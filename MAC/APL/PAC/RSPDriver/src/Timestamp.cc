@@ -23,6 +23,7 @@
 #include "Timestamp.h"
 
 #include <math.h>
+#include <time.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -56,6 +57,9 @@ void Timestamp::setNow(double delay)
 
 std::ostream& operator<< (std::ostream& os, const RSP_Protocol::Timestamp& ts)
 {
+  char timestring[256];
   time_t seconds = (time_t)ts.sec();
-  return os << ctime(&seconds); /* << "." << ts.usec();*/
+
+  strftime(timestring, 255, "%s - %a, %d %b %Y %H:%M:%S  %z", gmtime(&seconds));
+  return os << timestring; // << "." << ts.usec();
 }

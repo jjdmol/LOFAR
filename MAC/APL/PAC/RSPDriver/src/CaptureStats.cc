@@ -31,7 +31,6 @@
 
 #include "PSAccess.h"
 
-#include <Suite/suite.h>
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
@@ -49,54 +48,24 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
-#define SAMPLE_FREQUENCY 160.0 // MHz
-
-#define START_TEST(_test_, _descr_) \
-  setCurSubTest(#_test_, _descr_)
-
-#define STOP_TEST() \
-  reportSubTest()
-
-#define FAIL_ABORT(_txt_, _final_state_) \
-do { \
-    FAIL(_txt_);  \
-    TRAN(_final_state_); \
-} while (0)
-
-#define TESTC_ABORT(cond, _final_state_) \
-do { \
-  if (!TESTC(cond)) \
-  { \
-    TRAN(_final_state_); \
-    break; \
-  } \
-} while (0)
-
-#define TESTC_DESCR_ABORT(cond, _descr_, _final_state_) \
-do { \
-  if (!TESTC_DESCR(cond, _descr_)) \
-  { \
-    TRAN(_final_state_); \
-    break; \
-  } \
-} while(0)
-
 CaptureStats::CaptureStats(string name, int type, bitset<MAX_N_RCUS> device_set, int n_devices,
-			   int duration, int integration, uint8 rcucontrol, bool onefile)
-  : GCFTask((State)&CaptureStats::initial, name), Test(name),
+			   int duration, int integration, uint8 rcucontrol, bool onefile, bool xinetd_mode)
+  : GCFTask((State)&CaptureStats::initial, name),
     m_type(type), m_device_set(device_set), m_n_devices(n_devices),
     m_duration(duration), m_integration(integration), m_rcucontrol(rcucontrol),
-    m_nseconds(0), m_file(0), m_onefile(onefile)
+    m_nseconds(0), m_file(0), m_onefile(onefile), m_xinetd_mode(xinetd_mode), m_format("250-%f\n")
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  m_file = new (FILE*)[m_n_devices];
-  if (!m_file)
-  {
-    cerr << "Error: failed to allocate memory for file handles." << endl;
-    exit(EXIT_FAILURE);
+  if (!m_xinetd_mode) {
+    m_file = new (FILE*)[m_n_devices];
+    if (!m_file)
+      {
+	cout << "500 Error: failed to allocate memory for file handles." << endl;
+	exit(EXIT_FAILURE);
+      }
+    for (int i = 0; i < m_n_devices; i++) m_file[i] = 0;
   }
-  for (int i = 0; i < m_n_devices; i++) m_file[i] = 0;
   
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
 }
@@ -125,7 +94,13 @@ GCFEvent::TResult CaptureStats::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(CaptureStats::enabled);
+      if (m_xinetd_mode) {
+	// send welcome
+	cout << "220 This is the CaptureStats server, at your service." << endl;
+	TRAN(CaptureStats::wait4command);
+      } else {
+	TRAN(CaptureStats::handlecommand);
+      }
     }
     break;
 
@@ -151,7 +126,148 @@ GCFEvent::TResult CaptureStats::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
+std::bitset<MAX_N_RCUS> strtoset(const char* str, unsigned int max)
+{
+  string inputstring(str);
+  char* start = (char*)inputstring.c_str();
+  char* end   = 0;
+  bool  range = false;
+  unsigned long prevrcu = 0;
+  bitset<MAX_N_RCUS> rcuset;
+
+  rcuset.reset();
+
+  while (start)
+  {
+    unsigned long rcu = strtoul(start, &end, 10); // read decimal numbers
+    start = (end ? (*end ? end + 1 : 0) : 0); // advance
+    if (rcu >= max)
+    {
+      cout << "500 Value " << rcu << " out of range in RCU set specification" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    if (end)
+    {
+      switch (*end)
+      {
+	case ',':
+	case 0:
+	{
+	  if (range)
+	  {
+	    if (0 == prevrcu && 0 == rcu) rcu = max - 1;
+	    if (rcu < prevrcu)
+	    {
+	      cout << "500 Error: invalid rcu range specified" << endl;
+	      exit(EXIT_FAILURE);
+	    }
+	    for (unsigned long i = prevrcu; i <= rcu; i++) rcuset.set(i);
+	  }
+	    
+	  else
+	  {
+	    rcuset.set(rcu);
+	  }
+	  range=false;
+	}
+	break;
+
+	case ':':
+	  range=true;
+	  break;
+
+	default:
+	  printf("invalid character %c", *end);
+	  break;
+      }
+    }
+    prevrcu = rcu;
+  }
+
+  return rcuset;
+}
+
+GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      {
+	string symbol;
+	int    station_id;
+	string rcuspec;
+	bool done = false;
+
+	while (!done) {
+	  // get command
+	  cin >> symbol;
+
+	  if ("set" == symbol) {
+
+	    cin >> symbol;
+
+	    if ("sensor" == symbol) {
+
+	      cin >> symbol;
+
+	      if ("subband_statistics" == symbol) {
+
+		cin >> station_id;
+		cin >> rcuspec;
+		cin >> m_duration;
+		cin >> m_integration;
+		cin.ignore(256, '\n');
+
+		m_device_set = strtoset(rcuspec.c_str(), m_n_devices);
+		if (m_duration < 1) {
+
+		  cout << "500 Bad set command" << endl;
+
+		}
+		if (0 == m_integration) m_integration = m_duration;
+
+		cout << "210 Ok." << endl;
+
+	      } else {
+
+		cout << "500 Syntax error" << endl;
+
+	      }
+	  
+	    } else if ("format" == symbol) {
+
+	      cin >> m_format;
+	      m_format = "250-" + m_format + "\n"; // prepend 250- prompt
+
+	    } else {
+
+	      cout << "500 Syntax error" << endl;
+
+	    }
+	  } else if ("go" == symbol) {
+
+	    done = true;
+	    cin.ignore(256,'\n');
+	    TRAN(CaptureStats::handlecommand);
+
+	  } else if ("quit" == symbol) {
+	    cout << "221 Bye." << endl;
+	    exit(EXIT_SUCCESS);
+	  }else {
+	    cout << "500 Syntax error" << endl;
+	  }
+	}
+      }
+      break;
+    }
+
+  return status;
+}
+
+GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -159,30 +275,34 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
   {
     case F_ENTRY:
     {
-      START_TEST("enabled", "test UPDSTATS");
+      if (m_xinetd_mode) {
+	cout << "250-Acquiring sensor data." << endl;
+	cout << "250-" << endl;
+	cout << "250-META sensor = subband_statistics 0 ";
+	bool comma = false;
+	for (int i = 0; i < (int)m_device_set.size(); i++) {
+	  if (m_device_set[i]) {
+	    if (comma) {
+	      cout << ","; comma = false;
+	    }
+	    cout << i; comma = true;
+	  }
+	}
+	cout << " " << m_duration << " " << m_integration << endl;
+	cout << "250-" << endl;
+      }
 
       // set rcu control register
       RSPSetrcuEvent setrcu;
-      setrcu.timestamp.setNow();
+      setrcu.timestamp = Timestamp(0,0);
       setrcu.rcumask = m_device_set;
       
-//      setrcu.rcumask.reset();
-//       if (m_device >= 0)
-//       {
-// 	setrcu.rcumask.set(m_device);
-//       }
-//       else
-//       {
-// 	for (int i = 0; i < m_n_devices; i++)
-// 	  setrcu.rcumask.set(i);
-//       }
-
       setrcu.settings().resize(1);
       setrcu.settings()(0).value = m_rcucontrol;
 
       if (!m_server.send(setrcu))
       {
-	cerr << "Error: failed to send RCU control" << endl;
+	cout << "500 Error: failed to send RCU control" << endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -194,35 +314,24 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != ack.status)
       {
-	cerr << "Error: failed to set RCU control register" << endl;
+	cout << "500 Error: failed to set RCU control register" << endl;
 	exit(EXIT_FAILURE);
       }
 
-      sleep(2);
+      sleep(1);
 
       // subscribe to status updates
       RSPSubstatusEvent substatus;
 
-      substatus.timestamp.setNow();
+      substatus.timestamp = Timestamp(0,0);
 
       substatus.rcumask = m_device_set;
       
-//       substatus.rcumask.reset();
-//       if (m_device >= 0)
-//       {
-// 	substatus.rcumask.set(m_device);
-//       }
-//       else
-//       {
-// 	for (int i = 0; i < m_n_devices; i++)
-// 	  substatus.rcumask.set(i);
-//       }
-	
       substatus.period = 1;
       
       if (!m_server.send(substatus))
       {
-	cerr << "Error: failed to send subscription for status updates" << endl;
+	cout << "500 Error: failed to send subscription for status updates" << endl;
 	exit(EXIT_FAILURE);
       }
 
@@ -235,35 +344,25 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != ack.status)
       {
-	cerr << "Error: failed to subscribe to status updates" << endl;
+	cout << "500 Error: failed to subscribe to status updates" << endl;
 	exit(EXIT_FAILURE);
       }
+      m_statushandle = ack.handle;
 
       // subscribe to statistics updates
       RSPSubstatsEvent substats;
 
-      substats.timestamp.setNow();
+      substats.timestamp = Timestamp(0,0);
 
       substats.rcumask = m_device_set;
       
-//       substats.rcumask.reset();
-//       if (m_device >= 0)
-//       {
-// 	substats.rcumask.set(m_device);
-//       }
-//       else
-//       {
-// 	for (int i = 0; i < m_n_devices; i++)
-// 	  substats.rcumask.set(i);
-//       }
-	
       substats.period = 1;
       substats.type = m_type;
       substats.reduction = SUM;
       
       if (!m_server.send(substats))
       {
-	cerr << "Error: failed to send subscription for statistics updates" << endl;
+	cout << "500 Error: failed to send subscription for statistics updates" << endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -275,9 +374,11 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != ack.status)
       {
-	cerr << "Error: failed to subscribe to statistics updates" << endl;
+	cout << "500 Error: failed to subscribe to statistics updates" << endl;
 	exit(EXIT_FAILURE);
       }
+
+      m_statshandle = ack.handle;
     }
     break;
 
@@ -287,20 +388,31 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
       
       if (SUCCESS != upd.status)
       {
-	cerr << "Error: invalid update" << endl;
+	cout << "500 Error: invalid update" << endl;
 	exit(EXIT_FAILURE);
       }
 
-      cout << "time=" << upd.timestamp;
+      if (!m_xinetd_mode) {
+	cout << "time=" << upd.timestamp;
+      } else {
+	cout << "250-META time status = " << upd.timestamp << endl;
+      }
       int result = 0;
       for (int device = 0; device < m_n_devices; device++)
       {
 	if (!m_device_set[device]) continue;
 	
-	printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
-	       device,
-	       upd.sysstatus.rcu()(result).status,
-	       upd.sysstatus.rcu()(result).nof_overflow);
+	if (m_xinetd_mode) {
+	  cout << formatString("250-META status, rcu[%02d](status=0x%02x, noverflow=%d)",
+			       device,
+			       upd.sysstatus.rcu()(result).status,
+			       upd.sysstatus.rcu()(result).nof_overflow) << endl;
+	} else {
+	  printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
+		 device,
+		 upd.sysstatus.rcu()(result).status,
+		 upd.sysstatus.rcu()(result).nof_overflow);
+	}
 	result++;
       }
     }
@@ -312,33 +424,68 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != upd.status)
       {
-	cerr << "Error: invalid update" << endl;
+	cout << "500 Error: invalid update" << endl;
 	exit(EXIT_FAILURE);
       }
 
-#if 0
-      LOG_INFO_STR("upd.time=" << upd.timestamp);
-      LOG_INFO_STR("upd.handle=" << upd.handle);
-      
-      LOG_DEBUG_STR("upd.stats=" << upd.stats());
-#endif
+      if (!m_xinetd_mode) {
+	cout << "time=" << upd.timestamp;
+      } else {
+	cout << "250-META time subband_statistics = " << upd.timestamp << endl;
+      }
 
-      capture_statistics(upd.stats());
+      if (capture_statistics(upd.stats())) {
+	if (m_xinetd_mode) {
+	  m_nseconds = 0; // reset counter
+	  cout << "250 Data acquisition done." << endl;
+
+	  // unsubscribe from status and subband statistics
+	  RSPUnsubstatusEvent unsubstatus;
+	  unsubstatus.handle = m_statushandle;
+	  if (!m_server.send(unsubstatus))
+	    {
+	      cout << "500 Error: failed to send subscription for status updates" << endl;
+	      exit(EXIT_FAILURE);
+	    }
+	} else {
+	  exit(EXIT_SUCCESS);
+	}
+      }
     }
     break;
-    
+
+    case RSP_UNSUBSTATUSACK:
+    {
+      RSPUnsubstatusackEvent ack(e);
+      
+      if (SUCCESS != ack.status)
+      {
+	cout << "500 Error: unsubscribe failure" << endl;
+	exit(EXIT_FAILURE);
+      }
+
+      // unsubscribe from stats updates
+      RSPUnsubstatsEvent unsubstats;
+      unsubstats.handle = m_statshandle;
+      if (!m_server.send(unsubstats))
+	{
+	  cout << "500 Error: failed to send subscription for status updates" << endl;
+	  exit(EXIT_FAILURE);
+	}
+    }
+    break;
+
     case RSP_UNSUBSTATSACK:
     {
       RSPUnsubstatsackEvent ack(e);
 
       if (SUCCESS != ack.status)
       {
-	cerr << "Error: unsubscribe failure" << endl;
+	cout << "500 Error: unsubscribe failure" << endl;
 	exit(EXIT_FAILURE);
       }
 
-      port.close();
-      TRAN(CaptureStats::initial);
+      TRAN(CaptureStats::wait4command);
     }
     break;
 
@@ -346,12 +493,6 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
     {
       port.close();
       TRAN(CaptureStats::initial);
-    }
-    break;
-
-    case F_EXIT:
-    {
-      STOP_TEST();
     }
     break;
 
@@ -363,7 +504,7 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-void CaptureStats::capture_statistics(Array<double, 2>& stats)
+bool CaptureStats::capture_statistics(Array<double, 2>& stats)
 {
   if (0 == m_nseconds)
   {
@@ -376,7 +517,7 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
     if ( (stats.extent(firstDim) != m_values.extent(firstDim))
 	 || (stats.extent(secondDim) != m_values.extent(secondDim)) )
     {
-      cerr << "Error: shape mismatch" << endl;
+      cout << "500 Error: shape mismatch" << endl;
       exit(EXIT_FAILURE);
     }
   }
@@ -391,9 +532,9 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
     {
       m_values /= m_integration;
 
-      write_statistics(m_values); // write (optionally integrated) statistics
+      output_statistics(m_values); // write (optionally integrated) statistics
 
-      if (!m_onefile)
+      if (!m_onefile && m_file)
       {
 	for (int i = 0; i < m_n_devices; i++)
 	{
@@ -404,9 +545,9 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
     }
     else
     {
-      write_statistics(stats); // write interval sampled statistics
+      output_statistics(stats); // write interval sampled statistics
 
-      if (!m_onefile)
+      if (!m_onefile && m_file)
       {
 	for (int i = 0; i < m_n_devices; i++)
 	{
@@ -422,18 +563,24 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
   // check if duration has been reached
   if (m_nseconds >= m_duration)
   {
-    for (int i = 0; i < m_n_devices; i++)
-    {
-      if (m_file[i]) fclose(m_file[i]);
-      m_file[i] = 0;
+    if (m_file) {
+      for (int i = 0; i < m_n_devices; i++)
+	{
+	  if (m_file[i]) fclose(m_file[i]);
+	  m_file[i] = 0;
+	}
     }
-    exit(EXIT_SUCCESS);
+
+    return true;
   }
+
+  return false;
 }
 
-void CaptureStats::write_statistics(Array<double, 2>& stats)
+void CaptureStats::output_statistics(Array<double, 2>& stats)
 {
   int result_device = 0;
+
   for (int device = 0; device < m_n_devices; device++)
   {
     if (!m_device_set[device]) continue;
@@ -443,11 +590,11 @@ void CaptureStats::write_statistics(Array<double, 2>& stats)
 
     if (!t)
     {
-      cerr << "Error: localtime?" << endl;
+      cout << "500 Error: localtime?" << endl;
       exit(EXIT_FAILURE);
     }
 
-    if (!m_file[device])
+    if (m_file && !m_file[device] && !m_xinetd_mode)
     {
       char filename[PATH_MAX];
       switch (m_type)
@@ -463,7 +610,7 @@ void CaptureStats::write_statistics(Array<double, 2>& stats)
 		   t->tm_hour, t->tm_min, t->tm_sec, device);
 	  break;
 	default:
-	  cerr << "Error: invalid m_type" << endl;
+	  cout << "500 Error: invalid m_type" << endl;
 	  exit(EXIT_FAILURE);
 	  break;
       }
@@ -471,23 +618,33 @@ void CaptureStats::write_statistics(Array<double, 2>& stats)
 
       if (!m_file[device])
       {
-	cerr << "Error: Failed to open file: " << filename << endl;
+	cout << "500 Error: Failed to open file: " << filename << endl;
 	exit(EXIT_FAILURE);
       }
     }
     
-    if (stats.extent(secondDim)
-	!= (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
-		       stats.extent(secondDim), m_file[device]))
-    {
-      perror("fwrite");
-      exit(EXIT_FAILURE);
-    }
+    if (!m_xinetd_mode) {
+      if (stats.extent(secondDim)
+	  != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
+			 stats.extent(secondDim), m_file[device]))
+	{
+	  cout << "500 Error: fwrite" << endl;
+	  exit(EXIT_FAILURE);
+	}
+    } else {
 
-    //(void)fclose(ofile);
+      cout << "250-META rcu " << device << endl;
+      cout << "250-BEGIN" << endl;
+      for (int i = 0; i < stats.extent(secondDim); i++) {
+	printf(m_format.c_str(), stats(result_device, i));
+      }
+      cout << "250-END" << endl;
+      cout << "250-" << endl;
+    }
 
     result_device++; // next
   }
+
 }
 
 void CaptureStats::run()
@@ -523,6 +680,8 @@ void usage()
   cout << endl;
   cout << "    --onefile                # or -o; default off, output one big file or file per interval." << endl;
   cout << endl;
+  cout << "    --xinetd                 # or -x; enable xinetd mode, input from stdin, output on stdout." << endl;
+  cout << endl;
   cout << "    --help                   # or -h; this help" << endl;
   cout << endl;
   cout << "Example:" << endl;
@@ -536,67 +695,6 @@ void usage()
   cout << "   # capture from all RCUs for 10 seconds only storing every second result in a separate file for each RCU." << endl;
 }
 
-std::bitset<MAX_N_RCUS> strtoset(char* str, unsigned int max)
-{
-  char* start = str;
-  char* end   = 0;
-  bool  range = false;
-  unsigned long prevrcu = 0;
-  bitset<MAX_N_RCUS> rcuset;
-
-  rcuset.reset();
-
-  while (start)
-  {
-    unsigned long rcu = strtoul(start, &end, 10); // read decimal numbers
-    start = (end ? (*end ? end + 1 : 0) : 0); // advance
-    if (rcu >= max)
-    {
-      cerr << "Value " << rcu << " out of range in RCU set specification" << endl;
-      exit(EXIT_FAILURE);
-    }
-
-    if (end)
-    {
-      switch (*end)
-      {
-	case ',':
-	case 0:
-	{
-	  if (range)
-	  {
-	    if (0 == prevrcu && 0 == rcu) rcu = max - 1;
-	    if (rcu < prevrcu)
-	    {
-	      cerr << "Error: invalid rcu range specified" << endl;
-	      exit(EXIT_FAILURE);
-	    }
-	    for (unsigned long i = prevrcu; i <= rcu; i++) rcuset.set(i);
-	  }
-	    
-	  else
-	  {
-	    rcuset.set(rcu);
-	  }
-	  range=false;
-	}
-	break;
-
-	case ':':
-	  range=true;
-	  break;
-
-	default:
-	  printf("invalid character %c", *end);
-	  break;
-      }
-    }
-    prevrcu = rcu;
-  }
-
-  return rcuset;
-}
-
 int main(int argc, char** argv)
 {
   int type        = 0;
@@ -606,6 +704,7 @@ int main(int argc, char** argv)
   unsigned long controlopt = 0xB9;
   uint8 rcucontrol = 0xB9;
   bool onefile = false;
+  bool xinetd_mode = false;
   
   // default is rcu 0
   device_set.set(0);
@@ -616,11 +715,11 @@ int main(int argc, char** argv)
 
   try
   {
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
   }
   catch (Exception e)
   {
-    cerr << "Error: failed to load configuration files: " << e.text() << endl;
+    cout << "500 Error: failed to load configuration files: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
 
@@ -637,8 +736,9 @@ int main(int argc, char** argv)
 	{ "duration",     required_argument, 0, 'd' },
 	{ "integration",  optional_argument, 0, 'i' },
 	{ "statstype",    required_argument, 0, 's' },
-	{ "help",         no_argument,       0, 'h' },
 	{ "onefile",      no_argument,       0, 'o' },
+	{ "xinetd",       no_argument,       0, 'x' },
+	{ "help",         no_argument,       0, 'h' },
 	  
 	{ 0, 0, 0, 0 },
       };
@@ -659,7 +759,7 @@ int main(int argc, char** argv)
 	controlopt = strtoul(optarg, 0, 0);
 	if ( controlopt > 0xFF )
 	{
-	  cerr << "Error: invalid control parameter, must be < 0xFF" << endl;
+	  cout << "500 Error: invalid control parameter, must be < 0xFF" << endl;
 	  exit(EXIT_FAILURE);
 	}
 	rcucontrol = controlopt;
@@ -681,22 +781,26 @@ int main(int argc, char** argv)
 
 	if (type < 0 || type >= Statistics::N_STAT_TYPES)
 	{
-	  cerr << formatString("Error: invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
+	  cout << "500 " << formatString("Error: invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
 	  exit(EXIT_FAILURE);
 	}
-	break;
-	
-      case 'h':
-	usage();
-	exit(EXIT_SUCCESS);
 	break;
 	
       case 'o':
 	onefile = true;
 	break;
 
+      case 'x':
+	xinetd_mode = true;
+	break;
+
+      case 'h':
+	usage();
+	exit(EXIT_SUCCESS);
+	break;
+	
       case '?':
-	cerr << "Error: error in option '" << char(optopt) << "'." << endl;
+	cout << "500 Error: error in option '" << char(optopt) << "'." << endl;
 	exit(EXIT_FAILURE);
 	break;
 
@@ -709,14 +813,14 @@ int main(int argc, char** argv)
   // check for valid
   if (device_set.count() == 0 || device_set.count() > (unsigned int)n_devices)
   {
-    cerr << formatString("Error: invalid device set or device set not specified") << endl;
+    cout << "500 " << formatString("Error: invalid device set or device set not specified") << endl;
     exit(EXIT_FAILURE);
   }
 
   // check for valid duration
   if (duration <= 0)
   {
-    cerr << "Error: duration must be > 0." << endl;
+    cout << "500 Error: duration must be > 0." << endl;
     exit(EXIT_FAILURE);
   }
 
@@ -725,25 +829,23 @@ int main(int argc, char** argv)
   // check for valid integration
   if ( (abs(integration) > duration) )
   {
-    cerr << "Error: abs(integration) must be <= duration" << endl;
+    cout << "500 Error: abs(integration) must be <= duration" << endl;
     exit(EXIT_FAILURE);
   }
 
-  Suite s("CaptureStats", &cerr);
-  s.addTest(new CaptureStats("CaptureStats", type, device_set, n_devices, duration, integration, rcucontrol, onefile));
+  CaptureStats c("CaptureStats", type, device_set, n_devices, duration, integration, rcucontrol, onefile, xinetd_mode);
+  
   try
   {
-    s.run();
+    c.run();
   }
   catch (Exception e)
   {
-    cerr << "Error: exception: " << e.text() << endl;
+    cout << "500 Error: exception: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
-  long nFail = s.report();
-  s.free();
 
   LOG_INFO("Normal termination of program");
 
-  return nFail;
+  return 0;
 }
