@@ -62,7 +62,7 @@ TGCFResult GCFPVInteger::setValue(const string& valueData)
   return result;
 }
 
-string GCFPVInteger::getValueAsString(const string& format)
+string GCFPVInteger::getValueAsString(const string& format) const
 {
   string retVal;
   if (format.length() == 0)

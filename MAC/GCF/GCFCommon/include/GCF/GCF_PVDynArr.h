@@ -61,7 +61,7 @@ class GCFPVDynArr : public GCFPValue
     virtual TGCFResult setValue(const string& value);
 
     // Returns the value of this object in a string
-    virtual string getValueAsString(const string& format = "");
+    virtual string getValueAsString(const string& format = "") const;
 
     /** Returns the value of this object*/
     virtual const GCFPValueArray& getValue() const {return _values;}

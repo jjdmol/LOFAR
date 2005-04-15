@@ -65,7 +65,7 @@ TGCFResult GCFPVUnsigned::setValue(const string& valueData)
   return result;
 }
 
-string GCFPVUnsigned::getValueAsString(const string& format)
+string GCFPVUnsigned::getValueAsString(const string& format) const
 {
   string retVal;
   if (format.length() == 0)
