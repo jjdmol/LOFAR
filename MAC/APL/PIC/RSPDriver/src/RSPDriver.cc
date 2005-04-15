@@ -758,8 +758,23 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
     command->setWeights(sw_event->weights()(Range(timestep, timestep),
 					    Range::all(),
 					    Range::all()));
-	
-    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+    
+    //
+    // if weights for only one timestep are given
+    // and the timestamp == Timestamp(0,0)
+    // then apply the weights immediately
+    //
+    if ((1 == sw_event->weights().extent(firstDim))
+	&& (Timestamp(0,0) == sw_event->timestamp))
+    {
+      LOG_INFO("applying beamforming weights immediately");
+      command->apply(Cache::getInstance().getFront());
+      command->apply(Cache::getInstance().getBack());
+    }
+    else
+    {
+      (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+    }
   }
 
   /* cleanup the event */
@@ -810,7 +825,17 @@ void RSPDriver::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
     return;
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  // if timestamp == Timestamp(0,0) then apply the changes immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    LOG_INFO("applying setsubbands immediately");
+    command->apply(Cache::getInstance().getFront());
+    command->apply(Cache::getInstance().getBack());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
   command->ack(Cache::getInstance().getFront());
 }
 
@@ -857,7 +882,17 @@ void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
     return;
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  // if timestamp == Timestamp(0,0) apply changes immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    LOG_INFO("applying RCU control immediately");
+    command->apply(Cache::getInstance().getFront());
+    command->apply(Cache::getInstance().getBack());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
   command->ack(Cache::getInstance().getFront());
 }
 
@@ -904,7 +939,17 @@ void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
     return;
   }
 
-  (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  // if timestamp == Timestamp(0,0) then apply the changes immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    LOG_INFO("applying WG settings immediately");
+    command->apply(Cache::getInstance().getFront());
+    command->apply(Cache::getInstance().getBack());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
   command->ack(Cache::getInstance().getFront());
 }
 

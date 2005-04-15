@@ -29,50 +29,55 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-class Tuner : public GCFTask, public Test
+class Tuner : public GCFTask
 {
-  public:
-    /**
-     * The constructor of the Tuner task.
-     * @param name The name of the task. The name is used for looking
-     * up connection establishment information using the GTMNameService and
-     * GTMTopologyService classes.
-     */
-    Tuner(string name, std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
-		 uint8 rcucontrol = 0xB9, int centersubband = 474);
-    virtual ~Tuner();
+public:
+  /**
+   * The constructor of the Tuner task.
+   * @param name The name of the task. The name is used for looking
+   * up connection establishment information using the GTMNameService and
+   * GTMTopologyService classes.
+   */
+  Tuner(string name, std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
+	uint8 rcucontrol = 0xB9, int centersubband = 256, bool initialize = false);
+  virtual ~Tuner();
 
-    // state methods
+  // state methods
 
-    /**
-     * The initial state. In this state a connection with the RSP
-     * driver is attempted. When the connection is established,
-     * a transition is made to the enabled state.
-     */
-    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+  /**
+   * The initial state. In this state a connection with the RSP
+   * driver is attempted. When the connection is established,
+   * a transition is made to the enabled state.
+   */
+  GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
-    /**
-     * The test states. This state is reached when the
-     * beam_server port is connected.
-     */
-    GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+  /**
+   * Initialize the boards.
+   */
+  GCFEvent::TResult initialize(GCFEvent& e, GCFPortInterface &p);
 
-    /**
-     * Run the tests.
-     */
-    void run();
+  /**
+   * Tune in to a specific subband.
+   */
+  GCFEvent::TResult tunein(GCFEvent& e, GCFPortInterface &p);
 
-  private:
-    // member variables
+  /**
+   * Run the tests.
+   */
+  void run();
 
-  private:
-    // ports
-    GCFPort m_server;
+private:
+  // member variables
 
-    std::bitset<MAX_N_RCUS> m_device_set;
-    int                     m_n_devices;
-    uint8                   m_rcucontrol;
-    int                     m_centersubband;
+private:
+  // ports
+  GCFPort m_server;
+
+  std::bitset<MAX_N_RCUS> m_device_set;
+  int                     m_n_devices;
+  uint8                   m_rcucontrol;
+  int                     m_centersubband;
+  bool                    m_initialize;
 };
      
 #endif /* TUNER_H_ */
