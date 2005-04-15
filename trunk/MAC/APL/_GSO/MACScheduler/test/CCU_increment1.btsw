@@ -151,8 +151,63 @@ WaitUntilTestEnd (SM1_ready) =
   finish : TERMINATE ; finish.
 }
 
+Statemachine_THPVSSBridge  ( stop ) =
+{
+  s000   : F_PVSS_LOAD_EXT_PROPERTY_SET( "CCU1_VIC_VIStartDaemon",
+                                         "TAplStartDaemon" )			 			; s010.
+  s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, 0x00000000 ) 			; s020.
+  s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
+  
+  s020   : F_PVSS_EXT_GET_VALUE ( "CCU1_VIC_VIStartDaemon",
+                                  "command" )														; s030.
+  s030   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,"CCU1_VIC_VIStartDaemon",,"command",, )		; s990.
+//  s030   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,,,,, )											; error.
+//
+//  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( "CCU1_VIC_VIStartDaemon",
+//                                           "command" )									; s050.
+//  s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, 0x00000000 ) 	; s060.
+//  s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
+//
+//  s060   : F_PVSS_EXT_SET_VALUE ( "CCU1_VIC_VIStartDaemon",
+//                                  "command",
+//                                  "dummy1" )														; s070.
+//  s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, 0x00000000 ) 						; s080.
+//  s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
+//  
+//  s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,"CCU1_VIC_VIStartDaemon",,"command",,"dummy1" )	; s090.
+//  s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, ) 											; error.
+//
+//  s090   : F_PVSS_UNSUBSCRIBE_EXT_PROPERTY ( "CCU1_VIC_VIStartDaemon",
+//                                           	 "command" )								; s100.
+//  s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, 0x00000000 )	; s110.
+//  s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )						; error.
+
+//  s110   : F_PVSS_EXT_SET_VALUE ( "CCU1_VIC_VIStartDaemon",
+//                                  "command",
+//                                  "dummy2" )														; s120.
+//  s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, 0x00000000 ) 						; s130.
+//  s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
+  
+//  s130   : F_PVSS_EXT_GET_VALUE ( "CCU1_VIC_VIStartDaemon",
+//                                  "command" )														; s140.
+//  s140   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,"CCU1_VIC_VIStartDaemon",,"command",,"dummy2" )		; s150.
+//  s140   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,,,,, )											; error.
+
+//  s150   : F_PVSS_UNLOAD_EXT_PROPERTY_SET( "CCU1_VIC_VIStartDaemon" )			; s160.
+//  s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, 0x00000000 ) 			; s990.
+//  s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
+  
+//  s990   : R_SIG( stop )                                       				 	; finish.
+  s990   : TERMINATE                                       				 	; s990.
+    
+  finish : TERMINATE ; finish.
+  error  : TERMINATE ; error.
+}
+
+
+
 [testscript]
-VAR     SM1_done, SM2_stop, SM3_stop, SM4_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled, vbsd_connected.
+VAR     SM1_done, SM2_stop, SM3_stop, SM4_stop, SM5_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled, vbsd_connected.
 
 COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled)
         WaitUntilTestEnd (SM1_done).
@@ -162,4 +217,6 @@ COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).
 COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
 
 COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
+
+COM5 :  Statemachine_THPVSSBridge (SM5_stop).
 

@@ -48,7 +48,6 @@
 
 #undef PACKAGE
 #undef VERSION
-#define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
 
 using namespace LOFAR;

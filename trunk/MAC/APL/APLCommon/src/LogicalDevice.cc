@@ -33,7 +33,6 @@
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
 
-#define DECLARE_SIGNAL_NAMES
 #include "APLCommon/LogicalDevice_Protocol.ph"
 #include "APLCommon/StartDaemon_Protocol.ph"
 
@@ -608,9 +607,8 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       port.cancelTimer(timerEvent.id);
       LOG_DEBUG(formatString("(%s) PrepareTimer %d triggered and cancelled",__func__,timerEvent.id));
       // this is a prepare timer for the schedule of a logical device. claim the device
-      boost::shared_ptr<LOGICALDEVICEClaimEvent> claimEvent(new LOGICALDEVICEClaimEvent);
-      _sendEvent(claimEvent,port);
-      // when the device (and all it's children) is claimed, the prepare message is sent
+      _claim();
+      // and when the device (and all it's children) is claimed, the prepare message is sent
       // automatically
     }
     else if(timerEvent.id == m_startTimerId)
@@ -618,16 +616,14 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       port.cancelTimer(timerEvent.id);
       LOG_DEBUG(formatString("(%s) StartTimer %d triggered and cancelled",__func__,timerEvent.id));
       // this is a start timer for the schedule of a logical device. resume the device
-      boost::shared_ptr<LOGICALDEVICEResumeEvent> resumeEvent(new LOGICALDEVICEResumeEvent);
-      _sendEvent(resumeEvent,port);
+      _resume();
     }
     else if(timerEvent.id == m_stopTimerId)
     {
       port.cancelTimer(timerEvent.id);
       LOG_DEBUG(formatString("(%s) StopTimer %d triggered and cancelled",__func__,timerEvent.id));
       // this is a stop timer for the schedule of a logical device. suspend the device
-      boost::shared_ptr<LOGICALDEVICESuspendEvent> suspendEvent(new LOGICALDEVICESuspendEvent);
-      _sendEvent(suspendEvent,port);
+      _suspend();
     }
     else if(timerEvent.id == m_retrySendTimerId)
     {

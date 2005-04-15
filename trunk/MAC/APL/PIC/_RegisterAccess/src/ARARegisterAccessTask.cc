@@ -22,7 +22,6 @@
 //#  $Id$
 
 // this include needs to be first!
-#define DECLARE_SIGNAL_NAMES
 #include "RSP_Protocol.ph"
 
 #include "ARARegisterAccessTask.h"

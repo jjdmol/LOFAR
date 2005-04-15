@@ -38,8 +38,6 @@ int main(int argc, char* argv[])
 {
   int retval=-1;
  
-  INIT_LOGGER(argv[0]);
-   
   {
     bool mac1Test=false;
     bool mac2Test=false;

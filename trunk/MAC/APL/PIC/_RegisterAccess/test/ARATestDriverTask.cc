@@ -22,7 +22,6 @@
 
 #undef PACKAGE
 #undef VERSION
-#define DECLARE_SIGNAL_NAMES
 #include "RSP_Protocol.ph"
 
 #include "../src/ARAConstants.h"

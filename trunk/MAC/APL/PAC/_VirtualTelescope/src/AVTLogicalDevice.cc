@@ -30,7 +30,6 @@
 #include "AVTLogicalDevice.h"
 #include "AVTPropertyDefines.h"
 
-#define DECLARE_SIGNAL_NAMES
 #include "LogicalDevice_Protocol.ph"
 
 using namespace LOFAR::GCF::Common;

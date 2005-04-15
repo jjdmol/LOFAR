@@ -32,10 +32,8 @@ using namespace LOFAR::GCF::PAL;
 
 int main(int argc, char* argv[])
 {
-  INIT_LOGGER(argv[0]);
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"LogicalDeviceScheduler");
-  
   GCFTask::init(argc, argv);
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"LogicalDeviceScheduler");
   
   ParameterSet::instance()->adoptFile("LogicalDeviceServer.conf");
     
