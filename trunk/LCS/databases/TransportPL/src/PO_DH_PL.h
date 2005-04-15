@@ -23,7 +23,7 @@
 #ifndef TRANSPORTPL_PO_DH_PL_H
 #define TRANSPORTPL_PO_DH_PL_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <PL/TPersistentObject.h>
 #include <PL/DBRep.h>

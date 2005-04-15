@@ -20,8 +20,10 @@
 //#
 //# $Id$
 
-#include <iostream>
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
+#include <Common/lofar_iostream.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_File.h>
 #include <TransportPL/TH_PL.h>

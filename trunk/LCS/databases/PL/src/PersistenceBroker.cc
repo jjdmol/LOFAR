@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <PL/ConnectionHandler.h>
 #include <PL/Exception.h>
 #include <PL/PersistenceBroker.h>

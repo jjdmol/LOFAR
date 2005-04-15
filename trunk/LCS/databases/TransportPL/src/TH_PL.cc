@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 #include <TransportPL/TH_PL.h>
 #include <Transport/Transporter.h>

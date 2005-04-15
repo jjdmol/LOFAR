@@ -23,7 +23,7 @@
 #ifndef ACC_MYACCLIENTFUNCTIONS_H
 #define ACC_MYACCLIENTFUNCTIONS_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <ACC/ACAsyncClient.h>

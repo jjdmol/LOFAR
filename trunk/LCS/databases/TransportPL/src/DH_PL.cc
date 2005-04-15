@@ -20,12 +20,13 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 #include <TransportPL/DH_PL.h>		        // for class definition
 #include <TransportPL/PO_DH_PL.h>
 #include <TransportPL/TH_PL.h>                  // for class definition
-#include <Common/Exception.h>
-#include <sstream>				// for ostringstream
+#include <Common/LofarLogger.h>                 // for ASSERT macro
 
 namespace LOFAR {
 
