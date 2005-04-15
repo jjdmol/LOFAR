@@ -37,6 +37,7 @@
 #include <string.h>
 #include <blitz/array.h>
 #include <getopt.h>
+#include <math.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -50,44 +51,16 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 #define N_SELECTED_SUBBANDS 13
+#define SCALE (1<<(16-2))
 
-#define SAMPLE_FREQUENCY 160.0 // MHz
-
-#define START_TEST(_test_, _descr_) \
-  setCurSubTest(#_test_, _descr_)
-
-#define STOP_TEST() \
-  reportSubTest()
-
-#define FAIL_ABORT(_txt_, _final_state_) \
-do { \
-    FAIL(_txt_);  \
-    TRAN(_final_state_); \
-} while (0)
-
-#define TESTC_ABORT(cond, _final_state_) \
-do { \
-  if (!TESTC(cond)) \
-  { \
-    TRAN(_final_state_); \
-    break; \
-  } \
-} while (0)
-
-#define TESTC_DESCR_ABORT(cond, _descr_, _final_state_) \
-do { \
-  if (!TESTC_DESCR(cond, _descr_)) \
-  { \
-    TRAN(_final_state_); \
-    break; \
-  } \
-} while(0)
+#define SAMPLE_FREQUENCY 163.84e6 // MHz
+#define DECIMATION       1024
 
 Tuner::Tuner(string name, bitset<MAX_N_RCUS> device_set, int n_devices,
-	     uint8 rcucontrol, int centersubband)
-  : GCFTask((State)&Tuner::initial, name), Test(name),
+	     uint8 rcucontrol, int centersubband, bool initialize)
+  : GCFTask((State)&Tuner::initial, name),
     m_device_set(device_set), m_n_devices(n_devices),
-    m_rcucontrol(rcucontrol), m_centersubband(centersubband)
+    m_rcucontrol(rcucontrol), m_centersubband(centersubband), m_initialize(initialize)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -117,7 +90,11 @@ GCFEvent::TResult Tuner::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(Tuner::enabled);
+      if (m_initialize) {
+	TRAN(Tuner::initialize);
+      } else {
+	TRAN(Tuner::tunein);
+      }
     }
     break;
 
@@ -143,7 +120,23 @@ GCFEvent::TResult Tuner::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult Tuner::enabled(GCFEvent& e, GCFPortInterface& port)
+BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
+
+/**
+ * Convert the weights to 16-bits signed integer.
+ */
+inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
+{
+#ifdef W_TYPE_DOUBLE
+  return complex<int16_t>((int16_t)(round(cd.real()*SCALE)),
+			  (int16_t)(round(cd.imag()*SCALE)));
+#else
+  return complex<int16_t>((int16_t)(roundf(cd.real()*SCALE)),
+			  (int16_t)(roundf(cd.imag()*SCALE)));
+#endif
+}
+
+GCFEvent::TResult Tuner::initialize(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -151,13 +144,11 @@ GCFEvent::TResult Tuner::enabled(GCFEvent& e, GCFPortInterface& port)
     {
     case F_ENTRY:
       {
-	START_TEST("enabled", "test UPDSTATS");
-
 	//
 	// switch on and configure the selected RCU's
 	//
 	RSPSetrcuEvent setrcu;
-	setrcu.timestamp.setNow();
+	setrcu.timestamp = Timestamp(0,0);
 	setrcu.rcumask = m_device_set;
       
 	setrcu.settings().resize(1);
@@ -165,7 +156,7 @@ GCFEvent::TResult Tuner::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	if (!m_server.send(setrcu))
 	  {
-	    cerr << "Error: failed to send RCU control" << endl;
+	    LOG_FATAL("Error: failed to send RCU control");
 	    exit(EXIT_FAILURE);
 	  }
       }
@@ -177,33 +168,30 @@ GCFEvent::TResult Tuner::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	if (SUCCESS != ack.status)
 	  {
-	    cerr << "Error: failed to set RCU control register" << endl;
+	    LOG_FATAL("Error: failed to set RCU control register");
 	    exit(EXIT_FAILURE);
 	  }
 
-	sleep(2);
-
 	//
-	// Select the appropriate subbands
+	// Clear subband selection
 	//
 	RSPSetsubbandsEvent ss;
-	ss.timestamp.setNow(0);
+	ss.timestamp = Timestamp(0,0);
 
 	ss.blpmask.reset();
-	for (int i = 0; i < GET_CONFIG("RS.N_BLPS", i); i++) ss.blpmask.set(i); // all blps
+	for (int i = 0;
+	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
+	     i++)
+	  {
+	    ss.blpmask.set(i); // all blps
+	  }
 
 	ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
 	ss.subbands() = 0;
 
-	for (int i = 0; i < N_SELECTED_SUBBANDS; i++)
-	  {
-	    ss.subbands()(0, i*2)   = (m_centersubband + i - (N_SELECTED_SUBBANDS/2-1)) * 2;
-	    ss.subbands()(0, i*2+1) = (m_centersubband + i - (N_SELECTED_SUBBANDS/2-1)) * 2 + 1;
-	  }
-      
 	if (!m_server.send(ss))
 	  {
-	    cerr << "Error: failed to send subband selection" << endl;
+	    LOG_FATAL("Error: failed to send subband selection");
 	    exit(EXIT_FAILURE);
 	  }
 
@@ -215,25 +203,31 @@ GCFEvent::TResult Tuner::enabled(GCFEvent& e, GCFPortInterface& port)
 	RSPSetsubbandsackEvent ack(e);
 	if (SUCCESS != ack.status)
 	  {
-	    cerr << "Error: negative ack on subband selection" << endl;
+	    LOG_FATAL("Error: negative ack on subband selection");
 	    exit(EXIT_FAILURE);
 	  }
 
 	//
-	// Set beamformer weights
+	// Clear the beamformer weights
 	//
 	RSPSetweightsEvent sw;
-	sw.timestamp.setNow(0); // immediate
+	sw.timestamp = Timestamp(0,0);
 
 	sw.blpmask.reset();
-	for (int i = 0; i < GET_CONFIG("RS.N_BLPS", i); i++) sw.blpmask.set(i); // all blps
+	for (int i = 0;
+	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
+	     i++)
+	  {
+	    sw.blpmask.set(i);
+	  }
 
-	sw.weights().resize(1, GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
-	sw.weights() = 0;
+	sw.weights().resize(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i),
+			    MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+	sw.weights() = complex<int16>(0,0);
 	
 	if (!m_server.send(sw))
 	  {
-	    cerr << "Error: failed to send beamformer weights" << endl;
+	    LOG_FATAL("Error: failed to send beamformer weights");
 	    exit(EXIT_FAILURE);
 	  }
       }
@@ -244,7 +238,137 @@ GCFEvent::TResult Tuner::enabled(GCFEvent& e, GCFPortInterface& port)
 	RSPSetweightsackEvent ack(e);
 	if (SUCCESS != ack.status)
 	  {
-	    cerr << "Error: negative ack on beamformer weights" << endl;
+	    LOG_FATAL("Error: negative ack on beamformer weights");
+	    exit(EXIT_FAILURE);
+	  }
+
+	TRAN(Tuner::tunein);
+      }
+      break;
+
+    case F_DISCONNECTED:
+      {
+	port.close();
+	TRAN(Tuner::initial);
+      }
+      break;
+
+    case F_EXIT:
+      {
+	//STOP_TEST();
+      }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
+
+  return status;
+}
+GCFEvent::TResult Tuner::tunein(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      {
+	//
+	// Select the appropriate subbands
+	//
+	RSPSetsubbandsEvent ss;
+	ss.timestamp = Timestamp(0,0);
+
+	ss.blpmask.reset();
+	for (int i = 0; i < GET_CONFIG("RS.N_BLPS", i); i++)
+	  {
+	    if (m_device_set[i * MEPHeader::N_POL]
+		|| m_device_set[i * MEPHeader::N_POL + 1])
+	    {
+	      LOG_DEBUG_STR("selecting blp " << i);
+	      ss.blpmask.set(i); // only selected blp
+	    }
+	  }
+
+	ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
+	ss.subbands() = 0;
+
+	for (int i = 0; i < N_SELECTED_SUBBANDS; i++)
+	  {
+	    ss.subbands()(0, i*2)   = (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2;
+	    ss.subbands()(0, i*2+1) = (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2 + 1;
+
+	    LOG_DEBUG_STR("subband(" << i*2 << ")=" << (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2);
+	    LOG_DEBUG_STR("subband(" << i*2+1 << ")=" << (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2 + 1);
+	  }
+      
+	if (!m_server.send(ss))
+	  {
+	    LOG_FATAL("Error: failed to send subband selection");
+	    exit(EXIT_FAILURE);
+	  }
+
+      }
+      break;
+
+    case RSP_SETSUBBANDSACK:
+      {
+	RSPSetsubbandsackEvent ack(e);
+	if (SUCCESS != ack.status)
+	  {
+	    LOG_FATAL("Error: negative ack on subband selection");
+	    exit(EXIT_FAILURE);
+	  }
+
+	//
+	// Set beamformer weights
+	//
+	RSPSetweightsEvent sw;
+	sw.timestamp = Timestamp(0,0);
+
+	sw.blpmask.reset();
+	for (int i = 0; i < GET_CONFIG("RS.N_BLPS", i); i++)
+	  {
+	    if (m_device_set[i * MEPHeader::N_POL]
+		|| m_device_set[i * MEPHeader::N_POL + 1])
+	    {
+	      LOG_DEBUG_STR("selecting blp " << i);
+	      sw.blpmask.set(i); // only selected blp
+	    }
+	  }
+
+	Array<complex<double>, 4> weights(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i),
+					  MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+
+	weights(0, Range::all(), Range::all(), Range::all()) = complex<double>(0,0);
+	for (int rcu = 0;
+	     rcu < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+	     rcu++)
+	  {
+	    if (m_device_set[rcu]) {
+	      weights(0, rcu/2, Range::all(), rcu%2) = complex<double>(1,0);
+	    }
+	  }
+
+	sw.weights().resize(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i),
+			    MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+	sw.weights() = convert2complex_int16_t(conj(weights));
+	
+	if (!m_server.send(sw))
+	  {
+	    LOG_FATAL("Error: failed to send beamformer weights");
+	    exit(EXIT_FAILURE);
+	  }
+      }
+      break;
+
+    case RSP_SETWEIGHTSACK:
+      {
+	RSPSetweightsackEvent ack(e);
+	if (SUCCESS != ack.status)
+	  {
+	    LOG_FATAL("Error: negative ack on beamformer weights");
 	    exit(EXIT_FAILURE);
 	  }
 
@@ -261,7 +385,7 @@ GCFEvent::TResult Tuner::enabled(GCFEvent& e, GCFPortInterface& port)
 
     case F_EXIT:
       {
-	STOP_TEST();
+	//STOP_TEST();
       }
       break;
 
@@ -299,6 +423,8 @@ void usage()
   cout << endl;
   cout << "    --centersubband=N        # or -s; default 6, center subband (with 6 subbands to the left and 6 to the right" << endl;
   cout << endl;
+  cout << "    --frequency=N            # or -f; default 88.0MHz, frequency of center subband" << endl;
+  cout << endl;
   cout << "    --help                   # or -h; this help" << endl;
   cout << endl;
   cout << "Example:" << endl;
@@ -323,7 +449,7 @@ std::bitset<MAX_N_RCUS> strtoset(char* str, unsigned int max)
     start = (end ? (*end ? end + 1 : 0) : 0); // advance
     if (rcu >= max)
     {
-      cerr << "Value " << rcu << " out of range in RCU set specification" << endl;
+      LOG_FATAL_STR("Value " << rcu << " out of range in RCU set specification");
       exit(EXIT_FAILURE);
     }
 
@@ -339,7 +465,7 @@ std::bitset<MAX_N_RCUS> strtoset(char* str, unsigned int max)
 	    if (0 == prevrcu && 0 == rcu) rcu = max - 1;
 	    if (rcu < prevrcu)
 	    {
-	      cerr << "Error: invalid rcu range specified" << endl;
+	      LOG_FATAL("Error: invalid rcu range specified");
 	      exit(EXIT_FAILURE);
 	    }
 	    for (unsigned long i = prevrcu; i <= rcu; i++) rcuset.set(i);
@@ -368,12 +494,25 @@ std::bitset<MAX_N_RCUS> strtoset(char* str, unsigned int max)
   return rcuset;
 }
 
+int freq2subband(double frequency)
+{
+  double subband = (frequency / SAMPLE_FREQUENCY) * DECIMATION;
+
+  if (subband > 512) subband = 512 - (subband - 512); // correct for aliasing
+
+  LOG_INFO_STR("freq2subband: subband=" << subband);
+
+  return int(floor(subband));
+}
+
 int main(int argc, char** argv)
 {
   bitset<MAX_N_RCUS> device_set = 0;
   unsigned long controlopt = 0xB9;
   uint8 rcucontrol = 0xB9;
-  int centersubband = N_SELECTED_SUBBANDS - 1;
+  int centersubband = 0;
+  double frequency = 88.0e6;
+  bool initialize = false;
   
   // default is rcu 0
   device_set.set(0);
@@ -388,7 +527,7 @@ int main(int argc, char** argv)
     }
   catch (Exception e)
     {
-      cerr << "Error: failed to load configuration files: " << e.text() << endl;
+      LOG_FATAL_STR("Error: failed to load configuration files: " << e.text());
       exit(EXIT_FAILURE);
     }
 
@@ -401,13 +540,15 @@ int main(int argc, char** argv)
 	  { "rcu",           required_argument, 0, 'r' },
 	  { "control",       required_argument, 0, 'c' },
 	  { "centersubband", required_argument, 0, 's' },
+	  { "frequency",     required_argument, 0, 'f' },
+	  { "init",          no_argument,       0, 'i' },
 	  { "help",          no_argument,       0, 'h' },
 	  { 0, 0, 0, 0 },
 	};
 
       int option_index = 0;
       int c = getopt_long_only(argc, argv,
-			       "r:c:sh", long_options, &option_index);
+			       "r:c:s:f:ih", long_options, &option_index);
     
       if (c == -1) break;
     
@@ -421,26 +562,36 @@ int main(int argc, char** argv)
 	  controlopt = strtoul(optarg, 0, 0);
 	  if ( controlopt > 0xFF )
 	    {
-	      cerr << "Error: invalid control parameter, must be < 0xFF" << endl;
+	      LOG_FATAL("Error: invalid control parameter, must be < 0xFF");
 	      exit(EXIT_FAILURE);
 	    }
 	  rcucontrol = controlopt;
 #if 0
-	  cout << formatString("control=0x%02x", rcucontrol) << endl;
+	  LOG_DEBUG(formatString("control=0x%02x", rcucontrol));
 #endif
 	  break;
       
 	case 's':
-	  centersubband = atoi(optarg);
+	  if (optarg) centersubband = atoi(optarg);
+	  LOG_DEBUG_STR("centersubband=" << centersubband);
+	  break;
+	  
+	case 'f':
+	  if (optarg) frequency = atof(optarg) * 1e6;
+	  LOG_DEBUG_STR("frequency=" << frequency);
 	  break;
       
 	case 'h':
 	  usage();
 	  exit(EXIT_SUCCESS);
 	  break;
+
+	case 'i':
+	  initialize = true;
+	  break;
       
 	case '?':
-	  cerr << "Error: error in option '" << char(optopt) << "'." << endl;
+	  LOG_FATAL_STR("Error: error in option '" << char(optopt) << "'.");
 	  exit(EXIT_FAILURE);
 	  break;
       
@@ -450,33 +601,53 @@ int main(int argc, char** argv)
 	}
     }
 
+  // convert frequency to center subband
+  if (0 == centersubband)
+  {
+    centersubband = freq2subband(frequency);
+  }
+
   // check for valid
   if (device_set.count() == 0 || device_set.count() > (unsigned int)n_devices)
     {
-      cerr << "Error: invalid device set or device set not specified" << endl;
+      LOG_FATAL("Error: invalid device set or device set not specified");
       exit(EXIT_FAILURE);
     }
 
-  if (centersubband <= N_SELECTED_SUBBANDS/2-1 || centersubband >= 512-(N_SELECTED_SUBBANDS/2-1))
+  if (centersubband < N_SELECTED_SUBBANDS/2 || centersubband >= 512-(N_SELECTED_SUBBANDS/2))
     {
-      cerr << "Error: invalid center subband index, must be >= " << N_SELECTED_SUBBANDS/2-1 << " and < " << 512-(N_SELECTED_SUBBANDS/2-1) << endl;
+      LOG_WARN_STR("Warning: invalid center subband index, must be >= " << N_SELECTED_SUBBANDS/2 
+		   << " and < " << 512-(N_SELECTED_SUBBANDS/2));
     }
 
+  Tuner t("Tuner", device_set, n_devices, rcucontrol, centersubband, initialize);
+  try
+    {
+      t.run();
+    }
+  catch (Exception e)
+    {
+      LOG_FATAL_STR("Error: exception: " << e.text());
+      exit(EXIT_FAILURE);
+    }
+
+#if 0
   Suite s("Tuner", &cerr);
-  s.addTest(new Tuner("Tuner", device_set, n_devices, rcucontrol, centersubband));
+  s.addTest(new Tuner(
   try
     {
       s.run();
     }
   catch (Exception e)
     {
-      cerr << "Error: exception: " << e.text() << endl;
+      LOG_FATAL_STR("Error: exception: " << e.text());
       exit(EXIT_FAILURE);
     }
   long nFail = s.report();
   s.free();
+#endif
 
   LOG_INFO("Normal termination of program");
 
-  return nFail;
+  return 0;
 }
