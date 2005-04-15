@@ -64,7 +64,7 @@ TGCFResult GCFPVDouble::setValue(const string& valueData)
   return result;
 }
 
-string GCFPVDouble::getValueAsString(const string& format)
+string GCFPVDouble::getValueAsString(const string& format) const
 {
   string retVal;
   if (format.length() == 0)

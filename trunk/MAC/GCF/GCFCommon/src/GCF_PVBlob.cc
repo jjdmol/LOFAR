@@ -114,8 +114,9 @@ TGCFResult GCFPVBlob::setValue(const string& value)
   return result;
 }
 
-string GCFPVBlob::getValueAsString(const string& format)
+string GCFPVBlob::getValueAsString(const string& format) const
 {
+  return "Not implemented yet!";
 }
 
 GCFPValue* GCFPVBlob::clone() const

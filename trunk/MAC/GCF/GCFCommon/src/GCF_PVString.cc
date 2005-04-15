@@ -64,7 +64,7 @@ TGCFResult GCFPVString::setValue(const string& value)
   return result;
 }
 
-string GCFPVString::getValueAsString(const string& format)
+string GCFPVString::getValueAsString(const string& format) const
 {
   string retVal;
   if (format.length() == 0)

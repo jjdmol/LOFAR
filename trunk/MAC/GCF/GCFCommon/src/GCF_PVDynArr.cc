@@ -139,9 +139,9 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
   }
 }
 
-string GCFPVDynArr::getValueAsString(const string& format)
+string GCFPVDynArr::getValueAsString(const string& format) const
 {
-  return "Not yet implemented";
+  return "Not yet implemented!";
 }
 
 GCFPValue* GCFPVDynArr::clone() const

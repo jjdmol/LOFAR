@@ -91,7 +91,7 @@ class GCFPValue
 
     // returns the value of the concrete type class in a string
     // the default format is like the expected format for the setValue(string) method
-    virtual string getValueAsString(const string& format = "") = 0;
+    virtual string getValueAsString(const string& format = "") const = 0;
 
     /** 
      * Static method
