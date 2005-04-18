@@ -74,6 +74,9 @@ namespace LOFAR
     DH_RSPSync::syncStamp_t itsNextStamp;
     DH_RSPSync::syncStamp_t itsDelay;    
     bool itsReadNext; // Do we need to read at the beginning of the next process()?
+
+    static ProfilingState theirWaitingState;
+    static ProfilingState theirCatchingUpState;
   };
 
   inline void WH_RSP::setDelay(const DH_RSPSync::syncStamp_t newDelay)
