@@ -69,17 +69,18 @@ void GCFTask::init(int argc, char** argv)
   _argv = argv;
   
   ParameterSet* pParamSet = ParameterSet::instance();
-  string appName(argv[0]);
-  pParamSet->adoptFile(appName + ".conf");
+  char* appString = strrchr(argv[0], '/');
+  string appName((appString?appString+1:argv[0]));
+  pParamSet->adoptFile(string(GCF_TM_SYSCONF "/") + appName + ".conf");
 
   ifstream    logPropFile;
 
   //# Try to open the file
-  string logPropFileName = appName + ".log_prop";
+  string logPropFileName = string(GCF_TM_SYSCONF "/") + appName + ".log_prop";
   logPropFile.open(logPropFileName.c_str(), ifstream::in);
   if (!logPropFile) 
   {
-    logPropFileName = "./mac.log_prop";
+    logPropFileName = GCF_TM_SYSCONF "/mac.log_prop";
   }
   else
   {

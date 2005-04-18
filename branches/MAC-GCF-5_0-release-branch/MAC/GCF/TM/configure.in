@@ -10,6 +10,15 @@ AM_INIT_AUTOMAKE(GCF/TM, 4.2)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
+dnl Define the prefix to allow the use of this path in programs
+AC_DEFINE_UNQUOTED([GCF_TM_PREFIX],["${prefix}"],[Path to GCF/TM install prefix directory.])
+GCF_TM_PREFIX="${prefix}"
+AC_SUBST([GCF_TM_PREFIX])
+
+AC_DEFINE_UNQUOTED([GCF_TM_SYSCONF],["${prefix}/etc"],[Path to GCF/TM install prefix directory.])
+GCF_TM_SYSCONF="${prefix}/etc"
+AC_SUBST([GCF_TM_SYSCONF])
+
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC

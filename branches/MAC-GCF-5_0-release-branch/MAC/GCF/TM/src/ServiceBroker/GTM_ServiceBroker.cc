@@ -52,7 +52,7 @@ GTMServiceBroker::GTMServiceBroker() :
 
   // initialize the port
   _serviceBroker.init(*this, "client", GCFPortInterface::SAP, SB_PROTOCOL);
-  ParameterSet::instance()->adoptFile("ServiceBroker.conf");
+  ParameterSet::instance()->adoptFile(GCF_TM_SYSCONF "/ServiceBroker.conf");
 }
 
 GTMServiceBroker::~GTMServiceBroker()
