@@ -34,7 +34,7 @@
 #include "mpi.h"
 
 #ifdef HAVE_MPI
-#include "/usr/local/Cluster-Apps/mpich-1.2.5.2-icc80/include/mpe.h"
+#include "mpe.h"
 #endif
 
 namespace LOFAR
@@ -96,4 +96,21 @@ void Profiler::deActivate()
 
 }
 
-#endif
+#endif // HAVE_MPI_PROFILER is defined
+
+namespace LOFAR {
+
+ProfilingState::ProfilingState():
+  itsInState(false),
+  itsState(0)
+{
+}
+
+void ProfilingState::init(const char* name, const char* color)
+{
+  if (itsState==0)
+    itsState = Profiler::defineState(name, color);
+}
+
+} //namespace LOFAR
+
