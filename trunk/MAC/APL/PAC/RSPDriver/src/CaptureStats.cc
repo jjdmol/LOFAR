@@ -188,7 +188,7 @@ std::bitset<MAX_N_RCUS> strtoset(const char* str, unsigned int max)
   return rcuset;
 }
 
-GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -201,7 +201,8 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& /*po
 	string rcuspec;
 	bool done = false;
 
-	while (!done) {
+	while (!done && cin) {
+
 	  // get command
 	  cin >> symbol;
 
@@ -241,6 +242,7 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& /*po
 
 	      cin >> m_format;
 	      m_format = "250-" + m_format + "\n"; // prepend 250- prompt
+	      cout << "210 Ok." << endl;
 
 	    } else {
 
@@ -260,7 +262,23 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& /*po
 	    cout << "500 Syntax error" << endl;
 	  }
 	}
+
+	if (!cin) { // lost connection with stdin
+	  exit(EXIT_FAILURE);
+	}
       }
+      break;
+
+    case F_DISCONNECTED:
+      {
+	port.close();
+	cout << "500 Error: port '" << port.getName() << "' disconnected." << endl;
+	exit(EXIT_FAILURE);
+      }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
       break;
     }
 
@@ -492,7 +510,8 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
     case F_DISCONNECTED:
     {
       port.close();
-      TRAN(CaptureStats::initial);
+      cout << "500 Error: port '" << port.getName() << "' disconnected." << endl;
+      exit(EXIT_FAILURE);
     }
     break;
 
