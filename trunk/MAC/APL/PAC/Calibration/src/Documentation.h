@@ -146,11 +146,11 @@ void RemoteStationCalibration::calibrate(const SubArray&    subarray,
 
 Various classes contain array classes based on the Blitz++ array
 template package. A Blitz++ array is declared using the element type
-and number of dimensions. The following example declares a three
-dimensional array of complex doubles with dimensions 96 x 96 x 512.
+and number of dimensions. The following example declares a four
+dimensional array of complex doubles with dimensions 96 x 96 x 2 x 2.
 
 \code
-Array<complex<double>, 4> acm(96, 96, 512);
+Array<complex<double>, 4> acm(96, 96, 2, 2);
 \endcode
 
 For more specific information on how to use Blitz++ the reader is
