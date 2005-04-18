@@ -38,7 +38,7 @@ void Source::getPos(double& ra, double& dec) const
 
 bool Source::getFlux(int n, double& freq, double& flux) const
 {
-  if (n < 0 || n >= (int)m_flux.size()) {
+  if (n < 0 || n >= (int)m_flux.extent(firstDim)) {
 
     freq = 0; 
     flux = 0;
