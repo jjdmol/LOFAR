@@ -224,10 +224,10 @@ void WH_Correlator::process() {
 //	out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
 
 	for (int sample = 0; sample < itsNsamples; sample++) {
-	  *out_ptr     += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
-	  *(out_ptr+1) += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
-	  *(out_ptr+2) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
-	  *(out_ptr+3) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
+	  *out_ptr     += *(in_buffer+s1_addr) * conj( *(in_buffer+s2_addr));     // XX
+	  *(out_ptr+1) += *(in_buffer+s1_addr) * conj(*(in_buffer+s2_addr+1));   // XY
+	  *(out_ptr+2) += *(in_buffer+s1_addr+1) * conj(*(in_buffer+s2_addr));   // YX
+	  *(out_ptr+3) += *(in_buffer+s1_addr+1) * conj(*(in_buffer+s2_addr+1)); // YY
 	  s1_addr+=itsNpolarisations*itsNelements; 
 	  s2_addr+=itsNpolarisations*itsNelements;
 	} // sample
@@ -239,9 +239,9 @@ void WH_Correlator::process() {
 #ifdef DO_TIMING
   stoptime = timer();
 #endif
-  
-  delete[](in_buffer);
 
+  delete[](in_buffer);
+  
 #ifdef DO_TIMING
 #ifdef HAVE_MPI
   double elapsed_time = (stoptime-starttime);
