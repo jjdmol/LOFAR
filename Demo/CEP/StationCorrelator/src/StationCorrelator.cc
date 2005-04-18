@@ -33,6 +33,7 @@
 #include <TH_RSP.h>
 
 #include <tinyCEP/WorkHolder.h>
+#include <tinyCEP/Profiler.h>
 
 #include <CEPFrame/Step.h>
 #include <CEPFrame/WH_Empty.h>
@@ -118,7 +119,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     if (useRealRSP) {
       string iface = itsKVM["interfaces"].getVecString()[i];
-      cout<<"interface: "<<iface<<endl;
+      //      cout<<"interface: "<<iface<<endl;
       string oMac  = itsKVM["oMacs"].getVecString()[i];
       string rMac  = itsKVM["rMacs"].getVecString()[i];
       itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_RSP(iface.c_str(), 
@@ -134,6 +135,8 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     if (i != 0) {
       // we're a syncSlave. Connect the second input to an appropriate output.
       connect(itsRSPsteps[0], itsRSPsteps[i], itsNcorrelator + i - 1, 1);
+      itsRSPsteps[0]->setOutRate(10000, itsNcorrelator + i - 1);
+      itsRSPsteps[i]->setInRate(10000, 1);
     }
   }
 
@@ -151,7 +154,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     // the transpose collects data to intergrate over, so only the input 
     // and process methods run fast
     itsTsteps[i]->setOutRate(slow_rate);
-    itsTsteps[i]->runOnNode(lastFreeNode++); // do not increase lastFreeNode here, it needs to run on the same node
+    itsTsteps[i]->runOnNode(lastFreeNode); // do not increase lastFreeNode here, it needs to run on the same node
 
     // connect the Transpose step just created to the correct RSP outputs
     for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
@@ -188,6 +191,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     dumpstep.setInRate(slow_rate);
     dumpstep.setProcessRate(slow_rate);
     dumpstep.setOutRate(slow_rate);
+    //cout<<"Dump on node "<<lastFreeNode<<endl;
     dumpstep.runOnNode(lastFreeNode++);
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
@@ -207,6 +211,9 @@ void StationCorrelator::prerun() {
     
 void StationCorrelator::run(int steps) {
   LOG_TRACE_FLOW_STR("Start StationCorrelator::run() "  );
+#ifdef HAVE_MPI
+  TH_MPI::synchroniseAllProcesses();
+#endif
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
     getComposite().process();
@@ -252,17 +259,20 @@ int main (int argc, const char** argv) {
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
     correlator.baseDefine(kvm);
-    cout << "defined" << endl;
+    //    cout << "defined" << endl;
+    Profiler::init();
     correlator.basePrerun();
-    cout << "init done" << endl;
+    //    cout << "init done" << endl;
+    Profiler::activate();
     correlator.baseRun(kvm.getInt("runsteps",1));
-    cout << "run" << endl;
-    correlator.baseDump();
+    //    cout << "run" << endl;
+    //correlator.baseDump();
     correlator.baseQuit();
+    Profiler::deActivate();
 
   } catch (std::exception& x) {
-    cout << "Unexpected exception" << endl;
-    cerr << x.what() << endl; 
+    cerr << "Unexpected exception: " << x.what() << endl; 
+    cout << "Unexpected exception: " << x.what() << endl; 
   }
   return 0;
 }
