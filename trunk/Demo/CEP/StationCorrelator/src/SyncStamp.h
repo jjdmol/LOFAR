@@ -23,7 +23,7 @@
 #ifndef SYNCSTAMP_H
 #define SYNCSTAMP_H
 
-#define MAX_BLOCK_ID 1000
+#define MAX_BLOCK_ID 156250
 
 #include <Common/lofar_iostream.h>
 
