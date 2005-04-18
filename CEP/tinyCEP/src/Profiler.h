@@ -69,6 +69,20 @@ private:
   
 };
 
+class ProfilingState
+{
+public:
+  ProfilingState();
+  
+  void enter();
+  void leave();
+  void init(const char* name, const char* color);
+
+private:
+  bool itsInState;
+  int itsState;
+};
+
 #ifndef HAVE_MPI_PROFILER
 inline void Profiler::init() {};
 inline int  Profiler::defineState (const char*, const char*) {return 0;}
@@ -76,6 +90,25 @@ inline void Profiler::enterState (int) {};
 inline void Profiler::leaveState (int) {};
 inline void Profiler::activate() {};
 inline void Profiler::deActivate() {};
+
+inline void ProfilingState::enter() {};
+inline void ProfilingState::leave() {};
+
+#else
+
+inline void ProfilingState::enter() {
+  if (!itsInState){
+    Profiler::enterState(itsState);
+    itsInState = true;
+  }
+};
+inline void ProfilingState::leave() {
+  if (itsInState) {
+    Profiler::leaveState(itsState);
+    itsInState = false;
+  }
+};
+
 #endif
 
 }
