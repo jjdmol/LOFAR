@@ -23,7 +23,7 @@
 #ifndef CEPFRAME_SIMULATORPARSE_H
 #define CEPFRAME_SIMULATORPARSE_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <Common/lofar_complex.h>

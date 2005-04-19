@@ -2,7 +2,7 @@
 #ifndef TINYCEP_EXAMPLE_H
 #define TINYCEP_EXAMPLE_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/KeyValueMap.h>
 

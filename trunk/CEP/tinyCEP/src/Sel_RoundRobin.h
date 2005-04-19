@@ -23,7 +23,7 @@
 #ifndef TINYCEP_SEL_ROUNDROBIN_H
 #define TINYCEP_SEL_ROUNDROBIN_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include "tinyCEP/Selector.h"
 

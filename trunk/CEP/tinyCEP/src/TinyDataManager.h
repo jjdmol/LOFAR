@@ -23,7 +23,7 @@
 #ifndef TINYDEP_TINYDATAMANAGER_H
 #define TINYDEP_TINYDATAMANAGER_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/LofarLogger.h>
 #include <Transport/DataHolder.h>
 
