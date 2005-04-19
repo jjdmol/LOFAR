@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-
+#include <lofar_config.h>
 #include <PSS3/MNS/MeqMatrix.h>
 #include <PSS3/MNS/MeqMatrixTmp.h>
 #include <PSS3/MNS/MeqMatrixRealSca.h>
