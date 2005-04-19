@@ -23,7 +23,7 @@
 #ifndef TINYFRAME_WORKHOLDER_H
 #define TINYFRAME_WORKHOLDER_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <tinyCEP/TinyDataManager.h>
 /* #include <Common/lofar_iostream.h> */

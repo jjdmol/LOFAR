@@ -23,7 +23,7 @@
 #ifndef TINYCEP_TINYAPPLICATIONHOLDER_H
 #define TINYCEP_TINYAPPLICATIONHOLDER_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <Transport/DataHolder.h>
