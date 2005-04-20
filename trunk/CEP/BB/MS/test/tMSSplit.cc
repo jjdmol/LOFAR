@@ -20,6 +20,12 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+#include <Common/BlobIStream.h>
+#include <Common/BlobIBufStream.h>
+#include <Common/BlobArray.h>
+#include <Common/LofarLogger.h>
+
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -27,10 +33,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/IO/RegularFileIO.h>
 #include <casa/Exceptions/Error.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobArray.h>
-#include <Common/LofarLogger.h>
+
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
