@@ -4,17 +4,73 @@
 
 include 'table.g'
 
-mssplit := function (msin, selcommand, msout, datacolumn='DATA', deepcopy=T)
+mssplit := function (msin, msout, datacolumn, nparts, machs, remdir)
 {
     t:=table (msin);
     if (is_fail(t)) fail;
-    if (deepcopy) {
-	t1 := t.query (selcommand, sortlist='TIME,ANTENNA1,ANTENNA2',
-		       name=spaste(msout,'_tmp'));
-    } else {
-	t1 := t.query (selcommand, sortlist='TIME,ANTENNA1,ANTENNA2',
-		       name=msout);
+    # Determine nr of spectral windows, subarrays, etc.
+    t1:=t.query(sortlist='unique DATA_DESC_ID, ARRAY_ID');
+    if (is_fail(t1)) fail;
+    nr := t1.nrows();
+    arrids := t1.getcol ('ARRAY_ID');
+    ddids  := t1.getcol ('DATA_DESC_ID');
+    t1.close();
+    if (nr == 0) {
+	fail paste("No rows in MS",msin);
     }
+    if (nr > nparts) {
+	fail paste('Nr of subarrays and spectral windows (=', nr,
+		   ') exceeds nparts =(', nparts, ')');
+    }
+    if (nr > 1) {
+	fail 'Multiple subarray por spectral windows cannot be handled yet';
+    }
+    # Determine nr of baselines
+    t1:=t.query(sortlist='unique ANTENNA1 ANTENNA2');
+    if (is_fail(t1)) fail;
+    nrbl := t1.nrows();
+    ant1 := t1.getcol('ANTENNA1');
+    ant2 := t1.getcol('ANTENNA2');
+    t1.close();
+    # Fill matrix telling which baselines are available.
+    #  0 = not available
+    #  1 = available
+    # -1 = available mirrored (thus 1 in opposite cell)
+    nrant := max(max(ant1), max(ant2));
+    blmat := array(0, nrant, nrant);
+    for (i in [1:len(ant1)]) {
+	blmat[ant1[i],ant2[i]] := 1;     # real baseline
+	blmat[ant2[i],ant1[i]] := -1;    # mirrored baseline
+    }
+    # Determine nr of baselines per part (evenly divided).
+    nrblpart := as_integer(nrbl / nparts);
+    nfpart := nrbl - nrblpart*nparts;         # nr of full parts
+    # Loop through all baselines and try to group them such that each group
+    # contains the fewest nr of antennas.
+    # First find the width of a square containing antennas giving a group.
+    width := 1;
+    a1 := [nrant];
+    a2 := [1];
+    while (sum(abs(blmat[a1,a2])) < nrpbl) {
+	a1 := [nrant-width:nrant];
+	width +:= 1;
+	a2 := [1:width];
+    }
+    nrpbl := nrblpart;
+    if (partnr <= nfpart) nrpbl +:= 1;
+	    
+    # Start with the first group.
+    inx1 := nrant;
+    inx2 := 1;
+    grpnr := 1;
+    nrpbl := 0;
+    while (nrpbl < nrblpart) {
+	
+    
+    # Create as many parts as needed.
+    for (seqnr in [1:nparts]) {
+    t1 := t.query (selcommand, sortlist='TIME,ANTENNA1,ANTENNA2',
+		   name=spaste(msout,'_tmp'));
     t.close();
     if (is_fail(t1)) fail;
     nr := t1.nrows();
@@ -22,7 +78,6 @@ mssplit := function (msin, selcommand, msout, datacolumn='DATA', deepcopy=T)
     if (nr == 0) {
 	fail paste('no rows selected from table', msin);
     }
-    if (deepcopy) {
 	t1 := table (spaste(msout,'_tmp'), readonly=F);
 	# Check if data column is present.
 	cols := t1.colnames();
