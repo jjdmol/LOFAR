@@ -82,10 +82,10 @@ namespace LOFAR
       for (int fi=0; fi<itsMatrixYSize; fi++) {
 	for (int ti=0; ti<itsMatrixXSize; ti++) {
 #ifdef USE_INCREMENTAL
-	  DH_CMatrix::valueType c((float) number, (float) number+1);
+          DH_CMatrix::valueType c(makedcomplex((float)number,(float)number+1));
 	  number+=2;
 #else
-	  DH_CMatrix::valueType c((float) rand()/RAND_MAX, (float) rand()/RAND_MAX);
+	  DH_CMatrix::valueType c(makedcomplex((float)rand()/RAND_MAX,(float)rand()/RAND_MAX));
 #endif
 	  dh_matrix->value(ti, fi) = c;
 	  //cout<<"xi, yi, c, matrix[xi,yi]: "<<xi<<", "<<yi<<", "<<c<<", "<<dh_matrix->value(xi,yi)<<endl;
