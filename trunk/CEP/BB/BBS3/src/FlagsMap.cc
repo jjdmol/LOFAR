@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include <BBS3/FlagsMap.h>
 
 namespace LOFAR

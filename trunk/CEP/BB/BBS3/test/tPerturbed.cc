@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/Prediffer.h>
 #include <BBS3/Solver.h>
 #include <BBS3/MNS/MeqMatrix.h>

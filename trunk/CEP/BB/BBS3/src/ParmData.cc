@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/ParmData.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>

@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/Prediffer.h>
 #include <BBS3/Solver.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
@@ -36,11 +37,6 @@
 #include <malloc.h>
 
 #include <Common/hexdump.h>
-
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobIBufChar.h>
 
 
 using namespace LOFAR;
