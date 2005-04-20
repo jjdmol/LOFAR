@@ -26,7 +26,7 @@ namespace LOFAR
 
   class DH_CMatrix: public DataHolder {
   public:
-    typedef complex<double> valueType;
+    typedef LOFAR::dcomplex valueType;
     explicit DH_CMatrix (const string& name = "", 
 			 int xsize = 0, 
 			 int ysize = 0, 
