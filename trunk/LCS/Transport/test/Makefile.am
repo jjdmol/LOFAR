@@ -47,8 +47,7 @@ TESTS	=					\
 	ExampleMPI_test.sh			\
 	ExampleVarBuf_test.sh			\
 	ExampleSocket_test.sh		        \
-	tTH_Socket_test.sh                      \
-        ExampleEthernet_test.sh
+	tTH_Socket_test.sh
 
 
 include $(lofar_sharedir)/Makefile.common
