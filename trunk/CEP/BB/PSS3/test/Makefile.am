@@ -7,9 +7,8 @@ tBBS2_SOURCES = tBBS2.cc
 LDADD				= ../src/libpss3.la 
 DEPENDENCIES			= ../src/libpss3.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
-				  lofar_sharedir=$(lofar_sharedir) \
-				  common_top_builddir=$(common_top_builddir)
+TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+				  AIPSPP=$(AIPSPP)
 
 #TESTS = tBBS2_test.sh	
 
