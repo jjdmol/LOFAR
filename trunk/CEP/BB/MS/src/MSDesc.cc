@@ -20,6 +20,12 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+#include <Common/BlobOStream.h>
+#include <Common/BlobOBufStream.h>
+#include <Common/BlobArray.h>
+#include <Common/LofarLogger.h>
+
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSAntenna.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
@@ -38,10 +44,7 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Exceptions/Error.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobOBufStream.h>
-#include <Common/BlobArray.h>
-#include <Common/LofarLogger.h>
+
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
