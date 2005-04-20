@@ -13,7 +13,8 @@ t3C343_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
 LDADD				= ../src/libbbs3.la 
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
-				  MPIBIN=$(MPIBIN)
+				  MPIBIN=$(MPIBIN) \
+				  AIPSPP=$(AIPSPP)
 
 # TESTS = tBBS3_test.sh
 TESTS = tPredSolv.sh tPerturbed.sh
