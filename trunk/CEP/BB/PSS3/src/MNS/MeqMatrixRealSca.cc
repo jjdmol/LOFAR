@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-
+#include <lofar_config.h>
 #include <PSS3/MNS/MeqMatrixRealSca.h>
 #include <PSS3/MNS/MeqMatrixRealArr.h>
 #include <PSS3/MNS/MeqMatrixComplexSca.h>
@@ -28,6 +28,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
 #include <Common/lofar_iostream.h>
+#include <cmath>
 
 using namespace casa;
 

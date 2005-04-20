@@ -20,13 +20,14 @@
 //#
 //# $Id$
 
-
+#include <lofar_config.h>
 #include <PSS3/MNS/MeqMatrixRealSca.h>
 #include <PSS3/MNS/MeqMatrixRealArr.h>
 #include <PSS3/MNS/MeqMatrixComplexSca.h>
 #include <PSS3/MNS/MeqMatrixComplexArr.h>
 #include <Common/Debug.h>
 #include <casa/BasicSL/Constants.h>
+#include <cmath>
 
 using namespace casa;
 
