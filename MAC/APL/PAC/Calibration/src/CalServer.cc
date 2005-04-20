@@ -214,7 +214,7 @@ void CalServer::calibrate()
   //
   try 
     {
-      ParameterSet ps(string(CAL_SYSCONF) + "/" + string("SpectralWindow.conf"));
+      ParameterSet ps(CAL_SYSCONF "/SpectralWindow.conf");
 
       //
       // load the spectral window configurations
@@ -225,32 +225,30 @@ void CalServer::calibrate()
       //
       // load the dipole model
       //
-      m_dipolemodel = DipoleModelLoader::loadFromFile("DipoleModel.conf");
+      m_dipolemodel = DipoleModelLoader::loadFromFile(CAL_SYSCONF "/DipoleModel.conf");
 
       //cout << "Dipole model=" << m_dipolemodel->getModel() << endl;
 
       //
       // load the source catalog
       //
-      m_catalog = SourceCatalogLoader::loadFromFile("SourceCatalog.conf");
+      m_catalog = SourceCatalogLoader::loadFromFile(CAL_SYSCONF "/SourceCatalog.conf");
 
       //
       // Load antenna arrays
       //
-      ps = ParameterSet(string(CAL_SYSCONF) + "/" + string("Antennas.conf"));
-
-      AntennaArray* lba = AntennaArrayLoader::loadFromBlitzString("LBA", ps["LBA_POSITIONS"]);
+      AntennaArray* lba = AntennaArrayLoader::loadFromFile("LBA", CAL_SYSCONF "/LBAntennas.conf");
       m_arrays.push_back(*lba);
       delete lba;
 
-      AntennaArray* hba = AntennaArrayLoader::loadFromBlitzString("HBA", ps["HBA_POSITIONS"]);
+      AntennaArray* hba = AntennaArrayLoader::loadFromFile("HBA", CAL_SYSCONF "/HBAntennas.conf");
       m_arrays.push_back(*hba);
       delete hba;
 
       //
       // load the ACC
       //
-      m_acc = ACCLoader::loadFromFile(string(CAL_SYSCONF) + "/" + string("ACC.conf"));
+      m_acc = ACCLoader::loadFromFile(CAL_SYSCONF "/ACC.conf");
 
       if (!m_acc)
 	{

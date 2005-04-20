@@ -24,6 +24,7 @@
 #include "AntennaArray.h"
 
 #include <blitz/array.h>
+#include <fstream>
 
 using namespace CAL;
 using namespace std;
@@ -59,4 +60,20 @@ AntennaArray* AntennaArrayLoader::loadFromBlitzString(std::string name, std::str
   arraystream >> positions;
 
   return new AntennaArray(name, positions);
+}
+
+AntennaArray* AntennaArrayLoader::loadFromFile(std::string name, std::string filename)
+{
+  AntennaArray* newarray = 0;
+  Array<double, 3> positions;
+
+  ifstream antstream(filename.c_str());
+
+  if (antstream.is_open())
+    {
+      antstream >> positions;
+      newarray = new AntennaArray(name, positions);
+    }
+
+  return newarray;
 }

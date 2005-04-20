@@ -19,7 +19,8 @@ BUILT_SOURCES = \
 	SpectralWindow.conf \
 	DipoleModel.conf \
 	SourceCatalog.conf \
-	Antennas.conf \
+	LBAntennas.conf \
+	HBAntennas.conf \
 	ACC.conf \
 	CalServer.log_prop
 
@@ -31,7 +32,8 @@ sysconf_DATA = \
 	SpectralWindow.conf \
 	DipoleModel.conf \
 	SourceCatalog.conf \
-	Antennas.conf \
+	LBAntennas.conf \
+	HBAntennas.conf \
 	ACC.conf \
 	CalServer.log_prop
 

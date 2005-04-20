@@ -77,6 +77,7 @@ namespace CAL
   {
   public:
     static AntennaArray* loadFromBlitzString(std::string name, std::string array);
+    static AntennaArray* loadFromFile(std::string name, std::string filename);
   };
 };
 
