@@ -20,12 +20,13 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <PSS3/MNS/MeqParmSingle.h>
 #include <PSS3/MNS/MeqRequest.h>
 #include <Common/Debug.h>
 #include <Common/lofar_vector.h>
 #include <casa/Utilities/BinarySearch.h>
-
+#include <cmath>
 
 namespace LOFAR {
 
