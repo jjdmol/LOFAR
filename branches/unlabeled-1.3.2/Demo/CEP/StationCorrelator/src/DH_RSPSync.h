@@ -10,7 +10,7 @@
 #define DH_RSPSYNC_H
 
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Transport/DataHolder.h>
 #include <SyncStamp.h>
