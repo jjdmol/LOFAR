@@ -1,0 +1,9 @@
+mac.ns.CEPLCU_PAC_VBStartDaemon.server.host=localhost
+mac.ns.CEPLCU_PAC_VBStartDaemon.server.port=27004
+mac.ns.CEPLCU_PAC_VBStartDaemon.server.type=TCP
+mac.ns.VB1.client.host=localhost
+mac.ns.VB1.client.port=27005
+mac.ns.VB2.client.host=localhost
+mac.ns.VB2.client.port=27006
+
+
