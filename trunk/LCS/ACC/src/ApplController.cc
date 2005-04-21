@@ -517,7 +517,8 @@ void ApplController::checkForACCommands()
 			itsCmdStack->add(newMsg->getScheduleTime(), newMsg);
 			// Tell user it is scheduled.
 			itsServerStub->sendResult(newMsg->getCommand(), 
-									  AcCmdMaskOk | AcCmdMaskScheduled);
+									  AcCmdMaskOk | AcCmdMaskScheduled,
+									  "Command is scheduled");
 		}
 	}
 }
@@ -612,7 +613,7 @@ void ApplController::checkStateTimer()
 	LOG_DEBUG("State timer still running?");
 
 	if (itsStateEngine->IsStateExpired()) {
-		sendExecutionResult(0, "timed out");
+		sendExecutionResult(0, "Timed out");
 	}
 }
 

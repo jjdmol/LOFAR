@@ -80,11 +80,11 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 	DH_CtrlClient->setID(3);
 	DH_CtrlServer.setID(4);
 
+	sleep (2);					// give AC a little time to start up.
 	DH_CtrlClient->connectBidirectional(DH_CtrlServer, 
 					 			TH_Socket(host, "", port, false, syncClient),
 					 			TH_Socket("", host, port, true,  syncClient),
-								true);	// blocking
-	sleep (2);					// give AC a little time to start up.
+								syncClient);
 	DH_CtrlClient->init();
 
 	itsCommChan = new ApplControlComm(syncClient);
