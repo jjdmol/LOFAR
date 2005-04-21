@@ -1,0 +1,353 @@
+//-------------------------------------------------------------
+//    SAS PROTOCOL SPECIFICATION for TestHarness
+//    BeamServer PROTOCOL SPECIFICATION for TestHarness
+//    version April 1, 2005 
+//
+//    This file contains a computer readable interpretation of
+//    the SAS and BeamServer protocols for Lofar
+//
+//    This file is intended to be used as an input file for the
+//    AutoTest Script Engine. It is not a formal definition of 
+//    The SAS and BeamServer protocols: 
+//
+//    Change track:
+//    ==========================================================
+//    April 13, 2005  : Initial release, 
+//                      Tilman Mueller
+//
+//    ==========================================================
+//    Notes:
+//    The following diagram shows the connections between the 
+//    Test engine and Lofar
+//     _________________                                    ____________
+//    |Lofar		   			|                                  | Testengine	|
+//    |apps        			|                                  | 						|
+//    |   ______________|_    StartDaemon Protocol        _|__________  |
+//    |  | VirtualBackend |<-----------------------------|VILD stub   | |
+//    |  |________________|----------------------------->|____________| |
+//    |            			|                                  |            |
+//    |   ______________|_    LogicalDevice Protocol      _|__________  |
+//    |  | VirtualBackend |<-----------------------------|VI stub			| |
+//    |  |________________|----------------------------->|____________| |
+//    |            			|                                  |            |
+//    |_________________|                                  |____________|
+//                   
+//    This file contains four sections:
+//    [io]        : I/O configuration
+//    [type]      : type definitions
+//    [functions] : Messages sent to the Device under Test (DUT)
+//    [events]    : Messages received from the DuT.
+//
+//    The format of each section is explained in brief in the
+//    beginning of each section.
+
+
+[io]
+COM1 = { SOCKET, ccc , "client localhost 27004" } // client of VBStartDeemon
+COM2 = { SOCKET, ccc , "server localhost 27005" } // server for VB1
+
+// For serial ports: COM1 = { COM1, ccc , "Baud=1200 parity=N data=8 stop=1 octs=on" }
+
+
+#define PADDING        0x00
+
+[type]
+
+//    A type has a number of parameters: the first parameter
+//    defines the size in bytes. If there is a second and third
+//    parameter, these define the lower and upper limit.
+//
+//    If there is a fourth parameter, it can be a string
+//    with the following meanings:
+//    TIME          : Parameters of this type reflect a certain
+//                    time(span)
+//    ENUM          : Parameters of this type have a value with
+//                    an enumerated meaning.
+//    BITFIELD      : Parameters of this type are bitmap para-
+//                    meters.
+//    ASCII_0       : Field contains zero-terminated ASCII data.
+//                    Field is fixed-sized, but bytes following
+//                    the 0-byte are undefined and not checked.
+//    UNICODE_0     : Field contains zero-terminated UNICODE
+//                    data.
+//    ASCII         : Field contains non-terminated ASCII data.
+
+//
+//    The meaning of the remaining parameters depends of this
+//    string:
+//    TIME          : Has one additional parameter, which is
+//                    a float. This float indicates the time in
+//                    seconds intended of one unit.
+//    ENUM          : A list of additional parameters exists.
+//                    This list is intended to be self-explaining.
+//    BITFIELD      : A list of additional parameters exists.
+//                    If the bitfield is denoted as
+//                    (0xXXXX,0xXXXX), the first bitfield is
+//                    a mask, the second bitfield defines the
+//                    bits.
+
+
+//    First a small list of general purpose types is defined.
+//    Default type is interpreted as "Big endian"
+
+t_B1                  = {   1 }
+t_B2                  = {   2 }
+t_B3                  = {   3 }
+t_B4                  = {   4 }
+t_B6                  = {   6 }
+t_B8                  = {   8 }
+t_B16                 = {  16 }
+
+//    The remaining Lofar types:
+
+t_uShort              =  {   2 }
+t_Double              =  {   8 }
+t_Int                 =  {   4 }
+t_uInt                =  {   4 }
+t_Long                =  {   4 }
+t_uLong               =  {   4 }
+t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; strings are padded with \0
+
+//
+// NOTE: String workaround. The current version of the TestHarness for Lofar
+// has no native support for strings as used by Lofar. Lofar expects a string
+// to be prefixed by a 32 bit number that defines the length of the string that
+// follows. The TestHarness only supports 0-terminated strings and fixed size strings
+// with length prefixes. 
+// This protocol uses 0-terminated strings with a maximum length of 50 characters
+// It is possible to send less characters, but the total string length remains 50
+// characters and is padded with \0 characters.
+// The string is prepended with a constant indicating the length of the string
+// For example:
+//   0x32000000, // string length, big endian
+//   VIrootID                    : t_String50
+//
+
+// LOGICALDEVICE enums
+t_LD_Result           = { 4, 0x00000000, 0x00000003, ENUM,
+                             0x00000000 : "NO_ERROR",
+                             0x00000001 : "FILENOTFOUND",
+                             0x00000002 : "INCORRECT_NUMBER_OF_PARAMETERS",
+                             0x00000003 : "UNKNOWN_COMMAND"
+                       }
+
+t_SD_LogicalDeviceTypes = { 4, 0x00000001, 0x00000007, ENUM,
+                               0x00000001 : "VIRTUALINSTRUMENT",
+                               0x00000002 : "VIRTUALTELESCOPE", 
+                               0x00000003 : "VIRTUALARRAY", 
+                               0x00000004 : "STATIONRECEPTORGROUP", 
+                               0x00000005 : "ARRAYOPERATIONS", 
+                               0x00000006 : "STATIONOPERATIONS", 
+                               0x00000007 : "VIRTUALBACKEND"
+                       }
+
+t_SD_Result             = { 4, 0x00000000, 0x00000006, ENUM,
+                               0x00000000 : "NO_ERROR",
+                               0x00000001 : "UNSPECIFIED_ERROR", 
+                               0x00000002 : "UNSUPPORTED_LD", 
+                               0x00000003 : "FILENOTFOUND",
+                               0x00000004 : "PARAMETERNOTFOUND",
+                               0x00000005 : "INCORRECT_NUMBER_OF_PARAMETERS",
+                               0x00000006 : "UNKNOWN_COMMAND"
+                          }
+
+//
+// Signal ID's
+//
+// LOGICALDEVICE Protocol
+//
+//  0x01  CONNECT
+//  0x02  CONNECTED
+//  0x03  SCHEDULE
+//  0x04  SCHEDULED
+//  0x05  CANCELSCHEDULE
+//  0x06  SCHEDULECANCELLED
+//  0x07  CLAIM
+//  0x08  CLAIMED
+//  0x09  PREPARE
+//  0x0A  PREPARED
+//  0x0B  RESUME
+//  0x0C  RESUMED
+//  0x0D  SUSPEND
+//  0x0E  SUSPENDED
+//  0x0F  RELEASE
+//  0x10  RELEASED
+//
+// STARTDAEMON Protocol
+//
+//  0x01  SCHEDULE
+//  0x02  SCHEDULED
+//  0x03  STOP
+//
+// direction and protocol definitions:
+//
+//                      IN    OUT   INOUT
+//  SAS (MACScheduler)  0x4D  0x8D  0xCD
+//  ABS (BeamServer)    0x54  0x94  0xD4
+//  LD  (VB)            0x4B  0x8B  0xCB
+//  SD  (VBSD)          0x4C  0x8C  0xCC
+//
+
+[functions]
+// -------------------------------------------------------------------
+// ---------------------LOGICALDEVICE_Protocol------------------------
+// -------------------------------------------------------------------
+F_LOGICALDEVICE_CONNECTED =
+{
+  0x02, // signal Id
+  0x8B, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
+}
+
+F_LOGICALDEVICE_SCHEDULE =
+{
+  0x03, // signal Id
+  0x8B, // Direction and protocol
+  0x36000000, // message payload length. Depends on string length, big endian
+  0x32000000, // string length, big endian
+  fileName                   : t_String50
+}
+
+F_LOGICALDEVICE_CANCELSCHEDULE =
+{
+  0x05, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+F_LOGICALDEVICE_CLAIM =
+{
+  0x07, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+F_LOGICALDEVICE_PREPARE =
+{
+  0x09, // signal Id
+  0x8B, // Direction and protocol
+  x	: t_B4 // message payload length, big endian
+}
+
+F_LOGICALDEVICE_RESUME =
+{
+  0x0B, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+F_LOGICALDEVICE_SUSPEND =
+{
+  0x0D, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+F_LOGICALDEVICE_RELEASE =
+{
+  0x0F, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+// -------------------------------------------------------------------
+// ---------------------STARTDAEMON_Protocol------------------------
+// -------------------------------------------------------------------
+// If a parameter name is followed by an asterisk,
+//    (*), that parameter is used as the array size of the
+//    parameters which have a type followed by [].
+//
+F_STARTDAEMON_SCHEDULE =
+{
+  0x01, // signal Id
+  0x4C, // Direction and protocol
+  0x70000000,
+  logicalDeviceType           : t_SD_LogicalDeviceTypes,
+  0x32000000,
+  taskName                    : t_String50,
+  0x32000000,
+  fileName                    : t_String50
+}
+
+F_STARTDAEMON_STOP =
+{
+  0x03, // signal Id
+  0x4C, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+[events]
+// -------------------------------------------------------------------
+// ---------------------LOGICALDEVICE_Protocol------------------------
+// -------------------------------------------------------------------
+E_LOGICALDEVICE_CONNECT =
+{ 
+  0x01, // signal Id
+  0x4B, // Direction and protocol
+  0x36000000, // message payload length. Depends on string length, big endian
+  0x32000000, // string length, big endian
+  nodeId                    : t_String50
+}
+
+E_LOGICALDEVICE_SCHEDULED =
+{
+  0x04, // signal Id
+  0x4B, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
+}
+
+E_LOGICALDEVICE_SCHEDULECANCELLED =
+{
+  0x06, // signal Id
+  0x4B, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
+}
+
+E_LOGICALDEVICE_CLAIMED =
+{
+  0x08, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+} 
+
+E_LOGICALDEVICE_PREPARED =
+{
+  0x0A, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+} 
+
+E_LOGICALDEVICE_RESUMED =
+{
+  0x0C, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+E_LOGICALDEVICE_SUSPENDED =
+{
+  0x0E, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+E_LOGICALDEVICE_RELEASED =
+{
+  0x10, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+// -------------------------------------------------------------------
+// ---------------------STARTDAEMON_Protocol------------------------
+// -------------------------------------------------------------------
+E_STARTDAEMON_SCHEDULED =
+{
+  0x02, // signal Id
+  0x8C, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_SD_Result
+}

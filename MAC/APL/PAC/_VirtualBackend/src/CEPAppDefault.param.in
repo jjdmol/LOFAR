@@ -1,0 +1,19 @@
+#
+AC.timeout.createsubsets=  1 m
+AC.timeout.startup      =  1 m
+AC.timeout.define       = 40
+AC.timeout.init         = 40
+AC.timeout.run          = 30
+AC.timeout.pause        = 50
+AC.timeout.recover      = 50
+AC.timeout.snapshot     = 30
+AC.timeout.reinit       = 30
+AC.timeout.info         = 30
+AC.timeout.quit         = 60
+AC.timeout.exitdelay    = 15 m
+AC.timeout.kill         = 60
+#
+AC.application=
+AC.resultfile =
+
+AC.process[0].count =
