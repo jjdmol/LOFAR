@@ -157,10 +157,11 @@ bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg)
 //
 // sendResult(aResult, someOptions)
 //
-void ApplControlServer::sendResult(uint16	aResult, const string&	someOptions) 
+void ApplControlServer::sendResult(ACCmd			command, 
+								   uint16			aResult, 
+								   const string&	someOptions) 
 {
 	itsCommChan->getDataHolder()->setResult(aResult);
-	ACCmd command = itsCommChan->getDataHolder()->getCommand();
 	itsCommChan->sendCmd (static_cast<ACCmd>(command | ACCmdResult), 
 												0, 0, someOptions);
 

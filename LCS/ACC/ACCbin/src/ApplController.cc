@@ -41,7 +41,6 @@ ApplController::ApplController(const string&	configID) :
 	itsObsParamSet	 (new ParameterSet),
 	itsResultParamSet(new ParameterSet),
 	itsProcList		 (0),
-	itsNodeList      (0),
 	itsACCmdImpl     (new ACCmdImpl),
 	itsCmdStack      (new CmdStack),
 	itsProcListener  (0),
@@ -83,7 +82,6 @@ ApplController::~ApplController()
 	if (itsObsParamSet)    { delete itsObsParamSet;    }
 	if (itsResultParamSet) { delete itsResultParamSet; }
 	if (itsProcList)       { delete itsProcList;       }
-	if (itsNodeList)       { delete itsNodeList;       }
 	if (itsACCmdImpl)      { delete itsACCmdImpl;      }
 	if (itsCmdStack)       { delete itsCmdStack;       }
 	if (itsProcListener)   { delete itsProcListener;   }
@@ -212,7 +210,8 @@ void ApplController::sendExecutionResult(uint16			result,
 	LOG_DEBUG_STR("ApplController:sendExecutionResult(" << result << "," 
 															<< comment << ")");
 
-	itsServerStub ->sendResult(result, comment);	// notify user
+	// notify user
+	itsServerStub ->sendResult(itsCurACMsg->getCommand(), result, comment);	
 	itsAPAPool    ->stopAckCollection();			// stop collecting
 	itsCurState	  = StateNone;						// reset Cmd state
 	itsStateEngine->reset();						// reset state Engine
@@ -517,7 +516,8 @@ void ApplController::checkForACCommands()
 			// schedule it.
 			itsCmdStack->add(newMsg->getScheduleTime(), newMsg);
 			// Tell user it is scheduled.
-			itsServerStub->sendResult(AcCmdMaskOk | AcCmdMaskScheduled);
+			itsServerStub->sendResult(newMsg->getCommand(), 
+									  AcCmdMaskOk | AcCmdMaskScheduled);
 		}
 	}
 }

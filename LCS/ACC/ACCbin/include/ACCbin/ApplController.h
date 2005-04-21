@@ -87,7 +87,6 @@ private:
 	ParameterSet*		itsObsParamSet;	    // PS of observation, given by AM
 	ParameterSet*		itsResultParamSet;	// PS for collecting proc. results.
 	ItemList*			itsProcList;		// All AP's according to ObsParSet
-	ItemList*			itsNodeList;		// All Nodes acc. to ObsParSet
 	ACCmdImpl*			itsACCmdImpl;		// The command implementation
 	CmdStack*			itsCmdStack;		// Future commands stack
 	Socket*				itsProcListener;	// For AP's to connect to
