@@ -209,7 +209,7 @@ void GPMController::deletePropSet(const GCFPropertySet& propSet)
     pAction = &iter->second;
     if (pAction->pPropSet == &propSet)
     {
-      _actionSeqList.erase(iter);
+      pAction->pPropSet = 0;
       break;
     }
   }
@@ -377,6 +377,7 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
            iter != tmpSeqList.end(); ++iter)
       {
         pAction = &iter->second;
+        if (!pAction->pPropSet) continue;
         switch (pAction->signal)
         {
           case PA_REGISTER_SCOPE: registerScope(* (GCFMyPropertySet*)pAction->pPropSet); break;
