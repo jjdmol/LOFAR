@@ -118,7 +118,8 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 	switch (cmdType) {
 	case PCCmdInfo:		
 		// TODO: make a real implementation.
-		sendResult(PcCmdMaskOk, "ProcControlServer says:Not yet implemented");
+		sendResult(theMsg->getCommand(), PcCmdMaskOk, 
+					"ProcControlServer says:Not yet implemented");
 		return (true); 								
 	case PCCmdAnswer:	
 		sendAnswer = false; 
@@ -156,17 +157,18 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 	}
 
 	if (sendAnswer) {
-		sendResult(result ? PcCmdMaskOk : 0);
+		sendResult(theMsg->getCommand(), result ? PcCmdMaskOk : 0);
 	}
 
 	return (true);
 }
 
 
-void ProcControlServer::sendResult(uint16	aResult, const string&	someOptions) 
+void ProcControlServer::sendResult(PCCmd			command,
+								   uint16			aResult, 
+								   const string&	someOptions) 
 {
 	itsCommChan->getDataHolder()->setResult(aResult);
-	PCCmd command = itsCommChan->getDataHolder()->getCommand();
 	itsCommChan->sendCmd (static_cast<PCCmd>(command | PCCmdResult), 
 						  someOptions);
 }

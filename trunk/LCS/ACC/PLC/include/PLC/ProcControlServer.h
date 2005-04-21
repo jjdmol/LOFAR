@@ -72,10 +72,12 @@ public:
 	// Note: The KVpair should contain a timestamp for proper storage.
 	void	sendResultParameters(const string&	kvList);
 
-	// Function to read a message an call the corresponding function.
+	// Function to read a message and call the corresponding function.
 	bool	pollForMessage() const;
-	bool 	handleMessage(DH_ProcControl*	theMsg);
-	void	sendResult(uint16	aResult, const string&	someOptions = "");
+	bool 	handleMessage (DH_ProcControl*	theMsg);
+	void	sendResult    (PCCmd			command, 
+						   uint16			aResult, 
+						   const string&	someOptions = "");
 
 	inline DH_ProcControl*	getDataHolder() const;
 

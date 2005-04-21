@@ -76,7 +76,9 @@ public:
 
 	// Constructs a result message for the current command and sends it to
 	// the client side.
-	void	sendResult(uint16	aResult, const string&	someOptions = "");
+	void	sendResult(ACCmd			command,
+					   uint16			aResult, 
+					   const string&	someOptions = "");
 
 	// Get pointer to dataHolder
 	inline DH_ApplControl*	getDataHolder() const;
