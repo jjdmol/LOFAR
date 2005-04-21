@@ -1,0 +1,71 @@
+//
+// Protocol definition for the NodeManager
+//
+autogen definitions protocol;
+
+description = "Protocol for the NodeManager";
+prefix = "NM"; // for the signal names
+id = "(LOFAR::GCF::TM::F_APL_PROTOCOL + 20)";
+
+include = '<GCF/GCF_Defines.h>';
+
+prelude = << PRELUDE_END
+
+PRELUDE_END;
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = CLAIM;
+	dir = IN;
+	param = {
+		name = "nodesToClaim";
+		type = "string";
+	};
+};
+
+event = {
+	signal = CLAIMED;
+	dir = OUT;
+	param = {
+		name = "newClaimedNodes";
+		type = "string";
+	};
+	param = {
+		name = "releasedNodes";
+		type = "string";
+	};
+	param = {
+		name = "faultyNodes";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = RELEASE;
+	dir = IN;
+	param = {
+		name = "nodesToRelease";
+		type = "string";
+	};
+};
+
+event = {
+	signal = RELEASED;
+	dir = IN;	
+	param = {
+		name = "faultyNodes";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "unsigned int";
+	};
+};
