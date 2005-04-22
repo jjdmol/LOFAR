@@ -115,6 +115,11 @@ TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, con
       LOG_FATAL(e.message());
       result = SD_RESULT_PARAMETERNOTFOUND;
     }
+    catch(APLCommon::WrongVersionException& e)
+    {
+      LOG_FATAL(e.message());
+      result = SD_RESULT_WRONG_VERSION;
+    }
     catch(Exception& e)
     {
       LOG_FATAL(e.message());

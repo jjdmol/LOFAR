@@ -20,6 +20,6 @@ mac.ns.MACScheduler.VIparent_server.host=localhost
 # because it depends on the VI name
 #
 mac.VirtualInstrument.pvss.cmdline=-proj MAC
-mac.VirtualInstrument.retryTimeout=3600
-mac.VirtualInstrument.retryPeriod=10
+retryTimeout=25
+retryPeriod=10
 

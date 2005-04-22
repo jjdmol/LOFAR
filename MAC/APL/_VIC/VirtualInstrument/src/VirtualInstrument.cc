@@ -46,11 +46,16 @@ namespace AVI
 {
 INIT_TRACER_CONTEXT(VirtualInstrument,LOFARLOGGER_PACKAGE);
 
+// Logical Device version
+const string VirtualInstrument::VI_VERSION = string("1.0");
+
 const string VirtualInstrument::VI_PROPNAME_CONNECTEDSTATIONS     = string("connectedStations");
 const string VirtualInstrument::VI_PROPNAME_DISCONNECTEDSTATIONS  = string("disconnectedStations");
 
-VirtualInstrument::VirtualInstrument(const string& taskName, const string& parameterFile, GCFTask* pStartDaemon) :
-  LogicalDevice(taskName,parameterFile,pStartDaemon),
+VirtualInstrument::VirtualInstrument(const string& taskName, 
+                                     const string& parameterFile, 
+                                     GCFTask* pStartDaemon) :
+  LogicalDevice(taskName,parameterFile,pStartDaemon,VI_VERSION),
   m_vtSchedulerPropertySets(),
   m_disconnectedVTSchedulerPropertySets(),
   m_retryPropsetLoadTimerId(0)  
@@ -196,7 +201,7 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
   }
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -215,7 +220,7 @@ GCFEvent::TResult VirtualInstrument::concrete_initial_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -239,7 +244,7 @@ GCFEvent::TResult VirtualInstrument::concrete_idle_state(GCFEvent& event, GCFPor
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -262,7 +267,7 @@ GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GC
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -270,7 +275,7 @@ GCFEvent::TResult VirtualInstrument::concrete_claimed_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -281,7 +286,7 @@ GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, G
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/)
+GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -289,12 +294,13 @@ GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFP
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  newState=LOGICALDEVICE_STATE_GOINGDOWN;
+  newState=LOGICALDEVICE_STATE_IDLE;
+//  newState=LOGICALDEVICE_STATE_GOINGDOWN;
   return status;
 }
 

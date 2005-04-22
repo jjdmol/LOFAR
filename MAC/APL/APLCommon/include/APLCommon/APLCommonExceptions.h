@@ -34,6 +34,7 @@ namespace APLCommon {
   EXCEPTION_CLASS(APLCommonException,APLException);
   EXCEPTION_CLASS(ParameterNotFoundException,APLCommonException);
   EXCEPTION_CLASS(ParameterFileNotFoundException,APLCommonException);
+  EXCEPTION_CLASS(WrongVersionException,APLCommonException);
 
 }; // namespace APLCommon
 
