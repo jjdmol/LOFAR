@@ -38,6 +38,7 @@
 #include "APLCommon/PropertySetAnswerHandlerInterface.h"
 #include "APLCommon/PropertySetAnswer.h"
 #include "APLCommon/APLCommonExceptions.h"
+#include "APLCommon/LogicalDevice_Protocol.ph"
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -64,8 +65,10 @@ namespace APLCommon
 
       typedef enum
       {
-        LOGICALDEVICE_STATE_NOSTATE=-1,
-        LOGICALDEVICE_STATE_IDLE=0,
+        LOGICALDEVICE_STATE_NOSTATE=-2,
+        LOGICALDEVICE_STATE_DISABLED=-1,
+        LOGICALDEVICE_STATE_INITIAL=0,
+        LOGICALDEVICE_STATE_IDLE,
         LOGICALDEVICE_STATE_CLAIMING,
         LOGICALDEVICE_STATE_CLAIMED,
         LOGICALDEVICE_STATE_PREPARING,
@@ -75,6 +78,7 @@ namespace APLCommon
         LOGICALDEVICE_STATE_GOINGDOWN
       } TLogicalDeviceState;
 
+      static const string LD_STATE_STRING_DISABLED;
       static const string LD_STATE_STRING_INITIAL;
       static const string LD_STATE_STRING_IDLE;
       static const string LD_STATE_STRING_CLAIMING;
@@ -90,6 +94,7 @@ namespace APLCommon
       static const string LD_PROPNAME_COMMAND;
       static const string LD_PROPNAME_STATUS;
       static const string LD_PROPNAME_STATE;
+      static const string LD_PROPNAME_VERSION;
       static const string LD_PROPNAME_CLAIMTIME;
       static const string LD_PROPNAME_PREPARETIME;
       static const string LD_PROPNAME_STARTTIME;
@@ -107,8 +112,10 @@ namespace APLCommon
       
       explicit LogicalDevice(const string& taskName, 
                              const string& parameterFile, 
-                             GCF::TM::GCFTask* pStartDaemon) throw (APLCommon::ParameterFileNotFoundException, 
-                                                                    APLCommon::ParameterNotFoundException);
+                             GCF::TM::GCFTask* pStartDaemon,
+                             const string& version) throw (APLCommon::ParameterFileNotFoundException, 
+                                                           APLCommon::ParameterNotFoundException,
+                                                           APLCommon::WrongVersionException);
       virtual ~LogicalDevice();
 
       string& getServerPortName();
@@ -155,7 +162,7 @@ namespace APLCommon
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
       bool _isAPCLoaded() const;
       void _apcLoaded();
-      void _doStateTransition(const TLogicalDeviceState& newState);
+      void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode);
       void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       vector<string> _getChildKeys();
       void _sendEvent(GCFEventSharedPtr eventPtr, GCF::TM::GCFPortInterface& port);
@@ -169,13 +176,13 @@ namespace APLCommon
       time_t getStopTime() const;
 
       virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer)=0;
-      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual GCF::TM::GCFEvent::TResult concrete_claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p)=0;
-      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLDResult& errorCode)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
 
       virtual void concreteClaim(GCF::TM::GCFPortInterface& port)=0;
       virtual void concretePrepare(GCF::TM::GCFPortInterface& port)=0;
@@ -255,6 +262,9 @@ namespace APLCommon
 
       unsigned long                         m_retrySendTimerId;
       TEventBufferVector                    m_eventBuffer;
+      
+      TLDResult                             m_globalError;
+      const string                          m_version;
 
       ALLOC_TRACER_CONTEXT  
   };

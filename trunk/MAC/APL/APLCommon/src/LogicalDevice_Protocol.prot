@@ -41,6 +41,8 @@ enum TLDResult
   LD_RESULT_FILENOTFOUND,
   LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
   LD_RESULT_UNKNOWN_COMMAND,
+  LD_RESULT_DISABLED,
+  LD_RESULT_LOW_QUALITY,
 };
 
 PRELUDE_END;
@@ -135,6 +137,10 @@ event = {
 event = {
 	signal = CLAIMED;
 	dir = IN; // from child to parent
+  param = {
+    name = "result";
+    type = "TLDResult";
+  };
 };
 
 //
@@ -151,6 +157,10 @@ event = {
 event = {
 	signal = PREPARED;
 	dir = IN; // from child to parent
+  param = {
+    name = "result";
+    type = "TLDResult";
+  };
 };
 
 //
@@ -167,6 +177,10 @@ event = {
 event = {
 	signal = RESUMED;
 	dir = IN; // from child to parent
+  param = {
+    name = "result";
+    type = "TLDResult";
+  };
 };
 
 //
@@ -183,6 +197,10 @@ event = {
 event = {
 	signal = SUSPENDED;
 	dir = IN; // from child to parent
+  param = {
+    name = "result";
+    type = "TLDResult";
+  };
 };
 
 //
@@ -199,4 +217,8 @@ event = {
 event = {
 	signal = RELEASED;
 	dir = IN; // from child to parent
+  param = {
+    name = "result";
+    type = "TLDResult";
+  };
 };
