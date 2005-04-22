@@ -45,6 +45,7 @@ const string StartDaemon::PSTYPE_STARTDAEMON("TAplStartDaemon");
 const string StartDaemon::SD_PROPNAME_COMMAND("command");
 const string StartDaemon::SD_PROPNAME_STATUS("status");
 const string StartDaemon::SD_COMMAND_SCHEDULE("SCHEDULE");
+const string StartDaemon::SD_COMMAND_DESTROY_LOGICALDEVICE("DESTROY_LOGICALDEVICE");
 const string StartDaemon::SD_COMMAND_STOP("STOP");
 
 INIT_TRACER_CONTEXT(StartDaemon,LOFARLOGGER_PACKAGE);
@@ -58,7 +59,9 @@ StartDaemon::StartDaemon(const string& name) :
   m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL),
   m_childPorts(),
   m_factories(),
-  m_logicalDevices()
+  m_logicalDevices(),
+  m_garbageCollection(),
+  m_garbageCollectionTimerId(0)
 {
 #ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
   LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
@@ -85,14 +88,22 @@ void StartDaemon::registerFactory(TLogicalDeviceTypes ldType,boost::shared_ptr<L
 TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, const string& taskName, const string& fileName)
 {
   TSDResult result = SD_RESULT_NO_ERROR;
-  TFactoryMap::iterator it = m_factories.find(ldType);
-  if(m_factories.end() != it)
+  TFactoryMap::iterator itFactories = m_factories.find(ldType);
+  if(m_factories.end() != itFactories)
   {
     try
     {
-      boost::shared_ptr<LogicalDevice> ld = it->second->createLogicalDevice(taskName,fileName);
-      m_logicalDevices.push_back(ld);
-      ld->start(); // make initial transition
+      TLogicalDeviceMap::iterator itDevices = m_logicalDevices.find(taskName);
+      if(itDevices != m_logicalDevices.end())
+      {
+        result = SD_RESULT_ALREADY_EXISTS;
+      }
+      else
+      {
+        boost::shared_ptr<LogicalDevice> ld = itFactories->second->createLogicalDevice(taskName,fileName,this);
+        m_logicalDevices[taskName] = ld;
+        ld->start(); // make initial transition
+      }
     }
     catch(APLCommon::ParameterFileNotFoundException& e)
     {
@@ -114,6 +125,33 @@ TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, con
   {
     LOG_FATAL_STR("Requested Logical Device ("<<ldType<<") cannot be created by this StartDaemon");
     result = SD_RESULT_UNSUPPORTED_LD;
+  }
+  return result;
+}
+
+TSDResult StartDaemon::destroyLogicalDevice(const string& name)
+{
+  TSDResult result = SD_RESULT_NO_ERROR;
+  TLogicalDeviceMap::iterator it = m_logicalDevices.find(name);
+  if(it == m_logicalDevices.end())
+  {
+    result = SD_RESULT_LD_NOT_FOUND;
+  }
+  else
+  {
+    if(it->second->getLogicalDeviceState() == LogicalDevice::LOGICALDEVICE_STATE_GOINGDOWN)
+    {
+      // add the LD to the collection of garbage.
+      m_garbageCollection[it->first] = it->second;
+      m_garbageCollectionTimerId = m_serverPort.setTimer(0L,1000L); // 1000 microseconds
+      
+      // erase the LD from the collection of LD's.
+      m_logicalDevices.erase(it);
+    }
+    else
+    {
+      result = SD_RESULT_WRONG_STATE;
+    }
   }
   return result;
 }
@@ -221,6 +259,24 @@ GCFEvent::TResult StartDaemon::idle_state(GCFEvent& event, GCFPortInterface& por
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
+      
+    case F_TIMER:
+    {
+      GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+      if(timerEvent.id == m_garbageCollectionTimerId)
+      {
+        // garbage collection
+        TLogicalDeviceMap::iterator it = m_garbageCollection.begin();
+        while(it != m_garbageCollection.end())
+        {
+          m_garbageCollection.erase(it);
+          it = m_garbageCollection.begin();
+        }
+        port.cancelTimer(timerEvent.id);
+        m_garbageCollectionTimerId = 0;
+      }
+      break;
+    }
     
     case STARTDAEMON_SCHEDULE:
     {
@@ -233,6 +289,34 @@ GCFEvent::TResult StartDaemon::idle_state(GCFEvent& event, GCFPortInterface& por
       port.send(scheduledEvent);
       break;
     }
+    
+    case STARTDAEMON_DESTROY_LOGICALDEVICE:
+    {
+      STARTDAEMONDestroyLogicaldeviceEvent destroyEvent(event);
+      STARTDAEMONDestroyLogicaldeviceEvent* pDestroyEvent = &destroyEvent;
+      if(destroyEvent.name.length() == 0)
+      {
+        // the destroy event was sent from within this application, so it has
+        // not been packed. A static cast will do just fine.
+        pDestroyEvent = static_cast<STARTDAEMONDestroyLogicaldeviceEvent*>(&event);
+      } 
+      
+      TSDResult result = SD_RESULT_UNSPECIFIED_ERROR;
+      if(pDestroyEvent != 0)
+      {
+        result = destroyLogicalDevice(pDestroyEvent->name);
+      }
+      m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
+      break;
+    }
+    
+    case STARTDAEMON_STOP:
+    {
+      stop();
+      m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(SD_RESULT_SHUTDOWN));
+      break;
+    }
+    
     default:
       LOG_DEBUG(formatString("StartDaemon(%s)::idle_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -306,9 +390,26 @@ void StartDaemon::handlePropertySetAnswer(GCFEvent& answer)
             m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
+        // DESTROY_LOGICALDEVICE <name>
+        else if(command==string(SD_COMMAND_DESTROY_LOGICALDEVICE))
+        {
+          if(parameters.size()==1)
+          {
+            string name = parameters[0];
+            
+            TSDResult result = destroyLogicalDevice(name);
+            m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+          else
+          {
+            TSDResult result = SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
         // STOP
         else if(command==string(SD_COMMAND_STOP))
         {
+          m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(SD_RESULT_SHUTDOWN));
           stop();
         }
         else

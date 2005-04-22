@@ -77,11 +77,5 @@ void APLUtilities::string2Vector(const string& parametersString, vector<string>&
 
 time_t APLUtilities::getUTCtime()
 {
-  time_t curr=time(0);// current local time
-  tm local=*gmtime(&curr);// convert curr to GMT, store as tm
-  local.tm_isdst = -1;  // A negative value for tm_isdst shall cause mktime() 
-                        // to attempt to determine whether Daylight Savings Time 
-                        // is in effect for the specified time.
-  time_t utc=(mktime(&local));// convert GMT tm to GMT time_t
-  return utc;
+  return time(0);// current system time in UTC
 }

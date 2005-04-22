@@ -52,6 +52,10 @@ enum TSDResult
   SD_RESULT_PARAMETERNOTFOUND,
   SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
   SD_RESULT_UNKNOWN_COMMAND,
+  SD_RESULT_ALREADY_EXISTS,
+  SD_RESULT_LD_NOT_FOUND,
+  SD_RESULT_WRONG_STATE,
+  SD_RESULT_SHUTDOWN,
 };
 
 PRELUDE_END;
@@ -85,6 +89,15 @@ event = {
   param = {
     name = "result";
     type = "TSDResult";
+  };
+};
+
+event = {
+  signal = DESTROY_LOGICALDEVICE;
+  dir = IN;
+  param = {
+    name = "name";
+    type = "string";
   };
 };
 

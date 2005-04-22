@@ -30,6 +30,7 @@
 #include "APLCommon/APLCommonExceptions.h"
 
 //# Common Includes
+#include <GCF/TM/GCF_Task.h>
 
 // forward declaration
 
@@ -47,7 +48,9 @@ namespace APLCommon
       LogicalDeviceFactory() {}; 
       virtual ~LogicalDeviceFactory() {};
       
-      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, const string& parameterFile)=0;
+      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
+                                                                   const string& parameterFile,
+                                                                   GCF::TM::GCFTask* pStartDaemon)=0;
 
     protected:
       // protected copy constructor

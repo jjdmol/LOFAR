@@ -25,6 +25,7 @@
 
 //# Includes
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
@@ -71,7 +72,7 @@ namespace APLCommon
         LOGICALDEVICE_STATE_SUSPENDED,
         LOGICALDEVICE_STATE_ACTIVE,
         LOGICALDEVICE_STATE_RELEASING,
-        LOGICALDEVICE_STATE_RELEASED
+        LOGICALDEVICE_STATE_GOINGDOWN
       } TLogicalDeviceState;
 
       static const string LD_STATE_STRING_INITIAL;
@@ -82,13 +83,14 @@ namespace APLCommon
       static const string LD_STATE_STRING_SUSPENDED;
       static const string LD_STATE_STRING_ACTIVE;
       static const string LD_STATE_STRING_RELEASING;
-      static const string LD_STATE_STRING_RELEASED;
+      static const string LD_STATE_STRING_GOINGDOWN;
 
       // property defines
       static const string LD_PROPSET_TYPENAME;
       static const string LD_PROPNAME_COMMAND;
       static const string LD_PROPNAME_STATUS;
       static const string LD_PROPNAME_STATE;
+      static const string LD_PROPNAME_CLAIMTIME;
       static const string LD_PROPNAME_PREPARETIME;
       static const string LD_PROPNAME_STARTTIME;
       static const string LD_PROPNAME_STOPTIME;
@@ -103,8 +105,10 @@ namespace APLCommon
       static const string LD_COMMAND_SUSPEND;
       static const string LD_COMMAND_RELEASE;
       
-      explicit LogicalDevice(const string& taskName, const string& parameterFile) throw (APLCommon::ParameterFileNotFoundException, 
-                                                                                         APLCommon::ParameterNotFoundException);
+      explicit LogicalDevice(const string& taskName, 
+                             const string& parameterFile, 
+                             GCF::TM::GCFTask* pStartDaemon) throw (APLCommon::ParameterFileNotFoundException, 
+                                                                    APLCommon::ParameterNotFoundException);
       virtual ~LogicalDevice();
 
       string& getServerPortName();
@@ -120,6 +124,7 @@ namespace APLCommon
       GCF::TM::GCFEvent::TResult suspended_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       GCF::TM::GCFEvent::TResult active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       GCF::TM::GCFEvent::TResult releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult goingdown_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
     protected:
       // protected default constructor
@@ -136,6 +141,7 @@ namespace APLCommon
 #endif
       
       typedef boost::shared_ptr<TRemotePort>  TPortSharedPtr;
+      typedef boost::weak_ptr<TRemotePort>    TPortWeakPtr;
       APL_DECLARE_SHARED_POINTER(GCF::TM::GCFEvent)
 
       /**
@@ -157,6 +163,7 @@ namespace APLCommon
       void _sendScheduleToClients();
       string _getShareLocation() const;
       time_t _decodeTimeParameter(const string& timeStr) const;
+      time_t getClaimTime() const;
       time_t getPrepareTime() const;
       time_t getStartTime() const;
       time_t getStopTime() const;
@@ -165,6 +172,7 @@ namespace APLCommon
       virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
@@ -182,6 +190,7 @@ namespace APLCommon
     protected:    
       APL_DECLARE_SHARED_POINTER(GCF::PAL::GCFMyPropertySet)
       
+      GCF::TM::GCFTask*                     m_startDaemon;
       PropertySetAnswer                     m_propertySetAnswer;
       GCFMyPropertySetSharedPtr             m_basePropertySet;
       std::string                           m_basePropertySetName;
@@ -193,14 +202,6 @@ namespace APLCommon
       TRemotePort                           m_serverPort; // listening port
 
     private:
-      void _schedule();
-      void _cancelSchedule();
-      void _claim();
-      void _prepare();
-      void _resume();
-      void _suspend();
-      void _release();
-
       struct TBufferedEventInfo
       {
         TBufferedEventInfo(time_t t,GCF::TM::GCFPortInterface* p,GCFEventSharedPtr e) : 
@@ -215,8 +216,18 @@ namespace APLCommon
       
       typedef vector<TPortSharedPtr>        TPortVector;
       typedef map<string,TPortSharedPtr>    TPortMap;
+      typedef map<string,TPortWeakPtr>      TPortWeakPtrMap;
       typedef vector<TBufferedEventInfo>    TEventBufferVector;
       
+      void _schedule();
+      void _cancelSchedule();
+      void _claim();
+      void _prepare();
+      void _resume();
+      void _suspend();
+      void _release();
+      TPortVector::iterator _getChildPort(GCF::TM::GCFPortInterface& port);
+
       TRemotePort                           m_parentPort; // connection with parent, if any
       
       // the vector and map both contain the child ports. The vector is used
@@ -226,16 +237,18 @@ namespace APLCommon
       // are stored in the TPortMap. The map is used in all communication with the
       // childs.
       TPortVector                           m_childPorts;           // connected childs
-      TPortMap                              m_connectedChildPorts;  // connected childs and ID's
+      TPortWeakPtrMap                       m_connectedChildPorts;  // connected childs and ID's
       
       TPortMap                              m_childStartDaemonPorts; // child startDaemons
       bool                                  m_apcLoaded;
       TLogicalDeviceState                   m_logicalDeviceState;
       
-      unsigned long                         m_prepareTimerId; // actually: claim
-      unsigned long                         m_startTimerId; // actually: active
-      unsigned long                         m_stopTimerId; // actually: suspend
+      unsigned long                         m_claimTimerId;
+      unsigned long                         m_prepareTimerId;
+      unsigned long                         m_startTimerId; // LD becomes active
+      unsigned long                         m_stopTimerId; // LD becomes suspended
       
+      time_t                                m_claimTime; // in UTC, seconds since 1-1-1970
       time_t                                m_prepareTime; // in UTC, seconds since 1-1-1970
       time_t                                m_startTime;   // in UTC, seconds since 1-1-1970
       time_t                                m_stopTime;    // in UTC, seconds since 1-1-1970
