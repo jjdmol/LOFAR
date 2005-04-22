@@ -3,6 +3,7 @@ mac.ns.MACScheduler.SAS_server.host=localhost
 mac.ns.MACScheduler.SAS_server.port=27000
 mac.ns.MACScheduler.VIparent_server.type=TCP
 mac.ns.MACScheduler.VIparent_server.host=localhost
+mac.ns.MACScheduler.VIparent_server.port=27100
 
 mac.ns.CCU1_VIC_VIStartDaemon.server.type=TCP
 mac.ns.CCU1_VIC_VIStartDaemon.server.host=localhost

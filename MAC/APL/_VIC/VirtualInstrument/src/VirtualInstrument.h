@@ -51,7 +51,7 @@ namespace AVI
       static const string VI_PROPNAME_CONNECTEDSTATIONS;
       static const string VI_PROPNAME_DISCONNECTEDSTATIONS;
 
-      explicit VirtualInstrument(const string& taskName, const string& parameterFile);
+      explicit VirtualInstrument(const string& taskName, const string& parameterFile, GCF::TM::GCFTask* pStartDaemon);
       virtual ~VirtualInstrument();
 
     protected:
@@ -75,6 +75,10 @@ namespace AVI
       * Claiming state additional behaviour must be implemented in the derived classes. 
       */
       virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
+      /**
+      * Claimed state additional behaviour must be implemented in the derived classes. 
+      */
+      virtual GCF::TM::GCFEvent::TResult concrete_claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * Preparing state additional behaviour must be implemented in the derived classes. 
       */

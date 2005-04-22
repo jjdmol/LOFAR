@@ -63,6 +63,7 @@ namespace APLCommon
       static const string SD_PROPNAME_COMMAND;
       static const string SD_PROPNAME_STATUS;
       static const string SD_COMMAND_SCHEDULE;
+      static const string SD_COMMAND_DESTROY_LOGICALDEVICE;
       static const string SD_COMMAND_STOP;
 
       StartDaemon(const string& name); 
@@ -70,6 +71,8 @@ namespace APLCommon
       
       void registerFactory(TLogicalDeviceTypes ldType, boost::shared_ptr<LogicalDeviceFactory> factory);
       TSDResult createLogicalDevice(const TLogicalDeviceTypes ldType, const string& taskName, const string& fileName);
+      TSDResult destroyLogicalDevice(const string& name);
+      
 
       /**
       * The initial state handler. This handler is passed to the GCFTask constructor
@@ -106,17 +109,19 @@ namespace APLCommon
       typedef GCF::PAL::GCFPVSSPort TThePortTypeInUse;
 #endif
       typedef map<TLogicalDeviceTypes,boost::shared_ptr<LogicalDeviceFactory> > TFactoryMap;
-      typedef vector<boost::shared_ptr<LogicalDevice> > TLogicalDeviceVector;
+      typedef map<string,boost::shared_ptr<LogicalDevice> > TLogicalDeviceMap;
       typedef vector<boost::shared_ptr<TThePortTypeInUse> > TPortVector;
 
       PropertySetAnswer               m_propertySetAnswer;
-      GCF::PAL::GCFMyPropertySet              m_properties;
+      GCF::PAL::GCFMyPropertySet      m_properties;
       string                          m_serverPortName;
       TThePortTypeInUse               m_serverPort; // listening port
       TPortVector                     m_childPorts;    // connected childs
 
       TFactoryMap                     m_factories;
-      TLogicalDeviceVector            m_logicalDevices;
+      TLogicalDeviceMap               m_logicalDevices;
+      TLogicalDeviceMap               m_garbageCollection;
+      unsigned long                   m_garbageCollectionTimerId;
     
       ALLOC_TRACER_CONTEXT  
   };

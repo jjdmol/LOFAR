@@ -29,6 +29,7 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
 #include <APLCommon/APLUtilities.h>
+#include <APLCommon/LogicalDevice_Protocol.ph>
 #include <APLCommon/StartDaemon_Protocol.ph>
 #include "VirtualInstrument.h"
 
@@ -48,8 +49,8 @@ INIT_TRACER_CONTEXT(VirtualInstrument,LOFARLOGGER_PACKAGE);
 const string VirtualInstrument::VI_PROPNAME_CONNECTEDSTATIONS     = string("connectedStations");
 const string VirtualInstrument::VI_PROPNAME_DISCONNECTEDSTATIONS  = string("disconnectedStations");
 
-VirtualInstrument::VirtualInstrument(const string& taskName, const string& parameterFile) :
-  LogicalDevice(taskName,parameterFile),
+VirtualInstrument::VirtualInstrument(const string& taskName, const string& parameterFile, GCFTask* pStartDaemon) :
+  LogicalDevice(taskName,parameterFile,pStartDaemon),
   m_vtSchedulerPropertySets(),
   m_disconnectedVTSchedulerPropertySets(),
   m_retryPropsetLoadTimerId(0)  
@@ -94,6 +95,9 @@ VirtualInstrument::VirtualInstrument(const string& taskName, const string& param
 VirtualInstrument::~VirtualInstrument()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+  m_vtSchedulerPropertySets.clear();
+  m_disconnectedVTSchedulerPropertySets.clear();
 }
 
 void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
@@ -239,8 +243,30 @@ GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GC
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+
+  switch (event.signal)
+  {
+    case LOGICALDEVICE_CLAIMED:
+    {
+      // check if all clients are claimed
+      // check quality requirements
+      // enter claimed state
+      break;
+    }
+    
+    default:
+      break;
+  }
   newState=LOGICALDEVICE_STATE_CLAIMED;
   
+  return status;
+}
+
+GCFEvent::TResult VirtualInstrument::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+
   return status;
 }
 
@@ -248,6 +274,8 @@ GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, G
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+
+  // test your childs
   newState=LOGICALDEVICE_STATE_SUSPENDED;
   
   return status;
@@ -266,8 +294,7 @@ GCFEvent::TResult VirtualInstrument::concrete_releasing_state(GCFEvent& event, G
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  newState=LOGICALDEVICE_STATE_RELEASED;
-  
+  newState=LOGICALDEVICE_STATE_GOINGDOWN;
   return status;
 }
 

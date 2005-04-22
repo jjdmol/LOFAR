@@ -25,8 +25,9 @@ Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack, 
   s020  : TIMER(30)																							; timeout.	// or timeout
   s030  : R_SIG ( vbsd_scheduled )                              ; s100.			// wait for VirtualBackend response; sync with VirtualBackend statemachine
   s030  : TIMER(30)																							; timeout.	// or timeout
-  s031  : R_SIG ( bs_alloc_ack )                                ; s100.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
+  s031  : R_SIG ( bs_alloc_ack )                                ; s040.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
   s031  : TIMER(30)																							; timeout.	// or timeout
+  s040  : TIMER(30)                                             ; s100.     // wait for schedule to finish
 // ------------------------------------------------------------------------------
 
 
@@ -86,8 +87,8 @@ VAR handle.
   s000   : E_ABS_BEAMFREE  ( handle )                             ; s020.
   s000   : E_ABS_BEAMPOINTTO (,,,,)                               ; s030.
   s000   : E_ABS_WGSETTINGS (,)                                   ; s040.
-  s000   : E_ABS_WGENABLE                                         ; s000.
-  s000   : E_ABS_WGDISABLE                                        ; s000.
+  s000   : E_ABS_WGENABLE ( )                                     ; s000.
+  s000   : E_ABS_WGDISABLE ( )                                    ; s000.
   s000   : R_SIG( stop )                                        	; finish.
   
   s010   : S_SIG( bs_alloc_ack )
@@ -105,7 +106,7 @@ VAR handle.
 Statemachine_VBStartDaemon ( stop, vbsd_scheduled, vbsd_connected ) =
 {
   s000   : E_STARTDAEMON_SCHEDULE (,,,,,)                         ; s010.
-  s000   : E_STARTDAEMON_STOP				                              ; finish.
+  s000   : E_STARTDAEMON_STOP	( ) 	                              ; finish.
   s000   : R_SIG( stop )                                        	; finish.
   
   s010   : F_STARTDAEMON_SCHEDULED ( 0x00000000 )         				
@@ -125,21 +126,21 @@ Statemachine_VirtualBackend  ( stop, vbsd_connected ) =
   s020   : E_LOGICALDEVICE_CONNECTED ( )                          ; error.
   
 	s030   : E_LOGICALDEVICE_SCHEDULE ()                           	; s040.
-	s030   : E_LOGICALDEVICE_CANCELSCHEDULE                         ; s050.
-	s030   : E_LOGICALDEVICE_CLAIM                           				; s060.
-	s030   : E_LOGICALDEVICE_PREPARE                           			; s070.
-	s030   : E_LOGICALDEVICE_RESUME                           			; s080.
-	s030   : E_LOGICALDEVICE_SUSPEND                           			; s090.
-	s030   : E_LOGICALDEVICE_RELEASE                           			; s100.
+	s030   : E_LOGICALDEVICE_CANCELSCHEDULE ( )                     ; s050.
+	s030   : E_LOGICALDEVICE_CLAIM ( )                       				; s060.
+	s030   : E_LOGICALDEVICE_PREPARE ( )														; s070.
+	s030   : E_LOGICALDEVICE_RESUME ( )                       			; s080.
+	s030   : E_LOGICALDEVICE_SUSPEND ( )                       			; s090.
+	s030   : E_LOGICALDEVICE_RELEASE ( )                       			; s100.
   s030   : R_SIG( stop )                                        	; finish.
   
   s040   : F_LOGICALDEVICE_SCHEDULED ( 0x00000000 )         			; s030.
   s050   : F_LOGICALDEVICE_SCHEDULECANCELLED ( 0x00000000 )  			; s030.
-  s060   : F_LOGICALDEVICE_CLAIMED 																; s030.
-  s070   : F_LOGICALDEVICE_PREPARED 															; s030.
-  s080   : F_LOGICALDEVICE_RESUMED 																; s030.
-  s090   : F_LOGICALDEVICE_SUSPENDED 															; s030.
-  s100   : F_LOGICALDEVICE_RELEASED 															; s030.
+  s060   : F_LOGICALDEVICE_CLAIMED ( 0x00000000 )  								; s030.
+  s070   : F_LOGICALDEVICE_PREPARED ( 0x00000000 )								; s030.
+  s080   : F_LOGICALDEVICE_RESUMED ( 0x00000000 )									; s030.
+  s090   : F_LOGICALDEVICE_SUSPENDED ( 0x00000000 )								; s030.
+  s100   : F_LOGICALDEVICE_RELEASED ( 0x00000000 )								; s030.
   
   finish : TERMINATE ; finish.
   error  : TERMINATE ; error.
@@ -153,52 +154,60 @@ WaitUntilTestEnd (SM1_ready) =
 
 Statemachine_THPVSSBridge  ( stop ) =
 {
-  s000   : F_PVSS_LOAD_EXT_PROPERTY_SET( "CCU1_VIC_VIStartDaemon",
-                                         "TAplStartDaemon" )			 			; s010.
-  s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, 0x00000000 ) 			; s020.
+VAR scope.
+
+  s000   : F_PVSS_LOAD_EXT_PROPERTY_SET( "System1:PAC_LogicalDeviceScheduler","TLcuPacLogicalDeviceScheduler" )			 			; s010.
+  s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" )				; s020.
   s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
   
-  s020   : F_PVSS_EXT_GET_VALUE ( "CCU1_VIC_VIStartDaemon",
-                                  "command" )														; s030.
-  s030   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,"CCU1_VIC_VIStartDaemon",,"command",, )		; s990.
-//  s030   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,,,,, )											; error.
-//
-//  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( "CCU1_VIC_VIStartDaemon",
-//                                           "command" )									; s050.
-//  s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, 0x00000000 ) 	; s060.
-//  s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
-//
-//  s060   : F_PVSS_EXT_SET_VALUE ( "CCU1_VIC_VIStartDaemon",
-//                                  "command",
-//                                  "dummy1" )														; s070.
-//  s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, 0x00000000 ) 						; s080.
-//  s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
-//  
-//  s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,"CCU1_VIC_VIStartDaemon",,"command",,"dummy1" )	; s090.
-//  s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, ) 											; error.
-//
-//  s090   : F_PVSS_UNSUBSCRIBE_EXT_PROPERTY ( "CCU1_VIC_VIStartDaemon",
-//                                           	 "command" )								; s100.
-//  s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, 0x00000000 )	; s110.
-//  s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )						; error.
+  s020   : F_PVSS_EXT_GET_VALUE ( "System1:PAC_LogicalDeviceScheduler","command" )														; s030.
+  s030   : E_PVSS_VALUE_CHANGE_RESPONSE ( ,,"System1:PAC_LogicalDeviceScheduler",,"command",, )							; s040. // note: can only check one string in an event 
+  s030   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, )											; error.
 
-//  s110   : F_PVSS_EXT_SET_VALUE ( "CCU1_VIC_VIStartDaemon",
-//                                  "command",
-//                                  "dummy2" )														; s120.
-//  s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, 0x00000000 ) 						; s130.
-//  s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
-  
-//  s130   : F_PVSS_EXT_GET_VALUE ( "CCU1_VIC_VIStartDaemon",
-//                                  "command" )														; s140.
-//  s140   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,"CCU1_VIC_VIStartDaemon",,"command",,"dummy2" )		; s150.
-//  s140   : E_PVSS_EXT_GET_VALUE_RESPONSE( ,,,,,, )											; error.
+  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( "System1:PAC_LogicalDeviceScheduler","command" )									; s050.
+  s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 	; s060.
+  s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
 
-//  s150   : F_PVSS_UNLOAD_EXT_PROPERTY_SET( "CCU1_VIC_VIStartDaemon" )			; s160.
-//  s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, 0x00000000 ) 			; s990.
-//  s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
+  s060   : F_PVSS_EXT_SET_VALUE ( "System1:PAC_LogicalDeviceScheduler","command","dummy1" )														; s070.
+  s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 						; s080.
+  s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
   
-//  s990   : R_SIG( stop )                                       				 	; finish.
-  s990   : TERMINATE                                       				 	; s990.
+  s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,"System1:PAC_LogicalDeviceScheduler",,"command",,"dummy1" )								; s090. // note: can only check one string in an event
+  s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, ) 											; error.
+
+  s090   : F_PVSS_UNSUBSCRIBE_EXT_PROPERTY ( "System1:PAC_LogicalDeviceScheduler","command" )								; s100.
+  s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" )	; s110.
+  s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )						; error.
+
+  s110   : F_PVSS_EXT_SET_VALUE ( "System1:PAC_LogicalDeviceScheduler","command","dummy2" )														; s120.
+  s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 						; s130.
+  s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
+ 
+  s130   : F_PVSS_EXT_GET_VALUE ( "System1:PAC_LogicalDeviceScheduler","command" )														; s140.
+  s140   : E_PVSS_VALUE_CHANGE_RESPONSE ( ,,"System1:PAC_LogicalDeviceScheduler",,"command",,"dummy2" )							; s150. // note: can only check one string in an event 
+  s140   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, )											; error.
+
+  s150   : F_PVSS_UNLOAD_EXT_PROPERTY_SET( "System1:PAC_LogicalDeviceScheduler" )			; s160.
+  s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" ) 		; s500.
+  s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
+  
+  s500   : F_PVSS_LOAD_EXT_PROPERTY_SET( "System1:PAC_LogicalDeviceScheduler","TLcuPacLogicalDeviceScheduler" )			 			; s510.
+  s510   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" )				; s520.
+  s510   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
+  
+  s520   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( "System1:PAC_LogicalDeviceScheduler","command" )									; s530.
+  s530   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 	; s540.
+  s530   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
+
+  s540   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( "System1:PAC_LogicalDeviceScheduler","status" )									; s550.
+  s550   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"status" ) 	; s560.
+  s550   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
+
+  s560   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, )												; s560.
+  s560   : R_SIG( stop )                                       				 	; finish.
+
+  s990   : R_SIG( stop )                                       				 	; finish.
+	s990   : TERMINATE                                       				 	; s990.
     
   finish : TERMINATE ; finish.
   error  : TERMINATE ; error.
@@ -218,5 +227,5 @@ COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
 
 COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
 
-COM5 :  Statemachine_THPVSSBridge (SM5_stop).
+//COM5 :  Statemachine_THPVSSBridge (SM5_stop).
 

@@ -191,29 +191,29 @@ t_GCF_PSCategory        = { 4, 0x00000000, 0x00000002, ENUM,
                                0x00000002 : "PS_CAT_PERM_AUTOLOAD"
                           }
                           
-t_GCF_Result            = { 4, 0x00000000, 0x00000002, ENUM,
+t_GCF_Result            = { 4, 0x00000000, 0x00000015, ENUM,
                                0x00000000 : "GCF_NO_ERROR", 
-                               0x00000000 : "GCF_UNKNOWN_ERROR",
-                               0x00000000 : "GCF_PML_ERROR", 
-                               0x00000000 : "GCF_EXTPS_LOAD_ERROR",
-                               0x00000000 : "GCF_PS_CONFIGURE_ERROR",
-                               0x00000000 : "GCF_EXTPS_UNLOAD_ERROR",
-                               0x00000000 : "GCF_MYPS_ENABLE_ERROR",
-                               0x00000000 : "GCF_MYPS_DISABLE_ERROR",
-                               0x00000000 : "GCF_VALUESTRING_NOT_VALID",
-                               0x00000000 : "GCF_DIFFERENT_TYPES",
-                               0x00000000 : "GCF_BUSY",
-                               0x00000000 : "GCF_ALREADY_LOADED",
-                               0x00000000 : "GCF_NOT_LOADED",
-                               0x00000000 : "GCF_PROP_NOT_VALID",
-                               0x00000000 : "GCF_PROP_WRONG_TYPE",
-                               0x00000000 : "GCF_PROP_NOT_IN_SET",
-                               0x00000000 : "GCF_NO_PROPER_DATA",
-                               0x00000000 : "GCF_SCOPE_ALREADY_REG",
-                               0x00000000 : "GCF_ALREADY_SUBSCRIBED",
-                               0x00000000 : "GCF_NOT_SUBSCRIBED",
-                               0x00000000 : "GCF_WRONG_STATE",
-                               0x00000000 : "GCF_PVSS_ERROR"
+                               0x00000001 : "GCF_UNKNOWN_ERROR",
+                               0x00000002 : "GCF_PML_ERROR", 
+                               0x00000003 : "GCF_EXTPS_LOAD_ERROR",
+                               0x00000004 : "GCF_PS_CONFIGURE_ERROR",
+                               0x00000005 : "GCF_EXTPS_UNLOAD_ERROR",
+                               0x00000006 : "GCF_MYPS_ENABLE_ERROR",
+                               0x00000007 : "GCF_MYPS_DISABLE_ERROR",
+                               0x00000008 : "GCF_VALUESTRING_NOT_VALID",
+                               0x00000009 : "GCF_DIFFERENT_TYPES",
+                               0x0000000A : "GCF_BUSY",
+                               0x0000000B : "GCF_ALREADY_LOADED",
+                               0x0000000C : "GCF_NOT_LOADED",
+                               0x0000000D : "GCF_PROP_NOT_VALID",
+                               0x0000000E : "GCF_PROP_WRONG_TYPE",
+                               0x0000000F : "GCF_PROP_NOT_IN_SET",
+                               0x00000010 : "GCF_NO_PROPER_DATA",
+                               0x00000011 : "GCF_SCOPE_ALREADY_REG",
+                               0x00000012 : "GCF_ALREADY_SUBSCRIBED",
+                               0x00000013 : "GCF_NOT_SUBSCRIBED",
+                               0x00000014 : "GCF_WRONG_STATE",
+                               0x00000015 : "GCF_PVSS_ERROR"
                           }
                           
 //
@@ -366,35 +366,35 @@ F_LOGICALDEVICE_CLAIMED =
 {
   0x08, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 } 
 
 F_LOGICALDEVICE_PREPARED =
 {
   0x0A, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 } 
 
 F_LOGICALDEVICE_RESUMED =
 {
   0x0C, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 F_LOGICALDEVICE_SUSPENDED =
 {
   0x0E, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 F_LOGICALDEVICE_RELEASED =
 {
   0x10, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 // -------------------------------------------------------------------
@@ -621,14 +621,14 @@ E_ABS_WGENABLE =
 { 
   0x08, // signal Id
   0x54, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 E_ABS_WGDISABLE = 
 { 
   0x09, // signal Id
   0x54, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 // -------------------------------------------------------------------
@@ -655,42 +655,42 @@ E_LOGICALDEVICE_CANCELSCHEDULE =
 {
   0x05, // signal Id
   0x8B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 E_LOGICALDEVICE_CLAIM =
 {
   0x07, // signal Id
   0x8B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 E_LOGICALDEVICE_PREPARE =
 {
   0x09, // signal Id
   0x8B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 E_LOGICALDEVICE_RESUME =
 {
   0x0B, // signal Id
   0x8B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 E_LOGICALDEVICE_SUSPEND =
 {
   0x0D, // signal Id
   0x8B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 E_LOGICALDEVICE_RELEASE =
 {
   0x0F, // signal Id
   0x8B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 // -------------------------------------------------------------------
@@ -716,7 +716,7 @@ E_STARTDAEMON_STOP =
 {
   0x03, // signal Id
   0x4C, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  msglength : t_B4 //0x00000000 // message payload length, big endian
 }
 
 
@@ -728,9 +728,9 @@ E_PVSS_ENABLE_MY_PROPERTY_SET_RESPONSE =
   0x02, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50
 }
 
 E_PVSS_DISABLE_MY_PROPERTY_SET_RESPONSE = 
@@ -738,9 +738,9 @@ E_PVSS_DISABLE_MY_PROPERTY_SET_RESPONSE =
   0x04, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50
 }
 
 E_PVSS_MY_GET_VALUE_RESPONSE = 
@@ -748,12 +748,12 @@ E_PVSS_MY_GET_VALUE_RESPONSE =
   0x06, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  propertyLen*                : t_B4,
-  property                    : t_B1[],
-  valueLen*                   : t_B4,
-  value                       : t_B1[]
+  scopeLen                    : t_B4,
+  scope                       : t_String50,
+  propertyLen                 : t_B4,
+  property                    : t_String50,
+  valueLen                    : t_B4,
+  value                       : t_String50
 }
 
 E_PVSS_MY_SET_VALUE_RESPONSE = 
@@ -761,11 +761,11 @@ E_PVSS_MY_SET_VALUE_RESPONSE =
   0x08, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  propertyLen*                : t_B4,
-  property                    : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50,
+  propertyLen                 : t_B4,
+  property                    : t_String50
 }
 
 E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE = 
@@ -773,9 +773,9 @@ E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE =
   0x0A, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50
 }
 
 E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE = 
@@ -783,9 +783,9 @@ E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE =
   0x0C, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50
 }
 
 E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE = 
@@ -793,11 +793,11 @@ E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE =
   0x0E, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  propertyLen*                : t_B4,
-  property                    : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50,
+  propertyLen                 : t_B4,
+  property                    : t_String50
 }
 
 E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE = 
@@ -805,11 +805,11 @@ E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE =
   0x10, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  propertyLen*                : t_B4,
-  property                    : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50,
+  propertyLen                 : t_B4,
+  property                    : t_String50
 }
 
 E_PVSS_EXT_GET_VALUE_RESPONSE = 
@@ -817,12 +817,12 @@ E_PVSS_EXT_GET_VALUE_RESPONSE =
   0x12, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  propertyLen*                : t_B4,
-  property                    : t_B1[],
-  valueLen*                   : t_B4,
-  value                       : t_B1[]
+  scopeLen                    : t_B4,
+  scope                       : t_String50,
+  propertyLen                 : t_B4,
+  property                    : t_String50,
+  valueLen                    : t_B4,
+  value                       : t_String50
 }
 
 E_PVSS_EXT_SET_VALUE_RESPONSE = 
@@ -830,11 +830,11 @@ E_PVSS_EXT_SET_VALUE_RESPONSE =
   0x14, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  propertyLen*                : t_B4,
-  property                    : t_B1[],
-  response                    : t_GCF_Result
+  response                    : t_GCF_Result,
+  scopeLen                    : t_B4,
+  scope                       : t_String50,
+  propertyLen                 : t_B4,
+  property                    : t_String50
 }
 
 E_PVSS_VALUE_CHANGE_RESPONSE = 
@@ -842,11 +842,11 @@ E_PVSS_VALUE_CHANGE_RESPONSE =
   0x15, // signal Id
   0x8E, // Direction and protocol
   msgLength                   : t_B4,
-  scopeLen*                   : t_B4,
-  scope                       : t_B1[],
-  propertyLen*                : t_B4,
-  property                    : t_B1[],
-  valueLen*                   : t_B4,
-  value                       : t_B1[]
+  scopeLen                    : t_B4,
+  scope                       : t_String50,
+  propertyLen                 : t_B4,
+  property                    : t_String50,
+  valueLen                    : t_B4,
+  value                       : t_String50
 }
 
