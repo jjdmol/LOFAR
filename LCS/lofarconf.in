@@ -1,6 +1,8 @@
-Common        # Common stuff
-Transport     # Communication stuff
-Math	      # Math stuff
 ACC           # Application Configuration & Control
-CRD	      # Coordinate server stuff
+AMC           # Astronomical Measures Conversions (successor of CRD)
+Common        # Common stuff
+CRD	      # Coordinate server stuff (deprecated)
 databases     # Database stuff
+Math	      # Math stuff
+Tools         # Useful tools
+Transport     # Low-level transport library
