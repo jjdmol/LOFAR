@@ -29,7 +29,7 @@
 #include <Common/lofar_iostream.h>
 
 #include <Transport/TH_Mem.h>
-#include <Transport/TH_ShMem>
+#include <Transport/TH_ShMem.h>
 #include <Transport/TH_MPI.h>
 #include <TH_RSP.h>
 
@@ -256,7 +256,7 @@ void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dst
   if (srcNode == dstNode) {
     //    cout<<srcStep->getName()<<" and "<<dstStep->getName()<<" on same node"<<endl;
     if (sharedMem) {
-      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_ShMem(srcNode, dstNode), false); // true=blocking
+      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_ShMem(srcNode,dstNode), false); // true=blocking
     } 
     else {
       dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
