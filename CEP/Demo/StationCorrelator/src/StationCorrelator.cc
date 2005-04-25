@@ -29,6 +29,7 @@
 #include <Common/lofar_iostream.h>
 
 #include <Transport/TH_Mem.h>
+#include <Transport/TH_ShMem>
 #include <Transport/TH_MPI.h>
 #include <TH_RSP.h>
 
