@@ -43,7 +43,7 @@ class StationCorrelator: public LOFAR::ApplicationHolder
   virtual void quit    ();
  private:
   // connect two steps
-  void connect(Step* srcStep, Step* dstStep, int srcDH, int dstDH);
+  void connect(Step* srcStep, Step* dstStep, int srcDH, int dstDH, bool sharedMem);
 
   vector<WorkHolder*> itsWHs;
 

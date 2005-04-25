@@ -1,5 +1,4 @@
-//#  WH_RSP.h: Store RSP beamlets, blockID, stationID and isValid flag in 
-//#             several (NOWH_Correlator) StationData dataholders
+//#  WH_RSPInput.h: Catch RSP ethernet frames and synchronize RSP inputs 
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef STATIONCORRELATOR_WH_RSP_H
-#define STATIONCORRELATOR_WH_RSP_H
+#ifndef STATIONCORRELATOR_WH_RSPINPUT_H
+#define STATIONCORRELATOR_WH_RSPINPUT_H
 
 
 #include <Common/KeyValueMap.h>
@@ -31,28 +30,33 @@
 
 namespace LOFAR
 {
-  class WH_RSP: public WorkHolder
+  class WH_RSPInput: public WorkHolder
   {
   public:
 
-    explicit WH_RSP(const string& name, 
-                    const KeyValueMap kvm);
-    virtual ~WH_RSP();
+    explicit WH_RSPInput(const string& name, 
+                         const KeyValueMap kvm,
+		         const bool isSyncMaster = false);
+    virtual ~WH_RSPInput();
     
     static WorkHolder* construct(const string& name, 
-                                 const KeyValueMap kvm);
-    virtual WH_RSP* make(const string& name);
+                                 const KeyValueMap kvm,
+				 const bool isSyncMaster = false);
+    virtual WH_RSPInput* make(const string& name);
 
     virtual void process();
-  
+
+    /// set delay of this WorkHolder
+    void setDelay(const DH_RSPSync::syncStamp_t newDelay);
+    
     /// Show the work holder on stdout.
     virtual void dump();
 
   private:
     /// forbid copy constructor
-    WH_RSP (const WH_RSP&);
+    WH_RSPInput (const WH_RSPInput&);
     /// forbid assignment
-    WH_RSP& operator= (const WH_RSP&);
+    WH_RSPInput& operator= (const WH_RSPInput&);
 
     int itsNpackets;
     int itsPolarisations;
@@ -64,11 +68,18 @@ namespace LOFAR
 
     KeyValueMap itsKVM;
 
-    
+    // for synchronisation
+    bool itsIsSyncMaster; // Am I the one that sends the sync packets?
+    DH_RSPSync::syncStamp_t itsNextStamp;
+    DH_RSPSync::syncStamp_t itsDelay;    
+    bool itsReadNext; // Do we need to read at the beginning of the next process()?
 
-    static ProfilingState theirInvalidDataState;
-    static ProfilingState theirTransposeState;
+    static ProfilingState theirWaitingState;
+    static ProfilingState theirCatchingUpState;
   };
+
+  inline void WH_RSPInput::setDelay(const DH_RSPSync::syncStamp_t newDelay)
+    { itsDelay = newDelay; }
 
 } // namespace LOFAR
 

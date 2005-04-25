@@ -9,6 +9,7 @@ DH_CorrCube.h						\
 DH_Vis.h						\
 WH_RSP.h                                                \
 WH_RSPBoard.h                                           \
+WH_RSPInput.h                                           \
 WH_Transpose.h						\
 WH_Correlator.h						\
 WH_Dump.h						\
@@ -24,6 +25,7 @@ DH_CorrCube.cc						\
 DH_Vis.cc						\
 WH_RSP.cc                                               \
 WH_RSPBoard.cc                                          \
+WH_RSPInput.cc                                          \
 WH_Transpose.cc						\
 WH_Correlator.cc					\
 WH_Dump.cc						\
