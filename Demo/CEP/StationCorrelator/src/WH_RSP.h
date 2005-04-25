@@ -1,5 +1,5 @@
-//#  WH_RSP.h: Analyse RSP ethernet frames and store datablocks, blockID, 
-//#            stationID and isValid flag in DH_StationData
+//#  WH_RSP.h: Store RSP beamlets, blockID, stationID and isValid flag in 
+//#             several (NOWH_Correlator) StationData dataholders
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,20 +36,15 @@ namespace LOFAR
   public:
 
     explicit WH_RSP(const string& name, 
-                    const KeyValueMap kvm,
-		    const bool isSyncMaster = false);
+                    const KeyValueMap kvm);
     virtual ~WH_RSP();
     
     static WorkHolder* construct(const string& name, 
-                                 const KeyValueMap kvm,
-				 const bool isSyncMaster = false);
+                                 const KeyValueMap kvm);
     virtual WH_RSP* make(const string& name);
 
     virtual void process();
-
-    /// set delay of this WorkHolder
-    void setDelay(const DH_RSPSync::syncStamp_t newDelay);
-    
+  
     /// Show the work holder on stdout.
     virtual void dump();
 
@@ -69,18 +64,11 @@ namespace LOFAR
 
     KeyValueMap itsKVM;
 
-    // for synchronisation
-    bool itsIsSyncMaster; // Am I the one that sends the sync packets?
-    DH_RSPSync::syncStamp_t itsNextStamp;
-    DH_RSPSync::syncStamp_t itsDelay;    
-    bool itsReadNext; // Do we need to read at the beginning of the next process()?
+    
 
-    static ProfilingState theirWaitingState;
-    static ProfilingState theirCatchingUpState;
+    static ProfilingState theirInvalidDataState;
+    static ProfilingState theirTransposeState;
   };
-
-  inline void WH_RSP::setDelay(const DH_RSPSync::syncStamp_t newDelay)
-    { itsDelay = newDelay; }
 
 } // namespace LOFAR
 

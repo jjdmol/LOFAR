@@ -1,4 +1,5 @@
-//  DH_RSP.cc:
+//  DH_RSP.cc: DataHolder storing RSP raw ethernet frames for 
+//             StationCorrelator demo
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -57,28 +58,25 @@ DataHolder* DH_RSP::clone() const
 
 void DH_RSP::preprocess()
 {
-  initDataFields();
+  // first delete possible preexisting buffers
+  postprocess();
   
   // Add the fields to the data definition.
+  addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
 
+  // Create the data blob
   createDataBlock();
-  itsBuffer = getData<BufferType> ("Buffer");
-  for (unsigned int i=0; i<itsBufSize; i++) {
-    itsBuffer[i] = 0;
-  }
-}
-
-void DH_RSP::setBufferSize (unsigned int bufsize)
-{
-  itsBufSize = bufsize;
-  preprocess();
 }
 
 void DH_RSP::fillDataPointers()
 {
   // Fill in the buffer pointer.
+  itsFlagptr = getData<int> ("Flag");
   itsBuffer  = getData<BufferType> ("Buffer");
+
+  // use memset to null the buffer instead of a for loop
+  memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
 }
 
 void DH_RSP::postprocess()

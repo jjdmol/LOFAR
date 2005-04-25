@@ -55,32 +55,19 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// Reset the buffer size.
-  void setBufferSize (const unsigned int bufsize);
-
-  /// Get write access to the Buffer.
+  /// accessor functions to the blob data
+  const int getStationID() const;
+  void setStationID(int);
+  const int getSeqID() const;
+  void setSeqID(int);
+  const int getBlockID() const;
+  void setBlockID(int);
+  const int getFlag() const;
+  void setFlag(int);
   BufferType* getBuffer();
   
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
-
-  /// Get StationID from first EPA-packet in RSP-frame
-  const int getStationID() const;
-
-  /// Get SequenceID from first EPA-packet in RSP-frame
-  const int getSeqID() const;
-
-  /// Get BlockID from first EPA-packet in RSP-frame
-  const int getBlockID() const;
-
-  /// Set StationID of first EPA-packet in RSP-frame
-  void setStationID(int);
-
-  /// Set SequenceID of first EPA-packet in RSP-frame
-  void setSeqID(int);
-
-  /// Set BlockID of first EPA-packet in RSP-frame
-  void setBlockID(int); 
 
   /// Reset the buffer
   void resetBuffer();
@@ -98,7 +85,10 @@ public:
   // Fill the pointers (itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
+  /// pointers to data in the blob
   BufferType*  itsBuffer;
+  int* itsFlagptr;
+
   int itsEPAheaderSize;
   int itsNoBeamlets;
   int itsNoPolarisations;
@@ -120,6 +110,9 @@ inline const int DH_RSP::getSeqID() const
 inline const int DH_RSP::getBlockID() const
   { return ((int*)&itsBuffer[10])[0]; }
 
+inline const int DH_RSP::getFlag() const
+  { return *itsFlagptr; }
+
 inline void DH_RSP::setStationID(int stationid)
   { memcpy(&itsBuffer[2], &stationid, sizeof(int)); }
 
@@ -128,6 +121,9 @@ inline void  DH_RSP::setSeqID(int seqid)
 
 inline void  DH_RSP::setBlockID(int blockid)
   { memcpy(&itsBuffer[10], &blockid, sizeof(int)); }
+
+inline void DH_RSP::setFlag(int flag)
+  { *itsFlagptr = flag; }
 
 inline void DH_RSP:: resetBuffer()
   { memset(itsBuffer, 0, itsBufSize); }

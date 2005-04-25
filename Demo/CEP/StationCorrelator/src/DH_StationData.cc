@@ -62,7 +62,6 @@ void DH_StationData::preprocess() {
 
   // Create the data blob
   createDataBlock();
-
 }
 
 void DH_StationData::postprocess() 

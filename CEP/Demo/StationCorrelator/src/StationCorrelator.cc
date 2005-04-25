@@ -43,6 +43,7 @@
 #include <StationCorrelator.h>
 
 #include <WH_RSPBoard.h>
+#include <WH_RSPInput.h>
 #include <WH_RSP.h>
 #include <WH_Transpose.h>
 #include <WH_Correlator.h>
@@ -90,6 +91,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   comp.runOnNode(0);
 
   LOG_TRACE_FLOW_STR("Create the workholders");
+  
   /// Create the WorkHolders 
   bool useRealRSP = itsKVM.getBool("useRealRSPBoard", false);
   WH_RSPBoard RSPBoard("WH_RSPBoard", itsKVM);
@@ -101,43 +103,57 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     StepRSPemulator.runOnNode(lastFreeNode++);
   }
   
-  Step** itsRSPsteps = new Step*[itsNrsp];
+  Step** itsRSPinputSteps = new Step*[itsNrsp];
   for (unsigned int i = 0; i < itsNrsp; i++) {
-    snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
-    LOG_TRACE_LOOP_STR("Create RSP workholder/Step " << H_name);
-    WH_RSP* whRSP; 
+    snprintf(H_name, 128, "RSPInputNode_%d_of_%d", i, itsNrsp);
+    LOG_TRACE_LOOP_STR("Create RSPInput workholder/Step " << H_name);
+    WH_RSPInput* whRSPinput; 
 
     if (i == 0) {
-      whRSP = new WH_RSP(H_name, itsKVM, true);  // syncmaster
+      whRSPinput = new WH_RSPInput(H_name, itsKVM, true);  // syncmaster
     } else {
-      whRSP = new WH_RSP(H_name, itsKVM, false);  // notsyncmaster
+      whRSPinput = new WH_RSPInput(H_name, itsKVM, false);  // notsyncmaster
     }
-    itsRSPsteps[i] = new Step(*whRSP, H_name, false);
-    comp.addStep(itsRSPsteps[i]); 
+    itsRSPinputSteps[i] = new Step(*whRSPinput, H_name, false);
+    comp.addStep(itsRSPinputSteps[i]); 
 
-    itsRSPsteps[i]->runOnNode(lastFreeNode++);
+    itsRSPinputSteps[i]->runOnNode(lastFreeNode++);
 
     if (useRealRSP) {
       string iface = itsKVM["interfaces"].getVecString()[i];
       //      cout<<"interface: "<<iface<<endl;
       string oMac  = itsKVM["oMacs"].getVecString()[i];
       string rMac  = itsKVM["rMacs"].getVecString()[i];
-      itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_RSP(iface.c_str(), 
-								rMac.c_str(), 
-								oMac.c_str(), 
-								0x000, 
-								true), true);
+      itsRSPinputSteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_RSP(iface.c_str(), 
+						    		     rMac.c_str(), 
+								     oMac.c_str(), 
+								     0x000, 
+								     true), true);
     } else {
       // Use the WH_RSPBoard to emulate a real RSP Board
-      connect(&StepRSPemulator, itsRSPsteps[i], i, 0);
+      connect(&StepRSPemulator, itsRSPinputSteps[i], i, 0, false); // true=sharedMem
     }
 
     if (i != 0) {
-      // we're a syncSlave. Connect the second input to an appropriate output.
-      connect(itsRSPsteps[0], itsRSPsteps[i], itsNcorrelator + i - 1, 1);
-      itsRSPsteps[0]->setOutRate(10000, itsNcorrelator + i - 1);
-      itsRSPsteps[i]->setInRate(10000, 1);
+      // we're a syncSlave. Connect the second input to the propriate output.
+      connect(itsRSPinputSteps[0], itsRSPinputSteps[i], i , 1, false); // true=sharedMem
+      itsRSPinputSteps[0]->setOutRate(10000, i);
+      itsRSPinputSteps[i]->setInRate(10000, 1);
     }
+  }
+  
+  Step** itsRSPsteps = new Step*[itsNrsp];
+  for (unsigned int i = 0; i < itsNrsp; i++) {
+    snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
+    LOG_TRACE_LOOP_STR("Create RSP workholder/Step " << H_name);
+    WH_RSP* whRSP; 
+
+    whRSP = new WH_RSP(H_name, itsKVM);  
+    itsRSPsteps[i] = new Step(*whRSP, H_name, false);
+    comp.addStep(itsRSPsteps[i]); 
+
+    itsRSPsteps[i]->runOnNode(lastFreeNode++);
+    connect(itsRSPinputSteps[i], itsRSPsteps[i], 0, 0, true); // true=sharedMem
   }
 
   Step** itsTsteps = new Step*[itsNcorrelator];
@@ -154,13 +170,12 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     // the transpose collects data to intergrate over, so only the input 
     // and process methods run fast
     itsTsteps[i]->setOutRate(slow_rate);
-    itsTsteps[i]->runOnNode(lastFreeNode); // do not increase lastFreeNode here, it needs to run on the same node
+    itsTsteps[i]->runOnNode(lastFreeNode++); 
 
     // connect the Transpose step just created to the correct RSP outputs
     for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
-      connect(itsRSPsteps[rsp], itsTsteps[i], i, rsp);
+      connect(itsRSPsteps[rsp], itsTsteps[i], i, rsp, false); // true=sharedMem
     }
-
 
     // now create the Correlator workholder
     sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
@@ -174,7 +189,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     itsCsteps[i]->setOutRate(slow_rate);
     itsCsteps[i]->runOnNode(lastFreeNode++);
     
-    connect(itsTsteps[i], itsCsteps[i], 0, 0);
+    connect(itsTsteps[i], itsCsteps[i], 0, 0, true);  // true=sharedMem
   }
   
   
@@ -195,7 +210,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     dumpstep.runOnNode(lastFreeNode++);
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
-      connect(itsCsteps[c_index++], &dumpstep, 0, in);
+      connect(itsCsteps[c_index++], &dumpstep, 0, in, false);  // true=shared mem
     }
   }
   LOG_TRACE_FLOW_STR("Finished define()");
@@ -231,7 +246,7 @@ void StationCorrelator::quit() {
 
 }
 
-void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dstDH) {
+void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dstDH, bool sharedMem) {
   //  cout<<"Connecting "<<srcStep->getName()<<" and "<<dstStep->getName()<<" ...";
 #ifdef HAVE_MPI
   int srcNode = srcStep->getNode();
@@ -239,8 +254,14 @@ void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dst
   //  cout<<" from "<<srcNode<<" to "<<dstNode<<" ";
   if (srcNode == dstNode) {
     //    cout<<srcStep->getName()<<" and "<<dstStep->getName()<<" on same node"<<endl;
-    dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
-  } else {
+    if (sharedMem) {
+      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_ShMem(srcNode, dstNode), false); // true=blocking
+    } 
+    else {
+      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
+    }
+  } 
+  else {
     dstStep->connect(srcStep, dstDH, srcDH, 1, TH_MPI(srcNode, dstNode), true);  // true=blocking
   }
 #else
