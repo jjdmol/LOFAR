@@ -43,7 +43,7 @@ const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp) c
   timestamp = Timestamp(0,0);
 
   // check range of subband argument
-  if (subband <= 0 || subband > m_acc.extent(thirdDim)) return Array<complex<double>,4>();
+  if (subband < 0 || subband > m_acc.extent(thirdDim)) return Array<complex<double>,4>();
 
   timestamp = m_time(subband);
 
