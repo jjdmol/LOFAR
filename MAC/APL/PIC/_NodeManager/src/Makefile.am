@@ -8,7 +8,8 @@ SUFFIXES = .ph
 
 pkgincludedir = $(includedir)/APL
 pkginclude_HEADERS = \
-	../include/APL/NodeManager.h
+	../include/APL/NodeManager.h \
+	../include/APL/NMUtilities.h
 	
 DOCHDRS	=	$(pkginclude_HEADERS) \
 	NodeManagerDaemon.h \
@@ -19,24 +20,29 @@ DOCHDRS	=	$(pkginclude_HEADERS) \
 lib_LTLIBRARIES 	= libnm.la
 
 libnm_la_SOURCES	= $(DOCHDRS) \
-	NodeManager.cc \
-	NM_Protocol.cc
+	NodeManager.cc
 	
 libnm_la_CPPFLAGS = -I$(top_srcdir)/include
+libnm_la_LIBADD = libsnm.la
 
-noinst_LTLIBRARIES 	= libnmd.la
+noinst_LTLIBRARIES 	= libnmd.la libsnm.la
 
 libnmd_la_SOURCES	= $(DOCHDRS) \
 	NodeManagerDaemon.cc \
 	NodeManagerClient.cc \
-	PropertyProxy.cc \
+	PropertyProxy.cc
+libnmd_la_CPPFLAGS = -I$(top_srcdir)/include
+
+libsnm_la_SOURCES	= $(DOCHDRS) \
+	NMUtilities.cc \
 	NM_Protocol.cc
+libsnm_la_CPPFLAGS = -I$(top_srcdir)/include
 
 bin_PROGRAMS   		= NodeManager
   
 NodeManager_SOURCES		  = NMMain.cc
-NodeManager_LDADD		    = libnmd.la $(LOFAR_DEPEND)
-NodeManager_DEPENDENCIES	= libnmd.la $(LOFAR_DEPEND)
+NodeManager_LDADD		    = libnmd.la libsnm.la $(LOFAR_DEPEND)
+NodeManager_DEPENDENCIES	= libnmd.la libsnm.la $(LOFAR_DEPEND)
 NodeManager_CPPFLAGS			=
 
 BUILT_SOURCES = \

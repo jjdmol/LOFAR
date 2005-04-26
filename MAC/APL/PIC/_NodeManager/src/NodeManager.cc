@@ -96,10 +96,10 @@ GCFEvent::TResult NodeManager::operational(GCFEvent& e, GCFPortInterface& p)
     case NM_CLAIMED:
     {
       NMClaimedEvent inResponse(e);
-      list<string> newClaimedNodes, releasedNodes, faultyNodes;
-      Utils::convStringToList(newClaimedNodes, inResponse.newClaimedNodes);
-      Utils::convStringToList(releasedNodes, inResponse.releasedNodes);
-      Utils::convStringToList(faultyNodes, inResponse.releasedNodes);
+      TNodeList newClaimedNodes, releasedNodes, faultyNodes;
+      Utils::convStringToSet(newClaimedNodes, inResponse.newClaimedNodes);
+      Utils::convStringToSet(releasedNodes, inResponse.releasedNodes);
+      Utils::convStringToSet(faultyNodes, inResponse.faultyNodes);
       _interface.nodesClaimed(newClaimedNodes, releasedNodes, faultyNodes);
       break;
     }
@@ -122,7 +122,7 @@ void NodeManager::claimNodes(TNodeList& nodesToClaim)
 {
   NMClaimEvent outRequest;
   
-  Utils::convListToString(outRequest.nodesToClaim, nodesToClaim);
+  Utils::convSetToString(outRequest.nodesToClaim, nodesToClaim);
   if (_nmPort.isConnected())
   {
     _nmPort.send(outRequest);
@@ -133,12 +133,11 @@ void NodeManager::releaseNodes(TNodeList& nodesToRelease)
 {
   NMReleaseEvent outRequest;
   
-  Utils::convListToString(outRequest.nodesToRelease, nodesToRelease);
+  Utils::convSetToString(outRequest.nodesToRelease, nodesToRelease);
   if (_nmPort.isConnected())
   {
     _nmPort.send(outRequest);
   }  
 }
-
  } // namespace ANM
 } // namespace LOFAR

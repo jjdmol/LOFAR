@@ -26,12 +26,15 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_TCPPort.h>
 
+#include <set>
+using std::set;
+
 namespace LOFAR 
 {
  namespace ANM 
  {  
 
-typedef list<string> TNodeList;
+typedef set<string> TNodeList;
 
 class NodeManagerInterface 
 {
