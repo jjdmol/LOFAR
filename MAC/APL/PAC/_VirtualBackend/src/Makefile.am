@@ -3,13 +3,17 @@ INSTALL=/usr/bin/install -C
 DOCHDRS	=	 \
 	CEPApplicationManager.h \
 	VirtualBackendFactory.h \
-	VirtualBackendLD.h
+	VirtualBackendLD.h \
+	VBQualityGuard.h \
+	VBFuncStateProperty.h
    
 noinst_LTLIBRARIES 	= libvb.la
 
 libvb_la_SOURCES	= $(DOCHDRS) \
 	CEPApplicationManager.cc \
-	VirtualBackendLD.cc
+	VirtualBackendLD.cc \
+	VBQualityGuard.cc \
+	VBFuncStateProperty.cc
 	
 libvb_la_CPPFLAGS			= \
 	-DBOOST_DISABLE_THREADS \

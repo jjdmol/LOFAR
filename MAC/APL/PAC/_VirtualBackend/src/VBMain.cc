@@ -35,7 +35,7 @@ using namespace LOFAR::AVB;  // A)pplication layer V)irtual B)ackend
 int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
-
+  
   LOG_INFO("MACProcessScope: APL.PAC.VB");  
   
   boost::shared_ptr<VirtualBackendFactory> vbFactory(new VirtualBackendFactory);

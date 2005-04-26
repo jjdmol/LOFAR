@@ -1,3 +1,4 @@
+AC.versionnr=1.0
 logicalDeviceType=7
 parentHost=localhost
 parentPort=27005
@@ -8,10 +9,13 @@ startDaemonPort=server
 startDaemonTask=PAC_VBStartDaemon
 propertysetBaseName=PAC_VB1
 propertysetDetailsType=TAplPacVB
-prepareTime=+10
+claimTime=+10
+prepareTime=+20
 startTime=+200
 stopTime=+230
 childs=
+
+rescheduleTimeOut=20
 
 AC.process[0].count = 2
 AC.process[1].ID = tPCClient(2)			# tPCclient1
