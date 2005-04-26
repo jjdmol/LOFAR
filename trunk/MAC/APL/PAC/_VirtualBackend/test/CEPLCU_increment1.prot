@@ -124,11 +124,14 @@ t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; string
 //
 
 // LOGICALDEVICE enums
-t_LD_Result           = { 4, 0x00000000, 0x00000003, ENUM,
+t_LD_Result           = { 4, 0x00000000, 0x00000006, ENUM,
                              0x00000000 : "NO_ERROR",
                              0x00000001 : "FILENOTFOUND",
                              0x00000002 : "INCORRECT_NUMBER_OF_PARAMETERS",
-                             0x00000003 : "UNKNOWN_COMMAND"
+                             0x00000003 : "UNKNOWN_COMMAND",
+                             0x00000004 : "DISABLED",
+                             0x00000005 : "LOW_QUALITY",
+                             0x00000006 : "TIMING_FAILURE"
                        }
 
 t_SD_LogicalDeviceTypes = { 4, 0x00000001, 0x00000007, ENUM,
@@ -310,35 +313,40 @@ E_LOGICALDEVICE_CLAIMED =
 {
   0x08, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
 } 
 
 E_LOGICALDEVICE_PREPARED =
 {
   0x0A, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
 } 
 
 E_LOGICALDEVICE_RESUMED =
 {
   0x0C, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
 }
 
 E_LOGICALDEVICE_SUSPENDED =
 {
   0x0E, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
 }
 
 E_LOGICALDEVICE_RELEASED =
 {
   0x10, // signal Id
   0x4B, // Direction and protocol
-  0x00000000 // message payload length, big endian
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
 }
 
 // -------------------------------------------------------------------

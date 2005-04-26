@@ -24,7 +24,7 @@
 #include <boost/shared_ptr.hpp>
 #include <Common/lofar_sstream.h>
 #include <GCF/GCF_PVString.h>
-#include <APLCommon/StartDaemon_Protocol.ph>
+#include <APLCommon/LogicalDevice_Protocol.ph>
 #include <ACC/KVpair.h>
 #include <set>
 
@@ -44,10 +44,15 @@ using namespace ANM;
 
 INIT_TRACER_CONTEXT(VirtualBackendLD, LOFARLOGGER_PACKAGE);
 
-VirtualBackendLD::VirtualBackendLD(const string& taskName, const string& parameterFile) :
-  LogicalDevice(taskName, parameterFile),
-  _nodeManager(*this),
-  _cepApplication(*this, taskName)
+const string VirtualBackendLD::VB_VERSION = string("1.0");
+
+VirtualBackendLD::VirtualBackendLD(const string& taskName, 
+                                   const string& parameterFile,
+                                   GCF::TM::GCFTask* pStartDaemon) :
+  LogicalDevice(taskName, parameterFile, pStartDaemon, VB_VERSION),
+  _cepApplication(*this, taskName),
+  _qualityGuard(*this),
+  _rstoID(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());  
 }
@@ -63,82 +68,53 @@ void VirtualBackendLD::concrete_handlePropertySetAnswer(GCFEvent& answer)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, formatString("%s - event=%s",
       getName().c_str(),
       evtstr(answer)).c_str());
-  switch(answer.signal)
-  {
-    case F_SUBSCRIBED:
-    {
-      break;
-    }
-    case F_UNSUBSCRIBED:
-    {
-      break;
-    }
-    case F_VCHANGEMSG:
-    {
-      break;
-    }
-    case F_VGETRESP:
-    {
-      break;
-    }
-    case F_EXTPS_LOADED:
-    {
-      break;
-    }
-    case F_EXTPS_UNLOADED:
-    {
-      break;
-    }
-    case F_PS_CONFIGURED:
-    {
-      break;
-    }
-    case F_MYPS_ENABLED:
-    {
-      break;
-    }
-    case F_MYPS_DISABLED:
-    {
-      break;
-    }
-    case F_SERVER_GONE:
-    {
-      break;
-    }
-    default:
-      break;
-  }
 }
 
-GCFEvent::TResult VirtualBackendLD::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualBackendLD::concrete_initial_state(
+                                              GCFEvent& event, 
+                                              GCFPortInterface& /*p*/, 
+                                              TLogicalDeviceState& /*newState*/, 
+                                              TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, formatString("%s - event=%s", 
       getName().c_str(),
       evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  newState = LOGICALDEVICE_STATE_NOSTATE;
-  switch (event.signal)
-  {
-    case F_ENTRY:
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }  
   return status;
 }
 
-GCFEvent::TResult VirtualBackendLD::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualBackendLD::concrete_idle_state(
+                                              GCFEvent& event, 
+                                              GCFPortInterface& /*p*/, 
+                                              TLogicalDeviceState& /*newState*/, 
+                                              TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, formatString("%s - event=%s",
       getName().c_str(),
       evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  newState = LOGICALDEVICE_STATE_NOSTATE;
   switch (event.signal)
   {
-    case F_ENTRY:      
+    case F_ENTRY:  
+      if (_qualityGuard.isQualityLow() || errorCode == LD_RESULT_TIMING_FAILURE)
+      {
+        time_t rsto(0);
+        try 
+        {
+          rsto = m_parameterSet.getTime("rescheduleTimeOut");
+        }
+        catch (...)
+        {
+        }
+        if (rsto == 0)
+        {
+          _qualityGuard.stopMonitoring();
+        }
+        else
+        {
+          _rstoID = m_serverPort.setTimer((double) rsto);
+        }
+      }
       break;
     
     default:
@@ -148,7 +124,11 @@ GCFEvent::TResult VirtualBackendLD::concrete_idle_state(GCFEvent& event, GCFPort
   return status;
 }
 
-GCFEvent::TResult VirtualBackendLD::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/)
+GCFEvent::TResult VirtualBackendLD::concrete_claiming_state(
+                                              GCFEvent& event, 
+                                              GCFPortInterface& /*p*/, 
+                                              TLogicalDeviceState& /*newState*/, 
+                                              TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, formatString("%s - event=%s",
       getName().c_str(),
@@ -158,7 +138,25 @@ GCFEvent::TResult VirtualBackendLD::concrete_claiming_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult VirtualBackendLD::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/)
+GCFEvent::TResult VirtualBackendLD::concrete_claimed_state(
+                                              GCFEvent& event, 
+                                              GCFPortInterface& /*p*/, 
+                                              TLogicalDeviceState& /*newState*/, 
+                                              TLDResult& /*errorCode*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, formatString("%s - event=%s",
+      getName().c_str(),
+      evtstr(event)).c_str());
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+
+  return status;
+}
+
+GCFEvent::TResult VirtualBackendLD::concrete_preparing_state(
+                                              GCFEvent& event, 
+                                              GCFPortInterface& /*p*/, 
+                                              TLogicalDeviceState& /*newState*/, 
+                                              TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, formatString("%s - event=%s",
       getName().c_str(),
@@ -168,7 +166,10 @@ GCFEvent::TResult VirtualBackendLD::concrete_preparing_state(GCFEvent& event, GC
   return status;
 }
 
-GCFEvent::TResult VirtualBackendLD::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/)
+GCFEvent::TResult VirtualBackendLD::concrete_active_state(
+                                              GCFEvent& event, 
+                                              GCFPortInterface& /*p*/, 
+                                              TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",
       getName().c_str(),
@@ -178,13 +179,24 @@ GCFEvent::TResult VirtualBackendLD::concrete_active_state(GCFEvent& event, GCFPo
   return status;
 }
 
-GCFEvent::TResult VirtualBackendLD::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualBackendLD::concrete_releasing_state(
+                                              GCFEvent& event, 
+                                              GCFPortInterface& /*p*/, 
+                                              TLogicalDeviceState& newState, 
+                                              TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, formatString("%s - event=%s",
       getName().c_str(),
       evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  newState = LOGICALDEVICE_STATE_RELEASED;
+  if (errorCode == LD_RESULT_NO_ERROR)
+  {
+    newState = LOGICALDEVICE_STATE_GOINGDOWN;
+  }
+  else
+  {
+    newState = LOGICALDEVICE_STATE_IDLE;
+  }
   return status;
 }
 
@@ -221,7 +233,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
       try
       {
         nodeName = m_parameterSet.getString(formatString("%s.node", procName.c_str()));
-        _neededNodes.push_back(nodeName);
+        _neededNodes.insert(nodeName);
       }
       catch (...)
       {
@@ -237,7 +249,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
           _cepAppParams.adoptCollection(m_parameterSet.makeSubset(procName, newProcName));
           processInfoCopied.insert(procName);
           nodeName = m_parameterSet.getString(formatString("%s[0].node", procName.c_str()));
-          _neededNodes.push_back(nodeName);
+          _neededNodes.insert(nodeName);
         }
       }
       catch (...)
@@ -256,7 +268,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
         newProcName.replace(0, strlen("AC"), ldName.c_str(), ldName.length());
         _cepAppParams.adoptCollection(m_parameterSet.makeSubset(procName, newProcName));
         nodeName = m_parameterSet.getString(formatString("%s[%d].node", procName.c_str(), j));
-        _neededNodes.push_back(nodeName);   
+        _neededNodes.insert(nodeName);   
       }
       catch (...)
       {
@@ -264,8 +276,9 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
       }
     }
   }
-  _neededNodes.unique();
-  _nodeManager.claimNodes(_neededNodes);  
+  LOG_DEBUG(formatString("%d", _neededNodes.size()));
+  
+  _qualityGuard.monitorNodes(_neededNodes);  
 }
 
 void VirtualBackendLD::concretePrepare(GCFPortInterface& /*port*/)
@@ -311,7 +324,7 @@ void VirtualBackendLD::concretePrepare(GCFPortInterface& /*port*/)
   if (now > bootTime)
   {
     LOG_WARN("Cannot gurantee all CEP processes are started in time.");
-    _doStateTransition(LOGICALDEVICE_STATE_IDLE);
+    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_TIMING_FAILURE);
   }
   else
   {
@@ -331,8 +344,7 @@ void VirtualBackendLD::concreteSuspend(GCFPortInterface& /*port*/)
 
 void VirtualBackendLD::concreteRelease(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
-  _nodeManager.releaseNodes(_neededNodes);
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());  
 }
 
 void VirtualBackendLD::concreteParentDisconnected(GCFPortInterface& /*port*/)
@@ -345,23 +357,32 @@ void VirtualBackendLD::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
 }
 
-void VirtualBackendLD::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
+void VirtualBackendLD::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
+  if (&port == &m_serverPort && _rstoID == timerEvent.id)
+  {
+    _rstoID = 0;
+    _qualityGuard.stopMonitoring();
+  }
 }
 
-void VirtualBackendLD::nodesClaimed(TNodeList& newClaimedNodes, 
-                                    TNodeList& releasedNodes,
-                                    TNodeList& faultyNodes)
+void VirtualBackendLD::qualityGuardStarted()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
   _doStateTransition(LOGICALDEVICE_STATE_CLAIMED);
 }
 
-void VirtualBackendLD::nodesReleased()
+void VirtualBackendLD::qualityGuardStopped()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
-  _cepApplication.quit(0);
+  _doStateTransition(LOGICALDEVICE_STATE_RELEASING);
+}
+
+void VirtualBackendLD::lowQuality(TNodeList& faultyNodes)
+{  
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
+  _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
 }
 
 void VirtualBackendLD::appBooted(uint16 result)
@@ -421,7 +442,7 @@ void VirtualBackendLD::appQuitDone(uint16 result)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
   if (result == AcCmdMaskOk)
   {  
-    _doStateTransition(LOGICALDEVICE_STATE_RELEASED);  
+    _qualityGuard.stopMonitoring();
   }
 }
 
@@ -456,16 +477,6 @@ void VirtualBackendLD::appSupplyInfoAnswer(const string& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
   LOG_INFO_STR("Answer: " << answer);
-}
-
-void VirtualBackendLD::myPSAnswer()
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
-}
-
-void VirtualBackendLD::myPSvalueChanged(const string& /*propName*/, const GCF::Common::GCFPValue& /*value*/)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
 }
 
   } // namespace AVB

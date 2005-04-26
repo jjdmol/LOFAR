@@ -30,8 +30,8 @@
 
 //# local includes
 #include <APLCommon/LogicalDevice.h>
-#include <APL/NodeManager.h>
 #include <CEPApplicationManager.h>
+#include <VBQualityGuard.h>
 
 //# Common Includes
 
@@ -45,13 +45,16 @@ namespace LOFAR
   namespace AVB
   {
 
-class VirtualBackendLD : public APLCommon::LogicalDevice,
-                         public ANM::NodeManagerInterface,
+class VirtualBackendLD : public APLCommon::LogicalDevice,                         
                          public CEPApplicationManagerInterface
 {
   public:
+    // Logical Device version
+    static const string VB_VERSION;
 
-    explicit VirtualBackendLD(const string& taskName, const string& parameterFile);
+    explicit VirtualBackendLD(const string& taskName, 
+                              const string& parameterFile,
+                              GCF::TM::GCFTask* pStartDaemon);
     virtual ~VirtualBackendLD();
 
   protected:
@@ -66,27 +69,31 @@ class VirtualBackendLD : public APLCommon::LogicalDevice,
     /**
     * Initial state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
+    virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
     /**
     * Idle state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
+    virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
     /**
     * Claiming state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
+    virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
+    /**
+    * Claimed state additional behaviour must be implemented in the derived classes. 
+    */
+    virtual GCF::TM::GCFEvent::TResult concrete_claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
     /**
     * Preparing state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
+    virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
     /**
     * active state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLDResult& errorCode);
     /**
     * Releasing state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
+    virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
 
     /**
     * Implementation of the Claim method is done in the derived classes. 
@@ -118,11 +125,11 @@ class VirtualBackendLD : public APLCommon::LogicalDevice,
     virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port);
     virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port);
 
-  protected: // implemenation of abstract NodeManagerInterface methods
-    void    nodesClaimed(ANM::TNodeList& newClaimedNodes, 
-                         ANM::TNodeList& releasedNodes,
-                         ANM::TNodeList& faultyNodes);
-    void    nodesReleased();
+  private: // interface for quality guard
+    friend class VBQualityGuard;
+    void qualityGuardStarted();
+    void qualityGuardStopped();
+    void lowQuality(ANM::TNodeList& faultyNodes);
     
   protected: // implemenation of abstract CEPApplicationManagerInterface methods
     void    appBooted(uint16 result);
@@ -137,19 +144,13 @@ class VirtualBackendLD : public APLCommon::LogicalDevice,
     void    appReplaced(uint16 result);
     string  appSupplyInfo(const string& keyList);
     void    appSupplyInfoAnswer(const string& answer);
-
-  protected: // 
-    void    myPSAnswer();
-    void    myPSvalueChanged(const string& propName, const GCF::Common::GCFPValue& value);
-
+  
   private:
-    // GCF::PAL::GCFMyPropertySet _vbProps; not yet used
-    // GCF::PAL::GCFExtPropertySet _cepProps; not yet used
-    ANM::NodeManager          _nodeManager;
     CEPApplicationManager     _cepApplication;
-    //VirtualBackendQuality     _quality;
+    VBQualityGuard            _qualityGuard;
     ACC::ParameterCollection  _cepAppParams;
-    list<string>              _neededNodes;
+    ANM::TNodeList            _neededNodes;
+    unsigned long             _rstoID;
   
     ALLOC_TRACER_CONTEXT  
 };

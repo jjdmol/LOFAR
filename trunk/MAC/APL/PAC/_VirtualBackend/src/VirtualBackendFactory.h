@@ -44,7 +44,9 @@ class VirtualBackendFactory : public APLCommon::LogicalDeviceFactory
     VirtualBackendFactory() {}; 
     virtual ~VirtualBackendFactory() {};
     
-    virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, const string& parameterFile);
+    virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, 
+                                                                            const string& parameterFile,
+                                                                            GCF::TM::GCFTask* pStartDaemon);
 
   protected:
     // protected copy constructor
@@ -56,9 +58,11 @@ class VirtualBackendFactory : public APLCommon::LogicalDeviceFactory
   
 };
 
-inline boost::shared_ptr<APLCommon::LogicalDevice> VirtualBackendFactory::createLogicalDevice(const string& taskName, const string& parameterFile)
+inline boost::shared_ptr<APLCommon::LogicalDevice> VirtualBackendFactory::createLogicalDevice(const string& taskName, 
+                                                                            const string& parameterFile,
+                                                                            GCF::TM::GCFTask* pStartDaemon)
 {
-  return boost::shared_ptr<APLCommon::LogicalDevice>(new VirtualBackendLD(taskName, parameterFile));
+  return boost::shared_ptr<APLCommon::LogicalDevice>(new VirtualBackendLD(taskName, parameterFile, pStartDaemon));
 };
 
   } // namespace AVB

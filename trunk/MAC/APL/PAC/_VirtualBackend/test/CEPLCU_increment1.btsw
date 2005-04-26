@@ -17,26 +17,25 @@
 Statemachine_VBStartDaemonClient (vbsd_scheduled) =
 {
 // ------------------------------------------------------------------------------
-  s000  : F_STARTDAEMON_SCHEDULE 	(0x00000007, "VB1", "VB1.param" )    ; s010.			// send schedule VB1
-  s010  : E_STARTDAEMON_SCHEDULED ( )
-  				R_SIG(vbsd_scheduled)              						; finish.		// wait for response
+  s000  : 	F_STARTDAEMON_SCHEDULE 	(0x00000007, "VB1", "VB1.param" )    ; s010.			// send schedule VB1
+  s010  :		E_STARTDAEMON_SCHEDULED ( )
+  					R_SIG(vbsd_scheduled)              						; finish.		// wait for response
 
-  finish : TERMINATE															; finish.
+  finish : 	TERMINATE															; finish.
 }
 
 Statemachine_VirtualInstrument ( vbsd_scheduled) =
 {
-	s000   : E_LOGICALDEVICE_CONNECT   ( )				                  ; s001.
-  s001	 : F_LOGICALDEVICE_CONNECTED ( 0x00000000 )								; s002.
-  s002	 : E_LOGICALDEVICE_SCHEDULED ( )													
-  				 E_LOGICALDEVICE_CLAIMED	    													; s003.
-  s003	 : F_LOGICALDEVICE_PREPARE (0x00000000 )									; s004.
-  s004   : E_LOGICALDEVICE_SUSPENDED
-  				 E_LOGICALDEVICE_RESUMED
-  				 E_LOGICALDEVICE_SUSPENDED
-  				 E_LOGICALDEVICE_RELEASED   														; ready.
-  ready  : S_SIG(vbsd_scheduled)			 														; finish.
-  finish : TERMINATE 																							; finish.
+	s000   : 	E_LOGICALDEVICE_CONNECT   ( )				                  ; s001.
+  s001	 : 	F_LOGICALDEVICE_CONNECTED ( 0x00000000 )								; s002.
+  s002	 : 	E_LOGICALDEVICE_SCHEDULED ( )													
+						E_LOGICALDEVICE_CLAIMED ()
+						E_LOGICALDEVICE_PREPARED ()
+						E_LOGICALDEVICE_SUSPENDED ()
+						E_LOGICALDEVICE_RESUMED ()
+						E_LOGICALDEVICE_RELEASED () 														; ready.
+  ready  : 	S_SIG(vbsd_scheduled)			 														; finish.
+  finish : 	TERMINATE 																							; finish.
 }
 
 [testscript]

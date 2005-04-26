@@ -1,9 +1,9 @@
 #
-AC.timeout.createsubsets=  1 m
-AC.timeout.startup      =  1 m
-AC.timeout.define       = 40
-AC.timeout.init         = 40
-AC.timeout.run          = 30
+AC.timeout.createsubsets= 10
+AC.timeout.startup      = 10
+AC.timeout.define       = 20
+AC.timeout.init         = 10
+AC.timeout.run          = 10
 AC.timeout.pause        = 50
 AC.timeout.recover      = 50
 AC.timeout.snapshot     = 30
