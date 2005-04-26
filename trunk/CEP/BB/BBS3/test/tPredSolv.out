@@ -1,60 +1,495 @@
+Debug: registered context Global=0
 >>>
-log4cplus:ERROR No appenders could be found for logger (CEP.BB.BBS3).
-log4cplus:ERROR Please initialize the log4cplus system properly.
-/tmp/test.demo/demo
-Mon Jan 31 10:46:49 2005      WARN MeasIERS::fillMeas(MeasIERS::Files, Double) (file /lofarbuild/aips++/stable/code/measures/implement/Measures/MeasIERS.cc, line 94):
+050426 144320,726 [1078673920] TRACE  TRC - TRACE module activated
+Starting first test
+Tue Apr 26 12:43:21 2005    SEVERE MeasTable::dUTC(Double) (file /lofarbuild/aips++/weekly/code/measures/implement/Measures/MeasTable.cc, line 6308):
+Leap second table TAI_UTC seems out-of-date. 
+Until table is updated (see aips++ manager) times and coordinates
+derived from UTC could be wrong by 1s or more.
+
+Tue Apr 26 12:43:21 2005      WARN MeasIERS::fillMeas(MeasIERS::Files, Double) (file /lofarbuild/aips++/weekly/code/measures/implement/Measures/MeasIERS.cc, line 94):
 Requested JD27223.3 is outside the IERS table data range
 Calculations will proceed with less precision
 
-Mon Jan 31 10:46:49 2005      WARN MeasTable::dUT1(Double) (file /lofarbuild/aips++/stable/code/measures/implement/Measures/MeasTable.cc, line 6437):
+Tue Apr 26 12:43:21 2005      WARN MeasTable::dUT1(Double) (file /lofarbuild/aips++/weekly/code/measures/implement/Measures/MeasTable.cc, line 6437):
 No requested dUT1 data available from IERS tables. 
 Proceeding with probably less precision.
 
-Mon Jan 31 10:46:49 2005      WARN MeasTable::PolarMotion(Double) (file /lofarbuild/aips++/stable/code/measures/implement/Measures/MeasTable.cc, line 6265):
+Tue Apr 26 12:43:21 2005      WARN MeasTable::PolarMotion(Double) (file /lofarbuild/aips++/weekly/code/measures/implement/Measures/MeasTable.cc, line 6265):
 No requested polar motion data available from IERS tables. 
 Proceeding with probably less precision.
 
 BBSTest: BeginOfInterval
-BBSTest: file-mapping timer: avg = 71.6 us, total = 71.6 us, count =         1
+BBSTest: file-mapping timer: avg = 54.5 us, total = 54.5 us, count =         1
 
-BBSTest: initparms    timer: avg = 32.9 ms, total = 32.9 ms, count =         1
+BBSTest: initparms    timer: avg = 26.9 ms, total = 26.9 ms, count =         1
 
-bufShape [100,10,12,200]
-BBSTest: predict timer: avg = 1.81 ms, total = 90.3 ms, count =        50
-
-BBSTest: formeqs timer: avg = 72.6 us, total = 3.63 ms, count =        50
+bufShape [4,10,312,200]
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   1
+  calcuvw  : 0
 
 Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+BBSTest: predict timer: avg = 1.42 ms, total = 70.8 ms, count =        50
+
+BBSTest: formeqs timer: avg = 36.8 us, total = 1.84 ms, count =        50
+
+Nr of used data points:    800
+Nr of flagged data points: 0
 itsSolFlag: 1
 itsRank   : 9
 itsFit    : 1
-itsMu     : 0.01097264283
-itsStddev : 0.01097264283
-itsChi    : 2.406894223
+itsMu     : 0.011
+itsStddev : 0.011
+itsChi    : 0.0962
 
-BBSTest: solver     timer: avg =  280 us, total =  280 us, count =         1
+BBSTest: solver     timer: avg =  439 us, total =  439 us, count =         1
 
-After:  [2.734004034,0.453799903,0.60459961,2.734020143,0.4536931581,0.5967461872,2.733981712,0.4537585098,0.6003633806]
-/tmp/test.demo/demo
+iter0:  [2.734004076,0.4538001731,0.6039205533,2.734020405,0.4536930993,0.5974054979,2.733981394,0.4537583416,0.6004018857]
+BBSTest: predict timer: avg =  1.4 ms, total =  140 ms, count =       100
+
+BBSTest: formeqs timer: avg = 32.7 us, total = 3.27 ms, count =       100
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -2
+itsMu     : 0.000138
+itsStddev : 0.000138
+itsChi    : 1.51e-05
+
+BBSTest: solver     timer: avg =  668 us, total =  668 us, count =         1
+
+iter1:  [2.734004501,0.4538008139,0.6056732548,2.734017502,0.4536965908,0.5944160394,2.733984812,0.4537684625,0.599921246]
+BBSTest: predict timer: avg =  1.4 ms, total =  210 ms, count =       150
+
+BBSTest: formeqs timer: avg = 31.4 us, total = 4.71 ms, count =       150
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -2
+itsMu     : 4.83e-05
+itsStddev : 4.83e-05
+itsChi    : 1.85e-06
+
+BBSTest: solver     timer: avg =  438 us, total =  438 us, count =         1
+
+iter2:  [2.734005357,0.4537966951,0.6076239876,2.734016631,0.4536953623,0.5926366284,2.733984825,0.4537734395,0.5997288338]
+BBSTest: predict timer: avg =  1.4 ms, total =  280 ms, count =       200
+
+BBSTest: formeqs timer: avg = 30.8 us, total = 6.15 ms, count =       200
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 0
+itsRank   : 0
+itsFit    : -1.64
+itsMu     : 0
+itsStddev : 0
+itsChi    : 0
+
+BBSTest: solver     timer: avg =  424 us, total =  424 us, count =         1
+
+iter3:  [2.734005357,0.4537966951,0.6076239876,2.734016631,0.4536953623,0.5926366284,2.733984825,0.4537734395,0.5997288338]
+BBSTest: predict timer: avg =  1.4 ms, total =  349 ms, count =       250
+
+BBSTest: formeqs timer: avg = 30.4 us, total = 7.59 ms, count =       250
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 4.46e-05
+itsStddev : 4.46e-05
+itsChi    : 3.16e-06
+
+BBSTest: solver     timer: avg =  472 us, total =  472 us, count =         1
+
+iter4:  [2.734005349,0.4537964747,0.607649964,2.73401662,0.4536955569,0.5925934234,2.733984837,0.4537734839,0.5997525707]
+BBSTest: predict timer: avg =  1.4 ms, total =  419 ms, count =       300
+
+BBSTest: formeqs timer: avg = 30.1 us, total = 9.04 ms, count =       300
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.56
+itsMu     : 4.3e-05
+itsStddev : 4.3e-05
+itsChi    : 1.46e-06
+
+BBSTest: solver     timer: avg =  438 us, total =  438 us, count =         1
+
+iter5:  [2.734005506,0.4537960501,0.607807842,2.734016505,0.453695427,0.5924074287,2.733984796,0.4537740044,0.5997745076]
+BBSTest: predict timer: avg = 1.39 ms, total =  488 ms, count =       350
+
+BBSTest: formeqs timer: avg = 29.9 us, total = 10.5 ms, count =       350
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -0.066
+itsMu     : 4.17e-05
+itsStddev : 4.17e-05
+itsChi    : 1.38e-06
+
+BBSTest: solver     timer: avg =  443 us, total =  443 us, count =         1
+
+iter6:  [2.73400571,0.4537954918,0.6087007697,2.734016377,0.4536952294,0.5917800549,2.733984717,0.4537746398,0.5995094076]
+BBSTest: predict timer: avg = 1.39 ms, total =  558 ms, count =       400
+
+BBSTest: formeqs timer: avg = 29.7 us, total = 11.9 ms, count =       400
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 0
+itsRank   : 0
+itsFit    : -0.042
+itsMu     : 0
+itsStddev : 0
+itsChi    : 0
+
+BBSTest: solver     timer: avg =  426 us, total =  426 us, count =         1
+
+iter7:  [2.73400571,0.4537954918,0.6087007697,2.734016377,0.4536952294,0.5917800549,2.733984717,0.4537746398,0.5995094076]
+BBSTest: predict timer: avg = 1.39 ms, total =  627 ms, count =       450
+
+BBSTest: formeqs timer: avg = 29.6 us, total = 13.3 ms, count =       450
+
+Nr of used data points:    800
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 4.15e-05
+itsStddev : 4.15e-05
+itsChi    : 2.73e-06
+
+BBSTest: solver     timer: avg =  438 us, total =  438 us, count =         1
+
+iter8:  [2.734005712,0.4537954822,0.6087097309,2.734016374,0.4536952313,0.5917732441,2.733984717,0.4537746473,0.5995073432]
+End of first test
+Starting double setEquations test
 BBSTest: BeginOfInterval
-BBSTest: file-mapping timer: avg =  106 us, total =  106 us, count =         1
+BBSTest: file-mapping timer: avg = 55.8 us, total = 55.8 us, count =         1
 
-BBSTest: initparms    timer: avg =  296 ms, total =  296 ms, count =         1
+BBSTest: initparms    timer: avg =   26 ms, total =   26 ms, count =         1
 
-bufShape [100,10,12,99000]
-BBSTest: predict timer: avg = 1.84 ms, total = 45.5  s, count =     24750
-
-BBSTest: formeqs timer: avg = 58.7 us, total = 1.45  s, count =     24750
+bufShape [4,10,312,200]
+use toblob
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   1
+  calcuvw  : 0
 
 Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+BBSTest: predict timer: avg = 1.41 ms, total = 70.4 ms, count =        50
+
+BBSTest: formeqs timer: avg = 35.7 us, total = 1.79 ms, count =        50
+
+Nr of used data points:    1600
+Nr of flagged data points: 0
 itsSolFlag: 1
 itsRank   : 9
 itsFit    : 1
-itsMu     : 0.1513780999
-itsStddev : 0.1513780999
-itsChi    : 226861.5521
+itsMu     : 0.011
+itsStddev : 0.011
+itsChi    : 0.192
 
-BBSTest: solver     timer: avg =  270 us, total =  270 us, count =         1
+BBSTest: solver     timer: avg =  472 us, total =  472 us, count =         1
 
-After:  [2.734000947,0.4537899633,0.8540249608,2.734020251,0.4536898586,0.5032648719,2.733980648,0.4537503535,0.3403978668]
+iter0:  [2.734004076,0.4538001731,0.6039205533,2.734020405,0.4536930993,0.5974054979,2.733981394,0.4537583416,0.6004018857]
+End of double setEquations test
+Starting test with two prediffers
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 47.5 us, total = 47.5 us, count =         1
+
+BBSTest: initparms    timer: avg = 26.6 ms, total = 26.6 ms, count =         1
+
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 51.9 us, total = 51.9 us, count =         1
+
+BBSTest: initparms    timer: avg =   26 ms, total =   26 ms, count =         1
+
+bufShape-1 [8,10,156,200]
+BBSTest: predict timer: avg = 1.42 ms, total = 71.2 ms, count =        50
+
+BBSTest: formeqs timer: avg = 41.2 us, total = 2.06 ms, count =        50
+
+bufShape-2 [8,10,156,200]
+BBSTest: predict timer: avg = 1.44 ms, total =   72 ms, count =        50
+
+BBSTest: formeqs timer: avg = 39.5 us, total = 1.97 ms, count =        50
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+Nr of used data points:    3200
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.01098171166
+itsStddev : 0.01098171166
+itsChi    : 0.3848281894
+
+BBSTest: solver     timer: avg =  445 us, total =  445 us, count =         1
+
+After:  [2.734004074,0.4538001633,0.6039471597,2.734020395,0.4536931018,0.5973809337,2.733981406,0.4537583473,0.6004009832]
+Per prediffer: [[2.734004074,0.4538001633,0.6039471597,2.734020395,0.4536931018,0.5973809337,2.733981406,0.4537583473,0.6004009832],[2.734004074,0.4538001633,0.6039471597,2.734020395,0.4536931018,0.5973809337,2.733981406,0.4537583473,0.6004009832]]
+End of test with two prediffers
+Starting test with 21 antennas
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 50.8 us, total = 50.8 us, count =         1
+
+BBSTest: initparms    timer: avg =   53 ms, total =   53 ms, count =         1
+
+bufShape [4,10,313,1050]
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   1
+  calcuvw  : 0
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+BBSTest: predict timer: avg = 1.46 ms, total = 1.53  s, count =      1050
+
+BBSTest: formeqs timer: avg = 13.2 us, total = 13.8 ms, count =      1050
+
+Nr of used data points:    4200
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.0266
+itsStddev : 0.0266
+itsChi    : 2.96
+
+BBSTest: solver     timer: avg =  439 us, total =  439 us, count =         1
+
+iter0:  [2.734000058,0.4537900035,0.9838712296,2.734020269,0.4536898874,0.5025455825,2.733980649,0.4537501573,0.3049662165]
+BBSTest: predict timer: avg = 1.45 ms, total = 3.05  s, count =      2100
+
+BBSTest: formeqs timer: avg =   11 us, total = 23.1 ms, count =      2100
+
+Nr of used data points:    4200
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -2
+itsMu     : 0.000791
+itsStddev : 0.000791
+itsChi    : 0.00262
+
+BBSTest: solver     timer: avg =  438 us, total =  438 us, count =         1
+
+iter1:  [2.734000002,0.4537900019,1.000212808,2.734020009,0.4536900032,0.5000044708,2.733980009,0.4537499987,0.2993235781]
+BBSTest: predict timer: avg = 1.45 ms, total = 4.57  s, count =      3150
+
+BBSTest: formeqs timer: avg = 10.2 us, total =   32 ms, count =      3150
+
+Nr of used data points:    4200
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.99
+itsMu     : 1.49e-05
+itsStddev : 1.49e-05
+itsChi    : 9.33e-07
+
+BBSTest: solver     timer: avg =  443 us, total =  443 us, count =         1
+
+iter2:  [2.734,0.45379,0.9999948478,2.73402,0.45369,0.49998994,2.73398,0.4537499998,0.3000014784]
+BBSTest: predict timer: avg = 1.45 ms, total = 6.09  s, count =      4200
+
+BBSTest: formeqs timer: avg = 9.77 us, total =   41 ms, count =      4200
+
+Nr of used data points:    4200
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -2
+itsMu     : 2.79e-07
+itsStddev : 2.79e-07
+itsChi    : 3.26e-10
+
+BBSTest: solver     timer: avg =  445 us, total =  445 us, count =         1
+
+iter3:  [2.734,0.45379,0.9999998111,2.73402,0.45369,0.4999999478,2.73398,0.45375,0.3000003025]
+BBSTest: predict timer: avg = 1.45 ms, total = 7.62  s, count =      5250
+
+BBSTest: formeqs timer: avg = 9.53 us, total =   50 ms, count =      5250
+
+Nr of used data points:    4200
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -2
+itsMu     : 2.31e-08
+itsStddev : 2.31e-08
+itsChi    : 2.23e-12
+
+BBSTest: solver     timer: avg =  468 us, total =  468 us, count =         1
+
+iter4:  [2.734,0.45379,1.000000002,2.73402,0.45369,0.5000000021,2.73398,0.45375,0.2999999998]
+End of test with 21 antennas
+Starting test with updating parmtable
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 52.5 us, total = 52.5 us, count =         1
+
+BBSTest: initparms    timer: avg = 26.7 ms, total = 26.7 ms, count =         1
+
+bufShape [8,10,156,200]
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   3
+  calcuvw  : 0
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+BBSTest: predict timer: avg =  1.4 ms, total = 70.2 ms, count =        50
+
+BBSTest: formeqs timer: avg = 37.3 us, total = 1.86 ms, count =        50
+
+Nr of used data points:    1600
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.011
+itsStddev : 0.011
+itsChi    : 0.192
+
+BBSTest: solver     timer: avg =  436 us, total =  436 us, count =         1
+
+iter0:  [2.734004074,0.4538001633,0.6039471597,2.734020395,0.4536931018,0.5973809337,2.733981406,0.4537583473,0.6004009832]
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.604]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.597]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+BBSTest: predict timer: avg = 1.41 ms, total =  141 ms, count =       100
+
+BBSTest: formeqs timer: avg = 34.8 us, total = 3.48 ms, count =       100
+
+Nr of used data points:    1600
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -2
+itsMu     : 0.000139
+itsStddev : 0.000139
+itsChi    : 3.06e-05
+
+BBSTest: solver     timer: avg =  478 us, total =  478 us, count =         1
+
+iter1:  [2.734004511,0.4538007895,0.6057240058,2.734017495,0.4536965748,0.5943667748,2.733984811,0.4537684948,0.5999195408]
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.606]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.594]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+BBSTest: predict timer: avg = 1.41 ms, total =  212 ms, count =       150
+
+BBSTest: formeqs timer: avg =   34 us, total = 5.09 ms, count =       150
+
+Nr of used data points:    1600
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -2
+itsMu     : 4.86e-05
+itsStddev : 4.86e-05
+itsChi    : 3.76e-06
+
+BBSTest: solver     timer: avg =  438 us, total =  438 us, count =         1
+
+iter2:  [2.734005359,0.4537966814,0.6077026266,2.734016629,0.4536953566,0.5925676336,2.733984825,0.4537734474,0.5997190639]
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.608]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.593]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+BBSTest: predict timer: avg = 1.41 ms, total =  283 ms, count =       200
+
+BBSTest: formeqs timer: avg = 33.5 us, total =  6.7 ms, count =       200
+
+Nr of used data points:    1600
+Nr of flagged data points: 0
+itsSolFlag: 0
+itsRank   : 0
+itsFit    : -1.65
+itsMu     : 0
+itsStddev : 0
+itsChi    : 0
+
+BBSTest: solver     timer: avg =  421 us, total =  421 us, count =         1
+
+iter3:  [2.734005359,0.4537966814,0.6077026266,2.734016629,0.4536953566,0.5925676336,2.733984825,0.4537734474,0.5997190639]
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.608]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.593]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+BBSTest: predict timer: avg = 1.41 ms, total =  353 ms, count =       250
+
+BBSTest: formeqs timer: avg = 33.3 us, total = 8.31 ms, count =       250
+
+Nr of used data points:    1600
+Nr of flagged data points: 0
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 4.49e-05
+itsStddev : 4.49e-05
+itsChi    : 6.44e-06
+
+BBSTest: solver     timer: avg =  442 us, total =  442 us, count =         1
+
+iter4:  [2.734005351,0.4537964622,0.6077289227,2.734016618,0.4536955494,0.5925240488,2.733984837,0.4537734924,0.5997427985]
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.608]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.593]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+End of test with updating parmtable
 <<<
