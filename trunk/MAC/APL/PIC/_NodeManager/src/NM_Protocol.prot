@@ -42,10 +42,6 @@ event = {
 		name = "faultyNodes";
 		type = "string";
 	};
-	param = {
-		name = "result";
-		type = "unsigned int";
-	};
 };
 
 event = {
@@ -59,13 +55,5 @@ event = {
 
 event = {
 	signal = RELEASED;
-	dir = IN;	
-	param = {
-		name = "faultyNodes";
-		type = "string";
-	};
-	param = {
-		name = "result";
-		type = "unsigned int";
-	};
+	dir = OUT;	
 };

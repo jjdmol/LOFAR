@@ -27,6 +27,7 @@
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <PropertyProxy.h>
+#include <APL/NodeManager.h> // for the type TNodeList 
 
 namespace LOFAR 
 {
@@ -56,14 +57,14 @@ class NodeManagerClient : public GCF::TM::GCFTask
   private: // data members        
     GCF::TM::GCFTCPPort _nmcPort;
     NodeManagerDaemon&  _daemon;
-    list<string>        _curClaimedNodes;
+    TNodeList           _curClaimedNodes;
     PropertyProxy       _propertyProxy;
 
   private: // admin members
-    list<string> _newClaimedNodes;
-    list<string> _nodesToRelease;
-    list<string> _releasedNodes;
-    list<string> _faultyNodes;
+    TNodeList _newClaimedNodes;
+    TNodeList _nodesToRelease;
+    TNodeList _releasedNodes;
+    TNodeList _faultyNodes;
     unsigned int _nrOfValueGetRequests;
 };
  } // namespace ANM

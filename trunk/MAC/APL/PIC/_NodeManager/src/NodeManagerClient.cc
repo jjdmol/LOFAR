@@ -26,8 +26,8 @@
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/PAL/GCF_Answer.h>
 #include <GCF/Utils.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <NM_Protocol.ph>
+#include <APL/NMUtilities.h>
 
 #define FULL_RS_DP(rsname) formatString("PIC_CEP_%s.state", (rsname).c_str())
 enum 
@@ -85,7 +85,7 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  static list<string> claimNodes;
+  static TNodeList claimNodes;
   
   switch (e.signal)
   {
@@ -108,41 +108,47 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
       _newClaimedNodes.clear();
       _releasedNodes.clear();
       
-      Utils::convStringToList(claimNodes, inRequest.nodesToClaim);
+      Utils::convStringToSet(claimNodes, inRequest.nodesToClaim);
+      
       _nodesToRelease = _curClaimedNodes;
-      list<string>::iterator curClaimedNode;
-      for (list<string>::iterator nodeToClaim = claimNodes.begin();
+      TNodeList::iterator curClaimedNode;
+      // find out whether nodes must be claimed or released
+      for (TNodeList::iterator nodeToClaim = claimNodes.begin();
           nodeToClaim != claimNodes.end(); ++nodeToClaim)
       {
-        for (curClaimedNode = _curClaimedNodes.begin();
-             curClaimedNode != _curClaimedNodes.end(); ++curClaimedNode)
-        {
-          if (curClaimedNode == nodeToClaim)
-          {
-            _nodesToRelease.remove(*curClaimedNode);
-            break;
-          }
-        }
+        curClaimedNode = _curClaimedNodes.find(*nodeToClaim);
+
         if (curClaimedNode == _curClaimedNodes.end())
         {
-          _newClaimedNodes.push_back(*nodeToClaim);
-        }
-        
-        if (_propertyProxy.requestPropValue(FULL_RS_DP(*nodeToClaim)) != GCF_NO_ERROR)
-        {
-          _faultyNodes.push_back(*nodeToClaim);
+          // node not yet claimed 
+          
+          // get current state value
+          if (_propertyProxy.requestPropValue(FULL_RS_DP(*nodeToClaim)) != GCF_NO_ERROR)
+          {
+            _faultyNodes.insert(*nodeToClaim);
+          }
+          else
+          {
+            _newClaimedNodes.insert(*nodeToClaim);
+            _nrOfValueGetRequests++;
+          }        
         }
         else
         {
-          _nrOfValueGetRequests++;
-        }        
+          _nodesToRelease.erase(*curClaimedNode);
+        }            
+        
       }
-      for (list<string>::iterator nodeToRelease = _nodesToRelease.begin();
+      // now we have a list with which are currently claimed but not needed anymore
+      // so they have to release
+      for (TNodeList::iterator nodeToRelease = _nodesToRelease.begin();
            nodeToRelease != _nodesToRelease.end(); ++nodeToRelease)
       {
         if (_propertyProxy.requestPropValue(FULL_RS_DP(*nodeToRelease)) != GCF_NO_ERROR)
         {
-          _faultyNodes.push_back(*nodeToRelease);
+          // could not be released in the right way so pretend this is already 
+          // done here
+          _releasedNodes.insert(*nodeToRelease);
         }
         else
         {
@@ -151,10 +157,11 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
       }
       if (_nrOfValueGetRequests == 0)
       {
+        // no state value has to be updated so the response can be sent here
         NMClaimedEvent outResponse;
-        Utils::convListToString(outResponse.newClaimedNodes, _newClaimedNodes);
-        Utils::convListToString(outResponse.releasedNodes, _releasedNodes);
-        Utils::convListToString(outResponse.faultyNodes, _faultyNodes);
+        Utils::convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
+        Utils::convSetToString(outResponse.releasedNodes, _releasedNodes);
+        Utils::convSetToString(outResponse.faultyNodes, _faultyNodes);
         _nmcPort.send(outResponse);
       }
       else
@@ -166,14 +173,16 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
     case NM_RELEASE:
     {
       NMReleaseEvent inRequest(e);
-      list<string> releaseNodes;
-      Utils::convStringToList(releaseNodes, inRequest.nodesToRelease);
-      for (list<string>::iterator nodeToRelease = releaseNodes.begin();
+      TNodeList releaseNodes;
+      Utils::convStringToSet(releaseNodes, inRequest.nodesToRelease);
+      for (TNodeList::iterator nodeToRelease = releaseNodes.begin();
           nodeToRelease != releaseNodes.end(); ++nodeToRelease)
       {        
         if (_propertyProxy.requestPropValue(FULL_RS_DP(*nodeToRelease)) != GCF_NO_ERROR)
         {
-          _faultyNodes.push_back(*nodeToRelease);
+          // could not be released in the right way so pretend this is already 
+          // done here
+          _releasedNodes.insert(*nodeToRelease);
         }
         else
         {
@@ -182,6 +191,7 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
       }
       if (_nrOfValueGetRequests == 0)
       {
+        // no state value has to be updated so the response can be sent here
         NMReleasedEvent outResponse;
         _nmcPort.send(outResponse);
       }
@@ -218,22 +228,23 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPropValueEvent& getResp = (GCFPropValueEvent&) e;
       GCFPVInteger& value = (GCFPVInteger&) (*getResp.pValue);
-      string resName(getResp.pPropName);
-      resName.erase(0, GCFPVSSInfo::getLocalSystemName().length() + strlen(":PIC_CEP_"));
-      resName.erase(resName.length() - strlen(".state"));
-      list<string>::iterator nodeToRelease;
+      
+      string resName(NMUtilities::extractNodeName(getResp.pPropName));
+      
+      TNodeList::iterator nodeToRelease;
       for (nodeToRelease = _nodesToRelease.begin();
            nodeToRelease != _nodesToRelease.end(); ++nodeToRelease)
       {
         if (*nodeToRelease == resName) 
         {
+          // node was selected to be released
           if (value.getValue() > RS_IDLE)
           {
             value.setValue(value.getValue() - 1); // decrease usecount
             _propertyProxy.setPropValue(getResp.pPropName, value);
-            _releasedNodes.push_back(*nodeToRelease);
           }
-          _curClaimedNodes.remove(*nodeToRelease);
+          _releasedNodes.insert(*nodeToRelease);
+          _curClaimedNodes.erase(*nodeToRelease);
           break;
         }
       }
@@ -243,13 +254,15 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
         // not in releasedNodes list, so it must be claimed
         if (value.getValue() < RS_IDLE)
         {
-          _faultyNodes.push_back(resName);
+          // could not be claimed due to the malfunctioning state of the node
+          _faultyNodes.insert(resName);
+          _newClaimedNodes.erase(resName);
         }
         else 
         {
           value.setValue(value.getValue() + 1); // increase usecount
           _propertyProxy.setPropValue(getResp.pPropName, value);
-          _curClaimedNodes.push_back(resName);
+          _curClaimedNodes.insert(resName);
         }        
       }
       
@@ -257,9 +270,9 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
       if (_nrOfValueGetRequests == 0)
       {
         NMClaimedEvent outResponse;
-        Utils::convListToString(outResponse.newClaimedNodes, _newClaimedNodes);
-        Utils::convListToString(outResponse.releasedNodes, _releasedNodes);
-        Utils::convListToString(outResponse.faultyNodes, _faultyNodes);
+        Utils::convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
+        Utils::convSetToString(outResponse.releasedNodes, _releasedNodes);
+        Utils::convSetToString(outResponse.faultyNodes, _faultyNodes);
         _nmcPort.send(outResponse);
         TRAN(NodeManagerClient::operational);
       }
@@ -291,15 +304,16 @@ GCFEvent::TResult NodeManagerClient::releasing(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPropValueEvent& getResp = (GCFPropValueEvent&) e;
       GCFPVInteger& value = (GCFPVInteger&) (*getResp.pValue);
-      string resName(getResp.pPropName);
-      resName.erase(0, GCFPVSSInfo::getLocalSystemName().length() + strlen(":PIC_CEP_"));
-      resName.erase(resName.length() - strlen(".state"));
+
+      // extract the resource (node) name from the propName
+      string resName(NMUtilities::extractNodeName(getResp.pPropName));
+
       if (value.getValue() > RS_IDLE)
       {
         value.setValue(value.getValue() - 1); // decrease usecount
         _propertyProxy.setPropValue(getResp.pPropName, value);
       }
-      _curClaimedNodes.remove(resName);
+      _curClaimedNodes.erase(resName);
             
       _nrOfValueGetRequests--;
       if (_nrOfValueGetRequests == 0)
