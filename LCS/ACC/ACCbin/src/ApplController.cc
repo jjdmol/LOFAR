@@ -289,6 +289,8 @@ void ApplController::createParSubsets()
 		procPS.add("process.name", procName);
 		procPS.add(procName+".ACport", 
 						 itsBootParamSet->getString("AC.processportnr"));
+		procPS.add(procName+".ACnode", 
+						 itsBootParamSet->getString("AC.node"));
 
 		// Step 2: The start/stop information (ruler info) is not for the
 		// process but for the AC. Remove it from the paramset and store it in
