@@ -38,6 +38,7 @@ prelude = << PRELUDE_END
 enum TLDResult
 {
   LD_RESULT_NO_ERROR = 0, 
+  LD_RESULT_UNSPECIFIED,
   LD_RESULT_FILENOTFOUND,
   LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
   LD_RESULT_UNKNOWN_COMMAND,
@@ -192,7 +193,7 @@ event = {
 };
 
 //
-// SUSPEND - result of the SUSPEND request
+// SUSPENDED - result of the SUSPEND request
 //
 event = {
 	signal = SUSPENDED;

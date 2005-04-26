@@ -141,12 +141,21 @@ t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; string
 //
 
 // SAS enums
-t_SAS_Result          = { 4, 0x00000000, 0x00000004, ENUM,
-                             0x00000000 : "NO_ERROR",
-                             0x00000001 : "ERROR_UNSPECIFIED",
-                             0x00000002 : "ERROR_VI_NOT_FOUND",
-                             0x00000003 : "ERROR_INCORRECT_NUMBER_OF_PARAMETERS",
-                             0x00000004 : "ERROR_UNKNOWN_COMMAND"
+t_SAS_Result          = { 4, 0x00000000, 0x0000000D, ENUM,
+                             0x00000000 : "NO_ERROR", 
+                             0x00000001 : "ERROR_UNSPECIFIED", 
+                             0x00000002 : "ERROR_VI_NOT_FOUND", 
+                             0x00000003 : "ERROR_PARAMETERNOTFOUND",
+                             0x00000004 : "ERROR_INCORRECT_NUMBER_OF_PARAMETERS",
+                             0x00000005 : "ERROR_UNKNOWN_COMMAND",
+                             0x00000006 : "ERROR_DISABLED",
+                             0x00000007 : "ERROR_LOW_QUALITY",
+                             0x00000008 : "ERROR_WRONG_VERSION",
+                             0x00000009 : "ERROR_UNSUPPORTED_LD",
+                             0x0000000A : "ERROR_LD_NOT_FOUND",
+                             0x0000000B : "ERROR_WRONG_STATE",
+                             0x0000000C : "ERROR_SHUTDOWN",
+                             0x0000000D : "ERROR_ALREADY_EXISTS"
                        }
 
 // ABS enums
@@ -158,13 +167,14 @@ t_ABS_Result          = { 4, 0x00000000, 0x00000003, ENUM,
                        }
 
 // LOGICALDEVICE enums
-t_LD_Result           = { 4, 0x00000000, 0x00000005, ENUM,
+t_LD_Result           = { 4, 0x00000000, 0x00000006, ENUM,
                              0x00000000 : "NO_ERROR",
-                             0x00000001 : "FILENOTFOUND",
-                             0x00000002 : "INCORRECT_NUMBER_OF_PARAMETERS",
-                             0x00000003 : "UNKNOWN_COMMAND",
-                             0x00000004 : "DISABLED",
-                             0x00000005 : "LOW_QUALITY"
+                             0x00000001 : "UNSPECIFIED",
+                             0x00000002 : "FILENOTFOUND",
+                             0x00000003 : "INCORRECT_NUMBER_OF_PARAMETERS",
+                             0x00000004 : "UNKNOWN_COMMAND",
+                             0x00000005 : "DISABLED",
+                             0x00000006 : "LOW_QUALITY"
                        }
 
 t_SD_LogicalDeviceTypes = { 4, 0x00000001, 0x00000007, ENUM,
@@ -177,14 +187,19 @@ t_SD_LogicalDeviceTypes = { 4, 0x00000001, 0x00000007, ENUM,
                                0x00000007 : "VIRTUALBACKEND"
                        }
 
-t_SD_Result             = { 4, 0x00000000, 0x00000006, ENUM,
+t_SD_Result             = { 4, 0x00000000, 0x0000000B, ENUM,
                                0x00000000 : "NO_ERROR",
                                0x00000001 : "UNSPECIFIED_ERROR", 
                                0x00000002 : "UNSUPPORTED_LD", 
                                0x00000003 : "FILENOTFOUND",
                                0x00000004 : "PARAMETERNOTFOUND",
                                0x00000005 : "INCORRECT_NUMBER_OF_PARAMETERS",
-                               0x00000006 : "UNKNOWN_COMMAND"
+                               0x00000006 : "UNKNOWN_COMMAND",
+                               0x00000007 : "ALREADY_EXISTS",
+                               0x00000008 : "LD_NOT_FOUND",
+                               0x00000009 : "WRONG_STATE",
+                               0x0000000A : "SHUTDOWN",
+                               0x0000000B : "WRONG_VERSION"
                           }
 
 t_GCF_PSCategory        = { 4, 0x00000000, 0x00000002, ENUM,
@@ -411,8 +426,10 @@ F_STARTDAEMON_SCHEDULED =
 {
   0x02, // signal Id
   0x8C, // Direction and protocol
-  0x04000000, // message payload length, big endian
-  result                    : t_SD_Result
+  0x3A000000, // message payload length, big endian
+  result                    : t_SD_Result,
+  0x32000000, // string length, big endian
+  viRootId                  : t_String50
 }
 
 // -------------------------------------------------------------------
@@ -537,8 +554,10 @@ E_SAS_RESPONSE =
 { 
   0x04, // signal Id 
   0x8D, // Direction and protocol 
-  0x04000000, // message payload length, big endian
-  result                      : t_SAS_Result
+  msgLen                      : t_B4, // message payload length, big endian
+  result                      : t_SAS_Result,
+  strLen* 										: t_B4, // string length, big endian
+  nodeID                      : t_B1[]
 }
 
 E_SAS_REPLACEMENT_REQUEST = 

@@ -39,6 +39,7 @@
 #include "APLCommon/PropertySetAnswer.h"
 #include "APLCommon/APLCommonExceptions.h"
 #include "APLCommon/LogicalDevice_Protocol.ph"
+#include "APLCommon/StartDaemon_Protocol.ph"
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -159,6 +160,8 @@ namespace APLCommon
       bool _isChildPort(GCF::TM::GCFPortInterface& port);
       bool _isChildStartDaemonPort(GCF::TM::GCFPortInterface& port, string& startDaemonKey);
       void _sendToAllChilds(GCFEventSharedPtr eventPtr);
+      bool _childsInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
+      bool _childsNotInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
       bool _isAPCLoaded() const;
       void _apcLoaded();
@@ -221,10 +224,12 @@ namespace APLCommon
         GCFEventSharedPtr event;
       };
       
-      typedef vector<TPortSharedPtr>        TPortVector;
-      typedef map<string,TPortSharedPtr>    TPortMap;
-      typedef map<string,TPortWeakPtr>      TPortWeakPtrMap;
-      typedef vector<TBufferedEventInfo>    TEventBufferVector;
+      typedef vector<TPortSharedPtr>          TPortVector;
+      typedef map<string,TPortSharedPtr>      TPortMap;
+      typedef map<string,TPortWeakPtr>        TPortWeakPtrMap;
+      typedef vector<TBufferedEventInfo>      TEventBufferVector;
+      typedef map<string,TLogicalDeviceTypes> TString2LDTypeMap;
+      typedef map<string,TLogicalDeviceState> TString2LDStateMap;
       
       void _schedule();
       void _cancelSchedule();
@@ -234,6 +239,8 @@ namespace APLCommon
       void _suspend();
       void _release();
       TPortVector::iterator _getChildPort(GCF::TM::GCFPortInterface& port);
+      void _setChildStates(TLogicalDeviceState ldState);
+      void _setConnectedChildState(GCF::TM::GCFPortInterface& port, TLogicalDeviceState ldState);
 
       TRemotePort                           m_parentPort; // connection with parent, if any
       
@@ -265,6 +272,9 @@ namespace APLCommon
       
       TLDResult                             m_globalError;
       const string                          m_version;
+
+      TString2LDTypeMap                     m_childTypes;
+      TString2LDStateMap                    m_childStates;
 
       ALLOC_TRACER_CONTEXT  
   };

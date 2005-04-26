@@ -29,8 +29,6 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
 #include <APLCommon/APLUtilities.h>
-#include <APLCommon/LogicalDevice_Protocol.ph>
-#include <APLCommon/StartDaemon_Protocol.ph>
 #include "VirtualInstrument.h"
 
 using namespace LOFAR::GCF::Common;
@@ -58,16 +56,12 @@ VirtualInstrument::VirtualInstrument(const string& taskName,
   LogicalDevice(taskName,parameterFile,pStartDaemon,VI_VERSION),
   m_vtSchedulerPropertySets(),
   m_disconnectedVTSchedulerPropertySets(),
-  m_retryPropsetLoadTimerId(0)  
+  m_retryPropsetLoadTimerId(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
-  // filter the Virtual Telescopes from the parameter file: In increment 1, they
-  // are old style
 
   try
   {  
-    // 1. get childs parameter
     string childs = m_parameterSet.getString("childs");
     vector<string> childsVector;
     APLUtilities::string2Vector(childs,childsVector);
@@ -75,16 +69,18 @@ VirtualInstrument::VirtualInstrument(const string& taskName,
     vector<string>::iterator it = childsVector.begin();
     while(it != childsVector.end())
     {
-      // 2. if <child>.logicalDeviceType == LDTYPE_VIRTUALTELESCOPE
+      // filter the Virtual Telescopes from the parameter file: In increment 1, they
+      // are old style
+      // if <child>.logicalDeviceType == LDTYPE_VIRTUALTELESCOPE
       int ldType = m_parameterSet.getInt((*it) + ".logicalDeviceType");
       if(ldType == LDTYPE_VIRTUALTELESCOPE)
       {
-        // 3.   get <child>.oldStyle* and create that propertyset
+        // get <child>.oldStyle* and create that propertyset
         string propsetName = m_parameterSet.getString((*it) + ".oldStyleSchedulerName");
         string propsetType = m_parameterSet.getString((*it) + ".oldStyleSchedulerType");
         
-        TGCFExtPropertySetPtr vtPropset(new GCFExtPropertySet(propsetName.c_str(),propsetType.c_str(),&m_propertySetAnswer));
-        m_vtSchedulerPropertySets[(*it)] = vtPropset;
+        TGCFExtPropertySetPtr vtSchedulerPropset(new GCFExtPropertySet(propsetName.c_str(),propsetType.c_str(),&m_propertySetAnswer));
+        m_vtSchedulerPropertySets[(*it)] = vtSchedulerPropset;
       }
       ++it;
     }
@@ -138,6 +134,7 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
         {
           if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
           {
+            it->second->subscribeProp(string("status"));
             _writeScheduleCommand(it->first,it->second);
           }
           GCFPVString newItem(it->first);
@@ -201,7 +198,7 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
   }
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult VirtualInstrument::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -220,7 +217,7 @@ GCFEvent::TResult VirtualInstrument::concrete_initial_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult VirtualInstrument::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -253,21 +250,50 @@ GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GC
   {
     case LOGICALDEVICE_CLAIMED:
     {
-      // check if all clients are claimed
-      // check quality requirements
-      // enter claimed state
+      LOG_TRACE_FLOW("CLAIMED received");
+      // check if all childs are not claiming anymore
+      // now only checking VB, because VT's are old style
+      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_CLAIMING))
+      {
+        LOG_TRACE_FLOW("No childs CLAIMING");
+        // ALL virtual backend childs must be claimed
+        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
+        {
+          LOG_TRACE_FLOW("100% VB's CLAIMED");
+          // 50% of the VT's must be claimed
+          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_CLAIMED))
+          {
+            LOG_TRACE_FLOW("00% VT's CLAIMED");
+            
+            LOG_TRACE_FLOW("need to check old style VT's");
+            
+            // enter claimed state
+            newState  = LOGICALDEVICE_STATE_CLAIMED;
+            errorCode = LD_RESULT_NO_ERROR;
+          }
+          else
+          {
+            newState  = LOGICALDEVICE_STATE_IDLE;
+            errorCode = LD_RESULT_LOW_QUALITY;
+          }
+        }
+        else
+        {
+          newState  = LOGICALDEVICE_STATE_IDLE;
+          errorCode = LD_RESULT_LOW_QUALITY;
+        }
+      }
       break;
     }
     
     default:
       break;
   }
-  newState=LOGICALDEVICE_STATE_CLAIMED;
   
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult VirtualInstrument::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -280,13 +306,50 @@ GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, G
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  // test your childs
-  newState=LOGICALDEVICE_STATE_SUSPENDED;
+  switch (event.signal)
+  {
+    case LOGICALDEVICE_PREPARED:
+    {
+      LOG_TRACE_FLOW("PREPARED received");
+      // check if all childs are not preparing anymore
+      // now only checking VB, because VT's are old style
+      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_PREPARING))
+      {
+        LOG_TRACE_FLOW("No childs PREPARING");
+        // ALL virtual backend childs must be prepared
+        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
+        {
+          LOG_TRACE_FLOW("All VB's SUSPENDED");
+          // 00% of the VT's must be prepared
+          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_SUSPENDED))
+          {
+            LOG_TRACE_FLOW("00% VT's SUSPENDED");
+            // enter suspended state
+            newState=LOGICALDEVICE_STATE_SUSPENDED;
+          }
+          else
+          {
+            newState  = LOGICALDEVICE_STATE_CLAIMED;
+            errorCode = LD_RESULT_LOW_QUALITY;
+          }
+        }
+        else
+        {
+          newState  = LOGICALDEVICE_STATE_CLAIMED;
+          errorCode = LD_RESULT_LOW_QUALITY;
+        }
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
   
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& errorCode)
+GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -294,7 +357,7 @@ GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFP
   return status;
 }
 
-GCFEvent::TResult VirtualInstrument::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult VirtualInstrument::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -373,7 +436,7 @@ void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortI
     }
 
     // keep on polling
-    m_retryPropsetLoadTimerId = m_serverPort.setTimer(10L);
+    m_retryPropsetLoadTimerId = m_serverPort.setTimer(5L);
   }
 }
 

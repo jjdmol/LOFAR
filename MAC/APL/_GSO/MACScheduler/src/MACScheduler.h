@@ -37,6 +37,9 @@
 #include "APLCommon/PropertySetAnswerHandlerInterface.h"
 #include "APLCommon/PropertySetAnswer.h"
 #include "APLCommon/APLCommonExceptions.h"
+#include "SAS_Protocol.ph"
+#include "APLCommon/LogicalDevice_Protocol.ph"
+#include "APLCommon/StartDaemon_Protocol.ph"
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -127,13 +130,18 @@ namespace GSO
       typedef vector<TTCPPortPtr>             TTCPPortVector;
       typedef vector<TRemotePortPtr>          TRemotePortVector;
       typedef map<string,TRemotePortPtr>      TStringRemotePortMap;
+      typedef map<string,TTCPPortPtr>         TStringTCPportMap;
       
       bool _isServerPort(const GCF::TM::GCFPortInterface& server, const GCF::TM::GCFPortInterface& port) const;
+      TTCPPortVector::const_iterator _getSASclientPort(const GCF::TM::GCFPortInterface& port) const;
       bool _isSASclientPort(const GCF::TM::GCFPortInterface& port) const;
       bool _isVISDclientPort(const GCF::TM::GCFPortInterface& port, string& visd) const;
       bool _isVIclientPort(const GCF::TM::GCFPortInterface& port) const;
+      string _getVInameFromPort(const GCF::TM::GCFPortInterface& port) const;
       string _getShareLocation() const;
       void _handleSASprotocol(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
+      TSASResult _LDtoSASresult(const TLDResult& ldResult);
+      TSASResult _SDtoSASresult(const TSDResult& sdResult);
       
       string                                m_SASserverPortName;
       GCF::TM::GCFTCPPort                   m_SASserverPort;      // SAS-MAC communication
@@ -151,6 +159,8 @@ namespace GSO
       // childs.
       TRemotePortVector                     m_VIclientPorts;      // created VI's
       TStringRemotePortMap                  m_connectedVIclientPorts; // maps node ID's to ports
+      
+      TStringTCPportMap                     m_VItoSASportMap;
       
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
       boost::shared_ptr<ACC::ConfigurationMgr> m_configurationManager;
