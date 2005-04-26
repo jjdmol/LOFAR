@@ -29,6 +29,7 @@
 #include "CalibrationAlgorithm.h"
 #include "CalibrationResult.h"
 #include "SubArray.h"
+#include <blitz/array.h>
 
 namespace CAL
 {
@@ -45,6 +46,17 @@ namespace CAL
       virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result);
       
     private:
+      const std::vector<Source> make_local_sky_model(const SourceCatalog& catalog, double obstime);
+
+      blitz::Array<std::complex<double>, 2> make_ref_acm(const std::vector<Source>& LSM, blitz::Array<double, 3>& AntennaPos, const DipoleModel& dipolemodel, double freq);
+      blitz::Array<bool, 2> set_restriction(blitz::Array<double, 3>& AntennaPos, double minbaseline);
+      blitz::Array<std::complex<double>, 2> computeAlpha(blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
+
+      blitz::Array<double, 2> matmult(blitz::Array<double, 2> A, blitz::Array<double, 2> B);
+      double interp1d(blitz::Array<double, 1> xval, blitz::Array<double, 1> yval, double xinterp);
+      double interp2d(blitz::Array<double, 1> xgrid, blitz::Array<double, 1> ygrid, blitz::Array<double, 2> dataval, double xinterp, double yinterp);
+      double interp3d(blitz::Array<double, 1> xgrid, blitz::Array<double, 1> ygrid, blitz::Array<double, 1> zgrid, blitz::Array<double, 3> dataval, double xinterp, double yinterp, double zinterp);
+
       // member variables needed to store local state
     };
 };

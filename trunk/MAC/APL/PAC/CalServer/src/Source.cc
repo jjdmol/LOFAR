@@ -52,4 +52,7 @@ bool Source::getFlux(int n, double& freq, double& flux) const
   return true;
 }
 
-    
+blitz::Array<double, 2> const & Source::getFluxes() const
+{
+  return m_flux;
+}

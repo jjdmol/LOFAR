@@ -305,11 +305,11 @@ void CalServer::calibrate()
   //
   // Number of antennas and polarizations must be equal on all related arrays.
   //
-  ASSERT(m_acc->getACC().extent(firstDim) == nantennas
-	 && m_acc->getACC().extent(secondDim) == nantennas
-	 && m_acc->getACC().extent(thirdDim) == m_spws[0].getNumSubbands()
-	 && m_acc->getACC().extent(fourthDim) == npol
-	 && m_acc->getACC().extent(fifthDim) == npol);
+  ASSERT(m_acc->getACC().extent(firstDim) == nantennas);
+  ASSERT(m_acc->getACC().extent(secondDim) == nantennas);
+  ASSERT(m_acc->getACC().extent(thirdDim) == m_spws[0].getNumSubbands());
+  ASSERT(m_acc->getACC().extent(fourthDim) == npol);
+  ASSERT(m_acc->getACC().extent(fifthDim) == npol);
 
   //
   // Save the calibration gains and quality matrices
