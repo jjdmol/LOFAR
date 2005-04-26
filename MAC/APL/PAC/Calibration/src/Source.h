@@ -75,9 +75,14 @@ namespace CAL
      * @return true if point exists, false if 0 > n <= nfrequencies.
      */
     bool getFlux(int n, double& freq, double&) const;
-    
-  private:
 
+    /**
+     * Get the array containing (freq, flux) pairs
+     * @return the blitz array with (freq, flux) pairs for the source
+     */
+    blitz::Array<double, 2> const & getFluxes() const;
+
+  private:
     std::string m_name;
     double      m_ra;
     double      m_dec;

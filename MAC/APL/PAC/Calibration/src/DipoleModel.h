@@ -45,7 +45,7 @@ namespace CAL
      * @return The dipole model with dimensions:
      * 2 (0=phi, 1=theta) x 50 (l) x 50 (m) x 24 (frequency planes)
      */
-    blitz::Array<std::complex<double>, 4>& getModel() { return m_sens; }
+    blitz::Array<std::complex<double>, 4> getModel() const { return m_sens; }
 
   private:
 
