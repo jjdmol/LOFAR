@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 
 #include <Transport/TH_ShMem.h>
 
