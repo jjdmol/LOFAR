@@ -75,8 +75,9 @@ int main (int argc, char *argv[]) {
 		APCmdImpl		itsAPCmdImpl;
 
 		// [A] Connect to the Application Controller
-		ProcControlServer	itsPCcomm(itsParamSet.getInt(itsProcID+".ACport"),
-									  &itsAPCmdImpl);
+		ProcControlServer  itsPCcomm(itsParamSet.getString(itsProcID+".ACnode"),
+									 itsParamSet.getInt(itsProcID+".ACport"),
+									 &itsAPCmdImpl);
 
 		// IMPLEMENT: do other launch activities like processing the ParamSet
 
