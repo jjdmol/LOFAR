@@ -289,6 +289,7 @@ GCFEvent::TResult StartDaemon::idle_state(GCFEvent& event, GCFPortInterface& por
       STARTDAEMONScheduledEvent scheduledEvent;
       
       scheduledEvent.result = createLogicalDevice(scheduleEvent.logicalDeviceType,scheduleEvent.taskName, scheduleEvent.fileName);
+      scheduledEvent.VIrootID = scheduleEvent.taskName;
       
       m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(scheduledEvent.result));
       port.send(scheduledEvent);

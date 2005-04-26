@@ -34,6 +34,7 @@ prelude = << PRELUDE_END
 
 enum TLogicalDeviceTypes 
 {
+  LDTYPE_NO_TYPE = 0, 
   LDTYPE_VIRTUALINSTRUMENT = 1, 
   LDTYPE_VIRTUALTELESCOPE, 
   LDTYPE_VIRTUALARRAY, 
@@ -91,6 +92,10 @@ event = {
     name = "result";
     type = "TSDResult";
   };
+	param = {
+	  name = "VIrootID";
+	  type = "string";
+	};
 };
 
 event = {

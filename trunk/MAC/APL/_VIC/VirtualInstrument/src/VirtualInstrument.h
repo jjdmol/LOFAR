@@ -136,7 +136,6 @@ namespace AVI
       TString2PropsetMap  m_disconnectedVTSchedulerPropertySets;
       unsigned long       m_retryPropsetLoadTimerId;
       
-
       ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon

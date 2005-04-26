@@ -31,9 +31,6 @@
 #include "APLCommon/APLUtilities.h"
 #include "MACScheduler.h"
 
-#include "SAS_Protocol.ph"
-#include "APLCommon/LogicalDevice_Protocol.ph"
-#include "APLCommon/StartDaemon_Protocol.ph"
 
 INIT_TRACER_CONTEXT(LOFAR::GSO::MACScheduler,LOFARLOGGER_PACKAGE);
 
@@ -74,7 +71,8 @@ MACScheduler::MACScheduler() :
   m_VIparentPortName(string("VIparent_server")),
   m_VIparentPort(*this, m_VIparentPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
   m_VIclientPorts(),
-  m_connectedVIclientPorts()
+  m_connectedVIclientPorts(),
+  m_VItoSASportMap()
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
   ,m_configurationManager()
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -267,16 +265,22 @@ bool MACScheduler::_isServerPort(const GCFPortInterface& server, const GCFPortIn
   return (&port == &server); // comparing two pointers. yuck?
 }
    
-bool MACScheduler::_isSASclientPort(const GCFPortInterface& port) const
+MACScheduler::TTCPPortVector::const_iterator MACScheduler::_getSASclientPort(const GCFPortInterface& port) const
 {
   bool found=false;
   TTCPPortVector::const_iterator it=m_SASclientPorts.begin();
   while(!found && it != m_SASclientPorts.end())
   {
     found = (&port == (*it).get()); // comparing two pointers. yuck?
-    ++it;
+    if(!found)
+      ++it;
   }
-  return found;
+  return it;
+}
+
+bool MACScheduler::_isSASclientPort(const GCFPortInterface& port) const
+{
+  return (_getSASclientPort(port) != m_SASclientPorts.end());
 }
 
 bool MACScheduler::_isVISDclientPort(const GCFPortInterface& port, string& visd) const
@@ -305,6 +309,26 @@ bool MACScheduler::_isVIclientPort(const GCFPortInterface& port) const
     ++it;
   }
   return found;
+}
+
+string MACScheduler::_getVInameFromPort(const GCF::TM::GCFPortInterface& port) const
+{
+  string viName("");
+  if(_isVIclientPort(port))
+  {
+    bool found = false;
+    TStringRemotePortMap::const_iterator it = m_connectedVIclientPorts.begin();
+    while(!found && it != m_connectedVIclientPorts.end())
+    {
+      found = (&port == it->second.get());
+      if(found)
+      {
+        viName = it->first;
+      }
+      ++it;
+    }
+  }
+  return viName;
 }
 
 void MACScheduler::_disconnectedHandler(GCFPortInterface& port)
@@ -345,6 +369,88 @@ string MACScheduler::_getShareLocation() const
     LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using /home/lofar/MACTransport/",e.message().c_str()));
   }
   return shareLocation;
+}
+
+TSASResult MACScheduler::_LDtoSASresult(const TLDResult& ldResult)
+{
+  TSASResult sasResult;
+  switch(ldResult)
+  {
+    case LD_RESULT_NO_ERROR:
+      sasResult = SAS_RESULT_NO_ERROR;
+      break;
+    case LD_RESULT_UNSPECIFIED:
+      sasResult = SAS_RESULT_ERROR_UNSPECIFIED;
+      break;
+    case LD_RESULT_FILENOTFOUND:
+      sasResult = SAS_RESULT_ERROR_VI_NOT_FOUND;
+      break;
+    case LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS:
+      sasResult = SAS_RESULT_ERROR_INCORRECT_NUMBER_OF_PARAMETERS;
+      break;
+    case LD_RESULT_UNKNOWN_COMMAND:
+      sasResult = SAS_RESULT_ERROR_UNKNOWN_COMMAND;
+      break;
+    case LD_RESULT_DISABLED:
+      sasResult=SAS_RESULT_ERROR_DISABLED;
+      break;
+    case LD_RESULT_LOW_QUALITY:
+      sasResult=SAS_RESULT_ERROR_LOW_QUALITY;
+      break;
+    default:
+      sasResult=SAS_RESULT_ERROR_UNSPECIFIED;
+      break;
+  }
+  return sasResult;
+}
+
+TSASResult MACScheduler::_SDtoSASresult(const TSDResult& sdResult)
+{
+  TSASResult sasResult;
+  switch(sdResult)
+  {
+    case SD_RESULT_NO_ERROR:
+      sasResult = SAS_RESULT_NO_ERROR;
+      break;
+    case SD_RESULT_UNSPECIFIED_ERROR:
+      sasResult = SAS_RESULT_ERROR_UNSPECIFIED;
+      break;
+    case SD_RESULT_UNSUPPORTED_LD:
+      sasResult = SAS_RESULT_ERROR_UNSUPPORTED_LD;
+      break;
+    case SD_RESULT_FILENOTFOUND:
+      sasResult = SAS_RESULT_ERROR_VI_NOT_FOUND;
+      break;
+    case SD_RESULT_PARAMETERNOTFOUND:
+      sasResult = SAS_RESULT_ERROR_PARAMETERNOTFOUND;
+      break;
+    case SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS:
+      sasResult = SAS_RESULT_ERROR_INCORRECT_NUMBER_OF_PARAMETERS;
+      break;
+    case SD_RESULT_UNKNOWN_COMMAND:
+      sasResult = SAS_RESULT_ERROR_UNKNOWN_COMMAND;
+      break;
+    case SD_RESULT_ALREADY_EXISTS:
+      sasResult = SAS_RESULT_ERROR_ALREADY_EXISTS;
+      break;
+    case SD_RESULT_LD_NOT_FOUND:
+      sasResult = SAS_RESULT_ERROR_LD_NOT_FOUND;
+      break;
+    case SD_RESULT_WRONG_STATE:
+      sasResult = SAS_RESULT_ERROR_WRONG_STATE;
+      break;
+    case SD_RESULT_SHUTDOWN:
+      sasResult = SAS_RESULT_ERROR_SHUTDOWN;
+      break;
+    case SD_RESULT_WRONG_VERSION:
+      sasResult = SAS_RESULT_ERROR_WRONG_VERSION;
+      break;
+
+    default:
+      sasResult=SAS_RESULT_ERROR_UNSPECIFIED;
+      break;
+  }
+  return sasResult;
 }
 
 GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
@@ -470,14 +576,55 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
     case LOGICALDEVICE_SCHEDULED:
     {
       LOGICALDEVICEScheduledEvent scheduledEvent(event);
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(scheduledEvent.result));
+      SASResponseEvent sasResponseEvent;
+      sasResponseEvent.result = _LDtoSASresult(scheduledEvent.result);
+
+      string viName = _getVInameFromPort(port);
+      sasResponseEvent.VIrootID = viName;
+      TStringTCPportMap::iterator it = m_VItoSASportMap.find(viName);
+      if(it != m_VItoSASportMap.end())
+      {
+        it->second->send(sasResponseEvent);
+      }
+      
+      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+      break;
+    }
+      
+    case STARTDAEMON_SCHEDULED:
+    {
+      STARTDAEMONScheduledEvent scheduledEvent(event);
+      SASResponseEvent sasResponseEvent;
+      sasResponseEvent.result = _SDtoSASresult(scheduledEvent.result);
+
+      string viName = scheduledEvent.VIrootID;
+      sasResponseEvent.VIrootID = viName;
+      TStringTCPportMap::iterator it = m_VItoSASportMap.find(viName);
+      if(it != m_VItoSASportMap.end())
+      {
+        it->second->send(sasResponseEvent);
+      }
+      
+      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
       break;
     }
       
     case LOGICALDEVICE_SCHEDULECANCELLED:
     {
       LOGICALDEVICESchedulecancelledEvent schedulecancelledEvent(event);
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(schedulecancelledEvent.result));
+      SASResponseEvent sasResponseEvent;
+      sasResponseEvent.result = _LDtoSASresult(schedulecancelledEvent.result);
+      
+      string viName = _getVInameFromPort(port);
+      sasResponseEvent.VIrootID = viName;
+      TStringTCPportMap::iterator it = m_VItoSASportMap.find(viName);
+      if(it != m_VItoSASportMap.end())
+      {
+        it->second->send(sasResponseEvent);
+      }
+      
+      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+      
       break;
     }
       
@@ -500,10 +647,10 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
     {
       // schedule event received from SAS
       SASScheduleEvent sasScheduleEvent(event);
-      SASResponseEvent sasResponseEvent;
-      sasResponseEvent.result = SAS_RESULT_NO_ERROR;
-      string shareLocation = _getShareLocation();
+      // BSE fixed string workaround:
+      sasScheduleEvent.VIrootID = string(sasScheduleEvent.VIrootID.c_str());
       
+      string shareLocation = _getShareLocation();
       try
       {
         // read the parameterset from the database:
@@ -523,6 +670,13 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         string psFileName = string("/") + viName + string(".ps");
         string psFilePath = shareLocation + string("mnt/") + allocatedCCU + string("/") + psFileName;
         ps->writeFile(psFilePath);
+
+
+        // add the VI to the VI-SASport map
+        if(_isSASclientPort(port))
+        {
+          m_VItoSASportMap[viName] = *_getSASclientPort(port);
+        }
         
         // send the schedule event to the VI-StartDaemon on the CCU
         STARTDAEMONScheduleEvent sdScheduleEvent;
@@ -537,23 +691,24 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         }
         else
         {
+          SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+          port.send(sasResponseEvent);      
         }        
       }
       catch(Exception& e)
       {
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+        SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+        port.send(sasResponseEvent);      
       }
-      port.send(sasResponseEvent);      
       break;
     }
     case SAS_CANCELSCHEDULE:
     {
       // schedule event received from SAS
       SASCancelscheduleEvent sasCancelScheduleEvent(event);
-      SASResponseEvent sasResponseEvent;
-      sasResponseEvent.result = SAS_RESULT_NO_ERROR;
       string shareLocation = _getShareLocation();
       
       // search the port of the VI
@@ -581,15 +736,18 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         }
         else
         {
+          SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+          port.send(sasResponseEvent);      
         }        
       }
       catch(Exception& e)
       {
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+        SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+        port.send(sasResponseEvent);      
       }
-      port.send(sasResponseEvent);      
       break;
     }
     
@@ -597,8 +755,6 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
     {
       // schedule event received from SAS
       SASUpdatescheduleEvent sasUpdateScheduleEvent(event);
-      SASResponseEvent sasResponseEvent;
-      sasResponseEvent.result = SAS_RESULT_NO_ERROR;
       string shareLocation = _getShareLocation();
 
       // search the port of the VI
@@ -631,15 +787,18 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         }
         else
         {
+          SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+          port.send(sasResponseEvent);      
         }        
       }
       catch(Exception& e)
       {
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+        SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+        port.send(sasResponseEvent);      
       }
-      port.send(sasResponseEvent);      
       break;
     }
     

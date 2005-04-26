@@ -33,8 +33,6 @@
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
 
-#include "APLCommon/StartDaemon_Protocol.ph"
-
 using namespace LOFAR::ACC;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -111,7 +109,9 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_retrySendTimerId(0),
   m_eventBuffer(),
   m_globalError(LD_RESULT_NO_ERROR),
-  m_version(version)
+  m_version(version),
+  m_childTypes(),
+  m_childStates()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -437,6 +437,27 @@ time_t LogicalDevice::getStopTime() const
 void LogicalDevice::_schedule()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  // (erase and) fill the childTypes and childStates maps
+  m_childTypes.clear();
+  m_childStates.clear();
+  // create the childs
+  vector<string> childKeys = _getChildKeys();
+  vector<string>::iterator chIt;
+  for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
+  {
+    try
+    {
+      TLogicalDeviceTypes ldType = (TLogicalDeviceTypes)m_parameterSet.getInt((*chIt) + ".logicalDeviceType");
+      m_childTypes[*chIt] = ldType;
+      m_childStates[*chIt] = LOGICALDEVICE_STATE_IDLE;
+    }
+    catch(Exception& e)
+    {
+      LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
+    }
+  }
+  
   if(m_claimTimerId != 0)
   {
     m_serverPort.cancelTimer(m_claimTimerId);
@@ -595,6 +616,100 @@ void LogicalDevice::_sendToAllChilds(GCFEventSharedPtr eventPtr)
     }
     ++it;
   }
+}
+
+void LogicalDevice::_setChildStates(TLogicalDeviceState ldState)
+{
+  // set all child states
+  TString2LDStateMap::iterator it=m_childStates.begin();
+  while(it != m_childStates.end())
+  {
+    it->second = ldState;
+    ++it;
+  }
+}
+
+void LogicalDevice::_setConnectedChildState(GCFPortInterface& port, TLogicalDeviceState ldState)
+{
+  bool found=false;
+  TPortWeakPtrMap::iterator it=m_connectedChildPorts.begin();
+  while(!found && it != m_connectedChildPorts.end())
+  {
+    string childKey = it->first;
+    if(TPortSharedPtr pChildPort = it->second.lock())
+    {
+      if(&port == pChildPort.get())
+      {
+        found=true;
+        m_childStates[childKey] = ldState;
+      }
+    }
+    ++it;
+  }
+}
+
+// check if enough LD's of a specific type are in a specific state
+bool LogicalDevice::_childsInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state)
+{
+  double totalLDs(0.0);
+  double ldsInState(0.0);
+  
+  for(TString2LDTypeMap::iterator typesIt = m_childTypes.begin();typesIt != m_childTypes.end();++typesIt)
+  {
+    if(typesIt->second == type || type == LDTYPE_NO_TYPE)
+    {
+      totalLDs += 1.0;
+      TString2LDStateMap::iterator statesIt = m_childStates.find(typesIt->first);
+      if(statesIt != m_childStates.end())
+      {
+        LOG_DEBUG(formatString("%s is in state %d",typesIt->first.c_str(),statesIt->second));
+        if(statesIt->second == state)
+        {
+          ldsInState += 1.0;
+        }
+      }
+    }
+  }
+  
+  double resultingPercentage(0.0);
+  if(totalLDs > 0.0)
+  {
+    resultingPercentage = ldsInState/totalLDs*100.0;
+  }
+  
+  return (resultingPercentage >= requiredPercentage);
+}
+
+// check if enough LD's of a specific type are not in a specific state
+bool LogicalDevice::_childsNotInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state)
+{
+  double totalLDs(0.0);
+  double ldsNotInState(0.0);
+  
+  for(TString2LDTypeMap::iterator typesIt = m_childTypes.begin();typesIt != m_childTypes.end();++typesIt)
+  {
+    if(typesIt->second == type || type == LDTYPE_NO_TYPE)
+    {
+      totalLDs += 1.0;
+      TString2LDStateMap::iterator statesIt = m_childStates.find(typesIt->first);
+      if(statesIt != m_childStates.end())
+      {
+        LOG_DEBUG(formatString("%s is in state %d",typesIt->first.c_str(),statesIt->second));
+        if(statesIt->second != state)
+        {
+          ldsNotInState += 1.0;
+        }
+      }
+    }
+  }
+  
+  double resultingPercentage(0.0);
+  if(totalLDs > 0.0)
+  {
+    resultingPercentage = ldsNotInState/totalLDs*100.0;
+  }
+  
+  return (resultingPercentage >= requiredPercentage);
 }
 
 void LogicalDevice::_disconnectedHandler(GCFPortInterface& port)
@@ -990,7 +1105,8 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       if(it != m_childPorts.end())
       {
         LOGICALDEVICEConnectEvent connectEvent(event);
-        m_connectedChildPorts[connectEvent.nodeId] = TPortWeakPtr(*it);
+        string tempString(connectEvent.nodeId.c_str()); // workaround for char[50] received from BSE
+        m_connectedChildPorts[tempString] = TPortWeakPtr(*it);
         
         boost::shared_ptr<LOGICALDEVICEConnectedEvent> connectedEvent(new LOGICALDEVICEConnectedEvent);
         if(m_logicalDeviceState == LOGICALDEVICE_STATE_DISABLED)
@@ -1123,7 +1239,8 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
       if(it != m_childPorts.end())
       {
         LOGICALDEVICEConnectEvent connectEvent(event);
-        m_connectedChildPorts[connectEvent.nodeId] = TPortWeakPtr(*it);
+        string tempString(connectEvent.nodeId.c_str()); // workaround for char[50] received from BSE
+        m_connectedChildPorts[tempString] = TPortWeakPtr(*it);
         
         boost::shared_ptr<LOGICALDEVICEConnectedEvent> connectedEvent(new LOGICALDEVICEConnectedEvent);
         connectedEvent->result = LD_RESULT_NO_ERROR;
@@ -1201,6 +1318,7 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
       
       // send claim event to childs
+      _setChildStates(LOGICALDEVICE_STATE_CLAIMING);
       boost::shared_ptr<LOGICALDEVICEClaimEvent> claimEvent(new LOGICALDEVICEClaimEvent);
       _sendToAllChilds(claimEvent);
       
@@ -1229,6 +1347,20 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
     case LOGICALDEVICE_RELEASE:
     {
       _doStateTransition(LOGICALDEVICE_STATE_RELEASING,m_globalError);
+      break;
+    }
+    
+    case LOGICALDEVICE_CLAIMED:
+    {
+      LOGICALDEVICEClaimedEvent claimedEvent(event);
+      if(claimedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_CLAIMED);
+      }
+      else
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_IDLE);
+      }
       break;
     }
     
@@ -1366,6 +1498,7 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
 
       // send prepare event to childs
+      _setChildStates(LOGICALDEVICE_STATE_PREPARING);
       boost::shared_ptr<LOGICALDEVICEPrepareEvent> prepareEvent(new LOGICALDEVICEPrepareEvent);
       _sendToAllChilds(prepareEvent);
 
@@ -1394,6 +1527,20 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
     case LOGICALDEVICE_RELEASE:
     {
       _doStateTransition(LOGICALDEVICE_STATE_RELEASING,m_globalError);
+      break;
+    }
+    
+    case LOGICALDEVICE_PREPARED:
+    {
+      LOGICALDEVICEPreparedEvent preparedEvent(event);
+      if(preparedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
+      }
+      else
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_CLAIMED);
+      }
       break;
     }
     
@@ -1491,6 +1638,16 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       break;
     }
     
+    case LOGICALDEVICE_SUSPENDED:
+    {
+      LOGICALDEVICESuspendedEvent suspendedEvent(event);
+      if(suspendedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
+      }
+      break;
+    }
+    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::suspended_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -1565,6 +1722,20 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       break;
     }
     
+    case LOGICALDEVICE_RESUMED:
+    {
+      LOGICALDEVICEResumedEvent resumedEvent(event);
+      if(resumedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_ACTIVE);
+      }
+      else
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
+      }
+      break;
+    }
+    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::active_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -1612,6 +1783,7 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
 
       // send release event to childs
+      _setChildStates(LOGICALDEVICE_STATE_RELEASING);
       boost::shared_ptr<LOGICALDEVICEReleaseEvent> releaseEvent(new LOGICALDEVICEReleaseEvent);
       _sendToAllChilds(releaseEvent);
 
@@ -1627,6 +1799,16 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       _handleTimers(event,port);
       break;
 
+    case LOGICALDEVICE_RELEASED:
+    {
+      LOGICALDEVICEReleasedEvent releasedEvent(event);
+      if(releasedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_IDLE);
+      }
+      break;
+    }
+    
     // the LOGICALDEVICE_RELEASED event cannot result in a transition to 
     // the idle state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_RELEASED message. 
