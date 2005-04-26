@@ -37,7 +37,8 @@ namespace LOFAR {
 //
 // Setup (wait for an) connection with the PC client
 //
-ProcControlServer::ProcControlServer(const uint16				portnr,
+ProcControlServer::ProcControlServer(const string&				hostname, 
+									 const uint16				portnr,
 									 const ProcessControl*		PCImpl) :
 	itsPCImpl(PCImpl)
 {
@@ -47,8 +48,8 @@ ProcControlServer::ProcControlServer(const uint16				portnr,
 	DH_PC_Server->setID(4);
 
 	DH_PC_Client.connectBidirectional(*DH_PC_Server, 
-				 			TH_Socket("", "localhost", portnr, true,  false),
-				 			TH_Socket("localhost", "", portnr, false, false),
+				 			TH_Socket("", hostname, portnr, true,  false),
+				 			TH_Socket(hostname, "", portnr, false, false),
 							false);	// blocking
 	DH_PC_Server->init();
 

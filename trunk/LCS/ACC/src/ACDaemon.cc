@@ -241,9 +241,10 @@ void ACDaemon::constructACFile(const ACRequest*		anACR,
 	
 	// TODO: Calculate processportnr
 
-	ACPS.add(KVpair("AC.backlog",       backlog));
+	ACPS.add(KVpair("AC.backlog", backlog));
+	ACPS.add(KVpair("AC.node",	  itsParamSet->getString("ACDaemon.ACnodeIP")));
 	ACPS.add(KVpair("AC.userportnr",    ntohs(anACR->itsPort)));
-	ACPS.add(KVpair("AC.processportnr", 3900));
+	ACPS.add(KVpair("AC.processportnr", 100+ntohs(anACR->itsPort))); // TODO
 
 	char	myHostname[1024];
 	gethostname(myHostname, 1023);
