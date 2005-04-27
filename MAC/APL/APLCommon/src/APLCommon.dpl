@@ -13,3 +13,5 @@ TAplLogicalDevice.TAplLogicalDevice	1#1
 	startTime	21#11
 	stopTime	21#12
 	__childs	9#8
+	claimTime	21#13
+	version	25#14
