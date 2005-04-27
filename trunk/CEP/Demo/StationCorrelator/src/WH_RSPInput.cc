@@ -56,12 +56,11 @@ WH_RSPInput::WH_RSPInput(const string& name,
   char str[32];
   
   // get parameters
-  //itsNCorrOutputs  = kvm.getInt("NoWH_Correlator", 7);  
   itsNRSPOutputs   = kvm.getInt("NoWH_RSP", 2);  
   itsPolarisations = kvm.getInt("polarisations",2);           
-  itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
-  itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
-  itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
+  itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92);       // number of EPA-packet beamlets per OutDataholder
+  itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);     // number of EPA-packets in RSP-ethernetframe
+  itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);         // headersize in bytes
   itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader; // packetsize in bytes
 
   // create incoming dataholder   
@@ -69,8 +68,6 @@ WH_RSPInput::WH_RSPInput(const string& name,
   
   // create outgoing dataholder
   getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out", itsKVM));
-  ((DataManager)getDataManager()).setOutBufferingProperties(0, false); // use CyclicBuffer on output
-
 
   if (itsIsSyncMaster) {
     // if we are the sync master we need extra outputs (NoWH_RSP -1)
@@ -82,12 +79,16 @@ WH_RSPInput::WH_RSPInput(const string& name,
     // if we are a sync slave we need 1 extra input
     getDataManager().addInDataHolder(1, new DH_RSPSync("DH_Sync_in"));
   }
+
+  // use cyclic buffer on output
+  //((DataManager)getDataManager()).setOutBufferingProperties(0, false);
+   
   // We need to be able to read more than one packet at the time in case we are lagging
   // and we want to skip one or more packets.
   getDataManager().setAutoTriggerIn(0, false); 
 
   theirCatchingUpState.init ("WH_RSPInput catching up", "yellow");
-  theirWaitingState.init ("WH_RSPInput waiting", "orange");
+  theirWaitingState.init ("WH_RSPInput waiting", "orange");  
 }
 
 WH_RSPInput::~WH_RSPInput() {
