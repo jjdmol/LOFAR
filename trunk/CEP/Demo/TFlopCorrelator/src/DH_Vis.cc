@@ -17,21 +17,21 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name)
+DH_Vis::DH_Vis (const string& name, short startfreq)
 : DataHolder    (name, "DH_Vis"),
   itsBuffer     (0),
-  itsNPol       (2)
+  itsNPols      (2)
 {
-  ParameterSet  myPS("TFlopCorrelator.cfg");
-  //ParameterCollection	myPC(myPS);
-  itsNStations  = myPS("DH_CorrCube.stations");
+//   ParameterSet  myPS("TFlopCorrelator.cfg");
+//   //ParameterCollection	myPC(myPS);
+//   itsNStations  = myPS("DH_CorrCube.stations");
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
     itsBuffer(0)
 {
-  itsNPol = that.itsNPol;
+  itsNPols = that.itsNPols;
   itsNStations = that.itsNStations;
 }
 
@@ -50,14 +50,15 @@ void DH_Vis::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = nstations * nstations * nchannels * npolarisations*npolarisations; 
+  itsBufSize = itsNStations * itsNStations * itsNFChannels * itsNPols*itsNPols; 
 
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();  // calls fillDataPointers
   //itsBuffer = getData<BufferType> ("Buffer");
   // todo: memset instead of loop
   for (unsigned int i=0; i<itsBufSize; i++) {
-    itsBuffer[i] = 0;
+    __real__ itsBuffer[i] = 0.0;
+    __imag__ itsBuffer[i] = 0.0;
   }
 }
 

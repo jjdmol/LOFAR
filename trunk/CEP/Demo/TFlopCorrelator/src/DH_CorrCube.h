@@ -13,6 +13,7 @@
 
 #include <lofar_config.h>
 
+#include <ACC/ParameterSet.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 
@@ -27,9 +28,9 @@ class DH_CorrCube: public DataHolder
 {
 public:
   typedef uint16 BufferPrimitive;
-  typedef complex<BufferPrimitive> BufferType;
+  typedef u16complex BufferType;
 
-  explicit DH_CorrCube (const string& name); 
+  explicit DH_CorrCube (const string& name, short subband); 
 
 
   DH_CorrCube(const DH_CorrCube&);
@@ -45,19 +46,19 @@ public:
   virtual void postprocess();
 
   /// Get write access to the Buffer in the DataPacket.
-  LOFAR_BUILTIN_COMPLEXFP* getBuffer();
+  u16complex* getBuffer();
   /// Get access to the Buffer in the DataPacket.
-  const LOFAR_BUILTIN_COMPLEXFP* getBuffer() const;
+  const u16complex* getBuffer() const;
 
   /// return pointer to array containing time/pol series for specified freqchannel and station 
   /// to be used in correlator inner loop
-  LOFAR_BUILTIN_COMPLEXFP* getBufferTimePolSeries(int channel, int station);
+  u16complex* getBufferTimePolSeries(int channel, int station);
 
   /// get/set completely specified element in the buffer
-  LOFAR_BUILTIN_COMPLEXFP* getBufferElement(int channel, int station, int sample, int polarisation);
+  u16complex* getBufferElement(int channel, int station, int sample, int polarisation);
   void setBufferElement(int channel, int station, int sample, int polarisation, BufferType* value); 
 
-   const unsigned int getBufSize() const;
+  const unsigned int getBufSize() const;
 
 private:
   /// Forbid assignment.
@@ -76,32 +77,32 @@ private:
 };
 
 
-#define CCADDRESS_FREQ    (freq)                            itsNPol*itsNTimes*itsNStations*itsNFChannels*(freq)
-#define CCADDRESS_STATION (freq, station)       CCADDRESS_FREQ((freq)) +  itsNPol*itsNTimes*itsNStations*(station) 
-#define CCADDRESS_TIME    (freq, station, time) CCADDRESS_STATION((freq),(station)) +  itsNPol*itsNTimes*(time) 
-#define CCADDRESS_POL     (freq, station, time, pol) CCADDRESS_TIME((freq),(station),(time))  +  itsNPol*(pol)
+#define CCADDRESS_FREQ(freq) itsNPol*itsNTimes*itsNStations*itsNFChannels*(freq)
+#define CCADDRESS_STATION(freq, station) CCADDRESS_FREQ((freq)) +  itsNPol*itsNTimes*itsNStations*(station) 
+#define CCADDRESS_TIME(freq, station, time) CCADDRESS_STATION((freq),(station)) +  itsNPol*itsNTimes*(time) 
+#define CCADDRESS_POL(freq, station, time, pol) CCADDRESS_TIME((freq),(station),(time))  +  itsNPol*(pol)
  
- inline LOFAR_BUILTIN_COMPLEXFP* DH_CorrCube::getBuffer()
+ inline u16complex* DH_CorrCube::getBuffer()
    { return itsBuffer; }
  
- inline const LOFAR_BUILTIN_COMPLEXFP* DH_CorrCube::getBuffer() const
+ inline const u16complex* DH_CorrCube::getBuffer() const
    { return itsBuffer; }
  
- inline LOFAR_BUILTIN_COMPLEXFP* DH_CorrCube::getBufferElement(int channel, 
-							       int station,
-							       int sample,
-							       int pol)     
+ inline u16complex* DH_CorrCube::getBufferElement(int channel, 
+						  int station,
+						  int sample,
+						  int pol)     
    { return itsBuffer + CCADDRESS_POL(channel, station, sample, pol); }
  
- LOFAR_BUILTIN_COMPLEXFP* getBufferTimePolSeries(int channel, int station) 
-   { return itsBuffer + CCADDRESS_STATION(channel, station); } 
+/*  inline u16complex* getBufferTimePolSeries(int channel, int station)  */
+/*    { return itsBuffer + CCADDRESS_STATION(channel, station); } */
  
  inline void DH_CorrCube::setBufferElement(int channel, 
 					   int sample, 
 					   int station, 
 					   int polarisation,
-					   LOFAR_BUILTIN_COMPLEXFP* valueptr) {
-   *(itsBuffer + CCADDRESS_POL(channel, station, sample, pol)) = *valueptr;
+					   u16complex* valueptr) {
+   *(itsBuffer + CCADDRESS_POL(channel, station, sample, polarisation)) = *valueptr;
  }
  
  inline const unsigned int DH_CorrCube::getBufSize() const {
@@ -109,5 +110,4 @@ private:
  }
  
 }
-
 #endif 

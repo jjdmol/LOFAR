@@ -22,11 +22,11 @@ namespace LOFAR
       itsSubBand     (subband),
       itsNPol        (2)
   {
-    ParameterSet  myPS("TFlopCorrelator.cfg");
-    //ParameterCollection	myPC(myPS);
-    itsNFChannels = myPS("DH_CorrCube.freqs");
-    itsNStations  = myPS("DH_CorrCube.stations");
-    itsNTimes     = myPS("DH_CorrCube.times");
+//     ParameterSet  myPS("TFlopCorrelator.cfg");
+//     //ParameterCollection	myPC(myPS);
+//     itsNFChannels = myPS("DH_CorrCube.freqs");
+//     itsNStations  = myPS("DH_CorrCube.stations");
+//     itsNTimes     = myPS("DH_CorrCube.times");
   }
   
 DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)
@@ -57,14 +57,14 @@ void DH_CorrCube::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsNStations * itsNFCannels * itsNTimes * itsNPol;
+  itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
   
   addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
   
   createDataBlock();  // calls fillDataPointers
   // itsBuffer = getData<BufferType> ("Buffer");
-  memset(itsBuffer, 0, itsBufSize*sizeof(LOFAR_BUILTIN_COMPLEXFP)); 
+  memset(itsBuffer, 0, itsBufSize*sizeof(u16complex)); 
 }
 
 void DH_CorrCube::postprocess()
