@@ -24,6 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.>
+
 #include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/Profiler.h>
 
