@@ -58,16 +58,9 @@ WH_Correlator::WH_Correlator(const string& name,
   itsNpolarisations = itsKVM.getInt("polarisations", 2);
   itsNtargets = 0; // not used?
 
-  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 
-						      itsNelements, 
-						      itsNsamples, 
-						      itsNchannels,
-						      itsNpolarisations));
+  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
 
-  getDataManager().addOutDataHolder(0, new DH_Vis("out", 
-						  itsNelements, 
-						  itsNchannels, 
-						  itsNpolarisations));
+  getDataManager().addOutDataHolder(0, new DH_Vis("out", 1));
 
   t_start.tv_sec = 0;
   t_start.tv_usec = 0;
@@ -92,7 +85,7 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 }
 
 void WH_Correlator::process() {
-  DBGASSERTSTR(itsNPol == 2, "Implementation of WH_Correlator only works for NPols==2; itsNPols =  " << itsNpols);
+  DBGASSERTSTR(itsNpolarisations == 2, "Implementation of WH_Correlator only works for NPols==2; itsNPols =  " << itsNpolarisations);
 
   double starttime, stoptime, cmults;
 
