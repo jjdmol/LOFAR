@@ -20,6 +20,9 @@ namespace LOFAR
 class DH_Vis: public DataHolder
 {
 public:
+  typedef float BufferPrimitive;
+  typedef fcomplex BufferType;
+
   explicit DH_Vis (const string& name, short startfreq);
 
   DH_Vis(const DH_Vis&);
@@ -36,12 +39,12 @@ public:
   virtual void postprocess();
 
   /// Get write access to the Buffer in the DataPacket.
-  LOFAR_BUILTIN_COMPLEXFP* getBuffer();
+  fcomplex* getBuffer();
   /// Get read access to the Buffer in the DataPacket.
-  const LOFAR_BUILTIN_COMPLEXFP* getBuffer() const;
+  const fcomplex* getBuffer() const;
 
-  LOFAR_BUILTIN_COMPLEXFP*       getBufferElement(int station1, int station2, int channel, int polarisation);
-  void              setBufferElement(int station1, int station2, int channel, int polarisation, LOFAR_BUILTIN_COMPLEXFP* valueptr);
+  fcomplex* getBufferElement(int station1, int station2, int channel, int polarisation);
+  void      setBufferElement(int station1, int station2, int channel, int polarisation, fcomplex* valueptr);
 
   const unsigned int getBufSize() const;
 
@@ -49,34 +52,36 @@ private:
   /// Forbid assignment.
   DH_Vis& operator= (const DH_Vis&);
 
-  LOFAR_BUILTIN_COMPLEXFP*  itsBuffer;    // data array 
+  fcomplex*  itsBuffer;    // data array 
   unsigned int itsBufSize;
 
   short itsStartFreq; // first freq channel ID
   short itsNStations; // #stations in the buffer 
-  
+  short itsNPols;     // #polarisations 
+  short itsNFChannels;
+
   void fillDataPointers();
 };
 
 
-inline LOFAR_BUILTIN_COMPLEXFP* DH_Vis::getBuffer()
+inline fcomplex* DH_Vis::getBuffer()
   { return itsBuffer; }
  
-inline const LOFAR_BUILTIN_COMPLEXFP* DH_Vis::getBuffer() const
+inline const fcomplex* DH_Vis::getBuffer() const
   { return itsBuffer; }
 
-#define VISADDRESS_FREQ (freq) itsNFChannels*(freq)    
-#define VISADDRESS_BASELINE (freq, station1, station2)  VISADDRESS_FREQ((freq)) + 
-#define VISADDRESS_POL  (freq, station1, station2, pol) VISADDRESS_BASELINE((freq),(station1),(station2)) + itsNPols*pol
+#define VISADDRESS_FREQ(freq) itsNFChannels*(freq)    
+#define VISADDRESS_BASELINE(freq, station1, station2)  VISADDRESS_FREQ((freq)) + 
+#define VISADDRESS_POL(freq, station1, station2, pol) VISADDRESS_BASELINE((freq),(station1),(station2)) + itsNPols*pol
 
-inline LOFAR_BUILTIN_COMPLEXFP* DH_Vis::getBufferElement(int station1, int station2, int channel, int polarisation)
+inline fcomplex* DH_Vis::getBufferElement(int station1, int station2, int channel, int polarisation)
   { 
-    return itsBuffer + VISADDRESS(station1, station2, channel, polarisation);
+    return itsBuffer + VISADDRESS_POL(station1, station2, channel, polarisation);
   }
  
-inline void :setBufferElement(int station1, int station2, int channel, int polarisation, LOFAR_BUILTIN_COMPLEXFP* valueptr)
+inline void DH_Vis::setBufferElement(int station1, int station2, int channel, int polarisation, fcomplex* valueptr)
 {
-  *( itsBuffer + VISADDRESS(station1, station2, channel, polarisation)  ) = *valueptr;
+  *( itsBuffer + VISADDRESS_POL(station1, station2, channel, polarisation)  ) = *valueptr;
 };
 
 
