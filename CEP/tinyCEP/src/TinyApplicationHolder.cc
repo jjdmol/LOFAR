@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <tinyCEP/TinyApplicationHolder.h>
 #include TRANSPORTERINCLUDE
 
