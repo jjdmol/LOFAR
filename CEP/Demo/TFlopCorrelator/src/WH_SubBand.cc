@@ -4,60 +4,67 @@
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
 //#  $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 //# Includes
+#include <ACC/ParameterSet.h>
 #include <WH_SubBand.h>
 
-#include <fftw.h>
+#include <TFlopCorrelator/DH_SubBand.h>
+#include <TFlopCorrelator/DH_CorrCube.h>
+
+//#include <fftw.h>
 
 using namespace LOFAR;
 
-WH_SubBand::WH_SubBand(const string& name) {
+WH_SubBand::WH_SubBand(const string& name,
+		       const short   subBandID):
+ WorkHolder( 1, 1, name, "WH_Correlator"),
+ itsSBID   (subBandID)
+{
 
-  // Need input: number of filter taps
-  itsNtaps = 8;
-  itsNcoeff = 8;
+   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+   //ParameterCollection	myPC(myPS);
+   itsNtaps     = myPS.getInt("WH_SubBand.taps");
+   itsNcoeff    = itsNtaps; // aren't these the same anyway?
+   itsFFTLen    = myPS.getInt("WH_SubBand.fftlen");
+   itsCpF       = myPS.getInt("WH_SubBand.Corr_per_Filter");
+
+   getDataManager().addInDataHolder(0, new DH_SubBand("input", itsSBID));
+   for (int c=0; c<itsCpF; c++) {
+     getDataManager().addOutDataHolder(0, new DH_CorrCube("in", itsSBID)); 
+   }
+   
+   //todo: Add DH for filter coefficients;
+   //      need functionalit like the CEPFrame setAutotrigger.
+
 
   // Initialize the delay line
-  delayLine = new FilterType[2*itsNtaps]; 
-  memset(delayLine,0,2*itsNtaps*sizeof(FilterType));
-  delayPtr = delayLine;
-
-  // Need input: filter coefficients
-  coeffPtr = new FilterType[itsNcoeff];
-  for (int j = 0; j < itsNcoeff; j++) {
-    __real__ coeffPtr[j] = (j + 1);
-  }
-
+   delayLine = new FilterType[2*itsNtaps]; 
+   memset(delayLine,0,2*itsNtaps*sizeof(FilterType));
+   delayPtr = delayLine;
+   
+   // Need input: filter coefficients
+   coeffPtr = new FilterType[itsNcoeff];
+   for (int j = 0; j < itsNcoeff; j++) {
+     __real__ coeffPtr[j] = (j + 1);
+   }
+   
 }
 
 WH_SubBand::~WH_SubBand() {
 }
 
-WorkHolder* WH_SubBand::construct(const string& name) {
-  return new WH_SubBand(name);
+WorkHolder* WH_SubBand::construct(const string& name,
+				  const short   SBID) {
+  return new WH_SubBand(name, SBID);
 }
 
 WH_SubBand* WH_SubBand::make(const string& name) {
-  return new WH_SubBand(name);
+  return new WH_SubBand(name, itsSBID);
 }
 
 void WH_SubBand::process() {
