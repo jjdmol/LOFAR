@@ -60,6 +60,7 @@ ApplController_SOURCES      = ACDaemonComm.cc \
 							  APAdminPool.cc \
 							  ProcRule.cc \
 							  PR_Shell.cc \
+							  PR_MPI.cc \
 							  ProcRuler.cc \
 							  ItemList.cc \
 							  ApplController.cc \
