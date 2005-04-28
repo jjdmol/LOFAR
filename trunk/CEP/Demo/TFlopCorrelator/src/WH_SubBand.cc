@@ -26,7 +26,7 @@
 //# Includes
 #include <WH_SubBand.h>
 
-#include <complex>
+#include <fftw.h>
 
 using namespace LOFAR;
 
@@ -62,6 +62,15 @@ WH_SubBand* WH_SubBand::make(const string& name) {
 
 void WH_SubBand::process() {
   
+  acc = 0 + 0i;
+
+  for (int i = 0; i < itsNtaps; i++) { 
+    
+    acc += coeffPtr[i] * delayLine[i];
+    
+  }
+
+
 }
 
 void WH_SubBand::dump() {
