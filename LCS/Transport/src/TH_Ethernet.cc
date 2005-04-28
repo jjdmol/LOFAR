@@ -21,6 +21,9 @@
 //# $Id$
 
 
+
+#ifndef HAVE_BGL
+
 #include <lofar_config.h>
 
 #include <Transport/TH_Ethernet.h>
@@ -402,4 +405,5 @@ void TH_Ethernet::Init()
 
 }
 
+#endif
 
