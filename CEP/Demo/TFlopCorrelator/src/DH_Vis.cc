@@ -10,9 +10,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <ACC/ParameterSet.h>
 
 #include <DH_Vis.h>
-#include <Common/KeyValueMap.h>
 
 namespace LOFAR
 {
@@ -20,11 +20,12 @@ namespace LOFAR
 DH_Vis::DH_Vis (const string& name, short startfreq)
 : DataHolder    (name, "DH_Vis"),
   itsBuffer     (0),
+  itsStartFreq  (startfreq), 
   itsNPols      (2)
 {
-//   ParameterSet  myPS("TFlopCorrelator.cfg");
-//   //ParameterCollection	myPC(myPS);
-//   itsNStations  = myPS("DH_CorrCube.stations");
+   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+   //ParameterCollection	myPC(myPS);
+   itsNStations  = myPS.getInt("DH_CorrCube.stations");
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)
@@ -50,15 +51,12 @@ void DH_Vis::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsNStations * itsNStations * itsNFChannels * itsNPols*itsNPols; 
-
-  addField("Buffer", BlobField<BufferType>(1, itsBufSize));
+  itsBufSize = itsNStations * itsNStations * itsNFChannels * itsNPols*itsNPols;
+  addField("Buffer", BlobField<fcomplex>(1, itsBufSize));
   createDataBlock();  // calls fillDataPointers
-  //itsBuffer = getData<BufferType> ("Buffer");
-  // todo: memset instead of loop
-  for (unsigned int i=0; i<itsBufSize; i++) {
-    itsBuffer[i] = 0.0 + 0.0i;
-  }
+  //itsBuffer = getData<fcomplex> ("Buffer");
+  memset(itsBuffer, 0, itsBufSize*sizeof(fcomplex)); 
+
 }
 
 void DH_Vis::postprocess()
@@ -67,7 +65,7 @@ void DH_Vis::postprocess()
 }
 
 void DH_Vis::fillDataPointers() {
-  itsBuffer = getData<BufferType> ("Buffer");
+  itsBuffer = getData<fcomplex> ("Buffer");
 
 }
 
