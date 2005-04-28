@@ -57,6 +57,8 @@ namespace LOFAR
     FilterType* coeffPtr;
     FilterType* inputPtr;
 
+    FilterType acc;
+
     void adjustDelayPtr();
   };
 
