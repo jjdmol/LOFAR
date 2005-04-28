@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+
+#ifndef HAVE_BGL
+
 #ifndef TRANSPORT_TH_ETHERNET_H
 #define TRANSPORT_TH_ETHERNET_H
 
@@ -120,3 +123,4 @@ inline bool TH_Ethernet::isBidirectional() const
 
 #endif
 
+#endif
