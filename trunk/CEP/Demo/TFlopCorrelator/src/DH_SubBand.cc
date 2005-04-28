@@ -1,4 +1,4 @@
-//  DH_CorrCube.cc:
+//  DH_SubBand.cc:
 //
 //  Copyright (C) 2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -10,26 +10,28 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#include <DH_CorrCube.h>
+#include <DH_SubBand.h>
 #include <ACC/ParameterSet.h>
+
 
 namespace LOFAR
 {
 
-  DH_CorrCube::DH_CorrCube (const string& name, short subband)
-    : DataHolder     (name, "DH_CorrCube"),
+  DH_SubBand::DH_SubBand (const string& name, 
+			  const short   subband)
+    : DataHolder     (name, "DH_SubBand"),
       itsBuffer      (0),
       itsSubBand     (subband),
       itsNPol        (2)
   {
     ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
     //ParameterCollection	myPC(myPS);
-    itsNFChannels = myPS.getInt("DH_CorrCube.freqs");
-    itsNStations  = myPS.getInt("DH_CorrCube.stations");
-    itsNTimes     = myPS.getInt("DH_CorrCube.times");
+    itsNFChannels = myPS.getInt("DH_SubBand.freqs");
+    itsNStations  = myPS.getInt("DH_SubBand.stations");
+    itsNTimes     = myPS.getInt("DH_SubBand.times");
   }
   
-DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)
+DH_SubBand::DH_SubBand(const DH_SubBand& that)
   : DataHolder(that),
     itsBuffer(0)
 {
@@ -40,18 +42,18 @@ DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)
     itsNPol       = that.itsNPol;
 }
 
-DH_CorrCube::~DH_CorrCube()
+DH_SubBand::~DH_SubBand()
 {
   //  delete [] (char*)(itsDataPacket);
   itsBuffer = 0;
 }
 
-DataHolder* DH_CorrCube::clone() const
+DataHolder* DH_SubBand::clone() const
 {
-  return new DH_CorrCube(*this);
+  return new DH_SubBand(*this);
 }
 
-void DH_CorrCube::preprocess()
+void DH_SubBand::preprocess()
 {
   // First delete possible buffers.
   postprocess();
@@ -63,16 +65,16 @@ void DH_CorrCube::preprocess()
   addField ("Buffer", BlobField<fcomplex>(1, itsBufSize));
   
   createDataBlock();  // calls fillDataPointers
-  // itsBuffer = getData<fcomplex> ("Buffer");
+  // itsBuffer = getData<BufferType> ("Buffer");
   memset(itsBuffer, 0, itsBufSize*sizeof(fcomplex)); 
 }
 
-void DH_CorrCube::postprocess()
+void DH_SubBand::postprocess()
 {
   itsBuffer     = 0;
 }
 
-void DH_CorrCube::fillDataPointers() {
+void DH_SubBand::fillDataPointers() {
   itsBuffer = getData<fcomplex> ("Buffer");
 }
 }

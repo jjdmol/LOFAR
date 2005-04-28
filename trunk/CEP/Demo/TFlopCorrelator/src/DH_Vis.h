@@ -6,8 +6,8 @@
 //#
 //# $Id$
 
-#ifndef ONLINEPROTO_DH_VIS_H
-#define ONLINEPROTO_DH_VIS_H
+#ifndef TFLOPCORR_DH_VIS_H
+#define TFLOPCORR_DH_VIS_H
 
 
 #include <lofar_config.h>
@@ -20,9 +20,6 @@ namespace LOFAR
 class DH_Vis: public DataHolder
 {
 public:
-  typedef float BufferPrimitive;
-  typedef fcomplex BufferType;
-
   explicit DH_Vis (const string& name, short startfreq);
 
   DH_Vis(const DH_Vis&);
