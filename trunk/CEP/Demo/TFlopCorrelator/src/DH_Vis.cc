@@ -57,8 +57,7 @@ void DH_Vis::preprocess()
   //itsBuffer = getData<BufferType> ("Buffer");
   // todo: memset instead of loop
   for (unsigned int i=0; i<itsBufSize; i++) {
-    __real__ itsBuffer[i] = 0.0;
-    __imag__ itsBuffer[i] = 0.0;
+    itsBuffer[i] = 0.0 + 0.0i;
   }
 }
 
