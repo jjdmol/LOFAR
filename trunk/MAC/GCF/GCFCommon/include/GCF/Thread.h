@@ -133,69 +133,40 @@ namespace LOFAR
 
   extern const Attributes _null_attributes;
 
-  const Attributes & Attributes::Null ()
-  { return _null_attributes; }
-        
-  Attributes joinable ()
-  { return Attributes(Attributes::JOINABLE); }
+  Attributes joinable ();
 
-  Attributes detached ()
-  { return Attributes(Attributes::DETACHED); }
+  Attributes detached ();
 
   // -----------------------------------------------------------------------
   // Thread functions
   // -----------------------------------------------------------------------
 
   // returns thread id of self
-  ThrID self ()
-  { 
-    return ThrID::self(); 
-  }
+  ThrID self ();
 
   // Thread::create() creates a thred
   ThrID create (void * (*start)(void*),void *arg=0,const Attributes &attr = Attributes::Null());
 
   // Exits a thread
-  void exit (void *value=0)
-  { 
-    pthread_exit(value); 
-  }
+  void exit (void *value=0);
 
   // Sets the sigmask for a thread
-  int signalMask (int how,const sigset_t *newmask,sigset_t *oldmask = 0)
-  {
-    return pthread_sigmask(how,newmask,oldmask);
-  }
+  int signalMask (int how,const sigset_t *newmask,sigset_t *oldmask = 0);
 
   // Sets a single signal in a thread's sigmask
-  int signalMask (int how,int sig,sigset_t *oldmask = 0)
-  {
-    sigset_t sset;
-    sigemptyset(&sset);
-    sigaddset(&sset,sig);
-    return pthread_sigmask(how,&sset,oldmask);
-  }
+  int signalMask (int how,int sig,sigset_t *oldmask = 0);
 
   // sets the thread's cancellation state
-  int setCancelState (int state,int &oldstate = dummy_int)
-  {
-    return pthread_setcancelstate(state,&oldstate);
-  }
+  int setCancelState (int state,int &oldstate = dummy_int);
 
   // sets the thread's cancellation type
-  int setCancelType (int type,int &oldtype = dummy_int)
-  {
-    return pthread_setcanceltype(type,&oldtype);
-  }
+  int setCancelType (int type,int &oldtype = dummy_int);
 
-  void testCancel ()
-  {
-    pthread_testcancel();
-  }
+  void testCancel ();
 
 
   // constant: the null thread id
-    const ThrID ThrID_null;
+  const ThrID ThrID_null;
 
 #else
 
