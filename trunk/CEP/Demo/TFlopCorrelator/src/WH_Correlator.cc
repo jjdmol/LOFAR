@@ -4,27 +4,13 @@
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
 //#  $Id$
 
 #include <lofar_config.h>
 #include <stdio.h>
 
 // General includes
-#include <Common/KeyValueMap.h>
+#include <ACC/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 #ifdef HAVE_MPI
@@ -47,15 +33,16 @@
 
 using namespace LOFAR;
 
-WH_Correlator::WH_Correlator(const string& name, 
-			     const KeyValueMap& kvm)
-  : WorkHolder( 1, 1, name, "WH_Correlator"),
-    itsKVM    (kvm)
+WH_Correlator::WH_Correlator(const string& name) : 
+  WorkHolder( 1, 1, name, "WH_Correlator"),
+  itsNpolarisations (2)
 {
-  itsNelements = itsKVM.getInt("stations", 92);
-  itsNsamples  = itsKVM.getInt("samples", 100);
-  itsNchannels = itsKVM.getInt("channels", 46);
-  itsNpolarisations = itsKVM.getInt("polarisations", 2);
+
+  ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+  //ParameterCollection	myPC(myPS);
+  itsNelements = myPS.getInt("WH_Corr.stations");
+  itsNsamples  = myPS.getInt("WH_Corr.samples");
+  itsNchannels = myPS.getInt("WH_Corr.channels"); 
   itsNtargets = 0; // not used?
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
@@ -74,14 +61,13 @@ WH_Correlator::WH_Correlator(const string& name,
 WH_Correlator::~WH_Correlator() {
 }
 
-WorkHolder* WH_Correlator::construct (const string& name, 
-				      const KeyValueMap& kvm)
+WorkHolder* WH_Correlator::construct (const string& name)
 {
-  return new WH_Correlator(name, kvm);
+  return new WH_Correlator(name);
 }
 
 WH_Correlator* WH_Correlator::make (const string& name) {
-  return new WH_Correlator(name, itsKVM);
+  return new WH_Correlator(name);
 }
 
 void WH_Correlator::process() {
@@ -97,8 +83,8 @@ void WH_Correlator::process() {
     gettimeofday(&t_stop, NULL);
     
     bandwidth = 8.0 *
-      ((inDH->getBufSize()*sizeof(DH_CorrCube::BufferType)) +
-       (outDH->getBufSize()*sizeof(DH_Vis::BufferType))) /
+      ((inDH->getBufSize()*sizeof(fcomplex)) +
+       (outDH->getBufSize()*sizeof(fcomplex))) /
       (t_stop.tv_sec + 1.0e-6*t_stop.tv_usec - 
        t_start.tv_sec + 1.0e-6*t_start.tv_usec);
 
@@ -113,33 +99,12 @@ void WH_Correlator::process() {
 #endif 
 
   // reset integrator.
-  memset(outDH->getBuffer(), 
-	 0,
-	 outDH->getBufSize()*sizeof(DH_Vis::BufferType));
+  memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(fcomplex));
 
 
 
-  //
-  // this block of code does the cast from complex<uint16> to complex<float>
-  // 
-#if 1
-  // using builtin complex type
-  // this will work for both GNU and IBM compilers. The Intel compiler only recognizes the older __complex__ type
-  DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
+  // todo: replace n_buffer by appropriate input data ptr 
   _Complex float* in_buffer = new _Complex float[inDH->getBufSize()];
-  for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
-    __real__ *(in_buffer+i) =  *(in_ptr+2*i);    
-    __imag__ *(in_buffer+i) =  *(in_ptr+2*i+1);
-  }
-#else
-  // using stl templated complex type
-  DH_CorrCube::BufferType* in_ptr = (DH_CorrCube::BufferType*) inDH->getBuffer();
-  // The float pointer is explicit, since DH_Vis is now complex<double>
-  complex<float>*  in_buffer = new complex<float>[inDH->getBufSize()];
-  for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
-    *(in_buffer+i) = *(in_ptr+i); 
-  }
-#endif 
 
   //
   // This is the actual correlator
@@ -200,7 +165,7 @@ void WH_Correlator::process() {
     } // station1
   } // fchannel
 
-#else
+#else   // NO BGL
 
 //   complex<double> * out_ptr;
   _Complex double * out_ptr;
@@ -232,8 +197,7 @@ void WH_Correlator::process() {
   stoptime = timer();
 #endif
   
-  delete[](in_buffer);
-
+  
 #ifdef DO_TIMING
 #ifdef HAVE_MPI
   double elapsed_time = (stoptime-starttime);
