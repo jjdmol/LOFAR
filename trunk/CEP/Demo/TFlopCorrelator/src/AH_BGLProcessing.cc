@@ -161,34 +161,4 @@ void AH_BGLProcessing::quit() {
 
 }
 
-int main (int argc, const char** argv) {
 
-  INIT_LOGGER("AH_BGLProcessing");
-
-  try {
-    kvm = KeyParser::parseFile("TestRange");
-
-  } catch (std::exception& x) {
-    cerr << x.what() << endl;
-  }
-  
-  try {
-//     kvm.show(cout);
-
-    AH_BGLProcessing correlator(kvm);
-    correlator.setarg(argc, argv);
-    correlator.baseDefine(kvm);
-    cout << "defined" << endl;
-    correlator.basePrerun();
-    cout << "init" << endl;
-    correlator.baseRun(1);
-    cout << "run" << endl;
-    correlator.baseDump();
-    correlator.baseQuit();
-
-  } catch (std::exception& x) {
-    cout << "Unexpected exception" << endl;
-    cerr << x.what() << endl; 
-  }
-  return 0;
-}
