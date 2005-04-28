@@ -55,6 +55,9 @@ public:
 	virtual ProcRule*	clone()   const = 0;
 
 	const string&	getName()   const;
+	const string&	getNodeName()   const;
+	const string&	getExecName()   const;
+	const string&	getParamFile()   const;
 	bool 			isStarted() const;
 	void 			markAsStopped();
 
@@ -84,6 +87,21 @@ inline bool ProcRule::isStarted() const
 inline const string& ProcRule::getName() const
 {
 	return (itsProcName);
+}
+
+inline const string& ProcRule::getNodeName() const
+{
+	return (itsNodeName);
+}
+
+inline const string& ProcRule::getExecName() const
+{
+	return (itsExecName);
+}
+
+inline const string& ProcRule::getParamFile() const
+{
+	return (itsParamfile);
 }
 
 inline void	ProcRule::markAsStopped()

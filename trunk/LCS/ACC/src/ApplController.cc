@@ -28,6 +28,7 @@
 #include <Common/hexdump.h>			// TODO: remove in final version
 #include <ACC/ApplController.h>
 #include <ACC/PR_Shell.h>			// TODO: factory!
+#include <ACC/PR_MPI.h>			// TODO: factory!
 #include <ACC/ItemList.h>			// @@
 
 namespace LOFAR {
@@ -304,6 +305,7 @@ void ApplController::createParSubsets()
 		//itsProcRuler.add(makePR(procType, nodeNm, procNm, execNm, fileNm));
 		string execName = procPS.getString(procName+".executable");
 		itsProcRuler.add(PR_Shell(nodeName, procName, execName, fileName));
+		//itsProcRuler.add(PR_MPI(nodeName, procName, execName, fileName, itsProcList->size(), baseProcName));
 
 		// Remove execute type from processes paramlist
 		procPS.remove(procName+".startstoptype");
