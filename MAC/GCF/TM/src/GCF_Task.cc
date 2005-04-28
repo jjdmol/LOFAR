@@ -46,6 +46,7 @@ namespace LOFAR
 // static member initialisation
 bool GCFTask::_doExit = false;
 GCFTask::THandlers GCFTask::_handlers;
+GCFTask::THandlers GCFTask::_tempHandlers;
 GCFTask::TProtocols GCFTask::_protocols;
 int GCFTask::_argc = 0;
 char** GCFTask::_argv = 0;
@@ -99,19 +100,20 @@ void GCFTask::run()
   signal(SIGTERM, GCFTask::signalHandler);
   signal(SIGPIPE, SIG_IGN);
 
-  // THE MAIN LOOP OF THE APPLICATION
+  // THE MAIN LOOP OF THE MAC PROCESS
   // can only be interrupted/stopped by calling stop or terminating the application
   while (!_doExit)
   {
-    // new handlers can add during processing the workProc
-    // thus a temp handler list is made
-    THandlers tempHandlers(_handlers); 
+    // new handlers can be add during processing the workProc
+    // thus a temp handler map is used
+    _tempHandlers.clear();
+    _tempHandlers.insert(_handlers.begin(), _handlers.end()); 
 
-    for (THandlers::iterator iter = tempHandlers.begin() ;
-          iter != tempHandlers.end() && !_doExit; 
-          ++iter)
+    for (THandlers::iterator iter = _tempHandlers.begin() ;
+         iter != _tempHandlers.end() && !_doExit; ++iter)
     {
-      (*iter)->workProc();
+      if (!iter->second) continue;
+      iter->first->workProc();
     }
   }
   stop();
@@ -122,17 +124,18 @@ void GCFTask::stop()
   // stops the application in 2 steps
   // first it stops the handlers and secondly it deletes the handler objects if
   // they are not used anymore by other object followed by deleting the handlers list
+  GCFHandler* pHandler(0);
   if (_doExit)
   {
-    LOG_INFO("Application is stopped! Possible reasons: 'stop' called or terminated");
-    GCFHandler* pHandler;
+    LOG_INFO("Process is stopped! Possible reasons: 'stop' called or terminated");
     for (THandlers::iterator iter = _handlers.begin() ;
-          iter != _handlers.end() ; 
-          ++iter)
+         iter != _handlers.end(); ++iter)
     {
-      pHandler = (*iter);
-      pHandler->leave(); // "application" is also a handler user, see registerHandler
-      if (pHandler->mayDeleted()) // no other object uses this handler?
+      if (!iter->second) continue; // handler pointer is not valid anymore, 
+                                   // because this handler was deleted by the user
+      pHandler = iter->first;
+      pHandler->leave(); // "process" is also a handler user, see registerHandler
+      if (pHandler->mayDeleted()) // no other object uses this handler anymore?
       {
         delete pHandler;
       }
@@ -141,12 +144,13 @@ void GCFTask::stop()
   }
   else
   {
-    GCFHandler* pHandler;
     for (THandlers::iterator iter = _handlers.begin() ;
           iter != _handlers.end() ; 
           ++iter)
     {
-      pHandler = (*iter);
+      if (!iter->second) continue; // handler pointer is not valid anymore, 
+                                   // because this handler was deleted by the user
+      pHandler = iter->first;
       pHandler->stop();
     } 
     _doExit = true;
@@ -155,8 +159,20 @@ void GCFTask::stop()
 
 void GCFTask::registerHandler(GCFHandler& handler)
 {
-  _handlers.push_back(&handler);
+  _handlers[&handler] = true; // valid pointer
   handler.use(); // released after stop
+}
+
+void GCFTask::deregisterHandler(GCFHandler& handler)
+{
+  THandlers::iterator iter = _tempHandlers.find(&handler);
+  
+  if (iter != _tempHandlers.end())
+  {
+    iter->second = false; // pointer will be made invalid because the user 
+                          // deletes the handler by itself                          
+  }
+  _handlers.erase(&handler);
 }
 
 void GCFTask::registerProtocol(unsigned short protocolID,
