@@ -100,6 +100,9 @@ class GCFTask : public GCFFsm
     /// registers a GCFHandler for the mainloop
     static void registerHandler (GCFHandler& handler);
     
+    /// deregisters a GCFHandler from the mainloop
+    static void deregisterHandler (GCFHandler& handler);
+
     /// stops the application; it stops all registered handlers
     static void stop ();
  
@@ -137,8 +140,9 @@ class GCFTask : public GCFFsm
     /// the task name
     string _name;
     /// all registered handlers, which should be invoked (workProc) circulair
-    typedef vector<GCFHandler*> THandlers;
+    typedef map<GCFHandler*, bool /*valid*/> THandlers;
     static THandlers _handlers;
+    static THandlers _tempHandlers;
 
     /// all registered protocols in the application
     typedef map<unsigned short, const char**> TProtocols;
