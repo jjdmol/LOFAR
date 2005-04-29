@@ -26,8 +26,6 @@
 #include <Common/KeyValueMap.h>
 #include <CEPFrame/ApplicationHolder.h>
 
-LOFAR::KeyValueMap kvm;
-
 namespace LOFAR {
 // Description of class.
 class StationCorrelator: public LOFAR::ApplicationHolder

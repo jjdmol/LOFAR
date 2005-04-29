@@ -256,7 +256,7 @@ void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dst
   if (srcNode == dstNode) {
     //    cout<<srcStep->getName()<<" and "<<dstStep->getName()<<" on same node"<<endl;
     if (sharedMem) {
-      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_ShMem(srcNode,dstNode), false); // true=blocking
+      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_ShMem(srcNode,dstNode), true); // true=blocking
     } 
     else {
       dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
@@ -271,30 +271,3 @@ void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dst
   //  cout<<"ok"<<endl;
 }
 
-int main (int argc, const char** argv) {
-
-  INIT_LOGGER("StationCorrelator");
-
-  try {
-    kvm = KeyParser::parseFile("/home/zwart/TestRange");
-
-    StationCorrelator correlator(kvm);
-    correlator.setarg(argc, argv);
-    correlator.baseDefine(kvm);
-    //    cout << "defined" << endl;
-    Profiler::init();
-    correlator.basePrerun();
-    //    cout << "init done" << endl;
-    Profiler::activate();
-    correlator.baseRun(kvm.getInt("runsteps",1));
-    //    cout << "run" << endl;
-    //correlator.baseDump();
-    correlator.baseQuit();
-    Profiler::deActivate();
-
-  } catch (std::exception& x) {
-    cerr << "Unexpected exception: " << x.what() << endl; 
-    cout << "Unexpected exception: " << x.what() << endl; 
-  }
-  return 0;
-}
