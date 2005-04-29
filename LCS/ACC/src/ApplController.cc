@@ -301,11 +301,14 @@ void ApplController::createParSubsets()
 
 		// II. Save proc ruling info in separate map for later
 		// TODO: make factory!!!!
-		//string procType = procPS.getString(procName+".startstoptype");
+		string procType = procPS.getString(procName+".startstoptype");
 		//itsProcRuler.add(makePR(procType, nodeNm, procNm, execNm, fileNm));
 		string execName = procPS.getString(procName+".executable");
-		itsProcRuler.add(PR_Shell(nodeName, procName, execName, fileName));
-		//itsProcRuler.add(PR_MPI(nodeName, procName, execName, fileName, itsProcList->size(), baseProcName));
+		if (procType == "cmdline") {
+		  itsProcRuler.add(PR_Shell(nodeName, procName, execName, fileName));
+		} else if (procType == "mpirun" ) {
+		  itsProcRuler.add(PR_MPI(nodeName, procName, execName, fileName, itsProcList->size(), baseProcName));
+		};
 
 		// Remove execute type from processes paramlist
 		procPS.remove(procName+".startstoptype");

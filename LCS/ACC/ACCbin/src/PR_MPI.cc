@@ -63,7 +63,7 @@ namespace LOFAR {
     {
       // its possible that a pr with this index already exists. In that case the new
       // one is clone of the old one. So forget about the old one and remember the new one
-      itsPRList[index] = pr;
+      itsPRList[pr->getName()] = pr;
       LOG_TRACE_OBJ_STR("pr added to PR_MPI_Group, we now have "<<itsPRList.size()<<" prs");
     };
     void PR_MPI_Group::signOff(PR_MPI* pr)
