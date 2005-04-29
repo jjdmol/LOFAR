@@ -31,7 +31,6 @@
 #include <BBS3/MNS/MeqBaseLinPS.h>
 #include <BBS3/MNS/MeqStatExpr.h>
 #include <BBS3/MNS/MeqJonesSum.h>
-#include <BBS3/MNS/MeqIonos.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <BBS3/MNS/MeqParmSingle.h>
