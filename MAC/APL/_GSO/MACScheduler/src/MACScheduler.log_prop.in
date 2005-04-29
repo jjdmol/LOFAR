@@ -25,14 +25,14 @@ log4cplus.appender.STDOUT.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S} %-5p
 #log4cplus.appender.STDOUT.filters.2=log4cplus::spi::DenyAllFilter
 
 log4cplus.appender.FILE=log4cplus::RollingFileAppender
-log4cplus.appender.FILE.File=log/MACScheduler.log
+log4cplus.appender.FILE.File=../log/MACScheduler.log
 log4cplus.appender.FILE.MaxFileSize=5MB
 log4cplus.appender.FILE.MaxBackupIndex=5
 log4cplus.appender.FILE.layout=log4cplus::PatternLayout
 log4cplus.appender.FILE.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S} %-5p %c{3} - %m [%.25l]%n
 
 log4cplus.appender.XMLFILE=log4cplus::RollingFileAppender
-log4cplus.appender.XMLFILE.File=log/MACSchedulerlog.xml
+log4cplus.appender.XMLFILE.File=../log/MACSchedulerlog.xml
 log4cplus.appender.XMLFILE.MaxFileSize=5MB
 log4cplus.appender.XMLFILE.MaxBackupIndex=5
 log4cplus.appender.XMLFILE.layout=log4cplus::XMLLayout
