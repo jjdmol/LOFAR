@@ -69,10 +69,6 @@ event = {
     type = "LOFAR::GCF::Common::TGCFResult";
   };
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
   };
@@ -93,10 +89,6 @@ event = {
   param = {
     name = "response";
     type = "LOFAR::GCF::Common::TGCFResult";
-  };
-  param = {
-    name = "scopelen";
-    type = "unsigned int";
   };
   param = {
     name = "scope";
@@ -121,24 +113,12 @@ event = {
   signal = MY_GET_VALUE_RESPONSE;
   dir = OUT;
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
   };
   param = {
-    name = "propertylen";
-    type = "unsigned int";
-  };
-  param = {
     name = "property";
     type = "string";
-  };
-  param = {
-    name = "valuelen";
-    type = "unsigned int";
   };
   param = {
     name = "value";
@@ -171,16 +151,8 @@ event = {
     type = "LOFAR::GCF::Common::TGCFResult";
   };
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
-  };
-  param = {
-    name = "propertylen";
-    type = "unsigned int";
   };
   param = {
     name = "property";
@@ -209,10 +181,6 @@ event = {
     type = "LOFAR::GCF::Common::TGCFResult";
   };
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
   };
@@ -233,10 +201,6 @@ event = {
   param = {
     name = "response";
     type = "LOFAR::GCF::Common::TGCFResult";
-  };
-  param = {
-    name = "scopelen";
-    type = "unsigned int";
   };
   param = {
     name = "scope";
@@ -265,16 +229,8 @@ event = {
     type = "LOFAR::GCF::Common::TGCFResult";
   };
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
-  };
-  param = {
-    name = "propertylen";
-    type = "unsigned int";
   };
   param = {
     name = "property";
@@ -303,16 +259,8 @@ event = {
     type = "LOFAR::GCF::Common::TGCFResult";
   };
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
-  };
-  param = {
-    name = "propertylen";
-    type = "unsigned int";
   };
   param = {
     name = "property";
@@ -337,24 +285,12 @@ event = {
   signal = EXT_GET_VALUE_RESPONSE;
   dir = OUT;
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
   };
   param = {
-    name = "propertylen";
-    type = "unsigned int";
-  };
-  param = {
     name = "property";
     type = "string";
-  };
-  param = {
-    name = "valuelen";
-    type = "unsigned int";
   };
   param = {
     name = "value";
@@ -387,16 +323,8 @@ event = {
     type = "LOFAR::GCF::Common::TGCFResult";
   };
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
-  };
-  param = {
-    name = "propertylen";
-    type = "unsigned int";
   };
   param = {
     name = "property";
@@ -408,24 +336,12 @@ event = {
   signal = VALUE_CHANGE_RESPONSE;
   dir = OUT;
   param = {
-    name = "scopelen";
-    type = "unsigned int";
-  };
-  param = {
     name = "scope";
     type = "string";
   };
   param = {
-    name = "propertylen";
-    type = "unsigned int";
-  };
-  param = {
     name = "property";
     type = "string";
-  };
-  param = {
-    name = "valuelen";
-    type = "unsigned int";
   };
   param = {
     name = "value";
