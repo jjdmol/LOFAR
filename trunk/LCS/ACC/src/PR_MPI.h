@@ -52,6 +52,13 @@ namespace LOFAR {
 
     class PR_MPI;
 
+    class ProcIdCompare{
+    public:
+      bool operator()( const string& x, const string& y);
+      bool isNumber(char x);
+    };
+    typedef map<string, PR_MPI*, ProcIdCompare> PRList;
+
     class PR_MPI_Group {
     public:
       // no constructor because the PR_MPI needs to find its group using getGroup
@@ -73,12 +80,15 @@ namespace LOFAR {
 
       int itsNumberOfNodes;
       string itsGroupName;
-      map<string, PR_MPI*> itsPRList;
+
+      PRList itsPRList;
 
       bool itsIsRunning;
       string itsParamFile;
 
+
       static map<string, PR_MPI_Group*> theirGroupList;
+
     };
 
 
@@ -119,6 +129,41 @@ namespace LOFAR {
 
     inline void PR_MPI::markAsStarted()
       { itsIsStarted = false;};
+
+    inline bool ProcIdCompare::operator()( const string& x, const string& y) {
+      int xpos, ypos, pos, xvalue, yvalue;
+      for (pos=0; (pos<x.size()) && (pos<y.size()); pos++) {
+	if (isNumber(x[pos]) && isNumber(y[pos])) {
+	  // next char is a number
+	  xpos = ypos = pos;
+	  // find the end of the number
+	  while (isNumber(x[xpos]) && (xpos < x.size())) xpos++;
+	  while (isNumber(y[ypos]) && (ypos < y.size())) ypos++;
+	  // get the numeric value
+	  xvalue = atoi(x.substr(pos, xpos-pos).c_str());
+	  yvalue = atoi(y.substr(pos, ypos-pos).c_str());
+	  // compare
+	  if (xvalue > yvalue) {
+	    return false;
+	  } else if (xvalue < yvalue) {
+	    return true;
+	  }
+	  pos=xpos;
+	} else {
+	  // next char is not a number, compare chars
+	  if (x[pos] > y[pos]) {
+	    return false;
+	  } else if (x[pos] < y[pos]) {
+	    return true;
+	  };
+	}
+      }
+      return false;
+    }
+    inline bool ProcIdCompare::isNumber(char x) {
+      return ((x>='0') && (x<='9'));
+    };
+
 
     // @} addgroup
   } // namespace ACC
