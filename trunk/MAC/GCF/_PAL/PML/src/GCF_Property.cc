@@ -39,7 +39,8 @@ GCFProperty::GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pProper
   _pPropertySet(pPropertySet),
   _pAnswerObj(0),
   _pPropService(0),
-  _propInfo(propInfo)
+  _propInfo(propInfo),
+  _isIndependedProp(pPropertySet == 0)
 {
   _pPropService = new GPMPropertyService(*this);
 }
@@ -47,7 +48,7 @@ GCFProperty::GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pProper
 
 GCFProperty::~GCFProperty()
 {
-  assert (_pPropertySet == 0);
+  assert (_isIndependedProp);
   if (exists()) // can already be deleted by the Property Agent
   {      
     unsubscribe();
