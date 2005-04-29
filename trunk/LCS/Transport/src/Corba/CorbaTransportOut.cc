@@ -23,9 +23,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/BaseSim.h"
-#include "Common/Debug.h"
-#include "CEPFrame/Corba/CorbaTransportOut.h"
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include <CEPFrame/BaseSim.h>
+#include <Common/Debug.h>
+#include <CEPFrame/Corba/CorbaTransportOut.h>
 
 CorbaTransportOut::CorbaTransportOut(
 			     PortableServer::POA_var        itsRootPOA,

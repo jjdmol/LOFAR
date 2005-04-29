@@ -20,7 +20,10 @@
 //#
 //#  $Id$
 
-#include <DH_Example.h>
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include "DH_Example.h"
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
@@ -33,14 +36,14 @@ using namespace LOFAR;
 
 void sendData1 (DH_Example& sender)
 {
-  sender.getBuffer()[0] = fcomplex(17,-3.5);
+  sender.getBuffer()[0] = makefcomplex(17,-3.5);
   sender.setCounter(2);
   sender.write();
 }
 
 void sendData2 (DH_Example& sender)
 {
-  sender.getBuffer()[0] = fcomplex(17,-3.5);
+  sender.getBuffer()[0] = makefcomplex(17,-3.5);
   sender.setCounter(2);
   // fill extra blob
   BlobOStream& bos = sender.createExtraBlob();
@@ -50,7 +53,7 @@ void sendData2 (DH_Example& sender)
 
 void sendData3 (DH_Example& sender)
 {
-  sender.getBuffer()[0] = fcomplex(15,-4.5);
+  sender.getBuffer()[0] = makefcomplex(15,-4.5);
   sender.setCounter(5);
   BlobOStream& bos = sender.createExtraBlob();
   bos << int(1) << float(3);
@@ -61,7 +64,7 @@ void sendData3 (DH_Example& sender)
 
 void sendData4 (DH_Example& sender)
 {
-  sender.getBuffer()[0] = fcomplex(1.7,3.52);
+  sender.getBuffer()[0] = makefcomplex(1.7,3.52);
   sender.setCounter(5);
   sender.write();
 }

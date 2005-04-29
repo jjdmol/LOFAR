@@ -22,6 +22,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 
 #include <Transport/Socket.h>
 #include <Common/lofar_iostream.h>

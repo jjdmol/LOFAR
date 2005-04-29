@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include "DH_Ethernet.h"
 #include <Transport/TH_Ethernet.h>
 #include <Transport/TH_Mem.h>

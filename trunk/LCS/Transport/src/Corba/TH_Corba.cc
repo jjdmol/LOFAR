@@ -23,6 +23,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Corba/TH_Corba.h>
 #include <Corba/BS_Corba.h>
 #include <Common/Debug.h>

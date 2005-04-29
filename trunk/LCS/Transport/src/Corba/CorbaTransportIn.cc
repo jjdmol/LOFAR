@@ -22,10 +22,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
-#include "CEPFrame/BaseSim.h"
-#include "Common/Debug.h"
-#include "CEPFrame/Corba/CorbaTransportIn.h"
+
+#include <CEPFrame/BaseSim.h>
+#include <Common/Debug.h>
+#include <CEPFrame/Corba/CorbaTransportIn.h>
 
 CorbaTransportIn::CorbaTransportIn(int aID)
 {   

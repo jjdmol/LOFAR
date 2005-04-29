@@ -22,8 +22,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/Corba/BS_Corba.h"
-#include "Common/Debug.h"
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include <CEPFrame/Corba/BS_Corba.h>
+#include <Common/Debug.h>
 #include <unistd.h>
 
 pthread_t                      BS_Corba::itsORBThread;
