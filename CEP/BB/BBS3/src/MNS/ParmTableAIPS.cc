@@ -253,9 +253,6 @@ void ParmTableAIPS::putCoeffCheck (const string& parmName,
 				   MeqPolc& polc)
 {
   const MeqDomain& domain = polc.domain();
-  //const MeqMatrix& values = polc.getCoeff();
-  //const MeqMatrix& simvalues = polc.getSimCoeff();
-  //const MeqMatrix& pertsimvalues = polc.getPertSimCoeff();
   Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
     ASSERTSTR (sel.nrow()==1, "Parameter " << parmName <<
@@ -287,9 +284,6 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
 				 MeqPolc& polc)
 {
   itsInitTable.reopenRW();
-  //const MeqMatrix& values = polc.getCoeff();
-  //const MeqMatrix& simvalues = polc.getSimCoeff();
-  //const MeqMatrix& pertsimvalues = polc.getPertSimCoeff();
   // First see if the parameter name exists at all.
   *itsInitIndexName = parmName;
   Vector<uInt> rownrs = itsInitIndex->getRowNumbers();
@@ -371,10 +365,6 @@ void ParmTableAIPS::putNewDefCoeff (const string& parmName,
   uInt rownr = itsInitTable.nrow();
   itsInitTable.addRow();
   ScalarColumn<String> namCol (itsInitTable, "NAME");
-  //    ScalarColumn<double> stCol (itsInitTable, "STARTTIME");
-  //    ScalarColumn<double> etCol (itsInitTable, "ENDTIME");
-  //    ScalarColumn<double> sfCol (itsInitTable, "STARTFREQ");
-  //    ScalarColumn<double> efCol (itsInitTable, "ENDFREQ");
   ScalarColumn<double> t0Col (itsInitTable, "TIME0");
   ScalarColumn<double> f0Col (itsInitTable, "FREQ0");
   ScalarColumn<double> tscCol (itsInitTable, "TIMESCALE");
@@ -382,10 +372,6 @@ void ParmTableAIPS::putNewDefCoeff (const string& parmName,
   ScalarColumn<double> diffCol (itsInitTable, "DIFF");
   ScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
   namCol.put (rownr, parmName);
-  //sfCol.put (rownr, polc.domain.startX());
-  //    efCol.put (rownr, polc.domain.endX());
-  //    stCol.put (rownr, polc.domain.startY());
-  //    etCol.put (rownr, polc.domain.endY());
   ArrayColumn<double> valCol (itsInitTable, "VALUES");
   ArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
   ArrayColumn<double> simpertCol (itsInitTable, "SIM_PERT");
@@ -410,10 +396,10 @@ Table ParmTableAIPS::find (const string& parmName,
   if (rownrs.nelements() > 0) {
     Table sel = itsTable(rownrs);
     // Find all rows overlapping the requested domain.
-    Table sel3 = sel(domain.startX() < sel.col("ENDTIME")   &&
-		     domain.endX()   > sel.col("STARTTIME") &&
-		     domain.startY() < sel.col("ENDFREQ")   &&
-		     domain.endY()   > sel.col("STARTFREQ"));
+    Table sel3 = sel(domain.startY() < sel.col("ENDTIME")   &&
+		     domain.endY()   > sel.col("STARTTIME") &&
+		     domain.startX() < sel.col("ENDFREQ")   &&
+		     domain.endX()   > sel.col("STARTFREQ"));
     result = sel3;
   }
   return result;
@@ -447,7 +433,6 @@ vector<string> ParmTableAIPS::getSources()
     tab = itsTable;
   }
   LOG_TRACE_STAT_STR("Finished retreiving "<<nams.size()<<" sources");
-  //cout<<"Finished retreiving "<<nams.size()<<" sources"<<endl;
   return nams;
 }
 
