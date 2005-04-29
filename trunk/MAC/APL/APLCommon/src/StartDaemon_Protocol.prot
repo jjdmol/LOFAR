@@ -77,11 +77,11 @@ event = {
 	};
 	param = {
 	  name = "taskName";
-	  type = "string";
+    type = "string";
 	};
 	param = {
 		name = "fileName";
-		type = "string";
+    type = "string";
 	};
 };
 

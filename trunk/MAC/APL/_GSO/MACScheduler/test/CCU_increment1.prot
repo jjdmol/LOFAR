@@ -55,16 +55,14 @@
 //    The format of each section is explained in brief in the
 //    beginning of each section.
 
-
 [io]
-COM1 = { SOCKET, ccc , "client localhost 27000" } // MACScheduler
-COM2 = { SOCKET, ccc , "server localhost 27001" } // BeamServer
-COM3 = { SOCKET, ccc , "server localhost 27002" } // VBStartDaemon
-COM4 = { SOCKET, ccc , "client localhost 27003" } // VirtualBackend
-COM5 = { SOCKET, ccc , "client localhost 26999" } // THPVSSBridge
+COM1 = { SOCKET, ccc, "client localhost 27000" } // MACScheduler
+COM2 = { SOCKET, ccc, "server localhost 27001" } // BeamServer
+COM3 = { SOCKET, ccc, "server localhost 27002" } // VBStartDaemon
+COM4 = { SOCKET, ccc, "client localhost 27003" } // VirtualBackend
+COM5 = { SOCKET, ccc, "client localhost 26999" } // THPVSSBridge
 
 // For serial ports: COM1 = { COM1, ccc , "Baud=1200 parity=N data=8 stop=1 octs=on" }
-
 
 #define PADDING        0x00
 
@@ -123,6 +121,7 @@ t_Int                 =  {   4 }
 t_uInt                =  {   4 }
 t_Long                =  {   4 }
 t_uLong               =  {   4 }
+t_String              = -{65535-, ASCII } // (-) indicates little endian
 t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; strings are padded with \0
 
 //
@@ -136,8 +135,8 @@ t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; string
 // characters and is padded with \0 characters.
 // The string is prepended with a constant indicating the length of the string
 // For example:
-//   0x32000000, // string length, big endian
-//   VIrootID                    : t_String50
+//   noOfChars                   : t_B4,
+//   VIrootID                    : t_String[ noOfChars ]
 //
 
 // SAS enums
@@ -299,8 +298,9 @@ F_SAS_SCHEDULE =
 { 
   0x01, // signal Id
   0x4D, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  VIrootID                    : t_String[ noOfChars ]
   VIrootID                    : t_String50
 }
 
@@ -308,8 +308,9 @@ F_SAS_UPDATESCHEDULE =
 { 
   0x02, // signal Id
   0x4D, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  VIrootID                    : t_String[ noOfChars ]
   VIrootID                    : t_String50
 }
 
@@ -317,8 +318,9 @@ F_SAS_CANCELSCHEDULE =
 { 
   0x03, // signal Id
   0x4D, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  VIrootID                    : t_String[ noOfChars ]
   VIrootID                    : t_String50
 }
 
@@ -358,9 +360,10 @@ F_LOGICALDEVICE_CONNECT =
 { 
   0x01, // signal Id
   0x4B, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  nodeId                    : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  nodeId 		                  : t_String[ noOfChars ]
+  nodeId 		                  : t_String50
 }
 
 F_LOGICALDEVICE_SCHEDULED =
@@ -426,10 +429,11 @@ F_STARTDAEMON_SCHEDULED =
 {
   0x02, // signal Id
   0x8C, // Direction and protocol
-  0x3A000000, // message payload length, big endian
-  result                    : t_SD_Result,
-  0x32000000, // string length, big endian
-  viRootId                  : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  result                      : t_SD_Result,
+  noOfChars                   : t_B4,
+//  viRootId 		                : t_String[ noOfChars ]
+  viRootId 		                : t_String50
 }
 
 // -------------------------------------------------------------------
@@ -439,11 +443,13 @@ F_PVSS_ENABLE_MY_PROPERTY_SET =
 { 
   0x01, // signal Id
   0x4E, // Direction and protocol
-  0x70000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  type                        : t_String50,
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  type    		                : t_String[ noOfChars2 ],
+  type    		                : t_String50,
   category                    : t_GCF_PSCategory
 }
 
@@ -451,99 +457,117 @@ F_PVSS_DISABLE_MY_PROPERTY_SET =
 { 
   0x03, // signal Id
   0x4E, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ]
+  scope    		                : t_String50
 }
 
 F_PVSS_MY_GET_VALUE = 
 { 
   0x05, // signal Id
   0x4E, // Direction and protocol
-  0x6C000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  property                    : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 F_PVSS_MY_SET_VALUE = 
 { 
   0x07, // signal Id
   0x4E, // Direction and protocol
-  0xA2000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  property                    : t_String50,
-  0x32000000, // string length, big endian
-  value                       : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ],
+  property 		                : t_String50,
+  noOfChars3                  : t_B4,
+//  value   		                : t_String[ noOfChars3 ]
+  value   		                : t_String50
 }
 
 F_PVSS_LOAD_EXT_PROPERTY_SET = 
 { 
   0x09, // signal Id
   0x4E, // Direction and protocol
-  0x6C000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  type                        : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  type		 		                : t_String[ noOfChars2 ]
+  type		 		                : t_String50
 }
 
 F_PVSS_UNLOAD_EXT_PROPERTY_SET = 
 { 
   0x0B, // signal Id
   0x4E, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ]
+  scope    		                : t_String50
 }
 
 F_PVSS_SUBSCRIBE_EXT_PROPERTY = 
 { 
   0x0D, // signal Id
   0x4E, // Direction and protocol
-  0x6C000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  property                    : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 F_PVSS_UNSUBSCRIBE_EXT_PROPERTY = 
 { 
   0x0F, // signal Id
   0x4E, // Direction and protocol
-  0x6C000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  property                    : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 F_PVSS_EXT_GET_VALUE = 
 { 
   0x11, // signal Id
   0x4E, // Direction and protocol
-  0x6C000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  property                    : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 F_PVSS_EXT_SET_VALUE = 
 { 
   0x13, // signal Id
   0x4E, // Direction and protocol
-  0xA2000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  scope                       : t_String50,
-  0x32000000, // string length, big endian
-  property                    : t_String50,
-  0x32000000, // string length, big endian
-  value                       : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope    		                : t_String[ noOfChars ],
+  scope    		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ],
+  property 		                : t_String50,
+  noOfChars3                  : t_B4,
+//  value		 		                : t_String[ noOfChars3 ]
+  value		 		                : t_String50
 }
 
 [events]
@@ -556,17 +580,19 @@ E_SAS_RESPONSE =
   0x8D, // Direction and protocol 
   msgLen                      : t_B4, // message payload length, big endian
   result                      : t_SAS_Result,
-  strLen* 										: t_B4, // string length, big endian
-  nodeID                      : t_B1[]
+  noOfChars                   : t_B4,
+//  nodeID   		                : t_String[ noOfChars ]
+  nodeID   		                : t_String50
 }
 
 E_SAS_REPLACEMENT_REQUEST = 
 { 
   0x05, // signal Id 
   0x8D, // Direction and protocol 
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  nodeID                      : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  nodeID   		                : t_String[ noOfChars ]
+  nodeID   		                : t_String50
 }
 
 // -------------------------------------------------------------------
@@ -672,9 +698,10 @@ E_LOGICALDEVICE_SCHEDULE =
 {
   0x03, // signal Id
   0x8B, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  fileName                   : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  filename 		                : t_String[ noOfChars ]
+  filename 		                : t_String50
 }
 
 E_LOGICALDEVICE_CANCELSCHEDULE =
@@ -730,12 +757,14 @@ E_STARTDAEMON_SCHEDULE =
 {
   0x01, // signal Id
   0x4C, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   logicalDeviceType           : t_SD_LogicalDeviceTypes,
-  taskNameLen*                : t_B4,
-  taskName                    : t_B1[],
-  fileNameLen*                : t_B4,
-  fileName                    : t_B1[]
+  noOfChars                   : t_B4,
+//  taskName 		                : t_String[ noOfChars ],
+  taskName 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  fileName 		                : t_String[ noOfChars2 ]
+  fileName 		                : t_String50
 }
 
 E_STARTDAEMON_STOP =
@@ -753,126 +782,147 @@ E_PVSS_ENABLE_MY_PROPERTY_SET_RESPONSE =
 { 
   0x02, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ]
+  scope		 		                : t_String50
 }
 
 E_PVSS_DISABLE_MY_PROPERTY_SET_RESPONSE = 
 { 
   0x04, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ]
+  scope		 		                : t_String50
 }
 
 E_PVSS_MY_GET_VALUE_RESPONSE = 
 { 
   0x06, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
-  scopeLen                    : t_B4,
-  scope                       : t_String50,
-  propertyLen                 : t_B4,
-  property                    : t_String50,
-  valueLen                    : t_B4,
-  value                       : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ],
+  scope		 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ],
+  property 		                : t_String50,
+  noOfChars3                  : t_B4,
+//  value		 		                : t_String[ noOfChars3 ]
+  value		 		                : t_String50
 }
 
 E_PVSS_MY_SET_VALUE_RESPONSE = 
 { 
   0x08, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50,
-  propertyLen                 : t_B4,
-  property                    : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ],
+  scope		 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE = 
 { 
   0x0A, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ]
+  scope		 		                : t_String50
 }
 
 E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE = 
 { 
   0x0C, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ]
+  scope		 		                : t_String50
 }
 
 E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE = 
 { 
   0x0E, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50,
-  propertyLen                 : t_B4,
-  property                    : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ],
+  scope		 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE = 
 { 
   0x10, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50,
-  propertyLen                 : t_B4,
-  property                    : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ],
+  scope		 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 E_PVSS_EXT_GET_VALUE_RESPONSE = 
 { 
   0x12, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
-  scopeLen                    : t_B4,
-  scope                       : t_String50,
-  propertyLen                 : t_B4,
-  property                    : t_String50,
-  valueLen                    : t_B4,
-  value                       : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ],
+  scope		 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ],
+  property 		                : t_String50,
+  noOfChars3                  : t_B4,
+//  value		 		                : t_String[ noOfChars3 ]
+  value		 		                : t_String50
 }
 
 E_PVSS_EXT_SET_VALUE_RESPONSE = 
 { 
   0x14, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
+  msgLength                   : t_B4, // message payload length. Depends on string length
   response                    : t_GCF_Result,
-  scopeLen                    : t_B4,
-  scope                       : t_String50,
-  propertyLen                 : t_B4,
-  property                    : t_String50
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ],
+  scope		 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ]
+  property 		                : t_String50
 }
 
 E_PVSS_VALUE_CHANGE_RESPONSE = 
 { 
   0x15, // signal Id
   0x8E, // Direction and protocol
-  msgLength                   : t_B4,
-  scopeLen                    : t_B4,
-  scope                       : t_String50,
-  propertyLen                 : t_B4,
-  property                    : t_String50,
-  valueLen                    : t_B4,
-  value                       : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  scope		 		                : t_String[ noOfChars ],
+  scope		 		                : t_String50,
+  noOfChars2                  : t_B4,
+//  property 		                : t_String[ noOfChars2 ],
+  property 		                : t_String50,
+  noOfChars3                  : t_B4,
+//  value		 		                : t_String[ noOfChars3 ]
+  value		 		                : t_String50
 }
 

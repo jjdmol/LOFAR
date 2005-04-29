@@ -31,6 +31,11 @@
 #include "APLCommon/APLUtilities.h"
 #include "MACScheduler.h"
 
+#define ADJUSTEVENTSTRINGPARAMTOBSE(str) \
+{ \
+  LOG_DEBUG("Adjust " #str " string size for test tool"); \
+  str.resize(50,0); \
+}
 
 INIT_TRACER_CONTEXT(LOFAR::GSO::MACScheduler,LOFARLOGGER_PACKAGE);
 
@@ -205,6 +210,9 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
               sdScheduleEvent.taskName = viName;
               sdScheduleEvent.fileName = psFileName;
               
+ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.taskName)
+ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
+
               TStringRemotePortMap::iterator it = m_VISDclientPorts.find(allocatedCCU);
               if(it != m_VISDclientPorts.end())
               {
@@ -581,6 +589,9 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
 
       string viName = _getVInameFromPort(port);
       sasResponseEvent.VIrootID = viName;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
       TStringTCPportMap::iterator it = m_VItoSASportMap.find(viName);
       if(it != m_VItoSASportMap.end())
       {
@@ -599,6 +610,9 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
 
       string viName = scheduledEvent.VIrootID;
       sasResponseEvent.VIrootID = viName;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
       TStringTCPportMap::iterator it = m_VItoSASportMap.find(viName);
       if(it != m_VItoSASportMap.end())
       {
@@ -617,6 +631,9 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
       
       string viName = _getVInameFromPort(port);
       sasResponseEvent.VIrootID = viName;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
       TStringTCPportMap::iterator it = m_VItoSASportMap.find(viName);
       if(it != m_VItoSASportMap.end())
       {
@@ -684,6 +701,9 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         sdScheduleEvent.taskName = viName;
         sdScheduleEvent.fileName = psFileName;
         
+ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.taskName)
+ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
+
         TStringRemotePortMap::iterator it = m_VISDclientPorts.find(allocatedCCU);
         if(it != m_VISDclientPorts.end())
         {
@@ -693,6 +713,9 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         {
           SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
           port.send(sasResponseEvent);      
         }        
       }
@@ -701,6 +724,9 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
         SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
         port.send(sasResponseEvent);      
       }
       break;
@@ -738,6 +764,9 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         {
           SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
           port.send(sasResponseEvent);      
         }        
       }
@@ -746,6 +775,9 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
         SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
         port.send(sasResponseEvent);      
       }
       break;
@@ -783,12 +815,18 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         {
           LOGICALDEVICEScheduleEvent scheduleEvent;
           scheduleEvent.fileName = psFileName;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent.fileName)
+
           it->second->send(scheduleEvent);
         }
         else
         {
           SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
           port.send(sasResponseEvent);      
         }        
       }
@@ -797,6 +835,9 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
         SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
         port.send(sasResponseEvent);      
       }
       break;

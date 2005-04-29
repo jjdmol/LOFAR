@@ -131,9 +131,12 @@ namespace AVI
       typedef std::map<std::string,TGCFExtPropertySetPtr>     TString2PropsetMap;
       
       bool _writeScheduleCommand(const string& name, TGCFExtPropertySetPtr& propset);
+      bool _checkQualityRequirements();
     
       TString2PropsetMap  m_vtSchedulerPropertySets;
       TString2PropsetMap  m_disconnectedVTSchedulerPropertySets;
+      TString2PropsetMap  m_vtPropertySets;
+      unsigned long       m_qualityCheckTimerId;
       unsigned long       m_retryPropsetLoadTimerId;
       
       ALLOC_TRACER_CONTEXT  

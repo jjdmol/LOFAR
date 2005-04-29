@@ -33,6 +33,17 @@
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
 
+#define ADJUSTEVENTSTRINGPARAMTOBSE(str) \
+{ \
+  LOG_DEBUG("Adjust " #str " string size for test tool"); \
+  str.resize(50,0); \
+}
+#define ADJUSTEVENTSTRINGPARAMFROMBSE(str) \
+{ \
+  LOG_DEBUG("Adjust " #str " string size for test tool"); \
+  str = str.c_str(); \
+}
+
 using namespace LOFAR::ACC;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -648,6 +659,26 @@ void LogicalDevice::_setConnectedChildState(GCFPortInterface& port, TLogicalDevi
   }
 }
 
+string LogicalDevice::_getConnectedChildName(GCFPortInterface& port)
+{
+  string childKey;
+  bool found=false;
+  TPortWeakPtrMap::iterator it=m_connectedChildPorts.begin();
+  while(!found && it != m_connectedChildPorts.end())
+  {
+    if(TPortSharedPtr pChildPort = it->second.lock())
+    {
+      if(&port == pChildPort.get())
+      {
+        found=true;
+        childKey = it->first;
+      }
+    }
+    ++it;
+  }
+  return childKey;
+}
+
 // check if enough LD's of a specific type are in a specific state
 bool LogicalDevice::_childsInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state)
 {
@@ -714,18 +745,35 @@ bool LogicalDevice::_childsNotInState(const double requiredPercentage, const TLo
 
 void LogicalDevice::_disconnectedHandler(GCFPortInterface& port)
 {
+  string startDaemonKey;
   port.close();
   if(_isServerPort(port))
   {
+    LOG_ERROR(formatString("Server port of task %s could not be opened",getName().c_str()));
   }
   else if(_isChildPort(port))
   {
+    LOG_ERROR(formatString("Connection with child %s failed",_getConnectedChildName(port).c_str()));
     concreteChildDisconnected(port);
   }
   else if(_isParentPort(port))
   {
+    LOG_ERROR(formatString("Connection with parent %s failed",getName().c_str()));
     concreteParentDisconnected(port);
   }
+  else if(_isChildStartDaemonPort(port, startDaemonKey))
+  {
+    LOG_ERROR(formatString("Connection with child's startdaemon %s failed",startDaemonKey.c_str()));
+  }
+  port.setTimer(10L); // retry to open the port
+}
+
+void LogicalDevice::_acceptChildConnection()
+{
+  TPortSharedPtr server(new TRemotePort);
+  server->init(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL);
+  m_serverPort.accept(*(server.get()));
+  _addChildPort(server);
 }
 
 bool LogicalDevice::_isAPCLoaded() const
@@ -863,6 +911,11 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       // keep on polling
       m_retrySendTimerId = m_serverPort.setTimer(static_cast<long int>(retryPeriod));
     }
+    else if(!port.isConnected())
+    {
+      // try to open the port
+      port.open();
+    }
     else
     {
       concreteHandleTimers(timerEvent,port);
@@ -930,6 +983,10 @@ void LogicalDevice::_sendScheduleToClients()
         scheduleEvent->logicalDeviceType = ldType;
         scheduleEvent->taskName = startDaemonKey;
         scheduleEvent->fileName = parameterFileName;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->taskName)
+ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
+
         _sendEvent(scheduleEvent,*startDaemonPort);
       }
       catch(Exception& e)
@@ -959,6 +1016,9 @@ void LogicalDevice::_sendScheduleToClients()
           // send the schedule to the child
           boost::shared_ptr<LOGICALDEVICEScheduleEvent> scheduleEvent(new LOGICALDEVICEScheduleEvent);
           scheduleEvent->fileName = parameterFileName;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
+
           _sendEvent(scheduleEvent,*pChildPort);
         }
       }
@@ -1164,13 +1224,8 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
     }
       
     case F_ACCEPT_REQ:
-    {
-      TPortSharedPtr server(new TRemotePort);
-      server->init(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL);
-      m_serverPort.accept(*(server.get()));
-      _addChildPort(server);
+      _acceptChildConnection();
       break;
-    }
 
     case F_DISCONNECTED:
       port.close();
@@ -1217,13 +1272,8 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
     }
   
     case F_ACCEPT_REQ:
-    {
-      TPortSharedPtr server(new TRemotePort);
-      server->init(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL);
-      m_serverPort.accept(*(server.get()));
-      _addChildPort(server);
+      _acceptChildConnection();
       break;
-    }
 
     case F_DISCONNECTED:
       _disconnectedHandler(port);
@@ -1252,6 +1302,9 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
     case LOGICALDEVICE_SCHEDULE:
     {
       LOGICALDEVICEScheduleEvent scheduleEvent(event);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.fileName)
+
       m_parameterSet.adoptFile(_getShareLocation() + string("share/") + scheduleEvent.fileName);
       _schedule();
       
@@ -1424,6 +1477,9 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
     case LOGICALDEVICE_SCHEDULE:
     {
       LOGICALDEVICEScheduleEvent scheduleEvent(event);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.fileName)
+
       m_parameterSet.adoptFile(_getShareLocation() + string("share/") + scheduleEvent.fileName);
       _schedule();
       

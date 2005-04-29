@@ -290,6 +290,14 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
           GCFPVUnsigned unsignedValue;
           unsignedValue.copy(*pPropAnswer->pValue);
           it->second = (unsignedValue.getValue() == 0); // true if status is OK
+          if(it->second)
+          {
+            LOG_INFO(formatString("%s : Required resource %s available (%d)",getName().c_str(),resName.c_str(),unsignedValue.getValue()));
+          }
+          else
+          {
+            LOG_WARN(formatString("%s : Required resource %s not available (%d)",getName().c_str(),resName.c_str(),unsignedValue.getValue()));
+          }
         }
         ++it;
       }
