@@ -251,7 +251,7 @@ VAR scope.
   s550   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"status" ) 	; s560.
   s550   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
 
-  s560   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, )												; s560.
+  s560   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, )												; s990.
   s560   : R_SIG( stop )                                       				 	; finish.
 
   s990   : R_SIG( stop )                                       				 	; finish.
@@ -266,15 +266,15 @@ VAR scope.
 [testscript]
 VAR     SM1_done, SM2_stop, SM3_stop, SM4_stop, SM5_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled, vbsd_connected.
 
-COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled)
-        WaitUntilTestEnd (SM1_done).
+//COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled)
+//        WaitUntilTestEnd (SM1_done).
 
-COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).
+//COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).
 
-COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
+//COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
 
-COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
+//COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
 
-//COM5 :  Statemachine_THPVSSBridge (SM5_stop).
+COM5 :  Statemachine_THPVSSBridge (SM5_stop).
 //COM5 :  Statemachine_PVSSMACScheduler (SM5_stop).
 
