@@ -5,7 +5,7 @@
 # don't use channels, use NoRSPBeamlets instead
 # channels       = 46,	# the number of individual channels
 runsteps	 = 3125, # number of runs to perform
-useRealRSPBoard  = T,	# Use the real RSPBoard T or the WH_RSPBoard F
+useRealRSPBoard  = F,	# Use the real RSPBoard T or the WH_RSPBoard F
 interfaces       = ["eth1", "eth1"], # interface names for all TH_Ethernets
 oMacs            = ["00:00:5A:9A:C0:DC", "00:00:5A:9A:9E:80"], # interface names for all TH_Ethernets
 rMacs            = ["00:00:00:00:00:01", "00:00:00:00:00:02"], # interface names for all TH_Ethernets
