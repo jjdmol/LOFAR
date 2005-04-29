@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqParmSingle.h>
 #include <BBS3/MNS/MeqRequest.h>
 #include <Common/lofar_vector.h>

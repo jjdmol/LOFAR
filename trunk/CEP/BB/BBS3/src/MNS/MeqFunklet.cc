@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqFunklet.h>
@@ -36,7 +37,10 @@ MeqFunklet::MeqFunklet()
   itsPertValue  (1e-6),
   itsIsRelPert  (true),
   itsX0         (0),
-  itsY0         (0)
+  itsY0         (0),
+  itsXScale     (1),
+  itsYScale     (1),
+  itsID         (-1)
 {}
 
 MeqFunklet::~MeqFunklet()

@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqStatExpr.h>
@@ -30,11 +31,11 @@
 
 namespace LOFAR {
 
-MeqStatExpr::MeqStatExpr (MeqExpr* faradayRotation,
-			  MeqExpr* dipoleRotation,
-			  MeqExpr* dipoleEllipticity,
-			  MeqExpr* gain1,
-			  MeqExpr* gain2)
+MeqStatExpr::MeqStatExpr (const MeqExpr& faradayRotation,
+			  const MeqExpr& dipoleRotation,
+			  const MeqExpr& dipoleEllipticity,
+			  const MeqExpr& gain1,
+			  const MeqExpr& gain2)
 : itsFarRot (faradayRotation),
   itsDipRot (dipoleRotation),
   itsDipEll (dipoleEllipticity),
@@ -45,22 +46,23 @@ MeqStatExpr::MeqStatExpr (MeqExpr* faradayRotation,
 MeqStatExpr::~MeqStatExpr()
 {}
 
-void MeqStatExpr::calcResult (const MeqRequest& request)
+MeqJonesResult MeqStatExpr::getResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 
   // Allocate the result objects.
   // At the end they will be stored in the base class object.
-  MeqResult result11(request.nspid());
-  MeqResult result12(request.nspid());
-  MeqResult result21(request.nspid());
-  MeqResult result22(request.nspid());
+  MeqJonesResult result(request.nspid());
+  MeqResult& result11 = result.result11();
+  MeqResult& result12 = result.result12();
+  MeqResult& result21 = result.result21();
+  MeqResult& result22 = result.result22();
   // Get the values (also perturbed) for the expressions.
-  MeqResult frot = itsFarRot->getResult (request);
-  MeqResult drot = itsDipRot->getResult (request);
-  MeqResult dell = itsDipEll->getResult (request);
-  MeqResult g1  = itsGain1->getResult (request);
-  MeqResult g2  = itsGain2->getResult (request);
+  MeqResult frot = itsFarRot.getResult (request);
+  MeqResult drot = itsDipRot.getResult (request);
+  MeqResult dell = itsDipEll.getResult (request);
+  MeqResult g1  = itsGain1.getResult (request);
+  MeqResult g2  = itsGain2.getResult (request);
   // Precalculate reused subexpressions.
   // They might also be reused in calculating the perturbed values,
   // so do not use a MeqMatrixTmp for them.
@@ -70,11 +72,11 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
   MeqMatrix cosdrot = cos(drot.getValue());
   MeqMatrix sindell = sin(dell.getValue());
   MeqMatrix cosdell = cos(dell.getValue());
-  // Multiple dell and drot matrices as:
+  // Multiply dell and drot matrices as:
   //        cde -sde       cdr isdr
   //        sde  cde      isdr  cdr
   // Precalculate the multiplications.
-  // Thereafter multiple the result with the frot matrix
+  // Thereafter multiply the result with the frot matrix
   //            cosfrot -sinfrot
   //            sinfrot  cosfrot
   // This is described in AIPS++ note 185.
@@ -177,10 +179,7 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
       }
     }
   }
-  setResult11 (result11);
-  setResult12 (result12);
-  setResult21 (result21);
-  setResult22 (result22);
+  return result;
 }
 
 }

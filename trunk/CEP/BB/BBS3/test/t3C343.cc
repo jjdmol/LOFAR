@@ -107,6 +107,7 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
     cout.precision (prec);
     pre1.updateSolvableParms (solver.getSolvableParmData());
   }
+  pre1.writeParms();
   delete [] buffer;
   delete [] flags;
 }
@@ -169,6 +170,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
       cout.precision (prec);
       pre1.updateSolvableParms (solver.getSolvableParmData());
     }
+    pre1.writeParms();
     delete [] buffer;
     delete [] flags;
     timeStart += timeStep;
@@ -181,21 +183,41 @@ int main (int argc, const char* argv[])
   cout << ">>>" << endl;
   INIT_LOGGER("t3C343");
   try {
-    if (argc < 5) {
-      cerr << "Run as: t3C343 user msname meqparmtable skyparmtable [nriter=1] [calcuvw=1]"
+    if (argc < 6) {
+      cerr << "Run as: t3C343 user msname meqparmtable skyparmtable model [type=1] [nriter=1] [calcuvw=1] [dbtype=aips]"
 	   << endl;
       return 1;
     }
+    int type=1;
+    if (argc > 6) {
+      istringstream iss(argv[6]);
+      iss >> type;
+    }
     int nriter=1;
-    if (argc > 5) {
-      istringstream iss(argv[5]);
+    if (argc > 7) {
+      istringstream iss(argv[7]);
       iss >> nriter;
     }
     int calcuvw=1;
-    if (argc > 6) {
-      istringstream iss(argv[6]);
+    if (argc > 8) {
+      istringstream iss(argv[8]);
       iss >> calcuvw;
     }
+    string dbtype="aips";
+    if (argc > 9) {
+      dbtype = argv[9];
+    }
+
+    cout << "t3C343 user=         " << argv[1] << endl;
+    cout << "       msname:       " << argv[2] << endl;
+    cout << "       meqparmtable: " << argv[3] << endl;
+    cout << "       skyparmtable: " << argv[4] << endl;
+    cout << "       modeltype:    " << argv[5] << endl;
+    cout << "       solve-type:   " << type << endl;
+    cout << "       nriter:       " << nriter << endl;
+    cout << "       calcuvw:      " << calcuvw << endl;
+    cout << "       dbtype:       " << dbtype << endl;
+
     // Do a solve.
     {
       vector<int> antVec(14);
@@ -207,27 +229,30 @@ int main (int argc, const char* argv[])
       grp1.push_back (1);
       grp1.push_back (2);
       srcgrp.push_back (grp1);
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.AP", srcgrp, calcuvw, true);
+      Prediffer pre1(argv[2], argv[3], argv[4], dbtype, argv[1], "", "",
+		     antVec, argv[5], srcgrp, calcuvw, true);
       // Do a further selection; only XX,YY and no autocorrelations.
       vector<int> corr(2,0);
       corr[1] = 3;
       vector<int> antVec2;
       pre1.select (antVec2, antVec2, false, corr);
-      vector<string> solv(1);
-      solv[0] = "StokesI.*";
-      //      solv[1] = "RA.*";
-      //      solv[2] = "DEC.*";
-      //doSolveAll (pre1, solv, nriter);
-      vector<string> solv2(2);
-      vector<string> solv2exc(4);
-      solv2[0] = "EJ11.phase.*";
-      solv2[1] = "EJ22.phase.*";
-      solv2exc[0] = "EJ11.phase.SR1.SG1";
-      solv2exc[1] = "EJ11.phase.SR1";
-      solv2exc[2] = "EJ22.phase.SR1.SG1";
-      solv2exc[3] = "EJ22.phase.SR1";
-      doSolveStep (pre1, solv2, solv2exc, 60, nriter);
+      if (type == 1) {
+	vector<string> solv(1);
+	solv[0] = "StokesI.*";
+	//      solv[1] = "RA.*";
+	//      solv[2] = "DEC.*";
+	doSolveAll (pre1, solv, nriter);
+      } else {
+	vector<string> solv2(2);
+	vector<string> solv2exc(4);
+	solv2[0] = "EJ11.phase.*";
+	solv2[1] = "EJ22.phase.*";
+	solv2exc[0] = "EJ11.phase.SR1.SG1";
+	solv2exc[1] = "EJ11.phase.SR1";
+	solv2exc[2] = "EJ22.phase.SR1.SG1";
+	solv2exc[3] = "EJ22.phase.SR1";
+	doSolveStep (pre1, solv2, solv2exc, 60, nriter);
+      }
     }
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;

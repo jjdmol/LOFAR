@@ -47,7 +47,7 @@ class MeqParmGroup;
 // The constructor assigns a unique id to the parameter and adds
 // it to a map to find the id from the name.
 
-class MeqParm : public MeqExpr
+class MeqParm : public MeqExprRep
 {
 public:
   // Create a parameter with the given name.

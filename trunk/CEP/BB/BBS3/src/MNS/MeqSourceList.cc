@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqSourceList.h>
 #include <Common/LofarLogger.h>
 

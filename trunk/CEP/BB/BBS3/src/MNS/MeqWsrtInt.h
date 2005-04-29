@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQWSRTINT_H)
+#ifndef MNS_MEQWSRTINT_H
 #define MNS_MEQWSRTINT_H
 
 // \file MNS/MeqWsrtInt.h
@@ -41,22 +41,22 @@ class MeqWsrtPoint;
 
 // This class is the (abstract) base class for an expression.
 
-class MeqWsrtInt: public MeqJonesExpr
+class MeqWsrtInt: public MeqJonesExprRep
 {
 public:
   // Construct from source list, pahse reference position and uvw.
-  MeqWsrtInt (MeqJonesExpr* vis, MeqJonesExpr* station1,
-	      MeqJonesExpr* station2);
+  MeqWsrtInt (const MeqJonesExpr& vis, const MeqJonesExpr& station1,
+	      const MeqJonesExpr& station2);
 
   ~MeqWsrtInt();
 
   // Get the result of the expression for the given domain.
-  void calcResult (const MeqRequest&);
+  MeqJonesResult getResult (const MeqRequest&);
 
 private:
-  MeqJonesExpr* itsExpr;
-  MeqJonesExpr* itsStat1;
-  MeqJonesExpr* itsStat2;
+  MeqJonesExpr itsExpr;
+  MeqJonesExpr itsStat1;
+  MeqJonesExpr itsStat2;
 };
 
 // @}

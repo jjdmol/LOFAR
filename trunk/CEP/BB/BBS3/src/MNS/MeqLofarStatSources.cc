@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqLofarStatSources.h>
@@ -56,7 +57,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
   for (int i=0; i<nrsrc; i++) {
     req.setSourceNr (i);
     int srcnr = itsSrc->actualSourceNr(i);
-    MeqJonesExpr* jjones = itsStat[srcnr];
+    MeqJonesExpr jjones = itsStat[srcnr];
     const MeqResult& kjones = itsSrc->getResult (req);
     const MeqResult* kdel = 0;
     // Get the value of the first channel (exp(2.pi.i(ul+vm+wn))/sqrt(n)
@@ -75,10 +76,10 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
       }
     }
     // Get the J Jones matrices.
-    MeqResult& j11 = jjones->result11 (request);
-    MeqResult& j12 = jjones->result12 (request);
-    MeqResult& j21 = jjones->result21 (request);
-    MeqResult& j22 = jjones->result22 (request);
+    MeqResult& j11 = jjones.result11 (request);
+    MeqResult& j12 = jjones.result12 (request);
+    MeqResult& j21 = jjones.result21 (request);
+    MeqResult& j22 = jjones.result22 (request);
     // The result of J*K is kept in J.
     // The same is true for perturbed values.
     // So if K has a perturbed value for a parameter and J has not,
@@ -106,7 +107,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
 	}
       }
     }
-    // Now multiple the J Jones with K and keep the result in J.
+    // Now multiply the J Jones with K and keep the result in J.
     {
       MeqMatrix& val = j11.getValueRW();
       if (val.nelements() == nfreq  &&  !val.isDouble()) {

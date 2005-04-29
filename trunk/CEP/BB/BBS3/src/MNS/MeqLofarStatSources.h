@@ -44,50 +44,32 @@ class MeqLofarStatSources
 public:
   // Construct from the station Jones matrices per source and the
   // list of sources.
-  MeqLofarStatSources (const vector<MeqJonesExpr*>& statSources,
+  MeqLofarStatSources (const vector<MeqJonesExpr>& statSources,
 		       MeqStatSources* sources);
 
   virtual ~MeqLofarStatSources();
 
   // Get the result for the given source.
   // First calculate the results if a new request id is given.
-  const MeqResult& getResult11 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-      }
+  MeqJonesResult getResult (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) calcResult(request);
       int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
-      return itsStat[srcnr]->getResult11(); }
-  const MeqResult& getResult12 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-      }
-      int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
-      return itsStat[srcnr]->getResult12(); }
-  const MeqResult& getResult21 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-      }
-      int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
-      return itsStat[srcnr]->getResult21(); }
-  const MeqResult& getResult22 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-      }
-      int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
-      return itsStat[srcnr]->getResult22(); }
+      return itsStat[srcnr].getResult();
+    }
 
   const MeqResult& getN (const MeqRequest& request)
     { return itsSrc->getN(request); }
 
 private:
   // Calculate the result of its members.
+  // I.e. calculate it for all sources.
   void calcResult (const MeqRequest&);
 
-  vector<MeqJonesExpr*> itsStat;
-  MeqStatSources*       itsSrc;
-  MeqMatrix             itsK;
-  MeqMatrix             itsPertK;
-  MeqRequestId          itsLastReqId;
+  vector<MeqJonesExpr> itsStat;
+  MeqStatSources*      itsSrc;
+  MeqMatrix            itsK;
+  MeqMatrix            itsPertK;
+  MeqRequestId         itsLastReqId;
 };
 
 // @}

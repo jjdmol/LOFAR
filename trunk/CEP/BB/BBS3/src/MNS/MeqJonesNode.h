@@ -28,6 +28,7 @@
 
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
+#include <BBS3/MNS/MeqExpr.h>
 
 namespace LOFAR {
 
@@ -37,27 +38,28 @@ namespace LOFAR {
 
 //# Forward Declarations
 class MeqExpr;
+class MeqJonesResult;
 
 
 // This class is a node in a Jones matrix expression.
 
-class MeqJonesNode: public MeqJonesExpr
+class MeqJonesNode: public MeqJonesExprRep
 {
 public:
   // Construct from four Jones elements.
-  MeqJonesNode (MeqExpr* elem11, MeqExpr* elem12,
-		MeqExpr* elem21, MeqExpr* elem22);
+  MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
+		const MeqExpr& elem21, const MeqExpr& elem22);
 
   virtual ~MeqJonesNode();
 
   // Calculate the result of its members.
-  virtual void calcResult (const MeqRequest&);
+  virtual MeqJonesResult getResult (const MeqRequest&);
 
 private:
-  MeqExpr* itsExpr11;
-  MeqExpr* itsExpr12;
-  MeqExpr* itsExpr21;
-  MeqExpr* itsExpr22;
+  MeqExpr itsExpr11;
+  MeqExpr itsExpr12;
+  MeqExpr itsExpr21;
+  MeqExpr itsExpr22;
 };
 
 // @}

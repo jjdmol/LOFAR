@@ -20,16 +20,51 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 #include <BBS3/MNS/MeqRequest.h>
+#include <Common/Exception.h>
 
 namespace LOFAR {
 
-MeqExpr::~MeqExpr()
+MeqExprRep::~MeqExprRep()
 {}
 
+MeqResult MeqExprRep::getResult (const MeqRequest&)
+{
+  THROW (LOFAR::Exception,
+	 "MeqExpr::getResult not implemented in derived class");
+}
+
+MeqResultVec MeqExprRep::getResultVec (const MeqRequest& request)
+{
+  MeqResultVec res(1);
+  res[0] = getResult (request);
+  return res;
+}
+
+
+
+MeqExpr::MeqExpr (const MeqExpr& that)
+: itsRep (that.itsRep)
+{
+  if (itsRep != 0) {
+    itsRep->link();
+  }
+}
+MeqExpr& MeqExpr::operator= (const MeqExpr& that)
+{
+  if (this != &that) {
+    MeqExprRep::unlink (itsRep);
+    itsRep = that.itsRep;
+    if (itsRep != 0) {
+      itsRep->link();
+    }
+  }
+  return *this;
+}
 
 
 
@@ -38,8 +73,8 @@ MeqExprToComplex::~MeqExprToComplex()
 
 MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
 {
-  MeqResult real = itsReal->getResult (request);
-  MeqResult imag = itsImag->getResult (request);
+  MeqResult real = itsReal.getResult (request);
+  MeqResult imag = itsImag.getResult (request);
   MeqResult result(request.nspid());
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     if (real.isDefined(spinx)) {
@@ -66,8 +101,8 @@ MeqExprAPToComplex::~MeqExprAPToComplex()
 
 MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
 {
-  MeqResult ampl  = itsAmpl->getResult (request);
-  MeqResult phase = itsPhase->getResult (request);
+  MeqResult ampl  = itsAmpl.getResult (request);
+  MeqResult phase = itsPhase.getResult (request);
   MeqResult result(request.nspid());
   MeqMatrixTmp res (tocomplex(cos(phase.getValue()), sin(phase.getValue())));
   for (int spinx=0; spinx<request.nspid(); spinx++) {

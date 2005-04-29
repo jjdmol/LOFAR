@@ -66,12 +66,18 @@ public:
   virtual MeqPolc getInitCoeff (const string& parmName) = 0;
 
   // Put the polynomial coefficient for the given parameter and domain.
-  virtual void putCoeff (const string& parmName,
-			 const MeqPolc& polc) = 0;
+  // If it is a new domain, the polc ID might be set.
+  virtual void putCoeff (const string& parmName, MeqPolc& polc) = 0;
 
-  // Put the default coefficients
-  virtual void putDefCoeff (const string& parmName,
-			    const MeqPolc& polc) = 0;
+  // Put for a new parameter.
+  virtual void putNewCoeff (const string& parmName, MeqPolc& polc) = 0;
+
+  // Put the default coefficients.
+  // The polc ID might be set.
+  virtual void putDefCoeff (const string& parmName, MeqPolc& polc) = 0;
+
+  // Put for a new default parameter.
+  virtual void putNewDefCoeff (const string& parmName, MeqPolc& polc) = 0;
 
   // Get the names of all sources in the table.
   virtual vector<string> getSources() = 0;
@@ -81,6 +87,7 @@ public:
 
   // Connect to the database or table
   virtual void connect() = 0;
+
   // Create the database or table
   //  This has now become a static function and so it can't be overloaded.
   //  When creating a new ParmTable class, you can implement this function 
@@ -88,10 +95,6 @@ public:
   //virtual void createTable() = 0;
   // clear database or table
   virtual void clearTable() = 0;
-  virtual void putNewDefCoeff (const string& parmName,
-			       const MeqPolc& polc) = 0;
-  virtual void putNewCoeff (const string& parmName,
-			    const MeqPolc& polc) = 0;
 
   // Set or get the name and type.
   // <group>
@@ -144,7 +147,8 @@ public:
     { return itsRep->getInitCoeff (parmName); }
 
   // Put the polynomial coefficient for the given parameter and domain.
-  void putCoeff (const string& parmName, const MeqPolc& polc)
+  // If it is a new domain, the polc ID might be set.
+  void putCoeff (const string& parmName, MeqPolc& polc)
     { itsRep->putCoeff (parmName, polc); }
 
   // Return point sources for the given source numbers.

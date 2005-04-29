@@ -28,6 +28,8 @@
 
 //# Includes
 #include <Common/lofar_vector.h>
+#include <BBS3/MNS/MeqResult.h>
+#include <BBS3/MNS/MeqResultVec.h>
 
 namespace LOFAR {
 
@@ -37,33 +39,83 @@ namespace LOFAR {
 
 //# Forward declarations
 class MeqRequest;
-class MeqResult;
-class MeqMatrix;
 
 
 // This class is the (abstract) base class for an expression.
 
-class MeqExpr
+class MeqExprRep
 {
 public:
   // The default constructor.
-  MeqExpr()
-    {};
+  MeqExprRep()
+    : itsCount(0)
+    {}
 
-  virtual ~MeqExpr();
+  virtual ~MeqExprRep();
 
-  // Get the result of the expression for the given domain.
-  virtual MeqResult getResult (const MeqRequest&) = 0;
+  void link()
+    { itsCount++; }
+
+  static void unlink (MeqExprRep* rep)
+    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
+
+  // Get the single result of the expression for the given domain.
+  // The default implementation throw an exception.
+  virtual MeqResult getResult (const MeqRequest&);
+
+  // Get the multi result of the expression for the given domain.
+  // The default implementation calls getResult.
+  virtual MeqResultVec getResultVec (const MeqRequest& request);
+  // </group>
 
 private:
+  // Forbid copy and assignment.
+  MeqExprRep (const MeqExprRep&);
+  MeqExprRep& operator= (const MeqExprRep&);
+
+  int itsCount;
 };
 
 
 
-class MeqExprToComplex: public MeqExpr
+class MeqExpr
 {
 public:
-  MeqExprToComplex (MeqExpr* real, MeqExpr* imag)
+  // Construct from a rep object.
+  // It takes over the pointer, so it takes care of deleting the object.
+  MeqExpr (MeqExprRep* expr = 0)
+    : itsRep(expr)
+    { if (itsRep) itsRep->link(); }
+
+  // Copy constructor (reference semantics).
+  MeqExpr (const MeqExpr&);
+
+  ~MeqExpr()
+    { MeqExprRep::unlink (itsRep); }
+
+  // Assignment (reference semantics).
+  MeqExpr& operator= (const MeqExpr&);
+
+  // Get the result of the expression for the given domain.
+  // getResult will throw an exception if the node has a multi result.
+  // getResultVec will always succeed.
+  // <group>
+  MeqResult getResult (const MeqRequest& request)
+    { return itsRep->getResult (request); }
+  MeqResultVec getResultVec (const MeqRequest& request)
+    { return itsRep->getResultVec (request); }
+  // </group>
+
+private:
+  MeqExprRep* itsRep;
+};
+
+
+
+class MeqExprToComplex: public MeqExprRep
+{
+public:
+  MeqExprToComplex (MeqExpr real, MeqExpr imag)
     : itsReal(real), itsImag(imag) {;}
 
   virtual ~MeqExprToComplex();
@@ -71,16 +123,16 @@ public:
   virtual MeqResult getResult (const MeqRequest&);
 
 private:
-  MeqExpr* itsReal;
-  MeqExpr* itsImag;
+  MeqExpr itsReal;
+  MeqExpr itsImag;
 };
 
 
 
-class MeqExprAPToComplex: public MeqExpr
+class MeqExprAPToComplex: public MeqExprRep
 {
 public:
-  MeqExprAPToComplex (MeqExpr* ampl, MeqExpr* phase)
+  MeqExprAPToComplex (MeqExpr ampl, MeqExpr phase)
     : itsAmpl(ampl), itsPhase(phase) {;}
 
   virtual ~MeqExprAPToComplex();
@@ -88,8 +140,8 @@ public:
   virtual MeqResult getResult (const MeqRequest&);
 
 private:
-  MeqExpr* itsAmpl;
-  MeqExpr* itsPhase;
+  MeqExpr itsAmpl;
+  MeqExpr itsPhase;
 };
 
 // @}

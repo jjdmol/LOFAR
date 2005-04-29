@@ -130,9 +130,23 @@ void Solver::solve (bool useSVD,
   return;
 }
 
+void Solver::mergeFitter (const casa::LSQFit& fitter, int prediffer)
+{
+  ASSERT (uint(prediffer) < itsIndices.size());
+  // Initialize the solver (needed after a setSolvable).
+  if (itsDoSet) {
+    itsSolver.set ((unsigned) itsSolvableValues.size());
+    itsNUsed = 0;
+    itsNFlag = 0;
+    itsDoSet = false;
+  }
+  vector<int>& predInx = itsIndices[prediffer];
+  ASSERT (fitter.nUnknowns() == predInx.size());
+  ASSERT (itsSolver.merge (fitter, predInx.size(), (uint*)(&predInx[0])));
+}
 
 void Solver::setEquations (const double* data, const char* flags,
-			   int nresult, int nrspid, int nval, int prediffer)
+			   int nresult, int nrspid, int nrval, int prediffer)
 {
   ASSERT (uint(prediffer) < itsIndices.size());
   // Initialize the solver (needed after a setSolvable).
@@ -149,7 +163,6 @@ void Solver::setEquations (const double* data, const char* flags,
   double* derivs = &(derivVec[0]);
   // Each result is a 2d array of [nrval,nrspid+1] (nrval varies most rapidly).
   // The first value is the difference; the others the derivatives. 
-  int nrval = nval;
   for (int i=0; i<nresult; ++i) {
     for (int j=0; j<nrval; ++j) {
       // Each value result,freq gives an equation (unless flagged).

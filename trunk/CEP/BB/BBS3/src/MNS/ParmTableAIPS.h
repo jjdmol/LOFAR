@@ -59,20 +59,18 @@ public:
   virtual MeqPolc getInitCoeff (const string& parmName);
 
   // Put the polynomial coefficient for the given parameter and domain.
-  virtual void putCoeff (const string& parmName,
-			 const MeqPolc& polc);
+  // If written in a new row, the polc ID is set to the rownr.
+  virtual void putCoeff (const string& parmName, MeqPolc& polc);
+
+  // Insert new coefficients.
+  // The polc ID is set to the rownr.
+  virtual void putNewCoeff (const string& parmName, MeqPolc& polc);
 
   // Put the default coefficients
-  virtual void putDefCoeff (const string& parmName,
-			    const MeqPolc& polc);
-
-  // Insert new coefficients
-  void putNewCoeff (const string& parmName, 
-		    const MeqPolc& polc);
+  virtual void putDefCoeff (const string& parmName, MeqPolc& polc);
 
   // Insert new default coefficients
-  void putNewDefCoeff (const string& parmName, 
-		       const MeqPolc& polc);
+  virtual void putNewDefCoeff (const string& parmName, MeqPolc& polc);
 
   // Get the names of all sources in the table.
   virtual vector<string> getSources();
@@ -88,6 +86,9 @@ public:
   virtual void clearTable();
 
 private:
+  // Put a polc. Check if it is in a new row or not.
+  void putCoeffCheck (const string& parmName, MeqPolc& polc);
+
   // Find the table subset containing the parameter values for the
   // requested domain.
   casa::Table find (const string& parmName, 

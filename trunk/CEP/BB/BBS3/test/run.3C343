@@ -1,14 +1,15 @@
 #!/bin/sh
 # this script must be called with nriter and usernm
 
-if [ "$#" != "3" ]; then
- echo "run as:   run.3C343 nriter usernm calcuvw"
+if [ "$#" != "4" ]; then
+ echo "run as:   run.3C343 nriter usernm calcuvw dbtype"
  exit 1
 fi
 
 niter=$1
 usernm=$2
 calcuvw=$3
+dbtype=$4
 
 # Define functions to create the parm tables.
 beginParmdbInputFile () {
@@ -68,13 +69,17 @@ makeGsm () {
 
 echo "  Generating parm tables ..."
 # use functions to initialize parmtables
-beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='10008336'"
+beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336'"
 makeMeq
 applyfile
 
-beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='10008336_gsm'"
+beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'"
 makeGsm
 applyfile
 
 # Run the test.
-./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm $niter $calcuvw
+# Solve for StokesI (and save that).
+time ./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm "" 1 $niter $calcuvw $dbtype
+
+# Solve for phase
+time ./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm "AP" 2 $niter $calcuvw $dbtype

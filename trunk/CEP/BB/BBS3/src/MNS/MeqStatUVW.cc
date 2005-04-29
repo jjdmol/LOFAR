@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqStatUVW.h>
@@ -81,9 +82,9 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   }
   // Calculate the UVW coordinates using the AIPS++ code.
   ASSERTSTR (itsStation, "UVW coordinates cannot be calculated");
-  MeqResult posx = itsStation->getPosX()->getResult (request);
-  MeqResult posy = itsStation->getPosY()->getResult (request);
-  MeqResult posz = itsStation->getPosZ()->getResult (request);
+  MeqResult posx = itsStation->getPosX().getResult (request);
+  MeqResult posy = itsStation->getPosY().getResult (request);
+  MeqResult posz = itsStation->getPosZ().getResult (request);
   LOG_TRACE_FLOW_STR ("posx" << posx.getValue());
   LOG_TRACE_FLOW_STR ("posy" << posy.getValue());
   LOG_TRACE_FLOW_STR ("posz" << posz.getValue());

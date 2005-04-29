@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqHist.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>

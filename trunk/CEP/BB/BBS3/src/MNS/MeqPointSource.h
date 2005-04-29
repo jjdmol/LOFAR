@@ -49,54 +49,52 @@ public:
   MeqPointSource();
 
   MeqPointSource (const string& name,
-		  MeqExpr* fluxI, MeqExpr* fluxQ,
-		  MeqExpr* fluxU, MeqExpr* fluxV,
-		  MeqExpr* ra, MeqExpr* dec);
+		  const MeqExpr& fluxI, const MeqExpr& fluxQ,
+		  const MeqExpr& fluxU, const MeqExpr& fluxV,
+		  const MeqExpr& ra, const MeqExpr& dec);
 
   const string& getName() const
     { return itsName; }
 
-  MeqExpr* getI()
+  MeqExpr& getI()
     { return itsI; }
-  MeqExpr* getQ()
+  MeqExpr& getQ()
     { return itsQ; }
-  MeqExpr* getU()
+  MeqExpr& getU()
     { return itsU; }
-  MeqExpr* getV()
+  MeqExpr& getV()
     { return itsV; }
+  MeqExpr& getRa()
+    { return itsRa; }
+  MeqExpr& getDec()
+    { return itsDec; }
+
+  // Get the source nr.
+  int getSourceNr() const
+    { return itsSourceNr; }
+
+  // Get the group nr.
+  int getGroupNr() const
+    { return itsGroupNr; }
 
   // Set the source nr.
   void setSourceNr (int sourceNr)
     { itsSourceNr = sourceNr; }
 
-  // Set the phase reference position.
-  void setPhaseRef (const MeqPhaseRef* phaseRef)
-    { itsPhaseRef = phaseRef; }
-
-  // Get the precalculated result of l, m, or n.
-  const MeqResult& getL (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) calculate(request); return itsL; }
-  const MeqResult& getM (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) calculate(request); return itsM; }
-  const MeqResult& getN (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) calculate(request); return itsN; }
-  
-  void calculate (const MeqRequest&);
+  // Set the group nr.
+  void setGroupNr (int groupNr)
+    { itsGroupNr = groupNr; }
 
 private:
   int       itsSourceNr;
+  int       itsGroupNr;
   string    itsName;
-  MeqExpr*  itsI;
-  MeqExpr*  itsQ;
-  MeqExpr*  itsU;
-  MeqExpr*  itsV;
-  MeqExpr*  itsRa;
-  MeqExpr*  itsDec;
-  const MeqPhaseRef* itsPhaseRef;
-  MeqResult itsL;
-  MeqResult itsM;
-  MeqResult itsN;
-  MeqRequestId itsLastReqId;
+  MeqExpr   itsI;
+  MeqExpr   itsQ;
+  MeqExpr   itsU;
+  MeqExpr   itsV;
+  MeqExpr   itsRa;
+  MeqExpr   itsDec;
 };
 
 // @}

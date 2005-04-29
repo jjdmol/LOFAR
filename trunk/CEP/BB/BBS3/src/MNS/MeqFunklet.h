@@ -131,17 +131,37 @@ public:
   const MeqMatrix& getPertSimCoeff() const
     { return itsPertSimCoeff; }
 
-  // Set the zero-point of the funklet.
+  // Set the zero-points of the funklet.
   void setX0 (double x0)
     { itsX0 = x0; }
   void setY0 (double y0)
     { itsY0 = y0; }
 
-  // Get the zero-point of the funklet.
+  // Set the scales of the funklet.
+  void setXScale (double xScale)
+    { itsXScale = xScale; }
+  void setYScale (double yScale)
+    { itsYScale = yScale; }
+
+  // Get the zero-points of the funklet.
   double getX0() const
     { return itsX0; }
   double getY0() const
     { return itsY0; }
+
+  // Get the scales of the funklet.
+  double getXScale() const
+    { return itsXScale; }
+  double getYScale() const
+    { return itsYScale; }
+
+  // Set the ID of the funklet in the database table.
+  void setID (int id)
+    { itsID = id; }
+
+  // Get the ID of the funklet in the database table.
+  int getID() const
+    { return itsID; }
 
 protected:
   MeqMatrix    itsCoeff;
@@ -156,6 +176,11 @@ protected:
   bool         itsIsRelPert;   //# true = perturbation is relative
   double       itsX0;
   double       itsY0;
+  double       itsXScale;
+  double       itsYScale;
+  int          itsID;          //# ID of funklet in database
+                               //#   -1 = might be new
+                               //#   -2 = certainly new
 };
 
 // @}

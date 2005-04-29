@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqPhaseRef.h>
 #include <Common/LofarLogger.h>
 #include <measures/Measures/MDirection.h>

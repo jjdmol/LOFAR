@@ -49,14 +49,14 @@ ParmTableAIPS::ParmTableAIPS (const string& userName, const string& tableName)
   itsIndexName   (itsIndex.accessKey(), "NAME"),
   itsInitIndex   (0)
 {
-  itsTableName = string("/tmp/") + userName + string(".") + tableName + string(".MEP");
-
-  // these things should be done in the connect (just like the initialization of itsTable etc)
+  itsTableName = "/tmp/" + userName + "." + tableName + ".MEP";
+  // These things should be done in the connect
+  // (just like the initialization of itsTable etc.).
   if (itsTable.keywordSet().isDefined ("DEFAULTVALUES")) {
     itsInitTable = itsTable.keywordSet().asTable ("DEFAULTVALUES");
     itsInitIndex = new ColumnsIndex (itsInitTable, "NAME");
     itsInitIndexName = RecordFieldPtr<String> (itsInitIndex->accessKey(),
-						 "NAME");
+					       "NAME");
   }
 }
 
@@ -65,12 +65,15 @@ ParmTableAIPS::~ParmTableAIPS()
   delete itsInitIndex;
 }
 
-void ParmTableAIPS::connect() {
+void ParmTableAIPS::connect()
+{
   // connect was done in the constructor
 }
 
-void ParmTableAIPS::createTable(const string& userName, const string& tableName) {
-  string fullTableName = string("/tmp/") + userName + string(".") + tableName + string(".MEP");
+void ParmTableAIPS::createTable (const string& userName,
+				 const string& tableName)
+{
+  string fullTableName = "/tmp/" + userName + "." + tableName + ".MEP";
   TableDesc td("PSS parameter table", TableDesc::New);
   td.comment() = String("Table containing parameters for PSS");
   td.addColumn (ScalarColumnDesc<String>("NAME"));
@@ -83,6 +86,8 @@ void ParmTableAIPS::createTable(const string& userName, const string& tableName)
   td.addColumn (ArrayColumnDesc <double>("SIM_PERT"));
   td.addColumn (ScalarColumnDesc<double>("TIME0"));
   td.addColumn (ScalarColumnDesc<double>("FREQ0"));
+  td.addColumn (ScalarColumnDesc<double>("TIMESCALE"));
+  td.addColumn (ScalarColumnDesc<double>("FREQSCALE"));
   td.addColumn (ArrayColumnDesc <bool>  ("SOLVABLE"));
   td.addColumn (ScalarColumnDesc<double>("DIFF"));
   td.addColumn (ScalarColumnDesc<bool>  ("DIFF_REL"));
@@ -97,6 +102,8 @@ void ParmTableAIPS::createTable(const string& userName, const string& tableName)
   tddef.addColumn (ArrayColumnDesc <double>("SIM_PERT"));
   tddef.addColumn (ScalarColumnDesc<double>("TIME0"));
   tddef.addColumn (ScalarColumnDesc<double>("FREQ0"));
+  tddef.addColumn (ScalarColumnDesc<double>("TIMESCALE"));
+  tddef.addColumn (ScalarColumnDesc<double>("FREQSCALE"));
   tddef.addColumn (ArrayColumnDesc <bool>  ("SOLVABLE"));
   tddef.addColumn (ScalarColumnDesc<double>("DIFF"));
   tddef.addColumn (ScalarColumnDesc<bool>  ("DIFF_REL"));
@@ -115,7 +122,9 @@ void ParmTableAIPS::createTable(const string& userName, const string& tableName)
 
   // some descriptions could be added to the tables
 }
-void ParmTableAIPS::clearTable() {
+
+void ParmTableAIPS::clearTable()
+{
   Vector<uInt> initRows = itsInitTable.rowNumbers();
   itsInitTable.removeRow(initRows);
   Vector<uInt> rows = itsTable.rowNumbers();
@@ -128,6 +137,8 @@ vector<MeqPolc> ParmTableAIPS::getPolcs (const string& parmName,
   vector<MeqPolc> result;
   Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
+    // Get rownrs in parm table itself.
+    Vector<uInt> rownrs = sel.rowNumbers (itsTable);
     ROScalarColumn<double> stCol (sel, "STARTTIME");
     ROScalarColumn<double> etCol (sel, "ENDTIME");
     ROScalarColumn<double> sfCol (sel, "STARTFREQ");
@@ -138,20 +149,26 @@ vector<MeqPolc> ParmTableAIPS::getPolcs (const string& parmName,
     ROArrayColumn<double> simpertCol (sel, "SIM_PERT");
     ROScalarColumn<double> t0Col (sel, "TIME0");
     ROScalarColumn<double> f0Col (sel, "FREQ0");
+    ROScalarColumn<double> tscCol (sel, "TIMESCALE");
+    ROScalarColumn<double> fscCol (sel, "FREQSCALE");
     ROScalarColumn<double> diffCol (sel, "DIFF");
     ROScalarColumn<bool> drelCol (sel, "DIFF_REL");
     for (unsigned int i=0; i<sel.nrow(); i++) {
       MeqPolc polc;
+      // Set the row number as the ID, so it can be used in the put.
+      polc.setID (rownrs[i]);
       if (maskCol.isDefined(i)) {
 	polc.setCoeff (Matrix<double>(valCol(i)), maskCol(i));
       } else {
 	polc.setCoeff (Matrix<double>(valCol(i)));
       }
-      polc.setX0 (t0Col(i));
-      polc.setY0 (f0Col(i));
+      polc.setX0 (f0Col(i));
+      polc.setY0 (t0Col(i));
+      polc.setXScale (fscCol(i));
+      polc.setYScale (tscCol(i));
       polc.setSimCoeff (Matrix<double>(simvalCol(i)));
       polc.setPertSimCoeff (Matrix<double>(simpertCol(i)));
-      polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
+      polc.setDomain (MeqDomain(sfCol(i), efCol(i), stCol(i), etCol(i)));
       polc.setPerturbation (diffCol(i), drelCol(i));
       result.push_back (polc);
     }
@@ -181,6 +198,8 @@ MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName)
 	ROArrayColumn<Double> valCol (itsInitTable, "VALUES");
 	ROScalarColumn<double> t0Col (itsInitTable, "TIME0");
 	ROScalarColumn<double> f0Col (itsInitTable, "FREQ0");
+	ROScalarColumn<double> tscCol (itsInitTable, "TIMESCALE");
+	ROScalarColumn<double> fscCol (itsInitTable, "FREQSCALE");
 	ROScalarColumn<double> diffCol (itsInitTable, "DIFF");
 	ROScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
 	ROArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
@@ -190,8 +209,10 @@ MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName)
 	} else {
 	  result.setCoeff (Matrix<double>(valCol(row)));
 	}
-	result.setX0 (t0Col(row));
-	result.setY0 (f0Col(row));
+	result.setX0 (f0Col(row));
+	result.setY0 (t0Col(row));
+	result.setXScale (fscCol(row));
+	result.setYScale (tscCol(row));
 	result.setPerturbation (diffCol(row), drelCol(row));
 	result.setSimCoeff (Matrix<double>(simvalCol(row)));
 	result.setPertSimCoeff (Matrix<double>(simpertCol(row)));
@@ -210,9 +231,27 @@ MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName)
 }
 				    
 void ParmTableAIPS::putCoeff (const string& parmName,
-			      const MeqPolc& polc)
+			      MeqPolc& polc)
 {
   itsTable.reopenRW();
+  int rownr = polc.getID();
+  if (rownr < 0) {
+    if (rownr == -2) {
+      // It is certainly a new row.
+      putNewCoeff (parmName, polc);
+    } else {
+      // It might be a new row.
+      putCoeffCheck (parmName, polc);
+    }
+  } else {
+    ArrayColumn<double> valCol (itsTable, "VALUES");
+    valCol.put (rownr, polc.getCoeff().getDoubleMatrix());
+  }
+}
+
+void ParmTableAIPS::putCoeffCheck (const string& parmName,
+				   MeqPolc& polc)
+{
   const MeqDomain& domain = polc.domain();
   //const MeqMatrix& values = polc.getCoeff();
   //const MeqMatrix& simvalues = polc.getSimCoeff();
@@ -240,12 +279,12 @@ void ParmTableAIPS::putCoeff (const string& parmName,
     ArrayColumn<double> simpertCol (sel, "SIM_PERT");
     valCol.put (0, polc.getCoeff().getDoubleMatrix());
   } else {
-    putNewCoeff(parmName, polc);
+    putNewCoeff (parmName, polc);
   }
 }
 
 void ParmTableAIPS::putDefCoeff (const string& parmName,
-				 const MeqPolc& polc)
+				 MeqPolc& polc)
 {
   itsInitTable.reopenRW();
   //const MeqMatrix& values = polc.getCoeff();
@@ -260,6 +299,8 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
     ScalarColumn<String> namCol (sel, "NAME");
     ScalarColumn<double> t0Col (sel, "TIME0");
     ScalarColumn<double> f0Col (sel, "FREQ0");
+    ScalarColumn<double> tscCol (sel, "TIMESCALE");
+    ScalarColumn<double> fscCol (sel, "FREQSCALE");
     ScalarColumn<double> diffCol (sel, "DIFF");
     ScalarColumn<bool> drelCol (sel, "DIFF_REL");
     namCol.put (rownr, parmName);
@@ -269,8 +310,10 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
     valCol.put (rownr, polc.getCoeff().getDoubleMatrix());
     simvalCol.put (rownr, polc.getSimCoeff().getDoubleMatrix());
     simpertCol.put (rownr, polc.getPertSimCoeff().getDoubleMatrix());
-    t0Col.put   (rownr, polc.getX0());
-    f0Col.put   (rownr, polc.getY0());
+    f0Col.put   (rownr, polc.getX0());
+    t0Col.put   (rownr, polc.getY0());
+    fscCol.put   (rownr, polc.getXScale());
+    tscCol.put   (rownr, polc.getYScale());
     diffCol.put (rownr, polc.getPerturbation());
     drelCol.put (rownr, polc.isRelativePerturbation());
   } else if (rownrs.nelements() == 0) {
@@ -281,7 +324,7 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
 }
 
 void ParmTableAIPS::putNewCoeff (const string& parmName, 
-				 const MeqPolc& polc)
+				 MeqPolc& polc)
 {
   itsTable.reopenRW();
   uInt rownr = itsTable.nrow();
@@ -293,28 +336,34 @@ void ParmTableAIPS::putNewCoeff (const string& parmName,
   ScalarColumn<double> efCol (itsTable, "ENDFREQ");
   ScalarColumn<double> t0Col (itsTable, "TIME0");
   ScalarColumn<double> f0Col (itsTable, "FREQ0");
+  ScalarColumn<double> tscCol (itsTable, "TIMESCALE");
+  ScalarColumn<double> fscCol (itsTable, "FREQSCALE");
   ScalarColumn<double> diffCol (itsTable, "DIFF");
   ScalarColumn<bool> drelCol (itsTable, "DIFF_REL");
   namCol.put (rownr, parmName);
-  stCol.put (rownr, polc.domain().startX());
-  etCol.put (rownr, polc.domain().endX());
-  sfCol.put (rownr, polc.domain().startY());
-  efCol.put (rownr, polc.domain().endY());
+  sfCol.put (rownr, polc.domain().startX());
+  efCol.put (rownr, polc.domain().endX());
+  stCol.put (rownr, polc.domain().startY());
+  etCol.put (rownr, polc.domain().endY());
   ArrayColumn<double> valCol (itsTable, "VALUES");
   ArrayColumn<double> simvalCol (itsTable, "SIM_VALUES");
   ArrayColumn<double> simpertCol (itsTable, "SIM_PERT");
   valCol.put (rownr, polc.getCoeff().getDoubleMatrix());
   simvalCol.put (rownr, polc.getSimCoeff().getDoubleMatrix());
   simpertCol.put (rownr, polc.getPertSimCoeff().getDoubleMatrix());
-  t0Col.put   (rownr, polc.getX0());
-  f0Col.put   (rownr, polc.getY0());
+  f0Col.put   (rownr, polc.getX0());
+  t0Col.put   (rownr, polc.getY0());
+  fscCol.put   (rownr, polc.getXScale());
+  tscCol.put   (rownr, polc.getYScale());
   diffCol.put (rownr, polc.getPerturbation());
   drelCol.put (rownr, polc.isRelativePerturbation());
+  // Polc is now stored here.
+  polc.setID (rownr);
 }
 
 
 void ParmTableAIPS::putNewDefCoeff (const string& parmName, 
-				    const MeqPolc& polc)
+				    MeqPolc& polc)
 {
   itsTable.reopenRW();
   itsInitTable.reopenRW();
@@ -328,21 +377,25 @@ void ParmTableAIPS::putNewDefCoeff (const string& parmName,
   //    ScalarColumn<double> efCol (itsInitTable, "ENDFREQ");
   ScalarColumn<double> t0Col (itsInitTable, "TIME0");
   ScalarColumn<double> f0Col (itsInitTable, "FREQ0");
+  ScalarColumn<double> tscCol (itsInitTable, "TIMESCALE");
+  ScalarColumn<double> fscCol (itsInitTable, "FREQSCALE");
   ScalarColumn<double> diffCol (itsInitTable, "DIFF");
   ScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
   namCol.put (rownr, parmName);
-  //stCol.put (rownr, polc.domain.startX());
-  //    etCol.put (rownr, polc.domain.endX());
-  //    sfCol.put (rownr, polc.domain.startY());
-  //    efCol.put (rownr, polc.domain.endY());
+  //sfCol.put (rownr, polc.domain.startX());
+  //    efCol.put (rownr, polc.domain.endX());
+  //    stCol.put (rownr, polc.domain.startY());
+  //    etCol.put (rownr, polc.domain.endY());
   ArrayColumn<double> valCol (itsInitTable, "VALUES");
   ArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
   ArrayColumn<double> simpertCol (itsInitTable, "SIM_PERT");
   valCol.put (rownr, polc.getCoeff().getDoubleMatrix());
   simvalCol.put (rownr, polc.getSimCoeff().getDoubleMatrix());
   simpertCol.put (rownr, polc.getPertSimCoeff().getDoubleMatrix());
-  t0Col.put   (rownr, polc.getX0());
-  f0Col.put   (rownr, polc.getY0());
+  f0Col.put   (rownr, polc.getX0());
+  t0Col.put   (rownr, polc.getY0());
+  fscCol.put   (rownr, polc.getXScale());
+  tscCol.put   (rownr, polc.getYScale());
   diffCol.put (rownr, polc.getPerturbation());
   drelCol.put (rownr, polc.isRelativePerturbation());
 }

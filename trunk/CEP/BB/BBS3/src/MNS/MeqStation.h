@@ -44,13 +44,13 @@ public:
   // The default constructor.
   MeqStation();
 
-  MeqStation (MeqExpr* posX, MeqExpr* posY, MeqExpr* posZ, const string& name);
+  MeqStation (MeqExpr posX, MeqExpr posY, MeqExpr posZ, const string& name);
 
-  MeqExpr* getPosX() const
+  MeqExpr& getPosX()
     { return itsX; }
-  MeqExpr* getPosY() const
+  MeqExpr& getPosY()
     { return itsY; }
-  MeqExpr* getPosZ() const
+  MeqExpr& getPosZ()
     { return itsZ; }
 
   const string& getName() const
@@ -58,9 +58,9 @@ public:
 
 
 private:
-  MeqExpr* itsX;
-  MeqExpr* itsY;
-  MeqExpr* itsZ;
+  MeqExpr itsX;
+  MeqExpr itsY;
+  MeqExpr itsZ;
   string   itsName;
 };
 
