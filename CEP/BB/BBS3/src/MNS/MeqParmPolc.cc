@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqParmPolc.h>
 #include <BBS3/MNS/MeqRequest.h>
 #include <Common/LofarLogger.h>
@@ -178,7 +179,7 @@ void MeqParmPolc::update (const vector<double>& values)
 
 void MeqParmPolc::updateFromTable()
 {
-  ASSERTSTR(false, "MeqParmPolc::updatwFromTable not implemented");
+  ASSERTSTR(false, "MeqParmPolc::updateFromTable not implemented");
 }
 
 void MeqParmPolc::save()

@@ -58,7 +58,9 @@ enum Command {
   CREATE,
   SHOWALLSOURCES,
   SHOWALLDEFSOURCES,
-  QUIT};
+  QUIT
+};
+
 
 Command getCommand (char*& str)
 {
@@ -200,8 +202,10 @@ void newParm (const std::string& tableName, const std::string& parmName,
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);
-  polc.setX0 (kvmap.getDouble ("time0", 0.));
-  polc.setY0 (kvmap.getDouble ("freq0", 0.));
+  polc.setX0 (kvmap.getDouble ("freq0", 0.));
+  polc.setY0 (kvmap.getDouble ("time0", 0.));
+  polc.setXScale (kvmap.getDouble ("freqscale", 1e6));
+  polc.setYScale (kvmap.getDouble ("timescale", 1.));
   polc.setDomain (getDomain (kvmap, "domain"));
   //  cout<<"now putting "<<parmName<<endl;
   PTR->putNewCoeff(parmName, polc);
@@ -226,10 +230,13 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);
-  polc.setX0 (kvmap.getDouble ("time0", 0.));
-  polc.setY0 (kvmap.getDouble ("freq0", 0.));
+  polc.setX0 (kvmap.getDouble ("freq0", 0.));
+  polc.setY0 (kvmap.getDouble ("time0", 0.));
+  polc.setXScale (kvmap.getDouble ("freqscale", 1e6));
+  polc.setYScale (kvmap.getDouble ("timescale", 1.));
   PTR->putNewDefCoeff(parmName, polc);
 }
+
 void updateDef (const std::string& tableName, const std::string& parmName,
 		KeyValueMap& kvmap)
 {
@@ -249,24 +256,28 @@ void updateDef (const std::string& tableName, const std::string& parmName,
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);
-  polc.setX0 (kvmap.getDouble ("time0", 0.));
-  polc.setY0 (kvmap.getDouble ("freq0", 0.));
+  polc.setX0 (kvmap.getDouble ("freq0", 0.));
+  polc.setY0 (kvmap.getDouble ("time0", 0.));
+  polc.setXScale (kvmap.getDouble ("freqscale", 1e6));
+  polc.setYScale (kvmap.getDouble ("timescale", 1.));
   PTR->putDefCoeff(parmName, polc);
 }
 
-void ShowDef(string name){
+void ShowDef(string name)
+{
   cout<<name<<" : "<<endl;
   MeqPolc MP = PTR->getInitCoeff(name);
-  cout<<" coeff        : "<<MP.getCoeff()<<endl;
+  cout<<" Coeff        : "<<MP.getCoeff()<<endl;
   cout<<" Simcoeff     : "<<MP.getSimCoeff()<<endl;
   cout<<" PertSimcoeff : "<<MP.getPertSimCoeff()<<endl;
   cout<<" perturbation : "<<MP.getPerturbation()<<endl;
   cout<<" relperturb   : "<<MP.isRelativePerturbation()<<endl;
 }
 
-void Show(string name, MeqDomain &domain){
+void Show(string name, MeqDomain &domain)
+{
   vector<MeqPolc> VMP = PTR->getPolcs(name, domain);
-  for (uint i=0; i<VMP.size(); i++){
+  for (uint i=0; i<VMP.size(); i++) {
     cout<<name<<" : "<<endl;
     cout<<" coeff        : "<<VMP[i].getCoeff()<<endl;
     cout<<" Simcoeff     : "<<VMP[i].getSimCoeff()<<endl;
@@ -278,7 +289,8 @@ void Show(string name, MeqDomain &domain){
   }
 }
 
-void ShowAllSources() {
+void ShowAllSources()
+{
   vector<string> names = PTR->getSources();
   cout << "names: "<<names<<endl;
   MeqDomain MD;
@@ -286,14 +298,15 @@ void ShowAllSources() {
     Show(names[i], MD);
   }
 }
-void ShowAllDefSources() {
+
+void ShowAllDefSources()
+{
   vector<string> names = PTR->getSources();
   cout << "names: "<<names<<endl;
   for (uint i=0; i<names.size(); i++) {
     ShowDef(names[i]);
   }
 }
-
 
 void doIt()
 {

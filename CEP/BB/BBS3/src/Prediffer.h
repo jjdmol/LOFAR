@@ -28,6 +28,7 @@
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Quanta/MVBaseline.h>
+#include <scimath/Fitting/LSQFit.h>
 
 #include <BBS3/ParmData.h>
 #include <BBS3/MNS/MeqDomain.h>
@@ -40,9 +41,9 @@
 #include <BBS3/MNS/MeqSourceList.h>
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqStation.h>
-#include <BBS3/MNS/MeqStatSources.h>
-#include <BBS3/MNS/MeqLofarStatSources.h>
 #include <BBS3/MNS/MeqStatUVW.h>
+#include <BBS3/MNS/MeqLMN.h>
+#include <BBS3/MNS/MeqDFTPS.h>
 #include <BBS3/MNS/ParmTable.h>
 
 #include <Common/Timer.h>
@@ -74,7 +75,7 @@ public:
   // for the specified data descriptor (i.e. spectral window) and antennas.
   // The database type (aips or postgres) has to be given.
   // For postgres the database name has to be given as well.
-  // Currently model types WSRT, LOFAR.RI and LOFAR.AP are recognized.
+  // Currently model types LOFAR.RI and LOFAR.AP are recognized.
   // The UVW coordinates can be recalculated or taken from the MS.
   Prediffer (const string& msName,
 	     const string& meqModel,
@@ -124,6 +125,11 @@ public:
 			 const vector<string>& excludePatterns,
 			 bool isSolvable);
 
+  // Get the equations for all selected baselines and fill the
+  // fitter object with them.
+  // The fitter object gets initialized before being filled.
+  void fillFitter (casa::LSQFit&);
+
   // Get the equations for all selected baselines.
   // The values are stored into the buffer as a 3-dim double array with axes
   // nresult,nspid+1,nval.
@@ -166,6 +172,16 @@ public:
   // This is mainly used for test purposes.
   vector<MeqResult> getResults (bool calcDeriv=true);
 
+  // Write the solved parms.
+  void writeParms();
+
+  // Write the fitter matrix into a BlobStream.
+  static void toBlob (const casa::LSQFit&, BlobOStream&);
+
+  // Read the fitter obbject from a BlobStream.
+  static void fromBlob (casa::LSQFit&, BlobIStream&);
+
+
 private:
   // Copy constructor and assignment are not allowed.
   // <group>
@@ -198,14 +214,18 @@ private:
   // Also check the source groups.
   void getSources();
 
-  // Create the WSRT expressions for each baseline.
-  void makeWSRTExpr();
-
   // Create the LOFAR expressions for each baseline.
   // The EJones (per source/station) can be expressed as real/imag
   // or ampl/phase.
   // The station parameters are optionally taken into account.
-  void makeLOFARExpr (bool asAP, bool useStatParm);
+  void makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm);
+
+  // Fill the fitter with the equations for the given baseline.
+  void fillEquation (casa::LSQFit& fitter, int nresult, int nrval,
+		     double* result, char* flagResult,
+		     const fcomplex* data, const bool* flags,
+		     const MeqRequest& request,
+		     int blindex, int ant1, int ant2);
 
   // Get equations for a single time and baseline.
   void getEquation (double* result, char* flagResult,
@@ -228,21 +248,15 @@ private:
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
 
   MeqSourceList         itsSources;
-  vector<int>           itsSrcGrpNr;    //# groupnr of each source (-1 = none)
   vector<vector<int> >  itsSrcGrp;      //# sources in each group
+  vector<int>           itsSrcNrMap;    //# map of all srcnr to used srcnr
   casa::Vector<int>     itsPeelSourceNrs;
+  vector<MeqLMN*>       itsLMN;         //# LMN for sources used
   vector<MeqStation*>   itsStations;
-  vector<MeqStatUVW*>   itsStatUVW;
-  vector<MeqStatSources*> itsStatSrc;
-  vector<MeqLofarStatSources*> itsLSSExpr; //# Lofar sources per station
-  vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
-  vector<MeqExpr*>      itsComplexConv; //# Expression to convert to complex
-  vector<MeqJonesNode*> itsJonesNodes;  //# Jones nodes
-  vector<casa::MVBaseline>     itsBaselines;
-  vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
-  vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
-  vector<MeqJonesExpr*> itsExpr;        //# solve expression tree per baseline
-  vector<MeqJonesExpr*> itsResExpr;     //# residual expr tree per baseline
+  vector<MeqStatUVW*>   itsStatUVW;     //# UVW values per station
+  vector<casa::MVBaseline> itsBaselines;
+  vector<MeqJonesExpr>  itsExpr;        //# solve expression tree per baseline
+  vector<MeqJonesExpr>  itsResExpr;     //# residual expr tree per baseline
 
   double itsStartFreq;                //# start frequency of observation
   double itsEndFreq;

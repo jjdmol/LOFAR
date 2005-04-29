@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqPolc.h>
@@ -71,10 +72,10 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
   } else {
     // The polynomial has multiple coefficients.
     // Get the step and start values in the domain.
-    double stepx = request.stepX();
-    double stepy = request.stepY();
-    double stx = domain.startX() - itsX0 + stepx * .5;
-    double sty = domain.startY() - itsY0 + stepy * .5;
+    double stepx = request.stepX() / itsXScale;
+    double stepy = request.stepY() / itsYScale;
+    double stx = (domain.startX() - itsX0) / itsXScale + stepx * .5;
+    double sty = (domain.startY() - itsY0) / itsYScale + stepy * .5;
     // Get number of steps and coefficients in x and y.
     int ndx = request.nx();
     int ndy = request.ny();

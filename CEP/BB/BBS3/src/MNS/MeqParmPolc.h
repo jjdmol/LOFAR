@@ -68,8 +68,12 @@ public:
     { itsPolcs.push_back (polc); }
 
   // Get the polynomials.
+  // <group>
   const vector<MeqPolc>& getPolcs() const
     { return itsPolcs; }
+  vector<MeqPolc>& getPolcs()
+    { return itsPolcs; }
+  // </group>
 
   // Read the polcs for the given domain.
   virtual void readPolcs (const MeqDomain& domain);

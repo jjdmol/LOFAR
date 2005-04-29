@@ -43,7 +43,7 @@ class MeqHist;
 class MeqLofarStatSources;
 
 
-class MeqLofarPoint: public MeqJonesExpr
+class MeqLofarPoint: public MeqJonesExprRep
 {
 public:
   MeqLofarPoint (MeqSourceList* sources,

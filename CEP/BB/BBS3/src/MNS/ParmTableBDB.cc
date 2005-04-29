@@ -138,7 +138,7 @@ namespace LOFAR {
   }
 				    
   void ParmTableBDB::putCoeff (const string& parmName,
-			       const MeqPolc& polc)
+			       MeqPolc& polc)
   {
     const MeqDomain& domain = polc.domain();
 
@@ -168,7 +168,7 @@ namespace LOFAR {
   }
 
   void ParmTableBDB::putDefCoeff (const string& parmName,
-				  const MeqPolc& polc)
+				  MeqPolc& polc)
   {
     // For Berkeley DB there is no difference between a default and a normal parm (yet)
     putCoeff (parmName, polc);  
@@ -176,7 +176,7 @@ namespace LOFAR {
 
 
   void ParmTableBDB::putNewCoeff (const string& parmName,
-				  const MeqPolc& polc)
+				  MeqPolc& polc)
   {
     MPHKey key(parmName, polc.domain());
     MeqParmHolder mph(parmName, polc);
@@ -185,7 +185,7 @@ namespace LOFAR {
   }
 
   void ParmTableBDB::putNewDefCoeff (const string& parmName,
-				     const MeqPolc& polc)
+				     MeqPolc& polc)
   {
     // For Berkeley DB there is no difference between a default and a normal parm (yet)
     putNewCoeff (parmName, polc);  
@@ -342,6 +342,8 @@ namespace LOFAR {
     mphdata->perturbation = itsMPH.getPolc().getPerturbation();
     mphdata->x0 = itsMPH.getPolc().getX0();
     mphdata->y0 = itsMPH.getPolc().getY0();
+    mphdata->xscale = itsMPH.getPolc().getXScale();
+    mphdata->yscale = itsMPH.getPolc().getYScale();
     mphdata->domain = itsMPH.getPolc().domain();
     mphdata->isRelPerturbation = itsMPH.getPolc().isRelativePerturbation();
 
@@ -362,6 +364,8 @@ namespace LOFAR {
     mp.setPerturbation(mphdata->perturbation, mphdata->isRelPerturbation);
     mp.setX0(mphdata->x0);
     mp.setY0(mphdata->y0);
+    mp.setXScale(mphdata->xscale);
+    mp.setYScale(mphdata->yscale);
     mp.setDomain(mphdata->domain);
 	
     // copy values of variable length

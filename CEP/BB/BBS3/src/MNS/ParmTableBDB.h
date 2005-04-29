@@ -69,17 +69,18 @@ namespace LOFAR {
     virtual MeqPolc getInitCoeff (const string& parmName);
 
     // Put the polynomial coefficient for the given parameter and domain.
-    virtual void putCoeff (const string& parmName,
-			   const MeqPolc& polc);
+    // If written in a new row, the polc ID is set to the rownr.
+    virtual void putCoeff (const string& parmName, MeqPolc& polc);
+
+    // Insert new coefficients.
+    // The polc ID is set to the rownr.
+    virtual void putNewCoeff (const string& parmName, MeqPolc& polc);
 
     // Put the default coefficients
-    virtual void putDefCoeff (const string& parmName,
-			      const MeqPolc& polc);
+    virtual void putDefCoeff (const string& parmName, MeqPolc& polc);
 
-    virtual void putNewCoeff (const string& parmName,
-			      const MeqPolc& polc);
-    virtual void putNewDefCoeff (const string& parmName,
-				 const MeqPolc& polc);
+    // Insert new default coefficients
+    virtual void putNewDefCoeff (const string& parmName, MeqPolc& polc);
 
     // Get the names of all sources in the table.
     virtual vector<string> getSources();
@@ -95,11 +96,10 @@ namespace LOFAR {
     virtual void clearTable();
 
   private:
-    Db itsDb;
-
     vector<MeqParmHolder> find (const string& parmName, 
 				const MeqDomain& domain);
 
+    Db itsDb;
     string itsTableName;
     // class used as the index for the database
     class MPHKey : public Dbt {
@@ -134,6 +134,8 @@ namespace LOFAR {
       double perturbation;
       double x0;
       double y0;
+      double xscale;
+      double yscale;
       MeqDomain domain;
       bool isRelPerturbation;
       unsigned int stringSizes[4];

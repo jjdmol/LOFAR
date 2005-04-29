@@ -64,8 +64,8 @@ public:
       return itsDeltas[request.getSourceNr()]; }
 
   // Get N (= sqrt(1-l^2-m^2) for the given source.
-  const MeqResult& getN (const MeqRequest& request)
-    { return (*itsSources)[request.getSourceNr()].getN(request); }
+  const MeqResult& getN (const MeqRequest& request);
+    //    { return (*itsSources)[request.getSourceNr()].getN(request); }
 
   // Get the exponent for the given time value in the domain.
   double getExponent (int sourceNr, const MeqRequest& request);

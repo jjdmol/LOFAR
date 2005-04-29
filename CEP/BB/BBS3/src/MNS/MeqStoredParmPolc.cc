@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
@@ -62,6 +63,7 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
     ASSERTSTR (!polc.getCoeff().isNull(), "No value found for parameter "
 	       << getName());
     polc.setDomain (domain);
+    polc.setID (-2);           // Certainly a new polc
     ///    itsTable->putCoeff (getName(), polc);
     polcs.push_back (polc);
   } else {
@@ -116,7 +118,7 @@ void MeqStoredParmPolc::updateFromTable()
 
 void MeqStoredParmPolc::save()
 {
-  const vector<MeqPolc>& polcs = getPolcs();
+  vector<MeqPolc>& polcs = getPolcs();
   for (unsigned int i=0; i<polcs.size(); i++) {
     itsTable->putCoeff (getName(), polcs[i]);
   }

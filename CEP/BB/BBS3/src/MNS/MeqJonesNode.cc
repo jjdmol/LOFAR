@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqJonesNode.h>
@@ -27,8 +28,8 @@
 
 namespace LOFAR {
 
-MeqJonesNode::MeqJonesNode (MeqExpr* elem11, MeqExpr* elem12,
-			    MeqExpr* elem21, MeqExpr* elem22)
+MeqJonesNode::MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
+			    const MeqExpr& elem21, const MeqExpr& elem22)
 : itsExpr11 (elem11),
   itsExpr12 (elem12),
   itsExpr21 (elem21),
@@ -38,14 +39,16 @@ MeqJonesNode::MeqJonesNode (MeqExpr* elem11, MeqExpr* elem12,
 MeqJonesNode::~MeqJonesNode()
 {}
 
-void MeqJonesNode::calcResult (const MeqRequest& request)
+MeqJonesResult MeqJonesNode::getResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 
-  setResult11 (itsExpr11->getResult (request));
-  setResult12 (itsExpr12->getResult (request));
-  setResult21 (itsExpr21->getResult (request));
-  setResult22 (itsExpr22->getResult (request));
+  MeqJonesResult res;
+  res.result11() = itsExpr11.getResult (request);
+  res.result12() = itsExpr12.getResult (request);
+  res.result21() = itsExpr21.getResult (request);
+  res.result22() = itsExpr22.getResult (request);
+  return res;
 }
 
 }

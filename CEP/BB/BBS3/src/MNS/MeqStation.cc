@@ -20,17 +20,15 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqStation.h>
 
 namespace LOFAR {
 
 MeqStation::MeqStation()
-: itsX (0),
-  itsY (0),
-  itsZ (0)
 {}
 
-MeqStation::MeqStation (MeqExpr* posX, MeqExpr* posY, MeqExpr* posZ,
+MeqStation::MeqStation (MeqExpr posX, MeqExpr posY, MeqExpr posZ,
 			const string& name)
 : itsX    (posX),
   itsY    (posY),

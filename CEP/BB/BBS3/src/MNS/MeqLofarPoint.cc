@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqLofarPoint.h>
@@ -64,6 +65,22 @@ static void doCalcResult(
   dcomplex *dyx, dcomplex *dyy, Int ncell
 )
 {
+  // Multiply some matrices.
+  // Outer product  A = L x R*   and then  AM   where
+  //   M = S (I Q U V) = (s1 s2 s3 s4)
+  // For linear polarisation
+  //   S = 1  1  0  0
+  //       0  0  1  i
+  //       0  0  1 -i
+  //       1 -1  0  0
+  // so in total:   (l11 l12)   (r11 r12) (s1)
+  //                (       ) x (       ) (s2)
+  //                (l21 l22)   (r21 r22) (s3)
+  //                                      (s4)
+  //            =   (l11r11 l11r12 l12r11 l12r12) (s1)
+  //                (l11r21 l11r22 l12r21 l12r22) (s2)
+  //                (l21r11 l21r12 l22r11 l22r12) (s3)
+  //                (l21r21 l21r22 l22r21 l22r22) (s4)
   for (int i=0; i<ncell; i++) {
     // Possible make bit faster by having conjugate of s2 and s3
     // and using: sf11 = (conj(s1*r11[i] + s2*r12[i]); etc.
@@ -80,6 +97,14 @@ static void doCalcResult(
     dxy[i] = l11[i]*sf12 + l12[i]*sf22;
     dyx[i] = l21[i]*sf11 + l22[i]*sf21;
     dyy[i] = l21[i]*sf12 + l22[i]*sf22;
+    //    dcomplex sf11 = s1*l11 + s3*l12;
+    //    dcomplex sf12 = s1*l21 + s3*l22;
+    //    dcomplex sf21 = s2*l11 + s4*l12;
+    //    dcomplex sf22 = s2*l21 + s4*l22;
+    //    dxx[i] = sf11*conj(r11[i]) + sf21*conj(r12[i]);
+    //    dxy[i] = sf11*conj(r21[i]) + sf21*conj(r22[i]);
+    //    dyx[i] = sf12*conj(r11[i]) + sf22*conj(r12[i]);
+    //    dyy[i] = sf12*conj(r21[i]) + sf22*conj(r22[i]);
   }
 }
 
@@ -166,6 +191,7 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
     double uval = uk.getValue().getDouble();
     double vval = vk.getValue().getDouble();
     double fact = 1 / (2*nk.getValue().getDouble());
+    // For linear polarisation the S matrix is as follows.
     double s1 = (ival + qval)  * fact;
     dcomplex s2 = makedcomplex(uval*fact, vval*fact);
     dcomplex s3 = LOFAR::conj(s2);

@@ -28,6 +28,7 @@
 
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
+#include <BBS3/MNS/MeqExpr.h>
 
 namespace LOFAR {
 
@@ -40,27 +41,27 @@ class MeqExpr;
 
 // This class is a node in a Jones matrix expression.
 
-class MeqStatExpr: public MeqJonesExpr
+class MeqStatExpr: public MeqJonesExprRep
 {
 public:
   // Construct from the various subexpressions.
-  MeqStatExpr (MeqExpr* faradayRotation,
-	       MeqExpr* dipoleRotation,
-	       MeqExpr* dipoleEllipticity,
-	       MeqExpr* gain1,
-	       MeqExpr* gain2);
+  MeqStatExpr (const MeqExpr& faradayRotation,
+	       const MeqExpr& dipoleRotation,
+	       const MeqExpr& dipoleEllipticity,
+	       const MeqExpr& gain1,
+	       const MeqExpr& gain2);
 
   virtual ~MeqStatExpr();
 
   // Calculate the result of its members.
-  virtual void calcResult (const MeqRequest&);
+  virtual MeqJonesResult getResult (const MeqRequest&);
 
 private:
-  MeqExpr* itsFarRot;
-  MeqExpr* itsDipRot;
-  MeqExpr* itsDipEll;
-  MeqExpr* itsGain1;
-  MeqExpr* itsGain2;
+  MeqExpr itsFarRot;
+  MeqExpr itsDipRot;
+  MeqExpr itsDipEll;
+  MeqExpr itsGain1;
+  MeqExpr itsGain2;
 };
 
 // @}

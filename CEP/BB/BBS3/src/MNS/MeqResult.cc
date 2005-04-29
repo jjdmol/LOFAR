@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-//# Includes
+#include <lofar_config.h>
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 

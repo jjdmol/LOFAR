@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqJonesExpr.h>
@@ -27,9 +28,29 @@
 
 namespace LOFAR {
 
-MeqJonesExpr::~MeqJonesExpr()
+MeqJonesExprRep::~MeqJonesExprRep()
 {}
 
+MeqJonesExpr::MeqJonesExpr (const MeqJonesExpr& that)
+: itsRep (that.itsRep)
+{
+  if (itsRep != 0) {
+    itsRep->link();
+  }
+}
+MeqJonesExpr& MeqJonesExpr::operator= (const MeqJonesExpr& that)
+{
+  if (this != &that) {
+    MeqJonesExprRep::unlink (itsRep);
+    itsRep = that.itsRep;
+    if (itsRep != 0) {
+      itsRep->link();
+    }
+  }
+  return *this;
+}
+
+  /*
 void MeqJonesExpr::multiply (const MeqJonesExpr& left,
 			     const MeqJonesExpr& right)
 {
@@ -175,5 +196,5 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
     }
   }
 }
-
+  */
 }

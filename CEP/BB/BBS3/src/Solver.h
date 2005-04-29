@@ -66,9 +66,12 @@ public:
   const vector<double>& getSolvableValues() const
     { return itsSolvableValues; }
 
+  // Merge the fitter from the given Prediffer with the global fitter.
+  void mergeFitter (const casa::LSQFit&, int prediffer);
+
   // Set the equations for a given prediffer.
   // The data array has to be 4-dimensional with C-style shape
-  // [nresult,nrspid+1,nval].
+  // [nresult,nrspid+1,nrval].
   // The first value on the spid axis is the difference between measured and
   // predicted data. The other values are the derivatives for each spid.
   // An equation is added to the solver for each value,result.
@@ -78,7 +81,7 @@ public:
   // has been called for all prediffers.
   // After the last setEquations, the solve function can be called.
   void setEquations (const double* data, const char* flags,
-		     int nresult, int nrspid, int nval, int prediffer);
+		     int nresult, int nrspid, int nrval, int prediffer);
 
   // Solve which returns solved parameter values in a vector and fit value 
   // in Quality object.
@@ -96,7 +99,7 @@ private:
   // </group>
 
 
-  casa::LSQaips  itsSolver;
+  casa::LSQFit   itsSolver;
   MeqMatrix      itsSolution;            //# Solution as complex numbers
   vector<double> itsFitME;
   Quality itsSol;                        //# Solution quality

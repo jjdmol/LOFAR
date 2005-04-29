@@ -27,7 +27,7 @@
 // The base class of a Jones matrix expression.
 
 //# Includes
-#include <BBS3/MNS/MeqResult.h>
+#include <BBS3/MNS/MeqJonesResult.h>
 #include <BBS3/MNS/MeqRequest.h>
 
 
@@ -37,93 +37,61 @@ namespace LOFAR {
 // \addtogroup MNS
 // @{
 
-// This class is the (abstract) base class for an expression.
+// This class is the (abstract) base class for a Jones expression.
+
+class MeqJonesExprRep
+{
+public:
+  // The default constructor.
+  MeqJonesExprRep()
+    : itsCount(0), itsLastReqId(InitMeqRequestId)
+    {};
+
+  virtual ~MeqJonesExprRep();
+
+  void link()
+    { itsCount++; }
+
+  static void unlink (MeqJonesExprRep* rep)
+    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
+
+  // Calculate the result of its members.
+  virtual MeqJonesResult getResult (const MeqRequest&) = 0;
+
+private:
+  // Forbid copy and assignment.
+  MeqJonesExprRep (const MeqJonesExprRep&);
+  MeqJonesExprRep& operator= (const MeqJonesExprRep&);
+
+  int          itsCount;
+  MeqRequestId itsLastReqId;
+};
+
+
 
 class MeqJonesExpr
 {
 public:
   // The default constructor.
-  MeqJonesExpr()
-    : itsLastReqId (InitMeqRequestId)
-    {};
+  // It takes over the pointer, so it takes care of deleting the object.
+  MeqJonesExpr (MeqJonesExprRep* expr = 0)
+    { itsRep = expr; if (itsRep) itsRep->link(); }
 
-  virtual ~MeqJonesExpr();
+  MeqJonesExpr (const MeqJonesExpr&);
 
-  // Calculate the result of its members.
-  virtual void calcResult (const MeqRequest&) = 0;
+  ~MeqJonesExpr()
+    { MeqJonesExprRep::unlink (itsRep); }
 
-  // Get the result of the given element.
-  const MeqResult& getResult11() const
-    { return its11; }
-  const MeqResult& getResult12() const
-    { return its12; }
-  const MeqResult& getResult21() const
-    { return its21; }
-  const MeqResult& getResult22() const
-    { return its22; }
+  MeqJonesExpr& operator= (const MeqJonesExpr&);
 
-  // Get write access to the result.
-  MeqResult& result11()
-    { return its11; }
-  MeqResult& result12()
-    { return its12; }
-  MeqResult& result21()
-    { return its21; }
-  MeqResult& result22()
-    { return its22; }
-
-  // Get write access to the result.
-  // Calculate the result if a new request id is given.
-  MeqResult& result11 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-	itsLastReqId = request.getId();
-      }
-      return its11; }
-  MeqResult& result12 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-	itsLastReqId = request.getId();
-      }
-      return its12; }
-  MeqResult& result21 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-	itsLastReqId = request.getId();
-      }
-      return its21; }
-  MeqResult& result22 (const MeqRequest& request)
-    { if (request.getId() != itsLastReqId) {
-        calcResult(request);
-	itsLastReqId = request.getId();
-      }
-      return its22; }
-
-  // Multiply 2 Jones matrices and put the result in this one.
-  void multiply (const MeqJonesExpr& left, const MeqJonesExpr& right);
-
-  // Set the type and shape of the result objects.
-  //  void setDouble (int nx, int ny);
-  //  void setDComplex (int nx, int ny);
-
-protected:
-  // Set the result.
-  void setResult11 (const MeqResult& result)
-    { its11 = result; }
-  void setResult12 (const MeqResult& result)
-    { its12 = result; }
-  void setResult21 (const MeqResult& result)
-    { its21 = result; }
-  void setResult22 (const MeqResult& result)
-    { its22 = result; }
+  // Get the result of the expression for the given domain.
+  MeqJonesResult getResult (const MeqRequest& request)
+    { return itsRep->getResult (request); }
 
 private:
-  MeqResult    its11;
-  MeqResult    its12;
-  MeqResult    its21;
-  MeqResult    its22;
-  MeqRequestId itsLastReqId;
+  MeqJonesExprRep* itsRep;
 };
+
 
 // @}
 

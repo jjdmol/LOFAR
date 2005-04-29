@@ -25,15 +25,18 @@
 #include <BBS3/Prediffer.h>
 #include <BBS3/MMap.h>
 #include <BBS3/FlagsMap.h>
+#include <BBS3/MNS/MeqLMN.h>
+#include <BBS3/MNS/MeqDFTPS.h>
+#include <BBS3/MNS/MeqBaseDFTPS.h>
+#include <BBS3/MNS/MeqBaseLinPS.h>
 #include <BBS3/MNS/MeqStatExpr.h>
+#include <BBS3/MNS/MeqJonesSum.h>
+#include <BBS3/MNS/MeqIonos.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <BBS3/MNS/MeqParmSingle.h>
-#include <BBS3/MNS/MeqPointDFT.h>
 #include <BBS3/MNS/MeqPointSource.h>
-#include <BBS3/MNS/MeqWsrtInt.h>
-#include <BBS3/MNS/MeqWsrtPoint.h>
-#include <BBS3/MNS/MeqLofarPoint.h>
+#include <BBS3/MNS/MeqJonesMul3.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
 
 #include <Common/Timer.h>
@@ -58,6 +61,9 @@
 #include <casa/Quanta/MVPosition.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/Timer.h>
+#include <casa/Containers/Record.h>
+#include <casa/IO/AipsIO.h>
+#include <casa/IO/MemoryIO.h>
 #include <casa/Exceptions/Error.h>
 
 #include <stdexcept>
@@ -75,7 +81,7 @@ namespace LOFAR
 // Constructor. Initialize a Prediffer object.
 //
 // Create list of stations and list of baselines from MS.
-// Create the MeqExpr tree for the WSRT.
+// Create the MeqExpr tree for the given model type.
 //
 //----------------------------------------------------------------------
 Prediffer::Prediffer(const string& msName,
@@ -129,21 +135,21 @@ Prediffer::Prediffer(const string& msName,
   getSources();
 
   // Set up the expression tree for all baselines.
-  if (modelType == "WSRT") {
-    makeWSRTExpr();
-  } else {
-    bool asAP = true;
-    bool useStatParm = false;
-    vector<string> types = StringUtil::split(modelType, '.');
-    for (uint i=0; i<types.size(); ++i) {
-      if (types[i] == "RI") {
-	asAP = false;
-      } else if (types[i] == "USESP") {
-	useStatParm = true;
-      }
+  bool asAP = true;
+  bool useStatParm = false;
+  bool useEJ = false;
+  vector<string> types = StringUtil::split(modelType, '.');
+  for (uint i=0; i<types.size(); ++i) {
+    if (types[i] == "RI") {
+      asAP = false;
+      useEJ = true;
+    } else if (types[i] == "AP") {
+      useEJ = true;
+    } else if (types[i] == "USESP") {
+      useStatParm = true;
     }
-    makeLOFARExpr(asAP, useStatParm);
   }
+  makeLOFARExpr(useEJ, asAP, useStatParm);
 
   LOG_INFO_STR( "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
 		<< ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor );
@@ -181,43 +187,6 @@ Prediffer::~Prediffer()
 {
   LOG_TRACE_FLOW( "Prediffer destructor" );
 
-  itsParmGroup.clear();         // Delete all parameters
-
-  for (vector<MeqJonesExpr*>::iterator iter = itsExpr.begin();
-       iter != itsExpr.end();
-       iter++) {
-    delete *iter;
-  }
-  for (vector<MeqJonesExpr*>::iterator iter = itsResExpr.begin();
-       iter != itsResExpr.end();
-       iter++) {
-    delete *iter;
-  }
-  for (vector<MeqJonesExpr*>::iterator iter = itsStatExpr.begin();
-       iter != itsStatExpr.end();
-       iter++) {
-    delete *iter;
-  }
-  for (vector<MeqStatSources*>::iterator iter = itsStatSrc.begin();
-       iter != itsStatSrc.end();
-       iter++) {
-    delete *iter;
-  }
-  for (vector<MeqExpr*>::iterator iter = itsComplexConv.begin();
-       iter != itsComplexConv.end();
-       iter++) {
-    delete *iter;
-  }
-  for (vector<MeqJonesNode*>::iterator iter = itsJonesNodes.begin();
-       iter != itsJonesNodes.end();
-       iter++) {
-    delete *iter;
-  }
-  for (vector<MeqLofarStatSources*>::iterator iter = itsLSSExpr.begin();
-       iter != itsLSSExpr.end();
-       iter++) {
-    delete *iter;
-  }
   for (vector<MeqStatUVW*>::iterator iter = itsStatUVW.begin();
        iter != itsStatUVW.end();
        iter++) {
@@ -225,6 +194,11 @@ Prediffer::~Prediffer()
   }
   for (vector<MeqStation*>::iterator iter = itsStations.begin();
        iter != itsStations.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqLMN*>::iterator iter = itsLMN.begin();
+       iter != itsLMN.end();
        iter++) {
     delete *iter;
   }
@@ -317,12 +291,12 @@ void Prediffer::fillStations (const vector<int>& antnrs)
       Vector<double> antpos = itsAntPos.column(ant);
       sprintf (str, "%d", ant+1);
       String name = string("SR") + str;
-      MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
-					     &itsParmGroup, antpos(0));
-      MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
-					     &itsParmGroup, antpos(1));
-      MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
-					     &itsParmGroup, antpos(2));
+      MeqParmSingle* px = new MeqParmSingle("AntPosX." + name,
+					    &itsParmGroup, antpos(0));
+      MeqParmSingle* py = new MeqParmSingle("AntPosY." + name,
+					    &itsParmGroup, antpos(1));
+      MeqParmSingle* pz = new MeqParmSingle("AntPosZ." + name,
+					    &itsParmGroup, antpos(2));
       itsStations[ant] = new MeqStation(px, py, pz, name);
     }
   }
@@ -366,13 +340,13 @@ void Prediffer::fillBaselines (const vector<int>& antnrs)
       itsBLSelection(a1,a2) = true;
       // Create an MVBaseline object for each antenna pair.
       MVPosition pos1
-	(itsStations[a1]->getPosX()->getResult(req).getValue().getDouble(),
-	 itsStations[a1]->getPosY()->getResult(req).getValue().getDouble(),
-	 itsStations[a1]->getPosZ()->getResult(req).getValue().getDouble());
+	(itsStations[a1]->getPosX().getResult(req).getValue().getDouble(),
+	 itsStations[a1]->getPosY().getResult(req).getValue().getDouble(),
+	 itsStations[a1]->getPosZ().getResult(req).getValue().getDouble());
       MVPosition pos2
-	(itsStations[a2]->getPosX()->getResult(req).getValue().getDouble(),
-	 itsStations[a2]->getPosY()->getResult(req).getValue().getDouble(),
-	 itsStations[a2]->getPosZ()->getResult(req).getValue().getDouble());
+	(itsStations[a2]->getPosX().getResult(req).getValue().getDouble(),
+	 itsStations[a2]->getPosY().getResult(req).getValue().getDouble(),
+	 itsStations[a2]->getPosZ().getResult(req).getValue().getDouble());
       itsBaselines.push_back (MVBaseline (pos1, pos2));
     }
   }
@@ -420,105 +394,41 @@ void Prediffer::getSources()
   int nrsrc = itsSources.size();
   for (int i=0; i<nrsrc; ++i) {
     itsSources[i].setSourceNr (i);
-    itsSources[i].setPhaseRef (&itsPhaseRef);
   }
-  // Determine for each group in which source it belongs.
-  itsSrcGrpNr.resize (nrsrc);
+  // Make a map for the sources actually used.
+  itsSrcNrMap.reserve (nrsrc);
   if (itsSrcGrp.size() == 0) {
     // Set groups if nothing given.
     itsSrcGrp.resize (nrsrc);
     vector<int> vec(1);
     for (int i=0; i<nrsrc; ++i) {
-      itsSrcGrpNr[i] = i;      // group nrs are 0-relative
-      vec[0] = i+1;            // source nrs are 1-relative
+      vec[0] = i+1;                 // source nrs are 1-relative
       itsSrcGrp[i] = vec;
+      itsSrcNrMap.push_back (i);
+      itsSources[i].setGroupNr (i);   // group nrs are 0-relative
     }
   } else {
-    for (int i=0; i<nrsrc; ++i) {
-      itsSrcGrpNr[i] = -1;
-    }
     for (uint j=0; j<itsSrcGrp.size(); ++j) {
       vector<int> srcs = itsSrcGrp[j];
       ASSERTSTR (srcs.size() > 0, "Sourcegroup " << j << " is empty");
       for (uint i=0; i<srcs.size(); ++i) {
 	ASSERTSTR (srcs[i] > 0  &&  srcs[i] <= nrsrc,
 		   "Sourcenr must be > 0 and <= #sources (=" << nrsrc << ')');
-	ASSERTSTR (itsSrcGrpNr[srcs[i]-1] == -1,
+	ASSERTSTR (itsSources[srcs[i]-1].getGroupNr() < 0,
 		   "Sourcenr " << srcs[i] << " multiply used in groups");
-	itsSrcGrpNr[srcs[i]-1] = j;
+        itsSources[srcs[i]-1].setGroupNr (j);
+	itsSources[srcs[i]-1].setSourceNr (itsSrcNrMap.size());
+	itsSrcNrMap.push_back (srcs[i]-1);
       }
     }
   }
-}
-
-//----------------------------------------------------------------------
-//
-// ~makeWSRTExpr
-//
-// Make the expression tree per baseline for the WSRT.
-//
-//----------------------------------------------------------------------
-void Prediffer::makeWSRTExpr()
-{
-  // Make expressions for each station.
-  itsStatUVW  = vector<MeqStatUVW*>     (itsStations.size(),
-					 (MeqStatUVW*)0);
-  itsStatSrc  = vector<MeqStatSources*> (itsStations.size(),
-					 (MeqStatSources*)0);
-  itsStatExpr = vector<MeqJonesExpr*>   (itsStations.size(),
-					 (MeqJonesExpr*)0);
-  for (unsigned int i=0; i<itsStations.size(); i++) {
-    if (itsStations[i] != 0) {
-      // Expression to get UVW per station
-      if (itsCalcUVW) {
-	itsStatUVW[i] = new MeqStatUVW (itsStations[i], &itsPhaseRef);
-      } else {
-	itsStatUVW[i] = new MeqStatUVW;
-      }
-      // Expression to calculate contribution per station per source.
-      itsStatSrc[i] = new MeqStatSources (itsStatUVW[i], &itsSources);
-      // Expression representing station parameters.
-      MeqExpr* frot = new MeqStoredParmPolc ("frot." +
-					     itsStations[i]->getName(),
-					     &itsParmGroup, &itsMEP);
-      MeqExpr* drot = new MeqStoredParmPolc ("drot." +
-					     itsStations[i]->getName(),
-					     &itsParmGroup, &itsMEP);
-      MeqExpr* dell = new MeqStoredParmPolc ("dell." +
-					     itsStations[i]->getName(),
-					     &itsParmGroup, &itsMEP);
-      MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
-					       itsStations[i]->getName(),
-					       &itsParmGroup, &itsMEP);
-      MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
-					       itsStations[i]->getName(),
-					       &itsParmGroup, &itsMEP);
-      itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
-    }
-  }    
-
-  // Make an expression for each baseline.
-  itsExpr.resize (itsBaselines.size());
-  itsResExpr.resize (itsBaselines.size());
-  // Create the histogram object for couting of used #cells in time and freq
-  itsCelltHist.resize (itsBaselines.size());
-  itsCellfHist.resize (itsBaselines.size());
-  int nrant = itsBLIndex.nrow();
-  for (int ant2=0; ant2<nrant; ant2++) {
-    for (int ant1=0; ant1<nrant; ant1++) {
-      int blindex = itsBLIndex(ant1,ant2);
-      if (blindex >= 0) {
-	// Create the DFT kernel.
-	MeqPointDFT* dft = new MeqPointDFT (itsStatSrc[ant1],
-					    itsStatSrc[ant2]);
-	itsResExpr[blindex] = new MeqWsrtPoint (&itsSources, dft,
-						&itsCelltHist[blindex],
-						&itsCellfHist[blindex]);
-	itsExpr[blindex] = new MeqWsrtInt (itsResExpr[blindex],
-					   itsStatExpr[ant1],
-					   itsStatExpr[ant2]);
-      }
-    }
+  // Make an LMN node for each source used.
+  int nrused = itsSrcNrMap.size();
+  itsLMN.reserve (nrused);
+  for (int i=0; i<nrused; ++i) {
+    int src = itsSrcNrMap[i];
+    itsLMN.push_back (new MeqLMN(&(itsSources[src])));
+    itsLMN[i]->setPhaseRef (&itsPhaseRef);
   }
 }
 
@@ -526,114 +436,103 @@ void Prediffer::makeWSRTExpr()
 //
 // ~makeLOFARExpr
 //
-// Make the expression tree per baseline for the WSRT.
+// Make the expression tree per baseline for LOFAR.
 //
 //----------------------------------------------------------------------
-void Prediffer::makeLOFARExpr(bool asAP, bool useStatParm)
+void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
 {
-  // Make expressions for each station.
-  itsStatUVW  = vector<MeqStatUVW*>          (itsStations.size(),
-					      (MeqStatUVW*)0);
-  itsStatSrc  = vector<MeqStatSources*>      (itsStations.size(),
-					      (MeqStatSources*)0);
-  itsLSSExpr  = vector<MeqLofarStatSources*> (itsStations.size(),
-					      (MeqLofarStatSources*)0);
-  itsStatExpr = vector<MeqJonesExpr*>        (itsStations.size(),
-					      (MeqJonesExpr*)0);
+  // Allocate the vectors holding the expressions.
+  int nrstat = itsStations.size();
+  int nrsrc  = itsSrcNrMap.size();
+  int nrgrp  = itsSrcGrp.size();
+  itsStatUVW.reserve  (nrstat);
+  // EJ is real/imag or ampl/phase
   string ejname1 = "real.";
   string ejname2 = "imag.";
   if (asAP) {
     ejname1 = "ampl.";
     ejname2 = "phase.";
   }
-  for (unsigned int i=0; i<itsStations.size(); i++) {
+  // Vector containing StatExpr-s.
+  vector<MeqJonesExpr> statExpr(nrstat);
+  // Vector containing DFTPS-s.
+  vector<MeqExpr> pdfts(nrsrc*nrstat);
+  // Vector containing all EJ-s per station per source group.
+  vector<MeqJonesExpr> grpEJ(nrgrp*nrstat);
+  // Fill the vectors for each station.
+  for (int i=0; i<nrstat; ++i) {
+    MeqStatUVW* uvw = 0;
+    // Do it only if the station is actually used.
     if (itsStations[i] != 0) {
       // Expression to calculate UVW per station
-      itsStatUVW[i] = new MeqStatUVW (itsStations[i], &itsPhaseRef);
-      // Expression to calculate contribution per station per source.
-      itsStatSrc[i] = new MeqStatSources (itsStatUVW[i], &itsSources);
-      // Expression representing station parameters.
+      uvw = new MeqStatUVW (itsStations[i], &itsPhaseRef);
+      // Do pure station parameters only if told so.
       if (useStatParm) {
-	MeqExpr* frot = new MeqStoredParmPolc ("frot." +
+	MeqExpr frot (new MeqStoredParmPolc ("frot." +
+			  		     itsStations[i]->getName(),
+					     &itsParmGroup, &itsMEP));
+	MeqExpr drot (new MeqStoredParmPolc ("drot." +
+					     itsStations[i]->getName(),
+					     &itsParmGroup, &itsMEP));
+	MeqExpr dell (new MeqStoredParmPolc ("dell." +
+					     itsStations[i]->getName(),
+					     &itsParmGroup, &itsMEP));
+	MeqExpr gain11 (new MeqStoredParmPolc ("gain.11." +
 					       itsStations[i]->getName(),
-					       &itsParmGroup, &itsMEP);
-	MeqExpr* drot = new MeqStoredParmPolc ("drot." +
+					       &itsParmGroup, &itsMEP));
+	MeqExpr gain22 (new MeqStoredParmPolc ("gain.22." +
 					       itsStations[i]->getName(),
-					       &itsParmGroup, &itsMEP);
-	MeqExpr* dell = new MeqStoredParmPolc ("dell." +
-					       itsStations[i]->getName(),
-					       &itsParmGroup, &itsMEP);
-	MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
-						 itsStations[i]->getName(),
-						 &itsParmGroup, &itsMEP);
-	MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
-						 itsStations[i]->getName(),
-						 &itsParmGroup, &itsMEP);
-	itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
+					       &itsParmGroup, &itsMEP));
+	statExpr[i] = MeqJonesExpr(new MeqStatExpr (frot, drot, dell,
+						    gain11, gain22));
       }
-      // Make a complex gain expression per station per source group.
-      MeqExpr* ej11;
-      MeqExpr* ej12;
-      MeqExpr* ej21;
-      MeqExpr* ej22;
-      vector<MeqExpr*> vej11;
-      vector<MeqExpr*> vej12;
-      vector<MeqExpr*> vej21;
-      vector<MeqExpr*> vej22;
-      for (uint j=0; j<itsSrcGrp.size(); j++) {
-	ostringstream ostr;
-	ostr << j+1;
-	string nm = itsStations[i]->getName() + ".SG" + ostr.str();
-	MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11." + ejname1 + nm,
-						&itsParmGroup, &itsMEP);
-	MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11." + ejname2 + nm,
-						&itsParmGroup, &itsMEP);
-	MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12." + ejname1 + nm,
-						&itsParmGroup, &itsMEP);
-	MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12." + ejname2 + nm,
-						&itsParmGroup, &itsMEP);
-	MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21." + ejname1 + nm,
-						&itsParmGroup, &itsMEP);
-	MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21." + ejname2 + nm,
-						&itsParmGroup, &itsMEP);
-	MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22." + ejname1 + nm,
-						&itsParmGroup, &itsMEP);
-	MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
-						&itsParmGroup, &itsMEP);
-	if (asAP) {
-	  ej11 = new MeqExprAPToComplex (ej11r, ej11i);
-	  ej12 = new MeqExprAPToComplex (ej12r, ej12i);
-	  ej21 = new MeqExprAPToComplex (ej21r, ej21i);
-	  ej22 = new MeqExprAPToComplex (ej22r, ej22i);
-	} else {
-	  ej11 = new MeqExprToComplex (ej11r, ej11i);
-	  ej12 = new MeqExprToComplex (ej12r, ej12i);
-	  ej21 = new MeqExprToComplex (ej21r, ej21i);
-	  ej22 = new MeqExprToComplex (ej22r, ej22i);
+      // Make a DFT per station per source.
+      for (int src=0; src<nrsrc; ++src) {
+	pdfts[i*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src], uvw));
+      }
+      if (useEJ) {
+	// Make a complex gain expression per station per source group.
+	MeqExprRep* ej11;
+	MeqExprRep* ej12;
+	MeqExprRep* ej21;
+	MeqExprRep* ej22;
+	for (int j=0; j<nrgrp; j++) {
+	  ostringstream ostr;
+	  ostr << j+1;
+	  string nm = itsStations[i]->getName() + ".SG" + ostr.str();
+	  MeqExpr ej11r (new MeqStoredParmPolc ("EJ11." + ejname1 + nm,
+						&itsParmGroup, &itsMEP));
+	  MeqExpr ej11i (new MeqStoredParmPolc ("EJ11." + ejname2 + nm,
+						&itsParmGroup, &itsMEP));
+	  MeqExpr ej12r (new MeqStoredParmPolc ("EJ12." + ejname1 + nm,
+						&itsParmGroup, &itsMEP));
+	  MeqExpr ej12i (new MeqStoredParmPolc ("EJ12." + ejname2 + nm,
+						&itsParmGroup, &itsMEP));
+	  MeqExpr ej21r (new MeqStoredParmPolc ("EJ21." + ejname1 + nm,
+						&itsParmGroup, &itsMEP));
+	  MeqExpr ej21i (new MeqStoredParmPolc ("EJ21." + ejname2 + nm,
+						&itsParmGroup, &itsMEP));
+	  MeqExpr ej22r (new MeqStoredParmPolc ("EJ22." + ejname1 + nm,
+						&itsParmGroup, &itsMEP));
+	  MeqExpr ej22i (new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
+						&itsParmGroup, &itsMEP));
+	  if (asAP) {
+	    ej11 = new MeqExprAPToComplex (ej11r, ej11i);
+	    ej12 = new MeqExprAPToComplex (ej12r, ej12i);
+	    ej21 = new MeqExprAPToComplex (ej21r, ej21i);
+	    ej22 = new MeqExprAPToComplex (ej22r, ej22i);
+	  } else {
+	    ej11 = new MeqExprToComplex (ej11r, ej11i);
+	    ej12 = new MeqExprToComplex (ej12r, ej12i);
+	    ej21 = new MeqExprToComplex (ej21r, ej21i);
+	    ej22 = new MeqExprToComplex (ej22r, ej22i);
+	  }
+	  grpEJ[i*nrgrp + j] = new MeqJonesNode (MeqExpr(ej11), MeqExpr(ej12),
+						 MeqExpr(ej21), MeqExpr(ej22));
 	}
-	vej11.push_back (ej11);
-	vej12.push_back (ej12);
-	vej21.push_back (ej21);
-	vej22.push_back (ej22);
-	itsComplexConv.push_back (ej11);
-	itsComplexConv.push_back (ej12);
-	itsComplexConv.push_back (ej21);
-	itsComplexConv.push_back (ej22);
       }
-      // Make the Jones nodes for each source.
-      vector<MeqJonesExpr*> vec;
-      for (int j=0; j<itsSources.size(); j++) {
-	int grpnr = itsSrcGrpNr[j];
-	MeqJonesNode* jonesNode = new MeqJonesNode (vej11[grpnr],
-						    vej12[grpnr],
-						    vej21[grpnr],
-						    vej22[grpnr]);
-	itsJonesNodes.push_back (jonesNode);
-	vec.push_back (jonesNode);
-      }
-      // Make an expression per station per source.
-      itsLSSExpr[i] = new MeqLofarStatSources (vec, itsStatSrc[i]);
     }
+    itsStatUVW.push_back (uvw);
   }    
 
   // Make an expression for each baseline.
@@ -641,27 +540,56 @@ void Prediffer::makeLOFARExpr(bool asAP, bool useStatParm)
   if (useStatParm) {
     itsResExpr.resize (itsBaselines.size());
   }
-  // Create the histogram object for couting of used #cells in time and freq
-  itsCelltHist.resize (itsBaselines.size());
-  itsCellfHist.resize (itsBaselines.size());
   int nrant = itsBLIndex.nrow();
   for (int ant2=0; ant2<nrant; ant2++) {
     for (int ant1=0; ant1<nrant; ant1++) {
       int blindex = itsBLIndex(ant1,ant2);
       if (blindex >= 0) {
-	// Create the DFT kernel.
-	MeqJonesExpr* expr = new MeqLofarPoint (&itsSources,
-						itsLSSExpr[ant1],
-						itsLSSExpr[ant2],
-						&itsCelltHist[blindex],
-						&itsCellfHist[blindex]);
-	if (useStatParm) {
-	  itsResExpr[blindex] = expr;
-	  itsExpr[blindex] = new MeqWsrtInt (itsResExpr[blindex],
-					     itsStatExpr[ant1],
-					     itsStatExpr[ant2]);
+	vector<MeqJonesExpr> vecAll;
+	// Loop through all source groups.
+	for (int grp=0; grp<nrgrp; ++grp) {
+	  const vector<int>& srcgrp = itsSrcGrp[grp];
+	  vector<MeqJonesExpr> vec;
+	  vec.reserve (srcgrp.size());
+	  for (uint j=0; j<srcgrp.size(); ++j) {
+	    // Create the total DFT per source.
+	    int src = srcgrp[j] - 1;
+	    MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
+					     pdfts[ant2*nrsrc + src],
+					     itsLMN[src]));
+	    vec.push_back (MeqJonesExpr
+			  (new MeqBaseLinPS(expr1,
+					    &(itsSources[itsSrcNrMap[src]]))));
+	  }
+	  MeqJonesExpr sum;
+	  // Sum all sources in the group.
+	  if (vec.size() == 1) {
+	    sum = vec[0];
+	  } else {
+	    sum = MeqJonesExpr (new MeqJonesSum(vec));
+	  }
+	  // Multiple by ionospheric gain/phase per station.
+	  if (useEJ) {
+	    vecAll.push_back (new MeqJonesMul3(grpEJ[ant1*nrgrp + grp],
+					       sum,
+					       grpEJ[ant2*nrgrp + grp]));
+	  } else {
+	    vecAll.push_back (sum);
+	  }
+	}
+	// Sum all groups.
+	MeqJonesExpr sumAll;
+	if (vecAll.size() == 1) {
+	  sumAll = vecAll[0];
 	} else {
-	  itsExpr[blindex] = expr;
+	  sumAll = MeqJonesExpr (new MeqJonesSum(vecAll));
+	}
+	if (useStatParm) {
+	  itsExpr[blindex] = new MeqJonesMul3(statExpr[ant1],
+					      sumAll,
+					      statExpr[ant2]);
+	} else {
+	  itsExpr[blindex] = sumAll;
 	}
       }
     }
@@ -884,32 +812,145 @@ void Prediffer::setSolvableParms (const vector<string>& parms,
        iter != parmList.end();
        iter++)
   {
-    String parmName ((*iter)->getName());
-    // Loop through all regex-es until a match is found.
-    for (vector<Regex>::const_iterator incIter = parmRegex.begin();
-	 incIter != parmRegex.end();
-	 incIter++)
-    {
-      if (parmName.matches(*incIter)) {
-	bool parmExc = false;
-	// Test if not excluded.
-	for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
-	     excIter != excludeRegex.end();
-	     excIter++)
-	{
-	  if (parmName.matches(*excIter)) {
-	    parmExc = true;
-	    break;
+    if (*iter) {
+      String parmName ((*iter)->getName());
+      // Loop through all regex-es until a match is found.
+      for (vector<Regex>::const_iterator incIter = parmRegex.begin();
+	   incIter != parmRegex.end();
+	   incIter++)
+      {
+	if (parmName.matches(*incIter)) {
+	  bool parmExc = false;
+	  // Test if not excluded.
+	  for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+	       excIter != excludeRegex.end();
+	       excIter++)
+	  {
+	    if (parmName.matches(*excIter)) {
+	      parmExc = true;
+	      break;
+	    }
 	  }
+	  if (!parmExc) {
+	    LOG_TRACE_OBJ_STR( "setSolvable: " << (*iter)->getName());
+	    (*iter)->setSolvable(isSolvable);
+	  }
+	  break;
 	}
-	if (!parmExc) {
-	  LOG_TRACE_OBJ_STR( "setSolvable: " << (*iter)->getName());
-	  (*iter)->setSolvable(isSolvable);
-	}
-	break;
       }
     }
   }
+}
+
+//----------------------------------------------------------------------
+//
+// ~fillFitter
+//
+// Fill the fitter with the condition equations for the selected baselines
+// and domain.
+//
+//----------------------------------------------------------------------
+void Prediffer::fillFitter (casa::LSQFit& fitter)
+{
+  fitter.set (itsNrScid);
+  LOG_TRACE_FLOW("Prediffer::fillFitter");
+  int nrchan = itsLastChan-itsFirstChan+1;
+  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
+  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
+  unsigned int freqOffset = itsDataFirstChan*itsNCorr;
+
+  // Get the pointer to the mapped data.
+  fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
+  void* flagStart = itsFlagsMap->getStart();
+  int flagStartBit = itsFlagsMap->getStartBit();
+  ASSERTSTR(dataStart!=0 && flagStart!=0,
+	    "No memory region mapped. Call map(..) first."
+	    << " Perhaps you have forgotten to call nextInterval().");
+
+  // Allocate a buffer to convert flags from bits to bools.
+  // Use Block instead of vector, because vector uses bits.
+  Block<bool> flags(nrchan*itsNCorr);
+  bool* flagsPtr = &(flags[0]);
+  // Loop through all baselines/times and create a request.
+  for (uint tStep=0; tStep<itsNrTimes; ++tStep) {
+    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
+    double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
+    double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
+    
+    MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
+    MeqRequest request(domain, nrchan, 1, itsNrScid);
+    vector<double> result(nrchan*itsNSelCorr*(itsNrScid+1)*2);
+    vector<char> flagResult(nrchan*itsNSelCorr*2);
+    // Loop through all baselines and fill its equations if selected.
+    for (uint bl=0; bl<itsNrBl; ++bl) {
+      uint ant1 = itsAnt1[bl];
+      uint ant2 = itsAnt2[bl];
+      ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow());
+      if (itsBLSelection(ant1,ant2)  &&  itsBLIndex(ant1,ant2) >= 0) {
+	// Get pointer to correct data part.
+	unsigned int blOffset = bl*itsNrChan*itsNCorr;
+	fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
+	// Convert the flag bits to bools.
+	bitToBool (flagsPtr, flagStart, nrchan*itsNCorr,
+		   timeOffset + blOffset + freqOffset + flagStartBit);
+	// Get an equation for this baseline.
+	int blindex = itsBLIndex(ant1,ant2);
+	fillEquation (fitter, itsNSelCorr, nrchan*2,
+		      &(result[0]), &(flagResult[0]), data, flagsPtr,
+		      request, blindex, ant1, ant2);
+      }
+    }
+  }
+  cout << "BBSTest: predict " << itsPredTimer << endl;
+  cout << "BBSTest: formeqs " << itsEqTimer << endl;
+}
+
+
+//----------------------------------------------------------------------
+//
+// ~fillEquation
+//
+// Fill the fitter with the equations for the given baseline.
+//
+//----------------------------------------------------------------------
+void Prediffer::fillEquation (casa::LSQFit& fitter, int nresult, int nrval,
+			      double* result, char* flagResult,
+			      const fcomplex* data, const bool* flags,
+			      const MeqRequest& request,
+			      int blindex, int ant1, int ant2)
+{
+  // Get all equations.
+  getEquation (result, flagResult, data, flags, request, blindex, ant1, ant2);
+  // Add all equations to the fitter.
+  itsEqTimer.start();
+  // Use a consecutive vector to assemble all derivatives.
+  int nrspid = itsNrScid;
+  vector<double> derivVec(nrspid);
+  double* derivs = &(derivVec[0]);
+  // Each result is a 2d array of [nrval,nrspid+1] (nrval varies most rapidly).
+  // The first value is the difference; the others the derivatives. 
+  for (int i=0; i<nresult; ++i) {
+    for (int j=0; j<nrval; ++j) {
+      // Each value result,freq gives an equation (unless flagged).
+      if (*flagResult++ == 0) {
+	double diff = result[0];
+	const double* derivdata = result + nrval;
+	for (int k=0; k<nrspid; ++k) {
+	  derivs[k] = derivdata[k*nrval];
+	}
+	fitter.makeNorm (&(derivVec[0]), 1., diff);
+	//itsNUsed++;
+      } else {
+	//itsNFlag++;
+      }
+      // Go to next time,freq value.
+      result++;
+    }
+    // Go to next result (note that data has already been incremented nrval
+    // times, so here we use nrspid instead of nrspid+1.
+    result += nrspid*nrval;
+  }
+  itsEqTimer.stop();
 }
 
 //----------------------------------------------------------------------
@@ -1013,8 +1054,9 @@ void Prediffer::getEquation (double* result, char* flagResult,
 			     int blindex, int ant1, int ant2)
 {
   itsPredTimer.start();
-  MeqJonesExpr& expr = *(itsExpr[blindex]);
-  expr.calcResult (request);         // This is the actual predict
+  MeqJonesExpr& expr = itsExpr[blindex];
+  // Do the actual predict.
+  MeqJonesResult jresult = expr.getResult (request); 
   itsPredTimer.stop();
 
   itsEqTimer.start();
@@ -1023,13 +1065,13 @@ void Prediffer::getEquation (double* result, char* flagResult,
   /// showd = (ant1==4 && ant2==8);
   // Put the results in a single array for easier handling.
   const MeqResult* predResults[4];
-  predResults[0] = &(expr.getResult11());
+  predResults[0] = &(jresult.getResult11());
   if (itsNCorr == 2) {
-    predResults[1] = &(expr.getResult22());
+    predResults[1] = &(jresult.getResult22());
   } else if (itsNCorr == 4) {
-    predResults[1] = &(expr.getResult12());
-    predResults[2] = &(expr.getResult21());
-    predResults[3] = &(expr.getResult22());
+    predResults[1] = &(jresult.getResult12());
+    predResults[2] = &(jresult.getResult21());
+    predResults[3] = &(jresult.getResult22());
   }
   // Loop through the correlations.
   for (int corr=0; corr<itsNCorr; ++corr) {
@@ -1123,12 +1165,13 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
 	///showd = (ant1==4 && ant2==8);
 	// Get the result for this baseline.
 	int blindex = itsBLIndex(ant1,ant2);
-	MeqJonesExpr& expr = *(itsExpr[blindex]);
-	expr.calcResult (request);         // This is the actual predict
-	results.push_back (expr.getResult11());
-	results.push_back (expr.getResult12());
-	results.push_back (expr.getResult21());
-	results.push_back (expr.getResult22());
+	MeqJonesExpr& expr = itsExpr[blindex];
+	// This is the actual predict.
+	MeqJonesResult result = expr.getResult (request);
+	results.push_back (result.getResult11());
+	results.push_back (result.getResult12());
+	results.push_back (result.getResult21());
+	results.push_back (result.getResult22());
       }
     }
   }
@@ -1260,7 +1303,7 @@ void Prediffer::subtractPeelSources (bool write)
 	{
 	  throw AipsError("Number of correlations should be 1, 2, or 4");
 	}
-	///    if (MeqPointDFT::doshow) cout << "result: " << data << endl;
+	///    if (MeqDFTPS::doshow) cout << "result: " << data << endl;
 
       } // End if (itsBLSelection(ant1,ant2) == ...)
     } // End loop bl
@@ -1500,10 +1543,12 @@ void Prediffer::updateSolvableParms (const vector<double>& values)
        iter != parmList.end();
        iter++)
   {
-    if ((*iter)->isSolvable()) {
-      MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
-      ASSERT (ppc);
-      ppc->update (values);
+    if (*iter) {
+      if ((*iter)->isSolvable()) {
+	MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
+	ASSERT (ppc);
+	ppc->update (values);
+      }
     }
   }
   resetEqLoop();
@@ -1517,19 +1562,21 @@ void Prediffer::updateSolvableParms (const vector<ParmData>& parmData)
        iter != parmList.end();
        iter++)
   {
-    if ((*iter)->isSolvable()) {
-      const string& pname = (*iter)->getName();
-      // Update the parameter matching the name.
-      for (vector<ParmData>::const_iterator iterpd = parmData.begin();
-	   iterpd != parmData.end();
-	   iterpd++) {
-	if (iterpd->getName() == pname) {
-	  MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
-	  ASSERT (ppc);
-	  ppc->update (iterpd->getValues());
-	  break;
+    if (*iter) {
+      if ((*iter)->isSolvable()) {
+	const string& pname = (*iter)->getName();
+	// Update the parameter matching the name.
+	for (vector<ParmData>::const_iterator iterpd = parmData.begin();
+	     iterpd != parmData.end();
+	     iterpd++) {
+	  if (iterpd->getName() == pname) {
+	    MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
+	    ASSERT (ppc);
+	    ppc->update (iterpd->getValues());
+	    break;
+	  }
+	  // A non-matching name is ignored.
 	}
-	// A non-matching name is ignored.
       }
     }
   }
@@ -1544,17 +1591,18 @@ void Prediffer::updateSolvableParms()
        iter != parmList.end();
        iter++)
   {
-    if ((*iter)->isSolvable()) {
-      MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
-      ASSERT (ppc);
-      ppc->updateFromTable();
-      
-//       streamsize prec = cout.precision();
-//       cout.precision(10);
-//       cout << "****Read: " << (*iter)->getCoeffValues().getDouble()
-// 	   << " for parameter " << (*iter)->getName() << endl;
-//       cout.precision (prec);
-
+    if (*iter) {
+      if ((*iter)->isSolvable()) {
+	MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
+	ASSERT (ppc);
+	ppc->updateFromTable();
+	
+	//       streamsize prec = cout.precision();
+	//       cout.precision(10);
+	//       cout << "****Read: " << (*iter)->getCoeffValues().getDouble()
+	// 	   << " for parameter " << (*iter)->getName() << endl;
+	//       cout.precision (prec);
+      }
     }
   }
   resetEqLoop();
@@ -1567,6 +1615,31 @@ void Prediffer::resetEqLoop()
 {
   itsNrTimesDone = 0;
   itsBlNext      = 0;
+}
+
+void Prediffer::writeParms()
+{
+  NSTimer saveTimer;
+  saveTimer.start();
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
+
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if (*iter) {
+      if ((*iter)->isSolvable()) {
+	(*iter)->save();
+      }
+    }
+  }
+  // Unlock the parm tables.
+  itsMEP.unlock();
+  itsGSMMEP.unlock();
+  saveTimer.stop();
+  cout << "BBSTest: write-parm    " << saveTimer << endl;
+  cout << "wrote timeIndex=" << itsTimeIndex
+       << " nrTimes=" << itsNrTimes << endl;
 }
 
 void Prediffer::showSettings() const
@@ -1586,6 +1659,48 @@ void Prediffer::showSettings() const
   }
   cout << "  calcuvw  : " << itsCalcUVW << endl;
   cout << endl;
+}
+
+void Prediffer::toBlob (const LSQFit& fitter, BlobOStream& bos)
+{
+  // Store the fitter in a few steps:
+  // - convert to a Record
+  // - store the Record in an AipsIO object
+  // - store the AipsIO buffer in the blob.
+  // This might be a bit slow, but it is easiest and most general to program.
+  // It is expected that the fitter data are not too many, so that this
+  // process does not take too much time.
+  // If it appears to take a lot of time, the record can be stored in the
+  // blob directly, but that requires intimate knowledge of the contents
+  // of the record, thus of the LSQFit class. This is not very desirable.
+  casa::MemoryIO buf;
+  casa::AipsIO aio(&buf);
+  casa::Record rec;
+  casa::String str;
+  ASSERT (fitter.toRecord (str, rec));
+  aio << rec;
+  bos.putStart ("fitter", 1);
+  int size = buf.length();
+  bos << size;
+  bos.put ((char*)(buf.getBuffer()), size);
+  bos.putEnd();
+}
+
+void Prediffer::fromBlob (LSQFit& fitter, BlobIStream& bis)
+{
+  casa::MemoryIO buf;
+  casa::AipsIO aio(&buf);
+  casa::Record rec;
+  int version = bis.getStart ("fitter");
+  ASSERTSTR (version==1, "Prediffer::fromBlob - incorrect version");
+  int size;
+  bis >> size;
+  buf.setBuffer (size);
+  bis.get ((char*)(buf.getBuffer()), size);
+  bis.getEnd();
+  aio >> rec;
+  casa::String str;
+  ASSERT (fitter.fromRecord (str, rec));
 }
 
 } // namespace LOFAR

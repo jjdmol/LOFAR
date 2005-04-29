@@ -64,6 +64,111 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
   }
 }
 
+void doSolveFit (Prediffer& pre1, const vector<string>& solv, bool toblob,
+		 int niter)
+{
+  // Set the solvable parameters.
+  pre1.clearSolvableParms();
+  pre1.setSolvableParms (solv, vector<string>(), true);
+  // Set a domain.
+  pre1.setDomain (137750000-250000, 2*500000, 0., 1e12);
+  //pre1.setDomain (0., 1e12, 0., 1e12);
+    
+  // Get the ParmData from the Prediffer and send it to the solver.
+  // Optionally convert it to and from a blob to see if that works fine.
+  Solver solver;
+  solver.initSolvableParmData (1);
+  if (toblob) {
+    cout << "use toblob" << endl;
+    BlobOBufChar bufo;
+    {
+      BlobOStream bos(bufo);
+      bos.putStart ("ParmData", 1);
+      bos << pre1.getSolvableParmData();
+      bos.putEnd();
+    }
+    BlobIBufChar bufi(bufo.getBuffer(), bufo.size());
+    BlobIStream bis(bufi);
+    bis.getStart ("ParmData");
+    vector<ParmData> parmData;
+    bis >> parmData;
+    bis.getEnd();
+    solver.setSolvableParmData (parmData, 0);
+  } else {
+    solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
+  }
+  vector<ParmData> pData = pre1.getSolvableParmData();
+  pre1.showSettings();
+  streamsize prec = cout.precision();
+  cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
+
+  for (int it=0; it<niter; ++it) {
+    // Get the fitter from the prediffer and give it to the solver.
+    casa::LSQFit fitter;
+    if (toblob) {
+      casa::LSQFit fitter2;
+      pre1.fillFitter (fitter2);
+      BlobOBufChar bufo;
+      {
+	BlobOStream bos(bufo);
+	Prediffer::toBlob (fitter2, bos);
+      }
+      BlobIBufChar bufi(bufo.getBuffer(), bufo.size());
+      BlobIStream bis(bufi);
+      Prediffer::fromBlob (fitter, bis);
+    } else {
+      pre1.fillFitter (fitter);
+    }
+    solver.mergeFitter (fitter, 0);
+    // Do the solve.
+    Quality quality;
+    solver.solve (false, quality);
+    cout << "iter" << it << ":  " << setprecision(10)
+	 << solver.getSolvableValues() << endl;
+    cout.precision (prec);
+    pre1.updateSolvableParms (solver.getSolvableParmData());
+  }
+}
+
+void doSolveFit2 (Prediffer& pre1, Prediffer& pre2,
+		  const vector<string>& solv, int niter)
+{
+  Solver solver;
+  solver.initSolvableParmData (2);
+  // Set the solvable parameters.
+  pre1.clearSolvableParms();
+  pre2.clearSolvableParms();
+  pre1.setSolvableParms (solv, vector<string>(), true);
+  pre2.setSolvableParms (solv, vector<string>(), true);
+  // Set a domain.
+  pre1.setDomain (137750000-250000, 4*500000, 0., 1e12);
+  ///  vector<uint32> shape1 = pre1.setDomain (0., 1e12, 0., 1e12);
+  pre2.setDomain (137750000-250000, 4*500000, 0., 1e12);
+  ///  vector<uint32> shape2 = pre2.setDomain (0., 1e12, 0., 1e12);
+  // Get the ParmData from the Prediffers and send it to the solver.
+  solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
+  solver.setSolvableParmData (pre2.getSolvableParmData(), 1);
+    
+  streamsize prec = cout.precision();
+  cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
+  for (int it=0; it<niter; ++it) {
+    // Get the fitter from the prediffer and give it to the solver.
+    casa::LSQFit fitter;
+    pre1.fillFitter (fitter);
+    solver.mergeFitter (fitter, 0);
+    pre2.fillFitter (fitter);
+    solver.mergeFitter (fitter, 1);
+    // Do the solve.
+    Quality quality;
+    solver.solve (false, quality);
+    cout << "iter" << it << ":  " << setprecision(10)
+	 << solver.getSolvableValues() << endl;
+    cout.precision (prec);
+    pre1.updateSolvableParms (solver.getSolvableParmData());
+    pre2.updateSolvableParms (solver.getSolvableParmData());
+  }
+}
+
 void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
 	      int niter)
 {
@@ -389,6 +494,51 @@ int main (int argc, const char* argv[])
       solv[2] = "StokesI.*";
       doSolve (pre1, solv, false, 5);
       cout << "End of test with 21 antennas" << endl;
+    }
+    // Let the Prediffer fill the fitter.
+    {
+      cout << "Starting test with 21 antennas using fillFitter" << endl;
+      vector<int> antVec(21);
+      for (uint i=0; i<antVec.size(); ++i) {
+	antVec[i] = 4*i;
+      }
+      vector<vector<int> > srcgrp;
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+		     antVec, "LOFAR.RI", srcgrp, false, true);
+      // Only use first correlation.
+      vector<int> corrVec(1, 0);
+      vector<int> antVec2;
+      pre1.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
+      vector<string> solv(3);
+      solv[0] = "RA.*";
+      solv[1] = "DEC.*";
+      solv[2] = "StokesI.*";
+      doSolveFit (pre1, solv, true, 5);
+      cout << "End of test with 21 antennas using fillFitter" << endl;
+    }
+    // Do the same with 2 Prediffers.
+    {
+      cout << "Starting test with 21 antennas using fillFitter2" << endl;
+      vector<int> antVec(21);
+      for (uint i=0; i<antVec.size(); ++i) {
+	antVec[i] = 4*i;
+      }
+      vector<vector<int> > srcgrp;
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+		     antVec, "LOFAR.RI", srcgrp, false, true);
+      Prediffer pre2(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+		     antVec, "LOFAR.RI", srcgrp, false, true);
+      // Only use first correlation.
+      vector<int> corrVec(1, 0);
+      vector<int> antVec2;
+      pre1.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
+      pre2.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
+      vector<string> solv(3);
+      solv[0] = "RA.*";
+      solv[1] = "DEC.*";
+      solv[2] = "StokesI.*";
+      doSolveFit2 (pre1, pre2, solv, 3);
+      cout << "End of test with 21 antennas using fillFitter2" << endl;
     }
     // Do a solve updating the parm table.
     // This should be the last one.
