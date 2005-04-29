@@ -1,6 +1,8 @@
 bin_PROGRAMS = StationCorrelator
 
 DOCHDRS =						\
+StationCorrelator.h					\
+StationCorrelatorController.h				\
 DH_RSP.h						\
 DH_RSPSync.h						\
 DH_Empty.h						\
@@ -30,6 +32,8 @@ WH_Transpose.cc						\
 WH_Correlator.cc					\
 WH_Dump.cc						\
 StationCorrelator.cc					\
+StationCorrelatorController.cc				\
+StationCorrelatorMain.cc				\
 SyncStamp.cc                                            \
 TH_RSP.cc
 

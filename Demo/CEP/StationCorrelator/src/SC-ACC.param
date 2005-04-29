@@ -1,0 +1,58 @@
+# This is an example
+# To run with ACC some parameters will probably have to be changed.
+
+# This file has to match the TestRange file.
+# The number of SCDprocs = 2*NoWH_RSP + 2*NoWH_Correlator + NoWH_Dump + (1 if useRealRSPBoard == F)
+# The hostnames have to be correct:
+# first the host name for the WH_RSPemulator (if useRealRSPBoard == F)
+# then the hostnames for all the WH_RSPInputs
+# then these ^ hostnames again (for the WH_RSPs (they have to run on the same node as the WH_RSPInput)
+# then the hostname for the 1st correlator twice (once for the Transpose, once for the Correlator)
+# then twice the hostname for every next correlator
+# then the hostname for the dump node
+#
+# this should be changed to something simpler soon :)
+
+
+#
+AC.timeout.powerup      =  3 m
+AC.timeout.powerdown    =  3 m
+AC.timeout.createsubsets=  3 m
+AC.timeout.exitdelay    = 15 m
+AC.timeout.startup      =  2 m
+AC.timeout.define       = 40
+AC.timeout.init         = 40
+AC.timeout.run          = 30
+AC.timeout.pause        = 50
+AC.timeout.recover      = 50
+AC.timeout.snapshot     = 30
+AC.timeout.reinit       = 30
+AC.timeout.info         = 30
+AC.timeout.quit         = 60
+AC.timeout.kill         = 60
+#
+AC.application=SCD
+AC.resultfile =./AC_result.log
+#
+# Application structure parameters
+SCD.versionnr=0.0.1
+#
+AC.process[0].count=1
+AC.process[1].ID = SCDproc(6)
+#
+# metadata about a proces
+SCD.SCDproc[0].startstoptype = mpirun
+SCD.SCDproc[0].executable    = /home/zwart/LOFAR/CEP/Demo/StationCorrelator/build/gnu_scampi-opt/src/StationCorrelator
+SCD.SCDproc[0].versionnr     = 0.0.1
+
+
+# Process related parameters
+SCD.SCDproc[0].node		  = lofar17
+SCD.SCDproc[1].node		  = lofar15
+SCD.SCDproc[2].node		  = lofar11
+SCD.SCDproc[3].node		  = lofar11
+SCD.SCDproc[4].node		  = lofar12
+SCD.SCDproc[5].node		  = lofar12
+SCD.SCDproc[6].node		  = lofar15
+SCD.SCDproc[0].APsOwnParam   = /home/zwart/TestRange
+
