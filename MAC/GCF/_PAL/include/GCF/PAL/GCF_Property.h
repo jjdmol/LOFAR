@@ -134,19 +134,20 @@ class GCFProperty
   private:
     friend class GCFPropertySet;
     // Normally a property object can only constructed by a property set object.
-    // The constructor and destructor are therefor protected. At this way the 
-    // property objects are protected from deleting by others than property 
-    // sets. 
+    // The constructor and destructor are therefore protected to avoid unlegal 
+    // con-/destructions. So the property set objects and the containing property 
+    // objects have a strong dependency to eachother. 
     // There is one exception: a GCFExtProperty can be instantiated by a user.
-    // In that case the instance is not related to a property set and should 
-    // therefor be able to delete by the user. This conflicts with the above 
-    // description. Therefor the property set objects gets by this method the 
-    // possibility to uncouple the properties before deleting them (in destructor
-    // of GCFPropertySet). So the destruction of a property is made dependent on
-    // the value of the pointer to a property set. If 0 it may be deleted 
+    // In that case the instance is not related to any property set (independent) 
+    // and must be  able to be deleted by the user. This conflicts with the above 
+    // statement. Therefore the property set objects gets, by means of this 
+    // method, the possibility to make all containing properties independent 
+    // just right before deleting them (in destructor of the GCFPropertySet). 
+    // Then the destruction of a property could be made dependent on
+    // the value of the _isIndependedProp. If true it may be deleted 
     // otherwise we get an assert!!!
     void resetPropSetRef () 
-      { _pPropertySet = 0; }
+      { _isIndependedProp = true; }
     
   private:
     GCFProperty();
@@ -163,6 +164,7 @@ class GCFProperty
     Common::TPropertyInfo  _propInfo;
 
   private: // admin. data members
+    bool                  _isIndependedProp;
 };
   } // namespace PAL
  } // namespace GCF
