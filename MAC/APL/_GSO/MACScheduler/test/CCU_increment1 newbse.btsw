@@ -19,31 +19,27 @@ Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack, 
 //	s000 : CONNECTION_ESTABLISHED ; s001.
 //	s001 : TIMER(1) ; s002.
 // ------------------------------------------------------------------------------
-  s002  : F_SAS_SCHEDULE ( 0x00000036,0x00000032,"VIWrongVersion1.ps" )               ; s010.			// send schedule VI1
-  s010  : E_SAS_RESPONSE ( 0x0000003A,0x00000008,0x00000032,"VIWrongVersion1" ) ; s050.			// wait for WRONG VERSION response
+  s002  : F_SAS_SCHEDULE ( 0x00000016,0x00000012,"VIWrongVersion1.ps" )               ; s010.			// send schedule VI1
+  s010  : E_SAS_RESPONSE ( 0x00000017,0x00000008,0x0000000F,"VIWrongVersion1" ) ; s050.			// wait for WRONG VERSION response
   s010  : E_SAS_RESPONSE ( ,,, )                                ; error.  	// invalid response received
 // ------------------------------------------------------------------------------
-  s050  : F_SAS_SCHEDULE ( 0x00000036,0x00000032,"VI1.ps" )     ; s060.			// send schedule VI1
-  s060  : E_SAS_RESPONSE ( ,0x0000000D,, )              	      ; s065.			// error already exists
+  s050  : F_SAS_SCHEDULE ( 0x0000000A,0x00000006,"VI1.ps" )     ; s060.			// send schedule VI1
   s060  : E_SAS_RESPONSE ( ,0x00000000,, )              	      ; s070.			// wait for response
   s060  : E_SAS_RESPONSE ( ,,, )                                ; error.  	// invalid response received
-  s065  : F_SAS_UPDATESCHEDULE ( 0x00000036,0x00000032,"VI1.ps" )     ; s066.			// send schedule VI1
-  s066  : E_SAS_RESPONSE ( ,0x00000000,, )              	      ; s070.			// wait for response
-  s066  : E_SAS_RESPONSE ( ,,, )                                ; error.  	// invalid response received
-  s070  : R_SIG ( vbsd_scheduled )                              ; s090.    	// or wait for VirtualBackend response; sync with VirtualBackend statemachine
+  s070  : R_SIG ( vbsd_scheduled )                              ; s080.    	// or wait for VirtualBackend response; sync with VirtualBackend statemachine
   s070  : TIMER(30)																							; timeout.	// or timeout
-  s090  : TIMER(300)                                             ; s100.     // wait for schedule to finish
+  s080  : TIMER(300)                                            ; s100.     // wait for schedule to finish
 // ------------------------------------------------------------------------------
 
 
 // ------------------------------------------------------------------------------
-  s100  : F_SAS_CANCELSCHEDULE ( 0x00000036,0x00000032,"VI1.ps" )                     ; s110.			// cancel schedule VI1
+  s100  : F_SAS_CANCELSCHEDULE ( 0x0000000A,0x00000006,"VI1.ps" )                     ; s110.			// cancel schedule VI1
   s110  : E_SAS_RESPONSE ( ,0x00000000,, )                      ; s200.			// wait for response
   s110  : E_SAS_RESPONSE ( ,,, )                                ; error.  	// invalid response received
 // ------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------
-  s200  : F_SAS_SCHEDULE ( 0x00000036,0x00000032,"VI1.ps" )                           ; s210.			// send schedule VI1
+  s200  : F_SAS_SCHEDULE ( 0x0000000A,0x00000006,"VI1.ps" )                           ; s210.			// send schedule VI1
   s210  : E_SAS_RESPONSE ( ,0x00000000,, )                      ; s220.			// wait for response
   s210  : E_SAS_RESPONSE ( ,,, )                                ; error.  	// invalid response received
   s220  : R_SIG ( bs_alloc_ack )                                ; s230.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
@@ -56,7 +52,7 @@ Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack, 
 // ------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------
-  s300  : F_SAS_UPDATESCHEDULE ( 0x00000036,0x00000032,"VI1.ps" )                     ; s310.			// send schedule update VI1
+  s300  : F_SAS_UPDATESCHEDULE ( 0x0000000A,0x00000006,"VI1.ps" )                     ; s310.			// send schedule update VI1
   s310  : E_SAS_RESPONSE ( ,0x00000000,, )                      ; s320.			// wait for response
   s310  : E_SAS_RESPONSE ( ,,, )                                ; error.  	// invalid response received
   s320  : R_SIG ( bs_alloc_ack )                                ; s230.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
@@ -118,7 +114,7 @@ Statemachine_VBStartDaemon ( stop, vbsd_scheduled, vbsd_connected ) =
   s002   : E_STARTDAEMON_STOP	( ) 	                              ; finish.
   s002   : R_SIG( stop )                                        	; finish.
   
-  s010   : F_STARTDAEMON_SCHEDULED ( 0x0000003A,0x00000000,0x00000032,"VB1" ) ; s011.
+  s010   : F_STARTDAEMON_SCHEDULED ( 0x0000000B,0x00000000,0x00000003,"VB1" ) ; s011.
   s011   : S_SIG( vbsd_scheduled ) ; s012.
   s012   : S_SIG( vbsd_connected )																; s002.
   
@@ -131,7 +127,7 @@ Statemachine_VirtualBackend  ( stop, vbsd_connected ) =
 //	s001 : TIMER(1) ; s002.
   s002   : R_SIG( vbsd_connected )																; s010.
   
-  s010   : F_LOGICALDEVICE_CONNECT( 0x00000036,0x00000032,"VB1" )	; s020.
+  s010   : F_LOGICALDEVICE_CONNECT( 0x00000007,0x00000003,"VB1" )	; s020.
   
   s020   : E_LOGICALDEVICE_CONNECTED (0x00000000)                 ; s030.
   s020   : E_LOGICALDEVICE_CONNECTED ( )                          ; error.
@@ -169,26 +165,26 @@ VAR scope.
 
 //	s000 : CONNECTION_ESTABLISHED ; s001.
 //	s001 : TIMER(1) ; s002.
-  s002   : F_PVSS_LOAD_EXT_PROPERTY_SET( 0x0000006C,0x00000032,"System1:GSO_MACScheduler",0x00000032,"TAplMacScheduler" )		; s010.
+  s002   : F_PVSS_LOAD_EXT_PROPERTY_SET( 0x00000030,0x00000018,"System1:GSO_MACScheduler",0x00000010,"TAplMacScheduler" )		; s010.
   s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:GSO_MACScheduler" )	; s040.
   s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
   
-  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x0000006C,0x00000032,"System1:GSO_MACScheduler",0x00000032,"status" )						; s050.
+  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x00000026,0x00000018,"System1:GSO_MACScheduler",0x00000006,"status" )						; s050.
   s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:GSO_MACScheduler",,"status" ) 	; s060.
   s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
 
-  s060   : F_PVSS_EXT_SET_VALUE ( 0x000000A2,0x00000032,"System1:GSO_MACScheduler",0x00000032,"command",0x00000032,"SCHEDULE VI1.ps" )			; s070.
+  s060   : F_PVSS_EXT_SET_VALUE ( 0x0000003A,0x00000018,"System1:GSO_MACScheduler",0x00000007,"command",0x0000000F,"SCHEDULE VI1.ps" )			; s070.
   s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:GSO_MACScheduler",,"command" ) ; s080.
   s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
   
   s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,"System1:GSO_MACScheduler",,"status",, )		; s090. // note: can only check one string in an event
   s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, ) 											; error.
 
-  s090   : F_PVSS_UNSUBSCRIBE_EXT_PROPERTY ( 0x0000006C,0x00000032,"System1:GSO_MACScheduler",0x00000032,"status" )								; s100.
+  s090   : F_PVSS_UNSUBSCRIBE_EXT_PROPERTY ( 0x00000026,0x00000018,"System1:GSO_MACScheduler",0x00000006,"status" )								; s100.
   s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( , 0x00000000,,"System1:GSO_MACScheduler",,"status" )	; s150.
   s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )						; error.
 
-  s150   : F_PVSS_UNLOAD_EXT_PROPERTY_SET( 0x00000036,0x00000032,"System1:GSO_MACScheduler" )			; s160.
+  s150   : F_PVSS_UNLOAD_EXT_PROPERTY_SET( 0x0000001C,0x00000018,"System1:GSO_MACScheduler" )			; s160.
   s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:GSO_MACScheduler" ) 		; s990.
   s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
   
@@ -204,50 +200,50 @@ VAR scope.
 
 //	s000 : CONNECTION_ESTABLISHED ; s001.
 //	s001 : TIMER(1) ; s002.
-  s002   : F_PVSS_LOAD_EXT_PROPERTY_SET( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"TLcuPacLogicalDeviceScheduler" )			 			; s010.
+  s002   : F_PVSS_LOAD_EXT_PROPERTY_SET( 0x00000047,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x0000001D,"TLcuPacLogicalDeviceScheduler" )			 			; s010.
   s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" )				; s020.
   s010   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
   
-  s020   : F_PVSS_EXT_GET_VALUE ( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"command" )														; s030.
+  s020   : F_PVSS_EXT_GET_VALUE ( 0x00000031,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000007,"command" )														; s030.
   s030   : E_PVSS_VALUE_CHANGE_RESPONSE ( ,,"System1:PAC_LogicalDeviceScheduler",,"command",, )							; s040. // note: can only check one string in an event 
   s030   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, )											; error.
 
-  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"command" )									; s050.
+  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x00000031,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000007,"command" )									; s050.
   s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 	; s060.
   s050   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
 
-  s060   : F_PVSS_EXT_SET_VALUE ( 0x000000A2,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"command",0x00000032,"dummy1" )														; s070.
+  s060   : F_PVSS_EXT_SET_VALUE ( 0x0000003B,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000007,"command",0x00000006,"dummy1" )														; s070.
   s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 						; s080.
   s070   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
   
   s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,"System1:PAC_LogicalDeviceScheduler",,"command",,"dummy1" )								; s090. // note: can only check one string in an event
   s080   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, ) 											; error.
 
-  s090   : F_PVSS_UNSUBSCRIBE_EXT_PROPERTY ( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"command" )								; s100.
+  s090   : F_PVSS_UNSUBSCRIBE_EXT_PROPERTY ( 0x00000031,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000007,"command" )								; s100.
   s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" )	; s110.
   s100   : E_PVSS_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )						; error.
 
-  s110   : F_PVSS_EXT_SET_VALUE ( 0x000000A2,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"command",0x00000032,"dummy2" )														; s120.
+  s110   : F_PVSS_EXT_SET_VALUE ( 0x0000003B,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000007,"command",0x00000006,"dummy2" )														; s120.
   s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( , 0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 						; s130.
   s120   : E_PVSS_EXT_SET_VALUE_RESPONSE( ,,,,, )												; error.
  
-  s130   : F_PVSS_EXT_GET_VALUE ( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"command" )														; s140.
+  s130   : F_PVSS_EXT_GET_VALUE ( 0x00000031,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000007,"command" )														; s140.
   s140   : E_PVSS_VALUE_CHANGE_RESPONSE ( ,,"System1:PAC_LogicalDeviceScheduler",,"command",,"dummy2" )							; s150. // note: can only check one string in an event 
   s140   : E_PVSS_VALUE_CHANGE_RESPONSE( ,,,,,, )											; error.
 
-  s150   : F_PVSS_UNLOAD_EXT_PROPERTY_SET( 0x00000036,0x00000032,"System1:PAC_LogicalDeviceScheduler" )			; s160.
+  s150   : F_PVSS_UNLOAD_EXT_PROPERTY_SET( 0x00000026,0x00000022,"System1:PAC_LogicalDeviceScheduler" )			; s160.
   s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" ) 		; s500.
   s160   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
   
-  s500   : F_PVSS_LOAD_EXT_PROPERTY_SET( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"TLcuPacLogicalDeviceScheduler" )			 			; s510.
+  s500   : F_PVSS_LOAD_EXT_PROPERTY_SET( 0x00000047,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x0000001D,"TLcuPacLogicalDeviceScheduler" )			 			; s510.
   s510   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler" )				; s520.
   s510   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE( ,,, )            			; error.
   
-  s520   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"command" )									; s530.
+  s520   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x00000031,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000007,"command" )									; s530.
   s530   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"command" ) 	; s540.
   s530   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
 
-  s540   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x0000006C,0x00000032,"System1:PAC_LogicalDeviceScheduler",0x00000032,"status" )									; s550.
+  s540   : F_PVSS_SUBSCRIBE_EXT_PROPERTY ( 0x00000030,0x00000022,"System1:PAC_LogicalDeviceScheduler",0x00000006,"status" )									; s550.
   s550   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,0x00000000,,"System1:PAC_LogicalDeviceScheduler",,"status" ) 	; s560.
   s550   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE( ,,,,, )							; error.
 

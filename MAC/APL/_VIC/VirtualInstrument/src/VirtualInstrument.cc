@@ -56,6 +56,8 @@ VirtualInstrument::VirtualInstrument(const string& taskName,
   LogicalDevice(taskName,parameterFile,pStartDaemon,VI_VERSION),
   m_vtSchedulerPropertySets(),
   m_disconnectedVTSchedulerPropertySets(),
+  m_vtPropertySets(),
+  m_qualityCheckTimerId(0),
   m_retryPropsetLoadTimerId(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
@@ -81,6 +83,12 @@ VirtualInstrument::VirtualInstrument(const string& taskName,
         
         TGCFExtPropertySetPtr vtSchedulerPropset(new GCFExtPropertySet(propsetName.c_str(),propsetType.c_str(),&m_propertySetAnswer));
         m_vtSchedulerPropertySets[(*it)] = vtSchedulerPropset;
+        
+        string remoteSystemName = m_parameterSet.getString((*it) + ".remoteSystem");
+        propsetName = remoteSystemName + string(":") + m_parameterSet.getString((*it) + ".propertysetBaseName");
+        propsetType = m_parameterSet.getString((*it) + ".propertysetDetailsType");
+        TGCFExtPropertySetPtr vtPropset(new GCFExtPropertySet(propsetName.c_str(),propsetType.c_str(),&m_propertySetAnswer));
+        m_vtPropertySets[(*it)] = vtPropset;
       }
       ++it;
     }
@@ -116,6 +124,31 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
     }
     case F_VCHANGEMSG:
     {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+      
+      bool found=false;
+      TString2PropsetMap::iterator it=m_vtPropertySets.begin();
+      while(!found && it!=m_vtPropertySets.end())
+      {
+        if(strstr(pPropAnswer->pPropName,it->second->getFullScope().c_str()) != 0)
+        {
+          found=true;
+          if(strstr(pPropAnswer->pPropName, ".status") != 0)
+          {
+            GCFPVString* pvString=(GCFPVString*)pPropAnswer->pValue;
+            LOG_DEBUG(formatString("VI(%s) - %s=%s",getName().c_str(),pPropAnswer->pPropName,pvString->getValue().c_str()));
+            if(pvString->getValue() != string("Active"))
+            {
+              LOG_FATAL(formatString("VI(%s): quality too low",getName().c_str()));
+              // any VT not running results in low quality
+              m_serverPort.cancelTimer(m_qualityCheckTimerId);
+              m_qualityCheckTimerId = 0;
+              _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+            }
+          }
+        }
+        ++it;
+      }
       break;
     }
     case F_VGETRESP:
@@ -125,51 +158,68 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
     case F_EXTPS_LOADED:
     {
       GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-      if(pPropAnswer->result == GCF_NO_ERROR)
+      if(strstr(pPropAnswer->pScope, "Scheduler") != 0) // if it is a scheduler propertyset
       {
-        GCFPValueArray stationsVector;
-
-        TString2PropsetMap::iterator it=m_vtSchedulerPropertySets.begin();
-        while(it!=m_vtSchedulerPropertySets.end())
+        if(pPropAnswer->result == GCF_NO_ERROR)
         {
-          if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
+          GCFPValueArray stationsVector;
+  
+          TString2PropsetMap::iterator it=m_vtSchedulerPropertySets.begin();
+          while(it!=m_vtSchedulerPropertySets.end())
           {
-            it->second->subscribeProp(string("status"));
-            _writeScheduleCommand(it->first,it->second);
+            if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
+            {
+	            it->second->subscribeProp(string("status"));
+              _writeScheduleCommand(it->first,it->second);
+            }
+            GCFPVString* newItem=new GCFPVString(it->first);
+            stationsVector.push_back(newItem);
+            ++it;
           }
-          GCFPVString newItem(it->first);
-          stationsVector.push_back(&newItem);
-          ++it;
+          GCFPVDynArr newStations(LPT_STRING,stationsVector);
+          m_detailsPropertySet->setValue(VI_PROPNAME_CONNECTEDSTATIONS,newStations);
+          
+          // free memory. bah
+          for(GCFPValueArray::iterator pvaIt = stationsVector.begin();pvaIt != stationsVector.end();++pvaIt)
+          {
+            delete *pvaIt;
+          }
         }
-        GCFPVDynArr newStations(LPT_STRING,stationsVector);
-        m_detailsPropertySet->setValue(VI_PROPNAME_CONNECTEDSTATIONS,newStations);
+        else
+        {
+          LOG_WARN(formatString("failed to load propertyset %s",pPropAnswer->pScope));
+  
+          bool propsetFound=false;
+          TString2PropsetMap::iterator it=m_vtSchedulerPropertySets.begin();
+          while(!propsetFound && it!=m_vtSchedulerPropertySets.end())
+          {
+            if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
+            {
+              m_disconnectedVTSchedulerPropertySets[it->first] = it->second;
+              propsetFound=true;
+            }
+            ++it;
+          }
+  
+          GCFPValueArray stationsVector;
+          it = m_disconnectedVTSchedulerPropertySets.begin();
+          while(it != m_disconnectedVTSchedulerPropertySets.end())
+          {
+            GCFPVString* newItem=new GCFPVString(it->first);
+            stationsVector.push_back(newItem);
+            ++it;
+          }
+          GCFPVDynArr newStations(LPT_STRING,stationsVector);
+          m_detailsPropertySet->setValue(VI_PROPNAME_DISCONNECTEDSTATIONS,newStations);
+          // free memory. bah
+          for(GCFPValueArray::iterator pvaIt = stationsVector.begin();pvaIt != stationsVector.end();++pvaIt)
+          {
+            delete *pvaIt;
+          }
+        }
       }
-      else
+      else // it is a VT propertyset
       {
-        LOG_WARN(formatString("failed to load propertyset %s",pPropAnswer->pScope));
-
-        bool propsetFound=false;
-        TString2PropsetMap::iterator it=m_vtSchedulerPropertySets.begin();
-        while(!propsetFound && it!=m_vtSchedulerPropertySets.end())
-        {
-          if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
-          {
-            m_disconnectedVTSchedulerPropertySets[it->first] = it->second;
-            propsetFound=true;
-          }
-          ++it;
-        }
-
-        GCFPValueArray stationsVector;
-        it = m_disconnectedVTSchedulerPropertySets.begin();
-        while(it != m_disconnectedVTSchedulerPropertySets.end())
-        {
-          GCFPVString newItem(it->first);
-          stationsVector.push_back(&newItem);
-          ++it;
-        }
-        GCFPVDynArr newStations(LPT_STRING,stationsVector);
-        m_detailsPropertySet->setValue(VI_PROPNAME_DISCONNECTEDSTATIONS,newStations);
       }
       break;
     }
@@ -248,6 +298,17 @@ GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GC
 
   switch (event.signal)
   {
+    case F_ENTRY:
+    {
+      // load property sets of the scheduled VT's
+      TString2PropsetMap::iterator it;
+      for(it=m_vtPropertySets.begin();it!=m_vtPropertySets.end();++it)
+      {
+        it->second->load();
+      }
+      break;
+    }
+    
     case LOGICALDEVICE_CLAIMED:
     {
       LOG_TRACE_FLOW("CLAIMED received");
@@ -353,7 +414,18 @@ GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFP
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  
+
+  switch (event.signal)
+  {
+    case F_ENTRY:
+    {
+      m_qualityCheckTimerId = m_serverPort.setTimer(5L);
+      break;
+    }
+          
+    default:
+      break;
+  }  
   return status;
 }
 
@@ -438,6 +510,19 @@ void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortI
     // keep on polling
     m_retryPropsetLoadTimerId = m_serverPort.setTimer(5L);
   }
+  else if(timerEvent.id == m_qualityCheckTimerId)
+  {
+    if(!_checkQualityRequirements())
+    {
+      LOG_FATAL(formatString("VI(%s): quality too low",getName().c_str()));
+      _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+    }
+    else
+    {
+      // keep on polling
+      m_qualityCheckTimerId = m_serverPort.setTimer(5L);
+    }
+  }
 }
 
 bool VirtualInstrument::_writeScheduleCommand(const string& name, TGCFExtPropertySetPtr& propset)
@@ -481,5 +566,32 @@ bool VirtualInstrument::_writeScheduleCommand(const string& name, TGCFExtPropert
   return scheduleSent;
 }
 
+bool VirtualInstrument::_checkQualityRequirements()
+{
+  bool requirementsMet = false;
+  
+  // ALL virtual backend childs must be active
+  if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_ACTIVE))
+  {
+    LOG_TRACE_FLOW("All VB's RESUMED");
+    // 00% of the VT's must be active
+    if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_ACTIVE))
+    {
+      LOG_TRACE_FLOW("00% VT's RESUMED");
+      requirementsMet=true;
+      
+      // additonal check because of old style VT's: get status from the property sets
+      TString2PropsetMap::iterator it;
+      for(it=m_vtPropertySets.begin();it!=m_vtPropertySets.end();++it)
+      {
+        it->second->requestValue("status");
+      }
+    }
+  }
+  
+  return requirementsMet;
+}
+
 }; // namespace VIC
 }; // namespace LOFAR
+

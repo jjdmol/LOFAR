@@ -163,6 +163,7 @@ namespace APLCommon
       bool _childsInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
       bool _childsNotInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
+      void _acceptChildConnection();
       bool _isAPCLoaded() const;
       void _apcLoaded();
       void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode);
@@ -241,6 +242,7 @@ namespace APLCommon
       TPortVector::iterator _getChildPort(GCF::TM::GCFPortInterface& port);
       void _setChildStates(TLogicalDeviceState ldState);
       void _setConnectedChildState(GCF::TM::GCFPortInterface& port, TLogicalDeviceState ldState);
+      string _getConnectedChildName(GCF::TM::GCFPortInterface& port);
 
       TRemotePort                           m_parentPort; // connection with parent, if any
       

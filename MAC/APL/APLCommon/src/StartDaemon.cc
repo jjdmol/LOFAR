@@ -32,6 +32,13 @@
 
 #include "APLCommon/StartDaemon.h"
 
+#define ADJUSTEVENTSTRINGPARAMFROMBSE(str) \
+{ \
+  LOG_DEBUG("Adjust " #str " string size for test tool"); \
+  str = str.c_str(); \
+}
+
+
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
@@ -286,9 +293,14 @@ GCFEvent::TResult StartDaemon::idle_state(GCFEvent& event, GCFPortInterface& por
     case STARTDAEMON_SCHEDULE:
     {
       STARTDAEMONScheduleEvent scheduleEvent(event);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.taskName)
+ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.fileName)
+      
       STARTDAEMONScheduledEvent scheduledEvent;
       
       scheduledEvent.result = createLogicalDevice(scheduleEvent.logicalDeviceType,scheduleEvent.taskName, scheduleEvent.fileName);
+      
       scheduledEvent.VIrootID = scheduleEvent.taskName;
       
       m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(scheduledEvent.result));

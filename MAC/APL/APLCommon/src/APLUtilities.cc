@@ -69,7 +69,10 @@ void APLUtilities::string2Vector(const string& parametersString, vector<string>&
     if(nextDelim>delim)
     {
       string param(parametersString.substr(delim,nextDelim-delim));
-      parameters.push_back(param);
+      if(param.length()>0)
+      {
+        parameters.push_back(param);
+      }
       delim=nextDelim+1;
     } 
   } while(delim<parametersStringLen);
