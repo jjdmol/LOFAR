@@ -43,6 +43,11 @@
 # include <Common/ComplexBuiltinFP.h>
 # include <Common/ComplexBuiltinInt.h>
 
+#elif (defined HAVE_BGL)
+# define LOFAR_BUILTIN_COMPLEXFP __complex__
+# include <Common/ComplexBuiltinFP.h>
+# include <Common/ComplexStdInt.h>
+
 #else
 # include <Common/ComplexStdFP.h>
 # include <Common/ComplexStdInt.h>
