@@ -61,6 +61,7 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());
     parm.save();
+    ptab.unlock();
   }
 }
 
