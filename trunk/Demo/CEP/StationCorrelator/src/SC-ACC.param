@@ -38,7 +38,7 @@ AC.resultfile =./AC_result.log
 SCD.versionnr=0.0.1
 #
 AC.process[0].count=1
-AC.process[1].ID = SCDproc(6)
+AC.process[1].ID = SCDproc(20)
 #
 # metadata about a proces
 SCD.SCDproc[0].startstoptype = mpirun
@@ -48,11 +48,25 @@ SCD.SCDproc[0].versionnr     = 0.0.1
 
 # Process related parameters
 SCD.SCDproc[0].node		  = lofar17
-SCD.SCDproc[1].node		  = lofar15
+SCD.SCDproc[1].node		  = lofar8
 SCD.SCDproc[2].node		  = lofar11
-SCD.SCDproc[3].node		  = lofar11
-SCD.SCDproc[4].node		  = lofar12
+SCD.SCDproc[3].node		  = lofar12
+SCD.SCDproc[4].node		  = lofar11
 SCD.SCDproc[5].node		  = lofar12
-SCD.SCDproc[6].node		  = lofar15
+SCD.SCDproc[6].node		  = lofar13
+SCD.SCDproc[7].node		  = lofar13
+SCD.SCDproc[8].node		  = lofar14
+SCD.SCDproc[9].node		  = lofar14
+SCD.SCDproc[10].node		  = lofar15
+SCD.SCDproc[11].node		  = lofar15
+SCD.SCDproc[12].node		  = lofar7
+SCD.SCDproc[13].node		  = lofar7
+SCD.SCDproc[14].node		  = lofar4
+SCD.SCDproc[15].node		  = lofar4
+SCD.SCDproc[16].node		  = lofar5
+SCD.SCDproc[17].node		  = lofar5
+SCD.SCDproc[18].node		  = lofar6
+SCD.SCDproc[19].node		  = lofar6
+SCD.SCDproc[20].node		  = lofar8
 SCD.SCDproc[0].APsOwnParam   = /home/zwart/TestRange
 
