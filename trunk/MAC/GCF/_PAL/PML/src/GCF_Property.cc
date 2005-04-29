@@ -94,17 +94,21 @@ TGCFResult GCFProperty::setValue(const GCFPValue& value, bool wantAnswer)
 
 TGCFResult GCFProperty::setValue(const string& value, bool wantAnswer)
 { 
+  TGCFResult result(GCF_NO_ERROR);
   assert(_pPropService);
   GCFPValue* pValue = GCFPValue::createMACTypeObject(_propInfo.type);
   if (pValue) 
   { 
-    pValue->setValue(value);
-    return _pPropService->setPropValue(getFullName(), *pValue, wantAnswer); 
+    if ((result = pValue->setValue(value)) == GCF_NO_ERROR)
+    {
+      result = _pPropService->setPropValue(getFullName(), *pValue, wantAnswer);
+    }
   }
   else 
   {
-    return GCF_PROP_WRONG_TYPE;
+    result = GCF_PROP_WRONG_TYPE;
   }
+  return result;
 }
 
 bool GCFProperty::exists () 

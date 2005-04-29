@@ -71,7 +71,7 @@ class GCFMyProperty : public GCFProperty
     // updated too.
     // @return can be GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
     // <group>
-    Common::TGCFResult setValue (const string value, bool wantAnswer = false);
+    Common::TGCFResult setValue (const string& value, bool wantAnswer = false);
     Common::TGCFResult setValue (const Common::GCFPValue& value, bool wantAnswer = false);
     // </group>
     
