@@ -20,10 +20,13 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <iostream>
 
 #include <Transport/TH_Mem.h>
-#include <DH_Example.h>
+#include "DH_Example.h"
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;

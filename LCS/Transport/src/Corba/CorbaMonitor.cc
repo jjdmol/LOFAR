@@ -23,10 +23,13 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/BaseSim.h"
-#include "Common/Debug.h"
-#include "CEPFrame/Corba/CorbaMonitor.h"
-#include "CEPFrame/WorkHolder.h"
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include <CEPFrame/BaseSim.h>
+#include <Common/Debug.h>
+#include <CEPFrame/Corba/CorbaMonitor.h>
+#include <CEPFrame/WorkHolder.h>
 
 CorbaMonitor::CorbaMonitor(PortableServer::POA_var        aRootPOA,
 			   PortableServer::POAManager_var aPOAManager,

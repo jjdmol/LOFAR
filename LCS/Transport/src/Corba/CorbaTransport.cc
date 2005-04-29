@@ -22,8 +22,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
-#include "CEPFrame/Corba/CorbaTransport.h"
+
+#include <CEPFrame/Corba/CorbaTransport.h>
 
 
 CorbaTransport::CorbaTransport()

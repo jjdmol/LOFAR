@@ -23,10 +23,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/BaseSim.h"
-#include "Common/Debug.h"
-#include "CEPFrame/Corba/CorbaController.h"
-#include "CEPFrame/VirtualMachine.h"
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include <CEPFrame/BaseSim.h>
+#include <Common/Debug.h>
+#include <CEPFrame/Corba/CorbaController.h>
+#include <CEPFrame/VirtualMachine.h>
 #include <unistd.h>
 
 CorbaController::CorbaController(PortableServer::POA_var        aRootPOA,

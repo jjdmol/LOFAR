@@ -20,7 +20,10 @@
 //#
 //# $Id$
 
-#include <DH_VarBuf.h>
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include "DH_VarBuf.h"
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>

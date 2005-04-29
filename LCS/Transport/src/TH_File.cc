@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 
 #include <Transport/TH_File.h>
 #include <Common/LofarLogger.h>

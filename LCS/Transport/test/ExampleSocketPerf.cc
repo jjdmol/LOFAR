@@ -23,11 +23,14 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_fstream.h>
 #include <Transport/TH_Socket.h>
-#include <DH_Example.h>
-#include <StopWatch.h>
+#include "DH_Example.h"
+#include "StopWatch.h"
 #include <iomanip>
 
 using namespace LOFAR;

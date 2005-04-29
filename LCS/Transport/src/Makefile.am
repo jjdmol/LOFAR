@@ -7,7 +7,6 @@ endif
 
 INSTHDRS = \
 BaseSim.h \
-CyclicBuffer.h \
 DataHolder.h \
 DataBlobExtra.h \
 TH_File.h \
@@ -35,7 +34,6 @@ lib_LTLIBRARIES 	= libtransport.la
 libtransport_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 libtransport_la_SOURCES = \
-CyclicBuffer.cc \
 DataHolder.cc \
 DataBlobExtra.cc \
 TH_File.cc \
