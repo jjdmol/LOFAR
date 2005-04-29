@@ -29,8 +29,6 @@ include = '<GCF/GCF_Defines.h>';
 prelude = << PRELUDE_END
 // define namespace and enumerations here
 
-static const int PVSSBRIDGE_STRINGLEN = 50;
-
 //enum TEchoEnum
 //{
 //  ECHO_ENUM_FIRST = 1, 
@@ -76,7 +74,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -102,7 +100,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -128,7 +126,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "propertylen";
@@ -136,7 +134,7 @@ event = {
   };
   param = {
     name = "property";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "valuelen";
@@ -144,7 +142,7 @@ event = {
   };
   param = {
     name = "value";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -178,7 +176,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "propertylen";
@@ -186,7 +184,7 @@ event = {
   };
   param = {
     name = "property";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -216,7 +214,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -242,7 +240,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -272,7 +270,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "propertylen";
@@ -280,7 +278,7 @@ event = {
   };
   param = {
     name = "property";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -310,7 +308,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "propertylen";
@@ -318,7 +316,7 @@ event = {
   };
   param = {
     name = "property";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -344,7 +342,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "propertylen";
@@ -352,7 +350,7 @@ event = {
   };
   param = {
     name = "property";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "valuelen";
@@ -360,7 +358,7 @@ event = {
   };
   param = {
     name = "value";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -394,7 +392,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "propertylen";
@@ -402,7 +400,7 @@ event = {
   };
   param = {
     name = "property";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 
@@ -415,7 +413,7 @@ event = {
   };
   param = {
     name = "scope";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "propertylen";
@@ -423,7 +421,7 @@ event = {
   };
   param = {
     name = "property";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
   param = {
     name = "valuelen";
@@ -431,7 +429,7 @@ event = {
   };
   param = {
     name = "value";
-    type = "char[PVSSBRIDGE_STRINGLEN]";
+    type = "string";
   };
 };
 

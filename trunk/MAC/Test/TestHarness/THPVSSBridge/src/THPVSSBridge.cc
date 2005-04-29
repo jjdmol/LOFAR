@@ -29,6 +29,18 @@
 #include "THPVSSBridge.h"
 #include "THPVSSBridge_Protocol.ph"
 
+#define ADJUSTEVENTSTRINGPARAMTOBSE(str) \
+{ \
+  LOG_DEBUG("Adjust " #str " string size for test tool"); \
+  str.resize(50,0); \
+}
+#define ADJUSTEVENTSTRINGPARAMFROMBSE(str) \
+{ \
+  LOG_DEBUG("Adjust " #str " string size for test tool"); \
+  str = str.c_str(); \
+}
+
+
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -37,12 +49,6 @@ using namespace LOFAR::APLCommon;
 using namespace LOFAR::MACTest;
 
 INIT_TRACER_CONTEXT(LOFAR::MACTest::THPVSSBridge,LOFARLOGGER_PACKAGE);
-
-void string2array(char out[PVSSBRIDGE_STRINGLEN], string in)
-{
-  memset(out,0,PVSSBRIDGE_STRINGLEN);
-  strncpy(out,in.c_str(),PVSSBRIDGE_STRINGLEN);
-}
 
 string stripProperty(string in)
 {
@@ -92,11 +98,15 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s)","F_SUBSCRIBED",pPropAnswer->pPropName));
       
       THPVSSBridgeSubscribeExtPropertyResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,stripProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
-      string2array(pvssBridgeEvent.property,getProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.propertylen = strlen(pvssBridgeEvent.property);
+      pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
+      pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.response = GCF_NO_ERROR;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }
@@ -107,11 +117,15 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s)","F_UNSUBSCRIBED",pPropAnswer->pPropName));
 
       THPVSSBridgeUnsubscribeExtPropertyResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,stripProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
-      string2array(pvssBridgeEvent.property,getProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.propertylen = strlen(pvssBridgeEvent.property);
+      pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
+      pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.response = GCF_NO_ERROR;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }
@@ -122,12 +136,17 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s=%s)","F_VCHANGEMSG",pPropAnswer->pPropName,pPropAnswer->pValue->getValueAsString().c_str()));
       
       THPVSSBridgeValueChangeResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,stripProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
-      string2array(pvssBridgeEvent.property,getProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.propertylen = strlen(pvssBridgeEvent.property);
-      string2array(pvssBridgeEvent.value,pPropAnswer->pValue->getValueAsString());
-      pvssBridgeEvent.valuelen = strlen(pvssBridgeEvent.value);
+      pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
+      pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
+      pvssBridgeEvent.value = pPropAnswer->pValue->getValueAsString();
+      pvssBridgeEvent.valuelen = pvssBridgeEvent.value.length();
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.value)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }  
@@ -138,12 +157,17 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s=%s)","F_VGETRESP",pPropAnswer->pPropName,pPropAnswer->pValue->getValueAsString().c_str()));
       
       THPVSSBridgeValueChangeResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,stripProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
-      string2array(pvssBridgeEvent.property,getProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.propertylen = strlen(pvssBridgeEvent.property);
-      string2array(pvssBridgeEvent.value,pPropAnswer->pValue->getValueAsString());
-      pvssBridgeEvent.valuelen = strlen(pvssBridgeEvent.value);
+      pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
+      pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
+      pvssBridgeEvent.value = pPropAnswer->pValue->getValueAsString();
+      pvssBridgeEvent.valuelen = pvssBridgeEvent.value.length();
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.value)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }  
@@ -154,11 +178,15 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s)","F_VSETRESP",pPropAnswer->pPropName));
 
       THPVSSBridgeExtSetValueResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,stripProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
-      string2array(pvssBridgeEvent.property,getProperty(string(pPropAnswer->pPropName)));
-      pvssBridgeEvent.propertylen = strlen(pvssBridgeEvent.property);
+      pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
+      pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
+      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.response = GCF_NO_ERROR;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }
@@ -168,9 +196,12 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s,%d)","F_EXTPS_LOADED",pPropAnswer->pScope,pPropAnswer->result));
 
       THPVSSBridgeLoadExtPropertySetResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,string(pPropAnswer->pScope));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
+      pvssBridgeEvent.scope = string(pPropAnswer->pScope);
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+
       m_serverPort.send(pvssBridgeEvent);
 
       break;
@@ -182,9 +213,12 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s,%d)","F_EXTPS_UNLOADED",pPropAnswer->pScope,pPropAnswer->result));
 
       THPVSSBridgeUnloadExtPropertySetResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,string(pPropAnswer->pScope));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
+      pvssBridgeEvent.scope = string(pPropAnswer->pScope);
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }
@@ -195,9 +229,12 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s,%d)","F_MYPS_ENABLED",pPropAnswer->pScope,pPropAnswer->result));
 
       THPVSSBridgeEnableMyPropertySetResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,string(pPropAnswer->pScope));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
+      pvssBridgeEvent.scope = string(pPropAnswer->pScope);
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }
@@ -208,9 +245,12 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       LOG_DEBUG(formatString("%s(%s,%d)","F_MYPS_DISABLED",pPropAnswer->pScope,pPropAnswer->result));
 
       THPVSSBridgeDisableMyPropertySetResponseEvent pvssBridgeEvent;
-      string2array(pvssBridgeEvent.scope,string(pPropAnswer->pScope));
-      pvssBridgeEvent.scopelen = strlen(pvssBridgeEvent.scope);
+      pvssBridgeEvent.scope = string(pPropAnswer->pScope);
+      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
+
       m_serverPort.send(pvssBridgeEvent);
       break;
     }
@@ -283,6 +323,10 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET:
     {
       THPVSSBridgeEnableMyPropertySetEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.type)
+
       LOG_DEBUG(formatString("%s(%s,%s,%d)","THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.type.c_str(),pvssBridgeEvent.category));
       
       TMyPropertySetPtr pMyPropSet(new GCFMyPropertySet(pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.type.c_str(),pvssBridgeEvent.category,&m_propertySetAnswer));
@@ -291,8 +335,11 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
       if(GCF_NO_ERROR != res)
       {
         THPVSSBridgeEnableMyPropertySetResponseEvent pvssBridgeResponseEvent;
-        string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
         pvssBridgeResponseEvent.response = res;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+
         m_serverPort.send(pvssBridgeResponseEvent);
       }
       break;
@@ -301,6 +348,9 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET:
     {
       THPVSSBridgeDisableMyPropertySetEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+
       LOG_DEBUG(formatString("%s(%s)","THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET",pvssBridgeEvent.scope.c_str()));
 
       TMyPropertySetMap::iterator it = m_myPropertySets.find(pvssBridgeEvent.scope);
@@ -310,16 +360,22 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
         if(GCF_NO_ERROR != res)
         {
           THPVSSBridgeDisableMyPropertySetResponseEvent pvssBridgeResponseEvent;
-          string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
+          pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
           pvssBridgeResponseEvent.response = res;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+
           m_serverPort.send(pvssBridgeResponseEvent);
         }
       }
       else
       {
         THPVSSBridgeDisableMyPropertySetResponseEvent pvssBridgeResponseEvent;
-        string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
         pvssBridgeResponseEvent.response = GCF_UNKNOWN_ERROR;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+
         m_serverPort.send(pvssBridgeResponseEvent);
       }
       break;
@@ -328,20 +384,28 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_MY_GET_VALUE:
     {
       THPVSSBridgeMyGetValueEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.property)
+
       LOG_DEBUG(formatString("%s(%s,%s)","THPVSSBRIDGE_MY_GET_VALUE",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str()));
 
       THPVSSBridgeMyGetValueResponseEvent pvssBridgeResponseEvent;
-      string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-      string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
-      string2array(pvssBridgeResponseEvent.value,string(""));
+      pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+      pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
+      pvssBridgeResponseEvent.value = string("");
       
       TMyPropertySetMap::iterator it = m_myPropertySets.find(pvssBridgeEvent.scope);
       if(it != m_myPropertySets.end())
       {
-        string fixTerminatingZerosString(pvssBridgeEvent.property.c_str());
-        GCFPValue* pValue = it->second->getValue(fixTerminatingZerosString);
-        string2array(pvssBridgeResponseEvent.value,pValue->getValueAsString());
+        GCFPValue* pValue = it->second->getValue(pvssBridgeEvent.property);
+        pvssBridgeResponseEvent.value = pValue->getValueAsString();
       }
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.value)
+
       m_serverPort.send(pvssBridgeResponseEvent);
       break;
     }
@@ -349,28 +413,40 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_MY_SET_VALUE:
     {
       THPVSSBridgeMySetValueEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.property)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.value)
+
       LOG_DEBUG(formatString("%s(%s,%s,%s)","THPVSSBRIDGE_MY_SET_VALUE",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str(),pvssBridgeEvent.value.c_str()));
 
       TMyPropertySetMap::iterator it = m_myPropertySets.find(pvssBridgeEvent.scope);
       if(it != m_myPropertySets.end())
       {
-        string fixTerminatingZerosString(pvssBridgeEvent.property.c_str());
-        TGCFResult res = it->second->setValue(fixTerminatingZerosString,pvssBridgeEvent.value);
+        TGCFResult res = it->second->setValue(pvssBridgeEvent.property,pvssBridgeEvent.value);
         if(GCF_NO_ERROR != res)
         {
           THPVSSBridgeMySetValueResponseEvent pvssBridgeResponseEvent;
-          string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-          string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
+          pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+          pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
           pvssBridgeResponseEvent.response = res;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+
           m_serverPort.send(pvssBridgeResponseEvent);
         }
       }
       else
       {
         THPVSSBridgeMySetValueResponseEvent pvssBridgeResponseEvent;
-        string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-        string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+        pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
         pvssBridgeResponseEvent.response = GCF_UNKNOWN_ERROR;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+
         m_serverPort.send(pvssBridgeResponseEvent);
       }
       break;
@@ -379,6 +455,10 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET:
     {
       THPVSSBridgeLoadExtPropertySetEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.type)
+
       LOG_DEBUG(formatString("%s(%s,%s)","THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.type.c_str()));
 
       TExtPropertySetPtr pExtPropSet(new GCFExtPropertySet(pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.type.c_str(),&m_propertySetAnswer));
@@ -387,8 +467,11 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
       if(GCF_NO_ERROR != res)
       {
         THPVSSBridgeLoadExtPropertySetResponseEvent pvssBridgeResponseEvent;
-        string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
         pvssBridgeResponseEvent.response = res;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+
         m_serverPort.send(pvssBridgeResponseEvent);
       }
       break;
@@ -397,6 +480,9 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET:
     {
       THPVSSBridgeUnloadExtPropertySetEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+
       LOG_DEBUG(formatString("%s(%s)","THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET",pvssBridgeEvent.scope.c_str()));
 
       TExtPropertySetMap::iterator it = m_extPropertySets.find(pvssBridgeEvent.scope);
@@ -406,16 +492,22 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
         if(GCF_NO_ERROR != res)
         {
           THPVSSBridgeUnloadExtPropertySetResponseEvent pvssBridgeResponseEvent;
-          string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
+          pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
           pvssBridgeResponseEvent.response = res;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+
           m_serverPort.send(pvssBridgeResponseEvent);
         }
       }
       else
       {
         THPVSSBridgeUnloadExtPropertySetResponseEvent pvssBridgeResponseEvent;
-        string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
         pvssBridgeResponseEvent.response = GCF_UNKNOWN_ERROR;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+
         m_serverPort.send(pvssBridgeResponseEvent);
       }
       break;
@@ -424,28 +516,39 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY:
     {
       THPVSSBridgeSubscribeExtPropertyEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.property)
+
       LOG_DEBUG(formatString("%s(%s,%s)","THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_SET",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str()));
 
       TExtPropertySetMap::iterator it = m_extPropertySets.find(pvssBridgeEvent.scope);
       if(it != m_extPropertySets.end())
       {
-        string fixTerminatingZerosString(pvssBridgeEvent.property.c_str());
-        TGCFResult res = it->second->subscribeProp(fixTerminatingZerosString);
+        TGCFResult res = it->second->subscribeProp(pvssBridgeEvent.property);
         if(GCF_NO_ERROR != res)
         {
           THPVSSBridgeSubscribeExtPropertyResponseEvent pvssBridgeResponseEvent;
-          string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-          string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
+          pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+          pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
           pvssBridgeResponseEvent.response = res;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+
           m_serverPort.send(pvssBridgeResponseEvent);
         }
       }
       else
       {
         THPVSSBridgeSubscribeExtPropertyResponseEvent pvssBridgeResponseEvent;
-        string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-        string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+        pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
         pvssBridgeResponseEvent.response = GCF_UNKNOWN_ERROR;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+
         m_serverPort.send(pvssBridgeResponseEvent);
       }
       break;
@@ -454,19 +557,26 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY:
     {
       THPVSSBridgeUnsubscribeExtPropertyEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.property)
+
       LOG_DEBUG(formatString("%s(%s,%s)","THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_SET",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str()));
 
       THPVSSBridgeUnsubscribeExtPropertyResponseEvent pvssBridgeResponseEvent;
-      string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-      string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
+      pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+      pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
       pvssBridgeResponseEvent.response = GCF_UNKNOWN_ERROR;
 
       TExtPropertySetMap::iterator it = m_extPropertySets.find(pvssBridgeEvent.scope);
       if(it != m_extPropertySets.end())
       {
-        string fixTerminatingZerosString(pvssBridgeEvent.property.c_str());
-        pvssBridgeResponseEvent.response = it->second->unsubscribeProp(fixTerminatingZerosString);
+        pvssBridgeResponseEvent.response = it->second->unsubscribeProp(pvssBridgeEvent.property);
       }
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+
       m_serverPort.send(pvssBridgeResponseEvent);
       break;
     }
@@ -474,28 +584,41 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_EXT_GET_VALUE:
     {
       THPVSSBridgeExtGetValueEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.property)
+
       LOG_DEBUG(formatString("%s(%s,%s)","THPVSSBRIDGE_EXT_GET_VALUE",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str()));
 
       TExtPropertySetMap::iterator it = m_extPropertySets.find(pvssBridgeEvent.scope);
       if(it != m_extPropertySets.end())
       {
-        string fixTerminatingZerosString(pvssBridgeEvent.property.c_str());
-        TGCFResult res = it->second->requestValue(fixTerminatingZerosString);
+        TGCFResult res = it->second->requestValue(pvssBridgeEvent.property);
         if(GCF_NO_ERROR != res)
         {
           THPVSSBridgeExtGetValueResponseEvent pvssBridgeResponseEvent;
-          string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-          string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
-          string2array(pvssBridgeResponseEvent.value,string(""));
+          pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+          pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
+          pvssBridgeResponseEvent.value = string("");
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.value)
+
           m_serverPort.send(pvssBridgeResponseEvent);
         }
       }
       else
       {
         THPVSSBridgeExtGetValueResponseEvent pvssBridgeResponseEvent;
-        string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-        string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
-        string2array(pvssBridgeResponseEvent.value,string(""));
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+        pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
+        pvssBridgeResponseEvent.value = string("");
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.value)
+
         m_serverPort.send(pvssBridgeResponseEvent);
       }      
       break;
@@ -504,19 +627,27 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     case THPVSSBRIDGE_EXT_SET_VALUE:
     {
       THPVSSBridgeExtSetValueEvent pvssBridgeEvent(e);
+
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.scope)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.property)
+ADJUSTEVENTSTRINGPARAMFROMBSE(pvssBridgeEvent.value)
+
       LOG_DEBUG(formatString("%s(%s,%s,%s)","THPVSSBRIDGE_EXT_SET_VALUE",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str(),pvssBridgeEvent.value.c_str()));
 
       TGCFResult res = GCF_UNKNOWN_ERROR;
       TExtPropertySetMap::iterator it = m_extPropertySets.find(pvssBridgeEvent.scope);
       if(it != m_extPropertySets.end())
       {
-        string fixTerminatingZerosString(pvssBridgeEvent.property.c_str());
-        res = it->second->setValue(fixTerminatingZerosString,pvssBridgeEvent.value);
+        res = it->second->setValue(pvssBridgeEvent.property,pvssBridgeEvent.value);
       }
       THPVSSBridgeExtSetValueResponseEvent pvssBridgeResponseEvent;
-      string2array(pvssBridgeResponseEvent.scope,pvssBridgeEvent.scope);
-      string2array(pvssBridgeResponseEvent.property,pvssBridgeEvent.property);
+      pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+      pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
       pvssBridgeResponseEvent.response = res;
+
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.scope)
+ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeResponseEvent.property)
+
       m_serverPort.send(pvssBridgeResponseEvent);
       break;
     }
