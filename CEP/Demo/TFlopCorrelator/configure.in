@@ -11,11 +11,11 @@ dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
 dnl Checks for programs.
-AC_PROG_AWK
-AC_PROG_YACC
+dnl AC_PROG_AWK
+dnl AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_CXX
-AM_PROG_LEX
+dnl AM_PROG_LEX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_DISABLE_SHARED
@@ -55,10 +55,12 @@ lofar_CORBA
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
-lofar_PACKAGE(CEP/CEPFrame)
+dnl lofar_PACKAGE(CEP/CEPFrame)
 lofar_PACKAGE(CEP/tinyCEP)
 lofar_PACKAGE(LCS/Transport)
 lofar_PACKAGE(LCS/Common)
+lofar_PACKAGE(LCS/ACC)
+lofar_FFTW2(1)
 
 dnl
 dnl Output Makefiles
