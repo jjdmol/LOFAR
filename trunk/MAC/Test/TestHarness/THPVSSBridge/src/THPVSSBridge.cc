@@ -99,9 +99,7 @@ void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
       
       THPVSSBridgeSubscribeExtPropertyResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.response = GCF_NO_ERROR;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
@@ -118,9 +116,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
 
       THPVSSBridgeUnsubscribeExtPropertyResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.response = GCF_NO_ERROR;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
@@ -137,11 +133,8 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
       
       THPVSSBridgeValueChangeResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.value = pPropAnswer->pValue->getValueAsString();
-      pvssBridgeEvent.valuelen = pvssBridgeEvent.value.length();
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
@@ -158,11 +151,8 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.value)
       
       THPVSSBridgeValueChangeResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.value = pPropAnswer->pValue->getValueAsString();
-      pvssBridgeEvent.valuelen = pvssBridgeEvent.value.length();
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
@@ -179,9 +169,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.value)
 
       THPVSSBridgeExtSetValueResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = stripProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.property = getProperty(string(pPropAnswer->pPropName));
-      pvssBridgeEvent.propertylen = pvssBridgeEvent.property.length();
       pvssBridgeEvent.response = GCF_NO_ERROR;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
@@ -197,7 +185,6 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.property)
 
       THPVSSBridgeLoadExtPropertySetResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = string(pPropAnswer->pScope);
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
@@ -214,7 +201,6 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
 
       THPVSSBridgeUnloadExtPropertySetResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = string(pPropAnswer->pScope);
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
@@ -230,7 +216,6 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
 
       THPVSSBridgeEnableMyPropertySetResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = string(pPropAnswer->pScope);
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
@@ -246,7 +231,6 @@ ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
 
       THPVSSBridgeDisableMyPropertySetResponseEvent pvssBridgeEvent;
       pvssBridgeEvent.scope = string(pPropAnswer->pScope);
-      pvssBridgeEvent.scopelen = pvssBridgeEvent.scope.length();
       pvssBridgeEvent.response = pPropAnswer->result;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(pvssBridgeEvent.scope)
