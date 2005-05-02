@@ -1,10 +1,3 @@
-if HAVE_CORBA
-SUBDIRS                 = Corba .
-else
-SUBDIRS                 = .
-endif
-
-
 INSTHDRS = \
 BaseSim.h \
 DataHolder.h \
@@ -44,13 +37,6 @@ TH_Socket.cc \
 TH_Ethernet.cc \
 Transporter.cc \
 TransportHolder.cc 
-
-
-if HAVE_CORBA
-libtransport_la_LIBADD = Corba/libth_corba.la
-else
-libtransport_la_LIBADD = 
-endif
 
 include $(lofar_sharedir)/Makefile.common
 
