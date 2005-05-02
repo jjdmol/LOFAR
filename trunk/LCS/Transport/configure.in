@@ -56,7 +56,6 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI
-lofar_CORBA
 lofar_PACKAGE(LCS/Common)
 
 dnl
@@ -64,7 +63,6 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 src/Makefile
-src/Corba/Makefile
 test/Makefile
 Makefile
 )
