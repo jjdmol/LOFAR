@@ -23,7 +23,7 @@
 #ifndef _LOCK_H_
 #define _LOCK_H_
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/LofarLogger.h>
 #include <pthread.h>

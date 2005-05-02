@@ -23,10 +23,10 @@
 #ifndef CEPFRAME_SYNCHRONISITYMANAGER_H
 #define CEPFRAME_SYNCHRONISITYMANAGER_H
 
-/*  #include <lofar_config.h> */
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include "Transport/DataHolder.h"
-#include "CEPFrame/DHPoolManager.h"
+#include <Transport/DataHolder.h>
+#include <CEPFrame/DHPoolManager.h>
 #include <pthread.h>
 
 namespace LOFAR

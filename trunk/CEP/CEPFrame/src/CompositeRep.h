@@ -23,15 +23,15 @@
 #ifndef CEPFRAME_COMPOSITEREP_H
 #define CEPFRAME_COMPOSITEREP_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
-#include "CEPFrame/StepRep.h"
-#include "CEPFrame/VirtualMachine.h"
+#include <CEPFrame/StepRep.h>
+#include <CEPFrame/VirtualMachine.h>
 
 namespace LOFAR
 {

@@ -23,10 +23,10 @@
 #ifndef CEPFRAME_WH_TESTER_H
 #define CEPFRAME_WH_TESTER_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include "tinyCEP/WorkHolder.h"
-#include "CEPFrame/DH_Tester.h"
+#include <tinyCEP/WorkHolder.h>
+#include <CEPFrame/DH_Tester.h>
 
 namespace LOFAR
 {
