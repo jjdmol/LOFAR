@@ -56,6 +56,8 @@ int ACCmain (int argc, const char** argv) {
     correlator.setarg(argc, argv);
 
     // the object that issues the commands to the StationCorrelator
+    int noRuns = 100;
+    int totalRuns = 0;
     StationCorrelatorController corrContr(correlator,1);
 
     ProcControlServer itsPCcomm(itsParamSet.getString(itsProcID+".ACnode"),
@@ -81,6 +83,7 @@ int ACCmain (int argc, const char** argv) {
 	// we can update our runstate here if we like
 	shouldQuit = (newMsg->getCommand() == PCCmdQuit);
 	if (newMsg->getCommand() == PCCmdRun) {
+	  totalRuns += noRuns;
 	  isRunning = true;
 	} else if (newMsg->getCommand() == PCCmdPause || newMsg->getCommand() == PCCmdQuit) {
 	  isRunning = false;
@@ -100,9 +103,16 @@ int ACCmain (int argc, const char** argv) {
 	itsPCcomm.sendResultParameters(resultBuffer);
       }
       
-      // If we are not running, we should sleep 1 second
-      if (!isRunning) sleep(1);
-
+      if (isRunning) { 
+	// If we are running call run
+	// this shouldn't be done here, but it is necessary for the demo
+	// so our program will keep running once it is started
+	corrContr.run();
+	totalRuns += noRuns;
+      } else {
+	// If we are not running, we should sleep 1 second
+	sleep(1);
+      }
     }
     
     LOG_INFO_STR("Shutting down: StationCorrelator");
@@ -113,7 +123,7 @@ int ACCmain (int argc, const char** argv) {
     ParameterSet resultSet;
     string resultBuffer;
     resultSet.add(KVpair("StationCorrelator.result", 
-			 string("run completed"),
+			 formatString("%d runs completed", totalRuns),
 			 true));
     resultSet.writeBuffer(resultBuffer);		// convert to stringbuffer
     itsPCcomm.unregisterAtAC(resultBuffer);		// send to AC before quiting
