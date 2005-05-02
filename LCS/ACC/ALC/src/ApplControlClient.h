@@ -99,6 +99,7 @@ public:
 					  const string&		processList,
 					  const string&		nodeList,
 					  const string&		configID) 	 const ;
+	bool	cancelCmdQueue () const;
 	// @}
 
 	

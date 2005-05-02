@@ -163,6 +163,11 @@ bool	ApplControlClient::replace(const time_t	 scheduleTime,
 	return(itsCommChan->doRemoteCmd (ACCmdReplace, scheduleTime, 0, configID));
 }
 
+bool	ApplControlClient::cancelCmdQueue() const
+{
+	return(itsCommChan->doRemoteCmd (ACCmdCancelQueue, 0, 0, ""));
+}
+
 string	ApplControlClient::askInfo(const string&	keyList) const 
 {
 	if (!itsCommChan->doRemoteCmd (ACCmdInfo, 0, 0, keyList))

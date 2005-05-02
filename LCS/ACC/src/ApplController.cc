@@ -25,10 +25,9 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/hexdump.h>			// TODO: remove in final version
 #include <ACC/ApplController.h>
 #include <ACC/PR_Shell.h>			// TODO: factory!
-#include <ACC/PR_MPI.h>			// TODO: factory!
+#include <ACC/PR_MPI.h>				// TODO: factory!
 #include <ACC/ItemList.h>			// @@
 
 namespace LOFAR {
@@ -404,10 +403,16 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
 	// what command should we execute?
 	ACCmd newCmd = anACMsg->getCommand();
 
+	// Special case: flush command queue?
+	if (newCmd == ACCmdCancelQueue) {
+		itsCmdStack->clear();
+		return;
+	}
+
 	// still commands in progress?
 	if (itsCurState != StateNone) {
 		// some command is running, has new command overrule 'rights'?
-		if ((newCmd != ACCmdQuit) && (newCmd != ACCmdReplace)){
+		if ((newCmd != ACCmdQuit) && (newCmd != ACCmdPause)){
 			// No overrule rights, reject new command
 			sendExecutionResult (0, "Previous command is still running");
 			return;
