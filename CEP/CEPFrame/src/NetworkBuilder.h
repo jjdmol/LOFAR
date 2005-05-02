@@ -23,9 +23,9 @@
 #ifndef CEPFRAME_NETWORKBUILDER_H_
 #define CEPFRAME_NETWORKBUILDER_H_
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include "CEPFrame/Composite.h"
+#include <CEPFrame/Composite.h>
 
 namespace LOFAR
 {

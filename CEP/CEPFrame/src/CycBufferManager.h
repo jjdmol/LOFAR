@@ -23,17 +23,17 @@
 #ifndef CEPFRAME_CYCBUFFERMANAGER_H
 #define CEPFRAME_CYCBUFFERMANAGER_H
 
-/*  #include <lofar_config.h> */
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include "CEPFrame/CyclicBuffer.h"
+#include <CEPFrame/CyclicBuffer.h>
 
 /**
   Class CycBufferManager is derived from class DHPoolManager. It main
   purpose is to manage DataHolders in a cyclic buffer.
 */
 
-#include "Transport/DataHolder.h"
-#include "CEPFrame/DHPoolManager.h"
+#include <Transport/DataHolder.h>
+#include <CEPFrame/DHPoolManager.h>
 
 namespace LOFAR
 {

@@ -23,7 +23,7 @@
 #ifndef CEPFRAME_STEPREP_H
 #define CEPFRAME_STEPREP_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Transport/BaseSim.h>
 #include <tinyCEP/WorkHolder.h>

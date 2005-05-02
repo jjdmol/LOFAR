@@ -23,7 +23,7 @@
 #ifndef CEPFRAME_COMPOSITE_H
 #define CEPFRAME_COMPOSITE_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <CEPFrame/Step.h>
 #include <CEPFrame/CompositeRep.h>

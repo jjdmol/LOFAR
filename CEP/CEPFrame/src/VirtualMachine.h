@@ -23,7 +23,7 @@
 #ifndef CEPFRAME_VIRTUALMACHINE_H
 #define CEPFRAME_VIRTUALMACHINE_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/lofar_string.h>
 

@@ -23,10 +23,10 @@
 #ifndef CEPFRAME_WH_EMPTY_H
 #define CEPFRAME_WH_EMPTY_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include "tinyCEP/WorkHolder.h"
-#include "CEPFrame/DH_Empty.h"
+#include <tinyCEP/WorkHolder.h>
+#include <CEPFrame/DH_Empty.h>
 
 namespace LOFAR
 {

@@ -23,7 +23,7 @@
 #ifndef _CYCLIC_BUFFER_H_
 #define _CYCLIC_BUFFER_H_
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <CEPFrame/Lock.h>
 //#include <Common/lofar_deque.h>
