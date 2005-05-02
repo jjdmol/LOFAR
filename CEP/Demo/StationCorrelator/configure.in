@@ -59,6 +59,7 @@ lofar_PACKAGE(CEP/CEPFrame)
 lofar_PACKAGE(CEP/tinyCEP)
 lofar_PACKAGE(LCS/Transport)
 lofar_PACKAGE(LCS/Common)
+lofar_PACKAGE(LCS/ACC)
 
 dnl
 dnl Output Makefiles
