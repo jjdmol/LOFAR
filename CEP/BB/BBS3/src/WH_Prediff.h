@@ -82,6 +82,9 @@ class WH_Prediff : public LOFAR::WorkHolder
   // Read the next workorder
   void readWorkOrder();
 
+  // Get the sourceGroups specification.
+  void getSrcGrp (const KeyValueMap& args, vector<vector<int> >& srcgrp) const;
+
   // Read a parameter solution
   void readSolution(int id, vector<ParmData>& solVec);
 

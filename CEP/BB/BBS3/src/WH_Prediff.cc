@@ -232,6 +232,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
     bool calcUVW = args.getBool("calcUVW", false);
     bool lockMappedMem = args.getBool("lockMappedMem", false);
     vector<vector<int> > srcgrp;
+    getSrcGrp (args, srcgrp);
     Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
 				    dbName, dbHost, dbPwd, antNrs,
 				    modelType, srcgrp, calcUVW,lockMappedMem);
@@ -266,6 +267,30 @@ void WH_Prediff::readWorkOrder()
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Assigned);
   wo->updateDB();
+}
+
+void WH_Prediff::getSrcGrp (const KeyValueMap& args,
+			    vector<vector<int> >& srcgrp) const
+{
+  srcgrp.resize (0);
+  KeyValueMap::const_iterator grpf = args.find("sourceGroups");
+  if (grpf != args.end()) {
+    const KeyValue& grpval = grpf->second;
+    // The keyword is given.
+    // The value should be a vector.
+    // Process the vector if not empty.
+    const vector<KeyValue>& sgval = grpval.getVector();
+    ASSERT (sgval.size() > 0);
+    // Please note that a specification of [1,2,3] is the same as
+    // [[1],[2],[3]]. Both result in 3 groups of 1 source.
+    srcgrp.reserve (sgval.size());
+    for (vector<KeyValue>::const_iterator iter = sgval.begin();
+	 iter != sgval.end();
+	 ++iter)
+    {
+      srcgrp.push_back (iter->getVecInt());
+    }
+  }
 }
 
 void WH_Prediff::readSolution(int id, vector<ParmData>& solVec)
