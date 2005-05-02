@@ -131,6 +131,11 @@ bool	ACCmdImpl::replace	 (const time_t		scheduleTime,
 	return (true);
 }
 
+bool	ACCmdImpl::cancelCmdQueue () const 
+{
+	THROW (Exception, "We should never come in ACCmdImpl::cancelCmdQueue");
+	return (true);
+}
 
 // Define a generic way to exchange info between client and server.
 string	ACCmdImpl::askInfo   (const string& 	keylist) const

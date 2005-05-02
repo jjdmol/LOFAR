@@ -60,6 +60,9 @@ public:
 	// Returns true is the time of the top-element lays in the past.
 	bool			timeExpired();
 
+	// Removes all command from the Stack
+	void			clear();
+
 private:
 	// Who wants to copy a CmdStack?
 	CmdStack(const CmdStack&	that);
@@ -71,6 +74,11 @@ private:
 	// The map used for the storage.
 	DHACStack		itsStack;
 };
+
+inline void CmdStack::clear()
+{
+	itsStack.clear();
+}
 
 // @} addgroup
   } // namespace ACC

@@ -55,6 +55,7 @@ enum ACCmd {    ACCmdNone = 0, ACCmdBoot,
 				ACCmdReinit,   ACCmdReplace,
 				ACCmdInfo,     ACCmdAnswer,
 				ACCmdReport,   ACCmdAsync,
+			    ACCmdCancelQueue,
 				ACCmdResult = 0x1000
 };
 

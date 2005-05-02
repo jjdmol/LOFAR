@@ -173,6 +173,13 @@ public:
 							  const string&		processList,
 							  const string&		nodeList,
 							  const string&		configID)	  const = 0;
+
+	// with the \c cancelCmdQueue command the AC user can instruct the 
+	// Application Controller to cancel all command on the command stack.
+	// Note: This command has NO effect on the command that is currently
+	// running, is it handled intern in the ApplicationController.
+	virtual bool	cancelCmdQueue 	 () const = 0;
+
 	// @}
 
 	// \par

@@ -70,6 +70,7 @@ public:
 							  const string&		processList,
 							  const string&		nodeList,
 							  const string&		configID)     const;
+	virtual bool	cancelCmdQueue () const;
 
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist) const;
