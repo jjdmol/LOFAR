@@ -95,7 +95,7 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
       break;
       
     case F_CLOSED:
-      _daemon.clientClosed(*this);
+      TRAN(NodeManagerClient::closing);
       break;
       
     case NM_CLAIM:
@@ -221,7 +221,7 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
       break;
       
     case F_CLOSED:
-      _daemon.clientClosed(*this);
+      TRAN(NodeManagerClient::closing);
       break;
       
     case F_VGETRESP:
@@ -297,7 +297,7 @@ GCFEvent::TResult NodeManagerClient::releasing(GCFEvent& e, GCFPortInterface& p)
       break;
       
     case F_CLOSED:
-      _daemon.clientClosed(*this);
+      TRAN(NodeManagerClient::closing);
       break;
       
     case F_VGETRESP:
@@ -321,6 +321,56 @@ GCFEvent::TResult NodeManagerClient::releasing(GCFEvent& e, GCFPortInterface& p)
         NMReleasedEvent outResponse;
         _nmcPort.send(outResponse);
         TRAN(NodeManagerClient::operational);
+      }
+      break;
+    }
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult NodeManagerClient::closing(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      for (TNodeList::iterator nodeToRelease = _curClaimedNodes.begin();
+           nodeToRelease != _curClaimedNodes.end(); ++nodeToRelease)
+      {
+        if (_propertyProxy.requestPropValue(FULL_RS_DP(*nodeToRelease)) == GCF_NO_ERROR)
+        {
+          _nrOfValueGetRequests++;
+        }        
+      }
+      if (_nrOfValueGetRequests == 0)
+      {
+        _daemon.clientClosed(*this);
+      }
+      break;     
+    }
+    case F_VGETRESP:
+    {
+      GCFPropValueEvent& getResp = (GCFPropValueEvent&) e;
+      GCFPVInteger& value = (GCFPVInteger&) (*getResp.pValue);
+
+      // extract the resource (node) name from the propName
+      string resName(NMUtilities::extractNodeName(getResp.pPropName));
+
+      if (value.getValue() > RS_IDLE)
+      {
+        value.setValue(value.getValue() - 1); // decrease usecount
+        _propertyProxy.setPropValue(getResp.pPropName, value);
+      }
+            
+      _nrOfValueGetRequests--;
+      if (_nrOfValueGetRequests == 0)
+      {
+        _daemon.clientClosed(*this);
       }
       break;
     }
