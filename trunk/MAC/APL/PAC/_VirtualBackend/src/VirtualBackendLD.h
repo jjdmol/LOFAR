@@ -130,6 +130,7 @@ class VirtualBackendLD : public APLCommon::LogicalDevice,
     void qualityGuardStarted();
     void qualityGuardStopped();
     void lowQuality(ANM::TNodeList& faultyNodes);
+    void qualityChanged();
     
   protected: // implemenation of abstract CEPApplicationManagerInterface methods
     void    appBooted(uint16 result);

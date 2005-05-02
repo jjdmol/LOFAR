@@ -100,12 +100,22 @@ class VBQualityGuard : public ANM::NodeManagerInterface
     VBQAnswer                   _answer;
     ANM::NodeManager            _nodeManager;
 
- private: // admin. members
+  private: // admin. members
     ANM::TNodeList              _faultyNodes;
     unsigned int                _nrOfNotMonitoredNodes;
     unsigned int                _nrOfPendingSubscriptions;
     bool                        _lowQualityReported;
     
+    typedef enum 
+    {
+      S_IDLE,
+      S_CLAIMING,
+      S_SUBSCRIBING,
+      S_OPERATIONAL,
+      S_RELEASING
+    } TState;
+    
+    TState                      _state;
     ALLOC_TRACER_CONTEXT  
 };
 

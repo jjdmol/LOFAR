@@ -48,7 +48,9 @@ void VBQAnswer::handleAnswer (GCFEvent& answer)
       GCFPropValueEvent& vcEvent = (GCFPropValueEvent&) answer;
       string propName(vcEvent.pPropName);
       DBGASSERT(vcEvent.pValue->getType() == LPT_CHAR);
-      _vbqg.valueChanged(propName, ((GCFPVChar*)vcEvent.pValue)->getValue());
+      unsigned char val = ((GCFPVChar*)(vcEvent.pValue))->getValue();
+      DBGASSERT(val <= 100);
+      _vbqg.valueChanged(propName, val);
       break;
     }
     default:
@@ -65,7 +67,8 @@ VBQualityGuard::VBQualityGuard(VirtualBackendLD& ld) :
     _nodeManager(*this),
     _nrOfNotMonitoredNodes(0),
     _nrOfPendingSubscriptions(0),
-    _lowQualityReported(false)
+    _lowQualityReported(false),
+    _state(S_IDLE)
 { 
 }
 
@@ -82,7 +85,9 @@ VBQualityGuard::~VBQualityGuard()
 void VBQualityGuard::monitorNodes(TNodeList& nodesToMonitor)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, _vbLD.getName().c_str());
+  DBGASSERT(_state == S_IDLE || _state == S_OPERATIONAL);
   _lowQualityReported = false;
+  _state = S_CLAIMING;
   _nodeManager.claimNodes(nodesToMonitor);
   //_cepAppProperties.load();
 }
@@ -90,7 +95,9 @@ void VBQualityGuard::monitorNodes(TNodeList& nodesToMonitor)
 void VBQualityGuard::stopMonitoring()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, _vbLD.getName().c_str());
-
+  
+  if (_state != S_OPERATIONAL) return;
+  
   TNodeList nodesToRelease;
   VBFuncStateProperty* pProp;
   for (TFuncStateProps::iterator iter = _functStateProps.begin();
@@ -101,6 +108,7 @@ void VBQualityGuard::stopMonitoring()
     nodesToRelease.insert(iter->first);
   }
   _functStateProps.clear();
+  _state = S_RELEASING;
   _nodeManager.releaseNodes(nodesToRelease);
   _currQuality = 0;  
   _lowQualityReported = false;
@@ -120,6 +128,7 @@ void VBQualityGuard::valueChanged(const string& propName, char newValue)
       _faultyNodes.insert(NMUtilities::extractNodeName(propName));
     }
     _currQuality -= pChangedProp->getCurrentValue() - newValue;
+    _vbLD.qualityChanged();
     checkQuality();
   }
   else
@@ -141,10 +150,13 @@ void VBQualityGuard::answer(GCFEvent& answer)
     case F_SUBSCRIBED:
       if (propName.find(":PIC_CEP_") < string::npos)
       {
+        DBGASSERT(_state == S_SUBSCRIBING);
         _currQuality -= (100 - pAProp->getCurrentValue());
         _nrOfPendingSubscriptions--;
         if (_nrOfPendingSubscriptions == 0)
         {
+          _vbLD.qualityChanged();
+          _state = S_OPERATIONAL;
           checkQuality();
           if (!_lowQualityReported)
           {
@@ -157,7 +169,11 @@ void VBQualityGuard::answer(GCFEvent& answer)
     case F_UNSUBSCRIBED: // subscription lost
       if (propName.find(":PIC_CEP_") < string::npos)
       {
+        unsigned int oldQuality(_currQuality);
+
         _currQuality -= pAProp->getCurrentValue();
+
+        if (_currQuality != oldQuality) _vbLD.qualityChanged();
 
         _nrOfNotMonitoredNodes++;
 
@@ -175,6 +191,8 @@ void VBQualityGuard::nodesClaimed(TNodeList& newClaimedNodes,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, _vbLD.getName().c_str());
 
+  DBGASSERT(_state == S_CLAIMING);
+  
   _faultyNodes = faultyNodes;
   _nrOfNotMonitoredNodes = faultyNodes.size();
   _nrOfPendingSubscriptions = 0;
@@ -182,11 +200,10 @@ void VBQualityGuard::nodesClaimed(TNodeList& newClaimedNodes,
   for (TNodeList::iterator iter = newClaimedNodes.begin();
        iter != newClaimedNodes.end(); ++iter)
   {
-    pAProp = new VBFuncStateProperty(formatString("PIC_CEP_%s.func_state", (*iter).c_str()), _answer);
+    pAProp = new VBFuncStateProperty(formatString("PIC_CEP_%s.funcState", (*iter).c_str()), _answer);
     _functStateProps[*iter] = pAProp;
     _currQuality += 100; // the actual quality of this node will be set in the 
                          // valueChanged method
-    _nrOfPendingSubscriptions++;
   }
   
   TFuncStateProps::iterator foundNode;
@@ -210,15 +227,33 @@ void VBQualityGuard::nodesClaimed(TNodeList& newClaimedNodes,
     if (foundNode != _functStateProps.end())
     {
       pAProp = foundNode->second;
+      _nrOfPendingSubscriptions++;
       pAProp->startMonitoring();
     }
+  }
+  if (_nrOfPendingSubscriptions == 0)
+  {
+    _vbLD.qualityChanged();
+    _state = S_OPERATIONAL;
+    checkQuality();
+    if (!_lowQualityReported)
+    {
+      _vbLD.qualityGuardStarted();
+    }
+  }
+  else
+  {
+    _state = S_SUBSCRIBING;
   }
 }
 
 void VBQualityGuard::nodesReleased()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, _vbLD.getName().c_str());
-  _vbLD.qualityGuardStopped();
+
+  DBGASSERT(_state == S_RELEASING);
+  _state = S_IDLE;
+  _vbLD.qualityGuardStopped();  
 }
 
 bool VBQualityGuard::isQualityLow() const
