@@ -144,7 +144,7 @@ private:
 inline bool TH_MPI::init()
   { return true;}
 
-inline bool TH_MPI::isClonable()
+inline bool TH_MPI::isClonable() const
   { return true; }
 
 }
