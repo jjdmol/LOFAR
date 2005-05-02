@@ -51,6 +51,7 @@ class NodeManagerClient : public GCF::TM::GCFTask
     GCF::TM::GCFEvent::TResult operational (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
     GCF::TM::GCFEvent::TResult claiming    (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
     GCF::TM::GCFEvent::TResult releasing   (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult closing     (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
         
   private: // helper methods
     
