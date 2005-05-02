@@ -14,33 +14,95 @@
 
 [statemachines]
 
-Statemachine_VBStartDaemonClient (vbsd_scheduled) =
+Statemachine_VBStartDaemonClient (thbr_ready) =
 {
 // ------------------------------------------------------------------------------
   s000  : 	F_STARTDAEMON_SCHEDULE 	(0x00000007, "VB1", "VB1.param" )    ; s010.			// send schedule VB1
-  s010  :		E_STARTDAEMON_SCHEDULED ( )
-  					R_SIG(vbsd_scheduled)              						; finish.		// wait for response
+  s010  :		E_STARTDAEMON_SCHEDULED ( )																	 ; s011.
+  s011  :   R_SIG(thbr_ready)              															 ; finish.		// wait for response
 
-  finish : 	TERMINATE															; finish.
+  finish : 	TERMINATE																										 ; finish.
 }
 
-Statemachine_VirtualInstrument ( vbsd_scheduled) =
+Statemachine_VirtualInstrument ( vbld_scheduled, vbld_ready) =
 {
 	s000   : 	E_LOGICALDEVICE_CONNECT   ( )				                  ; s001.
-  s001	 : 	F_LOGICALDEVICE_CONNECTED ( 0x00000000 )								; s002.
-  s002	 : 	E_LOGICALDEVICE_SCHEDULED ( )													
-						E_LOGICALDEVICE_CLAIMED ()
-						E_LOGICALDEVICE_PREPARED ()
-						E_LOGICALDEVICE_SUSPENDED ()
-						E_LOGICALDEVICE_RESUMED ()
-						E_LOGICALDEVICE_RELEASED () 														; ready.
-  ready  : 	S_SIG(vbsd_scheduled)			 														; finish.
-  finish : 	TERMINATE 																							; finish.
+  s001	 : 	F_LOGICALDEVICE_CONNECTED ( 0x00000000 )							; s002.
+  s002	 : 	E_LOGICALDEVICE_SCHEDULED ( )													; s004.
+  
+  s004	 :  S_SIG(vbld_scheduled)																	; s004.  
+  s004	 :  E_LOGICALDEVICE_CLAIMED (0x00000000)									; s005.
+	s004	 :	E_LOGICALDEVICE_RELEASED (0x00000005) 								; newtry.
+  s004	 :  E_LOGICALDEVICE_CLAIMED ()														; error.
+  
+	s005   :	E_LOGICALDEVICE_PREPARED (0x00000000)									; s006.
+	s005   :	E_LOGICALDEVICE_PREPARED (0x00000005)									; s008.
+	s005   :	E_LOGICALDEVICE_PREPARED ()														; error.
+	
+	s006	 :	E_LOGICALDEVICE_SUSPENDED (0x00000000)								; s007.
+	s006   :	E_LOGICALDEVICE_SUSPENDED (0x00000005)								; s008.
+	s006	 :	E_LOGICALDEVICE_SUSPENDED ()												  ; error.
+	
+	s007   :	E_LOGICALDEVICE_RESUMED ()													  ; s008.
+
+	s008	 :	E_LOGICALDEVICE_RELEASED (0x00000000) 								; ready.
+	s008	 :	E_LOGICALDEVICE_RELEASED (0x00000005) 								; newtry.
+	s008	 :	E_LOGICALDEVICE_RELEASED () 													; error.
+
+	newtry :  F_LOGICALDEVICE_SCHEDULE ("VB1.param" )    						; s002.
+	
+  ready  : 	S_SIG(vbld_ready)			 																; finish.
+  finish : 	TERMINATE 																						; finish.
+  error  : 	TERMINATE 																						; error.
+}
+
+Statemachine_THPVSSBridge  (vbld_scheduled, vbld_ready, thbr_ready) =
+{
+  s000   : R_SIG(vbld_scheduled)																											; s010.
+  
+  s010	 : F_PVSS_LOAD_EXT_PROPERTY_SET("PAC_VB1_details", "TAplPacVB" )							; s011.
+  s011   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE(, 0x00000000, , )										; s012.
+  s011   : E_PVSS_LOAD_EXT_PROPERTY_SET_RESPONSE(, , , )           										; error.
+  s012   : TIMER(1)																																		; s020.
+
+	s020	 : F_PVSS_ENABLE_MY_PROPERTY_SET("PIC_CEP_sun", "TResource", 0x00000002)			; s021.
+	s021   : E_PVSS_ENABLE_MY_PROPERTY_SET_RESPONSE(, 0x00000000, , )										; s022. 
+	s022   : TIMER(50)																																	; s040.
+  s022   : E_PVSS_VALUE_CHANGE_RESPONSE (, , , , , , )																; s022. 
+
+  s040   : F_PVSS_SUBSCRIBE_EXT_PROPERTY("PAC_VB1_details", "quality" )							  ; s041.
+  s041   : E_PVSS_SUBSCRIBE_EXT_PROPERTY_RESPONSE(, 0x00000000, , "LCU1:PAC_VB1_details", , "quality" ) ; s050.
+
+	// force low quality
+  s050   : F_PVSS_MY_SET_VALUE ("PIC_CEP_sun", "funcState", "O" )											; s051.
+  s051   : E_PVSS_MY_SET_VALUE_RESPONSE(, 0x00000000, , , , ) 												; s051.
+  s051   : E_PVSS_VALUE_CHANGE_RESPONSE (, , "LCU1:PAC_VB1_details", , "quality", , "Y")	; s052. // 'Y' == 89%
+  s051   : E_PVSS_VALUE_CHANGE_RESPONSE (, , , , , , )																; s051. 
+  s052   : TIMER(20)																																		; s060.
+  
+  s060   : F_PVSS_MY_SET_VALUE ("PIC_CEP_sun", "funcState", "d" )										; s061.
+  s061   : E_PVSS_MY_SET_VALUE_RESPONSE(, 0x00000000, , , , ) 												; s061.
+  s061   : E_PVSS_VALUE_CHANGE_RESPONSE (, , "LCU1:PAC_VB1_details", , "quality", , "d")	; s080. 
+  s061   : E_PVSS_VALUE_CHANGE_RESPONSE (, , , , , , )																; s061. 
+
+  s080	 : F_PVSS_UNLOAD_EXT_PROPERTY_SET("PAC_VB1_details")												  ; s081.
+  s081   : E_PVSS_UNLOAD_EXT_PROPERTY_SET_RESPONSE(, 0x00000000, , )									; s082.
+  s081   : E_PVSS_VALUE_CHANGE_RESPONSE (, , , , , , )																; s081. // just for sure 
+	s082	 : F_PVSS_DISABLE_MY_PROPERTY_SET("PIC_CEP_sun")															; s083.
+	s083   : E_PVSS_DISABLE_MY_PROPERTY_SET_RESPONSE(, 0x00000000, , )									; s098. 
+  s083   : E_PVSS_VALUE_CHANGE_RESPONSE (, , , , , , )																; s083. // just for sure
+
+  s098 	 : R_SIG(vbld_ready)																													; s099.
+  s099	 : S_SIG(thbr_ready)																													; finish.
+  finish : TERMINATE ; finish.
+  error  : TERMINATE ; error.
 }
 
 [testscript]
-VAR     vbsd_scheduled.
+VAR     vbld_scheduled, thbr_ready, vbld_ready.
 
-COM1 :  Statemachine_VBStartDaemonClient (vbsd_scheduled).
+COM1 :  Statemachine_VBStartDaemonClient (thbr_ready).
 
-COM2 :  Statemachine_VirtualInstrument (vbsd_scheduled).
+COM2 :  Statemachine_VirtualInstrument (vbld_scheduled, vbld_ready).
+
+COM5 :  Statemachine_THPVSSBridge (vbld_scheduled, vbld_ready, thbr_ready).

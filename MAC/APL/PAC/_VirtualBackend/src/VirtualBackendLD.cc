@@ -21,14 +21,9 @@
 //#  $Id$
 
 #include "VirtualBackendLD.h"
-#include <boost/shared_ptr.hpp>
-#include <Common/lofar_sstream.h>
-#include <GCF/GCF_PVString.h>
 #include <APLCommon/LogicalDevice_Protocol.ph>
 #include <ACC/KVpair.h>
-#include <set>
-
-using std::set;
+#include <GCF/GCF_PVChar.h>
 
 namespace LOFAR
 {
@@ -95,7 +90,7 @@ GCFEvent::TResult VirtualBackendLD::concrete_idle_state(
   GCFEvent::TResult status = GCFEvent::HANDLED;
   switch (event.signal)
   {
-    case F_ENTRY:  
+    case F_ENTRY:      
       if (_qualityGuard.isQualityLow() || errorCode == LD_RESULT_TIMING_FAILURE)
       {
         time_t rsto(0);
@@ -117,6 +112,12 @@ GCFEvent::TResult VirtualBackendLD::concrete_idle_state(
       }
       break;
     
+    case LOGICALDEVICE_SCHEDULE:
+      if (_rstoID > 0)
+      {
+        m_serverPort.cancelTimer(_rstoID);
+        _rstoID = 0;
+      }
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -276,8 +277,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
       }
     }
   }
-  LOG_DEBUG(formatString("%d", _neededNodes.size()));
-  
+ 
   _qualityGuard.monitorNodes(_neededNodes);  
 }
 
@@ -364,6 +364,7 @@ void VirtualBackendLD::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortIn
   {
     _rstoID = 0;
     _qualityGuard.stopMonitoring();
+    _cepApplication.quit(0);
   }
 }
 
@@ -383,6 +384,24 @@ void VirtualBackendLD::lowQuality(TNodeList& faultyNodes)
 {  
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
   _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
+  time_t rsto(0);
+  try 
+  {
+    rsto = m_parameterSet.getTime("rescheduleTimeOut");
+  }
+  catch (...)
+  {
+  }
+  if (getLogicalDeviceState() == LOGICALDEVICE_STATE_ACTIVE)
+  {
+    _cepApplication.snapshot(0, "snapshot DB");
+    _cepApplication.pause(0, rsto, "condition");
+  }
+}
+
+void VirtualBackendLD::qualityChanged()
+{
+  m_detailsPropertySet->setValue("quality", GCFPVChar(_qualityGuard.getQuality()));
 }
 
 void VirtualBackendLD::appBooted(uint16 result)
