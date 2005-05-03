@@ -75,6 +75,6 @@ void DH_SubBand::postprocess()
 }
 
 void DH_SubBand::fillDataPointers() {
-  itsBuffer = getData<fcomplex> ("Buffer");
+  itsBuffer = getData<BufferType> ("Buffer");
 }
 }
