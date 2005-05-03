@@ -406,6 +406,8 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
 	// Special case: flush command queue?
 	if (newCmd == ACCmdCancelQueue) {
 		itsCmdStack->clear();
+		// send result without doing anything else.
+		itsServerStub->sendResult(newCmd, AcCmdMaskOk, "Queue is flushed");	
 		return;
 	}
 
