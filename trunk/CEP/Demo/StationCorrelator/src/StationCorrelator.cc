@@ -83,7 +83,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   char H_name[128];
   int slow_rate = itsKVM.getInt("samples",256000)/itsKVM.getInt("NoPacketsInFrame",8);
   int lastFreeNode = 0;
-  cout<<"slow_rate: "<<slow_rate<<endl;
+  //  cout<<"slow_rate: "<<slow_rate<<endl;
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   WH_Empty empty;
