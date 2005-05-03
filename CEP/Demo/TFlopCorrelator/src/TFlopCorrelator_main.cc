@@ -10,12 +10,14 @@
 #include <lofar_config.h>
 
 #include <Common/RunOnNode.h>
+//#include <TFlopCorrelator/AH_InputSection.h>
 #include <TFlopCorrelator/AH_BGLProcessing.h>
+//#include <TFlopCorrelator/AH_Storage.h>
 
 
 int main (int argc, const char** argv) {
 
-  INIT_LOGGER("AH_BGLProcessing");
+  INIT_LOGGER("TFlopCorrelator");
 
   // Note: AH_BGLProcessing is based in tinyCEP only for
   //       compatibility with BGL. Therefore, HAVE_BGL macros are
@@ -32,26 +34,25 @@ int main (int argc, const char** argv) {
     // 1: BGL processing
     // 2: data gathering and torage
 
-    RUNINAPPL(0) {}
+    RUNINAPPL(0) {
+      cout << "Application 0" << endl;
+    }
+
     RUNINAPPL(1) {
-      AH_BGLProcessing correlator();
-      correlator.setarg(argc, argv);    
-      correlator.baseDefine();
+      cout << "Application 1" << endl;
+      AH_BGLProcessing bglP();
+      bglP.setarg(argc, argv);    
+      bglP.baseDefine();
+      bglP.basePrerun();
+      bglP.baseRun(1);
+      bglP.baseDump();
+      bglP.baseQuit();
     }
-    RUNINAPPL(2) {
-    }
-    cout << "defined" << endl;
     
-
-
-
-    correlator.basePrerun();
-    cout << "init" << endl;
-    correlator.baseRun(1);
-    cout << "run" << endl;
-    correlator.baseDump();
-    correlator.baseQuit();
-
+    RUNINAPPL(2) {
+      cout << "Application 2" << endl;
+    }
+    
 
   } catch (std::exception& x) {
     cout << "Unexpected exception" << endl;
