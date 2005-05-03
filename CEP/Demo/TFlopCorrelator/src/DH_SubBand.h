@@ -26,6 +26,7 @@ namespace LOFAR
 class DH_SubBand: public DataHolder
 {
 public:
+  typedef u16complex BufferType;
 
   explicit DH_SubBand (const string& name,
 		       const short   subband); 
@@ -44,19 +45,19 @@ public:
   virtual void postprocess();
 
   /// Get write access to the Buffer in the DataPacket.
-  fcomplex* getBuffer();
+  u16complex* getBuffer();
   /// Get access to the Buffer in the DataPacket.
-  const fcomplex* getBuffer() const;
+  const u16complex* getBuffer() const;
 
   /// return pointer to array containing time/pol series for specified freqchannel and station 
   /// to be used in correlator inner loop
 
   //todo: define usefull accessors 
-  //fcomplex* getBufferTimePolSeries(int channel, int station);
+  //u16complex* getBufferTimePolSeries(int channel, int station);
 
   /// get/set completely specified element in the buffer
-  //fcomplex* getBufferElement(int channel, int station, int sample, int polarisation);
-  //void setBufferElement(int channel, int station, int sample, int polarisation, fcomplex* value); 
+  //u16complex* getBufferElement(int channel, int station, int sample, int polarisation);
+  //void setBufferElement(int channel, int station, int sample, int polarisation, u16complex* value); 
 
    const unsigned int getBufSize() const;
 
@@ -64,7 +65,7 @@ private:
   /// Forbid assignment.
   DH_SubBand& operator= (const DH_SubBand&);
 
-  fcomplex*  itsBuffer;    // 
+  u16complex*  itsBuffer;    // 
   unsigned int itsBufSize;
   
   short itsSubBand;
@@ -81,26 +82,26 @@ private:
 #define SBADDRESS_TIME    (freq, station, time) SBADDRESS_STATION((freq),(station)) +  itsNPol*itsNTimes*(time) 
 #define SBADDRESS_POL     (freq, station, time, pol) SBADDRESS_TIME((freq),(station),(time))  +  itsNPol*(pol)
  
- inline fcomplex* DH_SubBand::getBuffer()
+ inline u16complex* DH_SubBand::getBuffer()
    { return itsBuffer; }
  
- inline const fcomplex* DH_SubBand::getBuffer() const
+ inline const u16complex* DH_SubBand::getBuffer() const
    { return itsBuffer; }
  
-/*  inline fcomplex* DH_SubBand::getBufferElement(int channel,  */
+/*  inline u16complex* DH_SubBand::getBufferElement(int channel,  */
 /* 					       int station, */
 /* 					       int sample, */
 /* 					       int pol)      */
 /*    { return itsBuffer + SBADDRESS_POL(channel, station, sample, pol); } */
  
-/*  fcomplex* getBufferTimePolSeries(int channel, int station)  */
+/*  u16complex* getBufferTimePolSeries(int channel, int station)  */
 /*    { return itsBuffer + SBADDRESS_STATION(channel, station); }  */
  
 /*  inline void DH_SubBand::setBufferElement(int channel,  */
 /* 					  int sample,  */
 /* 					  int station,  */
 /* 					  int polarisation, */
-/* 					  fcomplex* valueptr) { */
+/* 					  u16complex* valueptr) { */
 /*    *(itsBuffer + SBADDRESS_POL(channel, station, sample, pol)) = *valueptr; */
 /*  } */
  
@@ -109,5 +110,4 @@ private:
  }
  
 }
-
 #endif 
