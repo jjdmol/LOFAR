@@ -26,6 +26,7 @@ namespace LOFAR
 class DH_CorrCube: public DataHolder
 {
 public:
+  typedef fcomplex BufferType;
 
   explicit DH_CorrCube (const string& name, short subband); 
 
@@ -43,17 +44,17 @@ public:
   virtual void postprocess();
 
   /// Get write access to the Buffer in the DataPacket.
-  fcomplex* getBuffer();
+  BufferType* getBuffer();
   /// Get access to the Buffer in the DataPacket.
-  const fcomplex* getBuffer() const;
+  const BufferType* getBuffer() const;
 
   /// return pointer to array containing time/pol series for specified freqchannel and station 
   /// to be used in correlator inner loop
-  fcomplex* getBufferTimePolSeries(int channel, int station);
+  BufferType* getBufferTimePolSeries(int channel, int station);
 
   /// get/set completely specified element in the buffer
-  fcomplex* getBufferElement(int channel, int station, int sample, int polarisation);
-  void setBufferElement(int channel, int station, int sample, int polarisation, fcomplex* value); 
+  BufferType* getBufferElement(int channel, int station, int sample, int polarisation);
+  void setBufferElement(int channel, int station, int sample, int polarisation, BufferType* value); 
 
   const unsigned int getBufSize() const;
 
@@ -61,7 +62,7 @@ private:
   /// Forbid assignment.
   DH_CorrCube& operator= (const DH_CorrCube&);
 
-  fcomplex*  itsBuffer;    // 
+  BufferType*  itsBuffer;    // 
   unsigned int itsBufSize;
   
   short itsSubBand;
@@ -79,26 +80,26 @@ private:
 #define CCADDRESS_TIME(freq, station, time) CCADDRESS_STATION((freq),(station)) +  itsNPol*itsNTimes*(time) 
 #define CCADDRESS_POL(freq, station, time, pol) CCADDRESS_TIME((freq),(station),(time))  +  itsNPol*(pol)
  
- inline fcomplex* DH_CorrCube::getBuffer()
+ inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
    { return itsBuffer; }
  
- inline const fcomplex* DH_CorrCube::getBuffer() const
+ inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
    { return itsBuffer; }
  
- inline fcomplex* DH_CorrCube::getBufferElement(int channel, 
+ inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int channel, 
 						  int station,
 						  int sample,
 						  int pol)     
    { return itsBuffer + CCADDRESS_POL(channel, station, sample, pol); }
  
-/*  inline fcomplex* getBufferTimePolSeries(int channel, int station)  */
+/*  inline BufferType* getBufferTimePolSeries(int channel, int station)  */
 /*    { return itsBuffer + CCADDRESS_STATION(channel, station); } */
  
  inline void DH_CorrCube::setBufferElement(int channel, 
 					   int sample, 
 					   int station, 
 					   int polarisation,
-					   fcomplex* valueptr) {
+					   BufferType* valueptr) {
    *(itsBuffer + CCADDRESS_POL(channel, station, sample, polarisation)) = *valueptr;
  }
  

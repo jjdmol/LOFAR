@@ -60,11 +60,11 @@ void DH_CorrCube::preprocess()
   itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
   
   addField ("Flag", BlobField<int>(1, 1));
-  addField ("Buffer", BlobField<fcomplex>(1, itsBufSize));
+  addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
   
   createDataBlock();  // calls fillDataPointers
-  // itsBuffer = getData<fcomplex> ("Buffer");
-  memset(itsBuffer, 0, itsBufSize*sizeof(fcomplex)); 
+  // itsBuffer = getData<BufferType> ("Buffer");
+  memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
 }
 
 void DH_CorrCube::postprocess()
@@ -73,6 +73,6 @@ void DH_CorrCube::postprocess()
 }
 
 void DH_CorrCube::fillDataPointers() {
-  itsBuffer = getData<fcomplex> ("Buffer");
+  itsBuffer = getData<BufferType> ("Buffer");
 }
 }
