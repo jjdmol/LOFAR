@@ -9,6 +9,8 @@
 #ifndef LOFAR_TFLOPCORRELATOR_WHSUBBAND_H
 #define LOFAR_TFLOPCORRELATOR_WHSUBBAND_H
 
+#include <fftw.h>
+
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR
@@ -16,7 +18,7 @@ namespace LOFAR
   class WH_SubBand: public WorkHolder {
     
   public:
-    typedef u16complex FilterType;
+    typedef fcomplex FilterType;
 
     explicit WH_SubBand (const string& name,
 			 const short SubBandID); // subBand identification for this filter
@@ -26,9 +28,11 @@ namespace LOFAR
     static WorkHolder* construct (const string& name, const short SubBandID); 
     virtual WH_SubBand* make (const string& name);
 
+    virtual void preprocess();
     virtual void process();
     virtual void dump();
-    
+    virtual void postprocess();
+
   private:
     /// forbid copy constructor
     WH_SubBand(const WH_SubBand&);
@@ -36,21 +40,29 @@ namespace LOFAR
     /// forbid assignment
     WH_SubBand& operator= (const WH_SubBand&);
 
+    int itsNsubbands;
+
+    /// FIR Filter variables
     short itsNtaps;
-    short itsNcoeff;
+    short itsNfilters;
     short itsFFTLen;
     short itsSBID; // subBandID
     short itsCpF;
     
-    FilterType* delayPtr;
-    FilterType* delayLine;
+    FilterType** delayPtr;
+    FilterType** delayLine;
 
-    FilterType* coeffPtr;
-    FilterType* inputPtr;
+    float**      coeffPtr;
+    FilterType*  inputPtr;
 
     FilterType acc;
 
     void adjustDelayPtr();
+
+    /// FFT
+    fftw_direction itsFFTDirection;
+    fftw_plan      itsFFTPlan;
+
   };
 
 } // namespace LOFAR
