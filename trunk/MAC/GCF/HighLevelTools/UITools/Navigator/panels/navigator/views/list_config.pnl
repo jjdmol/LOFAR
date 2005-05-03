@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,391 108 917 684 N "_3DFace" 5
+PANEL,355 259 917 684 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -18,51 +18,12 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-6 50
-"Border1"
-""
-1 10 224 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-41 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 197 581 224
-6 35
-"Border3"
-""
-1 10 249 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-26 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 222 581 249
-6 34
-"Border2"
-""
-1 10 274 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-25 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 247 203 274
 1 9 1 "" 57
 0
 2 13
 "Text3"
 ""
-1 20 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -71,8 +32,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 62 198 78
-0 2 0 "s" 0 0 0 64 0 0  22 62
+E E 0 1 1 0 1 E U  0 E 12 62 188 78
+0 2 0 "s" 0 0 0 64 0 0  12 62
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -82,7 +43,7 @@ LANG:1 28 Selected list-view for type:
 2 14
 "txt_dpTypeName"
 ""
-1 200 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 190 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -102,8 +63,8 @@ LANG:1 0
     setValue(\"\", \"text\", \"datapoint type not found\");
   }
 }" 0
- E 0 1 1 0 1 E U  0 E 202 62 468 78
-0 2 0 "s" 0 0 0 64 0 0  202 62
+ E 0 1 1 0 1 E U  0 E 192 62 458 78
+0 2 0 "s" 0 0 0 64 0 0  192 62
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -120,142 +81,201 @@ LANG:1 0
 0
 1 19 2 "" 3
 0
-2 21
-"Text4"
+6 61
+"Border7"
 ""
-1 21 225 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 247 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-12 0 0 0 0 0
+53 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 220 600 247
+6 62
+"Border8"
+""
+1 10 272 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 245 600 272
+2 63
+"Text2"
+""
+1 21 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+55 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 23 227 117 243
-0 2 0 "s" 0 0 0 192 0 0  23 227
+E E 0 1 1 0 1 E U  0 E 23 250 135 266
+0 2 0 "s" 0 0 0 192 0 0  23 250
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 16 Selection query:
-2 30
-"Text6"
+LANG:1 18 Selection query:DP
+2 64
+"Text5"
 ""
-1 21 251 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 21 222 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
-21 0 0 0 0 0
+56 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 23 253 128 269
-0 2 0 "s" 0 0 0 192 0 0  23 253
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 17 Selection amount:
-2 41
-"Text12"
-""
-1 21 199 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
- E E
-32 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 23 201 54 217
-0 2 0 "s" 0 0 0 64 0 0  23 201
+E E 0 1 1 0 1 E U  0 E 23 224 54 240
+0 2 0 "s" 0 0 0 64 0 0  23 224
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 5 Title
-6 45
-"Border4"
+2 65
+"Text8"
 ""
-1 10 305 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 20 299 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-36 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 278 581 305
-6 46
-"Border20"
-""
-1 10 194 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-37 0 0 0 0 0
+57 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 184 580 194
-6 47
-"Border21"
+E E 0 1 1 0 1 E U  0 E 22 301 269 317
+0 2 0 "s" 0 0 0 192 0 0  22 301
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 43 Number of decimals for datapoint type float
+6 66
+"Border9"
 ""
-1 10 184 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+1 10 297 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-38 0 0 0 0 0
+58 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 270 600 297
+2 67
+"Text9"
+""
+1 21 273 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+59 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 164 110 184
-2 48
-"Text31"
+E E 0 1 1 0 1 E U  0 E 23 275 144 291
+0 2 0 "s" 0 0 0 192 0 0  23 275
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Selection query:DPE
+6 68
+"Border10"
 ""
-1 17 164 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+1 10 322 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-39 0 0 0 0 0
+60 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 295 600 322
+6 76
+"Border11"
+""
+1 10 217 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+67 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 166 94 182
-0 2 0 "s" 0 0 0 192 0 0  19 166
+E E 0 1 1 0 1 E U  1 E 10 207 600 217
+6 77
+"Border12"
+""
+1 10 207 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 187 110 207
+2 78
+"Text10"
+""
+1 17 187 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+69 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 189 94 205
+0 2 0 "s" 0 0 0 192 0 0  19 189
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 13 Configuration
-4 49
-"Line2"
+4 79
+"Line1"
 ""
-1 10 184 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+1 10 207 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
  E E
-40 0 0 0 0 0
+70 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  110 184 10 184
+E E 0 1 1 0 1 E  110 207 10 207
 19 8
-"RadioButton2"
+"ListType"
 ""
-1 198 100 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 188 100 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -266,7 +286,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-196 98 390 147
+186 98 380 147
 2
 T 
 1
@@ -285,10 +305,10 @@ LANG:1 0
  1
 "main()
 {
-  int customList, SelectedItem;
-
-	if (dpExists($configDatapoint + \".customList\"))
-	{
+  if(navConfigConfigSubviewPermitted())
+  {
+    setValue (\"ListType\", \"enabled\", TRUE);
+    int customList, SelectedItem;
     dpGet($configDatapoint + \".customList\", customList);
 
     if (!customList)
@@ -300,20 +320,12 @@ LANG:1 0
       SelectedItem = 0;
       dpSet($configDatapoint + \".customList\", 1);
     }
-    setValue (\"RadioButton2\", \"number\", SelectedItem);
+    setValue (\"ListType\", \"number\", SelectedItem);
   }
   else
   {
-    setValue (\"RadioButton2\", \"enabled\", FALSE);
+    setValue (\"ListType\", \"enabled\", FALSE);
   }
-
-  if (dpGetElementName($datapoint)!=\"\")
-  {
-    setValue (\"RadioButton2\", \"enabled\", FALSE);
-  }
-
-    
-
 }" 0
 
 "main(int button)
@@ -321,36 +333,14 @@ LANG:1 0
   string DedicatedPanelName, subViewName;
   getSubviewName(subViewName);
 
-  if (0==RadioButton2.number())         // Standard trend-plot 1  
+  if (0==ListType.number())         // Standard trend-plot 1  
   {
     dpSet($configDatapoint + \".customList\", FALSE);
   }
-  else if (1==RadioButton2.number())   // Standard trend-plot 1 and 2  
+  else if (1==ListType.number())   // Standard trend-plot 1 and 2  
   {
     dpSet($configDatapoint + \".customList\", TRUE);
   }
-/*
-  else if (2==RadioButton2.number())  //Dedicated trend-plot panel
-  {
-    dpSet($configDatapoint + \".Standard\", FALSE);
-    dpSet($configDatapoint + \".Trend2Active\", FALSE);
-    dpSet($configDatapoint + \".Dedicated\", TRUE);
-    // Transport dedicated panel-name to subview
-    dpGet($configDatapoint + \".DedicatedPanelName:_online.._value\", DedicatedPanelName);
-    DebugN(\"1. DedicatedPanelName: \" + DedicatedPanelName);
-    DebugN(\"1. subViewName: \"+subViewName);
-    if (\"\" == DedicatedPanelName)
-    {
-      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
-      DebugN(\"dpSet error panel\");
-    }
-    else
-    {
-      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
-    }
-
-  }
-  */
 }" 0
 
 1 10 1 "" 54
@@ -359,145 +349,175 @@ LANG:1 0
 0
 1 12 1 "" 58
 0
-14 24
-"txt_amountRetrieved"
+13 60
+"btn_apply"
 ""
-1 483 279 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 540 330 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
-15 0 0 0 0 0
+51 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-481 277 565 304
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-  setValue (\"\", \"editable\", FALSE);
-	if (dpGetElementName($datapoint)!=\"\")
-  {
-    setValue (\"\", \"enabled\", FALSE);
-  }
-
-}" 0
-
-E
-1 27 4 "" 0
-0
-1 28 5 "" 0
-0
-22 32
-"ComboBox"
-""
-1 131 249 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-23 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-129 247 203 274
-0
-"main()
-{
-  // Is it a datapoint element? then disable control
-	// This includes that this control is only suitable for DP-Types
-  dyn_string content = makeDynString(\"10\",\"20\",\"30\",\"40\",\"50\",\"75\",\"100\",\"150\",\"200\");
-  
-
-	if (!dpExists($configDatapoint + \".maxAmountToRetrieve\"))
-  {
-    ComboBox.backCol = \"DpDoesNotExist\";  
-    ComboBox.editable = FALSE;
-  }
-	else if (dpGetElementName($datapoint)!=\"\")
-  {
-    setValue (\"\", \"enabled\", FALSE);
-  }
-  else
-  {
-    int selectionAmount;
-    dpGet($configDatapoint + \".maxAmountToRetrieve\", selectionAmount);
-    for(int i=1 ; i<=dynlen(content); i++)
-    {
-      ComboBox.appendItem(content[i]);
-      if (selectionAmount==content[i])
- 	  		{
-	  			ComboBox.selectedPos = ComboBox.itemCount;
-	  	  } 
-    }
-  }
-}
-" 0
-
-"main()
-{
-  dpSet($configDatapoint + \".maxAmountToRetrieve\", ComboBox.text);
-}" 0
-
-E
- 0 0
-13 43
-"btn_test"
-""
-1 12 280 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-34 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-10 278 134 305
+538 328 602 355
 T 
 1
-LANG:1 14 Test selection
+LANG:1 5 Apply
 "main()
 {
-  dyn_dyn_anytype tab;
-  //$configDatapoint + \".selectionQuery\"
-  string selectionQuery;
-  dpGet($configDatapoint + \".selectionQuery\", selectionQuery);
-  DebugN(\"selectionQuery: \" + selectionQuery);
-  dpQuery(\"SELECT 'COUNT(_online.._value)' FROM '\" + $datapoint + selectionQuery + \"' \", tab);
-  if (dynlen(tab)>=2)
-  {
-    setValue(\"txt_amountRetrieved\", \"text\", tab[2][2]);
-    DebugN(\"Retrieved: \"  + tab[2][2]);
-  }
-  else
-  {
-    setValue(\"txt_amountRetrieved\", \"text\", 0);
-    DebugN(\"Retrieved: \"  + 0);
-  }
-
+    dpSet($configDatapoint + \".Title\", txt_title.text);
+    dpSet($configDatapoint + \".floatDecimals\", (cbb_nrOfDecimals.selectedPos-1));
+    dpSet($configDatapoint + \".selectionQuery\", txt_dp.text);
+    dpSet($configDatapoint + \".selectionQueryDPE\", txt_dpe.text);
 }" 0
  E E "main()
 {
 
-	if (!dpExists($configDatapoint + \".maxAmountToRetrieve\"))
+  if(navConfigConfigSubviewPermitted())
   {
-    setValue(\"btn_test\", \"enabled\", FALSE);
+    ListType.enabled = TRUE;
+    dpConnect(\"NavViewListSetConfigPermission\", $configDatapoint + \".customList:_online.._value\");
+    int floatDecimals;
+    string selectionQuery,selectionQueryDPE,Title;
+    dpGet($configDatapoint + \".Title\", Title);
+    dpGet($configDatapoint + \".floatDecimals\", floatDecimals);
+    dpGet($configDatapoint + \".selectionQuery\", selectionQuery);
+    dpGet($configDatapoint + \".selectionQueryDPE\", selectionQueryDPE);
+    txt_title.text = Title;
+    txt_dpe.text = selectionQueryDPE;
+    txt_dp.text = selectionQuery;
+    cbb_nrOfDecimals.selectedPos = floatDecimals + 1;
   }
-  else if (dpGetElementName($datapoint)!=\"\")
+  else
   {
-    setValue (\"\", \"enabled\", FALSE);
+    ListType.enabled = FALSE;
   }
 
+}
+
+NavViewListSetConfigPermission(string dp1, bool customList)
+{
+  if(navConfigConfigSubviewPermitted() && customList)
+  {
+    txt_dpe.enabled = TRUE;
+    txt_dp.enabled = TRUE;
+    txt_title.enabled = TRUE;
+    cbb_nrOfDecimals.enabled = TRUE;
+    btn_apply.enabled = TRUE;
+  }
+  else
+  {
+    txt_dpe.enabled = FALSE;
+    txt_dp.enabled = FALSE;
+    txt_title.enabled = FALSE;
+    cbb_nrOfDecimals.enabled = FALSE;
+    btn_apply.enabled = FALSE;
+  }
+  
 }" 0
 
+22 70
+"cbb_nrOfDecimals"
+""
+1 282 297 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+61 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+280 295 344 322
+7
+1
+LANG:1 1 0
+ 0
+1
+LANG:1 1 1
+ 1
+1
+LANG:1 1 2
+ 0
+1
+LANG:1 1 3
+ 0
+1
+LANG:1 1 4
+ 0
+1
+LANG:1 1 5
+ 0
+1
+LANG:1 1 6
+ 0
+E
+E
+E
+ 0 0
+14 73
+"txt_title"
+""
+1 160 221 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+64 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+158 219 600 246
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 74
+"txt_dp"
+""
+1 160 246 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+65 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+158 244 600 271
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 75
+"txt_dpe"
+""
+1 160 271 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+66 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+158 269 600 296
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
 0
 LAYER, 1 
 1
@@ -538,16 +558,4 @@ LANG:1 6 Layer8
 "objects\\Nav\\info_config disabled_because_dpe.pnl" 90 600 T 10 1 0 1  10 70  
 1
 "$datapoint""$datapoint"
-3 4 ""
-"objects\\Nav\\editString.pnl" 140 422 T 18 1 0 1  -9 -199  
-3
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$elementName""selectionQuery"
-3 5 "Group8"
-"objects\\Nav\\editString.pnl" 150 270 T 19 1 0 1  -19 -72  
-3
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$elementName""Title"
 0

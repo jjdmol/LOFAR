@@ -1,31 +1,40 @@
 V 10
 1
 LANG:1 17 NavigatorListView
-PANEL,432 344 950 740 N "_3DFace" 2
+PANEL,465 404 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-	if ((dpGetElementName($datapoint)==\"\") && dpExists($configDatapoint + \".customList\"))
+	if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".customList\"))
   {
     TableProperties.tableMode(TABLE_SELECT_BROWSE);
     TableProperties.selectByClick(TABLE_SELECT_LINE_COLUMN);
-
-    setValue (\"txt_selectionQuery\", \"visible\", TRUE);  
-    setValue (\"txt_amount\", \"visible\", TRUE);  
-    setValue (\"label_amount\", \"visible\", TRUE);  
-    setValue (\"TableProperties\", \"visible\", TRUE); 
-    setValue (\"TextDatapointName\", \"text\", $datapoint);
-    setValue (\"txt_amountRetrieved\", \"visible\", TRUE);
-    setValue (\"label_amountRetrieved\", \"visible\", TRUE);
-    setValue (\"label_datapoint\", \"visible\", TRUE);
-    setValue (\"label_datapoint\", \"text\", \"Selection query: \" + $datapoint);
+    TextDatapointName.text = $datapoint;
+    TableProperties.visible = TRUE;
+    btn_default.enabled = TRUE;
+    btn_query.enabled = TRUE;
+    txt_dp.enabled  = TRUE;
+    txt_dpe.enabled = TRUE;
+    btn_apply.enabled = TRUE;
+    //seperate the dpConnect in showTitle and loadTable, because otherwise
+    //the query is performed several times.
+    dpConnect(\"showTitle\", $configDatapoint + \".Title\");
+    
     dpConnect(\"loadTable\", $configDatapoint + \".customList\",
 	                         $configDatapoint + \".selectionQuery\",
-	                         $configDatapoint + \".trigger\",
-	                         $configDatapoint + \".Title\");
+	                         $configDatapoint + \".trigger\");
 	}  
 }
+
+
+
+
+showTitle(string dp1, string title)
+{
+  setValue(\"txt_title\", \"text\", title);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: loadTable
@@ -34,160 +43,84 @@ PANEL,432 344 950 740 N "_3DFace" 2
 ///////////////////////////////////////////////////////////////////////////////////
 loadTable(string dp1, bool customList,
           string dp2, string selectionQuery,
-          string dp3, int trigger,
-          string dp4, string title)
+          string dp4, int trigger)
 {
   dyn_string propNames;
   dyn_dyn_anytype tab;
   string newSelectionQuery;
   int newSelectionAmount;
-  
-  setValue(\"txt_title\", \"text\", title);
+  dyn_string output;
+  string attribute = \"_online.._value\";
+  string datapointPath = buildPathFromNode(g_curSelNode);
+	string dpName;
+  int first=0;
+  int searchDepth=0;
+  bool showProgress=FALSE;
+  bool singleElement=TRUE;
+  //Clear the current list and perform a disconnect for the old DP's
   clearListTable(propNames);
-  ///////////////////////////////////////////////////////////////////////
-  
+
   if (!customList)
   {
-    string systemName = \"\";
-    dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint + \"' WHERE _LEAF\", tab);
-    for(int i=2 ; i<=dynlen(tab) ; i++)
-    {
-      string temp =tab[i][1];
-      temp = substr(temp, (strlen($datapoint)+1), strlen(temp));
-      TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
-      propNames[i-1] = $datapoint + \".\" + temp + \":_online.._value\";
-    }
-    //setValue (\"btn_default\", \"visible\", TRUE);
+    output = queryDatabase(attribute, datapointPath, first, searchDepth, showProgress, singleElement);
   }
   else if (customList)
   {
-    //setValue (\"btn_default\", \"visible\", FALSE);
-/*    if (trigger != 0) // triggered by the textbox on the view panel
+    dyn_string outputTemp = queryDatabaseForDP(attribute, datapointPath + selectionQuery, TRUE);
+    dyn_string elementsOutput;
+    int maximumCount = dynlen(outputTemp);
+    string selectionQueryDPE;
+    dpGet($configDatapoint + \".selectionQueryDPE\",selectionQueryDPE);
+    for(int i=1; i<=dynlen(outputTemp);i++)
     {
-      getValue(\"txt_selectionQuery\", \"text\", newSelectionQuery);
-      getValue(\"txt_amount\", \"text\", newSelectionAmount);
-      dpSet($configDatapoint + \".trigger\", 0);
+      elementsOutput = queryDatabaseForDpElements(+outputTemp[i]+\"__enabled.\");
+      elementsOutput = dynPatternMatch(\".\"+selectionQueryDPE+\"*\", elementsOutput);
+      for(int j=1;j<=dynlen(elementsOutput);j++)
+      {
+        output[dynlen(output)+1]= outputTemp[i] + elementsOutput[j];
+      }
+      progressBar(maximumCount, i);
     }
-    else
-    {*/
-    dpGet($configDatapoint + \".maxAmountToRetrieve\", newSelectionAmount);
-    newSelectionQuery = selectionQuery;
-    //string systemName = \"System1:\";
-    newSelectionQuery = $datapoint + newSelectionQuery;
-    getPropertyNames(newSelectionQuery, newSelectionAmount, propNames);
+    progressBar(maximumCount, maximumCount);
   }
-  //DebugN(propNames);
+
+  //### adjust data and fill table
+  for(int i=1 ; i<=dynlen(output) ; i++)
+  {
+    string temp =output[i];
+    strreplace(temp, $datapoint, \"\");
+    TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
+    propNames[i] = $datapoint + temp + \":_online.._value\";
+  }
   connectTable(propNames);
 }
 
 
-
-/*  if (table !=\"\")
-  {
-  //  disconnectTabel();
-  }
- // else
-  //connectTabel(propNames);
-  
-  */
-  //////////////////////////////////////////
-  
-
-/*
-    dpQuery(\"SELECT '_online.._value' FROM '\" + selection + \"' FIRST \"+ amount, tab);
-    DebugN(\"---------------------------------------------------------------\");
-    TableProperties.deleteAllLines();
-    for(int i=2 ; i<=dynlen(tab) ; i++)
-    {
-      string tekst = tab[i][1];
-//      DebugN(tekst);
-//dpElementType
-      dpConnect(\"ChangeColor\", tekst);
-      output = substr(tekst, (strlen($datapoint)+1), strlen(tekst));
-      TableProperties.appendLine(\"propertyName\", output ,\"value\", (i-1));
-    }
-*/
-
-
-/*  DebugTN(\"ListView: $datapoint,$configDatapoint:\",$datapoint,$configDatapoint);
-  if(isDollarDefined(\"$datapoint\") && strlen($datapoint) > 0)
-  {
-    //navPMLloadPropertySet($datapoint);
-
-    string datapoint = dpSubStr($datapoint,DPSUB_DP_EL);
-    string systemName = strrtrim(dpSubStr($datapoint,DPSUB_SYS),\":\");
-    DebugTN(\"systemName,datpoint:\",systemName,datapoint);
-
-    TextDatapointName.text = $datapoint;
-
-    string query=\"SELECT '_online.._value' FROM '\" + datapoint + \"' WHERE _LEAF AND _SYS=\\\"\" + systemName +\"\\\"\";
-    dyn_dyn_anytype table;
-    dpQuery(query, table);
-	
-    int z;
-    shape tableProperties=getShape(\"TableProperties\");
-    dyn_string propNames;
-    dyn_string propPaths;
-    dyn_anytype values;
-    for(z=2;z<=dynlen(table);z++)
-    {
-      dyn_anytype tempDynAnyType;
-      tempDynAnyType = table[z];
-		  
-      string dpel,dp,el;
-      anytype value = tempDynAnyType[2];
-      dpel = dpSubStr(tempDynAnyType[1],DPSUB_DP_EL);
-      dp = dpSubStr(tempDynAnyType[1],DPSUB_DP);
-      el = substr(dpel,strlen(dp)+1);
- 		
-      dynAppend(propPaths,dpel);
-      dynAppend(propNames,el);
-				
-//////
-dyn_dyn_string names;
-dyn_dyn_int types;
-dpTypeGet(dpTypeName(dp),names,types);
-//				DebugN(\"lalalalie\",dp,dpTypeName(dp),names,types);
-///////
-				
-      dynAppend(values,value);
-    }
-    tableProperties.appendLines(dynlen(propNames),\"propertyPath\",propPaths,\"propertyName\",propNames,\"value\",values);
-	
-    dpQueryConnectAll(\"UpdateTextFields\", true, \"onlineValues\", query);
-  }
-}
-
-/*
-int UpdateTextFields(string ident,dyn_dyn_anytype table)
+dyn_string queryDatabaseForDpElements(string datapointPath)
 {
-  int z;
-  shape tableProperties=getShape(\"TableProperties\");
-  dyn_string propNames;
-  dyn_anytype values;
-  for(z=2;z<=dynlen(table);z++)
+  dyn_string output;
+  string temp;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  int elementIndex;
+  int outputCounter=1;
+
+  int functionOk;
+    
+  dynClear(elementNames);  //clear the content
+  dynClear(elementTypes);
+  functionOk = dpTypeGet(getDpTypeFromEnabled(datapointPath),elementNames,elementTypes);
+  if(functionOk==-1)
+     DebugN(\"Error in __enabled entry: \" +datapointPath);
+  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
   {
-    dyn_anytype tempDynAnyType;
-    tempDynAnyType = table[z];
-	  
-    string dpel,dp,el,dpPath;
-    anytype value = tempDynAnyType[2];
-    dpel = dpSubStr(tempDynAnyType[1],DPSUB_DP_EL);
-    dp = dpSubStr(tempDynAnyType[1],DPSUB_DP);
-    el = substr(dpel,strlen(dp)+1);
-	
-    dynAppend(propNames,el);
-    dynAppend(values,value);
+    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
+    string elementName = elementNames[elementIndex][elementLevel+1];
+    output[outputCounter] = \".\" + elementName;
+    outputCounter++;
   }
-  tableProperties.updateLines(1,\"propertyName\",propNames,\"value\",values);
-
-  return 0;
-}
-
-*/
-
-
-" 0
+  return output;
+}" 0
 "main()
 {
   //navPMLunloadPropertySet($datapoint);
@@ -207,26 +140,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-2 66
-"label_amount"
-""
-1 440 710 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-81 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 442 712 547 728
-0 2 0 "s" 0 0 0 192 0 0  442 712
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 17 Selection amount:
 2 68
 "TextDatapointName"
 ""
@@ -287,46 +200,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 17 Selection amount:
-2 72
-"label_amountRetrieved"
-""
-1 730 710 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-86 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 732 712 876 728
-0 2 0 "s" 0 0 0 192 0 0  732 712
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 25 Amount results retrieved:
-2 75
-"label_datapoint"
-""
-1 450 681 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-88 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 546 683 640 699
-0 2 0 "s" 0 0 0 194 0 0  546 683
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 16 Selection query:
 2 76
 "Text3"
 ""
@@ -379,22 +252,101 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 670 944 740
+E E 0 1 1 0 1 E U  0 E 10 670 720 740
+2 79
+"Text4"
+""
+1 170 710 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 172 712 190 728
+0 2 0 "s" 0 0 0 192 0 0  172 712
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 DP
+2 80
+"Text5"
+""
+1 450 710 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+92 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 452 712 479 728
+0 2 0 "s" 0 0 0 192 0 0  452 712
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 DPE
+6 84
+"progressBar_border"
+""
+1 200 687 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+96 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 200 681 711 699
+6 85
+"progressBar"
+""
+1 204 693 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
+ E E
+97 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 204 684 706 694
+30 87
+"Frame1"
+""
+1 730 740 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+97 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 730 664 940 741
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Changes
 25 53
 "TableProperties"
 ""
 1 9 40 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
- E E
+ E "main()
+{
+DebugN(\"Dubbel klik\");
+}" 0
+
 72 0 0 0 0 0
-"main()
-{
-//DebugN(\"Set focus\");
-}" 0
-"main()
-{
-//DebugN(\"Lost Focus\");
-}" 0
- E
+EE E
 0
 1
 LANG:1 0 
@@ -439,7 +391,7 @@ E "main(int row, string column, string value)
     }
   }
 }" 0
- 1 0 1 4 35 "propertyPath" 0 0 0 "s" 1
+ 1 0 1 5 35 "propertyPath" 0 0 0 "s" 1
 LANG:1 13 Property path
 E1
 LANG:1 0 
@@ -447,11 +399,15 @@ LANG:1 0
 LANG:1 13 Property name
 E1
 LANG:1 0 
- 600 "value" 0 1 -1 "s" 1
+ 500 "value" 0 1 0 "s" 1
 LANG:1 5 Value
 E1
 LANG:1 0 
- 215 "unit" 0 1 0 "s" 1
+ 165 "New" 0 1 -1 "s" 1
+LANG:1 3 New
+E1
+LANG:1 0 
+ 150 "unit" 0 1 0 "s" 1
 LANG:1 4 Unit
 E1
 LANG:1 0 
@@ -530,156 +486,37 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 0 2 0 3 0
 1 0
-14 55
-"txt_selectionQuery"
-""
-1 550 680 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-73 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-548 678 932 705
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-//  setValue(\"\", \"text\", \"_Rack1_SubRack1_Board1_AP1_RCU*.status\");
-}" 0
-
-"main()
-{
-  dyn_string propNames;
-  string newSelectionQuery;
-  int newSelectionAmount;
-  
-  setValue(\"txt_amountRetrieved\", \"editable\", FALSE);
-  getValue(\"txt_amount\", \"text\", newSelectionAmount);
-  getValue(\"txt_selectionQuery\", \"text\", newSelectionQuery);
-  DisplayText(\"\", \"Ok\", newSelectionQuery);
-  clearListTable(propNames);
-  newSelectionQuery = $datapoint + newSelectionQuery;
-  getPropertyNames(newSelectionQuery, newSelectionAmount, propNames);
-  setValue(\"txt_amountRetrieved\", \"text\", dynlen(propNames));
-  connectTable(propNames);
-
-/*
-   dyn_dyn_anytype tab;
-//    dpQuery(\"SELECT '_online.._value' FROM 'System1:PIC_Rack1_SubRack1_Board1_AP1_RCU*.status' \", tab);
-//    dpQuery(\"SELECT '_online.._value' FROM 'System1:PIC_Rack?_SubRack?_Board1_AP?_RCU?.status' \", tab);
-string selection, output;
-int amount;
-getValue(\"\", \"text\", selection);
-getValue(\"amount\", \"text\", amount);
-
-    //dpQuery(\"SELECT '_online.._value' FROM 'System1:PIC_Rack1_SubRack1.*' \", tab);
-    
-    dpQuery(\"SELECT '_online.._value' FROM '\" + selection + \"' FIRST \"+ amount, tab);
-    DebugN(\"---------------------------------------------------------------\");
-    TableProperties.deleteAllLines();
-    for(int i=2 ; i<=dynlen(tab) ; i++)
-    {
-      string tekst = tab[i][1];
-//      DebugN(tekst);
-//dpElementType
-      dpConnect(\"ChangeColor\", tekst);
-      output = substr(tekst, (strlen($datapoint)+1), strlen(tekst));
-      TableProperties.appendLine(\"propertyName\", output ,\"value\", (i-1));
-    }
-*/
-}
-
-
-/*
-ChangeColor(string dp1, int status)
-{
-
-//setValue (\"TableProperties\", \"cellBackColRC \", 1, \"value\" , \"Red\");
-
-  if (status==0)
-    setValue (\"TableProperties\", \"cellBackColRC\", 1, \"value\" , \"white\");
-  else
-    setValue (\"TableProperties\", \"cellBackColRC\", 1, \"value\" , \"Red\");
-}
-*/" 0
-
-22 62
-"txt_amount"
-""
-1 550 710 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-77 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-548 708 612 735
-9
-1
-LANG:1 2 10
- 1
-1
-LANG:1 2 20
- 0
-1
-LANG:1 2 30
- 0
-1
-LANG:1 2 40
- 0
-1
-LANG:1 2 50
- 0
-1
-LANG:1 2 75
- 0
-1
-LANG:1 3 100
- 0
-1
-LANG:1 3 150
- 0
-1
-LANG:1 3 200
- 0
-E
-E
-E
- 0 0
-14 70
-"txt_amountRetrieved"
-""
-1 880 710 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-84 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-878 708 932 735
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
 13 73
 "btn_default"
 ""
-1 20 710 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 20 680 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 678 142 705
+T 
+1
+LANG:1 11 Reset query
+"main()
+{
+ dpSet($configDatapoint + \".trigger\", 0);
+ setValue(\"txt_amountRetrieved\", \"text\", \"\");
+ setValue(\"txt_selectionQuery\", \"text\", \"\");
+}" 0
+ E E E
+13 81
+"btn_query"
+""
+1 20 710 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+93 0 0 0 0 0
 EE E
 0
 1
@@ -691,12 +528,115 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 18 708 142 735
 T 
 1
-LANG:1 11 Reset query
+LANG:1 5 Query
 "main()
 {
- dpSet($configDatapoint + \".trigger\", 0);
- setValue(\"txt_amountRetrieved\", \"text\", \"\");
- setValue(\"txt_selectionQuery\", \"text\", \"\");
+  dyn_string propNames;
+  dyn_string output;
+  dpGet($configDatapoint + \".queryResult\", propNames);
+  clearListTable(propNames);
+  string datapointPath = buildPathFromNode(g_curSelNode);
+  string searchDP, searchDPE, temp;
+  
+  getValue(\"txt_dp\", \"text\", searchDP);
+  getValue(\"txt_dpe\", \"text\", searchDPE);
+  //output = queryDatabase(attribute, datapointPath + searchDP, first, searchDepth, showProgress, singleElement);
+  dyn_string output = queryDatabase(\"_online.._value\",
+                                    datapointPath + searchDP, 0, 0, TRUE, FALSE);
+
+  dyn_string finalOutput = dynPatternMatch(\"*\"+searchDPE,output);
+  for(int i=1 ; i<=dynlen(finalOutput) ; i++)
+  {
+    temp =finalOutput[i];
+    strreplace(temp, $datapoint, \"\");
+    TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
+    finalOutput[i] = finalOutput[i] + \":_online.._value\";
+  }
+  dyn_string propNames;
+  connectTable(finalOutput);
+}" 0
+ E E E
+14 82
+"txt_dp"
+""
+1 200 710 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 708 432 735
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 83
+"txt_dpe"
+""
+1 490 710 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+488 708 712 735
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 88
+"btn_apply"
+""
+1 776 697 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+97 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+774 695 898 722
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+
+navViewListApplyChanges($configDatapoint + \".queryResult\");
+
+}
+
+
+navViewListApplyChanges(string dpNameQueryResult)
+{
+  dyn_string queryResult;
+  dpGet(dpNameQueryResult, queryResult);
+  
+  anytype newValue;
+  for(int i=1;i<=dynlen(queryResult);i++)
+  {
+    newValue=\"\";
+    getValue(\"TableProperties\", \"cellValueRC\", i-1, \"New\" , newValue);
+    setValue(\"TableProperties\", \"cellValueRC\", i-1, \"New\" , \"\");
+    if(\"\"!=newValue && elementTypeValid(queryResult[i]))
+    {
+      strreplace(queryResult[i], \":_online.._value\", \"\");
+      dpSet(queryResult[i], newValue);
+    }
+  }
 }" 0
  E E E
 0

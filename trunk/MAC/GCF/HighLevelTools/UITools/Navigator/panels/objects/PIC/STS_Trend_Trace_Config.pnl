@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,295 138 258 47 N "_3DFace" 4
+PANEL,285 168 258 47 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -83,12 +83,14 @@ E E 0 1 1 0 1 E U  0 E 10 10 155 34
   	{
   	//Configure Trace
   	case 2:
+  	    DebugN(\"dpName:\"+dpName);
 				ChildPanelOnCentralModal(\"navigator/views/trend_view_trace_config.pnl\",
 	  		                         \"Configure Trace \" + $TraceNr +\" of Trend \"+$TrendNr,
 	  		                         makeDynString(\"$datapoint:\" + $datapoint,
 	  		                                       \"$configDatapoint:\" + $configDatapoint,
 	  		                                       \"$TrendNr:\" + $TrendNr,
-	  		                                       \"$TraceNr:\" + $TraceNr));
+	  		                                       \"$TraceNr:\" + $TraceNr,
+	  		                                       \"$selectedDP:\" + dpName));
 
   			break;
   	//Delete trace

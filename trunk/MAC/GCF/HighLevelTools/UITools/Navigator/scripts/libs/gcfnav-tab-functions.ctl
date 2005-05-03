@@ -14,7 +14,7 @@
 //#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //#  GNU General Public License for more details.
 //#
-//#  You should have received a copy of the GNU General Public License
+//#  You should have received a copy of the GNU General Public Licenlse
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
@@ -66,7 +66,6 @@ void NavTabInitialize(string datapoint)
 {
   LOG_DEBUG("NavTabInitialize(datapoint): ",datapoint);
   
-  
   dyn_errClass err;
   shape viewsComboBoxCtrl = getShape(VIEW_COMBOBOX_CTRL);  
   shape viewTabsCtrl      = getShape(VIEW_TABS_CTRL);  
@@ -92,7 +91,6 @@ void NavTabInitialize(string datapoint)
   dyn_int  nrOfSubViews;
   dyn_string subViews;
   dyn_string configs;
-  
   if(navConfigGetViewConfigElements(dpNameConfig,
                                     selectedViewUnused,
                                     selectedSubView,
@@ -102,7 +100,6 @@ void NavTabInitialize(string datapoint)
                                     configs))
   {
     LOG_DEBUG("NavTabInitialize:",g_selectedView,selectedSubView,LOG_DYN(views),LOG_DYN(nrOfSubViews),LOG_DYN(subViews),LOG_DYN(configs));
-
     for(int i=1;i<=dynlen(views);i++)
     {
       if(navConfigGetViewCaption(views[i]) == g_selectedViewName)
@@ -173,20 +170,38 @@ void ComboBoxViewsSelectionChanged()
   
   string selectedSubView = viewsComboBoxCtrl.selectedText();
   string selectedPanel = g_subViews[selectedSubView];
+
+  //if for selectedSubView a mapping has been found, use this name,
+  //otherwise parse an empty string to prevent WARNINGS
+  string insertSubViewConfigs="";
+  if(mappingHasKey(g_subViewConfigs, selectedSubView))
+  {
+    insertSubViewConfigs = g_subViewConfigs[selectedSubView];   
+  }
+  else
+  {
+    insertSubViewConfigs = "";
+  }
+
   dyn_string panelParameters = makeDynString(
     "$datapoint:" + g_datapoint,
-    "$configDatapoint:" + g_subViewConfigs[selectedSubView]);
+    "$configDatapoint:" + insertSubViewConfigs);
   LOG_TRACE("selectedSubView,selectedPanel,panelParameters: ",selectedSubView,selectedPanel,panelParameters);
   
   //---------------------------------------------------------------
   //viewTabsCtrl.namedRegisterPanel divided in three possibilities.
   //1. panelfile present and accessable
   //2. There is no subview configured for this DP-Type
-  //3. The configured panel file for this subview has not been found
-  if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
+  //1. panelfile present and accessable
+  if(viewsComboBoxCtrl.itemCount==0)
+  {
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nosubview.pnl",panelParameters);
+    LOG_DEBUG("## No subview configured for this datapoint type");
+  }
+  else if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
-	LOG_TRACE("## selectedPanel:", selectedPanel);
+	  LOG_TRACE("## selectedPanel:", selectedPanel);
   }
   else if (selectedPanel=="0")
   {
@@ -194,7 +209,7 @@ void ComboBoxViewsSelectionChanged()
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanel.pnl",panelParameters);
     LOG_DEBUG("## No panel configured for this subview");
   }
-  else
+  else  //3. The configured panel file for this subview has not been found
   {
 	  string oldSelectedPanel = selectedPanel;
 	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanelfound.pnl",panelParameters);
@@ -208,13 +223,27 @@ void ComboBoxViewsSelectionChanged()
     datapointTypeName = dpTypeName(g_datapoint);
   else
     datapointTypeName = g_datapoint;
+  //////////////////////////////////////////////////////////////
+
+  
+//  DebugN("test125:"+(g_subViewConfigs[selectedSubView]));
+//  if(g_subViewConfigs[selectedSubView]==0)
   
   dyn_string configPanelParameters = makeDynString(
     "$selectedView:" + g_selectedView,
     "$viewName:" + g_selectedViewName,
     "$selectedElementDpType:" + datapointTypeName,
     "$datapoint:" + g_datapoint,
-    "$configDatapoint:"+g_subViewConfigs[selectedSubView]);
+    "$configDatapoint:"+insertSubViewConfigs);
+  
+  //////////////////////////////////////////////////////////////  
+//  This is the original one
+/*  dyn_string configPanelParameters = makeDynString(
+    "$selectedView:" + g_selectedView,
+    "$viewName:" + g_selectedViewName,
+    "$selectedElementDpType:" + datapointTypeName,
+    "$datapoint:" + g_datapoint,
+    "$configDatapoint:"+g_subViewConfigs[selectedSubView]); */
   LOG_TRACE("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);
   
   // check if the file exists:

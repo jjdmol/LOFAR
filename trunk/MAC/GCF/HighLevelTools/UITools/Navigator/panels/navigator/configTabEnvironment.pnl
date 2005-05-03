@@ -1,0 +1,1032 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,333 230 730 540 N "_3DFace" 0
+EEE E E 1 -1 -1 0  80 120
+"" 0 1
+E"#uses \"gcfnav-functions.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+30 15
+"Frame3"
+""
+1 10 220 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 10 10 720 220
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 22 Environment Membership
+2 5
+"Text1"
+""
+1 13 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 282 269 298
+0 2 0 "s" 0 0 0 194 0 0  142 282
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 for environment name:
+30 7
+"Frame1"
+""
+1 10 340 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 10 230 330 340
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Create environment 
+30 8
+"Frame2"
+""
+1 400 340 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 400 230 720 340
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Delete environment 
+2 22
+"Text3"
+""
+1 100 30 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 102 32 213 48
+0 2 0 "s" 0 0 0 192 0 0  102 32
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Environment name:
+2 32
+"Text4"
+""
+1 270 30 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 272 32 361 48
+0 2 0 "s" 0 0 0 192 0 0  272 32
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Not member of:
+2 33
+"Text5"
+""
+1 520 30 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 522 32 587 48
+0 2 0 "s" 0 0 0 192 0 0  522 32
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 10 Member of:
+2 35
+"Text6"
+""
+1 57 250 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 252 225 268
+0 2 0 "s" 0 0 0 194 0 0  142 252
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 for user name:
+2 38
+"Text8"
+""
+1 410 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 539 282 666 298
+0 2 0 "s" 0 0 0 194 0 0  539 282
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 for environment name:
+2 39
+"Text9"
+""
+1 454 250 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 539 252 622 268
+0 2 0 "s" 0 0 0 194 0 0  539 252
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 for user name:
+13 0
+"Button1"
+""
+1 150 310 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 308 272 335
+T 
+1
+LANG:1 6 Create
+"main()
+{
+  int error;
+  string newEnvironmentName;         // environment to create 
+  string newEnvironmentNameUserName; // username to create environment for
+  dyn_string dpTypeList = dpTypes(\"T*\");
+  dyn_string environmentNames;
+  SelectionList_output.deleteAllItems;
+  dpGet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES, environmentNames);
+  getValue(\"txt_environmentName\", \"text\", newEnvironmentName);
+  if(newEnvironmentName==\"\")
+  {
+    getValue(\"list_usernames\", \"selectedText\", newEnvironmentNameUserName);
+    if(newEnvironmentNameUserName!=\"\")
+    {
+      newEnvironmentName = \"Personal\";
+    }
+  }
+  
+  ///////////////////////////////////////////////////////////////////
+  if(newEnvironmentName!=\"\")
+  {
+    if(!dynContains(environmentNames, newEnvironmentName) && !(newEnvironmentName==\"Personal\"))
+    {
+      bool stopSearch;
+      for(int j=1;j<=dynlen(environmentNames)&&!stopSearch;j++)
+      {
+       if(environmentNames[j]==\"\")
+       {
+         stopSearch=TRUE; 
+         environmentNames[j] = newEnvironmentName;
+       }
+      }
+      if(!stopSearch)
+      {
+        environmentNames[dynlen(environmentNames)+1] = newEnvironmentName;
+      }
+      dpSet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES, environmentNames);
+    
+    
+    setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment   : \" + newEnvironmentName);
+    setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment for user: \" + newEnvironmentNameUserName);
+    setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment ID: \" + navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName));
+    string systemName = getSystemName();
+    strreplace(systemName, \":\", \"\");
+    dpTypeList[dynlen(dpTypeList)+1] = systemName;
+    for(int i=1; i<=dynlen(dpTypeList); i++)
+    {
+      dpCopyBufferClear();
+      error=0;
+      setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Creating type\");
+      dpCopy(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
+      setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy result: \" + error);
+      error=0;
+      dpCopyOriginal(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
+      setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy content result: \" + error);
+      SelectionList_output.selectedPos = SelectionList_output.itemCount;
+    }
+    setValue(\"SelectionList_output\", \"appendItem\", \"Creation of new environment \"+newEnvironmentName+\" completed\");
+  }
+  else
+  {
+    setValue(\"SelectionList_output\", \"appendItem\", \"Environment name already exists, environment not created.\");
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  }
+  else if(dynContains(environmentNames, newEnvironmentName))
+  {
+    setValue(\"SelectionList_output\", \"appendItem\", \"Environment name already exists, environment not created.\");
+  }
+  else
+  {
+    setValue(\"SelectionList_output\", \"appendItem\", \"No environment name given, environment not created.\");
+  }
+
+
+}" 0
+ E E E
+14 1
+"txt_environmentName"
+""
+1 150 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+"main()
+{
+list_usernames.selectedPos=list_usernames.itemCount;
+
+DebugN(\"set focus\");
+}" 0
+E E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 278 312 305
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+17 2
+"SelectionList_output"
+""
+1 10 350 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+8 348 722 530
+0
+E
+E
+E
+
+3 1
+13 10
+"btn_delete"
+""
+1 540 310 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+538 308 662 335
+T 
+1
+LANG:1 6 Delete
+"main()
+{
+  string environmentName2Delete;
+  string environmentName2DeleteUserName;
+  getValue(\"environmentNameToDelete\", \"selectedText\", environmentName2Delete);
+  getValue(\"list_usernames_delete\", \"selectedText\", environmentName2DeleteUserName);
+
+  string text1=\"$1:Are you sure you want to delete the\\nenvironment: \" +environmentName2Delete;
+  anytype configOK, ok;
+  dyn_float resultFloat;
+  dyn_string resultString;
+  ChildPanelOnCentralModalReturn(\"vision/MessageWarning2\",
+	  		                         \"Confirm delete\",makeDynString(text1,\"Yes\",\"No\"), resultFloat, resultString);
+  
+  if(resultFloat[1]==1)
+  {
+    //if relevant, disable environment membesrship configuration
+    if(ComboBox_environmentMembership.selectedText==environmentName2Delete)
+    {
+      UG_selected.deleteAllItems;
+      UG_available.deleteAllItems;
+      btn_removeMembership.visible=FALSE;
+      btn_addMembership.visible=FALSE;
+      UG_selected.enabled=FALSE;
+      UG_available.enabled=FALSE;
+      UG_available.appendItem = \"Select other environment\";
+      UG_selected.appendItem = \"Select other environment\";
+    }
+
+    setValue(\"SelectionList_output\", \"appendItem\", \"Delete environment:    \" + environmentName2Delete);
+    setValue(\"SelectionList_output\", \"appendItem\", \"Delete environment ID: \" + navConfigGetEnvironment(environmentName2Delete,environmentName2DeleteUserName));
+    SelectionList_output.selectedPos = SelectionList_output.itemCount;
+    dyn_string deleteReeks = dpNames(\"__nav\"+navConfigGetEnvironment(environmentName2Delete,environmentName2DeleteUserName)+\"*\");
+
+    for(int i=1; i<=dynlen(deleteReeks); i++)
+    {
+      setValue(\"SelectionList_output\", \"appendItem\", \"Delete DP: \" + deleteReeks[i]);
+      dpDelete(deleteReeks[i]);
+      SelectionList_output.selectedPos = SelectionList_output.itemCount;
+    }
+    if(environmentName2Delete!=\"Personal\")
+    {
+      dyn_string environmentNames, environmentGroups;
+      dpGet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES, environmentNames);
+      dpGet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTGROUPS, environmentGroups);
+      environmentGroups[dynContains(environmentNames, environmentName2Delete)]=\"\";
+      environmentNames[dynContains(environmentNames, environmentName2Delete)]=\"\";
+      dpSet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES, environmentNames);
+      dpSet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTGROUPS, environmentGroups);
+    }
+    setValue(\"SelectionList_output\", \"appendItem\", \"Environment deleted from list.\");
+    SelectionList_output.selectedPos = SelectionList_output.itemCount;
+    list_usernames_delete.selectedPos = list_usernames_delete.itemCount;
+    btn_delete.enabled=FALSE;
+  }
+}" 0
+ E E E
+22 13
+"environmentNameToDelete"
+""
+1 540 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+538 278 702 305
+0
+"main()
+{
+
+  dpConnect(\"navConfigfillEnvironmentList\", DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES); 
+  environmentNameToDelete.selectedPos=1;
+  delay(0,100);
+  
+  if(environmentNameToDelete.selectedText==\"Personal\")
+  {
+    list_usernames_delete.enabled=TRUE;
+    if(list_usernames_delete.selectedText==\"\")
+    {
+      btn_delete.enabled=FALSE;
+    }    
+  }
+  else
+  {
+    list_usernames_delete.selectedPos = list_usernames_delete.itemCount;
+    list_usernames_delete.enabled=FALSE;
+    btn_delete.enabled=TRUE;
+  }
+
+  
+  
+  /*
+  if(environmentNameToDelete.selectedText==\"Personal\" && list_usernames_delete.selectedText==\"\")
+  {
+    btn_delete.enabled=FALSE;
+  }
+  else
+  {
+    btn_delete.enabled=TRUE;
+  }
+  if(environmentNameToDelete.selectedText!=\"Personal\")
+  {
+    list_usernames_delete.editable=TRUE;
+    list_usernames_delete.selectedPos = list_usernames_delete.itemCount;
+  }
+  else
+  {
+    list_usernames_delete.editable=FALSE;
+  }
+*/
+
+}" 0
+
+"main()
+{
+
+  if(environmentNameToDelete.selectedText==\"Personal\")
+  {
+    list_usernames_delete.enabled=TRUE;
+    if(list_usernames_delete.selectedText==\"\")
+    {
+      btn_delete.enabled=FALSE;
+    }    
+  }
+  else
+  {
+    list_usernames_delete.selectedPos = list_usernames_delete.itemCount;
+    list_usernames_delete.enabled=FALSE;
+    btn_delete.enabled=TRUE;
+  }
+
+/*
+
+  if(environmentNameToDelete.selectedText==\"Personal\" && list_usernames_delete.selectedText==\"\")
+  {
+    btn_delete.enabled=FALSE;
+  }
+  else
+  {
+
+  }
+*/  
+}" 0
+
+E
+ 0 0
+13 14
+"Button4"
+""
+1 340 315 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+338 313 390 340
+T 
+1
+LANG:1 5 Clear
+"main()
+{
+  SelectionList_output.deleteAllItems;
+}" 0
+ E E E
+17 17
+"UG_available"
+""
+1 270 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+268 48 462 212
+0
+E
+E
+E
+
+3 1
+17 18
+"UG_selected"
+""
+1 520 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+518 48 712 212
+0
+E
+E
+E
+
+3 1
+22 21
+"ComboBox_environmentMembership"
+""
+1 100 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 48 262 75
+0
+"main()
+{
+    UG_available.deleteAllItems;
+    UG_selected.deleteAllItems;
+  dpConnect(\"navConfigfillEnvironmentList\", DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES); 
+  arrangeUserGroupMembership();
+  if(ComboBox_environmentMembership.selectedText==\"Personal\")
+  {
+    UG_available.deleteAllItems;
+    UG_selected.deleteAllItems;
+    btn_removeMembership.visible=FALSE;
+    btn_addMembership.visible=FALSE;
+    UG_selected.enabled=FALSE;
+    UG_available.enabled=FALSE;
+    UG_available.appendItem = \"Select other environment\";
+    UG_selected.appendItem = \"Select other environment\";
+  }
+  else
+  {
+    btn_removeMembership.visible=TRUE;
+    btn_addMembership.visible=TRUE;
+    UG_selected.enabled=TRUE;
+    UG_available.enabled=TRUE;
+  }
+}  
+" 0
+
+"main()
+{
+
+  btn_applyMembership.enabled=FALSE; 
+  if(ComboBox_environmentMembership.selectedText==\"Personal\")
+  {
+    UG_selected.deleteAllItems;
+    UG_available.deleteAllItems;
+    btn_removeMembership.visible=FALSE;
+    btn_addMembership.visible=FALSE;
+    UG_selected.enabled=FALSE;
+    UG_available.enabled=FALSE;
+    UG_available.appendItem = \"Select other environment\";
+    UG_selected.appendItem = \"Select other environment\";
+
+  }
+  else
+  {
+    arrangeUserGroupMembership();
+    btn_removeMembership.visible=TRUE;
+    btn_addMembership.visible=TRUE;
+    UG_selected.enabled=TRUE;
+    UG_available.enabled=TRUE;
+  }
+
+}
+" 0
+
+E
+ 0 0
+13 23
+"btn_removeMembership"
+""
+1 480 90 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+2
+LANG:1 11 Select area
+LANG:0 17 Bereich auswählen
+0
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+478 88 507 115
+P 
+14215660
+"pictures/arrow_left.xpm"
+1
+LANG:1 0 
+"main()
+{
+  btn_applyMembership.enabled=TRUE; 
+  
+  shape to   =getShape(\"UG_available\");
+  shape from =getShape(\"UG_selected\");
+
+  if(from.selectedText!=\"\")
+  {
+    string selectedTextFrom = from.selectedText;
+    dyn_string itemsFrom = from.items;
+    dyn_string itemsTo = to.items;
+    dynRemove(itemsFrom, from.selectedPos);
+  
+    if(dynlen(itemsTo)==1 && itemsTo[1]==\"\")
+      itemsTo[1] = selectedTextFrom;
+    else
+      itemsTo[dynlen(itemsTo)+1] = selectedTextFrom;
+  
+    from.items = itemsFrom;
+    to.items = itemsTo;
+  }
+}" 0
+ E E E
+13 25
+"btn_applyMembership"
+""
+1 470 187 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+468 185 514 212
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  dyn_string items,UserGroups, environmentGroups, environmentNames;
+  getValue(\"UG_selected\", \"items\", items);
+  string GroupsForEnvironment, selectedEnvironment;
+  dpGet(\"_Groups.UserName\", UserGroups);
+  for(int i=1; i<=dynlen(items); i++)
+  {
+    if(i==1)
+    {
+      GroupsForEnvironment = items[i];
+    }
+    else
+    {
+     GroupsForEnvironment = GroupsForEnvironment +\"|\" +items[i];
+     DebugN(\"i\"+i+\": \"+GroupsForEnvironment);
+    }
+  }
+  //dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  getValue(\"ComboBox_environmentMembership\", \"selectedText\", selectedEnvironment);
+  dpGet(DPNAME_NAVIGATOR + \".environmentGroups\", environmentGroups);
+  dpGet(DPNAME_NAVIGATOR + \".environmentNames\", environmentNames);
+  
+  environmentGroups[dynContains(environmentNames, selectedEnvironment)]=GroupsForEnvironment;
+  dpSet(DPNAME_NAVIGATOR + \".environmentGroups\", environmentGroups);
+  
+  btn_applyMembership.enabled=FALSE; 
+  
+}" 0
+ E E E
+13 27
+"btn_addMembership"
+""
+1 480 120 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+2
+LANG:1 14 Deselect  area
+LANG:0 16 Bereich abwählen
+0
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+478 118 507 145
+P 
+14215660
+"pictures/arrow_right.xpm"
+1
+LANG:1 0 
+"main()
+{
+  btn_applyMembership.enabled=TRUE; 
+  
+  shape from=getShape(\"UG_available\");
+  shape to=getShape(\"UG_selected\");
+
+  if(from.selectedText!=\"\")
+  {
+    string selectedTextFrom = from.selectedText;
+    dyn_string itemsFrom = from.items;
+    dyn_string itemsTo = to.items;
+    dynRemove(itemsFrom, from.selectedPos);
+  
+    if(dynlen(itemsTo)==1 && itemsTo[1]==\"\")
+      itemsTo[1] = selectedTextFrom;
+    else
+      itemsTo[dynlen(itemsTo)+1] = selectedTextFrom;
+  
+    from.items = itemsFrom;
+    to.items = itemsTo;
+  }
+  
+}" 0
+ E E E
+14 28
+"username"
+""
+1 130 80 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 78 262 105
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", \"user_westerbork\");
+}" 0
+
+E
+13 29
+"Button2"
+""
+1 20 80 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 78 122 112
+T 
+1
+LANG:1 14 getEnvironment
+"main()
+{
+  dyn_string environmentGroups, environmentNames,currentUserGroupNames;
+  dyn_string Users_UserName, Users_GroupIds, Groups_UserName, Groups_UserId;
+  dyn_string environmentListAvailableToUser;
+  string currentGroupIds, currentUser; //= getUserName();
+  environmentListAvailableToUser[1]=\"Personal\";
+  env.deleteAllItems;
+  getValue(\"username\", \"text\", currentUser);
+  dpGet(\"_Users.UserName\",  Users_UserName);
+  dpGet(\"_Users.GroupIds\",  Users_GroupIds);
+  dpGet(\"_Groups.UserName\", Groups_UserName);
+  dpGet(\"_Groups.UserId\",  Groups_UserId);
+  
+  currentGroupIds = Users_GroupIds[dynContains(Users_UserName, currentUser)];
+  dyn_string GroupIdsSplit= strsplit(currentGroupIds, \";\");
+  for(int i=1;i<=dynlen(GroupIdsSplit);i++)
+  {
+   currentUserGroupNames[i] = Groups_UserName[dynContains(Groups_UserId, GroupIdsSplit[i])];
+   env.appendItem = \"UG: \" +currentUserGroupNames[i];
+  }
+
+  dpGet(DPNAME_NAVIGATOR + \".environmentGroups\", environmentGroups);
+  dpGet(DPNAME_NAVIGATOR + \".environmentNames\", environmentNames);
+ 
+  for(int i=1;i<=dynlen(environmentGroups);i++) //UG assignment to Environment
+  {
+    dyn_string environmentGroupSplit= strsplit(environmentGroups[i], \"|\"); //which UG do we have
+    for(int j=1;j<=dynlen(environmentGroupSplit);j++) // UG group root,para,quest for env. X
+    {
+      for(int k=1;k<=dynlen(currentUserGroupNames);k++) //user membership in UG guest etc.
+      {
+        dyn_string currentUserGroupNamesSplit= strsplit(currentUserGroupNames[k], \"|\"); 
+        for(int m=1;m<=dynlen(currentUserGroupNamesSplit);m++)
+        {
+          if(currentUserGroupNamesSplit[m]==environmentGroupSplit[j])
+          {
+            env.appendItem = \"Match: \" + environmentNames[i];
+            environmentListAvailableToUser[dynlen(environmentListAvailableToUser)+1] = environmentNames[i];
+          }
+        }
+      }
+    }
+  }
+  DebugN(\"environmentListAvailableToUser\");
+  DebugN(environmentListAvailableToUser);
+  
+}" 0
+ E E E
+17 31
+"env"
+""
+1 20 120 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 118 262 212
+0
+E
+E
+E
+
+3 1
+22 34
+"list_usernames"
+""
+1 150 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 248 312 275
+0
+"main()
+{
+dpConnect(\"fillListWithUserNames\", getSystemName() + \"_Users.UserName:_online.._value\");
+}
+
+fillListWithUserNames(string dp1, dyn_string userNames)
+{
+  list_usernames.deleteAllItems;
+  list_usernames.items = userNames;
+  list_usernames.appendItem = \"\";
+
+}" 0
+
+"main()
+{
+  txt_environmentName.text=\"\";
+}" 0
+
+E
+ 0 0
+22 40
+"list_usernames_delete"
+""
+1 540 250 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+538 248 702 275
+0
+"main()
+{
+  dpConnect(\"navConfigEnvironmentFillListWithUserNames\", \"System1:_Users.UserName:_online.._value\");
+}
+
+
+navConfigEnvironmentFillListWithUserNames(string dp1, dyn_string userNames)
+{
+  setValue(\"\", \"deleteAllItems\");
+  setValue(\"\", \"items\", userNames);
+  setValue(\"\", \"appendItem\", \"\");
+}
+
+" 0
+
+"main()
+{
+/*
+  dyn_string items = environmentNameToDelete.items;
+  if(items[environmentNameToDelete.itemCount]==\"\")
+  {
+    environmentNameToDelete.selectedPos(environmentNameToDelete.itemCount);
+  }
+  else
+  {
+    environmentNameToDelete.appendItem=\"\";
+    environmentNameToDelete.selectedPos(environmentNameToDelete.itemCount);
+  }
+  */
+  if(list_usernames_delete.selectedText==\"\")
+  {
+    btn_delete.enabled=FALSE;
+  }
+  else
+  {
+    btn_delete.enabled=TRUE;
+  }
+}" 0
+
+E
+ 0 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

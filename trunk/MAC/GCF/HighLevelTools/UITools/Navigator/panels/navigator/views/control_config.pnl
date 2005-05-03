@@ -1,12 +1,13 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,526 241 901 608 N "_3DFace" 4
+PANEL,311 201 901 608 N "_3DFace" 5
 "$configDatapoint"
+"$datapoint"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
-EEE E E 1 -1 -1 0  -1 -1
+EEE E E 1 -1 -1 0  80 180
 "" 0 1
 EE 2
 "CBRef""1"
@@ -38,6 +39,57 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 LANG:1 18 control_config.pnl
 1 5 1 "" 57
 0
+2 9
+"Text3"
+""
+1 -30 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E -28 52 148 68
+0 2 0 "s" 0 0 0 66 0 0  -28 52
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 22 Control-view for type:
+2 10
+"txt_dpTypeName"
+""
+1 150 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+	if (dpExists($datapoint))
+	{
+	  setValue(\"\", \"text\", dpTypeName($datapoint));
+	}
+	else
+	{
+    setValue(\"\", \"text\", \"datapoint type not found\");
+  }
+}" 0
+ E 0 1 1 0 1 E U  0 E 152 52 418 68
+0 2 0 "s" 0 0 0 64 0 0  152 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
 1 6 1 "" 54
 0
 1 7 1 "" 55

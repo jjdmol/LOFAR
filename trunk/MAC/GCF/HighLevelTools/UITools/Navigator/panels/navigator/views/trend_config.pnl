@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 trend_config
-PANEL,410 315 879 700 N "_3DFace" 5
+PANEL,333 230 879 700 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -679,12 +679,12 @@ LANG:1 0
       dpGet($configDatapoint + \".DedicatedPanelName:_online.._value\", DedicatedPanelName);
       if (\"\" == DedicatedPanelName)
       {
-      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
+      dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
       DebugN(\"dpSet error panel\");
     }
     else
     {
-      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
+      dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
     }
     }
     else if (!Standard && !Trend2Active && !Dedicated)
@@ -719,14 +719,14 @@ LANG:1 0
     dpSet($configDatapoint + \".Standard\", TRUE);
     dpSet($configDatapoint + \".Trend2Active\", FALSE);
     dpSet($configDatapoint + \".Dedicated\", FALSE);
-    dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"trend_view.pnl\");
+    dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Trend_\" + subViewName + \".filename\", \"trend_view.pnl\");
   }
   else if (1==RadioButton2.number())   // Standard trend-plot 1 and 2  
   {
     dpSet($configDatapoint + \".Standard\", TRUE);
     dpSet($configDatapoint + \".Trend2Active\", TRUE);
     dpSet($configDatapoint + \".Dedicated\", FALSE);
-    dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"trend_view.pnl\");
+    dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Trend_\" + subViewName + \".filename\", \"trend_view.pnl\");
   }
   else if (2==RadioButton2.number())  //Dedicated trend-plot panel
   {
@@ -739,12 +739,12 @@ LANG:1 0
     DebugN(\"1. subViewName: \"+subViewName);
     if (\"\" == DedicatedPanelName)
     {
-      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
+      dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
       DebugN(\"dpSet error panel\");
     }
     else
     {
-      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
+      dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
       //navConfigTriggerNavigatorRefresh(); Later on
     }
 
@@ -1111,7 +1111,7 @@ LANG:1 6 Layer8
 "$TrendNr""2"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
-3 36 ""
+3 36 "menu"
 "navigator\\navigator_config_tab.pnl" 20 550 T 139 1 0 1  -1 -506  
 4
 "$configDatapoint""$configDatapoint"

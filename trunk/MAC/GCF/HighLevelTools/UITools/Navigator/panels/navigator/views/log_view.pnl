@@ -1,0 +1,769 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,355 259 950 780 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+  startThread( \"SimulationLogger\" );	
+
+	//Check for existance of both datapoints.
+	if (dpAccessable($datapoint + \".log\") &&
+	    dpAccessable($configDatapoint + \".messageWindow\") &&
+	    (dpGetElementName($datapoint)==\"\"))
+	{
+    TextDatapointName.text = $datapoint;
+    string title;
+    dpGet($configDatapoint + \".title\", title);
+    setValue(\"txt_title\", \"text\", title);
+    dpSet($configDatapoint + \".filterApplTemp\", \"\");
+    dpSet($configDatapoint + \".filterLoggerTemp\", \"\");
+    dpConnect(\"navViewLogMessage\", $datapoint + \".log\");
+  }
+
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewLogMessage: Display a log message in the loggerTable
+//                         
+// Input: Log message from the database
+//
+// Output: If the log message
+//         
+///////////////////////////////////////////////////////////////////////////
+navViewLogMessage(string dp1, string logMessage)
+{
+  // Definition of a logger message. In the rest of the function the const are
+  // used in stead of the numerals
+  const int msgTime       = 1;
+  const int msgLevel      = 2;
+  const int msgHost       = 3;
+  const int msgApl        = 4;
+  const int msgLoggerName = 5;
+  const int msgMessage    = 6;
+  const int msgInfo       = 7;
+
+  //Only show log if logging to screen is set active
+  string filterAppl,filterLogger;
+
+  dpGet($configDatapoint + \".filterApplTemp\", filterAppl);
+  if(\"\"==filterAppl)
+  {
+    dpGet($configDatapoint + \".filterAppl\", filterAppl);
+    if(filterAppl==\"\")   
+    {
+      filterAppl=\"*\";  //if nothing is filled in, a star must be used.
+    }
+  }
+  
+  dpGet($configDatapoint + \".filterLoggerTemp\", filterLogger);
+  if(\"\"==filterLogger)
+  {
+    dpGet($configDatapoint + \".filterLogger\", filterLogger);
+    if(\"\"==filterLogger)
+    {
+      filterLogger=\"*\"; //if nothing is filled in, a star must be used.
+    }
+  }
+  
+  dyn_string messageSplit = strsplit(logMessage, \"|\");
+//  DebugN(\"[-----------------------------------]\");
+//  DebugN(\"PatternLog:\"+patternMatch(filterLogger,messageSplit[msgLoggerName]));
+//  DebugN(\"filterLogger:\"+filterLogger);
+//  DebugN(\"messageSplit:\"+messageSplit[msgLoggerName]);
+//  DebugN(\"PatternApp:\"+patternMatch(filterAppl,messageSplit[msgApl]));
+  if(showLog.state(0))
+  {
+    if(((showWarning.state(0) && messageSplit[msgLevel]==\"Warning\") ||
+        (showError.state(0)   && messageSplit[msgLevel]==\"Error\") ||
+        (showFatal.state(0)   && messageSplit[msgLevel]==\"Fatal\")) &&
+       patternMatch(filterLogger,messageSplit[msgLoggerName]) &&
+       patternMatch(filterAppl,messageSplit[msgApl]))
+    {
+      logger.appendLine(\"Time\",        messageSplit[msgTime],
+                        \"Level\",       messageSplit[msgLevel],    
+                        \"Host\",        messageSplit[msgHost],
+                        \"Application\", messageSplit[msgApl],
+                        \"loggerName\",  messageSplit[msgLoggerName],    
+                        \"Message\",     messageSplit[msgMessage],
+                        \"Info\",        messageSplit[msgInfo]);
+    }
+  
+    // If the maximum messageWindow size has been reached,
+    // delete the first line in the loggerTable
+    int messageWindow;
+    dpGet($configDatapoint + \".messageWindow\", messageWindow);
+    if(logger.lineCount>messageWindow)
+    {
+      int difference = logger.lineCount - messageWindow;
+      for(int i=1; i<=(difference); i++)
+      {
+        logger.deleteLineN(0);
+      }
+    }
+  }
+}
+
+
+SimulationLogger()
+{
+  string t;
+  int i=0;
+  string message;
+  while(1)
+  {
+    while(1)
+    {
+     t = getCurrentTime();
+      message = t+\"|Fatal|MARS|LogicalDeice.cc|PAC_VT_Trend|Buffer underrun occured|\"+i;
+      dpSet($datapoint + \".log\", message);
+      delay(0,500);
+      message = t+\"|Error|SUN|score.cc|MAC_DNLD|Buffet underrun|\"+i;
+      dpSet($datapoint + \".log\", message);
+      delay(0,500);
+      message = t+\"|Warning|Mercury|file.cc|PAC_VT_Viper|Buffer underrun occured|\"+i;
+      dpSet($datapoint + \".log\", message);
+      delay(0,500);
+      i++;
+    }
+  }
+}
+" 0
+EE E E 1 -1 -1 0  10 200
+"" 0 1
+E"#uses \"gcfnav-pmlinterface.ctl\"
+#uses \"gcf-common.ctl\"
+#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 6
+"TextDatapointName"
+""
+1 70 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 72 2 906 18
+0 2 0 "s" 0 0 0 64 0 0  72 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+2 7
+"Text2"
+""
+1 12 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 14 2 62 18
+0 2 0 "s" 0 0 0 64 0 0  14 2
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 Log for:
+6 17
+"Border7"
+""
+1 400 713 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 400 689 761 713
+2 18
+"Text1"
+""
+1 407 691 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 497 693 585 709
+0 2 0 "s" 0 0 0 194 0 0  497 693
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Log message:
+6 20
+"Border1"
+""
+1 400 743 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 400 719 761 743
+2 21
+"Text4"
+""
+1 414 721 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 507 723 598 739
+0 2 0 "s" 0 0 0 194 0 0  507 723
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Show column:
+6 25
+"Border2"
+""
+1 770 743 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 770 719 936 743
+2 26
+"Text5"
+""
+1 781 721 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 847 723 911 739
+0 2 0 "s" 0 0 0 194 0 0  847 723
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Show log:
+6 31
+"Border4"
+""
+1 10 713 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 689 292 713
+2 32
+"Text7"
+""
+1 22 691 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 129 693 234 709
+0 2 0 "s" 0 0 0 194 0 0  129 693
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 Application filter
+6 33
+"Border5"
+""
+1 10 743 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+31 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 719 292 743
+2 34
+"Text8"
+""
+1 49 721 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 129 723 207 739
+0 2 0 "s" 0 0 0 194 0 0  129 723
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Logger filter
+2 39
+"Text3"
+""
+1 13 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+36 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 15 22 63 38
+0 2 0 "s" 0 0 0 66 0 0  15 22
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Title:
+2 40
+"txt_title"
+""
+1 70 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+37 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 72 22 764 38
+0 2 0 "s" 0 0 0 64 0 0  72 22
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+25 1
+"logger"
+""
+1 10 39 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+8 37 942 685
+E E 1 0 1 7 1 "Time" 0 1 0 "s" 1
+LANG:1 4 Time
+E1
+LANG:1 0 
+ 160 "Level" 0 1 0 "s" 1
+LANG:1 5 Level
+E1
+LANG:1 0 
+ 60 "Host" 0 1 0 "s" 1
+LANG:1 4 Host
+E1
+LANG:1 0 
+ 80 "Application" 0 1 0 "s" 1
+LANG:1 11 Application
+E1
+LANG:1 0 
+ 110 "loggerName" 0 1 0 "s" 1
+LANG:1 11 Logger name
+E1
+LANG:1 0 
+ 200 "Message" 0 1 0 "s" 1
+LANG:1 7 Message
+E1
+LANG:1 0 
+ 300 "Info" 0 0 0 "s" 1
+LANG:1 4 Info
+E1
+LANG:1 0 
+ 195 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 1 2 3 0
+1 0
+13 5
+"Button3"
+""
+1 819 6 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+817 4 941 31
+T 
+1
+LANG:1 9 Clear log
+"main()
+{
+  logger.deleteAllLines;
+}" 0
+ E E E
+20 13
+"showWarning"
+""
+1 520 694 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+518 692 595 712
+1
+T 
+1
+LANG:1 7 Warning
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+EE20 14
+"showError"
+""
+1 610 694 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+608 692 684 712
+1
+T 
+1
+LANG:1 5 Error
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+EE20 15
+"showFatal"
+""
+1 690 694 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+688 692 751 711
+1
+T 
+1
+LANG:1 5 Fatal
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+EE20 22
+"showHost"
+""
+1 520 724 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+518 722 573 742
+1
+T 
+1
+LANG:1 4 Host
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+E"main(int button, bool state)
+{
+  setValue (\"logger\", \"namedColumnVisibility\", \"Host\", state);
+}" 0
+20 23
+"showApplication"
+""
+1 590 724 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+588 722 678 742
+1
+T 
+1
+LANG:1 11 Application
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+E"main(int button, bool state)
+{
+  setValue (\"logger\", \"namedColumnVisibility\", \"Application\", state);
+}" 0
+20 24
+"CheckButton4"
+""
+1 690 724 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+688 722 759 741
+1
+T 
+1
+LANG:1 4 Info
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+E"main(int button, bool state)
+{
+  setValue (\"logger\", \"namedColumnVisibility\", \"Info\", state);
+}" 0
+20 27
+"showLog"
+""
+1 860 724 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+858 722 929 741
+1
+T 
+1
+LANG:1 3 Log
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+EE14 35
+"txt_filterAppl"
+""
+1 140 689 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+33 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+138 687 292 714
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 36
+"txt_filterLogger"
+""
+1 140 719 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+138 717 292 744
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 37
+"Button1"
+""
+1 303 718 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+301 716 383 743
+T 
+1
+LANG:1 12 Reset filter
+"main()
+{
+  dpSet($configDatapoint + \".filterApplTemp\", \"\");
+  dpSet($configDatapoint + \".filterLoggerTemp\", \"\");
+  txt_filterLogger.text=\"\";
+  txt_filterAppl.text=\"\";
+}" 0
+ E E E
+13 38
+"Button2"
+""
+1 303 690 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+36 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+301 688 383 715
+T 
+1
+LANG:1 12 Apply filter
+"main()
+{
+  dpSet($configDatapoint + \".filterApplTemp\", txt_filterAppl.text);
+  dpSet($configDatapoint + \".filterLoggerTemp\", txt_filterLogger.text);
+
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

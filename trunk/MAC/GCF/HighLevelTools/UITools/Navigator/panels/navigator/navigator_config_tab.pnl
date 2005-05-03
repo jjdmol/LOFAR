@@ -1,16 +1,14 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,547 209 946 43 N "_3DFace" 4
+PANEL,406 172 946 43 N "_3DFace" 4
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
 "main()
 {
-  // disable remove button if only one subview exists
-  string viewConfigDpName = \"__nav_\" + $selectedElementDpType + \"_viewconfig\";
-  
+  string viewConfigDpName = \"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\" + $selectedElementDpType + \"_viewconfig\";
   dyn_int nrOfSubViews;
   if(dpExists(viewConfigDpName))
   {
@@ -24,27 +22,54 @@ PANEL,547 209 946 43 N "_3DFace" 4
     }
     else
     {
-      //DebugN(\"nrOfSubViews: \" + nrOfSubViews);
-      //DebugN(\"nrOfSubViews[$selectedView]: \" + nrOfSubViews[$selectedView]);
-      if(nrOfSubViews[$selectedView] > 1)
-      {
-        btnRemove.enabled = TRUE;
-        btnDefault.enabled = TRUE;
-      }
-      else if(nrOfSubViews[$selectedView] == 1)
-      {
-        btnRemove.enabled = TRUE;
-        btnDefault.enabled = FALSE;
-      }
-      else if(nrOfSubViews[$selectedView] < 1)
-      {
-        btnRemove.enabled = FALSE;
-        btnDefault.enabled = FALSE;
-      }
-
+      dpConnect(\"NavConfigSubviewUR\",
+                DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT + \":_online.._value\");
     }
   }
-}" 0
+}
+
+
+
+NavConfigSubviewUR(string dp1, string selectedEnvironment)
+{
+  // disable remove button if only one subview exists
+  string viewConfigDpName = \"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\" + $selectedElementDpType + \"_viewconfig\";
+  dyn_int nrOfSubViews;
+  dpGet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews);
+  bool accessPermit = ((selectedEnvironment==\"Personal\") || (selectedEnvironment!=\"Personal\" && getUserPermission(UR_ADDREMOVESYSTEMSUBVIEW)));
+  if(accessPermit)
+  {
+    btnNew.enabled=TRUE;
+    if(nrOfSubViews[$selectedView] > 1)
+    {
+      btnRemove.enabled = TRUE;
+      btnDefault.enabled = TRUE;
+    }
+    else if(nrOfSubViews[$selectedView] == 1)
+    {
+      btnRemove.enabled = TRUE;
+      btnDefault.enabled = FALSE;
+    }
+    else if(nrOfSubViews[$selectedView] < 1)
+    {
+      btnRemove.enabled = FALSE;
+      btnDefault.enabled = FALSE;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+" 0
 EE E E 1 -1 -1 0  20 40
 "" 0 1
 E"#uses \"gcfnav-tab-functions.ctl\"
@@ -73,7 +98,7 @@ E E 0 2 1 0 1 E  1 39 938 39
 13 54
 "btnNew"
 ""
-1 4 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 4 4 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 62 0 0 0 0 0
 EE E
@@ -124,7 +149,6 @@ LANG:1 14 Remove subview
   int nrOfSubviews;
   if(ConfigTabRemoveSubViewClicked($viewName,$selectedView,$selectedElementDpType,$configDatapoint,nrOfSubviews))
   {
-    DebugN(\"nrOfSubviews:(del button): \" + nrOfSubviews);
     if(nrOfSubviews <= 1)
     {
       btnRemove.enabled = false;
