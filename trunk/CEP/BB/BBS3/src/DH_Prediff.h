@@ -69,14 +69,13 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  void setBufferSize(const vector<uint32>& shape);
-  const vector<uint32>& getBufferSize();
+  void setBufferSize(int size);
+  int getBufferSize();
 
   void setDataSize(unsigned int size);
   unsigned int getDataSize() const;
 
   double* getDataBuffer();
-  char* getFlagBuffer();
 
   bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
@@ -86,9 +85,6 @@ public:
   double getStartTime();
   double getEndTime();
   void setDomain(double fStart, double fEnd, double tStart, double tEnd);
-
-  bool moreDataToCome();
-  void setMoreData(bool more);
 
   void dump();
 
@@ -103,8 +99,6 @@ private:
 
   unsigned int* itsDataSize;    // Number of equations in data buffer
   double* itsDataBuffer;
-  char*   itsFlagBuffer;
-  unsigned int* itsMoreData;   // More result to come?
   double* itsStartFreq;        // Start frequency of the domain
   double* itsEndFreq;          // End frequency of the domain
   double* itsStartTime;        // Start time of the domain
@@ -119,15 +113,6 @@ inline unsigned int DH_Prediff::getDataSize() const
 
 inline double* DH_Prediff::getDataBuffer()
 { return itsDataBuffer; }
-
-inline char* DH_Prediff::getFlagBuffer()
-{ return itsFlagBuffer; }
-
-inline bool DH_Prediff::moreDataToCome()
-{ return ((*itsMoreData==0)?(false):(true));}
-
-inline void DH_Prediff::setMoreData(bool more)
-{ *itsMoreData = more; }
 
 inline double DH_Prediff::getStartFreq()
 { return *itsStartFreq; }

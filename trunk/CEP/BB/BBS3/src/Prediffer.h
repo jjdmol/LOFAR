@@ -99,13 +99,12 @@ public:
 
   // Set the domain (in frequency and time).
   // Hereafter getSolvableParmData can be called.
-  // It returns a vector containing the 3-dim shape of the expected data
-  // (as nrchan-nrspid-nreq).
-  // The 4th element of the vector is the total number of equations.
-  // The vector is empty if the domain is outside the observation domain.
+  // It returns the maximum length of the buffer needed to marshall
+  // the LSQFit object filled by fillFitter.
+  // The length is 0 if the domain is outside the observation domain.
   // If needed the given domain is adjusted to the observation domain.
-  vector<uint32> setDomain (double startFreq, double lengthFreq,
-			    double startTime, double lengthTime);
+  int setDomain (double startFreq, double lengthFreq,
+		 double startTime, double lengthTime);
 
   // Get the actual domain.
   const MeqDomain& getDomain() const
@@ -129,18 +128,6 @@ public:
   // fitter object with them.
   // The fitter object gets initialized before being filled.
   void fillFitter (casa::LSQFit&);
-
-  // Get the equations for all selected baselines.
-  // The values are stored into the buffer as a 3-dim double array with axes
-  // nresult,nspid+1,nval.
-  // The flags are stored in a 2-dim boolean array with axes nresult,nval.
-  // It is checked if the shape of the buffer is correct.
-  // The function should be called until a false status is returned.
-  // In nresult it returns the number of results put in the buffer.
-  // Normally this is shape(2), but for the last time it can be less.
-  bool getEquations (double* result, char* flagResult,
-		     const vector<uint32>& shape,
-		     int& nresult);
 
   // Set the source numbers to use in this peel step.
   bool setPeelSources (const vector<int>& peelSources,
@@ -175,11 +162,11 @@ public:
   // Write the solved parms.
   void writeParms();
 
-  // Write the fitter matrix into a BlobStream.
-  static void toBlob (const casa::LSQFit&, BlobOStream&);
+  // Marshall the fitter object into a buffer.
+  static void marshall (const casa::LSQFit&, void* buffer, int bufferSize);
 
-  // Read the fitter obbject from a BlobStream.
-  static void fromBlob (casa::LSQFit&, BlobIStream&);
+  // Demarshall the fitter object from a buffer.
+  static void demarshall (casa::LSQFit&, const void* buffer, int bufferSize);
 
 
 private:

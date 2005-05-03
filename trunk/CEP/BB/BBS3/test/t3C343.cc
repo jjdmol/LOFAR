@@ -65,15 +65,7 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain. Only use center frequency and all times.
-  vector<uint32> shape = pre1.setDomain (1.18e9-59.5*156250, 56*156250,
-					 0., 1e12);
-  uint nrval = shape[0] * shape[1] * shape[2];
-  uint bufnreq = shape[2];
-  uint totnreq = shape[3];
-  uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
-  cout << "bufShape " << shape << endl;
-  double* buffer = new double[nrval];
-  char* flags = new char[shape[0]*shape[2]];
+  pre1.setDomain (1.18e9-59.5*156250, 56*156250, 0., 1e12);
     
   // Get the ParmData from the Prediffer and send it to the solver.
   Solver solver;
@@ -85,20 +77,10 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
   cout << "Before: " << setprecision(15) << solver.getSolvableValues() << endl;
 
   for (int it=0; it<niter; ++it) {
-    // Get the equations from the prediffer and give them to the solver.
-    for (uint i=0; i<nrloop; i++) {
-      int nres;
-      bool more = pre1.getEquations (buffer, flags, shape, nres);
-      int nreq = bufnreq;
-      if (i == nrloop-1) {
-	nreq = totnreq  - (nrloop-1)*bufnreq;
-	ASSERT (!more);
-      } else {
-	ASSERT (more);
-      }
-      ASSERT (nres == nreq);
-      solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
-    }
+    // Get the fitter from the prediffer and give them to the solver.
+    casa::LSQFit fitter;
+    pre1.fillFitter (fitter);
+    solver.mergeFitter (fitter, 0);
     // Do the solve.
     Quality quality;
     solver.solve (false, quality);
@@ -108,8 +90,6 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
     pre1.updateSolvableParms (solver.getSolvableParmData());
   }
   pre1.writeParms();
-  delete [] buffer;
-  delete [] flags;
 }
 
 // Solve for steps in time.
@@ -128,15 +108,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
   // Loop through all time domains.
   while (timeStart < timeLast) {
     // Set a domain. Use middle 56 channels and 2 times per step.
-    vector<uint32> shape = pre1.setDomain (1.18e9-59.5*156250, 56*156250,
-					   timeStart, timeStep);
-    uint nrval = shape[0] * shape[1] * shape[2];
-    uint bufnreq = shape[2];
-    uint totnreq = shape[3];
-    uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
-    cout << "bufShape " << shape << endl;
-    double* buffer = new double[nrval];
-    char* flags = new char[shape[0]*shape[2]];
+    pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
     
     // Get the ParmData from the Prediffer and send it to the solver.
     Solver solver;
@@ -148,20 +120,10 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
     cout << "Before: " << setprecision(15) << solver.getSolvableValues() << endl;
 
     for (int it=0; it<niter; ++it) {
-      // Get the equations from the prediffer and give them to the solver.
-      for (uint i=0; i<nrloop; i++) {
-	int nres;
-	bool more = pre1.getEquations (buffer, flags, shape, nres);
-	int nreq = bufnreq;
-	if (i == nrloop-1) {
-	  nreq = totnreq  - (nrloop-1)*bufnreq;
-	  ASSERT (!more);
-	} else {
-	  ASSERT (more);
-	}
-	ASSERT (nres == nreq);
-	solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
-      }
+      // Get the fitter from the prediffer and give them to the solver.
+      casa::LSQFit fitter;
+      pre1.fillFitter (fitter);
+      solver.mergeFitter (fitter, 0);
       // Do the solve.
       Quality quality;
       solver.solve (false, quality);
@@ -171,8 +133,6 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
       pre1.updateSolvableParms (solver.getSolvableParmData());
     }
     pre1.writeParms();
-    delete [] buffer;
-    delete [] flags;
     timeStart += timeStep;
   }
 }
