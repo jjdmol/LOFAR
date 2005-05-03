@@ -31,6 +31,7 @@
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/DH_Solution.h>
 #include <BBS3/Solver.h>
+#include <BBS3/Prediffer.h>
 #include <BBS3/ParmData.h>
 
 #include <iostream>
@@ -216,7 +217,6 @@ Solver* WH_Solve::getSolver(int id)
 void WH_Solve::readInputs(Solver* solver, bool firstRead)
 {
   LOG_TRACE_FLOW("WH_Solve::readInputs");
-  bool more = false;
   DH_Prediff* dh;
   for (int i=0; i<itsNPrediffers; i++)
   {
@@ -225,21 +225,10 @@ void WH_Solve::readInputs(Solver* solver, bool firstRead)
       dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
       getDataManager().readyWithInHolder(i+2);  // Cause input to be read
     }
-    do
-    {
-
-      dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
-      vector<uint32> shape = dh->getBufferSize();
-      solver->setEquations(dh->getDataBuffer(), dh->getFlagBuffer(),
-			   dh->getDataSize(),
-			   shape[1]-1, shape[0], i);     // id = i or from prediffer?
-      more = dh->moreDataToCome();
-      if (more)
-      {
-	getDataManager().readyWithInHolder(i+2);  // Cause input to be read
-      }
-    }
-    while (more);
+    dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
+    casa::LSQFit fitter;
+    Prediffer::demarshall (fitter, dh->getDataBuffer(), dh->getBufferSize());
+    solver->mergeFitter (fitter, i);
   }
 }
 

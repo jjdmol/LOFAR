@@ -643,8 +643,8 @@ void Prediffer::initParms (const MeqDomain& domain)
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-vector<uint32> Prediffer::setDomain (double fstart, double flength,
-				     double tstart, double tlength)
+int Prediffer::setDomain (double fstart, double flength,
+			  double tstart, double tlength)
 {
   // Determine the first channel and nr of channels to process.
   ASSERT (fstart <= itsEndFreq);
@@ -687,7 +687,7 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   }
   // Exit when no more chunks.
   if (itsTimeIndex >= itsTimes.nelements()) {
-    return vector<uint32>();
+    return 0;
   }
   
   cout << "BBSTest: BeginOfInterval" << endl;
@@ -736,20 +736,9 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   initParms (itsDomain);
   parmTimer.stop();
   cout << "BBSTest: initparms    " << parmTimer << endl;
-
-  // Create the shape vector.
-  vector<uint32> shape(4);
-  shape[0] = 2*(itsLastChan-itsFirstChan+1);
-  shape[1] = itsNrScid+1;
-  // Use a buffer of, say, up to 100 KBytes.
-  // All corr, freq and spid have to fit in it.
-  itsNrBufTB = std::max (1, int(0.5 + 100000.
-				/ (shape[0] * shape[1] * itsNSelCorr)
-				/ sizeof(double)));
-  shape[2] = itsNrBufTB*itsNSelCorr;
-  shape[3] = itsNSelCorr * itsNrSelBl * itsNrTimes;   // total nr
-//   itsSolveColName = itsDataColName;
-  return shape;
+  // Return the (estimated) maximum buffer size needed to marshall the
+  // fitter object.
+  return itsNrScid*itsNrScid/2 + 1000;
 }
 
 
@@ -950,94 +939,6 @@ void Prediffer::fillEquation (casa::LSQFit& fitter, int nresult, int nrval,
     result += nrspid*nrval;
   }
   itsEqTimer.stop();
-}
-
-//----------------------------------------------------------------------
-//
-// ~getEquations
-//
-// Get the condition equations for the selected baselines and domain.
-//
-//----------------------------------------------------------------------
-bool Prediffer::getEquations (double* result, char* flagResult,
-			      const vector<uint32>& shape,
-			      int& nresult)
-{
-  ASSERT (itsNrTimesDone < itsNrTimes);
-  LOG_TRACE_FLOW("Prediffer::getEquations");
-  // Check if the shape is correct.
-  int nrchan = itsLastChan-itsFirstChan+1;
-  ASSERT (shape[2] == uint(itsNrBufTB*itsNSelCorr)
-	  && shape[1] == uint(itsNrScid+1)
-	  && shape[0] == uint(2*nrchan));
-  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
-  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
-  unsigned int freqOffset = itsDataFirstChan*itsNCorr;
-
-  // Get the pointer to the mapped data.
-  fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
-  void* flagStart = itsFlagsMap->getStart();
-  int flagStartBit = itsFlagsMap->getStartBit();
-  ASSERTSTR(dataStart!=0 && flagStart!=0,
-	    "No memory region mapped. Call map(..) first."
-	    << " Perhaps you have forgotten to call nextInterval().");
-
-  // Allocate a buffer to convert flags from bits to bools.
-  // Use Block instead of vector, because vector uses bits.
-  Block<bool> flags(nrchan*itsNCorr);
-  bool* flagsPtr = &(flags[0]);
-  // Loop through all baselines/times and create a request.
-  uint nrDone = 0;
-  while (itsNrTimesDone<itsNrTimes) {
-    uint tStep = itsNrTimesDone;
-    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
-    double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
-    double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
-    
-    MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
-    MeqRequest request(domain, nrchan, 1, itsNrScid);
-
-    // Loop through all baselines and get an equation if selected.
-    while (itsBlNext<itsNrBl) {
-      uint ant1 = itsAnt1[itsBlNext];
-      uint ant2 = itsAnt2[itsBlNext];
-      ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow());
-      if (itsBLSelection(ant1,ant2)  &&  itsBLIndex(ant1,ant2) >= 0) {
-	if (nrDone == itsNrBufTB) {
-	  break;
-	}
-	// Get pointer to correct data part.
-	unsigned int blOffset = itsBlNext*itsNrChan*itsNCorr;
-	fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
-	// Convert the flag bits to bools.
-	bitToBool (flagsPtr, flagStart, nrchan*itsNCorr,
-		   timeOffset + blOffset + freqOffset + flagStartBit);
-	// Get an equation for this baseline.
-	int blindex = itsBLIndex(ant1,ant2);
-	getEquation (result, flagResult, data, flagsPtr,
-		     request, blindex, ant1, ant2);
-	result += 2*nrchan*itsNSelCorr*(itsNrScid+1);
-	flagResult += 2*nrchan*itsNSelCorr;
-	++nrDone;
-      }
-      ++itsBlNext;
-    }
-    if (itsBlNext == itsNrBl) {
-      // A baseline loop has been completed.
-      ++itsNrTimesDone;
-      itsBlNext = 0;
-    }
-    if (nrDone == itsNrBufTB) {
-      break;
-    }
-  }
-  nresult = nrDone*itsNSelCorr;
-  if (itsNrTimesDone == itsNrTimes) {
-    cout << "BBSTest: predict " << itsPredTimer << endl;
-    cout << "BBSTest: formeqs " << itsEqTimer << endl;
-    return false;
-  }
-  return true;
 }
 
 //----------------------------------------------------------------------
@@ -1660,43 +1561,25 @@ void Prediffer::showSettings() const
   cout << endl;
 }
 
-void Prediffer::toBlob (const LSQFit& fitter, BlobOStream& bos)
+void Prediffer::marshall (const LSQFit& fitter, void* buffer, int bufferSize)
 {
   // Store the fitter in a few steps:
   // - convert to a Record
-  // - store the Record in an AipsIO object
-  // - store the AipsIO buffer in the blob.
-  // This might be a bit slow, but it is easiest and most general to program.
-  // It is expected that the fitter data are not too many, so that this
-  // process does not take too much time.
-  // If it appears to take a lot of time, the record can be stored in the
-  // blob directly, but that requires intimate knowledge of the contents
-  // of the record, thus of the LSQFit class. This is not very desirable.
-  casa::MemoryIO buf;
+  // Make a non-expandable buffer and use it in AipsIO.
+  casa::MemoryIO buf(buffer, bufferSize, ByteIO::Update);
   casa::AipsIO aio(&buf);
   casa::Record rec;
   casa::String str;
+  // Convert the fitter to a Record and serialize it into the buffer.
   ASSERT (fitter.toRecord (str, rec));
   aio << rec;
-  bos.putStart ("fitter", 1);
-  int size = buf.length();
-  bos << size;
-  bos.put ((char*)(buf.getBuffer()), size);
-  bos.putEnd();
 }
 
-void Prediffer::fromBlob (LSQFit& fitter, BlobIStream& bis)
+void Prediffer::demarshall (LSQFit& fitter, const void* buffer, int bufferSize)
 {
-  casa::MemoryIO buf;
+  casa::MemoryIO buf(buffer, bufferSize);
   casa::AipsIO aio(&buf);
   casa::Record rec;
-  int version = bis.getStart ("fitter");
-  ASSERTSTR (version==1, "Prediffer::fromBlob - incorrect version");
-  int size;
-  bis >> size;
-  buf.setBuffer (size);
-  bis.get ((char*)(buf.getBuffer()), size);
-  bis.getEnd();
   aio >> rec;
   casa::String str;
   ASSERT (fitter.fromRecord (str, rec));

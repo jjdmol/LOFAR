@@ -147,7 +147,7 @@ MeqMatrix getArray (const KeyValueMap& kvmap, const std::string& arrName,
 {
   KeyValueMap::const_iterator value = kvmap.find(arrName);
   if (value == kvmap.end()) {
-    return MeqMatrix (double(defaultValue), 1, 1);
+    return MeqMatrix (double(defaultValue));
   }
   vector<double> vec;
   if (value->second.dataType() == KeyValue::DTValueVector) {

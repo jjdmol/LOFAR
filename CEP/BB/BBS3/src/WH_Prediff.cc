@@ -115,10 +115,10 @@ void WH_Prediff::process()
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
 
-    vector<uint32> dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-					       wo->getStartTime(), wo->getTimeLength());
+    int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+			       wo->getStartTime(), wo->getTimeLength());
    
-    dhRes->setBufferSize(dataShape);              // Set data field of output DH_Prediff to correct size
+    dhRes->setBufferSize(size);              // Set data field of output DH_Prediff to correct size
 
     dhRes->setParmData(pred->getSolvableParmData());   
   }
@@ -133,9 +133,9 @@ void WH_Prediff::process()
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
 
-    vector<uint32> dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-					       wo->getStartTime(), wo->getTimeLength());
-    dhRes->setBufferSize(dataShape);              // Set data field of output DH_Prediff to correct size
+    int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+			       wo->getStartTime(), wo->getTimeLength());
+    dhRes->setBufferSize(size);      // Set data field of output DH_Prediff to correct size
 
     dhRes->setParmData(pred->getSolvableParmData());
   }
@@ -168,22 +168,15 @@ void WH_Prediff::process()
   }
 
   // Calculate, put in output dataholder buffer and send to solver
-  bool more=false;
-  int nresult = 0;
-  do
   {
     dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
-    more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getFlagBuffer(),
-			      dhRes->getBufferSize(), nresult);
-    MeqDomain domain = pred->getDomain();
-    dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), domain.endY());
-    dhRes->setMoreData(more);
-    dhRes->setDataSize(nresult);
+    casa::LSQFit fitter;
+    pred->fillFitter (fitter);
+    Prediffer::marshall (fitter, dhRes->getDataBuffer(),
+			 dhRes->getBufferSize());
     // send result to solver
     getDataManager().readyWithOutHolder(2);
   }
-  while (more);
-    
 
   if (wo->getSubtractSources())
   {

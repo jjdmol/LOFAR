@@ -65,15 +65,16 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
   }
 }
 
-void doSolveFit (Prediffer& pre1, const vector<string>& solv, bool toblob,
-		 int niter)
+void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
+	      int niter)
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
-  pre1.setDomain (137750000-250000, 2*500000, 0., 1e12);
-  //pre1.setDomain (0., 1e12, 0., 1e12);
+  int bufsize = pre1.setDomain (137750000-250000, 2*500000, 0., 1e12);
+  //int bufsize = pre1.setDomain (0., 1e12, 0., 1e12);
+  char* fitBuf = new char[bufsize];
     
   // Get the ParmData from the Prediffer and send it to the solver.
   // Optionally convert it to and from a blob to see if that works fine.
@@ -109,14 +110,8 @@ void doSolveFit (Prediffer& pre1, const vector<string>& solv, bool toblob,
     if (toblob) {
       casa::LSQFit fitter2;
       pre1.fillFitter (fitter2);
-      BlobOBufChar bufo;
-      {
-	BlobOStream bos(bufo);
-	Prediffer::toBlob (fitter2, bos);
-      }
-      BlobIBufChar bufi(bufo.getBuffer(), bufo.size());
-      BlobIStream bis(bufi);
-      Prediffer::fromBlob (fitter, bis);
+      Prediffer::marshall (fitter2, fitBuf, bufsize);
+      Prediffer::demarshall (fitter, fitBuf, bufsize);
     } else {
       pre1.fillFitter (fitter);
     }
@@ -129,10 +124,11 @@ void doSolveFit (Prediffer& pre1, const vector<string>& solv, bool toblob,
     cout.precision (prec);
     pre1.updateSolvableParms (solver.getSolvableParmData());
   }
+  delete [] fitBuf;
 }
 
-void doSolveFit2 (Prediffer& pre1, Prediffer& pre2,
-		  const vector<string>& solv, int niter)
+void doSolve2 (Prediffer& pre1, Prediffer& pre2,
+	       const vector<string>& solv, int niter)
 {
   Solver solver;
   solver.initSolvableParmData (2);
@@ -170,101 +166,14 @@ void doSolveFit2 (Prediffer& pre1, Prediffer& pre2,
   }
 }
 
-void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
-	      int niter)
-{
-  // Set the solvable parameters.
-  pre1.clearSolvableParms();
-  pre1.setSolvableParms (solv, vector<string>(), true);
-  // Set a domain.
-  vector<uint32> shape = pre1.setDomain (137750000-250000, 2*500000,
-  //vector<uint32> shape = pre1.setDomain (0., 1e12,
-					 0., 1e12);
-  uint nrval = shape[0] * shape[1] * shape[2];
-  uint bufnreq = shape[2];
-  uint totnreq = shape[3];
-  uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
-  cout << "bufShape " << shape << endl;
-  double* buffer = new double[nrval];
-  char* flags = new char[shape[0]*shape[2]];
-    
-  // Get the ParmData from the Prediffer and send it to the solver.
-  // Optionally convert it to and from a blob to see if that works fine.
-  Solver solver;
-  solver.initSolvableParmData (1);
-  if (toblob) {
-    cout << "use toblob" << endl;
-    BlobOBufChar bufo;
-    {
-      BlobOStream bos(bufo);
-      bos.putStart ("ParmData", 1);
-      bos << pre1.getSolvableParmData();
-      bos.putEnd();
-    }
-    BlobIBufChar bufi(bufo.getBuffer(), bufo.size());
-    BlobIStream bis(bufi);
-    bis.getStart ("ParmData");
-    vector<ParmData> parmData;
-    bis >> parmData;
-    bis.getEnd();
-    solver.setSolvableParmData (parmData, 0);
-  } else {
-    solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
-  }
-  vector<ParmData> pData = pre1.getSolvableParmData();
-  pre1.showSettings();
-  streamsize prec = cout.precision();
-  cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
-
-  for (int it=0; it<niter; ++it) {
-    // Get the equations from the prediffer and give them to the solver.
-    for (uint i=0; i<nrloop; i++) {
-      int nres;
-      bool more = pre1.getEquations (buffer, flags, shape, nres);
-      int nreq = bufnreq;
-      if (i == nrloop-1) {
-	nreq = totnreq  - (nrloop-1)*bufnreq;
-	ASSERT (!more);
-      } else {
-	ASSERT (more);
-      }
-      ASSERT (nres == nreq);
-      ///cout << "*** buffer " << i << " ***" << endl;
-      ///    hexdump(buffer, nrval);
-      solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
-      // Define equations for a 2nd time to see if solution changes.
-      if (toblob) {
-	solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
-      }
-    }
-    // Do the solve.
-    Quality quality;
-    solver.solve (false, quality);
-    cout << "iter" << it << ":  " << setprecision(10)
-	 << solver.getSolvableValues() << endl;
-    cout.precision (prec);
-    pre1.updateSolvableParms (solver.getSolvableParmData());
-  }
-  delete [] buffer;
-  delete [] flags;
-}
-
 void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
-  vector<uint32> shape = pre1.setDomain (137750000-250000, 4*500000,
-  //vector<uint32> shape = pre1.setDomain (0., 1e12,
-					 0., 1e12);
-  uint nrval = shape[0] * shape[1] * shape[2];
-  uint bufnreq = shape[2];
-  uint totnreq = shape[3];
-  uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
-  cout << "bufShape " << shape << endl;
-  double* buffer = new double[nrval];
-  char* flags = new char[shape[0]*shape[2]];
+  pre1.setDomain (137750000-250000, 4*500000, 0., 1e12);
+  //pre1.setDomain (0., 1e12, 0., 1e12);
     
   // Get the ParmData from the Prediffer and send it to the solver.
   // Optionally convert it to and from a blob to see if that works fine.
@@ -277,22 +186,10 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
   cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
 
   for (int it=0; it<niter; ++it) {
-    // Get the equations from the prediffer and give them to the solver.
-    for (uint i=0; i<nrloop; i++) {
-      int nres;
-      bool more = pre1.getEquations (buffer, flags, shape, nres);
-      int nreq = bufnreq;
-      if (i == nrloop-1) {
-	nreq = totnreq  - (nrloop-1)*bufnreq;
-	ASSERT (!more);
-      } else {
-	ASSERT (more);
-      }
-      ASSERT (nres == nreq);
-      ///cout << "*** buffer " << i << " ***" << endl;
-      ///    hexdump(buffer, nrval);
-      solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
-    }
+    // Get the fitter from the prediffer and give it to the solver.
+    casa::LSQFit fitter;
+    pre1.fillFitter (fitter);
+    solver.mergeFitter (fitter, 0);
     // Do the solve.
     Quality quality;
     solver.solve (false, quality);
@@ -302,89 +199,6 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
     writeParms (solver.getSolvableParmData(), pre1.getDomain());
     pre1.updateSolvableParms();
   }
-  delete [] buffer;
-  delete [] flags;
-}
-
-void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
-{
-  Solver solver;
-  solver.initSolvableParmData (2);
-  // Set the solvable parameters.
-  pre1.clearSolvableParms();
-  pre2.clearSolvableParms();
-  pre1.setSolvableParms (solv, vector<string>(), true);
-  pre2.setSolvableParms (solv, vector<string>(), true);
-  // Set a domain.
-  vector<uint32> shape1 = pre1.setDomain (137750000-250000, 4*500000,
-  ///  vector<uint32> shape1 = pre1.setDomain (0., 1e12,
-					  0., 1e12);
-  vector<uint32> shape2 = pre2.setDomain (137750000-250000, 4*500000,
-  ///  vector<uint32> shape2 = pre2.setDomain (0., 1e12,
-					  0., 1e12);
-  // Get the ParmData from the Prediffers and send it to the solver.
-  solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
-  solver.setSolvableParmData (pre2.getSolvableParmData(), 1);
-  {
-    // Get the equations.
-    uint nrval = shape1[0] * shape1[1] * shape1[2];
-    uint bufnreq = shape1[2];
-    uint totnreq = shape1[3];
-    uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
-    cout << "bufShape-1 " << shape1 << endl;
-    double* buffer = new double[nrval];
-    char* flags = new char[shape1[0]*shape1[2]];
-    // Get the equations from the prediffer and give them to the solver.
-    for (uint i=0; i<nrloop; i++) {
-      int nres;
-      bool more = pre1.getEquations (buffer, flags, shape1, nres);
-      int nreq = bufnreq;
-      if (i == nrloop-1) {
-	nreq = totnreq  - (nrloop-1)*bufnreq;
-	ASSERT (!more);
-      } else {
-	ASSERT (more);
-      }
-      ASSERT (nres == nreq);
-      solver.setEquations (buffer, flags, nreq, shape1[1]-1, shape1[0], 0);
-    }
-    delete [] buffer;
-    delete [] flags;
-  }
-  {
-    uint nrval = shape2[0] * shape2[1] * shape2[2];
-    uint bufnreq = shape2[2];
-    uint totnreq = shape2[3];
-    uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
-    cout << "bufShape-2 " << shape2 << endl;
-    double* buffer = new double[nrval];
-    char* flags = new char[shape2[0]*shape2[2]];
-    // Get the equations from the prediffer and give them to the solver.
-    for (uint i=0; i<nrloop; i++) {
-      int nres;
-      bool more = pre2.getEquations (buffer, flags, shape2, nres);
-      int nreq = bufnreq;
-      if (i == nrloop-1) {
-	nreq = totnreq  - (nrloop-1)*bufnreq;
-	ASSERT (!more);
-      } else {
-	ASSERT (more);
-      }
-      ASSERT (nres == nreq);
-      solver.setEquations (buffer, flags, nreq, shape2[1]-1, shape2[0], 1);
-    }
-    delete [] buffer;
-    delete [] flags;
-  }
-
-  // Do the solve.
-  streamsize prec = cout.precision();
-  cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
-  Quality quality;
-  solver.solve (false, quality);
-  cout << "After:  " << setprecision(10) << solver.getSolvableValues() << endl;
-  cout << "Per prediffer: " << solver.getSolutions() << endl;
-  cout.precision (prec);
 }
 
 
@@ -472,7 +286,7 @@ int main (int argc, const char* argv[])
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
       solv[2] = "StokesI.*";
-      doSolve2 (pre1, pre2, solv);
+      doSolve2 (pre1, pre2, solv, 1);
       cout << "End of test with two prediffers" << endl;
     }
     // Take more baselines.
@@ -495,51 +309,6 @@ int main (int argc, const char* argv[])
       solv[2] = "StokesI.*";
       doSolve (pre1, solv, false, 5);
       cout << "End of test with 21 antennas" << endl;
-    }
-    // Let the Prediffer fill the fitter.
-    {
-      cout << "Starting test with 21 antennas using fillFitter" << endl;
-      vector<int> antVec(21);
-      for (uint i=0; i<antVec.size(); ++i) {
-	antVec[i] = 4*i;
-      }
-      vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", srcgrp, false, true);
-      // Only use first correlation.
-      vector<int> corrVec(1, 0);
-      vector<int> antVec2;
-      pre1.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
-      vector<string> solv(3);
-      solv[0] = "RA.*";
-      solv[1] = "DEC.*";
-      solv[2] = "StokesI.*";
-      doSolveFit (pre1, solv, true, 5);
-      cout << "End of test with 21 antennas using fillFitter" << endl;
-    }
-    // Do the same with 2 Prediffers.
-    {
-      cout << "Starting test with 21 antennas using fillFitter2" << endl;
-      vector<int> antVec(21);
-      for (uint i=0; i<antVec.size(); ++i) {
-	antVec[i] = 4*i;
-      }
-      vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", srcgrp, false, true);
-      Prediffer pre2(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", srcgrp, false, true);
-      // Only use first correlation.
-      vector<int> corrVec(1, 0);
-      vector<int> antVec2;
-      pre1.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
-      pre2.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
-      vector<string> solv(3);
-      solv[0] = "RA.*";
-      solv[1] = "DEC.*";
-      solv[2] = "StokesI.*";
-      doSolveFit2 (pre1, pre2, solv, 3);
-      cout << "End of test with 21 antennas using fillFitter2" << endl;
     }
     // Do a solve updating the parm table.
     // This should be the last one.
