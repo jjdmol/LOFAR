@@ -1,15 +1,16 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,350 228 502 255 N "_3DFace" 5
+PANEL,285 168 600 283 N "_3DFace" 6
 "$AreaNr"
 "$Column"
 "$Row"
 "$configDatapoint"
 "$datapoint"
+"$selectedDP"
 "main()
 {
-  startThread(\"FillSelectionList\");
+//  startThread(\"FillSelectionList\");
 }
 
 
@@ -108,7 +109,7 @@ LANG:1 6 Layer1
 2 4
 "Text1"
 ""
-1 17 222 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -117,51 +118,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 224 115 240
-0 2 0 "s" 0 0 0 64 0 0  19 224
+E E 0 1 1 0 1 E U  0 E 19 254 115 270
+0 2 0 "s" 0 0 0 64 0 0  19 254
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 13 Label in cell
-6 27
-"Border1"
-""
-1 401 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-21 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 401 10 491 40
-2 28
-"Text5"
-""
-1 409 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-22 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 411 12 484 28
-0 2 0 "s" 0 0 0 192 0 0  411 12
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 11 Selected DP
 6 29
 "Border2"
 ""
-1 10 235 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 265 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -170,133 +138,155 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 220 140 244
-6 39
-"bar_border"
+E E 0 1 1 0 1 E U  0 E 10 250 140 274
+6 53
+"progressBar_border"
 ""
-1 10 200 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 10 222 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
-30 0 0 0 0 0
+41 0 0 0 0 0
 EE E
 1
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 194 491 212
-6 40
-"bar"
+E E 0 1 1 0 1 E U  1 E 10 216 590 234
+6 54
+"progressBar"
 ""
-1 13 206 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
+1 13 228 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
  E E
-31 0 0 0 0 0
+42 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 13 197 486 207
-17 1
-"SelectionList1"
+E E 0 1 1 0 1 E U  1 E 13 219 586 229
+6 59
+"Border5"
 ""
-1 10 70 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
-2 0 0 0 0 0
+47 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
-0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-8 68 492 189
-0
-E
-"main()
-{
-  string SelectedItem;
-  int RowNumber, RefRowNumber;
-	dyn_string ColumndpNames, ColumnTitles;
-
-  getValue(\"SelectionList1\", \"selectedText\", SelectedItem);
-  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\", ColumndpNames); 
-  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
-
-  RefRowNumber = $Row;
-  RowNumber = RefRowNumber + 1;
-  ColumndpNames[ConvIndex($Row)]=SelectedItem;
-  dpSet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\", ColumndpNames); 
-  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\", ColumndpNames); 
-	
-}" 0
-
-E
-
-3 1
-14 2
-"txt_dpName"
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 30 370 40
+6 60
+"Border6"
 ""
-1 10 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
-3 0 0 0 0 0
+48 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 46 30
+2 61
+"Text2"
+""
+1 17 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+49 0 0 0 0 0
+EE E
 0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 12 37 28
+0 2 0 "s" 0 0 0 192 0 0  19 12
+ 1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-8 28 492 55
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-  dpConnect(\"updateSelectedDatapoint\",
-            $configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\"); 
-
-}
-
-
-updateSelectedDatapoint(string dp1, dyn_string ColumndpNames)
-{
-
-
-//  int Row, Column;
-//  dyn_string ColumndpNames;
-  string connectDatapoint;
-
-//  getValue(\"\", \"currentCell\", Row, Column);
-//  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
-  
-  if (dynlen(ColumndpNames)>0)
-  {
-    if ((0 != ColumndpNames[ConvIndex($Row)]) && (\"\" != ColumndpNames[ConvIndex($Row)]))
-    {
-      if (1==dynlen(strsplit(ColumndpNames[ConvIndex($Row)], \".\")))
-      {
-        connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex($Row)];
-      }
-      else
-      {
-        connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex($Row)];
-      }
-      setValue(\"\", \"text\", connectDatapoint);
-    }
-    else
-    {
-      setValue(\"\", \"text\", \"None\");
-    }
-  }
-}" 0
-
-E
+1
+LANG:1 2 DP
+4 62
+"Line1"
+""
+1 11 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  46 30 11 30
+6 63
+"Border7"
+""
+1 380 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+51 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 380 30 590 40
+6 64
+"Border8"
+""
+1 380 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+52 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 380 10 423 30
+2 65
+"Text6"
+""
+1 387 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 389 12 416 28
+0 2 0 "s" 0 0 0 192 0 0  389 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 DPE
+4 66
+"Line3"
+""
+1 381 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  423 30 381 30
 14 5
 "txt_legend"
 ""
-1 127 220 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 127 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -307,7 +297,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-125 218 279 245
+125 248 279 275
 3 "s" 0 0 0 0 0 0 
 E
 "// valid
@@ -316,40 +306,85 @@ main()
   dyn_string ColumnTitles;
 
   dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
-  setValue(\"txt_legend\", \"text\", ColumnTitles[ConvIndex($Row)]);
+  if(dynlen(ColumnTitles)<=$Row)
+  {
+    setValue(\"txt_legend\", \"text\", ColumnTitles[ConvIndex($Row)]);
+  } 
+   
 }" 0
 
-"main()
-{
-  string InsertedText;
-  string CombinedText;
-  dyn_string ColumnTitles;
-  
-  getValue(\"\", \"text\", InsertedText);
-  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
-  ColumnTitles[ConvIndex($Row)] = InsertedText;
-  dpSet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
- 	DisplayText(\"txt_legend\", \" Ok\", InsertedText);
-}" 0
-
-13 48
-"Button1"
+E
+1 49 0 "" 0
+0
+1 50 0 "" 1
+0
+1 51 0 "" 2
+0
+13 55
+"btn_ok"
 ""
-1 420 220 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 390 250 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
-38 0 0 0 0 0
+43 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-418 218 488 246
+388 248 452 275
 T 
 1
-LANG:1 5 Close
+LANG:1 2 OK
+"main()
+{
+  navViewAlertApplyCellSettings($Row, $Column);
+  PanelOff();
+}" 0
+ E E E
+13 56
+"btn_apply"
+""
+1 530 250 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+528 248 592 275
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  navViewAlertApplyCellSettings($Row, $Column);
+}" 0
+ E E E
+13 57
+"Button4"
+""
+1 460 250 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+458 248 522 275
+T 
+1
+LANG:1 6 Cancel
 "main()
 {
   PanelOff();
@@ -384,4 +419,9 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 "Group2"
+"objects\\Nav\\nav_SysDpDpeSelection.pnl" -80 40 T 39 1 0 1  0 2  
+2
+"$datapoint""$datapoint"
+"$selectedDP""$selectedDP"
 0

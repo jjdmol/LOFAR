@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,432 344 950 740 N "_3DFace" 5
+PANEL,531 230 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -190,14 +190,13 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 198 128 692 155
 3 "s" 0 0 0 0 0 0 
 E
-"// Valid
-main()
+"main()
 {
   if (dpExists($configDatapoint))
   {
     setValue(\"\", \"enabled\", TRUE);
-    string currentSubview = substr($configDatapoint ,strlen(\"System1:__nav_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
-    dpConnect(\"EP_textFieldInCB\", \"System1:__nav_subview_Panel_\" + currentSubview + \".filename:_online.._value\");
+    string currentSubview = substr($configDatapoint ,strlen(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
+    dpConnect(\"EP_textFieldInCB\", getSystemName() + \"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Panel_\" + currentSubview + \".filename:_online.._value\");
    	// Is it a datapoint element? then disable control
 	  // This includes that this control is only suitable for DP-Types
 	  if (dpGetElementName($datapoint)!=\"\")
@@ -253,7 +252,7 @@ LANG:1 4 Load
  	{
     SplitfileName = strsplit(fileName, \"/\");
     getSubviewName(subViewName);
-    dpSet(\"System1:__nav_subview_Panel_\" + subViewName + \".filename\", SplitfileName[dynlen(SplitfileName)]);
+    dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Panel_\" + subViewName + \".filename\", SplitfileName[dynlen(SplitfileName)]);
     navConfigTriggerNavigatorRefresh();
   }
 }" 0

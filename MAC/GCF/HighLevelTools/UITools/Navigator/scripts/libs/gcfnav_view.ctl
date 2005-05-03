@@ -1,4 +1,144 @@
 //////////////////////////////////////////////////////////////////////////////////
+// FunctionName: trendApplySettings
+//
+//  
+///////////////////////////////////////////////////////////////////////////////////
+void TrendConfigApplyTraceSettings()
+{
+  int ScaleMin, ScaleMax;
+  bool AutoScale;
+	string dpName, dpeName, legendName;
+
+  //Set the values in the graphical objects
+	getValue("txt_legendName", "text", legendName);
+	getValue("txt_scaleMax", "text", ScaleMax);
+	getValue("txt_scaleMin", "text", ScaleMin);
+  getValue("btn_AutoScale", "state", 0, AutoScale);
+  getValue("list_dp",  "selectedText", dpName);
+  getValue("list_dpe", "selectedText", dpeName);
+
+  //Get the values from the PVSS database
+  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".AutoScale", AutoScale);
+	dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".dpName", dpName+"."+dpeName);
+  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".LegendName", legendName);
+
+  if (ScaleMin<ScaleMax)
+  {
+    dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMax", ScaleMax);
+	  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
+	}
+	else
+  {
+    setValue("txt_scaleMax", "text", ScaleMax + 10);
+    dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMax", ScaleMin+10);
+	  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewAlertGetDpFromColumn: Gets the selectedDP 
+//                         
+// Input: 1. Row
+//        2. Column
+//
+// Output: stores the current configuration of the cell into the PVSS II
+//         database
+///////////////////////////////////////////////////////////////////////////
+navViewAlertApplyCellSettings(string RowNumber, string Column)
+{
+	dyn_string ColumndpNames, ColumnTitles;
+ 
+  dpGet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "dpNames", ColumndpNames); 
+  dpGet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "Titles", ColumnTitles);
+
+  ColumnTitles[ConvIndex($Row)] = txt_legend.text;
+  ColumndpNames[ConvIndex($Row)] = list_dp.selectedText + "." + list_dpe.selectedText;
+
+  dpSet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "dpNames", ColumndpNames); 
+  dpSet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "Titles", ColumnTitles);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewControlDisplayTime: converts the serialtime to the a  
+//                                     normal, readable time notation
+//
+// Input: serialTime
+// Output: output is written to the controllerLog
+///////////////////////////////////////////////////////////////////////////
+navViewControlDisplayTime(string dp1, int serialTime)
+{
+  string timeToDisplay = getCurrentTime();
+  string elementName = dpGetElementName(dp1);
+  strreplace(elementName, ".", "");
+  time t;
+  setPeriod(t, serialTime); 
+  //formatTime("%H:%M:%S %d-%m-%Y", t)
+  controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + formatTime("%H:%M:%S %d-%m-%Y", t);
+  setValue("", "text", formatTime("%H:%M:%S %d-%m-%Y", t));
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewControlDisplayText: Displays the text: textToDisplay
+//                                     
+// Input: text to display
+// Output: output is written to the controllerLog
+///////////////////////////////////////////////////////////////////////////
+navViewControlDisplayText(string dp1, string textToDisplay)
+{
+  setValue("", "text", textToDisplay);
+  string timeToDisplay = getCurrentTime();
+  string elementName = dpGetElementName(dp1);
+  strreplace(elementName, ".", "");
+  controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + textToDisplay;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewAlertGetDpFromColumn: Gets the selectedDP 
+//                         
+// Input: 1. Row
+//        2. Column
+//
+// Output: string with the current selectedDP for the current cell,
+//         can also be empty ("")
+///////////////////////////////////////////////////////////////////////////
+string navViewAlertGetDpFromColumn(int Row,int Column)
+{
+
+  dyn_string ColumndpNames;
+  string connectDatapoint;
+
+  getValue("", "currentCell", Row, Column);
+  dpGet($configDatapoint + "." + $AreaNr + ".Column" + Column + "dpNames", ColumndpNames); 
+  if (dynlen(ColumndpNames)>0)
+  {
+    if ((0 != ColumndpNames[ConvIndex(Row)]) && ("" != ColumndpNames[ConvIndex(Row)]))
+    {
+    
+/*      if (1==dynlen(strsplit(ColumndpNames[ConvIndex(Row)], ".")))
+      {
+        connectDatapoint = $datapoint + "." + ColumndpNames[ConvIndex(Row)];
+      }
+      else
+      {
+        connectDatapoint = $datapoint + "_" + ColumndpNames[ConvIndex(Row)];
+      }*/
+      connectDatapoint = ColumndpNames[ConvIndex(Row)];
+      DebugN("connectDatapoint:"+connectDatapoint);
+      return connectDatapoint;
+    }
+    else
+    {
+      return "";
+    }
+  }
+  return "";
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
 // FunctionName: getPropertyNames
 //
 //  
@@ -36,9 +176,8 @@ void clearListTable(dyn_string &propNames)
   dpGet($configDatapoint + ".queryResult", propNames);
   for(int i=1 ; i<=dynlen(propNames); i++)
   {
-   dpDisconnect("connectActualValue", propNames[i],
-                                      $configDatapoint + ".queryResult");
-   DebugN("propNames["+i+"]: "+ propNames[i]);
+   navPMLunloadPropertySet(dpSubStr(propNames[i], DPSUB_SYS_DP));
+   dpDisconnect("connectActualValue", propNames[i]);
   }
   TableProperties.deleteAllLines;
   propNames="";
@@ -55,8 +194,8 @@ connectTable(dyn_string propNames)
   dpSet($configDatapoint + ".queryResult", propNames);
   for(int i=1; i<=dynlen(propNames); i++)
   {
-    dpConnect("connectActualValue", propNames[i],
-                                    $configDatapoint + ".queryResult");
+    navPMLloadPropertySet(dpSubStr(propNames[i], DPSUB_SYS_DP));
+    dpConnect("connectActualValue", propNames[i]);
   }
 }
 
@@ -66,13 +205,28 @@ connectTable(dyn_string propNames)
 //
 //  
 ///////////////////////////////////////////////////////////////////////////////////
-connectActualValue(string dp1, anytype actualValue,
-                   string dp2, dyn_string queryResult)
+connectActualValue(string dp1, anytype actualValue)
 {
-  //DebugN("Found at: " + dynContains(queryResult,(dp1)));
+  dyn_string queryResult; 
+  anytype valueString;
+  dpGet($configDatapoint + ".queryResult", queryResult);
   if(elementTypeValid(dp1))
-  {
-    TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "value", actualValue);
+  { 
+    if(dpElementType(dp1)==22)
+    {
+      int floatDecimals;
+      dpGet($configDatapoint + ".floatDecimals", floatDecimals);
+      if(floatDecimals<=0)
+        floatDecimals=1;
+      string newActualValue;
+      sprintf(newActualValue, "%."+floatDecimals+"f", actualValue);
+      valueString = newActualValue;
+    }
+    else
+    {
+      valueString = actualValue;
+    }
+    TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "value", valueString);
   }
   else
   {
@@ -150,6 +304,8 @@ void jump2Station()
   {
     if ("LOFAR Navigator" == myPanelName())
     {
+//      string datapointPath;
+//      convertOriginal2ReferenceDP($datapoint,datapointPath);
       navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Station01");
     }
     else
@@ -169,11 +325,13 @@ void jump2Station()
 ///////////////////////////////////////////////////////////////////////////////////
 void jump2StationSubrack()
 {
-  if(dpExists($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr))
+  if(dpAccessable($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr))
   {
     if ("LOFAR Navigator" == myPanelName())
     {
-      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);
+      //tring datapointPath;
+      //convertOriginal2ReferenceDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr,datapointPath);
+      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);        
     }
     else
     {  
@@ -185,6 +343,7 @@ void jump2StationSubrack()
 }
 
 
+
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: jump2StationSubrackRCU
 //
@@ -193,10 +352,12 @@ void jump2StationSubrack()
 void jump2StationSubrackRCU()
 {
 
-  if(dpExists($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr))
+  if(dpAccessable($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr))
   {
     if ("LOFAR Navigator" == myPanelName())
-    {
+    { 
+      //string datapointPath;
+      //convertOriginal2ReferenceDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr, datapointPath);
       navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
     }
     else
@@ -688,12 +849,37 @@ void getSubviewName(string &subViewName)
     else
       text = text + split[i];
   }
-//	subViewName = "System1:__nav_subview_Trend_" + text;
-    subViewName = text;
-//  	DebugN("subViewName inside: "+ subViewName);
-//	DebugN("s$configDatapoint: "+ $configDatapoint);
+  subViewName = text;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: NavConfigTrendFillDpeSelection
+//
+// Fills the dpe selectionlist for a datapoint selection
+///////////////////////////////////////////////////////////////////////////////////
+void NavConfigTrendFillDpeSelection(string datapoint)
+{
+  string selectedDP;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  getValue("list_dp", "selectedText", selectedDP);
+  dyn_string output;
+  int elementIndex;
+  list_dpe.deleteAllItems; 
+  if(selectedDP!="")
+    selectedDP = "_" + selectedDP;
+
+  dpTypeGet(getDpTypeFromEnabled(datapoint + selectedDP + "__enabled."),elementNames,elementTypes);
+  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+  {
+    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
+    string elementName = elementNames[elementIndex][elementLevel+1];
+    output[dynlen(output)+1] = elementName;
+  }
+  dynSortAsc(output);
+  list_dpe.items =output;
+  list_dpe.selectedPos=0;
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 //

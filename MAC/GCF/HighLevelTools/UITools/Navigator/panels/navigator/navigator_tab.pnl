@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 NavigatorGenericTab
-PANEL,547 209 958 778 N "_3DFace" 1
+PANEL,571 359 958 778 N "_3DFace" 1
 "$datapoint"
 "main()
 {

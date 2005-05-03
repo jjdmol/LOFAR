@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,391 108 950 471 N "_3DFace" 3
+PANEL,287 197 950 471 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -69,11 +69,11 @@ ArrangeConfigTableContent(string dp1, dyn_string ColumnTitles,
       }
       else if (!dpExists(connectDatapoint))// + ColumndpNames[ConvIndex(i)])) //Exists the configured datapoint? No
       {
-        setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"DpDoesNotExist\");
+        setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"DpDoesNotExist\");
       }
       else if (dpExists(connectDatapoint)) //Exists the configured datapoint? Yes
       {
-        setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"white\");
+        setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"white\");
       }
     }
     else
@@ -148,21 +148,8 @@ E
   getValue(\"\", \"currentCell\", Row, Column);	
   txt = makeDynString(\"PUSH_BUTTON, Configure , 2, 1\",
                       \"PUSH_BUTTON, Delete, 1, 1\");
-
-
-//  txt = makeDynString(\"PUSH_BUTTON, Select watch, 2, 1\",
-//                      \"PUSH_BUTTON, Disable watch, 1, 1\");
- 
   popupMenu(txt, iAnswer);
-
-  //DebugN(\"Row: \" + Row);
-		  
-
-  //########################################################
-  //
   //	Compute the chosen option
-  //
-  //########################################################
   	switch (iAnswer)
   	{
   	case 1:
@@ -176,24 +163,41 @@ E
       	break;
   	case 2:
 				setValue (\"Table1\", \"cellBackCol\", \"white\");
+				DebugN(\"navViewAlertGetDpFromColumn(Row,Column):\"+navViewAlertGetDpFromColumn(Row,Column));
         ChildPanelOnCentralModal(\"navigator/views/alert_config_table_cell.pnl\",
 				                         \"Select DP\", makeDynString(\"$Row:\" + Row,
 				                                                    \"$Column:\" + Column,
 				                                                    \"$configDatapoint:\" + $configDatapoint,
 				                                                    \"$datapoint:\" + $datapoint,
-				                                                    \"$AreaNr:\" + $AreaNr));
+				                                                    \"$AreaNr:\" + $AreaNr,
+				                                                    \"$selectedDP:\" + navViewAlertGetDpFromColumn(Row,Column)));
       	break;
     default:
     		break;
     }
-}" 0
+}
+
+" 0
  "main()
 {
   int Row, Column;
+  getValue(\"\", \"currentCell\", Row, Column);
+  string selectedDP = $datapoint + \"_\" + navViewAlertGetDpFromColumn(Row, Column);
+  if(selectedDP!=\"\")
+  {
+    setValue(\"test\", \"text\", selectedDP);
+  }
+  else
+  {
+    setValue(\"test\", \"text\", \"None\");
+  }
+
+
+/*  
   dyn_string ColumndpNames;
   string connectDatapoint;
 
-  getValue(\"\", \"currentCell\", Row, Column);
+
   dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
   if (dynlen(ColumndpNames)>0)
   {
@@ -213,7 +217,7 @@ E
     {
       setValue(\"test\", \"text\", \"None\");
     }
-  }
+  }*/
 }
 " 0
 

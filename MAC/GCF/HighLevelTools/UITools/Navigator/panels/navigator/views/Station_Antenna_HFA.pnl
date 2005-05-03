@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 HFA Antennas
-PANEL,258 138 994 514 N "_3DFace" 1
+PANEL,560 435 994 514 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  28 10
 "" 0 1

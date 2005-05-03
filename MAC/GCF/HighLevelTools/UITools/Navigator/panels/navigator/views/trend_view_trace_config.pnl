@@ -1,45 +1,34 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,258 108 502 319 N "_3DFace" 4
+PANEL,627 450 600 338 N "_3DFace" 5
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
 "$datapoint"
+"$selectedDP"
 "main()
 {
-  startThread(\"FillSelectionList\");
+//  startThread(\"FillSelectionList\");
   
-  dpConnect(\"EnableScaleInput\", $configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".AutoScale\",
-                                $configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\");
+  int ScaleMin, ScaleMax;
+  bool AutoScale;
+	string dpName, legendName;
+	
+  //Get the values from the PVSS database
+  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMax:_online.._value\", ScaleMax);
+	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMin:_online.._value\", ScaleMin);
+  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".AutoScale:_online.._value\", AutoScale);
+	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName:_online.._value\", dpName);
+  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".LegendName:_online.._value\", legendName);
+    
+  //Set the values in the graphical objects
+	setValue(\"txt_legendName\", \"text\", legendName);  
+	setValue(\"txt_scaleMax\", \"text\", ScaleMax);
+	setValue(\"txt_scaleMin\", \"text\", ScaleMin);
+  setValue(\"btn_AutoScale\", \"state\", 0, AutoScale);
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-//
-// FunctionName: ProgressBar
-// Function    : display
-// 
-///////////////////////////////////////////////////////////////////////////////////
-void ProgressBar(float Maximum, float value)
-{
-  float Minimum = 0;
-  int waarde;
-  float positie;
-	if (value>Minimum)
-	{
-    setValue(\"bar\", \"visible\", TRUE);
-    setValue(\"bar_border\", \"visible\", TRUE);
-  }
-	
-  setValue(\"bar\", \"scale\", value/Maximum, 1.0);
-  
-  if (Maximum==value)
-  {
-    delay(0,200);
-    setValue(\"bar\", \"visible\", FALSE);
-    setValue(\"bar_border\", \"visible\", FALSE);
-  }
-}
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -49,73 +38,36 @@ void ProgressBar(float Maximum, float value)
  ///////////////////////////////////////////////////////////////////////////////////
 void FillSelectionList()
 {
-  dyn_dyn_anytype tab;
-  int i, ScaleMin, ScaleMax;
-  int j=1;
-  int SelectionPosition;
-  string value, hulp, EntryForSelectionList, CurrentSelection;
-  dyn_anytype all;
-  dyn_string Items;
- 	bool state;
- 	int TotalDPE;
- 	
-  if ($datapoint==\"\")
-    dpQuery(\"SELECT '_online.._value' FROM 'PIC*' \", tab);
-  else
-    dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint +\"*' \", tab);
-  SelectionList1.deleteAllItems();
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", CurrentSelection);
-  TotalDPE = dynlen(tab);
-  for (i=2; i<=TotalDPE ; i++)
+  string attribute = \"_online.._value\";
+  string datapointPath = buildPathFromNode(g_curSelNode);
+	string dpName;
+  int first=0;
+  int searchDepth=0;
+  bool showProgress=TRUE;
+  bool singleElement=FALSE;
+
+  dyn_string output = queryDatabase(attribute, datapointPath + \"*\", first, searchDepth, showProgress, singleElement);
+  for(int i=1; i<=dynlen(output);i++ )
   {
-    if (\"\" != tab[i][1])
+    strreplace(output[i], datapointPath, \"\");
+    if(strpos(output[i], \"_\")==0)
     {
-      hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
-	    if ((20==dpElementType(hulp)) || (21==dpElementType(hulp)) ||  (22==dpElementType(hulp)) || (23==dpElementType(hulp)))
-	    {	    
-        EntryForSelectionList = strltrim(hulp, dpSubStr($datapoint, DPSUB_DP_EL));
-        if (0==(strpos (EntryForSelectionList, \"_\")))
-          Items[j] = strltrim(EntryForSelectionList, \"_\");
-        else
-          Items[j] = EntryForSelectionList;
-  			if (CurrentSelection == Items[j])
-  			  SelectionPosition = j;
-        j++;
-      }
-      ProgressBar(TotalDPE, j);
+      output[i] = strltrim(output[i], \"_\");
     }
   }
+  //Get input from use to perform the Query
+	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", dpName);
 
-	setValue(\"SelectionList1\", \"items\", Items);  //Insert all items in one time, faster the inserting every item apart
-  ProgressBar(TotalDPE, TotalDPE);
-  SelectionList1.selectedPos(SelectionPosition);
-	DebugN(\"SelectionPosition: \"+SelectionPosition);
-}
-
+  SelectionList1.items(output);  //Insert all items in one time, faster the inserting every item apart
+  SelectionList1.selectedPos(dynContains(output, dpName));
 
 
-EnableScaleInput(string dp1, bool state,
-								 string dp2, string dpName)
-{
-  int ScaleMin, ScaleMax;
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMax:_online.._value\", ScaleMax);
-	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMin:_online.._value\", ScaleMin);
-  setValue(\"txt_min\", \"enabled\", !state);
-  setValue(\"txt_max\", \"enabled\", !state);
-  if (ScaleMin==ScaleMax)
-  {
-    ScaleMax=ScaleMax+10;
-  }
-  setValue(\"txt_max\", \"text\", ScaleMax);
-  setValue(\"txt_min\", \"text\", ScaleMin);
-	btn_AutoScale.state(0)=state;
-  setValue(\"txt_dpName\", \"text\", dpName);
-}
-" 0
+}" 0
 EE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
-#uses \"gcfnav_view.ctl\"" 0
+#uses \"gcfnav_view.ctl\"
+#uses \"gcf-common.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -127,7 +79,7 @@ LANG:1 6 Layer1
 2 4
 "Text1"
 ""
-1 17 222 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 238 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -136,8 +88,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 224 115 240
-0 2 0 "s" 0 0 0 64 0 0  19 224
+E E 0 1 1 0 1 E U  0 E 19 240 115 256
+0 2 0 "s" 0 0 0 64 0 0  19 240
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -147,7 +99,7 @@ LANG:1 14 Name in legend
 2 7
 "Text2"
 ""
-1 17 243 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 259 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -156,8 +108,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 245 175 261
-0 2 0 "s" 0 0 0 64 0 0  19 245
+E E 0 1 1 0 1 E U  0 E 19 261 175 277
+0 2 0 "s" 0 0 0 64 0 0  19 261
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -167,7 +119,7 @@ LANG:1 24 Automatic scaling Y-axis
 2 12
 "Text3"
 ""
-1 17 267 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 283 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -176,8 +128,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 269 164 285
-0 2 0 "s" 0 0 0 64 0 0  19 269
+E E 0 1 1 0 1 E U  0 E 19 285 164 301
+0 2 0 "s" 0 0 0 64 0 0  19 285
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -187,7 +139,7 @@ LANG:1 20 Scale Y-axis maximum
 2 13
 "Text4"
 ""
-1 17 288 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 304 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -196,51 +148,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 290 163 306
-0 2 0 "s" 0 0 0 64 0 0  19 290
+E E 0 1 1 0 1 E U  0 E 19 306 163 322
+0 2 0 "s" 0 0 0 64 0 0  19 306
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 20 Scale Y-axis minimum
-6 27
-"Border1"
-""
-1 401 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-21 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 401 10 491 40
-2 28
-"Text5"
-""
-1 409 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-22 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 411 12 484 28
-0 2 0 "s" 0 0 0 192 0 0  411 12
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 11 Selected DP
 6 29
 "Border2"
 ""
-1 10 235 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 251 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -249,11 +168,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 220 140 244
+E E 0 1 1 0 1 E U  0 E 10 236 140 260
 6 30
 "Border3"
 ""
-1 10 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 296 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -262,11 +181,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 265 188 289
+E E 0 1 1 0 1 E U  0 E 10 281 188 305
 6 31
 "Border4"
 ""
-1 10 302 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 318 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -275,11 +194,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 287 184 311
+E E 0 1 1 0 1 E U  0 E 10 303 184 327
 6 32
 "Border5"
 ""
-1 10 257 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 273 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -288,11 +207,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 242 279 267
+E E 0 1 1 0 1 E U  0 E 10 258 279 283
 6 39
-"bar_border"
+"progressBar_border"
 ""
-1 10 200 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 10 222 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 30 0 0 0 0 0
 EE E
@@ -301,11 +220,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 194 491 212
+E E 0 1 1 0 1 E U  1 E 10 216 590 234
 6 40
-"bar"
+"progressBar"
 ""
-1 13 206 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
+1 13 228 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
  E E
 31 0 0 0 0 0
 EE E
@@ -314,53 +233,129 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 13 197 486 207
-17 1
-"SelectionList1"
+E E 0 1 1 0 1 E U  1 E 13 219 586 229
+6 52
+"Border1"
 ""
-1 10 70 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
-2 0 0 0 0 0
+41 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 30 370 40
+6 53
+"Border6"
+""
+1 10 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+42 0 0 0 0 0
+EE E
 0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 46 30
+2 54
+"Text5"
+""
+1 17 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 12 37 28
+0 2 0 "s" 0 0 0 192 0 0  19 12
+ 1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-8 68 492 189
+1
+LANG:1 2 DP
+4 55
+"Line1"
+""
+1 11 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+EE E
 0
-E
-"main()
-{
-  string SelectedItem;
-	string LegendName;
-	string UnloadDpName;
-	
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\"+$TraceNr+\".dpName\", UnloadDpName); 
-  navPMLunloadPropertySet($datapoint + \"_\" + UnloadDpName);
-
-  getValue(\"SelectionList1\", \"selectedText\", SelectedItem);
-	dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\"+$TraceNr+\".dpName\", strltrim(SelectedItem, dpSubStr($datapoint, DPSUB_DP_EL)));
-	navPMLloadPropertySet($datapoint + \"_\" + SelectedItem); //Load selected datapoint
-	getValue(\"txt_legend\", \"text\", LegendName);
-	if (LegendName==\"\")
-	{
- 	  dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\"+$TraceNr+\".LegendName\", \"Trace\"+$TraceNr);
- 	  setValue(\"txt_legend\", \"text\", \"Trace\"+$TraceNr);
-  }
-	
-	
-}" 0
-
-E
-
-3 1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  46 30 11 30
+6 56
+"Border7"
+""
+1 380 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 380 30 590 40
+6 57
+"Border8"
+""
+1 380 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 380 10 423 30
+2 58
+"Text6"
+""
+1 387 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 389 12 416 28
+0 2 0 "s" 0 0 0 192 0 0  389 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 DPE
+4 59
+"Line3"
+""
+1 381 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  423 30 381 30
 20 8
 "btn_AutoScale"
 ""
-1 184 243 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 184 259 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -371,7 +366,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-182 241 202 265
+182 257 202 281
 1
 T 
 1
@@ -384,31 +379,12 @@ LANG:1 0
 E E 
 E"main(int button, bool state)
 {
-	dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".AutoScale\", state);
+//	dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".AutoScale\", state);
 }" 0
-14 2
-"txt_dpName"
-""
-1 10 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-3 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-8 28 492 55
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
 14 5
-"txt_legend"
+"txt_legendName"
 ""
-1 127 220 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 127 236 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -419,31 +395,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-125 218 279 245
+125 234 279 261
 3 "s" 0 0 0 0 0 0 
 E
-"// valid
-main()
-{
-  string LegendName;
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".LegendName:_online.._value\", LegendName);
-	setValue(\"txt_legend\", \"text\", LegendName);
-}" 0
-
-"main()
-{
-  string InsertedText;
-  string CombinedText;
-  
-  getValue(\"\", \"text\", InsertedText);
-  dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".LegendName\", InsertedText);
- 	DisplayText(\"txt_legend\", \" Ok\", InsertedText);
-}" 0
-
+E
+E
 14 25
-"txt_max"
+"txt_scaleMax"
 ""
-1 177 265 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 177 281 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -454,33 +414,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-175 263 279 290
+175 279 279 306
 3 "s" 0 0 0 0 0 0 
 E
 E
-"main()
-{
-  int Input, ScaleMax, ScaleMin;
-  
-  getValue(\"\", \"text\", Input);
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMin:_online.._value\", ScaleMin);
-  if (Input>ScaleMin)
-  {
-		dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMax\", Input);
-		DisplayText(\"txt_max\", \" Ok\", Input);
-  }
-  else
-  {
-		dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMax:_online.._value\", ScaleMax);
-		DisplayText(\"txt_max\", \" Wrong input\", ScaleMax);
-	}
-
-}" 0
-
+E
 14 26
-"txt_min"
+"txt_scaleMin"
 ""
-1 177 287 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 177 303 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -491,35 +433,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-175 285 279 312
+175 301 279 328
 3 "s" 0 0 0 0 0 0 
 E
 E
-"main()
-{
-  int Input, ScaleMax, ScaleMin;
-
-  getValue(\"\", \"text\", Input);
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMax:_online.._value\", ScaleMax);
-	
-  if (Input<ScaleMax)
-  {
-		dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMin\", Input);
-		DisplayText(\"txt_min\", \" Ok\", Input);
-  }
-  else
-  {
-		dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMin:_online.._value\", ScaleMin);
-		DisplayText(\"txt_min\", \" Wrong input\", ScaleMin);
-	}
-
-}
-" 0
-
+E
 13 37
-"Button1"
+"btn_ok"
 ""
-1 430 285 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 390 306 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 29 0 0 0 0 0
 EE E
@@ -530,15 +452,91 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-428 283 492 310
+388 304 452 331
 T 
 1
 LANG:1 2 OK
 "main()
 {
+  TrendConfigApplyTraceSettings();
   PanelOff();
 }" 0
  E E E
+13 42
+"btn_apply"
+""
+1 530 306 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+32 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+528 304 592 331
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  TrendConfigApplyTraceSettings();
+}" 0
+ E E E
+13 43
+"Button4"
+""
+1 460 306 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+33 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+458 304 522 331
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+1 67 1 "" 0
+0
+1 68 1 "" 1
+0
+1 69 1 "" 2
+0
+14 70
+"TextField1"
+""
+1 310 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+308 248 582 275
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\",\"text\", $selectedDP);
+}" 0
+
+E
 0
 LAYER, 1 
 1
@@ -568,4 +566,9 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 1 ""
+"objects\\Nav\\nav_SysDpDpeSelection.pnl" 141 201 T 52 1 0 1  -221 -161  
+2
+"$datapoint""$datapoint"
+"$selectedDP""$selectedDP"
 0

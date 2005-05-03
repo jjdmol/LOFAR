@@ -29,6 +29,8 @@
 global string   DPNAME_NAVIGATOR                = "__navigator";
 global string   ELNAME_RESOURCEROOTS            = "resourceRoots";
 global string   ELNAME_IGNOREENABLEDROOTS       = "ignoreEnabledRoots";
+global string   ELNAME_ENVIRONMENTNAMES         = "environmentNames";
+global string   ELNAME_ENVIRONMENTGROUPS        = "environmentGroups";
 global string   ELNAME_SELECTEDELEMENT          = "selectedElement";
 global string   ELNAME_SELECTEDVIEWCAPTION      = "selectedViewCaption";
 global string   ELNAME_USECOUNT                 = "useCount";
@@ -39,6 +41,7 @@ global string   ELNAME_FILENAME                 = "filename";
 global string   ELNAME_CONFIGPANEL              = "configPanel";
 global string   ELNAME_SELECTEDVIEW             = "selectedView";
 global string   ELNAME_SELECTEDSUBVIEW          = "selectedSubView";
+global string   ELNAME_SELECTEDENVIRONMENT      = "selectedEnvironment";
 global string   ELNAME_NROFSUBVIEWS             = "nrOfSubViews";
 global string   ELNAME_SUBVIEWS                 = "subViews";
 global string   ELNAME_CONFIGS                  = "configs";
@@ -271,6 +274,53 @@ string navConfigGetViewConfigPanel(string dpView)
   return configPanel;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+//Function checkForReference
+//
+// parameters: parentDatapoint - get the children of this datapoint
+//             depth           - how many levels of children to get
+// 
+// returns - original parentDatapoint if it is a reference
+//         - bool if it is a reference
+//         - dyn_string reference with ref information
+///////////////////////////////////////////////////////////////////////////
+bool checkForReference(string &parentDatapoint, dyn_string &reference, bool &parentDatapointIsReference)
+{
+  dyn_string refOut;
+  bool stopCheck=FALSE;
+  //parentDatapointIsReference=FALSE;
+  for(int i=1; (i<=dynlen(g_referenceList) && !stopCheck); i++)
+  {
+    refOut = strsplit(g_referenceList[i],"=");
+    if (refOut[1] == parentDatapoint || patternMatch(refOut[1]+ "*",parentDatapoint))
+    {
+      stopCheck = TRUE;
+      parentDatapointIsReference = TRUE;
+      strreplace(parentDatapoint, refOut[1], refOut[2]);
+      reference = refOut;
+    }
+  }
+  return parentDatapointIsReference;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function checkForReferenceReplaceOriginal
+//
+// parameters: resources  
+//             reference  
+// 
+// returns - reference resources in stead of original resources
+///////////////////////////////////////////////////////////////////////////
+void checkForReferenceReplaceOriginal(dyn_string &resources, dyn_string reference)
+{
+  for(int i=1; i<=dynlen(resources); i++)
+  {
+    strreplace(resources[i], reference[2], reference[1]);
+  }
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 //Function navConfigGetResources
 //
@@ -284,9 +334,11 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   dyn_string resources;
   dyn_string allResources;
   dyn_string resourceRoots;
+  dyn_string reference;
   dyn_errClass err;
   int maxDepth;
-  
+  bool parentDatapointIsReference;
+  checkForReference(parentDatapoint, reference, parentDatapointIsReference);
   if(parentDatapoint == "")
   {
     maxDepth = depth;
@@ -337,7 +389,96 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
     }
     i++;
   }
+  if(parentDatapointIsReference)
+  {
+    checkForReferenceReplaceOriginal(resources, reference);
+  }
   return resources;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Functionname: navConfigGetEnvironment
+// Function: 
+// 
+// Input: 1. environmentName:  "" = current environment,
+//                            !"" = given environment
+//        2. userName, in combination with environment Personal:
+//                      "" = current user(name)
+//                     !"" = given user(name)
+// returns the view config datapoint corresponding to the datapointpath
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetEnvironment(string environmentName, string userName)
+{
+  string environment;
+  string environmentOutput;
+  string environmentType;
+  string environmentNumber;
+  dyn_string environmentNames;
+  dpGet(DPNAME_NAVIGATOR + "." + ELNAME_ENVIRONMENTNAMES, environmentNames);
+  
+  if(environmentName=="") // work with the current selected environment
+  {
+    string navInstanceEnvironmentName;
+    dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, navInstanceEnvironmentName);
+    environment = navInstanceEnvironmentName;
+  }
+  else                    // work with a given environment
+  {
+    environment = environmentName;
+  }
+    
+  if(environment=="Personal")
+  {
+    environmentType = "U";
+    if(userName!="") // is userName is given, use it.
+    {
+      environmentNumber = getUserId(userName);
+    }
+    else
+    {
+      environmentNumber = getUserId();
+    }
+  }
+  else
+  {
+    environmentType = "E" ;
+    environmentNumber = dynContains(environmentNames,environment);
+  }
+  environmentOutput = environmentType + strexpand("\\fill{0}", 4-strlen(environmentNumber))+environmentNumber;
+  
+  return environmentOutput;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigfillEnvironmentList
+// 
+// fills a comb
+///////////////////////////////////////////////////////////////////////////
+void navConfigfillEnvironmentList(string dp1, dyn_string environmentNames)
+{
+  setValue("","deleteAllItems");
+  string selectedEnvironment;
+  int itemCount=0;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  
+  
+  for(int i=1; i<= dynlen(environmentNames); i++)
+  {
+    if(environmentNames[i]!="")
+      setValue("","appendItem",environmentNames[i]);
+    if(environmentNames[i]==selectedEnvironment)
+    {
+      getValue("","itemCount", itemCount);
+      setValue("","selectedPos", itemCount);
+    }
+    
+  }
+  if(itemCount==0)
+  {
+    setValue("","selectedPos",1);
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, "Personal");
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -349,18 +490,17 @@ string navConfigGetViewConfig(string datapointPath)
 {
   string datapointType;
   string dpViewConfig = "";
-  
   if(dpExists(datapointPath))
   {
     datapointType = dpTypeName(datapointPath);
     // find __nav_<datapointType>_viewconfig datapoint
-    dpViewConfig = "__nav_"+datapointType+"_viewconfig";
+    dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointType+"_viewconfig";
   }
   else
   {
     // a system root node is selected
-    // find __nav_<systemname>_viewconfig datapoint
-    dpViewConfig = "__nav_"+datapointPath+"_viewconfig";
+    // find __nav<environment>_<systemname>_viewconfig datapoint
+    dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointPath+"_viewconfig";
   }
   if(!dpExists(dpViewConfig))
   {
@@ -571,6 +711,137 @@ void navConfigTriggerNavigatorRefresh()
 ///////////////////////////////////////////////////////////////////////////
 void navConfigTriggerNavigatorRefreshWithDP(string newDatapoint)
 {
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT,newDatapoint);
+//  string datapointPath;
+//  convertOriginal2ReferenceDP(buildPathFromNode(g_curSelNode) + addingPart, datapointPath);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE,0);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//Function environmentsAvailableToUser
+// 
+// returns the environments Available To the current User
+///////////////////////////////////////////////////////////////////////////
+dyn_string environmentsAvailableToUser()
+{
+  dyn_string environmentGroups, environmentNames,currentUserGroupNames;
+  dyn_string Users_UserName, Users_GroupIds, Groups_UserName, Groups_UserId;
+  dyn_string environmentListAvailableToUser;
+  string currentGroupIds, currentUser = getUserName();
+  environmentListAvailableToUser[1]="Personal";
+  dpGet("_Users.UserName",  Users_UserName);
+  dpGet("_Users.GroupIds",  Users_GroupIds);
+  dpGet("_Groups.UserName", Groups_UserName);
+  dpGet("_Groups.UserId",  Groups_UserId);
+  
+  currentGroupIds = Users_GroupIds[dynContains(Users_UserName, currentUser)];
+  dyn_string GroupIdsSplit= strsplit(currentGroupIds, ";");
+  for(int i=1;i<=dynlen(GroupIdsSplit);i++)
+  {
+   currentUserGroupNames[i] = Groups_UserName[dynContains(Groups_UserId, GroupIdsSplit[i])];
+  }
+
+  dpGet(DPNAME_NAVIGATOR + ".environmentGroups", environmentGroups);
+  dpGet(DPNAME_NAVIGATOR + ".environmentNames", environmentNames);
+ 
+  for(int i=1;i<=dynlen(environmentGroups);i++) //UG assignment to Environment
+  {
+    dyn_string environmentGroupSplit= strsplit(environmentGroups[i], "|"); //which UG do we have
+    for(int j=1;j<=dynlen(environmentGroupSplit);j++) // UG group root,para,quest for env. X
+    {
+      for(int k=1;k<=dynlen(currentUserGroupNames);k++) //user membership in UG guest etc.
+      {
+        dyn_string currentUserGroupNamesSplit= strsplit(currentUserGroupNames[k], "|"); 
+        for(int m=1;m<=dynlen(currentUserGroupNamesSplit);m++)
+        {
+          if(currentUserGroupNamesSplit[m]==environmentGroupSplit[j])
+          {
+            environmentListAvailableToUser[dynlen(environmentListAvailableToUser)+1] = environmentNames[i];
+          }
+        }
+      }
+    }
+  }
+  return environmentListAvailableToUser;
+}  
+
+///////////////////////////////////////////////////////////////////////////
+// Function navConfigConfigSubviewPermitted
+//  
+// if $configDatapoint exits, and not a DPE is selected in the tree, and a
+// personal environment can always be configured, but a system environment
+// only when you have the user-right.
+//
+// returns or the configuration of a subview is permitted, nrof Colums, titel etc.
+///////////////////////////////////////////////////////////////////////////
+bool navConfigConfigSubviewPermitted()
+{
+  string selectedEnvironment;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  
+  if(dpExists($configDatapoint) &&
+     dpGetElementName($datapoint)=="" && 
+     ((selectedEnvironment=="Personal") || (selectedEnvironment!="Personal" && getUserPermission(UR_CONFIGSYSTEMSUBVIEW))))
+  {
+    return TRUE;
+  }
+  else
+  {
+    return FALSE;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: navConfigGetElementsFromDp
+//
+// Fills the dpe selectionlist for a datapoint selection
+///////////////////////////////////////////////////////////////////////////////////
+dyn_string navConfigGetElementsFromDp(string datapoint)
+{
+  string selectedDP;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  dyn_string output;
+  int elementIndex;
+
+  dpTypeGet(getDpTypeFromEnabled(datapoint + "__enabled."),elementNames,elementTypes);
+  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+  {
+    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
+    string elementName = elementNames[elementIndex][elementLevel+1];
+    output[dynlen(output)+1] = elementName;
+  }
+  dynSortAsc(output);
+  return output;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//Function arrangeUserGroupMembership
+// 
+// fills the selectionboxes: member of and not member of
+///////////////////////////////////////////////////////////////////////////
+void arrangeUserGroupMembership()
+{
+  UG_selected.deleteAllItems;
+  UG_available.deleteAllItems;
+  dyn_string environmentGroups, environmentNames, UserGroups;
+  dpGet("_Groups.UserName", UserGroups);
+  dpGet(DPNAME_NAVIGATOR + ".environmentGroups", environmentGroups);
+  dpGet(DPNAME_NAVIGATOR + ".environmentNames", environmentNames);
+  string GroupsForEnvironment = environmentGroups[dynContains(environmentNames, ComboBox_environmentMembership.selectedText)];
+  dyn_string GroupsForEnvironmentsplit = strsplit(GroupsForEnvironment, "|");
+  
+  for(int i=1; i<=dynlen(GroupsForEnvironmentsplit);i++)
+  {
+    int position = dynContains(UserGroups, GroupsForEnvironmentsplit[i]);
+    if(position>0)
+    {
+      UG_selected.appendItem = GroupsForEnvironmentsplit[i];
+      dynRemove(UserGroups, position);
+    }
+  }
+  UG_available.items=UserGroups;
 }
