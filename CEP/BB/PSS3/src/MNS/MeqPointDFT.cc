@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <PSS3/MNS/MeqPointDFT.h>
 #include <PSS3/MNS/MeqStatSources.h>
 #include <PSS3/MNS/MeqStatUVW.h>

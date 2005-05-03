@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <MNS/ParmTableBDB.h>
 #include <MNS/MeqDomain.h>
 #include <Common/BlobIBufChar.h>

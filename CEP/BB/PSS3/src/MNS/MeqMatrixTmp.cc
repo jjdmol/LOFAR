@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 
 #include <PSS3/MNS/MeqMatrixTmp.h>
 #include <PSS3/MNS/MeqMatrixRealArr.h>
