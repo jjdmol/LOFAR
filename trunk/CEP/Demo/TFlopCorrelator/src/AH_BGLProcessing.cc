@@ -46,99 +46,57 @@ void AH_BGLProcessing::undefine() {
 
 void AH_BGLProcessing::define() {
 
-  LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
+
+ LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
-  WH_Empty empty;
-  Composite comp(empty);
-  setComposite(comp);
-  comp.runOnNode(0);
 
+  // Create the bgl Processing section; these use  tinyCEP
+  // The processing section consists of the SubBand filter
+  // and correlators
 
-  // Create the input section; these use  tinyCEP
+  LOG_TRACE_FLOW_STR("Create input side interface stubs");
+  SB_Stub inStub(false);
 
-  LOG_TRACE_FLOW_STR("Create the workholders");
-  /// Create the WorkHolders 
-  Step** itsRSPsteps = new Step*[itsNrsp];
-  for (unsigned int i = 0; i < itsNrsp; i++) {
-    snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
-    LOG_TRACE_LOOP_STR("Create RSP workholder/Step " << H_name);
-    WH_RSP* whRSP; 
+  LOG_TRACE_FLOW_STR("Create output side interface stubs");
+  Corr_Stub outStub(true);
 
-    if (i == 0) {
-      whRSP = new WH_RSP(H_name, itsKVM, true);  // syncmaster
-    } else {
-      whRSP = new WH_RSP(H_name, itsKVM, false);  // notsyncmaster
-    }
-    itsRSPsteps[i] = new Step(*whRSP, H_name, false);
+  LOG_TRACE_FLOW_STR("Create the SubBand filter  workholders");
+  vector<WH_SubBand*> SBFNodes;
+  for (int i=0; i<NoSBFNodes; i++) {
+    sprintf(WH_DH_Name, "SubBandFilter_%d_of_%d", i, NoSBFNodes);
+    SBFNodes.push_back(new WH_SubBand(WH_DH_Name,      // name
+				      0));   // SubBandID
+    itsWHs.push_back((WorkHolder*) SBFNodes[i]);
+    itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
 
-    // set the rates of this Step.
-    itsRSPsteps[i]->setInRate(fast_rate);
-    itsRSPsteps[i]->setProcessRate(fast_rate);
-    itsRSPsteps[i]->setOutRate(fast_rate);
-
-    comp.addStep(itsRSPsteps[i]); 
-
-    if (i != 0) {
-      // we're a syncSlave. Connect the second input to an appropriate output.
-      itsRSPsteps[i]->connect(itsRSPsteps[0], 1, itsNcorrelator, 1, TH_Mem(), true);
-    }
-  }
-
-  Step** itsTsteps = new Step*[itsNcorrelator];
-  Step** itsCsteps = new Step*[itsNcorrelator];
-  for (unsigned int i = 0; i < itsNcorrelator; i++) {
-    // we create a transpose workholder for every correlator workholder
-    // to rearrange the data coming from the RSP boards.
-    sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNcorrelator);
-    LOG_TRACE_LOOP_STR("Create Transpose workholder/Step " << H_name);
-
-    WH_Transpose whTranspose(H_name, itsKVM);
-    itsTsteps[i] = new Step(whTranspose, H_name, false);
-    // the transpose collects data to intergrate over, so only the input 
-    // and process methods run fast
-    itsTsteps[i]->setInRate(fast_rate);
-    itsTsteps[i]->setProcessRate(fast_rate);
-
-    comp.addStep(itsTsteps[i]);
-
-    // connect the Transpose step just created to the correct RSP outputs
-    for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
-      //      itsRSPsteps[rsp]->connect(itsTsteps[i], i+1, rsp, 1, TH_Mem(), true);
-      itsTsteps[i]->connect(itsRSPsteps[rsp], rsp, i, 1, TH_Mem(), 
-			    true);       // true=blocking
-    }
-
-
-    // now create the Correlator workholder
-    sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
-    LOG_TRACE_LOOP_STR("Create Correlator  workholder/Step " << H_name);
-
-    WH_Correlator whCorrelator(H_name, itsKVM);
-    itsCsteps[i] = new Step(whCorrelator, H_name, false);
-    comp.addStep(itsCsteps[i]);
+    // todo: connect SBFilter to input stub
+    // this connection is defined in the SB_Stub class
+    //inStub.connect (DH_SubBand& sb);
     
-    itsCsteps[i]->connectInput(itsTsteps[i], TH_Mem(), 
-			       true);   // true=blocking
-  }
+  };
   
-  
-  unsigned int c_index = 0;
-  for (unsigned int i = 0; i < itsNdump; i++) {
-    sprintf(H_name, "DumpNode_%d_of_%d", i, itsNdump);
-    LOG_TRACE_LOOP_STR("Create Dump workholder/Step " << H_name);
 
-    WH_Dump whDump(H_name, itsKVM);
-    Step dumpstep(whDump);
-    comp.addStep(dumpstep);
+  LOG_TRACE_FLOW_STR("Create the Correlator workholders");
+  vector<WH_Correlator*> CorrNodes;
+  for (int i=0; i<NoCorrNodes; i++) {
+    sprintf(WH_DH_Name, "Correlator_%d_of_%d", i, NoCorrNodes);
+    CorrNodes.push_back(new WH_Correlator(WH_DH_Name));      // name
+    itsWHs.push_back((WorkHolder*) CorrNodes[i]);
+    itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
+
+    // todo: connect Correlator to SBFilter
+    // this connection is defined in the SB_Stub class
+
+    // todo: connect correlator to output stub
+    //outStub.connect();
+  };
+  
     
-    for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
-      dumpstep.connect(itsCsteps[c_index++], in, 0, 1, TH_Mem(), 
-		       true);  // true=blocking
-    }
-  }
   LOG_TRACE_FLOW_STR("Finished define()");
 }
+
+
 
 void AH_BGLProcessing::prerun() {
   getComposite().preprocess();
