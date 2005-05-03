@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/Profiling/PerfProfile.h>
 
 #include <PSS3/MNS/MeqWsrtPoint.h>

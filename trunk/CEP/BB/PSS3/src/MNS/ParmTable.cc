@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <PSS3/MNS/ParmTable.h>
 #include <PSS3/MNS/ParmTableAIPS.h>
 #include <PSS3/MNS/ParmTableBDB.h>

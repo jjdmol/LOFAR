@@ -24,7 +24,7 @@
 #define MNS_PARMTABLEBDB_H
 
 //# Includes
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <MNS/ParmTable.h>
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>

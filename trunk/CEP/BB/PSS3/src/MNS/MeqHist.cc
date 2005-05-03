@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <PSS3/MNS/MeqHist.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>
