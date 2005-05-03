@@ -124,6 +124,17 @@ void doRun()
 
 }
 
+// Cancel Command queue
+void doCancel()
+{
+	cout << "Sending Cancel command" << endl;
+	if (ACClient->cancelCmdQueue()) {
+		waitForAnswer();
+	}
+	cout << "Queue must be flushed by now." << endl;
+
+}
+
 // Pause(condition,waitTime)
 void doPause()
 {
@@ -161,6 +172,7 @@ void showMenu()
 	cout << "d		Define : start processes" << endl;
 	cout << "i		Init: let AP connect to each other" << endl;
 	cout << "r		Run: do work" << endl;
+	cout << "c		Cancel Command Queue" << endl;
 	cout << "p		Pause(condition,waitTime)" << endl;
 	cout << "s		Quit: stop processes" << endl << endl;
 
@@ -183,39 +195,13 @@ int main (int argc, char *argv[]) {
 		case 'd':	doDefine();			break;
 		case 'i':	doInit();			break;
 		case 'r':	doRun();			break;
+		case 'c':	doCancel();			break;
 		case 'p':	doPause();			break;
 		case 's':	doStop();			break;
 		}
 	}
 
 	doDisconnect();
-
-#if 0
-	LOG_DEBUG (formatString("Sending command pause went %s!", 
-				ACClient->pause(time(0)+40, 0, "pause condition") ? "OK" : "WRONG"));
-	ACClient->processACmsgFromServer();
-
-
-	LOG_DEBUG (formatString("Sending command snapshot went %s!", 
-				ACClient->snapshot(0x4321, "destination for snapshot") ? "OK" : "WRONG"));
-	ACClient->processACmsgFromServer();
-
-
-	LOG_DEBUG (formatString("Sending command recover went %s!", 
-				ACClient->recover(0x12345678, "recover source") ? "OK" : "WRONG"));
-	ACClient->processACmsgFromServer();
-
-
-	LOG_DEBUG (formatString("Sending command reinit went %s!", 
-				ACClient->boot(0x25525775, "reinit configID") ? "OK" : "WRONG"));
-	ACClient->processACmsgFromServer();
-
-
-	LOG_DEBUG (formatString("Command askInfo returned \n[%s]", 
-				ACClient->askInfo("Mag ik van jouw ....").c_str()));
-	ACClient->processACmsgFromServer();
-
-#endif
 
 }
 
