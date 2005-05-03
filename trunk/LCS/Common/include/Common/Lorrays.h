@@ -32,10 +32,6 @@
   #include <Common/Lonumerics.h>
 #endif
     
-#if !defined(HAVE_BLITZ) 
-  #error Blitz not configured
-#endif
-
 #include <Common/Lorrays-Blitz.h>
 
 #endif

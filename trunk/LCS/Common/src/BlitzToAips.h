@@ -28,14 +28,6 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#ifndef HAVE_BLITZ
-#error Blitz support required
-#endif
-
-#ifndef HAVE_AIPSPP
-#error AIPS++ support required
-#endif
-    
 #include <Common/Lorrays.h>
 #include <casa/Arrays/Array.h>
 
