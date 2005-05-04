@@ -74,30 +74,35 @@ WH_SubBand* WH_SubBand::make(const string& name) {
 
 void WH_SubBand::preprocess() {
   itsFFTPlan = fftw_create_plan(itsNsubbands, itsFFTDirection, FFTW_MEASURE);
+
+  fft_in  = static_cast<FilterType*> (malloc(itsFFTLen * sizeof(FilterType)));
+  fft_out = static_cast<FilterType*> (malloc(2 * itsFFTLen * sizeof(FilterType)));
 }
 
 void WH_SubBand::process() {
-  acc = 0.0 + 0.0i;
 
-  fftw_complex* in;
-  fftw_complex* out;
+  // reset the fft_in buffer in case we used it before.
+  memset(fft_in, 0, itsFFTLen * 2);
 
   for (int f = 0; f < itsFFTLen; f++) {
     for (int i = 0; i < itsNtaps; i++) { 
-      
-      // acc += static_cast<FilterType>(coeffPtr[f][i]) * static_cast<FilterType>(delayLine[f][i]);
-      __real__ acc += coeffPtr[f][i] * __real__ delayLine[f][i];
-      __imag__ acc += coeffPtr[f][i] * __imag__ delayLine[f][i];
-      
+
+      fft_in[f] += coeffPtr[f][i] * delayLine[f][i];
+
     }
   }
 
-  fftw_one(itsFFTPlan, in, out);
+  fftw_one(itsFFTPlan, 
+	   reinterpret_cast<fftw_complex *>(fft_in), 
+	   reinterpret_cast<fftw_complex *>(fft_out));
 }
 
 
 void WH_SubBand::postprocess() {
   fftw_destroy_plan(itsFFTPlan);
+
+  free(fft_in);
+  free(fft_out);
 }
 
 void WH_SubBand::dump() {
