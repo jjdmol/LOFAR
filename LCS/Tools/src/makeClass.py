@@ -330,7 +330,7 @@ def addToMakefile(type,className,srcDir,subDirName):
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".h \\\n")
           writeFile.write("\t"+end)
-        elif end.find('\\'):
+        elif end.find('\\') > -1:
           writeFile.write(front+" = "+extendedClassName+".h \\\n")
         else :
           writeFile.write(front+" = "+extendedClassName+".h\n")
@@ -346,7 +346,7 @@ def addToMakefile(type,className,srcDir,subDirName):
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".cc \\\n")
           writeFile.write("\t\t"+end)
-        elif end.find('\\'):
+        elif end.find('\\') > -1:
           writeFile.write(front+" = "+extendedClassName+".cc \\\n")
         else :
           writeFile.write(front+" = "+extendedClassName+".cc\n")
@@ -363,7 +363,7 @@ def addToMakefile(type,className,srcDir,subDirName):
           writeFile.write(front+" = "+extendedClassName+" \\\n")
           writeFile.write("\t"+end)
           searchEnd=1
-        elif end.find('\\'):
+        elif end.find('\\') > -1:
           writeFile.write(front+" = "+extendedClassName+" \\\n")
           searchEnd=1
         else :
@@ -389,7 +389,7 @@ def addToMakefile(type,className,srcDir,subDirName):
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".tcc \\\n")
           writeFile.write("\t"+end)
-        elif end.find('\\'):
+        elif end.find('\\') > -1:
           writeFile.write(front+" = "+extendedClassName+".tcc \\\n")
         else :
           writeFile.write(front+" = "+extendenClassName+".tcc\n")
