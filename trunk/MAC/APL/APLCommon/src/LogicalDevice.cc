@@ -54,6 +54,8 @@ namespace LOFAR
 namespace APLCommon
 {
 
+const string LogicalDevice::LD_CONFIG_PREFIX            = string("mac.apl.ld.");
+
 const string LogicalDevice::LD_STATE_STRING_DISABLED    = string("Disabled");
 const string LogicalDevice::LD_STATE_STRING_INITIAL     = string("Initial");
 const string LogicalDevice::LD_STATE_STRING_IDLE        = string("Idle");
@@ -137,7 +139,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   
   try
   {
-    m_parameterSet.adoptFile(_getShareLocation() + string("share/") + parameterFile);
+    m_parameterSet.adoptFile(_getShareLocation() + parameterFile);
   }
   catch(Exception& e)
   {
@@ -302,7 +304,7 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
           {
             if(parameters.size()==1)
             {
-              m_parameterSet.adoptFile(_getShareLocation() + string("share/") + parameters[0]);
+              m_parameterSet.adoptFile(_getShareLocation() + parameters[0]);
               _schedule();
             }
             else
@@ -873,8 +875,8 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
         GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
         try
         {
-          retryTimeout = pParamSet->getInt("retryTimeout");
-          retryPeriod  = pParamSet->getInt("retryPeriod");
+          retryTimeout = pParamSet->getInt(LD_CONFIG_PREFIX + string("retryTimeout"));
+          retryPeriod  = pParamSet->getInt(LD_CONFIG_PREFIX + string("retryPeriod"));
         } 
         catch(Exception& e)
         {
@@ -975,7 +977,11 @@ void LogicalDevice::_sendScheduleToClients()
         ACC::ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
         string parameterFileName = startDaemonKey+string(".ps"); 
         string remoteSystem = psSubset.getString("startDaemonHost");
-        psSubset.writeFile(_getShareLocation() + string("mnt/") + remoteSystem + string("/") + parameterFileName);
+        
+        string tempFileName = APLUtilities::getTempFileName();
+        psSubset.writeFile(tempFileName);
+        APLUtilities::remoteCopy(tempFileName,remoteSystem,_getShareLocation()+parameterFileName);
+        remove(tempFileName.c_str());
   
         // send the schedule to the startdaemon of the child
         TLogicalDeviceTypes ldType = static_cast<TLogicalDeviceTypes>(psSubset.getInt("logicalDeviceType"));
@@ -1011,8 +1017,12 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
           ACC::ParameterSet psSubset = m_parameterSet.makeSubset(childKey + string("."));
           string parameterFileName = childKey+string(".ps"); 
           string remoteSystem = psSubset.getString("startDaemonHost");
-          psSubset.writeFile(_getShareLocation() + string("mnt/") + remoteSystem + string("/") + parameterFileName);
-    
+
+          string tempFileName = APLUtilities::getTempFileName();
+          psSubset.writeFile(tempFileName);
+          APLUtilities::remoteCopy(tempFileName,remoteSystem,_getShareLocation()+parameterFileName);
+          remove(tempFileName.c_str());
+  
           // send the schedule to the child
           boost::shared_ptr<LOGICALDEVICEScheduleEvent> scheduleEvent(new LOGICALDEVICEScheduleEvent);
           scheduleEvent->fileName = parameterFileName;
@@ -1033,15 +1043,23 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
 
 string LogicalDevice::_getShareLocation() const
 {
-  string shareLocation("/home/lofar/MACTransport/");
+  string shareLocation("/opt/lofar/MAC/parametersets/");
   GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
   try
   {
-    shareLocation = pParamSet->getString("shareLocation");
+    string tempShareLocation = pParamSet->getString(LD_CONFIG_PREFIX + string("shareLocation"));
+    if(tempShareLocation.length()>0)
+    {
+      if(tempShareLocation[tempShareLocation.length()-1] != '/')
+      {
+        tempShareLocation+=string("/");
+      }
+      shareLocation=tempShareLocation;
+    }
   } 
   catch(Exception& e)
   {
-    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using /home/lofar/MACTransport/",e.message().c_str()));
+    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using %s",e.message().c_str(),shareLocation.c_str()));
   }
   return shareLocation;
 }
@@ -1106,10 +1124,10 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
             KVpair kvPair(key,(int)serverPort);
             m_parameterSet.replace(kvPair);
             
-            string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
+            string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
             string startDaemonPortName = m_parameterSet.getString((*chIt) + string(".startDaemonPort"));
             string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
-            string childPsName         = startDaemonHostName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
+            string childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
             
             TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
             TPeerAddr peerAddr;
@@ -1305,7 +1323,7 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
 
 ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.fileName)
 
-      m_parameterSet.adoptFile(_getShareLocation() + string("share/") + scheduleEvent.fileName);
+      m_parameterSet.adoptFile(_getShareLocation() + scheduleEvent.fileName);
       _schedule();
       
       boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
@@ -1480,7 +1498,7 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
 
 ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.fileName)
 
-      m_parameterSet.adoptFile(_getShareLocation() + string("share/") + scheduleEvent.fileName);
+      m_parameterSet.adoptFile(_getShareLocation() + scheduleEvent.fileName);
       _schedule();
       
       boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);

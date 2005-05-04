@@ -77,14 +77,14 @@ VirtualInstrument::VirtualInstrument(const string& taskName,
       int ldType = m_parameterSet.getInt((*it) + ".logicalDeviceType");
       if(ldType == LDTYPE_VIRTUALTELESCOPE)
       {
+        string remoteSystemName = m_parameterSet.getString((*it) + ".remoteSystem");
+
         // get <child>.oldStyle* and create that propertyset
-        string propsetName = m_parameterSet.getString((*it) + ".oldStyleSchedulerName");
+        string propsetName = remoteSystemName + string(":") + m_parameterSet.getString((*it) + ".oldStyleSchedulerName");
         string propsetType = m_parameterSet.getString((*it) + ".oldStyleSchedulerType");
-        
         TGCFExtPropertySetPtr vtSchedulerPropset(new GCFExtPropertySet(propsetName.c_str(),propsetType.c_str(),&m_propertySetAnswer));
         m_vtSchedulerPropertySets[(*it)] = vtSchedulerPropset;
         
-        string remoteSystemName = m_parameterSet.getString((*it) + ".remoteSystem");
         propsetName = remoteSystemName + string(":") + m_parameterSet.getString((*it) + ".propertysetBaseName");
         propsetType = m_parameterSet.getString((*it) + ".propertysetDetailsType");
         TGCFExtPropertySetPtr vtPropset(new GCFExtPropertySet(propsetName.c_str(),propsetType.c_str(),&m_propertySetAnswer));

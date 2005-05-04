@@ -1,5 +1,5 @@
 mac.ns.AVTTest.BeamServer.type=TCP
-mac.ns.AVTTest.BeamServer.host=localhost
+mac.ns.AVTTest.BeamServer.host=saturnus
 mac.ns.AVTTest.BeamServer.port=27001
 mac.ns.AVTTestMAC2.timerPort.type=TCP
 mac.ns.LogicalDeviceScheduler.timerPort.type=TCP
@@ -9,8 +9,6 @@ mac.top.LogicalDeviceServer.BeamServer.remoteservice=AVTTest:BeamServer
 mac.top.AVTLogicalDeviceScheduler.client.remoteservice=AVTTestVT1:server
 mac.top.AVTTestVT1.client.remoteservice=AVTTestBF1:server
 mac.top.AVTTestBF1.client.remoteservice=BeamServer:server
-
-mac.LogicalDeviceServer.pvss.cmdline=-proj MAC
 
 mac.apl.avt.PREPARETIME=5
 mac.apl.avt.BEAMSERVERPORT=BeamServer

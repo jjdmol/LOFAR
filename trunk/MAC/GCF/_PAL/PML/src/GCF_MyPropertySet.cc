@@ -46,6 +46,7 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
   _counter(0),
   _missing(0)
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   loadPropSetIntoRam();
 }
 
@@ -60,11 +61,13 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
   _counter(0),
   _missing(0)
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   loadPropSetIntoRam();
 }
 
 GCFMyPropertySet::~GCFMyPropertySet ()
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   if (_state != S_DISABLED)
   {
     // delete this set from the controller permanent
@@ -82,6 +85,7 @@ GCFProperty* GCFMyPropertySet::createPropObject(const TPropertyInfo& propInfo)
   
 TGCFResult GCFMyPropertySet::enable ()
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   TGCFResult result(GCF_NO_ERROR);
     
   LOG_INFO(LOFAR::formatString ( 
@@ -114,6 +118,7 @@ TGCFResult GCFMyPropertySet::enable ()
 
 TGCFResult GCFMyPropertySet::disable ()
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   TGCFResult result(GCF_NO_ERROR);
   
   LOG_INFO(LOFAR::formatString ( 
@@ -185,6 +190,7 @@ GCFPValue* GCFMyPropertySet::getOldValue (const string propName)
           
 void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   assert(_state == S_ENABLING);
   LOG_INFO(LOFAR::formatString ( 
       "PA-RESP: Property set '%s' is enabled%s",
@@ -204,6 +210,7 @@ void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 
 void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   assert(_state == S_DISABLING);
    
   LOG_INFO(LOFAR::formatString ( 
@@ -217,6 +224,7 @@ void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
 
 bool GCFMyPropertySet::linkProperties()
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   bool successful(true);
   assert(_pController);
   switch (_state)
@@ -243,6 +251,7 @@ bool GCFMyPropertySet::linkProperties()
 
 bool GCFMyPropertySet::tryLinking()
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   bool successful(true);
   assert(_pController);
   switch (_state)
@@ -320,6 +329,7 @@ bool GCFMyPropertySet::tryLinking()
 
 void GCFMyPropertySet::linked (GCFMyProperty& prop)
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   _counter--;
   if (_counter == 0)
   {
@@ -366,6 +376,7 @@ void GCFMyPropertySet::linked (GCFMyProperty& prop)
 
 void GCFMyPropertySet::unlinkProperties()
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   assert(_pController);
   switch (_state)
   {
@@ -396,6 +407,7 @@ void GCFMyPropertySet::unlinkProperties()
 
 void GCFMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   GCFMyProperty* pProperty;
   for(TPropertyList::iterator iter = _properties.begin(); 
       iter != _properties.end(); ++iter)
@@ -408,6 +420,7 @@ void GCFMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
 
 void GCFMyPropertySet::initProperties(const TPropertyConfig config[])
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   GCFMyProperty* pProperty;
   unsigned int i = 0;
   while (config[i].propName != 0)
@@ -430,6 +443,7 @@ void GCFMyPropertySet::initProperties(const TPropertyConfig config[])
 
 void GCFMyPropertySet::wrongState(const char* request)
 {
+  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   const char* stateString[] =
   {
     "DISABLED", 

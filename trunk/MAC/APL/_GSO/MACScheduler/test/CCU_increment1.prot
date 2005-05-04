@@ -56,11 +56,11 @@
 //    beginning of each section.
 
 [io]
-COM1 = { SOCKET, ccc, "client localhost 27000" } // MACScheduler
-COM2 = { SOCKET, ccc, "server localhost 27001" } // BeamServer
-COM3 = { SOCKET, ccc, "server localhost 27002" } // VBStartDaemon
-COM4 = { SOCKET, ccc, "client localhost 27003" } // VirtualBackend
-COM5 = { SOCKET, ccc, "client localhost 26999" } // THPVSSBridge
+COM1 = { SOCKET, ccc, "client saturnus 27000" } // MACScheduler
+COM2 = { SOCKET, ccc, "server saturnus 27001" } // BeamServer
+COM3 = { SOCKET, ccc, "server saturnus 27002" } // VBStartDaemon
+COM4 = { SOCKET, ccc, "client saturnus 27003" } // VirtualBackend
+COM5 = { SOCKET, ccc, "client saturnus 26999" } // THPVSSBridge
 
 // For serial ports: COM1 = { COM1, ccc , "Baud=1200 parity=N data=8 stop=1 octs=on" }
 
@@ -140,7 +140,7 @@ t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; string
 //
 
 // SAS enums
-t_SAS_Result          = { 4, 0x00000000, 0x0000000D, ENUM,
+t_SAS_Result          = { 4, 0x00000000, 0x0000000E, ENUM,
                              0x00000000 : "NO_ERROR", 
                              0x00000001 : "ERROR_UNSPECIFIED", 
                              0x00000002 : "ERROR_VI_NOT_FOUND", 
@@ -149,12 +149,13 @@ t_SAS_Result          = { 4, 0x00000000, 0x0000000D, ENUM,
                              0x00000005 : "ERROR_UNKNOWN_COMMAND",
                              0x00000006 : "ERROR_DISABLED",
                              0x00000007 : "ERROR_LOW_QUALITY",
-                             0x00000008 : "ERROR_WRONG_VERSION",
-                             0x00000009 : "ERROR_UNSUPPORTED_LD",
-                             0x0000000A : "ERROR_LD_NOT_FOUND",
-                             0x0000000B : "ERROR_WRONG_STATE",
-                             0x0000000C : "ERROR_SHUTDOWN",
-                             0x0000000D : "ERROR_ALREADY_EXISTS"
+                             0x00000008 : "ERROR_TIMING_FAILURE",
+                             0x00000009 : "ERROR_WRONG_VERSION",
+                             0x0000000A : "ERROR_UNSUPPORTED_LD",
+                             0x0000000B : "ERROR_LD_NOT_FOUND",
+                             0x0000000C : "ERROR_WRONG_STATE",
+                             0x0000000D : "ERROR_SHUTDOWN",
+                             0x0000000E : "ERROR_ALREADY_EXISTS"
                        }
 
 // ABS enums
@@ -331,7 +332,7 @@ F_ABS_BEAMALLOC_ACK =
 { 
   0x02, // signal Id
   0x94, // Direction and protocol
-  0x0800000, // message payload length, big endian
+  0x08000000, // message payload length, big endian
   handle                      : t_Int,
   status                      : t_ABS_Result
 }
@@ -340,7 +341,7 @@ F_ABS_BEAMFREE_ACK =
 { 
   0x04, // signal Id
   0x94, // Direction and protocol
-  0x0800000, // message payload length, big endian
+  0x08000000, // message payload length, big endian
   handle                      : t_Int,
   status                      : t_ABS_Result
 }
