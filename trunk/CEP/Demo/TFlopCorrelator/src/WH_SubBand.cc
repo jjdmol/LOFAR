@@ -29,21 +29,20 @@ WH_SubBand::WH_SubBand(const string& name,
    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
    //ParameterCollection	myPC(myPS);
    itsNtaps     = myPS.getInt("WH_SubBand.taps");
-   itsNfilters  = myPS.getInt("WH_SubBand.filters");
    itsFFTLen    = myPS.getInt("WH_SubBand.fftlen");
-   itsCpF       = myPS.getInt("WH_SubBand.Corr_per_Filter");
+   itsCpF       = myPS.getInt("Corr_per_Filter");
 
    getDataManager().addInDataHolder(0, new DH_SubBand("input", itsSBID));
 
    for (int c=0; c<itsCpF; c++) {
-     getDataManager().addOutDataHolder(0, new DH_CorrCube("in", itsSBID)); 
+     getDataManager().addOutDataHolder(0, new DH_CorrCube("output", itsSBID)); 
    }
    
    //todo: Add DH for filter coefficients;
    //      need functionalit like the CEPFrame setAutotrigger.
 
 
-   for (int filter = 0; filter <  itsNfilters; filter++) {
+   for (int filter = 0; filter <  itsFFTLen; filter++) {
 
      // Initialize the delay line
      delayLine[filter] = new FilterType[2*itsNtaps]; 
@@ -83,7 +82,7 @@ void WH_SubBand::process() {
   fftw_complex* in;
   fftw_complex* out;
 
-  for (int f = 0; f < itsNfilters; f++) {
+  for (int f = 0; f < itsFFTLen; f++) {
     for (int i = 0; i < itsNtaps; i++) { 
       
       acc += static_cast<FilterType>(coeffPtr[f][i]) * static_cast<FilterType>(delayLine[f][i]);
