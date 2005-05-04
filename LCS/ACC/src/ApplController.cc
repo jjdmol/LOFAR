@@ -71,13 +71,6 @@ ApplController::~ApplController()
 {
 	LOG_TRACE_OBJ ("ApplController destructor");
 
-	// Save results from the processes to a file (append).
-	if (itsResultParamSet && itsObsParamSet && 
-							 itsObsParamSet->isDefined("AC.resultfile")) {
-	   itsResultParamSet->writeFile(itsObsParamSet->getString("AC.resultfile"),
-								    true);
-	}
-
 	if (itsBootParamSet)   { delete itsBootParamSet;   }
 	if (itsObsParamSet)    { delete itsObsParamSet;    }
 	if (itsResultParamSet) { delete itsResultParamSet; }
@@ -662,10 +655,20 @@ void ApplController::checkStateEngine()
 
 	// State was flagged ready, check if there is another state we should 
 	// execute.
+
+	// Special case: handle Quit command extras
 	// TODO: implement quit in a neat way!
 	if (itsCurState == StateKillAppl) {
+		// Save results from the processes to a file (append).
+		if (itsResultParamSet && itsObsParamSet && 
+								 itsObsParamSet->isDefined("AC.resultfile")) {
+		   itsResultParamSet->writeFile(
+								itsObsParamSet->getString("AC.resultfile"),
+								true);
+		}
 		itsIsRunning = false;
 	}
+
 	itsCurState = itsStateEngine->nextState();
 	if (itsCurState == StateNone) {
 		sendExecutionResult(AcCmdMaskOk, "Command ready");		// No more states
