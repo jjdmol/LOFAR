@@ -15,15 +15,25 @@ using namespace LOFAR::ACC;
 
 namespace LOFAR { 
 
-  SB_Stub::SB_Stub (bool stubOnServer)
+  SB_Stub::SB_Stub (int nSBF,
+		    bool stubOnServer)
     : itsStubOnServer (stubOnServer),
-      itsSB("noname",1) // todo: bring in correct SBID!!
-  {}
+      itsSB("noname",1), // todo: bring in correct SBID!!
+      itsNSBF (nSBF)
+  {
+    itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
+    itsNSBF     = itsPS->getInt("NSBF");  // number of SubBand filters in the application
+    
+    for (int i=0; i<itsNSBF, i++) {
+      itsSB[i] = new DH_SubBand();
+    }
+  }
 
   SB_Stub::~SB_Stub()
   {}
 
-  void SB_Stub::connect (DH_SubBand& sb)
+  void SB_Stub::connect (int SBF_nr,
+			 DH_SubBand& sb)
   {
     const ParameterSet myPS("TFlopCorrelator.cfg");
     TH_Socket thSB(myPS.getString("SBConnection.ClientHost"), // sendhost

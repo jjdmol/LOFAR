@@ -7,6 +7,9 @@
 //#
 //# $Id$
 
+#ifndef LOFAR_TFLOPCORRELATOR_SBSTUB_H
+#define LOFAR_TFLOPCORRELATOR_SBSTUB_H
+
 #include <string>
 #include <TFlopCorrelator/DH_SubBand.h>
 //#include <TFlopCorrelator/DH_FilterCoeff.h>
@@ -29,11 +32,14 @@ public:
   void connect (DH_SubBand& sb);
 
 private:
-  bool          itsStubOnServer;
-  std::string   itsParmFileName;
-  DH_SubBand    itsSB;
-
+  bool               itsStubOnServer;
+  std::string        itsParmFileName;
+  ACC::ParameterSet* itsPS;
+  DH_SubBand*        itsSB;
+  int                itsNSBF;
 };
 
 } //namespace
+
+#endif //include guard 
 
