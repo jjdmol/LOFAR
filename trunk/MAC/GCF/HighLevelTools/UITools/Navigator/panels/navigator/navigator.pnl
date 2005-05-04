@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,355 259 1260 960 N "_3DFace" 0
+PANEL,258 138 1260 960 N "_3DFace" 0
 "main()
 {
 	Navigator_HandleEventInitialize();
@@ -417,7 +417,7 @@ LANG:1 0
 13 66
 "Button1"
 ""
-1 1190 870 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 950 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 39 0 0 0 0 0
 EE E
@@ -428,7 +428,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-1188 868 1213 895
+948 -2 973 25
 T 
 1
 LANG:1 3 ...
@@ -447,7 +447,7 @@ LANG:1 3 ...
 13 67
 "Button2"
 ""
-1 1220 870 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 980 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 40 0 0 0 0 0
 EE E
@@ -458,7 +458,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-1218 868 1243 895
+978 -2 1003 25
 T 
 1
 LANG:1 3 ...
@@ -477,7 +477,7 @@ LANG:1 3 ...
 13 68
 "Button3"
 ""
-1 1160 870 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 920 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 41 0 0 0 0 0
 EE E
@@ -488,7 +488,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-1158 868 1183 895
+918 -2 943 25
 T 
 1
 LANG:1 3 ...
@@ -507,7 +507,7 @@ LANG:1 3 ...
 13 70
 "Button5"
 ""
-1 1160 900 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 1020 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 42 0 0 0 0 0
 EE E
@@ -518,7 +518,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-1158 898 1183 925
+1018 -2 1043 25
 T 
 1
 LANG:1 3 ...
@@ -537,7 +537,7 @@ LANG:1 3 ...
 13 71
 "Button6"
 ""
-1 1190 900 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 1050 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 43 0 0 0 0 0
 EE E
@@ -548,7 +548,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-1188 898 1213 925
+1048 -2 1073 25
 T 
 1
 LANG:1 3 ...
@@ -567,7 +567,7 @@ LANG:1 3 ...
 13 72
 "Button8"
 ""
-1 1220 900 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 1080 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 44 0 0 0 0 0
 EE E
@@ -578,7 +578,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-1218 898 1243 925
+1078 -2 1103 25
 T 
 1
 LANG:1 3 ...
@@ -721,59 +721,59 @@ E
 {
   string currentInput = input_shortCut.text;
   dyn_string shortCuts;
-  dpGet(\"System1:__navigator.shortCuts\", shortCuts);
+  dpGet(getSystemName() + \"__navigator.shortCuts\", shortCuts);
   
   
   string currentInputPrefix = substr(currentInput, 0,2);
   string currentInputSuffix = substr(currentInput, 2,5);
-  DebugN(\"currentInput:\"+currentInput);
-  DebugN(\"currentInputPrefix:\"+currentInputPrefix);
-  DebugN(\"currentInputSuffix:\"+currentInputSuffix);
+//  DebugN(\"currentInput:\"+currentInput);
+//  DebugN(\"currentInputPrefix:\"+currentInputPrefix);
+//  DebugN(\"currentInputSuffix:\"+currentInputSuffix);
   switch(currentInputPrefix)
   {
   case \"01\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[1]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[1]+currentInputSuffix);
     break;
  
   case \"02\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[2]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[2]+currentInputSuffix);
     break;
 
   case \"03\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[3]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[3]+currentInputSuffix);
     break;
 
   case \"04\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[4]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[4]+currentInputSuffix);
     break;
 
   case \"05\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[5]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[5]+currentInputSuffix);
     break;
 
   case \"06\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[6]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[6]+currentInputSuffix);
     break;
 
   case \"07\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[7]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[7]+currentInputSuffix);
     break;
 
   case \"08\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[8]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[8]+currentInputSuffix);
     break;
 
   case \"09\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[9]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[9]+currentInputSuffix);
     break;
 
   case \"10\":
-    navConfigTriggerNavigatorRefreshWithDP(shortCuts[10]+currentInputSuffix);
+    navConfigTriggerNavigatorRefreshWithDP(getSystemName() + shortCuts[10]+currentInputSuffix);
     break;
 
  
   default:
-    DebugN(\"DEFAULT OF FLOAT\");
+    DebugN(\"No case found\");
   }
  
 

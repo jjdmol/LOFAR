@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,333 230 730 540 N "_3DFace" 0
+PANEL,372 257 730 540 N "_3DFace" 0
 EEE E E 1 -1 -1 0  80 120
 "" 0 1
 E"#uses \"gcfnav-functions.ctl\"" 0
@@ -240,53 +240,54 @@ LANG:1 6 Create
       newEnvironmentName = \"Personal\";
     }
   }
-  
   ///////////////////////////////////////////////////////////////////
   if(newEnvironmentName!=\"\")
   {
-    if(!dynContains(environmentNames, newEnvironmentName) && !(newEnvironmentName==\"Personal\"))
+    if((!dynContains(environmentNames, newEnvironmentName) && !(newEnvironmentName==\"Personal\")) || (newEnvironmentName==\"Personal\"))
     {
-      bool stopSearch;
-      for(int j=1;j<=dynlen(environmentNames)&&!stopSearch;j++)
-      {
-       if(environmentNames[j]==\"\")
-       {
-         stopSearch=TRUE; 
-         environmentNames[j] = newEnvironmentName;
-       }
+      if(!(newEnvironmentName==\"Personal\"))
+      { 
+        bool stopSearch;
+        for(int j=1;j<=dynlen(environmentNames)&&!stopSearch;j++)
+        {
+         if(environmentNames[j]==\"\")
+         {
+           stopSearch=TRUE; 
+           environmentNames[j] = newEnvironmentName;
+         }
+        }
+        if(!stopSearch)
+        {
+          environmentNames[dynlen(environmentNames)+1] = newEnvironmentName;
+        }
+        dpSet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES, environmentNames);
       }
-      if(!stopSearch)
-      {
-        environmentNames[dynlen(environmentNames)+1] = newEnvironmentName;
-      }
-      dpSet(DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES, environmentNames);
     
     
-    setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment   : \" + newEnvironmentName);
-    setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment for user: \" + newEnvironmentNameUserName);
-    setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment ID: \" + navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName));
-    string systemName = getSystemName();
-    strreplace(systemName, \":\", \"\");
-    dpTypeList[dynlen(dpTypeList)+1] = systemName;
-    for(int i=1; i<=dynlen(dpTypeList); i++)
-    {
-      dpCopyBufferClear();
-      error=0;
-      setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Creating type\");
-      dpCopy(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
-      setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy result: \" + error);
-      error=0;
-      dpCopyOriginal(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
-      setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy content result: \" + error);
-      SelectionList_output.selectedPos = SelectionList_output.itemCount;
+      setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment   : \" + newEnvironmentName);
+      setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment for user: \" + newEnvironmentNameUserName);
+      setValue(\"SelectionList_output\", \"appendItem\", \"Creating new environment ID: \" + navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName));
+      string systemName = getSystemName();
+      strreplace(systemName, \":\", \"\");
+      dpTypeList[dynlen(dpTypeList)+1] = systemName;
+      for(int i=1; i<=dynlen(dpTypeList); i++)
+      {
+        dpCopyBufferClear();
+        error=0;
+        setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Creating type\");
+        dpCopy(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
+        setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy result: \" + error);
+        error=0;
+        dpCopyOriginal(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
+        setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy content result: \" + error);
+        SelectionList_output.selectedPos = SelectionList_output.itemCount;
+      }
+      setValue(\"SelectionList_output\", \"appendItem\", \"Creation of new environment \"+newEnvironmentName+\" completed\");
     }
-    setValue(\"SelectionList_output\", \"appendItem\", \"Creation of new environment \"+newEnvironmentName+\" completed\");
-  }
-  else
-  {
-    setValue(\"SelectionList_output\", \"appendItem\", \"Environment name already exists, environment not created.\");
-  }
-
+    else
+    {
+      setValue(\"SelectionList_output\", \"appendItem\", \"Environment name already exists, environment not created.\");
+    }
   ///////////////////////////////////////////////////////////////////
   }
   else if(dynContains(environmentNames, newEnvironmentName))
@@ -961,7 +962,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0
 "main()
 {
-  dpConnect(\"navConfigEnvironmentFillListWithUserNames\", \"System1:_Users.UserName:_online.._value\");
+  dpConnect(\"navConfigEnvironmentFillListWithUserNames\", getSystemName() + \"_Users.UserName:_online.._value\");
 }
 
 
