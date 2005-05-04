@@ -11,8 +11,6 @@
 #define TFLOPCORRELATOR_DH_CORRCUBE_H
 
 
-#include <lofar_config.h>
-
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 

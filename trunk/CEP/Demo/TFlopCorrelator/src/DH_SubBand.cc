@@ -10,6 +10,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
+#include <lofar_config.h>
+
 #include <DH_SubBand.h>
 #include <ACC/ParameterSet.h>
 

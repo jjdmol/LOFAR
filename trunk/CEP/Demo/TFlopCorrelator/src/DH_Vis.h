@@ -10,8 +10,6 @@
 #define TFLOPCORR_DH_VIS_H
 
 
-#include <lofar_config.h>
-
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 
