@@ -51,6 +51,8 @@ class APLUtilities
     static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
     static void string2Vector(const string& parametersString, vector<string>& parameters); 
     static time_t getUTCtime();
+    static int remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile);
+    static string getTempFileName();
     
   protected:
     // protected copy constructor

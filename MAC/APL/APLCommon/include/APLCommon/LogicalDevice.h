@@ -79,6 +79,8 @@ namespace APLCommon
         LOGICALDEVICE_STATE_GOINGDOWN
       } TLogicalDeviceState;
 
+      static const string LD_CONFIG_PREFIX;
+      
       static const string LD_STATE_STRING_DISABLED;
       static const string LD_STATE_STRING_INITIAL;
       static const string LD_STATE_STRING_IDLE;
@@ -166,7 +168,7 @@ namespace APLCommon
       void _acceptChildConnection();
       bool _isAPCLoaded() const;
       void _apcLoaded();
-      void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode);
+      void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode=LD_RESULT_NO_ERROR);
       void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       vector<string> _getChildKeys();
       void _sendEvent(GCFEventSharedPtr eventPtr, GCF::TM::GCFPortInterface& port);

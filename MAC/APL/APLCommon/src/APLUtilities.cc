@@ -82,3 +82,46 @@ time_t APLUtilities::getUTCtime()
 {
   return time(0);// current system time in UTC
 }
+
+int APLUtilities::remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile)
+{
+  char tempFileName [L_tmpnam];
+  tmpnam(tempFileName);
+  
+  string command("rcp ");
+  command += localFile + string(" ");
+  command += remoteHost + string(":");
+  command += remoteFile;
+  command += string(" 1>&2 2>") + string(tempFileName);
+  int result = system(command.c_str());
+  if(result != 0)
+  {
+    char outputLine[200];
+    string outputString;
+    FILE* f=fopen(tempFileName,"rt");
+    if(f != NULL)
+    {
+      while(!feof(f))
+      {
+        fgets(outputLine,200,f);
+        if(!feof(f))
+          outputString+=string(outputLine);
+      }
+      fclose(f);
+      LOG_ERROR(formatString("Unable to remote copy %s to %s:%s: %s",localFile.c_str(),remoteHost.c_str(),remoteFile.c_str(),outputString.c_str()));
+    }
+  }
+  else
+  {
+    LOG_INFO(formatString("Successfully copied %s to %s:%s",localFile.c_str(),remoteHost.c_str(),remoteFile.c_str()));
+  }
+  remove(tempFileName);
+  return result;
+}
+
+string APLUtilities::getTempFileName()
+{
+  char tempFileName [L_tmpnam];
+  tmpnam(tempFileName);
+  return string(tempFileName);
+}

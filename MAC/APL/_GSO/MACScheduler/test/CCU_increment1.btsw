@@ -20,7 +20,7 @@ Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack, 
 //	s001 : TIMER(1) ; s002.
 // ------------------------------------------------------------------------------
   s002  : F_SAS_SCHEDULE ( 0x00000036,0x00000032,"VIWrongVersion1.ps" )               ; s010.			// send schedule VI1
-  s010  : E_SAS_RESPONSE ( 0x0000003A,0x00000008,0x00000032,"VIWrongVersion1" ) ; s050.			// wait for WRONG VERSION response
+  s010  : E_SAS_RESPONSE ( 0x0000003A,0x00000009,0x00000032,"VIWrongVersion1" ) ; s050.			// wait for WRONG VERSION response
   s010  : E_SAS_RESPONSE ( ,,, )                                ; error.  	// invalid response received
 // ------------------------------------------------------------------------------
   s050  : F_SAS_SCHEDULE ( 0x00000036,0x00000032,"VI1.ps" )     ; s060.			// send schedule VI1
@@ -266,15 +266,15 @@ VAR scope.
 [testscript]
 VAR     SM1_done, SM2_stop, SM3_stop, SM4_stop, SM5_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled, vbsd_connected.
 
-//COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled)
-//        WaitUntilTestEnd (SM1_done).
+COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled)
+        WaitUntilTestEnd (SM1_done).
 
-//COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).
+COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).
 
-//COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
+COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
 
-//COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
+COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
 
-COM5 :  Statemachine_THPVSSBridge (SM5_stop).
+//COM5 :  Statemachine_THPVSSBridge (SM5_stop).
 //COM5 :  Statemachine_PVSSMACScheduler (SM5_stop).
 

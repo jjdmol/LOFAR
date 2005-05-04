@@ -192,7 +192,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-              ACC::ParameterCollection pc(shareLocation + string("share/") + parameters[0]); // assume VIrootID is a file
+              ACC::ParameterCollection pc(shareLocation + parameters[0]); // assume VIrootID is a file
               boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -200,15 +200,18 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
               // get some parameters and write it to the allocated CCU
               string allocatedCCU = ps->getString("allocatedCCU");
               string viName = ps->getString("name");
-              string psFileName = string("/") + viName + string(".ps");
-              string psFilePath = shareLocation + string("mnt/") + allocatedCCU + string("/") + psFileName;
-              ps->writeFile(psFilePath);
+              string parameterFileName = viName + string(".ps");
+      
+              string tempFileName = APLUtilities::getTempFileName();
+              ps->writeFile(tempFileName);
+              APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
+              remove(tempFileName.c_str());
               
               // send the schedule event to the VI-StartDaemon on the CCU
               STARTDAEMONScheduleEvent sdScheduleEvent;
               sdScheduleEvent.logicalDeviceType = LDTYPE_VIRTUALINSTRUMENT;
               sdScheduleEvent.taskName = viName;
-              sdScheduleEvent.fileName = psFileName;
+              sdScheduleEvent.fileName = parameterFileName;
               
 ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.taskName)
 ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
@@ -366,15 +369,23 @@ void MACScheduler::_disconnectedHandler(GCFPortInterface& port)
 
 string MACScheduler::_getShareLocation() const
 {
-  string shareLocation("/home/lofar/MACTransport/");
+  string shareLocation("/opt/lofar/MAC/parametersets/");
   GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
   try
   {
-    shareLocation = pParamSet->getString("shareLocation");
+    string tempShareLocation = pParamSet->getString(MS_CONFIG_PREFIX + string("shareLocation"));
+    if(tempShareLocation.length()>0)
+    {
+      if(tempShareLocation[tempShareLocation.length()-1] != '/')
+      {
+        tempShareLocation+=string("/");
+      }
+      shareLocation=tempShareLocation;
+    }
   } 
   catch(Exception& e)
   {
-    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using /home/lofar/MACTransport/",e.message().c_str()));
+    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using %s",e.message().c_str(),shareLocation.c_str()));
   }
   return shareLocation;
 }
@@ -404,6 +415,9 @@ TSASResult MACScheduler::_LDtoSASresult(const TLDResult& ldResult)
       break;
     case LD_RESULT_LOW_QUALITY:
       sasResult=SAS_RESULT_ERROR_LOW_QUALITY;
+      break;
+    case LD_RESULT_TIMING_FAILURE:
+      sasResult=SAS_RESULT_ERROR_TIMING_FAILURE;
       break;
     default:
       sasResult=SAS_RESULT_ERROR_UNSPECIFIED;
@@ -486,6 +500,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
           char ccuName[20];
           sprintf(ccuName,"CCU%d",i+1);
           
+          string startDaemonHostName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonHost"));
           string startDaemonPortName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonPort"));
           string startDaemonTaskName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonTask"));
 
@@ -495,7 +510,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
           peerAddr.portname = startDaemonPortName;
           startDaemonPort->setAddr(peerAddr);
           startDaemonPort->open();
-          m_VISDclientPorts[ccuName] = startDaemonPort;
+          m_VISDclientPorts[startDaemonHostName] = startDaemonPort;
         }
       }
       catch(Exception& e)
@@ -676,7 +691,7 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-        ACC::ParameterCollection pc(shareLocation + string("share/") + sasScheduleEvent.VIrootID); // assume VIrootID is a file
+        ACC::ParameterCollection pc(shareLocation + sasScheduleEvent.VIrootID); // assume VIrootID is a file
         boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -684,10 +699,12 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         // get some parameters and write it to the allocated CCU
         string allocatedCCU = ps->getString("allocatedCCU");
         string viName = ps->getString("name");
-        string psFileName = string("/") + viName + string(".ps");
-        string psFilePath = shareLocation + string("mnt/") + allocatedCCU + string("/") + psFileName;
-        ps->writeFile(psFilePath);
+        string parameterFileName = viName + string(".ps");
 
+        string tempFileName = APLUtilities::getTempFileName();
+        ps->writeFile(tempFileName);
+        APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
+        remove(tempFileName.c_str());
 
         // add the VI to the VI-SASport map
         if(_isSASclientPort(port))
@@ -699,7 +716,7 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         STARTDAEMONScheduleEvent sdScheduleEvent;
         sdScheduleEvent.logicalDeviceType = LDTYPE_VIRTUALINSTRUMENT;
         sdScheduleEvent.taskName = viName;
-        sdScheduleEvent.fileName = psFileName;
+        sdScheduleEvent.fileName = parameterFileName;
         
 ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.taskName)
 ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
@@ -746,7 +763,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-        ACC::ParameterCollection pc(shareLocation + string("share/") + sasCancelScheduleEvent.VIrootID); // assume VIrootID is a file
+        ACC::ParameterCollection pc(shareLocation + sasCancelScheduleEvent.VIrootID); // assume VIrootID is a file
         boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -798,23 +815,26 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-        ACC::ParameterCollection pc(shareLocation + string("share/") + sasUpdateScheduleEvent.VIrootID); // assume VIrootID is a file
+        ACC::ParameterCollection pc(shareLocation + sasUpdateScheduleEvent.VIrootID); // assume VIrootID is a file
         boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
         string allocatedCCU = ps->getString("allocatedCCU");
         string viName = ps->getString("name");
-        string psFileName = string("/") + viName + string(".ps");
-        string psFilePath = shareLocation + string("mnt/") + allocatedCCU + string("/") + psFileName;
-        ps->writeFile(psFilePath);
+        string parameterFileName = viName + string(".ps");
+
+        string tempFileName = APLUtilities::getTempFileName();
+        ps->writeFile(tempFileName);
+        APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
+        remove(tempFileName.c_str());
         
         // send a SCHEDULE message
         TStringRemotePortMap::iterator it = m_connectedVIclientPorts.find(viName);
         if(it != m_connectedVIclientPorts.end())
         {
           LOGICALDEVICEScheduleEvent scheduleEvent;
-          scheduleEvent.fileName = psFileName;
+          scheduleEvent.fileName = parameterFileName;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent.fileName)
 
