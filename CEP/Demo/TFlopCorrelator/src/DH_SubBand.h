@@ -10,9 +10,6 @@
 #ifndef TFLOPCORRELATOR_DH_SUBBAND_H
 #define TFLOPCORRELATOR_DH_SUBBAND_H
 
-
-#include <lofar_config.h>
-
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 
