@@ -11,6 +11,7 @@
 #define LOFAR_TFLOPCORRELATOR_SBSTUB_H
 
 #include <string>
+#include <ACC/ParameterSet.h>
 #include <TFlopCorrelator/DH_SubBand.h>
 //#include <TFlopCorrelator/DH_FilterCoeff.h>
 
@@ -29,14 +30,14 @@ public:
   ~SB_Stub();
 
   // Connect the given objects to the stubs.
-  void connect (DH_SubBand& sb);
+  void connect (int& SBF_nr,
+		DH_SubBand& sb);
 
 private:
-  bool               itsStubOnServer;
-  std::string        itsParmFileName;
-  ACC::ParameterSet* itsPS;
-  DH_SubBand*        itsSB;
-  int                itsNSBF;
+  bool                itsStubOnServer;
+  ACC::ParameterSet*  itsPS;
+  vector<DH_SubBand*> itsSB;
+  int                 itsNSBF;
 };
 
 } //namespace
