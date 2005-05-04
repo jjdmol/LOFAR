@@ -85,7 +85,9 @@ void WH_SubBand::process() {
   for (int f = 0; f < itsFFTLen; f++) {
     for (int i = 0; i < itsNtaps; i++) { 
       
-      acc += static_cast<FilterType>(coeffPtr[f][i]) * static_cast<FilterType>(delayLine[f][i]);
+      // acc += static_cast<FilterType>(coeffPtr[f][i]) * static_cast<FilterType>(delayLine[f][i]);
+      __real__ acc += coeffPtr[f][i] * __real__ delayLine[f][i];
+      __imag__ acc += coeffPtr[f][i] * __imagc__ delayLine[f][i];
       
     }
   }
