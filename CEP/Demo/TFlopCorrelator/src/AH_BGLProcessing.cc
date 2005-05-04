@@ -46,9 +46,13 @@ void AH_BGLProcessing::undefine() {
 
 void AH_BGLProcessing::define() {
 
-
- LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
-
+  LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
+  LOG_TRACE_FLOW_STR("Read parameters from file TFlopCorrelator.cfg");
+  itsPS    = new ACC::ParameterSet("TFlopCorrelator.cfg");
+  itsNSBF  = itsPS->getInt("NSBF");  // number of SubBand filters in the application
+  itsCpF   = itsPS->getInt("Corr_per_Filter");
+  
+  
   LOG_TRACE_FLOW_STR("Create the top-level composite");
 
   // Create the bgl Processing section; these use  tinyCEP
@@ -56,43 +60,54 @@ void AH_BGLProcessing::define() {
   // and correlators
 
   LOG_TRACE_FLOW_STR("Create input side interface stubs");
-  SB_Stub inStub(false);
+  SB_Stub inStub(true);
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  Corr_Stub outStub(true);
+  Corr_Stub outStub(false);
 
   LOG_TRACE_FLOW_STR("Create the SubBand filter  workholders");
+  
   vector<WH_SubBand*> SBFNodes;
-  for (int i=0; i<NoSBFNodes; i++) {
-    sprintf(WH_DH_Name, "SubBandFilter_%d_of_%d", i, NoSBFNodes);
+  for (int s=0; s<itsNSBF; s++) {
+    sprintf(WH_DH_Name, "SubBandFilter_%d_of_%d", s, itsNSBF);
     SBFNodes.push_back(new WH_SubBand(WH_DH_Name,      // name
 				      0));   // SubBandID
-    itsWHs.push_back((WorkHolder*) SBFNodes[i]);
+    itsWHs.push_back((WorkHolder*) SBFNodes[s]);
     itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
 
-    // todo: connect SBFilter to input stub
-    // this connection is defined in the SB_Stub class
-    //inStub.connect (DH_SubBand& sb);
+    // connect the Subband filter to the input section
+    // this interface is defined in the SB_Stub class
+    inStub.connect (s,                                                            // SBF filter number
+		    (DH_SubBand*)SBFNodes[s]->getDataManager()->getInHolder(0));  // input dataholder in the current WH
     
   };
   
 
   LOG_TRACE_FLOW_STR("Create the Correlator workholders");
   vector<WH_Correlator*> CorrNodes;
-  for (int i=0; i<NoCorrNodes; i++) {
-    sprintf(WH_DH_Name, "Correlator_%d_of_%d", i, NoCorrNodes);
-    CorrNodes.push_back(new WH_Correlator(WH_DH_Name));      // name
-    itsWHs.push_back((WorkHolder*) CorrNodes[i]);
-    itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
+  int corrID=0; // corr serial number in the AH
 
-    // todo: connect Correlator to SBFilter
-    // this connection is defined in the SB_Stub class
-
-    // todo: connect correlator to output stub
-    //outStub.connect();
+  for (int s=0; s<itsNSBF; s++ ) {
+    // loop over all SubBand Filters
+    for (int c=0; c<itsCpF; c++) {
+      // loop over al the correlators connected to a single SubBandFilter
+      corrID++;  // 
+      sprintf(WH_DH_Name, "Correlator_%d_of_%d", corrID, itsNSBF*itsCpF);
+      CorrNodes.push_back(new WH_Correlator(WH_DH_Name));      // name
+      itsWHs.push_back((WorkHolder*) CorrNodes[corrID]);
+      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
+      
+      // todo: connect Correlator to SBFilter
+      // this connection is defined in the SB_Stub class
+      
+      // connect the Subband filter to the input section
+      // this interface is defined in the SB_Stub class
+      outStub.connect (corrID,                                                              // Corr filter number
+		       (DH_SubBand*)CorrNodes[corrID]->getDataManager()->getOutHolder(0));  // input dataholder in the current WH
+      
+    }
   };
   
-    
   LOG_TRACE_FLOW_STR("Finished define()");
 }
 
