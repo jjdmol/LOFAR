@@ -328,6 +328,7 @@ GCFNavSubViewConfigLog.GCFNavSubViewConfigLog	1#1
 	filterLogger	25#7
 	filterLoggerTemp	25#8
 	title	25#9
+GCFLogLevel.GCFLogLevel	21#2
 
 # Datapoint/DpId
 DpName	TypeName	ID
@@ -345,7 +346,7 @@ __nav_view_log	GCFNavView	51403
 __nav_view_archive	GCFNavView	52168
 __nav_Alert_viewconfig	GCFNavViewConfiguration	52278
 __nav_default_viewconfig	GCFNavViewConfiguration	56917
-
+__loglevel	GCFLogLevel	48254
 
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status	_original.._stime
@@ -377,13 +378,6 @@ __nav_SingleElement_Trend.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 1
 __nav_SingleElement_Trend.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.866
 __nav_SingleElement_Trend.DedicatedPanelName	GCFNavSubViewConfigTrend	"Station.pnl"	0x101	17.02.2005 10:35:48.876
 __nav_SingleElement_Trend.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 10:35:48.876
-__navigator.viewsPath	GCFNavigator	"navigator/views/"	0x101	17.02.2005 10:35:48.886
-__navigator.resourceRoots	GCFNavigator	"System1:PIC", "System1:PAC", "System1:VIC"	0x101	29.04.2005 05:57:40.597
-__navigator.ignoreEnabledRoots	GCFNavigator		0x101	14.04.2005 09:05:46.538
-__navigator.environmentNames	GCFNavigator	"Personal", "", "", "", ""	0x101	03.05.2005 09:20:55.770
-__navigator.environmentGroups	GCFNavigator	"", "", "", "", "", "", "", "", ""	0x101	03.05.2005 09:20:55.770
-__navigator.treeAccess	GCFNavigator	"", "", "", "", "", "System1:PIC_Stations_Station01_Rack?", "LCU?:", "System1:PIC_CEP", "System1:PIC_WAN", "System1:PIC", "System1:PAC", "System1:PIC_Stations_Station01_Rack2", "System1:VIC", "0", "0", "System1:PIC_Station01_Rack01_Board1_AP1_RCU2", "System0?:"	0x101	29.04.2005 05:59:58.886
-__navigator.shortCuts	GCFNavigator	"System1:PIC_Stations_Station", "System1:PIC_Stations_Station01_Rack", "System1:PIC_WAN_Switch", "", "", "", "", "", "", ""	0x101	02.05.2005 13:25:25.297
 __nav_view_trend.caption	GCFNavView	"Trend"	0x101	17.02.2005 10:35:48.907
 __nav_view_trend.configPanel	GCFNavView	"trend_config.pnl"	0x101	17.02.2005 10:35:48.917
 __nav_view_panel.caption	GCFNavView	"Panel"	0x101	17.02.2005 10:35:49.848
