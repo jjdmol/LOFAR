@@ -1,5 +1,5 @@
-SUBDIRS=src
+SUBDIRS=src test
 
-DOC_SUBDIRS=src
+DOC_SUBDIRS=src test
 
 include $(lofar_sharedir)/Makefile.common
