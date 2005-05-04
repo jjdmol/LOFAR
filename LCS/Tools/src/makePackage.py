@@ -133,10 +133,12 @@ def createBootstrap(lofarDir,packageName,dirLevel):
   # Create Bootstrap in Package dir
   #
   readFile=openFile(lofarDir+"/templates/package_bootstrap_template","r")
-  writeFile=openFile(packageName+"/bootstrap","w")
+  fileName=packageName+"/bootstrap"
+  writeFile=openFile(fileName,"w")
   replacePackageName(readFile,writeFile,packageName,dirLevel)
   writeFile.close()
   readFile.close()
+  os.chmod(fileName, os.stat(fileName).st_mode | 0111)
 
 def createMakefiles(lofarDir,packageName,srcDir,testDir,dirLevel):
   #
