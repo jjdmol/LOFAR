@@ -18,6 +18,10 @@ namespace LOFAR
   class WH_SubBand: public WorkHolder {
     
   public:
+
+    // Note that we may need to change FilterType to dcomplex 
+    // because of the FFT. The current cast to fftw_complex might
+    // not be correct and may even cause a segfault.
     typedef fcomplex FilterType;
 
     explicit WH_SubBand (const string& name,
@@ -54,7 +58,8 @@ namespace LOFAR
     float**      coeffPtr;
     FilterType*  inputPtr;
 
-    FilterType acc;
+    FilterType*  fft_in;
+    FilterType*  fft_out;
 
     void adjustDelayPtr();
 
