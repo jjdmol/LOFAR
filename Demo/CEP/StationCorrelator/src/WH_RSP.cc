@@ -54,8 +54,8 @@ WH_RSP::WH_RSP(const string& name,
   itsNRSPOutputs   = kvm.getInt("NoWH_RSP", 2) - 1;  
   itsPolarisations = kvm.getInt("polarisations",2);           
   itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
-  itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
-  itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
+  itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);                 // number of EPA-packets in RSP-ethernetframe
+  itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                     // headersize in bytes
   itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader; // packetsize in bytes
 
   // create incoming dataholder   
@@ -140,6 +140,8 @@ void WH_RSP::process()
       }
     }
   }
+  theirTransposeState.leave();
+  theirInvalidDataState.leave();
 }
 
 void WH_RSP::dump() {

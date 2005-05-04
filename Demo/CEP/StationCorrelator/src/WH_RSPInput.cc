@@ -81,7 +81,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   }
 
   // use cyclic buffer on output
-  //((DataManager)getDataManager()).setOutBufferingProperties(0, false);
+  ((DataManager)getDataManager()).setOutBufferingProperties(0, false);
    
   // We need to be able to read more than one packet at the time in case we are lagging
   // and we want to skip one or more packets.
