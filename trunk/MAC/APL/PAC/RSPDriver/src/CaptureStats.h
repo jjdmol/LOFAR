@@ -33,6 +33,12 @@ class CaptureStats : public GCFTask
 {
 public:
 
+  static const int MAX_LINE_LENGTH = 256;
+  static const int MAX_OPTIONS     = 40; // maximum number of cmd line options
+  static const int CMDLINE_MODE = 0;
+  static const int XINETD_MODE  = 1;
+  static const int HTTP_MODE    = 2;
+
   /**
    * Options for statistics capturing.
    */
@@ -44,7 +50,7 @@ public:
     int                     integration;
     uint8                   rcucontrol;
     bool                    onefile;
-    bool                    xinetd_mode;
+    int                     xinetd_mode;
   } Options;
 
   /**
@@ -90,6 +96,11 @@ public:
    */
   void run();
 
+  /**
+   * Parse URL options.
+   */
+  void parse_urloptions(char* url);
+
 private:
   // member variables
 
@@ -106,7 +117,7 @@ private:
   string m_format; // format of xinetd output
   uint32 m_statushandle; // handle for status update subscripton
   uint32 m_statshandle;  // handle for stats update subscription
-  char m_line[128]; // line buffer for getopt options
+  char m_line[MAX_LINE_LENGTH]; // line buffer for getopt options
 };
      
 #endif /* CAPTURESTATS_H_ */

@@ -85,7 +85,7 @@ CaptureStats::CaptureStats(string name, const Options& options)
 
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  if (!m_options.xinetd_mode) {
+  if (CMDLINE_MODE == m_options.xinetd_mode) {
     m_file = new (FILE*)[m_options.n_devices];
     if (!m_file)
       {
@@ -122,9 +122,7 @@ GCFEvent::TResult CaptureStats::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      if (m_options.xinetd_mode) {
-	// send welcome
-	cout << "220 This is the CaptureStats server, at your service." << endl;
+      if (XINETD_MODE == m_options.xinetd_mode) {
 	TRAN(CaptureStats::wait4command);
       } else {
 	TRAN(CaptureStats::handlecommand);
@@ -216,6 +214,63 @@ static std::bitset<MAX_N_RCUS> strtoset(const char* str, unsigned int max)
   return rcuset;
 }
 
+void CaptureStats::parse_urloptions(char* url)
+{
+  while (url && *url && *url++ == ' ') { /*nop*/ } // skip whitespace
+
+  // url+1 skips past leading slash
+  char *key, *value = 0;
+
+  char *p = url+1;
+  while (p && *p) {
+
+    key = p;
+    while (*p && *p++ != '='); // point to value
+    if (*p) {
+      *(p-1) = 0; // terminate key
+
+      value = p;
+      while (*p && *p++ != '&'); // point to next key
+      if (*p) *(p-1) = 0; // terminate value
+    }
+    
+    char *decoded_value = spc_decode_url(value, 0);
+    //cout << "value=\"" << decoded_value << "\"" << endl;
+
+    string option = key;
+    if ("device_set" == option) {
+      m_options.device_set = strtoset(decoded_value, m_options.n_devices);
+    } else if ("duration" == option) {
+      m_options.duration = atoi(decoded_value);
+    } else if ("integration" == option) {
+      m_options.integration = atoi(decoded_value);
+    } else if ("rcucontrol" == option) {
+      unsigned long controlopt = strtoul(decoded_value, 0, 0);
+      if ( controlopt > 0xFF )
+	{
+	  cout << "500 Error: invalid control parameter, must be < 0xFF" << endl;
+	  return;
+	}
+      m_options.rcucontrol = (uint8)controlopt;
+    } else if ("type" == option) {
+      m_options.type = atoi(decoded_value);
+    } else if ("submit" == option) {
+      /* ignore */
+    } else {
+      cout << "500 Warning: unrecognised option: " << key << "=\"" << decoded_value << "\"" << endl;
+      return;
+    }
+    
+    if (decoded_value) {
+      free(decoded_value);
+      decoded_value = 0;
+    }
+    
+    //cout << "key=\"" << key << "\"" << endl;
+    //cout << "value=\"" << value << "\"" << endl;
+  }
+}
+
 GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -228,7 +283,7 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port
 	//int    station_id;
 	string rcuspec;
 	bool done = false;
-	char line[128];
+	char line[MAX_LINE_LENGTH];
 	int   argc = 0;
 	char* argv[20];
 
@@ -237,8 +292,39 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port
 	  // get command
 	  cin >> symbol;
 
-	  if ("set" == symbol) {
+	  if ("GET" == symbol) {
 
+	    cout << "HTTP/1.1 200 OK" << endl;
+	    cout << "Content-Type: application/text" << endl;
+	    cout << "Content-Disposition: attachment; filename=\"data.dat\"" << endl;
+	    cout << endl;
+
+	    m_options.xinetd_mode = HTTP_MODE; // HTTP mode
+
+	    // read URL parameters
+	    line[MAX_LINE_LENGTH-1] = '\0'; // make sure it is NULL-terminated
+	    cin.getline(line, MAX_LINE_LENGTH - 1);
+
+	    //cout << "line=\"" << line << "\"" << endl;
+	    parse_urloptions(line);
+
+#if 0	    
+	    // read away remainder of HTTP request
+	    do {
+	      cin.getline(line, MAX_LINE_LENGTH - 1);
+	    } while(strlen(line) > 0);
+#endif
+	    done=true;
+	    TRAN(CaptureStats::handlecommand);
+
+	  } else if ("hello" == symbol) {
+
+	    // send welcome
+	    cout << "220 This is the CaptureStats server, at your service." << endl;
+
+	  } else if ("set" == symbol) {
+
+	    // xinetd mode
 	    cin >> symbol;
 
 	    if ("sensor" == symbol) {
@@ -248,15 +334,15 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port
 	      if ("statistics" == symbol) {
 		
 		// get options
-		memset(line, '\n', 128); // initialize
-		cin.getline(line, 127);
-		memcpy(m_line, line, 128);
+		memset(line, '\n', MAX_LINE_LENGTH); // initialize
+		cin.getline(line, MAX_LINE_LENGTH - 1);
+		memcpy(m_line, line, MAX_LINE_LENGTH);
 
 		// convert to argc, argv
 		char* c = line;
 		argv[0] = "set sensor statistics";
 		argc = 1;
-		while (*c && *c != '\n' && argc < 20) {
+		while (*c && *c != '\n' && argc < MAX_OPTIONS) {
 		  if (*c == ' ') {
 		    while (*c && *++c == ' ') { /*nop*/ } // skip whitespace
 		    *(c-1) = 0;
@@ -269,7 +355,7 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port
 		if (0 == parse_options(argc, argv, m_options)) {
 		  cout << "210 Ok." << endl;
 		}
-		m_options.xinetd_mode = true; // this was reset by parse_options
+		m_options.xinetd_mode = XINETD_MODE; // this was reset by parse_options
 
 #if 0
 		cin >> station_id;
@@ -359,7 +445,7 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
   {
     case F_ENTRY:
     {
-      if (m_options.xinetd_mode) {
+      if (XINETD_MODE == m_options.xinetd_mode) {
 	cout << "250-Acquiring sensor data." << endl;
 	cout << "250-" << endl;
 	cout << "250-META sensor = statistics " << m_line << endl;
@@ -466,28 +552,37 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 	exit(EXIT_FAILURE);
       }
 
-      if (!m_options.xinetd_mode) {
-	cout << "time=" << upd.timestamp << endl;
-      } else {
-	cout << "250-META time status = " << upd.timestamp << endl;
-      }
-      int result = 0;
-      for (int device = 0; device < m_options.n_devices; device++)
-      {
-	if (!m_options.device_set[device]) continue;
-	
-	if (m_options.xinetd_mode) {
-	  cout << formatString("250-META status, rcu[%02d](status=0x%02x, noverflow=%d)",
-			       device,
-			       upd.sysstatus.rcu()(result).status,
-			       upd.sysstatus.rcu()(result).nof_overflow) << endl;
-	} else {
-	  printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
-		 device,
-		 upd.sysstatus.rcu()(result).status,
-		 upd.sysstatus.rcu()(result).nof_overflow);
+      switch (m_options.xinetd_mode)
+	{
+	case CMDLINE_MODE:
+	  cout << "time=" << upd.timestamp << endl;
+	  break;
+	case XINETD_MODE:
+	  cout << "250-META time status = " << upd.timestamp << endl;
+	  break;
 	}
-	result++;
+
+      if (CMDLINE_MODE == m_options.xinetd_mode
+	  || XINETD_MODE == m_options.xinetd_mode)
+      {
+	int result = 0;
+	for (int device = 0; device < m_options.n_devices; device++)
+	{
+	  if (!m_options.device_set[device]) continue;
+	  
+	  if (XINETD_MODE == m_options.xinetd_mode) {
+	    cout << formatString("250-META status, rcu[%02d](status=0x%02x, noverflow=%d)",
+				 device,
+				 upd.sysstatus.rcu()(result).status,
+				 upd.sysstatus.rcu()(result).nof_overflow) << endl;
+	  } else {
+	    printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
+		   device,
+		   upd.sysstatus.rcu()(result).status,
+		   upd.sysstatus.rcu()(result).nof_overflow);
+	  }
+	  result++;
+	}
       }
     }
     break;
@@ -502,14 +597,18 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 	exit(EXIT_FAILURE);
       }
 
-      if (!m_options.xinetd_mode) {
-	cout << "time=" << upd.timestamp << endl;
-      } else {
-	cout << "250-META time statistics = " << upd.timestamp << endl;
-      }
+      switch (m_options.xinetd_mode)
+	{
+	case CMDLINE_MODE:
+	  cout << "time=" << upd.timestamp << endl;
+	  break;
+	case XINETD_MODE:
+	  cout << "250-META time status = " << upd.timestamp << endl;
+	  break;
+	}
 
       if (capture_statistics(upd.stats())) {
-	if (m_options.xinetd_mode) {
+	if (XINETD_MODE == m_options.xinetd_mode) {
 	  m_nseconds = 0; // reset counter
 	  cout << "250 Data acquisition done." << endl;
 
@@ -559,6 +658,9 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 	exit(EXIT_FAILURE);
       }
 
+      if (HTTP_MODE == m_options.xinetd_mode) {
+	exit(EXIT_SUCCESS);
+      }
       TRAN(CaptureStats::wait4command);
     }
     break;
@@ -669,7 +771,7 @@ void CaptureStats::output_statistics(Array<double, 2>& stats)
       exit(EXIT_FAILURE);
     }
 
-    if (m_file && !m_file[device] && !m_options.xinetd_mode)
+    if (m_file && !m_file[device] && (CMDLINE_MODE == m_options.xinetd_mode))
     {
       char filename[PATH_MAX];
       switch (m_options.type)
@@ -698,23 +800,33 @@ void CaptureStats::output_statistics(Array<double, 2>& stats)
       }
     }
     
-    if (!m_options.xinetd_mode) {
-      if (stats.extent(secondDim)
-	  != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
-			 stats.extent(secondDim), m_file[device]))
+    switch (m_options.xinetd_mode)
+      {
+      case CMDLINE_MODE:
+	if (stats.extent(secondDim)
+	    != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
+			   stats.extent(secondDim), m_file[device]))
 	{
 	  cout << "500 Error: fwrite" << endl;
 	  exit(EXIT_FAILURE);
 	}
-    } else {
+	break;
 
-      cout << "250-META rcu " << device << endl;
-      cout << "250-BEGIN" << endl;
-      for (int i = 0; i < stats.extent(secondDim); i++) {
-	printf(m_format.c_str(), stats(result_device, i));
-      }
-      cout << "250-END" << endl;
-      cout << "250-" << endl;
+      case XINETD_MODE:
+	cout << "250-META rcu " << device << endl;
+	cout << "250-BEGIN" << endl;
+	for (int i = 0; i < stats.extent(secondDim); i++) {
+	  printf(m_format.c_str(), stats(result_device, i));
+	}
+	cout << "250-END" << endl;
+	cout << "250-" << endl;
+	break;
+
+      case HTTP_MODE:
+	for (int i = 0; i < stats.extent(secondDim); i++) {
+	  printf("%f\n", stats(result_device, i));
+	}
+	break;
     }
 
     result_device++; // next
@@ -804,7 +916,7 @@ static int parse_options(int argc, char** argv, CaptureStats::Options& options)
   options.integration = 1;
   options.rcucontrol = 0xB9;
   options.onefile = false;
-  options.xinetd_mode = false;
+  options.xinetd_mode = CaptureStats::CMDLINE_MODE;
 
   options.n_devices = ((options.type <= Statistics::SUBBAND_POWER) ?
 		       GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL :
@@ -904,7 +1016,7 @@ static int parse_options(int argc, char** argv, CaptureStats::Options& options)
 	break;
 
       case 'x':
-	options.xinetd_mode = true;
+	options.xinetd_mode = CaptureStats::XINETD_MODE;
 	break;
 
       case 'h':
