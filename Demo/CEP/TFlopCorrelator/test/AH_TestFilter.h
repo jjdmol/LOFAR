@@ -28,6 +28,11 @@
 #include <tinyCEP/SimulatorParseClass.h>
 #include <tinyCEP/WorkHolder.h>
 
+// include MPI if we have it
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
+
 
 // includes subject to test (WorkHolders to test etc.)
 #include "../src/DH_SubBand.h"
@@ -56,7 +61,9 @@ namespace LOFAR
     virtual void quit();
 
   private:
-    WorkHolder* itsWH;
+    vector<WorkHolder*> itsWHs;
+
+    int itsRank;
   };
 } // namespace LOFAR
 
