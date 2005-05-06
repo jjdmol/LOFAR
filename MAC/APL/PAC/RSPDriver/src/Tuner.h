@@ -38,8 +38,9 @@ public:
    * up connection establishment information using the GTMNameService and
    * GTMTopologyService classes.
    */
-  Tuner(string name, std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
-	uint8 rcucontrol = 0xB9, int centersubband = 256, bool initialize = false);
+  Tuner(string name, std::vector<int> centersubbands,
+        std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
+	uint8 rcucontrol = 0xB9, bool initialize = false);
   virtual ~Tuner();
 
   // state methods
@@ -73,10 +74,10 @@ private:
   // ports
   GCFPort m_server;
 
+  std::vector<int>        m_centersubbands;
   std::bitset<MAX_N_RCUS> m_device_set;
   int                     m_n_devices;
   uint8                   m_rcucontrol;
-  int                     m_centersubband;
   bool                    m_initialize;
 };
      
