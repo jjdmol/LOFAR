@@ -22,8 +22,33 @@
 
 #include <TestFilter.h>
 
-int main (int argc, char** argv){
+#include <Transport/TH_MPI.h>
+#include <tinyCEP/SimulatorParseClass.h>
 
+using namespace LOFAR;
 
+int main (int argc, const char** argv){
+
+  try {
+#ifdef HAVE_MPI
+    TH_MPI::init(argc, argv);
+#endif
+    
+    AH_TestFilter app;
+    app.setarg(argc,argv);
+    app.baseDefine();
+    app.basePrerun();
+    app.baseRun(1);
+    app.baseDump();
+    app.baseQuit();
+
+#ifdef HAVE_MPI
+    TH_MPI::finalize();
+#endif
+  } catch (LOFAR::Exception ex) {
+    cout << "Caught exception: "<< ex.what() << endl;
+  } catch (...) {
+    cout << "Caught exception "<< endl;
+  }
   return 0;
 }
