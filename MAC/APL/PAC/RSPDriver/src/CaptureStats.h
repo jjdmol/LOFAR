@@ -27,75 +27,86 @@
 
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
+#include <bitset>
 
 class CaptureStats : public GCFTask
 {
-  public:
-    /**
-     * The constructor of the CaptureStats task.
-     * @param name The name of the task. The name is used for looking
-     * up connection establishment information using the GTMNameService and
-     * GTMTopologyService classes.
-     */
-    CaptureStats(string name, int type, std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
-		 int duration = 1, int integration = 1, uint8 rcucontrol = 0xB9, bool onfile = false, bool xinetd_mode = false);
-    virtual ~CaptureStats();
+public:
 
-    // state methods
+  /**
+   * Options for statistics capturing.
+   */
+  typedef struct {
+    int                     type;
+    std::bitset<MAX_N_RCUS> device_set;
+    int                     n_devices;
+    int                     duration;
+    int                     integration;
+    uint8                   rcucontrol;
+    bool                    onefile;
+    bool                    xinetd_mode;
+  } Options;
 
-    /**
-     * The initial state. In this state a connection with the RSP
-     * driver is attempted. When the connection is established,
-     * a transition is made to the enabled state.
-     */
-    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+  /**
+   * The constructor of the CaptureStats task.
+   * @param name The name of the task. The name is used for looking
+   * up connection establishment information using the GTMNameService and
+   * GTMTopologyService classes.
+   */
+  CaptureStats(string name, const Options& options);
+  virtual ~CaptureStats();
 
-    /**
-     * This state is used to wait for input (in xinetd_mode)
-     */
-    GCFEvent::TResult wait4command(GCFEvent& e, GCFPortInterface &p);
+  // state methods
 
-    /**
-     * This state is used to perform a command.
-     */
-    GCFEvent::TResult handlecommand(GCFEvent& e, GCFPortInterface &p);
+  /**
+   * The initial state. In this state a connection with the RSP
+   * driver is attempted. When the connection is established,
+   * a transition is made to the enabled state.
+   */
+  GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
-    /**
-     * Load and integrate statistics
-     */
-    bool capture_statistics(blitz::Array<double, 2>& stats);
+  /**
+   * This state is used to wait for input (in xinetd_mode)
+   */
+  GCFEvent::TResult wait4command(GCFEvent& e, GCFPortInterface &p);
 
-    /**
-     * Write statistics to file
-     */
-    void output_statistics(blitz::Array<double, 2>& stats);
+  /**
+   * This state is used to perform a command.
+   */
+  GCFEvent::TResult handlecommand(GCFEvent& e, GCFPortInterface &p);
 
-    /**
-     * Run the tests.
-     */
-    void run();
+  /**
+   * Load and integrate statistics
+   */
+  bool capture_statistics(blitz::Array<double, 2>& stats);
 
-  private:
-    // member variables
+  /**
+   * Write statistics to file
+   */
+  void output_statistics(blitz::Array<double, 2>& stats);
 
-  private:
-    // ports
-    GCFPort m_server;
-    int m_type;
-    std::bitset<MAX_N_RCUS> m_device_set;
-    int m_n_devices;
-    int m_duration;
-    int m_integration;
-    uint8 m_rcucontrol;
+  /**
+   * Run the tests.
+   */
+  void run();
 
-    blitz::Array<double, 2> m_values;
-    int m_nseconds;
-    FILE** m_file;  // array of file descriptors
-    bool m_onefile; // output one big file? if false output separate file for each capture
-    bool m_xinetd_mode; // behave as xinetd process, input on stdin, output on stdout
-    string m_format; // format of xinetd output
-    uint32 m_statushandle; // handle for status update subscripton
-    uint32 m_statshandle;  // handle for stats update subscription
+private:
+  // member variables
+
+private:
+  // ports
+  GCFPort m_server;
+
+  // options
+  Options m_options;
+
+  blitz::Array<double, 2> m_values;
+  int m_nseconds;
+  FILE** m_file;  // array of file descriptors
+  string m_format; // format of xinetd output
+  uint32 m_statushandle; // handle for status update subscripton
+  uint32 m_statshandle;  // handle for stats update subscription
+  char m_line[128]; // line buffer for getopt options
 };
      
 #endif /* CAPTURESTATS_H_ */
