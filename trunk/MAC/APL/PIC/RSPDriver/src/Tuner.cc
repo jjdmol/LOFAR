@@ -50,17 +50,17 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
-#define N_SELECTED_SUBBANDS 13
 #define SCALE (1<<(16-2))
 
 #define SAMPLE_FREQUENCY 163.84e6 // MHz
 #define DECIMATION       1024
 
-Tuner::Tuner(string name, bitset<MAX_N_RCUS> device_set, int n_devices,
-	     uint8 rcucontrol, int centersubband, bool initialize)
+Tuner::Tuner(string name, vector<int> centersubbands, bitset<MAX_N_RCUS> device_set, int n_devices,
+	     uint8 rcucontrol, bool initialize)
   : GCFTask((State)&Tuner::initial, name),
+    m_centersubbands(centersubbands), 
     m_device_set(device_set), m_n_devices(n_devices),
-    m_rcucontrol(rcucontrol), m_centersubband(centersubband), m_initialize(initialize)
+    m_rcucontrol(rcucontrol), m_initialize(initialize)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -296,14 +296,16 @@ GCFEvent::TResult Tuner::tunein(GCFEvent& e, GCFPortInterface& port)
 	ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
 	ss.subbands() = 0;
 
-	for (int i = 0; i < N_SELECTED_SUBBANDS; i++)
-	  {
-	    ss.subbands()(0, i*2)   = (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2;
-	    ss.subbands()(0, i*2+1) = (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2 + 1;
+	int s = 0;
+	for (int i = 0; i < (int)m_centersubbands.size(); i++) {
+	  for (int j = 0; j < 3; j++, s+=2) {
+	    ss.subbands()(0, s)   = (m_centersubbands[i]+j-1) * 2;
+	    ss.subbands()(0, s+1) = (m_centersubbands[i]+j-1) * 2 + 1;
 
-	    LOG_DEBUG_STR("subband(" << i*2 << ")=" << (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2);
-	    LOG_DEBUG_STR("subband(" << i*2+1 << ")=" << (m_centersubband + i - (N_SELECTED_SUBBANDS/2)) * 2 + 1);
+	    LOG_DEBUG_STR("subband(" << s   << ")=" << ss.subbands()(0, s));
+	    LOG_DEBUG_STR("subband(" << s+1 << ")=" << ss.subbands()(0, s+1));
 	  }
+	}
       
 	if (!m_server.send(ss))
 	  {
@@ -514,8 +516,8 @@ int main(int argc, char** argv)
   bitset<MAX_N_RCUS> device_set = 0;
   unsigned long controlopt = 0xB9;
   uint8 rcucontrol = 0xB9;
-  int centersubband = 0;
-  double frequency = 88.0e6;
+  vector<int> centersubbands;
+  vector<double> frequencies;
   bool initialize = false;
   
   // default is rcu 0
@@ -576,13 +578,17 @@ int main(int argc, char** argv)
 	  break;
       
 	case 's':
-	  if (optarg) centersubband = atoi(optarg);
-	  LOG_DEBUG_STR("centersubband=" << centersubband);
+	  if (optarg) {
+	    centersubbands.push_back(atoi(optarg));
+	  }
+	  LOG_DEBUG_STR("centersubband=" << centersubbands[centersubbands.size()-1]);
 	  break;
 	  
 	case 'f':
-	  if (optarg) frequency = atof(optarg) * 1e6;
-	  LOG_DEBUG_STR("frequency=" << frequency);
+	  if (optarg) {
+	    frequencies.push_back(atof(optarg) * 1e6);
+	  }
+	  LOG_DEBUG_STR("frequency=" << frequencies[frequencies.size()-1]);
 	  break;
       
 	case 'h':
@@ -606,9 +612,13 @@ int main(int argc, char** argv)
     }
 
   // convert frequency to center subband
-  if (0 == centersubband)
+  if (frequencies.size() > 0)
   {
-    centersubband = freq2subband(frequency);
+    centersubbands.clear();
+    vector<double>::iterator freqit;
+    for (freqit = frequencies.begin(); freqit != frequencies.end(); freqit++) {
+      centersubbands.push_back(freq2subband(*freqit));
+    }
   }
 
   // check for valid
@@ -618,13 +628,7 @@ int main(int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  if (centersubband < N_SELECTED_SUBBANDS/2 || centersubband >= 512-(N_SELECTED_SUBBANDS/2))
-    {
-      LOG_WARN_STR("Warning: invalid center subband index, must be >= " << N_SELECTED_SUBBANDS/2 
-		   << " and < " << 512-(N_SELECTED_SUBBANDS/2));
-    }
-
-  Tuner t("Tuner", device_set, n_devices, rcucontrol, centersubband, initialize);
+  Tuner t("Tuner", centersubbands, device_set, n_devices, rcucontrol, initialize);
   try
     {
       t.run();
@@ -634,22 +638,6 @@ int main(int argc, char** argv)
       LOG_FATAL_STR("Error: exception: " << e.text());
       exit(EXIT_FAILURE);
     }
-
-#if 0
-  Suite s("Tuner", &cerr);
-  s.addTest(new Tuner(
-  try
-    {
-      s.run();
-    }
-  catch (Exception e)
-    {
-      LOG_FATAL_STR("Error: exception: " << e.text());
-      exit(EXIT_FAILURE);
-    }
-  long nFail = s.report();
-  s.free();
-#endif
 
   LOG_INFO("Normal termination of program");
 
