@@ -48,23 +48,51 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
-CaptureStats::CaptureStats(string name, int type, bitset<MAX_N_RCUS> device_set, int n_devices,
-			   int duration, int integration, uint8 rcucontrol, bool onefile, bool xinetd_mode)
+// local funtions
+static std::bitset<MAX_N_RCUS> strtoset(const char* str, unsigned int max);
+static void usage(const char* xinetdprefix = 0);
+static int  parse_options(int argc, char** argv, CaptureStats::Options& options);
+
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+   
+#define SPC_BASE16_TO_10(x) (((x) >= '0' && (x) <= '9') ? ((x) - '0') : \
+                             (toupper((x)) - 'A' + 10))
+   
+char *spc_decode_url(const char *url, size_t *nbytes) {
+  char       *out, *ptr;
+  const char *c;
+   
+  if (!(out = ptr = strdup(url))) return 0;
+  for (c = url;  *c;  c++) {
+    if (*c != '%' || !isxdigit(c[1]) || !isxdigit(c[2])) *ptr++ = *c;
+    else {
+      *ptr++ = (SPC_BASE16_TO_10(c[1]) * 16) + (SPC_BASE16_TO_10(c[2]));
+      c += 2;
+    }
+  }
+  *ptr = 0;
+  if (nbytes) *nbytes = (ptr - out); /* does not include null byte */
+  return out;
+}
+
+CaptureStats::CaptureStats(string name, const Options& options)
   : GCFTask((State)&CaptureStats::initial, name),
-    m_type(type), m_device_set(device_set), m_n_devices(n_devices),
-    m_duration(duration), m_integration(integration), m_rcucontrol(rcucontrol),
-    m_nseconds(0), m_file(0), m_onefile(onefile), m_xinetd_mode(xinetd_mode), m_format("250-%f\n")
+    m_nseconds(0), m_file(0), m_format("250-%f\n")
 {
+  m_options = options;
+
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  if (!m_xinetd_mode) {
-    m_file = new (FILE*)[m_n_devices];
+  if (!m_options.xinetd_mode) {
+    m_file = new (FILE*)[m_options.n_devices];
     if (!m_file)
       {
 	cout << "500 Error: failed to allocate memory for file handles." << endl;
 	exit(EXIT_FAILURE);
       }
-    for (int i = 0; i < m_n_devices; i++) m_file[i] = 0;
+    for (int i = 0; i < m_options.n_devices; i++) m_file[i] = 0;
   }
   
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
@@ -94,7 +122,7 @@ GCFEvent::TResult CaptureStats::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      if (m_xinetd_mode) {
+      if (m_options.xinetd_mode) {
 	// send welcome
 	cout << "220 This is the CaptureStats server, at your service." << endl;
 	TRAN(CaptureStats::wait4command);
@@ -126,7 +154,7 @@ GCFEvent::TResult CaptureStats::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-std::bitset<MAX_N_RCUS> strtoset(const char* str, unsigned int max)
+static std::bitset<MAX_N_RCUS> strtoset(const char* str, unsigned int max)
 {
   string inputstring(str);
   char* start = (char*)inputstring.c_str();
@@ -197,9 +225,12 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port
     case F_ENTRY:
       {
 	string symbol;
-	int    station_id;
+	//int    station_id;
 	string rcuspec;
 	bool done = false;
+	char line[128];
+	int   argc = 0;
+	char* argv[20];
 
 	while (!done && cin) {
 
@@ -214,23 +245,51 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port
 
 	      cin >> symbol;
 
-	      if ("subband_statistics" == symbol) {
+	      if ("statistics" == symbol) {
+		
+		// get options
+		memset(line, '\n', 128); // initialize
+		cin.getline(line, 127);
+		memcpy(m_line, line, 128);
 
+		// convert to argc, argv
+		char* c = line;
+		argv[0] = "set sensor statistics";
+		argc = 1;
+		while (*c && *c != '\n' && argc < 20) {
+		  if (*c == ' ') {
+		    while (*c && *++c == ' ') { /*nop*/ } // skip whitespace
+		    *(c-1) = 0;
+		    argv[argc++] = c;
+		  }
+		  c++;
+		}
+
+		// parse options
+		if (0 == parse_options(argc, argv, m_options)) {
+		  cout << "210 Ok." << endl;
+		}
+		m_options.xinetd_mode = true; // this was reset by parse_options
+
+#if 0
 		cin >> station_id;
 		cin >> rcuspec;
-		cin >> m_duration;
-		cin >> m_integration;
+		cin >> m_options.duration;
+		cin >> m_options.integration;
 		cin.ignore(256, '\n');
 
-		m_device_set = strtoset(rcuspec.c_str(), m_n_devices);
-		if (m_duration < 1) {
+		m_options.device_set = strtoset(rcuspec.c_str(), m_options.n_devices);
+		if (m_options.duration < 1) {
 
 		  cout << "500 Bad set command" << endl;
 
-		}
-		if (0 == m_integration) m_integration = m_duration;
+		} else {
 
-		cout << "210 Ok." << endl;
+		  if (0 == m_options.integration) m_options.integration = m_options.duration;
+		  cout << "210 Ok." << endl;
+
+		}
+#endif
 
 	      } else {
 
@@ -255,9 +314,16 @@ GCFEvent::TResult CaptureStats::wait4command(GCFEvent& e, GCFPortInterface& port
 	    cin.ignore(256,'\n');
 	    TRAN(CaptureStats::handlecommand);
 
+	  } else if ("help" == symbol) {
+
+	    usage("250-");
+	    cout << "250 done." << endl;
+
 	  } else if ("quit" == symbol) {
+
 	    cout << "221 Bye." << endl;
 	    exit(EXIT_SUCCESS);
+
 	  }else {
 	    cout << "500 Syntax error" << endl;
 	  }
@@ -293,30 +359,20 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
   {
     case F_ENTRY:
     {
-      if (m_xinetd_mode) {
+      if (m_options.xinetd_mode) {
 	cout << "250-Acquiring sensor data." << endl;
 	cout << "250-" << endl;
-	cout << "250-META sensor = subband_statistics 0 ";
-	bool comma = false;
-	for (int i = 0; i < (int)m_device_set.size(); i++) {
-	  if (m_device_set[i]) {
-	    if (comma) {
-	      cout << ","; comma = false;
-	    }
-	    cout << i; comma = true;
-	  }
-	}
-	cout << " " << m_duration << " " << m_integration << endl;
+	cout << "250-META sensor = statistics " << m_line << endl;
 	cout << "250-" << endl;
       }
 
       // set rcu control register
       RSPSetrcuEvent setrcu;
       setrcu.timestamp = Timestamp(0,0);
-      setrcu.rcumask = m_device_set;
+      setrcu.rcumask = m_options.device_set;
       
       setrcu.settings().resize(1);
-      setrcu.settings()(0).value = m_rcucontrol;
+      setrcu.settings()(0).value = m_options.rcucontrol;
 
       if (!m_server.send(setrcu))
       {
@@ -343,7 +399,7 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 
       substatus.timestamp = Timestamp(0,0);
 
-      substatus.rcumask = m_device_set;
+      substatus.rcumask = m_options.device_set;
       
       substatus.period = 1;
       
@@ -372,10 +428,10 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 
       substats.timestamp = Timestamp(0,0);
 
-      substats.rcumask = m_device_set;
+      substats.rcumask = m_options.device_set;
       
       substats.period = 1;
-      substats.type = m_type;
+      substats.type = m_options.type;
       substats.reduction = SUM;
       
       if (!m_server.send(substats))
@@ -410,17 +466,17 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 	exit(EXIT_FAILURE);
       }
 
-      if (!m_xinetd_mode) {
-	cout << "time=" << upd.timestamp;
+      if (!m_options.xinetd_mode) {
+	cout << "time=" << upd.timestamp << endl;
       } else {
 	cout << "250-META time status = " << upd.timestamp << endl;
       }
       int result = 0;
-      for (int device = 0; device < m_n_devices; device++)
+      for (int device = 0; device < m_options.n_devices; device++)
       {
-	if (!m_device_set[device]) continue;
+	if (!m_options.device_set[device]) continue;
 	
-	if (m_xinetd_mode) {
+	if (m_options.xinetd_mode) {
 	  cout << formatString("250-META status, rcu[%02d](status=0x%02x, noverflow=%d)",
 			       device,
 			       upd.sysstatus.rcu()(result).status,
@@ -446,14 +502,14 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 	exit(EXIT_FAILURE);
       }
 
-      if (!m_xinetd_mode) {
-	cout << "time=" << upd.timestamp;
+      if (!m_options.xinetd_mode) {
+	cout << "time=" << upd.timestamp << endl;
       } else {
-	cout << "250-META time subband_statistics = " << upd.timestamp << endl;
+	cout << "250-META time statistics = " << upd.timestamp << endl;
       }
 
       if (capture_statistics(upd.stats())) {
-	if (m_xinetd_mode) {
+	if (m_options.xinetd_mode) {
 	  m_nseconds = 0; // reset counter
 	  cout << "250 Data acquisition done." << endl;
 
@@ -545,17 +601,17 @@ bool CaptureStats::capture_statistics(Array<double, 2>& stats)
 
   m_nseconds++; // advance to next second
 
-  if (0 == m_nseconds % m_integration)
+  if (0 == m_nseconds % m_options.integration)
   {
-    if (m_integration > 0) 
+    if (m_options.integration > 0) 
     {
-      m_values /= m_integration;
+      m_values /= m_options.integration;
 
       output_statistics(m_values); // write (optionally integrated) statistics
 
-      if (!m_onefile && m_file)
+      if (!m_options.onefile && m_file)
       {
-	for (int i = 0; i < m_n_devices; i++)
+	for (int i = 0; i < m_options.n_devices; i++)
 	{
 	  if (m_file[i]) fclose(m_file[i]);
 	  m_file[i] = 0;
@@ -566,9 +622,9 @@ bool CaptureStats::capture_statistics(Array<double, 2>& stats)
     {
       output_statistics(stats); // write interval sampled statistics
 
-      if (!m_onefile && m_file)
+      if (!m_options.onefile && m_file)
       {
-	for (int i = 0; i < m_n_devices; i++)
+	for (int i = 0; i < m_options.n_devices; i++)
 	{
 	  if (m_file[i]) fclose(m_file[i]);
 	  m_file[i] = 0;
@@ -580,10 +636,10 @@ bool CaptureStats::capture_statistics(Array<double, 2>& stats)
   }
 
   // check if duration has been reached
-  if (m_nseconds >= m_duration)
+  if (m_nseconds >= m_options.duration)
   {
     if (m_file) {
-      for (int i = 0; i < m_n_devices; i++)
+      for (int i = 0; i < m_options.n_devices; i++)
 	{
 	  if (m_file[i]) fclose(m_file[i]);
 	  m_file[i] = 0;
@@ -600,9 +656,9 @@ void CaptureStats::output_statistics(Array<double, 2>& stats)
 {
   int result_device = 0;
 
-  for (int device = 0; device < m_n_devices; device++)
+  for (int device = 0; device < m_options.n_devices; device++)
   {
-    if (!m_device_set[device]) continue;
+    if (!m_options.device_set[device]) continue;
     
     time_t now = time(0);
     struct tm* t = localtime(&now);
@@ -613,10 +669,10 @@ void CaptureStats::output_statistics(Array<double, 2>& stats)
       exit(EXIT_FAILURE);
     }
 
-    if (m_file && !m_file[device] && !m_xinetd_mode)
+    if (m_file && !m_file[device] && !m_options.xinetd_mode)
     {
       char filename[PATH_MAX];
-      switch (m_type)
+      switch (m_options.type)
       {
 	case Statistics::SUBBAND_POWER:
 	  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
@@ -629,7 +685,7 @@ void CaptureStats::output_statistics(Array<double, 2>& stats)
 		   t->tm_hour, t->tm_min, t->tm_sec, device);
 	  break;
 	default:
-	  cout << "500 Error: invalid m_type" << endl;
+	  cout << "500 Error: invalid type" << endl;
 	  exit(EXIT_FAILURE);
 	  break;
       }
@@ -642,7 +698,7 @@ void CaptureStats::output_statistics(Array<double, 2>& stats)
       }
     }
     
-    if (!m_xinetd_mode) {
+    if (!m_options.xinetd_mode) {
       if (stats.extent(secondDim)
 	  != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
 			 stats.extent(secondDim), m_file[device]))
@@ -672,80 +728,90 @@ void CaptureStats::run()
   GCFTask::run();
 }
 
-void usage()
+static void usage(const char* xinetdprefix)
 {
-  cout << "Usage: CaptureStats [arguments]" << endl;
-  cout << "arguments (all optional):" << endl;
-  cout << "    --rcu=<rcuset>           # or -r; default 1, : means all RCU's" << endl;
-  cout << "        Example: -r=1,2,4:7 or --rcu=1:3,5:7" << endl;
-  cout << endl;
-  cout << "    --control=0xHH           # or -c; default 0xB9 (low band)" << endl;
-  cout << "        bit[7] = VDDVCC_ENABLE" << endl;
-  cout << "        bit[6] = VH_ENABLE" << endl;
-  cout << "        bit[5] = VL_ENABLE" << endl;
-  cout << "        bit[4] = FILSEL_1" << endl;
-  cout << "        bit[3] = FILSEL_0" << endl;
-  cout << "        bit[2] = BANDSEL" << endl;
-  cout << "        bit[1] = HBA_ENABLE" << endl;
-  cout << "        bit[0] = LBA_ENABLE" << endl;
-  cout << "        Exmples LB=0xB9, HB_110_190=0xC6, HB_170_230=0xCE, HB_210_250=0xD6" << endl;
-  cout << endl;
-  cout << "    --duration=N             # or -d; default 1, number of seconds to capture" << endl;
-  cout << endl;
-  cout << "    --integration[=N]        # or -i; default equal to duration" << endl;
-  cout << "        Note: integration < 0 means don't itegrate but sample with the specified interval." << endl;
-  cout << endl;
-  cout << "    --statstype=0|1          # or -s; default 0, 0 = subbands, 1 = beamlets" << endl;
-  cout << endl;
-  cout << "    --onefile                # or -o; default off, output one big file or file per interval." << endl;
-  cout << endl;
-  cout << "    --xinetd                 # or -x; enable xinetd mode, input from stdin, output on stdout." << endl;
-  cout << endl;
-  cout << "    --help                   # or -h; this help" << endl;
-  cout << endl;
-  cout << "Example:" << endl;
-  cout << "  CaptureStats -r=5 -d=20 -i=5" << endl;
-  cout << "   # capture from RCU 5 for 20 seconds integrating every 5 seconds; results in four output files." << endl;
-  cout << endl;
-  cout << "  CaptureStats -r=-1 -d=10 -i" << endl;
-  cout << "   # capture from all RCUs for 10 seconds integrating 10 seconds; results in one output file for each RCU." << endl;
-  cout << endl;
-  cout << "  CaptureStats -r=-1 -d=10 -i=-2" << endl;
-  cout << "   # capture from all RCUs for 10 seconds only storing every second result in a separate file for each RCU." << endl;
+  const char* p = (xinetdprefix?xinetdprefix:"");
+
+  if (!xinetdprefix) {
+    cout << p << "Usage: CaptureStats [options]" << endl;
+  } else {
+    cout << p << "Usage: set sensor statistics [options]" << endl;
+  }
+
+  cout << p << "Available options:" << endl;
+  cout << p << "    --rcu=<rcuset>           # or -r; default 1, : means all RCU's" << endl;
+  cout << p << "        Example: -r=1,2,4:7 or --rcu=1:3,5:7" << endl;
+  cout << p << endl;
+  cout << p << "    --control=0xHH           # or -c; default 0xB9 (low band)" << endl;
+  cout << p << "        bit[7] = VDDVCC_ENABLE" << endl;
+  cout << p << "        bit[6] = VH_ENABLE" << endl;
+  cout << p << "        bit[5] = VL_ENABLE" << endl;
+  cout << p << "        bit[4] = FILSEL_1" << endl;
+  cout << p << "        bit[3] = FILSEL_0" << endl;
+  cout << p << "        bit[2] = BANDSEL" << endl;
+  cout << p << "        bit[1] = HBA_ENABLE" << endl;
+  cout << p << "        bit[0] = LBA_ENABLE" << endl;
+  cout << p << "        Exmples LB=0xB9, HB_110_190=0xC6, HB_170_230=0xCE, HB_210_250=0xD6" << endl;
+  cout << p << endl;
+  cout << p << "    --duration=N             # or -d; default 1, number of seconds to capture" << endl;
+  cout << p << endl;
+  cout << p << "    --integration[=N]        # or -i; default equal to duration" << endl;
+  cout << p << "        Note: integration < 0 means don't itegrate but sample with the specified interval." << endl;
+  cout << p << endl;
+  cout << p << "    --statstype=0|1          # or -s; default 0, 0 = subbands, 1 = beamlets" << endl;
+  cout << p << endl;
+
+  if (!xinetdprefix) {
+    // only for command line version
+    cout << p << "    --onefile                # or -o; default off, output one big file or file per interval." << endl;
+    cout << p << endl;
+    cout << p << "    --xinetd                 # or -x; enable xinetd mode, input from stdin, output on stdout." << endl;
+    cout << p << endl;
+    cout << p << "    --help                   # or -h; this help" << endl;
+    cout << p << endl;
+    cout << p << "Examples:" << endl;
+    cout << p << "  CaptureStats -r=5 -d=20 -i=5" << endl;
+    cout << p << "   # capture from RCU 5 for 20 seconds integrating every 5 seconds; results in four output files." << endl;
+    cout << p << endl;
+    cout << p << "  CaptureStats -r=: -d=10 -i" << endl;
+    cout << p << "   # capture from all RCUs for 10 seconds integrating 10 seconds; results in one output file for each RCU." << endl;
+    cout << p << endl;
+    cout << p << "  CaptureStats -r=: -d=10 -i=-2" << endl;
+    cout << p << "   # capture from all RCUs for 10 seconds only storing every second result in a separate file for each RCU." << endl;
+  } else {
+    cout << p << "Examples:" << endl;
+    cout << p << "  set sensor statistics -r=5 -d=20 -i=5" << endl;
+    cout << p << "   # capture from RCU 5 for 20 seconds integrating every 5 seconds; results in four output files." << endl;
+    cout << p << endl;
+    cout << p << "  set sensor statistics -r=: -d=10 -i" << endl;
+    cout << p << "   # capture from all RCUs for 10 seconds integrating 10 seconds; results in one output file for each RCU." << endl;
+    cout << p << endl;
+    cout << p << "  set sensor statistics -r=: -d=10 -i=-2" << endl;
+    cout << p << "   # capture from all RCUs for 10 seconds only storing every second result in a separate file for each RCU." << endl;
+  }
 }
 
-int main(int argc, char** argv)
+static int parse_options(int argc, char** argv, CaptureStats::Options& options)
 {
-  int type        = 0;
-  bitset<MAX_N_RCUS> device_set = 0;
-  int duration    = 1;
-  int integration = 0;
-  unsigned long controlopt = 0xB9;
-  uint8 rcucontrol = 0xB9;
-  bool onefile = false;
-  bool xinetd_mode = false;
-  
-  // default is rcu 0
-  device_set.set(0);
-  
-  GCFTask::init(argc, argv);
+  // print arguments
+  //for (int i = 0; i < argc; i++) cout << "argv[" << i << "]=\"" << argv[i] << "\"" << endl;
 
-  LOG_INFO(formatString("Program %s has started", argv[0]));
+  // set default options;
+  options.type = 0;
+  options.device_set.set(0);  // default is rcu 0
+  options.n_devices = 0;
+  options.duration = 1;
+  options.integration = 1;
+  options.rcucontrol = 0xB9;
+  options.onefile = false;
+  options.xinetd_mode = false;
 
-  try
-  {
-    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
-  }
-  catch (Exception e)
-  {
-    cout << "500 Error: failed to load configuration files: " << e.text() << endl;
-    exit(EXIT_FAILURE);
-  }
+  options.n_devices = ((options.type <= Statistics::SUBBAND_POWER) ?
+		       GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL :
+		       GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL);
 
-  int n_devices = ((type <= Statistics::SUBBAND_POWER) ?
-		   GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL :
-		   GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL);
-
+  optind = 0; // reset option parsing
+  //opterr = 0; // no error reporting to stderr
   while (1)
   {
     static struct option long_options[] = 
@@ -771,56 +837,84 @@ int main(int argc, char** argv)
     switch (c)
     {
       case 'r':
-	device_set = strtoset(optarg, n_devices);
+	if (optarg) options.device_set = strtoset(optarg, options.n_devices);
 	break;
 	
       case 'c':
-	controlopt = strtoul(optarg, 0, 0);
-	if ( controlopt > 0xFF )
 	{
-	  cout << "500 Error: invalid control parameter, must be < 0xFF" << endl;
-	  exit(EXIT_FAILURE);
-	}
-	rcucontrol = controlopt;
+	  if (optarg) {
+	    unsigned long controlopt = strtoul(optarg, 0, 0);
+	    if ( controlopt > 0xFF )
+	    {
+	      cout << "500 Error: invalid control parameter, must be < 0xFF" << endl;
+	      return -1;
+	    }
+	    options.rcucontrol = (uint8)controlopt;
 #if 0
-	cout << formatString("control=0x%02x", rcucontrol) << endl;
+	    cout << formatString("control=0x%02x", rcucontrol) << endl;
 #endif
+	  }
+	}
 	break;
 
       case 'd':
-	duration = atoi(optarg);
+	if (optarg) {
+	  if (1 != sscanf(optarg, "%d", &options.duration)) {
+	    cout << "500 format error for duration option" << endl;
+	    return -1;
+	  }
+	} else {
+	  cout << "500 missing argument for duration option" << endl;
+	  return -1;
+	}
 	break;
 
       case 'i':
-	if (optarg) integration = atoi(optarg);
+	if (optarg) {
+	  if (1 != sscanf(optarg, "%d", &options.integration)) {
+	    cout << "500 format error for integration option" << endl;
+	    return -1;
+	  }
+	} else {
+	  cout << "500 missing argument for integration option" << endl;
+	  return -1;
+	}
 	break;
 	
       case 't':
-	type = atoi(optarg);
+	if (optarg) {
+	  if (1 != sscanf(optarg, "%d", &options.type)) {
+	    cout << "500 format error for type option" << endl;
+	    return -1;
+	  }
 
-	if (type < 0 || type >= Statistics::N_STAT_TYPES)
-	{
-	  cout << "500 " << formatString("Error: invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
-	  exit(EXIT_FAILURE);
+	  if (options.type < 0 || options.type >= Statistics::N_STAT_TYPES)
+	  {
+	    cout << "500 " << formatString("Error: invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
+	    return -1;
+	  }
+	} else {
+	  cout << "500 missing argument for type option" << endl;
+	  return -1;
 	}
 	break;
 	
       case 'o':
-	onefile = true;
+	options.onefile = true;
 	break;
 
       case 'x':
-	xinetd_mode = true;
+	options.xinetd_mode = true;
 	break;
 
       case 'h':
 	usage();
-	exit(EXIT_SUCCESS);
+	return -1;
 	break;
 	
       case '?':
 	cout << "500 Error: error in option '" << char(optopt) << "'." << endl;
-	exit(EXIT_FAILURE);
+	return -1;
 	break;
 
       default:
@@ -830,29 +924,53 @@ int main(int argc, char** argv)
   }
 
   // check for valid
-  if (device_set.count() == 0 || device_set.count() > (unsigned int)n_devices)
+  if (options.device_set.count() == 0 || options.device_set.count() > (unsigned int)options.n_devices)
   {
     cout << "500 " << formatString("Error: invalid device set or device set not specified") << endl;
-    exit(EXIT_FAILURE);
+    return -1;
   }
 
   // check for valid duration
-  if (duration <= 0)
+  if (options.duration <= 0)
   {
     cout << "500 Error: duration must be > 0." << endl;
-    exit(EXIT_FAILURE);
+    return -1;
   }
 
-  if (0 == integration) integration = duration;
+  if (0 == options.integration) options.integration = options.duration;
 
   // check for valid integration
-  if ( (abs(integration) > duration) )
+  if ( (abs(options.integration) > options.duration) )
   {
     cout << "500 Error: abs(integration) must be <= duration" << endl;
+    return -1;
+  }
+  
+  return 0;
+}
+
+int main(int argc, char** argv)
+{
+  CaptureStats::Options options;
+
+  GCFTask::init(argc, argv);
+
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+
+  try
+  {
+    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
+  }
+  catch (Exception e)
+  {
+    cout << "500 Error: failed to load configuration files: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
 
-  CaptureStats c("CaptureStats", type, device_set, n_devices, duration, integration, rcucontrol, onefile, xinetd_mode);
+  if (parse_options(argc, argv, options) < 0) {
+    exit(EXIT_FAILURE);
+  }
+  CaptureStats c("CaptureStats", options);
   
   try
   {
