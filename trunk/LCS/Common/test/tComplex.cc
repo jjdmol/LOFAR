@@ -23,14 +23,14 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if (defined __INTEL_COMPILER)
+#if defined __INTEL_COMPILER
 # define LOFAR_BUILTIN_COMPLEXFP __complex__
 # include <Common/ComplexBuiltinFP.h>
 # include <Common/ComplexStdInt.h>
 # define MAKEFCOMPLEX(re,im) ((re)*1. + (im)*1.i)
 # define MAKEDCOMPLEX(re,im) ((re)*1. + (im)*1.i)
 # define MAKEU16COMPLEX(re,im) complex<LOFAR::TYPES::uint16>(re,im)
-#elif (defined __GNUC__)
+#elif defined __GNUC__ && !defined __INSURE__
 # define LOFAR_BUILTIN_COMPLEXFP __complex__
 # define LOFAR_BUILTIN_COMPLEXINT __complex__
 # include <Common/ComplexBuiltinFP.h>
