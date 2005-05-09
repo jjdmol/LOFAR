@@ -23,11 +23,17 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <DH_SubBand.h>
 #include <WH_FilterInput.h>
 
 using namespace LOFAR;
 
-WH_FilterInput::WH_FilterInput(const string& name) {
+WH_FilterInput::WH_FilterInput(const string& name):
+  WorkHolder(0, 1, name, "WH_FilterInput"),
+  itsSBID(0)
+{
+  getDataManager().addOutDataHolder(0, new DH_SubBand("output",
+						      itsSBID));
 }
 
 WH_FilterInput::~WH_FilterInput() {
