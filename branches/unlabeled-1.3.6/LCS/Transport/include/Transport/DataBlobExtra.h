@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_DATABLOBEXTRA_H
-#define TRANSPORT_DATABLOBEXTRA_H
+#ifndef LOFAR_TRANSPORT_DATABLOBEXTRA_H
+#define LOFAR_TRANSPORT_DATABLOBEXTRA_H
 
 // \file DataBlobExtra.h
 // Extra fields for the blob in the DataHolder

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TH_MEM_H
-#define TRANSPORT_TH_MEM_H
+#ifndef LOFAR_TRANSPORT_TH_MEM_H
+#define LOFAR_TRANSPORT_TH_MEM_H
 
 // \file TH_Mem.h
 // In-memory transport mechanism

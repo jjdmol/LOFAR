@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_DATAHOLDER_H
-#define TRANSPORT_DATAHOLDER_H
+#ifndef LOFAR_TRANSPORT_DATAHOLDER_H
+#define LOFAR_TRANSPORT_DATAHOLDER_H
 
 // \file DataHolder.h
 // Abstract base class for the data holders

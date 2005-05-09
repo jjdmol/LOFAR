@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TH_SOCKET_H
-#define TRANSPORT_TH_SOCKET_H
+#ifndef LOFAR_TRANSPORT_TH_SOCKET_H
+#define LOFAR_TRANSPORT_TH_SOCKET_H
 
 // \file TH_Socket.h
 // Socket based TransportHolder. Based on the Socket wrapper class from

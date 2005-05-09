@@ -23,8 +23,8 @@
 
 #ifndef HAVE_BGL
 
-#ifndef TRANSPORT_TH_ETHERNET_H
-#define TRANSPORT_TH_ETHERNET_H
+#ifndef LOFAR_TRANSPORT_TH_ETHERNET_H
+#define LOFAR_TRANSPORT_TH_ETHERNET_H
 
 // \file TH_Ethernet.h
 // Transport mechanism for Ethernet 

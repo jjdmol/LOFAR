@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TH_FILE_H
-#define TRANSPORT_TH_FILE_H
+#ifndef LOFAR_TRANSPORT_TH_FILE_H
+#define LOFAR_TRANSPORT_TH_FILE_H
 
 // \file TH_File.h
 // To/from file transport mechanism

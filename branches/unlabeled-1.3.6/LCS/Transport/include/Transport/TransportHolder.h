@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TRANSPORTHOLDER_H
-#define TRANSPORT_TRANSPORTHOLDER_H
+#ifndef LOFAR_TRANSPORT_TRANSPORTHOLDER_H
+#define LOFAR_TRANSPORT_TRANSPORTHOLDER_H
 
 // \file TransportHolder.h
 // Abstract base class for all TransportHolders

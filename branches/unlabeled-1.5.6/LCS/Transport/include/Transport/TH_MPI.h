@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TH_MPI_H
-#define TRANSPORT_TH_MPI_H
+#ifndef LOFAR_TRANSPORT_TH_MPI_H
+#define LOFAR_TRANSPORT_TH_MPI_H
 
 // \file TH_MPI.h
 // Transport mechanism for MPI
