@@ -44,8 +44,6 @@ namespace LOFAR
     /// forbid assignment
     WH_SubBand& operator= (const WH_SubBand&);
 
-    int itsNsubbands;
-
     /// FIR Filter variables
     short itsNtaps;
     short itsFFTLen;
@@ -63,7 +61,7 @@ namespace LOFAR
 
     void adjustDelayPtr();
 
-    /// FFT
+    /// FFTW variables
     fftw_direction itsFFTDirection;
     fftw_plan      itsFFTPlan;
 

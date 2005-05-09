@@ -30,10 +30,12 @@ namespace LOFAR
   class WH_FilterOutput: public WorkHolder {
 
   public:
-    explicit WH_FilterOutput (const string& name);
+    explicit WH_FilterOutput (const string& name, 
+			      const int inputs);
     virtual ~WH_FilterOutput();
 
-    static WorkHolder* construct (const string& name);
+    static WorkHolder* construct (const string& name,
+				  const int inputs);
     virtual WH_FilterOutput* make (const string& name);
 
     virtual void preprocess();
@@ -44,6 +46,8 @@ namespace LOFAR
     WH_FilterOutput (const WH_FilterOutput&);
     WH_FilterOutput& operator= (const WH_FilterOutput&);
 
+    int itsSBID;
+    int itsInputs;
   };
 } // namespace LOFAR
 

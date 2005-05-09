@@ -64,11 +64,11 @@ void DH_SubBand::preprocess()
   itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
   
   addField ("Flag", BlobField<int>(1, 1));
-  addField ("Buffer", BlobField<fcomplex>(1, itsBufSize));
+  addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
   
   createDataBlock();  // calls fillDataPointers
-  // itsBuffer = getData<BufferType> ("Buffer");
-  memset(itsBuffer, 0, itsBufSize*sizeof(fcomplex)); 
+  itsBuffer = getData<BufferType> ("Buffer");
+  memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
 }
 
 void DH_SubBand::postprocess()

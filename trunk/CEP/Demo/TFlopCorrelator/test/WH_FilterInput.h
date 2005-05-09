@@ -44,6 +44,7 @@ namespace LOFAR
     WH_FilterInput (const WH_FilterInput&);
     WH_FilterInput& operator= (const WH_FilterInput&);
 
+    int itsSBID;
   };
 } // namespace LOFAR
 

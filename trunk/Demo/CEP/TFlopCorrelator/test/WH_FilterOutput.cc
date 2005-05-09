@@ -23,22 +23,38 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <ACC/ParameterSet.h>
+
+#include <DH_CorrCube.h>
 #include <WH_FilterOutput.h>
 
 using namespace LOFAR;
 
-WH_FilterOutput::WH_FilterOutput(const string& name) {
+WH_FilterOutput::WH_FilterOutput(const string& name, int inputs) :
+  WorkHolder( inputs, 0, name, "WH_FilterOutput"),
+  itsSBID(0),
+  itsInputs(inputs)
+{
+  ACC::ParameterSet myPS("TFlopCorrelator.cfg");
+  int itsCpF = myPS.getInt("Corr_per_Filter");
+
+  char str[32];
+  for (int c = 0; c < itsCpF; c++) {
+    sprintf(str, "input_%d", c);
+    getDataManager().addInDataHolder(c, new DH_CorrCube(str,
+							itsSBID));
+  }
 }
 
 WH_FilterOutput::~WH_FilterOutput() {
 }
 
-WorkHolder* WH_FilterOutput::construct(const string& name) {
-  return new WH_FilterOutput(name);
+WorkHolder* WH_FilterOutput::construct(const string& name, int inputs) {
+  return new WH_FilterOutput(name, inputs);
 }
 
 WH_FilterOutput* WH_FilterOutput::make(const string& name) {
-  return new WH_FilterOutput(name);
+  return new WH_FilterOutput(name, itsInputs);
 }
 
 void WH_FilterOutput::preprocess() {

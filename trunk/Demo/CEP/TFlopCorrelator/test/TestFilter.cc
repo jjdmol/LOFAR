@@ -37,8 +37,11 @@ int main (int argc, const char** argv){
     AH_TestFilter app;
     app.setarg(argc,argv);
     app.baseDefine();
+    cout << "define done" << endl;
     app.basePrerun();
+    cout << "Pre run done" << endl;
     app.baseRun(1);
+    cout << "Run done" << endl;
     app.baseDump();
     app.baseQuit();
 

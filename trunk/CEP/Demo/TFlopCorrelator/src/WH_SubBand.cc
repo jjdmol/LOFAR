@@ -23,7 +23,7 @@ using namespace LOFAR;
 WH_SubBand::WH_SubBand(const string& name,
 		       const short   subBandID):
  WorkHolder( 1, 1, name, "WH_Correlator"),
- itsSBID   (subBandID)
+ itsSBID       (subBandID)
 {
 
    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
@@ -39,8 +39,11 @@ WH_SubBand::WH_SubBand(const string& name,
    }
    
    //todo: Add DH for filter coefficients;
-   //      need functionalit like the CEPFrame setAutotrigger.
+   //      need functionality like the CEPFrame setAutotrigger.
 
+   delayLine = new FilterType*[itsFFTLen];
+   delayPtr  = new FilterType*[itsFFTLen];
+   coeffPtr  = new float*[itsFFTLen];
 
    for (int filter = 0; filter <  itsFFTLen; filter++) {
 
@@ -54,10 +57,10 @@ WH_SubBand::WH_SubBand(const string& name,
      for (int j = 0; j < itsNtaps; j++) {
        coeffPtr[filter][j] = (j + 1);
      }
-
    }
 
-   
+   // FFT
+   itsFFTDirection = FFTW_FORWARD;
 }
 
 WH_SubBand::~WH_SubBand() {
@@ -73,7 +76,7 @@ WH_SubBand* WH_SubBand::make(const string& name) {
 }
 
 void WH_SubBand::preprocess() {
-  itsFFTPlan = fftw_create_plan(itsNsubbands, itsFFTDirection, FFTW_MEASURE);
+  itsFFTPlan = fftw_create_plan(itsFFTLen, itsFFTDirection, FFTW_MEASURE);
 
   fft_in  = static_cast<FilterType*> (malloc(itsFFTLen * sizeof(FilterType)));
   fft_out = static_cast<FilterType*> (malloc(2 * itsFFTLen * sizeof(FilterType)));
