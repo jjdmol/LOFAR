@@ -45,19 +45,24 @@ StationCorrelatorController::~StationCorrelatorController()
 
 bool StationCorrelatorController::define   () const
 {
+  cout<<"Define called"<<endl;
   LOG_TRACE_FLOW("Define called by ACC");
   itsStationCorrelator.baseDefine();
+  cout<<"Define ready"<<endl;
   return true;
 }
 bool StationCorrelatorController::init     () const
 {
+  cout<<"Init called"<<endl;
   LOG_TRACE_FLOW("Init called by ACC");
   Profiler::init();
   itsStationCorrelator.basePrerun();
+  cout<<"Init ready"<<endl;
   return true;
 }
 bool StationCorrelatorController::run      () const
 {
+  cout<<"Running"<<endl;
   LOG_TRACE_FLOW("Run called by ACC");
   Profiler::activate();
   itsStationCorrelator.baseRun(itsNoRuns);
@@ -65,34 +70,46 @@ bool StationCorrelatorController::run      () const
 }
 bool StationCorrelatorController::pause    (const	string&	condition) const
 {
+  cout<<"Pause called"<<endl;
   LOG_ERROR("Pause not implemented in ApplicationHolder");
+  cout<<"Pause ready"<<endl;
   return false;
 }
 bool StationCorrelatorController::quit  	 () const
 {
+  cout<<"Quit called"<<endl;
   LOG_TRACE_FLOW("Quit called by ACC");
   Profiler::deActivate();
   itsStationCorrelator.basePostrun();
   itsStationCorrelator.baseQuit();
+  cout<<"Quit ready"<<endl;
   return true;
 }
 bool StationCorrelatorController::snapshot (const string&	destination) const
 {
+  cout<<"Snapshot called"<<endl;
   LOG_ERROR("Snapshot not implemented in ApplicationHolder");
+  cout<<"Snapshot ready"<<endl;
   return false;
 }
 bool StationCorrelatorController::recover  (const string&	source) const
 {
+  cout<<"Recover called"<<endl;
   LOG_ERROR("recover not implemented in ApplicationHolder");
+  cout<<"Recover ready"<<endl;
   return false;
 }
 bool StationCorrelatorController::reinit	 (const string&	configID) const
 {
+  cout<<"Reinit called"<<endl;
   LOG_ERROR("Reinit not implemented in ApplicationHolder");
+  cout<<"Reinit ready"<<endl;
   return false;
 }  
 string StationCorrelatorController::askInfo   (const string& 	keylist) const
 {
+  cout<<"AskInfo called"<<endl;
+  cout<<"AskInfo ready"<<endl;
   return "no info available yet";
 }
 
