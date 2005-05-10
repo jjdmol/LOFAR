@@ -28,9 +28,12 @@ WH_SubBand::WH_SubBand(const string& name,
 
    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
    //ParameterCollection	myPC(myPS);
-   itsNtaps     = myPS.getInt("WH_SubBand.taps");
-   itsFFTLen    = myPS.getInt("WH_SubBand.fftlen");
-   itsCpF       = myPS.getInt("Corr_per_Filter");
+   itsNtaps      = myPS.getInt("WH_SubBand.taps");
+   itsNStations  = myPS.getInt("WH_SubBand.stations");
+   itsNTimes     = myPS.getInt("WH_SubBand.times");
+   itsNFChannels = myPS.getInt("WH_SubBand.freqs");
+   itsNPol       = myPS.getInt("WH_SubBand.pols");
+   itsCpF        = myPS.getInt("Corr_per_Filter");
 
    getDataManager().addInDataHolder(0, new DH_SubBand("input", itsSBID));
 
@@ -41,15 +44,15 @@ WH_SubBand::WH_SubBand(const string& name,
    //todo: Add DH for filter coefficients;
    //      need functionality like the CEPFrame setAutotrigger.
 
-   delayLine = new FilterType*[itsFFTLen];
-   delayPtr  = new FilterType*[itsFFTLen];
-   coeffPtr  = new float*[itsFFTLen];
+   delayLine = new FilterType*[itsNStations];
+   delayPtr  = new FilterType*[itsNStations];
+   coeffPtr  = new float*[itsNStations];
 
-   for (int filter = 0; filter <  itsFFTLen; filter++) {
+   for (int filter = 0; filter <  itsNStations; filter++) {
 
      // Initialize the delay line
      delayLine[filter] = new FilterType[2*itsNtaps]; 
-     memset(delayLine[filter],0,2*itsNtaps*sizeof(FilterType));
+     memset(delayLine[filter], 0, 2*itsNtaps*sizeof(FilterType));
      delayPtr[filter] = delayLine[filter];
 
      // Need input: filter coefficients
@@ -76,18 +79,18 @@ WH_SubBand* WH_SubBand::make(const string& name) {
 }
 
 void WH_SubBand::preprocess() {
-  itsFFTPlan = fftw_create_plan(itsFFTLen, itsFFTDirection, FFTW_MEASURE);
+  itsFFTPlan = fftw_create_plan(itsNStations, itsFFTDirection, FFTW_MEASURE);
 
-  fft_in  = static_cast<FilterType*> (malloc(itsFFTLen * sizeof(FilterType)));
-  fft_out = static_cast<FilterType*> (malloc(2 * itsFFTLen * sizeof(FilterType)));
+  fft_in  = static_cast<FilterType*> (malloc(itsNStations * sizeof(FilterType)));
+  fft_out = static_cast<FilterType*> (malloc(2 * itsNStations * sizeof(FilterType)));
 }
 
 void WH_SubBand::process() {
 
   // reset the fft_in buffer in case we used it before.
-  memset(fft_in, 0, itsFFTLen * 2);
+  memset(fft_in, 0, itsNStations * 2);
 
-  for (int f = 0; f < itsFFTLen; f++) {
+  for (int f = 0; f < itsNStations; f++) {
     for (int i = 0; i < itsNtaps; i++) { 
 
       fft_in[f] += coeffPtr[f][i] * delayLine[f][i];
