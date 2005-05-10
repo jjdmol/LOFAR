@@ -72,6 +72,7 @@ private:
 							 bool				passOwnership);
 	void startCmdState      ();
 	void createParSubsets   ();
+	void writeResultFile    ();
 
 	void checkForACCommands();
 	void checkForAPMessages();
