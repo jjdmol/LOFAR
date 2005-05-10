@@ -12,6 +12,7 @@
 #include <fftw.h>
 
 #include <tinyCEP/WorkHolder.h>
+#include <DH_SubBand.h>
 
 namespace LOFAR
 {
@@ -53,8 +54,10 @@ namespace LOFAR
     short itsSBID; // subBandID
     short itsCpF;
     
-    FilterType** delayPtr;
-    FilterType** delayLine;
+    short itsNFilters;
+
+    DH_SubBand::BufferType** delayPtr;
+    DH_SubBand::BufferType** delayLine;
 
     float**      coeffPtr;
     FilterType*  inputPtr;
