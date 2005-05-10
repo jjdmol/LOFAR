@@ -38,7 +38,7 @@
 
 #ifdef HAVE_BGL
 // cheat by including the entire hummer_builtin.h file
-#include <hummer_builtin.h>
+//#include <hummer_builtin.h>
 #endif 
 
 
@@ -159,7 +159,7 @@ void WH_Correlator::process() {
 #ifdef DO_TIMING
   starttime = timer();
 #endif
-#ifdef HAVE_BGL
+#if 0
   
   // BlueGene/L specific correlator code
   // compared to earlier versions I have:
