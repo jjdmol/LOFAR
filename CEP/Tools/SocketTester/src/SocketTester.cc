@@ -29,6 +29,7 @@
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_sstream.h>
+#include <Common/LofarLogger.h>
 #include <Common/Net/Socket.h>
 #include <unistd.h>			/* usleep */
 
@@ -40,9 +41,7 @@
 
 #include <mpi.h>
 
-#define SENDER        0      /* boolean */
 #define ACKTAG        734
-#define LISTENER      1
 
 #define IP_LEN	      16
 #define BUFLEN	      128
@@ -59,30 +58,47 @@ void read_config(int32  myrank,
 		 int32  *ackMode, 
 		 int32  *sleeptime, 
 		 int32  *runs, 
+		 int32  *listener,  // will be used as bool
+		 int32  *sender,    // will be used as bool
 		 int32  *mymode, 
 		 char   *myip, 
 		 int32  *myport) {
   
+  printf("Read cfg file on node %i\n", myrank);
   FILE *cfg = fopen("SocketTester.cfg", "r");
-  fscanf(cfg, "ackMode %i", ackMode);
+  if (cfg == NULL) {
+    printf("Couldn't open file %i/n", errno);
+    exit(0);
+  }
+  fscanf(cfg, "ackMode %i\n", ackMode);
   printf("ackMode = %i\n", *ackMode);
-  fscanf(cfg, "sleeptime %i", sleeptime);
+  fscanf(cfg, "sleeptime %i\n", sleeptime);
   printf("sleeptime = %i\n", *sleeptime);
-  fscanf(cfg, "runs %i", runs);
+  fscanf(cfg, "runs %i\n", runs);
   printf("runs = %i\n", *runs);
+  fscanf(cfg, "listener %i\n", listener);
+  printf("listener = %i\n", *listener);
+  fscanf(cfg, "sender %i\n", sender);
+  printf("sender = %i\n", *sender);
+  fscanf(cfg, "mode %i\n", mymode);
+  printf("mode = %i\n", *mymode);
 
   char anip[IP_LEN];
-  int32 anode, amode;
+  int32 anode, aport;
   for(int32 n = 1; n < nodes; n++) {
-    fscanf(cfg, "node%3i %1i %s  %i", &anode, &amode, anip, myport);
+    fscanf(cfg, "node%3i %4i %s\n", &anode, &aport, anip);
+    printf("READ: node: %i     Port: %i IP: %s    \n", anode, aport, anip);
     if (anode == myrank) {
-      *mymode = amode;
+      *myport = aport;
       strcpy(myip, anip);
-      printf("node: %i     Mode: %1i    IP: %s    Port: %i", myrank, *mymode, myip, *myport);
+      printf("USE:  node: %i     Mode: %1i    IP: %s    Port: %i\n", 
+	     myrank, *mymode, myip, *myport);
     }
   }
 
   fclose (cfg);
+  printf("runs = %i\n", *runs);
+  printf("Finished reading cfg file\n");
 }
 
 //
@@ -103,12 +119,23 @@ using namespace LOFAR;
 // main
 //
 int main(int32 argc, char*argv[]) {
+  
+  if (argc !=2) {
+    printf("specify listenermode (0/1) as first command line argument");
+    //exit(1);
+  }
+  bool listenermode = argv[1];
+  printf("Listenermode : %i\n", listenermode);
 
+
+  INIT_LOGGER("SocketTester.log_prop");
   MPI_Init(&argc, &argv);
 
   // Get info about MPI environment
-  int32 myrank, nodes;
+  int32 myrank=0; 
+  int32 nodes=1;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank); 
+  printf("MyRank %i\n",myrank);
   MPI_Comm_size(MPI_COMM_WORLD, &nodes); 
 
   // Get mpi settings for me for this run.
@@ -116,23 +143,33 @@ int main(int32 argc, char*argv[]) {
   int32 ackMode;
   int32 sleeptime;
   int32 runs;
+  int32 sender,listener; // interpreted as bool
   char  myip[IP_LEN];
-  read_config(myrank,nodes,&ackMode,&sleeptime,&runs,&mymode,&myip[0],&myport);
+  sleep(5*myrank);
+  read_config(myrank,nodes,&ackMode,&sleeptime,&runs,
+	      &listener, & sender, &mymode,&myip[0],&myport);
+
+  LOG_TRACE_CALC_STR("runs = " << runs);
+  LOG_TRACE_CALC_STR("sleeptime = " << sleeptime);
+  LOG_TRACE_CALC_STR("trigger mode = " << mymode);
 
   if (myrank != 0) { /* rank 0 is the master, see below */
     Socket *mysock;
 
     /* Make connections */
-    if (LISTENER) {
-      Socket	listensock;
+    if (listener) {
+      LOG_TRACE_FLOW_STR("Start listener");
+      Socket	listensock("serverSocket");
       listensock.initServer(to_string(myport));
       mysock = listensock.accept(-1);
     } else {
+      LOG_TRACE_FLOW_STR("Start Socket");
       mysock = new Socket("clientSocket", 
 			  string(myip), 
 		          to_string(myport));
+
     }
-    
+    LOG_TRACE_FLOW_STR("Finished socket connections");
     /* Synchronise all nodes */
     MPI_Barrier(MPI_COMM_WORLD);
     
@@ -141,12 +178,15 @@ int main(int32 argc, char*argv[]) {
     char   message[BUFLEN], buf[BUFLEN];
     strcpy (message, "testmessage MPI");
     int32  len = strlen(message);
+    LOG_TRACE_FLOW_STR("start runs loop " << runs);
     for (r = 0; r < runs; r++) {
+      LOG_TRACE_FLOW_STR("Wait for BCast " << r);
       /* receive the broadcast of the next node to transport  */
-      MPI_Bcast(&n, 1, MPI_INTEGER, 0, MPI_COMM_WORLD);
+      MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+      LOG_TRACE_FLOW_STR("Received BCast " << n);
       if (n == myrank || n == -1) {
 	/* perform the actual data transport */
-	if (SENDER) {
+	if (sender) {
 	  mysock->write(message, len);
 	} else { /* receiver */
 	  mysock->read(&buf[0], len);
@@ -157,11 +197,11 @@ int main(int32 argc, char*argv[]) {
 	if (n == -1) {
 	  /* ackMode && alltogether; need global ack to master */
 	  int32 collval, myval = 1;
-	  MPI_Reduce(&myval, &collval, 1, MPI_INTEGER, MPI_LOR, 0, MPI_COMM_WORLD);
+	  MPI_Reduce(&myval, &collval, 1, MPI_INT, MPI_LOR, 0, MPI_COMM_WORLD);
 	} else {
 	  /*  ackMode needs single acknowledge to master */
 	  int32 ack = 1;
-	  MPI_Send(&ack, 1, MPI_INTEGER, 0, ACKTAG, MPI_COMM_WORLD);
+	  MPI_Send(&ack, 1, MPI_INT, 0, ACKTAG, MPI_COMM_WORLD);
 	}
       }
 
@@ -173,6 +213,7 @@ int main(int32 argc, char*argv[]) {
      * All I have to do is make the others work
      */
 
+    LOG_TRACE_FLOW_STR("Master; mode " << mymode);
     /* Wait for all connections to be completed */
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -183,31 +224,34 @@ int main(int32 argc, char*argv[]) {
     int32 r, n;
     int32 recvbuf;
     MPI_Status status;
+    LOG_TRACE_FLOW_STR("Start Master loops; runs = " 
+		       << runs << " nodes = " << nodes);
     for (r = 0; r < runs; r++) {
       for (n = 1; n < nodes; n++) {
 	switch (mymode) {
 	case 0:                            /* One-by-one mode */
 	  nextnode = n;
-          MPI_Bcast(&nextnode, 1, MPI_INTEGER, 0, MPI_COMM_WORLD);  // trigger
+	  LOG_TRACE_FLOW("Master sends BCast");
+          MPI_Bcast(&nextnode, 1, MPI_INT, 0, MPI_COMM_WORLD);  // trigger
 	  if (ackMode) {
-	    MPI_Recv(&recvbuf, 1, MPI_INTEGER, nextnode, 
-					ACKTAG, MPI_COMM_WORLD, &status); /* acknowledge */
+	    MPI_Recv(&recvbuf, 1, MPI_INT, nextnode, 
+		     ACKTAG, MPI_COMM_WORLD, &status); /* acknowledge */
 	  }
 	  break;
 	case 1:                            /* Random order nodes 1...nodes */
 	  nextnode = 1 + (random() % nodes); 
-          MPI_Bcast(&nextnode, 1, MPI_INTEGER, 0, MPI_COMM_WORLD);  // trigger
+          MPI_Bcast(&nextnode, 1, MPI_INT, 0, MPI_COMM_WORLD);  // trigger
 	  if (ackMode) {
-	    MPI_Recv(&recvbuf, 1, MPI_INTEGER, nextnode, ACKTAG, MPI_COMM_WORLD, &status); /* acknowledge */
+	    MPI_Recv(&recvbuf, 1, MPI_INT, nextnode, ACKTAG, MPI_COMM_WORLD, &status); /* acknowledge */
 	  }
 	  break;
 	case 2:                             /* All together mode */
 	  int32 collval, myval=0;
 	  nextnode = -1;                   /* will trigger all nodes */
 	  n += nodes;                      /* ends the nodes loop  */
-          MPI_Bcast(&nextnode, 1, MPI_INTEGER, 0, MPI_COMM_WORLD);  // trigger
+          MPI_Bcast(&nextnode, 1, MPI_INT, 0, MPI_COMM_WORLD);  // trigger
 	  if (ackMode) {
-	    MPI_Reduce(&myval, &collval, 1, MPI_INTEGER, MPI_LOR, 0, MPI_COMM_WORLD);
+	    MPI_Reduce(&myval, &collval, 1, MPI_INT, MPI_LOR, 0, MPI_COMM_WORLD);
 	  }
 	  break;
 	} // switch
