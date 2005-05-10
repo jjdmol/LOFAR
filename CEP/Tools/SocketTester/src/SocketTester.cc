@@ -44,7 +44,7 @@
 #define ACKTAG        734
 
 #define IP_LEN	      16
-#define BUFLEN	      128
+#define BUFLEN	      1048576  // 1 MByte
 
 namespace LOFAR {
 
@@ -86,7 +86,7 @@ void read_config(int32  myrank,
   char anip[IP_LEN];
   int32 anode, aport;
   for(int32 n = 1; n < nodes; n++) {
-    fscanf(cfg, "node%3i %4i %s\n", &anode, &aport, anip);
+    fscanf(cfg, "node%3i %i %s\n", &anode, &aport, anip);
     printf("READ: node: %i     Port: %i IP: %s    \n", anode, aport, anip);
     if (anode == myrank) {
       *myport = aport;
@@ -128,7 +128,7 @@ int main(int32 argc, char*argv[]) {
   printf("Listenermode : %i\n", listenermode);
 
 
-  INIT_LOGGER("SocketTester.log_prop");
+  INIT_LOGGER("/home/schaaf/SocketTester");
   MPI_Init(&argc, &argv);
 
   // Get info about MPI environment
@@ -160,13 +160,23 @@ int main(int32 argc, char*argv[]) {
     if (listener) {
       LOG_TRACE_FLOW_STR("Start listener");
       Socket	listensock("serverSocket");
-      listensock.initServer(to_string(myport));
+      listensock.initServer(toString(myport));
+      if (!listensock.ok()) {
+	LOG_TRACE_FLOW_STR("Could not start listener " 
+			   << listensock.errstr());
+	exit(1);
+      }
       mysock = listensock.accept(-1);
     } else {
       LOG_TRACE_FLOW_STR("Start Socket");
       mysock = new Socket("clientSocket", 
 			  string(myip), 
 		          to_string(myport));
+      if (!mysock->ok()) {
+	LOG_ERROR("Client socket creation failed");
+	exit(0);
+      }
+      mysock->connect(10000);
 
     }
     LOG_TRACE_FLOW_STR("Finished socket connections");
@@ -176,8 +186,8 @@ int main(int32 argc, char*argv[]) {
     /* start the data transfer */
     int32  r, n;
     char   message[BUFLEN], buf[BUFLEN];
-    strcpy (message, "testmessage MPI");
-    int32  len = strlen(message);
+    strcpy (message, "testmessage SocketTester");
+    int32  len = BUFLEN; //old: strlen(message);
     LOG_TRACE_FLOW_STR("start runs loop " << runs);
     for (r = 0; r < runs; r++) {
       LOG_TRACE_FLOW_STR("Wait for BCast " << r);
@@ -226,6 +236,7 @@ int main(int32 argc, char*argv[]) {
     MPI_Status status;
     LOG_TRACE_FLOW_STR("Start Master loops; runs = " 
 		       << runs << " nodes = " << nodes);
+    double startTime = MPI_Wtime();
     for (r = 0; r < runs; r++) {
       for (n = 1; n < nodes; n++) {
 	switch (mymode) {
@@ -257,8 +268,12 @@ int main(int32 argc, char*argv[]) {
 	} // switch
       } // for nodes
     } // for runs
-  } // master or not
-
+    double endTime = MPI_Wtime();
+    cout << "average transfer rate = "
+	 << runs*BUFLEN/(endTime-startTime)/(1024*1024*1024)
+	 << "Gbps per node " << endl;
+      } // master or not
+  
   MPI_Finalize();
   return (0);
 } // main
