@@ -36,9 +36,12 @@ WH_FilterInput::WH_FilterInput(const string& name):
 {
   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
   //ParameterCollection	myPC(myPS);
-  itsNtaps     = myPS.getInt("WH_SubBand.taps");
-  itsNStations = myPS.getInt("WH_SubBand.stations");
-  itsCpF       = myPS.getInt("Corr_per_Filter");
+  //  itsNtaps     = myPS.getInt("WH_SubBand.taps");
+  itsNStations  = myPS.getInt("WH_SubBand.stations");
+  itsNTimes     = myPS.getInt("WH_SubBand.times");
+  itsNFChannels = myPS.getInt("WH_SubBand.freqs");
+  itsNPol       = myPS.getInt("WH_SubBand.pols");
+  itsCpF        = myPS.getInt("Corr_per_Filter");
 
   getDataManager().addOutDataHolder(0, new DH_SubBand("output",
 						      itsSBID));
@@ -60,14 +63,15 @@ void WH_FilterInput::preprocess() {
 
 void WH_FilterInput::process() {
   DH_SubBand::BufferType * buffer;
+  int itsNFilters = itsNStations * itsNFChannels * itsNPol;
 
   buffer = ((DH_SubBand*)getDataManager().getOutHolder(0))->getBuffer();
   memset(buffer, 0, ((DH_SubBand*)getDataManager().getOutHolder(0))->getBufSize() * sizeof(DH_SubBand::BufferType));
 
-  // an impuls signal
-  __real__ *buffer = 1;
-  
-
+  // each filter gets an impuls signal
+  for (int filter = 0; filter < itsNFilters; filter++) {
+    __real__ *(buffer + filter * itsNTimes) = 1;
+  }
 }
 
 void WH_FilterInput::dump() {

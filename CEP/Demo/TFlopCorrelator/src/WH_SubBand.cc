@@ -44,15 +44,18 @@ WH_SubBand::WH_SubBand(const string& name,
    //todo: Add DH for filter coefficients;
    //      need functionality like the CEPFrame setAutotrigger.
 
-   delayLine = new FilterType*[itsNStations];
-   delayPtr  = new FilterType*[itsNStations];
-   coeffPtr  = new float*[itsNStations];
+   // each station, each frequency block and each polarisation have their own filter
+   itsNFilters = itsNStations * itsNFChannels * itsNPol;
 
-   for (int filter = 0; filter <  itsNStations; filter++) {
+   delayLine = new DH_SubBand::BufferType*[itsNFilters];
+   delayPtr  = new DH_SubBand::BufferType*[itsNFilters];
+   coeffPtr  = new float*[itsNFilters];
+
+   for (int filter = 0; filter <  itsNFilters; filter++) {
 
      // Initialize the delay line
-     delayLine[filter] = new FilterType[2*itsNtaps]; 
-     memset(delayLine[filter], 0, 2*itsNtaps*sizeof(FilterType));
+     delayLine[filter] = new DH_SubBand::BufferType[2*itsNtaps]; 
+     memset(delayLine[filter], 0, 2*itsNtaps*sizeof(DH_SubBand::BufferType));
      delayPtr[filter] = delayLine[filter];
 
      // Need input: filter coefficients
@@ -62,7 +65,7 @@ WH_SubBand::WH_SubBand(const string& name,
      }
    }
 
-   // FFT
+   // FFTW parameters
    itsFFTDirection = FFTW_FORWARD;
 }
 
@@ -82,25 +85,34 @@ void WH_SubBand::preprocess() {
   itsFFTPlan = fftw_create_plan(itsNStations, itsFFTDirection, FFTW_MEASURE);
 
   fft_in  = static_cast<FilterType*> (malloc(itsNStations * sizeof(FilterType)));
-  fft_out = static_cast<FilterType*> (malloc(2 * itsNStations * sizeof(FilterType)));
+  fft_out = static_cast<FilterType*> (malloc(itsNStations * sizeof(FilterType)));
 }
 
 void WH_SubBand::process() {
 
-  // reset the fft_in buffer in case we used it before.
-  memset(fft_in, 0, itsNStations * 2);
+  for (int channel = 0; channel < itsNFChannels; channel++) {
 
-  for (int f = 0; f < itsNStations; f++) {
-    for (int i = 0; i < itsNtaps; i++) { 
+    // reset the fft_in buffer in case we used it before.
+    memset(fft_in, 0, itsNStations * 2);
+   
+    for (int f = 0; f < itsNStations; f++) {
+      for (int sample = 0; sample < itsNTimes; sample++) {
 
-      fft_in[f] += coeffPtr[f][i] * delayLine[f][i];
+	*delayPtr[f] = *((DH_SubBand*)getDataManager().getInHolder(0))->getBufferElement(channel, f, sample, 0);
 
+	for (int i = 0; i < itsNtaps; i++) { 
+	  
+	  fft_in[f] += coeffPtr[f][i] * delayLine[f][i];
+	  
+	}
+	adjustDelayPtr();
+      }
     }
-  }
 
-  fftw_one(itsFFTPlan, 
-	   reinterpret_cast<fftw_complex *>(fft_in), 
-	   reinterpret_cast<fftw_complex *>(fft_out));
+    fftw_one(itsFFTPlan, 
+	     reinterpret_cast<fftw_complex *>(fft_in), 
+	     reinterpret_cast<fftw_complex *>(fft_out));
+  }
 }
 
 
