@@ -71,15 +71,11 @@ namespace LOFAR
     // for synchronisation
     bool itsIsSyncMaster; // Am I the one that sends the sync packets?
     DH_RSPSync::syncStamp_t itsNextStamp;
-    DH_RSPSync::syncStamp_t itsDelay;    
     bool itsReadNext; // Do we need to read at the beginning of the next process()?
 
-    static ProfilingState theirWaitingState;
-    static ProfilingState theirCatchingUpState;
+    static ProfilingState theirOldDataState;
+    static ProfilingState theirMissingDataState;
   };
-
-  inline void WH_RSPInput::setDelay(const DH_RSPSync::syncStamp_t newDelay)
-    { itsDelay = newDelay; }
 
 } // namespace LOFAR
 

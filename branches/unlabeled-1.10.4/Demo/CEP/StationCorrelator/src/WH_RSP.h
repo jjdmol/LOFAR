@@ -64,10 +64,12 @@ namespace LOFAR
 
     KeyValueMap itsKVM;
 
-    
+    //for delay-control
+    DH_RSPSync::syncStamp_t itsNextStamp;
+    bool itsReadNext;
 
-    static ProfilingState theirInvalidDataState;
-    static ProfilingState theirTransposeState;
+    static ProfilingState theirCatchingUpState;
+    static ProfilingState theirWaitingState;
   };
 
 } // namespace LOFAR

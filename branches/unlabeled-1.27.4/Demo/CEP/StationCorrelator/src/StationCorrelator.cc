@@ -112,8 +112,9 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     if (i == 0) {
       whRSPinput = new WH_RSPInput(H_name, itsKVM, true);  // syncmaster
-    } else {
-      whRSPinput = new WH_RSPInput(H_name, itsKVM, false);  // notsyncmaster
+    } 
+    else {
+      whRSPinput = new WH_RSPInput(H_name, itsKVM, false); // notsyncmaster
     }
     itsRSPinputSteps[i] = new Step(*whRSPinput, H_name, false);
     comp.addStep(itsRSPinputSteps[i]); 
@@ -135,12 +136,8 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
       connect(&StepRSPemulator, itsRSPinputSteps[i], i, 0, false); // true=sharedMem
     }
 
-    if (i != 0) {
-      // we're a syncSlave. Connect the second input to the propriate output.
-      connect(itsRSPinputSteps[0], itsRSPinputSteps[i], i , 1, false); // true=sharedMem
-      itsRSPinputSteps[0]->setOutRate(10000, i);
-      itsRSPinputSteps[i]->setInRate(10000, 1);
-    }
+    // set synchronization outputs of syncmaster
+    itsRSPinputSteps[0]->setOutRate(10000, i+1);;
   }
   
   Step** itsRSPsteps = new Step*[itsNrsp];
@@ -155,6 +152,11 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     itsRSPsteps[i]->runOnNode(lastFreeNode++);
     connect(itsRSPinputSteps[i], itsRSPsteps[i], 0, 0, true); // true=sharedMem
+    // to do: connect(Delay_controller[i], itsRSPsteps[i], 0, 1, false);
+    // for now: use syncmaster outputs of itsRSPinputSteps[0]
+    connect(itsRSPinputSteps[0], itsRSPsteps[i], i+1, 1, true);
+    // set synchronization inputs
+    itsRSPsteps[i]->setInRate(10000, 1);
   }
 
   Step** itsTsteps = new Step*[itsNcorrelator];

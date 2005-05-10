@@ -1,5 +1,5 @@
-//#  WH_RSP.cc: Store RSP beamlets, blockID, stationID and isValid flag in 
-//#             in several (NOWH_correlator) StationData dataholders
+//#  WH_RSP.cc: Store delay-control synchronized RSP data in several 
+//#             (NOWH_correlator) StationData dataholders
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,20 +32,23 @@
 // Application specific includes
 #include <WH_RSP.h>
 #include <DH_RSP.h>
+#include <DH_RSPSync.h>
 #include <DH_StationData.h>
 
 using namespace LOFAR;
 
-ProfilingState WH_RSP::theirInvalidDataState;
-ProfilingState WH_RSP::theirTransposeState;
+ProfilingState WH_RSP::theirCatchingUpState;
+ProfilingState WH_RSP::theirWaitingState;
 
 WH_RSP::WH_RSP(const string& name, 
                const KeyValueMap kvm) 
-  : WorkHolder (1,
+  : WorkHolder (2,
 		kvm.getInt("NoWH_Correlator", 7), 
 		name, 
 		"WH_RSP"),
-    itsKVM (kvm)
+    itsKVM (kvm),
+    itsNextStamp(-1,0),
+    itsReadNext(true)
 {
   char str[32];
   
@@ -58,20 +61,29 @@ WH_RSP::WH_RSP(const string& name,
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                     // headersize in bytes
   itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader; // packetsize in bytes
 
-  // create incoming dataholder   
+  // create incoming RSP dataholder    
   getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", itsKVM)); // buffer of char
-  //((DataManager)getDataManager()).setOutBufferingProperties(i, false);
+
+  // create incoming Sync-timestamp dataholder
+  getDataManager().addInDataHolder(1, new DH_RSPSync("DH_RSP_delay"));
   
-  // create outgoing dataholders
+  // create outgoing RSP dataholders
   int bufsize =  itsPolarisations * itsNbeamlets * itsNpackets;
   for (int i=0; i < itsNCorrOutputs; i++) {
-    snprintf(str, 32, "DH_out_%d", i);
-    getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<int16>
-    
+    snprintf(str, 32, "DH_StationData_%d", i);
+    getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<int16>   
   }
 
-  theirInvalidDataState.init ("WH_RSP invalid data", "yellow");
-  theirTransposeState.init ("WH_RSP transpose", "orange");
+  // use cyclic buffer on RSP input
+  //((DataManager)getDataManager()).setInBufferingProperties(0, false); 
+
+  // do not use autotriggering on the RSP input
+  // 'new read' trigger will be set manually
+  getDataManager().setAutoTriggerIn(0, false); 
+
+  // init profiling states
+  theirCatchingUpState.init ("WH_RSP catching up", "yellow");
+  theirWaitingState.init ("WH_RSP waitinge", "orange");
 }
 
 WH_RSP::~WH_RSP() {
@@ -92,57 +104,110 @@ void WH_RSP::process()
 { 
   DH_RSP* inDHp;
   DH_StationData* outDHp;
+  SyncStamp thisStamp;
+  bool newStamp = false;
   int char_blocksize; 
   int complex_int16_blocksize;
   int amountToCopy; 
-      
-  // get incoming dataholder
-  inDHp = (DH_RSP*)getDataManager().getInHolder(0);
 
-  // is data valid?
-  bool invalid = inDHp->getFlag();
-
-  // copy stationID, blockID and valid/invalid flag of first EPA-packet in OutDataholder
-  outDHp = (DH_StationData*)getDataManager().getOutHolder(0);
-  outDHp->setStationID( inDHp->getStationID() );
-  outDHp->setBlockID( inDHp->getBlockID() );
-  outDHp->setFlag( invalid );
-      
-  if ( invalid ) { // invalid beamlets
-    theirTransposeState.leave();
-    theirInvalidDataState.enter();
-    amountToCopy = itsPolarisations * itsNbeamlets * itsNpackets * sizeof(complex<int16>);
-    for (int i=0;i<itsNCorrOutputs;i++) {
-      outDHp = (DH_StationData*)getDataManager().getOutHolder(i);
-      memset (outDHp->getBuffer(), 0, amountToCopy);   
-    }
+  if (itsReadNext) {
+    // read next packet from input
+    getDataManager().getInHolder(0);
+    getDataManager().readyWithInHolder(0);
+  } 
+  
+  if (itsNextStamp.getSeqId() == -1) {
+    // force to read the first delay_controlled timestamp
+    getDataManager().getInHolder(1);
+    getDataManager().readyWithInHolder(1);
   }
-  else { // valid beamlets
-    theirTransposeState.enter();
-    theirInvalidDataState.leave();
-    char_blocksize = itsNbeamlets * itsPolarisations * sizeof(complex<int16>); 
-    complex_int16_blocksize = itsNbeamlets * itsPolarisations;
-    amountToCopy = itsPolarisations * itsNbeamlets * sizeof(complex<int16>);
-    for (int i=0;i<itsNpackets;i++) {
-      for (int j=0;j<itsNCorrOutputs;j++) {
-        outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-        memcpy( &outDHp->getBuffer()[i * complex_int16_blocksize], 
-	        &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
-                amountToCopy);
-#define DUMP_NOT_DEFINED
-#ifdef DUMP
-        cout<<"packet: "<<i<<"  output: "<<j<<"   ";
-        for (int c=0; c<char_blocksize/sizeof(complex<int16>); c++) {
-          cout<<((complex<int16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
+  // get delay_controlled timestamp
+  DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
+  itsNextStamp = dhp->getSyncStamp(); 
+  // we need to increment the stamp because it is written only once per second or so
+  dhp->incrementStamp(itsNpackets);
+      
+  while (!newStamp) {
+
+    // get incoming RSP data
+    inDHp = (DH_RSP*)getDataManager().getInHolder(0);
+    thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
+
+    // Use next line to bypass synchronization 
+    //itsNextStamp = thisStamp;
+
+    if (thisStamp < itsNextStamp) {
+      // catching up: (current timestamp < delay_control timestamp)
+      
+      // set profiling state
+      theirCatchingUpState.enter();
+      theirWaitingState.leave();
+      
+      LOG_TRACE_COND_STR("Packet too old; skip");
+      
+      // stay in while loop and trigger a new read
+      // so this packet will be skipped
+      getDataManager().readyWithInHolder(0);
+      newStamp = false;
+    }
+    else if (thisStamp > itsNextStamp) {
+      // wait: (current timestamp > delay_control timestamp)
+      
+      // set profiling state
+      theirCatchingUpState.leave();
+      theirWaitingState.enter();
+      
+      // step out of the while loop and do not trigger a new read
+      // so this packet will be read again next loop
+      newStamp = true; 
+      itsReadNext = false;       
+    }
+    else {
+      // synchronized: current timestamp == delay_control timestamp
+      
+      // reset profiling states
+      theirCatchingUpState.leave();
+      theirWaitingState.leave();
+      
+      // copy stationID, blockID and valid/invalid flag of first EPA-packet in OutDataholder
+      outDHp = (DH_StationData*)getDataManager().getOutHolder(0);
+      outDHp->setStationID( inDHp->getStationID() );
+      outDHp->setBlockID( inDHp->getBlockID() );
+      outDHp->setFlag( inDHp->getFlag() );
+
+       // valid data received?
+      bool valid = !inDHp->getFlag();
+
+      if (valid) { 
+         // valid beamlets
+        char_blocksize = itsNbeamlets * itsPolarisations * sizeof(complex<int16>); 
+        complex_int16_blocksize = itsNbeamlets * itsPolarisations;
+        amountToCopy = itsPolarisations * itsNbeamlets * sizeof(complex<int16>);
+        for (int i=0;i<itsNpackets;i++) {
+          for (int j=0;j<itsNCorrOutputs;j++) {
+            outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
+            memcpy( &outDHp->getBuffer()[i * complex_int16_blocksize], 
+	            &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
+                    amountToCopy);
+          }
         }
-        cout<<endl;
-#endif
       }
+      else { 
+        // invalid beamlets
+        amountToCopy = itsPolarisations * itsNbeamlets * itsNpackets * sizeof(complex<int16>);
+        for (int i=0;i<itsNCorrOutputs;i++) {
+         outDHp = (DH_StationData*)getDataManager().getOutHolder(i);
+         memset (outDHp->getBuffer(), 0, amountToCopy);   
+        }
+      }
+      
+      // step out of the while loop and trigger a new read
+      newStamp = true;
+      itsReadNext = true;
     }
-  }
-  theirTransposeState.leave();
-  theirInvalidDataState.leave();
+  } // while (!newStamp)
 }
+
 
 void WH_RSP::dump() {
   cout<<"DUMP OF WH_RSP: "<<getName()<<endl;
