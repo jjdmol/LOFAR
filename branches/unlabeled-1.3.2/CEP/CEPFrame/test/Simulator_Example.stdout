@@ -68,14 +68,8 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 
 DUMP Data from last Processing step: 
-WH_Example ExampleSimul Buffers:
-(0,0),(0,0)
-WH_Example Composite2 Buffers:
-(0,0),(0,0)
 WH_Example Step1 Buffers:
 (1,0),(1,0)
-WH_Example Composite1 Buffers:
-(0,0),(0,0)
 WH_Example Step2 Buffers:
 (1,0),(1,0)
 WH_Example Step3 Buffers:
