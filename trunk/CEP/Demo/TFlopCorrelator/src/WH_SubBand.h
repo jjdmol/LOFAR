@@ -46,7 +46,10 @@ namespace LOFAR
 
     /// FIR Filter variables
     short itsNtaps;
-    short itsFFTLen;
+    short itsNStations;
+    short itsNTimes;
+    short itsNFChannels;
+    short itsNPol;
     short itsSBID; // subBandID
     short itsCpF;
     

@@ -24,13 +24,14 @@ namespace LOFAR
     : DataHolder     (name, "DH_SubBand"),
       itsBuffer      (0),
       itsSubBand     (subband),
-      itsNPol        (2)
+      itsNPol        (0)
   {
     ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
     //ParameterCollection	myPC(myPS);
-    itsNFChannels = myPS.getInt("DH_SubBand.freqs");
-    itsNStations  = myPS.getInt("DH_SubBand.stations");
-    itsNTimes     = myPS.getInt("DH_SubBand.times");
+    itsNFChannels = myPS.getInt("WH_SubBand.freqs");
+    itsNStations  = myPS.getInt("WH_SubBand.stations");
+    itsNTimes     = myPS.getInt("WH_SubBand.times");
+    itsNPol       = myPS.getInt("WH_SubBand.pols");
   }
   
 DH_SubBand::DH_SubBand(const DH_SubBand& that)
