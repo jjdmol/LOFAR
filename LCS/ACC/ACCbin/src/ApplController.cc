@@ -310,6 +310,23 @@ void ApplController::createParSubsets()
 		procPS.writeFile(fileName);
 	}
 }
+
+//
+// writeResultFile
+//
+// Write the collected (end) results of the processes to the resultfile.
+//
+void ApplController::writeResultFile()
+{
+	// Save results from the processes to a file (append).
+	if (itsResultParamSet && itsObsParamSet && 
+							 itsObsParamSet->isDefined("AC.resultfile")) {
+	   itsResultParamSet->writeFile(
+							itsObsParamSet->getString("AC.resultfile"),
+							true);
+	}
+}
+
 //
 // startState (newMsg)
 //
@@ -620,8 +637,17 @@ void ApplController::checkStateTimer()
 	LOG_DEBUG("State timer still running?");
 
 	if (itsStateEngine->IsStateExpired()) {
+		// Special case: handle Quit command extras
+		// when quit state failed we must perform the kill state anyway.
+		if (itsCurState == StateQuitCmd) {
+			itsProcRuler.stopAll();
+			writeResultFile();
+			itsIsRunning = false;
+		}
+
 		sendExecutionResult(0, "Timed out");
 	}
+
 }
 
 
@@ -657,15 +683,8 @@ void ApplController::checkStateEngine()
 	// execute.
 
 	// Special case: handle Quit command extras
-	// TODO: implement quit in a neat way!
 	if (itsCurState == StateKillAppl) {
-		// Save results from the processes to a file (append).
-		if (itsResultParamSet && itsObsParamSet && 
-								 itsObsParamSet->isDefined("AC.resultfile")) {
-		   itsResultParamSet->writeFile(
-								itsObsParamSet->getString("AC.resultfile"),
-								true);
-		}
+		writeResultFile();
 		itsIsRunning = false;
 	}
 
