@@ -44,7 +44,19 @@ global string    NAVPML_ENABLED_AUTOLOAD =  "autoloaded";
 void navPMLinitialize()
 {
   LOG_TRACE("navPMLinitialize");
-	g_PAclientId = gcfInit("pmlCallback");
+  if(g_PAclientId == 0) 
+  	g_PAclientId = gcfInit("pmlCallback");
+  else
+    LOG_WARN("PML already initialized");
+  
+  if(g_PAclientId == 0) 
+  {
+    LOG_FATAL("PML not properly initialized");
+  }
+  else
+  {
+    LOG_INFO("PML initialized. Using ID:",g_PAclientId);
+  }
 }  
 
 ///////////////////////////////////////////////////////////////////////////
@@ -55,7 +67,11 @@ void navPMLinitialize()
 void navPMLterminate()
 {
   LOG_TRACE("navPMLterminate");
-	gcfLeave(g_PAclientId);
+  if(g_PAclientId != 0)
+  {
+  	gcfLeave(g_PAclientId);
+    g_PAclientId = 0;
+  }
 }  
 
 ///////////////////////////////////////////////////////////////////////////
@@ -66,17 +82,10 @@ void navPMLterminate()
 void navPMLloadPropertySet(string datapoint)
 {
   LOG_TRACE("navPMLloadPropertySet",datapoint);
-  if(dpExists(datapoint))
+  if(!navPMLisAutoLoaded(datapoint))
   {
-    if(!navPMLisAutoLoaded(datapoint))
-    {
-      gcfLoadPS(g_PAclientId,datapoint);
-    }
-	}
-	else
-	{
-	  LOG_TRACE("navPMLloadPropertySet -- Datapoint does not exist",datapoint);
-	}
+    gcfLoadPS(g_PAclientId,datapoint);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
