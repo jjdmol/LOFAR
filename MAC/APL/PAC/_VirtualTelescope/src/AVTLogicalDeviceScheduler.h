@@ -155,32 +155,32 @@ namespace AVT
        * returns true if the timerId is a prepareTimer for the given logical device
        * Also sets the current schedule id for the logical device.
        */
-      bool checkPrepareTimer(const string& deviceName, unsigned long timerId);
+      bool checkAndCancelPrepareTimer(const string& deviceName, unsigned long timerId, GCF::TM::GCFPortInterface& port);
       /*
        * returns true if the timerId is a startTimer for the given logical device
        * Also sets the current schedule id for the logical device.
        */
-      bool checkStartTimer(const string& deviceName, unsigned long timerId);
+      bool checkAndCancelStartTimer(const string& deviceName, unsigned long timerId, GCF::TM::GCFPortInterface& port);
       /*
        * returns true if the timerId is a stopTimer for the given logical device
        * Also resets the current schedule id for the logical device.
        */
-      bool checkStopTimer(const string& deviceName, unsigned long timerId);
+      bool checkAndCancelStopTimer(const string& deviceName, unsigned long timerId, GCF::TM::GCFPortInterface& port);
       
       /*
        * returns true if the timerId is a startTimer for the maintenance schedule
        */
-      bool checkMaintenanceStartTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt);
+      bool checkAndCancelMaintenanceStartTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt, GCF::TM::GCFPortInterface& port);
       /*
        * returns true if the timerId is a stopTimer for the maintenance schedule
        */
-      bool checkMaintenanceStopTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt);
+      bool checkAndCancelMaintenanceStopTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt, GCF::TM::GCFPortInterface& port);
       
       
       void sendWGsettings();
       void sendWGenable();
       void sendWGdisable();
-      void getRequiredResources(list<GCF::Common::TPropertyInfo>& requiredResources, int rack, int subrack, int board, int ap, int rcu);
+      void getRequiredResources(list<GCF::Common::TPropertyInfo>& requiredResources, const string& ldName);
 
       static string m_schedulerTaskName;
 

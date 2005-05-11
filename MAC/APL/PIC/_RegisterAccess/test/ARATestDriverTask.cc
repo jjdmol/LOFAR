@@ -233,6 +233,31 @@ void ARATestDriverTask::addPropertySet(string scope)
       }
     }
   }
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN))
+  {
+    for(rack=1;rack<=n_racks;rack++)
+    {
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      {
+        for(board=1;board<=n_boards_per_subrack;board++)
+        {
+          for(ap=1;ap<=n_aps_per_board;ap++)
+          {
+            sprintf(scopeString,scope.c_str(),rack,subrack,board,ap);
+            boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_FPGA,&m_answer));
+            propSetPtr->load();
+            unsigned int i=0;
+            while(PROPS_FPGA[i].propName!=0)    
+            {
+              propSetPtr->subscribeProp(PROPS_FPGA[i].propName);
+              i++;
+            }
+            m_propMap[scopeString]=propSetPtr;
+          }
+        }
+      }
+    }
+  }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN))
   {
     for(rack=1;rack<=n_racks;rack++)

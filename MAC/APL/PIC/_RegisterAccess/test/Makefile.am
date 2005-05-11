@@ -1,11 +1,6 @@
-noinst_PROGRAMS 		= aratest
+bin_PROGRAMS 		= aratest
 
 TESTS			= #aratest
-
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
 
 aratest_CPPFLAGS= \
 	-I$(top_srcdir)/../GCF/GCFCommon/src \
@@ -20,11 +15,9 @@ aratest_SOURCES 		= \
 	ARATestDriverTask.cc \
 	ARATestMain.cc
 	
-BUILT_SOURCES = \
-	aratest.conf \
-	aratest.log_prop
-	
-EXTRA_DIST = \
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA= \
 	aratest.conf \
 	aratest.log_prop
 	

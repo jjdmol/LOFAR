@@ -58,7 +58,7 @@
 [io]
 COM1 = { SOCKET, ccc, "client saturnus 27000" } // MACScheduler
 COM2 = { SOCKET, ccc, "server saturnus 27001" } // BeamServer
-COM3 = { SOCKET, ccc, "server saturnus 27002" } // VBStartDaemon
+COM3 = { SOCKET, ccc, "server saturnus 27010" } // VBStartDaemon
 COM4 = { SOCKET, ccc, "client saturnus 27003" } // VirtualBackend
 COM5 = { SOCKET, ccc, "client saturnus 26999" } // THPVSSBridge
 

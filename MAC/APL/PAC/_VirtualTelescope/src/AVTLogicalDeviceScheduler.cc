@@ -24,6 +24,7 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_sstream.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <time.h>
 
@@ -312,7 +313,7 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
   return result;
 }
 
-bool AVTLogicalDeviceScheduler::checkPrepareTimer(const string& deviceName, unsigned long timerId)
+bool AVTLogicalDeviceScheduler::checkAndCancelPrepareTimer(const string& deviceName, unsigned long timerId, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - device=%s,timerId=%d",getName().c_str(),deviceName.c_str(),timerId).c_str());
   bool isPrepareTimer=false;
@@ -333,13 +334,15 @@ bool AVTLogicalDeviceScheduler::checkPrepareTimer(const string& deviceName, unsi
       {
         ldIt->second.currentSchedule = it->first;
       }
+      port.cancelTimer(timerId);
+      it->second.prepareTimerId = 0;
     }
   }
   LOG_DEBUG(formatString("Timer %d is %sa schedule prepare timer",timerId,(isPrepareTimer?"":"NOT ")));
   return isPrepareTimer;
 }
 
-bool AVTLogicalDeviceScheduler::checkStartTimer(const string& deviceName, unsigned long timerId)
+bool AVTLogicalDeviceScheduler::checkAndCancelStartTimer(const string& deviceName, unsigned long timerId, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - device=%s,timerId=%d",getName().c_str(),deviceName.c_str(),timerId).c_str());
   bool isStartTimer=false;
@@ -360,13 +363,15 @@ bool AVTLogicalDeviceScheduler::checkStartTimer(const string& deviceName, unsign
       {
         ldIt->second.currentSchedule = it->first;
       }
+      port.cancelTimer(timerId);
+      it->second.startTimerId = 0;
     }
   }
   LOG_DEBUG(formatString("Timer %d is %sa schedule start timer",timerId,(isStartTimer?"":"NOT ")));
   return isStartTimer;
 }
 
-bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigned long timerId)
+bool AVTLogicalDeviceScheduler::checkAndCancelStopTimer(const string& deviceName, unsigned long timerId, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - device=%s,timerId=%d",getName().c_str(),deviceName.c_str(),timerId).c_str());
   bool isStopTimer=false;
@@ -387,13 +392,15 @@ bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigne
       {
         ldIt->second.currentSchedule = 0;
       }
+      port.cancelTimer(timerId);
+      it->second.stopTimerId = 0;
     }
   }
   LOG_DEBUG(formatString("Timer %d is %sa schedule stop timer",timerId,(isStopTimer?"":"NOT ")));
   return isStopTimer;
 }
 
-bool AVTLogicalDeviceScheduler::checkMaintenanceStartTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt)
+bool AVTLogicalDeviceScheduler::checkAndCancelMaintenanceStartTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - timerId=%d",getName().c_str(),timerId).c_str());
   bool isStartTimer=false;
@@ -405,12 +412,17 @@ bool AVTLogicalDeviceScheduler::checkMaintenanceStartTimer(unsigned long timerId
     {
       ++scheduleIt;
     }
+    else
+    {
+      port.cancelTimer(timerId);
+      scheduleIt->second.startTimerId = 0;
+    }
   }
   LOG_DEBUG(formatString("Timer %d is %sa maintenance start timer",timerId,(isStartTimer?"":"NOT ")));
   return isStartTimer;
 }
 
-bool AVTLogicalDeviceScheduler::checkMaintenanceStopTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt)
+bool AVTLogicalDeviceScheduler::checkAndCancelMaintenanceStopTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - timerId=%d",getName().c_str(),timerId).c_str());
   bool isStopTimer=false;
@@ -421,6 +433,11 @@ bool AVTLogicalDeviceScheduler::checkMaintenanceStopTimer(unsigned long timerId,
     if(!isStopTimer)
     {
       ++scheduleIt;
+    }
+    else
+    {
+      port.cancelTimer(timerId);
+      scheduleIt->second.stopTimerId = 0;
     }
   }
   LOG_DEBUG(formatString("Timer %d is %sa maintenance stop timer",timerId,(isStopTimer?"":"NOT ")));
@@ -450,50 +467,36 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       vector<shared_ptr<AVTStationReceptor> > receptors;
       
       list<TPropertyInfo> requiredResources;
-      getRequiredResources(requiredResources,1,1,1,1,1);
-      receptors.push_back(addReceptor(string("SR1"),requiredResources));
-      getRequiredResources(requiredResources,1,1,1,1,2);
-      receptors.push_back(addReceptor(string("SR2"),requiredResources));
-      getRequiredResources(requiredResources,2,1,1,1,1);
-      receptors.push_back(addReceptor(string("SR3"),requiredResources));
-      getRequiredResources(requiredResources,2,1,1,1,2);
-      receptors.push_back(addReceptor(string("SR4"),requiredResources));
-      getRequiredResources(requiredResources,3,1,1,1,1);
-      receptors.push_back(addReceptor(string("SR5"),requiredResources));
-      getRequiredResources(requiredResources,3,1,1,1,2);
-      receptors.push_back(addReceptor(string("SR6"),requiredResources));
-      getRequiredResources(requiredResources,4,1,1,1,1);
-      receptors.push_back(addReceptor(string("SR7"),requiredResources));
-      getRequiredResources(requiredResources,4,1,1,1,2);
-      receptors.push_back(addReceptor(string("SR8"),requiredResources));
+      for(int sr=1;sr<=8;sr++)
+      {
+        stringstream currentSR;
+        currentSR << "SR" << sr;
+        getRequiredResources(requiredResources,currentSR.str());
+        receptors.push_back(addReceptor(currentSR.str(),requiredResources));
+      }
 
       // create receptor groups
-      vector<shared_ptr<AVTStationReceptor> > receptorsSRG1;
-      vector<shared_ptr<AVTStationReceptor> > receptorsSRG2;
-      vector<shared_ptr<AVTStationReceptor> > receptorsSRG3;
-      vector<shared_ptr<AVTStationReceptor> > receptorsSRG4;
+      for(int srg=1;srg<=4;srg++)
+      {
+        stringstream currentSRG;
+        currentSRG << "SRG" << srg;
+        vector<shared_ptr<AVTStationReceptor> > receptorsSRG;
+        
+        string reqRes = ParameterSet::instance()->getString(PARAM_REQRES_PREFIX + currentSRG.str());
+        
+        char * pch = strtok ((char*)reqRes.c_str(),",");
+        while (pch != 0)
+        {
+          int sr=atoi(pch);
+          if(sr>0)
+            sr-=1; // index starts with 0
+          receptorsSRG.push_back(receptors[sr]);
+          pch = strtok (NULL, ",");
+        }
+            
+        addReceptorGroup(currentSRG.str(),receptorsSRG);
+      }
       
-      receptorsSRG1.push_back(receptors[0]);
-      receptorsSRG1.push_back(receptors[1]);
-      
-      receptorsSRG2.push_back(receptors[2]);
-      receptorsSRG2.push_back(receptors[3]);
-      
-      receptorsSRG3.push_back(receptors[4]);
-      receptorsSRG3.push_back(receptors[5]);
-      
-      receptorsSRG4.push_back(receptors[0]);
-      receptorsSRG4.push_back(receptors[1]);
-      receptorsSRG4.push_back(receptors[2]);
-      receptorsSRG4.push_back(receptors[3]);
-      receptorsSRG4.push_back(receptors[4]);
-      receptorsSRG4.push_back(receptors[5]);
-
-      addReceptorGroup(string("SRG1"),receptorsSRG1);
-      addReceptorGroup(string("SRG2"),receptorsSRG2);
-      addReceptorGroup(string("SRG3"),receptorsSRG3);
-      addReceptorGroup(string("SRG4"),receptorsSRG4);
-
       m_timerPort.open();
       break;
     }
@@ -608,9 +611,8 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       if(it!=m_logicalDeviceMap.end())
       {
         LOG_DEBUG("Logical device timer triggered");
-        if(checkPrepareTimer(it->first,timerEvent.id))
+        if(checkAndCancelPrepareTimer(it->first,timerEvent.id,port))
         {
-          port.cancelTimer(timerEvent.id);
           LOG_DEBUG(formatString("(%s) PrepareTimer %d triggered and cancelled",__func__,timerEvent.id));
           // this is a prepare timer for the schedule of a logical device. claim the device
           LOGICALDEVICEClaimEvent claimEvent;
@@ -618,17 +620,15 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
           // when the device (and all it's children) is claimed, the prepare message is sent
           // automatically
         }
-        else if(checkStartTimer(it->first,timerEvent.id))
+        else if(checkAndCancelStartTimer(it->first,timerEvent.id,port))
         {
-          port.cancelTimer(timerEvent.id);
           LOG_DEBUG(formatString("(%s) StartTimer %d triggered and cancelled",__func__,timerEvent.id));
           // this is a start timer for the schedule of a logical device. resume the device
           LOGICALDEVICEResumeEvent resumeEvent;
           port.send(resumeEvent);
         }
-        else if(checkStopTimer(it->first,timerEvent.id))
+        else if(checkAndCancelStopTimer(it->first,timerEvent.id,port))
         {
-          port.cancelTimer(timerEvent.id);
           LOG_DEBUG(formatString("(%s) StopTimer %d triggered and cancelled",__func__,timerEvent.id));
           // this is a stop timer for the schedule of a logical device. suspend the device
           LOGICALDEVICESuspendEvent suspendEvent;
@@ -646,12 +646,12 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         
         // check maintenance timers:
         MaintenanceScheduleIterT maintenanceIt;
-        if(checkMaintenanceStartTimer(timerEvent.id,maintenanceIt))
+        if(checkAndCancelMaintenanceStartTimer(timerEvent.id,maintenanceIt,port))
         {
           GCFPVUnsigned inMaintenance(1);
           maintenanceIt->second.pMaintenanceProperty->setValue(inMaintenance);
         }
-        else if(checkMaintenanceStopTimer(timerEvent.id,maintenanceIt))
+        else if(checkAndCancelMaintenanceStopTimer(timerEvent.id,maintenanceIt,port))
         {
           GCFPVUnsigned outofMaintenance(0);
           maintenanceIt->second.pMaintenanceProperty->setValue(outofMaintenance);
@@ -685,11 +685,11 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
       {
         if(strstr(pPropAnswer->pScope, SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator) != 0)
         {
-          m_propertiesWG.configure(APC_WaveformGenerator);
+//          m_propertiesWG.configure(APC_WaveformGenerator);
         }
         else if(strstr(pPropAnswer->pScope, SCOPE_PAC_LogicalDeviceScheduler) != 0)
         {
-          m_properties.configure(APC_LogicalDeviceScheduler);
+//          m_properties.configure(APC_LogicalDeviceScheduler);
         }
       }
       else
@@ -1080,11 +1080,16 @@ void AVTLogicalDeviceScheduler::sendWGdisable()
   }
 }
 
-void AVTLogicalDeviceScheduler::getRequiredResources(list<TPropertyInfo>& requiredResources, int rack, int subrack, int board, int ap, int rcu)
+void AVTLogicalDeviceScheduler::getRequiredResources(list<TPropertyInfo>& requiredResources, const string& ldName)
 {
   requiredResources.clear();
 
   char scopeString[300];
+  
+  int rack(1),subrack(1),board(1),ap(1),rcu(1);
+  string reqRes = ParameterSet::instance()->getString(PARAM_REQRES_PREFIX + ldName);
+  sscanf(reqRes.c_str(),"%d,%d,%d,%d,%d",&rack,&subrack,&board,&ap,&rcu);
+  LOG_DEBUG(formatString("requiredResources for %s: rack%d,subrack%d,board%d,ap%d,rcu%d",ldName.c_str(),rack,subrack,board,ap,rcu));
   
   {
     string propName(string(SCOPE_PIC)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
