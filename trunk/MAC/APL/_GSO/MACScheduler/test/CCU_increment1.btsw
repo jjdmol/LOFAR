@@ -271,9 +271,9 @@ COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_
 
 COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).
 
-COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
+//COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
 
-COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
+//COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
 
 //COM5 :  Statemachine_THPVSSBridge (SM5_stop).
 //COM5 :  Statemachine_PVSSMACScheduler (SM5_stop).

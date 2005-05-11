@@ -197,6 +197,11 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
               
+              // replace the parent port (assigned by the ServiceBroker)
+              unsigned int parentPort = m_VIparentPort.getPortNumber();
+              ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+              ps->replace(kvPair);
+              
               // get some parameters and write it to the allocated CCU
               string allocatedCCU = ps->getString("allocatedCCU");
               string viName = ps->getString("name");
@@ -221,10 +226,17 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
               {
                 it->second->send(sdScheduleEvent);
               }
+              else
+              {
+                TSASResult result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+                m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+              }
             }
             catch(Exception& e)
             {
               LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+              TSASResult result = SAS_RESULT_ERROR_UNSPECIFIED;
+              m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
             }
           }
           else
@@ -238,6 +250,59 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
         {
           if(parameters.size()==1)
           {
+            string shareLocation = _getShareLocation();
+      
+            // search the port of the VI
+            try
+            {
+              // read the parameterset from the database:
+#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
+              boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
+#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
+              LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
+              // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
+              ACC::ParameterCollection pc(shareLocation + parameters[0]); // assume VIrootID is a file
+              boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+              // End of soon to be obsolete code
+#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+              
+              // replace the parent port (assigned by the ServiceBroker)
+              unsigned int parentPort = m_VIparentPort.getPortNumber();
+              ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+              ps->replace(kvPair);
+              
+              string allocatedCCU = ps->getString("allocatedCCU");
+              string viName = ps->getString("name");
+              string parameterFileName = viName + string(".ps");
+      
+              string tempFileName = APLUtilities::getTempFileName();
+              ps->writeFile(tempFileName);
+              APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
+              remove(tempFileName.c_str());
+              
+              // send a SCHEDULE message
+              TStringRemotePortMap::iterator it = m_connectedVIclientPorts.find(viName);
+              if(it != m_connectedVIclientPorts.end())
+              {
+                LOGICALDEVICEScheduleEvent scheduleEvent;
+                scheduleEvent.fileName = parameterFileName;
+      
+ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent.fileName)
+      
+                it->second->send(scheduleEvent);
+              }
+              else
+              {
+                TSASResult result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+                m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+              }        
+            }
+            catch(Exception& e)
+            {
+              LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+              TSASResult result = SAS_RESULT_ERROR_UNSPECIFIED;
+              m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+            }
           }
           else
           {
@@ -250,6 +315,43 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
         {
           if(parameters.size()==1)
           {
+            string shareLocation = _getShareLocation();
+            
+            // search the port of the VI
+            try
+            {
+              // read the parameterset from the database:
+#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
+              boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
+#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
+              LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
+              // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
+              ACC::ParameterCollection pc(shareLocation + parameters[0]); // assume VIrootID is a file
+              boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+              // End of soon to be obsolete code
+#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+              
+              string viName = ps->getString("name");
+              
+              // send a CANCELSCHEDULE message
+              TStringRemotePortMap::iterator it = m_connectedVIclientPorts.find(viName);
+              if(it != m_connectedVIclientPorts.end())
+              {
+                LOGICALDEVICECancelscheduleEvent cancelScheduleEvent;
+                it->second->send(cancelScheduleEvent);
+              }
+              else
+              {
+                TSASResult result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+                m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+              }        
+            }
+            catch(Exception& e)
+            {
+              LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+              TSASResult result = SAS_RESULT_ERROR_UNSPECIFIED;
+              m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+            }
           }
           else
           {
@@ -696,6 +798,11 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
+        // replace the parent port (assigned by the ServiceBroker)
+        unsigned int parentPort = m_VIparentPort.getPortNumber();
+        ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+        ps->replace(kvPair);
+        
         // get some parameters and write it to the allocated CCU
         string allocatedCCU = ps->getString("allocatedCCU");
         string viName = ps->getString("name");
@@ -819,6 +926,11 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
         boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+        
+        // replace the parent port (assigned by the ServiceBroker)
+        unsigned int parentPort = m_VIparentPort.getPortNumber();
+        ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+        ps->replace(kvPair);
         
         string allocatedCCU = ps->getString("allocatedCCU");
         string viName = ps->getString("name");

@@ -19,6 +19,24 @@ mac.apl.avt.MAX_SRG_RESOURCES_UNAVAILABLE=1
 #mac.apl.avt.APC_VT1=ApcVirtualTelescope_VT1
 #mac.apl.avt.APC_BF1=ApcStationBeamformer_BF1
 
+# required resources for the station receptors:
+#                      Rack,Subrack,Board,AP,Rcu
+mac.apl.avt.REQRES_SR1=1,1,1,1,1
+mac.apl.avt.REQRES_SR2=1,1,1,1,2
+mac.apl.avt.REQRES_SR3=1,1,1,2,1
+mac.apl.avt.REQRES_SR4=1,1,1,2,2
+mac.apl.avt.REQRES_SR5=1,1,1,3,1
+mac.apl.avt.REQRES_SR6=1,1,1,3,2
+mac.apl.avt.REQRES_SR7=1,1,1,4,1
+mac.apl.avt.REQRES_SR8=1,1,1,4,2
+
+# required resources for the station receptor groups:
+#                      Station Receptors
+mac.apl.avt.REQRES_SRG1=1,2,3,4,5,6,7,8
+mac.apl.avt.REQRES_SRG2=1,2,3,4,5,6,7,8
+mac.apl.avt.REQRES_SRG3=1,2,3,4
+mac.apl.avt.REQRES_SRG4=5,6,7,8
+
 mac.ns.VT1.VT1_server.type=TCP
 mac.ns.VT2.VT2_server.type=TCP
 mac.ns.VT3.VT3_server.type=TCP

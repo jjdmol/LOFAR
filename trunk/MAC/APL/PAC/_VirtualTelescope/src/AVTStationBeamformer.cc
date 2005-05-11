@@ -340,7 +340,7 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
       if(pPropAnswer->result == GCF_NO_ERROR)
       {
         // property set loaded, now load apc
-        m_properties.configure(m_APC);
+//        m_properties.configure(m_APC);
       }
       else
       {

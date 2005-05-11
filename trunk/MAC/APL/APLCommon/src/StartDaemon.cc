@@ -25,6 +25,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <GCF/GCF_PVInteger.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 #include "APLCommon/APL_Defines.h"
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
@@ -57,13 +58,14 @@ const string StartDaemon::SD_COMMAND_STOP("STOP");
 
 INIT_TRACER_CONTEXT(StartDaemon,LOFARLOGGER_PACKAGE);
 
+// The pvss System Name is necessary to distinguish between startdaemon servers on different systems
 StartDaemon::StartDaemon(const string& name) :
   GCFTask((State)&StartDaemon::initial_state,name),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_properties(name.c_str(),PSTYPE_STARTDAEMON.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer),
   m_serverPortName(string("server")),
-  m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL),
+  m_serverPort(),
   m_childPorts(),
   m_factories(),
   m_logicalDevices(),
@@ -73,6 +75,13 @@ StartDaemon::StartDaemon(const string& name) :
 #ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
   LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
 #endif
+
+  // PVSS must have been initialized before the local system name can be retrieved
+  string taskName = GCFPVSSInfo::getLocalSystemName()+string("_")+name;
+  setName(taskName);
+  // it is important to init the m_serverPort AFTER setting the name of the task.
+  m_serverPort.init(*this, m_serverPortName, GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL),
+  
 
   registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_signalnames);
   LOG_DEBUG(formatString("StartDaemon(%s)::StartDaemon",getName().c_str()));

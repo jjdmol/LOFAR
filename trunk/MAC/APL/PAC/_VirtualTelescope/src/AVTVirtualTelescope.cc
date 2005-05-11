@@ -91,7 +91,10 @@ bool AVTVirtualTelescope::checkQualityRequirements()
   {
     requirementsMet=m_stationReceptorGroup.checkQualityRequirements(); // max failing antennas
   }
-  
+  if(!requirementsMet)
+  {
+    LOG_WARN(formatString("AVTVirtualTelescope(%s)::%s requirements not met",getName().c_str(),__func__));
+  }
   return requirementsMet;
 }
 
@@ -270,6 +273,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
         }
         else
         {
+          LOG_FATAL(formatString("AVTVirtualTelescope(%s): quality too low",getName().c_str()));
           TRAN(AVTLogicalDevice::releasing_state);
           concreteRelease(port);
         }
@@ -330,7 +334,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_active_state(GCFEvent& event, GC
       {
         if(!checkQualityRequirements())
         {
-          LOG_FATAL(formatString("AVTVirtualTelescope(%s): quality too low",getName().c_str(),__func__));
+          LOG_FATAL(formatString("AVTVirtualTelescope(%s): quality too low",getName().c_str()));
           GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
           LOGICALDEVICESuspendEvent suspendEvent;
           dispatch(suspendEvent,dummyPort); 
@@ -391,7 +395,7 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
       if(pPropAnswer->result == GCF_NO_ERROR)
       {
         // property set loaded, now load apc
-        m_properties.configure(m_APC);
+//        m_properties.configure(m_APC);
       }
       else
       {

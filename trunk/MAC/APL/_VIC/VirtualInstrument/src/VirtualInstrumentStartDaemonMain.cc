@@ -36,20 +36,9 @@ int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
   
-  string ccuName("CCU1");
-  if(argc != 2)
-  {
-    LOG_FATAL(formatString("invalid number of arguments. Assuming: %s %s",argv[0],ccuName.c_str()));
-  }
-  else
-  {
-    ccuName = string(argv[1]);
-    LOG_INFO(formatString("VirtualInstrument started with CCU name = %s",ccuName.c_str()));
-  }
-  
   boost::shared_ptr<VirtualInstrumentFactory> viFactory(new VirtualInstrumentFactory);
   
-  StartDaemon sd(ccuName + string("_VIC_VIStartDaemon"));
+  StartDaemon sd(string("VIC_VIStartDaemon"));
   sd.registerFactory(LDTYPE_VIRTUALINSTRUMENT,viFactory);
   sd.start(); // make initial transition
 

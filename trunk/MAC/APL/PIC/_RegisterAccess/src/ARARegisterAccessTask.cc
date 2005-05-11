@@ -338,6 +338,7 @@ GCFEvent::TResult RegisterAccessTask::myPropSetsLoaded(GCFEvent& e, GCFPortInter
 
     case F_ENTRY:
     {
+/*
       LOG_INFO("configuring propsets using APCs...");
       m_APCsLoadCounter=0;
       TAPCMap::iterator apcIt;
@@ -349,6 +350,9 @@ GCFEvent::TResult RegisterAccessTask::myPropSetsLoaded(GCFEvent& e, GCFPortInter
           psIt->second->configure(apcIt->second);
         }
       }
+*/
+      LOG_INFO("NOT configuring propsets using APCs...");
+      TRAN(RegisterAccessTask::APCsLoaded);
       break;
     }
 

@@ -34,6 +34,7 @@ const char PARAM_BEAMSERVERPORT[]                 = "mac.apl.avt.BEAMSERVERPORT"
 const char PARAM_APC[]                            = "mac.apl.avt.APC_";
 const char PARAM_MAX_SR_RESOURCES_UNAVAILABLE[]   = "mac.apl.avt.MAX_SR_RESOURCES_UNAVAILABLE";
 const char PARAM_MAX_SRG_RESOURCES_UNAVAILABLE[]  = "mac.apl.avt.MAX_SRG_RESOURCES_UNAVAILABLE";
+const char PARAM_REQRES_PREFIX[]                  = "mac.apl.avt.REQRES_";
 
 #define AVT_N_BEAMLETS 128
 

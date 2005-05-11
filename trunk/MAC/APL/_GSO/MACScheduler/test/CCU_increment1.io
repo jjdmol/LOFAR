@@ -1,7 +1,7 @@
 [io]
 COM1 = { SOCKET, LOFAR, 8192, "client localhost 27000" } // MACScheduler
 COM2 = { SOCKET, LOFAR, 8192, "server localhost 27001" } // BeamServer
-COM3 = { SOCKET, LOFAR, 8192, "server localhost 27002" } // VBStartDaemon
+COM3 = { SOCKET, LOFAR, 8192, "server localhost 27010" } // VBStartDaemon
 COM4 = { SOCKET, LOFAR, 8192, "client localhost 27003" } // VirtualBackend
 COM5 = { SOCKET, LOFAR, 8192, "client localhost 26999" } // THPVSSBridge
 

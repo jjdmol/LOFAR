@@ -22,6 +22,7 @@
 
 #undef PACKAGE
 #undef VERSION
+#include <unistd.h>
 #include <lofar_config.h>
 #include <boost/shared_array.hpp>
 #include <Common/LofarLogger.h>
@@ -134,7 +135,10 @@ LogicalDevice::LogicalDevice(const string& taskName,
 
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
 
-  string host("");
+  char localHostName[300];
+  gethostname(localHostName,300);
+  m_serverPort.setHostName(localHostName);
+  
   string psDetailsType("");
   
   try
@@ -1124,16 +1128,15 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
             KVpair kvPair(key,(int)serverPort);
             m_parameterSet.replace(kvPair);
             
-            string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
-            string startDaemonPortName = m_parameterSet.getString((*chIt) + string(".startDaemonPort"));
-            string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
-            string childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
+            string        remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
+            string        startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
+            unsigned int  startDaemonPortNr   = m_parameterSet.getInt((*chIt) + string(".startDaemonPort"));
+            string        startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
+            string        childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
             
             TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
-            TPeerAddr peerAddr;
-            peerAddr.taskname = startDaemonTaskName;
-            peerAddr.portname = startDaemonPortName;
-            startDaemonPort->setAddr(peerAddr);
+            startDaemonPort->setHostName(startDaemonHostName);
+            startDaemonPort->setPortNumber(startDaemonPortNr);
             startDaemonPort->open();
             m_childStartDaemonPorts[(*chIt)] = startDaemonPort;
             

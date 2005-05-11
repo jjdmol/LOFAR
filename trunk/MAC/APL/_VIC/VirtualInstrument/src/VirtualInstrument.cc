@@ -434,8 +434,8 @@ GCFEvent::TResult VirtualInstrument::concrete_releasing_state(GCFEvent& event, G
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  newState=LOGICALDEVICE_STATE_IDLE;
-//  newState=LOGICALDEVICE_STATE_GOINGDOWN;
+//  newState=LOGICALDEVICE_STATE_IDLE;
+  newState=LOGICALDEVICE_STATE_GOINGDOWN;
   return status;
 }
 

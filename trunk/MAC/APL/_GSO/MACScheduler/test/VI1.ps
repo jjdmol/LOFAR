@@ -1,3 +1,6 @@
+###########################
+# Virtual Instrument      
+###########################
 AAAAAAA-THIS-IS-A-BUG-IN-ACC.versionnr=1.0
 qualification=development
 allocatedCCU=saturnus
@@ -10,27 +13,30 @@ propertysetDetailsType=TAplVicVI
 #startDaemonHost=saturnus
 claimTime=+20
 prepareTime=+40
-startTime=+60
+startTime=+100
 stopTime=+160
-childs=VT1,VB1
+childs=VT1,VT2,VB1
 
+###########################
+# Virtual Telescope
+###########################
 VT1.versionnr=1.0
 VT1.qualification=development
 VT1.logicalDeviceType=2
 VT1.parentHost=saturnus
-VT1.parentPort=server
+VT1.parentPort=0
 VT1.parentTask=VI1
 VT1.remoteSystem=STSLCU3
 VT1.oldStyleSchedulerName=PAC_LogicalDeviceScheduler
 VT1.oldStyleSchedulerType=TLcuPacLogicalDeviceScheduler
 VT1.startDaemonHost=mercury
-VT1.startDaemonPort=server
+VT1.startDaemonPort=0
 VT1.startDaemonTask=PAC_VTStartDaemon
 VT1.propertysetBaseName=PAC_VT1
 VT1.propertysetDetailsType=TLcuPacVT
 VT1.claimTime=+20
 VT1.prepareTime=+40
-VT1.startTime=+60
+VT1.startTime=+100
 VT1.stopTime=+160
 VT1.childs=BF1,SRG1
 VT1.frequency=110.0
@@ -39,56 +45,159 @@ VT1.directionType=AZEL
 VT1.angle1=0.45
 VT1.angle2=0.65
 
+###########################
+# BeamFormer
+###########################
 BF1.versionnr=1.0
 BF1.qualification=development
 BF1.logicalDeviceType=2
 BF1.parentHost=mercury
-BF1.parentPort=server
+BF1.parentPort=0
 BF1.parentTask=VT1
 BF1.remoteSystem=STSLCU3
 BF1.startDaemonHost=mercury
-BF1.startDaemonPort=server
+BF1.startDaemonPort=0
 BF1.startDaemonTask=PAC_VTStartDaemon
 BF1.propertysetBaseName=PAC_VT1_BF1
 BF1.propertysetDetailsType=TLcuPacSBF
 BF1.claimTime=+20
 BF1.prepareTime=+40
-BF1.startTime=+60
+BF1.startTime=+100
 BF1.stopTime=+160
 BF1.childs=
 
+###########################
+# Station Receptor Group
+###########################
 SRG1.versionnr=1.0
 SRG1.qualification=development
-SRG1.logicalDeviceType=2
+SRG1.logicalDeviceType=4
 SRG1.parentHost=mercury
-SRG1.parentPort=server
+SRG1.parentPort=0
 SRG1.parentTask=VT1
 SRG1.remoteSystem=STSLCU3
 SRG1.startDaemonHost=mercury
-SRG1.startDaemonPort=server
+SRG1.startDaemonPort=0
 SRG1.startDaemonTask=PAC_VTStartDaemon
 SRG1.propertysetBaseName=PAC_SRG1
 SRG1.propertysetDetailsType=TLcuPacSRG
 SRG1.claimTime=+20
 SRG1.prepareTime=+40
-SRG1.startTime=+60
+SRG1.startTime=+100
 SRG1.stopTime=+160
 SRG1.childs=
 
+###########################
+# Virtual Telescope
+###########################
+VT2.versionnr=1.0
+VT2.qualification=development
+VT2.logicalDeviceType=2
+VT2.parentHost=saturnus
+VT2.parentPort=0
+VT2.parentTask=VI2
+VT2.remoteSystem=CCU1
+VT2.oldStyleSchedulerName=PAC_LogicalDeviceScheduler
+VT2.oldStyleSchedulerType=TLcuPacLogicalDeviceScheduler
+VT2.startDaemonHost=saturnus
+VT2.startDaemonPort=0
+VT2.startDaemonTask=PAC_VTStartDaemon
+VT2.propertysetBaseName=PAC_VT2
+VT2.propertysetDetailsType=TLcuPacVT
+VT2.claimTime=+20
+VT2.prepareTime=+40
+VT2.startTime=+100
+VT2.stopTime=+160
+VT2.childs=BF2,SRG2
+VT2.frequency=110.0
+VT2.subbands=0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15
+VT2.directionType=AZEL
+VT2.angle1=0.45
+VT2.angle2=0.65
+
+###########################
+# BeamFormer
+###########################
+BF2.versionnr=1.0
+BF2.qualification=development
+BF2.logicalDeviceType=2
+BF2.parentHost=saturnus
+BF2.parentPort=0
+BF2.parentTask=VT2
+BF2.remoteSystem=CCU1
+BF2.startDaemonHost=saturnus
+BF2.startDaemonPort=0
+BF2.startDaemonTask=PAC_VTStartDaemon
+BF2.propertysetBaseName=PAC_VT2_BF2
+BF2.propertysetDetailsType=TLcuPacSBF
+BF2.claimTime=+20
+BF2.prepareTime=+40
+BF2.startTime=+100
+BF2.stopTime=+160
+BF2.childs=
+
+###########################
+# Station Receptor Group
+###########################
+SRG2.versionnr=1.0
+SRG2.qualification=development
+SRG2.logicalDeviceType=4
+SRG2.parentHost=saturnus
+SRG2.parentPort=0
+SRG2.parentTask=VT2
+SRG2.remoteSystem=CCU1
+SRG2.startDaemonHost=saturnus
+SRG2.startDaemonPort=0
+SRG2.startDaemonTask=PAC_VTStartDaemon
+SRG2.propertysetBaseName=PAC_SRG2
+SRG2.propertysetDetailsType=TLcuPacSRG
+SRG2.claimTime=+20
+SRG2.prepareTime=+40
+SRG2.startTime=+100
+SRG2.stopTime=+160
+SRG2.childs=
+
+
+###########################
+# Virtual Backend
+###########################
 VB1.versionnr=1.0
 VB1.qualification=development
 VB1.logicalDeviceType=7
 VB1.parentHost=saturnus
-VB1.parentPort=server
+VB1.parentPort=0
 VB1.parentTask=VI1
-VB1.remoteSystem=STSLCU3
-VB1.startDaemonHost=mercury
-VB1.startDaemonPort=server
+VB1.remoteSystem=CEPLCU1
+VB1.startDaemonHost=sun
+VB1.startDaemonPort=27010
 VB1.startDaemonTask=PAC_VBStartDaemon
 VB1.propertysetBaseName=PAC_VB1
 VB1.propertysetDetailsType=TAplPacVB
 VB1.claimTime=+20
 VB1.prepareTime=+40
-VB1.startTime=+60
+VB1.startTime=+100
 VB1.stopTime=+160
 VB1.childs=
+
+
+VB1.AC.versionnr=1.0
+VB1.rescheduleTimeOut=20
+
+VB1.AC.process[0].count = 2
+VB1.AC.process[1].ID = tPCClient(2)			# tPCclient1
+VB1.AC.process[2].ID = tAnother[1]				# tAnother3
+#
+# metadata about a proces
+VB1.AC.tPCClient[0].startstoptype = cmdline
+VB1.AC.tPCClient[0].executable = ./APTest
+
+VB1.AC.tAnother[0].startstoptype = cmdline
+VB1.AC.tAnother[0].executable = ./APTest
+
+# Process related parameters
+VB1.AC.tPCClient[1].node		    = sun
+#
+# idem for next process
+VB1.AC.tPCClient[2].node		    = pluto
+#
+VB1.AC.tAnother[1].node		    = sun
