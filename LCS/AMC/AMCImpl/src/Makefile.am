@@ -1,7 +1,6 @@
-SUBDIRS				= . AMCServer
-
 INSTHDRS			= ConverterImpl.h \
-				  Exceptions.h
+				  Exceptions.h \
+				  AMCServer/ConverterServer.h
 
 NOINSTHDRS			=
 
@@ -16,6 +15,7 @@ DOCHDRS				= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES			= libamcimpl.la
 
 libamcimpl_la_SOURCES 		= $(DOCHDRS) \
-				  ConverterImpl.cc
+				  ConverterImpl.cc \
+				  AMCServer/ConverterServer.cc
 
 include $(lofar_sharedir)/Makefile.common
