@@ -46,6 +46,8 @@ TLcuPicRCU.TLcuPicRCU	1#1
 	HBAEnable	23#10
 	LBAEnable	23#13
 	nofOverflow	20#12
+	statisticsSubbandPower	25#14
+	statisticsBeamletPower	25#15
 TLcuPicLFA.TLcuPicLFA	1#1
 	status	20#2
 TLcuPicHFA.TLcuPicHFA	1#1

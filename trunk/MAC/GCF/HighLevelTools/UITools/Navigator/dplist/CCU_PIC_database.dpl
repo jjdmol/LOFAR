@@ -1,0 +1,11 @@
+# ascii dump of database
+
+# DpType
+TypeName
+TCcuPic.TCcuPic	1#1
+	status	25#3
+	__stations	9#4
+
+# Datapoint/DpId
+DpName	TypeName	ID
+PIC_CCU	TCcuPic	63846
