@@ -27,3 +27,4 @@ Data 			Description
 					10.87.2.128     lofar28.astron.nl lofar28
 					10.87.2.129     lofar29.astron.nl lofar29
 					10.87.2.130     lofar30.astron.nl lofar30
+20050513	su: ln -sf /usr/share/zoneinfo/CET /etc/localtime # set correct timezone
