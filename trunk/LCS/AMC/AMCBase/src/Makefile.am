@@ -1,10 +1,12 @@
-SUBDIRS				= . AMCClient
-
 INSTHDRS			= Converter.h \
 				  EarthCoord.h \
-				  Exceptions.h \
+				  Exceptions.h
 				  SkyCoord.h \
-				  TimeCoord.h 
+				  TimeCoord.h \
+				  AMCClient/BlobIO.h \
+				  AMCClient/ConverterClient.h \
+				  AMCClient/ConverterCommand.h \
+				  AMCClient/DH_Converter.h
 
 NOINSTHDRS			=
 
@@ -21,6 +23,10 @@ lib_LTLIBRARIES			= libamcbase.la
 libamcbase_la_SOURCES 		= $(DOCHDRS) \
 				  EarthCoord.cc \
 				  SkyCoord.cc \
-				  TimeCoord.cc 
+				  TimeCoord.cc \
+				  AMCClient/BlobIO.cc \
+				  AMCClient/ConverterClient.cc \
+				  AMCClient/ConverterCommand.cc \
+				  AMCClient/DH_Converter.cc
 
 include $(lofar_sharedir)/Makefile.common
