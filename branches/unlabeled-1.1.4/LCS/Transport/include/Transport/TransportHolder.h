@@ -23,6 +23,7 @@
 #ifndef TRANSPORT_TRANSPORTHOLDER_H
 #define TRANSPORT_TRANSPORTHOLDER_H
 
+#include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR
@@ -68,8 +69,8 @@ public:
   virtual bool sendBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0) = 0;
 
   // Start receiving the fixed sized data sent by the connected
-  // TransportHolder. Returns true if data has been received completely.
-  virtual bool recvNonBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0) = 0;
+  // TransportHolder. Returns number of bytes read.
+  virtual int32 recvNonBlocking (void* buf, int32 nbytes, int tag, int32 nBytesRead=0, DataHolder* dh=0) = 0;
 
   /// Wait until data has been received into buf.
   virtual void waitForReceived(void* buf, int nbytes, int tag) = 0;

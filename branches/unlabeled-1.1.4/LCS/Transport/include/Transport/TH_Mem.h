@@ -64,8 +64,8 @@ public:
      Note: when using these non-blocking methods be very careful not to change 
      the data between a sendNonBlocking and recvNonBlocking call! 
   */
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, 
-			       int nrBytesRead=0, DataHolder* dh=0);
+  virtual int32 recvNonBlocking(void* buf, int32 nbytes, int tag, 
+			       int32 offset=0, DataHolder* dh=0);
 
   /**
      Send fixed sized data.

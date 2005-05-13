@@ -67,8 +67,8 @@ public:
   /**
      This method calls the blocking receive method.
   */
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag,
-			       int nBytesRead=0, DataHolder* dh=0);  
+  virtual int32 recvNonBlocking(void* buf, int32 nbytes, int tag,
+			       int32 nBytesRead=0, DataHolder* dh=0);  
 
   /**
      Send the data. If the Direction is defined as Write, this method writes 

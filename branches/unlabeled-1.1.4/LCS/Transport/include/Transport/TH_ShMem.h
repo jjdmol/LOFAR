@@ -70,10 +70,10 @@ public:
      by memcpy'ing the data from the sender.
   */
   void initRecv(void* buf, int tag);
-  virtual bool recvBlocking(void* buf, int nbytes, int tag, 
-			    int nrBytesRead=0, DataHolder* dh=0);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, 
-			       int nrBytesRead=0, DataHolder* dh=0);
+  virtual bool recvBlocking(void* buf, int32 nbytes, int tag, 
+			    int32 offset=0, DataHolder* dh=0);
+  virtual int32 recvNonBlocking(void* buf, int32 nbytes, int tag, 
+			       int32 offset=0, DataHolder* dh=0);
 
   // Wait for the data to be received
   virtual void waitForReceived(void* bug, int nbytes, int tag);

@@ -34,7 +34,6 @@ namespace LOFAR
 {
 
 //# Forward Declarations
-class Connection;
 class BlobOStream;
 class BlobIStream;
 class DataBlobExtra;
@@ -113,10 +112,6 @@ public:
   // Set the name of the DataHolder.
   void setName (const string& name);
 
-  // Get/set the connection.
-  Connection* getConnection() const;
-  void setConnection(Connection* conn);
-
   // Set maximum data size.
   // If used, it should be called before initialization.
   // Normally this is not needed, but for TH_ShMem transports it is useful,
@@ -134,6 +129,10 @@ public:
   // Get the MAXIMUM data block size supported (in bytes).
   // 0 means no maximum.
   int getMaxDataSize() const;
+
+  // Tell the DataHolder the properties how the buffer allocation is done.
+  void setAllocationProperties (bool		dataCanGrow,
+				BlobStringType	aBlobType);
 
   // Get the version of this DataHolder.
   int getVersion();
@@ -218,7 +217,7 @@ protected:
 
 private:
   // Get the type of BlobString needed from the transport holder.
-  virtual BlobStringType blobStringType();
+  virtual BlobStringType getBlobStringType();
 
   // Put the extra data block into the main data blob.
   // If possible and needed the buffer is resized.
@@ -231,13 +230,12 @@ private:
   // The default implementation does nothing.
   virtual void fillDataPointers();
 
-
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
-  Connection*     itsConnection;
+  BlobStringType* itsBlobType;
   int             itsMaxDataSize;   //# <0 is not filled in
-  bool            itsIsAddMax;
+  bool		  itsDataCanGrow;
   string          itsName;
   string          itsType;
   int             itsVersion;
@@ -249,16 +247,13 @@ private:
 
 
 inline void DataHolder::setMaxDataSize (uint nbytes, bool isAddMax)
-  { itsMaxDataSize = nbytes; itsIsAddMax = isAddMax; }
+  { itsMaxDataSize = nbytes; itsDataCanGrow = !isAddMax; }
 
 inline int DataHolder::getDataSize() const
   { return itsData->size(); }
 
 inline void* DataHolder::getDataPtr() const
   { return itsData->data(); }
-
-inline Connection* DataHolder::getConnection() const
-  { return itsConnection; }
 
 inline bool DataHolder::hasFixedSize()
   { return (itsDataFields.hasFixedShape()  && itsDataFields.version() == 1
@@ -325,6 +320,17 @@ inline bool DataHolder::isInitialized()
 {
   return itsInitialized;
 }
+
+inline void DataHolder::setAllocationProperties(bool  		dataCanGrow,
+					        BlobStringType aBlobType)
+{
+  DBGASSERTSTR (!itsInitialized, "Allocation Properties are already set");
+
+  itsDataCanGrow = dataCanGrow;
+  itsBlobType    = new BlobStringType(&aBlobType);
+  itsInitialized = true;
+}
+
 
 
 } // end namespace
