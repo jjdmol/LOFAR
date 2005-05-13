@@ -1,0 +1,8 @@
+Data 			Description
+20050511	su: /opt/lofar/pvssproj
+20050511  su: chmod a+w /opt/lofar/bin /opt/lofar/etc /opt/lofar/pvssproj
+20050511	created pvssproj: CCU / loc: $LOFARHOME / sysname: CCU1 / sysnr: 3 / distributed: yes / disthosts: 
+20050511	su: added following lines to /etc/hosts
+					10.87.2.128     lofar28.astron.nl lofar28
+					10.87.2.129     lofar29.astron.nl lofar29
+					10.87.2.130     lofar30.astron.nl lofar30
