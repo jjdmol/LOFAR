@@ -28,10 +28,11 @@
 
 #include "ARAConstants.h"
 
-#include <iostream>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_strstream.h>
 #include <time.h>
-#include <string.h>
-#include <vector>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -78,6 +79,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_APCsLoadCounter(0),
       m_RSPclient(*this, m_RSPserverName, GCFPortInterface::SAP, RSP_PROTOCOL),
       m_physicalModel(),
+      m_propertySet2RCUMap(),
       m_subStatusHandle(0),
       m_subStatsHandleSubbandPower(0),
       m_subStatsHandleBeamletPower(0),
@@ -88,7 +90,8 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_n_rcus_per_ap(2),
       m_n_rcus(2),
       m_status_update_interval(1),
-      m_stats_update_interval(1)
+      m_stats_update_interval(1),
+      m_centralized_stats(false)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -101,6 +104,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
   int board;
   int ap;
   int rcu;
+  int globalRcuNr(0);
   
   m_n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
   m_n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
@@ -114,6 +118,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
                               m_n_racks;
   m_status_update_interval = ParameterSet::instance()->getInt(PARAM_STATUS_UPDATE_INTERVAL);
   m_stats_update_interval  = ParameterSet::instance()->getInt(PARAM_STATISTICS_UPDATE_INTERVAL);
+  m_centralized_stats      = (0!=ParameterSet::instance()->getInt(PARAM_STATISTICS_CENTRALIZED));
   
   // fill MyPropertySets map
   addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station);
@@ -165,6 +170,9 @@ RegisterAccessTask::RegisterAccessTask(string name)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_RCU, PSCAT_LCU_PIC_RCU, PROPS_RCU);
+
+            m_propertySet2RCUMap[string(scopeString)] = globalRcuNr++;
+
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_ADCStatistics, PSCAT_LCU_PIC_ADCStatistics, PROPS_ADCStatistics);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
@@ -738,6 +746,12 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       break;
     }
     
+    case RSP_SETRCUACK:
+    {
+      LOG_INFO("RSP_SETRCUACK received");
+      break;
+    }
+    
     case F_DISCONNECTED:
     {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
@@ -757,6 +771,20 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_BANDSEL) != 0)
+      {
+        handleBandSelection(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+/*
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSELA) != 0)
+      {
+        handleFilterSelectionA(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSELB) != 0)
+      {
+        handleFilterSelectionB(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+*/
       break;
     }
     
@@ -1002,47 +1030,87 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
     int maxRCUs     = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
     int maxSubbands = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
 
-    int rcu,subband;
-    GCFPValueArray valuePointerVector;
-    
-    // first elements indicate the length of the array
-    valuePointerVector.push_back(new GCFPVDouble(maxRCUs));
-    valuePointerVector.push_back(new GCFPVDouble(maxSubbands));
-    
-    // then for each rcu, the statistics of the beamlets or subbands
-    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
+    if(m_centralized_stats)
     {
-      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
+      // build a vector of doubles that will be stored in one datapoint
+      GCFPValueArray valuePointerVector;
+    
+      // first elements indicate the length of the array
+      valuePointerVector.push_back(new GCFPVDouble(maxRCUs));
+      valuePointerVector.push_back(new GCFPVDouble(maxSubbands));
+    
+      // then for each rcu, the statistics of the beamlets or subbands
+      int rcu,subband;
+      for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
       {
-        double stat = statistics(rcu,subband);
-        valuePointerVector.push_back(new GCFPVDouble(stat));
+        for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
+        {
+          double stat = statistics(rcu,subband);
+          valuePointerVector.push_back(new GCFPVDouble(stat));
+        }
       }
-    }
 
-    // convert the vector of unsigned values to a dynamic array
-    GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
-    
-    // set the property
-    TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
-    if(propSetIt != m_myPropertySetMap.end())
-    {
-      if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
+      // convert the vector of unsigned values to a dynamic array
+      GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
+      
+      // set the property
+      TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
+      if(propSetIt != m_myPropertySetMap.end())
       {
-        propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
+        if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
+        {
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
+        }
+        else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
+        {
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
+        }
       }
-      else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
+    
+      // cleanup
+      GCFPValueArray::iterator it=valuePointerVector.begin();
+      while(it!=valuePointerVector.end())
       {
-        propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
+        delete *it;
+        valuePointerVector.erase(it);
+        it=valuePointerVector.begin();
       }
     }
-    
-    // cleanup
-    GCFPValueArray::iterator it=valuePointerVector.begin();
-    while(it!=valuePointerVector.end())
+    else
     {
-      delete *it;
-      valuePointerVector.erase(it);
-      it=valuePointerVector.begin();
+      // statistics will be stored as a string in an element of each rcu
+      // then for each rcu, the statistics of the beamlets or subbands
+      int rcu,subband;
+      for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
+      {
+        stringstream statisticsStream;
+        statisticsStream.setf(ios_base::fixed);
+        for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
+        {
+          double stat = statistics(rcu,subband);
+          statisticsStream << subband << " ";
+          statisticsStream << stat << endl;
+        }
+        
+        GCFPVString statisticsString(statisticsStream.str());
+        // set the property
+        char scopeString[300];
+        int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
+        getRCURelativeNumbers(rcu,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+        TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(scopeString);
+        if(propSetIt != m_myPropertySetMap.end())
+        {
+          if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
+          {
+            propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
+          }
+          else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
+          {
+            propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
+          }
+        }
+      }
     }
   }
   
@@ -1249,9 +1317,11 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status,uint32 no
     GCFPVBool pvBoolFilSelA(tempStatus);
     it->second->setValue(string(PROPNAME_FILSELA),pvBoolFilSelA);
 
+/* this one is write-only
     tempStatus = (status >> 2) & 0x01;
     GCFPVBool pvBoolBandSel(tempStatus);
     it->second->setValue(string(PROPNAME_BANDSEL),pvBoolBandSel);
+*/
 
     tempStatus = (status >> 1) & 0x01;
     GCFPVBool pvBoolHBAEnable(tempStatus);
@@ -1264,9 +1334,6 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status,uint32 no
     if(pvBoolVddVccEn.getValue() ||
        pvBoolVhEnable.getValue() ||
        pvBoolVlEnable.getValue() ||
-       pvBoolFilSelB.getValue() ||
-       pvBoolFilSelA.getValue() ||
-       pvBoolBandSel.getValue() ||
        pvBoolHBAEnable.getValue() ||
        pvBoolLBAEnable.getValue())
     {
@@ -1310,6 +1377,73 @@ void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& val
   m_physicalModel.inMaintenance(maintenanceFlag,resource);
 }
 
+void RegisterAccessTask::handleBandSelection(string propName, const GCFPValue& value)
+{
+  GCFPVBool pvLBAEnable;
+  GCFPVBool pvHBAEnable;
+  GCFPVBool pvBandSel;
+  GCFPVBool pvFilSelA;
+  GCFPVBool pvFilSelB;
+  GCFPVBool pvVLEnable;
+  GCFPVBool pvVHEnable;
+  GCFPVBool pvVddVccEn;
+  
+  TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(propName);
+  if(propsetIt != m_myPropertySetMap.end())
+  {
+    pvBandSel.copy(value);
+    // get old register values
+    pvLBAEnable.copy(*propsetIt->second->getValue(PROPNAME_LBAENABLE)); // bit 0
+    pvHBAEnable.copy(*propsetIt->second->getValue(PROPNAME_HBAENABLE)); // bit 1
+  //  pvBandSel.copy(*propsetIt->second->getValue(PROPNAME_BANDSEL));   // bit 2
+    pvFilSelA.copy(*propsetIt->second->getValue(PROPNAME_FILSELA));   // bit 3
+    pvFilSelB.copy(*propsetIt->second->getValue(PROPNAME_FILSELB));   // bit 4
+    pvVLEnable.copy(*propsetIt->second->getValue(PROPNAME_VLENABLE));  // bit 5
+    pvVHEnable.copy(*propsetIt->second->getValue(PROPNAME_VHENABLE));  // bit 6
+    pvVddVccEn.copy(*propsetIt->second->getValue(PROPNAME_VDDVCCEN));  // bit 7
+    
+    int rcucontrol = 0;
+    if(pvLBAEnable.getValue())
+      rcucontrol |= 0x01;
+    if(pvHBAEnable.getValue())
+      rcucontrol |= 0x02;
+    if(pvBandSel.getValue())
+      rcucontrol |= 0x04;
+    if(pvFilSelA.getValue())
+      rcucontrol |= 0x08;
+    if(pvFilSelB.getValue())
+      rcucontrol |= 0x10;
+    if(pvVLEnable.getValue())
+      rcucontrol |= 0x20;
+    if(pvVHEnable.getValue())
+      rcucontrol |= 0x40;
+    if(pvVddVccEn.getValue())
+      rcucontrol |= 0x80;
+    
+    int rcu = getRCUHardwareNr(propName);
+    if(rcu>=0)
+    {
+      RSPSetrcuEvent setrcu;
+      setrcu.timestamp = Timestamp(0,0);
+      setrcu.rcumask = 0;
+      setrcu.rcumask.set(rcu);
+          
+      setrcu.settings().resize(1);
+      setrcu.settings()(0).value = rcucontrol;
+    
+      m_RSPclient.send(setrcu);
+    }
+    else
+    {
+      LOG_FATAL(formatString("rcu for property %s not found in local administration",propName.c_str()));
+    }
+  }
+  else
+  {
+    LOG_FATAL(formatString("property %s not found in local administration",propName.c_str()));
+  }
+}
+
 void RegisterAccessTask::getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr)
 {
   rackNr          = boardNr / (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
@@ -1324,6 +1458,55 @@ void RegisterAccessTask::getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int
   boardRelativeNr   = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board) ) % m_n_boards_per_subrack + 1;
   apRelativeNr      = ( rcuNr / (m_n_rcus_per_ap) ) % m_n_aps_per_board + 1;
   rcuRelativeNr     = ( rcuNr % m_n_rcus_per_ap) + 1;
+}
+
+int RegisterAccessTask::getRCUHardwareNr(const string& property)
+{
+  int rcu=-1;
+  // strip property and systemname, propertyset name remains
+  int posBegin=property.find_first_of(":")+1;
+  int posEnd=property.find_last_of(".");
+  string propertySetName = property.substr(posBegin,posEnd-posBegin);
+  
+  bool rcuFound=false;
+  map<string,int>::iterator it = m_propertySet2RCUMap.begin();
+  while(!rcuFound && it != m_propertySet2RCUMap.end())
+  {
+    if(propertySetName == it->first)
+    {
+      rcuFound=true;
+      rcu = it->second;
+    }
+    else
+    {
+      ++it;
+    }
+  }
+  return rcu;
+}
+
+RegisterAccessTask::TMyPropertySetMap::iterator RegisterAccessTask::getPropertySetFromScope(const string& property)
+{
+  // strip property and systemname, propertyset name remains
+  int posBegin=property.find_first_of(":")+1;
+  int posEnd=property.find_last_of(".");
+  string propertySetName = property.substr(posBegin,posEnd-posBegin);
+  
+  bool rcuFound=false;
+  TMyPropertySetMap::iterator it = m_myPropertySetMap.begin();
+  while(!rcuFound && it != m_myPropertySetMap.end())
+  {
+    if(propertySetName == it->first)
+    {
+      rcuFound=true;
+    }
+    else
+    {
+      ++it;
+    }
+  }
+  return it;
+  
 }
 
 } // namespace ARA

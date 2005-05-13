@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <blitz/array.h>
+#include <Common/lofar_sstream.h>
 #include <time.h>
 
 #undef PACKAGE
@@ -101,7 +102,7 @@ ARATestDriverTask::ARATestDriverTask() :
 	memset(&rcuStatus,0,sizeof(rcuStatus));
   m_systemStatus.rcu()(blitz::Range::all()) = rcuStatus;
   
-  m_stats().resize(1,n_rcus,RSP_Protocol::MAX_N_BLPS);
+  m_stats().resize(n_rcus,MEPHeader::N_BEAMLETS);
   
   m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
   
@@ -758,18 +759,17 @@ void ARATestDriverTask::updateStats()
   updStatsEvent.timestamp.setNow();
   updStatsEvent.status=SUCCESS;
   
-  int i=0;
-  int j;
-  int k;
-  for(j=0;j<n_rcus;j++)
+  int rcu;
+  int subband;
+  for(rcu=0;rcu<n_rcus;rcu++)
   {
-    for(k=0;k<RSP_Protocol::MAX_N_BLPS;k++)
+    for(subband=0;subband<MEPHeader::N_BEAMLETS;subband++)
     {
 		  double noise=(double)(rand()%1000)/500.0;
-		  if(k==10)
-      	m_stats()(i,j,k) = 4000+noise*500.0;
+		  if(subband==rcu*10)
+      	m_stats()(rcu,subband) = 4000+noise*500.0;
 			else		  
-      	m_stats()(i,j,k) = noise;
+      	m_stats()(rcu,subband) = noise;
     }
   }
   
@@ -1025,6 +1025,18 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       ack.versions.bp().reference(versions.bp().copy());
       ack.versions.ap().reference(versions.ap().copy());
       
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_SETRCU:
+    {
+      LOG_INFO("RSP_SETRCU received");
+      
+      RSPSetrcuackEvent ack;
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+     
       port.send(ack);
       break;
     }

@@ -109,6 +109,11 @@ namespace ARA
        */
       void handleMaintenance(string propName, const GCF::Common::GCFPValue& value);
       
+      /**
+       * Handle a change of the BandSel field
+       */
+      void handleBandSelection(string propName, const GCF::Common::GCFPValue& value);
+      
     private:
       // internal types
       // gcf 3.1: needs specific apc's for every resource
@@ -179,6 +184,8 @@ namespace ARA
     private:
       void getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr);
       void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);    
+      int getRCUHardwareNr(const string& property);
+      TMyPropertySetMap::iterator getPropertySetFromScope(const string& property);
       
       // member variables
       ARAAnswer   m_answer;
@@ -193,8 +200,10 @@ namespace ARA
 
       // ports
       static string     m_RSPserverName;
-      GCF::TM::GCFPort           m_RSPclient;
+      GCF::TM::GCFPort  m_RSPclient;
       ARAPhysicalModel  m_physicalModel;
+    
+      map<string,int>   m_propertySet2RCUMap;
       
       // subscriptions
       uint32            m_subStatusHandle;
@@ -209,6 +218,7 @@ namespace ARA
       int               m_n_rcus;
       int               m_status_update_interval;
       int               m_stats_update_interval;
+      bool              m_centralized_stats;
 
   };
 

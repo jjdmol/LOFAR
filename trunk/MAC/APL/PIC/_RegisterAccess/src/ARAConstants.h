@@ -37,6 +37,7 @@ namespace ARA
   const char PARAM_N_RCUS_PER_AP[]               = "mac.apl.ara.N_RCUS_PER_AP";
   const char PARAM_STATUS_UPDATE_INTERVAL[]      = "mac.apl.ara.STATUS_UPDATE_INTERVAL";
   const char PARAM_STATISTICS_UPDATE_INTERVAL[]  = "mac.apl.ara.STATISTICS_UPDATE_INTERVAL";
+  const char PARAM_STATISTICS_CENTRALIZED[]      = "mac.apl.ara.STATISTICS_CENTRALIZED";
   
 };
 
