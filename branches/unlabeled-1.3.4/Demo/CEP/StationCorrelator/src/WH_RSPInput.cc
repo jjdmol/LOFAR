@@ -33,6 +33,7 @@
 #include <WH_RSPInput.h>
 #include <DH_RSP.h>
 #include <DH_RSPSync.h>
+#include <BufferingController.h>
 
 using namespace LOFAR;
 
@@ -62,12 +63,12 @@ WH_RSPInput::WH_RSPInput(const string& name,
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);     // headersize in bytes
   itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader; // packetsize in bytes
 
-  // create incoming dataholder   
+  // create incoming rsp-dataholder   
   getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", itsKVM));
   
-  // create outgoing dataholder
+  // create outgoing rsp-dataholder
   getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out", itsKVM));
-  
+
   //**** delete SyncMaster code when the DelayController which controls the delay and synchronization is build ****
   if (itsIsSyncMaster) {
     // We are the SyncMaster so we need extra outputs (NoWH_RSP)
@@ -76,10 +77,14 @@ WH_RSPInput::WH_RSPInput(const string& name,
       getDataManager().addOutDataHolder(i, new DH_RSPSync(str));
     }
   }
+  
+  // create a cyclic buffer with 100 'DH_RSP_out' elements
+  itsBufControl = new BufferingController(0,getDataManager().getOutHolder(0), 100);
+
   //**************************************************************************************************************
 
-  // use cyclic buffer on output
-  ((DataManager)getDataManager()).setOutBufferingProperties(0, false);
+  // use cyclic buffer on output channel 0
+  //((DataManager)getDataManager()).setOutBufferingProperties(0, false);
    
   // do not use autotriggering on the input
   // 'new read' trigger will be set manually
@@ -90,7 +95,9 @@ WH_RSPInput::WH_RSPInput(const string& name,
   theirMissingDataState.init ("WH_RSPInput missing packets", "orange");  
 }
 
-WH_RSPInput::~WH_RSPInput() {
+WH_RSPInput::~WH_RSPInput() 
+{
+  delete itsBufControl;
 }
 
 WorkHolder* WH_RSPInput::construct(const string& name,
@@ -105,6 +112,10 @@ WH_RSPInput* WH_RSPInput::make(const string& name)
   return new WH_RSPInput(name, itsKVM, itsIsSyncMaster);
 }
 
+void WH_RSPInput::preprocess()
+{
+  itsBufControl->preprocess();
+}
 
 void WH_RSPInput::process() 
 { 

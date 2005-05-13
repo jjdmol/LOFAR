@@ -27,6 +27,7 @@
 #include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 #include <DH_RSPSync.h>
+#include <BufferingController.h>
 
 namespace LOFAR
 {
@@ -43,11 +44,10 @@ namespace LOFAR
                                  const KeyValueMap kvm,
 				 const bool isSyncMaster = false);
     virtual WH_RSPInput* make(const string& name);
-
+    
+    virtual void preprocess();
+    
     virtual void process();
-
-    /// set delay of this WorkHolder
-    void setDelay(const DH_RSPSync::syncStamp_t newDelay);
     
     /// Show the work holder on stdout.
     virtual void dump();
@@ -65,6 +65,8 @@ namespace LOFAR
     int itsNRSPOutputs;
     int itsSzEPAheader;
     int itsSzEPApacket;
+
+    BufferingController* itsBufControl;
 
     KeyValueMap itsKVM;
 
