@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# Set up the AIPS environment, which is needed by the coordinate server
-source /lofarbuild/aips++/weekly/aipsinit.sh >/dev/null
+# Set up the AIPS environment, which is needed by the coordinate server.
+# Redirect stdout to stderr; otherwise comparison of output files will fail.
+source /lofarbuild/aips++/weekly/aipsinit.sh 1>&2
 
 # Execute test test program
-tConverterImpl
+./tConverterImpl
