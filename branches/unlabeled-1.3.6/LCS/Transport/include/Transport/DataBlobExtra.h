@@ -1,4 +1,4 @@
-//# DataBlobExtra.h: Extra fields for the blob in the DataHolder
+///# DataBlobExtra.h: Extra fields for the blob in the DataHolder
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,13 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_TRANSPORT_DATABLOBEXTRA_H
-#define LOFAR_TRANSPORT_DATABLOBEXTRA_H
-
-// \file DataBlobExtra.h
-// Extra fields for the blob in the DataHolder
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#ifndef TRANSPORT_DATABLOBEXTRA_H
+#define TRANSPORT_DATABLOBEXTRA_H
 
 //# Includes
 #include <Common/BlobIBufChar.h>
@@ -35,9 +30,6 @@
 
 namespace LOFAR
 {
-
-// \addtogroup Transport
-// @{
 
 //# Forward Declarations
 class DataHolder;
@@ -71,7 +63,7 @@ public:
   void openBlock (const BlobString& data);
 
   // Write the extra block into the main block.
-  void write();
+  void pack();
 
   // Get the name of the extra data blob.
   const std::string& getName() const;
@@ -83,12 +75,10 @@ public:
   void clearOut()
     { itsCreateDone = false; }
 
-  // \name Get read access to the blob used last
-  // The blob used last is the blob opened or created.
+  // Get read access to the blob used last (i.e. the blob opened or created).
+  // The first version assures that there is a blob.
   // <group>
-  // Assures that there is a blob.
   BlobIStream& getBlock();
-  // Sets \a found=true when a blob is found.
   BlobIStream& getBlock (bool& found, int& version);
   // <group>
 
@@ -102,13 +92,13 @@ private:
 
   BlobOStream* itsOut;
   BlobIStream* itsIn;
-  BlobOBufChar itsBufOut;     ///< write buffer for extra blob data
-  BlobIBufChar itsBufIn;      ///< read buffer for extra blob data
-  std::string  itsName;       ///< blob type name for extra data
-  int          itsVersion;    ///< blob version for extra data
-  char*        itsDataPtr;    ///< pointer to extra block in the main block
-  bool         itsCreateDone; ///< true = createBlock has been done
-  int          itsLastDone;   ///< 0=nothing, 1=create, 2=open done as last
+  BlobOBufChar itsBufOut;     //# write buffer for extra blob data
+  BlobIBufChar itsBufIn;      //# read buffer for extra blob data
+  std::string  itsName;       //# blob type name for extra data
+  int          itsVersion;    //# blob version for extra data
+  char*        itsDataPtr;    //# pointer to extra block in the main block
+  bool         itsCreateDone; //# true = createBlock has been done
+  int          itsLastDone;   //# 0=nothing, 1=create, 2=open done as last
   DataHolder*  itsDH;
 };
 
@@ -123,7 +113,6 @@ inline int DataBlobExtra::getVersion()
   return itsVersion; 
 }
 
-// @} // Doxygen endgroup Transport
 
 } // end namespace
 

@@ -20,12 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_TRANSPORT_TH_FILE_H
-#define LOFAR_TRANSPORT_TH_FILE_H
-
-// \file TH_File.h
-// To/from file transport mechanism
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#ifndef TRANSPORT_TH_FILE_H
+#define TRANSPORT_TH_FILE_H
 
 #include <Transport/TransportHolder.h>
 #include <stdio.h>
@@ -33,14 +29,13 @@
 namespace LOFAR
 {
 
-// \addtogroup Transport
-// @{
-
-// This class defines the transport mechanism To/From a single dataholder.
-// A connection between two dataholders has to be made; Only one of them is 
-// active and produces or consumes data from the transport mechanism. The 
-// other dataholder is supposed to do nothing at all (probably not added to 
-// the simul) but is needed to use the Step::connect... methods.
+/**
+   This class defines the transport mechanism To/From a single dataholder.
+   A connection between two dataholders has to be made; Only one of them is 
+   active and produces or consumes data from the transport mechanism. The 
+   other dataholder is supposed to do nothing at all (probably not added to 
+   the simul) but is needed to use the Step::connect... methods.
+*/
 
 class TH_File: public TransportHolder
 {
@@ -48,53 +43,62 @@ public:
   enum direction{Write,Read,UnDefined};
 
   TH_File();
-  // The constructor.
-  // Arguments:
-  // \arg filename   The file name, including path, to/from which the data is 
-  //	             written/read
-  // \arg aDirection Defines whether data is written(only send() method active)
-  //	             or read (only recv method active)
-
+  /**
+     The constructor.
+     Arguments:
+        filename:    The file name, including path, to/from which the data is 
+	             written/read
+	aDirection:  Defines whether data is written(only send() method active)
+	             or read (only recv method active)
+  **/
   TH_File(string    aFileName, direction aDirection);
   virtual ~TH_File();
 
-  // method to make a TH_File instance;
-  virtual TH_File* make() const;
+  // Initialization
+  virtual bool init();
 
-  // Receive the data. If the Direction is defined as Read, this method reads 
-  // the next DataHolder from file.
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  /**
+     Receive the data. If the Direction is defined as Read, this method reads 
+     the next DataHolder from file.
+  */
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, 
+			    int nBytesRead=0, DataHolder* dh=0);
 
-  // This method calls the blocking receive method.
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);  
+  /**
+     This method calls the blocking receive method.
+  */
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag,
+			       int nBytesRead=0, DataHolder* dh=0);  
 
-  // Send the data. If the Direction is defined as Write, this method writes
-  // the next DataHolder to file.
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
+  /**
+     Send the data. If the Direction is defined as Write, this method writes 
+     the next DataHolder to file.
+  */
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
-  // This method calls the blocking receive method.
-  virtual bool sendNonBlocking(void* buf, int nbytes,int tag);
+  /**
+     This method calls the blocking receive method.
+  */
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   // Wait until the data has been sent
-  virtual bool waitForSent(void* buf, int nbytes, int tag); 
+  virtual void waitForSent(void* buf, int nbytes, int tag); 
 
   // Wait until the data has been received
-  virtual bool waitForReceived(void* bug, int nbytes, int tag);
+  virtual void waitForReceived(void* bug, int nbytes, int tag);
 
-  // Get the type of transport, i.e. "TH_File"
+  /// Get the type of transport, i.e. "TH_File"
   virtual string getType() const;
 
-  // Return whether the proposed connection between \a srcRank and \a dstRank 
-  // would be possible with this TransportHolder specialisation.
-  virtual bool connectionPossible(int srcRank, int dstRank) const;
+  /// Is TH_File clonable?
+  virtual bool isClonable() const;
+
+  /// Return a copy of this transportholder
+  virtual TH_File* clone() const;
 
   static void finalize();
-  static void waitForBroadCast();
-  static void waitForBroadCast (unsigned long& aVar);
-  static void sendBroadCast (unsigned long timeStamp);
   static int getCurrentRank();
   static int getNumberOfNodes();
-  static void synchroniseAllProcesses();
 
  private:
   string    itsFileName;
@@ -107,7 +111,11 @@ public:
   int       itsSepLen;
 };
 
-// @} // Doxygen endgroup Transport
+inline bool TH_File::init()
+  { return true; }
+
+inline bool TH_File::isClonable() const
+  { return true; }
 
 }
 

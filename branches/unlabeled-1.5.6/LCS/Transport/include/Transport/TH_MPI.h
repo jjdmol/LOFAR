@@ -20,13 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_TRANSPORT_TH_MPI_H
-#define LOFAR_TRANSPORT_TH_MPI_H
-
-// \file TH_MPI.h
-// Transport mechanism for MPI
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#ifndef TRANSPORT_TH_MPI_H
+#define TRANSPORT_TH_MPI_H
 
 #ifdef HAVE_MPI
 
@@ -52,12 +47,12 @@
 
 namespace LOFAR
 {
-// \addtogroup Transport
-// @{
 
-// This class defines the transport mechanism for MPI to be
-// able to run the simulation in a parallel way on multiple nodes.
-// It is the default TransportHolder when compiling with MPI=1.
+/**
+   This class defines the transport mechanism for MPI to be
+   able to run the simulation in a parallel way on multiple nodes.
+   It is the default TransportHolder when compiling with MPI=1.
+*/
 
 class TH_MPI: public TransportHolder
 {
@@ -65,37 +60,42 @@ public:
   TH_MPI(int sourceNode, int targetNode);
   virtual ~TH_MPI();
 
-  virtual TH_MPI* make() const;
+  // This method does nothing. Use initMPI(..) once at the start of your application!
+  bool init();
 
   void lock();
   void unlock();
 
-  // \name Read the data.
-  // @{
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarBlocking(int tag);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarNonBlocking(int tag);
-  // @}
+  /// Read the data.
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead=0, 
+			    DataHolder* dh=0);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, int nrBytesRead=0, 
+			       DataHolder* dh=0);
+  /// Wait for the data to be received
+  virtual void waitForReceived(void* buf, int nbytes, int tag);
 
-  // Wait for the data to be received
-  virtual bool waitForReceived(void* buf, int nbytes, int tag);
+  /// Write the data.
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  /// Wait for the data to be sent
+  virtual void waitForSent(void* buf, int nbytes, int tag);
 
-  // \name Write the data.
-  // @{
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
-  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
-  // @}
+  // Read the total message length of the next message.
+  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
 
-  // Wait for the data to be sent
-  virtual bool waitForSent(void* buf, int nbytes, int tag);
+  // Read the total message length of the next message.
+  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
-  // Get the type of transport.
+  /// Get the type of transport.
   virtual string getType() const;
 
-  virtual bool isBidirectional() const;
+  // Can TH_MPI be cloned?
+  virtual bool isClonable() const;
 
-  static void init (int argc, const char *argv[]);
+  // Create a copy
+  virtual TH_MPI* clone() const;
+
+  static void initMPI (int argc, const char *argv[]);
   static void finalize();
   static void waitForBroadCast();
   static void waitForBroadCast (unsigned long& aVar);
@@ -141,10 +141,11 @@ private:
 
 };
 
-inline bool TH_MPI::isBidirectional() const
-  { return true; }
+inline bool TH_MPI::init()
+  { return true;}
 
-// @} // Doxygen group Transport
+inline bool TH_MPI::isClonable() const
+  { return true; }
 
 }
 

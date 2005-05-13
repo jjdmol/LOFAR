@@ -51,15 +51,16 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
-lofar_CORBA
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
-lofar_PACKAGE(CEP/CEPFrame)
-lofar_PACKAGE(CEP/tinyCEP)
-lofar_PACKAGE(LCS/Transport)
-lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(LCS/ACC)
+
+
+lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)
+lofar_INTERNAL(LCS/ACC,ACC,,ACC/ParameterSet.h,,)
+lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,CEPFrame/DataManager.h,,)
+lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,tinyCEP/TinyDataManager.h,,)
 
 dnl
 dnl Output Makefiles

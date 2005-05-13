@@ -20,37 +20,33 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_TRANSPORT_TRANSPORTHOLDER_H
-#define LOFAR_TRANSPORT_TRANSPORTHOLDER_H
-
-// \file TransportHolder.h
-// Abstract base class for all TransportHolders
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#ifndef TRANSPORT_TRANSPORTHOLDER_H
+#define TRANSPORT_TRANSPORTHOLDER_H
 
 #include <Common/lofar_string.h>
 
 namespace LOFAR
 {
-// \addtogroup Transport
-// @{
 
-//# Forward declarations
 class BlobStringType;
-class Transporter;
+class DataHolder;
 
-// This class defines the base class for transport mechanism classes
-// to transport data between connected BaseDataHolders.
-// Actually, the data transport is done between 2 TransportHolder objects
-// belonging to the communicating DataHolder objects.
-//
-// Derived classes (e.g. TH_MPI) implement the concrete transport
-// classes.
-//
-// If data have to be transported between different machines, they
-// need to have the same data representation. It is not possible
-// yet to transport data between e.g. a SUN and PC. This will be
-// improved in the future.
+/**
+   This class defines the base class for transport mechanism classes
+   to transport data between connected BaseDataHolders.
+   Actually, the data transport is done between 2 TransportHolder objects
+   belonging to the communicating DataHolder objects.
+
+   Derived classes (e.g. TH_MPI) implement the concrete transport
+   classes.
+
+   If data have to be transported between different machines, they
+   need to have the same data representation. It is not possible
+   yet to transport data between e.g. a SUN and PC. This will be
+   improved in the future.
+*/
+
+class Transporter;
 
 class TransportHolder
 {
@@ -59,83 +55,63 @@ public:
 
   virtual ~TransportHolder();
 
-  // Make an instance of the derived TransportHolder.
-  virtual TransportHolder* make() const = 0;
-
-  // Initialise the Transport; this may for instance open a file,
+  // Initialize the Transport; this may for instance open a file,
   // port or dbms connection
-  virtual bool init();
+  virtual bool init() = 0;
 
   // Recv the fixed sized data sent by the connected TransportHolder
   // and wait until data has been received into buf.
-  virtual bool recvBlocking (void* buf, int nbytes, int tag);
-
-  // Recv the variable sized data sent by the connected TransportHolder
-  // and wait until data has been received into buf.
-  virtual bool recvVarBlocking (int tag);
-
-  // Start receiving the fixed sized data sent by the connected
-  // TransportHolder.
-  virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
-
-  // Start receiving the variable sized data sent by the connected
-  // TransportHolder.
-  virtual bool recvVarNonBlocking (int tag);
-
-  // Wait until data has been received into buf.
-  virtual bool waitForReceived(void* buf, int nbytes, int tag);
+  virtual bool recvBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0) = 0;
 
   // Send the fixed sized data to the connected TransportHolder
-  // and wait until the data have been sent.
-  virtual bool sendBlocking (void* buf, int nbytes, int tag);
+  // and wait until the data has been sent.
+  virtual bool sendBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0) = 0;
 
-  // Send the variable sized data to the connected TransportHolder
-  // and wait until the data have been sent.
-  // The default implementation uses sendBlocking.
-  virtual bool sendVarBlocking (void* buf, int nbytes, int tag);
+  // Start receiving the fixed sized data sent by the connected
+  // TransportHolder. Returns true if data has been received completely.
+  virtual bool recvNonBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0) = 0;
+
+  /// Wait until data has been received into buf.
+  virtual void waitForReceived(void* buf, int nbytes, int tag) = 0;
 
   // Start sending the fixed sized data to the connected TransportHolder.
-  virtual bool sendNonBlocking (void* buf, int nbytes, int tag);
+  // Returns true if data has been sent completely.
+  virtual bool sendNonBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0) = 0;
 
-  // Start sending the variable sized data to the connected TransportHolder.
-  // The default implementation uses sendNonBlocking.
-  virtual bool sendVarNonBlocking (void* buf, int nbytes, int tag);
+  /// Wait until the data has been sent.
+  virtual void waitForSent(void* buf, int nbytes, int tag) = 0;
 
-  // Wait until the data has been sent.
-  virtual bool waitForSent(void* buf, int nbytes, int tag);
+  // Read the total message length of the next message.
+  // Default return value is -1, to indicate this is not possible.
+  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
 
-  // Wait until the receiving TransportHolder has received the data.
-  virtual bool waitForRecvAck(void* buf, int nbytes, int tag);
+  // Read the total message length of the next message.
+  // Default return value of nrBytes is -1, to indicate this is not possible.
+  // True is returned if the total message length could be immediately read 
+  // (or can never be read).
+  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
-  // Get the type of transport as a string.
+  // Check the state of this TransportHolder. Default is true.
+  virtual bool isConnected () const;
+
+  /// Get the type of transport as a string.
   virtual string getType() const = 0;
 
   // Get the type of BlobString needed for the DataHolder.
   virtual BlobStringType blobStringType() const;
 
-  // Tell if a data buffer can grow.
   // The default implementation is true, but TH_ShMem is false.
   virtual bool canDataGrow() const;
 
-  // Check if a connection is possible between two processes.
-  virtual bool connectionPossible (int srcRank, int dstRank) const;
+  // Can the derived TransportHolder be cloned?
+  virtual bool isClonable() const = 0;
 
-  // Check if this TransportHolder can handle bidirectional transport.
-  virtual bool isBidirectional () const;
+  // Clone the instance of the derived TransportHolder.
+  virtual TransportHolder* clone() const;
 
-  // \name Accessor method for its Transporter.
-  // <group>
-  Transporter* getTransporter()
-    { return itsTransporter; }
-  void setTransporter (Transporter* tp)
-    { itsTransporter = tp; }
-  // </group>
 
-private:
-  Transporter* itsTransporter;
 };
 
-// @} // Doxygen endgroup Transport
 
 }
 

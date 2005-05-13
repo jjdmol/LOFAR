@@ -1,4 +1,4 @@
-//# TH_Ethernet.h: Transport mechanism for Raw Ethernet 
+//# TH_Ethernet.h: Transport mechanism for Ethernet 
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,19 +20,10 @@
 //#
 //# $Id$
 
+#ifndef TRANSPORT_TH_ETHERNET_H
+#define TRANSPORT_TH_ETHERNET_H
 
-#ifndef HAVE_BGL
-
-#ifndef LOFAR_TRANSPORT_TH_ETHERNET_H
-#define LOFAR_TRANSPORT_TH_ETHERNET_H
-
-// \file TH_Ethernet.h
-// Transport mechanism for Ethernet 
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Transport/TransportHolder.h>
-#include <Common/LofarTypes.h>
-#include <Common/lofar_string.h>
 
 #include <net/if.h>
 #include <linux/if_packet.h>
@@ -42,71 +33,59 @@
 namespace LOFAR
 {
 
-// \addtogroup Transport
-// @{
-
-#define MIN_FRAME_LEN 200
-
-// This class defines the transport mechanism for RAW Ethernet 
+/**
+   This class defines the transport mechanism for RAW Ethernet 
+   communication between dataholders.
+*/
 
 class TH_Ethernet: public TransportHolder
 {
 public:
-  TH_Ethernet(const string &ifname, 
-              const string &rMac, 
-              const string &oMac, 
-              const uint16 etype  = 0x0000, 
-              const bool dhheader = false);
+  TH_Ethernet(const char* ifname, 
+              const char* remoteMac, 
+              unsigned short ethertype = 0x0000);
   
   virtual ~TH_Ethernet();
 
-  // Make an instance of the transportholder
-  virtual TH_Ethernet* make() const;
-  
   // Returns if socket initialization was successful 
   virtual bool init();
 
   // Read the data.
-  virtual bool recvBlocking(void* buf, int32 nbytes, int32 tag);
-  virtual bool recvVarBlocking(int32 tag);
-  virtual bool recvNonBlocking(void* buf, int32 nbytes, int32 tag);
-  virtual bool recvVarNonBlocking(int32 tag);
-
+  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvVarBlocking(int tag);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvVarNonBlocking(int tag);
   // Wait for the data to be received
-  virtual bool waitForReceived(void* buf, int32 nbytes, int32 tag);
+  virtual bool waitForReceived(void* buf, int nbytes, int tag);
 
   // Write the data.
-  virtual bool sendBlocking(void* buf, int32 nbytes, int32 tag);
-  virtual bool sendNonBlocking(void* buf, int32 nbytes, int32 tag);
-
+  virtual bool sendBlocking(void* buf, int nbytes, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
   // Wait for the data to be sent
-  virtual bool waitForSent(void* buf, int32 nbytes, int32 tag);
+  virtual bool waitForSent(void* buf, int nbytes, int tag);
 
   // Get the type of transport.
   virtual string getType() const;
 
+  // Is TH_Ethernet clonable?
+  virtual bool isClonable() const;
+
+  // Make an instance of the transportholder
+  virtual TH_Ethernet* clone() const;
+
   virtual bool isBidirectional() const;
+
   
  private:  
-  int32 itsSocketFD;
-  int32 itsMaxdatasize;
-  int32 itsMaxframesize;
-  int32 itsDHheaderSize;
-  
-  bool itsDHheader;
-  bool itsInitDone;
-  
-  string itsIfname;
-  string itsRemoteMac;
-  string itsOwnMac;
-  
-  char* itsRecvPacket; 
-  char* itsSendPacket; 
-  char* itsSendPacketData;
-  
-  uint16 itsEthertype;
-  
-  struct sockaddr_ll itsSockaddr;
+  int _socketFD;
+  bool _initDone;
+  char _ifname[IFNAMSIZ];
+  char _remoteMac[ETH_ALEN];
+  char _recvPacket[ETH_FRAME_LEN];
+  char _sendPacket[ETH_FRAME_LEN];
+  char* _sendPacketData;
+  unsigned short _ethertype;
+  struct sockaddr_ll _sockaddr;
 
   void Init();
  
@@ -117,10 +96,10 @@ public:
 inline bool TH_Ethernet::isBidirectional() const
   { return true; }
 
-// @} // Doxygen endgroup Transport
+inline bool TH_Ethernet::isClonable() const
+  { return true; }
 
 }
 
 #endif
 
-#endif

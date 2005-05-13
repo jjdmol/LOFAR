@@ -26,14 +26,13 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <AMCImpl/ConverterImpl.h>
-#include <AMCBase/AMCClient/DH_Converter.h>
+#include <Common/LofarTypes.h>
+#include <Common/Net/Socket.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
-
     // This class represents the server side of the client/server
     // implementation of the AMC. Its main purpose is to handle the
     // communication with the ConverterClient. It does \e not implement the
@@ -49,6 +48,12 @@ namespace LOFAR
       // Destructor.
       ~ConverterServer();
 
+      // Start running the event-loop that will continuously monitor for
+      // incoming connections. When a connection request is received the
+      // handleConnections() method is called to further handle the client
+      // request.
+      void run();
+
     private:
       //@{
       // Make this class non-copyable.
@@ -56,20 +61,14 @@ namespace LOFAR
       ConverterServer operator=(const ConverterServer&);
       //@}
 
-      void recvRequest(const vector<SkyCoord>&,
-                       const vector<EarthCoord>&,
-                       const vector<TimeCoord>&);
+      // This method handles incoming connection requests. For each
+      // connection a new process is spawned that will further handle any
+      // coordinate conversion requests, until the client side closes the
+      // connection.
+      void handleConnections();
 
-      void sendResult(vector<SkyCoord>&);
-
-      // This is an instance of the actual implementation of the converter.
-      ConverterImpl itsConverterImpl;
-
-      // Data holder holding the request data to be received from the client.
-      DH_Converter itsRequest;
-
-      // Data holder holding the result data to be sent to the client.
-      DH_Converter itsResult;
+      // On this socket we will be listening for incoming connection requests.
+      Socket itsListenSocket;
 
     };
 
