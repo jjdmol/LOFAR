@@ -571,10 +571,6 @@ event = {
     name = "type";
     type = "uint8";
   };
-  param = {
-    name = "reduction";
-    type = "StatsReduction";
-  };
 };
 
 event = {

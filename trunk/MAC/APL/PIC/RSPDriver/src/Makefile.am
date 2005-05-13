@@ -31,7 +31,8 @@ BUILT_SOURCES = \
 	CaptureStats.conf \
 	CaptureStats.log_prop \
 	Tuner.conf \
-	SetWG.conf
+	SetWG.conf \
+	rspctl.conf
 
 clean-local:
 	rm -f \
@@ -53,7 +54,8 @@ sysconf_DATA = \
 	CaptureStats.conf \
 	CaptureStats.log_prop \
 	Tuner.conf \
-	SetWG.conf
+	SetWG.conf \
+	rspctl.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
@@ -117,7 +119,8 @@ bin_PROGRAMS = \
 	ViewStats \
 	CaptureStats \
 	Tuner \
-	SetWG
+	SetWG \
+	rspctl
 
 RSPDriver_SOURCES = \
 	RefCount.h \
@@ -224,6 +227,14 @@ SetWG_SOURCES = \
 	SetWG.cc
 
 SetWG_LDADD = \
+	$(top_builddir)/src/librsp.la \
+	-lsuite
+
+rspctl_SOURCES = \
+	rspctl.h \
+	rspctl.cc
+
+rspctl_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	-lsuite
 

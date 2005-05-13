@@ -698,8 +698,8 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 
   // print time, ugly
   char timestr[32];
-  strftime(timestr, 32, "%T", localtime(&now.tv_sec));
-  LOG_INFO(formatString("TICK: time=%s.%d", timestr, now.tv_usec));
+  strftime(timestr, 32, "%T", gmtime(&now.tv_sec));
+  LOG_INFO(formatString("TICK: time=%s.%d UTC", timestr, now.tv_usec));
 
   /* construct a timer event */
   GCFTimerEvent timer;
