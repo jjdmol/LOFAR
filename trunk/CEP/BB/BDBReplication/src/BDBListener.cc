@@ -28,8 +28,8 @@
 #include <boost/thread.hpp>
 
 // Application specific includes
-#include <MNS/BDBListener.h>
-#include <MNS/BDBConHandler.h>
+#include <BDBListener.h>
+#include <BDBConHandler.h>
 
 using namespace LOFAR;
 using namespace std;

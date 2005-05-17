@@ -53,7 +53,7 @@ dnl
 lofar_DEBUG_OPTIMIZE
 lofar_MPI()
 lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(LCS/Transport)
+dnl lofar_INTERNAL(LCS/Transport)
 lofar_EXTERNAL(bdb,1,db_cxx.h,"db_cxx",/usr/local/BerkeleyDB.4.2)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,boost_thread-gcc-mt,/home/loose/linux/usr/local/boost-1_32/gnu3)
 
@@ -62,5 +62,6 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 src/Makefile
+test/Makefile
 Makefile
 )

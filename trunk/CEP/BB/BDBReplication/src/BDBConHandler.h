@@ -29,7 +29,7 @@
 #include <boost/thread.hpp>
 #include <db_cxx.h>
  
-#include <MNS/BDBSite.h>
+#include <BDBReplication/BDBSite.h>
 
 using namespace LOFAR;
 

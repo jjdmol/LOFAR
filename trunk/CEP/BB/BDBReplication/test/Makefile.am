@@ -1,20 +1,10 @@
-bin_PROGRAMS	= repQuote
+common_top_builddir=@common_top_builddir@
 
-DOCHDRS 	=				\
-BDBSite.h					\
-BDBReplicator.h					\
-BDBConHandler.h					\
-BDBListener.h
+check_PROGRAMS	= repQuote
 
-COMMONSRC 		= $(DOCHDRS)		\
-tBDBReplication.cc		   		\
-BDBReplicator.cc				\
-BDBConHandler.cc				\
-BDBListener.cc					\
-BDBSite.cc
+repQuote_SOURCES  	= tBDBReplication.cc
 
-
-repQuote_SOURCES  	= $(COMMONSRC)
-
+LDADD = ../src/libBDBReplication.la
+DEPENDENCIES = ../src/libBDBReplication.la $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
