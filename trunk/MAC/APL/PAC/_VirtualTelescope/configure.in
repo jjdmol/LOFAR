@@ -71,7 +71,7 @@ lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 lofar_EXTERNAL(GCFPAL,1,GCF/PAL/GCF_Property.h,,)
-lofar_EXTERNAL(GCFPALlight,1,GCF/PALlight/GCF_RTMyProperty.h,,)
+#lofar_EXTERNAL(GCFPALlight,1,GCF/PALlight/GCF_RTMyProperty.h,,)
 lofar_EXTERNAL(APLCommon,1,APLCommon/APL_Defines.h,,)
 
 dnl
