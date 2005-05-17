@@ -29,8 +29,8 @@
 #include <boost/thread.hpp>
 #include <db_cxx.h>
 
-#include <MNS/BDBConHandler.h>
-#include <MNS/BDBListener.h>
+#include <BDBReplication/BDBConHandler.h>
+#include <BDBReplication/BDBListener.h>
  
 using namespace LOFAR;
 

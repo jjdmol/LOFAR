@@ -27,7 +27,7 @@
 #include <iostream>
 
 // Application specific includes
-#include <MNS/BDBReplicator.h>
+#include <BDBReplicator.h>
 
 using namespace LOFAR;
 using namespace std;

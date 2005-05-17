@@ -25,7 +25,7 @@
 
 #include <db_cxx.h>
 
-#include <BDBReplicator.h>
+#include <BDBReplication/BDBReplicator.h>
 
 int
 print_data (Dbc * dbc)

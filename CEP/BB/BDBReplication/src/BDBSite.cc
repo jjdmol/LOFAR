@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <iostream>
 
-#include <MNS/BDBSite.h>
+#include <BDBSite.h>
 
 // Application specific includes
 

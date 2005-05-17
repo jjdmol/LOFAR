@@ -25,7 +25,7 @@
 
 #include <Common/Net/Socket.h>
  
-#include <MNS/BDBConHandler.h>
+#include <BDBReplication/BDBConHandler.h>
 
 using namespace LOFAR;
 
