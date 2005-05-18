@@ -843,7 +843,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
         updStatusEvent.handle));
 
     blitz::Array<EPA_Protocol::BoardStatus,  1>& boardStatus = updStatusEvent.sysstatus.board();
-    blitz::Array<EPA_Protocol::RCUStatus,  1>& rcuStatus = updStatusEvent.sysstatus.rcu();
+//    blitz::Array<EPA_Protocol::RCUStatus,  1>& rcuStatus = updStatusEvent.sysstatus.rcu();
     
     int rackNr=1;
     int subRackNr=1;
@@ -1047,9 +1047,11 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
     blitz::Array<double, 2>& statistics = updStatsEvent.stats();
     int maxRCUs     = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
     int maxSubbands = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
+    LOG_DEBUG(formatString("maxRCUs:%d maxSubbands:%d",maxRCUs,maxSubbands));
 
     if(m_centralized_stats)
     {
+      LOG_DEBUG("Writing statistics to a dynamic array of doubles");
       // build a vector of doubles that will be stored in one datapoint
       GCFPValueArray valuePointerVector;
     
@@ -1096,11 +1098,14 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
     }
     else
     {
+      LOG_DEBUG("Writing statistics to one string");
       // statistics will be stored as a string in an element of each rcu
       // then for each rcu, the statistics of the beamlets or subbands
       int rcu,subband;
       for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
       {
+        LOG_DEBUG(formatString("rcu:%d",rcu));
+        
         stringstream statisticsStream;
         statisticsStream.setf(ios_base::fixed);
         for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
@@ -1109,6 +1114,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
           statisticsStream << subband << " ";
           statisticsStream << stat << endl;
         }
+        LOG_DEBUG(formatString("statistics:%s",statisticsStream.str().c_str()));
         
         GCFPVString statisticsString(statisticsStream.str());
         // set the property
@@ -1121,10 +1127,12 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         {
           if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
           {
+            LOG_DEBUG(formatString("Writing subband statistics to %s",propSetIt->second->getScope().c_str()));
             propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
           }
           else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
           {
+            LOG_DEBUG(formatString("Writing beamlet statistics to %s",propSetIt->second->getScope().c_str()));
             propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
           }
         }
