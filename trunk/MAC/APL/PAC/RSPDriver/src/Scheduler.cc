@@ -100,6 +100,17 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
       completeSync();
     }
 
+    //
+    // round to nearest second t, warn if time is too far off from top of second
+    //
+    //        t-1        t         t+1
+    //            XXXX|<--->|XXXX
+    //
+    unsigned long second = timeout->sec;
+    if (timeout->usec >= 1e6-1000) second++; // round to next whole second
+    if (timeout->usec > 1000 && timeout->usec < 1e6 - 1000) {
+      LOG_WARN_STR("Scheduler time too far off from top off second: usec=" << timeout->usec);
+    }
     setCurrentTime(timeout->sec, 0);
 
     scheduleCommands();

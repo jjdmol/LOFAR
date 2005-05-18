@@ -70,6 +70,10 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #define ETHERTYPE_EPA 0x10FA
 
 using namespace RSP;
@@ -81,7 +85,8 @@ static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
 
 RSPDriver::RSPDriver(string name)
   : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler(),
-    m_update_counter(0), m_n_updates(0), m_elapsed(0)
+    m_update_counter(0), m_n_updates(0), m_elapsed(0),
+    m_ppsfd(-1), m_ppshandle(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
@@ -145,8 +150,8 @@ bool RSPDriver::isEnabled()
     }
   }
 
-  // m_clock is only used in SW_SYNC mode 0
-  if (0 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+  // m_clock is only used in SYNC_MODE mode 0
+  if (0 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
   {
     enabled = enabled && m_clock.isConnected();
   }
@@ -366,12 +371,51 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
   {
     case F_INIT:
     {
+      if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i)) {
+	pps_params_t parm;
+
+	// standard time format and trigger on rising edge, API version 1
+	parm.mode = PPS_TSFMT_TSPEC;
+	parm.mode |= PPS_CAPTUREASSERT; // trigger on ASSERT
+	parm.api_version = PPS_API_VERS_1;
+
+	if ((m_ppsfd = open(GET_CONFIG_STRING("RSPDriver.PPS_DEVICE"), O_RDWR)) < 0) {
+	  LOG_FATAL_STR("Error opening '" << GET_CONFIG_STRING("RSPDriver.PPS_DEVICE") << "': " << strerror(errno));
+	  exit(EXIT_FAILURE);
+	}
+
+	if (time_pps_create(m_ppsfd, &m_ppshandle) < 0) {
+	  LOG_FATAL_STR("PPS device does not support PPS API?: " << strerror(errno));
+	  exit(EXIT_FAILURE);
+	}
+
+	int caps = 0;
+	if (time_pps_getcap(m_ppshandle, &caps) < 0) {
+	  LOG_FATAL_STR("Cannot get PPS device capabilities:" << strerror(errno));
+	  exit(EXIT_FAILURE);
+	}
+	LOG_INFO(formatString("PPS device capabilities are 0x%x\n", caps));
+
+#if 0
+	if (!(caps & PPS_CANWAIT & PPS_CAPTUREASSERT)) {
+	  LOG_FATAL("PPS device does not support PPS_CANWAIT & PPS_CAPTUREASSERT. PPS device unsuitable.");
+	  exit(EXIT_FAILURE);
+	}
+#endif
+
+	if (time_pps_setparams(m_ppshandle, &parm) < 0) {
+	  LOG_FATAL_STR("Error settings parameters on PPS device:" << strerror(errno));
+	  exit(EXIT_FAILURE);
+	}
+
+	// now we're setup to use time_pps_fetch...
+      }
     }
     break;
 
     case F_ENTRY:
     {
-      if (0 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+      if (0 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
       {
 	if (!m_clock.isConnected()) m_clock.open();
       }
@@ -463,13 +507,13 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       // start waiting for clients
       if (!m_acceptor.isConnected()) m_acceptor.open();
 
-      if (1 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+      if (1 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
       {
 	/* Start the update timer after 1 second */
 	m_board[0].setTimer(1.0,
 			    GET_CONFIG("RSPDriver.SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
       }
-      else if (2 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+      else if (2 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
       {
 	//
 	// single timeout after 1 second to set
@@ -482,6 +526,28 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	// to print average nr of updates per second
 	//
 	m_clock.setTimer(1.0, 1.0); // every second after 1.0 second
+      }
+      else if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+      {
+	//
+	// read away most recent timestamp..
+	//
+	if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
+	    LOG_FATAL_STR("Error fetching initial PPS: " << strerror(errno));
+	    exit(EXIT_FAILURE);
+	}
+
+	//
+	// and wait for next timestamp to get in sync immediately
+	//
+	if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
+	    LOG_FATAL_STR("Error fetching initial PPS: " << strerror(errno));
+	    exit(EXIT_FAILURE);
+	}
+
+	// start a single shot timer that is slightly shorter that 1 second
+	// when the timer expires, wait for the true PPS using time_pps_fetch
+	m_board[0].setTimer(0.99); // 1st event after 1 second
       }
     }
     break;
@@ -581,12 +647,58 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       if (&port == &m_board[0])
       {
 	//
-	// If SYNC_MODE != 0 then run the scheduler
+	// If SYNC_MODE == 1|2 then run the scheduler
 	// directly on the software timer.
 	//
-	if (0 != GET_CONFIG("RSPDriver.SW_SYNC", i))
+	if (   (1 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+	    || (2 == GET_CONFIG("RSPDriver.SYNC_MODE", i)))
 	{
 	  (void)clock_tick(m_clock); // force clock tick
+	}
+	else if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
+	{
+	  const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
+	  GCFTimerEvent timer;
+	  pps_info_t prevppsinfo = m_ppsinfo;
+
+	  if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
+
+	    LOG_WARN_STR("Error fetching PPS: " << strerror(errno));
+	    
+	    // print time, ugly
+	    char timestr[32];
+	    strftime(timestr, 32, "%T", gmtime(&timeout->sec));
+	    LOG_INFO(formatString("TICK: time=%s.%06d UTC (not PPS)", timestr, timeout->usec));
+
+	    m_board[0].setTimer((long)1); // next event after exactly 1 second
+	  
+	  } else {
+
+	    // print time of day, ugly
+	    char timestr[32];
+	    strftime(timestr, 32, "%T", gmtime(&timeout->sec));
+	    LOG_INFO(formatString("TICK: time=%s.%06d UTC (timeout)", timestr, timeout->usec));
+
+	    // print time of day, ugly
+	    strftime(timestr, 32, "%T", gmtime(&m_ppsinfo.assert_timestamp.tv_sec));
+	    LOG_INFO(formatString("TICK: PPS_time=%s.%06d UTC", timestr, m_ppsinfo.assert_timestamp.tv_nsec / 1000));
+	    
+	    /* construct a timer event */
+	    timer.sec  = m_ppsinfo.assert_timestamp.tv_sec;
+	    timer.usec = m_ppsinfo.assert_timestamp.tv_nsec / 1000;
+	    timer.id   = 0;
+	    timer.arg  = 0;
+
+	    /* check for missed PPS */
+	    if (prevppsinfo.assert_sequence + 1 != m_ppsinfo.assert_sequence) {
+	      LOG_WARN_STR("Missed " << m_ppsinfo.assert_sequence - prevppsinfo.assert_sequence - 1 << " PPS events.");
+	    }	      
+	  }
+
+	  m_board[0].setTimer(0.95); // next event in just under 1 second
+
+	  /* run the scheduler with the timer event */
+	  status = m_scheduler.run(timer, port);
 	}
       }
       else if (&port == &m_clock)
@@ -612,7 +724,12 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       LOG_INFO(formatString("DISCONNECTED: port '%s'", port.getName().c_str()));
       port.close();
 
-      if (&port == &m_board[0] || &port == &m_board[1])
+      if (&port == &m_acceptor)
+      {
+	LOG_FATAL("Failed to start listening for client connections.");
+	exit(EXIT_FAILURE);
+      }
+      else if (&port == &m_board[0] || &port == &m_board[1] || &port == &m_acceptor)
       {
 	m_acceptor.close();
 	TRAN(RSPDriver::initial);
@@ -642,10 +759,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	status = m_scheduler.dispatch(event, port);
 
 	//
-	// if SW_SYNC mode 2 and sync has completed
+	// if SYNC_MODE mode 2 and sync has completed
 	// send new clock_tick
 	//
-	if (2 == GET_CONFIG("RSPDriver.SW_SYNC", i) &&
+	if (2 == GET_CONFIG("RSPDriver.SYNC_MODE", i) &&
 	    m_scheduler.syncHasCompleted())
 	{
 	  m_board[0].setTimer(0.0); // immediate
@@ -679,7 +796,7 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 
   uint8 count = '0';
 
-  if (0 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+  if (0 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
   {
     if (port.recv(&count, sizeof(uint8)) != 1)
     {
@@ -699,7 +816,7 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
   // print time, ugly
   char timestr[32];
   strftime(timestr, 32, "%T", gmtime(&now.tv_sec));
-  LOG_INFO(formatString("TICK: time=%s.%d UTC", timestr, now.tv_usec));
+  LOG_INFO(formatString("TICK: time=%s.%06d UTC", timestr, now.tv_usec));
 
   /* construct a timer event */
   GCFTimerEvent timer;
@@ -1176,9 +1293,9 @@ int main(int argc, char** argv)
   
   try
   {
+    //GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriver.conf");
     GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriverPorts.conf");
     GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
-    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriver.conf");
   }
   catch (Exception e)
   {
