@@ -44,7 +44,6 @@
 #define ACKTAG        734
 
 #define IP_LEN	      16
-#define BUFLEN	      1048576  // 1 MByte
 
 namespace LOFAR {
 
@@ -61,6 +60,7 @@ void read_config(int32  myrank,
 		 int32  *listener,  // will be used as bool
 		 int32  *sender,    // will be used as bool
 		 int32  *mymode, 
+		 int32  *pkgsize,
 		 char   *myip, 
 		 int32  *myport) {
   
@@ -82,6 +82,8 @@ void read_config(int32  myrank,
   printf("sender = %i\n", *sender);
   fscanf(cfg, "mode %i\n", mymode);
   printf("mode = %i\n", *mymode);
+  fscanf(cfg, "pkgsize %i\n", pkgsize);
+  printf("pkgsize = %i\n", *pkgsize);
 
   char anip[IP_LEN];
   int32 anode, aport;
@@ -97,7 +99,6 @@ void read_config(int32  myrank,
   }
 
   fclose (cfg);
-  printf("runs = %i\n", *runs);
   printf("Finished reading cfg file\n");
 }
 
@@ -128,7 +129,7 @@ int main(int32 argc, char*argv[]) {
   printf("Listenermode : %i\n", listenermode);
 
 
-  INIT_LOGGER("/home/schaaf/SocketTester");
+  INIT_LOGGER("SocketTester");
   MPI_Init(&argc, &argv);
 
   // Get info about MPI environment
@@ -142,12 +143,12 @@ int main(int32 argc, char*argv[]) {
   int32 mymode, myport;
   int32 ackMode;
   int32 sleeptime;
-  int32 runs;
+  int32 runs, pkgsize;
   int32 sender,listener; // interpreted as bool
   char  myip[IP_LEN];
   sleep(5*myrank);
   read_config(myrank,nodes,&ackMode,&sleeptime,&runs,
-	      &listener, & sender, &mymode,&myip[0],&myport);
+	      &listener, & sender, &mymode, &pkgsize, &myip[0],&myport);
 
   LOG_TRACE_CALC_STR("runs = " << runs);
   LOG_TRACE_CALC_STR("sleeptime = " << sleeptime);
@@ -176,6 +177,7 @@ int main(int32 argc, char*argv[]) {
 	LOG_ERROR("Client socket creation failed");
 	exit(0);
       }
+      mysock->setBlocking(true);
       mysock->connect(10000);
 
     }
@@ -185,9 +187,14 @@ int main(int32 argc, char*argv[]) {
     
     /* start the data transfer */
     int32  r, n;
-    char   message[BUFLEN], buf[BUFLEN];
+    double startTime = MPI_Wtime();
+    double totalsent = 0.;  // argegated sent data
+    double totalmissed = 0.; // aggregated missed data
+    int32  sent;
+    char*  message = new char[pkgsize];
+    char*  buf     = new char[pkgsize];
+    
     strcpy (message, "testmessage SocketTester");
-    int32  len = BUFLEN; //old: strlen(message);
     LOG_TRACE_FLOW_STR("start runs loop " << runs);
     for (r = 0; r < runs; r++) {
       LOG_TRACE_FLOW_STR("Wait for BCast " << r);
@@ -197,9 +204,15 @@ int main(int32 argc, char*argv[]) {
       if (n == myrank || n == -1) {
 	/* perform the actual data transport */
 	if (sender) {
-	  mysock->write(message, len);
+	  sent = mysock->write(message, pkgsize);
+	  totalsent += sent;
+	  totalmissed += (sent - pkgsize);
+	  if (sent != pkgsize) cout << sent << endl;
 	} else { /* receiver */
-	  mysock->read(&buf[0], len);
+	  sent =  mysock->read(&buf[0], pkgsize) ;
+	  totalsent += sent;
+	  totalmissed += (sent - pkgsize);
+	  if (sent != pkgsize) cout << sent << endl;
 	}
       }
 
@@ -217,7 +230,25 @@ int main(int32 argc, char*argv[]) {
 
       usleep (sleeptime); 
     }
-
+    cout << endl;
+    double endTime = MPI_Wtime();
+    cout << "   Starttime " << startTime
+	 << "   EndTime " << endTime
+         << "   runs "    << runs
+	 << "   Buflen " << pkgsize 
+	 << "   totalsent " << totalsent
+         << "   (missed " << totalmissed << ")"
+	 << endl;
+        double totaltime = endTime - startTime;
+    cout << "total sent = " << totalsent ;
+    totalsent *= 8./(1024.*1024.*1024.); // in Gbits
+    cout << "(" << totalsent << " Gbit)" 
+	 << "   totaltime = " << totaltime 
+	 << endl;
+    cout << "Client average transfer rate = "
+	 << totalsent / totaltime
+	 << "Gbps per node " << endl;
+    
   } else { /* my rank == 0 */
     /* I am the master 
      * All I have to do is make the others work
@@ -268,11 +299,16 @@ int main(int32 argc, char*argv[]) {
 	} // switch
       } // for nodes
     } // for runs
-    double endTime = MPI_Wtime();
-    cout << "average transfer rate = "
-	 << runs*BUFLEN/(endTime-startTime)/(1024*1024*1024)
-	 << "Gbps per node " << endl;
-      } // master or not
+//     double endTime = MPI_Wtime();
+//     cout << "   Starttime " << startTime
+// 	 << "   EndTime " << endTime
+// 	 << "   runs " << runs
+// 	 << "   Buflen " << pkgsize 
+// 	 << endl;
+//     cout << "average transfer rate = "
+// 	 << runs*pkgsize/((endTime-startTime)*(1024*1024*1024))
+// 	 << "Gbps per node " << endl;
+  } // master or not
   
   MPI_Finalize();
   return (0);
