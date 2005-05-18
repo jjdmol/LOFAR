@@ -8,4 +8,5 @@ TCcuPic.TCcuPic	1#1
 
 # Datapoint/DpId
 DpName	TypeName	ID
-PIC_CCU	TCcuPic	63846
+PIC	TCcuPic	63846
+PIC_Stations	TCcuPic	63847
