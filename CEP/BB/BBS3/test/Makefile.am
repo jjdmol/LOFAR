@@ -1,4 +1,7 @@
-check_PROGRAMS = tPredSolv tPerturbed t3C343
+check_PROGRAMS = tMeqPolc tPredSolv tPerturbed t3C343
+
+tMeqPolc_SOURCES = tMeqPolc.cc
+tMeqPolc_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
 
 tPredSolv_SOURCES = tPredSolv.cc
 tPredSolv_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
@@ -17,6 +20,6 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  AIPSPP=$(AIPSPP)
 
 # TESTS = tBBS3_test.sh
-TESTS = tPredSolv.sh tPerturbed.sh
+TESTS = tMeqPolc.sh tPredSolv.sh tPerturbed.sh
 
 include $(lofar_sharedir)/Makefile.common
