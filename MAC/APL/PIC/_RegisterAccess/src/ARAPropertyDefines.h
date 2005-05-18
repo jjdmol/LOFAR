@@ -48,6 +48,15 @@ const int N_RCUS                = N_RCUS_PER_AP*
                                   N_RACKS;
 */
 
+const int BIT_LBAENABLE = 0;
+const int BIT_HBAENABLE = 1;
+const int BIT_BANDSEL = 2;
+const int BIT_FILSELA = 3;
+const int BIT_FILSELB = 4;
+const int BIT_VLENABLE = 5;
+const int BIT_VHENABLE = 6;
+const int BIT_VDDVCCEN = 7;
+
 const char APC_Station[]        = "ApcStationType";
 const char APC_Rack[]           = "ApcRackType";
 const char APC_SubRack[]        = "ApcSubRackType";
@@ -108,19 +117,19 @@ const char TYPE_LCU_PAC_LogicalDeviceScheduler[]  = "TLcuPacLogicalDeviceSchedul
 
 const GCF::Common::TPSCategory PSCAT_LCU_PIC               = GCF::Common::PS_CAT_PERMANENT;
 const GCF::Common::TPSCategory PSCAT_LCU_PIC_Alert         = GCF::Common::PS_CAT_PERM_AUTOLOAD;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_Maintenance   = GCF::Common::PS_CAT_PERMANENT;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Maintenance   = GCF::Common::PS_CAT_PERM_AUTOLOAD;
 const GCF::Common::TPSCategory PSCAT_LCU_PIC_Rack          = GCF::Common::PS_CAT_PERM_AUTOLOAD;
 const GCF::Common::TPSCategory PSCAT_LCU_PIC_SubRack       = GCF::Common::PS_CAT_PERM_AUTOLOAD;
 const GCF::Common::TPSCategory PSCAT_LCU_PIC_Board         = GCF::Common::PS_CAT_PERM_AUTOLOAD;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_MEPStatus     = GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_SYNCStatus    = GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_BoardRCUStatus= GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_Ethernet      = GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_FPGA          = GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_RCU           = GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_ADCStatistics = GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_LFA           = GCF::Common::PS_CAT_TEMPORARY;
-const GCF::Common::TPSCategory PSCAT_LCU_PIC_HFA           = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_MEPStatus     = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_SYNCStatus    = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_BoardRCUStatus= GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Ethernet      = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_FPGA          = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_RCU           = GCF::Common::PS_CAT_PERMANENT;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_ADCStatistics = GCF::Common::PS_CAT_PERMANENT;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_LFA           = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_HFA           = GCF::Common::PS_CAT_PERM_AUTOLOAD;
 
 
 // the following constants cannot be defined as const char because they are used

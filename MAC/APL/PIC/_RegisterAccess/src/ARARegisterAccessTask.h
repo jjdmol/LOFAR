@@ -110,9 +110,9 @@ namespace ARA
       void handleMaintenance(string propName, const GCF::Common::GCFPValue& value);
       
       /**
-       * Handle a change of the BandSel field
+       * Handle a change of one of the RCU settings fields
        */
-      void handleBandSelection(string propName, const GCF::Common::GCFPValue& value);
+      void handleRCUSettings(string propName, const int bitnr, const GCF::Common::GCFPValue& value);
       
     private:
       // internal types

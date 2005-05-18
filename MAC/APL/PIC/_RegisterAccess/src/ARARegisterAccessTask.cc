@@ -771,20 +771,38 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_LBAENABLE) != 0)
+      {
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_LBAENABLE,*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_HBAENABLE) != 0)
+      {
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_HBAENABLE,*pPropAnswer->pValue);
+      }
       else if(strstr(pPropAnswer->pPropName,PROPNAME_BANDSEL) != 0)
       {
-        handleBandSelection(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_BANDSEL,*pPropAnswer->pValue);
       }
-/*
       else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSELA) != 0)
       {
-        handleFilterSelectionA(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_FILSELA,*pPropAnswer->pValue);
       }
       else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSELB) != 0)
       {
-        handleFilterSelectionB(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_FILSELB,*pPropAnswer->pValue);
       }
-*/
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_VLENABLE) != 0)
+      {
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_VLENABLE,*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_VHENABLE) != 0)
+      {
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_VHENABLE,*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_VDDVCCEN) != 0)
+      {
+        handleRCUSettings(string(pPropAnswer->pPropName),BIT_VDDVCCEN,*pPropAnswer->pValue);
+      }
       break;
     }
     
@@ -1377,7 +1395,7 @@ void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& val
   m_physicalModel.inMaintenance(maintenanceFlag,resource);
 }
 
-void RegisterAccessTask::handleBandSelection(string propName, const GCFPValue& value)
+void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, const GCFPValue& value)
 {
   GCFPVBool pvLBAEnable;
   GCFPVBool pvHBAEnable;
@@ -1391,16 +1409,46 @@ void RegisterAccessTask::handleBandSelection(string propName, const GCFPValue& v
   TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(propName);
   if(propsetIt != m_myPropertySetMap.end())
   {
-    pvBandSel.copy(value);
     // get old register values
     pvLBAEnable.copy(*propsetIt->second->getValue(PROPNAME_LBAENABLE)); // bit 0
     pvHBAEnable.copy(*propsetIt->second->getValue(PROPNAME_HBAENABLE)); // bit 1
-  //  pvBandSel.copy(*propsetIt->second->getValue(PROPNAME_BANDSEL));   // bit 2
+    pvBandSel.copy(*propsetIt->second->getValue(PROPNAME_BANDSEL));   // bit 2
     pvFilSelA.copy(*propsetIt->second->getValue(PROPNAME_FILSELA));   // bit 3
     pvFilSelB.copy(*propsetIt->second->getValue(PROPNAME_FILSELB));   // bit 4
     pvVLEnable.copy(*propsetIt->second->getValue(PROPNAME_VLENABLE));  // bit 5
     pvVHEnable.copy(*propsetIt->second->getValue(PROPNAME_VHENABLE));  // bit 6
     pvVddVccEn.copy(*propsetIt->second->getValue(PROPNAME_VDDVCCEN));  // bit 7
+    
+    // modify the new value
+    switch(bitnr)
+    {
+      case BIT_LBAENABLE:
+        pvLBAEnable.copy(value);
+        break;
+      case BIT_HBAENABLE:
+        pvHBAEnable.copy(value);
+        break;
+      case BIT_BANDSEL:
+        pvBandSel.copy(value);
+        break;
+      case BIT_FILSELA:
+        pvFilSelA.copy(value);
+        break;
+      case BIT_FILSELB:
+        pvFilSelB.copy(value);
+        break;
+      case BIT_VLENABLE:
+        pvVLEnable.copy(value);
+        break;
+      case BIT_VHENABLE:
+        pvVHEnable.copy(value);
+        break;
+      case BIT_VDDVCCEN:
+        pvVddVccEn.copy(value);
+        break;
+      default:
+        break;
+    }
     
     int rcucontrol = 0;
     if(pvLBAEnable.getValue())
