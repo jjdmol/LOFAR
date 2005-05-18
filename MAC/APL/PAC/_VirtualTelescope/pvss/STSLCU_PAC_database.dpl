@@ -1,0 +1,81 @@
+# ascii dump of database
+
+# DpType
+TypeName
+TLcuPacLogicalDeviceScheduler.TLcuPacLogicalDeviceScheduler	1#1
+	command	25#2
+	status	25#3
+TLcuPacWaveformGenerator.TLcuPacWaveformGenerator	1#1
+	frequency	22#2
+	amplitude	20#3
+TLcuPacVT.TLcuPacVT	1#1
+	command	25#2
+	status	25#3
+	startTime	20#4
+	stopTime	20#5
+	srgName	25#6
+	bfName	25#7
+TLcuPacSR.TLcuPacSR	1#1
+	command	25#2
+	status	25#3
+	startTime	20#4
+	stopTime	20#5
+	filter	20#6
+	antenna	20#7
+	power	20#8
+	frequency	22#9
+TLcuPacSRG.TLcuPacSRG	1#1
+	command	25#2
+	status	25#3
+	startTime	20#4
+	stopTime	20#5
+	filter	20#6
+	antenna	20#7
+	power	20#8
+	frequency	22#9
+TLcuPacSBF.TLcuPacSBF	1#1
+	command	25#2
+	status	25#3
+	directionType	25#4
+	directionAngle1	22#5
+	directionAngle2	22#6
+	subbandStart	20#7
+	subbandEnd	20#8
+TLcuPac.TLcuPac	1#2
+	status	21#3
+
+# Datapoint/DpId
+DpName	TypeName	ID
+PAC_VT1	TLcuPacVT	48000
+PAC_VT2	TLcuPacVT	48001
+PAC_VT3	TLcuPacVT	48002
+PAC_VT4	TLcuPacVT	48003
+PAC_VT5	TLcuPacVT	48004
+PAC_VT6	TLcuPacVT	48005
+PAC_VT7	TLcuPacVT	48006
+PAC_VT8	TLcuPacVT	48007
+PAC_VT1_BF1	TLcuPacSBF	48008
+PAC_VT2_BF2	TLcuPacSBF	48009
+PAC_VT3_BF3	TLcuPacSBF	48010
+PAC_VT4_BF4	TLcuPacSBF	48011
+PAC_VT5_BF5	TLcuPacSBF	48012
+PAC_VT6_BF6	TLcuPacSBF	48013
+PAC_VT7_BF7	TLcuPacSBF	48014
+PAC_VT8_BF8	TLcuPacSBF	48015
+PAC_SRG5	TLcuPacSRG	48028
+PAC_SRG6	TLcuPacSRG	48029
+PAC_SRG7	TLcuPacSRG	48030
+PAC_SRG8	TLcuPacSRG	48031
+PAC_SR1	TLcuPacSR	53927
+PAC_SR2	TLcuPacSR	53944
+PAC_SR3	TLcuPacSR	53945
+PAC_SR4	TLcuPacSR	53946
+PAC_SR5	TLcuPacSR	53947
+PAC_SR6	TLcuPacSR	53948
+PAC_SR7	TLcuPacSR	53949
+PAC_SR8	TLcuPacSR	53950
+PAC_SRG1	TLcuPacSRG	53951
+PAC_SRG2	TLcuPacSRG	53952
+PAC_SRG3	TLcuPacSRG	53953
+PAC_SRG4	TLcuPacSRG	53954
+PAC_LogicalDeviceScheduler	TLcuPacLogicalDeviceScheduler	54325
