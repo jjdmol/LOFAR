@@ -1114,7 +1114,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
           statisticsStream << subband << " ";
           statisticsStream << stat << endl;
         }
-        LOG_DEBUG(formatString("statistics:%s",statisticsStream.str().c_str()));
+        LOG_DEBUG(formatString("first part of statistics:%s",statisticsStream.str().substr(0,30).c_str()));
         
         GCFPVString statisticsString(statisticsStream.str());
         // set the property
@@ -1127,13 +1127,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         {
           if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
           {
-            LOG_DEBUG(formatString("Writing subband statistics to %s",propSetIt->second->getScope().c_str()));
-            propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
+            TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
+            LOG_DEBUG(formatString("Writing subband statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
           }
           else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
           {
-            LOG_DEBUG(formatString("Writing beamlet statistics to %s",propSetIt->second->getScope().c_str()));
-            propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
+            TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
+            LOG_DEBUG(formatString("Writing beamlet statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
           }
         }
       }
