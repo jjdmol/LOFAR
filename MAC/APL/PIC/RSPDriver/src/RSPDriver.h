@@ -35,6 +35,7 @@
 #include "Scheduler.h"
 
 #include <list>
+#include <sys/timepps.h>
 
 namespace RSP
 {
@@ -56,7 +57,7 @@ namespace RSP
       void addAllSyncActions();
 
       /**
-       * Open all ports to boards.
+       * Open or close all ports to boards.
        */
       void openBoards();
 
@@ -133,6 +134,10 @@ namespace RSP
       int m_update_counter; // nr of updates completed in one second
       int m_n_updates;      // number of completed updates
       int m_elapsed;        // elapsed number of seconds
+
+      int          m_ppsfd;     // file descriptor for PPS device
+      pps_handle_t m_ppshandle; // handle to PPS API interface
+      pps_info_t   m_ppsinfo;   // most recent ppsinfo
   };
 
 };
