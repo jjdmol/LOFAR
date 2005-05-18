@@ -110,6 +110,10 @@ public:
   // Clone the instance of the derived TransportHolder.
   virtual TransportHolder* clone() const;
 
+  // The reset method is called when the source or destination of a 
+  // connection changes.
+  // Resets all members which are source or destination specific.
+  virtual void reset() = 0;
 
 };
 

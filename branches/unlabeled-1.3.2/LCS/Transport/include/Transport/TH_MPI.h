@@ -95,6 +95,9 @@ public:
   // Create a copy
   virtual TH_MPI* clone() const;
 
+  // Resets all members which are source or destination specific.
+  void reset();
+
   static void initMPI (int argc, const char *argv[]);
   static void finalize();
   static void waitForBroadCast();
@@ -146,6 +149,9 @@ inline bool TH_MPI::init()
 
 inline bool TH_MPI::isClonable() const
   { return true; }
+
+inline void TH_MPI::reset()
+  {}
 
 }
 

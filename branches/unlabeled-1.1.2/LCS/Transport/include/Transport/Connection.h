@@ -93,7 +93,7 @@ class Connection
   /// Get its tag.
   int getTag() const;
 
-  /// Change the connection start/end point
+  /// Change the connection start/end point.
   void setDestinationDH(DataHolder* dest);
   void setSourceDH(DataHolder* dest);
 

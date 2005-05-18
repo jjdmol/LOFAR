@@ -38,26 +38,26 @@ namespace LOFAR
 /**
    This class defines the transport mechanism between data holders
    that have been connected using a TH_ShMem object. This can
-   only be done when both data holder reside within the same address
+   only be done when both data holders reside within the same address
    space.  It uses memcpy to transport the data.
-  
-   The match between send and receive is done using a map.  This map
-   keeps track of all messages that have been sent through the
-   TH_Mem::send function. The tag argument is mapped to the private Msg
-   class which keeps record of the address of the buffer that should be
-   sent, the number of bytes to send and the tag of the send.  The
-   assumption of this implementation is that the tag is unique for
-   communication between each pair of connected DataHolders and that
-   there is no need to queue multiple sends (i.e. a send will always be
-   followed by the matching receive before the next send is done).
+
+   It uses a variable in shared memory to communicate the address in
+   shared memory to copy the data from. The address of this variable
+   has to be communicated once to the receiver. For this another
+   transport mechanism must be used.
 */
 
 class TH_ShMem: public TransportHolder
 {
 public:
   // Create an object to send data from source to destination.
-  // Both must be running on the same node.
-  TH_ShMem(int sourceNode, int targetNode);
+  // Both must be running on the same node. 
+  // The TransportHolder th is used once to communicate the 
+  // handle of the shared memory region used in communication 
+  // between source and destination.
+  // NB: TH_ShMem becomes owner of this th and takes care of its
+  // destruction!
+  TH_ShMem(TransportHolder* th);
 
   virtual ~TH_ShMem();
 
@@ -69,11 +69,11 @@ public:
      Receive the data. This call does the actual data transport
      by memcpy'ing the data from the sender.
   */
-  void initRecv(void* buf, int tag);
+  void recvCommContext(int tag);
   virtual bool recvBlocking(void* buf, int32 nbytes, int tag, 
 			    int32 offset=0, DataHolder* dh=0);
   virtual int32 recvNonBlocking(void* buf, int32 nbytes, int tag, 
-			       int32 offset=0, DataHolder* dh=0);
+				int32 offset=0, DataHolder* dh=0);
 
   // Wait for the data to be received
   virtual void waitForReceived(void* bug, int nbytes, int tag);
@@ -85,7 +85,7 @@ public:
      which can be matched by the recv call.
      The only thing it does is setting the status.
   */
-  void initSend(void* buf, int tag);
+  void sendCommContext(int tag);
   virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
   virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
@@ -100,22 +100,14 @@ public:
   /// Return a copy of this transportholder
   virtual TH_ShMem* clone() const;
 
+  // Resets all members which are source or destination specific.
+  virtual void reset();
+
   // Get the type of BlobString needed from the transport holder.
   virtual BlobStringType blobStringType() const;
 
   // A data buffer can not grow.
   virtual bool canDataGrow() const;
-
- 
-  static void   init (int argc, const char *argv[]);
-  static void   finalize();
-  static void   waitForBroadCast();
-  static void   waitForBroadCast (unsigned long& aVar);
-  static void   sendBroadCast (unsigned long timeStamp);
-  static int    getCurrentRank();
-  static int    getNumberOfNodes();
-  static void   synchroniseAllProcesses();
-  static string getHostName(int rank);
 
  private:
 
@@ -157,23 +149,25 @@ public:
       size_t itsOffset;
   };
 
+  // Class CommContext keeps track of the sending shared memory buffer
+  // and semaphores to synchronize sender and receiver.
   class CommContext
   {
   public:
-
-      void setArgs(void* buf, int remote, int tag);
-      bool matchArgs(void* buf, int remote, int tag);
+      void init(void);
+      void setHandle(ShMemHandle hdl);
+      bool matchHandle(ShMemHandle& hdl);
+      shmem_cond_t* getRecvCompleteCondition();
+      shmem_cond_t* getSendReadyCondition();
 
   public:
-      ShMemHandle handle;
-      void*       buf;
-      int         remote;
-      int         tag;
+      ShMemHandle handle;                      // Handle of the sending ShMemBuf
+      shmem_cond_t itsRecvCompleteCondition;   // use semaphore in shared memory to synchronize the sender and receiver
+      shmem_cond_t itsSendReadyCondition;
   };
 
   /**
-     The class Buf keeps track of the shared memory buffer
-     that is used in shared memory communication.
+     The class ShMemBuf is a buffer in shared memory.
   */                                                                                                                                                                                                                                    
   class ShMemBuf
   {
@@ -183,38 +177,32 @@ public:
       
       int           getMagicCookie();
       bool          matchMagicCookie();
-      int           getRemote();
-      int           getTag();
-      shmem_cond_t* getRecvCompleteCondition();
-      shmem_cond_t* getSendReadyCondition();
-      void*         getDataAddress();
-      
+      void*         getDataAddress();   
       static ShMemBuf* toBuf(void* ptr);
 
   private:
-      unsigned int itsMagicCookie;
-      shmem_cond_t itsRecvCompleteCondition;
-      shmem_cond_t itsSendReadyCondition;
+      unsigned int itsMagicCookie;    // Identifies this as a shared memory buffer
       void*        itsBuf;
   };
 
-  int       itsSourceNode;
-  int       itsTargetNode;
-  bool      itsFirstCall;
-  ShMemBuf* itsSendBuf;
-  ShMemBuf* itsRecvBuf;
+  TransportHolder* itsHelperTH;       // TransportHolder, used once to communicate the shared memory handle
 
-  CommContext itsSendContext;
-  CommContext itsRecvContext;
+  bool             itsFirstCall;     // First time send/recv is called on this TH?
+  bool             itsReset;         // Has reset been called?
 
-  static char* hostNames;
+  ShMemHandle      itsCommHandle;    // Handle of the CommContext 
+  CommContext*     itsCommContext;   // Communication context in shared memory
+
+  ShMemBuf*        itsSendBuf;       // Sending shared memory buffer
+  ShMemBuf*        itsRecvBuf;       // Receiving shared memory buffer,
+                                     // (only used by receiving TH_ShMem)
+
+  ShMemHandle      itsPrevSendHandle; // Handle of the previous sending buffer 
 };
 
-inline bool TH_ShMem::init()
-  { return true; }
-
 inline bool TH_ShMem::isClonable() const
-  { return true; }
+  { return itsHelperTH->isClonable(); }
+
 
 }
 

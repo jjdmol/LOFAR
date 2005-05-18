@@ -59,6 +59,9 @@ public:
     /// Is TH_Socket clonable?
     virtual bool isClonable() const;
 
+    // Resets all members which are source or destination specific.
+    virtual void reset();    
+
     /// Read the data.
     virtual bool recvBlocking 		(void* buf, int32 nbytes, int32 tag,
 									 int offset = 0, DataHolder* dh = 0);
@@ -107,6 +110,9 @@ private:
 
 inline bool TH_Socket::isClonable() const
   { return false; }  
+
+inline void TH_Socket::reset()
+  { }
 
 } // namespace LOFAR
 

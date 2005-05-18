@@ -107,6 +107,9 @@ public:
 
   virtual TH_Mem* clone() const;
 
+  // Resets all members which are source or destination specific.
+  virtual void reset();
+
   // NB: The following method doesn't do what you expect! It does not
   // guarantee the buffer contents has been safely sent.
   // Your application should make sure write/read are called alternately.

@@ -96,6 +96,9 @@ public:
   /// Return a copy of this transportholder
   virtual TH_File* clone() const;
 
+  // Resets all members which are source or destination specific.
+  virtual void reset();
+
   static void finalize();
   static int getCurrentRank();
   static int getNumberOfNodes();
@@ -116,6 +119,10 @@ inline bool TH_File::init()
 
 inline bool TH_File::isClonable() const
   { return true; }
+
+inline void TH_File::reset()
+  {}
+
 
 }
 
