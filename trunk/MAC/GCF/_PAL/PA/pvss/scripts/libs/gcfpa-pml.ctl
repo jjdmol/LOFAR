@@ -125,7 +125,7 @@ void gcfMainCallBack(string callBackDP, blob value)
 {
 	dyn_string splittedDP = strsplit(dpSubStr(callBackDP, DPSUB_DP), "_");
 	unsigned lastElement = dynlen(splittedDP);
-	unsigned ID = splittedDP[lastElement];
+	unsigned ID = splittedDP[lastElement - 1];
 	string callBackFunc = findCallBackFunc(ID);
 	dyn_string msg;
 	string msgValue;
