@@ -39,6 +39,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <GCF/ParameterSet.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -1143,17 +1144,9 @@ void ARATestDriverTask::getHardwareIndexes(const string& propName,const string& 
 	hardwareIndexes.clear();
 	const int numIndexes=10;
 	int indexes[numIndexes];
-	int system=0;
 
-	if(0 == propName.find(string("System")))
-	{
-		string scanScope = string("System%d:")+scope;
-	  sscanf(propName.c_str(),scanScope.c_str(),&system,&indexes[0],&indexes[1],&indexes[2],&indexes[3],&indexes[4],&indexes[5],&indexes[6],&indexes[7],&indexes[8],&indexes[9]);
-	}	
-	else
-	{
-	  sscanf(propName.c_str(),scope.c_str(),&indexes[0],&indexes[1],&indexes[2],&indexes[3],&indexes[4],&indexes[5],&indexes[6],&indexes[7],&indexes[8],&indexes[9]);
-	}
+  string scanScope = GCFPVSSInfo::getLocalSystemName() + string(":")+scope;
+  sscanf(propName.c_str(),scanScope.c_str(),&indexes[0],&indexes[1],&indexes[2],&indexes[3],&indexes[4],&indexes[5],&indexes[6],&indexes[7],&indexes[8],&indexes[9]);
 	for(int i=0;i<numIndexes;i++)
 	{
 		hardwareIndexes.push_back(indexes[i]);
