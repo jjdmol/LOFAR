@@ -327,7 +327,7 @@ inline void DataHolder::setAllocationProperties(bool  		dataCanGrow,
   DBGASSERTSTR (!itsInitialized, "Allocation Properties are already set");
 
   itsDataCanGrow = dataCanGrow;
-  itsBlobType    = new BlobStringType(&aBlobType);
+  itsBlobType    = new BlobStringType(aBlobType);
   itsInitialized = true;
 }
 
