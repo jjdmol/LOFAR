@@ -45,7 +45,7 @@ namespace LOFAR
       ConverterClient(const string& server = "localhost", 
                       uint16 port = 31337);
 
-      virtual ~ConverterClient() {}
+      virtual ~ConverterClient();
 
       virtual SkyCoord j2000ToAzel(const SkyCoord& radec, 
                                    const EarthCoord& pos, 
