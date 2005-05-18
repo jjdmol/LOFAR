@@ -26,20 +26,19 @@
 // \file MNS/MeqDomain.h
 // The domain for an expression
 
-// This class represents a domain for which an expression has to be
-// evaluated.
-// The domain is normalized to the interval [-1,1].
-//    offset = (st+end)/2    and    scale = (end-st)/2.
-//    st = off-scale         and    end = off+scale
-// Then
-//    scaledvalue = (realvalue - offset) / scale
-
+#include <iosfwd>
 
 namespace LOFAR {
 
 // \ingroup BBS3
 // \addtogroup MNS
 // @{
+
+// This class represents a domain for which an expression has to be
+// evaluated. The x and y-values can be scaled to avoid having very large
+// values (e.g. frequencies).
+// Then
+//    scaledvalue = (realvalue - offset) / scale
 
 class MeqDomain
 {
@@ -79,6 +78,8 @@ public:
   bool operator== (const MeqDomain& that) const
   { return itsOffsetX == that.itsOffsetX  &&  itsScaleX == that.itsScaleX
        &&  itsOffsetY == that.itsOffsetY  &&  itsScaleY == that.itsScaleY; }
+
+  friend std::ostream& operator<< (std::ostream&, const MeqDomain&);
 
 private:
   double itsOffsetX;

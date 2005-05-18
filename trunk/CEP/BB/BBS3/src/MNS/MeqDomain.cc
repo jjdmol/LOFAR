@@ -46,4 +46,11 @@ MeqDomain::MeqDomain (double startX, double endX,
   itsScaleY  = (endY - startY) * .5;
 }
 
+std::ostream& operator<< (std::ostream& os, const MeqDomain& domain)
+{
+  os << "[(" << domain.startX() << ',' << domain.endX() << "),("
+     << domain.startY() << ',' << domain.endY() << ")]";
+  return os;
+}
+
 }
