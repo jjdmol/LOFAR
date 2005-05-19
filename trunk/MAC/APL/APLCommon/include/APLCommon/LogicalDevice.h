@@ -247,6 +247,7 @@ namespace APLCommon
       string _getConnectedChildName(GCF::TM::GCFPortInterface& port);
 
       TRemotePort                           m_parentPort; // connection with parent, if any
+      unsigned long                         m_parentReconnectTimerId;
       
       // the vector and map both contain the child ports. The vector is used
       // to cache the port at the moment of the accept. However, at that moment, 

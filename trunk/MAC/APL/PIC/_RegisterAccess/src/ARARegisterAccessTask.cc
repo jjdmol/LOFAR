@@ -843,7 +843,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
         updStatusEvent.handle));
 
     blitz::Array<EPA_Protocol::BoardStatus,  1>& boardStatus = updStatusEvent.sysstatus.board();
-//    blitz::Array<EPA_Protocol::RCUStatus,  1>& rcuStatus = updStatusEvent.sysstatus.rcu();
+    blitz::Array<EPA_Protocol::RCUStatus,  1>& rcuStatus = updStatusEvent.sysstatus.rcu();
     
     int rackNr=1;
     int subRackNr=1;
@@ -956,10 +956,10 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       int rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap2_rcu.statusx;
@@ -973,10 +973,10 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap3_rcu.statusx;
@@ -990,10 +990,10 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap4_rcu.statusx;
@@ -1007,13 +1007,12 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
     }
 
-/*
     for(int rcuNr=rcuStatus.lbound(blitz::firstDim); rcuNr <= rcuStatus.ubound(blitz::firstDim); ++rcuNr)
     {
       uint8   rcuStatusBits = rcuStatus(rcuNr).status;
@@ -1026,7 +1025,6 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       LOG_DEBUG(formatString("RCU[%d]= %s",rcuNr,scopeString));
       updateRCUproperties(scopeString,rcuStatusBits);
     }
-*/
   }
   
   return status;
@@ -1310,7 +1308,7 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
   }
 }
 
-void RegisterAccessTask::updateRCUproperties(string scope,uint8 status,uint32 nof_overflow)
+void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
 {
   // layout rcu status (for both statusX and statusY): 
   // 7         6         5         4        3        2       1          0
@@ -1319,44 +1317,66 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status,uint32 no
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
-  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
   }
   else
   {
     unsigned int tempStatus = (status >> 7 ) & 0x01;
     GCFPVBool pvBoolVddVccEn(tempStatus);
-    it->second->setValue(string(PROPNAME_VDDVCCEN),pvBoolVddVccEn);
+    if(pvBoolVddVccEn.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VDDVCCEN)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_VDDVCCEN),pvBoolVddVccEn);
+    }
     
     tempStatus = (status >> 6) & 0x01;
     GCFPVBool pvBoolVhEnable(tempStatus);
-    it->second->setValue(string(PROPNAME_VHENABLE),pvBoolVhEnable);
-
+    if(pvBoolVhEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VHENABLE)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_VHENABLE),pvBoolVhEnable);
+    }
+    
     tempStatus = (status >> 5) & 0x01;
     GCFPVBool pvBoolVlEnable(tempStatus);
-    it->second->setValue(string(PROPNAME_VLENABLE),pvBoolVlEnable);
-
+    if(pvBoolVlEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VLENABLE)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_VLENABLE),pvBoolVlEnable);
+    }
+    
     tempStatus = (status >> 4) & 0x01;
     GCFPVBool pvBoolFilSelB(tempStatus);
-    it->second->setValue(string(PROPNAME_FILSELB),pvBoolFilSelB);
-
+    if(pvBoolFilSelB.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSELB)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_FILSELB),pvBoolFilSelB);
+    }
+    
     tempStatus = (status >> 3) & 0x01;
     GCFPVBool pvBoolFilSelA(tempStatus);
-    it->second->setValue(string(PROPNAME_FILSELA),pvBoolFilSelA);
-
-/* this one is write-only
+    if(pvBoolFilSelA.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSELA)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_FILSELA),pvBoolFilSelA);
+    }
+    
     tempStatus = (status >> 2) & 0x01;
     GCFPVBool pvBoolBandSel(tempStatus);
-    it->second->setValue(string(PROPNAME_BANDSEL),pvBoolBandSel);
-*/
-
+    if(pvBoolBandSel.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_BANDSEL)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_BANDSEL),pvBoolBandSel);
+    }
+    
     tempStatus = (status >> 1) & 0x01;
     GCFPVBool pvBoolHBAEnable(tempStatus);
-    it->second->setValue(string(PROPNAME_HBAENABLE),pvBoolHBAEnable);
-
+    if(pvBoolHBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_HBAENABLE)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_HBAENABLE),pvBoolHBAEnable);
+    }
+    
     tempStatus = (status >> 0) & 0x01;
     GCFPVBool pvBoolLBAEnable(tempStatus);
-    it->second->setValue(string(PROPNAME_LBAENABLE),pvBoolLBAEnable);
-    
+    if(pvBoolLBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_LBAENABLE)))->getValue())
+    {
+      it->second->setValue(string(PROPNAME_LBAENABLE),pvBoolLBAEnable);
+    }
+      
     if(pvBoolVddVccEn.getValue() ||
        pvBoolVhEnable.getValue() ||
        pvBoolVlEnable.getValue() ||
@@ -1371,7 +1391,19 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status,uint32 no
       GCFPVUnsigned pvUnsignedStatus(STATUS_OK);
       it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
     }       
+  }
+}
 
+void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 status,uint32 nof_overflow)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  if(it == m_myPropertySetMap.end())
+  {
+    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
+  {
+    LOG_WARN("ignoring status field in BoardRCUStatus");
     GCFPVUnsigned pvUns(nof_overflow);
     it->second->setValue(string(PROPNAME_NOFOVERFLOW),pvUns);
   }
@@ -1405,75 +1437,75 @@ void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& val
 
 void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, const GCFPValue& value)
 {
-  GCFPVBool pvLBAEnable;
-  GCFPVBool pvHBAEnable;
-  GCFPVBool pvBandSel;
-  GCFPVBool pvFilSelA;
-  GCFPVBool pvFilSelB;
-  GCFPVBool pvVLEnable;
-  GCFPVBool pvVHEnable;
-  GCFPVBool pvVddVccEn;
+  boost::shared_ptr<GCFPVBool> pvLBAEnable;
+  boost::shared_ptr<GCFPVBool> pvHBAEnable;
+  boost::shared_ptr<GCFPVBool> pvBandSel;
+  boost::shared_ptr<GCFPVBool> pvFilSelA;
+  boost::shared_ptr<GCFPVBool> pvFilSelB;
+  boost::shared_ptr<GCFPVBool> pvVLEnable;
+  boost::shared_ptr<GCFPVBool> pvVHEnable;
+  boost::shared_ptr<GCFPVBool> pvVddVccEn;
   
   TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(propName);
   if(propsetIt != m_myPropertySetMap.end())
   {
     // get old register values
-    pvLBAEnable.copy(*propsetIt->second->getValue(PROPNAME_LBAENABLE)); // bit 0
-    pvHBAEnable.copy(*propsetIt->second->getValue(PROPNAME_HBAENABLE)); // bit 1
-    pvBandSel.copy(*propsetIt->second->getValue(PROPNAME_BANDSEL));   // bit 2
-    pvFilSelA.copy(*propsetIt->second->getValue(PROPNAME_FILSELA));   // bit 3
-    pvFilSelB.copy(*propsetIt->second->getValue(PROPNAME_FILSELB));   // bit 4
-    pvVLEnable.copy(*propsetIt->second->getValue(PROPNAME_VLENABLE));  // bit 5
-    pvVHEnable.copy(*propsetIt->second->getValue(PROPNAME_VHENABLE));  // bit 6
-    pvVddVccEn.copy(*propsetIt->second->getValue(PROPNAME_VDDVCCEN));  // bit 7
+    pvLBAEnable.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_LBAENABLE))); // bit 0
+    pvHBAEnable.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_HBAENABLE))); // bit 1
+    pvBandSel.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_BANDSEL)));   // bit 2
+    pvFilSelA.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_FILSELA)));   // bit 3
+    pvFilSelB.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_FILSELB)));   // bit 4
+    pvVLEnable.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_VLENABLE)));  // bit 5
+    pvVHEnable.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_VHENABLE)));  // bit 6
+    pvVddVccEn.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_VDDVCCEN)));  // bit 7
     
     // modify the new value
     switch(bitnr)
     {
       case BIT_LBAENABLE:
-        pvLBAEnable.copy(value);
+        pvLBAEnable->copy(value);
         break;
       case BIT_HBAENABLE:
-        pvHBAEnable.copy(value);
+        pvHBAEnable->copy(value);
         break;
       case BIT_BANDSEL:
-        pvBandSel.copy(value);
+        pvBandSel->copy(value);
         break;
       case BIT_FILSELA:
-        pvFilSelA.copy(value);
+        pvFilSelA->copy(value);
         break;
       case BIT_FILSELB:
-        pvFilSelB.copy(value);
+        pvFilSelB->copy(value);
         break;
       case BIT_VLENABLE:
-        pvVLEnable.copy(value);
+        pvVLEnable->copy(value);
         break;
       case BIT_VHENABLE:
-        pvVHEnable.copy(value);
+        pvVHEnable->copy(value);
         break;
       case BIT_VDDVCCEN:
-        pvVddVccEn.copy(value);
+        pvVddVccEn->copy(value);
         break;
       default:
         break;
     }
     
     int rcucontrol = 0;
-    if(pvLBAEnable.getValue())
+    if(pvLBAEnable->getValue())
       rcucontrol |= 0x01;
-    if(pvHBAEnable.getValue())
+    if(pvHBAEnable->getValue())
       rcucontrol |= 0x02;
-    if(pvBandSel.getValue())
+    if(pvBandSel->getValue())
       rcucontrol |= 0x04;
-    if(pvFilSelA.getValue())
+    if(pvFilSelA->getValue())
       rcucontrol |= 0x08;
-    if(pvFilSelB.getValue())
+    if(pvFilSelB->getValue())
       rcucontrol |= 0x10;
-    if(pvVLEnable.getValue())
+    if(pvVLEnable->getValue())
       rcucontrol |= 0x20;
-    if(pvVHEnable.getValue())
+    if(pvVHEnable->getValue())
       rcucontrol |= 0x40;
-    if(pvVddVccEn.getValue())
+    if(pvVddVccEn->getValue())
       rcucontrol |= 0x80;
     
     int rcu = getRCUHardwareNr(propName);

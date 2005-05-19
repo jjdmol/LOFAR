@@ -88,7 +88,7 @@ int APLUtilities::remoteCopy(const string& localFile, const string& remoteHost, 
   char tempFileName [L_tmpnam];
   tmpnam(tempFileName);
   
-  string command("rcp ");
+  string command("scp ");
   command += localFile + string(" ");
   command += remoteHost + string(":");
   command += remoteFile;
@@ -108,7 +108,7 @@ int APLUtilities::remoteCopy(const string& localFile, const string& remoteHost, 
           outputString+=string(outputLine);
       }
       fclose(f);
-      LOG_ERROR(formatString("Unable to remote copy %s to %s:%s: %s",localFile.c_str(),remoteHost.c_str(),remoteFile.c_str(),outputString.c_str()));
+      LOG_ERROR(formatString("Unable to remote copy %s to %s:%s: %s",localFile.c_str(),remoteHost.c_str(),remoteFile.c_str(),outputString.c_str(),remoteHost.c_str()));
     }
   }
   else
