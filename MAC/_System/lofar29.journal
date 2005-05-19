@@ -28,3 +28,4 @@ Data 			Description
 					10.87.2.130     lofar30.astron.nl lofar30
 20050513        su: ln -sf /usr/share/zoneinfo/CET /etc/localtime # set correct timezone
 200505013       created symlink /dev/pps0 -> /dev/ttyS0 for PPS input
+0050517        created /etc/sysconfig/network-scripts/ifcfg-eth1 to configure eth1 with ip-adres 192.168.1.29
