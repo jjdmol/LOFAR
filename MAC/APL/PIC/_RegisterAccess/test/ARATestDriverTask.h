@@ -54,6 +54,8 @@ namespace ARA
     public:
       ARATestDriverTask();
       virtual ~ARATestDriverTask();
+      
+      void schedule();
   
     protected:
       // protected copy constructor
@@ -101,6 +103,9 @@ namespace ARA
       int             n_aps_per_board;
       int             n_rcus_per_ap;
       int             n_rcus;
+      
+      bool              m_schedule;
+      GCF::PAL::GCFExtPropertySet m_MACSchedulerPS;
   };  
 };
 

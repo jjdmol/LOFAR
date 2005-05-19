@@ -74,7 +74,9 @@ ARATestDriverTask::ARATestDriverTask() :
   n_boards_per_subrack(1),
   n_aps_per_board(1),
   n_rcus_per_ap(1),
-  n_rcus(1)
+  n_rcus(1),
+  m_schedule(false),
+  m_MACSchedulerPS("GSO_MACScheduler","TAplMacScheduler",&m_answer)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -111,6 +113,11 @@ ARATestDriverTask::ARATestDriverTask() :
 
 ARATestDriverTask::~ARATestDriverTask()
 {
+}
+
+void ARATestDriverTask::schedule()
+{
+  m_schedule=true;
 }
 
 void ARATestDriverTask::addPropertySet(string scope)
@@ -811,31 +818,53 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
   switch (event.signal)
   {
     case F_INIT:
-      // fill APCs map
-      addPropertySet(SCOPE_PIC);
-      addPropertySet(SCOPE_PIC_Maintenance);
-      addPropertySet(SCOPE_PIC_RackN);
-      addPropertySet(SCOPE_PIC_RackN_Alert);
-      addPropertySet(SCOPE_PIC_RackN_Maintenance);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_Maintenance);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_Alert);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Alert);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_ETH);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_BP);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics);
-      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance);
-      
+      if(m_schedule)
+        m_MACSchedulerPS.load();
+      else
+      {
+        // fill APCs map
+        addPropertySet(SCOPE_PIC);
+        addPropertySet(SCOPE_PIC_Maintenance);
+        addPropertySet(SCOPE_PIC_RackN);
+        addPropertySet(SCOPE_PIC_RackN_Alert);
+        addPropertySet(SCOPE_PIC_RackN_Maintenance);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_Maintenance);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_Alert);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Alert);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_ETH);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_BP);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics);
+        addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance);
+      }      
       break;
 
     case F_ENTRY:
-      if (!m_RSPserver.isConnected()) 
+      if(!m_schedule)
       {
-        m_RSPserver.open();
+        if (!m_RSPserver.isConnected()) 
+        {
+          m_RSPserver.open();
+        }
+      }
+      break;
+    
+    case F_EXTPS_LOADED:
+      if(m_schedule)
+      {
+        GCFPVString command("SCHEDULE VI1.ps");
+        m_MACSchedulerPS.setValue("command",command);
+      }
+      break;
+      
+    case F_VSETRESP:
+      if(m_schedule)
+      {
+        stop();
       }
       break;
     
