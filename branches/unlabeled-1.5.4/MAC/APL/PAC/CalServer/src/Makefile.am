@@ -4,14 +4,14 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-DEPA_Y_POL_IMAG_FIX \
 	-DWEIGHTS_IN_NETWORK_ORDER \
-	-DUSE_GNUPLOT
+	-DUSE_GNUPLOT -fmessage-length=0
 
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(lofar_root)/MAC/MACCommon/autogen $<
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(lofar_root)/MAC/MACCommon/autogen $<
 
 BUILT_SOURCES = \
 	CAL_Protocol.ph \
@@ -21,8 +21,9 @@ BUILT_SOURCES = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
-	ACC.conf \
 	CalServer.log_prop
+
+#	ACC.conf
 
 EXTRA_DIST = \
 	CAL_Protocol.ph
@@ -34,8 +35,9 @@ sysconf_DATA = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
-	ACC.conf \
 	CalServer.log_prop
+
+#	ACC.conf 
 
 include_HEADERS = \
 	$(top_builddir)/src/CAL_Protocol.ph
@@ -65,6 +67,8 @@ libcal_la_SOURCES = \
 	AntennaArray.cc \
 	SubArray.h \
 	SubArray.cc \
+	AntennaGains.h \
+	AntennaGains.cc \
 	CalibrationInterface.h \
 	CalibrationAlgorithm.h \
 	CalibrationAlgorithm.cc \

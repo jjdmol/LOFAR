@@ -30,7 +30,9 @@ using namespace blitz;
 using namespace LOFAR::RSP_Protocol;
 using namespace std;
 
-ACC::ACC(Array<complex<double>, 5>& acc) : m_acc(acc), m_time(acc.extent(thirdDim))
+ACC::ACC(int nsubbands, int nantennas, int npol) :
+	m_acc(nsubbands, nantennas, nantennas, npol, npol),
+	m_time(nsubbands)
 {
 }
 
@@ -43,17 +45,49 @@ const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp) c
   timestamp = Timestamp(0,0);
 
   // check range of subband argument
-  if (subband < 0 || subband > m_acc.extent(thirdDim)) return Array<complex<double>,4>();
+  if (subband < 0 || subband > m_acc.extent(firstDim)) return Array<complex<double>,4>();
 
   timestamp = m_time(subband);
 
-#if 0
-  Array<complex<double>, 4> slice(m_acc(Range::all(), Range::all(),
-					subband, Range::all(), Range::all()));
-#endif
+  return m_acc(subband, Range::all(), Range::all(),
+  			   Range::all(), Range::all());
+}
 
-  return m_acc(Range::all(), Range::all(),
-	       subband, Range::all(), Range::all());
+void ACC::updateACM(int subband, Timestamp timestamp, Array<complex<double>, 4>& newacm)
+{
+	Range all = Range::all();
+	m_acc(subband, all, all, all, all) = newacm;
+	m_time(subband) = timestamp;
+}
+
+ACCs::ACCs(int nsubbands, int nantennas, int npol) : 
+	m_front(0), m_back(1)
+{
+	m_buffer[m_front] = new ACC(nsubbands, nantennas, npol);
+	m_buffer[m_back]  = new ACC(nsubbands, nantennas, npol);
+}
+
+ACCs::~ACCs()
+{
+	delete m_buffer[m_front];
+	delete m_buffer[m_back];
+}
+
+ACC& ACCs::getFront() const
+{
+	return *m_buffer[m_front];
+}
+
+ACC& ACCs::getBack() const
+{
+	return *m_buffer[m_back];
+}
+
+void ACCs::swap()
+{
+	int tmp = m_front;
+	m_front = m_back;
+	m_back = tmp;
 }
 
 const ACC* ACCLoader::loadFromFile(string filename)
@@ -62,12 +96,19 @@ const ACC* ACCLoader::loadFromFile(string filename)
   Array<complex<double>, 5> acc_array;
 
   ifstream accstream(filename.c_str());
-
+  
   if (accstream.is_open())
     {
       accstream >> acc_array;
-      acc = new ACC(acc_array);
     }
+
+  acc = new ACC(acc_array.extent(firstDim),
+                acc_array.extent(secondDim),
+                acc_array.extent(thirdDim),
+                acc_array.extent(fourthDim),
+                acc_array.extent(fifthDim));
+  acc->setACC(acc_array);
+  
 
   return acc;
 }

@@ -33,7 +33,8 @@ namespace CAL
   class ACC
   {
   public:
-    ACC(blitz::Array<std::complex<double>, 5>& acc);
+    ACC() {}
+    ACC(int nsubbands, int nantennas, int npol);
     virtual ~ACC();
 
     /**
@@ -45,6 +46,12 @@ namespace CAL
      * subband is specified an empty array is returned.
      */
     const blitz::Array<std::complex<double>, 4> getACM(int subband, LOFAR::RSP_Protocol::Timestamp& timestamp) const;
+    
+    /**
+     * Update an ACM.
+     */
+    void updateACM(int subband, LOFAR::RSP_Protocol::Timestamp timestamp,
+     			   blitz::Array<std::complex<double>, 4>& newacm);
 
     /**
      * Get the size of the array.
@@ -56,6 +63,11 @@ namespace CAL
      * @return The 5-dimensional ACC array.
      */
     const blitz::Array<std::complex<double>, 5>& getACC() const { return m_acc; }
+    
+    /**
+     * Initialize the ACC array.
+     */
+     void setACC(blitz::Array<std::complex<double>, 5>& acc) { m_acc.reference(acc); }
 
   private:
 
@@ -72,7 +84,44 @@ namespace CAL
      */
     blitz::Array<LOFAR::RSP_Protocol::Timestamp, 1> m_time;
   };
+  
+  /**
+   * Factory class for ACC (Array Correlation Cube) instances.
+   * This class manages ACC instances: the front and back ACC buffers.
+   * The calibration algorithm works with the front ACC buffer while 
+   * in the background the next ACC buffer is filled by the CAL::ACCService.
+   */
+  class ACCs
+  {
+  	public:
 
+  	ACCs(int nsubbands, int nantennas, int npol);
+	virtual ~ACCs();
+	
+	/**
+	 * @return a reference to the front ACC buffer. This buffer can be used
+	 * to pass to the calibration algorithm.
+	 */
+	ACC& getFront() const;
+	
+	/**
+	 * @return a reference to the back ACC buffer. This buffer can be filled
+	 * for the next calibration iteration.
+	 */
+	ACC& getBack() const;
+	
+	/**
+	 * Swap the front and back buffers after the calibration has completed and
+	 * the back buffer is filled with the most recent ACC for use in the next
+	 * calibration iteration.
+	 */
+	void swap();
+		
+	private:
+	int m_front;
+	int m_back;
+	ACC* m_buffer[2];
+  };
 
   class ACCLoader
   {
