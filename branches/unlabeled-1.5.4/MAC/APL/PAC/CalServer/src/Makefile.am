@@ -53,6 +53,7 @@ lib_LTLIBRARIES = libcal.la
 libcal_la_SOURCES = \
 	Documentation.h \
 	$(top_builddir)/src/CAL_Protocol.cc \
+	SharedResource.h \
 	ACC.h \
 	ACC.cc \
 	Source.h \
@@ -72,8 +73,6 @@ libcal_la_SOURCES = \
 	CalibrationInterface.h \
 	CalibrationAlgorithm.h \
 	CalibrationAlgorithm.cc \
-	CalibrationResult.h \
-	CalibrationResult.cc \
 	RemoteStationCalibration.h \
 	RemoteStationCalibration.cc
 

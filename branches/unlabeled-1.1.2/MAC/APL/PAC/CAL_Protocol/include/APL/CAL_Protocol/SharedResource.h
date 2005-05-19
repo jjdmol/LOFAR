@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationInterface.h: class definition for the Beam Server task.
+//#  SharedResource.h: Locking for shared resources. Not thread safe.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,29 +21,44 @@
 //#
 //#  $Id$
 
-#ifndef CALIBRATIONINTERFACE_H_
-#define CALIBRATIONINTERFACE_H_
-
-#include "SubArray.h"
-#include "ACC.h"
-#include "AntennaGains.h"
+#ifndef SHAREDRESOURCE_H_
+#define SHAREDRESOURCE_H_
 
 namespace CAL
 {
-  class CalibrationInterface
+  class SharedResource
   {
   public:
-    //CalibrationInterface() = 0;
-    virtual ~CalibrationInterface() {}
-      
+    SharedResource() : m_semaphore(0) {}
+    virtual ~SharedResource() {}
+    
+    /*@{*/
     /**
-     * Calibrate the specified subarray. Store the result in the AntennaGains object.
-     * @param subarray The subarray to calibrate. Use SubArray methods to get relevant parameters.
-     * @param result The calibration result should be stored in this object.
+     * Lock the resource for reading or writing.
+     * @return true if the locking succeeded, false otherwise.
      */
-    virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& gains) = 0;
+    bool writeLock() { if (m_semaphore == 0) m_semaphore--; return m_semaphore == -1; }
+    bool readLock() { if (m_semaphore >= 0) m_semaphore++; return m_semaphore > 0; }
+    /*@}*/
+
+    /*@{*/
+    /**
+     * Unlock the resource.
+     */
+    void writeUnlock() { m_semaphore = 0; }
+    void readUnlock() { m_semaphore--; if (m_semaphore < 0) m_semaphore = 0; }
+    /*@}*/
+
+    /**
+     * Check whether the resource is locked.
+     * @return true if the resource is locked, false otherwise.
+     */
+    bool isLocked() const { return 0 == m_semaphore; }
+
+  private:
+    int m_semaphore;
   };
 };
 
-#endif /* CALIBRATIONINTERFACE_H_ */
+#endif /* SHAREDRESOURCE_H_ */
 

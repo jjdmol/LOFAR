@@ -26,11 +26,12 @@
 
 #include <blitz/array.h>
 #include <complex>
+#include "SharedResource.h"
 #include "Timestamp.h"
 
 namespace CAL
 {
-  class ACC
+  class ACC : public SharedResource
   {
   public:
     ACC() {}
@@ -51,7 +52,7 @@ namespace CAL
      * Update an ACM.
      */
     void updateACM(int subband, LOFAR::RSP_Protocol::Timestamp timestamp,
-     			   blitz::Array<std::complex<double>, 4>& newacm);
+		   blitz::Array<std::complex<double>, 4>& newacm);
 
     /**
      * Get the size of the array.
@@ -67,7 +68,7 @@ namespace CAL
     /**
      * Initialize the ACC array.
      */
-     void setACC(blitz::Array<std::complex<double>, 5>& acc) { m_acc.reference(acc); }
+    void setACC(blitz::Array<std::complex<double>, 5>& acc) { m_acc.reference(acc); }
 
   private:
 
@@ -93,34 +94,34 @@ namespace CAL
    */
   class ACCs
   {
-  	public:
+  public:
 
-  	ACCs(int nsubbands, int nantennas, int npol);
-	virtual ~ACCs();
+    ACCs(int nsubbands, int nantennas, int npol);
+    virtual ~ACCs();
 	
-	/**
-	 * @return a reference to the front ACC buffer. This buffer can be used
-	 * to pass to the calibration algorithm.
-	 */
-	ACC& getFront() const;
+    /**
+     * @return a reference to the front ACC buffer. This buffer can be used
+     * to pass to the calibration algorithm.
+     */
+    ACC& getFront() const;
 	
-	/**
-	 * @return a reference to the back ACC buffer. This buffer can be filled
-	 * for the next calibration iteration.
-	 */
-	ACC& getBack() const;
+    /**
+     * @return a reference to the back ACC buffer. This buffer can be filled
+     * for the next calibration iteration.
+     */
+    ACC& getBack() const;
 	
-	/**
-	 * Swap the front and back buffers after the calibration has completed and
-	 * the back buffer is filled with the most recent ACC for use in the next
-	 * calibration iteration.
-	 */
-	void swap();
+    /**
+     * Swap the front and back buffers after the calibration has completed and
+     * the back buffer is filled with the most recent ACC for use in the next
+     * calibration iteration.
+     */
+    void swap();
 		
-	private:
-	int m_front;
-	int m_back;
-	ACC* m_buffer[2];
+  private:
+    int m_front;
+    int m_back;
+    ACC* m_buffer[2];
   };
 
   class ACCLoader

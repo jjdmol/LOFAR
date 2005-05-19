@@ -30,7 +30,7 @@
 #include "SpectralWindow.h"
 #include "AntennaArray.h"
 #include "ACC.h"
-#include "CalibrationResult.h"
+#include "AntennaGains.h"
 
 namespace CAL
 {
@@ -59,13 +59,13 @@ namespace CAL
      * @param cal The calibration algorithm to use.
      * @param acc The Array Correlation Cube on which to calibrate.
      */
-    void startCalibration(CalibrationInterface* cal, const ACC& acc);
+    void calibrate(CalibrationInterface* cal, const ACC& acc);
 
     /**
      * Get calibration result (if available).
      * @param cal Calibration result
      */
-    bool getCalibration(const CalibrationResult*& cal, int buffer = FRONT);
+    bool getGains(const AntennaGains*& cal, int buffer = FRONT);
 
     /**
      * Abort background calibration.
@@ -86,8 +86,8 @@ namespace CAL
     };
 
   private:
-    const SpectralWindow& m_spw; // reference to the spectral window for this subarray
-    CalibrationResult*    m_result[BACK + 1]; // two calibration result records
+    const SpectralWindow& m_spw;              // reference to the spectral window for this subarray
+    AntennaGains*         m_result[BACK + 1]; // two calibration result records
   };
 };
 

@@ -26,6 +26,7 @@
 
 #include <string>
 #include <blitz/array.h>
+#include <map>
 
 namespace CAL
 {
@@ -71,6 +72,22 @@ namespace CAL
 
     blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas x Npol x 3 (x,y,z)
     blitz::Array<int, 2>    m_rcuindex; // the index of the rcu to which a dipole is connected, dimensions Nantennas x Npol
+  };
+
+  /**
+   * Factory class for the Antenna class. Manages one or more AntennaArrays which are loaded from file.
+   */
+  class AntennaArrays
+  {
+  public:
+    AntennaArrays();
+    virtual ~AntennaArrays();
+
+    AntennaArray& get(std::string name) const;
+    void          loadAllFromFile(std::string filename);
+    
+  private:
+    std::map<std::string, AntennaArray*> m_arrays;
   };
 
   class AntennaArrayLoader

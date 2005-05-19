@@ -50,7 +50,7 @@ antenna) for each subband.
 be degraded when interpolation between neighbouring subbands is
 required to estimate the gain in a subband that was occupied by RFI.
 
-The CAL::CalibrationResult class contains these two result arrays.
+The CAL::AntennaGains class contains these two result arrays.
 
 \section subarray Sub arrays
 
@@ -75,7 +75,7 @@ The calibrate() method has two input parameters:
 \li The auto correlation cube to use for calibration (CAL::ACC).
 
 ..and one output parameter:
-\li The calibration result (CAL::CalibrationResult)
+\li The calibration result (CAL::AntennaGains)
 
 Access to the other input parameters is done through the methods of
 the CAL::CalibrationAlgorithm class:
@@ -110,7 +110,7 @@ main loop over the subbands might look like.
 
 void RemoteStationCalibration::calibrate(const SubArray&    subarray,
                                          const ACC&         acc,
-                                         CalibrationResult& result)
+                                         AntennaGains& gains)
 {
   const SpectralWindow&   spw = subarray.getSPW();        // get spectral window
   const Array<double, 3>& pos = subarray.getAntennaPos(); // get antenna positions
@@ -192,14 +192,14 @@ Array<complex<double>, 4> sens(2, 50, 50, 24);
 \li The resulting gains for each antenna element and subband. This is
 2-dimensional array of complex doubles. Dimensions are 96 antennas x 2
 polarizations x 512 subbands. This array is returned by the
-CAL::CalibrationResult::getGains() method.
+CAL::AntennaGains::getGains() method.
 \code
 Array<complex<double>, 3> gains(96, 2, 512);
 \endcode
 \li Quality measure for the calibration of each subband. This is a
 1-dimensional array of doubles. Extent of the array is 512
 subbands. This array is returned by the
-CAL::CalibrationResult::getQuality() method.
+CAL::AntennaGains::getQuality() method.
 \code
 Array<double, 1> quality(512);
 \endcode

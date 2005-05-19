@@ -40,8 +40,15 @@ RemoteStationCalibration::RemoteStationCalibration(const SourceCatalog& catalog,
 {
 }
 
-void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result)
+void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& gains)
 {
+  //
+  // BIG WARNING: The order of the axes in the acc array have changed.
+  // The order now is: nsubbands x nantennas x nantennas x npol x npol array of complex doubles.
+  //
+  // This warning can be removed when the code in this file has been adapted to that change.
+  //
+
   const SpectralWindow&   spw = subarray.getSPW();        // get spectral window
   const DipoleModel&   dipolemodel = getDipoleModel();    // get dipole model
   const SourceCatalog& sources     = getSourceCatalog();  // get sky model
@@ -86,13 +93,13 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
     cout << acm1pol << endl;
     Array<complex<double>, 2> alpha(computeAlpha(acm1pol, R0, mask));
     cout << alpha << endl;
-    //compute_gains(acm, R0, pos, spw.getSubbandFreq(sb), Rtest, result);
-    //compute_quality(Rtest, sb, result);
+    //compute_gains(acm, R0, pos, spw.getSubbandFreq(sb), Rtest, gains);
+    //compute_quality(Rtest, sb, gains);
   }
 
   //interpolate_bad_subbands();
    
-  result.setComplete(true); // when finished
+  gains.setComplete(true); // when finished
 }
 
 const vector<Source> RemoteStationCalibration::make_local_sky_model(const SourceCatalog& catalog, double obstime)

@@ -294,11 +294,11 @@ void CalServer::calibrate()
 
   //
   // Create the calibration algorithm and
-  // call the startCalibration routine of the subarray
+  // call the calibrate routine of the subarray
   // with the ACC.
   //
   RemoteStationCalibration cal(*m_catalog, *m_dipolemodel);
-  fts1.startCalibration(&cal, *m_acc);
+  fts1.calibrate(&cal, *m_acc);
 
   //
   // Sanity check on dimensions of the various arrays
@@ -314,14 +314,14 @@ void CalServer::calibrate()
   //
   // Save the calibration gains and quality matrices
   //
-  const CalibrationResult* result = 0;
-  if (fts1.getCalibration(result, SubArray::BACK))
+  const AntennaGains* gains = 0;
+  if (fts1.getGains(gains, SubArray::BACK))
     {
       // save gains matrix
-      ofstream gains("gains.out");
-      if (gains.is_open())
+      ofstream gainsout("gains.out");
+      if (gainsout.is_open())
 	{
-	  gains << result->getGains();
+	  gainsout << gains->getGains();
 	}
       else
 	{
@@ -330,10 +330,10 @@ void CalServer::calibrate()
 	}
 
       // save quality matrix
-      ofstream quality("quality.out");
-      if (quality.is_open())
+      ofstream qualityout("quality.out");
+      if (qualityout.is_open())
 	{
-	  quality << result->getQuality();
+	  qualityout << gains->getQuality();
 	}
       else
 	{

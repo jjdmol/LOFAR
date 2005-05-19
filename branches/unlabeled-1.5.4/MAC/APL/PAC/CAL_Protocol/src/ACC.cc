@@ -102,13 +102,8 @@ const ACC* ACCLoader::loadFromFile(string filename)
       accstream >> acc_array;
     }
 
-  acc = new ACC(acc_array.extent(firstDim),
-                acc_array.extent(secondDim),
-                acc_array.extent(thirdDim),
-                acc_array.extent(fourthDim),
-                acc_array.extent(fifthDim));
+  acc = new ACC();
   acc->setACC(acc_array);
-  
 
   return acc;
 }

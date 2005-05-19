@@ -57,21 +57,21 @@ SubArray::SubArray(string                 name,
   // TODO: compact array by removing antennas of which both polarizations have not been selected
 
   // create calibration result objects
-  m_result[FRONT] = new CalibrationResult(pos.extent(firstDim), spw.getNumSubbands());
-  m_result[BACK]  = new CalibrationResult(pos.extent(firstDim), spw.getNumSubbands());
+  m_result[FRONT] = new AntennaGains(pos.extent(firstDim), spw.getNumSubbands());
+  m_result[BACK]  = new AntennaGains(pos.extent(firstDim), spw.getNumSubbands());
 }
 
 SubArray::~SubArray()
 {}
 
-void SubArray::startCalibration(CalibrationInterface* cal, const ACC& acc)
+void SubArray::calibrate(CalibrationInterface* cal, const ACC& acc)
 {
   if (!cal) return;
 
   cal->calibrate(*this, acc, *m_result[BACK]);
 }
 
-bool SubArray::getCalibration(const CalibrationResult*& cal, int buffer)
+bool SubArray::getGains(const AntennaGains*& cal, int buffer)
 {
   cal = 0;
 

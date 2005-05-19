@@ -27,7 +27,7 @@
 #include "SourceCatalog.h"
 #include "DipoleModel.h"
 #include "CalibrationAlgorithm.h"
-#include "CalibrationResult.h"
+#include "AntennaGains.h"
 #include "SubArray.h"
 #include <blitz/array.h>
 
@@ -43,7 +43,7 @@ namespace CAL
        */
       virtual ~RemoteStationCalibration() {}
 
-      virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result);
+      virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& result);
       
     private:
       const std::vector<Source> make_local_sky_model(const SourceCatalog& catalog, double obstime);

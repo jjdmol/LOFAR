@@ -26,7 +26,7 @@
 
 #include "SubArray.h"
 #include "ACC.h"
-#include "CalibrationResult.h"
+#include "AntennaGains.h"
 
 namespace CAL
 {
@@ -37,11 +37,11 @@ namespace CAL
     virtual ~CalibrationInterface() {}
       
     /**
-     * Calibrate the specified subarray. Store the result in the CalibrationResult object.
+     * Calibrate the specified subarray. Store the result in the AntennaGains object.
      * @param subarray The subarray to calibrate. Use SubArray methods to get relevant parameters.
      * @param result The calibration result should be stored in this object.
      */
-    virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result) = 0;
+    virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& gains) = 0;
   };
 };
 
