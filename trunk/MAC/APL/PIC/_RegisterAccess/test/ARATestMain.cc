@@ -54,16 +54,25 @@ int main(int argc, char* argv[])
     CCmdLine cmdLine;
 
     bool noTest=false;
+    bool schedule=false;
     // parse argc,argv 
     if (cmdLine.SplitLine(argc, argv) > 0)
     {
       noTest = cmdLine.HasSwitch("-notest");
+      schedule = cmdLine.HasSwitch("-schedule");
     }
     
     // create test driver task. 
     if(noTest)
     {
       ARATestDriverTask testDriverTask;
+      testDriverTask.start(); // make initial transition
+      GCFTask::run(); //is also called by the ARATest class
+    }
+    else if(schedule)
+    {
+      ARATestDriverTask testDriverTask;
+      testDriverTask.schedule();
       testDriverTask.start(); // make initial transition
       GCFTask::run(); //is also called by the ARATest class
     }
