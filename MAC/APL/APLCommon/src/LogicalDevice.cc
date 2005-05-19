@@ -107,6 +107,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_serverPortName(string("server")),
   m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
   m_parentPort(),
+  m_parentReconnectTimerId(0),
   m_childPorts(),
   m_connectedChildPorts(),
   m_childStartDaemonPorts(),
@@ -837,7 +838,13 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
   if(event.signal == F_TIMER)
   {
     GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-    if(timerEvent.id == m_claimTimerId)
+    if(timerEvent.id == m_parentReconnectTimerId && _isParentPort(port))
+    {
+      m_parentReconnectTimerId = 0;
+      port.cancelTimer(timerEvent.id);
+      m_parentPort.open();
+    }
+    else if(timerEvent.id == m_claimTimerId)
     {
       m_claimTimerId = 0;
       port.cancelTimer(timerEvent.id);
@@ -1141,7 +1148,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
             m_childStartDaemonPorts[(*chIt)] = startDaemonPort;
             
             // add reference in propertyset
-            GCFPVDynArr* childRefs = static_cast<GCFPVDynArr*>(m_basePropertySet->getValue(LD_PROPNAME_CHILDREFS));
+            boost::shared_ptr<GCFPVDynArr> childRefs(static_cast<GCFPVDynArr*>(m_basePropertySet->getValue(LD_PROPNAME_CHILDREFS)));
             if(childRefs != 0)
             {
               GCFPValueArray refsVector(childRefs->getValue()); // create a copy 
@@ -1249,9 +1256,14 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       break;
 
     case F_DISCONNECTED:
+    {
       port.close();
+      if(_isParentPort(port))
+      {
+        m_parentReconnectTimerId = port.setTimer(10L);
+      }
       break;
-
+    }
     case F_TIMER:
       _handleTimers(event,port);
       break;

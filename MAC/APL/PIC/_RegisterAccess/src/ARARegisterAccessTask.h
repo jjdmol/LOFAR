@@ -175,7 +175,8 @@ namespace ARA
       /**
        * update rcu properties based on status bits
        */
-      void updateRCUproperties(string scope,uint8 status,uint32 nof_overflow);
+      void updateBoardRCUproperties(string scope,uint8 status,uint32 nof_overflow);
+      void updateRCUproperties(string scope,uint8 status);
       /**
        * update version string
        */
