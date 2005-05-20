@@ -10,4 +10,6 @@ main()
   dpSet("GSO__enabled.","autoloaded|TCcuPic");
   dpCreate("VIC__enabled", "GCFPaPsEnabled");
   dpSet("VIC__enabled.","autoloaded|TCcuPic");
+  
+  dpDelete("GSO_MACScheduler");
 }
