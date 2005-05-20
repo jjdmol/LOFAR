@@ -30,21 +30,32 @@
 
 namespace CAL
 {
+  /**
+   * This class holds the results of a remote station calibration: the
+   * calibrated antenna gains. Along with the gains a quality measure
+   * is computed by the calibration algorithm. This quality measure indicates
+   * the confidence in the computed antenna gain.
+   */
   class AntennaGains
     {
     public:
-      AntennaGains(int nantennas, int nsubbands);
+      AntennaGains();
+      AntennaGains(int nantennas, int npol, int nsubbands);
       virtual ~AntennaGains();
 
       /**
-       * Get reference to the result gains array.
+       * Get reference to the array with calibrated antenna gains.
+       * @return a reference to the calibrated gains. A three dimensional array of
+       * complex doubles with dimensions: nantennas x npol x nsubbands
        */
       const blitz::Array<std::complex<double>, 3>& getGains() const { return m_gains; }
 
       /**
-       * Get reference to the quality array.
+       * Get reference to the array with quality measure.
+       * @return a reference to the quality measure array. A 3-dimensional array
+       * of doubles with nantennas x npol x nsubbands elements.
        */
-      const blitz::Array<double, 1>& getQuality() const { return m_quality; }
+      const blitz::Array<double, 3>& getQuality() const { return m_quality; }
 
       /**
        * has the calibration algorithm producing this result completed?
@@ -56,9 +67,19 @@ namespace CAL
        */
       void setComplete(bool value) { m_complete = value; }
 
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack   (void* buffer);
+      unsigned int unpack (void* buffer);
+      /*@}*/
+
     private:
       blitz::Array<std::complex<double>, 3> m_gains;
-      blitz::Array<double, 1>               m_quality;
+      blitz::Array<double, 3>               m_quality;
       bool                                  m_complete; // is this calibration complete?
     };
 };

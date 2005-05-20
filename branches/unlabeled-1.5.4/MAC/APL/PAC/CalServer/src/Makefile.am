@@ -21,6 +21,7 @@ BUILT_SOURCES = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
+	AntennaArrays.conf \
 	CalServer.log_prop
 
 #	ACC.conf
@@ -35,6 +36,7 @@ sysconf_DATA = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
+	AntennaArrays.conf \
 	CalServer.log_prop
 
 #	ACC.conf 
@@ -58,14 +60,18 @@ libcal_la_SOURCES = \
 	ACC.cc \
 	Source.h \
 	Source.cc \
-	SourceCatalog.h \
-	SourceCatalog.cc \
+	SourceData.h \
+	SourceData.cc \
 	DipoleModel.h \
 	DipoleModel.cc \
+	DipoleModelData.h \
+	DipoleModelData.cc \
 	SpectralWindow.h \
 	SpectralWindow.cc \
 	AntennaArray.h \
 	AntennaArray.cc \
+	AntennaArrayData.h \
+	AntennaArrayData.cc \
 	SubArray.h \
 	SubArray.cc \
 	AntennaGains.h \

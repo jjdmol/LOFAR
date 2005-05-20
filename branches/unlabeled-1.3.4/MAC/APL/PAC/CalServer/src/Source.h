@@ -25,6 +25,7 @@
 #define SOURCE_H_
 
 #include <string>
+#include <vector>
 #include <blitz/array.h>
 
 namespace CAL
@@ -39,7 +40,8 @@ namespace CAL
      * @param ra Right ascension of the source (in radians).
      * @param dec Declination of the source (in radians).
      */
-    Source(std::string name, double ra, double dec, blitz::Array<double, 2>& flux) : m_name(name), m_ra(ra), m_dec(dec), m_flux(flux) {}
+    Source(std::string name, double ra, double dec, const blitz::Array<double, 2>& flux) :
+      m_name(name), m_ra(ra), m_dec(dec), m_flux(flux) {}
     virtual ~Source();
 
     /**
@@ -87,6 +89,42 @@ namespace CAL
     double      m_ra;
     double      m_dec;
     blitz::Array<double, 2> m_flux; // array of frequency, flux pairs, 
+  };
+
+  class Sources
+  {
+  public:
+    Sources();
+    virtual ~Sources();
+
+    /**
+     * Get a reference to the source vector.
+     * @return A reference to the vector of sources.
+     */
+    const std::vector<Source>& getSources() const { return m_sources; }
+
+    /**
+     * Get the source positions as a blitz array.
+     * Dimensions: nsources x 2 (ra,dec)
+     * @return The source positions as a two-dimensional blitz array (nsources x 2 (ra,dec)).
+     */
+    const blitz::Array<double, 2> getSourcePositions() const;
+
+    /**
+     * Get the number of sources.
+     */
+    int getNumSources() const { return m_sources.size(); }
+
+    /**
+     * Get all sources from file or database.
+     * @param url The resource locator for the source database (e.g. filename, or database table).
+     * @note Currently only a file name is supported.
+     */
+    void getAll(std::string url);
+    
+  private:
+
+    std::vector<Source> m_sources;
   };
 
 };

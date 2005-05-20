@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationAlgorithm.h: class definition for the Beam Server task.
+//#  DipoleModelData.h: declaration of the DipoleModelData class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,29 +21,35 @@
 //#
 //#  $Id$
 
-#ifndef CALIBRATIONALGORITHM_H_
-#define CALIBRATIONALGORITHM_H_
+#ifndef DIPOLEMODELDATA_H_
+#define DIPOLEMODELDATA_H_
 
-#include "CalibrationInterface.h"
-#include "Source.h"
-#include "DipoleModel.h"
+#include <complex>
+#include <blitz/array.h>
+#include <fstream>
 
 namespace CAL
 {
-  class CalibrationAlgorithm : public CalibrationInterface
+  class DipoleModelData
   {
   public:
-    CalibrationAlgorithm(const Sources& sources, const DipoleModel& dipolemodel);
-    virtual ~CalibrationAlgorithm();
-      
-    virtual const Sources&     getSources()     { return m_sources;     }
-    virtual const DipoleModel& getDipoleModel() { return m_dipolemodel; }
-      
+    DipoleModelData();
+    virtual ~DipoleModelData();
+
+    bool getNextFromFile(std::string filename);
+
+    std::string getName() const { return m_name; }
+    const blitz::Array<std::complex<double>, 4>& getSens() const { return m_sens; }
+
   private:
-    const Sources&     m_sources;
-    const DipoleModel& m_dipolemodel;
+    std::string   m_filename;
+    std::ifstream m_file;
+
+    std::string                           m_name;
+    blitz::Array<std::complex<double>, 4> m_sens;
   };
+
 };
 
-#endif /* CALIBRATIONALGORITHM_H_ */
+#endif /* DIPOLEMODELDATA_H_ */
 

@@ -53,7 +53,7 @@ using namespace CAL_Protocol;
 
 CalServer::CalServer(string name)
   : GCFTask((State)&CalServer::initial, name),
-    m_dipolemodel(0), m_acc(0), m_catalog(0)
+    m_acc(0)
 {
 #if 0
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
@@ -223,27 +223,19 @@ void CalServer::calibrate()
 					       ps["SpectralWindow.names"]);
 
       //
-      // load the dipole model
+      // load the dipole models
       //
-      m_dipolemodel = DipoleModelLoader::loadFromFile(CAL_SYSCONF "/DipoleModel.conf");
-
-      //cout << "Dipole model=" << m_dipolemodel->getModel() << endl;
+      m_dipolemodels.getAll(CAL_SYSCONF "/DipoleModel.conf");
 
       //
       // load the source catalog
       //
-      m_catalog = SourceCatalogLoader::loadFromFile(CAL_SYSCONF "/SourceCatalog.conf");
+      m_sources.getAll(CAL_SYSCONF "/SourceCatalog.conf");
 
       //
       // Load antenna arrays
       //
-      AntennaArray* lba = AntennaArrayLoader::loadFromFile("LBA", CAL_SYSCONF "/LBAntennas.conf");
-      m_arrays.push_back(*lba);
-      delete lba;
-
-      AntennaArray* hba = AntennaArrayLoader::loadFromFile("HBA", CAL_SYSCONF "/HBAntennas.conf");
-      m_arrays.push_back(*hba);
-      delete hba;
+      m_arrays.getAll(CAL_SYSCONF "/AntennaArrays.conf");
 
       //
       // load the ACC
@@ -282,22 +274,22 @@ void CalServer::calibrate()
   //
   // Dimensions of the antenna array
   //
-  int nantennas = m_arrays[0].getAntennaPos().extent(firstDim);
-  int npol      = m_arrays[0].getAntennaPos().extent(secondDim);
+  int nantennas = m_arrays.getByName("LBA").getAntennaPos().extent(firstDim);
+  int npol      = m_arrays.getByName("LBA").getAntennaPos().extent(secondDim);
 
   //
   // Create the FTS-1 subarray, with spectral window 0 (0 - 80 MHz)
   // 
   Array<bool,2> select(nantennas, npol);
   select = true;
-  SubArray fts1("FTS-1", m_arrays[0].getAntennaPos(), select, m_spws[0]);
+  SubArray fts1("FTS-1", m_arrays.getByName("LBA").getAntennaPos(), select, m_spws[0]);
 
   //
   // Create the calibration algorithm and
   // call the calibrate routine of the subarray
   // with the ACC.
   //
-  RemoteStationCalibration cal(*m_catalog, *m_dipolemodel);
+  RemoteStationCalibration cal(m_sources, m_dipolemodels.getByName("LBAntenna"));
   fts1.calibrate(&cal, *m_acc);
 
   //
@@ -305,9 +297,9 @@ void CalServer::calibrate()
   //
   // Number of antennas and polarizations must be equal on all related arrays.
   //
-  ASSERT(m_acc->getACC().extent(firstDim) == nantennas);
+  ASSERT(m_acc->getACC().extent(firstDim) == m_spws[0].getNumSubbands());
   ASSERT(m_acc->getACC().extent(secondDim) == nantennas);
-  ASSERT(m_acc->getACC().extent(thirdDim) == m_spws[0].getNumSubbands());
+  ASSERT(m_acc->getACC().extent(thirdDim) == nantennas);
   ASSERT(m_acc->getACC().extent(fourthDim) == npol);
   ASSERT(m_acc->getACC().extent(fifthDim) == npol);
 

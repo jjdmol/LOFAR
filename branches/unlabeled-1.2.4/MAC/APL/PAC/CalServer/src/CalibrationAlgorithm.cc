@@ -25,8 +25,8 @@
 
 using namespace CAL;
 
-CalibrationAlgorithm::CalibrationAlgorithm(const SourceCatalog& catalog, const DipoleModel& dipolemodel)
-  : m_catalog(catalog), m_dipolemodel(dipolemodel)
+CalibrationAlgorithm::CalibrationAlgorithm(const Sources& sources, const DipoleModel& dipolemodel)
+  : m_sources(sources), m_dipolemodel(dipolemodel)
 {
 }
 

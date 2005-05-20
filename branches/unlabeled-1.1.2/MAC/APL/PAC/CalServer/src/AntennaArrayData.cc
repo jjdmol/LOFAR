@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationAlgorithm.h: class definition for the Beam Server task.
+//#  AntennaArrayData.cc: implementation of the AntennaArrayData class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,29 +21,45 @@
 //#
 //#  $Id$
 
-#ifndef CALIBRATIONALGORITHM_H_
-#define CALIBRATIONALGORITHM_H_
+#include "AntennaArrayData.h"
+#include <string>
+#include <fstream>
 
-#include "CalibrationInterface.h"
-#include "Source.h"
-#include "DipoleModel.h"
+using namespace CAL;
+using namespace std;
 
-namespace CAL
+AntennaArrayData::AntennaArrayData()
 {
-  class CalibrationAlgorithm : public CalibrationInterface
-  {
-  public:
-    CalibrationAlgorithm(const Sources& sources, const DipoleModel& dipolemodel);
-    virtual ~CalibrationAlgorithm();
-      
-    virtual const Sources&     getSources()     { return m_sources;     }
-    virtual const DipoleModel& getDipoleModel() { return m_dipolemodel; }
-      
-  private:
-    const Sources&     m_sources;
-    const DipoleModel& m_dipolemodel;
-  };
-};
+}
 
-#endif /* CALIBRATIONALGORITHM_H_ */
+AntennaArrayData::~AntennaArrayData()
+{
+  m_file.close();
+}
+
+bool AntennaArrayData::getNextFromFile(string filename)
+{
+  if (filename != m_filename) {
+    // open new file
+    if (m_file.is_open()) m_file.close();
+    m_file.open(filename.c_str());
+    m_filename = filename;
+  }
+  
+  if (!m_file.good()) {
+    m_file.close();
+    return false;
+  }
+
+  getline(m_file, m_name); // get name
+  if ("" == m_name) {
+    m_file.close();
+    return false;
+  }
+
+  m_file >> m_positions; // get positions
+
+  return true;
+}
+
 

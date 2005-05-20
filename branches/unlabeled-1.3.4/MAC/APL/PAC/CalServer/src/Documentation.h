@@ -28,7 +28,7 @@ this matrix.
 this is represented by the CAL::SpectralWindow class which can be queried to
 obtain the actual frequency for a specific subband.
 \li <b>A sky model to make an accurate prediction of the input
-signal.</b>\n The CAL::SourceCatalog class represents the sky model.
+signal.</b>\n The CAL::Sources class represents the sky model.
 \li <b>A model of the beam pattern of the individual antenna
 elements.</b>\n The CAL::DipoleModel class represents the beam pattern of a
 dipole.
@@ -80,7 +80,7 @@ The calibrate() method has two input parameters:
 Access to the other input parameters is done through the methods of
 the CAL::CalibrationAlgorithm class:
 
-\li CAL::CalibrationAlgorithm::getSourceCatalog()
+\li CAL::CalibrationAlgorithm::getSources()
 \li CAL::CalibrationAlgorithm::getDipoleModel()
 
 The CAL::CalibrationAlgorithm class is a sub class of
@@ -116,7 +116,7 @@ void RemoteStationCalibration::calibrate(const SubArray&    subarray,
   const Array<double, 3>& pos = subarray.getAntennaPos(); // get antenna positions
 
   const DipoleModel&   dipolemodel = getDipoleModel();    // get dipole model
-  const SourceCatalog& sources     = getSourceCatalog();  // get sky model
+  const Sources&       sources     = getSources();        // get sky model
 
   cout << "calibrate: spectral window name=" << spw.getName() << endl;
   cout << "calibrate: subband width=" << spw.getSubbandWidth() << " Hz" << endl;
@@ -205,7 +205,7 @@ Array<double, 1> quality(512);
 \endcode
 \li The source positions. This is a 2-dimensional array of
 doubles. The dimensions are 300 sources x 3d position vector. This
-array is returned by the CAL::SourceCatalog::getSourcePositions()
+array is returned by the CAL::Sources::getSourcePositions()
 method.
 \code
 Array<double, 2> skymodel(300, 3);

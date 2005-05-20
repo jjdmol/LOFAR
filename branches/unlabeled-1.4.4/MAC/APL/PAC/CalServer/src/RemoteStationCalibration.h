@@ -24,7 +24,7 @@
 #ifndef REMOTESTATIONCALIBRATION_H_
 #define REMOTESTATIONCALIBRATION_H_
 
-#include "SourceCatalog.h"
+#include "Source.h"
 #include "DipoleModel.h"
 #include "CalibrationAlgorithm.h"
 #include "AntennaGains.h"
@@ -36,7 +36,7 @@ namespace CAL
   class RemoteStationCalibration : public CalibrationAlgorithm
     {
     public:
-      RemoteStationCalibration(const SourceCatalog& catalog, const DipoleModel& dipolemodel);
+      RemoteStationCalibration(const Sources& sources, const DipoleModel& dipolemodel);
 
       /**
        * Destructor: delete any dynamically allocated member variables
@@ -46,7 +46,7 @@ namespace CAL
       virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& result);
       
     private:
-      const std::vector<Source> make_local_sky_model(const SourceCatalog& catalog, double obstime);
+      const std::vector<Source> make_local_sky_model(const Sources& sources, double obstime);
 
       blitz::Array<std::complex<double>, 2> make_ref_acm(const std::vector<Source>& LSM, blitz::Array<double, 3>& AntennaPos, const DipoleModel& dipolemodel, double freq);
       blitz::Array<bool, 2> set_restriction(blitz::Array<double, 3>& AntennaPos, double minbaseline);

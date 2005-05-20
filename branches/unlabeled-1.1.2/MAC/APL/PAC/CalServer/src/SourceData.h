@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationAlgorithm.h: class definition for the Beam Server task.
+//#  SourceData.h: definition of data for a sky source
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,29 +21,40 @@
 //#
 //#  $Id$
 
-#ifndef CALIBRATIONALGORITHM_H_
-#define CALIBRATIONALGORITHM_H_
+#ifndef SOURCEDATA_H_
+#define SOURCEDATA_H_
 
-#include "CalibrationInterface.h"
-#include "Source.h"
-#include "DipoleModel.h"
+#include <string>
+#include <blitz/array.h>
+#include <fstream>
 
 namespace CAL
 {
-  class CalibrationAlgorithm : public CalibrationInterface
+  class SourceData
   {
   public:
-    CalibrationAlgorithm(const Sources& sources, const DipoleModel& dipolemodel);
-    virtual ~CalibrationAlgorithm();
-      
-    virtual const Sources&     getSources()     { return m_sources;     }
-    virtual const DipoleModel& getDipoleModel() { return m_dipolemodel; }
-      
+
+    SourceData();
+    virtual ~SourceData();
+
+    bool getNextFromFile(std::string filename);
+
+    std::string getName() const { return m_name; }
+    double getRA() const { return m_ra; }
+    double getDEC() const { return m_dec; }
+    const blitz::Array<double, 2>& getFlux() const { return m_flux; }
+
   private:
-    const Sources&     m_sources;
-    const DipoleModel& m_dipolemodel;
+    std::string             m_filename;
+    std::ifstream           m_file;
+
+    std::string             m_name;
+    double                  m_ra;
+    double                  m_dec;
+    blitz::Array<double, 2> m_flux;
   };
+
 };
 
-#endif /* CALIBRATIONALGORITHM_H_ */
+#endif /* SOURCEDATA_H_ */
 

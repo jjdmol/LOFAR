@@ -42,6 +42,7 @@ ACC::~ACC()
 
 const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp) const
 {
+  Range all = Range::all();
   timestamp = Timestamp(0,0);
 
   // check range of subband argument
@@ -49,45 +50,51 @@ const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp) c
 
   timestamp = m_time(subband);
 
-  return m_acc(subband, Range::all(), Range::all(),
-  			   Range::all(), Range::all());
+  return m_acc(subband, all, all, all, all);
 }
 
 void ACC::updateACM(int subband, Timestamp timestamp, Array<complex<double>, 4>& newacm)
 {
-	Range all = Range::all();
-	m_acc(subband, all, all, all, all) = newacm;
-	m_time(subband) = timestamp;
+  Range all = Range::all();
+  m_acc(subband, all, all, all, all) = newacm;
+  m_time(subband) = timestamp;
+}
+
+void ACC::setACC(blitz::Array<std::complex<double>, 5>& acc)
+{
+  m_acc.reference(acc);
+  m_time.resize(acc.extent(firstDim));
+  m_time = Timestamp(0,0);
 }
 
 ACCs::ACCs(int nsubbands, int nantennas, int npol) : 
 	m_front(0), m_back(1)
 {
-	m_buffer[m_front] = new ACC(nsubbands, nantennas, npol);
-	m_buffer[m_back]  = new ACC(nsubbands, nantennas, npol);
+  m_buffer[m_front] = new ACC(nsubbands, nantennas, npol);
+  m_buffer[m_back]  = new ACC(nsubbands, nantennas, npol);
 }
 
 ACCs::~ACCs()
 {
-	delete m_buffer[m_front];
-	delete m_buffer[m_back];
+  delete m_buffer[m_front];
+  delete m_buffer[m_back];
 }
 
 ACC& ACCs::getFront() const
 {
-	return *m_buffer[m_front];
+  return *m_buffer[m_front];
 }
 
 ACC& ACCs::getBack() const
 {
-	return *m_buffer[m_back];
+  return *m_buffer[m_back];
 }
 
 void ACCs::swap()
 {
-	int tmp = m_front;
-	m_front = m_back;
-	m_back = tmp;
+  int tmp = m_front;
+  m_front = m_back;
+  m_back = tmp;
 }
 
 const ACC* ACCLoader::loadFromFile(string filename)

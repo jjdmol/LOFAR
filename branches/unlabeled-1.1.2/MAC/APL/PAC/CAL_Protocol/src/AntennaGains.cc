@@ -22,26 +22,71 @@
 //#  $Id$
 
 #include "AntennaGains.h"
+#include "Marshalling.h"
+#include <Common/LofarTypes.h>
+
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 using namespace CAL;
 using namespace std;
 using namespace blitz;
+using namespace LOFAR;
 
-AntennaGains::AntennaGains(int nantennas, int nsubbands) : m_complete(false)
+AntennaGains::AntennaGains()
 {
-  if (nantennas < 0 || nsubbands < 0)
+}
+
+AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_complete(false)
+{
+  if (nantennas < 0 || npol < 0 || nsubbands < 0)
     {
       nantennas = 0;
+      npol = 0;
       nsubbands = 0;
     }
    
-  m_gains.resize(nantennas, 2, nsubbands);
+  m_gains.resize(nantennas, npol, nsubbands);
   m_gains = 1;
 
-  m_quality.resize(nsubbands);
+  m_quality.resize(nantennas, npol, nsubbands);
   m_quality = 1;
 }
 
 AntennaGains::~AntennaGains()
 {}
+
+unsigned int AntennaGains::getSize()
+{
+  return 
+      MSH_ARRAY_SIZE(m_gains, complex<double>)
+    + MSH_ARRAY_SIZE(m_quality, double)
+    + sizeof(bool);
+}
+
+unsigned int AntennaGains::pack(void* buffer)
+{
+  unsigned int offset = 0;
+
+  MSH_PACK_ARRAY(buffer, offset, m_gains, complex<double>);
+  MSH_PACK_ARRAY(buffer, offset, m_quality, double);
+  memcpy(buffer, &m_complete, sizeof(bool));
+  offset += sizeof(bool);
+
+  return offset;
+}
+
+unsigned int AntennaGains::unpack(void* buffer)
+{
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 3);
+  MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 3);
+  memcpy(&m_complete, buffer, sizeof(bool));
+  offset += sizeof(bool);
+
+  return offset;
+}
 

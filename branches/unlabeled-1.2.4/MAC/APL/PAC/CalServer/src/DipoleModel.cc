@@ -23,6 +23,7 @@
 
 
 #include "DipoleModel.h"
+#include "DipoleModelData.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -43,24 +44,21 @@ DipoleModel::~DipoleModel()
 {
 }
 
-/*const*/ DipoleModel* DipoleModelLoader::loadFromFile(string filename)
+DipoleModels::DipoleModels()
 {
-  DipoleModel* model = new DipoleModel(filename);
+}
 
-  if (!model) return 0;
+DipoleModels::~DipoleModels()
+{
+}
 
-  ifstream modelfile(filename.c_str());
+void DipoleModels::getAll(string url)
+{
+  DipoleModelData data;
 
-  if (!modelfile)
-    {
-      LOG_FATAL_STR("Failed to open dipole model: " << filename);
-      exit(EXIT_FAILURE);
-    }
-
-  modelfile >> model->m_sens;
-
-  modelfile.close();
-
-  return model;
+  while (data.getNextFromFile(url)) {
+    DipoleModel* model = new DipoleModel(data.getName());
+    m_models[data.getName()] = model;
+  }
 }
 

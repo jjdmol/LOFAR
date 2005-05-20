@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#include "SourceCatalog.h"
+#include "Source.h"
 #include "DipoleModel.h"
 #include "RemoteStationCalibration.h"
 
@@ -35,8 +35,8 @@ using namespace blitz;
 using namespace std;
 using namespace LOFAR::RSP_Protocol;
 
-RemoteStationCalibration::RemoteStationCalibration(const SourceCatalog& catalog, const DipoleModel& dipolemodel)
-  : CalibrationAlgorithm(catalog, dipolemodel)
+RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, const DipoleModel& dipolemodel)
+  : CalibrationAlgorithm(sources, dipolemodel)
 {
 }
 
@@ -49,9 +49,9 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   // This warning can be removed when the code in this file has been adapted to that change.
   //
 
-  const SpectralWindow&   spw = subarray.getSPW();        // get spectral window
-  const DipoleModel&   dipolemodel = getDipoleModel();    // get dipole model
-  const SourceCatalog& sources     = getSourceCatalog();  // get sky model
+  const SpectralWindow& spw = subarray.getSPW();        // get spectral window
+  const DipoleModel&    dipolemodel = getDipoleModel();    // get dipole model
+  const Sources&        sources     = getSources();  // get sky model
 
   cout << "calibrate: spectral window name=" << spw.getName() << endl;
   cout << "calibrate: subband width=" << spw.getSubbandWidth() << " Hz" << endl;
@@ -102,9 +102,9 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   gains.setComplete(true); // when finished
 }
 
-const vector<Source> RemoteStationCalibration::make_local_sky_model(const SourceCatalog& catalog, double obstime)
+const vector<Source> RemoteStationCalibration::make_local_sky_model(const Sources& sources, double obstime)
 {
-  const std::vector<Source> skymodel = catalog.getCatalog();
+  const std::vector<Source> skymodel = sources.getSources();
 
   // obstime is in UTC seconds since Jan 1, 1970, 0h0m0s
   // This was Julian Day 2440587.5

@@ -26,7 +26,7 @@
 
 #include "SpectralWindow.h"
 #include "AntennaArray.h"
-#include "SourceCatalog.h"
+#include "Source.h"
 #include "DipoleModel.h"
 #include "ACC.h"
 
@@ -81,11 +81,11 @@ namespace CAL
     /**
      * List of defined spectral windows.
      */
-    std::vector<SpectralWindow> m_spws;        // vector of spectral windows (read from config file)
-    std::vector<AntennaArray>   m_arrays;      // vector of antenna arrays (read from config file)
-    /*const*/ DipoleModel*      m_dipolemodel; // dipole model
-    const ACC*                  m_acc;         // ACC matrix
-    const SourceCatalog*        m_catalog;     // source catalog
+    std::vector<SpectralWindow> m_spws;         // vector of spectral windows (read from config file)
+    AntennaArrays               m_arrays;       // antenna arrays (read from config file)
+    DipoleModels                m_dipolemodels; // dipole model (read from file)
+    const ACC*                  m_acc;          // ACC matrix (read from file)
+    Sources                     m_sources;      // source catalog (read from file)
 
     /**
      * Client/Server management member variables.

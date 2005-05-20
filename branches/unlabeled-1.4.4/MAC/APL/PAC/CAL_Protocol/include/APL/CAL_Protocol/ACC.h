@@ -68,7 +68,7 @@ namespace CAL
     /**
      * Initialize the ACC array.
      */
-    void setACC(blitz::Array<std::complex<double>, 5>& acc) { m_acc.reference(acc); }
+    void setACC(blitz::Array<std::complex<double>, 5>& acc);
 
   private:
 
@@ -76,7 +76,7 @@ namespace CAL
 
     /**
      * ACC is a five dimensional array of complex numbers with dimensions
-     * nantennas x nantennas x nsubbands x npol x npol.
+     * nsubbands x  nantennas x nantennas x npol x npol.
      */
     blitz::Array<std::complex<double>, 5>    m_acc;
 

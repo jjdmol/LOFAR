@@ -57,8 +57,8 @@ SubArray::SubArray(string                 name,
   // TODO: compact array by removing antennas of which both polarizations have not been selected
 
   // create calibration result objects
-  m_result[FRONT] = new AntennaGains(pos.extent(firstDim), spw.getNumSubbands());
-  m_result[BACK]  = new AntennaGains(pos.extent(firstDim), spw.getNumSubbands());
+  m_result[FRONT] = new AntennaGains(pos.extent(firstDim), pos.extent(secondDim), spw.getNumSubbands());
+  m_result[BACK]  = new AntennaGains(pos.extent(firstDim), pos.extent(secondDim), spw.getNumSubbands());
 }
 
 SubArray::~SubArray()

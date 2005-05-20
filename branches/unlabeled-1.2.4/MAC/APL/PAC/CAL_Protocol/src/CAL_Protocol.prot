@@ -11,6 +11,13 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+13)";
 // e.g.
 // include = '<sys/time.h>';
 
+include = '"AntennaGains.h"';
+include = '"Timestamp.h"';
+
+include = '<bitset>';
+include = '<set>';
+include = '<Common/LofarTypes.h>';
+
 prelude = << PRELUDE_END
 
 enum {
@@ -29,136 +36,134 @@ PRELUDE_END;
 // A "param" has a "name" and a "type".
 //
 event = {
-      signal = CREATESUBARRAY;
+      signal = START; // start calibration of a subarray
       dir = IN;
-      param = {
-	    // name of the station receptor group
-	    name = "srgname";
+      param = { // name of the subarray
+	    name = "name";
 	    type = "string";
       };
-      param = {
-	    // positions of the antennas
-	    name = "pos";
-	    type = "int"; // AntennaPositions
+      param = { // name of the array of which it is a subarray
+	    name = "parent";
+	    type = "string";
       };
-      param = {
+      param = { // subset of the antennas
+	    name = "subset";
+	    type = "std::bitset<256>";
+      };
+      param = { // sampling_frequency
 	    name = "sampling_frequency";
 	    type = "double";
       };
+      param = { // nyquist_zone
+	    name = "nyquist_zone";
+	    type = "int";
+      };
+      // sampling_frequency and nyquist_zone determine the spectral window
 };
 
 event = {
-      signal = CREATESUBARRAY_ACK;
+      signal = STARTACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+};
+
+event = {
+      signal = STOP; // stop calibration of a subarray
+      dir = IN;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = STOPACK;
+      dir = OUT;
+      param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
+      };
+};
+
+event = {
+      signal = SUBSCRIBE; // subscribe to antenna gain updates
+      dir = IN;
+      param = { // name of the subarray
+	    name = "name";
+	    type = "string";
+      };
+      param = { // set of subbands
+	    name = "subbandset";
+	    type = "std::set<int>";
+      };
+};
+
+event = {
+      signal = SUBSCRIBEACK;
       dir = OUT;
       param = {
 	    name = "status";
 	    type = "int";
       };
       param = {
-	    name = "srgname";
-	    type = "string";
+	    name = "handle";
+	    type = "uint32";
       };
 };
 
 event = {
-      signal = STARTCAL;
+      signal = UPDATE; // antenna gains update
+      dir = OUT;
+      param = { // time of the gains
+	    name = "timestamp";
+	    type = "RSP_Protocol::Timestamp";
+	    userdefined;
+      };
+      param = { // status
+	    name = "status";
+	    type = "int16";
+      };
+      param = { // handle
+	    name = "handle";
+	    type = "uint32";
+      };
+      param = { // gains
+	    name = "gains";
+	    type = "CAL::AntennaGains";
+	    userdefined;
+      };
+};
+
+event = {
+      signal = UNSUBSCRIBE; // unsubscribe from updates
       dir = IN;
       param = {
-	    name = "srgname";
-	    type = "string";
+	    name = "handle";
+	    type = "uint32";
       };
 };
 
 event = {
-      signal = STARTCAL_ACK;
+      signal = UNSUBSCRIBEACK;
       dir = OUT;
       param = {
 	    name = "status";
-	    type = "int";
+	    type = "int16";
       };
       param = {
-	    name = "srgname";
-	    type = "string";
+	    name = "handle";
+	    type = "uint32";
       };
 };
-
-event = {
-      signal = DESTROYSUBARRAY;
-      dir = IN;
-      param = {
-	    name = "srgname";
-	    type = "string";
-      };
-};
-
-event = {
-      signal = DESTROYSUBARRAY_ACK;
-      dir = IN;
-      param = {
-	    name = "status";
-	    type = "int";
-      };
-      param = {
-	    name = "srgname";
-	    type = "string";
-      };
-};
-
-event = {
-      signal = SUBCAL;
-      dir = IN;
-      param = {
-	    name = "srgname";
-	    type = "string";
-      };
-};
-
-event = {
-      signal = SUBCAL_ACK;
-      dir = OUT;
-      param = {
-	    name = "status";
-	    type = "int";
-      };
-      param = {
-	    name = "srgname";
-	    type = "string";
-      };
-};
-
-event = {
-      signal = UPDCAL;
-      dir = OUT;
-      param = {
-	    name = "status";
-	    type = "int";
-      };
-      param = {
-	    name = "srgname";
-	    type = "string";
-      };
-};
-
-event = {
-      signal = UNSUBCAL;
-      dir = IN;
-      param = {
-	    name = "srgname";
-	    type = "string";
-      };
-};
-
-event = {
-      signal = UNSUBCAL_ACK;
-      dir = OUT;
-      param = {
-	    name = "status";
-	    type = "int";
-      };
-      param = {
-	    name = "srgname";
-	    type = "string";
-      };
-};
-
 

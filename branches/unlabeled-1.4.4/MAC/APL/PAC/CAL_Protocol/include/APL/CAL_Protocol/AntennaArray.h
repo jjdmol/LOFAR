@@ -30,16 +30,23 @@
 
 namespace CAL
 {
+  /**
+   * This class represents an antenna array. The LOFAR remote station will initially
+   * have two anntena arrays. One for the low-band antennas, and one for the high-band
+   * antennas. Alternative configurations of the antennas would also be described by 
+   * separate AntennaArray instance.
+   * The AntennaArray instantes are created using information from a configuration file.
+   */
   class AntennaArray
   {
   public:
     
     /**
      * Create a new antenna array.
-     *
-     * @param name   The name of this antenna array.
-     * @param pos    The x,y,z positions of the antennas (dimensions: numAntennas x 2 (numPol) x 3 (x,y,z)
-     *
+     * @param name      The name of this antenna array.
+     * @param pos       The x,y,z positions of the antennas (dimensions: nantennas x npol (2) x 3 (x,y,z)
+     * @param rcuindex  The mapping from antenna to input RCU. If the mapping is one-on-one then this
+     * parameter can be omitted. This is used for creating subarrays of an AntennaArray.
      */
     AntennaArray(std::string                    name,
 		 const blitz::Array<double, 3>& pos,
@@ -63,6 +70,11 @@ namespace CAL
      */
     int getNumAntennas() const { return m_pos.extent(blitz::firstDim); }
 
+    /**
+     * Get the RCU index of a particular antenna.
+     */
+    inline int getRCUIndex(int nantenna, int npol) const { return m_rcuindex(nantenna, npol); }
+
   private:
     std::string             m_name;     // name of this antenna array
 
@@ -83,19 +95,23 @@ namespace CAL
     AntennaArrays();
     virtual ~AntennaArrays();
 
-    AntennaArray& get(std::string name) const;
-    void          loadAllFromFile(std::string filename);
-    
+    /**
+     * Get an antenna array by name.
+     * @return a pointer to the AntennaArray or 0 if the array was not found.
+     */
+    const AntennaArray& getByName(std::string name) { return *m_arrays[name]; }
+
+    /**
+     * Get all antenna arrays. A second call to this method replaces the antenna arrays
+     * loaded by the first call.
+     * @param url load antenna arrays from this resource location (e.g. filename or database table).
+     */
+    void getAll(std::string url);
+
   private:
-    std::map<std::string, AntennaArray*> m_arrays;
+    std::map<std::string, const AntennaArray*> m_arrays;
   };
 
-  class AntennaArrayLoader
-  {
-  public:
-    static AntennaArray* loadFromBlitzString(std::string name, std::string array);
-    static AntennaArray* loadFromFile(std::string name, std::string filename);
-  };
 };
 
 #endif /* ANTENNAARRAY_H_ */
