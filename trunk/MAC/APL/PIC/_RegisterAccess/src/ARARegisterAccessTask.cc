@@ -1153,12 +1153,15 @@ void RegisterAccessTask::updateBoardProperties(string scope,
   }
   else
   {
-    GCFPVUnsigned pvTemp(voltage_15);
-    it->second->setValue(string(PROPNAME_VOLTAGE15),pvTemp);
+    double v15 = static_cast<double>(voltage_15) * (2.5/192.0);
+    GCFPVDouble pvDouble15(v15);
+    it->second->setValue(string(PROPNAME_VOLTAGE15),pvDouble15);
     
-    pvTemp.setValue(voltage_33);
-    it->second->setValue(string(PROPNAME_VOLTAGE33),pvTemp);
+    double v33 = static_cast<double>(voltage_33) * (5.0/192.0);
+    GCFPVDouble pvDouble33(v33);
+    it->second->setValue(string(PROPNAME_VOLTAGE33),pvDouble33);
 
+    GCFPVUnsigned pvTemp;
     pvTemp.setValue(ffi0);
     it->second->setValue(string(PROPNAME_FFI0),pvTemp);
 
@@ -1283,10 +1286,12 @@ void RegisterAccessTask::updateFPGAproperties(string scope, uint8 status,
   }
   else
   {
-    GCFPVUnsigned pvUns(status);
+    LOG_INFO(formatString("FPGA status field is not yet used: %s.status=0x%x",scope.c_str(),status));
+//    GCFPVUnsigned pvUns(status);
+    GCFPVUnsigned pvUns(0);
     it->second->setValue(string(PROPNAME_STATUS),pvUns);
     
-    GCFPVDouble pvDouble(static_cast<double>(temp)/100.0);
+    GCFPVDouble pvDouble(static_cast<double>(temp));
     it->second->setValue(string(PROPNAME_TEMPERATURE),pvDouble);
   }
 }
@@ -1377,11 +1382,9 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
       it->second->setValue(string(PROPNAME_LBAENABLE),pvBoolLBAEnable);
     }
       
-    if(pvBoolVddVccEn.getValue() ||
-       pvBoolVhEnable.getValue() ||
-       pvBoolVlEnable.getValue() ||
-       pvBoolHBAEnable.getValue() ||
-       pvBoolLBAEnable.getValue())
+    if(!pvBoolVddVccEn.getValue() ||
+       (!pvBoolVhEnable.getValue() && !pvBoolVlEnable.getValue()) ||
+       (!pvBoolHBAEnable.getValue() && !pvBoolLBAEnable.getValue()))
     {
       GCFPVUnsigned pvUnsignedStatus(STATUS_ERROR);
       it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
