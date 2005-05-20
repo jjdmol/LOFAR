@@ -496,7 +496,7 @@ void treeAddDatapoints(dyn_string names)
   dyn_string addedDatapoints;
   string systemName;
   long addedNode=0;
-
+  dynSortAsc(names); //Sort the dyn_string names to avoid problems with references
   g_parentIndex = 0;           // variable used in function fwTreeView_appendToParentNode
   g_nodeID  = 0;  // to increase performance
   if(dynlen(names)>0)
@@ -527,16 +527,16 @@ void treeAddDatapoints(dyn_string names)
 	    int parentId;
 	    // remove the System part from the datapoint name
 	    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
-        if(datapointName == "")
+      if(datapointName == "")
+      {
+        datapointName = names[namesIndex];
+        // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
+        int sepPos = strpos(datapointName,":");
+        if(sepPos >= 0)
         {
-          datapointName = names[namesIndex];
-          // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
-          int sepPos = strpos(datapointName,":");
-          if(sepPos >= 0)
-          {
-            datapointName = substr(datapointName,sepPos+1);
-          }
+          datapointName = substr(datapointName,sepPos+1);
         }
+      }
 
 	    // only add ENABLED datapoints
 	    dyn_string reference;
@@ -545,7 +545,7 @@ void treeAddDatapoints(dyn_string names)
       checkForReference(dpName, reference, dpIsReference);
 	    if(dpIsReference) //If the dpName is a reference, use the original datapoint
 	    {
-	      dpName=reference[2];
+	      LOG_DEBUG("DP is reference",dpName, reference[2]);
 	    }
 	    else
 	    {
@@ -601,8 +601,15 @@ void treeAddDatapoints(dyn_string names)
         dpIsReference=false;
         checkForReference(names[namesIndex], reference, dpIsReference);
         LOG_TRACE("dpTypeGet for: ",names[namesIndex]);
-        //dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
-        dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."),elementNames,elementTypes);
+        if(dpAccessable(names[namesIndex] + "__enabled"))
+        {
+          dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."),elementNames,elementTypes);
+        }
+        else
+        {
+          dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
+        }
+        
 
         // add elements of this datapoint, if any, skip system stuff
         if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
@@ -634,6 +641,7 @@ void treeAddDatapoints(dyn_string names)
                 dyn_string referenceSplit = strsplit(referenceContent[k], "=");
                 g_referenceList[dynlen(g_referenceList)+1]= addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2])+"=" + referenceSplit[2];
                 names[dynlen(names)+1]= addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
+                LOG_TRACE("Add reference: ",names[dynlen(names)]);
               }
             }
             else
@@ -1366,28 +1374,32 @@ void ButtonMaximize_HandleEventClick()
       {
         LOG_TRACE("viewConfig:",selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
     
-        // create the mapping
-        int beginSubViews=1;
-        if(selectedView < 1)
-          selectedView = 1;
-        if(selectedSubView < 1)
-          selectedSubView = 1;
-        for(int i=1;i<selectedView;i++)
+        if(selectedView > 0 && selectedSubView > 0)
         {
-          beginSubViews += nrOfSubViews[i];
-        }
-        // get subviews config
-        string subViewCaption;
-        string subViewFileName;
-        if(navConfigGetSubViewConfigElements(subViews[beginSubViews+selectedSubView-1],subViewCaption,subViewFileName))
-        {
-          string viewsPath = navConfigGetViewsPath();
-          LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
-
-          dyn_string panelParameters = makeDynString(
-            "$datapoint:" + datapointPath,
-            "$configDatapoint:" + configs[beginSubViews+selectedSubView-1]);
-          ModuleOnWithPanel(datapointPath,-1,-1,0,0,1,1,"",viewsPath+subViewFileName, subViewCaption, panelParameters);
+          // create the mapping
+          int beginSubViews=1;
+          for(int i=1;i<selectedView;i++)
+          {
+            beginSubViews += nrOfSubViews[i];
+          }
+          // get subviews config
+          string subViewCaption;
+          string subViewFileName;
+          if(navConfigGetSubViewConfigElements(subViews[beginSubViews+selectedSubView-1],subViewCaption,subViewFileName))
+          {
+            string viewsPath = navConfigGetViewsPath();
+            LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
+  
+            string dpNameTemp=datapointPath;
+            bool isReference;
+            dyn_string reference;
+            
+            checkForReference(dpNameTemp, reference, isReference);
+            dyn_string panelParameters = makeDynString(
+              "$datapoint:" + dpNameTemp,
+              "$configDatapoint:" + configs[beginSubViews+selectedSubView-1]);
+            ModuleOnWithPanel(dpNameTemp,-1,-1,0,0,1,1,"",viewsPath+subViewFileName, subViewCaption, panelParameters);
+          }
         }
       }
     }
@@ -1421,7 +1433,8 @@ TreeView_OnSelect(unsigned pos)
   dyn_string reference;
   bool parentDatapointIsReference;
   checkForReference(datapointPath, reference, parentDatapointIsReference);
-
+  
+  LOG_TRACE("check for expand",parentDatapointIsReference, datapointPath, dpAccessable(datapointPath));
   if(checkDpPermit(datapointPath) || pos==1)
   {
     if(!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath)))

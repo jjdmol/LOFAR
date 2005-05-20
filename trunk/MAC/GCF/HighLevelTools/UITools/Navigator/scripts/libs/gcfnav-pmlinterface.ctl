@@ -204,7 +204,7 @@ bool navPMLisAutoLoaded(string datapoint)
 bool navPMLisTemporary(string datapoint)
 {
   bool temporary=false;
-  LOG_TRACE("navPMLisTemporary",datapoint);
+  //LOG_TRACE("navPMLisTemporary",datapoint);
   
   // check if the propertyset is temporary by GCF
   if(strpos(datapoint, NAVPML_DPNAME_ENABLED)>=0)
@@ -220,7 +220,7 @@ bool navPMLisTemporary(string datapoint)
       }
     }
   }
-  LOG_TRACE("navPMLisTemporary[T/F]",temporary);
+  //LOG_TRACE("navPMLisTemporary[T/F]",temporary);
   return temporary;
 }
 

@@ -157,9 +157,11 @@ bool navConfigCheckEnabled(string datapointName)
   if(dpExists(datapointName + "__enabled"))
   {
     enabled = true;
+    LOG_TRACE("dpName__enabled Exists",datapointName, enabled);
   }
   else
   {
+    LOG_TRACE("dpName__enabled NOT Exists",datapointName, enabled);
     // check the ignoreEnabledRoots field
     dyn_string ignoreEnabledDPs;
     dyn_errClass err;
@@ -177,6 +179,7 @@ bool navConfigCheckEnabled(string datapointName)
         }
       }
     }
+
   }
   return enabled;
 }
@@ -366,13 +369,76 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
     dynAppend(allResources,dpNames(resourceRoots[i]+"*"));
   }
   
+
+  /////////////////////////////////////////////////////////////
+  LOG_DEBUG("All resources: ",dynlen(allResources));
+  DebugTN("###1. All resources: ",allResources);
+  dyn_string newCollection;
+  dyn_string temporaryCollection;
+  dyn_string checkCollection = allResources;
+  dyn_string enabledCollection = dynPatternMatch("*__enabled", allResources);
+  int enabledCollectionLength = dynlen(enabledCollection);
+  int position;
+  for(int j=1; j<=enabledCollectionLength; j++)
+  {
+    string enabledCollectionItem = enabledCollection[j];
+    strreplace(enabledCollectionItem, "__enabled", "");
+    position = dynContains(checkCollection, enabledCollectionItem);
+    DebugTN("### position:"+position + "|of: "+enabledCollectionItem);
+    if(position>0)
+    {
+      LOG_DEBUG("Adding: ",checkCollection[position]);
+      dynAppend(newCollection, checkCollection[position]);
+      dynRemove(checkCollection, position);
+    }
+    else if(0==position)
+    {
+      if(navPMLisTemporary(enabledCollectionItem + "__enabled"))
+      {
+        LOG_DEBUG("Adding temp: ", enabledCollectionItem);
+        dynAppend(newCollection, enabledCollectionItem);
+      }
+    }
+  }
+  ///////////////////////////////////////////////////////////////
+  // Add
+  if(dynlen(checkCollection)>0)
+  {
+    bool enabled=FALSE;
+    for(int j=1; j<=dynlen(checkCollection);j++)
+    {
+      // check the ignoreEnabledRoots field
+      dyn_string ignoreEnabledDPs;
+      dyn_errClass err;
+      dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS,ignoreEnabledDPs);
+      err = getLastError();
+      if(dynlen(err) == 0)
+      {
+        for(int n=1;n<=dynlen(ignoreEnabledDPs) && !enabled;n++)
+        {
+          int pos = strpos(checkCollection[j],ignoreEnabledDPs[n]);
+          if(pos >= 0)
+          {
+            dynAppend(newCollection, checkCollection[j]);
+            enabled = TRUE;
+          }
+        }
+      }
+    }
+  }
+  ////////////////////////////////////////////////////////////////
+  allResources = newCollection;
+  DebugTN("###2. All resources: ",allResources);
+  /////////////////////////////////////////////////////////////
   // now remove all DP's with double '_' (e.g. __enabled)
   // strip everything below the requested level
   // remove duplicates  
   int i=1;
+  
   while(i<=dynlen(allResources))
   {
-    if((strpos(allResources[i],"__") < 0) || navPMLisTemporary(allResources[i]))
+    //if((strpos(allResources[i],"__") < 0) || navPMLisTemporary(allResources[i]))
+    if(strpos(allResources[i],"__") < 0)
     {
       strreplace(allResources[i], "__enabled", "");
       dyn_string dpPathElements = strsplit(allResources[i],"_");
@@ -495,9 +561,14 @@ string navConfigGetViewConfig(string datapointPath)
   string datapointType;
   string dpViewConfig = "";
   DebugN("## datapointPath:"+datapointPath);
-  if(dpAccessable(datapointPath+"__enabled."))
+  string dpNameTemp=datapointPath;
+  bool isReference;
+  dyn_string reference;
+  
+  checkForReference(dpNameTemp, reference, isReference);
+  if(dpAccessable(dpNameTemp+"__enabled"))
   {
-    datapointType = getDpTypeFromEnabled(datapointPath+"__enabled.");
+    datapointType = getDpTypeFromEnabled(dpNameTemp+"__enabled.");
     // find __nav_<datapointType>_viewconfig datapoint
     dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointType+"_viewconfig";
   }
