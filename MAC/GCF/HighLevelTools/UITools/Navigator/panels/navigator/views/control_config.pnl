@@ -1,13 +1,17 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,311 201 901 608 N "_3DFace" 5
+PANEL,636 374 901 608 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
-EEE E E 1 -1 -1 0  80 180
+"main()
+{
+//  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+}" 0
+EE E E 1 -1 -1 0  80 180
 "" 0 1
 EE 2
 "CBRef""1"

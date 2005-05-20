@@ -1,0 +1,137 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,287 148 960 750 N "_3DFace" 0
+EEE E E 1 -1 -1 0  -1 -1
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 1
+"Border2"
+""
+1 23 740 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nederland2_gray.bmp" 13434828 E 23 10 933 740
+7 2
+"Ellipse1"
+""
+1 325 396 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 325 396 10 10
+7 3
+"Ellipse2"
+""
+1 415 477 E E E 1 E 1 E N "_WindowText" E N "Lofar_maintenance" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 415 477 10 10
+7 4
+"Ellipse3"
+""
+1 529 504 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 529 504 10 10
+7 5
+"Ellipse4"
+""
+1 615 473 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 615 473 10 10
+9 6
+"Arc1"
+""
+1 766 287 E E E 1 E 1 E N "Lofar_background_dark" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 4 1 0 1 E U  0 E 886 422 240 -270
+ 0 886 152 646 422 0
+9 7
+"Arc2"
+""
+1 475 305 E E E 1 E 1 E N "Lofar_background_dark" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 4 1 0 1 E U  0 E 640 180 330 250
+ 0 310 180 640 430 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,627 450 600 338 N "_3DFace" 5
+PANEL,465 341 600 338 N "_3DFace" 5
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -514,29 +514,6 @@ LANG:1 6 Cancel
 0
 1 69 1 "" 2
 0
-14 70
-"TextField1"
-""
-1 310 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-53 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-308 248 582 275
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\",\"text\", $selectedDP);
-}" 0
-
-E
 0
 LAYER, 1 
 1

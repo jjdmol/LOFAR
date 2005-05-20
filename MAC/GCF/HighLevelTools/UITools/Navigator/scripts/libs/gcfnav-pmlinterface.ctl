@@ -175,14 +175,14 @@ bool navPMLisAutoLoaded(string datapoint)
 {
   bool autoLoaded=false;
   LOG_TRACE("navPMLisAutoLoaded",datapoint);
-  if(dpExists(datapoint))
+  if(dpAccessable(datapoint))
   {
     // check if the propertyset is autoloaded by GCF
-    if(dpExists(datapoint + NAVPML_DPNAME_ENABLED))
+    if(dpAccessable(datapoint + NAVPML_DPNAME_ENABLED))
     {
       string enabled="";
-      dpGet(datapoint + NAVPML_DPNAME_ENABLED,enabled);
-      if(enabled == NAVPML_ENABLED_AUTOLOAD)
+      dpGet(datapoint + NAVPML_DPNAME_ENABLED + ".",enabled);
+      if(patternMatch(NAVPML_ENABLED_AUTOLOAD, enabled))
       {
         autoLoaded = true;
       }
@@ -194,3 +194,35 @@ bool navPMLisAutoLoaded(string datapoint)
   }
   return autoLoaded;
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+//Function navPMLisTemporary
+//
+// returns true if the propertyset is temporary
+///////////////////////////////////////////////////////////////////////////
+bool navPMLisTemporary(string datapoint)
+{
+  bool temporary=false;
+  LOG_TRACE("navPMLisTemporary",datapoint);
+  
+  // check if the propertyset is temporary by GCF
+  if(strpos(datapoint, NAVPML_DPNAME_ENABLED)>=0)
+  {
+    if(dpAccessable(datapoint))
+    {
+      string enabled="";
+      dpGet(datapoint + ".", enabled);
+      LOG_TRACE("navPMLisTemporary[content enabled]",enabled);
+      if(strpos(enabled, NAVPML_ENABLED_TEMP)>=0)
+      {
+        temporary = true;
+      }
+    }
+  }
+  LOG_TRACE("navPMLisTemporary[T/F]",temporary);
+  return temporary;
+}
+
+
+

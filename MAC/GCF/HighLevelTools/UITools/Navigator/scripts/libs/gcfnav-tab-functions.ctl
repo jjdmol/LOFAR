@@ -219,10 +219,11 @@ void ComboBoxViewsSelectionChanged()
  
   string datapointTypeName = "";
   //DebugTN("g_datapoint",g_datapoint);
-  if(dpExists(g_datapoint))
-    datapointTypeName = dpTypeName(g_datapoint);
+  //getDpTypeFromEnabled( + "__enabled.")
+  if(dpAccessable(g_datapoint))
+    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled.");
   else
-    datapointTypeName = g_datapoint;
+    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled."); //original was only <= g_datapoint>
   //////////////////////////////////////////////////////////////
 
   

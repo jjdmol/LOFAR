@@ -1,11 +1,23 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,483 137 95 138 N "_3DFace" 3
+PANEL,442 381 95 138 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
-EEE E E 1 -1 -1 0  28 79
+"main()
+{
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\");
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance\");
+
+}" 0
+"main()
+{
+  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\");
+  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance\");
+
+}" 0
+E E E 1 -1 -1 0  28 79
 "" 0 1
 EE 2
 "CBRef""1"
@@ -36,6 +48,33 @@ LANG:1 0
   EP_setBackColor();
 }
 
+
+
+EP_setBackColor()
+{
+  dyn_errClass err;
+  bool OK=FALSE;
+  DebugTN(\"Start \"+$datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+  while(!OK)
+  {
+    delay(0,0.100);
+    OK = dpAccessable($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status\") &&
+         dpAccessable($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status\");
+
+  }
+  DebugTN(\"Stop  \"+$datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+  dpConnect(\"setBackGroundColorAEM\",
+            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\",
+            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\");
+//  err = getLastError();
+//  if (dynlen(err) > 0)
+//    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+
+/*
 EP_setBackColor()
 {
 dyn_errClass err;
@@ -54,7 +93,7 @@ dyn_errClass err;
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
 
-}" 0
+}*/" 0
  E 0 1 1 0 1 E U  1 E 10 10 55 55
 4 26
 "Line5"

@@ -1,3 +1,6 @@
+
+
+global string CURRENT_DP_MESSAGE = "Current selection in tree";
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: trendApplySettings
 //
@@ -35,6 +38,100 @@ void TrendConfigApplyTraceSettings()
   }
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewGetDpFromDpSelectionList; retrieves the correct dpName
+//                                            from the dpSelection
+// Input:  1. list_system.selectedText
+//         2. list_dp.selectedText
+// Output: 1. datapoint name
+///////////////////////////////////////////////////////////////////////////
+string navViewGetDpFromDpSelectionList(string dollarDatapoint)
+{
+  string datapoint;
+  if(list_system.selectedText==getSystemName())
+  {
+    if(CURRENT_DP_MESSAGE==list_dp.selectedText)
+    {
+      datapoint = dollarDatapoint;
+    }
+    else
+    {
+      datapoint = dollarDatapoint + "_" + list_dp.selectedText;
+    }
+  }
+  else
+  {
+    datapoint = list_system.selectedText + list_dp.selectedText;
+  }
+  return datapoint;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence3, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence3(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 3);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence4, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence4(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 4);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence5, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence5(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 5);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence6, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence6(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 6);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence7, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence7(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 7);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence8, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence8(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 8);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Function navViewAlertGetDpFromColumn: Gets the selectedDP 
 //                         
@@ -58,25 +155,6 @@ navViewAlertApplyCellSettings(string RowNumber, string Column)
   dpSet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "Titles", ColumnTitles);
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Function navViewControlDisplayTime: converts the serialtime to the a  
-//                                     normal, readable time notation
-//
-// Input: serialTime
-// Output: output is written to the controllerLog
-///////////////////////////////////////////////////////////////////////////
-navViewControlDisplayTime(string dp1, int serialTime)
-{
-  string timeToDisplay = getCurrentTime();
-  string elementName = dpGetElementName(dp1);
-  strreplace(elementName, ".", "");
-  time t;
-  setPeriod(t, serialTime); 
-  //formatTime("%H:%M:%S %d-%m-%Y", t)
-  controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + formatTime("%H:%M:%S %d-%m-%Y", t);
-  setValue("", "text", formatTime("%H:%M:%S %d-%m-%Y", t));
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Function navViewControlDisplayText: Displays the text: textToDisplay
@@ -86,12 +164,37 @@ navViewControlDisplayTime(string dp1, int serialTime)
 ///////////////////////////////////////////////////////////////////////////
 navViewControlDisplayText(string dp1, string textToDisplay)
 {
-  setValue("", "text", textToDisplay);
   string timeToDisplay = getCurrentTime();
   string elementName = dpGetElementName(dp1);
   strreplace(elementName, ".", "");
+  setValue("txt_" + elementName, "text", textToDisplay);
   controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + textToDisplay;
 }
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewControlDisplayTime: converts the serialtime to the a  
+//                                     normal, readable time notation
+//
+// Input: serialTime
+// Output: output is written to the controllerLog
+///////////////////////////////////////////////////////////////////////////
+navViewControlDisplayTime(string dp1, int serialTime)
+{
+  dyn_string dpPlit = strsplit(dp1, ".");
+  string timeToDisplay = getCurrentTime();
+  string elementName = dpGetElementName(dp1);
+  strreplace(elementName, ".", "");
+  time t;
+  setPeriod(t, serialTime); 
+  //formatTime("%H:%M:%S %d-%m-%Y", t)
+  controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + formatTime("%H:%M:%S %d-%m-%Y", t);
+  setValue("txt_"+elementName, "text", formatTime("%H:%M:%S %d-%m-%Y", t));
+
+}
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -756,35 +859,11 @@ void BPContextMenu()
   			break;
    	case 10:   	
 			  dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 0);
-/* 		  dpActivateAlert($datapoint + "_Board1_BP.status", bOK);
- 		  	dpActivateAlert($datapoint + "_Board1_AP1.status", bOK);
- 		  	dpActivateAlert($datapoint + "_Board1_AP2.status", bOK);
- 		  	dpActivateAlert($datapoint + "_Board1_AP3.status", bOK);
- 		  	dpActivateAlert($datapoint + "_Board1_AP4.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP1_RCU1.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP1_RCU2.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP2_RCU1.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP2_RCU2.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP3_RCU1.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP3_RCU2.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP4_RCU1.status", bOK);
-		  	dpActivateAlert($datapoint + "_Board1_AP4_RCU2.status", bOK); */
+/* 		  dpActivateAlert($datapoint + "_Board1_BP.status", bOK);*/
       	break;
    	case 11:
 			  dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 1);
-/* 		  dpDeactivateAlert($datapoint + "_Board1_BP.status", bOK);
- 		  	dpDeactivateAlert($datapoint + "_Board1_AP1.status", bOK);
- 		  	dpDeactivateAlert($datapoint + "_Board1_AP2.status", bOK);
- 		  	dpDeactivateAlert($datapoint + "_Board1_AP3.status", bOK);
- 		  	dpDeactivateAlert($datapoint + "_Board1_AP4.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP1_RCU1.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP1_RCU2.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP2_RCU1.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP2_RCU2.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP3_RCU1.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP3_RCU2.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP4_RCU1.status", bOK);
-		  	dpDeactivateAlert($datapoint + "_Board1_AP4_RCU2.status", bOK); */
+/* 		  dpDeactivateAlert($datapoint + "_Board1_BP.status", bOK);*/
      	break;
     default:
     	break;
@@ -868,8 +947,10 @@ void NavConfigTrendFillDpeSelection(string datapoint)
   list_dpe.deleteAllItems; 
   if(selectedDP!="")
     selectedDP = "_" + selectedDP;
-
-  dpTypeGet(getDpTypeFromEnabled(datapoint + selectedDP + "__enabled."),elementNames,elementTypes);
+  DebugN("dpType:"+getDpTypeFromEnabled(datapoint + "__enabled."));
+  DebugN("dp:"+datapoint);
+  
+  dpTypeGet(getDpTypeFromEnabled(datapoint + "__enabled."),elementNames,elementTypes);
   for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
   {
     int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
