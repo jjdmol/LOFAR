@@ -856,7 +856,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
     case F_EXTPS_LOADED:
       if(m_schedule!="")
       {
-        GCFPVString command("SCHEDULE VI1.ps");
+        GCFPVString command(string("SCHEDULE ") + m_schedule);
         m_MACSchedulerPS.setValue("command",command);
       }
       break;

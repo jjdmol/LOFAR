@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     else if(schedule)
     {
       ARATestDriverTask testDriverTask;
-      testDriverTask.schedule();
+      testDriverTask.schedule(cmdLine.GetSafeArgument("-schedule", 0, "VI1.ps"));
       testDriverTask.start(); // make initial transition
       GCFTask::run(); //is also called by the ARATest class
     }
