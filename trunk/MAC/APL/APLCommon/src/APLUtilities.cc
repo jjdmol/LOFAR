@@ -88,7 +88,7 @@ int APLUtilities::remoteCopy(const string& localFile, const string& remoteHost, 
   char tempFileName [L_tmpnam];
   tmpnam(tempFileName);
   
-  string command("scp ");
+  string command("scp -Bq"); // -B: batch mode; -q: no progress bar
   command += localFile + string(" ");
   command += remoteHost + string(":");
   command += remoteFile;
