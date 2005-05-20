@@ -589,8 +589,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 
     case F_ENTRY:
     {
-      GCFPVString status(MS_STATE_STRING_INITIAL);
-      m_propertySet->setValue(MS_PROPNAME_STATUS,status);
+      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(SAS_RESULT_NO_ERROR));
       
       // connect to startdaemon clients
       GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
@@ -648,9 +647,6 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
       // open server ports
       m_SASserverPort.open();
       m_VIparentPort.open();
-      
-      GCFPVString status(MS_STATE_STRING_IDLE);
-      m_propertySet->setValue(MS_PROPNAME_STATUS,status);
       break;
     }
   
