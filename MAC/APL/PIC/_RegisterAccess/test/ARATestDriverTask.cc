@@ -75,7 +75,7 @@ ARATestDriverTask::ARATestDriverTask() :
   n_aps_per_board(1),
   n_rcus_per_ap(1),
   n_rcus(1),
-  m_schedule(false),
+  m_schedule(""),
   m_MACSchedulerPS("GSO_MACScheduler","TAplMacScheduler",&m_answer)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
@@ -115,9 +115,9 @@ ARATestDriverTask::~ARATestDriverTask()
 {
 }
 
-void ARATestDriverTask::schedule()
+void ARATestDriverTask::schedule(string schedule)
 {
-  m_schedule=true;
+  m_schedule=schedule;
 }
 
 void ARATestDriverTask::addPropertySet(string scope)
@@ -818,7 +818,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
   switch (event.signal)
   {
     case F_INIT:
-      if(m_schedule)
+      if(m_schedule!="")
         m_MACSchedulerPS.load();
       else
       {
@@ -844,7 +844,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       break;
 
     case F_ENTRY:
-      if(!m_schedule)
+      if(m_schedule=="")
       {
         if (!m_RSPserver.isConnected()) 
         {
@@ -854,7 +854,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       break;
     
     case F_EXTPS_LOADED:
-      if(m_schedule)
+      if(m_schedule!="")
       {
         GCFPVString command("SCHEDULE VI1.ps");
         m_MACSchedulerPS.setValue("command",command);
@@ -862,7 +862,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       break;
       
     case F_VSETRESP:
-      if(m_schedule)
+      if(m_schedule!="")
       {
         stop();
       }
