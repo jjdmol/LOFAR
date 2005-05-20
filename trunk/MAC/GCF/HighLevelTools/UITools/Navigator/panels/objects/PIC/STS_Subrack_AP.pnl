@@ -1,13 +1,16 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,370 211 184 193 N "_3DFace" 2
+PANEL,258 138 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
 {
   setValue(\"text_APNr\", \"text\", \"AP\" + $APNr);
   setValue(\"text_Temp\" , \"editable\", FALSE);
+
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr);
+
 
   if( !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\") ||
       !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\") ||
@@ -62,7 +65,11 @@ ControlGUIAP(string dp1, float temperature,
     setValue(\"txt_version\", \"text\", \"ver: x:x\");
 }
 " 0
-EE E E 1 -1 -1 0  20 60
+"main()
+{
+  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr);
+}" 0
+E E E 1 -1 -1 0  20 60
 "" 0 1
 EE 2
 "CBRef""1"
@@ -359,6 +366,7 @@ E"main(int button, bool state)
       }
       else
       {
+        navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus\");
         setValue(\"output_syncCount\", \"backCol\", \"white\");
         setValue(\"output_sampleCount\", \"backCol\", \"white\");
         setValue(\"output_errorCount\", \"backCol\", \"white\");
@@ -370,9 +378,11 @@ E"main(int button, bool state)
     }
     else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
     {
+    
       dpDisconnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
                                       $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
                                       $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\");
+      navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus\");
     }
 
       

@@ -1,8 +1,8 @@
 V 10
 2
-LANG:0 9 InfoPanel
 LANG:1 9 infoPanel
-PANEL,810 280 1250 100 N "_3DFace" 0
+LANG:0 9 InfoPanel
+PANEL,517 199 1250 100 N "_3DFace" 0
 "main()
 {
 }" 0
@@ -15,8 +15,7 @@ EE 2
 NC
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
-2
-LANG:0 6 Layer1
+1
 LANG:1 6 Layer1
 4 78
 "Line3"
@@ -27,8 +26,8 @@ LANG:1 6 Layer1
 EE E
 0
 2
-LANG:0 0 
 LANG:1 0 
+LANG:0 0 
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  1070 80 1070 0
@@ -102,40 +101,60 @@ E E 0 1 1 0 1 E  1070 80 1070 0
 1 113 19 "" 1
 31 "transform" 0 0 0.9232323232323231 0 2.892857142857143  7.909090909090978 -306.2142857142857 
 0
+13 114
+"Button1"
+""
+1 1030 70 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+44 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1028 68 1052 102
+T 
+1
+LANG:1 0 
+"main()
+{
+  table_top.columnVisibility(0, FALSE);
+  table_top.columnWidth(3,345);
+  table_top.columnWidth(4,345);
+  table_top.columnVisibility(5, FALSE);
+  table_top.columnVisibility(6, FALSE);
+}" 0
+ E E E
 0
 LAYER, 1 
-2
-LANG:0 6 Layer2
+1
 LANG:1 6 Layer2
 0
 LAYER, 2 
-2
-LANG:0 6 Layer3
+1
 LANG:1 6 Layer3
 0
 LAYER, 3 
-2
-LANG:0 6 Layer4
+1
 LANG:1 6 Layer4
 0
 LAYER, 4 
-2
-LANG:0 6 Layer5
+1
 LANG:1 6 Layer5
 0
 LAYER, 5 
-2
-LANG:0 6 Layer6
+1
 LANG:1 6 Layer6
 0
 LAYER, 6 
-2
-LANG:0 6 Layer7
+1
 LANG:1 6 Layer7
 0
 LAYER, 7 
-2
-LANG:0 6 Layer8
+1
 LANG:1 6 Layer8
 0
 3 17 ""

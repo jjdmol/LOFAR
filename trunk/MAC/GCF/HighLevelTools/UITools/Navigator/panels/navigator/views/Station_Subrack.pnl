@@ -1,12 +1,70 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,252 108 986 776 N "_3DFace" 1
+PANEL,500 334 986 776 N "_3DFace" 1
 "$datapoint"
-EEE E E 1 -1 -1 0  120 205
+"main()
+{
+  l_gcfPmlId = gcfInit(\"pmlCallback\");
+}" 0
+"main()
+{
+  gcfLeave(l_gcfPmlId);
+}" 0
+E E E 1 -1 -1 0  120 205
 "" 0 1
 E"//Include of ctl file
 #uses \"gcfnav_view.ctl\"
+#uses \"gcfpa-pml.ctl\"
+int l_gcfPmlId;
+
+
+void pmlCallback(dyn_string response)
+{
+  LOG_DEBUG(\"pmlCallback:\",LOG_DYN(response));
+  if(response[1] == \"loaded\")
+  {
+    if(response[3] == \"OK\")
+    {
+    }
+    else
+    {
+    }
+  }
+  else if(response[1] == \"unloaded\")
+  {
+    if(response[3] == \"OK \")
+    {
+    }
+    else
+    {
+    }
+  }
+  else if(response[1] == \"configured\")
+  {
+    if(response[3] == \"OK \")
+    {
+    }
+    else
+    {
+    }
+  }
+  else if(response[1] == \"gone\")
+  {
+  }
+  else
+  {
+  }
+}
+
+
+
+
+
+
+
+
+
 " 0
  2
 "CBRef""1"

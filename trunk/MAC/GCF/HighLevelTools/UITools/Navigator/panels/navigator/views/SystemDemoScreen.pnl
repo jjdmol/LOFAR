@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,420 168 950 741 N "_3DFace" 1
+PANEL,258 138 950 741 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  10 650
 "" 0 1
@@ -915,10 +915,36 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 LANG:1 3 ACC
 1 181 11 "" 0
 0
+1 182 11 "" 4
+0
 1 182 11 "" 2
 0
 1 183 11 "" 3
 0
+13 184
+"Button1"
+""
+1 60 40 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+78 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+58 38 182 65
+T 
+1
+LANG:1 4 Load
+"main()
+{
+  navPMLloadPropertySet(\"CCU1:VIC_VIStartDaemon\");
+  navPMLloadPropertySet(\"CCU1:GSO_MACScheduler\");
+}" 0
+ E E E
 0
 LAYER, 1 
 1

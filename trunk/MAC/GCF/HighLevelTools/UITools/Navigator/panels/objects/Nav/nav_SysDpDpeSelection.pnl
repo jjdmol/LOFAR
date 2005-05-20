@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,585 731 672 169 N "_3DFace" 2
+PANEL,405 201 672 169 N "_3DFace" 2
 "$datapoint"
 "$selectedDP"
 EEE E E 1 -1 -1 0  0 0
@@ -17,7 +17,7 @@ LANG:1 6 Layer1
 17 0
 "list_system"
 ""
-1 0 0 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -31,7 +31,32 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 -2 -2 82 172
 0
 E
-E
+"main()
+{
+  string attribute = \"_online.._value\";
+	string dpName, tempDpe;
+  bool showProgress=TRUE;
+  string datapointPath;
+  string selectedSystem = list_system.selectedText;
+  list_dp.deleteAllItems;
+  list_dpe.deleteAllItems;
+
+  if(selectedSystem==getSystemName())
+  {
+    datapointPath = buildPathFromNode(g_curSelNode);
+  }
+  else
+  {
+   datapointPath = list_system.selectedText;
+  }
+  dyn_string output = queryDatabaseForDP(attribute, datapointPath, showProgress);
+  if(list_system.selectedText==getSystemName())
+  {
+    dynInsertAt(output,CURRENT_DP_MESSAGE,1);
+  }
+  list_dp.items = output;
+}" 0
+
 E
 
 3 1
@@ -54,22 +79,57 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 "main()
 {
   string attribute = \"_online.._value\";
-  string datapointPath = buildPathFromNode(g_curSelNode);
+  string datapointPath; 
 	string dpName, tempDpe;
-  int first=0;
-  int searchDepth=0, j=1;;
   bool showProgress=TRUE;
-  bool singleElement=FALSE;
-///  dyn_string output;
-  dyn_string output = queryDatabaseForDP(attribute, datapointPath, showProgress);
-  list_dp.deleteAllItems;
-
   string temp=$selectedDP;
-  DebugN(\"Within Selection, $selectedDP:\"+$selectedDP);
-//  if($selectedDP!=\"\")
-//  {
-//    dpGet($selectedDP, temp);
-//  }
+  dyn_string output;
+  string systemName = dpSubStr($selectedDP, DPSUB_SYS);
+  list_dp.deleteAllItems;
+  //DebugN(\"Within Selection, $selectedDP:\"+$selectedDP);
+
+  //[------------------------------------------------------------]
+  //Fill list_system with all the systems available at the moment
+  dyn_int distributedSystems;
+  dpGet(\"_DistManager.State.SystemNums\", distributedSystems);
+  list_system.appendItem = getSystemName();
+  if(dynlen(distributedSystems)>0)
+  {
+    for(int i=1; i<=dynlen(distributedSystems); i++)
+    {
+      list_system.appendItem = getSystemName(distributedSystems[i]);
+    }
+  }
+
+  // [------------------------------------------------------------]
+  // Check for systemName if present, dpName is absolute,
+  // otherwise the dpname is relative
+  if(\"\"!=systemName)
+  {
+    list_system.selectedPos = dynContains(list_system.items, systemName);
+    datapointPath = systemName;
+    temp = dpSubStr($selectedDP, DPSUB_DP_EL);
+  }
+  else
+  {
+    list_system.selectedPos = 1;
+    datapointPath = $datapoint; //buildPathFromNode(g_curSelNode);
+    if(0==strpos(temp, \"_\"))
+    {
+      temp = substr(temp, 1, strlen(temp));
+    }
+  }
+  
+  //list_system.enabled = !isDistributed($datapoint);  Do not enable/disable yet.
+  
+
+  ///////////////////////////////
+  output = queryDatabaseForDP(attribute, datapointPath, showProgress);
+  if(list_system.selectedText==getSystemName())
+  {
+    dynInsertAt(output,CURRENT_DP_MESSAGE,1);
+  }
+
 
   if(temp!=\"\")
   {
@@ -78,94 +138,66 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
     {
      dyn_string tempSplit = strsplit(temp, \".\");
      temp = tempSplit[1];
-     tempDpe = tempSplit[2];
+     if(dynlen(tempSplit)>=2)
+     {
+       tempDpe = tempSplit[2];
+     }
+    }
+    else
+    {
+     dyn_string tempSplit = strsplit(temp, \".\");
+     temp = CURRENT_DP_MESSAGE;
+     if(dynlen(tempSplit)>=2)
+     {
+       tempDpe = tempSplit[2];
+     }
     }
   }
 
   list_dp.items = output;
+  DebugN(\"temp:\"+temp);
+  DebugN(\"tempDpe:\"+tempDpe);
+  DebugN(\"$datapoint:\"+$datapoint);
+  DebugN(\"datapointPath:\"+datapointPath);
+/*  if(0==strpos(temp, \".\"))
+  {
+    list_dp.selectedPos=dynContains(output, CURRENT_DP_MESSAGE);
+  }*/
   list_dp.selectedPos=dynContains(output, temp);
+
   
+  //If the tempDpe is not empty, fill the list and select
   if(tempDpe!=\"\")
   {
-    NavConfigTrendFillDpeSelection($datapoint);
+    NavConfigTrendFillDpeSelection(navViewGetDpFromDpSelectionList($datapoint));
     dyn_string dpeNames = list_dpe.items;
     list_dpe.selectedPos = dynContains(dpeNames, tempDpe);
   }
   
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function queryDatabase: Query's the (distributed)database according the
-//                         given options
-//
-// Input: 1. Datapoint name, including systemName
-//        2. Attribute (E.g. \"_online.._value\")
-//        3. Use function progressBar to display a progressBar
-//
-// Output: dyn_string with the resultsm exlusief the current datapointPath
-///////////////////////////////////////////////////////////////////////////
-/*
-dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool useProgressBar)
-{
-  string tempDP;
-  int j=1;
-  dyn_string output;
-  dyn_dyn_anytype tab;
-  string temp;
-  dyn_dyn_string elementNames;
-  dyn_dyn_int elementTypes;
-  string datapointPathOriginal = datapointPath;
-  int elementIndex;
-  bool dpIsReference=false;
-  dyn_string reference;
-  string REMOTESYSTEM=\"\";
-  string firstXResults = \"\";
-
-  checkForReference(datapointPath, reference, dpIsReference);
-  if(dpIsReference && !dpIsDistributed(datapointPath))
-  {
-    strreplace(datapointPath, datapointPathOriginal, reference[2]);
-  }  
-  else if(dpIsReference && dpIsDistributed(datapointPath))
-  {
-    strreplace(datapointPath, datapointPathOriginal, reference[2]);
-    REMOTESYSTEM = \" REMOTE '\" + strrtrim(dpSubStr(reference[2],DPSUB_SYS),\":\") + \"'\";
-  }
-  dpQuery(\"SELECT '\"+attribute+\"' FROM '\"+datapointPath + \"*__enabled' \"+REMOTESYSTEM, tab);
-  int maximumCount = dynlen(tab);
-  for(int i=2 ; i<=dynlen(tab) ; i++)
-  {
-    tempDP = tab[i][1];
-    if(tempDP!=\"\")
-    {
-      strreplace(tempDP, \"__enabled.\", \"\");
-      if(checkDpPermit(tempDP))
-      {
-        strreplace(tempDP, datapointPath, \"\");
-        if(strpos(tempDP, \"_\")==0)
-        {
-          tempDP = strltrim(tempDP, \"_\");
-        }
-        if(tempDP!=\"\")
-        {
-          output[j]=tempDP;
-          j++;
-        }
-      }
-    }
-    if(useProgressBar)
-      progressBar(maximumCount, j);
-  }
-  if(useProgressBar)
-    progressBar(maximumCount, maximumCount);
-  dynSortAsc(output); //sort the dyn_string output (alphanumeric)
-  return output;
-}*/" 0
+}" 0
 
 "main()
 {
+/*  string datapoint;
 
-  NavConfigTrendFillDpeSelection($datapoint);
+  if(list_system.selectedText==getSystemName())
+  {
+    if(CURRENT_DP_MESSAGE==list_dp.selectedText)
+    {
+      datapoint = $datapoint;
+    }
+    else
+    {
+      datapoint = $datapoint + \"_\" + list_dp.selectedText;
+    }
+  }
+  else
+  {
+    datapoint = list_system.selectedText + list_dp.selectedText;
+  }
+*/
+
+  NavConfigTrendFillDpeSelection(navViewGetDpFromDpSelectionList($datapoint));
 }
 /*
 void NavConfigTrendFillDpeSelection()
@@ -200,12 +232,7 @@ E
 1 460 0 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
-"main()
-{
- btn_apply.enabled = TRUE;
- btn_ok.enabled = TRUE;
-}" 0
-E E
+EE E
 0
 1
 LANG:1 0 

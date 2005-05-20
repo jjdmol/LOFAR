@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 17 NavigatorListView
-PANEL,465 404 950 740 N "_3DFace" 2
+PANEL,465 341 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -19,7 +19,8 @@ PANEL,465 404 950 740 N "_3DFace" 2
     btn_apply.enabled = TRUE;
     //seperate the dpConnect in showTitle and loadTable, because otherwise
     //the query is performed several times.
-    dpConnect(\"showTitle\", $configDatapoint + \".Title\");
+    dpConnect(\"showTitle\", $configDatapoint + \".Title\",
+                           $configDatapoint + \".customList\");
     
     dpConnect(\"loadTable\", $configDatapoint + \".customList\",
 	                         $configDatapoint + \".selectionQuery\",
@@ -30,9 +31,17 @@ PANEL,465 404 950 740 N "_3DFace" 2
 
 
 
-showTitle(string dp1, string title)
+showTitle(string dp1, string title,
+          string dp2, bool customList)
 {
-  setValue(\"txt_title\", \"text\", title);
+  if(customList)
+  {
+    setValue(\"txt_title\", \"text\", title);
+  }
+  else
+  {
+    setValue(\"txt_title\", \"text\", \"Standard property list\");
+  }
 }
 
 
@@ -506,9 +515,9 @@ T
 LANG:1 11 Reset query
 "main()
 {
- dpSet($configDatapoint + \".trigger\", 0);
- setValue(\"txt_amountRetrieved\", \"text\", \"\");
- setValue(\"txt_selectionQuery\", \"text\", \"\");
+  dpSet($configDatapoint + \".trigger\", 0);
+  setValue(\"txt_dp\", \"text\", \"\");
+  setValue(\"txt_dpe\", \"text\", \"\");
 }" 0
  E E E
 13 81

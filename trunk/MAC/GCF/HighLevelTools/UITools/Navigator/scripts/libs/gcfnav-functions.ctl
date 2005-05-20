@@ -551,6 +551,9 @@ void treeAddDatapoints(dyn_string names)
 	    {
 	      dpName=names[namesIndex];
 	    }
+
+	      
+	      
       if(navConfigCheckEnabled(dpName))
 	    {
 		    // split the datapoint path in elements
@@ -597,8 +600,9 @@ void treeAddDatapoints(dyn_string names)
         dynClear(elementTypes);
         dpIsReference=false;
         checkForReference(names[namesIndex], reference, dpIsReference);
-
-        dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
+        LOG_TRACE("dpTypeGet for: ",names[namesIndex]);
+        //dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
+        dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."),elementNames,elementTypes);
 
         // add elements of this datapoint, if any, skip system stuff
         if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
@@ -727,7 +731,7 @@ insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
     for(int j=1; j<=dynlen(internalNodeMapping); j++)
     {
       g_itemID2datapoint[internalNodeMapping[j]] = fullDPname[j];
-	  g_datapoint2itemID[fullDPname[j]] = internalNodeMapping[j];
+	    g_datapoint2itemID[fullDPname[j]] = internalNodeMapping[j];
     }
   }
 }
@@ -1181,6 +1185,14 @@ void TreeCtrl_HandleEventOnExpand(long Node)
       }
         // get top level resources. "" means no parent, 1 means: 1 level deep
         dyn_string resources = navConfigGetResources(datapointPath,1);
+/*        for(int i=1; i<=dynlen(resources); i++)
+        {
+          if(navPMLisTemporary(resources[i]+NAVPML_DPNAME_ENABLED))
+          {
+     	      navPMLloadPropertySet(resources[i]);
+          }
+        }*/
+        //delay(0,200);
         LOG_DEBUG("adding resources: ",LOG_DYN(resources));
         treeAddDatapoints(resources);
     }
@@ -1628,6 +1640,12 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
     strreplace(datapointPath, datapointPathOriginal, reference[2]);
     REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2],DPSUB_SYS),":") + "'";
   }
+  else if(!dpIsReference && dpIsDistributed(datapointPath))
+  {
+    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(datapointPath,DPSUB_SYS),":") + "'";
+  }
+  //DebugN("REMOTESYSTEM:"+REMOTESYSTEM);
+  //DebugN("SELECT '"+attribute+"' FROM '"+datapointPath + "*__enabled' "+REMOTESYSTEM);
   dpQuery("SELECT '"+attribute+"' FROM '"+datapointPath + "*__enabled' "+REMOTESYSTEM, tab);
   int maximumCount = dynlen(tab);
   for(int i=2 ; i<=dynlen(tab) ; i++)
@@ -1756,21 +1774,39 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
   return output;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Function getLoadTypeFromEnabled: retrieves information from an __enabled
+//
+// Input: 1. Datapoint name, including systemName
+//
+// Output: load type, stored in the __enabled. auto/perm/temp
+//         
+///////////////////////////////////////////////////////////////////////////
 string getLoadTypeFromEnabled(string datapointPath)
 {
   string content;
   dyn_string contentSplit;
   dpGet(datapointPath,content);
-  contentSplit = strsplit(content, "=");
+  contentSplit = strsplit(content, "|");
   return contentSplit[2];
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Function getDpTypeFromEnabled: retrieves information from an __enabled
+//
+// Input: 1. Datapoint name, including systemName
+//
+// Output: Datapoint type, stored in the __enabled
+//         
+///////////////////////////////////////////////////////////////////////////
 string getDpTypeFromEnabled(string datapointPath)
 {
   string content;
   dyn_string contentSplit;
   dpGet(datapointPath,content);
-  contentSplit = strsplit(content, "=");
+  contentSplit = strsplit(content, "|");
     if(dynlen(contentSplit)<2)
     DebugN(contentSplit);
 

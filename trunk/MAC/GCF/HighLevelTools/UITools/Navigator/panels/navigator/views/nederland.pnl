@@ -1,0 +1,96 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,291 145 960 750 N "_3DFace" 0
+EEE E E 1 -1 -1 0  -1 -1
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 6
+"Border3"
+""
+1 20 740 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nederland2.bmp" 13434828 E 20 10 930 740
+6 2
+"Border2"
+""
+1 500 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_IO" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 500 210 550 260
+7 3
+"Ellipse1"
+""
+1 323 396 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 323 396 10 10
+7 4
+"Ellipse2"
+""
+1 409 475 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 409 475 10 10
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -4,8 +4,9 @@ LANG:1 15 LOFAR Navigator
 PANEL,258 138 1260 960 N "_3DFace" 0
 "main()
 {
+  navPMLinitialize();
 	Navigator_HandleEventInitialize();
-  startThread( \"Simulation\" );	
+//  startThread( \"Simulation\" );	
 //navPMLunloadPropertySet();
 //navPMLloadPropertySet();
 }
@@ -152,6 +153,8 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 3 "pictures/logo.bmp" 13434828 E 1134 0 1249 39
+1 11 7 "" 114
+0
 28 2
 "TabViews"
 ""

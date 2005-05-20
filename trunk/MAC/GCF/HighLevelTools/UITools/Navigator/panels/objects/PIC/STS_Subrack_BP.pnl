@@ -1,11 +1,14 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,295 138 328 89 N "_3DFace" 1
+PANEL,258 138 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
   //Function: Set background color of BP
+  navPMLloadPropertySet($datapoint + \"_Board1_BP\");
+  navPMLloadPropertySet($datapoint + \"_Board1_BP_Maintenance\");
+
   EP_setBackColor();
   
 }
@@ -27,7 +30,13 @@ dyn_errClass err;
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
 }" 0
-EE E E 1 -1 -1 0  20 60
+"main()
+{
+  navPMLloadPropertySet($datapoint + \"_Board1_BP\");
+  navPMLloadPropertySet($datapoint + \"_Board1_BP_Maintenance\");
+
+}" 0
+E E E 1 -1 -1 0  20 60
 "" 0 1
 EE 2
 "CBRef""1"

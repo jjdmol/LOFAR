@@ -1,14 +1,16 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,483 137 139 149 N "_3DFace" 3
+PANEL,266 320 139 149 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
 "main()
 {
-  setValue(\"text_RCUNr\", \"text\", \"RCU\" + $RCUNr );
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
 
+  setValue(\"text_RCUNr\", \"text\", \"RCU\" + $RCUNr );
   //Function: Set background color of RCU
   EP_setBackColor();
   
@@ -33,7 +35,13 @@ dyn_errClass err;
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
 }
 " 0
-EE E E 1 -1 -1 0  20 140
+"main()
+{
+  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
+
+}" 0
+E E E 1 -1 -1 0  20 140
 "" 0 1
 EE 2
 "CBRef""1"

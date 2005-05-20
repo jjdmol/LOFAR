@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,300 200 554 344 N "_3DFace" 0
+PANEL,465 341 554 344 N "_3DFace" 0
 EEE E E 1 -1 -1 0  10 10
 "" 0 1
 EE 2
@@ -142,13 +142,14 @@ LANG:1 12 query+create
        if(!dpExists(datapoint + \"__enabled\"))
        {
          dpCreate(datapoint + \"__enabled\", \"GCFPaPsEnabled\");
-         dpSetWait(datapoint + \"__enabled.:_original.._value\", \"autoloaded=\" + dpTypeName(datapoint));
-         DebugN(\"## \" + datapoint + \"    |content: \" +  \"autoloaded=\"+ dpTypeName(datapoint));
        }
+       dpSetWait(datapoint + \"__enabled.:_original.._value\", \"autoloaded|\" + dpTypeName(datapoint));
+       DebugN(\"## \" + datapoint + \"    |content: \" +  \"autoloaded|\"+ dpTypeName(datapoint));
        
      }
    setValue(\"txt_current\", \"text\", i);
    }
+   DebugN(\"## Done\");
 }" 0
  E E E
 14 3

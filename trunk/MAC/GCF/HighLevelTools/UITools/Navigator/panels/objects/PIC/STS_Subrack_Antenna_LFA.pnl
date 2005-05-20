@@ -1,11 +1,22 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,483 137 70 164 N "_3DFace" 3
+PANEL,523 338 70 164 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
-EEE E E 1 -1 -1 0  28 79
+"main()
+{
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
+}" 0
+"main()
+{
+navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
+navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
+
+}" 0
+E E E 1 -1 -1 0  28 79
 "" 0 1
 EE 2
 "CBRef""1"

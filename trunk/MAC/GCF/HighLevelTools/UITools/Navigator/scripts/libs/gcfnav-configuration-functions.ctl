@@ -293,12 +293,15 @@ bool checkForReference(string &parentDatapoint, dyn_string &reference, bool &par
   for(int i=1; (i<=dynlen(g_referenceList) && !stopCheck); i++)
   {
     refOut = strsplit(g_referenceList[i],"=");
-    if (refOut[1] == parentDatapoint || patternMatch(refOut[1]+ "*",parentDatapoint))
+    if(dynlen(refOut)>=1)
     {
-      stopCheck = TRUE;
-      parentDatapointIsReference = TRUE;
-      strreplace(parentDatapoint, refOut[1], refOut[2]);
-      reference = refOut;
+      if (refOut[1] == parentDatapoint || patternMatch(refOut[1]+ "*",parentDatapoint))
+      {
+        stopCheck = TRUE;
+        parentDatapointIsReference = TRUE;
+        strreplace(parentDatapoint, refOut[1], refOut[2]);
+        reference = refOut;
+      }
     }
   }
   return parentDatapointIsReference;
@@ -369,8 +372,9 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   int i=1;
   while(i<=dynlen(allResources))
   {
-    if(strpos(allResources[i],"__") < 0)
+    if((strpos(allResources[i],"__") < 0) || navPMLisTemporary(allResources[i]))
     {
+      strreplace(allResources[i], "__enabled", "");
       dyn_string dpPathElements = strsplit(allResources[i],"_");
       string addResource;
       int d=1;
@@ -490,9 +494,10 @@ string navConfigGetViewConfig(string datapointPath)
 {
   string datapointType;
   string dpViewConfig = "";
-  if(dpExists(datapointPath))
+  DebugN("## datapointPath:"+datapointPath);
+  if(dpAccessable(datapointPath+"__enabled."))
   {
-    datapointType = dpTypeName(datapointPath);
+    datapointType = getDpTypeFromEnabled(datapointPath+"__enabled.");
     // find __nav_<datapointType>_viewconfig datapoint
     dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointType+"_viewconfig";
   }

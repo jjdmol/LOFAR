@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,333 230 954 748 N "_3DFace" 2
+PANEL,281 168 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -342,7 +342,7 @@ LANG:1 6 Layer1
 2 15
 "Trend1_txt_LegendVisible"
 ""
-1 13 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 733 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -351,8 +351,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 15 2 96 18
-0 2 0 "s" 0 0 0 192 0 0  15 2
+E E 0 1 1 0 1 E U  0 E 735 2 816 18
+0 2 0 "s" 0 0 0 192 0 0  735 2
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -362,7 +362,7 @@ LANG:1 14 Legend visible
 2 16
 "Trend1_txt_ZoomVisible"
 ""
-1 146 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 866 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -371,8 +371,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 148 2 219 18
-0 2 0 "s" 0 0 0 192 0 0  148 2
+E E 0 1 1 0 1 E U  0 E 868 2 939 18
+0 2 0 "s" 0 0 0 192 0 0  868 2
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -382,7 +382,7 @@ LANG:1 12 Zoom visible
 2 25
 "Trend2_txt_LegendVisible"
 ""
-1 13 380 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 733 380 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -391,8 +391,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 15 382 96 398
-0 2 0 "s" 0 0 0 192 0 0  15 382
+E E 0 1 1 0 1 E U  0 E 735 382 816 398
+0 2 0 "s" 0 0 0 192 0 0  735 382
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -402,7 +402,7 @@ LANG:1 14 Legend visible
 2 26
 "Trend2_txt_ZoomVisible"
 ""
-1 146 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 866 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -411,8 +411,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 148 383 219 399
-0 2 0 "s" 0 0 0 192 0 0  148 383
+E E 0 1 1 0 1 E U  0 E 868 383 939 399
+0 2 0 "s" 0 0 0 192 0 0  868 383
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -422,7 +422,7 @@ LANG:1 12 Zoom visible
 2 31
 "Trend2_txt_LabelTitle"
 ""
-1 256 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 10 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -431,8 +431,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 258 383 286 399
-0 2 0 "s" 0 0 0 192 0 0  258 383
+E E 0 1 1 0 1 E U  0 E 12 383 40 399
+0 2 0 "s" 0 0 0 192 0 0  12 383
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -442,7 +442,7 @@ LANG:1 6 Title:
 2 32
 "Trend2_txt_Title"
 ""
-1 286 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 40 381 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -451,8 +451,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 288 383 300 399
-0 2 0 "s" 0 0 0 192 0 0  288 383
+E E 0 1 1 0 1 E U  0 E 42 383 54 399
+0 2 0 "s" 0 0 0 192 0 0  42 383
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -462,7 +462,7 @@ LANG:1 3 ...
 2 33
 "Trend1_txt_LabelTitle"
 ""
-1 256 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 10 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -471,8 +471,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 258 2 286 18
-0 2 0 "s" 0 0 0 192 0 0  258 2
+E E 0 1 1 0 1 E U  0 E 12 2 40 18
+0 2 0 "s" 0 0 0 192 0 0  12 2
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -482,7 +482,7 @@ LANG:1 6 Title:
 2 34
 "Trend1_txt_Title"
 ""
-1 286 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 40 0 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 27 0 0 0 0 0
 EE E
@@ -491,8 +491,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 288 2 300 18
-0 2 0 "s" 0 0 0 192 0 0  288 2
+E E 0 1 1 0 1 E U  0 E 42 2 54 18
+0 2 0 "s" 0 0 0 192 0 0  42 2
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -615,7 +615,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-
 13 13
 "Trend1_btn_LegendVisible"
 ""
-1 0 5 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+1 720 5 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
  E E
 13 0 0 0 0 0
 EE E
@@ -626,7 +626,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
--2 3 12 17
+718 3 732 17
 T 
 1
 LANG:1 0 
@@ -645,7 +645,7 @@ else
 13 14
 "Trend1_btn_ZoomVisible"
 ""
-1 130 5 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+1 850 5 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
  E E
 14 0 0 0 0 0
 EE E
@@ -656,7 +656,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-128 3 142 17
+848 3 862 17
 T 
 1
 LANG:1 0 
@@ -676,7 +676,7 @@ else
 13 27
 "Trend2_btn_LegendVisible"
 ""
-1 0 385 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+1 720 385 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
  E E
 23 0 0 0 0 0
 EE E
@@ -687,7 +687,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
--2 383 12 397
+718 383 732 397
 T 
 1
 LANG:1 0 
@@ -706,7 +706,7 @@ else
 13 28
 "Trend2_btn_ZoomVisible"
 ""
-1 130 386 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
+1 850 386 E E E 1 E 0 E N "_3DText" E N {153,153,153} E E
  E E
 24 0 0 0 0 0
 EE E
@@ -717,7 +717,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-128 384 142 398
+848 384 862 398
 T 
 1
 LANG:1 0 
