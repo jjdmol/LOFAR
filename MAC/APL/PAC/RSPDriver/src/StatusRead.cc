@@ -39,6 +39,7 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace blitz;
+using namespace RTC;
 
 StatusRead::StatusRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)

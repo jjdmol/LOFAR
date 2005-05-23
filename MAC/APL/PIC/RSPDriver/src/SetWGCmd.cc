@@ -35,6 +35,7 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
+using namespace RTC;
 
 SetWGCmd::SetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {

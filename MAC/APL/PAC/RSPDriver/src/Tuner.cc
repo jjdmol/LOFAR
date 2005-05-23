@@ -49,6 +49,7 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
+using namespace RTC;
 
 #define SCALE (1<<(16-2))
 

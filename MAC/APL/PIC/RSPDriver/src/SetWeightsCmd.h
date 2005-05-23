@@ -71,8 +71,8 @@ namespace RSP
       /**
        * get timestamp of the event
        */
-      virtual const Timestamp& getTimestamp() const;
-      virtual void setTimestamp(const Timestamp& timestamp);
+      virtual const RTC::Timestamp& getTimestamp() const;
+      virtual void setTimestamp(const RTC::Timestamp& timestamp);
       /*@}*/
 
       /**

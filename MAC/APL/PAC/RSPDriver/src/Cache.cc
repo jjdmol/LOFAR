@@ -34,6 +34,7 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
+using namespace RTC;
 
 /**
  * Instance pointer for the Cache singleton class.
@@ -167,7 +168,7 @@ CacheBuffer::~CacheBuffer()
   m_versions.ap().free();
 }
 
-RSP_Protocol::Timestamp CacheBuffer::getTimestamp() const
+RTC::Timestamp CacheBuffer::getTimestamp() const
 {
   return m_timestamp;
 }

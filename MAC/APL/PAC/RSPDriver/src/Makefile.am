@@ -1,6 +1,6 @@
 
 if HAVE_SYS_CAPABILITY_H
-CAPLIBS=$(top_builddir)/src/libnetraw.la -lcap
+CAPLIBS=-lnetraw -lcap
 else
 CAPLIBS=
 endif
@@ -72,11 +72,10 @@ sysconf_DATA = \
 %.top: %.top.in
 	cp $< $@
 
-lib_LTLIBRARIES = librsp.la libepa.la libnetraw.la
+lib_LTLIBRARIES = librsp.la libepa.la
 
 include_HEADERS = \
 	RSP_Protocol.ph \
-	Timestamp.h \
 	BeamletWeights.h \
 	SubbandSelection.h \
 	RCUSettings.h \
@@ -84,7 +83,6 @@ include_HEADERS = \
 	SystemStatus.h \
 	Statistics.h \
 	Versions.h \
-	Marshalling.h \
 	\
 	EPA_Protocol.ph \
 	MEPHeader.h \
@@ -93,7 +91,6 @@ include_HEADERS = \
 	PSAccess.h
 
 librsp_la_SOURCES = \
-	Timestamp.cc \
 	BeamletWeights.cc \
 	SubbandSelection.cc \
 	RCUSettings.cc \
@@ -109,10 +106,6 @@ libepa_la_SOURCES = \
 	EPA_Protocol.cc \
 	RawEvent.h \
 	RawEvent.cc
-
-libnetraw_la_SOURCES = \
-	netraw.cc \
-	netraw.h
 
 bin_PROGRAMS = \
 	RSPDriver \
@@ -192,16 +185,16 @@ RSPDriver_SOURCES = \
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
+	$(RTCCOMMON_LDADD) \
 	$(CAPLIBS)
 
 ViewStats_SOURCES = \
-	gnuplot_i.h \
-	gnuplot_i.cc \
 	ViewStats.h \
 	ViewStats.cc
 
 ViewStats_LDADD = \
 	$(top_builddir)/src/librsp.la \
+	-lgnuplot_i
 	-lsuite
 
 CaptureStats_SOURCES = \
@@ -221,8 +214,6 @@ Tuner_LDADD = \
 	-lsuite
 
 SetWG_SOURCES = \
-	gnuplot_i.h \
-	gnuplot_i.cc \
 	SetWG.h \
 	SetWG.cc
 
@@ -236,6 +227,7 @@ rspctl_SOURCES = \
 
 rspctl_LDADD = \
 	$(top_builddir)/src/librsp.la \
+	$(RTCCOMMON_LDADD) \
 	-lsuite
 
 include $(lofar_sharedir)/Makefile.common

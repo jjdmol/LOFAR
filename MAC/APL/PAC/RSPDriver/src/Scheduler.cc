@@ -32,6 +32,7 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
+using namespace RTC;
 
 #define SCHEDULING_DELAY 2
 

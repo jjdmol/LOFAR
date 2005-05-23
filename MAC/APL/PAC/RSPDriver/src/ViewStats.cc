@@ -48,6 +48,7 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
+using namespace RTC;
 
 #define SAMPLE_FREQUENCY 160.0 // MHz
 

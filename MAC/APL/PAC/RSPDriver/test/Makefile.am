@@ -1,6 +1,6 @@
 
 if HAVE_SYS_CAPABILITY_H
-CAPLIBS=$(top_builddir)/src/libnetraw.la -lcap
+CAPLIBS=-lnetraw -lcap
 else
 CAPLIBS=
 endif

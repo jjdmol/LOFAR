@@ -42,6 +42,7 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace blitz;
+using namespace RTC;
 
 WriteReg::WriteReg(GCFPortInterface& board_port, int board_id,
 		   uint8 dstid, uint8 pid, uint8 regid, uint16 size,

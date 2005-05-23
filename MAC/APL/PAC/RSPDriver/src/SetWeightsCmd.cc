@@ -35,6 +35,7 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
+using namespace RTC;
 
 SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& port,
 			     Operation oper, int timestep)

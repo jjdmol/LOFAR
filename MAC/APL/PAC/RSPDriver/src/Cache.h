@@ -46,7 +46,7 @@ namespace RSP
       /**
        * Data access methods.
        */
-      RSP_Protocol::Timestamp         getTimestamp() const;
+      RTC::Timestamp                  getTimestamp() const;
       RSP_Protocol::BeamletWeights&   getBeamletWeights();
       RSP_Protocol::SubbandSelection& getSubbandSelection();
       RSP_Protocol::RCUSettings&      getRCUSettings();
@@ -58,7 +58,7 @@ namespace RSP
       /*@}*/
 
     private:
-      RSP_Protocol::Timestamp        m_timestamp;
+      RTC::Timestamp                 m_timestamp;
 
       RSP_Protocol::BeamletWeights   m_beamletweights;
       RSP_Protocol::SubbandSelection m_subbandselection;

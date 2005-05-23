@@ -35,6 +35,7 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
+using namespace RTC;
 
 GetRCUCmd::GetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
@@ -93,12 +94,12 @@ void GetRCUCmd::complete(CacheBuffer& cache)
   ack(cache);
 }
 
-const Timestamp& GetRCUCmd::getTimestamp() const
+const RTC::Timestamp& GetRCUCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void GetRCUCmd::setTimestamp(const Timestamp& timestamp)
+void GetRCUCmd::setTimestamp(const RTC::Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }

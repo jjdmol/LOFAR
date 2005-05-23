@@ -103,8 +103,8 @@ namespace RSP
        * Get or set the timestamp of the underlying event
        * for a command.
        */
-      virtual const RSP_Protocol::Timestamp& getTimestamp() const = 0;
-      virtual void setTimestamp(const RSP_Protocol::Timestamp& timestamp) = 0;
+      virtual const RTC::Timestamp& getTimestamp() const = 0;
+      virtual void setTimestamp(const RTC::Timestamp& timestamp) = 0;
 
       /**
        * Validate the parameters of the event.
