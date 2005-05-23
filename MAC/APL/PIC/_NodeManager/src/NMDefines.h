@@ -1,6 +1,6 @@
-//#  NMUtilities.h: Utility functions
+//#  NMDefines.h: preprocessor definitions of various constants
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,49 +20,27 @@
 //#
 //#  $Id$
 
-#ifndef NMUTILITIES_H
-#define NMUTILITIES_H
+#ifndef GPA_DEFINES_H
+#define GPA_DEFINES_H
 
-//# Includes
+#include <GCF/GCF_Defines.h>
 
-//# Common Includes
-#include <Common/lofar_string.h>
-
-//# GCF Includes
-
-//# local includes
-
-
-const std::string NM_NODE_SCOPE("PIC_CEP_");
-
-// forward declaration
-
-namespace LOFAR
+namespace LOFAR 
 {
-  
-  namespace ANM
-  {
+ namespace ANM 
+ {
 
-class NMUtilities
-{
-  public:
+const string NM_TASK_NAME("APL-NM");
+const string NM_CONF("NodeManager.conf");
+const string NM_PORT_NAME("client");
 
-    NMUtilities() {}
-    virtual ~NMUtilities() {}
+const string NMC_TASK_NAME("APL-NMC");
+const string NMC_PORT_NAME("nmd-client");
 
-    static string extractNodeName(string propName);
-    
-  protected:
-    // protected copy constructor
-    NMUtilities(const NMUtilities&);
-    // protected assignment operator
-    NMUtilities& operator=(const NMUtilities&);
+const string NMD_TASK_NAME("APL-NMD");
+const string NMD_PORT_NAME("server");
 
-  private:
-
-    ALLOC_TRACER_CONTEXT  
-};
-
-  } // namespace ANM
+ } // namespace ANM
 } // namespace LOFAR
+
 #endif

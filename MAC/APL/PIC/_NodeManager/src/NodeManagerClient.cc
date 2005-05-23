@@ -28,8 +28,10 @@
 #include <GCF/Utils.h>
 #include <NM_Protocol.ph>
 #include <APL/NMUtilities.h>
+#include <NMDefines.h>
 
-#define FULL_RS_DP(rsname) formatString("PIC_CEP_%s.state", (rsname).c_str())
+#define FULL_RS_DP(rsname) formatString("%s%s.state", NM_NODE_SCOPE.c_str(), (rsname).c_str())
+
 enum 
 {
   RS_DEFECT = -4,
@@ -48,12 +50,12 @@ using namespace GCF::PAL;
  namespace ANM
  {
 NodeManagerClient::NodeManagerClient(NodeManagerDaemon& daemon) :
-  GCFTask((State)&NodeManagerClient::initial, "APL-NMC"),
+  GCFTask((State)&NodeManagerClient::initial, NMC_TASK_NAME),
   _daemon(daemon),
   _propertyProxy(*this),
   _nrOfValueGetRequests(0)
 {
-  _nmcPort.init(*this, "nmd-client", GCFPortInterface::SPP, NM_PROTOCOL);
+  _nmcPort.init(*this, NMC_PORT_NAME, GCFPortInterface::SPP, NM_PROTOCOL);
   _daemon.getPortProvider().accept(_nmcPort);
 }
 
@@ -158,6 +160,7 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
       if (_nrOfValueGetRequests == 0)
       {
         // no state value has to be updated so the response can be sent here
+        LOG_INFO("Ready with claiming. All requested nodes are already claimed!");
         NMClaimedEvent outResponse;
         Utils::convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
         Utils::convSetToString(outResponse.releasedNodes, _releasedNodes);
@@ -192,6 +195,7 @@ GCFEvent::TResult NodeManagerClient::operational(GCFEvent& e, GCFPortInterface& 
       if (_nrOfValueGetRequests == 0)
       {
         // no state value has to be updated so the response can be sent here
+        LOG_INFO("Ready with releasing. All requested nodes are already (automatically) released!");
         NMReleasedEvent outResponse;
         _nmcPort.send(outResponse);
       }
@@ -241,7 +245,18 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
           if (value.getValue() > RS_IDLE)
           {
             value.setValue(value.getValue() - 1); // decrease usecount
+            LOG_INFO(formatString(
+                "Decreases the usecount of '%s' to %d", 
+                resName.c_str(),
+                value.getValue()));            
             _propertyProxy.setPropValue(getResp.pPropName, value);
+          }
+          else
+          {
+            LOG_INFO(formatString(
+                "Could not decrease the usecount of '%s' (state == %d)", 
+                resName.c_str(),
+                value.getValue()));           
           }
           _releasedNodes.insert(*nodeToRelease);
           _curClaimedNodes.erase(*nodeToRelease);
@@ -254,6 +269,10 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
         // not in releasedNodes list, so it must be claimed
         if (value.getValue() < RS_IDLE)
         {
+          LOG_INFO(formatString(
+              "Could not increase the usecount of '%s' (state == %d)", 
+              resName.c_str(),
+              value.getValue()));
           // could not be claimed due to the malfunctioning state of the node
           _faultyNodes.insert(resName);
           _newClaimedNodes.erase(resName);
@@ -261,6 +280,11 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
         else 
         {
           value.setValue(value.getValue() + 1); // increase usecount
+          LOG_INFO(formatString(
+              "Increases the usecount of '%s' to %d", 
+              resName.c_str(),
+              value.getValue()));
+          
           _propertyProxy.setPropValue(getResp.pPropName, value);
           _curClaimedNodes.insert(resName);
         }        
@@ -269,6 +293,7 @@ GCFEvent::TResult NodeManagerClient::claiming(GCFEvent& e, GCFPortInterface& p)
       _nrOfValueGetRequests--;
       if (_nrOfValueGetRequests == 0)
       {
+        LOG_INFO("Ready with claiming.");
         NMClaimedEvent outResponse;
         Utils::convSetToString(outResponse.newClaimedNodes, _newClaimedNodes);
         Utils::convSetToString(outResponse.releasedNodes, _releasedNodes);
@@ -311,13 +336,25 @@ GCFEvent::TResult NodeManagerClient::releasing(GCFEvent& e, GCFPortInterface& p)
       if (value.getValue() > RS_IDLE)
       {
         value.setValue(value.getValue() - 1); // decrease usecount
+        LOG_INFO(formatString(
+            "Decreases the usecount of '%s' to %d", 
+            resName.c_str(),
+            value.getValue()));
         _propertyProxy.setPropValue(getResp.pPropName, value);
+      }
+      else
+      {
+        LOG_INFO(formatString(
+            "Could not decrease the usecount of '%s' (state == %d)", 
+            resName.c_str(),
+            value.getValue()));           
       }
       _curClaimedNodes.erase(resName);
             
       _nrOfValueGetRequests--;
       if (_nrOfValueGetRequests == 0)
       {
+        LOG_INFO("Ready with releasing.");
         NMReleasedEvent outResponse;
         _nmcPort.send(outResponse);
         TRAN(NodeManagerClient::operational);
@@ -339,6 +376,7 @@ GCFEvent::TResult NodeManagerClient::closing(GCFEvent& e, GCFPortInterface& /*p*
   {
     case F_ENTRY:
     {
+      LOG_INFO("Client gone. Start autoreleasing of all currently claimed nodes.");
       for (TNodeList::iterator nodeToRelease = _curClaimedNodes.begin();
            nodeToRelease != _curClaimedNodes.end(); ++nodeToRelease)
       {
@@ -364,12 +402,17 @@ GCFEvent::TResult NodeManagerClient::closing(GCFEvent& e, GCFPortInterface& /*p*
       if (value.getValue() > RS_IDLE)
       {
         value.setValue(value.getValue() - 1); // decrease usecount
+        LOG_INFO(formatString(
+            "Decreases the usecount of '%s' to %d", 
+            resName.c_str(),
+            value.getValue()));        
         _propertyProxy.setPropValue(getResp.pPropName, value);
       }
             
       _nrOfValueGetRequests--;
       if (_nrOfValueGetRequests == 0)
       {
+        LOG_INFO("Ready with autoreleasing.");
         _daemon.clientClosed(*this);
       }
       break;
