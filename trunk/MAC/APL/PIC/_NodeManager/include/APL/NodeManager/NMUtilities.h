@@ -32,6 +32,9 @@
 
 //# local includes
 
+
+const std::string NM_NODE_SCOPE("PIC_CEP_");
+
 // forward declaration
 
 namespace LOFAR

@@ -26,6 +26,7 @@
 #include <GCF/Utils.h>
 #include <GCF/ParameterSet.h>
 #include <NM_Protocol.ph>
+#include <NMDefines.h>
 
 namespace LOFAR 
 {
@@ -35,14 +36,14 @@ using namespace GCF::TM;
  {
 
 NodeManager::NodeManager(NodeManagerInterface& interface) :
-  GCFTask((State)&NodeManager::initial, "APL-NM"),
+  GCFTask((State)&NodeManager::initial, NM_TASK_NAME),
   _interface(interface)
 {
   // register the protocol for debugging purposes
   registerProtocol(NM_PROTOCOL, NM_PROTOCOL_signalnames);
 
-  _nmPort.init(*this, "client", GCFPortInterface::SAP, NM_PROTOCOL);
-  ParameterSet::instance()->adoptFile("NodeManager.conf");
+  _nmPort.init(*this, NM_PORT_NAME, GCFPortInterface::SAP, NM_PROTOCOL);
+  ParameterSet::instance()->adoptFile(NM_CONF);
   start();
 }
 
