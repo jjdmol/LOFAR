@@ -27,8 +27,6 @@
 #ifndef PARAMETERSET_H
 #define PARAMETERSET_H
 
-#include <lofar_config.h>
-
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>

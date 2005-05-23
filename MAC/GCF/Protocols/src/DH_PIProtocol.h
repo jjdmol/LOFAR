@@ -23,7 +23,6 @@
 #ifndef DH_PIPROTOCOL_H
 #define DH_PIPROTOCOL_H
 
-#include <lofar_config.h>
 #include <set>
 #include <Transport/DataHolder.h>
 

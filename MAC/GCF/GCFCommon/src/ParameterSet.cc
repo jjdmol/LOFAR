@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/ParameterSet.h>
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_sstream.h>
