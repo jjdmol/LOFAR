@@ -89,7 +89,8 @@ tComplex_LDADD			= ../src/libcommon.la
 tComplex_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
+TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+				  LOFARROOT=$(LOFARROOT)
 
 
 include $(lofar_sharedir)/Makefile.common
