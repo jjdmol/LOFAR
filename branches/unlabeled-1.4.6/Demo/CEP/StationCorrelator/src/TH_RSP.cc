@@ -231,6 +231,7 @@ bool TH_RSP::waitForSent(void*, int32, int32)
 
 void TH_RSP::Init()
 { 
+
   // Initialize a kernel-level packet filter
   struct sock_fprog filter;
   struct sock_filter mac_filter_insn[]=
@@ -399,6 +400,7 @@ void TH_RSP::Init()
 
   // Raw ethernet socket successfully initialized
   itsInitDone = true; 
+  
 }
 
 }

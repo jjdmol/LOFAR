@@ -74,9 +74,6 @@ WH_RSP::WH_RSP(const string& name,
     getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<int16>   
   }
 
-  // use cyclic buffer on RSP input
-  //((DataManager)getDataManager()).setInBufferingProperties(0, false); 
-
   // do not use autotriggering on the RSP input
   // 'new read' trigger will be set manually
   getDataManager().setAutoTriggerIn(0, false); 
@@ -109,7 +106,7 @@ void WH_RSP::process()
   int char_blocksize; 
   int complex_int16_blocksize;
   int amountToCopy; 
-
+  
   if (itsReadNext) {
     // read next packet from input
     getDataManager().getInHolder(0);
@@ -121,11 +118,16 @@ void WH_RSP::process()
     getDataManager().getInHolder(1);
     getDataManager().readyWithInHolder(1);
   }
+
   // get delay_controlled timestamp
   DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
   itsNextStamp = dhp->getSyncStamp(); 
   // we need to increment the stamp because it is written only once per second or so
-  dhp->incrementStamp(itsNpackets);
+  if (!itsKVM.getBool("useRealRSPBoard", false)) {
+    dhp->incrementStamp(1);
+  } else {
+    dhp->incrementStamp(itsNpackets);
+  }
       
   while (!newStamp) {
 
@@ -134,7 +136,7 @@ void WH_RSP::process()
     thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
 
     // Use next line to bypass synchronization 
-    //itsNextStamp = thisStamp;
+    // itsNextStamp = thisStamp;
 
     if (thisStamp < itsNextStamp) {
       // catching up: (current timestamp < delay_control timestamp)
@@ -164,7 +166,6 @@ void WH_RSP::process()
     }
     else {
       // synchronized: current timestamp == delay_control timestamp
-      
       // reset profiling states
       theirCatchingUpState.leave();
       theirWaitingState.leave();
@@ -210,11 +211,12 @@ void WH_RSP::process()
 
 
 void WH_RSP::dump() {
-  cout<<"DUMP OF WH_RSP: "<<getName()<<endl;
   DH_RSP* inDHp;
   DH_StationData* outDHp;
   inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-      
+
+  cout << "received stamp on " << getName() << " : " << inDHp->getSeqID() << ":" << inDHp->getBlockID() << endl;
+/* 
   // determine blocksizes of char-based InHolder and complex<int16-based> OutHolder
   int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<int16>); 
   int complex_int16_blocksize = itsNbeamlets * itsPolarisations;
@@ -227,7 +229,9 @@ void WH_RSP::dump() {
 	cout<<((complex<int16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
       }
       cout<<endl;
-    }
-  }      
+    } 
+  }
+*/
+   
 } 
   

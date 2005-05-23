@@ -48,7 +48,7 @@ WH_RSPBoard::WH_RSPBoard(const string& name,
   for (int i=0; i<itsNoutputs; i++) {
     sprintf(str, "DH_Boardout_%d2", i);
     getDataManager().addOutDataHolder(i, new DH_RSP(str, itsKVM)); // buffer of char
-  }  
+  }
 }
 
 WH_RSPBoard::~WH_RSPBoard() {
@@ -67,9 +67,10 @@ WH_RSPBoard* WH_RSPBoard::make(const string& name)
 
 void WH_RSPBoard::process() 
 {
-//   cout<<"Stamp: "<<itsStamp<<endl;
+  //cout<<"Stamp: "<<itsStamp<<endl;
   int noEP = itsKVM.getInt("NoPacketsInFrame", 8);
   int noBeamlet = itsKVM.getInt("NoRSPBeamlets", 92);
+
   for (int i=0; i<itsNoutputs; i++) {
     DH_RSP* outDH = (DH_RSP*) getDataManager().getOutHolder(i);
     outDH->resetBuffer();
@@ -83,6 +84,6 @@ void WH_RSPBoard::process()
       }
     }
   }
-
+  
   itsStamp++;
 }

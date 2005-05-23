@@ -77,18 +77,20 @@ WH_RSPInput::WH_RSPInput(const string& name,
       getDataManager().addOutDataHolder(i, new DH_RSPSync(str));
     }
   }
-  
-  // create a cyclic buffer with 100 'DH_RSP_out' elements
-  itsBufControl = new BufferingController(0,getDataManager().getOutHolder(0), 100);
-
   //**************************************************************************************************************
-
+  
   // use cyclic buffer on output channel 0
   //((DataManager)getDataManager()).setOutBufferingProperties(0, false);
+  itsBufControl = new BufferingController(0, 100); // 100 elements
+ 
    
-  // do not use autotriggering on the input
+  // do not use autotriggering on input channel 0
   // 'new read' trigger will be set manually
-  getDataManager().setAutoTriggerIn(0, false); 
+  getDataManager().setAutoTriggerIn(0, false);
+
+  // do not use autotriggering on output channel 0 to disable his datamanager
+  // 'new write' trigger will be set manually (using BufferingController) 
+  getDataManager().setAutoTriggerOut(0, false);
 
   // init profiling states
   theirOldDataState.init ("WH_RSPInput old packets", "yellow");
@@ -114,6 +116,7 @@ WH_RSPInput* WH_RSPInput::make(const string& name)
 
 void WH_RSPInput::preprocess()
 {
+  itsBufControl->setGeneralHolder(getDataManager().getOutHolder(0)); 
   itsBufControl->preprocess();
 }
 
@@ -129,13 +132,13 @@ void WH_RSPInput::process()
   int startDelay;  
   
   if (itsIsSyncMaster) {
-    // we are the SyncMaster, so increase the nextValue and send it to the slaves
+    // we are the SyncMaster, so increase the nextValue and send it to the slaves"
     if (itsNextStamp.getSeqId() == -1) {
       // this is the first loop
       // so take the current timestamp and determine the time stamp at which we all will start
       DH_RSP* inDHp = (DH_RSP*)getDataManager().getInHolder(0);
       itsNextStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
-  
+      
       if (!itsKVM.getBool("useRealRSPBoard", false)) {
 	// we are not using the real rspboards, so no delay
 	startDelay = 0;;
@@ -153,7 +156,11 @@ void WH_RSPInput::process()
       }      
     }// 
     else {
-      itsNextStamp += itsNpackets;
+      if (!itsKVM.getBool("useRealRSPBoard", false)) {
+        itsNextStamp += 1;
+      } else {
+        itsNextStamp += itsNpackets;
+      }
       for (int i = 1; i < itsNRSPOutputs; i++) {
 	((DH_RSPSync*)getDataManager().getOutHolder(i))->setSyncStamp(itsNextStamp);
       }
@@ -169,7 +176,11 @@ void WH_RSPInput::process()
       itsNextStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
     }
     else {
-      itsNextStamp += itsNpackets;
+      if (!itsKVM.getBool("useRealRSPBoard", false)) {
+        itsNextStamp += 1;
+      } else {
+        itsNextStamp += itsNpackets;
+      } 
     }      
   }
 
@@ -184,10 +195,11 @@ void WH_RSPInput::process()
     // get incoming RSP data
     inDHp = (DH_RSP*)getDataManager().getInHolder(0);
     thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
-
+      
     if (thisStamp < itsNextStamp) { 
       // this packets time stamp is too old
       // packet could be delayed in ethernet connection link
+      //cout << "thisStamp < itsNextStamp" << endl;
   
       // to do: store this packet in right place of output buffer to 
       // overwrite already made dummy-data for this timestamp
@@ -201,6 +213,7 @@ void WH_RSPInput::process()
       // stay in the while loop and trigger a new read
       getDataManager().readyWithInHolder(0);
       newStamp = false;
+
     } 
     else if (itsNextStamp + (itsNpackets - 1) < thisStamp) {
       // we missed a packet 
@@ -208,11 +221,13 @@ void WH_RSPInput::process()
       // set profiling state
       theirOldDataState.leave();
       theirMissingDataState.enter();
-      
+ 
       // copy dummy data for missing timestamp in OutDataholder 
-      outDHp = (DH_RSP*)getDataManager().getOutHolder(0);
+      outDHp = (DH_RSP*)itsBufControl->getOutHolder();
       outDHp->setFlag( 1 ); // mark data as invalid
       memset( outDHp->getBuffer(), 0, amountToCopy);
+      //trigger a write
+      itsBufControl->readyWithOutHolder();
       
       // step out of the while loop and do not trigger a new read 
       // so this packet will be read again next loop
@@ -221,24 +236,27 @@ void WH_RSPInput::process()
     }
     else { 
       // excpected packet received
-
+ 
       // reset profiling states
       theirMissingDataState.leave();
       theirOldDataState.leave();
 
       // copy contents of InDataHolder to OutDataholder
-      outDHp = (DH_RSP*)getDataManager().getOutHolder(0);
+      outDHp = (DH_RSP*)itsBufControl->getOutHolder();
       outDHp->setFlag( 0 ); // mark data as valid
       memcpy(outDHp->getBuffer(), inDHp->getBuffer(), amountToCopy);
       
+      //trigger a write
+      itsBufControl->readyWithOutHolder();
       // step out of the while loop and trigger a new read
       newStamp = true;
       itsReadNext = true;
     }
-  } 
+  }
 }
 
 void WH_RSPInput::dump() {
+  /*
   cout<<"DUMP OF WH_RSPInput: "<<getName()<<endl;
   DH_RSP* inDHp;
   DH_RSP* outDHp;
@@ -256,5 +274,5 @@ void WH_RSPInput::dump() {
 	cout<<((complex<int16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader])[c]<<" ";
       }
       cout<<endl;
-  }      
+      }*/      
 }

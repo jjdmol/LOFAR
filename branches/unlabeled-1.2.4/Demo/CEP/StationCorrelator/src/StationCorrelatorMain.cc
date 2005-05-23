@@ -145,7 +145,7 @@ int oldmain (int argc, const char** argv) {
   INIT_LOGGER("StationCorrelator");
 
   try {
-    KeyValueMap kvm = KeyParser::parseFile("/home/zwart/TestRange");
+    KeyValueMap kvm = KeyParser::parseFile("/home/lang/TestRange");
 
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);

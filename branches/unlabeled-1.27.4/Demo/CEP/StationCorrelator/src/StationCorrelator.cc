@@ -137,7 +137,8 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     }
 
     // set synchronization outputs of syncmaster
-    itsRSPinputSteps[0]->setOutRate(10000, i+1);;
+    itsRSPinputSteps[0]->setOutRate(10000, i+1);
+
   }
   
   Step** itsRSPsteps = new Step*[itsNrsp];
@@ -151,12 +152,19 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     comp.addStep(itsRSPsteps[i]); 
 
     itsRSPsteps[i]->runOnNode(lastFreeNode++);
+    //connect(itsRSPinputSteps[i], itsRSPsteps[i], 0, 0, true); // true=sharedMem
+    // itsRSPsteps[i]->connect(itsRSPinputSteps[i], 0, 0, 1, TH_Mem(), true); //blocking
+#ifdef HAVE_MPI
     connect(itsRSPinputSteps[i], itsRSPsteps[i], 0, 0, true); // true=sharedMem
+#else
+    itsRSPsteps[i]->connect(itsRSPinputSteps[i], 0, 0, 1, TH_Mem(), true); //blocking
+#endif
     // to do: connect(Delay_controller[i], itsRSPsteps[i], 0, 1, false);
     // for now: use syncmaster outputs of itsRSPinputSteps[0]
     connect(itsRSPinputSteps[0], itsRSPsteps[i], i+1, 1, true);
     // set synchronization inputs
     itsRSPsteps[i]->setInRate(10000, 1);
+    //itsRSPsteps[i]->setProcessRate(2);
   }
 
   Step** itsTsteps = new Step*[itsNcorrelator];
