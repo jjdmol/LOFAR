@@ -1,0 +1,68 @@
+
+if HAVE_SYS_CAPABILITY_H
+CAPLIBS=$(top_builddir)/src/libnetraw.la -lcap
+else
+CAPLIBS=
+endif
+
+#
+# Define ENABLE_CAP_NET_RAW to let RSPDriver run as setuid root
+# with only cap_net_raw capability enabled.
+#
+AM_CPPFLAGS =
+
+INSTALL=install -C
+
+AUTOGEN = autogen
+SUFFIXES = .ph
+BUILT_SOURCES = 
+
+clean-local:
+
+EXTRA_DIST = \
+	$(BUILT_SOURCES)
+
+sysconf_DATA =
+
+lib_LTLIBRARIES = librtccommon.la libnetraw.la libgnuplot_i.la
+
+include_HEADERS = \
+	Marshalling.h \
+	Timestamp.h \
+	netraw.h \
+	gnuplot_i.h
+
+librtccommon_la_SOURCES = \
+	Marshalling.h \
+	Timestamp.h \
+	Timestamp.cc
+
+libnetraw_la_SOURCES = \
+	netraw.h \
+	netraw.cc
+
+libgnuplot_i_la_SOURCES = \
+	gnuplot_i.h \
+	gnuplot_i.cc
+
+%.ph: %.prot
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+
+%.properties: $(MAC_CONFIG)/%.properties
+	cp $< $@
+
+%.conf: %.conf.in
+	cp $< $@
+
+%.log_prop: %.log_prop.in
+	cp $< $@
+
+%.ns: %.ns.in
+	cp $< $@
+
+%.top: %.top.in
+	cp $< $@
+
+include $(lofar_sharedir)/Makefile.common
