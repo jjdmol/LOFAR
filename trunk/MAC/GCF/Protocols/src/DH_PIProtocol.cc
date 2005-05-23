@@ -20,7 +20,7 @@
 //
 //  $Id$
 
-
+#include <lofar_config.h>
 #include <DH_PIProtocol.h>
 
 namespace LOFAR 
