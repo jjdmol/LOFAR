@@ -91,14 +91,14 @@ namespace RSP
        * to receiving a command event from on of the RSPDriver
        * client processes.
        */
-      RSP_Protocol::Timestamp enter(Ptr<Command> command, QueueID queue = LATER);
+      RTC::Timestamp enter(Ptr<Command> command, QueueID queue = LATER);
 
       /*@{*/
       /**
        * Set/get the current time (from the update triggering timeout event).
        */
       void setCurrentTime(long sec, long usec);
-      Timestamp getCurrentTime() const;
+      RTC::Timestamp getCurrentTime() const;
       /*@}*/
 
     private:
@@ -143,7 +143,7 @@ namespace RSP
 		std::vector<SyncAction*> > m_syncactions;
       std::map< GCFPortInterface*, bool >  m_sync_completed;
 
-      RSP_Protocol::Timestamp m_current_time;
+      RTC::Timestamp m_current_time;
 
       int m_current_priority;
   };

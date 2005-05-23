@@ -49,6 +49,7 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
+using namespace RTC;
 
 #define SAMPLE_FREQUENCY 160.0e6
 
@@ -281,8 +282,8 @@ int main(int argc, char** argv)
   //
   try
   {
-    GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriverPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
   }
   catch (Exception e)
   {

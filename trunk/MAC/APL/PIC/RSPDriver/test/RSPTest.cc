@@ -46,6 +46,7 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
+using namespace RTC;
 
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)

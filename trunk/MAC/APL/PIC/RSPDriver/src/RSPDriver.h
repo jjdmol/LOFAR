@@ -75,9 +75,9 @@ namespace RSP
       GCFEvent::TResult initial(GCFEvent& event, GCFPortInterface &port);
 
       /**
-       * Delete the client ports on the m_garbage_list.
+       * Delete the client ports on the m_dead_clients.
        */
-      void RSPDriver::collect_garbage();
+      void RSPDriver::undertaker();
 
       /**
        * The enabled state. In this state the task can receive
@@ -128,7 +128,7 @@ namespace RSP
       GCFTCPPort     m_acceptor; // listen for clients on this port
       GCFETHRawPort* m_board;    // array of ports, one for each RSP board
       std::list<GCFPortInterface*> m_client_list;  // list of clients
-      std::list<GCFPortInterface*> m_garbage_list; // list of clients to cleanup
+      std::list<GCFPortInterface*> m_dead_clients; // list of clients to cleanup
 
       Scheduler m_scheduler;
       int m_update_counter; // nr of updates completed in one second

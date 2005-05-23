@@ -38,6 +38,7 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace blitz;
+using namespace RTC;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))

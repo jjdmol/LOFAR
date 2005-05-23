@@ -80,6 +80,7 @@ using namespace RSP;
 using namespace std;
 using namespace LOFAR;
 using namespace blitz;
+using namespace RTC;
 
 static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
 
@@ -483,22 +484,22 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
   return status;
 }
 
-void RSPDriver::collect_garbage()
+void RSPDriver::undertaker()
 {
-  for (list<GCFPortInterface*>::iterator it = m_garbage_list.begin();
-       it != m_garbage_list.end();
+  for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
+       it != m_dead_clients.end();
        it++)
   {
     delete (*it);
   }
-  m_garbage_list.clear();
+  m_dead_clients.clear();
 }
 
 GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  collect_garbage();
+  undertaker(); // destroy dead clients
 
   switch (event.signal)
   {
@@ -740,7 +741,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	(void)m_scheduler.cancel(port);
 
 	m_client_list.remove(&port);
-	m_garbage_list.push_back(&port);
+	m_dead_clients.push_back(&port);
       }
     }
     break;

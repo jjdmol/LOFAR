@@ -47,6 +47,7 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
+using namespace RTC;
 
 // local funtions
 static std::bitset<MAX_N_RCUS> strtoset(const char* str, unsigned int max);

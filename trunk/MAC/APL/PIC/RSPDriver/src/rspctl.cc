@@ -67,6 +67,7 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace rspctl;
+using namespace RTC;
 
 // local funtions
 static void usage();
@@ -157,15 +158,87 @@ SubbandsCommand::SubbandsCommand()
 {
 }
 
-void SubbandsCommand::send(GCFPortInterface& /*port*/)
+void SubbandsCommand::send(GCFPortInterface& port)
 {
-  cerr << "Error: option '--subbands' not supported yet." << endl;
-  exit(EXIT_FAILURE);
+  if (getMode()) {
+    // GET
+    RSPGetsubbandsEvent getsubbands;
+
+    getsubbands.timestamp = Timestamp(0,0);
+
+    bitset<MAX_N_RCUS> mask = getRCUMask();
+    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
+      if (mask[rcu]) getsubbands.blpmask.set(rcu/2);
+    }
+
+    getsubbands.cache = true;
+
+    port.send(getsubbands);
+  } else {
+    // SET
+    RSPSetsubbandsEvent setsubbands;
+    setsubbands.timestamp = Timestamp(0,0);
+    bitset<MAX_N_RCUS> mask = getRCUMask();
+    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
+      if (mask[rcu]) {
+	cerr << "blpmask[" << rcu/2 << "] set" << endl;
+	setsubbands.blpmask.set(rcu/2);
+      }
+    }
+
+    cerr << "blpmask.count()=" << setsubbands.blpmask.count() << endl;
+
+    setsubbands.subbands().resize(1,m_subbandset.size()*2);
+
+    std::set<int>::iterator it;
+    int i;
+    for (i = 0, it = m_subbandset.begin(); it != m_subbandset.end(); it++, i+=2) {
+      setsubbands.subbands()(0, i)   = (*it)*2;
+      setsubbands.subbands()(0, i+1) = (*it)*2+1;
+    }
+
+    port.send(setsubbands);
+  }
 }
 
-GCFEvent::TResult SubbandsCommand::ack(GCFEvent& /*ack*/)
+GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 {
-  return GCFEvent::NOT_HANDLED;
+  switch (e.signal)
+    {
+    case RSP_GETSUBBANDSACK:
+      {
+	RSPGetsubbandsackEvent ack(e);
+	bitset<MAX_N_RCUS> mask = getRCUMask();
+
+	if (SUCCESS == ack.status) {
+	  int blpin = 0;
+	  for (int rcuout = 0; rcuout < get_nrcus(); rcuout++) {
+
+	    if (mask[rcuout]) {
+	      printf("RCU[%02d].subbands=", rcuout);
+	      cout << ack.subbands()(blpin++, Range::all()) << endl;
+	      rcuout++;
+	    }
+	  }
+	} else {
+	  cerr << "Error: RSP_GETSUBBANDS command failed." << endl;
+	}
+      }
+      break;
+
+    case RSP_SETSUBBANDSACK:
+      {
+	RSPSetsubbandsackEvent ack(e);
+
+	if (SUCCESS != ack.status) {
+	  cerr << "Error: RSP_SETSUBBANDS command failed." << endl;
+	}
+      }
+    }
+
+  GCFTask::stop();
+
+  return GCFEvent::HANDLED;
 }
 
 RCUCommand::RCUCommand()
@@ -428,6 +501,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_SETRCUACK:
     case RSP_GETSTATSACK:
     case RSP_GETVERSIONACK:
+    case RSP_GETSUBBANDSACK:
+    case RSP_SETSUBBANDSACK:
       status = m_command.ack(e); // handle the acknowledgement
       break;
 
@@ -850,11 +925,11 @@ static void usage()
   cout << "rspctl usage:" << endl;
   cout << endl;
   cout << "rspctl --weights        [--select=<set>] # get weights" << endl;
-  cout << "  Examples --select sets: --select=1,2,4:7 or --select=1:3,5:7" << endl;
+  cout << "  Example --select sets: --select=1,2,4:7 or --select=1:3,5:7" << endl;
   cout << "rspctl --weights=(0|1)  [--select=<set>] # set weights" << endl;
   cout << "rspctl --subbands       [--select=<set>] # get subband selection" << endl;
   cout << "rspctl --subbands=<set> [--select=<set>] # set subband selection" << endl;
-  cout << "  Eexample --subbands sets: --subbands=0:39 or --select=0:19,40:59" << endl;
+  cout << "  Example --subbands sets: --subbands=0:39 or --select=0:19,40:59" << endl;
   cout << "rspctl --rcu            [--select=<set>] # get RCU control" << endl;
   cout << "rspctl --rcu=0x??       [--select=<set>] # set RCU control" << endl;
   cout << "             0x80 = VDDVCC_ENABLE" << endl;
@@ -1071,7 +1146,7 @@ int main(int argc, char** argv)
   }
 
   if (0 == (command = parse_options(argc, argv))) {
-    usage();
+    cout << "Warning: no command specified." << endl;
     exit(EXIT_FAILURE);
   }
 
