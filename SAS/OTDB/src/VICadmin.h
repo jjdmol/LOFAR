@@ -28,7 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <OTDB/OTDBTypes.h>
+#include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBconnection.h>
 
 namespace LOFAR {
@@ -49,8 +49,10 @@ namespace LOFAR {
 // In other word: the software tree(VIC) is mapped on the hardware tree(PIC).
 class VICadmin {
 public:
+	enum formatType { FtKVList, FtHTML };
+
 	// Connect the VIC interface to an OTDB database.
-	explicit VICadmin (const OTDBconnection &		aConn);
+	explicit VICadmin (OTDBconnection*		aConn);
 
 	~VICadmin();
 
@@ -60,13 +62,13 @@ public:
 
 	// a VIC tree is build up from single components. The definition of a
 	// component can loaded from a file with this call
-	itemID	loadComponentFile (treeID			aTreeID,
+	nodeID	loadComponentFile (treeID			aTreeID,
 							   const string&	filename);
 
 	// From a component tree a (folded) tree can be constructed. In a folded
 	// tree only the structure of the tree is created, there is no replication
 	// of nodes on the same level.
-	treeID	buildFoldedTree (treeID		baseTree)
+	treeID	buildFoldedTree (treeID		baseTree);
 
 	// From a foldedTree a fully instanciated tree can be build.
 	treeID	instanciateTree (treeID		baseTree);

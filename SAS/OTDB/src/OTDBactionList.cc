@@ -33,7 +33,12 @@ namespace LOFAR {
 //
 // OTDBactionList()
 //
-OTDBactionList::OTDBactionList()
+OTDBactionList::OTDBactionList(const OTDBcontrol&		control,
+							   const OTDBeventList&		eventList,
+							   mActionStatus			actionStatusSet,
+							   mOriginator				originatorSet,
+							   ptime					periodBegin,
+							   ptime					periodEnd)
 {}
 
 //
@@ -43,6 +48,23 @@ OTDBactionList::~OTDBactionList()
 {}
 
 
+//
+// copy operator
+//
+OTDBactionList::OTDBactionList(const OTDBactionList& that)
+  : vector<OTDBaction> (that)
+{}
+
+//
+// operator= copying
+//
+OTDBactionList& OTDBactionList::operator=(const OTDBactionList& that)
+{
+	if (this != &that) {
+		vector<OTDBaction>::operator= (that);
+	}
+	return (*this);
+}
 
 
   } // namespace OTDB

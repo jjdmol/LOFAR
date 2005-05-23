@@ -28,7 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <otherPackage/file.h>
+#include <OTDB/OTDBtypes.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -38,7 +38,7 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-class ...;
+//# class ...;
 
 
 // Action an operator takes on an OTDBevent.
@@ -52,14 +52,13 @@ public:
 	// Copying is allowed
 	OTDBaction(const OTDBaction&	that);
 
-	OTDBaction& operator=(const OTDBaction& that)
-	if (this != &that) { ... } return *this; }
+	OTDBaction& operator=(const OTDBaction& that);
 
 private:
 	//# --- Datamembers ---
 	actionID		itsID;
 	eventID			itsEventID;
-	Time			itsTimestamp;
+	ptime			itsTimestamp;
 	string			itsOriginator;
 	actionType		itsType;
 	string			itsDescription;
@@ -67,14 +66,6 @@ private:
 
 //# --- Inline functions ---
 
-// ... example
-//#
-//# operator<<
-//#
-inline ostream& operator<< (ostream& os, const OTDBaction& aOTDBaction)
-{	
-	return (c.print(os));
-}
 
 
 // @}

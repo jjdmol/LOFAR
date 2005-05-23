@@ -25,7 +25,9 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
+#include<Common/StringUtil.h>
 #include<OTDB/OTDBconnection.h>
+#include<OTDB/OTDBconstants.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -67,8 +69,8 @@ bool OTDBconnection::connect()
 
 	// Note: we connect to the database as user Lofar, the real DBaccess
 	// is implemented in the SP's we will call.
-	string	connectString("host=dop50 dbname= ") + itsDatabase
-						+ " user=postgres";
+	string	connectString("host=dop50 dbname= " + itsDatabase
+						+ " user=postgres");
 
 	// try to make the connection to the database
 	itsConnection = new connection(connectString);
@@ -78,7 +80,7 @@ bool OTDBconnection::connect()
 	}
 
 	try {
-		work 	xAction(itsConnection, "authenticate");
+		work 	xAction(*itsConnection, "authenticate");
 		result  res = xAction.exec("SELECT OTDBlogin(" + itsUser +
 									"," + itsPassword + ")");
 		int		connOK;
@@ -91,8 +93,8 @@ bool OTDBconnection::connect()
 			return (false);
 		}
 	}
-	catch (exception& ex) {
-		itsError = "Exception during authentication:" + ex.what();
+	catch (std::exception& ex) {
+		itsError = string("Exception during authentication:") + ex.what();
 		delete itsConnection;
 		itsConnection = 0;
 		return (false);
@@ -109,48 +111,54 @@ bool OTDBconnection::connect()
 //
 // To get a list of all OTDB trees available in the database.
 vector<treeInfo> OTDBconnection::getTreeList(
-					treeType	 	aTreeType = TTvic,
-					treeClassif 	aClassification=TCoperational)
+					treeType	 	aTreeType,
+					treeClassif 	aClassification)
 {
 	if (!itsIsConnected && !connect()) {
-		return (vector<treeInfo> tmp); // @@@
+		vector<treeInfo> 	empty;
+		return (empty); 
 	}
 
 	try {
-		work	xAction(itsConnection, "getTreeList");
-		result	res = xAction.exec("SELECT * from getTreeList(" +
-								toString(treeType) + "," +
-								toString(treeClassif) + ")");
+		work	xAction(*itsConnection, "getTreeList");
+		string	query("SELECT * from getTreeList(" +
+						toString(aTreeType) + "," +
+						toString(aClassification) + ")");
+		result	res = xAction.exec(query);
 
 		int32	nrRecords = res.size();
 
 		vector<treeInfo>	resultVec(nrRecords);
 		for (int32 i = 0; i < nrRecords; i++) {
-			treeInfo*	tip = resultVec[i];
-			tip->treeID 		= res[i]["treeID"];
-			tip->classification = res[i]["treeID"];
-			tip->creator 	  	= res[i]["treeID"];
-			tip->creationDate 	= res[i]["treeID"];
-			tip->type 			= res[i]["treeID"];
-			tip->originalTree 	= res[i]["treeID"];
-			tip->campaign 		= res[i]["treeID"];
-			tip->starttime 		= res[i]["treeID"];
-			tip->stoptime 		= res[i]["treeID"];
+			treeInfo*	tip = &resultVec[i];
+//			TODO
+//			tip->treeID 		= res[i]["treeID"];
+//			tip->classification = res[i]["treeID"];
+//			tip->creator 	  	= res[i]["treeID"];
+//			tip->creationDate 	= res[i]["treeID"];
+//			tip->type 			= res[i]["treeID"];
+//			tip->originalTree 	= res[i]["treeID"];
+//			tip->campaign 		= res[i]["treeID"];
+//			tip->starttime 		= res[i]["treeID"];
+//			tip->stoptime 		= res[i]["treeID"];
 		}
 
 		return (resultVec);
 	}
-	catch (exception&	ex) {
-		itsError = "Exception during retrieval of TreeInfoList:" + ex.what();
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of TreeInfoList:")
+					 + ex.what();
 	}
 
-	return (vector<treeInfo> tmp); // @@@
+	vector<treeInfo> 	empty;
+	return (empty);
 }
 
 //
 // print(ostream&): os&
 //
 // Show connection characteristics.
+
 ostream& OTDBconnection::print (ostream& os) const
 {
 	os << itsUser << "@" << itsDatabase << ":";
