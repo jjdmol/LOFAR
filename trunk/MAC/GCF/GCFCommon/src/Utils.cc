@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <GCF/GCF_Defines.h>
 
+using std::set;
+
 namespace LOFAR 
 {
  namespace GCF 
@@ -44,6 +46,40 @@ void Utils::convStringToList(list<string>& stringList,
       pStringListItem = strtok(NULL, "|");
       dataLength -= (stringListItem.size() + 1);
       stringList.push_back(stringListItem);
+    }
+  }
+}
+
+void Utils::convSetToString(string& setString, 
+                                  const set<string>& stringSet)
+{
+  setString.clear();
+  for (set<string>::const_iterator iter = stringSet.begin(); 
+       iter != stringSet.end(); ++iter)
+  {
+    setString += *iter;
+    setString += '|';
+  }
+}
+
+void Utils::convStringToSet(set<string>& stringSet, 
+                                      const string& setString)
+{
+  unsigned int dataLength = setString.length();
+  char data[dataLength + 1];
+  memcpy(data, setString.c_str(), dataLength);
+  data[dataLength] = 0;
+  stringSet.clear();
+  if (dataLength > 0)
+  {
+    string stringSetItem;
+    char* pStringSetItem = strtok(data, "|");
+    while (pStringSetItem && dataLength > 0)
+    {
+      stringSetItem = pStringSetItem;      
+      pStringSetItem = strtok(NULL, "|");
+      dataLength -= (stringSetItem.size() + 1);
+      stringSet.insert(stringSetItem);
     }
   }
 }
