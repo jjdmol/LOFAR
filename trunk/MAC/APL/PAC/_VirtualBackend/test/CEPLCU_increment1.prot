@@ -43,7 +43,7 @@
 
 
 [io]
-COM1 = { SOCKET, ccc , "client localhost 27004" } // client of VBStartDeemon
+COM1 = { SOCKET, ccc , "client localhost 27010" } // client of VBStartDeemon
 COM2 = { SOCKET, ccc , "server localhost 27005" } // server for VB1
 COM5 = { SOCKET, ccc , "client localhost 26999" } // THPVSSBridge
 
@@ -125,14 +125,15 @@ t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; string
 //
 
 // LOGICALDEVICE enums
-t_LD_Result           = { 4, 0x00000000, 0x00000006, ENUM,
+t_LD_Result           = { 4, 0x00000000, 0x00000007, ENUM,
                              0x00000000 : "NO_ERROR",
-                             0x00000001 : "FILENOTFOUND",
-                             0x00000002 : "INCORRECT_NUMBER_OF_PARAMETERS",
-                             0x00000003 : "UNKNOWN_COMMAND",
-                             0x00000004 : "DISABLED",
-                             0x00000005 : "LOW_QUALITY",
-                             0x00000006 : "TIMING_FAILURE"
+                             0x00000001 : "UNSPECIFIED",
+                             0x00000002 : "FILENOTFOUND",
+                             0x00000003 : "INCORRECT_NUMBER_OF_PARAMETERS",
+                             0x00000004 : "UNKNOWN_COMMAND",
+                             0x00000005 : "DISABLED",
+                             0x00000006 : "LOW_QUALITY",
+                             0x00000007 : "TIMING_FAILURE"
                        }
 
 t_SD_LogicalDeviceTypes = { 4, 0x00000001, 0x00000007, ENUM,
@@ -435,9 +436,10 @@ E_LOGICALDEVICE_CONNECT =
 { 
   0x01, // signal Id
   0x4B, // Direction and protocol
-  0x36000000, // message payload length. Depends on string length, big endian
-  0x32000000, // string length, big endian
-  nodeId                    : t_String50
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  noOfChars                   : t_B4,
+//  nodeId 		                  : t_String[ noOfChars ]
+  nodeId 		                  : t_String50
 }
 
 E_LOGICALDEVICE_SCHEDULED =
@@ -503,8 +505,11 @@ E_STARTDAEMON_SCHEDULED =
 {
   0x02, // signal Id
   0x8C, // Direction and protocol
-  0x04000000, // message payload length, big endian
-  result                    : t_SD_Result
+  msgLength                   : t_B4, // message payload length. Depends on string length
+  result                      : t_SD_Result,
+  noOfChars                   : t_B4,
+//  viRootId 		                : t_String[ noOfChars ]
+  viRootId 		                : t_String50
 }
 
 // -------------------------------------------------------------------

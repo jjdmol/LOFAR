@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
   
   boost::shared_ptr<VirtualBackendFactory> vbFactory(new VirtualBackendFactory);
   
-  StartDaemon sd(string("CEPLCU_PAC_VBStartDaemon"));
+  StartDaemon sd(string("PAC_VBStartDaemon"));
   sd.registerFactory(LDTYPE_VIRTUALBACKEND, vbFactory);
   sd.start(); // make initial transition
 

@@ -150,6 +150,7 @@ class VirtualBackendLD : public APLCommon::LogicalDevice,
     CEPApplicationManager     _cepApplication;
     VBQualityGuard            _qualityGuard;
     ACC::ParameterCollection  _cepAppParams;
+    ACC::ParameterCollection  _resultParams;
     ANM::TNodeList            _neededNodes;
     unsigned long             _rstoID;
   
