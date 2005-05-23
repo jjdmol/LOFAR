@@ -1,14 +1,16 @@
-mac.ns.AVTTest.BeamServer.type=TCP
-mac.ns.AVTTest.BeamServer.host=saturnus
-mac.ns.AVTTest.BeamServer.port=27001
-mac.ns.AVTTestMAC2.timerPort.type=TCP
+#mac.ns.AVTTest.BeamServer.type=TCP
+#mac.ns.AVTTest.BeamServer.host=saturnus
+#mac.ns.AVTTest.BeamServer.port=27001
+#mac.ns.AVTTestMAC2.timerPort.type=TCP
 mac.ns.LogicalDeviceScheduler.timerPort.type=TCP
-#mac.top.LogicalDeviceScheduler.BeamServer.remoteservice=ABS:client
-mac.top.LogicalDeviceServer.BeamServer.remoteservice=AVTTest:BeamServer
+mac.ns.BeamServer.acceptor.type=TCP
 
-mac.top.AVTLogicalDeviceScheduler.client.remoteservice=AVTTestVT1:server
-mac.top.AVTTestVT1.client.remoteservice=AVTTestBF1:server
-mac.top.AVTTestBF1.client.remoteservice=BeamServer:server
+mac.top.LogicalDeviceScheduler.BeamServer.remoteservice=BeamServer:acceptor
+#mac.top.LogicalDeviceServer.BeamServer.remoteservice=AVTTest:BeamServer
+
+#mac.top.AVTLogicalDeviceScheduler.client.remoteservice=AVTTestVT1:server
+#mac.top.AVTTestVT1.client.remoteservice=AVTTestBF1:server
+#mac.top.AVTTestBF1.client.remoteservice=BeamServer:server
 
 mac.apl.avt.PREPARETIME=5
 mac.apl.avt.BEAMSERVERPORT=BeamServer
@@ -62,14 +64,14 @@ mac.ns.BF5.BeamServer.type=TCP
 mac.ns.BF6.BeamServer.type=TCP
 mac.ns.BF7.BeamServer.type=TCP
 mac.ns.BF8.BeamServer.type=TCP
-mac.top.BF1.BeamServer.remoteservice=AVTTest:BeamServer
-mac.top.BF2.BeamServer.remoteservice=AVTTest:BeamServer
-mac.top.BF3.BeamServer.remoteservice=AVTTest:BeamServer
-mac.top.BF4.BeamServer.remoteservice=AVTTest:BeamServer
-mac.top.BF5.BeamServer.remoteservice=AVTTest:BeamServer
-mac.top.BF6.BeamServer.remoteservice=AVTTest:BeamServer
-mac.top.BF7.BeamServer.remoteservice=AVTTest:BeamServer
-mac.top.BF8.BeamServer.remoteservice=AVTTest:BeamServer
+mac.top.BF1.BeamServer.remoteservice=BeamServer:acceptor
+mac.top.BF2.BeamServer.remoteservice=BeamServer:acceptor
+mac.top.BF3.BeamServer.remoteservice=BeamServer:acceptor
+mac.top.BF4.BeamServer.remoteservice=BeamServer:acceptor
+mac.top.BF5.BeamServer.remoteservice=BeamServer:acceptor
+mac.top.BF6.BeamServer.remoteservice=BeamServer:acceptor
+mac.top.BF7.BeamServer.remoteservice=BeamServer:acceptor
+mac.top.BF8.BeamServer.remoteservice=BeamServer:acceptor
 
 mac.ns.SRG1.SRG1_server.type=TCP
 mac.ns.SRG2.SRG2_server.type=TCP
