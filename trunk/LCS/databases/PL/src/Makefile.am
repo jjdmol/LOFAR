@@ -12,6 +12,7 @@ INSTHDRS = \
 	PersistentObject.h \
 	QueryObject.h \
 	TPersistentObject.h \
+	PLfwd.h \
 	Query/BinaryExprNode.h \
 	Query/ColumnExprNode.h \
 	Query/ConstExprNode.h \
