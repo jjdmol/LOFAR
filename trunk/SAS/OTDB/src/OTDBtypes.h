@@ -29,6 +29,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <OTDB/OTDBconstants.h>
+#include <boost/date_time/posix_time/ptime.hpp>
+
+using namespace boost::posix_time;
 
 namespace LOFAR {
   namespace OTDB {
@@ -41,9 +44,13 @@ namespace LOFAR {
 
 typedef		int32		treeID;
 typedef		int64		nodeID;
+typedef		int32		actionID;
+typedef		int32		eventID;
 typedef		int16		treeClassif;
 typedef		int16		treeType;
 typedef		int16		paramType;
+typedef		int16		actionType;
+typedef		int16		eventType;
 
 //#
 //# Helper classes for PIC and VIC
@@ -84,7 +91,7 @@ public:
 	paramType		type;			// node / bool / int / long / float / etc.
 	string			unit;
 	string			description;
-}
+};
 
 
 // The OTDBvalue structure contains one value of one OTDB item.
@@ -99,7 +106,7 @@ public:
 	nodeID			ID;
 	string			value;
 	ptime			time;
-}
+};
 
 
 // @}

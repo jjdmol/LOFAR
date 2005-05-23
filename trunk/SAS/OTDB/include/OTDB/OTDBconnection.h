@@ -28,7 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <pqxx/connection>
+#include <pqxx/pqxx>
 #include <OTDB/OTDBtypes.h>
 
 using namespace pqxx;
@@ -63,7 +63,7 @@ public:
 	bool connect();
 
 	// To get a list of all OTDB trees available in the database.
-	vector<treeInfo> getTreeList(treeType	 aTreeType = TTvic,
+	vector<treeInfo> getTreeList(treeType	 aTreeType,
 								 treeClassif aClassification=TCoperational);
 
 	// Show connection characteristics.
@@ -99,9 +99,9 @@ inline bool OTDBconnection::isConnected() const
 //# operator<<
 //#
 inline ostream& operator<< (ostream& 				os, 
-							const OTDBconnection&	aOTDBconnection) const
+							const OTDBconnection&	aOTDBconnection)
 {	
-	return (c.print(os));
+	return (aOTDBconnection.print(os));
 }
 
 //#

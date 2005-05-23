@@ -50,7 +50,7 @@ namespace LOFAR {
 class PICadmin {
 public:
 	// Connect the PIC interface to an OTDB database.
-	explicit PICadmin (const OTDBconnection &		aConn);
+	explicit PICadmin (OTDBconnection*		aConn);
 	
 	~PICadmin();
 
@@ -69,7 +69,6 @@ public:
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.
 	string	errorMsg();
-}
 
 private:
 	// Default construction and copying is not allowed

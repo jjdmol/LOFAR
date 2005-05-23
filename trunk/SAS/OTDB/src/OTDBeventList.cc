@@ -33,7 +33,10 @@ namespace LOFAR {
 //
 // OTDBeventList()
 //
-OTDBeventList::OTDBeventList()
+OTDBeventList::OTDBeventList(const OTDBcontrol&		control,
+							 const mEventStatus		eventStatusSet,
+							 const ptime&			periodBegin,
+							 const ptime&			periodEnd)
 {}
 
 //
@@ -43,6 +46,23 @@ OTDBeventList::~OTDBeventList()
 {}
 
 
+//
+// copy operator
+//
+OTDBeventList::OTDBeventList(const OTDBeventList& that)
+  : vector<OTDBevent> (that)
+{}
+
+//
+// operator= copying
+//
+OTDBeventList& OTDBeventList::operator=(const OTDBeventList& that)
+{
+	if (this != &that) {
+		vector<OTDBevent>::operator= (that);
+	}
+	return (*this);
+}
 
 
   } // namespace OTDB

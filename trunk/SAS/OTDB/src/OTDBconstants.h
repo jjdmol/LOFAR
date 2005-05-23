@@ -33,36 +33,36 @@ namespace LOFAR {
 // @{
 
 // Enumeration of tree classifications. Used in VIC and PIC trees.
-const int16	TC_all				= 0;
-const int16	TC_experimental		= 1;
-const int16	TC_operational		= 2;
-const int16	TC_obsolete			= 3;
+const int16	TCall				= 0;
+const int16	TCexperimental		= 1;
+const int16	TCoperational		= 2;
+const int16	TCobsolete			= 3;
 
 
 // Enumeration of parameter types. Used in VIC and PIC trees.
-const int16 PT_node				= 0;		// not a parameter
-const int16	PT_bool				= 101;
-const int16	PT_int				= 102;
-const int16	PT_long				= 103;
-const int16	PT_float			= 104;
-const int16	PT_double			= 105;
-const int16	PT_icomplex			= 106;
-const int16	PT_lcomplex			= 107;
+const int16 PTnode				= 0;		// not a parameter
+const int16	PTbool				= 101;
+const int16	PTint				= 102;
+const int16	PTlong				= 103;
+const int16	PTfloat				= 104;
+const int16	PTdouble			= 105;
+const int16	PTicomplex			= 106;
+const int16	PTlcomplex			= 107;
 const int16	PT_fcomplex			= 108;
-const int16	PT_dcomplex			= 109;
-const int16	PT_text				= 110;
-const int16	PT_bin				= 111;
+const int16	PTdcomplex			= 109;
+const int16	PTtext				= 110;
+const int16	PTbin				= 111;
 
 
 // Enumeration of tree types.
-const int16	TT_hardware			= 10;
-const int16	TT_template			= 20;
-const int16	TT_configure		= 30;
-const int16	TT_schedule			= 40;
-const int16	TT_queued			= 50;
-const int16	TT_active			= 60;
-const int16	TT_finished			= 70;
-const int16	TT_obsolete			= 80;
+const int16	TThardware			= 10;
+const int16	TTtemplate			= 20;
+const int16	TTconfigure			= 30;
+const int16	TTschedule			= 40;
+const int16	TTqueued			= 50;
+const int16	TTactive			= 60;
+const int16	TTfinished			= 70;
+const int16	TTobsolete			= 80;
 
 
 // @}

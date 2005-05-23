@@ -33,7 +33,7 @@ namespace LOFAR {
 //
 // PICadmin()
 //
-PICadmin::PICadmin (const OTDBconnection &		aConn):
+PICadmin::PICadmin (OTDBconnection*		aConn):
 	itsConn  (aConn),
 	itsError ("")
 {
@@ -66,7 +66,8 @@ treeID	PICadmin::loadMasterFile (const string&	filename)
 		return (0);
 	}
 
-	...
+	// TODO: ...
+	return (0);
 }
 
 //
@@ -83,7 +84,8 @@ bool	PICadmin::classify (treeID			aTreeID,
 		return (false);
 	}
 
-	...
+	// TODO: ...
+	return (true);
 
 }
 

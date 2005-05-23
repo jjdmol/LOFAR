@@ -28,8 +28,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/lofar_datetime.h>
 #include <Common/lofar_vector.h>
+#include <OTDB/OTDBtypes.h>
+#include <OTDB/OTDBaction.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -40,9 +41,10 @@ namespace LOFAR {
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
 class OTDBcontrol;
-class OTDBaction;
 class OTDBeventList;
 
+typedef		int32		mActionStatus;
+typedef		int32		mOriginator;
 
 // Collection of OTDBactions.
 // ...
@@ -51,10 +53,10 @@ class OTDBactionList : public vector<OTDBaction>
 public:
 	OTDBactionList (const OTDBcontrol&		control,
 					const OTDBeventList&	eventList,
-					mActionStatus	actionStatusSet,
-					mOriginator		originatorSet,
-					ptime			periodBegin,
-					ptime			periodEnd);
+					mActionStatus			actionStatusSet,
+					mOriginator				originatorSet,
+					ptime					periodBegin,
+					ptime					periodEnd);
 	~OTDBactionList();
 
 private:

@@ -28,7 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <otherPackage/file.h>
+#include <OTDB/OTDBtypes.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -52,14 +52,13 @@ public:
 	// Copying is allowed
 	OTDBevent(const OTDBevent&	that);
 
-	OTDBevent& operator=(const OTDBevent& that)
-	if (this != &that) { ... } return *this; }
+	OTDBevent& operator=(const OTDBevent& that);
 
 	//# --- Datamembers ---
 	eventID			itsID;
 	string			itsParamName;
 	eventType		itsType;
-	Time			itsTimestamp;
+	ptime			itsTimestamp;
 	
 };
 

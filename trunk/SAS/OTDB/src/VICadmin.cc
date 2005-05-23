@@ -33,18 +33,21 @@ namespace LOFAR {
 //
 // VICadmin()
 //
-VICadmin::VICadmin (const OTDBconnection &		aConn) :
+VICadmin::VICadmin (OTDBconnection*		aConn) :
 	itsConn  (aConn),
 	itsError ("")
 {
+	ASSERTSTR(aConn, "Null pointer for connection not allowed");
 }
 
 //
 // ~VICadmin()
 //
-~VICadmin::VICadmin()
+VICadmin::~VICadmin()
 {
-	ASSERTSTR(aConn, "Null pointer for connection not allowed");
+	if (itsConn) {
+		delete itsConn;
+	}
 }
 
 //
@@ -54,9 +57,14 @@ VICadmin::VICadmin (const OTDBconnection &		aConn) :
 // (empty) tree must be created.
 treeID	VICadmin::createNewTree ()
 {
-	if (itsConn) {
-		delete itsConn;
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (0);
 	}
+
+	//TODO: ...
+
+	return (0);
 }
 
 //
@@ -64,7 +72,7 @@ treeID	VICadmin::createNewTree ()
 //
 // a VIC tree is build up from single components. The definition of a
 // component can loaded from a file with this call
-itemID	VICadmin::loadComponentFile (treeID			aTreeID,
+nodeID	VICadmin::loadComponentFile (treeID			aTreeID,
 						   			 const string&	filename)
 {
 	if (!itsConn->connect()) {
@@ -72,7 +80,9 @@ itemID	VICadmin::loadComponentFile (treeID			aTreeID,
 		return (0);
 	}
 
-	...
+	//TODO: ...
+
+	return (0);
 
 }
 
@@ -90,7 +100,9 @@ treeID	VICadmin::buildFoldedTree (treeID		baseTree)
 		return (0);
 	}
 
-	...
+	//TODO: ...
+
+	return (0);
 }
 
 //
@@ -105,7 +117,9 @@ treeID	VICadmin::instanciateTree (treeID		baseTree)
 		return (false);
 	}
 
-	...
+	//TODO: ...
+
+	return (true);
 }
 
 //
@@ -121,7 +135,9 @@ bool	VICadmin::setClassification(treeID			aTreeID,
 		return (false);
 	}
 
-	...
+	//TODO: ...
+
+	return (true);
 }
 
 //
@@ -139,7 +155,9 @@ bool	VICadmin::setTreeType(treeID		aTreeID,
 		return (false);
 	}
 
-	...
+	//TODO: ...
+
+	return (true);
 }
 
 //
@@ -151,7 +169,7 @@ bool	VICadmin::exportTree (treeID			aTreeID,
 							  nodeID			topItem,
 							  const string&		filename,
 							  const formatType	outputFormat,
-							  bool				folded = false)
+							  bool				folded)
 {
 
 	if (!itsConn->connect()) {
@@ -159,7 +177,9 @@ bool	VICadmin::exportTree (treeID			aTreeID,
 		return (false);
 	}
 
-	...
+	//TODO: ...
+
+	return (true);
 }
 
 

@@ -28,6 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <OTDB/OTDBconnection.h>
 #include <OTDB/OTDBtypes.h>
 
 namespace LOFAR {
@@ -54,32 +55,32 @@ public:
 	// Once an treeID is chosen, the user can retrieve the definition of that
 	// tree. A nodeID may be passed to get a sub-tree in stead of the full
 	// PIC tree.
-	vector<OTDBitem> getItemList (nodeID		topNode,
+	vector<OTDBnode> getItemList (nodeID		topNode,
 								  uint32		depth);
 
 	// PVSS will continuously add value-changes to the offline PIC.
 	// There two ways PVSS can do this.
-	// The function returns false if the PIC item can not be found.
+	// The function returns false if the PIC node can not be found.
 	bool	addKVT (const string&	key,
 					const string&	value,
-					Time			time);
+					ptime			time);
 	bool	addKVT (const OTDBvalue&		aKVT);
 	// Note: This form will probably be used by SAS and OTB when committing
-	// a list of modified items.
+	// a list of modified node.
 	bool 	addKVTlist (vector<OTDBvalue>	theValues);
 
 	//# SHM queries
 	// With searchInPeriod a list of all valuechanges in the OTDB tree can
 	// be retrieved from the database.
-	// By chosing the topItem right one item or a sub tree of the whole tree
+	// By chosing the topItem right one node or a sub tree of the whole tree
 	// (you probably don't want this!) can be retrieved.
 	// When the endDate is not specified all value changes from beginDate
 	// till 'now' are retrieved, otherwise the selection is limited to
 	// [beginDate..endDate>.
 	vector<OTDBvalue> searchInPeriod (nodeID			topNode,
 									  uint32			depth,
-									  const DBdate&		beginDate,
-									  const DBdate&		endDate = 0);
+									  const ptime&		beginDate,
+									  const ptime&		endDate = ptime());
 	//# SAS queries
 	// For scheduling the VIC tree on the OTDB tree SAS must know what
 	// resources exist in the OTDB tree. This list can be retrieved with

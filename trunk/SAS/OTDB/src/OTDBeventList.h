@@ -28,8 +28,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/lofar_datetime.h>
 #include <Common/lofar_vector.h>
+#include <OTDB/OTDBtypes.h>
+#include <OTDB/OTDBevent.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -40,8 +41,8 @@ namespace LOFAR {
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
 class OTDBcontrol;
-class OTDBevent;
 
+typedef		int32		mEventStatus;
 
 // Gets an collection of OTDBevents from the database.
 // 
