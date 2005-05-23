@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "VBFuncStateProperty.h"
 #include "VBQualityGuard.h"
 

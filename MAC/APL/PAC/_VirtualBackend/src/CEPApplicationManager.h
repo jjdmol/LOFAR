@@ -75,26 +75,28 @@ class CEPApplicationManager : public ACC::ACClientFunctions,
     
   public: // methods may be called from specialized CEPApplicationManagerInterface
     bool  boot     (const time_t    scheduleTime,
-                    const string&   configID)      ;
-    bool  define   (const time_t    scheduleTime)  const ;
-    bool  init     (const time_t    scheduleTime)  const ;
-    bool  run      (const time_t    scheduleTime)  const ;
+                    const string&   configID);
+    bool  define   (const time_t    scheduleTime)  const;
+    bool  init     (const time_t    scheduleTime)  const;
+    bool  run      (const time_t    scheduleTime)  const;
     bool  pause    (const time_t    scheduleTime,
                     const time_t    maxWaitTime,
-                    const string&   condition)     const ;
-    bool  quit     (const time_t    scheduleTime)  const ;
-    bool  shutdown (const time_t    scheduleTime)  const ;
+                    const string&   condition)     const;
+    bool  quit     (const time_t    scheduleTime)  const;
+    bool  shutdown (const time_t    scheduleTime)  const;
     bool  snapshot (const time_t    scheduleTime,
-                    const string&   destination)   const ;
+                    const string&   destination)   const;
     bool  recover  (const time_t    scheduleTime,
-                    const string&   source)        const ;
+                    const string&   source)        const;
     bool  reinit   (const time_t    scheduleTime,
-                    const string&   configID)      const ;
+                    const string&   configID)      const;
     bool  replace  (const time_t    scheduleTime,
                     const string&   processList,
                     const string&   nodeList,
-                    const string&   configID)      const ;
+                    const string&   configID)      const;
     string  askInfo (const string&  keylist)       const;    
+    bool  cancelCmdQueue ()                        const;    
+    ACC::ACCmd getLastOkCmd()                      const;
      
   private: // implemenation of abstract GCFHandler methods
     friend class GCF::TM::GCFHandler;
@@ -121,6 +123,7 @@ class CEPApplicationManager : public ACC::ACClientFunctions,
     CEPApplicationManagerInterface& _interface;
     ACC::ACAsyncClient              _acClient;
     bool                            _continuePoll;
+    ACC::ACCmd                      _lastOkCmd;
     
     ALLOC_TRACER_CONTEXT  
 };
@@ -130,7 +133,8 @@ inline CEPApplicationManager::CEPApplicationManager(
                                     const string& appName) :
       _interface(interface),
       _acClient(this, appName, 10, 100, 1, 0),
-      _continuePoll(false)
+      _continuePoll(false),
+      _lastOkCmd(ACC::ACCmdNone)
       
 { 
   use(); // to avoid that this object will be deleted in GCFTask::stop;
@@ -206,11 +210,16 @@ inline bool  CEPApplicationManager::replace  (const time_t    scheduleTime,
   return _acClient.replace(scheduleTime, processList, nodeList, configID);
 }
  
-inline string  CEPApplicationManager::askInfo (const string&  keylist)       const
+inline bool  CEPApplicationManager::cancelCmdQueue ()                       const
 {
-  return _acClient.askInfo(keylist);
+  return _acClient.cancelCmdQueue();
 }
  
+inline ACC::ACCmd CEPApplicationManager::getLastOkCmd() const 
+{
+  return _lastOkCmd;
+}
+
 inline void CEPApplicationManager::stop()
 {
 }

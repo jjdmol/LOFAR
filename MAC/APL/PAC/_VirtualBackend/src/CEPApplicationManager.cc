@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include "CEPApplicationManager.h"
-
 
 namespace LOFAR
 {
@@ -41,16 +41,21 @@ void CEPApplicationManager::workProc()
   }
 }
 
-void  CEPApplicationManager::handleAckMsg      (ACCmd         cmd, 
-                                                uint16        result,
-                                                const string& info)
+void  CEPApplicationManager::handleAckMsg(ACCmd         cmd, 
+                                          uint16        result,
+                                          const string& info)
 {
   LOG_INFO(formatString("command: %d, result: %d, info: %s", cmd, result, info.c_str()));
   switch (cmd)
   {
     case ACCmdBoot:
+      if (result == AcCmdMaskOk)
+      {
+        _lastOkCmd = cmd;
+      }
       _interface.appBooted(result);
       break;
+
     case ACCmdQuit:
       if (result == AcCmdMaskOk)
       {
@@ -58,33 +63,54 @@ void  CEPApplicationManager::handleAckMsg      (ACCmd         cmd,
       }
       _interface.appQuitDone(result);
       break;
+
     case ACCmdDefine:
+      if (result == AcCmdMaskOk)
+      {
+        _lastOkCmd = cmd;
+      }
       _interface.appDefined(result);
       break;
+
     case ACCmdInit:
+      if (result == AcCmdMaskOk)
+      {
+        _lastOkCmd = cmd;
+      }
       _interface.appInitialized(result);
       break;
+
     case ACCmdPause:
       _interface.appPaused(result);
       break;
+
     case ACCmdRun:
+      if (result == AcCmdMaskOk)
+      {
+        _lastOkCmd = cmd;
+      }
       _interface.appRunDone(result);
       break;
+
     case ACCmdSnapshot:
       _interface.appSnapshotDone(result);
       break;
+
     case ACCmdRecover:
       _interface.appRecovered(result);
       break;
+
     case ACCmdReinit:
       _interface.appReinitialized(result);
       break;
+
     case ACCmdReplace:
       _interface.appReplaced(result);
       break;
+
     default:
       LOG_WARN_STR("Received command = " << cmd << ", result = " << result
-          << ", info = " << info << "not handled!");
+          << ", info = " << info << " not handled!");
       break;
   }
 }                                                

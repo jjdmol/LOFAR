@@ -20,10 +20,14 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "VirtualBackendLD.h"
 #include <APLCommon/LogicalDevice_Protocol.ph>
 #include <ACC/KVpair.h>
 #include <GCF/GCF_PVChar.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/Utils.h>
 
 namespace LOFAR
 {
@@ -39,6 +43,11 @@ using namespace ANM;
 
 INIT_TRACER_CONTEXT(VirtualBackendLD, LOFARLOGGER_PACKAGE);
 
+PROPERTYCONFIGLIST_BEGIN(detailsPropertySetConf)
+  PROPERTYCONFIGLIST_ITEM("quality", GCF_READABLE_PROP, "d")
+  PROPERTYCONFIGLIST_ITEM("__stationCorrelator", GCF_READABLE_PROP, "StationCorrelator=CEP_SCD")
+PROPERTYCONFIGLIST_END
+
 const string VirtualBackendLD::VB_VERSION = string("1.0");
 
 VirtualBackendLD::VirtualBackendLD(const string& taskName, 
@@ -50,6 +59,7 @@ VirtualBackendLD::VirtualBackendLD(const string& taskName,
   _rstoID(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());  
+  m_detailsPropertySet->initProperties(detailsPropertySetConf);
 }
 
 
@@ -118,6 +128,8 @@ GCFEvent::TResult VirtualBackendLD::concrete_idle_state(
         m_serverPort.cancelTimer(_rstoID);
         _rstoID = 0;
       }
+      break;
+      
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -190,14 +202,16 @@ GCFEvent::TResult VirtualBackendLD::concrete_releasing_state(
       getName().c_str(),
       evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  
   if (errorCode == LD_RESULT_NO_ERROR)
   {
-    newState = LOGICALDEVICE_STATE_GOINGDOWN;
+    _qualityGuard.stopMonitoring();
   }
   else
   {
     newState = LOGICALDEVICE_STATE_IDLE;
   }
+  
   return status;
 }
 
@@ -209,7 +223,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
   _cepAppParams.adoptFile("CEPAppDefault.param");
 
   _cepAppParams.replace("AC.application", getName());
-  _cepAppParams.replace("AC.resultfile", formatString("./%s_result.log", getName().c_str()));
+  _cepAppParams.replace("AC.resultfile", formatString("./ACC-%s_result.param", getName().c_str()));
   
   string processScope("AC.process");
   uint32 nrProcs = m_parameterSet.getInt(formatString("%s[0].count", processScope.c_str()));
@@ -323,12 +337,33 @@ void VirtualBackendLD::concretePrepare(GCFPortInterface& /*port*/)
 
   if (now > bootTime)
   {
+    system(formatString("writeCEPparamFile %s", getName().c_str()).c_str());
     LOG_WARN("Cannot gurantee all CEP processes are started in time.");
     _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_TIMING_FAILURE);
   }
   else
   {
-    _cepApplication.boot(bootTime, paramFileName);
+    switch (_cepApplication.getLastOkCmd())
+    {
+      case ACCmdNone:
+        _cepApplication.boot(bootTime, paramFileName);
+        break;
+        
+      case ACCmdBoot:
+        _cepApplication.define(defineTime);
+        break;
+        
+      case ACCmdDefine:
+      case ACCmdInit:
+      case ACCmdRun:
+        _cepApplication.recover(0, "snapshot-DB");
+        break;
+              
+      default:
+        assert(0);
+        break;
+    }    
+    system(formatString("writeCEPparamFile %s", getName().c_str()).c_str());
   }
 }
 
@@ -345,6 +380,14 @@ void VirtualBackendLD::concreteSuspend(GCFPortInterface& /*port*/)
 void VirtualBackendLD::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());  
+  system(formatString("readCEPResultFile %s", getName().c_str()).c_str());  
+  _resultParams.adoptFile(formatString("./ACC-%s_result.param", getName().c_str()));
+  _resultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
+  if (!_resultParams.isDefined(formatString("%s.faultyNodes", getName().c_str())))
+  {
+    _resultParams.add(formatString("%s.faultyNodes", getName().c_str()), "");
+  }
+  _resultParams.writeFile(formatString("%s_result.param", getName().c_str()));
 }
 
 void VirtualBackendLD::concreteParentDisconnected(GCFPortInterface& /*port*/)
@@ -364,7 +407,7 @@ void VirtualBackendLD::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortIn
   {
     _rstoID = 0;
     _qualityGuard.stopMonitoring();
-    _cepApplication.quit(0);
+    //_cepApplication.quit(0);
   }
 }
 
@@ -377,26 +420,30 @@ void VirtualBackendLD::qualityGuardStarted()
 void VirtualBackendLD::qualityGuardStopped()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
-  _doStateTransition(LOGICALDEVICE_STATE_RELEASING);
+  _doStateTransition(LOGICALDEVICE_STATE_GOINGDOWN);
 }
 
 void VirtualBackendLD::lowQuality(TNodeList& faultyNodes)
 {  
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
+  string faultyNodeList;
+  Utils::convSetToString(faultyNodeList, faultyNodes);
+  _resultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
+  _resultParams.replace(formatString("%s.faultyNodes", getName().c_str()), faultyNodeList);
+  switch (getLogicalDeviceState())
+  {
+    case LOGICALDEVICE_STATE_ACTIVE:
+    case LOGICALDEVICE_STATE_PREPARING:
+    case LOGICALDEVICE_STATE_SUSPENDED:
+      //_cepApplication.cancelCmdQueue(); // not in this increment
+      //_cepApplication.snapshot(0, "snapshot-DB"); // not in this increment
+      _cepApplication.quit(0);
+      break;
+
+    default:
+      break;  
+  }
   _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
-  time_t rsto(0);
-  try 
-  {
-    rsto = m_parameterSet.getTime("rescheduleTimeOut");
-  }
-  catch (...)
-  {
-  }
-  if (getLogicalDeviceState() == LOGICALDEVICE_STATE_ACTIVE)
-  {
-    _cepApplication.snapshot(0, "snapshot DB");
-    _cepApplication.pause(0, rsto, "condition");
-  }
 }
 
 void VirtualBackendLD::qualityChanged()
@@ -461,23 +508,45 @@ void VirtualBackendLD::appQuitDone(uint16 result)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
   if (result == AcCmdMaskOk)
   {  
-    _qualityGuard.stopMonitoring();
+    //_qualityGuard.stopMonitoring(); // not in this increment
   }
 }
 
 void VirtualBackendLD::appSnapshotDone(uint16 /*result*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
+  time_t rsto(0);
+  try 
+  {
+    rsto = m_parameterSet.getTime("rescheduleTimeOut");
+  }
+  catch (...) {}
+  _cepApplication.pause(0, rsto, "condition");
 }
 
 void VirtualBackendLD::appRecovered(uint16 /*result*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
+  
+  time_t startTime  = getStartTime();
+  time_t reinitTime = startTime  - _cepAppParams.getTime("AC.timeout.reinit");
+  
+  string paramFileName(formatString("ACC-%s.param", getName().c_str()));
+  
+  _cepApplication.reinit(reinitTime, paramFileName);
 }
 
-void VirtualBackendLD::appReinitialized(uint16 /*result*/)
+void VirtualBackendLD::appReinitialized(uint16 result)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, getName().c_str());
+  if (result == AcCmdMaskOk)
+  {    
+    _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED);
+  }
+  else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
+  {  
+    _cepApplication.run(getStartTime());
+  }
 }
 
 void VirtualBackendLD::appReplaced(uint16 /*result*/)
