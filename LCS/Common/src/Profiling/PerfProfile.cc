@@ -23,6 +23,9 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/Profiling/PerfProfile.h>
 
 namespace LOFAR 

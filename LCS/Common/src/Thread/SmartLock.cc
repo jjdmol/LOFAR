@@ -1,3 +1,6 @@
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 //## begin module%1.4%.codegen_version preserve=yes
 //   Read the documentation to learn more about C++ code generator
 //   versioning.

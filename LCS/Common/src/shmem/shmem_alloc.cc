@@ -21,6 +21,9 @@
  * $Id$
  */
  
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/shmem/shmem_alloc.h>
 #include <Common/shmem/segbasemap.h>
 #include <stdlib.h>

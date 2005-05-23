@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/shmem/segbasemap.h>
 #include <Common/lofar_map.h>
 #include <stdio.h>
