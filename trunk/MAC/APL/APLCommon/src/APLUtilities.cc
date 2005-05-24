@@ -88,12 +88,14 @@ int APLUtilities::remoteCopy(const string& localFile, const string& remoteHost, 
   char tempFileName [L_tmpnam];
   tmpnam(tempFileName);
   
-  string command("scp -Bq"); // -B: batch mode; -q: no progress bar
+  string command("scp -Bq "); // -B: batch mode; -q: no progress bar
   command += localFile + string(" ");
   command += remoteHost + string(":");
   command += remoteFile;
-  command += string(" 1>&2 2>") + string(tempFileName);
+  command += string(" 1>&2 2> ") + string(tempFileName);
   int result = system(command.c_str());
+  LOG_DEBUG(formatString("copy command: %s",command.c_str()));
+
   if(result != 0)
   {
     char outputLine[200];
