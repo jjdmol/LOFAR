@@ -588,7 +588,7 @@ bool VirtualInstrument::_checkQualityRequirements()
       }
     }
   }
-  
+  LOG_DEBUG(formatString("checkQualityRequirements returns %s",(requirementsMet?"true":"false"))); 
   return requirementsMet;
 }
 
