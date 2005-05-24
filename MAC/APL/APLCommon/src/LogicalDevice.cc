@@ -772,7 +772,7 @@ void LogicalDevice::_disconnectedHandler(GCFPortInterface& port)
   {
     LOG_ERROR(formatString("Connection with child's startdaemon %s failed",startDaemonKey.c_str()));
   }
-  port.setTimer(10L); // retry to open the port
+  port.setTimer(3L); // retry to open the port
 }
 
 void LogicalDevice::_acceptChildConnection()
@@ -891,6 +891,7 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
         } 
         catch(Exception& e)
         {
+          LOG_INFO("Using default retry period of 10s");
         }
   
         // loop through the buffered events and try to send each one.
@@ -1181,7 +1182,18 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
         _sendEvent(scheduledEvent,m_parentPort);
         
         // poll retry buffer every 10 seconds
-        m_retrySendTimerId = m_serverPort.setTimer(10L);
+        int retryPeriod = 10; // retry sending buffered events every 10 seconds
+        m_retrySendTimerId = 0;
+        GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+        try
+        {
+          retryPeriod  = pParamSet->getInt(LD_CONFIG_PREFIX + string("retryPeriod"));
+        }
+        catch(Exception& e)
+        {
+          LOG_INFO("Using default retry period of 10s");
+        }
+        m_retrySendTimerId = m_serverPort.setTimer(static_cast<long int>(retryPeriod));
       }
       break;
     }
@@ -1260,7 +1272,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       port.close();
       if(_isParentPort(port))
       {
-        m_parentReconnectTimerId = port.setTimer(10L);
+        m_parentReconnectTimerId = port.setTimer(3L);
       }
       break;
     }
