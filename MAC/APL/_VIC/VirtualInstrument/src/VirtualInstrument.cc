@@ -122,6 +122,7 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
     {
       break;
     }
+    case F_VGETRESP:
     case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
@@ -149,10 +150,6 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
         }
         ++it;
       }
-      break;
-    }
-    case F_VGETRESP:
-    {
       break;
     }
     case F_EXTPS_LOADED:
@@ -420,6 +417,7 @@ GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFP
     case F_ENTRY:
     {
       m_qualityCheckTimerId = m_serverPort.setTimer(5L);
+      LOG_DEBUG(formatString("qualityCheckTimerId=%d",m_qualityCheckTimerId));
       break;
     }
           
@@ -544,9 +542,9 @@ bool VirtualInstrument::_writeScheduleCommand(const string& name, TGCFExtPropert
     
     schedule << childsVector[0] << ",";
     schedule << childsVector[1] << ",";
-    time_t startTime = _decodeTimeParameter(m_parameterSet.getString(name + string(".") + string("startTime")));
+    time_t startTime = APLUtilities::decodeTimeString(m_parameterSet.getString(name + string(".") + string("startTime")));
     schedule << startTime << ",";
-    time_t stopTime = _decodeTimeParameter(m_parameterSet.getString(name + string(".") + string("stopTime")));
+    time_t stopTime = APLUtilities::decodeTimeString(m_parameterSet.getString(name + string(".") + string("stopTime")));
     schedule << stopTime << ",";
     
     schedule << m_parameterSet.getString(name + string(".") + string("frequency")) << ",";

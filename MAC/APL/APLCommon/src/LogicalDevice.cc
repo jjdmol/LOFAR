@@ -416,22 +416,6 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
   }  
 }
 
-time_t LogicalDevice::_decodeTimeParameter(const string& timeStr) const
-{
-  // specified times are in UTC, seconds since 1-1-1970
-  time_t returnTime=APLUtilities::getUTCtime();
-  string::size_type plusPos = timeStr.find('+');
-  if(plusPos != string::npos)
-  {
-    returnTime += atoi(timeStr.substr(plusPos+1).c_str());
-  }
-  else
-  {
-    returnTime = atoi(timeStr.c_str());
-  }
-  return returnTime;
-}
-
 time_t LogicalDevice::getClaimTime() const
 {
   return m_claimTime;
@@ -500,15 +484,22 @@ void LogicalDevice::_schedule()
   // set timers
   // specified times are in UTC, seconds since 1-1-1970
   time_t timeNow = APLUtilities::getUTCtime();
-  m_claimTime   = _decodeTimeParameter(m_parameterSet.getString("claimTime"));
-  m_prepareTime = _decodeTimeParameter(m_parameterSet.getString("prepareTime"));
-  m_startTime   = _decodeTimeParameter(m_parameterSet.getString("startTime"));
-  m_stopTime    = _decodeTimeParameter(m_parameterSet.getString("stopTime"));
+  m_claimTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("claimTime"));
+  m_prepareTime = APLUtilities::decodeTimeString(m_parameterSet.getString("prepareTime"));
+  m_startTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("startTime"));
+  m_stopTime    = APLUtilities::decodeTimeString(m_parameterSet.getString("stopTime"));
   
   m_claimTimerId = m_serverPort.setTimer(m_claimTime - timeNow);
   m_prepareTimerId = m_serverPort.setTimer(m_prepareTime - timeNow);
   m_startTimerId = m_serverPort.setTimer(m_startTime - timeNow);
   m_stopTimerId = m_serverPort.setTimer(m_stopTime - timeNow);
+
+  // set properties
+  m_basePropertySet->setValue(LD_PROPNAME_CLAIMTIME,GCFPVInteger(m_claimTime));
+  m_basePropertySet->setValue(LD_PROPNAME_PREPARETIME,GCFPVInteger(m_prepareTime));
+  m_basePropertySet->setValue(LD_PROPNAME_STARTTIME,GCFPVInteger(m_startTime));
+  m_basePropertySet->setValue(LD_PROPNAME_STOPTIME,GCFPVInteger(m_stopTime));
+ 
 
   _sendScheduleToClients();
 }
@@ -925,14 +916,14 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       // keep on polling
       m_retrySendTimerId = m_serverPort.setTimer(static_cast<long int>(retryPeriod));
     }
-    else if(!port.isConnected())
-    {
-      // try to open the port
-      port.open();
-    }
     else
     {
       concreteHandleTimers(timerEvent,port);
+    }
+    if(!port.isConnected())
+    {
+      // try to open the port
+      port.open();
     }
   }
 }
@@ -1834,6 +1825,12 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       {
         _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
       }
+      break;
+    }
+    
+    case LOGICALDEVICE_RELEASED:
+    {
+      _setConnectedChildState(port,LOGICALDEVICE_STATE_IDLE);
       break;
     }
     

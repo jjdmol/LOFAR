@@ -83,6 +83,22 @@ time_t APLUtilities::getUTCtime()
   return time(0);// current system time in UTC
 }
 
+time_t APLUtilities::decodeTimeString(const string& timeStr)
+{
+  // specified times are in UTC, seconds since 1-1-1970
+  time_t returnTime=APLUtilities::getUTCtime();
+  string::size_type plusPos = timeStr.find('+');
+  if(plusPos != string::npos)
+  {
+    returnTime += atoi(timeStr.substr(plusPos+1).c_str());
+  }
+  else
+  {
+    returnTime = atoi(timeStr.c_str());
+  }
+  return returnTime;
+}
+
 int APLUtilities::remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile)
 {
   char tempFileName [L_tmpnam];
