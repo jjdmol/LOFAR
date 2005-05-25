@@ -1,22 +1,18 @@
-# don't use SzDH_RSP, it depends on other values
-# SzDH_RSP       = 6000,# Size (payload in bytes) of RSP ethernet frame
-# don't use stations, use NoWH_RSP instead
-# stations       = 2,	# the number of RSP boards
-# don't use channels, use NoRSPBeamlets instead
-# channels       = 46,	# the number of individual channels
-runsteps	 = 3125, # number of runs to perform
-useRealRSPBoard  = F,	# Use the real RSPBoard T or the WH_RSPBoard F
+runsteps	 = 3125400, # number of runs to perform
+useRealRSPBoard  = T,	# Use the real RSPBoard T or the WH_RSPBoard F
 interfaces       = ["eth1", "eth1"], # interface names for all TH_Ethernets
-oMacs            = ["00:00:5A:9A:C0:DC", "00:00:5A:9A:9E:80"], # interface names for all TH_Ethernets
+oMacs            = ["00:04:23:B5:C4:6A", "00:04:23:B5:C5:CA"], # interface names for all TH_Ethernets
 rMacs            = ["00:00:00:00:00:01", "00:00:00:00:00:02"], # interface names for all TH_Ethernets
-NoRSPBeamlets    = 14,	# Number of beamlets in one EPA-packet
+NoRSPBeamlets    = 28,	# Number of beamlets in one EPA-packet
 polarisations    = 2,	
 SzEPAheader      = 14,	# Size (in bytes) of the header of an EPA-packet
-NoPacketsInFrame = 50,	# Number of EPA-packets in one RSP ethernet frame
+NoPacketsInFrame = 30,	# Number of EPA-packets in one RSP ethernet frame
 NoWH_RSP         = 2,	   
 NoWH_Correlator  = 7,	# This also defines the number of WH_Transpose as well as the number of Transpose inputs
 samples          = 156250, #number of samples to integrate 
 NoWH_Dump        = 1,	
-outFileName      = ["/tmp/SC1.out", "/tmp/SC2.out", "/tmp/SC2.out", "/tmp/SC2.out"]	# Filename for dump outputfile
+outFileName      = ["/tmp/SC1-zwart.out", "/tmp/SC2.out", "/tmp/SC2.out", "/tmp/SC2.out"]	# Filename for dump outputfile
 
+
+# 1 sec 156250
 

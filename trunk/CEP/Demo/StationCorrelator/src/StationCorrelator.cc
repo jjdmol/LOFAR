@@ -49,6 +49,7 @@
 #include <WH_Transpose.h>
 #include <WH_Correlator.h>
 #include <WH_Dump.h>
+#include <WH_Plot2MAC.h>
 
 #include <DH_RSP.h>
 #include <DH_StationData.h>
@@ -201,7 +202,8 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     string oFile  = itsKVM["outFileName"].getVecString()[i];
 
-    WH_Dump whDump(H_name, itsKVM, oFile);
+    //WH_Dump whDump(H_name, itsKVM, oFile);
+    WH_Plot2MAC whDump(H_name, itsKVM);
     Step dumpstep(whDump, H_name);
     comp.addStep(dumpstep);
     dumpstep.setInRate(slow_rate);
@@ -229,6 +231,9 @@ void StationCorrelator::run(int steps) {
   LOG_TRACE_FLOW_STR("Start StationCorrelator::run() "  );
 #ifdef HAVE_MPI
   TH_MPI::synchroniseAllProcesses();
+//   int myRank = 0;
+//   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+//   cout<<"Starting run on node "<<myRank<<endl;
 #endif
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );

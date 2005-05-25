@@ -51,7 +51,11 @@ WH_RSPInput::WH_RSPInput(const string& name,
     itsIsSyncMaster(isSyncMaster),
     itsNextStamp(-1,0),
     itsDelay(0),
-    itsReadNext(true)
+    itsReadNext(true),
+    itsNoPackets(0),
+    itsNoMissed(0),
+    itsNoOld(0),
+    itsNoOk(0)
 {
   char str[32];
   
@@ -87,7 +91,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   // and we want to skip one or more packets.
   getDataManager().setAutoTriggerIn(0, false); 
 
-  theirCatchingUpState.init ("WH_RSPInput catching up", "yellow");
+  theirCatchingUpState.init ("WH_RSPInput catching up", "brown");
   theirWaitingState.init ("WH_RSPInput waiting", "orange");  
 }
 
@@ -167,7 +171,7 @@ void WH_RSPInput::process()
   DH_RSP* outDHp;
   bool inSync = false;
   SyncStamp thisStamp;
-  int amountToCopy =  itsNbeamlets * itsPolarisations * sizeof(complex<int16>);
+  int amountToCopy =  itsNpackets * itsSzEPApacket;
 
   while (!inSync) {
     
@@ -176,7 +180,7 @@ void WH_RSPInput::process()
     //cout<<"expected: "<<itsNextStamp<<" received: "<<thisStamp<<endl;
 
     // Use the next line to bypass synchonization
-#define NO_SYNC_NOT_DEFINED
+#define NO_SYNC
 #ifdef NO_SYNC
     thisStamp=itsNextStamp;
 #endif
@@ -197,6 +201,9 @@ void WH_RSPInput::process()
       LOG_TRACE_COND_STR("Package too old; skip");
       getDataManager().readyWithInHolder(0);
       inSync = false;
+
+      itsNoPackets++;
+      itsNoOld++;
     } 
     else if (itsNextStamp + (itsNpackets - 1) < thisStamp) {
       theirWaitingState.leave();
@@ -220,6 +227,8 @@ void WH_RSPInput::process()
       // step out of the while loop and do not call readyWithInHolder
       inSync = true;
       itsReadNext = false; // read this packet again next process      
+      itsNoPackets++;
+      itsNoMissed++;
     } 
     else { // (*thisStamp == itsNextStamp) 
       theirCatchingUpState.leave();
@@ -250,12 +259,20 @@ void WH_RSPInput::process()
       // (this InHolder is not auto triggered)
       itsReadNext = true;
       inSync = true;
+      itsNoPackets++;
+      itsNoOk++;
     } 
   } 
+  theirCatchingUpState.leave();
+}
+
+void WH_RSPInput::postprocess() {
+  cout<<"[P="<<itsNoPackets<<",M="<<itsNoMissed<<",O="<<itsNoOld<<",OK="<<itsNoOk<<"]"<<endl;
 }
 
 void WH_RSPInput::dump() {
   cout<<"DUMP OF WH_RSPInput: "<<getName()<<endl;
+  cout<<"[P="<<itsNoPackets<<",M="<<itsNoMissed<<",O="<<itsNoOld<<",OK="<<itsNoOk<<"]"<<endl;
   DH_RSP* inDHp;
   DH_RSP* outDHp;
   inDHp = (DH_RSP*)getDataManager().getInHolder(0);

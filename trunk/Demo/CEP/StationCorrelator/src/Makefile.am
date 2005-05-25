@@ -15,6 +15,7 @@ WH_RSPInput.h                                           \
 WH_Transpose.h						\
 WH_Correlator.h						\
 WH_Dump.h						\
+WH_Plot2MAC.h						\
 SyncStamp.h                                             \
 TH_RSP.h
 
@@ -31,6 +32,7 @@ WH_RSPInput.cc                                          \
 WH_Transpose.cc						\
 WH_Correlator.cc					\
 WH_Dump.cc						\
+WH_Plot2MAC.cc						\
 StationCorrelator.cc					\
 StationCorrelatorController.cc				\
 StationCorrelatorMain.cc				\

@@ -155,9 +155,10 @@ int oldmain (int argc, const char** argv) {
     correlator.basePrerun();
     cout << "init done" << endl;
     Profiler::activate();
-    correlator.baseRun(kvm.getInt("runsteps",1));
     cout << "run" << endl;
-    //correlator.baseDump();
+    correlator.baseRun(kvm.getInt("runsteps",1));
+    cout << "run complete" << endl;
+    correlator.baseDump();
     correlator.baseQuit();
     Profiler::deActivate();
 
