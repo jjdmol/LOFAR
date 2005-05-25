@@ -1148,6 +1148,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
               refsVector.push_back(&newRef);
               GCFPVDynArr newChildRefs(LPT_STRING,refsVector);
               m_basePropertySet->setValue(LD_PROPNAME_CHILDREFS,newChildRefs);
+              LOG_DEBUG(formatString("Added child reference %s to %s",newRef.getValue().c_str(),m_basePropertySetName.c_str()));
             }
           }
           catch(Exception& e)
