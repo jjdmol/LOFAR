@@ -11,6 +11,7 @@
 #include <stdio.h>           // for sprintf
 #include <sys/types.h>       // for file output
 #include <fcntl.h>           // for file output
+#include <math.h>            // for sqrt()
 
 // General includes
 #include <Common/LofarLogger.h>
@@ -100,6 +101,18 @@ void WH_Dump::process() {
     dhp = (DH_Vis*)getDataManager().getInHolder(i);
     recSize += dhp->getBufSize()*sizeof(DH_Vis::BufferType);
     for (int channel=0; channel<itsNchannels; channel++) {
+#if 1
+      int noAns = itsNelements * std::sqrt((double)itsNpolarisations);
+      memset(freqBlock, 0, itsNelements*itsNelements*itsNpolarisations * sizeof(DH_Vis::BufferPrimitive));
+      for (int an1=0; an1 < noAns; an1++) {
+ 	for (int an2=0; an2 < an1; an2++) {
+ 	  freqBlock[ an1 * noAns + an2 ] = dhp->getBufferElement(an1/2, an2/1, i, 2 * (an1%2) +  an2%2)->imag();
+ 	}
+ 	for (int an2=an1; an2 < noAns; an2++) {
+ 	  freqBlock[ an1 * noAns + an2 ] = dhp->getBufferElement(an2/2, an1/2, i, 2 * (an2%2) + an1%2)->real();
+ 	}
+      }
+#else
       for (int el1=0; el1<itsNelements; el1++){
 	for (int el2=0; el2<=el1; el2++){
 	  int offsetIm = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
@@ -110,6 +123,7 @@ void WH_Dump::process() {
 	  }
 	}
       }
+#endif
       written = write(itsOutputFile, freqBlock, itsNelements * itsNelements * itsNpolarisations * sizeof(DH_Vis::BufferPrimitive));
       
       if (written == -1) {

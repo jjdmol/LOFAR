@@ -53,6 +53,8 @@ namespace LOFAR
     KeyValueMap itsKVM;
 
     SyncStamp itsStamp;
+
+    bool altBit;
   };
 
 } // namespace LOFAR

@@ -73,7 +73,7 @@ bool StationCorrelatorController::pause    (const	string&	condition) const
   cout<<"Pause called"<<endl;
   LOG_ERROR("Pause not implemented in ApplicationHolder");
   cout<<"Pause ready"<<endl;
-  return false;
+  return true;
 }
 bool StationCorrelatorController::quit  	 () const
 {
@@ -90,21 +90,21 @@ bool StationCorrelatorController::snapshot (const string&	destination) const
   cout<<"Snapshot called"<<endl;
   LOG_ERROR("Snapshot not implemented in ApplicationHolder");
   cout<<"Snapshot ready"<<endl;
-  return false;
+  return true;
 }
 bool StationCorrelatorController::recover  (const string&	source) const
 {
   cout<<"Recover called"<<endl;
   LOG_ERROR("recover not implemented in ApplicationHolder");
   cout<<"Recover ready"<<endl;
-  return false;
+  return true;
 }
 bool StationCorrelatorController::reinit	 (const string&	configID) const
 {
   cout<<"Reinit called"<<endl;
   LOG_ERROR("Reinit not implemented in ApplicationHolder");
   cout<<"Reinit ready"<<endl;
-  return false;
+  return true;
 }  
 string StationCorrelatorController::askInfo   (const string& 	keylist) const
 {

@@ -31,7 +31,10 @@ DH_StationData::DH_StationData (const string& name,
                                 const unsigned int bufsize)
   : DataHolder     (name, "DH_StationData"),
     itsBufSize     (bufsize),
-    itsBuffer      (0)
+    itsBuffer      (0),
+    itsStationIDptr(0),
+    itsBlockIDptr  (0),
+    itsFlagptr     (0)
 { }
 
 DH_StationData::~DH_StationData() 
@@ -42,7 +45,10 @@ DH_StationData::~DH_StationData()
 DH_StationData::DH_StationData(const DH_StationData& that)
   : DataHolder(that),
     itsBuffer(0),
-    itsBufSize(that.itsBufSize)
+    itsBufSize(that.itsBufSize),
+    itsStationIDptr(0),
+    itsBlockIDptr  (0),
+    itsFlagptr     (0)
 { }
 
 DataHolder* DH_StationData:: clone() const {
@@ -67,6 +73,9 @@ void DH_StationData::preprocess() {
 void DH_StationData::postprocess() 
 {
   itsBuffer = 0;
+  itsStationIDptr = 0;
+  itsBlockIDptr   = 0;
+  itsFlagptr      = 0;
 }
 
 void DH_StationData::fillDataPointers() 

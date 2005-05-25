@@ -41,7 +41,8 @@ WH_RSPBoard::WH_RSPBoard(const string& name,
 		name, 
 		"WH_RSPBoard"),
     itsKVM (kvm),
-    itsStamp(2, 0)
+    itsStamp(2, 0),
+    altBit(true)
 {
   char str[32];
 
@@ -77,11 +78,24 @@ void WH_RSPBoard::process()
     outDH->setStationID(i);
     outDH->setSeqID(itsStamp.getSeqId());
     outDH->setBlockID(itsStamp.getBlockId());    
+    cout<<"station "<<i<<endl;
     for (int ep=0; ep<noEP; ep++) {
       for (int bl=0; bl<noBeamlet; bl++) {
-	outDH->setBufferElement(ep, bl, 0, complex<int16>(100*i+bl, 0));
+	//outDH->setBufferElement(ep, bl, 0, complex<int16>(100*i+bl, 0));
+	if (altBit){
+	  complex<int16> value(1, 0);
+	  outDH->setBufferElement(ep, bl, 0,  value);
+	  cout<<value<<"  ";
+	  altBit=false;
+	} else {
+	  complex<int16> value(100, 0);
+	  outDH->setBufferElement(ep, bl, 0,  value);
+	  cout<<value<<"  ";
+	  altBit=true;
+	}
       }
     }
+    cout<<endl;
   }
 
   itsStamp++;

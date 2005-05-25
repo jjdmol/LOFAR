@@ -45,6 +45,7 @@ namespace LOFAR
     virtual WH_RSPInput* make(const string& name);
 
     virtual void process();
+    virtual void postprocess();
 
     /// set delay of this WorkHolder
     void setDelay(const DH_RSPSync::syncStamp_t newDelay);
@@ -76,6 +77,10 @@ namespace LOFAR
 
     static ProfilingState theirWaitingState;
     static ProfilingState theirCatchingUpState;
+    int itsNoPackets;
+    int itsNoMissed;
+    int itsNoOld;
+    int itsNoOk;
   };
 
   inline void WH_RSPInput::setDelay(const DH_RSPSync::syncStamp_t newDelay)

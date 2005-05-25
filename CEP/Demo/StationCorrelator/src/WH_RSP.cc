@@ -70,8 +70,8 @@ WH_RSP::WH_RSP(const string& name,
     
   }
 
-  theirInvalidDataState.init ("WH_RSP invalid data", "yellow");
-  theirTransposeState.init ("WH_RSP transpose", "orange");
+  theirInvalidDataState.init ("WH_RSP invalid data", "purple");
+  theirTransposeState.init ("WH_RSP transpose", "black");
 }
 
 WH_RSP::~WH_RSP() {
@@ -154,14 +154,17 @@ void WH_RSP::dump() {
   int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<int16>); 
   int complex_int16_blocksize = itsNbeamlets * itsPolarisations;
       
-  for (int i=0;i<itsNpackets;i++) {
-    for (int j=0;j<itsNCorrOutputs;j++) {
-      outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-      cout<<"packet: "<<i<<"  output: "<<j<<"   ";
-      for (int c=0; c<char_blocksize/sizeof(complex<int16>); c++) {
+  if (inDHp->getFlag()) {
+    cout<<"INVALID DATA"<<endl;
+  } else {
+    for (int i=0;i<itsNpackets;i++) {
+      for (int j=0;j<itsNCorrOutputs;j++) {
+	cout<<"packet: "<<i<<"  output: "<<j<<"   ";
+	for (int c=0; c<char_blocksize/sizeof(complex<int16>); c++) {
 	cout<<((complex<int16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
+	}
+	cout<<endl;
       }
-      cout<<endl;
     }
   }      
 } 
