@@ -31,7 +31,6 @@
 #include <AMCBase/AMCClient/DH_Result.h>
 #include <Transport/Connection.h>
 #include <Transport/TH_Socket.h>
-#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
