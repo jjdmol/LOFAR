@@ -23,6 +23,7 @@
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
+#include <boost/shared_array.hpp>
 #include <Common/LofarLogger.h>
 #include <GCF/ParameterSet.h>
 #include <GCF/GCF_PVString.h>
@@ -183,7 +184,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
           if(parameters.size()==1)
           {
             string shareLocation = _getShareLocation();
-
+          
             try
             {
               // read the parameterset from the database:
@@ -192,7 +193,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-              ACC::ParameterCollection pc(shareLocation + parameters[0]); // assume VIrootID is a file
+              ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
               boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -206,7 +207,10 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
               string allocatedCCU = ps->getString("allocatedCCU");
               string viName = ps->getString("name");
               string parameterFileName = viName + string(".ps");
-      
+          
+              // make all relative times absolute
+              _convertRelativeTimes(ps);
+          
               string tempFileName = APLUtilities::getTempFileName();
               ps->writeFile(tempFileName);
               APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
@@ -217,10 +221,10 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
               sdScheduleEvent.logicalDeviceType = LDTYPE_VIRTUALINSTRUMENT;
               sdScheduleEvent.taskName = viName;
               sdScheduleEvent.fileName = parameterFileName;
-              
+                      
 ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.taskName)
 ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
-
+          
               TStringRemotePortMap::iterator it = m_VISDclientPorts.find(allocatedCCU);
               if(it != m_VISDclientPorts.end())
               {
@@ -252,7 +256,6 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
           {
             string shareLocation = _getShareLocation();
       
-            // search the port of the VI
             try
             {
               // read the parameterset from the database:
@@ -261,7 +264,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-              ACC::ParameterCollection pc(shareLocation + parameters[0]); // assume VIrootID is a file
+              ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
               boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -274,6 +277,9 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
               string allocatedCCU = ps->getString("allocatedCCU");
               string viName = ps->getString("name");
               string parameterFileName = viName + string(".ps");
+      
+              // make all relative times absolute
+              _convertRelativeTimes(ps);
       
               string tempFileName = APLUtilities::getTempFileName();
               ps->writeFile(tempFileName);
@@ -326,7 +332,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent.fileName)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-              ACC::ParameterCollection pc(shareLocation + parameters[0]); // assume VIrootID is a file
+              ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
               boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -451,20 +457,26 @@ void MACScheduler::_disconnectedHandler(GCFPortInterface& port)
   port.close();
   if(_isServerPort(m_SASserverPort,port))
   {
+    LOG_FATAL("SAS server closed");
     m_SASserverPort.open(); // server closed? reopen it
   }
   else if(_isServerPort(m_VIparentPort,port))
   {
+    LOG_FATAL("VI parent server closed");
     m_VIparentPort.open(); // server closed? reopen it
   }
   else if(_isSASclientPort(port))
   {
+    LOG_FATAL("SAS client port disconnected");
   }
   else if(_isVISDclientPort(port,visd))
   {
+    LOG_FATAL(formatString("VI Startdaemon port disconnected: %s",visd.c_str()));
+    port.setTimer(3L);
   }
   else if(_isVIclientPort(port))
   {
+    LOG_FATAL("VI client port disconnected");
     // do something with the nodeId?
   }
 }
@@ -675,6 +687,15 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
+    
+    case F_TIMER:
+    {
+      GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+      // no need to check for timerID because only one timer is used
+      port.cancelTimer(timerEvent.id);
+      port.open();
+      break;
+    }
 
     case SAS_SCHEDULE:
     case SAS_CANCELSCHEDULE:
@@ -803,6 +824,9 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         string allocatedCCU = ps->getString("allocatedCCU");
         string viName = ps->getString("name");
         string parameterFileName = viName + string(".ps");
+        
+        // make all relative times absolute
+        _convertRelativeTimes(ps);
 
         string tempFileName = APLUtilities::getTempFileName();
         ps->writeFile(tempFileName);
@@ -932,6 +956,9 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
         string viName = ps->getString("name");
         string parameterFileName = viName + string(".ps");
 
+        // make all relative times absolute
+        _convertRelativeTimes(ps);
+
         string tempFileName = APLUtilities::getTempFileName();
         ps->writeFile(tempFileName);
         APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
@@ -976,6 +1003,69 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
   }
 }
 
+void MACScheduler::_convertRelativeTimes(boost::shared_ptr<ACC::ParameterSet> ps)
+{
+  try
+  {
+    _convertRelativeTimesChild("",ps);
+  }
+  catch(Exception& e)
+  {
+  }
+}
+
+void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<ACC::ParameterSet> ps)
+{
+  string keyPrefix("");
+  if(child.length() > 0)
+  {
+    keyPrefix=child + string(".");
+  }
+  string claimKey(keyPrefix + string("claimTime"));
+  string prepareKey(keyPrefix + string("prepareTime"));
+  string startKey(keyPrefix + string("startTime"));
+  string stopKey(keyPrefix + string("stopTime"));
+  string childsKey(keyPrefix + string("childs"));
+  
+  time_t claimTime   = APLUtilities::decodeTimeString(ps->getString(claimKey));
+  time_t prepareTime = APLUtilities::decodeTimeString(ps->getString(prepareKey));
+  time_t startTime   = APLUtilities::decodeTimeString(ps->getString(startKey));
+  time_t stopTime    = APLUtilities::decodeTimeString(ps->getString(stopKey));
+
+  ACC::KVpair kvPairClaimTime(claimKey,(int)claimTime);
+  ps->replace(kvPairClaimTime);
+  ACC::KVpair kvPairPrepareTime(prepareKey,(int)prepareTime);
+  ps->replace(kvPairPrepareTime);
+  ACC::KVpair kvPairStartTime(startKey,(int)startTime);
+  ps->replace(kvPairStartTime);
+  ACC::KVpair kvPairStopTime(stopKey,(int)stopTime);
+  ps->replace(kvPairStopTime);
+
+  // propagate into the child keys
+  string childs;
+  vector<string> childKeys;
+  childs = ps->getString(childsKey);
+  char* pch;
+  boost::shared_array<char> childsCopy(new char[childs.length()+1]);
+  strcpy(childsCopy.get(),childs.c_str());
+  pch = strtok (childsCopy.get(),",");
+  while (pch != NULL)
+  {
+    childKeys.push_back(string(pch));
+    pch = strtok (NULL, ",");
+  }
+  vector<string>::iterator chIt;
+  for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
+  {
+    try
+    {
+      _convertRelativeTimesChild(*chIt,ps);
+    }
+    catch(Exception& e)
+    {
+    }
+  }
+}
 
 };
 };

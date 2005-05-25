@@ -18,7 +18,8 @@ MACScheduler_SOURCES 		= \
 	MACSchedulerMain.cc \
 	SAS_Protocol.cc
 	
-MACScheduler_LDADD		= 
+MACScheduler_LDADD		    = $(LOFAR_DEPEND)
+MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
 	
 include_HEADERS = 
 

@@ -142,6 +142,9 @@ namespace GSO
       void _handleSASprotocol(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       TSASResult _LDtoSASresult(const TLDResult& ldResult);
       TSASResult _SDtoSASresult(const TSDResult& sdResult);
+
+      void _convertRelativeTimes(boost::shared_ptr<ACC::ParameterSet> ps);
+      void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::ParameterSet> ps);
       
       string                                m_SASserverPortName;
       GCF::TM::GCFTCPPort                   m_SASserverPort;      // SAS-MAC communication
