@@ -220,13 +220,25 @@ void ComboBoxViewsSelectionChanged()
   string datapointTypeName = "";
   //DebugTN("g_datapoint",g_datapoint);
   //getDpTypeFromEnabled( + "__enabled.")
-  if(dpAccessable(g_datapoint))
-    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled.");
-  else
-    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled."); //original was only <= g_datapoint>
+  //This was the original one AdB 25-5-2005
+ // if(dpAccessable(g_datapoint))
+//    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled.");
+ //else
+//    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled."); //original was only <= g_datapoint>
   //////////////////////////////////////////////////////////////
-
-  
+  if(dpAccessable(g_datapoint+"__enabled"))
+  {
+    datapointTypeName = getDpTypeFromEnabled(g_datapoint+"__enabled.");
+  }
+  else if(dpAccessable(g_datapoint))
+  {
+    datapointTypeName = dpTypeName(g_datapoint);
+  }
+  else
+  {
+    datapointTypeName = g_datapoint;
+  }
+//////////////////////////////////////////////////////////////////  
 //  DebugN("test125:"+(g_subViewConfigs[selectedSubView]));
 //  if(g_subViewConfigs[selectedSubView]==0)
   

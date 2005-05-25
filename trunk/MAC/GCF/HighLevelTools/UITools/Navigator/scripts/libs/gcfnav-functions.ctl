@@ -186,6 +186,7 @@ void changeSelectedPosition(string newDatapoint)
         if (nodeID !=0)
   	  {
 	    TreeView_OnExpand(nodeID);
+      
    	}
     }
     }
@@ -551,11 +552,7 @@ void treeAddDatapoints(dyn_string names)
 	    {
 	      dpName=names[namesIndex];
 	    }
-
 	      
-	      
-      if(navConfigCheckEnabled(dpName))
-	    {
 		    // split the datapoint path in elements
 		    dpPathElements = strsplit(datapointName,"_");
 		    string addingDPpart = systemName;
@@ -594,22 +591,21 @@ void treeAddDatapoints(dyn_string names)
   		      }
           }
 		    }
-			  
+
+        if(navConfigCheckEnabled(dpName))
+        {
         // get the datapoint structure
         dynClear(elementNames);
         dynClear(elementTypes);
         dpIsReference=false;
         checkForReference(names[namesIndex], reference, dpIsReference);
         LOG_TRACE("dpTypeGet for: ",names[namesIndex]);
-        if(dpAccessable(names[namesIndex] + "__enabled"))
-        {
-          dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."),elementNames,elementTypes);
-        }
-        else
+        int TypeGetError = dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."),elementNames,elementTypes);
+        DebugTN("TypeGetError:"+TypeGetError);
+        if(TypeGetError==-1) // the enabled doesn't exist, the the dpTypeName on names[Index]
         {
           dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
         }
-        
 
         // add elements of this datapoint, if any, skip system stuff
         if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
@@ -670,7 +666,7 @@ void treeAddDatapoints(dyn_string names)
             }
           }
          }
-	    }
+      }
 	  }
 	  if(dynlen(internalNodeMapping)!=0)
 	  { 
@@ -1193,14 +1189,6 @@ void TreeCtrl_HandleEventOnExpand(long Node)
       }
         // get top level resources. "" means no parent, 1 means: 1 level deep
         dyn_string resources = navConfigGetResources(datapointPath,1);
-/*        for(int i=1; i<=dynlen(resources); i++)
-        {
-          if(navPMLisTemporary(resources[i]+NAVPML_DPNAME_ENABLED))
-          {
-     	      navPMLloadPropertySet(resources[i]);
-          }
-        }*/
-        //delay(0,200);
         LOG_DEBUG("adding resources: ",LOG_DYN(resources));
         treeAddDatapoints(resources);
     }
@@ -1280,7 +1268,7 @@ void TreeCtrl_HandleEventOnCollapse(unsigned Node)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function checkForReferenceReplaceOriginal
+//Function checkForReferenceRemoveFromList
 //
 // parameters: datapointPath - deletes al related references form the
 //             g_referenceList
@@ -1437,7 +1425,7 @@ TreeView_OnSelect(unsigned pos)
   LOG_TRACE("check for expand",parentDatapointIsReference, datapointPath, dpAccessable(datapointPath));
   if(checkDpPermit(datapointPath) || pos==1)
   {
-    if(!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath)))
+    if(!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled")))
     {
       TreeCtrl_HandleEventOnSelChange(pos);
     }
@@ -1802,7 +1790,7 @@ string getLoadTypeFromEnabled(string datapointPath)
   dyn_string contentSplit;
   dpGet(datapointPath,content);
   contentSplit = strsplit(content, "|");
-  return contentSplit[2];
+  return contentSplit[1];
 }
 
 
@@ -1822,8 +1810,17 @@ string getDpTypeFromEnabled(string datapointPath)
   contentSplit = strsplit(content, "|");
     if(dynlen(contentSplit)<2)
     DebugN(contentSplit);
+    
+  if(dynlen(contentSplit)>1)
+  {
+    return contentSplit[2];
+  }
+  else
+  {
+    return "-1";
+  }
+//  DebugN("contentSplit[2]:"+contentSplit[2]);
 
-  return contentSplit[2];
 }
 
 
