@@ -1741,6 +1741,21 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       break;
     }
     
+    // this happens if a child resumes itself just before the parent
+    case LOGICALDEVICE_RESUMED:
+    {
+      LOGICALDEVICEResumedEvent resumedEvent(event);
+      if(resumedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_ACTIVE);
+      }
+      else
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
+      }
+      break;
+    }
+    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::suspended_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
