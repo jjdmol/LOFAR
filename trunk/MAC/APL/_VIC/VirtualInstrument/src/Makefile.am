@@ -16,7 +16,8 @@ VirtualInstrument_SOURCES 		= \
 	VirtualInstrument.cc \
 	VirtualInstrumentStartDaemonMain.cc
 	
-VirtualInstrument_LDADD		= 
+VirtualInstrument_LDADD		    = $(LOFAR_DEPEND)
+VirtualInstrument_DEPENDENCIES	= $(LOFAR_DEPEND)
 	
 include_HEADERS = 
 
