@@ -175,7 +175,6 @@ namespace APLCommon
       void _addChildPort(TPortSharedPtr childPort);
       void _sendScheduleToClients();
       string _getShareLocation() const;
-      time_t _decodeTimeParameter(const string& timeStr) const;
       time_t getClaimTime() const;
       time_t getPrepareTime() const;
       time_t getStartTime() const;
