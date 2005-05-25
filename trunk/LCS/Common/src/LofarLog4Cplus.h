@@ -198,6 +198,8 @@ namespace LOFAR {
 // Allocates a global LoggerReference object in the scope of the class you
 // place this macro in. The (also defined) function getLogger returns the
 // created LoggerReference object.
+// \warning This macro alters access control! Make sure to reset access
+// control when adding declarations to your class \e after using this macro.
 #define	ALLOC_TRACER_CONTEXT \
 	private:	static		LOFAR::LoggerReference	theirTraceLoggerRef;	\
 	public:		static inline	LOFAR::LoggerReference	&getLogger() \
