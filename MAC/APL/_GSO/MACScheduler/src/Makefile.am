@@ -32,6 +32,7 @@ EXTRA_DIST =   \
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA = \
+	customPropPVSSDB.ctl \
 	MACScheduler.conf \
 	MACScheduler.log_prop
 	
@@ -41,4 +42,7 @@ configfiles_DATA = \
 %.conf: %.conf.in
 	cp $< $@
 
+%.ctl: %.ctl.in
+	cp $< $@
+	
 include $(lofar_sharedir)/Makefile.common
