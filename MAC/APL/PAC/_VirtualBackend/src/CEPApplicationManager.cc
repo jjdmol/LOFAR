@@ -57,7 +57,7 @@ void  CEPApplicationManager::handleAckMsg(ACCmd         cmd,
       break;
 
     case ACCmdQuit:
-      if (result == AcCmdMaskOk)
+      if (result == AcCmdMaskOk && result == 0)
       {
         _continuePoll = false;
       }
