@@ -60,8 +60,8 @@ typedef		int16		eventType;
 // The the last few fields will be empty for PIC trees.
 class treeInfo {
 public:
-	treeInfo();
-	~treeInfo();
+//#	treeInfo();
+//#	~treeInfo();
 
 	treeID			ID;
 	treeClassif		classification; // experimental / operational / etc.
@@ -69,7 +69,7 @@ public:
 	ptime			creationDate;	
 	treeType		type;			// template / schedule / etc.
 	// -- VIC only --
-	treeID			orignalTree;
+	treeID			originalTree;
 	string			campaign;
 	ptime			starttime;
 	ptime			stoptime;
@@ -81,8 +81,8 @@ public:
 // Note: it does NOT contain the value of the item.
 class OTDBnode {
 public:
-	OTDBnode();
-	~OTDBnode();
+//#	OTDBnode();
+//#	~OTDBnode();
 
 	nodeID			ID;
 	nodeID			parentID;
@@ -97,11 +97,11 @@ public:
 // The OTDBvalue structure contains one value of one OTDB item.
 class OTDBvalue {
 public:
-	OTDBvalue();
+	OTDBvalue() {};
 	OTDBvalue(nodeID			anID, 
 			  const string&		aValue, 
 			  const ptime&		atime);
-	~OTDBvalue();
+	~OTDBvalue() {};
 
 	nodeID			ID;
 	string			value;
