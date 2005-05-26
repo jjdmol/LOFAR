@@ -292,7 +292,7 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
           it->second = (unsignedValue.getValue() == 0); // true if status is OK
           if(it->second)
           {
-            LOG_INFO(formatString("%s : Required resource %s available (%d)",getName().c_str(),resName.c_str(),unsignedValue.getValue()));
+//            LOG_INFO(formatString("%s : Required resource %s available (%d)",getName().c_str(),resName.c_str(),unsignedValue.getValue()));
           }
           else
           {

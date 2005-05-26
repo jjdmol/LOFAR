@@ -922,9 +922,13 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
                 }
                 else
                 {
-                  string statusString("Error ");
-                  statusString += commandString + string(",already started");
-                  status.setValue(statusString);
+                  LOG_DEBUG(formatString("(%s) Stopping schedule %d. timers %d and %d cancelled.",__func__,scheduleId,scheduleIt->second.prepareTimerId,scheduleIt->second.stopTimerId));
+                  ldIt->second.clientPort->cancelTimer(scheduleIt->second.prepareTimerId);
+                  ldIt->second.clientPort->cancelTimer(scheduleIt->second.stopTimerId);
+                  scheduleIt->second.stopTimerId = ldIt->second.clientPort->setTimer(1.0);
+//                  string statusString("Error ");
+//                  statusString += commandString + string(",already started");
+//                  status.setValue(statusString);
                 }
               }
               else
@@ -1179,6 +1183,18 @@ void AVTLogicalDeviceScheduler::getRequiredResources(list<TPropertyInfo>& requir
     TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
+  {
+    sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
+    requiredResources.push_back(propInfo);
+  }
+  {
+    sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
+    requiredResources.push_back(propInfo);
+  }
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
     string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));

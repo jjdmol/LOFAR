@@ -311,9 +311,19 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
     }
         
     default:
+    {
+      // added check
+      AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+      // prepared event is received from the beam former or station receptor group
+      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED,true)) // require slave LD's to be active
+      {
+        stateFinished=true;
+      }
+      //
       LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
+    }
   }
 
   return status;
