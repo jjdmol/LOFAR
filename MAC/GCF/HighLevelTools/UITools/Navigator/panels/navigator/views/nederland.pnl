@@ -1,8 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,291 145 960 750 N "_3DFace" 0
-EEE E E 1 -1 -1 0  -1 -1
+PANEL,258 138 908 687 N "_3DFace" 0
+EEE E E 1 -1 -1 0  20 740
 "" 0 1
 EE 2
 "CBRef""1"
@@ -25,45 +25,156 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 3 "pictures/nederland2.bmp" 13434828 E 20 10 930 740
-6 2
-"Border2"
+7 8
+"Ellipse4"
 ""
-1 500 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_IO" E E
+1 466 406 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  E E
-3 0 0 0 0 0
+9 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 500 210 550 260
-7 3
-"Ellipse1"
+E "main()
+{
+navConfigTriggerNavigatorRefreshWithDP(\"CCU1:PIC_CEP\");
+}" 0
+ 0 1 1 0 1 E U  1 E 466 406 10 10
+2 9
+"Text1"
 ""
-1 323 396 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 450 370 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
  E E
-4 0 0 0 0 0
+10 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 323 396 10 10
-7 4
-"Ellipse2"
+E E 0 1 1 0 1 E U  1 E 452 372 479 388
+0 2 0 "s" 0 0 0 192 0 0  452 372
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 CEP
+6 10
+"Border1"
 ""
-1 409 475 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 450 390 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-5 0 0 0 0 0
+11 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 409 475 10 10
+E E 0 1 1 0 1 E U  0 E 450 370 481 390
+2 11
+"Text2"
+""
+1 500 518 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 502 520 554 536
+0 2 0 "s" 0 0 0 192 0 0  502 520
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Station 2
+6 12
+"Border4"
+""
+1 500 538 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 500 518 555 538
+2 13
+"Text3"
+""
+1 400 440 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 402 442 454 458
+0 2 0 "s" 0 0 0 192 0 0  402 442
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Station 1
+6 14
+"Border5"
+""
+1 400 460 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 400 440 455 460
+7 15
+"Ellipse5"
+""
+1 411 477 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+navConfigTriggerNavigatorRefreshWithDP(\"CCU1:PIC_Stations_STSLCU1\");
+}" 0
+ 0 1 1 0 1 E U  1 E 411 477 10 10
+7 16
+"Ellipse6"
+""
+1 527 503 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+navConfigTriggerNavigatorRefreshWithDP(\"CCU1:PIC_Stations_STSLCU2\");
+}" 0
+ 0 1 1 0 1 E U  1 E 527 503 10 10
 0
 LAYER, 1 
 1

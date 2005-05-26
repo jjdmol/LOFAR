@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,405 201 690 319 N "_3DFace" 4
+PANEL,419 299 690 341 N "_3DFace" 4
 "$PlotNr"
 "$configDatapoint"
 "$datapoint"
@@ -308,10 +308,73 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 3 ...
+6 82
+"Border2"
+""
+1 10 277 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+61 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 262 644 286
+2 83
+"Text3"
+""
+1 20 264 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+62 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 266 153 282
+0 2 0 "s" 0 0 0 66 0 0  22 266
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 Selected script file:
+2 84
+"txt_script"
+""
+1 159 264 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+63 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect(\"showScriptFilename\", $configDatapoint + \".\" + $PlotNr + \".scriptFilename\");
+
+}
+
+showScriptFilename(string dp1, string value)
+{
+  setValue(\"\",\"text\", value);
+}" 0
+ E 0 1 1 0 1 E U  0 E 161 266 173 282
+0 2 0 "s" 0 0 0 192 0 0  161 266
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
 6 32
 "Border5"
 ""
-1 10 277 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 299 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -320,31 +383,121 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 262 279 287
-2 7
-"Text2"
+E E 0 1 1 0 1 E U  0 E 10 284 279 309
+6 86
+"Border3"
 ""
-1 17 263 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 322 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-8 0 0 0 0 0
+65 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 307 279 331
+2 87
+"Text10"
+""
+1 20 309 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+66 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 265 175 281
-0 2 0 "s" 0 0 0 64 0 0  19 265
+E E 0 1 1 0 1 E U  0 E 22 311 153 327
+0 2 0 "s" 0 0 0 66 0 0  22 311
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 24 Automatic scaling Y-axis
+LANG:1 19 Used data filename:
+2 88
+"txt_datFilename"
+""
+1 159 309 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+67 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\",\"text\", \"spectrum\"+$PlotNr+\".dat\");
+}
+
+" 0
+ E 0 1 1 0 1 E U  0 E 161 311 173 327
+0 2 0 "s" 0 0 0 192 0 0  161 311
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+2 89
+"Text12"
+""
+1 20 287 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 289 153 305
+0 2 0 "s" 0 0 0 66 0 0  22 289
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Plot active:
+13 80
+"Button1"
+""
+1 615 262 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+59 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+613 260 645 286
+P 
+13434828
+"pictures/icon_fileselector.bmp"
+1
+LANG:1 0 
+"main()
+{
+ string dat;
+ fileSelector(dat, \"c:\\\\\", false, \"*.dem\");
+ if(dat!=\"\")
+ {
+   setValue(\"txt_script\", \"text\", dat);
+ }
+
+}" 0
+ E E E
 13 37
 "btn_ok"
 ""
-1 549 286 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 549 306 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 29 0 0 0 0 0
 EE E
@@ -355,7 +508,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-547 284 611 311
+547 304 611 331
 T 
 1
 LANG:1 2 OK
@@ -408,13 +561,23 @@ navViewPlotApplyTraceSettings(int PlotNumber)
   
   }
   
+  //Apply the Setting dpName if changed
+  string currentScriptFilename;
+  string selectedScriptFilename = txt_script.text;
+  dpGet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", currentScriptFilename);
+  if(currentScriptFilename!=selectedScriptFilename)
+  {
+    dpSet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", selectedScriptFilename);
+  }
+
+  
 
 }" 0
  E E E
 13 43
 "Button4"
 ""
-1 619 286 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 619 306 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 33 0 0 0 0 0
 EE E
@@ -425,7 +588,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-617 284 681 311
+617 304 681 331
 T 
 1
 LANG:1 6 Cancel
@@ -443,7 +606,7 @@ LANG:1 6 Cancel
 20 70
 "btn_Active"
 ""
-1 172 264 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 172 286 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 53 0 0 0 0 0
 EE E
@@ -454,7 +617,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-170 262 187 286
+170 284 187 308
 1
 T 
 1
