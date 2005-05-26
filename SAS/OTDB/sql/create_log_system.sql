@@ -18,6 +18,7 @@ CREATE OR REPLACE FUNCTION clearlog()
   RETURNS VOID AS '
 	BEGIN
 	  DELETE FROM log;
+	  RETURN;
 	END;
 ' language plpgsql;
 

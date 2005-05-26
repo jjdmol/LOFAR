@@ -14,6 +14,7 @@ CREATE TABLE OTDBuser (
 	role		VARCHAR(30),
 	lastlogin	timestamp,
 
+	CONSTRAINT	userID_uniq		UNIQUE(userID),		-- for references
 	CONSTRAINT	username_uniq	UNIQUE(username)
 ) WITHOUT OIDS;
 
