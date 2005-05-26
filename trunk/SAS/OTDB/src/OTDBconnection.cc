@@ -26,6 +26,7 @@
 //# Includes
 #include<Common/LofarLogger.h>
 #include<Common/StringUtil.h>
+#include<Common/lofar_datetime.h>
 #include<OTDB/OTDBconnection.h>
 #include<OTDB/OTDBconstants.h>
 
@@ -81,8 +82,8 @@ bool OTDBconnection::connect()
 
 	try {
 		work 	xAction(*itsConnection, "authenticate");
-		result  res = xAction.exec("SELECT OTDBlogin(" + itsUser +
-									"," + itsPassword + ")");
+		result  res = xAction.exec("SELECT OTDBlogin('" + itsUser +
+									"','" + itsPassword + "')");
 		int		connOK;
 		res[0][0].to(connOK);
 
@@ -109,7 +110,8 @@ bool OTDBconnection::connect()
 //
 // getTreeList(treeType, classification): vector<treeInfo>
 //
-// To get a list of all OTDB trees available in the database.
+// To get a list of the OTDB trees available in the database.
+//
 vector<treeInfo> OTDBconnection::getTreeList(
 					treeType	 	aTreeType,
 					treeClassif 	aClassification)
@@ -120,27 +122,44 @@ vector<treeInfo> OTDBconnection::getTreeList(
 	}
 
 	try {
+		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeList");
-		string	query("SELECT * from getTreeList(" +
-						toString(aTreeType) + "," +
-						toString(aClassification) + ")");
+		string	query("SELECT * from getTreeList('" +
+						toString(aTreeType) + "','" +
+						toString(aClassification) + "')");
+
+		// execute query
 		result	res = xAction.exec(query);
 
-		int32	nrRecords = res.size();
+		// show how many records found
+		result::size_type	nrRecords = res.size();
+		LOG_DEBUG_STR (nrRecords << " records in treeList(" 
+						<< aTreeType << ", " << aClassification << ")");
 
+		// copy information to output vector
 		vector<treeInfo>	resultVec(nrRecords);
-		for (int32 i = 0; i < nrRecords; i++) {
-			treeInfo*	tip = &resultVec[i];
-//			TODO
-//			tip->treeID 		= res[i]["treeID"];
-//			tip->classification = res[i]["treeID"];
-//			tip->creator 	  	= res[i]["treeID"];
-//			tip->creationDate 	= res[i]["treeID"];
-//			tip->type 			= res[i]["treeID"];
-//			tip->originalTree 	= res[i]["treeID"];
-//			tip->campaign 		= res[i]["treeID"];
-//			tip->starttime 		= res[i]["treeID"];
-//			tip->stoptime 		= res[i]["treeID"];
+		for (result::size_type i = 0; i < nrRecords; ++i) {
+			res[i]["id"].to(resultVec[i].ID);
+			res[i]["classification"].to(resultVec[i].classification);
+			res[i]["creator"].to(resultVec[i].creator);
+			string crea;
+			res[i]["creationdate"].to(crea);
+			resultVec[i].creationDate = time_from_string(crea);
+			res[i]["type"].to(resultVec[i].type);
+
+			// next values are optional
+			res[i]["originaltree"].to(resultVec[i].originalTree);
+			res[i]["campaign"].to(resultVec[i].campaign);
+			string start;
+			res[i]["starttime"].to(start);
+			if (start.length() > 0) {
+				resultVec[i].starttime = time_from_string(start);
+			}
+			string stop;
+			res[i]["stoptime"].to(stop);
+			if (stop.length() > 0) {
+				resultVec[i].stoptime = time_from_string(stop);
+			}
 		}
 
 		return (resultVec);
