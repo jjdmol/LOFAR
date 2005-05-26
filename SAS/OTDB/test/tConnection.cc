@@ -24,12 +24,92 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
+#include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
+#include <OTDB/OTDBconnection.h>
+
+using namespace LOFAR;
+using namespace LOFAR::OTDB;
+
+//
+// show the result
+//
+void showList(const vector<treeInfo>&	trees) {
+
+
+	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
+	cout << "------+-------+----------+--------------------+----+--------+------------------" << endl;
+	for (uint32	i = 0; i < trees.size(); ++i) {
+		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%s",
+			trees[i].ID,
+			trees[i].classification,
+			trees[i].creator.c_str(),
+			to_simple_string(trees[i].creationDate).c_str(),
+			trees[i].type,
+			trees[i].campaign.c_str(),
+			to_simple_string(trees[i].starttime).c_str()));
+		cout << row << endl;
+	}
+
+	cout << trees.size() << " records" << endl << endl;
+}
 
 int main (int	argc, char*	argv[]) {
 
+	INIT_LOGGER(basename(argv[0]));
+	LOG_INFO_STR("Starting " << argv[0]);
 
+	OTDBconnection conn("paulus", "boskabouter", "overeem");
 
+	try {
 
-	return (1);
+		LOG_DEBUG_STR(conn);
+		LOG_DEBUG("Trying to connect to the database");
+		ASSERTSTR(conn.connect(), "Connnection failed");
+
+		LOG_INFO_STR("Connection succesful: " << conn);
+
+		LOG_INFO("getTreeList(0,0)");
+		vector<treeInfo>	treeList = conn.getTreeList(0, 0);
+		if (treeList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showList(treeList);
+		}
+		LOG_INFO("getTreeList(0,1)");
+		treeList = conn.getTreeList(00, 1);
+		if (treeList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showList(treeList);
+		}
+		LOG_INFO("getTreeList(20,0)");
+		treeList = conn.getTreeList(20, 0);
+		if (treeList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showList(treeList);
+		}
+
+		LOG_INFO("getTreeList(20,1)");
+		treeList = conn.getTreeList(20, 1);
+		if (treeList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showList(treeList);
+		}
+	}
+	catch (std::exception&	ex) {
+		LOG_FATAL_STR("Unexpected exception: " << ex.what());
+		LOG_FATAL_STR("Errormsg: " << conn.errorMsg());
+		return (1);		// return !0 on failure
+	}
+
+	LOG_INFO_STR ("Terminated succesfully: " << argv[0]);
+
+	return (0);		// return 0 on succes
 }
