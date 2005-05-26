@@ -144,7 +144,8 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
               // any VT not running results in low quality
               m_serverPort.cancelTimer(m_qualityCheckTimerId);
               m_qualityCheckTimerId = 0;
-              _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+              _cancelSchedule(LD_RESULT_LOW_QUALITY);
+              //_doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
             }
           }
         }
@@ -416,7 +417,7 @@ GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFP
   {
     case F_ENTRY:
     {
-      m_qualityCheckTimerId = m_serverPort.setTimer(5L);
+      m_qualityCheckTimerId = m_serverPort.setTimer(10L);
       LOG_DEBUG(formatString("qualityCheckTimerId=%d",m_qualityCheckTimerId));
       break;
     }
@@ -513,6 +514,8 @@ void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortI
     if(!_checkQualityRequirements())
     {
       LOG_FATAL(formatString("VI(%s): quality too low",getName().c_str()));
+      m_serverPort.cancelTimer(m_qualityCheckTimerId);
+      m_qualityCheckTimerId=0;
       _cancelSchedule(LD_RESULT_LOW_QUALITY);
     }
     else
