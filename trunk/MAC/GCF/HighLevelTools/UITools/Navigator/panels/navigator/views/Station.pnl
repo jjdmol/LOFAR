@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,495 198 994 514 N "_3DFace" 1
+PANEL,258 138 994 514 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  188 128
 "" 0 1
@@ -14,19 +14,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-6 1
-"Border1"
-""
-1 14 140 E E E 1 E 0 E N "_WindowText" E N {204,204,204} E E
- E E
-1 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 1 1 1 0 1 E U  1 E 14 30 935 140
 6 816
 "Border399"
 ""
@@ -1474,66 +1461,6 @@ LANG:1 1 4
 0
 1 1992 29 "" 55
 0
-2 1992
-"txt_error_black"
-""
-1 420 120 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-804 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 422 122 479 138
-0 2 0 "s" 0 0 0 192 0 0  422 122
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 AP1 Error
-2 1993
-"txt_error_red"
-""
-1 450 100 E E E 1 E 0 E N {255,0,0} E N "_Transparent" E E
- E E
-805 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 452 102 509 118
-0 2 0 "s" 0 0 0 192 0 0  452 102
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 AP1 Error
-2 1996
-"Text12"
-""
-1 409 40 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-808 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 411 42 436 58
-0 2 0 "s" 0 0 0 192 0 0  411 42
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 4 Test
 1 1173 25 "" 0
 0
 1 1174 25 "" 1
@@ -1691,80 +1618,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 6 View: 
-13 1991
-"Button3"
-""
-1 400 59 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-803 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-398 57 452 81
-T 
-1
-LANG:1 3 red
-"main()
-{
-setValue(\"txt_error_red\", \"visible\", TRUE);
-setValue(\"txt_error_black\", \"visible\", FALSE);
-
-}" 0
- E E E
-13 1994
-"Button5"
-""
-1 400 79 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-806 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-398 77 452 101
-T 
-1
-LANG:1 5 black
-"main()
-{
-setValue(\"txt_error_red\", \"visible\", FALSE);
-setValue(\"txt_error_black\", \"visible\", TRUE);
-
-}" 0
- E E E
-13 1995
-"Button6"
-""
-1 400 99 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-807 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-398 97 452 121
-T 
-1
-LANG:1 4 none
-"main()
-{
-setValue(\"txt_error_red\", \"visible\", FALSE);
-setValue(\"txt_error_black\", \"visible\", FALSE);
-}" 0
- E E E
 0
 LAYER, 1 
 1

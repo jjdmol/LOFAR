@@ -424,6 +424,8 @@ void showView(string dpViewConfig, string datapointPath)
           LOG_DEBUG("showView","caption=selectedViewCaption");
           selectedViewTabId = tabId;
           tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+          //DebugTN("NAVIGATOR_TAB_FILENAME:"+NAVIGATOR_TAB_FILENAME);
+          //DebugTN("panelParameters:"+panelParameters);
         }
       }
       else

@@ -10,7 +10,6 @@ PANEL,258 138 328 89 N "_3DFace" 1
   navPMLloadPropertySet($datapoint + \"_Board1_BP_Maintenance\");
 
   EP_setBackColor();
-  
 }
 
 EP_setBackColor()
@@ -26,6 +25,7 @@ dyn_errClass err;
 
   dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
 					                           $datapoint + \"_Board1_BP.status:_online.._value\");
+  dpConnect(\"showVersion\", $datapoint + \"_Board1_BP.version:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -133,7 +133,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 140 20 180 60
 2 5
-"Text2"
+"txt_version"
 ""
 1 252 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E

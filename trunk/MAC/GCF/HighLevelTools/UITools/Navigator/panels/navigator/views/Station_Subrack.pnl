@@ -1,16 +1,16 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,500 334 986 776 N "_3DFace" 1
+PANEL,258 138 986 776 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  l_gcfPmlId = gcfInit(\"pmlCallback\");
+//  l_gcfPmlId = gcfInit(\"pmlCallback\");
 }" 0
-"main()
-{
-  gcfLeave(l_gcfPmlId);
-}" 0
+"//main()
+//{
+//  gcfLeave(l_gcfPmlId);
+//}" 0
 E E E 1 -1 -1 0  120 205
 "" 0 1
 E"//Include of ctl file

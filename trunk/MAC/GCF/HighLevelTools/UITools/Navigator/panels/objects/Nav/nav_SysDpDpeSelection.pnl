@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,405 201 672 169 N "_3DFace" 2
+PANEL,258 138 672 169 N "_3DFace" 2
 "$datapoint"
 "$selectedDP"
 EEE E E 1 -1 -1 0  0 0
@@ -173,7 +173,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
     dyn_string dpeNames = list_dpe.items;
     list_dpe.selectedPos = dynContains(dpeNames, tempDpe);
   }
-  
+  btn_ok.enabled = TRUE;
 }" 0
 
 "main()

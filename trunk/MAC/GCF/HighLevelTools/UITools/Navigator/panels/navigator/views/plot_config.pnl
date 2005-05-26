@@ -1,15 +1,23 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,277 234 950 740 N "_3DFace" 5
+PANEL,258 138 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
-EEE E E 1 -1 -1 0  -1 -1
+"main()
+{
+   strreplace(PICTURE_PATH, \"/\", \"\\\\\");
+}" 0
+EE E E 1 -1 -1 0  -1 -1
 "" 0 1
-EE 2
+E"string PICTURE_PATH = PROJ_PATH + \"pictures/\";
+string TEMP_PATH    = \"c:\\\\temp\\\\\";
+string GNUPLOT_PATH = \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\\";
+" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -19,168 +27,10 @@ LAYER, 0
 LANG:1 6 Layer1
 1 0 0 "" 57
 0
-6 4
-"Border20"
-""
-1 20 400 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-1 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 390 590 400
-6 5
-"Border21"
-""
-1 20 390 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-2 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 370 70 390
-2 6
-"Text31"
-""
-1 27 370 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
- E E
-3 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 29 372 63 388
-0 2 0 "s" 0 0 0 192 0 0  29 372
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Plot-1
-4 7
-"Line2"
-""
-1 20 390 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
- E E
-4 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  70 390 20 390
-6 16
-"Border1"
-""
-1 20 431 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-13 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 404 591 431
-2 17
-"Text1"
-""
-1 32 407 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-14 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 34 409 58 425
-0 2 0 "s" 0 0 0 192 0 0  34 409
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 Title
-6 18
-"Border3"
-""
-1 20 456 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-15 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 429 591 456
-6 19
-"Border2"
-""
-1 20 506 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-16 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 479 213 506
-2 20
-"Text4"
-""
-1 31 432 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-17 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 33 434 124 450
-0 2 0 "s" 0 0 0 192 0 0  33 434
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 16 Selected script:
-2 21
-"Text6"
-""
-1 31 483 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-18 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 33 485 113 501
-0 2 0 "s" 0 0 0 192 0 0  33 485
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 15 Color partition
 2 26
 "Text3"
 ""
-1 10 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -189,8 +39,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 62 208 78
-0 2 0 "s" 0 0 0 64 0 0  12 62
+E E 0 1 1 0 1 E U  0 E 12 52 208 68
+0 2 0 "s" 0 0 0 64 0 0  12 52
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -200,7 +50,7 @@ LANG:1 31 Selected plot-view(s) for type:
 2 27
 "txt_dpTypeName"
 ""
-1 210 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 210 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -220,672 +70,14 @@ LANG:1 0
     setValue(\"\", \"text\", \"datapoint type not found\");
   }
 }" 0
- E 0 1 1 0 1 E U  0 E 212 62 478 78
-0 2 0 "s" 0 0 0 64 0 0  212 62
+ E 0 1 1 0 1 E U  0 E 212 52 478 68
+0 2 0 "s" 0 0 0 64 0 0  212 52
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 0 
-6 29
-"Border5"
-""
-1 20 481 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-26 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 454 591 481
-2 30
-"Text5"
-""
-1 31 457 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-27 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 33 459 116 475
-0 2 0 "s" 0 0 0 192 0 0  33 459
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 13 Configured DP
-6 39
-"Border10"
-""
-1 10 460 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-36 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 450 580 460
-6 40
-"Border11"
-""
-1 10 450 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-37 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 430 60 450
-2 41
-"Text7"
-""
-1 17 430 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
- E E
-38 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 432 53 448
-0 2 0 "s" 0 0 0 192 0 0  19 432
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Plot-2
-4 42
-"Line4"
-""
-1 10 450 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
- E E
-39 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  60 450 10 450
-6 43
-"Border12"
-""
-1 10 491 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-40 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 464 581 491
-2 44
-"Text8"
-""
-1 22 467 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-41 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 24 469 48 485
-0 2 0 "s" 0 0 0 192 0 0  24 469
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 Title
-6 45
-"Border13"
-""
-1 10 516 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-42 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 489 581 516
-6 46
-"Border14"
-""
-1 10 566 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-43 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 539 203 566
-2 47
-"Text9"
-""
-1 21 492 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-44 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 23 494 114 510
-0 2 0 "s" 0 0 0 192 0 0  23 494
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 16 Selected script:
-2 48
-"Text10"
-""
-1 21 543 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-45 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 23 545 103 561
-0 2 0 "s" 0 0 0 192 0 0  23 545
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 15 Color partition
-6 49
-"Border15"
-""
-1 10 541 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-46 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 514 581 541
-2 50
-"Text11"
-""
-1 21 517 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-47 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 23 519 106 535
-0 2 0 "s" 0 0 0 192 0 0  23 519
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 13 Configured DP
-6 56
-"Border16"
-""
-1 10 460 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-53 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 450 580 460
-6 57
-"Border17"
-""
-1 10 450 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-54 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 430 60 450
-2 58
-"Text12"
-""
-1 17 430 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
- E E
-55 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 432 53 448
-0 2 0 "s" 0 0 0 192 0 0  19 432
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Plot-3
-4 59
-"Line5"
-""
-1 10 450 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
- E E
-56 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  60 450 10 450
-6 60
-"Border18"
-""
-1 10 651 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-57 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 624 471 651
-2 61
-"Text13"
-""
-1 410 550 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-58 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 440 552 468 568
-0 2 0 "s" 0 0 0 194 0 0  440 552
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Title:
-6 62
-"Border19"
-""
-1 10 676 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-59 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 649 471 676
-6 63
-"Border22"
-""
-1 10 566 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-60 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 539 203 566
-2 64
-"Text14"
-""
-1 350 522 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-61 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 443 524 534 540
-0 2 0 "s" 0 0 0 194 0 0  443 524
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 16 Selected script:
-2 65
-"Text15"
-""
-1 21 543 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-62 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 23 545 103 561
-0 2 0 "s" 0 0 0 192 0 0  23 545
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 15 Color partition
-2 67
-"Text16"
-""
-1 34 627 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-64 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 123 629 210 645
-0 2 0 "s" 0 0 0 194 0 0  123 629
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 14 Configured DP:
-6 92
-"Border30"
-""
-1 212 506 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-89 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 212 479 405 506
-2 93
-"Text23"
-""
-1 213 483 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-90 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 215 485 330 501
-0 2 0 "s" 0 0 0 192 0 0  215 485
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 17 Timestamp(number)
-6 97
-"Border31"
-""
-1 202 566 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-94 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 202 539 395 566
-2 98
-"Text24"
-""
-1 203 543 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-95 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 205 545 320 561
-0 2 0 "s" 0 0 0 192 0 0  205 545
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 17 Timestamp(number)
-6 100
-"Border32"
-""
-1 202 566 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-97 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 202 539 395 566
-2 101
-"Text25"
-""
-1 203 543 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-98 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 205 545 320 561
-0 2 0 "s" 0 0 0 192 0 0  205 545
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 17 Timestamp(number)
-6 126
-"Border4"
-""
-1 570 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-121 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 570 610 720 650
-6 127
-"Border6"
-""
-1 10 620 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-122 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 610 470 620
-6 128
-"Border7"
-""
-1 10 610 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-123 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 590 60 610
-2 129
-"Text2"
-""
-1 17 590 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
- E E
-124 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 592 53 608
-0 2 0 "s" 0 0 0 192 0 0  19 592
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Plot-1
-4 130
-"Line1"
-""
-1 10 610 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
- E E
-125 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  60 610 10 610
-6 131
-"Border8"
-""
-1 10 519 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-126 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 480 470 520
-2 136
-"Text17"
-""
-1 79 652 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-131 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 123 654 165 670
-0 2 0 "s" 0 0 0 194 0 0  123 654
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 7 Status:
-2 138
-"Text18"
-""
-1 131 627 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-133 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 133 629 216 645
-0 2 0 "s" 0 0 0 192 0 0  133 629
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 13 Configured DP
-2 139
-"Text19"
-""
-1 131 652 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-134 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-"main()
-{
-
-dpConnect(\"navViewPlotDisplayDpNameActive\", $configDatapoint + \".\" + plotNumber + \".Active\",
-                                            $configDatapoint + \".\" + plotNumber + \".dpName\");
-}
-navViewPlotDisplayDpNameActive(string dp1, int Active,
-                               string dp2, string dpName)
-{
-
-
-}" 0
- E 0 1 1 0 1 E U  0 E 133 654 168 670
-0 2 0 "s" 0 0 0 192 0 0  133 654
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Active
 1 153 2 "" 0
 0
 1 154 2 "" 1
@@ -906,419 +98,72 @@ LANG:1 6 Active
 0
 1 162 2 "" 9
 0
+1 164 3 "" 0
+0
+1 165 3 "" 1
+0
+1 166 3 "" 2
+0
+1 167 3 "" 3
+0
+1 168 3 "" 4
+0
+1 169 3 "" 5
+0
+1 170 3 "" 6
+0
+1 171 3 "" 7
+0
+1 172 3 "" 8
+0
+1 173 3 "" 9
+0
+1 175 4 "" 0
+0
+1 176 4 "" 1
+0
+1 177 4 "" 2
+0
+1 178 4 "" 3
+0
+1 179 4 "" 4
+0
+1 180 4 "" 5
+0
+1 181 4 "" 6
+0
+1 182 4 "" 7
+0
+1 183 4 "" 8
+0
+1 184 4 "" 9
+0
+1 186 5 "" 0
+0
+1 187 5 "" 1
+0
+1 188 5 "" 2
+0
+1 189 5 "" 3
+0
+1 190 5 "" 4
+0
+1 191 5 "" 5
+0
+1 192 5 "" 6
+0
+1 193 5 "" 7
+0
+1 194 5 "" 8
+0
+1 195 5 "" 9
+0
 1 1 0 "" 54
 0
 1 2 0 "" 55
 0
 1 3 0 "" 58
 0
-14 22
-"TextField3"
-""
-1 141 405 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-19 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-139 403 582 430
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", \"Spectrogram - antenna 12\");
-}" 0
-
-E
-14 24
-"TextField2"
-""
-1 141 430 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-21 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-139 428 582 455
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-13 25
-"Button1"
-""
-1 594 431 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-22 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-592 429 624 457
-P 
-13434828
-"pictures/icon_fileselector.bmp"
-1
-LANG:1 0 
-E E E E
-14 31
-"TextField1"
-""
-1 141 455 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-28 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-139 453 582 480
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-  string dpName;
-  dpGet($configDatapoint +\".1.dpName\", dpName);
-  setValue(\"\", \"text\", dpName);
-}" 0
-
-"main()
-{
-  string dpName;
-  getValue(\"\", \"text\", dpName);
-  dpSet($configDatapoint +\".1.dpName\", dpName);
-
-}" 0
-
-13 38
-"btn_test"
-""
-1 141 481 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-35 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-139 479 211 506
-T 
-1
-LANG:1 6 Change
-E E E E
-14 51
-"TextField4"
-""
-1 131 465 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-48 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-129 463 572 490
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", \"Actual antenna[12] spectrum\");
-}" 0
-
-E
-14 52
-"TextField5"
-""
-1 131 490 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-49 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-129 488 572 515
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-13 53
-"Button4"
-""
-1 584 491 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-50 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-582 489 614 517
-P 
-13434828
-"pictures/icon_fileselector.bmp"
-1
-LANG:1 0 
-E E E E
-13 55
-"Button5"
-""
-1 131 542 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-52 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-129 540 201 567
-T 
-1
-LANG:1 6 Change
-E E E E
-14 68
-"TextField7"
-""
-1 450 550 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-65 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-448 548 789 575
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-14 69
-"TextField8"
-""
-1 451 520 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-66 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-449 518 789 545
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-13 70
-"Button6"
-""
-1 584 491 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-67 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-582 489 614 517
-P 
-13434828
-"pictures/icon_fileselector.bmp"
-1
-LANG:1 0 
-E E E E
-13 72
-"Button7"
-""
-1 131 542 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-69 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-129 540 201 567
-T 
-1
-LANG:1 6 Change
-E E E E
-14 96
-"TextField13"
-""
-1 337 481 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-93 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-335 479 403 506
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", \"512\");
-}" 0
-
-E
-14 99
-"TextField14"
-""
-1 327 541 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-96 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-325 539 393 566
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", \"1\");
-}" 0
-
-E
-14 102
-"TextField15"
-""
-1 327 541 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
- E E
-99 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-325 539 393 566
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", \"0\");
-}" 0
-
-E
-14 111
-"TextField6"
-""
-1 130 515 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-108 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-128 513 571 540
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-  string dpName;
-  dpGet($configDatapoint +\".2.dpName\", dpName);
-  setValue(\"\", \"text\", dpName);
-}" 0
-
-"main()
-{
-  string dpName;
-  getValue(\"\", \"text\", dpName);
-  dpSet($configDatapoint +\".2.dpName\", dpName);
-
-}" 0
-
-14 112
-"input_dpName"
-""
-1 470 680 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-109 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-468 678 810 705
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-  string dpName;
-  dpGet($configDatapoint +\".3.dpName\", dpName);
-  setValue(\"\", \"text\", dpName);
-}" 0
-
-"main()
-{
-  string dpName;
-  getValue(\"\", \"text\", dpName);
-  dpSet($configDatapoint +\".3.dpName\", dpName);
-
-}" 0
-
 13 115
 "btn_update_data"
 ""
@@ -1467,65 +312,20 @@ for (i=0 ; i<100; i++)
 	
 }" 0
  E E E
-13 124
-"btn_apply"
+1 163 2 "" 10
+0
+1 174 3 "" 10
+0
+1 185 4 "" 10
+0
+1 196 5 "" 10
+0
+13 241
+"Button1"
 ""
-1 580 620 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+1 350 480 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
-119 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-578 618 642 645
-T 
-1
-LANG:1 5 Apply
-E E E "main()
-{
-
-}
-
-void NavViewPlotFillPlotConfig(int plotNumber)
-{
-  int plotActive;
-  dpGet($configDatapoint + \".\" + plotNumber + \".active\", plotActive);
-  if(1==plot1Active)
-  {
-    input_dpName.enabled;
-    btn_Active;
-  }
-}" 0
-
-13 125
-"Button10"
-""
-1 650 620 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-120 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-648 618 712 645
-T 
-1
-LANG:1 6 Cancel
-E E E E
-14 137
-"TextField9"
-""
-1 210 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-132 0 0 0 0 0
+144 0 0 0 0 0
 EE E
 0
 1
@@ -1534,90 +334,34 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-208 58 550 85
+348 478 472 505
+T 
+1
+LANG:1 7 Button1
+"main()
+{
+setValue(\"out\", \"text\", TEMP_PATH);
+}" 0
+ E E E
+14 242
+"out"
+""
+1 630 500 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+145 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+628 498 732 525
 3 "s" 0 0 0 0 0 0 
 E
-"main()
-{
-  string dpName;
-  dpGet($configDatapoint +\".3.dpName\", dpName);
-  setValue(\"\", \"text\", dpName);
-}" 0
-
-"main()
-{
-  string dpName;
-  getValue(\"\", \"text\", dpName);
-  dpSet($configDatapoint +\".3.dpName\", dpName);
-
-}" 0
-
-13 140
-"Button11"
-""
-1 410 651 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-135 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-408 649 472 676
-T 
-1
-LANG:1 6 Config
-"main()
-{
-  string dpName;
-  int plotNumber=1;
-  dpGet($configDatapoint + \".\" + plotNumber + \".dpName\", dpName); 
-
-		ChildPanelOnCentralModal(\"navigator/views/plot_config_config_dp.pnl\",
- 		                         \"Configure Plot \"+plotNumber,
-  		                         makeDynString(\"$datapoint:\" + $datapoint,
-  		                                       \"$configDatapoint:\" + $configDatapoint,
-  		                                       \"$PlotNr:\" + plotNumber,
-  		                                       \"$selectedDP:\" + dpName));
-}" 0
- E E E
-13 141
-"Button2"
-""
-1 260 690 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-136 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-258 688 322 715
-T 
-1
-LANG:1 6 Config
-"main()
-{
-  string dpName;
-  int plotNumber=2;
-  dpGet($configDatapoint + \".\" + plotNumber + \".dpName\", dpName); 
-
-		ChildPanelOnCentralModal(\"navigator/views/plot_config_config_dp.pnl\",
- 		                         \"Configure Plot \"+plotNumber,
-  		                         makeDynString(\"$datapoint:\" + $datapoint,
-  		                                       \"$configDatapoint:\" + $configDatapoint,
-  		                                       \"$PlotNr:\" + plotNumber,
-  		                                       \"$selectedDP:\" + dpName));
-}" 0
- E E E
-1 163 2 "" 10
-0
+E
+E
 0
 LAYER, 1 
 1
@@ -1655,9 +399,27 @@ LANG:1 6 Layer8
 "$selectedView""$selectedView"
 "$viewName""$viewName"
 3 2 ""
-"objects\\Nav\\navViewPlotConfig.pnl" 316 205 T 137 1 0 1  -126 -4  
+"objects\\Nav\\navViewPlotConfig.pnl" 316 205 T 137 1 0 1  -306 -74  
 3
 "$PlotNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 3 "Group4"
+"objects\\Nav\\navViewPlotConfig.pnl" 10 90 T 138 1 0 1  0 131  
+3
+"$PlotNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 4 "Group6"
+"objects\\Nav\\navViewPlotConfig.pnl" 10 190 T 139 1 0 1  0 121  
+3
+"$PlotNr""3"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 5 "Group8"
+"objects\\Nav\\navViewPlotConfig.pnl" 10 290 T 140 1 0 1  0 111  
+3
+"$PlotNr""4"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 0

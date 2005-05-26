@@ -207,12 +207,12 @@ int navViewPlotConvertGnuplotOutput(int plotNumber)
     if ((access(TEMP_PATH + "gnuplot" + plotNumber+ ".png", R_OK)==0) &&
         (access(iview_dir + "i_view32.exe", F_OK)==0))
     {
-      system("rm " + PICTURE_PATH + +"gnuplot"+plotNumber+ ".bmp");
+      system("start /b rm " + PICTURE_PATH + +"gnuplot"+plotNumber+ ".bmp");
       system(iview_dir + "i_view32.exe " + TEMP_PATH + "gnuplot" + plotNumber + ".png /convert=" + PICTURE_PATH + "gnuplot" + plotNumber+ ".bmp");
     }
     else
     {
-      system("copy " + PICTURE_PATH + "gnuplot_error.bmp " + PICTURE_PATH + "gnuplot" + plotNumber+ ".bmp");
+      system("start /b copy " + PICTURE_PATH + "gnuplot_error.bmp " + PICTURE_PATH + "gnuplot" + plotNumber+ ".bmp");
     }
 
 return 0;
@@ -257,7 +257,7 @@ int navViewPlotGenerateGnuPlotScriptFile(int plotNumber, string plotTitle)
     // otherwise generated dumme
     if(scriptFilename!="" && access(scriptFilename, F_OK)==0)
     {
-      system("type " + scriptFilename + " >> " + TEMP_PATH + "gnuplot" + plotNumber+ ".dem");
+      system("start /b type " + scriptFilename + " >> " + TEMP_PATH + "gnuplot" + plotNumber+ ".dem");
     }
     else
     {
@@ -284,7 +284,7 @@ int navViewPlotGenerateGnuPlotScriptFile(int plotNumber, string plotTitle)
       
       fputs ("plot sin(1) title \""+messageText+"\" with lines\n" , f );
       fclose(f);
-      system("type "+TEMP_PATH + "gnuplot.dem >> " + TEMP_PATH + "gnuplot" + plotNumber+ ".dem");
+      system("start /b type "+TEMP_PATH + "gnuplot.dem >> " + TEMP_PATH + "gnuplot" + plotNumber+ ".dem");
     }
   
 return 0;
@@ -359,7 +359,7 @@ int navViewPlotGenerateGnuplotOutput(int plotNumber)
     if ((access(GNUPLOT_PATH + "wgnuplot.exe", F_OK)==0) && 
         (access(TEMP_PATH + "gnuplot" + plotNumber+ ".dem", F_OK)==0))
     {
-      system("rm " + TEMP_PATH + "gnuplot" + plotNumber+ ".png");
+      system("start /b rm " + TEMP_PATH + "gnuplot" + plotNumber+ ".png");
       system(GNUPLOT_PATH + "wgnuplot.exe " + TEMP_PATH + "gnuplot" + plotNumber+ ".dem");
       if (access(TEMP_PATH + "gnuplot" + plotNumber + ".png", F_OK)!=0)
         return -1;                
@@ -479,7 +479,7 @@ navViewPlotMainPlotSequence(string spectrum_data, int plotNumber)
   navViewPlotGenerateGnuPlotScriptFile(plotNumber, plotTitle);
   navViewPlotGenerateGnuplotOutput(plotNumber);
   navViewPlotConvertGnuplotOutput(plotNumber);
-
+  delay(1,0);
   setValue("plot_" + plotNumber+ "", "fill","[pattern,[tile,bmp,gnuplot" + plotNumber+ ".bmp]]");
 }
 
@@ -570,15 +570,6 @@ navViewControlDisplayStatus(string dp1, int statusNumber)
   setValue("txt_status", "text", textToDisplay);
   controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + textToDisplay;
 }
-
-
-
-
-
-
-
-
-
 
 
 

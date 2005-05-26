@@ -59,7 +59,7 @@ ControlGUIAP(string dp1, float temperature,
     setValue(\"btn_details\", \"backCol\", \"Red\");
   }
 
-  if (version !=0)
+  if (version !=\"\")
     setValue(\"txt_version\", \"text\", \"ver: \" +version);
   else
     setValue(\"txt_version\", \"text\", \"ver: x:x\");
