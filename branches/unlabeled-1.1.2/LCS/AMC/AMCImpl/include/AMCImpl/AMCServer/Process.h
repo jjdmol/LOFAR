@@ -36,7 +36,7 @@ namespace LOFAR
   namespace AMC
   {
 
-    // \addtogroup AMCImpl
+    // \addtogroup AMCServer
     // @{
 
     // This class provides a wrapper around the OS fork() method. Classes that
@@ -44,6 +44,8 @@ namespace LOFAR
     // methods, parent() and child(), can be overridden by the derived class
     // to implement class specific behaviour in the parent and child process
     // respectively.
+    //
+    // \todo Maybe this class should be moved to the LCS/Common package.
     class Process
     {
     public:
@@ -61,7 +63,7 @@ namespace LOFAR
       // spawned process will be made child of the \c init process, which will
       // fetch the child's termination status.
       //
-      // \return \c true is spawn succeeded, else \c false.
+      // \return \c true if spawn succeeded, else \c false.
       bool spawn(bool avoidZombies = false);
 
       // Return true if this is the parent process.

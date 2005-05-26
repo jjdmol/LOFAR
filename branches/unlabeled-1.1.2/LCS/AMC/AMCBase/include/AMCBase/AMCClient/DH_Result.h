@@ -1,4 +1,4 @@
-//#  DH_Result.h: one line description
+//#  DH_Result.h: DataHolder for a conversion result.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_DH_RESULT_H
 #define LOFAR_AMCBASE_AMCCLIENT_DH_RESULT_H
 
+// \file DH_Result.h
+// DataHolder for a conversion result
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -35,6 +38,9 @@ namespace LOFAR
   {
     //# Forward declarations
     class SkyCoord;
+
+    // \addtogroup AMCClient
+    // @{
 
     // This class contains the conversion result that will be transferred from
     // the server to the client.
@@ -67,6 +73,8 @@ namespace LOFAR
       static const int theirVersionNr;
      
     };
+
+    // @}
 
   } // namespace AMC
 

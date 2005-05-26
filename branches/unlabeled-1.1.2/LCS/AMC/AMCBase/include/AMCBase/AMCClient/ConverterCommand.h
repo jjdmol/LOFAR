@@ -1,4 +1,4 @@
-//#  ConverterCommand.h: class describing commands to be sent to converter.
+//#  ConverterCommand.h: Commands to be sent to the AMC Converter server.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_CONVERTERCOMMAND_H
 #define LOFAR_AMCBASE_AMCCLIENT_CONVERTERCOMMAND_H
 
+// \file ConverterCommand.h
+// Commands to be sent to the AMC Converter server
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -35,15 +38,18 @@ namespace LOFAR
   namespace AMC
   {
 
+    // \addtogroup AMCClient
+    // @{
+
     // Class representing the commands that can be sent to the converter. The
     // actual commands are defined in the enumerate type Cmd. This \c enum was
     // defined within a class for a number of reasons:
     // - to be able to define an operator<<(BlobOStream&) and
     //   operator>>(BlobIStream&); this is especially important when we need 
-    //   to ensure that the \c enum is streamed with a fixed size
+    //   to ensure that the \c enum is streamed with a fixed size;
     // - to be able to check whether the \c enum being read using
-    //   operator>>(BlobIStream&) represents a valid enumeration value.
-    // - to avoid namespace pollution
+    //   operator>>(BlobIStream&) represents a valid enumeration value;
+    // - to avoid namespace pollution.
     class ConverterCommand
     {
     public:
@@ -99,11 +105,10 @@ namespace LOFAR
 
     };
 
-//     // Compare \a lhs and \a rhs for equality.
-//     bool operator==(const ConverterCommand& lhs, const ConverterCommand& rhs);
-
     // Output in ASCII format.
     ostream& operator<<(ostream& os, const ConverterCommand& cc);
+
+    // @}
 
 
     //# We implement the constructor and destructor here, because they are
@@ -120,7 +125,7 @@ namespace LOFAR
       ConverterCommand::theirCmdSet.clear();
     }
 
-    
+
   } // namespace AMC
 
 } // namespace LOFAR

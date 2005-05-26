@@ -1,4 +1,4 @@
-//#  DH_Request.h: one line description
+//#  DH_Request.h: DataHolder for a conversion request.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_DH_REQUEST_H
 #define LOFAR_AMCBASE_AMCCLIENT_DH_REQUEST_H
 
+// \file DH_Request.h
+// DataHolder for a conversion request
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -38,6 +41,9 @@ namespace LOFAR
     class EarthCoord;
     class TimeCoord;
     class ConverterCommand;
+
+    // \addtogroup AMCClient
+    // @{
 
     // This class contains the conversion request that will be sent from the
     // client to the server.
@@ -77,6 +83,8 @@ namespace LOFAR
       static const int theirVersionNr;
      
     };
+
+    // @}
 
   } // namespace AMC
 

@@ -1,4 +1,4 @@
-//#  ConverterServer.h: one line description
+//#  ConverterServer.h: server side of the AMC client/server implementation.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCIMPL_AMCSERVER_CONVERTERSERVER_H
 #define LOFAR_AMCIMPL_AMCSERVER_CONVERTERSERVER_H
 
+// \file ConverterServer.h
+// Server side of the AMC client/server implementation
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -33,11 +36,20 @@ namespace LOFAR
 {
   namespace AMC
   {
+
+    // \addtogroup AMCServer
+    // @{
+
     // This class represents the server side of the client/server
-    // implementation of the AMC. Its main purpose is to handle the
-    // communication with the ConverterClient. It does \e not implement the
-    // Converter interface. It uses ConverterImpl to handle the conversion
-    // requests from the clients.
+    // implementation of the AMC. Its main purpose is to handle incoming
+    // connection requests from ConverterClient objects. It does \e not
+    // implement the Converter interface.
+    //
+    // Whenever the server accepts a connection, it immediately creates a new
+    // ConverterProcess object and spawns the current process. The newly
+    // created process will then handle all client requests until the client
+    // disconnects. The server will continue listening for incoming
+    // connections requests.
     class ConverterServer
     {
     public:
@@ -72,6 +84,7 @@ namespace LOFAR
 
     };
 
+    // @}
 
   } // namespace AMC
 

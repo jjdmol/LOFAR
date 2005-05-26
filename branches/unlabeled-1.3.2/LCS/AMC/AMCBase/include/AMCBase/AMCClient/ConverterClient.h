@@ -1,4 +1,4 @@
-//#  ConverterClient.h: one line description
+//#  ConverterClient.h: Client side of the AMC client/server implementation.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_CONVERTERCLIENT_H
 #define LOFAR_AMCBASE_AMCCLIENT_CONVERTERCLIENT_H
 
+// \file ConverterClient.h
+// Client side of the AMC client/server implementation
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -36,8 +39,15 @@ namespace LOFAR
 {
   namespace AMC
   {
+    // \addtogroup AMCClient
+    // @{
+
     // This class represents the client side of the client/server
-    // implementation of the AMC. It implements the Converter interface.
+    // implementation of the AMC. It implements the Converter interface. 
+    //
+    // The client acts as a proxy. It sends a conversion request to the
+    // server; the server performs the actual conversion and returns the
+    // result to the client.
     class ConverterClient : public Converter
     {
     public:
@@ -111,6 +121,8 @@ namespace LOFAR
       Connection itsRecvConn;
 
     };
+
+    // @}
 
   } // namespace AMC
   

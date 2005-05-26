@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCBASE_TIMECOORD_H
 #define LOFAR_AMCBASE_TIMECOORD_H
 
+// \file TimeCoord.h
+// Class to hold a time coordinate as 2 values
+
 //# Forward Declarations.
 #include <Common/lofar_iosfwd.h>
 
@@ -31,6 +34,12 @@ namespace LOFAR
   namespace AMC
   {
 
+    // \addtogroup AMCBase
+    // @{
+
+    // This class represents a moment in time. The time is stored internally
+    // using two doubles: the first representing days as Modified Julian Day
+    // (MJD); the second representing a fraction of a day. 
     class TimeCoord
     {
     public:
@@ -45,29 +54,25 @@ namespace LOFAR
       // Create from an MJD (with possible fractions of day for high accuracy).
       explicit TimeCoord (double mjd, double fraction=0);
 
-      // @{
-      // Get/set the UTC time in seconds since January 1, 1970 (Unix format).
+      // Get the UTC time in seconds since January 1, 1970 (Unix format).
       double utc() const;
+      // Set the UTC time in seconds since January 1, 1970 (Unix format).
       void utc(double s);
-      // @}
 
-      // @{
-      // Get/set the local time in seconds since January 1, 1970 (Unix format).
+      // Get the local time in seconds since January 1, 1970 (Unix format).
       double local() const;
+      // Set the local time in seconds since January 1, 1970 (Unix format).
       void local(double s);
-      // @}
 
-      // @{
-      // Get/set the UTC time in MJD.
+      // Get the UTC time in MJD.
       double mjd() const;
+      // Set the UTC time in MJD.
       void mjd(double mjd);
-      // @}
 
-      // @{
-      // Get day and fraction.
+      // Get day as Modified Julian Day (MJD).
       double getDay() const;
+      // Get fraction of the day.
       double getFraction() const;
-      // @}
 
       // Get year, month, day. If \a local is false, return UTC time; else
       // return local time.
@@ -89,6 +94,8 @@ namespace LOFAR
 
     // Output in ASCII (in UTC).
     ostream& operator<< (ostream&, const TimeCoord&);
+
+    // @}
 
 
     //######################## INLINE FUNCTIONS ########################//

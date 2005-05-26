@@ -1,4 +1,4 @@
-//#  ConverterProcess.h: one line description
+//#  ConverterProcess.h: process client conversion requests.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCIMPL_AMCSERVER_CONVERTERPROCESS_H
 #define LOFAR_AMCIMPL_AMCSERVER_CONVERTERPROCESS_H
 
+// \file ConverterProcess.h
+// Process client conversion requests
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -41,6 +44,15 @@ namespace LOFAR
   namespace AMC
   {
 
+    // \addtogroup AMCServer
+    // @{
+
+    // This class processes the conversion requests it receives from a
+    // ConverterClient. Whenever the ConverterServer accepts an incoming
+    // client connection, it creates a new ConverterProcess object and spawns
+    // a new process. In the new process the handleRequests() method of the
+    // newly create ConverterProcess object is called; this method will handle
+    // all client requests until the client disconnects.
     class ConverterProcess : public Process
     {
     public:
@@ -83,6 +95,8 @@ namespace LOFAR
       ConverterImpl itsConverter;
 
     };
+
+    // @}
 
   } // namespace AMC
 
