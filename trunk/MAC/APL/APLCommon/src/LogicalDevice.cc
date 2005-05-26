@@ -504,9 +504,10 @@ void LogicalDevice::_schedule()
   _sendScheduleToClients();
 }
 
-void LogicalDevice::_cancelSchedule()
+void LogicalDevice::_cancelSchedule(const TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  m_globalError = errorCode;
   m_serverPort.cancelTimer(m_claimTimerId);
   m_claimTimerId = 0;
   m_serverPort.cancelTimer(m_prepareTimerId);
