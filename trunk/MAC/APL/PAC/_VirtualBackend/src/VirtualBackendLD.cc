@@ -203,13 +203,17 @@ GCFEvent::TResult VirtualBackendLD::concrete_releasing_state(
       evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   
-  if (errorCode == LD_RESULT_NO_ERROR)
+  if (event.signal == F_ENTRY)
   {
-    _qualityGuard.stopMonitoring();
-  }
-  else
-  {
-    newState = LOGICALDEVICE_STATE_IDLE;
+    if (errorCode == LD_RESULT_NO_ERROR)
+    {
+      _cepApplication.quit(0);
+      _qualityGuard.stopMonitoring();
+    }
+    else
+    {
+      newState = LOGICALDEVICE_STATE_IDLE;
+    }
   }
   
   return status;
@@ -462,6 +466,12 @@ void VirtualBackendLD::appBooted(uint16 result)
                                      _cepAppParams.getTime("AC.timeout.startup");
     _cepApplication.define(defineTime);
   }
+  else if (result == 0) // Error
+  {
+    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+    _cepApplication.quit(0);
+    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
+  }
 }
 
 void VirtualBackendLD::appDefined(uint16 result)
@@ -473,6 +483,12 @@ void VirtualBackendLD::appDefined(uint16 result)
     time_t initTime   = startTime  - _cepAppParams.getTime("AC.timeout.init");
   
     _cepApplication.init(initTime);
+  }
+  else if (result == 0) // Error
+  {
+    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+    _cepApplication.quit(0);
+    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
   }
 }
 
@@ -487,6 +503,12 @@ void VirtualBackendLD::appInitialized(uint16 result)
   {
     _cepApplication.run(getStartTime());
   }
+  else if (result == 0) // Error
+  {
+    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+    _cepApplication.quit(0);
+    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
+  }
 }
 
 void VirtualBackendLD::appRunDone(uint16 result)
@@ -495,6 +517,12 @@ void VirtualBackendLD::appRunDone(uint16 result)
   if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
   {      
     _cepApplication.quit(getStopTime());
+  }
+  else if (result == 0) // Error
+  {
+    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+    _cepApplication.quit(0);
+    _doStateTransition(LOGICALDEVICE_STATE_RELEASING, LD_RESULT_LOW_QUALITY);
   }
 }
 
