@@ -174,6 +174,7 @@ namespace APLCommon
       void _sendEvent(GCFEventSharedPtr eventPtr, GCF::TM::GCFPortInterface& port);
       void _addChildPort(TPortSharedPtr childPort);
       void _sendScheduleToClients();
+      void _cancelSchedule(const TLDResult& errorCode = LD_RESULT_NO_ERROR);
       string _getShareLocation() const;
       time_t getClaimTime() const;
       time_t getPrepareTime() const;
@@ -234,7 +235,6 @@ namespace APLCommon
       typedef map<string,TLogicalDeviceState> TString2LDStateMap;
       
       void _schedule();
-      void _cancelSchedule();
       void _claim();
       void _prepare();
       void _resume();
