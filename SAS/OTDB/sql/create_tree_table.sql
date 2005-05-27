@@ -17,12 +17,12 @@ CREATE TABLE OTDBtree (
 	classif		INT2			NOT NULL REFERENCES classification(ID),
 	treetype	INT2			NOT NULL REFERENCES treetype(ID),
 	creator		INT2			NOT NULL REFERENCES operator(ID),
-	d_creation	timestamp(0),
+	d_creation	TIMESTAMP(0)	DEFAULT 'now',
 
 	-- optional info
 	campaign	INT4			REFERENCES campaign(ID),
-	starttime	timestamp(0),
-	stoptime	timestamp(0),
+	starttime	TIMESTAMP(0),
+	stoptime	TIMESTAMP(0),
 	owner		INT2			REFERENCES operator(ID),
 
 	-- contraints
