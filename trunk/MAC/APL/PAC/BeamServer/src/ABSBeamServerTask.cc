@@ -533,7 +533,7 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent& wgs,
 
 void BeamServerTask::wgenable_action()
 {
-  if (!GET_CONFIG("BeamServer.DISABLE_WG", i))
+  if (!GET_CONFIG("BeamServer.DISABLE_SETWG", i))
   {
     RSPSetwgEvent wg;
 
@@ -555,20 +555,22 @@ void BeamServerTask::wgenable_action()
 
 void BeamServerTask::wgdisable_action()
 {
-  RSPSetwgEvent wg;
+  if (!GET_CONFIG("BeamServer.DISABLE_SETWG", i)) {
+    RSPSetwgEvent wg;
   
-  wg.timestamp.setNow();
-  wg.rcumask.reset();
-  for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) wg.rcumask.set(i);
-  wg.settings().resize(1);
-  wg.settings()(0).freq = 0;
-  wg.settings()(0).ampl = 0;
-  wg.settings()(0).phase = 0;
-  wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
-  wg.settings()(0).mode = WGSettings::MODE_OFF;
-  wg.settings()(0).preset = WGSettings::PRESET_SINE;
+    wg.timestamp.setNow();
+    wg.rcumask.reset();
+    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) wg.rcumask.set(i);
+    wg.settings().resize(1);
+    wg.settings()(0).freq = 0;
+    wg.settings()(0).ampl = 0;
+    wg.settings()(0).phase = 0;
+    wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
+    wg.settings()(0).mode = WGSettings::MODE_OFF;
+    wg.settings()(0).preset = WGSettings::PRESET_SINE;
 
-  m_rspdriver.send(wg);
+    m_rspdriver.send(wg);
+  }
 }
 
 BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
@@ -632,19 +634,21 @@ void BeamServerTask::compute_weights(long current_seconds)
 
 void BeamServerTask::send_weights()
 {
-  RSPSetweightsEvent sw;
+  if (!GET_CONFIG("BeamServer.DISABLE_SETWEIGHTS", i)) {
+    RSPSetweightsEvent sw;
 
-  sw.timestamp.setNow(COMPUTE_INTERVAL); // activate after COMPUTE_INTERVAL seconds
-  LOG_DEBUG_STR("sw.time=" << sw.timestamp);
+    sw.timestamp.setNow(COMPUTE_INTERVAL); // activate after COMPUTE_INTERVAL seconds
+    LOG_DEBUG_STR("sw.time=" << sw.timestamp);
 
-  // select all BLPS, no subarraying
-  sw.blpmask.reset();
-  for (int i = 0; i < m_n_blps; i++) sw.blpmask.set(i);
+    // select all BLPS, no subarraying
+    sw.blpmask.reset();
+    for (int i = 0; i < m_n_blps; i++) sw.blpmask.set(i);
 
-  sw.weights().resize(COMPUTE_INTERVAL, m_n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
-  sw.weights() = m_weights16;
+    sw.weights().resize(COMPUTE_INTERVAL, m_n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+    sw.weights() = m_weights16;
 
-  m_rspdriver.send(sw);
+    m_rspdriver.send(sw);
+  }
 }
 
 void BeamServerTask::update_sbselection()
@@ -667,85 +671,89 @@ void BeamServerTask::update_sbselection()
 
 void BeamServerTask::send_sbselection()
 {
-  RSPSetsubbandsEvent ss;
+  if (!GET_CONFIG("BeamServer.DISABLE_SETSUBBANDS", i)) {
+    RSPSetsubbandsEvent ss;
   
-  ss.timestamp.setNow(0);
+    ss.timestamp.setNow(0);
 
-  // select all BLPS, no subarraying
-  ss.blpmask.reset();
-  for (int i = 0; i < m_n_blps; i++) ss.blpmask.set(i);
+    // select all BLPS, no subarraying
+    ss.blpmask.reset();
+    for (int i = 0; i < m_n_blps; i++) ss.blpmask.set(i);
 
-  //
-  // Always allocate the array as if all beamlets were
-  // used. Because of allocation and deallocation of beams
-  // there can be holes in the subband selection.
-  //
-  // E.g. Beamlets 0-63 are used by beam 0, beamlets 64-127 by
-  // beam 1, then beam 0 is deallocated, thus there is a hole
-  // of 64 beamlets before the beamlets of beam 1.
-  //
-  ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
-  ss.subbands() = 0;
+    //
+    // Always allocate the array as if all beamlets were
+    // used. Because of allocation and deallocation of beams
+    // there can be holes in the subband selection.
+    //
+    // E.g. Beamlets 0-63 are used by beam 0, beamlets 64-127 by
+    // beam 1, then beam 0 is deallocated, thus there is a hole
+    // of 64 beamlets before the beamlets of beam 1.
+    //
+    ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
+    ss.subbands() = 0;
 
-  int nrsubbands = m_sbsel.size() <= 0 ? 0 : m_sbsel.size() * 2;
-  LOG_DEBUG(formatString("nrsubbands=%d", nrsubbands));
+    int nrsubbands = m_sbsel.size() <= 0 ? 0 : m_sbsel.size() * 2;
+    LOG_DEBUG(formatString("nrsubbands=%d", nrsubbands));
 
-  int i = 0;
-  for (map<int,int>::iterator sel = m_sbsel.begin();
-       sel != m_sbsel.end(); ++sel, ++i)
-  {
-    LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
+    int i = 0;
+    for (map<int,int>::iterator sel = m_sbsel.begin();
+	 sel != m_sbsel.end(); ++sel, ++i)
+      {
+	LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
 
-    if (sel->first >= MEPHeader::N_BEAMLETS)
-    {
-      LOG_ERROR(formatString("SBSELECTION: invalid src index", sel->first));
-      continue;
-    }
+	if (sel->first >= MEPHeader::N_BEAMLETS)
+	  {
+	    LOG_ERROR(formatString("SBSELECTION: invalid src index", sel->first));
+	    continue;
+	  }
       
-    if (sel->second >= MEPHeader::N_SUBBANDS)
-    {
-      LOG_ERROR(formatString("SBSELECTION: invalid tgt index", sel->second));
-      continue;
-    }
+	if (sel->second >= MEPHeader::N_SUBBANDS)
+	  {
+	    LOG_ERROR(formatString("SBSELECTION: invalid tgt index", sel->second));
+	    continue;
+	  }
 
-    // same selection for x and y polarization
-    ss.subbands()(0, sel->first*2)   = sel->second * 2;
-    ss.subbands()(0, sel->first*2+1) = sel->second * 2 + 1;
+	// same selection for x and y polarization
+	ss.subbands()(0, sel->first*2)   = sel->second * 2;
+	ss.subbands()(0, sel->first*2+1) = sel->second * 2 + 1;
+      }
+
+    //cout << "ss.subbands() = " << ss.subbands() << endl;
+
+    m_rspdriver.send(ss);
   }
-
-  //cout << "ss.subbands() = " << ss.subbands() << endl;
-
-  m_rspdriver.send(ss);
 }
 
 void BeamServerTask::send_rcusettings()
 {
-  RSPSetrcuEvent rcu;
+  if (!GET_CONFIG("BeamServer.DISABLE_SETRCU", i)) {
+    RSPSetrcuEvent rcu;
   
-  rcu.timestamp.setNow(0);
+    rcu.timestamp.setNow(0);
 
-  // select all BLPS, no subarraying
-  rcu.rcumask.reset();
-  for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++)
-  {
-    rcu.rcumask.set(i);
-  }
+    // select all BLPS, no subarraying
+    rcu.rcumask.reset();
+    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++)
+      {
+	rcu.rcumask.set(i);
+      }
 
-  int current_spw = SpectralWindowConfig::getInstance().getCurrent();
+    int current_spw = SpectralWindowConfig::getInstance().getCurrent();
   
-  if (current_spw >= 0)
-  {
-    const SpectralWindow* spw = SpectralWindowConfig::getInstance().get(current_spw);
-    if (!spw)
-    {
-      LOG_WARN_STR("No spectral window definition found for spectral window index " << current_spw);
-      return;
-    }
+    if (current_spw >= 0)
+      {
+	const SpectralWindow* spw = SpectralWindowConfig::getInstance().get(current_spw);
+	if (!spw)
+	  {
+	    LOG_WARN_STR("No spectral window definition found for spectral window index " << current_spw);
+	    return;
+	  }
 
-    rcu.settings().resize(1);
-    rcu.settings()(0).value = spw->rcusettings();
+	rcu.settings().resize(1);
+	rcu.settings()(0).value = spw->rcusettings();
 
-    m_rspdriver.send(rcu);
+	m_rspdriver.send(rcu);
+      }
   }
 }
 
@@ -757,9 +765,9 @@ int main(int argc, char** argv)
 
   try 
   {
-    GCF::ParameterSet::instance()->adoptFile("BeamServer.conf");
-    GCF::ParameterSet::instance()->adoptFile("BeamServerPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    //GCF::ParameterSet::instance()->adoptFile(ABS_SYSCONF "/BeamServer.conf");
+    GCF::ParameterSet::instance()->adoptFile(ABS_SYSCONF "/BeamServerPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile(ABS_SYSCONF "/RemoteStation.conf");
   }
   catch (Exception e)
   {

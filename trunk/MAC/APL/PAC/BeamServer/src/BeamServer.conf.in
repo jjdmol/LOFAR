@@ -3,16 +3,19 @@
 #
 
 #
-# Disable control of the waveform generator (=> always use external (RCU) input)
-#
-BeamServer.DISABLE_WG=1
-
-#
 # Total number of BLPS to be used by the Beamformer.
 # This is the total number for the remote stations and should
 # be less than RS.N_RSPBOARDS * RS.N_BLPS
 #
-BeamServer.N_BLPS=2
+BeamServer.N_BLPS=4
+
+#
+# Disable various communication with RSP driver
+#
+BeamServer.DISABLE_SETWEIGHTS=1
+BeamServer.DISABLE_SETSUBBANDS=1
+BeamServer.DISABLE_SETRCU=1
+BeamServer.DISABLE_SETWG=1
 
 #
 # Definitions of spectral windows
