@@ -57,7 +57,7 @@ lofar_DOCXX
 lofar_BLITZ(1)
 lofar_FFTW2
 lofar_LAPACK
-lofar_PACKAGE(LCS/Common)
+lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
 
 dnl
 dnl Output Makefiles

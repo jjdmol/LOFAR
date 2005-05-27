@@ -50,9 +50,9 @@ dnl
 lofar_DEBUG_OPTIMIZE
 lofar_MPI
 lofar_DOCXX
-lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(LCS/Transport)
 
+lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)
 
 dnl
 dnl Output Makefiles

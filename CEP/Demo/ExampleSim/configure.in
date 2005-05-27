@@ -51,12 +51,11 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
-lofar_CORBA
 lofar_MATLAB
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
-lofar_PACKAGE(CEP/CEPFrame)
+lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,CEPFrame/DataManager.h,,)
 
 dnl
 dnl Output Makefiles
