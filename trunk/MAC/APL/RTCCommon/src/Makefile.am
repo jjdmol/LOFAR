@@ -28,14 +28,21 @@ lib_LTLIBRARIES = librtccommon.la libnetraw.la libgnuplot_i.la
 
 include_HEADERS = \
 	Marshalling.h \
+	TestSuite.h \
 	Timestamp.h \
+	Observer.h \
+	Subject.h \
 	netraw.h \
 	gnuplot_i.h
 
 librtccommon_la_SOURCES = \
 	Marshalling.h \
+	TestSuite.h \
 	Timestamp.h \
-	Timestamp.cc
+	Timestamp.cc \
+	Observer.h \
+	Subject.h \
+	Subject.cc
 
 libnetraw_la_SOURCES = \
 	netraw.h \
