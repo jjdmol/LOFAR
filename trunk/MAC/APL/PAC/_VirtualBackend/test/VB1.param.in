@@ -1,18 +1,19 @@
 AC.versionnr=1.0
+qualification=development
 logicalDeviceType=7
 parentHost=localhost
-parentPort=27005
+parentPort=0
 parentTask=VI1
-remoteSystem=LCU1
-startDaemonHost=LCU1
-startDaemonPort=server
+remoteSystem=CEPLCU1
+startDaemonHost=locallhost
+startDaemonPort=27010
 startDaemonTask=PAC_VBStartDaemon
 propertysetBaseName=PAC_VB1
 propertysetDetailsType=TAplPacVB
-claimTime=+10
-prepareTime=+20
-startTime=+200
-stopTime=+230
+claimTime=+20
+prepareTime=+40
+startTime=+115
+stopTime=+10915
 childs=
 
 rescheduleTimeOut=20
