@@ -1,0 +1,731 @@
+V 10
+1
+LANG:1 19 station_subrack_rcu
+PANEL,295 138 923 749 N "_3DFace" 1
+"$datapoint"
+EEE E E 1 -1 -1 0  130 290
+"" 0 1
+E"//Include of ctl file
+#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 129
+"Border31"
+""
+1 210 665 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 210 160 650 665
+4 36
+"Line1"
+""
+1 270 720 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  590 720 270 720
+4 37
+"Line2"
+""
+1 430 720 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  430 720 430 621
+4 39
+"Line3"
+""
+1 520 395 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  520 485 520 395
+6 44
+"Border3"
+""
+1 280 325 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 280 265 400 325
+2 45
+"Text3"
+""
+1 300 271 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 302 273 385 289
+0 2 0 "s" 0 0 0 192 0 0  302 273
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Low band filter
+4 53
+"Line5"
+""
+1 340 395 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  340 485 340 395
+4 54
+"Line6"
+""
+1 460 485 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  520 485 460 485
+4 55
+"Line7"
+""
+1 340 325 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  340 365 340 325
+4 57
+"Line9"
+""
+1 430 589 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  430 589 430 560
+2 60
+"Text6"
+""
+1 527 469 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 529 471 587 487
+0 2 0 "s" 0 0 0 192 0 0  529 471
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 High-band
+2 61
+"Text7"
+""
+1 270 468 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 272 470 327 486
+0 2 0 "s" 0 0 0 192 0 0  272 470
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 Low-band
+4 65
+"Line15"
+""
+1 340 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  340 265 340 120
+4 122
+"Line18"
+""
+1 520 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  520 265 520 120
+2 183
+"txt_polarization_HFA"
+""
+1 526 139 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  string RcuNumber;
+//  setValue(\"\", \"text\", substr($datapoint, strlen($datapoint)-1, strlen($datapoint)));
+  RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
+  if (RcuNumber==\"1\")
+    setValue(\"\", \"text\", \"x\");
+  else if (RcuNumber==\"2\")
+    setValue(\"\", \"text\", \"y\");
+  else 
+    setValue(\"\", \"text\", \"?\");
+
+}
+" 0
+ E 0 1 1 0 1 E U  0 E 528 141 536 157
+0 2 0 "s" 0 0 0 192 0 0  528 141
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+1 196 10 "" 0
+0
+1 197 10 "" 1
+0
+4 201
+"Line8"
+""
+1 520 325 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+99 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  520 365 520 325
+1 208 13 "" 0
+0
+1 209 13 "" 4
+0
+1 210 13 "" 5
+0
+1 212 14 "" 0
+0
+1 213 14 "" 2
+0
+1 215 15 "" 0
+0
+1 216 15 "" 2
+0
+1 218 16 "" 0
+0
+1 219 16 "" 2
+0
+1 221 17 "" 0
+0
+1 222 17 "" 2
+0
+1 224 18 "" 0
+0
+1 225 18 "" 2
+0
+4 229
+"Line11"
+""
+1 340 485 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+109 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  400 485 340 485
+2 230
+"Text1"
+""
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+110 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+ setValue(\"\", \"text\", $datapoint);
+}" 0
+ E 0 1 1 0 1 E U  0 E 12 2 678 18
+0 2 0 "s" 0 0 0 64 0 0  12 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Text1
+2 231
+"Text2"
+""
+1 303 75 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+110 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 341 77 413 93
+0 2 0 "s" 0 0 0 193 0 0  341 77
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Low-frequent
+2 234
+"Text8"
+""
+1 315 95 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+113 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 341 97 389 113
+0 2 0 "s" 0 0 0 193 0 0  341 97
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Antenna
+2 235
+"Text9"
+""
+1 480 75 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+114 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 520 77 596 93
+0 2 0 "s" 0 0 0 193 0 0  520 77
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 High-frequent
+2 236
+"Text10"
+""
+1 495 95 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 521 97 569 113
+0 2 0 "s" 0 0 0 193 0 0  521 97
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Antenna
+2 239
+"txt_polarization_LFA"
+""
+1 346 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  string RcuNumber;
+//  setValue(\"\", \"text\", substr($datapoint, strlen($datapoint)-1, strlen($datapoint)));
+  RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
+  if (RcuNumber==\"1\")
+    setValue(\"\", \"text\", \"x\");
+  else if (RcuNumber==\"2\")
+    setValue(\"\", \"text\", \"y\");
+  else 
+    setValue(\"\", \"text\", \"?\");
+
+}
+" 0
+ E 0 1 1 0 1 E U  0 E 348 142 356 158
+0 2 0 "s" 0 0 0 192 0 0  348 142
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+2 240
+"Text12"
+""
+1 529 700 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 561 702 621 718
+0 2 0 "s" 0 0 0 193 0 0  561 702
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Backplane
+6 242
+"rect_overflow"
+""
+1 479 620 E E E 1 E 1 E N "_Transparent" E N "Lofar_device_active" E E
+ E E
+120 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 479 590 619 620
+2 244
+"Text5"
+""
+1 562 602 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+122 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 590 604 642 620
+0 2 0 "s" 0 0 0 193 0 0  590 604
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 overflows
+4 254
+"Line10"
+""
+1 479 590 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+129 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  479 590 619 590
+4 255
+"Line12"
+""
+1 480 620 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+130 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  480 620 620 620
+4 256
+"Line13"
+""
+1 619 590 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+131 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  619 621 619 590
+2 243
+"Text4"
+""
+1 576 587 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+121 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 590 589 614 605
+0 2 0 "s" 0 0 0 193 0 0  590 589
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 nr of
+14 47
+"TextField1"
+""
+1 285 295 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+283 293 397 320
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", \"10-90 MHz\");
+}" 0
+
+E
+1 198 10 "" 2
+0
+1 211 13 "" 1
+0
+1 214 14 "" 1
+0
+1 217 15 "" 1
+0
+1 220 16 "" 1
+0
+1 223 17 "" 1
+0
+1 226 18 "" 1
+0
+14 241
+"txt_overflow"
+""
+1 488 594 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+486 592 560 617
+3 "s" 0 0 0 2 0 0 
+E
+"main()
+{
+  string RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
+  setValue(\"txt_overflow\", \"editable\", FALSE);  
+  if (dpExists($datapoint + \".VddVccEn\",
+               $datapoint + \".nofOverflow:_online.._value\"))
+	{
+	  dpConnect(\"ShownofOverflows\", $datapoint + \".VddVccEn:_online.._value\",
+	                                $datapoint + \".nofOverflow:_online.._value\");
+  }
+  else
+  {
+    setValue(\"rect_overflow\", \"backCol\", \"DpDoesNotExist\");
+  }
+}
+
+ShownofOverflows(string dp1, bool Status,
+                 string dp2, unsigned nofOverflow)
+{
+ 
+  setValue(\"txt_overflow\", \"text\", nofOverflow );
+  if (Status==TRUE)
+  {
+    setValue(\"rect_overflow\", \"backCol\", \"Lofar_device_active\");
+  }
+  else 
+  {
+    setValue(\"rect_overflow\", \"backCol\", \"grey\");
+  }
+   
+   
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+" 0
+
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 10 ""
+"objects\\PIC\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  147 125  
+1
+"$datapoint""$datapoint"
+3 13 ""
+"objects\\PIC\\STS_RCU_bandSelection.pnl" 475 403 T 102 1 0 1  -45 112  
+1
+"$datapoint""$datapoint"
+3 14 ""
+"objects\\PIC\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  209 -259  
+3
+"$Caption""LFA-Receiver"
+"$Component""VlEnable"
+"$datapoint""$datapoint"
+3 15 "Group11"
+"objects\\PIC\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  411 45  
+3
+"$Caption""HFA-Receiver"
+"$Component""VhEnable"
+"$datapoint""$datapoint"
+3 16 "Group13"
+"objects\\PIC\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  50 270  
+3
+"$Caption""AD-Convertor"
+"$Component""VddVccEn"
+"$datapoint""$datapoint"
+3 17 "Group15"
+"objects\\PIC\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  231 -75  
+3
+"$Caption""LFA-Amplifier"
+"$Component""LBAEnable"
+"$datapoint""$datapoint"
+3 18 "Group17"
+"objects\\PIC\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  411 110  
+3
+"$Caption""HFA-Amplifier"
+"$Component""HBAEnable"
+"$datapoint""$datapoint"
+0

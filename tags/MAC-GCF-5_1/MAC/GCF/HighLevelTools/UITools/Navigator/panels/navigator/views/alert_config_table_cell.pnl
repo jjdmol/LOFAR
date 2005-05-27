@@ -1,0 +1,427 @@
+V 10
+1
+LANG:1 19 Trace configuration
+PANEL,285 168 600 283 N "_3DFace" 6
+"$AreaNr"
+"$Column"
+"$Row"
+"$configDatapoint"
+"$datapoint"
+"$selectedDP"
+"main()
+{
+//  startThread(\"FillSelectionList\");
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: FillSelectionList
+// Function    : Fills the selection list with retrieved datapoint from the 
+//               PVSS database
+ ///////////////////////////////////////////////////////////////////////////////////
+void FillSelectionList()
+{
+  dyn_dyn_anytype tab;
+  int j=1;
+  int i;
+  int SelectionPosition;
+  string temp, CurrentAlertClass;
+  string value, hulp, EntryForSelectionList, CurrentSelection;
+  dyn_anytype all;
+  dyn_string Items;
+ 	bool state;
+ 	int TotalDPE;
+  //DebugTN(\"## start dpQuery\");
+  if ($datapoint==\"\")
+  {
+    dpQuery(\"SELECT '_online.._value' FROM 'PIC*' \", tab);
+    dpQuery(\"SELECT '_alert_hdl.._active' FROM 'PIC*' WHERE ('_alert_hdl.._active' > 0)\", tab);
+    DebugN(\"Query is PIC*\");
+  }
+  else
+  {
+   //dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint + \"*' \", tab);
+   dpQuery(\"SELECT '_alert_hdl.._active' FROM '\" + $datapoint + \"*' WHERE ('_alert_hdl.._active' > 0)\", tab);
+  }
+  //DebugTN(\"## stop  dpQuery\");
+  SelectionList1.deleteAllItems();
+  TotalDPE = dynlen(tab);
+  bool AlertActive;
+  for (i=2; i<=TotalDPE ; i++)
+  {
+    if (\"\" != tab[i][1])
+    {
+      //DebugTN(\"-----------------------\");
+      //DebugTN(\"----- get ------\");
+      //System1:PIC_WAN_Switch01.status:_alert_hdl.._class
+      //dpGet(tab[i][1] + \":_alert_hdl.._class\", CurrentAlertClass); // Get the alertclass of the DPE
+      //dpGet(tab[i][1] + \":_alert_hdl.._active\", AlertActive);
+      
+      
+      
+      //DebugTN(\"-- get ready ---\");
+      //if (AlertActive ==TRUE)                                  // If \"\" there is no alertclass
+      //{                                                            // configured!
+        DebugN(\"##alertclass found: \"+i);
+        //////////////////////////////////
+        //string hulp, EntryForSelectionList;
+        //hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
+        //EntryForSelectionList = strltrim(hulp, dpSubStr($datapoint, DPSUB_DP_EL));
+        ///////////////////////////////////
+        // Items[j] = tab[i][1];  // this is the old, absolute addition
+        EntryForSelectionList = strltrim(dpSubStr(tab[i][1], DPSUB_DP_EL_CONF_DET_ATT), (dpSubStr($datapoint, DPSUB_DP_EL)+\"_\"));
+        if (0==(strpos (EntryForSelectionList, \"_\")))
+          Items[j] = strltrim(EntryForSelectionList, \"_\");
+        else if (0==(strpos (EntryForSelectionList, \".\")))
+          Items[j] = strltrim(EntryForSelectionList, \".\");
+        else
+          Items[j] = EntryForSelectionList;
+        
+        j++;
+
+      //}
+      ProgressBar(TotalDPE, i);
+    }
+  }
+
+	setValue(\"SelectionList1\", \"items\", Items);  //Insert all items in one time, faster the inserting every item apart
+  //DebugTN(\"## Total: \" + TotalDPE);
+  ProgressBar(TotalDPE, TotalDPE);
+//  SelectionList1.selectedPos(SelectionPosition);
+//	DebugN(\"SelectionPosition: \"+SelectionPosition);
+}
+
+
+" 0
+EE E E 1 -1 -1 0  190 250
+"" 0 1
+E"//Include of ctl file
+#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 4
+"Text1"
+""
+1 17 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 254 115 270
+0 2 0 "s" 0 0 0 64 0 0  19 254
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Label in cell
+6 29
+"Border2"
+""
+1 10 265 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 250 140 274
+6 53
+"progressBar_border"
+""
+1 10 222 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+41 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 216 590 234
+6 54
+"progressBar"
+""
+1 13 228 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
+ E E
+42 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 13 219 586 229
+6 59
+"Border5"
+""
+1 10 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 30 370 40
+6 60
+"Border6"
+""
+1 10 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 46 30
+2 61
+"Text2"
+""
+1 17 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+49 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 12 37 28
+0 2 0 "s" 0 0 0 192 0 0  19 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 DP
+4 62
+"Line1"
+""
+1 11 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  46 30 11 30
+6 63
+"Border7"
+""
+1 380 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+51 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 380 30 590 40
+6 64
+"Border8"
+""
+1 380 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+52 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 380 10 423 30
+2 65
+"Text6"
+""
+1 387 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 389 12 416 28
+0 2 0 "s" 0 0 0 192 0 0  389 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 DPE
+4 66
+"Line3"
+""
+1 381 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  423 30 381 30
+14 5
+"txt_legend"
+""
+1 127 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+125 248 279 275
+3 "s" 0 0 0 0 0 0 
+E
+"// valid
+main()
+{
+  dyn_string ColumnTitles;
+
+  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
+  if(dynlen(ColumnTitles)<=$Row)
+  {
+    setValue(\"txt_legend\", \"text\", ColumnTitles[ConvIndex($Row)]);
+  } 
+   
+}" 0
+
+E
+1 49 0 "" 0
+0
+1 50 0 "" 1
+0
+1 51 0 "" 2
+0
+13 55
+"btn_ok"
+""
+1 390 250 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+388 248 452 275
+T 
+1
+LANG:1 2 OK
+"main()
+{
+  navViewAlertApplyCellSettings($Row, $Column);
+  PanelOff();
+}" 0
+ E E E
+13 56
+"btn_apply"
+""
+1 530 250 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+528 248 592 275
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  navViewAlertApplyCellSettings($Row, $Column);
+}" 0
+ E E E
+13 57
+"Button4"
+""
+1 460 250 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+458 248 522 275
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "Group2"
+"objects\\Nav\\nav_SysDpDpeSelection.pnl" -80 40 T 39 1 0 1  0 2  
+2
+"$datapoint""$datapoint"
+"$selectedDP""$selectedDP"
+0

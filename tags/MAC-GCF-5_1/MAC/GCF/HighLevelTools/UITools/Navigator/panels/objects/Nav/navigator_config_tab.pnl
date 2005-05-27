@@ -1,0 +1,173 @@
+V 10
+1
+LANG:1 9 ConfigTab
+PANEL,511 187 946 43 N "_3DFace" 7
+"$configDatapoint"
+"$controlAttributes"
+"$controlNames"
+"$elementNames"
+"$selectedElementDpType"
+"$selectedView"
+"$viewName"
+"main()
+{
+  //DebugTN(\"ConfigTab: $selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames:\",$selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames);
+  DebugTN(\"ConfigTab: $selectedView,$configDatapoint,$selectedElementDpType:\",$selectedView,$configDatapoint,$selectedElementDpType);
+}" 0
+EE E E 1 -1 -1 0  20 40
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+4 57
+"LINE1"
+""
+1 1 39 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+67 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  1 39 938 39
+13 54
+"btnNew"
+""
+1 4 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+62 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
+0 ""
+4 4 100 31
+T 
+1
+LANG:1 14 New subview...
+"main()
+{
+  ChildPanelOnCentralModal(
+    \"navigator/navigator_newsubview.pnl\",
+    \"Add Sub-view\",
+    makeDynString(\"$addView:TRUE\", 
+                  \"$viewName:\" + $viewName,
+                  \"$selectedView:\" + $selectedView, 
+                  \"$selectedElementDpType:\" + $selectedElementDpType, 
+                  \"$configDatapoint:\" + $configDatapoint));
+
+  // TODO: refresh the Views or SubViews controls, to make the new subview available
+}" 0
+ E E E
+13 55
+"btnRemove"
+""
+1 104 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+64 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
+0 ""
+104 4 200 31
+T 
+1
+LANG:1 14 Remove subview
+"main()
+{
+  ChildPanelOnCentralModal(
+    \"navigator/navigator_newsubview.pnl\",
+    \"Remove Sub-view\",
+    makeDynString(\"$addView:FALSE\", 
+                  \"$viewName:\" + $viewName,
+                  \"$selectedView:\" + $selectedView, 
+                  \"$selectedElementDpType:\" + $selectedElementDpType, 
+                  \"$configDatapoint:\" + $configDatapoint));
+
+  // TODO: refresh the Views or SubViews controls, to remove the subview from the combobox
+
+}" 0
+ E E E
+13 56
+"btnApply"
+""
+1 204 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+66 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
+0 ""
+204 4 300 31
+T 
+1
+LANG:1 13 Apply changes
+"main()
+{
+  if(isDollarDefined(\"$configDatapoint\") && 
+     isDollarDefined(\"$controlNames\") && 
+     isDollarDefined(\"$controlAttributes\") && 
+     isDollarDefined(\"$elementNames\"))
+  {
+    dyn_string dynControlNames = strsplit($controlNames,\"|\");
+    dyn_string dynControlAttributes = strsplit($controlAttributes,\"|\");
+    dyn_string dynElementNames = strsplit($elementNames,\"|\");
+    for(int i=1; i<=dynlen(dynControlNames);i++)
+    {
+      anytype value;
+      getValue(dynControlNames[i],dynControlAttributes[i],value);
+      DebugTN(\"Storing control value:\",dynControlNames[i],dynControlAttributes[i],value,$configDatapoint,dynElementNames[i]);
+
+      dpSet($configDatapoint + \".\" + dynElementNames[i],value);
+    }
+  }
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

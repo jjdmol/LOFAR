@@ -1,0 +1,497 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,355 259 950 740 N "_3DFace" 5
+"$configDatapoint"
+"$datapoint"
+"$selectedElementDpType"
+"$selectedView"
+"$viewName"
+EEE E E 1 -1 -1 0  20 20
+"" 0 1
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 23
+"Border5"
+""
+1 10 169 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 155 330 179
+2 0
+"Text3"
+""
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 52 119 68
+0 2 0 "s" 0 0 0 64 0 0  12 52
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Logging for type:
+2 1
+"txt_dpTypeName"
+""
+1 133 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+	if (dpExists($datapoint))
+	{
+	  setValue(\"\", \"text\", dpTypeName($datapoint));
+	}
+	else
+	{
+    setValue(\"\", \"text\", \"datapoint type not found\");
+  }
+}" 0
+ E 0 1 1 0 1 E U  0 E 135 52 444 68
+0 2 0 "s" 0 0 0 64 0 0  135 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+1 14 1 "" 57
+0
+1 18 2 "" 0
+0
+1 19 2 "" 4
+0
+1 19 2 "" 1
+0
+1 20 2 "" 2
+0
+1 21 2 "" 3
+0
+2 22
+"txt_Dedicated_panel"
+""
+1 22 157 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 24 159 218 175
+0 2 0 "s" 0 0 0 64 0 0  24 159
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 31 Amount of entries in the logger
+6 24
+"Border20"
+""
+1 10 128 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 118 328 128
+6 25
+"Border21"
+""
+1 10 118 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 98 60 118
+2 26
+"Text31"
+""
+1 15 98 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 17 100 53 116
+0 2 0 "s" 0 0 0 192 0 0  17 100
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Config
+4 27
+"Line2"
+""
+1 10 118 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  60 118 10 118
+6 31
+"Border4"
+""
+1 10 203 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 179 330 203
+2 32
+"Text7"
+""
+1 22 181 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 129 183 234 199
+0 2 0 "s" 0 0 0 194 0 0  129 183
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 Application filter
+6 33
+"Border1"
+""
+1 10 227 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 203 330 227
+2 34
+"Text8"
+""
+1 49 205 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 129 207 207 223
+0 2 0 "s" 0 0 0 194 0 0  129 207
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Logger filter
+6 38
+"Border2"
+""
+1 10 155 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 131 330 155
+2 39
+"Text1"
+""
+1 99 133 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 129 135 157 151
+0 2 0 "s" 0 0 0 194 0 0  129 135
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Title
+1 15 1 "" 54
+0
+1 16 1 "" 55
+0
+1 17 1 "" 58
+0
+22 30
+"messageWindow"
+""
+1 250 155 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+248 153 332 180
+7
+1
+LANG:1 2 25
+ 0
+1
+LANG:1 2 50
+ 0
+1
+LANG:1 2 75
+ 0
+1
+LANG:1 3 100
+ 0
+1
+LANG:1 3 125
+ 0
+1
+LANG:1 3 150
+ 0
+1
+LANG:1 3 300
+ 0
+E
+"main()
+{
+  dpSet($configDatapoint + \".messageWindow\", messageWindow.selectedText);
+}" 0
+
+E
+ 0 0
+14 35
+"txt_filterAppl"
+""
+1 140 179 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+138 177 330 204
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 36
+"txt_filterLogger"
+""
+1 140 203 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+138 201 330 228
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 37
+"btn_apply"
+""
+1 270 240 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+27 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+268 238 332 265
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  dpSet($configDatapoint + \".filterAppl\", txt_filterAppl.text);
+  dpSet($configDatapoint + \".filterLogger\", txt_filterLogger.text);
+  dpSet($configDatapoint + \".title\", txt_title.text);
+}" 0
+ E E "main()
+{
+  if(navConfigConfigSubviewPermitted())
+  {
+    messageWindow.enabled = TRUE;
+    txt_filterAppl.enabled = TRUE;
+    txt_filterLogger.enabled = TRUE;
+    txt_title.enabled = TRUE;
+    btn_apply.enabled = TRUE;
+    navViewLogFillConfig();
+  }
+  else
+  {
+    messageWindow.enabled = FALSE;
+    txt_filterAppl.enabled = FALSE;
+    btn_apply.enabled = FALSE;
+    txt_title.enabled = FALSE;
+    txt_filterLogger.enabled = FALSE;
+
+  }
+}
+
+
+void navViewLogFillConfig()
+{
+
+  int messageWindowSetting;
+  string filterLogger, filterAppl, title;
+
+  dpGet($configDatapoint + \".filterAppl\", filterAppl);
+  dpGet($configDatapoint + \".filterLogger\", filterLogger);
+  setValue(\"txt_filterLogger\",\"text\", filterLogger);
+  setValue(\"txt_filterAppl\",\"text\", filterAppl);
+
+  dpGet($configDatapoint + \".title\", title);
+  setValue(\"txt_title\",\"text\", title);
+  
+  dpGet($configDatapoint + \".messageWindow\", messageWindowSetting);
+  if(messageWindowSetting<=0)
+  {
+    dpSet(dpName, 25);
+  }
+  else
+  {
+    dyn_string items = messageWindow.items;
+    messageWindow.selectedPos = dynContains(items, messageWindowSetting);
+  }
+}
+" 0
+
+14 40
+"txt_title"
+""
+1 140 131 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+138 129 330 156
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 ""
+"navigator\\navigator_config_tab.pnl" 120 250 T 11 1 0 1  -101 -206  
+4
+"$configDatapoint""$configDatapoint"
+"$selectedElementDpType""$selectedElementDpType"
+"$selectedView""$selectedView"
+"$viewName""$viewName"
+3 2 "Group3"
+"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 590 T 11 1 0 1  10 70  
+1
+"$datapoint""$datapoint"
+0
