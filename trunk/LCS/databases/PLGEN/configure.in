@@ -53,8 +53,8 @@ dnl
 lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
-lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(LCS/databases/PL)
+lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/databases/PL,PL,,PL/PersistentObject.h,,)
 
 dnl
 dnl Output Makefiles

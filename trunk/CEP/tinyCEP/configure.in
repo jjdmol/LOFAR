@@ -5,7 +5,7 @@ AC_INIT(src/WorkHolder.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(tinyCEP, 1.0, no-define)
+AM_INIT_AUTOMAKE(tinyCEP, 0.1)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -56,8 +56,9 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI
-lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(LCS/Transport)
+
+lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)
 
 dnl
 dnl Output Makefiles
