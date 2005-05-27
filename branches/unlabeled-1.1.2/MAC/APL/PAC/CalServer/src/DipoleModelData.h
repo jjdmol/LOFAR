@@ -28,28 +28,30 @@
 #include <blitz/array.h>
 #include <fstream>
 
-namespace CAL
-{
-  class DipoleModelData
-  {
-  public:
-    DipoleModelData();
-    virtual ~DipoleModelData();
+namespace LOFAR {
+  namespace CAL {
 
-    bool getNextFromFile(std::string filename);
+    class DipoleModelData
+    {
+    public:
+      DipoleModelData();
+      virtual ~DipoleModelData();
 
-    std::string getName() const { return m_name; }
-    const blitz::Array<std::complex<double>, 4>& getSens() const { return m_sens; }
+      bool getNextFromFile(std::string filename);
 
-  private:
-    std::string   m_filename;
-    std::ifstream m_file;
+      std::string getName() const { return m_name; }
+      const blitz::Array<std::complex<double>, 4>& getSens() const { return m_sens; }
 
-    std::string                           m_name;
-    blitz::Array<std::complex<double>, 4> m_sens;
-  };
+    private:
+      std::string   m_filename;
+      std::ifstream m_file;
 
-};
+      std::string                           m_name;
+      blitz::Array<std::complex<double>, 4> m_sens;
+    };
+
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* DIPOLEMODELDATA_H_ */
 

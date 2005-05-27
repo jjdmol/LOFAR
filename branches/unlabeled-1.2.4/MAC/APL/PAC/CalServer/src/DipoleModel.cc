@@ -32,9 +32,10 @@
 #include <fstream>
 #include <blitz/array.h>
 
-using namespace CAL;
-using namespace blitz;
 using namespace std;
+using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
 
 DipoleModel::DipoleModel(string name) : m_name(name)
 {
@@ -50,6 +51,11 @@ DipoleModels::DipoleModels()
 
 DipoleModels::~DipoleModels()
 {
+  for (map<string, const DipoleModel*>::const_iterator it = m_models.begin();
+       it != m_models.end(); it++)
+  {
+    if ((*it).second) delete (*it).second;
+  }
 }
 
 void DipoleModels::getAll(string url)

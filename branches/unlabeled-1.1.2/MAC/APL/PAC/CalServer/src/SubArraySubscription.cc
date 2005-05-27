@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationAlgorithm.h: class definition for the Beam Server task.
+//#  SubArraySubscription.cc: class implementation
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,32 +21,31 @@
 //#
 //#  $Id$
 
-#ifndef CALIBRATIONALGORITHM_H_
-#define CALIBRATIONALGORITHM_H_
+#include "SubArray.h"
+#include "SubArraySubscription.h"
+#include "CAL_Protocol.ph"
+#include <Common/LofarLogger.h>
 
-#include "CalibrationInterface.h"
-#include "Source.h"
-#include "DipoleModel.h"
+using namespace LOFAR;
+using namespace CAL;
+using namespace RTC;
 
-namespace LOFAR {
-  namespace CAL {
+void SubArraySubscription::update(Subject* subject)
+{
+  ASSERT(subject == static_cast<Subject*>(m_subarray));
 
-    class CalibrationAlgorithm : public CalibrationInterface
-    {
-    public:
-      CalibrationAlgorithm(const Sources& sources, const DipoleModel& dipolemodel);
-      virtual ~CalibrationAlgorithm();
-      
-      virtual const Sources&     getSources()     { return m_sources;     }
-      virtual const DipoleModel& getDipoleModel() { return m_dipolemodel; }
-      
-    private:
-      const Sources&     m_sources;
-      const DipoleModel& m_dipolemodel;
-    };
+  const AntennaGains* calibratedGains = 0;
+    
+  // get gains from the FRONT buffer
+  if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
 
-  }; // namespace CAL
-}; // namespace LOFAR
-
-#endif /* CALIBRATIONALGORITHM_H_ */
+    CALUpdateEvent update;
+    update.timestamp.setNow(0);
+    update.status = SUCCESS;
+    update.handle = (uint32)this;
+    
+    update.gains = *calibratedGains;
+    m_port.send(update);
+  }
+}
 

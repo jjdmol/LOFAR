@@ -28,91 +28,93 @@
 #include <blitz/array.h>
 #include <map>
 
-namespace CAL
-{
-  /**
-   * This class represents an antenna array. The LOFAR remote station will initially
-   * have two anntena arrays. One for the low-band antennas, and one for the high-band
-   * antennas. Alternative configurations of the antennas would also be described by 
-   * separate AntennaArray instance.
-   * The AntennaArray instantes are created using information from a configuration file.
-   */
-  class AntennaArray
-  {
-  public:
+namespace LOFAR {
+  namespace CAL {
+
+    /**
+     * This class represents an antenna array. The LOFAR remote station will initially
+     * have two anntena arrays. One for the low-band antennas, and one for the high-band
+     * antennas. Alternative configurations of the antennas would also be described by 
+     * separate AntennaArray instance.
+     * The AntennaArray instantes are created using information from a configuration file.
+     */
+    class AntennaArray
+    {
+    public:
     
-    /**
-     * Create a new antenna array.
-     * @param name      The name of this antenna array.
-     * @param pos       The x,y,z positions of the antennas (dimensions: nantennas x npol (2) x 3 (x,y,z)
-     * @param rcuindex  The mapping from antenna to input RCU. If the mapping is one-on-one then this
-     * parameter can be omitted. This is used for creating subarrays of an AntennaArray.
-     */
-    AntennaArray(std::string                    name,
-		 const blitz::Array<double, 3>& pos,
-		 const blitz::Array<int, 2>*    rcuindex = 0);
-    virtual ~AntennaArray();
+      /**
+       * Create a new antenna array.
+       * @param name      The name of this antenna array.
+       * @param pos       The x,y,z positions of the antennas (dimensions: nantennas x npol (2) x 3 (x,y,z)
+       * @param rcuindex  The mapping from antenna to input RCU. If the mapping is one-on-one then this
+       * parameter can be omitted. This is used for creating subarrays of an AntennaArray.
+       */
+      AntennaArray(std::string                    name,
+		   const blitz::Array<double, 3>& pos,
+		   const blitz::Array<int, 2>*    rcuindex = 0);
+      virtual ~AntennaArray();
+
+      /**
+       * Get the name of the array.
+       * @return The name of the array or subarray (e.g. LBA_ARRAY, HBA_ARRAY, SINGLEPOL_LBA_ARRAY, etc).
+       */
+      std::string getName() const { return m_name; }
+
+      /**
+       * Get the positions of the antennas.
+       * @return The array with positions of the antennas.
+       */
+      const blitz::Array<double, 3>& getAntennaPos() const { return m_pos; }
+
+      /**
+       * @return The number of dual polarized antennas (one antenna = two dipoles)
+       */
+      int getNumAntennas() const { return m_pos.extent(blitz::firstDim); }
+
+      /**
+       * Get the RCU index of a particular antenna.
+       */
+      inline int getRCUIndex(int nantenna, int npol) const { return m_rcuindex(nantenna, npol); }
+
+    private:
+      std::string             m_name;     // name of this antenna array
+
+    protected:
+
+      friend class AntennaArrayLoader;
+
+      blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas x Npol x 3 (x,y,z)
+      blitz::Array<int, 2>    m_rcuindex; // the index of the rcu to which a dipole is connected, dimensions Nantennas x Npol
+    };
 
     /**
-     * Get the name of the array.
-     * @return The name of the array or subarray (e.g. LBA_ARRAY, HBA_ARRAY, SINGLEPOL_LBA_ARRAY, etc).
+     * Factory class for the Antenna class. Manages one or more AntennaArrays which are loaded from file.
      */
-    std::string getName() const { return m_name; }
+    class AntennaArrays
+    {
+    public:
+      AntennaArrays();
+      virtual ~AntennaArrays();
 
-    /**
-     * Get the positions of the antennas.
-     * @return The array with positions of the antennas.
-     */
-    const blitz::Array<double, 3>& getAntennaPos() const { return m_pos; }
+      /**
+       * Get an antenna array by name.
+       * @return a pointer to the AntennaArray or 0 if the array was not found.
+       */
+      const AntennaArray* getByName(std::string name) { return m_arrays[name]; }
 
-    /**
-     * @return The number of dual polarized antennas (one antenna = two dipoles)
-     */
-    int getNumAntennas() const { return m_pos.extent(blitz::firstDim); }
+      /**
+       * Get all antenna arrays. A second call to this method replaces the antenna arrays
+       * loaded by the first call.
+       * @param url load antenna arrays from this resource location (e.g. filename or database table).
+       */
+      void getAll(std::string url);
 
-    /**
-     * Get the RCU index of a particular antenna.
-     */
-    inline int getRCUIndex(int nantenna, int npol) const { return m_rcuindex(nantenna, npol); }
+    private:
+      std::map<std::string, const AntennaArray*> m_arrays;
+    };
 
-  private:
-    std::string             m_name;     // name of this antenna array
-
-  protected:
-
-    friend class AntennaArrayLoader;
-
-    blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas x Npol x 3 (x,y,z)
-    blitz::Array<int, 2>    m_rcuindex; // the index of the rcu to which a dipole is connected, dimensions Nantennas x Npol
-  };
-
-  /**
-   * Factory class for the Antenna class. Manages one or more AntennaArrays which are loaded from file.
-   */
-  class AntennaArrays
-  {
-  public:
-    AntennaArrays();
-    virtual ~AntennaArrays();
-
-    /**
-     * Get an antenna array by name.
-     * @return a pointer to the AntennaArray or 0 if the array was not found.
-     */
-    const AntennaArray& getByName(std::string name) { return *m_arrays[name]; }
-
-    /**
-     * Get all antenna arrays. A second call to this method replaces the antenna arrays
-     * loaded by the first call.
-     * @param url load antenna arrays from this resource location (e.g. filename or database table).
-     */
-    void getAll(std::string url);
-
-  private:
-    std::map<std::string, const AntennaArray*> m_arrays;
-  };
-
-};
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* ANTENNAARRAY_H_ */
 

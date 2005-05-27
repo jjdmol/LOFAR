@@ -31,9 +31,10 @@
 #include "SubArray.h"
 #include <blitz/array.h>
 
-namespace CAL
-{
-  class RemoteStationCalibration : public CalibrationAlgorithm
+namespace LOFAR {
+  namespace CAL {
+
+    class RemoteStationCalibration : public CalibrationAlgorithm
     {
     public:
       RemoteStationCalibration(const Sources& sources, const DipoleModel& dipolemodel);
@@ -59,7 +60,9 @@ namespace CAL
 
       // member variables needed to store local state
     };
-};
+
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* REMOTESTATIONCALIBRATION_H_ */
 

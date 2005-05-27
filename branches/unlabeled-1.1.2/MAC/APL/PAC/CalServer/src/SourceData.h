@@ -28,33 +28,35 @@
 #include <blitz/array.h>
 #include <fstream>
 
-namespace CAL
-{
-  class SourceData
-  {
-  public:
+namespace LOFAR {
+  namespace CAL {
 
-    SourceData();
-    virtual ~SourceData();
+    class SourceData
+    {
+    public:
 
-    bool getNextFromFile(std::string filename);
+      SourceData();
+      virtual ~SourceData();
 
-    std::string getName() const { return m_name; }
-    double getRA() const { return m_ra; }
-    double getDEC() const { return m_dec; }
-    const blitz::Array<double, 2>& getFlux() const { return m_flux; }
+      bool getNextFromFile(std::string filename);
 
-  private:
-    std::string             m_filename;
-    std::ifstream           m_file;
+      std::string getName() const { return m_name; }
+      double getRA() const { return m_ra; }
+      double getDEC() const { return m_dec; }
+      const blitz::Array<double, 2>& getFlux() const { return m_flux; }
 
-    std::string             m_name;
-    double                  m_ra;
-    double                  m_dec;
-    blitz::Array<double, 2> m_flux;
-  };
+    private:
+      std::string             m_filename;
+      std::ifstream           m_file;
 
-};
+      std::string             m_name;
+      double                  m_ra;
+      double                  m_dec;
+      blitz::Array<double, 2> m_flux;
+    };
+
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* SOURCEDATA_H_ */
 

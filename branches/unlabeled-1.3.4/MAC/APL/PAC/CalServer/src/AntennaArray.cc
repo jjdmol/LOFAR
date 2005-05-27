@@ -27,9 +27,10 @@
 #include <blitz/array.h>
 #include <fstream>
 
-using namespace CAL;
 using namespace std;
 using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
 
 AntennaArray::AntennaArray(string                  name,
 			   const Array<double, 3>& pos,

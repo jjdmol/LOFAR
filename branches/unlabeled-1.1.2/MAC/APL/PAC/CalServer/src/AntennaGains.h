@@ -28,19 +28,44 @@
 #include <math.h>
 #include <blitz/array.h>
 
-namespace CAL
-{
-  /**
-   * This class holds the results of a remote station calibration: the
-   * calibrated antenna gains. Along with the gains a quality measure
-   * is computed by the calibration algorithm. This quality measure indicates
-   * the confidence in the computed antenna gain.
-   */
-  class AntennaGains
+namespace LOFAR {
+  namespace CAL {
+
+    /**
+     * This class holds the results of a remote station calibration: the
+     * calibrated antenna gains. Along with the gains a quality measure
+     * is computed by the calibration algorithm. This quality measure indicates
+     * the confidence in the computed antenna gain.
+     */
+    class AntennaGains
     {
     public:
+
+      /*@{*/
+      /**
+       * Constructors
+       */
       AntennaGains();
       AntennaGains(int nantennas, int npol, int nsubbands);
+      /*@}*/
+
+      /**
+       * Copy constructor.
+       */
+      AntennaGains(const AntennaGains & copy)
+      {
+	m_gains.resize(copy.m_gains.shape());
+	m_gains = copy.m_gains.copy();
+
+	m_quality.resize(copy.m_quality.shape());
+	m_quality = copy.m_quality.copy();
+
+	m_complete = copy.m_complete;
+      }
+
+      /**
+       * Destructor
+       */
       virtual ~AntennaGains();
 
       /**
@@ -65,7 +90,12 @@ namespace CAL
       /**
        * set the complete status.
        */
-      void setComplete(bool value) { m_complete = value; }
+      void setComplete(bool value = true) { m_complete = value; }
+
+      /**
+       * Assignment operator
+       */
+      AntennaGains& operator=(const AntennaGains& rhs);
 
     public:
       /*@{*/
@@ -82,7 +112,9 @@ namespace CAL
       blitz::Array<double, 3>               m_quality;
       bool                                  m_complete; // is this calibration complete?
     };
-};
+
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* CALIBRATIONRESULT_H_ */
 

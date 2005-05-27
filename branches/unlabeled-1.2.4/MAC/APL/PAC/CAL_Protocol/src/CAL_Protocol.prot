@@ -1,4 +1,4 @@
-//
+// -*- mode: c++ -*-//
 // Protocol definition for the Calibration Server Protocol
 //
 autogen definitions protocol;
@@ -22,10 +22,12 @@ prelude = << PRELUDE_END
 
 enum {
   SUCCESS = 0,
-  ERR_RANGE,     // range error in message parameters
-  ERR_CREATE,    // could not allocate beam
-  ERR_CALIBRATE, // could not free beam
+  ERR_RANGE,       // range error in message parameters
+  ERR_NO_PARENT,   // no parent antenna array by that name found
+  ERR_NO_SUBARRAY, // no subarray by that name found
 };
+
+static const int N_SUBBANDS=512;
 
 PRELUDE_END;
 
@@ -46,7 +48,7 @@ event = {
 	    name = "parent";
 	    type = "string";
       };
-      param = { // subset of the antennas
+      param = { // subset of the receivers (2 receivers per antenna)
 	    name = "subset";
 	    type = "std::bitset<256>";
       };
@@ -105,7 +107,7 @@ event = {
       };
       param = { // set of subbands
 	    name = "subbandset";
-	    type = "std::set<int>";
+	    type = "std::bitset<N_SUBBANDS>";
       };
 };
 
@@ -127,7 +129,7 @@ event = {
       dir = OUT;
       param = { // time of the gains
 	    name = "timestamp";
-	    type = "RSP_Protocol::Timestamp";
+	    type = "RTC::Timestamp";
 	    userdefined;
       };
       param = { // status

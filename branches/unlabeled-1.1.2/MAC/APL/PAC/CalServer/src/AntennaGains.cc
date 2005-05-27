@@ -30,10 +30,10 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-using namespace CAL;
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
+using namespace CAL;
 
 AntennaGains::AntennaGains()
 {
@@ -72,7 +72,7 @@ unsigned int AntennaGains::pack(void* buffer)
 
   MSH_PACK_ARRAY(buffer, offset, m_gains, complex<double>);
   MSH_PACK_ARRAY(buffer, offset, m_quality, double);
-  memcpy(buffer, &m_complete, sizeof(bool));
+  memcpy((char*)buffer + offset, &m_complete, sizeof(bool));
   offset += sizeof(bool);
 
   return offset;
@@ -84,9 +84,21 @@ unsigned int AntennaGains::unpack(void* buffer)
 
   MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 3);
   MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 3);
-  memcpy(&m_complete, buffer, sizeof(bool));
+  memcpy(&m_complete, (char*)buffer + offset, sizeof(bool));
   offset += sizeof(bool);
 
   return offset;
+}
+
+AntennaGains& AntennaGains::operator=(const AntennaGains& rhs)
+{
+  m_gains.resize(rhs.m_gains.shape());
+  m_gains = rhs.m_gains.copy();
+
+  m_quality.resize(rhs.m_quality.shape());
+  m_quality = rhs.m_quality.copy();
+
+  m_complete = rhs.m_complete;
+  return *this;
 }
 

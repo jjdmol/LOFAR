@@ -28,46 +28,48 @@
 #include <string>
 #include <fstream>
 
-namespace CAL
-{
-  /**
-   * This class is responsible for managing the AntennaArray data.
-   */
-  class AntennaArrayData
-  {
-  public:
-    AntennaArrayData();
-    virtual ~AntennaArrayData();
+namespace LOFAR {
+  namespace CAL {
 
     /**
-     * Load an antenna array from file. A second call to this method
-     * will override the data from the first.
-     * @param filename The file to load data from.
-     * @return true when an antenna array was succesfully loaded, false when
-     * no more arrays could be loaded.
+     * This class is responsible for managing the AntennaArray data.
      */
-    bool getNextFromFile(std::string filename);
+    class AntennaArrayData
+    {
+    public:
+      AntennaArrayData();
+      virtual ~AntennaArrayData();
 
-    /**
-     * Get the name.
-     * @return the name of the antenna array
-     */
-    std::string getName() const { return m_name; }
+      /**
+       * Load an antenna array from file. A second call to this method
+       * will override the data from the first.
+       * @param filename The file to load data from.
+       * @return true when an antenna array was succesfully loaded, false when
+       * no more arrays could be loaded.
+       */
+      bool getNextFromFile(std::string filename);
 
-    /**
-     * Get the antenna positions.
-     * @return the antenna positions.
-     */
-    const blitz::Array<double, 3>& getPositions() const { return m_positions; }
+      /**
+       * Get the name.
+       * @return the name of the antenna array
+       */
+      std::string getName() const { return m_name; }
 
-  private:
-    std::string             m_filename;
-    std::ifstream           m_file;
+      /**
+       * Get the antenna positions.
+       * @return the antenna positions.
+       */
+      const blitz::Array<double, 3>& getPositions() const { return m_positions; }
 
-    std::string             m_name;
-    blitz::Array<double, 3> m_positions;
-  };
-};
+    private:
+      std::string             m_filename;
+      std::ifstream           m_file;
+
+      std::string             m_name;
+      blitz::Array<double, 3> m_positions;
+    };
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* ANTENNAARRAYDATA_H_ */
 

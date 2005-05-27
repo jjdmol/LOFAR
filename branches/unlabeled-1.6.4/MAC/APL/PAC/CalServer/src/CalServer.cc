@@ -28,7 +28,9 @@
 #include "CalServer.h"
 #include "SpectralWindow.h"
 #include "SubArray.h"
+#include "SubArraySubscription.h"
 #include "RemoteStationCalibration.h"
+#include "Timestamp.h"
 
 #ifndef CAL_SYSCONF
 #define CAL_SYSCONF "."
@@ -44,10 +46,11 @@
 
 #include <blitz/array.h>
 
-using namespace LOFAR;
-using namespace blitz;
-using namespace CAL;
 using namespace std;
+using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
+using namespace RTC;
 
 using namespace CAL_Protocol;
 
@@ -55,13 +58,10 @@ CalServer::CalServer(string name)
   : GCFTask((State)&CalServer::initial, name),
     m_acc(0)
 {
-#if 0
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, CAL_PROTOCOL);
   //m_acmserver.init(*this, "acmserver", GCFPortInterface::SAP, ACM_PROTOCOL);
-#endif
-
 }
 
 CalServer::~CalServer()
@@ -69,7 +69,7 @@ CalServer::~CalServer()
 
 bool CalServer::isEnabled()
 {
-  return false; //m_acmserver.isConnected();
+  return true; //m_acmserver.isConnected();
 }
 
 GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
@@ -77,48 +77,73 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch(e.signal)
-  {
+    {
     case F_INIT:
-    {
-    }
-    break;
-
-    case F_ENTRY:
-    {
-      //if (!m_acmserver.isConnected()) m_acmserver.open();
-    }
-    break;
-
-    case F_CONNECTED:
-    {
-      if (isEnabled())
       {
+	try { 
+
+	  //
+	  // load the dipole models
+	  //
+	  m_dipolemodels.getAll(CAL_SYSCONF "/DipoleModel.conf");
+
+	  //
+	  // load the source catalog
+	  //
+	  m_sources.getAll(CAL_SYSCONF "/SourceCatalog.conf");
+
+	  //
+	  // Load antenna arrays
+	  //
+	  m_arrays.getAll(CAL_SYSCONF "/AntennaArrays.conf");
+
+	} catch (Exception e)  {
+
+	  LOG_ERROR_STR("Failed to load configuration files: " << e);
+	  exit(EXIT_FAILURE);
+
+	}
+
 	TRAN(CalServer::enabled);
       }
-    }
-    break;
+      break;
+
+    case F_ENTRY:
+      {
+	//if (!m_acmserver.isConnected()) m_acmserver.open();
+      }
+      break;
+
+    case F_CONNECTED:
+      {
+	if (isEnabled())
+	  {
+	    TRAN(CalServer::enabled);
+	  }
+      }
+      break;
 
     case F_DISCONNECTED:
-    {
-      LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-      port.close();
-    }
-    break;
+      {
+	LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+	port.close();
+      }
+      break;
 
     case F_TIMER:
-    {
-      if (!port.isConnected())
       {
-	LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
-	port.open();
+	if (!port.isConnected())
+	  {
+	    LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
+	    port.open();
+	  }
       }
-    }
-    break;
+      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-  }
+    }
 
   return status;
 }
@@ -134,6 +159,23 @@ void CalServer::undertaker()
   m_dead_clients.clear();
 }
 
+void CalServer::remove_client(GCFPortInterface* port)
+{
+  ASSERT(0 != port);
+
+  map<GCFPortInterface*, string>::iterator p = m_clients.find(port);
+  ASSERT(p != m_clients.end());
+
+  SubArray* subarray = m_subarrays.getByName(m_clients[port]);
+  if (subarray) {
+    m_subarrays.remove(subarray);
+  }
+
+  m_clients.erase(port);
+  m_dead_clients.push_back(port);
+
+}
+
 GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -141,74 +183,258 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
   undertaker(); // destroy dead clients
 
   switch (e.signal)
-  {
-    case F_ENTRY:
     {
-      if (!m_acceptor.isConnected()) m_acceptor.open();
-    }
-    break;
+    case F_ENTRY:
+      {
+	if (!m_acceptor.isConnected()) m_acceptor.open();
+	m_acceptor.setTimer(0.0, 1.0);
+      }
+      break;
 
     case F_ACCEPT_REQ:
-    {
-      GCFTCPPort* client = new GCFTCPPort();
-      client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
-      m_acceptor.accept(*client);
-      m_clients.push_back(client);
+      {
+	GCFTCPPort* client = new GCFTCPPort();
+	client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
+	m_acceptor.accept(*client);
+	m_clients[client] = ""; // empty string to indicate there is a connection, but no subarray yet
 
-      LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_clients.size()));
-    }
-    break;
+	LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_clients.size()));
+      }
+      break;
       
     case F_CONNECTED:
-    {
-      LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
-    }
-    break;
+      {
+	LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
+      }
+      break;
 
     case F_TIMER:
-    {
-      GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+      {
+	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
-      LOG_INFO(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+	//const Timestamp t = Timestamp(timer->sec, timer->usec);
+	LOG_INFO_STR("updateAll @ " << timer->sec);
 
-    }
-    break;
+	m_subarrays.updateAll();
+
+      }
+      break;
 
     case F_DISCONNECTED:
-    {
-      LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
-      port.close();
-
-      if (&m_acmserver == &port || &m_acceptor == &port)
       {
-	m_acceptor.close();
-	TRAN(CalServer::initial);
-      }
-      else
-      {
-	// TODO: clean up
+	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
 
-	m_clients.remove(&port);
-	m_dead_clients.push_back(&port);
+	if (&m_acmserver == &port || &m_acceptor == &port)
+	  {
+	    m_acceptor.close();
+	    TRAN(CalServer::initial);
+	  }
+	else
+	  {
+	    // destroy subarray
+	    remove_client(&port);
+	  }
       }
-    }
-    break;
+      break;
+
+    case CAL_START:
+      status = handle_cal_start(e, port);
+      break;
+
+    case CAL_STOP:
+      status = handle_cal_stop(e, port);
+      break;
+
+    case CAL_SUBSCRIBE:
+      status = handle_cal_subscribe(e, port);
+      break;
+
+    case CAL_UNSUBSCRIBE:
+      status = handle_cal_unsubscribe(e, port);
+      break;
 
     case F_EXIT:
-    {
-    }
-    break;
+      {
+      }
+      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
+    }
+
+  return status;
+}
+
+GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  CALStartEvent start(e);
+  CALStartackEvent ack;
+
+  ack.status = SUCCESS; // assume succes, until otherwise
+  ack.name = start.name;
+
+  // find parent AntennaArray
+  const AntennaArray* parent = m_arrays.getByName(start.parent);
+
+  if ("" != m_clients[&port]) {
+    LOG_ERROR_STR("A subarray has already been registered: name=" << m_clients[&port]);
+    LOG_ERROR("Only one active subarray per client supported.");
+    ack.status = ERR_RANGE;
+  } else if ("" == string(start.name)) {
+    LOG_ERROR("Empty subarray name.");
+    ack.status = ERR_RANGE;
+  } else if (!parent) {
+
+    // parent not found, set error status
+    LOG_ERROR_STR("Parent array '" << start.parent << "' not found.");
+    ack.status = ERR_NO_PARENT;
+
+  } else {
+
+    m_clients[&port] = string(start.name); // register subarray with port
+
+    const Array<double, 3>& positions = parent->getAntennaPos();
+    Array<bool, 2> select;
+    select.resize(positions.extent(firstDim),
+		  positions.extent(secondDim));
+
+    select = true;
+
+    // create subarray to calibrate
+    SubArray* subarray = new SubArray(start.name,
+				      positions,
+				      select,
+				      start.sampling_frequency,
+				      start.nyquist_zone,
+				      CAL_Protocol::N_SUBBANDS);
+
+    m_subarrays.add(subarray);
+
+#if 1
+    ACC acc;
+    subarray->calibrate(0, acc);
+#else
+    //
+    // load the ACC
+    //
+    m_acc = ACCLoader::loadFromFile(CAL_SYSCONF "/ACC.conf");
+    
+    if (!m_acc) {
+      LOG_ERROR("Failed to load ACC matrix.");
+      exit(EXIT_FAILURE);
+    }
+
+    //
+    // Create the calibration algorithm and
+    // call the calibrate routine of the subarray
+    // with the ACC.
+    //
+    const DipoleModel* model = m_dipolemodels.getByName("LBAntenna");
+    if (!model) {
+      LOG_FATAL("Failed to load dipolemodel 'LBAntenna'");
+      exit(EXIT_FAILURE);
+    }
+    RemoteStationCalibration cal(m_sources, *model);
+    subarray->calibrate(&cal, *m_acc);
+#endif
   }
+
+  port.send(ack); // send ack
+
+  return status;
+}
+
+GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  CALStopEvent stop(e);
+  CALStopackEvent ack;
+  ack.name = stop.name;
+  ack.status = SUCCESS;
+  
+  // destroy subarray, what do we do with the observers?
+  if (m_subarrays.remove(stop.name)) {
+    m_clients[&port] = ""; // unregister subarray name
+  } else {
+    ack.status = ERR_NO_SUBARRAY; // subarray not found
+  }
+
+  port.send(ack);
+
+  return status;
+}
+
+GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  CALSubscribeEvent subscribe(e);
+  CALSubscribeackEvent ack;
+  ack.status = SUCCESS;
+
+  // get subarray by name
+  SubArray* subarray = m_subarrays.getByName(subscribe.name);
+
+  if (subarray) {
+
+    // create subscription
+    SubArraySubscription* subscription = new SubArraySubscription(subarray,
+								  subscribe.subbandset,
+								  port);
+
+    ack.handle = (uint32)subscription;
+								
+    // attach subscription to the subarray
+    subarray->attach(subscription);
+
+  } else {
+
+    ack.status = ERR_NO_SUBARRAY;
+
+  }
+
+  port.send(ack);
+
+  return status;
+}
+
+GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  CALUnsubscribeEvent unsubscribe(e);
+
+  // create ack
+  CALUnsubscribeackEvent ack;
+  ack.handle = unsubscribe.handle;
+  ack.status = SUCCESS;
+
+  // find associated subarray
+  SubArray* subarray = m_subarrays.getByName(m_clients[&port]);
+  if (subarray) {
+
+    // detach subscription, this destroys the subscription
+    subarray->detach((SubArraySubscription*)unsubscribe.handle);
+
+    // handle is no longer valid
+
+  } else {
+
+    ack.status = ERR_NO_SUBARRAY;
+
+  }
+  port.send(ack);
 
   return status;
 }
 
 void CalServer::calibrate()
 {
+#if 0
   //
   // Load configuration files.
   //
@@ -272,24 +498,38 @@ void CalServer::calibrate()
 #endif
 
   //
+  // Get the low-band antenna array
+  //
+  const AntennaArray* array = m_arrays.getByName("LBA");
+  if (!array) {
+    LOG_FATAL("Failed to load the antenna array definition 'LBA'");
+    exit(EXIT_FAILURE);
+  }
+
+  //
   // Dimensions of the antenna array
   //
-  int nantennas = m_arrays.getByName("LBA").getAntennaPos().extent(firstDim);
-  int npol      = m_arrays.getByName("LBA").getAntennaPos().extent(secondDim);
+  int nantennas = array->getAntennaPos().extent(firstDim);
+  int npol      = array->getAntennaPos().extent(secondDim);
 
   //
   // Create the FTS-1 subarray, with spectral window 0 (0 - 80 MHz)
   // 
   Array<bool,2> select(nantennas, npol);
   select = true;
-  SubArray fts1("FTS-1", m_arrays.getByName("LBA").getAntennaPos(), select, m_spws[0]);
+  SubArray fts1("FTS-1", array->getAntennaPos(), select, m_spws[0]);
 
   //
   // Create the calibration algorithm and
   // call the calibrate routine of the subarray
   // with the ACC.
   //
-  RemoteStationCalibration cal(m_sources, m_dipolemodels.getByName("LBAntenna"));
+  const DipoleModel* model = m_dipolemodels.getByName("LBAntenna");
+  if (!model) {
+    LOG_FATAL("Failed to load dipolemodel 'LBAntenna'");
+    exit(EXIT_FAILURE);
+  }
+  RemoteStationCalibration cal(m_sources, *model);
   fts1.calibrate(&cal, *m_acc);
 
   //
@@ -338,6 +578,7 @@ void CalServer::calibrate()
       LOG_ERROR("Calibration has not yet completed.");
       exit(EXIT_FAILURE);
     }
+#endif
 }
 
 #if 0
@@ -363,15 +604,13 @@ int main(int argc, char** argv)
 
   CalServer cal("CalServer");
 
+#if 0
   struct timeval start, end;
   gettimeofday(&start, 0);
   cal.calibrate(); // temporary entry point for standalone CalServer
   gettimeofday(&end, 0);
-
   LOG_INFO_STR("CalServer execution time: " << end.tv_sec - start.tv_sec << " seconds");
-
-#if 0
-  // this code is not used since CalServer is currently a stand-alone program
+#endif
 
   cal.start(); // make initial transition
 
@@ -384,7 +623,6 @@ int main(int argc, char** argv)
     LOG_ERROR_STR("Exception: " << e.text());
     exit(EXIT_FAILURE);
   }
-#endif
 
   LOG_INFO("Normal termination of program");
 

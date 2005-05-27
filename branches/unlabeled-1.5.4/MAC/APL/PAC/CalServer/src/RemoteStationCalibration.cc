@@ -30,10 +30,11 @@
 #include <complex>
 #include <math.h>
 
-using namespace CAL;
-using namespace blitz;
 using namespace std;
-using namespace LOFAR::RSP_Protocol;
+using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
+using namespace RTC;
 
 RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, const DipoleModel& dipolemodel)
   : CalibrationAlgorithm(sources, dipolemodel)

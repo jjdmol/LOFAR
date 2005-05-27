@@ -23,6 +23,7 @@
 
 #include "CalibrationAlgorithm.h"
 
+using namespace LOFAR;
 using namespace CAL;
 
 CalibrationAlgorithm::CalibrationAlgorithm(const Sources& sources, const DipoleModel& dipolemodel)

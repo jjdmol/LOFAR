@@ -23,8 +23,9 @@
 
 #include "SourceData.h"
 
-using namespace CAL;
 using namespace std;
+using namespace LOFAR;
+using namespace CAL;
 
 SourceData::SourceData()
 {

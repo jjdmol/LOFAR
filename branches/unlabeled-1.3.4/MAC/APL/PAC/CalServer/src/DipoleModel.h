@@ -28,8 +28,9 @@
 #include <blitz/array.h>
 #include <map>
 
-namespace CAL
-{
+namespace LOFAR {
+namespace CAL {
+
   class DipoleModel
   {
   public:
@@ -72,13 +73,14 @@ namespace CAL
     /**
      * Get model by name.
      */
-    const DipoleModel& getByName(std::string name) { return *m_models[name]; }
+    const DipoleModel* getByName(std::string name) { return m_models[name]; }
     
   private:
-    std::map<std::string, DipoleModel*> m_models;
+    std::map<std::string, const DipoleModel*> m_models;
   };
 
-};
+}; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* DIPOLEMODEL_H_ */
 

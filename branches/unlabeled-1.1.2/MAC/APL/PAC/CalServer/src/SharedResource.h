@@ -24,41 +24,44 @@
 #ifndef SHAREDRESOURCE_H_
 #define SHAREDRESOURCE_H_
 
-namespace CAL
-{
-  class SharedResource
-  {
-  public:
-    SharedResource() : m_semaphore(0) {}
-    virtual ~SharedResource() {}
+namespace LOFAR {
+  namespace CAL {
+
+    class SharedResource
+    {
+    public:
+      SharedResource() : m_semaphore(0) {}
+      virtual ~SharedResource() {}
     
-    /*@{*/
-    /**
-     * Lock the resource for reading or writing.
-     * @return true if the locking succeeded, false otherwise.
-     */
-    bool writeLock() { if (m_semaphore == 0) m_semaphore--; return m_semaphore == -1; }
-    bool readLock() { if (m_semaphore >= 0) m_semaphore++; return m_semaphore > 0; }
-    /*@}*/
+      /*@{*/
+      /**
+       * Lock the resource for reading or writing.
+       * @return true if the locking succeeded, false otherwise.
+       */
+      bool writeLock() { if (m_semaphore == 0) m_semaphore--; return m_semaphore == -1; }
+      bool readLock() { if (m_semaphore >= 0) m_semaphore++; return m_semaphore > 0; }
+      /*@}*/
 
-    /*@{*/
-    /**
-     * Unlock the resource.
-     */
-    void writeUnlock() { m_semaphore = 0; }
-    void readUnlock() { m_semaphore--; if (m_semaphore < 0) m_semaphore = 0; }
-    /*@}*/
+      /*@{*/
+      /**
+       * Unlock the resource.
+       */
+      void writeUnlock() { m_semaphore = 0; }
+      void readUnlock() { m_semaphore--; if (m_semaphore < 0) m_semaphore = 0; }
+      /*@}*/
 
-    /**
-     * Check whether the resource is locked.
-     * @return true if the resource is locked, false otherwise.
-     */
-    bool isLocked() const { return 0 == m_semaphore; }
+      /**
+       * Check whether the resource is locked.
+       * @return true if the resource is locked, false otherwise.
+       */
+      bool isLocked() const { return 0 == m_semaphore; }
 
-  private:
-    int m_semaphore;
-  };
-};
+    private:
+      int m_semaphore;
+    };
+
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* SHAREDRESOURCE_H_ */
 

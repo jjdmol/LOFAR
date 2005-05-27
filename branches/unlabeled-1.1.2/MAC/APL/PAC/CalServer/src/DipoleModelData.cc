@@ -27,9 +27,9 @@
 #include <blitz/array.h>
 #include <fstream>
 
-using namespace CAL;
 using namespace std;
-
+using namespace LOFAR;
+using namespace CAL;
 
 DipoleModelData::
 DipoleModelData::DipoleModelData()

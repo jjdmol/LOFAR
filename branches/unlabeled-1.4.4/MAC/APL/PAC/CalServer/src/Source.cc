@@ -24,8 +24,9 @@
 #include "Source.h"
 #include "SourceData.h"
 
-using namespace CAL;
 using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
 
 Source::~Source()
 {

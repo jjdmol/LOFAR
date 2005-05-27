@@ -25,10 +25,11 @@
 #include <blitz/array.h>
 #include <fstream>
 
-using namespace CAL;
-using namespace blitz;
-using namespace LOFAR::RSP_Protocol;
 using namespace std;
+using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
+using namespace RTC;
 
 ACC::ACC(int nsubbands, int nantennas, int npol) :
 	m_acc(nsubbands, nantennas, nantennas, npol, npol),

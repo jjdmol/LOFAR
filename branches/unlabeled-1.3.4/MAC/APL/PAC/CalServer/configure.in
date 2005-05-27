@@ -73,6 +73,7 @@ lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 lofar_EXTERNAL(cpplapack,1,cpplapack.h,"","/usr/local/lib/+pkg",,,,"-llapack -lblas -lg2c -lm")
+lofar_EXTERNAL(RTCCommon,1,Marshalling.h,,)
 
 dnl
 dnl Output Makefiles
