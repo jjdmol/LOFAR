@@ -88,7 +88,7 @@ RSPDriver.IF_NAME=eth2
 # beamlet statistics match the subband statistics
 #
 RSPDriver.IDENTITY_WEIGHTS=1
-RSPDriver.FIRST_SUBBAND=465
+RSPDriver.FIRST_SUBBAND=384
 
 #
 # Select LOOPBACK_MODE mode
@@ -136,3 +136,8 @@ RSPDriver.READ_WG=0
 # Swap RCU bits? (for older firmware)
 #
 RSPDriver.SWAP_RCU_BITS=0
+
+#
+# Set to 1 to force vddvcc_en on RCU to 1 = AD convertor always on
+#
+RSPDriver.FORCE_VDDVCC_EN=1

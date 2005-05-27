@@ -20,7 +20,6 @@ check_PROGRAMS = \
 	RSPTest
 
 RSPTest_SOURCES = \
-	RSPTestSuite.h \
 	RSPTest.h \
 	RSPTest.cc
 
@@ -29,7 +28,6 @@ RSPTest_LDADD = \
 	-lsuite
 
 EPAStub_SOURCES = \
-	RSPTestSuite.h \
 	EPAStub.h \
 	EPAStub.cc
 

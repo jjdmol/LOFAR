@@ -60,7 +60,7 @@ CacheBuffer::CacheBuffer()
 
   if (!GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
   {
-    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
+    m_beamletweights()(Range::all(), Range::all(), Range::all(), Range::all()) =
       complex<int16>(0, 0);
     m_subbandselection() = 0;
   }
@@ -68,14 +68,19 @@ CacheBuffer::CacheBuffer()
   {
     // these weights ensure that the beamlet statistics
     // exactly match the subband statistics
-    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
+    m_beamletweights()(Range::all(), Range::all(), Range::all(), 0) =
       complex<int16>(0x4000, 0);
+    m_beamletweights()(Range::all(), Range::all(), Range::all(), 1) =
+      complex<int16>(0, 0);
 
     //
     // Set subbands selection in increasing value
     //
     secondIndex i;
-    m_subbandselection()(Range::all(), Range::all()) = (i + GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) % MEPHeader::N_SUBBANDS);
+    m_subbandselection()(Range::all(), Range::all()) = (i + GET_CONFIG("RSPDriver.FIRST_SUBBAND", i)
+							% (MEPHeader::N_SUBBANDS * MEPHeader::N_POL));
+
+    LOG_WARN_STR("m_subbandselection()=" << m_subbandselection());
   }
 
   m_rcusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
