@@ -22,12 +22,10 @@
 //#  $Id$
 
 // this include needs to be first!
-#define DECLARE_SIGNAL_NAMES
-
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
-#include "RSPTestSuite.h"
+#include "TestSuite.h"
 #include "RSPTest.h"
 
 #include <iostream>
@@ -40,13 +38,13 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-using namespace RSP_Test;
 using namespace std;
-using namespace LOFAR;
 using namespace blitz;
+using namespace LOFAR;
+using namespace RTC;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
-using namespace RTC;
+using namespace RSP_Test;
 
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)

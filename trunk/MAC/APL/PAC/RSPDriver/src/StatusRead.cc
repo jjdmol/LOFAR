@@ -88,6 +88,28 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   // copy board status
   memcpy(&status.board()(getBoardId()), &ack.board, sizeof(BoardStatus));
 
+  // sanity check on SYNC status, status for all AP's must be the same
+  if (ack.board.ap1_sync.sample_count != ack.board.ap2_sync.sample_count
+      || ack.board.ap1_sync.sample_count != ack.board.ap3_sync.sample_count
+      || ack.board.ap1_sync.sample_count != ack.board.ap4_sync.sample_count)
+    {
+      LOG_WARN(formatString("RSP[%02d]: sample_count mismatch", getBoardId()));
+    }
+
+  if (ack.board.ap1_sync.sync_count != ack.board.ap2_sync.sync_count
+      || ack.board.ap1_sync.sync_count != ack.board.ap3_sync.sync_count
+      || ack.board.ap1_sync.sync_count != ack.board.ap4_sync.sync_count)
+    {
+      LOG_WARN(formatString("RSP[%02d]: sync_count mismatch", getBoardId()));
+    }
+
+  if (ack.board.ap1_sync.error_count != ack.board.ap2_sync.error_count
+      || ack.board.ap1_sync.error_count != ack.board.ap3_sync.error_count
+      || ack.board.ap1_sync.error_count != ack.board.ap4_sync.error_count)
+    {
+      LOG_WARN(formatString("RSP[%02d]: error_count mismatch", getBoardId()));
+    }
+
   uint8 global_rcu_base = getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 
   // copy RCU status
