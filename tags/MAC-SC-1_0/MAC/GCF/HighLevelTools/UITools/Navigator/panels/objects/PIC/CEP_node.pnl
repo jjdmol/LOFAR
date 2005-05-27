@@ -1,0 +1,211 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,420 168 233 85 N "_3DFace" 2
+"$NodeNr"
+"$datapoint"
+EEE E E 1 -1 -1 0  30 70
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border1"
+""
+1 30 70 E E E 1 E 1 E N "_WindowText" E N "Lofar_background_light" E E
+ "main()
+{
+  string txt_maintenance, txt_status;
+  int iAnswer, maintenance;
+  bool bOK;				//Variable with value FALSE
+   popupMenu(makeDynString(
+   \"PUSH_BUTTON, Set state to -> -6, 10, 1\",
+   \"PUSH_BUTTON, Set state to -> -5, 11, 1\",
+   \"PUSH_BUTTON, Set state to -> -4, 12, 1\",
+   \"PUSH_BUTTON, Set state to -> -3, 13, 1\",
+   \"PUSH_BUTTON, Set state to -> -2, 14, 1\",
+   \"PUSH_BUTTON, Set state to -> -1, 15, 1\",
+   \"PUSH_BUTTON, Set state to ->  0, 16, 1\",
+   \"PUSH_BUTTON, Set state to ->  1, 17, 1\",
+   \"PUSH_BUTTON, Set state to ->  2, 18, 1\",
+   \"SEPARATOR\",
+   \"PUSH_BUTTON, Set funcState to ->   0, 19, 1\",
+   \"PUSH_BUTTON, Set funcState to ->  25, 20, 1\",
+   \"PUSH_BUTTON, Set funcState to ->  50, 21, 1\",
+   \"PUSH_BUTTON, Set funcState to ->  75, 22, 1\",
+   \"PUSH_BUTTON, Set funcState to -> 100, 23, 1\"), iAnswer);
+   
+  	switch (iAnswer)
+  	{
+  	case 10:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", -6);
+      	break;
+   	case 11:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", -5);
+      	break;
+  	case 12:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", -4);
+      	break;
+  	case 13:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", -3);
+      	break;
+  	case 14:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", -2);
+      	break;
+  	case 15:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", -1);
+      	break;
+  	case 16:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", 0);
+      	break;
+  	case 17:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", 1);
+      	break;
+  	case 18:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".state:_original.._value\", 2);
+      	break;
+  	case 19:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".funcState:_original.._value\", 0);
+      	break;
+  	case 20:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".funcState:_original.._value\", 25);
+      	break;
+  	case 21:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".funcState:_original.._value\", 50);
+      	break;
+  	case 22:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".funcState:_original.._value\", 75);
+      	break;
+  	case 23:
+			  dpSetWait($datapoint + \"_lofar\"+ $NodeNr +\".funcState:_original.._value\", 100);
+      	break;
+    default:
+    	break;
+  	}       
+}" 0
+ E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 30 20 110 70
+2 4
+"Text1"
+""
+1 33 21 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+setValue(\"\", \"text\", $NodeNr);
+}" 0
+ E 0 1 1 0 1 E U  0 E 35 23 61 39
+0 2 0 "s" 0 0 0 64 0 0  35 23
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+14 2
+"TextField1"
+""
+1 120 20 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+118 18 222 45
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+dpConnect(\"fillTextBox\", \"System1:PIC_CEP_lofar4.state\");
+}
+
+
+fillTextBox(string dp1, anytype value)
+{
+ setValue(\"\", \"text\", value);
+}" 0
+
+E
+14 3
+"TextField2"
+""
+1 120 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+118 48 222 75
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+dpConnect(\"fillTextBox\", \"System1:PIC_CEP_lofar4.funcState\");
+}
+
+
+fillTextBox(string dp1, anytype value)
+{
+ setValue(\"\", \"text\", value);
+}" 0
+
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

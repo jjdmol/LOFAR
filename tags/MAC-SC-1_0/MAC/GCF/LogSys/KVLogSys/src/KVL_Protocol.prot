@@ -1,0 +1,109 @@
+//
+// Protocol definition for the KVL system
+//
+autogen definitions protocol;
+
+description = "Protocol for the KVL system";
+prefix = "KVL"; // for the signal names
+id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 4)";
+
+include = '<GCF/GCF_Defines.h>';
+include = '<KVLUtils.h>';
+
+prelude = << PRELUDE_END
+
+PRELUDE_END;
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = UPDATE;
+	dir = IN;
+	param = {
+		name = "key";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "LOFAR::GCF::LogSys::Value";
+		userdefined;
+	};
+	param = {
+		name = "origin";
+		type = "LOFAR::GCF::Common::TKVLOrigin";
+	};
+	param = {
+		name = "timestamp";
+		type = "timeval";
+	};
+};
+
+event = {
+	signal = UPDATES;
+	dir = IN;
+	param = {
+		name = "seqNr";
+		type = "uint16";
+	};
+	param = {
+		name = "daemonID";
+		type = "uint8";
+	};
+	param = {
+		name = "nrOfUpdates";
+		type = "uint16";
+	};
+	param = {
+		name = "updates";
+		type = "LOFAR::GCF::LogSys::LoggingCollection";
+		userdefined;
+	};
+};
+
+event = {
+	signal = ANSWER;
+	dir = OUT;
+	param = {
+		name = "seqNr";
+		type = "uint16";
+	};
+};
+
+event = {
+	signal = REGISTER;
+	dir = IN;	
+	param = {
+		name = "curID";
+		type = "uint8";
+	};
+	param = {
+		name = "firstSeqNr";
+		type = "uint16";
+	};
+};
+
+event = {
+	signal = REGISTERED;
+	dir = OUT;	
+	param = {
+		name = "ID";
+		type = "uint8";
+	};
+	param = {
+		name = "curSeqNr";
+		type = "uint16";
+	};
+};
+
+event = {
+	signal = UNREGISTER;
+	dir = IN;	
+	param = {
+		name = "curID";
+		type = "uint8";
+	};
+};
+

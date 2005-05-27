@@ -1,0 +1,167 @@
+//
+// Protocol definition for the Calibration Server Protocol
+//
+autogen definitions protocol;
+
+description = "Protocol for the Calibration Server";
+prefix = "CAL"; // for the signal names
+id = "(F_APL_PROTOCOL+13)";
+
+// specify extra include files
+// e.g.
+// include = '<sys/time.h>';
+
+prelude = << PRELUDE_END
+
+namespace CAL_Protocol
+{
+	enum {
+	     SUCCESS = 0,
+	     ERR_RANGE,     // range error in message parameters
+	     ERR_CREATE,    // could not allocate beam
+	     ERR_CALIBRATE, // could not free beam
+	};
+};
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+      signal = CREATESUBARRAY;
+      dir = IN;
+      param = {
+	    // name of the station receptor group
+	    name = "srgname";
+	    type = "string";
+      };
+      param = {
+	    // positions of the antennas
+	    name = "pos";
+	    type = "int"; // AntennaPositions
+      };
+      param = {
+	    name = "sampling_frequency";
+	    type = "double";
+      };
+};
+
+event = {
+      signal = CREATESUBARRAY_ACK;
+      dir = OUT;
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = STARTCAL;
+      dir = IN;
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = STARTCAL_ACK;
+      dir = OUT;
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = DESTROYSUBARRAY;
+      dir = IN;
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = DESTROYSUBARRAY_ACK;
+      dir = IN;
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = SUBCAL;
+      dir = IN;
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = SUBCAL_ACK;
+      dir = OUT;
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = UPDCAL;
+      dir = OUT;
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = UNSUBCAL;
+      dir = IN;
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+event = {
+      signal = UNSUBCAL_ACK;
+      dir = OUT;
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+      param = {
+	    name = "srgname";
+	    type = "string";
+      };
+};
+
+

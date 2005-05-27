@@ -1,0 +1,174 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,250 138 142 95 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+
+  if (dpExists($datapoint + \".filSelA\") && 
+      dpExists($datapoint + \".filSelB\"))
+	{
+    dpConnect(\"ControlHBFilter\", $datapoint + \".filSelA:_online.._value\",
+                                 $datapoint + \".filSelB:_online.._value\");
+  }
+  else
+  {
+    setValue(\"rect_filter\", \"backCol\", \"DpDoesNotExist\");
+  }
+}
+
+
+ControlHBFilter(string dp1, bool filSelA,
+                string dp2, bool filSelB)
+{
+  if (!filSelA && !filSelB)
+  {
+    ComboBox1.selectedPos=1;
+    setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+  }
+  else if (!filSelA && filSelB)
+  {
+    ComboBox1.selectedPos=2;
+    setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+  }
+  else if (filSelA && !filSelB)
+  {
+    ComboBox1.selectedPos=3;
+    setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+  }
+  else if (filSelA && filSelB)
+  {
+    ComboBox1.selectedPos=4;
+    setValue(\"rect_filter\", \"backCol\", \"grey\");
+  }
+}" 0
+EE E E 1 -1 -1 0  10 70
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"rect_filter"
+""
+1 10 70 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 130 70
+2 1
+"Text2"
+""
+1 29 16 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 31 18 113 34
+0 2 0 "s" 0 0 0 192 0 0  31 18
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Highband filter
+22 2
+"ComboBox1"
+""
+1 15 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+13 38 127 65
+4
+1
+LANG:1 11 110-190 Mhz
+ 1
+1
+LANG:1 11 170-230 MHz
+ 0
+1
+LANG:1 11 210-250 MHz
+ 0
+1
+LANG:1 10 Filter off
+ 0
+E
+"main()
+{
+  if (ComboBox1.selectedPos==1)          //110-190MHz
+  {
+	dpSet($datapoint + \".filSelA\", FALSE);
+	dpSet($datapoint + \".filSelB\", FALSE);
+  }
+  else if (ComboBox1.selectedPos==2)     //170-230MHz
+  {
+	  dpSet($datapoint + \".filSelA\", FALSE);
+  	dpSet($datapoint + \".filSelB\", TRUE);
+  }
+  else if (ComboBox1.selectedPos==3)     //210-250MHz
+  {
+  	dpSet($datapoint + \".filSelA\", TRUE);
+  	dpSet($datapoint + \".filSelB\", FALSE);
+  }
+  else if (ComboBox1.selectedPos==4)     //Filter OFF
+  {
+  	dpSet($datapoint + \".filSelA\", TRUE);
+  	dpSet($datapoint + \".filSelB\", TRUE);
+  }
+
+}" 0
+
+E
+ 0 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

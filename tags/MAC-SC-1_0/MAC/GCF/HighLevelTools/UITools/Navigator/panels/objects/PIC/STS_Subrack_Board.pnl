@@ -1,0 +1,343 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,295 138 222 182 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+ dpConnect(\"MaintenanceIcon\", $datapoint + \"_Maintenance.status:_online.._value\");
+}
+
+
+MaintenanceIcon (string dp1, int MaintenanceStatus)
+{
+  setValue(\"icon_maintenance\", \"visible\", (1==MaintenanceStatus));
+}" 0
+EE E E 1 -1 -1 0  10 170
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border13"
+""
+1 10 170 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 0 1 E U  1 E 10 10 210 170
+2 1
+"label_lastError"
+""
+1 50 128 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 52 130 122 145
+0 2 0 "s" 0 0 0 66 0 0  52 130
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Last error:
+2 2
+"label_packetsError"
+""
+1 30 105 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 107 122 124
+0 2 0 "s" 0 0 0 66 0 0  32 107
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Packets error:
+2 3
+"label_packetsReceived"
+""
+1 20 82 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 84 122 98
+0 2 0 "s" 0 0 0 66 0 0  22 84
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Packets received:
+2 4
+"Text11"
+""
+1 15 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 17 17 80 33
+0 2 0 "s" 0 0 0 192 0 0  17 17
+ 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 RSP board
+2 5
+"Text1"
+""
+1 158 153 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 206 155 252 169
+0 2 0 "s" 0 0 0 194 0 0  206 155
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 10 ver.: 0.12
+6 6
+"icon_maintenance"
+""
+1 164 56 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
+ "main()
+{
+  BPContextMenu();
+}" 0
+ E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 164 17 204 57
+2 11
+"Text2"
+""
+1 34 55 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 36 57 74 73
+0 2 0 "s" 0 0 0 192 0 0  36 57
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 details
+14 7
+"output_packetsError"
+""
+1 130 104 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 102 202 127
+3 "s" 0 0 0 2 0 0 
+E
+E
+E
+14 8
+"output_lastError"
+""
+1 130 128 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 126 202 151
+3 "s" 0 0 0 2 0 0 
+E
+E
+E
+14 9
+"output_packetsReceived"
+""
+1 130 80 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 78 202 103
+3 "s" 0 0 0 2 0 0 
+E
+E
+E
+20 10
+"CheckButton2"
+""
+1 17 36 E E E 1 E 1 E N "_3DText" E N {204,204,204} E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+15 34 142 62
+1
+T 
+1
+LANG:1 16 Control ethernet
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+E"main(int button, bool state)
+{
+  if (button == 0)
+  {
+      setValue(\"label_packetsReceived\" , \"visible\", state);
+      setValue(\"label_packetsError\"    , \"visible\", state);
+      setValue(\"label_lastError\"       , \"visible\", state);
+      setValue(\"output_packetsReceived\", \"visible\", state);
+      setValue(\"output_packetsError\"   , \"visible\", state);
+      setValue(\"output_lastError\"      , \"visible\", state);
+      
+      setValue(\"output_packetsReceived\", \"editable\", FALSE);
+      setValue(\"output_packetsError\"   , \"editable\", FALSE);
+      setValue(\"output_lastError\"      , \"editable\", FALSE);
+
+    
+    if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
+    {
+      if(!dpExists($datapoint + \"_Board1_ETH.packetsReceived:_online.._value\") ||
+         !dpExists($datapoint + \"_Board1_ETH.packetsError:_online.._value\") ||
+         !dpExists($datapoint + \"_Board1_ETH.lastError:_online.._value\"))
+      {
+        setValue(\"output_packetsReceived\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"output_packetsError\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"output_lastError\", \"backCol\", \"_dpdoesnotexist\");
+        return;
+      }
+      else
+      {
+        setValue(\"output_packetsReceived\", \"backCol\", \"white\");
+        setValue(\"output_packetsError\", \"backCol\", \"white\");
+        setValue(\"output_lastError\", \"backCol\", \"white\");
+        dpConnect(\"BoardETHDetails\", $datapoint + \"_Board1_ETH.packetsReceived:_online.._value\",
+                                     $datapoint + \"_Board1_ETH.packetsError:_online.._value\",
+                                     $datapoint + \"_Board1_ETH.lastError:_online.._value\");
+      }
+    }
+    else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
+    {
+      dpDisconnect(\"BoardETHDetails\", $datapoint + \"_Board1_ETH.packetsReceived:_online.._value\",
+                                      $datapoint + \"_Board1_ETH.packetsError:_online.._value\",
+                                      $datapoint + \"_Board1_ETH.lastError:_online.._value\");
+    }
+   }
+}
+
+
+
+BoardETHDetails(string dp1, int packetsReceived,
+                string dp2, int packetsError,
+                string dp3, int lastError)
+{
+  setValue(\"output_packetsReceived\", \"text\", packetsReceived);
+  setValue(\"output_packetsError\"   , \"text\", packetsError);
+  setValue(\"output_lastError\"      , \"text\", lastError);
+}" 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

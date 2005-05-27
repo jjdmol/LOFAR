@@ -1,0 +1,175 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,295 138 328 89 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+  //Function: Set background color of BP
+  EP_setBackColor();
+  
+}
+
+EP_setBackColor()
+{
+dyn_errClass err;
+
+  if( !dpExists( $datapoint + \"_Board1_BP.status:_online.._value\") ||
+  		!dpExists( $datapoint + \"_Board1_Maintenance.status:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
+					                           $datapoint + \"_Board1_BP.status:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+}" 0
+EE E E 1 -1 -1 0  20 60
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"backGround"
+""
+1 20 60 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E "// SimpleCtrlScriptStart {valid}
+main(int iType)
+{
+  dyn_errClass err;
+
+  int          i, iReturnValue = 1, iDpCount = 1;
+  dyn_int      diType = makeDynInt();
+  dyn_string   dsDps;
+
+  dsDps[1] = $datapoint+\"_Board1_BP_status.\" + \":_alert_hdl.._ack\";
+
+  if ( isFunctionDefined(\"isAckable\") )
+  {
+    isAckable( iType, dsDps, iReturnValue );
+    if ( iReturnValue == 0 || dynlen (dsDps ) < 1 ) return;
+  }
+
+  for ( i = 1; i <= dynlen(dsDps); i++ )
+    diType[i] = iType;
+
+  dpSetWait( dsDps, diType );
+
+  err = getLastError();
+  if ( dynlen(err) > 0 )
+    DebugN(err);
+}
+// SimpleCtrlScript {EP_confirm}
+// dpCount {1}
+// dp1 {$datapoint + \"_Board1_BP_status.\"}
+// SimpleCtrlScriptEnd {EP_confirm}
+" 0
+
+ "main()
+{
+  BPContextMenu();
+}
+" 0
+ E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 20 300 61
+2 3
+"Text1"
+""
+1 28 31 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 30 33 48 49
+0 2 0 "s" 0 0 0 192 0 0  30 33
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 BP
+6 4
+"icon_maintenance"
+""
+1 140 59 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
+ "main()
+{
+  BPContextMenu();
+}" 0
+ E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 140 20 180 60
+2 5
+"Text2"
+""
+1 252 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 297 47 340 61
+0 2 0 "s" 0 0 0 194 0 0  297 47
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 ver: 0.12
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
