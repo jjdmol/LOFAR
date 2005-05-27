@@ -73,7 +73,7 @@ void navConfigSetNavigatorID(int newID)
   if(newID != 0)
   {
     g_navigatorID = newID;
-    if(!dpExists(DPNAME_NAVIGATOR + g_navigatorID))
+    if(!dpAccessable(DPNAME_NAVIGATOR + g_navigatorID))
     {
       createConfiguration = true;
     }
@@ -83,7 +83,7 @@ void navConfigSetNavigatorID(int newID)
     int id=1;
     while(id<20 && !createConfiguration) // if no free config found, use config #20
     {
-      if(!dpExists(DPNAME_NAVIGATOR + id))
+      if(!dpAccessable(DPNAME_NAVIGATOR + id))
       {
         g_navigatorID = id;
         createConfiguration=true;
@@ -154,7 +154,7 @@ void navConfigDecreaseUseCount()
 bool navConfigCheckEnabled(string datapointName)
 {
   bool enabled = false;
-  if(dpExists(datapointName + "__enabled"))
+  if(dpAccessable(datapointName + "__enabled"))
   {
     enabled = true;
     LOG_TRACE("dpName__enabled Exists",datapointName, enabled);
@@ -194,7 +194,7 @@ void navConfigSetSelectedElement(string datapointPath)
 {
   string dpSelectedElementContainer = DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDELEMENT;
   string dpSelectedElement = datapointPath;
-  if(dpExists(dpSelectedElementContainer))
+  if(dpAccessable(dpSelectedElementContainer))
   {
     dpSet(dpSelectedElementContainer,dpSelectedElement);
   }
@@ -582,7 +582,7 @@ string navConfigGetViewConfig(string datapointPath)
     // find __nav<environment>_<systemname>_viewconfig datapoint
     dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointPath+"_viewconfig";
   }
-  if(!dpExists(dpViewConfig))
+  if(!dpAccessable(dpViewConfig))
   {
     LOG_TRACE("navConfigGetViewConfig","DP does not exist, using default configuration",dpViewConfig);
     dpViewConfig = "__nav_default_viewconfig";
@@ -711,7 +711,7 @@ bool navConfigSanityCheck(string &message)
     {
       for(i=1;i<=dynlen(tab[viewsIndex][2]) && sane;i++)
       {
-        sane = dpExists(tab[viewsIndex][2][i]);
+        sane = dpAccessable(tab[viewsIndex][2][i]);
         DebugTN("check view existance:",sane,tab[viewsIndex][2][i]);
       }
       if(!sane)
@@ -725,7 +725,7 @@ bool navConfigSanityCheck(string &message)
     {
       for(i=1;i<=dynlen(tab[subViewsIndex][2]) && sane;i++)
       {
-        sane = dpExists(tab[subViewsIndex][2][i]);
+        sane = dpAccessable(tab[subViewsIndex][2][i]);
         DebugTN("check subview existance:",sane,tab[subViewsIndex][2][i]);
       }
       if(!sane)
@@ -739,7 +739,7 @@ bool navConfigSanityCheck(string &message)
     {
       for(i=1;i<=dynlen(tab[configsIndex][2]) && sane;i++)
       {
-        sane = dpExists(tab[configsIndex][2][i]);
+        sane = dpAccessable(tab[configsIndex][2][i]);
         DebugTN("check configs existance:",sane,tab[configsIndex][2][i]);
       }
       if(!sane)
@@ -859,7 +859,7 @@ bool navConfigConfigSubviewPermitted()
   string selectedEnvironment;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
   
-  if(dpExists($configDatapoint) &&
+  if(dpAccessable($configDatapoint) &&
      dpGetElementName($datapoint)=="" && 
      ((selectedEnvironment=="Personal") || (selectedEnvironment!="Personal" && getUserPermission(UR_CONFIGSYSTEMSUBVIEW))))
   {

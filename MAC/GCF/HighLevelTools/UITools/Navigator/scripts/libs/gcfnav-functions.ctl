@@ -372,7 +372,7 @@ void showActiveView(string dpViewConfig, string datapointPath)
     }
     else
     {
-      if(dpExists(views[selectedViewTabId]))
+      if(dpAccessable(views[selectedViewTabId]))
       {
         tabCtrl.registerPanel(selectedViewTabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
       }
@@ -409,7 +409,7 @@ void showView(string dpViewConfig, string datapointPath)
   
   for(tabId=1;tabId<=dynlen(views);tabId++)
   {
-    if(dpExists(views[tabId]))
+    if(dpAccessable(views[tabId]))
     {
       string caption = navConfigGetViewCaption(views[tabId]);
       if(strlen(caption)>0)
@@ -975,7 +975,7 @@ void Navigator_HandleEventInitialize()
   {
     string datapointPath = buildPathFromNode(selectedNode);
     string dpViewConfig = navConfigGetViewConfig(datapointPath);
-    if(selectedNode!=0 && dpExists(dpViewConfig))
+    if(selectedNode!=0 && dpAccessable(dpViewConfig))
     {
       showView(dpViewConfig,datapointPath);
     }
@@ -1020,7 +1020,7 @@ void Navigator_HandleUpdateTrigger(string dpe,int trigger)
 {
   string newDatapoint;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
-  //if ((newDatapoint !="") && dpExists(newDatapoint)) Orginal
+  //if ((newDatapoint !="") && dpAccessable(newDatapoint)) Orginal
   if (newDatapoint !="")
   {
     changeSelectedPosition(newDatapoint);
@@ -1090,7 +1090,7 @@ void TabViews_HandleEventSelectionChanged()
       navConfigSetSelectedView(datapointPath,tabCtrl.activeRegister+1);
     
       string dpViewConfig = navConfigGetViewConfig(datapointPath);
-      if(selectedNode!=0 && dpExists(dpViewConfig))
+      if(selectedNode!=0 && dpAccessable(dpViewConfig))
       {
         showActiveView(dpViewConfig,datapointPath);
       }
@@ -1345,7 +1345,7 @@ void ButtonMaximize_HandleEventClick()
     string datapointPath = buildPathFromNode(Node);
     string dpViewConfig = navConfigGetViewConfig(datapointPath);
     LOG_TRACE("ButtonMaximize_HandleEventClick",Node,dpViewConfig);
-    if(Node!=0 && dpExists(dpViewConfig))
+    if(Node!=0 && dpAccessable(dpViewConfig))
     {
       int selectedView;
       int selectedSubView;

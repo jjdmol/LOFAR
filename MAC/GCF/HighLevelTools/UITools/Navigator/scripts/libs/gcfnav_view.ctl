@@ -827,7 +827,7 @@ showVersion(string dp1, string version)
 ///////////////////////////////////////////////////////////////////////////////////
 void jump2Station()
 {
-  if(dpExists($datapoint + "_Station01"))
+  if(dpAccessable($datapoint + "_Station01"))
   {
     if ("LOFAR Navigator" == myPanelName())
     {
@@ -1371,8 +1371,6 @@ void NavConfigTrendFillDpeSelection(string datapoint)
   list_dpe.deleteAllItems; 
   if(selectedDP!="")
     selectedDP = "_" + selectedDP;
-  DebugN("dpType:"+getDpTypeFromEnabled(datapoint + "__enabled."));
-  DebugN("dp:"+datapoint);
   
   dpTypeGet(getDpTypeFromEnabled(datapoint + "__enabled."),elementNames,elementTypes);
   for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
