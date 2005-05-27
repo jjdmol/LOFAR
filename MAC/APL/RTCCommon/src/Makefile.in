@@ -65,12 +65,13 @@ libnetraw_la_LIBADD =
 am_libnetraw_la_OBJECTS = netraw.lo
 libnetraw_la_OBJECTS = $(am_libnetraw_la_OBJECTS)
 librtccommon_la_LIBADD =
-am_librtccommon_la_OBJECTS = Timestamp.lo
+am_librtccommon_la_OBJECTS = Timestamp.lo Subject.lo
 librtccommon_la_OBJECTS = $(am_librtccommon_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/Timestamp.Plo \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/Subject.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/Timestamp.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/gnuplot_i.Plo ./$(DEPDIR)/netraw.Plo
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -243,14 +244,21 @@ sysconf_DATA =
 lib_LTLIBRARIES = librtccommon.la libnetraw.la libgnuplot_i.la
 include_HEADERS = \
 	Marshalling.h \
+	TestSuite.h \
 	Timestamp.h \
+	Observer.h \
+	Subject.h \
 	netraw.h \
 	gnuplot_i.h
 
 librtccommon_la_SOURCES = \
 	Marshalling.h \
+	TestSuite.h \
 	Timestamp.h \
-	Timestamp.cc
+	Timestamp.cc \
+	Observer.h \
+	Subject.h \
+	Subject.cc
 
 libnetraw_la_SOURCES = \
 	netraw.h \
@@ -334,6 +342,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Subject.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Timestamp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gnuplot_i.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netraw.Plo@am__quote@
