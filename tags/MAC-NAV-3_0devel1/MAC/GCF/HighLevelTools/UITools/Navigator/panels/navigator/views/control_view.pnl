@@ -1,0 +1,862 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 138 950 740 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+  navPMLloadPropertySet($datapoint + \"_details\");
+  //DebugTN(\"LOAD:\"+$datapoint + \"_details\");
+  //DebugTN(\"LOAD:\"+$datapoint);
+  navPMLloadPropertySet($datapoint);
+  bool Wait=TRUE;
+  while(Wait)
+  {
+    if(dpAccessable($datapoint))
+    {
+      Wait = FALSE;
+    }
+    delay(0, 0.100);
+  }
+  if((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".Dummy1\"))
+  {
+    btn_commands.enabled = TRUE;
+    btn_clear.enabled = TRUE;
+    //dpSet($datapoint+\".command\", \"\"); setting this causes in the message <unknown command>
+    if(dpAccessable($datapoint + \".command\"))
+      dpConnect(\"navViewControlDisplayCommand\", $datapoint + \".command\");//:_online.._value\");
+    else
+      setValue(\"txt_command\", \"text\", \"Not available\");
+    
+    if(dpAccessable($datapoint + \".status\"))
+    {
+      dpConnect(\"navViewControlDisplayStatus\", $datapoint + \".status\");//:_online.._value\");
+    }
+    else
+    {
+      setValue(\"txt_status\", \"text\", \"Not available\");
+    }
+      
+    if(dpAccessable($datapoint + \".state\"))
+    {
+      dpConnect(\"navViewControlDisplayText\", $datapoint + \".state\");//:_online.._value\");
+    }
+    else
+    {
+      setValue(\"txt_state\", \"text\", \"Not available\");
+    }
+      
+    if(dpAccessable($datapoint + \".claimTime\"))
+      dpConnect(\"navViewControlDisplayTime\", $datapoint + \".claimTime\");
+    else
+      setValue(\"txt_claimTime\", \"text\", \"Not available\");
+      
+    if(dpAccessable($datapoint + \".prepareTime\"))
+      dpConnect(\"navViewControlDisplayTime\", $datapoint + \".prepareTime\");
+    else
+      setValue(\"txt_prepareTime\", \"text\", \"Not available\");
+      
+    if(dpAccessable($datapoint + \".startTime\"))
+      dpConnect(\"navViewControlDisplayTime\", $datapoint + \".startTime\");
+    else
+      setValue(\"txt_startTime\", \"text\", \"Not available\");
+      
+    if(dpAccessable($datapoint + \".stopTime\"))
+      dpConnect(\"navViewControlDisplayTime\", $datapoint + \".stopTime\");
+    else
+      setValue(\"txt_stopTime\", \"text\", \"Not available\");
+      
+    txt_controllerName.text = $datapoint;
+    
+    //Check or the details are accessable
+    if(dpAccessable($datapoint+\"_details\"))
+    {
+      navViewControlHandleDetails($datapoint+\"_details\");
+    }
+    else
+    {
+      detailList.appendLine(\"detail\", \"No details found\", \"content\", \"No details found\");
+    }
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewControlHandleDetails: dpConnects the datapoint detail
+//                                       elements to the function
+//                                       navViewControlDisplayElement
+//                         
+// Input: detail DP name
+///////////////////////////////////////////////////////////////////////////
+void navViewControlHandleDetails(string datapointDetails)
+{
+  dyn_string elements = navConfigGetElementsFromDp($datapoint+\"_details\");
+  for(int i=1; i<=dynlen(elements); i++)
+  {
+    dpConnect(\"navViewControlDisplayElement\", datapointDetails + \".\" + elements[i] + \":_online.._value\");
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewControlDisplayElement: handles an individual element and
+//                                        fills the table with the element
+//                                        names and the values. Even when
+//                                        it is a array/dynamic type.
+//                         
+// Input: detail DPE name
+///////////////////////////////////////////////////////////////////////////
+navViewControlDisplayElement(string dp1, dyn_anytype elementValues)
+{
+   string elementName = dpGetElementName(dp1);
+   strreplace(elementName, \".\", \"\");
+   if(dynlen(elementValues)>1)
+   {
+     for(int j=1; j<=dynlen(elementValues); j++) //current datapoint can be an array
+     {
+       detailList.appendLine(\"detail\", elementName + \"[\"+j+\"]\", \"content\", elementValues[j]);
+     }
+   }
+   else
+   {
+     if(elementValues==\"\")
+     {
+       elementValues = \"No value\";
+     }
+     detailList.appendLine(\"detail\", elementName, \"content\", elementValues);
+   }
+   
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewControlDisplayCommand: Displays a given command in the
+//                                        controllerLog
+//                                        
+//                         
+// Input: detail DP command name
+///////////////////////////////////////////////////////////////////////////
+navViewControlDisplayCommand(string dp1, string command)
+{
+  string timeToDisplay = getCurrentTime();
+  string elementName = dpGetElementName(dp1);
+  strreplace(elementName, \".\", \"\");
+  controllerLog.appendItem = timeToDisplay + \" | \" + elementName + \": \" + command;
+}" 0
+EE E E 1 -1 -1 0  108 128
+"" 0 1
+E"#uses \"gcfnav-pmlinterface.ctl\"
+#uses \"gcfnav_view.ctl\"
+#uses \"gcfnav-functions.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 23
+"Border10"
+""
+1 10 53 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 43 530 53
+6 24
+"Border6"
+""
+1 10 43 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 23 160 43
+2 25
+"Text14"
+""
+1 20 23 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 25 67 41
+0 2 0 "s" 0 0 0 192 0 0  22 25
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 General
+4 26
+"Line1"
+""
+1 10 43 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  10 43 160 43
+6 59
+"Border20"
+""
+1 10 239 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+59 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 229 530 239
+6 60
+"Border21"
+""
+1 10 229 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+60 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 209 160 229
+2 61
+"Text31"
+""
+1 17 209 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+61 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 211 148 227
+0 2 0 "s" 0 0 0 192 0 0  19 211
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 Specific parameter list
+4 62
+"Line2"
+""
+1 10 229 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+62 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  160 229 10 229
+6 67
+"Border24"
+""
+1 10 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+67 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 56 530 80
+2 68
+"Text34"
+""
+1 94 57 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 135 59 174 75
+0 2 0 "s" 0 0 0 194 0 0  135 59
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Status
+6 69
+"Border25"
+""
+1 10 102 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+69 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 78 530 102
+2 70
+"Text35"
+""
+1 96 79 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+70 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 135 81 172 97
+0 2 0 "s" 0 0 0 194 0 0  135 81
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 State:
+6 75
+"Border26"
+""
+1 10 550 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+75 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 540 939 550
+6 76
+"Border27"
+""
+1 10 540 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+76 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 520 160 540
+2 77
+"Text36"
+""
+1 20 520 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+77 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 522 98 538
+0 2 0 "s" 0 0 0 192 0 0  22 522
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Controller log
+4 78
+"Line3"
+""
+1 11 540 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+78 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  160 540 11 540
+2 112
+"Text2"
+""
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+111 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 2 79 18
+0 2 0 "s" 0 0 0 192 0 0  12 2
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Controller:
+2 113
+"txt_controllerName"
+""
+1 82 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+112 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 84 2 88 18
+0 2 0 "s" 0 0 0 192 0 0  84 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 .
+6 116
+"Border3"
+""
+1 10 124 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+115 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 100 530 124
+6 117
+"Border4"
+""
+1 10 146 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+116 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 122 530 146
+2 118
+"Text3"
+""
+1 46 123 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+117 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 135 125 222 141
+0 2 0 "s" 0 0 0 194 0 0  135 125
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Perpare time:
+6 119
+"Border5"
+""
+1 10 168 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+118 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 144 530 168
+2 120
+"Text5"
+""
+1 67 145 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 135 147 201 163
+0 2 0 "s" 0 0 0 194 0 0  135 147
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Start time:
+6 121
+"Border7"
+""
+1 10 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+120 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 166 530 190
+2 122
+"Text6"
+""
+1 68 168 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+121 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 135 170 200 186
+0 2 0 "s" 0 0 0 194 0 0  135 170
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 10 Stop time:
+2 123
+"Text7"
+""
+1 60 101 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+122 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 135 103 208 119
+0 2 0 "s" 0 0 0 194 0 0  135 103
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Claim time:
+2 124
+"txt_status"
+""
+1 140 57 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+123 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 59 246 75
+0 2 0 "s" 0 0 0 192 0 0  142 59
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 26                           
+2 125
+"txt_state"
+""
+1 140 79 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+124 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 81 234 97
+0 2 0 "s" 0 0 0 192 0 0  142 81
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23                        
+2 126
+"txt_claimTime"
+""
+1 140 101 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+125 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 103 194 119
+0 2 0 "s" 0 0 0 192 0 0  142 103
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13              
+2 127
+"txt_prepareTime"
+""
+1 140 123 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+126 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 125 238 141
+0 2 0 "s" 0 0 0 192 0 0  142 125
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 24                         
+2 128
+"txt_startTime"
+""
+1 140 145 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+127 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 147 250 163
+0 2 0 "s" 0 0 0 192 0 0  142 147
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 27                            
+2 129
+"txt_stopTime"
+""
+1 140 168 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+128 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 142 170 270 186
+0 2 0 "s" 0 0 0 192 0 0  142 170
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 32                                 
+17 91
+"controllerLog"
+""
+1 10 553 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+91 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 119 -microsoft windows-Courier New-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,49,Courier New
+0 ""
+8 551 942 732
+0
+"main()
+{
+/*
+  controllerLog.appendItem(\"12/23/2005 | 13:05:58 | Observation aborted by user\");
+  controllerLog.appendItem(\"12/23/2005 | 12:58:01 | Calibration deviation was 2.016 E-12\");
+  controllerLog.appendItem(\"12/23/2005 | 12:55:04 | Calibration [5 of 5] Ok\");
+  controllerLog.appendItem(\"12/23/2005 | 12:54:07 | Calibration [4 of 5] Ok\");
+  controllerLog.appendItem(\"12/23/2005 | 12:53:10 | Calibration [3 of 5] Ok\");
+  controllerLog.appendItem(\"12/23/2005 | 12:52:13 | Calibration [2 of 5] Ok\");
+  controllerLog.appendItem(\"12/23/2005 | 12:51:16 | Calibration [1 of 5] Ok\");
+  controllerLog.appendItem(\"12/23/2005 | 12:47:19 | Observation started\");
+  controllerLog.appendItem(\"12/23/2005 | 12:39:01 | System is ready, awaiting start-trigger\");
+  controllerLog.appendItem(\"12/23/2005 | 12:35:45 | Claiming resources granted\");
+  controllerLog.appendItem(\"12/23/2005 | 12:33:23 | Claiming resources\");
+  controllerLog.appendItem(\"12/23/2005 | 12:31:19 | Request for observation\");
+*/
+}" 0
+
+E
+E
+
+3 1
+13 106
+"btn_clear"
+""
+1 880 510 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+105 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+878 508 942 535
+T 
+1
+LANG:1 5 Clear
+"main()
+{
+  controllerLog.deleteAllItems;
+}" 0
+ E E E
+25 111
+"detailList"
+""
+1 10 243 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+110 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+8 241 532 508
+E E 1 0 1 2 1 "detail" 0 1 0 "s" 1
+LANG:1 14 Detail element
+E1
+LANG:1 0 
+ 250 "content" 0 1 0 "s" 1
+LANG:1 5 Value
+E1
+LANG:1 0 
+ 250 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 2 1 3 0
+1 0
+13 115
+"btn_commands"
+""
+1 750 510 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+114 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+748 508 872 535
+T 
+1
+LANG:1 8 Commands
+"main()
+{
+  ChildPanelOnCentralModal(\"navigator/views/control_view_commands.pnl\",
+	                         \"Commands\", makeDynString(\"$configDatapoint:\" + $configDatapoint,
+				                                             \"$datapoint:\" + $datapoint));
+}" 0
+ E E E
+13 130
+"Button1"
+""
+1 860 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+128 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+858 8 942 32
+T 
+1
+LANG:1 8 Load VB1
+"main()
+{
+  navPMLloadPropertySet(\"CEPLCU1:PAC_VB1\");
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -1,0 +1,290 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 138 804 105 N "_3DFace" 3
+"$PlotNr"
+"$configDatapoint"
+"$datapoint"
+EEE E E 1 -1 -1 0  10 71
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border18"
+""
+1 10 71 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 44 800 71
+6 1
+"Border19"
+""
+1 10 96 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 69 800 96
+2 2
+"Text16"
+""
+1 34 47 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 123 49 210 65
+0 2 0 "s" 0 0 0 194 0 0  123 49
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Configured DP:
+6 3
+"Border6"
+""
+1 10 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 30 800 40
+6 4
+"Border7"
+""
+1 10 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 60 30
+2 5
+"txt_Title"
+""
+1 17 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 12 50 28
+0 2 0 "s" 0 0 0 192 0 0  19 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Plot  
+4 6
+"Line1"
+""
+1 10 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  60 30 10 30
+2 7
+"Text17"
+""
+1 79 72 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 123 74 165 90
+0 2 0 "s" 0 0 0 194 0 0  123 74
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Status:
+2 8
+"txt_dpName"
+""
+1 131 47 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 133 49 145 65
+0 2 0 "s" 0 0 0 192 0 0  133 49
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+2 9
+"txt_Active"
+""
+1 131 72 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 133 74 145 90
+0 2 0 "s" 0 0 0 192 0 0  133 74
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+13 10
+"Button11"
+""
+1 740 71 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+738 69 802 96
+T 
+1
+LANG:1 6 Config
+"main()
+{
+  string dpName;
+  dpGet($configDatapoint + \".\" + $PlotNr + \".dpName\", dpName); 
+
+		ChildPanelOnCentralModal(\"navigator/views/plot_config_config_dp.pnl\",
+ 		                         \"Configure Plot \"+$PlotNr,
+  		                         makeDynString(\"$datapoint:\" + $datapoint,
+  		                                       \"$configDatapoint:\" + $configDatapoint,
+  		                                       \"$PlotNr:\" + $PlotNr,
+  		                                       \"$selectedDP:\" + dpName));
+}" 0
+ E E "main()
+{
+  setValue(\"txt_Title\", \"text\", \"Plot \" + $PlotNr);
+  if(navConfigConfigSubviewPermitted())
+  {  
+    dpConnect(\"navViewPlotDisplayDpNameActive\", $configDatapoint + \".\" + $PlotNr + \".active\",
+                                                $configDatapoint + \".\" + $PlotNr + \".dpName\");
+  }
+  else
+  {
+    setValue(\"txt_dpName\", \"text\", \"No configuration data found\");
+    setValue(\"txt_Active\", \"text\", \"No configuration data found\");
+  }                                            
+   
+   
+}
+navViewPlotDisplayDpNameActive(string dp1, int Active,
+                               string dp2, string dpName)
+{
+  //Display the value of the Active state in the txt_Active
+  if(0==Active)
+  {
+    setValue(\"txt_Active\", \"text\", \"In-active\");
+  }
+  else if(1==Active)
+  {
+    setValue(\"txt_Active\", \"text\", \"Active\");
+  }
+  else if(1==Active)
+  {
+    setValue(\"txt_Active\", \"text\", \"State unknown\");
+  }
+  
+  //Display the value of the dpName in the txt_dpName
+  if(\"\"==dpName)
+  {
+    setValue(\"txt_dpName\", \"text\", \"None\");  
+  }
+  else
+  {
+    setValue(\"txt_dpName\", \"text\", dpName);
+  }
+  
+}
+
+
+" 0
+
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

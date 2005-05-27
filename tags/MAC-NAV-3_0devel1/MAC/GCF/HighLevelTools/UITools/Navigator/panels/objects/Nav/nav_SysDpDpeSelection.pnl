@@ -1,0 +1,279 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 138 672 169 N "_3DFace" 2
+"$datapoint"
+"$selectedDP"
+EEE E E 1 -1 -1 0  0 0
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+17 0
+"list_system"
+""
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-2 -2 82 172
+0
+E
+"main()
+{
+  string attribute = \"_online.._value\";
+	string dpName, tempDpe;
+  bool showProgress=TRUE;
+  string datapointPath;
+  string selectedSystem = list_system.selectedText;
+  list_dp.deleteAllItems;
+  list_dpe.deleteAllItems;
+
+  if(selectedSystem==getSystemName())
+  {
+    datapointPath = buildPathFromNode(g_curSelNode);
+  }
+  else
+  {
+   datapointPath = list_system.selectedText;
+  }
+  dyn_string output = queryDatabaseForDP(attribute, datapointPath, showProgress);
+  if(list_system.selectedText==getSystemName())
+  {
+    dynInsertAt(output,CURRENT_DP_MESSAGE,1);
+  }
+  list_dp.items = output;
+}" 0
+
+E
+
+3 1
+17 1
+"list_dp"
+""
+1 90 0 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 -2 452 172
+0
+"main()
+{
+  string attribute = \"_online.._value\";
+  string datapointPath; 
+	string dpName, tempDpe;
+  bool showProgress=TRUE;
+  string temp=$selectedDP;
+  dyn_string output;
+  string systemName = dpSubStr($selectedDP, DPSUB_SYS);
+  list_dp.deleteAllItems;
+  //DebugN(\"Within Selection, $selectedDP:\"+$selectedDP);
+
+  //[------------------------------------------------------------]
+  //Fill list_system with all the systems available at the moment
+  dyn_int distributedSystems;
+  dpGet(\"_DistManager.State.SystemNums\", distributedSystems);
+  list_system.appendItem = getSystemName();
+  if(dynlen(distributedSystems)>0)
+  {
+    for(int i=1; i<=dynlen(distributedSystems); i++)
+    {
+      list_system.appendItem = getSystemName(distributedSystems[i]);
+    }
+  }
+
+  // [------------------------------------------------------------]
+  // Check for systemName if present, dpName is absolute,
+  // otherwise the dpname is relative
+  if(\"\"!=systemName)
+  {
+    list_system.selectedPos = dynContains(list_system.items, systemName);
+    datapointPath = systemName;
+    temp = dpSubStr($selectedDP, DPSUB_DP_EL);
+  }
+  else
+  {
+    list_system.selectedPos = 1;
+    datapointPath = $datapoint; //buildPathFromNode(g_curSelNode);
+    if(0==strpos(temp, \"_\"))
+    {
+      temp = substr(temp, 1, strlen(temp));
+    }
+  }
+  
+  //list_system.enabled = !isDistributed($datapoint);  Do not enable/disable yet.
+  
+
+  ///////////////////////////////
+  output = queryDatabaseForDP(attribute, datapointPath, showProgress);
+  if(list_system.selectedText==getSystemName())
+  {
+    dynInsertAt(output,CURRENT_DP_MESSAGE,1);
+  }
+
+
+  if(temp!=\"\")
+  {
+    int dotPos = strpos(temp, \".\");
+    if(dotPos>=1)
+    {
+     dyn_string tempSplit = strsplit(temp, \".\");
+     temp = tempSplit[1];
+     if(dynlen(tempSplit)>=2)
+     {
+       tempDpe = tempSplit[2];
+     }
+    }
+    else
+    {
+     dyn_string tempSplit = strsplit(temp, \".\");
+     temp = CURRENT_DP_MESSAGE;
+     if(dynlen(tempSplit)>=2)
+     {
+       tempDpe = tempSplit[2];
+     }
+    }
+  }
+
+  list_dp.items = output;
+  DebugN(\"temp:\"+temp);
+  DebugN(\"tempDpe:\"+tempDpe);
+  DebugN(\"$datapoint:\"+$datapoint);
+  DebugN(\"datapointPath:\"+datapointPath);
+/*  if(0==strpos(temp, \".\"))
+  {
+    list_dp.selectedPos=dynContains(output, CURRENT_DP_MESSAGE);
+  }*/
+  list_dp.selectedPos=dynContains(output, temp);
+
+  
+  //If the tempDpe is not empty, fill the list and select
+  if(tempDpe!=\"\")
+  {
+    NavConfigTrendFillDpeSelection(navViewGetDpFromDpSelectionList($datapoint));
+    dyn_string dpeNames = list_dpe.items;
+    list_dpe.selectedPos = dynContains(dpeNames, tempDpe);
+  }
+  btn_ok.enabled = TRUE;
+}" 0
+
+"main()
+{
+/*  string datapoint;
+
+  if(list_system.selectedText==getSystemName())
+  {
+    if(CURRENT_DP_MESSAGE==list_dp.selectedText)
+    {
+      datapoint = $datapoint;
+    }
+    else
+    {
+      datapoint = $datapoint + \"_\" + list_dp.selectedText;
+    }
+  }
+  else
+  {
+    datapoint = list_system.selectedText + list_dp.selectedText;
+  }
+*/
+
+  NavConfigTrendFillDpeSelection(navViewGetDpFromDpSelectionList($datapoint));
+}
+/*
+void NavConfigTrendFillDpeSelection()
+{
+  string selectedDP;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  getValue(\"list_dp\", \"selectedText\", selectedDP);
+  dyn_string output;
+  int elementIndex;
+  list_dpe.deleteAllItems; 
+
+  dpTypeGet(getDpTypeFromEnabled($datapoint + \"_\" + selectedDP+ \"__enabled.\"),elementNames,elementTypes);
+  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+  {
+    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
+    string elementName = elementNames[elementIndex][elementLevel+1];
+    output[dynlen(output)+1] = elementName;
+  }
+  dynSortAsc(output);
+  list_dpe.items =output;
+  list_dpe.selectedPos=0;
+}
+*/" 0
+
+E
+
+3 1
+17 2
+"list_dpe"
+""
+1 460 0 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+458 -2 672 172
+0
+E
+E
+E
+
+3 1
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
