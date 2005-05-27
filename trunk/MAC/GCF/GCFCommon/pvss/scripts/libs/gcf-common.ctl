@@ -12,7 +12,7 @@ bool dpAccessable(string dpName)
   string dpSystemName = strrtrim(dpSubStr(dpName,DPSUB_SYS),":");
   if(getSystemName()==(dpSystemName+":"))
   {
-    return TRUE;
+    return dpExists(dpName);
   }
   else if (getSystemName()!=(dpSystemName+":"))
   {
