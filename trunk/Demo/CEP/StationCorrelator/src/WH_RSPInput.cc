@@ -208,7 +208,7 @@ void WH_RSPInput::process()
     else if (itsNextStamp + (itsNpackets - 1) < thisStamp) {
       theirWaitingState.leave();
       theirCatchingUpState.enter();
-      //cout<<"packet with timestamp: "<<itsNextStamp<<" was missed! received: "<<thisStamp<<endl;
+      //      cout<<"packet with timestamp: "<<itsNextStamp<<" was missed! received: "<<thisStamp<<endl;
 
       LOG_TRACE_COND_STR("Package has been missed, insert dummy package");
       // we missed some packets, 

@@ -62,7 +62,7 @@ bool StationCorrelatorController::init     () const
 }
 bool StationCorrelatorController::run      () const
 {
-  cout<<"Running"<<endl;
+  //  cout<<"Running"<<endl;
   LOG_TRACE_FLOW("Run called by ACC");
   Profiler::activate();
   itsStationCorrelator.baseRun(itsNoRuns);
