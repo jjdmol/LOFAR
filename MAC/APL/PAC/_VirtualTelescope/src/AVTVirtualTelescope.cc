@@ -303,7 +303,9 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
     {
       AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
       // prepared event is received from the beam former or station receptor group
-      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED,true)) // require slave LD's to be active
+      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED,true) ||  
+         allInState(port,LOGICALDEVICE_STATE_CLAIMED,true) ||
+         allInState(port,LOGICALDEVICE_STATE_ACTIVE,true)) // require slave LD's to be suspended, claimed or active
       {
         stateFinished=true;
       }
@@ -312,10 +314,10 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
         
     default:
     {
-      // added check
-      AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
-      // prepared event is received from the beam former or station receptor group
-      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED,true)) // require slave LD's to be active
+      // added check because all childs may have already been prepared with the right parameters. Then no prepared message will be received
+      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED,true) ||  
+         allInState(port,LOGICALDEVICE_STATE_CLAIMED,true) ||
+         allInState(port,LOGICALDEVICE_STATE_ACTIVE,true)) // require slave LD's to be suspended, claimed or active
       {
         stateFinished=true;
       }
