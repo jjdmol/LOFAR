@@ -23,11 +23,14 @@
 #ifndef BDBSITE_H
 #define BDBSITE_H
 
+#include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/Net/Socket.h>
 #include <db_cxx.h>
  
 using namespace LOFAR;
+
+class BDBReplicator;
 
 class BDBSite {
  public:
@@ -44,6 +47,8 @@ class BDBSite {
   Socket* itsSocket;
   Dbt itsConnectionData;
   char* itsConnectionDataBuffer;
+
+  ALLOC_TRACER_CONTEXT;
 };
 
 inline Socket* BDBSite::getSocket()

@@ -66,7 +66,7 @@ class BDBCHThread {
   // dump siteMap to cout
   void printSiteMap();
   // called from inside the ch thread
-  void connectTo(const char* otherHostName,
+  bool connectTo(const char* otherHostName,
 		 int otherPort);
 
  private:
@@ -87,6 +87,7 @@ class BDBCHThread {
   DbEnv* itsDbEnv;
   string itsHostName;
   int itsPort;
+  ALLOC_TRACER_ALIAS(BDBSite);
 };
 
 #endif

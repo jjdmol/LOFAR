@@ -61,7 +61,7 @@ BDBCHThread::~BDBCHThread()
   if (theirObjectCounter == 0) {
     map<int, BDBSite*>::iterator it;
     for (it=theirSiteMap.begin(); it!=theirSiteMap.end(); it++) {
-      delete it->second->getSocket();
+      //      delete it->second->getSocket();
       delete it->second;      
     }
   }
@@ -74,6 +74,11 @@ void BDBCHThread::stop()
 
 bool BDBCHThread::shouldStop()
 {
+//   if (theirShouldStop) {
+//     LOG_TRACE_FLOW("conhandler should stop");
+//   } else {
+//     LOG_TRACE_FLOW("conhandler should not stop");
+//   }
   return theirShouldStop;
 };
 
@@ -95,7 +100,7 @@ void BDBCHThread::operator()()
 	// check if there is data available
 	// this loop could use more error checking
 	if (mySocket->read(&messageSize, 4) == 4) {
-	  //cout<<"Received message from env "<<it->first<<endl;
+	  //LOG_TRACE_FLOW("Received message from env "<<it->first);
 	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
 	  LOG_TRACE_FLOW("BDBConHandlThread data present on socket");
 	  isMessagePresent = true;
@@ -153,7 +158,7 @@ int BDBCHThread::send(DbEnv *dbenv,
     if (pos != theirSiteMap.end()){
       sendOne(control, rec, pos->second->getSocket());
     } else {
-      cerr<<"BDB trying to send to unknown environment"<<endl;
+      LOG_ERROR("BDB trying to send to unknown environment");
     }
   }
   LOG_TRACE_FLOW("BDBConHandlThread send finished");
@@ -179,13 +184,13 @@ void BDBCHThread::sendOne(const Dbt *control,
 }
 
 
-void BDBCHThread::connectTo(const char* hostName, const int port)
+bool BDBCHThread::connectTo(const char* hostName, const int port)
 {
   Socket* newSocket = new Socket();
   BDBSite* newSite = new BDBSite(hostName, port, newSocket);
   LOG_TRACE_FLOW_STR("BDBConHandlThread connecting to "<<*newSite);
   LOG_TRACE_FLOW_STR("BDBConHandlThread connecting from "<<itsHostName<<":"<<itsPort);
-  cout<<"BDBConHandlThread connecting to "<<*newSite<<endl;
+  LOG_TRACE_FLOW_STR("BDBConHandlThread connecting to "<<*newSite);
 
   char service[20];
   snprintf(service, 20, "%d", port);
@@ -198,8 +203,10 @@ void BDBCHThread::connectTo(const char* hostName, const int port)
     newSocket->write(itsHostName.c_str(), messageSize);
     
     addSite(newSite);
-  };
-  //  LOG_TRACE_FLOW("BDBConHandlThread connectedTo");
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void BDBCHThread::handleMessage(Dbt* rec, Dbt* control, int envId)
@@ -209,16 +216,16 @@ void BDBCHThread::handleMessage(Dbt* rec, Dbt* control, int envId)
   LOG_TRACE_FLOW_STR(control<<" "<<rec<<" "<<envId<<" "<<itsDbEnv);
 
   DbLsn retLSN;
-  //  cout<<"handling message ...";
+  //  LOG_TRACE_FLOW("handling message ...";
   int ret = itsDbEnv->rep_process_message(control, rec, &envId, &retLSN);
-  //  cout<<"ready"<<endl;
+  //  LOG_TRACE_FLOW("ready");
   
   int port = 0;
   char* hostName = NULL;
   switch (ret) {
+//   DB_REP_STARTUPDNE is not supported by older versions of libdb
 //   case DB_REP_STARTUPDONE:
 //     LOG_TRACE_FLOW("BDBConHandlThread startup done");
-//     cerr<<"startup done"<<endl;
 //     break;
 
   case DB_REP_NEWSITE:
@@ -226,35 +233,33 @@ void BDBCHThread::handleMessage(Dbt* rec, Dbt* control, int envId)
     port = *((int*)rec->get_data());
     hostName =(char*)rec->get_data()+4;
 
-    cout<<"new site detected by libdb: "<<hostName<<":"<<port<<endl;
+    LOG_TRACE_FLOW_STR("new site detected by libdb: "<<hostName<<":"<<port);
     connectTo(hostName, port);    
     break;
     
   case DB_REP_DUPMASTER:
-    cerr<<"More than one master"<<endl;
-    exit(1);
+    ASSERTSTR(false, "More than one master");
     break;
 
   case DB_REP_HOLDELECTION:
-    cerr<<"hold election"<<endl;
-    exit(1);    
+    ASSERTSTR(false, "hold election");
     break;
 
   case DB_REP_ISPERM:
-    cerr<<"Permanent message no "<<endl;
+    LOG_TRACE_FLOW("Permanent message no ");
     break;
 
   case DB_REP_NEWMASTER:
-    cerr<<"new master"<<endl;
+    LOG_TRACE_FLOW("new master");
     break;
 
   case DB_REP_NOTPERM:
-    cerr<<"Non-permanent message no "<<endl;
+    LOG_TRACE_FLOW("Non-permanent message no ");
     break;
   
   default:
     if (ret != 0) 
-      cerr<<"error from handle message: "<<itsDbEnv->strerror(ret)<<endl;
+      LOG_ERROR_STR("error from handle message: "<<itsDbEnv->strerror(ret));
 
   }
   LOG_TRACE_FLOW("message handled");
@@ -278,9 +283,9 @@ void BDBCHThread::addSite(BDBSite* newSite)
     if (!found) {
       theirSiteMap[theirLastEnvId++] = newSite;
       LOG_TRACE_FLOW_STR("New site "<<*newSite);
-      cout<<"site added: "<<*newSite<<endl;
+      LOG_TRACE_FLOW_STR("site added: "<<*newSite);
     } else {
-      cout<<"site already exists: "<<*newSite<<endl;
+      LOG_TRACE_FLOW_STR("site already exists: "<<*newSite);
       LOG_TRACE_FLOW_STR("Site "<<*newSite<<"already exists");
       delete newSite;
     };
@@ -290,13 +295,13 @@ void BDBCHThread::addSite(BDBSite* newSite)
 
 void BDBCHThread::printSiteMap()
 {
-  cout<<endl
+  LOG_TRACE_FLOW_STR(endl
       <<"    SITEMAP" << endl
-      <<"================"<<endl<<endl;
+      <<"================"<<endl);
 
   map<int, BDBSite*>::iterator it;
   boost::mutex::scoped_lock sl(theirSiteMapMutex);
   for (it = theirSiteMap.begin(); it!=theirSiteMap.end(); it++) {
-    cout<<it->first<<": "<<*(it->second)<<endl;
+    LOG_TRACE_FLOW_STR(it->first<<": "<<*(it->second));
   }
 }

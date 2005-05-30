@@ -63,10 +63,18 @@ void BDBReplicator::startReplication()
   if (!itsReplicationStarted) {
     itsLThread = new boost::thread(itsLThreadObject);
 
+    // wait until the listener is listening
+    while(!itsLThreadObject.isListening()) {
+      LOG_TRACE_FLOW_STR("BDBReplicator waiting for listener");
+      sleep(1);
+    }
+
     if(!itsIsMaster) {
-      sleep(1);
-      itsCHThreadObject.connectTo(itsMasterHostName.c_str(), itsMasterPort);
-      sleep(1);
+      // try to connect to master
+      while (!itsCHThreadObject.connectTo(itsMasterHostName.c_str(), itsMasterPort)) {
+	LOG_ERROR_STR("BDBReplicator trying to connect to master on port "<<itsMasterPort);
+	sleep(1);
+      }
     }
     
     LOG_TRACE_FLOW("BDBReplicator starting replication");
@@ -114,11 +122,14 @@ BDBReplicator::~BDBReplicator()
 {
   //  LOG_TRACE_FLOW("BDBReplicator destructor");
   itsLThreadObject.stop();
-  itsLThread->join();
-  delete itsLThread;
   itsCHThreadObject.stop();
+
+  itsLThread->join();
   itsCHThread->join();
+
+  delete itsLThread;
   delete itsCHThread;
+
   if (itsDbEnv !=0) {
     itsDbEnv->close(0);
     delete itsDbEnv;

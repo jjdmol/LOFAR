@@ -34,19 +34,20 @@
 using namespace LOFAR;
 using namespace std;
 
+bool BDBListenThread::theirShouldStop = false;
+bool BDBListenThread::theirIsListening = false;
+
 BDBListenThread::BDBListenThread(const int port,
 				 BDBCHThread* ConnectionHandler)
   :itsConnectionHandler(*ConnectionHandler),
-   itsPort(port),
-   itsShouldStop(false)
+   itsPort(port)
 {
   //  LOG_TRACE_FLOW("BDBListenThread constructor");
 }
 
 BDBListenThread::BDBListenThread(const BDBListenThread& other)
   :itsConnectionHandler(other.itsConnectionHandler),
-   itsPort(other.itsPort),
-   itsShouldStop(other.itsShouldStop)
+   itsPort(other.itsPort)
 {
   //  LOG_TRACE_FLOW("BDBListenThread copy constructor");
 }
@@ -58,12 +59,17 @@ BDBListenThread::~BDBListenThread()
 
 void BDBListenThread::stop()
 {
-  itsShouldStop = true;
+  theirShouldStop = true;
 };
 
 bool BDBListenThread::shouldStop()
 {
-  return itsShouldStop;
+//   if (theirShouldStop) {
+//     cout<<"listener should stop"<<endl;
+//   } else {
+//     cout<<"listener should not stop"<<endl;
+//   }
+  return theirShouldStop;
 };
 
 void BDBListenThread::operator()()
@@ -76,10 +82,11 @@ void BDBListenThread::operator()()
   while (listenSocket.initServer(service) != Socket::SK_OK) {
     LOG_TRACE_FLOW_STR("Could not init server ("<<listenSocket.errstr()<<"), retrying");
   };
+  theirIsListening = true;
   LOG_TRACE_FLOW("Server initted");
   while (!shouldStop()) {
     LOG_TRACE_FLOW("BDBListenThread starting to listen");
-    Socket* newSocket = listenSocket.accept();
+    Socket* newSocket = listenSocket.accept(500); // wait 500 ms for new connection
     if (newSocket != 0){
       int port=0;
       newSocket->readBlocking(&port, 4);
@@ -91,7 +98,6 @@ void BDBListenThread::operator()()
       BDBSite* newSite = new BDBSite(hostname, port, newSocket);
 
       LOG_TRACE_FLOW_STR("Accepted connection from "<<newSocket->host()<<":"<<newSocket->port());
-      cout<<"Accepted connection from "<<newSocket->host()<<":"<<newSocket->port()<<endl;
       itsConnectionHandler.addSite(newSite);
     }
     LOG_TRACE_FLOW("BDBListenThread accepted connection");

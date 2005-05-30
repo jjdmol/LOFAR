@@ -25,6 +25,7 @@
 
 #include <map>
 #include <Common/lofar_string.h>
+#include <Common/LofarLogger.h>
 #include <Common/Net/Socket.h>
 #include <boost/thread.hpp>
 #include <db_cxx.h>
@@ -66,6 +67,8 @@ class BDBReplicator {
   BDBListenThread itsLThreadObject;
   boost::thread* itsLThread;
   DbEnv* itsDbEnv;
+
+  ALLOC_TRACER_ALIAS(BDBSite);
 };
 
 inline DbEnv* BDBReplicator::getDbEnv()
