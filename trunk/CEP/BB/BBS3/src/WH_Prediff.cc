@@ -220,6 +220,8 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
     string dbName = args.getString("DBName", "test");
     string dbHost = args.getString("DBHost", "dop50.astron.nl");
     string dbPwd = args.getString("DBPwd", "");
+    int dbMasterPort = args.getInt("DBMasterPort", 13157); //random port number
+    int dbMyPort = dbMasterPort + id;
 
     string modelType = args.getString("modelType", "LOFAR.RI");
     bool calcUVW = args.getBool("calcUVW", false);
@@ -227,8 +229,8 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
     Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
-				    dbName, dbHost, dbPwd, antNrs,
-				    modelType, srcgrp, calcUVW,lockMappedMem);
+				    dbName, dbHost, dbPwd, dbMasterPort, dbMyPort,
+				    antNrs, modelType, srcgrp, calcUVW,lockMappedMem);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));
     isNew = true;

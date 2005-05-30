@@ -37,7 +37,8 @@ using namespace std;
 
 namespace LOFAR
 {
-ParmWriter::ParmWriter()
+ParmWriter::ParmWriter(const int DBMasterPort)
+  : itsDBMasterPort(DBMasterPort)
 {}
 
 ParmWriter::~ParmWriter()
@@ -57,7 +58,7 @@ void ParmWriter::write(vector<ParmData>& pData, double fStart, double fEnd,
 	 << " (" << pData[i].getDBType()
 	 << ") values=" << pData[i].getValues() << endl;
     ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
-		   pData[i].getDBName(), "");
+		   pData[i].getDBName(), "", "localhost", itsDBMasterPort, itsDBMasterPort, true);
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());
