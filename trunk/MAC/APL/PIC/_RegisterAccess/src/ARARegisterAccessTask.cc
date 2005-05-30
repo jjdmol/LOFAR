@@ -405,8 +405,13 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
     {
       if (!m_RSPclient.isConnected()) 
       {
-        m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
-      }
+        bool res=m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
+        LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
+        if(!res)
+        {
+          m_RSPclient.setTimer((long)3);
+        }  
+      } 
       break;
     }
 
