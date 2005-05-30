@@ -1,4 +1,4 @@
-lib_LTLIBRARIES	= libBDBReplication.la
+lib_LTLIBRARIES	= libbdbreplication.la
 
 DOCHDRS 	=				\
 BDBSite.h					\
@@ -13,6 +13,6 @@ BDBListener.cc					\
 BDBSite.cc
 
 
-libBDBReplication_la_SOURCES  	= $(COMMONSRC)
+libbdbreplication_la_SOURCES  	= $(COMMONSRC)
 
 include $(lofar_sharedir)/Makefile.common

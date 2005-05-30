@@ -33,6 +33,8 @@
 using namespace LOFAR;
 using namespace std;
 
+INIT_TRACER_CONTEXT(BDBSite, "BDBReplication");
+
 BDBSite::BDBSite(const char* hostName, const int port, Socket* socket)
   :itsHostName(hostName), 
    itsPort(port),
@@ -49,7 +51,7 @@ BDBSite::BDBSite(const char* hostName, const int port, Socket* socket)
 
 BDBSite:: ~BDBSite()
 {
-  delete [] itsConnectionDataBuffer;
+  delete itsConnectionDataBuffer;
   delete itsSocket;
 }
 

@@ -191,7 +191,7 @@ int mainNoRep(int argc, char** argv)
 int
 main (int argc, char *argv[])
 {
-  INIT_LOGGER("BDBrepQuote");
+  INIT_LOGGER("tBDBReplication");
 #if 0
   return mainNoRep(argc, argv);
 #else

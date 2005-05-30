@@ -29,7 +29,6 @@
 
 using namespace LOFAR;
 
-
 class BDBListenThread {
  public:
   // called from outside the thread
@@ -40,6 +39,8 @@ class BDBListenThread {
   ~BDBListenThread();
 
   void stop();
+  
+  bool isListening();
 
   // this contains the loop of the thread
   void operator()();
@@ -49,9 +50,14 @@ class BDBListenThread {
   int itsPort;
 
   // used from outside and within so protected by a mutex
-  bool itsShouldStop;
+  static bool theirShouldStop;
+  static bool theirIsListening;
   bool shouldStop();
 
+  ALLOC_TRACER_ALIAS(BDBSite);
 };
+
+inline bool BDBListenThread::isListening() {
+  return theirIsListening; }
 
 #endif
