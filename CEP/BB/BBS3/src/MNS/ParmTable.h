@@ -129,7 +129,8 @@ public:
   // For an AIPS++ table, the extension .MEP is added to the table name.
   ParmTable (const string& dbType, const string& tableName,
 	     const string& dbName, const string& pwd,
-	     const string& hostName = "localhost");
+	     const string& hostName, const int masterPort,
+	     const int myPort, const bool isMaster);
 
   ~ParmTable()
     { delete itsRep; }

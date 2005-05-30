@@ -40,23 +40,27 @@ using namespace casa;
 namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
-    itsDb (NULL, 0),
     itsTableName ("/tmp/" + userName + "." + tableName + ".bdb")
   {
+    itsDb = new Db(NULL, 0);
   }
 
   ParmTableBDB::~ParmTableBDB()
   {
-    itsDb.sync(0);
-    itsDb.close(0);
+    if (itsDb != 0) {
+      itsDb->sync(0);
+      itsDb->close(0);
+      delete itsDb;
+      itsDb = 0;
+    }
   }
 
   void ParmTableBDB::connect(){
     u_int32_t oFlags = 0;
-    itsDb.set_flags(DB_DUPSORT);
-    //  if (itsDb.open(transid, filename, database, dbtype, flags, mode) !=0) {
-    if (itsDb.open(NULL, itsTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
-      itsDb.close(0);
+    itsDb->set_flags(DB_DUPSORT);
+    //  if (itsDb->open(transid, filename, database, dbtype, flags, mode) !=0) {
+    if (itsDb->open(NULL, itsTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+      itsDb->close(0);
       ASSERTSTR(false, "no connection to database");    
     }
     LOG_TRACE_STAT("connected to database");
@@ -80,7 +84,7 @@ namespace LOFAR {
 
   void ParmTableBDB::clearTable(){
     u_int32_t count;
-    itsDb.truncate(NULL, &count, 0);
+    itsDb->truncate(NULL, &count, 0);
   }
 
   vector<MeqPolc> ParmTableBDB::getPolcs (const string& parmName,
@@ -115,7 +119,7 @@ namespace LOFAR {
   
     string name = parmName;
     while (true) {
-      if (itsDb.get(NULL, &key, &value, 0) != 0) {
+      if (itsDb->get(NULL, &key, &value, 0) != 0) {
 	// key wasn't found or there was an error
 	string::size_type idx = name.rfind ('.');
 	// Exit loop if no more name parts.
@@ -147,7 +151,7 @@ namespace LOFAR {
     MPHValue value;
     MeqDomain pdomain;
     Dbc* cursorp;
-    itsDb.cursor(NULL, &cursorp, 0);
+    itsDb->cursor(NULL, &cursorp, 0);
 
     int flags = DB_SET;
     while (cursorp->get(&key, &value, flags) == 0) {
@@ -181,7 +185,7 @@ namespace LOFAR {
     MPHKey key(parmName, polc.domain());
     MeqParmHolder mph(parmName, polc);
     MPHValue value(mph);
-    itsDb.put(NULL, &key, &value, 0);
+    itsDb->put(NULL, &key, &value, 0);
   }
 
   void ParmTableBDB::putNewDefCoeff (const string& parmName,
@@ -202,7 +206,7 @@ namespace LOFAR {
     MPHValue value;
     MeqDomain pdomain;
     Dbc* cursorp;
-    itsDb.cursor(NULL, &cursorp, 0);
+    itsDb->cursor(NULL, &cursorp, 0);
 
     int flags = DB_SET;
     while (cursorp->get(&key, &value, flags) == 0) {
@@ -233,7 +237,7 @@ namespace LOFAR {
     // then we can first find RA and then walk the rest of the database
     // or we can use a secondary key on the first part of the name
     Dbc* cursorp;
-    itsDb.cursor(NULL, &cursorp, 0);
+    itsDb->cursor(NULL, &cursorp, 0);
     string name;
     int flags = DB_SET_RANGE; //go to RA or the first string that is bigger
     while (cursorp->get(&key, &value, flags) == 0) {
