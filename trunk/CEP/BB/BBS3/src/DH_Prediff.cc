@@ -83,7 +83,7 @@ void DH_Prediff::preprocess()
   addField ("EndFreq", BlobField<double>(1));
   addField ("StartTime", BlobField<double>(1));
   addField ("EndTime", BlobField<double>(1));
-  addField ("DataBuf", BlobField<double>(1, 0u, false));
+  addField ("DataBuf", BlobField<double>(1, 0u));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
