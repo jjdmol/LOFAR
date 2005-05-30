@@ -56,7 +56,7 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
 	 << " (" << pData[i].getDBType()
 	 << ") values=" << pData[i].getValues() << endl;
     ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
-		   pData[i].getDBName(), "");
+		   pData[i].getDBName(), "", "localhost", 13157, 13157, true);
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());
@@ -220,7 +220,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", 13157, 13157, 
 		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -246,7 +246,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", 13157, 13157, 
 		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -270,9 +270,9 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", 13157, 13157,  
 		     antVec, "LOFAR.RI", srcgrp, false, true);
-      Prediffer pre2(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+      Prediffer pre2(argv[2], argv[3], argv[4], "aips", argv[1], "", "", 13157, 13157, 
 		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -297,7 +297,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 4*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", 13157, 13157, 
 		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Only use first correlation.
       vector<int> corrVec(1, 0);
@@ -319,7 +319,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", 13157, 13157, 
 		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
