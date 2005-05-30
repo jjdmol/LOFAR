@@ -8,9 +8,9 @@ cd tBBS3_tmp
 ln -s ../../../../test/tBBS3.sh .
 ln -s ../../../../test/tBBS3.test* .
 ln -s ../../../../src/clearBB .
-ln -s ../../../../test/initparms .
+ln -s ../../../../src/initparms .
 ln -s ../../../../test/run.test* .
-ln -s ../tBBS3 . 
+ln -s ../../src/BBS3 tBBS3 
 ln -s ../../src/parmdb . 
 ln -s ../../../../test/generalinfo.sh .
 ln -s ../../../../test/cp2web.sh .

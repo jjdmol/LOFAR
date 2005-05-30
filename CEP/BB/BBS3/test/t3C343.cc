@@ -49,7 +49,7 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
 	 << " (" << pData[i].getDBType()
 	 << ") values=" << pData[i].getValues() << endl;
     ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
-		   pData[i].getDBName(), "");
+		   pData[i].getDBName(), "", "localhost", 13157, 13157, true);
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());
@@ -189,7 +189,7 @@ int main (int argc, const char* argv[])
       grp1.push_back (1);
       grp1.push_back (2);
       srcgrp.push_back (grp1);
-      Prediffer pre1(argv[2], argv[3], argv[4], dbtype, argv[1], "", "",
+      Prediffer pre1(argv[2], argv[3], argv[4], dbtype, argv[1], "", "", 13157, 13157,
 		     antVec, argv[5], srcgrp, calcuvw, true);
       // Do a further selection; only XX,YY and no autocorrelations.
       vector<int> corr(2,0);
