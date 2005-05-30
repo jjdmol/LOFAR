@@ -1,6 +1,6 @@
 INSTHDRS			= Converter.h \
 				  EarthCoord.h \
-				  Exceptions.h
+				  Exceptions.h \
 				  SkyCoord.h \
 				  TimeCoord.h \
 				  AMCClient/BlobIO.h \
