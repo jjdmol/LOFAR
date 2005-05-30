@@ -21,9 +21,11 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <unistd.h>
 #include <BBS3/MNS/ParmTable.h>
 #include <BBS3/MNS/ParmTableAIPS.h>
 #include <BBS3/MNS/ParmTableBDB.h>
+#include <BBS3/MNS/ParmTableBDBRepl.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/Vector.h>
@@ -35,19 +37,23 @@ namespace LOFAR {
 
 ParmTable::ParmTable (const string& dbType, const string& tableName,
 		      const string& userName, const string& passwd,
-		      const string& hostName)
+		      const string& hostName, const int masterPort,
+		      const int myPort, const bool isMaster)
 : itsRep (0)
 {
   if (dbType == "aips") {
     itsRep = new ParmTableAIPS (userName, tableName);
   } else if (dbType == "bdb") {
     itsRep = new ParmTableBDB (userName, tableName);
+  } else if (dbType == "bdbrepl") {
+    char hostnameBuffer[128];
+    gethostname(hostnameBuffer, 128);
+    string myHostName = hostnameBuffer;
+    itsRep = new ParmTableBDBRepl (userName, tableName, myHostName, myPort, hostName, masterPort, isMaster);
   } else {
     ASSERT (dbType=="aips");
   }
-  itsRep->setTableName (tableName);
   itsRep->setDBType    (dbType);
-  itsRep->setDBName    (userName);
   itsRep->connect();
 }
 

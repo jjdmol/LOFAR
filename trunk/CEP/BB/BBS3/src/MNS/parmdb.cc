@@ -26,6 +26,7 @@
 
 #include <MNS/ParmTableAIPS.h>
 #include <MNS/ParmTableBDB.h>
+#include <MNS/ParmTableBDBRepl.h>
 #include <Common/LofarLogger.h>
 #include <Common/KeyValueMap.h>
 #include <Common/KeyParser.h>
@@ -43,16 +44,16 @@ using std::endl;
 string dbHost, dbName, dbType, dbUser, tableName;
 ParmTableRep* PTR;
 
-enum Command {
+enum PTCommand {
   NOCMD,
   SHOW,
   NEW,
   UPDATE,
-  DELETE,
+  DEL,
   SHOWDEF,
   NEWDEF,
   UPDATEDEF,
-  DELETEDEF,
+  DELDEF,
   CONNECT,
   CLEAR,
   CREATE,
@@ -62,9 +63,9 @@ enum Command {
 };
 
 
-Command getCommand (char*& str)
+PTCommand getCommand (char*& str)
 {
-  Command cmd = NOCMD;
+  PTCommand cmd = NOCMD;
   while (*str == ' ') {
     str++;
   }
@@ -80,7 +81,7 @@ Command getCommand (char*& str)
   } else if (sc == "update") {
     cmd = UPDATE;
   } else if (sc == "delete"  ||  sc == "remove"  || sc == "erase") {
-    cmd = DELETE;
+    cmd = DEL;
   } else if (sc == "showdef"  ||  sc == "listdef") {
     cmd = SHOWDEF;
   } else if (sc == "newdef"  ||  sc == "insertdef"  ||  sc == "adddef") {
@@ -88,7 +89,7 @@ Command getCommand (char*& str)
   } else if (sc == "updatedef") {
     cmd = UPDATEDEF;
   } else if (sc == "deletedef"  ||  sc == "removedef"  || sc == "erasedef") {
-    cmd = DELETEDEF;
+    cmd = DELDEF;
   } else if (sc == "connect") {
     cmd = CONNECT;
   } else if (sc == "clear") {
@@ -324,7 +325,7 @@ void doIt()
       if (cstr[0] == 0) {
 	break;
       }
-      Command cmd = getCommand (cstr);
+      PTCommand cmd = getCommand (cstr);
       if (cmd == QUIT) {
 	break;
       }
@@ -342,6 +343,8 @@ void doIt()
 	  PTR = new ParmTableAIPS (dbUser, tableName);
 	} else if (dbType=="bdb") {
 	  PTR = new ParmTableBDB (dbUser, tableName);
+	} else if (dbType=="bdbrepl") {
+	  PTR = new ParmTableBDBRepl (dbUser, tableName, "localhost", 13157, "localhost", 13157, true);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
@@ -365,6 +368,8 @@ void doIt()
 	  ParmTableAIPS::createTable(dbUser, tableName);
 	} else if (dbType=="bdb") {
 	  ParmTableBDB::createTable(dbUser, tableName);
+	} else if (dbType=="bdbrepl") {
+	  ParmTableBDBRepl::createTable(dbUser, tableName);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
@@ -399,7 +404,7 @@ void doIt()
   delete PTR;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
   try {
     doIt();
@@ -407,5 +412,6 @@ int main()
     std::cerr << "Caught exception: " << x.what() << std::endl;
     return 1;
   }
+  
   return 0;
 }

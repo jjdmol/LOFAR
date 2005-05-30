@@ -95,11 +95,11 @@ namespace LOFAR {
     // clear database or table
     virtual void clearTable();
 
-  private:
+  protected:
     vector<MeqParmHolder> find (const string& parmName, 
 				const MeqDomain& domain);
 
-    Db itsDb;
+    Db* itsDb;
     string itsTableName;
     // class used as the index for the database
     class MPHKey : public Dbt {
