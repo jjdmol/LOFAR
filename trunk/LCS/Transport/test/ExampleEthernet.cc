@@ -66,7 +66,7 @@ void test (bool isReceiver, string interface, string remoteMac, string ownMac)
   DH_Ethernet DH_Receiver("dh_receiver", 368);
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
-  TH_Ethernet proto(interface, remoteMac, ownMac, 0x000, false);
+  TH_Ethernet proto(interface, remoteMac, ownMac, 0x000);
   
   DH_Sender.connectTo (DH_Receiver, proto, true);
   if (isReceiver) { 

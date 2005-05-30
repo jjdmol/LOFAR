@@ -55,8 +55,7 @@ public:
   TH_Ethernet(const string &ifname, 
               const string &rMac, 
               const string &oMac, 
-              const uint16 etype  = 0x0000, 
-              const bool dhheader = false);
+              const uint16 etype  = 0x0000); 
   
   virtual ~TH_Ethernet();
 
@@ -93,7 +92,6 @@ public:
   int32 itsMaxframesize;
   int32 itsDHheaderSize;
   
-  bool itsDHheader;
   bool itsInitDone;
   
   string itsIfname;

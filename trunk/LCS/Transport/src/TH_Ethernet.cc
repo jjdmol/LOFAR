@@ -54,13 +54,11 @@ namespace LOFAR
 TH_Ethernet::TH_Ethernet(const string &ifname, 
                          const string &rMac, 
                          const string &oMac, 
-                         const uint16 etype, 
-                         const bool dhheader)
+                         const uint16 etype) 
      : itsIfname(ifname), 
        itsRemoteMac(rMac),
        itsOwnMac(oMac), 
-       itsEthertype(etype),
-       itsDHheader(dhheader) 
+       itsEthertype(etype) 
 {
   LOG_TRACE_FLOW("TH_Ethernet constructor");
   
@@ -82,7 +80,7 @@ TH_Ethernet::~TH_Ethernet()
 
 TH_Ethernet* TH_Ethernet::make() const
 {
-  return new TH_Ethernet(itsIfname, itsRemoteMac, itsOwnMac, itsEthertype, itsDHheader);
+  return new TH_Ethernet(itsIfname, itsRemoteMac, itsOwnMac, itsEthertype);
 }
 
 bool TH_Ethernet::init()
@@ -111,11 +109,6 @@ bool TH_Ethernet::recvBlocking(void* buf, int32 nbytes, int32 tag)
  
   // Pointer to end of buffer
   endptr = (char*)buf + nbytes;
-
-  // if necessary, use offset to prevent that dataholder-header will be overwritten
-  if (itsDHheader) {
-    buf = (char *) buf + itsDHheaderSize; 
-  }
 
   // Pointer to received data excl. ethernetheader
   payloadptr = itsRecvPacket + sizeof(struct ethhdr);
@@ -393,11 +386,6 @@ void TH_Ethernet::Init()
 
   // Set pointer to user data to be send
   itsSendPacketData = itsSendPacket + sizeof(struct ethhdr);
-
-  // If necessary, determine size of dataholder header
-  if (itsDHheader) {
-    itsDHheaderSize = getTransporter()->getDataHolder()->getHeaderSize();
-  } 
 
   // Raw ethernet socket successfully initialized
   itsInitDone = true; 
