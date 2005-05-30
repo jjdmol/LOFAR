@@ -212,7 +212,7 @@ namespace LOFAR {
 // Only defines a function the return the LoggerReference in scope 'scope/class'
 #define ALLOC_TRACER_ALIAS(other) \
 	public:		static inline	LOFAR::LoggerReference	&getLogger() \
-				{ return other::theirTraceLoggerRef; }	
+				{ return other::getLogger(); }	
 // 
 
 #define LOG_TRACE_LOOP(message)		LofarLogTrace(1, message)
@@ -320,6 +320,7 @@ void	initTraceModule(void);
 
 #define	LofarInitTracingModule
 #define	ALLOC_TRACER_CONTEXT 
+#define ALLOC_TRACER_ALIAS(other)
 #define INIT_TRACER_CONTEXT(scope,contextname) 
 #define LOG_TRACE_LIFETIME(level,message)
 #define LOG_TRACE_LIFETIME_STR(level,stream)
