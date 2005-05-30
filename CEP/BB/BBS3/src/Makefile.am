@@ -57,6 +57,7 @@ MNS/MeqStatUVW.h \
 MNS/MeqStoredParmPolc.h \
 MNS/ParmTableAIPS.h \
 MNS/ParmTableBDB.h\
+MNS/ParmTableBDBRepl.h\
 MNS/ParmTable.h
 
 NOINSTHDRS =
@@ -126,12 +127,13 @@ MNS/MeqStatUVW.cc \
 MNS/MeqStoredParmPolc.cc \
 MNS/ParmTableAIPS.cc \
 MNS/ParmTableBDB.cc\
+MNS/ParmTableBDBRepl.cc\
 MNS/ParmTable.cc
 
 
 
 #bin_PROGRAMS = BlackBoardDemo fillsqldb
-bin_PROGRAMS = parmdb BBS3
+bin_PROGRAMS = BBS3 parmdb
 
 parmdb_SOURCES = MNS/parmdb.cc
 parmdb_LDADD = libbbs3.la

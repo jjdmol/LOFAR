@@ -32,12 +32,15 @@ StrategyController::StrategyController(int id,
 				       DH_Solution* inDH, 
 				       DH_WOPrediff* outWOPD, 
 				       DH_WOSolve* outWOSolve,
-				       int nrPrediffers)
+				       int nrPrediffers,
+				       const int DBMasterPort)
   : itsInDH      (inDH),
     itsWOPD      (outWOPD),
     itsWOSolve   (outWOSolve),
     itsNrPrediffers(nrPrediffers),
-    itsID        (id)
+    itsID        (id),
+    itsParmWriter(DBMasterPort)
+    
 {
   LOG_TRACE_FLOW("StrategyController constructor");
 }

@@ -84,6 +84,8 @@ public:
 	     const string& dbName,
 	     const string& dbHost,
 	     const string& dbPwd,
+	     const int dbMasterPort,
+	     const int dbMyPort,
 	     const vector<int>& ant,
 	     const string& modelType,
 	     const vector<vector<int> >& sourceGroups,

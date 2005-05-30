@@ -32,6 +32,7 @@
 #include <Common/lofar_vector.h>
 #include <tinyCEP/WorkHolder.h>
 #include <Common/KeyValueMap.h>
+#include <MNS/ParmTable.h>
 
 #include <Common/lofar_list.h>
 namespace LOFAR
@@ -98,6 +99,8 @@ private:
                                              // At the moment each process() call 
                                              // executes one StrategyController
   bool                     itsFirstCall;
+
+  ParmTable* itsParmTable;
 
 };
 

@@ -36,7 +36,7 @@ namespace LOFAR
 SC_Simple::SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD,
 		     DH_WOSolve* woSolve, int nrPrediffers,
 		     const KeyValueMap& args)
-  : StrategyController(id, inDH, woPD, woSolve, nrPrediffers),
+  : StrategyController(id, inDH, woPD, woSolve, nrPrediffers, args.getInt("DBMasterPort", 13157)),
     itsFirstCall      (true),
     itsPrevWOID       (0),
     itsArgs           (args),

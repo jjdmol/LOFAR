@@ -90,6 +90,8 @@ Prediffer::Prediffer(const string& msName,
 		     const string& dbName,
 		     const string& dbHost,
 		     const string& dbPwd,
+		     const int dbMasterPort,
+		     const int dbMyPort,
 		     const vector<int>& ant,
 		     const string& modelType,
 		     const vector<vector<int> >& sourceGroups,
@@ -98,9 +100,9 @@ Prediffer::Prediffer(const string& msName,
   :
   itsMSName       (msName),
   itsMEPName      (meqModel),
-  itsMEP          (dbType, meqModel, dbName, dbPwd, dbHost),
+  itsMEP          (dbType, meqModel, dbName, dbPwd, dbHost, dbMasterPort, dbMyPort, false),
   itsGSMMEPName   (skyModel),
-  itsGSMMEP       (dbType, skyModel, dbName, dbPwd, dbHost),
+  itsGSMMEP       (dbType, skyModel, dbName, dbPwd, dbHost, dbMasterPort, dbMyPort, false),
   itsCalcUVW      (calcUVW),
   itsSrcGrp       (sourceGroups),
   itsNCorr        (0),
@@ -388,7 +390,7 @@ void Prediffer::countBaseCorr()
 //----------------------------------------------------------------------
 void Prediffer::getSources()
 {
-  // Get the sources from the ParmTable.
+  // Get the sources from the ParmTable
   itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
   int nrsrc = itsSources.size();
   for (int i=0; i<nrsrc; ++i) {

@@ -48,7 +48,8 @@ string i2str(int i) {
   : WorkHolder     (3, 3, name,"WH_Control"),
     itsNrPrediffers(nrPrediffers),
     itsArgs        (args),
-    itsFirstCall   (true)
+    itsFirstCall   (true),
+    itsParmTable   (0)
 {
   getDataManager().addInDataHolder(0, new DH_Solution("in_0")); 
   getDataManager().addInDataHolder(1, new DH_WOPrediff("in_1")); // dummy
@@ -73,6 +74,7 @@ WH_Control::~WH_Control()
     delete (*iter);
   }
   itsControllers.clear();
+  delete itsParmTable;
 }
 
 WorkHolder* WH_Control::construct (const string& name, int nrPrediffers,
@@ -82,7 +84,25 @@ WorkHolder* WH_Control::construct (const string& name, int nrPrediffers,
 }
 
 void WH_Control::preprocess()
-{}
+{
+  if (itsParmTable == 0) {
+    KeyValueMap sckvm = itsArgs["SC1params"].getValueMap();
+    KeyValueMap dbkvm = sckvm["MSDBparams"].getValueMap();
+
+    char hostnameBuffer[128];
+    gethostname(hostnameBuffer, 128);
+    string myHostName = hostnameBuffer;
+
+    itsParmTable = new ParmTable(dbkvm.getString("DBType", "aips"), 
+				 "dummy", 
+				 dbkvm.getString("DBName", "test"), 
+				 dbkvm.getString("DBPwd", ""), 
+				 myHostName,
+				 dbkvm.getInt("DBMasterPort", 13157), 
+				 dbkvm.getInt("DBMasterPort", 13157), 
+				 true);
+  }
+}
 
 WH_Control* WH_Control::make (const string& name)
 {

@@ -44,7 +44,7 @@ namespace LOFAR
   {
   public:
     // Constructor
-    ParmWriter();
+    ParmWriter(const int itsDBMasterPort);
 
     // Destructor
     ~ParmWriter();
@@ -53,6 +53,7 @@ namespace LOFAR
 	       double tStart, double tEnd);
 
   private:
+    int itsDBMasterPort;
 
   };
 

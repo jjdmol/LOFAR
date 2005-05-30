@@ -53,7 +53,8 @@ public:
   StrategyController(int id, DH_Solution* inDH, 
 		     DH_WOPrediff* outWOPD, 
 		     DH_WOSolve* outWOSolve,
-		     int nrPrediffers);
+		     int nrPrediffers,
+		     const int DBMasterPort);
 
   // Destructor
   virtual ~StrategyController();
