@@ -13,6 +13,10 @@ security_func.sql
 
 misc_func.sql
 
+# OTDBConnection
 getTreeList_func.sql
 newTree_func.sql
 
+# PICadmin
+hPICsearchParamID_func.sql
+addPICparam_func.sql
