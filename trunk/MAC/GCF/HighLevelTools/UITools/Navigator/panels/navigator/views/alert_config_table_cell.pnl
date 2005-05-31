@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,285 168 600 283 N "_3DFace" 6
+PANEL,328 229 690 283 N "_3DFace" 6
 "$AreaNr"
 "$Column"
 "$Row"
@@ -151,7 +151,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 216 590 234
+E E 0 1 1 0 1 E U  1 E 10 216 680 234
 6 54
 "progressBar"
 ""
@@ -164,11 +164,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 13 219 586 229
+E E 0 1 1 0 1 E U  1 E 13 219 676 229
 6 59
 "Border5"
 ""
-1 10 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+1 100 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
 47 0 0 0 0 0
 EE E
@@ -177,11 +177,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 30 370 40
+E E 0 1 1 0 1 E U  1 E 100 30 460 40
 6 60
 "Border6"
 ""
-1 10 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+1 100 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
 48 0 0 0 0 0
 EE E
@@ -190,11 +190,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 10 46 30
+E E 0 1 1 0 1 E U  1 E 100 10 136 30
 2 61
 "Text2"
 ""
-1 17 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+1 107 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
  E E
 49 0 0 0 0 0
 EE E
@@ -203,8 +203,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 12 37 28
-0 2 0 "s" 0 0 0 192 0 0  19 12
+E E 0 1 1 0 1 E U  0 E 109 12 127 28
+0 2 0 "s" 0 0 0 192 0 0  109 12
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -214,7 +214,7 @@ LANG:1 2 DP
 4 62
 "Line1"
 ""
-1 11 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+1 101 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
  E E
 50 0 0 0 0 0
 EE E
@@ -223,11 +223,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  46 30 11 30
+E E 0 1 1 0 1 E  136 30 101 30
 6 63
 "Border7"
 ""
-1 380 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+1 470 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
 51 0 0 0 0 0
 EE E
@@ -236,11 +236,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 380 30 590 40
+E E 0 1 1 0 1 E U  1 E 470 30 680 40
 6 64
 "Border8"
 ""
-1 380 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+1 470 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
 52 0 0 0 0 0
 EE E
@@ -249,11 +249,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 380 10 423 30
+E E 0 1 1 0 1 E U  1 E 470 10 513 30
 2 65
 "Text6"
 ""
-1 387 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+1 477 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
  E E
 53 0 0 0 0 0
 EE E
@@ -262,8 +262,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 389 12 416 28
-0 2 0 "s" 0 0 0 192 0 0  389 12
+E E 0 1 1 0 1 E U  0 E 479 12 506 28
+0 2 0 "s" 0 0 0 192 0 0  479 12
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -273,7 +273,7 @@ LANG:1 3 DPE
 4 66
 "Line3"
 ""
-1 381 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+1 471 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
  E E
 54 0 0 0 0 0
 EE E
@@ -282,7 +282,66 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  423 30 381 30
+E E 0 1 1 0 1 E  513 30 471 30
+6 67
+"Border9"
+""
+1 10 40 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 30 90 40
+6 68
+"Border10"
+""
+1 10 30 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+55 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 71 30
+2 69
+"Text7"
+""
+1 17 10 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 12 64 28
+0 2 0 "s" 0 0 0 192 0 0  19 12
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 System
+4 70
+"Line2"
+""
+1 11 30 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  71 30 11 30
 14 5
 "txt_legend"
 ""
@@ -323,7 +382,7 @@ E
 13 55
 "btn_ok"
 ""
-1 390 250 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+1 550 250 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 43 0 0 0 0 0
 EE E
@@ -334,7 +393,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-388 248 452 275
+548 248 612 275
 T 
 1
 LANG:1 2 OK
@@ -344,33 +403,10 @@ LANG:1 2 OK
   PanelOff();
 }" 0
  E E E
-13 56
-"btn_apply"
-""
-1 530 250 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-44 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-528 248 592 275
-T 
-1
-LANG:1 5 Apply
-"main()
-{
-  navViewAlertApplyCellSettings($Row, $Column);
-}" 0
- E E E
 13 57
 "Button4"
 ""
-1 460 250 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 620 250 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 45 0 0 0 0 0
 EE E
@@ -381,7 +417,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-458 248 522 275
+618 248 682 275
 T 
 1
 LANG:1 6 Cancel
@@ -420,7 +456,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 "Group2"
-"objects\\Nav\\nav_SysDpDpeSelection.pnl" -80 40 T 39 1 0 1  0 2  
+"objects\\Nav\\nav_SysDpDpeSelection.pnl" -80 40 T 39 1 0 1  90 2  
 2
 "$datapoint""$datapoint"
 "$selectedDP""$selectedDP"
