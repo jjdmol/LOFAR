@@ -59,18 +59,20 @@ public:
 	// To test if we are (still) connected.
 	inline bool isConnected() const;
 
-	// To reconnect in case the connection was lost
+	// To connect or reconnect in case the connection was lost
 	bool connect();
 
 	// To get a list of all OTDB trees available in the database.
-	vector<treeInfo> getTreeList(treeType	 aTreeType,
-								 treeClassif aClassification=TCoperational);
+	vector<treeInfo> getTreeList(treeType	 	 aTreeType,
+								 treeClassifType aClassification=TCoperational);
 
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;
 
 	//# --- accessor functions ---
 	inline string errorMsg() const;
+	inline uint32 getAuthToken() const;
+	inline connection* getConn() const;
 
 private:
 	// Copying is not allowed
@@ -83,6 +85,7 @@ private:
 	string		itsDatabase;
 	bool		itsIsConnected;
 	connection*	itsConnection;
+	uint32		itsAuthToken;
 	string		itsError;
 };
 
@@ -93,6 +96,27 @@ private:
 inline bool OTDBconnection::isConnected() const
 {
 	return (itsIsConnected);
+}
+
+//#
+//# getAuthToken();
+//#
+inline uint32 OTDBconnection::getAuthToken() const
+{
+	return (itsAuthToken);
+}
+
+//#
+//# getConn();
+//#
+//# I'm not very happy with this call but we need the pqxx connection for
+//# creating a transaction. A pqxx transaction is a template that creates
+//# a non copyable object, making it difficult to define a call like:
+//# work(*)	OTDBconnection::transaction(transactionName);
+//#
+inline connection* OTDBconnection::getConn() const
+{
+	return (itsConnection);
 }
 
 //#

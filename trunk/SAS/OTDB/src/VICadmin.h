@@ -58,35 +58,35 @@ public:
 
 	// Before any components can be loaded into a component tree a new
 	// (empty) tree must be created.
-	treeID	createNewTree ();
+	treeIDType createNewTree ();
 
 	// a VIC tree is build up from single components. The definition of a
 	// component can loaded from a file with this call
-	nodeID	loadComponentFile (treeID			aTreeID,
-							   const string&	filename);
+	nodeIDType loadComponentFile (treeIDType		aTreeID,
+							   	  const string&	filename);
 
 	// From a component tree a (folded) tree can be constructed. In a folded
 	// tree only the structure of the tree is created, there is no replication
 	// of nodes on the same level.
-	treeID	buildFoldedTree (treeID		baseTree);
+	treeIDType buildFoldedTree (treeIDType	baseTree);
 
 	// From a foldedTree a fully instanciated tree can be build.
-	treeID	instanciateTree (treeID		baseTree);
+	treeIDType instanciateTree (treeIDType	baseTree);
 
 	// Set the classification of the tree.
-	bool	setClassification(treeID		aTreeID,
-							  treeClassif	aClassification);
+	bool	setClassification(treeIDType		aTreeID,
+							  treeClassifType	aClassification);
 
 	// Set the type/stage of the tree. When changing the type of a tree all
 	// constraints/validations for the current type must be fulfilled.
 	// When errors occur these can be retrieved with the errorMsg function.
-	bool	setTreeType(treeID			aTreeID,
+	bool	setTreeType(treeIDType		aTreeID,
 						treeType		aType);
 
 	// Export a VIC (sub)tree to a file. The user may choose in which format
 	// the tree is exported: HTML, KeyValue List.
-	bool	exportTree (treeID				aTreeID,
-						nodeID				topItem,
+	bool	exportTree (treeIDType			aTreeID,
+						nodeIDType			topItem,
 						const string&		filename,
 						const formatType	outputFormat,
 						bool				folded = false);

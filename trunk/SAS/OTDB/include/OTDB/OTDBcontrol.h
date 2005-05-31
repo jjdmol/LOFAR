@@ -51,7 +51,7 @@ public:
 				 const string&	database);
 	~OTDBcontrol();
 
-	actionID addAction (eventID				anEventID,
+	actionID addAction (eventIDType			anEventID,
 						actionType			anActionType,
 			  			const string&		description);
 
