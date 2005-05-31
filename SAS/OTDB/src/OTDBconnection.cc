@@ -45,6 +45,7 @@ OTDBconnection::OTDBconnection (const string&	username,
 	itsDatabase	  (database),
 	itsIsConnected(false),
 	itsConnection (0),
+	itsAuthToken  (0),
 	itsError	  ("")
 { }
 
@@ -80,14 +81,14 @@ bool OTDBconnection::connect()
 		return (false);
 	}
 
+	uint32		authToken;
 	try {
 		work 	xAction(*itsConnection, "authenticate");
 		result  res = xAction.exec("SELECT OTDBlogin('" + itsUser +
 									"','" + itsPassword + "')");
-		int		connOK;
-		res[0][0].to(connOK);
+		res[0][0].to(authToken);
 
-		if (connOK == 0) {
+		if (authToken == 0) {
 			itsError = "Authentication failed";
 			delete itsConnection;
 			itsConnection = 0;
@@ -103,6 +104,7 @@ bool OTDBconnection::connect()
 	
 	// everything is Ok.
 	itsIsConnected = true;
+	itsAuthToken   = authToken;
 	return (true);
 }
 
@@ -113,8 +115,8 @@ bool OTDBconnection::connect()
 // To get a list of the OTDB trees available in the database.
 //
 vector<treeInfo> OTDBconnection::getTreeList(
-					treeType	 	aTreeType,
-					treeClassif 	aClassification)
+					treeType	 		aTreeType,
+					treeClassifType		aClassification)
 {
 	if (!itsIsConnected && !connect()) {
 		vector<treeInfo> 	empty;

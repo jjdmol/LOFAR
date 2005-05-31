@@ -55,7 +55,7 @@ VICadmin::~VICadmin()
 //
 // Before any components can be loaded into a component tree a new
 // (empty) tree must be created.
-treeID	VICadmin::createNewTree ()
+treeIDType	VICadmin::createNewTree ()
 {
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
@@ -72,7 +72,7 @@ treeID	VICadmin::createNewTree ()
 //
 // a VIC tree is build up from single components. The definition of a
 // component can loaded from a file with this call
-nodeID	VICadmin::loadComponentFile (treeID			aTreeID,
+nodeIDType	VICadmin::loadComponentFile (treeIDType			aTreeID,
 						   			 const string&	filename)
 {
 	if (!itsConn->connect()) {
@@ -92,7 +92,7 @@ nodeID	VICadmin::loadComponentFile (treeID			aTreeID,
 // From a component tree a (folded) tree can be constructed. In a folded
 // tree only the structure of the tree is created, there is no replication
 // of nodes on the same level.
-treeID	VICadmin::buildFoldedTree (treeID		baseTree)
+treeIDType	VICadmin::buildFoldedTree (treeIDType		baseTree)
 {
 
 	if (!itsConn->connect()) {
@@ -109,7 +109,7 @@ treeID	VICadmin::buildFoldedTree (treeID		baseTree)
 // instanciateTree(treeID): treeID
 //
 // From a foldedTree a fully instanciated tree can be build.
-treeID	VICadmin::instanciateTree (treeID		baseTree)
+treeIDType	VICadmin::instanciateTree (treeIDType		baseTree)
 {
 
 	if (!itsConn->connect()) {
@@ -126,8 +126,8 @@ treeID	VICadmin::instanciateTree (treeID		baseTree)
 // setClassification(treeID, classification): bool
 //
 // Set the classification of the tree.
-bool	VICadmin::setClassification(treeID			aTreeID,
-								    treeClassif		aClassification)
+bool	VICadmin::setClassification(treeIDType			aTreeID,
+								    treeClassifType		aClassification)
 {
 
 	if (!itsConn->connect()) {
@@ -146,8 +146,8 @@ bool	VICadmin::setClassification(treeID			aTreeID,
 // Set the type/stage of the tree. When changing the type of a tree all
 // constraints/validations for the current type must be fulfilled.
 // When errors occur these can be retrieved with the errorMsg function.
-bool	VICadmin::setTreeType(treeID		aTreeID,
-							  treeType		aType)
+bool	VICadmin::setTreeType(treeIDType		aTreeID,
+							  treeType			aType)
 {
 
 	if (!itsConn->connect()) {
@@ -165,8 +165,8 @@ bool	VICadmin::setTreeType(treeID		aTreeID,
 //
 // Export a VIC (sub)tree to a file. The user may choose in which format
 // the tree is exported: HTML, KeyValue List.
-bool	VICadmin::exportTree (treeID			aTreeID,
-							  nodeID			topItem,
+bool	VICadmin::exportTree (treeIDType		aTreeID,
+							  nodeIDType		topItem,
 							  const string&		filename,
 							  const formatType	outputFormat,
 							  bool				folded)

@@ -24,8 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<OTDB/PICadmin.h>
+#include <Common/LofarLogger.h>
+#include <fstream>
+#include <OTDB/PICadmin.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -45,9 +46,7 @@ PICadmin::PICadmin (OTDBconnection*		aConn):
 //
 PICadmin::~PICadmin()
 {
-	if (itsConn) {
-		delete itsConn;
-	}
+	// Do not delete the connection, we just borrowed it.
 }
 
 //
@@ -59,14 +58,73 @@ PICadmin::~PICadmin()
 // Returns 0 on failure, otherwise the ID of the new tree is returned.
 //
 // Note: this call is only available for a few authorized users.
-treeID	PICadmin::loadMasterFile (const string&	filename)
+treeIDType	PICadmin::loadMasterFile (const string&	filename)
 {
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
 		return (0);
 	}
 
-	// TODO: ...
+	ifstream	inFile;
+
+	inFile.open (filename.c_str());
+	if (!inFile) {
+		cout << "Cannot open input file " << filename << endl;
+		return (0);
+	}
+
+	work 	xAction(*(itsConn->getConn()), "loadMasterFile");
+
+	try {
+		// First create a new tree entry.
+		result res = xAction.exec(
+					formatString("SELECT newTree(%d,%d,%d::int2,%d::int2,%d)",
+							itsConn->getAuthToken(),
+							0, 						// original tree
+							TCexperimental,			// classification
+							TThardware,				// hardware(PIC)
+							0));					// no campaign
+							
+		// Analyse result.
+		treeIDType		newTreeID;
+		res[0]["newtree"].to(newTreeID);
+		cout << "treeID = " << newTreeID << endl;
+		if (newTreeID == 0) {
+			itsError = "Unable to create a new PIC tree";
+			inFile.close();
+			return (0);
+		}
+
+		// Loop through file and add parameters to new tree.
+		paramType		parType;
+		string			parName;
+		int				counter = 0;
+		while (inFile >> parType >> parName) {
+			cout << "param: " << parName << endl;
+			res = xAction.exec("SELECT addPICparam(" + 
+				to_string(newTreeID) + "," +
+				"'" + parName + "'," + 
+				to_string(parType) + "::int2)");
+			++counter;
+			if (counter % 1000 == 0) {
+				cout << "\r" << counter << flush;
+			}
+		} 
+
+		xAction.commit();
+		inFile.close();
+
+		cout << endl << "Inserted " << counter << " parameters in tree " 
+				<< newTreeID << endl;
+
+		return (newTreeID);
+	}
+	catch (Exception&	ex) {
+		cout << ex.what();
+		inFile.close();
+		return (0);
+	}
+
 	return (0);
 }
 
@@ -76,17 +134,40 @@ treeID	PICadmin::loadMasterFile (const string&	filename)
 // Tries to give the tree the given classification. This may fail eg.
 // because there may only be one operational PIC tree.
 // Reason of failure can be obtainedwith the errorMsg function.
-bool	PICadmin::classify (treeID			aTreeID,
-							treeClassif		aClassification)
+bool	PICadmin::classify (treeIDType			aTreeID,
+							treeClassifType		aClassification)
 {
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
 
-	// TODO: ...
-	return (true);
+	work 	xAction(*(itsConn->getConn()), "setClassification");
 
+	try {
+		// First create a new tree entry.
+		result res = xAction.exec(
+					formatString("SELECT classify(%d,%d,%d::int2)",
+							itsConn->getAuthToken(),
+							aTreeID,				// original tree
+							aClassification));		// classification
+							
+		// Analyse result.
+		bool		succes;
+		res[0]["classify"].to(succes);
+		if (!succes) {
+			itsError = "Unable to classify tree";
+			return (false);
+		}
+
+		xAction.commit();
+
+		return (true);
+	}
+	catch (Exception&	ex) {
+		cout << ex.what();
+		return (false);
+	}
 }
 
   } // namespace OTDB

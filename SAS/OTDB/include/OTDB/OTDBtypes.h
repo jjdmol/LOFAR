@@ -42,11 +42,11 @@ namespace LOFAR {
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
 
-typedef		int32		treeID;
-typedef		int64		nodeID;
-typedef		int32		actionID;
-typedef		int32		eventID;
-typedef		int16		treeClassif;
+typedef		int32		treeIDType;
+typedef		int64		nodeIDType;
+typedef		int32		actionIDType;
+typedef		int32		eventIDType;
+typedef		int16		treeClassifType;
 typedef		int16		treeType;
 typedef		int16		paramType;
 typedef		int16		actionType;
@@ -63,13 +63,13 @@ public:
 //#	treeInfo();
 //#	~treeInfo();
 
-	treeID			ID;
-	treeClassif		classification; // experimental / operational / etc.
+	treeIDType		ID;
+	treeClassifType	classification; // experimental / operational / etc.
 	string			creator;
 	ptime			creationDate;	
 	treeType		type;			// template / schedule / etc.
 	// -- VIC only --
-	treeID			originalTree;
+	treeIDType		originalTree;
 	string			campaign;
 	ptime			starttime;
 	ptime			stoptime;
@@ -84,8 +84,8 @@ public:
 //#	OTDBnode();
 //#	~OTDBnode();
 
-	nodeID			ID;
-	nodeID			parentID;
+	nodeIDType		ID;
+	nodeIDType		parentID;
 	string			name;
 	int16			index;
 	paramType		type;			// node / bool / int / long / float / etc.
@@ -98,12 +98,12 @@ public:
 class OTDBvalue {
 public:
 	OTDBvalue() {};
-	OTDBvalue(nodeID			anID, 
+	OTDBvalue(nodeIDType		anID, 
 			  const string&		aValue, 
 			  const ptime&		atime);
 	~OTDBvalue() {};
 
-	nodeID			ID;
+	nodeIDType		ID;
 	string			value;
 	ptime			time;
 };

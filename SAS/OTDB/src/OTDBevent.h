@@ -55,7 +55,7 @@ public:
 	OTDBevent& operator=(const OTDBevent& that);
 
 	//# --- Datamembers ---
-	eventID			itsID;
+	eventIDType		itsID;
 	string			itsParamName;
 	eventType		itsType;
 	ptime			itsTimestamp;

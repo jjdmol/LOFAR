@@ -58,13 +58,13 @@ public:
 	// the master PIC. The master PIC will be in a exported ASCII file, with
 	// loadMasterFile this file can be added.
 	// Note: this call is only available for a few authorized users.
-	treeID	loadMasterFile (const string&	filename);
+	treeIDType	loadMasterFile (const string&	filename);
 
 	// Tries to give the tree the given classification. This may fail eg.
 	// because there may only be one operational PIC tree.
 	// Reason of failure can be obtainedwith the errorMsg function.
-	bool	classify (treeID			aTreeID,
-					  treeClassif		aClassification);
+	bool	classify (treeIDType		aTreeID,
+					  treeClassifType	aClassification);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.

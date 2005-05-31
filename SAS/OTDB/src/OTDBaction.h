@@ -56,8 +56,8 @@ public:
 
 private:
 	//# --- Datamembers ---
-	actionID		itsID;
-	eventID			itsEventID;
+	actionIDType	itsID;
+	eventIDType		itsEventID;
 	ptime			itsTimestamp;
 	string			itsOriginator;
 	actionType		itsType;

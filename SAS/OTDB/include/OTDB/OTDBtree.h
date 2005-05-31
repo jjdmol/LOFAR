@@ -48,14 +48,14 @@ class OTDBtree
 public:
 	// Connect the PIC interface to an OTDB database.
 	OTDBtree (const OTDBconnection &	aConn,
-		 	  treeID					aTreeID);
+		 	  treeIDType				aTreeID);
 
 	~OTDBtree();
 
 	// Once an treeID is chosen, the user can retrieve the definition of that
 	// tree. A nodeID may be passed to get a sub-tree in stead of the full
 	// PIC tree.
-	vector<OTDBnode> getItemList (nodeID		topNode,
+	vector<OTDBnode> getItemList (nodeIDType	topNode,
 								  uint32		depth);
 
 	// PVSS will continuously add value-changes to the offline PIC.
@@ -77,7 +77,7 @@ public:
 	// When the endDate is not specified all value changes from beginDate
 	// till 'now' are retrieved, otherwise the selection is limited to
 	// [beginDate..endDate>.
-	vector<OTDBvalue> searchInPeriod (nodeID			topNode,
+	vector<OTDBvalue> searchInPeriod (nodeIDType		topNode,
 									  uint32			depth,
 									  const ptime&		beginDate,
 									  const ptime&		endDate = ptime());
@@ -86,7 +86,7 @@ public:
 	// resources exist in the OTDB tree. This list can be retrieved with
 	// this function.
 	// TBW: Is this realy what SAS needs???
-	vector<OTDBvalue> getSchedulableItems (nodeID		topNode = 0);
+	vector<OTDBvalue> getSchedulableItems (nodeIDType	topNode = 0);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.
@@ -100,7 +100,7 @@ private:
 
 	//# --- Datamembers ---
 	OTDBconnection*		itsConn;
-	treeID				itsTreeID;
+	treeIDType			itsTreeID;
 	string				itsError;
 };
 
