@@ -1,35 +1,33 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 328 89 N "_3DFace" 1
+PANEL,730 510 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  //Function: Set background color of BP
+  //Load the property set for this datapoint
   navPMLloadPropertySet($datapoint + \"_Board1_BP\");
   navPMLloadPropertySet($datapoint + \"_Board1_BP_Maintenance\");
 
-  EP_setBackColor();
+  if(dpAccessable($datapoint + \"_Board1_BP.status:_online.._value\") &&
+     dpAccessable($datapoint + \"_Board1_Maintenance.status:_online.._value\"))
+  {
+    dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
+					                             $datapoint + \"_Board1_BP.status:_online.._value\",
+					                             $datapoint + \"_Board1_BP.status:_online.._invalid\");
+    dpConnect(\"showVersion\", $datapoint + \"_Board1_BP.version:_online.._value\",
+                             $datapoint + \"_Board1_BP.version:_online.._invalid\");
+    dpConnect(\"navViewShowTemp\", $datapoint + \"_Board1_BP.version:_online.._value\",
+                                 $datapoint + \"_Board1_BP.version:_online.._invalid\");
+  }
+  else
+  {
+    setValue(\"backGround\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_temperature\", \"text\", \"x\");
+  }
 }
 
-EP_setBackColor()
-{
-dyn_errClass err;
-
-  if( !dpExists( $datapoint + \"_Board1_BP.status:_online.._value\") ||
-  		!dpExists( $datapoint + \"_Board1_Maintenance.status:_online.._value\"))
-  {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-    return;
-  }
-
-  dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
-					                           $datapoint + \"_Board1_BP.status:_online.._value\");
-  dpConnect(\"showVersion\", $datapoint + \"_Board1_BP.version:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-}" 0
+" 0
 "main()
 {
   navPMLloadPropertySet($datapoint + \"_Board1_BP\");
@@ -135,7 +133,7 @@ E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 140 20 180 6
 2 5
 "txt_version"
 ""
-1 252 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 258 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -144,14 +142,67 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 297 47 340 61
+E E 0 1 1 0 1 E U  0 E 297 47 334 61
 0 2 0 "s" 0 0 0 194 0 0  297 47
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 9 ver: 0.12
+LANG:1 8 ver: x.x
+6 6
+"Border1"
+""
+1 245 45 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 245 25 295 45
+2 7
+"label_temperature"
+""
+1 276 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 292 27 306 43
+0 2 0 "s" 0 0 0 194 0 0  292 27
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+2 8
+"txt_temperature"
+""
+1 267 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 276 27 283 43
+0 2 0 "3.0f" 4 0 0 194 0 0  276 27
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
 0
 LAYER, 1 
 1

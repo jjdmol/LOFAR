@@ -7,24 +7,23 @@ PANEL,258 138 184 193 N "_3DFace" 2
 "main()
 {
   setValue(\"text_APNr\", \"text\", \"AP\" + $APNr);
-  setValue(\"text_Temp\" , \"editable\", FALSE);
-
   navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr);
 
-
-  if( !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\") ||
-      !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._value\"))
+  if(dpAccessable($datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\"))
   {
-    setValue(\"rect_AP\", \"color\", \"_dpdoesnotexist\");
-    setValue(\"btn_details\", \"backCol\", \"_dpdoesnotexist\");
-    return;
+    dpConnect(\"ControlGUIAP\", $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\",
+                              $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\",
+                              $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._invalid\");
+    setValue(\"output_packetsReceived\", \"editable\", FALSE);
+    dpConnect(\"showVersion\", $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._value\",
+                             $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._invalid\");
   }
-
-  dpConnect(\"ControlGUIAP\", $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\",
-                            $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\",
-                            $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._value\");
-  setValue(\"output_packetsReceived\", \"editable\", FALSE);
+  else
+  {
+    setValue(\"rect_AP\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"btn_details\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_temperature\", \"text\", \"x.x\");
+  }
 }
 
 
@@ -38,31 +37,37 @@ PANEL,258 138 184 193 N "_3DFace" 2
 /////////////////////////////////////////////////////////////////////
 ControlGUIAP(string dp1, float temperature,
              string dp2, int status,
-             string dp3, string version)
+             string dp3, bool invalid)
 {
-  setValue(\"text_Temp\", \"text\", temperature );  // Display the temperature with with format xx.x
-  
-	//Calculate the Backcolor of the AP
-  if (status == 0)
+  if(!invalid)
   {
-    setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
-  }
-  else if (status == 1)
-	{
-    setValue(\"rect_AP\", \"backCol\", \"Red\");
-    setValue(\"btn_details\", \"backCol\", \"Red\");
+    // 1. Display the temperature with with format xxx
+    setValue(\"txt_temperature\", \"text\", temperature);
+    setValue(\"txt_temperature\", \"visible\", TRUE);
+  
+    // 2. Calculate the Backcolor of the AP
+    if (status == 0)
+    {
+      setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
+    }
+    else if (status == 1)
+	  {
+      setValue(\"rect_AP\", \"backCol\", \"Red\");
+      setValue(\"btn_details\", \"backCol\", \"Red\");
+    }
+    else
+  	{
+      setValue(\"rect_AP\", \"backCol\", \"Red\");
+      setValue(\"btn_details\", \"backCol\", \"Red\");
+    }
   }
   else
-	{
-    setValue(\"rect_AP\", \"backCol\", \"Red\");
-    setValue(\"btn_details\", \"backCol\", \"Red\");
+  {
+    setValue(\"rect_AP\", \"backCol\", \"cyan\");
+    setValue(\"btn_details\", \"backCol\", \"cyan\");
+    setValue(\"txt_temperature\", \"visible\", FALSE);
   }
-
-  if (version !=\"\")
-    setValue(\"txt_version\", \"text\", \"ver: \" +version);
-  else
-    setValue(\"txt_version\", \"text\", \"ver: x:x\");
 }
 " 0
 "main()
@@ -82,7 +87,7 @@ LANG:1 6 Layer1
 6 0
 "rect_AP"
 ""
-1 20 180 E E E 1 E 1 E N "_WindowText" E N {51,204,0} E "// SimpleCtrlScriptStart {valid}
+1 20 180 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E "// SimpleCtrlScriptStart {valid}
 main(int iType)
 {
   dyn_errClass err;
@@ -128,6 +133,19 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 20 20 160 180
+6 17
+"Border1"
+""
+1 96 50 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 96 30 150 50
 2 3
 "text_APNr"
 ""
@@ -140,38 +158,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 27 33 34 49
+E E 0 1 1 0 1 E U  0 E 27 33 45 49
 0 2 0 "s" 0 0 0 192 0 0  27 33
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 1 X
-2 4
-"Text1"
-""
-1 138 30 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-5 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 140 32 154 48
-0 2 0 "s" 0 0 0 192 0 0  140 32
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 °C
+LANG:1 2 AP
 2 6
 "txt_version"
 ""
-1 116 164 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 119 164 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -180,18 +178,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 158 166 198 180
+E E 0 1 1 0 1 E U  0 E 158 166 195 180
 0 2 0 "s" 0 0 0 194 0 0  158 166
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 11 ver:       
+LANG:1 8 ver: x.x
 2 8
 "label_sampleCount"
 ""
-1 20 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 20 95 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -200,8 +198,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 119 72 138
-0 2 0 "s" 0 0 0 66 0 0  22 119
+E E 0 1 1 0 1 E U  0 E 22 97 72 116
+0 2 0 "s" 0 0 0 66 0 0  22 97
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -211,9 +209,29 @@ LANG:1 7 Sample:
 2 9
 "label_syncCount"
 ""
-1 37 141 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 37 118 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 39 120 72 136
+0 2 0 "s" 0 0 0 66 0 0  39 120
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Sync:
+2 7
+"label_errorCount"
+""
+1 37 141 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
 EE E
 0
 1
@@ -227,27 +245,47 @@ E E 0 1 1 0 1 E U  0 E 39 143 72 159
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 5 Sync:
-2 7
-"label_errorCount"
+LANG:1 6 Error:
+2 18
+"txt_temperature"
 ""
-1 37 93 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 124 30 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-7 0 0 0 0 0
+17 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 39 95 72 111
-0 2 0 "s" 0 0 0 66 0 0  39 95
+E E 0 1 1 0 1 E U  0 E 133 32 140 48
+0 2 0 "3.0f" 4 0 0 194 0 0  133 32
  1
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 6 Error:
+LANG:1 1 x
+2 4
+"label_temperature"
+""
+1 132 30 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 148 32 162 48
+0 2 0 "s" 0 0 0 194 0 0  148 32
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
 14 12
 "output_errorCount"
 ""
@@ -308,7 +346,7 @@ E
 20 10
 "btn_details"
 ""
-1 87 55 E E E 1 E 1 E N "_3DText" E N "Lofar_device_active" E E
+1 87 55 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -332,32 +370,23 @@ LANG:1 0
 E E 
 E"main(int button, bool state)
 {
-
-
   if (button == 0)
   {
     setValue(\"label_errorCount\", \"visible\", state);
     setValue(\"output_errorCount\", \"visible\", state);
     setValue(\"output_errorCount\" , \"editable\", FALSE);
-
-    
     setValue(\"label_sampleCount\", \"visible\", state);
     setValue(\"output_sampleCount\", \"visible\", state);
     setValue(\"output_sampleCount\", \"editable\", FALSE);
-
-    
     setValue(\"output_syncCount\", \"visible\", state);
     setValue(\"label_syncCount\", \"visible\", state);
     setValue(\"output_syncCount\"  , \"editable\", FALSE);
-
-    
-
     
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
-      if(!dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\") ||
-         !dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\") ||
-         !dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\"))
+      if(!dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\") ||
+         !dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\") ||
+         !dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\"))
       {
         setValue(\"output_syncCount\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"output_sampleCount\", \"backCol\", \"_dpdoesnotexist\");
@@ -372,7 +401,8 @@ E"main(int button, bool state)
         setValue(\"output_errorCount\", \"backCol\", \"white\");
         dpConnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
-                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\");
+                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
+                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
       }
                                    
     }
@@ -381,7 +411,8 @@ E"main(int button, bool state)
     
       dpDisconnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
                                       $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
-                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\");
+                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
+                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
       navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus\");
     }
 
@@ -392,31 +423,22 @@ E"main(int button, bool state)
 
 FPGASyncDetails(string dp1, int sampleCount,
                 string dp2, int syncCount,
-                string dp3, int errorCount)
+                string dp3, int errorCount,
+                string dp4, bool invalid)
 {
-  setValue(\"output_errorCount\" , \"text\", sampleCount);
-  setValue(\"output_sampleCount\", \"text\", syncCount);
-  setValue(\"output_syncCount\"  , \"text\", errorCount);
+  if(!invalid)
+  {
+    setValue(\"output_errorCount\" , \"text\", sampleCount);
+    setValue(\"output_sampleCount\", \"text\", syncCount);
+    setValue(\"output_syncCount\"  , \"text\", errorCount);
+  }
+  else
+  {
+    setValue(\"output_errorCount\" , \"text\", \"error\");
+    setValue(\"output_sampleCount\", \"text\", \"error\");
+    setValue(\"output_syncCount\"  , \"text\", \"error\");
+  }
 }" 0
-14 15
-"text_Temp"
-""
-1 90 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-14 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-88 28 138 55
-3 "3.1f" 5 0 0 2 0 0 
-E
-E
-E
 0
 LAYER, 1 
 1
