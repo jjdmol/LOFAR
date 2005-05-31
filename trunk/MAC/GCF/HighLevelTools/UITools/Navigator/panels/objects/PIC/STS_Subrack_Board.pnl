@@ -1,13 +1,32 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 222 182 N "_3DFace" 1
+PANEL,283 671 222 182 N "_3DFace" 1
 "$datapoint"
 "main()
 {
+  navPMLloadPropertySet($datapoint + \"_Board1\");
+  navPMLloadPropertySet($datapoint + \"_Board1_Maintenance\");
+
+  if(dpAccessable($datapoint + \"_Board1.version:_online.._value\") &&
+     dpAccessable($datapoint + \"_Board1_Maintenance.status:_online.._value\"))
+  {
+//    dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
+//					                             $datapoint + \"_Board1_BP.status:_online.._value\",
+//					                             $datapoint + \"_Board1_BP.status:_online.._invalid\");
+    dpConnect(\"showVersion\", $datapoint + \"_Board1.version:_online.._value\",
+                             $datapoint + \"_Board1.version:_online.._invalid\");
+  }
+  else
+  {
+    setValue(\"backGround\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"CheckButton2\", \"backCol\", \"_dpdoesnotexist\");
+    
+  }
+
+
  dpConnect(\"MaintenanceIcon\", $datapoint + \"_Maintenance.status:_online.._value\");
  
- dpConnect(\"showVersion\", $datapoint + \"_Board1.version:_online.._value\");
 }
 
 
@@ -27,7 +46,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"Border13"
+"backGround"
 ""
 1 10 170 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  E E
@@ -122,7 +141,7 @@ LANG:1 9 RSP board
 2 5
 "txt_version"
 ""
-1 201 153 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 167 153 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -131,14 +150,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 206 155 209 169
+E E 0 1 1 0 1 E U  0 E 206 155 243 169
 0 2 0 "s" 0 0 0 194 0 0  206 155
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 1 :
+LANG:1 8 ver: x.x
 6 6
 "icon_maintenance"
 ""
