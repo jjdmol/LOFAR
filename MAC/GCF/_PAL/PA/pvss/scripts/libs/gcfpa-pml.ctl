@@ -1,8 +1,8 @@
 #uses "gcfpa-com.ctl"
 
-global dyn_dyn_string gCallBackList;	
-global dyn_dyn_string gSeqList;	
-global dyn_dyn_string gPSList;	
+global dyn_dyn_string gCallBackList; // 1 == callBackFuncName; 2 == ID; 3 == myManNum
+global dyn_dyn_string gSeqList;	// 1 == seqNr ; 2 == ID; 3 == scope
+global dyn_dyn_string gPSList;	// 1 == scope; 2 == ID
 
 // GCF INTERFACE METHODS - START
 
@@ -328,10 +328,10 @@ void gcfWatchDog(string dp, string wdMsg)
 			sysNrOfLoadedPS = getSystemId(dpSubStr(gPSList[i][1], DPSUB_SYS)); // 1 == loaded property set scope
 			if (sysNrOfLoadedPS == sysNr)
 			{
-				dynAppend(response, "gone"); 
-				dynAppend(response, gPSList[i][1]); 			
+				dynAppend(indication, "gone"); 
+				dynAppend(indication, gPSList[i][1]); 			
 				callBackFunc = findCallBackFunc(gPSList[i][2]); // 2 == ID
-				callUserDefinedFunction(callBackFunc, response);
+				callUserDefinedFunction(callBackFunc, indication);
 				dynRemove(gPSList, i);
 			}
 		}
@@ -340,10 +340,10 @@ void gcfWatchDog(string dp, string wdMsg)
 			sysNrOfLoadedPS = getSystemId(dpSubStr(gSeqList[i][3], DPSUB_SYS)); // 3 == loaded property set scope
 			if (sysNrOfLoadedPS == sysNr)
 			{
-				dynAppend(response, "gone"); 
-				dynAppend(response, gSeqList[i][3]); 			
+				dynAppend(indication, "gone"); 
+				dynAppend(indication, gSeqList[i][3]); 			
 				callBackFunc = findCallBackFunc(gSeqList[i][2]); // 2 == ID
-				callUserDefinedFunction(callBackFunc, response);
+				callUserDefinedFunction(callBackFunc, indication);
 				dynRemove(gSeqList, i);
 			}
 		}	
