@@ -54,7 +54,7 @@ CREATE SEQUENCE PICparamrefID;
 
 CREATE TABLE PICparamref (
 	paramID		INT4			NOT NULL DEFAULT nextval('PICparamrefID'),
-	PVSSname	VARCHAR(80)		NOT NULL,
+	PVSSname	VARCHAR(120)	NOT NULL,
 	par_type	INT2			REFERENCES param_type(ID),
 	unit		INT2			REFERENCES unit(ID),
 	pruning		INT2			DEFAULT 10,
@@ -77,7 +77,7 @@ CREATE TABLE PIChierarchy (
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	paramID		INT4			NOT NULL DEFAULT nextval('PIChierarchID'),
 	parentID	INT4			NOT NULL, --  REFERENCES PIChierachy(paramID),
-	name		VARCHAR(12)		NOT NULL,
+	name		VARCHAR(40)		NOT NULL,
 	index		INT2			NOT NULL DEFAULT 0,
 
 	CONSTRAINT	param_uniq_in_tree	UNIQUE(treeID, paramID)
