@@ -72,8 +72,10 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
+  cout << ">>>" << endl;
   int bufsize = pre1.setDomain (137750000-250000, 2*500000, 0., 1e12);
   //int bufsize = pre1.setDomain (0., 1e12, 0., 1e12);
+  cout << "<<<" << endl;
   char* fitBuf = new char[bufsize];
     
   // Get the ParmData from the Prediffer and send it to the solver.
@@ -107,6 +109,7 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
   for (int it=0; it<niter; ++it) {
     // Get the fitter from the prediffer and give it to the solver.
     casa::LSQFit fitter;
+    cout << ">>>" << endl;
     if (toblob) {
       casa::LSQFit fitter2;
       pre1.fillFitter (fitter2);
@@ -119,8 +122,10 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
     // Do the solve.
     Quality quality;
     solver.solve (false, quality);
+    cout << "<<<" << endl;
     cout << "iter" << it << ":  " << setprecision(10)
 	 << solver.getSolvableValues() << endl;
+    cout << quality << endl;
     cout.precision (prec);
     pre1.updateSolvableParms (solver.getSolvableParmData());
   }
@@ -138,10 +143,12 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2,
   pre1.setSolvableParms (solv, vector<string>(), true);
   pre2.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
+  cout << ">>>" << endl;
   pre1.setDomain (137750000-250000, 4*500000, 0., 1e12);
   ///  vector<uint32> shape1 = pre1.setDomain (0., 1e12, 0., 1e12);
   pre2.setDomain (137750000-250000, 4*500000, 0., 1e12);
   ///  vector<uint32> shape2 = pre2.setDomain (0., 1e12, 0., 1e12);
+  cout << "<<<" << endl;
   // Get the ParmData from the Prediffers and send it to the solver.
   solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
   solver.setSolvableParmData (pre2.getSolvableParmData(), 1);
@@ -151,6 +158,7 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2,
   for (int it=0; it<niter; ++it) {
     // Get the fitter from the prediffer and give it to the solver.
     casa::LSQFit fitter;
+    cout << ">>>" << endl;
     pre1.fillFitter (fitter);
     solver.mergeFitter (fitter, 0);
     pre2.fillFitter (fitter);
@@ -158,8 +166,10 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2,
     // Do the solve.
     Quality quality;
     solver.solve (false, quality);
+    cout << "<<<" << endl;
     cout << "iter" << it << ":  " << setprecision(10)
 	 << solver.getSolvableValues() << endl;
+    cout << quality << endl;
     cout.precision (prec);
     pre1.updateSolvableParms (solver.getSolvableParmData());
     pre2.updateSolvableParms (solver.getSolvableParmData());
@@ -172,8 +182,10 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
+  cout << ">>>" << endl;
   pre1.setDomain (137750000-250000, 4*500000, 0., 1e12);
   //pre1.setDomain (0., 1e12, 0., 1e12);
+  cout << "<<<" << endl;
     
   // Get the ParmData from the Prediffer and send it to the solver.
   // Optionally convert it to and from a blob to see if that works fine.
@@ -188,13 +200,16 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
   for (int it=0; it<niter; ++it) {
     // Get the fitter from the prediffer and give it to the solver.
     casa::LSQFit fitter;
+    cout << ">>>" << endl;
     pre1.fillFitter (fitter);
     solver.mergeFitter (fitter, 0);
     // Do the solve.
     Quality quality;
     solver.solve (false, quality);
+    cout << "<<<" << endl;
     cout << "iter" << it << ":  " << setprecision(10)
 	 << solver.getSolvableValues() << endl;
+    cout << quality << endl;
     cout.precision (prec);
     writeParms (solver.getSolvableParmData(), pre1.getDomain());
     pre1.updateSolvableParms();
@@ -204,7 +219,6 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
 
 int main (int argc, const char* argv[])
 {
-  cout << ">>>" << endl;
   INIT_LOGGER("tPredSolv");
   try {
     if (argc < 5) {
@@ -340,6 +354,5 @@ int main (int argc, const char* argv[])
     cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
-  cout << "<<<" << endl;
   return 0;
 }
