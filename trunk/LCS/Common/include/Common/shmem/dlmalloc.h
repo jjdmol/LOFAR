@@ -678,13 +678,13 @@ int  dlmallopt(int, int);
 /** @{ */
 
 #ifndef M_NBLKS
-#define M_NLBLKS  2    /* UNUSED in this malloc */
+#define M_NLBLKS  2    /**< UNUSED in this malloc */
 #endif
 #ifndef M_GRAIN
-#define M_GRAIN   3    /* UNUSED in this malloc */
+#define M_GRAIN   3    /**< UNUSED in this malloc */
 #endif
 #ifndef M_KEEP
-#define M_KEEP    4    /* UNUSED in this malloc */
+#define M_KEEP    4    /**< UNUSED in this malloc */
 #endif
 
 /** @} */
