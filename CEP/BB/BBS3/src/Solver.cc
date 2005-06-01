@@ -94,8 +94,8 @@ void Solver::solve (bool useSVD,
   // Solve the equation. 
   uint rank;
   double fit;
-  cout << "Nr of used data points:    " << itsNUsed << endl;
-  cout << "Nr of flagged data points: " << itsNFlag << endl;
+  //  cout << "Nr of used data points:    " << itsNUsed << endl;
+  //  cout << "Nr of flagged data points: " << itsNFlag << endl;
   LOG_INFO_STR( "Nr of used data points:    " << itsNUsed);
   LOG_INFO_STR( "Nr of flagged data points: " << itsNFlag);
   LOG_INFO_STR( "Solution before: " << itsSolvableValues);
@@ -111,7 +111,6 @@ void Solver::solve (bool useSVD,
   resultQuality.itsMu = itsSolver.getWeightedSD();
   resultQuality.itsStddev = itsSolver.getSD();
   resultQuality.itsChi = itsSolver.getChi();
-  cout << resultQuality << endl;
 
   // Store the new values in the ParmData vector.
   const double* val = &(itsSolvableValues[0]);
