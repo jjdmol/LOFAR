@@ -1,0 +1,477 @@
+Starting first test
+>>>
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 48.5 us, total = 48.5 us, count =         1
+
+BBSTest: initparms    timer: avg =   29 ms, total =   29 ms, count =         1
+
+<<<
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   1
+  calcuvw  : 0
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+>>>
+BBSTest: predict timer: avg = 1.49 ms, total = 74.6 ms, count =        50
+
+BBSTest: formeqs timer: avg = 22.1 us, total = 2.21 ms, count =       100
+
+BBSTest: solver     timer: avg =  225 us, total =  225 us, count =         1
+
+<<<
+iter0:  [2.734004076,0.4538001731,0.6039205533,2.734020405,0.4536930993,0.5974054979,2.733981394,0.4537583416,0.6004018856]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.01102832013
+itsStddev : 0.01102832013
+itsChi    : 0.09620446133
+
+>>>
+BBSTest: predict timer: avg = 1.48 ms, total =  148 ms, count =       100
+
+BBSTest: formeqs timer: avg = 20.4 us, total = 4.07 ms, count =       200
+
+BBSTest: solver     timer: avg =  234 us, total =  234 us, count =         1
+
+<<<
+iter1:  [2.734004501,0.4538008139,0.6056732548,2.734017502,0.4536965908,0.5944160393,2.733984812,0.4537684625,0.599921246]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.997991457
+itsMu     : 0.0001383415022
+itsStddev : 0.0001383415022
+itsChi    : 1.513845164e-05
+
+>>>
+BBSTest: predict timer: avg =  1.5 ms, total =  224 ms, count =       150
+
+BBSTest: formeqs timer: avg = 19.8 us, total = 5.95 ms, count =       300
+
+BBSTest: solver     timer: avg =  225 us, total =  225 us, count =         1
+
+<<<
+iter2:  [2.734005357,0.4537966951,0.6076239876,2.734016631,0.4536953623,0.5926366284,2.733984825,0.4537734395,0.5997288337]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.998236256
+itsMu     : 4.833823413e-05
+itsStddev : 4.833823413e-05
+itsChi    : 1.84823864e-06
+
+>>>
+BBSTest: predict timer: avg =  1.5 ms, total =  300 ms, count =       200
+
+BBSTest: formeqs timer: avg = 19.6 us, total = 7.83 ms, count =       400
+
+BBSTest: solver     timer: avg =  221 us, total =  221 us, count =         1
+
+<<<
+iter3:  [2.734005357,0.4537966951,0.6076239876,2.734016631,0.4536953623,0.5926366284,2.733984825,0.4537734395,0.5997288337]
+itsSolFlag: 0
+itsRank   : 0
+itsFit    : -1.642773984
+itsMu     : 0
+itsStddev : 0
+itsChi    : 0
+
+>>>
+BBSTest: predict timer: avg =  1.5 ms, total =  375 ms, count =       250
+
+BBSTest: formeqs timer: avg = 19.4 us, total =  9.7 ms, count =       500
+
+BBSTest: solver     timer: avg =  219 us, total =  219 us, count =         1
+
+<<<
+iter4:  [2.734005349,0.4537964747,0.6076499641,2.73401662,0.4536955569,0.5925934234,2.733984837,0.4537734839,0.5997525707]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 4.455541865e-05
+itsStddev : 4.455541865e-05
+itsChi    : 3.158429861e-06
+
+>>>
+BBSTest: predict timer: avg =  1.5 ms, total =  449 ms, count =       300
+
+BBSTest: formeqs timer: avg = 19.3 us, total = 11.6 ms, count =       600
+
+BBSTest: solver     timer: avg =  223 us, total =  223 us, count =         1
+
+<<<
+iter5:  [2.734005506,0.4537960501,0.6078078421,2.734016505,0.453695427,0.5924074287,2.733984796,0.4537740044,0.5997745075]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.562235676
+itsMu     : 4.301307675e-05
+itsStddev : 4.301307675e-05
+itsChi    : 1.463448694e-06
+
+>>>
+BBSTest: predict timer: avg =  1.5 ms, total =  524 ms, count =       350
+
+BBSTest: formeqs timer: avg = 19.2 us, total = 13.5 ms, count =       700
+
+BBSTest: solver     timer: avg =  225 us, total =  225 us, count =         1
+
+<<<
+iter6:  [2.73400571,0.4537954918,0.6087007697,2.734016377,0.4536952294,0.5917800549,2.733984717,0.4537746398,0.5995094076]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -0.06602045218
+itsMu     : 4.174575154e-05
+itsStddev : 4.174575154e-05
+itsChi    : 1.378481847e-06
+
+>>>
+BBSTest: predict timer: avg =  1.5 ms, total =  598 ms, count =       400
+
+BBSTest: formeqs timer: avg = 19.2 us, total = 15.4 ms, count =       800
+
+BBSTest: solver     timer: avg =  221 us, total =  221 us, count =         1
+
+<<<
+iter7:  [2.73400571,0.4537954918,0.6087007697,2.734016377,0.4536952294,0.5917800549,2.733984717,0.4537746398,0.5995094076]
+itsSolFlag: 0
+itsRank   : 0
+itsFit    : -0.04196550223
+itsMu     : 0
+itsStddev : 0
+itsChi    : 0
+
+>>>
+BBSTest: predict timer: avg =  1.5 ms, total =  675 ms, count =       450
+
+BBSTest: formeqs timer: avg = 19.2 us, total = 17.3 ms, count =       900
+
+BBSTest: solver     timer: avg =  220 us, total =  220 us, count =         1
+
+<<<
+iter8:  [2.734005712,0.4537954822,0.6087097308,2.734016374,0.4536952313,0.5917732441,2.733984717,0.4537746473,0.5995073432]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 4.145217827e-05
+itsStddev : 4.145217827e-05
+itsChi    : 2.733788385e-06
+
+End of first test
+Starting double setEquations test
+>>>
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 45.6 us, total = 45.6 us, count =         1
+
+BBSTest: initparms    timer: avg = 28.7 ms, total = 28.7 ms, count =         1
+
+<<<
+use toblob
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   1
+  calcuvw  : 0
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+>>>
+BBSTest: predict timer: avg = 1.48 ms, total = 74.2 ms, count =        50
+
+BBSTest: formeqs timer: avg = 21.1 us, total = 2.11 ms, count =       100
+
+BBSTest: solver     timer: avg =  269 us, total =  269 us, count =         1
+
+<<<
+iter0:  [2.734004076,0.4538001731,0.6039205533,2.734020405,0.4536930993,0.5974054979,2.733981394,0.4537583416,0.6004018856]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.01102832013
+itsStddev : 0.01102832013
+itsChi    : 0.09620446133
+
+End of double setEquations test
+Starting test with two prediffers
+>>>
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 42.7 us, total = 42.7 us, count =         1
+
+BBSTest: initparms    timer: avg = 29.2 ms, total = 29.2 ms, count =         1
+
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 51.3 us, total = 51.3 us, count =         1
+
+BBSTest: initparms    timer: avg = 29.3 ms, total = 29.3 ms, count =         1
+
+<<<
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+>>>
+BBSTest: predict timer: avg = 1.51 ms, total = 75.7 ms, count =        50
+
+BBSTest: formeqs timer: avg =   27 us, total =  2.7 ms, count =       100
+
+BBSTest: predict timer: avg = 1.52 ms, total = 75.9 ms, count =        50
+
+BBSTest: formeqs timer: avg = 26.9 us, total = 2.69 ms, count =       100
+
+BBSTest: solver     timer: avg =  224 us, total =  224 us, count =         1
+
+<<<
+iter0:  [2.734004074,0.4538001633,0.6039471598,2.734020395,0.4536931018,0.5973809337,2.733981406,0.4537583473,0.6004009832]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.01098171166
+itsStddev : 0.01098171166
+itsChi    : 0.3848281894
+
+End of test with two prediffers
+Starting test with 21 antennas
+>>>
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 42.1 us, total = 42.1 us, count =         1
+
+BBSTest: initparms    timer: avg = 60.1 ms, total = 60.1 ms, count =         1
+
+<<<
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   1
+  calcuvw  : 0
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+>>>
+BBSTest: predict timer: avg = 1.47 ms, total = 1.55  s, count =      1050
+
+BBSTest: formeqs timer: avg = 7.86 us, total = 16.5 ms, count =      2100
+
+BBSTest: solver     timer: avg =  232 us, total =  232 us, count =         1
+
+<<<
+iter0:  [2.734000058,0.4537900035,0.9838712296,2.734020269,0.4536898874,0.5025455825,2.733980649,0.4537501573,0.3049662164]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.02657902437
+itsStddev : 0.02657902437
+itsChi    : 2.960709052
+
+>>>
+BBSTest: predict timer: avg = 1.48 ms, total =  3.1  s, count =      2100
+
+BBSTest: formeqs timer: avg = 6.89 us, total = 28.9 ms, count =      4200
+
+BBSTest: solver     timer: avg =  225 us, total =  225 us, count =         1
+
+<<<
+iter1:  [2.734000002,0.4537900019,1.000212808,2.734020009,0.4536900032,0.5000044708,2.733980009,0.4537499987,0.2993235781]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.998141673
+itsMu     : 0.0007906191818
+itsStddev : 0.0007906191818
+itsChi    : 0.002619704792
+
+>>>
+BBSTest: predict timer: avg = 1.48 ms, total = 4.65  s, count =      3150
+
+BBSTest: formeqs timer: avg = 6.52 us, total = 41.1 ms, count =      6300
+
+BBSTest: solver     timer: avg =  225 us, total =  225 us, count =         1
+
+<<<
+iter2:  [2.734,0.45379,0.9999948478,2.73402,0.45369,0.49998994,2.73398,0.4537499998,0.3000014784]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.993345788
+itsMu     : 1.492073613e-05
+itsStddev : 1.492073613e-05
+itsChi    : 9.330354846e-07
+
+>>>
+BBSTest: predict timer: avg = 1.47 ms, total = 6.19  s, count =      4200
+
+BBSTest: formeqs timer: avg = 6.34 us, total = 53.3 ms, count =      8400
+
+BBSTest: solver     timer: avg =  223 us, total =  223 us, count =         1
+
+<<<
+iter3:  [2.734,0.45379,0.9999998111,2.73402,0.45369,0.4999999478,2.73398,0.45375,0.3000003025]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.998783352
+itsMu     : 2.789022544e-07
+itsStddev : 2.789022544e-07
+itsChi    : 3.260030854e-10
+
+>>>
+BBSTest: predict timer: avg = 1.47 ms, total = 7.73  s, count =      5250
+
+BBSTest: formeqs timer: avg = 6.24 us, total = 65.5 ms, count =     10500
+
+BBSTest: solver     timer: avg =  224 us, total =  224 us, count =         1
+
+<<<
+iter4:  [2.734,0.45379,1.000000002,2.73402,0.45369,0.5000000021,2.73398,0.45375,0.2999999998]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.997468978
+itsMu     : 2.305808727e-08
+itsStddev : 2.305808727e-08
+itsChi    : 2.228251553e-12
+
+End of test with 21 antennas
+Starting test with updating parmtable
+>>>
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 46.6 us, total = 46.6 us, count =         1
+
+BBSTest: initparms    timer: avg = 28.4 ms, total = 28.4 ms, count =         1
+
+<<<
+Prediffer settings:
+  msname:    /tmp/diepen.demo
+  mepname:   demo
+  gsmname:   demo_gsm
+  solvparms: [RA.CP1(1),DEC.CP1(1),StokesI.CP1(1),RA.CP2(1),DEC.CP2(1),StokesI.CP2(1),RA.CP3(1),DEC.CP3(1),StokesI.CP3(1)]
+  stchan:    0
+  endchan:   3
+  calcuvw  : 0
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+>>>
+BBSTest: predict timer: avg = 1.49 ms, total = 74.7 ms, count =        50
+
+BBSTest: formeqs timer: avg = 26.9 us, total = 2.69 ms, count =       100
+
+BBSTest: solver     timer: avg =  225 us, total =  225 us, count =         1
+
+<<<
+iter0:  [2.734004074,0.4538001633,0.6039471598,2.734020395,0.4536931018,0.5973809337,2.733981406,0.4537583473,0.6004009832]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.01099723109
+itsStddev : 0.01099723109
+itsChi    : 0.1924140947
+
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.604]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.597]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+>>>
+BBSTest: predict timer: avg = 1.49 ms, total =  149 ms, count =       100
+
+BBSTest: formeqs timer: avg = 25.6 us, total = 5.13 ms, count =       200
+
+BBSTest: solver     timer: avg =  270 us, total =  270 us, count =         1
+
+<<<
+iter1:  [2.734004511,0.4538007895,0.6057240058,2.734017495,0.4536965748,0.5943667748,2.733984811,0.4537684948,0.5999195407]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.997977332
+itsMu     : 0.0001387250709
+itsStddev : 0.0001387250709
+itsChi    : 3.061823068e-05
+
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.606]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.594]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+>>>
+BBSTest: predict timer: avg = 1.49 ms, total =  224 ms, count =       150
+
+BBSTest: formeqs timer: avg = 25.2 us, total = 7.57 ms, count =       300
+
+BBSTest: solver     timer: avg =  228 us, total =  228 us, count =         1
+
+<<<
+iter2:  [2.734005359,0.4537966814,0.6077026265,2.734016629,0.4536953566,0.5925676337,2.733984825,0.4537734474,0.5997190639]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : -1.998215963
+itsMu     : 4.860151327e-05
+itsStddev : 4.860151327e-05
+itsChi    : 3.758112383e-06
+
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.608]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.593]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+>>>
+BBSTest: predict timer: avg = 1.49 ms, total =  299 ms, count =       200
+
+BBSTest: formeqs timer: avg =   25 us, total =   10 ms, count =       400
+
+BBSTest: solver     timer: avg =  223 us, total =  223 us, count =         1
+
+<<<
+iter3:  [2.734005359,0.4537966814,0.6077026265,2.734016629,0.4536953566,0.5925676337,2.733984825,0.4537734474,0.5997190639]
+itsSolFlag: 0
+itsRank   : 0
+itsFit    : -1.647615658
+itsMu     : 0
+itsStddev : 0
+itsChi    : 0
+
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.608]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.593]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+>>>
+BBSTest: predict timer: avg = 1.49 ms, total =  373 ms, count =       250
+
+BBSTest: formeqs timer: avg = 24.9 us, total = 12.4 ms, count =       500
+
+BBSTest: solver     timer: avg =  222 us, total =  222 us, count =         1
+
+<<<
+iter4:  [2.734005351,0.4537964622,0.6077289227,2.734016618,0.4536955494,0.5925240489,2.733984837,0.4537734924,0.5997427985]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 4.491003142e-05
+itsStddev : 4.491003142e-05
+itsChi    : 6.435962753e-06
+
+Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.608]
+Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.593]
+Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.73]
+Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.454]
+Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6]
+End of test with updating parmtable
