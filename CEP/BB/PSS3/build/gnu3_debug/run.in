@@ -1,8 +1,0 @@
-define
-	cRead=0,
-	ksRead=1,
-	ksWrite=1
-;
-run 1;
-quit
-
