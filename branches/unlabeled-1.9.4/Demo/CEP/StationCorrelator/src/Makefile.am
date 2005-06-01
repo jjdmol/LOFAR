@@ -16,8 +16,8 @@ WH_Transpose.h						\
 WH_Correlator.h						\
 WH_Dump.h						\
 SyncStamp.h                                             \
-BufferingController.h                                   \
 CyclicBuffer.h                                          \
+BufferController.h                                      \
 TH_RSP.h      
 
 StationCorrelator_SOURCES 	=	$(DOCHDRS)	\
@@ -37,7 +37,6 @@ StationCorrelator.cc					\
 StationCorrelatorController.cc				\
 StationCorrelatorMain.cc				\
 SyncStamp.cc                                            \
-BufferingController.cc                                  \
 TH_RSP.cc
 
 include $(lofar_sharedir)/Makefile.common

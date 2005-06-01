@@ -62,8 +62,8 @@ void DH_RSP::preprocess()
   postprocess();
   
   // Add the fields to the data definition.
-  addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
+  addField ("Flag", BlobField<int>(1, 1));
 
   // Create the data blob
   createDataBlock();

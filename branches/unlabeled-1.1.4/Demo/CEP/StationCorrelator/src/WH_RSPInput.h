@@ -24,25 +24,43 @@
 #define STATIONCORRELATOR_WH_RSPINPUT_H
 
 
+#include <Transport/TH_Ethernet.h>
+
 #include <Common/KeyValueMap.h>
+#include <Common/lofar_string.h>
 #include <tinyCEP/WorkHolder.h>
 #include <DH_RSPSync.h>
-#include <BufferingController.h>
+#include <BufferController.h>
 
 namespace LOFAR
 {
+  
+  struct BufferType1 {
+    char element[9000];
+  };
+
+  struct BufferType2 {
+    bool element;
+  };
+
+
   class WH_RSPInput: public WorkHolder
   {
   public:
 
     explicit WH_RSPInput(const string& name, 
                          const KeyValueMap kvm,
-		         const bool isSyncMaster = false);
+                         const string device,
+                         const string srcMAC,
+                         const string destMAC);
     virtual ~WH_RSPInput();
     
     static WorkHolder* construct(const string& name, 
                                  const KeyValueMap kvm,
-				 const bool isSyncMaster = false);
+                                 const string device,
+                                 const string srcMAC,
+                                 const string destMAC);
+	
     virtual WH_RSPInput* make(const string& name);
     
     virtual void preprocess();
@@ -58,22 +76,33 @@ namespace LOFAR
     /// forbid assignment
     WH_RSPInput& operator= (const WH_RSPInput&);
 
+    // read data from input connection
+    void readInput();
+
+    // raw ethernet interface 
+    TH_Ethernet* itsInputConnection;
+    string itsDevice;
+    string itsSrcMAC;
+    string itsDestMAC;
+    char* itsRecvFrame;
+    int itsSzRSPframe;
     int itsNpackets;
-    int itsPolarisations;
-    int itsNbeamlets;
-    int itsNCorrOutputs;
-    int itsNRSPOutputs;
-    int itsSzEPAheader;
-    int itsSzEPApacket;
-
-    BufferingController* itsBufControl;
-
+    
+    
+    // cyclic buffer for rsp-data
+    BufferController<BufferType1*> *itsDataBuffer;
+    
+    // cyclic buffer for invalid data flag
+    BufferController<BufferType2*> *itsFlagBuffer;
+    
+    // keyvalue map
     KeyValueMap itsKVM;
 
-    // for synchronisation
-    bool itsIsSyncMaster; // Am I the one that sends the sync packets?
-    DH_RSPSync::syncStamp_t itsNextStamp;
-    bool itsReadNext; // Do we need to read at the beginning of the next process()?
+    // timestamps
+    DH_RSPSync::syncStamp_t itsActualStamp, itsNextStamp;
+    
+    // Do we need to read at the beginning of the next process()?
+    bool itsReadNext;
 
     static ProfilingState theirOldDataState;
     static ProfilingState theirMissingDataState;

@@ -109,36 +109,16 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     snprintf(H_name, 128, "RSPInputNode_%d_of_%d", i, itsNrsp);
     LOG_TRACE_LOOP_STR("Create RSPInput workholder/Step " << H_name);
     WH_RSPInput* whRSPinput; 
+    
+    string iface = itsKVM["interfaces"].getVecString()[i];
+    string oMac  = itsKVM["oMacs"].getVecString()[i];
+    string rMac  = itsKVM["rMacs"].getVecString()[i];
+    whRSPinput = new WH_RSPInput(H_name, itsKVM, iface, rMac, oMac);
 
-    if (i == 0) {
-      whRSPinput = new WH_RSPInput(H_name, itsKVM, true);  // syncmaster
-    } 
-    else {
-      whRSPinput = new WH_RSPInput(H_name, itsKVM, false); // notsyncmaster
-    }
     itsRSPinputSteps[i] = new Step(*whRSPinput, H_name, false);
     comp.addStep(itsRSPinputSteps[i]); 
 
     itsRSPinputSteps[i]->runOnNode(lastFreeNode++);
-
-    if (useRealRSP) {
-      string iface = itsKVM["interfaces"].getVecString()[i];
-      //      cout<<"interface: "<<iface<<endl;
-      string oMac  = itsKVM["oMacs"].getVecString()[i];
-      string rMac  = itsKVM["rMacs"].getVecString()[i];
-      itsRSPinputSteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_RSP(iface.c_str(), 
-						    		     rMac.c_str(), 
-								     oMac.c_str(), 
-								     0x000, 
-								     true), true);
-    } else {
-      // Use the WH_RSPBoard to emulate a real RSP Board
-      connect(&StepRSPemulator, itsRSPinputSteps[i], i, 0, false); // true=sharedMem
-    }
-
-    // set synchronization outputs of syncmaster
-    itsRSPinputSteps[0]->setOutRate(10000, i+1);
-
   }
   
   Step** itsRSPsteps = new Step*[itsNrsp];
@@ -160,11 +140,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     itsRSPsteps[i]->connect(itsRSPinputSteps[i], 0, 0, 1, TH_Mem(), true); //blocking
 #endif
     // to do: connect(Delay_controller[i], itsRSPsteps[i], 0, 1, false);
-    // for now: use syncmaster outputs of itsRSPinputSteps[0]
-    connect(itsRSPinputSteps[0], itsRSPsteps[i], i+1, 1, true);
-    // set synchronization inputs
-    itsRSPsteps[i]->setInRate(10000, 1);
-    //itsRSPsteps[i]->setProcessRate(2);
+   
   }
 
   Step** itsTsteps = new Step*[itsNcorrelator];

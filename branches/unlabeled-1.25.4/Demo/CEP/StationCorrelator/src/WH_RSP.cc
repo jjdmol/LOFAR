@@ -207,6 +207,7 @@ void WH_RSP::process()
       itsReadNext = true;
     }
   } // while (!newStamp)
+  dump();
 }
 
 

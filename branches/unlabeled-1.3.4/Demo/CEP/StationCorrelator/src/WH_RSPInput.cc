@@ -33,7 +33,7 @@
 #include <WH_RSPInput.h>
 #include <DH_RSP.h>
 #include <DH_RSPSync.h>
-#include <BufferingController.h>
+#include <BufferController.h>
 
 using namespace LOFAR;
 
@@ -42,164 +42,109 @@ ProfilingState WH_RSPInput::theirMissingDataState;
 
 WH_RSPInput::WH_RSPInput(const string& name, 
                          const KeyValueMap kvm,
-	                 const bool isSyncMaster) 
-  : WorkHolder (1,
-                //if SyncMaster we have 'NoWH_RSP' extra outputs
-		1 + (isSyncMaster?kvm.getInt("NoWH_RSP", 2) : 0),
-		name, 
-		"WH_RSPInput"),
+                         const string device,
+                         const string srcMAC,
+                         const string destMAC)
+  : WorkHolder (1, 1, name, "WH_RSPInput"),
     itsKVM (kvm),
-    itsIsSyncMaster(isSyncMaster),
+    itsDevice(device),
+    itsSrcMAC(srcMAC),
+    itsDestMAC(destMAC),
+    itsActualStamp(0,0),
     itsNextStamp(-1,0),
     itsReadNext(true)
 {
-  char str[32];
+  // number of EPA packets per RSP frame
+  int itsNpackets = kvm.getInt("NoPacketsInFrame", 8);
   
-  // get parameters
-  itsNRSPOutputs   = kvm.getInt("NoWH_RSP", 2);  
-  itsPolarisations = kvm.getInt("polarisations",2);           
-  itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92);   // number of EPA-packet beamlets per OutDataholder
-  itsNpackets      = kvm.getInt("NoPacketsInFrame", 8); // number of EPA-packets in RSP-ethernetframe
-  itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);     // headersize in bytes
-  itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader; // packetsize in bytes
+  // size of an EPA packet in bytes 
+  int sizeofpacket   = ( kvm.getInt("polarisations",2) * 
+                          sizeof(complex<int16>) * 
+                          kvm.getInt("NoRSPBeamlets", 92)
+                       ) + 
+                       kvm.getInt("SzEPAheader", 14); 
+ 
+  // size of a RSP frame in bytes
+  itsSzRSPframe = itsNpackets * sizeofpacket;
 
-  // create incoming rsp-dataholder   
-  getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", itsKVM));
+  // create raw ethernet interface to catch incoming RSP data
+  itsInputConnection = new TH_Ethernet(itsDevice, itsSrcMAC, itsDestMAC, 0x000 );
   
-  // create outgoing rsp-dataholder
+  // create a buffer to hold imcoming RSP frame  
+   itsRecvFrame = new char[itsSzRSPframe]; 
+ 
+  // create incoming dataholder holding the delay information 
+  //getDataManager().addInDataHolder(0, new DH_Delay("DH_delay"));
+
+  // create outgoing dataholder holding the delay controlled RSP data
   getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out", itsKVM));
 
-  //**** delete SyncMaster code when the DelayController which controls the delay and synchronization is build ****
-  if (itsIsSyncMaster) {
-    // We are the SyncMaster so we need extra outputs (NoWH_RSP)
-    for (int i = 1; i <= itsNRSPOutputs; i++) {
-      snprintf(str, 32, "DH_Sync_out_%d", i);
-      getDataManager().addOutDataHolder(i, new DH_RSPSync(str));
-    }
-  }
-  //**************************************************************************************************************
-  
-  // use cyclic buffer on output channel 0
-  //((DataManager)getDataManager()).setOutBufferingProperties(0, false);
-  itsBufControl = new BufferingController(0, 100); // 100 elements
+  // use a cyclic buffer to hold the rsp data
+  itsDataBuffer = new BufferController< BufferType1* >(100); // 100 elements
+
+  // use a cyclic buffer to hold the valid/invalid flag
+  itsFlagBuffer = new BufferController< BufferType2* >(100); // 100 elements
  
-   
-  // do not use autotriggering on input channel 0
-  // 'new read' trigger will be set manually
-  getDataManager().setAutoTriggerIn(0, false);
-
-  // do not use autotriggering on output channel 0 to disable his datamanager
-  // 'new write' trigger will be set manually (using BufferingController) 
-  getDataManager().setAutoTriggerOut(0, false);
-
   // init profiling states
   theirOldDataState.init ("WH_RSPInput old packets", "yellow");
   theirMissingDataState.init ("WH_RSPInput missing packets", "orange");  
+
 }
 
 WH_RSPInput::~WH_RSPInput() 
 {
-  delete itsBufControl;
+  delete itsDataBuffer;
+  delete itsFlagBuffer;
+  delete itsInputConnection;
+
+  delete [] itsRecvFrame;
 }
 
 WorkHolder* WH_RSPInput::construct(const string& name,
-                              const KeyValueMap kvm,
-			      const bool isSyncMaster) 
+                                   const KeyValueMap kvm,
+                                   const string device,
+                                   const string srcMAC,
+                                   const string destMAC)
 {
-  return new WH_RSPInput(name, kvm, isSyncMaster);
+  return new WH_RSPInput(name, kvm, device, srcMAC, destMAC);
 }
 
 WH_RSPInput* WH_RSPInput::make(const string& name)
 {
-  return new WH_RSPInput(name, itsKVM, itsIsSyncMaster);
+  return new WH_RSPInput(name, itsKVM, itsDevice, itsSrcMAC, itsDestMAC);
 }
 
 void WH_RSPInput::preprocess()
 {
-  itsBufControl->setGeneralHolder(getDataManager().getOutHolder(0)); 
-  itsBufControl->preprocess();
+  cout << "WH_RSPInput::preprocess() begin" << endl;
+  itsDataBuffer->preprocess();
+  itsFlagBuffer->preprocess();
+  cout << "WH_RSPInput::preprocess() end" << endl;
 }
 
 void WH_RSPInput::process() 
 { 
   if (itsReadNext) {
-    // read next packet from input
-    getDataManager().getInHolder(0);
-    getDataManager().readyWithInHolder(0);
+    // read a new RSP packet from input
+    readInput();  
   }
-
-  //**** delete SyncMaster code when the DelayController which controls the delay and synchronization is build ****
-  int startDelay;  
+    
+  if (itsNextStamp.getSeqId() == -1) {
+    // first loop so set itsNextStamp equal to thisStamp
+    itsNextStamp.setStamp(itsActualStamp.getSeqId(), itsActualStamp.getBlockId());
+  }
   
-  if (itsIsSyncMaster) {
-    // we are the SyncMaster, so increase the nextValue and send it to the slaves"
-    if (itsNextStamp.getSeqId() == -1) {
-      // this is the first loop
-      // so take the current timestamp and determine the time stamp at which we all will start
-      DH_RSP* inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-      itsNextStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
-      
-      if (!itsKVM.getBool("useRealRSPBoard", false)) {
-	// we are not using the real rspboards, so no delay
-	startDelay = 0;;
-      } else {
-	// we are using the real rsp boards, put in a delay to
-	// let the slaves catch up
-	startDelay = itsNpackets * 1500;
-      }
-      for (int i = 1; i <= itsNRSPOutputs; i++) {
-	((DH_RSPSync*)getDataManager().getOutHolder(i))->setSyncStamp(itsNextStamp + startDelay);
-        // we need to force a write, because this outHolder has a lower data rate
-        // if the rate is 1000, the workholder will write for
-        // the first time in the 1000th runstep.
-        getDataManager().readyWithOutHolder(i);
-      }      
-    }// 
-    else {
-      if (!itsKVM.getBool("useRealRSPBoard", false)) {
-        itsNextStamp += 1;
-      } else {
-        itsNextStamp += itsNpackets;
-      }
-      for (int i = 1; i < itsNRSPOutputs; i++) {
-	((DH_RSPSync*)getDataManager().getOutHolder(i))->setSyncStamp(itsNextStamp);
-      }
-    }
-  }
-  //****************************************************************************************************************
-  else {
-    // we are not SyncMaster
-    if (itsNextStamp.getSeqId() == -1) {
-      // this is the first loop
-      // so take the current timestamp
-      DH_RSP* inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-      itsNextStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
-    }
-    else {
-      if (!itsKVM.getBool("useRealRSPBoard", false)) {
-        itsNextStamp += 1;
-      } else {
-        itsNextStamp += itsNpackets;
-      } 
-    }      
-  }
-
-  DH_RSP* inDHp;
+  BufferType1* edata;
+  BufferType2* eflag;
   DH_RSP* outDHp;
   bool newStamp = false;
-  SyncStamp thisStamp;
-  int amountToCopy =  itsNbeamlets * itsPolarisations * sizeof(complex<int16>);
 
   while (!newStamp) {
-    
-    // get incoming RSP data
-    inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-    thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
       
-    if (thisStamp < itsNextStamp) { 
+    if (itsActualStamp < itsNextStamp) { 
       // this packets time stamp is too old
       // packet could be delayed in ethernet connection link
-      //cout << "thisStamp < itsNextStamp" << endl;
+      //cout << "old packet" << endl;
   
       // to do: store this packet in right place of output buffer to 
       // overwrite already made dummy-data for this timestamp
@@ -211,23 +156,25 @@ void WH_RSPInput::process()
       LOG_TRACE_COND_STR("Old packet received");
       
       // stay in the while loop and trigger a new read
-      getDataManager().readyWithInHolder(0);
+      readInput();
       newStamp = false;
-
     } 
-    else if (itsNextStamp + (itsNpackets - 1) < thisStamp) {
+    else if (itsNextStamp + (itsNpackets - 1) < itsActualStamp) {
       // we missed a packet 
-
+      //cout << "missed a packet" << endl;
       // set profiling state
       theirOldDataState.leave();
       theirMissingDataState.enter();
  
       // copy dummy data for missing timestamp in OutDataholder 
-      outDHp = (DH_RSP*)itsBufControl->getOutHolder();
-      outDHp->setFlag( 1 ); // mark data as invalid
-      memset( outDHp->getBuffer(), 0, amountToCopy);
+      edata = (BufferType1*)itsDataBuffer->getOutHolder();
+      eflag = (BufferType2*)itsFlagBuffer->getOutHolder();
+      //to do: set the missing stamp
+      eflag->element = true;
+     
       //trigger a write
-      itsBufControl->readyWithOutHolder();
+      itsDataBuffer->readyWithOutHolder();
+      itsFlagBuffer->readyWithOutHolder();
       
       // step out of the while loop and do not trigger a new read 
       // so this packet will be read again next loop
@@ -242,37 +189,35 @@ void WH_RSPInput::process()
       theirOldDataState.leave();
 
       // copy contents of InDataHolder to OutDataholder
-      outDHp = (DH_RSP*)itsBufControl->getOutHolder();
-      outDHp->setFlag( 0 ); // mark data as valid
-      memcpy(outDHp->getBuffer(), inDHp->getBuffer(), amountToCopy);
+      edata = (BufferType1*)itsDataBuffer->getOutHolder();
+      eflag = (BufferType2*)itsFlagBuffer->getOutHolder();
+      memcpy(edata->element, itsRecvFrame, itsSzRSPframe);
+      eflag->element = false;      
       
       //trigger a write
-      itsBufControl->readyWithOutHolder();
+      itsDataBuffer->readyWithOutHolder();
+      itsFlagBuffer->readyWithOutHolder();
+      
       // step out of the while loop and trigger a new read
       newStamp = true;
       itsReadNext = true;
     }
   }
+  // increment itsNextStamp
+  itsNextStamp += itsNpackets;
 }
 
-void WH_RSPInput::dump() {
-  /*
-  cout<<"DUMP OF WH_RSPInput: "<<getName()<<endl;
-  DH_RSP* inDHp;
-  DH_RSP* outDHp;
-  inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-  outDHp = (DH_RSP*)getDataManager().getOutHolder(0);
-  
+void WH_RSPInput::readInput()
+{    
+  // catch a new ethernet frame 
+  itsInputConnection->recvBlocking( (void*)itsRecvFrame, itsSzRSPframe, 0);
     
-  // determine blocksizes of char-based InHolder and complex<int16-based> OutHolder
-  int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<int16>);
-      
-  for (int i=0;i<itsNpackets;i++) {
-      outDHp = (DH_RSP*)getDataManager().getOutHolder(0);
-      cout<<"packet: "<<"   ";
-      for (int c=0; c<char_blocksize/sizeof(complex<int16>); c++) {
-	cout<<((complex<int16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader])[c]<<" ";
-      }
-      cout<<endl;
-      }*/      
+  // get the timestamp
+  int seqid   = ((int*)&itsRecvFrame[6])[0];
+  int blockid = ((int*)&itsRecvFrame[10])[0];
+  itsActualStamp.setStamp(seqid ,blockid);
+}
+
+void WH_RSPInput::dump() 
+{
 }
