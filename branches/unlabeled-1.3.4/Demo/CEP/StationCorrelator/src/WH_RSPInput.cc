@@ -167,14 +167,13 @@ void WH_RSPInput::process()
       theirMissingDataState.enter();
  
       // copy dummy data for missing timestamp in OutDataholder 
-      edata = (BufferType1*)itsDataBuffer->getOutHolder();
-      eflag = (BufferType2*)itsFlagBuffer->getOutHolder();
+      edata = (BufferType1*)itsDataBuffer->getWritePtr();
+      eflag = (BufferType2*)itsFlagBuffer->getWritePtr();
       //to do: set the missing stamp
       eflag->element = true;
      
-      //trigger a write
-      itsDataBuffer->readyWithOutHolder();
-      itsFlagBuffer->readyWithOutHolder();
+      itsDataBuffer->readyWriting();
+      itsFlagBuffer->readyWriting();
       
       // step out of the while loop and do not trigger a new read 
       // so this packet will be read again next loop
@@ -189,14 +188,13 @@ void WH_RSPInput::process()
       theirOldDataState.leave();
 
       // copy contents of InDataHolder to OutDataholder
-      edata = (BufferType1*)itsDataBuffer->getOutHolder();
-      eflag = (BufferType2*)itsFlagBuffer->getOutHolder();
+      edata = (BufferType1*)itsDataBuffer->getWritePtr();
+      eflag = (BufferType2*)itsFlagBuffer->getWritePtr();
       memcpy(edata->element, itsRecvFrame, itsSzRSPframe);
       eflag->element = false;      
-      
-      //trigger a write
-      itsDataBuffer->readyWithOutHolder();
-      itsFlagBuffer->readyWithOutHolder();
+     
+      itsDataBuffer->readyWriting();
+      itsFlagBuffer->readyWriting();
       
       // step out of the while loop and trigger a new read
       newStamp = true;
