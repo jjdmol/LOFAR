@@ -56,6 +56,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_CHECK_LONG_LONG
 lofar_QATOOLS
 lofar_DOCXX
+lofar_LOG4CPLUS
 lofar_MPI
 lofar_DTL(1)
 lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
