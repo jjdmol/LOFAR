@@ -81,6 +81,8 @@ EXCEPTION_CLASS(AssertError,Exception);
 #	define AUTO_FUNCTION_NAME		"??"
 #endif
 
+// @}
+
 //#------------------------ Assert and FailWhen -------------------------------
 //#
 //# NB: THROW is defined in package-dependant file.
@@ -114,8 +116,6 @@ EXCEPTION_CLASS(AssertError,Exception);
 #define DBGASSERTSTR(cond,stream)
 #define DBGFAILWHEN(cond)
 #endif
-
-// @}
 
 // @}
     
