@@ -4,6 +4,7 @@
 ln -s /data/PSS3/diepen/BBS2/demo3_p1.MS /tmp/$USER.demo
 ln -s /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
 ln -s /data/PSS3/diepen/BBS2/demo3_gsm.MEP /tmp/$USER.demo_gsm.MEP
+ln -s /data/PSS3/diepen/BBS2/demo3p_gsm.MEP /tmp/$USER.demo3p_gsm.MEP
 
 ./tPerturbed $USER /tmp/$USER.demo demo demo_gsm LOFAR.RI 'RA.*' 'DEC.*' 'StokesI.*'
 status=$?
@@ -15,6 +16,12 @@ if [ $stat != 0 ]; then
 fi
 
 ./tPerturbed $USER /tmp/$USER.demo demo demo_gsm LOFAR.AP 'EJ*'
+stat=$?
+if [ $stat != 0 ]; then
+  status=$stat
+fi
+
+./tPerturbed $USER /tmp/$USER.demo demo demo3p_gsm LOFAR.AP 'RA.*' 'DEC.*' 'StokesI.*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
