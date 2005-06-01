@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_TH_SHMEM_H
-#define LIBTRANSPORT_TH_SHMEM_H
+#ifndef LOFAR_TRANSPORT_TH_SHMEM_H
+#define LOFAR_TRANSPORT_TH_SHMEM_H
 
 //# Needed for shmem
 #define USE_PUBLIC_MALLOC_WRAPPERS

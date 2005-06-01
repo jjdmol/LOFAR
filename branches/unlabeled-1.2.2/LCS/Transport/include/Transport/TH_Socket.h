@@ -21,8 +21,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TH_SOCKET_H
-#define TRANSPORT_TH_SOCKET_H
+#ifndef LOFAR_TRANSPORT_TH_SOCKET_H
+#define LOFAR_TRANSPORT_TH_SOCKET_H
 
 #include <Common/lofar_string.h>
 #include <Transport/TransportHolder.h>

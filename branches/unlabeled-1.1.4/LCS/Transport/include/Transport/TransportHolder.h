@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TRANSPORTHOLDER_H
-#define TRANSPORT_TRANSPORTHOLDER_H
+#ifndef LOFAR_TRANSPORT_TRANSPORTHOLDER_H
+#define LOFAR_TRANSPORT_TRANSPORTHOLDER_H
 
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>

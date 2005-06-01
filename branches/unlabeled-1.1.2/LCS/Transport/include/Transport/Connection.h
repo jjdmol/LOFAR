@@ -20,10 +20,9 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_CONNECTION_H
-#define TRANSPORT_CONNECTION_H
+#ifndef LOFAR_TRANSPORT_CONNECTION_H
+#define LOFAR_TRANSPORT_CONNECTION_H
  
-
 
 //# Includes
 #include <Transport/BaseSim.h>

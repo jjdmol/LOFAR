@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TH_MEM_H
-#define TRANSPORT_TH_MEM_H
+#ifndef LOFAR_TRANSPORT_TH_MEM_H
+#define LOFAR_TRANSPORT_TH_MEM_H
 
 #include <Transport/TransportHolder.h>
 #include <Common/lofar_map.h>

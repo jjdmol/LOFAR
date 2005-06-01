@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_CONNECTION_H
-#define TRANSPORT_CONNECTION_H
+#ifndef LOFAR_TRANSPORT_CSCONNECTION_H
+#define LOFAR_TRANSPORT_CSCONNECTION_H
 
 // \file CSConnection.h
 // A CSConnection connects a DataHolder with a TransportHolder. It is used
