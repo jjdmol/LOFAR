@@ -1,4 +1,0 @@
-DFTConnection.ClientHost="localhost"
-DFTConnection.ServerHost="localhost"
-DFTConnection.RequestPort=17543
-DFTConnection.ResultPort=17544
