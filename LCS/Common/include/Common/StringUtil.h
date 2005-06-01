@@ -1,4 +1,4 @@
-//#  StringUtil.h: one line description
+//#  StringUtil.h: useful string manipulation methods.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,9 +23,10 @@
 #ifndef LOFAR_COMMON_STRINGUTIL_H
 #define LOFAR_COMMON_STRINGUTIL_H
 
-// \fileStringUtil.h
-// 
+// \file StringUtil.h
+// Useful string manipulation methods
 
+//# Includes
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
