@@ -73,10 +73,10 @@ public:
   virtual DataHolder* clone() const = 0;
 
   // Pack the data (use before writing)
-  void pack();
+  virtual void pack();
 
   // Unpack the data (use after reading). Checks and converts it as needed.
-  void unpack();
+  virtual void unpack();
 
   // Dump the DataHolder contents to cout.
   // The default implementation does nothing.
