@@ -18,6 +18,8 @@
 #include <DH_Vis.h>
 #include <AH_BackEnd.h>
 
+#include <unistd.h>
+
 #define LOCALHOST_IP "127.0.0.1"
 
 

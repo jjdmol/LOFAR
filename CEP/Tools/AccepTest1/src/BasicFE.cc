@@ -18,6 +18,8 @@
 #include <Transport/TH_MPI.h>
 #endif
 
+#include <unistd.h>
+
 using namespace LOFAR;
 
 int main (int argc, const char** argv) {
