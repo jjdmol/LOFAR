@@ -8,6 +8,7 @@
 //#  $Id$
 
 #include <sys/time.h>
+#include <unistd.h>
 
 // TransportHolders
 #include <Common/lofar_iostream.h>

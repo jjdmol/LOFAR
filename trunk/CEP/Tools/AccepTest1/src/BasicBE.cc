@@ -7,7 +7,7 @@
 //#
 //#  $Id$
 
-
+#include <unistd.h>
 
 // TransportHolders
 #include <Common/lofar_iostream.h>

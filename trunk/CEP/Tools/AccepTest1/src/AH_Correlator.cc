@@ -11,6 +11,8 @@
 #include <AH_Correlator.h>
 #include <Transport/TH_MPI.h>
 
+#include <unistd.h>
+
 extern "C" void traceback (void);
 
 using namespace LOFAR;

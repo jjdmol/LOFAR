@@ -14,6 +14,9 @@
 #include <Common/KeyParser.h>
 #include <Common/KeyValueMap.h>
 #include <Common/Net/Socket.h>
+
+#include <unistd.h>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif

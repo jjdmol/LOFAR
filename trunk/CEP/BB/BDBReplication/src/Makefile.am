@@ -12,7 +12,7 @@ pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
+DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES	= libbdbreplication.la
 
