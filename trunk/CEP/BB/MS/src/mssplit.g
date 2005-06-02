@@ -202,7 +202,7 @@ mssplit := function (msin, nparts, datacolumn='DATA')
     }
     # No split needed if only 1 part.
     if (nparts < 2) {
-	msconv (t, spaste(msin,'_p1', '', datacolumn));
+	msconv (t, spaste(msin,'_p1'), '', datacolumn);
 	t.close();
 	return T;
     }
