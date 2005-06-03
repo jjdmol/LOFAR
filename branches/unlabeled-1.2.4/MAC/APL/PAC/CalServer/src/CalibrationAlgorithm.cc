@@ -26,8 +26,8 @@
 using namespace LOFAR;
 using namespace CAL;
 
-CalibrationAlgorithm::CalibrationAlgorithm(const Sources& sources, const DipoleModel& dipolemodel)
-  : m_sources(sources), m_dipolemodel(dipolemodel)
+CalibrationAlgorithm::CalibrationAlgorithm(const Sources& sources, DipoleModels& dipolemodels)
+  : m_sources(sources), m_dipolemodels(dipolemodels)
 {
 }
 

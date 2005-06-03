@@ -37,7 +37,8 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
 
-DipoleModel::DipoleModel(string name) : m_name(name)
+DipoleModel::DipoleModel(string name, const Array<complex<double>, 4>& sens) :
+  m_name(name), m_sens(sens)
 {
 }
 
@@ -63,7 +64,7 @@ void DipoleModels::getAll(string url)
   DipoleModelData data;
 
   while (data.getNextFromFile(url)) {
-    DipoleModel* model = new DipoleModel(data.getName());
+    DipoleModel* model = new DipoleModel(data.getName(), data.getSens());
     m_models[data.getName()] = model;
   }
 }

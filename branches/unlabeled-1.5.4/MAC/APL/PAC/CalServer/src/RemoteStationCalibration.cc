@@ -36,8 +36,8 @@ using namespace LOFAR;
 using namespace CAL;
 using namespace RTC;
 
-RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, const DipoleModel& dipolemodel)
-  : CalibrationAlgorithm(sources, dipolemodel)
+RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels)
+  : CalibrationAlgorithm(sources, dipolemodels)
 {
 }
 
@@ -50,9 +50,15 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   // This warning can be removed when the code in this file has been adapted to that change.
   //
 
-  const SpectralWindow& spw = subarray.getSPW();        // get spectral window
-  const DipoleModel&    dipolemodel = getDipoleModel();    // get dipole model
-  const Sources&        sources     = getSources();  // get sky model
+  const SpectralWindow& spw = subarray.getSPW();         // get spectral window
+        DipoleModels&   dipolemodels = getDipoleModels(); // get dipole models
+  const Sources&        sources      = getSources();      // get sky model
+  const DipoleModel*    dipolemodel  = dipolemodels.getByName("LBAntenna");
+
+  if (!dipolemodel) {
+    LOG_FATAL("Failed to load dipolemodel 'LBAntenna'");
+    exit(EXIT_FAILURE);
+  }
 
   cout << "calibrate: spectral window name=" << spw.getName() << endl;
   cout << "calibrate: subband width=" << spw.getSubbandWidth() << " Hz" << endl;
@@ -85,22 +91,23 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
     // for testing purposes we overrule the calculation above
     freq = 30e6;
     
-    Array<complex<double>, 2> R0(make_ref_acm(LSM, AntennaPos, dipolemodel, freq));
+    Array<complex<double>, 2> R0(make_ref_acm(LSM, AntennaPos, *dipolemodel, freq));
     // mark baselines of at least 40m
     Array<bool, 2> mask(set_restriction(AntennaPos, 40));
     
-    cout << acm << endl;
+    //KJW: cout << acm << endl;
     Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
-    cout << acm1pol << endl;
+    //KJW: cout << acm1pol << endl;
     Array<complex<double>, 2> alpha(computeAlpha(acm1pol, R0, mask));
-    cout << alpha << endl;
+    //KJW: cout << alpha << endl;
+
     //compute_gains(acm, R0, pos, spw.getSubbandFreq(sb), Rtest, gains);
     //compute_quality(Rtest, sb, gains);
   }
 
   //interpolate_bad_subbands();
    
-  gains.setComplete(true); // when finished
+  gains.setDone(true); // when finished
 }
 
 const vector<Source> RemoteStationCalibration::make_local_sky_model(const Sources& sources, double obstime)

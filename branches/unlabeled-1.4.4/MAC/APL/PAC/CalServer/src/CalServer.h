@@ -30,6 +30,7 @@
 #include "DipoleModel.h"
 #include "ACC.h"
 #include "SubArray.h"
+#include "CalibrationAlgorithm.h"
 
 #include <GCF/TM/GCF_Control.h>
 
@@ -93,6 +94,8 @@ namespace LOFAR {
 
       SubArrays                   m_subarrays;    // the subarrays (created by clients)
       ACCs&                       m_accs;         // front and back ACC buffers (received from ACMServer)
+
+      CalibrationAlgorithm*       m_cal;          // pointer to the calibration algorithm to use
 
       /**
        * Client/Server management member variables.

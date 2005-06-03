@@ -137,7 +137,7 @@ void RemoteStationCalibration::calibrate(const SubArray&    subarray,
     }
   interpolate_bad_subbands();
    
-  result.setComplete(true); // when finished
+  result.setDone(true); // when finished
 }
 
 \endcode

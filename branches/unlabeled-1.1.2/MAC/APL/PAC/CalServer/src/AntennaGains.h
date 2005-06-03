@@ -60,7 +60,7 @@ namespace LOFAR {
 	m_quality.resize(copy.m_quality.shape());
 	m_quality = copy.m_quality.copy();
 
-	m_complete = copy.m_complete;
+	m_done = copy.m_done;
       }
 
       /**
@@ -85,12 +85,12 @@ namespace LOFAR {
       /**
        * has the calibration algorithm producing this result completed?
        */
-      bool isComplete() { return m_complete; }
+      bool isDone() { return m_done; }
 
       /**
        * set the complete status.
        */
-      void setComplete(bool value = true) { m_complete = value; }
+      void setDone(bool value = true) { m_done = value; }
 
       /**
        * Assignment operator
@@ -110,7 +110,7 @@ namespace LOFAR {
     private:
       blitz::Array<std::complex<double>, 3> m_gains;
       blitz::Array<double, 3>               m_quality;
-      bool                                  m_complete; // is this calibration complete?
+      bool                                  m_done; // has the calibration finished
     };
 
   }; // namespace CAL

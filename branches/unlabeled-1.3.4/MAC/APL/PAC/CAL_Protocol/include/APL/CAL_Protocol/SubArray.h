@@ -135,6 +135,15 @@ namespace LOFAR {
        */
       void updateAll();
 
+      /**
+       * Try to start calibration on all subarrays with the give
+       * algorithm and array correlation cube.
+       * @param cal Pointer to the calibration algorithm interface.
+       * @param acc Reference to the array correlation cube to use for
+       * calibration.
+       */
+      void calibrate(CalibrationInterface* cal, const ACC& acc);
+
     private:
       std::map<std::string, SubArray*> m_arrays;
     };

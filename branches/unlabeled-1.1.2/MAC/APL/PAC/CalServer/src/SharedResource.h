@@ -42,16 +42,26 @@ namespace LOFAR {
        * Lock the resource for reading or writing.
        * @return true if the locking succeeded, false otherwise.
        */
-      bool writeLock() { if (m_semaphore <= 0 && m_semaphore > -m_maxwriters) m_semaphore--; return m_semaphore < 0; }
-      bool readLock()  { if (m_semaphore >= 0 && m_semaphore <  m_maxreaders) m_semaphore++; return m_semaphore > 0; }
+      inline bool writeLock() {
+	int old = m_semaphore;
+	if (m_semaphore <= 0 && m_semaphore > -m_maxwriters) m_semaphore--;
+	return m_semaphore != old;
+      }
+
+      inline bool readLock() {
+	int old = m_semaphore;
+	if (m_semaphore >= 0 && m_semaphore <  m_maxreaders) m_semaphore++;
+	return m_semaphore != old;
+      }
+
       /*@}*/
 
       /*@{*/
       /**
        * Unlock the resource.
        */
-      void writeUnlock() { m_semaphore++; if (m_semaphore > 0) m_semaphore = 0; }
-      void readUnlock()  { m_semaphore--; if (m_semaphore < 0) m_semaphore = 0; }
+      inline void writeUnlock() { m_semaphore++; if (m_semaphore > 0) m_semaphore = 0; }
+      inline void readUnlock()  { m_semaphore--; if (m_semaphore < 0) m_semaphore = 0; }
       /*@}*/
 
       /*@{*/

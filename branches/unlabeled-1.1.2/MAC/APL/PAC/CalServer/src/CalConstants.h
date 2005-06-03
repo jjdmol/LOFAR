@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationAlgorithm.h: class definition for the Beam Server task.
+//#  CalConstants.h: constants used throughout calibration code
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,32 +21,17 @@
 //#
 //#  $Id$
 
-#ifndef CALIBRATIONALGORITHM_H_
-#define CALIBRATIONALGORITHM_H_
-
-#include "CalibrationInterface.h"
-#include "Source.h"
-#include "DipoleModel.h"
+#ifndef CALCONSTANTS_H_
+#define CALCONSTANTS_H_
 
 namespace LOFAR {
   namespace CAL {
 
-    class CalibrationAlgorithm : public CalibrationInterface
-    {
-    public:
-      CalibrationAlgorithm(const Sources& sources, DipoleModels& dipolemodels);
-      virtual ~CalibrationAlgorithm();
-      
-      virtual const Sources&      getSources()      { return m_sources;      }
-      virtual       DipoleModels& getDipoleModels() { return m_dipolemodels; }
-      
-    private:
-      const Sources&      m_sources;
-            DipoleModels& m_dipolemodels;
-    };
+    static const int NXYZ = 3; // extent of coordinate dimension
+    static const int NPOL = 2; // extent of polarization dimension
+
 
   }; // namespace CAL
 }; // namespace LOFAR
-
-#endif /* CALIBRATIONALGORITHM_H_ */
-
+     
+#endif /* CALCONSTANTS_H_ */

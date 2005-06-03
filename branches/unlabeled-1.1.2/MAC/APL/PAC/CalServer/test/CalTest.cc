@@ -125,7 +125,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	START_TEST("test001", "test START");
 
-	m_counter1 = 0;
+	//m_counter1 = 0;
 
 	CALStartEvent start;
 
@@ -170,7 +170,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	m_handle = ack.handle;
 
 	// start timer
-	m_server.setTimer(4.0);
+	m_server.setTimer(10.0);
       }
       break;
       
@@ -185,13 +185,13 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
 
-	m_counter1++;
+	//m_counter1++;
       }
       break;
 
     case F_TIMER:
       {
-	TESTC_ABORT(m_counter1 >= 3, CalTest::final);
+	//TESTC_ABORT(m_counter1 >= 3, CalTest::final);
 
 	CALUnsubscribeEvent unsubscribe;
 	
@@ -271,7 +271,7 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
       {
 	START_TEST("test002", "test START");
 
-	m_counter1 = 0; // reset update counter
+	//m_counter1 = 0; // reset update counter
 
 	CALStartEvent start;
 
@@ -316,7 +316,7 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
 	m_handle = ack.handle;
 
 	// start timer
-	m_server.setTimer(4.0);
+	m_server.setTimer(10.0);
       }
       break;
 
@@ -331,13 +331,13 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
 
-	m_counter1++;
+	//m_counter1++;
       }
       break;
 
     case F_TIMER:
       {
-	TESTC_ABORT(m_counter1 >= 3, CalTest::final);
+	//TESTC_ABORT(m_counter1 >= 3, CalTest::final);
 
 	CALStopEvent stop;
 	stop.name = "test002";

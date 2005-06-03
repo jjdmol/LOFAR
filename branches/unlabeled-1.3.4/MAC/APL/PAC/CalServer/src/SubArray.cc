@@ -37,7 +37,7 @@ SubArray::SubArray(string                 name,
 		   int nyquist_zone,
 		   int nsubbands) :
   AntennaArray(name, pos),
-  m_spw(name, sampling_frequency, nyquist_zone, nsubbands)
+  m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands)
 {
   // assert sizes
   ASSERT(select.extent(firstDim) == pos.extent(firstDim)
@@ -79,7 +79,7 @@ void SubArray::calibrate(CalibrationInterface* cal, const ACC& acc)
 
   if (cal) cal->calibrate(*this, acc, *m_result[FRONT]);
 
-  m_result[FRONT]->setComplete();
+  m_result[FRONT]->setDone();
 }
 
 bool SubArray::getGains(const AntennaGains*& cal, int buffer)
@@ -91,7 +91,7 @@ bool SubArray::getGains(const AntennaGains*& cal, int buffer)
   {
     cal = m_result[buffer];
   
-    return m_result[buffer]->isComplete();
+    return m_result[buffer]->isDone();
   }
 
   return false;
@@ -108,7 +108,7 @@ const SpectralWindow& SubArray::getSPW() const
 bool SubArray::isDone()
 {
   ASSERT(m_result[FRONT]);
-  return m_result[FRONT]->isComplete();
+  return m_result[FRONT]->isDone();
 }
 
 SubArrays::SubArrays()
@@ -167,6 +167,21 @@ void SubArrays::updateAll()
       if (subarray->isDone()) {
 	subarray->notify();
       }
+    }
+  }
+}
+
+void SubArrays::calibrate(CalibrationInterface* cal, const ACC& acc)
+{
+  ASSERT(0 != cal);
+
+  for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
+       it != m_arrays.end(); ++it)
+  {
+    SubArray* subarray = (*it).second;
+
+    if (acc.isValid() && !subarray->isDone()) {
+      subarray->calibrate(cal, acc);
     }
   }
 }

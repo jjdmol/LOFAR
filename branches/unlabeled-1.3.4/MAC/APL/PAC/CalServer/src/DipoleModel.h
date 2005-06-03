@@ -34,7 +34,7 @@ namespace CAL {
   class DipoleModel
   {
   public:
-    DipoleModel(std::string name);
+    DipoleModel(std::string name, const blitz::Array<std::complex<double>, 4>& sens);
     virtual ~DipoleModel();
 
     /**
@@ -74,7 +74,6 @@ namespace CAL {
      * Get model by name.
      */
     const DipoleModel* getByName(std::string name) { return m_models[name]; }
-    
   private:
     std::map<std::string, const DipoleModel*> m_models;
   };

@@ -35,7 +35,7 @@ namespace LOFAR {
     class ACC : public SharedResource
     {
     public:
-      ACC() : m_initialized(false) {}
+      ACC() : m_valid(false) {}
       ACC(int nsubbands, int nantennas, int npol);
       virtual ~ACC();
 
@@ -87,14 +87,19 @@ namespace LOFAR {
       void setACC(blitz::Array<std::complex<double>, 5>& acc);
 
       /**
-       * Is the array initialised? If not don't use it.
+       * Is the array valid? If not don't use it.
        */
-      bool isInitialised() const { return m_initialized; }
+      bool isValid() const { return m_valid; }
 
       /**
-       * Set initialised. 
+       * Set to valid
        */
-      void setInitialized() { m_initialized = true; }
+      void validate() { m_valid = true; }
+
+      /**
+       * Set to invalid.
+       */
+      void invalidate() { m_valid = false; }
 
     private:
 
@@ -111,7 +116,7 @@ namespace LOFAR {
        */
       blitz::Array<RTC::Timestamp, 1> m_time;
 
-      bool m_initialized; // has the array been initialized
+      bool m_valid; // does the array contain valid data?
     };
   
     /**

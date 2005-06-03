@@ -78,17 +78,14 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
       break;
 
     case F_INIT:
-      if (!m_accs.getBack().writeLock()) {
-	LOG_FATAL("Failed to get initial write lock on ACC back buffer.");
-	exit(EXIT_FAILURE);
-      }
       break;
 
     case F_CONNECTED:
       {
 	if (m_acmserver.isConnected())
 	{
-	  port.setTimer(0.0, 1.0); // check every second
+	  port.setTimer(2.0, 2.0); // check every second
+	  //port.setTimer(0.0, 1.0); // check every second
 	  TRAN(ACMProxy::idle);
 	}
       }
@@ -124,6 +121,8 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
+  static bool done = false;
+
   switch (e.signal)
     {
     case F_ENTRY:
@@ -141,21 +140,34 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 
 	LOG_INFO_STR("timer @ " << timer->sec);
 
-	if (m_accs.getFront().writeLock())
-	{
-#if 0
-	  ACMGetEvent get;
-	  get.timestamp = Timestamp(0,0);
-	  get.rcumask.reset();
-	  for (int i = 0; i < accs.getFront().getNAntennas() * accs.getFront().getNPol(); i++) {
-	    get.rcumask.set(i);
-	  }
-	  get.subbands.reset();
-	  // TODO select all subbands
+	// SIM
+	if (m_accs.getBack().isWriteLocked()) {
+	  m_accs.getBack().writeUnlock();
+	  m_accs.getBack().validate(); // make valid
 
-	  port.send(get);
-#endif
+	  done = true;
 	}
+
+	if (!done) {
+	  if (m_accs.getBack().writeLock())
+	    {
+#if 0
+	      ACMGetEvent get;
+	      get.timestamp = Timestamp(0,0);
+	      get.rcumask.reset();
+	      for (int i = 0; i < m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol(); i++) {
+		get.rcumask.set(i);
+	      }
+	      get.subbands.reset();
+	      // TODO select all subbands
+
+	      port.send(get);
+#endif
+	    } else {
+	      LOG_WARN("failed to get writeLock on ACC backbuffer");
+	    }
+	}
+
       }
       break;
 
@@ -231,7 +243,7 @@ GCFEvent::TResult ACMProxy::handle_acm_acm(GCFEvent& /*e*/, GCFPortInterface& /*
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  //accs.getFront().updateACM(acm.subband, acm.timestamp, acm.acm);
+  //m_accs.getBack().updateACM(acm.subband, acm.timestamp, acm.acm);
 
   return status;
 }
@@ -240,7 +252,8 @@ GCFEvent::TResult ACMProxy::handle_acm_done(GCFEvent& /*e*/, GCFPortInterface& /
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  m_accs.getFront().writeUnlock();
+  m_accs.getBack().validate();
+  m_accs.getBack().writeUnlock();
 
   return status;
 }

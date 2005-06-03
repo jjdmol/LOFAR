@@ -105,9 +105,10 @@ namespace LOFAR {
       /**
        * Get all antenna arrays. A second call to this method replaces the antenna arrays
        * loaded by the first call.
-       * @param url load antenna arrays from this resource location (e.g. filename or database table).
+       * @param url Load antenna arrays from this resource location (e.g. filename or database table).
+       * @param minantennas The array loaded must have at least this number of antennas.
        */
-      void getAll(std::string url);
+      void getAll(std::string url, int minantennas);
 
     private:
       std::map<std::string, const AntennaArray*> m_arrays;

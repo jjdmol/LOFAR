@@ -39,7 +39,7 @@ AntennaGains::AntennaGains()
 {
 }
 
-AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_complete(false)
+AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_done(false)
 {
   if (nantennas < 0 || npol < 0 || nsubbands < 0)
     {
@@ -72,7 +72,7 @@ unsigned int AntennaGains::pack(void* buffer)
 
   MSH_PACK_ARRAY(buffer, offset, m_gains, complex<double>);
   MSH_PACK_ARRAY(buffer, offset, m_quality, double);
-  memcpy((char*)buffer + offset, &m_complete, sizeof(bool));
+  memcpy((char*)buffer + offset, &m_done, sizeof(bool));
   offset += sizeof(bool);
 
   return offset;
@@ -84,7 +84,7 @@ unsigned int AntennaGains::unpack(void* buffer)
 
   MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 3);
   MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 3);
-  memcpy(&m_complete, (char*)buffer + offset, sizeof(bool));
+  memcpy(&m_done, (char*)buffer + offset, sizeof(bool));
   offset += sizeof(bool);
 
   return offset;
@@ -98,7 +98,7 @@ AntennaGains& AntennaGains::operator=(const AntennaGains& rhs)
   m_quality.resize(rhs.m_quality.shape());
   m_quality = rhs.m_quality.copy();
 
-  m_complete = rhs.m_complete;
+  m_done = rhs.m_done;
   return *this;
 }
 

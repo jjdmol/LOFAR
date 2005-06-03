@@ -1,10 +1,7 @@
 
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir)/src \
-	-DEPA_Y_POL_IMAG_FIX \
-	-DWEIGHTS_IN_NETWORK_ORDER \
-	-DUSE_GNUPLOT 
+#AM_CPPFLAGS = \
+#	-I$(top_srcdir)/src
 
 #-fmessage-length=0 // needed for Eclipse
 
@@ -95,6 +92,7 @@ libcaldevel_la_SOURCES = \
 bin_PROGRAMS = CalServer
 
 CalServer_SOURCES = \
+	CalConstants.h \
 	CalServer.h \
 	CalServer.cc \
 	ACMProxy.h \

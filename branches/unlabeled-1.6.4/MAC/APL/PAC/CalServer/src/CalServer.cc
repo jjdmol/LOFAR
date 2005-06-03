@@ -25,6 +25,7 @@
 #define DECLARE_SIGNAL_NAMES
 #include "CAL_Protocol.ph"
 
+#include "CalConstants.h"
 #include "CalServer.h"
 #include "SpectralWindow.h"
 #include "SubArray.h"
@@ -61,7 +62,7 @@ using namespace CAL_Protocol;
 
 CalServer::CalServer(string name, ACCs& accs)
   : GCFTask((State)&CalServer::initial, name),
-    m_accs(accs)
+    m_accs(accs), m_cal(0)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
@@ -69,7 +70,9 @@ CalServer::CalServer(string name, ACCs& accs)
 }
 
 CalServer::~CalServer()
-{}
+{
+  if (m_cal) delete m_cal;
+}
 
 void CalServer::undertaker()
 {
@@ -122,7 +125,13 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  // Load antenna arrays
 	  //
-	  m_arrays.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
+	  m_arrays.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.AntennaArraysFile")),
+			  m_accs.getFront().getACC().extent(secondDim));
+
+	  //
+	  // Setup calibration algorithm
+	  //
+	  m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels);
 
 	} catch (Exception e)  {
 
@@ -208,6 +217,23 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	//const Timestamp t = Timestamp(timer->sec, timer->usec);
 	LOG_INFO_STR("updateAll @ " << timer->sec);
+
+	//
+	// Swap buffers when all calibrations have finished on the front buffer
+	// and the back buffer is not locked and is valid (has been filled by ACMProxy).
+	// 
+	if (   !m_accs.getFront().isLocked()
+	    && !m_accs.getBack().isLocked()
+	    && m_accs.getBack().isValid())
+	{
+	  LOG_INFO("swapping buffers");
+
+	  // start new calibration
+	  m_accs.swap();
+	  m_accs.getBack().invalidate(); // invalidate
+	}
+
+	m_subarrays.calibrate(m_cal, m_accs.getFront());
 
 	m_subarrays.updateAll();
 
@@ -297,6 +323,12 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
     select = true;
 
+    ASSERT(m_accs.getBack().getACC().extent(firstDim) == GET_CONFIG("CalServer.NSUBBANDS", i));
+    ASSERT(m_accs.getFront().getACC().extent(secondDim) == positions.extent(firstDim));
+    ASSERT(m_accs.getFront().getACC().extent(thirdDim) == positions.extent(firstDim));
+    ASSERT(m_accs.getFront().getACC().extent(fourthDim) == positions.extent(secondDim));
+    ASSERT(m_accs.getFront().getACC().extent(fifthDim) == positions.extent(secondDim));
+
     // create subarray to calibrate
     SubArray* subarray = new SubArray(start.name,
 				      positions,
@@ -307,9 +339,9 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
     m_subarrays.add(subarray);
 
-#if 1
-    subarray->calibrate(0, m_accs.getFront());
-#else
+    // calibration will start within one second
+
+#if 0
     //
     // load the ACC
     //
@@ -503,12 +535,11 @@ void CalServer::calibrate()
   // Dimensions of the antenna array
   //
   int nantennas = array->getAntennaPos().extent(firstDim);
-  int npol      = array->getAntennaPos().extent(secondDim);
 
   //
   // Create the FTS-1 subarray, with spectral window 0 (0 - 80 MHz)
   // 
-  Array<bool,2> select(nantennas, npol);
+  Array<bool,2> select(nantennas, NPOL);
   select = true;
   SubArray fts1("FTS-1", array->getAntennaPos(), select, m_spws[0]);
 
@@ -533,8 +564,8 @@ void CalServer::calibrate()
   ASSERT(m_acc->getACC().extent(firstDim) == m_spws[0].getNumSubbands());
   ASSERT(m_acc->getACC().extent(secondDim) == nantennas);
   ASSERT(m_acc->getACC().extent(thirdDim) == nantennas);
-  ASSERT(m_acc->getACC().extent(fourthDim) == npol);
-  ASSERT(m_acc->getACC().extent(fifthDim) == npol);
+  ASSERT(m_acc->getACC().extent(fourthDim) == NPOL);
+  ASSERT(m_acc->getACC().extent(fifthDim) == NPOL);
 
   //
   // Save the calibration gains and quality matrices
@@ -581,9 +612,9 @@ int main(int argc, char** argv)
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   ACCs* accs; // the ACC buffers
-  accs = new ACCs(GET_CONFIG("CalServer.nsubbands", i),
-		  GET_CONFIG("CalServer.nantennas", i),
-		  GET_CONFIG("CalServer.npol", i));
+  accs = new ACCs(GET_CONFIG("CalServer.NSUBBANDS", i),
+		  GET_CONFIG("CalServer.NANTENNAS", i),
+		  NPOL);
 
   if (!accs) {
     LOG_FATAL("Failed to allocate memory for the ACC arrays.");
