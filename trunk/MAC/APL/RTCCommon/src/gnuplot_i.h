@@ -396,6 +396,12 @@ void gnuplot_plot_slope(
 /*--------------------------------------------------------------------------*/
 void gnuplot_plot_equation(gnuplot_ctrl * h, char * equation, char * title) ;
 
+/**
+ * @brief Plot multiple plots in one plot.
+ */
+void gnuplot_multiplot_array(gnuplot_ctrl* h,
+			     Array<double, 2> matrix);
+    
 #if 1
 /*-------------------------------------------------------------------------*/
 /**
