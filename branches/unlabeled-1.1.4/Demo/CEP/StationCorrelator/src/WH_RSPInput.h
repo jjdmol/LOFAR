@@ -90,10 +90,10 @@ namespace LOFAR
     
     
     // cyclic buffer for rsp-data
-    BufferController<BufferType1*> *itsDataBuffer;
+    BufferController<BufferType1> *itsDataBuffer;
     
     // cyclic buffer for invalid data flag
-    BufferController<BufferType2*> *itsFlagBuffer;
+    BufferController<BufferType2> *itsFlagBuffer;
     
     // keyvalue map
     KeyValueMap itsKVM;

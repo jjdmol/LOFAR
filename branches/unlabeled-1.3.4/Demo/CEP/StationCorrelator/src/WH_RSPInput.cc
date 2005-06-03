@@ -80,10 +80,10 @@ WH_RSPInput::WH_RSPInput(const string& name,
   getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out", itsKVM));
 
   // use a cyclic buffer to hold the rsp data
-  itsDataBuffer = new BufferController< BufferType1* >(100); // 100 elements
+  itsDataBuffer = new BufferController< BufferType1 >(100); // 100 elements
 
   // use a cyclic buffer to hold the valid/invalid flag
-  itsFlagBuffer = new BufferController< BufferType2* >(100); // 100 elements
+  itsFlagBuffer = new BufferController< BufferType2 >(100); // 100 elements
  
   // init profiling states
   theirOldDataState.init ("WH_RSPInput old packets", "yellow");
@@ -117,8 +117,8 @@ WH_RSPInput* WH_RSPInput::make(const string& name)
 void WH_RSPInput::preprocess()
 {
   cout << "WH_RSPInput::preprocess() begin" << endl;
-  itsDataBuffer->preprocess();
-  itsFlagBuffer->preprocess();
+  //itsDataBuffer->preprocess();
+  //itsFlagBuffer->preprocess();
   cout << "WH_RSPInput::preprocess() end" << endl;
 }
 
