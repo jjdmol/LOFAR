@@ -36,7 +36,6 @@
 #include <BBS3/MNS/MeqParmSingle.h>
 #include <BBS3/MNS/MeqPointSource.h>
 #include <BBS3/MNS/MeqJonesMul3.h>
-#include <BBS3/MNS/MeqMatrixComplexArr.h>
 
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
@@ -69,6 +68,8 @@
 #include <iostream>
 #include <fstream>
 #include <malloc.h>
+
+#include <BBS3/BBSTestLogger.h>
 
 using namespace casa;
 
@@ -170,7 +171,7 @@ Prediffer::Prediffer(const string& msName,
   // initialize the ComplexArr pool with the most frequently used size
   // itsNrChan is the number of frequency channels
   // 1 is the number of time steps. This code is limited to one timestep only
-  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
+  //  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
@@ -208,7 +209,7 @@ Prediffer::~Prediffer()
   delete itsFlagsMap;
 
   // clear up the matrix pool
-  MeqMatrixComplexArr::poolDeactivate();
+  //  MeqMatrixComplexArr::poolDeactivate();
 }
 
 
@@ -692,7 +693,8 @@ int Prediffer::setDomain (double fstart, double flength,
     return 0;
   }
   
-  cout << "BBSTest: BeginOfInterval" << endl;
+  BBSTestLogger BBSTest;
+  BBSTest.log("BeginOfInterval");
 
   // Find the end of the interval.
   int startIndex = itsTimeIndex;
@@ -726,7 +728,7 @@ int Prediffer::setDomain (double fstart, double flength,
   }
 
   mapTimer.stop();
-  cout << "BBSTest: file-mapping " << mapTimer << endl;
+  BBSTest.log("file-mapping", mapTimer);
 
   NSTimer parmTimer;
   parmTimer.start();
@@ -737,7 +739,7 @@ int Prediffer::setDomain (double fstart, double flength,
 
   initParms (itsDomain);
   parmTimer.stop();
-  cout << "BBSTest: initparms    " << parmTimer << endl;
+  BBSTest.log("initparms", parmTimer);
   // Return the (estimated) maximum buffer size needed to marshall the
   // fitter object.
   return itsNrScid*itsNrScid/2 + 1000;
@@ -891,8 +893,8 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
       }
     }
   }
-  cout << "BBSTest: predict " << itsPredTimer << endl;
-  cout << "BBSTest: formeqs " << itsEqTimer << endl;
+  BBSTestLogger::log("predict", itsPredTimer);
+  BBSTestLogger::log("formeqs", itsEqTimer);
 }
 
 
@@ -1539,7 +1541,7 @@ void Prediffer::writeParms()
   itsMEP.unlock();
   itsGSMMEP.unlock();
   saveTimer.stop();
-  cout << "BBSTest: write-parm    " << saveTimer << endl;
+  BBSTestLogger::log("write-parm", saveTimer);
   cout << "wrote timeIndex=" << itsTimeIndex
        << " nrTimes=" << itsNrTimes << endl;
 }

@@ -58,7 +58,8 @@ MNS/MeqStoredParmPolc.h \
 MNS/ParmTableAIPS.h \
 MNS/ParmTableBDB.h\
 MNS/ParmTableBDBRepl.h\
-MNS/ParmTable.h
+MNS/ParmTable.h\
+BBSTestLogger.h
 
 NOINSTHDRS =
 
@@ -128,12 +129,15 @@ MNS/MeqStoredParmPolc.cc \
 MNS/ParmTableAIPS.cc \
 MNS/ParmTableBDB.cc\
 MNS/ParmTableBDBRepl.cc\
-MNS/ParmTable.cc
+MNS/ParmTable.cc\
+BBSTestLogger.cc
 
 
 
 #bin_PROGRAMS = BlackBoardDemo fillsqldb
-bin_PROGRAMS = BBS3 parmdb
+bin_PROGRAMS = BBS3 parmdb kvmReader
+
+kvmReader_SOURCES = MNS/kvmReader.cc
 
 parmdb_SOURCES = MNS/parmdb.cc
 parmdb_LDADD = libbbs3.la
