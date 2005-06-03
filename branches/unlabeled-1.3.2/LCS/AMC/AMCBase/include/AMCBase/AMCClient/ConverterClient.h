@@ -102,7 +102,7 @@ namespace LOFAR
       //@{
       // Make this class non-copyable.
       ConverterClient(const ConverterClient&);
-      ConverterClient operator=(const ConverterClient&);
+      ConverterClient& operator=(const ConverterClient&);
       //@}
 
       // Data holder holding the request data to be sent to the server.
