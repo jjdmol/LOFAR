@@ -36,9 +36,9 @@ CTRLparams=[
     useSVD=F,              // Use Singular Value Decomposition in solve?
 
     MSDBparams=[
-      MSName="demo3_p1",         // Name of the Measurement Set
-      DBHost="dop50.astron.nl",          // Parameter database host name
-      DBType="aips",           // Parameter database type
+      MSName="demo3_p1.MS",         // Name of the Measurement Set
+      DBHost="lofar17",          // Parameter database host name
+      DBType="bdbrepl",           // Parameter database type
       DBPwd="",                // Parameter database password
       meqTableName="demo",    // Meq model table name *       
       skyTableName="demo_gsm" // Sky model table name *

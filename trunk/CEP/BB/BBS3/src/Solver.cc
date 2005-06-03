@@ -27,6 +27,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 
+#include <BBS3/BBSTestLogger.h>
+
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -123,7 +125,7 @@ void Solver::solve (bool useSVD,
   }
 
   timer.stop();
-  cout << "BBSTest: solver     " << timer << endl;
+  BBSTestLogger::log("solver", timer);
   itsNUsed = 0;
   itsNFlag = 0;
   return;
