@@ -39,6 +39,7 @@ global int      NR_OF_VIEWS            = 10;
 global dyn_string  g_itemID2datapoint;
 global mapping  g_datapoint2itemID;
 global bool     g_initializing         = true;
+global bool     g_showDPE              = false; //Show datapoint elements in the tree. If yes=> do!
 global int      g_curSelNode = 0;
 global int      STARTUP_DELAY = 1;
 global int      id;                    //needed for changing the selection in the tree (panel navigation, ER 218)
@@ -518,12 +519,12 @@ void treeAddDatapoints(dyn_string names)
       insertDatapointNodeMapping(addedNode,systemName);
     }  
 	  
-    dyn_int internalNodeMapping;
-    dyn_string internalFullDPName;
-
 	  // go through the list of datapoint names
 	  for(namesIndex=1;namesIndex<=dynlen(names);namesIndex++)
 	  {
+      dyn_int internalNodeMapping;
+      dyn_string internalFullDPName;
+
 	    int pathIndex;
 	    dyn_string dpPathElements;
 	    string datapointName;
@@ -555,47 +556,47 @@ void treeAddDatapoints(dyn_string names)
 	      dpName=names[namesIndex];
 	    }
 	      
-		    // split the datapoint path in elements
-		    dpPathElements = strsplit(datapointName,"_");
-		    string addingDPpart = systemName;
-		    for(pathIndex=0;pathIndex<=dynlen(dpPathElements);pathIndex++)
-		    {
-		      // Check if the item already exists
-		      if(mappingHasKey(g_datapoint2itemID,addingDPpart))
-		      {
-		        addedNode = g_datapoint2itemID[addingDPpart];
-		      }
-		      else
-		      {
-		        // item does not exist
-		        dynAppend(addedDatapoints,addingDPpart);
-		        if(addingDPpart != systemName)
+	    // split the datapoint path in elements
+	    dpPathElements = strsplit(datapointName,"_");
+	    string addingDPpart = systemName;
+	    for(pathIndex=0;pathIndex<=dynlen(dpPathElements);pathIndex++)
+	    {
+	      // Check if the item already exists
+	      if(mappingHasKey(g_datapoint2itemID,addingDPpart))
+	      {
+	        addedNode = g_datapoint2itemID[addingDPpart];
+	      }
+	      else
+	      {
+	        // item does not exist
+	        dynAppend(addedDatapoints,addingDPpart);
+	        if(addingDPpart != systemName)
+	        {
+	          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
+			      if (addedNode!=0)
 		        {
-		          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
-				      if (addedNode!=0)
-			        {
-			          internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
-			          internalFullDPName[dynlen(internalFullDPName)+1] = addingDPpart;
-			        }
-              LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
+		          internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
+		          internalFullDPName[dynlen(internalFullDPName)+1] = addingDPpart;
 		        }
-          }
-		      parentId = addedNode;
-          if(pathIndex<dynlen(dpPathElements))
-          {
-  		      if(pathIndex==0)
-  		      {
-  		        addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex+1];
-  		      }
-  		      else if(pathIndex<dynlen(dpPathElements))
-  		      {
-  		       addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex+1];
-  		      }
-          }
-		    }
-
-        if(navConfigCheckEnabled(dpName))
+            LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
+	        }
+        }
+	      parentId = addedNode;
+        if(pathIndex<dynlen(dpPathElements))
         {
+		      if(pathIndex==0)
+		      {
+		        addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex+1];
+		      }
+		      else if(pathIndex<dynlen(dpPathElements))
+		      {
+		       addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex+1];
+		      }
+        }
+	    }
+
+      if(navConfigCheckEnabled(dpName))
+      {
         // get the datapoint structure
         dynClear(elementNames);
         dynClear(elementTypes);
@@ -607,7 +608,7 @@ void treeAddDatapoints(dyn_string names)
         {
           dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
         }
-
+  
         // add elements of this datapoint, if any, skip system stuff
         if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
         {
@@ -623,7 +624,8 @@ void treeAddDatapoints(dyn_string names)
           if (namesIndex == 1)  max = dynlen(elementNames);
           else max = 2;
           string fullDPname;
-          for(elementIndex=2;elementIndex<=max;elementIndex++) 
+          //for(elementIndex=2;elementIndex<=max;elementIndex++)
+          for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++)
           {
             // every last item of each array contains an element name (see help on dpTypeGet())
             // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
@@ -639,15 +641,16 @@ void treeAddDatapoints(dyn_string names)
                 g_referenceList[dynlen(g_referenceList)+1]= addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2])+"=" + referenceSplit[2];
                 names[dynlen(names)+1]= addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
                 LOG_TRACE("Add reference: ",names[dynlen(names)]);
+                // Because this is a reference, the DP's of the branche must be retrieved and
+                // add to the dyn_string names, for correct build-up of the tree.
+                dyn_string refResources = navConfigGetResources(addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]),2);
+                dynAppend(names,refResources);
               }
             }
-            else
-            {
-              fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
-            }
-            //a reference element must never appear in the treebrowser
-            if(!("__"==substr(elementName, 0,2)))
+            else if(g_showDPE) //show elements?
             {            
+              //a reference element must never appear in the treebrowser
+              fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
               if(mappingHasKey(g_datapoint2itemID,fullDPname))
               {
                 addedNode = g_datapoint2itemID[fullDPname];
@@ -656,22 +659,22 @@ void treeAddDatapoints(dyn_string names)
               {
                 addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
                 LOG_TRACE("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
-			          if (addedNode!=0)
+  		          if (addedNode!=0)
                 {
     			        internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
         			    internalFullDPName[dynlen(internalFullDPName)+1] = fullDPname;
-			          }
+  		          }
               }
               parentIds[elementLevel+1] = addedNode; // remember this node as parent at its level in case there are elements below this one
               parentNodes[elementLevel+1] = parentNodes[elementLevel]+"."+elementName;
             }
           }
-         }
+        }
       }
-	  }
-	  if(dynlen(internalNodeMapping)!=0)
-	  { 
-	    insertInternalNodeMapping(internalNodeMapping, internalFullDPName);
+  	  if(dynlen(internalNodeMapping)!=0)
+  	  { 
+  	    insertInternalNodeMapping(internalNodeMapping, internalFullDPName);
+      }
     }
   }
 }
@@ -1142,7 +1145,7 @@ void InitializeTree()
   }
   
   // get top level resources. "" means no parent, 1 means: 1 level deep
-  dyn_string resources = navConfigGetResources("",1);
+  dyn_string resources = navConfigGetResources("",2);
   LOG_DEBUG("adding resources: ",LOG_DYN(resources));
   treeAddDatapoints(resources);
   if(ActiveXSupported())
@@ -1189,7 +1192,7 @@ void TreeCtrl_HandleEventOnExpand(long Node)
         datapointPath="";
       }
         // get top level resources. "" means no parent, 1 means: 1 level deep
-        dyn_string resources = navConfigGetResources(datapointPath,1);
+        dyn_string resources = navConfigGetResources(datapointPath,2);
         LOG_DEBUG("adding resources: ",LOG_DYN(resources));
         treeAddDatapoints(resources);
     }

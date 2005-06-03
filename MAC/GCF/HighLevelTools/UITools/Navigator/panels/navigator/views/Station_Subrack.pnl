@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,258 138 986 776 N "_3DFace" 1
+PANEL,274 203 986 776 N "_3DFace" 1
 "$datapoint"
 E"//main()
 //{
@@ -11,57 +11,7 @@ E E E 1 -1 -1 0  120 205
 "" 0 1
 E"//Include of ctl file
 #uses \"gcfnav_view.ctl\"
-#uses \"gcfpa-pml.ctl\"
-int l_gcfPmlId;
-
-
-void pmlCallback(dyn_string response)
-{
-  LOG_DEBUG(\"pmlCallback:\",LOG_DYN(response));
-  if(response[1] == \"loaded\")
-  {
-    if(response[3] == \"OK\")
-    {
-    }
-    else
-    {
-    }
-  }
-  else if(response[1] == \"unloaded\")
-  {
-    if(response[3] == \"OK \")
-    {
-    }
-    else
-    {
-    }
-  }
-  else if(response[1] == \"configured\")
-  {
-    if(response[3] == \"OK \")
-    {
-    }
-    else
-    {
-    }
-  }
-  else if(response[1] == \"gone\")
-  {
-  }
-  else
-  {
-  }
-}
-
-
-
-
-
-
-
-
-
-" 0
+#uses \"gcfpa-pml.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -834,6 +784,18 @@ E E 0 1 1 0 1 E  700 730 710 720
 0
 1 661 37 "" 11
 0
+1 662 37 "" 12
+0
+1 663 37 "" 13
+0
+1 664 37 "" 14
+0
+1 665 37 "" 15
+0
+1 666 37 "" 16
+0
+1 667 37 "" 17
+0
 4 665
 "Line1"
 ""
@@ -1500,6 +1462,8 @@ E E 0 1 1 0 1 E  110 360 110 310
 1 663 37 "" 9
 0
 1 664 37 "" 10
+0
+1 834 37 "" 18
 0
 0
 LAYER, 1 
