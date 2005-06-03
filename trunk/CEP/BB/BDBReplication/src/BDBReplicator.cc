@@ -34,7 +34,7 @@ using namespace std;
 
 BDBReplicator::BDBReplicator(const string& DbEnvName,
 			     const string& hostName, 
-			     const int port, 
+			     const int port,
 			     const string& masterHostName,
 			     const int masterPort,
 			     const bool master)
@@ -45,10 +45,10 @@ BDBReplicator::BDBReplicator(const string& DbEnvName,
     itsMasterHostName(masterHostName),
     itsMasterPort(masterPort),
     itsIsMaster(master),
-    itsCHThreadObject(hostName, port),
-    itsCHThread(0),
-    itsLThreadObject(port, &itsCHThreadObject),
-    itsLThread(0),
+    itsCommunicator(hostName, port),
+    itsCommunicatorThread(0),
+    itsConnector(port, &itsCommunicator),
+    itsConnectorThread(0),
     itsDbEnv(0)
 {
   if (master){
@@ -61,17 +61,18 @@ BDBReplicator::BDBReplicator(const string& DbEnvName,
 void BDBReplicator::startReplication()
 {
   if (!itsReplicationStarted) {
-    itsLThread = new boost::thread(itsLThreadObject);
+    itsConnectorThread = new boost::thread(itsConnector);
 
     // wait until the listener is listening
-    while(!itsLThreadObject.isListening()) {
+    while(!itsConnector.isListening()) {
       LOG_TRACE_FLOW_STR("BDBReplicator waiting for listener");
       sleep(1);
     }
+    itsPort = itsConnector.getPort();
 
     if(!itsIsMaster) {
       // try to connect to master
-      while (!itsCHThreadObject.connectTo(itsMasterHostName.c_str(), itsMasterPort)) {
+      while (!itsCommunicator.connectTo(itsMasterHostName.c_str(), itsMasterPort)) {
 	LOG_ERROR_STR("BDBReplicator trying to connect to master on port "<<itsMasterPort);
 	sleep(1);
       }
@@ -80,7 +81,7 @@ void BDBReplicator::startReplication()
     LOG_TRACE_FLOW("BDBReplicator starting replication");
     itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
     //  LOG_TRACE_FLOW("BDBReplicator setting rep_transport");
-    if (itsDbEnv->set_rep_transport(1, &BDBCHThread::send) !=0 )
+    if (itsDbEnv->set_rep_transport(1, &BDBCommunicator::send) !=0 )
       LOG_TRACE_FLOW("cannot set rep transport in BDBReplicator");
     u_int32_t flags = DB_CREATE | DB_THREAD | DB_INIT_REP |
       DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
@@ -95,6 +96,7 @@ void BDBReplicator::startReplication()
     memcpy(buffer, &itsPort, sizeof(int));
     strcpy(buffer+sizeof(int), itsHostName.c_str());
     Dbt connectionData(buffer, sizeof(int)+itsHostName.size() + 2);
+
     if (itsIsMaster) {
       flags = DB_REP_MASTER;
     } else {
@@ -104,10 +106,10 @@ void BDBReplicator::startReplication()
     if (itsDbEnv->rep_start(&connectionData, flags) != 0)
       LOG_TRACE_FLOW ("could not execute rep start in BDBReplicator");
     
-    itsCHThreadObject.setEnv(itsDbEnv);
+    itsCommunicator.setEnv(itsDbEnv);
     
     //  LOG_TRACE_FLOW("BDBReplicator starting threads");
-    itsCHThread = new boost::thread(itsCHThreadObject);
+    itsCommunicatorThread = new boost::thread(itsCommunicator);
     LOG_TRACE_FLOW("BDBReplicator replication started");  
 
     if (!itsIsMaster) {
@@ -121,14 +123,14 @@ void BDBReplicator::startReplication()
 BDBReplicator::~BDBReplicator()
 {
   //  LOG_TRACE_FLOW("BDBReplicator destructor");
-  itsLThreadObject.stop();
-  itsCHThreadObject.stop();
+  itsConnector.stop();
+  itsCommunicator.stop();
 
-  itsLThread->join();
-  itsCHThread->join();
+  itsConnectorThread->join();
+  itsCommunicatorThread->join();
 
-  delete itsLThread;
-  delete itsCHThread;
+  delete itsConnectorThread;
+  delete itsCommunicatorThread;
 
   if (itsDbEnv !=0) {
     itsDbEnv->close(0);

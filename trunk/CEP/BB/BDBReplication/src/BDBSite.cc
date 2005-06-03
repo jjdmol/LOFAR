@@ -64,3 +64,13 @@ ostream& operator<<(ostream& os, BDBSite& site)
 {
   return os<<site.itsHostName<<":"<<site.itsPort;
 }
+
+void BDBSite::send(void* buffer, int bufferSize) {
+  boost::mutex::scoped_lock sl(itsSocketMutex);
+  itsSocket->write(buffer, bufferSize);
+}
+
+int BDBSite::recv(void* buffer, int bufferSize) {
+  boost::mutex::scoped_lock sl(itsSocketMutex);
+  return itsSocket->readBlocking(buffer, bufferSize);
+} 

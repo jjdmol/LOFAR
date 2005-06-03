@@ -1,4 +1,4 @@
-//#  BDBConHandler.h: Handle message from other berkeley db replication nodes
+//#  BDBCommunicator.h: Handle message from other berkeley db replication nodes
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -33,14 +33,14 @@
 
 using namespace LOFAR;
 
-class BDBCHThread {
+class BDBCommunicator {
  public:
   // called from outside the thread
-  BDBCHThread(const string& hostname, const int port);
+  BDBCommunicator(const string& hostname, const int port);
 
-  BDBCHThread(const BDBCHThread& other);
+  BDBCommunicator(const BDBCommunicator& other);
 
-  ~BDBCHThread();
+  ~BDBCommunicator();
 
   // the callback function for libdb
   static int send(DbEnv *dbenv,
@@ -51,7 +51,7 @@ class BDBCHThread {
 		  u_int32_t flags);
   static void sendOne(const Dbt *control, 
 		      const Dbt *rec, 
-		      Socket* mySocket);
+		      BDBSite& mySite);
 
   void setEnv(DbEnv* DbEnv);
 

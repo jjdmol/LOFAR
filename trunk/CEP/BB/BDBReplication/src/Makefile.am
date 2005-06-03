@@ -1,8 +1,8 @@
 INSTHDRS         =                              \
 BDBSite.h					\
 BDBReplicator.h					\
-BDBConHandler.h					\
-BDBListener.h
+BDBCommunicator.h					\
+BDBConnector.h
 
 NOINSTHDRS =
 
@@ -18,8 +18,8 @@ lib_LTLIBRARIES	= libbdbreplication.la
 
 libbdbreplication_la_SOURCES  	= \
 BDBReplicator.cc				\
-BDBConHandler.cc				\
-BDBListener.cc					\
+BDBCommunicator.cc				\
+BDBConnector.cc					\
 BDBSite.cc
 
 include $(lofar_sharedir)/Makefile.common

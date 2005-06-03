@@ -1,4 +1,4 @@
-//#  BDBReplicator.cc: Handle replication of a Berkeley DB database
+//#  BDBConnector.cc: Handle replication of a Berkeley DB database
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,64 +28,61 @@
 #include <boost/thread.hpp>
 
 // Application specific includes
-#include <BDBListener.h>
-#include <BDBConHandler.h>
+#include <BDBConnector.h>
 
 using namespace LOFAR;
 using namespace std;
 
-bool BDBListenThread::theirShouldStop = false;
-bool BDBListenThread::theirIsListening = false;
-
-BDBListenThread::BDBListenThread(const int port,
-				 BDBCHThread* ConnectionHandler)
+BDBConnectorRep::BDBConnectorRep(const int port,
+				 BDBCommunicator* ConnectionHandler)
   :itsConnectionHandler(*ConnectionHandler),
-   itsPort(port)
+   itsPort(port),
+   itsShouldStop(false),
+   itsIsListening(false)
 {
-  //  LOG_TRACE_FLOW("BDBListenThread constructor");
+  //  LOG_TRACE_FLOW("BDBConnector constructor");
 }
 
-BDBListenThread::BDBListenThread(const BDBListenThread& other)
-  :itsConnectionHandler(other.itsConnectionHandler),
-   itsPort(other.itsPort)
+BDBConnectorRep::~BDBConnectorRep()
 {
-  //  LOG_TRACE_FLOW("BDBListenThread copy constructor");
+  //  LOG_TRACE_FLOW("BDBConnector detor");
 }
 
-BDBListenThread::~BDBListenThread()
+void BDBConnectorRep::stop()
 {
-  //  LOG_TRACE_FLOW("BDBListenThread detor");
-}
-
-void BDBListenThread::stop()
-{
-  theirShouldStop = true;
+  itsShouldStop = true;
 };
 
-bool BDBListenThread::shouldStop()
+bool BDBConnectorRep::shouldStop()
 {
-//   if (theirShouldStop) {
+//   if (itsShouldStop) {
 //     cout<<"listener should stop"<<endl;
 //   } else {
 //     cout<<"listener should not stop"<<endl;
 //   }
-  return theirShouldStop;
+  return itsShouldStop;
 };
 
-void BDBListenThread::operator()()
+void BDBConnectorRep::operator()()
 {
-  LOG_TRACE_FLOW("BDBListenThread starting thread");
+  LOG_TRACE_FLOW("BDBConnector starting thread");
   Socket listenSocket;
   char service[20];
   snprintf(service, 20, "%d", itsPort);
-  LOG_TRACE_FLOW_STR("BDBListenThread initting server on port "<<service);
-  while (listenSocket.initServer(service) != Socket::SK_OK) {
-    LOG_TRACE_FLOW_STR("Could not init server ("<<listenSocket.errstr()<<"), retrying");
+  LOG_TRACE_FLOW_STR("BDBConnector initting server on port "<<service);
+  while (!itsIsListening) {    
+    char service[20];
+    snprintf(service, 20, "%d", itsPort);
+    if (listenSocket.initServer(service) != Socket::SK_OK) {
+      LOG_TRACE_FLOW_STR("Could not init server ("<<listenSocket.errstr()<<"), retrying");
+      itsPort++;
+    } else {
+      itsIsListening = true;
+    }
   };
-  theirIsListening = true;
   LOG_TRACE_FLOW("Server initted");
   while (!shouldStop()) {
-    LOG_TRACE_FLOW("BDBListenThread starting to listen");
+    LOG_TRACE_FLOW("BDBConnector starting to listen");
     Socket* newSocket = listenSocket.accept(500); // wait 500 ms for new connection
     if (newSocket != 0){
       int port=0;
@@ -100,8 +97,31 @@ void BDBListenThread::operator()()
       LOG_TRACE_FLOW_STR("Accepted connection from "<<newSocket->host()<<":"<<newSocket->port());
       itsConnectionHandler.addSite(newSite);
     }
-    LOG_TRACE_FLOW("BDBListenThread accepted connection");
+    LOG_TRACE_FLOW("BDBConnector accepted connection");
     boost::thread::yield();
   }
 }
 
+BDBConnector::BDBConnector(const int port,
+			   BDBCommunicator* ConnectionHandler)
+{
+  itsRep = new BDBConnectorRep(port, ConnectionHandler);
+  itsRep->itsReferences++;
+  //  LOG_TRACE_FLOW("BDBConnector constructor");
+}
+
+BDBConnector::BDBConnector(const BDBConnector& other)
+  : itsRep(other.itsRep)
+{
+  if (itsRep != 0) 
+    itsRep->itsReferences++;
+  //  LOG_TRACE_FLOW("BDBConnector copy constructor");
+}
+
+BDBConnector::~BDBConnector()
+{
+  itsRep->itsReferences--;
+  if (itsRep->itsReferences == 0)
+    delete itsRep;
+  //  LOG_TRACE_FLOW("BDBConnector detor");
+}

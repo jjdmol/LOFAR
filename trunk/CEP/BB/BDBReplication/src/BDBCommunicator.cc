@@ -1,4 +1,4 @@
-//#  BDBReplicator.cc: Handle replication of a Berkeley DB database
+//#  BDBCommunicator.cc: Handle sending and receiveing messages
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,18 +27,18 @@
 #include <iostream>
 
 // Application specific includes
-#include <BDBReplicator.h>
+#include <BDBCommunicator.h>
 
 using namespace LOFAR;
 using namespace std;
 
-boost::mutex BDBCHThread::theirSiteMapMutex;
-map<int, BDBSite*> BDBCHThread::theirSiteMap;
-int BDBCHThread::theirObjectCounter = 0;
-bool BDBCHThread::theirShouldStop = false;
-int BDBCHThread::theirLastEnvId = 2;
+boost::mutex BDBCommunicator::theirSiteMapMutex;
+map<int, BDBSite*> BDBCommunicator::theirSiteMap;
+int BDBCommunicator::theirObjectCounter = 0;
+bool BDBCommunicator::theirShouldStop = false;
+int BDBCommunicator::theirLastEnvId = 2;
 
-BDBCHThread::BDBCHThread(const string& hostName, const int port)
+BDBCommunicator::BDBCommunicator(const string& hostName, const int port)
   : itsEnvId(1),
     itsDbEnv(0),
     itsHostName(hostName),
@@ -46,7 +46,7 @@ BDBCHThread::BDBCHThread(const string& hostName, const int port)
 {
   theirObjectCounter++;
 };
-BDBCHThread::BDBCHThread(const BDBCHThread& other)
+BDBCommunicator::BDBCommunicator(const BDBCommunicator& other)
   : itsEnvId(other.itsEnvId),
     itsDbEnv(other.itsDbEnv),
     itsHostName(other.itsHostName),
@@ -55,24 +55,23 @@ BDBCHThread::BDBCHThread(const BDBCHThread& other)
   theirObjectCounter++;
 };
 
-BDBCHThread::~BDBCHThread()
+BDBCommunicator::~BDBCommunicator()
 {
   theirObjectCounter--;
   if (theirObjectCounter == 0) {
     map<int, BDBSite*>::iterator it;
     for (it=theirSiteMap.begin(); it!=theirSiteMap.end(); it++) {
-      //      delete it->second->getSocket();
       delete it->second;      
     }
   }
 }
-void BDBCHThread::stop()
+void BDBCommunicator::stop()
 {
   theirShouldStop = true;
   LOG_TRACE_FLOW("BDBConHandlThread stop set");
 };
 
-bool BDBCHThread::shouldStop()
+bool BDBCommunicator::shouldStop()
 {
 //   if (theirShouldStop) {
 //     LOG_TRACE_FLOW("conhandler should stop");
@@ -82,7 +81,7 @@ bool BDBCHThread::shouldStop()
   return theirShouldStop;
 };
 
-void BDBCHThread::operator()()
+void BDBCommunicator::operator()()
 {
   LOG_TRACE_FLOW("BDBConHandlThread started");
   while(!shouldStop()) {
@@ -96,10 +95,10 @@ void BDBCHThread::operator()()
       { // new scope because of scoped lock
 	boost::mutex::scoped_lock sl(theirSiteMapMutex);
 
-	Socket* mySocket = it->second->getSocket();
+	BDBSite& mySite = *(it->second);
 	// check if there is data available
 	// this loop could use more error checking
-	if (mySocket->read(&messageSize, 4) == 4) {
+	if (mySite.recv(&messageSize, 4) == 4) {
 	  //LOG_TRACE_FLOW("Received message from env "<<it->first);
 	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
 	  LOG_TRACE_FLOW("BDBConHandlThread data present on socket");
@@ -107,17 +106,17 @@ void BDBCHThread::operator()()
 	  // read control Dbt
 	  cBuffer = new char[messageSize];
 	  if (messageSize > 0) {
-	    mySocket->readBlocking(cBuffer, messageSize);
+	    mySite.recv(cBuffer, messageSize);
 	  }
 	  control.set_data(cBuffer);
 	  control.set_size(messageSize);
 	  
 	  // read rec Dbt
-	  mySocket->readBlocking(&messageSize, 4);
+	  mySite.recv(&messageSize, 4);
 	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
 	  rBuffer = new char[messageSize];
 	  if (messageSize > 0) {
-	    mySocket->readBlocking(rBuffer, messageSize);
+	    mySite.recv(rBuffer, messageSize);
 	  }
 	  rec.set_data(rBuffer);
 	  rec.set_size(messageSize);
@@ -135,7 +134,7 @@ void BDBCHThread::operator()()
   }
 }
 
-int BDBCHThread::send(DbEnv *dbenv,
+int BDBCommunicator::send(DbEnv *dbenv,
 		      const Dbt *control, 
 		      const Dbt *rec, 
 		      const DbLsn *lsnp,
@@ -150,13 +149,13 @@ int BDBCHThread::send(DbEnv *dbenv,
     map<int, BDBSite*>::iterator it;
     for (it=theirSiteMap.begin(); it!=theirSiteMap.end(); it++)
     {
-      sendOne(control, rec, it->second->getSocket());
+      sendOne(control, rec, *(it->second));
     }
   } else {
     map<int, BDBSite*>::iterator pos;
     pos = theirSiteMap.find(envid);
     if (pos != theirSiteMap.end()){
-      sendOne(control, rec, pos->second->getSocket());
+      sendOne(control, rec, *(pos->second));
     } else {
       LOG_ERROR("BDB trying to send to unknown environment");
     }
@@ -165,26 +164,26 @@ int BDBCHThread::send(DbEnv *dbenv,
   return 0;
 }
 
-void BDBCHThread::sendOne(const Dbt *control, 
+void BDBCommunicator::sendOne(const Dbt *control, 
 			 const Dbt *rec, 
-			 Socket* mySocket)
+			 BDBSite& mySite)
 {
   //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
   int size = control->get_size();
   LOG_TRACE_FLOW_STR("writing size:" <<size);
-  mySocket->write(&size, 4);
+  mySite.send(&size, 4);
   if (control->get_size() > 0)
-    mySocket->write(control->get_data(), control->get_size());
+    mySite.send(control->get_data(), control->get_size());
   size = rec->get_size();
   LOG_TRACE_FLOW_STR("writing size:" <<size);
-  mySocket->write(&size, 4);
+  mySite.send(&size, 4);
   if (rec->get_size() > 0)
-    mySocket->write(rec->get_data(), rec->get_size());
+    mySite.send(rec->get_data(), rec->get_size());
   //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
 }
 
 
-bool BDBCHThread::connectTo(const char* hostName, const int port)
+bool BDBCommunicator::connectTo(const char* hostName, const int port)
 {
   Socket* newSocket = new Socket();
   BDBSite* newSite = new BDBSite(hostName, port, newSocket);
@@ -209,7 +208,7 @@ bool BDBCHThread::connectTo(const char* hostName, const int port)
   }
 }
 
-void BDBCHThread::handleMessage(Dbt* rec, Dbt* control, int envId)
+void BDBCommunicator::handleMessage(Dbt* rec, Dbt* control, int envId)
 {
   LOG_TRACE_FLOW("BDBConHandlThread handling message");
 
@@ -265,13 +264,13 @@ void BDBCHThread::handleMessage(Dbt* rec, Dbt* control, int envId)
   LOG_TRACE_FLOW("message handled");
 }
 
-void BDBCHThread::setEnv(DbEnv* dbenv)
+void BDBCommunicator::setEnv(DbEnv* dbenv)
 {
   //  LOG_TRACE_FLOW_STR("Setting db environment to "<<dbenv);
   itsDbEnv = dbenv;
 };
 
-void BDBCHThread::addSite(BDBSite* newSite)
+void BDBCommunicator::addSite(BDBSite* newSite)
 {
   bool found = false;
   map<int, BDBSite*>::iterator it;
@@ -293,7 +292,7 @@ void BDBCHThread::addSite(BDBSite* newSite)
   printSiteMap();
 }
 
-void BDBCHThread::printSiteMap()
+void BDBCommunicator::printSiteMap()
 {
   LOG_TRACE_FLOW_STR(endl
       <<"    SITEMAP" << endl
