@@ -1,13 +1,11 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,485 306 954 748 N "_3DFace" 2
+PANEL,394 316 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-	//Simulation for altering a few selected DP's
-//	startThread( \"Simulation\" );	
 
 	//Check for existance trend config data.
 	if (dpExists($configDatapoint + \".Standard\") &&
@@ -297,19 +295,21 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
   }
   else
 	{
-	  DebugN(\"Trend dpName2Connect:\"+dpName);
+	  //DebugN(\"Trend dpName2Connect:\"+dpName);
 	  if (dpGetElementName($datapoint)!=\"\")   //SelectedItem is a datapoint element
-	  {
+	  { 
+	    navPMLloadPropertySet(dpSubStr($datapoint, DPSUB_SYS_DP));
       setValue(\"Trend\"+TrendNumber,\"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \":_online.._value\");
-      navPMLloadPropertySet(dpSubStr($datapoint, DPSUB_SYS_DP));
 	  }
 	  else //SelectedItem is a datapoint (not element)
 	  {
-	    if (dpExists($datapoint + \"_\" + dpName))
+	    if (dpAccessable($datapoint + dpName))
 	    {
-        navPMLloadPropertySet(dpSubStr($datapoint + \"_\" + dpName, DPSUB_SYS_DP));
-        DebugN(\"Trend dpName2Connect:\"+dpName);
-		    setValue(\"Trend\"+TrendNumber, \"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \"_\" + dpName + \":_online.._value\");
+        string dpToConnect = navViewRetrieveDpName($datapoint, dpName);
+        navPMLloadPropertySet(dpToConnect);
+        setValue(\"Trend\"+TrendNumber, \"disconnectDirectly\", \"curve\"+TraceNumber);
+        setValue(\"Trend\"+TrendNumber, \"curveRemoveData\", \"curve\"+TraceNumber, getCurrentTime());
+		    setValue(\"Trend\"+TrendNumber, \"connectDirectly\", \"curve\"+TraceNumber, dpToConnect + \":_online.._value\");
         setValue(\"Trend\"+TrendNumber, \"curveLegendName\", \"curve\"+TraceNumber, LegendName);
         setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, TRUE);
         setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, TRUE);
@@ -320,7 +320,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 	  {
       if (ScaleMin==ScaleMax)
         ScaleMax = ScaleMin + 10;
-      setValue(\"Trend\"+TrendNumber, \"curveMin\", \"curve\"+TraceNumber, ScaleMin);
+      //setValue(\"Trend\"+TrendNumber, \"curveMin\", \"curve\"+TraceNumber, ScaleMin);
       setValue(\"Trend\"+TrendNumber, \"curveMax\", \"curve\"+TraceNumber, ScaleMax);
 	  }
   }

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,445 353 1260 960 N "_3DFace" 0
+PANEL,394 316 1260 960 N "_3DFace" 0
 "main()
 {
   navPMLinitialize();
@@ -783,6 +783,43 @@ E
   
 }" 0
 
+20 96
+"showDPE"
+""
+1 360 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+58 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+358 8 462 32
+1
+T 
+1
+LANG:1 8 Show DPE
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+E"main(int button, bool state)
+{
+
+  bool status;
+  getValue(\"showDPE\", \"state\", 0, status);
+//button(0)
+  if(status)
+    g_showDPE=TRUE;
+  else
+    g_showDPE=FALSE;
+    
+}" 0
 0
 LAYER, 1 
 1
