@@ -7,6 +7,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 
 #include <stdio.h>           // for sprintf
 #include <sys/types.h>       // for file output

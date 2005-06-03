@@ -23,6 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <StationCorrelator.h>
+
 #include <Common/KeyParser.h>
 #include <Common/KeyValueMap.h>
 #include <Common/LofarLogger.h>
@@ -31,17 +33,13 @@
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_ShMem.h>
 #include <Transport/TH_MPI.h>
-#include <TH_RSP.h>
+//#include <TH_RSP.h>
 
 #include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/Profiler.h>
 
 #include <CEPFrame/Step.h>
-#include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Composite.h>
-#include <CEPFrame/ApplicationHolder.h>
-
-#include <StationCorrelator.h>
 
 #include <WH_RSPBoard.h>
 #include <WH_RSPInput.h>
@@ -49,7 +47,7 @@
 #include <WH_Transpose.h>
 #include <WH_Correlator.h>
 #include <WH_Dump.h>
-#include <WH_Plot2MAC.h>
+//#include <WH_Plot2MAC.h>
 
 #include <DH_RSP.h>
 #include <DH_StationData.h>
@@ -87,8 +85,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   //  cout<<"slow_rate: "<<slow_rate<<endl;
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
-  WH_Empty empty;
-  Composite comp(empty);
+  Composite comp(0,0);
   setComposite(comp);
   comp.runOnNode(0);
 
@@ -98,7 +95,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   bool useRealRSP = itsKVM.getBool("useRealRSPBoard", false);
   WH_RSPBoard RSPBoard("WH_RSPBoard", itsKVM);
   Step StepRSPemulator(RSPBoard, "STEP_RSPBoard");
-  comp.addStep(StepRSPemulator);
+  comp.addBlock(StepRSPemulator);
   if (useRealRSP) {
     StepRSPemulator.runOnNode(-1);
   } else {
@@ -117,7 +114,9 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
       whRSPinput = new WH_RSPInput(H_name, itsKVM, false);  // notsyncmaster
     }
     itsRSPinputSteps[i] = new Step(*whRSPinput, H_name, false);
-    comp.addStep(itsRSPinputSteps[i]); 
+    // use cyclic buffer on output
+    itsRSPinputSteps[i]->setOutBufferingProperties(0, false);
+    comp.addBlock(itsRSPinputSteps[i]); 
 
     itsRSPinputSteps[i]->runOnNode(lastFreeNode++);
 
@@ -126,11 +125,11 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
       //      cout<<"interface: "<<iface<<endl;
       string oMac  = itsKVM["oMacs"].getVecString()[i];
       string rMac  = itsKVM["rMacs"].getVecString()[i];
-      itsRSPinputSteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_RSP(iface.c_str(), 
-						    		     rMac.c_str(), 
-								     oMac.c_str(), 
-								     0x000, 
-								     true), true);
+  //     itsRSPinputSteps[i]->connect(0, &StepRSPemulator, i, 1, new TH_RSP(iface.c_str(), 
+// 						    		     rMac.c_str(), 
+// 								     oMac.c_str(), 
+// 								     0x000, 
+// 								     true), true);
     } else {
       // Use the WH_RSPBoard to emulate a real RSP Board
       connect(&StepRSPemulator, itsRSPinputSteps[i], i, 0, false); // true=sharedMem
@@ -152,7 +151,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     whRSP = new WH_RSP(H_name, itsKVM);  
     itsRSPsteps[i] = new Step(*whRSP, H_name, false);
-    comp.addStep(itsRSPsteps[i]); 
+    comp.addBlock(itsRSPsteps[i]); 
 
     itsRSPsteps[i]->runOnNode(lastFreeNode++);
     connect(itsRSPinputSteps[i], itsRSPsteps[i], 0, 0, true); // true=sharedMem
@@ -168,7 +167,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     WH_Transpose whTranspose(H_name, itsKVM);
     itsTsteps[i] = new Step(whTranspose, H_name, false);
-    comp.addStep(itsTsteps[i]);
+    comp.addBlock(itsTsteps[i]);
     // the transpose collects data to intergrate over, so only the input 
     // and process methods run fast
     itsTsteps[i]->setOutRate(slow_rate);
@@ -185,7 +184,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     WH_Correlator whCorrelator(H_name, itsKVM);
     itsCsteps[i] = new Step(whCorrelator, H_name, false);
-    comp.addStep(itsCsteps[i]);
+    comp.addBlock(itsCsteps[i]);
     itsCsteps[i]->setInRate(slow_rate);
     itsCsteps[i]->setProcessRate(slow_rate);
     itsCsteps[i]->setOutRate(slow_rate);
@@ -202,10 +201,10 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     string oFile  = itsKVM["outFileName"].getVecString()[i];
 
-    //WH_Dump whDump(H_name, itsKVM, oFile);
-    WH_Plot2MAC whDump(H_name, itsKVM);
+    WH_Dump whDump(H_name, itsKVM, oFile);
+    //WH_Plot2MAC whDump(H_name, itsKVM);
     Step dumpstep(whDump, H_name);
-    comp.addStep(dumpstep);
+    comp.addBlock(dumpstep);
     dumpstep.setInRate(slow_rate);
     dumpstep.setProcessRate(slow_rate);
     dumpstep.setOutRate(slow_rate);
@@ -261,17 +260,18 @@ void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dst
   if (srcNode == dstNode) {
     //    cout<<srcStep->getName()<<" and "<<dstStep->getName()<<" on same node"<<endl;
     if (sharedMem) {
-      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_ShMem(srcNode,dstNode), true); // true=blocking
+      TH_MPI* mpiTH = new TH_MPI(srcNode, dstNode);
+      dstStep->connect(dstDH, srcStep, srcDH, 1, new TH_ShMem(mpiTH), true); // true=blocking
     } 
     else {
-      dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
+      dstStep->connect(dstDH, srcStep, srcDH, 1, new TH_Mem(), false);  // true=blocking
     }
   } 
   else {
-    dstStep->connect(srcStep, dstDH, srcDH, 1, TH_MPI(srcNode, dstNode), true);  // true=blocking
+    dstStep->connect(dstDH, srcStep, srcDH, 1, new TH_MPI(srcNode, dstNode), true);  // true=blocking
   }
 #else
-  dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
+  dstStep->connect(dstDH, srcStep, srcDH, 1, new TH_Mem(), false);  // true=blocking
 #endif
   //  cout<<"ok"<<endl;
 }
