@@ -1,6 +1,4 @@
-bin_PROGRAMS = StationCorrelator
-
-DOCHDRS =						\
+INSTHDRS =						\
 StationCorrelator.h					\
 StationCorrelatorController.h				\
 DH_RSP.h						\
@@ -18,6 +16,16 @@ WH_Dump.h						\
 WH_Plot2MAC.h						\
 SyncStamp.h                                             \
 TH_RSP.h
+
+NOINSTHDRS=
+
+TCCHDRS=
+
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 
 StationCorrelator_SOURCES 	=	$(DOCHDRS)	\
 DH_RSP.cc						\
@@ -38,5 +46,14 @@ StationCorrelatorController.cc				\
 StationCorrelatorMain.cc				\
 SyncStamp.cc                                            \
 TH_RSP.cc
+
+AM_YFLAGS               = -d -p KeyParse
+AM_LFLAGS               = -PKeyTokenize
+LEX_OUTPUT_ROOT         = lex.KeyTokenize
+
+bin_PROGRAMS = StationCorrelator
+StationCorrelator_SOURCES       = StationCorrelator.cc
+StationCorrelator_LDADD         =
+StationCorrelator_DEPENDENCIES  = $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
