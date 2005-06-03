@@ -33,7 +33,8 @@ include_HEADERS = \
 	Observer.h \
 	Subject.h \
 	netraw.h \
-	gnuplot_i.h
+	gnuplot_i.h \
+	PSAccess.h
 
 librtccommon_la_SOURCES = \
 	Marshalling.h \

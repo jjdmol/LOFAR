@@ -495,41 +495,10 @@ void gnuplot_plot_xy(
 )
 {
   int     i ;
-  //int		tmpfd ;
-  //char    name[128] ;
   char    cmd[GP_CMD_SIZE] ;
   char    line[GP_CMD_SIZE] ;
 
   if (handle==NULL || x==NULL || y==NULL || (n<1)) return ;
-
-#if 0
-  /* Open one more temporary file? */
-  if (handle->ntmp == GP_MAX_TMP_FILES - 1) {
-    fprintf(stderr,
-	    "maximum # of temporary files reached (%d): cannot open more",
-	    GP_MAX_TMP_FILES) ;
-    return ;
-  }
-
-  /* Open temporary file for output   */
-  sprintf(name, "%s/gnuplot-i-XXXXXX", P_tmpdir);
-  if ((tmpfd=mkstemp(name))==-1) {
-    fprintf(stderr,"cannot create temporary file: exiting plot") ;
-    return ;
-  }
-  /* Store file name in array for future deletion */
-  strcpy(handle->to_delete[handle->ntmp], name) ;
-  handle->ntmp ++ ;
-#endif
-
-#if 0
-  /* Write data to this file  */
-  for (i=0 ; i<n; i++) {
-    sprintf(line, "%g %g\n", x[i], y[i]) ;
-    write(tmpfd, line, strlen(line));
-  }
-  close(tmpfd) ;
-#endif
 
   /* Command to be sent to gnuplot    */
   if (handle->nplots > 0) {
@@ -538,36 +507,23 @@ void gnuplot_plot_xy(
     strcpy(cmd, "plot") ;
   }
 
-#if 0    
-  if (title == NULL) {
-    sprintf(line, "%s \"%s\" with %s", cmd, name, handle->pstyle) ;
-  } else {
-    sprintf(line, "%s \"%s\" title \"%s\" with %s", cmd, name,
-	    title, handle->pstyle) ;
-  }
-#else
   if (title == NULL) {
     sprintf(line, "%s \"%s\" with %s", cmd, "-", handle->pstyle) ;
   } else {
     sprintf(line, "%s \"%s\" title \"%s\" with %s", cmd, "-",
 	    title, handle->pstyle) ;
   }
-#endif
 
   /* send command to gnuplot  */
   gnuplot_cmd(handle, line) ;
 
-#if 1
   /* Write data to the pipe  */
   for (i=0 ; i<n; i++) {
     fprintf(handle->gnucmd, "%g %g\n", x[i], y[i]) ;
-    //write(tmpfd, line, strlen(line));
   }
   fprintf(handle->gnucmd, "e\n"); // end data input
-  //close(tmpfd) ;
-#endif
 
-  //handle->nplots++ ;
+  handle->nplots++ ;
   return ;
 }
 
@@ -746,6 +702,19 @@ void gnuplot_plot_equation(
     gnuplot_cmd(h, cmd) ;
     h->nplots++ ;
     return ;
+}
+
+void gnuplot_multiplot_array(gnuplot_ctrl* h,
+			     Array<double, 2> matrix)
+{
+  /* Write data to the pipe  */
+  for (int i = 0; i < matrix.extent(firstDim); i++) {
+    for (int j = 0; j < matrix.extent(secondDim); j++) {
+      fprintf(h->gnucmd, "%d %g\n", j, matrix(i,j));
+    }
+    fprintf(h->gnucmd, "e\n"); // end data input
+  }
+  fflush(h->gnucmd);
 }
 
 #if 1
