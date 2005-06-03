@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/Net/Socket.h>
+#include <boost/thread.hpp>
 #include <db_cxx.h>
  
 using namespace LOFAR;
@@ -37,11 +38,15 @@ class BDBSite {
   BDBSite(const char* hostName, const int port, Socket* socket);
   ~BDBSite();
 
-  Socket* getSocket();
+  void send(void* buffer, int bufferSize);
+  int recv(void* buffer, int bufferSize);
+
+  //  Socket* getSocket();
   Dbt* getConnectionData();
   bool operator==(BDBSite& other);
   friend ostream& operator<<(ostream& os, BDBSite& site);
  private:
+  boost::mutex itsSocketMutex;
   string itsHostName;
   int itsPort;
   Socket* itsSocket;
@@ -51,8 +56,8 @@ class BDBSite {
   ALLOC_TRACER_CONTEXT;
 };
 
-inline Socket* BDBSite::getSocket()
-{ return itsSocket;};
+//inline Socket* BDBSite::getSocket()
+//{ return itsSocket;};
 inline Dbt* BDBSite::getConnectionData()
 { return &itsConnectionData; };
 

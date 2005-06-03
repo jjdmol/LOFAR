@@ -30,8 +30,8 @@
 #include <boost/thread.hpp>
 #include <db_cxx.h>
 
-#include <BDBReplication/BDBConHandler.h>
-#include <BDBReplication/BDBListener.h>
+#include <BDBReplication/BDBCommunicator.h>
+#include <BDBReplication/BDBConnector.h>
  
 using namespace LOFAR;
 
@@ -41,7 +41,7 @@ class BDBReplicator {
   // called from outside the thread
   BDBReplicator(const string& DbEnvName,
 		const string& hostName, 
-		const int port, 
+		const int port,
 		const string& masterHostname,
 		const int masterPort,
 		const bool isMaster);
@@ -62,10 +62,10 @@ class BDBReplicator {
   int itsMasterPort;
   bool itsIsMaster;
 
-  BDBCHThread itsCHThreadObject;
-  boost::thread* itsCHThread;
-  BDBListenThread itsLThreadObject;
-  boost::thread* itsLThread;
+  BDBCommunicator itsCommunicator;
+  boost::thread* itsCommunicatorThread;
+  BDBConnector itsConnector;
+  boost::thread* itsConnectorThread;
   DbEnv* itsDbEnv;
 
   ALLOC_TRACER_ALIAS(BDBSite);
