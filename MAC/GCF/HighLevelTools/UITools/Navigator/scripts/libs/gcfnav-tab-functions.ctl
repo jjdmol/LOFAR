@@ -190,31 +190,37 @@ void ComboBoxViewsSelectionChanged()
   
   //---------------------------------------------------------------
   //viewTabsCtrl.namedRegisterPanel divided in three possibilities.
-  //1. panelfile present and accessable
-  //2. There is no subview configured for this DP-Type
-  //1. panelfile present and accessable
+  //1. There is no subview configured for the DpType
+  //2. 
+  //3. panelfile present and accessable
+  //4. There is no panelfile configured for this DP-Type
+  //5. panelfile not present and accessable
   if(viewsComboBoxCtrl.itemCount==0)
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nosubview.pnl",panelParameters);
-    LOG_DEBUG("## No subview configured for this datapoint type");
+    LOG_DEBUG("1. No subview configured for this datapoint type");
   }
+//  else if(!dpAccessable(g_datapoint))
+//  {
+//    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nodpfound.pnl",panelParameters);
+//    LOG_DEBUG("2. Datapoint selected in tree not found.");
+//  }
   else if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
-	  LOG_TRACE("## selectedPanel:", selectedPanel);
+	  LOG_DEBUG("3 selectedPanel:", selectedPanel);
   }
   else if (selectedPanel=="0")
   {
     selectedPanel = "navigator/views/nopanel.pnl";
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanel.pnl",panelParameters);
-    LOG_DEBUG("## No panel configured for this subview");
+    LOG_DEBUG("4 No panel configured for this subview");
   }
   else  //3. The configured panel file for this subview has not been found
   {
 	  string oldSelectedPanel = selectedPanel;
 	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanelfound.pnl",panelParameters);
-	  LOG_DEBUG("## VIEW_TABS_VIEW_NAME: ", VIEW_TABS_VIEW_NAME);
-    LOG_DEBUG("## File does not exist:",oldSelectedPanel);
+    LOG_DEBUG("5. File does not exist:",oldSelectedPanel);
   }            
  
   string datapointTypeName = "";
@@ -238,10 +244,9 @@ void ComboBoxViewsSelectionChanged()
   {
     datapointTypeName = g_datapoint;
   }
-//////////////////////////////////////////////////////////////////  
-//  DebugN("test125:"+(g_subViewConfigs[selectedSubView]));
-//  if(g_subViewConfigs[selectedSubView]==0)
-  
+
+  //  if(g_subViewConfigs[selectedSubView]==0)
+  // Load the config panel in the viewTabsCtrl
   dyn_string configPanelParameters = makeDynString(
     "$selectedView:" + g_selectedView,
     "$viewName:" + g_selectedViewName,

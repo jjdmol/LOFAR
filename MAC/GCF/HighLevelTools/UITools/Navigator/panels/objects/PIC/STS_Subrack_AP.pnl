@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,258 138 184 193 N "_3DFace" 2
+PANEL,284 171 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
@@ -64,8 +64,8 @@ ControlGUIAP(string dp1, float temperature,
   }
   else
   {
-    setValue(\"rect_AP\", \"backCol\", \"cyan\");
-    setValue(\"btn_details\", \"backCol\", \"cyan\");
+    setValue(\"rect_AP\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"btn_details\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_temperature\", \"visible\", FALSE);
   }
 }

@@ -603,7 +603,6 @@ void treeAddDatapoints(dyn_string names)
         checkForReference(names[namesIndex], reference, dpIsReference);
         LOG_TRACE("dpTypeGet for: ",names[namesIndex]);
         int TypeGetError = dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."),elementNames,elementTypes);
-        DebugTN("TypeGetError:"+TypeGetError);
         if(TypeGetError==-1) // the enabled doesn't exist, the the dpTypeName on names[Index]
         {
           dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
@@ -1425,8 +1424,16 @@ TreeView_OnSelect(unsigned pos)
   checkForReference(datapointPath, reference, parentDatapointIsReference);
   
   LOG_TRACE("check for expand",parentDatapointIsReference, datapointPath, dpAccessable(datapointPath));
+  //Check or the access is permitted to this point in the tree
   if(checkDpPermit(datapointPath) || pos==1)
   {
+    //check or the selected item in the tree is an dpe. If yes, use the dp name to check the existance
+    if(strpos(datapointPath, ".")>0)
+    {
+     dyn_string datapointPathSplit = strsplit(datapointPath, ".");
+     datapointPath = datapointPathSplit[1];
+     DebugN("datapointPath after split:"+datapointPath);
+    }
     if(!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled")))
     {
       TreeCtrl_HandleEventOnSelChange(pos);

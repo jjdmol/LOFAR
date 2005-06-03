@@ -571,7 +571,7 @@ string navConfigGetViewConfig(string datapointPath)
     // find __nav_<datapointType>_viewconfig datapoint
     dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointType+"_viewconfig";
   }
-  else if(dpAccessable(dpNameTemp))
+  else if(dpExists(dpNameTemp)) // Explicit use op dpExist!!!
   {
     datapointType = dpTypeName(datapointPath);
     dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointType+"_viewconfig";

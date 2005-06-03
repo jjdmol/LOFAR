@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,281 168 954 748 N "_3DFace" 2
+PANEL,485 306 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -297,6 +297,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
   }
   else
 	{
+	  DebugN(\"Trend dpName2Connect:\"+dpName);
 	  if (dpGetElementName($datapoint)!=\"\")   //SelectedItem is a datapoint element
 	  {
       setValue(\"Trend\"+TrendNumber,\"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \":_online.._value\");
@@ -307,6 +308,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 	    if (dpExists($datapoint + \"_\" + dpName))
 	    {
         navPMLloadPropertySet(dpSubStr($datapoint + \"_\" + dpName, DPSUB_SYS_DP));
+        DebugN(\"Trend dpName2Connect:\"+dpName);
 		    setValue(\"Trend\"+TrendNumber, \"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \"_\" + dpName + \":_online.._value\");
         setValue(\"Trend\"+TrendNumber, \"curveLegendName\", \"curve\"+TraceNumber, LegendName);
         setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, TRUE);

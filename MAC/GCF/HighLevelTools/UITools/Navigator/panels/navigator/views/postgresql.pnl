@@ -1,0 +1,319 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,347 111 886 600 N "_3DFace" 0
+EEE E E 1 -1 -1 0  30 358
+"" 0 1
+E"#uses \"shm.ctl\"
+dbConnection connection;
+// In the config file the following entry's must exists
+//
+//[ctrl]
+//CtrlDLL = \"CtrlADO\"
+//
+//[ui]
+//CtrlDLL = \"CtrlADO\"
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 3
+"Text1"
+""
+1 30 120 E E E 1 E 1 E N {255,255,255} E N {51,102,255} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 32 122 238 138
+0 2 0 "s" 0 0 0 64 0 0  32 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 33 Output, retrieved from PostgreSQL
+6 4
+"Border1"
+""
+1 30 103 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 30 80 170 103
+2 5
+"Text2"
+""
+1 39 82 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 41 84 76 100
+0 2 0 "s" 0 0 0 192 0 0  41 84
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Query
+14 1
+"TextField1"
+""
+1 130 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+128 78 652 105
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+ setValue(\"\", \"text\", \"select * from \");
+}" 0
+
+"main()
+{
+  string command;
+  dbRecordset rs;
+  getValue(\"\", \"text\", command);
+  dyn_string tableLine;
+  int error = dbOpenRecordset(connection, command, rs);
+  showError(connection);
+
+  int rc;
+  anytype field, fld1, fld2;
+  string input=\"\";
+  while (!rc && !dbEOF (rs))
+  {
+    int i=0;
+    field=\"\";
+    while(!rc)
+    {
+      input=\"\";
+      rc = dbGetField (rs, i, fld1);
+      input=fld1;
+      tableLine[i+1]=input;
+      field = field + \" | \" + input;
+      i++;
+    }
+    output.appendItem = field;
+    Table1.appendLine(\"0\", tableLine[1], \"1\", tableLine[2], \"2\", tableLine[3], \"3\", tableLine[4]);
+    rc = dbMoveNext (rs);
+  }
+}" 0
+
+17 2
+"output"
+""
+1 30 142 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 140 812 322
+0
+E
+E
+E
+
+3 1
+13 9
+"Button1"
+""
+1 30 20 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 18 104 45
+T 
+1
+LANG:1 5 Start
+"main()
+{
+
+  int resultCode = dbOpenConnection(\"DSN=SHM\", connection);
+  showError(connection);
+}" 0
+ E E E
+13 10
+"Button2"
+""
+1 110 20 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+108 18 184 45
+T 
+1
+LANG:1 4 Stop
+"main()
+{
+  int resultCode =\"\";
+  resultCode = dbCloseConnection(connection);
+  //showError(connection);
+  output.appendItem = \"Stop \" +resultCode;
+}" 0
+ E E E
+19 11
+"RadioButton1"
+""
+1 240 20 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+238 18 342 42
+1
+T 
+1
+LANG:1 12 RadioButton1
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+ 1
+E
+E
+13 12
+"Button3"
+""
+1 660 120 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+658 118 782 145
+T 
+1
+LANG:1 5 Clear
+"main()
+{
+output.deleteAllItems;
+}" 0
+ E E E
+25 13
+"Table1"
+""
+1 30 330 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+28 328 582 582
+E E 0 0 1 4 1 "0" 0 1 -1 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 128 "1" 0 1 -1 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 128 "2" 0 1 -1 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 128 "3" 0 1 -1 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 128 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 1 1 3 0
+1 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

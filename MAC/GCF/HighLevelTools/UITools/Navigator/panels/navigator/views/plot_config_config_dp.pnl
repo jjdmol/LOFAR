@@ -1,35 +1,12 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,419 299 690 341 N "_3DFace" 4
+PANEL,435 356 690 341 N "_3DFace" 4
 "$PlotNr"
 "$configDatapoint"
 "$datapoint"
 "$selectedDP"
-"main()
-{
-//  startThread(\"FillSelectionList\");
-  
-/*  int ScaleMin, ScaleMax;
-  bool AutoScale;
-	string dpName, legendName;
-	
-  //Get the values from the PVSS database
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMax:_online.._value\", ScaleMax);
-	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".ScaleMin:_online.._value\", ScaleMin);
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".AutoScale:_online.._value\", AutoScale);
-	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName:_online.._value\", dpName);
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".LegendName:_online.._value\", legendName);
-    
-  //Set the values in the graphical objects
-	setValue(\"txt_legendName\", \"text\", legendName);  
-	setValue(\"txt_scaleMax\", \"text\", ScaleMax);
-	setValue(\"txt_scaleMin\", \"text\", ScaleMin);
-  setValue(\"btn_AutoScale\", \"state\", 0, AutoScale);*/
-}
-
-" 0
-EE E E 1 -1 -1 0  190 250
+EEE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
 #uses \"gcfnav_view.ctl\"
@@ -527,11 +504,9 @@ navViewPlotApplyTraceSettings(int PlotNumber)
   string currentConfigDpName; //current configuration in the PVSS database
   string selectedConfigDpName; //
 
-  //DebugN(\"system.selectedText:\"+list_system.selectedText);
-  //DebugN(\"getSystemName()    :\"+getSystemName());
   if(list_system.selectedText==getSystemName())
   {
-    if(list_dp.selectedText==CURRENT_DP_MESSAGE)
+    if(list_dp.selectedText==CURRENT_DP_MESSAGE) //CURRENT_DP_MESSAGE is global string \"Current selection in tree\"
     {
       selectedConfigDpName = $datapoint + \".\" +list_dpe.selectedText;
     }
