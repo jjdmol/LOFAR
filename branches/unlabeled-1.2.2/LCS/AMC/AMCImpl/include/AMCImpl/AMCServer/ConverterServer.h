@@ -60,23 +60,22 @@ namespace LOFAR
       // Destructor.
       ~ConverterServer();
 
-      // Start running the event-loop that will continuously monitor for
-      // incoming connections. When a connection request is received the
-      // handleConnections() method is called to further handle the client
-      // request.
+      // Start running the event-loop. The event loop will continuously call
+      // the handleConnections() method, which blocks until it receives a
+      // connection request.
       void run();
 
     private:
       //@{
       // Make this class non-copyable.
       ConverterServer(const ConverterServer&);
-      ConverterServer operator=(const ConverterServer&);
+      ConverterServer& operator=(const ConverterServer&);
       //@}
 
-      // This method handles incoming connection requests. For each
-      // connection a new process is spawned that will further handle any
-      // coordinate conversion requests, until the client side closes the
-      // connection.
+      // This method handles incoming connection requests. It blocks until it
+      // receives a connection request. For each connection a new process is
+      // spawned that will further handle any coordinate conversion requests,
+      // until the client side closes the connection.
       void handleConnections();
 
       // On this socket we will be listening for incoming connection requests.

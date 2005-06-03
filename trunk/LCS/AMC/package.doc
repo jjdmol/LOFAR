@@ -7,7 +7,12 @@
 // 
 // The package is split into two sub-packages: AMCBase and AMCImpl.
 //
-// \image html package_amc.png "Package view of the AMC sub-packages" 
+// \image html amc_package.png "Package view of the AMC sub-packages" 
+//
+// The relation between the most important classes of these sub-packages is
+// shown in the class diagram below.
+//
+// \image html amc_main_classes.png "Class diagram showing the most important classes of the AMC sub-packages"
 
 // @{
 
