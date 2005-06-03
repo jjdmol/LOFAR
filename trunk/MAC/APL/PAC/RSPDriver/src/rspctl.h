@@ -31,6 +31,10 @@
 #include <bitset>
 #include <set>
 
+#include <Timestamp.h>
+
+#include <blitz/array.h>
+
 namespace rspctl
 {
 
@@ -168,6 +172,7 @@ namespace rspctl
       StatisticsCommand();
       virtual ~StatisticsCommand() {}
       virtual void send(GCFPortInterface& port);
+      void plot_statistics(blitz::Array<double, 2>& stats, const RTC::Timestamp& timestamp);
       virtual GCFEvent::TResult ack(GCFEvent& e);
       void setType(uint8 type) { m_type = type; }
     private:

@@ -86,9 +86,7 @@ include_HEADERS = \
 	\
 	EPA_Protocol.ph \
 	MEPHeader.h \
-	MEPData.h \
-	\
-	PSAccess.h
+	MEPData.h
 
 librsp_la_SOURCES = \
 	BeamletWeights.cc \
@@ -228,6 +226,7 @@ rspctl_SOURCES = \
 rspctl_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(RTCCOMMON_LDADD) \
-	-lsuite
+	-lsuite \
+	-lgnuplot_i
 
 include $(lofar_sharedir)/Makefile.common
