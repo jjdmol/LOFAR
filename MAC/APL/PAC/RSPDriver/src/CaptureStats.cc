@@ -245,14 +245,6 @@ void CaptureStats::parse_urloptions(char* url)
       m_options.duration = atoi(decoded_value);
     } else if ("integration" == option) {
       m_options.integration = atoi(decoded_value);
-    } else if ("rcucontrol" == option) {
-      unsigned long controlopt = strtoul(decoded_value, 0, 0);
-      if ( controlopt > 0xFF )
-	{
-	  cout << "500 Error: invalid control parameter, must be < 0xFF" << endl;
-	  return;
-	}
-      m_options.rcucontrol = (uint8)controlopt;
     } else if ("type" == option) {
       m_options.type = atoi(decoded_value);
     } else if ("submit" == option) {
@@ -453,34 +445,6 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 	cout << "250-" << endl;
       }
 
-      // set rcu control register
-      RSPSetrcuEvent setrcu;
-      setrcu.timestamp = Timestamp(0,0);
-      setrcu.rcumask = m_options.device_set;
-      
-      setrcu.settings().resize(1);
-      setrcu.settings()(0).value = m_options.rcucontrol;
-
-      if (!m_server.send(setrcu))
-      {
-	cout << "500 Error: failed to send RCU control" << endl;
-	exit(EXIT_FAILURE);
-      }
-    }
-    break;
-    
-    case RSP_SETRCUACK:
-    {
-      RSPSetrcuackEvent ack(e);
-
-      if (SUCCESS != ack.status)
-      {
-	cout << "500 Error: failed to set RCU control register" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      sleep(1);
-
       // subscribe to status updates
       RSPSubstatusEvent substatus;
 
@@ -495,10 +459,9 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
 	cout << "500 Error: failed to send subscription for status updates" << endl;
 	exit(EXIT_FAILURE);
       }
-
     }
     break;
-
+    
     case RSP_SUBSTATUSACK:
     {
       RSPSubstatusackEvent ack(e);
@@ -855,17 +818,6 @@ static void usage(const char* xinetdprefix)
   cout << p << "    --rcu=<rcuset>           # or -r; default 1, : means all RCU's" << endl;
   cout << p << "        Example: -r=1,2,4:7 or --rcu=1:3,5:7" << endl;
   cout << p << endl;
-  cout << p << "    --control=0xHH           # or -c; default 0xB9 (low band)" << endl;
-  cout << p << "        bit[7] = VDDVCC_ENABLE" << endl;
-  cout << p << "        bit[6] = VH_ENABLE" << endl;
-  cout << p << "        bit[5] = VL_ENABLE" << endl;
-  cout << p << "        bit[4] = FILSEL_1" << endl;
-  cout << p << "        bit[3] = FILSEL_0" << endl;
-  cout << p << "        bit[2] = BANDSEL" << endl;
-  cout << p << "        bit[1] = HBA_ENABLE" << endl;
-  cout << p << "        bit[0] = LBA_ENABLE" << endl;
-  cout << p << "        Exmples LB=0xB9, HB_110_190=0xC6, HB_170_230=0xCE, HB_210_250=0xD6" << endl;
-  cout << p << endl;
   cout << p << "    --duration=N             # or -d; default 1, number of seconds to capture" << endl;
   cout << p << endl;
   cout << p << "    --integration[=N]        # or -i; default equal to duration" << endl;
@@ -915,7 +867,6 @@ static int parse_options(int argc, char** argv, CaptureStats::Options& options)
   options.n_devices = 0;
   options.duration = 1;
   options.integration = 1;
-  options.rcucontrol = 0xB9;
   options.onefile = false;
   options.xinetd_mode = CaptureStats::CMDLINE_MODE;
 
@@ -930,7 +881,6 @@ static int parse_options(int argc, char** argv, CaptureStats::Options& options)
     static struct option long_options[] = 
       {
         { "rcu",          required_argument, 0, 'r' },
-        { "control",      required_argument, 0, 'c' },
 	{ "duration",     required_argument, 0, 'd' },
 	{ "integration",  optional_argument, 0, 'i' },
 	{ "statstype",    required_argument, 0, 's' },
@@ -953,23 +903,6 @@ static int parse_options(int argc, char** argv, CaptureStats::Options& options)
 	if (optarg) options.device_set = strtoset(optarg, options.n_devices);
 	break;
 	
-      case 'c':
-	{
-	  if (optarg) {
-	    unsigned long controlopt = strtoul(optarg, 0, 0);
-	    if ( controlopt > 0xFF )
-	    {
-	      cout << "500 Error: invalid control parameter, must be < 0xFF" << endl;
-	      return -1;
-	    }
-	    options.rcucontrol = (uint8)controlopt;
-#if 0
-	    cout << formatString("control=0x%02x", rcucontrol) << endl;
-#endif
-	  }
-	}
-	break;
-
       case 'd':
 	if (optarg) {
 	  if (1 != sscanf(optarg, "%d", &options.duration)) {

@@ -48,7 +48,6 @@ public:
     int                     n_devices;
     int                     duration;
     int                     integration;
-    uint8                   rcucontrol;
     bool                    onefile;
     int                     xinetd_mode;
   } Options;

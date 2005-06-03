@@ -61,6 +61,8 @@
 #include <ctype.h>
 #include <set>
 
+#include <gnuplot_i.h>
+
 using namespace std;
 using namespace LOFAR;
 using namespace blitz;
@@ -345,6 +347,7 @@ StatisticsCommand::StatisticsCommand() : m_type(Statistics::SUBBAND_POWER)
 void StatisticsCommand::send(GCFPortInterface& port)
 {
   if (getMode()) {
+#if 0
     // GET
     RSPGetstatsEvent getstats;
 
@@ -354,6 +357,18 @@ void StatisticsCommand::send(GCFPortInterface& port)
     getstats.type = m_type;
 
     port.send(getstats);
+#else
+    // SUBSCRIBE
+    RSPSubstatsEvent substats;
+
+    substats.timestamp = Timestamp(0,0);
+    substats.rcumask = getRCUMask();
+    substats.period = 1;
+    substats.type = m_type;
+    substats.reduction = SUM;
+
+    port.send(substats);
+#endif
   } else {
     // SET 
     cerr << "Error: set mode not support for option '--statistics'" << endl;
@@ -361,8 +376,75 @@ void StatisticsCommand::send(GCFPortInterface& port)
   }
 }
 
+#define SAMPLE_FREQUENCY 160.0
+void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
+{
+  static gnuplot_ctrl* handle = 0;
+  int n_freqbands = stats.extent(secondDim);
+  bitset<MAX_N_RCUS> mask = getRCUMask();
+
+  // initialize the freq array
+  firstIndex i;
+  
+  if (!handle)
+  {
+    handle = gnuplot_init();
+    if (!handle) return;
+
+    //gnuplot_setstyle(handle, "steps");
+    gnuplot_cmd(handle, "set grid x y");
+  }
+
+  //gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
+  gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"");
+  gnuplot_cmd(handle, "set ylabel \"dB\"");
+  gnuplot_cmd(handle, "set yrange [0:140]");
+  gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
+
+  char plotcmd[2048];
+  time_t seconds = timestamp.sec();
+  strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"", gmtime(&seconds));
+
+  gnuplot_cmd(handle, plotcmd);
+
+  strcpy(plotcmd, "plot ");
+
+  int count = 0;
+  for (int rcuout = 0; rcuout < get_nrcus(); rcuout++) {
+    if (mask[rcuout]) {
+      if (count > 0) strcat(plotcmd, ",");
+      count++;
+
+      switch (m_type)
+	{
+	case Statistics::SUBBAND_POWER:
+	  snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
+		   SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+	  break;
+	case Statistics::BEAMLET_POWER:
+	  snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
+		   SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+	  break;
+	default:
+	  cerr << "Error: invalid m_type" << endl;
+	  exit(EXIT_FAILURE);
+	  break;
+	}
+    }
+  }
+
+  gnuplot_cmd(handle, plotcmd);
+
+  gnuplot_multiplot_array(handle, stats);
+
+  //gnuplot_cmd(handle, "set nomultiplot");
+}
+
 GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 {
+  if (e.signal != RSP_UPDSTATS) return GCFEvent::NOT_HANDLED;
+
+#if 0
   RSPGetstatsackEvent ack(e);
   bitset<MAX_N_RCUS> mask = getRCUMask();
 
@@ -378,10 +460,20 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 	rcuin++;
       }
     }
+
+    plot_statistics(ack.stats());
   } else {
     cerr << "Error: RSP_GETSTATS command failed." << endl;
   }
-  GCFTask::stop();
+#else
+  RSPUpdstatsEvent upd(e);
+
+  if (SUCCESS == upd.status) {
+    plot_statistics(upd.stats(), upd.timestamp);
+  }
+#endif
+  
+  //GCFTask::stop();
 
   return GCFEvent::HANDLED;
 }
@@ -500,6 +592,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETRCUACK:
     case RSP_SETRCUACK:
     case RSP_GETSTATSACK:
+    case RSP_SUBSTATSACK:
+    case RSP_UPDSTATS:
     case RSP_GETVERSIONACK:
     case RSP_GETSUBBANDSACK:
     case RSP_SETSUBBANDSACK:

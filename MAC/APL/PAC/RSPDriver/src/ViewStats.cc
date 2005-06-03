@@ -253,9 +253,6 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
   static gnuplot_ctrl* handle = 0;
   int n_freqbands = stats.extent(secondDim);
 
-  Array<double, 1> freq(n_freqbands);
-  Array<double, 1> value(n_freqbands);
-
   // initialize the freq array
   firstIndex i;
   
@@ -267,67 +264,60 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
     gnuplot_setstyle(handle, "steps");
     gnuplot_cmd(handle, "set grid x y");
     //gnuplot_cmd(handle, "set bmargin 1");
-    gnuplot_cmd(handle, "set tmargin .05");
   }
 
-#if 1
-  gnuplot_cmd(handle, "set size 1,1");
-  gnuplot_cmd(handle, "set origin 0,0");
-  gnuplot_cmd(handle, "set multiplot");
-  gnuplot_cmd(handle, "set size 1,%f", 1.0 / stats.extent(firstDim));
-#endif
+  //gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
+  gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"");
+  gnuplot_cmd(handle, "set ylabel \"dB\"");
+  gnuplot_cmd(handle, "set yrange [0:140]");
+  gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
+
+  char plotcmd[2048];
+  strcpy(plotcmd, "plot ");
+
   for (int device = stats.lbound(firstDim);
        device <= stats.ubound(firstDim);
        device++)
   {
-    gnuplot_resetplot(handle); // try here
-    gnuplot_cmd(handle, "set origin 0,%f", 1.0 * device / stats.extent(firstDim));
+    // gnuplot_resetplot(handle); // try here
 
-    if (device == stats.lbound(firstDim))
-    {
-      gnuplot_cmd(handle, "set xtics axis");
-      gnuplot_cmd(handle, "set xtics 0,20");
-    }
-    else
-    {
-      gnuplot_cmd(handle, "set noxtics");
-    }
-    
     // compute logarithm of values
-    value  = stats(device, Range::all());
+    //value  = stats(device, Range::all());
 
     // add 1 to prevent -inf result
     // 46 bits precision
-    value = 10.0 * log10(value + 1.0); // / (1.0*((uint64)1<<46))) * 10.0;
+    //value = 10.0 * log10(value + 1.0); // / (1.0*((uint64)1<<46))) * 10.0;
 
     // set yrange for power
     //gnuplot_cmd(handle, "set ytics 0,20");
-    gnuplot_cmd(handle, "set yrange [0:140]");
-    gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
 
-    freq = i * (SAMPLE_FREQUENCY / (n_freqbands * 2.0)); // calculate frequency in MHz
-    gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
 
-    // gnuplot_resetplot(handle);
+    //freq = i * (SAMPLE_FREQUENCY / (n_freqbands * 2.0)); // calculate frequency in MHz
 
-    char title[128];
+    if (device > 0) strcat(plotcmd, ",");
+
     switch (m_type)
     {
       case Statistics::SUBBAND_POWER:
-	snprintf(title, 128, "(RCU=%d)", (m_device < 0 ? device : m_device));
+	snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
+		 SAMPLE_FREQUENCY, n_freqbands*2.0, (m_device < 0 ? device : m_device));
 	break;
       case Statistics::BEAMLET_POWER:
-	snprintf(title, 128, "Beamlet Power (RSP board=%d)", (m_device < 0 ? device : m_device));
+	snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
+		 SAMPLE_FREQUENCY, n_freqbands*2.0, (m_device < 0 ? device : m_device));
 	break;
       default:
-	snprintf(title, 128, "ERROR: Invalid m_type");
+	cerr << "Error: invalid m_type" << endl;
+	exit(EXIT_FAILURE);
 	break;
     }
-
-    gnuplot_plot_xy(handle, freq.data(), value.data(), n_freqbands, title);
   }
 
-  gnuplot_cmd(handle, "set nomultiplot");
+  gnuplot_cmd(handle, plotcmd);
+
+  gnuplot_multiplot_array(handle, stats);
+
+  //gnuplot_cmd(handle, "set nomultiplot");
 }
 
 void ViewStats::run()
