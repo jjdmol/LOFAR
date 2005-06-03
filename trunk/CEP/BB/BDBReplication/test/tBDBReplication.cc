@@ -27,85 +27,49 @@
 
 #include <BDBReplication/BDBReplicator.h>
 
-int
-print_data (Dbc * dbc)
-{
-  Dbt key, value;
+void write2db(DbEnv* myDbEnv, Db* myDb, char* key, char* value) {
+  Dbt keyT, valueT;
 
-  cout<<"\tkey\tvalue"<<endl;
-  cout<<"\t======\t====="<<endl;
+  keyT.set_data(key);
+  keyT.set_size(strlen(key));
 
-  int flags = DB_FIRST;
-  while(dbc->get(&key, &value, flags) == 0) {
-    flags = DB_NEXT;
-    char buffer1[40];
-    char buffer2[40];
-    snprintf (buffer1, key.get_size()+1, "%s\0", (char*)key.get_data());
-    snprintf (buffer2, value.get_size()+1, "%s\0", (char*)value.get_data());
-    cout<<"\t"<<buffer1<<"\t"<<buffer2<<endl;
-  }
-  return 0;
-}
-
-int
-client (DbEnv* dbenv)
-{
-  DbTxn* myTxn;
-  dbenv->txn_begin(NULL, &myTxn, 0);
+  valueT.set_data(value);
+  valueT.set_size(strlen(value));
   
-  Db myDb(dbenv, DB_CXX_NO_EXCEPTIONS);
-  Db mydDb(dbenv, DB_CXX_NO_EXCEPTIONS);
-
-  LOG_TRACE_FLOW_STR ("opening database in environment "<<dbenv);
-  int minor, major, patch;
-  dbenv->version(&major, &minor, &patch);
-  LOG_TRACE_FLOW_STR("db version: "<<major<<"."<<minor<<"-"<<patch);
-
-  try{
-//     int ret = mydDb.open(myTxn, "quotes", "quotes", DB_BTREE, DB_CREATE, 0);
-//     if(ret !=0) {
-//       LOG_TRACE_FLOW_STR("Could not open database"<<dbenv->strerror(ret));
-//       cerr<<"Could not open database"<<dbenv->strerror(ret)<<endl;
-//     }
-//     mydDb.close(0);
-    int ret = myDb.open(myTxn, "quotes", "quotes", DB_BTREE, DB_RDONLY, 0);
-    if(ret !=0) {
-      cerr<<"Could not open database"<<dbenv->strerror(ret)<<endl;
-      LOG_TRACE_FLOW_STR("Could not open database"<<dbenv->strerror(ret));
-    }
-  } catch (Exception &e) {
-    cout<<"Exception while opening database: "<<e.what()<<endl;
-    exit(1);
-  } catch (...) {
-    cout<<"caught unknown exception"<<endl;
-    exit(1);
+  LOG_TRACE_FLOW_STR ("writing to master database: <"<<(char*)key<<"="<<value<<">");
+  int ret = myDb->put(0, &keyT, &valueT, DB_AUTO_COMMIT);
+  if(ret !=0) {
+    LOG_TRACE_FLOW_STR("could not write to database on master:"<<myDbEnv->strerror(ret));
   }
-  cout<<"db opened"<<endl;
-  myTxn->commit(0);
+}  
 
-  for (;;) {    
-    cout<<"Reading from database .."<<endl;
-    LOG_TRACE_FLOW("Reading");
-    
-    Dbc* cursor;
-    int ret = myDb.cursor(NULL, &cursor, 0);
-    if (ret != 0) {
-      cerr<<"Error while getting cursor: "<<dbenv->strerror(ret)<<endl;
-      exit(1);
-    }
-    
-    print_data (cursor);
-    cursor->close ();
-    
-    sleep (3);
-  }
+int readFromDb(DbEnv* myDbEnv, Db* myDb, char* key) {
+  Dbt keyT, valueT;
+
+  keyT.set_data(key);
+  keyT.set_size(strlen(key));
   
-  myDb.close(0);
+  valueT.set_data(key);
+  valueT.set_size(strlen(key));
 
-  while(1);
-  return 0;
-}
+  LOG_TRACE_FLOW_STR ("reading from client database: key = "<<key);
+  Dbc* cursorp;
+  myDb->cursor(NULL, &cursorp, 0);
 
+  int ret = cursorp->get(&keyT, &valueT, DB_SET);
+//   DbTxn* myTxn = 0;
+//   myDbEnv->txn_begin(NULL, &myTxn, 0);
+//myDb->get(NULL, &keyT, &valueT, DB_AUTO_COMMIT);
+//   myTxn->commit(0);
+  cursorp->close();
+
+  if(ret !=0) {
+    LOG_TRACE_FLOW_STR("could not read from database on client:"<<myDbEnv->strerror(ret));
+    cerr<<"could not read from database on client:"<<myDbEnv->strerror(ret)<<endl;;
+    return 0;
+  }
+  return atoi((const char*)valueT.get_data());
+}  
 
 int
 master (DbEnv* myDbEnv)
@@ -117,7 +81,7 @@ master (DbEnv* myDbEnv)
   LOG_TRACE_FLOW_STR("creating db");  
   Db myDb(myDbEnv, 0);
   LOG_TRACE_FLOW_STR("opening database on master");  
-  if (myDb.open(myTxn, "quotes", "quotes", DB_BTREE, DB_CREATE, 0)!=0)
+  if (myDb.open(myTxn, "test", "test", DB_BTREE, DB_CREATE, 0)!=0)
     LOG_TRACE_FLOW("could not open database on master");
 
   if (myTxn->commit(0) != 0)
@@ -125,147 +89,115 @@ master (DbEnv* myDbEnv)
 
   Dbt key, value;
 
-  char buf[128], *rbuf;
+  // set 4 values in the db:
+  // first a = 2, b = 3, a = 5, c = 7
+  // the client knows now that a*b*c should be 105
 
-  while(1) {
-    cout << "QUOTESERVER> ";
-    fflush (stdout);
-    
-    if (fgets (buf, sizeof (buf), stdin) == NULL)
-      break;
-    (void) strtok (&buf[0], " \t\n");
-    rbuf = strtok (NULL, " \t\n");
-    if (rbuf == NULL || rbuf[0] == '\0') {
-      if (strncmp (buf, "exit", 4) == 0 || strncmp (buf, "quit", 4) == 0)
-	break;
-      continue;
-    }
-    
-    key.set_data(buf);
-    key.set_size(strlen (buf));
-
-    value.set_data(rbuf);
-    value.set_size(strlen (rbuf));
-
-    LOG_TRACE_FLOW_STR ("writing to master database: <"<<(char*)buf<<"="<<rbuf<<">");
-    int ret = myDb.put(0, &key, &value, DB_AUTO_COMMIT);
-    if(ret !=0) {
-      LOG_TRACE_FLOW_STR("could not write to database on master:"<<myDbEnv->strerror(ret));
-    }
-  }
+  write2db(myDbEnv, &myDb, "a", "2");
+  write2db(myDbEnv, &myDb, "b", "3");
+  write2db(myDbEnv, &myDb, "a", "5");
+  write2db(myDbEnv, &myDb, "c", "7");
   
+  while(1);
+
   return 0;
 }
 
-int mainNoRep(int argc, char** argv)
+bool
+client (DbEnv* dbenv)
 {
-  string itsDbEnvName = "dir0";
-  LOG_TRACE_FLOW("Starting up");
-  DbEnv* itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
-  u_int32_t flags = DB_CREATE | DB_INIT_MPOOL | DB_INIT_TXN;
-  LOG_TRACE_FLOW("Opening environment");
-  int ret = itsDbEnv->open(itsDbEnvName.c_str(), flags, 0);
-  if (ret != 0) {
-    LOG_TRACE_FLOW("Cannot open db environment");
-    LOG_TRACE_FLOW_STR("Error: "<<itsDbEnv->strerror(ret));
+  DbTxn* myTxn;
+  dbenv->txn_begin(NULL, &myTxn, 0);
+  
+  Db myDb(dbenv, DB_CXX_NO_EXCEPTIONS);
+
+  LOG_TRACE_FLOW_STR ("opening database in environment "<<dbenv);
+  int minor, major, patch;
+  dbenv->version(&major, &minor, &patch);
+  LOG_TRACE_FLOW_STR("db version: "<<major<<"."<<minor<<"-"<<patch);
+
+  int retries = 3;
+  while(1) {
+    try{
+      int ret = myDb.open(myTxn, "test", "test", DB_BTREE, DB_RDONLY, 0);
+      if(ret !=0) {
+	cerr<<"Could not open database"<<dbenv->strerror(ret)<<endl;
+	LOG_TRACE_FLOW_STR("Could not open database"<<dbenv->strerror(ret));
+      } else {
+	cout<<"db opened"<<endl;	
+	break;
+      }
+    } catch (Exception &e) {
+      cout<<"Exception while opening database: "<<e.what()<<endl;
+      exit(1);
+    } catch (...) {
+      cout<<"caught unknown exception"<<endl;
+      exit(1);
+    }
+    retries--;
+    if (retries <= 0) exit(1);
+    sleep(3);
   }
-  LOG_TRACE_FLOW("Starting master");
-  try {
-    master (itsDbEnv);
-  } catch (Exception &e) {
-    cout<<"Exception: "<<e.what()<<endl;
-  } catch (DbDeadlockException &e) {
-    cout<<"DbException: "<<e.what()<<endl;
-  } catch (DbException &e) {
-    cout<<"DbException: "<<e.what()<<endl;
-  } catch (DbLockNotGrantedException &e) {
-    cout<<"DbException: "<<e.what()<<endl;
-  } catch (DbMemoryException &e) {
-    cout<<"DbException: "<<e.what()<<endl;
-  } catch (DbRunRecoveryException &e) {
-    cout<<"DbException: "<<e.what()<<endl;
-  } 
-  return 0;
-} 
+  myTxn->commit(0);
+
+  bool testOK = false;
+  for (int i=0; i<3; i++) {    
+    LOG_TRACE_FLOW("Reading");
+    
+    int a = readFromDb(dbenv, &myDb, "a");
+    int b = readFromDb(dbenv, &myDb, "b");
+    int c = readFromDb(dbenv, &myDb, "c");
+
+    if (a*b*c == 105) {
+      cerr<<"The answer is 105"<<endl;
+      testOK = true;
+      break;
+    } else { 
+      cerr<<"The answer is not 105, but "<<a*b*c<<endl;
+      sleep(3); // wait a few seconds before a retry
+    }
+  }  
+  myDb.close(0);
+
+  return testOK;
+}
 
 int
 main (int argc, char *argv[])
 {
+  try {
   INIT_LOGGER("tBDBReplication");
-#if 0
-  return mainNoRep(argc, argv);
-#else
-  int master_eid;
-  int my_eid;
-  char *myHostName;
-  unsigned short myPort;
-  char *masterHostName;
-  unsigned short masterPort;
+  unsigned short myPort = 0;
+  unsigned short masterPort = 0;
   
-
   extern char *optarg;
-  enum
-  { MASTER, CLIENT, UNKNOWN } whoami;
-  int maxsites, nsites, ret, priority, verbose;
-  char *c, ch;
-  const char *home, *progname;
+  bool amMaster = false;
+  char *home = "";
+  char ch;
 
-  master_eid = DB_EID_INVALID;
-
-  whoami = UNKNOWN;
-  maxsites = nsites = ret = verbose = 0;
-  priority = 100;
-  home = "TESTDIR";
-  progname = "ex_repquote";
-
-  while ((ch = getopt (argc, argv, "i:Ch:Mm:n:o:p:v")) != EOF)
+  while ((ch = getopt (argc, argv, "fh:m:o:")) != EOF) {
     switch (ch)
       {
-      case 'i':
-	my_eid = atoi (optarg);
-	if (my_eid == 0)
-	  {
-	    whoami = MASTER;
-	    master_eid = 1;
-	  }
-	else
-	  {
-	    whoami = CLIENT;
-	  }
+      case 'f':
+	amMaster = true;
 	break;
       case 'h':
 	home = optarg;
 	break;
-      case 'm':
-	myHostName = strtok(optarg, ":");
-	if ((c = strtok (NULL, ":")) == NULL)
-	  {
-	    fprintf (stderr, "Bad host specification.\n");
-	  }
-	myPort = (unsigned short) atoi (c);
-	break;
       case 'o':
-	masterHostName = strtok(optarg, ":");
-	if ((c = strtok (NULL, ":")) == NULL)
-	  {
-	    fprintf (stderr, "Bad host specification.\n");
-	  }
-	masterPort = atoi (c);
+	myPort = atoi (optarg);
 	break;
-      case 'p':
-	priority = atoi (optarg);
+      case 'm':
+	masterPort = atoi (optarg);
 	break;
-      case 'v':
-	verbose = 1;
-	break;
-      case '?':
       default:
 	break;
       }
+  }
 
   BDBReplicator* BDBR;
-  if (whoami == MASTER){
-    BDBR = new BDBReplicator(home,"localhost", myPort, "localhost", masterPort, true);
+  if (amMaster){
+    BDBR = new BDBReplicator(home,"localhost", myPort, "localhost", myPort, true);
   } else {
     BDBR = new BDBReplicator(home,"localhost", myPort, "localhost", masterPort, false);
   };
@@ -274,18 +206,23 @@ main (int argc, char *argv[])
   BDBR->startReplication();
   DbEnv* myDbEnv = BDBR->getDbEnv();
 
-  if (whoami == MASTER)
+  sleep(1);
+
+  if (amMaster)
     {
       LOG_TRACE_FLOW_STR("starting master");
       master (myDbEnv);
     }
   else
     {
-      //      sleep (5);
-      client (myDbEnv);
+      LOG_TRACE_FLOW_STR("starting client");
+      sleep(5);
+      if(!client (myDbEnv)) return 1;
     }
 
   return 0;
-#endif
+  } catch ( ... ) {
+    return 1;
+  }
 }
 

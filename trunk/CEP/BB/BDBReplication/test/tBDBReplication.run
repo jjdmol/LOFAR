@@ -1,0 +1,17 @@
+#!/bin/sh
+
+rm masterDir -rf
+mkdir masterDir
+
+./tBDBReplication -f -h masterDir -o 8020 &> master.log &
+
+sleep 10
+
+rm slaveDir -rf
+mkdir slaveDir
+./tBDBReplication -h slaveDir -m 8020 -o 8021 &> slave.log
+result=$?
+
+killall tBDBReplication
+
+exit $result
