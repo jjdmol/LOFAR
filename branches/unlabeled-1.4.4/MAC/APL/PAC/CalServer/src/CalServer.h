@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalServer.h: class definition for the Beam Server task.
+//#  CalServer.h: class definition for the CalServe task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -45,7 +45,7 @@ namespace LOFAR {
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      CalServer(string name);
+      CalServer(string name, ACCs& accs);
       virtual ~CalServer();
 
       /**
@@ -59,15 +59,22 @@ namespace LOFAR {
       void calibrate();
 
       /**
-       * Are all ports connected and are we ready to go to the
-       * enabled state?
+       * The undertaker method deletes dead clients on the m_dead_clients list.
        */
-      bool isEnabled();
+      void undertaker();
 
       /**
-       * The initial state.
+       * Remove a client and the associated subarray.
+       */
+      void remove_client(GCFPortInterface* port);
+
+      /*@{*/
+      /**
+       * States
        */
       GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &port);
+      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &port);
+      /*@}*/
 
       /*@{*/
       /**
@@ -79,31 +86,13 @@ namespace LOFAR {
       GCFEvent::TResult handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port);
       /*@}*/
 
-      /**
-       * The undertaker method deletes dead clients on the m_dead_clients list.
-       */
-      void undertaker();
-
-      /**
-       * Remove a client and the associated subarray.
-       */
-      void remove_client(GCFPortInterface* port);
-
-      /**
-       * The enabled state.
-       */
-      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &port);
-
     private:
-      /**
-       * List of defined spectral windows.
-       */
-      std::vector<SpectralWindow> m_spws;         // vector of spectral windows (read from config file)
-      AntennaArrays               m_arrays;       // antenna arrays (read from config file)
-      SubArrays                   m_subarrays;    // the subarrays
-      DipoleModels                m_dipolemodels; // dipole model (read from file)
-      const ACC*                  m_acc;          // ACC matrix (read from file)
+      AntennaArrays               m_arrays;       // antenna arrays (read from file)
       Sources                     m_sources;      // source catalog (read from file)
+      DipoleModels                m_dipolemodels; // dipole model   (read from file)
+
+      SubArrays                   m_subarrays;    // the subarrays (created by clients)
+      ACCs&                       m_accs;         // front and back ACC buffers (received from ACMServer)
 
       /**
        * Client/Server management member variables.
@@ -111,7 +100,6 @@ namespace LOFAR {
       GCFTCPPort                               m_acceptor;     // connect point for clients
       std::map<GCFPortInterface*, std::string> m_clients;      // list of clients with related subarray name
       std::list<GCFPortInterface*>             m_dead_clients; // list of disconnected clients
-      GCFPort                                  m_acmserver;    // connection to the ACM server
     };
 
   }; // namespace CAL

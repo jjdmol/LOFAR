@@ -3,9 +3,25 @@
 #
 
 #
-# Calibration Server configuration
+# CalServer task configuration
 #
 mac.ns.CalServer.acceptor.type=TCP
-mac.ns.CalServer.acmserver.type=TCP
-mac.top.BeamServer.acmserver.remoteservice=ACMServer:acceptor
+
+#
+# Define dimensions of the ACC array
+#
+CalServer.nsubbands=28
+CalServer.nantennas=8
+CalServer.npol=2
+CalServer.DipoleModelFile=DipoleModel.conf
+CalServer.SourceCatalogFile=SourceCatalog.conf
+CalServer.AntennaArraysFile=AntennaArrays.conf
+
+#
+# ACMProxy task configuration
+#
+mac.ns.ACMProxy.acmserver.type=TCP
+#mac.top.ACMProxy.acmserver.remoteservice=ACMServer:acceptor
+mac.top.ACMProxy.acmserver.remoteservice=RSPDriver:acceptor
+
 

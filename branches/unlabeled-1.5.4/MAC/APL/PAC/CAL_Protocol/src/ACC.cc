@@ -32,8 +32,9 @@ using namespace CAL;
 using namespace RTC;
 
 ACC::ACC(int nsubbands, int nantennas, int npol) :
-	m_acc(nsubbands, nantennas, nantennas, npol, npol),
-	m_time(nsubbands)
+  SharedResource(1,1), // at most one reader or one writer
+  m_acc(nsubbands, nantennas, nantennas, npol, npol),
+  m_time(nsubbands), m_initialized(false)
 {
 }
 

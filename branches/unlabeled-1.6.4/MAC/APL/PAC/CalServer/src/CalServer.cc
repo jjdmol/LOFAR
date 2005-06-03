@@ -30,7 +30,12 @@
 #include "SubArray.h"
 #include "SubArraySubscription.h"
 #include "RemoteStationCalibration.h"
+
+#include "ACMProxy.h"
+
+// from RTCCommon
 #include "Timestamp.h"
+#include "PSAccess.h"
 
 #ifndef CAL_SYSCONF
 #define CAL_SYSCONF "."
@@ -54,99 +59,17 @@ using namespace RTC;
 
 using namespace CAL_Protocol;
 
-CalServer::CalServer(string name)
+CalServer::CalServer(string name, ACCs& accs)
   : GCFTask((State)&CalServer::initial, name),
-    m_acc(0)
+    m_accs(accs)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, CAL_PROTOCOL);
-  //m_acmserver.init(*this, "acmserver", GCFPortInterface::SAP, ACM_PROTOCOL);
 }
 
 CalServer::~CalServer()
 {}
-
-bool CalServer::isEnabled()
-{
-  return true; //m_acmserver.isConnected();
-}
-
-GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  switch(e.signal)
-    {
-    case F_INIT:
-      {
-	try { 
-
-	  //
-	  // load the dipole models
-	  //
-	  m_dipolemodels.getAll(CAL_SYSCONF "/DipoleModel.conf");
-
-	  //
-	  // load the source catalog
-	  //
-	  m_sources.getAll(CAL_SYSCONF "/SourceCatalog.conf");
-
-	  //
-	  // Load antenna arrays
-	  //
-	  m_arrays.getAll(CAL_SYSCONF "/AntennaArrays.conf");
-
-	} catch (Exception e)  {
-
-	  LOG_ERROR_STR("Failed to load configuration files: " << e);
-	  exit(EXIT_FAILURE);
-
-	}
-
-	TRAN(CalServer::enabled);
-      }
-      break;
-
-    case F_ENTRY:
-      {
-	//if (!m_acmserver.isConnected()) m_acmserver.open();
-      }
-      break;
-
-    case F_CONNECTED:
-      {
-	if (isEnabled())
-	  {
-	    TRAN(CalServer::enabled);
-	  }
-      }
-      break;
-
-    case F_DISCONNECTED:
-      {
-	LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-	port.close();
-      }
-      break;
-
-    case F_TIMER:
-      {
-	if (!port.isConnected())
-	  {
-	    LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
-	    port.open();
-	  }
-      }
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-    }
-
-  return status;
-}
 
 void CalServer::undertaker()
 {
@@ -176,6 +99,78 @@ void CalServer::remove_client(GCFPortInterface* port)
 
 }
 
+GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch(e.signal)
+    {
+    case F_INIT:
+      {
+	try { 
+
+	  //
+	  // load the dipole models
+	  //
+	  m_dipolemodels.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.DipoleModelFile")));
+
+	  //
+	  // load the source catalog
+	  //
+	  m_sources.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.SourceCatalogFile")));
+
+	  //
+	  // Load antenna arrays
+	  //
+	  m_arrays.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
+
+	} catch (Exception e)  {
+
+	  LOG_ERROR_STR("Failed to load configuration files: " << e);
+	  exit(EXIT_FAILURE);
+
+	}
+      }
+      break;
+
+    case F_ENTRY:
+      {
+	if (!m_acceptor.isConnected()) m_acceptor.open();
+      }
+      break;
+
+    case F_CONNECTED:
+      {
+	if (m_acceptor.isConnected()) TRAN(CalServer::enabled);
+      }
+      break;
+
+    case F_DISCONNECTED:
+      {
+	LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+	port.close();
+	port.setTimer(3.0);
+      }
+      break;
+
+    case F_TIMER:
+      {
+	if (!port.isConnected())
+	  {
+	    LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
+	    port.open();
+	  }
+      }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
+
+  return status;
+}
+
 GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -186,15 +181,14 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
     {
     case F_ENTRY:
       {
-	if (!m_acceptor.isConnected()) m_acceptor.open();
 	m_acceptor.setTimer(0.0, 1.0);
       }
       break;
 
     case F_ACCEPT_REQ:
       {
-	GCFTCPPort* client = new GCFTCPPort();
-	client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
+ 	GCFTCPPort* client = new GCFTCPPort();
+ 	client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
 	m_acceptor.accept(*client);
 	m_clients[client] = ""; // empty string to indicate there is a connection, but no subarray yet
 
@@ -223,10 +217,10 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
     case F_DISCONNECTED:
       {
 	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
+	port.close();
 
-	if (&m_acmserver == &port || &m_acceptor == &port)
+	if (&m_acceptor == &port)
 	  {
-	    m_acceptor.close();
 	    TRAN(CalServer::initial);
 	  }
 	else
@@ -314,8 +308,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     m_subarrays.add(subarray);
 
 #if 1
-    ACC acc;
-    subarray->calibrate(0, acc);
+    subarray->calibrate(0, m_accs.getFront());
 #else
     //
     // load the ACC
@@ -581,38 +574,31 @@ void CalServer::calibrate()
 #endif
 }
 
-#if 0
-void signalHandler(int sig)
-{
-  if ( (sig == SIGINT) || (sig == SIGTERM) )
-    {
-      LOG_ERROR("exiting on signal");
-      exit(EXIT_FAILURE);
-    }
-}                                        
-#endif
-
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-//   signal(SIGINT,  signalHandler);
-//   signal(SIGTERM, signalHandler);
-//   signal(SIGPIPE, SIG_IGN);
-
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  CalServer cal("CalServer");
+  ACCs* accs; // the ACC buffers
+  accs = new ACCs(GET_CONFIG("CalServer.nsubbands", i),
+		  GET_CONFIG("CalServer.nantennas", i),
+		  GET_CONFIG("CalServer.npol", i));
 
-#if 0
-  struct timeval start, end;
-  gettimeofday(&start, 0);
-  cal.calibrate(); // temporary entry point for standalone CalServer
-  gettimeofday(&end, 0);
-  LOG_INFO_STR("CalServer execution time: " << end.tv_sec - start.tv_sec << " seconds");
-#endif
+  if (!accs) {
+    LOG_FATAL("Failed to allocate memory for the ACC arrays.");
+    exit(EXIT_FAILURE);
+  }
 
-  cal.start(); // make initial transition
+  //
+  // create CalServer and ACMProxy tasks
+  // they communicate via the ACCs instance
+  //
+  CalServer cal     ("CalServer", *accs);
+  ACMProxy  acmproxy("ACMProxy",  *accs);
+
+  cal.start();      // make initial transition
+  acmproxy.start(); // make initial transition
 
   try
   {
@@ -623,6 +609,8 @@ int main(int argc, char** argv)
     LOG_ERROR_STR("Exception: " << e.text());
     exit(EXIT_FAILURE);
   }
+
+  delete accs;
 
   LOG_INFO("Normal termination of program");
 

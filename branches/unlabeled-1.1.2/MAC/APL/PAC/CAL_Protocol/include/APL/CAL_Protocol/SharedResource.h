@@ -30,7 +30,11 @@ namespace LOFAR {
     class SharedResource
     {
     public:
-      SharedResource() : m_semaphore(0) {}
+      explicit SharedResource(int maxreaders = 1, int maxwriters = 1) :
+	m_semaphore(0),
+	m_maxreaders(maxreaders),
+	m_maxwriters(maxwriters)
+      {}
       virtual ~SharedResource() {}
     
       /*@{*/
@@ -38,26 +42,32 @@ namespace LOFAR {
        * Lock the resource for reading or writing.
        * @return true if the locking succeeded, false otherwise.
        */
-      bool writeLock() { if (m_semaphore == 0) m_semaphore--; return m_semaphore == -1; }
-      bool readLock() { if (m_semaphore >= 0) m_semaphore++; return m_semaphore > 0; }
+      bool writeLock() { if (m_semaphore <= 0 && m_semaphore > -m_maxwriters) m_semaphore--; return m_semaphore < 0; }
+      bool readLock()  { if (m_semaphore >= 0 && m_semaphore <  m_maxreaders) m_semaphore++; return m_semaphore > 0; }
       /*@}*/
 
       /*@{*/
       /**
        * Unlock the resource.
        */
-      void writeUnlock() { m_semaphore = 0; }
-      void readUnlock() { m_semaphore--; if (m_semaphore < 0) m_semaphore = 0; }
+      void writeUnlock() { m_semaphore++; if (m_semaphore > 0) m_semaphore = 0; }
+      void readUnlock()  { m_semaphore--; if (m_semaphore < 0) m_semaphore = 0; }
       /*@}*/
 
+      /*@{*/
       /**
-       * Check whether the resource is locked.
+       * Check whether the resource is locked for
+       * reading or writing, or for reading
        * @return true if the resource is locked, false otherwise.
        */
-      bool isLocked() const { return 0 == m_semaphore; }
+      bool isLocked()      const { return 0 != m_semaphore; }
+      bool isWriteLocked() const { return m_semaphore < 0;  }
+      bool isReadLocked()  const { return m_semaphore > 0;  }
 
     private:
       int m_semaphore;
+      int m_maxreaders;
+      int m_maxwriters;
     };
 
   }; // namespace CAL

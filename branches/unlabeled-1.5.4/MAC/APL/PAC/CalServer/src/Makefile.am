@@ -96,7 +96,9 @@ bin_PROGRAMS = CalServer
 
 CalServer_SOURCES = \
 	CalServer.h \
-	CalServer.cc
+	CalServer.cc \
+	ACMProxy.h \
+	ACMProxy.cc
 
 CalServer_LDADD = \
 	$(top_builddir)/src/libcal.la \

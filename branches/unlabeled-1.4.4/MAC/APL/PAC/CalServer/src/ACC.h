@@ -35,7 +35,7 @@ namespace LOFAR {
     class ACC : public SharedResource
     {
     public:
-      ACC() {}
+      ACC() : m_initialized(false) {}
       ACC(int nsubbands, int nantennas, int npol);
       virtual ~ACC();
 
@@ -61,6 +61,21 @@ namespace LOFAR {
       int getSize() const { return m_acc.size(); }
 
       /**
+       * Get number of subbands.
+       */
+      int getNSubbands() const { return m_acc.extent(blitz::firstDim); }
+
+      /**
+       * Get number of antennas
+       */
+      int getNAntennas() const { return m_acc.extent(blitz::secondDim); }
+
+      /**
+       * Get number of polarizations
+       */
+      int getNPol() const { return m_acc.extent(blitz::fourthDim); }
+
+      /**
        * Get a reference to the ACC array.
        * @return The 5-dimensional ACC array.
        */
@@ -70,6 +85,16 @@ namespace LOFAR {
        * Initialize the ACC array.
        */
       void setACC(blitz::Array<std::complex<double>, 5>& acc);
+
+      /**
+       * Is the array initialised? If not don't use it.
+       */
+      bool isInitialised() const { return m_initialized; }
+
+      /**
+       * Set initialised. 
+       */
+      void setInitialized() { m_initialized = true; }
 
     private:
 
@@ -85,6 +110,8 @@ namespace LOFAR {
        * m_time is a 1 dimensional array with a timestamp for each subband.
        */
       blitz::Array<RTC::Timestamp, 1> m_time;
+
+      bool m_initialized; // has the array been initialized
     };
   
     /**

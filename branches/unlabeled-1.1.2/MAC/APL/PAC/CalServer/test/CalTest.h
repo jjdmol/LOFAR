@@ -60,6 +60,7 @@ namespace CAL_Test
      */
     GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
     GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
+    GCFEvent::TResult test003(GCFEvent& e, GCFPortInterface &p);
     /*@}*/
 
     /**
@@ -75,6 +76,8 @@ namespace CAL_Test
     GCFPort m_server;
 
     LOFAR::uint32 m_handle; // subscription handle
+
+    int m_counter1; // general purpose test counter, semantics assigned per test
   };
 
 };

@@ -45,7 +45,7 @@ using namespace CAL_Protocol;
 using namespace CAL_Test;
 
 CalTest::CalTest(string name)
-  : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0)
+  : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
@@ -125,6 +125,8 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	START_TEST("test001", "test START");
 
+	m_counter1 = 0;
+
 	CALStartEvent start;
 
 	start.name   = "test001";
@@ -182,11 +184,15 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
+
+	m_counter1++;
       }
       break;
 
     case F_TIMER:
       {
+	TESTC_ABORT(m_counter1 >= 3, CalTest::final);
+
 	CALUnsubscribeEvent unsubscribe;
 	
 	unsubscribe.handle = m_handle;
@@ -205,7 +211,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	m_handle = 0; // clear handle
 
 	CALStopEvent stop;
-	stop.name = "test002";
+	stop.name = "test001";
 	TESTC_ABORT(m_server.send(stop), CalTest::final);
       }
       break;
@@ -213,10 +219,10 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
     case CAL_STOPACK:
       {
 	CALStopackEvent ack(e);
-	TESTC_ABORT(ack.name == "test002", CalTest::final);
+	TESTC_ABORT(ack.name == "test001", CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
-	TRAN(CalTest::test002);
+	TRAN(CalTest::test002); // next test
       }
       break;
 
@@ -264,6 +270,8 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
     case F_ENTRY:
       {
 	START_TEST("test002", "test START");
+
+	m_counter1 = 0; // reset update counter
 
 	CALStartEvent start;
 
@@ -322,11 +330,15 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
 	
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
+
+	m_counter1++;
       }
       break;
 
     case F_TIMER:
       {
+	TESTC_ABORT(m_counter1 >= 3, CalTest::final);
+
 	CALStopEvent stop;
 	stop.name = "test002";
 	TESTC_ABORT(m_server.send(stop), CalTest::final);
@@ -341,7 +353,135 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
 
 	m_handle = 0;
 
-	TRAN(CalTest::final);
+	TRAN(CalTest::test003); // next test
+      }
+      break;
+
+    case F_DISCONNECTED:
+      {
+	port.close();
+
+	FAIL_ABORT("unexpected disconnect", CalTest::final);
+      }
+      break;
+
+    case F_EXIT:
+      {
+	STOP_TEST();
+      }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
+
+  return status;
+}
+
+GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  //
+  // Scenario for test003 (successful start, subscribe, stop [no unsubscribe], 50 x as fast as possible)
+  // 
+  // START       ->
+  //             <- STARTACK
+  // SUBSCRIBE   ->
+  //             <- SUBSCRIBEACK
+  // STOP        ->
+  //             <- STOPACK
+  //
+  
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      {
+	START_TEST("test003", "test START");
+
+	m_counter1 = 0; // reset update counter
+
+	CALStartEvent start;
+
+	start.name   = "test003";
+	start.parent = "LBA";
+	start.subset.reset();
+
+	// first 10 antennas (20 receivers)
+	for (int i = 0; i < 20; i++) {
+	  start.subset.set(i);
+	}
+	start.sampling_frequency = 160e6; // 160 MHz
+	start.nyquist_zone = 1;
+
+	TESTC_ABORT(m_server.send(start), CalTest::final);
+      }
+      break;
+
+    case CAL_STARTACK:
+      {
+	CALStartackEvent ack(e);
+
+	TESTC_ABORT(ack.name == "test003", CalTest::final);
+	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
+
+	// send subscribe
+	CALSubscribeEvent subscribe;
+
+	subscribe.name = "test003";
+	subscribe.subbandset.reset();
+	subscribe.subbandset.set(100);
+
+	TESTC_ABORT(m_server.send(subscribe), CalTest::final);
+      }
+      break;
+
+    case CAL_SUBSCRIBEACK:
+      {
+	CALSubscribeackEvent ack(e);
+
+	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
+	m_handle = ack.handle;
+
+	usleep(100000); // wait 100 msec
+
+	CALStopEvent stop;
+	stop.name = "test003";
+	TESTC_ABORT(m_server.send(stop), CalTest::final);
+      }
+      break;
+
+    case CAL_STOPACK:
+      {
+	CALStopackEvent ack(e);
+	TESTC_ABORT(ack.name == "test003", CalTest::final);
+	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
+
+	m_handle = 0;
+	
+	m_counter1++;
+
+	if (m_counter1 > 50) {
+	  TRAN(CalTest::final);
+	} else {
+
+	  // again
+	  CALStartEvent start;
+
+	  start.name   = "test003";
+	  start.parent = "LBA";
+	  start.subset.reset();
+	  
+	  // first 10 antennas (20 receivers)
+	  for (int i = 0; i < 20; i++) {
+	    start.subset.set(i);
+	  }
+	  start.sampling_frequency = 160e6; // 160 MHz
+	  start.nyquist_zone = 1;
+	  
+	  TESTC_ABORT(m_server.send(start), CalTest::final);
+	}
       }
       break;
 
