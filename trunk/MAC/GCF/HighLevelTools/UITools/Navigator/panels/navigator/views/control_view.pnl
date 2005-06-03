@@ -7,8 +7,6 @@ PANEL,258 138 950 740 N "_3DFace" 2
 "main()
 {
   navPMLloadPropertySet($datapoint + \"_details\");
-  //DebugTN(\"LOAD:\"+$datapoint + \"_details\");
-  //DebugTN(\"LOAD:\"+$datapoint);
   navPMLloadPropertySet($datapoint);
   bool Wait=TRUE;
   while(Wait)
@@ -23,7 +21,6 @@ PANEL,258 138 950 740 N "_3DFace" 2
   {
     btn_commands.enabled = TRUE;
     btn_clear.enabled = TRUE;
-    //dpSet($datapoint+\".command\", \"\"); setting this causes in the message <unknown command>
     if(dpAccessable($datapoint + \".command\"))
       dpConnect(\"navViewControlDisplayCommand\", $datapoint + \".command\");//:_online.._value\");
     else
@@ -94,7 +91,10 @@ void navViewControlHandleDetails(string datapointDetails)
   dyn_string elements = navConfigGetElementsFromDp($datapoint+\"_details\");
   for(int i=1; i<=dynlen(elements); i++)
   {
-    dpConnect(\"navViewControlDisplayElement\", datapointDetails + \".\" + elements[i] + \":_online.._value\");
+    if(strpos(elements[i], \"__\")<0)
+    {
+      dpConnect(\"navViewControlDisplayElement\", datapointDetails + \".\" + elements[i] + \":_online.._value\");
+    }
   }
 }
 
@@ -805,29 +805,6 @@ LANG:1 8 Commands
   ChildPanelOnCentralModal(\"navigator/views/control_view_commands.pnl\",
 	                         \"Commands\", makeDynString(\"$configDatapoint:\" + $configDatapoint,
 				                                             \"$datapoint:\" + $datapoint));
-}" 0
- E E E
-13 130
-"Button1"
-""
-1 860 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-128 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-858 8 942 32
-T 
-1
-LANG:1 8 Load VB1
-"main()
-{
-  navPMLloadPropertySet(\"CEPLCU1:PAC_VB1\");
 }" 0
  E E E
 0

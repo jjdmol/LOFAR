@@ -772,34 +772,35 @@ bool elementTypeValid(string element)
 // 2. Set the visibility of the "icon_maintenance" 
 ///////////////////////////////////////////////////////////////////////////////////
 setBackGroundColorAEM(string dp1, unsigned maintenance,
-                      string dp2, unsigned status)
+                      string dp2, unsigned status,
+                      string dp3, bool invalid)
 {
-	setValue("icon_maintenance", "visible", (maintenance == 1));
-
-  //Maintenance has priority above error status
-  if (maintenance == 1)
-  {
-  	setValue("backGround", "backCol", "Lofar_maintenance");
-  }
-  else if (status==1)    //object is in error status
-  {
-    setValue("backGround", "backCol", "Red");
-  }
-  else if (status==0)  //object has a correct status
-  {
-    setValue("backGround", "backCol", "Lofar_device_active");
-  }
-  else // if any other state => givce the color red
-  {
-    setValue("backGround", "backCol", "Red");
-  }
-	
   
-/*  if (version !="")
-    setValue("txt_version", "text", "ver: " + version);
+  if(!invalid)
+  {
+	  setValue("icon_maintenance", "visible", (maintenance == 1));
+    //Maintenance has priority above error status
+    if (maintenance == 1)
+    {
+    	setValue("backGround", "backCol", "Lofar_maintenance");
+    }
+    else if (status==1)    //object is in error status
+    {
+      setValue("backGround", "backCol", "Red");
+    }
+    else if (status==0)  //object has a correct status
+    {
+      setValue("backGround", "backCol", "Lofar_device_active");
+    }
+    else // if any other state => givce the color red
+    {
+      setValue("backGround", "backCol", "Red");
+    }
+  }
   else
-    setValue("txt_version", "text", "ver: x:x");
-  */
+  {
+    setValue("backGround", "backCol", "_dpdoesnotexist");
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -807,17 +808,48 @@ setBackGroundColorAEM(string dp1, unsigned maintenance,
 //           Displays the version of the PIC object in txt_version
 //
 // Input: $datapoint.version
-//
 // Output: version displayed in txt_version
 ///////////////////////////////////////////////////////////////////////////
-showVersion(string dp1, string version)
+showVersion(string dp1, string version,
+            string dp2, bool invalid)
 {
-  if (version !="")
-    setValue("txt_version", "text", "ver: " +version);
+  if(!invalid)
+  {
+    if (version !="")
+    {
+      setValue("txt_version", "text", "ver: " +version);
+    }
+    else
+    {
+      setValue("txt_version", "text", "ver: x:x");
+    }
+  }
   else
-    setValue("txt_version", "text", "ver: x:x");
+  {
+    setValue("txt_version", "text", "ver: x:x");    
+  }
 }
-
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewShowTemp   
+//           Displays the temperature in txt_temperature
+//
+// Input: $datapoint.temperature [float]
+// Output: temperature displayed in txt_temperature
+///////////////////////////////////////////////////////////////////////////
+navViewShowTemp(string dp1, float temperature,
+                string dp2, bool invalid)
+{
+  //Display the temperature with with format xxx if the datapoint is valid
+  if(!invalid)
+  {
+    setValue("txt_temperature", "text", temperature);  
+    setValue("txt_temperature", "visible", TRUE);
+  }
+  else
+  {
+    setValue("txt_temperature", "visible", FALSE);  
+  }
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1257,7 +1289,7 @@ void AntennaContextMenu(string antenna)
 // FunctionName: BPContextMenu
 //
 /////////////////////////////////////////////////////////////////////
-void BPContextMenu()
+void BPContextMenu(bool invalid)
 {
   string txt_maintenance, txt_status;
   int Answer, maintenance, status;
@@ -1265,7 +1297,17 @@ void BPContextMenu()
   	
   dpGet($datapoint + "_Board1_BP.status:_original.._value", status);
 	dpGet($datapoint + "_Board1_Maintenance.status:_original.._value", maintenance);
-  BuildContextMenu(status, maintenance, Answer);
+  
+  /////////////////////////////////////////
+  
+  if(invalid)
+  {
+    popupMenu(makeDynString("PUSH_BUTTON, Object not reacheable, 0, 0"), Answer);
+  }
+  else
+  {
+    BuildContextMenu(status, maintenance, Answer);
+  }
 
 
   //////////////////////////////////////////////////////////

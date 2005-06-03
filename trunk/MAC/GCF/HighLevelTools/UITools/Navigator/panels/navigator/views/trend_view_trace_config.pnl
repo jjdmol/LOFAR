@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,339 354 690 338 N "_3DFace" 5
+PANEL,490 320 690 338 N "_3DFace" 5
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -581,16 +581,52 @@ void navViewTrendConfigApplyTraceSettings()
   }
 
   //Get the dpName from the PVSS database
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", currentDpName);
+/*  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", currentDpName);
   if(\"\"==dpeName)
   {
     navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
   }
-  else if(currentLegendName!=legendName)
+  else if(currentDpName!=legendName)
   {
     dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", dpName+\".\"+dpeName);
     PanelOff();
+  }*/
+  ////////////////////////////////////////////////////////////////////////
+  string selectedConfigDpName;
+  if(\"\"!=list_dpe.selectedText)
+  {
+    if(list_system.selectedText==getSystemName())
+    {
+      if(list_dp.selectedText==CURRENT_DP_MESSAGE) //CURRENT_DP_MESSAGE is global string \"Current selection in tree\"
+      {
+        selectedConfigDpName = $datapoint + \".\" +list_dpe.selectedText;
+      }
+      else
+      {
+        selectedConfigDpName = $datapoint + \"_\" + list_dp.selectedText + \".\" +list_dpe.selectedText;
+      }
+      strreplace(selectedConfigDpName, $datapoint, \"\");
+    }
+    else
+    {
+      selectedConfigDpName = list_system.selectedText + list_dp.selectedText + \".\" +list_dpe.selectedText;
+    }
+    //Check whether the current selected dpName is different from the stored dpName
+    dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", currentDpName);
+    if(currentDpName!=selectedConfigDpName)
+    {
+      dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", selectedConfigDpName);
+    }
+    PanelOff();
   }
+  else
+  {
+    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+  }
+
+  
+  
+  /////////////////////////////////////////////////////////////////////////
 }
 " 0
  E E E

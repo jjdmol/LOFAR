@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,372 287 923 749 N "_3DFace" 1
+PANEL,284 171 923 749 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  130 290
 "" 0 1
@@ -331,7 +331,7 @@ LANG:1 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 14 ..............
+LANG:1 1 .
 2 231
 "Text2"
 ""
@@ -587,7 +587,7 @@ LANG:1 0
 {
   setValue(\"\", \"text\", \"10-90 MHz\");
 }" 0
- E 0 1 1 0 1 E U  0 E 342 300 342 316
+ E 0 1 1 0 1 E U  0 E 342 300 344 316
 0 2 0 "s" 0 0 0 193 0 0  342 300
  1
 1
