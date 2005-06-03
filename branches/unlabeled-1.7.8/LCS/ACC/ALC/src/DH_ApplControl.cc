@@ -42,13 +42,16 @@ DH_ApplControl::DH_ApplControl() :
 	itsScheduleTime(0),
 	itsResult(0)
 {
+	LOG_TRACE_OBJ("DH_applControl()");
 	setExtraBlob ("Extra", 1);
 }
 
 
 // Destructor
 DH_ApplControl::~DH_ApplControl() 
-{ }
+{
+	LOG_TRACE_OBJ("~DH_applControl()");
+}
 
 // Copying is allowed.
 DH_ApplControl::DH_ApplControl(const DH_ApplControl& that) :
@@ -82,9 +85,13 @@ DH_ApplControl*		DH_ApplControl::makeDataCopy() const
 	return (newDHAC);
 }	
 
-// Redefines the preprocess function.
-void 	DH_ApplControl::preprocess()
+// Redefines the init function.
+void 	DH_ApplControl::init()
 {
+	LOG_TRACE_FLOW("DH_ApplControl:init()");
+
+	initDataFields();
+
 	addField ("VersionNumber", BlobField<uint16>(1));
 	addField ("Command", 	   BlobField<int16>(1));	// ACCmd
 	addField ("ScheduleTime",  BlobField<int32>(1));	// time_t
@@ -95,24 +102,26 @@ void 	DH_ApplControl::preprocess()
 
 }
 
-// Redefine the write function.
-bool	DH_ApplControl::write()
+// Redefine the pack function.
+void	DH_ApplControl::pack()
 {
+	LOG_TRACE_RTTI("DH_ApplControl:pack()");
+
 	BlobOStream&	bos = createExtraBlob();		// attached to dataholder
 
 	bos <<	itsOptions;
 	bos <<	itsProcList;
 	bos <<	itsNodeList;
 	
-	return (DataHolder::write());
+	DataHolder::pack();
 }
 
-// Redefine the read function.
-bool	DH_ApplControl::read()
+// Redefine the unpack function.
+void	DH_ApplControl::unpack()
 {
-	if (!DataHolder::read()) {
-		return (false);
-	}
+	LOG_TRACE_RTTI("DH_ApplControl:unpack()");
+
+	DataHolder::unpack();
 
 	int32			version;
 	bool			found;
@@ -123,8 +132,6 @@ bool	DH_ApplControl::read()
 	bis >>	itsProcList;
 	bis >>	itsNodeList;
 	bis.getEnd();
-
-	return (true);
 }
 
 
@@ -132,6 +139,8 @@ bool	DH_ApplControl::read()
 
 // Implement the initialisation of the pointers
 void	DH_ApplControl::fillDataPointers() {
+	LOG_TRACE_FLOW("DH_ApplControl:fillDataPointers()");
+
 	itsVersionNumber = getData<uint16>("VersionNumber");
 	itsCommand 		 = getData<int16> ("Command");
 	// need old plain C typecast to get the time_t values back.

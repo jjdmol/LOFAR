@@ -75,19 +75,8 @@ public:
 	// Copying only by cloning
 	DH_ProcControl*		clone() const;
 
-	// Implements the preprocess function.
-	virtual void 	preprocess();
-	// @}
-
-	// \name Additional methods
-	// Allows the DH_ProcControl to be used without libTransport.
-	// @{
-
-	// Pack data into buffer before writing
-	void pack();
-
-	// Unpack received data
-	void unpack();
+	// Implements the init function.
+	virtual void 	init();
 	// @}
 
 	// \name Data-accessor methods
@@ -181,21 +170,6 @@ inline uint16	DH_ProcControl::getResult () const
 	return (*itsResult);
 }
 
-//#
-//# pack()
-//#
-inline void DH_ProcControl::pack() 
-{
-	writeExtra();
-}
-
-//#
-//# unpack()
-//#
-inline void DH_ProcControl::unpack() 
-{
-	handleDataRead();
-}
 
 // @} addgroup
 } // namespace ACC
