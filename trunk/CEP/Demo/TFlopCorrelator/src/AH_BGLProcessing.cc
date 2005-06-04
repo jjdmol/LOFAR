@@ -5,6 +5,8 @@
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  $Id$
+//
+/////////////////////////////////////////////////////////////////////
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>

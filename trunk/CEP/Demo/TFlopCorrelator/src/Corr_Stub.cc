@@ -5,6 +5,8 @@
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# $Id$
+//#
+////////////////////////////////////////////////////////////////////
 
 #include <TFlopCorrelator/CorrStub.h>
 #include <Transport/TH_Socket.h>
@@ -26,13 +28,15 @@ namespace LOFAR {
     for (int i=0; i<itsNCorr, i++) {
       itsCorr.push_back(new DH_SubBand());
     }
+    
+    //todo: Dump/storage side
   }
   
   CorrStub::~CorrStub()
   {}
   
   void CorrStub::connect (int&      C_nr,
-			  DH_SVis& sb)
+			  DH_Vis& sb)
   {
     DBGASSERT_STR(((C_nr >= 0) && (C_nr < itsCorr.size())),
 		  "C_nr argument out of boundaries; " << C_nr << " / " << itsCorr.size());
