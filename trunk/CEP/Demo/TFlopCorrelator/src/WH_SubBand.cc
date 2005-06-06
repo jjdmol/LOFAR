@@ -35,6 +35,9 @@ WH_SubBand::WH_SubBand(const string& name,
    itsNPol       = myPS.getInt("WH_SubBand.pols");
    itsCpF        = myPS.getInt("Corr_per_Filter");
 
+   // todo: Pr-correlation correction DH in channel 0
+   //   getDataManager().addInDataHolder(0, new DH_??("input", itsSBID));
+
    getDataManager().addInDataHolder(0, new DH_SubBand("input", itsSBID));
 
    for (int c=0; c<itsCpF; c++) {
