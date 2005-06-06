@@ -335,7 +335,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 				      select,
 				      start.sampling_frequency,
 				      start.nyquist_zone,
-				      CAL_Protocol::N_SUBBANDS);
+				      1/*CAL_Protocol::N_SUBBANDS*/);
 
     m_subarrays.add(subarray);
 

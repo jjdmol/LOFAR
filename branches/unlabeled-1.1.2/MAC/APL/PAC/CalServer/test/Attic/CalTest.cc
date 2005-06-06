@@ -462,7 +462,7 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
 	
 	m_counter1++;
 
-	if (m_counter1 > 50) {
+	if (m_counter1 > 10) {
 	  TRAN(CalTest::final);
 	} else {
 

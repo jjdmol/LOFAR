@@ -152,7 +152,15 @@ bool SubArrays::remove(SubArray*& subarray)
 
 SubArray* SubArrays::getByName(std::string name)
 {
-  return m_arrays[name];
+  // find SubArray
+  map<string,SubArray*>::iterator it = m_arrays.find(name);
+
+  if (it != m_arrays.end()) {
+    return (*it).second;
+  }
+
+  return 0;
+  //return m_arrays[name];
 }
 
 void SubArrays::updateAll()
@@ -179,6 +187,7 @@ void SubArrays::calibrate(CalibrationInterface* cal, const ACC& acc)
        it != m_arrays.end(); ++it)
   {
     SubArray* subarray = (*it).second;
+    ASSERT(0 != subarray);
 
     if (acc.isValid() && !subarray->isDone()) {
       subarray->calibrate(cal, acc);
