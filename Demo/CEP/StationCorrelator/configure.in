@@ -55,12 +55,14 @@ lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 
-
 lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)
 lofar_INTERNAL(LCS/ACC,ACC,,ACC/ParameterSet.h,,)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,CEPFrame/DataManager.h,,)
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,tinyCEP/TinyDataManager.h,,)
+lofar_INTERNAL(MAC/GCF/PALlight, PALlight, , , GCF/PALlight/CEPPropertySet.h, gcfceppallight)
+lofar_INTERNAL(MAC/GCF, GCFCommon, , , GCF/GCF_PVString.h, gcfcommon)
+lofar_INTERNAL(MAC/GCF/Protocols, Protocols, , , GCF/Protocols/DH_PIProtocol.h, gcfpicepprot)
 
 dnl
 dnl Output Makefiles
