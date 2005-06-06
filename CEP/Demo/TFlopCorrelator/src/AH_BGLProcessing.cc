@@ -52,7 +52,6 @@ void AH_BGLProcessing::define() {
   LOG_TRACE_FLOW_STR("Read parameters from file TFlopCorrelator.cfg");
   itsPS    = new ACC::ParameterSet("TFlopCorrelator.cfg");
   itsNSBF  = itsPS->getInt("NSBF");  // number of SubBand filters in the application
-  itsCpF   = itsPS->getInt("Corr_per_Filter");
   
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
@@ -88,7 +87,7 @@ void AH_BGLProcessing::define() {
   LOG_TRACE_FLOW_STR("Create the Correlator workholders");
   vector<WH_Correlator*> CorrNodes;
   int corrID=0; // corr serial number in the AH
-
+  itsCpF   = itsPS->getInt("Corr_per_Filter");
   for (int s=0; s<itsNSBF; s++ ) {
     // loop over all SubBand Filters
     for (int c=0; c<itsCpF; c++) {
