@@ -186,7 +186,6 @@ void TH_Mem::readTotalMsgLengthBlocking(int tag, int& nrBytes)
 {
 #ifndef USE_THREADS
   LOG_ERROR("readTotalMsgLengthBlocking not available without USE_THREADS");
-  return false;
 #else
   LOG_TRACE_RTTI("TH_Mem readTotalMsgLengthBlocking()");  
   pthread_mutex_lock(&theirMapLock);
