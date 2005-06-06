@@ -1,21 +1,37 @@
-bin_PROGRAMS = TFlopCorrelator
-
-DOCHDRS =						\
-DH_CorrCube.h						\
-DH_Vis.h						\
-DH_SubBand.h						\
-WH_Correlator.h						\
-WH_SubBand.h						\
+INSTHDRS         	=\
+DH_CorrCube.h		\
+DH_Vis.h		\
+DH_SubBand.h		\
+WH_Correlator.h		\
+WH_SubBand.h		\
 SB_Stub.h
 
+NOINSTHDRS 		=
 
-TFlopCorrelator_SOURCES 	=	$(DOCHDRS)	\
-DH_CorrCube.cc						\
-DH_Vis.cc						\
-DH_SubBand.cc						\
-WH_Correlator.cc					\
-WH_SubBand.cc						\
+TCCHDRS 		=
+
+pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS 		= $(NOINSTHDRS)
+
+DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
+
+bin_PROGRAMS 		= TFC_Correlator TFC_Input TFC_Store
+
+TFC_Correlator_SOURCES 	= $(DOCHDRS)\
+DH_CorrCube.cc		\
+DH_Vis.cc		\
+DH_SubBand.cc		\
+WH_Correlator.cc	\
+WH_SubBand.cc		\
 SB_Stub.cc
 
+TFC_Input_SOURCES	= $(DOCHDRS)\
+DH_SubBand.cc		\
+SB_Stub.cc
+
+TFC_Store_SOURCES 	= $(DOCHDRS)\
+DH_Vis.cc		\
+Corr_Stub.cc
 
 include $(lofar_sharedir)/Makefile.common
