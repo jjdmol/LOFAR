@@ -25,19 +25,17 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef WH_SOURCE_H
-#define WH_SOURCE_H
+#ifndef LOFAR_ASYNCTEST_WH_SOURCE_H
+#define LOFAR_ASYNCTEST_WH_SOURCE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <tinyCEP/WorkHolder.h>
+#include <AsyncTest/StopWatch.h>
 
-#include "CEPFrame/WorkHolder.h"
-#include "AsyncTest/DH_GrowSize.h"
-#include "AsyncTest/StopWatch.h"
+namespace LOFAR
+{
 
 /**
-   The WH_Growsize class implements a workholder with DH_Growsize
+   The WH_Growsize class implements a workholder with DH_Buffer
    objects as inputs and outputs. The process() method does nothing to
    the data (not even copy...) but can contains a performance measurement
    indication for the data transport bandwidth of the output DataHolders. 
@@ -89,10 +87,11 @@ private:
   /// Used to do timing on communication
   StopWatch   watch;
   int         itsIteration;
-  static int  itsMeasurements;
   static bool itsFirstcall;
   int         itsTime;
 
 };
+
+} // end namespace LOFAR
 
 #endif

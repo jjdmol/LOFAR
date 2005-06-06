@@ -24,7 +24,6 @@
 #include <lofar_config.h>
 
 #include <TransportPL/TH_PL.h>
-#include <Transport/Transporter.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/TPersistentObject.h>
 #include <PL/DBRepHolder.h>    // needed to see ObjectId specialization
@@ -49,6 +48,8 @@ TH_PL::TH_PL (const string& tableName)
   : itsTableName  (tableName),
     itsWriteSeqNo (0),
     itsReadSeqNo  (0),
+    itsSendDHPL   (0),
+    itsRecvDHPL   (0),
     itsInitCalled (false)
 {
   LOG_TRACE_FLOW( "TH_PL constructor" );
@@ -67,21 +68,26 @@ TH_PL::~TH_PL()
   }
 }
 
-TH_PL* TH_PL::make() const
+TH_PL* TH_PL::clone() const
 {
   return new TH_PL(itsTableName);
 }
 
 bool TH_PL::init()
 {
+  return true;
+}
+
+void TH_PL::initialiseRecvTPO(DataHolder* dh)
+{
   // Do a dynamic cast of the DataHolder to a DH_PL.
   // and check if it is correct.
-  itsDHPL = dynamic_cast<DH_PL*>(getTransporter()->getDataHolder());
-  if (itsDHPL == 0) {
+  itsRecvDHPL = dynamic_cast<DH_PL*>(dh);
+  if (itsRecvDHPL == 0) {
     throw LOFAR::Exception("TH_PL: DataHolder used is not derived from DH_PL");
   }
   // Initialize the TPO object in the DH_PL.
-  itsDHPL->initPO (itsTableName);
+  itsRecvDHPL->initPO (itsTableName);
 
   // If this is the first instance of TH_PL in the (current) process,
   // connect to the database.
@@ -90,7 +96,26 @@ bool TH_PL::init()
   }
   TH_PL::theirInstanceCount++;
   itsInitCalled = true;
-  return true;
+}
+
+void TH_PL::initialiseSendTPO(DataHolder* dh)
+{
+  // Do a dynamic cast of the DataHolder to a DH_PL.
+  // and check if it is correct.
+  itsSendDHPL = dynamic_cast<DH_PL*>(dh);
+  if (itsSendDHPL == 0) {
+    throw LOFAR::Exception("TH_PL: DataHolder used is not derived from DH_PL");
+  }
+  // Initialize the TPO object in the DH_PL.
+  itsSendDHPL->initPO (itsTableName);
+
+  // If this is the first instance of TH_PL in the (current) process,
+  // connect to the database.
+  if (TH_PL::theirInstanceCount == 0L) {
+    connectDatabase ();
+  }
+  TH_PL::theirInstanceCount++;
+  itsInitCalled = true;
 }
 
 void TH_PL::useDatabase (const string& dbDSN, const string& userName)
@@ -121,98 +146,96 @@ string TH_PL::getType() const
   return "TH_PL";
 }
 
-bool TH_PL::connectionPossible (int srcRank, int dstRank) const
+void TH_PL::insertDB (int tag, DataHolder* dh)  
 {
-  return srcRank == dstRank;
-}
-
-void TH_PL::insertDB (int tag)  
-{  
-  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);  
+  if (itsSendDHPL == 0)
+  {
+    initialiseSendTPO(dh);
+  }   
+  PL::PersistentObject& aPO = itsSendDHPL->preparePO (tag, itsWriteSeqNo++);  
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);  
 }  
 
-void TH_PL::updateDB (int tag)  
+void TH_PL::updateDB (int tag, DataHolder* dh)  
 {  
-  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);  
+  if (itsSendDHPL == 0)
+  {
+    initialiseSendTPO(dh);
+  }
+  PL::PersistentObject& aPO = itsSendDHPL->preparePO (tag, itsWriteSeqNo++);  
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::UPDATE);  
 }  
      
-int TH_PL::queryDB (const string& queryString, int tag)  
-{  
+int TH_PL::queryDB (const string& queryString, int tag, DataHolder* dh)  
+{ 
+  if (itsRecvDHPL == 0)
+  {
+    initialiseRecvTPO(dh);
+  } 
   // Get a reference to the DHPL's TPO object.  
-  PL::PersistentObject& aPO = itsDHPL->getPO();  
+  PL::PersistentObject& aPO = itsRecvDHPL->getPO();  
   int result = aPO.retrieveInPlace(PL::QueryObject(queryString));  
   ASSERT (result >= 0);  
   itsReadSeqNo++;  
   return result;  
 }  
 
-bool TH_PL::sendBlocking(void*, int, int tag)
+bool TH_PL::sendBlocking(void*, int, int tag, DataHolder* dh)
 {
   LOG_TRACE_RTTI( "TH_PL sendBlocking()" );
-  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
+  if (itsSendDHPL == 0)
+  {
+    initialiseSendTPO(dh);
+  }
+  PL::PersistentObject& aPO = itsSendDHPL->preparePO (tag, itsWriteSeqNo++);
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);
   return true;
 }
 
-bool TH_PL::sendNonBlocking(void* buf, int nbytes, int tag)
+bool TH_PL::sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh)
 {
   LOG_WARN( "TH_PL::sendNonBlocking() is not implemented. The sendBlocking() method is used instead.");
-  return sendBlocking(buf, nbytes, tag);
+  return sendBlocking(buf, nbytes, tag, dh);
 }
 
-bool TH_PL::waitForSent(void*, int, int)
+void TH_PL::waitForSent(void*, int, int)
 {
   LOG_TRACE_RTTI( "TH_PL waitForSent()" );
-  return true;
 }
 
-bool TH_PL::recvBlocking(void*, int nbytes, int tag)
+bool TH_PL::recvBlocking(void*, int nbytes, int tag, int nBytesRead, DataHolder* dh)
 {
   LOG_TRACE_RTTI( "TH_PL recvBlocking()" );
-  bool result = recvVarBlocking (tag);
-  if (result) {
-    DBGASSERTSTR(int(itsDHPL->getDataBlock().size()) == nbytes,
-		 "TH_PL::recv - non matching size; found "
-		 << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
+  if (itsRecvDHPL == 0)
+  {
+    initialiseRecvTPO(dh);
+  }
+  int result = 1;
+  if (nBytesRead <= 0)
+  {
+    // Get a reference to the DHPL's TPO object.
+    PL::PersistentObject& aPO = itsRecvDHPL->getPO();
+    // PL is based on query objects to identify records in database
+    // tables. A query object is now prepared to retrieve the record with
+    // the correct tag and sequence number.
+    std::ostringstream q;
+    q << "tag=" << tag << " AND seqnr=" << itsReadSeqNo;
+    itsReadSeqNo++;
+    result = aPO.retrieveInPlace(PL::QueryObject(q.str()));
+    ASSERT (result == 1);
   }
   return result;
 }
 
-bool TH_PL::recvVarBlocking(int tag)
-{
-  LOG_TRACE_RTTI( "TH_PL recvVarBlocking()" );
-  // Get a reference to the DHPL's TPO object.
-  PL::PersistentObject& aPO = itsDHPL->getPO();
-  // PL is based on query objects to identify records in database
-  // tables. A query object is now prepared to retrieve the record with
-  // the correct tag and sequence number.
-  std::ostringstream q;
-  q << "tag=" << tag << " AND seqnr=" << itsReadSeqNo;
-  itsReadSeqNo++;
-  int result = aPO.retrieveInPlace(PL::QueryObject(q.str()));
-  ASSERT (result == 1);
-  // ToDo: DBGASSERTSTR(itsReadSeqnNo == ... ,"");
-  return true;
-}
-
-bool TH_PL::recvNonBlocking(void* buf, int nbytes, int tag)
+int32 TH_PL::recvNonBlocking(void* buf, int nbytes, int tag, int nBytesRead, DataHolder* dh)
 { 
   LOG_WARN( "TH_PL::recvNonBlocking() is not implemented. recvBlocking() is used instead." );    
-  return recvBlocking (buf, nbytes, tag);
+  return (recvBlocking (buf, nbytes, tag, nBytesRead, dh)?nbytes:0);
 }
 
-bool TH_PL::recvVarNonBlocking(int tag)
-{ 
-  LOG_WARN( "recvVarNonBlocking() is not implemented. recvBlocking() is used instead.");
-  return recvVarBlocking (tag);
-}
-
-bool TH_PL::waitForReceived(void*, int, int)
+void TH_PL::waitForReceived(void*, int, int)
 {
   LOG_TRACE_RTTI( "TH_PL waitForReceived()" );
-  return true;
 }
 
 void TH_PL::waitForBroadCast () {}

@@ -1,5 +1,5 @@
 
-Start Processing composit Example1
+Start Processing composite Example1
 Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
@@ -92,8 +92,6 @@ Step4
 Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
 
 DUMP Data from last Processing step: 
-WH_Example Example1 Buffers:
-(14,0),(14,0)
 WH_Example Step1 Buffers:
 (11,0),(11,0)
 WH_Example Step2 Buffers:
@@ -103,7 +101,7 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-Start Processing composit Example2
+Start Processing composite Example2
 Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
@@ -141,8 +139,6 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (45,0),(45,0)
 
 DUMP Data from last Processing step: 
-WH_Example Example2 Buffers:
-(45,0),(45,0)
 WH_Example Step1 Buffers:
 (6,0),(6,0)
 (6,0),(6,0)
@@ -153,7 +149,7 @@ WH_Example Step2 Buffers:
 WH_Example Step3 Buffers:
 (45,0),(45,0)
 
-Start Processing composit Example3
+Start Processing composite Example3
 Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
@@ -201,8 +197,6 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (16,0),(16,0)
 
 DUMP Data from last Processing step: 
-WH_Example Example3 Buffers:
-(16,0),(16,0)
 WH_Example Step1 Buffers:
 (6,0),(6,0)
 (6,0),(6,0)
@@ -213,7 +207,7 @@ WH_Example Step2b Buffers:
 WH_Example Step3 Buffers:
 (16,0),(16,0)
 
-Start Processing composit Example4
+Start Processing composite Example4
 Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
@@ -306,336 +300,8 @@ Step4
 Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
 
 DUMP Data from last Processing step: 
-WH_Example Example4 Buffers:
-(14,0),(14,0)
 WH_Example Step1 Buffers:
 (11,0),(11,0)
-WH_Example Composite2 Buffers:
-(14,0),(14,0)
-WH_Example Composite1 Buffers:
-(13,0),(13,0)
-WH_Example Step2 Buffers:
-(12,0),(12,0)
-WH_Example Step3 Buffers:
-(13,0),(13,0)
-WH_Example Step4 Buffers:
-(14,0),(14,0)
-
-Start Processing composit Example1
-Call composit.process() 0
-Step1
-Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Call composit.process() 1
-Step1
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Call composit.process() 2
-Step1
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Call composit.process() 3
-Step1
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call composit.process() 4
-Step1
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Call composit.process() 5
-Step1
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call composit.process() 6
-Step1
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Call composit.process() 7
-Step1
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call composit.process() 8
-Step1
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Call composit.process() 9
-Step1
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
-
-DUMP Data from last Processing step: 
-WH_Example Example1 Buffers:
-(14,0),(14,0)
-WH_Example Step1 Buffers:
-(11,0),(11,0)
-WH_Example Step2 Buffers:
-(12,0),(12,0)
-WH_Example Step3 Buffers:
-(13,0),(13,0)
-WH_Example Step4 Buffers:
-(14,0),(14,0)
-
-Start Processing composit Example2
-Call composit.process() 0
-Step1
-Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (21,0),(21,0)
-Call composit.process() 1
-Step1
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (27,0),(27,0)
-Call composit.process() 2
-Step1
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (33,0),(33,0)
-Call composit.process() 3
-Step1
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (39,0),(39,0)
-Call composit.process() 4
-Step1
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (45,0),(45,0)
-
-DUMP Data from last Processing step: 
-WH_Example Example2 Buffers:
-(45,0),(45,0)
-WH_Example Step1 Buffers:
-(6,0),(6,0)
-(6,0),(6,0)
-WH_Example Step2 Buffers:
-(14,0),(14,0)
-(14,0),(14,0)
-(14,0),(14,0)
-WH_Example Step3 Buffers:
-(45,0),(45,0)
-
-Start Processing composit Example3
-Call composit.process() 0
-Step1
-Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
-Step2a
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step2b
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call composit.process() 1
-Step1
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step2a
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step2b
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call composit.process() 2
-Step1
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step2a
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step2b
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call composit.process() 3
-Step1
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step2a
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step2b
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
-Call composit.process() 4
-Step1
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step2a
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step2b
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (16,0),(16,0)
-
-DUMP Data from last Processing step: 
-WH_Example Example3 Buffers:
-(16,0),(16,0)
-WH_Example Step1 Buffers:
-(6,0),(6,0)
-(6,0),(6,0)
-WH_Example Step2a Buffers:
-(7,0),(7,0)
-WH_Example Step2b Buffers:
-(7,0),(7,0)
-WH_Example Step3 Buffers:
-(16,0),(16,0)
-
-Start Processing composit Example4
-Call composit.process() 0
-Step1
-Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Call composit.process() 1
-Step1
-Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Call composit.process() 2
-Step1
-Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Call composit.process() 3
-Step1
-Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call composit.process() 4
-Step1
-Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Call composit.process() 5
-Step1
-Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call composit.process() 6
-Step1
-Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Call composit.process() 7
-Step1
-Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call composit.process() 8
-Step1
-Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Call composit.process() 9
-Step1
-Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Step2
-Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Step3
-Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Step4
-Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
-
-DUMP Data from last Processing step: 
-WH_Example Example4 Buffers:
-(14,0),(14,0)
-WH_Example Step1 Buffers:
-(11,0),(11,0)
-WH_Example Composite2 Buffers:
-(14,0),(14,0)
-WH_Example Composite1 Buffers:
-(13,0),(13,0)
 WH_Example Step2 Buffers:
 (12,0),(12,0)
 WH_Example Step3 Buffers:

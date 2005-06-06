@@ -65,7 +65,6 @@ namespace LOFAR
     KeyValueMap itsKVM;
 
     
-
     static ProfilingState theirInvalidDataState;
     static ProfilingState theirTransposeState;
   };

@@ -59,11 +59,11 @@ ACAsyncClient::~ACAsyncClient()
 // The returned boolean reflects the handling of a message.
 bool	ACAsyncClient::processACmsgFromServer()	const
 {
-	DH_ApplControl*		DHPtr = itsCommChan->getDataHolder();
-
-	if (!DHPtr->read()) {
+	if (!itsCommChan->poll()) {
 		return (false);
 	}
+
+	DH_ApplControl*		DHPtr = itsCommChan->getDataHolder();
 
 	ACCmd	cmdType = DHPtr->getCommand();
 	LOG_TRACE_VAR_STR ("ACASyncClient:proccessACmsgFromServer:cmdType=" 

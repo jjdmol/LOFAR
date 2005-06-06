@@ -49,8 +49,9 @@ DataHolder* DH_ExampleSim::clone() const
   return new DH_ExampleSim(*this);
 }
 
-void DH_ExampleSim::preprocess()
+void DH_ExampleSim::init()
 {
+  initDataFields();
   // Add the fields to the data definition.
   addField ("Counter", BlobField<int>(1));
   addField ("Buffer", BlobField<int>(1, //version 
@@ -70,10 +71,4 @@ void DH_ExampleSim::fillDataPointers()
   itsCounter = getData<int> ("Counter");
   // Fill in the buffer pointer.
   itsBuffer  = getData<int> ("Buffer");
-}
-
-void DH_ExampleSim::postprocess()
-{
-  itsCounter = 0;
-  itsBuffer = 0;
 }

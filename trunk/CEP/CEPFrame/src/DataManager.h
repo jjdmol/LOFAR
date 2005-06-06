@@ -27,6 +27,7 @@
 
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/DataHolder.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
@@ -35,6 +36,7 @@ typedef struct
 {
   DataHolder* currentDH;
   int         id;             // id of dataholder in DHPoolManager
+  Connection* connection;     // Connection
 } DH_info;
 
 /**
@@ -63,6 +65,12 @@ public:
   
   void preprocess();
   void postprocess();
+
+  // Get/set the in/out connection per channel
+  Connection* getInConnection(int channel) const;
+  void setInConnection(int channel, Connection* conn);
+  Connection* getOutConnection(int channel) const;
+  void setOutConnection(int channel, Connection* conn);
 
   const string& getInHolderName(int channel) const;
   const string& getOutHolderName(int channel) const; 

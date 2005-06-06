@@ -1,4 +1,4 @@
-//# CompositeRep.h: Class to hold a collection of Step objects
+//# CompositeRep.h: Class to hold a collection of Block objects
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,54 +20,53 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_COMPOSITEREP_H
-#define CEPFRAME_COMPOSITEREP_H
+#ifndef LOFAR_CEPFRAME_COMPOSITEREP_H
+#define LOFAR_CEPFRAME_COMPOSITEREP_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+// \file CompositeRep.h
+// Class to hold a collection of Block objects
 
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
+
 #include <Common/lofar_list.h>
-#include <CEPFrame/StepRep.h>
+#include <CEPFrame/BlockRep.h>
 #include <CEPFrame/VirtualMachine.h>
 
 namespace LOFAR
 {
 
-class CorbaController;
 class Composite;
+class Connection;
 
-
-/** The Composite class is related to the Step class following a Composite pattern.
-    Therefore, a Composite is a collection of Steps and/or Composites
+/** The Composite class is related to the Block class following a Composite pattern.
+    Therefore, a Composite is a collection of Blocks and/or Composites
     In the constructor the actual workholder is defined. 
     The actual simulation work is performed in the process() method
     (which calls the Workholder::process() method)
 */
 
-class CompositeRep: public StepRep
+class CompositeRep: public BlockRep
 {
 public:
-  // Maptype for names
-  typedef map<string,StepRep*> nameMapType;
 
   /** Normally used basic constructor.
       A pointer to a workholder (containing the dataholders) is passed.
   */
-  CompositeRep (WorkHolder& worker,
-	    const string& name,
-	    bool addnameSuffix,
-	    bool controllable,
-	    bool monitor);
+  CompositeRep (int nrInputs,
+		int nrOutputs,
+		const string& name,
+		bool addnameSuffix);
 
   virtual ~CompositeRep();
   
   
   /** Set Node numbers for both In and OutData
       Set application number as well.
-      Do it recursively for all Steps in this Composite.
+      Do it recursively for all Blocks in this Composite.
   */
   virtual void runOnNode (int aNode, int applNr);
 
@@ -78,7 +77,7 @@ public:
 
   /** The process method is the basical simulation step.
       It will first read the data for the in DataHolders in the workholder
-      Then it will call the process() method for all the Steps in the list
+      Then it will call the process() method for all the Blocks in the list
       Finally it will write the data from the DataHolders
       (e.g to another MPI process)
    */
@@ -92,11 +91,28 @@ public:
   /// Dump information to the user
   virtual void dump() const;
 
-  /// Add a Step to this Composite
-  void addStep (const Step& aStep);
+  /// Get number of inputs / outputs
+  int getNrInputs() const;
+  int getNrOutputs() const;
 
-  /// Get all Steps in the Composite.
-  const list<Step*>& getSteps() const;
+  /** SetRate methods:
+      These methods set the rate at which input/output dataholders are
+      read/written.
+      The rate is the fraction of the events that is to be read/written.
+      The dhIndex argument selects only the given input/output
+      DataHolder; dhIndex=-1 sets all input/output DataHolders.
+      setRate calls both setInRate and setOutRate and also sets the
+      Step::itsRate.
+  */
+  void setProcessRate (int rate);
+  void setInRate (int rate, int dhIndex);
+  void setOutRate (int rate, int dhIndex);
+
+  /// Add a Block to this Composite
+  void addBlock (const Block& aBlock);
+
+  /// Get all Blocks in the Composite.
+  //  const list<Block*>& getBlocks() const;
 
   /// Distinguish between step and simul
   bool isComposite() const;
@@ -106,74 +122,56 @@ public:
   /// lower the highest level flag
   void setNotHighestLevel();
 
-  /** Simplify the connections by using TH_Mem for all connections between
-      Steps running on the same node.
+  /**
+     Set nrChan input channels of aBlock as input channels of this CompositeRep.
+     Start at the given indices. 
+     If nrChan=-1 is given, it will be set to the 
+     minimum number of input channels in aBlock and this CompositeRep.
+     This is needed in order to let the framework transport the data read by 
+     the Composite directly to the DataHolder of the Block in the Composite.
   */
-  virtual void replaceConnectionsWith(const TransportHolder& newTH,
-				      bool blockingComm=true);
-
-  /// Connect source and target DataHolders by name.
-  bool connect (const string& sourceName, const string& targetName,
-		const TransportHolder& prototype, bool blockingComm=true);
-
-  /** Helper for ConnectInputToArray 
-   */
-  bool connect_thisIn_In (Step* aStep,          
-			  int    thisChannelOffset,
-			  int    thatChannelOffset,
-			  int    skip,
-			  const TransportHolder& prototype,
-			  bool blockingComm=true);
-
-  /** Helper for ConnectOutputToArray 
-   */
-  bool connect_thisOut_Out (Step* aStep,          
-			    int    thisChannelOffset,
-			    int    thatChannelOffset,
-			    int    skip,
-			    const TransportHolder& prototype,
-			    bool blockingComm=true);
+  void setInput (int thisIndex, 
+		 Block* aBlock, 
+		 int thatIndex, 
+		 int nrChan);
+  
+  /**
+     Set nrChan output channels of aBlock as output channels of this CompositeRep.
+     Start at the given indices.
+     If nrChan=-1 is given, it will be set to the minimum number of output
+     channels in aBlock and this CompositeRep.
+     This is needed in order to let the framework transport the data from 
+     the last Block in the Composite to the output of the Composite.
+  */
+  void setOutput (int thisIndex, 
+		  Block* aBlock, 
+		  int thatIndex, 
+		  int nrChan);
 
   /**
-     Connect all input DataHolders in the aStep[] array to the input
-     DataHolders of the current simul.
-     This connection is needed in order to let the framework transport
-     the data read by the Composite to the DataHolders of the first Steps
+     Set input channels in the aBlock[] array as input channels of 
+     this CompositeRep.
+     This is needed in order to let the framework transport
+     the data read by the Composite directly to the DataHolders of the first Blocks
      in the Composite.
+     If the nrBlocks argument is -1, it is assumed that
+     each of the Blocks in the array has only one output channel
+     which will be connected to the input channel of the Composite.
   */
-  bool connectInputToArray (Step* aStep[],  // pointer to  array of ptrs to Steps
-			    int    nrItems, // nr of Steps in aStep[] array
-			    int    skip,     // skip in inputs in aStep 
-			    int    offset,  // start with this input nr in aStep
-			    const TransportHolder& prototype,
-			    bool blockingComm=true);
-
-//   /**
-//      Connect all input DataHolders in the Composite[] array to the input
-//      DataHolders of the current simul.
-//      This connection is needed in order to let the framework transport
-//      the data read by the Composite to the DataHolders of the first Composites
-//      in the Composite.
-//    */
-//   bool connectInputToArray (Composite* aStep[],     // pointer to  array of ptrs to Steps
-// 			    int    nrItems,  // n of Steps in aStep[] array
-// 			    int    skip,     // skip in inputs in aStep 
-// 			    int    offset,  // start with this input nr in aStep
-// 			    const TransportHolder& prototype);
+  void setInputArray (Block* aBlock[],  // pointer to  array of ptrs to Blocks
+		      int    nrBlocks);  // nr of Blocks in aBlock[] array
 
   /**
-     Connect all output DataHolders in the aStep[] array to the output
-     DataHolders of the current simul.
-     This connection is needed in order to let the framework transport
-     the data read by the Composite to the DataHolders of the first Steps
-     in the Composite.
+     Set output channels in the aBlock[] array as output channels of 
+     this CompositeRep.
+     This is needed in order to let the framework transport
+     the data from the last Block in the Composite to the output of the Composite.
+     If the nrBlocks argument is -1, it is assumed that
+     each of the Blocks in the array has only one input channel
+     which will be connected to the output channel of the Composite.
    */
-  bool connectOutputToArray (Step* aStep[],  // pointer to  array of ptrs to Steps
-			     int    nrItems, // nr of Steps in aStep[] array
-			     int    skip,     // skip in inputs in aStep 
-			     int    offset,  // start with this input nr in aStep
-			     const TransportHolder& prototype,
-			     bool blockingComm=true);
+  void setOutputArray (Block* aBlock[],  // pointer to  array of ptrs to Blocks
+		       int    nrBlocks);  // nr of Blocks in aBlock[] array
 
   /**
      Get a pointer to the Virtual Machine controlling this CompositeRep. The Virtual 
@@ -181,29 +179,51 @@ public:
    */
   VirtualMachine& getVM();
 
-private:
-  /** Split the given name into step and dataholder part (separated by a .).
-      Each part can be empty.
-      The isSource argument tells if the name is the source or target.
-      The step name is looked up and the corresponding StepRep* is filled in.
-      An empty step means this Composite.
-      Similarly the DataHolder is looked up and its index is filled in.
-      (-1 means that no DataHolder part is given).
-  */
-  bool splitName (bool isSource, const string& name,
-		  StepRep*& step, int& dhIndex);
+  void addConnection(Connection* conn);
+
+  /// Get DataManager handling a specific in/output channel
+  DataManager& getInDataManager(int channel);
+  DataManager& getOutDataManager(int channel);
+
+  /// Get the channel number in the actual DataManager of an input/output channel.
+  /// For a Step these will be identical.
+  int getInChannelNumber(int channel);
+  int getOutChannelNumber(int channel);
+
+  /// Get the node number.
+  int getNode() const;
+
+  /// Get the application number.
+  int getAppl() const; 
+
+ private:
+
+  // Struct to indicate channels
+  class ChannelInfo{
+  public: 
+    ChannelInfo() : block(0), chanNr(-1) {}
+    Block* block;
+    int    chanNr;
+  };
 
   /// true = this Composite is the top Composite
   bool itsIsHighestLevel;
-  /// List of Steps contained in the Composite
-  list<Step*> itsSteps;
-  /// Map of Step names of Step objects.
-  nameMapType itsNameMap;
+  /// List of Blocks contained in the Composite
+  list<Block*> itsBlocks;
+  /// List of Connections contained in the Composite
+  list<Connection*> itsConnections;
 
   /// The VirtualMachine object.
   VirtualMachine itsVM;
-  /// pointer to the CorbaController/Monitor objects (can be 0).
-  CorbaController* itsController;
+
+  int itsNrInputs;
+  int itsNrOutputs;
+
+  int itsNode;
+  int itsAppl;
+  
+  vector<ChannelInfo> itsInputs;   // Mapping of input channels to containing Blocks
+  vector<ChannelInfo> itsOutputs;  // Mapping of outputs channels to containing Blocks
 };
 
   
@@ -211,11 +231,19 @@ inline bool CompositeRep::isHighestLevel() const
   { return itsIsHighestLevel; }
 inline void CompositeRep::setNotHighestLevel()
   { itsIsHighestLevel = false; }
-inline const list<Step*>& CompositeRep::getSteps() const
- { return itsSteps; }
+/* inline const list<Block*>& CompositeRep::getBlocks() const */
+/*  { return itsBlocks; } */
 inline VirtualMachine& CompositeRep::getVM()
  { return itsVM; }
 
+inline int CompositeRep::getNode() const
+  { return itsNode; }
+
+inline int CompositeRep::getNrInputs() const
+  { return itsNrInputs; }
+
+inline int CompositeRep::getNrOutputs() const
+  { return itsNrOutputs; } 
 }
 
 #endif

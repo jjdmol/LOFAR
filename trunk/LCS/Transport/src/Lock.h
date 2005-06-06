@@ -20,12 +20,13 @@
 //#
 //# $Id$
 
-#ifndef _LOCK_H_
-#define _LOCK_H_
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#ifndef LOFAR_TRANSPORT_LOCK_H_
+#define LOFAR_TRANSPORT_LOCK_H_
 
 #include <Common/LofarLogger.h>
+
+#ifdef USE_THREADS
+
 #include <pthread.h>
 
 namespace LOFAR
@@ -187,5 +188,7 @@ class ThreadRWLock
 };
 
 }
+
+#endif // USE_THREADS
 
 #endif

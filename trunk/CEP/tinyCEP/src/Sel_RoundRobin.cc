@@ -48,7 +48,7 @@ Selector* Sel_RoundRobin::clone() const
 unsigned int Sel_RoundRobin::getNext()
 {
   itsCurrentSelection++;
-  if (itsCurrentSelection >= itsNOptions)
+  if (itsCurrentSelection >= (int)itsNOptions)
   {
     itsCurrentSelection = 0;
   }

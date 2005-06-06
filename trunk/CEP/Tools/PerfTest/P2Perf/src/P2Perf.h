@@ -25,14 +25,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef P2PERF_P2PERF_H
-#define P2PERF_P2PERF_H
-
-#include <lofar_config.h>
+#ifndef LOFAR_P2PERF_P2PERF_H
+#define LOFAR_P2PERF_P2PERF_H
 
 #include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
-#include "P2Perf/DHGrowStrategy.h"
+#include <P2Perf/DHGrowStrategy.h>
+
+namespace LOFAR
+{
+
+class Step;
 
 /**
    The P2Perf class implements a Simulator consisting of a set of data
@@ -59,10 +62,10 @@ public:
 
  private:
   /// Define pointers to the arrays with steps and workholders.
-  LOFAR::WorkHolder **Sworkholders;
-  LOFAR::WorkHolder **Dworkholders;
-  LOFAR::Step        **Ssteps;
-  LOFAR::Step        **Dsteps;
+  WorkHolder **Sworkholders;
+  WorkHolder **Dworkholders;
+  Step       **Ssteps;
+  Step       **Dsteps;
 
   /// Number of source steps
   int itsSourceSteps;
@@ -78,5 +81,6 @@ public:
       
 };
 
+} // namespace LOFAR
 
 #endif

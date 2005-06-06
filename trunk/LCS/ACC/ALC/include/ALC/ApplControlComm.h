@@ -31,6 +31,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <Transport/CSConnection.h>
 #include <ACC/DH_ApplControl.h>
 
 namespace LOFAR {
@@ -53,8 +54,14 @@ typedef enum { AcCmdMaskOk 	 	  = 0x0001,
 class ApplControlComm 
 {
 public:
-	// The only constructor.
-	explicit ApplControlComm(bool	syncComm);
+	// The client constructor.
+	ApplControlComm(const string&		hostname,
+					const string&		port,
+					bool				syncComm);
+
+	// The server constructor
+	ApplControlComm(const string&		port,
+					bool				syncComm);
 
 	// Destructor;
 	virtual ~ApplControlComm();
@@ -81,6 +88,10 @@ public:
 	// result.
 	bool	waitForResponse() const;
 
+	// Can be used in async communication to see if a new message has arrived.
+	// Returns \c false in sync communication because the call would block.
+	bool	poll() const;
+
 	// Executes the given command: fills a dataholder, send it to the sender,
 	// and does a 'waitForResponse'.
 	bool	doRemoteCmd(const ACCmd			theCmd,
@@ -90,12 +101,8 @@ public:
 						const string&		theProcList = "",
 						const string&		theNodeList = "") const;
 
-	// Returns a pointer to the dataholder.
+	// Retuirns a pointer to the dataholder.
 	DH_ApplControl*		getDataHolder() const;
-
-	// Install a pointer to the DataHolder that can be used to hold the data
-	// that must be exchanged.
-	void				setDataHolder(DH_ApplControl*	aDHPtr);
 
 private:
 	// Not default constructable
@@ -108,22 +115,19 @@ private:
 	ApplControlComm& 	operator=(const ApplControlComm& that);
 
 	//# --- Datamembers ---
-	// Pointer to a dataholder (=buffer) that is used for packing and unpacking
-	// the information when it is send or read.
+	// Pointer to a connection objects that manage the communication
+	CSConnection*			itsReadConn;
+	CSConnection*			itsWriteConn;
 	DH_ApplControl*		itsDataHolder;
 
 	// Synchrone or Asynchrone communication.
 	bool				itsSyncComm;
 };
 
+//# ----- inline functions -----
 inline DH_ApplControl*	ApplControlComm::getDataHolder() const
 {
-	return itsDataHolder;
-}
-
-inline void ApplControlComm::setDataHolder(DH_ApplControl*	aDHPtr)
-{
-	itsDataHolder = aDHPtr;
+	return (itsDataHolder);
 }
 
 // @} addgroup

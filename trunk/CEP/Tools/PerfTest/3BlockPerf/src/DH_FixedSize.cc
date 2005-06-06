@@ -25,7 +25,6 @@
 
 
 #include "3BlockPerf/DH_FixedSize.h"
-#include "Common/Debug.h"
 
 namespace LOFAR {
 
@@ -53,7 +52,7 @@ DataHolder* DH_FixedSize::clone() const
   return new DH_FixedSize(*this);
 }
 
-void DH_FixedSize::preprocess()
+void DH_FixedSize::init()
 {
   addField ("Data", BlobField<valueType>(1, itsNoValues)); //version, no_elements
   createDataBlock();

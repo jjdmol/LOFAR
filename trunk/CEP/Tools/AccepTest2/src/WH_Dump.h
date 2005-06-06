@@ -7,10 +7,8 @@
 //#
 //# $Id$
 
-#ifndef WH_DUMP_H
-#define WH_DUMP_H
-
-#include <lofar_config.h>
+#ifndef LOFAR_ACCEPTEST2_WH_DUMP_H
+#define LOFAR_ACCEPTEST2_WH_DUMP_H
 
 #include <tinyCEP/WorkHolder.h>
 #include <iostream>
@@ -26,7 +24,7 @@ namespace LOFAR
     explicit WH_Dump (const string& name = "WH_Dump", 
 		      int matrixXsize = 0, 
 		      int matrixYsize = 0,
-		      ostream& os = cout);
+		      ostream& os = std::cout);
 
     virtual ~WH_Dump();
 
@@ -34,7 +32,7 @@ namespace LOFAR
     static WorkHolder* construct (const string& name = "WH_Dump", 
 				  int matrixXsize = 0, 
 				  int matrixYsize = 0,
-				  ostream& os = cout);
+				  ostream& os = std::cout);
 
     /// Make a fresh copy of the WH object.
     virtual WH_Dump* make (const string& name);

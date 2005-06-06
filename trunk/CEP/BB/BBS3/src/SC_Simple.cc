@@ -33,10 +33,11 @@
 namespace LOFAR
 {
 
-SC_Simple::SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD,
-		     DH_WOSolve* woSolve, int nrPrediffers,
+SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn, 
+		     Connection* outWOSolveConn, int nrPrediffers,
 		     const KeyValueMap& args)
-  : StrategyController(id, inDH, woPD, woSolve, nrPrediffers, args.getInt("DBMasterPort", 13157)),
+  : StrategyController(id, inSolConn, outWOPDConn, outWOSolveConn, 
+		       nrPrediffers, args.getInt("DBMasterPort", 13157)),
     itsFirstCall      (true),
     itsPrevWOID       (0),
     itsArgs           (args),
@@ -69,17 +70,19 @@ SC_Simple::~SC_Simple()
 
 bool SC_Simple::execute()
 {
+  DH_WOPrediff* WOPD = getPrediffWorkOrder();
+  DH_WOSolve* WOSolve = getSolveWorkOrder();
   itsCurIter++;
   bool nextInter = false;
   if (itsFirstCall)
   {
     itsFirstCall = false;
     nextInter = true;
-    itsWOPD->setNewBaselines(true);
-    itsWOPD->setNewPeelSources(true);
-    itsWOPD->setSubtractSources(false);
-    itsWOPD->setUpdateParms(false);
-    itsWOSolve->setNewDomain(true);
+    WOPD->setNewBaselines(true);
+    WOPD->setNewPeelSources(true);
+    WOPD->setSubtractSources(false);
+    WOPD->setUpdateParms(false);
+    WOSolve->setNewDomain(true);
     itsCurStartTime = itsArgs.getFloat ("startTime", 0);
   }
   else
@@ -87,11 +90,11 @@ bool SC_Simple::execute()
     // Read solution of previously issued workorders
     readSolution();
 
-    itsWOPD->setNewBaselines(false);
-    itsWOPD->setNewPeelSources(false);
-    itsWOPD->setSubtractSources(false);
-    itsWOPD->setUpdateParms(true);
-    itsWOSolve->setNewDomain(false);
+    WOPD->setNewBaselines(false);
+    WOPD->setNewPeelSources(false);
+    WOPD->setSubtractSources(false);
+    WOPD->setUpdateParms(true);
+    WOSolve->setNewDomain(false);
 
     if (itsControlParmUpd)   // If Controller handles parameter writing
     {
@@ -107,7 +110,7 @@ bool SC_Simple::execute()
     else
     {
       // Send the (reference to) parameter values to Prediffers.
-      itsWOPD->setSolutionID(itsPrevWOID);
+      WOPD->setSolutionID(itsPrevWOID);
     }
 
     // If solution for this interval is good enough, go to next. TBA
@@ -120,60 +123,60 @@ bool SC_Simple::execute()
   }
 
   // Set prediffer workorder data
-  itsWOPD->setStatus(DH_WOPrediff::New);
-  itsWOPD->setKSType("Prediff1");
-  itsWOPD->setStartFreq (itsArgs.getFloat ("startFreq", 0));
-  itsWOPD->setFreqLength (itsArgs.getFloat ("freqLength", 0));
-  itsWOPD->setStartTime (itsCurStartTime);
+  WOPD->setStatus(DH_WOPrediff::New);
+  WOPD->setKSType("Prediff1");
+  WOPD->setStartFreq (itsArgs.getFloat ("startFreq", 0));
+  WOPD->setFreqLength (itsArgs.getFloat ("freqLength", 0));
+  WOPD->setStartTime (itsCurStartTime);
   float timeLength = itsArgs.getFloat ("timeLength", 10);
-  itsWOPD->setTimeLength (timeLength);
-  itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
-  itsWOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr", true));
-  itsWOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
-  itsWOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));
+  WOPD->setTimeLength (timeLength);
+  WOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
+  WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr", true));
+  WOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
+  WOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));
   KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
   vector<int> ant = (const_cast<KeyValueMap&>(itsArgs))["antennas"].getVecInt();
   vector<string> pNames = (const_cast<KeyValueMap&>(itsArgs))["solvableParams"].getVecString();
   vector<int> srcs = (const_cast<KeyValueMap&>(itsArgs))["sources"].getVecInt();
-  itsWOPD->setVarData (msParams, ant, pNames, srcs);
+  WOPD->setVarData (msParams, ant, pNames, srcs);
 
-  itsWOPD->setNewWorkOrderID();
-  itsWOPD->setStrategyControllerID(getID());
-  itsWOPD->setNewDomain(nextInter);
+  WOPD->setNewWorkOrderID();
+  WOPD->setStrategyControllerID(getID());
+  WOPD->setNewDomain(nextInter);
 
   
   // Set solver workorder data  
-  itsWOSolve->setStatus(DH_WOSolve::New);
-  itsWOSolve->setKSType("Solver");
-  itsWOSolve->setUseSVD (itsArgs.getBool ("useSVD", false));
+  WOSolve->setStatus(DH_WOSolve::New);
+  WOSolve->setKSType("Solver");
+  WOSolve->setUseSVD (itsArgs.getBool ("useSVD", false));
 
-  itsWOSolve->setNewWorkOrderID();
-  itsPrevWOID = itsWOSolve->getWorkOrderID();  // Remember the issued workorder id
-  itsWOSolve->setStrategyControllerID(getID());
-  itsWOSolve->setNewDomain(nextInter);
+  WOSolve->setNewWorkOrderID();
+  itsPrevWOID = WOSolve->getWorkOrderID();  // Remember the issued workorder id
+  WOSolve->setStrategyControllerID(getID());
+  WOSolve->setNewDomain(nextInter);
 
   // Temporarily show on cout
   cout << "!!!!!!! Sent workorders: " << endl;
-  itsWOPD->dump();
-  itsWOSolve->dump();
+  WOPD->dump();
+  WOSolve->dump();
 
   cout << "!!!!!!! " << endl;
 
   // Insert WorkOrders into database
-  itsWOPD->insertDB();
+  WOPD->insertDB(*itsOutWOPDConn);
 
   // Send workorders the same workorders to other prediffers (if there are more than 1)
   int nrPred = getNumberOfPrediffers();
   for (int i = 2; i <= nrPred; i++)
   {
-    itsWOPD->setNewWorkOrderID();
+    WOPD->setNewWorkOrderID();
     char str[32];
     sprintf(str, "%i", i);
-    itsWOPD->setKSType("Prediff"+string(str));
-    itsWOPD->insertDB();
+    WOPD->setKSType("Prediff"+string(str));
+    WOPD->insertDB(*itsOutWOPDConn);
   }
 
-  itsWOSolve->insertDB();
+  WOSolve->insertDB(*itsOutWOSolveConn);
 
   return true;
 }
@@ -208,7 +211,7 @@ void SC_Simple::readSolution()
   sprintf(str, "WOID=%i", id);
   string query(str);
 
-  while (solPtr->queryDB(query) <= 0)
+  while (solPtr->queryDB(query, *itsInSolConn) <= 0)
   {
     if (firstTime)
     {

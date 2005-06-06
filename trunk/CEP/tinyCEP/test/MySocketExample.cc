@@ -21,40 +21,51 @@
 //#  $Id$
 
 #include <MySocketExample.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
 
   MySocketExample::MySocketExample(int ninput, int noutput, bool sender)
-    : itsNinput(ninput),
-      itsNoutput(noutput),
-      itsIsSender(sender) {
-      }
+    : itsNinput  (ninput),
+      itsNoutput (noutput),
+      itsIsSender(sender),
+      itsConn    (0),
+      itsTH      (0)
+  {
+  }
       
   MySocketExample::~MySocketExample() {
     delete itsWHs[0];
+    delete itsConn;
+    delete itsTH;
   }
 
-  void MySocketExample::define (const KeyValueMap& map) {
+  void MySocketExample::define (const KeyValueMap&) {
 
-    // create the data holders
+    string service("8192");
+    // create the work holders
     if (itsIsSender) {
-
-      itsWHs[0] = new WH_Example("WH_ExampleS", 1, 1, 10);
-      itsWHs[1] = new WH_Example("DUMMY", 1, 1, 10);
-
-      itsWHs[0]->getDataManager().getOutHolder(0)->connectTo 
-	( *itsWHs[1]->getDataManager().getInHolder(0),
-	  TH_Socket("127.0.0.1", "127.0.0.1", 8192, false) );
-
-    } else {
 
       itsWHs[0] = new WH_Example("WH_ExampleR", 1, 1, 10);
       itsWHs[1] = new WH_Example("DUMMY", 1, 1, 10);
 
-      itsWHs[1]->getDataManager().getOutHolder(0)->connectTo 
-	( *itsWHs[0]->getDataManager().getInHolder(0),
-	  TH_Socket("127.0.0.1", "127.0.0.1", 8192, false) );
+      // Create a server socket
+      itsTH = new TH_Socket(service, false); 
+      itsConn = new Connection("SendConn", itsWHs[0]->getDataManager().getOutHolder(0),
+			       itsWHs[1]->getDataManager().getInHolder(0), itsTH,
+			       false);
+
+    } else {
+
+      itsWHs[0] = new WH_Example("WH_ExampleS", 1, 1, 10);
+      itsWHs[1] = new WH_Example("DUMMY", 1, 1, 10);
+
+      // Create a client socket
+      itsTH = new TH_Socket("127.0.0.1", service, false);
+      itsConn = new Connection("RecvConn", itsWHs[1]->getDataManager().getOutHolder(0),
+			       itsWHs[0]->getDataManager().getInHolder(0), itsTH,
+			       false);
     }
   }
 
@@ -89,7 +100,14 @@ namespace LOFAR
 
 
   void MySocketExample::dump() const {
-
+    if (itsIsSender)
+    {
+      cout << "Sender dump:" << endl;
+    }
+    else
+    {
+      cout << "Receiver dump:" << endl;
+    }
     itsWHs[0]->dump();
 
   }

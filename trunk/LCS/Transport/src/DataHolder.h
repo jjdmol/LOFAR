@@ -29,7 +29,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Transport/Transporter.h>
 #include <Common/BlobFieldSet.h>
 #include <Common/BlobHeader.h>
 #include <Common/BlobString.h>
@@ -75,59 +74,54 @@ public:
   // Destructor
   virtual ~DataHolder();
 
+  // Initialization. The default implementation does nothing.
+  virtual void init();   
+
   // Make a copy
   virtual DataHolder* clone() const = 0;
 
-  // The preprocess method is called during init, thus
-  // before any read or write is done.
-  // It can be used to initialize the DataHolder.
-  // The default implementation does nothing.
-  virtual void preprocess();
+  // Pack the data (use before writing)
+  virtual void pack();
 
-  // The postprocess method is called after process is done.
-  // It can be used to clean up the DataHolder.
-  // The default implementation does nothing.
-  void basePostprocess();
-  virtual void postprocess();
+  // Unpack the data (use after reading). Checks and converts it as needed.
+  virtual void unpack();
 
   // Dump the DataHolder contents to cout.
   // The default implementation does nothing.
   virtual void dump() const;
 
-  // Read the packet data.
-  virtual bool read();
+  // Get data size (in bytes);
+  int getDataSize() const;
 
-  // Write the packet data.
-  virtual bool write();
+  // Get a pointer to the data (the beginning of the blob).
+  void* getDataPtr() const;
 
-  // Is the Transporter of this DataHolder valid?
-  bool isValid() const;
+  // Get the size of a blob header.
+  uint getHeaderSize() const;
 
-  // Connect to another DataHolder.
-  // The data will flow from this object to thatDH.
-  bool connectTo(DataHolder& thatDH, const TransportHolder& prototype,
-		 bool blockingComm = true);
+  // Extract the size from the blob header in the buffer.
+  static uint getDataLength (const void* buffer);
 
-  // Connect to another DataHolder.
-  // The data flow is bidirectional.
-  bool connectBidirectional(DataHolder& thatDH, 
-			    const TransportHolder& thisTH,
-			    const TransportHolder& thatTH,
-			    bool blockingComm = true);
+  // Resize the buffer to the given size (if needed).
+  void resizeBuffer (uint newSize);
 
-  // Initialization (must be called after connect).
-  bool init();   
+  // Does this DataHolder have a fixed size?
+  bool hasFixedSize();
 
-  // Getting, setting and comparing of a timestamp.
-  void setTimeStamp (unsigned long aTimeStamp);
-  unsigned long getTimeStamp() const;
-  void copyTimeStamp (const DataHolder& that);
-  void copyTimeStamp (const DataHolder* that);
-  // Functions to deal with handling the timestamp 
-  int compareTimeStamp (const DataHolder& that) const;
+  // Get the type of the DataHolder.
+  const string& getType() const;
+
+  // Set the type of the DataHolder.
+  void setType (const string& type);
+
+  // Get the name of the DataHolder.
+  const string& getName() const;
+
+  // Set the name of the DataHolder.
+  void setName (const string& name);
 
   // Set maximum data size.
-  // If used, it should be called before preprocess.
+  // If used, it should be called before initialization.
   // Normally this is not needed, but for TH_ShMem transports it is useful,
   // because a buffer in TH_ShMem cannot grow. For other TransportHolders
   // it is not necessary, but can be useful in some cases.
@@ -144,77 +138,29 @@ public:
   // 0 means no maximum.
   int getMaxDataSize() const;
 
-  // Get data size (in bytes);
-  int getDataSize() const;
+  // Tell the DataHolder the properties how the buffer allocation is done.
+  void setAllocationProperties (bool		dataCanGrow,
+				BlobStringType	aBlobType);
 
-  // Get a pointer to the data (the beginning of the blob).
-  void* getDataPtr() const;
+  // Get the version of this DataHolder.
+  int getVersion();
 
-   // Set/get the ID
-  void setID(int aID);
-  int getID() const;
-
-  // Get communication type
-  bool isBlocking();
-
-  // Get the type of the DataHolder.
-  const string& getType() const;
-
-  // Set the type of the DataHolder.
-  void setType (const string& type);
-
-  // Get the name of the DataHolder.
-  const string& getName() const;
-
-  // Set the name of the DataHolder.
-  void setName (const string& name);
-
-  // Get the Transporter object used to send the data
-  // to/from the DataHolder connected to this one.
-  Transporter& getTransporter();
-
-  // Initialize the extra output blob holding arbitrary fields.
-  // The return reference can be used to store the fields in.
-  // It is meant for DataHolders writing data.
-  BlobOStream& createExtraBlob();
-
-  // Clear the extra blob output buffer.
-  // This is needed, because an extra blob is kept until overwritten.
-  void clearExtraBlob();
-
-  // \name Get read access to the extra blob last created or read.
-  // If a created blob is used, only the data written so far can be accessed.
-  // <group>
-  // Throws an exception if there is no extra blob.
-  BlobIStream& getExtraBlob();
-  // \a found is false if there is no extra blob.
-  BlobIStream& getExtraBlob (bool& found, int& version);
-  // </group>
+  // Check if this DataHolder had been initialized.
+  bool isInitialized();
 
   // \name Get access to the data blob.
   // <group>
-  BlobString& getDataBlock();
+  BlobString& getDataBlock();                    // Used by PO_DH_PL
   const BlobString& getDataBlock() const;
   // </group>
 
-  // Get the size of a blob header.
-  uint getHeaderSize() const;
-
-  // Extract the size from the blob header in the buffer.
-  static uint getDataLength (const void* buffer);
-
-  // Resize the buffer to the given size (if needed).
-  void resizeBuffer (uint newSize);
-
 protected:
-  // Copy constructor
+  // Copy DataHolder
   DataHolder(const DataHolder&);
 
   // \name Add a field to the data block definition.
   // Optionally a (unique) name can be given to the field.
   // It returns the index of the field.
-  // Note that the timestamp is always the first
-  // field of the block.
   // <group>
   uint addField (const BlobFieldBase&);
   uint addField (const std::string& fieldName, const BlobFieldBase&);
@@ -254,8 +200,21 @@ protected:
   // Tell that the extra data block will be used.
   void setExtraBlob (const string& name, int version);
 
-  // Handle the data read (check and convert it as needed).
-  void handleDataRead();
+ // Initialize the extra output blob holding arbitrary fields.
+  // The return reference can be used to store the fields in.
+  // It is meant for DataHolders writing data.
+  BlobOStream& createExtraBlob();
+  // Clear the extra blob output buffer.
+  // This is needed, because an extra blob is kept until overwritten.
+  void clearExtraBlob();
+  // Get read access to the extra blob last created or read.
+  // If a created blob is used, only the data written so far can be accessed.
+  // <br>found=false is set if there is no extra blob. The first version
+  // throws an exception if there is no extra blob.
+  // <group>
+  BlobIStream& getExtraBlob();
+  BlobIStream& getExtraBlob (bool& found, int& version);
+  // </group>
 
   // Get the data field set.
   BlobFieldSet& dataFieldSet();
@@ -263,20 +222,17 @@ protected:
   // Initialize the data field set.
   void initDataFields();
 
-  // Write the extra data block into the main blob
-  void writeExtra();
+  //  // The basePostprocess method cleans up the DataHolder.
+  //  void basePostprocess();          // TBD: Is this needed?
 
 private:
   // Get the type of BlobString needed from the transport holder.
-  virtual BlobStringType blobStringType();
+  virtual BlobStringType getBlobStringType();
 
   // Put the extra data block into the main data blob.
   // If possible and needed the buffer is resized.
   // If resized, the data pointers are refilled.
   void putExtra (const void* data, uint size);
-
-  // Fill all data pointers (of timestamp and in derived class).
-  void fillAllDataPointers();
 
   // Let the derived class fill its pointers to the data in the blob.
   // This function is called when the blob is created and when its layout
@@ -284,25 +240,24 @@ private:
   // The default implementation does nothing.
   virtual void fillDataPointers();
 
-
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
-  Transporter  itsTransporter;
-  int          itsMaxDataSize;   ///< <0 is not filled in
-  bool         itsIsAddMax;
-  string       itsName;
-  string       itsType;
-  int          itsVersion;
-  int          itsReadConvert;   ///< data conversion needed after a read?
-                                 ///< 0=no, 1=yes, else=not known yet
-  uint64*      itsTimeStampPtr;
-  DataBlobExtra* itsExtraPtr;
+  BlobStringType* itsBlobType;
+  int             itsMaxDataSize;   //# <0 is not filled in
+  bool		  itsDataCanGrow;
+  string          itsName;
+  string          itsType;
+  int             itsVersion;
+  int             itsReadConvert;   //# data conversion needed after a read?
+                                    //# 0=no, 1=yes, else=not known yet
+  DataBlobExtra*  itsExtraPtr;
+  bool            itsInitialized;
 };
 
 
 inline void DataHolder::setMaxDataSize (uint nbytes, bool isAddMax)
-  { itsMaxDataSize = nbytes; itsIsAddMax = isAddMax; }
+  { itsMaxDataSize = nbytes; itsDataCanGrow = !isAddMax; }
 
 inline int DataHolder::getDataSize() const
   { return itsData->size(); }
@@ -310,20 +265,9 @@ inline int DataHolder::getDataSize() const
 inline void* DataHolder::getDataPtr() const
   { return itsData->data(); }
 
-inline Transporter& DataHolder::getTransporter()
-  { return itsTransporter; }
-
-inline void DataHolder::setTimeStamp (unsigned long aTimeStamp)
-  { *itsTimeStampPtr = aTimeStamp; }
-
-inline unsigned long DataHolder::getTimeStamp() const
-  { return *itsTimeStampPtr; }
-
-inline void DataHolder::copyTimeStamp (const DataHolder& that)
-  { *itsTimeStampPtr = that.getTimeStamp(); }
-
-inline void DataHolder::copyTimeStamp (const DataHolder* that)
-  { *itsTimeStampPtr = that->getTimeStamp(); }
+inline bool DataHolder::hasFixedSize()
+  { return (itsDataFields.hasFixedShape()  && itsDataFields.version() == 1
+	    && itsExtraPtr == 0);  }
 
 inline const string& DataHolder::getName() const
   { return itsName; }
@@ -337,14 +281,8 @@ inline const string& DataHolder::getType () const
 inline void DataHolder::setType(const string& type)
   { itsType = type; }
 
-inline void DataHolder::setID(int aID)
-  { itsTransporter.setItsID(aID); }
-
-inline int DataHolder::getID() const
-  { return itsTransporter.getItsID(); }
-
-inline bool DataHolder::isBlocking()
-  { return itsTransporter.isBlocking(); }
+inline int DataHolder::getVersion()
+  { return itsVersion; }
 
 inline BlobFieldSet& DataHolder::dataFieldSet()
   { return itsDataFields; }
@@ -378,12 +316,6 @@ inline const BlobString& DataHolder::getDataBlock() const
   return *itsData;
 }
 
-inline void DataHolder::fillAllDataPointers()
-{
-  itsTimeStampPtr = itsDataFields[0].getData<uint64> (*itsDataBlob);
-  fillDataPointers();
-}
-
 inline uint DataHolder::getHeaderSize() const
 {
   return sizeof(BlobHeader);
@@ -392,6 +324,21 @@ inline uint DataHolder::getHeaderSize() const
 inline uint DataHolder::getDataLength (const void* buffer)
 {
   return static_cast<const BlobHeader*>(buffer)->getLength();
+}
+
+inline bool DataHolder::isInitialized()
+{
+  return itsInitialized;
+}
+
+inline void DataHolder::setAllocationProperties(bool  		dataCanGrow,
+					        BlobStringType aBlobType)
+{
+  DBGASSERTSTR (!itsInitialized, "Allocation Properties are already set");
+
+  itsDataCanGrow = dataCanGrow;
+  itsBlobType    = new BlobStringType(aBlobType);
+  itsInitialized = true;
 }
 
 // @} // Doxygen endgroup Transport

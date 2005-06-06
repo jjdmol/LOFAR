@@ -40,6 +40,8 @@ namespace LOFAR
 // \addtogroup BBS3
 // @{
 
+class Step;
+
 class BlackBoardDemo: public LOFAR::ApplicationHolder
 {
 public:

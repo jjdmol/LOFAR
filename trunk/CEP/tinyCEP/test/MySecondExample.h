@@ -37,7 +37,8 @@ namespace LOFAR
     int    itsArgv;
     char** itsArgc;
 
-    DataHolder* itsProto;
+    Connection* itsConn;
+    TransportHolder* itsTH;
 
     DH_Example* dhptr;
 

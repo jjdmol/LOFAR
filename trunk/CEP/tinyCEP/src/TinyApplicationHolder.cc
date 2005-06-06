@@ -22,42 +22,33 @@
 
 #include <lofar_config.h>
 
+#include <Transport/BaseSim.h>
 #include <tinyCEP/TinyApplicationHolder.h>
 #include TRANSPORTERINCLUDE
 
 namespace LOFAR
 {
-//   TinyApplicationHolder::TinyApplicationHolder(int ninput, int noutput, DataHolder* dhptr)
-//     : itsArgc(0),
-//       itsArgv(0),
-//       itsProto(dhptr),
-//       itsDataManager(0) {
-//       itsNinputs(ninput),
-//       itsNoutputs(noutput){
-//   }
 
   TinyApplicationHolder::TinyApplicationHolder()
     : itsArgc(0),
-      itsArgv(0),
-      itsProto(0)
+      itsArgv(0)
     { }
 
   TinyApplicationHolder::~TinyApplicationHolder() {
-    // dit segfault op dit moment nog.. FIXME!
-    //    delete itsProto;
   }
 
   TinyApplicationHolder::TinyApplicationHolder(const TinyApplicationHolder& that)
     : itsArgc        (that.itsArgc),
-      itsArgv        (that.itsArgv),
-      itsProto       (that.itsProto) { 
+      itsArgv        (that.itsArgv)
+  { 
   }
       
     
   void TinyApplicationHolder::baseDefine(const KeyValueMap& params) {
+#ifdef HAVE_MPI
     // Initialize MPI environment
-    TRANSPORTER::init(itsArgc, itsArgv);
-
+    TRANSPORTER::initMPI(itsArgc, itsArgv);
+#endif
     // Let derived class define the Application
     define(params);
   }
@@ -78,7 +69,7 @@ namespace LOFAR
     dump();
   }
 
-  void TinyApplicationHolder::baseDHFile(const string& dh, const string& name) {
+  void TinyApplicationHolder::baseDHFile(const string&, const string&) {
   }
   
   void TinyApplicationHolder::basePostrun() {
@@ -89,7 +80,7 @@ namespace LOFAR
     quit();
   }
 
-  void TinyApplicationHolder::define(const KeyValueMap& map) {
+  void TinyApplicationHolder::define(const KeyValueMap&) {
   }
   
   void TinyApplicationHolder::check() {
@@ -98,7 +89,7 @@ namespace LOFAR
   void TinyApplicationHolder::init() {
   }
   
-  void TinyApplicationHolder::run(int nsteps) {
+  void TinyApplicationHolder::run(int) {
   }
   
   void TinyApplicationHolder::run_once() {

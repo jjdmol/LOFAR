@@ -1,6 +1,6 @@
-//#  ExampleSocket.cc: a test program for the TH_Socket class
+//#  tTH_Socket.cc: Tests the functionality of the TH_Socket class
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -23,222 +23,216 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include "DH_Example.h"
+#include <lofar_config.h>
+#include <Common/LofarTypes.h>
+#include <Common/lofar_iostream.h>
+#include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
-#include <Transport/TH_Mem.h>
-#include <Common/BlobOStream.h>
-#include <iostream>
+#include <Transport/Connection.h>
+#include <DH_Socket.h>
 
 using namespace LOFAR;
 
-void sendData1 (DH_Example& sender)
+static bool			readerRole;
+static bool			listenerAtDest;
+static bool			blocking;
+static bool			bidirectional;
+static DH_Socket	*theDH = 0;
+
+#define	BUF_SZ		256000
+
+namespace LOFAR
 {
-  sender.getBuffer()[0] = makefcomplex(17,-3.5);
-  sender.setCounter(2);
-  sender.write();
+
+//
+// sendData(outConn, reverseOrder)
+//
+int32	sendData(Connection&	outConn, bool		reverseOrder)
+{
+	uchar		*buffer;
+	
+	LOG_TRACE_COND("ResizingBuffer");
+	theDH->setBufferSize(BUF_SZ);
+	theDH->setCounter(BUF_SZ);
+	buffer = theDH->getBuffer();
+
+	// fill buffer
+	LOG_TRACE_COND("Filling buffer");
+	for (int32 i = 0; i < BUF_SZ; i++) {
+		buffer[i] = (((reverseOrder) ? BUF_SZ - i : i) & 0xFF);
+	}
+
+	LOG_INFO(formatString("Sending data %s", 
+						  reverseOrder ? "in reverse order" :""));
+	outConn.write();
+	outConn.waitForWrite();
+	return (0);
 }
 
-void sendData2 (DH_Example& sender)
+//
+// readAndCheckData(outConn, reverseOrder)
+//
+int32 readAndCheckData(Connection&	inConn, bool reverseOrder)
 {
-  sender.getBuffer()[0] = makefcomplex(17,-3.5);
-  sender.setCounter(2);
-  // fill extra blob
-  BlobOStream& bos = sender.createExtraBlob();
-  bos << "a string";
-  sender.write();
+	// receive data
+	LOG_INFO(formatString("Receiving %sdata", 
+									reverseOrder ? "reverse ordered " :""));
+	theDH->setBufferSize(BUF_SZ);
+
+	// Read the data and be sure everthing is received
+#if YOU_WANT_TO_WAIT_BLOCKING_IN_WAIT_FOR_READ
+	inConn.read();
+	inConn.waitForRead();
+#else
+	int32 count = 1;
+	while(!inConn.read()) {
+		count++;
+	}
+	LOG_INFO_STR("Data read in " << count << " tries");
+#endif
+
+	// Check the contents of the buffer.
+	const uchar* c = static_cast<uchar*>(theDH->getBuffer());
+	for (int32 i = 0; i < BUF_SZ; i++) {
+		if (c[i] != static_cast<uchar>
+							((((reverseOrder) ? BUF_SZ - i : i) & 0xFF))) {
+			LOG_FATAL(formatString ("Bytenr %d is 0x%02X and should be 0x%02X",
+					  i, c[i], (((reverseOrder) ? BUF_SZ - i : i) & 0xFF)));
+			LOG_INFO("Test failed!");
+			return (1);
+		}
+	}
+
+	LOG_INFO("Received data is OK");
+	return (0);
 }
 
-void sendData3 (DH_Example& sender)
+//
+// doTest(testnr)
+//
+// Four important (global) flags determine the behaviour of the test:
+//
+// readerRole		true = start with reading;   false = start with writing
+// listenerAtDest	true = don't start listener; false = start listener
+// bidirectional	true = do read+write test;   false = one way test
+// blocking			true = sync. communication;  false = async. communication
+int32 doTest(int32	testnr) 
 {
-  sender.getBuffer()[0] = makefcomplex(15,-4.5);
-  sender.setCounter(5);
-  BlobOStream& bos = sender.createExtraBlob();
-  bos << int(1) << float(3);
-  bos.putStart ("p3", 3);
-  bos.putEnd();
-  sender.write();
+	// Init dataholder
+	theDH = new DH_Socket("theDH", 1);	
+	theDH->init();
+
+	// Create TCP socket.
+	string		service(formatString("%d", testnr+3850));
+	TH_Socket	*testSocket;
+	int32		result;
+
+	if (readerRole == listenerAtDest) {
+		// open server socket, but force that client is first
+		sleep(3);
+		testSocket = new TH_Socket(service, blocking);
+	}
+	else {
+		// open client socket
+		testSocket = new TH_Socket("localhost", service, blocking);
+	}
+
+	// make the connection
+	LOG_INFO("Setting up connection...");
+	while (!testSocket->init()) {
+		LOG_INFO("no connection yet, retry in 1 second");
+		sleep (1);
+	}
+	LOG_INFO("Connection made succesfully");
+
+	// Do the test
+	if (readerRole) {
+		Connection	readConn ("read" , 0, theDH, testSocket);
+		LOG_TRACE_COND ("About to read data");
+		result = readAndCheckData(readConn, false);// data in normal order
+
+		if (bidirectional) {
+			Connection	writeConn("write", theDH, 0, testSocket);
+			LOG_INFO("Sleeping for 5 seconds to test async comm");
+			sleep(5);					// be sure read is active for max errors
+			LOG_TRACE_COND ("About to write data");
+			result += sendData(writeConn, true);	    // data in reverse order
+		}
+	}
+	else {	// writerRole
+		Connection	writeConn("write", theDH, 0, testSocket);
+		LOG_TRACE_COND ("About to write data");
+		result = sendData(writeConn, false);		// data in normal order
+
+		if (bidirectional) {
+			Connection	readConn ("read", 0, theDH, testSocket);
+			LOG_TRACE_COND ("About to read data");
+			result += readAndCheckData(readConn, true);// data in reverse order
+		}
+	}
+
+	delete theDH;
+	theDH = 0;
+
+	if (result == 0) {
+		LOG_INFO ("Test passed succesful!");
+	}
+	return (result);
 }
 
-void sendData4 (DH_Example& sender)
+void usageMessage(char	*progName)
 {
-  sender.getBuffer()[0] = makefcomplex(1.7,3.52);
-  sender.setCounter(5);
-  sender.write();
-}
-
-void receiveData (DH_Example& receiver, DH_Example& result)
-{
-  result.read();
-  receiver.read();
-  cout << "Received " << receiver.getDataSize() << " bytes" << endl;
-  ASSERT (receiver.getDataSize() == result.getDataSize());
-  const char* d1 = static_cast<char*>(result.getDataPtr());
-  const char* d2 = static_cast<char*>(receiver.getDataPtr());
-  for (int i=0; i<result.getDataSize(); i++) {
-    ASSERT (d1[i] == d2[i]);
-  }
-}
-
-void test1 (bool isReceiver)
-{
-  DH_Example DH_Sender("dh1", 1);
-  DH_Example DH_Receiver("dh2", 1);
-  DH_Sender.setID(1);
-  DH_Receiver.setID(2);
-  TH_Socket proto("localhost", "localhost", 8924);
-  DH_Sender.connectTo (DH_Receiver, proto, true);
-  if (isReceiver)
-    DH_Receiver.init();
-  else
-    DH_Sender.init();
-
-  DH_Example dh1("dh1mem", 1);
-  DH_Example dh2("dh2mem", 1);
-  dh1.setID(3);
-  dh2.setID(4);
-  dh1.connectTo (dh2, TH_Mem(), false);
-  dh1.init();
-  dh2.init();
-
-  // Use a TH_Mem to check if the socket receiver gets the correct data.
-  // It should match the data sent via TH_Mem.
-  if (isReceiver) {
-    sendData1 (dh1);
-    receiveData (DH_Receiver, dh2);
-  } else {
-    cout << "Send data1" << endl;
-    sendData1 (DH_Sender);
-  }
-}
-
-void test2 (bool isReceiver)
-{
-  DH_Example DH_Sender("dh1", 1, true);
-  DH_Example DH_Receiver("dh2", 1, true);
-  DH_Sender.setID(1);
-  DH_Receiver.setID(2);
-  TH_Socket proto("localhost", "localhost", 8924);
-  DH_Sender.connectTo (DH_Receiver, proto, true);
-  if (isReceiver)
-    DH_Receiver.init();
-  else
-    DH_Sender.init();
-
-  DH_Example dh1("dh1mem", 1, true);
-  DH_Example dh2("dh2mem", 1, true);
-  dh1.setID(3);
-  dh2.setID(4);
-  dh1.connectTo (dh2, TH_Mem(), false);
-  dh1.init();
-  dh2.init();
-
-  // Use a TH_Mem to check if the socket receiver gets the correct data.
-  // It should match the data sent via TH_Mem.
-  if (isReceiver) {
-    sendData1 (dh1);
-    receiveData (DH_Receiver, dh2);
-    sendData2 (dh1);
-    receiveData (DH_Receiver, dh2);
-    sendData3 (dh1);
-    receiveData (DH_Receiver, dh2);
-    sendData4 (dh1);
-    receiveData (DH_Receiver, dh2);
-  } else {
-    cout << "Send data1" << endl;
-    sendData1 (DH_Sender);
-    cout << "Send data2" << endl;
-    sendData2 (DH_Sender);
-    cout << "Send data3" << endl;
-    sendData3 (DH_Sender);
-    cout << "Send data4" << endl;
-    sendData4 (DH_Sender);
-  }
-}
-
-void testBidirectional (bool isReceiver)
-{
-  DH_Example DH_Sender("dh1", 1);
-  DH_Example DH_Receiver("dh2", 1);
-  DH_Sender.setID(1);
-  DH_Receiver.setID(2);
-  TH_Socket proto("localhost", "", 8924, false);
-  TH_Socket proto2("", "localhost", 8924, true);
-  DH_Sender.connectBidirectional (DH_Receiver, proto, proto2, true);
-  // DH_Sender.connectTo (DH_Receiver, proto, true);
-  if (isReceiver)
-    DH_Receiver.init();
-  else
-    DH_Sender.init();
-
-  DH_Example dh1("dh1mem", 1);
-  DH_Example dh2("dh2mem", 1);
-  dh1.setID(3);
-  dh2.setID(4);
-  dh1.connectBidirectional (dh2, TH_Mem(), TH_Mem(), false);
-  dh1.init();
-  dh2.init();
-
-  // Use a TH_Mem to check if the socket receiver gets the correct data.
-  // It should match the data sent via TH_Mem.
-  if (isReceiver) {
-    sendData1 (dh1);
-    receiveData (DH_Receiver, dh2);
-    // And send different data back
-    cout << "Receiver sending data4 back" << endl;
-    sendData4(DH_Receiver);
-
-  } else {
-    cout << "Send data1" << endl;
-    sendData1 (DH_Sender);
-    // And receive data back
-    sendData4(dh2);
-    receiveData (DH_Sender, dh1);
-
-  }
+	cout << "Usage: " << progName << " -s|-c" << endl;
 }
 
 
-void displayUsage (void)
-{
-  cout << "Usage: ExampleSocket [-s|-c]" << endl;
-  cout << "(Skipping test)." << endl;
+} // namespace LOFAR
+
+int main (int32 argc, char*	argv[]) {
+
+	// check invocation
+	if (argc != 2) {
+		usageMessage(argv[0]);
+		return (1);
+	}
+
+	// check first parameter
+	if (!strcmp(argv[1], "-s")) {
+		readerRole = true;
+	}
+	else {
+		if (!strcmp(argv[1], "-c")) {
+			readerRole = false;
+		}
+		else {
+			cout << "ERROR: Parameter must be -s or -c" << endl;
+			usageMessage(argv[0]);
+			return (1);
+		}
+	}
+	
+	INIT_LOGGER(argv[0]);
+
+	LOG_INFO("Executing 8 tests with changing blockingmode, listenerside and uni-/bidirectional mode");
+	LOG_INFO_STR("Buffer exchanged is " << BUF_SZ << " bytes tall");
+
+	int32	result = 0;
+	for (int32 testnr = 1; testnr <= 8; testnr++) {
+		listenerAtDest = (testnr % 2 == 1);
+		blocking	   = (testnr < 5);
+		bidirectional  = (testnr % 4 == 3) || (testnr % 4 == 0);
+
+		LOG_INFO(formatString("===== TEST %d =====", testnr));
+		LOG_INFO(formatString("%s, %s listener, %sblocking, %sdirectional",
+			readerRole ? "server" : "client",
+			(readerRole == listenerAtDest) ? "starting" : "no",
+			blocking ? "" : "non",
+			bidirectional ? "bi" : "uni"));
+	
+		sleep(2);
+		result += doTest(testnr);
+	}
+
+	return (result);
 }
 
-int main (int argc, const char** argv)
-{
-  INIT_LOGGER("ExampleSocket.log_prop");
-
-  string which;
-  try {
-    bool isReceiver; 
-    // isReceiver == false => this program must run as a server (receiver).
-    // isReceiver == true  => this program must run as a client (sender).
-    
-    if (argc < 2) {
-      displayUsage ();
-      return 0;
-    }
-
-    if (! strcmp (argv [1], "-s")) {
-      cout << "(Server side)" << endl;
-      isReceiver = true;
-      which = "receiver";
-    } else if (! strcmp (argv [1], "-c")) {
-      cout << "(Client side)" << endl;
-      isReceiver = false;
-      which = "sender";
-    } else {
-      displayUsage ();
-      return 0;
-    }
-
-    test1(isReceiver);
-    test2(isReceiver);
-    testBidirectional(isReceiver);
-  } catch (std::exception& x) {
-    cout << "Unexpected exception in " << which << ": " << x.what() << endl;
-    return 1;
-  }
-  cout << which << " OK" << endl;
-  return 0;
-}

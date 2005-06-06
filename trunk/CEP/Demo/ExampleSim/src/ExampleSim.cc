@@ -23,19 +23,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
+
 #include <stdio.h>
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
-#include <CEPFrame/WH_Empty.h>
 #include <ExampleSim/ExampleSim.h>
 #include <ExampleSim/WH_Source.h>
 #include <ExampleSim/WH_Multiply.h>
 #include <ExampleSim/WH_Add.h>
+#include <Transport/TH_Mem.h>
 
 #include TRANSPORTERINCLUDE
 
@@ -51,7 +53,7 @@ ExampleSim::~ExampleSim()
 }
 
 /**
-   Define function for the ExampleSim simulation. It defines the steps that 
+   Define function for the ExampleSim application. It defines the steps that 
    process part of the data.
  */
 void ExampleSim::define(const KeyValueMap& params)
@@ -60,7 +62,7 @@ void ExampleSim::define(const KeyValueMap& params)
   undefine();
 
   // Create the top-level Composite
-  Composite topComposite(new WH_Empty(), "ExampleSim");
+  Composite topComposite(0, 0, "ExampleSim");
   setComposite(topComposite);
 
   // Set node and application number of Composite
@@ -81,43 +83,41 @@ void ExampleSim::define(const KeyValueMap& params)
   Step addStep(addWH, "adderStep");
 
   // Create a composite Step
-  WH_Multiply WHcomp("Composite", 2);
-  Composite composite(WHcomp, "calcComposite");
-  composite.addStep(multStep);
-  composite.addStep(addStep);
+  Composite composite(2, 1, "calcComposite");
+  composite.addBlock(multStep);
+  composite.addBlock(addStep);
   // and make the internal connections
-  Step* stepPtr = &multStep;
-  composite.connectInputToArray(&stepPtr, 1, 0, 0, TH_Mem(), false);
-  addStep.connectInput(&multStep, TH_Mem(), false);
-  stepPtr = &addStep;
-  composite.connectOutputToArray(&stepPtr, 1, 0, 0, TH_Mem(), false);
+  composite.setInput(0, &multStep, 0, -1);
+  addStep.connectInput(&multStep, new TH_Mem(), false);
+  composite.setOutput(0, &addStep, 0, -1);
 
   // Determine the node for each step to run on
   sourceStep.runOnNode(0);
   composite.runOnNode(1);
 
   // Add all Step(s) to Composite
-  topComposite.addStep(sourceStep);
-  topComposite.addStep(composite);
+  topComposite.addBlock(sourceStep);
+  topComposite.addBlock(composite);
 
   // Create the connections between Steps
-  composite.connectInput(&sourceStep, TH_Mem(), false);
+  composite.connectInput(&sourceStep, new TH_Mem(), false);
 
 
 }
   
 
 void ExampleSim::run(int nSteps) {
-  TRACER1("Call run()");
+  LOG_TRACE_FLOW("Call run()");
   Step::clearEventCount();
 
-  TRACER4("Start Processing simul");    
+  LOG_TRACE_FLOW("Start Processing top level composite");    
   for (int i=0; i<nSteps; i++) {
-    TRACER2("Call simul.process() ");
+    LOG_TRACE_FLOW("Calling top level composite process() ");
     getComposite().process();
   }
 
-  TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
+  LOG_TRACE_FLOW_STR("END OF COMPOSITE on node " 
+		     << TRANSPORTER::getCurrentRank () );
  
 #if 0
   //     close environment

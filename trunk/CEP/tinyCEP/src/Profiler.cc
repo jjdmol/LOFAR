@@ -25,9 +25,7 @@
 
 #include <lofar_config.h>
 
-#include "tinyCEP/Profiler.h"
-#include <Common/Debug.h>
-#include <Common/lofar_iostream.h>
+#include <tinyCEP/Profiler.h>
 
 #ifdef HAVE_MPI_PROFILER
 

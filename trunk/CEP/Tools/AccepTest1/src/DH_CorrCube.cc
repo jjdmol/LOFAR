@@ -48,7 +48,7 @@ DataHolder* DH_CorrCube::clone() const
   return new DH_CorrCube(*this);
 }
 
-void DH_CorrCube::preprocess()
+void DH_CorrCube::init()
 {
   // First delete possible buffers.
   postprocess();

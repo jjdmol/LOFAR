@@ -25,8 +25,8 @@
 
 #include <Common/lofar_iostream.h>
 #include <Transport/TH_Mem.h>
-#include <Transport/TH_File.h>
 #include <TransportPL/TH_PL.h>
+#include <Transport/Connection.h>
 #include <DH_Example.h>
 
 using namespace LOFAR;
@@ -36,14 +36,12 @@ bool testMem()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 bidirectionally with non-blocking in-memory 
   // communication
-  DH1.connectBidirectional(DH2, TH_Mem(), TH_Mem(), false);
+  TH_Mem memTH1;
+  TH_Mem memTH2;
+  Connection conn1("Connection1", &DH1, &DH2, &memTH1, false);
+  Connection conn2("Connection2", &DH2, &DH1, &memTH2, false);
     
   // initialize
   DH1.init();
@@ -62,8 +60,8 @@ bool testMem()
        << endl;
     
   // do the "forward" data transport
-  DH1.write();
-  DH2.read();
+  conn1.write();
+  conn1.read();
   
   cout << "After forward transport  : " 
        << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
@@ -80,8 +78,8 @@ bool testMem()
   // now we change the data somewhat and do the "backwards" transport
   DH2.getBuffer()[0] += makefcomplex(1,1);
   DH2.setCounter(3);
-  DH2.write();
-  DH1.read();
+  conn2.write();
+  conn2.read();
   // 
   
   cout << "After backwards transport  : " 
@@ -107,14 +105,11 @@ bool testPL()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 via a database
-  DH1.connectBidirectional(DH2, TH_PL("TestBidirectional"),
-			   TH_PL("TestBidirectional"));
+  TH_PL plTH1("TestBidirectional");
+  TH_PL plTH2("TestBidirectional");
+  Connection conn1("connection1", &DH1, &DH2, &plTH1);
+  Connection conn2("connection2", &DH2, &DH1, &plTH2);
 
   // initialize
   DH1.init();
@@ -133,8 +128,8 @@ bool testPL()
        << endl;
     
   // do the "forward" data transport
-  DH1.write();
-  DH2.read();
+  conn1.write();
+  conn1.read();
   
   cout << "After forward transport  : " 
        << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
@@ -151,8 +146,8 @@ bool testPL()
   // now we change the data somewhat and do the "backwards" transport
   DH2.getBuffer()[0] += makefcomplex(1,1);
   DH2.setCounter(3);
-  DH2.write();
-  DH1.read();
+  conn2.write();
+  conn2.read();
   // 
   
   cout << "After backwards transport  : " 
@@ -185,9 +180,6 @@ int main(int argc, const char** argv)
   bool resultPL = true;
   cout << "Testing TH_PL..." << endl;
   resultPL = testPL();
-
-  // Bidirectional communication with TH_File is not possible, because TH_File 
-  // is either read-only or write-only.
 
   // Check if all tests succeeded
   if (resultMem && resultPL) {

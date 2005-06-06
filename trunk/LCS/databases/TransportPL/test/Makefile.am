@@ -4,15 +4,15 @@ check_PROGRAMS			= Example ExampleMem ExamplePL ExamplePL2 ExamplePL3 ExamplePL4
 
 Example_SOURCES 		= Example.cc DH_Example.cc
 
-ExampleMem_SOURCES 		= ExampleMem.cc DH_Example.cc
+ExampleMem_SOURCES 		= ExampleMem.cc DH_Example.cc DH_ExampleExtra.cc
 
-ExamplePL_SOURCES 		= ExamplePL.cc DH_Example.cc
+ExamplePL_SOURCES 		= ExamplePL.cc DH_Example.cc DH_ExampleExtra.cc
 
 ExamplePL2_SOURCES 		= ExamplePL2.cc DH_Example2.cc
 
 ExamplePL3_SOURCES 		= ExamplePL3.cc DH_Example2.cc
 
-ExamplePL4_SOURCES 		= ExamplePL4.cc DH_Example2.cc
+ExamplePL4_SOURCES 		= ExamplePL4.cc DH_ExampleExtra2.cc
 
 TestBidirectional_SOURCES 	= TestBidirectional.cc DH_Example.cc
 

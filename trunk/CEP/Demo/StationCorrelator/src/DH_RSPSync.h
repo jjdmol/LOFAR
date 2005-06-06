@@ -32,7 +32,7 @@ public:
 
 
   /// Allocate the buffers.
-  virtual void preprocess();
+  virtual void init();
 
   /// Set the sync stamp
   void setSyncStamp(const syncStamp_t syncStamp);

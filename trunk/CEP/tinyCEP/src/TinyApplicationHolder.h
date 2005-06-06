@@ -26,8 +26,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Transport/DataHolder.h>
-#include <Transport/Transporter.h>
 #include <tinyCEP/TinyDataManager.h>
 
 #include <Common/KeyValueMap.h>
@@ -39,7 +37,6 @@ namespace LOFAR
   class TinyApplicationHolder
   {
   public:
-    //TinyApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
     // default constructor does nothing.
     TinyApplicationHolder();
     virtual ~TinyApplicationHolder();
@@ -61,7 +58,7 @@ namespace LOFAR
     /// Dump the simulation data by calling the dump function.
     virtual void baseDump();
     
-    /// Set the output file of a data holder.
+    /// Set the output file of a data holder.    // ?? Is this used at all??
     virtual void baseDHFile (const string& dh, const string& name);
 
     /// Do a postrun on the simulation.
@@ -100,9 +97,7 @@ namespace LOFAR
     const char** itsArgv;
 
   private:
-    // DataHolder prototype for the application
-    DataHolder* itsProto;
-
+ 
   };
 
 } // namespace LOFAR

@@ -20,15 +20,16 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_NETWORKBUILDER_H_
-#define CEPFRAME_NETWORKBUILDER_H_
+#ifndef LOFAR_CEPFRAME_NETWORKBUILDER_H_
+#define LOFAR_CEPFRAME_NETWORKBUILDER_H_
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <CEPFrame/Composite.h>
+#include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR
 {
+class Composite;
 
 /**
    The NetworkBuilder is part of the implementation of a Builder pattern

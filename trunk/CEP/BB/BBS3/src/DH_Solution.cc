@@ -98,7 +98,7 @@ PL::PersistentObject& DH_Solution::getPO() const
   return *itsPODHSOL;
 } 
 
-void DH_Solution::preprocess()
+void DH_Solution::init()
 {
   // Add the fields to the data definition.
   addField ("WOID", BlobField<int>(1));
@@ -138,19 +138,6 @@ void DH_Solution::fillDataPointers()
   itsEndFreq = getData<double> ("EndFreq");
   itsStartTime = getData<double> ("StartTime");
   itsEndTime = getData<double> ("EndTime");
-}
-
-void DH_Solution::postprocess()
-{
-  itsWOID = 0;
-  itsFit = 0;
-  itsMu = 0;
-  itsStdDev = 0;
-  itsChi = 0;
-  itsStartFreq = 0;
-  itsEndFreq = 0;
-  itsStartTime = 0;
-  itsEndTime = 0;
 }
 
 Quality DH_Solution::getQuality() const

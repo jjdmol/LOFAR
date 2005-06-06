@@ -24,8 +24,10 @@
 #include <lofar_config.h>
 
 #include <DH_Example.h>
+#include <DH_ExampleExtra.h>
 #include <TransportPL/TH_PL.h>
 #include <Transport/TH_Mem.h>
+#include <Transport/Connection.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobArray.h>
 #include <vector>
@@ -34,51 +36,83 @@
 using namespace LOFAR;
 
 
-void sendData1 (DH_Example& sender)
+void sendData1 (Connection& conn)
 {
-  sender.getBuffer()[0] = makefcomplex(17,-3.5);
-  sender.setCounter(2);
-  sender.write();
+  DH_Example* sender = (DH_Example*)conn.getDataHolder();
+  sender->getBuffer()[0] = makefcomplex(17,-3.5);
+  sender->setCounter(2);
+  conn.write();
 }
 
-void sendData2 (DH_Example& sender)
+void sendExtraData1 (Connection& conn)
 {
-  sender.getBuffer()[0] = makefcomplex(17,-3.5);
-  sender.setCounter(2);
+  DH_ExampleExtra* sender = (DH_ExampleExtra*)conn.getDataHolder();
+  sender->getBuffer()[0] = makefcomplex(17,-3.5);
+  sender->setCounter(2);
+  conn.write();
+}
+
+void sendData2 (Connection& conn)
+{
+  DH_ExampleExtra* sender = (DH_ExampleExtra*)conn.getDataHolder();  
+  sender->getBuffer()[0] = makefcomplex(17,-3.5);
+  sender->setCounter(2);
   // fill extra blob (> 1 KByte because of possible DTL bug)
-  BlobOStream& bos = sender.createExtraBlob();
+  BlobOStream& bos = sender->fillVariableBuffer();
   bos << "a string";
   bos << std::vector<int>(256,1);
-  sender.write();
+  conn.write();
 }
 
-void sendData3 (DH_Example& sender)
+void sendData3 (Connection& conn)
 {
-  sender.getBuffer()[0] = makefcomplex(15,-4.5);
-  sender.setCounter(5);
-  BlobOStream& bos = sender.createExtraBlob();
+  DH_ExampleExtra* sender = (DH_ExampleExtra*)conn.getDataHolder();  
+  sender->getBuffer()[0] = makefcomplex(15,-4.5);
+  sender->setCounter(5);
+  BlobOStream& bos = sender->fillVariableBuffer();
   bos << int(1) << float(3);
   bos.putStart ("p3", 3);
   bos.putEnd();
-  sender.write();
+  conn.write();
 }
 
-void sendData4 (DH_Example& sender)
+void sendData4 (Connection& conn)
 {
-  sender.getBuffer()[0] = makefcomplex(1.7,3.52);
-  sender.setCounter(5);
-  sender.write();
+  DH_ExampleExtra* sender = (DH_ExampleExtra*)conn.getDataHolder();
+  sender->getBuffer()[0] = makefcomplex(1.7,3.52);
+  sender->setCounter(5);
+  conn.write();
 }
 
-void receiveData (DH_Example& receiver, DH_Example& result)
+void receiveData (Connection& conn, Connection& connRes)
 {
-  result.read();
-  receiver.read();
-  cout << "Received " << receiver.getDataSize() << " bytes" << endl;
-  ASSERT (receiver.getDataSize() == result.getDataSize());
-  const char* d1 = static_cast<char*>(result.getDataPtr());
-  const char* d2 = static_cast<char*>(receiver.getDataPtr());
-  for (int i=0; i<result.getDataSize(); i++) {
+  DH_Example* receiver = (DH_Example*)conn.getDataHolder(true);
+  DH_Example* result = (DH_Example*)connRes.getDataHolder(true);
+
+  connRes.read();
+  conn.read();
+  cout << "Received " << receiver->getDataSize() << " bytes" << endl;
+  ASSERT (receiver->getDataSize() == result->getDataSize());
+
+  const char* d1 = static_cast<char*>(result->getDataPtr());
+  const char* d2 = static_cast<char*>(receiver->getDataPtr());
+  for (int i=0; i<result->getDataSize(); i++) {
+    ASSERT (d1[i] == d2[i]);
+  }
+}
+
+void receiveExtraData (Connection& conn, Connection& connRes)
+{
+  DH_ExampleExtra* receiver = (DH_ExampleExtra*)conn.getDataHolder(true);
+  DH_ExampleExtra* result = (DH_ExampleExtra*)connRes.getDataHolder(true);
+
+  connRes.read();
+  conn.read();
+  cout << "Received " << receiver->getDataSize() << " bytes" << endl;
+  ASSERT (receiver->getDataSize() == result->getDataSize());
+  const char* d1 = static_cast<char*>(result->getDataPtr());
+  const char* d2 = static_cast<char*>(receiver->getDataPtr());
+  for (int i=0; i<result->getDataSize(); i++) {
     ASSERT (d1[i] == d2[i]);
   }
 }
@@ -87,64 +121,61 @@ void test1()
 {
   DH_Example DH_Sender("dh1", 1);
   DH_Example DH_Receiver("dh2", 1);
-  DH_Sender.setID(1);
-  DH_Receiver.setID(2);
-  DH_Sender.connectTo (DH_Receiver, TH_PL("ExamplePL"));
+
+  TH_PL plTH("ExamplePL");
+  Connection conn1("connection1", &DH_Sender, &DH_Receiver, &plTH);
   DH_Sender.init();
   DH_Receiver.init();
 
   DH_Example dh1("dh1mem", 1);
   DH_Example dh2("dh2mem", 1);
-  dh1.setID(3);
-  dh2.setID(4);
-  dh1.connectTo (dh2, TH_Mem(), false);
+  TH_Mem memTH;
+  Connection conn2("connection2", &dh1, &dh2, &memTH, false);
   dh1.init();
   dh2.init();
 
   // Use a TH_Mem to check if the TH_PL receiver gets the correct data.
   // It should match the data sent via TH_Mem.
   cout << "Send data1" << endl;
-  sendData1 (DH_Sender);
-  sendData1 (dh1);
-  receiveData (DH_Receiver, dh2);
+  sendData1 (conn1);
+  sendData1 (conn2);
+  receiveData (conn1, conn2);
 }
 
 void test2()
 {
-  DH_Example DH_Sender("dh1", 1, true);
-  DH_Example DH_Receiver("dh2", 1, true);
-  DH_Sender.setID(1);
-  DH_Receiver.setID(2);
-  DH_Sender.connectTo (DH_Receiver, TH_PL("ExamplePL"));
+  DH_ExampleExtra DH_Sender("dh1", 1);
+  DH_ExampleExtra DH_Receiver("dh2", 1);
+  TH_PL plTH("ExamplePL");
+  Connection conn1("connection1", &DH_Sender, &DH_Receiver, &plTH);
   DH_Sender.init();
   DH_Receiver.init();
 
-  DH_Example dh1("dh1mem", 1, true);
-  DH_Example dh2("dh2mem", 1, true);
-  dh1.setID(3);
-  dh2.setID(4);
-  dh1.connectTo (dh2, TH_Mem(), false);
+  DH_ExampleExtra dh1("dh1mem", 1);
+  DH_ExampleExtra dh2("dh2mem", 1);
+  TH_Mem memTH;
+  Connection conn2("connection2", &dh1, &dh2, &memTH, false);
   dh1.init();
   dh2.init();
 
   // Use a TH_Mem to check if the TH_PL receiver gets the correct data.
   // It should match the data sent via TH_Mem.
   cout << "Send data1" << endl;
-  sendData1 (DH_Sender);
-  sendData1 (dh1);
-  receiveData (DH_Receiver, dh2);
+  sendExtraData1 (conn1);
+  sendExtraData1 (conn2);
+  receiveExtraData (conn1, conn2);
   cout << "Send data2" << endl;
-  sendData2 (DH_Sender);
-  sendData2 (dh1);
-  receiveData (DH_Receiver, dh2);
+  sendData2 (conn1);
+  sendData2 (conn2);
+  receiveExtraData (conn1, conn2);
   cout << "Send data3" << endl;
-  sendData3 (DH_Sender);
-  sendData3 (dh1);
-  receiveData (DH_Receiver, dh2);
+  sendData3 (conn1);
+  sendData3 (conn2);
+  receiveExtraData (conn1, conn2);
   cout << "Send data4" << endl;
-  sendData4 (DH_Sender);
-  sendData4 (dh1);
-  receiveData (DH_Receiver, dh2);
+  sendData4 (conn1);
+  sendData4 (conn2);
+  receiveExtraData (conn1, conn2);
 }
 
 

@@ -62,50 +62,68 @@ public:
   TH_Mem();
   virtual ~TH_Mem();
 
-  // method to make a TH_Mem instance
-  virtual TH_Mem* make() const;
+  virtual bool init();  
 
-  // Receive fixed sized data. This call does the actual data transport
-  // by memcpy'ing the data from the sender.
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
+  /**
+     Receive fixed sized data. This call does the actual data transport
+     by memcpy'ing the data from the sender.
+     Note: when using these non-blocking methods be very careful not to change 
+     the data between a sendNonBlocking and recvNonBlocking call! 
+  */
+  virtual int32 recvNonBlocking(void* buf, int32 nbytes, int tag, 
+			       int32 offset=0, DataHolder* dh=0);
+  /**
+     Send fixed sized data.
+     It does not really send, because the recv is doing the memcpy.
+     This call only records the buf, nbytes, destination and tag
+     which can be matched by the recv call.
+     The only thing it does is setting the status.
+  */
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
-  // Send fixed sized data.
-  // It does not really send, because the recv is doing the memcpy.
-  // This call only records the buf, nbytes, destination and tag
-  // which can be matched by the recv call.
-  // The only thing it does is setting the status.
-  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
+  /**
+     Receive fixed size data. This call does the actual data transport
+     by memcpy'ing the data from the sender and sending out a
+     received notification.
+  */
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead=0, 
+			    DataHolder* dh=0);
 
-  // Receive variable sized data. This call does the actual data transport
-  // by memcpy'ing the data from the sender.
-  virtual bool recvVarNonBlocking(int tag);
+ /**
+     Send fixed size data.
+     It does not really send, because the recv is doing the memcpy.
+     This call only records the buf, nbytes, destination and tag
+     which can be matched by the recv call.
+     The only things it does are setting the status and waiting for
+     a notification of the receiver.
+  */
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
-  // Receive fixed size data. This call does the actual data transport
-  // by memcpy'ing the data from the sender and sending out a
-  // received notification.
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  // Read the total message length of the next message.
+  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
 
-  // Send fixed size data.
-  // It does not really send, because the recv is doing the memcpy.
-  // This call only records the buf, nbytes, destination and tag
-  // which can be matched by the recv call.
-  // The only things it does are setting the status and waiting for
-  // a notification of the receiver.
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
-
-  // Receive variable size data. This call does the actual data transport
-  // by memcpy'ing the data from the sender and sending out a
-  // received notification.
-  virtual bool recvVarBlocking(int tag);
+  // Read the total message length of the next message.
+  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
   // Get the type of transport.
   virtual string getType() const;
 
-  virtual bool connectionPossible(int srcRank, int dstRank) const;
+  virtual bool isClonable() const;
 
-  virtual bool isBidirectional() const;
- 
-  // \name Static functions which are the same as those in TH_ShMem and TH_MPI.
+  virtual TH_Mem* clone() const;
+
+  // Resets all members which are source or destination specific.
+  virtual void reset();
+
+  // NB: The following method doesn't do what you expect! It does not
+  // guarantee the buffer contents has been safely sent.
+  // Your application should make sure write/read are called alternately.
+  virtual void waitForSent(void* buf, int nbytes, int tag);
+
+  // This method does nothing, because the memcpy is always done by recvNonBlocking
+  virtual void waitForReceived(void* buf, int nbytes, int tag);
+
+  // Static functions which are the same as those in TH_ShMem and TH_MPI.
   // They don't do anything. In this way templating on TH type can be done.
   // <group>
   static void init (int argc, const char *argv[]);
@@ -123,8 +141,10 @@ public:
   // Initializes condition variables needed for blocking communication
   void initConditionVariables(int tag);
 
-  // The map from tag to source DataHolder object.
-  static map<int, DataHolder*> theSources;
+  /**
+     The map from tag to source DataHolder object.
+   */
+  static map<int, DataHolder*> theirSources;
 
 #ifdef USE_THREADS
   // \name Maps which hold condition variables.
@@ -139,13 +159,16 @@ public:
 
   bool        itsFirstSendCall;
   bool        itsFirstRecvCall;
-  DataHolder* itsDataSource;
+  DataHolder* itsDataSource;   // Pointer to current source DataHolder
 
   bool        itsFirstCall;
 };
 
-inline bool TH_Mem::isBidirectional() const
-  { return true; }
+inline bool TH_Mem::init()
+{ return true; }
+
+inline bool TH_Mem::isClonable() const
+{ return true; }
 
 // @} // Doxygen endgroup Transport
 

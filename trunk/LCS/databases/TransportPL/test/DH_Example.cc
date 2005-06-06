@@ -20,6 +20,7 @@
 //
 //  $Id$
 
+#include <lofar_config.h>
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -29,17 +30,12 @@
 namespace LOFAR
 {
 
-DH_Example::DH_Example (const string& name, unsigned int initialNelements,
-			bool useExtra)
+DH_Example::DH_Example (const string& name, unsigned int initialNelements)
 : DH_PL      (name, "DH_Example", 1),
   itsCounter (0),
   itsBuffer  (0),
   itsBufSize (initialNelements)
-{
-  if (useExtra) {
-    setExtraBlob ("Extra", 1);
-  }
-}
+{}
 
 DH_Example::DH_Example(const DH_Example& that)
 : DH_PL      (that),
@@ -56,7 +52,7 @@ DataHolder* DH_Example::clone() const
   return new DH_Example(*this);
 }
 
-void DH_Example::preprocess()
+void DH_Example::init()
 {
   // Initialize the fieldset.
   initDataFields();
@@ -75,7 +71,7 @@ void DH_Example::preprocess()
 void DH_Example::setBufferSize (unsigned int nelements)
 {
   itsBufSize = nelements;
-  preprocess();
+  init();
 }
 
 void DH_Example::fillDataPointers()
@@ -84,12 +80,6 @@ void DH_Example::fillDataPointers()
   itsCounter = getData<int> ("Counter");
   // Fill in the buffer pointer.
   itsBuffer  = getData<BufferType> ("Buffer");
-}
-
-void DH_Example::postprocess()
-{
-  itsCounter = 0;
-  itsBuffer = 0;
 }
 
 } // end namespace

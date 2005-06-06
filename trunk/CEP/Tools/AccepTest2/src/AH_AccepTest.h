@@ -10,7 +10,6 @@
 #ifndef AH_ACCEPTEST_H
 #define AH_ACCEPTEST_H
 
-#include <lofar_config.h>
 #include <fstream>
 #include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/TinyApplicationHolder.h>
@@ -18,6 +17,9 @@
 namespace LOFAR
 {
   using std::fstream;
+
+  class Connection;
+  class TransportHolder;
 
   class AH_AccepTest: public TinyApplicationHolder {
   public:
@@ -37,6 +39,8 @@ namespace LOFAR
     AH_AccepTest& operator= (const AH_AccepTest&);
     
     vector<WorkHolder*> itsWHs;
+    vector<Connection*> itsConns;
+    vector<TransportHolder*> itsTHs;
     void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH);
   private:
     fstream* itsFileOutput;

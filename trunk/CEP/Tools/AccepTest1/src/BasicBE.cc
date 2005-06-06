@@ -16,6 +16,8 @@
 #include <Common/KeyValueMap.h>
 #include <Common/Net/Socket.h>
 
+#include <unistd.h>
+
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
 #endif
@@ -78,7 +80,7 @@ int main (int argc, const char** argv) {
   INIT_LOGGER(loggerfile.c_str());
 
 #ifdef HAVE_MPI
-  TH_MPI::init(argc, argv);
+  TH_MPI::initMPI(argc, argv);
 #endif
 
   for (int nrRuns=0; nrRuns<runs; nrRuns++) {

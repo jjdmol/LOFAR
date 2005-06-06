@@ -24,19 +24,17 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>             // for sprintf
+#include <lofar_config.h>
+
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/Debug.h>
-
-#include "AsyncTest/WH_Source.h"
-#include "AsyncTest/StopWatch.h"
-#include "AsyncTest/AsyncTest.h"
+#include <AsyncTest/WH_Source.h>
+#include <AsyncTest/DH_Buffer.h>
+#include <AsyncTest/StopWatch.h>
+#include <AsyncTest/AsyncTest.h>
 
 using namespace LOFAR;
 
-int  WH_Source::itsMeasurements = 1000;
 bool WH_Source::itsFirstcall = true;
 
 WH_Source::WH_Source (const string& name, 
@@ -48,39 +46,22 @@ WH_Source::WH_Source (const string& name,
 : WorkHolder    (nin, nout, name),
   itsBufLength  (nbuffer),
   itsSizeFixed (sizeFixed),
-  itsIteration(itsMeasurements),
-  itsTime(0),
-  itsSyncWrite(syncWrite)
+  itsSyncWrite(syncWrite),
+  itsIteration(1),
+  itsTime(0)
 {
-    AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
-    AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
-  //   AssertStr (nout == nin, "number of inputs and outputs must match");
-  
   char str[8];
 
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addInDataHolder(i, new DH_GrowSize (std::string("in_") + str,
-				     nbuffer, itsSizeFixed), true);
-
-    DbgAssertStr(getDataManager().getGeneralInHolder(i)->getType() == "DH_GrowSize",
-               "DataHolder is not of type DH_GrowSize");    
-
-    ((DH_GrowSize*)getDataManager().getGeneralInHolder(i))->
-      setInitialDataPacketSize(nbuffer);
-
+    getDataManager().addInDataHolder(i, new DH_Buffer (std::string("in_") + str,
+				     nbuffer));
   }
   
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addOutDataHolder(i, new DH_GrowSize(std::string("out_") + str,
-				      nbuffer, itsSizeFixed), itsSyncWrite);
-
-    DbgAssertStr(getDataManager().getGeneralOutHolder(i)->getType() == "DH_GrowSize",
-               "DataHolder is not of type DH_GrowSize");    
-
-    ((DH_GrowSize*)getDataManager().getGeneralOutHolder(i))->
-	setInitialDataPacketSize(nbuffer);
+    getDataManager().addOutDataHolder(i, new DH_Buffer(std::string("out_") + str,
+				      nbuffer));
   }
 
 }
@@ -106,9 +87,12 @@ WorkHolder* WH_Source::make(const string& name)
 
 void WH_Source::process()
 { 
-    getDataManager().getOutHolder(0)->setTimeStamp(itsTime++);
-    // getDataManager().getInHolder(0);
-   //dump();
+  for (int i = 0; i < getDataManager().getOutputs(); i++)
+  {
+    ((DH_Buffer*)(getDataManager().getOutHolder(i)))->setCounter(itsIteration);
+  }
+  itsIteration++;
+  //dump();
 }
 
 void WH_Source::dump()
@@ -116,10 +100,10 @@ void WH_Source::dump()
   cout << "WH_Source " << getName() << " dump:" << endl;
   for (int i = 0; i < getDataManager().getInputs(); i++)
   {
-    ((DH_GrowSize*)getDataManager().getInHolder(i))->dump();
+    getDataManager().getInHolder(i)->dump();
   }
   for (int j = 0; j < getDataManager().getOutputs(); j++)
   {
-    ((DH_GrowSize*)getDataManager().getOutHolder(j))->dump();
+    getDataManager().getOutHolder(j)->dump();
   }
 }

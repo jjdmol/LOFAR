@@ -40,14 +40,13 @@ public:
   typedef fcomplex BufferType;
 
   explicit DH_Example (const string& name="dh_example",
-		       unsigned int initialNelements = 10,
-		       bool useExtra = false);
+		       unsigned int initialNelements = 10);
 
   DH_Example(const DH_Example&);
 
   virtual ~DH_Example();
 
-  virtual DataHolder* clone() const;
+  virtual DH_Example* clone() const;
 
   /// Set the Counter attribute.
   void setCounter (int counter);
@@ -55,10 +54,10 @@ public:
   int getCounter() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  /// Note: call this after this DataHolder has been connected to make 
+  /// sure the buffers are allocated in the right place (in normal or 
+  /// shared memory in case of connection with TH_ShMem)
+  virtual void init();
 
   /// Reset the buffer size.
   void setBufferSize (unsigned int nelements);

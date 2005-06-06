@@ -27,8 +27,9 @@
 #include <lofar_config.h>
 
 #include <tinyCEP/WorkHolder.h>
+#include <Transport/DataHolder.h>
 #include <tinyCEP/Profiler.h>
-
+#include <Transport/BaseSim.h>
 #include TRANSPORTERINCLUDE
 
 namespace LOFAR
@@ -232,12 +233,6 @@ void WorkHolder::basePostprocess()
 //     TRACER4("WorkHolder::basePostprocess " << getName() << " on node/appl (" 
 // 	   << getNode() << '/' << getAppl() << ')');
     postprocess();
-    for (int input=0; input<itsNinputs; input++)	{
-      getDataManager().getInHolder(input)->basePostprocess();
-    }
-    for (int output=0; output<itsNoutputs; output++)	{
-      getDataManager().getOutHolder(output)->basePostprocess();
-    }
     getDataManager().postprocess();
   }
 }

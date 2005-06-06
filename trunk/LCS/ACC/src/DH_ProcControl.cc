@@ -63,15 +63,20 @@ DH_ProcControl*		DH_ProcControl::clone() const
 }
 
 
-// Redefines the preprocess function.
-void 	DH_ProcControl::preprocess()
+// Redefines the init function.
+void 	DH_ProcControl::init()
 {
-	LOG_TRACE_RTTI ("DH_ProcControl:preprocess");
+	LOG_TRACE_RTTI ("DH_ProcControl:init");
 
+	// Initialize the fieldset
+	initDataFields();
+
+	// Add the fields to the definition
 	addField ("VersionNumber", BlobField<uint16>(1));
 	addField ("Command", 	   BlobField<int16>(1));	// PCCmd
 	addField ("Result", 	   BlobField<uint16>(1));
 
+	// create the data blob (calls fillpointers).
 	createDataBlock();
 
 }

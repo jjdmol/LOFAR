@@ -1,42 +1,38 @@
-//#  CompositeRep.cc:
-//#
-//#  Copyright (C) 2000, 2001
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id$
+///  CompositeRep.cc:
+//
+//  Copyright (C) 2000, 2001
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//  $Id$
+//
+//
+//////////////////////////////////////////////////////////////////////
 
-//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 #include <CEPFrame/CompositeRep.h>
-#include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
-#include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/VirtualMachine.h>
+#include <Transport/Connection.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
 #include <unistd.h>
-
-#ifdef HAVE_CORBA
-#include <Transport/Corba/BS_Corba.h>
-#include <Transport/Corba/CorbaController.h>
-#endif 
 
 namespace LOFAR
 {
@@ -45,326 +41,221 @@ namespace LOFAR
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CompositeRep::CompositeRep (WorkHolder& worker, 
-		    const string& name,
-		    bool addNameSuffix, 
-		    bool controllable,
-		    bool monitor)
-: StepRep          (worker, name, addNameSuffix, monitor),
+CompositeRep::CompositeRep (int nrInputs,
+			    int nrOutputs,
+			    const string& name,
+			    bool addNameSuffix)
+: BlockRep         (name, addNameSuffix),
   itsIsHighestLevel(true),
-  itsController    (0)
+  itsNrInputs      (nrInputs),
+  itsNrOutputs     (nrOutputs),
+  itsNode          (0),
+  itsAppl          (0)
 {
   LOG_TRACE_FLOW("CompositeRep C'tor");
-  if (controllable) {
-    LOG_TRACE_RTTI_STR("Create controllable Composite " << name);
-#ifdef HAVE_CORBA
-    // Create a CorbaController object and connect it to the VirtualMachine.
-    itsController = new CorbaController (BS_Corba::getPOA(),
-					 BS_Corba::getPOAManager(),
-					 name, 
-					 &itsVM);
-#else
-    LOG_INFO("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
-#endif 
-  }
+ 
+  itsInputs.resize(nrInputs);
+  itsOutputs.resize(nrOutputs);
 }
 
 CompositeRep::~CompositeRep()
 {
-  for (list<Step*>::iterator iter=itsSteps.begin();
-       iter!=itsSteps.end(); iter++) {
+  for (list<Block*>::iterator iter=itsBlocks.begin();
+       iter!=itsBlocks.end(); iter++) {
     delete *iter;
   }
-#ifdef HAVE_CORBA
-  delete itsController;
-#endif
+  for (list<Connection*>::iterator it=itsConnections.begin();
+       it!=itsConnections.end(); it++)
+  {
+    TransportHolder* th = (*it)->getTransportHolder();
+    LOG_TRACE_FLOW_STR("Deleting connection " << (*it)->getTag());
+    delete th;
+    delete *it;
+  }
+
+  itsInputs.clear();
+  itsOutputs.clear();
 }
 
-void CompositeRep::addStep (const Step& step)
+void CompositeRep::addBlock (const Block& aBlock)
 {
-  LOG_TRACE_FLOW_STR("Composite::addStep " << step.getName());
+  LOG_TRACE_FLOW_STR("Composite::addBlock " << aBlock.getName());
   // Error if the step is already used in a simul.
-  ASSERTSTR (step.getRep()->getParent() == 0,
-	     "Step " << step.getName() << " already used in another simul");
-  // Make a copy of the Step object.
-  // Note that the underlying StepRep is shared (reference counted).
-  Step* aStep = step.clone();
-  StepRep* stepPtr = aStep->getRep();
+  ASSERTSTR (aBlock.getRep()->getParent() == 0,
+ 	     "Block " << aBlock.getName() 
+ 	     << " already used in another composite");
+  // Make a copy of the Block object.
+  // Note that the underlying BlockRep is shared (reference counted).
+  Block* block = aBlock.clone();
+  BlockRep* stepPtr = block->getRep();
   // Set the sequence number (which might change the name).
-  stepPtr->setSeqNr (itsSteps.size());
-  // Error if the step name is already used.
-  ASSERTSTR (itsNameMap.find(stepPtr->getName()) == itsNameMap.end(),
-	     "Step name '%s' already used in this simul" <<
-	     step.getName());
+  stepPtr->setSeqNr (itsBlocks.size());
   // Put the copy of the step in list.
-  itsSteps.push_back (aStep);
-  // Add the name to the map.
-  itsNameMap[stepPtr->getName()] = stepPtr;
+  itsBlocks.push_back (block);
   // Tell that the step has been added to a Composite.
   stepPtr->setParent (*this);
   if (stepPtr->isComposite()) {
     CompositeRep* simulPtr = dynamic_cast<CompositeRep*>(stepPtr);
-    // update the ishighestlevel flag of the aStep
+    // update the ishighestlevel flag of the aBlock
     simulPtr->setNotHighestLevel();
   }
 }
 
+void CompositeRep::addConnection(Connection* conn)
+{
+  LOG_TRACE_FLOW_STR("Composite::addConnection " << conn->getTag());
+  itsConnections.push_back(conn);
+}
+
 void CompositeRep::runOnNode (int aNode, int applNr)
 {
-  StepRep::runOnNode (aNode, applNr);
-  for (list<Step*>::iterator iter=itsSteps.begin();
-       iter!=itsSteps.end(); iter++) {
+  itsNode = aNode;
+  itsAppl = applNr;
+  for (list<Block*>::iterator iter=itsBlocks.begin();
+       iter!=itsBlocks.end(); iter++) {
     (*iter)->runOnNode (aNode, applNr);
   }
 }
 
-
-bool CompositeRep::connect (const string& sourceName, const string& targetName,
-			    const TransportHolder& prototype, bool blockingComm)
+void CompositeRep::setInput (int thisIndex, 
+			     Block* aBlock, 
+			     int thatIndex, 
+			     int nrChan)
 {
-  int sourceDH, targetDH;
-  StepRep* sourceStep;
-  StepRep* targetStep;
-  if (! splitName (true, sourceName, sourceStep, sourceDH)) {
-    return false;
+  DBGASSERTSTR (thisIndex >= 0,          "Channel index is too low");
+  DBGASSERTSTR (thisIndex < getNrInputs(), "Channel index is too high");
+  DBGASSERTSTR (nrChan <= aBlock->getNrInputs() && nrChan <= getNrInputs(), 
+		"nrChan is too high");
+
+  // Determine how many channels to loop
+  if (nrChan < 0) {
+    nrChan = min(aBlock->getNrInputs(), this->getNrInputs());
   }
-  if (! splitName (false, targetName, targetStep, targetDH)) {
-    return false;
+
+  for (int i=0; i<nrChan; i++) 
+  {
+    int thisInx = thisIndex + i;  // Channel nr in this Composite
+    int thatInx = thatIndex + i;  // Channel nr in aBlock
+
+    DBGASSERTSTR(itsInputs[thisInx].block == 0 && itsInputs[thisInx].chanNr == -1,
+		 "Input" << thisInx << " has already been set.");
+    itsInputs[thisInx].block = aBlock;
+    itsInputs[thisInx].chanNr = thatInx;
   }
-  ASSERTSTR (sourceStep != targetStep,
-	     "Attempt to connect Step/Composite " <<
-	     sourceStep->getName() << " to itself");
-  if (sourceStep == this) {
-    if (sourceDH < 0  &&  targetDH < 0) {
-      Step tgt(targetStep);
-      return connect_thisIn_In (&tgt, 0, 0, 0, prototype, blockingComm);
-    } else {
-      return connectData (prototype,
-			  sourceStep->getInData(max(0,sourceDH)),
-			  targetStep->getInData(max(0,targetDH)),
-			  blockingComm);
-    }
-  } else if (targetStep == this) {
-    if (sourceDH < 0  &&  targetDH < 0) {
-      Step src(sourceStep);
-      connect_thisOut_Out (&src, 0, 0, 0, prototype, blockingComm);
-    } else {
-      return connectData (prototype,
-			  sourceStep->getOutData(max(0,sourceDH)),
-			  targetStep->getOutData(max(0,targetDH)),
-			  blockingComm);
-    }
-  } else {
-    // If no DataHolders given, connect all of them in the steps.
-    // Otherwise connect given DataHolder. Take first if not given.
-    if (sourceDH < 0  &&  targetDH < 0) {
-      Step src(sourceStep);
-      return targetStep->connectInput (&src, prototype, blockingComm);
-    } else {
-      return targetStep->connectRep (sourceStep, max(0,targetDH),
-				     max(0,sourceDH), 1, prototype,
-				     blockingComm);
-    }
-  }
-  return false;
 }
-
-bool CompositeRep::splitName (bool isSource, const string& name,
-			  StepRep*& step, int& dhIndex)
+  
+void CompositeRep::setOutput (int thisIndex, 
+			      Block* aBlock, 
+			      int thatIndex, 
+			      int nrChan)
 {
-  dhIndex = -1;
-  step = 0;
-  // Determine if we have to take the input or output DataHolder.
-  bool takeOut = isSource;
-  // Split the name at the .
-  int i = name.find('.');
-  // Find the step part and object. No step part means this Composite.
-  if (i == 0) {
-    step = this;
-    takeOut = !isSource;
-  } else {
-    string stepName = name;
-    if (i > 0) {
-      stepName = name.substr (0, i);
-    }
-    ASSERTSTR (itsNameMap.find(stepName) != itsNameMap.end(),
-	       "Step name " << stepName << " is unknown");
-    step = itsNameMap[stepName];
+  ASSERTSTR (thisIndex >= 0,          "Channel index is too low");
+  ASSERTSTR (thisIndex < getNrOutputs(), "Channel index is too high");
+  DBGASSERTSTR (nrChan <= aBlock->getNrOutputs() && nrChan <= getNrOutputs(), 
+		"nrChan is too high");
+
+  // Determine how many channels to loop
+  if (nrChan < 0) {
+    nrChan = min(aBlock->getNrOutputs(), this->getNrOutputs());
   }
-  // Find the DataHolder name.
-  // No name means all DataHolders in the Step.
-  string dhName;
-  if (i >= 0) {
-    i++;
-    if (i < int(name.length())) {
-      dhName = name.substr (i, name.length()-i);
-    }
+
+  for (int i=0; i<nrChan; i++) 
+  {
+    int thisInx = thisIndex + i;  // DataHolder nr in this Composite
+    int thatInx = thatIndex + i;  // DataHolder nr in aBlock
+
+    DBGASSERTSTR(itsOutputs[thisInx].block == 0 && itsOutputs[thisInx].chanNr == -1,
+		 "Output " << thisInx << " has already been set.");
+    itsOutputs[thisInx].block = aBlock;
+    itsOutputs[thisInx].chanNr = thatInx;
   }
-  // Find the DataHolder index in the WorkHolder of the Step.
-  // It can be an input or an output DataHolder depending on:
-  // - is it a source or target
-  // - is it this Composite or a Step in the Composite.
-  if (! dhName.empty()) {
-    string type = "Output";
-    if (takeOut) {
-      dhIndex = step->getWorker()->getOutChannel(dhName);
-    } else {
-      type = "Input";
-      dhIndex = step->getWorker()->getInChannel(dhName);
-    }
-    ASSERTSTR (dhIndex >= 0,
-	       type << " DataHolder " << dhName <<
-	       " unknown in step/simul " << step->getName());
-  }
-  return true;
 }
 
 
-bool CompositeRep::connect_thisOut_Out (Step* aStep,          
-				    int   thisChannelOffset,
-				    int   thatChannelOffset,
-				    int   skip,
-				    const TransportHolder& prototype,
-				    bool blockingComm)
+void CompositeRep::setInputArray (Block* aBlock[],    // array of ptrs to Blocks
+				  int    nrBlocks)    // nr of Blocks in aBlock[] array
 {
-  if (aStep == NULL) {
-    return false;
-  }
-  // determine how much channels to loop
-  int loopSize = min(aStep->getWorker()->getDataManager().getOutputs(),
-		     this->getWorker()->getDataManager().getOutputs());
-  for (int channel=0; channel < loopSize ; channel += skip+1) {
-    int thischannel = channel+thisChannelOffset;   // channel nr in this Step
-    int thatchannel = channel+thatChannelOffset;   // channel nr in aStep
-    
-    connectData (prototype,
-		 aStep->getOutData(thatchannel),
-		 this->getOutData(thischannel),
-		 blockingComm);
-
-    LOG_TRACE_RTTI_STR("connect_OutOut; Connect " << getName() << "(ID = "
-	   << getID() << " ) channel " << thischannel << "to : ("
-	   << aStep->getRep()->getID() << ") OutTransport ID = " 
-	   << aStep->getOutData(thatchannel).getID() << " ");  
-  }
-  return true;
-}
-
-bool CompositeRep::connect_thisIn_In (Step* aStep,          
-				  int   thisChannelOffset,
-				  int   thatChannelOffset,
-				  int   skip,
-				  const TransportHolder& prototype,
-				  bool blockingComm)
-{
-  if (aStep == NULL) {
-    return false;
-  }
-
-  // determine how much channels to loop
-  int loopSize = min(aStep->getWorker()->getDataManager().getInputs(),
-		     this->getWorker()->getDataManager().getInputs());
-  for (int channel=0; channel < loopSize ; channel += skip+1) {
-    int thischannel = channel+thisChannelOffset;  // channel nr in this Step
-    int thatchannel = channel+thatChannelOffset;  // channel nr in aStep
-    connectData (prototype,
-		 this->getInData(thischannel),
-		 aStep->getInData(thatchannel),
-		 blockingComm);
-
-    LOG_TRACE_RTTI_STR( "connect_thisIn_In; Connect " << getName() 
-			<< "(ID = " << getID() 
-	   << " ) channel " << thischannel << " : InTransport InID = " 
-	   << aStep->getInData(thatchannel).getID() << " ");  
-  }
-  return true;
-}
-
-
-bool CompositeRep::connectInputToArray (Step* aStep[],   // pointer to  array of ptrs to Steps
-				 int    nrItems, // nr of Steps in aStep[] array
-				 int    skip,     // skip in inputs in aStep 
-				 int    offset,   // start with this input nr in aStep
-				 const TransportHolder& prototype,
-				 bool blockingComm)
-{
-
-  LOG_TRACE_FLOW_STR("connectInputToArray " 
+  LOG_TRACE_FLOW_STR("setInputArray " 
 		     << getName() << " "
-		     << aStep[0]->getName());
-  if (aStep==NULL) return false;
-  int channelOffset=0;
-  for (int item=offset; item<nrItems; item ++) {
-    ASSERTSTR(getWorker()->getDataManager().getInputs()  
-	    >=  channelOffset + aStep[item]->getWorker()->getDataManager().getInputs() - skip,
-		 "Step::connectInputToArray not enough inputs");
-    connect_thisIn_In (aStep[item],
-		       channelOffset, // offset in this
-		       offset,
-		       skip,         // offset in aStep
-		       prototype,
-		       blockingComm);
+		     << aBlock[0]->getName());
+  DBGASSERT(aBlock!=NULL);
 
-    channelOffset += aStep[item]->getWorker()->getDataManager().getInputs() - skip;
+  if (nrBlocks < 0) {  // set nrBlocks automatically
+    nrBlocks = getNrInputs();
   }
-  return true;
-  
+  int dhIndex=0;
+
+  for (int item=0; item<nrBlocks; item++) {
+    ASSERTSTR (getNrInputs() >= 
+               dhIndex+aBlock[item]->getNrOutputs(),
+               "setInputArray " << getName() << " - " << aBlock[item]->getName() <<
+               "; not enough inputs");
+
+    setInput(dhIndex, aBlock[item], 0, -1);
+    dhIndex += aBlock[item]->getNrOutputs();
+  }
+  if (dhIndex != getNrInputs()) {
+    LOG_WARN_STR("CompositeRep::setInputArray() - Warning:  " << 
+		 getName() << " - " << aBlock[0]->getName() 
+		 << ", unequal number of inputs and outputs");
+  }
 }
 
-bool CompositeRep::connectOutputToArray (Step* aStep[],  // array of ptrs to Steps
-				  int    nrItems,
-				  int    skip,    // skip in inputs in aStep 
-				  int    offset,  // start with this input nr in aStep
-				  const TransportHolder& prototype,
-				  bool blockingComm)
-{ // nr of Steps in aStep[] array
-  
-  LOG_TRACE_FLOW_STR( "connectOutputToArray " 
-		      << getName() << " "
-		      << aStep[0]->getName());
-  if (aStep==NULL) return false;
-  int channelOffset=0;
-  for (int item=0; item<nrItems; item++) {
-    ASSERTSTR (getWorker()->getDataManager().getOutputs() >=
-	       channelOffset + aStep[item]->getWorker()->getDataManager().getOutputs(),
-	       "Step::connectOutputToArray not enough outputs");
-    connect_thisOut_Out (aStep[item],
-			 channelOffset, // offset in this
-			 offset,
-			 skip,
-			 prototype,
-			 blockingComm);
-    channelOffset += aStep[item]->getWorker()->getDataManager().getOutputs() - skip;
-  }
-  return true;
-}
-
-void CompositeRep::replaceConnectionsWith(const TransportHolder& newTH, bool blockingComm)
+void CompositeRep::setOutputArray (Block* aBlock[],  // array of ptrs to Blocks
+				   int    nrBlocks)  // nr of Blocks in aBlock[] array
 {
-  // Do a simplifyComm for this Composite.
-  StepRep::replaceConnectionsWith(newTH, blockingComm);
-  // Do the same for all steps in this Composite.
-  for (list<Step*>::iterator iter=itsSteps.begin();
-       iter!=itsSteps.end(); iter++) {
-    (*iter)->replaceConnectionsWith(newTH, blockingComm);
+  LOG_TRACE_FLOW_STR( "setOutputArray " 
+		      << getName() << " "
+		      << aBlock[0]->getName());
+  DBGASSERT(aBlock==NULL);
+
+  if (nrBlocks < 0) {  // set nrBlocks automatically
+    nrBlocks = getNrOutputs();
+  }
+  int dhIndex=0;
+
+  for (int item=0; item<nrBlocks; item++) {
+
+    ASSERTSTR (getNrOutputs() >= 
+               dhIndex+aBlock[item]->getNrInputs(),
+               "setOutputArray " << getName() << " - " << aBlock[item]->getName() <<
+               "; not enough inputs");
+
+    setOutput(dhIndex, aBlock[item], 0, -1);
+
+    dhIndex += aBlock[item]->getNrInputs();
+
+  }
+  if (dhIndex != getNrOutputs()) {
+    LOG_WARN_STR("CompositeRep::setOutputArray() - Warning:   " 
+		 << getName() << " - " << aBlock[0]->getName()
+		 << ", unequal number of inputs and outputs");
   }
 }
+
+// void CompositeRep::replaceConnectionsWith(const TransportHolder& newTH, bool blockingComm)
+// {
+//   // Do a simplifyComm for this Composite.
+//   BlockRep::replaceConnectionsWith(newTH, blockingComm);
+//   // Do the same for all steps in this Composite.
+//   for (list<Block*>::iterator iter=itsBlocks.begin();
+//        iter!=itsBlocks.end(); iter++) {
+//     (*iter)->replaceConnectionsWith(newTH, blockingComm);
+//   }
+// }
 
 void CompositeRep::preprocess()
 {
   LOG_TRACE_FLOW_STR("Composite " << getName() << " preprocess");
-  StepRep::preprocess();
-  list<Step*>::iterator iList;
-  for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
+  list<Block*>::iterator iList;
+  for (iList = itsBlocks.begin(); iList != itsBlocks.end(); ++iList) {
     (*iList)->preprocess();
   }
 }
 
 void CompositeRep::process()
 {
-  /// 1) Read InData
-  /// 2) process all steps
-  /// 3) Write OutData
+  /// Process all contained steps
 
   // The VirtualMachine controls the state of this CompositeRep.
   // The process() method will only do something while in the "running" mode.
@@ -388,26 +279,9 @@ void CompositeRep::process()
     onRightNode = false;     
   }
 	
-  if (! (getWorker()->shouldProcess())) {
-    onRightNode = false;     
-    LOG_TRACE_RTTI("Not on right node/appl; will skip Read & Write, and proceed substeps.");
-  }
-
-  if (onRightNode) {
-    // Composites run on ALL nodes.
-    // Only read and write of the simul is on your own node
-    for (int ch=0; ch < getWorker()->getDataManager().getInputs(); ch++) {
-      // Read the source of inTransport
-      getWorker()->getDataManager().getInHolder(ch);
-      getWorker()->getDataManager().readyWithInHolder(ch);
-      // Write the InTransport to the first step of this simul
-      (getWorker()->getDataManager().getInHolder(ch))->write();
-    }  
-  }
-
-  // Process all substeps (and simuls), even if this simul isn't running on this node 
-  list<Step*>::iterator iList;
-  for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
+  // Process all substeps (and composites), even if this composite isn't running on this node 
+  list<Block*>::iterator iList;
+  for (iList = itsBlocks.begin(); iList != itsBlocks.end(); ++iList) {
     if ((*iList)->isComposite()) {
       LOG_TRACE_RTTI_STR("Processing Composite " << (*iList)->getName());  
     } else {            // not a Composite but a step
@@ -415,23 +289,14 @@ void CompositeRep::process()
     }
     (*iList)->process();
   }
-  
-  if (onRightNode) {
-    for (int ch=0; ch < getWorker()->getDataManager().getOutputs(); ch++) {
-      // Fill the outdata buffer by reading from last step
-      getWorker()->getDataManager().getOutHolder(ch)->read();
-      // Write the Outtransport
-      getWorker()->getDataManager().readyWithOutHolder(ch);
-    }  
-  }
+ 
 }
 
 void CompositeRep::postprocess()
 {
   LOG_TRACE_FLOW_STR("Composite " << getName() << " postprocess");
-  StepRep::postprocess();
-  list<Step*>::iterator iList;
-  for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
+  list<Block*>::iterator iList;
+  for (iList = itsBlocks.begin(); iList != itsBlocks.end(); ++iList) {
     (*iList)->postprocess();
   }
 }
@@ -439,9 +304,8 @@ void CompositeRep::postprocess()
 void CompositeRep::dump() const
 {
   LOG_TRACE_FLOW_STR("Composite " << getName() << " dump");
-  StepRep::dump();
-  list<Step*>::const_iterator iList;
-  for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
+  list<Block*>::const_iterator iList;
+  for (iList = itsBlocks.begin(); iList != itsBlocks.end(); ++iList) {
     (*iList)->dump();
   }
 }
@@ -451,5 +315,128 @@ bool CompositeRep::isComposite() const
   return true;
 }
 
+DataManager& CompositeRep::getInDataManager(int channel)
+{
+  DBGASSERTSTR (channel >= 0,        "Channel index is too low");
+  DBGASSERTSTR (channel < getNrInputs(), "Channel index is too high");
+  Block* blockPtr = itsInputs[channel].block;
+  ASSERTSTR(blockPtr!=0, "Input channel " << channel 
+	    << " has not been set in this Composite.")
+  int index = itsInputs[channel].chanNr;
+  ASSERTSTR(index>=0,"Input channel " << channel 
+	    << " has not been correctly set in this Composite.")  
+  return blockPtr->getInDataManager(index);
+}
+
+DataManager& CompositeRep::getOutDataManager(int channel)
+{
+  DBGASSERTSTR (channel >= 0,        "Channel index is too low");
+  DBGASSERTSTR (channel < getNrOutputs(), "Channel index is too high");
+  Block* blockPtr = itsOutputs[channel].block;
+  ASSERTSTR(blockPtr!=0, "Output channel " << channel 
+	    << " has not been set in this Composite.")
+  int index = itsOutputs[channel].chanNr;
+  ASSERTSTR(index>=0,"Output channel " << channel 
+	    << " has not been correctly set in this Composite.")  
+  return blockPtr->getOutDataManager(index);
+}
+
+int CompositeRep::getInChannelNumber(int channel)
+{
+  DBGASSERTSTR (channel >= 0,        "Channel index is too low");
+  DBGASSERTSTR (channel < getNrInputs(), "Channel index is too high");
+  Block* blockPtr = itsInputs[channel].block;
+  ASSERTSTR(blockPtr!=0, "Input channel " << channel 
+	    << " has not been set in this Composite.");
+  int index = itsInputs[channel].chanNr;
+  ASSERTSTR(index>=0,"Input channel " << channel 
+	    << " has not been correctly set in this Composite.");
+  return blockPtr->getRep()->getInChannelNumber(index);
+}
+
+int CompositeRep::getOutChannelNumber(int channel)
+{
+  DBGASSERTSTR (channel >= 0,        "Channel index is too low");
+  DBGASSERTSTR (channel < getNrOutputs(), "Channel index is too high");
+  Block* blockPtr = itsOutputs[channel].block;
+  ASSERTSTR(blockPtr!=0, "Output channel " << channel 
+	    << " has not been set in this Composite.");
+  int index = itsOutputs[channel].chanNr;
+  ASSERTSTR(index>=0,"Output channel " << channel 
+	    << " has not been correctly set in this Composite.");  
+  return blockPtr->getRep()->getOutChannelNumber(index);
+}
+
+int CompositeRep::getAppl() const
+{
+  return itsAppl;
+}
+
+void CompositeRep::setProcessRate (int rate)
+{
+  list<Block*>::iterator iter;
+  for (iter = itsBlocks.begin(); iter != itsBlocks.end(); ++iter)
+  {
+    (*iter)->setProcessRate(rate);
+  }
+}
+
+void CompositeRep::setInRate(int rate, int dhIndex)
+{
+  if (dhIndex == -1)
+  {
+    for (int i=0; i<getNrInputs(); i++)
+    {
+      Block* blockPtr = itsInputs[i].block;
+      ASSERTSTR(blockPtr!=0, "Input channel " << i 
+		<< " has not been set in this Composite.");
+      int index = itsInputs[i].chanNr;
+      ASSERTSTR(index>=0,"Input channel " << dhIndex 
+		<< " has not been correctly set in this Composite."); 
+      blockPtr->getRep()->setInRate(rate, index);
+    }
+  }
+  else
+  {
+    DBGASSERTSTR (dhIndex >= 0,        "Channel index is too low");
+    DBGASSERTSTR (dhIndex < getNrInputs(), "Channel index is too high");
+    Block* blockPtr = itsInputs[dhIndex].block;
+    ASSERTSTR(blockPtr!=0, "Input channel " << dhIndex 
+	      << " has not been set in this Composite.");
+    int index = itsInputs[dhIndex].chanNr;
+    ASSERTSTR(index>=0,"Input channel " << dhIndex 
+	      << " has not been correctly set in this Composite."); 
+    blockPtr->getRep()->setInRate(rate, index);
+  }
+}
+
+void CompositeRep::setOutRate (int rate, int dhIndex)
+{
+  if (dhIndex == -1)
+  {
+    for (int i=0; i<getNrInputs(); i++)
+    {
+      Block* blockPtr = itsInputs[i].block;
+      ASSERTSTR(blockPtr!=0, "Input channel " << i 
+		<< " has not been set in this Composite.");
+      int index = itsInputs[i].chanNr;
+      ASSERTSTR(index>=0,"Input channel " << dhIndex 
+		<< " has not been correctly set in this Composite."); 
+      blockPtr->getRep()->setInRate(rate, index);
+    }
+  }
+  else
+  {
+    DBGASSERTSTR (dhIndex >= 0,        "Channel index is too low");
+    DBGASSERTSTR (dhIndex < getNrInputs(), "Channel index is too high");
+    Block* blockPtr = itsInputs[dhIndex].block;
+    ASSERTSTR(blockPtr!=0, "Input channel " << dhIndex 
+	      << " has not been set in this Composite.");
+    int index = itsInputs[dhIndex].chanNr;
+    ASSERTSTR(index>=0,"Input channel " << dhIndex 
+	      << " has not been correctly set in this Composite."); 
+    blockPtr->getRep()->setInRate(rate, index);
+  }
+}
 
 }

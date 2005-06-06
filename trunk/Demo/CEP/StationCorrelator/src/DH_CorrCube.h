@@ -10,9 +10,6 @@
 #ifndef ONLINEPROTO_DH_ARRAYTFPLANE_H
 #define ONLINEPROTO_DH_ARRAYTFPLANE_H
 
-
-#include <lofar_config.h>
-
 #include <Transport/DataHolder.h>
 #include <complex>
 
@@ -44,10 +41,7 @@ public:
   DataHolder* clone() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   /// accessor functions to the blob 
   int getStationID() const;

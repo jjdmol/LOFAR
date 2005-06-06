@@ -23,8 +23,6 @@
 #ifndef CEPFRAME_SYNCHRONISITYMANAGER_H
 #define CEPFRAME_SYNCHRONISITYMANAGER_H
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 #include <Transport/DataHolder.h>
 #include <CEPFrame/DHPoolManager.h>
 #include <pthread.h>
@@ -39,13 +37,15 @@ namespace LOFAR
   same DHPoolManager object. 
 */
 
-//class DHPoolManager;
+class DataManager;
+class Connection;
 
 // Struct containing data that is shared between main program and thread
 typedef struct thread_args{
-  pthread_mutex_t mutex;
+  pthread_mutex_t  mutex;
   DHPoolManager*   manager;
-  bool            stopThread;
+  Connection*      conn;
+  bool             stopThread;
 }thread_data;
 
 
@@ -55,7 +55,7 @@ public:
   /** The constructor with the number of input and output
       DataHolders as arguments.
   */
-  SynchronisityManager (int inputs=0, int outputs=0);
+  SynchronisityManager (DataManager* dm, int inputs=0, int outputs=0);
 
   virtual ~SynchronisityManager();
 
@@ -87,6 +87,7 @@ static void* startReaderThread(void* thread_arg);
   // Start function for writer thread
 static void* startWriterThread(void* thread_arg);
 
+  DataManager* itsDM; 
   int itsNinputs;
   int itsNoutputs;
   DHPoolManager** itsInManagers;

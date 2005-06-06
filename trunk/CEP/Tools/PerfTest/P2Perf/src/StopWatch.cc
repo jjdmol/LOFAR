@@ -1,5 +1,7 @@
+#include <lofar_config.h>
+
 #include <Common/lofar_iostream.h>
-#include <string.h>
+#include <Common/lofar_string.h>
 #include <StopWatch.h>
 
 StopWatch* StopWatch::theirGlobalStopWatch = 0;

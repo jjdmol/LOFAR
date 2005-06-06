@@ -1,5 +1,5 @@
-//  AsyncTest.h: Concrete Simulator class for performance measurements on
-//            a sequence of cross-connected steps
+//  AsyncTest.h: Concrete ApplicationHolder class for performance measurements
+//               on a number of steps with buffered (asynchronous) transport
 //
 //  Copyright (C) 2000, 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,38 +25,36 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ASYNCTEST_H
-#define ASYNCTEST_H
+#ifndef LOFAR_ASYNCTEST_ASYNCTEST_H
+#define LOFAR_ASYNCTEST_ASYNCTEST_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <CEPFrame/ApplicationHolder.h>
+#include <Common/KeyValueMap.h>
+#include <AsyncTest/WH_Source.h>
+#include <AsyncTest/WH_Sink.h>
 
-#include "CEPFrame/Simulator.h"
-#include "CEPFrame/ParamBlock.h"
-#include "AsyncTest/WH_Source.h"
-#include "AsyncTest/WH_Sink.h"
+namespace LOFAR
+{
 
 // define the maximum data block size used in this simulation
 #define MAX_GROW_SIZE (256*1024) // 256 kWords =^ 1 MB
 
+class Step;
+
 /**
-   The AsyncTest class implements a Simulator consisting of a set of data
-   source steps cross-connected to a set of destination nodes. By
-   using DH_Growsize and WH_Growsize, this simulator can be used for
-   performance measurements on the (cross) connections between the
-   steps.
-   
+   The AsyncTest class implements a ApplicationHolder consisting of 
+   a set of data source steps cross-connected to a set of destination 
+   nodes.    
 */
 
-class AsyncTest: public LOFAR::Simulator
+class AsyncTest: public LOFAR::ApplicationHolder
 {
 public:
   AsyncTest();
   virtual ~AsyncTest();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
+  virtual void define(const LOFAR::KeyValueMap& params = LOFAR::KeyValueMap());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();
@@ -67,8 +65,8 @@ public:
   /// Define pointers to the arrays with steps and workholders.
   WH_Source **Sworkholders;
   WH_Sink **Dworkholders;
-  LOFAR::Step        **Ssteps;
-  LOFAR::Step        **Dsteps;
+  Step      **Ssteps;
+  Step      **Dsteps;
 
   /// Number of source steps
     int itsSourceSteps;
@@ -84,5 +82,6 @@ public:
       
 };
 
+} // end namespace LOFAR
 
 #endif

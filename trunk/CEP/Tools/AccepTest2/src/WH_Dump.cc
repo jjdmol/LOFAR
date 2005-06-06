@@ -11,7 +11,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <AccepTest2/WH_Dump.h>
-#include <Common/LofarLogger.h>
 #include <AccepTest2/DH_CMatrix.h>
 #include <iomanip>
 

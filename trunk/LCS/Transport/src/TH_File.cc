@@ -23,7 +23,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-
 #include <Transport/TH_File.h>
 #include <Common/LofarLogger.h>
 
@@ -60,22 +59,18 @@ TH_File::~TH_File()
   //if (itsOutFile) fclose(itsOutFile);
 }
 
-TH_File* TH_File::make() const
-{
-    return new TH_File(itsFileName, itsDirection);
-}
-
 string TH_File::getType() const
 {
-    return "TH_File";
+  return "TH_File";
 }
 
-bool TH_File::connectionPossible(int, int) const
+TH_File* TH_File::clone() const
 {
-  return true; //srcRank == dstRank;
+  return new TH_File(itsFileName, itsDirection);
 }
 
-bool TH_File::recvBlocking(void* buf, int nbytes, int)
+
+bool TH_File::recvBlocking(void* buf, int nbytes, int, int, DataHolder*)
 { 
   LOG_TRACE_RTTI( "TH_File recvBlocking()" );
   bool result = true;
@@ -95,7 +90,7 @@ bool TH_File::recvBlocking(void* buf, int nbytes, int)
     if (itsInFile != NULL) {
       int n_read;
       n_read = fread(buf, 1, nbytes, itsInFile);
-      FAILWHEN(result = (n_read != nbytes));
+      ASSERTSTR (n_read == nbytes, "TH_File::recvBlocking not enough bytes have been read");
       LOG_TRACE_CALC_STR( "Read main block " << n_read ); 
       char mySep[255];
       n_read = fread(mySep,
@@ -103,8 +98,7 @@ bool TH_File::recvBlocking(void* buf, int nbytes, int)
 		     itsSepLen,
 		     itsInFile);
       LOG_TRACE_CALC_STR( "Read separator block " << n_read << " : " << mySep ); 
-      FAILWHEN(result = ((n_read != itsSepLen)
-			 && strncmp(itsSeparator,mySep, itsSepLen)));
+      ASSERT((n_read == itsSepLen) && (strncmp(itsSeparator,mySep, itsSepLen)== 0));
 
       LOG_TRACE_COND_STR( "Read from File " << itsFileName );
     } else {
@@ -117,13 +111,14 @@ bool TH_File::recvBlocking(void* buf, int nbytes, int)
   return result;
 }
 
-bool TH_File::recvNonBlocking(void* buf, int nbytes, int)
+int32 TH_File::recvNonBlocking(void* buf, int32 nbytes, int tag, 
+			      int32 offset, DataHolder* dh)
 {
   LOG_WARN("TH_File::recvNonBlocking() is not implemented. The recvBlocking() method is used instead."); 
-  return recvBlocking(buf, nbytes, 0);
+  return (recvBlocking(buf, nbytes, tag, offset, dh) ? nbytes : 0);
 }
 
-bool TH_File::sendBlocking(void* buf, int nbytes, int)
+bool TH_File::sendBlocking(void* buf, int nbytes, int, DataHolder*)
 {
   LOG_TRACE_RTTI("TH_File sendBlocking()");
   bool result = true;
@@ -143,12 +138,12 @@ bool TH_File::sendBlocking(void* buf, int nbytes, int)
     if (itsOutFile) {
       int n_written;
       n_written = fwrite(buf, 1, nbytes, itsOutFile);
-      FAILWHEN(result = (n_written != nbytes));
+      ASSERTSTR(n_written == nbytes, "TH_File::sendBlocking not enough bytes have been written");
       n_written = fwrite(itsSeparator,
 			 1,
 			 itsSepLen,
 			 itsOutFile);
-      FAILWHEN(result = (n_written != itsSepLen));
+      ASSERT(n_written == itsSepLen);
       LOG_TRACE_COND_STR ( "Write to File " << itsFileName 
 			   << " (" << nbytes 
 			   << "," << itsSepLen 
@@ -160,41 +155,24 @@ bool TH_File::sendBlocking(void* buf, int nbytes, int)
   } else {
     LOG_TRACE_COND( "Skip Write to File" );
   }
+
   return result;
 }
 
-bool TH_File::sendNonBlocking(void* buf, int nbytes, int)
+bool TH_File::sendNonBlocking(void* buf, int nbytes, int, DataHolder*)
 {
   LOG_WARN("TH_File::sendNonBlocking() is not implemented. The sendBlocking() method is used instead.");
   return sendBlocking(buf, nbytes, 0);
 }
 
-bool TH_File::waitForSent(void*, int, int)
+void TH_File::waitForSent(void*, int, int)
 {
   LOG_TRACE_RTTI("TH_File waitForSent()");
-  return true;
 }
 
-bool TH_File::waitForReceived(void*, int, int)
+void TH_File::waitForReceived(void*, int, int)
 {
   LOG_TRACE_RTTI("TH_File waitForReceived()");
-  return true;
-}
-
-void TH_File::waitForBroadCast()
-{
-  LOG_TRACE_RTTI("TH_File waitForBroadCast()");
-}
-
-void TH_File::waitForBroadCast(unsigned long&)
-{
-  LOG_TRACE_RTTI("TH_File waitForBroadCast(..)");
-}
-
-
-void TH_File::sendBroadCast(unsigned long)
-{
-  LOG_TRACE_RTTI("TH_File sendBroadCast()");
 }
 
 int TH_File::getCurrentRank()
@@ -210,11 +188,6 @@ int TH_File::getNumberOfNodes()
 void TH_File::finalize()
 {
   LOG_TRACE_RTTI("TH_File finalize()");
-}
-
-void TH_File::synchroniseAllProcesses()
-{
-  LOG_TRACE_RTTI("TH_File synchroniseAllProcesses()");
 }
 
 }

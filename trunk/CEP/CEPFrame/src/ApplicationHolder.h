@@ -25,8 +25,8 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <tinyCEP/TinyApplicationHolder.h>
 #include <CEPFrame/Composite.h>
+#include <tinyCEP/TinyApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 
 namespace LOFAR
@@ -98,7 +98,7 @@ protected:
   //@}
 
   /// Fill the pointer to the simulation.
-  void setComposite (const Composite&);
+  void setComposite (Composite&);
 
   /// Get the pointer to the simulation.
   Composite& getComposite();
@@ -122,7 +122,7 @@ private:
 };
 
 
-inline void ApplicationHolder::setComposite (const Composite& comp)
+inline void ApplicationHolder::setComposite (Composite& comp)
   { itsComposite = comp; }
 
 inline Composite& ApplicationHolder::getComposite()

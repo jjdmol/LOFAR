@@ -24,35 +24,29 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <Common/lofar_iostream.h>
-#include <stdlib.h>
-#include <Common/lofar_string.h>
+#include <lofar_config.h>
 
 #include <P2Perf/P2Perf.h>
+#include <CEPFrame/Step.h>
+
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_string.h>
+
 #include <P2Perf/WH_Src.h>
 #include <P2Perf/WH_Dest.h>
-#include <Transport/Transporter.h>
-#include <CEPFrame/Step.h>
 #include <CEPFrame/ApplicationHolder.h>
 #include <tinyCEP/Profiler.h>
 #include <Transport/TH_ShMem.h>
 #include <Transport/TH_Socket.h>
-#include <CEPFrame/WH_Empty.h>
-#include <Common/LofarLogger.h>
 
 #include TRANSPORTERINCLUDE
-
-#ifdef HAVE_CORBA
-#include <CEPFrame/Corba/BS_Corba.h>
-#include <CEPFrame/Corba/TH_Corba.h>
-#endif
 
 using namespace LOFAR;
 
 P2Perf::P2Perf():
   itsSourceSteps(0),
-  itsDestSteps(0)
+  itsDestSteps  (0),
+  itsDHGS       (0)
 {
   Sworkholders = NULL;
   Ssteps       = NULL;
@@ -71,17 +65,13 @@ P2Perf::~P2Perf()
 */
 void P2Perf::define(const KeyValueMap& params)
 {
-#ifdef HAVE_CORBA
-// Start Orb Environment
-  AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
-#endif
 
 #ifdef HAVE_MPI
-  // TH_ShMem only works in combination with MPI
-  // initialize TH_ShMem
+  // TH_ShMem works in P2Perf in combination with MPI
+  // initialize MPI
   int useShMem = params.getInt("shmem",1);
   if (useShMem) 
-  TH_ShMem::init(0, NULL);
+  TH_MPI::initMPI(0, NULL);
 #endif
   
   char name[20];  // name used during Step/WH creation
@@ -95,13 +85,7 @@ void P2Perf::define(const KeyValueMap& params)
 
   LOG_TRACE_VAR_STR("P2Perf Processor " << rank << " of " << size << " operational.");
 
-  WH_Empty empty;
-
-  Composite comp(empty, // workholder
-		 "P2Perf", // name
-		 true,  // add name suffix
-		 true,  // controllable	      
-		 false); // monitor
+  Composite comp(0, 0, "P2Perf");
   setComposite(comp);
   comp.runOnNode(0);
   comp.setCurAppl(0);
@@ -161,8 +145,7 @@ void P2Perf::define(const KeyValueMap& params)
     monitor = false;//(iStep==0) ? true:false;
     Ssteps[iStep] = new Step(Sworkholders[iStep], 
 			     "SourceStep", 
-			     iStep,
-			     monitor);
+			     iStep);
       
     // Determine the node and process to run in
     Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
@@ -206,12 +189,12 @@ void P2Perf::define(const KeyValueMap& params)
   // first ALL the sources....
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
     LOG_TRACE_OBJ_STR("Add Source step " << iStep);
-    comp.addStep(Ssteps[iStep]);
+    comp.addBlock(Ssteps[iStep]);
   }
   // ...then the destinations
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
     LOG_TRACE_OBJ_STR("Add Dest step " << iStep);
-    comp.addStep(Dsteps[iStep]);
+    comp.addBlock(Dsteps[iStep]);
   }
   
   // Create the cross connections
@@ -219,54 +202,47 @@ void P2Perf::define(const KeyValueMap& params)
     for (int ch = 0; ch < itsSourceSteps; ch++) {
       // Set up the connections
       // Correlator Style
-#ifdef HAVE_CORBA
-      Dsteps[step]->connect(Ssteps[ch],
-                            ch,
-                            step,
-                            1,
-                            TH_Corba());
-#else
+
 #ifdef HAVE_MPI
       LOG_TRACE_VAR("Connect using MPI");
+      TH_MPI* thMPI = new TH_MPI(Ssteps[ch]->getNode(),
+				 Dsteps[step]->getNode());
       if (useShMem)
       {
-        Dsteps[step]->connect(Ssteps[ch],
-                              ch,
+        Dsteps[step]->connect(ch,
+			      Ssteps[ch],
                               step,
                               1,
-                              TH_ShMem(Ssteps[ch]->getNode(),
-                              Dsteps[step]->getNode()));
+                              new TH_ShMem(thMPI));
       } else
       {
-        Dsteps[step]->connect(Ssteps[ch],
-                              ch,
+        Dsteps[step]->connect(ch,
+			      Ssteps[ch],
                               step,
                               1,
-                              TH_MPI(Ssteps[ch]->getNode(),
-                                     Dsteps[step]->getNode()));
+                              thMPI);
       };
 #else 
       if (useSockets != 0) 
       {
-        Dsteps[step]->connect(Ssteps[ch],
-                              ch,
+        Dsteps[step]->connect(ch,
+			      Ssteps[ch],
                               step,
                               1,
-                              TH_Socket( params.getString("sockets_sending_host", "localhost"),
+                              new TH_Socket( params.getString("sockets_sending_host", "localhost"),
                                          params.getString("sockets_receiving_host", "localhost"),
                                          params.getInt("sockets_portnumber",20001)), 
                               false);
       } else
       {
-        Dsteps[step]->connect(Ssteps[ch],
-                              ch,
+        Dsteps[step]->connect(ch,
+			      Ssteps[ch],
                               step,
                               1,
-                              TH_Mem(), 
+                              new TH_Mem(), 
                               false);
       }
 #endif //HAVE_MPI
-#endif //HAVE_CORBA
     }
   }
 }

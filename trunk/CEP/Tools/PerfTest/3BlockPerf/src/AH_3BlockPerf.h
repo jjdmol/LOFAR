@@ -25,10 +25,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef AH_3BLOCKPERF_H
-#define AH_3BLOCKPERF_H
-
-#include <lofar_config.h>
+#ifndef LOFAR_3BLOCKPERF_AH_3BLOCKPERF_H
+#define LOFAR_3BLOCKPERF_AH_3BLOCKPERF_H
 
 #include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
@@ -42,6 +40,8 @@ namespace LOFAR {
    in the WH_Heat, we can do measurement of the bandwidth as a function
    of these two variables.   
 */
+
+class Step;
 
 class AH_3BlockPerf: public LOFAR::ApplicationHolder
 {

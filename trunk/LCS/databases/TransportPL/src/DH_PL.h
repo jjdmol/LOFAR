@@ -30,6 +30,8 @@
 
 namespace LOFAR {
 
+class Connection;
+
 /// DH_PL is a DataHolder implementation based on (LOFAR/Common) PL.
 // Note that the (current) implementation of PL uses DTL which uses ODBC.
 // Usually a PostgreSQL database is used, but every ODBC-compliant database
@@ -89,11 +91,11 @@ public:
   // Read from the database with the given query string.
   // It returns the number of matching records. Only the first matching one
   // is really retrieved.
-  int queryDB (const string& queryString);
+  int queryDB (const string& queryString, Connection& conn);
   // Insert the current record in the database.
-  void insertDB();
+  void insertDB(Connection& conn);
   // Update the current record in the database.
-  void updateDB();
+  void updateDB(Connection& conn);
   // <group>
 
 protected:
@@ -108,8 +110,7 @@ private:
   int64  itsSeqNr;
   PO_DH_PL* itsPODHPL;
 };
- 
- 
+
 inline PL::PersistentObject& DH_PL::preparePO (int tag, int64 seqnr)
 {
   itsTag   = tag;

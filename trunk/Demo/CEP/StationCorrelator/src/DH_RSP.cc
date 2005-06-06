@@ -56,11 +56,8 @@ DataHolder* DH_RSP::clone() const
   return new DH_RSP(*this);
 }
 
-void DH_RSP::preprocess()
+void DH_RSP::init()
 {
-  // first delete possible preexisting buffers
-  postprocess();
-  
   // Add the fields to the data definition.
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
   addField ("Flag", BlobField<int>(1, 1));
@@ -82,9 +79,5 @@ void DH_RSP::fillDataPointers()
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
 }
 
-void DH_RSP::postprocess()
-{
-  itsBuffer = 0;
-}
 
 } // end namespace

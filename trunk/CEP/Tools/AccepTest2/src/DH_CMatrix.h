@@ -37,7 +37,7 @@ namespace LOFAR
     virtual DataHolder* clone() const;
 
     // Allocate room for the actual data
-    virtual void preprocess();
+    virtual void init();
 
     class Axis {
     public:

@@ -48,8 +48,10 @@ DataHolder* DH_Example::clone() const
   return new DH_Example(*this);
 }
 
-void DH_Example::preprocess()
+void DH_Example::init()
 {
+  // Initialize the fieldset.
+  initDataFields();
   // Add the fields to the data definition.
   addField ("Counter", BlobField<int>(1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
@@ -61,12 +63,6 @@ void DH_Example::preprocess()
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i] = makefcomplex(0,0);
   }
-}
-
-void DH_Example::postprocess()
-{
-  itsCounter = 0;
-  itsBuffer = 0;
 }
 
 void DH_Example::dump()

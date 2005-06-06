@@ -23,6 +23,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
+
 #include <tinyCEP/SimulatorParseClass.h>
 //#include <tinyCEP/TinyApplicationHolder.h>
 #include <Common/KeyValueMap.h>

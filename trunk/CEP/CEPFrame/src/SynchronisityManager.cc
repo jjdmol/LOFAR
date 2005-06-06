@@ -1,33 +1,38 @@
-//#  SynchronisityManager.cc: implementation of the SynchronisityManager class.
-//#
-//#  Copyright (C) 2000, 2001
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id$
+//  SynchronisityManager.cc:
+//
+//  Copyright (C) 2000, 2001
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//  $Id$
+//
+// SynchronisityManager.cc: implementation of the SynchronisityManager class.
+//
+//////////////////////////////////////////////////////////////////////
 
-//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 #include <CEPFrame/SynchronisityManager.h>
 #include <CEPFrame/DHPoolManager.h>
 #include <CEPFrame/CycBufferManager.h>
 #include <Common/LofarLogger.h>
+#include <Transport/Connection.h>
 #include <unistd.h>
+#include <CEPFrame/DataManager.h>
 
 namespace LOFAR
 {
@@ -36,8 +41,9 @@ namespace LOFAR
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-SynchronisityManager::SynchronisityManager (int inputs, int outputs)
-  : itsNinputs(inputs),
+SynchronisityManager::SynchronisityManager (DataManager* dm, int inputs, int outputs)
+  : itsDM      (dm),
+    itsNinputs (inputs),
     itsNoutputs(outputs)
 {
   LOG_TRACE_FLOW("SynchronisityManager constructor");
@@ -57,6 +63,7 @@ SynchronisityManager::SynchronisityManager (int inputs, int outputs)
     int status = pthread_mutex_init(&itsReadersData[i].mutex, NULL);
     DBGASSERTSTR(status == 0, "Init reader mutex failed");
     itsReadersData[i].manager = 0;
+    itsReadersData[i].conn = 0;
     itsReadersData[i].stopThread = true;
   }
 
@@ -67,6 +74,7 @@ SynchronisityManager::SynchronisityManager (int inputs, int outputs)
     int status = pthread_mutex_init(&itsWritersData[j].mutex, NULL);
     DBGASSERTSTR(status == 0, "Init writer mutex failed");
     itsWritersData[j].manager = 0;
+    itsWritersData[j].conn = 0;
     itsWritersData[j].stopThread = true;
   }
 }
@@ -161,7 +169,11 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
 
     DataHolder* dh = manager->getWriteLockedDH(&id);
 
-    while (dh->read() == false)
+    Connection* pConn = data->conn;
+    pConn->setDestinationDH(dh);           // Set connection to new DataHolder
+    pConn->getTransportHolder()->reset();  // Reset TransportHolder
+
+    while (pConn->read() == false)
     {
       pthread_mutex_lock(&data->mutex);         /// Check stop condition
       if (data->stopThread == true)
@@ -197,7 +209,11 @@ void* SynchronisityManager::startWriterThread(void* thread_arg)
     pthread_mutex_unlock(&data->mutex);
     int id;
     LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to write");
-    manager->getReadLockedDH(&id)->write();
+    DataHolder* dh = manager->getReadLockedDH(&id);
+    Connection* pConn = data->conn;
+    pConn->setSourceDH(dh);               // Set connection to new DataHolder
+    pConn->getTransportHolder()->reset(); // Reset TransportHolder
+    pConn->write();
     manager->readUnlock(id);
   
   }
@@ -260,6 +276,7 @@ void SynchronisityManager::readAsynchronous(int channel)
   if (itsReadersData[channel].stopThread == true)
   {                                            // Thread creation
     itsReadersData[channel].manager = itsInManagers[channel];
+    itsReadersData[channel].conn = itsDM->getInConnection(channel);
     itsReadersData[channel].stopThread = false;
     pthread_create(&itsReaders[channel], NULL, startReaderThread, &itsReadersData[channel]);
     LOG_TRACE_RTTI_STR("Reader thread " << itsReaders[channel] << " created");
@@ -275,6 +292,7 @@ void SynchronisityManager::writeAsynchronous(int channel)
   if (itsWritersData[channel].stopThread == true)
   {                                              // Thread creation
     itsWritersData[channel].manager = itsOutManagers[channel];
+    itsWritersData[channel].conn = itsDM->getOutConnection(channel);
     itsWritersData[channel].stopThread = false;
     LOG_TRACE_RTTI_STR("Writer thread creation");
     pthread_create(&itsWriters[channel], NULL, startWriterThread, &itsWritersData[channel]);
@@ -285,13 +303,20 @@ void SynchronisityManager::writeAsynchronous(int channel)
 
 void SynchronisityManager::sharePoolManager(int channel)
 {
-  if (itsOutManagers[channel] != 0)        // Sets output DHPoolManager pointer to 
-  {                                        // input DHPoolManager
-    delete itsOutManagers[channel];
+  if (!itsOutManagers[channel]->getSharing())
+  {
+    if (itsOutManagers[channel] != 0)        // Sets output DHPoolManager pointer to 
+    {                                        // input DHPoolManager
+      delete itsOutManagers[channel];
+    }
+    itsOutManagers[channel] = itsInManagers[channel];
+    itsOutManagers[channel]->setSharing(true);
+    itsOutSynchronisities[channel] = itsInSynchronisities[channel];
   }
-  itsOutManagers[channel] = itsInManagers[channel];
-  itsOutManagers[channel]->setSharing(true);
-  itsOutSynchronisities[channel] = itsInSynchronisities[channel];
+  else
+  {
+    LOG_DEBUG_STR("Channel " << channel << " already shared.");
+  }
 }
 
 

@@ -18,6 +18,7 @@
 //# along with this program; if not, write to the Free Software
 //# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+
 //# $Id$
 
 //# Always #include <lofar_config.h> first!
@@ -27,6 +28,9 @@
 #include <TransportPL/PO_DH_PL.h>
 #include <TransportPL/TH_PL.h>                  // for class definition
 #include <Common/LofarLogger.h>                 // for ASSERT macro
+#include <Transport/Connection.h>
+#include <Common/Exception.h>
+#include <sstream>				// for ostringstream
 
 namespace LOFAR {
 
@@ -62,30 +66,30 @@ PL::PersistentObject& DH_PL::getPO() const
   return *itsPODHPL;
 }
 
-int DH_PL::queryDB (const string& queryString)
+int DH_PL::queryDB (const string& queryString, Connection& conn)
 {
-  TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
+  TH_PL* ptr = dynamic_cast<TH_PL*>(conn.getTransportHolder());
   ASSERT (ptr != 0);
   int result;
-  result = ptr->queryDB (queryString, getTransporter().getReadTag());
-  handleDataRead();
+  result = ptr->queryDB (queryString, conn.getTag(), this);
+  unpack();
   return result;
 }
 
-void DH_PL::insertDB()
+void DH_PL::insertDB(Connection& conn)
 {
-  writeExtra();
-  TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
+  pack();
+  TH_PL* ptr = dynamic_cast<TH_PL*>(conn.getTransportHolder());
   ASSERT (ptr != 0);
-  ptr->insertDB (getTransporter().getWriteTag());
+  ptr->insertDB (conn.getTag(), this);
 }
 
-void DH_PL::updateDB()
+void DH_PL::updateDB(Connection& conn)
 {
-  writeExtra();
-  TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
+  pack();
+  TH_PL* ptr = dynamic_cast<TH_PL*>(conn.getTransportHolder());
   ASSERT (ptr != 0);
-  ptr->updateDB (getTransporter().getWriteTag());
+  ptr->updateDB (conn.getTag(), this);
 }
 
 } // end namespace

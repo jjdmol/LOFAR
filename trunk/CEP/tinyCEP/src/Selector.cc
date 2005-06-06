@@ -23,8 +23,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 
-#include "tinyCEP/Selector.h"
+#include <tinyCEP/Selector.h>
+
 
 namespace LOFAR
 {

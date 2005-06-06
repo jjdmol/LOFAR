@@ -10,6 +10,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
+
 #include <AccepTest2/WH_Random.h>
 #include <AccepTest2/WH_Transpose.h>
 #include <AccepTest2/WH_Dump.h>
@@ -20,6 +22,7 @@
 #include <AH_AccepTest.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_MPI.h>
+#include <Transport/Connection.h>
 
 
 namespace LOFAR
@@ -182,11 +185,24 @@ namespace LOFAR
 
   void AH_AccepTest::undefine()
   {
-    vector<WorkHolder*>::iterator it = itsWHs.begin();
-    for (; it!=itsWHs.end(); it++) {
-      delete *it;
+    vector<WorkHolder*>::iterator it1 = itsWHs.begin();
+    for (; it1!=itsWHs.end(); it1++) {
+      delete *it1;
     }
     itsWHs.clear();
+
+    vector<Connection*>::iterator it2 = itsConns.begin();
+    for (; it2!=itsConns.end(); it2++) {
+      delete *it2;
+    }
+    itsConns.clear();
+
+    vector<TransportHolder*>::iterator it3 = itsTHs.begin();
+    for (; it3!=itsTHs.end(); it3++) {
+      delete *it3;
+    }
+    itsTHs.clear();
+
     if (itsFileOutput) delete itsFileOutput;
   }
 
@@ -213,16 +229,22 @@ namespace LOFAR
 
   void AH_AccepTest::connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH) {
 #ifdef HAVE_MPI
-    srcWH->getDataManager().getOutHolder(srcDH)->connectTo
-      ( *(dstWH->getDataManager().getInHolder(dstDH)), 
-	TH_MPI(srcWH->getNode(), dstWH->getNode()),
-	true);
+    itsTHs.push_back( new TH_MPI(srcWH->getNode(), dstWH->getNode()) );
+    itsConns.push_back( new Connection("conn", 
+				       srcWH->getDataManager().getOutHolder(srcDH),
+				       dstWH->getDataManager().getInHolder(dstDH),
+				       itsTHs.back(), true) );
 #else
-    srcWH->getDataManager().getOutHolder(srcDH)->connectTo
-      ( *(dstWH->getDataManager().getInHolder(dstDH)), 
-	TH_Mem(),
-	false);
+    itsTHs.push_back( new TH_Mem ); 
+    itsConns.push_back( new Connection("conn", 
+				       srcWH->getDataManager().getOutHolder(srcDH),
+				       dstWH->getDataManager().getInHolder(dstDH),
+				       itsTHs.back(), false) );
 #endif
+
+    srcWH->getDataManager().setOutConnection(srcDH, itsConns.back());
+    dstWH->getDataManager().setInConnection(dstDH, itsConns.back());
+
   }
   
   void AH_AccepTest::quit() {

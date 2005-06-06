@@ -27,7 +27,7 @@ namespace LOFAR
     delete itsWorkHolder;
   }
 
-  void MyExample::define(const KeyValueMap& map) {
+  void MyExample::define(const KeyValueMap&) {
     // create a WorkHolder
     itsWorkHolder = new WH_Example("WH_Example", 1, 1, 10);
   }

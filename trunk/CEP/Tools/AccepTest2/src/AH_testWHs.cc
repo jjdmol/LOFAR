@@ -9,13 +9,14 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
+#include <Transport/Connection.h>
 #include <AccepTest2/WH_Random.h>
 #include <AccepTest2/WH_Transpose.h>
 #include <AccepTest2/WH_Dump.h>
 #include <AccepTest2/WH_Heat.h>
 #include <AccepTest2/WH_Split.h>
 #include <AccepTest2/WH_Join.h>
-#include <Common/LofarLogger.h>
 #include <AH_testWHs.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_MPI.h>
@@ -45,18 +46,18 @@ namespace LOFAR
     int totalNumberOfNodes = ( NoSplitsPerSplitter + 2 ) * NoSplitters + 3 * NoHeatLines + NoRndNodes;
     int MPINodes = TH_MPI::getNumberOfNodes();
     if (totalNumberOfNodes>MPINodes) {
-      cerr<<"This program was started with "<<TH_MPI::getNumberOfNodes()
-	  <<" processes, but we need "<<totalNumberOfNodes<<" processes. Aborting"<<endl;
+      std::cerr<<"This program was started with "<<TH_MPI::getNumberOfNodes()
+	  <<" processes, but we need "<<totalNumberOfNodes<<" processes. Aborting"<<std::endl;
       exit(1);
     } else if (totalNumberOfNodes<MPINodes) {
-      cerr<<"This program was started with "<<TH_MPI::getNumberOfNodes()
-	  <<" processes, but we need only "<<totalNumberOfNodes<<"."<<endl;
+      std::cerr<<"This program was started with "<<TH_MPI::getNumberOfNodes()
+	  <<" processes, but we need only "<<totalNumberOfNodes<<"."<<std::endl;
     };
 #endif
     
     // you can choose the output for the WH_Dump here
     // of course this can also be done per workholder
-    ostream& myOutput = cout;
+    ostream& myOutput = std::cout;
     itsFileOutput = new fstream("/dev/null", fstream::out);
     //ostream& myOutput = *itsFileOutput;
 
@@ -172,11 +173,24 @@ namespace LOFAR
 
   void AH_testWHs::undefine()
   {
-    vector<WorkHolder*>::iterator it = itsWHs.begin();
-    for (; it!=itsWHs.end(); it++) {
-      delete *it;
+    vector<WorkHolder*>::iterator it1 = itsWHs.begin();
+    for (; it1!=itsWHs.end(); it1++) {
+      delete *it1;
     }
     itsWHs.clear();
+
+    vector<Connection*>::iterator it2 = itsConns.begin();
+    for (; it2!=itsConns.end(); it2++) {
+      delete *it2;
+    }
+    itsConns.clear();
+
+    vector<TransportHolder*>::iterator it3 = itsTHs.begin();
+    for (; it3!=itsTHs.end(); it3++) {
+      delete *it3;
+    }
+    itsTHs.clear();
+
     delete itsFileOutput;
   }
 
@@ -205,16 +219,21 @@ namespace LOFAR
   
   void AH_testWHs::connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH) {
 #ifdef HAVE_MPI
-    srcWH->getDataManager().getOutHolder(srcDH)->connectTo
-      ( *(dstWH->getDataManager().getInHolder(dstDH)), 
-	TH_MPI(srcWH->getNode(), dstWH->getNode()),
-	true);
+    itsTHs.push_back( new TH_MPI(srcWH->getNode(), dstWH->getNode()) );
+    itsConns.push_back( new Connection("conn", 
+				       srcWH->getDataManager().getOutHolder(srcDH),
+				       dstWH->getDataManager().getInHolder(dstDH),
+				       itsTHs.back(), true) );
 #else
-    srcWH->getDataManager().getOutHolder(srcDH)->connectTo
-      ( *(dstWH->getDataManager().getInHolder(dstDH)), 
-	TH_Mem(),
-	false);
+    itsTHs.push_back( new TH_Mem ); 
+    itsConns.push_back( new Connection("conn", 
+				       srcWH->getDataManager().getOutHolder(srcDH),
+				       dstWH->getDataManager().getInHolder(dstDH),
+				       itsTHs.back(), false) );
 #endif
+
+    srcWH->getDataManager().setOutConnection(srcDH, itsConns.back());
+    dstWH->getDataManager().setInConnection(dstDH, itsConns.back());
   }
 
   void AH_testWHs::quit() {

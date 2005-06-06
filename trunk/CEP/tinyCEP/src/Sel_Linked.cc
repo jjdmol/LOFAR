@@ -23,8 +23,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 
-#include "tinyCEP/Sel_Linked.h"
+#include <tinyCEP/Sel_Linked.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {

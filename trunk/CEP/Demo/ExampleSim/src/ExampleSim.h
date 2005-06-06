@@ -24,10 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef EXAMPLESIM_H
-#define EXAMPLESIM_H
-
-#include <lofar_config.h>
+#ifndef LOFAR_EXAMPLESIM_EXAMPLESIM_H
+#define LOFAR_EXAMPLESIM_EXAMPLESIM_H
 
 #include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>

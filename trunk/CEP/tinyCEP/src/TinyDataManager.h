@@ -30,7 +30,9 @@
 namespace LOFAR
 {
   //# Forward Declarations
+  class DataHolder;
   class Selector;
+  class Connection;
 
   // Description of class.
   class TinyDataManager
@@ -92,6 +94,12 @@ namespace LOFAR
     bool hasInputSelector();
     bool hasOutputSelector();
 
+    // Get/set the in/out connection per channel
+    virtual Connection* getInConnection(int channel);
+    virtual void setInConnection(int channel, Connection* conn);
+    virtual Connection* getOutConnection(int channel);
+    virtual void setOutConnection(int channel, Connection* conn);
+
     void setReadyInFlag(int channel);
     void setReadyOutFlag(int channel);
     bool getReadyInFlag(int channel);
@@ -103,9 +111,11 @@ namespace LOFAR
     int itsNoutputs;
 
     TinyDataManager (const TinyDataManager&);
- 
+
     DataHolder** itsInDHs;
+    Connection** itsInConnections;
     DataHolder** itsOutDHs;
+    Connection** itsOutConnections; 
 
     /// the DataManager also stores the input- output- and 
     /// processrates.
@@ -130,7 +140,8 @@ namespace LOFAR
     static int DataHolderID;
     bool* itsReadyInFlag;
     bool* itsReadyOutFlag;
-  };
+
+ };
 
 inline int TinyDataManager::getInputs() const { 
   return itsNinputs; }

@@ -1,31 +1,35 @@
-//#  DataManager.cc: implementation of the DataManager class.
-//#
-//#  Copyright (C) 2000, 2001
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id$
+//  DataManager.cc:
+//
+//  Copyright (C) 2000, 2001
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//  $Id$
+//
+// DataManager.cc: implementation of the DataManager class.
+//
+//////////////////////////////////////////////////////////////////////
 
-//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 #include <CEPFrame/DataManager.h>
 #include <CEPFrame/SynchronisityManager.h>
 #include <CEPFrame/DHPoolManager.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
@@ -38,7 +42,7 @@ DataManager::DataManager (int inputs, int outputs)
   : TinyDataManager(inputs, outputs)
 {
   LOG_TRACE_FLOW("DataManager constructor");
-  itsSynMan = new SynchronisityManager(inputs, outputs);
+  itsSynMan = new SynchronisityManager(this, inputs, outputs);
   itsInDHsinfo = new DH_info[inputs];
   itsOutDHsinfo = new DH_info[outputs];
 
@@ -46,29 +50,33 @@ DataManager::DataManager (int inputs, int outputs)
   {
     itsInDHsinfo[i].currentDH = 0;
     itsInDHsinfo[i].id = -1;
+    itsInDHsinfo[i].connection = 0;
   }
   for (int j = 0; j < outputs; j++)
   {
     itsOutDHsinfo[j].currentDH = 0;
     itsOutDHsinfo[j].id = -1;
+    itsOutDHsinfo[j].connection = 0;
   }
 }
 
 DataManager::DataManager (const DataManager& that)
   : TinyDataManager(that.itsNinputs, that.itsNoutputs)
 {
-  itsSynMan = new SynchronisityManager(itsNinputs, itsNoutputs);
+  itsSynMan = new SynchronisityManager(this, itsNinputs, itsNoutputs);
   itsInDHsinfo = new DH_info[itsNinputs];
   itsOutDHsinfo = new DH_info[itsNoutputs];
   for (int i = 0; i < itsNinputs; i++)
   {
     itsInDHsinfo[i].currentDH = 0;
     itsInDHsinfo[i].id = -1;
+    itsInDHsinfo[i].connection = 0;
   }
   for (int j = 0; j < itsNoutputs; j++)
   {
     itsOutDHsinfo[j].currentDH = 0;
     itsOutDHsinfo[j].id = -1;
+    itsOutDHsinfo[j].connection = 0;
   }
 }
 
@@ -76,7 +84,7 @@ DataManager::DataManager (const TinyDataManager& that)
   : TinyDataManager(that)                       // Copy all data from TinyDM
 {
   LOG_TRACE_FLOW("Copy TinyDataManager to DataManager");
-  itsSynMan = new SynchronisityManager(itsNinputs, itsNoutputs);
+  itsSynMan = new SynchronisityManager(this, itsNinputs, itsNoutputs);
   itsInDHsinfo = new DH_info[itsNinputs];
   itsOutDHsinfo = new DH_info[itsNoutputs];
 
@@ -86,6 +94,7 @@ DataManager::DataManager (const TinyDataManager& that)
 
     itsInDHsinfo[i].currentDH = 0;
     itsInDHsinfo[i].id = -1;
+    itsInDHsinfo[i].connection = 0;
   }
   for (int j = 0; j < itsNoutputs; j++)
   {
@@ -93,6 +102,7 @@ DataManager::DataManager (const TinyDataManager& that)
 
     itsOutDHsinfo[j].currentDH = 0;
     itsOutDHsinfo[j].id = -1;
+    itsOutDHsinfo[j].connection = 0;
   }
 }
 
@@ -159,7 +169,15 @@ void DataManager::readyWithInHolder(int channel)
 
     if (itsSynMan->isInSynchronous(channel) == true)
     {
-      itsInDHsinfo[channel].currentDH->read();
+      if (getInConnection(channel)!=0)
+      {
+	getInConnection(channel)->read();
+      }
+      else
+      {
+	LOG_TRACE_COND_STR("DataManager::readyWithInHolder Skipping read of channel = " << channel 
+			   << ". Input is not connected.");	
+      }
     }
     else
     {
@@ -193,8 +211,16 @@ void DataManager::readyWithOutHolder(int channel)
   {
     if (itsSynMan->isOutSynchronous(channel) == true)
     {
-      LOG_TRACE_RTTI("DataManager::readyWithOutHolder synchronous write");
-      itsOutDHsinfo[channel].currentDH->write();
+      if (getOutConnection(channel) != 0)
+      {
+	LOG_TRACE_RTTI("DataManager::readyWithOutHolder synchronous write");
+	getOutConnection(channel)->write();
+      }
+      else
+      {
+	LOG_TRACE_COND_STR("DataManager::readyWithOutHolder Skipping read of channel = " << channel 
+			   << ". Output is not connected.");
+      }
     }
     else
     {
@@ -211,6 +237,38 @@ void DataManager::readyWithOutHolder(int channel)
   {
     LOG_TRACE_RTTI("DataManager::readyWithOutHolder Outholder not previously requested with getOutHolder() function");
   }
+}
+
+Connection* DataManager::getInConnection(int channel) const
+{
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getInputs(), "input channel too high");
+  return itsInDHsinfo[channel].connection;
+}
+
+void DataManager::setInConnection(int channel, Connection* conn)
+{
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getInputs(), "input channel too high");
+  ASSERTSTR(itsInDHsinfo[channel].connection == 0, "Input " << channel 
+	    << " is already connected.");
+  itsInDHsinfo[channel].connection = conn;
+}
+
+Connection* DataManager::getOutConnection(int channel) const
+{
+  DBGASSERTSTR(channel >= 0, "output channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "output channel too high");
+  return itsOutDHsinfo[channel].connection;
+}
+
+void DataManager::setOutConnection(int channel, Connection* conn)
+{
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "input channel too high");
+  ASSERTSTR(itsOutDHsinfo[channel].connection == 0, "Output " << channel 
+	    << " is already connected.");
+  itsOutDHsinfo[channel].connection = conn;
 }
 
 DataHolder* DataManager::getGeneralInHolder(int channel) const
@@ -254,7 +312,14 @@ void DataManager::initializeInputs()
 	// todo: can't we get the process step from elsewere?
 	if ( getInputRate(ch) == 1 ) {
 	  LOG_TRACE_COND_STR("DM Allowed input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
-	  itsInDHsinfo[ch].currentDH->read();
+	  if (getInConnection(ch) != 0)
+	  {
+	    getInConnection(ch)->read();
+	  }
+	  else
+	  {
+	    LOG_TRACE_COND_STR("DM Skip input handling;  channel = " << ch << " step=1 is not connected");
+	  }
 	} else {
 	  LOG_TRACE_COND_STR("DM Skip input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
 	}
@@ -275,7 +340,7 @@ void DataManager::initializeInputs()
 void DataManager::setInBufferingProperties(int channel, bool synchronous,
 					   bool shareDHs) const
 {
-  ASSERTSTR(itsInDHs[channel]->getTransporter().getTransportHolder()==0, 
+  ASSERTSTR(getInConnection(channel) == 0, 
 	    "Input " << channel << 
 	    " is already connected. Buffering properties must be set before connecting."); 
   DataHolder* dhPtr = getGeneralInHolder(channel);
@@ -294,7 +359,7 @@ void DataManager::setInBufferingProperties(int channel, bool synchronous,
 void DataManager::setOutBufferingProperties(int channel, bool synchronous,
 					    bool shareDHs) const
 {
-  ASSERTSTR(itsOutDHs[channel]->getTransporter().getTransportHolder()==0, 
+  ASSERTSTR(getOutConnection(channel)==0, 
 	    "Output " << channel << 
 	    " is already connected. Buffering properties must be set before connecting."); 
   DataHolder* dhPtr = getGeneralOutHolder(channel);

@@ -30,6 +30,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <Transport/CSConnection.h>
 #include <ACC/DH_ProcControl.h>
 
 namespace LOFAR {
@@ -49,8 +50,14 @@ typedef enum { PcCmdMaskOk 	 	  = 0x0001,
 class ProcControlComm 
 {
 public:
-	// The only constructor
-	explicit ProcControlComm(bool	syncComm);
+	// The client constructor
+	ProcControlComm(const string&		hostname,
+					const string&		port,
+					bool				syncComm);
+
+	// The server constructor
+	ProcControlComm(const string&		port,
+					bool				syncComm);
 
 	// Destructor;
 	virtual ~ProcControlComm();
@@ -71,6 +78,10 @@ public:
 	// result.
 	bool	waitForResponse() const;
 
+	// Can be used in async communication to see if a new message has arived.
+	// Returns \c true in async communication because call would block.
+	bool	poll() const;
+
 	// Executes the given command: fills a dataholder, send it to the sender,
 	// and do a 'waitForResponse'.
 	bool	doRemoteCmd(const PCCmd			theCmd,
@@ -78,10 +89,6 @@ public:
 
 	// Returns a pointer to the dataholder.
 	DH_ProcControl*		getDataHolder() const;
-
-	// Install a pointer to the DataHolder that is used to hold the data
-	// that must be exchanged.
-	void				setDataHolder(DH_ProcControl*	aDHPtr);
 
 private:
 	// Not default constructable
@@ -93,10 +100,10 @@ private:
 	// Copying is not allowed this way.
 	ProcControlComm&	operator= (const ProcControlComm&	that);
 
-	//# --- datamembers ---
-
-	// Pointer to a dataholder that is used for packing and unpacking the
-	// information when it is sent or read.
+	//# --- Datamembers ---
+	// Pointers to the connection objects that manage the communication
+	CSConnection*			itsReadConn;
+	CSConnection*			itsWriteConn;
 	DH_ProcControl*		itsDataHolder;
 
 	// Synchrone or asynchrone communication.
@@ -112,13 +119,6 @@ inline DH_ProcControl*	ProcControlComm::getDataHolder() const
 	return itsDataHolder;
 }
 
-//#
-//# setDataHolder(aDHpointer)
-//#
-inline void ProcControlComm::setDataHolder(DH_ProcControl*	aDHPtr)
-{
-	itsDataHolder = aDHPtr;
-}
 
 // @} addgroup
 } // namespace ACC

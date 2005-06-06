@@ -41,19 +41,8 @@ ApplControlServer::ApplControlServer(const uint16			portnr,
 									 ApplControl*			ACImpl) :
 	itsACImpl(ACImpl)
 {
-	DH_ApplControl	DH_AC_Client;
-	DH_ApplControl*	DH_AC_Server = new DH_ApplControl;
-	DH_AC_Client.setID(3);
-	DH_AC_Server->setID(4);
-
-	DH_AC_Client.connectBidirectional(*DH_AC_Server, 
-				 			TH_Socket("", "localhost", portnr, false, false),
-				 			TH_Socket("localhost", "", portnr, true,  false),
-							false);	// blocking
-	DH_AC_Server->init();
-
-	itsCommChan = new ApplControlComm(false);		// async
-	itsCommChan->setDataHolder(DH_AC_Server);
+	itsCommChan = new ApplControlComm(toString(portnr), false);	// async
+	ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
 }
 
 //
@@ -85,7 +74,7 @@ bool	ApplControlServer::pollForMessage() const
 {
 	LOG_TRACE_FLOW("ApplControlServer:pollForMessage");
 
-	return (itsCommChan->getDataHolder()->read());
+	return (itsCommChan->poll());
 }
 
 //

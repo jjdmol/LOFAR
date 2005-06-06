@@ -12,7 +12,6 @@
 
 #include <sys/time.h>
 
-#include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
 #include <Common/KeyValueMap.h>
 

@@ -25,7 +25,6 @@
 #define STATIONCORRELATOR_DH_RSP_H
 
 
-#include <lofar_config.h>
 #include <Transport/DataHolder.h>
 #include <complex>
 #include <Common/KeyValueMap.h>
@@ -50,10 +49,7 @@ public:
   DataHolder* clone() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   /// accessor functions to the blob data
   const int getStationID() const;

@@ -10,8 +10,6 @@
 #ifndef CEPFRAME_DH_EMPTY_H
 #define CEPFRAME_DH_EMPTY_H
 
-#include <lofar_config.h>
-
 #include <Transport/DataHolder.h>
 
 namespace LOFAR

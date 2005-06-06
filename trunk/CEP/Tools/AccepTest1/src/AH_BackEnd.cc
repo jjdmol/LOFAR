@@ -14,6 +14,7 @@
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
 #include <tinyCEP/SimulatorParseClass.h>
+#include <Transport/Connection.h>
 
 #include <DH_Vis.h>
 #include <AH_BackEnd.h>
@@ -61,14 +62,6 @@ void AH_BackEnd::define(const KeyValueMap& /*params*/) {
 
   undefine();
 
-  WH_Correlator myWHCorrelator("noname",
-			       itsNelements, 
-			       itsNsamples,
-			       itsNchannels, 
-			       itsNtargets,
-			       itsNpolarisations
-			       );
-
   for (int cn = 0; cn < itsNtargets/itsNtgroups; cn++) {
     itsWHs.push_back((WorkHolder*)
 		     new WH_Dump("noname",
@@ -76,18 +69,34 @@ void AH_BackEnd::define(const KeyValueMap& /*params*/) {
 				 itsNchannels,
 				 itsNpolarisations));
 
-    myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
-      ( *itsWHs.back()->getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, true, itsBlocking) );
+    string service(formatString("%d", itsPort+cn));
+    itsInTHs.push_back( new TH_Socket(service, itsBlocking) );
+    itsInConns.push_back( new Connection("inConn", 0,
+					 itsWHs.back()->getDataManager().getInHolder(0),
+					 itsInTHs.back()) );
+    itsWHs.back()->getDataManager().setInConnection(0, itsInConns.back());
+
   }
 }
 
 void AH_BackEnd::undefine() {
-  vector<WorkHolder*>::iterator it = itsWHs.begin();
-  for (; it!=itsWHs.end(); it++) {
-    delete *it;
+  vector<WorkHolder*>::iterator it1 = itsWHs.begin();
+  for (; it1!=itsWHs.end(); it1++) {
+    delete *it1;
   }
   itsWHs.clear();
+
+  vector<Connection*>::iterator it2 = itsInConns.begin();
+  for (; it2!=itsInConns.end(); it2++) {
+    delete *it2;
+  }
+  itsInConns.clear();
+
+  vector<TransportHolder*>::iterator it3 = itsInTHs.begin();
+  for (; it3!=itsInTHs.end(); it3++) {
+    delete *it3;
+  }
+  itsInTHs.clear();
 }
 
 //
@@ -100,39 +109,53 @@ void AH_BackEnd::init() {
   int cn = 0;
   int good = 0;
   cout << "init BE WH: starting all listeners..." << endl;
-  vector<WorkHolder*>::iterator it = itsWHs.begin();
-  for (; it != itsWHs.end(); it++) {
-//    cout << "init BE WH " << (*it)->getName() << " listening on port " 
-//         << itsPort+cn << endl;
-
-    // Get pointer to TH_Socket
-    TH_Socket* THS = static_cast<TH_Socket*>
-                     ((*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder());
-    std::stringstream	service;	// construct string with portnumber
-    service << itsPort+cn;
-    // Start the listener first
-    if (!THS->setListenSocket(new Socket("TH_Socket", service.str()))) {
-      cout << itsPort+cn << ":listener NOT OK" << endl;
+  vector<TransportHolder*>::iterator iter = itsInTHs.begin();
+  for (; iter != itsInTHs.end(); iter++)
+  {
+    if (!(*iter)->init())
+    {
+       cout << itsPort+cn << ":listener NOT OK" << endl;
     }
-    else {
+    else 
+    {
       good++;
     }
-
     usleep(50);
     cn++;
   }
+
+
+//   vector<WorkHolder*>::iterator it = itsWHs.begin();
+//   for (; it != itsWHs.end(); it++) {
+// //    cout << "init BE WH " << (*it)->getName() << " listening on port " 
+// //         << itsPort+cn << endl;
+
+//     // Get pointer to TH_Socket
+//     TH_Socket* THS = static_cast<TH_Socket*>
+//                      ((*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder());
+//     std::stringstream	service;	// construct string with portnumber
+//     service << itsPort+cn;
+//     // Start the listener first
+//     if (!THS->setListenSocket(new Socket("TH_Socket", service.str()))) {
+//       cout << itsPort+cn << ":listener NOT OK" << endl;
+//     }
+//     else {
+//       good++;
+//     }
+
+//     usleep(50);
+//     cn++;
+//   }
   cout << good << " of " << cn << " listeners started OK" << endl;
 
   // Now do the normal loop
   struct timeval timestamp;
   cn = 0;
-  it = itsWHs.begin();
+  vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
     cout << "init BE WH " << (*it)->getName() << " accepting on port " 
          << itsPort+cn << endl;
 
-    // be sure right blocking mode is used.
-    (*it)->getDataManager().getInHolder(0)->getTransporter().setIsBlocking(itsBlocking);
     // do the accept
     (*it)->basePreprocess();
 

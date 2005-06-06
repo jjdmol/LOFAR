@@ -42,7 +42,7 @@ DataHolder* DH_Vis::clone() const
   return new DH_Vis(*this);
 }
 
-void DH_Vis::preprocess()
+void DH_Vis::init()
 {
   // First delete possible buffers.
   postprocess();

@@ -76,13 +76,8 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   // Free any memory previously allocated
   undefine();
 
-  // Create the top-level Simul
-  WH_Empty empty;
-  Composite topComposite(empty, 
-	      "BlackBoardDemo",
-	      true, 
-	      true,  // controllable	      
-	      true); // monitor
+  // Create the top-level Composite
+  Composite topComposite(0, 0,"BlackBoardDemo");
   setComposite(topComposite);
 
   // Set node and application number of Simul
@@ -101,7 +96,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   WH_Control controlWH("control", itsNumberPD, ctrlParams);
   Step controlStep(controlWH, "controlStep");
   controlStep.runOnNode(0,0);
-  topComposite.addStep(controlStep);
+  topComposite.addBlock(controlStep);
 
   // Create the Prediffers
   itsPDSteps = new Step*[itsNumberPD];
@@ -116,14 +111,14 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     int index = pdNo - 1;
     itsPDSteps[index] = new Step(predWH, "prediffer"+pdID);
     itsPDSteps[index]->runOnNode(pdNo,0);
-    topComposite.addStep(itsPDSteps[index]);
+    topComposite.addBlock(itsPDSteps[index]);
   }
   
   // Create the Solver
   WH_Solve solveWH("Solver", itsNumberPD);
   Step solverStep(solveWH, "solverStep");
   solverStep.runOnNode(itsNumberPD+1,0);
-  topComposite.addStep(solverStep);
+  topComposite.addBlock(solverStep);
 
   // All DataHolders connected to a database table are connected to their 
   // dummy equivalent in the same WorkHolder. In this way the number of 
@@ -132,24 +127,24 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   // some overhead in the preprocess phase)
 
   // Create the connections to the database (themselves).
-  controlStep.connect(&controlStep, 0, 0, 1, TH_PL("BBS3Solutions"));
-  controlStep.connect(&controlStep, 1, 1, 1, TH_PL("BBS3WOPrediffer"));
-  controlStep.connect(&controlStep, 2, 2, 1, TH_PL("BBS3WOSolver"));
+  controlStep.connect(0, &controlStep, 0, 1, new TH_PL("BBS3Solutions"));
+  controlStep.connect(1, &controlStep, 1, 1, new TH_PL("BBS3WOPrediffer"));
+  controlStep.connect(2, &controlStep, 2, 1, new TH_PL("BBS3WOSolver"));
 
   // Same for Solver
-  solverStep.connect(&solverStep, 0, 0, 1, TH_PL("BBS3WOSolver"));
-  solverStep.connect(&solverStep, 1, 1, 1, TH_PL("BBS3Solutions"));
+  solverStep.connect(0, &solverStep, 0, 1, new TH_PL("BBS3WOSolver"));
+  solverStep.connect(1, &solverStep, 1, 1, new TH_PL("BBS3Solutions"));
 
   for (int index = 0; index < itsNumberPD; index++)
   {
     // Create the connection to the database.
-    itsPDSteps[index]->connect(itsPDSteps[index], 0, 0, 1, TH_PL("BBS3WOPrediffer"));
-    itsPDSteps[index]->connect(itsPDSteps[index], 1, 1, 1, TH_PL("BBS3Solutions"));
+    itsPDSteps[index]->connect(0, itsPDSteps[index], 0, 1, new TH_PL("BBS3WOPrediffer"));
+    itsPDSteps[index]->connect(1, itsPDSteps[index], 1, 1, new TH_PL("BBS3Solutions"));
     // Create the connection to the Solver
 #ifdef HAVE_MPI
-    solverStep.connect(itsPDSteps[index], index+2, 2, 1, TH_MPI(index+1,itsNumberPD+1)); 
+    solverStep.connect(index+2, itsPDSteps[index], 2, 1, new TH_MPI(index+1,itsNumberPD+1)); 
 #else
-    solverStep.connect(itsPDSteps[index], index+2, 2, 1, TH_Mem(), false);   
+    solverStep.connect(index+2, itsPDSteps[index], 2, 1, new TH_Mem(), false);   
 #endif
   }
 

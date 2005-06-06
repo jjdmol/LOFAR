@@ -42,6 +42,8 @@ using namespace std;
 
 namespace LOFAR 
 {
+  class Connection;
+
   class AH_Correlator: public LOFAR::TinyApplicationHolder {
 
   public:
@@ -58,7 +60,10 @@ namespace LOFAR
     virtual void quit();
   private:
     WorkHolder* itsWH;
-    
+    Connection* itsInConn;   // Connection on input side
+    Connection* itsOutConn;  // Connection on output side
+    TransportHolder* itsInTH;
+    TransportHolder* itsOutTH;
     int   itsNelements;
     int   itsNsamples;
     int   itsNchannels;

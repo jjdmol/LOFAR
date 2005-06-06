@@ -20,7 +20,6 @@
 //
 //  $Id$
 
-
 #include "DH_VarBuf.h"
 
 namespace LOFAR
@@ -48,7 +47,7 @@ DataHolder* DH_VarBuf::clone() const
   return new DH_VarBuf(*this);
 }
 
-void DH_VarBuf::preprocess()
+void DH_VarBuf::init()
 {
   // Initialize the fieldset.
   initDataFields();
@@ -91,12 +90,6 @@ void DH_VarBuf::fillDataPointers()
   itsCounter = getData<int> ("Counter");
   // Fill in the buffer pointer.
   itsBuffer  = getData<BufferType> ("Buffer");
-}
-
-void DH_VarBuf::postprocess()
-{
-  itsCounter = 0;
-  itsBuffer = 0;
 }
 
 DH_VarBuf::BufferType& DH_VarBuf::getBufferElement(unsigned int element)

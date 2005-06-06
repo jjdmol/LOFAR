@@ -23,27 +23,23 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
+#include <lofar_config.h>
+
+//#include <stdio.h>
 #include <Common/lofar_iostream.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#include <Common/Debug.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
-#include <CEPFrame/WH_Empty.h>
 #include <tinyCEP/Profiler.h>
 #include <Transport/TH_ShMem.h>
 #include <EmptyAppl/EmptyAppl.h>
 #include <Common/KeyValueMap.h>
-
+#include <Common/LofarLogger.h>
 
 #include TRANSPORTERINCLUDE
 
-#ifdef HAVE_CORBA
-#include <CEPFrame/Corba/BS_Corba.h>
-#include <CEPFrame/Corba/TH_Corba.h>
-#endif
 
 using namespace LOFAR;
 
@@ -63,25 +59,16 @@ EmptyAppl::~EmptyAppl()
 void EmptyAppl::define(const KeyValueMap&)
 {
 
-#ifdef HAVE_CORBA
-  // Start Orb Environment
-  AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
-#endif
-
 #ifdef HAVE_MPI
   // TH_ShMem only works in combination with MPI
-  TH_ShMem::init(0, NULL);
+  TH_MPI::initMPI(0, NULL);
 #endif
   
   // Free any memory previously allocated
   undefine();
 
-  // Create the top-level Simul
-  Composite comp(new WH_Empty(), 
-	        "EmptyAppl",
-	        true, 
-	        true,  // controllable	      
-	        true); // monitor
+  // Create the top-level Composite
+  Composite comp(0, 0, "EmptyAppl");
   setComposite(comp);
 
   // Set node and application number of Composite
@@ -108,38 +95,33 @@ void EmptyAppl::define(const KeyValueMap&)
 
 
   // Add all Step(s) to Simul
-  // Example:    comp.addStep(sourceStep);
-  //             comp.addStep(targetStep);
+  // Example:    comp.addBlock(sourceStep);
+  //             comp.addBlock(targetStep);
 
 
   // Create the cross connections between Steps
   // Example:     #ifdef HAVE_MPI
-  //              targetStep.connect(sourceStep, 0, 0, 1, TH_MPI::proto);
+  //              targetStep.connect(sourceStep, 0, 0, 1, new TH_MPI(0,1));
   //              #endif
-
-
-  // Optional: Performance optimisations
-  // Example:     #ifdef HAVE_MPI
-  //                simul.optimizeConnectionsWith(TH_ShMem::proto);
-  //              #endif 
 
 }
   
 
 void EmptyAppl::run(int nSteps) {
-  TRACER1("Call run()");
+  LOG_TRACE_FLOW("Call run()");
   Profiler::init();
   Step::clearEventCount();
 
-  TRACER4("Start Processing simul");    
+  LOG_TRACE_FLOW("Start Processing simul");    
   for (int i=0; i<nSteps; i++) {
     if (i==2) Profiler::activate();
-    TRACER2("Call simul.process() ");
+    LOG_TRACE_FLOW("Call simul.process() ");
     getComposite().process();
     if (i==5) Profiler::deActivate();
   }
 
-  TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
+  LOG_TRACE_FLOW_STR("END OF SIMUL on node " 
+		     << TRANSPORTER::getCurrentRank () );
  
 #if 0
   //     close environment

@@ -20,8 +20,6 @@
 //#
 //# $Id$
 
-
-
 #ifndef HAVE_BGL
 
 #include <lofar_config.h>
@@ -78,7 +76,7 @@ TH_Ethernet::~TH_Ethernet()
   }
 }
 
-TH_Ethernet* TH_Ethernet::make() const
+TH_Ethernet* TH_Ethernet::clone() const
 {
   return new TH_Ethernet(itsIfname, itsRemoteMac, itsOwnMac, itsEthertype);
 }

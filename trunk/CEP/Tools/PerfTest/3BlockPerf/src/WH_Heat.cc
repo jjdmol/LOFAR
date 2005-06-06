@@ -26,10 +26,7 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/Debug.h>
-
-#include "3BlockPerf/WH_Heat.h"
+#include <3BlockPerf/WH_Heat.h>
 
 namespace LOFAR {
 
@@ -39,8 +36,8 @@ WH_Heat::WH_Heat (const string& name,
                : WorkHolder    (1, 1, name),
 		 itsSize (size),
 		 itsFlopsPerByte(flopsPB),
-		 itsNoValues(0),
 		 itsFactor(0),
+		 itsNoValues(0),
 		 itsBuffer(0)
 
 {
@@ -78,10 +75,10 @@ void WH_Heat::process()
   DH_FixedSize::valueType* data_out = ((DH_FixedSize*)getDataManager().getOutHolder(0))->getPtr2Data(); // pointer to the ingoing data
   DH_FixedSize::valueType result;
 
-  for (int i=0; i<itsNoValues; i++) {
+  for (uint i=0; i<itsNoValues; i++) {
     result = data_in[i];
     // do the specified number of flops
-    for (int j=0; j<itsNoMultiplications; j++) {
+    for (uint j=0; j<itsNoMultiplications; j++) {
       result = itsFactor + result;
     }
     data_out[i] = result;

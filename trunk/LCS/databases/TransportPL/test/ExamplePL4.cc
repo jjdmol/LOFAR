@@ -24,7 +24,8 @@
 #include <lofar_config.h>
 
 #include <TransportPL/TH_PL.h>
-#include <DH_Example2.h>
+#include <DH_ExampleExtra2.h>
+#include <Transport/Connection.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/LofarLogger.h>
@@ -45,58 +46,58 @@ int main()
     TH_PL::useDatabase ("test");
 
     // Connect to itself to attach the TH_PL to the data holder.
-    DH_Example2 DH1("dh1", 1, true);
-    DH1.setID(1);
-    DH1.connectTo(DH1, TH_PL("ExamplePL2"));
+    DH_ExampleExtra2 DH1("dh1", 1);
+    TH_PL plTH("ExamplePL2");
+    Connection conn("connection1", &DH1, &DH1, &plTH);
     DH1.init();
     
     // fill the DataHolders with some initial data
     {
       DH1.getBuffer()[0] = makefcomplex(17,-3.5);
       DH1.setCounter(2);
-      BlobOStream& bos = DH1.createExtraBlob();
+      BlobOStream& bos = DH1.fillVariableBuffer();
       bos << "test1";
-      BlobIStream& bis = DH1.getExtraBlob();
+      BlobIStream& bis = DH1.readVariableBuffer();
       string str;
       bis >> str;
       ASSERT (str == "test1");
-      DH1.insertDB();
+      DH1.insertDB(conn);
     }
     // write another record.
     {
       DH1.getBuffer()[0] = makefcomplex(117,-3.5);
       DH1.setCounter(3);
-      BlobOStream& bos = DH1.createExtraBlob();
+      BlobOStream& bos = DH1.fillVariableBuffer();
       bos << float(4.5) << "test1a";
-      DH1.insertDB();
+      DH1.insertDB(conn);
     }
     // read first record back and check it.
     {
-      ASSERT (DH1.queryDB ("counter=2") == 1);
+      ASSERT (DH1.queryDB ("counter=2", conn) == 1);
       ASSERT (DH1.getBuffer()[0] == makefcomplex(17,-3.5)
 	      &&  DH1.getCounter() == 2);
       bool found;
       int version;
-      BlobIStream& bis = DH1.getExtraBlob (found, version);
+      BlobIStream& bis = DH1.readVariableBuffer (found, version);
       ASSERT (found);
       string str;
       bis >> str;
       bis.getEnd();
       ASSERT (str == "test1");
-      BlobIStream& bis2 = DH1.getExtraBlob();
+      BlobIStream& bis2 = DH1.readVariableBuffer();
       bis2 >> str;
       ASSERT (str == "test1");
     }
     // update the record, read it back and check it.
     DH1.setCounter(4);
-    DH1.updateDB();
+    DH1.updateDB(conn);
     {
-      ASSERT (DH1.queryDB ("counter=4") == 1);
+      ASSERT (DH1.queryDB ("counter=4", conn) == 1);
       ASSERT (DH1.getBuffer()[0] == makefcomplex(17,-3.5)
 	      &&  DH1.getCounter() == 4);
       bool found;
       int version;
-      BlobIStream& bis = DH1.getExtraBlob (found, version);
+      BlobIStream& bis = DH1.readVariableBuffer (found, version);
       ASSERT (found);
       string str;
       bis >> str;
@@ -106,12 +107,12 @@ int main()
 
     // read second record back and check it.
     {
-      ASSERT (DH1.queryDB ("counter=3") == 1);
+      ASSERT (DH1.queryDB ("counter=3",conn) == 1);
       ASSERT (DH1.getBuffer()[0] == makefcomplex(117,-3.5)
 	      &&  DH1.getCounter() == 3);
       bool found;
       int version;
-      BlobIStream& bis = DH1.getExtraBlob (found, version);
+      BlobIStream& bis = DH1.readVariableBuffer (found, version);
       ASSERT (found);
       float val;
       string str;
@@ -120,16 +121,16 @@ int main()
       ASSERT (val == 4.5  &&  str == "test1a");
     }
     // update the record, read it back and check it.
-    DH1.getBuffer()[0] = -1. * DH1.getBuffer()[0];
-    DH1.clearExtraBlob();
-    DH1.updateDB();
+    DH1.getBuffer()[0] = makefcomplex(0,0)-DH1.getBuffer()[0];
+    DH1.clearVariableBuffer();
+    DH1.updateDB(conn);
     {
-      ASSERT (DH1.queryDB ("counter=3") == 1);
+      ASSERT (DH1.queryDB ("counter=3", conn) == 1);
       ASSERT (DH1.getBuffer()[0] == makefcomplex(-117,3.5)
 	      &&  DH1.getCounter() == 3);
       bool found;
       int version;
-      DH1.getExtraBlob (found, version);
+      DH1.readVariableBuffer (found, version);
       ASSERT (!found);
     }
     return 0;

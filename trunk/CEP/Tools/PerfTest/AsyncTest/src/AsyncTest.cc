@@ -24,48 +24,34 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
+#include <lofar_config.h>
+
 #include <Common/lofar_iostream.h>
-#include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <AsyncTest/AsyncTest.h>
 
-#include <Common/Debug.h>
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/Profiler.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/ParamBlock.h"
-#include "CEPFrame/ShMem/TH_ShMem.h"
-#include "AsyncTest/AsyncTest.h"
-#include "AsyncTest/WH_Source.h"
-#include "AsyncTest/WH_Sink.h"
-
-#include "CEPFrame/TH_Mem_Bl.h"
+#include <Common/LofarLogger.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Composite.h>
+#include <tinyCEP/Profiler.h>
+#include <Transport/TH_Mem.h>
+#include <AsyncTest/WH_Source.h>
+#include <AsyncTest/WH_Sink.h>
 
 #include TRANSPORTERINCLUDE
 
-#ifdef HAVE_CORBA
-#include "CEPFrame/Corba/BS_Corba.h"
-#include "CEPFrame/Corba/TH_Corba.h"
-#endif
-
 using namespace LOFAR;
 
-AsyncTest::AsyncTest():
-  itsSourceSteps(0),
-  itsDestSteps(0),
-  itsSyncRW(true)
-{
-  Sworkholders = NULL;
-  Ssteps       = NULL;
-  Dworkholders = NULL;
-  Dsteps       = NULL;
-}
+AsyncTest::AsyncTest()
+  : Sworkholders  (0),
+    Dworkholders  (0),
+    Ssteps        (0),
+    Dsteps        (0),
+    itsSourceSteps(0),
+    itsDestSteps  (0),
+    itsSyncRW     (true)
+{}
 
 AsyncTest::~AsyncTest()
 {
@@ -76,33 +62,25 @@ AsyncTest::~AsyncTest()
    define function for the AsyncTest simulation. It defines a list
    of steps that each process a part of the data.
  */
-void AsyncTest::define(const ParamBlock& params)
+void AsyncTest::define(const KeyValueMap& params)
 {
-#ifdef HAVE_CORBA
-  // Start Orb Environment
-  AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
-#endif
-
   char name[20];  // name used during Step/WH creation
   
   // free any memory previously allocated
   undefine();
 
-  WH_Empty empty;
-
-  Simul simul(empty, 
-	      "AsyncTest",
-	      true, 
-	      true,  // controllable	      
-	      true); // monitor
-  setSimul(simul);
-  simul.runOnNode(0);
-  simul.setCurAppl(0);
+  Composite comp(0, 0, "AsyncTest");
+  setComposite(comp);
+  comp.runOnNode(0);
+  comp.setCurAppl(0);
 
   itsSourceSteps = 2;
   itsDestSteps   = 1;
-  itsFixedSize   = params.getInt("fixedsize",0);
-  itsSyncRW     = params.getInt("synchronous",1);
+  //  itsFixedSize   = params.getInt("fixedsize",0);
+  //  itsSyncRW     = params.getInt("synchronous",1);
+
+  itsFixedSize   = 1024;
+  itsSyncRW     = 0;
 
   bool  WithMPI=false;
 
@@ -128,20 +106,23 @@ void AsyncTest::define(const ParamBlock& params)
     // Create the Source Step
     sprintf(name, "GrowSizeSource[%d]", iStep);
     Sworkholders[iStep] = new WH_Source(name, 
-				  1, // should be 0 
+				  0, 
 				  itsDestSteps,
 				  (itsFixedSize?itsFixedSize:MAX_GROW_SIZE),
-				  itsFixedSize!=0,
-				  itsSyncRW);
+				  itsFixedSize!=0, itsSyncRW);
     
       monitor = (iStep==0) ? true:false;
       Ssteps[iStep] = new Step(Sworkholders[iStep], 
-			       "GrowSizeSourceStep", 
-			       iStep,
-			       monitor);
-      
+			       "SourceStep", 
+			       iStep);
+
+      // Set the buffering properties
+      for (int nrOutp=0; nrOutp<itsDestSteps; nrOutp++)
+      {
+	Ssteps[iStep]->setOutBufferingProperties(nrOutp, itsSyncRW, false);
+      }
       // Determine the node and process to run in
-      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
+      //      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
   }
   
   
@@ -152,31 +133,38 @@ void AsyncTest::define(const ParamBlock& params)
     sprintf(name, "GrowSizeDest[%d]", iStep);
     Dworkholders[iStep] = new WH_Sink(name, 
 				  itsSourceSteps, 
-				  1, // should be 0 
+				  0, 
 				  (itsFixedSize?itsFixedSize:MAX_GROW_SIZE),
 				  itsFixedSize!=0,
 				  itsSyncRW);
     
     Dsteps[iStep] = new Step(Dworkholders[iStep], "GrowSizeDestStep", iStep);
+
+    // Set the buffering properties
+    for (int nrInp=0; nrInp<itsSourceSteps; nrInp++)
+    {
+      Dsteps[iStep]->setInBufferingProperties(nrInp, itsSyncRW, false);
+    }
+
     // Determine the node and process to run in
     if (WithMPI) {
-      TRACER2("Dest MPI runonnode (" << iStep << ")");
-      Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); // run in App 0
+      LOG_TRACE_RTTI_STR("Dest MPI runonnode (" << iStep << ")");
+      //      Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); // run in App 0
     } else {
-      Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
+      //      Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
     }
   }
 
-  // Now Add the steps to the simul;
+  // Now Add the steps to the composite;
   // first ALL the sources....
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
-    TRACER4("Add Source step " << iStep);
-    simul.addStep(Ssteps[iStep]);
+    LOG_TRACE_RTTI_STR("Add Source step " << iStep);
+    comp.addBlock(Ssteps[iStep]);
   }
   // ...then the destinations
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
-    TRACER4("Add Dest step " << iStep);
-    simul.addStep(Dsteps[iStep]);
+    LOG_TRACE_RTTI_STR("Add Dest step " << iStep);
+    comp.addBlock(Dsteps[iStep]);
   }
   
   // Create the cross connections
@@ -184,46 +172,44 @@ void AsyncTest::define(const ParamBlock& params)
     for (int ch = 0; ch < itsSourceSteps; ch++) {
       // Set up the connections
       // Correlator Style
-#ifdef HAVE_CORBA
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Corba::proto);
-#else
-#ifdef HAVE_MPI
-      TRACER2("Connect using MPI");
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_MPI::proto);
-#else
+
+// #ifdef HAVE_MPI
+//       LOG_TRACE_RTTI("Connect using MPI");
+//       Dsteps[step]->connect(ch, Ssteps[ch],step,1, 
+// 			    new TH_MPI(ch, itsSourceSteps+step));
+// #else
       if (itsSyncRW)
       {
-	Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Mem::proto);
+	Dsteps[step]->connect(ch, Ssteps[ch],step,1, new TH_Mem(), false);
       }
       else
       {
-	Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Mem_Bl::proto);
+	Dsteps[step]->connect(ch, Ssteps[ch],step,1, new TH_Mem(), true);
       }
 
-#endif
-#endif
+// #endif
     }
   }
   
 }
 
-void doIt (Simul& simul, const std::string& name, int nsteps) {
+void doIt (Composite& comp, const std::string& name, int nsteps) {
 #if 0
   simul.resolveComm();
 #endif
-  TRACER1("Ready with definition of configuration");
+  LOG_TRACE_FLOW("Ready with definition of configuration");
   Profiler::init();
-  Step::clearEventCount();
+  Block::clearEventCount();
 
-  TRACER4("Start Processing simul " << name);    
+  LOG_TRACE_FLOW_STR("Start Processing simul " << name);    
   for (int i=0; i<nsteps; i++) {
     if (i==2) Profiler::activate();
-    TRACER2("Call simul.process() ");
-    simul.process();
+    LOG_TRACE_FLOW("Call simul.process() ");
+    comp.process();
     if (i==5) Profiler::deActivate();
   }
 
-  TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
+  LOG_TRACE_FLOW_STR("END OF COMPOSITE on node " << TRANSPORTER::getCurrentRank () );
  
 #if 0
   //     close environment
@@ -233,12 +219,12 @@ void doIt (Simul& simul, const std::string& name, int nsteps) {
 
 void AsyncTest::run(int nSteps) {
   nSteps = nSteps;
-  doIt(getSimul(), "AsyncTest Simulator", nSteps);
+  doIt(getComposite(), "AsyncTest Simulator", nSteps);
 
 }
 
 void AsyncTest::dump() const {
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void AsyncTest::quit() {  

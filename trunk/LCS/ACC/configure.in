@@ -53,6 +53,7 @@ dnl
 lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
+lofar_LOG4CPLUS
 lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,Transport/TransportHolder.h,,)
 

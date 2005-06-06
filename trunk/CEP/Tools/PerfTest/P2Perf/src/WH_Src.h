@@ -25,17 +25,13 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef WH_Src_H
-#define WH_Src_H
+#ifndef P2PERF_WH_SRC_H
+#define P2PERF_WH_SRC_H
 
-#ifdef HAVE_CONFIG_H
-#include <lofar_config.h>
-#endif
-
-#include "tinyCEP/WorkHolder.h"
-#include "P2Perf/DH_VarSize.h"
-#include "P2Perf/DHGrowStrategy.h"
-#include "P2Perf/StopWatch.h"
+#include <tinyCEP/WorkHolder.h>
+#include <P2Perf/DH_VarSize.h>
+#include <P2Perf/DHGrowStrategy.h>
+#include <P2Perf/StopWatch.h>
 
 /**
    The WH_Src class implements a workholder with DH_VarSize

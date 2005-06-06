@@ -23,9 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-
 #include <Transport/TH_Mem.h>
-#include <Transport/Transporter.h>
 #include <Transport/DataHolder.h>
 #include <Common/LofarLogger.h>
 
@@ -38,7 +36,7 @@ namespace LOFAR
  * the tag which is a unique for each connection created in
  * the Transport.
  */
-map<int, DataHolder*> TH_Mem::theSources;
+map<int, DataHolder*> TH_Mem::theirSources;
 #ifdef USE_THREADS
 map<int, pthread_cond_t> TH_Mem::dataAvailable;
 map<int, pthread_cond_t> TH_Mem::dataReceived;
@@ -60,22 +58,14 @@ TH_Mem::~TH_Mem()
   LOG_TRACE_FLOW("TH_Mem destructor");
 }
 
-TH_Mem* TH_Mem::make() const
-{
-  return new TH_Mem();
-}
-
 string TH_Mem::getType() const
 {
   return "TH_Mem";
 }
 
-bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
+TH_Mem* TH_Mem::clone() const
 {
-  LOG_TRACE_RTTI_STR( "TH_Mem::connectionPossible between "
-		      << srcRank << " and "
-		      << dstRank << "?" );
-  return srcRank == dstRank;
+  return new TH_Mem();
 }
 
 void TH_Mem::initConditionVariables(int tag)
@@ -94,60 +84,42 @@ void TH_Mem::initConditionVariables(int tag)
     dataReceived[tag] = condRecv;
   }
 #else
-  LOG_WARN("initConditionVAriables not executed since compiled without USE_THREADS");
+  LOG_WARN("initConditionVariables not executed since compiled without USE_THREADS");
 #endif
 }
 
-bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
+int32 TH_Mem::recvNonBlocking(void* buf, int32 nbytes, int tag, int32 offset, DataHolder*)
 { 
   LOG_TRACE_RTTI("TH_Mem recvNonBlocking()");  
   // If first time, get the source DataHolder.
   if (itsFirstRecvCall) {
-    itsDataSource = theSources[tag];
+    itsDataSource = theirSources[tag];
     ASSERTSTR (itsDataSource != 0, "TH_Mem: no matching send for recv");
-    ASSERT (nbytes == itsDataSource->getDataSize());
     // erase the record
-    theSources.erase (tag);
+    theirSources.erase (tag);
     itsFirstRecvCall = false;
   }
-  DBGASSERT (nbytes == itsDataSource->getDataSize());
-  memcpy(buf, itsDataSource->getDataPtr(), nbytes);
-  return true;
+  char* dataPtr = static_cast<char*>(itsDataSource->getDataPtr()) + offset;
+  memcpy(buf, dataPtr, nbytes);
+  return nbytes;
 }
 
 /**
    The send function must now add its DataHolder to the map
-   containing theSources.
+   containing theirSources.
  */
-bool TH_Mem::sendNonBlocking(void* /*buf*/, int nbytes, int tag)
+bool TH_Mem::sendNonBlocking(void*, int, int tag, DataHolder* dh)
 {
   LOG_TRACE_RTTI("TH_Mem sendNonBlocking()"); 
   if (itsFirstSendCall) {
-    theSources[tag] = getTransporter()->getDataHolder();
+    ASSERTSTR (dh!=0, "Source DataHolder needs to be specified in TH_Mem::sendNonBlocking method!") 
+    theirSources[tag] = dh;
     itsFirstSendCall = false;
   }
   return true;
 }
 
-bool TH_Mem::recvVarNonBlocking(int tag)
-{ 
-  LOG_TRACE_RTTI("TH_Mem recvVarNonBlocking()"); 
-  // If first time, get the source DataHolder.
-  if (itsFirstRecvCall) {
-    itsDataSource = theSources[tag];
-    ASSERTSTR (itsDataSource != 0, "TH_Mem: no matching send for recv");
-    // erase the record
-    theSources.erase (tag);
-    itsFirstRecvCall = false;
-  }
-  int nb = itsDataSource->getDataSize();
-  DataHolder* target = getTransporter()->getDataHolder();
-  target->resizeBuffer (nb);
-  memcpy (target->getDataPtr(), itsDataSource->getDataPtr(), nb);
-  return true;
-}
-
-bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
+bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead, DataHolder*)
 { 
 #ifndef USE_THREADS
   LOG_ERROR("recvBlocking not available without USE_THREADS");
@@ -162,28 +134,19 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
     itsFirstCall = false;
   }
 
-  if (theSources.end() == theSources.find(tag))
+  if (theirSources.end() == theirSources.find(tag))
   {
     pthread_cond_wait(&dataAvailable[tag], &theirMapLock); // Wait for sent message
   }
   
-  itsDataSource = theSources[tag];
+  itsDataSource = theirSources[tag];
 
-  if (nbytes == itsDataSource->getDataSize())
-  {
-    /// do the memcpy
-    memcpy(buf, itsDataSource->getDataPtr(), nbytes);
-        
-    // erase the record
-    theSources.erase(tag);
-  }
-  else
-  {
-    // erase the record
-    theSources.erase(tag);
-        
-    THROW(LOFAR::Exception, "Number of bytes do not match");
-  }
+  char* dataPtr = static_cast<char*>(itsDataSource->getDataPtr()) + nrBytesRead;
+  /// do the memcpy
+  memcpy(buf, dataPtr, nbytes);
+
+  // erase the record
+  theirSources.erase(tag);        
 
   pthread_cond_signal(&dataReceived[tag]);
   pthread_mutex_unlock(&theirMapLock);
@@ -192,9 +155,9 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
 }
 
 /**
-   The send function must now add its DataHolder to the map containing theSources.
+   The send function must now add its DataHolder to the map containing theirSources.
  */
-bool TH_Mem::sendBlocking(void* /*buf*/, int nbytes, int tag)
+bool TH_Mem::sendBlocking(void*, int, int tag, DataHolder* dh)
 {
 #ifndef USE_THREADS
   LOG_ERROR("sendBlocking not available without USE_THREADS");
@@ -209,7 +172,8 @@ bool TH_Mem::sendBlocking(void* /*buf*/, int nbytes, int tag)
     itsFirstCall = false;
   }
 
-  theSources[tag] = getTransporter()->getDataHolder();
+  ASSERTSTR (dh!=0, "Source DataHolder needs to be specified in TH_Mem::sendBlocking method!") 
+  theirSources[tag] = dh;
   pthread_cond_signal(&dataAvailable[tag]); // Signal data available
   pthread_cond_wait(&dataReceived[tag], &theirMapLock);  // Wait for data received
   pthread_mutex_unlock(&theirMapLock);
@@ -218,42 +182,68 @@ bool TH_Mem::sendBlocking(void* /*buf*/, int nbytes, int tag)
 #endif //USE_THREADS
 }
 
-bool TH_Mem::recvVarBlocking(int tag)
-{ 
+void TH_Mem::readTotalMsgLengthBlocking(int tag, int& nrBytes)
+{
 #ifndef USE_THREADS
-  LOG_ERROR("recvVarBlocking not available without USE_THREADS");
+  LOG_ERROR("readTotalMsgLengthBlocking not available without USE_THREADS");
   return false;
 #else
-
-  LOG_WARN("TH_Mem::recvVarBlocking(). Using blocking in-memory transport can cause a dead-lock.");
-
+  LOG_TRACE_RTTI("TH_Mem readTotalMsgLengthBlocking()");  
   pthread_mutex_lock(&theirMapLock);
+
   if (itsFirstCall)
   {
     initConditionVariables(tag);
     itsFirstCall = false;
   }
 
-  if (theSources.end() == theSources.find(tag))
+  if (theirSources.end() == theirSources.find(tag))
   {
     pthread_cond_wait(&dataAvailable[tag], &theirMapLock); // Wait for sent message
   }
   
-  itsDataSource = theSources[tag];
-  int nb = itsDataSource->getDataSize();
-  DataHolder* target = getTransporter()->getDataHolder();
-  target->resizeBuffer(nb);
-  /// do the memcpy
-  memcpy(target->getDataPtr(), itsDataSource->getDataPtr(), nb);
-  
-  // erase the record
-  theSources.erase(tag);
+  itsDataSource = theirSources[tag];
 
-  pthread_cond_signal(&dataReceived[tag]);
+  nrBytes = itsDataSource->getDataSize();
   pthread_mutex_unlock(&theirMapLock);
-  return true;
+
 #endif //USE_THREADS
 }
+
+bool TH_Mem::readTotalMsgLengthNonBlocking(int tag, int& nrBytes)
+{
+  LOG_TRACE_RTTI("TH_Mem readTotalMsgLengthNonBlocking()");  
+  // If first time, get the source DataHolder.
+  if (itsFirstRecvCall) {
+    itsDataSource = theirSources[tag];
+    ASSERTSTR(itsDataSource != 0, "TH_Mem::readTotalMsgLengthNonBlocking: "<< 
+	      " no matching send.");
+    // erase the record
+    theirSources.erase (tag);
+    itsFirstRecvCall = false;
+  }
+  nrBytes = itsDataSource->getDataSize();
+  return true;
+}
+
+// NB: The following method doesn't do what you expect! It does not
+// guarantee the buffer contents has been safely sent.
+// Your application should make sure write/read are called alternately.
+void TH_Mem::waitForSent(void*, int, int)
+{
+  LOG_WARN("TH_Mem::waitForSent does not guarantee the safety of your buffer. You should handle this in your application! (call write/read alternately)");
+}
+
+void TH_Mem::reset()
+{
+  LOG_TRACE_FLOW("TH_Mem reset");
+  itsFirstSendCall = true;
+  itsFirstRecvCall = true;
+  itsDataSource = 0;
+}
+
+void TH_Mem::waitForReceived(void*, int, int)
+{}
 
 void TH_Mem::waitForBroadCast()
 {

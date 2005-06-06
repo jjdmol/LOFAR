@@ -25,14 +25,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef DH_VARSIZE_H
-#define DH_VARSIZE_H
+#ifndef LOFAR_P2PERF_DH_VARSIZE_H
+#define LOFAR_P2PERF_DH_VARSIZE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
-#include "Transport/DataHolder.h"
+#include <Transport/DataHolder.h>
 
 /**
    This class is an data holder that has has a variable size.
@@ -59,7 +56,7 @@ public:
 
   DataHolder* clone() const;
 
-  virtual void preprocess();
+  virtual void init();
   
   // allow changing of the fixed data size
   void setSpoofedDataSize(int dataSize);

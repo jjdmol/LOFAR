@@ -22,13 +22,11 @@
 //
 /////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <EmptyAppl/EmptyAppl.h>
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -49,12 +47,13 @@ int main (int argc, const char** argv)
 #ifdef HAVE_MPI
   MPI_Init(&argc, (char ***)&argv);
 #endif
+
+  INIT_LOGGER("EmptyAppl.log_prop");
+
   try {
     EmptyAppl simulator;
     simulator.setarg (argc, argv);
 	  
-    // Set trace level.
-    Debug::initLevels (argc, argv);
     try {
       LOFAR::SimulatorParse::parse (simulator);
     }

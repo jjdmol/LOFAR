@@ -64,10 +64,7 @@ public:
 /*   virtual void initPO (const string& tableName); */
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   void setBufferSize(int size);
   int getBufferSize();

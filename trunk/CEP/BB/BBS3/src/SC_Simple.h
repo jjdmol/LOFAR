@@ -42,8 +42,8 @@ namespace LOFAR
 class SC_Simple : public StrategyController
 {
 public:
-  SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD, 
-	    DH_WOSolve* woSolve, int nrPrediffers,
+  SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn, 
+	    Connection* outWOSolveConn, int nrPrediffers,
 	    const KeyValueMap& args);
 
   virtual ~SC_Simple();

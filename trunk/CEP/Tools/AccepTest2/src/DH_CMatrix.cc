@@ -60,7 +60,7 @@ namespace LOFAR
     return new DH_CMatrix(*this);
   }
 
-  void DH_CMatrix::preprocess()
+  void DH_CMatrix::init()
   {
     // create fields in the Blob
     addField("Xaxis", BlobField<Axis>(1));
