@@ -18,5 +18,8 @@ getTreeList_func.sql
 newTree_func.sql
 
 # PICadmin
+create_PIC_tables.sql
 hPICsearchParamID_func.sql
 addPICparam_func.sql
+getItemList_func.sql
+

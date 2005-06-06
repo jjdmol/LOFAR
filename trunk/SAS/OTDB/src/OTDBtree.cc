@@ -33,14 +33,84 @@ namespace LOFAR {
 //
 // OTDBtree()
 //
-OTDBtree::OTDBtree()
-{}
+OTDBtree::OTDBtree (OTDBconnection* 	aConn,
+		 	  		treeIDType			aTreeID) :
+	itsConn  (aConn),
+	itsTreeID(aTreeID),
+	itsError ("")
+{
+	ASSERTSTR(aConn, "Null pointer for connection not allowed");
+	ASSERTSTR(aTreeID, "TreeID may not be 0");
+}
 
 //
 // ~OTDBtree()
 //
 OTDBtree::~OTDBtree()
-{}
+{
+	// Do not delete the connection, we just borrowed it.
+}
+
+//
+// getItemList
+//
+// Once an treeID is chosen, the user can retrieve the definition of that
+// tree. A nodeID may be passed to get a sub-tree in stead of the full
+// PIC tree.
+vector<OTDBnode> OTDBtree::getItemList (nodeIDType	topNode,
+								  		uint32		depth)
+{
+	if (!itsConn->connect()) {
+		vector<OTDBnode>	empty;
+		return (empty);
+	}
+
+	// construct a query that call a stored procedure.
+	work	xAction(*(itsConn->getConn()), "getItemList");
+	string	query("SELECT * from getItemList('" +
+				toString(itsTreeID) + "','" +
+				toString(topNode) + "','" +
+				toString(depth) + "')");
+	try {
+		result res = xAction.exec(query);
+
+		// show how many records found
+		result::size_type	nrRecords = res.size();
+		LOG_DEBUG_STR (nrRecords << "records in itemList(" <<
+						topNode << ", " << depth << ")");
+
+		// copy information to output vector
+		vector<OTDBnode>	resultVec(nrRecords);
+		for (result::size_type	i = 0; i < nrRecords; ++i) {
+			res[i]["paramid"].to(resultVec[i].ID);
+			res[i]["parentid"].to(resultVec[i].parentID);
+			res[i]["name"].to(resultVec[i].name);
+			res[i]["index"].to(resultVec[i].index);
+			bool	leaf;
+			res[i]["leaf"].to(leaf);
+			if (leaf) {
+				res[i]["par_type"].to(resultVec[i].type);
+			}
+			else {
+				resultVec[i].type = 0;
+			}
+			resultVec[i].unit = 0;
+			res[i]["unit"].to(resultVec[i].unit);
+			res[i]["description"].to(resultVec[i].description);
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of getItemList:")
+				 + ex.what();
+	}
+
+	vector<OTDBnode>	empty;
+	return (empty);
+
+}
+
 
 
 

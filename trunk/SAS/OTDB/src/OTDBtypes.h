@@ -43,7 +43,8 @@ namespace LOFAR {
 //# classes mentioned as parameter or returntype without virtual functions.
 
 typedef		int32		treeIDType;
-typedef		int64		nodeIDType;
+//typedef		int64		nodeIDType;	TODO: long long not supported by pqxx
+typedef		int32		nodeIDType;
 typedef		int32		actionIDType;
 typedef		int32		eventIDType;
 typedef		int16		treeClassifType;
@@ -89,7 +90,7 @@ public:
 	string			name;
 	int16			index;
 	paramType		type;			// node / bool / int / long / float / etc.
-	string			unit;
+	int16			unit;
 	string			description;
 };
 

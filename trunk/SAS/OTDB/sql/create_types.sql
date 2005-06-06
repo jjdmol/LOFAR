@@ -19,13 +19,15 @@ CREATE TYPE treeInfo AS (
 );
 
 CREATE TYPE OTDBnode AS (
-	ID				INT8,
-	parentID		INT8,
-	name			VARCHAR(30),
+	paramID			INT4,
+	parentID		INT4,
+	name			VARCHAR(40),
 	index			SMALLINT,
-	paramtype		INT2,			-- param_type.ID%TYPE,
-	unit			VARCHAR(4),		-- unit.name%TYPE,
-	description		VARCHAR(80)
+	leaf			BOOLEAN,
+	par_type		INT2,			-- param_type.ID%TYPE,
+	unit			INT2,
+--	unit			VARCHAR(4),		-- unit.name%TYPE,
+	description		TEXT
 );
 
 

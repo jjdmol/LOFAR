@@ -38,18 +38,20 @@ DROP FUNCTION addPICparam (INT4, VARCHAR(120), INT2);
 CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
   RETURNS INT4 AS '
 	DECLARE
-		vdummy		PICparamref.paramID%TYPE;
+		vParRefID	PICparamref.paramID%TYPE;
 		vParamID	PIChierarchy.paramID%TYPE;
 		vParentID	PIChierarchy.parentID%TYPE;
 		vFullname	VARCHAR(120);
 		vNodename	VARCHAR(40);
 		vParamIndex	INT2;
 		vFieldnr	INT4;
+		vLeaf		BOOLEAN;
 
 	BEGIN
 	  -- be sure parameter exists in reference table.
+	  vParRefID := 0;
 	  SELECT paramid 
-	  INTO	 vdummy
+	  INTO	 vParRefID
 	  FROM   PICparamRef
 	  WHERE  PVSSname = $2
 	  LIMIT  1;
@@ -58,6 +60,11 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 		-- TODO: add other fields also.
 	    INSERT INTO PICparamRef(PVSSname, par_type)
 	    VALUES ($2, $3);
+		-- and retrieve its ID
+	    SELECT paramid 
+	    INTO   vParRefID
+	    FROM   PICparamRef
+	    WHERE  PVSSname = $2;
 	  END IF;
 
 	  -- add record to the PIC hierachical tree
@@ -79,8 +86,15 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 		AND		name     = vNodename;
 		IF NOT FOUND THEN
 		  vParamID  := nextval(\'PIChierarchID\');
-		  INSERT INTO PIChierarchy(treeID, paramID, parentID, name, index)
-		  VALUES ($1, vParamID, vParentID, vNodename, vParamIndex);
+		  IF length(split_part(vFullname, \'.\', vFieldnr+1)) <= 0 THEN
+			vLeaf := TRUE;
+		  ELSE
+			vLeaf := FALSE;
+		  END IF;
+		  INSERT INTO PIChierarchy(treeID, paramID, parentID, 
+								   paramRefID, name, index, leaf)
+		  VALUES ($1, vParamID, vParentID, 
+				  vParRefID, vNodename, vParamIndex, vLeaf);
 		END IF;
 
 		vFieldnr := vFieldnr + 1;

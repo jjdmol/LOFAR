@@ -47,8 +47,8 @@ class OTDBtree
 {
 public:
 	// Connect the PIC interface to an OTDB database.
-	OTDBtree (const OTDBconnection &	aConn,
-		 	  treeIDType				aTreeID);
+	OTDBtree (OTDBconnection*	aConn,
+		 	  treeIDType		aTreeID);
 
 	~OTDBtree();
 
