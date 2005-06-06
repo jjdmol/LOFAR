@@ -24,34 +24,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
+#include <lofar_config.h>
+
+//#include <stdio.h>
 #include <Common/lofar_iostream.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <Common/Debug.h>
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/Profiler.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/ParamBlock.h"
-#include "CEPFrame/ShMem/TH_ShMem.h"
-#include "InOutTest/InOutTest.h"
-#include "InOutTest/WH_Source.h"
-#include "InOutTest/WH_InOut.h"
-#include "InOutTest/WH_Sink.h"
+//#include <Common/LofarLogger.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Composite.h>
+#include <tinyCEP/Profiler.h>
+#include <Transport/TH_ShMem.h>
+#include <InOutTest/InOutTest.h>
+#include <InOutTest/WH_Source.h>
+#include <InOutTest/WH_InOut.h>
+#include <InOutTest/WH_Sink.h>
 
 #include TRANSPORTERINCLUDE
-
-#ifdef HAVE_CORBA
-#include "CEPFrame/Corba/BS_Corba.h"
-#include "CEPFrame/Corba/TH_Corba.h"
-#endif
 
 using namespace LOFAR;
 
@@ -68,12 +58,8 @@ InOutTest::~InOutTest()
    define function for the P2Perf simulation. It defines a list
    of steps that each process a part of the data.
  */
-void InOutTest::define(const ParamBlock& params)
+void InOutTest::define(const KeyValueMap& params)
 {
-#ifdef HAVE_CORBA
-  // Start Orb Environment
-  AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
-#endif
 
 #ifdef HAVE_MPI
   // TH_ShMem only works in combination with MPI
@@ -88,20 +74,18 @@ void InOutTest::define(const ParamBlock& params)
   // free any memory previously allocated
   undefine();
 
-  TRACER2("InOutTest Processor " << rank << " of " << size << " operational.");
+  LOG_TRACE_FLOW_STR("InOutTest Processor " << rank << " of " << size << " operational.");
 
-  WH_Empty empty;
+  Composite comp(0, 0, "InOutTest");
+  setComposite(comp);
+  comp.runOnNode(0);
+  comp.setCurAppl(0);
 
-  Simul simul(empty, "InOutTest", true);
-  setSimul(simul);
-  simul.runOnNode(0);
-  simul.setCurAppl(0);
-
-  itsFixedSize   = params.getInt("fixedsize",0);
-  itsNPerf       = params.getInt("numberperf",0);  //Number of iterations over
+  itsFixedSize   = params.getInt("fixedsize",1028);
+  itsNPerf       = params.getInt("numberperf",100);  //Number of iterations over
                                                    //which performance is 
                                                    //measured
-  itsIOshared    = params.getInt("shareIO",0);     //Share input & output in
+  itsIOshared    = params.getInt("shareIO",1);     //Share input & output in
                                                    //WH_InOut Default no sharing
   // Create the Source Step
   WH_Source SourceWH("Source", (itsFixedSize?itsFixedSize:MAX_GROW_SIZE));
@@ -109,11 +93,12 @@ void InOutTest::define(const ParamBlock& params)
   Step SourceSt(SourceWH, "SourceStep", 0);
   SourceSt.runOnNode(0, 0); // run in App 0
 
-  WH_InOut InOutWH("InOut", itsIOshared, 
-                   (itsFixedSize?itsFixedSize:MAX_GROW_SIZE));
+  WH_InOut InOutWH("InOut", (itsFixedSize?itsFixedSize:MAX_GROW_SIZE));
   Step WorkSt(InOutWH, "InOutStep", 0);
   WorkSt.runOnNode(1, 0);
     
+  WorkSt.setInBufferingProperties(0, true, itsIOshared); // Share in/output?
+
   // Create the Destination Step
   WH_Sink DestWH("Dest", false, (itsFixedSize?itsFixedSize:MAX_GROW_SIZE),
 		 itsNPerf);  
@@ -122,20 +107,20 @@ void InOutTest::define(const ParamBlock& params)
 
   // Now Add the steps to the simul;
 
-  TRACER4("Add steps");
-  simul.addStep(SourceSt);
-  simul.addStep(WorkSt);
-  simul.addStep(DestSt);
+  LOG_TRACE_STAT("Add steps");
+  comp.addBlock(SourceSt);
+  comp.addBlock(WorkSt);
+  comp.addBlock(DestSt);
    
   // Create the cross connections
 
 #ifdef HAVE_MPI
-  TRACER2("Connect using MPI");
-  DestSt.connect(&WorkSt,0,0,1,TH_MPI::proto);
-  WorkSt.connect(&SourceSt,0,0,1,TH_MPI::proto);
+  LOG_TRACE_FLOW("Connect using MPI");
+  DestSt.connect(0, &WorkSt, 0, 1, new TH_MPI(1,0));
+  WorkSt.connect(0, &SourceSt, 0, 1, new TH_MPI(1,0));
 #else
-  DestSt.connect(&WorkSt,0,0,1,TH_Mem::proto);
-  WorkSt.connect(&SourceSt,0,0,1,TH_Mem::proto);
+    DestSt.connect(0, &WorkSt, 0, 1, new TH_Mem(), false);
+    WorkSt.connect(0, &SourceSt, 0, 1, new TH_Mem(), false);
 #endif
 
   
@@ -145,23 +130,23 @@ void InOutTest::define(const ParamBlock& params)
 #endif
 }
 
-void doIt (Simul& simul, const std::string& name, int nsteps) {
+void doIt (Composite& comp, const std::string& name, int nsteps) {
 #if 0
-  simul.resolveComm();
+  comp.resolveComm();
 #endif
-  TRACER1("Ready with definition of configuration");
+  LOG_TRACE_FLOW("Ready with definition of configuration");
   Profiler::init();
-  Step::clearEventCount();
+  Block::clearEventCount();
 
-  TRACER4("Start Processing simul " << name);    
+  LOG_TRACE_FLOW_STR("Start Processing simul " << name);    
   for (int i=0; i<nsteps; i++) {
     if (i==2) Profiler::activate();
-    TRACER2("Call simul.process() ");
-    simul.process();
+    LOG_TRACE_FLOW("Call simul.process() ");
+    comp.process();
     if (i==5) Profiler::deActivate();
   }
 
-  TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
+  LOG_TRACE_FLOW_STR("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
  
 #if 0
   //     close environment
@@ -171,12 +156,12 @@ void doIt (Simul& simul, const std::string& name, int nsteps) {
 
 void InOutTest::run(int nSteps) {
   nSteps = nSteps;
-  doIt(getSimul(), "InOutTest Simulator", nSteps);
+  doIt(getComposite(), "InOutTest Simulator", nSteps);
 
 }
 
 void InOutTest::dump() const {
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void InOutTest::quit() {  

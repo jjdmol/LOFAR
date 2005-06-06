@@ -26,7 +26,6 @@
 // General includes
 #include <Common/LofarLogger.h>
 
-#include <CEPFrame/DataManager.h>
 #include <tinyCEP/Profiler.h>
 
 // Application specific includes
@@ -83,10 +82,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
     // if we are a sync slave we need 1 extra input
     getDataManager().addInDataHolder(1, new DH_RSPSync("DH_Sync_in"));
   }
-
-  // use cyclic buffer on output
-  ((DataManager)getDataManager()).setOutBufferingProperties(0, false);
-   
+  
   // We need to be able to read more than one packet at the time in case we are lagging
   // and we want to skip one or more packets.
   getDataManager().setAutoTriggerIn(0, false); 

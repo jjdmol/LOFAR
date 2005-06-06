@@ -23,8 +23,8 @@
 
 #ifndef HAVE_BGL
 
-#ifndef TRANSPORT_TH_ETHERNET_H
-#define TRANSPORT_TH_ETHERNET_H
+#ifndef LOFAR_TRANSPORT_TH_ETHERNET_H
+#define LOFAR_TRANSPORT_TH_ETHERNET_H
 
 // \file TH_Ethernet.h
 // Transport mechanism for Ethernet 
@@ -59,9 +59,6 @@ public:
   
   virtual ~TH_Ethernet();
 
-  // Make an instance of the transportholder
-  virtual TH_Ethernet* make() const;
-  
   // Returns if socket initialization was successful 
   virtual bool init();
 
@@ -83,6 +80,12 @@ public:
 
   // Get the type of transport.
   virtual string getType() const;
+
+  // Is TH_Ethernet clonable?
+  virtual bool isClonable() const;
+
+  // Make an instance of the transportholder
+  virtual TH_Ethernet* clone() const;
 
   virtual bool isBidirectional() const;
   
@@ -113,6 +116,9 @@ public:
 };
 
 inline bool TH_Ethernet::isBidirectional() const
+  { return true; }
+
+inline bool TH_Ethernet::isClonable() const
   { return true; }
 
 // @} // Doxygen endgroup Transport

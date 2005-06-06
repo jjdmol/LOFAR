@@ -57,6 +57,8 @@ namespace LOFAR
       int  itsNinput;
       int  itsNoutput;
       bool itsIsSender;
+      Connection* itsConn;
+      TransportHolder* itsTH;
       
       
   };

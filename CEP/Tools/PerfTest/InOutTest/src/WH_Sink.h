@@ -24,16 +24,14 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef WH_SINK_H
-#define WH_SINK_H
+#ifndef LOFAR_INOUTTEST_WH_SINK_H
+#define LOFAR_INOUTTEST_WH_SINK_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <tinyCEP/WorkHolder.h>
+#include <InOutTest/StopWatch.h>
 
-#include "CEPFrame/WorkHolder.h"
-#include "CEPFrame/DH_Example.h"
-#include "InOutTest/StopWatch.h"
+namespace LOFAR
+{
 
 /**
    The WH_Growsize class implements a workholder with DH_Growsize
@@ -48,8 +46,7 @@ public:
 
   WH_Sink (const string& name="WH_Sink",
 	       bool first = false,
-	       unsigned int nbuffer=10, // default length of the
-	                                // buffer in DH_Growsize::DataPacket 
+	       unsigned int nbuffer=10, // default length of the buffer
 	       unsigned int niterations=1);   // number of iterations
 
   virtual ~WH_Sink();
@@ -91,5 +88,7 @@ private:
   int itsLastPerf;
 
 };
+
+} // end namespace LOFAR
 
 #endif

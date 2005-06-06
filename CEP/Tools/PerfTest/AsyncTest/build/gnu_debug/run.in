@@ -1,6 +1,6 @@
 define
         fixedsize=150,
-        synchronous=0
+        synchronous=1
 ;
-run 3003;
+run 3;
 quit

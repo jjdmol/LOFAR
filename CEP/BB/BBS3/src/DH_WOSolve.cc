@@ -90,7 +90,7 @@ PL::PersistentObject& DH_WOSolve::getPO() const
   return *itsPODHWO;
 } 
 
-void DH_WOSolve::preprocess()
+void DH_WOSolve::init()
 {
   // Add the fields to the data definition.
   addField ("WOID", BlobField<int>(1));
@@ -127,17 +127,6 @@ void DH_WOSolve::fillDataPointers()
   itsNewDomain = getData<unsigned int> ("NewDomain");
   itsUseSVD = getData<unsigned int> ("UseSVD");
   itsCleanUp = getData<unsigned int> ("CleanUp");
-}
-
-void DH_WOSolve::postprocess()
-{
-  itsWOID = 0;
-  itsSCID = 0;
-  itsStatus = 0;
-  itsKSType = 0;
-  itsNewDomain = 0;
-  itsUseSVD = 0;
-  itsCleanUp = 0;
 }
 
 void DH_WOSolve::setKSType(const string& ksType)

@@ -42,19 +42,8 @@ ProcControlServer::ProcControlServer(const string&				hostname,
 									 const ProcessControl*		PCImpl) :
 	itsPCImpl(PCImpl)
 {
-	DH_ProcControl	DH_PC_Client;
-	DH_ProcControl*	DH_PC_Server = new DH_ProcControl;
-	DH_PC_Client.setID(3);
-	DH_PC_Server->setID(4);
-
-	DH_PC_Client.connectBidirectional(*DH_PC_Server, 
-				 			TH_Socket("", hostname, portnr, true,  false),
-				 			TH_Socket(hostname, "", portnr, false, false),
-							false);	// blocking
-	DH_PC_Server->init();
-
-	itsCommChan = new ProcControlComm(false);		// async
-	itsCommChan->setDataHolder(DH_PC_Server);
+	itsCommChan = new ProcControlComm(hostname, toString(portnr), false);
+	ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
 }
 
 // Destructor
@@ -103,7 +92,7 @@ bool	ProcControlServer::pollForMessage() const
 {
 	LOG_TRACE_FLOW("ProcControlServer:pollForMessage");
 
-	return (itsCommChan->getDataHolder()->read());
+	return (itsCommChan->poll());
 }
 
 bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg) 

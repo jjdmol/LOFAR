@@ -20,9 +20,6 @@
 //#
 //#  $Id$
 
-//# Always #include <lofar_config.h> first!
-#include <lofar_config.h>
-
 #ifndef STATIONCORRELATORCONTROLLER_H
 #define STATIONCORRELATORCONTROLLER_H
 

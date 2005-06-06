@@ -1,25 +1,22 @@
 
 INSTHDRS		 	= 			\
-DH_Empty.h					\
 DH_Example.h					\
 DH_Tester.h					\
-Composite.h						\
-NetworkBuilder.h					\
-CompositeRep.h					\
+NetworkBuilder.h				\
 VirtualMachine.h				\
 ApplicationHolder.h				\
 Step.h						\
 StepRep.h					\
-WH_Empty.h					\
 WH_Example.h					\
 WH_Tester.h					\
-WH_TestAutoTrigger.h				\
-Lock.h						\
-CyclicBuffer.h					\
 DHPoolManager.h					\
 CycBufferManager.h				\
 SynchronisityManager.h				\
-DataManager.h					
+DataManager.h				\
+Block.h 					\
+BlockRep.h					\
+Composite.h					\
+CompositeRep.h					
 
 NOINSTHDRS =
 
@@ -34,25 +31,23 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES 	= libcepframe.la
 
 libcepframe_la_SOURCES 	= $(DOCHDRS)		\
-DH_Empty.cc					\
 DH_Example.cc					\
 DH_Tester.cc					\
-Composite.cc					\
-NetworkBuilder.cc					\
-CompositeRep.cc					\
+NetworkBuilder.cc				\
 VirtualMachine.cc				\
 ApplicationHolder.cc				\
 Step.cc						\
 StepRep.cc					\
-WH_Empty.cc					\
 WH_Example.cc					\
 WH_Tester.cc					\
-WH_TestAutoTrigger.cc				\
 DHPoolManager.cc				\
 CycBufferManager.cc				\
 SynchronisityManager.cc				\
-DataManager.cc					
-
+DataManager.cc					\
+Block.cc					\
+BlockRep.cc					\
+Composite.cc					\
+CompositeRep.cc					
 
 EXTRA_DIST = assay
 

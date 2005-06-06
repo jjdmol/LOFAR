@@ -20,10 +20,9 @@
 //#
 //# $Id$
 
-#ifndef BASESIM_PROFILER_H
-#define BASESIM_PROFILER_H
-
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#ifndef TINYCEP_PROFILER_H
+#define TINYCEP_PROFILER_H
 
 namespace LOFAR
 {

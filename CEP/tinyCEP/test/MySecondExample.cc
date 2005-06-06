@@ -1,5 +1,7 @@
 
 #include <MySecondExample.h>
+#include <Transport/Connection.h>
+#include <Transport/TransportHolder.h>
 
 namespace LOFAR
 {
@@ -7,7 +9,8 @@ namespace LOFAR
   MySecondExample::MySecondExample(int ninput, int noutput)
     : itsArgv(0),
       itsArgc(0),
-      itsProto(dhptr),
+      itsConn(0),
+      itsTH(0),
       itsNinputs(ninput),
       itsNoutputs(noutput),
       itsWHCount(0) {
@@ -17,9 +20,11 @@ namespace LOFAR
   MySecondExample::~MySecondExample() {
     delete itsWHs[0];
     delete itsWHs[1];
+    delete itsConn;
+    delete itsTH;
   }
 
-  void MySecondExample::define(const KeyValueMap& map) {
+  void MySecondExample::define(const KeyValueMap&) {
     // create a WorkHolder
     WH_Example* myWHExamples[2];
     
@@ -29,9 +34,13 @@ namespace LOFAR
     itsWHs[0] = myWHExamples[0];
     itsWHs[1] = myWHExamples[1];
 
-    myWHExamples[0]->getDataManager().getOutHolder(0)->connectTo
-      ( *myWHExamples[1]->getDataManager().getInHolder(0), 
-	TH_Mem(), false );
+    itsTH = new TH_Mem();
+    itsConn = new Connection("firstConn",
+			     myWHExamples[0]->getDataManager().getOutHolder(0),
+			     myWHExamples[1]->getDataManager().getInHolder(0),
+			     itsTH, false);
+    itsWHs[0]->getDataManager().setOutConnection(0, itsConn);
+    itsWHs[1]->getDataManager().setInConnection(0, itsConn);
 
     itsWHCount = 2;
   }

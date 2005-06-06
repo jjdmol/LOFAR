@@ -10,6 +10,7 @@
 
 #include <AH_Correlator.h>
 #include <Transport/TH_MPI.h>
+#include <Transport/Connection.h>
 
 #include <unistd.h>
 
@@ -19,6 +20,10 @@ using namespace LOFAR;
 
 AH_Correlator::AH_Correlator(int elements, int samples, int channels, int polarisations, 
 		       char* frontendip, char* backendip, int baseport, int targets):
+  itsInConn   (0),
+  itsOutConn  (0),
+  itsInTH     (0),
+  itsOutTH    (0),
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels), 
@@ -49,19 +54,6 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 					  itsNtargets);
   itsWH->runOnNode(itsRank);
 
-  // now create two dummy workholders to connect to
-  // these will not exist outside the scope of this method
-  WH_Random myWHRandom("noname",
-		       itsNelements, 
-		       itsNsamples,
-		       itsNchannels,
-		       itsNpolarisations);
-  
-  WH_Dump myWHDump("noname",
-		   itsNelements,
-		   itsNchannels,
-		   itsNpolarisations);
-  
 #ifdef HAVE_MPI
   // Synchronise all correlators here and connect sequentially in blocks of 10
   TH_MPI::synchroniseAllProcesses();
@@ -69,18 +61,31 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 #endif
 
   // now connect to the dummy workholders. 
+  // create input client socket
+  string inService(formatString("%d", itsBaseport+itsRank));
+  itsInTH = new TH_Socket(itsFEIP, inService);
+  itsInConn = new Connection("inConn",
+			     0,
+			     itsWH->getDataManager().getInHolder(0),
+			     itsInTH);
+  itsWH->getDataManager().setInConnection(0, itsInConn);
 
-  myWHRandom.getDataManager().getOutHolder(0)->connectTo 
-    ( *itsWH->getDataManager().getInHolder(0), 
-      TH_Socket(itsFEIP, itsFEIP, itsBaseport+itsRank, false, true) );
-
-  itsWH->getDataManager().getOutHolder(0)->connectTo
-    ( *myWHDump.getDataManager().getInHolder(0), 
-      TH_Socket(itsBEIP, itsBEIP, itsBaseport+itsNtargets+itsRank, true, true));
+  // create output client socket
+  string outService(formatString("%d", itsBaseport+itsNtargets+itsRank));
+  itsOutTH = new TH_Socket(itsBEIP, outService);
+  itsOutConn = new Connection("outConn",
+			      itsWH->getDataManager().getOutHolder(0),
+			      0,
+			      itsOutTH);
+  itsWH->getDataManager().setOutConnection(0, itsOutConn);
 }
 
 void AH_Correlator::undefine() {
   delete itsWH;
+  delete itsInConn;
+  delete itsOutConn;
+  delete itsInTH;
+  delete itsOutTH;
 }
 
 

@@ -74,7 +74,7 @@ DataHolder* DH_Prediff::clone() const
   return new DH_Prediff(*this);
 }
 
-void DH_Prediff::preprocess()
+void DH_Prediff::init()
 {
   LOG_TRACE_FLOW("DH_Prediff preprocess");
   // Add the fields to the data definition.
@@ -104,12 +104,6 @@ void DH_Prediff::fillDataPointers()
   itsEndFreq = getData<double> ("EndFreq");
   itsStartTime = getData<double> ("StartTime");
   itsEndTime = getData<double> ("EndTime");
-}
-
-
-void DH_Prediff::postprocess()
-{
-  LOG_TRACE_FLOW("DH_Prediff postprocess");
 }
 
 bool DH_Prediff::getParmData(vector<ParmData>& pdata)

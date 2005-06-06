@@ -22,9 +22,7 @@
 //
 /////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
@@ -57,6 +55,7 @@ int main (int argc, const char** argv)
 //  	cout << endl;
 #endif
 
+  //  INIT_LOGGER("P2Perf.log_prop");
 
   LOFAR::KeyValueMap kvm;
   try {

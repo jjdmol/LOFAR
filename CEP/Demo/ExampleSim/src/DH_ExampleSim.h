@@ -50,9 +50,7 @@ public:
   int* getBuffer();
   const int* getBuffer() const;
 
-  virtual void preprocess();
-
-  virtual void postprocess();
+  virtual void init();
 
 private:
   /// Forbid assignment.

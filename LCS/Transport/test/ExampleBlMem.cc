@@ -23,7 +23,9 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include "DH_Example.h"
+#include <DH_Example.h>
+#include <DH_ExampleExtra.h>
+#include <Transport/Connection.h>
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
@@ -36,25 +38,27 @@ using namespace LOFAR;
 
 void* startWriterThread(void* thread_arg)
 {
-  DH_Example* dh = (DH_Example*)thread_arg;
+  Connection* conn = (Connection*)thread_arg; 
+  DH_Example* dh   = (DH_Example*)conn->getDataHolder();
   for (int count = 1; count <= 20; count++)
   {
     dh->getBuffer()[0] = makefcomplex(count+17,-3.5);
     dh->setCounter(count);
-    dh->write();
+    conn->write();
   }
   pthread_exit(NULL);
 }
 
 void* startReaderThread(void* thread_arg)
 {
-  DH_Example* dh = (DH_Example*)thread_arg;
+  Connection* conn = (Connection*)thread_arg; 
+  DH_Example* dh   = (DH_Example*)conn->getDataHolder(true);
   int* result = new int;
   *result = 1;
 
   for (int count = 1; count <= 20; count++)
   {
-    dh->read();
+    conn->read();
     if (dh->getBuffer()[0] != makefcomplex(count+15, -4.5) ||
 	dh->getCounter() != count)
     {
@@ -66,7 +70,8 @@ void* startReaderThread(void* thread_arg)
 
 void* startVarWriterThread(void* thread_arg)
 {
-  DH_Example* dh = (DH_Example*)thread_arg;
+  Connection* conn    = (Connection*)thread_arg; 
+  DH_ExampleExtra* dh = (DH_ExampleExtra*)conn->getDataHolder();
 
   for (int count=1; count <= 10; count++)
   {
@@ -75,33 +80,33 @@ void* startVarWriterThread(void* thread_arg)
       dh->getBuffer()[0] = makefcomplex(17,-3.5*count);
       dh->setCounter(1);
       // fill extra blob
-      BlobOStream& bos = dh->createExtraBlob();
+      BlobOStream& bos = dh->fillVariableBuffer();
       bos << "a string";
       // do the data transport
-      dh->write();
+      conn->write();
     }
     {
       dh->getBuffer()[0] = makefcomplex(15,-4.5*count);
       dh->setCounter(2);
       // do the data transport (without data in the extra blob)
-      dh->write();
+      conn->write();
     }
     {
       dh->getBuffer()[0] = makefcomplex(151,-4.5*count);
       dh->setCounter(20);
-      dh->clearExtraBlob();
+      dh->clearVariableBuffer();
       // do the data transport (without data in the extra blob)
-      dh->write();
+      conn->write();
     }
     {
       dh->getBuffer()[0] = makefcomplex(1.7,3.52);
       dh->setCounter(3);
-      BlobOStream& bos = dh->createExtraBlob();
+      BlobOStream& bos = dh->fillVariableBuffer();
       bos << int(1) << float(3*count);
       bos.putStart ("p3", 3);
       bos.putEnd();
       // do the data transport
-      dh->write();
+      conn->write();
     }
   }
   pthread_exit(NULL);
@@ -109,14 +114,15 @@ void* startVarWriterThread(void* thread_arg)
 
 void* startVarReaderThread(void* thread_arg)
 {
-  DH_Example* dh = (DH_Example*)thread_arg;
+  Connection* conn    = (Connection*)thread_arg; 
+  DH_ExampleExtra* dh = (DH_ExampleExtra*)conn->getDataHolder(true);
   int* result = new int;
   *result = 1;
 
   for (int count=1; count <= 10; count++)
   {
     {
-      dh->read();
+      conn->read();
       cout << "read a " << count << endl;
       if (dh->getBuffer()[0] != makefcomplex(17, -3.5*count) ||
 	  dh->getCounter() != 1)
@@ -125,7 +131,7 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      BlobIStream& bis = dh->getExtraBlob(found,version);
+      BlobIStream& bis = dh->readVariableBuffer(found,version);
       if (!found) {
 	cout << "!found 1" << endl;
 	*result = 0;
@@ -139,7 +145,7 @@ void* startVarReaderThread(void* thread_arg)
       }
     }
     {
-      dh->read();
+      conn->read();
       cout << "read a " << count << endl;
       if (dh->getBuffer()[0] != makefcomplex(15, -4.5*count) ||
 	  dh->getCounter() != 2)
@@ -148,7 +154,7 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      BlobIStream& bis = dh->getExtraBlob(found,version);
+      BlobIStream& bis = dh->readVariableBuffer(found,version);
       if (!found) {
 	cout << "!found 2" << endl;
 	*result = 0;
@@ -162,7 +168,7 @@ void* startVarReaderThread(void* thread_arg)
       }
     }
     {
-      dh->read();
+      conn->read();
       cout << "read a " << count << endl;
       if (dh->getBuffer()[0] != makefcomplex(151, -4.5*count) ||
 	  dh->getCounter() != 2)
@@ -171,14 +177,14 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      dh->getExtraBlob(found,version);
+      dh->readVariableBuffer(found,version);
       if (found) {
 	cout << "found 3" << endl;
 	*result = 0;
       }
     } 
     {
-      dh->read();
+      conn->read();
       cout << "read a " << count << endl;
       if (dh->getBuffer()[0] != makefcomplex(1.7, 3.52) ||
 	  dh->getCounter() != 3)
@@ -187,7 +193,7 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      BlobIStream& bis = dh->getExtraBlob(found,version);
+      BlobIStream& bis = dh->readVariableBuffer(found,version);
       if (!found) {
 	cout << "!found 4" << endl;
 	*result = 0;
@@ -218,13 +224,9 @@ bool test1()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), true);
+  TH_Mem memTH;
+  Connection conn("connection1", &DH1, &DH2, &memTH, true);
     
   // initialize
   DH1.init();
@@ -232,7 +234,7 @@ bool test1()
   
   // Create a writing thread
   pthread_t writer;
-  if (pthread_create(&writer, NULL, startWriterThread, &DH1))
+  if (pthread_create(&writer, NULL, startWriterThread, &conn))
   {
     cout << "Thread creation failed" << endl;
   }
@@ -246,7 +248,7 @@ bool test1()
   bool result = true;
   for (int count = 1; count <= 20; count++)
   {
-    DH2.read();
+    conn.read();
     if (DH2.getBuffer()[0] != makefcomplex(count+17, -3.5) ||
 	DH2.getCounter() != count)
     {
@@ -269,13 +271,9 @@ bool test2()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), true);
+  TH_Mem memTH;
+  Connection conn("connection2", &DH1, &DH2, &memTH, true);
     
   // initialize
   DH1.init();
@@ -286,7 +284,7 @@ bool test2()
   
   // Create a reading thread
   pthread_t reader;
-  if (pthread_create(&reader, NULL, startReaderThread, &DH2))
+  if (pthread_create(&reader, NULL, startReaderThread, &conn))
   {
     cout << "Thread creation failed." << endl;
   }
@@ -298,7 +296,7 @@ bool test2()
   {
     DH1.getBuffer()[0] = makefcomplex(count+15,-4.5);
     DH1.setCounter(count);
-    DH1.write();
+    conn.write();
   }
 
   int* result;
@@ -314,16 +312,12 @@ bool test2()
 bool testVar1()
 {
 #ifdef USE_THREADS
-  DH_Example DH1("dh1", 1, true);
-  DH_Example DH2("dh2", 1, true);
+  DH_ExampleExtra DH1("dh1", 1);
+  DH_ExampleExtra DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), true);
+  TH_Mem memTH;
+  Connection conn("connection3", &DH1, &DH2, &memTH, true);
     
   // initialize
   DH1.init();
@@ -331,7 +325,7 @@ bool testVar1()
   
   // Create a writing thread
   pthread_t varWriter;
-  if (pthread_create(&varWriter, NULL, startVarWriterThread, &DH1))
+  if (pthread_create(&varWriter, NULL, startVarWriterThread, &conn))
   {
     cout << "Thread creation failed" << endl;
   }
@@ -345,7 +339,7 @@ bool testVar1()
   for (int count=1; count <= 10; count++)
   {
     {
-      DH2.read();
+      conn.read();
       if (DH2.getBuffer()[0] != makefcomplex(17, -3.5*count) ||
 	  DH2.getCounter() != 1)
       {
@@ -353,7 +347,7 @@ bool testVar1()
       }
       int version;
       bool found;
-      BlobIStream& bis = DH2.getExtraBlob(found,version);
+      BlobIStream& bis = DH2.readVariableBuffer(found,version);
       if (!found) {
 	result = false;
       }
@@ -365,7 +359,7 @@ bool testVar1()
       }
     }
     {
-      DH2.read();
+      conn.read();
       if (DH2.getBuffer()[0] != makefcomplex(15, -4.5*count) ||
 	  DH2.getCounter() != 2)
       {
@@ -373,7 +367,7 @@ bool testVar1()
       }
       int version;
       bool found;
-      BlobIStream& bis = DH2.getExtraBlob(found,version);
+      BlobIStream& bis = DH2.readVariableBuffer(found,version);
       if (!found) {
 	result = false;
       }
@@ -385,7 +379,7 @@ bool testVar1()
       }
     }
     {
-      DH2.read();
+      conn.read();
       if (DH2.getBuffer()[0] != makefcomplex(151, -4.5*count) ||
 	  DH2.getCounter() != 20)
       {
@@ -393,13 +387,13 @@ bool testVar1()
       }
       int version;
       bool found;
-      DH2.getExtraBlob(found,version);
+      DH2.readVariableBuffer(found,version);
       if (found) {
 	result = false;
       }
     } 
     {
-      DH2.read();
+      conn.read();
       if (DH2.getBuffer()[0] != makefcomplex(1.7, 3.52) ||
 	  DH2.getCounter() != 3)
       {
@@ -407,7 +401,7 @@ bool testVar1()
       }
       int version;
       bool found;
-      BlobIStream& bis = DH2.getExtraBlob(found,version);
+      BlobIStream& bis = DH2.readVariableBuffer(found,version);
       if (!found) {
 	result = false;
       }
@@ -434,16 +428,12 @@ bool testVar1()
 bool testVar2()
 {
 #ifdef USE_THREADS
-  DH_Example DH1("dh1", 1, true);
-  DH_Example DH2("dh2", 1, true);
+  DH_ExampleExtra DH1("dh1", 1);
+  DH_ExampleExtra DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), true);
+  TH_Mem memTH;
+  Connection conn("connection4", &DH1, &DH2, &memTH, true);
     
   // initialize
   DH1.init();
@@ -454,7 +444,7 @@ bool testVar2()
   
   // Create a reading thread
   pthread_t varReader;
-  if (pthread_create(&varReader, NULL, startVarReaderThread, &DH2))
+  if (pthread_create(&varReader, NULL, startVarReaderThread, &conn))
   {
     cout << "Thread creation failed." << endl;
   }
@@ -469,36 +459,36 @@ bool testVar2()
       DH1.getBuffer()[0] = makefcomplex(17,-3.5*count);
       DH1.setCounter(1);
       // fill extra blob
-      BlobOStream& bos = DH1.createExtraBlob();
+      BlobOStream& bos = DH1.fillVariableBuffer();
       bos << "a string";
       // do the data transport
-      DH1.write();
+      conn.write();
       cout << "wrote a " << count << endl;
     }
     {
       DH1.getBuffer()[0] = makefcomplex(15,-4.5*count);
       DH1.setCounter(2);
       // do the data transport (without data in the extra blob)
-      DH1.write();
+      conn.write();
       cout << "wrote b " << count << endl;
     }
     {
       DH1.getBuffer()[0] = makefcomplex(151,-4.5*count);
       DH1.setCounter(2);
-      DH1.clearExtraBlob();
+      DH1.clearVariableBuffer();
       // do the data transport (without data in the extra blob)
-      DH1.write();
+      conn.write();
       cout << "wrote c " << count << endl;
     }
     {
       DH1.getBuffer()[0] = makefcomplex(1.7,3.52);
       DH1.setCounter(3);
-      BlobOStream& bos = DH1.createExtraBlob();
+      BlobOStream& bos = DH1.fillVariableBuffer();
       bos << int(1) << float(3*count);
       bos.putStart ("p3", 3);
       bos.putEnd();
       // do the data transport
-      DH1.write();
+      conn.write();
       cout << "wrote d " << count << endl;
     }
   }

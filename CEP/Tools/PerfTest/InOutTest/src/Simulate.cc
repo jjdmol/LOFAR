@@ -22,24 +22,18 @@
 //
 /////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
-#include "CEPFrame/SimulatorParseClass.h"
+#include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
-#include <Common/Debug.h>
-#include "InOutTest/InOutTest.h"
+
+#include <InOutTest/InOutTest.h>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 
-#ifdef HAVE_CORBA
-int atexit(void (*function)(void))
-{
-  return 1;
-}
-#endif
+using namespace LOFAR;
 
 int main (int argc, const char** argv)
 {
@@ -58,8 +52,9 @@ int main (int argc, const char** argv)
 	try {
 	  InOutTest simulator;
 	  simulator.setarg (argc, argv);
+
+	  INIT_LOGGER("InOutTest.log_prop");
 	  
-	  Debug::initLevels (argc, argv);
 	  try {
 	    LOFAR::SimulatorParse::parse (simulator);
 	  } catch (LOFAR::SimulatorParseError x) {

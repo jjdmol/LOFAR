@@ -25,17 +25,13 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef WH_DEST_H
-#define WH_DEST_H
+#ifndef P2PERF_WH_DEST_H
+#define P2PERF_WH_DEST_H
 
-#ifdef HAVE_CONFIG_H
-#include <lofar_config.h>
-#endif
-
-#include "tinyCEP/WorkHolder.h"
-#include "P2Perf/DH_VarSize.h"
-#include "P2Perf/DHGrowStrategy.h"
-#include "P2Perf/StopWatch.h"
+#include <tinyCEP/WorkHolder.h>
+#include <P2Perf/DH_VarSize.h>
+#include <P2Perf/DHGrowStrategy.h>
+#include <P2Perf/StopWatch.h>
 
 /**
    The WH_Dest class implements a workholder with DH_VarSize

@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <CEPFrame/CyclicBuffer.h>
+#include <Transport/CyclicBuffer.h>
 
 /**
   Class CycBufferManager is derived from class DHPoolManager. It main

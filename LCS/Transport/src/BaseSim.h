@@ -20,10 +20,10 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_BASESIM_H
-#define TRANSPORT_BASESIM_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#ifndef LOFAR_TRANSPORT_BASESIM_H
+#define LOFAR_TRANSPORT_BASESIM_H
 
 #define MPI_OPT
 

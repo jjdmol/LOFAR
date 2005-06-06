@@ -21,7 +21,9 @@
 //# $Id$
 
 #include <DH_Example.h>
+#include <DH_ExampleExtra.h>
 #include <Transport/TH_Mem.h>
+#include <Transport/Connection.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <iostream>
@@ -33,13 +35,9 @@ bool test1()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with non-blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), false);
+  TH_Mem memTH;
+  Connection conn("connection1", &DH1, &DH2, &memTH, false);
     
   // initialize
   DH1.init();
@@ -58,8 +56,8 @@ bool test1()
        << endl;
     
   // do the data transport
-  DH1.write();
-  DH2.read();
+  conn.write();
+  conn.read();
   
   cout << "After transport  : " 
        << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
@@ -77,16 +75,12 @@ bool test1()
 
 bool test2()
 {
-  DH_Example DH1("dh1", 1, true);
-  DH_Example DH2("dh2", 1, true);
+  DH_ExampleExtra DH1("dh1", 1);
+  DH_ExampleExtra DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with non-blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), false);
+  TH_Mem memTH;
+  Connection conn("connection1", &DH1, &DH2, &memTH, false);
     
   // initialize
   DH1.init();
@@ -98,18 +92,18 @@ bool test2()
     DH1.setCounter(2);
     DH2.setCounter(0);
     // fill extra blob
-    BlobOStream& bos = DH1.createExtraBlob();
+    BlobOStream& bos = DH1.fillVariableBuffer();
     bos << "a string";
     // do the data transport
-    DH1.write();
-    DH2.read();
+    conn.write();
+    conn.read();
     if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
     int version;
     bool found;
-    BlobIStream& bis = DH2.getExtraBlob(found, version);
+    BlobIStream& bis = DH2.readVariableBuffer(found, version);
     if (!found) {
       return false;
     }
@@ -126,8 +120,8 @@ bool test2()
     DH1.setCounter(2);
     DH2.setCounter(0);
     // do the data transport (without data in the extra blob)
-    DH1.write();
-    DH2.read();
+    conn.write();
+    conn.read();
     if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
@@ -135,7 +129,7 @@ bool test2()
     // Extra blob should be the same as the one before.
     int version;
     bool found;
-    BlobIStream& bis = DH2.getExtraBlob(found, version);
+    BlobIStream& bis = DH2.readVariableBuffer(found, version);
     if (!found) {
       return false;
     }
@@ -152,17 +146,17 @@ bool test2()
     DH1.setCounter(2);
     DH2.setCounter(0);
     // make empty extra blob
-    DH1.clearExtraBlob();
+    DH1.clearVariableBuffer();
     // do the data transport (without data in the extra blob)
-    DH1.write();
-    DH2.read();
+    conn.write();
+    conn.read();
     if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
     int version;
     bool found;
-    DH2.getExtraBlob(found, version);
+    DH2.readVariableBuffer(found, version);
     if (found) {
       return false;
     }
@@ -173,15 +167,15 @@ bool test2()
     DH1.setCounter(2);
     DH2.setCounter(0);
     // do the data transport (without data in the extra blob)
-    DH1.write();
-    DH2.read();
+    conn.write();
+    conn.read();
     if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
     int version;
     bool found;
-    DH2.getExtraBlob(found, version);
+    DH2.readVariableBuffer(found, version);
     if (found) {
       return false;
     }
@@ -191,20 +185,20 @@ bool test2()
     DH2.getBuffer()[0] = makefcomplex(0,0);
     DH1.setCounter(5);
     DH2.setCounter(0);
-    BlobOStream& bos = DH1.createExtraBlob();
+    BlobOStream& bos = DH1.fillVariableBuffer();
     bos << int(1) << float(3);
     bos.putStart ("p3", 3);
     bos.putEnd();
     // do the data transport
-    DH1.write();
-    DH2.read();
+    conn.write();
+    conn.read();
     if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
     int version;
     bool found;
-    BlobIStream& bis = DH2.getExtraBlob(found, version);
+    BlobIStream& bis = DH2.readVariableBuffer(found, version);
     if (!found) {
       return false;
     }

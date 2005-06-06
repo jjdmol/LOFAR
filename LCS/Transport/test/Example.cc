@@ -22,11 +22,11 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
-
 #include <iostream>
 
 #include <Transport/TH_Mem.h>
-#include "DH_Example.h"
+#include <DH_Example.h>
+#include <Transport/Connection.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
@@ -35,48 +35,52 @@ int main()
 {
   INIT_LOGGER("Example.log_prop");
   cout << "Transport Example test program" << endl;
+  bool result = false;
+  try {
+    DH_Example DH1("dh1", 1);
+    DH_Example DH2("dh2", 1);
     
-  DH_Example DH1("dh1", 1);
-  DH_Example DH2("dh2", 1);
+    // connect DH1 to DH2 with non-blocking in-memory communication
+    TH_Mem memTH;
+    Connection conn("connection1", &DH1, &DH2, &memTH, false);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
+    // initialize
+    DH1.init();
+    DH2.init();
 
-  // connect DH1 to DH2 with non-blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), false);
+    // fill the DataHolders with some initial data
+    DH1.getBufferElement(0) = makefcomplex(17,-3.5);
+    DH2.getBufferElement(0) = makefcomplex(0,0);
+    DH1.setCounter(2);
+    DH2.setCounter(0);
     
-  // initialize
-  DH1.init();
-  DH2.init();
+    cout << "Before transport : " 
+	 << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
+	 << " -- " 
+	 << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
+	 << endl;
     
-  // fill the DataHolders with some initial data
-  DH1.getBufferElement(0) = makefcomplex(17,-3.5);
-  DH2.getBufferElement(0) = makefcomplex(0,0);
-  DH1.setCounter(2);
-  DH2.setCounter(0);
+    // do the data transport
+    ASSERT(conn.write() == Connection::Finished);
+    ASSERT(conn.read() == Connection::Finished);
     
-  cout << "Before transport : " 
-       << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
-       << endl;
+    cout << "After transport  : " 
+	 << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
+	 << " -- " 
+	 << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
+	 << endl;
     
-  // do the data transport
-  DH1.write();
-  DH2.read();
-  
-  cout << "After transport  : " 
-       << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
-       << endl;
-
-  if (DH1.getBufferElement(0) == DH2.getBufferElement(0)
-  &&  DH1.getCounter() == DH2.getCounter()) {
-    return 0;
+    if (DH1.getBufferElement(0) == DH2.getBufferElement(0)
+	&&  DH1.getCounter() == DH2.getCounter()) {
+      result = true;
+    }
+    else {
+    cout << "Data in receiving DataHolder is incorrect" << endl;
+    result = false;
+    }
+  } catch (std::exception& x) {
+    cout << "Unexpected exception: " << x.what() << endl;
+    result = false;
   }
-  cout << "Data in receiving DataHolder is incorrect" << endl;
-  return 1;
+  return (result ? 0:1);
 }

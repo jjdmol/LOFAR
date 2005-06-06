@@ -53,10 +53,7 @@ public:
 	int32 getCounter() const;
 
 	/// Allocate the buffers.
-	virtual void preprocess();
-
-	/// Deallocate the buffers.
-	virtual void postprocess();
+	virtual void init();
 
 	/// Reset the buffer size.
 	void setBufferSize (uint32 nelements);

@@ -25,6 +25,7 @@
 
 #include <TransportPL/TH_PL.h>
 #include <DH_Example2.h>
+#include <Transport/Connection.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
 
@@ -41,14 +42,9 @@ int main()
     DH_Example2 DH1("dh1", 1);
     DH_Example2 DH2("dh2", 1);
     
-    // Assign an ID for each dataholder by hand for now
-    // This will be done by the framework later on
-    DH1.setID(1);
-    DH2.setID(2);
- 
     // connect DH1 to DH2
-    TH_PL TH1("ExamplePL2");
-    DH1.connectTo(DH2, TH1);
+    TH_PL plTH1("ExamplePL2");
+    Connection conn("connection1", &DH1, &DH2, &plTH1);
     
     // initialize the DataHolders
     DH1.init();
@@ -67,8 +63,8 @@ int main()
 	 << endl;
     
     // do the data transport
-    DH1.write();
-    DH2.read();
+    conn.write();
+    conn.read();
   
     cout << "After transport  : " 
 	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter() 
@@ -81,13 +77,13 @@ int main()
     DH2.getBuffer()[0] = makefcomplex(0,0); 
     DH1.setCounter(10); 
     DH2.setCounter(0); 
-    DH1.write(); 
+    conn.write(); 
     DH1.getBuffer()[0] = makefcomplex(200,114); 
     DH2.getBuffer()[0] = makefcomplex(0,0); 
     DH1.setCounter(21); 
     DH2.setCounter(0); 
-    DH1.write(); 
-    DH2.read(); 
+    conn.write(); 
+    conn.read(); 
     cout << "After 2nd transport  : "  
 	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter() 
 	 << " -- "  
@@ -95,7 +91,7 @@ int main()
 	 << endl; 
     ASSERT (DH2.getBuffer()[0] == makefcomplex(117,-13.15) 
 	    &&  DH2.getCounter() == 10); 
-    DH2.read(); 
+    conn.read(); 
     cout << "After 3rd transport  : "  
 	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
 	 << " -- " 
@@ -107,13 +103,13 @@ int main()
     DH2.getBuffer()[0] = makefcomplex(0,0);
     DH1.setCounter(10);
     DH2.setCounter(0);
-    DH1.write();
+    conn.write();
     DH1.getBuffer()[0] = makefcomplex(200,114);
     DH2.getBuffer()[0] = makefcomplex(0,0);
     DH1.setCounter(21);
     DH2.setCounter(0);
-    DH1.write();
-    DH2.read();
+    conn.write();
+    conn.read();
     cout << "After 2nd transport  : " 
 	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
 	 << " -- " 
@@ -121,7 +117,7 @@ int main()
 	 << endl;
     ASSERT (DH2.getBuffer()[0] == makefcomplex(117,-13.15)
 	    &&  DH2.getCounter() == 10);
-    DH2.read();
+    conn.read();
     cout << "After 3rd transport  : " 
 	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
 	 << " -- " 

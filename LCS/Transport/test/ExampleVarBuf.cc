@@ -23,7 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include "DH_VarBuf.h"
+#include <DH_VarBuf.h>
+#include <Transport/Connection.h>
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
@@ -50,13 +51,9 @@ bool test()
   DH_VarBuf DH1("dh1");
   DH_VarBuf DH2("dh2");
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with non-blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), false);
+  TH_Mem memTH;
+  Connection conn("connection1", &DH1, &DH2, &memTH, false);
     
   // initialize
   DH1.init();
@@ -81,8 +78,8 @@ bool test()
        << endl;
     
   // do the data transport
-  DH1.write();
-  DH2.read();
+  ASSERT(conn.write() == Connection::Finished);
+  ASSERT(conn.read() == Connection::Finished);
 
   dh1Size = DH1.getBufferSize();
   dh2Size = DH2.getBufferSize();
@@ -123,8 +120,8 @@ bool test()
        << endl;
     
   // do the data transport
-  DH1.write();
-  DH2.read();
+  ASSERT(conn.write() == Connection::Finished);
+  ASSERT(conn.read() == Connection::Finished);
 
   dh1Size = DH1.getBufferSize();
   dh2Size = DH2.getBufferSize();
@@ -165,8 +162,8 @@ bool test()
        << endl;
     
   // do the data transport
-  DH1.write();
-  DH2.read();
+  ASSERT(conn.write() == Connection::Finished);
+  ASSERT(conn.read() == Connection::Finished);
 
   dh1Size = DH1.getBufferSize();
   dh2Size = DH2.getBufferSize();

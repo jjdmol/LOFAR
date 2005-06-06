@@ -58,7 +58,7 @@ DataHolder* DH_VarSize::clone() const
   return new DH_VarSize(*this);
 }
 
-void DH_VarSize::preprocess()
+void DH_VarSize::init()
 {
   addField ("dummyData", BlobField<char>(1, itsMaxSpoofedDataSize)); //version, no_elements
   createDataBlock();

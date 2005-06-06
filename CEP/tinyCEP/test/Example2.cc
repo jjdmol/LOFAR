@@ -39,7 +39,7 @@ int main(int argc, const char** argv)
 {
   
 #ifdef HAVE_MPI
-  TH_MPI::init(argc,argv);
+  TH_MPI::initMPI(argc,argv);
 #endif
 
   // set trace levels

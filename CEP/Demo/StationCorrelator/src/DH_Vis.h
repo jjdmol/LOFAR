@@ -35,10 +35,7 @@ public:
 
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   /// Accessor funtion for the flagged inputs counter
   int getFlagCounter() const;

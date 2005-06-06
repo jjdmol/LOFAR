@@ -9,6 +9,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 
 #include <DH_CorrCube.h>
 #include <Common/KeyValueMap.h>
@@ -57,12 +58,8 @@ DataHolder* DH_CorrCube::clone() const
   return new DH_CorrCube(*this);
 }
 
-void DH_CorrCube::preprocess()
+void DH_CorrCube::init()
 {
-  // First delete possible buffers.
-  postprocess();
-
-  
   addField ("BlockID", BlobField<int>(1, 1));
   addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
@@ -72,11 +69,6 @@ void DH_CorrCube::preprocess()
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i]=0;
   }
-}
-
-void DH_CorrCube::postprocess()
-{
-  itsBuffer     = 0;
 }
 
 void DH_CorrCube::fillDataPointers() {

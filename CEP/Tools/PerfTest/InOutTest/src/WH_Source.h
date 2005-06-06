@@ -25,16 +25,14 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef WH_SOURCE_H
-#define WH_SOURCE_H
+#ifndef LOFAR_INOUTTEST_WH_SOURCE_H
+#define LOFAR_INOUTTEST_WH_SOURCE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <tinyCEP/WorkHolder.h>
+#include <Common/lofar_string.h>
 
-#include "CEPFrame/WorkHolder.h"
-#include "CEPFrame/DH_Example.h"
-#include "InOutTest/StopWatch.h"
+namespace LOFAR
+{
 
 /**
    The WH_Growsize class implements a workholder with DH_Growsize
@@ -43,13 +41,12 @@
    indication for the data transport bandwidth of the output DataHolders. 
  */
 
-class WH_Source: public LOFAR::WorkHolder
+class WH_Source: public WorkHolder
 {
 public:
 
   WH_Source (const string& name="WH_Source",
-	       unsigned int nbuffer=10); // default length of the
-	                                // buffer in DH_Example::DataPacket 
+	       unsigned int nbuffer=10); // default length of the buffer
   
   virtual ~WH_Source();
 
@@ -78,5 +75,7 @@ private:
   int itsIteration;
 
 };
+
+}
 
 #endif

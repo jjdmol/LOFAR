@@ -55,14 +55,14 @@ TH_MPI::~TH_MPI()
   LOG_TRACE_FLOW("TH_MPI destructor");
 }
 
-TH_MPI* TH_MPI::make() const
-{
-    return new TH_MPI(itsSourceNode, itsTargetNode);
-}
-
 string TH_MPI::getType() const
 {
     return "TH_MPI";
+}
+
+TH_MPI* TH_MPI::clone() const
+{
+  return new TH_MPI(itsSourceNode, itsTargetNode);
 }
 
 void TH_MPI::lock()
@@ -79,7 +79,7 @@ void TH_MPI::unlock()
 #endif
 }
 
-bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag)
+bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag, int, DataHolder*)
 {
   LOG_TRACE_RTTI_STR("TH_MPI recvBlocking(" << buf << "," 
 		     << nbytes << ", MPI_BYTE, " << itsSourceNode 
@@ -96,47 +96,19 @@ bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag)
   return (result == MPI_SUCCESS);
 }
 
-bool TH_MPI::recvVarBlocking(int tag)
-{
-  LOG_TRACE_RTTI( "TH_MPI recvVarBlocking" );
-  int result = MPI_SUCCESS;
-
-  MPI_Status status;
-
-  LOG_TRACE_STAT("MPI::probe ....");
-  result = MPI_Probe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
-  int nbytes = status.count;
-  DataHolder* target = getTransporter()->getDataHolder();
-  target->resizeBuffer (nbytes);
-  void* buf = target->getDataPtr();
-  LOG_TRACE_STAT_STR("MPI::recv(" << buf << "," << nbytes << ",....)");
-  result = MPI_Recv (buf, nbytes, MPI_BYTE, itsSourceNode, tag,
-		     MPI_COMM_WORLD, &status);
-  if (MPI_SUCCESS != result) {
-    LOG_ERROR_STR( "TH_MPI::recvVarBlocking result = " << result );
-  }
-  return (result == MPI_SUCCESS);
-}
-
-bool TH_MPI::recvNonBlocking(void* buf, int nbytes, int tag)
+int32 TH_MPI::recvNonBlocking(void* buf, int32 nbytes, int tag, int32, DataHolder*)
 {
   LOG_WARN( "TH_MPI::recvNonBlocking() is not implemented. recvBlocking() is used instead." );    
-  return recvBlocking(buf, nbytes, tag);
+  return (recvBlocking(buf, nbytes, tag) ? nbytes : 0);
 }
 
-bool TH_MPI::recvVarNonBlocking(int tag)
-{
-  LOG_WARN( "TH_MPI::recvVarNonBlocking() is not implemented. recvVarBlocking() is used instead." );    
-  return recvVarBlocking(tag);
-}
-
-bool TH_MPI::waitForReceived(void*, int, int)
+void TH_MPI::waitForReceived(void*, int, int)
 {
   LOG_TRACE_RTTI("TH_MPI waitForReceived()");
-  return true;
+  // Iwait
 }
 
-bool TH_MPI::sendBlocking(void* buf, int nbytes, int tag)
+bool TH_MPI::sendBlocking(void* buf, int nbytes, int tag, DataHolder*)
 {
   LOG_TRACE_RTTI_STR("TH_MPI::sendBlocking(" << buf << "," 
 		     << nbytes << ",MPI_BYTE, " << itsTargetNode 
@@ -151,16 +123,42 @@ bool TH_MPI::sendBlocking(void* buf, int nbytes, int tag)
   return (result == MPI_SUCCESS);
 }
 
-bool TH_MPI::sendNonBlocking(void* buf, int nbytes, int tag)
+bool TH_MPI::sendNonBlocking(void* buf, int nbytes, int tag, DataHolder*)
 {
   LOG_WARN( "TH_MPI::sendNonBlocking() is not implemented. The sendBlocking() method is used instead." );    
   return sendBlocking(buf, nbytes, tag);
 }
 
-bool TH_MPI::waitForSent(void*, int, int)
+void TH_MPI::readTotalMsgLengthBlocking(int tag, int& nrBytes)
+{
+  LOG_TRACE_RTTI( "TH_MPI::readTotalMsgLengthBlocking" );
+  int result = MPI_SUCCESS;
+
+  MPI_Status status;
+
+  LOG_TRACE_STAT("MPI::probe ....");
+  result = MPI_Probe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
+  nrBytes = status.count;
+}
+
+bool TH_MPI::readTotalMsgLengthNonBlocking(int tag, int& nrBytes)
+{
+//   LOG_TRACE_RTTI( "TH_MPI::readTotalMsgLengthBlocking" );
+//   int result = MPI_SUCCESS;
+
+//   MPI_Status status;
+
+//   LOG_TRACE_STAT("MPI::probe ....");
+//   result = MPI_IProbe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
+//   if (result == MPI_SUCCESS)
+//   nrBytes = status.count;
+//   //iprobe
+}
+
+void TH_MPI::waitForSent(void*, int, int)
 {
   LOG_TRACE_RTTI("TH_MPI waitForSent()");
-  return true;
+  // Iwait
 }
 
 void TH_MPI::waitForBroadCast()
@@ -213,7 +211,7 @@ int TH_MPI::getNumberOfNodes()
   return size;
 }
 
-void TH_MPI::init(int argc, const char *argv[])
+void TH_MPI::initMPI(int argc, const char *argv[])
 {
   LOG_TRACE_RTTI( "TH_MPI init()" );
   int initialized = 0;

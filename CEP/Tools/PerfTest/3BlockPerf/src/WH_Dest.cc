@@ -26,10 +26,7 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/Debug.h>
-
-#include "3BlockPerf/WH_Dest.h"
+#include <3BlockPerf/WH_Dest.h>
 
 namespace LOFAR {
                 

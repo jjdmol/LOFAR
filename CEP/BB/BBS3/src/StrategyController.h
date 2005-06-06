@@ -31,6 +31,7 @@
 #include <Common/lofar_string.h>
 #include <BBS3/Quality.h>
 #include <BBS3/ParmWriter.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
@@ -50,9 +51,9 @@ class StrategyController
 {
 public:
   // Creation of a StrategyController with its DataHolders to read and write.
-  StrategyController(int id, DH_Solution* inDH, 
-		     DH_WOPrediff* outWOPD, 
-		     DH_WOSolve* outWOSolve,
+  StrategyController(int id, Connection* inSolConn, 
+		     Connection* outWOPDConn, 
+		     Connection* outWOSolveConn,
 		     int nrPrediffers,
 		     const int DBMasterPort);
 
@@ -70,13 +71,10 @@ public:
 
   /// Get and set in/output dataholders
   DH_Solution* getSolution() const;
-  void setSolution(DH_Solution* dhPtr);
 
   DH_WOPrediff* getPrediffWorkOrder() const;
-  void setPrediffWorkOrder(DH_WOPrediff* dhPtr);
 
   DH_WOSolve* getSolveWorkOrder() const;
-  void setSolveWorkOrder(DH_WOSolve* dhPtr); 
 
   int getID() const;
 
@@ -85,9 +83,9 @@ public:
   ParmWriter& getParmWriter();
 
  protected:
-  DH_Solution*  itsInDH;
-  DH_WOPrediff* itsWOPD;
-  DH_WOSolve*   itsWOSolve;
+  Connection*   itsInSolConn;
+  Connection*   itsOutWOPDConn;
+  Connection*   itsOutWOSolveConn;
   int           itsNrPrediffers;
  
 private:
@@ -96,22 +94,13 @@ private:
 };
 
 inline DH_Solution* StrategyController::getSolution() const
-{ return itsInDH; }
-
-inline void StrategyController::setSolution(DH_Solution* dhPtr)
-{ itsInDH = dhPtr; }
+{ return (DH_Solution*)itsInSolConn->getDataHolder(true); }
 
 inline DH_WOPrediff* StrategyController::getPrediffWorkOrder() const
-{ return itsWOPD; }
-
-inline void StrategyController::setPrediffWorkOrder(DH_WOPrediff* dhPtr)
-{ itsWOPD = dhPtr; }
+{ return (DH_WOPrediff*)itsOutWOPDConn->getDataHolder(); }
 
 inline DH_WOSolve* StrategyController::getSolveWorkOrder() const
-{ return itsWOSolve; }
-
-inline void StrategyController::setSolveWorkOrder(DH_WOSolve* dhPtr)
-{ itsWOSolve = dhPtr; }
+{ return (DH_WOSolve*)itsOutWOSolveConn->getDataHolder(); }
 
 inline int StrategyController::getID() const
 { return itsID; }

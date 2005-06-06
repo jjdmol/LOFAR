@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_TEST_DH_EXAMPLE_H
-#define LIBTRANSPORT_TEST_DH_EXAMPLE_H
+#ifndef TRANSPORTPL_TEST_DH_EXAMPLE_H
+#define TRANSPORTPL_TEST_DH_EXAMPLE_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -40,8 +40,7 @@ public:
   typedef fcomplex BufferType;
 
   explicit DH_Example (const string& name="dh_example",
-		       unsigned int initialNelements = 10,
-		       bool useExtra = false);
+		       unsigned int initialNelements = 10);
 
   DH_Example(const DH_Example&);
 
@@ -55,10 +54,10 @@ public:
   int getCounter() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  /// Note: call this after this DataHolder has been connected to make 
+  /// sure the buffers are allocated in the right place (in normal or 
+  /// shared memory in case of connection with TH_ShMem)
+  virtual void init();
 
   /// Reset the buffer size.
   void setBufferSize (unsigned int nelements);

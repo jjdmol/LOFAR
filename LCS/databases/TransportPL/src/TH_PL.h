@@ -38,30 +38,31 @@ public:
   explicit TH_PL (const string& tableName = "defaultTable");
   virtual ~TH_PL ();
 
-  virtual TH_PL* make () const;
+  virtual TH_PL* clone () const;
+
+  virtual bool isClonable() const;
 
   virtual bool init();
 
-  virtual bool recvBlocking (void* buf, int nbytes, int tag);
-  virtual bool recvVarBlocking (int tag);
-  virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
-  virtual bool recvVarNonBlocking (int tag);
+  virtual bool recvBlocking (void* buf, int nbytes, int tag, 
+			     int nBytesRead=0, DataHolder* dh=0);
 
-  virtual bool waitForReceived (void* buf, int nbytes, int tag);
+  virtual int32 recvNonBlocking (void* buf, int nbytes, int tag, 
+				int nBytesRead=0, DataHolder* dh=0);
 
-  virtual bool sendBlocking (void* buf, int nbytes, int tag);
-  virtual bool sendNonBlocking (void* buf, int nbytes, int tag);
+  virtual void waitForReceived (void* buf, int nbytes, int tag);
 
-  virtual bool waitForSent (void* buf, int nbytes, int tag);
+  virtual bool sendBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendNonBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0);
+
+  virtual void waitForSent (void* buf, int nbytes, int tag);
 
   virtual string getType () const;
 
   // Get the type of BlobString needed for the DataHolder (which is a string).
   virtual BlobStringType blobStringType() const;
 
-  virtual bool connectionPossible (int srcRank, int dstRank) const;
-
-  virtual bool isBidirectional() const;
+  virtual void reset();
 
   static void finalize ();
   static void waitForBroadCast ();
@@ -77,9 +78,9 @@ public:
 			   const string& userName="postgres");
 
   // Special functions to deal with database records in a special way.  
-  int queryDB (const string& queryString, int tag);  
-  void insertDB (int tag);  
-  void updateDB (int tag);  
+  int queryDB (const string& queryString, int tag, DataHolder* dh);  
+  void insertDB (int tag, DataHolder* dh);  
+  void updateDB (int tag, DataHolder* dh);  
   // <group>  
   
 protected:
@@ -92,6 +93,10 @@ private:
   void disconnectDatabase();
   // </group> 
 
+  // Initialisation methods
+  void initialiseSendTPO(DataHolder* dh);
+  void initialiseRecvTPO(DataHolder* dh);
+
   /// Strings containing the name specs describing the ODBC connection.
   static string theirDSN;
   static string theirUserName;
@@ -99,15 +104,19 @@ private:
     
   int64  itsWriteSeqNo;
   int64  itsReadSeqNo;
-  DH_PL* itsDHPL;
+  DH_PL* itsSendDHPL;
+  DH_PL* itsRecvDHPL;
 
   bool itsInitCalled; // Flag to indicate if the init method has been called
                       // This is used in the counting of initialized instances.
 };
- 
-inline bool TH_PL::isBidirectional() const
-  { return true; }
 
+inline bool TH_PL::isClonable() const
+{ return true; }
+
+inline void TH_PL::reset()
+{}
+ 
 } // end namespace
 
 #endif

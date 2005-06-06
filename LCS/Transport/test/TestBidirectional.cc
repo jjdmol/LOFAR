@@ -26,8 +26,8 @@
 #include <iostream>
 
 #include <Transport/TH_Mem.h>
-#include <Transport/TH_File.h>
-#include "DH_Example.h"
+#include <Transport/Connection.h>
+#include <DH_Example.h>
 
 using namespace LOFAR;
 
@@ -36,14 +36,15 @@ bool testMem()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 bidirectionally with non-blocking in-memory 
   // communication
-  DH1.connectBidirectional(DH2, TH_Mem(), TH_Mem(), false);
+  // Use a different TH_Mem in each connection!
+  TH_Mem memTH1;    
+  TH_Mem memTH2;
+  // A connection for data flowing from DH1 to DH2.
+  Connection conn1("connection1", &DH1, &DH2, &memTH1, false);
+  // And a connection for data flowing from DH2 to DH1.
+  Connection conn2("connection2", &DH2, &DH1, &memTH2, false);
     
   // initialize
   DH1.init();
@@ -62,8 +63,8 @@ bool testMem()
        << endl;
     
   // do the "forward" data transport
-  DH1.write();
-  DH2.read();
+  ASSERT(conn1.write() == Connection::Finished);
+  ASSERT(conn1.read() == Connection::Finished);
   
   cout << "After forward transport  : " 
        << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
@@ -80,10 +81,9 @@ bool testMem()
   // now we change the data somewhat and do the "backwards" transport
   DH2.getBuffer()[0] += makefcomplex(1,1);
   DH2.setCounter(3);
-  DH2.write();
-  DH1.read();
-  // 
-  
+  ASSERT(conn2.write() == Connection::Finished);
+  ASSERT(conn2.read() == Connection::Finished);
+   
   cout << "After backwards transport  : " 
        << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
        << " -- " 

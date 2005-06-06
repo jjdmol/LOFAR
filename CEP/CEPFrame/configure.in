@@ -54,6 +54,9 @@ dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
 lofar_CHECK_LONG_LONG
+lofar_MATLAB
+lofar_XERCES
+lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS

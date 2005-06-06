@@ -7,15 +7,12 @@
 //#
 //#  $Id$
 
-#ifndef AH_BACKEND_H
-#define AH_BACKEND_H
-
-
-#include <lofar_config.h>
+#ifndef LOFAR_ACCEPTTEST1_AH_BACKEND_H
+#define LOFAR_ACCEPTTEST1_AH_BACKEND_H
 
 //# includes
-#include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/TinyApplicationHolder.h>
+#include <Transport/TransportHolder.h>
 
 #include <WH_Random.h>
 #include <WH_Correlator.h>
@@ -44,6 +41,8 @@ namespace LOFAR
   private:
 
     vector<WorkHolder*> itsWHs;
+    vector<Connection*> itsInConns;
+    vector<TransportHolder*> itsInTHs;
 
     int         itsWHcount;
     int         itsPort;

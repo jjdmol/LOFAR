@@ -97,11 +97,13 @@ void WH_Solve::process()
   // Query the database for a work order
   DH_WOSolve* wo =  dynamic_cast<DH_WOSolve*>(getDataManager().getInHolder(0));
   DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
+  Connection* connWO = getDataManager().getInConnection(0);
+  ASSERTSTR(connWO!=0, "Input 0 not connected");
  
   // Wait for workorder
   bool firstTime = true;
   while ((woPtr->queryDB("status=0 and (kstype='SOLVER' or kstype='" + getName()
-                         + "') order by kstype desc, woid asc")) <= 0)
+                         + "') order by kstype desc, woid asc", *connWO)) <= 0)
   {
     if (firstTime)
     {
@@ -117,7 +119,7 @@ void WH_Solve::process()
 
   // Update workorder status
   wo->setStatus(DH_WOSolve::Assigned);
-  woPtr->updateDB();
+  woPtr->updateDB(*connWO);
 
   int contrID = wo->getStrategyControllerID();
   Solver* solver = getSolver(contrID);
@@ -170,6 +172,8 @@ void WH_Solve::process()
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(1));
   sol->clearData();
   DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
+  Connection* connSol = getDataManager().getOutConnection(1);
+  ASSERTSTR(connSol != 0, "Output 1 not connected!");
   sol->setSolution(solver->getSolvableParmData());
   sol->setQuality(resultQuality);
   sol->setWorkOrderID(wo->getWorkOrderID());
@@ -182,8 +186,8 @@ void WH_Solve::process()
 		 predInp1->getStartTime(), predInp1->getEndTime());
 
   // Add solution to database and update work order
-  solPtr->insertDB();
-  woPtr->updateDB();
+  solPtr->insertDB(*connSol);
+  woPtr->updateDB(*connWO);
   
   if (wo->getCleanUp())   // If Solver (cache) is no longer needed: clean up  
   {

@@ -24,12 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef DH_FIXEDSIZE_H
-#define DH_FIXEDSIZE_H
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifndef LOFAR_3BLOCKPERF_DH_FIXEDSIZE_H
+#define LOFAR_3BLOCKPERF_DH_FIXEDSIZE_H
 
 #include <string>
 #include <Transport/DataHolder.h>
@@ -50,7 +46,7 @@ public:
 
   DataHolder* clone() const;
 
-  virtual void preprocess();
+  virtual void init();
 
   void fillDataPointers();
 

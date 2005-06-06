@@ -20,14 +20,13 @@
 //
 //  $Id$
 
-
 #include "DH_Socket.h"
 
 namespace LOFAR
 {
 
 DH_Socket::DH_Socket (const string& name, uint32 initialNrElements)
-: DataHolder (name),
+: DataHolder (name, "DH_Socket", 1),
   itsCounter (0),
   itsBuffer  (0),
   itsBufSize (initialNrElements)
@@ -49,7 +48,7 @@ DataHolder* DH_Socket::clone() const
   return new DH_Socket(*this);
 }
 
-void DH_Socket::preprocess()
+void DH_Socket::init()
 {
   // Initialize the fieldset.
   initDataFields();
@@ -68,7 +67,7 @@ void DH_Socket::preprocess()
 void DH_Socket::setBufferSize (uint32 nelements)
 {
   itsBufSize = nelements;
-  preprocess();
+  init();
 }
 
 void DH_Socket::fillDataPointers()
@@ -77,12 +76,6 @@ void DH_Socket::fillDataPointers()
   itsCounter = getData<int> ("Counter");
   // Fill in the buffer pointer.
   itsBuffer  = getData<BufferType> ("Buffer");
-}
-
-void DH_Socket::postprocess()
-{
-  itsCounter = 0;
-  itsBuffer = 0;
 }
 
 } // end namespace

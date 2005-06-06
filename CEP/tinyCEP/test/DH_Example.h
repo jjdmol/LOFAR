@@ -20,9 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TINYFRAME_TEST_DH_EXAMPLE_H
-#define TINYFRAME_TEST_DH_EXAMPLE_H
-
+#ifndef TINYCEP_TEST_DH_EXAMPLE_H
+#define TINYCEP_TEST_DH_EXAMPLE_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Transport/DataHolder.h>
@@ -46,18 +45,15 @@ public:
 
   virtual ~DH_Example();
 
-  DataHolder* clone() const;
+  virtual DataHolder* clone() const;
 
-  /// Set the Counter attribute in the DataPacket.
+  /// Set the Counter attribute.
   void setCounter (int counter);
-  /// Get the Counter attribute in the DataPacket.
+  /// Get the Counter attribute.
   int getCounter() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   /// Get write access to the Buffer in the DataPacket.
   BufferType* getBuffer();
@@ -70,7 +66,7 @@ private:
   /// Forbid assignment.
   DH_Example& operator= (const DH_Example&);
 
-  // Data pointers filled by preprocess.
+  // Data pointers filled by init.
   int*         itsCounter;
   BufferType*  itsBuffer;
   unsigned int itsBufSize;

@@ -28,6 +28,9 @@
 
 namespace LOFAR {
 // Description of class.
+
+class Step;
+
 class StationCorrelator: public LOFAR::ApplicationHolder
 {
  public:

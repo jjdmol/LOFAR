@@ -185,7 +185,9 @@ void WH_Prediff::process()
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);
-  wo->updateDB();
+  Connection* conn = getDataManager().getInConnection(0);
+  ASSERTSTR(conn!=0, "No connection set!");
+  wo->updateDB(*conn);
 
   if (wo->getCleanUp())   // If Prediffer (cache) is no longer needed: clean up  
   {
@@ -242,11 +244,12 @@ void WH_Prediff::readWorkOrder()
 {
   // Query the database for a work order
   DH_WOPrediff* wo =  dynamic_cast<DH_WOPrediff*>(getDataManager().getInHolder(0));
+  Connection* conn = getDataManager().getInConnection(0);
+  ASSERTSTR(conn!=0, "No connection set!");
  
   // Wait for workorder
   bool firstTime = true;
-  while ((wo->queryDB("status=0 and (kstype='" + getName()
-		      + "') order by woid asc")) <= 0)
+  while ((wo->queryDB("status=0 and (kstype='" + getName() + "') order by woid asc", *conn)) <= 0)
   {
     if (firstTime)
     {
@@ -261,7 +264,7 @@ void WH_Prediff::readWorkOrder()
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Assigned);
-  wo->updateDB();
+  wo->updateDB(*conn);
 }
 
 void WH_Prediff::getSrcGrp (const KeyValueMap& args,
@@ -293,14 +296,16 @@ void WH_Prediff::readSolution(int id, vector<ParmData>& solVec)
   LOG_TRACE_FLOW("WH_Prediff reading solution");
 
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
+  Connection* conn = getDataManager().getInConnection(1);
+  ASSERTSTR(conn!=0, "No connection set!");
 
   // Wait for solution
   char str[32];
   sprintf(str, "WOID=%i", id);
   string query(str);
 
-  ASSERTSTR(sol->queryDB(query) > 0, "No solution with WOID = "  
-	    << id << " found by WH_Prediff" );
+  ASSERTSTR(sol->queryDB(query, *conn) > 0, "No solution with WOID = "  
+	    << id << " found by WH_Prediff");
   
   sol->getSolution(solVec);
 }

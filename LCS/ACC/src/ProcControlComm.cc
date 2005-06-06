@@ -29,13 +29,52 @@
 namespace LOFAR {
   namespace ACC {
 
-
-ProcControlComm::ProcControlComm(bool	syncComm) :
-	itsDataHolder(0),
+//
+// client constructor
+//
+ProcControlComm::ProcControlComm(const string&		hostname,
+								 const string&		port,
+								 bool				syncComm) :
+	itsReadConn(0),
+	itsWriteConn(0),
+	itsDataHolder(new DH_ProcControl),
 	itsSyncComm(syncComm)
 {
+	ASSERTSTR(itsDataHolder, "Unable to allocate a dataholder");
+	itsDataHolder->init();
+
+	TH_Socket*	theTH = new TH_Socket(hostname, port, syncComm);
+	ASSERTSTR(theTH, "Unable to allocate a transportHolder");
+	theTH->init();
+
+	itsReadConn  = new CSConnection("read",  0, itsDataHolder, theTH, syncComm);
+	itsWriteConn = new CSConnection("write", itsDataHolder, 0, theTH, syncComm);
+	ASSERTSTR(itsReadConn,  "Unable to allocate connection for reading");
+	ASSERTSTR(itsWriteConn, "Unable to allocate connection for wrtiting");
 }
 
+//
+// server constructor
+//
+ProcControlComm::ProcControlComm(const string&		port,
+								 bool				syncComm) :
+	itsReadConn(0),
+	itsWriteConn(0),
+	itsDataHolder(new DH_ProcControl),
+	itsSyncComm(syncComm)
+{
+	ASSERTSTR(itsDataHolder, "Unable to allocate a dataholder");
+	itsDataHolder->init();
+
+	TH_Socket*	theTH = new TH_Socket(port, syncComm);
+	ASSERTSTR(theTH, "Unable to allocate a transportHolder");
+	theTH->init();
+
+	itsReadConn  = new CSConnection("read",  0, itsDataHolder, theTH, syncComm);
+	itsWriteConn = new CSConnection("write", itsDataHolder, 0, theTH, syncComm);
+	ASSERTSTR(itsReadConn,  "Unable to allocate connection for reading");
+	ASSERTSTR(itsWriteConn, "Unable to allocate connection for wrtiting");
+}
 // Destructor
 ProcControlComm::~ProcControlComm() 
 {
@@ -50,6 +89,22 @@ uint16	ProcControlComm::resultInfo	(void) const
 	return (itsDataHolder->getResult());
 }
 
+//
+// poll()
+//
+// Check if a new message is availabel
+// Note: only usefull for async communication
+//
+bool	ProcControlComm::poll() const
+{
+	// Never become blocking in a poll
+	if (itsSyncComm) {
+		return (false);
+	}
+
+	return (itsReadConn->read() == CSConnection::Finished);
+}
+
 bool	ProcControlComm::waitForResponse() const
 {
 	// never wait for a response when doing async communication.
@@ -58,7 +113,7 @@ bool	ProcControlComm::waitForResponse() const
 	}
 
 	// --- Sync Communication from this point ---
-	if (!itsDataHolder->read()) {
+	if (!itsReadConn->read() == CSConnection::Finished) {
 		return (false);							// there should have been data!
 	}
 
@@ -73,7 +128,7 @@ void	ProcControlComm::sendCmd(const PCCmd		theCmd,
 	itsDataHolder->setCommand 	   (theCmd);
 	itsDataHolder->setOptions	   (theOptions);
 
-	itsDataHolder->write();
+	itsWriteConn->write();
 }
  
 bool	ProcControlComm::doRemoteCmd(const PCCmd		theCmd,

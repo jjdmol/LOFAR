@@ -24,19 +24,19 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>             // for sprintf
+#include <lofar_config.h>
+
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/Debug.h>
-
-#include "AsyncTest/WH_Sink.h"
-#include "AsyncTest/StopWatch.h"
-#include "AsyncTest/AsyncTest.h"
+#include <AsyncTest/WH_Sink.h>
+#include <AsyncTest/DH_Buffer.h>
+#include <AsyncTest/StopWatch.h>
+#include <AsyncTest/AsyncTest.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 
-int  WH_Sink::itsMeasurements = 1000;
+int  WH_Sink::itsMeasurements = 10000;
 bool WH_Sink::itsFirstcall = true;
 
 WH_Sink::WH_Sink (const string& name, 
@@ -47,40 +47,24 @@ WH_Sink::WH_Sink (const string& name,
 		          bool syncRead)
 : WorkHolder    (nin, nout, name),
   itsBufLength  (nbuffer),
-  itsSizeFixed (sizeFixed),
-  itsIteration(itsMeasurements),
-  itsTime(0),
-  itsSyncRead(syncRead)
+  itsSizeFixed  (sizeFixed),
+  itsSyncRead   (syncRead),
+  itsIteration  (itsMeasurements),
+  itsTime       (0)
 {
-    AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
-    AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
-  //   AssertStr (nout == nin, "number of inputs and outputs must match");
-  
   char str[8];
 
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addInDataHolder(i, new DH_GrowSize (std::string("in_") + str,
-				     nbuffer, itsSizeFixed), itsSyncRead);
-
-    DbgAssertStr(getDataManager().getGeneralInHolder(i)->getType() == "DH_GrowSize",
-               "DataHolder is not of type DH_GrowSize");    
-
-    ((DH_GrowSize*)getDataManager().getGeneralInHolder(i))->
-      setInitialDataPacketSize(nbuffer);
-
+    getDataManager().addInDataHolder(i, new DH_Buffer (std::string("in_") + str,
+				     nbuffer));
   }
   
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addOutDataHolder(i, new DH_GrowSize(std::string("out_") + str,
-				      nbuffer, itsSizeFixed), true);
+    getDataManager().addOutDataHolder(i, new DH_Buffer(std::string("out_") + str,
+				      nbuffer));
 
-    DbgAssertStr(getDataManager().getGeneralOutHolder(i)->getType() == "DH_GrowSize",
-               "DataHolder is not of type DH_GrowSize");    
-
-    ((DH_GrowSize*)getDataManager().getGeneralOutHolder(i))->
-	setInitialDataPacketSize(nbuffer);
   }
 
 }
@@ -105,22 +89,20 @@ WorkHolder* WH_Sink::make(const string& name)
 //  }
 
 void WH_Sink::process()
-{  
-  getDataManager().getInHolder(1); //Necessary, otherwise buffer won't 
-                                   //be emptied
-  getDataManager().getInHolder(0);
-
-//    unsigned long inputTime = getDataManager().getInHolder(0)->getTimeStamp();
-//    if (inputTime != getDataManager().getInHolder(1)->getTimeStamp())
-//    {
-//      cout << "Timestamps not equal" << endl;
-//    }
-//    if ((unsigned long)itsTime != inputTime)
-//    {
-//      cout << "Timestamp is different" << endl;
-//    }
-//    cout << inputTime << endl;
-
+{ 
+  int count = ((DH_Buffer*)(getDataManager().getInHolder(0)))->getCounter();
+  for (int i = 1; i < getDataManager().getInputs(); i++)
+  {
+    if (((DH_Buffer*)(getDataManager().getInHolder(i)))->getCounter() != count)
+    {
+      cout << "Incorrect data received!" << endl;
+    }                                    
+    //NB: It is necessary to request all InHolders, otherwise buffer won't 
+    // be emptied
+  } 
+  cout << "  Received counter: "
+       << count << endl;
+  
     if (!itsFirstcall)
     {
       // watch.stop();
@@ -131,12 +113,11 @@ void WH_Sink::process()
 	watch.stop();
 	// first measurement; print packet sizes etc.
 		cout << endl;
-	int packetSize = getDataManager().getInHolder(0)->getDataPacketSize(); 
-	cout <<  packetSize << " "
-	     << log10(packetSize) << " ";
+	int dataSize = getDataManager().getInHolder(0)->getDataSize(); 
+	cout <<  "Data size " << dataSize << " ";
 
 	// report the bandwidth per output channel (in MB/s)
-	int perf = (int)(getDataManager().getOutHolder(0)->getDataPacketSize() * getDataManager().getInputs() * itsMeasurements
+	int perf = (int) (dataSize * getDataManager().getInputs() * itsMeasurements
 			    /(1024.*1024.*watch.elapsed()));
 	cout << perf 
 	     << "  "
@@ -158,7 +139,6 @@ void WH_Sink::process()
     itsIteration = itsMeasurements;
   }
 
-  getDataManager().getOutHolder(0)->setTimeStamp(itsTime++);
   //dump();
 }
 
@@ -167,11 +147,11 @@ void WH_Sink::dump()
   cout << "WH_Sink " << getName() << " dump:" << endl;
   for (int i = 0; i < getDataManager().getInputs(); i++)
   {
-    ((DH_GrowSize*)getDataManager().getInHolder(i))->dump();
+    getDataManager().getInHolder(i)->dump();
   }
   for (int j = 0; j < getDataManager().getOutputs(); j++)
   {
-    ((DH_GrowSize*)getDataManager().getOutHolder(j))->dump();
+    getDataManager().getOutHolder(j)->dump();
   }
 }
 

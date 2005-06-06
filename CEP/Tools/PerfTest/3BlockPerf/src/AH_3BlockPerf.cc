@@ -24,7 +24,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
+#include <lofar_config.h>
+
+//#include <stdio.h>
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>
 #include <Common/lofar_string.h>
@@ -35,7 +37,6 @@
 #include <3BlockPerf/WH_Dest.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/ApplicationHolder.h>
-#include <CEPFrame/WH_Empty.h>
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Mem.h>
 #ifdef HAVE_MPI
@@ -65,13 +66,7 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
   // free any memory previously allocated
   undefine();
 
-  WH_Empty empty;
-
-  Composite comp(empty, // workholder
-		 "AH_3BlockPerf", // name
-		 true,  // add name suffix
-		 true,  // controllable	      
-		 false); // monitor
+  Composite comp(0, 0, "AH_3BlockPerf");
   setComposite(comp);
   comp.runOnNode(0);
   comp.setCurAppl(0);
@@ -87,9 +82,9 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
   WorkHolder* srcWH = new WH_Src("SourceWH", size, packetsPerMeasurement, flopsPerByte);
   WorkHolder* heatWH = new WH_Heat("HeatWH", size, flopsPerByte);
   WorkHolder* dstWH = new WH_Dest("DestinationWH", size);
-  itsSrcStep = new Step(srcWH, "srcStep", 1, 0);
-  itsHeatStep = new Step(heatWH, "srcStep", 1, 0);
-  itsDstStep = new Step(dstWH, "srcStep", 1, 0);
+  itsSrcStep = new Step(srcWH, "srcStep", 1);
+  itsHeatStep = new Step(heatWH, "srcStep", 1);
+  itsDstStep = new Step(dstWH, "srcStep", 1);
 
   delete srcWH;
   delete heatWH;
@@ -102,9 +97,9 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
   //  dstWH->runOnNode(2,0);
   itsDstStep->runOnNode(2, 0);
 
-  comp.addStep(itsSrcStep);
-  comp.addStep(itsHeatStep);
-  comp.addStep(itsDstStep);
+  comp.addBlock(itsSrcStep);
+  comp.addBlock(itsHeatStep);
+  comp.addBlock(itsDstStep);
 
   // set synchronisity of steps
 #if 0
@@ -115,30 +110,30 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
 #endif
 
 #ifdef HAVE_MPI
-  itsHeatStep->connect(itsSrcStep,
-		       0, // thisDHIndex
+  itsHeatStep->connect(0, // thisDHIndex
+		       itsSrcStep,
 		       0, // thatDHIndex
 		       1, // no of DH's
-		       TH_MPI(itsSrcStep->getNode(), itsHeatStep->getNode()),
+		       new TH_MPI(itsSrcStep->getNode(), itsHeatStep->getNode()),
 		       true);
-  itsDstStep->connect(itsHeatStep,
-		      0, // thisDHIndex
+  itsDstStep->connect(0, // thisDHIndex
+		      itsHeatStep,
 		      0, // thatDHIndex
 		      1, // no of DH's
-		      TH_MPI(itsHeatStep->getNode(), itsDstStep->getNode()),
+		      new TH_MPI(itsHeatStep->getNode(), itsDstStep->getNode()),
 		      true);
 #else
-  itsHeatStep->connect(itsSrcStep,
-		       0, // thisDHIndex
+  itsHeatStep->connect(0, // thisDHIndex
+		       itsSrcStep,
 		       0, // thatDHIndex
 		       1, // no of DH's
-		       TH_Mem(),
+		       new TH_Mem(),
 		       false);
-  itsDstStep->connect(itsHeatStep,
-		      0, // thisDHIndex
+  itsDstStep->connect(0, // thisDHIndex
+		      itsHeatStep,
 		      0, // thatDHIndex
 		      1, // no of DH's
-		      TH_Mem(),
+		      new TH_Mem(),
 		      false);
 #endif
 }

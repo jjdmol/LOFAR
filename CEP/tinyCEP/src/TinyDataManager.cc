@@ -20,8 +20,12 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <tinyCEP/TinyDataManager.h>
+#include <Transport/DataHolder.h>
 #include <tinyCEP/Selector.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
@@ -38,7 +42,9 @@ namespace LOFAR
       itsOutputSelector(0)
   {
     itsInDHs = new DataHolder* [ninputs];
+    itsInConnections = new Connection* [ninputs];
     itsOutDHs = new DataHolder* [noutputs];
+    itsOutConnections = new Connection* [noutputs];
     itsInputRates = new int[ninputs];
     itsOutputRates = new int[noutputs];
     itsDoAutoTriggerIn = new bool[ninputs];
@@ -50,14 +56,70 @@ namespace LOFAR
       itsDoAutoTriggerIn[i]=true;
       itsInputRates[i]=1;
       itsReadyInFlag[i]=false;
+      itsInConnections[i]=0;
     }
     for (int j = 0; j < noutputs; j++)
     {
       itsDoAutoTriggerOut[j]=true;
       itsOutputRates[j]=1;
       itsReadyOutFlag[j]=false;
+      itsOutConnections[j]=0;
     }
 
+  }
+
+  TinyDataManager::TinyDataManager(const TinyDataManager& that)
+    : itsNinputs (that.itsNinputs),
+      itsNoutputs(that.itsNoutputs),
+      itsProcessRate(that.itsProcessRate),
+      itsInputSelector(0),
+      itsOutputSelector(0)
+  {
+    if (that.itsInputSelector != 0)
+    {
+      itsInputSelector = that.itsInputSelector->clone();// Copies the selectors
+    }
+    if (that.itsOutputSelector != 0)
+    {
+      itsOutputSelector = that.itsOutputSelector->clone();
+    }
+
+    itsInDHs = new DataHolder* [itsNinputs];          // Clones the DataHolders
+    itsInConnections = new Connection* [itsNinputs];
+    itsDoAutoTriggerIn = new bool[itsNinputs];
+    itsInputRates = new int[itsNinputs];
+    itsReadyInFlag = new bool[itsNinputs];
+    itsReadyOutFlag = new bool[itsNoutputs];
+    for (int ch = 0; ch < itsNinputs; ch++)
+    {
+      itsInDHs[ch] = that.itsInDHs[ch]->clone();
+      itsInConnections[ch] = that.itsInConnections[ch];
+      itsDoAutoTriggerIn[ch] = that.doAutoTriggerIn(ch);
+      itsInputRates[ch] = that.itsInputRates[ch];
+      itsReadyInFlag[ch] = that.itsReadyInFlag[ch];
+      if (that.itsInConnections[ch] != 0)
+      {
+	LOG_WARN("TinyDataManager copy constructor: Be warned TinyDataManager to be copied already contains connections.");
+      }
+      itsInConnections[ch] = 0;
+    }
+    itsOutDHs = new DataHolder* [itsNoutputs];
+    itsOutConnections = new Connection* [itsNoutputs];
+    itsDoAutoTriggerOut = new bool[itsNoutputs];
+    itsOutputRates = new int[itsNoutputs];
+    for (int ch = 0; ch < itsNoutputs; ch++)
+    {
+      itsOutDHs[ch] = that.itsOutDHs[ch]->clone();
+      itsOutConnections[ch] = that.itsOutConnections[ch];
+      itsDoAutoTriggerOut[ch]=that.doAutoTriggerOut(ch);
+      itsOutputRates[ch] = that.itsOutputRates[ch];
+      itsReadyOutFlag[ch] = that.itsReadyOutFlag[ch];
+      if (that.itsOutConnections[ch] != 0)
+      {
+	LOG_WARN("TinyDataManager copy constructor: Be warned TinyDataManager to be copied already contains connections.");
+      }
+      itsOutConnections[ch] = 0;
+    }
   }
 
   TinyDataManager::~TinyDataManager() {
@@ -69,6 +131,8 @@ namespace LOFAR
     delete [] itsDoAutoTriggerOut;
     delete [] itsReadyInFlag;
     delete [] itsReadyOutFlag;
+    delete [] itsInConnections;
+    delete [] itsOutConnections;
 
     // DataHolder clean-up:
     for (int i = 0; i < itsNinputs; i++)
@@ -91,47 +155,6 @@ namespace LOFAR
     return itsInDHs[channel];
   }
 
-
-  TinyDataManager::TinyDataManager(const TinyDataManager& that)
-    : itsNinputs (that.itsNinputs),
-      itsNoutputs(that.itsNoutputs),
-      itsProcessRate(that.itsProcessRate),
-      itsInputSelector(0),
-      itsOutputSelector(0)
-  {
-    if (that.itsInputSelector != 0)
-    {
-      itsInputSelector = that.itsInputSelector->clone();// Copies the selectors
-    }
-    if (that.itsOutputSelector != 0)
-    {
-      itsOutputSelector = that.itsOutputSelector->clone();
-    }
-
-    itsInDHs = new DataHolder* [itsNinputs];          // Clones the DataHolders
-    itsDoAutoTriggerIn = new bool[itsNinputs];
-    itsInputRates = new int[itsNinputs];
-    itsReadyInFlag = new bool[itsNinputs];
-    itsReadyOutFlag = new bool[itsNoutputs];
-    for (int ch = 0; ch < itsNinputs; ch++)
-    {
-      itsInDHs[ch] = that.itsInDHs[ch]->clone();
-      itsDoAutoTriggerIn[ch] = that.doAutoTriggerIn(ch);
-      itsInputRates[ch] = that.itsInputRates[ch];
-      itsReadyInFlag[ch] = that.itsReadyInFlag[ch];
-    }
-    itsOutDHs = new DataHolder* [itsNoutputs];
-    itsDoAutoTriggerOut = new bool[itsNoutputs];
-    itsOutputRates = new int[itsNoutputs];
-    for (int ch = 0; ch < itsNoutputs; ch++)
-    {
-      itsOutDHs[ch] = that.itsOutDHs[ch]->clone();
-      itsDoAutoTriggerOut[ch]=that.doAutoTriggerOut(ch);
-      itsOutputRates[ch] = that.itsOutputRates[ch];
-      itsReadyOutFlag[ch] = that.itsReadyOutFlag[ch];
-    }
-  }
-
   DataHolder* TinyDataManager::getOutHolder(int channel) {
     assertChannel(channel, false);
     return itsOutDHs[channel];
@@ -139,13 +162,13 @@ namespace LOFAR
 
   void TinyDataManager::addInDataHolder(int channel, DataHolder* dhptr) {
     assertChannel(channel, true);
-    dhptr->setID(TinyDataManager::DataHolderID++);
+    //    dhptr->setID(TinyDataManager::DataHolderID++);
     itsInDHs[channel] = dhptr;
   }
 
   void TinyDataManager::addOutDataHolder(int channel, DataHolder* dhptr) {
     assertChannel(channel, false);
-    dhptr->setID(TinyDataManager::DataHolderID++);
+    //    dhptr->setID(TinyDataManager::DataHolderID++);
     itsOutDHs[channel] = dhptr;
   }
 
@@ -177,9 +200,17 @@ namespace LOFAR
     for (int ch = 0; ch < itsNinputs; ch++) {
       if (doAutoTriggerIn(ch) && ( getInputRate(ch) == 1 )) { 
 	// only execute the zeroth call for rate==1 
-	LOG_TRACE_COND_STR("Execute Initial read call on channel = " 
-			   << ch << " step=1   rate= " << getInputRate(ch));
-	itsInDHs[ch]->read();
+
+	if (getInConnection(ch)!= 0)
+	{
+	  LOG_TRACE_COND_STR("Execute Initial read call on channel = " 
+			     << ch << " step=1   rate= " << getInputRate(ch));
+	  getInConnection(ch)->read();
+	}
+	else
+	{
+	  LOG_TRACE_COND_STR("Skip initial read, channel " << ch << " is not connected.");
+	}
       } else {
 	LOG_TRACE_COND_STR("Skip initial read on channel = " 
 			   << ch << " step=1   rate= " << getInputRate(ch));
@@ -201,11 +232,19 @@ namespace LOFAR
   void TinyDataManager::readyWithInHolder(int channel) {
     // The user has to call the ready with InHolder method 
     // in his own WorkHolder
-    if(!getReadyInFlag(channel)) { //only execute the DH->read() call once
+    if(!getReadyInFlag(channel)) { //only execute the Connection->read() call once
       setReadyInFlag(channel);
-      itsInDHs[channel]->read();
+      if (getInConnection(channel)!= 0)
+      {
+	getInConnection(channel)->read();
+      }
+      else
+      {
+	LOG_TRACE_COND_STR("readyWithInHolder input " << channel 
+		       << " not connected. Skipping read.");
+      }
     } else {
-      LOG_TRACE_COND_STR("readyWithInHolder already called; Skipped call to read()");
+      LOG_TRACE_COND("readyWithInHolder already called; Skipped call to read()");
     }
   }
   
@@ -214,7 +253,15 @@ namespace LOFAR
     // in his own WorkHolder
     if(!getReadyOutFlag(channel)) {
       setReadyOutFlag(channel);
-      itsOutDHs[channel]->write();
+      if (getOutConnection(channel)!= 0)
+      {      
+	getOutConnection(channel)->write();
+      }
+      else
+      {
+	LOG_TRACE_COND_STR("readyWithOutHolder output " << channel 
+		       << " not connected. Skipping write.");	
+      }
     } else {
       LOG_TRACE_COND_STR("readyWithOutHolder already called; Skipped call to write()");
     }
@@ -360,5 +407,36 @@ int TinyDataManager::getOutputRate(int dhIndex)
   } 
 }
 
+Connection* TinyDataManager::getInConnection(int channel)
+{
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getInputs(), "input channel too high");
+  return itsInConnections[channel];
+}
+
+void TinyDataManager::setInConnection(int channel, Connection* conn)
+{
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getInputs(), "input channel too high");
+  ASSERTSTR(itsInConnections[channel] == 0, "Input " << channel 
+            << " is already connected.");
+  itsInConnections[channel] = conn;
+}
+
+Connection* TinyDataManager::getOutConnection(int channel)
+{
+  DBGASSERTSTR(channel >= 0, "output channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "output channel too high");
+  return itsOutConnections[channel];
+}
+
+void TinyDataManager::setOutConnection(int channel, Connection* conn)
+{
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "input channel too high");
+  ASSERTSTR(itsOutConnections[channel] == 0, "Output " << channel 
+            << " is already connected.");
+  itsOutConnections[channel] = conn;
+}
   
 } // namespace LOFAR

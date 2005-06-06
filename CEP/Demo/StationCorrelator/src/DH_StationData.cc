@@ -55,11 +55,8 @@ DataHolder* DH_StationData:: clone() const {
   return new DH_StationData(*this);
 }
 
-void DH_StationData::preprocess() {
+void DH_StationData::init() {
   
-  // first delete possible preexisting buffers
-  postprocess();
-                        
   // Add the fields to the data definition
   addField("StationID", BlobField<int>(1, 1));
   addField("BlockID", BlobField<int>(1, 1));
@@ -68,14 +65,6 @@ void DH_StationData::preprocess() {
 
   // Create the data blob
   createDataBlock();
-}
-
-void DH_StationData::postprocess() 
-{
-  itsBuffer = 0;
-  itsStationIDptr = 0;
-  itsBlockIDptr   = 0;
-  itsFlagptr      = 0;
 }
 
 void DH_StationData::fillDataPointers() 

@@ -22,23 +22,14 @@
 //
 /////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
-#include "CEPFrame/SimulatorParseClass.h"
+#include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
-#include <Common/Debug.h>
-#include "AsyncTest/AsyncTest.h"
+#include <AsyncTest/AsyncTest.h>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
-#endif
-
-#ifdef HAVE_CORBA
-int atexit(void (*function)(void))
-{
-  return 1;
-}
 #endif
 
 int main (int argc, const char** argv)
@@ -56,16 +47,23 @@ int main (int argc, const char** argv)
 //  	cout << endl;
 #endif
 	try {
-	  AsyncTest simulator;
+	  LOFAR::AsyncTest simulator;
 	  simulator.setarg (argc, argv);
 	  
-	  Debug::initLevels (argc, argv);
+	  INIT_LOGGER("AsyncTest.log_prop");
+
+
 	  try {
-	    LOFAR::SimulatorParse::parse (simulator);
+	    //	    LOFAR::SimulatorParse::parse (simulator);
+
+	    simulator.baseDefine();
+	    simulator.baseRun(1);
+	    simulator.baseQuit();
+
 	  } catch (LOFAR::SimulatorParseError x) {
 	    
 	    //cout << x.getMesg() << endl;
-	    cout << x.what() << endl;
+	    std::cout << x.what() << std::endl;
 	    
 	    
 	    //      AsyncTest simulator;
@@ -77,6 +75,6 @@ int main (int argc, const char** argv)
 	    //      simulator.baseQuit();
 	  }
 	} catch (...) {
-	  cout << "Unexpected exception in Simulate" << endl;
+	  std::cout << "Unexpected exception in Simulate" << std::endl;
 	}
 }

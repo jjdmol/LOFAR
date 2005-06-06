@@ -24,15 +24,15 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
+
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/LofarLogger.h>
+//#include <Common/LofarLogger.h>
 
-#include "P2Perf/WH_Dest.h"
-#include "P2Perf/StopWatch.h"
-#include "P2Perf/P2Perf.h"
+#include <P2Perf/WH_Dest.h>
+#include <P2Perf/StopWatch.h>
 
 using namespace LOFAR;
 

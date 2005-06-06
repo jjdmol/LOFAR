@@ -26,7 +26,6 @@
 // General includes
 #include <Common/LofarLogger.h>
 
-#include <CEPFrame/DataManager.h>
 #include <tinyCEP/Profiler.h>
 
 // Application specific includes
@@ -60,7 +59,6 @@ WH_RSP::WH_RSP(const string& name,
 
   // create incoming dataholder   
   getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", itsKVM)); // buffer of char
-  //((DataManager)getDataManager()).setOutBufferingProperties(i, false);
   
   // create outgoing dataholders
   int bufsize =  itsPolarisations * itsNbeamlets * itsNpackets;

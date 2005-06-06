@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <Transport/TH_Mem.h>
+#include <Transport/Connection.h>
 #include <DH_Example.h>
 #include <Common/LofarLogger.h>
 
@@ -32,48 +33,56 @@ int main()
 {
   INIT_LOGGER("Example.log_prop");
   cout << "Transport Example test program" << endl;
+  bool result = false;
+  try 
+  {   
+    DH_Example DH1("dh1", 1);
+    DH_Example DH2("dh2", 1);
     
-  DH_Example DH1("dh1", 1);
-  DH_Example DH2("dh2", 1);
+    // connect DH1 to DH2 with non-blocking in-memory communication
+    TH_Mem memTH;
+    Connection conn("connection1", &DH1, &DH2, &memTH, false);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
-  // connect DH1 to DH2 with non-blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), false);
+    // initialize
+    DH1.init();
+    DH2.init();
     
-  // initialize
-  DH1.init();
-  DH2.init();
+    // fill the DataHolders with some initial data
+    DH1.getBuffer()[0] = makefcomplex(17,-3.5);
+    DH2.getBuffer()[0] = makefcomplex(0,0);
+    DH1.setCounter(2);
+    DH2.setCounter(0);
     
-  // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = makefcomplex(17,-3.5);
-  DH2.getBuffer()[0] = makefcomplex(0,0);
-  DH1.setCounter(2);
-  DH2.setCounter(0);
+    cout << "Before transport : " 
+	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+	 << " -- " 
+	 << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+	 << endl;
     
-  cout << "Before transport : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
+    // do the data transport
+    conn.write();
+    conn.read();
     
-  // do the data transport
-  DH1.write();
-  DH2.read();
+    cout << "After transport  : " 
+	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+	 << " -- " 
+	 << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+	 << endl;
   
-  cout << "After transport  : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
-
-  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
-  &&  DH1.getCounter() == DH2.getCounter()) {
-    return 0;
+    if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+	&&  DH1.getCounter() == DH2.getCounter()) {
+      result = true;
+    }
+    else
+    {
+      cout << "Data in receiving DataHolder is incorrect" << endl;
+      result = false;
+    }
+  } 
+  catch (std::exception& x) 
+  {
+    cout << "Unexpected exception: " << x.what() << endl;
+    result = false;
   }
-  cout << "Data in receiving DataHolder is incorrect" << endl;
-  return 1;
+  return (result ? 0:1);  
 }

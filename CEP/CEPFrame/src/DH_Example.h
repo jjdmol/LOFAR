@@ -49,26 +49,18 @@ public:
 
   DataHolder* clone() const;
 
-  /// Set the Counter attribute in the DataPacket.
+  /// Set the Counter attribute.
   void setCounter (int counter);
-  /// Get the Counter attribute in the DataPacket.
+  /// Get the Counter attribute.
   int getCounter() const;
 
-  /// Aloocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  /// Allocate the buffers.
+  virtual void init();
 
   /// Get write access to the Buffer.
   BufferType* getBuffer();
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
-
- /// overload the getcursize method;
-  /// reported data size may be altered with setDataPacketSize() method
-  int  getCurDataSize() ;
-  void setCurDataSize(const int nbytes) ;
 
 private:
   /// Forbid assignment.
@@ -95,16 +87,6 @@ inline DH_Example::BufferType* DH_Example::getBuffer()
 
 inline const DH_Example::BufferType* DH_Example::getBuffer() const
   { return itsBuffer; }
-
-inline int DH_Example::getCurDataSize() 
-  { return itsCurDataPacketSize; }
-   
-inline void DH_Example::setCurDataSize(const int nbytes)
-  {  
-    //! DBGASSERTSTR(nbytes <= (int)itsBufSize); 
-    itsCurDataPacketSize = nbytes;
-    return ;
-  }
 
 }
 

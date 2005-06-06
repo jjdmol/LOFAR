@@ -25,17 +25,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef INOUTTEST_H
-#define INOUTTEST_H
+#ifndef INOUTTEST_INOUTTEST_H
+#define INOUTTEST_INOUTTEST_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
-#include "CEPFrame/Simulator.h"
-#include "CEPFrame/ParamBlock.h"
-#include "InOutTest/WH_Source.h"
-#include "InOutTest/WH_Sink.h"
+#include <CEPFrame/ApplicationHolder.h>
+#include <Common/KeyValueMap.h>
 
 // define the maximum data block size used in this simulation
 #define MAX_GROW_SIZE (256*1024) // 256 kWords =^ 1 MB
@@ -49,14 +44,14 @@
    
 */
 
-class InOutTest: public LOFAR::Simulator
+class InOutTest: public LOFAR::ApplicationHolder
 {
 public:
   InOutTest();
   virtual ~InOutTest();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
+  virtual void define(const LOFAR::KeyValueMap& params = LOFAR::KeyValueMap());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();

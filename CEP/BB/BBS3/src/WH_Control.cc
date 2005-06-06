@@ -149,9 +149,9 @@ void WH_Control::postprocess()
 
 void WH_Control::createStrategyControllers()
 {
-  DH_Solution* inp = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(0));
-  DH_WOPrediff* pd = dynamic_cast<DH_WOPrediff*>(getDataManager().getOutHolder(1));
-  DH_WOSolve* sv = dynamic_cast<DH_WOSolve*>(getDataManager().getOutHolder(2));
+  Connection* inSolConn = getDataManager().getInConnection(0);
+  Connection* outPDConn = getDataManager().getOutConnection(1);
+  Connection* outSVConn = getDataManager().getOutConnection(2);
   int nrStrat = itsArgs.getInt("nrStrategies", 0);
 
   for (int i=1; i<=nrStrat; i++)
@@ -164,7 +164,7 @@ void WH_Control::createStrategyControllers()
     // Create StrategyController and add to list
     if (stratType == "Simple")
     {
-      SC_Simple* sc = new SC_Simple(i, inp, pd, sv, itsNrPrediffers, params);  // Each StrategyController
+      SC_Simple* sc = new SC_Simple(i, inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
       itsControllers.push_back(sc);                           // must get an unique ID
     }
     else

@@ -24,10 +24,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef EMPTYAPPL_H
-#define EMPTYAPPL_H
+#ifndef LOFAR_EMPTYAPPL_EMPTYAPPL_H
+#define LOFAR_EMPTYAPPL_EMPTYAPPL_H
 
-#include <lofar_config.h>
+// \file EmptyAppl.h
+// Empty ApplicationHolder class
 
 #include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>

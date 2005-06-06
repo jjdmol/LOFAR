@@ -76,14 +76,14 @@ public:
 	// @{ 
 
 	// Register the fixed size variables to the dataholderblob.
-	virtual void 	preprocess();
+	virtual void 	init();
 
 	// Tries to fill its buffer with new data. Returns \c true is a complete
 	// message is received.
-	virtual bool	read();
+	void	unpack();
 
 	// Write the current contents to the network.
-	virtual bool	write();
+	void	pack();
 
 	// The clone function is neccesary to meet the libTransport requirements,
 	// it copies everything but the data. Something we never need.
@@ -96,8 +96,6 @@ public:
 	// \c makeDataCopy is the counterpart of clone: it copies the data.
 	DH_ApplControl*		makeDataCopy() const;
 
-	// Construction of the blob
-	void pack();
 	// @}
 
 	// \name Data-accessor methods
@@ -257,15 +255,6 @@ inline uint16	DH_ApplControl::getResult		() const
 	//# no version support necc. yet.
 	return (*itsResult);
 }
-
-//#
-//# pack()
-//#
-inline void DH_ApplControl::pack() 
-{
-	writeExtra();
-}
-
 
 // @} addgroup
 } // namespace ACC

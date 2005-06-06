@@ -7,6 +7,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <stdio.h>
 
 // General includes

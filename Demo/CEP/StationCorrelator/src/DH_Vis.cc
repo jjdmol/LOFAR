@@ -48,22 +48,14 @@ DataHolder* DH_Vis::clone() const
   return new DH_Vis(*this);
 }
 
-void DH_Vis::preprocess()
+void DH_Vis::init()
 {
-  // First delete possible buffers.
-  postprocess();
-
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();
   itsBuffer = getData<BufferType> ("Buffer");
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i] = 0;
   }
-}
-
-void DH_Vis::postprocess()
-{
-  itsBuffer     = 0;
 }
 
 void DH_Vis::fillDataPointers() {

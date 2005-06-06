@@ -27,12 +27,8 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/Debug.h>
-
-#include "InOutTest/WH_Sink.h"
-#include "InOutTest/StopWatch.h"
-#include "InOutTest/InOutTest.h"
+#include <InOutTest/WH_Sink.h>
+#include <CEPFrame/DH_Example.h>
 
 using namespace LOFAR;
 
@@ -49,7 +45,7 @@ WH_Sink::WH_Sink (const string& name,
   itsNIterations(niterations),
   itsTime(0)
 {
-  getDataManager().addInDataHolder(0, new DH_Example ("in", nbuffer), true);
+  getDataManager().addInDataHolder(0, new DH_Example ("in", nbuffer));
 }
 
 
@@ -83,12 +79,11 @@ void WH_Sink::process()
       watch.stop();
       // first measurement; print packet sizes etc.
       cout << endl;
-      itsLastSize = getDataManager().getInHolder(0)->getDataPacketSize(); 
-      cout <<  itsLastSize << " "
-           << log10(itsLastSize) << " ";
+      itsLastSize = getDataManager().getInHolder(0)->getDataSize(); 
+      cout <<  itsLastSize << " ";
 
       // report the bandwidth per output channel (in MB/s)
-      itsLastPerf = (int)(getDataManager().getInHolder(0)->getDataPacketSize() * getDataManager().getInputs() * (itsNIterations
+      itsLastPerf = (int)(getDataManager().getInHolder(0)->getDataSize() * getDataManager().getInputs() * (itsNIterations
 			    /(1024.*1024.*watch.elapsed())));
       cout << itsLastPerf 
 	   << "  "
@@ -111,10 +106,11 @@ void WH_Sink::process()
   }
 
   // Output buffer
-//    DH_Example::BufferType* inbuf = 
-//                    ((DH_Example*)getDataManager().getInHolder(0))->getBuffer();
-//    cout << "Sink data "
-//         << inbuf[0] << ',' << inbuf[itsBufLength-1] << endl;
+   DH_Example::BufferType* inbuf = 
+                   ((DH_Example*)getDataManager().getInHolder(0))->getBuffer();
+   cout << "Sink data " 
+	<< ((DH_Example*)getDataManager().getInHolder(0))->getCounter() <<": "
+        << inbuf[0] << ',' << inbuf[itsBufLength-1] << endl;
 
 }
 

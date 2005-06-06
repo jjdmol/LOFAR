@@ -20,17 +20,15 @@
 //#
 //# $Id$
 
-#ifndef _CYCLIC_BUFFER_H_
-#define _CYCLIC_BUFFER_H_
+#ifndef LOFAR_TRANSPORT_CYCLIC_BUFFER_H_
+#define LOFAR_TRANSPORT_CYCLIC_BUFFER_H_
 
 // \file CyclicBuffer.h
 // Cyclic buffer interface
 
 #ifdef USE_THREADS
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
-#include <Lock.h>
+#include <Transport/Lock.h>
 //#include <Common/lofar_deque.h>
 #include <Common/lofar_vector.h>
 

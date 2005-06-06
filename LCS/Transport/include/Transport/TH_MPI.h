@@ -65,37 +65,45 @@ public:
   TH_MPI(int sourceNode, int targetNode);
   virtual ~TH_MPI();
 
-  virtual TH_MPI* make() const;
+  // This method does nothing. Use initMPI(..) once at the start of your application!
+  bool init();
 
   void lock();
   void unlock();
 
-  // \name Read the data.
-  // @{
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarBlocking(int tag);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarNonBlocking(int tag);
-  // @}
+  /// Read the data.
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, int offset=0, 
+			    DataHolder* dh=0);
+  virtual int32 recvNonBlocking(void* buf, int32 nbytes, int tag, int32 offset=0, 
+			       DataHolder* dh=0);
+  /// Wait for the data to be received
+  virtual void waitForReceived(void* buf, int nbytes, int tag);
 
-  // Wait for the data to be received
-  virtual bool waitForReceived(void* buf, int nbytes, int tag);
+  /// Write the data.
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  /// Wait for the data to be sent
+  virtual void waitForSent(void* buf, int nbytes, int tag);
 
-  // \name Write the data.
-  // @{
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
-  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
-  // @}
+  // Read the total message length of the next message.
+  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
 
-  // Wait for the data to be sent
-  virtual bool waitForSent(void* buf, int nbytes, int tag);
+  // Read the total message length of the next message.
+  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
   // Get the type of transport.
   virtual string getType() const;
 
-  virtual bool isBidirectional() const;
+  // Can TH_MPI be cloned?
+  virtual bool isClonable() const;
 
-  static void init (int argc, const char *argv[]);
+  // Create a copy
+  virtual TH_MPI* clone() const;
+
+  // Resets all members which are source or destination specific.
+  void reset();
+
+  static void initMPI (int argc, const char *argv[]);
   static void finalize();
   static void waitForBroadCast();
   static void waitForBroadCast (unsigned long& aVar);
@@ -141,8 +149,14 @@ private:
 
 };
 
-inline bool TH_MPI::isBidirectional() const
+inline bool TH_MPI::init()
+  { return true;}
+
+inline bool TH_MPI::isClonable() const
   { return true; }
+
+inline void TH_MPI::reset()
+  {}
 
 // @} // Doxygen group Transport
 

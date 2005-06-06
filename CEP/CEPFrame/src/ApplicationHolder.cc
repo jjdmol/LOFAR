@@ -26,6 +26,7 @@
 #include <lofar_config.h>
 
 #include <CEPFrame/ApplicationHolder.h>
+#include <Transport/BaseSim.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include TRANSPORTERINCLUDE
 
@@ -44,13 +45,16 @@ ApplicationHolder::~ApplicationHolder()
 
 void ApplicationHolder::baseDefine (const KeyValueMap& params)
 {
+#ifdef HAVE_MPI
   // Initialize MPI environment.
-  TRANSPORTER::init (itsArgc, itsArgv);
+  TH_MPI::initMPI (itsArgc, itsArgv);
+#endif
+
   // Set current application number if defined in parameters.
   KeyValueMap::const_iterator iter = params.find ("appl");
   if (iter != params.end()) {
     if (iter->second.dataType() == KeyValue::DTInt) {
-      Step::setCurAppl (iter->second.getInt());
+      Block::setCurAppl (iter->second.getInt());
     }
   }
   // Let derived class define the simulation.

@@ -28,10 +28,11 @@
 
 //# Includes
 #include <arpa/inet.h>
+#include <Common/StringUtil.h>
+#include <Common/Net/Socket.h>
 #include <ACC/ApplControlClient.h>
 #include <ACC/ACRequest.h>
 #include <ACC/DH_ApplControl.h>
-#include <Transport/TH_Socket.h>
 #include <Common/hexdump.h>
 
 namespace LOFAR {
@@ -75,20 +76,11 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 	uint16	port = ntohs(aRequest.itsPort);
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
 														host.c_str(), port));
-	DH_ApplControl*		DH_CtrlClient = new DH_ApplControl;
-	DH_ApplControl		DH_CtrlServer;
-	DH_CtrlClient->setID(3);
-	DH_CtrlServer.setID(4);
 
 	sleep (2);					// give AC a little time to start up.
-	DH_CtrlClient->connectBidirectional(DH_CtrlServer, 
-					 			TH_Socket(host, "", port, false, syncClient),
-					 			TH_Socket("", host, port, true,  syncClient),
-								syncClient);
-	DH_CtrlClient->init();
 
-	itsCommChan = new ApplControlComm(syncClient);
-	itsCommChan->setDataHolder(DH_CtrlClient);
+	itsCommChan = new ApplControlComm(host, toString(port), syncClient);
+	ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
 }
 
 // Destructor

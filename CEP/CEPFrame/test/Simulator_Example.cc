@@ -1,24 +1,26 @@
-//#  Simulator_Example.cc: Program for testing simulation parser
-//#
-//#  Copyright (C) 2000-2002
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id$
+//  Simulator_Example.cc: Program for testing simulation parser
+//
+//  Copyright (C) 2000-2002
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//  $Id$
+//
+/////////////////////////////////////////////////////////////////////////
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -44,8 +46,7 @@ void Simulator_Example::define (const KeyValueMap& params)
   params.show (cout);
 
   // define the top-level composite object
-  WH_Example exSimul("ExampleSimul");
-  Composite comp(exSimul);
+  Composite comp(0, 0, "ExampleSimul");
   setComposite (comp);
 
   // tell the Composite where to run
@@ -61,24 +62,21 @@ void Simulator_Example::define (const KeyValueMap& params)
   Step step3(whEx3);
 
   // Create the first composite and fill it
-  WH_Example whComp1("Composite1");
-  Composite composite1(whComp1, "simcomp1", false);
-  composite1.addStep(step2);
-  composite1.addStep(step3);
+  Composite composite1(0,0);
+  composite1.addBlock(step2);
+  composite1.addBlock(step3);
 
   // Create the second composite and fill it
   WH_Example whComp2("Composite2");
-  Composite composite2(whComp2, "simcomp2", false);
-  composite2.addStep(step1);
-  composite2.addStep(composite1);
+  Composite composite2(0, 0, "simcomp2", false);
+  composite2.addBlock(step1);
+  composite2.addBlock(composite1);
 
   // Add the Composite2 to the top-level Composite
-  comp.addStep(composite2);
+  comp.addBlock(composite2);
 
   // Now define the connections between the Steps and Composite objects:
-  step3.connectInput(&step2,TH_Mem(), false);
-  Step* addr2 = &composite2;
-  comp.connectInputToArray(&addr2,1,0,0,TH_Mem(),false);
+  step3.connectInput(&step2, new TH_Mem(), false);
 
   //////////////////////////////////////////////////////////////////////
   //
@@ -120,7 +118,7 @@ void Simulator_Example::quit()
 int main (int argc, const char* argv[])
 {
   // Set trace level.
-  INIT_LOGGER("SimulatorExample.log_prop");
+  INIT_LOGGER("Simulator_Example.log_prop");
   try {
     // First test some Parse functions.
     // Note that C++ also requires a \ to escape special characters.
@@ -164,7 +162,16 @@ int main (int argc, const char* argv[])
 //     cout << endl;
 //     cout << "Good Bye!" << endl;
 // #endif
-  } catch (...) {
-    cout << "Unexpected exception";
+  }
+  catch (LOFAR::Exception& e)
+  {
+    cout << "Lofar exception: " << e.what() << endl;
+  }
+  catch (std::exception& e)
+  {
+    cout << "Standard exception: " << e.what() << endl;
+  }
+  catch (...) {
+    cout << "Unexpected exception in Simulate" << endl;
   }
 }

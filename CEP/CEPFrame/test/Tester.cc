@@ -1,33 +1,31 @@
-//#  Tester.cc:
-//#
-//#  Copyright (C) 2000, 2001
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#  $Id$
-
-//# Always #include <lofar_config.h> first!
-#include <lofar_config.h>
+//  Tester.cc:
+//
+//  Copyright (C) 2000, 2001
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//  $Id$
 
 
 // Simulation.cpp
 // This is the main program for the LOFAR prototype simulation using the 
 // LOFARSim simulation environment.
 // 
+#include <lofar_config.h>
 
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_MPI.h>
@@ -44,8 +42,12 @@ int main (int argc, const char *argv[])
 {
   // Set trace level.
   INIT_LOGGER("Tester.log_prop");
+
+#ifdef HAVE_MPI
   // initialise MPI environment
-  TRANSPORTER::init(argc,argv);
+  TH_MPI::initMPI(argc,argv);
+#endif
+
   int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
   int appl = Step::getCurAppl ();
@@ -54,7 +56,7 @@ int main (int argc, const char *argv[])
 
   // create the main Simul; Steps and Simuls will be added to this one
   WH_Tester tester;
-  Composite testerSim(&tester, "TesterSim"); //Uses an empty workholder.
+  Composite testerSim(0, 0, "TesterSim"); 
   testerSim.runOnNode(0);
   
   // Now start defining the simulation. 
@@ -72,16 +74,16 @@ int main (int argc, const char *argv[])
   Step step3(&tester3, "step3", false);
 //   step3.runOnNode(2);
 
-  testerSim.addStep (&step1);
-  testerSim.addStep (&step2);
-  testerSim.addStep (&step3);
+  testerSim.addBlock (&step1);
+  testerSim.addBlock (&step2);
+  testerSim.addBlock (&step3);
 
 // #ifdef HAVE_MPI
-//   testerSim.connect ("step1", "step2", TH_MPI(0,1), false);
-//   testerSim.connect ("step2", "step3", TH_MPI(1,2), false);
+//   testerSim.connect ("step1", "step2", new TH_MPI(0,1), false);
+//   testerSim.connect ("step2", "step3", new TH_MPI(1,2), false);
 // #else
-  testerSim.connect ("step1", "step2", TH_Mem(), false);
-  testerSim.connect ("step2", "step3", TH_Mem(), false);
+  step2.connectInput (&step1, new TH_Mem(), false);
+  step3.connectInput (&step2, new TH_Mem(), false);
 // #endif
 
   //  testerSim.connectOutputToArray(fft,ELEMENTS);

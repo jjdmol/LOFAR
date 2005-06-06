@@ -25,6 +25,7 @@
 
 #include <TransportPL/TH_PL.h>
 #include <DH_Example2.h>
+#include <Transport/Connection.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
 
@@ -43,14 +44,9 @@ int main()
     DH_Example2 DH1("dh1", 1);
     DH_Example2 DH2("dh2", 1);
     
-    // Assign an ID for each dataholder by hand for now
-    // This will be done by the framework later on
-    DH1.setID(1);
-    DH2.setID(2);
- 
     // connect DH1 to DH2
-    TH_PL TH1("ExamplePL2");
-    DH1.connectTo(DH2, TH1);
+    TH_PL plTH("ExamplePL2");
+    Connection conn("connection1", &DH1, &DH2, &plTH);
     
     // initialize the DataHolders
     DH1.init();
@@ -63,31 +59,31 @@ int main()
     DH2.setCounter(0);
     
     // do the data transport
-    DH1.write();
-    ASSERT (DH2.queryDB ("counter=2 order by counter") == 1);
+    conn.write();
+    ASSERT (DH2.queryDB ("counter=2 order by counter", conn) == 1);
     ASSERT (DH2.getBuffer()[0] == makefcomplex(17,-3.5)
 	    &&  DH2.getCounter() == 2);
 
     // do the data transport again with different values.
     DH1.getBuffer()[0] = makefcomplex(117,-13.15);
     DH1.setCounter(10);
-    DH1.write();
+    conn.write();
     DH1.getBuffer()[0] = makefcomplex(200,114);
     DH1.setCounter(21);
-    DH1.write();
+    conn.write();
 
-    ASSERT (DH2.queryDB ("counter>2 order by counter") == 2);
+    ASSERT (DH2.queryDB ("counter>2 order by counter", conn) == 2);
     ASSERT (DH2.getBuffer()[0] == makefcomplex(117,-13.15)
 	    &&  DH2.getCounter() == 10);
-    ASSERT (DH2.queryDB ("counter<4") == 1);
+    ASSERT (DH2.queryDB ("counter<4", conn) == 1);
     ASSERT (DH2.getBuffer()[0] == makefcomplex(17,-3.5)
 	    &&  DH2.getCounter() == 2);
-    ASSERT (DH2.queryDB ("counter>2 order by counter desc") == 2);
+    ASSERT (DH2.queryDB ("counter>2 order by counter desc", conn) == 2);
     ASSERT (DH2.getBuffer()[0] == makefcomplex(200,114)
 	    &&  DH2.getCounter() == 21);
-    DH2.setCounter(22);
-    DH2.updateDB();
-    ASSERT (DH2.queryDB ("counter>2 order by counter desc") == 2);
+    DH1.setCounter(22);
+    DH1.updateDB(conn);
+    ASSERT (DH2.queryDB ("counter>2 order by counter desc", conn) == 2);
     ASSERT (DH2.getBuffer()[0] == makefcomplex(200,114)
 	    &&  DH2.getCounter() == 22);
     return 0;

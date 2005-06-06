@@ -29,20 +29,25 @@ namespace LOFAR
 {
 
 StrategyController::StrategyController(int id,
-				       DH_Solution* inDH, 
-				       DH_WOPrediff* outWOPD, 
-				       DH_WOSolve* outWOSolve,
+				       Connection* inSolConn, 
+				       Connection* outWOPDConn, 
+				       Connection* outWOSolveConn,
 				       int nrPrediffers,
 				       const int DBMasterPort)
-  : itsInDH      (inDH),
-    itsWOPD      (outWOPD),
-    itsWOSolve   (outWOSolve),
+  : itsInSolConn     (inSolConn),
+    itsOutWOPDConn   (outWOPDConn),
+    itsOutWOSolveConn(outWOSolveConn),
     itsNrPrediffers(nrPrediffers),
     itsID        (id),
     itsParmWriter(DBMasterPort)
     
 {
   LOG_TRACE_FLOW("StrategyController constructor");
+  ASSERTSTR(itsInSolConn != 0, "Solution input has not been connected!");
+  ASSERTSTR(itsOutWOPDConn != 0, 
+	    "Output to Prediffer has not been connected!");
+  ASSERTSTR(itsOutWOSolveConn != 0, 
+	    "Output to Solver has not been connected!");
 }
 
 StrategyController::~StrategyController()

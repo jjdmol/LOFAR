@@ -24,15 +24,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef WH_DEST_H
-#define WH_DEST_H
+#ifndef LOFAR_3BLOCKPERF_WH_DEST_H
+#define LOFAR_3BLOCKPERF_WH_DEST_H
 
-#ifdef HAVE_CONFIG_H
-#include <lofar_config.h>
-#endif
-
-#include "tinyCEP/WorkHolder.h"
-#include "3BlockPerf/DH_FixedSize.h"
+#include <tinyCEP/WorkHolder.h>
+#include <3BlockPerf/DH_FixedSize.h>
 
 namespace LOFAR {
 

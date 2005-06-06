@@ -12,7 +12,6 @@
 
 #include <sys/time.h>  // for gettimeofday
 
-#include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
 
 #include <DH_Vis.h>

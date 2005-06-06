@@ -23,7 +23,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-
 #include <Transport/DataBlobExtra.h>
 #include <Transport/DataHolder.h>
 #include <Common/BlobField.h>
@@ -57,9 +56,9 @@ DataBlobExtra::~DataBlobExtra()
   delete itsIn;
 }
 
-void DataBlobExtra::write()
+void DataBlobExtra::pack()
 {
-  LOG_TRACE_FLOW("DataBlobExtra write()");
+  LOG_TRACE_FLOW("DataBlobExtra pack()");
   // Only do something if a createExtraBlock was done.
   // This has the following effect:
   // - an existing extra blob in the buffer is kept.

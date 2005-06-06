@@ -116,7 +116,7 @@ PL::PersistentObject& DH_WOPrediff::getPO() const
   return *itsPODHWO;
 } 
 
-void DH_WOPrediff::preprocess()
+void DH_WOPrediff::init()
 {
   // Add the fields to the data definition.
   addField ("WOID", BlobField<int>(1));
@@ -193,29 +193,6 @@ void DH_WOPrediff::fillDataPointers()
   itsCleanUp = getData<unsigned int> ("CleanUp");
   itsUpdateParms = getData<unsigned int> ("UpdateParms");
   itsSolutionID = getData<int> ("SolutionID");
-}
-
-void DH_WOPrediff::postprocess()
-{
-  itsWOID = 0;
-  itsSCID = 0;
-  itsStatus = 0;
-  itsKSType = 0;
-  itsNewBaselines = 0;
-  itsNewDomain = 0;
-  itsNewPeelSources = 0;
-  itsSubtractSources = 0;
-  itsStartFreq = 0;
-  itsFreqLength = 0;
-  itsStartTime = 0;
-  itsTimeLength = 0;
-  itsModelType = 0;
-  itsCalcUVW = 0;
-  itsUseAutoCorr = 0;
-  itsLockMappedMem = 0;
-  itsCleanUp = 0;
-  itsUpdateParms = 0;
-  itsSolutionID = 0;
 }
 
 void DH_WOPrediff::setKSType(const string& ksType)

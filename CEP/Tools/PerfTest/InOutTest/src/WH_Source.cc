@@ -27,12 +27,11 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/Debug.h>
+#include <CEPFrame/Step.h>
 
-#include "InOutTest/WH_Source.h"
-#include "InOutTest/StopWatch.h"
-#include "InOutTest/InOutTest.h"
+#include <InOutTest/WH_Source.h>
+#include <InOutTest/StopWatch.h>
+#include <CEPFrame/DH_Example.h>
 
 using namespace LOFAR;
 
@@ -41,7 +40,7 @@ WH_Source::WH_Source (const string& name, unsigned int nbuffer)
   itsBufLength  (nbuffer),
   itsIteration(0)
 {
-  getDataManager().addOutDataHolder(0, new DH_Example("out_", nbuffer), true);
+  getDataManager().addOutDataHolder(0, new DH_Example("out_", nbuffer));
 }
 
 
@@ -58,12 +57,12 @@ WorkHolder* WH_Source::make(const string& name)
 void WH_Source::process()
 { 
   DH_Example* dhOut = (DH_Example*)getDataManager().getOutHolder(0);
-//    DH_Example::BufferType* buf = dhOut->getBuffer(); 
-//    dhOut->setTimeStamp(itsIteration);
-//    for (int i=0; i < itsBufLength; i++) {
-//      buf[i] = itsIteration+2;
-//    }
-//    itsIteration++;
+  DH_Example::BufferType* buf = dhOut->getBuffer(); 
+  dhOut->setCounter(itsIteration);
+  for (int i=0; i < itsBufLength; i++) {
+    buf[i] = makefcomplex(itsIteration+2, itsIteration+2);
+  }
+  itsIteration++;
 }
 
 void WH_Source::dump()

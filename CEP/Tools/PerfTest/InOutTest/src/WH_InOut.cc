@@ -27,26 +27,20 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "CEPFrame/Step.h"
-#include <Common/Debug.h>
-
-#include "InOutTest/WH_InOut.h"
-#include "InOutTest/InOutTest.h"
+#include <InOutTest/WH_InOut.h>
+#include <CEPFrame/DH_Example.h>
 
 using namespace LOFAR;
 
-WH_InOut::WH_InOut (const string& name, bool IOshared, unsigned int nbuffer)
+WH_InOut::WH_InOut (const string& name, unsigned int nbuffer)
 : WorkHolder    (1, 1, name),
-  itsBufLength  (nbuffer),
-  itsIOshared   (IOshared)
+  itsBufLength  (nbuffer)
 {
     getDataManager().addInDataHolder(0, new DH_Example ("DHIn",
-				     nbuffer), true, 
-				     IOshared);   // In- & output shared
+				     nbuffer));
 
     getDataManager().addOutDataHolder(0, new DH_Example("DHOut",
-				      nbuffer), true, 
-				      IOshared);   // In- & output shared
+				      nbuffer));
 }
 
 
@@ -56,7 +50,7 @@ WH_InOut::~WH_InOut()
 
 WorkHolder* WH_InOut::make(const string& name)
 {
-  return new WH_InOut(name, itsIOshared, itsBufLength);
+  return new WH_InOut(name, itsBufLength);
 }
 
 //  void WH_InOut::preprocess() {
@@ -70,14 +64,17 @@ void WH_InOut::process()
   DH_Example::BufferType* inbuf = 
                   ((DH_Example*)getDataManager().getInHolder(0))->getBuffer();
 
-//    cout << "Processing Data! "
-//         << inbuf[0] << ',' << inbuf[itsBufLength-1] << "   --->  ";
+    cout << "Processing Data! " 
+	 << ((DH_Example*)getDataManager().getInHolder(0))->getCounter() << ": "
+         << inbuf[0] << ',' << inbuf[itsBufLength-1] << "   --->  "
+	 << ((DH_Example*)getDataManager().getOutHolder(0))->getCounter() 
+	 << ": ";
 
   for (int m=0; m<itsBufLength; m++)
   {
     outbuf[m] = inbuf[m] + (float)1;
   }
-//    cout << outbuf[0] << ',' << outbuf[itsBufLength-1] << endl;
+    cout << outbuf[0] << ',' << outbuf[itsBufLength-1] << endl;
 }
 
 void WH_InOut::dump()

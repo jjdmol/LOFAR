@@ -26,6 +26,7 @@
 
 #include "DH_Example.h"
 #include <Transport/TH_Mem.h>
+#include <Transport/Connection.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/LofarLogger.h>
@@ -37,12 +38,13 @@ using namespace LOFAR;
 
 void* startWriterThread(void* thread_arg)
 {
-  DH_Example* dh = (DH_Example*)thread_arg;
+  Connection* conn = (Connection*)thread_arg;
+  DH_Example* dh   = (DH_Example*)conn->getDataHolder();
   dh->getBufferElement(0) = makefcomplex(17,-3.5);
   dh->setCounter(1);
   cout << "Sending buffer[0] = " << dh->getBufferElement(0)
        << "  counter = " << dh->getCounter() << endl;
-  dh->write();
+  conn->write();
   // Modify the dataholder before the previous write has completely sent
   // the data.
   dh->getBufferElement(0) = makefcomplex(2,8);
@@ -61,13 +63,9 @@ bool test1()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Assign an ID for each dataholder by hand for now
-  // This will be done by the framework later on
-  DH1.setID(1);
-  DH2.setID(2);
-
   // connect DH1 to DH2 with non-blocking in-memory communication
-  DH1.connectTo(DH2, TH_Mem(), false);
+  TH_Mem memTH;
+  Connection conn("connection1", &DH1, &DH2, &memTH, false);
     
   // initialize
   DH1.init();
@@ -78,7 +76,7 @@ bool test1()
   
   // Create a writing thread
   pthread_t writer;
-  if (pthread_create(&writer, NULL, startWriterThread, &DH1))
+  if (pthread_create(&writer, NULL, startWriterThread, &conn))
   {
     cout << "Thread creation failed" << endl;
   }
@@ -87,7 +85,7 @@ bool test1()
 
   // Read
   bool result = true;
-  DH2.read();
+  conn.read();
   cout << "Received buffer[0] = " << DH2.getBufferElement(0)
        << "  counter = " << DH2.getCounter() << endl;
 
@@ -108,7 +106,7 @@ bool test1()
 }
 
 
-int main()
+int main(int, const char**)
 {
   bool result = true;
   try {
