@@ -52,7 +52,6 @@ AM_LFLAGS               = -PKeyTokenize
 LEX_OUTPUT_ROOT         = lex.KeyTokenize
 
 bin_PROGRAMS = StationCorrelator
-StationCorrelator_SOURCES       = StationCorrelator.cc
 StationCorrelator_LDADD         =
 StationCorrelator_DEPENDENCIES  = $(LOFAR_DEPEND)
 
