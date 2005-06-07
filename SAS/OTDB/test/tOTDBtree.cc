@@ -32,9 +32,9 @@ using namespace LOFAR;
 using namespace LOFAR::OTDB;
 
 //
-// show the result
+// show the resulting list of Nodes
 //
-void showList(const vector<OTDBnode>&	items) {
+void showNodeList(const vector<OTDBnode>&	items) {
 
 
 	cout << "paramID|parentID|name           |Index|Type|Unit|Description" << endl;
@@ -48,6 +48,25 @@ void showList(const vector<OTDBnode>&	items) {
 			items[i].type,
 			items[i].unit,
 			items[i].description.c_str()));
+		cout << row << endl;
+	}
+
+	cout << items.size() << " records" << endl << endl;
+}
+
+//
+// show the resulting list of Values
+//
+void showValueList(const vector<OTDBvalue>&	items) {
+
+
+	cout << "name                           |value |time" << endl;
+	cout << "-------------------------------+------+--------------------" << endl;
+	for (uint32	i = 0; i < items.size(); ++i) {
+		string row(formatString("%-30.30s|%-7.7s|%s",
+			items[i].name.c_str(),
+			items[i].value.c_str(),
+			to_simple_string(items[i].time).c_str()));
 		cout << row << endl;
 	}
 
@@ -77,7 +96,7 @@ int main (int	argc, char*	argv[]) {
 				LOG_INFO_STR("No items found");
 			}
 			else {
-				showList(itemList);
+				showNodeList(itemList);
 			}
 		}
 
@@ -107,6 +126,20 @@ int main (int	argc, char*	argv[]) {
 		myVec.push_back(aKVT);
 		if (!tree.addKVTlist(myVec)) {
 			LOG_DEBUG("Could NOT add the vector of OTDBvalue classes");
+		}
+
+		for (int i = 1; i < 3; ++i) {
+			LOG_INFO_STR("searchInPeriod(5," << i << ") of tree 25");
+			vector<OTDBvalue>	valueList = 
+					tree.searchInPeriod(5,i,
+						ptime(second_clock::local_time()-seconds(10)),
+						ptime(second_clock::local_time()+seconds(10)));
+			if (valueList.size() == 0) {
+				LOG_INFO_STR("No items found");
+			}
+			else {
+				showValueList(valueList);
+			}
 		}
 	}
 	catch (std::exception&	ex) {
