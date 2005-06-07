@@ -28,6 +28,8 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+#ifdef HAVE_SHMEM
+
 //# Needed for shmem
 #define USE_PUBLIC_MALLOC_WRAPPERS
 #define USE_DL_PREFIX
@@ -35,6 +37,7 @@
 #include <Transport/TransportHolder.h>
 #include <Common/Allocator.h>
 #include <Common/lofar_map.h>
+
 #include <Common/shmem/shmem_alloc.h>
 
 namespace LOFAR
@@ -212,3 +215,5 @@ inline bool TH_ShMem::isClonable() const
 }
 
 #endif
+
+#endif 

@@ -22,6 +22,8 @@
 
 #include <lofar_config.h>
 
+#ifdef HAVE_SHMEM
+
 #include <Transport/TH_ShMem.h>
 
 #include <Transport/BaseSim.h>
@@ -389,3 +391,4 @@ void* TH_ShMem::ShMemBuf::getDataAddress()
 
 }
 
+#endif
