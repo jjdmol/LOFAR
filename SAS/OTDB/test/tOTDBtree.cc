@@ -70,15 +70,44 @@ int main (int	argc, char*	argv[]) {
 		LOG_DEBUG("Trying to construct a tree object");
 		OTDBtree	tree(&conn, 25);
 
-		LOG_INFO("getItemList(15,2) of tree 25");
-		vector<OTDBnode>	itemList = tree.getItemList(15,2);
-		if (itemList.size() == 0) {
-			LOG_INFO_STR("Error:" << conn.errorMsg());
-		}
-		else {
-			showList(itemList);
+		for (int i = 1; i < 5; ++i) {
+			LOG_INFO_STR("getItemList(5," << i << ") of tree 25");
+			vector<OTDBnode>	itemList = tree.getItemList(5,i);
+			if (itemList.size() == 0) {
+				LOG_INFO_STR("No items found");
+			}
+			else {
+				showList(itemList);
+			}
 		}
 
+		LOG_DEBUG("Adding a kvt to the PIC tree");
+		if (!tree.addKVT("LCU3:PIC.status", "maintenance", 
+							time_from_string("2002-01-20 23:59:55.123"))) {
+			LOG_DEBUG("Could NOT add the key, key unknown?");
+		}
+
+		LOG_DEBUG("Adding a OTDBvalue class to the PIC tree");
+		OTDBvalue	aKVT("LCU3:PIC_Rack1.status", "off", 
+						 ptime(microsec_clock::local_time()));
+		if (!tree.addKVT(aKVT)) {
+			LOG_DEBUG("Could NOT add the OTDBvalue class");
+		}
+
+		LOG_DEBUG("Adding a vector of OTDBvalue classes to the PIC tree");
+		vector<OTDBvalue>	myVec;
+		aKVT.value="on";
+		aKVT.time=ptime(microsec_clock::local_time());
+		myVec.push_back(aKVT);
+		aKVT.name="LCU3:PIC.status";
+		aKVT.time=ptime(microsec_clock::local_time());
+		myVec.push_back(aKVT);
+		aKVT.name="LCU3:PIC_Rack1_SubRack1.status";
+		aKVT.time=ptime(microsec_clock::local_time());
+		myVec.push_back(aKVT);
+		if (!tree.addKVTlist(myVec)) {
+			LOG_DEBUG("Could NOT add the vector of OTDBvalue classes");
+		}
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());
