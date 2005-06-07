@@ -46,8 +46,9 @@
 #include <epan/packet.h>
 #include "packet-epa.h"
 
-#define FRAGMENT_SIZE_BYTES  1024
-#define SS_SELECT_SIZE_BYTES 512
+#define FRAGMENT_SIZE_BYTES     1024
+#define SS_SELECT_SIZE_BYTES     512
+#define XST_FRAGMENT_SIZE_BYTES  960
 
 /*@{*/
 /**
@@ -95,8 +96,9 @@
 #define CRR     0x09 /* RSP clock and reset */
 #define CRB     0x0A /* BLP clock and reset */
 #define CDO     0x0B /* CEP Data Output */
+#define XST     0x0C /* Crosslet Statistics */
 
-#define MAX_PID CDO /* counting from 0 */
+#define MAX_PID XST /* counting from 0 */
 /*@}*/
 
 /*@{*/
@@ -136,6 +138,15 @@
 #define CRB_SOFTPPS   0x01
 
 #define CDO_SETTINGS  0x00
+
+#define XST_0_X       0X00
+#define XST_0_Y       0X01
+#define XST_1_X       0X02
+#define XST_1_Y       0X03
+#define XST_2_X       0X04
+#define XST_2_Y       0X05
+#define XST_3_X       0X06
+#define XST_3_Y       0X07
 
 #define MAX_REGID 0x03
 
@@ -206,6 +217,8 @@
 #define CRB_SOFTPPS_SIZE   1
 
 #define CDO_SETTINGS_SIZE  10
+
+#define XST_SETTINGS_SIZE  960
 /*@}*/
 
 /**
@@ -255,6 +268,7 @@ static const value_string pid_info_vals[] =
   { CRR, "CRR" },
   { CRB, "CRB" },
   { CDO, "CDO" },
+  { XST, "XST" },
   { 0,   NULL  },
 };
 
@@ -269,10 +283,11 @@ static const value_string pid_vals[] =
   { BST, "Beamlet statistics (BST)"           },
   { SST, "Subband statistics (SST)"           },
   { RCU, "RCU Control (RCU)"                  },
-  { CRR, "RSP Clock and Reset",               },
-  { CRB, "BLP Clock and Reset",               },
-  { CDO, "CEP Data Output",                   },
-  { 0,     NULL                                },
+  { CRR, "RSP Clock and Reset (CRR)"          },
+  { CRB, "BLP Clock and Reset (CRB)"          },
+  { CDO, "CEP Data Output (CDO)"              },
+  { XST, "Crosslet statistics (XST)"          },
+  { 0,   NULL                                 },
 };
 
 static const value_string status_vals[] =
@@ -357,6 +372,19 @@ static const value_string cdo_vals[] =
   { 0,     NULL   },
 };
 
+static const value_string xst_vals[] =
+{
+  { XST_0_X, "Xlets AP_0_X" },
+  { XST_0_Y, "Xlets AP_0_Y" },
+  { XST_1_X, "Xlets AP_1_X" },
+  { XST_1_Y, "Xlets AP_1_Y" },
+  { XST_2_X, "Xlets AP_2_X" },
+  { XST_2_Y, "Xlets AP_2_Y" },
+  { XST_3_X, "Xlets AP_3_X" },
+  { XST_3_Y, "Xlets AP_3_Y" },
+  { 0,       NULL },
+};
+
 static const value_string eth_error_vals[] =
 {
   { 0, "The ethernet frame was received correctly"           },
@@ -439,40 +467,37 @@ static int hf_epa_double      = -1;
 /**
  * RSP Status register fields.
  */
-/*static int df_rspstatus             = -1;*/
-static int df_rspstatus_voltage_15  = -1;
-static int df_rspstatus_voltage_33  = -1;
-/*static int df_fpgastatus            = -1;*/
-static int df_fpgastatus_bp_status  = -1;
+/*static int df_rspstatus           = -1;*/
+static int df_rspstatus_voltage_1_5 = -1;
+static int df_rspstatus_voltage_2_5 = -1;
+static int df_rspstatus_voltage_3_3 = -1;
+static int df_rspstatus_voltage_12  = -1;
+/*static int df_fpgastatus          = -1;*/
 static int df_fpgastatus_bp_temp    = -1;
-static int df_fpgastatus_ap1_status = -1;
+static int df_fpgastatus_ap0_temp   = -1;
 static int df_fpgastatus_ap1_temp   = -1;
-static int df_fpgastatus_ap2_status = -1;
 static int df_fpgastatus_ap2_temp   = -1;
-static int df_fpgastatus_ap3_status = -1;
 static int df_fpgastatus_ap3_temp   = -1;
-static int df_fpgastatus_ap4_status = -1;
-static int df_fpgastatus_ap4_temp   = -1;
-/*static int df_ethstatus             = -1;*/
+/*static int df_ethstatus           = -1;*/
 static int df_ethstatus_nof_frames  = -1;
 static int df_ethstatus_nof_errors  = -1;
 static int df_ethstatus_last_error  = -1;
-/*static int df_mepstatus             = -1;*/
+/*static int df_mepstatus      = -1;*/
 static int df_mepstatus_seqnr  = -1;
 static int df_mepstatus_error  = -1;
 /*static int df_syncstatus = -1; */
-static int df_ap1_sync_sample_count = -1;
-static int df_ap1_sync_sync_count   = -1;
-static int df_ap1_sync_error_count  = -1;
-static int df_ap2_sync_sample_count = -1;
-static int df_ap2_sync_sync_count   = -1;
-static int df_ap2_sync_error_count  = -1;
-static int df_ap3_sync_sample_count = -1;
-static int df_ap3_sync_sync_count   = -1;
-static int df_ap3_sync_error_count  = -1;
-static int df_ap4_sync_sample_count = -1;
-static int df_ap4_sync_sync_count   = -1;
-static int df_ap4_sync_error_count  = -1;
+static int df_ap0_sync_sample_offset = -1;
+static int df_ap0_sync_sync_count    = -1;
+static int df_ap0_sync_slice_count   = -1;
+static int df_ap1_sync_sample_offset = -1;
+static int df_ap1_sync_sync_count    = -1;
+static int df_ap1_sync_slice_count   = -1;
+static int df_ap2_sync_sample_offset = -1;
+static int df_ap2_sync_sync_count    = -1;
+static int df_ap2_sync_slice_count   = -1;
+static int df_ap3_sync_sample_offset = -1;
+static int df_ap3_sync_sync_count    = -1;
+static int df_ap3_sync_slice_count   = -1;
 
 /**
  * RSP Version register fields.
@@ -634,10 +659,14 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     case CDO:
       regstr = cdo_vals[reg].strptr;
       break;
+
+    case XST:
+      regstr = xst_vals[reg].strptr;
+      break;
   }
 
   if (!typestr) typestr = "Unknown type?";
-  if (!pidstr)  pidstr  = "Uknown process?";
+  if (!pidstr)  pidstr  = "Unknown process?";
   if (!regstr)  regstr  = "Unknown register?";
       
   /* fill the INFO column */
@@ -698,21 +727,18 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 
       newitem = proto_tree_add_text(newtree, tvb, 12, 4,  "RSP Status");
       subtree = proto_item_add_subtree(newitem, ett_rspstatus_detail);
-      proto_tree_add_item(subtree, df_rspstatus_voltage_15  ,tvb, 12, 1,  FALSE);
-      proto_tree_add_item(subtree, df_rspstatus_voltage_33  ,tvb, 13, 1,  FALSE);
+      proto_tree_add_item(subtree, df_rspstatus_voltage_1_5  ,tvb, 12, 1,  FALSE);
+      proto_tree_add_item(subtree, df_rspstatus_voltage_2_5  ,tvb, 13, 1,  FALSE);
+      proto_tree_add_item(subtree, df_rspstatus_voltage_3_3  ,tvb, 14, 1,  FALSE);
+      proto_tree_add_item(subtree, df_rspstatus_voltage_12   ,tvb, 15, 1,  FALSE);
 
       newitem = proto_tree_add_text(newtree, tvb,  16, 12, "FPGA Status");
       subtree = proto_item_add_subtree(newitem, ett_fpgastatus);
-      proto_tree_add_item(subtree, df_fpgastatus_bp_status  ,tvb, 16, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_bp_temp    ,tvb, 17, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_ap1_status ,tvb, 18, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_ap1_temp   ,tvb, 19, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_ap2_status ,tvb, 20, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_ap2_temp   ,tvb, 21, 1,  FALSE);   
-      proto_tree_add_item(subtree, df_fpgastatus_ap3_status ,tvb, 22, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_ap3_temp   ,tvb, 23, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_ap4_status ,tvb, 24, 1,  FALSE);
-      proto_tree_add_item(subtree, df_fpgastatus_ap4_temp   ,tvb, 25, 1,  FALSE);   
+      proto_tree_add_item(subtree, df_fpgastatus_bp_temp    ,tvb, 16, 1,  FALSE);
+      proto_tree_add_item(subtree, df_fpgastatus_ap0_temp   ,tvb, 17, 1,  FALSE);
+      proto_tree_add_item(subtree, df_fpgastatus_ap1_temp   ,tvb, 18, 1,  FALSE);   
+      proto_tree_add_item(subtree, df_fpgastatus_ap2_temp   ,tvb, 19, 1,  FALSE);
+      proto_tree_add_item(subtree, df_fpgastatus_ap3_temp   ,tvb, 20, 1,  FALSE);   
 
       newitem = proto_tree_add_text(newtree, tvb, 28, 12, "ETH Status");
       subtree = proto_item_add_subtree(newitem, ett_ethstatus);
@@ -728,45 +754,45 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       newitem = proto_tree_add_text(newtree, tvb, 44, 12, "SYNC Status");
       synctree = proto_item_add_subtree(newitem, ett_syncstatus);
       {
-	/* AP1 sync status */
-	newitem = proto_tree_add_text(synctree, tvb, 44, 12, "AP1 sync status");
+	/* AP0 sync status */
+	newitem = proto_tree_add_text(synctree, tvb, 44, 12, "AP0 sync status");
 	subtree = proto_item_add_subtree(newitem, ett_syncvalues);
-	proto_tree_add_item(subtree, df_ap1_sync_sample_count ,tvb, 44, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap1_sync_sync_count   ,tvb, 48, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap1_sync_error_count  ,tvb, 52, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap0_sync_sample_offset ,tvb, 44, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap0_sync_sync_count   ,tvb, 48, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap0_sync_slice_count  ,tvb, 52, 4, TRUE);
+      }
+      {
+	/* AP1 sync status */
+	newitem = proto_tree_add_text(synctree, tvb, 56, 12, "AP1 sync status");
+	subtree = proto_item_add_subtree(newitem, ett_syncvalues);
+	proto_tree_add_item(subtree, df_ap1_sync_sample_offset ,tvb, 56, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap1_sync_sync_count   ,tvb, 60, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap1_sync_slice_count  ,tvb, 64, 4, TRUE);
       }
       {
 	/* AP2 sync status */
-	newitem = proto_tree_add_text(synctree, tvb, 56, 12, "AP2 sync status");
+	newitem = proto_tree_add_text(synctree, tvb, 68, 12, "AP2 sync status");
 	subtree = proto_item_add_subtree(newitem, ett_syncvalues);
-	proto_tree_add_item(subtree, df_ap2_sync_sample_count ,tvb, 56, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap2_sync_sync_count   ,tvb, 60, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap2_sync_error_count  ,tvb, 64, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap2_sync_sample_offset ,tvb, 68, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap2_sync_sync_count   ,tvb, 72, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap2_sync_slice_count  ,tvb, 76, 4, TRUE);
       }
       {
 	/* AP3 sync status */
-	newitem = proto_tree_add_text(synctree, tvb, 68, 12, "AP3 sync status");
+	newitem = proto_tree_add_text(synctree, tvb, 80, 12, "AP3 sync status");
 	subtree = proto_item_add_subtree(newitem, ett_syncvalues);
-	proto_tree_add_item(subtree, df_ap3_sync_sample_count ,tvb, 68, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap3_sync_sync_count   ,tvb, 72, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap3_sync_error_count  ,tvb, 76, 4, TRUE);
-      }
-      {
-	/* AP4 sync status */
-	newitem = proto_tree_add_text(synctree, tvb, 80, 12, "AP4 sync status");
-	subtree = proto_item_add_subtree(newitem, ett_syncvalues);
-	proto_tree_add_item(subtree, df_ap4_sync_sample_count ,tvb, 80, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap4_sync_sync_count   ,tvb, 84, 4, TRUE);
-	proto_tree_add_item(subtree, df_ap4_sync_error_count  ,tvb, 88, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap3_sync_sample_offset ,tvb, 80, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap3_sync_sync_count   ,tvb, 84, 4, TRUE);
+	proto_tree_add_item(subtree, df_ap3_sync_slice_count  ,tvb, 88, 4, TRUE);
       }
 
       newitem = proto_tree_add_text(newtree, tvb, 92, 48, "RCU Status");
       rcustatus_tree = subtree = proto_item_add_subtree(newitem, ett_rcustatus);
 
-      newitem = proto_tree_add_text(rcustatus_tree, tvb, 92, 12, "AP1 RCU status");
+      newitem = proto_tree_add_text(rcustatus_tree, tvb, 92, 12, "AP0 RCU status");
       newtree = proto_item_add_subtree(newitem, ett_rcusettings);
       {
-	/* AP1 X-polarization */
+	/* AP0 X-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 92, 12, "X polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree, df_vddvcc_en,  tvb, 92, 1, FALSE);
@@ -780,7 +806,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 	proto_tree_add_item(subtree, df_nof_overflow, tvb, 98, 4, TRUE);
       }
       {
-	/* AP1 Y-polarization */
+	/* AP0 Y-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 92, 12, "Y polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree, df_vddvcc_en,  tvb, 93, 1, FALSE);
@@ -794,10 +820,10 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 	proto_tree_add_item(subtree, df_nof_overflow, tvb, 100, 4, TRUE);
       }
       
-      newitem = proto_tree_add_text(rcustatus_tree, tvb, 104, 12, "AP2 RCU status");
+      newitem = proto_tree_add_text(rcustatus_tree, tvb, 104, 12, "AP1 RCU status");
       newtree = proto_item_add_subtree(newitem, ett_rcusettings);
       {
-	/* AP2 X-polarization */
+	/* AP1 X-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 104, 12, "X polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree,df_vddvcc_en,  tvb, 104, 1, FALSE);
@@ -811,7 +837,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 	proto_tree_add_item(subtree, df_nof_overflow, tvb, 108, 4, TRUE);
       }
       {
-	/* AP2 Y-polarization */
+	/* AP1 Y-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 104, 12, "Y polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree,df_vddvcc_en,  tvb, 105, 1, FALSE);
@@ -825,10 +851,10 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 	proto_tree_add_item(subtree, df_nof_overflow, tvb, 112, 4, TRUE);
       }
       
-      newitem = proto_tree_add_text(rcustatus_tree, tvb, 116, 12, "AP3 RCU status");
+      newitem = proto_tree_add_text(rcustatus_tree, tvb, 116, 12, "AP2 RCU status");
       newtree = proto_item_add_subtree(newitem, ett_rcusettings);
       {
-	/* AP3 X-polarization */
+	/* AP2 X-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 116, 12, "X polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree,df_vddvcc_en,  tvb, 116, 1, FALSE);
@@ -842,7 +868,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 	proto_tree_add_item(subtree, df_nof_overflow, tvb, 120, 4, TRUE);
       }
       {
-	/* AP3 Y-polarization */
+	/* AP2 Y-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 116, 12, "Y polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree,df_vddvcc_en,  tvb, 117, 1, FALSE);
@@ -856,10 +882,10 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 	proto_tree_add_item(subtree, df_nof_overflow, tvb, 124, 4, TRUE);
       }
       
-      newitem = proto_tree_add_text(rcustatus_tree, tvb, 128, 12, "AP4 RCU status");
+      newitem = proto_tree_add_text(rcustatus_tree, tvb, 128, 12, "AP3 RCU status");
       newtree = proto_item_add_subtree(newitem, ett_rcusettings);
       {
-	/* AP4 X-polarization */
+	/* AP3 X-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 128, 12, "Y polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree,df_vddvcc_en,  tvb, 128, 1, FALSE);
@@ -873,7 +899,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 	proto_tree_add_item(subtree, df_nof_overflow, tvb, 132, 4, TRUE);
       }
       {
-	/* AP4 Y-polarization */
+	/* AP3 Y-polarization */
 	newitem = proto_tree_add_text(newtree, tvb, 128, 12, "Y polarization");
 	subtree = proto_item_add_subtree(newitem, ett_rcusettings);
 	proto_tree_add_item(subtree,df_vddvcc_en,  tvb, 129, 1, FALSE);
@@ -992,7 +1018,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       for (i = 0; i < 16; i++)
       {
 	guint64 val64 = tvb_get_ntohl(tvb, 12 + (i*sizeof(guint32)));
-	if ((1<<31) && val64) val64 = (val64 & ((1<<31)-1)) << 25;
+	if (((guint64)1<<31) && val64) val64 = (val64 & (((guint64)1<<31)-1)) << 25;
 	double dval = (double)val64;
 	
 	proto_tree_add_double(newtree, hf_epa_double, tvb,
@@ -1005,12 +1031,42 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       for (i = 0; i < 8; i++)
       {
 	guint64 val64 = tvb_get_ntohl(tvb, 12 + FRAGMENT_SIZE_BYTES - (8*sizeof(guint32)) + (i*sizeof(guint32)));
-	if ((1<<31) && val64) val64 = (val64 & ((1<<31)-1)) << 25;
+	if (((guint64)1<<31) && val64) val64 = (val64 & (((guint64)1<<31)-1)) << 25;
 	double dval = (double)val64;
 
 	proto_tree_add_double(newtree, hf_epa_double, tvb,
 			      12 + FRAGMENT_SIZE_BYTES - (8*sizeof(guint32)) + (i*sizeof(guint32)),
 			      sizeof(guint32), dval);
+      }
+    }
+    else if (READACK == type && XST == pid)
+    {
+      /* READACK XST_* */
+
+      newitem = proto_tree_add_text(epa_tree, tvb, 12, -1, "Crosslets Payload");
+      newtree = proto_item_add_subtree(newitem, ett_payload);
+
+      int i;
+      for (i = 0; i < 16; i++)
+      {
+	guint64 val64 = tvb_get_ntohl(tvb, 12 + (i*sizeof(guint32)));
+	if (((guint64)1<<31) && val64) val64 = (val64 & (((guint64)1<<31)-1)) << 25;
+	double dval = (double)val64;
+
+	proto_tree_add_item(newtree, hf_epa_uint32, tvb,
+			    12 + (i*sizeof(guint32)),
+			    sizeof(guint32), dval);
+      }
+      proto_tree_add_text(newtree, tvb, 0, 0, "...");
+      for (i = 0; i < 8; i++)
+      {
+	guint64 val64 = tvb_get_ntohl(tvb, 12 + XST_FRAGMENT_SIZE_BYTES - (8*sizeof(guint32)) + (i*sizeof(guint32)));
+	if (((guint64)1<<31) && val64) val64 = (val64 & (((guint64)1<<31)-1)) << 25;
+	double dval = (double)val64;
+
+	proto_tree_add_item(newtree, hf_epa_uint32, tvb,
+			    12 + XST_FRAGMENT_SIZE_BYTES - (8*sizeof(guint32)) + (i*sizeof(guint32)),
+			    sizeof(guint32), dval);
       }
     }
     else if ( (WRITE == type || READACK == type) && RCU == pid && RCU_SETTINGS == reg)
@@ -1159,65 +1215,50 @@ proto_register_epa(void)
   };
 
   static hf_register_info rspstatus_fields[] = {
-    { &df_rspstatus_voltage_15,
-      { "voltage_15",           "epa.data.rspstatus.voltage_15",
+    { &df_rspstatus_voltage_1_5,
+      { "voltage_1_5",           "epa.data.rspstatus.voltage_1_5",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
 	"Measured voltage on 1.5V circuit", HFILL }
     },
-    { &df_rspstatus_voltage_33,
-      { "voltage_33",           "epa.data.rspstatus.voltage_33",
+    { &df_rspstatus_voltage_2_5,
+      { "voltage_2_5",           "epa.data.rspstatus.voltage_2_5",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Measured voltage on 2.5 circuit", HFILL }
+    },
+    { &df_rspstatus_voltage_3_3,
+      { "voltage_3_3",           "epa.data.rspstatus.voltage_3_3",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
 	"Measured voltage on 3.3 circuit", HFILL }
     },
-    { &df_fpgastatus_bp_status,
-      { "bp_status",           "epa.data.fpgastatus.bp_status",
+    { &df_rspstatus_voltage_12,
+      { "voltage_12",           "epa.data.rspstatus.voltage_12",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"Current Board Processor status", HFILL }
+	"Measured voltage on 12V circuit", HFILL }
     },
     { &df_fpgastatus_bp_temp,
       { "bp_temp",           "epa.data.fpgastatus.bp_temp",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
 	"Current Board Processor temperature", HFILL }
     },
-    { &df_fpgastatus_ap1_status,
-      { "ap1_status",           "epa.data.fpgastatus.ap1_status",
+    { &df_fpgastatus_ap0_temp,
+      { "ap0_temp",           "epa.data.fpgastatus.ap0_temp",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"Current Antenna Processor 1 status", HFILL }
+	"Current Antenna Processor 0 temperature", HFILL }
     },
     { &df_fpgastatus_ap1_temp,
       { "ap1_temp",           "epa.data.fpgastatus.ap1_temp",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
 	"Current Antenna Processor 1 temperature", HFILL }
     },
-    { &df_fpgastatus_ap2_status,
-      { "ap2_status",           "epa.data.fpgastatus.ap2_status",
-	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"Current Antenna Processor 2 status", HFILL }
-    },
     { &df_fpgastatus_ap2_temp,
       { "ap2_temp",           "epa.data.fpgastatus.ap2_temp",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
 	"Current Antenna Processor 2 temperature", HFILL }
     },
-    { &df_fpgastatus_ap3_status,
-      { "ap3_status",           "epa.data.fpgastatus.ap3_status",
-	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"Current Antenna Processor 3 status", HFILL }
-    },
     { &df_fpgastatus_ap3_temp,
       { "ap3_temp",           "epa.data.fpgastatus.ap3_temp",
 	FT_UINT8, BASE_HEX, NULL, 0x0,          
 	"Current Antenna Processor 3 temperature", HFILL }
-    },
-    { &df_fpgastatus_ap4_status,
-      { "ap4_status",           "epa.data.fpgastatus.ap4_status",
-	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"Current Antenna Processor 4 status", HFILL }
-    },
-    { &df_fpgastatus_ap4_temp,
-      { "ap4_temp",           "epa.data.fpgastatus.ap4_temp",
-	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"Current Antenna Processor 4 temperature", HFILL }
     },
     {
       &df_ethstatus_nof_frames,
@@ -1260,9 +1301,33 @@ proto_register_epa(void)
       }
     },
     {
-      &df_ap1_sync_sample_count,
+      &df_ap0_sync_sample_offset,
       {
-	"sample_count", "epa.data.ap1_sync.sample_count",
+	"sample_offset", "epa.data.ap0_sync.sample_offset",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Sample count at last sync event", HFILL
+      }
+    },
+    {
+      &df_ap0_sync_sync_count,
+      {
+	"sync_count", "epa.data.ap0_sync.sync_count",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Counter for the number of sync events", HFILL
+      }
+    },
+    {
+      &df_ap0_sync_slice_count,
+      {
+	"slice_count", "epa.data.ap0_sync.slice_count",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Counter for the number of sync errors", HFILL
+      }
+    },
+    {
+      &df_ap1_sync_sample_offset,
+      {
+	"sample_offset", "epa.data.ap1_sync.sample_offset",
 	FT_UINT32, BASE_DEC, NULL, 0x0,
 	"Sample count at last sync event", HFILL
       }
@@ -1276,17 +1341,17 @@ proto_register_epa(void)
       }
     },
     {
-      &df_ap1_sync_error_count,
+      &df_ap1_sync_slice_count,
       {
-	"error_count", "epa.data.ap1_sync.error_count",
+	"slice_count", "epa.data.ap1_sync.slice_count",
 	FT_UINT32, BASE_DEC, NULL, 0x0,
 	"Counter for the number of sync errors", HFILL
       }
     },
     {
-      &df_ap2_sync_sample_count,
+      &df_ap2_sync_sample_offset,
       {
-	"sample_count", "epa.data.ap2_sync.sample_count",
+	"sample_offset", "epa.data.ap2_sync.sample_offset",
 	FT_UINT32, BASE_DEC, NULL, 0x0,
 	"Sample count at last sync event", HFILL
       }
@@ -1300,17 +1365,17 @@ proto_register_epa(void)
       }
     },
     {
-      &df_ap2_sync_error_count,
+      &df_ap2_sync_slice_count,
       {
-	"error_count", "epa.data.ap2_sync.error_count",
+	"slice_count", "epa.data.ap2_sync.slice_count",
 	FT_UINT32, BASE_DEC, NULL, 0x0,
 	"Counter for the number of sync errors", HFILL
       }
     },
     {
-      &df_ap3_sync_sample_count,
+      &df_ap3_sync_sample_offset,
       {
-	"sample_count", "epa.data.ap3_sync.sample_count",
+	"sample_offset", "epa.data.ap3_sync.sample_offset",
 	FT_UINT32, BASE_DEC, NULL, 0x0,
 	"Sample count at last sync event", HFILL
       }
@@ -1324,33 +1389,9 @@ proto_register_epa(void)
       }
     },
     {
-      &df_ap3_sync_error_count,
+      &df_ap3_sync_slice_count,
       {
-	"error_count", "epa.data.ap3_sync.error_count",
-	FT_UINT32, BASE_DEC, NULL, 0x0,
-	"Counter for the number of sync errors", HFILL
-      }
-    },
-    {
-      &df_ap4_sync_sample_count,
-      {
-	"sample_count", "epa.data.ap4_sync.sample_count",
-	FT_UINT32, BASE_DEC, NULL, 0x0,
-	"Sample count at last sync event", HFILL
-      }
-    },
-    {
-      &df_ap4_sync_sync_count,
-      {
-	"sync_count", "epa.data.ap4_sync.sync_count",
-	FT_UINT32, BASE_DEC, NULL, 0x0,
-	"Counter for the number of sync events", HFILL
-      }
-    },
-    {
-      &df_ap4_sync_error_count,
-      {
-	"error_count", "epa.data.ap4_sync.error_count",
+	"slice_count", "epa.data.ap3_sync.slice_count",
 	FT_UINT32, BASE_DEC, NULL, 0x0,
 	"Counter for the number of sync errors", HFILL
       }
