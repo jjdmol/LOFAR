@@ -32,7 +32,7 @@ CREATE TYPE OTDBnode AS (
 
 
 CREATE TYPE OTDBvalue AS (
-	ID				INT8,
+	name			VARCHAR(120),
 	value			TEXT,
 	time			timestamp(0)
 );

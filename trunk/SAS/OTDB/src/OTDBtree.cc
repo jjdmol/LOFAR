@@ -171,5 +171,62 @@ bool 	OTDBtree::addKVTlist (vector<OTDBvalue>	theValues)
 	return (result);
 }
 
+//
+// searchInPeriod(topNode, depth, begindate, enddate) : vector<value>
+//
+vector<OTDBvalue> OTDBtree::searchInPeriod (nodeIDType		topNode,
+									  	   uint32			depth,
+									  	   const ptime&		beginDate,
+									  	   const ptime&		endDate)
+{
+	if (!itsConn->connect()) {
+		vector<OTDBvalue>	empty;
+		return (empty);
+	}
+
+	vector<OTDBvalue>	resultVec;
+	for (uint32 queryDepth = 1; queryDepth <= depth; ++queryDepth) {
+		// construct a query that call a stored procedure.
+		work	xAction(*(itsConn->getConn()), "searchInPeriod");
+		string	query("SELECT * from searchInPeriod('" +
+					toString(itsTreeID) + "','" +
+					toString(topNode) + "','" +
+					toString(queryDepth) + "','" +
+					to_simple_string(beginDate) + "','" +
+					to_simple_string(endDate) + "')");
+		try {
+			result res = xAction.exec(query);
+
+			// show how many records found
+			result::size_type	nrRecords = res.size();
+			LOG_DEBUG_STR (nrRecords << " records in itemList(" <<
+							topNode << ", " << queryDepth << ")");
+			if (nrRecords == 0) {
+				break;
+			}
+
+			// copy information to output vector
+			OTDBvalue	newKVT;
+			for (result::size_type	i = 0; i < nrRecords; ++i) {
+				res[i]["name"].to(newKVT.name);
+				res[i]["value"].to(newKVT.value);
+				string	eventTime;
+				res[i]["time"].to(eventTime);
+				newKVT.time = time_from_string(eventTime);
+				// Finally add to vector.
+				resultVec.push_back(newKVT);
+			}
+		}
+		catch (std::exception&	ex) {
+			itsError = string("Exception during searchInPeriod:")
+					 + ex.what();
+			vector<OTDBvalue>	empty;
+			return (empty);
+		}
+	}	// for
+
+	return (resultVec);
+}
+
   } // namespace OTDB
 } // namespace LOFAR

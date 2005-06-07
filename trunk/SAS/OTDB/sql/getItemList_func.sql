@@ -1,5 +1,5 @@
 --
---  getItemList.sql: function for getting one layer of the tree
+--  getItemList.sql: function for getting some layers of a tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,13 +29,13 @@
 --
 -- Authorisation: none
 --
--- Tables: 	otdbtree		read
+-- Tables: 	picparamref		read
 --			pichierarchy	read
 --			vichierarchy	read
 --
 -- Types:	OTDBnode
 --
--- NOTE: For now the depth is always 1.
+-- TODO: IMPLEMENT VIC PART
 --
 CREATE OR REPLACE FUNCTION getItemList(INT4, INT4, INT4)
   RETURNS SETOF OTDBnode AS '
