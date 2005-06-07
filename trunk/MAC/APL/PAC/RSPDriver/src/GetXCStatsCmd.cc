@@ -1,4 +1,4 @@
-//#  GetStatsCmd.cc: implementation of the GetStatsCmd class
+//#  GetXCStatsCmd.cc: implementation of the GetXCStatsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "RSP_Protocol.ph"
-#include "GetStatsCmd.h"
+#include "GetXCStatsCmd.h"
 
 #include <PSAccess.h>
 #include <blitz/array.h>
@@ -37,7 +37,7 @@ using namespace RSP_Protocol;
 using namespace blitz;
 using namespace RTC;
 
-GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetXCStatsCmd::GetXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
   m_event = new RSPGetstatsEvent(event);
 
@@ -50,12 +50,12 @@ GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
   setPort(port);
 }
 
-GetStatsCmd::~GetStatsCmd()
+GetXCStatsCmd::~GetXCStatsCmd()
 {
   delete m_event;
 }
 
-void GetStatsCmd::ack(CacheBuffer& cache)
+void GetXCStatsCmd::ack(CacheBuffer& cache)
 {
   RSPGetstatsackEvent ack;
 
@@ -102,38 +102,38 @@ void GetStatsCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetStatsCmd::apply(CacheBuffer& /*cache*/)
+void GetXCStatsCmd::apply(CacheBuffer& /*cache*/)
 {
   // no-op
 }
 
-void GetStatsCmd::complete(CacheBuffer& cache)
+void GetXCStatsCmd::complete(CacheBuffer& cache)
 {
   ack(cache);
 }
 
-const Timestamp& GetStatsCmd::getTimestamp() const
+const Timestamp& GetXCStatsCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void GetStatsCmd::setTimestamp(const Timestamp& timestamp)
+void GetXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool GetStatsCmd::validate() const
+bool GetXCStatsCmd::validate() const
 {
   return ((m_event->rcumask.count() <= m_n_devices)
 	  && (m_event->type < Statistics::N_STAT_TYPES));
 }
 
-bool GetStatsCmd::readFromCache() const
+bool GetXCStatsCmd::readFromCache() const
 {
   return m_event->cache;
 }
 
-void GetStatsCmd::ack_fail()
+void GetXCStatsCmd::ack_fail()
 {
   RSPGetstatsackEvent ack;
 

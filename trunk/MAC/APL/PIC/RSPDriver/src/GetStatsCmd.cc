@@ -81,12 +81,12 @@ void GetStatsCmd::ack(CacheBuffer& cache)
       switch (m_event->type)
       {
 	case Statistics::SUBBAND_POWER:
-	  ack.stats()(0, result_device, Range::all())
+	  ack.stats()(result_device, Range::all())
 	    = cache.getSubbandStats()()(cache_device, Range::all());
 	  break;
 	
 	case Statistics::BEAMLET_POWER:
-	  ack.stats()(0, result_device, Range::all())
+	  ack.stats()(result_device, Range::all())
 	    = cache.getBeamletStats()()(cache_device, Range::all());
 	  break;
 

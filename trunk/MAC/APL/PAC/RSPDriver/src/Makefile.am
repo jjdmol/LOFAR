@@ -82,6 +82,7 @@ include_HEADERS = \
 	WGSettings.h \
 	SystemStatus.h \
 	Statistics.h \
+	XCStatistics.h \
 	Versions.h \
 	\
 	EPA_Protocol.ph \
@@ -95,6 +96,7 @@ librsp_la_SOURCES = \
 	WGSettings.cc \
 	SystemStatus.cc \
 	Statistics.cc \
+	XCStatistics.cc \
 	Versions.cc \
 	RSP_Protocol.cc
 
@@ -150,6 +152,10 @@ RSPDriver_SOURCES = \
 	GetStatsCmd.cc \
 	UpdStatsCmd.h \
 	UpdStatsCmd.cc \
+	GetXCStatsCmd.h \
+	GetXCStatsCmd.cc \
+	UpdXCStatsCmd.h \
+	UpdXCStatsCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \
@@ -173,6 +179,8 @@ RSPDriver_SOURCES = \
 	SstRead.cc \
 	BstRead.h \
 	BstRead.cc \
+	XstRead.h \
+	XstRead.cc \
 	VersionsRead.h \
 	VersionsRead.cc \
 	WGWrite.h \

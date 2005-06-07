@@ -124,6 +124,11 @@ CacheBuffer::CacheBuffer()
 			  MEPHeader::N_BEAMLETS);
   m_beamletstats() = 0;
 
+  m_crossletstats().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
+			   MEPHeader::N_XLETS, // GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
+			   MEPHeader::N_POL, MEPHeader::N_POL);
+  m_crossletstats() = complex<double>(0,0);
+
   m_systemstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_systemstatus.rcu().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
 
@@ -150,6 +155,7 @@ CacheBuffer::CacheBuffer()
   LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
   LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
   LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
+  LOG_DEBUG_STR("m_crossletstats().size()      =" << m_crossletstats().size()      * sizeof(complex<double>));
   LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
   LOG_DEBUG_STR("m_systemstatus.rcu().size()   =" << m_systemstatus.rcu().size()   * sizeof(EPA_Protocol::RCUStatus));
   LOG_DEBUG_STR("m_versions.rsp().size()       =" << m_versions.rsp().size()       * sizeof(uint8));
@@ -166,6 +172,7 @@ CacheBuffer::~CacheBuffer()
   m_wgsettings.waveforms().free();
   m_subbandstats().free();
   m_beamletstats().free();
+  m_crossletstats().free();
   m_systemstatus.board().free();
   m_systemstatus.rcu().free();
   m_versions.rsp().free();
@@ -178,7 +185,7 @@ RTC::Timestamp CacheBuffer::getTimestamp() const
   return m_timestamp;
 }
 
-BeamletWeights&   CacheBuffer::getBeamletWeights()
+BeamletWeights& CacheBuffer::getBeamletWeights()
 {
   return m_beamletweights;
 }
@@ -188,32 +195,37 @@ SubbandSelection& CacheBuffer::getSubbandSelection()
   return m_subbandselection;
 }
 
-RCUSettings&      CacheBuffer::getRCUSettings()
+RCUSettings& CacheBuffer::getRCUSettings()
 {
   return m_rcusettings;
 }
 
-WGSettings&       CacheBuffer::getWGSettings()
+WGSettings& CacheBuffer::getWGSettings()
 {
   return m_wgsettings;
 }
 
-SystemStatus&     CacheBuffer::getSystemStatus()
+SystemStatus& CacheBuffer::getSystemStatus()
 {
   return m_systemstatus;
 }
 
-Statistics&       CacheBuffer::getSubbandStats()
+Statistics& CacheBuffer::getSubbandStats()
 {
   return m_subbandstats;
 }
 
-Statistics&       CacheBuffer::getBeamletStats()
+Statistics& CacheBuffer::getBeamletStats()
 {
   return m_beamletstats;
 }
 
-Versions&         CacheBuffer::getVersions()
+XCStatistics& CacheBuffer::getCrossletStats()
+{
+  return m_crossletstats;
+}
+
+Versions& CacheBuffer::getVersions()
 {
   return m_versions;
 }

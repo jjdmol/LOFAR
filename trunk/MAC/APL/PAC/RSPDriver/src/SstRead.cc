@@ -47,7 +47,6 @@ SstRead::SstRead(GCFPortInterface& board_port, int board_id)
 
 SstRead::~SstRead()
 {
-  /* TODO: delete event? */
 }
 
 void SstRead::sendrequest()
@@ -101,7 +100,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / SST_N_FRAGMENTS);
 
-  uint16 offset = ack.hdr.m_fields.offset / sizeof(int32);
+  uint16 offset = ack.hdr.m_fields.offset / sizeof(uint32);
   
   LOG_DEBUG(formatString("SstRead::handleack: global_blp=%d, offset=%d",
 			 global_blp, offset));

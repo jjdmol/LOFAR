@@ -46,7 +46,6 @@ BstRead::BstRead(GCFPortInterface& board_port, int board_id)
 
 BstRead::~BstRead()
 {
-  /* TODO: delete event? */
 }
 
 void BstRead::sendrequest()
@@ -98,7 +97,7 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint16 offset = ack.hdr.m_fields.offset / sizeof(int32);
+  uint16 offset = ack.hdr.m_fields.offset / sizeof(uint32);
   
   LOG_DEBUG(formatString("BstRead::handleack: boardid=%d, offset=%d",
 			 getBoardId(), offset));

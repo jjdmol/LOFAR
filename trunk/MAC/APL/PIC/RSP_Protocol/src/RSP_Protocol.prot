@@ -22,6 +22,7 @@ include = '"RCUSettings.h"';
 include = '"WGSettings.h"';
 include = '"SystemStatus.h"';
 include = '"Statistics.h"';
+include = '"XCStatistics.h"';
 include = '"Versions.h"';
 include = '"MEPHeader.h"';
 
@@ -590,8 +591,144 @@ event = {
     type = "Statistics";
     userdefined;
   };
-};    
-    
+};
+
+
+event = {
+  signal = SUBXC;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+  param = {
+    name = "type";
+    type = "uint8";
+  };
+  param = {
+    name = "reduction";
+    type = "StatsReduction";
+  };
+};
+
+event = {
+  signal = SUBXCACK;
+  dir = OUT; 
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBXC;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBXCACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UPDXC;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+  param = {
+    name = "stats";
+    type = "XCStatistics";
+    userdefined;
+  };
+};
+
+event = {
+  signal = GETXC;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+  param = {
+    name = "type";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETXCACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "stats";
+    type = "XCStatistics";
+    userdefined;
+  };
+};
+
 event = {
   signal = GETVERSION;
   dir = IN;

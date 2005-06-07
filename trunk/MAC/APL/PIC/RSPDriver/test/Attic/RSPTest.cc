@@ -76,7 +76,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(RSPTest::test011);
+      TRAN(RSPTest::test001);
     }
     break;
 
@@ -802,7 +802,7 @@ GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
       
       LOG_INFO_STR("upd.stats=" << upd.stats());
 
-      if (updcount++ > 120) // two minutes
+      if (updcount++ > 12) // twelve seconds
       {
 	RSPUnsubstatsEvent unsub;
 	unsub.handle = upd.handle; // remove subscription with this handle

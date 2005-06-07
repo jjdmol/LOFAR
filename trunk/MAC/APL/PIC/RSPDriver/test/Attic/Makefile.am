@@ -14,10 +14,11 @@ AM_CPPFLAGS = \
 # 	EPAStub
 
 bin_PROGRAMS = \
-	EPAStub
-
-check_PROGRAMS = \
+	EPAStub \
 	RSPTest
+
+#check_PROGRAMS = \
+#	RSPTest
 
 RSPTest_SOURCES = \
 	RSPTest.h \
@@ -43,7 +44,8 @@ BUILT_SOURCES = \
 EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
-	EPAStub.conf
+	EPAStub.conf \
+	RSPTest.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
