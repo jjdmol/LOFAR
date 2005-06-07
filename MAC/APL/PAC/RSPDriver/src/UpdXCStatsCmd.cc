@@ -1,4 +1,4 @@
-//#  GetStatsCmd.cc: implementation of the GetStatsCmd class
+//#  UpdXCStatsCmd.cc: implementation of the UpdXCStatsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "RSP_Protocol.ph"
-#include "GetStatsCmd.h"
+#include "UpdXCStatsCmd.h"
 
 #include <PSAccess.h>
 #include <blitz/array.h>
@@ -37,31 +37,42 @@ using namespace RSP_Protocol;
 using namespace blitz;
 using namespace RTC;
 
-GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdXCStatsCmd::UpdXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetstatsEvent(event);
+  m_event = new RSPSubstatsEvent(event);
 
   m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
 		 ? GET_CONFIG("RS.N_BLPS", i) : 1)
     * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
 
   setOperation(oper);
-  setPeriod(0);
+  setPeriod(m_event->period);
   setPort(port);
 }
 
-GetStatsCmd::~GetStatsCmd()
+UpdXCStatsCmd::~UpdXCStatsCmd()
 {
   delete m_event;
 }
 
-void GetStatsCmd::ack(CacheBuffer& cache)
+void UpdXCStatsCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPGetstatsackEvent ack;
+  // intentionally left empty
+}
+
+void UpdXCStatsCmd::apply(CacheBuffer& /*cache*/)
+{
+  // no-op
+}
+
+void UpdXCStatsCmd::complete(CacheBuffer& cache)
+{
+  RSPUpdstatsEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status    = SUCCESS;
-  
+  ack.status = SUCCESS;
+  ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
+
   if (m_event->type <= Statistics::SUBBAND_POWER)
   {
     ack.stats().resize(m_event->rcumask.count(),
@@ -73,7 +84,7 @@ void GetStatsCmd::ack(CacheBuffer& cache)
 		       cache.getBeamletStats()().extent(secondDim));
   }
   
-  unsigned int result_device = 0;
+  int result_device = 0;
   for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++)
   {
     if (m_event->rcumask[cache_device])
@@ -84,12 +95,12 @@ void GetStatsCmd::ack(CacheBuffer& cache)
 	  ack.stats()(result_device, Range::all())
 	    = cache.getSubbandStats()()(cache_device, Range::all());
 	  break;
-	
+
 	case Statistics::BEAMLET_POWER:
 	  ack.stats()(result_device, Range::all())
 	    = cache.getBeamletStats()()(cache_device, Range::all());
 	  break;
-
+	  
 	default:
 	  LOG_ERROR("invalid statistics type");
 	  break;
@@ -98,48 +109,22 @@ void GetStatsCmd::ack(CacheBuffer& cache)
       result_device++;
     }
   }
-  
+
   getPort()->send(ack);
 }
 
-void GetStatsCmd::apply(CacheBuffer& /*cache*/)
-{
-  // no-op
-}
-
-void GetStatsCmd::complete(CacheBuffer& cache)
-{
-  ack(cache);
-}
-
-const Timestamp& GetStatsCmd::getTimestamp() const
+const Timestamp& UpdXCStatsCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void GetStatsCmd::setTimestamp(const Timestamp& timestamp)
+void UpdXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool GetStatsCmd::validate() const
+bool UpdXCStatsCmd::validate() const
 {
   return ((m_event->rcumask.count() <= m_n_devices)
 	  && (m_event->type < Statistics::N_STAT_TYPES));
-}
-
-bool GetStatsCmd::readFromCache() const
-{
-  return m_event->cache;
-}
-
-void GetStatsCmd::ack_fail()
-{
-  RSPGetstatsackEvent ack;
-
-  ack.timestamp = getTimestamp();
-  ack.status = FAILURE;
-  ack.stats().resize(0, 0, 0);
-
-  getPort()->send(ack);
 }

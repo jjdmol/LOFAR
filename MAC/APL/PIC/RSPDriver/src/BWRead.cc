@@ -120,6 +120,7 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   }
   
   uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
+  ASSERT(offset == bfcoefs.hdr.m_fields.offset / sizeof(int16));
 
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
 

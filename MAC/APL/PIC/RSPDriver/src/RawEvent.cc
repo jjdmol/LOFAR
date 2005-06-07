@@ -263,6 +263,70 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITEACK,     /* WRITEACK */
     },
   },
+
+  /* pid = 0x0C (XST) */
+  {
+    /* reg = 0x00 (XST_0_X) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x01 (XST_0_Y) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x02 (XST_1_X) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x03 (XST_1_Y) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x04 (XST_2_X) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x05 (XST_2_Y) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+    /* reg = 0x06 (XST_3_X) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+
+    /* reg = 0x07 (XST_3_Y) */
+    { 0,
+      EPA_READ,      /* READ */
+      0,
+      EPA_XST_STATS, /* READACK */
+      0,
+    },
+  },
 };
 
 GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)

@@ -69,6 +69,8 @@ const MEPHeader::FieldsType MEPHeader::CRB_SOFTPPS_HDR   = { WRITE, 0, 0, { DST_
 
 const MEPHeader::FieldsType MEPHeader::CDO_SETTINGS_HDR  = { WRITE, 0, 0, { DST_RSP, CDO, CDO_SETTINGS,  0 }, 0, CDO_SETTINGS_SIZE  };
 
+const MEPHeader::FieldsType MEPHeader::XST_STATS_HDR     = { READ,  0, 0, { DST_RSP, XST, XST_STATS,     0 }, 0, XST_STATS_SIZE     };
+
 unsigned int MEPHeader::getSize()
 {
   return MEPHeader::SIZE;

@@ -96,8 +96,9 @@ namespace EPA_Protocol
       static const uint8 CRR     = 0x09; /* RSP clock and reset */
       static const uint8 CRB     = 0x0A; /* BLP clock and reset */
       static const uint8 CDO     = 0x0B; /* CEP Data Output */
+      static const uint8 XST     = 0x0C; /* Crosslet statistics */
 
-      static const int MAX_PID = CDO; /* counting from 0 */
+      static const int MAX_PID = XST; /* counting from 0 */
       /*@}*/
 
       /*@{*/
@@ -138,7 +139,18 @@ namespace EPA_Protocol
 
       static const uint8 CDO_SETTINGS  = 0x00;
 
-      static const int MAX_REGID = 0x03;
+      static const uint8 XST_STATS     = 0x00;
+      static const uint8 XST_0_X       = XST_STATS + 0; // 8 registers, two for each AP
+      static const uint8 XST_0_Y       = XST_STATS + 1;
+      static const uint8 XST_1_X       = XST_STATS + 2;
+      static const uint8 XST_1_Y       = XST_STATS + 3;
+      static const uint8 XST_2_X       = XST_STATS + 4;
+      static const uint8 XST_2_Y       = XST_STATS + 5;
+      static const uint8 XST_3_X       = XST_STATS + 6;
+      static const uint8 XST_3_Y       = XST_STATS + 7;
+    static const uint8 XST_MAX_STATS = XST_STATS + 4; // SHOULD BE 8!!!!
+
+      static const int MAX_REGID = 0x07; // XST_3_Y
       
       /*@}*/
 
@@ -159,7 +171,8 @@ namespace EPA_Protocol
        * number of beamlets.
        */
       static const uint16 N_SUBBANDS = 512;
-      static const uint16 N_BEAMLETS = 128; // FTS-1 spec, final remote station will be 256
+      static const uint16 N_BEAMLETS = 128; // FTS-1 spec, final remote station will have 256 beamlets
+      static const uint16 N_XLETS    = 60;  // FTS-1.5 sepc, final remote station will have 4 lanes * 60 = 240 crosslets
       static const uint16 N_POL      = 2;                // number of polarizations
       static const uint16 N_PHASE    = 2;                // number of phases in a complex number
       static const uint16 N_PHASEPOL = N_PHASE * N_POL;  // number of phase polarizations
@@ -169,6 +182,12 @@ namespace EPA_Protocol
       // (> 1500 bytes) will be sent in a number of fragments of this size.
       //
       static const uint16 FRAGMENT_SIZE = 1024;
+    
+      //
+      // The XST crosslet registers are 1920 bytes in size.
+      // Send in two equal sized fragments of 960 bytes.
+      //
+      static const uint16 XST_FRAGMENT_SIZE = 960;
       
       /**
        * Read/write sizes in octets (= bytes)
@@ -205,6 +224,8 @@ namespace EPA_Protocol
       static const uint16 CRB_SOFTPPS_SIZE   = 1;
       
       static const uint16 CDO_SETTINGS_SIZE  = 10;
+
+      static const uint16 XST_STATS_SIZE     = N_XLETS * N_PHASEPOL * N_POL * sizeof(uint32);
       /*@}*/
 
     public:
@@ -307,6 +328,8 @@ namespace EPA_Protocol
       static const FieldsType CRB_SOFTPPS_HDR;
 
       static const FieldsType CDO_SETTINGS_HDR;
+
+      static const FieldsType XST_STATS_HDR;
       /*@}*/
   };
 };

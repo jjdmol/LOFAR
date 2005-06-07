@@ -89,46 +89,46 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   memcpy(&status.board()(getBoardId()), &ack.board, sizeof(BoardStatus));
 
   // sanity check on SYNC status, status for all AP's must be the same
-  if (ack.board.ap1_sync.sample_count != ack.board.ap2_sync.sample_count
-      || ack.board.ap1_sync.sample_count != ack.board.ap3_sync.sample_count
-      || ack.board.ap1_sync.sample_count != ack.board.ap4_sync.sample_count)
+  if (ack.board.ap0_sync.sample_offset != ack.board.ap1_sync.sample_offset
+      || ack.board.ap0_sync.sample_offset != ack.board.ap2_sync.sample_offset
+      || ack.board.ap0_sync.sample_offset != ack.board.ap3_sync.sample_offset)
     {
-      LOG_WARN(formatString("RSP[%02d]: sample_count mismatch", getBoardId()));
+      LOG_WARN(formatString("RSP[%02d]: sample_offset mismatch", getBoardId()));
     }
 
-  if (ack.board.ap1_sync.sync_count != ack.board.ap2_sync.sync_count
-      || ack.board.ap1_sync.sync_count != ack.board.ap3_sync.sync_count
-      || ack.board.ap1_sync.sync_count != ack.board.ap4_sync.sync_count)
+  if (ack.board.ap0_sync.sync_count != ack.board.ap1_sync.sync_count
+      || ack.board.ap0_sync.sync_count != ack.board.ap2_sync.sync_count
+      || ack.board.ap0_sync.sync_count != ack.board.ap3_sync.sync_count)
     {
       LOG_WARN(formatString("RSP[%02d]: sync_count mismatch", getBoardId()));
     }
 
-  if (ack.board.ap1_sync.error_count != ack.board.ap2_sync.error_count
-      || ack.board.ap1_sync.error_count != ack.board.ap3_sync.error_count
-      || ack.board.ap1_sync.error_count != ack.board.ap4_sync.error_count)
+  if (ack.board.ap0_sync.slice_count != ack.board.ap1_sync.slice_count
+      || ack.board.ap0_sync.slice_count != ack.board.ap2_sync.slice_count
+      || ack.board.ap0_sync.slice_count != ack.board.ap3_sync.slice_count)
     {
-      LOG_WARN(formatString("RSP[%02d]: error_count mismatch", getBoardId()));
+      LOG_WARN(formatString("RSP[%02d]: slice_count mismatch", getBoardId()));
     }
 
   uint8 global_rcu_base = getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 
   // copy RCU status
-  status.rcu()(global_rcu_base    ).status       = ack.board.ap1_rcu.statusx;
-  status.rcu()(global_rcu_base    ).nof_overflow = ack.board.ap1_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 1).status       = ack.board.ap1_rcu.statusy;
-  status.rcu()(global_rcu_base + 1).nof_overflow = ack.board.ap1_rcu.nof_overflowy;
-  status.rcu()(global_rcu_base + 2).status       = ack.board.ap2_rcu.statusx;
-  status.rcu()(global_rcu_base + 2).nof_overflow = ack.board.ap2_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 3).status       = ack.board.ap2_rcu.statusy;
-  status.rcu()(global_rcu_base + 3).nof_overflow = ack.board.ap2_rcu.nof_overflowy;
-  status.rcu()(global_rcu_base + 4).status       = ack.board.ap3_rcu.statusx;
-  status.rcu()(global_rcu_base + 4).nof_overflow = ack.board.ap3_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 5).status       = ack.board.ap3_rcu.statusy;
-  status.rcu()(global_rcu_base + 5).nof_overflow = ack.board.ap3_rcu.nof_overflowy;
-  status.rcu()(global_rcu_base + 6).status       = ack.board.ap4_rcu.statusx;
-  status.rcu()(global_rcu_base + 6).nof_overflow = ack.board.ap4_rcu.nof_overflowx;
-  status.rcu()(global_rcu_base + 7).status       = ack.board.ap4_rcu.statusy;
-  status.rcu()(global_rcu_base + 7).nof_overflow = ack.board.ap4_rcu.nof_overflowy;
+  status.rcu()(global_rcu_base    ).status       = ack.board.ap0_rcu.statusx;
+  status.rcu()(global_rcu_base    ).nof_overflow = ack.board.ap0_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 1).status       = ack.board.ap0_rcu.statusy;
+  status.rcu()(global_rcu_base + 1).nof_overflow = ack.board.ap0_rcu.nof_overflowy;
+  status.rcu()(global_rcu_base + 2).status       = ack.board.ap1_rcu.statusx;
+  status.rcu()(global_rcu_base + 2).nof_overflow = ack.board.ap1_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 3).status       = ack.board.ap1_rcu.statusy;
+  status.rcu()(global_rcu_base + 3).nof_overflow = ack.board.ap1_rcu.nof_overflowy;
+  status.rcu()(global_rcu_base + 4).status       = ack.board.ap2_rcu.statusx;
+  status.rcu()(global_rcu_base + 4).nof_overflow = ack.board.ap2_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 5).status       = ack.board.ap2_rcu.statusy;
+  status.rcu()(global_rcu_base + 5).nof_overflow = ack.board.ap2_rcu.nof_overflowy;
+  status.rcu()(global_rcu_base + 6).status       = ack.board.ap3_rcu.statusx;
+  status.rcu()(global_rcu_base + 6).nof_overflow = ack.board.ap3_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 7).status       = ack.board.ap3_rcu.statusy;
+  status.rcu()(global_rcu_base + 7).nof_overflow = ack.board.ap3_rcu.nof_overflowy;
 
   return GCFEvent::HANDLED;
 }

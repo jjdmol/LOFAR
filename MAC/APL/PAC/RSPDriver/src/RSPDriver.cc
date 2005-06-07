@@ -49,6 +49,7 @@
 #include "StatusRead.h"
 #include "SstRead.h"
 #include "BstRead.h"
+#include "XstRead.h"
 #include "WGWrite.h"
 #include "WGRead.h"
 #include "VersionsRead.h"
@@ -169,6 +170,7 @@ bool RSPDriver::isEnabled()
  * - STATUS (RSP Status): read RSP status info // StatusRead
  * - SST:    read subband statistics           // SstRead
  * - BST:    read beamlet statistics           // BstRead
+ * - XST:    read crosslet statistics          // XstRead
  * - WG:     write waveform generator settings // WGWrite
  * - STATUS (Version): read version info       // VersionsSync
  *
@@ -283,6 +285,17 @@ void RSPDriver::addAllSyncActions()
 	  RCURead* rcuread = new RCURead(m_board[boardid], boardid);
 	  m_scheduler.addSyncAction(rcuread);
 	}
+      }
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_XST", i))
+    {
+      XstRead* xstread = 0;
+
+      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_MAX_STATS; i++)
+      {
+	xstread = new XstRead(m_board[boardid], boardid, i);
+	m_scheduler.addSyncAction(xstread);
       }
     }
 
