@@ -99,12 +99,14 @@ public:
 class OTDBvalue {
 public:
 	OTDBvalue() {};
-	OTDBvalue(nodeIDType		anID, 
+	OTDBvalue(const string&		aName,
 			  const string&		aValue, 
-			  const ptime&		atime);
+			  const ptime&		aTime) :
+		name(aName), value(aValue), time(aTime) {};
 	~OTDBvalue() {};
 
-	nodeIDType		ID;
+//	nodeIDType		ID;
+	string			name;
 	string			value;
 	ptime			time;
 };

@@ -25,6 +25,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
+#include<Common/lofar_datetime.h>
 #include<OTDB/OTDBtree.h>
 
 namespace LOFAR {
@@ -65,55 +66,110 @@ vector<OTDBnode> OTDBtree::getItemList (nodeIDType	topNode,
 		return (empty);
 	}
 
-	// construct a query that call a stored procedure.
-	work	xAction(*(itsConn->getConn()), "getItemList");
-	string	query("SELECT * from getItemList('" +
-				toString(itsTreeID) + "','" +
-				toString(topNode) + "','" +
-				toString(depth) + "')");
-	try {
-		result res = xAction.exec(query);
+	vector<OTDBnode>	resultVec;
+	for (uint32 queryDepth = 1; queryDepth <= depth; ++queryDepth) {
+		// construct a query that call a stored procedure.
+		work	xAction(*(itsConn->getConn()), "getItemList");
+		string	query("SELECT * from getItemList('" +
+					toString(itsTreeID) + "','" +
+					toString(topNode) + "','" +
+					toString(queryDepth) + "')");
+		try {
+			result res = xAction.exec(query);
 
-		// show how many records found
-		result::size_type	nrRecords = res.size();
-		LOG_DEBUG_STR (nrRecords << "records in itemList(" <<
-						topNode << ", " << depth << ")");
+			// show how many records found
+			result::size_type	nrRecords = res.size();
+			LOG_DEBUG_STR (nrRecords << " records in itemList(" <<
+							topNode << ", " << queryDepth << ")");
+			if (nrRecords == 0) {
+				break;
+			}
 
-		// copy information to output vector
-		vector<OTDBnode>	resultVec(nrRecords);
-		for (result::size_type	i = 0; i < nrRecords; ++i) {
-			res[i]["paramid"].to(resultVec[i].ID);
-			res[i]["parentid"].to(resultVec[i].parentID);
-			res[i]["name"].to(resultVec[i].name);
-			res[i]["index"].to(resultVec[i].index);
-			bool	leaf;
-			res[i]["leaf"].to(leaf);
-			if (leaf) {
-				res[i]["par_type"].to(resultVec[i].type);
+			// copy information to output vector
+			OTDBnode	newNode;
+			for (result::size_type	i = 0; i < nrRecords; ++i) {
+				res[i]["paramid"].to(newNode.ID);
+				res[i]["parentid"].to(newNode.parentID);
+				res[i]["name"].to(newNode.name);
+				res[i]["index"].to(newNode.index);
+				bool	leaf;
+				res[i]["leaf"].to(leaf);
+				if (leaf) {
+					res[i]["par_type"].to(newNode.type);
+				}
+				else {
+					newNode.type = 0;
+				}
+				newNode.unit = 0;
+				res[i]["unit"].to(newNode.unit);
+				res[i]["description"].to(newNode.description);
+				// Finally add to vector.
+				resultVec.push_back(newNode);
 			}
-			else {
-				resultVec[i].type = 0;
-			}
-			resultVec[i].unit = 0;
-			res[i]["unit"].to(resultVec[i].unit);
-			res[i]["description"].to(resultVec[i].description);
 		}
+		catch (std::exception&	ex) {
+			itsError = string("Exception during retrieval of getItemList:")
+					 + ex.what();
+			vector<OTDBnode>	empty;
+			return (empty);
+		}
+	}	// for
 
-		return (resultVec);
-	}
-	catch (std::exception&	ex) {
-		itsError = string("Exception during retrieval of getItemList:")
-				 + ex.what();
-	}
-
-	vector<OTDBnode>	empty;
-	return (empty);
+	return (resultVec);
 
 }
 
+//
+// addKVT (key, value, time)
+//
+// Adds a key to the KVT tables
+//
+bool OTDBtree::addKVT (const string&	key,
+					   const string&	value,
+					   ptime			time)
+{
+	if (!itsConn->connect()) {
+		vector<OTDBnode>	empty;
+		return (false);
+	}
 
+	// construct a query that call a stored procedure.
+	work	xAction(*(itsConn->getConn()), "addKVT");
+	string	query("SELECT * from addKVT('" +
+				key + "','" +
+				value+ "','" +
+				to_simple_string(time)+ "')");
 
+	try {
+		result res = xAction.exec(query);
+		bool	insertResult;
+		res[0]["addKVT"].to(insertResult);
+		if (insertResult) {
+			xAction.commit();
+		}
+		return (insertResult);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during insert of KVT:") + ex.what();
+		return (false);
+	}
 
+	return (false);
+}
+
+//
+// addKVTList(vector<OTDBvalue>): bool
+//
+bool 	OTDBtree::addKVTlist (vector<OTDBvalue>	theValues) 
+{
+	bool	result = true;
+	for (uint32 i = 0; i < theValues.size(); ++i) {
+		result &= addKVT(theValues[i].name,
+						 theValues[i].value,
+						 theValues[i].time);
+	}
+	return (result);
+}
 
   } // namespace OTDB
 } // namespace LOFAR

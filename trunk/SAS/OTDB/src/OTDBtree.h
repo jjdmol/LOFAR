@@ -105,6 +105,10 @@ private:
 };
 
 //# --- Inline functions ---
+inline bool	OTDBtree::addKVT (const OTDBvalue&		aKVT)
+{
+	return (addKVT(aKVT.name, aKVT.value, aKVT.time));
+}
 
 
 
