@@ -9,11 +9,15 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <Common/lofar_iostream.h> 
+//#include <Common/LofarLogger.h>
+
 #include <Common/RunOnNode.h>
 //#include <TFlopCorrelator/AH_InputSection.h>
 #include <TFlopCorrelator/AH_BGLProcessing.h>
 //#include <TFlopCorrelator/AH_Storage.h>
 
+using namespace LOFAR;
 
 int main (int argc, const char** argv) {
 
@@ -40,13 +44,13 @@ int main (int argc, const char** argv) {
 
     RUNINAPPL(1) {
       cout << "Application 1" << endl;
-      AH_BGLProcessing bglP();
-      bglP.setarg(argc, argv);    
-      bglP.baseDefine();
-      bglP.basePrerun();
-      bglP.baseRun(1);
-      bglP.baseDump();
-      bglP.baseQuit();
+//       AH_BGLProcessing bglP();
+//       bglP.setarg(argc, argv);    
+//       bglP.baseDefine();
+//       bglP.basePrerun();
+//       bglP.baseRun(1);
+//       bglP.baseDump();
+//       bglP.baseQuit();
     }
     
     RUNINAPPL(2) {

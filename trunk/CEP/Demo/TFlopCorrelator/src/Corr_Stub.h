@@ -10,7 +10,7 @@
 #ifndef LOFAR_TFLOPCORRELATOR_CORRSTUB_H
 #define LOFAR_TFLOPCORRELATOR_CORRSTUB_H
 
-
+#include <ACC/ParameterSet.h>
 #include <TFlopCorrelator/DH_Vis.h>
 
 namespace LOFAR {
@@ -18,17 +18,17 @@ namespace LOFAR {
 // This class is a stub which is used to make the connection of the SubBandFilter
 // to the TflopCorrelator input section 
 
-class SB_Stub
+class CorrStub
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit SB_Stub (bool onServer=false);
+  explicit CorrStub (bool onServer=false);
 
-  ~SB_Stub();
+  ~CorrStub();
 
   // Connect the given objects to the stubs.
-  void connect (int& C_nr,
-		DH_SubBand& sb);
+  void connect (int C_nr,
+		DH_Vis& sb);
 
 private:
   bool               itsStubOnServer;
