@@ -26,8 +26,7 @@
 
 #include <Transport/TH_Ethernet.h>
 #include <Transport/BaseSim.h>
-#include <Transport/DataHolder.h>
-#include <Transport/Transporter.h> 
+#include <Transport/DataHolder.h> 
 #include <Common/LofarLogger.h>
 
 
@@ -92,7 +91,7 @@ string TH_Ethernet::getType() const
   return "TH_Ethernet"; 
 }
 
-bool TH_Ethernet::recvBlocking(void* buf, int32 nbytes, int32 tag)
+bool TH_Ethernet::recvBlocking(void* buf, int nbytes, int tag, int, DataHolder*)
 {  
   if (!itsInitDone) {
     return false;
@@ -140,36 +139,19 @@ bool TH_Ethernet::recvBlocking(void* buf, int32 nbytes, int32 tag)
   return true;
 }
 
-bool TH_Ethernet::recvVarBlocking(int32 tag)
-{
-  // Read dataholder info.
-  DataHolder* target = getTransporter()->getDataHolder();
-  void* buf = target->getDataPtr();
-  int32 size = target->getDataSize();
-  
-  return recvBlocking(buf, size, tag);
-}
-
-bool TH_Ethernet::recvNonBlocking(void* buf, int32 nbytes, int32 tag)
+int32 TH_Ethernet::recvNonBlocking(void* buf, int32 nbytes, int tag, int32, DataHolder*)
 {
   LOG_WARN( "TH_Ethernet::recvNonBlocking() is not implemented. recvBlocking() is used instead." );    
-  return recvBlocking(buf, nbytes, tag);
+  return (recvBlocking(buf, nbytes, tag) ? nbytes : 0);
 }
 
-bool TH_Ethernet::recvVarNonBlocking(int32 tag)
-{
-  LOG_WARN( "TH_Ethernet::recvVarNonBlocking() is not implemented. recvVarBlocking() is used instead." );    
-  return recvVarBlocking(tag);
-}
-
-bool TH_Ethernet::waitForReceived(void*, int32, int32)
+void TH_Ethernet::waitForReceived(void*, int32, int32)
 {
   LOG_TRACE_RTTI("TH_Ethernet waitForReceived()");
-  return true;
 }
 
 
-bool TH_Ethernet::sendBlocking(void* buf, int32 nbytes, int32 tag)
+bool TH_Ethernet::sendBlocking(void* buf, int nbytes, int tag, DataHolder*)
 {
   if (!itsInitDone) return false;
 
@@ -208,16 +190,27 @@ bool TH_Ethernet::sendBlocking(void* buf, int32 nbytes, int32 tag)
   }
 }
 
-bool TH_Ethernet::sendNonBlocking(void* buf, int32 nbytes, int32 tag)
+bool TH_Ethernet::sendNonBlocking(void* buf, int nbytes, int tag, DataHolder*)
 {
   LOG_WARN( "TH_Ethernet::sendNonBlocking() is not implemented." );
   return false;
 }
 
-bool TH_Ethernet::waitForSent(void*, int32, int32)
+void TH_Ethernet::readTotalMsgLengthBlocking(int tag, int& nrBytes)
+{
+  LOG_WARN( "TH_Ethernet::readTotalMsgLengthBlocking() is not implemented." );
+}
+
+bool TH_Ethernet::readTotalMsgLengthNonBlocking(int tag, int& nrBytes)
+{ 
+  LOG_WARN( "TH_Ethernet::readTotalMsgLengthNonBlocking() is not implemented." );
+  return false;
+}
+
+
+void TH_Ethernet::waitForSent(void*, int32, int32)
 {
   LOG_WARN( "TH_Ethernet::waitForSent() is not implemented." );
-  return false;
 }
 
 void TH_Ethernet::Init()

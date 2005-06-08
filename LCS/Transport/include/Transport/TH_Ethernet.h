@@ -29,7 +29,6 @@
 // \file TH_Ethernet.h
 // Transport mechanism for Ethernet 
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Transport/TransportHolder.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
@@ -60,23 +59,28 @@ public:
   virtual ~TH_Ethernet();
 
   // Returns if socket initialization was successful 
-  virtual bool init();
+  bool init();
 
-  // Read the data.
-  virtual bool recvBlocking(void* buf, int32 nbytes, int32 tag);
-  virtual bool recvVarBlocking(int32 tag);
-  virtual bool recvNonBlocking(void* buf, int32 nbytes, int32 tag);
-  virtual bool recvVarNonBlocking(int32 tag);
+  
+  /// Read the data.
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, int offset=0, 
+			    DataHolder* dh=0);
+  virtual int32 recvNonBlocking(void* buf, int32 nbytes, int tag, int32 offset=0, 
+			       DataHolder* dh=0);
+  /// Wait for the data to be received
+  virtual void waitForReceived(void* buf, int nbytes, int tag);
 
-  // Wait for the data to be received
-  virtual bool waitForReceived(void* buf, int32 nbytes, int32 tag);
+  /// Write the data.
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  /// Wait for the data to be sent
+  virtual void waitForSent(void* buf, int nbytes, int tag);
 
-  // Write the data.
-  virtual bool sendBlocking(void* buf, int32 nbytes, int32 tag);
-  virtual bool sendNonBlocking(void* buf, int32 nbytes, int32 tag);
+  // Read the total message length of the next message.
+  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
 
-  // Wait for the data to be sent
-  virtual bool waitForSent(void* buf, int32 nbytes, int32 tag);
+  // Read the total message length of the next message.
+  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
   // Get the type of transport.
   virtual string getType() const;
@@ -87,8 +91,8 @@ public:
   // Make an instance of the transportholder
   virtual TH_Ethernet* clone() const;
 
-  virtual bool isBidirectional() const;
-  
+  void reset();
+
  private:  
   int32 itsSocketFD;
   int32 itsMaxdatasize;
@@ -115,11 +119,12 @@ public:
 
 };
 
-inline bool TH_Ethernet::isBidirectional() const
-  { return true; }
-
 inline bool TH_Ethernet::isClonable() const
   { return true; }
+
+
+inline void TH_Ethernet::reset()
+  {}
 
 // @} // Doxygen endgroup Transport
 
