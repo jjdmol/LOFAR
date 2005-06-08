@@ -19,6 +19,7 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 bin_PROGRAMS 		= TFC_Correlator TFC_Input TFC_Store
 
 TFC_Correlator_SOURCES 	= $(DOCHDRS)\
+TFlopCorrelator_main.cc \
 DH_CorrCube.cc		\
 DH_Vis.cc		\
 DH_SubBand.cc		\
@@ -27,10 +28,12 @@ WH_SubBand.cc		\
 SB_Stub.cc
 
 TFC_Input_SOURCES	= $(DOCHDRS)\
+TFlopCorrelator_main.cc \
 DH_SubBand.cc		\
 SB_Stub.cc
 
 TFC_Store_SOURCES 	= $(DOCHDRS)\
+TFlopCorrelator_main.cc \
 DH_Vis.cc		\
 Corr_Stub.cc
 

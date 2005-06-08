@@ -13,7 +13,7 @@
 #include <lofar_config.h>
 
 #include <DH_SubBand.h>
-#include <ACC/ParameterSet.h>
+//#include <ACC/ParameterSet.h>
 
 
 namespace LOFAR
@@ -26,12 +26,12 @@ namespace LOFAR
       itsSubBand     (subband),
       itsNPol        (0)
   {
-    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-    //ParameterCollection	myPC(myPS);
-    itsNFChannels = myPS.getInt("WH_SubBand.freqs");
-    itsNStations  = myPS.getInt("WH_SubBand.stations");
-    itsNTimes     = myPS.getInt("WH_SubBand.times");
-    itsNPol       = myPS.getInt("WH_SubBand.pols");
+//     ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+//     //ParameterCollection	myPC(myPS);
+//     itsNFChannels = myPS.getInt("WH_SubBand.freqs");
+//     itsNStations  = myPS.getInt("WH_SubBand.stations");
+//     itsNTimes     = myPS.getInt("WH_SubBand.times");
+//     itsNPol       = myPS.getInt("WH_SubBand.pols");
   }
   
 DH_SubBand::DH_SubBand(const DH_SubBand& that)

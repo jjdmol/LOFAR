@@ -20,14 +20,14 @@ DH_RSP::DH_RSP (const string& name)
   itsBuffer  (0)
 {
 
-  ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+//   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
 
-  itsEPAheaderSize   = myPS.getInt("SzEPAheader"); // default 14
-  itsNoBeamlets      = myPS.getInt("NoRSPBeamlets", 92) ; // default 14
-  itsNoPolarisations = myPS.getInt("polarisations", 2);   // default 14
-  const int NoPacketsInFrame = myPS.getInt("NoPacketsInFrame"); // default 8
-  itsBufSize         =  NoPacketsInFrame * 
-    (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<int16>));
+//   itsEPAheaderSize   = myPS.getInt("SzEPAheader"); // default 14
+//   itsNoBeamlets      = myPS.getInt("NoRSPBeamlets", 92) ; // default 14
+//   itsNoPolarisations = myPS.getInt("polarisations", 2);   // default 14
+//   const int NoPacketsInFrame = myPS.getInt("NoPacketsInFrame"); // default 8
+//   itsBufSize         =  NoPacketsInFrame * 
+//     (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<int16>));
 }
 
 DH_RSP::DH_RSP(const DH_RSP& that)

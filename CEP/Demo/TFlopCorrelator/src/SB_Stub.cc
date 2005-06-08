@@ -39,11 +39,11 @@ namespace LOFAR {
 		   myPS.getInt("SBConnection.RequestPort"),   // port
 		   true
 		   );
-    itsSB[SBF_nr]->setID(itsPS->getInt("SBConnection.ID"));
+    //itsSB[SBF_nr]->setID(itsPS->getInt("SBConnection.ID"));
     if (itsStubOnServer) {
-      itsSB[SBF_nr]->connectTo (sb, thSB);
+      //itsSB[SBF_nr]->connectTo (sb, thSB);
     } else {
-      sb.connectTo (*(itsSB[SBF_nr]), thSB);
+      //sb.connectTo (*(itsSB[SBF_nr]), thSB);
     }
   };
 
