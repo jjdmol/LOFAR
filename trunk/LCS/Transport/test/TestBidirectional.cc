@@ -38,7 +38,10 @@ bool testMem()
     
   // connect DH1 to DH2 bidirectionally with non-blocking in-memory 
   // communication
-  // Use a different TH_Mem in each connection!
+  // Use a different TH_Mem in each connection! This is because 
+  // (in non-blocking mode) during the first read/write call the 
+  // source address is set in TH_Mem. This source is used in all 
+  // further communication.
   TH_Mem memTH1;    
   TH_Mem memTH2;
   // A connection for data flowing from DH1 to DH2.
