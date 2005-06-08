@@ -60,7 +60,7 @@ int main (int	argc, char*	argv[]) {
 	INIT_LOGGER(basename(argv[0]));
 	LOG_INFO_STR("Starting " << argv[0]);
 
-	OTDBconnection conn("paulus", "boskabouter", "overeem");
+	OTDBconnection conn("paulus", "boskabouter", "otdbtest");
 
 	try {
 

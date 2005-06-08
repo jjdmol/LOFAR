@@ -78,7 +78,7 @@ int main (int	argc, char*	argv[]) {
 	INIT_LOGGER(basename(argv[0]));
 	LOG_INFO_STR("Starting " << argv[0]);
 
-	OTDBconnection conn("paulus", "boskabouter", "overeem");
+	OTDBconnection conn("paulus", "boskabouter", "otdbtest");
 
 	try {
 
@@ -87,11 +87,11 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR("Connection succesful: " << conn);
 
 		LOG_DEBUG("Trying to construct a tree object");
-		OTDBtree	tree(&conn, 25);
+		OTDBtree	tree(&conn, 1);
 
 		for (int i = 1; i < 5; ++i) {
-			LOG_INFO_STR("getItemList(5," << i << ") of tree 25");
-			vector<OTDBnode>	itemList = tree.getItemList(5,i);
+			LOG_INFO_STR("getItemList(2," << i << ") of tree 1");
+			vector<OTDBnode>	itemList = tree.getItemList(2,i);
 			if (itemList.size() == 0) {
 				LOG_INFO_STR("No items found");
 			}
@@ -129,9 +129,9 @@ int main (int	argc, char*	argv[]) {
 		}
 
 		for (int i = 1; i < 3; ++i) {
-			LOG_INFO_STR("searchInPeriod(5," << i << ") of tree 25");
+			LOG_INFO_STR("searchInPeriod(2," << i << ") of tree 1");
 			vector<OTDBvalue>	valueList = 
-					tree.searchInPeriod(5,i,
+					tree.searchInPeriod(2,i,
 						ptime(second_clock::local_time()-seconds(10)),
 						ptime(second_clock::local_time()+seconds(10)));
 			if (valueList.size() == 0) {

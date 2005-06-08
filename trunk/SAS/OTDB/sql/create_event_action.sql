@@ -88,7 +88,9 @@ CREATE TABLE OTDBevent (
 	eventID		INT4			NOT NULL DEFAULT nextval('OTDBeventID'),
 	nodename	VARCHAR(80)		NOT NULL,
 	status		INT2			NOT NULL REFERENCES eventStatus(status),
-	eventTime	timestamp		DEFAULT 'now'
+	eventTime	timestamp		DEFAULT 'now',
+
+	CONSTRAINT eventID_uniq		UNIQUE(eventID)	-- for reference by action
 ) WITHOUT OIDS;
 
 -- example

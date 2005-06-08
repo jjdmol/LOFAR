@@ -21,15 +21,15 @@
 --
 --  $Id$
 --
-DROP TABLE classification;
-DROP TABLE constr_type;
-DROP TABLE param_type;
-DROP TABLE validation;
-DROP TABLE unit;
-DROP TABLE treetype;
+DROP TABLE classification CASCADE;
+DROP TABLE constr_type 	  CASCADE;
+DROP TABLE param_type 	  CASCADE;
+DROP TABLE validation 	  CASCADE;
+DROP TABLE unit		 	  CASCADE;
+DROP TABLE treetype 	  CASCADE;
 
-DROP TABLE campaign;
-DROP TABLE operator;
+DROP TABLE campaign 	  CASCADE;
+DROP TABLE operator 	  CASCADE;
 
 --
 -- Classification table
