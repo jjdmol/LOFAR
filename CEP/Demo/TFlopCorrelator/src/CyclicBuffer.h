@@ -1,4 +1,4 @@
-//# CyclicBuffer.h: Cyclic buffer interface
+//# CyclicBuffer.h: Cyclic buffer interface.
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,22 +20,22 @@
 //#
 //# $Id$
 
-#ifndef STATIONCORRELATOR_CYCLICBUFFER_H
-#define STATIONCORRELATOR_CYCLIC_BUFFER_H
+#ifndef TFLOPCORRELATOR_CYCLICBUFFER_H
+#define TFLOPCORRELATOR_CYCLIC_BUFFER_H
 
 
-#include <CEPFrame/Lock.h>
+#include <Transport/Lock.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
 
-// an element of the CyclicBuffer
+// an item of the CyclicBuffer
 template <class TYPE>
-class BufferElement
+class BufferItem
 {
  public:
-  BufferElement(TYPE DataItem) :
+  BufferItem(TYPE DataItem) :
     itsItem(DataItem)
     {
     }
@@ -55,7 +55,7 @@ class BufferElement
     int itsID;
 };
 
-/** A cyclic buffer template, like a fifo */
+
 template <class TYPE>
 class CyclicBuffer
 {
@@ -64,35 +64,62 @@ class CyclicBuffer
   CyclicBuffer();
   ~CyclicBuffer();
   
-  // return new ID
-  int   AddBufferElement(TYPE DataItem);
-  void  RemoveBufferElement(int ID);
-  void  RemoveElements();
+  // add item into buffer
+  int   AddBufferItem(TYPE DataItem);
+  
+  // clear item from buffer
+  void  RemoveBufferItem(int ID);
+  
+  // clear the buffer
+  void  RemoveItems();
 
-  TYPE& GetWriteLockedDataItem(int* ID); // Write new item to buffer
-  const TYPE& GetReadDataItem(int* ID);  // Read and remove item from buffer
-  TYPE& GetRWLockedDataItem(int* ID);    // Read and write item in buffer
-  void  WriteUnlockElement(int ID);
-  void  ReadUnlockElement(int ID);
+  // write an item and adjust head and count
+  TYPE& GetBufferWritePtr(int* ID);
 
-  bool CheckConsistency(int max);
-  void DumpState();
+  // read oldest item and adjust tail and count
+  const TYPE& GetBufferReadPtr(int* ID);
 
-  int  GetSize();
-  int  GetCount();
+  // read oldest item without adjusting tail and count 
+  const TYPE& GetFirstReadPtr(int* ID);
+
+  // read and remove item 'offset' items after oldest
+  // item and adjust tail and count
+  const TYPE& GetUserReadPtr(uint offset, int* ID);
+
+  // (over)write an item without adjusting head and count
+  TYPE& GetUserWritePtr(uint ID);
+  
+  // release locks
+  void  WriteUnlockItem(int ID);
+  void  ReadUnlockItem(int ID);
+
+  // print head, tail and count pointers
+  void Dump();
+
+  // maximum number of items in buffer
+  int  getSize();
+  
+  // actual number of written items in buffer
+  int  getCount(); 
+  
+  /* Use setWrittenBeforeReading(uint x) to force that cyclic buffer must 
+     contain at least x% of its maximum items before reading from buffer 
+     is possible (x=0 means that reading is possible if buffer contains 
+     at least 1 item */
+  void setWrittenBeforeReading(uint percentage);
 
  private:
 
-  void ReadLockElement(int ID);
-  void WriteLockElement(int ID);
-  bool CheckIDUniqueness();
+  void ReadLockItem(int ID);
+  void WriteLockItem(int ID);
   
-  vector< BufferElement <TYPE> > itsBuffer;
+  vector< BufferItem <TYPE> > itsBuffer;
 
   int itsHeadIdx;
-  int itsBodyIdx;
   int itsTailIdx;
   int itsCount;
+
+  int itsMinCount;
 
   pthread_mutex_t buffer_mutex;
   pthread_cond_t  data_available;
@@ -102,9 +129,9 @@ class CyclicBuffer
 template<class TYPE>
 CyclicBuffer<TYPE>::CyclicBuffer() :
     itsHeadIdx(0),
-    itsBodyIdx(0),
     itsTailIdx(0),
-    itsCount(0)
+    itsCount(0),
+    itsMinCount(0)
 {
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);
@@ -118,9 +145,9 @@ CyclicBuffer<TYPE>::~CyclicBuffer()
 }
 
 template<class TYPE>
-int CyclicBuffer<TYPE>::AddBufferElement(TYPE DataItem)
+int CyclicBuffer<TYPE>::AddBufferItem(TYPE DataItem)
 {
-  BufferElement<TYPE> elem(DataItem);
+  BufferItem<TYPE> elem(DataItem);
 
   pthread_mutex_lock(&buffer_mutex);
 
@@ -134,7 +161,7 @@ int CyclicBuffer<TYPE>::AddBufferElement(TYPE DataItem)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::RemoveBufferElement(int ID)
+void CyclicBuffer<TYPE>::RemoveBufferItem(int ID)
 {
   // lock the buffer for the duration of this routine
   pthread_mutex_lock(&buffer_mutex);
@@ -146,31 +173,28 @@ void CyclicBuffer<TYPE>::RemoveBufferElement(int ID)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::RemoveElements(void)
+void CyclicBuffer<TYPE>::RemoveItems(void)
 {
   // lock the buffer for the duration of this routine
   pthread_mutex_lock(&buffer_mutex);
 
-  // clear the deque
+  // clear the buffer
   itsBuffer.clear();
 
   pthread_mutex_unlock(&buffer_mutex);
 }
 
 template<class TYPE>
-TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
+TYPE& CyclicBuffer<TYPE>::GetBufferWritePtr(int* ID)
 {
 
   pthread_mutex_lock(&buffer_mutex);
-
+  
   // wait until space becomes available
   while (itsCount >= (int)itsBuffer.size())
   {
-    ASSERTSTR(itsCount == (int)itsBuffer.size(),
-	      "itsCount=" << itsCount << " out of range (" << itsBuffer.size() << ")");
     pthread_cond_wait(&space_available, &buffer_mutex);
   }
-  
 
   // CONDITION: itsCount < itsBuffer.size()
   // space available for at least one element
@@ -185,10 +209,9 @@ TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
     itsHeadIdx = 0;
   }
   itsCount++;
-  cout << "write: buffer contains " << itsCount << " element(s)" << endl;
 
-  // signal that data has become available
-  if (1 == itsCount)
+  // signal that data has become available 
+  if (itsMinCount+1 == itsCount)
   {
     pthread_cond_broadcast(&data_available);
   }
@@ -198,58 +221,27 @@ TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
 }
 
 template<class TYPE>
-TYPE& CyclicBuffer<TYPE>::GetRWLockedDataItem(int* ID)
+const TYPE& CyclicBuffer<TYPE>::GetBufferReadPtr(int* ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
-  // wait until data becomes available
-  while (itsCount <= 0)
+  // wait until enough elements are available
+  while (itsCount <= itsMinCount) 
   {
-    ASSERTSTR(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
+  // CONDITION: itsCount > itsMinCount
   
-  // CONDITION: itsCount > 0
-  // There is at least one element available
-  
-  *ID = itsBodyIdx++;
-  itsBuffer[*ID].itsRWLock.WriteLock();
-  
-  // adjust the body id
-  if (itsBodyIdx >= (int)itsBuffer.size())
-  {
-    itsBodyIdx = 0;
-  }
-
-  pthread_mutex_unlock(&buffer_mutex);
-  
-  return itsBuffer[*ID].itsItem;
-}
-
-template<class TYPE>
-const TYPE& CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
-{
-  pthread_mutex_lock(&buffer_mutex);
-
-  // wait until data becomes available
-  while (itsCount <= 0) 
-  {
-    ASSERTSTR(0 == itsCount , "itsCount=" << itsCount << " out of range (min=0)");
-    pthread_cond_wait(&data_available, &buffer_mutex);
-  }
-  // CONDITION: itsCount > 0
-  // There is at least 1 element available
-  
-  *ID = itsTailIdx++;
+  *ID = itsTailIdx;
   itsBuffer[*ID].itsRWLock.ReadLock();
-  
+ 
   // adjust the tail
+  itsTailIdx++;
   if (itsTailIdx >= (int)itsBuffer.size())
   {
     itsTailIdx = 0;
   }
   itsCount--;
-  cout << "read: buffer contains " << itsCount << " element(s)" << endl;
   
   // signal that space has become available
   pthread_cond_broadcast(&space_available);
@@ -260,81 +252,145 @@ const TYPE& CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::WriteUnlockElement(int ID)
+const TYPE& CyclicBuffer<TYPE>::GetFirstReadPtr(int* ID)
+{
+  pthread_mutex_lock(&buffer_mutex);
+
+  // wait until at least one element is available
+  while (itsCount <= 0) 
+  {
+    pthread_cond_wait(&data_available, &buffer_mutex);
+  }
+  // CONDITION: itsCount > 0
+  
+  *ID = itsTailIdx;
+  itsBuffer[*ID].itsRWLock.ReadLock();
+ 
+  pthread_mutex_unlock(&buffer_mutex);
+  
+  return itsBuffer[*ID].itsItem;
+}
+
+
+template<class TYPE>
+const TYPE& CyclicBuffer<TYPE>::GetUserReadPtr(uint offset, int* ID)
+{
+  if (offset >= (int)itsBuffer.size()) 
+  {
+    LOG_TRACE_RTTI("CyclicBuffer::getReadUserItem: offset >=  size of buffer. No offset used instead");
+    offset = 0;
+  }
+
+  pthread_mutex_lock(&buffer_mutex);
+
+  // wait until enough elements are available
+  while (itsCount <= (itsMinCount+offset)) 
+  {
+    pthread_cond_wait(&data_available, &buffer_mutex);
+  }
+  // CONDITION: itsCount > (itsMinCount + offset)
+  
+  if ( (itsTailIdx+offset) < (int)itsBuffer.size()) 
+  {
+    *ID = itsTailIdx+offset;
+  }
+  else {
+    *ID = itsTailIdx + offset - (int)itsBuffer.size(); 
+  }
+  itsBuffer[*ID].itsRWLock.ReadLock();
+ 
+  // adjust the tail
+  itsTailIdx = *ID+1;
+  if (itsTailIdx >= (int)itsBuffer.size()) 
+  {
+    itsTailIdx = 0;
+  }
+  
+  // adjust counter
+  itsCount -= (offset+1);
+  
+  // signal that space has become available
+  pthread_cond_broadcast(&space_available);
+
+  pthread_mutex_unlock(&buffer_mutex);
+  
+  return itsBuffer[*ID].itsItem;
+}
+
+
+template<class TYPE>
+TYPE& CyclicBuffer<TYPE>::GetUserWritePtr(uint ID)
+{
+  if (ID >= (int)itsBuffer.size()) {
+ 
+   LOG_TRACE_RTTI("CyclicBuffer::getWriteUserItem: ID >= size of buffer. Head ID used instead");
+   return itsBuffer[itsHeadIdx].itsItem;
+ } 
+
+  pthread_mutex_lock(&buffer_mutex); 
+
+  itsBuffer[ID].itsRWLock.WriteLock();
+
+  pthread_mutex_unlock(&buffer_mutex);
+
+  return itsBuffer[ID].itsItem;
+}
+
+template<class TYPE>
+void CyclicBuffer<TYPE>::WriteUnlockItem(int ID)
 {
   itsBuffer[ID].itsRWLock.WriteUnlock();
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::ReadUnlockElement(int ID)
+void CyclicBuffer<TYPE>::ReadUnlockItem(int ID)
 {
   itsBuffer[ID].itsRWLock.ReadUnlock();
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::ReadLockElement(int ID)
+void CyclicBuffer<TYPE>::ReadLockItem(int ID)
 {
   itsBuffer[ID].itsRWLock.ReadLock();
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::WriteLockElement(int ID)
+void CyclicBuffer<TYPE>::WriteLockItem(int ID)
 {
   itsBuffer[ID].itsRWLock.WriteLock();
 }
 
 template<class TYPE>
-bool CyclicBuffer<TYPE>::CheckIDUniqueness(void)
-{
-  //implicitly true for the deque implementation
-  return true;
-}
-
-template<class TYPE>
-bool CyclicBuffer<TYPE>::CheckConsistency(int max)
-{
-  bool result = false;
-  int  i;
-
-  // check internal consistency of CyclicBuffer
-  // all locks should be released
-
-  for (i=0; i< CEPF_MIN(max, (int)itsBuffer.size()); i++)
-  {
-    cerr << "elem("  << i << "): readers_reading=" << 
-      itsBuffer[i].itsRWLock.GetReadersReading() <<
-      ", writer_writing=" << itsBuffer[i].itsRWLock.GetWriterWriting() <<
-      ", maxcount=" << itsBuffer[i].itsRWLock.GetMaxReaders() << endl;
-  }
-
-  return result;
-}
-
-template<class TYPE>
-void CyclicBuffer<TYPE>::DumpState(void)
+void CyclicBuffer<TYPE>::Dump(void)
 {
   pthread_mutex_lock(&buffer_mutex);
-
-  CheckConsistency(1000);
   
   cerr << "itsHeadIdx = " << itsHeadIdx << endl;
   cerr << "itsTailIdx = " << itsTailIdx << endl;
-  cerr << "itsCount   = " << itsCount << endl;
+  cerr << "itsCount   = " << itsCount   << endl;
 
   pthread_mutex_unlock(&buffer_mutex);
 }
 
 template<class TYPE>
-int CyclicBuffer<TYPE>::GetSize(void)
+int CyclicBuffer<TYPE>::getSize(void)
 {
   return itsBuffer.size();
 }
 
 template<class TYPE>
-int CyclicBuffer<TYPE>::GetCount(void)
+int CyclicBuffer<TYPE>::getCount(void)
 {
   return itsCount;
 }
+
+template<class TYPE>
+void CyclicBuffer<TYPE>::setWrittenBeforeReading(uint percentage)
+{
+  itsMinCount =  ((float)percentage/100) * itsBuffer.size();
+  cout << "ItsMinCount: " << itsMinCount << endl;
+}
+
 
 }
 
