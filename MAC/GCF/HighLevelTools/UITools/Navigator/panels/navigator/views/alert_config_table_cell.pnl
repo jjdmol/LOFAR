@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,328 229 690 283 N "_3DFace" 6
+PANEL,461 269 690 283 N "_3DFace" 6
 "$AreaNr"
 "$Column"
 "$Row"
@@ -11,6 +11,18 @@ PANEL,328 229 690 283 N "_3DFace" 6
 "main()
 {
 //  startThread(\"FillSelectionList\");
+  dyn_string ColumnTitles;
+
+  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
+  if(dynlen(ColumnTitles)>=$Row)
+  {
+    setValue(\"txt_legendName\", \"text\", ColumnTitles[ConvIndex($Row)]);
+  }
+  else
+  {
+    setValue(\"txt_legendName\", \"text\", \"\");
+  }
+   
 }
 
 
@@ -20,6 +32,7 @@ PANEL,328 229 690 283 N "_3DFace" 6
 // Function    : Fills the selection list with retrieved datapoint from the 
 //               PVSS database
  ///////////////////////////////////////////////////////////////////////////////////
+ /*
 void FillSelectionList()
 {
   dyn_dyn_anytype tab;
@@ -92,7 +105,7 @@ void FillSelectionList()
 //	DebugN(\"SelectionPosition: \"+SelectionPosition);
 }
 
-
+*/
 " 0
 EE E E 1 -1 -1 0  190 250
 "" 0 1
@@ -343,7 +356,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  71 30 11 30
 14 5
-"txt_legend"
+"txt_legendName"
 ""
 1 127 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
@@ -359,19 +372,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 125 248 279 275
 3 "s" 0 0 0 0 0 0 
 E
-"// valid
-main()
-{
-  dyn_string ColumnTitles;
-
-  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
-  if(dynlen(ColumnTitles)<=$Row)
-  {
-    setValue(\"txt_legend\", \"text\", ColumnTitles[ConvIndex($Row)]);
-  } 
-   
-}" 0
-
+E
 E
 1 49 0 "" 0
 0
@@ -399,9 +400,69 @@ T
 LANG:1 2 OK
 "main()
 {
-  navViewAlertApplyCellSettings($Row, $Column);
-  PanelOff();
-}" 0
+  navViewAlertApplyCellSettings($AreaNr, $Row, $Column);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function navViewAlertGetDpFromColumn: Gets the selectedDP 
+//                         
+// Input: 1. Area number
+//        2. Row
+//        3. Column
+//
+// Output: stores the current configuration of the cell into the PVSS II
+//         database (dyn_string)
+///////////////////////////////////////////////////////////////////////////
+navViewAlertApplyCellSettings(int AreaNr, string RowNumber, string Column)
+{
+
+  dyn_string ColumnTitles;
+  dpGet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"Titles\", ColumnTitles);
+  if(ColumnTitles[ConvIndex(RowNumber)]!=txt_legendName.text)
+  {
+    ColumnTitles[ConvIndex(RowNumber)] = txt_legendName.text;
+    dpSet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"Titles\", ColumnTitles); 
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
+  string selectedConfigDpName;
+  if(\"\"!=list_dpe.selectedText)
+  {
+    if(list_system.selectedText==getSystemName())
+    {
+      if(list_dp.selectedText==CURRENT_DP_MESSAGE) //CURRENT_DP_MESSAGE is global string \"Current selection in tree\"
+      {
+        selectedConfigDpName = $datapoint + \".\" +list_dpe.selectedText;
+      }
+      else
+      {
+        selectedConfigDpName = $datapoint + \"_\" + list_dp.selectedText + \".\" +list_dpe.selectedText;
+      }
+      strreplace(selectedConfigDpName, $datapoint, \"\");
+    }
+    else
+    {
+      selectedConfigDpName = list_system.selectedText + list_dp.selectedText + \".\" +list_dpe.selectedText;
+    }
+    //Check whether the current selected dpName is different from the stored dpName
+    dyn_string ColumndpNames, ColumnTitles;
+    dpGet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
+    
+    if(ColumndpNames[ConvIndex(RowNumber)]!=selectedConfigDpName)
+    {
+      ColumndpNames[ConvIndex(RowNumber)] = selectedConfigDpName;
+      dpSet($configDatapoint + \".\" + AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
+    }
+    PanelOff();
+  }
+  else
+  {
+    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+  }
+ 
+}
+" 0
  E E E
 13 57
 "Button4"
@@ -426,6 +487,29 @@ LANG:1 6 Cancel
   PanelOff();
 }" 0
  E E E
+14 71
+"txt"
+""
+1 310 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+58 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+308 248 462 275
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+  setValue(\"\", \"text\", \"AreaNr:\"+$AreaNr);
+}" 0
+
+E
 0
 LAYER, 1 
 1

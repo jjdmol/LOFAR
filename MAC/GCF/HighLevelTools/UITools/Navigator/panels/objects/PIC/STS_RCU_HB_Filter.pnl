@@ -1,46 +1,57 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,250 138 142 95 N "_3DFace" 1
+PANEL,574 244 142 95 N "_3DFace" 1
 "$datapoint"
 "main()
 {
 
-  if (dpExists($datapoint + \".filSelA\") && 
-      dpExists($datapoint + \".filSelB\"))
+  if(dpAccessable($datapoint + \".filSelA\") && 
+     dpAccessable($datapoint + \".filSelB\"))
 	{
     dpConnect(\"ControlHBFilter\", $datapoint + \".filSelA:_online.._value\",
-                                 $datapoint + \".filSelB:_online.._value\");
+                                 $datapoint + \".filSelB:_online.._value\",
+                                 $datapoint + \".filSelB:_online.._invalid\");
   }
   else
   {
-    setValue(\"rect_filter\", \"backCol\", \"DpDoesNotExist\");
+    setValue(\"rect_filter\", \"backCol\", \"_dpdoesnotexist\");
   }
 }
 
 
 ControlHBFilter(string dp1, bool filSelA,
-                string dp2, bool filSelB)
+                string dp2, bool filSelB,
+                string dp3, bool invalid)
 {
-  if (!filSelA && !filSelB)
+  if(!invalid)
   {
-    ComboBox1.selectedPos=1;
-    setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+    ComboBox1.enabled = TRUE;
+    if (!filSelA && !filSelB)
+    {
+      ComboBox1.selectedPos=1;
+      setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+    }
+    else if (!filSelA && filSelB)
+    {
+      ComboBox1.selectedPos=2;
+      setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+    }
+    else if (filSelA && !filSelB)
+    {
+      ComboBox1.selectedPos=3;
+      setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+    }
+    else if (filSelA && filSelB)
+    {
+      ComboBox1.selectedPos=4;
+      setValue(\"rect_filter\", \"backCol\", \"grey\");
+    }
   }
-  else if (!filSelA && filSelB)
+  else
   {
-    ComboBox1.selectedPos=2;
-    setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
-  }
-  else if (filSelA && !filSelB)
-  {
-    ComboBox1.selectedPos=3;
-    setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
-  }
-  else if (filSelA && filSelB)
-  {
-    ComboBox1.selectedPos=4;
-    setValue(\"rect_filter\", \"backCol\", \"grey\");
+    ComboBox1.enabled = FALSE;
+    setValue(\"rect_filter\", \"backCol\", \"_dpdoesnotexist\");
   }
 }" 0
 EE E E 1 -1 -1 0  10 70
@@ -89,7 +100,7 @@ LANG:1 15 Highband filter
 22 2
 "ComboBox1"
 ""
-1 15 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 15 40 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
 EE E

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,636 374 946 43 N "_3DFace" 4
+PANEL,354 237 946 43 N "_3DFace" 4
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
@@ -10,7 +10,7 @@ PANEL,636 374 946 43 N "_3DFace" 4
 {
   string viewConfigDpName = \"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\" + $selectedElementDpType + \"_viewconfig\";
   dyn_int nrOfSubViews;
-  DebugN(\"viewConfigDpName:\"+viewConfigDpName);
+  //DebugN(\"viewConfigDpName:\"+viewConfigDpName);
   if(dpAccessable(viewConfigDpName))
   {
     dpGet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews);
@@ -188,7 +188,7 @@ LANG:1 14 Set to default
         viewConfigDpName + \".subViews\",subViews,
         viewConfigDpName + \".configs\",configs);
 
-  string currentSubView = substr($configDatapoint ,strlen(\"System1:__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
+  string currentSubView = substr($configDatapoint ,strlen(getSystemName()+\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
   for(int i=1;i<=mappinglen(g_subViews);i++)
   {
      if (currentSubView == cleanText(mappingGetKey(g_subViews,i)))

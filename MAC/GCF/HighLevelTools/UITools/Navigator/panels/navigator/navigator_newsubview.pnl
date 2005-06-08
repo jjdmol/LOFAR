@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,406 172 429 103 N "_3DFace" 4
+PANEL,306 200 429 103 N "_3DFace" 4
 "$addView"
 "$selectedElementDpType"
 "$selectedView"
@@ -257,7 +257,7 @@ LANG:1 2 OK
   if($addView)
   {
   //########################################################
-  if(!dpExists(subViewDpName)&& !dpExists(configDpName))
+  if(!dpAccessable(subViewDpName)&& !dpAccessable(configDpName))
   {
     if(comboCaption.visible == false) // adding new subview
     {
@@ -299,7 +299,7 @@ LANG:1 2 OK
       {
         dyn_int nrOfSubViews;
         dyn_string subViews,configs;
-        if(!dpExists(viewConfigDpName))
+        if(!dpAccessable(viewConfigDpName))
         {
           // create a new datapoint, based on the default config
           int err;
@@ -368,14 +368,12 @@ LANG:1 2 OK
   }
   else
   {
-    // remove subview config for the selected datapoint type
-    // NOTE: the subview itself may be reference by other configs. Therefore
-    // only the subview config and the references to that config are removed.
+    // remove subview config for the selected datapoint type and the subview datapoint
 
     int selectedSubView;
     dyn_int nrOfSubViews;
     dyn_string subViews,configs;
-    if(dpExists(viewConfigDpName))
+    if(dpAccessable(viewConfigDpName))
     {
       dpGet(viewConfigDpName + \".selectedSubView\",selectedSubView,
             viewConfigDpName + \".nrOfSubViews\",nrOfSubViews,
@@ -418,7 +416,18 @@ LANG:1 2 OK
         }
       }
     }
-    dpDelete(configDpName); 
+    
+    //User must confirm delete sunview
+/*    dyn_float resultFloat;
+    dyn_string resultString;
+    string text1=\"$1:Are you sure you want to delete the\\nsubview: \" +subViewName;
+    ChildPanelOnCentralModalReturn(\"vision/MessageWarning2\",
+                                   \"Confirm delete subview\\n\",makeDynString(text1,\"Yes\",\"No\"), resultFloat, resultString);
+    while(resultFloat[1]!=1 && resultFloat[1]!=0)
+    if(resultFloat[1]==1)
+    {*/
+      dpDelete(subViewDpName);
+      dpDelete(configDpName); 
   }
 
   // write return parameters to the database

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,490 320 690 338 N "_3DFace" 5
+PANEL,367 222 690 338 N "_3DFace" 5
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -36,6 +36,7 @@ PANEL,490 320 690 338 N "_3DFace" 5
 // Function    : Fills the selection list with retrieved datapoint from the 
 //               PVSS database
  ///////////////////////////////////////////////////////////////////////////////////
+/*
 void FillSelectionList()
 {
   string attribute = \"_online.._value\";
@@ -62,7 +63,7 @@ void FillSelectionList()
   SelectionList1.selectedPos(dynContains(output, dpName));
 
 
-}" 0
+}*/" 0
 EE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file

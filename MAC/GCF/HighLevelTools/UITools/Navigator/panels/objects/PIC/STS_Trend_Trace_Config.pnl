@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,285 168 258 47 N "_3DFace" 4
+PANEL,367 222 258 47 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -60,10 +60,12 @@ E E 0 1 1 0 1 E U  0 E 10 10 155 34
 1 75 10 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  "main()
 {
-		// Local data
-  	dyn_string txt;
-  	string dpName;
-  	int iAnswer;
+  dyn_string txt;
+  int iAnswer;
+  if(dpAccessable($configDatapoint + \".\"+$TrendNr+\".Trace\"+$TraceNr+\".LegendName:_online.._value\"))
+  {
+	  // Local data
+    string dpName;
   	int dpNameNotEmpty;
   	bool bOK;				//Variable with value FALSE
   	
@@ -102,6 +104,12 @@ E E 0 1 1 0 1 E U  0 E 10 10 155 34
     default:
     	break;
   	}       
+  }
+  else //$configDatapoint is not Accessable
+  {
+    txt = makeDynString(\"PUSH_BUTTON, Configuration not possible, 2, 0\");
+    popupMenu(txt, iAnswer);
+  }
 }" 0
  E
 2 0 0 0 0 0
@@ -125,7 +133,7 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( $configDatapoint + \".\"+$TrendNr+\".Trace\"+$TraceNr+\".LegendName:_online.._value\"))
+  if(!dpAccessable($configDatapoint + \".\"+$TrendNr+\".Trace\"+$TraceNr+\".LegendName:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;

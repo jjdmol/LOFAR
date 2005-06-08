@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,435 356 690 341 N "_3DFace" 4
+PANEL,266 353 690 341 N "_3DFace" 4
 "$PlotNr"
 "$configDatapoint"
 "$datapoint"
@@ -491,9 +491,7 @@ T
 LANG:1 2 OK
 "main()
 {
-  //TrendConfigApplyTraceSettings();
   navViewPlotApplyTraceSettings($PlotNr);
-  PanelOff();
 }
 
 
@@ -504,6 +502,27 @@ navViewPlotApplyTraceSettings(int PlotNumber)
   string currentConfigDpName; //current configuration in the PVSS database
   string selectedConfigDpName; //
 
+ 
+  //Apply the Setting Active if changed
+  dpGet($configDatapoint + \".\" + PlotNumber + \".active\", plotActive);
+  if(plotActive!=btn_Active.state(0))
+  {
+    dpSet($configDatapoint + \".\" + PlotNumber + \".active\", btn_Active.state(0));
+  }
+  
+  //Apply the Setting dpName if changed
+  string currentScriptFilename;
+  string selectedScriptFilename = txt_script.text;
+  dpGet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", currentScriptFilename);
+  if(currentScriptFilename!=selectedScriptFilename)
+  {
+    dpSet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", selectedScriptFilename);
+  }
+
+
+
+/////////////////////////////////////////////////////////////////////////
+/*
   if(list_system.selectedText==getSystemName())
   {
     if(list_dp.selectedText==CURRENT_DP_MESSAGE) //CURRENT_DP_MESSAGE is global string \"Current selection in tree\"
@@ -520,32 +539,47 @@ navViewPlotApplyTraceSettings(int PlotNumber)
   {
     selectedConfigDpName = list_system.selectedText + list_dp.selectedText + \".\" +list_dpe.selectedText;
   }
+*/
+////////////////////////////////////////////////////////////////////////
+  string selectedConfigDpName;
+  if(\"\"!=list_dpe.selectedText)
+  {
+    if(list_system.selectedText==getSystemName())
+    {
+      if(list_dp.selectedText==CURRENT_DP_MESSAGE) //CURRENT_DP_MESSAGE is global string \"Current selection in tree\"
+      {
+        selectedConfigDpName = $datapoint + \".\" +list_dpe.selectedText;
+      }
+      else
+      {
+        selectedConfigDpName = $datapoint + \"_\" + list_dp.selectedText + \".\" +list_dpe.selectedText;
+      }
+      strreplace(selectedConfigDpName, $datapoint, \"\");
+    }
+    else
+    {
+      selectedConfigDpName = list_system.selectedText + list_dp.selectedText + \".\" +list_dpe.selectedText;
+    }
+    //Check whether the current selected dpName is different from the stored dpName
+    //Apply the Setting dpName if changed
+    dpGet($configDatapoint + \".\" + PlotNumber + \".dpName\", currentConfigDpName);
+    if(currentConfigDpName!=selectedConfigDpName)
+    {
+      dpSet($configDatapoint + \".\" + PlotNumber + \".dpName\", selectedConfigDpName);
+    }
+    //dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", currentDpName);
+    //if(currentDpName!=selectedConfigDpName)
+    //{
+    // dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", selectedConfigDpName);
+    //}
+    PanelOff();
+  }
+  else
+  {
+    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+  }
 
-  //Apply the Setting dpName if changed
-  dpGet($configDatapoint + \".\" + PlotNumber + \".dpName\", currentConfigDpName);
-  if(currentConfigDpName!=selectedConfigDpName)
-  {
-    dpSet($configDatapoint + \".\" + PlotNumber + \".dpName\", selectedConfigDpName);
-  }
-  
-  //Apply the Setting Active if changed
-  dpGet($configDatapoint + \".\" + PlotNumber + \".active\", plotActive);
-  if(plotActive!=btn_Active.state(0))
-  {
-    dpSet($configDatapoint + \".\" + PlotNumber + \".active\", btn_Active.state(0));
-  
-  }
-  
-  //Apply the Setting dpName if changed
-  string currentScriptFilename;
-  string selectedScriptFilename = txt_script.text;
-  dpGet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", currentScriptFilename);
-  if(currentScriptFilename!=selectedScriptFilename)
-  {
-    dpSet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", selectedScriptFilename);
-  }
-
-  
+////////////////////////////////////////////////////////////////////////  
 
 }" 0
  E E E
@@ -630,7 +664,26 @@ E E
     setValue (\"\", \"enabled\", FALSE);
   }*/
 }" 0
-E0
+E14 90
+"txt_legendName"
+""
+1 350 310 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+348 308 502 335
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+0
 LAYER, 1 
 1
 LANG:1 6 Layer2

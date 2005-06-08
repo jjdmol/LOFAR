@@ -1,35 +1,47 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,250 138 124 85 N "_3DFace" 3
+PANEL,367 222 124 85 N "_3DFace" 3
 "$Caption"
 "$Component"
 "$datapoint"
 "main()
 {
-  if (dpExists($datapoint + \".\" + $Component))
+  if (dpAccessable($datapoint + \".\" + $Component))
 	{
 	  setValue(\"txt_component\", \"text\", $Caption);
-	  dpConnect(\"ControlComponent\", $datapoint + \".\" + $Component + \":_online.._value\");
+	  dpConnect(\"ControlComponent\", $datapoint + \".\" + $Component + \":_online.._value\",
+	                                $datapoint + \".\" + $Component + \":_online.._invalid\");
   }
   else
   {
-  //set color
-  setValue(\"rect\", \"backCol\", \"DpDoesNotExist\");
+    //set color
+    setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
   }
 }
 
-ControlComponent(string dp1, bool Status)
+ControlComponent(string dp1, bool Status,
+                 string dp2, bool invalid)
 {
-  if (Status==TRUE)
+
+  if(!invalid)
   {
-    setValue(\"rect\", \"backCol\", \"Lofar_device_active\");
-    CheckButton1.state(0)=TRUE;
+    CheckButton1.enabled = TRUE;
+    if (Status==TRUE)
+    {
+      setValue(\"rect\", \"backCol\", \"Lofar_device_active\");
+      CheckButton1.state(0)=TRUE;
+    }
+    else 
+    {
+      setValue(\"rect\", \"backCol\", \"grey\");
+      CheckButton1.state(0)=FALSE;
+    }
   }
-  else 
+  else
   {
-    setValue(\"rect\", \"backCol\", \"grey\");
-    CheckButton1.state(0)=FALSE;
+    CheckButton1.enabled = FALSE;
+    setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
   }
    
    
@@ -80,7 +92,7 @@ LANG:1 7 .......
 20 1
 "CheckButton1"
 ""
-1 65 42 E E E 1 E 1 E N "_3DText" E N {255,255,255} E E
+1 65 42 E E E 0 E 1 E N "_3DText" E N {255,255,255} E E
  E E
 2 0 0 0 0 0
 EE E

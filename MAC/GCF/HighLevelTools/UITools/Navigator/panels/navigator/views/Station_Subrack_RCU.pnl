@@ -1,9 +1,58 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,284 171 923 749 N "_3DFace" 1
+PANEL,379 215 923 749 N "_3DFace" 1
 "$datapoint"
-EEE E E 1 -1 -1 0  130 290
+"main()
+{
+  navPMLloadPropertySet($datapoint);
+  string RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
+  if (dpAccessable($datapoint + \".VddVccEn:_online.._value\") &&
+      dpAccessable($datapoint + \".nofOverflow:_online.._value\"))
+	{
+	  dpConnect(\"ShownofOverflows\", $datapoint + \".VddVccEn:_online.._value\",
+	                                $datapoint + \".nofOverflow:_online.._value\",
+	                                $datapoint + \".nofOverflow:_online.._invalid\");
+  }
+  else
+  {
+    setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_overflow\" , \"visible\", FALSE);
+    setValue(\"rect_lowBandFilter\", \"backCol\", \"_dpdoesnotexist\");
+    
+  }
+}
+
+ShownofOverflows(string dp1, bool Status,
+                 string dp2, unsigned nofOverflow,
+                 string dp3, bool invalid)
+{
+  if(!invalid)
+  {
+    setValue(\"txt_overflow\", \"text\", nofOverflow );
+    setValue(\"txt_overflow\" , \"visible\", TRUE);
+    setValue(\"rect_lowBandFilter\", \"backCol\", \"Lofar_device_active\");
+    if(Status)
+    {
+      setValue(\"rect_overflow\", \"backCol\", \"Lofar_device_active\");
+    }
+    else 
+    {
+      setValue(\"rect_overflow\", \"backCol\", \"grey\");
+    }
+  }
+  else
+  {
+    setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_overflow\" , \"visible\", FALSE);
+    setValue(\"rect_lowBandFilter\", \"backCol\", \"_dpdoesnotexist\");
+  }
+}" 0
+"main()
+{
+navPMLunloadPropertySet($datapoint);
+}" 0
+E E E 1 -1 -1 0  130 290
 "" 0 1
 E"//Include of ctl file
 #uses \"gcfnav_view.ctl\"" 0
@@ -68,7 +117,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  520 485 520 395
 6 44
-"Border3"
+"rect_lowBandFilter"
 ""
 1 280 325 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  E E
@@ -620,36 +669,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-"main()
-{
-  string RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
-  setValue(\"txt_overflow\", \"editable\", FALSE);  
-  if (dpAccessable($datapoint + \".VddVccEn:_online.._value\",
-                   $datapoint + \".nofOverflow:_online.._value\"))
-	{
-	  dpConnect(\"ShownofOverflows\", $datapoint + \".VddVccEn:_online.._value\",
-	                                $datapoint + \".nofOverflow:_online.._value\");
-  }
-  else
-  {
-    setValue(\"rect_overflow\", \"backCol\", \"DpDoesNotExist\");
-  }
-}
-
-ShownofOverflows(string dp1, bool Status,
-                 string dp2, unsigned nofOverflow)
-{
-  setValue(\"txt_overflow\", \"text\", nofOverflow );
-  if (Status==TRUE)
-  {
-    setValue(\"rect_overflow\", \"backCol\", \"Lofar_device_active\");
-  }
-  else 
-  {
-    setValue(\"rect_overflow\", \"backCol\", \"grey\");
-  }
-}" 0
- E 0 1 1 0 1 E U  0 E 552 597 559 613
+E E 0 1 1 0 1 E U  0 E 552 597 559 613
 0 2 0 "s" 0 0 0 194 0 0  552 597
  1
 1

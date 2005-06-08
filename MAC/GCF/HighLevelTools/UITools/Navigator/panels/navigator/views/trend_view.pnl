@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,394 316 954 748 N "_3DFace" 2
+PANEL,520 359 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -303,9 +303,11 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 	  }
 	  else //SelectedItem is a datapoint (not element)
 	  {
-	    if (dpAccessable($datapoint + dpName))
+	    string dpToConnect = navViewRetrieveDpName($datapoint, dpName);
+	    //if (dpAccessable($datapoint + dpName))
+	    if (dpAccessable(dpToConnect))
 	    {
-        string dpToConnect = navViewRetrieveDpName($datapoint, dpName);
+        
         navPMLloadPropertySet(dpToConnect);
         setValue(\"Trend\"+TrendNumber, \"disconnectDirectly\", \"curve\"+TraceNumber);
         setValue(\"Trend\"+TrendNumber, \"curveRemoveData\", \"curve\"+TraceNumber, getCurrentTime());
@@ -314,6 +316,10 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
         setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, TRUE);
         setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, TRUE);
         setValue(\"Trend\"+TrendNumber, \"curveAutoscale\", \"curve\"+TraceNumber, AutoScale);
+      }
+      else
+      {
+        setValue(\"Trend\"+TrendNumber, \"curveLegendName\", \"curve\"+TraceNumber, \"Resource not accessable\");
       }
     }
     if (AutoScale==FALSE)

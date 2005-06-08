@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,453 379 417 182 N "_3DFace" 1
+PANEL,491 301 417 182 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -141,7 +141,7 @@ LANG:1 9 RSP board
 2 5
 "txt_version"
 ""
-1 167 153 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 361 153 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -150,8 +150,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 206 155 243 169
-0 2 0 "s" 0 0 0 194 0 0  206 155
+E E 0 1 1 0 1 E U  0 E 400 155 437 169
+0 2 0 "s" 0 0 0 194 0 0  400 155
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -302,7 +302,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1
 LANG:1 4 0.00
 2 22
-"Text1"
+"txt_unitVoltage15"
 ""
 1 382 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
@@ -322,7 +322,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1
 LANG:1 1 V
 2 23
-"Text3"
+"txt_unitVoltage33"
 ""
 1 382 103 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
@@ -427,17 +427,15 @@ E"main(int button, bool state)
 {
   if (button == 0)
   {
-      setValue(\"label_packetsReceived\" , \"visible\", state);
-      setValue(\"label_packetsError\"    , \"visible\", state);
-      setValue(\"label_lastError\"       , \"visible\", state);
-      setValue(\"output_packetsReceived\", \"visible\", state);
-      setValue(\"output_packetsError\"   , \"visible\", state);
-      setValue(\"output_lastError\"      , \"visible\", state);
-      
-      setValue(\"output_packetsReceived\", \"editable\", FALSE);
-      setValue(\"output_packetsError\"   , \"editable\", FALSE);
-      setValue(\"output_lastError\"      , \"editable\", FALSE);
-
+    setValue(\"output_packetsReceived\", \"editable\", FALSE);
+    setValue(\"output_packetsError\"   , \"editable\", FALSE);
+    setValue(\"output_lastError\"      , \"editable\", FALSE);
+    setValue(\"label_packetsReceived\" , \"visible\", state);
+    setValue(\"label_packetsError\"    , \"visible\", state);
+    setValue(\"label_lastError\"       , \"visible\", state);
+    setValue(\"output_packetsReceived\", \"visible\", state);
+    setValue(\"output_packetsError\"   , \"visible\", state);
+    setValue(\"output_lastError\"      , \"visible\", state);
     
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
@@ -448,6 +446,10 @@ E"main(int button, bool state)
         setValue(\"output_packetsReceived\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"output_packetsError\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"output_lastError\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"output_packetsReceived\", \"text\", \"error\");
+        setValue(\"output_packetsError\"   , \"text\", \"error\");
+        setValue(\"output_lastError\"      , \"text\", \"error\");
+        DebugN(\"!dpAccessable\");
         return;
       }
       else
@@ -526,6 +528,9 @@ E"main(int button, bool state)
     setValue(\"label_voltage33\", \"visible\", state);
     setValue(\"txt_voltage15\"  , \"visible\", state);
     setValue(\"txt_voltage33\"  , \"visible\", state);
+    setValue(\"txt_unitVoltage15\"  , \"visible\", state);
+    setValue(\"txt_unitVoltage33\"  , \"visible\", state);
+
     setValue(\"rect_voltage15\"  , \"visible\", state);
     setValue(\"rect_voltage33\"  , \"visible\", state);
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
@@ -533,14 +538,16 @@ E"main(int button, bool state)
       if(!dpAccessable($datapoint + \"_Board1.voltage15:_online.._value\") ||
          !dpAccessable($datapoint + \"_Board1.voltage33:_online.._value\"))
       {
-        setValue(\"txt_voltage15\", \"text\", \"error\");
-        setValue(\"txt_voltage33\", \"text\", \"error\");
+        setValue(\"rect_voltage15\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"rect_voltage33\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"txt_voltage15\", \"visible\", FALSE);
+        setValue(\"txt_voltage33\", \"visible\", FALSE);
         return;
       }
       else
       {
-        setValue(\"txt_voltage15\", \"backCol\", \"white\");
-        setValue(\"txt_voltage33\", \"backCol\", \"white\");
+        setValue(\"rect_voltage15\", \"backCol\", \"white\");
+        setValue(\"rect_voltage33\", \"backCol\", \"white\");
         navPMLloadPropertySet($datapoint + \"_Board1\");
         dpConnect(\"BoardETHDetails\", $datapoint + \"_Board1.voltage15:_online.._value\",
                                      $datapoint + \"_Board1.voltage33:_online.._value\",
@@ -563,7 +570,6 @@ BoardETHDetails(string dp1, float voltage15,
                 string dp2, float voltage33,
                 string dp3, bool invalid)
 {
-  DebugN(\"Voltage invalid:\"+invalid);
   if(!invalid)
   {
     setValue(\"txt_voltage15\"   , \"text\", voltage15);
