@@ -27,6 +27,7 @@
 #include <tinyCEP/TinyApplicationHolder.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include <tinyCEP/WorkHolder.h>
+#include <Transport/Connection.h>
 
 // include MPI if we have it
 #ifdef HAVE_MPI
@@ -59,9 +60,12 @@ namespace LOFAR
     virtual void dump();
     virtual void postrun();
     virtual void quit();
+    void connectWHs(WorkHolder* srcWH, int dstDH, WorkHolder* dstWHs, int dstDH);
 
   private:
     vector<WorkHolder*> itsWHs;
+    vector<Connection*> itsConnections;
+    vector<TransportHolder*> itsTHs;
 
     int itsRank;
   };

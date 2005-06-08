@@ -61,24 +61,40 @@ namespace LOFAR
     itsWHs[2]->runOnNode(0);
 
     // connect the WorkHolders using TH_Mem()
-    itsWHs[0]->getDataManager().getOutHolder(0)->connectTo
-      ( *(itsWHs[1]->getDataManager().getInHolder(0)), 
-	  TH_Mem(),
-	  false);
+    connectWHs(itsWHs[0], 0, itsWHs[1], 0);
     for (int c = 0; c < outputs; c++) {
-      itsWHs[1]->getDataManager().getOutHolder(c)->connectTo
-	( *(itsWHs[2]->getDataManager().getInHolder(c)), 
-	  TH_Mem(),
-	  false);
+      connectWHs(itsWHs[1], c, itsWHs[2], c);
     }
   }
 
+  void AH_TestFilter::connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH) {
+    itsTHs.push_back(new TH_Mem());
+    itsConnections.push_back(new Connection("conn",
+				    srcWH->getDataManager().getOutHolder(srcDH),
+				    dstWH->getDataManager().getInHolder(dstDH),
+				    itsTHs.back(),
+				    false));
+    srcWH->getDataManager().setOutConnection(srcDH, itsConnections.back());
+    dstWH->getDataManager().setInConnection(dstDH, itsConnections.back());
+  }
+
   void AH_TestFilter::undefine() {
-    vector<WorkHolder*>::iterator it = itsWHs.begin();
-    for (; it!=itsWHs.end(); it++) {
-      delete *it;
+    vector<WorkHolder*>::iterator itW = itsWHs.begin();
+    for (; itW!=itsWHs.end(); itW++) {
+      delete *itW;
     }
     itsWHs.clear();
+    vector<Connection*>::iterator itC = itsConnections.begin();
+    for (; itC!=itsConnections.end(); itC++) {
+      delete *itC;
+    }
+    itsConnections.clear();
+    //    vector<TransportHolder*>::iterator itT = itsTHs.begin();
+    vector<TransportHolder*>::iterator itT = itsTHs.begin();
+    for (; itT!=itsTHs.end(); itT++) {
+      delete *itT;
+    }
+    itsTHs.clear();
   }
   
   void AH_TestFilter::init() {
@@ -103,6 +119,10 @@ namespace LOFAR
   }
 
   void AH_TestFilter::postrun() {
+    vector<WorkHolder*>::iterator it = itsWHs.begin();
+    for (; it != itsWHs.end(); it++) {
+      (*it)->basePostprocess();
+    }
   }
 
   void AH_TestFilter::quit() {
