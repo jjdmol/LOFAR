@@ -60,7 +60,7 @@ namespace LOFAR
     virtual void dump();
     virtual void postrun();
     virtual void quit();
-    void connectWHs(WorkHolder* srcWH, int dstDH, WorkHolder* dstWHs, int dstDH);
+    void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWHs, int dstDH);
 
   private:
     vector<WorkHolder*> itsWHs;
