@@ -9,11 +9,12 @@
 #ifndef AH_BGLPROCESSING_H
 #define AH_BGLPROCESSING_H
 
-#include <CEPFrame/ApplicationHolder.h>
+#include <tinyCEP/TinyApplicationHolder.h>
+#include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR {
 // Description of class.
-class AH_BGLProcessing: public LOFAR::ApplicationHolder
+class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
 {
  public:
   AH_BGLProcessing();
