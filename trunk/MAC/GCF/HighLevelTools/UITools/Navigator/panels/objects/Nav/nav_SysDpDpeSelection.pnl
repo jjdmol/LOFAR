@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 672 169 N "_3DFace" 2
+PANEL,427 235 672 169 N "_3DFace" 2
 "$datapoint"
 "$selectedDP"
 EEE E E 1 -1 -1 0  0 0
@@ -155,16 +155,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
   }
 
   list_dp.items = output;
-  DebugN(\"temp:\"+temp);
-  DebugN(\"tempDpe:\"+tempDpe);
-  DebugN(\"$datapoint:\"+$datapoint);
-  DebugN(\"datapointPath:\"+datapointPath);
-/*  if(0==strpos(temp, \".\"))
-  {
-    list_dp.selectedPos=dynContains(output, CURRENT_DP_MESSAGE);
-  }*/
   list_dp.selectedPos=dynContains(output, temp);
-
   
   //If the tempDpe is not empty, fill the list and select
   if(tempDpe!=\"\")
@@ -173,6 +164,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
     dyn_string dpeNames = list_dpe.items;
     list_dpe.selectedPos = dynContains(dpeNames, tempDpe);
   }
+  // Button may be used which init is done.
   btn_ok.enabled = TRUE;
 }" 0
 
@@ -243,7 +235,14 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 458 -2 672 172
 0
 E
-E
+"main()
+{
+  if(list_dpe.selectedText!=\"\")
+  {
+    txt_legendName.text = list_dpe.selectedText;
+  }
+}" 0
+
 E
 
 3 1

@@ -970,7 +970,7 @@ void Navigator_HandleEventInitialize()
   delay(STARTUP_DELAY); // wait for the tree control to complete initialization
   
   g_initializing = false;
-
+  
   // configure the tabs
   long selectedNode = getSelectedNode();
   if(selectedNode != 0)
@@ -982,6 +982,11 @@ void Navigator_HandleEventInitialize()
       showView(dpViewConfig,datapointPath);
     }
   }    
+
+  // Always select the first entry in the database
+  //fwTreeView_setSelectedPosition(1,"");
+  treeList.selectedPos = 1;
+
   
   LOG_DEBUG("~Navigator_HandleEventInitialize()");
 }
@@ -1385,11 +1390,16 @@ void ButtonMaximize_HandleEventClick()
             string dpNameTemp=datapointPath;
             bool isReference;
             dyn_string reference;
-            
+            string referenceDatapoint="";
             checkForReference(dpNameTemp, reference, isReference);
+            if(isReference)
+            {
+              referenceDatapoint=datapointPath;
+            }
             dyn_string panelParameters = makeDynString(
               "$datapoint:" + dpNameTemp,
-              "$configDatapoint:" + configs[beginSubViews+selectedSubView-1]);
+              "$configDatapoint:" + configs[beginSubViews+selectedSubView-1],
+              "$referenceDatapoint:" +referenceDatapoint);
             ModuleOnWithPanel(dpNameTemp,-1,-1,0,0,1,1,"",viewsPath+subViewFileName, subViewCaption, panelParameters);
           }
         }

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,372 257 730 540 N "_3DFace" 0
+PANEL,354 192 730 540 N "_3DFace" 0
 EEE E E 1 -1 -1 0  80 120
 "" 0 1
 E"#uses \"gcfnav-functions.ctl\"" 0
@@ -277,9 +277,15 @@ LANG:1 6 Create
         setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Creating type\");
         dpCopy(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
         setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy result: \" + error);
-        error=0;
-        dpCopyOriginal(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
-        setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy content result: \" + error);
+        if(error==0)
+        {
+          dpCopyOriginal(getSystemName() + \"__nav_default_viewconfig\", \"__nav\"+navConfigGetEnvironment(newEnvironmentName,newEnvironmentNameUserName)+\"_\"+dpTypeList[i]+\"_viewconfig\", error);
+          setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Copy content result: \" + error);
+        }
+        else
+        {
+          setValue(\"SelectionList_output\", \"appendItem\", dpTypeList[i] + \": Not copyed, dp already exists: \" + error);
+        }
         SelectionList_output.selectedPos = SelectionList_output.itemCount;
       }
       setValue(\"SelectionList_output\", \"appendItem\", \"Creation of new environment \"+newEnvironmentName+\" completed\");

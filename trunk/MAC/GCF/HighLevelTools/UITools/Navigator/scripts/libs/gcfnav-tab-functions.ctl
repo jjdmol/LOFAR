@@ -182,10 +182,21 @@ void ComboBoxViewsSelectionChanged()
   {
     insertSubViewConfigs = "";
   }
-
+  //Get the name of the refDp is it exits
+  string datapointPath = buildPathFromNode(g_curSelNode);
+  string dpNameTemp = datapointPath;
+  bool isReference;
+  dyn_string reference;
+  string referenceDatapoint="";
+  checkForReference(dpNameTemp, reference, isReference);
+  if(isReference)
+  {
+    referenceDatapoint=datapointPath;
+  }
   dyn_string panelParameters = makeDynString(
     "$datapoint:" + g_datapoint,
-    "$configDatapoint:" + insertSubViewConfigs);
+    "$configDatapoint:" + insertSubViewConfigs,
+    "$referenceDatapoint:" +referenceDatapoint);
   LOG_TRACE("selectedSubView,selectedPanel,panelParameters: ",selectedSubView,selectedPanel,panelParameters);
   
   //---------------------------------------------------------------
@@ -252,7 +263,8 @@ void ComboBoxViewsSelectionChanged()
     "$viewName:" + g_selectedViewName,
     "$selectedElementDpType:" + datapointTypeName,
     "$datapoint:" + g_datapoint,
-    "$configDatapoint:"+insertSubViewConfigs);
+    "$configDatapoint:"+insertSubViewConfigs,
+    "$referenceDatapoint:" +referenceDatapoint);
   
   //////////////////////////////////////////////////////////////  
 //  This is the original one

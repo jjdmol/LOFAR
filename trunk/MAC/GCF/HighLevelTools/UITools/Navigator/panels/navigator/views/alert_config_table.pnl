@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,287 197 950 471 N "_3DFace" 3
+PANEL,456 312 950 471 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -18,7 +18,7 @@ PANEL,287 197 950 471 N "_3DFace" 3
                                             \"Column11Titles\", \"\", \"Column12Titles\", \"\", \"Column13Titles\", \"\", \"Column14Titles\", \"\");
   }
   
-  setColumnConfig($AreaNr, nrOfColumns, 15, \"Config\");
+  setColumnConfig($AreaNr, 1, nrOfColumns, 15, \"Config\");
   setValue(\"Table1\", \"scale\", 1.0, nrOfRows/15.0);  
   setValue(\"Table1\", \"visible\", TRUE);  
 }
@@ -53,25 +53,16 @@ ArrangeConfigTableContent(string dp1, dyn_string ColumnTitles,
     // Change the backCol of a cell when no DP is present
     if (dynlen(ColumndpNames)>i) //Check or the dun_string had this index
     {
-      // Set the right notation for the dp \"_\" or \".\"
-      if (1==dynlen(strsplit(ColumndpNames[ConvIndex(i)], \".\")))
-      {
-        connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex(i)];
-      }
-      else
-      {
-        connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(i)];
-      }
-
+      connectDatapoint = navViewRetrieveDpName($datapoint, ColumndpNames[ConvIndex(i)]);
       if (ColumndpNames[ConvIndex(i)] == \"\")
       {
         setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
       }
-      else if (!dpExists(connectDatapoint))// + ColumndpNames[ConvIndex(i)])) //Exists the configured datapoint? No
+      else if (!dpAccessable(connectDatapoint))// + ColumndpNames[ConvIndex(i)])) //Exists the configured datapoint? No
       {
         setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"DpDoesNotExist\");
       }
-      else if (dpExists(connectDatapoint)) //Exists the configured datapoint? Yes
+      else if (dpAccessable(connectDatapoint)) //Exists the configured datapoint? Yes
       {
         setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"white\");
       }
@@ -182,7 +173,7 @@ E
 {
   int Row, Column;
   getValue(\"\", \"currentCell\", Row, Column);
-  string selectedDP = $datapoint + \"_\" + navViewAlertGetDpFromColumn(Row, Column);
+  //string selectedDP = $datapoint + \"_\" + navViewAlertGetDpFromColumn(Row, Column);
   if(selectedDP!=\"\")
   {
     setValue(\"test\", \"text\", selectedDP);

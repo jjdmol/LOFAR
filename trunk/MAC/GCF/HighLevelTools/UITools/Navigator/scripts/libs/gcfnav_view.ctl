@@ -1,6 +1,8 @@
 
 
 global string CURRENT_DP_MESSAGE = "Current selection in tree";
+global dyn_string g_ContectMenuDpAccessableErrorText = "PUSH_BUTTON, No actions possible, 2, 0";
+
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: trendApplySettings
 //
@@ -493,6 +495,7 @@ navViewPlotMainPlotSequence(string spectrum_data, int plotNumber)
 // Output: stores the current configuration of the cell into the PVSS II
 //         database
 ///////////////////////////////////////////////////////////////////////////
+
 navViewAlertApplyCellSettings(string RowNumber, string Column)
 {
 	dyn_string ColumndpNames, ColumnTitles;
@@ -863,9 +866,14 @@ void jump2Station()
   {
     if ("LOFAR Navigator" == myPanelName())
     {
-//      string datapointPath;
-//      convertOriginal2ReferenceDP($datapoint,datapointPath);
-      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Station01");
+      if($referenceDatapoint=="")
+      {
+        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Station01");
+      }
+      else
+      {
+        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Station01");
+      }
     }
     else
     {  
@@ -888,9 +896,15 @@ void jump2StationSubrack()
   {
     if ("LOFAR Navigator" == myPanelName())
     {
-      //tring datapointPath;
-      //convertOriginal2ReferenceDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr,datapointPath);
-      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);        
+      DebugN("$referenceDatapoint:"+$referenceDatapoint);
+      if($referenceDatapoint=="") //If the datapoint is a reference, use the reference to navigate to!!
+      {
+        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);        
+      }
+      else
+      {
+        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);
+      }
     }
     else
     {  
@@ -917,7 +931,14 @@ void jump2StationSubrackRCU()
     { 
       //string datapointPath;
       //convertOriginal2ReferenceDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr, datapointPath);
-      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+      if($referenceDatapoint=="")
+      {
+        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+      }
+      else
+      {
+        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+      }
     }
     else
     {  
@@ -935,31 +956,42 @@ void jump2StationSubrackRCU()
 //
 // Function    : Set the width of the configured amount of columns,
 //               otherwise they will be set to invisible
+// Input: 1. Table/Area number for which this function is executed
+//        2. TableNumber in which the grahpical updates must take place.
+//           The view has three different tables, the config one, but content is
+//           always for another $AreaNr
+//        3. Number of columns
+//        4. Maximum number of columns hard configured in the table object
+//        5. Which function to connect dp's must be used.
+//           option 1. ""       => use function ArrangeTableContent
+//           option 2. "Config" => use function ArrangeConfigTableContent
+// Output: 1. Table
 ///////////////////////////////////////////////////////////////////////////////////
-void setColumnConfig(int TableNumber, int nrOfColumns, int MaximumColumns, string Addition)
+void setColumnConfig(int TableNumber, int TableNumberToDisplay, int nrOfColumns, int MaximumColumns, string Addition)
 {
 
   int k, table_x, table_y;
 
-  getValue("Table"+TableNumber, "size", table_x, table_y);
+  getValue("Table"+TableNumberToDisplay, "size", table_x, table_y);
   for (k=0; k<nrOfColumns ; k++)
   {
     dpConnect("Arrange" + Addition + "TableContent", $configDatapoint + "."+TableNumber+".Column" + k + "Titles:_online.._value",
                                      $configDatapoint + "."+TableNumber+".Column" + k + "dpNames:_online.._value");
-    setValue("Table"+TableNumber, "columnVisibility", k, TRUE);
-    setValue("Table"+TableNumber, "columnWidth", k, (table_x/nrOfColumns));
+    setValue("Table"+TableNumberToDisplay, "columnVisibility", k, TRUE);
+    setValue("Table"+TableNumberToDisplay, "columnWidth", k, (table_x/nrOfColumns));
   }
   for (k=nrOfColumns ; k <= MaximumColumns ; k++)
   {
-    setValue("Table"+TableNumber, "columnVisibility", k, FALSE);
+    setValue("Table"+TableNumberToDisplay, "columnVisibility", k, FALSE);
   }
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////
-//
 // FunctionName: ConvIndex
-// Function    : Hoog de index op 1 op.
+// Function    : Hoog de index met 1 op.
+// Input: i
+// Ouput: i+1
 //////////////////////////////////////////////////////////////////////////////////
 int ConvIndex(int i)
 {
@@ -1141,7 +1173,9 @@ void RCUContextMenu()
   string txt_maintenance, txt_status;
   int Answer, status, maintenance;
   bool bOK;				//Variable with value FALSE
-
+  
+  if(dpAccessable($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value"))
+  {
   dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", status);
 	dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", maintenance);
 
@@ -1169,6 +1203,11 @@ void RCUContextMenu()
     default:
     	break;
   	}       
+  }  
+  else //$configDatapoint is not Accessable
+  {
+    popupMenu(g_ContectMenuDpAccessableErrorText, Answer); 
+  }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1192,11 +1231,17 @@ void BuildContextMenu(int status, int maintenance, int &Answer)
 	
 	
   if  ((status==-1) && (maintenance!=-1))
+  {
     popupMenu(makeDynString(txt_maintenance), Answer);
+  }
   else if  ((status!=-1) && (maintenance==-1))
+  {
     popupMenu(makeDynString(txt_status), Answer);
+  }
   else // ((status!=-1) && (maintenance!=-1))
+  {
     popupMenu(makeDynString(txt_maintenance, "SEPARATOR", txt_status), Answer);
+  }
   
 	
 }
@@ -1205,42 +1250,46 @@ void BuildContextMenu(int status, int maintenance, int &Answer)
 //
 // Function: Creates and handles the RMB menu for the antennas
 // FunctionName: AntennaContextMenu
-//
+// OLD IS NOT LONGER USED!!!!
 /////////////////////////////////////////////////////////////////////
+/*
 void AntennaContextMenuMain(string antenna)
 {
   string txt_maintenance;
   int Answer, status, maintenance;
   bool bOK;				//Variable with value FALSE
-
-  dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
-  dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
-
-  BuildContextMenu(status, maintenance, Answer);
+  if(dpAccessable($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value"))
+  {
+    dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
+    dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
+    BuildContextMenu(status, maintenance, Answer);
   
-	//########################################################
-	//
-	//	Compute the chosen option
-	//
-	//########################################################
+	  // Compute the chosen option
   	switch (Answer)
-  	{
-	case 2:
-	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
-	  break;
-	case 3:
-	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
-	  break;
-   	case 10:
-	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
-      break;
-   	case 11:
-	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
-      break;
-    default:
-      break;
+    {
+      case 2:
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
+        break;
+      case 3:
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
+	      break;
+      case 10:
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
+        break;
+      case 11:
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
+        break;
+      default:
+        break;
   	}       
-}
+  }  
+  else //$configDatapoint is not Accessable
+  {
+    dyn_string txt = makeDynString("PUSH_BUTTON, Configuration not possible, 2, 0");
+    popupMenu(g_ContectMenuDpAccessableErrorText, Answer);
+  }
+}*/
+
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -1253,34 +1302,34 @@ void AntennaContextMenu(string antenna)
   string txt_maintenance;
   int Answer, status, maintenance;
   bool bOK;				//Variable with value FALSE
-
-  dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
-  dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
-
-  BuildContextMenu(status, maintenance, Answer);
-  
-	//########################################################
-	//
-	//	Compute the chosen option
-	//
-	//########################################################
+  if(dpAccessable($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_online.._value"))
+  {
+    dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
+    dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
+    BuildContextMenu(status, maintenance, Answer);
+	  // Compute the chosen option
   	switch (Answer)
-  	{
-	case 2:
-	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
-	  break;
-	case 3:
-	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
-	  break;
-   	case 10:
-	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
-      break;
-   	case 11:
-	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
-      break;
-    default:
-      break;
+    {
+      case 2:
+	      dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
+        break;
+      case 3:
+        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
+        break;
+      case 10:
+        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
+        break;
+      case 11:
+        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
+        break;
+      default:
+        break;
   	}       
+  }  
+  else //$configDatapoint is not Accessable
+  {
+    popupMenu(g_ContectMenuDpAccessableErrorText, Answer); 
+  }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1289,51 +1338,42 @@ void AntennaContextMenu(string antenna)
 // FunctionName: BPContextMenu
 //
 /////////////////////////////////////////////////////////////////////
-void BPContextMenu(bool invalid)
+void BPContextMenu()
 {
   string txt_maintenance, txt_status;
   int Answer, maintenance, status;
   bool bOK;				//Variable with value FALSE
-  	
-  dpGet($datapoint + "_Board1_BP.status:_original.._value", status);
-	dpGet($datapoint + "_Board1_Maintenance.status:_original.._value", maintenance);
-  
-  /////////////////////////////////////////
-  
-  if(invalid)
+  if(dpAccessable($datapoint + "_Board1_BP.status:_original.._value"))
   {
-    popupMenu(makeDynString("PUSH_BUTTON, Object not reacheable, 0, 0"), Answer);
-  }
-  else
-  {
+    dpGet($datapoint + "_Board1_BP.status:_original.._value", status);
+	  dpGet($datapoint + "_Board1_Maintenance.status:_original.._value", maintenance);
     BuildContextMenu(status, maintenance, Answer);
-  }
 
-
-  //////////////////////////////////////////////////////////
-  //
-  //	Compute the chosen option
-  //
-  //////////////////////////////////////////////////////////
-  	switch (Answer)
-  	{
-  	case 2:
-			  dpSetWait($datapoint + "_Board1_BP.status:_original.._value", 0);
-  			break;
-   	case 3:
-			  dpSetWait($datapoint + "_Board1_BP.status:_original.._value", 1);
-  			break;
-   	case 10:   	
-			  dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 0);
-/* 		  dpActivateAlert($datapoint + "_Board1_BP.status", bOK);*/
-      	break;
-   	case 11:
-			  dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 1);
-/* 		  dpDeactivateAlert($datapoint + "_Board1_BP.status", bOK);*/
-     	break;
+    // Compute the chosen option
+    switch (Answer)
+    {
+    case 2:
+      dpSetWait($datapoint + "_Board1_BP.status:_original.._value", 0);
+      break;
+    case 3:
+      dpSetWait($datapoint + "_Board1_BP.status:_original.._value", 1);
+      break;
+    case 10:   	
+      dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 0);
+      //dpActivateAlert($datapoint + "_Board1_BP.status", bOK);
+      break;
+    case 11:
+      dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 1);
+      //dpDeactivateAlert($datapoint + "_Board1_BP.status", bOK);
+      break;
     default:
-    	break;
-  	}       
+      break;
+  	}
+  }  
+  else //$configDatapoint is not Accessable
+  {
+    popupMenu(g_ContectMenuDpAccessableErrorText, Answer);
+  }     
 }
 
 
@@ -1350,15 +1390,12 @@ void APContextMenu()
   int Answer;
   int status;
   bool bOK;				//Variable with value FALSE
-  	
-  dpGet($datapoint + "_Board1_AP"+ $APNr + ".status:_original.._value", status);
-  BuildContextMenu(status, -1, Answer);
+  if(dpAccessable($datapoint + "_Board1_AP"+ $APNr + ".status:_original.._value"))
+  {
+    dpGet($datapoint + "_Board1_AP"+ $APNr + ".status:_original.._value", status);
+    BuildContextMenu(status, -1, Answer);
 
-  ///////////////////////////////////////////////////////////
-  //
-  //	Compute the chosen option
-  //
-  ///////////////////////////////////////////////////////////
+    // Compute the chosen option
   	switch (Answer)
   	{
   	case 2:
@@ -1369,7 +1406,12 @@ void APContextMenu()
   			break;
     default:
     	break;
-  	}       
+  	}
+  }
+  else //$configDatapoint is not Accessable
+  {
+    popupMenu(g_ContectMenuDpAccessableErrorText, Answer);
+  }        
 }
 
 
@@ -1419,7 +1461,10 @@ void NavConfigTrendFillDpeSelection(string datapoint)
   {
     int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
     string elementName = elementNames[elementIndex][elementLevel+1];
-    output[dynlen(output)+1] = elementName;
+    if(!("__"==substr(elementName, 0,2))) //references, dpe starting with __ are not allowed in the list
+    {
+      output[dynlen(output)+1] = elementName;
+    }
   }
   dynSortAsc(output);
   list_dpe.items =output;

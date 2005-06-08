@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,420 168 182 113 N "_3DFace" 3
+PANEL,372 287 182 113 N "_3DFace" 3
 "$RackNr"
 "$SubrackNr"
 "$datapoint"
@@ -15,29 +15,29 @@ EP_setBackColor()
 {
 dyn_errClass err;
 
-  if( !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU1.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU1_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU2.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU2.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU2_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU1.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU1_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU2.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU2_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU1.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU1_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU2_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU1.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU1_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_Maintenance.status:_online.._value\") ||
-      !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\"))
+  if( !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU1.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU1_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU2.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU2.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU2_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU1.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU1_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU2.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1_RCU2_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU1.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2_RCU1_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU2_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU1.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU1_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_Maintenance.status:_online.._value\") ||
+      !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\"))
   {                 
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
@@ -68,7 +68,8 @@ dyn_errClass err;
             $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4.status:_online.._value\",
             $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status:_online.._value\",
             $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_Maintenance.status:_online.._value\",
-            $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\");
+            $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\",
+            $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status:_online.._invalid\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -118,7 +119,8 @@ EP_setBackColorCB(string dpSource1,  unsigned AP1_RCU1_stat, string dpSource2,  
 									string dpSource17, unsigned AP1_stat,      string dpSource18, unsigned AP2_stat,
 									string dpSource19, unsigned AP3_stat,      string dpSource20, unsigned AP4_stat,
 									string dpSource21, unsigned BP_stat,       string dpSource22, unsigned BP_main,
-									string dpSource23, unsigned Subrack_main)
+									string dpSource23, unsigned Subrack_main,
+									string dpSource24, bool BP_invalid)
 {
 	//Declaration of temporary variables
 	int AP1_RCU1_health, AP1_RCU2_health, AP2_RCU1_health, AP2_RCU2_health;
@@ -127,7 +129,28 @@ EP_setBackColorCB(string dpSource1,  unsigned AP1_RCU1_stat, string dpSource2,  
 	int BP_health;
 	int Subrack_health;
 	int SR_health;	// Subrack_maintenance status
-
+  if(BP_invalid) // The information stored in the dp's are INVALID!!
+  {
+    setValue(\"LED_1\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_1\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_2\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_2\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_3\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_3\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_4\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_4\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_5\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_5\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_6\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_6\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_7\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_7\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_8\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"LED_8\", \"foreCol\", \"_dpdoesnotexist\");
+    setValue(\"rect_Subrack\", \"backCol\", \"_dpdoesnotexist\");
+  }
+  else
+  {
 	//Calculate the Error/Health value for each variable
 	if ((AP1_RCU1_stat + AP1_RCU1_main)<1) AP1_RCU1_health=1; else AP1_RCU1_health=0;
 	if ((AP1_RCU2_stat + AP1_RCU2_main)<1) AP1_RCU2_health=1; else AP1_RCU2_health=0;
@@ -154,193 +177,190 @@ EP_setBackColorCB(string dpSource1,  unsigned AP1_RCU1_stat, string dpSource2,  
 																) * 100) / 8; 
 
 	// Display the subtrack health value into the six LED's
-  if (Subrack_health == 100)
-	{
-    setValue(\"LED_1\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_1\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-  }
-  else if ((Subrack_health) > 86 && ((Subrack_health) <= 100))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Yellow\");
-    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-  }
-  else if ((Subrack_health) > 74 && ((Subrack_health) <= 86))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Yellow\");
-    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_2\", \"backCol\", \"Yellow\");
-    setValue(\"LED_2\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-  }
-  else if ((Subrack_health) > 61 && ((Subrack_health) <= 74))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Yellow\");
-    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_2\", \"backCol\", \"Yellow\");
-    setValue(\"LED_2\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_3\", \"backCol\", \"Yellow\");
-    setValue(\"LED_3\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-  }
-  else if ((Subrack_health) > 49 && ((Subrack_health) <= 61))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Yellow\");
-    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_2\", \"backCol\", \"Yellow\");
-    setValue(\"LED_2\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_3\", \"backCol\", \"Yellow\");
-    setValue(\"LED_3\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_4\", \"backCol\", \"Yellow\");
-    setValue(\"LED_4\", \"foreCol\", \"Yellow\");
-    setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-
-  }
-  else if ((Subrack_health) > 36 && ((Subrack_health) <= 49))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Red\");
-    setValue(\"LED_1\", \"foreCol\", \"Red\");
-    setValue(\"LED_2\", \"backCol\", \"Red\");
-    setValue(\"LED_2\", \"foreCol\", \"Red\");
-    setValue(\"LED_3\", \"backCol\", \"Red\");
-    setValue(\"LED_3\", \"foreCol\", \"Red\");
-    setValue(\"LED_4\", \"backCol\", \"Red\");
-    setValue(\"LED_4\", \"foreCol\", \"Red\");
-    setValue(\"LED_5\", \"backCol\", \"Red\");
-    setValue(\"LED_5\", \"foreCol\", \"Red\");
-    setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-  }
-  else if ((Subrack_health) > 24 && ((Subrack_health) <= 36))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Red\");
-    setValue(\"LED_1\", \"foreCol\", \"Red\");
-    setValue(\"LED_2\", \"backCol\", \"Red\");
-    setValue(\"LED_2\", \"foreCol\", \"Red\");
-    setValue(\"LED_3\", \"backCol\", \"Red\");
-    setValue(\"LED_3\", \"foreCol\", \"Red\");
-    setValue(\"LED_4\", \"backCol\", \"Red\");
-    setValue(\"LED_4\", \"foreCol\", \"Red\");
-    setValue(\"LED_5\", \"backCol\", \"Red\");
-    setValue(\"LED_5\", \"foreCol\", \"Red\");
-    setValue(\"LED_6\", \"backCol\", \"Red\");
-    setValue(\"LED_6\", \"foreCol\", \"Red\");
-    setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-  }
-  else if ((Subrack_health) > 11 && ((Subrack_health) <= 24))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Red\");
-    setValue(\"LED_1\", \"foreCol\", \"Red\");
-    setValue(\"LED_2\", \"backCol\", \"Red\");
-    setValue(\"LED_2\", \"foreCol\", \"Red\");
-    setValue(\"LED_3\", \"backCol\", \"Red\");
-    setValue(\"LED_3\", \"foreCol\", \"Red\");
-    setValue(\"LED_4\", \"backCol\", \"Red\");
-    setValue(\"LED_4\", \"foreCol\", \"Red\");
-    setValue(\"LED_5\", \"backCol\", \"Red\");
-    setValue(\"LED_5\", \"foreCol\", \"Red\");
-    setValue(\"LED_6\", \"backCol\", \"Red\");
-    setValue(\"LED_6\", \"foreCol\", \"Red\");
-    setValue(\"LED_7\", \"backCol\", \"Red\");
-    setValue(\"LED_7\", \"foreCol\", \"Red\");
-    setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
-  }
-  else if ((Subrack_health) >= 0 && ((Subrack_health) <= 11))
-	{
-    setValue(\"LED_1\", \"backCol\", \"Red\");
-    setValue(\"LED_1\", \"foreCol\", \"Red\");
-    setValue(\"LED_2\", \"backCol\", \"Red\");
-    setValue(\"LED_2\", \"foreCol\", \"Red\");
-    setValue(\"LED_3\", \"backCol\", \"Red\");
-    setValue(\"LED_3\", \"foreCol\", \"Red\");
-    setValue(\"LED_4\", \"backCol\", \"Red\");
-    setValue(\"LED_4\", \"foreCol\", \"Red\");
-    setValue(\"LED_5\", \"backCol\", \"Red\");
-    setValue(\"LED_5\", \"foreCol\", \"Red\");
-    setValue(\"LED_6\", \"backCol\", \"Red\");
-    setValue(\"LED_6\", \"foreCol\", \"Red\");
-    setValue(\"LED_7\", \"backCol\", \"Red\");
-    setValue(\"LED_7\", \"foreCol\", \"Red\");
-    setValue(\"LED_8\", \"backCol\", \"Red\");
-    setValue(\"LED_8\", \"foreCol\", \"Red\");
-  }
+    if (Subrack_health == 100)
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_1\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 86 && ((Subrack_health) <= 100))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 74 && ((Subrack_health) <= 86))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Yellow\");
+      setValue(\"LED_2\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 61 && ((Subrack_health) <= 74))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Yellow\");
+      setValue(\"LED_2\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_3\", \"backCol\", \"Yellow\");
+      setValue(\"LED_3\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 49 && ((Subrack_health) <= 61))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Yellow\");
+      setValue(\"LED_1\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_2\", \"backCol\", \"Yellow\");
+      setValue(\"LED_2\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_3\", \"backCol\", \"Yellow\");
+      setValue(\"LED_3\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_4\", \"backCol\", \"Yellow\");
+      setValue(\"LED_4\", \"foreCol\", \"Yellow\");
+      setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 36 && ((Subrack_health) <= 49))
+	  {
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 24 && ((Subrack_health) <= 36))
+	  {
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Red\");
+      setValue(\"LED_6\", \"foreCol\", \"Red\");
+      setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) > 11 && ((Subrack_health) <= 24))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Red\");
+      setValue(\"LED_6\", \"foreCol\", \"Red\");
+      setValue(\"LED_7\", \"backCol\", \"Red\");
+      setValue(\"LED_7\", \"foreCol\", \"Red\");
+      setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+      setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+    }
+    else if ((Subrack_health) >= 0 && ((Subrack_health) <= 11))
+  	{
+      setValue(\"LED_1\", \"backCol\", \"Red\");
+      setValue(\"LED_1\", \"foreCol\", \"Red\");
+      setValue(\"LED_2\", \"backCol\", \"Red\");
+      setValue(\"LED_2\", \"foreCol\", \"Red\");
+      setValue(\"LED_3\", \"backCol\", \"Red\");
+      setValue(\"LED_3\", \"foreCol\", \"Red\");
+      setValue(\"LED_4\", \"backCol\", \"Red\");
+      setValue(\"LED_4\", \"foreCol\", \"Red\");
+      setValue(\"LED_5\", \"backCol\", \"Red\");
+      setValue(\"LED_5\", \"foreCol\", \"Red\");
+      setValue(\"LED_6\", \"backCol\", \"Red\");
+      setValue(\"LED_6\", \"foreCol\", \"Red\");
+      setValue(\"LED_7\", \"backCol\", \"Red\");
+      setValue(\"LED_7\", \"foreCol\", \"Red\");
+      setValue(\"LED_8\", \"backCol\", \"Red\");
+      setValue(\"LED_8\", \"foreCol\", \"Red\");
+    }
 
 	//Set visibility for Maintenance Sign if BP in Maintenance
-  setValue(\"icon_maintenance\", \"visible\", (Subrack_main == 1));
-//  setValue(\"Sign2\", \"visible\", (Subrack_main == 1));
+    setValue(\"icon_maintenance\", \"visible\", (Subrack_main == 1));
+    if (Subrack_main == 1)
+    {
+      setValue(\"rect_Subrack\", \"backCol\", \"Lofar_maintenance\");
+  	}
+    else
+    {
+      setValue(\"rect_Subrack\", \"backCol\", \"white\");
+    }
 
-  if (Subrack_main == 1)
-  {
-    setValue(\"rect_Subrack\", \"backCol\", \"Lofar_maintenance\");
-	}
-  else
-  {
-    setValue(\"rect_Subrack\", \"backCol\", \"white\");
   }
-//    setValue(\"rect_Subrack\", \"backCol\", \"lightgrey\"); Test if white is OK! 
-
 }" 0
 "main()
 {
