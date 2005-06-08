@@ -1,5 +1,5 @@
 --
---  addKVT.sql: Add a paramater to the KVT tables
+--  addKVT.sql: Add a parametervalue to the KVT tables
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,7 +27,7 @@
 --
 -- Expected timeformat YYYY Mon DD HH24:MI:SS.MS
 --
--- Adds the given parameter to the given hierarchical tree. 
+-- Add the given KVT triple to the KVT tables.
 --
 -- Authorisation: no
 -- 
@@ -37,12 +37,21 @@
 --
 -- Types:	none
 --
+-- TODO: IMPLEMENT VIC PART
+--
 CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
   RETURNS BOOLEAN AS '
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
+		vTime		timestamp;
 
 	BEGIN
+	  -- convert timestamp
+	  vTime := to_timestamp($3, \'YYYY-Mon-DD HH24:MI:SS.US\');
+	  IF vTime IS NULL THEN
+		vTime := now();
+	  END IF;
+
 	  -- Is it a PIC param?
 	  vParRefID := 0;
 	  SELECT paramid 
@@ -50,6 +59,7 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
 	  FROM   PICparamRef
 	  WHERE  PVSSname = $1
 	  LIMIT  1;
+
 	  IF NOT FOUND THEN
 		-- its a VIC parameter
 		-- TODO: implement VIC part
@@ -57,7 +67,7 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
 	  ELSE
 		-- its a PIC parameter
 	    INSERT INTO PICkvt(paramID, value, time)
-		VALUES (vParRefID, $2, to_timestamp($3, \'YYYY-Mon-DD HH24:MI:SS.US\'));
+		VALUES (vParRefID, $2, vTime);
 	  END IF;
 
 	  RETURN TRUE;

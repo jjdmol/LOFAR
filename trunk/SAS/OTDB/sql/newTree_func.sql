@@ -36,28 +36,28 @@
 CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT4)
   RETURNS INT4 AS '
 	DECLARE
-		newTreeID		OTDBtree.treeID%TYPE;
-		creatorID		OTDBtree.creator%TYPE;
-		isAuth			BOOLEAN;
-		authToken		ALIAS FOR $1;
+		vNewTreeID		OTDBtree.treeID%TYPE;
+		vCreatorID		OTDBtree.creator%TYPE;
+		vIsAuth			BOOLEAN;
+		vAuthToken		ALIAS FOR $1;
 
 	BEGIN
 		-- check authorisation
-		isAuth := FALSE;
+		vIsAuth := FALSE;
 		-- TBW: function number
-		SELECT isAuthorized(authToken, 1::int2, $4::int4) -- authToken, func, treetype
-		INTO   isAuth;
-
-		IF NOT isAuth THEN
+		-- authToken, func, treetype
+		SELECT isAuthorized(vAuthToken, 1::int2, $4::int4) 
+		INTO   vIsAuth;
+		IF NOT vIsAuth THEN
 			RETURN 0;
 		END IF;
 
 		-- authorized. Resolve creator
-		SELECT whoIs(authToken)
-		INTO   creatorID;
+		SELECT whoIs(vAuthToken)
+		INTO   vCreatorID;
 
 		-- Finally create tree entry
-		newTreeID := nextval(\'OTDBtreeID\');
+		vNewTreeID := nextval(\'OTDBtreeID\');
 		INSERT INTO OTDBtree (treeID,
 							  originid,
 							  classif,
@@ -65,18 +65,18 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT4)
 							  creator,
 							  campaign,
 							  owner)
-	    VALUES (newTreeID,
+	    VALUES (vNewTreeID,
 				$2,				-- orgTree
 				$3,				-- classif
 				$4,				-- treeType
-				creatorID,
+				vCreatorID,
 				$5,				-- campaign
-				creatorID);
+				vCreatorID);
 
 		IF NOT FOUND THEN
 		  RETURN 0;
 		ELSE
-		  RETURN newTreeID;
+		  RETURN vNewTreeID;
 		END IF;
 	END;
 ' LANGUAGE plpgsql;

@@ -38,31 +38,31 @@
 CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2)
   RETURNS SETOF treeInfo AS '
 	DECLARE
-		Rec			RECORD;
-		query		TEXT;
+		vRecord		RECORD;
+		vQuery		TEXT;
 
 	BEGIN
 	  -- Construct where clause
 	  IF $1 = 0 AND $2 = 0 THEN
 		-- parameters are both zero, select all records
-	    query := \'WHERE t.treeID != 0\';
+	    vQuery := \'WHERE t.treeID != 0\';
 	  ELSE
-	    query := \'WHERE \';
+	    vQuery := \'WHERE \';
 	    IF $1 > 0 THEN
 		  -- add selection on treeType
-	      query := query || \'t.treetype = \' || chr(39) || $1 || chr(39);
+	      vQuery := vQuery || \'t.treetype = \' || chr(39) || $1 || chr(39);
 	      IF $2 > 0 THEN
-		    query := query || \' AND \';
+		    vQuery := vQuery || \' AND \';
 	      END IF;
 	    END IF;
 	    IF $2 > 0 THEN
 		  -- add selection on classification
-	      query := query || \'t.classif = \' || chr(39) || $2 || chr(39);
+	      vQuery := vQuery || \'t.classif = \' || chr(39) || $2 || chr(39);
 	    END IF;
 	  END IF;
 
 	  -- do selection
-	  FOR Rec IN  EXECUTE \'
+	  FOR vRecord IN  EXECUTE \'
 		SELECT t.treeID, 
 			   t.classif, 
 			   u.username, 
@@ -75,9 +75,9 @@ CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2)
 		FROM   OTDBtree t 
 			   INNER JOIN OTDBuser u ON t.creator = u.userid
 			   INNER JOIN campaign c ON c.ID = t.campaign
-		\' || query 
+		\' || vQuery 
 	  LOOP
-		RETURN NEXT Rec;
+		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END

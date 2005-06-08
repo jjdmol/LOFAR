@@ -1,3 +1,26 @@
+--
+--  create_base_tables.sql: Creates the 'lookup' tables for OTDB
+--
+--  Copyright (C) 2005
+--  ASTRON (Netherlands Foundation for Research in Astronomy)
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+--
+--  This program is free software; you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published by
+--  the Free Software Foundation; either version 2 of the License, or
+--  (at your option) any later version.
+--
+--  This program is distributed in the hope that it will be useful,
+--  but WITHOUT ANY WARRANTY; without even the implied warranty of
+--  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--  GNU General Public License for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with this program; if not, write to the Free Software
+--  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+--
+--  $Id$
+--
 DROP TABLE classification;
 DROP TABLE constr_type;
 DROP TABLE param_type;
@@ -82,6 +105,8 @@ INSERT INTO param_type VALUES (25, 'text');
 -- meet the constraint criteria.
 -- The validation values are passed to the constraint scripts.
 --
+-- TODO: Check contents of the table.
+--
 CREATE TABLE validation (
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
@@ -98,6 +123,8 @@ INSERT INTO validation VALUES (3, 'resource');
 --
 -- The table defines the unit-information that should be displayed in
 -- the UI when a parameter is displayed for input.
+--
+-- TODO: Extend table with a lot more records.
 --
 CREATE TABLE unit (
 	ID			INT2			NOT NULL,
@@ -140,6 +167,8 @@ INSERT INTO treetype VALUES (80, 'obsolete');
 -- Campaign table
 --
 -- Used for assigning observation(tree)s to a campaign.
+--
+-- TODO: Remove records with ID's other than 0.
 --
 CREATE TABLE campaign (
 	ID			INT2			NOT NULL,
