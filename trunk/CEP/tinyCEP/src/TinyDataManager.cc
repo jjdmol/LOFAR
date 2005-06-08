@@ -407,7 +407,7 @@ int TinyDataManager::getOutputRate(int dhIndex)
   } 
 }
 
-Connection* TinyDataManager::getInConnection(int channel)
+Connection* TinyDataManager::getInConnection(int channel) const
 {
   DBGASSERTSTR(channel >= 0, "input channel too low");
   DBGASSERTSTR(channel < getInputs(), "input channel too high");
@@ -423,7 +423,7 @@ void TinyDataManager::setInConnection(int channel, Connection* conn)
   itsInConnections[channel] = conn;
 }
 
-Connection* TinyDataManager::getOutConnection(int channel)
+Connection* TinyDataManager::getOutConnection(int channel) const
 {
   DBGASSERTSTR(channel >= 0, "output channel too low");
   DBGASSERTSTR(channel < getOutputs(), "output channel too high");
