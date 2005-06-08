@@ -1,4 +1,4 @@
-//#  BufferController.h: template class buffercontrol
+//#  BufferController.h: template class to control a cyclic buffer.
 //#
 //#  Copyright (C) 2000, 2001
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,16 +21,15 @@
 //#  $Id$
 
 
-#ifndef STATIONCORRELATOR_BUFFERCONTROLLER_H
-#define STATIONCORRELATOR_BUFFERCONTROLLER_H
+#ifndef TFLOPCORRELATOR_BUFFERCONTROLLER_H
+#define TFLOPCORRELATOR_BUFFERCONTROLLER_H
 
 #include <pthread.h>
 #include "CyclicBuffer.h"
 
 
 /* Main purpose of the BufferController class is to control a type independant
-   cyclic buffer 
-*/
+   cyclic buffer */
 
 
 namespace LOFAR
@@ -44,247 +43,162 @@ public:
   BufferController(int size);
   ~BufferController();
   
-  TYPE& getInHolder();
-  TYPE& getOutHolder();
-  
+  TYPE* getBufferReadPtr();
+  TYPE* getBufferWritePtr();
 
-  void readyWithInHolder();
-  void readyWithOutHolder();
+  TYPE* getFirstReadPtr(int* ID);
+  TYPE* getUserReadPtr(uint offset);
+  TYPE* getUserWritePtr(uint ID);
   
-  void preprocess();
-  void postprocess();
-
-  int getBufferSize();
-  int getBufferCount();
+  void readyReading();
+  void readyWriting();
+  void dump();
+  
+  int getBufferSize(); // maximum number of elements in Cyclic Buffer
+  int getBufferCount();// actual number of elements in Cyclic Buffer
 
 private:
   
-  // Starts a reader thread
-  void read();
+  // current read info
+  TYPE* itsCurrentReadPtr;
+  int itsCurrentReadID;
   
-  // Starts a writer thread
-  void write();
-   
-  // Start function for reader thread
-  static void* startReaderThread(void* thread_arg);
-  
-  // Start function for writer thread
-  static void* startWriterThread(void* thread_arg);
+  // current write info
+  TYPE* itsCurrentWritePtr;
+  int itsCurrentWriteID;
 
-  typedef struct thread_args{
-    pthread_mutex_t mutex;
-    bool            stopThread;
-    CyclicBuffer<TYPE> *buffer;
-  }thread_data;
-
-
-  pthread_t itsInHolder;
-  pthread_t itsOutHolder;
-  thread_data itsInThreadData;
-  thread_data itsOutThreadData;
-
-  TYPE itsCurrentInData;
-  int itsCurrentInID;
-  
-  TYPE itsCurrentOutData;
-  int itsCurrentOutID;
-
-  CyclicBuffer<TYPE> itsBuffer;
+  CyclicBuffer<TYPE*> itsBuffer;
   int itsBufferSize;
-  
+
+  TYPE* itsBufferItems;  
 };
   
 template<class TYPE>
-BufferController<TYPE>::BufferController(int size)  
+BufferController<TYPE>::BufferController(int size)
+  : itsBufferSize(size)  
 {
   LOG_TRACE_FLOW("BufferController constructor");
 
-  int instatus = pthread_mutex_init(&itsInThreadData.mutex, NULL);
-  DBGASSERTSTR(instatus == 0, "Init mutex failed");
+  itsCurrentReadPtr = (TYPE*)0;
+  itsCurrentReadID = -1;
 
-  int outstatus = pthread_mutex_init(&itsOutThreadData.mutex, NULL);
-  DBGASSERTSTR(outstatus == 0, "Init mutex failed");
+  itsCurrentWritePtr = (TYPE*)0;
+  itsCurrentWriteID = -1;
 
-  itsInThreadData.stopThread = true;
-  itsCurrentInData = 0;
-  itsCurrentInID = -1;
-
-  itsOutThreadData.stopThread = true;
-  itsCurrentOutData = 0;
-  itsCurrentOutID = -1;
+  // construct cyclic buffer
+  itsBufferItems = new TYPE[size];
+  for (int i = 0; i < itsBufferSize; i++) 
+  {  
+    itsBuffer.AddBufferItem(&itsBufferItems[i]);
+  }
+  itsBuffer.setWrittenBeforeReading(0); 
 }
 
 template<class TYPE>
 BufferController<TYPE>::~BufferController()
 {
   LOG_TRACE_FLOW("BufferController destructor");
-  pthread_mutex_lock(&itsInThreadData.mutex);
-  if (itsInThreadData.stopThread == false) {
-    itsInThreadData.stopThread = true;  // Causes thread to exit
-  }
-  pthread_mutex_unlock(&itsInThreadData.mutex);
 
-  pthread_mutex_lock(&itsOutThreadData.mutex);
-  if (itsOutThreadData.stopThread == false) {
-    itsOutThreadData.stopThread = true;  // Causes thread to exit
-  }
-  pthread_mutex_unlock(&itsOutThreadData.mutex);
+  // clear the cyclic buffer
+  itsBuffer.RemoveItems();
+  delete[] itsBufferItems;
 }
 
 template<class TYPE>
-TYPE& BufferController<TYPE>::getInHolder()
+TYPE* BufferController<TYPE>::getBufferReadPtr()
 {
-  if (itsCurrentInData == 0) {
-    itsCurrentInData = itsBuffer.GetReadDataItem(&itsCurrentInID);
+  if (itsCurrentReadPtr == 0) {
+    itsCurrentReadPtr = itsBuffer.GetBufferReadPtr(&itsCurrentReadID);
   }
-  return itsCurrentInData; 
+  return itsCurrentReadPtr; 
 }
 
 template<class TYPE>
-TYPE&  BufferController<TYPE>::getOutHolder()
+TYPE*  BufferController<TYPE>::getBufferWritePtr()
 {
-  if (itsCurrentOutData == 0) {
-    itsBuffer.GetWriteLockedDataItem(&itsCurrentOutID);
+  if (itsCurrentWritePtr == 0) {
+    itsCurrentWritePtr = itsBuffer.GetBufferWritePtr(&itsCurrentWriteID);
   }
-  return itsCurrentOutData; 
+  return itsCurrentWritePtr; 
 }
 
 template<class TYPE>
-void BufferController<TYPE>::readyWithInHolder()
+TYPE* BufferController<TYPE>::getFirstReadPtr(int* ID)
 {
-  if (itsCurrentInID >= 0) 
+  if (itsCurrentReadPtr ==0) {
+    itsCurrentReadPtr = itsBuffer.GetFirstReadPtr(&itsCurrentReadID);
+  }
+  *ID = itsCurrentReadID; 
+  return itsCurrentReadPtr; 
+}
+
+template<class TYPE>
+TYPE* BufferController<TYPE>::getUserReadPtr(uint offset)
+{
+  if (itsCurrentReadPtr == 0) {
+    itsCurrentReadPtr = itsBuffer.GetUserReadPtr(offset, &itsCurrentReadID);
+  }
+  return itsCurrentReadPtr; 
+}
+
+template<class TYPE>
+TYPE* BufferController<TYPE>::getUserWritePtr(uint ID)
+{
+  if (itsCurrentWritePtr == 0) {
+    itsCurrentWritePtr = itsBuffer.GetUserWritePtr(ID);
+    itsCurrentWriteID = ID;
+  }
+  return itsCurrentWritePtr; 
+}
+
+template<class TYPE>
+void BufferController<TYPE>::readyReading()
+{
+  if (itsCurrentReadID >= 0) 
   {
-    read(); 
-    itsBuffer.ReadUnlockElement(itsCurrentInID); 
+    itsBuffer.ReadUnlockItem(itsCurrentReadID); 
   }
   else
   {
-    LOG_TRACE_RTTI("BufferController::readyWithHolder() holder not previously requested with getHolder() function");
+    LOG_TRACE_RTTI("BufferController::readpointer not previously requested with getradPtr() function");
   }
-  itsCurrentInData = 0;
-  itsCurrentInID = -1;
+  itsCurrentReadPtr = (TYPE*)0;
+  itsCurrentReadID = -1;
 }
 
+
+
 template<class TYPE>
-void BufferController<TYPE>::readyWithOutHolder()
+void BufferController<TYPE>::readyWriting()
 {
-  if (itsCurrentOutID >= 0) 
+  if (itsCurrentWriteID >= 0) 
   {
-    write();
-    itsBuffer.WriteUnlockElement(itsCurrentOutID);
+    itsBuffer.WriteUnlockItem(itsCurrentWriteID);
   }
   else {
-    LOG_TRACE_RTTI("BufferController::readyWithHolder() holder not previously requested with getHolder() function");
+    LOG_TRACE_RTTI("BufferController::writepointer not previously requested with getWritePtr() function");
   }
   
-  itsCurrentOutData = 0;
-  itsCurrentOutID = -1;
-}
-
-template<class TYPE>
-void BufferController<TYPE>::preprocess()
-{  
-  TYPE element;
-  for (int i = 0; i < itsBufferSize; i++)   // Fill buffer
-  {
-    itsBuffer.AddBufferElement(element);
-    cout << "Add element " << element << endl;
-  } 
-}
-
-template<class TYPE>
-void BufferController<TYPE>::postprocess()
-{
-}
-
-template<class TYPE>
-void* BufferController<TYPE>::startReaderThread(void* thread_arg)
-{
-  LOG_TRACE_RTTI_STR("In reader thread ID " << pthread_self());
-  thread_data* data = (thread_data*)thread_arg;
-  
-  while (1)
-  {
-    pthread_mutex_lock(&data->mutex); // check stop condition
-    if (data->stopThread == true)
-    {
-      pthread_mutex_unlock(&data->mutex);
-      LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
-      pthread_exit(NULL);
-    }
-    pthread_mutex_unlock(&data->mutex);
-    int id;
-    LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to read");
-
-    data->buffer->GetWriteLockedDataItem(&id);
-    data->buffer->WriteUnlockElement(id);
-  }
-}
-
-template<class TYPE>
-void* BufferController<TYPE>::startWriterThread(void* thread_arg)
-{
-  LOG_TRACE_RTTI_STR("In writer thread ID " << pthread_self());
-  thread_data* data = (thread_data*)thread_arg;
-
-  while (1)
-  {
-    pthread_mutex_lock(&data->mutex);
-    if (data->stopThread == true) // check stop condition
-    {
-      pthread_mutex_unlock(&data->mutex);
-      LOG_TRACE_RTTI_STR("Writer thread " << pthread_self() << " exiting");
-      pthread_exit(NULL);
-    }
-    pthread_mutex_unlock(&data->mutex);
-    int id;
-    LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to write");
-    data->buffer->GetReadDataItem(&id);
-    data->buffer->ReadUnlockElement(id);
-  }
-}
-
-template<class TYPE>
-void BufferController<TYPE>::read()
-{
-  pthread_mutex_lock(&itsInThreadData.mutex);
-  if (itsInThreadData.stopThread == true)
-  {                                          
-    itsInThreadData.buffer = &itsBuffer;
-    itsInThreadData.stopThread = false;
-    pthread_create(&itsInHolder, NULL, startReaderThread, &itsInThreadData);
-    LOG_TRACE_RTTI_STR("Reader thread " << itsInHolder << " created");
-  }
-
-  pthread_mutex_unlock(&itsInThreadData.mutex);
-}
-
-template<class TYPE>
-void BufferController<TYPE>::write()
-{
-  pthread_mutex_lock(&itsOutThreadData.mutex);
-
-  if (itsOutThreadData.stopThread == true)
-  {    
-    itsOutThreadData.buffer = &itsBuffer;
-    itsOutThreadData.stopThread = false;
-    pthread_create(&itsOutHolder, NULL, startWriterThread, &itsOutThreadData);
-    LOG_TRACE_RTTI_STR("Writer thread " << itsOutHolder << " created");
-  }
-
-  pthread_mutex_unlock(&itsOutThreadData.mutex);
+  itsCurrentWritePtr = (TYPE*)0;
+  itsCurrentWriteID = -1;
 }
 
 template<class TYPE>
 int BufferController<TYPE>::getBufferSize()
 {
-  return itsBuffer.GetSize();
+  return itsBuffer.getSize();
 }
 
 template<class TYPE>
 int BufferController<TYPE>::getBufferCount()
 {
-  return itsBuffer.GetCount();
+  return itsBuffer.getCount();
+}
+
+template<class TYPE>
+void BufferController<TYPE>::dump()
+{
+  itsBuffer.Dump();
 }
 
 

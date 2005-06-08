@@ -4,91 +4,120 @@
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-//#
-/////////////////////////////////////////////////////////////////
 
 #ifndef TFLOPCORRELATOR_WH_RSPINPUT_H
 #define TFLOPCORRELATOR_WH_RSPINPUT_H
 
-#include <Transport/TH_Ethernet.h>
-
 #include <Common/KeyValueMap.h>
 #include <Common/lofar_string.h>
 #include <tinyCEP/WorkHolder.h>
-//#include <DH_RSPSync.h>
+#include <Transport/TH_Ethernet.h>
+
+#include <pthread.h>
+
+#include <RSPTimeStamp.h>
 #include <BufferController.h>
+
 
 namespace LOFAR
 {
   
-  struct BufferType1 {
-    char element[9000];
-  };
+  typedef struct 
+  {
+    char item[9000];
+  } DataType;
 
-  struct BufferType2 {
-    bool element;
-  };
+  typedef struct 
+  {
+    int item;
+  } FlagType;
 
+  typedef struct 
+  {
+    BufferController<DataType>* databuffer;
+    BufferController<FlagType>* flagbuffer;
+    TH_Ethernet* connection; 
+    int framesize;
+    int packetsinframe;
+    bool stopthread;
+  }  thread_args;
 
+  
   class WH_RSPInput: public WorkHolder
   {
-  public:
+    public:
+      //typedef TimeStamp timestamp_t;
 
-    explicit WH_RSPInput(const string& name, 
-                         const string device,
-                         const string srcMAC,
-                         const string destMAC);
-    virtual ~WH_RSPInput();
+      explicit WH_RSPInput(const string& name, 
+                           const KeyValueMap kvm,
+                           const string device,
+                           const string srcMAC,
+                           const string destMAC);
+      virtual ~WH_RSPInput();
     
-    static WorkHolder* construct(const string& name, 
-                                 const string device,
-                                 const string srcMAC,
-                                 const string destMAC);
+      static WorkHolder* construct(const string& name, 
+                                   const KeyValueMap kvm,
+                                   const string device,
+                                   const string srcMAC,
+                                   const string destMAC);
 	
-    virtual WH_RSPInput* make(const string& name);
+      virtual WH_RSPInput* make(const string& name);
+     
+      virtual void preprocess();
     
-    virtual void preprocess();
-    
-    virtual void process();
-    
-    /// Show the work holder on stdout.
-    virtual void dump();
+      virtual void process();
 
-  private:
-    /// forbid copy constructor
-    WH_RSPInput (const WH_RSPInput&);
-    /// forbid assignment
-    WH_RSPInput& operator= (const WH_RSPInput&);
+      virtual void postprocess();
+    
+      // Show the work holder on stdout.
+      virtual void dump();
 
-    // read data from input connection
-    void readInput();
+    private:
+    
+      // forbid copy constructor
+      WH_RSPInput (const WH_RSPInput&);
+    
+      // forbid assignment
+      WH_RSPInput& operator= (const WH_RSPInput&);
 
-    // raw ethernet interface 
-    TH_Ethernet* itsInputConnection;
-    string itsDevice;
-    string itsSrcMAC;
-    string itsDestMAC;
-    char* itsRecvFrame;
-    int itsSzRSPframe;
-    int itsNpackets;
-    
-    
-    // cyclic buffer for rsp-data
-    BufferController<BufferType1*> *itsDataBuffer;
-    
-    // cyclic buffer for invalid data flag
-    BufferController<BufferType2*> *itsFlagBuffer;
-    
-    // timestamps
-    DH_RSPSync::syncStamp_t itsActualStamp, itsNextStamp;
-    
-    // Do we need to read at the beginning of the next process()?
-    bool itsReadNext;
+      // writer thread
+      pthread_t writerthread;
+      thread_args writerinfo;
+      //void* WriteToBufferThread(void* arguments);
 
-    static ProfilingState theirOldDataState;
-    static ProfilingState theirMissingDataState;
+      // raw ethernet interface 
+      TH_Ethernet* itsInputConnection;
+      string itsDevice;
+      string itsSrcMAC;
+      string itsDestMAC;
+  
+      int itsSzRSPframe;
+      int itsNpackets;
+    
+    
+      // cyclic buffer for rsp-data
+      BufferController<DataType> *itsDataBuffer;
+    
+      // cyclic buffer for invalid data flag
+      BufferController<FlagType> *itsFlagBuffer;
+    
+      // keyvalue map
+      KeyValueMap itsKVM;
   };
 
 } // namespace LOFAR
