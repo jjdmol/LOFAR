@@ -1,5 +1,5 @@
 --
---  addPICparam.sql: Add a paramater to an PIC tree.
+--  addPICparam.sql: Add a parameter to an PIC tree.
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,7 +30,9 @@
 --
 -- Authorisation: no
 -- 
--- Tables:	PICparamref PicHierarchy
+-- Tables:	
+--		PICparamref 	insert
+--		PicHierarchy	insert
 --
 -- Types:	none
 --

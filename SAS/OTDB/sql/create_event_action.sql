@@ -1,3 +1,28 @@
+--
+--  create_event_action.sql: Creates the event and action tables.
+--
+--  Copyright (C) 2005
+--  ASTRON (Netherlands Foundation for Research in Astronomy)
+--  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+--
+--  This program is free software; you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published by
+--  the Free Software Foundation; either version 2 of the License, or
+--  (at your option) any later version.
+--
+--  This program is distributed in the hope that it will be useful,
+--  but WITHOUT ANY WARRANTY; without even the implied warranty of
+--  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--  GNU General Public License for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with this program; if not, write to the Free Software
+--  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+--
+--  $Id$
+--
+
+
 -- creates the OTDB event and action tables
 
 DROP TABLE OTDBevent    CASCADE;
@@ -13,6 +38,8 @@ DROP SEQUENCE	OTDBactionID;
 --
 -- Defines the status values of an event
 -- Note: the values are single-bit values so that they can be ORed
+--
+-- TODO: Check if table contents is complete
 --
 CREATE TABLE eventStatus (
 	status		INT2			NOT NULL,
@@ -34,6 +61,8 @@ INSERT INTO eventStatus VALUES ( 32, 'maintenance');
 -- Defines the status values of an action
 -- Note: the values are single-bit values so that they can be ORed
 --
+-- TODO: Check if table contents is complete
+--
 CREATE TABLE actionStatus (
 	status		INT2			NOT NULL,
 	name		VARCHAR(20)		NOT NULL,
@@ -46,7 +75,6 @@ INSERT INTO actionStatus VALUES (  4, 'to be defined');
 INSERT INTO actionStatus VALUES (  8, 'confirmed defect');
 INSERT INTO actionStatus VALUES ( 16, 'off-line request');
 INSERT INTO actionStatus VALUES ( 32, 'closed');
-
 
 
 --
@@ -64,10 +92,7 @@ CREATE TABLE OTDBevent (
 ) WITHOUT OIDS;
 
 -- example
-INSERT INTO OTDBevent (nodename, status) 
-			VALUES ('LOFAR_LCU1_RACK2_CPU3', 4);
-
-
+-- INSERT INTO OTDBevent (nodename, status) VALUES ('LOFAR_LCU1_RACK2_CPU3', 4);
 
 
 --

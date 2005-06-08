@@ -25,7 +25,8 @@
 --
 -- hPICsearchParamID (treeID, paramname): paramID
 --
--- checks if the fucntion may be executed with the given value.
+-- Tries to resolve a parametername like a.b.c.d to an entry in an
+-- hierarchical PIC tree.
 --
 -- Authorisation: none
 --
@@ -62,7 +63,6 @@ CREATE OR REPLACE FUNCTION hPICsearchParamID(INT4, VARCHAR(120))
 		  RETURN 0;
 		END IF;
 
-		PERFORM logmsg(vNodename || to_char(vParamID, \'9999\'));
 		vFieldnr := vFieldnr + 1;
 		vParentID:= vParamID;
 	  END LOOP;
