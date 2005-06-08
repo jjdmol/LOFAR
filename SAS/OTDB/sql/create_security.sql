@@ -27,8 +27,8 @@
 --		 Possibly introduce usergroups as well.
 --
 
-DROP TABLE OTDBaccess;
-DROP TABLE OTDBuser;
+DROP TABLE OTDBaccess CASCADE;
+DROP TABLE OTDBuser   CASCADE;
 DROP SEQUENCE	OTDBuserID;
 
 --

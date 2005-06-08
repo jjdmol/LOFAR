@@ -22,7 +22,7 @@
 --  $Id$
 --
 
-DROP TABLE log;
+DROP TABLE log CASCADE;
 
 CREATE TABLE log (
 	msg		TEXT
