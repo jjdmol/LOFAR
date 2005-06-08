@@ -95,9 +95,9 @@ namespace LOFAR
     bool hasOutputSelector();
 
     // Get/set the in/out connection per channel
-    virtual Connection* getInConnection(int channel);
+    virtual Connection* getInConnection(int channel) const;
     virtual void setInConnection(int channel, Connection* conn);
-    virtual Connection* getOutConnection(int channel);
+    virtual Connection* getOutConnection(int channel) const;
     virtual void setOutConnection(int channel, Connection* conn);
 
     void setReadyInFlag(int channel);
