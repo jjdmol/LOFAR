@@ -228,5 +228,16 @@ vector<OTDBvalue> OTDBtree::searchInPeriod (nodeIDType		topNode,
 	return (resultVec);
 }
 
+//
+// getSchedulableItems
+//
+vector<OTDBvalue> OTDBtree::getSchedulableItems (nodeIDType	topNode)
+{
+	LOG_INFO("OTDBtree::getSchedulableItems is not yet implemented");
+
+	vector<OTDBvalue>	empty;
+	return (empty);
+}
+
   } // namespace OTDB
 } // namespace LOFAR

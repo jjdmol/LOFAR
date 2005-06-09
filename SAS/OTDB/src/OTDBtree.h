@@ -110,6 +110,9 @@ inline bool	OTDBtree::addKVT (const OTDBvalue&		aKVT)
 	return (addKVT(aKVT.name, aKVT.value, aKVT.time));
 }
 
+inline string OTDBtree::errorMsg() {
+	return (itsError);
+}
 
 
 // @}
