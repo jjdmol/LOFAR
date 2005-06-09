@@ -39,18 +39,19 @@ namespace LOFAR
   
   typedef struct 
   {
-    char item[9000];
+    char data[9000];
   } DataType;
 
   typedef struct 
   {
-    int item;
-  } FlagType;
+    int invalid;
+    timestamp_t timestamp;
+  } MetaDataType;
 
   typedef struct 
   {
     BufferController<DataType>* databuffer;
-    BufferController<FlagType>* flagbuffer;
+    BufferController<MetaDataType>* metadatabuffer;
     TH_Ethernet* connection; 
     int framesize;
     int packetsinframe;
@@ -98,7 +99,6 @@ namespace LOFAR
       // writer thread
       pthread_t writerthread;
       thread_args writerinfo;
-      //void* WriteToBufferThread(void* arguments);
 
       // raw ethernet interface 
       TH_Ethernet* itsInputConnection;
@@ -109,12 +109,11 @@ namespace LOFAR
       int itsSzRSPframe;
       int itsNpackets;
     
-    
       // cyclic buffer for rsp-data
       BufferController<DataType> *itsDataBuffer;
     
       // cyclic buffer for invalid data flag
-      BufferController<FlagType> *itsFlagBuffer;
+      BufferController<MetaDataType> *itsMetaDataBuffer;
     
       // keyvalue map
       KeyValueMap itsKVM;

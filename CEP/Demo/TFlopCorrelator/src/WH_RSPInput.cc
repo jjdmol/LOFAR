@@ -27,10 +27,10 @@
 #include <Common/LofarLogger.h>
 
 #include <CEPFrame/DataManager.h>
-//#include <tinyCEP/Profiler.h>
 
 // Application specific includes
 #include <WH_RSPInput.h>
+#include <DH_Sync.h>
 #include <DH_RSP.h>
 
 using namespace LOFAR;
@@ -38,70 +38,108 @@ using namespace LOFAR;
 
 void* WriteToBufferThread(void* arguments)
 {
- cout << "writing thread started" << endl;
- thread_args* args = (thread_args*)arguments;
- 
- BufferController<DataType>* databuffer = args->databuffer;
- BufferController<FlagType>* flagbuffer = args->flagbuffer;
- TH_Ethernet* connection = args->connection;
- int framesize = args->framesize;
- int packetsinframe = args->packetsinframe;
+  thread_args* args = (thread_args*)arguments;
+  BufferController<DataType>* databuffer = args->databuffer;
+  BufferController<MetaDataType>* metadatabuffer = args->metadatabuffer;
+  TH_Ethernet* connection = args->connection;
+  int framesize = args->framesize;
+  int packetsinframe = args->packetsinframe;
 
- char recvframe[9000];
- int seqid, blockid;
- TimeStamp actualstamp, nextstamp;
- DataType* dataptr;
- FlagType* flagptr;
- bool readnew = true;
- bool firstloop = true;
+  char recvframe[9000];
+  int seqid, blockid, itemid, offset;
+  timestamp_t actualstamp, nextstamp;
+  DataType* dataptr;
+  MetaDataType* metadataptr;
+  bool readnew = true;
+  bool firstloop = true;
 
- while(1) {
+  while(1) {
    
-   // check stop condition
-   if (args->stopthread == true) {
-     pthread_exit(NULL);
-   }
+    // check stop condition
+    if (args->stopthread == true) {
+      pthread_exit(NULL);
+    }
    
-   // catch a frame from input connection
-   if (readnew) {
-     connection->recvBlocking( (void*)recvframe, framesize, 0);
-   }
+    // catch a frame from input connection
+    if (readnew) {
+      connection->recvBlocking( (void*)recvframe, framesize, 0);
+    }
    
-   // get the actual timestamp
-   seqid   = ((int*)&recvframe[6])[0];
-   blockid = ((int*)&recvframe[10])[0];
-   actualstamp.setStamp(seqid ,blockid);
+    // get the actual timestamp
+    seqid   = ((int*)&recvframe[6])[0];
+    blockid = ((int*)&recvframe[10])[0];
+    actualstamp.setStamp(seqid ,blockid);
 
-   if (firstloop) {
-    // set nextstamp equal to actualstamp
-    nextstamp.setStamp(seqid, blockid);
-    firstloop = false;
-   }
+    if (firstloop) {
+      // set nextstamp equal to actualstamp
+      nextstamp.setStamp(seqid, blockid);
+      firstloop = false;
+    }
 
-   if (actualstamp < nextstamp) {
-     // old packet received 
-     // if exists, overwrite its previous created dummy
+    if (actualstamp < nextstamp) {
+      // old packet received 
+      // if exists, overwrite its previous created dummy
+      
+      // read oldest item in cyclic buffer
+      metadataptr = (MetaDataType*)metadatabuffer->getFirstReadPtr(&itemid);
+      
+      // subtract timestamps to find offset
+      offset = actualstamp - metadataptr->timestamp;
+      
+      // determine itemid to be written
+      itemid += offset;
+      
+      // release readlock
+      metadatabuffer->readyReading();
+   
+      // overwrite data and invalid flag
+      metadataptr = (MetaDataType*)metadatabuffer->getUserWritePtr(itemid);   
+      dataptr = (DataType*)databuffer->getUserWritePtr(itemid);
+      if (metadataptr != 0 && dataptr != 0) {
+        memcpy(dataptr->data, recvframe, framesize);
+        metadataptr->invalid = 0;
+      }      
      
-     readnew = true;   
-   }
-   else if (nextstamp + (packetsinframe - 1) < actualstamp) {
-     // missed a packet so write dummy into buffer 
-     
+      // release writelocks
+      databuffer->readyWriting();
+      metadatabuffer->readyWriting();
+      
+      // read new frame in next loop
+      readnew = true;   
+    }
+    else if (nextstamp + (packetsinframe - 1) < actualstamp) {
+      // missed a packet so set invalid flag and missing timestamp
+      metadataptr = (MetaDataType*)metadatabuffer->getBufferWritePtr(); 
+      metadataptr->invalid = 1;
+      metadataptr->timestamp = nextstamp;
 
-     readnew = false;
-   } 
-   else {
-     // expected packet received so write data into buffer
-     dataptr = (DataType*)databuffer->getBufferWritePtr();
-     flagptr = (FlagType*)flagbuffer->getBufferWritePtr();
+      // call getBufferWritePtr to increase the writepointer but
+      // don't write data because we have none
+      (DataType*)databuffer->getBufferWritePtr();   
      
-     memcpy(dataptr->item, recvframe, framesize);
-     flagptr->item = 0;      
-     databuffer->readyWriting();
-     flagbuffer->readyWriting();
-     readnew = true;
-   } 
- }
+      // release writelocks
+      databuffer->readyWriting();
+      metadatabuffer->readyWriting();
+      
+      // read same frame again in next loop
+      readnew = false;
+    } 
+    else {
+      // expected packet received so write data into buffer
+      dataptr = (DataType*)databuffer->getBufferWritePtr();
+      metadataptr = (MetaDataType*)metadatabuffer->getBufferWritePtr();      
+      memcpy(dataptr->data, recvframe, framesize);
+      metadataptr->invalid = 0;
+      metadataptr->timestamp = actualstamp;      
+     
+      // release writelocks
+      databuffer->readyWriting();
+      metadatabuffer->readyWriting();
+     
+      // read new frame in next loop
+      readnew = true;
+    } 
+  }
 }
 
 WH_RSPInput::WH_RSPInput(const string& name, 
@@ -133,10 +171,10 @@ WH_RSPInput::WH_RSPInput(const string& name,
 
   // use  cyclic buffers to hold the rsp data and valid/invalid flag
   itsDataBuffer = new BufferController<DataType>(100); 
-  itsFlagBuffer = new BufferController<FlagType>(100); 
+  itsMetaDataBuffer = new BufferController<MetaDataType>(100); 
   
    // create incoming dataholder holding the delay information 
-  //getDataManager().addInDataHolder(0, new DH_Delay("DH_delay"));
+  getDataManager().addInDataHolder(0, new DH_Sync("DH_Sync"));
 
   // create outgoing dataholder holding the delay controlled RSP data
   getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out"));
@@ -147,7 +185,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
 WH_RSPInput::~WH_RSPInput() 
 {
   delete itsDataBuffer;
-  delete itsFlagBuffer;
+  delete itsMetaDataBuffer;
   delete itsInputConnection;
 }
 
@@ -170,15 +208,14 @@ WH_RSPInput* WH_RSPInput::make(const string& name)
 
 void WH_RSPInput::preprocess()
 {
-  // writer thread information
+  // start up writer thread
   writerinfo.databuffer = itsDataBuffer;
-  writerinfo.flagbuffer = itsFlagBuffer;
+  writerinfo.metadatabuffer = itsMetaDataBuffer;
   writerinfo.connection = itsInputConnection;
   writerinfo.framesize = itsSzRSPframe;
   writerinfo.packetsinframe = itsNpackets;
   writerinfo.stopthread = false;
   
-  // start writer thread 
   if (pthread_create(&writerthread, NULL, WriteToBufferThread, &writerinfo) < 0)
   {
     perror("writer thread creation failure");
@@ -186,37 +223,39 @@ void WH_RSPInput::preprocess()
   }
 }
 
-
-void WH_RSPInput::postprocess()
-{
-  // stop writer thread
-  writerinfo.stopthread = true;
-}
-
-
 void WH_RSPInput::process() 
 { 
-  //DH_Delay* inDHp;
+  DH_Sync* inDHp;
   DH_RSP* outDHp;
   DataType* dataptr;
-  FlagType* flagptr;
+  MetaDataType* metadataptr;
+  timestamp_t syncstamp;
+  int seqid, blockid;
 
   // get delay information
-  //inDHp = (DH_Delay*)getDataManager().getInHolder(0);
+  inDHp = (DH_Sync*)getDataManager().getInHolder(0);
+  inDHp->getNextMainBeat(seqid, blockid);
+  syncstamp.setStamp(seqid, blockid);
   
   // add delay control code here
 
-  // get flag from cyclic buffer 
-  flagptr = itsFlagBuffer->getBufferReadPtr();
+  // get meta data from cyclic buffer 
+  metadataptr = itsMetaDataBuffer->getBufferReadPtr();
   
   // get data from cycclic buffer
   dataptr = itsDataBuffer->getBufferReadPtr();
 
   // write flag to outgoing dataholder
-  outDHp->setFlag(flagptr->item);
+  outDHp->setFlag(metadataptr->invalid);
 
   // write data to outgoing dataholder
-  memcpy(outDHp->getBuffer(), dataptr->item, itsSzRSPframe);
+  memcpy(outDHp->getBuffer(), dataptr->data, itsSzRSPframe);
+}
+
+void WH_RSPInput::postprocess()
+{
+  // stop writer thread
+  writerinfo.stopthread = true;
 }
 
 void WH_RSPInput::dump() 

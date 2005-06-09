@@ -1,4 +1,5 @@
-//# DH_Sync.h: todo: description 
+//# DH_Sync.h: dataholder to hold the delay information to perform
+//#            station synchronizaion       
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -15,7 +16,7 @@
 
 #include <lofar_config.h>
 #include <Transport/DataHolder.h>
-#include <complex>
+//#include <complex>
 
 using std::complex;
 
@@ -35,20 +36,20 @@ public:
 
   DataHolder* clone() const;
 
-  /// Allocate the buffers.
+  // Allocate the buffers.
   virtual void preprocess();
 
-  /// Deallocate the buffers.
+  // Deallocate the buffers.
   virtual void postprocess();
 
-  /// accessor functions to the blob data
+  // accessor functions to the blob data
   const int getDelay() const;
   // return the primairy and secondary timestamps for the start of the next integration sequence
-  const void getNextMainBeat(int& primairy,
-			     int& secondary) const; 
+  const void getNextMainBeat(int& seqid,
+			     int& blockid) const; 
   void setDelay(int);
-  // set the next primairy timestamp to process 
-  void setNextPrimairy(int primairy);
+  // set the next sequence ID to process 
+  void setNextPrimairy(int seqid);
 		   
  
  private:
@@ -59,10 +60,23 @@ public:
   virtual void fillDataPointers();
 
   /// pointers to data in the blob
-  int itsDelay;
-  int itsPrimairy;
-  int itsSecondary;
+  int* itsDelayPtr;
+  int* itsSeqIdPtr;
+  int* itsBlockIdPtr;
 };
+
+inline const int DH_Sync::getDelay() const
+  { return *itsDelayPtr; }
+
+inline const void DH_Sync::getNextMainBeat(int& seqid,
+			                   int& blockid) const
+  { seqid = *itsSeqIdPtr; blockid = *itsBlockIdPtr;} 
+
+inline void DH_Sync::setDelay(int delay)
+  { *itsDelayPtr = delay; *itsBlockIdPtr += delay;}
+
+inline void DH_Sync::setNextPrimairy(int seqid)
+  { *itsSeqIdPtr = seqid; }
 
 }
 #endif 

@@ -26,6 +26,7 @@
 #define MAX_BLOCK_ID 156250
 
 #include <Common/lofar_iostream.h>
+//#include <math.h>
 
 
 namespace LOFAR
@@ -41,15 +42,16 @@ namespace LOFAR
     // get block ID
     const int getBlockId () const;
 
-    /// the blockId restarts at zero at some point. Check if we are there yet
+    // the blockId restarts at zero at some point. Check if we are there yet
     void checkOverflow();
 
-    /// increase the value of the stamp
+    // increase the value of the stamp
     void operator+= (TimeStamp& other);
     void operator+= (int increment);
     void operator++ (int);
 
     TimeStamp operator+ (int other);
+    int operator- (TimeStamp& other);
     bool operator>  (TimeStamp& other);
     bool operator<  (TimeStamp& other);
     bool operator== (TimeStamp& other);
@@ -60,6 +62,8 @@ namespace LOFAR
     int itsSeqId;
     int itsBlockId;
   };
+
+  typedef TimeStamp timestamp_t;
 
   inline void TimeStamp::setStamp(const int seqId, const int blockId)
     { itsSeqId = seqId; itsBlockId = blockId; checkOverflow(); };
@@ -92,6 +96,12 @@ namespace LOFAR
     { 
       // check overflow is done in the constructor
       return TimeStamp(itsSeqId, itsBlockId + increment);
+    }
+
+   inline int TimeStamp::operator- (TimeStamp& other)
+    { 
+      //return abs(itsBlockId - other.itsBlockId);
+      return itsBlockId - other.itsBlockId;
     }
 
   inline bool TimeStamp::operator > (TimeStamp& other)
