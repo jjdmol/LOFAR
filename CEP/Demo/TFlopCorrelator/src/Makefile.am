@@ -1,4 +1,4 @@
-INSTHDRS         	=\
+INSTHDRS         	= \
 DH_CorrCube.h		\
 DH_Vis.h		\
 DH_SubBand.h		\
@@ -22,10 +22,10 @@ noinst_HEADERS 		= $(NOINSTHDRS)
 
 DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
-bin_PROGRAMS 		= TFC_Correlator TFC_Input TFC_Store
+bin_PROGRAMS 		= TFC_BGLProcessing TFC_InputSection TFC_Storage
 
-TFC_Correlator_SOURCES 	= $(DOCHDRS)\
-TFlopCorrelator_main.cc \
+TFC_BGLProcessing_SOURCES 	= $(DOCHDRS) \
+TFC_BGLProcessing_main.cc \
 DH_CorrCube.cc		\
 DH_Vis.cc		\
 DH_SubBand.cc		\
@@ -36,12 +36,12 @@ WH_SubBand.cc		\
 SB_Stub.cc              \
 RSPTimeStamp.cc         
 
-TFC_Input_SOURCES	= $(DOCHDRS)\
+TFC_InputSection_SOURCES	= $(DOCHDRS) \
 TFlopCorrelator_main.cc \
 DH_SubBand.cc		\
 SB_Stub.cc
 
-TFC_Store_SOURCES 	= $(DOCHDRS)\
+TFC_Storage_SOURCES 	= $(DOCHDRS) \
 TFlopCorrelator_main.cc \
 DH_Vis.cc		\
 Corr_Stub.cc
