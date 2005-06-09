@@ -30,9 +30,11 @@
 #include <signal.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 static pid_t g_child = 0;
-static char* g_progname = "LimitExec";
+static char* g_progname;
+static int g_seconds = 0;
 
 void usage_exit(void)
 {
@@ -45,13 +47,14 @@ void killchild(int sig)
   /* keep compiler happy */
   sig = sig;
   
+  fprintf(stderr, "LimitExec: %s has exceeded time limit (%d s) "
+          "and will be killed\n", g_progname, g_seconds);
+
   if (kill(g_child, SIGKILL) < 0)
   {
     perror("kill");
   }
 
-  fprintf(stderr, "%s: Process %d has exceeded time limit and has been killed.\n",
-	  g_progname, g_child);
 }
 
 // Translate the exit status of a child process.
@@ -59,19 +62,25 @@ void killchild(int sig)
 // else return the child's exit status.
 int exit_status(int status)
 {
-  if (WIFSIGNALED(status)) return -1;
+  if (WIFSIGNALED(status)) {
+    fprintf(stderr, "LimitExec: %s (pid=%d) was terminated "
+            "by signal #%d (%s)\n", g_progname, g_child, 
+            WTERMSIG(status), strsignal(WTERMSIG(status)));
+    return -1;
+  }
   else return WEXITSTATUS(status);
 }
 
 int main(int argc, char** argv)
 {
-  int seconds = 0;
   int status = 1;
 
   if (argc < 3) usage_exit();
 
-  seconds = atoi(argv[1]);
-  if (seconds < 0) usage_exit();
+  g_seconds = atoi(argv[1]);
+  if (g_seconds < 0) usage_exit();
+
+  g_progname = argv[2];
 
   if ((g_child = fork()) < 0)
   {
@@ -96,7 +105,7 @@ int main(int argc, char** argv)
     signal(SIGALRM, killchild);
 
     /* start the timer */
-    alarm(seconds);
+    alarm(g_seconds);
 
     /* wait for the child to exit
      * either normally or after being killed
