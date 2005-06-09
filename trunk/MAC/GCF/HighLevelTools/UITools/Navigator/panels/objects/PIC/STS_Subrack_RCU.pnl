@@ -1,10 +1,11 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,328 229 139 149 N "_3DFace" 3
+PANEL,473 288 139 149 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$datapoint"
+"$referenceDatapoint"
 "main()
 {
   //Function: Set background color of RCU
@@ -93,7 +94,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  jump2StationSubrackRCU();
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board1_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
  0 1 1 0 1 E U  1 E 40 40 100 110
 2 5
@@ -134,7 +135,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  jump2StationSubrackRCU();
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board1_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
  0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 50 68 90 108
 0

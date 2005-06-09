@@ -1,14 +1,11 @@
 V 10
 1
 LANG:1 19 NavigatorGenericTab
-PANEL,571 359 958 778 N "_3DFace" 1
+PANEL,306 200 958 778 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-// panel parameters:
-// $datapoint        : string representing the selected datapoint, including system name and (if applicable) element name
-
-  //DebugTN(\"navigator_tab::Initialize. $datapoint=\",$datapoint);
+  // $datapoint        : string representing the selected datapoint, including system name and (if applicable) element name
   NavTabInitialize($datapoint);
 }
 " 0

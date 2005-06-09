@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,367 222 124 85 N "_3DFace" 3
+PANEL,438 374 124 85 N "_3DFace" 3
 "$Caption"
 "$Component"
 "$datapoint"
@@ -11,7 +11,7 @@ PANEL,367 222 124 85 N "_3DFace" 3
 	{
 	  setValue(\"txt_component\", \"text\", $Caption);
 	  dpConnect(\"ControlComponent\", $datapoint + \".\" + $Component + \":_online.._value\",
-	                                $datapoint + \".\" + $Component + \":_online.._invalid\");
+	                                $datapoint + \".\" + $Component + \":_original.._invalid\");
   }
   else
   {
@@ -23,7 +23,7 @@ PANEL,367 222 124 85 N "_3DFace" 3
 ControlComponent(string dp1, bool Status,
                  string dp2, bool invalid)
 {
-
+  DebugN(\"dp1:\"+dp1+\"  |invalid:\"+invalid);
   if(!invalid)
   {
     CheckButton1.enabled = TRUE;

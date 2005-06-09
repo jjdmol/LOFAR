@@ -1,13 +1,11 @@
 V 10
 1
 LANG:1 5 panel
-PANEL,372 287 1006 750 N "_3DFace" 2
+PANEL,636 374 1006 750 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-  //string dpToConnect = navViewRetrieveDpName($datapoint, dpName);
-  //DebugTN(\"Initialize Alert-view\");
   // Is it a datapoint element? then disable control
 	// This includes that this control is only suitable for DP-Types
 	if (dpGetElementName($datapoint)==\"\")
@@ -41,20 +39,32 @@ PANEL,372 287 1006 750 N "_3DFace" 2
   }
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////
 //
-// FunctionName: ArrangeAlertList
-// Function    : Resize the Alert list
-// 
+// FunctionName: UpdateCell
+// Function    : Update a specific Cell in a specific table, with the actual
+//               alert color
 ///////////////////////////////////////////////////////////////////////////////////
-ArrangeAlertList(string dp1, float nrOfRowsList,
-                 string dp2, bool ListActive)
+void UpdateCell(string dpName, string value,
+                string dpNameInvalid, bool invalid)
 {
-  int x, y;
+  int i, TableNumber=1;
+  anytype Row, AlertColor;
+  string ColumnTitle, connectDatapoint;
+  dyn_string matchingList;
+  string checkDpName = dpName;
 
-  setValue(\"AlertList\", \"scale\", 1, (nrOfRowsList+1)/28 );
-  getValue(\"AlertList\", \"size\", x, y );
+  strreplace(checkDpName, \":_alert_hdl.._act_state_color\", \"\");
+  matchingList = dynPatternMatch(checkDpName + \"|*\", dpAlertList);
+
+  for(i=1; i<=dynlen(matchingList) ; i++)
+  {
+    dyn_string tablePosition = strsplit(matchingList[i], \"|\");
+      setValue (\"Table\"+tablePosition[4], \"cellBackColRC\", tablePosition[2], tablePosition[3] + \"Titles\", value);
+  }  
 }
+
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +84,7 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
   string connectDatapoint;
   getTableNumber(dp1, TableNumber);
   getColumnTitle(dp2, ColumnTitle);
-  DebugN(\"TableNumber:\"+TableNumber);
+  string insertConnectDatapoint;
   dpGet($configDatapoint + \".\"+TableNumber+\".nrOfRows:_online.._value\", nrOfRows);
   for (i=0; i< nrOfRows ;i++) 
   { 
@@ -95,14 +105,18 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
     getValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\" , CellContent);
     if (dynlen(Column1dpNames)>i)
     {
-       string connectDatapoint = navViewRetrieveDpName($datapoint, Column1dpNames[ConvIndex(i)]);
-       
+      string connectDatapoint = navViewRetrieveDpName($datapoint, Column1dpNames[ConvIndex(i)]);
       if (Column1dpNames[ConvIndex(i)] == CellContent)
       {
         if ((\"\" != Column1dpNames[ConvIndex(i)]) && (\"0\" != Column1dpNames[ConvIndex(i)]))
         {
-          
-          dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\", dp2,
+          insertConnectDatapoint = connectDatapoint + \"|\" + i +\"|\" + ColumnTitle + \"|\" + TableNumber;
+          if(dynContains(dpAlertList,insertConnectDatapoint)<1)
+          {
+            dpAlertList[dynlen(dpAlertList)+1] = insertConnectDatapoint;
+          }
+          navPMLloadPropertySet(dpSubStr(connectDatapoint, DPSUB_SYS_DP));
+          dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\",
                                   connectDatapoint + \":_online.._invalid\");
 	        setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
   	    }
@@ -113,11 +127,20 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
       }
       else if (Column1dpNames[ConvIndex(i)] != CellContent)
       {
-        if (dpAccessable(CellContent))
-        {
-          dpDisconnect(\"UpdateCell\", CellContent + \":_alert_hdl.._act_state_color\", dp2,
-                                     CellContent + \":_online.._invalid\");
-        }
+        //if (dpAccessable(CellContent))
+        //if(\"\" == Column1dpNames[ConvIndex(i)])
+        //{
+        
+          int position = dynContains(dpAlertList,navViewRetrieveDpName($datapoint,CellContent) + \"|\" + i +\"|\" + ColumnTitle + \"|\" + TableNumber);
+          //DebugN(\"check for:\"+navViewRetrieveDpName($datapoint,CellContent) + \"|\" + i +\"|\" + ColumnTitle + \"|\" + TableNumber);
+          if(position>0)
+          {
+            dynRemove(dpAlertList,position);
+            dpDisconnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\",
+                                       connectDatapoint + \":_online.._invalid\");
+            navPMLunloadPropertySet(dpSubStr(connectDatapoint, DPSUB_SYS_DP));
+          }
+        //}
         if ((\"\" == Column1dpNames[ConvIndex(i)]) || (\"0\" == Column1dpNames[ConvIndex(i)]))
         {
           setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
@@ -126,8 +149,13 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
         {
           if (dpAccessable(connectDatapoint)) //Exists the configured datapoint? 
           {
-            dpAlertList[ConvIndex(i)][1] = connectDatapoint;
-            dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\", dp2,
+            insertConnectDatapoint = connectDatapoint + \"|\" + i +\"|\" + ColumnTitle + \"|\" + TableNumber;
+            if(dynContains(dpAlertList,insertConnectDatapoint)<1)
+            {
+              dpAlertList[dynlen(dpAlertList)+1] = insertConnectDatapoint;
+            }
+            navPMLloadPropertySet(dpSubStr(connectDatapoint, DPSUB_SYS_DP));
+            dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\",
                                     connectDatapoint + \":_online.._invalid\");            
             setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
           }
@@ -148,47 +176,7 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
       setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
     }
   }
-  DebugN(\"dpAlertList\");
-  DebugN(dpAlertList);
 }
-
-//////////////////////////////////////////////////////////////////////////////////
-//
-// FunctionName: UpdateCell
-// Function    : Update a specific Cell in a specific table, with the actual
-//               alert color
-///////////////////////////////////////////////////////////////////////////////////
-void UpdateCell(string dpName, string value,
-                string dp1   , dyn_string ColumndpNames,
-                string dpNameInvalid, bool invalid)
-{
-  int i, TableNumber;
-  anytype Row, AlertColor;
-  string ColumnTitle, connectDatapoint;
-  getTableNumber(dp1, TableNumber);
-  getColumnTitle(dp1, ColumnTitle);
-  for(i=0; i<dynlen(ColumndpNames) ; i++)
-  {
-  
-    string connectDatapoint = navViewRetrieveDpName($datapoint, ColumndpNames[ConvIndex(i)]);
-    if (dpName == connectDatapoint + \":_alert_hdl.._act_state_color\") 
-    {
-      Row=i;
-      if(invalid) //if the current dpName is invalid, change color
-      {
-        setValue (\"Table\"+TableNumber, \"cellBackColRC\", Row, ColumnTitle + \"Titles\", \"_dpdoesnotexist\");
-      }
-      else
-      {
-        string valueForCol;
-        setValue (\"Table\"+TableNumber, \"cellBackColRC\", Row, ColumnTitle + \"Titles\", value);
-        dpGet(connectDatapoint + \":_alert_hdl.._act_state_fore_color\", valueForCol);
-        setValue (\"Table\"+TableNumber, \"cellForeColRC\", Row, ColumnTitle + \"Titles\", valueForCol);
-      }
-    }
-  }
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -285,11 +273,28 @@ PostitionObjects(string dp1, int Area1Active,
     setValue(\"txt_warning1\" , \"visible\", FALSE);
     setValue(\"icon_warning\" , \"visible\", FALSE);
   }*/
-}" 0
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ArrangeAlertList
+// Function    : Resize the Alert list
+// 
+///////////////////////////////////////////////////////////////////////////////////
+ArrangeAlertList(string dp1, float nrOfRowsList,
+                 string dp2, bool ListActive)
+{
+  int x, y;
+
+  setValue(\"AlertList\", \"scale\", 1, (nrOfRowsList+1)/28 );
+  getValue(\"AlertList\", \"size\", x, y );
+}
+" 0
 EE E E 1 -1 -1 0  0 0
 "" 0 1
-E"#uses \"gcfnav_view.ctl\"
-global dyn_dyn_string dpAlertList;" 0
+E"#uses \"gcfnav-functions.ctl\"
+#uses \"gcfnav_view.ctl\"
+dyn_string dpAlertList;" 0
  2
 "CBRef""1"
 "EClose"E
