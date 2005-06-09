@@ -37,7 +37,7 @@ namespace LOFAR {
       itsBlockId = newBlockId; 
     };
   }
-
+  
 
   ostream& operator<<(ostream& os, const TimeStamp& ss){
     os<<ss.itsSeqId<<" s: "<<ss.itsBlockId;

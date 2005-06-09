@@ -3,6 +3,7 @@ DH_CorrCube.h		\
 DH_Vis.h		\
 DH_SubBand.h		\
 DH_RSP.h                \
+DH_Sync.h               \
 WH_Correlator.h		\
 WH_SubBand.h		\
 CyclicBuffer.h          \
@@ -30,6 +31,7 @@ DH_CorrCube.cc		\
 DH_Vis.cc		\
 DH_SubBand.cc		\
 DH_RSP.cc               \
+DH_Sync.cc              \
 WH_RSPInput.cc          \
 WH_Correlator.cc	\
 WH_SubBand.cc		\

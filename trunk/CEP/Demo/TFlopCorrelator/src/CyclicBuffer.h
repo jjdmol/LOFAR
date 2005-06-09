@@ -87,7 +87,7 @@ class CyclicBuffer
   const TYPE& GetUserReadPtr(uint offset, int* ID);
 
   // (over)write an item without adjusting head and count
-  TYPE& GetUserWritePtr(uint ID);
+  TYPE GetUserWritePtr(uint ID);
   
   // release locks
   void  WriteUnlockItem(int ID);
@@ -319,12 +319,12 @@ const TYPE& CyclicBuffer<TYPE>::GetUserReadPtr(uint offset, int* ID)
 
 
 template<class TYPE>
-TYPE& CyclicBuffer<TYPE>::GetUserWritePtr(uint ID)
+TYPE CyclicBuffer<TYPE>::GetUserWritePtr(uint ID)
 {
   if (ID >= (int)itsBuffer.size()) {
  
    LOG_TRACE_RTTI("CyclicBuffer::getWriteUserItem: ID >= size of buffer. Head ID used instead");
-   return itsBuffer[itsHeadIdx].itsItem;
+   return 0;
  } 
 
   pthread_mutex_lock(&buffer_mutex); 
@@ -388,7 +388,6 @@ template<class TYPE>
 void CyclicBuffer<TYPE>::setWrittenBeforeReading(uint percentage)
 {
   itsMinCount =  ((float)percentage/100) * itsBuffer.size();
-  cout << "ItsMinCount: " << itsMinCount << endl;
 }
 
 
