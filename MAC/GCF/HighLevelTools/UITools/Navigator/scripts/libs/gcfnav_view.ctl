@@ -1,3 +1,28 @@
+//# gcfnav_view.ctl
+//#
+//#  Copyright (C) 2002-2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
+//#
+//# global functions for the views of the Navigator.
+//#
 
 
 global string CURRENT_DP_MESSAGE = "Current selection in tree";
@@ -855,99 +880,6 @@ navViewShowTemp(string dp1, float temperature,
 }
 
 
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: jump2Station
-//
-// jumps/load the Station.pnl
-///////////////////////////////////////////////////////////////////////////////////
-void jump2Station()
-{
-  if(dpAccessable($datapoint + "_Station01"))
-  {
-    if ("LOFAR Navigator" == myPanelName())
-    {
-      if($referenceDatapoint=="")
-      {
-        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Station01");
-      }
-      else
-      {
-        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Station01");
-      }
-    }
-    else
-    {  
-      RootPanelOn("navigator/views/Station.pnl",
-                  "Station ",
-                  makeDynString("$datapoint:" + $datapoint + "_Station01"));
-    }
-  }
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: jump2StationSubrack
-//
-// jumps/load the Station_Subrack.pnl
-///////////////////////////////////////////////////////////////////////////////////
-void jump2StationSubrack()
-{
-  if(dpAccessable($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr))
-  {
-    if ("LOFAR Navigator" == myPanelName())
-    {
-      DebugN("$referenceDatapoint:"+$referenceDatapoint);
-      if($referenceDatapoint=="") //If the datapoint is a reference, use the reference to navigate to!!
-      {
-        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);        
-      }
-      else
-      {
-        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);
-      }
-    }
-    else
-    {  
-      RootPanelOn("navigator/views/Station_Subrack.pnl",
-                  "Station - Subrack",
-                  makeDynString("$datapoint:" + $datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr));
-    }
-  }
-}
-
-
-
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: jump2StationSubrackRCU
-//
-// jumps/load the Station_Subrack.pnl
-///////////////////////////////////////////////////////////////////////////////////
-void jump2StationSubrackRCU()
-{
-
-  if(dpAccessable($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr + "__enabled"))
-  {
-    if ("LOFAR Navigator" == myPanelName())
-    { 
-      //string datapointPath;
-      //convertOriginal2ReferenceDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr, datapointPath);
-      if($referenceDatapoint=="")
-      {
-        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
-      }
-      else
-      {
-        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
-      }
-    }
-    else
-    {  
-      RootPanelOn("navigator/views/Station_Subrack_RCU.pnl",
-                  "Station - Subrack - RCU",
-                  makeDynString("$datapoint:" + $datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr));
-    }
-  }
-}
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1022,7 +954,6 @@ void getTableNumber(string dpName, int &TableNumber)
 void getColumnTitle(string dpName, string &ColumnTitle)
 {
   dyn_string resultaat;
-  string test = "System1:__nav_TLcuPicRack_config_Alert_Alert-1.1.Column1dpNames:_online.._value";
   resultaat = strsplit(dpName, ".");
   ColumnTitle = strrtrim(resultaat[3], "dpNames:_online");
 }
@@ -1378,9 +1309,10 @@ void BPContextMenu()
 
 
 /////////////////////////////////////////////////////////////////////
+// Function: APContextMenu
 //
-// Function: Creates and handles the RMB menu for the AP's
-// FunctionName: APContextMenu
+// Input: 1. AP status
+// Output: status can be changed by the context menu
 //
 /////////////////////////////////////////////////////////////////////
 void APContextMenu()
@@ -1497,3 +1429,113 @@ void ProgressBar(float Maximum, float value)
     setValue("bar_border", "visible", FALSE);
   }
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+//             GARBAGE  GARBAGE  GARBAGE  GARBAGE  GARBAGE  GARBAGE
+/*
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: jump2StationSubrackRCU
+//
+// jumps/load the Station_Subrack.pnl
+///////////////////////////////////////////////////////////////////////////////////
+void jump2StationSubrackRCU()
+{
+
+  if(dpAccessable($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr + "__enabled"))
+  {
+    if ("LOFAR Navigator" == myPanelName())
+    { 
+      //string datapointPath;
+      //convertOriginal2ReferenceDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr, datapointPath);
+      if($referenceDatapoint=="")
+      {
+        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+      }
+      else
+      {
+        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+      }
+    }
+    else
+    {  
+      RootPanelOn("navigator/views/Station_Subrack_RCU.pnl",
+                  "Station - Subrack - RCU",
+                  makeDynString("$datapoint:" + $datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr));
+    }
+  }
+}
+*/
+
+/*
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: jump2Station
+//
+// jumps/load the Station.pnl
+///////////////////////////////////////////////////////////////////////////////////
+void jump2Station()
+{
+  if(dpAccessable($datapoint + "_Station01"))
+  {
+    if ("LOFAR Navigator" == myPanelName())
+    {
+      if($referenceDatapoint=="")
+      {
+        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Station01");
+      }
+      else
+      {
+        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Station01");
+      }
+    }
+    else
+    {  
+      RootPanelOn("navigator/views/Station.pnl",
+                  "Station ",
+                  makeDynString("$datapoint:" + $datapoint + "_Station01"));
+    }
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: jump2StationSubrack
+//
+// jumps/load the Station_Subrack.pnl
+///////////////////////////////////////////////////////////////////////////////////
+void jump2StationSubrack()
+{
+  if(dpAccessable($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr))
+  {
+    if ("LOFAR Navigator" == myPanelName())
+    {
+      DebugN("$referenceDatapoint:"+$referenceDatapoint);
+      DebugN("$datapoint         :"+$datapoint);
+      DebugN("$configDatapoint   :"+$configDatapoint);
+      if($referenceDatapoint=="") //If the datapoint is a reference, use the reference to navigate to!!
+      {
+        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);        
+      }
+      else
+      {
+        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);
+      }
+    }
+    else // Panel is undocked.
+    {  
+      RootPanelOn("navigator/views/Station_Subrack.pnl",
+                  "Station - Subrack",
+                  makeDynString("$datapoint:" + $datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr));
+    }
+  }
+}
+
+*/
+

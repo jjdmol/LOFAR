@@ -407,7 +407,25 @@ void showView(string dpViewConfig, string datapointPath)
 
   // get tab properties
   dyn_string views = navConfigGetViews(dpViewConfig);
+
+  // At first find the selected tabview, and replace the current registerPanel
+  // by an empty panel. So the panel doesn't blink any more.
+  for(tabId=1;tabId<=dynlen(views);tabId++)
+  {
+    if(dpAccessable(views[tabId]))
+    {
+      string caption = navConfigGetViewCaption(views[tabId]);
+      if(strlen(caption)>0)
+      {
+        if(caption==selectedViewCaption)
+        {
+          tabCtrl.registerPanel(tabId-1,"navigator/views/nopanel.pnl",makeDynString(""));
+        }
+      }
+    }
+  }
   
+  //Now arrange the other tabs
   for(tabId=1;tabId<=dynlen(views);tabId++)
   {
     if(dpAccessable(views[tabId]))
@@ -423,8 +441,12 @@ void showView(string dpViewConfig, string datapointPath)
         if(caption == selectedViewCaption)
         {
           LOG_DEBUG("showView","caption=selectedViewCaption");
+          
           selectedViewTabId = tabId;
-          tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+          //bring this option outside this loop next line is new
+          //tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+          //this line is new: show only a empty panel
+          //tabCtrl.registerPanel(tabId-1,"navigator/views/nopanel.pnl",makeDynString(""));
           //DebugTN("NAVIGATOR_TAB_FILENAME:"+NAVIGATOR_TAB_FILENAME);
           //DebugTN("panelParameters:"+panelParameters);
         }
@@ -440,7 +462,12 @@ void showView(string dpViewConfig, string datapointPath)
       LOG_TRACE("showView","tab reference not found; making tab invisible: ",tabId);
       tabCtrl.registerVisible(tabId-1)=FALSE;
     }
+    //delay(1,0);
   }
+
+  //NOW display the selected tabview, after the tabs are filled and ready
+  tabCtrl.registerPanel(selectedViewTabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+
   // check if this tab is currently selected
   if(selectedViewCaption == "")
   {
@@ -452,11 +479,13 @@ void showView(string dpViewConfig, string datapointPath)
   
   // make the rest of the views invisible
   int i;
+  
   for(i=tabId;i<=NR_OF_VIEWS;i++)
   {
     LOG_TRACE("showView","tab undefined; making tab invisible: ",i);
     tabCtrl.registerVisible(i-1)=FALSE;
   }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -984,9 +1013,7 @@ void Navigator_HandleEventInitialize()
   }    
 
   // Always select the first entry in the database
-  //fwTreeView_setSelectedPosition(1,"");
   treeList.selectedPos = 1;
-
   
   LOG_DEBUG("~Navigator_HandleEventInitialize()");
 }
@@ -1392,6 +1419,7 @@ void ButtonMaximize_HandleEventClick()
             dyn_string reference;
             string referenceDatapoint="";
             checkForReference(dpNameTemp, reference, isReference);
+            
             if(isReference)
             {
               referenceDatapoint=datapointPath;
@@ -1593,7 +1621,7 @@ bool checkDpPermit(string datapointPath)
   dyn_string treeAccess;
   dyn_string treeAccessPermit;
   bool permit=FALSE, dpIsReference;
-  int permitLength;
+  int permitLength=0;
   dpGet(getSystemName() + "__navigator.treeAccess", treeAccess);
   dyn_string reference;
   checkForReference(datapointPath, reference, dpIsReference);
@@ -1612,7 +1640,7 @@ bool checkDpPermit(string datapointPath)
             permitLength=strlen(treeAccess[i]);
           }
         }
-        else if(!getUserPermission(i))
+        else
         {
           if(strlen(datapointPath)>=strlen(treeAccess[i]))
           {

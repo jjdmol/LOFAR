@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,574 244 142 95 N "_3DFace" 1
+PANEL,438 374 142 95 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -24,35 +24,39 @@ ControlHBFilter(string dp1, bool filSelA,
                 string dp2, bool filSelB,
                 string dp3, bool invalid)
 {
-  if(!invalid)
-  {
+//  if(!invalid)
+ // {
     ComboBox1.enabled = TRUE;
     if (!filSelA && !filSelB)
     {
       ComboBox1.selectedPos=1;
       setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+      DebugN(\"NOT filSelA &&  NOT filSelB\");
     }
     else if (!filSelA && filSelB)
     {
       ComboBox1.selectedPos=2;
       setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+      DebugN(\"NOT filSelA && filSelB\");
     }
     else if (filSelA && !filSelB)
     {
       ComboBox1.selectedPos=3;
       setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+      DebugN(\"filSelA &&  NOT filSelB\");
     }
     else if (filSelA && filSelB)
     {
       ComboBox1.selectedPos=4;
       setValue(\"rect_filter\", \"backCol\", \"grey\");
+      DebugN(\"filSelA && filSelB\");
     }
-  }
+/*  }
   else
   {
     ComboBox1.enabled = FALSE;
     setValue(\"rect_filter\", \"backCol\", \"_dpdoesnotexist\");
-  }
+  }*/
 }" 0
 EE E E 1 -1 -1 0  10 70
 "" 0 1

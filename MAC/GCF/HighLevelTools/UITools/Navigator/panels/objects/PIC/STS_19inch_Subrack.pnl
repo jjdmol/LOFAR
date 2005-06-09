@@ -1,14 +1,18 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,372 287 182 113 N "_3DFace" 3
+PANEL,473 288 182 113 N "_3DFace" 5
 "$RackNr"
 "$SubrackNr"
+"$configDatapoint"
 "$datapoint"
+"$referenceDatapoint"
 "main()
 {
   EP_setBackColor();	
 //  setValue(\"text_SubrackNr\", \"text\", $SubrackNr );
+  $configDatapoint;
+  $referenceDatapoint;
 }
 
 EP_setBackColor()
@@ -501,8 +505,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  jump2StationSubrack($datapoint);
-  
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Rack\" + $RackNr + \"_SubRack\" + $SubrackNr, \"Station_Subrack.pnl\");
 }
 " 0
  0 1 1 0 1 E U  1 E 31 25 159 89
@@ -689,7 +692,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  jump2StationSubrack($datapoint);
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Rack\" + $RackNr + \"_SubRack\" + $SubrackNr, \"Station_Subrack.pnl\");
 }" 0
  0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 76 33 116 73
 0
