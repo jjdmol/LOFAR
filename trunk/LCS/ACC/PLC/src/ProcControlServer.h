@@ -49,8 +49,8 @@ class ProcControlServer
 public:
 	// Note: default constructor is private
 	ProcControlServer(const string&			hostname,
-					  const uint16			portNr,
-					  const ProcessControl*	PCimpl);
+			  const uint16			portNr,
+			  ProcessControl*	PCimpl);
 
 	// Destructor;
 	~ProcControlServer();
@@ -90,7 +90,7 @@ private:
 	ProcControlServer(const ProcControlServer& that);
 	ProcControlServer& 	operator=(const ProcControlServer& that);
 
-	const ProcessControl*		itsPCImpl;
+	ProcessControl*		itsPCImpl;
 	ProcControlComm*			itsCommChan;
 };
 
