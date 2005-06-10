@@ -1,5 +1,5 @@
 
-bin_PROGRAMS			= tParameterSet tACClient ACuserMenu APExample APTest
+check_PROGRAMS			= tParameterSet tACClient ACuserMenu APExample APTest
 
 ### tParameterSet ###
 tParameterSet_SOURCES 	   = tParameterSet.cc
