@@ -18,13 +18,13 @@ namespace LOFAR {
 // This class is a stub which is used to make the connection of the SubBandFilter
 // to the TflopCorrelator input section 
 
-class CorrStub
+class Corr_Stub
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit CorrStub (bool onServer=false);
+  explicit Corr_Stub (bool onServer=false);
 
-  ~CorrStub();
+  ~Corr_Stub();
 
   // Connect the given objects to the stubs.
   void connect (int C_nr,

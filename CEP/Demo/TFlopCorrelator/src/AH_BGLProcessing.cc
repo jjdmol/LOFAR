@@ -12,8 +12,11 @@
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 
-#include <BGLProcessing/AH_BGLProcessing.h>
+#include <ACC/ParameterSet.h>
 
+#include <AH_BGLProcessing.h>
+#include <SB_Stub.h>
+#include <Corr_Stub.h>
 // tinyCEP
 
 // Transporters
@@ -21,7 +24,7 @@
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <CEPFrame/WH_Empty.h>
-//#include <WH_SubBandFilter.h>
+#include <WH_SubBand.cc>
 #include <WH_Correlator.h>
 // DataHolders
 #include <DH_SubBand.h>
@@ -46,13 +49,14 @@ void AH_BGLProcessing::undefine() {
   itsWHs.clear();
 }  
 
-void AH_BGLProcessing::define() {
+void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
   LOG_TRACE_FLOW_STR("Read parameters from file TFlopCorrelator.cfg");
-  itsPS    = new ACC::ParameterSet("TFlopCorrelator.cfg");
+  ACC::ParameterSet* itsPS    = new ACC::ParameterSet("TFlopCorrelator.cfg");
   itsNSBF  = itsPS->getInt("NSBF");  // number of SubBand filters in the application
   
+  int lowestFreeNode = 0;
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
 
@@ -69,8 +73,9 @@ void AH_BGLProcessing::define() {
   LOG_TRACE_FLOW_STR("Create the SubBand filter  workholders");
   
   vector<WH_SubBand*> SBFNodes;
+  char WH_DH_Name[40];
   for (int s=0; s<itsNSBF; s++) {
-    sprintf(WH_DH_Name, "SubBandFilter_%d_of_%d", s, itsNSBF);
+    snprintf(WH_DH_Name, 40, "SubBandFilter_%d_of_%d", s, itsNSBF);
     SBFNodes.push_back(new WH_SubBand(WH_DH_Name,      // name
 				      0));   // SubBandID
     itsWHs.push_back((WorkHolder*) SBFNodes[s]);
@@ -79,7 +84,7 @@ void AH_BGLProcessing::define() {
     // connect the Subband filter to the input section
     // this interface is defined in the SB_Stub class
     inStub.connect (s,                                                            // SBF filter number
-		    (DH_SubBand*)SBFNodes[s]->getDataManager()->getInHolder(0));  // input dataholder in the current WH
+		    *(DH_SubBand*)SBFNodes[s]->getDataManager().getInHolder(0));  // input dataholder in the current WH
     
   };
   
@@ -87,7 +92,7 @@ void AH_BGLProcessing::define() {
   LOG_TRACE_FLOW_STR("Create the Correlator workholders");
   vector<WH_Correlator*> CorrNodes;
   int corrID=0; // corr serial number in the AH
-  itsCpF   = itsPS->getInt("Corr_per_Filter");
+  int itsCpF   = itsPS->getInt("Corr_per_Filter");
   for (int s=0; s<itsNSBF; s++ ) {
     // loop over all SubBand Filters
     for (int c=0; c<itsCpF; c++) {
@@ -104,7 +109,7 @@ void AH_BGLProcessing::define() {
       // connect the Subband filter to the input section
       // this interface is defined in the SB_Stub class
       outStub.connect (corrID,                                                              // Corr filter number
-		       (DH_SubBand*)CorrNodes[corrID]->getDataManager()->getOutHolder(0));  // input dataholder in the current WH
+		       *(DH_Vis*)CorrNodes[corrID]->getDataManager().getOutHolder(0));  // input dataholder in the current WH
       
     }
   };
@@ -115,20 +120,37 @@ void AH_BGLProcessing::define() {
 
 
 void AH_BGLProcessing::prerun() {
-  getComposite().preprocess();
+  vector<WorkHolder*>::iterator it = itsWHs.begin();
+  for (; it < itsWHs.end(); it++) {
+    (*it)->basePreprocess();
+  }
 }
     
 void AH_BGLProcessing::run(int steps) {
   LOG_TRACE_FLOW_STR("Start AH_BGLProcessing::run() "  );
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
-    getComposite().process();
+    vector<WorkHolder*>::iterator it = itsWHs.begin();
+    for (; it < itsWHs.end(); it++) {
+      (*it)->baseProcess();
+    }
   }
   LOG_TRACE_FLOW_STR("Finished AH_BGLProcessing::run() "  );
 }
 
+void AH_BGLProcessing::postrun() {
+  vector<WorkHolder*>::iterator it = itsWHs.begin();
+  for (; it < itsWHs.end(); it++) {
+    (*it)->basePostprocess();
+  }
+}
+
+
 void AH_BGLProcessing::dump() const {
-  LOG_TRACE_FLOW_STR("AH_BGLProcessing::dump() not implemented"  );
+  vector<WorkHolder*>::const_iterator it;
+  for ( it = itsWHs.begin(); it < itsWHs.end(); it++) {
+    (*it)->dump();
+  }
 }
 
 void AH_BGLProcessing::quit() {

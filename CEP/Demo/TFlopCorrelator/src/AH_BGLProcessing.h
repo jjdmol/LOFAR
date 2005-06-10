@@ -20,14 +20,15 @@ class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
   AH_BGLProcessing();
   virtual ~AH_BGLProcessing();
   virtual void undefine();
-  virtual void define  ();
+  virtual void define  (const LOFAR::KeyValueMap&);
   virtual void prerun  ();
   virtual void run     (int nsteps);
+  virtual void postrun  ();
   virtual void dump    () const;
   virtual void quit    ();
  private:
   vector<WorkHolder*> itsWHs;
-
+  int itsNSBF;                  //number of Subbandfilters (from param file)
 
 };
 }

@@ -23,7 +23,6 @@
 #ifndef TFLOPCORRELATOR_WH_RSP_H
 #define TFLOPCORRELATOR_WH_RSP_H
 
-
 #include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 
