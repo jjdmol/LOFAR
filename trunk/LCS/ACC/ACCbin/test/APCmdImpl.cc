@@ -36,57 +36,57 @@ APCmdImpl::APCmdImpl()
 APCmdImpl::~APCmdImpl()
 {}
 
-bool	APCmdImpl::define 	 () const
+bool	APCmdImpl::define 	 ()
 {
 	LOG_DEBUG("define");
 	return (true);
 }
 
-bool	APCmdImpl::init 	 () const
+bool	APCmdImpl::init 	 ()
 {
 	LOG_DEBUG("init");
 	return (true);
 }
 
-bool	APCmdImpl::run 	 () const
+bool	APCmdImpl::run 	 ()
 {
 	LOG_DEBUG("run");
 	return (true);
 }
 
-bool	APCmdImpl::pause  	 (const	string&		condition) 	  const
+bool	APCmdImpl::pause  	 (const	string&		condition)
 {
 	LOG_DEBUG_STR("pause: " << condition);
 	return (true);
 }
 
-bool	APCmdImpl::quit  	 () const
+bool	APCmdImpl::quit  	 ()
 {
 	LOG_DEBUG("quit");
 	return (true);
 }
 
-bool	APCmdImpl::snapshot (const string&		destination)  const
+bool	APCmdImpl::snapshot (const string&		destination)
 {
 	LOG_DEBUG_STR("snapshot: " << destination);
 	return (true);
 }
 
-bool	APCmdImpl::recover  (const string&		source) 	  const
+bool	APCmdImpl::recover  (const string&		source)
 {
 	LOG_DEBUG_STR("recover: " << source);
 	return (true);
 }
 
 
-bool	APCmdImpl::reinit	 (const string&		configID)	  const
+bool	APCmdImpl::reinit	 (const string&		configID)
 {
 	LOG_DEBUG_STR("reinit: " << configID);
 	return (true);
 }
 
 // Define a generic way to exchange info between client and server.
-string	APCmdImpl::askInfo   (const string& 	keylist) const
+string	APCmdImpl::askInfo   (const string& 	keylist)
 {
 	LOG_DEBUG_STR("askinfo: " << keylist);
 	return ("APCmdImpl: askInfo not yet implemented");

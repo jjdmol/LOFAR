@@ -42,17 +42,17 @@ public:
 	virtual ~APCmdImpl();
 
 	// Command to control the application processes.
-	virtual bool	define 	 () 							  const;
-	virtual bool	init 	 () 							  const;
-	virtual bool	run 	 () 							  const;
-	virtual bool	pause  	 (const	string&		condition) 	  const;
-	virtual bool	quit  	 () 							  const;
-	virtual bool	snapshot (const string&		destination)  const;
-	virtual bool	recover  (const string&		source) 	  const;
-	virtual bool	reinit	 (const string&		configID)	  const;
+	virtual bool	define 	 ();
+	virtual bool	init 	 ();
+	virtual bool	run 	 ();
+	virtual bool	pause  	 (const	string&		condition);
+	virtual bool	quit  	 ();
+	virtual bool	snapshot (const string&		destination);
+	virtual bool	recover  (const string&		source);
+	virtual bool	reinit	 (const string&		configID);
 
 	// Define a generic way to exchange info between client and server.
-	string	askInfo   (const string& 	keylist) const;
+	string	askInfo   (const string& 	keylist);
 
 protected:
 	// Copying is not allowed
