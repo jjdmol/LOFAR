@@ -143,8 +143,7 @@ if HAVE_SHMEM
 libcommon_la_LIBADD	= shmem/libshmem.la
 endif
 
-bin_PROGRAMS		= LimitExec pkgdep
-LimitExec_SOURCES	= LimitExec.cc
+bin_PROGRAMS		= pkgdep
 pkgdep_SOURCES		= pkgdep.cc
 
 include $(lofar_sharedir)/Makefile.common
