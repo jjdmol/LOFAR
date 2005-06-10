@@ -111,10 +111,12 @@ namespace LOFAR
 
 
   void TinyApplicationHolder::getarg (int* argc, const char** argv[]) {
-  *argc = itsArgc;
-  *argv = itsArgv;
+    *argc = itsArgc;
+    *argv = itsArgv;
   }
 
-
+  void TinyApplicationHolder::setParameters (const ACC::ParameterSet& params) {
+    itsParamSet = params;
+  }
 
 } // namespace LOFAR

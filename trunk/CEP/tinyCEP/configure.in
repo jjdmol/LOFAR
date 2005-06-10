@@ -60,6 +60,7 @@ lofar_LOG4CPLUS
 lofar_MPI
 lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)
+lofar_INTERNAL(LCS/ACC,ACC,,ACC/ParameterSet.h,,)
 
 dnl
 dnl Output Makefiles

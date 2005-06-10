@@ -5,6 +5,7 @@ Profiler.h					\
 SimulatorParseClass.h \
 TinyDataManager.h \
 TinyApplicationHolder.h \
+ApplicationHolderController.h \
 WorkHolder.h \
 Selector.h \
 Sel_Linked.h \
@@ -49,6 +50,7 @@ SimulatorTokenize.ll            \
 SimulatorParseClass.cc          \
 TinyDataManager.cc 		\
 TinyApplicationHolder.cc 	\
+ApplicationHolderController.cc  \
 WorkHolder.cc 			\
 Selector.cc 			\
 Sel_Linked.cc 			\
