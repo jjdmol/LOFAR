@@ -44,7 +44,7 @@ int main (int argc, const char** argv) {
     } else {
       LOG_TRACE_FLOW("Main program started by ACC");
       // we were called by ACC so execute the ACCmain
-      AH_InputSection myAH;
+      AH_BGLProcessing myAH;
       ApplicationHolderController myAHController(myAH);
       myAHController.main(argc, argv);
     }

@@ -24,7 +24,7 @@
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <CEPFrame/WH_Empty.h>
-#include <WH_SubBand.cc>
+#include <WH_SubBand.h>
 #include <WH_Correlator.h>
 // DataHolders
 #include <DH_SubBand.h>
@@ -84,7 +84,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     // connect the Subband filter to the input section
     // this interface is defined in the SB_Stub class
     inStub.connect (s,                                                            // SBF filter number
-		    *(DH_SubBand*)SBFNodes[s]->getDataManager().getInHolder(0));  // input dataholder in the current WH
+		    (DH_SubBand*)SBFNodes[s]->getDataManager().getInHolder(0));  // input dataholder in the current WH
     
   };
   
