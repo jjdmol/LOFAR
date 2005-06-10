@@ -26,7 +26,7 @@ int main (int argc, const char** argv) {
       LOG_TRACE_FLOW("Main program not started by ACC");
       // there are no commandline arguments, so we were not called by ACC
 
-      AH_Storage myAH();
+      AH_Storage myAH;
       myAH.setarg(argc, argv);
       myAH.baseDefine();
       cout << "defined" << endl;
@@ -43,7 +43,7 @@ int main (int argc, const char** argv) {
     } else {
       LOG_TRACE_FLOW("Main program started by ACC");
       // we were called by ACC so execute the ACCmain
-      AH_InputSection myAH;
+      AH_Storage myAH;
       ApplicationHolderController myAHController(myAH);
       myAHController.main(argc, argv);
     }

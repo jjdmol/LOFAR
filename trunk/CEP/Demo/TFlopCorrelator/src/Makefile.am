@@ -35,16 +35,16 @@ bin_PROGRAMS 		= TFC_InputSection TFC_BGLProcessing TFC_Storage
 
 TFC_InputSection_SOURCES	= $(DOCHDRS) \
 TFC_InputSection_main.cc	\
+DH_Sync.cc			\
 DH_RSP.cc                	\
 DH_SubBand.cc			\
+WH_RSPInput.cc           	\
 WH_Transpose.cc			\
 RSPTimeStamp.cc          	\
 SB_Stub.cc               	\
 AH_InputSection.cc		
 #WH_RSP.cc 			
-#WH_RSPInput.cc           	
 #RSP_Stub.cc
-#DH_Sync.cc			
 
 TFC_BGLProcessing_SOURCES 	= $(DOCHDRS) \
 TFC_BGLProcessing_main.cc 	\
@@ -61,9 +61,9 @@ Corr_Stub.cc
 
 TFC_Storage_SOURCES 	= $(DOCHDRS) \
 TFC_Storage_main.cc 	\
-DH_Vis.h		\
-Corr_Stub.h
+DH_Vis.cc		\
+Corr_Stub.cc		\
+AH_Storage.cc
 #WH_Store.h
-#AH_Storage.h
 
 include $(lofar_sharedir)/Makefile.common
