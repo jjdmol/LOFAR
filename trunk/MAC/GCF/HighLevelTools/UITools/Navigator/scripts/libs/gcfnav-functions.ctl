@@ -40,7 +40,7 @@ global dyn_string  g_itemID2datapoint;
 global mapping  g_datapoint2itemID;
 global bool     g_initializing         = true;
 global bool     g_showDPE              = false; //Show datapoint elements in the tree. If yes=> do!
-global int      g_curSelNode = 0;
+global int      g_curSelNode = 1;
 global int      STARTUP_DELAY = 1;
 global int      id;                    //needed for changing the selection in the tree (panel navigation, ER 218)
 global int      treeAddCount = 0;      //test teller for performance issue
@@ -445,10 +445,6 @@ void showView(string dpViewConfig, string datapointPath)
           selectedViewTabId = tabId;
           //bring this option outside this loop next line is new
           //tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
-          //this line is new: show only a empty panel
-          //tabCtrl.registerPanel(tabId-1,"navigator/views/nopanel.pnl",makeDynString(""));
-          //DebugTN("NAVIGATOR_TAB_FILENAME:"+NAVIGATOR_TAB_FILENAME);
-          //DebugTN("panelParameters:"+panelParameters);
         }
       }
       else
@@ -994,11 +990,11 @@ void Navigator_HandleEventInitialize()
   
   // manually control the initialization of the tree and tabviews
   InitializeTabViews();
-//  InitializeTree(); cannot do it here because tree will not be visible initially, only after double click. Strange but true
+  //InitializeTree(); //cannot do it here because tree will not be visible initially, only after double click. Strange but true
   
   delay(STARTUP_DELAY); // wait for the tree control to complete initialization
-  
   g_initializing = false;
+
   
   // configure the tabs
   long selectedNode = getSelectedNode();
@@ -1012,9 +1008,6 @@ void Navigator_HandleEventInitialize()
     }
   }    
 
-  // Always select the first entry in the database
-  treeList.selectedPos = 1;
-  
   LOG_DEBUG("~Navigator_HandleEventInitialize()");
 }
 
@@ -1187,8 +1180,13 @@ void InitializeTree()
   else
   {
   }
-  
+  //treeCtrl.selectedPos = 1;
   LOG_DEBUG("~InitializeTree()");
+  delay(2,0);
+    shape treeList    = getShape(LIST_TREE_CTRL_NAME);
+  LOG_TRACE("Init,  set selected node[1]",g_curSelNode);
+  g_curSelNode = 1;
+  treeList.selectedPos = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1473,7 +1471,7 @@ TreeView_OnSelect(unsigned pos)
     {
      dyn_string datapointPathSplit = strsplit(datapointPath, ".");
      datapointPath = datapointPathSplit[1];
-     DebugN("datapointPath after split:"+datapointPath);
+     //DebugN("datapointPath after split:"+datapointPath);
     }
     if(!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled")))
     {
