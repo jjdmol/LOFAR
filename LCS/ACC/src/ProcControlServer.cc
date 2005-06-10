@@ -37,13 +37,13 @@ namespace LOFAR {
 //
 // Setup (wait for an) connection with the PC client
 //
-ProcControlServer::ProcControlServer(const string&				hostname, 
-									 const uint16				portnr,
-									 const ProcessControl*		PCImpl) :
-	itsPCImpl(PCImpl)
+ProcControlServer::ProcControlServer(const string& hostname, 
+				     const uint16 portnr,
+				     ProcessControl* PCImpl) :
+  itsPCImpl(PCImpl)
 {
-	itsCommChan = new ProcControlComm(hostname, toString(portnr), false);
-	ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
+  itsCommChan = new ProcControlComm(hostname, toString(portnr), false);
+  ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
 }
 
 // Destructor
