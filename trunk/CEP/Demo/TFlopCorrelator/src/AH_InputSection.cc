@@ -12,7 +12,9 @@
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 
-#include <InputSection/AH_InputSection.h>
+#include <ACC/ParameterSet.h>
+
+#include <AH_InputSection.h>
 
 // tinyCEP
 
@@ -22,7 +24,8 @@
 #include <tinyCEP/WorkHolder.h>
 #include <CEPFrame/WH_Empty.h>
 #include <WH_RSPInput.h>
-//#include <WH_Transpose.h>
+#include <WH_Transpose.h>
+#include <SB_Stub.h>
 
 // DataHolders
 #include <DH_SubBand.h>
@@ -45,18 +48,17 @@ void AH_InputSection::undefine() {
   itsWHs.clear();
 }  
 
-void AH_InputSection::define() {
+void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
   undefine();
 
-  LOG_TRACE_FLOW_STR("Read parameters from file TFlopCorrelator.cfg");
-  ACC::ParameterSet myPS("TFlopCorrelator.cfg");
-  itsNSBF  = myPS.getInt("NSBF");  // number of SubBand filters in the application
+  int lowestFreeNode = 0;
+  itsNSBF  = itsParamSet.getInt("NSBF");  // number of SubBand filters in the application
   
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
-  Composite comp();
+  Composite comp;
   setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
 
   // Create the InputSection using CEPFrame
@@ -81,17 +83,17 @@ void AH_InputSection::define() {
 
   LOG_TRACE_FLOW_STR("Create the Synchronisation workholder");
   {
-    Step*           SyncStep;
-    WH_SyncControl* SyncNode; 
-    sprintf(WH_DH_Name, "Sync_node_1_of_1");
-    SyncNode = new WH_SyncControl(WH_DH_name,
-				  myPS.getInt("NRSP")); // one output connectionper RSP
-    SyncStep = new Step(SyncNode, WH_DH_name,false);
-    itsWHs.push_back((WorkHolder*) SyncNode);
-    itsSteps.push_back(SyncStep);
-    SyncStep->runOnNode(0); //todo: define correct node number
-    SyncStep-setRate(myPS.getInt("SyncRate"));
-    comp.addStep(SyncStep); // add to the top-level composite
+//     Step*           SyncStep;
+//     WH_SyncControl* SyncNode; 
+//     sprintf(WH_DH_Name, "Sync_node_1_of_1");
+//     SyncNode = new WH_SyncControl(WH_DH_name,
+// 				  itsParamSet.getInt("NRSP")); // one output connectionper RSP
+//     SyncStep = new Step(SyncNode, WH_DH_name,false);
+//     itsWHs.push_back((WorkHolder*) SyncNode);
+//     itsSteps.push_back(SyncStep);
+//     SyncStep->runOnNode(0); //todo: define correct node number
+//     SyncStep-setRate(itsParamSet.getInt("SyncRate"));
+//     comp.addStep(SyncStep); // add to the top-level composite
   }
 
   LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
@@ -100,29 +102,37 @@ void AH_InputSection::define() {
   // DataHolders in the RSPInput Steps.
   // Note that the number of SubBandFilters per TRanspose Step
   // is hard codes as 2.
-  const int NSBF = myPS.getInt("NSBF");
-  DBGASSERT_STR(NSBF%2 == 0, "NSBF should be an even number");
+  const int NSBF = itsParamSet.getInt("NSBF");
+  DBGASSERTSTR(NSBF%2 == 0, "NSBF should be an even number");
   const int NrTransposeNodes = NSBF/2;
   vector<Step*>        RSPSteps;
   vector<WH_RSPInput*> RSPNodes;
-  for (int r=0; r<myPS.getInt("NRSP"); r++) {
-    sprintf(WH_DH_Name, "RSP_Input_node_%d_of_%d", r, itsRSPs);
+  int noRSPs = itsParamSet.getInt("NRSP");
+  int WH_DH_NameSize = 40;
+  char WH_DH_Name[WH_DH_NameSize];
+  for (int r=0; r<noRSPs; r++) {
+    snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, noRSPs);
+    // todo: get interface and MACs from parameterset
+    // todo: replace kvm by parameterSet
     RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,      // name
-				       NrTransposeNodes)); // nr of output DHs
+				       KeyValueMap(),
+				       "eth1",
+				       "srcMac",
+				       "dstMac"));
     RSPSteps.push_back(new Step(RSPNodes[r],WH_DH_Name,false));
     itsWHs.push_back((WorkHolder*) RSPNodes[r]);
     itsSteps.push_back(RSPSteps[r]);
     RSPSteps[r]->runOnNode(lowestFreeNode++);   
-    comp.addStep(RSPSteps[r]);
+    comp.addBlock(RSPSteps[r]);
 
     // connect the RSP boards
     //todo: set correct IP/Port numbers in WH_RSP
     
     //todo: connect the SyncController
-    itsRSPsteps[r]->connect(itsRSPinputSteps[r], 
-			    0, 0, 1,  //todo: check
-			    TH_MPI(), 
-			    true); //blocking
+//     RSPSteps[r]->connect(itsRSPinputSteps[r], 
+// 			    0, 0, 1,  //todo: check
+// 			    TH_MPI(), 
+// 			    true); //blocking
     
   };
   
@@ -131,14 +141,14 @@ void AH_InputSection::define() {
   vector<WH_Transpose*> TransNodes;
   vector<Step*>          TransSteps;
   for (int r=0; r < NrTransposeNodes; r++) {
-    sprintf(WH_DH_Name, "Transpose_node_%d_of_%d", r, itsRSPs);
+    sprintf(WH_DH_Name, "Transpose_node_%d_of_%d", r, noRSPs);
     TransNodes.push_back(new WH_Transpose(WH_DH_Name,      // name
-					  myPS.getInt("NStations")-1));  // inputs  
+					  KeyValueMap()));  // inputs  
     TransSteps.push_back(new Step(TransNodes[r],WH_DH_Name,false));
     itsWHs.push_back((WorkHolder*) TransNodes[r]);
     itsSteps.push_back(TransSteps[r]);
     TransSteps[r]->runOnNode(lowestFreeNode++);   
-    comp.addStep(TransSteps[r]);
+    comp.addBlock(TransSteps[r]);
 
     // connect the Subband filter form AH_BGLProcessing
     // to the input section
@@ -147,10 +157,10 @@ void AH_InputSection::define() {
     //
     // Output channel 0
     outStub.connect (2*r,                                                              // Corr filter number
-		     (DH_SubBand*)TransNodes[r]->getDataManager()->getOutHolder(0));  
+		     (DH_SubBand*)TransNodes[r]->getDataManager().getOutHolder(0));  
     // Output channel 1
     outStub.connect (2*r+1,                                                              // Corr filter number
-		     (DH_SubBand*)TransNodes[r]->getDataManager()->getOutHolder(1));  
+		     (DH_SubBand*)TransNodes[r]->getDataManager().getOutHolder(1));  
 
   }      
 
@@ -159,17 +169,14 @@ void AH_InputSection::define() {
   // corresponding subbands to the same Transpose Step. 
   //  
   for (int t=0; t<NrTransposeNodes; t++) {
-    for (int r=0; r<myPS.getInt("NRSP"); r++) {
-      TransStep[t]->connect(RSPSteps[r],
-			    r,t,1,
-			    TH_MPI(),
-			    true);  // true=blocking
+    for (int r=0; r<itsParamSet.getInt("NRSP"); r++) {
+//       TransSteps[t]->connect(RSPSteps[r],
+// 			    r,t,1,
+// 			    TH_MPI(),
+// 			    true);  // true=blocking
     }
   }
       
-};
-  
-
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }

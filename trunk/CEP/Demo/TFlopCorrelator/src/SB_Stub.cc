@@ -30,8 +30,8 @@ namespace LOFAR {
   SB_Stub::~SB_Stub()
   {}
 
-  void SB_Stub::connect (int& SBF_nr,
-			 DH_SubBand& sb)
+  void SB_Stub::connect (int SBF_nr,
+			 DH_SubBand* sb)
   {
     const ParameterSet myPS("TFlopCorrelator.cfg");
     TH_Socket thSB(myPS.getString("SBConnection.ClientHost"), // sendhost

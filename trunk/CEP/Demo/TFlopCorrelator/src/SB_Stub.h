@@ -30,8 +30,8 @@ public:
   ~SB_Stub();
 
   // Connect the given objects to the stubs.
-  void connect (int& SBF_nr,
-		DH_SubBand& sb);
+  void connect (int SBF_nr,
+		DH_SubBand* sb);
 
 private:
   bool                itsStubOnServer;

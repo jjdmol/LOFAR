@@ -1,4 +1,4 @@
-//# CorrStub.cc: Stub for connection to DFTServer and DFTRequest
+//# Corr_Stub.cc: Stub for connection to DFTServer and DFTRequest
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -17,7 +17,7 @@ using namespace LOFAR::ACC;
 
 namespace LOFAR { 
 
-  CorrStub::CorrStub (bool stubOnServer)
+  Corr_Stub::Corr_Stub (bool stubOnServer)
     : itsStubOnServer (stubOnServer)
   {
     itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
@@ -31,10 +31,10 @@ namespace LOFAR {
     //todo: Dump/storage side
   }
   
-  CorrStub::~CorrStub()
+  Corr_Stub::~Corr_Stub()
   {}
   
-  void CorrStub::connect (int C_nr,
+  void Corr_Stub::connect (int C_nr,
 			  DH_Vis& sb)
   {
     DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsCorr.size())),
