@@ -15,7 +15,7 @@ DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 #libtools_la_SOURCES =
 
 bin_PROGRAMS      = LimitExec
-LimitExec_SOURCES = LimitExec.cc
+LimitExec_SOURCES = LimitExec.c
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
