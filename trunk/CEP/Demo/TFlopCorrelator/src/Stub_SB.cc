@@ -1,4 +1,4 @@
-//# SB_Stub.cc: Stub for connection to DFTServer and DFTRequest
+//# Stub_SB.cc: Stub for connection to DFTServer and DFTRequest
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -6,7 +6,7 @@
 //#
 //# $Id$
 
-#include <TFlopCorrelator/SB_Stub.h>
+#include <TFlopCorrelator/Stub_SB.h>
 #include <Transport/TH_Socket.h>
 
 
@@ -15,7 +15,7 @@ using namespace LOFAR::ACC;
 
 namespace LOFAR { 
 
-  SB_Stub::SB_Stub (bool stubOnServer)
+  Stub_SB::Stub_SB (bool stubOnServer)
     : itsStubOnServer (stubOnServer)
   {
     itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
@@ -27,10 +27,10 @@ namespace LOFAR {
     }
   }
 
-  SB_Stub::~SB_Stub()
+  Stub_SB::~Stub_SB()
   {}
 
-  void SB_Stub::connect (int SBF_nr,
+  void Stub_SB::connect (int SBF_nr,
 			 DH_SubBand* sb)
   {
     const ParameterSet myPS("TFlopCorrelator.cfg");

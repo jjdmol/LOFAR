@@ -19,6 +19,7 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
