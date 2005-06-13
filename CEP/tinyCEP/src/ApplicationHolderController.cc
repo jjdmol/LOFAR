@@ -22,6 +22,7 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+#include <Transport/TH_MPI.h>
 
 #include <Common/LofarLogger.h>
 
@@ -138,12 +139,9 @@ int ApplicationHolderController::main (int argc, const char* argv[]) {
   try {
 
 #ifdef HAVE_MPI
-    // this is needed here, because argc and argv will be changed by mpi
-    int isInitted;
-    MPI_Initialized(&isInitted);
-    if (!isInitted) {
-      TH_MPI::init(argc, argv);
-    }
+    // this is needed here, because argc and argv will be changed by mpirun
+    // and MPI_Init will change them back
+    TH_MPI::initMPI(argc, argv);
 #endif
 
     // Read in parameterfile and get my name
