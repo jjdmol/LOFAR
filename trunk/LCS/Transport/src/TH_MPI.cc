@@ -143,6 +143,10 @@ void TH_MPI::readTotalMsgLengthBlocking(int tag, int& nrBytes)
 
 bool TH_MPI::readTotalMsgLengthNonBlocking(int tag, int& nrBytes)
 {
+  LOG_WARN( "TH_MPI::readTotalMsgLengthNonBlocking() is not implemented. The blocking method is used instead." );
+  readTotalMsgLengthBlocking(tag, nrBytes);
+  return true;
+
 //   LOG_TRACE_RTTI( "TH_MPI::readTotalMsgLengthBlocking" );
 //   int result = MPI_SUCCESS;
 

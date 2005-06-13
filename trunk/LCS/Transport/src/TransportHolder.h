@@ -88,7 +88,8 @@ public:
   virtual void waitForSent(void* buf, int nbytes, int tag) = 0;
 
   // Read the total message length of the next message.
-  // Default return value is -1, to indicate this is not possible.
+  // Default return value of nrBytes is -1, to indicate this is not 
+  // possible.
   virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
 
   // Read the total message length of the next message.
