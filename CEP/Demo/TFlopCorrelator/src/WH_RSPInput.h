@@ -23,7 +23,7 @@
 #ifndef TFLOPCORRELATOR_WH_RSPINPUT_H
 #define TFLOPCORRELATOR_WH_RSPINPUT_H
 
-#include <Common/KeyValueMap.h>
+#include <ACC/ParameterSet.h>
 #include <Common/lofar_string.h>
 #include <tinyCEP/WorkHolder.h>
 #include <Transport/TH_Ethernet.h>
@@ -39,19 +39,14 @@ namespace LOFAR
   
   typedef struct 
   {
-    char data[9000];
-  } DataType;
-
-  typedef struct 
-  {
+    char packet[9000];
     int invalid;
     timestamp_t timestamp;
-  } MetaDataType;
+  } dataType;
 
   typedef struct 
   {
-    BufferController<DataType>* databuffer;
-    BufferController<MetaDataType>* metadatabuffer;
+    BufferController<dataType>* databuffer;
     TH_Ethernet* connection; 
     int framesize;
     int packetsinframe;
@@ -65,14 +60,14 @@ namespace LOFAR
       //typedef TimeStamp timestamp_t;
 
       explicit WH_RSPInput(const string& name, 
-                           const KeyValueMap kvm,
+                           const ACC::ParameterSet pset,
                            const string device,
                            const string srcMAC,
                            const string destMAC);
       virtual ~WH_RSPInput();
     
       static WorkHolder* construct(const string& name, 
-                                   const KeyValueMap kvm,
+                                   const ACC::ParameterSet pset,
                                    const string device,
                                    const string srcMAC,
                                    const string destMAC);
@@ -105,18 +100,13 @@ namespace LOFAR
       string itsDevice;
       string itsSrcMAC;
       string itsDestMAC;
+      ACC::ParameterSet itsPset;
   
       int itsSzRSPframe;
       int itsNpackets;
     
       // cyclic buffer for rsp-data
-      BufferController<DataType> *itsDataBuffer;
-    
-      // cyclic buffer for invalid data flag
-      BufferController<MetaDataType> *itsMetaDataBuffer;
-    
-      // keyvalue map
-      KeyValueMap itsKVM;
+      BufferController<dataType> *itsDataBuffer;
   };
 
 } // namespace LOFAR

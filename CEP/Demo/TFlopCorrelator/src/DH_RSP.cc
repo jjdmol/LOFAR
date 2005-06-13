@@ -11,28 +11,33 @@
 ///////////////////////////////////////////////////////////////////
 
 #include <DH_RSP.h>
+#include <complex>
+
+using std::complex;
+
 
 namespace LOFAR
 {
 
-DH_RSP::DH_RSP (const string& name)
+DH_RSP::DH_RSP (const string& name,
+                const ACC::ParameterSet pset)
 : DataHolder (name, "DH_RSP"),
+  itsPSet    (pset),
   itsBuffer  (0)
 {
 
-//   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-
-//   itsEPAheaderSize   = myPS.getInt("SzEPAheader"); // default 14
-//   itsNoBeamlets      = myPS.getInt("NoRSPBeamlets", 92) ; // default 14
-//   itsNoPolarisations = myPS.getInt("polarisations", 2);   // default 14
-//   const int NoPacketsInFrame = myPS.getInt("NoPacketsInFrame"); // default 8
-//   itsBufSize         =  NoPacketsInFrame * 
-//     (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<int16>));
+   itsEPAheaderSize   = pset.getInt("SzEPAheader");
+   itsNoBeamlets      = pset.getInt("NoRSPBeamlets");
+   itsNoPolarisations = pset.getInt("polarisations");
+   const int NoPacketsInFrame = pset.getInt("NoPacketsInFrame");
+   itsBufSize         =  NoPacketsInFrame * 
+     (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<int16>));
 }
 
 DH_RSP::DH_RSP(const DH_RSP& that)
 : DataHolder         (that),
   itsBuffer          (0),
+  itsPSet            (that.itsPSet),
   itsEPAheaderSize   (that.itsEPAheaderSize),
   itsNoBeamlets      (that.itsNoBeamlets),
   itsNoPolarisations (that.itsNoPolarisations),
@@ -54,7 +59,6 @@ void DH_RSP::preprocess()
   
   // Add the fields to the data definition.
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
-  addField ("Flag", BlobField<int>(1, 1));
 
   // Create the data blob
   createDataBlock();
@@ -63,7 +67,6 @@ void DH_RSP::preprocess()
 void DH_RSP::fillDataPointers()
 {
   // Fill in the buffer pointer.
-  itsFlagptr = getData<int> ("Flag");
   itsBuffer  = getData<BufferType> ("Buffer");
 
   // use memset to null the buffer instead of a for loop

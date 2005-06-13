@@ -46,7 +46,7 @@ public:
   TYPE* getBufferReadPtr();
   TYPE* getBufferWritePtr();
 
-  TYPE* getFirstReadPtr(int* ID);
+  TYPE* getFirstReadPtr(int& ID);
   TYPE* getUserReadPtr(uint offset);
   TYPE* getUserWritePtr(uint ID);
   
@@ -108,7 +108,7 @@ template<class TYPE>
 TYPE* BufferController<TYPE>::getBufferReadPtr()
 {
   if (itsCurrentReadPtr == 0) {
-    itsCurrentReadPtr = itsBuffer.GetBufferReadPtr(&itsCurrentReadID);
+    itsCurrentReadPtr = itsBuffer.GetBufferReadPtr(itsCurrentReadID);
   }
   return itsCurrentReadPtr; 
 }
@@ -117,18 +117,18 @@ template<class TYPE>
 TYPE*  BufferController<TYPE>::getBufferWritePtr()
 {
   if (itsCurrentWritePtr == 0) {
-    itsCurrentWritePtr = itsBuffer.GetBufferWritePtr(&itsCurrentWriteID);
+    itsCurrentWritePtr = itsBuffer.GetBufferWritePtr(itsCurrentWriteID);
   }
   return itsCurrentWritePtr; 
 }
 
 template<class TYPE>
-TYPE* BufferController<TYPE>::getFirstReadPtr(int* ID)
+TYPE* BufferController<TYPE>::getFirstReadPtr(int& ID)
 {
   if (itsCurrentReadPtr ==0) {
-    itsCurrentReadPtr = itsBuffer.GetFirstReadPtr(&itsCurrentReadID);
+    itsCurrentReadPtr = itsBuffer.GetFirstReadPtr(itsCurrentReadID);
   }
-  *ID = itsCurrentReadID; 
+  ID = itsCurrentReadID; 
   return itsCurrentReadPtr; 
 }
 
@@ -136,7 +136,7 @@ template<class TYPE>
 TYPE* BufferController<TYPE>::getUserReadPtr(uint offset)
 {
   if (itsCurrentReadPtr == 0) {
-    itsCurrentReadPtr = itsBuffer.GetUserReadPtr(offset, &itsCurrentReadID);
+    itsCurrentReadPtr = itsBuffer.GetUserReadPtr(offset, itsCurrentReadID);
   }
   return itsCurrentReadPtr; 
 }

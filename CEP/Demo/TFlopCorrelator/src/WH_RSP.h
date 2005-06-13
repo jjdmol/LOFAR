@@ -23,7 +23,7 @@
 #ifndef TFLOPCORRELATOR_WH_RSP_H
 #define TFLOPCORRELATOR_WH_RSP_H
 
-#include <Common/KeyValueMap.h>
+#include <ACC/ParameterSet.h>
 #include <tinyCEP/WorkHolder.h>
 
 
@@ -34,19 +34,16 @@ namespace LOFAR
   public:
 
     explicit WH_RSP(const string& name, 
-                    const KeyValueMap kvm,
-		    const bool isSyncMaster = false);
+                    const ACC::ParameterSet pset);
     virtual ~WH_RSP();
     
     static WorkHolder* construct(const string& name, 
-                                 const KeyValueMap kvm,
-				 const bool isSyncMaster = false);
+                                 const ACC::ParameterSet pset);
     virtual WH_RSP* make(const string& name);
 
+    virtual void preprocess();
     virtual void process();
-
-    /// set delay of this WorkHolder
-    void setDelay(const DH_RSPSync::syncStamp_t newDelay);
+    virtual void postprocess();
 
   private:
     /// forbid copy constructor
@@ -54,24 +51,9 @@ namespace LOFAR
     /// forbid assignment
     WH_RSP& operator= (const WH_RSP&);
 
-    int itsNpackets;
-    int itsPolarisations;
-    int itsNbeamlets;
-    int itsNCorrOutputs;
-    int itsNRSPOutputs;
-    int itsSzEPAheader;
-    int itsSzEPApacket;
 
-    KeyValueMap itsKVM;
-
-    // for synchronisation
-    bool itsIsSyncMaster; // Am I the one that sends the sync packets?
-    DH_RSPSync::syncStamp_t itsNextStamp;
-    DH_RSPSync::syncStamp_t itsDelay;    
+    ACC::ParameterSet itsPSet;
   };
-
-  inline void WH_RSP::setDelay(const DH_RSPSync::syncStamp_t newDelay)
-    { itsDelay = newDelay; }
 
 } // namespace LOFAR
 

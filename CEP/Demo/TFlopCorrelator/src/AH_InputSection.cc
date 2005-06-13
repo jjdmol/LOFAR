@@ -22,7 +22,6 @@
 #include <Transport/TH_MPI.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <CEPFrame/WH_Empty.h>
 #include <WH_RSPInput.h>
 #include <WH_Transpose.h>
 #include <Stub_SB.h>
@@ -115,7 +114,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     // todo: get interface and MACs from parameterset
     // todo: replace kvm by parameterSet
     RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,      // name
-				       KeyValueMap(),
+				       itsParamSet,
 				       "eth1",
 				       "srcMac",
 				       "dstMac"));

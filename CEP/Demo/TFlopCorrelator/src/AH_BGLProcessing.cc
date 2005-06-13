@@ -23,7 +23,6 @@
 #include <Transport/TH_MPI.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <CEPFrame/WH_Empty.h>
 #include <WH_SubBand.h>
 #include <WH_Correlator.h>
 // DataHolders
