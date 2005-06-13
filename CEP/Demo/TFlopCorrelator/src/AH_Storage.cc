@@ -25,7 +25,7 @@
 #include <CEPFrame/WH_Empty.h>
 #include <WH_RSPInput.h>
 #include <WH_Transpose.h>
-#include <SB_Stub.h>
+#include <Stub_SB.h>
 
 // DataHolders
 #include <DH_SubBand.h>

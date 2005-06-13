@@ -15,8 +15,8 @@
 #include <ACC/ParameterSet.h>
 
 #include <AH_BGLProcessing.h>
-#include <SB_Stub.h>
-#include <Corr_Stub.h>
+#include <Stub_SB.h>
+#include <Stub_Corr.h>
 // tinyCEP
 
 // Transporters
@@ -65,10 +65,10 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   // and correlators
 
   LOG_TRACE_FLOW_STR("Create input side interface stubs");
-  SB_Stub inStub(true);
+  Stub_SB inStub(true);
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  Corr_Stub outStub(false);
+  Stub_Corr outStub(false);
 
   LOG_TRACE_FLOW_STR("Create the SubBand filter  workholders");
   
@@ -82,7 +82,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
 
     // connect the Subband filter to the input section
-    // this interface is defined in the SB_Stub class
+    // this interface is defined in the Stub_SB class
     inStub.connect (s,                                                            // SBF filter number
 		    (DH_SubBand*)SBFNodes[s]->getDataManager().getInHolder(0));  // input dataholder in the current WH
     
@@ -104,10 +104,10 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
       itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
       
       // todo: connect Correlator to SBFilter
-      // this connection is defined in the SB_Stub class
+      // this connection is defined in the Stub_SB class
       
       // connect the Subband filter to the input section
-      // this interface is defined in the SB_Stub class
+      // this interface is defined in the Stub_SB class
       outStub.connect (corrID,                                                              // Corr filter number
 		       *(DH_Vis*)CorrNodes[corrID]->getDataManager().getOutHolder(0));  // input dataholder in the current WH
       

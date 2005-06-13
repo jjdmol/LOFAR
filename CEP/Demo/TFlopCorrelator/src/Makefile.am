@@ -5,7 +5,6 @@ DH_SubBand.h		\
 DH_CorrCube.h		\
 DH_Vis.h		\
 WH_RSPInput.h           \
-WH_RSP.h 		\
 WH_Transpose.h		\
 WH_SubBand.h		\
 WH_Correlator.h		\
@@ -16,8 +15,9 @@ CyclicBuffer.h          \
 BufferController.h      \
 RSPTimeStamp.h          \
 Stub_SB.h               \
-Stub_Corr.h
-#Stub_RSP.h
+Stub_Corr.h		\
+Stub_RSP.h
+#WH_RSP.h 	
 #WH_Collect.h
 #WH_Store.h
 #AH_Storage.h
@@ -40,13 +40,13 @@ DH_Sync.cc			\
 DH_RSP.cc                	\
 DH_SubBand.cc			\
 WH_RSPInput.cc           	\
-WH_RSP.cc 			\
 WH_Transpose.cc			\
 WH_SyncControl.cc		\
 RSPTimeStamp.cc          	\
 Stub_SB.cc               	\
+Stub_RSP.cc			\
 AH_InputSection.cc		
-#Stub_RSP.cc
+#WH_RSP.cc 			
 
 TFC_BGLProcessing_SOURCES 	= $(DOCHDRS) \
 TFC_BGLProcessing_main.cc 	\

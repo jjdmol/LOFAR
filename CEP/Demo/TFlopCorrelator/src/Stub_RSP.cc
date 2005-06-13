@@ -21,9 +21,9 @@ namespace LOFAR {
     itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
     
     // todo: add DH_?? for pre-correlation correction factors 
-    for (int i=0; i<itsNSBF; i++) {
+    //    for (int i=0; i<itsNSBF; i++) {
       //      itsSB.push_back(new DH_SubBand("noname",1)); //todo: get correct SubbandID
-    }
+    //    }
   }
 
   Stub_RSP::~Stub_RSP()
