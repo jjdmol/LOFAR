@@ -1,4 +1,4 @@
-//# Corr_Stub.h: Stub for connection of Correlators with outside world
+//# Stub_Corr.h: Stub for connection of Correlators with outside world
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,13 +18,13 @@ namespace LOFAR {
 // This class is a stub which is used to make the connection of the SubBandFilter
 // to the TflopCorrelator input section 
 
-class Corr_Stub
+class Stub_Corr
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit Corr_Stub (bool onServer=false);
+  explicit Stub_Corr (bool onServer=false);
 
-  ~Corr_Stub();
+  ~Stub_Corr();
 
   // Connect the given objects to the stubs.
   void connect (int C_nr,

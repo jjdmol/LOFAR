@@ -1,4 +1,4 @@
-//# SB_Stub.h: Stub for connection of SB filter with outside world
+//# Stub_RSP.h: Stub for connection of SB filter with outside world
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -12,8 +12,6 @@
 
 #include <string>
 #include <ACC/ParameterSet.h>
-#include <TFlopCorrelator/DH_SubBand.h>
-//#include <TFlopCorrelator/DH_FilterCoeff.h>
 
 
 namespace LOFAR {
@@ -21,23 +19,20 @@ namespace LOFAR {
 // This class is a stub which is used to make the connection of the SubBandFilter
 // to the TflopCorrelator input section 
 
-class SB_Stub
+class Stub_RSP
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit SB_Stub (bool onServer=false);
+  explicit Stub_RSP (bool onServer=false);
 
-  ~SB_Stub();
+  ~Stub_RSP();
 
   // Connect the given objects to the stubs.
-  void connect (int SBF_nr,
-		DH_SubBand* sb);
+  void connect ();
 
 private:
   bool                itsStubOnServer;
   ACC::ParameterSet*  itsPS;
-  vector<DH_SubBand*> itsSB;
-  int                 itsNSBF;
 };
 
 } //namespace

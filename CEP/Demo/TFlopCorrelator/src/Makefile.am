@@ -9,14 +9,15 @@ WH_RSP.h 		\
 WH_Transpose.h		\
 WH_SubBand.h		\
 WH_Correlator.h		\
+WH_SyncControl.h	\
 AH_InputSection.h	\
 AH_BGLProcessing.h	\
 CyclicBuffer.h          \
 BufferController.h      \
 RSPTimeStamp.h          \
-SB_Stub.h               \
-Corr_Stub.h
-#RSP_Stub.h
+Stub_SB.h               \
+Stub_Corr.h
+#Stub_RSP.h
 #WH_Collect.h
 #WH_Store.h
 #AH_Storage.h
@@ -39,12 +40,13 @@ DH_Sync.cc			\
 DH_RSP.cc                	\
 DH_SubBand.cc			\
 WH_RSPInput.cc           	\
+WH_RSP.cc 			\
 WH_Transpose.cc			\
+WH_SyncControl.cc		\
 RSPTimeStamp.cc          	\
-SB_Stub.cc               	\
+Stub_SB.cc               	\
 AH_InputSection.cc		
-#WH_RSP.cc 			
-#RSP_Stub.cc
+#Stub_RSP.cc
 
 TFC_BGLProcessing_SOURCES 	= $(DOCHDRS) \
 TFC_BGLProcessing_main.cc 	\
@@ -54,15 +56,15 @@ DH_Vis.cc			\
 WH_SubBand.cc			\
 WH_Correlator.cc		\
 AH_BGLProcessing.cc		\
-SB_Stub.cc             		\
-Corr_Stub.cc
+Stub_SB.cc             		\
+Stub_Corr.cc
 #WH_Collect.cc
 
 
 TFC_Storage_SOURCES 	= $(DOCHDRS) \
 TFC_Storage_main.cc 	\
 DH_Vis.cc		\
-Corr_Stub.cc		\
+Stub_Corr.cc		\
 AH_Storage.cc
 #WH_Store.h
 

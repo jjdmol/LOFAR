@@ -13,15 +13,14 @@
 
 //# Includes
 #include <WH_SyncControl.h>
+#include <DH_Sync.h>
 
-using namespace LOFAR;
+namespace LOFAR{
 
-WH_SyncControl::WH_SyncControl(const string& name,
+WH_SyncControl::WH_SyncControl(const string& name
 			       //			       const int&    noutputs
-			       );  
-: WorkHolder(1, 1, name, "WH_SyncControl"),
-  itsNinputs(),
-  itsNoutputs()
+			       )
+: WorkHolder(1, 1, name, "WH_SyncControl")
     //todo: correct nr of inputs and outputs; each RSPInput node should
     //      receive a sync/delay DH from the syncController.
 {
@@ -31,14 +30,14 @@ WH_SyncControl::WH_SyncControl(const string& name,
   }
   for (int i = 0; i < itsNoutputs; i++) {
     snprintf(str, 128, "output_%d_of _%d", i, itsNoutputs);
-    getDataManager().addOutDataHolder(i, new DH_Sync(str);
+    getDataManager().addOutDataHolder(i, new DH_Sync(str));
   }
 }
 
 WH_SyncControl::~WH_SyncControl() {
 }
 
-WorkHolder* WH_SyncControl::construct(const string& name, KeyValueMap kvm) {
+WorkHolder* WH_SyncControl::construct(const string& name) {
   return new WH_SyncControl(name);
 }
 
@@ -47,4 +46,5 @@ WH_SyncControl* WH_SyncControl::make(const string& name) {
 }
 
 void WH_SyncControl::process() {
+}
 }
