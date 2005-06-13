@@ -5,6 +5,7 @@ DH_SubBand.h		\
 DH_CorrCube.h		\
 DH_Vis.h		\
 WH_RSPInput.h           \
+WH_RSP.h                \
 WH_Transpose.h		\
 WH_SubBand.h		\
 WH_Correlator.h		\
@@ -42,6 +43,7 @@ DH_SubBand.cc			\
 WH_RSPInput.cc           	\
 WH_Transpose.cc			\
 WH_SyncControl.cc		\
+WH_RSP.cc                       \
 RSPTimeStamp.cc          	\
 Stub_SB.cc               	\
 Stub_RSP.cc			\

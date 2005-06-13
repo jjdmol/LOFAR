@@ -14,11 +14,8 @@
 #define TFLOPCORRELATOR_DH_RSP_H
 
 
-#include <lofar_config.h>
+#include <ACC/ParameterSet.h>
 #include <Transport/DataHolder.h>
-#include <complex>
-
-using std::complex;
 
 namespace LOFAR
 {
@@ -28,7 +25,8 @@ class DH_RSP: public DataHolder
 public:
   typedef char BufferType;
 
-  explicit DH_RSP (const string& name);
+  explicit DH_RSP (const string& name,
+                   const ACC::ParameterSet pset);
 
   DH_RSP(const DH_RSP&);
 
@@ -58,12 +56,6 @@ public:
 
   /// Reset the buffer
   void resetBuffer();
-
-  /// set an element of the buffer
-  void setBufferElement(const int EPApacket, 
-			const int beamlet,
-			const int polarisation,
-			const complex<int16>& value);
   
  private:
   /// Forbid assignment.
@@ -74,12 +66,14 @@ public:
 
   /// pointers to data in the blob
   BufferType*  itsBuffer;
-  int* itsFlagptr;
+  int* itsFlagPtr;
 
   int itsEPAheaderSize;
   int itsNoBeamlets;
   int itsNoPolarisations;
   unsigned int itsBufSize;
+
+  ACC::ParameterSet itsPSet;
 };
 
 inline DH_RSP::BufferType* DH_RSP::getBuffer()
@@ -98,7 +92,7 @@ inline const int DH_RSP::getBlockID() const
   { return ((int*)&itsBuffer[10])[0]; }
 
 inline const int DH_RSP::getFlag() const
-  { return *itsFlagptr; }
+  { return *itsFlagPtr; }
 
 inline void DH_RSP::setStationID(int stationid)
   { memcpy(&itsBuffer[2], &stationid, sizeof(int)); }
@@ -109,25 +103,11 @@ inline void  DH_RSP::setSeqID(int seqid)
 inline void  DH_RSP::setBlockID(int blockid)
   { memcpy(&itsBuffer[10], &blockid, sizeof(int)); }
 
-inline void DH_RSP::setFlag(int flag)
-  { *itsFlagptr = flag; }
+inline void  DH_RSP::setFlag(int flag)
+  { *itsFlagPtr = flag; }
 
 inline void DH_RSP:: resetBuffer()
   { memset(itsBuffer, 0, itsBufSize); }
-
-#define GETADDRESS(ePacket, beamlet, polarisation) \
-  (ePacket + 1)* itsEPAheaderSize \
-  + ((ePacket * itsNoBeamlets + beamlet) \
-  * itsNoPolarisations + polarisation) \
-  * sizeof(complex<int16>)
-
-inline void DH_RSP::setBufferElement(const int EPApacket, 
-				     const int beamlet,
-				     const int polarisation,
-				     const complex<int16>& value)
-{
-  *((complex<int16>*)&itsBuffer[GETADDRESS(EPApacket, beamlet, polarisation)]) = value;
-}
 
 
 }

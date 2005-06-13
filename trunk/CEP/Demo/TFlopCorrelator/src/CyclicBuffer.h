@@ -74,20 +74,20 @@ class CyclicBuffer
   void  RemoveItems();
 
   // write an item and adjust head and count
-  TYPE& GetBufferWritePtr(int* ID);
+  TYPE GetBufferWritePtr(int& ID);
 
   // read oldest item and adjust tail and count
-  const TYPE& GetBufferReadPtr(int* ID);
+  const TYPE GetBufferReadPtr(int& ID);
 
   // read oldest item without adjusting tail and count 
-  const TYPE& GetFirstReadPtr(int* ID);
+  const TYPE GetFirstReadPtr(int& ID);
 
   // read and remove item 'offset' items after oldest
   // item and adjust tail and count
-  const TYPE& GetUserReadPtr(uint offset, int* ID);
+  const TYPE GetUserReadPtr(int offset, int& ID);
 
   // (over)write an item without adjusting head and count
-  TYPE GetUserWritePtr(uint ID);
+  TYPE GetUserWritePtr(int ID);
   
   // release locks
   void  WriteUnlockItem(int ID);
@@ -185,7 +185,7 @@ void CyclicBuffer<TYPE>::RemoveItems(void)
 }
 
 template<class TYPE>
-TYPE& CyclicBuffer<TYPE>::GetBufferWritePtr(int* ID)
+TYPE CyclicBuffer<TYPE>::GetBufferWritePtr(int& ID)
 {
 
   pthread_mutex_lock(&buffer_mutex);
@@ -199,8 +199,8 @@ TYPE& CyclicBuffer<TYPE>::GetBufferWritePtr(int* ID)
   // CONDITION: itsCount < itsBuffer.size()
   // space available for at least one element
   
-  *ID = itsHeadIdx;
-  itsBuffer[*ID].itsRWLock.WriteLock();
+  ID = itsHeadIdx;
+  itsBuffer[ID].itsRWLock.WriteLock();
   
   // adjust the head (points to first free position)
   itsHeadIdx++;
@@ -217,11 +217,11 @@ TYPE& CyclicBuffer<TYPE>::GetBufferWritePtr(int* ID)
   }
   pthread_mutex_unlock(&buffer_mutex);
 
-  return itsBuffer[*ID].itsItem;
+  return itsBuffer[ID].itsItem;
 }
 
 template<class TYPE>
-const TYPE& CyclicBuffer<TYPE>::GetBufferReadPtr(int* ID)
+const TYPE CyclicBuffer<TYPE>::GetBufferReadPtr(int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
@@ -232,8 +232,8 @@ const TYPE& CyclicBuffer<TYPE>::GetBufferReadPtr(int* ID)
   }
   // CONDITION: itsCount > itsMinCount
   
-  *ID = itsTailIdx;
-  itsBuffer[*ID].itsRWLock.ReadLock();
+  ID = itsTailIdx;
+  itsBuffer[ID].itsRWLock.ReadLock();
  
   // adjust the tail
   itsTailIdx++;
@@ -248,11 +248,11 @@ const TYPE& CyclicBuffer<TYPE>::GetBufferReadPtr(int* ID)
 
   pthread_mutex_unlock(&buffer_mutex);
   
-  return itsBuffer[*ID].itsItem;
+  return itsBuffer[ID].itsItem;
 }
 
 template<class TYPE>
-const TYPE& CyclicBuffer<TYPE>::GetFirstReadPtr(int* ID)
+const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
@@ -263,22 +263,22 @@ const TYPE& CyclicBuffer<TYPE>::GetFirstReadPtr(int* ID)
   }
   // CONDITION: itsCount > 0
   
-  *ID = itsTailIdx;
-  itsBuffer[*ID].itsRWLock.ReadLock();
+  ID = itsTailIdx;
+  itsBuffer[ID].itsRWLock.ReadLock();
  
   pthread_mutex_unlock(&buffer_mutex);
   
-  return itsBuffer[*ID].itsItem;
+  return itsBuffer[ID].itsItem;
 }
 
 
 template<class TYPE>
-const TYPE& CyclicBuffer<TYPE>::GetUserReadPtr(uint offset, int* ID)
+const TYPE CyclicBuffer<TYPE>::GetUserReadPtr(int offset, int& ID)
 {
-  if (offset >= (int)itsBuffer.size()) 
+  if ( (offset >= (int)itsBuffer.size()) || (offset < 0)) 
   {
-    LOG_TRACE_RTTI("CyclicBuffer::getReadUserItem: offset >=  size of buffer. No offset used instead");
-    offset = 0;
+    LOG_TRACE_RTTI("CyclicBuffer:: offset has invalid value");
+    return 0;
   }
 
   pthread_mutex_lock(&buffer_mutex);
@@ -292,15 +292,15 @@ const TYPE& CyclicBuffer<TYPE>::GetUserReadPtr(uint offset, int* ID)
   
   if ( (itsTailIdx+offset) < (int)itsBuffer.size()) 
   {
-    *ID = itsTailIdx+offset;
+    ID = itsTailIdx+offset;
   }
   else {
-    *ID = itsTailIdx + offset - (int)itsBuffer.size(); 
+    ID = itsTailIdx + offset - (int)itsBuffer.size(); 
   }
   itsBuffer[*ID].itsRWLock.ReadLock();
  
   // adjust the tail
-  itsTailIdx = *ID+1;
+  itsTailIdx = ID+1;
   if (itsTailIdx >= (int)itsBuffer.size()) 
   {
     itsTailIdx = 0;
@@ -314,16 +314,16 @@ const TYPE& CyclicBuffer<TYPE>::GetUserReadPtr(uint offset, int* ID)
 
   pthread_mutex_unlock(&buffer_mutex);
   
-  return itsBuffer[*ID].itsItem;
+  return itsBuffer[ID].itsItem;
 }
 
 
 template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetUserWritePtr(uint ID)
+TYPE CyclicBuffer<TYPE>::GetUserWritePtr(int ID)
 {
-  if (ID >= (int)itsBuffer.size()) {
- 
-   LOG_TRACE_RTTI("CyclicBuffer::getWriteUserItem: ID >= size of buffer. Head ID used instead");
+  if ( (ID >= (int)itsBuffer.size()) || (ID < 0))
+  {
+   LOG_TRACE_RTTI("CyclicBuffer::getWriteUserItem: ID has invalid value");
    return 0;
  } 
 

@@ -39,8 +39,7 @@ using namespace LOFAR;
 void* WriteToBufferThread(void* arguments)
 {
   thread_args* args = (thread_args*)arguments;
-  BufferController<DataType>* databuffer = args->databuffer;
-  BufferController<MetaDataType>* metadatabuffer = args->metadatabuffer;
+  BufferController<dataType>* databuffer = args->databuffer;
   TH_Ethernet* connection = args->connection;
   int framesize = args->framesize;
   int packetsinframe = args->packetsinframe;
@@ -48,8 +47,7 @@ void* WriteToBufferThread(void* arguments)
   char recvframe[9000];
   int seqid, blockid, itemid, offset;
   timestamp_t actualstamp, nextstamp;
-  DataType* dataptr;
-  MetaDataType* metadataptr;
+  dataType* dataptr;
   bool readnew = true;
   bool firstloop = true;
 
@@ -75,66 +73,60 @@ void* WriteToBufferThread(void* arguments)
       nextstamp.setStamp(seqid, blockid);
       firstloop = false;
     }
-
+    
+   // to do: bufferelements of EPApackets and not ethernet frames !!
+    
     if (actualstamp < nextstamp) {
       // old packet received 
       // if exists, overwrite its previous created dummy
       
       // read oldest item in cyclic buffer
-      metadataptr = (MetaDataType*)metadatabuffer->getFirstReadPtr(&itemid);
+      dataptr = (dataType*)databuffer->getFirstReadPtr(itemid);
       
       // subtract timestamps to find offset
-      offset = actualstamp - metadataptr->timestamp;
+      offset = actualstamp - dataptr->timestamp;
       
       // determine itemid to be written
       itemid += offset;
       
       // release readlock
-      metadatabuffer->readyReading();
+      databuffer->readyReading();
    
       // overwrite data and invalid flag
-      metadataptr = (MetaDataType*)metadatabuffer->getUserWritePtr(itemid);   
-      dataptr = (DataType*)databuffer->getUserWritePtr(itemid);
-      if (metadataptr != 0 && dataptr != 0) {
-        memcpy(dataptr->data, recvframe, framesize);
-        metadataptr->invalid = 0;
+      dataptr = (dataType*)databuffer->getUserWritePtr(itemid);
+      if (dataptr != 0) {
+        memcpy(dataptr->packet, recvframe, framesize);
+        dataptr->invalid = 0;
       }      
      
       // release writelocks
       databuffer->readyWriting();
-      metadatabuffer->readyWriting();
       
       // read new frame in next loop
       readnew = true;   
     }
     else if (nextstamp + (packetsinframe - 1) < actualstamp) {
       // missed a packet so set invalid flag and missing timestamp
-      metadataptr = (MetaDataType*)metadatabuffer->getBufferWritePtr(); 
-      metadataptr->invalid = 1;
-      metadataptr->timestamp = nextstamp;
-
-      // call getBufferWritePtr to increase the writepointer but
-      // don't write data because we have none
-      (DataType*)databuffer->getBufferWritePtr();   
+      dataptr = (dataType*)databuffer->getBufferWritePtr(); 
+      dataptr->packet[0]  = '\0';
+      dataptr->invalid = 1;
+      dataptr->timestamp = nextstamp;
      
       // release writelocks
       databuffer->readyWriting();
-      metadatabuffer->readyWriting();
       
       // read same frame again in next loop
       readnew = false;
     } 
     else {
       // expected packet received so write data into buffer
-      dataptr = (DataType*)databuffer->getBufferWritePtr();
-      metadataptr = (MetaDataType*)metadatabuffer->getBufferWritePtr();      
-      memcpy(dataptr->data, recvframe, framesize);
-      metadataptr->invalid = 0;
-      metadataptr->timestamp = actualstamp;      
+      dataptr = (dataType*)databuffer->getBufferWritePtr();
+      memcpy(dataptr->packet, recvframe, framesize);
+      dataptr->invalid = 0;
+      dataptr->timestamp = actualstamp;      
      
       // release writelocks
       databuffer->readyWriting();
-      metadatabuffer->readyWriting();
      
       // read new frame in next loop
       readnew = true;
@@ -143,25 +135,25 @@ void* WriteToBufferThread(void* arguments)
 }
 
 WH_RSPInput::WH_RSPInput(const string& name, 
-                         const KeyValueMap kvm,
+                         const ACC::ParameterSet pset,
                          const string device,
                          const string srcMAC,
                          const string destMAC)
   : WorkHolder (1, 1, name, "WH_RSPInput"),
-    itsKVM (kvm),
+    itsPset (pset),
     itsDevice(device),
     itsSrcMAC(srcMAC),
     itsDestMAC(destMAC)
 {
   // number of EPA packets per RSP frame
-  itsNpackets = kvm.getInt("NoPacketsInFrame", 8);
-  
+  itsNpackets = pset.getInt("NoPacketsInFrame");
+ 
   // size of an EPA packet in bytes 
-  int sizeofpacket   = ( kvm.getInt("polarisations",2) * 
+  int sizeofpacket   = ( pset.getInt("polarisations") * 
                           sizeof(complex<int16>) * 
-                          kvm.getInt("NoRSPBeamlets", 92)
+                          pset.getInt("NoRSPBeamlets")
                        ) + 
-                       kvm.getInt("SzEPAheader", 14); 
+                       pset.getInt("SzEPAheader"); 
  
   // size of a RSP frame in bytes
   itsSzRSPframe = itsNpackets * sizeofpacket;
@@ -170,14 +162,13 @@ WH_RSPInput::WH_RSPInput(const string& name,
   itsInputConnection = new TH_Ethernet(itsDevice, itsSrcMAC, itsDestMAC, 0x000 );
 
   // use  cyclic buffers to hold the rsp data and valid/invalid flag
-  itsDataBuffer = new BufferController<DataType>(100); 
-  itsMetaDataBuffer = new BufferController<MetaDataType>(100); 
+  itsDataBuffer = new BufferController<dataType>(1000); 
   
    // create incoming dataholder holding the delay information 
   getDataManager().addInDataHolder(0, new DH_Sync("DH_Sync"));
 
   // create outgoing dataholder holding the delay controlled RSP data
-  getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out"));
+  getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out", pset));
  
 }
 
@@ -185,24 +176,23 @@ WH_RSPInput::WH_RSPInput(const string& name,
 WH_RSPInput::~WH_RSPInput() 
 {
   delete itsDataBuffer;
-  delete itsMetaDataBuffer;
   delete itsInputConnection;
 }
 
 
 WorkHolder* WH_RSPInput::construct(const string& name,
-                                   const KeyValueMap kvm,
+                                   const ACC::ParameterSet pset,
                                    const string device,
                                    const string srcMAC,
                                    const string destMAC)
 {
-  return new WH_RSPInput(name, kvm, device, srcMAC, destMAC);
+  return new WH_RSPInput(name, pset, device, srcMAC, destMAC);
 }
 
 
 WH_RSPInput* WH_RSPInput::make(const string& name)
 {
-  return new WH_RSPInput(name, itsKVM, itsDevice, itsSrcMAC, itsDestMAC);
+  return new WH_RSPInput(name, itsPset, itsDevice, itsSrcMAC, itsDestMAC);
 }
 
 
@@ -210,7 +200,6 @@ void WH_RSPInput::preprocess()
 {
   // start up writer thread
   writerinfo.databuffer = itsDataBuffer;
-  writerinfo.metadatabuffer = itsMetaDataBuffer;
   writerinfo.connection = itsInputConnection;
   writerinfo.framesize = itsSzRSPframe;
   writerinfo.packetsinframe = itsNpackets;
@@ -227,8 +216,7 @@ void WH_RSPInput::process()
 { 
   DH_Sync* inDHp;
   DH_RSP* outDHp;
-  DataType* dataptr;
-  MetaDataType* metadataptr;
+  dataType* dataptr;
   timestamp_t syncstamp;
   int seqid, blockid;
 
@@ -238,18 +226,15 @@ void WH_RSPInput::process()
   syncstamp.setStamp(seqid, blockid);
   
   // add delay control code here
-
-  // get meta data from cyclic buffer 
-  metadataptr = itsMetaDataBuffer->getBufferReadPtr();
-  
+ 
   // get data from cycclic buffer
   dataptr = itsDataBuffer->getBufferReadPtr();
 
   // write flag to outgoing dataholder
-  outDHp->setFlag(metadataptr->invalid);
+  outDHp->setFlag(dataptr->invalid);
 
   // write data to outgoing dataholder
-  memcpy(outDHp->getBuffer(), dataptr->data, itsSzRSPframe);
+  memcpy(outDHp->getBuffer(), dataptr->packet, itsSzRSPframe);
 }
 
 void WH_RSPInput::postprocess()

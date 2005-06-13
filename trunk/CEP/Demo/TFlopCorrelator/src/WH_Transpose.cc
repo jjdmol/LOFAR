@@ -24,6 +24,7 @@
 
 // General includes
 #include <Common/LofarLogger.h>
+#include <ACC/ParameterSet.h>
 
 // Application specific includes
 #include <WH_Transpose.h>
@@ -41,9 +42,11 @@ WH_Transpose::WH_Transpose(const string& name,
 {
   char str[32];
 
+  ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+
   for (int i=0; i<itsNinputs; i++) {
     sprintf(str, "DH_in_%d", i);
-    getDataManager().addInDataHolder(i, new DH_RSP(str));
+    getDataManager().addInDataHolder(i, new DH_RSP(str, myPS));
   }
   
   getDataManager().addOutDataHolder(0, new DH_SubBand("DH_Subband_0of2", 0)); 
