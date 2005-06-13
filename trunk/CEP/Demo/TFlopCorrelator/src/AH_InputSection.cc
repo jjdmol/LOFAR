@@ -25,7 +25,7 @@
 #include <CEPFrame/WH_Empty.h>
 #include <WH_RSPInput.h>
 #include <WH_Transpose.h>
-#include <SB_Stub.h>
+#include <Stub_SB.h>
 
 // DataHolders
 #include <DH_SubBand.h>
@@ -71,7 +71,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   //       connection involved, we do have to define the port/IP numbering schemes
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  SB_Stub outStub(true);
+  Stub_SB outStub(true);
 
   //todo: define simulated RSP boards here or in extra AH
 
@@ -152,7 +152,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 
     // connect the Subband filter form AH_BGLProcessing
     // to the input section
-    // this interface is defined in the SB_Stub class
+    // this interface is defined in the Stub_SB class
     // Each Transpose node is connected to two SubBandfilters
     //
     // Output channel 0
