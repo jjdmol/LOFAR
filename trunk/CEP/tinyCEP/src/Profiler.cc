@@ -26,6 +26,7 @@
 #include <lofar_config.h>
 
 #include <tinyCEP/Profiler.h>
+#include <Common/LofarLogger.h>
 
 #ifdef HAVE_MPI_PROFILER
 
@@ -52,9 +53,9 @@ int Profiler::defineState (const char* name, const char* color)
   int startstate = theirNextFreeState++; // the start state
   int endstate   = theirNextFreeState++; // the end state
   MPE_Describe_state (startstate, endstate, (char*)name, (char*)color);
-  cdebug(3) << "Defined State " << name
-	    << " start=" << startstate
-	    << "  end=" << endstate << endl;
+  LOG_TRACE_FLOW_STR("Defined State " << name
+		     << " start=" << startstate
+		     << "  end=" << endstate);
   return startstate;
 }
 
