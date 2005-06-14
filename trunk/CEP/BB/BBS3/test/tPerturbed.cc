@@ -132,7 +132,7 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", 13157, 13157, 
-		     antVec, argv[5], srcgrp, false, true);
+		     antVec, argv[5], srcgrp, false);
       vector<string> solv(argc-6);
       for (uint i=0; i<solv.size(); ++i) {
 	solv[i] = argv[i+6];

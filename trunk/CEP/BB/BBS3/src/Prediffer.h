@@ -89,8 +89,7 @@ public:
 	     const vector<int>& ant,
 	     const string& modelType,
 	     const vector<vector<int> >& sourceGroups,
-	     bool calcUVW,
-	     bool lockMappedMem);
+	     bool calcUVW);
 
   // Destructor
   ~Prediffer();

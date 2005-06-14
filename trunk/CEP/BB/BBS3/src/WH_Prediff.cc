@@ -227,12 +227,11 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
 
     string modelType = args.getString("modelType", "LOFAR.RI");
     bool calcUVW = args.getBool("calcUVW", false);
-    bool lockMappedMem = args.getBool("lockMappedMem", false);
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
     Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
 				    dbName, dbHost, dbPwd, dbMasterPort, dbMyPort,
-				    antNrs, modelType, srcgrp, calcUVW,lockMappedMem);
+				    antNrs, modelType, srcgrp, calcUVW);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));
     isNew = true;

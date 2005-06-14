@@ -133,7 +133,6 @@ bool SC_Simple::execute()
   WOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
   WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr", true));
   WOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
-  WOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));
   KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
   vector<int> ant = (const_cast<KeyValueMap&>(itsArgs))["antennas"].getVecInt();
   vector<string> pNames = (const_cast<KeyValueMap&>(itsArgs))["solvableParams"].getVecString();
