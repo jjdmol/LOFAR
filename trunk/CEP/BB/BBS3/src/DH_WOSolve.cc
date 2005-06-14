@@ -83,6 +83,7 @@ void DH_WOSolve::initPO (const string& tableName)
 {                         
   itsPODHWO = new PO_DH_WOSOLVE(*this);
   itsPODHWO->tableName (tableName);
+  setPOInitialized();
 }
 
 PL::PersistentObject& DH_WOSolve::getPO() const
