@@ -190,7 +190,7 @@ int main (int argc, const char* argv[])
       grp1.push_back (2);
       srcgrp.push_back (grp1);
       Prediffer pre1(argv[2], argv[3], argv[4], dbtype, argv[1], "", "", 13157, 13157,
-		     antVec, argv[5], srcgrp, calcuvw, true);
+		     antVec, argv[5], srcgrp, calcuvw);
       // Do a further selection; only XX,YY and no autocorrelations.
       vector<int> corr(2,0);
       corr[1] = 3;

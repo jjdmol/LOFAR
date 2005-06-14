@@ -57,7 +57,6 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsModelType       (0),
     itsCalcUVW         (0),
     itsUseAutoCorr     (0),
-    itsLockMappedMem   (0),
     itsCleanUp         (0),
     itsUpdateParms     (0),
     itsSolutionID      (0),
@@ -84,7 +83,6 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsModelType       (0),
     itsCalcUVW         (0),
     itsUseAutoCorr     (0),
-    itsLockMappedMem   (0),
     itsCleanUp         (0),
     itsUpdateParms     (0),
     itsSolutionID      (0),
@@ -135,7 +133,6 @@ void DH_WOPrediff::init()
   addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
   addField ("CalcUVW", BlobField<unsigned int>(1));
   addField ("UseAutoCorr", BlobField<unsigned int>(1));
-  addField ("LockMappedMem", BlobField<unsigned int>(1));
   addField ("CleanUp", BlobField<unsigned int>(1));
   addField ("UpdateParms", BlobField<unsigned int>(1));
   addField ("SolutionID", BlobField<int>(1));
@@ -166,7 +163,6 @@ void DH_WOPrediff::init()
   *itsTimeLength = 0;
   *itsCalcUVW = 0;
   *itsUseAutoCorr = 0;
-  *itsLockMappedMem = 0;
   *itsCleanUp = 0;
   *itsUpdateParms = 0;
   *itsSolutionID = -1;
@@ -190,7 +186,6 @@ void DH_WOPrediff::fillDataPointers()
   itsModelType = getData<char> ("ModelType");
   itsCalcUVW = getData<unsigned int> ("CalcUVW");
   itsUseAutoCorr = getData<unsigned int> ("UseAutoCorr");
-  itsLockMappedMem = getData<unsigned int> ("LockMappedMem");
   itsCleanUp = getData<unsigned int> ("CleanUp");
   itsUpdateParms = getData<unsigned int> ("UpdateParms");
   itsSolutionID = getData<int> ("SolutionID");
@@ -335,7 +330,6 @@ void DH_WOPrediff::dump()
   cout << "Model type = " << getModelType() << endl;
   cout << "Calc UVW = " << getCalcUVW() << endl;
   cout << "Use auto correlations = " << getUseAutoCorrelations() << endl;
-  cout << "Lock mapped memory = " << getLockMappedMemory() << endl;
   cout << "Clean up = " << getCleanUp() << endl;
   cout << "Update parameters = " << getUpdateParms() << endl;
   cout << "Solution id = " << getSolutionID() << endl;
@@ -401,7 +395,6 @@ void DH_WOPrediff::clearData()
   setModelType("");
   setCalcUVW(false);
   setUseAutoCorrelations(true);
-  setLockMappedMemory(false);
   setCleanUp(false);
   setUpdateParms(false);
   setSolutionID(0);

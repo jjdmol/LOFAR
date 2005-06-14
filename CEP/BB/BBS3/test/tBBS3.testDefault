@@ -32,7 +32,6 @@ CTRLparams=[
     modelType="LOFAR.RI",  // Model type
     calcUVW=F,             // Calculate UVW coordinates?
     useAutoCorr=F,         // Use auto correlations
-    lockMappedMem=T,       // Call mlock immediately after mapping?
     useSVD=F,              // Use Singular Value Decomposition in solve?
 
     MSDBparams=[

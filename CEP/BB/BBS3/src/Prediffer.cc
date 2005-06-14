@@ -96,8 +96,7 @@ Prediffer::Prediffer(const string& msName,
 		     const vector<int>& ant,
 		     const string& modelType,
 		     const vector<vector<int> >& sourceGroups,
-		     bool    calcUVW,
-		     bool    lockMappedMem)
+		     bool    calcUVW)
   :
   itsMSName       (msName),
   itsMEPName      (meqModel),
@@ -113,8 +112,7 @@ Prediffer::Prediffer(const string& msName,
   itsNrTimesDone  (0),
   itsBlNext       (0),
   itsDataMap      (0),
-  itsFlagsMap     (0),
-  itsLockMappedMem(lockMappedMem)
+  itsFlagsMap     (0)
 {
   LOG_INFO_STR( "Prediffer constructor ("
 		<< "'" << msName   << "', "
@@ -721,11 +719,6 @@ int Prediffer::setDomain (double fstart, double flength,
   itsDataMap->mapFile(nr1*nr2*sizeof(fcomplex), nrValues*sizeof(fcomplex)); 
   // Map the correct flags subset (this time interval)
   itsFlagsMap->mapFile(startOffset, nrValues); 
-  if (itsLockMappedMem) {
-    // Make sure mapped data is resident in RAM
-    itsDataMap->lockMappedMemory();
-    itsFlagsMap->lockMappedMemory();
-  }
 
   mapTimer.stop();
   BBSTest.log("file-mapping", mapTimer);
@@ -1309,10 +1302,6 @@ void Prediffer::fillUVW()
   double* uvwDataPtr = 0;
   MMap* mapPtr = new MMap(itsMSName+"/vis.uvw", MMap::Read);
   mapPtr->mapFile(0, nrBytes);
-  if (itsLockMappedMem) {
-    // Make sure mapped data is resident in RAM
-    mapPtr->lockMappedMemory();
-  }   
   uvwDataPtr = (double*)mapPtr->getStart();
 
   // Step time by time through the MS.

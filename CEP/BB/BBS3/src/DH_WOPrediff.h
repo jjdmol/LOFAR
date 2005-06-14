@@ -118,9 +118,6 @@ public:
   bool getUseAutoCorrelations() const;
   void setUseAutoCorrelations(bool use);
 
-  bool getLockMappedMemory() const;
-  void setLockMappedMemory(bool lock);
-
   bool getCleanUp() const;
   void setCleanUp(bool clean);
 
@@ -167,7 +164,6 @@ private:
   char*         itsModelType;
   unsigned int* itsCalcUVW;
   unsigned int* itsUseAutoCorr;
-  unsigned int* itsLockMappedMem;
   unsigned int* itsCleanUp;                 // Clean up Prediffer object when finished?
   unsigned int* itsUpdateParms;             // Update solvable parameters?
   int*          itsSolutionID;              // (wo)ID of solution in solution table
@@ -260,12 +256,6 @@ inline bool DH_WOPrediff::getUseAutoCorrelations() const
 
 inline void DH_WOPrediff::setUseAutoCorrelations(bool use)
 { *itsUseAutoCorr = use; }
-
-inline bool DH_WOPrediff::getLockMappedMemory() const
-{ return *itsLockMappedMem; }
-
-inline void DH_WOPrediff::setLockMappedMemory(bool lock)
-{ *itsLockMappedMem = lock; }
 
 inline bool DH_WOPrediff::getCleanUp() const
 { return *itsCleanUp; }
