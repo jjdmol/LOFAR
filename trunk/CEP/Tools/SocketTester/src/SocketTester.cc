@@ -121,6 +121,7 @@ using namespace LOFAR;
 //
 int main(int32 argc, char*argv[]) {
   
+
   if (argc !=2) {
     printf("specify listenermode (0/1) as first command line argument");
     //exit(1);
@@ -138,6 +139,10 @@ int main(int32 argc, char*argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank); 
   printf("MyRank %i\n",myrank);
   MPI_Comm_size(MPI_COMM_WORLD, &nodes); 
+  int  namelen;
+  char processor_name[MPI_MAX_PROCESSOR_NAME];
+  MPI_Get_processor_name(processor_name,&namelen);
+  printf("Process %d on %s\n", myrank, processor_name);
 
   // Get mpi settings for me for this run.
   int32 mymode, myport;
@@ -167,6 +172,7 @@ int main(int32 argc, char*argv[]) {
 			   << listensock.errstr());
 	exit(1);
       }
+      listensock.setBlocking(true);
       mysock = listensock.accept(-1);
     } else {
       LOG_TRACE_FLOW_STR("Start Socket");
@@ -187,19 +193,27 @@ int main(int32 argc, char*argv[]) {
     
     /* start the data transfer */
     int32  r, n;
-    double startTime = MPI_Wtime();
     double totalsent = 0.;  // argegated sent data
     double totalmissed = 0.; // aggregated missed data
+    double startTime=MPI_Wtime();
     int32  sent;
     char*  message = new char[pkgsize];
     char*  buf     = new char[pkgsize];
-    
+    int32 startmeasurement = runs/10;
+ 
     strcpy (message, "testmessage SocketTester");
     LOG_TRACE_FLOW_STR("start runs loop " << runs);
+      
     for (r = 0; r < runs; r++) {
+//       if (r == startmeasurement) {
+// 	startTime = MPI_Wtime();
+// 	totalsent = 0.;
+// 	totalmissed = 0.;
+//       }
       LOG_TRACE_FLOW_STR("Wait for BCast " << r);
       /* receive the broadcast of the next node to transport  */
-      MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+      n=myrank;
+      //!MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
       LOG_TRACE_FLOW_STR("Received BCast " << n);
       if (n == myrank || n == -1) {
 	/* perform the actual data transport */
@@ -207,12 +221,10 @@ int main(int32 argc, char*argv[]) {
 	  sent = mysock->write(message, pkgsize);
 	  totalsent += sent;
 	  totalmissed += (sent - pkgsize);
-	  if (sent != pkgsize) cout << sent << endl;
 	} else { /* receiver */
 	  sent =  mysock->read(&buf[0], pkgsize) ;
 	  totalsent += sent;
 	  totalmissed += (sent - pkgsize);
-	  if (sent != pkgsize) cout << sent << endl;
 	}
       }
 
@@ -239,7 +251,7 @@ int main(int32 argc, char*argv[]) {
 	 << "   totalsent " << totalsent
          << "   (missed " << totalmissed << ")"
 	 << endl;
-        double totaltime = endTime - startTime;
+    double totaltime = endTime - startTime;
     cout << "total sent = " << totalsent ;
     totalsent *= 8./(1024.*1024.*1024.); // in Gbits
     cout << "(" << totalsent << " Gbit)" 
@@ -274,7 +286,7 @@ int main(int32 argc, char*argv[]) {
 	case 0:                            /* One-by-one mode */
 	  nextnode = n;
 	  LOG_TRACE_FLOW("Master sends BCast");
-          MPI_Bcast(&nextnode, 1, MPI_INT, 0, MPI_COMM_WORLD);  // trigger
+          //!MPI_Bcast(&nextnode, 1, MPI_INT, 0, MPI_COMM_WORLD);  // trigger
 	  if (ackMode) {
 	    MPI_Recv(&recvbuf, 1, MPI_INT, nextnode, 
 		     ACKTAG, MPI_COMM_WORLD, &status); /* acknowledge */
