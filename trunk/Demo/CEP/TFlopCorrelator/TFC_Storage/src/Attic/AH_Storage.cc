@@ -22,12 +22,10 @@
 #include <Transport/TH_MPI.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <WH_RSPInput.h>
-#include <WH_Transpose.h>
-#include <Stub_SB.h>
+#include <TFC_Interface/Stub_Corr.h>
 
 // DataHolders
-#include <DH_SubBand.h>
+#include <TFC_Interface/DH_Vis.h>
 
 using namespace LOFAR;
 

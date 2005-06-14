@@ -28,7 +28,7 @@
 
 // Application specific includes
 #include <WH_RSP.h>
-#include <DH_RSP.h>
+#include <TFC_Interface/DH_RSP.h>
 
 using namespace LOFAR;
 

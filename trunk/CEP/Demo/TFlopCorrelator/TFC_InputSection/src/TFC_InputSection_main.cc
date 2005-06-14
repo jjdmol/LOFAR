@@ -14,7 +14,7 @@
 
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
-#include <TFlopCorrelator/AH_InputSection.h>
+#include <TFC_InputSection/AH_InputSection.h>
 
 using namespace LOFAR;
 

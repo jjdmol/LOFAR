@@ -11,7 +11,7 @@
 #define LOFAR_TFLOPCORRELATOR_CORRSTUB_H
 
 #include <ACC/ParameterSet.h>
-#include <TFlopCorrelator/DH_Vis.h>
+#include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR {
 

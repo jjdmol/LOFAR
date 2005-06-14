@@ -30,8 +30,8 @@
 
 // Application specific includes
 #include <WH_RSPInput.h>
-#include <DH_Sync.h>
-#include <DH_RSP.h>
+#include <TFlopCorrelator/DH_Sync.h>
+#include <TFlopCorrelator/DH_RSP.h>
 
 using namespace LOFAR;
 

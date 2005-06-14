@@ -28,9 +28,9 @@
 #include <tWH_Transpose.h>
 
 #include <Transport/TH_Mem.h>
-#include <TFlopCorrelator/WH_Transpose.h>
-#include <TFlopCorrelator/DH_RSP.h>
-#include <TFlopCorrelator/DH_SubBand.h>
+#include <TFC_InputSection/WH_Transpose.h>
+#include <TFC_Interface/DH_RSP.h>
+#include <TFC_Interface/DH_SubBand.h>
 
 namespace LOFAR
 {

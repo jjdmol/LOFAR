@@ -13,7 +13,7 @@
 #include <Common/LofarLogger.h>
 
 #include <tinyCEP/ApplicationHolderController.h>
-#include <TFlopCorrelator/AH_Storage.h>
+#include <TFC_Storage/AH_Storage.h>
 
 using namespace LOFAR;
 

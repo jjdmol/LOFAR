@@ -12,7 +12,7 @@
 
 #include <string>
 #include <ACC/ParameterSet.h>
-#include <TFlopCorrelator/DH_SubBand.h>
+#include <TFC_Interface/DH_SubBand.h>
 //#include <TFlopCorrelator/DH_FilterCoeff.h>
 
 
