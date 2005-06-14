@@ -41,7 +41,8 @@ int main (int argc, char **argv) {
     TH_Mem TH;
     Connection con("connection", &srcDH, &dstDH, &TH, false);    
     
-    {
+    
+    { // this is specific for DH_SubBand
       RectMatrix<DH_SubBand::BufferType>& srcMatrix = srcDH.getDataMatrix();
       dimType stationDim = srcMatrix.getDim("Station"); 
       dimType freqDim = srcMatrix.getDim("FreqChannel"); 
@@ -61,13 +62,13 @@ int main (int argc, char **argv) {
 	  }
 	}
       }
-    }
+    } // this is specific for DH_SubBand
 
     // move data to dstDH using TH_Mem
     con.write();
     con.read();
     
-    {
+    { // this is specific for DH_SubBand
       // ask the dimensions in a different order
       RectMatrix<DH_SubBand::BufferType>& dstMatrix = srcDH.getDataMatrix();
       dimType polDim = dstMatrix.getDim("Polarisation"); 
@@ -94,7 +95,7 @@ int main (int argc, char **argv) {
 	  }
 	}
       }
-    }
+    }  // this is specific for DH_SubBand
     
   } catch (LOFAR::Exception e) {
     cerr << "Caught exception: "<< e.what() << endl;
