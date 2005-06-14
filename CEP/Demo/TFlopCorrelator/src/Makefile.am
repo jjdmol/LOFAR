@@ -17,6 +17,7 @@ AH_BGLProcessing.h	\
 CyclicBuffer.h          \
 BufferController.h      \
 RSPTimeStamp.h          \
+RectMatrix.h		\
 Stub_SB.h               \
 Stub_Corr.h		\
 Stub_RSP.h
@@ -49,6 +50,7 @@ WH_RSP.cc                       \
 RSPTimeStamp.cc          	\
 Stub_SB.cc               	\
 Stub_RSP.cc			\
+RectMatrix.cc			\
 AH_InputSection.cc		
 #WH_RSP.cc 			
 
@@ -62,6 +64,7 @@ WH_SubBand.cc			\
 WH_FFT.cc			\
 WH_Correlator.cc		\
 AH_BGLProcessing.cc		\
+RectMatrix.cc			\
 Stub_SB.cc             		\
 Stub_Corr.cc
 #WH_Collect.cc

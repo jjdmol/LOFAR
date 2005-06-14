@@ -24,7 +24,8 @@ namespace LOFAR
     : DataHolder     (name, "DH_SubBand"),
       itsBuffer      (0),
       itsSubBand     (subband),
-      itsNPol        (0)
+      itsNPol        (0),
+      itsMatrix      (0)
   {
 //     ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
 //     //ParameterCollection	myPC(myPS);
@@ -36,7 +37,8 @@ namespace LOFAR
   
 DH_SubBand::DH_SubBand(const DH_SubBand& that)
   : DataHolder(that),
-    itsBuffer(0)
+    itsBuffer(0),
+    itsMatrix(0)
 {
     itsSubBand    = that.itsSubBand;
     itsNFChannels = that.itsNFChannels;
@@ -70,6 +72,15 @@ void DH_SubBand::preprocess()
   createDataBlock();  // calls fillDataPointers
   itsBuffer = getData<BufferType> ("Buffer");
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
+
+  vector<DimDef> vdd;
+  vdd.push_back(DimDef("Station", itsNStations));
+  vdd.push_back(DimDef("FreqChannel", itsNFChannels));
+  vdd.push_back(DimDef("Time", itsNTimes));
+  vdd.push_back(DimDef("Polarisation", itsNPol));
+  
+  itsMatrix = new RectMatrix<BufferType> (vdd);
+  itsMatrix->setBuffer(itsBuffer, itsBufSize);
 }
 
 void DH_SubBand::postprocess()
