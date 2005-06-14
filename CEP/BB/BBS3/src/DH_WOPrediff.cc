@@ -109,6 +109,7 @@ void DH_WOPrediff::initPO (const string& tableName)
 {                         
   itsPODHWO = new PO_DH_WOPrediff(*this);
   itsPODHWO->tableName (tableName);
+  setPOInitialized();
 }
 
 PL::PersistentObject& DH_WOPrediff::getPO() const
