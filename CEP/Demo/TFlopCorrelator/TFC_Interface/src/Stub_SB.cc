@@ -6,7 +6,7 @@
 //#
 //# $Id$
 
-#include <TFlopCorrelator/Stub_SB.h>
+#include <TFC_Interface/Stub_SB.h>
 #include <Transport/TH_Socket.h>
 
 

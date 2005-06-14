@@ -13,7 +13,7 @@
 
 //# Includes
 #include <WH_SyncControl.h>
-#include <DH_Sync.h>
+#include <TFC_Interface/DH_Sync.h>
 
 namespace LOFAR{
 

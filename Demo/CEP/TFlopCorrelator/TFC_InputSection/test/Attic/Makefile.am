@@ -8,9 +8,7 @@ AM_CXXFLAGS = \
 
 tWH_Transpose_SOURCES =				\
 tWH_Transpose.cc				\
-../src/WH_Transpose.cc				\
-../src/DH_RSP.cc				\
-../src/DH_SubBand.cc
+../src/WH_Transpose.cc				
 
 CyclicBufferTest_SOURCES =                      \
 CyclicBufferTest.cc

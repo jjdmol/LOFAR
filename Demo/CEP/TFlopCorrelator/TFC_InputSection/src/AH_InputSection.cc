@@ -24,10 +24,10 @@
 #include <tinyCEP/WorkHolder.h>
 #include <WH_RSPInput.h>
 #include <WH_Transpose.h>
-#include <Stub_SB.h>
+#include <TFC_Interface/Stub_SB.h>
 
 // DataHolders
-#include <DH_SubBand.h>
+#include <TFC_Interface/DH_SubBand.h>
 
 using namespace LOFAR;
 

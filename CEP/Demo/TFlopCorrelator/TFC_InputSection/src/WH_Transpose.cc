@@ -28,8 +28,8 @@
 
 // Application specific includes
 #include <WH_Transpose.h>
-#include <DH_RSP.h>
-#include <DH_SubBand.h>
+#include <TFC_Interface/DH_RSP.h>
+#include <TFC_Interface/DH_SubBand.h>
 
 using namespace LOFAR;
 
