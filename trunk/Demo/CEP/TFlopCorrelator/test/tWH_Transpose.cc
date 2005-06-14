@@ -54,11 +54,11 @@ namespace LOFAR
   void AH_Transpose::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
     myKvm["NoWH_RSP"] = 2;
+    ACC::ParameterSet myPset;
+    myPset["NoWH_RSP"] = 2;
 
-    ACC::ParameterSet myPS("TFlopCorrelator.cfg");
-    
-    itsInDH1 = new DH_RSP("DH_RSP1", myPS);
-    itsInDH2 = new DH_RSP("DH_RSP2", myPS);
+    itsInDH1 = new DH_RSP("DH_RSP1", myPset);
+    itsInDH2 = new DH_RSP("DH_RSP1", myPset);
     itsOutDH1 = new DH_SubBand("DH_SubBand", 0);
     itsOutDH2 = new DH_SubBand("DH_SubBand", 1);
     itsWH = new WH_Transpose("WH_Transpose", myKvm);
