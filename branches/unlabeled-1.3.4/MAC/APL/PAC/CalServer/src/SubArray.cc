@@ -111,6 +111,12 @@ bool SubArray::isDone()
   return m_result[FRONT]->isDone();
 }
 
+void SubArray::clearDone()
+{
+  ASSERT(m_result[FRONT]);
+  m_result[FRONT]->setDone(false);
+}
+
 SubArrays::SubArrays()
 {}
 
@@ -160,7 +166,6 @@ SubArray* SubArrays::getByName(std::string name)
   }
 
   return 0;
-  //return m_arrays[name];
 }
 
 void SubArrays::updateAll()
@@ -174,13 +179,16 @@ void SubArrays::updateAll()
     if (subarray) {
       if (subarray->isDone()) {
 	subarray->notify();
+	subarray->clearDone(); // we've notified all subscribers, clear done flag
       }
     }
   }
 }
 
-void SubArrays::calibrate(CalibrationInterface* cal, const ACC& acc)
+void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc)
 {
+  bool done = false;
+
   ASSERT(0 != cal);
 
   for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
@@ -191,6 +199,14 @@ void SubArrays::calibrate(CalibrationInterface* cal, const ACC& acc)
 
     if (acc.isValid() && !subarray->isDone()) {
       subarray->calibrate(cal, acc);
+      done = true;
     }
   }
+
+  //
+  // prevent reuse of this acc by next calibrate call
+  // TODO: this should be done elsewhere once calibrate
+  // is running in its own thread
+  //
+  if (done) acc.invalidate();
 }

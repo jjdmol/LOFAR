@@ -100,15 +100,15 @@ namespace LOFAR {
        * Get an antenna array by name.
        * @return a pointer to the AntennaArray or 0 if the array was not found.
        */
-      const AntennaArray* getByName(std::string name) { return m_arrays[name]; }
+      const AntennaArray* getByName(std::string name);
 
       /**
        * Get all antenna arrays. A second call to this method replaces the antenna arrays
        * loaded by the first call.
        * @param url Load antenna arrays from this resource location (e.g. filename or database table).
-       * @param minantennas The array loaded must have at least this number of antennas.
+       * @param numantennas The array loaded must have exactly this number of antennas.
        */
-      void getAll(std::string url, int minantennas);
+      void getAll(std::string url);
 
     private:
       std::map<std::string, const AntennaArray*> m_arrays;

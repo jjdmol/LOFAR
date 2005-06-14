@@ -89,7 +89,8 @@ libcaldevel_la_SOURCES = \
 	RemoteStationCalibration.h \
 	RemoteStationCalibration.cc
 
-bin_PROGRAMS = CalServer
+bin_PROGRAMS = \
+	CalServer
 
 CalServer_SOURCES = \
 	CalConstants.h \

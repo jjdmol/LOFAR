@@ -25,6 +25,8 @@
 #define ACMPROXY_H_
 
 #include "ACC.h"
+#include "XCStatistics.h"
+#include "Timestamp.h"
 
 #include <GCF/TM/GCF_Control.h>
 
@@ -52,26 +54,32 @@ namespace LOFAR {
       /**
        * States
        */
-      GCFEvent::TResult initial  (GCFEvent& e, GCFPortInterface& port);
-      GCFEvent::TResult idle     (GCFEvent& e, GCFPortInterface& port);
-      GCFEvent::TResult receiving(GCFEvent& e, GCFPortInterface& port);
+      GCFEvent::TResult initial      (GCFEvent& e, GCFPortInterface& port);
+      GCFEvent::TResult idle         (GCFEvent& e, GCFPortInterface& port);
+      GCFEvent::TResult initializing (GCFEvent& e, GCFPortInterface& port);
+      GCFEvent::TResult receiving    (GCFEvent& e, GCFPortInterface& port);
+      GCFEvent::TResult unsubscribing(GCFEvent& e, GCFPortInterface& port);
       /*@}*/
 
-      /*@{*/
       /**
-       * Handle the CAL_Protocol requests
+       * Call this when a full ACC has been collected or an error occurred.
+       * @param success Set to true when full valid ACC has been collected,
+       * set to false when an error occurred (most notably disconnect from RSPDriver).
        */
-      GCFEvent::TResult handle_acm_acm (GCFEvent& e, GCFPortInterface &port);
-      GCFEvent::TResult handle_acm_done(GCFEvent& e, GCFPortInterface &port);
-      /*@}*/
+      void finalize(bool success);
 
     private:
       ACCs& m_accs; // pointer to ACC buffer collection (front and back)
 
       /**
-       * Port to the ACMServer.
+       * Port to the RSPDriver.
        */
-      GCFPort m_acmserver; // connection to the ACM server
+      GCFPort m_rspdriver; // connection to the RSPDriver
+      uint32  m_handle; // handle for the UPDXCSTATS events
+
+      RTC::Timestamp m_starttime; // first ACM will be received at this time
+      int     m_request_subband; // current index for request subband
+      int     m_update_subband;  // current index for update subband
     };
 
   }; // namespace CAL

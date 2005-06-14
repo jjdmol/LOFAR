@@ -40,14 +40,15 @@ namespace LOFAR {
       virtual ~ACC();
 
       /**
-       * Get a subband slice of the ACC cube.
+       * Get a subband and single polarized slice of the ACC cube.
        * @param subband Subband for which to return the ACM.
+       * @param pol1 0 == x, 1 == y
+       * @param pol2 0 == x, 1 == y
        * @param timestamp The timestamp of the specified subband is returned.
        * If an invalid subband is specified Timestamp(0,0) is returned.
-       * @return The ACM for the specified subband is returned. If an invalid
-       * subband is specified an empty array is returned.
+       * @return The ACM for the specified subband and polarizations is returned.
        */
-      const blitz::Array<std::complex<double>, 4> getACM(int subband, RTC::Timestamp& timestamp) const;
+      const blitz::Array<std::complex<double>, 2> getACM(int subband, int pol1, int pol2, RTC::Timestamp& timestamp) const;
     
       /**
        * Update an ACM.
@@ -107,7 +108,8 @@ namespace LOFAR {
 
       /**
        * ACC is a five dimensional array of complex numbers with dimensions
-       * nsubbands x  nantennas x nantennas x npol x npol.
+       *
+       * nsubbands x  npol x npol x nantennas x nantennas
        */
       blitz::Array<std::complex<double>, 5>    m_acc;
 

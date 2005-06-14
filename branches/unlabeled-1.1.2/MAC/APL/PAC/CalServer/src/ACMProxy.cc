@@ -49,17 +49,18 @@ using namespace LOFAR;
 using namespace CAL;
 using namespace RTC;
 
-// RSP protocol is temporary placeholder for ACM protocol
-#define ACM_PROTOCOL            RSP_PROTOCOL
-#define ACM_PROTOCOL_signalname RSP_PROTOCOL_signalnames
+#define START_DELAY 4
 
 ACMProxy::ACMProxy(string name, ACCs& accs)
   : GCFTask((State)&ACMProxy::initial, name),
-    m_accs(accs)
+    m_accs(accs),
+    m_handle(0),
+    m_request_subband(0),
+    m_update_subband(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  m_acmserver.init(*this, "acmserver", GCFPortInterface::SAP, ACM_PROTOCOL);
+  m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 ACMProxy::~ACMProxy()
@@ -73,7 +74,22 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
     {
     case F_ENTRY:
       {
-	if (!m_acmserver.isConnected()) m_acmserver.open();
+	m_handle = 0;
+	m_starttime = Timestamp(0,0);
+	m_request_subband = 0;
+	m_update_subband = 0;
+
+	LOG_DEBUG("opening port: m_rspdriver");
+
+	m_rspdriver.open();
+	
+	//
+	// When TRAN(CalServer::initial) is done when handling F_DISCONNECTED
+	// in any of the other states, then F_ENTRY of ::initial will be followed
+	// by a port.close() in the GCF framework which cancels the open on the previous line.
+	// Setting this timer will make sure the port is opened again.
+	//
+	m_rspdriver.setTimer(0.0);
       }
       break;
 
@@ -82,10 +98,8 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
       {
-	if (m_acmserver.isConnected())
+	if (m_rspdriver.isConnected())
 	{
-	  port.setTimer(2.0, 2.0); // check every second
-	  //port.setTimer(0.0, 1.0); // check every second
 	  TRAN(ACMProxy::idle);
 	}
       }
@@ -103,10 +117,15 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	if (!port.isConnected())
 	  {
-	    LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
+	    LOG_DEBUG(formatString("open port '%s'", port.getName().c_str()));
 	    port.open();
 	  }
       }
+      break;
+
+    case F_EXIT:
+      // stop timer, we're connected
+      m_rspdriver.cancelAllTimers();
       break;
 
     default:
@@ -121,11 +140,12 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  static bool done = false;
-
   switch (e.signal)
     {
     case F_ENTRY:
+      {
+	m_rspdriver.setTimer(2.0, 2.0); // check every two second
+      }
       break;
 
     case F_CONNECTED:
@@ -136,54 +156,25 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 
     case F_TIMER:
       {
-	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+	/*GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);*/
 
-	LOG_INFO_STR("timer @ " << timer->sec);
-
-	// SIM
-	if (m_accs.getBack().isWriteLocked()) {
-	  m_accs.getBack().writeUnlock();
-	  m_accs.getBack().validate(); // make valid
-
-	  done = true;
+	//
+	// start collecting the next ACC if possible
+	//
+	if (m_accs.getBack().writeLock()) {
+	  TRAN(ACMProxy::initializing);
+	} else {
+	  LOG_WARN("failed to get writeLock on ACC backbuffer");
 	}
-
-	if (!done) {
-	  if (m_accs.getBack().writeLock())
-	    {
-#if 0
-	      ACMGetEvent get;
-	      get.timestamp = Timestamp(0,0);
-	      get.rcumask.reset();
-	      for (int i = 0; i < m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol(); i++) {
-		get.rcumask.set(i);
-	      }
-	      get.subbands.reset();
-	      // TODO select all subbands
-
-	      port.send(get);
-#endif
-	    } else {
-	      LOG_WARN("failed to get writeLock on ACC backbuffer");
-	    }
-	}
-
       }
       break;
-
-#if 0
-    case ACM_GET_ACK:
-      TRAN(ACMProxy::receiving);
-      break;
-
-#endif
 
     case F_DISCONNECTED:
       {
 	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
 	port.close();
 
-	// TODO: cleanup
+	finalize(false);
 
 	TRAN(ACMProxy::initial);
       }
@@ -191,7 +182,89 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 
     case F_EXIT:
       {
+	// stop timer, it is not needed in the next state
+	m_rspdriver.cancelAllTimers();
       }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
+
+  return status;
+}
+
+/**
+ * In this state a few SETSUBBANDS command are sent to the
+ * RSPDriver to select the right subband for cross correlation.
+ */
+GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      {
+	RSPSetsubbandsEvent ss;
+
+	m_starttime.setNow();
+	m_starttime = m_starttime + START_DELAY; // start START_DELAY seconds from now
+
+	ss.timestamp = m_starttime;
+	ss.blpmask.reset();
+	for (int i = 0; i < 4; i++) {
+	  ss.blpmask.set(i);
+	}
+
+	m_request_subband = 0;
+	m_update_subband = 0;
+	ss.subbands().resize(1, 4*2);
+	ss.subbands() = m_request_subband;
+
+	LOG_INFO_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+	m_rspdriver.send(ss);
+
+	m_request_subband++;
+      }
+      break;
+
+    case RSP_SETSUBBANDSACK:
+      {
+	RSPSetsubbandsackEvent ack(e);
+
+	if (SUCCESS == ack.status) {
+
+	  if (m_request_subband < START_DELAY) {
+	    // request next subband
+	    RSPSetsubbandsEvent ss;
+	  
+	    ss.timestamp = m_starttime + m_request_subband;
+	    ss.blpmask.reset();
+	    for (int i = 0; i < 4; i++) {
+	      ss.blpmask.set(i);
+	    }
+	    
+	    ss.subbands().resize(1, 4*2);
+	    ss.subbands() = m_request_subband;
+
+	    LOG_INFO_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+	    port.send(ss);
+
+	    m_request_subband++;
+
+	  } else {
+	    TRAN(ACMProxy::receiving);
+	  }
+	} else {
+	  LOG_FATAL("SETSUBBANDSACK returned error status");
+	  exit(EXIT_FAILURE);
+	}
+      }
+      break;
+
+    case F_EXIT:
       break;
 
     default:
@@ -209,23 +282,101 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
   switch (e.signal)
     {
     case F_ENTRY:
+      {
+	// subscribe to statistics
+	RSPSubxcstatsEvent subxc;
+
+	subxc.timestamp = m_starttime;
+	subxc.rcumask.reset();
+
+	LOG_DEBUG_STR("nRCU's=" << m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol());
+	for (int i = 0; i < m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol(); i++) {
+	  subxc.rcumask.set(i);
+	}
+	subxc.period = 1;
+
+	m_rspdriver.send(subxc);
+      }
       break;
 
-#if 0
-    case ACM_ACM:
+    case RSP_SUBXCSTATSACK:
+      {
+	RSPSubxcstatsackEvent ack(e);
+
+	if (SUCCESS != ack.status) {
+	  LOG_FATAL("SUBCXSTATSACK returned error status");
+	  exit(EXIT_FAILURE);
+	}
+
+	m_handle = ack.handle;
+      }
       break;
 
-    case ACM_DONE:
-      TRAN(ACMProxy::idle);
+    case RSP_UPDXCSTATS:
+      {
+	RSPUpdxcstatsEvent upd(e);
+
+	if (m_update_subband < GET_CONFIG("CalServer.NSUBBANDS", i)) {
+	  if (m_handle == upd.handle) {
+	    if (SUCCESS == upd.status) {
+
+	      LOG_INFO_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
+	      LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
+
+	      if (upd.timestamp != m_starttime + m_update_subband) {
+		LOG_WARN("incorrect timestamp on XC statistics");
+	      }
+	      
+	      m_accs.getBack().updateACM(m_update_subband, upd.timestamp, upd.stats());
+	    } else {
+	      LOG_FATAL("UPDXCSTATS returned error code");
+	      exit(EXIT_FAILURE);
+	    }
+	  } else {
+	    LOG_WARN("Received UPDXCSTATS event with unknown handle.");
+	  }
+	  m_update_subband++;
+	} else {
+	  TRAN(ACMProxy::unsubscribing);
+	}
+
+	if (m_request_subband < GET_CONFIG("CalServer.NSUBBANDS", i)) {
+	  // request next subband
+	  RSPSetsubbandsEvent ss;
+	  
+	  ss.timestamp = m_starttime + m_request_subband;
+	  ss.blpmask.reset();
+	  for (int i = 0; i < 4; i++) {
+	    ss.blpmask.set(i);
+	  }
+	    
+	  ss.subbands().resize(1, 4*2);
+	  ss.subbands() = m_request_subband;
+
+	  LOG_INFO_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+	  port.send(ss);
+
+	  m_request_subband++;
+	}
+      }
       break;
-#endif
+
+    case RSP_SETSUBBANDSACK:
+      {
+	RSPSetsubbandsackEvent ack(e);
+	if (SUCCESS != ack.status) {
+	  LOG_FATAL("SETSUBBANDSACK returned error status");
+	  exit(EXIT_FAILURE);
+	}
+      }
+      break;
 
     case F_DISCONNECTED:
       {
 	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
 	port.close();
 
-	// TODO: cleanup
+	finalize(false);
 
 	TRAN(ACMProxy::initial);
       }
@@ -239,21 +390,64 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult ACMProxy::handle_acm_acm(GCFEvent& /*e*/, GCFPortInterface& /*port*/)
+GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  //m_accs.getBack().updateACM(acm.subband, acm.timestamp, acm.acm);
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      {
+	  RSPUnsubxcstatsEvent unsub;
+	  unsub.handle = m_handle;
+	  m_rspdriver.send(unsub);
+      }
+      break;
+
+    case RSP_UNSUBXCSTATSACK:
+      {
+	RSPUnsubxcstatsackEvent ack(e);
+
+	if (SUCCESS != ack.status) {
+	  LOG_FATAL("UNSUBXCSTATSACK returned error status");
+	  exit(EXIT_FAILURE);
+	}
+
+	// Finished collecting new ACC
+	finalize(true);
+
+	TRAN(ACMProxy::idle);
+      }
+      break;
+
+    case F_DISCONNECTED:
+      {
+	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
+	port.close();
+
+	finalize(false);
+
+	TRAN(ACMProxy::initial);
+      }
+      break;
+
+    case F_EXIT:
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
 
   return status;
 }
 
-GCFEvent::TResult ACMProxy::handle_acm_done(GCFEvent& /*e*/, GCFPortInterface& /*port*/)
+void ACMProxy::finalize(bool success)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  m_accs.getBack().validate();
-  m_accs.getBack().writeUnlock();
-
-  return status;
+  if (m_accs.getBack().isWriteLocked()) {
+    if (success) m_accs.getBack().validate(); // make valid
+    m_accs.getBack().writeUnlock();
+  } else {
+    LOG_WARN("no writelock! this should not happen ");
+  }
 }

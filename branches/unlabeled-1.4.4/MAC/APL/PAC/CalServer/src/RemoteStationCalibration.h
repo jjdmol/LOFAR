@@ -51,7 +51,7 @@ namespace LOFAR {
 
       blitz::Array<std::complex<double>, 2> make_ref_acm(const std::vector<Source>& LSM, blitz::Array<double, 3>& AntennaPos, const DipoleModel& dipolemodel, double freq);
       blitz::Array<bool, 2> set_restriction(blitz::Array<double, 3>& AntennaPos, double minbaseline);
-      blitz::Array<std::complex<double>, 2> computeAlpha(blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
+      blitz::Array<std::complex<double>, 2> computeAlpha(const blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
 
       blitz::Array<double, 2> matmult(blitz::Array<double, 2> A, blitz::Array<double, 2> B);
       double interp1d(blitz::Array<double, 1> xval, blitz::Array<double, 1> yval, double xinterp);

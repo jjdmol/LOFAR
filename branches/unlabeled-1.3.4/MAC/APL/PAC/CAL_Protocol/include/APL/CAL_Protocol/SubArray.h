@@ -83,6 +83,11 @@ namespace LOFAR {
       bool isDone();
 
       /**
+       * Used to clear the 'done' flag after updating all subscriptions.
+       */
+      void clearDone();
+
+      /**
        * Get a reference to the spectral window for this subarray.
        */
       const SpectralWindow& getSPW() const;
@@ -142,7 +147,7 @@ namespace LOFAR {
        * @param acc Reference to the array correlation cube to use for
        * calibration.
        */
-      void calibrate(CalibrationInterface* cal, const ACC& acc);
+      void calibrate(CalibrationInterface* cal, ACC& acc);
 
     private:
       std::map<std::string, SubArray*> m_arrays;

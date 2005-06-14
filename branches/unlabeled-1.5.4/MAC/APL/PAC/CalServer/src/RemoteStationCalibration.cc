@@ -60,16 +60,16 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
     exit(EXIT_FAILURE);
   }
 
-  cout << "calibrate: spectral window name=" << spw.getName() << endl;
-  cout << "calibrate: subband width=" << spw.getSubbandWidth() << " Hz" << endl;
-  cout << "calibrate: num_subbnads=" << spw.getNumSubbands() << endl;
-  cout << "calibrate: subarray name=" << subarray.getName() << endl;
-  cout << "calibrate: num_antennas=" << subarray.getNumAntennas() << endl;
+  LOG_INFO_STR("calibrate: spectral window name=" << spw.getName());
+  LOG_INFO_STR("calibrate: subband width=" << spw.getSubbandWidth() << " Hz");
+  LOG_INFO_STR("calibrate: num_subbnads=" << spw.getNumSubbands());
+  LOG_INFO_STR("calibrate: subarray name=" << subarray.getName());
+  LOG_INFO_STR("calibrate: num_antennas=" << subarray.getNumAntennas());
 
   //find_rfi_free_channels();
   for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
     Timestamp acmtime;
-    const Array<complex<double>, 4> acm = acc.getACM(sb, acmtime);
+    const Array<complex<double>, 2> acm = acc.getACM(sb, 0, 0, acmtime); // get XX acm
     
     // since acmtime is currently returning 0, we set it to the current
     // time for debug purposes, i.e. these lines need to be removed in the
@@ -85,8 +85,8 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
     
     Array<double, 3> AntennaPos = subarray.getAntennaPos();
     
-    cout << "calibrate: working on subband " << sb + 1 << " of "
-	   << spw.getNumSubbands() << endl;
+    LOG_INFO_STR("calibrate: working on subband " << sb + 1 << " of "
+	   << spw.getNumSubbands());
     double freq = sb * spw.getSubbandWidth() + spw.getSamplingFrequency() * (spw.getNyquistZone() - 1);
     // for testing purposes we overrule the calculation above
     freq = 30e6;
@@ -95,11 +95,11 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
     // mark baselines of at least 40m
     Array<bool, 2> mask(set_restriction(AntennaPos, 40));
     
-    //KJW: cout << acm << endl;
-    Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
-    //KJW: cout << acm1pol << endl;
-    Array<complex<double>, 2> alpha(computeAlpha(acm1pol, R0, mask));
-    //KJW: cout << alpha << endl;
+    //KJW: LOG_INFO_STR(acm);
+    //KJW: no longer needed Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
+    //KJW: LOG_INFO_STR(acm1pol);
+    Array<complex<double>, 2> alpha(computeAlpha(acm, R0, mask));
+    //KJW: LOG_INFO_STR(alpha);
 
     //compute_gains(acm, R0, pos, spw.getSubbandFreq(sb), Rtest, gains);
     //compute_quality(Rtest, sb, gains);
@@ -118,7 +118,7 @@ const vector<Source> RemoteStationCalibration::make_local_sky_model(const Source
   // This was Julian Day 2440587.5
   // number of seconds in a day: 86400
   double JulianDay = obstime / 86400 + 2440587.5;
-  cout << "calibrate: time of observation in Julian Days: " << JulianDay - 2453500 << endl;
+  LOG_INFO_STR("calibrate: time of observation in Julian Days: " << JulianDay - 2453500);
 
   // geographical location if station needed
   // currently location Dwingeloo is taken
@@ -226,7 +226,7 @@ Array<bool, 2> RemoteStationCalibration::set_restriction(Array<double, 3>& Anten
   return mask;
 }
 
-Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2> restriction)
+Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(const Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2> restriction)
 {
   int nelem = acm.extent(firstDim);
   Array<complex<double>, 2> alpha(nelem, nelem);

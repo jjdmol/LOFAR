@@ -59,6 +59,7 @@ bool AntennaArrayData::getNextFromFile(string filename)
   }
 
   m_file >> m_positions; // get positions
+  m_file.ignore(80,'\n'); // read away newline
 
   return true;
 }

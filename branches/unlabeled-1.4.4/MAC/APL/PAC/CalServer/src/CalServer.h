@@ -50,16 +50,6 @@ namespace LOFAR {
       virtual ~CalServer();
 
       /**
-       * Calibrate function. This method is the temporary entry-point of the
-       * calibration server to call the calibrate method of the RemoteStationCalibration
-       * class.
-       * It loads all relevant configuration files and calls the calibration routine.
-       * After completing the calibration it writes two result files:
-       *   gains.out and quality.out.
-       */
-      void calibrate();
-
-      /**
        * The undertaker method deletes dead clients on the m_dead_clients list.
        */
       void undertaker();

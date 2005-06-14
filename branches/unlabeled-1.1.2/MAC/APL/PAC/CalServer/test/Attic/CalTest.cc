@@ -130,11 +130,11 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	CALStartEvent start;
 
 	start.name   = "test001";
-	start.parent = "LBA";
+	start.parent = "FTS-1-LBA";
 	start.subset.reset();
 
-	// first 10 antennas (20 receivers)
-	for (int i = 0; i < 20; i++) {
+	// first 8 antennas (16 receivers)
+	for (int i = 0; i < 8; i++) {
 	  start.subset.set(i);
 	}
 	start.sampling_frequency = 160e6; // 160 MHz
@@ -170,7 +170,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	m_handle = ack.handle;
 
 	// start timer
-	m_server.setTimer(10.0);
+	m_server.setTimer(120.0); // two minutes
       }
       break;
       
@@ -276,11 +276,11 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
 	CALStartEvent start;
 
 	start.name   = "test002";
-	start.parent = "LBA";
+	start.parent = "FTS-1-LBA";
 	start.subset.reset();
 
-	// first 10 antennas (20 receivers)
-	for (int i = 0; i < 20; i++) {
+	// first 8 antennas (16 receivers)
+	for (int i = 0; i < 8; i++) {
 	  start.subset.set(i);
 	}
 	start.sampling_frequency = 160e6; // 160 MHz
@@ -405,11 +405,11 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
 	CALStartEvent start;
 
 	start.name   = "test003";
-	start.parent = "LBA";
+	start.parent = "FTS-1-LBA";
 	start.subset.reset();
 
-	// first 10 antennas (20 receivers)
-	for (int i = 0; i < 20; i++) {
+	// first 8 antennas (16 receivers)
+	for (int i = 0; i < 8; i++) {
 	  start.subset.set(i);
 	}
 	start.sampling_frequency = 160e6; // 160 MHz
@@ -470,11 +470,11 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
 	  CALStartEvent start;
 
 	  start.name   = "test003";
-	  start.parent = "LBA";
+	  start.parent = "FTS-1-LBA";
 	  start.subset.reset();
 	  
-	  // first 10 antennas (20 receivers)
-	  for (int i = 0; i < 20; i++) {
+	  // first 8 antennas (16 receivers)
+	  for (int i = 0; i < 8; i++) {
 	    start.subset.set(i);
 	  }
 	  start.sampling_frequency = 160e6; // 160 MHz

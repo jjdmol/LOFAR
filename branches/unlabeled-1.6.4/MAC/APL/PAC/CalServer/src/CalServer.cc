@@ -125,8 +125,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  // Load antenna arrays
 	  //
-	  m_arrays.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.AntennaArraysFile")),
-			  m_accs.getFront().getACC().extent(secondDim));
+	  m_arrays.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
 
 	  //
 	  // Setup calibration algorithm
@@ -215,8 +214,8 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
       {
 	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
-	//const Timestamp t = Timestamp(timer->sec, timer->usec);
-	LOG_INFO_STR("updateAll @ " << timer->sec);
+	const Timestamp t = Timestamp(timer->sec, timer->usec);
+	LOG_INFO_STR("updateAll @ " << t);
 
 	//
 	// Swap buffers when all calibrations have finished on the front buffer
@@ -323,11 +322,14 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
     select = true;
 
-    ASSERT(m_accs.getBack().getACC().extent(firstDim) == GET_CONFIG("CalServer.NSUBBANDS", i));
-    ASSERT(m_accs.getFront().getACC().extent(secondDim) == positions.extent(firstDim));
-    ASSERT(m_accs.getFront().getACC().extent(thirdDim) == positions.extent(firstDim));
-    ASSERT(m_accs.getFront().getACC().extent(fourthDim) == positions.extent(secondDim));
-    ASSERT(m_accs.getFront().getACC().extent(fifthDim) == positions.extent(secondDim));
+    LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
+    LOG_DEBUG_STR("positions.shape()" << positions.shape());
+
+    ASSERT(m_accs.getBack().getACC().extent(firstDim)   == GET_CONFIG("CalServer.NSUBBANDS", i));
+    ASSERT(m_accs.getFront().getACC().extent(secondDim) == positions.extent(secondDim));
+    ASSERT(m_accs.getFront().getACC().extent(thirdDim)  == positions.extent(secondDim));
+    ASSERT(m_accs.getFront().getACC().extent(fourthDim) == positions.extent(firstDim));
+    ASSERT(m_accs.getFront().getACC().extent(fifthDim)  == positions.extent(firstDim));
 
     // create subarray to calibrate
     SubArray* subarray = new SubArray(start.name,
@@ -335,7 +337,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 				      select,
 				      start.sampling_frequency,
 				      start.nyquist_zone,
-				      1/*CAL_Protocol::N_SUBBANDS*/);
+				      GET_CONFIG("CalServer.NSUBBANDS", i));
 
     m_subarrays.add(subarray);
 
@@ -455,154 +457,6 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
   port.send(ack);
 
   return status;
-}
-
-void CalServer::calibrate()
-{
-#if 0
-  //
-  // Load configuration files.
-  //
-  try 
-    {
-      ParameterSet ps(CAL_SYSCONF "/SpectralWindow.conf");
-
-      //
-      // load the spectral window configurations
-      //
-      m_spws = SPWLoader::loadFromBlitzStrings(ps["SpectralWindow.params"],
-					       ps["SpectralWindow.names"]);
-
-      //
-      // load the dipole models
-      //
-      m_dipolemodels.getAll(CAL_SYSCONF "/DipoleModel.conf");
-
-      //
-      // load the source catalog
-      //
-      m_sources.getAll(CAL_SYSCONF "/SourceCatalog.conf");
-
-      //
-      // Load antenna arrays
-      //
-      m_arrays.getAll(CAL_SYSCONF "/AntennaArrays.conf");
-
-      //
-      // load the ACC
-      //
-      m_acc = ACCLoader::loadFromFile(CAL_SYSCONF "/ACC.conf");
-
-      if (!m_acc)
-	{
-	  LOG_ERROR("Failed to load ACC matrix.");
-	  exit(EXIT_FAILURE);
-	}
-
-      //cout << "sizeof(ACC)=" << m_acc->getSize() * sizeof(complex<double>) << endl;
-
-#if 0
-      ofstream accstream("acc.out");
-      if (accstream.is_open())
-	{
-	  accstream << m_acc->getACC();
-	}
-#endif
-    }
-  catch (Exception e) 
-    {
-      LOG_ERROR_STR("Failed to load configuration files: " << e);
-      exit(EXIT_FAILURE);
-    }
-
-#if 0
-  for (unsigned int i = 0; i < m_spws.size(); i++)
-    {
-      cout << "SPW[" << i << "]=" << m_spws[i].getName() << endl;
-    }
-#endif
-
-  //
-  // Get the low-band antenna array
-  //
-  const AntennaArray* array = m_arrays.getByName("LBA");
-  if (!array) {
-    LOG_FATAL("Failed to load the antenna array definition 'LBA'");
-    exit(EXIT_FAILURE);
-  }
-
-  //
-  // Dimensions of the antenna array
-  //
-  int nantennas = array->getAntennaPos().extent(firstDim);
-
-  //
-  // Create the FTS-1 subarray, with spectral window 0 (0 - 80 MHz)
-  // 
-  Array<bool,2> select(nantennas, NPOL);
-  select = true;
-  SubArray fts1("FTS-1", array->getAntennaPos(), select, m_spws[0]);
-
-  //
-  // Create the calibration algorithm and
-  // call the calibrate routine of the subarray
-  // with the ACC.
-  //
-  const DipoleModel* model = m_dipolemodels.getByName("LBAntenna");
-  if (!model) {
-    LOG_FATAL("Failed to load dipolemodel 'LBAntenna'");
-    exit(EXIT_FAILURE);
-  }
-  RemoteStationCalibration cal(m_sources, *model);
-  fts1.calibrate(&cal, *m_acc);
-
-  //
-  // Sanity check on dimensions of the various arrays
-  //
-  // Number of antennas and polarizations must be equal on all related arrays.
-  //
-  ASSERT(m_acc->getACC().extent(firstDim) == m_spws[0].getNumSubbands());
-  ASSERT(m_acc->getACC().extent(secondDim) == nantennas);
-  ASSERT(m_acc->getACC().extent(thirdDim) == nantennas);
-  ASSERT(m_acc->getACC().extent(fourthDim) == NPOL);
-  ASSERT(m_acc->getACC().extent(fifthDim) == NPOL);
-
-  //
-  // Save the calibration gains and quality matrices
-  //
-  const AntennaGains* gains = 0;
-  if (fts1.getGains(gains, SubArray::BACK))
-    {
-      // save gains matrix
-      ofstream gainsout("gains.out");
-      if (gainsout.is_open())
-	{
-	  gainsout << gains->getGains();
-	}
-      else
-	{
-	  LOG_ERROR("Failed to open output file: gains.out");
-	  exit(EXIT_FAILURE);
-	}
-
-      // save quality matrix
-      ofstream qualityout("quality.out");
-      if (qualityout.is_open())
-	{
-	  qualityout << gains->getQuality();
-	}
-      else
-	{
-	  LOG_ERROR("Failed to open output file: quality.out");
-	  exit(EXIT_FAILURE);
-	}
-    }
-  else
-    {
-      LOG_ERROR("Calibration has not yet completed.");
-      exit(EXIT_FAILURE);
-    }
-#endif
 }
 
 int main(int argc, char** argv)

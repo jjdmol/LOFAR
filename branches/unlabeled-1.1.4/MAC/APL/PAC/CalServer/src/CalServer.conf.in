@@ -10,8 +10,10 @@ mac.ns.CalServer.acceptor.type=TCP
 #
 # Define dimensions of the ACC array
 #
-CalServer.NSUBBANDS=512
-CalServer.NANTENNAS=60
+CalServer.NSUBBANDS=10
+# 512
+CalServer.NANTENNAS=4
+# 60
 
 #
 # Set name for various configuration files
@@ -23,8 +25,7 @@ CalServer.AntennaArraysFile=AntennaArrays.conf
 #
 # ACMProxy task configuration
 #
-mac.ns.ACMProxy.acmserver.type=TCP
-#mac.top.ACMProxy.acmserver.remoteservice=ACMServer:acceptor
-mac.top.ACMProxy.acmserver.remoteservice=RSPDriver:acceptor
+mac.ns.ACMProxy.rspdriver.type=TCP
+mac.top.ACMProxy.rspdriver.remoteservice=RSPDriver:acceptor
 
 

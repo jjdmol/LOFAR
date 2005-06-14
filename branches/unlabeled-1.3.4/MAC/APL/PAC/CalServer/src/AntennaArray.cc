@@ -73,23 +73,25 @@ AntennaArrays::~AntennaArrays()
   }
 }
 
-void AntennaArrays::getAll(std::string url, int minantennas)
+const AntennaArray* AntennaArrays::getByName(std::string name)
+{
+  // find AntennaArray
+  map<string,const AntennaArray*>::iterator it = m_arrays.find(name);
+
+  if (it != m_arrays.end()) {
+    return (*it).second;
+  }
+
+  return 0;
+}
+
+void AntennaArrays::getAll(std::string url)
 {
   AntennaArrayData arraydata;
 
   while (arraydata.getNextFromFile(url)) {
     AntennaArray* newarray = new AntennaArray(arraydata.getName(),
 					      arraydata.getPositions());
-
-    if (arraydata.getPositions().extent(firstDim) < minantennas
-	|| arraydata.getPositions().extent(secondDim) != NPOL
-	|| arraydata.getPositions().extent(thirdDim) != NXYZ)
-    {
-      LOG_FATAL_STR("Invalid shape (" << arraydata.getPositions().shape() << ") for '"
-		    << arraydata.getName() << "' antenna array. "
-		    "Should be at least (" << shape(minantennas,NPOL,NXYZ) << ")");
-      exit(EXIT_FAILURE);
-    }
 
     m_arrays[arraydata.getName()] = newarray;
   }
