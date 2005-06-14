@@ -23,6 +23,9 @@
 #ifndef CEPFRAME_SIMULATORPARSE_H
 #define CEPFRAME_SIMULATORPARSE_H
 
+// \file SimulatorParseClass.h
+// Class for parsing application commands
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -34,6 +37,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup TinyCEP
+// @{
 
 extern "C" {
   int SimulatorTokenizewrap();
@@ -122,6 +128,8 @@ public:
     It throws an exception with the current token.
 */
 void SimulatorParseerror (char*);
+
+// @}
 
 }
 

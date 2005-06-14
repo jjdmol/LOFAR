@@ -23,12 +23,18 @@
 #ifndef TINYDEP_TINYDATAMANAGER_H
 #define TINYDEP_TINYDATAMANAGER_H
 
+// \file TinyDataManager.h
+// A DataHolder manager for tinyCEP
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/LofarLogger.h>
 #include <Transport/DataHolder.h>
 
 namespace LOFAR
 {
+// \addtogroup TinyCEP
+// @{
+
   //# Forward Declarations
   class DataHolder;
   class Selector;
@@ -168,7 +174,7 @@ inline void TinyDataManager::clearReadyInFlag(int channel)
 inline void TinyDataManager::clearReadyOutFlag(int channel)
 { itsReadyOutFlag[channel] = false;}
 
-
+// @}
 
 } // namespace LOFAR
 #endif

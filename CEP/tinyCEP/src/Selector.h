@@ -25,8 +25,14 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file Selection.h
+// Base class for selection mechanisms.
+
 namespace LOFAR
 {
+
+// \addtogroup TinyCEP
+// @{
 
 /**
    This class defines the base class for selection mechanisms.
@@ -60,6 +66,8 @@ inline unsigned int Selector::getNumberOfOptions()
 
 inline int Selector::getCurrentSelection()
 { return itsCurrentSelection; }
+
+// @}
 
 }
 

@@ -25,6 +25,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file WorkHolder.h
+// Abstract base class for the work holders.
+
 #include <tinyCEP/TinyDataManager.h>
 /* #include <Common/lofar_iostream.h> */
 
@@ -33,6 +36,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup TinyCEP
+// @{
 
 class KeyValueMap;
  
@@ -220,6 +226,8 @@ inline int WorkHolder::getCurAppl()
 
 inline void WorkHolder::setCurAppl (int applNr)
   { theirCurAppl = applNr; } 
+
+// @}
 
 }
 

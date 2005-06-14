@@ -23,6 +23,9 @@
 #ifndef TINYCEP_SEL_LINKED_H
 #define TINYCEP_SEL_LINKED_H
 
+// \file Sel_Linked.h
+// A selection mechanism which follows the selection of another selector.
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/LofarLogger.h>
@@ -30,6 +33,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup TinyCEP
+// @{
 
 /**
    This class implements a selection mechanism which follows the selection
@@ -55,6 +61,8 @@ private:
   Selector* itsLink;
   
 };
+
+// @}
 
 }
 

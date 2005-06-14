@@ -25,10 +25,15 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file Sel_RoundRobin.h
+// Implements a Round Robin selection mechanism.
+
 #include "tinyCEP/Selector.h"
 
 namespace LOFAR
 {
+// \addtogroup TinyCEP
+// @{
 
 /**
    This class implements a Round Robin selection mechanism.
@@ -49,6 +54,8 @@ private:
 
   Sel_RoundRobin(const Sel_RoundRobin&);
 };
+
+// @}
 
 }
 

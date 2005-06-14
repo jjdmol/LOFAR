@@ -25,6 +25,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file TinyApplicationHolder.h
+// Base class for a user application in tinyCEP
+
 //# Includes
 #include <tinyCEP/TinyDataManager.h>
 #include <ACC/ParameterSet.h>
@@ -33,6 +36,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup TinyCEP
+// @{
 
   // Description of class.
   class TinyApplicationHolder
@@ -104,6 +110,8 @@ namespace LOFAR
   private:
  
   };
+
+// @}
 
 } // namespace LOFAR
 
