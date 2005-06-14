@@ -24,7 +24,7 @@
 #define LOFAR_CEPFRAME_BLOCKREP_H
 
 // \file BlockRep.h
-// Base class of application building block
+// Base class of application building block, actual implementation
 
 //#include <Transport/TransportHolder.h>
 #include <stdlib.h>
@@ -34,6 +34,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 class Block;
 class TransportHolder;
@@ -311,6 +314,8 @@ inline void BlockRep::setOutBufferingProperties(int channel, bool synchronous,
 
 inline void BlockRep::setID()
   { itsID = theirNextID++; }
+
+// @}
 
 }
 

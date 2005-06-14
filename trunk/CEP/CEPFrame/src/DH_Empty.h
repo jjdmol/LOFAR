@@ -25,11 +25,17 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file DH_Empty
+// This is an empty DataHolder that does not do anything
+
 #include <Transport/DataHolder.h>
 #include <Transport/BaseSim.h>
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 /**
    This class represents an empty DataHolder.
@@ -45,6 +51,8 @@ public:
   virtual ~DH_Empty();
   virtual DataHolder* clone() const;
 };
+
+// @}
 
 }
 

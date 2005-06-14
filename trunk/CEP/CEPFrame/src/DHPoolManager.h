@@ -25,10 +25,16 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file DHPoolManager.h
+// Offers a common interface for access to DataHolders.
+
 #include <Transport/DataHolder.h>
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 /**
  The main purpose of this class is to control access to a DataHolder
@@ -88,6 +94,8 @@ inline bool DHPoolManager::getSharing()
 {
   return itsShared;
 }
+
+// @}
 
 }
 

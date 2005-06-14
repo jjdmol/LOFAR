@@ -25,10 +25,16 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file NetworkBuilder.h
+// Base class for builders.
+
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR
 {
+// \addtogroup CEPFrame
+// @{
+
 class Composite;
 
 /**
@@ -94,6 +100,8 @@ inline WorkHolder& NetworkBuilder::getWorker()
 
 inline void NetworkBuilder::setWorker (WorkHolder& worker)
 { itsWorker = worker.baseMake(); }
+
+// @}
 
 }
 

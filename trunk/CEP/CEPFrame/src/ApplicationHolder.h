@@ -23,6 +23,10 @@
 #ifndef CEPFRAME_APPLICATIONHOLDER_H
 #define CEPFRAME_APPLICATIONHOLDER_H
 
+// \file ApplicationHolder.h
+// Abstract base class for CEPFrame applications
+
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <CEPFrame/Composite.h>
@@ -31,6 +35,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 /**
    ApplicationHolder is the abstract base class for simulation application programs.
@@ -131,6 +138,7 @@ inline Composite& ApplicationHolder::getComposite()
 inline const Composite& ApplicationHolder::getComposite() const
   { return itsComposite; }
 
+// @}
 
 }
 

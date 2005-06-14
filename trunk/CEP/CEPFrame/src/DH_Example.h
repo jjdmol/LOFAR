@@ -26,11 +26,17 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file DH_Example.h
+// This is an example DataHolder
+
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 /**
    This class is an example DataHolder.
@@ -87,6 +93,8 @@ inline DH_Example::BufferType* DH_Example::getBuffer()
 
 inline const DH_Example::BufferType* DH_Example::getBuffer() const
   { return itsBuffer; }
+
+// @}
 
 }
 

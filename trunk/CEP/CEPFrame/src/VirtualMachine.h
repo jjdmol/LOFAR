@@ -25,10 +25,15 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file VirtualMachine.h
+// Virtual machine
+
 #include <Common/lofar_string.h>
 
 namespace LOFAR
 {
+// \addtogroup CEPFrame
+// @{
 
 class VirtualMachine
 {
@@ -69,6 +74,8 @@ inline VirtualMachine::State VirtualMachine::getState() const
 
 inline VirtualMachine::Status VirtualMachine::getStatus() const
   { return itsStatus; }
+
+// @}
 
 }
 

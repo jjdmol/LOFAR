@@ -25,12 +25,18 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file DataManager
+// Offers an interface to the data and takes care of buffering. 
+
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/DataHolder.h>
 #include <Transport/Connection.h>
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 typedef struct 
 {
@@ -106,6 +112,8 @@ private:
   DH_info* itsOutDHsinfo;       // Last requested outholders information
 
 };
+
+// @}
 
 } // namespace
 #endif

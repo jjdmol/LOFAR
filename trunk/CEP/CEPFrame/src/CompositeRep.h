@@ -38,6 +38,8 @@
 
 namespace LOFAR
 {
+// \addtogroup CEPFrame
+// @{
 
 class Composite;
 class Connection;
@@ -244,6 +246,9 @@ inline int CompositeRep::getNrInputs() const
 
 inline int CompositeRep::getNrOutputs() const
   { return itsNrOutputs; } 
+
+// @}
+
 }
 
 #endif

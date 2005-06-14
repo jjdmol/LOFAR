@@ -23,12 +23,18 @@
 #ifndef CEPFRAME_SYNCHRONISITYMANAGER_H
 #define CEPFRAME_SYNCHRONISITYMANAGER_H
 
+// \file SynchronisityManager.h
+// Controls asynchronous read/write acrions and sharing of data.
+
 #include <Transport/DataHolder.h>
 #include <CEPFrame/DHPoolManager.h>
 #include <pthread.h>
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 /**
   The main purpose of the SynchronisityManager class is to control asynchronous
@@ -121,6 +127,8 @@ inline bool SynchronisityManager::isInSynchronous(int channel)
 {
   return itsInSynchronisities[channel];
 }
+
+// @}
 
 }
 
