@@ -57,7 +57,6 @@ lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
-lofar_FFTW2(1)
 
 lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)

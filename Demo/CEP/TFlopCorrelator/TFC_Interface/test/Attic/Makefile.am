@@ -1,17 +1,23 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tRectMatrix
+check_PROGRAMS = tRectMatrix tDH_SubBand
 
 
 AM_CXXFLAGS = \
 	-I../../../src
 
 tRectMatrix_SOURCES =				\
-tRectMatrix.cc					\
-../src/RectMatrix.cc				
+tRectMatrix.cc					
+
+tDH_SubBand_SOURCES =				\
+tDH_SubBand.cc					
 
 TESTS   = 					\
-tRectMatrix.sh
+tRectMatrix.sh					\
+tDH_SubBand.sh
+
+LDADD = ../src/libtfc_interface.la
+DEPENDENCIES = ../src/libtfc_interface.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \

@@ -33,6 +33,10 @@ namespace LOFAR
 //     itsNStations  = myPS.getInt("WH_SubBand.stations");
 //     itsNTimes     = myPS.getInt("WH_SubBand.times");
 //     itsNPol       = myPS.getInt("WH_SubBand.pols");
+    itsNFChannels = 2;
+    itsNStations  = 3;
+    itsNTimes     = 4;
+    itsNPol       = 5;
   }
   
 DH_SubBand::DH_SubBand(const DH_SubBand& that)
@@ -58,11 +62,8 @@ DataHolder* DH_SubBand::clone() const
   return new DH_SubBand(*this);
 }
 
-void DH_SubBand::preprocess()
+void DH_SubBand::init()
 {
-  // First delete possible buffers.
-  postprocess();
-
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
   
@@ -81,11 +82,6 @@ void DH_SubBand::preprocess()
   
   itsMatrix = new RectMatrix<BufferType> (vdd);
   itsMatrix->setBuffer(itsBuffer, itsBufSize);
-}
-
-void DH_SubBand::postprocess()
-{
-  itsBuffer     = 0;
 }
 
 void DH_SubBand::fillDataPointers() {
