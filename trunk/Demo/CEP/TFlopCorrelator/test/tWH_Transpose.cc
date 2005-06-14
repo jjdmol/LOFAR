@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-
+#include <ACC/ParameterSet.h>
 #include <tWH_Transpose.h>
 
 #include <Transport/TH_Mem.h>
@@ -55,8 +55,10 @@ namespace LOFAR
     KeyValueMap myKvm(kvm);
     myKvm["NoWH_RSP"] = 2;
 
-    itsInDH1 = new DH_RSP("DH_RSP1");
-    itsInDH2 = new DH_RSP("DH_RSP1");
+    ACC::ParameterSet myPS("TFlopCorrelator.cfg");
+    
+    itsInDH1 = new DH_RSP("DH_RSP1", myPS);
+    itsInDH2 = new DH_RSP("DH_RSP2", myPS);
     itsOutDH1 = new DH_SubBand("DH_SubBand", 0);
     itsOutDH2 = new DH_SubBand("DH_SubBand", 1);
     itsWH = new WH_Transpose("WH_Transpose", myKvm);
