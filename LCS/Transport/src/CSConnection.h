@@ -35,6 +35,10 @@
 
 namespace LOFAR
 {
+
+// \addtogroup Transport
+// @{
+
 //# Forward declarations
 class DataHolder;
 class TransportHolder;
@@ -150,6 +154,8 @@ inline void CSConnection::setBlocking(bool block)
 
 inline bool CSConnection::isConnected() const
   { return (itsTransportHolder->isConnected()); }
+
+// @} // Doxygen endgroup Transport
 
 } // end namespace
 
