@@ -148,7 +148,7 @@ namespace EPA_Protocol
       static const uint8 XST_2_Y       = XST_STATS + 5;
       static const uint8 XST_3_X       = XST_STATS + 6;
       static const uint8 XST_3_Y       = XST_STATS + 7;
-    static const uint8 XST_MAX_STATS = XST_STATS + 4; // SHOULD BE 8!!!!
+      static const uint8 XST_MAX_STATS = XST_STATS + 8;
 
       static const int MAX_REGID = 0x07; // XST_3_Y
       
@@ -172,7 +172,7 @@ namespace EPA_Protocol
        */
       static const uint16 N_SUBBANDS = 512;
       static const uint16 N_BEAMLETS = 128; // FTS-1 spec, final remote station will have 256 beamlets
-      static const uint16 N_XLETS    = 60;  // FTS-1.5 sepc, final remote station will have 4 lanes * 60 = 240 crosslets
+      static const uint16 N_XLETS    = 54;  // FTS-1.5 spec, final remote station will have 96 crosslets
       static const uint16 N_POL      = 2;                // number of polarizations
       static const uint16 N_PHASE    = 2;                // number of phases in a complex number
       static const uint16 N_PHASEPOL = N_PHASE * N_POL;  // number of phase polarizations
@@ -184,10 +184,10 @@ namespace EPA_Protocol
       static const uint16 FRAGMENT_SIZE = 1024;
     
       //
-      // The XST crosslet registers are 1920 bytes in size.
-      // Send in two equal sized fragments of 960 bytes.
+      // XST register will be too large to get in one message when X_NLETS = 96
+      // When 96 crosslets are supported, the XST_FRAGMENT_SIZE should be divided by 2.
       //
-      static const uint16 XST_FRAGMENT_SIZE = 960;
+      static const uint16 XST_FRAGMENT_SIZE = N_XLETS * N_POL * sizeof(std::complex<uint32>);
       
       /**
        * Read/write sizes in octets (= bytes)
@@ -225,7 +225,7 @@ namespace EPA_Protocol
       
       static const uint16 CDO_SETTINGS_SIZE  = 10;
 
-      static const uint16 XST_STATS_SIZE     = N_XLETS * N_PHASEPOL * N_POL * sizeof(uint32);
+      static const uint16 XST_STATS_SIZE     = N_XLETS * N_POL * sizeof(std::complex<uint32>);
       /*@}*/
 
     public:

@@ -46,6 +46,9 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace RSP_Test;
 
+// number of RCUS to select in the rcumask
+#define N_TEST_RCUS 8
+
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)
 {
@@ -116,12 +119,13 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       RSPSetweightsEvent sw;
       sw.timestamp.setNow(10);
       LOG_INFO_STR("sw.time=" << sw.timestamp);
-      sw.blpmask.reset();
-      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
 
+      sw.blpmask.reset();
+      sw.blpmask.set(0);
+
+      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
       sw.weights()(0, 0, Range::all(), Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
-      sw.blpmask.set(0);
 
       TESTC_ABORT(m_server.send(sw), RSPTest::final);
     }
@@ -414,8 +418,9 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
 
       ss.timestamp = Timestamp(0,0);
       ss.rcumask.reset();
-      ss.rcumask.set(0);
-      ss.rcumask.set(1);
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	ss.rcumask.set(i);
+      }
       ss.cache = false;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
@@ -540,22 +545,15 @@ GCFEvent::TResult RSPTest::test008(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       for (int i = 0; i < ack.versions.rsp().extent(firstDim); i++)
-      {
-	printf("versions[board=%d] = rsp=%d.%d, bp=%d.%d, ",
-	       i,
-	       ack.versions.rsp()(i) >> 4,
-	       ack.versions.rsp()(i) & 0xF,
-	       ack.versions.bp()(i)  >> 4,
-	       ack.versions.bp()(i)  & 0xF);
-
-	for (int j = 0; j < EPA_Protocol::N_AP; j++)
 	{
-	  printf("ap[%d]=%d.%d, ",
-		 i * EPA_Protocol::N_AP + j,
-		 ack.versions.ap()(i * EPA_Protocol::N_AP + j) >> 4,
-		 ack.versions.ap()(i * EPA_Protocol::N_AP + j) &  0xF);
-	}
-	printf("\n");
+	LOG_INFO_STR(formatString("versions[board=%d] = rsp=%d.%d, bp=%d.%d, ap=%d.%d",
+				  i,
+				  ack.versions.rsp()(i) >> 4,
+				  ack.versions.rsp()(i) & 0xF,
+				  ack.versions.bp()(i)  >> 4,
+				  ack.versions.bp()(i)  & 0xF,
+				  ack.versions.ap()(i)  >> 4,
+				  ack.versions.ap()(i)  & 0xF));
       }
       
       TRAN(RSPTest::test009);
@@ -599,13 +597,16 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
       RSPSetwgEvent wgset;
       wgset.timestamp.setNow();
       wgset.rcumask.reset();
-      wgset.rcumask.set(0);
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	wgset.rcumask.set(i);
+      }
       wgset.settings().resize(1);
       wgset.settings()(0).freq            = 0xaabb;
       wgset.settings()(0).phase           = 0;
       wgset.settings()(0).ampl            = 0xccdd;
       wgset.settings()(0).nof_samples     = 0x1122;
       wgset.settings()(0).mode            = 0;
+      wgset.settings()(0).preset          = WGSettings::PRESET_SINE;
       
       TESTC_ABORT(m_server.send(wgset), RSPTest::final);
     }
@@ -623,7 +624,9 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
 
       wgget.timestamp.setNow(1);
       wgget.rcumask.reset();
-      wgget.rcumask.set(0);
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	wgget.rcumask.set(i);
+      }
       wgget.cache = false;
 
       TESTC_ABORT(m_server.send(wgget), RSPTest::final);
@@ -686,7 +689,9 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
 
       substatus.timestamp.setNow();
       substatus.rcumask.reset();
-      substatus.rcumask.set(0);
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	substatus.rcumask.set(i);
+      }
       substatus.period = 4;
       
       TESTC_ABORT(m_server.send(substatus) > 0, RSPTest::final);
@@ -712,7 +717,7 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
       
       LOG_INFO_STR("upd.sysstatus.board=" << upd.sysstatus.board());
 
-      if (updcount++ > 20)
+      if (updcount++ > 4) // four seconds
       {
 	RSPUnsubstatusEvent unsub;
 	unsub.handle = upd.handle; // remove subscription with this handle
@@ -767,14 +772,39 @@ GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
   {
     case F_ENTRY:
     {
-      START_TEST("test011", "test UPDSTATS");
+      START_TEST("test011", "test GET/UPD STATS");
+
+      // get stats (single)
+      RSPGetstatsEvent getstats;
+
+      getstats.timestamp.setNow();
+      getstats.rcumask.reset();
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	getstats.rcumask.set(i);
+      }
+      getstats.cache = false;
+      getstats.type = Statistics::SUBBAND_POWER;
+      
+
+      TESTC_ABORT(m_server.send(getstats) > 0, RSPTest::final);
+    }
+    break;
+
+  case RSP_GETSTATSACK:
+    {
+      RSPGetstatsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time" << ack.timestamp);
 
       // subscribe to status updates
       RSPSubstatsEvent substats;
 
       substats.timestamp.setNow();
       substats.rcumask.reset();
-      substats.rcumask.set(0);
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	substats.rcumask.set(i);
+      }
       substats.period = 1;
       substats.type = Statistics::SUBBAND_POWER;
       substats.reduction = SUM;
@@ -800,9 +830,9 @@ GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("upd.time=" << upd.timestamp);
       LOG_INFO_STR("upd.handle=" << upd.handle);
       
-      LOG_INFO_STR("upd.stats=" << upd.stats());
+      LOG_INFO_STR("upd.stats().shape()=" << upd.stats().shape());
 
-      if (updcount++ > 12) // twelve seconds
+      if (updcount++ > 4) // four seconds
       {
 	RSPUnsubstatsEvent unsub;
 	unsub.handle = upd.handle; // remove subscription with this handle
@@ -815,6 +845,118 @@ GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
     case RSP_UNSUBSTATSACK:
     {
       RSPUnsubstatsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+
+      LOG_INFO_STR("ack.handle=" << ack.handle);
+
+      TRAN(RSPTest::test012);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test012(GCFEvent& e, GCFPortInterface& port)
+{
+  static int updcount = 0;
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test012", "test GET/UPD XCSTATS");
+
+      // get stats (single)
+      RSPGetxcstatsEvent getxcstats;
+
+      getxcstats.timestamp.setNow();
+      getxcstats.rcumask.reset();
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	getxcstats.rcumask.set(i);
+      }
+      getxcstats.cache = false;
+
+      TESTC_ABORT(m_server.send(getxcstats) > 0, RSPTest::final);
+    }
+    break;
+
+  case RSP_GETXCSTATSACK:
+    {
+      RSPGetxcstatsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time" << ack.timestamp);
+      LOG_INFO_STR("ack.stats().shape()" << ack.stats().shape());
+
+      // subscribe to status updates
+      RSPSubxcstatsEvent subxcstats;
+
+      subxcstats.timestamp.setNow();
+      subxcstats.rcumask.reset();
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+	subxcstats.rcumask.set(i);
+      }
+      subxcstats.period = 1;
+      
+      TESTC_ABORT(m_server.send(subxcstats) > 0, RSPTest::final);
+    }
+    break;
+
+    case RSP_SUBXCSTATSACK:
+    {
+      RSPSubxcstatsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+    }
+    break;
+
+    case RSP_UPDXCSTATS:
+    {
+      RSPUpdxcstatsEvent upd(e);
+
+      TESTC_ABORT(upd.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("upd.time=" << upd.timestamp);
+      LOG_INFO_STR("upd.handle=" << upd.handle);
+      
+      LOG_INFO_STR("upd.stats().shape()=" << upd.stats().shape());
+
+      if (updcount++ > 4) // four seconds
+      {
+	RSPUnsubxcstatsEvent unsub;
+	unsub.handle = upd.handle; // remove subscription with this handle
+
+	TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+      }
+    }
+    break;
+    
+    case RSP_UNSUBXCSTATSACK:
+    {
+      RSPUnsubxcstatsackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
       LOG_INFO_STR("ack.time=" << ack.timestamp);

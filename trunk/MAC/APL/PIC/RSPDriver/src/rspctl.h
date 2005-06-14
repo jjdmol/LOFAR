@@ -152,8 +152,12 @@ namespace rspctl
       virtual void send(GCFPortInterface& port);
       virtual GCFEvent::TResult ack(GCFEvent& e);
       void setFrequency(double frequency) { m_frequency = frequency; }
+      void setPhase(int phase) { m_phase = phase; }
+      void setAmplitude(double amplitude) { m_amplitude = (uint8)(amplitude*(double)(1<<7)/100.0); }
     private:
       double m_frequency;
+      uint8  m_phase;
+      uint8  m_amplitude;
     };
 
   class StatusCommand : public Command
@@ -177,6 +181,17 @@ namespace rspctl
       void setType(uint8 type) { m_type = type; }
     private:
       uint8 m_type;
+    };
+
+  class XCStatisticsCommand : public Command
+    {
+    public:
+      XCStatisticsCommand();
+      virtual ~XCStatisticsCommand() {}
+      virtual void send(GCFPortInterface& port);
+      void plot_xcstatistics(blitz::Array<std::complex<double>, 4>& stats, const RTC::Timestamp& timestamp);
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+    private:
     };
 
   class VersionCommand : public Command

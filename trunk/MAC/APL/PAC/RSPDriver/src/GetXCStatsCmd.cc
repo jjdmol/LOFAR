@@ -39,11 +39,9 @@ using namespace RTC;
 
 GetXCStatsCmd::GetXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetstatsEvent(event);
+  m_event = new RSPGetxcstatsEvent(event);
 
-  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
-		 ? GET_CONFIG("RS.N_BLPS", i) : 1)
-    * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+  m_n_devices = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 
   setOperation(oper);
   setPeriod(0);
@@ -57,48 +55,29 @@ GetXCStatsCmd::~GetXCStatsCmd()
 
 void GetXCStatsCmd::ack(CacheBuffer& cache)
 {
-  RSPGetstatsackEvent ack;
+  RSPGetxcstatsackEvent ack;
 
   ack.timestamp = getTimestamp();
-  ack.status    = SUCCESS;
+  ack.status = SUCCESS;
+
+  TinyVector<int, 4> s = cache.getXCStats()().shape();
+  s(2) = m_event->rcumask.count() / 2;
+  ack.stats().resize(s);
   
-  if (m_event->type <= Statistics::SUBBAND_POWER)
-  {
-    ack.stats().resize(m_event->rcumask.count(),
-		       cache.getSubbandStats()().extent(secondDim));
-  }
-  else
-  {
-    ack.stats().resize(m_event->rcumask.count(),
-		       cache.getBeamletStats()().extent(secondDim));
-  }
-  
-  unsigned int result_device = 0;
+  int result_device = 0;
   for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++)
   {
     if (m_event->rcumask[cache_device])
     {
-      switch (m_event->type)
-      {
-	case Statistics::SUBBAND_POWER:
-	  ack.stats()(result_device, Range::all())
-	    = cache.getSubbandStats()()(cache_device, Range::all());
-	  break;
-	
-	case Statistics::BEAMLET_POWER:
-	  ack.stats()(result_device, Range::all())
-	    = cache.getBeamletStats()()(cache_device, Range::all());
-	  break;
+      Range all = Range::all();
 
-	default:
-	  LOG_ERROR("invalid statistics type");
-	  break;
-      }
+      ack.stats()(result_device % MEPHeader::N_POL, all, result_device / MEPHeader::N_POL, all) 
+	= cache.getXCStats()()(cache_device % MEPHeader::N_POL, all, cache_device / MEPHeader::N_POL, all);
       
       result_device++;
     }
   }
-  
+
   getPort()->send(ack);
 }
 
@@ -124,8 +103,7 @@ void GetXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetXCStatsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= m_n_devices)
-	  && (m_event->type < Statistics::N_STAT_TYPES));
+  return (m_event->rcumask.count() <= m_n_devices);
 }
 
 bool GetXCStatsCmd::readFromCache() const
@@ -135,11 +113,11 @@ bool GetXCStatsCmd::readFromCache() const
 
 void GetXCStatsCmd::ack_fail()
 {
-  RSPGetstatsackEvent ack;
+  RSPGetxcstatsackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = FAILURE;
-  ack.stats().resize(0, 0, 0);
+  ack.stats().resize(0, 0, 0, 0);
 
   getPort()->send(ack);
 }

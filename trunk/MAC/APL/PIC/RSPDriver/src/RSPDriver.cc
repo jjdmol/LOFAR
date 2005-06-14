@@ -39,6 +39,8 @@
 #include "GetVersionsCmd.h"
 #include "GetStatsCmd.h"
 #include "UpdStatsCmd.h"
+#include "GetXCStatsCmd.h"
+#include "UpdXCStatsCmd.h"
 
 #include "BWWrite.h"
 #include "BWRead.h"
@@ -90,6 +92,8 @@ RSPDriver::RSPDriver(string name)
     m_update_counter(0), m_n_updates(0), m_elapsed(0),
     m_ppsfd(-1), m_ppshandle(0)
 {
+  memset(&m_ppsinfo, 0, sizeof(pps_info_t));
+
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
@@ -389,6 +393,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 	pps_params_t parm;
 
 	// standard time format and trigger on rising edge, API version 1
+	memset(&parm, 0, sizeof(pps_params_t));
 	parm.mode = PPS_TSFMT_TSPEC;
 	parm.mode |= PPS_CAPTUREASSERT; // trigger on ASSERT
 	parm.api_version = PPS_API_VERS_1;
@@ -652,6 +657,18 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_getstats(event, port);
       break;
 
+    case RSP_SUBXCSTATS:
+      rsp_subxcstats(event, port);
+      break;
+
+    case RSP_UNSUBXCSTATS:
+      rsp_unsubxcstats(event, port);
+      break;
+
+    case RSP_GETXCSTATS:
+      rsp_getxcstats(event, port);
+      break;
+
     case RSP_GETVERSION:
       rsp_getversions(event, port);
       break;
@@ -683,6 +700,11 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	    char timestr[32];
 	    strftime(timestr, 32, "%T", gmtime(&timeout->sec));
 	    LOG_INFO(formatString("TICK: time=%s.%06d UTC (not PPS)", timestr, timeout->usec));
+
+	    timer.sec  = timeout->sec;
+	    timer.usec = timeout->usec;
+	    timer.id   = 0;
+	    timer.arg  = 0;
 
 	    m_board[0].setTimer((long)1); // next event after exactly 1 second
 	  
@@ -1234,6 +1256,79 @@ void RSPDriver::rsp_unsubstats(GCFEvent& event, GCFPortInterface& port)
 void RSPDriver::rsp_getstats(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetStatsCmd> command = new GetStatsCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    command->ack_fail();
+    return;
+  }
+
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ((Timestamp(0,0) == command->getTimestamp())
+      && (true == command->readFromCache()))
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+}
+
+void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
+{
+  // subscription is done by entering a UpdXCStatsCmd in the periodic queue
+  Ptr<UpdXCStatsCmd> command = new UpdXCStatsCmd(event, port, Command::READ);
+  RSPSubxcstatsackEvent ack;
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SUBXCSTATS: invalid parameter");
+    
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = FAILURE;
+    ack.handle = 0;
+
+    port.send(ack);
+    return;
+  }
+  else
+  {
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)&(*command);
+    port.send(ack);
+  }
+
+  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+			  Scheduler::PERIODIC);
+}
+
+void RSPDriver::rsp_unsubxcstats(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPUnsubxcstatsEvent unsub(event);
+
+  RSPUnsubxcstatsackEvent ack;
+  ack.timestamp = m_scheduler.getCurrentTime();
+  ack.status = FAILURE;
+  ack.handle = unsub.handle;
+
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
+  {
+    ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBXCSTATS: failed to remove subscription");
+  }
+
+  port.send(ack);
+}
+
+void RSPDriver::rsp_getxcstats(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetXCStatsCmd> command = new GetXCStatsCmd(event, port, Command::READ);
 
   if (!command->validate())
   {

@@ -87,7 +87,7 @@ namespace RSP
       
     private:
       GetXCStatsCmd();
-      RSPGetstatsEvent* m_event;
+      RSPGetxcstatsEvent* m_event;
       unsigned int m_n_devices;
   };
 };
