@@ -21,9 +21,11 @@
 
 // Transporters
 #include <Transport/TH_MPI.h>
+#include <Transport/TH_Mem.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <WH_SubBand.h>
+#include <WH_FFT.h>
 #include <WH_Correlator.h>
 // DataHolders
 #include <DH_SubBand.h>
@@ -41,19 +43,27 @@ AH_BGLProcessing::~AH_BGLProcessing() {
 }
 
 void AH_BGLProcessing::undefine() {
-  vector<WorkHolder*>::iterator it = itsWHs.begin();
-  for (; it!=itsWHs.end(); it++) {
-    delete *it;
+  vector<WorkHolder*>::iterator whit = itsWHs.begin();
+  for (; whit!=itsWHs.end(); whit++) {
+    delete *whit;
   }
   itsWHs.clear();
+  vector<TransportHolder*>::iterator thit = itsTHs.begin();
+  for (; thit!=itsTHs.end(); thit++) {
+    delete *thit;
+  }
+  itsTHs.clear();
+  vector<Connection*>::iterator cit = itsConnections.begin();
+  for (; cit!=itsConnections.end(); cit++) {
+    delete *cit;
+  }
+  itsConnections.clear();
 }  
 
 void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
-  LOG_TRACE_FLOW_STR("Read parameters from file TFlopCorrelator.cfg");
-  ACC::ParameterSet* itsPS    = new ACC::ParameterSet("TFlopCorrelator.cfg");
-  itsNSBF  = itsPS->getInt("NSBF");  // number of SubBand filters in the application
+  int itsNSBF  = itsParamSet.getInt("NSBF");  // number of SubBand filters in the application
   
   int lowestFreeNode = 0;
   
@@ -71,7 +81,10 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Create the SubBand filter  workholders");
   
+
+  // create WH_SubBand and WH_FFT
   vector<WH_SubBand*> SBFNodes;
+  vector<WH_FFT*> FFTNodes;
   char WH_DH_Name[40];
   for (int s=0; s<itsNSBF; s++) {
     snprintf(WH_DH_Name, 40, "SubBandFilter_%d_of_%d", s, itsNSBF);
@@ -84,25 +97,33 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     // this interface is defined in the Stub_SB class
     inStub.connect (s,                                                            // SBF filter number
 		    (DH_SubBand*)SBFNodes[s]->getDataManager().getInHolder(0));  // input dataholder in the current WH
-    
+
+
+
+    snprintf(WH_DH_Name, 40, "SubBandFilter_FFT_%d_of_%d", s, itsNSBF);
+    FFTNodes.push_back(new WH_FFT(WH_DH_Name));      // name
+    itsWHs.push_back((WorkHolder*) FFTNodes[s]);
+    itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
+
+    connectWHs(itsWHs[itsWHs.size()-2], 0, itsWHs[itsWHs.size()-1], 0);
   };
   
-
   LOG_TRACE_FLOW_STR("Create the Correlator workholders");
   vector<WH_Correlator*> CorrNodes;
   int corrID=0; // corr serial number in the AH
-  int itsCpF   = itsPS->getInt("Corr_per_Filter");
+  int itsCpF   = itsParamSet.getInt("Corr_per_Filter");
   for (int s=0; s<itsNSBF; s++ ) {
     // loop over all SubBand Filters
     for (int c=0; c<itsCpF; c++) {
       // loop over al the correlators connected to a single SubBandFilter
       corrID++;  // 
-      sprintf(WH_DH_Name, "Correlator_%d_of_%d", corrID, itsNSBF*itsCpF);
+      snprintf(WH_DH_Name, 40, "Correlator_%d_of_%d", corrID, itsNSBF*itsCpF);
       CorrNodes.push_back(new WH_Correlator(WH_DH_Name));      // name
       itsWHs.push_back((WorkHolder*) CorrNodes[corrID]);
       itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
       
       // todo: connect Correlator to SBFilter
+      
       // this connection is defined in the Stub_SB class
       
       // connect the Subband filter to the input section
@@ -153,7 +174,24 @@ void AH_BGLProcessing::dump() const {
 }
 
 void AH_BGLProcessing::quit() {
-
+  undefine();
 }
 
-
+void AH_BGLProcessing::connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH) {
+#ifdef HAVE_MPI
+  itsTHs.push_back(new TH_MPI(srcWH->getNode(), dstWH->getNode()) );
+  itsConnections.push_back( new Connection("conn", 
+					   srcWH->getDataManager().getOutHolder(srcDH),
+					   dstWH->getDataManager().getInHolder(dstDH),
+					   itsTHs.back(), true) );
+#else
+  itsTHs.push_back( new TH_Mem ); 
+  itsConnections.push_back( new Connection("conn", 
+					   srcWH->getDataManager().getOutHolder(srcDH),
+					   dstWH->getDataManager().getInHolder(dstDH),
+					   itsTHs.back(), false) );
+#endif
+  
+  srcWH->getDataManager().setOutConnection(srcDH, itsConnections.back());
+  dstWH->getDataManager().setInConnection(dstDH, itsConnections.back());
+}
