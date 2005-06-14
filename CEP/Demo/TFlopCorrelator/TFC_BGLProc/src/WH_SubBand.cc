@@ -13,8 +13,8 @@
 #include <ACC/ParameterSet.h>
 #include <WH_SubBand.h>
 
-#include <TFlopCorrelator/DH_SubBand.h>
-#include <TFlopCorrelator/DH_CorrCube.h>
+#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_CorrCube.h>
 
 #include <fftw.h>
 
@@ -105,7 +105,7 @@ void WH_SubBand::process() {
 
 	for (int i = 0; i < itsNtaps; i++) { 
 	  
-	  fft_in[f] += coeffPtr[f][i] * delayLine[f][i];
+// 	  fft_in[f] += coeffPtr[f][i] * delayLine[f][i];
 	  
 	}
 	adjustDelayPtr();

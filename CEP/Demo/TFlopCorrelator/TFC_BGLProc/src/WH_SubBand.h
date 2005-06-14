@@ -12,7 +12,7 @@
 #include <fftw.h>
 
 #include <tinyCEP/WorkHolder.h>
-#include <DH_SubBand.h>
+#include <TFC_Interface/DH_SubBand.h>
 
 namespace LOFAR
 {

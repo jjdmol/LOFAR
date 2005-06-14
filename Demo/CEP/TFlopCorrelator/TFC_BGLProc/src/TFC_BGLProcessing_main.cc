@@ -14,7 +14,7 @@
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
 
-#include <TFlopCorrelator/AH_BGLProcessing.h>
+#include <TFC_BGLProc/AH_BGLProcessing.h>
 
 using namespace LOFAR;
 

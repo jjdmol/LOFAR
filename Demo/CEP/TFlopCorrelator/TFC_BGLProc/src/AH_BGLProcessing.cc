@@ -15,8 +15,8 @@
 #include <ACC/ParameterSet.h>
 
 #include <AH_BGLProcessing.h>
-#include <Stub_SB.h>
-#include <Stub_Corr.h>
+#include <TFC_Interface/Stub_SB.h>
+#include <TFC_Interface/Stub_Corr.h>
 // tinyCEP
 
 // Transporters
@@ -28,9 +28,9 @@
 #include <WH_FFT.h>
 #include <WH_Correlator.h>
 // DataHolders
-#include <DH_SubBand.h>
-#include <DH_CorrCube.h>
-#include <DH_Vis.h>
+#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_CorrCube.h>
+#include <TFC_Interface/DH_Vis.h>
 
 using namespace LOFAR;
 
