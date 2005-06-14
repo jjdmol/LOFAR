@@ -176,7 +176,7 @@ void WH_RSPInput::process()
     //cout<<"expected: "<<itsNextStamp<<" received: "<<thisStamp<<endl;
 
     // Use the next line to bypass synchonization
-#define NO_SYNC
+#define NO_SYNC_NOT_DEFINED
 #ifdef NO_SYNC
     thisStamp=itsNextStamp;
 #endif

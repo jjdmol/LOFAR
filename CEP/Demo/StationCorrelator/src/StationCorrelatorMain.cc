@@ -36,7 +36,7 @@
 #include <ACC/ProcessControl.h>
 
 #include <StationCorrelator.h>
-#include <StationCorrelatorController.h>
+#include <ApplicationHolderController.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
@@ -48,85 +48,15 @@ int ACCmain (int argc, const char** argv) {
 
   try {
     // Read in parameterfile and get my name
-    ParameterSet	itsParamSet(argv[1]);			// may throw
-    string			itsProcID = itsParamSet.getString("process.name");
+    ParameterSet itsParamSet(argv[1]);			// may throw
+    string itsProcID = itsParamSet.getString("process.name");
     LOFAR::KeyValueMap kvm = KeyParser::parseFile(itsParamSet.getString(itsProcID+".APsOwnParam"));
 
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
 
-    // the object that issues the commands to the StationCorrelator
-    int noRuns = 100;
-    int totalRuns = 0;
-    StationCorrelatorController corrContr(correlator,1);
-
-    ProcControlServer itsPCcomm(itsParamSet.getString(itsProcID+".ACnode"),
-				itsParamSet.getInt(itsProcID+".ACport"),
-				&corrContr);
-
-    sleep(2);
-    LOG_TRACE_FLOW("Registering at ApplController");
-    itsPCcomm.registerAtAC(itsProcID);
-    LOG_TRACE_FLOW("Registered at ApplController");
-
-    // Main processing loop
-    bool shouldQuit = false;
-    bool isRunning = false;
-    while (!shouldQuit) {
-      LOG_TRACE_FLOW("Polling ApplController for message");
-      if (itsPCcomm.pollForMessage()) {
-	LOG_TRACE_FLOW("Message received from ApplController");
-
-	// get pointer to received data
-	DH_ProcControl* newMsg = itsPCcomm.getDataHolder();
-
-	// we can update our runstate here if we like
-	shouldQuit = (newMsg->getCommand() == PCCmdQuit);
-	if (newMsg->getCommand() == PCCmdRun) {
-	  totalRuns += noRuns;
-	  isRunning = true;
-	} else if (newMsg->getCommand() == PCCmdPause || newMsg->getCommand() == PCCmdQuit) {
-	  isRunning = false;
-	}
-
-	itsPCcomm.handleMessage(newMsg);
-      } 
-
-      // once in a while report some intermediate results
-      if (0) {
-	ParameterSet resultSet;
-	string resultBuffer;
-	resultSet.add(KVpair("StationCorrelator.interimresult", 
-			     "Everything fine",
-			     true));
-	resultSet.writeBuffer(resultBuffer);
-	itsPCcomm.sendResultParameters(resultBuffer);
-      }
-      
-      if (isRunning) { 
-	// If we are running call run
-	// this shouldn't be done here, but it is necessary for the demo
-	// so our program will keep running once it is started
-	corrContr.run();
-	totalRuns += noRuns;
-      } else {
-	// If we are not running, we should sleep 1 second
-	sleep(1);
-      }
-    }
-    
-    LOG_INFO_STR("Shutting down: StationCorrelator");
-
-    // unregister at AC and send last results
-    // As an example only 1 KV pair is returned but it is allowed to pass
-    // a whole parameterset.
-    ParameterSet resultSet;
-    string resultBuffer;
-    resultSet.add(KVpair("StationCorrelator.result", 
-			 formatString("%d runs completed", totalRuns),
-			 true));
-    resultSet.writeBuffer(resultBuffer);		// convert to stringbuffer
-    itsPCcomm.unregisterAtAC(resultBuffer);		// send to AC before quiting
+    ApplicationHolderController corrContr(correlator,1);
+    corrContr.main(argc, argv);
 
   }
   catch (Exception&	ex) {
