@@ -1,6 +1,7 @@
-common_top_builddir=@common_top_builddir@
+..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_Transpose TestFilter tRectMatrix
+check_PROGRAMS = tWH_Transpose TestFilter tRectMatrix CyclicBufferTest
+
 
 AM_CXXFLAGS = \
 	-I../../../src
@@ -19,6 +20,9 @@ tWH_Transpose.cc				\
 ../src/WH_Transpose.cc				\
 ../src/DH_RSP.cc				\
 ../src/DH_SubBand.cc
+
+CyclicBufferTest_SOURCES =                      \
+CyclicBufferTest.cc
 
 tRectMatrix_SOURCES =				\
 tRectMatrix.cc					\
