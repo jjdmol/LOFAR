@@ -48,8 +48,6 @@ TH_PL::TH_PL (const string& tableName)
   : itsTableName  (tableName),
     itsWriteSeqNo (0),
     itsReadSeqNo  (0),
-    itsSendDHPL   (0),
-    itsRecvDHPL   (0),
     itsInitCalled (false)
 {
   LOG_TRACE_FLOW( "TH_PL constructor" );
@@ -78,16 +76,19 @@ bool TH_PL::init()
   return true;
 }
 
-void TH_PL::initialiseRecvTPO(DataHolder* dh)
+DH_PL* TH_PL::initialiseTPO(DataHolder* dh)
 {
   // Do a dynamic cast of the DataHolder to a DH_PL.
   // and check if it is correct.
-  itsRecvDHPL = dynamic_cast<DH_PL*>(dh);
-  if (itsRecvDHPL == 0) {
+  DH_PL* dhPL = dynamic_cast<DH_PL*>(dh);
+  if (dhPL == 0) {
     throw LOFAR::Exception("TH_PL: DataHolder used is not derived from DH_PL");
   }
-  // Initialize the TPO object in the DH_PL.
-  itsRecvDHPL->initPO (itsTableName);
+  if (!(dhPL->isPOInitialized()))
+  {
+    // Initialize the TPO object in the DH_PL.
+    dhPL->initPO (itsTableName);
+  }
 
   // If this is the first instance of TH_PL in the (current) process,
   // connect to the database.
@@ -96,26 +97,7 @@ void TH_PL::initialiseRecvTPO(DataHolder* dh)
   }
   TH_PL::theirInstanceCount++;
   itsInitCalled = true;
-}
-
-void TH_PL::initialiseSendTPO(DataHolder* dh)
-{
-  // Do a dynamic cast of the DataHolder to a DH_PL.
-  // and check if it is correct.
-  itsSendDHPL = dynamic_cast<DH_PL*>(dh);
-  if (itsSendDHPL == 0) {
-    throw LOFAR::Exception("TH_PL: DataHolder used is not derived from DH_PL");
-  }
-  // Initialize the TPO object in the DH_PL.
-  itsSendDHPL->initPO (itsTableName);
-
-  // If this is the first instance of TH_PL in the (current) process,
-  // connect to the database.
-  if (TH_PL::theirInstanceCount == 0L) {
-    connectDatabase ();
-  }
-  TH_PL::theirInstanceCount++;
-  itsInitCalled = true;
+  return dhPL;
 }
 
 void TH_PL::useDatabase (const string& dbDSN, const string& userName)
@@ -148,32 +130,24 @@ string TH_PL::getType() const
 
 void TH_PL::insertDB (int tag, DataHolder* dh)  
 {
-  if (itsSendDHPL == 0)
-  {
-    initialiseSendTPO(dh);
-  }   
-  PL::PersistentObject& aPO = itsSendDHPL->preparePO (tag, itsWriteSeqNo++);  
+  DH_PL* dhPL = initialiseTPO(dh);
+
+  PL::PersistentObject& aPO = dhPL->preparePO (tag, itsWriteSeqNo++);  
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);  
 }  
 
 void TH_PL::updateDB (int tag, DataHolder* dh)  
 {  
-  if (itsSendDHPL == 0)
-  {
-    initialiseSendTPO(dh);
-  }
-  PL::PersistentObject& aPO = itsSendDHPL->preparePO (tag, itsWriteSeqNo++);  
+  DH_PL* dhPL = initialiseTPO(dh);
+  PL::PersistentObject& aPO = dhPL->preparePO (tag, itsWriteSeqNo++);  
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::UPDATE);  
 }  
      
 int TH_PL::queryDB (const string& queryString, int tag, DataHolder* dh)  
 { 
-  if (itsRecvDHPL == 0)
-  {
-    initialiseRecvTPO(dh);
-  } 
+  DH_PL* dhPL = initialiseTPO(dh);
   // Get a reference to the DHPL's TPO object.  
-  PL::PersistentObject& aPO = itsRecvDHPL->getPO();  
+  PL::PersistentObject& aPO = dhPL->getPO();  
   int result = aPO.retrieveInPlace(PL::QueryObject(queryString));  
   ASSERT (result >= 0);  
   itsReadSeqNo++;  
@@ -183,11 +157,8 @@ int TH_PL::queryDB (const string& queryString, int tag, DataHolder* dh)
 bool TH_PL::sendBlocking(void*, int, int tag, DataHolder* dh)
 {
   LOG_TRACE_RTTI( "TH_PL sendBlocking()" );
-  if (itsSendDHPL == 0)
-  {
-    initialiseSendTPO(dh);
-  }
-  PL::PersistentObject& aPO = itsSendDHPL->preparePO (tag, itsWriteSeqNo++);
+  DH_PL* dhPL = initialiseTPO(dh);
+  PL::PersistentObject& aPO = dhPL->preparePO (tag, itsWriteSeqNo++);
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);
   return true;
 }
@@ -206,15 +177,12 @@ void TH_PL::waitForSent(void*, int, int)
 bool TH_PL::recvBlocking(void*, int nbytes, int tag, int nBytesRead, DataHolder* dh)
 {
   LOG_TRACE_RTTI( "TH_PL recvBlocking()" );
-  if (itsRecvDHPL == 0)
-  {
-    initialiseRecvTPO(dh);
-  }
+  DH_PL* dhPL = initialiseTPO(dh);
   int result = 1;
   if (nBytesRead <= 0)
   {
     // Get a reference to the DHPL's TPO object.
-    PL::PersistentObject& aPO = itsRecvDHPL->getPO();
+    PL::PersistentObject& aPO = dhPL->getPO();
     // PL is based on query objects to identify records in database
     // tables. A query object is now prepared to retrieve the record with
     // the correct tag and sequence number.

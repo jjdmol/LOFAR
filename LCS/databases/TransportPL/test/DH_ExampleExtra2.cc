@@ -61,6 +61,7 @@ void DH_ExampleExtra2::initPO (const string& tableName)      //PL
 {                                                            //PL
   itsPODHEX = new PO_DH_EX(*this);                           //PL
   itsPODHEX->tableName (tableName);                          //PL
+  setPOInitialized();                                        //PL
 }                                                            //PL
 
 PL::PersistentObject& DH_ExampleExtra2::getPO() const        //PL
