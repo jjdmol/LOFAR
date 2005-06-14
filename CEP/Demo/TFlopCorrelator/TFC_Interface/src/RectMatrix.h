@@ -77,10 +77,10 @@ class RectMatrix {
   // it makes no sense to copy a block of information if it doesn't have the same
   // meaning in the other matrix
   void cpy2Matrix (cursorType srcCursor, 
-		   dimType& dim,
+		   dimType& srcDim,
 		   RectMatrix& dstMatrix,
 		   cursorType dstCursor, 
-		   dimType& dim,
+		   dimType& dstDim,
 		   int noBlocks);
   void cpyFromBlock (valueType* srcPointer, 
 		     int blockSize,
