@@ -2,12 +2,14 @@ INSTHDRS         	=\
 DH_Sync.h		\
 DH_RSP.h                \
 DH_SubBand.h		\
+DH_PPF.h		\
 DH_CorrCube.h		\
 DH_Vis.h		\
 WH_RSPInput.h           \
 WH_RSP.h                \
 WH_Transpose.h		\
 WH_SubBand.h		\
+WH_FFT.h		\
 WH_Correlator.h		\
 WH_SyncControl.h	\
 AH_InputSection.h	\
@@ -53,9 +55,11 @@ AH_InputSection.cc
 TFC_BGLProcessing_SOURCES 	= $(DOCHDRS) \
 TFC_BGLProcessing_main.cc 	\
 DH_SubBand.cc			\
+DH_PPF.cc			\
 DH_CorrCube.cc			\
 DH_Vis.cc			\
 WH_SubBand.cc			\
+WH_FFT.cc			\
 WH_Correlator.cc		\
 AH_BGLProcessing.cc		\
 Stub_SB.cc             		\

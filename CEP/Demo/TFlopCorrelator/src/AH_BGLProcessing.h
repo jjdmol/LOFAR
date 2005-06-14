@@ -10,6 +10,8 @@
 #define AH_BGLPROCESSING_H
 
 #include <tinyCEP/TinyApplicationHolder.h>
+#include <Transport/TransportHolder.h>
+#include <Transport/Connection.h>
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR {
@@ -26,10 +28,13 @@ class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
   virtual void postrun  ();
   virtual void dump    () const;
   virtual void quit    ();
- private:
-  vector<WorkHolder*> itsWHs;
-  int itsNSBF;                  //number of Subbandfilters (from param file)
 
+ private:
+
+  void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstWH);
+  vector<WorkHolder*> itsWHs;
+  vector<Connection*> itsConnections;
+  vector<TransportHolder*> itsTHs;
 };
 }
 #endif
