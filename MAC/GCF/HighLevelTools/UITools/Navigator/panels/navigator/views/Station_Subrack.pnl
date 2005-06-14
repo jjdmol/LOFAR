@@ -1,17 +1,17 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,274 203 986 776 N "_3DFace" 1
+PANEL,350 258 986 776 N "_3DFace" 2
 "$datapoint"
+"$referenceDatapoint"
 E"//main()
 //{
 //  gcfLeave(l_gcfPmlId);
 //}" 0
 E E E 1 -1 -1 0  120 205
 "" 0 1
-E"//Include of ctl file
-#uses \"gcfnav_view.ctl\"
-#uses \"gcfpa-pml.ctl\"" 0
+E"#uses \"apl-view.ctl\"
+//#uses \"gcfpa-pml.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -794,7 +794,11 @@ E E 0 1 1 0 1 E  700 730 710 720
 0
 1 666 37 "" 16
 0
-1 667 37 "" 17
+1 667 37 "" 21
+0
+1 668 37 "" 22
+0
+1 669 37 "" 23
 0
 4 665
 "Line1"
@@ -1463,7 +1467,7 @@ E E 0 1 1 0 1 E  110 360 110 310
 0
 1 664 37 "" 10
 0
-1 834 37 "" 18
+1 834 37 "" 19
 0
 0
 LAYER, 1 
@@ -1516,52 +1520,60 @@ LANG:1 6 Layer8
 "$datapoint""$datapoint"
 3 15 "AP1_RCU1"
 "objects\\PIC\\STS_Subrack_RCU.pnl" 62 153 T 161 1 0 1  -52 147  
-3
+4
 "$APNr""1"
 "$RCUNr""1"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 16 ""
 "objects\\PIC\\STS_Subrack_RCU.pnl" 79 262 T 161 1 0 1  31 38  
-3
+4
 "$APNr""1"
 "$RCUNr""2"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 17 "Group16"
 "objects\\PIC\\STS_Subrack_RCU.pnl" 270 210 T 162 1 0 1  -60 90  
-3
+4
 "$APNr""2"
 "$RCUNr""1"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 18 "Group18"
 "objects\\PIC\\STS_Subrack_RCU.pnl" 370 210 T 163 1 0 1  -60 90  
-3
+4
 "$APNr""2"
 "$RCUNr""2"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 19 "Group20"
 "objects\\PIC\\STS_Subrack_RCU.pnl" 470 210 T 164 1 0 1  -60 90  
-3
+4
 "$APNr""3"
 "$RCUNr""1"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 21 "Group24"
 "objects\\PIC\\STS_Subrack_RCU.pnl" 570 210 T 166 1 0 1  -60 90  
-3
+4
 "$APNr""3"
 "$RCUNr""2"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 22 "Group26"
 "objects\\PIC\\STS_Subrack_RCU.pnl" 670 210 T 167 1 0 1  -60 90  
-3
+4
 "$APNr""4"
 "$RCUNr""1"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 23 "Group28"
 "objects\\PIC\\STS_Subrack_RCU.pnl" 770 210 T 168 1 0 1  -60 90  
-3
+4
 "$APNr""4"
 "$RCUNr""2"
 "$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
 3 27 "BP"
 "objects\\PIC\\STS_Subrack_BP.pnl" 200 294 T 178 1 0 1  280 386  
 1
