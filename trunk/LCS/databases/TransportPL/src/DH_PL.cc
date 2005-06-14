@@ -37,12 +37,14 @@ namespace LOFAR {
 
 DH_PL::DH_PL (const string& name, const string& type, int version)
   : DataHolder (name, type, version),
-    itsPODHPL  (0)
+    itsPODHPL  (0),
+    itsPOInitialized (false)
 {}
 
 DH_PL::DH_PL (const DH_PL& that)
   : DataHolder (that),
-    itsPODHPL  (0)
+    itsPODHPL  (0),
+    itsPOInitialized (false)
 {}
 
 DH_PL::~DH_PL ()
@@ -59,6 +61,7 @@ void DH_PL::initPO (const string& tableName)
 {
   itsPODHPL = new PO_DH_PL(*this);
   itsPODHPL->tableName (tableName);
+  setPOInitialized();
 } 
 
 PL::PersistentObject& DH_PL::getPO() const

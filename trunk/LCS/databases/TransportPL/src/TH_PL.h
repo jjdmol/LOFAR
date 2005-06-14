@@ -94,8 +94,7 @@ private:
   // </group> 
 
   // Initialisation methods
-  void initialiseSendTPO(DataHolder* dh);
-  void initialiseRecvTPO(DataHolder* dh);
+  DH_PL* initialiseTPO(DataHolder* dh);
 
   /// Strings containing the name specs describing the ODBC connection.
   static string theirDSN;
@@ -104,8 +103,6 @@ private:
     
   int64  itsWriteSeqNo;
   int64  itsReadSeqNo;
-  DH_PL* itsSendDHPL;
-  DH_PL* itsRecvDHPL;
 
   bool itsInitCalled; // Flag to indicate if the init method has been called
                       // This is used in the counting of initialized instances.

@@ -75,6 +75,9 @@ public:
   // It should be overridden in a derived class having its own TPO object.
   virtual void initPO (const string& tableName);
 
+  // Check if TPO object is already created.
+  bool isPOInitialized();
+
   // Get the variable values.
   // <group>
   int getTag() const
@@ -102,6 +105,10 @@ protected:
   // Copy constructor.
   DH_PL (const DH_PL&);
 
+  // Call this method at the end of initPO().
+  // It set an initialized flag.
+  void setPOInitialized();
+
 private:
   // Forbid assignment.
   DH_PL& operator= (const DH_PL&);
@@ -109,6 +116,7 @@ private:
   int    itsTag;
   int64  itsSeqNr;
   PO_DH_PL* itsPODHPL;
+  bool   itsPOInitialized;
 };
 
 inline PL::PersistentObject& DH_PL::preparePO (int tag, int64 seqnr)
@@ -118,6 +126,11 @@ inline PL::PersistentObject& DH_PL::preparePO (int tag, int64 seqnr)
   return getPO();
 } 
 
+inline bool DH_PL::isPOInitialized()
+{ return itsPOInitialized; }
+
+inline void DH_PL::setPOInitialized()
+{ itsPOInitialized = true; }
 
 }// namespace LOFAR
 
