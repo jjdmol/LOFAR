@@ -1,6 +1,6 @@
 common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_Transpose TestFilter 
+check_PROGRAMS = tWH_Transpose TestFilter tRectMatrix
 
 AM_CXXFLAGS = \
 	-I../../../src
@@ -20,9 +20,14 @@ tWH_Transpose.cc				\
 ../src/DH_RSP.cc				\
 ../src/DH_SubBand.cc
 
+tRectMatrix_SOURCES =				\
+tRectMatrix.cc					\
+../src/RectMatrix.cc				
+
 TESTS   = 					\
 TestFilter.sh					\
-tWH_Transpose.sh
+tWH_Transpose.sh				\
+tRectMatrix.sh
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
