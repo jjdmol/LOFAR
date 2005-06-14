@@ -13,8 +13,8 @@
 #include <ACC/ParameterSet.h>
 #include <WH_FFT.h>
 
-#include <TFlopCorrelator/DH_PPF.h>
-#include <TFlopCorrelator/DH_CorrCube.h>
+#include <TFC_Interface/DH_PPF.h>
+#include <TFC_Interface/DH_CorrCube.h>
 
 #include <fftw.h>
 

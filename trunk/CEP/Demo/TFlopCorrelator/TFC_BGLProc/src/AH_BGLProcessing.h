@@ -31,7 +31,7 @@ class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
 
  private:
 
-  void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstWH);
+  void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH);
   vector<WorkHolder*> itsWHs;
   vector<Connection*> itsConnections;
   vector<TransportHolder*> itsTHs;

@@ -13,7 +13,7 @@
 #include <sys/time.h>  // for gettimeofday
 #include <tinyCEP/WorkHolder.h>
 
-#include <DH_Vis.h>
+#include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR
 {

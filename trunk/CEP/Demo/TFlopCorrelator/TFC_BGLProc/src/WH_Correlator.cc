@@ -18,8 +18,8 @@
 #endif
 
 // Application specific includes
-#include <DH_Vis.h>
-#include <DH_CorrCube.h>
+#include <TFC_Interface/DH_Vis.h>
+#include <TFC_Interface/DH_CorrCube.h>
 #include <WH_Correlator.h>
 
 #ifdef HAVE_BGL
