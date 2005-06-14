@@ -12,6 +12,7 @@
 
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
+#include <RectMatrix.h>
 
 namespace LOFAR
 {
@@ -58,6 +59,8 @@ public:
 
    const unsigned int getBufSize() const;
 
+   RectMatrix<BufferType>& getDataMatrix() const;
+
 private:
   /// Forbid assignment.
   DH_SubBand& operator= (const DH_SubBand&);
@@ -70,6 +73,8 @@ private:
   short itsNStations;      // #stations per buffer
   short itsNTimes;         // #time samples per buffer
   short itsNPol;           // #polarisations per sample
+
+  RectMatrix<BufferType>* itsMatrix;
 
   void fillDataPointers();
 };
@@ -106,6 +111,10 @@ private:
  inline const unsigned int DH_SubBand::getBufSize() const {
    return itsBufSize;
  }
+
+ inline RectMatrix<DH_SubBand::BufferType>& DH_SubBand::getDataMatrix() const {
+   return *itsMatrix; 
+ };
  
 }
 #endif 
