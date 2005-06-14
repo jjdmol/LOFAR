@@ -32,7 +32,7 @@
 //# rspctl --rcu            [--select=<set>] # get RCU control
 //# rspctl --rcu=0xce       [--select=<set>] # set RCU control
 //# rspctl --wg             [--select=<set>] # get waveform generator settings
-//# rspctl --wg=freq        [--select=<set>] # set waveform generator settings
+//# rspctl --wg=freq        [--select=<set>] # set wg freq is in Hz (float)
 //# rspctl --status         [--select=<set>] # get status
 //# rspctl --statistics[=(subband|beamlet)]
 //#                         [--select=<set>] # get subband (default) or beamlet statistics
@@ -74,6 +74,11 @@ using namespace RTC;
 // local funtions
 static void usage();
 static Command* parse_options(int argc, char** argv);
+
+//
+// Sample frequency, should be queried from the RSPDriver
+//
+#define SAMPLE_FREQUENCY 160.0e6
 
 static std::set<int> strtoset(const char* str, int max)
 {
@@ -145,15 +150,92 @@ WeightsCommand::WeightsCommand()
 {
 }
 
-void WeightsCommand::send(GCFPortInterface& /*port*/)
+void WeightsCommand::send(GCFPortInterface& port)
 {
-  cerr << "Error: option '--weights' not supported yet." << endl;
-  exit(EXIT_FAILURE);
+  if (getMode()) {
+    // GET
+    RSPGetweightsEvent getweights;
+
+    getweights.timestamp = Timestamp(0,0);
+
+    bitset<MAX_N_RCUS> mask = getRCUMask();
+    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
+      if (mask[rcu]) getweights.blpmask.set(rcu/2);
+    }
+
+    getweights.cache = true;
+
+    port.send(getweights);
+  } else {
+    // SET
+    RSPSetweightsEvent setweights;
+    setweights.timestamp = Timestamp(0,0);
+    bitset<MAX_N_RCUS> mask = getRCUMask();
+    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
+      if (mask[rcu]) {
+	cerr << "blpmask[" << rcu/2 << "] set" << endl;
+	setweights.blpmask.set(rcu/2);
+      }
+    }
+
+    cerr << "blpmask.count()=" << setweights.blpmask.count() << endl;
+
+    setweights.weights().resize(1, get_nrcus()/2, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+
+    // -1 < m_value <= 1
+    double value = m_value;
+    value *= (1<<15)-1;
+    setweights.weights() = complex<int16>((int16)value,0);
+
+    port.send(setweights);
+  }
 }
 
-GCFEvent::TResult WeightsCommand::ack(GCFEvent& /*ack*/)
+GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 {
-  return GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+    {
+    case RSP_GETWEIGHTSACK:
+      {
+	RSPGetweightsackEvent ack(e);
+	bitset<MAX_N_RCUS> mask = getRCUMask();
+
+	if (SUCCESS == ack.status) {
+	  int blpin = 0;
+	  for (int rcuout = 0; rcuout < get_nrcus(); rcuout++) {
+
+	    if (mask[rcuout]) {
+	      printf("RCU[%02d].weights=", rcuout);
+	      cout << ack.weights()(0, blpin++, Range::all(), Range::all()) << endl;
+	      rcuout++;
+	    }
+	  }
+	} else {
+	  cerr << "Error: RSP_GETWEIGHTS command failed." << endl;
+	}
+      }
+      break;
+
+    case RSP_SETWEIGHTSACK:
+      {
+	RSPSetweightsackEvent ack(e);
+
+	if (SUCCESS != ack.status) {
+	  cerr << "Error: RSP_SETWEIGHTS command failed." << endl;
+	}
+      }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
+
+  GCFTask::stop();
+
+  return status;
 }
 
 SubbandsCommand::SubbandsCommand()
@@ -205,6 +287,8 @@ void SubbandsCommand::send(GCFPortInterface& port)
 
 GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 {
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
   switch (e.signal)
     {
     case RSP_GETSUBBANDSACK:
@@ -236,11 +320,16 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 	  cerr << "Error: RSP_SETSUBBANDS command failed." << endl;
 	}
       }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
     }
 
   GCFTask::stop();
 
-  return GCFEvent::HANDLED;
+  return status;
 }
 
 RCUCommand::RCUCommand()
@@ -310,19 +399,98 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
-WGCommand::WGCommand()
+WGCommand::WGCommand() :
+  m_frequency(0.0),
+  m_phase(0),
+  m_amplitude(100)
 {
 }
 
-void WGCommand::send(GCFPortInterface& /*port*/)
+void WGCommand::send(GCFPortInterface& port)
 {
-  cerr << "Error: option '--wg' not supported yet." << endl;
-  exit(EXIT_FAILURE);
+  if (getMode()) {
+    // GET
+    RSPGetwgEvent wgget;
+    wgget.timestamp = Timestamp(0,0);
+    wgget.rcumask = getRCUMask();
+    wgget.cache = true;
+    port.send(wgget);
+
+  } else {
+    // SET
+    RSPSetwgEvent wgset;
+
+    wgset.timestamp = Timestamp(0,0);
+    wgset.rcumask = getRCUMask();
+    wgset.settings().resize(1);
+    wgset.settings()(0).freq = (uint16)(((m_frequency * (1<<16)) / SAMPLE_FREQUENCY) + 0.5);
+    wgset.settings()(0).phase = m_phase;
+    wgset.settings()(0).ampl = m_amplitude;
+    wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
+
+    if (m_frequency > 1e-6) {
+      wgset.settings()(0).mode = WGSettings::MODE_CALC;
+    } else {
+      wgset.settings()(0).mode = WGSettings::MODE_OFF;
+    }
+    wgset.settings()(0).preset = 0; // or one of PRESET_[SINE|SQUARE|TRIANGLE|RAMP]
+
+    port.send(wgset);
+  }
 }
 
-GCFEvent::TResult WGCommand::ack(GCFEvent& /*e*/)
+GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 {
-  return GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+    {
+    case RSP_GETWGACK:
+      {
+	RSPGetwgackEvent ack(e);
+      
+	if (SUCCESS == ack.status) {
+	  
+	  // print settings
+	  bitset<MAX_N_RCUS> mask = getRCUMask();
+	  int rcuin = 0;
+	  for (int rcuout = 0; rcuout < get_nrcus(); rcuout++) {
+	    
+	    if (mask[rcuout]) {
+	      printf("RCU[%02d].wg=[freq=%6d, phase=%3d, ampl=%3d, nof_samples=%6d, mode=%3d]\n",
+		     rcuout,
+		     ack.settings()(rcuin).freq,
+		     ack.settings()(rcuin).phase,
+		     ack.settings()(rcuin).ampl,
+		     ack.settings()(rcuin).nof_samples,
+		     ack.settings()(rcuin).mode);
+	      rcuin++;
+	    }
+	  }
+	} else {
+	  cerr << "Error: RSP_GETWG command failed." << endl;
+	}
+      }
+      break;
+
+    case RSP_SETWGACK:
+      {
+	RSPSetwgackEvent ack(e);
+	
+	if (SUCCESS != ack.status) {
+	  cerr << "Error: RSP_SETWG command failed." << endl;
+	}
+      }
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
+
+  GCFTask::stop();
+
+  return status;
 }
 
 StatusCommand::StatusCommand()
@@ -376,7 +544,6 @@ void StatisticsCommand::send(GCFPortInterface& port)
   }
 }
 
-#define SAMPLE_FREQUENCY 160.0
 void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
 {
   static gnuplot_ctrl* handle = 0;
@@ -399,7 +566,16 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
   gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"");
   gnuplot_cmd(handle, "set ylabel \"dB\"");
   gnuplot_cmd(handle, "set yrange [0:140]");
-  gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
+
+  switch (m_type)
+    {
+    case Statistics::SUBBAND_POWER:
+      gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
+      break;
+    case Statistics::BEAMLET_POWER:
+      gnuplot_cmd(handle, "set xrange [0:%d]", MEPHeader::N_BEAMLETS);
+      break;
+    }
 
   char plotcmd[2048];
   time_t seconds = timestamp.sec();
@@ -422,8 +598,9 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 		   SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
 	  break;
 	case Statistics::BEAMLET_POWER:
-	  snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
-		   SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+	  //snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
+	  //SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+	  snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ", rcuout);
 	  break;
 	default:
 	  cerr << "Error: invalid m_type" << endl;
@@ -435,13 +612,25 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
   gnuplot_cmd(handle, plotcmd);
 
-  gnuplot_multiplot_array(handle, stats);
+  gnuplot_write_matrix(handle, stats);
 
   //gnuplot_cmd(handle, "set nomultiplot");
 }
 
 GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 {
+  if (e.signal == RSP_SUBSTATSACK)
+    {
+      RSPSubstatsackEvent ack(e);
+
+      if (SUCCESS != ack.status) {
+	cerr << "failed to subscribe to statistics" << endl;
+	exit(EXIT_FAILURE);
+      }
+
+      return GCFEvent::HANDLED;
+    }
+
   if (e.signal != RSP_UPDSTATS) return GCFEvent::NOT_HANDLED;
 
 #if 0
@@ -465,6 +654,8 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
   } else {
     cerr << "Error: RSP_GETSTATS command failed." << endl;
   }
+  GCFTask::stop();
+
 #else
   RSPUpdstatsEvent upd(e);
 
@@ -472,8 +663,147 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
     plot_statistics(upd.stats(), upd.timestamp);
   }
 #endif
+
+  return GCFEvent::HANDLED;
+}
+
+XCStatisticsCommand::XCStatisticsCommand()
+{
+}
+
+void XCStatisticsCommand::send(GCFPortInterface& port)
+{
+  if (getMode()) {
+#if 0
+    // GET
+    RSPGetxcstatsEvent getxcstats;
+
+    getxcstats.timestamp = Timestamp(0,0);
+    getxcstats.rcumask = getRCUMask();
+    getxcstats.cache = true;
+    getxcstats.type = m_type;
+
+    port.send(getxcstats);
+#else
+    // SUBSCRIBE
+    RSPSubxcstatsEvent subxcstats;
+
+    subxcstats.timestamp = Timestamp(0,0);
+    subxcstats.rcumask = getRCUMask();
+    subxcstats.period = 1;
+
+    port.send(subxcstats);
+#endif
+  } else {
+    // SET 
+    cerr << "Error: set mode not support for option '--xcstatistics'" << endl;
+    GCFTask::stop();
+  }
+}
+
+void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, const Timestamp& timestamp)
+{
+  LOG_INFO_STR("plot_xcstatistics (shape=" << xcstats.shape() << ") @ " << timestamp);
+  LOG_INFO_STR("XX.real()=" << real(xcstats(0,0,Range::all(),Range::all())));
+  LOG_INFO_STR("XX.imag()=" << imag(xcstats(0,0,Range::all(),Range::all())));
+  LOG_INFO_STR("XY.real()=" << real(xcstats(0,1,Range::all(),Range::all())));
+  LOG_INFO_STR("XY.imag()=" << imag(xcstats(0,1,Range::all(),Range::all())));
+  LOG_INFO_STR("YX.real()=" << real(xcstats(1,0,Range::all(),Range::all())));
+  LOG_INFO_STR("YX.imag()=" << imag(xcstats(1,0,Range::all(),Range::all())));
+  LOG_INFO_STR("YY.real()=" << real(xcstats(1,1,Range::all(),Range::all())));
+  LOG_INFO_STR("YY.imag()=" << imag(xcstats(1,1,Range::all(),Range::all())));
+
+  xcstats(0,0,2,2) = 1.0;
+
+  static gnuplot_ctrl* handle = 0;
+  int n_ant = xcstats.extent(thirdDim);
+
+  //bitset<MAX_N_RCUS> mask = getRCUMask();
+
+  // initialize the freq array
+  firstIndex i;
   
-  //GCFTask::stop();
+  if (!handle)
+  {
+    handle = gnuplot_init();
+    if (!handle) return;
+
+    //gnuplot_setstyle(handle, "steps");
+    gnuplot_cmd(handle, "set grid x y");
+  }
+
+  //gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
+  gnuplot_cmd(handle, "set xlabel \"RCU\"");
+  gnuplot_cmd(handle, "set ylabel \"RCU\"");
+  gnuplot_cmd(handle, "set xrange [0:%d]", n_ant-1);
+  gnuplot_cmd(handle, "set yrange [0:%d]", n_ant-1);
+
+  char plotcmd[2048];
+  time_t seconds = timestamp.sec();
+  strftime(plotcmd, 255, "set title \"%s - %a, %d %b %Y %H:%M:%S  %z\"", gmtime(&seconds));
+
+  gnuplot_cmd(handle, plotcmd);
+
+  gnuplot_cmd(handle,
+	      "set view 0,0\n"
+	      "set ticslevel 0\n"
+	      "unset xtics\n"
+	      "unset ytics\n"
+	      "unset colorbox\n"
+	      "set key off\n"
+	      "set border 0\n");
+
+  gnuplot_cmd(handle, "splot \"-\" matrix with points ps 12 pt 5 palette");
+
+  gnuplot_write_matrix(handle, real(xcstats(0,0,Range::all(),Range::all())), true);
+}
+
+GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
+{
+  if (e.signal == RSP_SUBXCSTATSACK)
+    {
+      RSPSubxcstatsackEvent ack(e);
+
+      if (SUCCESS != ack.status) {
+	cerr << "failed to subscribe to xcstatistics" << endl;
+	exit(EXIT_FAILURE);
+      }
+
+      return GCFEvent::HANDLED;
+    }
+
+  if (e.signal != RSP_UPDXCSTATS) return GCFEvent::NOT_HANDLED;
+
+#if 0
+  RSPGetstatsackEvent ack(e);
+  bitset<MAX_N_RCUS> mask = getRCUMask();
+
+  if (SUCCESS == ack.status) {
+    int rcuin = 0;
+    for (int rcuout = 0; rcuout < get_nrcus(); rcuout++) {
+	
+      if (mask[rcuout]) {
+	printf("RCU[%02d].statistics=\n", rcuout);
+	for (int subband = 0; subband < ack.stats().extent(secondDim); subband++) {
+	  printf("%20.10E\n", ack.stats()(rcuin, subband));
+	}
+	rcuin++;
+      }
+    }
+
+    plot_statistics(ack.stats());
+  } else {
+    cerr << "Error: RSP_GETSTATS command failed." << endl;
+  }
+  GCFTask::stop();
+
+#else
+  RSPUpdxcstatsEvent upd(e);
+
+  if (SUCCESS == upd.status) {
+    plot_xcstatistics(upd.stats(), upd.timestamp);
+  }
+#endif
 
   return GCFEvent::HANDLED;
 }
@@ -594,9 +924,15 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETSTATSACK:
     case RSP_SUBSTATSACK:
     case RSP_UPDSTATS:
+    case RSP_SUBXCSTATSACK:
+    case RSP_UPDXCSTATS:
     case RSP_GETVERSIONACK:
     case RSP_GETSUBBANDSACK:
     case RSP_SETSUBBANDSACK:
+    case RSP_SETWEIGHTSACK:
+    case RSP_GETWEIGHTSACK:
+    case RSP_GETWGACK:
+    case RSP_SETWGACK:
       status = m_command.ack(e); // handle the acknowledgement
       break;
 
@@ -608,405 +944,6 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 
   return status;
 }
-
-#if 0
-GCFEvent::TResult RSPCtl::handlecommand(GCFEvent& e, GCFPortInterface& port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  switch (e.signal)
-  {
-    case F_ENTRY:
-    {
-      if (XINETD_MODE == m_options.xinetd_mode) {
-	cout << "250-Acquiring sensor data." << endl;
-	cout << "250-" << endl;
-	cout << "250-META sensor = statistics " << m_line << endl;
-	cout << "250-" << endl;
-      }
-
-      // set rcu control register
-      RSPSetrcuEvent setrcu;
-      setrcu.timestamp = Timestamp(0,0);
-      setrcu.rcumask = m_options.device_set;
-      
-      setrcu.settings().resize(1);
-      setrcu.settings()(0).value = m_options.rcucontrol;
-
-      if (!m_server.send(setrcu))
-      {
-	cout << "Error: failed to send RCU control" << endl;
-	exit(EXIT_FAILURE);
-      }
-    }
-    break;
-    
-    case RSP_SETRCUACK:
-    {
-      RSPSetrcuackEvent ack(e);
-
-      if (SUCCESS != ack.status)
-      {
-	cout << "500 Error: failed to set RCU control register" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      sleep(1);
-
-      // subscribe to status updates
-      RSPSubstatusEvent substatus;
-
-      substatus.timestamp = Timestamp(0,0);
-
-      substatus.rcumask = m_options.device_set;
-      
-      substatus.period = 1;
-      
-      if (!m_server.send(substatus))
-      {
-	cout << "500 Error: failed to send subscription for status updates" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-    }
-    break;
-
-    case RSP_SUBSTATUSACK:
-    {
-      RSPSubstatusackEvent ack(e);
-
-      if (SUCCESS != ack.status)
-      {
-	cout << "500 Error: failed to subscribe to status updates" << endl;
-	exit(EXIT_FAILURE);
-      }
-      m_statushandle = ack.handle;
-
-      // subscribe to statistics updates
-      RSPSubstatsEvent substats;
-
-      substats.timestamp = Timestamp(0,0);
-
-      substats.rcumask = m_options.device_set;
-      
-      substats.period = 1;
-      substats.type = m_options.type;
-      substats.reduction = SUM;
-      
-      if (!m_server.send(substats))
-      {
-	cout << "500 Error: failed to send subscription for statistics updates" << endl;
-	exit(EXIT_FAILURE);
-      }
-    }
-    break;
-
-    case RSP_SUBSTATSACK:
-    {
-      RSPSubstatsackEvent ack(e);
-
-      if (SUCCESS != ack.status)
-      {
-	cout << "500 Error: failed to subscribe to statistics updates" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      m_statshandle = ack.handle;
-    }
-    break;
-
-    case RSP_UPDSTATUS:
-    {
-      RSPUpdstatusEvent upd(e);
-      
-      if (SUCCESS != upd.status)
-      {
-	cout << "500 Error: invalid update" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      switch (m_options.xinetd_mode)
-	{
-	case CMDLINE_MODE:
-	  cout << "time=" << upd.timestamp << endl;
-	  break;
-	case XINETD_MODE:
-	  cout << "250-META time status = " << upd.timestamp << endl;
-	  break;
-	}
-
-      if (CMDLINE_MODE == m_options.xinetd_mode
-	  || XINETD_MODE == m_options.xinetd_mode)
-      {
-	int result = 0;
-	for (int device = 0; device < m_options.n_devices; device++)
-	{
-	  if (!m_options.device_set[device]) continue;
-	  
-	  if (XINETD_MODE == m_options.xinetd_mode) {
-	    cout << formatString("250-META status, rcu[%02d](status=0x%02x, noverflow=%d)",
-				 device,
-				 upd.sysstatus.rcu()(result).status,
-				 upd.sysstatus.rcu()(result).nof_overflow) << endl;
-	  } else {
-	    printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
-		   device,
-		   upd.sysstatus.rcu()(result).status,
-		   upd.sysstatus.rcu()(result).nof_overflow);
-	  }
-	  result++;
-	}
-      }
-    }
-    break;
-
-    case RSP_UPDSTATS:
-    {
-      RSPUpdstatsEvent upd(e);
-
-      if (SUCCESS != upd.status)
-      {
-	cout << "500 Error: invalid update" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      switch (m_options.xinetd_mode)
-	{
-	case CMDLINE_MODE:
-	  cout << "time=" << upd.timestamp << endl;
-	  break;
-	case XINETD_MODE:
-	  cout << "250-META time status = " << upd.timestamp << endl;
-	  break;
-	}
-
-      if (capture_statistics(upd.stats())) {
-	if (XINETD_MODE == m_options.xinetd_mode) {
-	  m_nseconds = 0; // reset counter
-	  cout << "250 Data acquisition done." << endl;
-
-	  // unsubscribe from status and subband statistics
-	  RSPUnsubstatusEvent unsubstatus;
-	  unsubstatus.handle = m_statushandle;
-	  if (!m_server.send(unsubstatus))
-	    {
-	      cout << "500 Error: failed to send subscription for status updates" << endl;
-	      exit(EXIT_FAILURE);
-	    }
-	} else {
-	  exit(EXIT_SUCCESS);
-	}
-      }
-    }
-    break;
-
-    case RSP_UNSUBSTATUSACK:
-    {
-      RSPUnsubstatusackEvent ack(e);
-      
-      if (SUCCESS != ack.status)
-      {
-	cout << "500 Error: unsubscribe failure" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      // unsubscribe from stats updates
-      RSPUnsubstatsEvent unsubstats;
-      unsubstats.handle = m_statshandle;
-      if (!m_server.send(unsubstats))
-	{
-	  cout << "500 Error: failed to send subscription for status updates" << endl;
-	  exit(EXIT_FAILURE);
-	}
-    }
-    break;
-
-    case RSP_UNSUBSTATSACK:
-    {
-      RSPUnsubstatsackEvent ack(e);
-
-      if (SUCCESS != ack.status)
-      {
-	cout << "500 Error: unsubscribe failure" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      if (HTTP_MODE == m_options.xinetd_mode) {
-	exit(EXIT_SUCCESS);
-      }
-      TRAN(RSPCtl::wait4command);
-    }
-    break;
-
-    case F_DISCONNECTED:
-    {
-      port.close();
-      cout << "500 Error: port '" << port.getName() << "' disconnected." << endl;
-      exit(EXIT_FAILURE);
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-bool RSPCtl::capture_statistics(Array<double, 2>& stats)
-{
-  if (0 == m_nseconds)
-  {
-    // initialize values array
-    m_values.resize(stats.extent(firstDim), stats.extent(secondDim));
-    m_values = 0.0;
-  }
-  else
-  {
-    if ( (stats.extent(firstDim) != m_values.extent(firstDim))
-	 || (stats.extent(secondDim) != m_values.extent(secondDim)) )
-    {
-      cout << "500 Error: shape mismatch" << endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  m_values += stats; // integrate
-
-  m_nseconds++; // advance to next second
-
-  if (0 == m_nseconds % m_options.integration)
-  {
-    if (m_options.integration > 0) 
-    {
-      m_values /= m_options.integration;
-
-      output_statistics(m_values); // write (optionally integrated) statistics
-
-      if (!m_options.onefile && m_file)
-      {
-	for (int i = 0; i < m_options.n_devices; i++)
-	{
-	  if (m_file[i]) fclose(m_file[i]);
-	  m_file[i] = 0;
-	}
-      }
-    }
-    else
-    {
-      output_statistics(stats); // write interval sampled statistics
-
-      if (!m_options.onefile && m_file)
-      {
-	for (int i = 0; i < m_options.n_devices; i++)
-	{
-	  if (m_file[i]) fclose(m_file[i]);
-	  m_file[i] = 0;
-	}
-      }
-    }
-    
-    m_values = 0.0;
-  }
-
-  // check if duration has been reached
-  if (m_nseconds >= m_options.duration)
-  {
-    if (m_file) {
-      for (int i = 0; i < m_options.n_devices; i++)
-	{
-	  if (m_file[i]) fclose(m_file[i]);
-	  m_file[i] = 0;
-	}
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
-void RSPCtl::output_statistics(Array<double, 2>& stats)
-{
-  int result_device = 0;
-
-  for (int device = 0; device < m_options.n_devices; device++)
-  {
-    if (!m_options.device_set[device]) continue;
-    
-    time_t now = time(0);
-    struct tm* t = localtime(&now);
-
-    if (!t)
-    {
-      cout << "500 Error: localtime?" << endl;
-      exit(EXIT_FAILURE);
-    }
-
-    if (m_file && !m_file[device] && (CMDLINE_MODE == m_options.xinetd_mode))
-    {
-      char filename[PATH_MAX];
-      switch (m_options.type)
-      {
-	case Statistics::SUBBAND_POWER:
-	  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
-		   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		   t->tm_hour, t->tm_min, t->tm_sec, device);
-	  break;
-	case Statistics::BEAMLET_POWER:
-	  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_pol%02d.dat",
-		   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		   t->tm_hour, t->tm_min, t->tm_sec, device);
-	  break;
-	default:
-	  cout << "500 Error: invalid type" << endl;
-	  exit(EXIT_FAILURE);
-	  break;
-      }
-      m_file[device] = fopen(filename, "w");
-
-      if (!m_file[device])
-      {
-	cout << "500 Error: Failed to open file: " << filename << endl;
-	exit(EXIT_FAILURE);
-      }
-    }
-    
-    switch (m_options.xinetd_mode)
-      {
-      case CMDLINE_MODE:
-	if (stats.extent(secondDim)
-	    != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
-			   stats.extent(secondDim), m_file[device]))
-	{
-	  cout << "500 Error: fwrite" << endl;
-	  exit(EXIT_FAILURE);
-	}
-	break;
-
-      case XINETD_MODE:
-	cout << "250-META rcu " << device << endl;
-	cout << "250-BEGIN" << endl;
-	for (int i = 0; i < stats.extent(secondDim); i++) {
-	  printf(m_format.c_str(), stats(result_device, i));
-	}
-	cout << "250-END" << endl;
-	cout << "250-" << endl;
-	break;
-
-      case HTTP_MODE:
-	for (int i = 0; i < stats.extent(secondDim); i++) {
-	  printf("%f\n", stats(result_device, i));
-	}
-	break;
-    }
-
-    result_device++; // next
-  }
-
-}
-#endif
 
 void RSPCtl::mainloop()
 {
@@ -1068,6 +1005,7 @@ static Command* parse_options(int argc, char** argv)
 	  { "wg",         optional_argument, 0, 'g' },
 	  { "status",     no_argument,       0, 'q' },
 	  { "statistics", optional_argument, 0, 't' },
+	  { "xcstatistics", no_argument,     0, 'x' },
 	  { "version",    no_argument,       0, 'v' },
 	  { "help",       no_argument,       0, 'h' },
 	  
@@ -1107,6 +1045,11 @@ static Command* parse_options(int argc, char** argv)
 	      weightscommand->setMode(false);
 	      double value = atof(optarg);
 	      weightscommand->setValue(value);
+	      
+	      if (value <= -1.0 || value > 1.0) {
+		cerr << "Error: invalid weights value, should be: -1 < value <= 1" << endl;
+		exit(EXIT_FAILURE);
+	      }
 	    }
 	  }
 	  break;
@@ -1188,8 +1131,22 @@ static Command* parse_options(int argc, char** argv)
 		statscommand->setType(Statistics::SUBBAND_POWER);
 	      } else if (!strcmp(optarg, "beamlet")) {
 		statscommand->setType(Statistics::BEAMLET_POWER);
+
+		// default for beamlet stats select is N_RSPBOARDS * N_POL
+		select.clear();
+		for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL; i++) {
+		  select.insert(i);
+		}
 	      }
 	    }
+	  }
+	  break;
+
+	case 'x':
+	  {
+	    if (command) delete command;
+	    XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand();
+	    command = xcstatscommand;
 	  }
 	  break;
 

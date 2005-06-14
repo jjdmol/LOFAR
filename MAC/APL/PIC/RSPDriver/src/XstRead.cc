@@ -108,39 +108,52 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint16 offset = ((getCurrentBLP() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE) / sizeof(uint32);
-  ASSERT(offset == ack.hdr.m_fields.offset / sizeof(uint32));
-
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + m_regid;
-  
-  LOG_DEBUG(formatString("XstRead::handleack: global_rcu=%d, offset=%d",
-			 global_rcu, offset));
-
-  Range fragment_range(offset / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL),
-		       (offset / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL)) + (N_XST_STATS / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL)) - 1);
-
-  LOG_DEBUG_STR("fragment_range=" << fragment_range);
-  
   if (ack.hdr.m_fields.addr.regid >= MEPHeader::XST_MAX_STATS)
   {
     LOG_ERROR("invalid xst ack");
     return GCFEvent::HANDLED;
   }
 
-  LOG_DEBUG_STR("xststats shape=" << 
-		shape(N_XST_STATS / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL),
-		      MEPHeader::N_POL,
-		      MEPHeader::N_POL));
+  uint16 offset = ((getCurrentBLP() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE) / sizeof(uint32);
+  ASSERT(offset == ack.hdr.m_fields.offset / sizeof(uint32));
 
-  Array<complex<uint32>, 3> xststats((complex<uint32>*)&ack.xst_stat,
-				     shape(N_XST_STATS / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL),
-					   MEPHeader::N_POL,
-					   MEPHeader::N_POL),
-				     neverDeleteData);
-
-  Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getCrossletStats()());
-
-  cache(global_rcu, fragment_range, Range::all(), Range::all()) = convert_cuint32_to_cdouble(xststats);
+  int global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (m_regid/2);
   
+  LOG_DEBUG(formatString("XstRead::handleack: global_blp=%d, offset=%d",
+			 global_blp, offset));
+
+  Array<complex<double>, 4>& cache(Cache::getInstance().getBack().getXCStats()());
+
+  offset /= (MEPHeader::N_PHASEPOL * MEPHeader::N_POL);
+  Range rcu_range(offset, cache.extent(thirdDim)-1);
+  
+  LOG_DEBUG_STR(endl << 
+		"global_blp=" << global_blp << endl <<
+		"rcu_range=" << rcu_range << endl <<
+		"xststats.range=" << rcu_range-offset);
+
+  if (offset <= cache.extent(thirdDim)) {
+
+    LOG_DEBUG_STR("xststats shape=" << 
+		  shape(N_XST_STATS / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL),
+			MEPHeader::N_POL));
+
+    Array<complex<uint32>, 2> xststats((complex<uint32>*)&ack.xst_stat,
+				       shape(N_XST_STATS / (MEPHeader::N_PHASEPOL * MEPHeader::N_POL),
+					     MEPHeader::N_POL),
+				       neverDeleteData);
+
+    // convert and reorder dimensions
+    for (int i = offset; i < cache.extent(thirdDim); i++) {
+      for (int j = 0; j < MEPHeader::N_POL; j++) {
+	cache(m_regid % 2, j, global_blp, i)
+	  = convert_cuint32_to_cdouble(xststats(i-offset, j));
+      }
+    }
+
+  } else {
+    LOG_DEBUG("ignoring EPA_XSTSTATS event, RCUs out of range");
+  }
+
   return GCFEvent::HANDLED;
 }

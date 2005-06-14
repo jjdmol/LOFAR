@@ -77,10 +77,10 @@ namespace RSP_Protocol
     private:
       /**
        * XCStatistics
-       * Dimensions are: (N_RSPBOARDS * N_BLPS x
-       *                  N_RSPBOARDS * N_BLPS x
+       * Dimensions are: (N_POL x
        *                  N_POL x
-       *                  N_POL)
+       *                  N_RSPBOARDS * N_BLPS x
+       *                  N_RSPBOARDS * N_BLPS)
        */
       blitz::Array<std::complex<double>, 4> m_xstatistics;
   };

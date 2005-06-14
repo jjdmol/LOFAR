@@ -124,10 +124,12 @@ CacheBuffer::CacheBuffer()
 			  MEPHeader::N_BEAMLETS);
   m_beamletstats() = 0;
 
-  m_crossletstats().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
-			   MEPHeader::N_XLETS, // GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
-			   MEPHeader::N_POL, MEPHeader::N_POL);
-  m_crossletstats() = complex<double>(0,0);
+  m_xcstats().resize(MEPHeader::N_POL,
+		     MEPHeader::N_POL,
+		     GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
+		     GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
+
+  m_xcstats() = complex<double>(0,0);
 
   m_systemstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_systemstatus.rcu().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
@@ -155,7 +157,7 @@ CacheBuffer::CacheBuffer()
   LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
   LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
   LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
-  LOG_DEBUG_STR("m_crossletstats().size()      =" << m_crossletstats().size()      * sizeof(complex<double>));
+  LOG_DEBUG_STR("m_xcstats().size()            =" << m_xcstats().size()            * sizeof(complex<double>));
   LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
   LOG_DEBUG_STR("m_systemstatus.rcu().size()   =" << m_systemstatus.rcu().size()   * sizeof(EPA_Protocol::RCUStatus));
   LOG_DEBUG_STR("m_versions.rsp().size()       =" << m_versions.rsp().size()       * sizeof(uint8));
@@ -172,7 +174,7 @@ CacheBuffer::~CacheBuffer()
   m_wgsettings.waveforms().free();
   m_subbandstats().free();
   m_beamletstats().free();
-  m_crossletstats().free();
+  m_xcstats().free();
   m_systemstatus.board().free();
   m_systemstatus.rcu().free();
   m_versions.rsp().free();
@@ -220,9 +222,9 @@ Statistics& CacheBuffer::getBeamletStats()
   return m_beamletstats;
 }
 
-XCStatistics& CacheBuffer::getCrossletStats()
+XCStatistics& CacheBuffer::getXCStats()
 {
-  return m_crossletstats;
+  return m_xcstats;
 }
 
 Versions& CacheBuffer::getVersions()

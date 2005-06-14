@@ -54,7 +54,7 @@ namespace RSP
       RSP_Protocol::SystemStatus&     getSystemStatus();
       RSP_Protocol::Statistics&       getSubbandStats();
       RSP_Protocol::Statistics&       getBeamletStats();
-      RSP_Protocol::XCStatistics&     getCrossletStats();
+      RSP_Protocol::XCStatistics&     getXCStats();
       RSP_Protocol::Versions&         getVersions();
       /*@}*/
 
@@ -67,7 +67,7 @@ namespace RSP
       RSP_Protocol::WGSettings       m_wgsettings;
       RSP_Protocol::Statistics       m_subbandstats;
       RSP_Protocol::Statistics       m_beamletstats;
-      RSP_Protocol::XCStatistics     m_crossletstats;
+      RSP_Protocol::XCStatistics     m_xcstats;
       RSP_Protocol::SystemStatus     m_systemstatus;
       RSP_Protocol::Versions         m_versions;
   };

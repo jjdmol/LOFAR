@@ -111,13 +111,17 @@ namespace RSP
       void rsp_setwg(GCFEvent& event, GCFPortInterface &port);
       void rsp_getwg(GCFEvent& event, GCFPortInterface &port);
 
-      void rsp_substatus(GCFEvent& event, GCFPortInterface &port);
+      void rsp_substatus  (GCFEvent& event, GCFPortInterface &port);
       void rsp_unsubstatus(GCFEvent& event, GCFPortInterface &port);
-      void rsp_getstatus(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getstatus  (GCFEvent& event, GCFPortInterface &port);
 
-      void rsp_substats(GCFEvent& event, GCFPortInterface &port);
+      void rsp_substats  (GCFEvent& event, GCFPortInterface &port);
       void rsp_unsubstats(GCFEvent& event, GCFPortInterface &port);
-      void rsp_getstats(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getstats  (GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_subxcstats  (GCFEvent& event, GCFPortInterface &port);
+      void rsp_unsubxcstats(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getxcstats  (GCFEvent& event, GCFPortInterface &port);
 
       void rsp_getversions(GCFEvent& event, GCFPortInterface &port);
       /*@}*/

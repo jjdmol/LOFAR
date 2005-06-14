@@ -593,9 +593,8 @@ event = {
   };
 };
 
-
 event = {
-  signal = SUBXC;
+  signal = SUBXCSTATS;
   dir = IN;
   param = {
     name = "timestamp";
@@ -610,18 +609,10 @@ event = {
     name = "period";
     type = "uint16";
   };
-  param = {
-    name = "type";
-    type = "uint8";
-  };
-  param = {
-    name = "reduction";
-    type = "StatsReduction";
-  };
 };
 
 event = {
-  signal = SUBXCACK;
+  signal = SUBXCSTATSACK;
   dir = OUT; 
   param = {
     name = "timestamp";
@@ -639,7 +630,7 @@ event = {
 };
 
 event = {
-  signal = UNSUBXC;
+  signal = UNSUBXCSTATS;
   dir = IN;
   param = {
     name = "handle";
@@ -648,7 +639,7 @@ event = {
 };
 
 event = {
-  signal = UNSUBXCACK;
+  signal = UNSUBXCSTATSACK;
   dir = OUT;
   param = {
     name = "timestamp";
@@ -666,7 +657,7 @@ event = {
 };
 
 event = {
-  signal = UPDXC;
+  signal = UPDXCSTATS;
   dir = OUT;
   param = {
     name = "timestamp";
@@ -689,7 +680,7 @@ event = {
 };
 
 event = {
-  signal = GETXC;
+  signal = GETXCSTATS;
   dir = IN;
   param = {
     name = "timestamp";
@@ -704,14 +695,10 @@ event = {
     name = "cache";
     type = "uint8";
   };
-  param = {
-    name = "type";
-    type = "uint8";
-  };
 };
 
 event = {
-  signal = GETXCACK;
+  signal = GETXCSTATSACK;
   dir = OUT;
   param = {
     name = "timestamp";

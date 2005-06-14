@@ -39,11 +39,9 @@ using namespace RTC;
 
 UpdXCStatsCmd::UpdXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPSubstatsEvent(event);
+  m_event = new RSPSubxcstatsEvent(event);
 
-  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
-		 ? GET_CONFIG("RS.N_BLPS", i) : 1)
-    * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+  m_n_devices = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 
   setOperation(oper);
   setPeriod(m_event->period);
@@ -67,44 +65,24 @@ void UpdXCStatsCmd::apply(CacheBuffer& /*cache*/)
 
 void UpdXCStatsCmd::complete(CacheBuffer& cache)
 {
-  RSPUpdstatsEvent ack;
+  RSPUpdxcstatsEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  if (m_event->type <= Statistics::SUBBAND_POWER)
-  {
-    ack.stats().resize(m_event->rcumask.count(),
-		       cache.getSubbandStats()().extent(secondDim));
-  }
-  else
-  {
-    ack.stats().resize(m_event->rcumask.count(),
-		       cache.getBeamletStats()().extent(secondDim));
-  }
+  TinyVector<int, 4> s = cache.getXCStats()().shape();
+  s(2) = m_event->rcumask.count() / 2;
+  ack.stats().resize(s);
   
   int result_device = 0;
   for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++)
   {
     if (m_event->rcumask[cache_device])
     {
-      switch (m_event->type)
-      {
-	case Statistics::SUBBAND_POWER:
-	  ack.stats()(result_device, Range::all())
-	    = cache.getSubbandStats()()(cache_device, Range::all());
-	  break;
-
-	case Statistics::BEAMLET_POWER:
-	  ack.stats()(result_device, Range::all())
-	    = cache.getBeamletStats()()(cache_device, Range::all());
-	  break;
-	  
-	default:
-	  LOG_ERROR("invalid statistics type");
-	  break;
-      }
+      Range all = Range::all();
+      ack.stats()(result_device % MEPHeader::N_POL, all, result_device / MEPHeader::N_POL, all) 
+	= cache.getXCStats()()(cache_device % MEPHeader::N_POL, all, cache_device / MEPHeader::N_POL, all);
       
       result_device++;
     }
@@ -125,6 +103,5 @@ void UpdXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdXCStatsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= m_n_devices)
-	  && (m_event->type < Statistics::N_STAT_TYPES));
+  return (m_event->rcumask.count() <= m_n_devices);
 }

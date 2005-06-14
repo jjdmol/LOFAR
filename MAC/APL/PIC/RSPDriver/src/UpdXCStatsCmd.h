@@ -77,7 +77,7 @@ namespace RSP
 
     private:
       UpdXCStatsCmd();
-      RSPSubstatsEvent* m_event;
+      RSPSubxcstatsEvent* m_event;
       unsigned int m_n_devices;
   };
 };

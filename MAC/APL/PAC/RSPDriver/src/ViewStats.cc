@@ -315,7 +315,7 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
 
   gnuplot_cmd(handle, plotcmd);
 
-  gnuplot_multiplot_array(handle, stats);
+  gnuplot_write_matrix(handle, stats);
 
   //gnuplot_cmd(handle, "set nomultiplot");
 }
