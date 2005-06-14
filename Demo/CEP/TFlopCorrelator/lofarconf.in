@@ -1,4 +1,4 @@
 TFC_Interface    # holds the DH's and Stubs 
-TFC_InputSection # 
-TFC_BGLProc      # 
-TFC_Storage      # 
+TFC_InputSection # input from station
+TFC_BGLProc      # processing on BGL (filter, correlator)
+TFC_Storage      # output to storage
