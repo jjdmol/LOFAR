@@ -25,6 +25,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file CycBufferManager.h
+// Manages DataHolders in a cyclic buffer.
+
 #include <Transport/CyclicBuffer.h>
 
 /**
@@ -37,6 +40,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 class CycBufferManager : public DHPoolManager
 {
@@ -67,6 +73,8 @@ private:
   CyclicBuffer<DataHolder*> itsBuf;   // Buffer containing DataHolders
 
 };
+
+// @}
 
 }
 #endif

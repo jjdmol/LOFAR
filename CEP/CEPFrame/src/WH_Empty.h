@@ -24,12 +24,16 @@
 #define CEPFRAME_WH_EMPTY_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+// \file WH_Empty
+// An empty WorkHolder (doing nothing).
 
 #include <tinyCEP/WorkHolder.h>
 #include <CEPFrame/DH_Empty.h>
 
 namespace LOFAR
 {
+// \addtogroup CEPFrame
+// @{
 
 /**
    This is an empty WorkHolder class.
@@ -68,6 +72,8 @@ private:
   WH_Empty& operator= (const WH_Empty&);
 
 };
+
+// @}
 
 }
 

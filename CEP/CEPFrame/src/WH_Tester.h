@@ -25,11 +25,16 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file WH_Tester.h
+// WorkHolder for the Tester test.
+
 #include <tinyCEP/WorkHolder.h>
 #include <CEPFrame/DH_Tester.h>
 
 namespace LOFAR
 {
+// \addtogroup CEPFrame
+// @{
 
 /**
    This is the work holder for the Tester test program.
@@ -64,6 +69,8 @@ private:
   WH_Tester& operator= (const WH_Tester&);
 
 };
+
+// @}
 
 }
 

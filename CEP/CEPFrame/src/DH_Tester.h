@@ -24,6 +24,8 @@
 #define CEPFRAME_DH_TESTER_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+// \file DH_Tester.h
+// Simple DataHolder test class for the program Tester.
 
 #include <Common/lofar_complex.h>
 #include <Transport/DataHolder.h>
@@ -31,6 +33,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup CEPFrame
+// @{
 
 /**
    This class is a simple DataHolder test class for the program Tester.
@@ -81,6 +86,8 @@ inline DH_Tester::DataBufferType* DH_Tester::getBuffer()
 
 inline const DH_Tester::DataBufferType* DH_Tester::getBuffer() const
   { return itsBuffer; }
+
+// @}
 
 }
 

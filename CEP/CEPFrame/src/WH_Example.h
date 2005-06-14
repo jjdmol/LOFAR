@@ -24,12 +24,16 @@
 #define CEPFRAME_WH_EXAMPLE_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+// \file WH_Example.h
+// This is an example of a WorkHolder class.
 
 #include <tinyCEP/WorkHolder.h>
 #include <CEPFrame/DH_Example.h>
 
 namespace LOFAR
 {
+// \addtogroup CEPFrame
+// @{
 
 /**
    This is an example of a WorkHolder class.
@@ -75,6 +79,8 @@ private:
   /// Length of DH_Example buffers.
   int itsBufLength;
 };
+
+// @}
 
 }
 
