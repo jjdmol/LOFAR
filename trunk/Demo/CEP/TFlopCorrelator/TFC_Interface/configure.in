@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/WH_Correlator.h)
+AC_INIT(src/DH_RSP.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
@@ -62,8 +62,6 @@ lofar_FFTW2(1)
 lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)
 lofar_INTERNAL(LCS/ACC,ACC,,ACC/ParameterSet.h,,)
-lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,tinyCEP/TinyDataManager.h,,)
-lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,CEPFrame/DataManager.h,,)
 
 dnl
 dnl Output Makefiles
