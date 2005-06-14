@@ -22,7 +22,9 @@
 
 #ifndef LOFAR_TRANSPORT_CONNECTION_H
 #define LOFAR_TRANSPORT_CONNECTION_H
- 
+
+// \file Connection.h
+// Connects DataHolder(s) with a TransportHolder. 
 
 //# Includes
 #include <Transport/BaseSim.h>
@@ -31,6 +33,10 @@
 
 namespace LOFAR
 {
+
+// \addtogroup Transport
+// @{
+
 //# Forward declarations
 class DataHolder;
 class TransportHolder;
@@ -145,6 +151,8 @@ inline void Connection::setBlocking(bool block)
 
 inline bool Connection::isConnected() const
   { return (itsTransportHolder->isConnected()); }
+
+// @} // Doxygen endgroup Transport
 
 } // end namespace
 
