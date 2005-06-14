@@ -24,8 +24,14 @@
 #ifndef TINYCEP_PROFILER_H
 #define TINYCEP_PROFILER_H
 
+// \file Profiler.h
+// This class is used to profile a program during execution. 
+
 namespace LOFAR
 {
+
+// \addtogroup TinyCEP
+// @{
 
 /**
    The Profiler class is used to profile the programme during execution.
@@ -109,6 +115,8 @@ inline void ProfilingState::leave() {
 };
 
 #endif
+
+// @}
 
 }
 

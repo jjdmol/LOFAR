@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-//# Always #include <lofar_config.h> first!
-#include <lofar_config.h>
-
 #ifndef TINYAPPLICATIONHOLDERCONTROLLER_H
 #define TINYAPPLICATIONHOLDERCONTROLLER_H
+
+// \file ApplicationHolderController.h
+// Interprets commands from ACC and executes them on the TinyApplicationHolder object
 
 #include <Common/LofarLogger.h>
 
@@ -40,6 +40,9 @@ using namespace LOFAR::ACC;
 
 class ApplicationHolderController : public ProcessControl
 {
+// \addtogroup TinyCEP
+// @{
+
 public:
   // Default constructable
   ApplicationHolderController(TinyApplicationHolder& stationCorrelator, int noRuns = 100);
@@ -72,5 +75,7 @@ protected:
   ApplicationHolderController (const ApplicationHolderController& that);
   ApplicationHolderController& 	operator=(const ApplicationHolderController& that);
 };
+
+// @}
 
 #endif
