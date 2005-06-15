@@ -56,11 +56,8 @@ DataHolder* DH_PPF::clone() const
   return new DH_PPF(*this);
 }
 
-void DH_PPF::preprocess()
+void DH_PPF::init()
 {
-  // First delete possible buffers.
-  postprocess();
-
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
   
@@ -70,11 +67,6 @@ void DH_PPF::preprocess()
   createDataBlock();  // calls fillDataPointers
   itsBuffer = getData<BufferType> ("Buffer");
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
-}
-
-void DH_PPF::postprocess()
-{
-  itsBuffer     = 0;
 }
 
 void DH_PPF::fillDataPointers() {

@@ -36,10 +36,7 @@ public:
   DataHolder* clone() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   /// Get write access to the Buffer in the DataPacket.
   BufferType* getBuffer();

@@ -36,10 +36,7 @@ public:
   DataHolder* clone() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   // todo: get pointer to array that can serve as input for the fft
   //BufferType* getBufferTimePolSeries(int channel, int station);

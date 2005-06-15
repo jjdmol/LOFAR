@@ -51,11 +51,8 @@ DataHolder* DH_CorrCube::clone() const
   return new DH_CorrCube(*this);
 }
 
-void DH_CorrCube::preprocess()
+void DH_CorrCube::init()
 {
-  // First delete possible buffers.
-  postprocess();
-
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
   
@@ -65,11 +62,6 @@ void DH_CorrCube::preprocess()
   createDataBlock();  // calls fillDataPointers
   // itsBuffer = getData<BufferType> ("Buffer");
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
-}
-
-void DH_CorrCube::postprocess()
-{
-  itsBuffer     = 0;
 }
 
 void DH_CorrCube::fillDataPointers() {

@@ -38,11 +38,8 @@ DataHolder* DH_Sync::clone() const
   return new DH_Sync(*this);
 }
 
-void DH_Sync::preprocess()
+void DH_Sync::init()
 {
-  // first delete possible preexisting buffers.
-  postprocess();
-  
   // add the fields to the data definition
   addField ("Delay", BlobField<int>(1, 1));
   addField ("SeqId", BlobField<int>(1, 1));
@@ -50,10 +47,6 @@ void DH_Sync::preprocess()
   
   // create the data blob
   createDataBlock();
-}
-
-void DH_Sync::postprocess()
-{
 }
 
 void DH_Sync::fillDataPointers() 
