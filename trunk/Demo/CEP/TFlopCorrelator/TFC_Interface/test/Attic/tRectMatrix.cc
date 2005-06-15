@@ -25,7 +25,7 @@
 
 #include <Common/Exception.h>
 #include <Common/lofar_iostream.h>
-#include <TFlopCorrelator/RectMatrix.h>
+#include <TFC_Interface/RectMatrix.h>
 
 #include <iostream>
 
