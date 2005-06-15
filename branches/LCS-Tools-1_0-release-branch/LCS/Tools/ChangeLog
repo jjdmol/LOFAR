@@ -1,0 +1,149 @@
+2005-06-15 16:49  loose
+
+	* AUTHORS: %[ER: 241]%
+
+	  Prepare for release of version 1.0
+
+2005-06-15 16:43  loose
+
+	* COPYING: %[ER: 241]%
+
+	  Prepare for release of version 1.0
+
+2005-06-15 16:28  loose
+
+	* INSTALL, NEWS, README, configure.in: %[ER: 241]%
+
+	  Prepare for release of version 1.0
+
+2005-06-13 16:29  loose
+
+	* src/: LimitExec.c, LimitExec.cc, Makefile.am: %[ER: 252]%
+
+	  Undid rename. For some obscure reason the IBM/XLC C compiler
+	  chokes on the code, whereas the C++ compiler does not.
+
+2005-06-10 12:24  loose
+
+	* src/: LimitExec.c, LimitExec.cc, Makefile.am: %[ER: 252]%
+
+	  Renamed LimitExec.cc to LimitExec.c, so that it is now compiled
+	  by gcc instead of g++; this reduces the runtime dependencies on
+	  shared object libraries.
+
+2005-06-09 17:40  loose
+
+	* src/LimitExec.cc: %[ER: 252]%
+
+	  Improved diagnostics when program was terminated by a signal
+	  (e.g. SEGV).	Some minor code changes.
+
+2005-06-09 15:39  loose
+
+	* src/: LimitExec.cc, Makefile.am: %[ER: 252]%
+
+	  Moved LimitExec.cc from LCS/Common to LCS/Tools.
+
+2005-05-27 17:03  coolen
+
+	* configure.in: %[ER: 273]%
+
+	  Changed lofar_PACKAGE into lofar_INTERNAL.
+
+2005-05-13 11:44  coolen
+
+	* configure.in, src/templates/package_configure.in_template: all
+	  changes so far for the lofar_PACKAGE to lofar_INTERNAL step.
+	  beware!!!  this branch also contains the ER231 changes , and
+	  those are NOT wanted in the main development tree....  Only take
+	  the configure.in stuff
+
+2005-05-04 18:02  loose
+
+	* src/makeClass.py: %[ER: 241]%
+
+	  Fixed bug in bug fix (which should have fixed problem with wrong
+	  insertion of backslash after "=")
+
+2005-05-04 17:20  loose
+
+	* src/templates/package_bootstrap_template: %[ER: 241]%
+
+	  Fixed bug in bootstrap template.
+
+2005-05-04 17:19  loose
+
+	* src/makePackage.py: %[ER: 241]%
+
+	  Set the executable bits of the generated bootstrap file.
+
+2005-04-08 13:31  lofar
+
+	* src/makeClass.py: %[ER:71 ]% if Makefile contained INSTHDRS = \
+	  the script went wrong with insertions solved now.
+
+2005-04-08 12:54  loose
+
+	* src/lofarinit.csh: %[ER: 253]%
+
+	  Added check for valid $a_root. Fixed bug when cd is an alias.
+
+2005-04-08 12:46  diepen
+
+	* src/lofarinit.sh: %[ER: 253]% Check if root directory exists
+
+2005-04-08 12:30  diepen
+
+	* src/lofarinit.csh: %[ER: 253]% Fixed little bug
+
+2005-04-08 12:23  diepen
+
+	* src/: lofarinit.csh, lofarinit.sh: %[ER: 253]% Use LOFARROOT
+	  instead of LOFARPATH
+
+2005-04-08 09:48  diepen
+
+	* src/: Makefile.am, lofarinit.csh, lofarinit.sh: %[ER: 253]%
+	  Improved comments
+
+2005-04-08 09:03  diepen
+
+	* src/: lofarinit.csh, lofarinit.sh: %[ER: 253]% Also try to strip
+	  new LOFARPATH
+
+2005-04-08 08:33  diepen
+
+	* src/: Makefile.am, lofarinit.csh, lofarinit.sh: %[ER: 253]% Added
+	  lofarinit.sh and .csh
+
+2005-02-25 14:51  lofar
+
+	* test/Makefile.am: %[ER: 71]% another bunch of required files for
+	  Tools
+
+2005-02-25 13:58  coolen
+
+	* Makefile.am, bootstrap, configure.in: added all buildfiles for
+	  this new package
+
+2005-02-25 13:50  coolen
+
+	* src/Makefile.am: New Makefile to handle the tools in LOFAR/LCS
+
+2005-02-21 16:30  coolen
+
+	* src/: makeClass.py, makePackage.py, makeTest.py,
+	  templates/header.cc_template, templates/header.h_template,
+	  templates/main.cc_template, templates/package_bootstrap_template,
+	  templates/package_configure.in_template,
+	  templates/package_lofarconf.in_template,
+	  templates/package_makefile.am_template,
+	  templates/src_makefile.am_template,
+	  templates/templated_header.cc_template,
+	  templates/templated_header.h_template,
+	  templates/templated_header.tcc_template,
+	  templates/test.cc_template, templates/test.in_template,
+	  templates/test.out_template, templates/test.sh_template,
+	  templates/test_makefile.am_template: %[ER: 241]% created Tools
+	  directory and added make* python scripts + templates
+
