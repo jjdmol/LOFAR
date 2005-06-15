@@ -30,7 +30,7 @@
 
 #include <pthread.h>
 
-#include <TFlopCorrelator/RSPTimeStamp.h>
+#include <TFC_Interface/RSPTimeStamp.h>
 #include <BufferController.h>
 
 
