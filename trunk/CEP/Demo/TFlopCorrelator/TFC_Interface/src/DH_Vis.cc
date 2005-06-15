@@ -46,11 +46,8 @@ DataHolder* DH_Vis::clone() const
   return new DH_Vis(*this);
 }
 
-void DH_Vis::preprocess()
+void DH_Vis::init()
 {
-  // First delete possible buffers.
-  postprocess();
-
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNStations * itsNFChannels * itsNPols*itsNPols;
   addField("Buffer", BlobField<fcomplex>(1, itsBufSize));
@@ -58,11 +55,6 @@ void DH_Vis::preprocess()
   //itsBuffer = getData<fcomplex> ("Buffer");
   memset(itsBuffer, 0, itsBufSize*sizeof(fcomplex)); 
 
-}
-
-void DH_Vis::postprocess()
-{
-  itsBuffer     = 0;
 }
 
 void DH_Vis::fillDataPointers() {
