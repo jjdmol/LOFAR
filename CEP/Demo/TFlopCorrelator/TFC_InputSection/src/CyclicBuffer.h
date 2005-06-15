@@ -297,7 +297,7 @@ const TYPE CyclicBuffer<TYPE>::GetUserReadPtr(int offset, int& ID)
   else {
     ID = itsTailIdx + offset - (int)itsBuffer.size(); 
   }
-  itsBuffer[*ID].itsRWLock.ReadLock();
+  itsBuffer[ID].itsRWLock.ReadLock();
  
   // adjust the tail
   itsTailIdx = ID+1;
