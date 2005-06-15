@@ -89,10 +89,10 @@ void AsyncTest::define(const KeyValueMap& params)
 #endif
 
   // Create the Workholders and Steps
-  Sworkholders = new (WH_Source*)[itsSourceSteps];
-  Ssteps       = new (Step*)[itsSourceSteps];
-  Dworkholders = new (WH_Sink*)[itsDestSteps];
-  Dsteps       = new (Step*)[itsDestSteps];
+  Sworkholders = new WH_Source*[itsSourceSteps];
+  Ssteps       = new Step*[itsSourceSteps];
+  Dworkholders = new WH_Sink*[itsDestSteps];
+  Dsteps       = new Step*[itsDestSteps];
   
   
   // now go and create the source and destination steps
