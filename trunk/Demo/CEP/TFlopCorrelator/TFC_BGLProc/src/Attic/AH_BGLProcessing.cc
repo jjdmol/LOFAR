@@ -81,58 +81,53 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Create the SubBand filter  workholders");
   
+  char WH_Name[40];
+  int noProcBlock = itsParamSet.getInt("NoProcessingBlocks");
+  int noFiltsPerBlock = itsParamSet.getInt("NoFiltersPerBlock");
+  int noCorsPerFilt = itsParamSet.getInt("NoCorsPerFilt");
+  int subband = 0;
+  for (int pb = 0; pb < noProcBlock; pb++) {
+    int corID = 0;
+    vector<WH_Correlator*> Cors;
+    for (int fil = 0; fil < noFiltsPerBlock; fil++) {
+      // create WH_SubBand and WH_FFT
+      snprintf(WH_Name, 40, "SubBandFilter_%d_of_%d_ofBlock_%d", fil, noFiltsPerBlock, pb);
+      WH_SubBand* SBFNode = new WH_SubBand(WH_Name, subband++);
+      itsWHs.push_back(SBFNode);
+      itsWHs.back()->runOnNode(lowestFreeNode++);   
 
-  // create WH_SubBand and WH_FFT
-  vector<WH_SubBand*> SBFNodes;
-  vector<WH_FFT*> FFTNodes;
-  char WH_DH_Name[40];
-  for (int s=0; s<itsNSBF; s++) {
-    snprintf(WH_DH_Name, 40, "SubBandFilter_%d_of_%d", s, itsNSBF);
-    SBFNodes.push_back(new WH_SubBand(WH_DH_Name,      // name
-				      0));   // SubBandID
-    itsWHs.push_back((WorkHolder*) SBFNodes[s]);
-    itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
+      snprintf(WH_Name, 40, "FFT_%d_of_%d_ofBlock_%d", fil, noFiltsPerBlock, pb);
+      WH_FFT* FFTNode = new WH_FFT(WH_Name);
+      itsWHs.push_back(FFTNode);
+      itsWHs.back()->runOnNode(lowestFreeNode++);   
 
-    // connect the Subband filter to the input section
-    // this interface is defined in the Stub_SB class
-    inStub.connect (s,                                                            // SBF filter number
-		    (DH_SubBand*)SBFNodes[s]->getDataManager().getInHolder(0));  // input dataholder in the current WH
-
-
-
-    snprintf(WH_DH_Name, 40, "SubBandFilter_FFT_%d_of_%d", s, itsNSBF);
-    FFTNodes.push_back(new WH_FFT(WH_DH_Name));      // name
-    itsWHs.push_back((WorkHolder*) FFTNodes[s]);
-    itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
-
-    connectWHs(itsWHs[itsWHs.size()-2], 0, itsWHs[itsWHs.size()-1], 0);
-  };
-  
-  LOG_TRACE_FLOW_STR("Create the Correlator workholders");
-  vector<WH_Correlator*> CorrNodes;
-  int corrID=0; // corr serial number in the AH
-  int itsCpF   = itsParamSet.getInt("Corr_per_Filter");
-  for (int s=0; s<itsNSBF; s++ ) {
-    // loop over all SubBand Filters
-    for (int c=0; c<itsCpF; c++) {
-      // loop over al the correlators connected to a single SubBandFilter
-      corrID++;  // 
-      snprintf(WH_DH_Name, 40, "Correlator_%d_of_%d", corrID, itsNSBF*itsCpF);
-      CorrNodes.push_back(new WH_Correlator(WH_DH_Name));      // name
-      itsWHs.push_back((WorkHolder*) CorrNodes[corrID]);
-      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);   
+      // todo: connect to inputSection using Stub_SB
+      connectWHs(SBFNode, 0, FFTNode, 0);
       
-      // todo: connect Correlator to SBFilter
-      
-      // this connection is defined in the Stub_SB class
-      
-      // connect the Subband filter to the input section
-      // this interface is defined in the Stub_SB class
-      outStub.connect (corrID,                                                              // Corr filter number
-		       *(DH_Vis*)CorrNodes[corrID]->getDataManager().getOutHolder(0));  // input dataholder in the current WH
-      
+      for (int cor = 0; cor < noCorsPerFilt; cor++, corId++) {
+	// create correlator nodes
+	snprintf(WH_Name, 40, "Correlator_%d_of_%d_ofBlock_%d", corID, noFiltsPerBlock*noCorsPerFilt, pb);
+	WH_Correlator* CorNode = new WH_Correlator(WH_Name);
+	itsWHs.push_back(CorNode);
+	itsWHs.back()->runOnNode(lowestFreeNode++);   
+	Cors.push_back(CorNode);
+	connectWHs(FFTNode, cor, CorNode, 0);
+      }
     }
-  };
+
+    // create collect node
+    snprintf(WH_Name, 40, "Collect_ofBlock_%d", pb);
+    // WH_Collect* ColNode = new WH_Collect(WH_Name);
+    itsWHs.push_back(ColNode);
+    itsWHs.back()->runOnNode(lowestFreeNode++);   
+    for (int cor = 0; cor <= corId; cor++) {
+      connectWHs(Cors[cor], 0, ColNode, cor);
+    }
+    // todo: create a dummy (or more) so that the number of processes in this block
+    // corresponds to the size of this block on BG/L (8 in CPM or 16 in VNM)
+    
+    // todo: connect to storage section using the Stub_Corr
+  }
   
   LOG_TRACE_FLOW_STR("Finished define()");
 }

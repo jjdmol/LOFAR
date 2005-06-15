@@ -92,6 +92,35 @@ void WH_SubBand::preprocess() {
 }
 
 void WH_SubBand::process() {
+#if 0
+  RectMatrix<DH_SubBand::BufferType>& srcMatrix =(DH_SubBand*)getDataManager().getInHolder(0)->getDataMatrix();
+  // this could be done in the preprocess too instead of every process step
+  dimType stationDim = srcMatrix.getDim("Station"); 
+  dimType freqDim = srcMatrix.getDim("FreqChannel"); 
+  dimType timeDim = srcMatrix.getDim("Time"); 
+  dimType polDim = srcMatrix.getDim("Polarisation"); 
+  RectMatrix<DH_SubBand::BufferType>::cursorType chanCur, statCur, timeCur, beginCursor = srcMatrix.getCursor(0*stationDim + 0* freqDim + 0*timeDim + 0*polDim);
+
+  // this is a for loop that uses the macro from the rectmatrix class
+  // set the start point
+  chanCursor = beginCursor;
+  // use the macro, arguments: matrix, dimension to walk through and cursor
+  MATRIX_FOR_LOOP(srcMatrix, freqDim, chanCur) {
+
+    // reset the fft_in buffer in case we used it before.
+    memset(fft_in, 0, itsNStations * 2);
+
+    // this is a for loop without the macro
+    // notice the 2 extra statements in the for loop    
+    for (int f = 0, statCur = chanCur; f < itsNStations; f++, srcMatrix.moveCursor(&statCur, stationDim)) {
+
+      // again a for loop using the macro
+      timeCur = statCur;
+      MATRIX_FOR_LOOP(srcMatrix, timeDim, timeCur) {
+
+	// shouldn't we do this with all polarisations?
+	*delayPtr[f] = srcMatrix.getValue(timeCur);
+#else
 
   for (int channel = 0; channel < itsNFChannels; channel++) {
 
@@ -102,6 +131,7 @@ void WH_SubBand::process() {
       for (int sample = 0; sample < itsNTimes; sample++) {
 
 	*delayPtr[f] = *((DH_SubBand*)getDataManager().getInHolder(0))->getBufferElement(channel, f, sample, 0);
+#endif
 
 	for (int i = 0; i < itsNtaps; i++) { 
 	  
