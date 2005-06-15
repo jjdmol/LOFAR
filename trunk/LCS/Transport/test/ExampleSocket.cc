@@ -174,6 +174,9 @@ int32 doTest(int32	testnr)
 	delete theDH;
 	theDH = 0;
 
+	delete testSocket;
+	testSocket = 0;
+
 	if (result == 0) {
 		LOG_INFO ("Test passed succesful!");
 	}
