@@ -1,0 +1,47 @@
+LCS/Common: Version 2.2, date: 2005/06/15
+=========================================
+
+
+The following Enhancement Requests have been implemented
+--------------------------------------------------------
+
+ER 220 : Build environment     : Compile on 64 bit machine 
+
+         Code has been modified in order to compiler properly on 64 bit
+         machines, like AMD Opterons.
+
+ER 236 : LOFAR SW development  : preparations for Package documentation 
+
+         The documentation of each LOFAR package should be put into a separate
+         Doxygen group (or module). This makes the documentation more
+         accessible and offers a way to quickly browse to different packages.
+         Preparations have been made for several packages, including
+         LCS/Common.
+
+ER 247 : Common                : Use builtin complex 
+
+         The GNU compiler suite comes with a builtin complex type. Whenever
+         possible this builtin type will be used, because performance almost
+         triples compared to the std::complex type.
+
+ER 252 : Build environment     : Add 'limit exec' to runtest.sh
+
+         Some test programs occasionally "hang" waiting for a mutex lock, or
+         in a blocking I/O operation. In order to not hamper a (system) build
+         these suspicious programs should be killed after a predefined
+         run-time. This feature has been added to runtest.sh /
+         assay. Currently, it will not work when a .run file is used.
+
+
+The following Problem Reports have been fixed
+---------------------------------------------
+
+PR 100 : LOFAR SW development  : Neither config.h nor lofar_config.h should
+                                 be included in header files
+
+         Inclusion of either config.h or lofar_config.h in a distributed
+         header file is problematic, because the config files themselves
+         cannot be distributed; they contain system specific definitions. It
+         is therefore unwise to include either of these files in a header
+         file.
+
