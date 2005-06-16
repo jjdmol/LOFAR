@@ -104,7 +104,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
       // todo: connect to inputSection using Stub_SB
       connectWHs(SBFNode, 0, FFTNode, 0);
       
-      for (int cor = 0; cor < noCorsPerFilt; cor++, corId++) {
+      for (int cor = 0; cor < noCorsPerFilt; cor++, corID++) {
 	// create correlator nodes
 	snprintf(WH_Name, 40, "Correlator_%d_of_%d_ofBlock_%d", corID, noFiltsPerBlock*noCorsPerFilt, pb);
 	WH_Correlator* CorNode = new WH_Correlator(WH_Name);
@@ -117,12 +117,12 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
     // create collect node
     snprintf(WH_Name, 40, "Collect_ofBlock_%d", pb);
-    // WH_Collect* ColNode = new WH_Collect(WH_Name);
-    itsWHs.push_back(ColNode);
-    itsWHs.back()->runOnNode(lowestFreeNode++);   
-    for (int cor = 0; cor <= corId; cor++) {
-      connectWHs(Cors[cor], 0, ColNode, cor);
-    }
+//     WH_Collect* ColNode = new WH_Collect(WH_Name);
+//     itsWHs.push_back(ColNode);
+//     itsWHs.back()->runOnNode(lowestFreeNode++);   
+//     for (int cor = 0; cor <= corId; cor++) {
+//       connectWHs(Cors[cor], 0, ColNode, cor);
+//     }
     // todo: create a dummy (or more) so that the number of processes in this block
     // corresponds to the size of this block on BG/L (8 in CPM or 16 in VNM)
     
