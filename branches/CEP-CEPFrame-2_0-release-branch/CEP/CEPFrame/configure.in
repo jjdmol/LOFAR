@@ -5,7 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(CEPFrame, 0.1)
+AM_INIT_AUTOMAKE(CEPFrame, 2.0, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -54,15 +54,14 @@ dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
 lofar_CHECK_LONG_LONG
-lofar_MATLAB
-lofar_XERCES
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
 lofar_MPI
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,tinyCEP/TinyDataManager.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_2,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_0,Transport/DataHolder.h,,)
+lofar_INTERNAL(CEP/tinyCEP,tinyCEP,CEP-tinyCEP-2_0,tinyCEP/TinyDataManager.h,,)
 
 dnl
 dnl Output Makefiles
