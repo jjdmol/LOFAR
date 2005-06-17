@@ -10,6 +10,10 @@ The build process has changed as well. The Transport library should now be
 built against an installed version of the Common library. (Ref. ER-270 and
 ER-273).
 
+There has been a significant change in TH_ShMem. It no longer needs MPI to
+work, instead a helper TransportHolder of your choice is used once to set up 
+the shared memory communication. This helper TransportHolder must be set 
+during construction.
 
 The following Enhancement Requests have been implemented
 --------------------------------------------------------
