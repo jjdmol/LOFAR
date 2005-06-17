@@ -1,8 +1,9 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,328 229 740 569 N "_3DFace" 0
-EEE E E 1 -1 -1 0  0 510
+PANEL,328 229 95 42 N "_3DFace" 1
+"$Nr"
+EEE E E 1 -1 -1 0  -1 -1
 "" 0 1
 EE 2
 "CBRef""1"
@@ -12,12 +13,12 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-28 1
-"Tab1"
+13 0
+"Button2"
 ""
-1 253 2706 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 10 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
-2 0 0 0 0 0
+1 0 0 0 0 0
 EE E
 0
 1
@@ -26,28 +27,23 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
--2 -2 742 572
-E4
-"Environment" 1
-LANG:1 11 Environment
-1 "navigator\\configTabEnvironment.pnl" 1
+8 8 40 34
+P 
+13434828
+"pictures/icon_fileselector.bmp"
+1
 LANG:1 0 
-0
-"Userrights" 1
-LANG:1 10 Userrights
-1 "navigator\\configTabUserrights.pnl" 1
-LANG:1 0 
-0
-"Shortcuts" 1
-LANG:1 9 Shortcuts
-1 "navigator\\configTabShortCuts.pnl" 1
-LANG:1 0 
-0
-"Path" 1
-LANG:1 4 Path
-1 "navigator\\configTabPathNames.pnl" 1
-LANG:1 0 
-0
+"main()
+{
+ string selectedFolder;
+ folderSelector(selectedFolder, \"\", false, \"*.*\");
+ if(selectedFolder!=\"\")
+ {
+   setValue(\"txt_pathNames\" + $Nr, \"text\", selectedFolder);
+ }
+
+}" 0
+ E E E
 0
 LAYER, 1 
 1

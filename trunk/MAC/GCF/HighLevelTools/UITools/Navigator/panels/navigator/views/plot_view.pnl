@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 4 view
-PANEL,497 412 950 740 N "_3DFace" 2
+PANEL,350 258 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -71,6 +71,62 @@ void navViewPlotMain()
     delay(1,0);
     if(\"PLAY\"==PLOT_STATE || \"STEP\"==PLOT_STATE) // 
     {
+      // perform this for every datapoint configured to plot
+      for(int i=1; i<=8; i++)
+      {
+        dpGet($configDatapoint + \".\" + i + \".active\", dpActive);
+        if(dpActive)
+        {
+          dpGet($configDatapoint + \".\" + i + \".dpName\", dpNameToPlot);
+          dpToConnect = navViewRetrieveDpName($datapoint, dpNameToPlot);
+          
+          //Check or a navPMLloadPropertySet must be performed for this datapoint
+          if(dynContains(dpsLoaded, dpToConnect)<1)
+          {
+            navPMLloadPropertySet(dpToConnect);
+            dpsLoaded[dynlen(dpsLoaded)+1] = dpToConnect;
+          }
+          dpGet(dpToConnect, spectrumData);
+          if(\"\"==spectrumData || \"0\"==spectrumData || strpos(spectrumData, \" \")<1) //if not correct data available, create alternative data
+          {
+            //spectrumData = (1+i)+\" \"+(30+i)+\"\\n\"+(2+i)+\" \"+(50+i)+\"\\n\"+(3+i)+\" \"+(30+i)+\"\\n\"+(4+i)+\" \"+(50+i)+\"\\n\"+(5+i)+\" \"+(30+i)+\"\\n\"+(6+i)+\" \"+(50+i)+\"\\n\"+(7+i)+\" \"+(30+i)+\"\\n\"+(8+i)+\" \"+(50+i)+\"\\n\"+(9+i)+\" \"+(30+i)+\"\\n\";
+            spectrumData = \"0 0\\n\";
+          }
+	        //write content of string to spectrum[DP_number].dat
+          fSpectrum = fopen(TEMP_PATH + l_outputFileName + i + \".dat\", \"w+\");
+          fputs (spectrumData, fSpectrum );
+          fclose(fSpectrum);
+        }
+        else // generate an empty file
+        {
+          spectrumData = \"0 0\\n100 100\\n200 0\\n\";
+          fSpectrum = fopen(TEMP_PATH + l_outputFileName + i + \".dat\", \"w+\");
+          fputs (spectrumData, fSpectrum );
+          fclose(fSpectrum);
+        }
+      }
+
+      // All needed datfile are generated, start generating the plot file
+      string timeString = getCurrentTime();
+      string plotTitle = \"[\"+timeString+\"]\";
+      int plotNumber=1;
+      if(\"PLAY\"==PLOT_STATE || \"STEP\"==PLOT_STATE) // 
+      {
+        navViewPlotGenerateGnuPlotScriptFile(plotNumber, plotTitle, xrangeMin, xrangeMax, yrangeMin, yrangeMax);
+        navViewPlotGenerateGnuplotOutput(plotNumber);
+        delay(0,0.400);
+        navViewPlotConvertGnuplotOutput(plotNumber);        
+        // Delay, minimal 1 second. Config item for user
+        setValue(\"plotarea1\", \"fill\",\"[pattern,[tile,bmp,gnuplot1.bmp]]\");
+        if(\"STEP\"==PLOT_STATE) 
+        {
+          PLOT_STATE=\"PAUSE\";
+          navViewPlotChangeState();
+        }
+      }
+  
+    }
+
       int updateRateInternal;
       if(0==UPDATE_RATE)
       {
@@ -100,51 +156,12 @@ void navViewPlotMain()
         delay(1,0);
         secondCounter++;
       }
-      // perform this for every datapoint configured to plot
-      for(int i=1; i<=4; i++)
-      {
-        dpGet($configDatapoint + \".\" + i + \".active\", dpActive);
-        if(dpActive)
-        {
-          dpGet($configDatapoint + \".\" + i + \".dpName\", dpNameToPlot);
-          dpToConnect = navViewRetrieveDpName($datapoint, dpNameToPlot);
-          
-          //Check or a navPMLloadPropertySet must be performed for this datapoint
-          if(dynContains(dpsLoaded, dpToConnect)<1)
-          {
-            navPMLloadPropertySet(dpToConnect);
-            dpsLoaded[dynlen(dpsLoaded)+1] = dpToConnect;
-          }
-          dpGet(dpToConnect, spectrumData);
-          if(\"\"==spectrumData || \"0\"==spectrumData || strpos(spectrumData, \" \")<1) //if not correct data available, create alternative data
-          {
-            spectrumData = \"0 30\\n1 50\\n2 30\\n3 50\\n4 30\\n5 50\\n6 30\\n7 50\\n8 30\\n\";
-          }
-	        //write content of string to spectrum[DP_number].dat
-          fSpectrum = fopen(TEMP_PATH +\"output\" + i + \".dat\", \"w+\");
-          fputs (spectrumData, fSpectrum );
-          fclose(fSpectrum);
-        }
-      }
 
-      // All needed datfile are generated, start generating the plot file
-      string timeString = getCurrentTime();
-      string plotTitle = \"[\"+timeString+\"]\";
-      int plotNumber=1;
-      if(\"PLAY\"==PLOT_STATE || \"STEP\"==PLOT_STATE) // 
-      {
-        navViewPlotGenerateGnuPlotScriptFile(plotNumber, plotTitle, xrangeMin, xrangeMax, yrangeMin, yrangeMax);
-        navViewPlotGenerateGnuplotOutput(plotNumber);
-        delay(0,0.400);
-        navViewPlotConvertGnuplotOutput(plotNumber);        
-        // Delay, minimal 1 second. Config item for user
-        setValue(\"plotarea1\", \"fill\",\"[pattern,[tile,bmp,gnuplot1.bmp]]\");
-        if(\"STEP\"==PLOT_STATE) 
-        {
-          PLOT_STATE=\"PAUSE\";
-          navViewPlotChangeState();
-        }
-      }
+  }
+}
+
+
+//OLD code to try to change bmp's without blinking!!!
 /*
       if(plotOneActive)
       {
@@ -174,14 +191,7 @@ void navViewPlotMain()
         //setValue(\"plotarea2\", \"position\", 940,40);
         plotOneActive = TRUE;
       }
-*/
-      //setValue(\"plotarea\", \"fill\",\"[pattern,[tile,bmp,gnuplot1.bmp]]\");
-   
-    }
-
-   
-  }
-}" 0
+*/" 0
 "main()
 {
 
@@ -206,7 +216,7 @@ dyn_string dpsLoaded;
 int UPDATE_RATE = 0;
 int xrangeMin, xrangeMax, yrangeMin, yrangeMax;
 string XRANGE, YRANGE;
-" 0
+string l_outputFileName = \"output\";" 0
  2
 "CBRef""1"
 "EClose"E
@@ -487,7 +497,7 @@ void navViewPlotContextMenu()
           dpGet($configDatapoint + \".\"+i+\".active\", Active);
           if(Active)
           {
-            system(COPY_COMMAND + \" \" + TEMP_PATH + \"spectrum\"+i+\".dat \"+ folderSelection);
+            system(COPY_COMMAND + \" \" + TEMP_PATH + l_outputFileName + i+\".dat \"+ folderSelection);
           }
         }
       }
@@ -516,23 +526,10 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 10 40 940 740
-6 88
-"icon_stop"
-""
-1 10 30 E E E 1 E 0 E N "_WindowText" E N {0,0,0} E E
- E E
-77 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 10 30 30
 10 92
 "icon_play"
 ""
-1 47 10 E E E 1 E 0 E N "_WindowText" E N {0,0,0} E E
+1 40 10 E E E 1 E 0 E N "_WindowText" E N {0,0,0} E E
  E E
 81 0 0 0 0 0
 EE E
@@ -541,14 +538,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 3 47 10
-67 20
-47 30
+E E 0 1 1 0 1 E U  1 E 3 40 10
+60 20
+40 30
 0
 6 94
 "icon_pause1"
 ""
-1 80 30 E E E 1 E 0 E N "_WindowText" E N {0,0,0} E E
+1 70 30 E E E 1 E 0 E N "_WindowText" E N {0,0,0} E E
  E E
 83 0 0 0 0 0
 EE E
@@ -557,11 +554,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 80 10 85 30
+E E 0 1 1 0 1 E U  1 E 70 10 75 30
 6 95
 "icon_pause2"
 ""
-1 90 30 E E E 1 E 0 E N "_WindowText" E N {0,0,0} E E
+1 80 30 E E E 1 E 0 E N "_WindowText" E N {0,0,0} E E
  E E
 84 0 0 0 0 0
 EE E
@@ -570,130 +567,20 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 90 10 95 30
-13 96
-"Button1"
+E E 0 1 1 0 1 E U  1 E 80 10 85 30
+7 106
+"icon_record"
 ""
-1 120 0 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+1 20 20 E E E 1 E 0 E N {255,0,0} E N {255,0,0} E E
  E E
-85 0 0 0 0 0
+94 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
-0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-118 -2 242 25
-T 
-1
-LANG:1 7 Button1
-"main()
-{
- DebugN(\"Plot state is:\"+PLOT_STATE);
-}" 0
- E E E
-13 99
-"Button2"
-""
-1 300 0 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-88 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-298 -2 422 25
-T 
-1
-LANG:1 7 Button2
-"main()
-{
-
-        setValue(\"plotarea2\", \"position\", 10,0);
-        setValue(\"plotarea2\", \"visible\", TRUE);
-}" 0
- E E "main()
-{
-  //setValue(\"plotarea1\", \"fill\",\"[pattern,[tile,bmp,gnuplot2.bmp]]\");
-  //setValue(\"plotarea2\", \"fill\",\"[pattern,[tile,bmp,gnuplot3.bmp]]\");
-}" 0
-
-13 100
-"Button3"
-""
-1 450 0 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-89 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-448 -2 572 25
-T 
-1
-LANG:1 7 Button3
-"main()
-{
-         plotarea2.fill=\"[outline]\"; // New syntax
-         //setValue(\"plotarea2\", \"visible\", FALSE);
-         //setValue(\"plotarea2\", \"position\", 1000,40);
-
-
-
-}" 0
- E E E
-13 101
-"Button4"
-""
-1 660 10 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-90 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-658 8 782 35
-T 
-1
-LANG:1 7 Button4
-"main()
-{
-setValue(\"plotarea1\", \"fill\",\"[pattern,[tile,bmp,gnuplot1.jpg]]\");
-}" 0
- E E E
-14 102
-"plot"
-""
-1 810 10 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-91 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-808 8 912 35
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 20 10 10
 0
 LAYER, 1 
 1

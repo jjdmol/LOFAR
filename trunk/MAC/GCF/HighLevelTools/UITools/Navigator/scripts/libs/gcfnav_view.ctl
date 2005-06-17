@@ -319,7 +319,7 @@ int navViewPlotGenerateGnuPlotScriptFile(int plotNumber, string plotTitle,
   fclose(f);
 
   string scriptFilename;
-  dpGet($configDatapoint + "." + plotNumber + ".scriptFilename", scriptFilename);
+  dpGet($configDatapoint + ".scriptFilename", scriptFilename);
   strreplace(scriptFilename, "/", "\\");    
   //If the scriptFilename is configured and existing, combine both script files,
   // otherwise generated dumme
