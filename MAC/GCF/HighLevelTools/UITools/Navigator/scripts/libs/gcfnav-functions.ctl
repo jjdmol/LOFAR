@@ -1856,8 +1856,10 @@ string getDpTypeFromEnabled(string datapointPath)
   dyn_string contentSplit;
   dpGet(datapointPath,content);
   contentSplit = strsplit(content, "|");
-    if(dynlen(contentSplit)<2)
+  if(dynlen(contentSplit)<2)
+  {
     DebugN(contentSplit);
+  }
     
   if(dynlen(contentSplit)>1)
   {
@@ -1880,6 +1882,28 @@ string getDpTypeFromEnabled(string datapointPath)
 void navConfigMessageWarning(string message)
 {
   ChildPanelOnCentralModal("navigator/MessageWarning", "Warning", makeDynString("$1:"+message));
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navConfigGetPathName   
+//           converts pathName so it can be used in combination with a
+//           system command, depending on operating system
+//
+// Input:  1. pathName
+// Output: 1. operating dependent pathName
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetPathName(string pathName)
+{
+  if (_WIN32)
+  {
+    strreplace(pathName, "/", "\\");     
+  }
+  else
+  {
+    strreplace(pathName, "/", "//");     
+  }
+  return pathName;
 }
 
 

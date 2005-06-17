@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,266 353 690 341 N "_3DFace" 4
+PANEL,258 138 690 341 N "_3DFace" 4
 "$PlotNr"
 "$configDatapoint"
 "$datapoint"
@@ -301,7 +301,7 @@ E E 0 1 1 0 1 E U  0 E 10 262 644 286
 2 83
 "Text3"
 ""
-1 20 264 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 20 264 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 62 0 0 0 0 0
 EE E
@@ -321,7 +321,7 @@ LANG:1 21 Selected script file:
 2 84
 "txt_script"
 ""
-1 159 264 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 159 264 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 63 0 0 0 0 0
 EE E
@@ -408,7 +408,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  setValue(\"\",\"text\", \"spectrum\"+$PlotNr+\".dat\");
+  setValue(\"\",\"text\", \"output\"+$PlotNr+\".dat\");
 }
 
 " 0
@@ -443,7 +443,7 @@ LANG:1 12 Plot active:
 13 80
 "Button1"
 ""
-1 615 262 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 615 262 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
  E E
 59 0 0 0 0 0
 EE E
@@ -511,14 +511,14 @@ navViewPlotApplyTraceSettings(int PlotNumber)
   }
   
   //Apply the Setting dpName if changed
-  string currentScriptFilename;
+/*  string currentScriptFilename;
   string selectedScriptFilename = txt_script.text;
   dpGet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", currentScriptFilename);
   if(currentScriptFilename!=selectedScriptFilename)
   {
     dpSet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", selectedScriptFilename);
   }
-
+*/
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -664,26 +664,7 @@ E E
     setValue (\"\", \"enabled\", FALSE);
   }*/
 }" 0
-E14 90
-"txt_legendName"
-""
-1 350 310 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-68 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-348 308 502 335
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-0
+E0
 LAYER, 1 
 1
 LANG:1 6 Layer2

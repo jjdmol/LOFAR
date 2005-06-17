@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,347 111 886 600 N "_3DFace" 0
+PANEL,438 374 886 600 N "_3DFace" 0
 EEE E E 1 -1 -1 0  30 358
 "" 0 1
 E"#uses \"shm.ctl\"
@@ -13,7 +13,74 @@ dbConnection connection;
 //
 //[ui]
 //CtrlDLL = \"CtrlADO\"
-" 0
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/*
+
+Understanding content can be placed in a file (E.g create.sql) with this file a example
+database can be create.
+-----------------------------------------------
+DROP TABLE action;
+DROP TABLE casus;
+DROP TABLE status;
+
+CREATE TABLE status (
+    status_id TEXT PRIMARY KEY    
+);
+
+CREATE TABLE casus (
+    casus_id          SERIAL PRIMARY KEY,
+    casus_description TEXT NOT NULL,
+    status_id         TEXT REFERENCES status,
+    casus_dpname      TEXT
+);
+
+
+CREATE TABLE action (
+    casus_id           INTEGER REFERENCES casus,
+    action_time        TIMESTAMP NOT NULL,
+    action_description TEXT,
+    action_initiator   TEXT,
+    PRIMARY KEY(casus_id, action_time)
+);
+
+INSERT INTO status(status_id) VALUES('OPEN');
+INSERT INTO status(status_id) VALUES('CLOSED');
+
+--INSERT INTO casus(casus_description, casus_dpname) VALUES('RCU FAULT', 'STSLCU3:PIC_Rack1_SubRack1_AP1_RCU1');
+--INSERT INTO casus(casus_description, casus_dpname) VALUES('DOWN FOR MAINTENANCE', 'STSLCU3:PIC');
+*/
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/*
+Understanding content can be placed in a file (E.g example.sql) with this file the example
+database can be filled with some data.
+--------------------------------------------------------------------
+-- empty these two tables
+DELETE FROM action;
+DELETE FROM casus;
+
+-- insert two sample cases
+INSERT INTO casus(casus_description, status_id, casus_dpname) VALUES('RCU failure', 'OPEN', 'STSLCU3:PIC_Rack1_SubRack1_AP1_RCU1');
+INSERT INTO action(casus_id, action_time, action_description, action_initiator) VALUES(1, now(), 'SHM detects failure with 99.4% confidence', 'SHM');
+INSERT INTO action(casus_id, action_time, action_description, action_initiator) VALUES(1, now(), 'Operator confirms the problem', 'karel');
+INSERT INTO action(casus_id, action_time, action_description, action_initiator) VALUES(1, now(), 'Maintenance on-site', 'pietje');
+INSERT INTO action(casus_id, action_time, action_description, action_initiator) VALUES(1, now(), 'Fixed the problem', 'pietje');
+UPDATE casus SET status_id = 'CLOSED' WHERE casus_id = 1;
+
+
+
+
+
+INSERT INTO casus(casus_description, status_id, casus_dpname) VALUES('Remote Station Maintenance', 'OPEN', 'STSLCU3:PIC');
+INSERT INTO action(casus_id, action_time, action_description, action_initiator) VALUES(2, now(), 'Station was put OFFLINE for maintenance', 'karel');
+INSERT INTO action(casus_id, action_time, action_description, action_initiator) VALUES(2, now(), 'Arrived on-site', 'pietje');
+
+
+*/" 0
  2
 "CBRef""1"
 "EClose"E
