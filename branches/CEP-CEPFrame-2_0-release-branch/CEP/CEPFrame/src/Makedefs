@@ -1,0 +1,604 @@
+#
+#
+#
+# THIS FILE SHOULD NO LONGER BE USED!!!!
+# IT HAS BEEN SUPERCEEDED BY THE AUTOCONF/AUTOMAKE BUILD SYSTEM
+#
+# This file has been left here for later reference
+#
+#
+#
+#
+
+# Statement to prevent use:
+exit;;
+
+#  Makedefs: Definitions for Makefile. This file is for inclusion only.
+#
+#  Copyright (C) 2000, 2001
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
+#
+#  $Log$
+#  Revision 1.30  2001/10/26 10:06:27  wierenga
+#  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+#
+#  Revision 1.29  2001/10/19 06:01:46  gvd
+#  Added checkConnections
+#  Cleaned up Transport and StepRep classes
+#
+#  Revision 1.28  2001/09/19 12:47:26  schaaf
+#  Enabled combined use of SCAMPI=1 and CORBA=1
+#
+#  Revision 1.27  2001/09/18 11:21:09  gvd
+#  Do not use -Wno-non-template-friend with PURIFY=1
+#
+#  Revision 1.26  2001/09/18 10:20:03  gvd
+#  MATLAB changes were lost after previous change; redid them
+#
+#  Revision 1.25  2001/09/14 10:15:36  schaaf
+#  Update for RadioDemo
+#
+#  Revision 1.24  2001/09/11 07:35:36  gvd
+#  Added support for matlab to Makedefs and added file mexversion.cc
+#
+#  Revision 1.23  2001/09/05 09:15:44  wierenga
+#  Use standard cc for scali instead of mpicc. Allow combination of SCAMPI with and without OPT
+#
+#  Revision 1.22  2001/09/05 08:03:16  wierenga
+#  Added SCAMPI configuration to use Scali MPI instead of MPICH
+#  Added SCACORBA configuration to use different install dir for vbroker on
+#  cluster.
+#
+#  Revision 1.21  2001/08/09 15:48:47  wierenga
+#  Implemented first version of TH_Corba and test program
+#
+#  Revision 1.20  2001/06/22 09:11:23  schaaf
+#  Added include path for Visibroker on lofar0
+#
+#  Revision 1.19  2001/04/04 06:38:33  gvd
+#  Use absolute path for PURE stuff, otherwise cannot find instrumented libraries
+#
+#  Revision 1.18  2001/03/29 11:52:02  gvd
+#  Define correct AIPS++ variables when compiling with AIPSPP
+#  Use gcc-2.95.3 on SOlaris
+#  Make test target dependent on lib
+#
+#  Revision 1.16  2001/03/29 10:27:17  gvd
+#  Only use AIPS++ if AIPSPATH is defined
+#
+#  Revision 1.15  2001/03/28 11:50:30  gvd
+#  Added bintest rule; test rule now builds test dir.
+#
+#  Revision 1.13  2001/03/23 10:00:40  gvd
+#  Improved documentation and test programs
+#  Added clearEventCount function to Step
+#
+#  Revision 1.12  2001/03/21 15:04:09  gvd
+#  Removed ctags from target all
+#  Also delete .o and .tim of EXES in cleanbin target
+#
+#  Revision 1.11  2001/03/21 10:22:06  gvd
+#  Improved make test rule
+#
+#  Revision 1.8  2001/03/01 13:15:47  gvd
+#  Improved documentation
+#
+#  Revision 1.6  2001/02/21 14:35:53  gvd
+#  Added cleandoc and cleanbin target
+#
+#########################################################################
+
+#	Makefile for the simulation environment.			#
+#	Use MPI=1 if you want to compile with MPI support.		#
+#	Use OPT=1 if you want to compile optimized (without -g)		#
+
+# This makefile is for inclusion only.
+# The main Makefile should look like:
+#
+#   EXES    = Tester Example_simple
+#   LIBNAME = lofarsim
+#   LIBS    = $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libbasesim.a
+#   AIPSPP  = 1
+#
+#   include $(DIRPREFIX)../BaseSim/Makedefs
+#
+# EXES gives the executables to build; i.e. the .cc files containing main.
+# LIBNAME gives the library name. It will be prefixed with 'lib'.
+# LIBS gives the extra libraries needed for linking.
+# AIPSPP=1 should be defined if AIPS++ is used in source files.
+
+
+
+# Also include the BaseSim directory
+# and the library directory (for the lcc and ycc files)
+INCLUDES += -I$(DIRPREFIX). -I$(DIRPREFIX)../BaseSim -I$(LIBDIR)
+
+ifdef CORBA
+INCLUDES += -I$(DIRPREFIX)../BaseSim/Corba -I/usr/local/inprise/vbroker/include
+
+endif
+
+ifdef SCACORBA
+INCLUDES += -I$(DIRPREFIX)../BaseSim/Corba -I/usr/local/inprise/vbroker/include
+CORBA=1
+endif
+
+BISON	= bison
+DOCXX	= doc++
+FLEX	= flex
+IDL2CPP = idl2cpp
+
+DOCXXFLAGS += --all --no-define --private --filenames --gifs --dir html
+
+# The binaries, libraries, and dependencies in a machine specific directory
+CURDIR   = $(shell pwd)
+USERNM   = $(shell bash -c pwd | sed -e 's#.*squaw/##' | sed -e 's#/.*##')
+TOPDIR   = $(shell bash -c pwd | sed -e 's#/squaw/.*#/squaw/#')$(USERNM)/lofar
+RESDIR   = $(shell uname -n)
+RRESDIR  = $(DIRPREFIX)$(RESDIR)
+TESTDIR  = ../$(RRESDIR)/bintest
+ASSAY    = $(DIRPREFIX)../BaseSim/assay
+
+CPPFLAGS += -DFIREWALLS
+
+# Get all .idl, .cc, .o, .tim files containing the mains
+ifdef CORBA
+IDLSRCS  = $(wildcard *.idl)
+IDLCSRCS = $(IDLSRCS:%.idl=%_c.cc)
+IDLSSRCS = $(IDLSRCS:%.idl=%_s.cc)
+IDLCHDRS = $(IDLSRCS:%.idl=%_c.hh)
+IDLSHDRS = $(IDLSRCS:%.idl=%_s.hh)
+endif
+
+EXESRCS	= $(addsuffix .cc, $(EXES))
+EXEOBJS	= $(EXESRCS:%.cc=$(LIBDIR)/%.o)
+EXETIMS	= $(EXESRCS:%.cc=$(DEPDIR)/%.tim)
+# Get all .cc files
+ALLSRCS	= $(wildcard *.cc)
+# Get all .cc files for the library (thus without main)
+LIBSRCS = $(IDLCSRCS) $(IDLSSRCS)
+LIBSRCS	+= $(filter-out $(EXESRCS), $(ALLSRCS))
+# Get all .o files for the library
+LIBOBJS	= $(LIBSRCS:%.cc=$(LIBDIR)/%.o)
+# Get all .tim files for the library
+# The .tim files are needed to be able to delete the .o files.
+# Otherwise objects have to be inserted in the library after each
+# compilation (which can be slow) or all objects have to be kept
+# (which takes space).
+LIBTIMS	= $(LIBSRCS:%.cc=$(DEPDIR)/%.tim)
+# Get all header files (for doc++)
+HDRS	= $(wildcard *.h)
+
+# Define linker and preprocessor
+CC      = g++
+LINKER  = $(CXX)
+CPP	= $(CC)
+
+# Test if AIPS++ is to be used and can be used.
+# It can only be used if (environment variable) AIPSPATH is defined
+# and if libaips.a exists.
+ifeq ($(AIPSPP), 1)
+  ifdef AIPSPATH
+    AIPSROOT := $(word 1, $(AIPSPATH))
+    AIPSARCH := $(AIPSROOT)/$(word 2, $(AIPSPATH))
+    ifeq ($(shell if [ -f $(AIPSARCH)/lib/libaips.a ]; then echo 1; else echo 0; fi ), 1)
+      USEAIPS = 1
+    endif
+  endif
+endif
+
+
+# Use gcc-2.95-3 on Solaris
+# Use correct AIPS++ definitions.
+ifeq ($(shell uname), SunOS)
+  CC = /local/gcc-2.95.3/bin/c++
+  ifdef USEAIPS
+    CPPFLAGS += -DAIPS_SOLARIS
+  endif
+endif
+ifeq ($(shell uname), Linux)
+  ifdef USEAIPS
+    CPPFLAGS += -DAIPS_LINUX
+  endif
+endif
+
+# Override EXES with TESTEXES if defined.
+ifdef TESTEXES
+  EXES = $(TESTEXES)
+endif
+
+# Dependency (.P) files are kept in depend subdirectory of library
+# (See www.paulandlesley.org/gmake/autodep.html for discussion of .P files)
+DEPDIR  = $(LIBDIR)/depend
+# Name of file in dependency directory (without extension)
+DEP	= $(DEPDIR)/$(*F)
+# Name of object file (with extension)
+OBJ	= $(LIBDIR)/$(*F).o
+
+# Define options and directories for compilation with or without debug
+# Also note that separate directories are used for MPI.
+CXXFLAGS += -Wall #-W
+#CXXFLAGS += -Wall -W -frepo
+
+# Define the stuff if MPI is to be used.
+#LDFLAGS = -frepo
+ifdef SCAMPI
+#    CXX	      = /opt/scali/contrib/mpe/bin/mpicc
+    MPINM     = mpi
+    BASELIB   = $(LIBDIR)/lib$(LIBNAME).a
+    CPPFLAGS += -DMPI_
+    INCLUDES += -I/opt/scali/include
+    CXXFLAGS += -Wno-reorder -Wno-switch -Wno-unused
+ifndef OPT
+    CPPFLAGS += -DPROFILER
+    INCLUDES += -I/opt/scali/contrib/mpe/include
+    LDFLAGS  += -L/opt/scali/contrib/mpe/lib -llmpe -lmpe -lm
+else
+    CPPFLAGS += -DNOPROFILER
+endif
+    LDFLAGS  += -L/opt/scali/lib -lmpi
+else
+ifdef MPI
+    CXX       = /opt/scali/contrib/mpich/bin/mpiCC
+#    CXX       = mpiCC
+    MPINM     = mpi
+    BASELIB   = $(LIBDIR)/lib$(LIBNAME).a
+    CPPFLAGS += -DNOPROFILER -DMPI_
+    INCLUDES += -I/opt/scali/contrib/mpich/include
+#    INCLUDES += -I/usr/local/mpich-1.2.0/mpe
+    CXXFLAGS += -Wno-reorder -Wno-switch -Wno-unused
+    LDFLAGS  += -L/opt/scali/contrib/mpich/lib 
+#    LDFLAGS  += -mpilog -lpmpich
+#-lmpi
+endif
+endif
+
+
+ifdef CORBA
+    CXX       = $(CC)
+    CXXFLAGS += -Wno-reorder -Wno-switch -Wno-unused
+    BASELIB   = $(LIBDIR)/lib$(LIBNAME).a
+    CPPFLAGS += -DNOPROFILER -DNOMPI_ -DCORBA_
+else
+    CXX       = $(CC)
+    CXXFLAGS += -Wno-reorder -Wno-switch -Wno-unused
+    BASELIB   = $(LIBDIR)/lib$(LIBNAME).a
+    CPPFLAGS += -DNOPROFILER -DNOMPI_
+endif
+
+ifdef MATLAB
+INCLUDES += -I/usr/local/matlabr12/extern/include
+CPPFLAGS += -DMATLAB_MEX_FILE -D_GNU_SOURCE -DMATLAB
+ifdef OPT
+    CPPFLAGS += -DNDEBUG
+endif
+LDFLAGS += -Wl,-rpath-link,/usr/local/matlabr12/extern/lib/glnx86
+LIBS += -L/usr/local/matlabr12/extern/lib/glnx86 -lmx -leng
+endif
+
+ifdef OPT
+    CXXFLAGS += -O3
+    ALIBDIR   = ../$(RESDIR)/$(MPINM)lib
+    BBINDIR   = ../$(RRESDIR)/$(MPINM)bin
+else
+    CXXFLAGS += -g
+    ALIBDIR   = ../$(RESDIR)/$(MPINM)libdbg
+    BBINDIR   = ../$(RRESDIR)/$(MPINM)bindbg
+endif
+LIBDIR = $(DIRPREFIX)$(ALIBDIR)
+
+# Define the extra includes, etc. needed for AIPS++.
+# Only do that if (environment variable) AIPSPATH is defined.
+ifdef USEAIPS
+  INCLUDES += -I$(AIPSROOT)/code/include
+  LIBS     += $(AIPSARCH)/lib/libaips.a
+  CPPFLAGS += -DAIPSPP
+  TMPCXXFLAGS = -Wno-non-template-friend
+endif
+
+# Define the purify variables.
+# Purify options, always added to each tool.
+PUREOPTIONS = -cache-dir=$(CURDIR)/$(LIBDIR)/pure_cache -always-use-cache-dir -chain-length=50
+
+# Purify can be used by linking with PURIFY=1 which will link the
+# executable with purify using the PUREOPTIONS above.
+# The same is true for Purecov and Quantify.
+# It is also possible to have more control by linking with
+# the PURE variable defined, but that requires more knowledge and
+# is hardly ever needed.
+BINDIR = $(BBINDIR)
+ifdef PURIFY
+    PURE := purify -best-effort
+endif
+ifdef QUANTIFY
+    PURE := quantify -best-effort
+endif
+ifdef PURECOV
+    PURE := purecov
+endif
+# As of 21-Feb-2001 only the old egcs compiler works for these
+# Rational products.
+ifdef PURE
+   CC     := /local/egcs-1.0.3a/bin/g++
+   LINKER := $(PURE) $(PUREOPTIONS) $(LINKER)
+   BINDIR  = $(BBINDIR)/pure_cache
+else
+   CXXFLAGS += $(TMPCXXFLAGS)
+endif
+
+
+# Mark the necessary targets as phony.
+.PHONY	: default new all lib doc links test bintest clean cleanpure cleandoc cleanbin cleanlinks cleantest updatelib %.o %.lcc %.ycc
+
+# Make sure some intermediate files are not deleted by make.
+.PRECIOUS : $(LIBDIR)/%.lcc $(LIBDIR)/%.ycc $(BINDIR)/% $(DEPDIR)/%.tim
+
+
+# By default the library and all executables are built
+
+default	: all
+
+new	: clean all
+
+all	: lib $(EXES)
+
+lib	: $(BASELIB)
+
+$(IDLCSRCS): $(IDLSRCS)
+	$(IDL2CPP) $<
+
+$(IDLSSRCS): $(IDLSRCS)
+	$(IDL2CPP) $<
+
+ctags   :
+	ctags -e *.h *.cc
+
+doc	:
+	$(DOCXX) $(DOCXXFLAGS) $(HDRS)
+
+cleanidl:
+	$(RM) -f $(IDLCSRCS) $(IDLSSRCS) $(IDLCHDRS) $(IDLSHDRS)
+
+clean	: cleandoc cleanpure cleanbin cleantest cleanidl
+	$(RM) -r $(LIBDIR)/* *.i
+
+cleandoc :
+	$(RM) html/*
+
+cleanpure :
+	$(RM) -r $(LIBDIR)/pure_cache $(BBINDIR)/pure_cache
+
+cleanbin : cleanlinks
+	$(RM) -r $(BINDIR)/* $(EXEOBJS) $(EXETIMS)
+
+cleanlinks :
+	$(RM) $(EXES)
+
+cleantest :
+	$(RM) -r $(TESTDIR)/*
+
+links   :
+# Clean all symlinks.
+# Note that the envvar _EXES_MAKE_ is needed because using EXES in the
+# for command gives errors when EXES is empty.
+	@ if [ "$(EXES)" != "" ] ; then \
+	    _EXES_MAKE_="$(EXES)" ; \
+	    for FILE in $$_EXES_MAKE_ ; \
+	    do \
+	      $(RM) $$FILE ; \
+	      if [ -f $(BINDIR)/$$FILE ] ; then \
+	        echo "ln -s $(BINDIR)/$$FILE $$FILE" ; \
+	        ln -s $(BINDIR)/$$FILE $$FILE; \
+	      fi ; \
+	    done ; \
+	  fi
+	   
+bintest : $(EXES)
+	@ if [ ! -d $(TESTDIR) ] ; then \
+	    mkdir -p $(TESTDIR); \
+	  fi
+	@ wdir=`pwd`; \
+	  if [ "$(EXES)" != "" ] ; then \
+	    _EXES_MAKE_="$(EXES)" ; \
+	    for FILE in $$_EXES_MAKE_ ; \
+	    do \
+	      $(RM) $(TESTDIR)/$$FILE ; \
+	      if [ -f $(BINDIR)/$$FILE ] ; then \
+	        echo "ln -s $$wdir/$(BINDIR)/$$FILE $(TESTDIR)/$$FILE"; \
+	        ln -s $$wdir/$(BINDIR)/$$FILE $(TESTDIR)/$$FILE; \
+	      fi ; \
+	      if [ -f "$$FILE.run" ] ; then \
+	        \cp $$FILE.run $(TESTDIR); \
+	      fi ; \
+	      if [ -f ".run" ] ; then \
+	        \cp .run $(TESTDIR); \
+	      fi ; \
+	      if [ -f "$$FILE.in" ] ; then \
+	        \cp $$FILE.in $(TESTDIR); \
+	      fi ; \
+	      if [ -f "$$FILE.out" ] ; then \
+	        \cp $$FILE.out $(TESTDIR); \
+	      fi ; \
+	    done ; \
+	    cd $(TESTDIR); \
+	    for FILE in $$_EXES_MAKE_ ; \
+	    do \
+	      if [ -r $$FILE ] ; then \
+		$$wdir/$(ASSAY) $$FILE; \
+	      fi ; \
+	    done ; \
+	  fi ; \
+	  cd $$wdir
+
+test    : lib
+	@ if [ -d test ] ; then \
+	    cd test; \
+	  fi ; \
+	  $(MAKE) bintest;
+
+updatelib :
+# Make sure only the object files found are archived.
+# Also make sure the objects of the main programs are not archived.
+	@ PGMROBJS="$(LIBOBJS)" ; \
+	  [ "$$PGMROBJS" != "" ] && PGMROBJS=`ls $$PGMROBJS 2>/dev/null` ; \
+	  if [ "$$PGMROBJS" != "" ] ; then \
+	    $(AR) $(ARFLAGS) $(BASELIB) $$PGMROBJS ; \
+	    $(RM) $$PGMROBJS ; \
+	  fi
+
+$(BASELIB) : $(LIBTIMS) updatelib
+
+$(BASELIB)(%.o) : $(DEPDIR)/%.tim
+	  $(AR) $(ARFLAGS) $(BASELIB) $<
+	  $(RM) $<
+
+$(LIBDIR)/%.o : $(DEPDIR)/%.tim
+
+$(DEPDIR)/%.tim : %.cc $(LIBDIR)/%.lcc $(LIBDIR)/%.ycc
+# Create directories if not existing.
+	@ if [ ! -d $(DEPDIR) ] ; then \
+	    mkdir -p $(DEPDIR); \
+	  fi
+# Create new dependency file.
+	@ $(CPP) -M $(CPPFLAGS) $(INCLUDES) -o $(DEP).d $<
+# Remove .ycc and .lcc dependencies. These files do not exist yet
+# and they are explicit prerequisites in the make rule.
+	@ sed -e 's/[^ :]\+\.[ly]cc//g' < $(DEP).d > $(DEP).d1
+# Replace X.o by DEPDIR/X.tim
+	@ sed -e 's#^\(.\+\)\.o#$(DEPDIR)/\1\.tim#' < $(DEP).d > $(DEP).P
+# Create new lines where all prerequisites are empty targets
+# (according to article (see above)).
+	@ sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+              -e '/^$$/ d' -e 's/$$/ :/' < $(DEP).d1 >> $(DEP).P;
+	@ $(RM) $(DEP).d $(DEP).d1
+	  $(CXX) $(CPPFLAGS) $(INCLUDES) -c $(CXXFLAGS) -o $(OBJ) $<
+	@ if [ $$? ] ; then \
+            touch $@; \
+	  fi
+
+%.o : $(DEPDIR)/%.tim ;
+
+$(LIBDIR)/%.lcc : %.l
+	  $(FLEX) -t -P$(<F:.l=) $< > $@
+
+# This rule is needed to ensure .cc files not including an .lcc file
+# get compiled.
+$(LIBDIR)/%.lcc : ;
+
+%.lcc : $(LIBDIR)/%.lcc ;
+
+$(LIBDIR)/%.ycc : %.y
+	  $(BISON) -p $(<F:.y=) -o $@ $<
+
+$(LIBDIR)/%.ycc : ;
+
+%.ycc : $(LIBDIR)/%.ycc ;
+
+%.i   : %.cc
+	  $(CPP) -E $(CPPFLAGS) $(INCLUDES) $< > $@
+
+# Strictly spoken the LIBTIMS dependency should not be needed here
+# because BASELIB is already dependent on LIBTIMS.
+# However, gmake does not seem to honor that dependency.
+# When a cc file is changed, it rebuilds BASELIB but not the executable.
+# With this dependency it does rebuild the executable.
+$(BINDIR)/% : $(BASELIB) $(DEPDIR)/%.tim $(LIBTIMS)
+	@ if [ ! -d $(BINDIR) ] ; then \
+	    mkdir -p $(BINDIR); \
+	  fi
+	  $(LINKER) $(OBJ) $(BASELIB) $(LIBS) $(LDFLAGS) -o $@
+
+# Make a symlink to the executable.
+% : $(BINDIR)/%
+	@ $(RM) $@
+	@ if [ -f $< ] ; then \
+	    echo "ln -s $< $@" ; \
+	    ln -s $< $@ ; \
+	  fi
+
+help ::
+	-@ echo ""
+	-@ echo "Targets defined in the Makedefs"
+	-@ echo "==============================="
+	-@ echo ""
+	-@ echo "        all: build all executables (default target)."
+	-@ echo "        new: make clean and all."
+	-@ echo "          %: build the given executable."
+	-@ echo "        lib: build the library."
+	-@ echo "  updatelib: insert all object modules into the library."
+	-@ echo "        doc: build doc++ html files from header files."
+	-@ echo "      links: make symlinks to executables in BINDIR."
+	-@ echo "       test: build, run, and check all programs in test dir."
+	-@ echo "    bintest: build, run, and check all programs in this dir."
+	-@ echo "      clean: delete all files created by make."
+	-@ echo "   cleanidl: delete all files created by idl2cpp."
+	-@ echo "   cleandoc: delete all files in html subdirectory."
+	-@ echo "  cleanpure: delete all purify files."
+	-@ echo "   cleanbin: delete all executables and symlinks."
+	-@ echo " cleanlinks: delete all symlinks to the executables."
+	-@ echo "  cleantest: delete all files in test directory."
+	-@ echo "        %.o: compile a .cc file."
+	-@ echo "        %.i: preprocess a .cc file."
+	-@ echo "      %.lcc: preprocess a lex file."
+	-@ echo "      %.ycc: preprocess a yacc file."
+	-@ echo "       show: show the values of variables."
+	-@ echo ""
+	-@ echo "Options:"
+	-@ echo "      OPT=1: build optimized (default is debug)."
+	-@ echo "   PURIFY=1: link with purify."
+	-@ echo "  PURECOV=1: link with purecov."
+	-@ echo " QUANTIFY=1: link with quantify."
+	-@ echo ""
+	-@ echo "Variables used:"
+	-@ echo "       CC: default c++ compiler and preprocessor."
+	-@ echo "      CXX: c++ compiler."
+	-@ echo ""
+
+show ::
+	-@ echo ""
+	-@ echo "Variable values in the Makedefs"
+	-@ echo "==============================="
+	-@ echo ""
+	-@ echo "       EXES: $(EXES)"
+	-@ echo "     BINDIR: $(BINDIR)"
+	-@ echo "    BASELIB: $(BASELIB)"
+	-@ echo "     LIBDIR: $(LIBDIR)"
+	-@ echo "    TESTDIR: $(TESTDIR)"
+	-@ echo "      ASSAY: $(ASSAY)"
+	-@ echo "       LIBS: $(LIBS)"
+	-@ echo "     LINKER: $(LINKER)"
+	-@ echo "    LDFLAGS: $(LDFLAGS)"
+	-@ echo "         CC: $(CC)"
+	-@ echo "   CXXFLAGS: $(CXXFLAGS)"
+	-@ echo "   INCLUDES: $(INCLUDES)"
+	-@ echo "   CPPFLAGS: $(CPPFLAGS)"
+	-@ echo "        CPP: $(CPP)"
+	-@ echo "PUREOPTIONS: $(PUREOPTIONS)"
+	-@ echo ""
+
+
+# Defeat builtin pattern rules.
+%.i : %.cc
+%.o : %.cc
+(%) : %
+%   : %.cc
+
+#Include the dependency files
+-include $(ALLSRCS:%.cc=$(DEPDIR)/%.P)
