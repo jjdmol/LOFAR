@@ -13,7 +13,7 @@
 #include <lofar_config.h>
 
 #include <DH_PPF.h>
-//#include <ACC/ParameterSet.h>
+#include <ACC/ParameterSet.h>
 
 
 namespace LOFAR
@@ -23,12 +23,11 @@ namespace LOFAR
 			  const short   subband)
     : DataHolder     (name, "DH_PPF"),
       itsBuffer      (0),
-      itsSubBand     (subband),
-      itsNPol        (0)
+      itsNSamples    (0)
   {
-//     ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
 //     //ParameterCollection	myPC(myPS);
-//     itsNFChannels = myPS.getInt("WH_SubBand.freqs");
+    itsNSamples = myPS.getInt("DH_PPF.samples");
 //     itsNStations  = myPS.getInt("WH_SubBand.stations");
 //     itsNTimes     = myPS.getInt("WH_SubBand.times");
 //     itsNPol       = myPS.getInt("WH_SubBand.pols");
@@ -38,11 +37,7 @@ DH_PPF::DH_PPF(const DH_PPF& that)
   : DataHolder(that),
     itsBuffer(0)
 {
-    itsSubBand    = that.itsSubBand;
-    itsNFChannels = that.itsNFChannels;
-    itsNStations  = that.itsNStations; 
-    itsNTimes     = that.itsNTimes;
-    itsNPol       = that.itsNPol;
+  itsNSamples = that.itsNSamples;
 }
 
 DH_PPF::~DH_PPF()
@@ -59,7 +54,7 @@ DataHolder* DH_PPF::clone() const
 void DH_PPF::init()
 {
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
+  itsBufSize = itsNSamples;
   
   addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
