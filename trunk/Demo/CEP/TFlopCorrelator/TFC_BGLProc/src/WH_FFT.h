@@ -21,9 +21,6 @@ namespace LOFAR
     
   public:
 
-    // Note that we may need to change FilterType to dcomplex 
-    // because of the FFT. The current cast to fftw_complex might
-    // not be correct and may even cause a segfault.
     typedef fcomplex FilterType;
 
     explicit WH_FFT (const string& name); // subBand identification for this filter
@@ -45,22 +42,12 @@ namespace LOFAR
     /// forbid assignment
     WH_FFT& operator= (const WH_FFT&);
 
-    /// FIR Filter variables
-    short itsNtaps;
-    short itsNStations;
-    short itsNTimes;
-    short itsNFChannels;
-    short itsNPol;
-    short itsSBID; // subBandID
-    short itsCpF;
-    
-    short itsNFilters;
-
-    DH_SubBand::BufferType** delayPtr;
-    DH_SubBand::BufferType** delayLine;
-
-    float**      coeffPtr;
-    FilterType*  inputPtr;
+    // FFT variables
+    short itsNtaps;       // #points of the FFT
+    short itsNSamples;    // #samples per input (normally itsNtaps/itsInputs)
+    short itsCpF;         // #correlators per Filter
+    short itsInputs;      
+    short itsSBID;
 
     FilterType*  fft_in;
     FilterType*  fft_out;

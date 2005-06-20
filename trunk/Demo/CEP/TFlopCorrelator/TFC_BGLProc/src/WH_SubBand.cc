@@ -14,9 +14,7 @@
 #include <WH_SubBand.h>
 
 #include <TFC_Interface/DH_SubBand.h>
-#include <TFC_Interface/DH_CorrCube.h>
-
-#include <fftw.h>
+#include <TFC_Interface/DH_PPF.h>
 
 using namespace LOFAR;
 
@@ -28,51 +26,39 @@ WH_SubBand::WH_SubBand(const string& name,
 
    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
    //ParameterCollection	myPC(myPS);
+   itsNFilters   = myPS.getInt("WH_SubBand.filters");
    itsNtaps      = myPS.getInt("WH_SubBand.taps");
    itsNStations  = myPS.getInt("WH_SubBand.stations");
    itsNTimes     = myPS.getInt("WH_SubBand.times");
-   itsNFChannels = myPS.getInt("WH_SubBand.freqs");
    itsNPol       = myPS.getInt("WH_SubBand.pols");
-   itsCpF        = myPS.getInt("Corr_per_Filter");
-
-   // todo: Pr-correlation correction DH in channel 0
-   //   getDataManager().addInDataHolder(0, new DH_??("input", itsSBID));
+   itsFFTs       = myPS.getInt("WH_SubBand.FFTs");
 
    getDataManager().addInDataHolder(0, new DH_SubBand("input", itsSBID));
 
-   for (int c=0; c<itsCpF; c++) {
-     getDataManager().addOutDataHolder(0, new DH_CorrCube("output", itsSBID)); 
+   for (int c=0; c<itsFFTs; c++) {
+     // this should probably be two DataHolders
+     getDataManager().addOutDataHolder(c, new DH_PPF("output", itsSBID)); 
    }
    
-   //todo: Add DH for filter coefficients;
-   //      need functionality like the CEPFrame setAutotrigger.
+   filterData = new filterBox[itsNFilters];
+   
+   for (int filter = 0; filter<itsNFilters; filter++) {
+     filterData[filter].filter_id = filter;
+     filterData[filter].delayLine = new FilterType[itsNtaps];
+     filterData[filter].filterTaps = new float[itsNtaps];
 
-   // each station, each frequency block and each polarisation have their own filter
-   itsNFilters = itsNStations * itsNFChannels * itsNPol;
-
-   delayLine = new DH_SubBand::BufferType*[itsNFilters];
-   delayPtr  = new DH_SubBand::BufferType*[itsNFilters];
-   coeffPtr  = new float*[itsNFilters];
-
-   for (int filter = 0; filter <  itsNFilters; filter++) {
-
-     // Initialize the delay line
-     delayLine[filter] = new DH_SubBand::BufferType[2*itsNtaps]; 
-     memset(delayLine[filter], 0, 2*itsNtaps*sizeof(DH_SubBand::BufferType));
-     delayPtr[filter] = delayLine[filter];
-
-     // Need input: filter coefficients
-     coeffPtr[filter] = new float[itsNtaps];
-     for (int j = 0; j < itsNtaps; j++) {
-       coeffPtr[filter][j] = (j + 1);
-     }
+     memset(filterData[filter].delayLine, 0, itsNtaps*sizeof(FilterType));
+     memset(filterData[filter].filterTaps, 0, itsNtaps*sizeof(float));
    }
 
-   // FFTW parameters
-   itsFFTDirection = FFTW_FORWARD;
 }
 
 WH_SubBand::~WH_SubBand() {
+  for (int filter = 0; filter < itsNFilters; filter++) {
+    delete filterData[filter].delayLine;
+    delete filterData[filter].filterTaps;
+  }
+  delete filterData;
 }
 
 WorkHolder* WH_SubBand::construct(const string& name,
@@ -85,82 +71,35 @@ WH_SubBand* WH_SubBand::make(const string& name) {
 }
 
 void WH_SubBand::preprocess() {
-  itsFFTPlan = fftw_create_plan(itsNStations, itsFFTDirection, FFTW_MEASURE);
-
-  fft_in  = static_cast<FilterType*> (malloc(itsNStations * sizeof(FilterType)));
-  fft_out = static_cast<FilterType*> (malloc(itsNStations * sizeof(FilterType)));
 }
 
 void WH_SubBand::process() {
-#if 0
-  RectMatrix<DH_SubBand::BufferType>& srcMatrix =(DH_SubBand*)getDataManager().getInHolder(0)->getDataMatrix();
-  // this could be done in the preprocess too instead of every process step
-  dimType stationDim = srcMatrix.getDim("Station"); 
-  dimType freqDim = srcMatrix.getDim("FreqChannel"); 
-  dimType timeDim = srcMatrix.getDim("Time"); 
-  dimType polDim = srcMatrix.getDim("Polarisation"); 
-  RectMatrix<DH_SubBand::BufferType>::cursorType chanCur, statCur, timeCur, beginCursor = srcMatrix.getCursor(0*stationDim + 0* freqDim + 0*timeDim + 0*polDim);
+  FilterType accum;
 
-  // this is a for loop that uses the macro from the rectmatrix class
-  // set the start point
-  chanCursor = beginCursor;
-  // use the macro, arguments: matrix, dimension to walk through and cursor
-  MATRIX_FOR_LOOP(srcMatrix, freqDim, chanCur) {
-
-    // reset the fft_in buffer in case we used it before.
-    memset(fft_in, 0, itsNStations * 2);
-
-    // this is a for loop without the macro
-    // notice the 2 extra statements in the for loop    
-    for (int f = 0, statCur = chanCur; f < itsNStations; f++, srcMatrix.moveCursor(&statCur, stationDim)) {
-
-      // again a for loop using the macro
-      timeCur = statCur;
-      MATRIX_FOR_LOOP(srcMatrix, timeDim, timeCur) {
-
-	// shouldn't we do this with all polarisations?
-	*delayPtr[f] = srcMatrix.getValue(timeCur);
-#else
-
-  for (int channel = 0; channel < itsNFChannels; channel++) {
-
-    // reset the fft_in buffer in case we used it before.
-    memset(fft_in, 0, itsNStations * 2);
-   
-    for (int f = 0; f < itsNStations; f++) {
-      for (int sample = 0; sample < itsNTimes; sample++) {
-
-	*delayPtr[f] = *((DH_SubBand*)getDataManager().getInHolder(0))->getBufferElement(channel, f, sample, 0);
-#endif
-
-	for (int i = 0; i < itsNtaps; i++) { 
-	  
-// 	  fft_in[f] += coeffPtr[f][i] * delayLine[f][i];
-	  
-	}
-	adjustDelayPtr();
-      }
+  for (int filter = 0; filter < itsNFilters; filter++) {
+    accum = 0.0;
+    
+    for (int tap = 0; tap < itsNtaps; tap++) {
+      accum += filterData[ filter ].filterTaps[ tap ] * 
+	filterData[ filter ].delayLine[ tap ];
     }
-
-    fftw_one(itsFFTPlan, 
-	     reinterpret_cast<fftw_complex *>(fft_in), 
-	     reinterpret_cast<fftw_complex *>(fft_out));
+    
+    static_cast<DH_PPF*>(getDataManager().getOutHolder(0))->setBufferElement(filter, accum);
+    adjustDelayPtr(filterData[filter].delayLine);
   }
+
 }
 
 
 void WH_SubBand::postprocess() {
-  fftw_destroy_plan(itsFFTPlan);
-
-  free(fft_in);
-  free(fft_out);
 }
 
 void WH_SubBand::dump() {
 }
 
-void WH_SubBand::adjustDelayPtr() { 
+void WH_SubBand::adjustDelayPtr(FilterType* dLine) { 
+  // this is a very inefficient implementation. Should be optimized later on.
   for (int i = itsNtaps - 2; i >= 0; i--) {
-    delayLine[i+1] = delayLine[i];
+    dLine[i+1] = dLine[i];
   }
 }

@@ -26,16 +26,15 @@ WH_FFT::WH_FFT(const string& name) :
    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
    //ParameterCollection	myPC(myPS);
    itsNtaps      = myPS.getInt("WH_FFT.taps");
-   itsNStations  = myPS.getInt("WH_FFT.stations");
-   itsNTimes     = myPS.getInt("WH_FFT.times");
-   itsNFChannels = myPS.getInt("WH_FFT.freqs");
-   itsNPol       = myPS.getInt("WH_FFT.pols");
+   itsNSamples   = myPS.getInt("WH_FFT.times");
    itsCpF        = myPS.getInt("Corr_per_Filter");
-
+   itsInputs     = myPS.getInt("WH_FFT.inputs");
    // todo: Pr-correlation correction DH in channel 0
    //   getDataManager().addInDataHolder(0, new DH_??("input", itsSBID));
 
-   getDataManager().addInDataHolder(0, new DH_SubBand("input", itsSBID));
+   for (int c = 0; c<itsInputs; c++) {
+     getDataManager().addInDataHolder(c, new DH_PPF("input", itsSBID));
+   }
 
    for (int c=0; c<itsCpF; c++) {
      getDataManager().addOutDataHolder(0, new DH_CorrCube("output", itsSBID)); 
@@ -57,22 +56,30 @@ WH_FFT* WH_FFT::make(const string& name) {
 }
 
 void WH_FFT::preprocess() {
-  itsFFTPlan = fftw_create_plan(itsNStations, itsFFTDirection, FFTW_MEASURE);
+  itsFFTPlan = fftw_create_plan(itsNtaps, itsFFTDirection, FFTW_MEASURE);
 
-  fft_in  = static_cast<FilterType*> (malloc(itsNStations * sizeof(FilterType)));
-  fft_out = static_cast<FilterType*> (malloc(itsNStations * sizeof(FilterType)));
+  fft_in  = static_cast<FilterType*> (malloc(itsNtaps * sizeof(FilterType)));
+  fft_out = static_cast<FilterType*> (malloc(itsNtaps * sizeof(FilterType)));
 }
 
 void WH_FFT::process() {
 
-  for (int channel = 0; channel < itsNFChannels; channel++) {
+  for (int i = 0; i < itsNinputs; i++) {
+    // merge the input DH's into one buffer (!! POTENTIAL HOTSPOT !!)
+    memcpy(fft_in + i*itsNSamples, getDataManager().getInHolder(i)->getDataPtr(), itsNSamples * sizeof(FilterType));
+  }
 
-    // reset the fft_in buffer in case we used it before.
+  fftw_one(itsFFTPlan, 
+	   reinterpret_cast<fftw_complex *>(fft_in), 
+	   reinterpret_cast<fftw_complex *>(fft_out));
 
-    // todo: get data from DataHolder
-    fftw_one(itsFFTPlan, 
-	     reinterpret_cast<fftw_complex *>(fft_in), 
-	     reinterpret_cast<fftw_complex *>(fft_out));
+  for (int cor = 0; cor < itsCpF; cor++) { 
+    // assume that channel 0 is bogus
+    // we can now devide the 255 remaining channels among 5(default) correlators
+    
+    // can we do this without memcpy?
+    getDataManager().getOutHolder(cor)->getDataPtr() = (fft_out+1) ;
+				 
   }
 }
 

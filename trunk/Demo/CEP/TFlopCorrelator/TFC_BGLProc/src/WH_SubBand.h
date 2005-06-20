@@ -16,6 +16,14 @@
 
 namespace LOFAR
 {
+  // define a structure to contain all relevant data for one filter
+  typedef struct {
+    short filter_id;
+    fcomplex*   delayLine;
+    float*      filterTaps;
+  } filterBox;
+
+
   class WH_SubBand: public WorkHolder {
     
   public:
@@ -46,18 +54,19 @@ namespace LOFAR
     WH_SubBand& operator= (const WH_SubBand&);
 
     /// FIR Filter variables
+    short itsNFilters;
     short itsNtaps;
     short itsNStations;
     short itsNTimes;
-    short itsNFChannels;
     short itsNPol;
     short itsSBID; // subBandID
     short itsCpF;
+    short itsFFTs;
     
-    short itsNFilters;
+    DH_SubBand::BufferType* delayPtr;
+    DH_SubBand::BufferType* delayLine;
 
-    DH_SubBand::BufferType** delayPtr;
-    DH_SubBand::BufferType** delayLine;
+    filterBox* filterData;
 
     float**      coeffPtr;
     FilterType*  inputPtr;
@@ -65,12 +74,7 @@ namespace LOFAR
     FilterType*  fft_in;
     FilterType*  fft_out;
 
-    void adjustDelayPtr();
-
-    /// FFTW variables
-    fftw_direction itsFFTDirection;
-    fftw_plan      itsFFTPlan;
-
+    void adjustDelayPtr(FilterType* dLine);
   };
 
 } // namespace LOFAR
