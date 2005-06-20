@@ -29,9 +29,8 @@ public:
 
   DataHolder* clone() const;
 
-
   /// Allocate the buffers.
-  virtual void preprocess();
+  virtual void init();
 
   /// Set the sync stamp
   void setSyncStamp(const timestamp_t syncStamp);

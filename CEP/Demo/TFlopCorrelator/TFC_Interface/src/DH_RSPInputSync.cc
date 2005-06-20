@@ -36,7 +36,7 @@ DataHolder* DH_RSPInputSync::clone() const
   return new DH_RSPInputSync(*this);
 }
 
-void DH_RSPInputSync::preprocess()
+void DH_RSPInputSync::init()
 {
   // this could be done nicer, but it works for now because SyncStamp doesn't contain
   // any pointers
