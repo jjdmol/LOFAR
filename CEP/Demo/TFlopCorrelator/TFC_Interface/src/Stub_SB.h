@@ -12,11 +12,14 @@
 
 #include <string>
 #include <ACC/ParameterSet.h>
-#include <TFC_Interface/DH_SubBand.h>
+#include <tinyCEP/TinyDataManager.h>
 //#include <TFlopCorrelator/DH_FilterCoeff.h>
 
 
 namespace LOFAR {
+
+class Connection;
+ class TH_Socket;
 
 // This class is a stub which is used to make the connection of the SubBandFilter
 // to the TflopCorrelator input section 
@@ -31,13 +34,15 @@ public:
 
   // Connect the given objects to the stubs.
   void connect (int SBF_nr,
-		DH_SubBand* sb);
+		TinyDataManager& dm,
+		int nrDH);
 
 private:
   bool                itsStubOnServer;
   ACC::ParameterSet*  itsPS;
-  vector<DH_SubBand*> itsSB;
   int                 itsNSBF;
+  TH_Socket**         itsTHs;
+  Connection**        itsConnections;
 };
 
 } //namespace

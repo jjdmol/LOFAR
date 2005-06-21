@@ -8,6 +8,7 @@
 
 #include <TFC_Interface/Stub_SB.h>
 #include <Transport/TH_Socket.h>
+#include <Transport/Connection.h>
 
 
 using namespace LOFAR;
@@ -16,35 +17,64 @@ using namespace LOFAR::ACC;
 namespace LOFAR { 
 
   Stub_SB::Stub_SB (bool stubOnServer)
-    : itsStubOnServer (stubOnServer)
+    : itsStubOnServer (stubOnServer),
+      itsTHs          (0),
+      itsConnections  (0)
   {
     itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
     itsNSBF     = itsPS->getInt("NSBF");  // number of SubBand filters in the application
-    
-    // todo: add DH_?? for pre-correlation correction factors 
+    ASSERTSTR(itsNSBF >= 0, "Number of subband filters must be greater than 0");
+    itsTHs = new TH_Socket*[itsNSBF];
+    itsConnections = new Connection*[itsNSBF];
+
     for (int i=0; i<itsNSBF; i++) {
-      itsSB.push_back(new DH_SubBand("noname",1)); //todo: get correct SubbandID
+      itsTHs[i] = 0;
+      itsConnections[i] = 0;
     }
+
   }
 
   Stub_SB::~Stub_SB()
-  {}
+  {
+    for (int i=0; i<itsNSBF; i++)
+    {
+      delete itsTHs[i];
+      delete itsConnections[i];
+    }
+    delete [] itsTHs;
+    delete [] itsConnections;
+  }
 
   void Stub_SB::connect (int SBF_nr,
-			 DH_SubBand* sb)
+			 TinyDataManager& dm,
+			 int dhNr)
   {
+    DBGASSERTSTR(SBF_nr <= itsNSBF, "Subband filter number too large");
     const ParameterSet myPS("TFlopCorrelator.cfg");
-    TH_Socket thSB(myPS.getString("SBConnection.ClientHost"), // sendhost
-		   myPS.getString("SBConnection.ServerHost"),   // recvhost
-		   myPS.getInt("SBConnection.RequestPort"),   // port
-		   true
-		   );
-    //itsSB[SBF_nr]->setID(itsPS->getInt("SBConnection.ID"));
-    if (itsStubOnServer) {
-      //itsSB[SBF_nr]->connectTo (sb, thSB);
-    } else {
-      //sb.connectTo (*(itsSB[SBF_nr]), thSB);
+    int port = myPS.getInt("SBConnection.RequestPort");
+    string service(formatString("%d", port));
+    if (itsStubOnServer)    // On the cluster side, so start a server socket
+    {
+      DBGASSERTSTR(itsTHs[SBF_nr] == 0, "Stub input " << SBF_nr << 
+		" has already been connected.");
+      // Create a server socket
+      itsTHs[SBF_nr] = new TH_Socket(service);
+      itsConnections[SBF_nr] = new Connection("toBG", dm.getOutHolder(dhNr), 
+					      0, itsTHs[SBF_nr], true);
+      dm.setOutConnection(dhNr, itsConnections[SBF_nr]);
     }
+    else             // On BG side , so start a client socket
+    {
+      DBGASSERTSTR(itsTHs[SBF_nr] == 0, "Stub output " << SBF_nr << 
+		" has already been connected.");
+      // Create a client socket
+      itsTHs[SBF_nr] = new TH_Socket(myPS.getString("SBConnection.ServerHost"),
+				     service);
+      itsConnections[SBF_nr] = new Connection("fromInpSection", 0, dm.getInHolder(dhNr), 
+					      itsTHs[SBF_nr], true);
+      dm.setInConnection(dhNr, itsConnections[SBF_nr]);
+    }
+
   };
 
   //todo: add connections for pre-correlation correction DH_?? 

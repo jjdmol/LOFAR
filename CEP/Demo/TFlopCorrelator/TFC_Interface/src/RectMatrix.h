@@ -50,7 +50,7 @@ class dimType{
 template <typename valueType>
 class RectMatrix {
  public:
-  RectMatrix(vector<DimDef>);
+  RectMatrix(vector<DimDef>&);
   //  ~RectMatrix();
   
   typedef int cursorType; // is the offset of the datamember in itsData
@@ -104,7 +104,7 @@ class RectMatrix {
 };
 
 template <typename valueType>
-RectMatrix<valueType>::RectMatrix(vector<DimDef> dimdefv) :
+RectMatrix<valueType>::RectMatrix(vector<DimDef>& dimdefv) :
   itsData(0)
 {
   vector<DimDef>::reverse_iterator it = dimdefv.rbegin();
