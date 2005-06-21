@@ -31,6 +31,11 @@
 #include "SubArray.h"
 #include "SubArraySubscription.h"
 #include "RemoteStationCalibration.h"
+#include "CalibrationAlgorithm.h"
+
+#ifdef USE_CAL_THREAD
+#include "CalibrationThread.h"
+#endif
 
 #include "ACMProxy.h"
 
@@ -63,22 +68,30 @@ using namespace CAL_Protocol;
 CalServer::CalServer(string name, ACCs& accs)
   : GCFTask((State)&CalServer::initial, name),
     m_accs(accs), m_cal(0)
+#ifdef USE_CAL_THREAD
+    , m_calthread(0)
+#endif
 {
-  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
+#ifdef USE_CAL_THREAD
+  pthread_mutex_init(&m_globallock, 0);
+#endif
 
+  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, CAL_PROTOCOL);
 }
 
 CalServer::~CalServer()
 {
-  if (m_cal) delete m_cal;
+  if (m_cal)       delete m_cal;
+#ifdef USE_CAL_THREAD
+  if (m_calthread) delete m_calthread;
+#endif
 }
 
 void CalServer::undertaker()
 {
   for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
-       it != m_dead_clients.end();
-       it++)
+       it != m_dead_clients.end(); ++it)
   {
     delete (*it);
   }
@@ -94,12 +107,11 @@ void CalServer::remove_client(GCFPortInterface* port)
 
   SubArray* subarray = m_subarrays.getByName(m_clients[port]);
   if (subarray) {
-    m_subarrays.remove(subarray);
+    m_subarrays.schedule_remove(subarray);
   }
 
   m_clients.erase(port);
   m_dead_clients.push_back(port);
-
 }
 
 GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
@@ -111,6 +123,10 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
     case F_INIT:
       {
 	try { 
+
+#ifdef USE_CAL_THREAD
+	  pthread_mutex_lock(&m_globallock); // lock for dipolemodels, and sources
+#endif
 
 	  //
 	  // load the dipole models
@@ -132,8 +148,19 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels);
 
+#ifdef USE_CAL_THREAD
+	  //
+	  // Setup calibration thread
+	  m_calthread = new CalibrationThread(&m_subarrays, m_cal, m_globallock);
+
+	  pthread_mutex_unlock(&m_globallock); // unlock global lock
+#endif
+
 	} catch (Exception e)  {
 
+#ifdef USE_CAL_THREAD
+	  pthread_mutex_unlock(&m_globallock); // unlock global lock
+#endif
 	  LOG_ERROR_STR("Failed to load configuration files: " << e);
 	  exit(EXIT_FAILURE);
 
@@ -183,8 +210,6 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  undertaker(); // destroy dead clients
-
   switch (e.signal)
     {
     case F_ENTRY:
@@ -215,7 +240,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
 	const Timestamp t = Timestamp(timer->sec, timer->usec);
-	LOG_INFO_STR("updateAll @ " << t);
+	LOG_DEBUG_STR("updateAll @ " << t);
 
 	//
 	// Swap buffers when all calibrations have finished on the front buffer
@@ -230,12 +255,31 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	  // start new calibration
 	  m_accs.swap();
 	  m_accs.getBack().invalidate(); // invalidate
+
+#ifdef USE_CAL_THREAD
+	  // join previous calibration thread
+	  (void)m_calthread->join();
+#endif
+
+	  m_subarrays.mutex_lock();
+	  undertaker(); // destroy dead clients, done here to prevent possible use of closed port
+	  m_subarrays.undertaker();  // remove subarrays scheduled for deletion
+	  m_subarrays.creator();     // bring new subarrays to life
+	  m_subarrays.mutex_unlock();
+
+#ifdef USE_CAL_THREAD
+	  // start calibration thread
+	  m_calthread->setACC(&m_accs.getFront());
+	  m_calthread->run();
+#else
+	  m_subarrays.calibrate(m_cal, m_accs.getFront());
+	  m_subarrays.updateAll();
+#endif
 	}
 
-	m_subarrays.calibrate(m_cal, m_accs.getFront());
-
+#ifdef USE_CAL_THREAD
 	m_subarrays.updateAll();
-
+#endif
       }
       break;
 
@@ -320,7 +364,12 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     select.resize(positions.extent(firstDim),
 		  positions.extent(secondDim));
 
-    select = true;
+    for (int i = 0;
+	 i < positions.extent(firstDim)*positions.extent(secondDim);
+	 i++)
+    {
+      if (start.subset[i]) select(i/2,i%2) = true;
+    }
 
     LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
     LOG_DEBUG_STR("positions.shape()" << positions.shape());
@@ -339,34 +388,9 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 				      start.nyquist_zone,
 				      GET_CONFIG("CalServer.NSUBBANDS", i));
 
-    m_subarrays.add(subarray);
+    m_subarrays.schedule_add(subarray);
 
     // calibration will start within one second
-
-#if 0
-    //
-    // load the ACC
-    //
-    m_acc = ACCLoader::loadFromFile(CAL_SYSCONF "/ACC.conf");
-    
-    if (!m_acc) {
-      LOG_ERROR("Failed to load ACC matrix.");
-      exit(EXIT_FAILURE);
-    }
-
-    //
-    // Create the calibration algorithm and
-    // call the calibrate routine of the subarray
-    // with the ACC.
-    //
-    const DipoleModel* model = m_dipolemodels.getByName("LBAntenna");
-    if (!model) {
-      LOG_FATAL("Failed to load dipolemodel 'LBAntenna'");
-      exit(EXIT_FAILURE);
-    }
-    RemoteStationCalibration cal(m_sources, *model);
-    subarray->calibrate(&cal, *m_acc);
-#endif
   }
 
   port.send(ack); // send ack
@@ -384,7 +408,7 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
   ack.status = SUCCESS;
   
   // destroy subarray, what do we do with the observers?
-  if (m_subarrays.remove(stop.name)) {
+  if (m_subarrays.schedule_remove(stop.name)) {
     m_clients[&port] = ""; // unregister subarray name
   } else {
     ack.status = ERR_NO_SUBARRAY; // subarray not found

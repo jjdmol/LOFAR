@@ -68,6 +68,8 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
 
   //find_rfi_free_channels();
   for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
+    sleep(1);
+
     Timestamp acmtime;
     const Array<complex<double>, 2> acm = acc.getACM(sb, 0, 0, acmtime); // get XX acm
     
@@ -99,7 +101,7 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
     //KJW: no longer needed Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
     //KJW: LOG_INFO_STR(acm1pol);
     Array<complex<double>, 2> alpha(computeAlpha(acm, R0, mask));
-    //KJW: LOG_INFO_STR(alpha);
+    LOG_INFO_STR(alpha);
 
     //compute_gains(acm, R0, pos, spw.getSubbandFreq(sb), Rtest, gains);
     //compute_quality(Rtest, sb, gains);

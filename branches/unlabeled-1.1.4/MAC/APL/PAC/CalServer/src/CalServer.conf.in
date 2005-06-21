@@ -10,9 +10,10 @@ mac.ns.CalServer.acceptor.type=TCP
 #
 # Define dimensions of the ACC array
 #
-CalServer.NSUBBANDS=10
+CalServer.NSUBBANDS=101
 # 512
-CalServer.NANTENNAS=4
+CalServer.NANTENNAS=60
+# 4
 # 60
 
 #
@@ -21,6 +22,15 @@ CalServer.NANTENNAS=4
 CalServer.DipoleModelFile=DipoleModel.conf
 CalServer.SourceCatalogFile=SourceCatalog.conf
 CalServer.AntennaArraysFile=AntennaArrays.conf
+
+#
+# For testing purposes, read ACC from file
+#
+# Set ACCTestEnable to 1 to enable reading from file ACCTestFile
+# If ACCTestEnable is set to 0 then the ACC is collected from the RSP hardware.
+#
+CalServer.ACCTestEnable=1
+CalServer.ACCTestFile=ACC.txt
 
 #
 # ACMProxy task configuration

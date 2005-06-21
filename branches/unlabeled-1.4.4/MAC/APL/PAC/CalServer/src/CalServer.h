@@ -30,12 +30,16 @@
 #include "DipoleModel.h"
 #include "ACC.h"
 #include "SubArray.h"
-#include "CalibrationAlgorithm.h"
 
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
   namespace CAL {
+
+    class CalibrationAlgorithm;
+#ifdef USE_CAL_THREAD
+    class CalibrationThread;
+#endif
 
     class CalServer : public GCFTask
     {
@@ -93,6 +97,12 @@ namespace LOFAR {
       GCFTCPPort                               m_acceptor;     // connect point for clients
       std::map<GCFPortInterface*, std::string> m_clients;      // list of clients with related subarray name
       std::list<GCFPortInterface*>             m_dead_clients; // list of disconnected clients
+
+#ifdef USE_CAL_THREAD
+      // CalibrationThread
+      CalibrationThread* m_calthread;
+      pthread_mutex_t    m_globallock;
+#endif
     };
 
   }; // namespace CAL

@@ -51,6 +51,10 @@ using namespace RTC;
 
 #define START_DELAY 4
 
+#ifndef CAL_SYSCONF
+#define CAL_SYSCONF "."
+#endif
+
 ACMProxy::ACMProxy(string name, ACCs& accs)
   : GCFTask((State)&ACMProxy::initial, name),
     m_accs(accs),
@@ -159,10 +163,20 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 	/*GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);*/
 
 	//
-	// start collecting the next ACC if possible
+	// start collecting the next ACC if needed
 	//
 	if (m_accs.getBack().writeLock()) {
-	  TRAN(ACMProxy::initializing);
+	  LOG_INFO("collecting next batch of ACMs");
+
+	  if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
+	    if (0 != m_accs.getBack().getFromFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
+	      LOG_FATAL("Failed to get ACC.");
+	      exit(EXIT_FAILURE);
+	    }
+	    finalize(true); // done reading from file
+	  } else {
+	    TRAN(ACMProxy::initializing);
+	  }
 	} else {
 	  LOG_WARN("failed to get writeLock on ACC backbuffer");
 	}
@@ -223,7 +237,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	ss.subbands().resize(1, 4*2);
 	ss.subbands() = m_request_subband;
 
-	LOG_INFO_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+	LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
 	m_rspdriver.send(ss);
 
 	m_request_subband++;
@@ -249,7 +263,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	    ss.subbands().resize(1, 4*2);
 	    ss.subbands() = m_request_subband;
 
-	    LOG_INFO_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+	    LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
 	    port.send(ss);
 
 	    m_request_subband++;
@@ -320,7 +334,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  if (m_handle == upd.handle) {
 	    if (SUCCESS == upd.status) {
 
-	      LOG_INFO_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
+	      LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
 	      LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
 
 	      if (upd.timestamp != m_starttime + m_update_subband) {
@@ -353,7 +367,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  ss.subbands().resize(1, 4*2);
 	  ss.subbands() = m_request_subband;
 
-	  LOG_INFO_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
+	  LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
 	  port.send(ss);
 
 	  m_request_subband++;
@@ -416,6 +430,7 @@ GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
 	// Finished collecting new ACC
 	finalize(true);
 
+	LOG_INFO("finished collecting ACMs");
 	TRAN(ACMProxy::idle);
       }
       break;

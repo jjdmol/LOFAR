@@ -82,19 +82,14 @@ void SubArray::calibrate(CalibrationInterface* cal, const ACC& acc)
   m_result[FRONT]->setDone();
 }
 
-bool SubArray::getGains(const AntennaGains*& cal, int buffer)
+bool SubArray::getGains(AntennaGains*& cal, int buffer)
 {
-  ASSERT(m_result[buffer]);
   cal = 0;
+  ASSERT(buffer >= FRONT && buffer <= BACK && m_result[buffer]);
 
-  if (buffer >= FRONT && buffer <= BACK)
-  {
-    cal = m_result[buffer];
+  cal = m_result[buffer];
   
-    return m_result[buffer]->isDone();
-  }
-
-  return false;
+  return m_result[buffer]->isDone();
 }
 
 void SubArray::abortCalibration()
@@ -122,49 +117,114 @@ SubArrays::SubArrays()
 
 SubArrays::~SubArrays()
 {
-  for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
-       it != m_arrays.end(); it++)
+  // delete subarrays from m_new_arrays map and clear map
+  for (map<string, SubArray*>::const_iterator it = m_new_arrays.begin();
+       it != m_new_arrays.begin(); ++it)
   {
     if ((*it).second) delete (*it).second;
   }
+  m_new_arrays.clear();
+
+  // delete subarrays from m_arrays map and clear map
+  for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
+       it != m_arrays.end(); ++it)
+  {
+    if ((*it).second) delete (*it).second;
+  }
+  m_arrays.clear();
+
+  // clear m_dead_arrays list, subarrays have already been delete
+  // because they were also in the m_arrays map
+  m_dead_arrays.clear();
 }
 
-void SubArrays::add(SubArray* array)
+void SubArrays::schedule_add(SubArray* array)
 {
   if (array) {
-    m_arrays[array->getName()] = array;
+    m_new_arrays[array->getName()] = array;
   }
 }
 
-bool SubArrays::remove(string name)
+bool SubArrays::schedule_remove(string name)
 {
-  // find SubArray
-  map<string,SubArray*>::iterator it = m_arrays.find(name);
+  // find in m_new_arrays
+  map<string,SubArray*>::iterator it = m_new_arrays.find(name);
 
   // if found then remove
+  if (it != m_new_arrays.end()) {
+    delete (*it).second;
+    m_new_arrays.erase(it);
+    return true;
+  }
+
+  // if not found in m_new_arrays, try to find in m_arrays
+  it = m_arrays.find(name);
+
+  // if found then move to m_dead_arrays
   if (it != m_arrays.end()) {
-    if ((*it).second) delete ((*it).second);
-    m_arrays.erase(it);
+    m_dead_arrays.push_back((*it).second);
     return true;
   }
 
   return false;
 }
 
-bool SubArrays::remove(SubArray*& subarray)
+bool SubArrays::schedule_remove(SubArray*& subarray)
 {
-  return (subarray?remove(subarray->getName()):false);
+  return (subarray?schedule_remove(subarray->getName()):false);
+}
+
+void SubArrays::creator()
+{
+  /**
+   * New subarrays are listed in m_new_arrays.
+   * This method moves these subarrays to the m_arrays map.
+   */
+  for (map<string, SubArray*>::const_iterator it = m_new_arrays.begin(); it != m_new_arrays.end(); ++it) {
+    m_arrays[(*it).second->getName()] = (*it).second; // add to m_arrays
+  }
+  m_new_arrays.clear(); // clear m_new_array
+}
+
+void SubArrays::undertaker()
+{
+  /**
+   * Subarrays that should be removed are listed in m_dead_arrays.
+   * This method deletes these subarrays and removes them from the m_arrays.
+   * The m_dead_arrays list is cleared when done.
+   */
+  map<string, SubArray*>::iterator findit;
+  for (list<SubArray*>::const_iterator it = m_dead_arrays.begin(); it != m_dead_arrays.end(); ++it) {
+
+    /* Remove from the m_arrays map*/
+    findit = m_arrays.find((*it)->getName());
+    if (findit != m_arrays.end()) {
+      m_arrays.erase(findit);
+    } else {
+      LOG_FATAL_STR("trying to remove non-existing subarray " << (*findit).second->getName());
+      exit(EXIT_FAILURE);
+    }
+
+    delete (*it);
+  }
+  m_dead_arrays.clear();
 }
 
 SubArray* SubArrays::getByName(std::string name)
 {
-  // find SubArray
-  map<string,SubArray*>::iterator it = m_arrays.find(name);
+  // find in m_new_arrays
+  map<string,SubArray*>::const_iterator it = m_new_arrays.find(name);
+
+  if (it != m_new_arrays.end()) {
+    return (*it).second;
+  }
+
+  // if not found in m_new_arrays, try to find in m_arrays
+  it = m_arrays.find(name);
 
   if (it != m_arrays.end()) {
     return (*it).second;
   }
-
   return 0;
 }
 
@@ -191,17 +251,23 @@ void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc)
 
   ASSERT(0 != cal);
 
-  for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
-       it != m_arrays.end(); ++it)
-  {
-    SubArray* subarray = (*it).second;
-    ASSERT(0 != subarray);
+  mutex_lock();
+  if (acc.isValid()) {
+    for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
+	 it != m_arrays.end(); ++it)
+      {
+	SubArray* subarray = (*it).second;
+	ASSERT(0 != subarray);
 
-    if (acc.isValid() && !subarray->isDone()) {
-      subarray->calibrate(cal, acc);
-      done = true;
-    }
+	if (!subarray->isDone()) {
+	  LOG_INFO_STR("start calibration of subarray: " << subarray->getName());
+	  subarray->calibrate(cal, acc);
+	  LOG_INFO_STR("finished calibration of subarray: " << subarray->getName());
+	  done = true;
+	}
+      }
   }
+  mutex_unlock();
 
   //
   // prevent reuse of this acc by next calibrate call
@@ -210,3 +276,24 @@ void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc)
   //
   if (done) acc.invalidate();
 }
+
+bool SubArrays::remove(string name)
+{
+  // find SubArray
+  map<string,SubArray*>::iterator it = m_arrays.find(name);
+
+  // if found then remove
+  if (it != m_arrays.end()) {
+    if ((*it).second) delete ((*it).second);
+    m_arrays.erase(it);
+    return true;
+  }
+
+  return false;
+}
+
+bool SubArrays::remove(SubArray*& subarray)
+{
+  return (subarray?remove(subarray->getName()):false);
+}
+

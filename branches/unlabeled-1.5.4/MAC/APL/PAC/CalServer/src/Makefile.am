@@ -1,7 +1,6 @@
 
 
-#AM_CPPFLAGS = \
-#	-I$(top_srcdir)/src
+AM_CPPFLAGS = -DUSE_CAL_THREAD
 
 #-fmessage-length=0 // needed for Eclipse
 
@@ -87,10 +86,13 @@ libcaldevel_la_SOURCES = \
 	CalibrationAlgorithm.h \
 	CalibrationAlgorithm.cc \
 	RemoteStationCalibration.h \
-	RemoteStationCalibration.cc
+	RemoteStationCalibration.cc \
+	CalibrationThread.h \
+	CalibrationThread.cc
 
 bin_PROGRAMS = \
-	CalServer
+	CalServer \
+	juggle_acc
 
 CalServer_SOURCES = \
 	CalConstants.h \
@@ -103,6 +105,9 @@ CalServer_LDADD = \
 	$(top_builddir)/src/libcal.la \
 	$(top_builddir)/src/libcaldevel.la \
 	-lrtccommon
+
+juggle_acc_SOURCES = \
+	juggle_acc.cc
 
 CalServer_DEPEND = $(LOFAR_DEPEND)
 #	libcal.la \

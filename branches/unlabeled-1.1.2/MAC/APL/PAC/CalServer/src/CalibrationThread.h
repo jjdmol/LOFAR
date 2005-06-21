@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  SubArraySubscription.cc: class implementation
+//#  CalibrationThread.h: class definition for the CalibrationThread class.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,32 +21,47 @@
 //#
 //#  $Id$
 
-#include "SubArray.h"
-#include "SubArraySubscription.h"
-#include "CAL_Protocol.ph"
-#include <Common/LofarLogger.h>
+#ifndef CALIBRATIONTHREAD_H_
+#define CALIBRATIONTHREAD_H_
 
-using namespace LOFAR;
-using namespace CAL;
-using namespace RTC;
+#ifdef USE_CAL_THREAD
+#include <pthread.h>
+#include "ACC.h"
 
-void SubArraySubscription::update(Subject* subject)
-{
-  ASSERT(subject == static_cast<Subject*>(m_subarray));
+namespace LOFAR {
+  namespace CAL {
 
-  AntennaGains* calibratedGains = 0;
+    class SubArrays;
+    class CalibrationInterface;
 
-  // get gains from the FRONT buffer
-  if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
+    class CalibrationThread
+    {
+    public:
+      CalibrationThread(SubArrays*            subarrays,
+			CalibrationInterface* cal,
+			pthread_mutex_t&      globallock);
+      virtual ~CalibrationThread();
 
-    CALUpdateEvent update;
-    update.timestamp.setNow(0);
-    update.status = SUCCESS;
-    update.handle = (uint32)this;
+      void setACC(ACC* acc);
 
-    update.gains.copy(*calibratedGains);
+      void run();
+      static void* thread_main(void* thisthread);
+      int join();
+      
+    private:
+      SubArrays*            m_subarrays;
+      CalibrationInterface* m_cal;
+      ACC*                  m_acc;
 
-    if (m_port.isConnected()) m_port.send(update);
-  }
-}
+      // thread management
+      pthread_t        m_thread;
+      pthread_mutex_t& m_globallock;
+    };
+
+  }; // namespace CAL
+}; // namespace LOFAR
+
+#endif
+
+#endif /* CALIBRATIONTHREAD_H_ */
 

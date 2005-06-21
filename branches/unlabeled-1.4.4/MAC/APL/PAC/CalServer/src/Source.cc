@@ -74,7 +74,7 @@ const Array<double, 2> Sources::getSourcePositions() const
   vector<Source>::const_iterator it;
 
   int i = 0;
-  for (it = m_sources.begin(); it < m_sources.end(); it++, i++)
+  for (it = m_sources.begin(); it < m_sources.end(); ++it, i++)
     {
       pos(i, 0) = (*it).getRA();
       pos(i, 1) = (*it).getDEC();

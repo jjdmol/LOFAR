@@ -85,6 +85,32 @@ void ACC::setACC(blitz::Array<std::complex<double>, 5>& acc)
   m_time = Timestamp(0,0);
 }
 
+int ACC::getFromFile(string filename)
+{
+  Array<complex<double>, 5> acc_array;
+
+  LOG_INFO_STR("Attempting to read ACC array with shape='" << m_acc.shape() << "' from '" << filename);
+
+  ifstream accstream(filename.c_str());
+  
+  if (accstream.is_open()) {
+    accstream >> acc_array;
+  } else {
+    LOG_WARN_STR("Failed to open file: " << filename);
+    return -1;
+  }
+
+  for (int i = 0; i < 5; i++) {
+    ASSERT(acc_array.extent(i) == m_acc.extent(i));
+  }
+
+  setACC(acc_array);
+
+  LOG_INFO_STR("Done reading ACC array");
+
+  return 0;
+}
+
 ACCs::ACCs(int nsubbands, int nantennas, int npol) : 
 	m_front(0), m_back(1)
 {
@@ -115,23 +141,6 @@ void ACCs::swap()
   m_back = tmp;
 }
 
-const ACC* ACCLoader::loadFromFile(string filename)
-{
-  ACC* acc = 0;
-  Array<complex<double>, 5> acc_array;
-
-  ifstream accstream(filename.c_str());
-  
-  if (accstream.is_open())
-    {
-      accstream >> acc_array;
-    }
-
-  acc = new ACC();
-  acc->setACC(acc_array);
-
-  return acc;
-}
 
 
 

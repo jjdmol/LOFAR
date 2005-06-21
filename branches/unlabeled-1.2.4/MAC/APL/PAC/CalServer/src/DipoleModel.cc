@@ -53,7 +53,7 @@ DipoleModels::DipoleModels()
 DipoleModels::~DipoleModels()
 {
   for (map<string, const DipoleModel*>::const_iterator it = m_models.begin();
-       it != m_models.end(); it++)
+       it != m_models.end(); ++it)
   {
     if ((*it).second) delete (*it).second;
   }

@@ -37,10 +37,19 @@ using namespace CAL;
 
 AntennaGains::AntennaGains()
 {
+#ifdef USE_CAL_THREAD
+  pthread_mutex_init(&m_mutex, 0);
+#endif
+  lock(); m_done = false; unlock();
 }
 
-AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_done(false)
+AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands)
 {
+#ifdef USE_CAL_THREAD
+  pthread_mutex_init(&m_mutex, 0);
+#endif
+  lock(); m_done = false; unlock();
+
   if (nantennas < 0 || npol < 0 || nsubbands < 0)
     {
       nantennas = 0;
@@ -70,10 +79,12 @@ unsigned int AntennaGains::pack(void* buffer)
 {
   unsigned int offset = 0;
 
+  lock();
   MSH_PACK_ARRAY(buffer, offset, m_gains, complex<double>);
   MSH_PACK_ARRAY(buffer, offset, m_quality, double);
   memcpy((char*)buffer + offset, &m_done, sizeof(bool));
   offset += sizeof(bool);
+  unlock();
 
   return offset;
 }
@@ -82,23 +93,28 @@ unsigned int AntennaGains::unpack(void* buffer)
 {
   unsigned int offset = 0;
 
+  lock();
   MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 3);
   MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 3);
   memcpy(&m_done, (char*)buffer + offset, sizeof(bool));
   offset += sizeof(bool);
+  unlock();
 
   return offset;
 }
 
-AntennaGains& AntennaGains::operator=(const AntennaGains& rhs)
+AntennaGains& AntennaGains::copy(AntennaGains& source)
 {
-  m_gains.resize(rhs.m_gains.shape());
-  m_gains = rhs.m_gains.copy();
+  lock(); source.lock();
+  m_gains.resize(source.m_gains.shape());
+  m_gains = source.m_gains.copy();
 
-  m_quality.resize(rhs.m_quality.shape());
-  m_quality = rhs.m_quality.copy();
+  m_quality.resize(source.m_quality.shape());
+  m_quality = source.m_quality.copy();
 
-  m_done = rhs.m_done;
+  m_done = source.m_done;
+  source.unlock(); unlock();
+
   return *this;
 }
 

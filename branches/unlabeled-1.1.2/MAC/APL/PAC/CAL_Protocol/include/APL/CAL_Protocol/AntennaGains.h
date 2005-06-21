@@ -27,6 +27,9 @@
 
 #include <math.h>
 #include <blitz/array.h>
+#ifdef USE_CAL_THREAD
+#include <pthread.h>
+#endif
 
 namespace LOFAR {
   namespace CAL {
@@ -50,20 +53,6 @@ namespace LOFAR {
       /*@}*/
 
       /**
-       * Copy constructor.
-       */
-      AntennaGains(const AntennaGains & copy)
-      {
-	m_gains.resize(copy.m_gains.shape());
-	m_gains = copy.m_gains.copy();
-
-	m_quality.resize(copy.m_quality.shape());
-	m_quality = copy.m_quality.copy();
-
-	m_done = copy.m_done;
-      }
-
-      /**
        * Destructor
        */
       virtual ~AntennaGains();
@@ -85,17 +74,28 @@ namespace LOFAR {
       /**
        * has the calibration algorithm producing this result completed?
        */
-      bool isDone() { return m_done; }
+      inline bool isDone() { bool done; lock(); done = m_done; unlock(); return done; }
 
       /**
        * set the complete status.
        */
-      void setDone(bool value = true) { m_done = value; }
+      inline void setDone(bool value = true) { lock(); m_done = value; unlock(); }
 
       /**
-       * Assignment operator
+       * Copy
        */
-      AntennaGains& operator=(const AntennaGains& rhs);
+      AntennaGains& copy(AntennaGains& source);
+
+      /**
+       * lock/unlock
+       */
+#ifdef USE_CAL_THREAD
+      inline int lock()   { return pthread_mutex_lock(&m_mutex);   }
+      inline int unlock() { return pthread_mutex_unlock(&m_mutex); }
+#else
+      inline int lock()   { return 0; }
+      inline int unlock() { return 0; }
+#endif
 
     public:
       /*@{*/
@@ -108,9 +108,19 @@ namespace LOFAR {
       /*@}*/
 
     private:
+      /**
+       * Prevent copying
+       */
+      AntennaGains(const AntennaGains & copy);
+
+    private:
       blitz::Array<std::complex<double>, 3> m_gains;
       blitz::Array<double, 3>               m_quality;
       bool                                  m_done; // has the calibration finished
+
+#ifdef USE_CAL_THREAD
+      pthread_mutex_t m_mutex; // control access to the m_done flag
+#endif
     };
 
   }; // namespace CAL

@@ -24,7 +24,8 @@
 #ifndef SUBARRAY_H_
 #define SUBARRAY_H_
 
-#include <set>
+#include <map>
+#include <list>
 #include <string>
 
 #include "Subject.h"
@@ -53,9 +54,9 @@ namespace LOFAR {
       SubArray(std::string                    name,
 	       const blitz::Array<double, 3>& array,
 	       const blitz::Array<bool, 2>&   select,
-	       double sampling_frequency,
-	       int spectral_window,
-	       int nsubbands);
+	       double                         sampling_frequency,
+	       int                            spectral_window,
+	       int                            nsubbands);
       virtual ~SubArray();
 
       /**
@@ -70,7 +71,7 @@ namespace LOFAR {
        * Get calibration result (if available).
        * @param cal Calibration result
        */
-      bool getGains(const AntennaGains*& cal, int buffer = FRONT);
+      bool getGains(AntennaGains*& cal, int buffer = FRONT);
 
       /**
        * Abort background calibration.
@@ -105,26 +106,40 @@ namespace LOFAR {
       AntennaGains*        m_result[BACK + 1]; // two calibration result records
     };
 
-    class SubArrays
+    class SubArrays : public SharedResource
     {
     public:
       SubArrays();
       virtual ~SubArrays();
 
       /**
-       * Add new subarray to the subarrays.
+       * @pre array != 0
+       * Schedule a new array for addition to the subarray list.
        * @param array Pointer (not 0) to the array to be added.
        */
-      void add(SubArray* array);
+      void schedule_add(SubArray* array);
 
       /**
-       * Remove subarray with the given name from the subarrays.
-       * The subarray instance will be deleted.
-       * @param name Name of the subarray to remove.
-       * @return true if found and removed, false otherwise
+       * Schedule subarray for removal. This is used
+       * to keep a subarray while the calibration algorithm
+       * is running on a separate thread. Only really remove
+       * the subarray when the thread has finished.
        */
-      bool remove(std::string name);
-      bool remove(SubArray*& subarray);
+      bool schedule_remove(std::string name);
+      bool schedule_remove(SubArray*& subarray);
+
+      /**
+       * New subarrays are listed in m_new_arrays.
+       * This method moves these subarrays to the m_arrays map.
+       */
+      void creator();
+      
+      /**
+       * Subarrays that should be removed are listed in m_dead_arrays.
+       * This method deletes these subarrays removes
+       * them from the m_arrays.
+       */
+      void undertaker();
 
       /**
        * Find a subarray by name.
@@ -149,8 +164,20 @@ namespace LOFAR {
        */
       void calibrate(CalibrationInterface* cal, ACC& acc);
 
+      /**
+       * Remove subarray with the given name from the subarrays.
+       * The subarray instance will be deleted.
+       * @param name Name of the subarray to remove.
+       * @return true if found and removed, false otherwise
+       */
     private:
+      bool remove(std::string name);
+      bool remove(SubArray*& subarray);
+
+    private:
+      std::map<std::string, SubArray*> m_new_arrays;  // subarrays that should be added for the next run of the calibration algorithm
       std::map<std::string, SubArray*> m_arrays;
+      std::list<SubArray*>             m_dead_arrays; // subarrays that have been stopped
     };
 
   }; // namespace CAL

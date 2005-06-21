@@ -90,21 +90,44 @@ namespace LOFAR {
       /**
        * Is the array valid? If not don't use it.
        */
-      bool isValid() const { return m_valid; }
+      bool isValid()
+      {
+	bool result;
+	mutex_lock();
+	result = m_valid;
+	mutex_unlock();
+	return result; 
+      }
 
       /**
        * Set to valid
        */
-      void validate() { m_valid = true; }
+      void validate()
+      {
+	mutex_lock();
+	m_valid = true; 
+	mutex_unlock();
+      }
 
       /**
        * Set to invalid.
        */
-      void invalidate() { m_valid = false; }
+      void invalidate() 
+      {
+	mutex_lock();
+	m_valid = false;
+	mutex_unlock();
+      }
+
+      /**
+       * Get the ACC from file. The ACC in the file needs
+       * to have the shape that is already defined.
+       * @param filename Name of the file to read.
+       * @return 0 on success, !0 on failure.
+       */
+      int getFromFile(std::string filename);
 
     private:
-
-      friend class ACCLoader;
 
       /**
        * ACC is a five dimensional array of complex numbers with dimensions
@@ -152,17 +175,11 @@ namespace LOFAR {
        * calibration iteration.
        */
       void swap();
-		
+
     private:
       int m_front;
       int m_back;
       ACC* m_buffer[2];
-    };
-
-    class ACCLoader
-    {
-    public:
-      static const ACC* loadFromFile(std::string filename);
     };
 
   }; // namespace CAL

@@ -67,7 +67,7 @@ AntennaArrays::AntennaArrays()
 AntennaArrays::~AntennaArrays()
 {
   for (map<string, const AntennaArray*>::const_iterator it = m_arrays.begin();
-       it != m_arrays.end(); it++)
+       it != m_arrays.end(); ++it)
   {
     if ((*it).second) delete (*it).second;
   }

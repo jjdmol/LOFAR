@@ -27,6 +27,7 @@ enum {
   ERR_NO_SUBARRAY, // no subarray by that name found
 };
 
+static const int MAX_N_RCUS=256;
 static const int N_SUBBANDS=512;
 
 PRELUDE_END;
@@ -50,7 +51,7 @@ event = {
       };
       param = { // subset of the receivers (2 receivers per antenna)
 	    name = "subset";
-	    type = "std::bitset<256>";
+	    type = "std::bitset<MAX_N_RCUS>";
       };
       param = { // sampling_frequency
 	    name = "sampling_frequency";
