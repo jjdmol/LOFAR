@@ -77,6 +77,7 @@ namespace CAL_Test
 
     LOFAR::uint32 m_handle; // subscription handle
 
+    string m_name; // name of the current array
     int m_counter1; // general purpose test counter, semantics assigned per test
   };
 

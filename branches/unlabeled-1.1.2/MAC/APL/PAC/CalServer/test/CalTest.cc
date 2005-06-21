@@ -111,8 +111,10 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
   //             <- STARTACK
   // SUBSCRIBE   ->
   //             <- SUBSCRIBEACK
-  // (timer 10 sec)
-  //             <- UPDATE (*)
+  //
+  //             <- UPDATE (*) (1st update)
+  //
+  //             <- UPDATE (*) (2nd update)
   // UNSUBSCRIBE ->
   //             <- UNSUBSCRIBEACK
   // STOP        ->
@@ -123,13 +125,16 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
     {
     case F_ENTRY:
       {
-	START_TEST("test001", "test START");
+	ostringstream name;
+	name << "test001_pid=" << (int)getpid();
+	m_name = name.str();
+	START_TEST(m_name, "test START");
 
-	//m_counter1 = 0;
+	m_counter1 = 0;
 
 	CALStartEvent start;
 
-	start.name   = "test001";
+	start.name   = m_name;
 	start.parent = "FTS-1-LBA";
 	start.subset.reset();
 
@@ -148,13 +153,13 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStartackEvent ack(e);
 
-	TESTC_ABORT(ack.name == "test001", CalTest::final);
+	TESTC_ABORT(ack.name == m_name, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	// send subscribe
 	CALSubscribeEvent subscribe;
 
-	subscribe.name = "test001";
+	subscribe.name = m_name;
 	subscribe.subbandset.reset();
 	subscribe.subbandset.set(100);
 
@@ -168,9 +173,6 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 	m_handle = ack.handle;
-
-	// start timer
-	m_server.setTimer(120.0); // two minutes
       }
       break;
       
@@ -185,19 +187,14 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
 
-	//m_counter1++;
-      }
-      break;
+	if (m_counter1++ >= 2) {
 
-    case F_TIMER:
-      {
-	//TESTC_ABORT(m_counter1 >= 3, CalTest::final);
-
-	CALUnsubscribeEvent unsubscribe;
+	  CALUnsubscribeEvent unsubscribe;
 	
-	unsubscribe.handle = m_handle;
+	  unsubscribe.handle = m_handle;
 
-	TESTC_ABORT(m_server.send(unsubscribe), CalTest::final);
+	  TESTC_ABORT(m_server.send(unsubscribe), CalTest::final);
+	}
       }
       break;
 
@@ -211,7 +208,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	m_handle = 0; // clear handle
 
 	CALStopEvent stop;
-	stop.name = "test001";
+	stop.name = m_name;
 	TESTC_ABORT(m_server.send(stop), CalTest::final);
       }
       break;
@@ -219,7 +216,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
     case CAL_STOPACK:
       {
 	CALStopackEvent ack(e);
-	TESTC_ABORT(ack.name == "test001", CalTest::final);
+	TESTC_ABORT(ack.name == m_name, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	TRAN(CalTest::test002); // next test
@@ -259,8 +256,8 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
   //             <- STARTACK
   // SUBSCRIBE   ->
   //             <- SUBSCRIBEACK
-  //             <- UPDATE (*)
-  // (timer 10 sec)
+  //
+  //             <- UPDATE (*) (1st update)
   // STOP        ->
   //             <- STOPACK
   //
@@ -269,13 +266,16 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
     {
     case F_ENTRY:
       {
-	START_TEST("test002", "test START");
+	ostringstream name;
+	name << "test002_pid=" << (int)getpid();
+	m_name = name.str();
+	START_TEST(m_name, "test START");
 
-	//m_counter1 = 0; // reset update counter
+	m_counter1 = 0; // reset update counter
 
 	CALStartEvent start;
 
-	start.name   = "test002";
+	start.name   = m_name;
 	start.parent = "FTS-1-LBA";
 	start.subset.reset();
 
@@ -294,13 +294,13 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStartackEvent ack(e);
 
-	TESTC_ABORT(ack.name == "test002", CalTest::final);
+	TESTC_ABORT(ack.name == m_name, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	// send subscribe
 	CALSubscribeEvent subscribe;
 
-	subscribe.name = "test002";
+	subscribe.name = m_name;
 	subscribe.subbandset.reset();
 	subscribe.subbandset.set(100);
 
@@ -314,9 +314,6 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
 
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 	m_handle = ack.handle;
-
-	// start timer
-	m_server.setTimer(10.0);
       }
       break;
 
@@ -331,24 +328,18 @@ GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
 
-	//m_counter1++;
-      }
-      break;
-
-    case F_TIMER:
-      {
-	//TESTC_ABORT(m_counter1 >= 3, CalTest::final);
-
-	CALStopEvent stop;
-	stop.name = "test002";
-	TESTC_ABORT(m_server.send(stop), CalTest::final);
+	if (++m_counter1 >= 1) {
+	  CALStopEvent stop;
+	  stop.name = m_name;
+	  TESTC_ABORT(m_server.send(stop), CalTest::final);
+	}
       }
       break;
 
     case CAL_STOPACK:
       {
 	CALStopackEvent ack(e);
-	TESTC_ABORT(ack.name == "test002", CalTest::final);
+	TESTC_ABORT(ack.name == m_name, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	m_handle = 0;
@@ -398,13 +389,16 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
     {
     case F_ENTRY:
       {
-	START_TEST("test003", "test START");
+	ostringstream name;
+	name << "test003_pid=" << (int)getpid();
+	m_name = name.str();
+	START_TEST(m_name, "test START");
 
 	m_counter1 = 0; // reset update counter
 
 	CALStartEvent start;
 
-	start.name   = "test003";
+	start.name   = m_name;
 	start.parent = "FTS-1-LBA";
 	start.subset.reset();
 
@@ -423,13 +417,13 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStartackEvent ack(e);
 
-	TESTC_ABORT(ack.name == "test003", CalTest::final);
+	TESTC_ABORT(ack.name == m_name, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	// send subscribe
 	CALSubscribeEvent subscribe;
 
-	subscribe.name = "test003";
+	subscribe.name = m_name;
 	subscribe.subbandset.reset();
 	subscribe.subbandset.set(100);
 
@@ -447,7 +441,7 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
 	usleep(100000); // wait 100 msec
 
 	CALStopEvent stop;
-	stop.name = "test003";
+	stop.name = m_name;
 	TESTC_ABORT(m_server.send(stop), CalTest::final);
       }
       break;
@@ -455,7 +449,7 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
     case CAL_STOPACK:
       {
 	CALStopackEvent ack(e);
-	TESTC_ABORT(ack.name == "test003", CalTest::final);
+	TESTC_ABORT(ack.name == m_name, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	m_handle = 0;
@@ -469,7 +463,7 @@ GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
 	  // again
 	  CALStartEvent start;
 
-	  start.name   = "test003";
+	  start.name   = m_name;
 	  start.parent = "FTS-1-LBA";
 	  start.subset.reset();
 	  
