@@ -61,7 +61,12 @@ asm volatile ("nop");
     for (int t=0, tcursor = beginCursor; t<myMatrix.getNElemInDim(tijdDim); myMatrix.moveCursor(&tcursor, tijdDim), t++) {
       for (int f=0, fcursor = tcursor; f<myMatrix.getNElemInDim(freqDim); myMatrix.moveCursor(&fcursor, freqDim), f++) {
 	for (int c=0, ccursor = fcursor; c<myMatrix.getNElemInDim(chanDim); myMatrix.moveCursor(&ccursor, chanDim), c++) {
-	  //	  cerr<<"setting value : "<<value<<endl;
+	  cerr<<"setting value : "<<value<<endl;
+
+	  cerr<< "tcursor " << tcursor << endl;
+	  cerr<< "fcursor " << fcursor << endl;
+	  cerr<< "ccursor " << ccursor << endl;
+
 	  myMatrix.setValue(ccursor, value++);
 	}
       }
