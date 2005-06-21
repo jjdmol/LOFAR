@@ -156,10 +156,12 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     //
     // Output channel 0
     outStub.connect (2*r,                                                              // Corr filter number
-		     (DH_SubBand*)TransNodes[r]->getDataManager().getOutHolder(0));  
+		     TransNodes[r]->getDataManager(), 
+		     0);  
     // Output channel 1
     outStub.connect (2*r+1,                                                              // Corr filter number
-		     (DH_SubBand*)TransNodes[r]->getDataManager().getOutHolder(1));  
+		     TransNodes[r]->getDataManager(),
+		     1);  
 
   }      
 
