@@ -69,21 +69,25 @@ namespace LOFAR
 			       itsWH->getDataManager().getInHolder(0), 
 			       itsTH, 
 			       false);
+    itsWH->getDataManager().setInConnection(0, itsInCon1);
     itsInCon2 = new Connection("in2", 
 			       itsInDH2, 
 			       itsWH->getDataManager().getInHolder(1), 
 			       itsTH, 
 			       false);
+    itsWH->getDataManager().setInConnection(1, itsInCon2);
     itsOutCon1 = new Connection("out1", 
 				itsOutDH1, 
 				itsWH->getDataManager().getOutHolder(0), 
 				itsTH, 
 				false);
+    itsWH->getDataManager().setOutConnection(0, itsOutCon1);
     itsOutCon2 = new Connection("out2", 
 				itsOutDH2, 
 				itsWH->getDataManager().getOutHolder(1), 
 				itsTH, 
 				false);
+    itsWH->getDataManager().setOutConnection(1, itsOutCon2);
   }
 
   void AH_Transpose::init() {
