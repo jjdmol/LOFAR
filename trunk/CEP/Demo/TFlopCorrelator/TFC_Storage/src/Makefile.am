@@ -1,6 +1,6 @@
-INSTHDRS         	=
-#WH_Store.h
-#AH_Storage.h
+INSTHDRS         	=\
+AH_Storage.h		\
+WH_Storage.h
 
 NOINSTHDRS 		=
 
@@ -16,7 +16,7 @@ bin_PROGRAMS 		= TFC_Storage
 
 TFC_Storage_SOURCES 	= $(DOCHDRS) \
 TFC_Storage_main.cc 	\
-AH_Storage.cc
-#WH_Store.h
+AH_Storage.cc		\
+WH_Storage.cc
 
 include $(lofar_sharedir)/Makefile.common
