@@ -1,6 +1,6 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_Transpose TestFilter tRectMatrix CyclicBufferTest
+check_PROGRAMS = tWH_FFT TestFilter 
 
 
 AM_CXXFLAGS = \
@@ -15,23 +15,13 @@ TestFilter.cc					\
 ../src/DH_SubBand.cc				\
 ../src/DH_CorrCube.cc
 
-tWH_Transpose_SOURCES =				\
-tWH_Transpose.cc				\
-../src/WH_Transpose.cc				\
-../src/DH_RSP.cc				\
-../src/DH_SubBand.cc
-
-CyclicBufferTest_SOURCES =                      \
-CyclicBufferTest.cc
-
-tRectMatrix_SOURCES =				\
-tRectMatrix.cc					\
-../src/RectMatrix.cc				
+tWH_FFT_SOURCES =				\
+tWH_FFT.cc				        \
+../src/WH_FFT.cc
 
 TESTS   = 					\
 TestFilter.sh					\
-tWH_Transpose.sh				\
-tRectMatrix.sh
+tWH_FFT.sh					
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
