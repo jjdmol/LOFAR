@@ -2,7 +2,7 @@ V 10
 2
 LANG:1 9 alert_hdl
 LANG:0 9 alert_hdl
-PANEL,403 221 623 531 N "_3DFace" 1
+PANEL,416 345 623 531 N "_3DFace" 1
 "$1"
 "main()
 {
@@ -990,18 +990,26 @@ LANG:0 10 Übernehmen
   string datapoint = $1;
   checkForReference(datapoint, reference, dpIsReference);
   out1 = dpNames(dpSubStr(datapoint,DPSUB_SYS)+\"*\", dpTypeName(datapoint));
+  DebugN(out1[1]);
+  DebugN(out1[2]);
+  DebugN(\"########################\");
   DebugN(out1);
+
   //out2 = dynUnique(out1);
   
-/*  maximumCount = dynlen(out1);
-  for(int i=1; i<+dynlen(out1); i++)  
+  maximumCount = dynlen(out1);
+  for(int i=1; i<=dynlen(out1); i++)  
   {
-    dpCopyConfig($1, tempDP, conf, error, drvNum);
+    
+    //dpCopyConfig(\"STSLCU3:PIC_Rack1_SubRack1_Board1_AP1_RCU1.status\",
+    //             \"STSLCU3:PIC_Rack1_SubRack1_Board1_AP1_RCU2.status\", conf, error, drvNum);
+    dpCopyConfig($1, out1[i]+\".status\", conf, error, drvNum);
+    if(error!=0) DebugN(i+\"[error]\"+error);
     progressBar(maximumCount, i);
   }
 
   progressBar(maximumCount, maximumCount);
-*/  
+  
 }" 0
  E E E
 0

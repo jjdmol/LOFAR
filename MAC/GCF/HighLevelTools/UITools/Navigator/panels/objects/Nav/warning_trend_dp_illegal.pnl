@@ -1,20 +1,16 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,270 138 343 81 N "_3DFace" 2
+PANEL,306 200 343 81 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
-"//
-main()
+"main()
 {
-
-  DebugN(\"## Function called\");
   bool StandardTrend;
   dpGet($configDatapoint + \".Standard\", StandardTrend);
 
    if ((dpGetElementName($datapoint)!=\"\") && StandardTrend)
   {
-    DebugN(\"## It is a DPE\");
     string hulp = dpSubStr($datapoint, DPSUB_DP_EL_CONF_DET_ATT);
     if ((20==dpElementType(hulp)) || (21==dpElementType(hulp)) ||  (22==dpElementType(hulp)) || (23==dpElementType(hulp)))
     {
@@ -26,7 +22,6 @@ main()
     }
     else
     {
-      DebugN(\"## It must be set visible\");
       setValue (\"txt_info\", \"visible\", TRUE);
       setValue (\"icon_info\", \"visible\", TRUE);
       setValue (\"txt_info_2\", \"visible\", TRUE);

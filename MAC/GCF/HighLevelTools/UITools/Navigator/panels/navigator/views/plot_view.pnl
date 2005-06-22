@@ -6,17 +6,86 @@ PANEL,350 258 950 740 N "_3DFace" 2
 "$datapoint"
 "main()
 {
-   strreplace(PICTURE_PATH, \"/\", \"\\\\\");
-   //DebugN(\"PICTURE_PATH:\"+PICTURE_PATH);
+  startThread(\"triggerRecord\");
+  strreplace(PICTURE_PATH, \"/\", \"\\\\\");
 
   if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".1.active\"))
   {
     navViewPlotChangeState();
     navViewPlotMain();
+    
   }
+
 }
 
 
+void triggerRecord()
+{
+  dpConnect(\"RecordFunction\", DPNAME_NAVIGATOR + g_navigatorID + \".triggerRecord\");
+}
+
+RecordFunction(string dp1, bool triggerRecord)
+{
+  DebugN(\"And here\");
+  //\"CCU1:__navU0000_TLcuPicSubRack_config_Plot_Plot-1\"
+  
+  //\"STSLCU2:PIC_Rack1_SubRack1_Board1_AP1_RCU2.statisticsSubbandPower\"
+  string dpName;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".dpRecord\", dpName);
+  DebugN(\"dpName:\"+dpName);
+  if(triggerRecord)
+  { 
+    DebugN(\"Recording has started\");
+    dpConnect(\"RecordSpectrum\", dpName);
+    file f;
+    f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.dat\", \"w+\");
+    fclose(f);
+
+  }
+  else
+  {
+    DebugN(\"Recording has stopped\");
+    dpDisconnect(\"RecordSpectrum\", dpName);
+    g_counter = 0;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+void RecordSpectrum(string dp1, string spectrum)
+{
+  g_counter++;
+  //writeToFile(spectrumData);
+//}
+
+//void writeToFile(string spectrum)
+//{
+  //string spectrum;
+  file f;
+  //f = fopen(\"c:\\\\aa\\\\test.dat\", \"w+\");
+  f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.tmp\", \"w+\");
+  //DebugTN(\"#####################  Start   ######################\");  
+//  for(int j=0; j<=60; j++)
+//  {
+    //dpGet(\"STSLCU2:PIC_Rack1_SubRack1_Board1_AP3_RCU2.statisticsSubbandPower\", spectrum);
+    dyn_string out = strsplit(spectrum, \"\\n\");
+    for(int i=0; i<=511; i++)
+    {
+      strreplace(out[i+1], i + \" \", g_counter + \" \" + i + \" \");
+      fputs (out[i+1] + \"\\n\", f );    
+    }
+    fputs (\"\\n\", f );
+
+//    delay(1,0);
+//  }
+  fclose(f);
+  system(\"type \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.tmp >> \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.dat\");
+  //DebugN(\"type \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.tmp >> \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.dat\");
+  DebugTN(\"##  Ready ## \"+g_counter+\" ##\");
+}
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 void navViewPlotMain()
 {
   bool dpActive;       // TRUE if dp must be used for plotting 
@@ -89,7 +158,6 @@ void navViewPlotMain()
           dpGet(dpToConnect, spectrumData);
           if(\"\"==spectrumData || \"0\"==spectrumData || strpos(spectrumData, \" \")<1) //if not correct data available, create alternative data
           {
-            //spectrumData = (1+i)+\" \"+(30+i)+\"\\n\"+(2+i)+\" \"+(50+i)+\"\\n\"+(3+i)+\" \"+(30+i)+\"\\n\"+(4+i)+\" \"+(50+i)+\"\\n\"+(5+i)+\" \"+(30+i)+\"\\n\"+(6+i)+\" \"+(50+i)+\"\\n\"+(7+i)+\" \"+(30+i)+\"\\n\"+(8+i)+\" \"+(50+i)+\"\\n\"+(9+i)+\" \"+(30+i)+\"\\n\";
             spectrumData = \"0 0\\n\";
           }
 	        //write content of string to spectrum[DP_number].dat
@@ -216,7 +284,8 @@ dyn_string dpsLoaded;
 int UPDATE_RATE = 0;
 int xrangeMin, xrangeMax, yrangeMin, yrangeMax;
 string XRANGE, YRANGE;
-string l_outputFileName = \"output\";" 0
+string l_outputFileName = \"output\";
+int g_counter;" 0
  2
 "CBRef""1"
 "EClose"E
@@ -511,12 +580,7 @@ void navViewPlotContextMenu()
     default:
       break;
     }
-  Debug(\"End of case function\");
-}
-
-
-
-" 0
+}" 0
  E
 76 0 0 0 0 0
 EE E
@@ -581,6 +645,30 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 20 20 10 10
+13 107
+"Button1"
+""
+1 270 10 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+268 8 392 35
+T 
+1
+LANG:1 7 Button1
+"main()
+{
+DebugN($configDatapoint);
+DebugN($datapoint);
+}" 0
+ E E E
 0
 LAYER, 1 
 1

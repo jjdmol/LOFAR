@@ -1,13 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,365 363 674 216 N "_3DFace" 6
+PANEL,258 138 654 216 N "_3DFace" 1
 "$configDatapoint"
-"$updateRate"
-"$xrangeMax"
-"$xrangeMin"
-"$yrangeMax"
-"$yrangeMin"
 EEE E E 1 -1 -1 0  20 20
 "" 0 1
 E"bool SETTINGS_FROM_DATABASE;
@@ -26,7 +21,7 @@ LANG:1 6 Layer1
 2 9
 "Text2"
 ""
-1 30 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -35,8 +30,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 32 52 114 68
-0 2 0 "s" 0 0 0 192 0 0  32 52
+E E 0 1 1 0 1 E U  0 E 12 52 94 68
+0 2 0 "s" 0 0 0 192 0 0  12 52
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -46,7 +41,7 @@ LANG:1 12 X range min:
 2 10
 "Text3"
 ""
-1 30 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -55,8 +50,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 32 82 118 98
-0 2 0 "s" 0 0 0 192 0 0  32 82
+E E 0 1 1 0 1 E U  0 E 12 82 98 98
+0 2 0 "s" 0 0 0 192 0 0  12 82
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -66,7 +61,7 @@ LANG:1 12 X range max:
 2 11
 "Text5"
 ""
-1 30 110 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 110 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -75,8 +70,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 32 112 113 128
-0 2 0 "s" 0 0 0 192 0 0  32 112
+E E 0 1 1 0 1 E U  0 E 12 112 93 128
+0 2 0 "s" 0 0 0 192 0 0  12 112
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -86,7 +81,7 @@ LANG:1 12 Y range min:
 2 12
 "Text6"
 ""
-1 30 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 12 0 0 0 0 0
 EE E
@@ -95,8 +90,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 32 142 117 158
-0 2 0 "s" 0 0 0 192 0 0  32 142
+E E 0 1 1 0 1 E U  0 E 12 142 97 158
+0 2 0 "s" 0 0 0 192 0 0  12 142
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -106,7 +101,7 @@ LANG:1 12 Y range max:
 2 16
 "Text1"
 ""
-1 31 180 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 180 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -115,8 +110,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 111 182 189 198
-0 2 0 "s" 0 0 0 194 0 0  111 182
+E E 0 1 1 0 1 E U  0 E 91 182 169 198
+0 2 0 "s" 0 0 0 194 0 0  91 182
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -126,7 +121,7 @@ LANG:1 12 Update rate:
 6 23
 "Border2"
 ""
-1 30 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -135,11 +130,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 30 10 664 34
+E E 0 1 1 0 1 E U  0 E 10 10 644 34
 2 24
 "Text4"
 ""
-1 40 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 20 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -148,8 +143,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 42 14 173 30
-0 2 0 "s" 0 0 0 66 0 0  42 14
+E E 0 1 1 0 1 E U  0 E 22 14 153 30
+0 2 0 "s" 0 0 0 66 0 0  22 14
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -159,7 +154,7 @@ LANG:1 21 Selected script file:
 2 25
 "setting_script"
 ""
-1 179 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 159 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -168,20 +163,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-"/*
-main()
-{
-  dpConnect(\"showScriptFilename\", $configDatapoint + \".\" + $PlotNr + \".scriptFilename\");
-
-}
-
-showScriptFilename(string dp1, string value)
-{
-  setValue(\"\",\"text\", value);
-}
-*/" 0
- E 0 1 1 0 1 E U  0 E 181 14 193 30
-0 2 0 "s" 0 0 0 192 0 0  181 14
+E E 0 1 1 0 1 E U  0 E 161 14 173 30
+0 2 0 "s" 0 0 0 192 0 0  161 14
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -191,7 +174,7 @@ LANG:1 3 ...
 13 5
 "btn_cancel"
 ""
-1 590 180 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 571 182 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -202,7 +185,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-588 178 664 205
+569 180 645 207
 T 
 1
 LANG:1 6 Cancel
@@ -214,7 +197,7 @@ LANG:1 6 Cancel
 13 6
 "btn_ok"
 ""
-1 510 180 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 491 182 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -225,7 +208,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-508 178 584 205
+489 180 565 207
 T 
 1
 LANG:1 2 OK
@@ -295,17 +278,17 @@ LANG:1 2 OK
   setting_script.text = scriptFilename;
 
 
-  setting_xrangeMin.text = $xrangeMin;
-  setting_xrangeMax.text = $xrangeMax;
-  setting_yrangeMin.text = $yrangeMin;
-  setting_yrangeMax.text = $yrangeMax;
-  setting_updateRate.text = $updateRate;
+  //setting_xrangeMin.text = $xrangeMin;
+  //setting_xrangeMax.text = $xrangeMax;
+  //setting_yrangeMin.text = $yrangeMin;
+  //setting_yrangeMax.text = $yrangeMax;
+  //setting_updateRate.text = $updateRate;
 }" 0
 
 14 7
 "setting_xrangeMin"
 ""
-1 120 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -316,7 +299,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-118 48 242 75
+98 48 222 75
 3 "7d" 7 0 0 0 0 0 
 E
 E
@@ -324,7 +307,7 @@ E
 14 13
 "setting_xrangeMax"
 ""
-1 120 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -335,7 +318,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-118 78 242 105
+98 78 222 105
 3 "7d" 7 0 0 0 0 0 
 E
 E
@@ -343,7 +326,7 @@ E
 14 14
 "setting_yrangeMin"
 ""
-1 120 110 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 110 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -354,7 +337,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-118 108 242 135
+98 108 222 135
 3 "7d" 7 0 0 0 0 0 
 E
 E
@@ -362,7 +345,7 @@ E
 14 15
 "setting_yrangeMax"
 ""
-1 120 140 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 140 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -373,7 +356,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-118 138 242 165
+98 138 222 165
 3 "7d" 7 0 0 0 0 0 
 E
 E
@@ -381,7 +364,7 @@ E
 14 17
 "setting_updateRate"
 ""
-1 120 180 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 180 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 17 0 0 0 0 0
 EE E
@@ -392,7 +375,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-118 178 242 205
+98 178 222 205
 3 "7d" 7 0 0 0 0 0 
 E
 E
@@ -400,7 +383,7 @@ E
 13 26
 "Button2"
 ""
-1 635 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 615 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -411,7 +394,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-633 8 665 34
+613 8 645 34
 P 
 13434828
 "pictures/icon_fileselector.bmp"

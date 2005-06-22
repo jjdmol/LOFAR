@@ -1,12 +1,11 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,447 287 954 748 N "_3DFace" 2
+PANEL,306 200 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-  DebugN(\"## Trend init\");
 	//Check for existance trend config data.
 	if (dpExists($configDatapoint + \".Standard\") &&
 	    dpExists($configDatapoint + \".Trend2Active\") &&
