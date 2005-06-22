@@ -3178,7 +3178,9 @@ void WriteVar(
     }
     else if ((ptVar->ptValue != NULL)
              && (ptVar->ptValue->pcValue != NULL)
-             && (ptVar->ptValue->pcValue[0] != 0))
+             && (ptVar->ptValue->pcValue[0] != 0)
+             && ( (ptVar->ptItsType != NULL) && 
+                  (ptVar->ptItsType->iKind != FILEDATAKIND) ) )
     {
       strcat(pcBuffer, " ");
 

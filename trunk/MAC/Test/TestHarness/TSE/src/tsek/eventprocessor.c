@@ -1106,6 +1106,7 @@ int16 ParseReceivedVariable(
 
   iParameterLength = ptTypeDef->iSizeInBytes;
   iEndianess       = ptTypeDef->iEndianess;
+  bErrorFree       = TRUE;
 
   if (iReducedLength > 0)
   {
