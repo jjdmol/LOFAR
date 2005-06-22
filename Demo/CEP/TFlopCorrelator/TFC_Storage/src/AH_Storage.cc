@@ -15,13 +15,10 @@
 #include <ACC/ParameterSet.h>
 
 #include <AH_Storage.h>
+#include <TFC_Interface/Stub_Corr.h>
 
-// tinyCEP
-
-// Transporters
-#include <Transport/TH_MPI.h>
 // Workholders
-#include <tinyCEP/WorkHolder.h>
+#include <TFC_Storage/WH_Storage.h>
 #include <TFC_Interface/Stub_Corr.h>
 
 // DataHolders
@@ -57,6 +54,12 @@ void AH_Storage::define(const LOFAR::KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp;
   setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
+
+  Stub_Corr instub(true);
+
+  WH_Storage itsWH("storage1", itsParamSet);
+  Step stStep(itsWH);
+  comp.addBlock(stStep);
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }
