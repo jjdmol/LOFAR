@@ -149,7 +149,7 @@ int16 BP_LoadBatch(
       /* No scripts in the batch file */
       AddMsg1("No script in batch");
 
-      internal_BatchStopped("Batch error");
+      internal_BatchStopped(my_strdup("Batch error"));
 
       iStatus = BP_NO_SCRIPTS_IN_BATCH;
     }
@@ -160,7 +160,7 @@ int16 BP_LoadBatch(
       /* This can only happen when there is no specification or script file */
       AddMsg1("No script or specification file");
 
-      internal_BatchStopped("Batch error");
+      internal_BatchStopped(my_strdup("Batch error"));
 
       iStatus = BP_NO_SCRIPTS_IN_BATCH;
     }
@@ -248,7 +248,7 @@ void BP_StopBatch(
   bp_StopFileLogging("Batch stopped by user");
 
   /* Let the user know that we stopped and why */
-  internal_BatchStopped((int8 *) "User Interruption");
+  internal_BatchStopped((int8 *) my_strdup("User Interruption"));
 
   cSemaphore++;
 
@@ -421,7 +421,7 @@ int16 RunScript(
         }
 
         /* Error while parsing the script file */
-        internal_BatchStopped((int8 *) "Script error");
+        internal_BatchStopped((int8 *) my_strdup("Script error"));
 
       }
     }
