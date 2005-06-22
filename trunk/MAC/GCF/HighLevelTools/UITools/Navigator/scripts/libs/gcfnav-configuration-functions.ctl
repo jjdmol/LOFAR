@@ -50,6 +50,83 @@ global string   ELNAME_NEWDATAPOINT             = "newDatapoint";
 global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "GCFNavigatorInstance";
 global int      g_navigatorID = 0;
 
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navConfigInitPathNames   
+//           Initiliases the global pathNames, according top the operating
+//           system;
+//
+// Input: 1. operating system
+//
+// Output: 1. g_path_temp is set
+//         1. g_path_gnuplot is set
+///////////////////////////////////////////////////////////////////////////
+void navConfigInitPathNames()
+{
+  dyn_string pathNames;
+  if(_WIN32)
+  {
+    dpGet("__navigator.pathNamesWindows", pathNames);
+    if(""!=pathNames[g_path_temp_index])
+      g_path_temp    = pathNames[g_path_temp_index];
+    else
+      g_path_temp    = "c:/temp";
+
+    g_path_gnuplot = pathNames[g_path_gnuplot_index];
+    
+  }
+  else
+  {
+    dpGet("__navigator.pathNamesLinux", pathNames);
+    if(""!=pathNames[g_path_temp_index])
+      g_path_temp    = pathNames[g_path_temp_index];
+    else
+      g_path_temp    = "/tmp";
+      
+    g_path_gnuplot = pathNames[g_path_gnuplot_index];
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navConfigGetPathName   
+//           converts a given pathName, according to the operating system,
+//           so it be used by a PVSS system command.
+//            
+// Input: 1. user configured pathName
+//
+// Output: 1. pathName with replaced slashes and backslashes
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetPathName(string pathName)
+{
+  string output;
+  if(_WIN32) //windows
+  {
+    strreplace(pathName, "/", "\\");
+    output = pathName;
+  }
+  else      //It must be Linux
+  {
+    strreplace(pathName, "/", "//");
+  }
+  return output;
+}
+
+string navConfigGetSlashes()
+{
+  string output;
+  if(_WIN32) //windows
+  {
+    output = "\\";
+  }
+  else
+  {
+    output = "//";
+  }
+  return output;
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////
 //Function navConfigGetNavigatorID
 //  

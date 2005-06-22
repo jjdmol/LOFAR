@@ -66,6 +66,12 @@ global int	UR_COMMANDSOPERATOR        = 21;
 global int	UR_COMMANDSMAINTENANCE     = 22;
 global int	UR_COMMANDSASTRONOMY       = 23;
 global int	UR_SYSTEMMANAGEMENT        = 24;
+/////////////////////////////////////////////
+//globals voor pathNames
+global string g_path_temp     = ""; 
+global string g_path_gnuplot  = ""; 
+global int g_path_temp_index     = 1;
+global int g_path_gnuplot_index  = 2;
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1884,27 +1890,6 @@ void navConfigMessageWarning(string message)
   ChildPanelOnCentralModal("navigator/MessageWarning", "Warning", makeDynString("$1:"+message));
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navConfigGetPathName   
-//           converts pathName so it can be used in combination with a
-//           system command, depending on operating system
-//
-// Input:  1. pathName
-// Output: 1. operating dependent pathName
-///////////////////////////////////////////////////////////////////////////
-string navConfigGetPathName(string pathName)
-{
-  if (_WIN32)
-  {
-    strreplace(pathName, "/", "\\");     
-  }
-  else
-  {
-    strreplace(pathName, "/", "//");     
-  }
-  return pathName;
-}
 
 
 

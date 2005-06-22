@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,438 374 504 213 N "_3DFace" 6
+PANEL,350 258 464 213 N "_3DFace" 6
 "$configDatapoint"
 "$updateRate"
 "$xrangeMax"
@@ -168,6 +168,13 @@ LANG:1 2 OK
 {
 
   //Check or the settings are LOCAL or DATABASE
+  navViewPlotApplyChanges();
+  PanelOff();
+
+}
+/*
+void navViewPlotApplyChanges()
+{
   dyn_string returnValues;
   returnValues[1] = setting_xrangeMin.text;
   returnValues[2] = setting_xrangeMax.text;
@@ -175,12 +182,9 @@ LANG:1 2 OK
   returnValues[4] = setting_yrangeMax.text;
   returnValues[5] = setting_updateRate.text;
   dpSet(\"_Ui_\"+myManNum()+ \".ReturnValue.Text:_original.._value\", returnValues);
-  PanelOff();
-  
-}" 0
+}*/" 0
  E E "main()
 {
-
   setting_xrangeMin.text = $xrangeMin;
   setting_xrangeMax.text = $xrangeMax;
   setting_yrangeMin.text = $yrangeMin;
@@ -283,25 +287,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 E
 E
-13 19
-"Button2"
-""
-1 184 180 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-18 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-182 178 258 205
-T 
-1
-LANG:1 5 Apply
-E E E E
 13 20
 "Button1"
 ""
@@ -366,35 +351,6 @@ LANG:1 24 Store config in database
   dpSet($configDatapoint + \".updateRate\", setting_updateRate.text);
 }" 0
  E E E
-22 22
-"ComboBox1"
-""
-1 290 110 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-21 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-288 108 392 135
-3
-1
-LANG:1 4 Auto
- 1
-1
-LANG:1 8 Database
- 0
-1
-LANG:1 5 Local
- 0
-E
-E
-E
- 0 0
 0
 LAYER, 1 
 1
