@@ -56,7 +56,7 @@ void DH_RSP::init()
 {
   // Add the fields to the data definition.
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
-
+  addField ("Flag", BlobField<int>(1));
   // Create the data blob
   createDataBlock();
 }
@@ -65,6 +65,8 @@ void DH_RSP::fillDataPointers()
 {
   // Fill in the buffer pointer.
   itsBuffer  = getData<BufferType> ("Buffer");
+  // Fill in the flag pointer.
+  itsFlagPtr= getData<int> ("Flag");
 
   // use memset to null the buffer instead of a for loop
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));

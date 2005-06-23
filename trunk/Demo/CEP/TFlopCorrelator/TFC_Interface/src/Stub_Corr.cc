@@ -24,7 +24,8 @@ namespace LOFAR {
       itsConnections  (0)
   {
     itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
-    itsNCorr = itsPS->getInt("NSBF") * itsPS->getInt("Corr_per_Filter");
+    itsNCorr = itsPS->getInt("NSBF")/2;
+    DBGASSERTSTR(NSBF%2 == 0, "NSBF should be an even number");
     LOG_TRACE_FLOW_STR("Total number of Correlators in the Stub_Corr is " << itsNCorr);
     ASSERTSTR(itsNCorr >= 0, "Number of Correlators in the Stub_Corr must be greater than 0");
 
@@ -50,8 +51,8 @@ namespace LOFAR {
 			   TinyDataManager& dm,
 			   int dhNr)
   {
-    DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsCorr.size())),
-		  "C_nr argument out of boundaries; " << C_nr << " / " << itsCorr.size());
+    DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsNCorr)),
+		  "C_nr argument out of boundaries; " << C_nr << " / " << itsNCorr);
 
     int port = itsPS->getInt("CorrConnection.RequestPort");
     string service(formatString("%d", port));

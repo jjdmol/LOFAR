@@ -10,7 +10,8 @@ RSPTimeStamp.h          \
 RectMatrix.h		\
 Stub_SB.h               \
 Stub_Corr.h		\
-Stub_RSP.h
+Stub_RSP.h		\
+Stub_Delay.h
 
 NOINSTHDRS 		=
 
@@ -36,6 +37,7 @@ RSPTimeStamp.cc          	\
 Stub_SB.cc               	\
 Stub_RSP.cc			\
 Stub_Corr.cc			\
+Stub_Delay.cc			\
 RectMatrix.cc			
 
 include $(lofar_sharedir)/Makefile.common
