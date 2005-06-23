@@ -45,3 +45,5 @@ PR 100 : LOFAR SW development  : Neither config.h nor lofar_config.h should
          is therefore unwise to include either of these files in a header
          file.
 
+         Note: This Problem Report is closely related to Enhancement Request
+               ER 229.
