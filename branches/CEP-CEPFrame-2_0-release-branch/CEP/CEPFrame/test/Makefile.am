@@ -15,7 +15,8 @@ check_PROGRAMS			= Example 		\
 				  shmem_alloc1		\
 				  shmem_alloc2		\
 				  TestAutoTrigger       \
-				  tmat	                
+				  CyclicBufferTest	\
+				  tmat
 
 Example_SOURCES 		= Example.cc
 Simulator_Example_SOURCES	= Simulator_Example.cc Simulator_Example.h
@@ -24,18 +25,10 @@ tmat_SOURCES			= tmat.cc
 shmem_alloc1_SOURCES		= shmem_alloc1.cc
 shmem_alloc2_SOURCES		= shmem_alloc2.cc
 TestAutoTrigger_SOURCES         = TestAutoTrigger.cc WH_TestAutoTrigger.h WH_TestAutoTrigger.cc
-
+CyclicBufferTest_SOURCES	= CyclicBufferTest.cc
 
 LDADD				= ../src/libcepframe.la
 DEPENDENCIES			= ../src/libcepframe.la $(LOFAR_DEPEND)
-
-
-Example_LDADD 			= ../src/libcepframe.la
-Example_DEPENDENCIES		= ../src/libcepframe.la $(LOFAR_DEPEND)
-Simulator_Example_LDADD	= ../src/libcepframe.la
-Simulator_Example_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND)
-Tester_LDADD			= ../src/libcepframe.la
-Tester_DEPENDENCIES		= ../src/libcepframe.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
@@ -49,7 +42,8 @@ TESTS	=					\
 	tmat_test.sh				\
 	shmem_alloc1.sh				\
 	shmem_alloc2.sh				\
-	TestAutoTrigger.sh			
+	TestAutoTrigger.sh			\
+	CyclicBufferTest.sh
 
 EXTRA_DIST = 					\
 	Example_test.sh				\
