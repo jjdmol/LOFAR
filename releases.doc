@@ -1,5 +1,42 @@
+
+Releases sorted by release date
+===============================
+
+CEP/CEPFrame    :       version: 2.0;   date: 2005/06/23
+CEP/tinyCEP     :       version: 2.0;   date: 2005/06/23
+LCS/Transport   :       version: 2.0;   date: 2005/06/17
+LCS/Common      :       version: 2.2;   date: 2005/06/16
+autoconf_share  :       version: 2.2;   date: 2005/06/16
+LCS/Tools       :       version: 1.0;   date: 2005/06/15
+CEP/CEPFrame    :       version: 1.0;   date: 2005/04/12
+CEP/tinyCEP     :       version: 1.0;   date: 2005/04/11
+LCS/Transport   :       version: 1.1;   date: 2005/03/16
+LCS/Common      :       version: 2.1;   date: 2005/03/16
+autoconf_share  :       version: 2.1;   date: 2005/03/16
+LCS/Transport   :       version: 1.0;   date: 2004/11/24
+LCS/Common      :       version: 2.0;   date: 2004/11/24
+autoconf_share  :       version: 2.0;   date: 2004/11/24
+
+
+
+Releases sorted by package
+============================
+
 autoconf_share
 --------------
+
+  Version: 2.2; date: 2005/06/16
+
+    required packages:
+      internal: <none>
+      external: autoconf (2.59)
+                automake (1.9.5)
+                libtool  (1.5.18)
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
 
   Version: 2.1; date: 2005/03/16
 
@@ -28,8 +65,37 @@ autoconf_share
 
 
 
+LCS/ACC
+-------
+
+  Version: 1.1; date: 2005/06/17
+
+    required packages:
+      internal: LCS/Transport (2.0)
+                LCS/Common (2.2)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: log4cplus (1.0.x)
+
+
+
 LCS/Common
 ----------
+
+  Version: 2.2; date: 2005/06/16
+
+    required packages:
+      internal: autoconf_share (2.2)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: log4cplus (1.0.x)
+                blitz++ (0.7)
+                mpich (1.2.5.2)
+
 
   Version: 2.1; date: 2005/03/16
 
@@ -58,8 +124,35 @@ LCS/Common
 
 
 
+LCS/Tools
+---------
+
+  Version: 1.0; date: 2005/06/15
+
+    required packages:
+      internal: autoconf_share (2.x)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
+
+
 LCS/Tranport
 ------------
+
+  Version: 2.0; date: 2005/06/17
+
+    required packages:
+      internal: LCS/Common (2.2)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: mpich (1.2.5.2)
+      external: <none>
+
 
   Version: 1.1; date: 2005/03/16
 
@@ -69,7 +162,7 @@ LCS/Tranport
 
     optional packages:
       internal: <none>
-      external: <none>
+      external: mpich (1.2.5.2)
 
 
   Version: 1.0; date: 2004/11/24
@@ -80,12 +173,23 @@ LCS/Tranport
 
     optional packages:
       internal: <none>
-      external: <none>
+      external: mpich (1.2.5.2)
 
 
 
 CEP/tinyCEP
 -----------
+
+  Version: 2.0; date: 2005/06/23
+
+    required packages:
+      internal: LCS/Transport (2.0)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: mpich (1.2.5.2)
+
 
   Version: 1.0; date: 2005/04/11
 
@@ -95,12 +199,24 @@ CEP/tinyCEP
 
     optional packages:
       internal: <none>
-      external: <none>
+      external: mpich (1.2.5.2)
 
 
 
 CEP/CEPFrame
 ------------
+
+  Version: 2.0; date: 2005/06/23
+
+    required packages:
+      internal: CEP/tinyCEP (2.0)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: mpich (1.2.5.2)
+                postgresql (7.3.2)
+
 
   Version: 1.0; date: 2005/04/12
 
@@ -110,5 +226,6 @@ CEP/CEPFrame
 
     optional packages:
       internal: <none>
-      external: postgresql (7.3.2)
+      external: mpich (1.2.5.2)
+                postgresql (7.3.2)
 
