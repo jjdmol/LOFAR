@@ -8,12 +8,10 @@
 //#
 ////////////////////////////////////////////////////////////////////
 
-#ifndef AH_INPUTSECTION_H
-#define AH_INPUTSECTION_H
+#ifndef TFC_STORAGE_AH_STORAGE_H
+#define TFC_STORAGE_AH_STORAGE_H
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <tinyCEP/WorkHolder.h>
-#include <CEPFrame/Step.h>
 
 namespace LOFAR {
 
@@ -22,6 +20,8 @@ namespace LOFAR {
 // connect to the BGLProcessing application Holder (using only tinyCEP). 
 // The interface between these is defined in  the Corr_Stub class.
 // 
+
+class Step;
 
 class AH_Storage: public LOFAR::ApplicationHolder
 {
