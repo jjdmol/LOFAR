@@ -13,16 +13,14 @@
 #include <Common/lofar_iostream.h>
 
 #include <ACC/ParameterSet.h>
-
 #include <AH_Storage.h>
 #include <TFC_Interface/Stub_Corr.h>
-
-// Workholders
 #include <TFC_Storage/WH_Storage.h>
-#include <TFC_Interface/Stub_Corr.h>
+#include <CEPFrame/Step.h>
 
 // DataHolders
 #include <TFC_Interface/DH_Vis.h>
+
 
 using namespace LOFAR;
 
