@@ -11,9 +11,11 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 #include <TFC_DelayCompensation/AH_DelayCompensation.h>
+#include <TFC_DelayCompensation/WH_DelayControl.h>
 #include <Common/lofar_iostream.h>
 #include <ACC/ParameterSet.h>
 #include <CEPFrame/Step.h>
+#include <TFC_Interface/Stub_Delay.h>
 
 using namespace LOFAR;
 
@@ -37,6 +39,11 @@ void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
   Composite comp;
   setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
 
+  int nRSP = itsParamSet.getInt("NRSP");
+  WH_DelayControl delayWH("DelayContr", nRSP);
+  Step delayStep(delayWH, "DelayContr");
+  comp.addBlock(delayStep);
+  // to do: connect to stub
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }
