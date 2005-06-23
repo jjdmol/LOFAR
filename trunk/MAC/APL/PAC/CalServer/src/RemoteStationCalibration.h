@@ -51,8 +51,11 @@ namespace CAL
       blitz::Array<std::complex<double>, 2> make_ref_acm(const std::vector<Source>& LSM, blitz::Array<double, 3>& AntennaPos, const DipoleModel& dipolemodel, double freq);
       blitz::Array<bool, 2> set_restriction(blitz::Array<double, 3>& AntennaPos, double minbaseline);
       blitz::Array<std::complex<double>, 2> computeAlpha(blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
+      blitz::Array<std::complex<double>, 1> computeGain(blitz::Array<std::complex<double>, 2>& alpha, blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
+      bool issuitable(const ACC& acc, int sb);
 
       blitz::Array<double, 2> matmult(blitz::Array<double, 2> A, blitz::Array<double, 2> B);
+      blitz::Array<std::complex<double>, 2> matmultc(blitz::Array<std::complex<double>, 2> A, blitz::Array<std::complex<double>, 2> B);
       double interp1d(blitz::Array<double, 1> xval, blitz::Array<double, 1> yval, double xinterp);
       double interp2d(blitz::Array<double, 1> xgrid, blitz::Array<double, 1> ygrid, blitz::Array<double, 2> dataval, double xinterp, double yinterp);
       double interp3d(blitz::Array<double, 1> xgrid, blitz::Array<double, 1> ygrid, blitz::Array<double, 1> zgrid, blitz::Array<double, 3> dataval, double xinterp, double yinterp, double zinterp);
