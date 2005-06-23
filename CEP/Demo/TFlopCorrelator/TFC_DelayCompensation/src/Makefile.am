@@ -1,5 +1,6 @@
 INSTHDRS         	=\
-AH_DelayCompensation.h		
+AH_DelayCompensation.h		\
+WH_DelayControl.h
 
 
 NOINSTHDRS 		=
@@ -16,6 +17,7 @@ bin_PROGRAMS 		= TFC_DelayCompensation
 
 TFC_DelayCompensation_SOURCES 	= $(DOCHDRS) \
 TFC_DelayCompensation_main.cc 	\
-AH_DelayCompensation.cc		
+AH_DelayCompensation.cc		\
+WH_DelayControl.cc
 
 include $(lofar_sharedir)/Makefile.common
