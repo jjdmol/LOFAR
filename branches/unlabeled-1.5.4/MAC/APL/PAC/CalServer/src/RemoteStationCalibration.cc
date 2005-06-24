@@ -114,6 +114,8 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
 	Array<complex<double>, 1> gain(computeGain(alpha, acm, R0, mask));
 	ASSERT(gains.getGains().extent(firstDim) == gain.extent(firstDim));
 	gains.getGains()(Range::all(), 0/*X-pol*/, sb) = gain;
+
+	cout << "gains[" << sb << "]=" << gain << endl;
 	
       } else
 	cout << "calibrate: subband " << sb + 1 << " was not processed" << endl;

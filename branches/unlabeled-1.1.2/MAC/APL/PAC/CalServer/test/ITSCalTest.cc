@@ -185,7 +185,7 @@ GCFEvent::TResult ITSCalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
 
-	LOG_INFO_STR("gains=" << update.gains.getGains());
+	//LOG_INFO_STR("gains=" << update.gains.getGains());
 
 	CALUnsubscribeEvent unsubscribe;
 	
