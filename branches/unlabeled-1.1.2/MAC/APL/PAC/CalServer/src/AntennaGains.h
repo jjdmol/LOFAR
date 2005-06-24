@@ -62,7 +62,7 @@ namespace LOFAR {
        * @return a reference to the calibrated gains. A three dimensional array of
        * complex doubles with dimensions: nantennas x npol x nsubbands
        */
-      const blitz::Array<std::complex<double>, 3>& getGains() const { return m_gains; }
+      blitz::Array<std::complex<double>, 3>& getGains() { return m_gains; }
 
       /**
        * Get reference to the array with quality measure.

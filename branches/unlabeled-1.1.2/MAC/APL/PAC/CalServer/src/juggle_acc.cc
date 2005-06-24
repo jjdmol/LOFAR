@@ -12,6 +12,7 @@ int main(int argc, char** argv)
   Array<complex<double>, 5> acc;
   Array<complex<double>, 5> newacc;
 
+#if 0
   if (3 == argc && argv[1] && argv[2]) {
     ifstream infile(argv[1]);
     ofstream outfile(argv[2]);
@@ -30,22 +31,52 @@ int main(int argc, char** argv)
      
     newacc.resize(acc.extent(thirdDim), acc.extent(fourthDim), acc.extent(fifthDim), acc.extent(firstDim), acc.extent(secondDim));
 
-#if 0
-    for (int i = 0; i < newacc.extent(firstDim); i++)
-      for (int j = 0; j < newacc.extent(secondDim); i++)
-	for (int k = 0; k < newacc.extent(thirdDim); j++)
-	  for (int l = 0; l < newacc.extent(fourthDim); l++)
-	    for (int m = 0; m < newacc.extent(fifthDim); m++)
-	      newacc(i,j,k,l,m) = acc(k,i,l,j,m);
-#else
-    newacc = acc(tensor::k, tensor::l, tensor::m, tensor::i, tensor::j);
-#endif
+    for (int i = 0; i < acc.extent(firstDim); i++)
+      for (int j = 0; j < acc.extent(secondDim); j++)
+	for (int k = 0; k < acc.extent(thirdDim); k++)
+	  for (int l = 0; l < acc.extent(fourthDim); l++)
+	    for (int m = 0; m < acc.extent(fifthDim); m++)
+	      newacc(k,l,m,i,j) = acc(i,j,k,l,m);
 
     outfile << newacc;
       
   } else {
     cout << "Usage: juggle_acc infile outfile" << endl;
   }
+
+#else
+
+  if (3 == argc && argv[1] && argv[2]) {
+    ifstream infile(argv[1]);
+    ifstream in2file(argv[2]);
+
+    if (!infile.is_open()) {
+      cerr << "Failed to open file for reading: " << argv[0] << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    if (!in2file.is_open()) {
+      cerr << "Failed to open file for writing: " << argv[0] << endl;
+      exit(EXIT_FAILURE);
+    }      
+
+    infile >> acc;
+    in2file >> newacc;
+     
+    for (int i = 0; i < acc.extent(firstDim); i++)
+      for (int j = 0; j < acc.extent(secondDim); j++)
+	for (int k = 0; k < acc.extent(thirdDim); k++)
+	  for (int l = 0; l < acc.extent(fourthDim); l++)
+	    for (int m = 0; m < acc.extent(fifthDim); m++)
+	      if (abs(acc(i,j,k,l,m) - newacc(k,l,m,i,j)) > 1e-15) {
+		fprintf(stderr, "fout op %d %d %d %d %d\n", i, j, k, l, m);
+	      }
+      
+  } else {
+    cout << "Usage: juggle_acc infile outfile" << endl;
+  }
+
+#endif
 
   return 0;
 }

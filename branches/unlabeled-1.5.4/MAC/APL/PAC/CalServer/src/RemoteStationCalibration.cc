@@ -29,12 +29,17 @@
 #include <blitz/array.h>
 #include <complex>
 #include <math.h>
+#include "cpplapack.h"
 
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
 using namespace RTC;
+using namespace blitz;
+using namespace std;
+//using namespace LOFAR::RSP_Protocol;
+using namespace CPPL;
 
 RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels)
   : CalibrationAlgorithm(sources, dipolemodels)
@@ -51,7 +56,7 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   //
 
   const SpectralWindow& spw = subarray.getSPW();         // get spectral window
-        DipoleModels&   dipolemodels = getDipoleModels(); // get dipole models
+  DipoleModels&   dipolemodels = getDipoleModels(); // get dipole models
   const Sources&        sources      = getSources();      // get sky model
   const DipoleModel*    dipolemodel  = dipolemodels.getByName("LBAntenna");
 
@@ -66,50 +71,77 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   LOG_INFO_STR("calibrate: subarray name=" << subarray.getName());
   LOG_INFO_STR("calibrate: num_antennas=" << subarray.getNumAntennas());
 
-  //find_rfi_free_channels();
-  for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
-    sleep(1);
+  int nloops = 1;
+  for (int niter = 0; niter < nloops; niter++) {
+    cout << "calibrate: working on loop " << niter << " of " << nloops << endl;
+    for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
+      sleep(1);
 
-    Timestamp acmtime;
-    const Array<complex<double>, 2> acm = acc.getACM(sb, 0, 0, acmtime); // get XX acm
+      Timestamp acmtime;
+      const Array<complex<double>, 2> acm = acc.getACM(sb, 0, 0, acmtime); // get XX acm
     
-    // since acmtime is currently returning 0, we set it to the current
-    // time for debug purposes, i.e. these lines need to be removed in the
-    // final version!
-    struct timeval tv;
-    acmtime.setNow();
+      // since acmtime is currently returning 0, we set it to the current
+      // time for debug purposes, i.e. these lines need to be removed in the
+      // final version!
+      struct timeval tv;
     
-    // check whether channel is RFI free
+      // check whether channel is RFI free
+      if (sb > 0 && sb < spw.getNumSubbands()-1 && issuitable(acc, sb)) {
 
-    // construct local sky model (LSM)
-    acmtime.get(&tv);
-    const vector<Source> LSM = make_local_sky_model(sources, tv.tv_sec);
+	// construct local sky model (LSM)
+	acmtime.get(&tv);
+	// the big number is de number of seconds passed between 1-1-1970, 0h0m0s
+	// and the time of the first measurement of the ITS deep integration
+	// campaign (24-9-2004, 12h21m49.65s
+	const vector<Source> LSM = make_local_sky_model(sources, 1096028509.65);
     
-    Array<double, 3> AntennaPos = subarray.getAntennaPos();
+	Array<double, 3> AntennaPos = subarray.getAntennaPos();
+      
+	cout << "calibrate: working on subband " << sb + 1 << " of "
+	     << spw.getNumSubbands() << endl;
+	double freq = sb * spw.getSubbandWidth() + spw.getSamplingFrequency() * (spw.getNyquistZone() - 1);
+	// for testing purposes we overrule the calculation above
+	freq = 3.0254e7;
     
-    LOG_INFO_STR("calibrate: working on subband " << sb + 1 << " of "
-	   << spw.getNumSubbands());
-    double freq = sb * spw.getSubbandWidth() + spw.getSamplingFrequency() * (spw.getNyquistZone() - 1);
-    // for testing purposes we overrule the calculation above
-    freq = 30e6;
+	Array<complex<double>, 2> R0(make_ref_acm(LSM, AntennaPos, *dipolemodel, freq));
+	// mark baselines of at least 40m
+	Array<bool, 2> mask(set_restriction(AntennaPos, 40));
     
-    Array<complex<double>, 2> R0(make_ref_acm(LSM, AntennaPos, *dipolemodel, freq));
-    // mark baselines of at least 40m
-    Array<bool, 2> mask(set_restriction(AntennaPos, 40));
-    
-    //KJW: LOG_INFO_STR(acm);
-    //KJW: no longer needed Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
-    //KJW: LOG_INFO_STR(acm1pol);
-    Array<complex<double>, 2> alpha(computeAlpha(acm, R0, mask));
-    LOG_INFO_STR(alpha);
-
-    //compute_gains(acm, R0, pos, spw.getSubbandFreq(sb), Rtest, gains);
-    //compute_quality(Rtest, sb, gains);
+	// estimate alpha = g * (1 ./ g)
+	//Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
+	Array<complex<double>, 2> alpha(computeAlpha(acm, R0, mask));
+	// extract g from alpha
+	Array<complex<double>, 1> gain(computeGain(alpha, acm, R0, mask));
+	ASSERT(gains.getGains().extent(firstDim) == gain.extent(firstDim));
+	gains.getGains()(Range::all(), 0/*X-pol*/, sb) = gain;
+	
+      } else
+	cout << "calibrate: subband " << sb + 1 << " was not processed" << endl;
+    }
   }
-
   //interpolate_bad_subbands();
    
   gains.setDone(true); // when finished
+}
+
+bool RemoteStationCalibration::issuitable(const ACC& acc, int sb)
+{
+  Timestamp acmtime;
+  Array<complex<double>, 1> test(3);
+
+  for (int idx = sb - 1; idx <= sb + 1; idx++) {
+    Array<complex<double>, 2> acm = acc.getACM(idx, 0, 0, acmtime).copy();
+    Array<complex<double>, 1> ac(acm.extent(firstDim));
+    ac = acm(tensor::i, tensor::i);
+    acm = acm(tensor::i, tensor::j) / sqrt(ac(tensor::i) * ac(tensor::j));
+    Array<complex<double>, 2> prod(acm.extent(firstDim), acm.extent(firstDim));
+    Array<complex<double>, 2> acmH(conj(acm.transpose(1, 0)));
+    prod = matmultc(acm, acmH);
+    Array<complex<double>, 1> diagprod(acm.extent(firstDim));
+    diagprod = prod(tensor::i, tensor::i);
+    test(idx + 1 - sb) = sum(diagprod);
+  }
+  return (abs(test(0) - test(1)) < 0.05 && abs(test(1) - test(2)) < 0.05);
 }
 
 const vector<Source> RemoteStationCalibration::make_local_sky_model(const Sources& sources, double obstime)
@@ -174,8 +206,6 @@ Array<complex<double>, 2> RemoteStationCalibration::make_ref_acm(const vector<So
   double k = 2 * M_PI * freq / 2.99792e8;
 
   // actual calculation of the reference ACM
-  firstIndex it1;
-  secondIndex it2;
   for (int idx = 0; idx < nsrc; idx++) {
     double
       l = (LSM.begin() + idx)->getRA(),
@@ -193,13 +223,13 @@ Array<complex<double>, 2> RemoteStationCalibration::make_ref_acm(const vector<So
     // Next lines contain meta information. It would be nice to put this in a
     // config file
     Array<double, 1> fgrid(10), lgrid(51), mgrid(51);
-    fgrid = (it1 + 1) * 10e6;
-    lgrid = it1 * 0.04 - 1;
-    mgrid = it1 * 0.04 - 1;
+    fgrid = (tensor::i + 1) * 10e6;
+    lgrid = tensor::i * 0.04 - 1;
+    mgrid = tensor::i * 0.04 - 1;
 
     double
       att = interp3d(lgrid, mgrid, fgrid, dipoleRespons(0, Range::all(), Range::all(), Range::all()), l, m, freq);
-    res += flux * att * asrc(it1) * conj(asrc(it2));
+    res += flux * att * asrc(tensor::i) * conj(asrc(tensor::j));
   }
   return res;
 }
@@ -212,15 +242,12 @@ Array<bool, 2> RemoteStationCalibration::set_restriction(Array<double, 3>& Anten
   // zpos not needed, since the baseline restriction is taken to be a
   // baseline restriction with the phase center in the zenith
 
-  firstIndex it1;
-  secondIndex it2;
-
   Array<double, 2>
     u(xpos.size(), xpos.size()),
     v(xpos.size(), xpos.size());
 
-  u = xpos(it2) - xpos(it1);
-  v = ypos(it2) - ypos(it1);
+  u = xpos(tensor::j) - xpos(tensor::i);
+  v = ypos(tensor::j) - ypos(tensor::i);
 
   Array<bool, 2>
     mask(xpos.size(), xpos.size());
@@ -228,7 +255,7 @@ Array<bool, 2> RemoteStationCalibration::set_restriction(Array<double, 3>& Anten
   return mask;
 }
 
-Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(const Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2> restriction)
+Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(const Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2>& restriction)
 {
   int nelem = acm.extent(firstDim);
   Array<complex<double>, 2> alpha(nelem, nelem);
@@ -237,7 +264,7 @@ Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(const Array<com
       int Nnonzero = 0;
       for (int idx3 = 0; idx3 < nelem; idx3++) {
 	if (restriction(idx1, idx3) && restriction(idx2, idx3)) {
-	  alpha(idx1, idx2) += (acm(idx1, idx3) * R0(idx2, idx3)) / (acm(idx2, idx3) * R0(idx1, idx3));
+	  alpha(idx1, idx2) += (acm(idx1, idx3) / R0(idx1, idx3)) / (acm(idx2, idx3) / R0(idx2, idx3));
 	  Nnonzero++;
 	}
       }
@@ -247,6 +274,46 @@ Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(const Array<com
   return alpha;
 }
 
+Array<complex<double>, 1> RemoteStationCalibration::computeGain(Array<complex<double>, 2>& alpha, const Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2> restriction)
+{
+  int nelem = alpha.extent(firstDim);
+
+  // blitz to Lapack conversion
+  zgematrix alphaCPPL(nelem, nelem);
+  for (int idx1 = 0; idx1 < nelem; idx1++)
+    for (int idx2 = 0; idx2 < nelem; idx2++)
+      alphaCPPL(idx1, idx2) = alpha(idx1, idx2);
+
+  // extraction of the gains
+  vector<complex<double> > eigenval;
+  vector<zcovector> eigenvec;
+  alphaCPPL.zgeev(eigenval, eigenvec);
+  int maxidx = 0;
+  for (int idx = 1; idx < nelem; idx++)
+    if (abs(eigenval[maxidx]) < abs(eigenval[idx])) maxidx = idx;
+  Array<complex<double>, 1> gain(nelem);
+  for (int idx = 0; idx < nelem; idx++)
+    gain(idx) = eigenvec[maxidx](idx);
+
+  // normalization
+  Array<complex<double>, 2> Rtest(nelem, nelem);
+
+  Rtest = gain(tensor::i) * gain(tensor::j) * R0(tensor::i, tensor::j);
+  int Nnonzero = 0;
+  double total = 0;
+  for (int idx1 = 1; idx1 < nelem; idx1++) {
+    for (int idx2 = 1; idx2 < nelem; idx2++) {
+      if (restriction(idx1, idx2)) {
+	total += abs(Rtest(idx1, idx2) / acm(idx1, idx2));
+	Nnonzero++;
+      }
+    }
+  }
+  double norm = 1.0 / sqrt(total / static_cast<double>(Nnonzero));
+  gain = norm * gain / (gain(0) / abs(gain(0)));
+  return gain;
+}
+
 Array<double, 2> RemoteStationCalibration::matmult(Array<double, 2> A, Array<double, 2> B)
 {
   ASSERT(A.extent(secondDim) == B.extent(firstDim));
@@ -254,6 +321,17 @@ Array<double, 2> RemoteStationCalibration::matmult(Array<double, 2> A, Array<dou
   secondIndex j;
   thirdIndex k;
   Array<double, 2> res(A.extent(firstDim), B.extent(secondDim));
+  res = sum(A(i, k) * B(k, j), k);
+  return res;
+}
+
+Array<complex<double>, 2> RemoteStationCalibration::matmultc(Array<complex<double>, 2> A, Array<complex<double>, 2> B)
+{
+  ASSERT(A.extent(secondDim) == B.extent(firstDim));
+  firstIndex i;
+  secondIndex j;
+  thirdIndex k;
+  Array<complex<double>, 2> res(A.extent(firstDim), B.extent(secondDim));
   res = sum(A(i, k) * B(k, j), k);
   return res;
 }
