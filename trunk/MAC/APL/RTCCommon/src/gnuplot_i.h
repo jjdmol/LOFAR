@@ -397,10 +397,10 @@ void gnuplot_plot_slope(
 void gnuplot_plot_equation(gnuplot_ctrl * h, char * equation, char * title) ;
 
 /**
- * @brief Plot multiple plots in one plot.
+ * @brief Write matrix data to gnuplot
  */
-void gnuplot_multiplot_array(gnuplot_ctrl* h,
-			     Array<double, 2> matrix);
+void gnuplot_write_matrix(gnuplot_ctrl* h,
+			  Array<double, 2> matrix, bool matrixstyle=false);
     
 #if 1
 /*-------------------------------------------------------------------------*/

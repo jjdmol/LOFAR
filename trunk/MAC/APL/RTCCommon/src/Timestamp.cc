@@ -55,7 +55,7 @@ void Timestamp::setNow(double delay)
 #endif
 }
 
-std::ostream& operator<< (std::ostream& os, const Timestamp& ts)
+std::ostream& LOFAR::RTC::operator<< (std::ostream& os, const Timestamp& ts)
 {
   char timestring[256];
   time_t seconds = (time_t)ts.sec();
