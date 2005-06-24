@@ -28,14 +28,8 @@
 // \file CycBufferManager.h
 // Manages DataHolders in a cyclic buffer.
 
-#include <Transport/CyclicBuffer.h>
-
-/**
-  Class CycBufferManager is derived from class DHPoolManager. It main
-  purpose is to manage DataHolders in a cyclic buffer.
-*/
-
 #include <Transport/DataHolder.h>
+#include <CEPFrame/CyclicBuffer.h>
 #include <CEPFrame/DHPoolManager.h>
 
 namespace LOFAR
@@ -44,6 +38,10 @@ namespace LOFAR
 // \addtogroup CEPFrame
 // @{
 
+/**
+  Class CycBufferManager is derived from class DHPoolManager. It main
+  purpose is to manage DataHolders in a cyclic buffer.
+*/
 class CycBufferManager : public DHPoolManager
 {
 public:

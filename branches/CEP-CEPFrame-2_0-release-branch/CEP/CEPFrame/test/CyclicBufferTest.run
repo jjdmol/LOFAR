@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# Some Linux distributions (e.g. RedHat 9.0) come with a buggy Native POSIX
+# Thread Library (NPTL), which causes a dead-lock in the CyclicBufferTest.
+# We are probably safe using LinuxThreads instead when running on a 2.4 
+# kernel. Let LD_ASSUME_KERNEL do the job.
+if [ `uname -s | tr '[A-Z]' '[a-z]'` = "linux" ] ;  then 
+  if uname -r | grep '^2\.4' > /dev/null ; then
+    export LD_ASSUME_KERNEL=2.4.1
+  fi
+fi
+
 ./CyclicBufferTest -dGlobal=0
 STATUS=$?
 exit $STATUS
