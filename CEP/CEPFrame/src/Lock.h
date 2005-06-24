@@ -20,22 +20,16 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_TRANSPORT_LOCK_H_
-#define LOFAR_TRANSPORT_LOCK_H_
+#ifndef _LOCK_H_
+#define _LOCK_H_
 
-// \file Lock.h
-// Defines some locks to be used in threads
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/LofarLogger.h>
-
-#ifdef USE_THREADS
-
 #include <pthread.h>
 
 namespace LOFAR
 {
-// \addtogroup Transport
-// @{
 
 #define THREAD_SAFE_MTX  ThreadMutex __pthread_mutex
 #define THREAD_SAFE_LOCK ThreadLock  __pthread_lock(__pthread_mutex)
@@ -192,10 +186,6 @@ class ThreadRWLock
     int             max_readers;
 };
 
-// @} // Doxygen endgroup Transport
-
 }
-
-#endif // USE_THREADS
 
 #endif

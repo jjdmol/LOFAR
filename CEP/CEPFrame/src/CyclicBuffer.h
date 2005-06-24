@@ -20,22 +20,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_TRANSPORT_CYCLIC_BUFFER_H_
-#define LOFAR_TRANSPORT_CYCLIC_BUFFER_H_
+#ifndef _CYCLIC_BUFFER_H_
+#define _CYCLIC_BUFFER_H_
 
-// \file CyclicBuffer.h
-// Cyclic buffer interface
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#ifdef USE_THREADS
-
-#include <Transport/Lock.h>
+#include <CEPFrame/Lock.h>
 //#include <Common/lofar_deque.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
-// \addtogroup Transport
-// @{
 
 #define CEPF_MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -309,10 +304,10 @@ bool CyclicBuffer<TYPE>::CheckConsistency(int max)
 
   for (i=0; i< CEPF_MIN(max, (int)itsBuffer.size()); i++)
   {
-    LOG_ERROR_STR( "elem("  << i << "): readers_reading=" << 
+    cerr << "elem("  << i << "): readers_reading=" << 
       itsBuffer[i].itsRWLock.GetReadersReading() <<
       ", writer_writing=" << itsBuffer[i].itsRWLock.GetWriterWriting() <<
-      ", maxcount=" << itsBuffer[i].itsRWLock.GetMaxReaders() );
+      ", maxcount=" << itsBuffer[i].itsRWLock.GetMaxReaders() << endl;
   }
 
   return result;
@@ -325,9 +320,9 @@ void CyclicBuffer<TYPE>::DumpState(void)
 
   CheckConsistency(1000);
   
-  LOG_TRACE_STAT_STR( "itsHeadIdx = " << itsHeadIdx );
-  LOG_TRACE_STAT_STR( "itsTailIdx = " << itsTailIdx );
-  LOG_TRACE_STAT_STR( "itsCount   = " << itsCount );
+  cerr << "itsHeadIdx = " << itsHeadIdx << endl;
+  cerr << "itsTailIdx = " << itsTailIdx << endl;
+  cerr << "itsCount   = " << itsCount << endl;
 
   pthread_mutex_unlock(&buffer_mutex);
 }
@@ -344,8 +339,6 @@ int CyclicBuffer<TYPE>::GetCount(void)
   return itsCount;
 }
 
-// @} // Doxygen endgroup Transport
-
 }
-#endif // USE_THREADS
+
 #endif
