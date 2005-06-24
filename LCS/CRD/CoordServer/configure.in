@@ -56,8 +56,8 @@ lofar_DEBUG_OPTIMIZE
 lofar_AIPSPP(1)
 lofar_QATOOLS
 lofar_DOCXX
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/CRD/Coord,Coord,,Coord/CoordClient.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/CRD/Coord,Coord,,1,Coord/CoordClient.h,,)
 
 
 dnl

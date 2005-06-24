@@ -61,9 +61,9 @@ lofar_AIPSPP(1,"-lmeasures -ltables -lscimath -lscimath_f -lcasa")
 lofar_MPI
 lofar_DTL(1)
 
-lofar_INTERNAL(LCS/databases/TransportPL,TransportPL,,TransportPL/DH_PL.h)
-lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,CEPFrame/DataManager.h)
-lofar_INTERNAL(CEP/BB/BDBReplication,BDBReplication,,BDBReplication/BDBReplicator.h)
+lofar_INTERNAL(LCS/databases/TransportPL,TransportPL,,1,TransportPL/DH_PL.h)
+lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h)
+lofar_INTERNAL(CEP/BB/BDBReplication,BDBReplication,,1,BDBReplication/BDBReplicator.h)
 
 #lofar_EXTERNAL(psql,1,libpq-fe.h,pq)
 #lofar_EXTERNAL(mysql,1,mysql/mysql.h,"z mysqlclient")
