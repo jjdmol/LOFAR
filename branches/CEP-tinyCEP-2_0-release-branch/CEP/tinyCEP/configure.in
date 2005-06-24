@@ -58,9 +58,9 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
 lofar_MPI
-lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_2,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_0,Transport/DataHolder.h,,)
-lofar_INTERNAL(LCS/ACC,ACC,LCS-ACC-1_1,ACC/ParameterSet.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_2,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_0,1,Transport/TransportHolder.h,,)
+lofar_INTERNAL(LCS/ACC,ACC,LCS-ACC-1_1,1,ACC/ParameterSet.h,,)
 
 dnl
 dnl Output Makefiles
