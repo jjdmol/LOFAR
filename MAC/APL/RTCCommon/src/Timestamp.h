@@ -86,6 +86,7 @@ namespace RTC
 	  bool       operator<=(const Timestamp& rhs) const;
 	  bool       operator>=(const Timestamp& rhs) const;
 	  bool       operator==(const Timestamp& rhs) const;
+	  bool       operator!=(const Timestamp& rhs) const;
 	  /*@}*/
 
 	  /*@{*/
@@ -178,14 +179,20 @@ namespace RTC
     return timercmp(&m_tv, &rhs.m_tv, ==);
   }
 
+  inline bool Timestamp::operator!=(const Timestamp& rhs) const
+  {
+    return timercmp(&m_tv, &rhs.m_tv, !=);
+  }
+
   inline long Timestamp::sec()  const { return m_tv.tv_sec;  }
   inline long Timestamp::usec() const { return m_tv.tv_usec; }
   /*@}*/
+
+  std::ostream& operator<< (std::ostream& os, const LOFAR::RTC::Timestamp& ts);
+
 }; // namespace RTC
 
 }; // namespace LOFAR
-
-std::ostream& operator<< (std::ostream& os, const LOFAR::RTC::Timestamp& ts);
 
 #define SECONDS(s)  Timestamp((s),0)
 #define USECONDS(u) Timestamp(0,(u))

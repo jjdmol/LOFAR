@@ -704,13 +704,23 @@ void gnuplot_plot_equation(
     return ;
 }
 
-void gnuplot_multiplot_array(gnuplot_ctrl* h,
-			     Array<double, 2> matrix)
+void gnuplot_write_matrix(gnuplot_ctrl* h,
+			  Array<double, 2> matrix, bool matrixstyle)
 {
   /* Write data to the pipe  */
-  for (int i = 0; i < matrix.extent(firstDim); i++) {
-    for (int j = 0; j < matrix.extent(secondDim); j++) {
-      fprintf(h->gnucmd, "%d %g\n", j, matrix(i,j));
+  if (!matrixstyle) {
+    for (int i = 0; i < matrix.extent(firstDim); i++) {
+      for (int j = 0; j < matrix.extent(secondDim); j++) {
+	fprintf(h->gnucmd, "%d %g\n", j, matrix(i,j));
+      }
+      fprintf(h->gnucmd, "e\n"); // end data input
+    }
+  } else {
+    for (int i = 0; i < matrix.extent(firstDim); i++) {
+      for (int j = 0; j < matrix.extent(secondDim); j++) {
+	fprintf(h->gnucmd, "%g ", matrix(i,j));
+      }
+      fprintf(h->gnucmd, "\n"); // end data input
     }
     fprintf(h->gnucmd, "e\n"); // end data input
   }
