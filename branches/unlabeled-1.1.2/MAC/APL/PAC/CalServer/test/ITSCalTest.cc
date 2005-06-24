@@ -140,8 +140,8 @@ GCFEvent::TResult ITSCalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	for (int i = 0; i < 60; i++) {
 	  start.subset.set(i);
 	}
-	start.sampling_frequency = 40e6; // 160 MHz
-	start.nyquist_zone = 2;
+	start.sampling_frequency = 80e6; // 160 MHz
+	start.nyquist_zone = 1;
 
 	TESTC_ABORT(m_server.send(start), ITSCalTest::final);
       }
