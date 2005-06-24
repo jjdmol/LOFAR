@@ -55,9 +55,9 @@ lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,,Transport/DataHolder.h,,)
-lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,tinyCEP/TinyDataManager.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
+lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
 
 dnl
 dnl Output Makefiles

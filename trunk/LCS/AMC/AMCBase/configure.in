@@ -54,8 +54,8 @@ dnl
 lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,,Transport/TransportHolder.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/TransportHolder.h,,)
 
 dnl
 dnl Output Makefiles

@@ -57,9 +57,9 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_BLITZ
 
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/ACC,ACC,,ACC/ParameterSet.h,,)
-lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,CEPFrame/DataManager.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/ACC,ACC,,1,ACC/ParameterSet.h,,)
+lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 
 dnl
 dnl Output Makefiles

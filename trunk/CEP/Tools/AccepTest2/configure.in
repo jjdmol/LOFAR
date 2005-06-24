@@ -56,8 +56,8 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_FFTW2(1)
 
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,tinyCEP/TinyDataManager.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
 
 dnl
 dnl Output Makefiles

@@ -62,8 +62,8 @@ lofar_MPI(0)
 lofar_QATOOLS
 lofar_DOCXX
 
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(CEP/CPA/PSS3/MNS,MNS,,MNS/ParmTable.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(CEP/CPA/PSS3/MNS,MNS,,1,MNS/ParmTable.h,,)
 
 dnl
 dnl Output Makefiles

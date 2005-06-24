@@ -58,7 +58,7 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
 lofar_MPI
-lofar_INTERNAL(LCS/Common,Common,,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 
 
 dnl

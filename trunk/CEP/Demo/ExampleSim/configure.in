@@ -55,7 +55,7 @@ lofar_MATLAB
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
-lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,CEPFrame/DataManager.h,,)
+lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 
 dnl
 dnl Output Makefiles
