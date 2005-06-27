@@ -18,8 +18,10 @@ BUILT_SOURCES = \
 	BeamServerPorts.conf \
 	BeamServer.conf
 
-EXTRA_DIST = \
-	ABS_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
+#	ABS_Protocol.ph \
+#	BeamServerPorts.conf \
+#	BeamServer.conf
 
 sysconf_DATA = \
 	BeamServerPorts.conf \
@@ -66,4 +68,5 @@ BeamServer_SOURCES = \
 BeamServer_LDADD = \
 	$(top_builddir)/src/libabs.la -lrsp
 
-include $(lofar_sharedir)/Makefile.common
+#include $(lofar_sharedir)/Makefile.common
+include ../Makefile.common

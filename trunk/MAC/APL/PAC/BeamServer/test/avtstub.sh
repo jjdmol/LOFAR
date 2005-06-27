@@ -2,7 +2,7 @@
 
 if [ $EUID -ne 0 ]; then
   echo ERROR: `basename $0`: This test must be run as 'root'
-  exit 1
+  exit 77
 fi
 
 # start the BeamServer
