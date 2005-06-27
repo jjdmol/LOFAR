@@ -23,6 +23,7 @@ check_PROGRAMS = \
 	SetFreq
 
 BeamServerTest_SOURCES = \
+	ABSTest.h \
 	BeamServerTest.cc
 
 BeamServerTest_LDADD = \
@@ -68,7 +69,6 @@ SweepTest_LDADD = \
 	-lsuite
 
 SetFreq_SOURCES = \
-	ABSSetFreq.h \
 	ABSSetFreq.cc
 
 SetFreq_LDADD = \
@@ -87,6 +87,11 @@ BUILT_SOURCES = \
 	AVTStub.conf \
 	EPATest.conf
 
+EXTRA_DIST = \
+	$(BUILT_SOURCES) \
+	avtstub.sh \
+	weights.dat
+
 sysconf_DATA = \
 	AVTStub.conf \
 	EPATest.conf
@@ -97,4 +102,5 @@ sysconf_DATA = \
 %.conf: %.conf.in
 	cp $< $@
 
-include $(lofar_sharedir)/Makefile.common
+#include $(lofar_sharedir)/Makefile.common
+include ../Makefile.common

@@ -151,7 +151,7 @@ public:
 	  //
 	  // read in reference data
 	  //
-	  FILE* wfile = fopen("../../../test/weights.dat", "r");
+	  FILE* wfile = fopen("../../test/weights.dat", "r");
 	  TESTC(wfile);
 	  if (!wfile) return;
 
