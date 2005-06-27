@@ -12,9 +12,7 @@ TH_Mem.h \
 TH_MPI.h \
 TH_ShMem.h \
 TH_Socket.h \
-TH_Ethernet.h \
-Lock.h \
-CyclicBuffer.h
+TH_Ethernet.h
 
 
 NOINSTHDRS =
@@ -44,8 +42,7 @@ TH_Mem.cc \
 TH_MPI.cc \
 TH_ShMem.cc \
 TH_Socket.cc \
-TH_Ethernet.cc \
-CyclicBuffer.cc 
+TH_Ethernet.cc
 
 include $(lofar_sharedir)/Makefile.common
 
