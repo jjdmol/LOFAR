@@ -1,11 +1,11 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/BaseSim.h)
+AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Transport, 0.1)
+AM_INIT_AUTOMAKE(Transport, 2.0, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -53,6 +53,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
+lofar_CHECK_PRETTY_FUNCTION
 lofar_CHECK_LONG_LONG
 lofar_QATOOLS
 lofar_DOCXX
