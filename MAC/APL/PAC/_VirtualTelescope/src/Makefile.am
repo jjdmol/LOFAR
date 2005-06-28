@@ -1,54 +1,26 @@
-bin_PROGRAMS 		= LogicalDeviceServer
+lib_LTLIBRARIES 	= libvirtualtelescope.la
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
-%.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+pkginclude_HEADERS = \
+	../include/VirtualTelescope/VirtualTelescope.h \
+	../include/VirtualTelescope/VirtualTelescopeFactory.h
 
-LogicalDeviceServer_CPPFLAGS= \
+libvirtualtelescope_la_CPPFLAGS= \
+	-I$(top_srcdir)/include \
 	-DBOOST_DISABLE_THREADS \
   -Wno-deprecated \
 	-fmessage-length=0 \
-	-fdiagnostics-show-location=once
+	-fdiagnostics-show-location=once \
+	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
-LogicalDeviceServer_SOURCES 		= \
-	AVTUtilities.cc \
-	AVTLogicalDevice.cc \
-	AVTLogicalDeviceScheduler.cc \
-	AVTResourceManager.cc \
-	AVTPropertySetAnswer.cc \
-	AVTStationBeamformer.cc \
-	AVTVirtualTelescope.cc \
-	AVTStationReceptor.cc \
-	AVTStationReceptorGroup.cc \
-	AVTLogicalDeviceServerMain.cc \
-	$(top_builddir)/src/LogicalDevice_Protocol.cc
+libvirtualtelescope_la_SOURCES 		= \
+	VirtualTelescope.cc
 	
-LogicalDeviceServer_LDADD		= \
-	-labs \
-	-lboost_date_time-gcc-1_31
-	
-include_HEADERS = \
-	$(top_builddir)/src/LogicalDevice_Protocol.ph
+include_HEADERS = 
 
-BUILT_SOURCES = \
-	LogicalDevice_Protocol.ph \
-	LogicalDeviceServer.conf \
-	LogicalDeviceServer.log_prop
-	
-EXTRA_DIST = \
-  LogicalDevice_Protocol.ph \
-	LogicalDeviceServer.conf \
-	LogicalDeviceServer.log_prop
+BUILT_SOURCES = 	
 
-#in case of make install these files will be copied to the bindir beside the test apps
-configfilesdir=$(bindir)
-configfiles_DATA= \
-	LogicalDeviceServer.conf \
-	LogicalDeviceServer.log_prop
-	
+EXTRA_DIST =   
+
 %.log_prop: %.log_prop.in
 	cp $< $@
 	
