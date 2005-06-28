@@ -143,7 +143,7 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
       boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Rack,&m_answer));
@@ -159,9 +159,9 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
         boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_SubRack,&m_answer));
@@ -178,11 +178,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Board,&m_answer));
@@ -200,11 +200,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_ETH))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Ethernet,&m_answer));
@@ -222,11 +222,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_BP))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_FPGA,&m_answer));
@@ -244,13 +244,13 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
-          for(ap=1;ap<=n_aps_per_board;ap++)
+          for(ap=0;ap<n_aps_per_board;ap++)
           {
             sprintf(scopeString,scope.c_str(),rack,subrack,board,ap);
             boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_FPGA,&m_answer));
@@ -269,15 +269,15 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
-          for(ap=1;ap<=n_aps_per_board;ap++)
+          for(ap=0;ap<n_aps_per_board;ap++)
           {
-            for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
+            for(rcu=0;rcu<n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_RCU,&m_answer));
@@ -297,15 +297,15 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
-          for(ap=1;ap<=n_aps_per_board;ap++)
+          for(ap=0;ap<n_aps_per_board;ap++)
           {
-            for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
+            for(rcu=0;rcu<n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_ADCStatistics,&m_answer));
@@ -337,7 +337,7 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_Maintenance))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
       boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
@@ -353,9 +353,9 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_Maintenance))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
         boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
@@ -372,11 +372,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
@@ -394,15 +394,15 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
-          for(ap=1;ap<=n_aps_per_board;ap++)
+          for(ap=0;ap<n_aps_per_board;ap++)
           {
-            for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
+            for(rcu=0;rcu<n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
@@ -422,7 +422,7 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_Alert))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
       boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Alert,&m_answer));
@@ -438,9 +438,9 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_Alert))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
         boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Alert,&m_answer));
@@ -457,11 +457,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_Alert))
   {
-    for(rack=1;rack<=n_racks;rack++)
+    for(rack=0;rack<n_racks;rack++)
     {
-      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
+      for(subrack=0;subrack<n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=n_boards_per_subrack;board++)
+        for(board=0;board<n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Alert,&m_answer));
@@ -672,7 +672,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   
   // layout rcu status (for both statusX and statusY): 
   // 7         6         5         4        3        2       1          0
-  // VDDVCCEN VHENABLE VLENABLE FILSELB FILSELA BANDSEL HBAENABLE LBAENABLE
+  // VDDVCCEN VHENABLE VLENABLE FILSEL1 FILSEL0 BANDSEL HBAENABLE LBAENABLE
   if(propName.find(string(PROPNAME_VDDVCCEN),0) != string::npos)
   {
     uint8 tempStatus = rcuStatus & 0x7f; // reset bits
@@ -700,7 +700,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_FILSELB),0) != string::npos)
+  else if(propName.find(string(PROPNAME_FILSEL1),0) != string::npos)
   {
     uint8 tempStatus = rcuStatus & 0xef; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<4);
@@ -709,7 +709,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_FILSELA),0) != string::npos)
+  else if(propName.find(string(PROPNAME_FILSEL0),0) != string::npos)
   {
     uint8 tempStatus = rcuStatus & 0xf7; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<3);
