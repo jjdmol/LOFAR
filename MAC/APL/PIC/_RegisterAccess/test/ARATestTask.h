@@ -80,8 +80,8 @@ namespace ARA
       int             m_test_passCounter;
       int             m_propsetLoadedCounter;
       
-      GCF::PAL::GCFExtPropertySet m_extPropSetAP1;
-      GCF::PAL::GCFExtPropertySet m_extPropSetAP1RCUmaintenance;
+      GCF::PAL::GCFExtPropertySet m_extPropSetAP0;
+      GCF::PAL::GCFExtPropertySet m_extPropSetAP0RCUmaintenance;
       GCF::PAL::GCFExtPropertySet m_extPropSetBoardAlert;
       GCF::PAL::GCFExtPropertySet m_extPropSetStationMaintenance;
       GCF::PAL::GCFExtPropertySet m_extPropSetLDS;

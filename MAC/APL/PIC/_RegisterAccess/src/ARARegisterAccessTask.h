@@ -120,16 +120,11 @@ namespace ARA
       // in gcf4.0, only the top level apc has to be loaded, and links to other
       // apc's are in the apc's themselves
       typedef map<string,boost::shared_ptr<GCF::PAL::GCFMyPropertySet> > TMyPropertySetMap;
-      typedef map<string,string> TAPCMap;
       
       /**
        * create propertyset object, add it to the map
        */
       void addMyPropertySet(const char* scope,const char* type, GCF::Common::TPSCategory category, const GCF::Common::TPropertyConfig propconfig[]);
-      /**
-       * create apc object, add it to the map
-       */
-      void addAPC(string apc,string scope);
 
       void updateBoardProperties(string scope,
                                  uint8  voltage_15,
@@ -160,8 +155,7 @@ namespace ARA
       /**
        * update fpga board properties based on status bits
        */
-      void updateFPGAboardProperties(string scope, uint8 ffi0, 
-                                                   uint8 ffi1);
+      void updateFPGAboardProperties(string scope);
       /**
        * update fpga properties based on status bits
        */
@@ -192,12 +186,9 @@ namespace ARA
       ARAAnswer   m_answer;
       
       TMyPropertySetMap m_myPropertySetMap;
-      TAPCMap           m_APCMap;
       
       bool              m_myPropsLoaded;
       unsigned long     m_myPropsLoadCounter;
-      bool              m_APCsLoaded;
-      unsigned long     m_APCsLoadCounter;
 
       // ports
       static string     m_RSPserverName;

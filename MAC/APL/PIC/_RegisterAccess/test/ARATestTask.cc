@@ -21,9 +21,9 @@
 //#  $Id$
 
 const char SCOPE_PAC_LDS[] = "PAC_LogicalDeviceScheduler";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1[] = "PIC_Rack1_SubRack1_Board1_AP1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance[] = "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_Alert[] = "PIC_Rack1_SubRack1_Board1_Alert";
+const char SCOPE_PIC_Rack0_SubRack0_Board0_AP0[] = "PIC_Rack0_SubRack0_Board0_AP";
+const char SCOPE_PIC_Rack0_SubRack0_Board0_AP0_RCU0_Maintenance[] = "PIC_Rack0_SubRack0_Board0_AP0_RCU0_Maintenance";
+const char SCOPE_PIC_Rack0_SubRack0_Board0_Alert[] = "PIC_Rack0_SubRack0_Board0_Alert";
 
 #define NEXT_TEST(_test_, _descr_) \
   { \
@@ -106,9 +106,9 @@ ARATestTask::ARATestTask() :
   m_RSPserver(),
   m_test_passCounter(0),
   m_propsetLoadedCounter(0),
-  m_extPropSetAP1(SCOPE_PIC_Rack1_SubRack1_Board1_AP1,TYPE_LCU_PIC_FPGA,&m_answer),
-  m_extPropSetAP1RCUmaintenance(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance,TYPE_LCU_PIC_Maintenance,&m_answer),
-  m_extPropSetBoardAlert(SCOPE_PIC_Rack1_SubRack1_Board1_Alert,TYPE_LCU_PIC_Alert,&m_answer),
+  m_extPropSetAP0(SCOPE_PIC_Rack0_SubRack0_Board0_AP0,TYPE_LCU_PIC_FPGA,&m_answer),
+  m_extPropSetAP0RCUmaintenance(SCOPE_PIC_Rack0_SubRack0_Board0_AP0_RCU0_Maintenance,TYPE_LCU_PIC_Maintenance,&m_answer),
+  m_extPropSetBoardAlert(SCOPE_PIC_Rack0_SubRack0_Board0_Alert,TYPE_LCU_PIC_Alert,&m_answer),
   m_extPropSetStationMaintenance(SCOPE_PIC_Maintenance,TYPE_LCU_PIC_Maintenance,&m_answer),
   m_extPropSetLDS(SCOPE_PAC_LDS,TYPE_LCU_PAC_LogicalDeviceScheduler,&m_answer)
 {
@@ -144,8 +144,8 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
       break;
 
     case F_ENTRY:
-      m_extPropSetAP1.load();
-      m_extPropSetAP1RCUmaintenance.load();
+      m_extPropSetAP0.load();
+      m_extPropSetAP0RCUmaintenance.load();
       m_extPropSetBoardAlert.load();
       m_extPropSetStationMaintenance.load();
       m_extPropSetLDS.load();
@@ -219,7 +219,7 @@ GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.1.1: Monitor FPGA registers. Goal: load secondary properties");
-      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1.requestValue(PROPNAME_STATUS)));
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP0.requestValue(PROPNAME_STATUS)));
       {
         NEXT_TEST(2,"put 1 antenna in maintenance");
       }
@@ -231,7 +231,7 @@ GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      TESTC(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1)!=0 &&
+      TESTC(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_AP0)!=0 &&
             strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0);
       // display the value:
       GCFPVUnsigned status;
@@ -267,9 +267,9 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.2.1: put 1 antenna in maintenance");
-      m_extPropSetAP1RCUmaintenance.subscribeProp(PROPNAME_STATUS);
+      m_extPropSetAP0RCUmaintenance.subscribeProp(PROPNAME_STATUS);
       GCFPVUnsigned inMaintenance(1);
-      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP0RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
       {
         NEXT_TEST(3,"put station in maintenance");
       }
@@ -285,7 +285,7 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       TESTC(
-        strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 &&
+        strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_AP0_RCU0_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()!=0 );
       // display the value:
@@ -295,7 +295,7 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
      
     case F_EXIT:
     {
-      m_extPropSetAP1RCUmaintenance.unsubscribeProp(PROPNAME_STATUS);
+      m_extPropSetAP0RCUmaintenance.unsubscribeProp(PROPNAME_STATUS);
       break;
     }
       
@@ -405,7 +405,7 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
         inMaintenance.getValue()==0 );
       
       // check maintenance status of antenna
-      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.requestValue(PROPNAME_STATUS)))
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP0RCUmaintenance.requestValue(PROPNAME_STATUS)))
       {
         NEXT_TEST(5,"put antenna out of maintenance");
       }
@@ -421,7 +421,7 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       TESTC(
-        strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 &&
+        strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_AP0_RCU0_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()!=0 );
       NEXT_TEST(5,"put antenna out of maintenance");
@@ -459,9 +459,9 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.2.4: put antenna out of maintenance");
-      m_extPropSetAP1RCUmaintenance.subscribeProp(PROPNAME_STATUS);
+      m_extPropSetAP0RCUmaintenance.subscribeProp(PROPNAME_STATUS);
       GCFPVUnsigned inMaintenance(0);
-      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP0RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
       {
         NEXT_TEST(6,"schedule maintenance of 1 antenna");
       }
@@ -477,7 +477,7 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       TESTC(
-        strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 &&
+        strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_AP0_RCU0_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()==0 );
       NEXT_TEST(6,"schedule maintenance of 1 antenna");
@@ -486,7 +486,7 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
      
     case F_EXIT:
     {
-      m_extPropSetAP1RCUmaintenance.unsubscribeProp(PROPNAME_STATUS);
+      m_extPropSetAP0RCUmaintenance.unsubscribeProp(PROPNAME_STATUS);
       break;
     }
       
@@ -516,11 +516,11 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
     {
       LOG_INFO("3.2.2.5: schedule maintenance of 1 antenna");
   
-      m_extPropSetAP1RCUmaintenance.subscribeProp(PROPNAME_STATUS);
+      m_extPropSetAP0RCUmaintenance.subscribeProp(PROPNAME_STATUS);
       m_test_passCounter=0;
       // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
       string cmd("MAINTENANCE 1,");
-      string resource(string("PIC_Rack1_SubRack1_Board1_AP1_RCU1")+string(","));
+      string resource(string("PIC_Rack0_SubRack0_Board0_AP0_RCU0")+string(","));
       
       // create time 10 seconds from now
       time_t timeNow = time(0);
@@ -550,7 +550,7 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 &&
+      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_AP0_RCU0_Maintenance)!=0 &&
          strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         GCFPVUnsigned inMaintenance;
@@ -581,7 +581,7 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
     
     case F_EXIT:
     {
-      m_extPropSetAP1RCUmaintenance.unsubscribeProp(PROPNAME_STATUS);
+      m_extPropSetAP0RCUmaintenance.unsubscribeProp(PROPNAME_STATUS);
       break;
     }
       
@@ -740,7 +740,7 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_Alert)!=0 &&
+      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_Alert)!=0 &&
          strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
@@ -816,7 +816,7 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_Alert)!=0 &&
+      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_Alert)!=0 &&
          strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
@@ -902,7 +902,7 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_Alert)!=0 &&
+      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack0_SubRack0_Board0_Alert)!=0 &&
          strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
