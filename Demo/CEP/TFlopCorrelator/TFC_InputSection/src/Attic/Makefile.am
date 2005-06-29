@@ -5,8 +5,8 @@ WH_Transpose.h		\
 WH_SyncControl.h	\
 AH_InputSection.h	\
 CyclicBuffer.h          \
-BufferController.h      \
-#WH_RSP.h 	
+BufferController.h   
+
 
 NOINSTHDRS 		=
 
@@ -26,7 +26,6 @@ WH_RSPInput.cc           	\
 WH_Transpose.cc			\
 WH_SyncControl.cc		\
 WH_RSP.cc                       \
-AH_InputSection.cc		
-#WH_RSP.cc 			
+AH_InputSection.cc			
 
 include $(lofar_sharedir)/Makefile.common

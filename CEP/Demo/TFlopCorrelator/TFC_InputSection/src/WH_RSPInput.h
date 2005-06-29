@@ -25,6 +25,7 @@
 
 #include <ACC/ParameterSet.h>
 #include <Common/lofar_string.h>
+#include <tinyCEP/TinyDataManager.h>
 #include <tinyCEP/WorkHolder.h>
 #include <Transport/TH_Ethernet.h>
 
@@ -50,6 +51,8 @@ namespace LOFAR
     TH_Ethernet* connection; 
     int framesize;
     int packetsinframe;
+    TinyDataManager* datamanager;
+    bool syncmaster;
     bool stopthread;
   }  thread_args;
 
@@ -63,7 +66,8 @@ namespace LOFAR
                            const ACC::ParameterSet pset,
                            const string device,
                            const string srcMAC,
-                           const string destMAC);
+                           const string destMAC,
+                           const bool isSyncMaster);
       virtual ~WH_RSPInput();
     
       static WorkHolder* construct(const string& name, 
@@ -100,8 +104,10 @@ namespace LOFAR
       string itsDevice;
       string itsSrcMAC;
       string itsDestMAC;
+      
       ACC::ParameterSet itsPset;
-  
+      
+      bool itsSyncMaster;
       int itsSzRSPframe;
       int itsNpackets;
     
