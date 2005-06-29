@@ -6,14 +6,14 @@
 //#
 //# $Id$
 
-#ifndef TFLOPCORRELATOR_DH_RSPSYNC_H
-#define TFLOPCORRELATOR_DH_RSPSYNC_H
+#ifndef TFLOPCORRELATOR_TFC_INTERFACE_DH_RSPSYNC_H
+#define TFLOPCORRELATOR_TFC_INTERFACE_DH_RSPSYNC_H
 
 
 #include <lofar_config.h>
 
 #include <Transport/DataHolder.h>
-#include <RSPTimeStamp.h>
+#include <TFC_Interface/RSPTimeStamp.h>
 
 namespace LOFAR
 {
