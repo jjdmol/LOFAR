@@ -2,7 +2,7 @@ INSTHDRS         	=\
 DH_RSPInputSync.h       \
 DH_Sync.h		\
 DH_RSP.h                \
-DH_SubBand.h		\
+DH_FIR.h		\
 DH_PPF.h		\
 DH_CorrCube.h		\
 DH_Vis.h		\
@@ -29,7 +29,7 @@ libtfc_interface_la_SOURCES  	= \
 DH_RSPInputSync.cc              \
 DH_Sync.cc			\
 DH_RSP.cc                	\
-DH_SubBand.cc			\
+DH_FIR.cc			\
 DH_PPF.cc			\
 DH_CorrCube.cc			\
 DH_Vis.cc			\

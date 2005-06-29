@@ -1,4 +1,4 @@
-//# DH_SubBand.h: SubBand DataHolder
+//# DH_FIR.h: FIR DataHolder
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,18 +21,18 @@ namespace LOFAR
 /**
    TBW
 */
-class DH_SubBand: public DataHolder
+class DH_FIR: public DataHolder
 {
 public:
   typedef u16complex BufferType;
 
-  explicit DH_SubBand (const string& name,
+  explicit DH_FIR (const string& name,
 		       const short   subband); 
 
 
-  DH_SubBand(const DH_SubBand&);
+  DH_FIR(const DH_FIR&);
 
-  virtual ~DH_SubBand();
+  virtual ~DH_FIR();
 
   DataHolder* clone() const;
 
@@ -60,12 +60,12 @@ public:
 
 private:
   /// Forbid assignment.
-  DH_SubBand& operator= (const DH_SubBand&);
+  DH_FIR& operator= (const DH_FIR&);
 
   BufferType*  itsBuffer;    // 
   unsigned int itsBufSize;
   
-  short itsSubBand;
+  short itsFIR;
   short itsNFChannels;
   short itsNStations;      // #stations per buffer
   short itsNTimes;         // #time samples per buffer
@@ -81,35 +81,35 @@ private:
 #define SBADDRESS_TIME(freq, station, time)     SBADDRESS_STATION((freq),(station)) +  itsNPol*itsNTimes*(time) 
 #define SBADDRESS_POL(freq, station, time, pol) SBADDRESS_TIME((freq),(station),(time))  +  itsNPol*(pol)
  
- inline DH_SubBand::BufferType* DH_SubBand::getBuffer()
+ inline DH_FIR::BufferType* DH_FIR::getBuffer()
    { return itsBuffer; }
  
- inline const DH_SubBand::BufferType* DH_SubBand::getBuffer() const
+ inline const DH_FIR::BufferType* DH_FIR::getBuffer() const
    { return itsBuffer; }
  
 
- inline DH_SubBand::BufferType* DH_SubBand::getBufferElement(int channel,
+ inline DH_FIR::BufferType* DH_FIR::getBufferElement(int channel,
 							     int station,
 							     int sample,
 							     int pol)
    { return itsBuffer + SBADDRESS_POL(channel, station, sample, pol); }
  
-/*  DH_SubBand::BufferType* getBufferTimePolSeries(int channel, int station) */
+/*  DH_FIR::BufferType* getBufferTimePolSeries(int channel, int station) */
 /*    { return itsBuffer + SBADDRESS_STATION(channel, station); } */
  
-/*  inline void DH_SubBand::setBufferElement(int channel, */
+/*  inline void DH_FIR::setBufferElement(int channel, */
 /* 					  int sample, */
 /* 					  int station, */
 /* 					  int polarisation, */
-/* 					  DH_SubBand::BufferType* valueptr) { */
+/* 					  DH_FIR::BufferType* valueptr) { */
 /*    *(itsBuffer + SBADDRESS_POL(channel, station, sample, pol)) = *valueptr; */
 /*  } */
  
- inline const unsigned int DH_SubBand::getBufSize() const {
+ inline const unsigned int DH_FIR::getBufSize() const {
    return itsBufSize;
  }
 
- inline RectMatrix<DH_SubBand::BufferType>& DH_SubBand::getDataMatrix() const {
+ inline RectMatrix<DH_FIR::BufferType>& DH_FIR::getDataMatrix() const {
    return *itsMatrix; 
  };
  
