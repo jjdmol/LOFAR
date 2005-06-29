@@ -1,5 +1,5 @@
 INSTHDRS         	=\
-DH_RSPInputSync.h       \
+DH_RSPSync.h            \
 DH_Sync.h		\
 DH_RSP.h                \
 DH_FIR.h		\
@@ -26,7 +26,7 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES	= libtfc_interface.la
 
 libtfc_interface_la_SOURCES  	= \
-DH_RSPInputSync.cc              \
+DH_RSPSync.cc                   \
 DH_Sync.cc			\
 DH_RSP.cc                	\
 DH_FIR.cc			\
