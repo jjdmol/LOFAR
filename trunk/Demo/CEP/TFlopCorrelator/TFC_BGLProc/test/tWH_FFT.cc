@@ -78,22 +78,22 @@ namespace LOFAR
 				itsTH, 
 				false);
 
-    itsOutCon1 = new Connection("out2", 
+    itsOutCon2 = new Connection("out2", 
 				itsOutDH2, 
 				itsWH->getDataManager().getOutHolder(1), 
 				itsTH, 
 				false);
-    itsOutCon1 = new Connection("out3", 
+    itsOutCon3 = new Connection("out3", 
 				itsOutDH3, 
 				itsWH->getDataManager().getOutHolder(2), 
 				itsTH, 
 				false);
-    itsOutCon1 = new Connection("out4", 
+    itsOutCon4 = new Connection("out4", 
 				itsOutDH4, 
 				itsWH->getDataManager().getOutHolder(3), 
 				itsTH, 
 				false);
-    itsOutCon1 = new Connection("out5", 
+    itsOutCon5 = new Connection("out5", 
 				itsOutDH5, 
 				itsWH->getDataManager().getOutHolder(4), 
 				itsTH, 

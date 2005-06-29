@@ -1,4 +1,4 @@
-//#  WH_FilterInput.h: input workholder for filter tester
+//#  filename.h: one line description
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,38 +20,47 @@
 //#
 //#  $Id$
 
-#ifndef TFLOP_CORRELATOR_FILTERINPUT_H
-#define TFLOP_CORRELATOR_FILTERINPUT_H
+#ifndef TFC_TWH_SUBBAND_H
+#define TFC_TWH_SUBBAND_H
 
+#include <tinyCEP/TinyApplicationHolder.h>
 #include <tinyCEP/WorkHolder.h>
+#include <Common/KeyValueMap.h>
+#include <Transport/Connection.h>
+#include <Transport/TransportHolder.h>
+#include <Transport/DataHolder.h>
 
-namespace LOFAR
-{
-  class WH_FilterInput: public WorkHolder {
+namespace LOFAR {
+
+  class AH_FIR: public LOFAR::TinyApplicationHolder {
 
   public:
-    explicit WH_FilterInput (const string& name);
-    virtual ~WH_FilterInput();
+    AH_FIR();
+    virtual ~AH_FIR();
 
-    static WorkHolder* construct (const string& name);
-    virtual WH_FilterInput* make (const string& name);
-
-    virtual void preprocess();
-    virtual void process();
-    virtual void dump();
+    virtual void define (const KeyValueMap& kvm);
+    void undefine();
+    virtual void init();
+    virtual void run(int nsteps);
+    virtual void postrun();
+    virtual void quit();
 
   private:
-    WH_FilterInput (const WH_FilterInput&);
-    WH_FilterInput& operator= (const WH_FilterInput&);
 
-    //    int itsNtaps;
-    int itsSBID;
-    int itsNStations;
-    int itsNTimes;
-    int itsNFChannels;
-    int itsNPol;
-    int itsCpF;
+    WorkHolder* itsWH;
+    
+    DataHolder* itsInDH1;
+    
+    DataHolder* itsOutDH1;
+    DataHolder* itsOutDH2;
+    
+    Connection* itsInCon1;
+
+    Connection* itsOutCon1;
+    Connection* itsOutCon2;
+
+    TransportHolder* itsTH;
   };
-} // namespace LOFAR
 
+} 
 #endif
