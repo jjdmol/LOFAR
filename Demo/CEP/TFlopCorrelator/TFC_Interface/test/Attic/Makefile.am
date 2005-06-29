@@ -1,6 +1,6 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tRectMatrix tDH_SubBand
+check_PROGRAMS = tRectMatrix tDH_FIR
 
 
 AM_CXXFLAGS = \
@@ -9,12 +9,12 @@ AM_CXXFLAGS = \
 tRectMatrix_SOURCES =				\
 tRectMatrix.cc					
 
-tDH_SubBand_SOURCES =				\
-tDH_SubBand.cc					
+tDH_FIR_SOURCES =				\
+tDH_FIR.cc					
 
 TESTS   = 					\
 tRectMatrix.sh					\
-tDH_SubBand.sh
+tDH_FIR.sh
 
 LDADD = ../src/libtfc_interface.la
 DEPENDENCIES = ../src/libtfc_interface.la $(LOFAR_DEPEND)
