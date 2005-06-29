@@ -1,5 +1,5 @@
-//#  DH_SubBand.cc: dataholder to hold the delay information to perform
-//#                 station synchronization
+//#  DH_Sync.cc: dataholder to hold the delay information to perform
+//#              station synchronization
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)

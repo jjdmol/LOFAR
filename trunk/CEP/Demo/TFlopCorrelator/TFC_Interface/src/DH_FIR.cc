@@ -1,4 +1,4 @@
-//  DH_SubBand.cc:
+//  DH_FIR.cc:
 //
 //  Copyright (C) 2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -12,57 +12,57 @@
 
 #include <lofar_config.h>
 
-#include <DH_SubBand.h>
+#include <DH_FIR.h>
 //#include <ACC/ParameterSet.h>
 
 
 namespace LOFAR
 {
 
-  DH_SubBand::DH_SubBand (const string& name, 
+  DH_FIR::DH_FIR (const string& name, 
 			  const short   subband)
-    : DataHolder     (name, "DH_SubBand"),
+    : DataHolder     (name, "DH_FIR"),
       itsBuffer      (0),
-      itsSubBand     (subband),
+      itsFIR     (subband),
       itsNPol        (0),
       itsMatrix      (0)
   {
 //     ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
 //     //ParameterCollection	myPC(myPS);
-//     itsNFChannels = myPS.getInt("WH_SubBand.freqs");
-//     itsNStations  = myPS.getInt("WH_SubBand.stations");
-//     itsNTimes     = myPS.getInt("WH_SubBand.times");
-//     itsNPol       = myPS.getInt("WH_SubBand.pols");
+//     itsNFChannels = myPS.getInt("WH_FIR.freqs");
+//     itsNStations  = myPS.getInt("WH_FIR.stations");
+//     itsNTimes     = myPS.getInt("WH_FIR.times");
+//     itsNPol       = myPS.getInt("WH_FIR.pols");
     itsNFChannels = 2;
     itsNStations  = 3;
     itsNTimes     = 4;
     itsNPol       = 5;
   }
   
-DH_SubBand::DH_SubBand(const DH_SubBand& that)
+DH_FIR::DH_FIR(const DH_FIR& that)
   : DataHolder(that),
     itsBuffer(0),
     itsMatrix(0)
 {
-    itsSubBand    = that.itsSubBand;
+    itsFIR    = that.itsFIR;
     itsNFChannels = that.itsNFChannels;
     itsNStations  = that.itsNStations; 
     itsNTimes     = that.itsNTimes;
     itsNPol       = that.itsNPol;
 }
 
-DH_SubBand::~DH_SubBand()
+DH_FIR::~DH_FIR()
 {
   //  delete [] (char*)(itsDataPacket);
   itsBuffer = 0;
 }
 
-DataHolder* DH_SubBand::clone() const
+DataHolder* DH_FIR::clone() const
 {
-  return new DH_SubBand(*this);
+  return new DH_FIR(*this);
 }
 
-void DH_SubBand::init()
+void DH_FIR::init()
 {
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
@@ -84,7 +84,7 @@ void DH_SubBand::init()
   itsMatrix->setBuffer(itsBuffer, itsBufSize);
 }
 
-void DH_SubBand::fillDataPointers() {
+void DH_FIR::fillDataPointers() {
   itsBuffer = getData<BufferType> ("Buffer");
 }
 }
