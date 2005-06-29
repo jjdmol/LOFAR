@@ -210,8 +210,8 @@ WH_RSPInput::WH_RSPInput(const string& name,
   // create raw ethernet interface to catch incoming RSP data
   itsInputConnection = new TH_Ethernet(itsDevice, itsSrcMAC, itsDestMAC, 0x000 );
 
-  // use  cyclic buffers to hold the rsp data and valid/invalid flag
-  itsDataBuffer = new BufferController<dataType>(1000);
+  // use cyclic buffer to hold the rsp data and valid/invalid flag
+  itsDataBuffer = new BufferController<dataType>(1000); // 1000 elements
  
   // create incoming dataholder holding the delay information 
   getDataManager().addInDataHolder(0, new DH_Sync("DH_Sync"));
@@ -278,10 +278,9 @@ void WH_RSPInput::preprocess()
 void WH_RSPInput::process() 
 { 
    
-
   DH_Sync* inDHp;
   DH_RSP* outDHp;
-  dataType* dataptr;
+  dataType* readptr;
   timestamp_t syncstamp;
   int seqid, blockid;
 
@@ -291,13 +290,17 @@ void WH_RSPInput::process()
   syncstamp.setStamp(seqid, blockid);
   
   // get data from cyclic buffer
-  dataptr = itsDataBuffer->getBufferReadPtr();
+  readptr = itsDataBuffer->getBufferReadPtr();
+  //to do: determine correct readptr using the delay from the delay controller
+  //       (readptr = getBufferReadPtr + delay offset)
 
   // write flag to outgoing dataholder
   outDHp->setFlag(dataptr->invalid);
 
+  // to do: write a new delay-controlled timestamp to outgoing dataholder
+
   // write data to outgoing dataholder
-  memcpy(outDHp->getBuffer(), dataptr->packet, itsSzRSPframe);
+  memcpy(outDHp->getBuffer(), readptr->packet, itsSzRSPframe);
 }
 
 void WH_RSPInput::postprocess()
