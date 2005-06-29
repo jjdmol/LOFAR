@@ -16,6 +16,7 @@
 
 #include <ACC/ParameterSet.h>
 #include <Transport/DataHolder.h>
+#include <TFC_Interface/RSPTimeStamp.h>
 
 namespace LOFAR
 {
@@ -46,6 +47,9 @@ public:
   void setBlockID(int);
   const int getFlag() const;
   void setFlag(int);
+  const timestamp_t getSyncedStamp() const;
+  void setSyncedStamp(timestamp_t);
+
   BufferType* getBuffer();
   
   /// Get read access to the Buffer.
@@ -64,6 +68,7 @@ public:
   /// pointers to data in the blob
   BufferType*  itsBuffer;
   int* itsFlagPtr;
+  timestamp_t* itsSyncedStampPtr;
 
   int itsEPAheaderSize;
   int itsNoBeamlets;
@@ -91,6 +96,9 @@ inline const int DH_RSP::getBlockID() const
 inline const int DH_RSP::getFlag() const
   { return *itsFlagPtr; }
 
+inline const timestamp_t DH_RSP::getSyncedStamp() const
+  { return *itsSyncedStampPtr; }
+
 inline void DH_RSP::setStationID(int stationid)
   { memcpy(&itsBuffer[2], &stationid, sizeof(int)); }
 
@@ -103,9 +111,11 @@ inline void  DH_RSP::setBlockID(int blockid)
 inline void  DH_RSP::setFlag(int flag)
   { *itsFlagPtr = flag; }
 
+inline void  DH_RSP::setSyncedStamp(timestamp_t stamp)
+  { *itsSyncedStampPtr = stamp; }
+
 inline void DH_RSP:: resetBuffer()
   { memset(itsBuffer, 0, itsBufSize); }
-
 
 }
 
