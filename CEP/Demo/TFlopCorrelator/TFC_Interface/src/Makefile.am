@@ -8,7 +8,7 @@ DH_CorrCube.h		\
 DH_Vis.h		\
 RSPTimeStamp.h          \
 RectMatrix.h		\
-Stub_SB.h               \
+Stub_FIR.h              \
 Stub_Corr.h		\
 Stub_RSP.h		\
 Stub_Delay.h
@@ -34,7 +34,7 @@ DH_PPF.cc			\
 DH_CorrCube.cc			\
 DH_Vis.cc			\
 RSPTimeStamp.cc          	\
-Stub_SB.cc               	\
+Stub_FIR.cc               	\
 Stub_RSP.cc			\
 Stub_Corr.cc			\
 Stub_Delay.cc			\
