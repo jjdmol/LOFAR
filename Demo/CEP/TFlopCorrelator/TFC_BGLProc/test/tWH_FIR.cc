@@ -25,52 +25,40 @@
 
 #include <Common/LofarLogger.h>
 #include <ACC/ParameterSet.h>
-#include <tWH_FFT.h>
+#include <tWH_FIR.h>
 
 #include <Transport/TH_Mem.h>
-#include <TFC_BGLProc/WH_FFT.h>
+#include <TFC_BGLProc/WH_FIR.h>
+#include <TFC_Interface/DH_RSP.h>
 #include <TFC_Interface/DH_PPF.h>
-#include <TFC_Interface/DH_CorrCube.h>
 
 namespace LOFAR
 {
 
-  AH_FFT::AH_FFT() :
-    itsWH(0),
-    itsInDH1(0), itsInDH2(0), itsOutDH1(0), itsOutDH2(0), itsOutDH3(0),
-    itsOutDH4(0), itsOutDH5(0), itsInCon1(0), itsInCon2(0), itsOutCon1(0),
-    itsOutCon2(0), itsOutCon3(0), itsOutCon4(0), itsOutCon5(0)
+  AH_FIR::AH_FIR() :
+    itsWH(0), itsInDH1(0), itsOutDH1(0), itsOutDH2(0), itsInCon1(0), 
+    itsOutCon1(0), itsOutCon2(0)
   {}
 
-  AH_FFT::~AH_FFT() {
+  AH_FIR::~AH_FIR() {
   }
   
-  void AH_FFT::define(const KeyValueMap& kvm) {
+  void AH_FIR::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
 
-    itsInDH1 = new DH_PPF("itsInDH1", 0);
-    itsInDH2 = new DH_PPF("itsInDH2", 0);
+//     itsInDH1 = new DH_RSP("itsInDH1", NULL);
     
-    itsOutDH1 = new DH_CorrCube("itsOutDH1", 0);
-    itsOutDH2 = new DH_CorrCube("itsOutDH2", 0);
-    itsOutDH3 = new DH_CorrCube("itsOutDH3", 0);
-    itsOutDH4 = new DH_CorrCube("itsOutDH4", 0);
-    itsOutDH5 = new DH_CorrCube("itsOutDH5", 0);
+    itsOutDH1 = new DH_PPF("itsOutDH1", 0);
+    itsOutDH2 = new DH_PPF("itsOutDH2", 0);
 
-    itsWH = new WH_FFT("WH_FFT");
+    itsWH = new WH_FIR("WH_FIR", 0);
     itsTH = new TH_Mem();
 
-    itsInCon1 = new Connection("in1", 
-			       itsInDH1, 
-			       itsWH->getDataManager().getInHolder(0), 
-			       itsTH, 
-			       false);
-
-    itsInCon2 = new Connection("in2", 
-			       itsInDH2, 
-			       itsWH->getDataManager().getInHolder(1), 
-			       itsTH,
-			       false);
+//     itsInCon1 = new Connection("in1", 
+// 			       itsInDH1, 
+// 			       itsWH->getDataManager().getInHolder(0), 
+// 			       itsTH, 
+// 			       false);
 
     itsOutCon1 = new Connection("out1", 
 				itsOutDH1, 
@@ -78,66 +66,43 @@ namespace LOFAR
 				itsTH, 
 				false);
 
-    itsOutCon2 = new Connection("out2", 
+    itsOutCon1 = new Connection("out2", 
 				itsOutDH2, 
 				itsWH->getDataManager().getOutHolder(1), 
 				itsTH, 
 				false);
-    itsOutCon3 = new Connection("out3", 
-				itsOutDH3, 
-				itsWH->getDataManager().getOutHolder(2), 
-				itsTH, 
-				false);
-    itsOutCon4 = new Connection("out4", 
-				itsOutDH4, 
-				itsWH->getDataManager().getOutHolder(3), 
-				itsTH, 
-				false);
-    itsOutCon5 = new Connection("out5", 
-				itsOutDH5, 
-				itsWH->getDataManager().getOutHolder(4), 
-				itsTH, 
-				false);
   }
 
-  void AH_FFT::init() {
+  void AH_FIR::init() {
     itsWH->basePreprocess();
   }
 
-  void AH_FFT::run(int steps) {
+  void AH_FIR::run(int steps) {
     for (int i = 0; i<steps; i++) {
       itsWH->baseProcess();
     }
   }
 
-  void AH_FFT::postrun() {
+  void AH_FIR::postrun() {
     // check result here
     
   }
 
-  void AH_FFT::undefine() {
+  void AH_FIR::undefine() {
     delete itsWH;
 
     delete itsInDH1; 
-    delete itsInDH2; 
 
     delete itsOutDH1;
     delete itsOutDH2;
-    delete itsOutDH3;
-    delete itsOutDH4;
-    delete itsOutDH5;
-    
+
     delete itsInCon1;
-    delete itsInCon2;
 
     delete itsOutCon1;
     delete itsOutCon2;
-    delete itsOutCon3;
-    delete itsOutCon4;
-    delete itsOutCon5;
   }
 
-  void AH_FFT::quit() {
+  void AH_FIR::quit() {
   }
 
 } // namespace LOFAR
@@ -147,7 +112,7 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv) {
   try {
-    AH_FFT test;
+    AH_FIR test;
     test.setarg(argc, argv);
     test.baseDefine();
     test.basePrerun();

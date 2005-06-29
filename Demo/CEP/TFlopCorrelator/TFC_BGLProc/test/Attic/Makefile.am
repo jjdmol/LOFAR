@@ -1,27 +1,34 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_FFT TestFilter 
+check_PROGRAMS = tWH_FFT tWH_FIR tWH_Correlator tPPFilter
 
 
 AM_CXXFLAGS = \
 	-I../../../src
 
-TestFilter_SOURCES = 				\
-WH_FilterInput.cc				\
-WH_FilterOutput.cc				\
-AH_TestFilter.cc				\
-TestFilter.cc					\
-../src/WH_SubBand.cc				\
-../src/DH_SubBand.cc				\
-../src/DH_CorrCube.cc
-
 tWH_FFT_SOURCES =				\
 tWH_FFT.cc				        \
 ../src/WH_FFT.cc
 
+tWH_FIR_SOURCES = 				\
+tWH_FIR.cc					\
+../src/WH_FIR.cc
+
+tWH_Correlator_SOURCES = 			\
+tWH_Correlator.cc				\
+../src/WH_Correlator.cc
+
+tPPFilter_SOURCES = 				\
+tPPFilter.cc					\
+../src/WH_FIR.cc				\
+../src/WH_FFT.cc
+
 TESTS   = 					\
-TestFilter.sh					\
-tWH_FFT.sh					
+tWH_FFT.sh					\
+tWH_FIR.sh					\
+tWH_Correlator.sh
+
+
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \

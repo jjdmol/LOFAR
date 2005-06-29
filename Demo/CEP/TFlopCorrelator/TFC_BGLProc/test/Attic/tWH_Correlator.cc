@@ -25,27 +25,27 @@
 
 #include <Common/LofarLogger.h>
 #include <ACC/ParameterSet.h>
-#include <tWH_FFT.h>
+#include <tWH_Correlator.h>
 
 #include <Transport/TH_Mem.h>
-#include <TFC_BGLProc/WH_FFT.h>
+#include <TFC_BGLProc/WH_Correlator.h>
 #include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_CorrCube.h>
 
 namespace LOFAR
 {
 
-  AH_FFT::AH_FFT() :
+  AH_Correlator::AH_Correlator() :
     itsWH(0),
     itsInDH1(0), itsInDH2(0), itsOutDH1(0), itsOutDH2(0), itsOutDH3(0),
     itsOutDH4(0), itsOutDH5(0), itsInCon1(0), itsInCon2(0), itsOutCon1(0),
     itsOutCon2(0), itsOutCon3(0), itsOutCon4(0), itsOutCon5(0)
   {}
 
-  AH_FFT::~AH_FFT() {
+  AH_Correlator::~AH_Correlator() {
   }
   
-  void AH_FFT::define(const KeyValueMap& kvm) {
+  void AH_Correlator::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
 
     itsInDH1 = new DH_PPF("itsInDH1", 0);
@@ -57,7 +57,7 @@ namespace LOFAR
     itsOutDH4 = new DH_CorrCube("itsOutDH4", 0);
     itsOutDH5 = new DH_CorrCube("itsOutDH5", 0);
 
-    itsWH = new WH_FFT("WH_FFT");
+    itsWH = new WH_Correlator("WH_Correlator");
     itsTH = new TH_Mem();
 
     itsInCon1 = new Connection("in1", 
@@ -100,22 +100,22 @@ namespace LOFAR
 				false);
   }
 
-  void AH_FFT::init() {
+  void AH_Correlator::init() {
     itsWH->basePreprocess();
   }
 
-  void AH_FFT::run(int steps) {
+  void AH_Correlator::run(int steps) {
     for (int i = 0; i<steps; i++) {
       itsWH->baseProcess();
     }
   }
 
-  void AH_FFT::postrun() {
+  void AH_Correlator::postrun() {
     // check result here
     
   }
 
-  void AH_FFT::undefine() {
+  void AH_Correlator::undefine() {
     delete itsWH;
 
     delete itsInDH1; 
@@ -137,7 +137,7 @@ namespace LOFAR
     delete itsOutCon5;
   }
 
-  void AH_FFT::quit() {
+  void AH_Correlator::quit() {
   }
 
 } // namespace LOFAR
@@ -147,7 +147,7 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv) {
   try {
-    AH_FFT test;
+    AH_Correlator test;
     test.setarg(argc, argv);
     test.baseDefine();
     test.basePrerun();

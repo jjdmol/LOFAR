@@ -1,4 +1,4 @@
-//#  AH_TestFilter.h: Application holder for FIR filter tester
+//#  filename.h: one line description
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,55 +20,68 @@
 //#
 //#  $Id$
 
-#ifndef TFLOP_CORRELATOR_AH_TESTFILTER_H
-#define TFLOP_CORRELATOR_AH_TESTFILTER_H
+#ifndef TFC_TPPFILTER_H
+#define TFC_TPPFILTER_H
 
-// global includes
 #include <tinyCEP/TinyApplicationHolder.h>
-#include <tinyCEP/SimulatorParseClass.h>
 #include <tinyCEP/WorkHolder.h>
+#include <Common/KeyValueMap.h>
 #include <Transport/Connection.h>
-
-// include MPI if we have it
-#ifdef HAVE_MPI
-#include <Transport/TH_MPI.h>
-#endif
-
-
-// includes subject to test (WorkHolders to test etc.)
-#include "../src/DH_SubBand.h"
-#include "../src/WH_SubBand.h"
-#include "../src/DH_CorrCube.h"
-
-// local includes (test WorkHolders etc.)
-#include <WH_FilterInput.h>
-#include <WH_FilterOutput.h>
+#include <Transport/TransportHolder.h>
+#include <Transport/DataHolder.h>
 
 namespace LOFAR
 {
-  class AH_TestFilter: public LOFAR::TinyApplicationHolder {
+
+  class AH_PPFilter: public LOFAR::TinyApplicationHolder 
+  {
 
   public:
-    AH_TestFilter();
-    virtual ~AH_TestFilter();
+    AH_PPFilter();
+    virtual ~AH_PPFilter();
 
-    // overload methods from the TinyApplicationHolder base class
-    virtual void define (const KeyValueMap& params = KeyValueMap());
+    virtual void define (const KeyValueMap& kvm);
     void undefine();
     virtual void init();
     virtual void run(int nsteps);
-    virtual void dump();
     virtual void postrun();
     virtual void quit();
-    void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWHs, int dstDH);
 
   private:
+
+    WorkHolder* itsFilterWH0;
+    WorkHolder* itsFilterWH1;
+    
+    WorkHolder* itsFFTWH0;
+    WorkHolder* itsFFTWH1;
+
+    DataHolder* itsInDH0;
+    DataHolder* itsInDH1;
+
+/*     DataHolder* itsInternalDH00; */
+/*     DataHolder* itsInternalDH01; */
+/*     DataHolder* itsInternalDH10; */
+/*     DataHolder* itsInternalDH11; */
+
+    DataHolder* itsOutDH0;
+    DataHolder* itsOutDH1;
+
+    Connection* itsInCon0;
+    Connection* itsInCon1;
+
+    Connection* itsInternalCon00;
+    Connection* itsInternalCon01;
+    Connection* itsInternalCon10;
+    Connection* itsInternalCon11;
+    
+    Connection* itsOutCon0;
+    Connection* itsOutCon1;
+
+    TransportHolder* itsTH;
+
     vector<WorkHolder*> itsWHs;
-    vector<Connection*> itsConnections;
-    vector<TransportHolder*> itsTHs;
-
-    int itsRank;
   };
-} // namespace LOFAR
 
+  // @}
+} // namespace LOFAR
 #endif
