@@ -15,6 +15,7 @@ MACScheduler_CPPFLAGS= \
 
 MACScheduler_SOURCES 		= \
 	MACScheduler.cc \
+	BeamletAllocator.cc \
 	MACSchedulerMain.cc \
 	SAS_Protocol.cc
 	

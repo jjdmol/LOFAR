@@ -30,6 +30,7 @@
 #include <GCF/GCF_PVInteger.h>
 
 #include "APLCommon/APLUtilities.h"
+#include "BeamletAllocator.h"
 #include "MACScheduler.h"
 
 #define ADJUSTEVENTSTRINGPARAMTOBSE(str) \
@@ -78,10 +79,11 @@ MACScheduler::MACScheduler() :
   m_VIparentPort(*this, m_VIparentPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
   m_VIclientPorts(),
   m_connectedVIclientPorts(),
-  m_VItoSASportMap()
+  m_VItoSASportMap(),
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-  ,m_configurationManager()
+  m_configurationManager(),
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+  m_beamletAllocator()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -827,40 +829,52 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         
         // make all relative times absolute
         _convertRelativeTimes(ps);
-
-        string tempFileName = APLUtilities::getTempFileName();
-        ps->writeFile(tempFileName);
-        APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
-        remove(tempFileName.c_str());
-
-        // add the VI to the VI-SASport map
-        if(_isSASclientPort(port))
-        {
-          m_VItoSASportMap[viName] = *_getSASclientPort(port);
-        }
         
-        // send the schedule event to the VI-StartDaemon on the CCU
-        STARTDAEMONScheduleEvent sdScheduleEvent;
-        sdScheduleEvent.logicalDeviceType = LDTYPE_VIRTUALINSTRUMENT;
-        sdScheduleEvent.taskName = viName;
-        sdScheduleEvent.fileName = parameterFileName;
-        
-ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.taskName)
-ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
-
-        TStringRemotePortMap::iterator it = m_VISDclientPorts.find(allocatedCCU);
-        if(it != m_VISDclientPorts.end())
-        {
-          it->second->send(sdScheduleEvent);
-        }
-        else
+        if(!m_beamletAllocator.allocateBeamlets(ps))
         {
           SASResponseEvent sasResponseEvent;
-          sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+          sasResponseEvent.result = SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
           port.send(sasResponseEvent);      
+        }
+        else
+        {
+          string tempFileName = APLUtilities::getTempFileName();
+          ps->writeFile(tempFileName);
+          APLUtilities::remoteCopy(tempFileName,allocatedCCU,shareLocation+parameterFileName);
+          remove(tempFileName.c_str());
+  
+          // add the VI to the VI-SASport map
+          if(_isSASclientPort(port))
+          {
+            m_VItoSASportMap[viName] = *_getSASclientPort(port);
+          }
+          
+          // send the schedule event to the VI-StartDaemon on the CCU
+          STARTDAEMONScheduleEvent sdScheduleEvent;
+          sdScheduleEvent.logicalDeviceType = LDTYPE_VIRTUALINSTRUMENT;
+          sdScheduleEvent.taskName = viName;
+          sdScheduleEvent.fileName = parameterFileName;
+        
+ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.taskName)
+ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
+
+          TStringRemotePortMap::iterator it = m_VISDclientPorts.find(allocatedCCU);
+          if(it != m_VISDclientPorts.end())
+          {
+            it->second->send(sdScheduleEvent);
+          }
+          else
+          {
+            SASResponseEvent sasResponseEvent;
+            sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+  
+ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
+
+            port.send(sasResponseEvent);      
+          }
         }        
       }
       catch(Exception& e)

@@ -168,6 +168,8 @@ namespace GSO
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
       boost::shared_ptr<ACC::ConfigurationMgr> m_configurationManager;
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+      
+      BeamletAllocator                      m_beamletAllocator;
 
       ALLOC_TRACER_CONTEXT  
    };
