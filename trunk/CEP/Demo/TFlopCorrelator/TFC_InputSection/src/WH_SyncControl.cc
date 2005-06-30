@@ -12,8 +12,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <WH_SyncControl.h>
-#include <TFC_Interface/DH_Sync.h>
+#include <TFC_InputSection/WH_SyncControl.h>
+#include <TFC_Interface/DH_Delay.h>
 
 namespace LOFAR{
 
@@ -30,7 +30,7 @@ WH_SyncControl::WH_SyncControl(const string& name
   }
   for (int i = 0; i < itsNoutputs; i++) {
     snprintf(str, 128, "output_%d_of _%d", i, itsNoutputs);
-    getDataManager().addOutDataHolder(i, new DH_Sync(str));
+    getDataManager().addOutDataHolder(i, new DH_Delay(str));
   }
 }
 

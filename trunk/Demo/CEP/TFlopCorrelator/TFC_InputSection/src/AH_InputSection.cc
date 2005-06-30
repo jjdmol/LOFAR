@@ -24,7 +24,8 @@
 #include <tinyCEP/WorkHolder.h>
 #include <WH_RSPInput.h>
 #include <WH_Transpose.h>
-#include <TFC_Interface/Stub_SB.h>
+#include <WH_SyncControl.h>
+#include <TFC_Interface/Stub_FIR.h>
 
 // DataHolders
 #include <TFC_Interface/DH_SubBand.h>
@@ -70,7 +71,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   //       connection involved, we do have to define the port/IP numbering schemes
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  Stub_SB outStub(true);
+  Stub_FIR outStub(true);
 
   //todo: define simulated RSP boards here or in extra AH
 
@@ -81,19 +82,19 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   //todo: define Merge Step/WH
 
   LOG_TRACE_FLOW_STR("Create the Synchronisation workholder");
-  {
-//     Step*           SyncStep;
-//     WH_SyncControl* SyncNode; 
-//     sprintf(WH_DH_Name, "Sync_node_1_of_1");
-//     SyncNode = new WH_SyncControl(WH_DH_name,
-// 				  itsParamSet.getInt("NRSP")); // one output connectionper RSP
-//     SyncStep = new Step(SyncNode, WH_DH_name,false);
-//     itsWHs.push_back((WorkHolder*) SyncNode);
-//     itsSteps.push_back(SyncStep);
-//     SyncStep->runOnNode(0); //todo: define correct node number
-//     SyncStep-setRate(itsParamSet.getInt("SyncRate"));
-//     comp.addStep(SyncStep); // add to the top-level composite
-  }
+//   Step*           SyncStep;
+//   WH_SyncControl* SyncNode;
+//   int nameSize = 40;
+//   char name[nameSize];    
+//   sprintf(name, "Sync_node_1_of_1");
+//   SyncNode = new WH_SyncControl(name,
+// 				itsParamSet.getInt("NRSP")); // one output connection per RSP
+//   SyncStep = new Step(SyncNode, name,false);
+//   itsWHs.push_back((WorkHolder*) SyncNode);
+//   itsSteps.push_back(SyncStep);
+//   SyncStep->runOnNode(lowestFreeNode++); //todo: define correct node number
+//   comp.addBlock(SyncStep); // add to the top-level composite
+
 
   LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
   // first determine the number of Transpose Steps that will be 
@@ -113,11 +114,24 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, noRSPs);
     // todo: get interface and MACs from parameterset
     // todo: replace kvm by parameterSet
-    RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,      // name
-				       itsParamSet,
-				       "eth1",
-				       "srcMac",
-				       "dstMac"));
+    if (r==0)
+    {
+      RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create sync master
+					 itsParamSet,
+					 "eth1",
+					 "srcMac",
+					 "dstMac",
+					 true));
+    }
+    else
+    {
+      RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create slave
+					 itsParamSet,
+					 "eth1",
+					 "srcMac",
+					 "dstMac",
+					 false));
+    }
     RSPSteps.push_back(new Step(RSPNodes[r],WH_DH_Name,false));
     itsWHs.push_back((WorkHolder*) RSPNodes[r]);
     itsSteps.push_back(RSPSteps[r]);
@@ -127,7 +141,15 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     // connect the RSP boards
     //todo: set correct IP/Port numbers in WH_RSP
     
-    //todo: connect the SyncController
+    // Connect the SyncController
+#ifdef HAVE_MPI
+    SyncStep->connect(r, RSPSteps[r], 0, 1, 
+		      new TH_MPI(SyncStep->getNode(), RSPSteps[r]->getNode()),
+		      true);
+#else
+    LOG_WARN("No connection made to SyncController"); 
+#endif
+
 //     RSPSteps[r]->connect(itsRSPinputSteps[r], 
 // 			    0, 0, 1,  //todo: check
 // 			    TH_MPI(), 
@@ -151,7 +173,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 
     // connect the Subband filter form AH_BGLProcessing
     // to the input section
-    // this interface is defined in the Stub_SB class
+    // this interface is defined in the Stub_FIR class
     // Each Transpose node is connected to two SubBandfilters
     //
     // Output channel 0

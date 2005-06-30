@@ -51,6 +51,7 @@ namespace LOFAR
     TH_Ethernet* connection; 
     int framesize;
     int packetsinframe;
+    int nrRSPoutputs;
     TinyDataManager* datamanager;
     bool syncmaster;
     bool stopthread;
@@ -74,7 +75,8 @@ namespace LOFAR
                                    const ACC::ParameterSet pset,
                                    const string device,
                                    const string srcMAC,
-                                   const string destMAC);
+                                   const string destMAC,
+				   const bool isSyncMaster);
 	
       virtual WH_RSPInput* make(const string& name);
      
@@ -110,7 +112,8 @@ namespace LOFAR
       bool itsSyncMaster;
       int itsSzRSPframe;
       int itsNpackets;
-    
+      int itsNRSPOutputs;
+
       // cyclic buffer for rsp-data
       BufferController<dataType> *itsDataBuffer;
   };

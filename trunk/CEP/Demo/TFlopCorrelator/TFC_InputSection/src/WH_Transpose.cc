@@ -29,7 +29,7 @@
 // Application specific includes
 #include <WH_Transpose.h>
 #include <TFC_Interface/DH_RSP.h>
-#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_FIR.h>
 
 using namespace LOFAR;
 
@@ -49,8 +49,11 @@ WH_Transpose::WH_Transpose(const string& name,
     getDataManager().addInDataHolder(i, new DH_RSP(str, myPS));
   }
   
-  getDataManager().addOutDataHolder(0, new DH_SubBand("DH_Subband_0of2", 0)); 
-  getDataManager().addOutDataHolder(1, new DH_SubBand("DH_Subband_1of2", 1)); 
+  for (int j=0; j<itsNoutputs; j++)
+  {
+    getDataManager().addOutDataHolder(j, new DH_FIR("DH_Subband_0of2", j));
+  }
+
 }
 
 WH_Transpose::~WH_Transpose() {

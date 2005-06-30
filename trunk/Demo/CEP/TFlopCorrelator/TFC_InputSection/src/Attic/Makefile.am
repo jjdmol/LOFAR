@@ -1,6 +1,5 @@
 INSTHDRS         	=\
 WH_RSPInput.h           \
-WH_RSP.h                \
 WH_Transpose.h		\
 WH_SyncControl.h	\
 AH_InputSection.h	\
@@ -25,7 +24,6 @@ TFC_InputSection_main.cc	\
 WH_RSPInput.cc           	\
 WH_Transpose.cc			\
 WH_SyncControl.cc		\
-WH_RSP.cc                       \
 AH_InputSection.cc			
 
 include $(lofar_sharedir)/Makefile.common
