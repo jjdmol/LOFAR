@@ -22,7 +22,7 @@ childs=VT1,VT2,VB1
 ###########################
 VT1.versionnr=1.0
 VT1.qualification=development
-VT1.logicalDeviceType=2
+VT1.logicalDeviceType=VIRTUALTELESCOPE
 VT1.parentHost=lofar26.astron.nl
 VT1.parentPort=0
 VT1.parentTask=VI1
@@ -46,32 +46,11 @@ VT1.angle1=0.0
 VT1.angle2=0.0
 
 ###########################
-# BeamFormer
-###########################
-BF1.versionnr=1.0
-BF1.qualification=development
-BF1.logicalDeviceType=2
-BF1.parentHost=lofar28.astron.nl
-BF1.parentPort=0
-BF1.parentTask=VT1
-BF1.remoteSystem=STSLCU1
-BF1.startDaemonHost=lofar28.astron.nl
-BF1.startDaemonPort=0
-BF1.startDaemonTask=PAC_VTStartDaemon
-BF1.propertysetBaseName=PAC_VT1_BF1
-BF1.propertysetDetailsType=TLcuPacSBF
-BF1.claimTime=+20
-BF1.prepareTime=+40
-BF1.startTime=+115
-BF1.stopTime=+648000
-BF1.childs=
-
-###########################
 # Station Receptor Group
 ###########################
 SRG1.versionnr=1.0
 SRG1.qualification=development
-SRG1.logicalDeviceType=4
+SRG1.logicalDeviceType=STATIONRECEPTORGROUP
 SRG1.parentHost=lofar28.astron.nl
 SRG1.parentPort=0
 SRG1.parentTask=VT1
@@ -92,7 +71,7 @@ SRG1.childs=
 ###########################
 VT2.versionnr=1.0
 VT2.qualification=development
-VT2.logicalDeviceType=2
+VT2.logicalDeviceType=VIRTUALTELESCOPE
 VT2.parentHost=lofar26.astron.nl
 VT2.parentPort=0
 VT2.parentTask=VI2
@@ -116,32 +95,11 @@ VT2.angle1=0.0
 VT2.angle2=0.0
 
 ###########################
-# BeamFormer
-###########################
-BF2.versionnr=1.0
-BF2.qualification=development
-BF2.logicalDeviceType=2
-BF2.parentHost=lofar26.astron.nl
-BF2.parentPort=0
-BF2.parentTask=VT2
-BF2.remoteSystem=STSLCU2
-BF2.startDaemonHost=lofar29.astron.nl
-BF2.startDaemonPort=0
-BF2.startDaemonTask=PAC_VTStartDaemon
-BF2.propertysetBaseName=PAC_VT2_BF2
-BF2.propertysetDetailsType=TLcuPacSBF
-BF2.claimTime=+20
-BF2.prepareTime=+40
-BF2.startTime=+115
-BF2.stopTime=+648000
-BF2.childs=
-
-###########################
 # Station Receptor Group
 ###########################
 SRG2.versionnr=1.0
 SRG2.qualification=development
-SRG2.logicalDeviceType=4
+SRG2.logicalDeviceType=STATIONRECEPTORGROUP
 SRG2.parentHost=lofar26.astron.nl
 SRG2.parentPort=0
 SRG2.parentTask=VT2
@@ -164,7 +122,7 @@ SRG2.childs=
 VB1.versionnr=1.0
 VB1.AC.versionnr=1.0
 VB1.qualification=development
-VB1.logicalDeviceType=7
+VB1.logicalDeviceType=VIRTUALBACKEND
 VB1.parentHost=lofar26.astron.nl
 VB1.parentPort=0
 VB1.parentTask=VI1
