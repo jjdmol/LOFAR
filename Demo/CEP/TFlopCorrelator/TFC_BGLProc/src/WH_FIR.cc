@@ -75,6 +75,8 @@ void WH_FIR::preprocess() {
 
 void WH_FIR::process() {
   FilterType accum;
+  short      write_to;
+  short      write_index;
 
   for (int filter = 0; filter < itsNFilters; filter++) {
     accum = 0.0;
@@ -84,7 +86,9 @@ void WH_FIR::process() {
 	filterData[ filter ].delayLine[ tap ];
     }
     
-    static_cast<DH_PPF*>(getDataManager().getOutHolder(0))->setBufferElement(filter, accum);
+    // make sure to write the output to the correct DataHolder
+    // this may turn out to be a hotspot, since we're writing small amounts of data
+    static_cast<DH_PPF*>(getDataManager().getOutHolder( filter % (itsNFilters/itsFFTs) ))->setBufferElement( filter / (itsNFilters/itsFFTs) , accum );
     adjustDelayPtr(filterData[filter].delayLine);
   }
 
