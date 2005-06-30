@@ -22,8 +22,8 @@ namespace LOFAR
 DH_RSP::DH_RSP (const string& name,
                 const ACC::ParameterSet pset)
 : DataHolder (name, "DH_RSP"),
-  itsPSet    (pset),
-  itsBuffer  (0)
+  itsBuffer  (0),
+  itsPSet    (pset)
 {
 
    itsEPAheaderSize   = pset.getInt("SzEPAheader");
@@ -37,11 +37,11 @@ DH_RSP::DH_RSP (const string& name,
 DH_RSP::DH_RSP(const DH_RSP& that)
 : DataHolder         (that),
   itsBuffer          (0),
-  itsPSet            (that.itsPSet),
   itsEPAheaderSize   (that.itsEPAheaderSize),
   itsNoBeamlets      (that.itsNoBeamlets),
   itsNoPolarisations (that.itsNoPolarisations),
-  itsBufSize         (that.itsBufSize)
+  itsBufSize         (that.itsBufSize),
+  itsPSet            (that.itsPSet)
 {}
 
 DH_RSP::~DH_RSP()
