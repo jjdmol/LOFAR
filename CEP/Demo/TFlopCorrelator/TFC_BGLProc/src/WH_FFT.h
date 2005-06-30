@@ -13,7 +13,7 @@
 
 #include <tinyCEP/WorkHolder.h>
 #include <TFC_Interface/DH_PPF.h>
-#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_CorrCube.h>
 
 namespace LOFAR
 {

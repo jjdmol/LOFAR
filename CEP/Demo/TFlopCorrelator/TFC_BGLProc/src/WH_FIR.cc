@@ -1,4 +1,4 @@
-//#  WH_SubBand.cc: 256 kHz polyphase filter
+//#  WH_FIR.cc: 256 kHz polyphase filter
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -11,14 +11,14 @@
 
 //# Includes
 #include <ACC/ParameterSet.h>
-#include <WH_SubBand.h>
+#include <WH_FIR.h>
 
-#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_FIR.h>
 #include <TFC_Interface/DH_PPF.h>
 
 using namespace LOFAR;
 
-WH_SubBand::WH_SubBand(const string& name,
+WH_FIR::WH_FIR(const string& name,
 		       const short   subBandID):
  WorkHolder( 1, 1, name, "WH_Correlator"),
  itsSBID       (subBandID)
@@ -26,14 +26,14 @@ WH_SubBand::WH_SubBand(const string& name,
 
    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
    //ParameterCollection	myPC(myPS);
-   itsNFilters   = myPS.getInt("WH_SubBand.filters");
-   itsNtaps      = myPS.getInt("WH_SubBand.taps");
-   itsNStations  = myPS.getInt("WH_SubBand.stations");
-   itsNTimes     = myPS.getInt("WH_SubBand.times");
-   itsNPol       = myPS.getInt("WH_SubBand.pols");
-   itsFFTs       = myPS.getInt("WH_SubBand.FFTs");
+   itsNFilters   = myPS.getInt("WH_FIR.filters");
+   itsNtaps      = myPS.getInt("WH_FIR.taps");
+   itsNStations  = myPS.getInt("WH_FIR.stations");
+   itsNTimes     = myPS.getInt("WH_FIR.times");
+   itsNPol       = myPS.getInt("WH_FIR.pols");
+   itsFFTs       = myPS.getInt("WH_FIR.FFTs");
 
-   getDataManager().addInDataHolder(0, new DH_SubBand("input", itsSBID));
+   getDataManager().addInDataHolder(0, new DH_FIR("input", itsSBID));
 
    for (int c=0; c<itsFFTs; c++) {
      // this should probably be two DataHolders
@@ -53,7 +53,7 @@ WH_SubBand::WH_SubBand(const string& name,
 
 }
 
-WH_SubBand::~WH_SubBand() {
+WH_FIR::~WH_FIR() {
   for (int filter = 0; filter < itsNFilters; filter++) {
     delete filterData[filter].delayLine;
     delete filterData[filter].filterTaps;
@@ -61,19 +61,19 @@ WH_SubBand::~WH_SubBand() {
   delete filterData;
 }
 
-WorkHolder* WH_SubBand::construct(const string& name,
+WorkHolder* WH_FIR::construct(const string& name,
 				  const short   SBID) {
-  return new WH_SubBand(name, SBID);
+  return new WH_FIR(name, SBID);
 }
 
-WH_SubBand* WH_SubBand::make(const string& name) {
-  return new WH_SubBand(name, itsSBID);
+WH_FIR* WH_FIR::make(const string& name) {
+  return new WH_FIR(name, itsSBID);
 }
 
-void WH_SubBand::preprocess() {
+void WH_FIR::preprocess() {
 }
 
-void WH_SubBand::process() {
+void WH_FIR::process() {
   FilterType accum;
 
   for (int filter = 0; filter < itsNFilters; filter++) {
@@ -91,13 +91,13 @@ void WH_SubBand::process() {
 }
 
 
-void WH_SubBand::postprocess() {
+void WH_FIR::postprocess() {
 }
 
-void WH_SubBand::dump() {
+void WH_FIR::dump() {
 }
 
-void WH_SubBand::adjustDelayPtr(FilterType* dLine) { 
+void WH_FIR::adjustDelayPtr(FilterType* dLine) { 
   // this is a very inefficient implementation. Should be optimized later on.
   for (int i = itsNtaps - 2; i >= 0; i--) {
     dLine[i+1] = dLine[i];
