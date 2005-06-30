@@ -48,8 +48,9 @@ class APLUtilities
     APLUtilities(); 
     virtual ~APLUtilities();
 
-    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
-    static void string2Vector(const string& parametersString, vector<string>& parameters); 
+    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters,const char delimiter=',');
+    static void string2Vector(const string& parametersString, vector<string>& parameters, const char delimiter=','); 
+    static void string2Vector(const string& parametersString, vector<int>& parameters, const char delimiter=','); 
     static time_t getUTCtime();
     static time_t decodeTimeString(const string& timeStr);
     static int remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile);

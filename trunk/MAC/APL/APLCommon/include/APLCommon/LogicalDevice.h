@@ -244,6 +244,7 @@ namespace APLCommon
       void _setChildStates(TLogicalDeviceState ldState);
       void _setConnectedChildState(GCF::TM::GCFPortInterface& port, TLogicalDeviceState ldState);
       string _getConnectedChildName(GCF::TM::GCFPortInterface& port);
+      TLogicalDeviceTypes _convertLogicalDeviceType(const string& ldTypeString);
 
       TRemotePort                           m_parentPort; // connection with parent, if any
       unsigned long                         m_parentReconnectTimerId;
