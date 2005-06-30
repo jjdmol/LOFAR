@@ -1,4 +1,4 @@
-//#  DH_Sync.cc: dataholder to hold the delay information to perform
+//#  DH_Delay.cc: dataholder to hold the delay information to perform
 //#              station synchronization
 //#
 //#  Copyright (C) 2004
@@ -13,32 +13,32 @@
 
 #include <lofar_config.h>
 
-#include <DH_Sync.h>
+#include <DH_Delay.h>
 
 namespace LOFAR
 {
 
-DH_Sync::DH_Sync (const string& name)
-    : DataHolder     (name, "DH_Sync")
+DH_Delay::DH_Delay (const string& name)
+    : DataHolder     (name, "DH_Delay")
 {
   
 }
   
-DH_Sync::DH_Sync(const DH_Sync& that)
+DH_Delay::DH_Delay(const DH_Delay& that)
   : DataHolder (that)
 {   
 }
 
-DH_Sync::~DH_Sync()
+DH_Delay::~DH_Delay()
 {
 }
 
-DataHolder* DH_Sync::clone() const
+DataHolder* DH_Delay::clone() const
 {
-  return new DH_Sync(*this);
+  return new DH_Delay(*this);
 }
 
-void DH_Sync::init()
+void DH_Delay::init()
 {
   // add the fields to the data definition
   addField ("Delay", BlobField<int>(1, 1));
@@ -49,7 +49,7 @@ void DH_Sync::init()
   createDataBlock();
 }
 
-void DH_Sync::fillDataPointers() 
+void DH_Delay::fillDataPointers() 
 {
   itsDelayPtr = getData<int> ("Delay");
   itsSeqIdPtr = getData<int> ("SeqId");
