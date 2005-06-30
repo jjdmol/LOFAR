@@ -27,8 +27,6 @@
 #include <WH_SyncControl.h>
 #include <TFC_Interface/Stub_FIR.h>
 
-// DataHolders
-#include <TFC_Interface/DH_SubBand.h>
 
 using namespace LOFAR;
 

@@ -30,7 +30,7 @@
 #include <Transport/TH_Mem.h>
 #include <TFC_InputSection/WH_Transpose.h>
 #include <TFC_Interface/DH_RSP.h>
-#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_FIR.h>
 
 namespace LOFAR
 {
@@ -59,8 +59,8 @@ namespace LOFAR
 
     itsInDH1 = new DH_RSP("DH_RSP1", myPset);
     itsInDH2 = new DH_RSP("DH_RSP1", myPset);
-    itsOutDH1 = new DH_SubBand("DH_SubBand", 0);
-    itsOutDH2 = new DH_SubBand("DH_SubBand", 1);
+    itsOutDH1 = new DH_FIR("DH_FIR", 0);
+    itsOutDH2 = new DH_FIR("DH_FIR", 1);
     itsWH = new WH_Transpose("WH_Transpose", myKvm);
     itsTH = new TH_Mem();
     
