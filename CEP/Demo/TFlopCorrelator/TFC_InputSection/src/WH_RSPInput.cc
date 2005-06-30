@@ -27,8 +27,8 @@
 #include <Common/LofarLogger.h>
 
 // Application specific includes
-#include <WH_RSPInput.h>
-#include <TFC_Interface/DH_Sync.h>
+#include <TFC_InputSection/WH_RSPInput.h>
+#include <TFC_Interface/DH_Delay.h>
 #include <TFC_Interface/DH_RSP.h>
 #include <TFC_Interface/DH_RSPSync.h>
       
@@ -44,6 +44,7 @@ void* WriteToBufferThread(void* arguments)
   TinyDataManager* datamanager = args->datamanager;
   int framesize = args->framesize;
   int packetsinframe = args->packetsinframe;
+  int nrRSPoutputs = args->nrRSPoutputs;
   bool syncmaster = args->syncmaster;
 
   char recvframe[9000];
@@ -81,10 +82,10 @@ void* WriteToBufferThread(void* arguments)
         datamanager->readyWithInHolder(1);
         firstloop = false;
       }      
-      DH_RSPSync* dhp = (DH_RSPSync*)datamanager.getInHolder(1);
+      DH_RSPSync* dhp = (DH_RSPSync*)datamanager->getInHolder(1);
       nextstamp = dhp->getSyncStamp(); 
       // we need to increment the stamp because it is written only once per second or so
-      dhp->incrementStamp(itsNpackets);
+      dhp->incrementStamp(packetsinframe);
     } // (!itsSyncMaster)
     else {
       // we are the master, so increase the nextValue and send it to the slaves
@@ -92,10 +93,10 @@ void* WriteToBufferThread(void* arguments)
         // set nextstamp equal to actualstamp
         nextstamp.setStamp(seqid, blockid);
         // build in a delay to let the slaves catch up
-        nextstamp += itsNPackets * 1500;
+        nextstamp += packetsinframe * 1500;
         
         // send the startstamp to the slaves
-        for (int i = 1; i < itsNRSPOutputs; i++) {
+        for (int i = 1; i < nrRSPoutputs; i++) {
 	  ((DH_RSPSync*)datamanager->getOutHolder(i))->setSyncStamp(nextstamp);
           // force a write 
           datamanager->readyWithOutHolder(i);
@@ -104,10 +105,10 @@ void* WriteToBufferThread(void* arguments)
       } // end (firstloop) 
       else {
         // increase the syncstamp
-        nextstamp += itsNpackets;
+        nextstamp += packetsinframe;
         // send the syncstamp to the slaves
-        for (int i = 1; i < itsNRSPOutputs; i++) {
-	  ((DH_RSPSync*)datamanager().getOutHolder(i))->setSyncStamp(nextstamp);
+        for (int i = 1; i < nrRSPoutputs; i++) {
+	  ((DH_RSPSync*)datamanager->getOutHolder(i))->setSyncStamp(nextstamp);
         }
       }
     } //end (itsIsSyncMaster)
@@ -121,7 +122,7 @@ void* WriteToBufferThread(void* arguments)
       // if exists, overwrite its previous created dummy
       
       // read oldest item in cyclic buffer if buffer is not empty
-      if (databuffer->getCount() > 0) {
+      if (databuffer->getBufferCount() > 0) {
         
         dataptr = (dataType*)databuffer->getFirstReadPtr(itemid);
         // subtract timestamps to find offset
@@ -177,16 +178,16 @@ WH_RSPInput::WH_RSPInput(const string& name,
                          const ACC::ParameterSet pset,
                          const string device,
                          const string srcMAC,
-                         const string destMAC
+                         const string destMAC,
                          const bool isSyncMaster)
   : WorkHolder ((isSyncMaster ? 1 : 2), 
                 1 + (isSyncMaster ? pset.getInt("NoWH_RSP")-1 : 0), 
                 name, 
                 "WH_RSPInput"),
-    itsPset (pset),
     itsDevice(device),
     itsSrcMAC(srcMAC),
     itsDestMAC(destMAC),
+    itsPset (pset),
     itsSyncMaster(isSyncMaster)
 {
   char str[32];
@@ -214,13 +215,13 @@ WH_RSPInput::WH_RSPInput(const string& name,
   itsDataBuffer = new BufferController<dataType>(1000); // 1000 elements
  
   // create incoming dataholder holding the delay information 
-  getDataManager().addInDataHolder(0, new DH_Sync("DH_Sync"));
+  getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay"));
 
   // create outgoing dataholder holding the delay controlled RSP data
   getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out", pset));
 
   // create dataholders for RSPInput synchronization
-  if (itsIsSyncMaster) {
+  if (itsSyncMaster) {
     // if we are the sync master we need (NoWH_RSP-1) extra outputs
     for (int i = 1; i < itsNRSPOutputs; i++) {
       snprintf(str, 32, "DH_RSPInputSync_out_%d", i);
@@ -245,15 +246,16 @@ WorkHolder* WH_RSPInput::construct(const string& name,
                                    const ACC::ParameterSet pset,
                                    const string device,
                                    const string srcMAC,
-                                   const string destMAC)
+                                   const string destMAC,
+				   const bool isSyncMaster)
 {
-  return new WH_RSPInput(name, pset, device, srcMAC, destMAC);
+  return new WH_RSPInput(name, pset, device, srcMAC, destMAC, isSyncMaster);
 }
 
 
 WH_RSPInput* WH_RSPInput::make(const string& name)
 {
-  return new WH_RSPInput(name, itsPset, itsDevice, itsSrcMAC, itsDestMAC);
+  return new WH_RSPInput(name, itsPset, itsDevice, itsSrcMAC, itsDestMAC, itsSyncMaster);
 }
 
 
@@ -264,7 +266,8 @@ void WH_RSPInput::preprocess()
   writerinfo.connection = itsInputConnection;
   writerinfo.framesize = itsSzRSPframe;
   writerinfo.packetsinframe = itsNpackets;
-  writerinfo.datamanager = getDataManager();
+  writerinfo.nrRSPoutputs = itsNRSPOutputs;
+  writerinfo.datamanager = &getDataManager();
   writerinfo.syncmaster = itsSyncMaster;
   writerinfo.stopthread = false;
   
@@ -278,14 +281,14 @@ void WH_RSPInput::preprocess()
 void WH_RSPInput::process() 
 { 
    
-  DH_Sync* inDHp;
+  DH_Delay* inDHp;
   DH_RSP* outDHp;
   dataType* readptr;
   timestamp_t syncstamp;
   int seqid, blockid;
 
   // get delay offset
-  inDHp = (DH_Sync*)getDataManager().getInHolder(0);
+  inDHp = (DH_Delay*)getDataManager().getInHolder(0);
   inDHp->getNextMainBeat(seqid, blockid);
   syncstamp.setStamp(seqid, blockid);
   
@@ -295,7 +298,7 @@ void WH_RSPInput::process()
   //       (readptr = getBufferReadPtr + delay offset)
 
   // write flag to outgoing dataholder
-  outDHp->setFlag(dataptr->invalid);
+  outDHp->setFlag(readptr->invalid);
 
   // to do: write a new delay-controlled timestamp to outgoing dataholder
 
