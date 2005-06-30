@@ -13,8 +13,8 @@
 #include <ACC/ParameterSet.h>
 #include <WH_FFT.h>
 
-#include <TFC_Interface/DH_PPF.h>
-#include <TFC_Interface/DH_CorrCube.h>
+// #include <TFC_Interface/DH_PPF.h>
+// #include <TFC_Interface/DH_CorrCube.h>
 
 #include <fftw.h>
 
@@ -78,8 +78,11 @@ void WH_FFT::process() {
     // we can now devide the 255 remaining channels among 5(default) correlators
     
     // can we do this without memcpy?
-    getDataManager().getOutHolder(cor)->getDataPtr() = (fft_out+1) ;
-				 
+    memcpy(static_cast<DH_CorrCube*>(getDataManager().getOutHolder(cor))->getBuffer(),  
+	   fft_out + 1 + cor * ( itsNtaps - 1 ) / itsCpF,
+	   (itsNtaps - 1) / itsCpF);
+
+    // static_cast<DH_CorrCube*>(getDataManager().getOutHolder(cor))->getBuffer() = fft_out + 1 + cor * ( itsNtaps - 1 ) / itsCpF ;
   }
 }
 

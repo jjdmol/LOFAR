@@ -1,4 +1,4 @@
-//#  WH_SubBand.h: 256 kHz polyphase filter
+//#  WH_FIR.h: 256 kHz polyphase filter
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -12,7 +12,7 @@
 #include <fftw.h>
 
 #include <tinyCEP/WorkHolder.h>
-#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_FIR.h>
 
 namespace LOFAR
 {
@@ -24,7 +24,7 @@ namespace LOFAR
   } filterBox;
 
 
-  class WH_SubBand: public WorkHolder {
+  class WH_FIR: public WorkHolder {
     
   public:
 
@@ -33,13 +33,13 @@ namespace LOFAR
     // not be correct and may even cause a segfault.
     typedef fcomplex FilterType;
 
-    explicit WH_SubBand (const string& name,
-			 const short SubBandID); // subBand identification for this filter
+    explicit WH_FIR (const string& name,
+			 const short FIRID); // subBand identification for this filter
 
-    virtual ~WH_SubBand();
+    virtual ~WH_FIR();
 
-    static WorkHolder* construct (const string& name, const short SubBandID); 
-    virtual WH_SubBand* make (const string& name);
+    static WorkHolder* construct (const string& name, const short FIRID); 
+    virtual WH_FIR* make (const string& name);
 
     virtual void preprocess();
     virtual void process();
@@ -48,10 +48,10 @@ namespace LOFAR
 
   private:
     /// forbid copy constructor
-    WH_SubBand(const WH_SubBand&);
+    WH_FIR(const WH_FIR&);
     
     /// forbid assignment
-    WH_SubBand& operator= (const WH_SubBand&);
+    WH_FIR& operator= (const WH_FIR&);
 
     /// FIR Filter variables
     short itsNFilters;
@@ -63,8 +63,8 @@ namespace LOFAR
     short itsCpF;
     short itsFFTs;
     
-    DH_SubBand::BufferType* delayPtr;
-    DH_SubBand::BufferType* delayLine;
+    DH_FIR::BufferType* delayPtr;
+    DH_FIR::BufferType* delayLine;
 
     filterBox* filterData;
 

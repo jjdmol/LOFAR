@@ -15,7 +15,7 @@
 #include <ACC/ParameterSet.h>
 
 #include <AH_BGLProcessing.h>
-#include <TFC_Interface/Stub_SB.h>
+#include <TFC_Interface/Stub_FIR.h>
 #include <TFC_Interface/Stub_Corr.h>
 // tinyCEP
 
@@ -24,11 +24,11 @@
 #include <Transport/TH_Mem.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <WH_SubBand.h>
+#include <WH_FIR.h>
 #include <WH_FFT.h>
 #include <WH_Correlator.h>
 // DataHolders
-#include <TFC_Interface/DH_SubBand.h>
+#include <TFC_Interface/DH_FIR.h>
 #include <TFC_Interface/DH_CorrCube.h>
 #include <TFC_Interface/DH_Vis.h>
 
@@ -63,23 +63,23 @@ void AH_BGLProcessing::undefine() {
 void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
-  int itsNSBF  = itsParamSet.getInt("NSBF");  // number of SubBand filters in the application
+  int itsNFIRF  = itsParamSet.getInt("NFIRF");  // number of FIR filters in the application
   
   int lowestFreeNode = 0;
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
 
   // Create the bgl Processing section; these use  tinyCEP
-  // The processing section consists of the SubBand filter
+  // The processing section consists of the FIR filter
   // and correlators
 
   LOG_TRACE_FLOW_STR("Create input side interface stubs");
-  Stub_SB inStub(true);
+  Stub_FIR inStub(true);
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
   Stub_Corr outStub(false);
 
-  LOG_TRACE_FLOW_STR("Create the SubBand filter  workholders");
+  LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
   
   char WH_Name[40];
   int noProcBlock = itsParamSet.getInt("NoProcessingBlocks");
@@ -90,10 +90,10 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     int corID = 0;
     vector<WH_Correlator*> Cors;
     for (int fil = 0; fil < noFiltsPerBlock; fil++) {
-      // create WH_SubBand and WH_FFT
-      snprintf(WH_Name, 40, "SubBandFilter_%d_of_%d_ofBlock_%d", fil, noFiltsPerBlock, pb);
-      WH_SubBand* SBFNode = new WH_SubBand(WH_Name, subband++);
-      itsWHs.push_back(SBFNode);
+      // create WH_FIR and WH_FFT
+      snprintf(WH_Name, 40, "FIRFilter_%d_of_%d_ofBlock_%d", fil, noFiltsPerBlock, pb);
+      WH_FIR* FIRFNode = new WH_FIR(WH_Name, subband++);
+      itsWHs.push_back(FIRFNode);
       itsWHs.back()->runOnNode(lowestFreeNode++);   
 
       snprintf(WH_Name, 40, "FFT_%d_of_%d_ofBlock_%d", fil, noFiltsPerBlock, pb);
@@ -101,8 +101,8 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
       itsWHs.push_back(FFTNode);
       itsWHs.back()->runOnNode(lowestFreeNode++);   
 
-      // todo: connect to inputSection using Stub_SB
-      connectWHs(SBFNode, 0, FFTNode, 0);
+      // todo: connect to inputSection using Stub_FIR
+      connectWHs(FIRFNode, 0, FFTNode, 0);
       
       for (int cor = 0; cor < noCorsPerFilt; cor++, corID++) {
 	// create correlator nodes
