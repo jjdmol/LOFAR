@@ -450,7 +450,8 @@ void LogicalDevice::_schedule()
   {
     try
     {
-      TLogicalDeviceTypes ldType = (TLogicalDeviceTypes)m_parameterSet.getInt((*chIt) + ".logicalDeviceType");
+      string ldTypeString = m_parameterSet.getString((*chIt) + ".logicalDeviceType");
+      TLogicalDeviceTypes ldType = _convertLogicalDeviceType(ldTypeString);
       m_childTypes[*chIt] = ldType;
       m_childStates[*chIt] = LOGICALDEVICE_STATE_IDLE;
     }
@@ -1066,6 +1067,44 @@ string LogicalDevice::_getShareLocation() const
     LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using %s",e.message().c_str(),shareLocation.c_str()));
   }
   return shareLocation;
+}
+
+TLogicalDeviceTypes LogicalDevice::_convertLogicalDeviceType(const string& ldTypeString)
+{
+  TLogicalDeviceTypes ldType = LDTYPE_NO_TYPE;
+  if(ldTypeString == "VIRTUALINSTRUMENT")
+  {
+    ldType = LDTYPE_VIRTUALINSTRUMENT;
+  }
+  else if(ldTypeString == "VIRTUALTELESCOPE")
+  {
+    ldType = LDTYPE_VIRTUALTELESCOPE;
+  }
+  else if(ldTypeString == "VIRTUALARRAY")
+  {
+    ldType = LDTYPE_VIRTUALARRAY;
+  }
+  else if(ldTypeString == "STATIONRECEPTORGROUP")
+  {
+    ldType = LDTYPE_STATIONRECEPTORGROUP;
+  }
+  else if(ldTypeString == "ARRAYOPERATIONS")
+  {
+    ldType = LDTYPE_ARRAYOPERATIONS;
+  }
+  else if(ldTypeString == "STATIONOPERATIONS")
+  {
+    ldType = LDTYPE_STATIONOPERATIONS;
+  }
+  else if(ldTypeString == "VIRTUALBACKEND")
+  {
+    ldType = LDTYPE_VIRTUALBACKEND;
+  }
+  else
+  {
+    ldType = static_cast<TLogicalDeviceTypes>(atoi(ldTypeString.c_str()));
+  }
+  return ldType;
 }
 
 GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface& port)

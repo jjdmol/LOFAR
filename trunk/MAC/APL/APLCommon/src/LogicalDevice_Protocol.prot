@@ -44,7 +44,11 @@ enum TLDResult
   LD_RESULT_UNKNOWN_COMMAND,
   LD_RESULT_DISABLED,
   LD_RESULT_LOW_QUALITY,
-  LD_RESULT_TIMING_FAILURE
+  LD_RESULT_TIMING_FAILURE,
+  LD_RESULT_RANGE_ERROR,     // range error in message parameters
+  LD_RESULT_BEAMALLOC_ERROR, // could not allocate beam
+  LD_RESULT_BEAMFREE_ERROR,  // could not free beam
+  
 };
 
 PRELUDE_END;
