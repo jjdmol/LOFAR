@@ -1,4 +1,4 @@
-//# DH_Sync.h: dataholder to hold the delay information to perform
+//# DH_Delay.h: dataholder to hold the delay information to perform
 //#            station synchronizaion       
 //#
 //# Copyright (C) 2004
@@ -10,8 +10,8 @@
 //#
 /////////////////////////////////////////////////////////////////
 
-#ifndef TFLOPCORRELATOR_DH_SYNC_H
-#define TFLOPCORRELATOR_DH_SYNC_H
+#ifndef TFLOPCORRELATOR_DH_DELAY_H
+#define TFLOPCORRELATOR_DH_DELAY_H
 
 
 #include <lofar_config.h>
@@ -23,16 +23,16 @@ using std::complex;
 namespace LOFAR
 {
 
-class DH_Sync: public DataHolder
+class DH_Delay: public DataHolder
 {
 public:
   typedef char BufferType;
 
-  explicit DH_Sync (const string& name);
+  explicit DH_Delay (const string& name);
 
-  DH_Sync(const DH_Sync&);
+  DH_Delay(const DH_Delay&);
 
-  virtual ~DH_Sync();
+  virtual ~DH_Delay();
 
   DataHolder* clone() const;
 
@@ -51,7 +51,7 @@ public:
  
  private:
   /// Forbid assignment.
-  DH_Sync& operator= (const DH_Sync&);
+  DH_Delay& operator= (const DH_Delay&);
 
   // Fill the pointers (itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
@@ -62,17 +62,17 @@ public:
   int* itsBlockIdPtr;
 };
 
-inline const int DH_Sync::getDelay() const
+inline const int DH_Delay::getDelay() const
   { return *itsDelayPtr; }
 
-inline const void DH_Sync::getNextMainBeat(int& seqid,
+inline const void DH_Delay::getNextMainBeat(int& seqid,
 			                   int& blockid) const
   { seqid = *itsSeqIdPtr; blockid = *itsBlockIdPtr;} 
 
-inline void DH_Sync::setDelay(int delay)
+inline void DH_Delay::setDelay(int delay)
   { *itsDelayPtr = delay; *itsBlockIdPtr += delay;}
 
-inline void DH_Sync::setNextPrimairy(int seqid)
+inline void DH_Delay::setNextPrimairy(int seqid)
   { *itsSeqIdPtr = seqid; }
 
 }
