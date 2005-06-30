@@ -38,8 +38,8 @@ public:
   /// Allocate the buffers.
   virtual void init();
 
-  /// get/set completely specified element in the buffer
-  BufferType* setBufferElement(int sample, BufferType value);
+  /// set completely specified element in the buffer
+  void setBufferElement(int sample, BufferType value);
 
 private:
   /// Forbid assignment.
@@ -52,7 +52,7 @@ private:
   void fillDataPointers();
 };
 
- inline DH_PPF::BufferType* DH_PPF::setBufferElement(int sample, DH_PPF::BufferType value) {
+inline void DH_PPF::setBufferElement(int sample, DH_PPF::BufferType value) {
    itsBuffer[sample] = value;
  }
    
