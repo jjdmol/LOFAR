@@ -33,7 +33,7 @@
 //# not /usr/include/complex.h. This is very unfortunate.
 //# Hence we declare functions like sin ourselves in ComplexC99.h.
 #include <Common/ComplexC99.h>
-#include <ostream>
+#include <Common/lofar_iostream.h>
 
 
 namespace LOFAR {
@@ -81,33 +81,33 @@ namespace LOFAR {
   inline double imag (TYPES::dcomplex x) { return __imag__(x); }
   inline TYPES::dcomplex conj  (TYPES::dcomplex x) { return ~(x); }
   //  inline TYPES::dcomplex dconj (TYPES::dcomplex x) { return ~(x); }
-  inline TYPES::dcomplex sin   (TYPES::dcomplex x) { return csin(x); }
-  inline TYPES::dcomplex cos   (TYPES::dcomplex x) { return ccos(x); }
-  inline TYPES::dcomplex tan   (TYPES::dcomplex x) { return ctan(x); }
-  inline TYPES::dcomplex asin  (TYPES::dcomplex x) { return casin(x); }
-  inline TYPES::dcomplex acos  (TYPES::dcomplex x) { return cacos(x); }
-  inline TYPES::dcomplex atan  (TYPES::dcomplex x) { return catan(x); }
-  inline TYPES::dcomplex sinh  (TYPES::dcomplex x) { return csinh(x); }
-  inline TYPES::dcomplex cosh  (TYPES::dcomplex x) { return ccosh(x); }
-  inline TYPES::dcomplex tanh  (TYPES::dcomplex x) { return ctanh(x); }
-  inline TYPES::dcomplex asinh (TYPES::dcomplex x) { return casinh(x); }
-  inline TYPES::dcomplex acosh (TYPES::dcomplex x) { return cacosh(x); }
-  inline TYPES::dcomplex atanh (TYPES::dcomplex x) { return catanh(x); }
-  inline TYPES::dcomplex sqrt  (TYPES::dcomplex x) { return csqrt(x); }
-  inline TYPES::dcomplex exp   (TYPES::dcomplex x) { return cexp(x); }
-  inline TYPES::dcomplex log   (TYPES::dcomplex x) { return clog(x); }
-  inline TYPES::dcomplex log10 (TYPES::dcomplex x) { return clog10(x); }
-  inline double          abs   (TYPES::dcomplex x) { return cabs(x); }
-  inline double          arg   (TYPES::dcomplex x) { return carg(x); }
+  inline TYPES::dcomplex sin   (TYPES::dcomplex x) { return ::csin(x); }
+  inline TYPES::dcomplex cos   (TYPES::dcomplex x) { return ::ccos(x); }
+  inline TYPES::dcomplex tan   (TYPES::dcomplex x) { return ::ctan(x); }
+  inline TYPES::dcomplex asin  (TYPES::dcomplex x) { return ::casin(x); }
+  inline TYPES::dcomplex acos  (TYPES::dcomplex x) { return ::cacos(x); }
+  inline TYPES::dcomplex atan  (TYPES::dcomplex x) { return ::catan(x); }
+  inline TYPES::dcomplex sinh  (TYPES::dcomplex x) { return ::csinh(x); }
+  inline TYPES::dcomplex cosh  (TYPES::dcomplex x) { return ::ccosh(x); }
+  inline TYPES::dcomplex tanh  (TYPES::dcomplex x) { return ::ctanh(x); }
+  inline TYPES::dcomplex asinh (TYPES::dcomplex x) { return ::casinh(x); }
+  inline TYPES::dcomplex acosh (TYPES::dcomplex x) { return ::cacosh(x); }
+  inline TYPES::dcomplex atanh (TYPES::dcomplex x) { return ::catanh(x); }
+  inline TYPES::dcomplex sqrt  (TYPES::dcomplex x) { return ::csqrt(x); }
+  inline TYPES::dcomplex exp   (TYPES::dcomplex x) { return ::cexp(x); }
+  inline TYPES::dcomplex log   (TYPES::dcomplex x) { return ::clog(x); }
+  inline TYPES::dcomplex log10 (TYPES::dcomplex x) { return ::clog10(x); }
+  inline double          abs   (TYPES::dcomplex x) { return ::cabs(x); }
+  inline double          arg   (TYPES::dcomplex x) { return ::carg(x); }
   inline TYPES::dcomplex pow   (TYPES::dcomplex x, TYPES::dcomplex exp)
-    { return cpow(x,exp); }
+    { return ::cpow(x,exp); }
   // </group>
 
   // Show the complex numbers.
   // <group>
-  inline std::ostream& operator<< (std::ostream& os, TYPES::fcomplex x)
+  inline ostream& operator<< (ostream& os, TYPES::fcomplex x)
     { os << '(' << real(x) << ',' << imag(x) << ')'; return os; }
-  inline std::ostream& operator<< (std::ostream& os, TYPES::dcomplex x)
+  inline ostream& operator<< (ostream& os, TYPES::dcomplex x)
     { os << '(' << real(x) << ',' << imag(x) << ')'; return os; }
   // </group>
 }
