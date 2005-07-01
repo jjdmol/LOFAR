@@ -39,11 +39,8 @@ int MeqMatrixComplexArr::theirNElements = 0;
 
 // To ensure 8-byte alignment of the data, round the size
 // of the header up to the nearest multiple of 8 bytes.
-// Add 8 extra bytes to make alignement on 16 bytes possible (for SSE).
 size_t MeqMatrixComplexArr::theirHeaderSize =
-    ((sizeof(MeqMatrixComplexArr) >> 3) << 3)
-  + ((sizeof(MeqMatrixComplexArr) & 0x7)? 8 : 0)
-  + 8;
+    ((sizeof(MeqMatrixComplexArr) + 7) / 8) * 8;
 
 MeqMatrixComplexArr::MeqMatrixComplexArr (int nx, int ny)
 : MeqMatrixRep (nx, ny)
@@ -96,7 +93,8 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
       // Allocate memory for the header and the maximum amount of data
       // (theirNElements). Only nx * ny elements will be used, but the
       // array can be reused for an array of size up to theirNElements.
-      newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
+      // Add 8 extra bytes to make alignment on 16 bytes possible (for SSE).
+      newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize + 8 +
 					    (theirNElements * sizeof(dcomplex)));
       // placement new to call constructor
       newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
@@ -116,11 +114,12 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
     // Array is larger than arrays in pool.
     // So allocate it separately.
     // Still use malloc to get enough memory for alignment.
-    newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
+    // Add 8 extra bytes to make alignment on 16 bytes possible (for SSE).
+    newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize + 8 +
 					  (nx * ny * sizeof(dcomplex)));
     // placement new
     newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
-    // set inPool to false so this matrix will be delete'd.
+    // set inPool to false so this matrix will be deleted.
     newArr->setInPool(false);
     newArr->setIsMalloced(true);
   }
