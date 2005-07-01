@@ -140,7 +140,7 @@ public:	\
     if( LFDebugCheck(level) ) { \
 		constructStream(stream) \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
-                        __PRETTY_FUNCTION__, oss.str().c_str(), 0); \
+                        AUTO_FUNCTION_NAME, oss.str().c_str(), 0); \
     }
 #define LOG_TRACE_LIFETIME(level,message) \
 	LOG_TRACE_LIFETIME_STR(level, message)
