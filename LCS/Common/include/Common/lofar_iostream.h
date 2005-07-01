@@ -36,6 +36,7 @@ namespace LOFAR
   using std::cin;
   using std::cout;
   using std::cerr;
+  using std::clog;
   using std::endl;
   using std::ends;
   using std::flush;
@@ -49,6 +50,7 @@ using LOFAR::iostream;
 using LOFAR::cin;
 using LOFAR::cout;
 using LOFAR::cerr;
+using LOFAR::clog;
 using LOFAR::endl;
 using LOFAR::ends;
 using LOFAR::flush;
