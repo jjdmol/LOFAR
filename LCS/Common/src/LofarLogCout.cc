@@ -42,7 +42,7 @@ namespace LFDebug
   bool Context::initialized = false;
 
   // debug output stream -- same as cerr on startup
-  ostream * dbg_stream_p = &cerr;
+  ostream * dbg_stream_p = &clog;
   ofstream dbg_file;
 
   // timestamp
