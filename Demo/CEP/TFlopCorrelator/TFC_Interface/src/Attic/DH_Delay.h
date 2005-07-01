@@ -40,11 +40,11 @@ public:
   virtual void init();
 
   // accessor functions to the blob data
-  const int getDelay() const;
+  const int getDelay(int index) const;
   // return the primairy and secondary timestamps for the start of the next integration sequence
   const void getNextMainBeat(int& seqid,
 			     int& blockid) const; 
-  void setDelay(int);
+  void setDelay(int index, int value);
   // set the next sequence ID to process 
   void setNextPrimairy(int seqid);
 		   
