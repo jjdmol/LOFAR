@@ -7,8 +7,8 @@
 //#
 //# $Id$
 
-#ifndef TFLOPCORRELATOR_DH_SUBBAND_H
-#define TFLOPCORRELATOR_DH_SUBBAND_H
+#ifndef TFLOPCORRELATOR_DH_FIR_H
+#define TFLOPCORRELATOR_DH_FIR_H
 
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
