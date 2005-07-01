@@ -23,33 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined __INTEL_COMPILER
-# define LOFAR_BUILTIN_COMPLEXFP __complex__
-# include <Common/ComplexBuiltinFP.h>
-# include <Common/ComplexStdInt.h>
-# define MAKEFCOMPLEX(re,im) ((re)*1. + (im)*1.i)
-# define MAKEDCOMPLEX(re,im) ((re)*1. + (im)*1.i)
-# define MAKEU16COMPLEX(re,im) complex<LOFAR::TYPES::uint16>(re,im)
-#elif defined __GNUC__ && !defined __INSURE__
-# define LOFAR_BUILTIN_COMPLEXFP __complex__
-# define LOFAR_BUILTIN_COMPLEXINT __complex__
-# include <Common/ComplexBuiltinFP.h>
-# include <Common/ComplexBuiltinInt.h>
-# define MAKEFCOMPLEX(re,im) ((re)*1. + (im)*1.i)
-# define MAKEDCOMPLEX(re,im) ((re)*1. + (im)*1.i)
-# define MAKEU16COMPLEX(re,im) ((re) + (im)*1i)
-#else
-# include <Common/ComplexStdFP.h>
-# include <Common/ComplexStdInt.h>
-# define MAKEFCOMPLEX(re,im) complex<short>(re,im)
-# define MAKEDCOMPLEX(re,im) complex<double>(re,im)
-# define MAKEU16COMPLEX(re,im) complex<LOFAR::TYPES::uint16>(re,im)
-#endif
-
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <malloc.h>
+#include <Common/lofar_complex.h>
 #include <complex>
 #include <Common/Timer.h>
 
@@ -72,8 +46,8 @@ inline complex<double> makedblcomplex(double re, double im)
 class mdcomplex
 {
 public:
-  mdcomplex() : itsValue(MAKEDCOMPLEX(0,0)) {}
-  mdcomplex(double re, double im) : itsValue(MAKEDCOMPLEX(re,im)) {}
+  mdcomplex() : itsValue(makedcomplex(0,0)) {}
+  mdcomplex(double re, double im) : itsValue(makedcomplex(re,im)) {}
   mdcomplex(dcomplex val) : itsValue(val) {}
   mdcomplex operator* (const mdcomplex that) {return mdcomplex(itsValue*that.itsValue);}
   friend mdcomplex conj (const mdcomplex that) {return mdcomplex(LOFAR::conj(that.itsValue));}
@@ -92,9 +66,9 @@ void check()
     cout << sin(c1) << endl;
   }
   {
-    dcomplex c1a MAKEDCOMPLEX(1,2);
-    dcomplex c1b (MAKEDCOMPLEX(4,5));
-    dcomplex c1c = MAKEDCOMPLEX(6,7);
+    dcomplex c1a (makedcomplex(1,2));
+    dcomplex c1b (makedcomplex(4,5));
+    dcomplex c1c = makedcomplex(6,7);
     dcomplex c1d (makedcomplex(7,8));
     cout << c1a << c1b << c1c << c1d << endl;
     complex<double> cc1(1,2);
@@ -181,7 +155,7 @@ int main (int argc, const char* argv[])
       timer.stop();
       timer.print (cout);
     }
-    delete arr1;
+    delete[] arr1;
   }
   {
     // Test filling of std::complex using inline function.
@@ -197,7 +171,7 @@ int main (int argc, const char* argv[])
       timer.stop();
       timer.print (cout);
     }
-    delete arr1;
+    delete[] arr1;
   }
   {
     // Test filling of builtin complex using macro.
@@ -207,13 +181,13 @@ int main (int argc, const char* argv[])
       timer.start();
       for (int j=0; j<nriter; ++j) {
 	for (int i=0; i<nrval; ++i) {
-	  arr1[i] = MAKEDCOMPLEX (i,i);
+	  arr1[i] = makedcomplex (i,i);
 	}
       }
       timer.stop();
       timer.print (cout);
     }
-    delete arr1;
+    delete[] arr1;
   }
   {
     // Test filling of dcomplex (usually builtin) using inline function.
@@ -229,7 +203,7 @@ int main (int argc, const char* argv[])
       timer.stop();
       timer.print (cout);
     }
-    delete arr1;
+    delete[] arr1;
   }
   {
     // Test multiplication of std::complex.
