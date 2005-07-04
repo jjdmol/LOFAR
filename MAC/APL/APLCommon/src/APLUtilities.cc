@@ -105,6 +105,33 @@ void APLUtilities::string2Vector(const string& parametersString, vector<int>& pa
   } while(delim<parametersStringLen);
 }
 
+/*
+ * Converts a , delimited string to a vector of ints
+ */
+void APLUtilities::string2Vector(const string& parametersString, vector<int16>& parameters, const char delimiter)
+{
+  unsigned int parametersStringLen=parametersString.length();
+  unsigned int delim(0);
+  unsigned int nextDelim;
+  do
+  {
+    nextDelim=parametersString.find(delimiter,delim);
+    if(nextDelim==string::npos)
+    {
+      nextDelim=parametersStringLen; // no delim found
+    }
+    if(nextDelim>delim)
+    {
+      string param(parametersString.substr(delim,nextDelim-delim));
+      if(param.length()>0)
+      {
+        parameters.push_back(atoi(param.c_str()));
+      }
+      delim=nextDelim+1;
+    } 
+  } while(delim<parametersStringLen);
+}
+
 time_t APLUtilities::getUTCtime()
 {
   return time(0);// current system time in UTC
