@@ -26,20 +26,31 @@
 //# Includes
 #include <AMCBase/AMCClient/ConverterClient.h>
 #include <AMCBase/AMCClient/ConverterCommand.h>
+#include <AMCBase/Exceptions.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
+#include <Common/StringUtil.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
 
-    
-    ConverterClient::ConverterClient(const string& /*server*/, uint16 /*port*/)
+    ConverterClient::ConverterClient(const string& server, uint16 port) :
+      itsTH(server, toString(port)),
+      itsSendConn("send", &itsRequest, 0, &itsTH),
+      itsRecvConn("recv", 0, &itsResult, &itsTH)
     {
-      // \todo A lot of code that handles setting up the connection with the
-      // server, using the Transport library, in particular TH_Socket.
+      if (!itsTH.init()) {
+        THROW (ClientError, 
+               "Failed to connect to " << server << " at port " << port);
+      }
+    }
+
+
+    ConverterClient::~ConverterClient()
+    {
     }
 
 
@@ -96,14 +107,14 @@ namespace LOFAR
       ConverterCommand cmd(ConverterCommand::J2000toAZEL);
                                 
       // Send the request to the server
-      itsRequest.send(cmd, skyCoord, earthCoord, timeCoord);
+      sendRequest(cmd, skyCoord, earthCoord, timeCoord);
 
       // Vectors to hold the conversion result.
       vector<SkyCoord> sc;
 
       // Receive the result from the server.
       // \note This method is blocking.
-      itsResult.receive(sc);
+      recvResult(sc);
 
       // Return the result of the conversion.
       return sc;
@@ -141,27 +152,49 @@ namespace LOFAR
       ConverterCommand cmd(ConverterCommand::AZELtoJ2000);
                                 
       // Send the request to the server
-      itsRequest.send(cmd, skyCoord, earthCoord, timeCoord);
+      sendRequest(cmd, skyCoord, earthCoord, timeCoord);
 
       // Vectors to hold the conversion result.
       vector<SkyCoord> sc;
 
       // Receive the result from the server.
       // \note This method is blocking.
-      itsResult.receive(sc);
+      recvResult(sc);
 
       // Return the result of the conversion.
       return sc;
     }
 
 
-//     void ConverterClient::sendRequest()
-//     {
-//     }
+    void ConverterClient::sendRequest(const ConverterCommand& cmd,
+                                      const vector<SkyCoord>& skyCoord,
+                                      const vector<EarthCoord>& earthCoord,
+                                      const vector<TimeCoord>& timeCoord)
+    {
+      // Write the conversion request into the data holder's I/O buffer.
+      itsRequest.writeBuf(cmd, skyCoord, earthCoord, timeCoord);
 
-//     void ConverterClient::recvResult()
-//     {
-//     }
+      // Write the request from the data holder's I/O buffer to the server.
+      itsSendConn.write();
+
+      // Always make this call, even though it only has effect when doing
+      // asynchronous communication.
+      itsSendConn.waitForWrite();
+
+    }
+
+    void ConverterClient::recvResult(vector<SkyCoord>& skyCoord)
+    {
+      // Read the result from the server into the data holder's I/O buffer.
+      itsRecvConn.read();
+
+      // Always make this call, even though it only has effect when doing
+      // asynchronous communication.
+      itsRecvConn.waitForRead();
+
+      // Read the conversion result from the I/O buffer into skyCoord
+      itsResult.readBuf(skyCoord);
+    }
 
 
   } // namespace AMC

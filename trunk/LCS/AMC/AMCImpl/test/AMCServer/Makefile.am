@@ -1,7 +1,22 @@
-check_PROGRAMS			= 
+check_PROGRAMS			= tProcess \
+				  tConverterClient \
+				  tConverterServer
 
-TESTS				= 
+TESTS				= tProcess.sh \
+				  tClientServer.sh
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
+tProcess_SOURCES		= tProcess.cc
+tProcess_LDADD			= ../../src/libamcimpl.la
+tProcess_DEPENDENCIES		= ../../src/libamcimpl.la $(LOFAR_DEPEND)
+
+tConverterClient_SOURCES	= tConverterClient.cc
+
+tConverterServer_SOURCES	= tConverterServer.cc
+tConverterServer_LDADD		= ../../src/libamcimpl.la
+tConverterServer_DEPENDENCIES	= ../../src/libamcimpl.la $(LOFAR_DEPEND)
+
+TESTS_ENVIRONMENT               = lofar_sharedir=$(lofar_sharedir) \
+				  LOFARROOT=$(LOFARROOT) \
+				  AIPSPP=$(AIPSPP)
 
 include $(lofar_sharedir)/Makefile.common

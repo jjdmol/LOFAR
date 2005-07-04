@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCIMPL_EXCEPTIONS_H
 #define LOFAR_AMCIMPL_EXCEPTIONS_H
 
+// \file AMCImpl/src/Exceptions.h
+// Definition of the AMCImpl specific exception classes
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -33,13 +36,19 @@ namespace LOFAR
   namespace AMC
   {
 
+    // \addtogroup AMCImpl
+    // @{
     // This exception is thrown when an error occurs within the conversion
     // methods.
     EXCEPTION_CLASS(ConverterError, Exception);
+    // @}
 
+    // \addtogroup AMCServer
+    // @{
     // This exception is thrown when an error occurs within the AMCServer
     // sub-package.
     EXCEPTION_CLASS(ServerError, Exception);
+    // @}
 
   } // namespace AMC
 

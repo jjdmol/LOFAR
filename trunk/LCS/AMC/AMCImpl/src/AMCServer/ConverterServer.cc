@@ -25,16 +25,23 @@
 
 //# Includes
 #include <AMCImpl/AMCServer/ConverterServer.h>
+#include <AMCImpl/AMCServer/ConverterProcess.h>
+#include <AMCImpl/Exceptions.h>
+#include <Common/StringUtil.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
 
-    ConverterServer::ConverterServer(uint16 /*port*/)
+    ConverterServer::ConverterServer(uint16 port) :
+      itsListenSocket("server", toString(port), Socket::TCP)
     {
-      // The server will create a listener socket that will handle any
-      // incoming client requests.
+      if (!itsListenSocket.ok()) {
+        THROW (ServerError,
+               formatString("Failed to create listen socket on port %d - %s",
+                            port, itsListenSocket.errstr().c_str()));
+      }
     }
 
 
@@ -43,18 +50,52 @@ namespace LOFAR
     }
 
 
-    void ConverterServer::recvRequest(const vector<SkyCoord>&,
-                                      const vector<EarthCoord>&,
-                                      const vector<TimeCoord>&)
+    void ConverterServer::run()
     {
+      while(true) {
+        handleConnections();
+      }
     }
 
 
-    void ConverterServer::sendResult(vector<SkyCoord>&)
+    void ConverterServer::handleConnections()
     {
+      // Listen for incoming client connections.
+      Socket* dataSocket = itsListenSocket.accept();
+
+      if (!dataSocket || !dataSocket->ok()) {
+        LOG_ERROR(formatString("Accept failed: %s", 
+                               itsListenSocket.errstr().c_str()));
+        return;
+      }
+
+      // The converter process will handle all client conversion requests.
+      ConverterProcess proc(dataSocket);
+      
+      // Let the converter process run as a separate process. We don't
+      // want to fetch the child's exit status, so add \c true to avoid
+      // zombies.
+      proc.spawn(true);
+      
+      // If we are the child process ...
+      if (proc.isChild()) {
+
+        LOG_TRACE_FLOW("This is the child process");
+        
+        // we should close the listen socket ...
+        LOG_TRACE_STAT("Closing listen socket ...");
+        itsListenSocket.close();
+        
+        // and handle all client requests, until client disconnects.
+        LOG_TRACE_STAT("Start handling client requests ...");
+        proc.handleRequests();
+        
+        // The child should NEVER return, but ALWAYS exit.
+        exit(0);
+      }
+
     }
 
- 
   } // namespacd AMC
 
 } // namespace LOFAR

@@ -25,6 +25,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
+// \file AMCBase/src/Exceptions.h
+// Definition of the AMCBase specific exception classes
+
 //# Includes
 #include <Common/Exception.h>
 
@@ -33,12 +36,18 @@ namespace LOFAR
   namespace AMC
   {
 
+    // \addtogroup AMCBase
+    // @{
     // This is the base exception class for the AMC package
     EXCEPTION_CLASS(Exception, LOFAR::Exception);
+    // @}
 
+    // \addtogroup AMCClient
+    // @{
     // This exception is thrown when an error occurs within the AMCClient
     // sub-package.
     EXCEPTION_CLASS(ClientError, Exception);
+    // @}
 
   } // namespace AMC
   

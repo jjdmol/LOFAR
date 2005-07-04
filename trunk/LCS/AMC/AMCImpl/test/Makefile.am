@@ -1,13 +1,13 @@
-SUBDIRS				= . AMCServer
+check_PROGRAMS			= tConverter
 
-check_PROGRAMS			= tConverterImpl
+tConverter_SOURCES		= tConverter.cc
+tConverter_LDADD		= ../src/libamcimpl.la
+tConverter_DEPENDENCIES		= ../src/libamcimpl.la $(LOFAR_DEPEND)
 
-tConverterImpl_SOURCES		= tConverterImpl.cc
-tConverterImpl_LDADD		= ../src/libamcimpl.la
-tConverterImpl_DEPENDENCIES	= ../src/libamcimpl.la $(LOFAR_DEPEND)
+TESTS				= tConverter.sh
 
-TESTS				= tConverterImpl.sh
-
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
+TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+				  LOFARROOT=$(LOFARROOT) \
+				  AIPSPP=$(AIPSPP)
 
 include $(lofar_sharedir)/Makefile.common

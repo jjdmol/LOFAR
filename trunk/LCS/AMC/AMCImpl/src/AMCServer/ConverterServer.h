@@ -1,4 +1,4 @@
-//#  ConverterServer.h: one line description
+//#  ConverterServer.h: server side of the AMC client/server implementation.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,22 +23,33 @@
 #ifndef LOFAR_AMCIMPL_AMCSERVER_CONVERTERSERVER_H
 #define LOFAR_AMCIMPL_AMCSERVER_CONVERTERSERVER_H
 
+// \file ConverterServer.h
+// Server side of the AMC client/server implementation
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <AMCImpl/ConverterImpl.h>
-#include <AMCBase/AMCClient/DH_Converter.h>
+#include <Common/LofarTypes.h>
+#include <Common/Net/Socket.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
 
+    // \addtogroup AMCServer
+    // @{
+
     // This class represents the server side of the client/server
-    // implementation of the AMC. Its main purpose is to handle the
-    // communication with the ConverterClient. It does \e not implement the
-    // Converter interface. It uses ConverterImpl to handle the conversion
-    // requests from the clients.
+    // implementation of the AMC. Its main purpose is to handle incoming
+    // connection requests from ConverterClient objects. It does \e not
+    // implement the Converter interface.
+    //
+    // Whenever the server accepts a connection, it immediately creates a new
+    // ConverterProcess object and spawns the current process. The newly
+    // created process will then handle all client requests until the client
+    // disconnects. The server will continue listening for incoming
+    // connections requests.
     class ConverterServer
     {
     public:
@@ -49,30 +60,30 @@ namespace LOFAR
       // Destructor.
       ~ConverterServer();
 
+      // Start running the event-loop. The event loop will continuously call
+      // the handleConnections() method, which blocks until it receives a
+      // connection request.
+      void run();
+
     private:
       //@{
       // Make this class non-copyable.
       ConverterServer(const ConverterServer&);
-      ConverterServer operator=(const ConverterServer&);
+      ConverterServer& operator=(const ConverterServer&);
       //@}
 
-      void recvRequest(const vector<SkyCoord>&,
-                       const vector<EarthCoord>&,
-                       const vector<TimeCoord>&);
+      // This method handles incoming connection requests. It blocks until it
+      // receives a connection request. For each connection a new process is
+      // spawned that will further handle any coordinate conversion requests,
+      // until the client side closes the connection.
+      void handleConnections();
 
-      void sendResult(vector<SkyCoord>&);
-
-      // This is an instance of the actual implementation of the converter.
-      ConverterImpl itsConverterImpl;
-
-      // Data holder holding the request data to be received from the client.
-      DH_Converter itsRequest;
-
-      // Data holder holding the result data to be sent to the client.
-      DH_Converter itsResult;
+      // On this socket we will be listening for incoming connection requests.
+      Socket itsListenSocket;
 
     };
 
+    // @}
 
   } // namespace AMC
 
