@@ -40,6 +40,7 @@
 #include "SAS_Protocol.ph"
 #include "APLCommon/LogicalDevice_Protocol.ph"
 #include "APLCommon/StartDaemon_Protocol.ph"
+#include "BeamletAllocator.h"
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -145,6 +146,8 @@ namespace GSO
 
       void _convertRelativeTimes(boost::shared_ptr<ACC::ParameterSet> ps);
       void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::ParameterSet> ps);
+      
+      bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::ParameterSet> ps);
       
       string                                m_SASserverPortName;
       GCF::TM::GCFTCPPort                   m_SASserverPort;      // SAS-MAC communication

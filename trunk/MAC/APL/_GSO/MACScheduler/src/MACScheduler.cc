@@ -30,7 +30,6 @@
 #include <GCF/GCF_PVInteger.h>
 
 #include "APLCommon/APLUtilities.h"
-#include "BeamletAllocator.h"
 #include "MACScheduler.h"
 
 #define ADJUSTEVENTSTRINGPARAMTOBSE(str) \
@@ -83,7 +82,7 @@ MACScheduler::MACScheduler() :
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
   m_configurationManager(),
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
-  m_beamletAllocator()
+  m_beamletAllocator(128)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -830,10 +829,11 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
         // make all relative times absolute
         _convertRelativeTimes(ps);
         
-        if(!m_beamletAllocator.allocateBeamlets(ps))
+        if(!_allocateBeamlets(sasScheduleEvent.VIrootID,ps))
         {
           SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED;
+          sasResponseEvent.VIrootID = sasScheduleEvent.VIrootID;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
@@ -870,6 +870,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
           {
             SASResponseEvent sasResponseEvent;
             sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+            sasResponseEvent.VIrootID = sasScheduleEvent.VIrootID;
   
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
@@ -882,6 +883,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
         SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+        sasResponseEvent.VIrootID = sasScheduleEvent.VIrootID;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
@@ -922,17 +924,21 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
         {
           SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+          sasResponseEvent.VIrootID = sasCancelScheduleEvent.VIrootID;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
           port.send(sasResponseEvent);      
-        }        
+        }
+        
+        m_beamletAllocator.deallocateBeamlets(sasCancelScheduleEvent.VIrootID);
       }
       catch(Exception& e)
       {
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
         SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+        sasResponseEvent.VIrootID = sasCancelScheduleEvent.VIrootID;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
@@ -993,6 +999,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent.fileName)
         {
           SASResponseEvent sasResponseEvent;
           sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+          sasResponseEvent.VIrootID = sasUpdateScheduleEvent.VIrootID;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
@@ -1004,6 +1011,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
         SASResponseEvent sasResponseEvent;
         sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+        sasResponseEvent.VIrootID = sasUpdateScheduleEvent.VIrootID;
 
 ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 
@@ -1059,15 +1067,7 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
   string childs;
   vector<string> childKeys;
   childs = ps->getString(childsKey);
-  char* pch;
-  boost::shared_array<char> childsCopy(new char[childs.length()+1]);
-  strcpy(childsCopy.get(),childs.c_str());
-  pch = strtok (childsCopy.get(),",");
-  while (pch != NULL)
-  {
-    childKeys.push_back(string(pch));
-    pch = strtok (NULL, ",");
-  }
+  APLUtilities::string2Vector(childs,childKeys,',');
   vector<string>::iterator chIt;
   for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
   {
@@ -1079,6 +1079,48 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
     {
     }
   }
+}
+
+bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::ParameterSet> ps)
+{
+  bool allocationOk(true);
+  
+  m_beamletAllocator.logAllocation();
+
+  vector<string> childKeys;
+  string childs = ps->getString("childs");
+  APLUtilities::string2Vector(childs,childKeys,',');
+  
+  vector<string> stations;
+  string subbands     = ps->getString("subbands");
+  time_t startTime    = ps->getInt("claimTime");
+  time_t stopTime     = ps->getInt("stopTime");
+  vector<int16> subbandsVector;
+  APLUtilities::string2Vector(subbands,subbandsVector,'|');
+  
+  for(vector<string>::iterator childsIt=childKeys.begin();allocationOk && childsIt!=childKeys.end();++childsIt)
+  {
+    string ldType = ps->getString(*childsIt + ".logicalDeviceType");
+    if(ldType == string("VIRTUALTELESCOPE") || atoi(ldType.c_str()) == static_cast<int>(LDTYPE_VIRTUALTELESCOPE))
+    {
+      stations.push_back(ps->getString(*childsIt + ".remoteSystem"));
+    }
+  }
+  
+  BeamletAllocator::TStationBeamletAllocation allocation;
+  allocationOk = m_beamletAllocator.allocateBeamlets(
+    VIrootID,
+    stations,
+    startTime,
+    stopTime,
+    subbandsVector,
+    allocation);
+    
+  // do something with it
+
+  m_beamletAllocator.logAllocation(false);
+
+  return allocationOk;
 }
 
 };
