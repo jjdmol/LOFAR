@@ -20,6 +20,7 @@ TESTS				= tSkyCoord.sh \
 				  tEarthCoord.sh \
 				  tTimeCoord.sh
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
+TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+				  LOFARROOT=$(LOFARROOT)
 
 include $(lofar_sharedir)/Makefile.common

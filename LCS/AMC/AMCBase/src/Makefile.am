@@ -6,7 +6,8 @@ INSTHDRS			= Converter.h \
 				  AMCClient/BlobIO.h \
 				  AMCClient/ConverterClient.h \
 				  AMCClient/ConverterCommand.h \
-				  AMCClient/DH_Converter.h
+				  AMCClient/DH_Request.h \
+				  AMCClient/DH_Result.h
 
 NOINSTHDRS			=
 
@@ -27,6 +28,7 @@ libamcbase_la_SOURCES 		= $(DOCHDRS) \
 				  AMCClient/BlobIO.cc \
 				  AMCClient/ConverterClient.cc \
 				  AMCClient/ConverterCommand.cc \
-				  AMCClient/DH_Converter.cc
+				  AMCClient/DH_Request.cc \
+				  AMCClient/DH_Result.cc
 
 include $(lofar_sharedir)/Makefile.common

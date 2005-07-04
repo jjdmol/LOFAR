@@ -1,4 +1,4 @@
-//#  tConverterImpl.cc: test program for the ConverterImpl class.
+//#  tConverterClient.cc: Client test program for the client/server test.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,19 +24,16 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <AMCImpl/ConverterImpl.h>
+#include <AMCBase/AMCClient/ConverterClient.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
 #include <Common/LofarLogger.h>
-#include <Common/Exception.h>
-#include <iostream>
 
-using namespace LOFAR::AMC;
 using namespace LOFAR;
-using namespace std;
+using namespace LOFAR::AMC;
 
-int main(int, const char* const argv[])
+int main(int /*argc*/, const char* const argv[])
 {
   INIT_LOGGER(argv[0]);
 
@@ -52,7 +49,6 @@ int main(int, const char* const argv[])
     ASSERT (pos.height() == 3);
     cout << pos << endl;
     EarthCoord dwl(0.111646531, 0.921760253, 25);
-    cout << TimeCoord::getUTCDiff() << endl;
     TimeCoord time(10.5);
     ASSERT (time.mjd() == 10.5);
     TimeCoord someTime(2004, 11, 19, 15, 22);
@@ -61,8 +57,11 @@ int main(int, const char* const argv[])
     TimeCoord someTime2 (someTime.mjd(), 1./24);
     cout << someTime2 << endl;
     TimeCoord someTime3 (someTime.mjd(), 1.);
+    cout << someTime3 << endl;
 
-    ConverterImpl conv;
+    // Create a default client. It will connect to a ConverterServer running
+    // on the local host on port 31337.
+    ConverterClient conv;
 
     {
       SkyCoord result = conv.j2000ToAzel (sky, dwl, someTime);
@@ -112,5 +111,4 @@ int main(int, const char* const argv[])
 
   cout << "OK" << endl;
   return 0;
-  
 }

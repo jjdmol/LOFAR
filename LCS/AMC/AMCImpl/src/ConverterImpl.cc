@@ -100,6 +100,9 @@ namespace LOFAR
       // This vector will hold the result of the conversion operation.
       vector<SkyCoord> result;
 
+      // Reserve space for the result to avoid resizing of the vector.
+      result.reserve(skyCoord.size() * earthCoord.size() * timeCoord.size());
+
       try {
 
         // Create a container for the Measure frame.

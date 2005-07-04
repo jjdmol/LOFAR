@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCBASE_CONVERTER_H
 #define LOFAR_AMCBASE_CONVERTER_H
 
+// \file Converter.h
+// Interface definition of the AMC converter classes
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -103,6 +106,8 @@ namespace LOFAR
       virtual ~Converter() {}
 
     };
+
+    // @}
 
   } // namespace AMC
 

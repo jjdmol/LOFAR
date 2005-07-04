@@ -1,4 +1,4 @@
-//#  ConverterImpl.h: implementation of the Converter interface.
+//#  ConverterImpl.h: implementation of the AMC Converter interface.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCIMPL_CONVERTERIMPL_H
 #define LOFAR_AMCIMPL_CONVERTERIMPL_H
 
+// \file ConverterImpl.h
+// Implementation of the AMC Converter interface
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -32,8 +35,11 @@ namespace LOFAR
 {
   namespace AMC
   {
-    // This class represents the client side of the client/server
-    // implementation of the AMC. It implements the Converter interface.
+    // \addtogroup AMCImpl
+    // @{
+
+    // This class represents the real implementation of the Converter
+    // interface. The hard conversion work is done by this class.
     class ConverterImpl : public Converter
     {
     public:
@@ -75,6 +81,8 @@ namespace LOFAR
     private:
 
     };
+
+    // @}
 
   } // namespace AMC
   

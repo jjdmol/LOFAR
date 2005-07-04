@@ -1,4 +1,4 @@
-//#  Exceptions.h: definition of the AMCBase specific exception classes.
+//#  amcserver.cc: Astronomical Measures Conversions server.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,37 +20,35 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_AMCBASE_EXCEPTIONS_H
-#define LOFAR_AMCBASE_EXCEPTIONS_H
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
-// \file AMCBase/src/Exceptions.h
-// Definition of the AMCBase specific exception classes
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 //# Includes
-#include <Common/Exception.h>
+#include <Common/LofarLogger.h>
+#include <AMCImpl/AMCServer/ConverterServer.h>
 
-namespace LOFAR
+using namespace LOFAR;
+using namespace LOFAR::AMC;
+
+int main(int argc, const char* const argv[])
 {
-  namespace AMC
-  {
+  INIT_LOGGER(argv[0]);
 
-    // \addtogroup AMCBase
-    // @{
-    // This is the base exception class for the AMC package
-    EXCEPTION_CLASS(Exception, LOFAR::Exception);
-    // @}
+  // Listen port (default: 31337)
+  uint16 port = argc > 1 ? atoi(argv[1]) : 31337;
 
-    // \addtogroup AMCClient
-    // @{
-    // This exception is thrown when an error occurs within the AMCClient
-    // sub-package.
-    EXCEPTION_CLASS(ClientError, Exception);
-    // @}
+  LOG_INFO_STR("Starting amcserver using port " << port);
+  try {
+    // Create a converter server, listening on port \a port.
+    ConverterServer server(port);
 
-  } // namespace AMC
-  
-} // namespace LOFAR
-
-#endif
+    // Run the server; this will start the event loop 
+    server.run();
+  }
+  catch (Exception& e) {
+    LOG_ERROR_STR(e);
+    return 1;
+  }
+  LOG_INFO("amcserver terminated");
+  return 0;
+}

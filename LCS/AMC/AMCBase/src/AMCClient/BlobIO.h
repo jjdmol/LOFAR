@@ -1,4 +1,4 @@
-//#  BlobIO.h: one line description
+//#  BlobIO.h: Blob (de)serialization methods for AMCBase classes.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_BLOBIO_H
 #define LOFAR_AMCBASE_AMCCLIENT_BLOBIO_H
 
+// \file BlobIO.h
+// Blob (de)serialization methods for AMCBase classes.
+
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
@@ -40,6 +43,9 @@ namespace LOFAR
     class EarthCoord;
     class TimeCoord;
     class ConverterCommand;
+
+    // \addtogroup AMCClient
+    // @{
 
     // Serialize the sky coordinates \a sc to the output blob stream \a bos.
     BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc);
@@ -67,6 +73,8 @@ namespace LOFAR
     // De-serialize the input blob stream \a bis to the converter command \a
     // cc.
     BlobIStream& operator>>(BlobIStream& bis, ConverterCommand& cc);
+
+    // @}
 
   } // namespace AMC
 
