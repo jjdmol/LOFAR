@@ -24,9 +24,8 @@
 #include <tinyCEP/WorkHolder.h>
 #include <WH_RSPInput.h>
 #include <WH_Transpose.h>
-#include <WH_SyncControl.h>
 #include <TFC_Interface/Stub_FIR.h>
-
+#include <TFC_Interface/Stub_Delay.h>
 
 using namespace LOFAR;
 
@@ -79,20 +78,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Create the Merge  workholder");
   //todo: define Merge Step/WH
 
-  LOG_TRACE_FLOW_STR("Create the Synchronisation workholder");
-//   Step*           SyncStep;
-//   WH_SyncControl* SyncNode;
-//   int nameSize = 40;
-//   char name[nameSize];    
-//   sprintf(name, "Sync_node_1_of_1");
-//   SyncNode = new WH_SyncControl(name,
-// 				itsParamSet.getInt("NRSP")); // one output connection per RSP
-//   SyncStep = new Step(SyncNode, name,false);
-//   itsWHs.push_back((WorkHolder*) SyncNode);
-//   itsSteps.push_back(SyncStep);
-//   SyncStep->runOnNode(lowestFreeNode++); //todo: define correct node number
-//   comp.addBlock(SyncStep); // add to the top-level composite
-
+  LOG_TRACE_FLOW_STR("Create the input side delay stub");
+  Stub_Delay delayStub(true);
 
   LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
   // first determine the number of Transpose Steps that will be 
@@ -139,19 +126,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     // connect the RSP boards
     //todo: set correct IP/Port numbers in WH_RSP
     
-    // Connect the SyncController
-#ifdef HAVE_MPI
-    SyncStep->connect(r, RSPSteps[r], 0, 1, 
-		      new TH_MPI(SyncStep->getNode(), RSPSteps[r]->getNode()),
-		      true);
-#else
-    LOG_WARN("No connection made to SyncController"); 
-#endif
-
-//     RSPSteps[r]->connect(itsRSPinputSteps[r], 
-// 			    0, 0, 1,  //todo: check
-// 			    TH_MPI(), 
-// 			    true); //blocking
+    // Connect the Delay Controller
+    delayStub.connect(r, RSPNodes[r]->getDataManager(), 0);
     
   };
   
