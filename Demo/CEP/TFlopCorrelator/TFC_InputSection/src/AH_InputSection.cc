@@ -54,7 +54,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
-  Composite comp;
+  Composite comp(0, 0, "topComposite");
   setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
 
   // Create the InputSection using CEPFrame
