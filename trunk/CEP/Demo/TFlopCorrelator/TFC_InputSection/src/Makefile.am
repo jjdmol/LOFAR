@@ -1,5 +1,7 @@
 INSTHDRS         	=\
 WH_RSPInput.h           \
+WH_SBSplit.h		\
+WH_SBCollect.h		\
 WH_Transpose.h		\
 AH_InputSection.h	\
 CyclicBuffer.h          \
@@ -21,6 +23,8 @@ bin_PROGRAMS 		= TFC_InputSection
 TFC_InputSection_SOURCES	= $(DOCHDRS) \
 TFC_InputSection_main.cc	\
 WH_RSPInput.cc           	\
+WH_SBSplit.cc			\
+WH_SBCollect.cc			\
 WH_Transpose.cc			\
 AH_InputSection.cc			
 

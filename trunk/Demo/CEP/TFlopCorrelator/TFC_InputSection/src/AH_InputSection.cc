@@ -16,14 +16,13 @@
 
 #include <AH_InputSection.h>
 
-// tinyCEP
-
 // Transporters
 #include <Transport/TH_MPI.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <WH_RSPInput.h>
-#include <WH_Transpose.h>
+#include <TFC_InputSection/WH_RSPInput.h>
+#include <TFC_InputSection/WH_SBSplit.h>
+#include <TFC_InputSection/WH_SBCollect.h>
 #include <TFC_Interface/Stub_FIR.h>
 #include <TFC_Interface/Stub_Delay.h>
 
@@ -132,48 +131,67 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   };
   
 
-  LOG_TRACE_FLOW_STR("Create the Transpose workholders");
-  vector<WH_Transpose*> TransNodes;
-  vector<Step*>          TransSteps;
-  for (int r=0; r < NrTransposeNodes; r++) {
-    sprintf(WH_DH_Name, "Transpose_node_%d_of_%d", r, noRSPs);
-    TransNodes.push_back(new WH_Transpose(WH_DH_Name,      // name
-					  KeyValueMap()));  // inputs  
-    TransSteps.push_back(new Step(TransNodes[r],WH_DH_Name,false));
-    itsWHs.push_back((WorkHolder*) TransNodes[r]);
-    itsSteps.push_back(TransSteps[r]);
-    TransSteps[r]->runOnNode(lowestFreeNode++);   
-    comp.addBlock(TransSteps[r]);
-
-    // connect the Subband filter form AH_BGLProcessing
-    // to the input section
-    // this interface is defined in the Stub_FIR class
-    // Each Transpose node is connected to two SubBandfilters
-    //
-    // Output channel 0
-    outStub.connect (2*r,                                                              // Corr filter number
-		     TransNodes[r]->getDataManager(), 
-		     0);  
-    // Output channel 1
-    outStub.connect (2*r+1,                                                              // Corr filter number
-		     TransNodes[r]->getDataManager(),
-		     1);  
-
-  }      
-
-  // todo: connect Transpose Steps to RSP Steps; 
-  // this is a Transpose style connection that sends all
-  // corresponding subbands to the same Transpose Step. 
-  //  
-  for (int t=0; t<NrTransposeNodes; t++) {
-    for (int r=0; r<itsParamSet.getInt("NRSP"); r++) {
-//       TransSteps[t]->connect(RSPSteps[r],
-// 			    r,t,1,
-// 			    TH_MPI(),
-// 			    true);  // true=blocking
+  LOG_TRACE_FLOW_STR("Create the Subband splitter workholders");
+  vector<WH_SBSplit*> splitNodes;
+  vector<Step*>       splitSteps;
+  int splitStartNode;
+  for (int r=0; r < noRSPs; r++) {
+    sprintf(WH_DH_Name, "Split_node_%d_of_%d", r, noRSPs);
+    splitNodes.push_back(new WH_SBSplit(WH_DH_Name,      // name
+					itsParamSet)); // inputs  
+    splitSteps.push_back(new Step(splitNodes[r],WH_DH_Name,false));
+    itsWHs.push_back((WorkHolder*) splitNodes[r]);
+    itsSteps.push_back(splitSteps[r]);
+    if (r==0)
+    {
+      splitStartNode = lowestFreeNode;
     }
+    splitSteps[r]->runOnNode(lowestFreeNode++);   
+    comp.addBlock(splitSteps[r]);
+
+#ifdef HAVE_MPI
+    // Connect RSP steps to splitters
+    splitSteps[r]->connect(0, RSPSteps[r], 0, 1, 
+			   new TH_MPI(splitStartNode-noRSPs+r, splitStartNode+r),
+			   true);
+#endif
   }
-      
+
+  LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
+  vector<WH_SBCollect*> collectNodes;
+  vector<Step*>         collectSteps;
+  int collectStartNode;
+  for (int nf=0; nf < NSBF; nf++) {
+    sprintf(WH_DH_Name, "Split_node_%d_of_%d", nf, noRSPs);
+    collectNodes.push_back(new WH_SBCollect(WH_DH_Name,      // name
+					    nf,              // Subband ID
+ 					    itsParamSet));   // inputs  
+    collectSteps.push_back(new Step(collectNodes[nf],WH_DH_Name,false));
+    itsWHs.push_back((WorkHolder*) collectNodes[nf]);
+    itsSteps.push_back(collectSteps[nf]);
+    if (nf==0)
+    {
+      collectStartNode = lowestFreeNode;
+    }
+    collectSteps[nf]->runOnNode(lowestFreeNode++);   
+    comp.addBlock(collectSteps[nf]);
+
+#ifdef HAVE_MPI
+    // Connect splitters to mergers (transpose)
+    for (int st=0; st<noRSPs; st++)
+    {
+      collectSteps[nf]->connect(st, splitSteps[st], nf, 1,
+			       new TH_MPI(splitStartNode+st, collectStartNode+nf), 
+			       true);
+    }
+#endif
+    // connect output to FIR stub
+    // Output channel 0
+    outStub.connect (nf,                           // Corr filter number
+		     collectNodes[nf]->getDataManager(), 
+		     0);  
+  }
+    
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }
