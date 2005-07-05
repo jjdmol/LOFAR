@@ -1,0 +1,1041 @@
+# ascii dump of database
+
+# DpType
+TypeName
+GCFDistPort.GCFDistPort	46#1
+GCFNavView.GCFNavView	1#1
+	caption	25#2
+	configPanel	25#3
+GCFNavViewConfiguration.GCFNavViewConfiguration	1#1
+	selectedView	21#2
+	selectedSubView	21#3
+	views	29#4
+	nrOfSubViews	5#8
+	subViews	29#6
+	configs	29#7
+GCFNavSubView.GCFNavSubView	1#1
+	caption	25#2
+	filename	25#3
+GCFNavigator.GCFNavigator	1#1
+	viewsPath	25#3
+	resourceRoots	9#5
+	ignoreEnabledRoots	9#6
+GCFNavSubViewConfigList.GCFNavSubViewConfigList	1#1
+	dummy	21#2
+	dummy2	25#3
+	customList	23#4
+	Title	25#5
+	selectionQuery	25#6
+	maxAmountToRetrieve	20#7
+	trigger	21#8
+	queryResult	9#9
+GCFLogLevel.GCFLogLevel	21#2
+GCFNavigatorInstance.GCFNavigatorInstance	1#1
+	useCount	21#2
+	selectedElement	25#6
+	selectedViewCaption	25#4
+	triggerUpdate	21#5
+	newDatapoint	25#7
+GCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
+	1	1#8
+		Trace1	1#55
+			dpName	25#56
+			AutoScale	23#57
+			ScaleMin	21#58
+			ScaleMax	21#59
+			LegendName	25#60
+		Trace2	1#61
+			dpName	25#62
+			AutoScale	23#63
+			ScaleMin	21#64
+			ScaleMax	21#65
+			LegendName	25#66
+		Trace3	1#67
+			dpName	25#68
+			AutoScale	23#69
+			ScaleMin	21#70
+			ScaleMax	21#71
+			LegendName	25#72
+		Trace4	1#73
+			dpName	25#74
+			AutoScale	23#75
+			ScaleMin	21#76
+			ScaleMax	21#77
+			LegendName	25#78
+		Trace5	1#79
+			dpName	25#80
+			AutoScale	23#81
+			ScaleMin	21#82
+			ScaleMax	21#83
+			LegendName	25#84
+		Trace6	1#85
+			dpName	25#86
+			AutoScale	23#87
+			ScaleMin	21#88
+			ScaleMax	21#89
+			LegendName	25#90
+		Trace7	1#91
+			dpName	25#92
+			AutoScale	23#93
+			ScaleMin	21#94
+			ScaleMax	21#95
+			LegendName	25#96
+		Trace8	1#97
+			dpName	25#98
+			AutoScale	23#99
+			ScaleMin	21#100
+			ScaleMax	21#101
+			LegendName	25#102
+		Title	25#103
+		Days	21#104
+		Hours	21#105
+		Minutes	21#106
+		Seconds	21#107
+	2	1#108
+		Trace1	1#109
+			dpName	25#110
+			AutoScale	23#111
+			ScaleMin	21#112
+			ScaleMax	21#113
+			LegendName	25#114
+		Trace2	1#115
+			dpName	25#116
+			AutoScale	23#117
+			ScaleMin	21#118
+			ScaleMax	21#119
+			LegendName	25#120
+		Trace3	1#121
+			dpName	25#122
+			AutoScale	23#123
+			ScaleMin	21#124
+			ScaleMax	21#125
+			LegendName	25#126
+		Trace4	1#127
+			dpName	25#128
+			AutoScale	23#129
+			ScaleMin	21#130
+			ScaleMax	21#131
+			LegendName	25#132
+		Trace5	1#133
+			dpName	25#134
+			AutoScale	23#135
+			ScaleMin	21#136
+			ScaleMax	21#137
+			LegendName	25#138
+		Trace6	1#139
+			dpName	25#140
+			AutoScale	23#141
+			ScaleMin	21#142
+			ScaleMax	21#143
+			LegendName	25#144
+		Trace7	1#145
+			dpName	25#146
+			AutoScale	23#147
+			ScaleMin	21#148
+			ScaleMax	21#149
+			LegendName	25#150
+		Trace8	1#151
+			dpName	25#152
+			AutoScale	23#153
+			ScaleMin	21#154
+			ScaleMax	21#155
+			LegendName	25#156
+		Title	25#157
+		Days	21#158
+		Hours	21#159
+		Minutes	21#160
+		Seconds	21#161
+	Standard	23#165
+	Trend2Active	23#166
+	DedicatedPanelName	25#167
+	Dedicated	23#168
+	dummy	25#169
+	dummy2	25#170
+GCFNavSubViewConfigAlert.GCFNavSubViewConfigAlert	1#1
+	1	1#2
+		Title	25#3
+		Active	23#4
+		nrOfRows	21#5
+		nrOfColumns	21#6
+		Column1Titles	9#7
+		Column1dpNames	9#8
+		Column2Titles	9#9
+		Column2dpNames	9#10
+		Column3Titles	9#11
+		Column3dpNames	9#12
+		Column4Titles	9#13
+		Column4dpNames	9#14
+		Column5Titles	9#15
+		Column5dpNames	9#16
+		Column6Titles	9#17
+		Column6dpNames	9#18
+		Column7Titles	9#19
+		Column7dpNames	9#20
+		Column8Titles	9#21
+		Column8dpNames	9#22
+		Column9Titles	9#23
+		Column9dpNames	9#24
+		Column10Titles	9#25
+		Column10dpNames	9#26
+		Column0Titles	9#78
+		Column0dpNames	9#79
+		Column11dpNames	9#80
+		Column11Titles	9#81
+		Column12dpNames	9#82
+		Column13dpNames	9#83
+		Column14dpNames	9#84
+		Column12Titles	9#85
+		Column13Titles	9#86
+		Column14Titles	9#87
+	2	1#27
+		Title	25#28
+		Active	23#29
+		nrOfRows	21#30
+		nrOfColumns	21#31
+		Column1Titles	9#32
+		Column1dpNames	9#33
+		Column2Titles	9#34
+		Column2dpNames	9#35
+		Column3Titles	9#36
+		Column3dpNames	9#37
+		Column4Titles	9#38
+		Column4dpNames	9#39
+		Column5Titles	9#40
+		Column5dpNames	9#41
+		Column6Titles	9#42
+		Column6dpNames	9#43
+		Column7Titles	9#44
+		Column7dpNames	9#45
+		Column8Titles	9#46
+		Column8dpNames	9#47
+		Column9Titles	9#48
+		Column9dpNames	9#49
+		Column10Titles	9#50
+		Column10dpNames	9#51
+		Column0Titles	9#88
+		Column11Titles	9#89
+		Column12Titles	9#90
+		Column13Titles	9#91
+		Column14Titles	9#92
+		Column11dpNames	9#93
+		Column12dpNames	9#94
+		Column13dpNames	9#95
+		Column14dpNames	9#96
+		Column0dpNames	9#107
+	3	1#52
+		Title	25#53
+		Active	23#54
+		nrOfRows	21#55
+		nrOfColumns	21#56
+		Column1Titles	9#57
+		Column1dpNames	9#58
+		Column2Titles	9#59
+		Column2dpNames	9#60
+		Column3Titles	9#61
+		Column3dpNames	9#62
+		Column4Titles	9#63
+		Column4dpNames	9#64
+		Column5Titles	9#65
+		Column5dpNames	9#66
+		Column6Titles	9#67
+		Column6dpNames	9#68
+		Column7Titles	9#69
+		Column7dpNames	9#70
+		Column8Titles	9#71
+		Column8dpNames	9#72
+		Column9Titles	9#73
+		Column9dpNames	9#74
+		Column10Titles	9#75
+		Column10dpNames	9#76
+		Column0dpNames	9#97
+		Column11dpNames	9#98
+		Column12dpNames	9#99
+		Column13dpNames	9#100
+		Column14dpNames	9#101
+		Column0Titles	9#102
+		Column11Titles	9#103
+		Column12Titles	9#104
+		Column13Titles	9#105
+		Column14Titles	9#106
+	ListActive	23#77
+	nrOfRowsList	21#108
+GCFNavSubViewConfigPlot.GCFNavSubViewConfigPlot	1#1
+	1	1#2
+		dpName	25#3
+		Script	25#4
+		maxTimeslotSize	21#5
+		ColorPartition	1#6
+			Red	21#7
+			Yellow	21#8
+			Green	21#9
+			Blue	21#10
+	2	1#11
+		dpName	25#12
+		Script	25#13
+		maxTimeslotSize	21#14
+		ColorPartition	1#15
+			Red	21#16
+			Yellow	21#17
+			Green	21#18
+			Blue	21#19
+	3	1#20
+		dpName	25#21
+		Script	25#22
+		maxTimeslotSize	21#23
+		ColorPartition	1#24
+			Red	21#25
+			Yellow	21#26
+			Green	21#27
+			Blue	21#28
+	4	1#29
+		dpName	25#30
+		Script	25#31
+		maxTimeslotSize	21#32
+		ColorPartition	1#33
+			Red	21#34
+			Yellow	21#35
+			Green	21#36
+			Blue	21#37
+	nrOfPlots	21#38
+	ScriptDescription	9#39
+	ScriptContent	9#40
+	ScreenSize	25#41
+	SelectedPlot	25#42
+	FontSize	25#43
+GCFNavSubViewConfigPanel.GCFNavSubViewConfigPanel	1#1
+	Dummy1	25#2
+	Dummy2	25#3
+GCFNavSubViewConfigBar.GCFNavSubViewConfigBar	1#1
+	Dummy1	21#2
+	Dummy2	21#3
+GCFNavSubViewConfigControl.GCFNavSubViewConfigControl	1#1
+	Dummy1	21#2
+	Dummy2	21#3
+GCFNavSubViewConfigConfig.GCFNavSubViewConfigConfig	1#1
+	Dummy1	21#2
+	Dummy2	21#3
+GCFNavSubViewConfigLog.GCFNavSubViewConfigLog	1#1
+	Dummy1	21#2
+	Dummy2	21#3
+
+# Datapoint/DpId
+DpName	TypeName	ID
+__nav_subview_list	GCFNavSubView	48072
+__nav_view_list	GCFNavView	48073
+__nav_view_plot	GCFNavView	48074
+__nav_default_config_list	GCFNavSubViewConfigList	48075
+__nav_SingleElement_Trend	GCFNavSubViewConfigTrend	48248
+__loglevel	GCFLogLevel	48254
+__navigator	GCFNavigator	48265
+__nav_TLcuPicSubRack_Alert	GCFNavSubViewConfigAlert	48270
+__nav_TLcuPicSub_Alert	GCFNavSubViewConfigAlert	48271
+__nav_TLcuPic_Alert	GCFNavSubViewConfigAlert	48272
+__nav_view_trend	GCFNavView	51142
+__nav_subview_plot	GCFNavSubView	51163
+__nav_default_config_plot	GCFNavSubViewConfigPlot	51164
+__nav_TLcuPicSubRack_config_Trend_Trend_Set1	GCFNavSubViewConfigTrend	51176
+__nav_TLcuPicSubRack_config_Trend_Trend_Progres_5	GCFNavSubViewConfigTrend	51179
+__nav_TLcuPicRack_config_Trend_Trend_Set3	GCFNavSubViewConfigTrend	51193
+__nav_TLcuPicRack_config_Trend_Trend-Set5	GCFNavSubViewConfigTrend	51203
+__nav_TLcuPicRack_config_Trend_Trend_Set13	GCFNavSubViewConfigTrend	51208
+__nav_TLcuPicRack_config_Trend_Trend_Set14	GCFNavSubViewConfigTrend	51210
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11	GCFNavSubViewConfigTrend	51220
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet	GCFNavSubViewConfigTrend	51225
+__nav_TLcuPic_config_Trend_Test125	GCFNavSubViewConfigTrend	51229
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G_H_I_J_K_L_M	GCFNavSubViewConfigTrend	51240
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G	GCFNavSubViewConfigTrend	51242
+__nav_TLcuPic_config_Trend_Trend-met-Station	GCFNavSubViewConfigTrend	51244
+__nav_view_panel	GCFNavView	51247
+__nav_default_config_panel	GCFNavSubViewConfigPanel	51248
+__nav_subview_panel	GCFNavSubView	51251
+__nav_TLcuPic_config_Panel_Panel_2	GCFNavSubViewConfigPanel	51254
+__nav_TLcuPicRack_config_Trend_Subrack	GCFNavSubViewConfigTrend	51256
+__nav_TLcuPicMaintenance_config_Trend_Main_Trend_config	GCFNavSubViewConfigTrend	51270
+__navigator1	GCFNavigatorInstance	51273
+__nav_TLcuPicSubRack_config_Trend_SubRack	GCFNavSubViewConfigTrend	51280
+__nav_TLcuPic_config_Trend_Station	GCFNavSubViewConfigTrend	51284
+__nav_TLcuPicFPGA_config_Trend_RCU_Details	GCFNavSubViewConfigTrend	51294
+__nav_TLcuPicRCU_config_Trend_RCU-details	GCFNavSubViewConfigTrend	51299
+__nav_TLcuPicSubRack_config_Trend_SubRack-viewtje	GCFNavSubViewConfigTrend	51307
+__nav_TLcuPicSubRack_config_List_Alert-view-SubRack	GCFNavSubViewConfigList	51320
+__nav_TLcuPicRack_config_Trend_Alert-new	GCFNavSubViewConfigTrend	51322
+__nav_TLcuPicRack_Alert	GCFNavSubViewConfigAlert	51325
+__nav_TLcuPicRack_config_Trend_Alert_Alert_view	GCFNavSubViewConfigAlert	51326
+__nav_TLcuPicRack_config_Trend_Alert	GCFNavSubViewConfigTrend	51328
+__nav_view_alert	GCFNavView	51347
+__nav_subview_alert	GCFNavSubView	51348
+__nav_default_config_alert	GCFNavSubViewConfigAlert	51349
+__nav_TLcuPicRack_config_Alert_Alert-1	GCFNavSubViewConfigAlert	51355
+__nav_TLcuPic_config_Panel_Panel-4	GCFNavSubViewConfigPanel	51390
+__nav_TLcuPic_config_Panel_Panel-xyz	GCFNavSubViewConfigPanel	51392
+__nav_view_bar	GCFNavView	51400
+__nav_view_control	GCFNavView	51401
+__nav_view_config	GCFNavView	51402
+__nav_view_log	GCFNavView	51403
+__nav_subview_bar	GCFNavSubView	51404
+__nav_subview_control	GCFNavSubView	51405
+__nav_subview_config	GCFNavSubView	51406
+__nav_subview_log	GCFNavSubView	51407
+__nav_default_config_bar	GCFNavSubViewConfigBar	51408
+__nav_default_config_config	GCFNavSubViewConfigConfig	51409
+__nav_default_config_control	GCFNavSubViewConfigControl	51410
+__nav_default_config_log	GCFNavSubViewConfigLog	51411
+__nav_TLcuPicRack_config_Bar	GCFNavSubViewConfigBar	51413
+__nav_TLcuPicRCU_config_Panel	GCFNavSubViewConfigPanel	51416
+__nav_TLcuPicRack_config_panel	GCFNavSubViewConfigPanel	51417
+__nav_TLcuPicRack_config_Panel	GCFNavSubViewConfigPanel	51418
+__nav_TLcuPicRack_config_Panel_Station-	GCFNavSubViewConfigPanel	51422
+__nav_TLcuPicSubRack_config_Panel_SubRack	GCFNavSubViewConfigPanel	51430
+__nav_TLcuPicRCU_config_Panel_RCU-Details	GCFNavSubViewConfigPanel	51432
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch	GCFNavSubViewConfigTrend	51434
+__nav_TLcuPicSubRack_config_Alert_Alerts-RCU	GCFNavSubViewConfigAlert	51440
+__nav_TLcuPicRack_config_Alert_Alert-Rack	GCFNavSubViewConfigAlert	51442
+__nav_TLcuPicAlert_config_Trend_Trend-2	GCFNavSubViewConfigTrend	51607
+__nav_TLcuPic_config_Trend_Trend-7	GCFNavSubViewConfigTrend	51613
+__nav_TLcuPicRCU_config_Trend_TREND-RCU	GCFNavSubViewConfigTrend	51695
+__nav_TLcuPicRack_config_Trend_Trend-RACK	GCFNavSubViewConfigTrend	51723
+__nav_default_viewconfig	GCFNavViewConfiguration	51786
+__nav_TLcuPicSubRack_config_Alert_Alertski-panelie	GCFNavSubViewConfigAlert	51790
+__nav_TLcuPic_config_Panel_Panel-LFA	GCFNavSubViewConfigPanel	51858
+__nav_System1_config_Panel_LOFAR-main	GCFNavSubViewConfigPanel	51862
+__nav_System1_config_Panel_LOFAR-main-Drenthe	GCFNavSubViewConfigPanel	51864
+__nav_TLcuPicRack_config_Trend_Trend-210	GCFNavSubViewConfigTrend	51997
+__nav_TLcuPicRack_config_Trend_Trend-321	GCFNavSubViewConfigTrend	51999
+__nav_TLcuPicRack_config_Trend_Trend-43210	GCFNavSubViewConfigTrend	52001
+__nav_TLcuPicMaintenance_config_Trend_Trend-main12345	GCFNavSubViewConfigTrend	52004
+__nav_TLcuPicMaintenance_config_Panel_Panel-1024	GCFNavSubViewConfigPanel	52121
+__nav_TLcuPicMaintenance_config_Panel_Panel-2048	GCFNavSubViewConfigPanel	52124
+__nav_TLcuPic_config_Panel_Panel-1000	GCFNavSubViewConfigPanel	52136
+__nav_TLcuPic_config_Panel_Panel-1001	GCFNavSubViewConfigPanel	52138
+__nav_TLcuPic_config_Panel_Panel-1002	GCFNavSubViewConfigPanel	52140
+__nav_TLcuPic_config_Panel_Panel-3	GCFNavSubViewConfigPanel	52157
+__nav_TLcuPic_config_Panel_Panel-station	GCFNavSubViewConfigPanel	52158
+__nav_TLcuPicRack_config_Panel_Panel-1002	GCFNavSubViewConfigPanel	52159
+__nav_view_archive	GCFNavView	52168
+__nav_TLcuPic_viewconfig	GCFNavViewConfiguration	52169
+__nav_TLcuPicHFA_viewconfig	GCFNavViewConfiguration	52170
+__nav_TLcuPicLFA_viewconfig	GCFNavViewConfiguration	52171
+__nav_TLcuPicBoard_viewconfig	GCFNavViewConfiguration	52172
+__nav_TLcuPicAlert_viewconfig	GCFNavViewConfiguration	52173
+__nav_TLcuPicBoardRCUStatus_viewconfig	GCFNavViewConfiguration	52174
+__nav_TLcuPicFPGA_viewconfig	GCFNavViewConfiguration	52175
+__nav_TLcuPicRack_viewconfig	GCFNavViewConfiguration	52176
+__nav_TLcuPicRCU_viewconfig	GCFNavViewConfiguration	52177
+__nav_TLcuPicMaintenance_viewconfig	GCFNavViewConfiguration	52178
+__nav_TLcuPicSubRack_viewconfig	GCFNavViewConfiguration	52179
+__nav__config_List_Lijst	GCFNavSubViewConfigList	52184
+__nav__viewconfig	GCFNavViewConfiguration	52185
+__nav_TLcuPic_config_Panel_Station-main	GCFNavSubViewConfigPanel	52193
+__nav_TLcuPic_config_Panel_Station-main-2	GCFNavSubViewConfigPanel	52195
+__nav_TLcuPic_config_Panel_Station-main-3	GCFNavSubViewConfigPanel	52197
+__nav_TLcuPic_config_Panel_Station-main-4	GCFNavSubViewConfigPanel	52199
+__nav_TLcuPic_config_Trend_Trend-1023	GCFNavSubViewConfigTrend	52204
+__nav_TLcuPicRack_config_Alert_Red-Alert	GCFNavSubViewConfigAlert	52206
+__nav_TLcuPic_config_Panel_Panel-1	GCFNavSubViewConfigPanel	52208
+__nav_TLcuPic_config_Panel_Panel-12	GCFNavSubViewConfigPanel	52211
+__nav_TLcuPicSubRack_config_Panel_Subrack	GCFNavSubViewConfigPanel	52236
+__nav_TLcuPic_config_Alert_Red-Alert-125	GCFNavSubViewConfigAlert	52245
+__nav_TLcuPic_config_Trend_Trend-123456	GCFNavSubViewConfigTrend	52247
+__nav_TLcuPic_config_Trend_Trend-1111	GCFNavSubViewConfigTrend	52250
+__nav_TLcuPic_config_Trend_Trend-1234	GCFNavSubViewConfigTrend	52253
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View	GCFNavSubViewConfigAlert	52265
+__nav_TLcuPicSubRack_config_Trend_Trend-SubRack	GCFNavSubViewConfigTrend	52275
+__nav_Alert_config_Alert_Alert-1234	GCFNavSubViewConfigAlert	52277
+__nav_Alert_viewconfig	GCFNavViewConfiguration	52278
+__nav_TLcuPicRCU_config_Panel_Panel-1111	GCFNavSubViewConfigPanel	52286
+__nav_TLcuPicMaintenance_config_Panel_Panel-166	GCFNavSubViewConfigPanel	52289
+__nav_System1_viewconfig	GCFNavViewConfiguration	52343
+__nav_TLcuPicRack_config_Trend_Trend-Test	GCFNavSubViewConfigTrend	52352
+__nav_TLcuPic_config_List_List-1	GCFNavSubViewConfigList	52363
+__nav_TLcuPicRCU_config_List_List-RCU	GCFNavSubViewConfigList	52366
+__nav_TLcuPicRack_config_List_List-Rack	GCFNavSubViewConfigList	52371
+__nav_TLcuPicMaintenance_config_List_List-Main	GCFNavSubViewConfigList	52408
+__nav_TLcuPicSubRack_config_List_List-SubRack	GCFNavSubViewConfigList	52414
+__nav_System1_config_List_List-System	GCFNavSubViewConfigList	52424
+__nav_System1_config_Control_Control-1	GCFNavSubViewConfigControl	52440
+__nav_TLcuPic_config_Bar_Bar-1	GCFNavSubViewConfigBar	52444
+__nav_TLcuPic_config_Panel_Panel-Drenthe	GCFNavSubViewConfigPanel	52447
+__nav_TLcuPic_config_Plot_Plot-1	GCFNavSubViewConfigPlot	52452
+__gcf_DPA_client_UIM1_1	GCFDistPort	53992
+__nav_subview_trend	GCFNavSubView	53995
+__gcf_DPA_client_UIM1_2	GCFDistPort	54000
+__gcf_DPA_client_UIM1_3	GCFDistPort	54002
+__gcf_DPA_client_UIM1_4	GCFDistPort	54004
+__gcf_DPA_client_UIM1_5	GCFDistPort	54006
+__gcf_DPA_client_UIM1_6	GCFDistPort	54008
+__gcf_DPA_client_UIM1_7	GCFDistPort	54010
+__gcf_DPA_client_UIM1_8	GCFDistPort	54012
+__gcf_DPA_client_UIM1_9	GCFDistPort	54014
+__nav_subview_Panel_Station-Racks	GCFNavSubView	54017
+__nav_TLcuPic_config_Panel_Station-Racks	GCFNavSubViewConfigPanel	54018
+__nav_subview_Panel_Station-Subrack	GCFNavSubView	54019
+__nav_TLcuPicSubRack_config_Panel_Station-Subrack	GCFNavSubViewConfigPanel	54020
+__nav_subview_Panel_Subrack-details	GCFNavSubView	54021
+__nav_TLcuPicRCU_config_Panel_Subrack-details	GCFNavSubViewConfigPanel	54022
+__nav_subview_Control_Control-1	GCFNavSubView	54028
+__nav_TLcuPacVT_config_Control_Control-1	GCFNavSubViewConfigControl	54029
+__nav_TLcuPacVT_viewconfig	GCFNavViewConfiguration	54030
+
+# DpValue
+ElementName	TypeName	_original.._value	_original.._status	_original.._stime
+__nav_subview_list.caption	GCFNavSubView	"List"	0x101	17.02.2005 09:06:46.845
+__nav_subview_list.filename	GCFNavSubView	"list-view.pnl"	0x101	17.02.2005 09:08:00.501
+__nav_view_list.caption	GCFNavView	"List"	0x101	17.02.2005 09:06:46.845
+__nav_view_list.configPanel	GCFNavView	"list_config.pnl"	0x101	17.02.2005 09:06:46.855
+__nav_view_plot.caption	GCFNavView	"Plot"	0x101	17.02.2005 09:06:46.865
+__nav_view_plot.configPanel	GCFNavView	"plot_config.pnl"	0x101	17.02.2005 09:06:46.865
+__nav_default_config_list.dummy	GCFNavSubViewConfigList	145	0x101	17.02.2005 09:06:46.865
+__nav_default_config_list.dummy2	GCFNavSubViewConfigList	"Niks"	0x101	17.02.2005 09:06:46.875
+__nav_SingleElement_Trend.1.Trace1.dpName	GCFNavSubViewConfigTrend	"PIC.status"	0x101	17.02.2005 09:06:46.875
+__nav_SingleElement_Trend.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:46.885
+__nav_SingleElement_Trend.1.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:46.885
+__nav_SingleElement_Trend.1.Trace1.ScaleMax	GCFNavSubViewConfigTrend	100	0x101	17.02.2005 09:06:46.895
+__nav_SingleElement_Trend.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Next"	0x101	17.02.2005 09:06:46.895
+__nav_SingleElement_Trend.1.Trace6.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:46.905
+__nav_SingleElement_Trend.1.Trace6.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:46.905
+__nav_SingleElement_Trend.1.Trace6.ScaleMax	GCFNavSubViewConfigTrend	12	0x101	17.02.2005 09:06:46.915
+__nav_SingleElement_Trend.1.Trace6.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:46.915
+__nav_SingleElement_Trend.1.Title	GCFNavSubViewConfigTrend	"Single element trend"	0x101	17.02.2005 09:06:46.925
+__nav_SingleElement_Trend.1.Days	GCFNavSubViewConfigTrend	3	0x101	17.02.2005 09:06:46.925
+__nav_SingleElement_Trend.1.Hours	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:46.935
+__nav_SingleElement_Trend.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:46.935
+__nav_SingleElement_Trend.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:46.945
+__nav_SingleElement_Trend.2.Trace1.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:46.945
+__nav_SingleElement_Trend.2.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:46.955
+__nav_SingleElement_Trend.2.Trace1.ScaleMax	GCFNavSubViewConfigTrend	1212	0x101	17.02.2005 09:06:46.955
+__nav_SingleElement_Trend.2.Trace1.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:46.965
+__nav_SingleElement_Trend.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:46.965
+__nav_SingleElement_Trend.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:46.965
+__nav_SingleElement_Trend.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:46.975
+__nav_SingleElement_Trend.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:46.975
+__nav_SingleElement_Trend.DedicatedPanelName	GCFNavSubViewConfigTrend	"Station.pnl"	0x101	17.02.2005 09:06:46.985
+__nav_SingleElement_Trend.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:46.985
+__loglevel.	GCFLogLevel	30000	0x101	17.02.2005 09:06:46.995
+__navigator.viewsPath	GCFNavigator	"navigator/views/"	0x101	17.02.2005 09:06:46.995
+__navigator.resourceRoots	GCFNavigator	"System1:PIC", "System1:PAC"	0x101	17.02.2005 09:06:47.005
+__navigator.ignoreEnabledRoots	GCFNavigator	"PIC_SNMP", "Station1", "PIC", "PAC"	0x101	17.02.2005 09:18:15.435
+__nav_TLcuPicSubRack_Alert.1.Title	GCFNavSubViewConfigAlert	"Alert area 1"	0x101	17.02.2005 09:06:47.015
+__nav_TLcuPicSubRack_Alert.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:47.015
+__nav_view_trend.caption	GCFNavView	"Trend"	0x101	17.02.2005 09:06:47.025
+__nav_view_trend.configPanel	GCFNavView	"trend_config.pnl"	0x101	17.02.2005 09:06:47.025
+__nav_subview_plot.caption	GCFNavSubView	"Plot"	0x101	17.02.2005 09:06:47.045
+__nav_subview_plot.filename	GCFNavSubView	"Station.pnl"	0x101	17.02.2005 09:06:47.045
+__nav_TLcuPicSubRack_config_Trend_Trend_Set1.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.055
+__nav_TLcuPicSubRack_config_Trend_Trend_Set1.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.065
+__nav_TLcuPicSubRack_config_Trend_Trend_Set1.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.065
+__nav_TLcuPicSubRack_config_Trend_Trend_Set1.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.075
+__nav_TLcuPicSubRack_config_Trend_Trend_Set1.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.075
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Trace1.dpName	GCFNavSubViewConfigTrend	"SubRack1.status"	0x101	17.02.2005 09:06:47.115
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.125
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:47.125
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Trace2.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:47.135
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Trace2.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.135
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Trace2.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:47.145
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Title	GCFNavSubViewConfigTrend	"abcd en q en z"	0x101	17.02.2005 09:06:47.145
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Days	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.155
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Hours	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.155
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.165
+__nav_TLcuPicRack_config_Trend_Trend_Set3.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.165
+__nav_TLcuPicRack_config_Trend_Trend_Set3.2.Title	GCFNavSubViewConfigTrend	"En ik ook"	0x101	17.02.2005 09:06:47.165
+__nav_TLcuPicRack_config_Trend_Trend_Set3.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.175
+__nav_TLcuPicRack_config_Trend_Trend_Set3.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.175
+__nav_TLcuPicRack_config_Trend_Trend_Set3.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.186
+__nav_TLcuPicRack_config_Trend_Trend_Set3.Trend2Active	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.186
+__nav_TLcuPicRack_config_Trend_Trend_Set3.DedicatedPanelName	GCFNavSubViewConfigTrend	"C:/ETM/FTS1/panels/navigator/views/trend_config.pnl"	0x101	17.02.2005 09:06:47.196
+__nav_TLcuPicRack_config_Trend_Trend_Set3.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.196
+__nav_TLcuPicRack_config_Trend_Trend-Set5.1.Trace1.dpName	GCFNavSubViewConfigTrend	"PIC_Rack1_SubRack1.status"	0x101	17.02.2005 09:06:47.216
+__nav_TLcuPicRack_config_Trend_Trend-Set5.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.216
+__nav_TLcuPicRack_config_Trend_Trend-Set5.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Traccie1"	0x101	17.02.2005 09:06:47.226
+__nav_TLcuPicRack_config_Trend_Trend-Set5.1.Title	GCFNavSubViewConfigTrend	"Dit is titel 1"	0x101	17.02.2005 09:06:47.226
+__nav_TLcuPicRack_config_Trend_Trend-Set5.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.236
+__nav_TLcuPicRack_config_Trend_Trend-Set5.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.236
+__nav_TLcuPicRack_config_Trend_Trend-Set5.2.Title	GCFNavSubViewConfigTrend	"Dit is Trend2 van Trend_Set5"	0x101	17.02.2005 09:06:47.236
+__nav_TLcuPicRack_config_Trend_Trend-Set5.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.246
+__nav_TLcuPicRack_config_Trend_Trend-Set5.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.246
+__nav_TLcuPicRack_config_Trend_Trend-Set5.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.256
+__nav_TLcuPicRack_config_Trend_Trend-Set5.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.256
+__nav_TLcuPicRack_config_Trend_Trend-Set5.DedicatedPanelName	GCFNavSubViewConfigTrend	"C:/ETM/FTS1/panels/navigator/views/trend_view.pnl"	0x101	17.02.2005 09:06:47.266
+__nav_TLcuPicRack_config_Trend_Trend-Set5.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.266
+__nav_TLcuPicRack_config_Trend_Trend_Set13.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.286
+__nav_TLcuPicRack_config_Trend_Trend_Set13.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.286
+__nav_TLcuPicRack_config_Trend_Trend_Set13.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.286
+__nav_TLcuPicRack_config_Trend_Trend_Set13.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.296
+__nav_TLcuPicRack_config_Trend_Trend_Set13.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.296
+__nav_TLcuPicRack_config_Trend_Trend_Set13.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.306
+__nav_TLcuPicRack_config_Trend_Trend_Set13.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.306
+__nav_TLcuPicRack_config_Trend_Trend_Set14.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.326
+__nav_TLcuPicRack_config_Trend_Trend_Set14.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.326
+__nav_TLcuPicRack_config_Trend_Trend_Set14.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.336
+__nav_TLcuPicRack_config_Trend_Trend_Set14.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.336
+__nav_TLcuPicRack_config_Trend_Trend_Set14.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.346
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.1.Trace5.dpName	GCFNavSubViewConfigTrend	"SubRack1.status"	0x101	17.02.2005 09:06:47.356
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.1.Trace5.LegendName	GCFNavSubViewConfigTrend	"Trace5"	0x101	17.02.2005 09:06:47.366
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.366
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.376
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.376
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.376
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.386
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.386
+__nav_TLcuPicRack_config_Trend_Trend_MSet_11.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.396
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Trace1.dpName	GCFNavSubViewConfigTrend	"Rack1_SubRack1.status"	0x101	17.02.2005 09:06:47.406
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.416
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"dit is legend name"	0x101	17.02.2005 09:06:47.416
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Trace2.dpName	GCFNavSubViewConfigTrend	".statisticsSubbandPower"	0x101	17.02.2005 09:06:47.426
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Trace2.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.426
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Trace2.ScaleMax	GCFNavSubViewConfigTrend	100	0x101	17.02.2005 09:06:47.436
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Trace2.LegendName	GCFNavSubViewConfigTrend	"Trace2"	0x101	17.02.2005 09:06:47.436
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Title	GCFNavSubViewConfigTrend	"eentje"	0x101	17.02.2005 09:06:47.446
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.446
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.456
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.2.Title	GCFNavSubViewConfigTrend	"afdewfdwe"	0x101	17.02.2005 09:06:47.456
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.456
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.466
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.466
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.476
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.DedicatedPanelName	GCFNavSubViewConfigTrend	"trend_view.pnl"	0x101	17.02.2005 09:06:47.476
+__nav_TLcuPic_config_Trend_Trend_EigenConfigSet.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.486
+__nav_TLcuPic_config_Trend_Test125.1.Trace1.dpName	GCFNavSubViewConfigTrend	"Rack1_SubRack1_Board1_AP1.temperature"	0x101	17.02.2005 09:06:47.496
+__nav_TLcuPic_config_Trend_Test125.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.506
+__nav_TLcuPic_config_Trend_Test125.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:47.506
+__nav_TLcuPic_config_Trend_Test125.1.Trace2.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:47.516
+__nav_TLcuPic_config_Trend_Test125.1.Trace2.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:47.516
+__nav_TLcuPic_config_Trend_Test125.1.Trace3.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:47.526
+__nav_TLcuPic_config_Trend_Test125.1.Trace3.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.526
+__nav_TLcuPic_config_Trend_Test125.1.Trace3.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:47.536
+__nav_TLcuPic_config_Trend_Test125.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.536
+__nav_TLcuPic_config_Trend_Test125.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.546
+__nav_TLcuPic_config_Trend_Test125.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.546
+__nav_TLcuPic_config_Trend_Test125.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.556
+__nav_TLcuPic_config_Trend_Test125.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.556
+__nav_TLcuPic_config_Trend_Test125.Trend2Active	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.566
+__nav_TLcuPic_config_Trend_Test125.DedicatedPanelName	GCFNavSubViewConfigTrend	"Station.pnl"	0x101	17.02.2005 09:06:47.566
+__nav_TLcuPic_config_Trend_Test125.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.566
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G_H_I_J_K_L_M.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.586
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G_H_I_J_K_L_M.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.586
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G_H_I_J_K_L_M.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.596
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G_H_I_J_K_L_M.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.596
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G_H_I_J_K_L_M.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.606
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G_H_I_J_K_L_M.DedicatedPanelName	GCFNavSubViewConfigTrend	"C:/ETM/FTS1/panels/navigator/navigator.pnl"	0x101	17.02.2005 09:06:47.606
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G.Standard	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.626
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G.Trend2Active	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.626
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G.DedicatedPanelName	GCFNavSubViewConfigTrend	"panel_config.pnl"	0x101	17.02.2005 09:06:47.626
+__nav_TLcuPic_config_Trend_A_B_C_D_E_F_G.Dedicated	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.636
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Trace1.dpName	GCFNavSubViewConfigTrend	"Maintenance.status"	0x101	17.02.2005 09:06:47.656
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.656
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.666
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Trace1.ScaleMax	GCFNavSubViewConfigTrend	10	0x101	17.02.2005 09:06:47.676
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:47.676
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Title	GCFNavSubViewConfigTrend	"Titel 1"	0x101	17.02.2005 09:06:47.686
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.686
+__nav_TLcuPic_config_Trend_Trend-met-Station.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.696
+__nav_TLcuPic_config_Trend_Trend-met-Station.2.Trace6.dpName	GCFNavSubViewConfigTrend	"Maintenance.status"	0x101	17.02.2005 09:06:47.706
+__nav_TLcuPic_config_Trend_Trend-met-Station.2.Trace6.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.706
+__nav_TLcuPic_config_Trend_Trend-met-Station.2.Trace6.LegendName	GCFNavSubViewConfigTrend	"Trace6"	0x101	17.02.2005 09:06:47.716
+__nav_TLcuPic_config_Trend_Trend-met-Station.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.716
+__nav_TLcuPic_config_Trend_Trend-met-Station.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.726
+__nav_TLcuPic_config_Trend_Trend-met-Station.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.736
+__nav_TLcuPic_config_Trend_Trend-met-Station.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.736
+__nav_TLcuPic_config_Trend_Trend-met-Station.DedicatedPanelName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:47.746
+__nav_TLcuPic_config_Trend_Trend-met-Station.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:47.746
+__nav_view_panel.caption	GCFNavView	"Panel"	0x101	17.02.2005 09:06:47.766
+__nav_view_panel.configPanel	GCFNavView	"panel_config.pnl"	0x101	17.02.2005 09:06:47.766
+__nav_subview_panel.caption	GCFNavSubView	"Panel"	0x101	17.02.2005 09:06:47.786
+__nav_subview_panel.filename	GCFNavSubView	"error_no_panel.pnl"	0x101	17.02.2005 09:06:47.796
+__nav_TLcuPicRack_config_Trend_Subrack.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.836
+__nav_TLcuPicMaintenance_config_Trend_Main_Trend_config.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.846
+__nav_TLcuPicMaintenance_config_Trend_Main_Trend_config.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.856
+__nav_TLcuPicMaintenance_config_Trend_Main_Trend_config.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:47.856
+__nav_TLcuPicMaintenance_config_Trend_Main_Trend_config.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:47.866
+__nav_TLcuPicMaintenance_config_Trend_Main_Trend_config.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.876
+__navigator1.useCount	GCFNavigatorInstance	1	0x101	17.02.2005 09:06:47.876
+__navigator1.selectedViewCaption	GCFNavigatorInstance	"tab1"	0x101	17.02.2005 09:06:47.887
+__navigator1.triggerUpdate	GCFNavigatorInstance	0	0x101	17.02.2005 09:06:47.887
+__navigator1.newDatapoint	GCFNavigatorInstance	"System1:PIC_Rack1_SubRack1_Board1_AP1_RCU1"	0x101	17.02.2005 09:06:47.897
+__nav_TLcuPicSubRack_config_Trend_SubRack.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.907
+__nav_TLcuPic_config_Trend_Station.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.937
+__nav_TLcuPicFPGA_config_Trend_RCU_Details.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.957
+__nav_TLcuPicRCU_config_Trend_RCU-details.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.977
+__nav_TLcuPicSubRack_config_Trend_SubRack-viewtje.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:47.987
+__nav_TLcuPicRack_config_Trend_Alert-new.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.027
+__nav_view_alert.caption	GCFNavView	"Alert"	0x101	17.02.2005 09:06:48.057
+__nav_view_alert.configPanel	GCFNavView	"alert_config.pnl"	0x101	17.02.2005 09:06:48.067
+__nav_subview_alert.caption	GCFNavSubView	"Alert"	0x101	17.02.2005 09:06:48.067
+__nav_subview_alert.filename	GCFNavSubView	"alert_view.pnl"	0x101	17.02.2005 09:06:48.077
+__nav_default_config_alert.1.Title	GCFNavSubViewConfigAlert	"Dit is een echte titel"	0x101	17.02.2005 09:06:48.077
+__nav_default_config_alert.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:48.087
+__nav_default_config_alert.1.nrOfRows	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.087
+__nav_default_config_alert.1.nrOfColumns	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.097
+__nav_default_config_alert.2.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:48.107
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Title	GCFNavSubViewConfigAlert	"Deze is nieuwie"	0x101	17.02.2005 09:06:48.117
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:48.127
+__nav_TLcuPicRack_config_Alert_Alert-1.1.nrOfRows	GCFNavSubViewConfigAlert	4	0x101	17.02.2005 09:06:48.127
+__nav_TLcuPicRack_config_Alert_Alert-1.1.nrOfColumns	GCFNavSubViewConfigAlert	4	0x101	17.02.2005 09:06:48.137
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column1Titles	GCFNavSubViewConfigAlert	"Dit is R0 C1", "Dit is 2", "Dit is 3", "Dit is 4", "Nog meer...", "121", "", "", "", "", "", "", "", "", "Dit is row 15"	0x101	17.02.2005 09:06:48.147
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column1dpNames	GCFNavSubViewConfigAlert	"System1:PIC_Rack1_Alert2.Alert2", "System1:PIC_Rack1_Alert1.Alert1", "System1:PIC_Rack1_Alert2.Alert2", "System1:PIC_Rack1_Alert2.Alert1", "System1:PIC_Rack1_Alert2.Alert2", "System1:PIC_Rack1_Alert2.Alert2", "", "", "", "", "", "", "", "", "System1:PIC_Rack1_Alert2.Alert1"	0x101	17.02.2005 09:06:48.147
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column2Titles	GCFNavSubViewConfigAlert	"sdsd", "Dit is gna gna", "", "Dit is 4", ""	0x101	17.02.2005 09:06:48.157
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column2dpNames	GCFNavSubViewConfigAlert	"", "", "", "System1:PIC_Rack1_Alert2.Alert1", ""	0x101	17.02.2005 09:06:48.157
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column3Titles	GCFNavSubViewConfigAlert	"", "sdsdsdsd", "Dit is ook een nieuwe", "", ""	0x101	17.02.2005 09:06:48.167
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column3dpNames	GCFNavSubViewConfigAlert	"", "", "System1:PIC_Rack1_Alert2.Alert1", "", ""	0x101	17.02.2005 09:06:48.177
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column4Titles	GCFNavSubViewConfigAlert	"", "", "", "", ""	0x101	17.02.2005 09:06:48.177
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column4dpNames	GCFNavSubViewConfigAlert	"System1:PIC_Rack1_Alert2.Alert1", "", "System1:PIC_Rack1_Alert2.Alert1", "", ""	0x101	17.02.2005 09:06:48.187
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column6Titles	GCFNavSubViewConfigAlert	"", "niet leeg"	0x101	17.02.2005 09:06:48.187
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column6dpNames	GCFNavSubViewConfigAlert	"", "System1:PIC_Rack1_Alert2.Alert1"	0x101	17.02.2005 09:06:48.197
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column9dpNames	GCFNavSubViewConfigAlert	"", "", "", "", "", "System1:PIC_Rack1_Alert2.Alert2"	0x101	17.02.2005 09:06:48.207
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Title	GCFNavSubViewConfigAlert	"Nieuwe title"	0x101	17.02.2005 09:06:48.207
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Active	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:48.217
+__nav_TLcuPicRack_config_Alert_Alert-1.2.nrOfRows	GCFNavSubViewConfigAlert	3	0x101	17.02.2005 09:06:48.227
+__nav_TLcuPicRack_config_Alert_Alert-1.2.nrOfColumns	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.227
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column1Titles	GCFNavSubViewConfigAlert	"sd", "sd", "sd", "sd", ""	0x101	17.02.2005 09:06:48.237
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column1dpNames	GCFNavSubViewConfigAlert	"System1:PIC_Rack1_Alert1.Alert1", "System1:PIC_Rack1_Alert1.Alert2", "", "", ""	0x101	17.02.2005 09:06:48.247
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column2Titles	GCFNavSubViewConfigAlert	"Dit is area 2", "Dit is ook area 2", "", "", ""	0x101	17.02.2005 09:06:48.247
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column2dpNames	GCFNavSubViewConfigAlert	"System1:PIC_Rack1_Alert2.Alert1", "System1:PIC_Rack1_Alert2.Alert2", "", "", ""	0x101	17.02.2005 09:06:48.267
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column3Titles	GCFNavSubViewConfigAlert	"", "", "", "Alert 2 subAlert 2", ""	0x101	17.02.2005 09:06:48.277
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column3dpNames	GCFNavSubViewConfigAlert	"", "", "", "System1:PIC_Rack1_Alert2.Alert2", ""	0x101	17.02.2005 09:06:48.277
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column4Titles	GCFNavSubViewConfigAlert	"", "", "", "", ""	0x101	17.02.2005 09:06:48.287
+__nav_TLcuPicRack_config_Alert_Alert-1.2.Column4dpNames	GCFNavSubViewConfigAlert	"", "", "", "", ""	0x101	17.02.2005 09:06:48.287
+__nav_TLcuPicRack_config_Alert_Alert-1.3.Active	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:48.287
+__nav_TLcuPicRack_config_Alert_Alert-1.3.nrOfRows	GCFNavSubViewConfigAlert	2	0x101	17.02.2005 09:06:48.297
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column0Titles	GCFNavSubViewConfigAlert	"Dit is 0 en 0"	0x101	17.02.2005 09:06:48.297
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column0dpNames	GCFNavSubViewConfigAlert	"System1:PIC_Rack1_Alert1.Alert1"	0x101	17.02.2005 09:06:48.307
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column14dpNames	GCFNavSubViewConfigAlert	"", "", "", "", "", "", "", "", "", "", "", "", "", "", "System1:PIC_Rack1_Alert2.Alert1"	0x101	17.02.2005 09:06:48.307
+__nav_TLcuPicRack_config_Alert_Alert-1.1.Column14Titles	GCFNavSubViewConfigAlert	"", "", "", "", "", "", "", "", "", "", "", "", "", "", "15 | 15"	0x101	17.02.2005 09:06:48.317
+__nav_view_bar.caption	GCFNavView	"Bar"	0x101	17.02.2005 09:06:48.347
+__nav_view_bar.configPanel	GCFNavView	"bar_config.pnl"	0x101	17.02.2005 09:06:48.357
+__nav_view_control.caption	GCFNavView	"Control"	0x101	17.02.2005 09:06:48.357
+__nav_view_control.configPanel	GCFNavView	"control_config.pnl"	0x101	17.02.2005 09:06:48.357
+__nav_view_config.caption	GCFNavView	"Config"	0x101	17.02.2005 09:06:48.367
+__nav_view_config.configPanel	GCFNavView	"nopanel.pnl"	0x101	17.02.2005 09:06:48.367
+__nav_view_log.caption	GCFNavView	"Log"	0x101	17.02.2005 09:06:48.377
+__nav_view_log.configPanel	GCFNavView	"nopanel.pnl"	0x101	17.02.2005 09:06:48.377
+__nav_subview_bar.caption	GCFNavSubView	"Bar"	0x101	17.02.2005 09:06:48.387
+__nav_subview_bar.filename	GCFNavSubView	"nopanel.pnl"	0x101	17.02.2005 09:06:48.387
+__nav_subview_control.caption	GCFNavSubView	"Control"	0x101	17.02.2005 09:06:48.387
+__nav_subview_control.filename	GCFNavSubView	"nopanel.pnl"	0x101	17.02.2005 09:06:48.397
+__nav_subview_config.caption	GCFNavSubView	"Config"	0x101	17.02.2005 09:06:48.397
+__nav_subview_config.filename	GCFNavSubView	"nopanel.pnl"	0x101	17.02.2005 09:06:48.407
+__nav_subview_log.caption	GCFNavSubView	"Log"	0x101	17.02.2005 09:06:48.407
+__nav_subview_log.filename	GCFNavSubView	"nopanel.pnl"	0x101	17.02.2005 09:06:48.417
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace1.dpName	GCFNavSubViewConfigTrend	"Board1_AP1_RCU1.status"	0x101	17.02.2005 09:06:48.457
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:48.457
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace1.ScaleMax	GCFNavSubViewConfigTrend	40	0x101	17.02.2005 09:06:48.467
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:48.467
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace2.dpName	GCFNavSubViewConfigTrend	"Board1_AP1_RCU2.status"	0x101	17.02.2005 09:06:48.477
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace2.AutoScale	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:48.477
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace2.ScaleMax	GCFNavSubViewConfigTrend	40	0x101	17.02.2005 09:06:48.487
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace2.LegendName	GCFNavSubViewConfigTrend	"Trace2"	0x101	17.02.2005 09:06:48.487
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace3.dpName	GCFNavSubViewConfigTrend	"Board1_AP2_RCU1.status"	0x101	17.02.2005 09:06:48.497
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace3.AutoScale	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:48.497
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace3.ScaleMax	GCFNavSubViewConfigTrend	40	0x101	17.02.2005 09:06:48.507
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace3.LegendName	GCFNavSubViewConfigTrend	"Trace3"	0x101	17.02.2005 09:06:48.507
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace4.dpName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:48.517
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace4.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.517
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Trace4.LegendName	GCFNavSubViewConfigTrend	""	0x101	17.02.2005 09:06:48.527
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Title	GCFNavSubViewConfigTrend	"RCU Watch status"	0x101	17.02.2005 09:06:48.527
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.537
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.537
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.2.Trace1.dpName	GCFNavSubViewConfigTrend	"Board1_AP3_RCU1_LFA.status"	0x101	17.02.2005 09:06:48.547
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.2.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:48.547
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.2.Title	GCFNavSubViewConfigTrend	"2de"	0x101	17.02.2005 09:06:48.557
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.557
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.567
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.567
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.578
+__nav_TLcuPicSubRack_config_Trend_RCU-Watch.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:48.578
+__nav_TLcuPicSubRack_config_Alert_Alerts-RCU.1.Title	GCFNavSubViewConfigAlert	"RCU Alert status"	0x101	17.02.2005 09:06:48.588
+__nav_TLcuPicSubRack_config_Alert_Alerts-RCU.1.nrOfRows	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.598
+__nav_TLcuPicSubRack_config_Alert_Alerts-RCU.1.nrOfColumns	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.598
+__nav_TLcuPicSubRack_config_Alert_Alerts-RCU.2.Active	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:48.608
+__nav_TLcuPicSubRack_config_Alert_Alerts-RCU.1.Column0Titles	GCFNavSubViewConfigAlert	"RCU 1"	0x101	17.02.2005 09:06:48.608
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Title	GCFNavSubViewConfigAlert	"Titel Area1"	0x101	17.02.2005 09:06:48.628
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:48.628
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.nrOfRows	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.638
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.nrOfColumns	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.638
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column1Titles	GCFNavSubViewConfigAlert	"", "", ""	0x101	17.02.2005 09:06:48.648
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column1dpNames	GCFNavSubViewConfigAlert	"", "", ""	0x101	17.02.2005 09:06:48.648
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column2Titles	GCFNavSubViewConfigAlert	"", "", "", "", ""	0x101	17.02.2005 09:06:48.658
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column2dpNames	GCFNavSubViewConfigAlert	"", "", "", "", ""	0x101	17.02.2005 09:06:48.668
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column3Titles	GCFNavSubViewConfigAlert	"", "", "", "", ""	0x101	17.02.2005 09:06:48.668
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column3dpNames	GCFNavSubViewConfigAlert	"", "", "", "", ""	0x101	17.02.2005 09:06:48.678
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column7Titles	GCFNavSubViewConfigAlert	"", "", "", "", "", "", "", "", "Dit is een nieuwe"	0x101	17.02.2005 09:06:48.678
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column7dpNames	GCFNavSubViewConfigAlert	"", "", "", "", "", "", "", "", "System1:PIC_Rack1_Alert2.Alert1"	0x101	17.02.2005 09:06:48.688
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column9dpNames	GCFNavSubViewConfigAlert		0x141	17.02.2005 09:06:48.698
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.Title	GCFNavSubViewConfigAlert	"Titel Area 2"	0x101	17.02.2005 09:06:48.698
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:48.708
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.nrOfRows	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.708
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.nrOfColumns	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.718
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.Column1Titles	GCFNavSubViewConfigAlert	"", "Dit 2 1"	0x101	17.02.2005 09:06:48.728
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.Column2Titles	GCFNavSubViewConfigAlert	"New"	0x101	17.02.2005 09:06:48.728
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.Column2dpNames	GCFNavSubViewConfigAlert	"System1:PIC_Rack1_Alert2.Alert2"	0x101	17.02.2005 09:06:48.738
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.Column5Titles	GCFNavSubViewConfigAlert	"", "", "", "Oke"	0x101	17.02.2005 09:06:48.748
+__nav_TLcuPicRack_config_Alert_Alert-Rack.2.Column5dpNames	GCFNavSubViewConfigAlert	"", "", "", "System1:PIC_Rack1_Alert2.Alert2"	0x101	17.02.2005 09:06:48.748
+__nav_TLcuPicRack_config_Alert_Alert-Rack.3.Title	GCFNavSubViewConfigAlert	"Titel Area 3"	0x101	17.02.2005 09:06:48.758
+__nav_TLcuPicRack_config_Alert_Alert-Rack.3.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:48.758
+__nav_TLcuPicRack_config_Alert_Alert-Rack.3.nrOfRows	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.768
+__nav_TLcuPicRack_config_Alert_Alert-Rack.3.nrOfColumns	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.778
+__nav_TLcuPicRack_config_Alert_Alert-Rack.ListActive	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:48.778
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column0Titles	GCFNavSubViewConfigAlert	"New A1 A1"	0x101	17.02.2005 09:06:48.788
+__nav_TLcuPicRack_config_Alert_Alert-Rack.1.Column0dpNames	GCFNavSubViewConfigAlert	"Alert1.Alert1"	0x101	17.02.2005 09:06:48.788
+__nav_TLcuPicRack_config_Alert_Alert-Rack.nrOfRowsList	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:48.798
+__nav_TLcuPicAlert_config_Trend_Trend-2.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.858
+__nav_TLcuPicAlert_config_Trend_Trend-2.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.868
+__nav_TLcuPicAlert_config_Trend_Trend-2.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.878
+__nav_TLcuPicAlert_config_Trend_Trend-2.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.878
+__nav_TLcuPicAlert_config_Trend_Trend-2.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.888
+__nav_TLcuPic_config_Trend_Trend-7.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.908
+__nav_TLcuPic_config_Trend_Trend-7.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.918
+__nav_TLcuPic_config_Trend_Trend-7.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.918
+__nav_TLcuPic_config_Trend_Trend-7.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.928
+__nav_TLcuPic_config_Trend_Trend-7.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.928
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.1.Title	GCFNavSubViewConfigTrend	"TLcuPicRCU_trend1"	0x101	17.02.2005 09:06:48.948
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.948
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.958
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.2.Title	GCFNavSubViewConfigTrend	"TLcuPicRCU_trend2"	0x101	17.02.2005 09:06:48.958
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:48.968
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:48.978
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.978
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:48.988
+__nav_TLcuPicRCU_config_Trend_TREND-RCU.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:48.998
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Trace1.dpName	GCFNavSubViewConfigTrend	"SubRack1.status"	0x101	17.02.2005 09:06:49.018
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.018
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Tracie 1"	0x101	17.02.2005 09:06:49.028
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Trace2.dpName	GCFNavSubViewConfigTrend	"SubRack1_Board1_AP1_RCU2.status"	0x101	17.02.2005 09:06:49.028
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Trace2.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.038
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Trace2.LegendName	GCFNavSubViewConfigTrend	"Trace2"	0x101	17.02.2005 09:06:49.048
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Title	GCFNavSubViewConfigTrend	"TLcuPicRack - Trend 1"	0x101	17.02.2005 09:06:49.048
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.058
+__nav_TLcuPicRack_config_Trend_Trend-RACK.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.068
+__nav_TLcuPicRack_config_Trend_Trend-RACK.2.Title	GCFNavSubViewConfigTrend	"TLcuPicRack - Trend 2"	0x101	17.02.2005 09:06:49.068
+__nav_TLcuPicRack_config_Trend_Trend-RACK.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.078
+__nav_TLcuPicRack_config_Trend_Trend-RACK.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.078
+__nav_TLcuPicRack_config_Trend_Trend-RACK.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.088
+__nav_TLcuPicRack_config_Trend_Trend-RACK.Trend2Active	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:49.098
+__nav_TLcuPicRack_config_Trend_Trend-RACK.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:49.098
+__nav_default_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	17.02.2005 09:52:41.266
+__nav_default_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 10:20:45.808
+__nav_default_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.128
+__nav_default_viewconfig.subViews	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.138
+__nav_default_viewconfig.configs	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.138
+__nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:06:49.148
+__nav_TLcuPicRack_config_Trend_Trend-210.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.228
+__nav_TLcuPicRack_config_Trend_Trend-210.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.238
+__nav_TLcuPicRack_config_Trend_Trend-210.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.238
+__nav_TLcuPicRack_config_Trend_Trend-210.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.248
+__nav_TLcuPicRack_config_Trend_Trend-210.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.248
+__nav_TLcuPicMaintenance_config_Trend_Trend-main12345.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.309
+__nav_TLcuPicMaintenance_config_Trend_Trend-main12345.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.309
+__nav_TLcuPicMaintenance_config_Trend_Trend-main12345.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.319
+__nav_TLcuPicMaintenance_config_Trend_Trend-main12345.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.319
+__nav_TLcuPicMaintenance_config_Trend_Trend-main12345.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.329
+__nav_view_archive.caption	GCFNavView	"Archive"	0x101	17.02.2005 09:06:49.379
+__nav_view_archive.configPanel	GCFNavView	"archive_config.pnl"	0x101	17.02.2005 09:06:49.379
+__nav_TLcuPic_viewconfig.selectedView	GCFNavViewConfiguration	6	0x101	17.02.2005 10:07:35.492
+__nav_TLcuPic_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 10:20:54.540
+__nav_TLcuPic_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.389
+__nav_TLcuPic_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_Panel_Station-Racks	0x101	17.02.2005 09:20:50.037
+__nav_TLcuPic_viewconfig.configs	GCFNavViewConfiguration	__nav_TLcuPic_config_Panel_Station-Racks	0x101	17.02.2005 09:20:50.037
+__nav_TLcuPic_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:20:50.037
+__nav_TLcuPicHFA_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	17.02.2005 09:06:49.409
+__nav_TLcuPicHFA_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:06:49.419
+__nav_TLcuPicHFA_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.419
+__nav_TLcuPicHFA_viewconfig.subViews	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.429
+__nav_TLcuPicHFA_viewconfig.configs	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.429
+__nav_TLcuPicHFA_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:06:49.439
+__nav_TLcuPicLFA_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	17.02.2005 09:06:49.439
+__nav_TLcuPicLFA_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:06:49.449
+__nav_TLcuPicLFA_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.449
+__nav_TLcuPicLFA_viewconfig.subViews	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.449
+__nav_TLcuPicLFA_viewconfig.configs	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.459
+__nav_TLcuPicLFA_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:06:49.459
+__nav_TLcuPicBoard_viewconfig.selectedView	GCFNavViewConfiguration	4	0x101	17.02.2005 09:06:49.469
+__nav_TLcuPicBoard_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:06:49.479
+__nav_TLcuPicBoard_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.479
+__nav_TLcuPicBoard_viewconfig.subViews	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.479
+__nav_TLcuPicBoard_viewconfig.configs	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.489
+__nav_TLcuPicBoard_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:06:49.489
+__nav_TLcuPicAlert_viewconfig.selectedView	GCFNavViewConfiguration	4	0x101	17.02.2005 09:06:49.499
+__nav_TLcuPicAlert_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:06:49.499
+__nav_TLcuPicAlert_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.499
+__nav_TLcuPicAlert_viewconfig.subViews	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.509
+__nav_TLcuPicAlert_viewconfig.configs	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.509
+__nav_TLcuPicAlert_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:06:49.509
+__nav_TLcuPicBoardRCUStatus_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	17.02.2005 09:06:49.519
+__nav_TLcuPicBoardRCUStatus_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:06:49.519
+__nav_TLcuPicBoardRCUStatus_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.519
+__nav_TLcuPicBoardRCUStatus_viewconfig.subViews	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.529
+__nav_TLcuPicBoardRCUStatus_viewconfig.configs	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.529
+__nav_TLcuPicBoardRCUStatus_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:06:49.529
+__nav_TLcuPicFPGA_viewconfig.selectedView	GCFNavViewConfiguration	3	0x101	17.02.2005 09:06:49.539
+__nav_TLcuPicFPGA_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:06:49.539
+__nav_TLcuPicFPGA_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.549
+__nav_TLcuPicFPGA_viewconfig.subViews	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.549
+__nav_TLcuPicFPGA_viewconfig.configs	GCFNavViewConfiguration		0x141	17.02.2005 09:06:49.549
+__nav_TLcuPicFPGA_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:06:49.559
+__nav_TLcuPicRack_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	17.02.2005 09:06:49.559
+__nav_TLcuPicRack_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:31:24.129
+__nav_TLcuPicRack_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.569
+__nav_TLcuPicRack_viewconfig.subViews	GCFNavViewConfiguration		0x101	17.02.2005 09:13:42.803
+__nav_TLcuPicRack_viewconfig.configs	GCFNavViewConfiguration		0x101	17.02.2005 09:13:39.428
+__nav_TLcuPicRack_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:13:58.265
+__nav_TLcuPicRCU_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	17.02.2005 09:06:49.579
+__nav_TLcuPicRCU_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	17.02.2005 09:47:50.698
+__nav_TLcuPicRCU_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.589
+__nav_TLcuPicRCU_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_Panel_Subrack-details	0x101	17.02.2005 09:26:35.044
+__nav_TLcuPicRCU_viewconfig.configs	GCFNavViewConfiguration	__nav_TLcuPicRCU_config_Panel_Subrack-details	0x101	17.02.2005 09:26:35.044
+__nav_TLcuPicRCU_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:26:35.044
+__nav_TLcuPicMaintenance_viewconfig.selectedView	GCFNavViewConfiguration	8	0x101	17.02.2005 09:06:49.599
+__nav_TLcuPicMaintenance_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 09:06:49.609
+__nav_TLcuPicMaintenance_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.609
+__nav_TLcuPicMaintenance_viewconfig.subViews	GCFNavViewConfiguration		0x101	17.02.2005 09:14:40.436
+__nav_TLcuPicMaintenance_viewconfig.configs	GCFNavViewConfiguration		0x101	17.02.2005 09:14:36.570
+__nav_TLcuPicMaintenance_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:14:48.938
+__nav_TLcuPicSubRack_viewconfig.selectedView	GCFNavViewConfiguration	2	0x101	17.02.2005 09:30:26.556
+__nav_TLcuPicSubRack_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	17.02.2005 09:47:35.706
+__nav_TLcuPicSubRack_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.629
+__nav_TLcuPicSubRack_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_Panel_Station-Subrack	0x101	17.02.2005 09:25:22.840
+__nav_TLcuPicSubRack_viewconfig.configs	GCFNavViewConfiguration	__nav_TLcuPicSubRack_config_Panel_Station-Subrack	0x101	17.02.2005 09:25:22.840
+__nav_TLcuPicSubRack_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 1, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:25:22.840
+__nav__config_List_Lijst.customList	GCFNavSubViewConfigList	1	0x101	17.02.2005 09:06:49.659
+__nav__viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	17.02.2005 10:19:42.988
+__nav__viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 10:19:43.568
+__nav__viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:49.679
+__nav__viewconfig.subViews	GCFNavViewConfiguration		0x101	17.02.2005 09:15:43.216
+__nav__viewconfig.configs	GCFNavViewConfiguration		0x101	17.02.2005 09:15:39.781
+__nav__viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:15:48.254
+__nav_TLcuPic_config_Trend_Trend-1023.1.Trace1.dpName	GCFNavSubViewConfigTrend	"Rack1.status"	0x101	17.02.2005 09:06:49.749
+__nav_TLcuPic_config_Trend_Trend-1023.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:49.749
+__nav_TLcuPic_config_Trend_Trend-1023.1.Trace2.dpName	GCFNavSubViewConfigTrend	"Rack1_SubRack1.status"	0x101	17.02.2005 09:06:49.759
+__nav_TLcuPic_config_Trend_Trend-1023.1.Trace2.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.759
+__nav_TLcuPic_config_Trend_Trend-1023.1.Trace2.LegendName	GCFNavSubViewConfigTrend	"Tracie 2"	0x101	17.02.2005 09:06:49.769
+__nav_TLcuPic_config_Trend_Trend-1023.1.Title	GCFNavSubViewConfigTrend	"Dit is de trend-plot 1"	0x101	17.02.2005 09:06:49.769
+__nav_TLcuPic_config_Trend_Trend-1023.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.789
+__nav_TLcuPic_config_Trend_Trend-1023.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.799
+__nav_TLcuPic_config_Trend_Trend-1023.2.Trace1.dpName	GCFNavSubViewConfigTrend	"Rack2_SubRack1.status"	0x101	17.02.2005 09:06:49.809
+__nav_TLcuPic_config_Trend_Trend-1023.2.Trace1.AutoScale	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:49.809
+__nav_TLcuPic_config_Trend_Trend-1023.2.Trace1.ScaleMin	GCFNavSubViewConfigTrend	40	0x101	17.02.2005 09:06:49.819
+__nav_TLcuPic_config_Trend_Trend-1023.2.Trace1.ScaleMax	GCFNavSubViewConfigTrend	60	0x101	17.02.2005 09:06:49.819
+__nav_TLcuPic_config_Trend_Trend-1023.2.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:49.819
+__nav_TLcuPic_config_Trend_Trend-1023.2.Title	GCFNavSubViewConfigTrend	"Dit is de trend-plot 2"	0x101	17.02.2005 09:06:49.829
+__nav_TLcuPic_config_Trend_Trend-1023.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.829
+__nav_TLcuPic_config_Trend_Trend-1023.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:49.839
+__nav_TLcuPic_config_Trend_Trend-1023.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.849
+__nav_TLcuPic_config_Trend_Trend-1023.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:49.849
+__nav_TLcuPic_config_Trend_Trend-1023.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 09:06:49.849
+__nav_TLcuPicRack_config_Alert_Red-Alert.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:49.869
+__nav_TLcuPicRack_config_Alert_Red-Alert.1.nrOfRows	GCFNavSubViewConfigAlert	7	0x101	17.02.2005 09:06:49.869
+__nav_TLcuPicRack_config_Alert_Red-Alert.1.nrOfColumns	GCFNavSubViewConfigAlert	7	0x101	17.02.2005 09:06:49.879
+__nav_TLcuPicRack_config_Alert_Red-Alert.1.Column1Titles	GCFNavSubViewConfigAlert	"", "Cell label"	0x101	17.02.2005 09:06:49.879
+__nav_TLcuPicRack_config_Alert_Red-Alert.1.Column1dpNames	GCFNavSubViewConfigAlert	"", "Alert2.Alert1"	0x101	17.02.2005 09:06:49.889
+__nav_TLcuPicRack_config_Alert_Red-Alert.1.Column2Titles	GCFNavSubViewConfigAlert	"", "", "A2 A2"	0x101	17.02.2005 09:06:49.889
+__nav_TLcuPicRack_config_Alert_Red-Alert.1.Column2dpNames	GCFNavSubViewConfigAlert	"", "", "Alert2.Alert2"	0x101	17.02.2005 09:06:49.899
+__nav_TLcuPicRack_config_Alert_Red-Alert.ListActive	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:49.899
+__nav_TLcuPicRack_config_Alert_Red-Alert.nrOfRowsList	GCFNavSubViewConfigAlert	4	0x101	17.02.2005 09:06:49.909
+__nav_TLcuPic_config_Alert_Red-Alert-125.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:49.949
+__nav_TLcuPic_config_Alert_Red-Alert-125.1.nrOfRows	GCFNavSubViewConfigAlert	10	0x101	17.02.2005 09:06:49.949
+__nav_TLcuPic_config_Alert_Red-Alert-125.1.nrOfColumns	GCFNavSubViewConfigAlert	15	0x101	17.02.2005 09:06:49.949
+__nav_TLcuPic_config_Alert_Red-Alert-125.1.Column1Titles	GCFNavSubViewConfigAlert	"", "", "", "", "", "TITLE"	0x101	17.02.2005 09:06:49.959
+__nav_TLcuPic_config_Alert_Red-Alert-125.1.Column1dpNames	GCFNavSubViewConfigAlert	"", "", "", "", "", "Rack1_Alert2.Alert2"	0x101	17.02.2005 09:06:49.959
+__nav_TLcuPic_config_Alert_Red-Alert-125.ListActive	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:49.970
+__nav_TLcuPic_config_Alert_Red-Alert-125.nrOfRowsList	GCFNavSubViewConfigAlert	4	0x101	17.02.2005 09:06:49.970
+__nav_TLcuPic_config_Trend_Trend-123456.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:49.990
+__nav_TLcuPic_config_Trend_Trend-123456.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.000
+__nav_TLcuPic_config_Trend_Trend-123456.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.000
+__nav_TLcuPic_config_Trend_Trend-123456.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.010
+__nav_TLcuPic_config_Trend_Trend-123456.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:50.010
+__nav_TLcuPic_config_Trend_Trend-1111.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.030
+__nav_TLcuPic_config_Trend_Trend-1111.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.040
+__nav_TLcuPic_config_Trend_Trend-1111.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.040
+__nav_TLcuPic_config_Trend_Trend-1111.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.050
+__nav_TLcuPic_config_Trend_Trend-1111.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:50.050
+__nav_TLcuPic_config_Trend_Trend-1234.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.060
+__nav_TLcuPic_config_Trend_Trend-1234.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.070
+__nav_TLcuPic_config_Trend_Trend-1234.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.070
+__nav_TLcuPic_config_Trend_Trend-1234.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.080
+__nav_TLcuPic_config_Trend_Trend-1234.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:50.080
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:50.100
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.1.nrOfRows	GCFNavSubViewConfigAlert	15	0x101	17.02.2005 09:06:50.100
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.1.nrOfColumns	GCFNavSubViewConfigAlert	6	0x101	17.02.2005 09:06:50.110
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.1.Column1Titles	GCFNavSubViewConfigAlert	"", "RCU5_A2"	0x101	17.02.2005 09:06:50.110
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.1.Column1dpNames	GCFNavSubViewConfigAlert	"", "Board1_AP2_RCU5.Alert2"	0x101	17.02.2005 09:06:50.120
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.1.Column2Titles	GCFNavSubViewConfigAlert	"", "RCU5_A1"	0x101	17.02.2005 09:06:50.140
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.1.Column2dpNames	GCFNavSubViewConfigAlert	"", "Board1_AP2_RCU5.Alert1"	0x101	17.02.2005 09:06:50.140
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.2.Active	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:50.150
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.2.nrOfRows	GCFNavSubViewConfigAlert	15	0x101	17.02.2005 09:06:50.150
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.2.nrOfColumns	GCFNavSubViewConfigAlert	3	0x101	17.02.2005 09:06:50.150
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.3.Active	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:50.160
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.3.nrOfRows	GCFNavSubViewConfigAlert	15	0x101	17.02.2005 09:06:50.160
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.3.nrOfColumns	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:50.160
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.ListActive	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:50.170
+__nav_TLcuPicSubRack_config_Alert_RCU-Alert-View.nrOfRowsList	GCFNavSubViewConfigAlert	4	0x101	17.02.2005 09:06:50.170
+__nav_TLcuPicSubRack_config_Trend_Trend-SubRack.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.180
+__nav_TLcuPicSubRack_config_Trend_Trend-SubRack.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.190
+__nav_TLcuPicSubRack_config_Trend_Trend-SubRack.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.190
+__nav_TLcuPicSubRack_config_Trend_Trend-SubRack.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.190
+__nav_TLcuPicSubRack_config_Trend_Trend-SubRack.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:50.200
+__nav_Alert_config_Alert_Alert-1234.1.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:50.210
+__nav_Alert_config_Alert_Alert-1234.1.nrOfRows	GCFNavSubViewConfigAlert	10	0x101	17.02.2005 09:06:50.210
+__nav_Alert_config_Alert_Alert-1234.1.nrOfColumns	GCFNavSubViewConfigAlert	5	0x101	17.02.2005 09:06:50.210
+__nav_Alert_config_Alert_Alert-1234.1.Column1Titles	GCFNavSubViewConfigAlert	"", "", "", ""	0x101	17.02.2005 09:06:50.220
+__nav_Alert_config_Alert_Alert-1234.1.Column1dpNames	GCFNavSubViewConfigAlert	"", "", "", ""	0x101	17.02.2005 09:06:50.220
+__nav_Alert_config_Alert_Alert-1234.1.Column3Titles	GCFNavSubViewConfigAlert	"", "Oke", "Alert one", "Test125"	0x101	17.02.2005 09:06:50.220
+__nav_Alert_config_Alert_Alert-1234.1.Column3dpNames	GCFNavSubViewConfigAlert	"", "Alert2", "Alert1", "Alert2"	0x101	17.02.2005 09:06:50.230
+__nav_Alert_config_Alert_Alert-1234.2.Active	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:50.230
+__nav_Alert_config_Alert_Alert-1234.2.nrOfRows	GCFNavSubViewConfigAlert	7	0x101	17.02.2005 09:06:50.230
+__nav_Alert_config_Alert_Alert-1234.2.nrOfColumns	GCFNavSubViewConfigAlert	4	0x101	17.02.2005 09:06:50.240
+__nav_Alert_config_Alert_Alert-1234.3.Active	GCFNavSubViewConfigAlert	0	0x101	17.02.2005 09:06:50.240
+__nav_Alert_config_Alert_Alert-1234.3.nrOfRows	GCFNavSubViewConfigAlert	2	0x101	17.02.2005 09:06:50.250
+__nav_Alert_config_Alert_Alert-1234.3.nrOfColumns	GCFNavSubViewConfigAlert	4	0x101	17.02.2005 09:06:50.250
+__nav_Alert_config_Alert_Alert-1234.ListActive	GCFNavSubViewConfigAlert	1	0x101	17.02.2005 09:06:50.250
+__nav_Alert_config_Alert_Alert-1234.1.Column0Titles	GCFNavSubViewConfigAlert	"", ""	0x101	17.02.2005 09:06:50.260
+__nav_Alert_config_Alert_Alert-1234.1.Column0dpNames	GCFNavSubViewConfigAlert	"", ""	0x101	17.02.2005 09:06:50.260
+__nav_Alert_config_Alert_Alert-1234.nrOfRowsList	GCFNavSubViewConfigAlert	7	0x101	17.02.2005 09:06:50.260
+__nav_Alert_viewconfig.selectedView	GCFNavViewConfiguration	4	0x101	17.02.2005 09:06:50.270
+__nav_Alert_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	17.02.2005 09:06:50.270
+__nav_Alert_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:50.270
+__nav_Alert_viewconfig.subViews	GCFNavViewConfiguration		0x101	17.02.2005 09:16:08.322
+__nav_Alert_viewconfig.configs	GCFNavViewConfiguration		0x101	17.02.2005 09:16:05.088
+__nav_Alert_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:16:14.171
+__nav_System1_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	17.02.2005 09:44:11.783
+__nav_System1_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 10:19:47.154
+__nav_System1_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:06:50.320
+__nav_System1_viewconfig.subViews	GCFNavViewConfiguration		0x101	17.02.2005 09:16:35.431
+__nav_System1_viewconfig.configs	GCFNavViewConfiguration		0x101	17.02.2005 09:16:32.046
+__nav_System1_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	17.02.2005 09:16:50.673
+__nav_TLcuPicRack_config_Trend_Trend-Test.1.Trace1.dpName	GCFNavSubViewConfigTrend	"SubRack1.status"	0x101	17.02.2005 09:06:50.390
+__nav_TLcuPicRack_config_Trend_Trend-Test.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:50.390
+__nav_TLcuPicRack_config_Trend_Trend-Test.1.Trace1.LegendName	GCFNavSubViewConfigTrend	"Trace1"	0x101	17.02.2005 09:06:50.390
+__nav_TLcuPicRack_config_Trend_Trend-Test.1.Title	GCFNavSubViewConfigTrend	"Titel van trend-1 test"	0x101	17.02.2005 09:06:50.400
+__nav_TLcuPicRack_config_Trend_Trend-Test.1.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.400
+__nav_TLcuPicRack_config_Trend_Trend-Test.1.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.410
+__nav_TLcuPicRack_config_Trend_Trend-Test.2.Minutes	GCFNavSubViewConfigTrend	5	0x101	17.02.2005 09:06:50.410
+__nav_TLcuPicRack_config_Trend_Trend-Test.2.Seconds	GCFNavSubViewConfigTrend	2	0x101	17.02.2005 09:06:50.410
+__nav_TLcuPicRack_config_Trend_Trend-Test.Standard	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 09:06:50.420
+__nav_TLcuPic_config_List_List-1.customList	GCFNavSubViewConfigList	0	0x101	17.02.2005 09:06:50.510
+__nav_TLcuPic_config_List_List-1.Title	GCFNavSubViewConfigList	"Please insert title"	0x101	17.02.2005 09:06:50.510
+__nav_TLcuPic_config_List_List-1.selectionQuery	GCFNavSubViewConfigList	"_Rack1_SubRack1_Board1_AP1*"	0x101	17.02.2005 09:06:50.510
+__nav_TLcuPic_config_List_List-1.maxAmountToRetrieve	GCFNavSubViewConfigList	75	0x101	17.02.2005 09:06:50.520
+__nav_TLcuPic_config_List_List-1.trigger	GCFNavSubViewConfigList	0	0x101	17.02.2005 09:06:50.520
+__nav_TLcuPic_config_List_List-1.queryResult	GCFNavSubViewConfigList	""	0x101	17.02.2005 09:06:50.520
+__nav_TLcuPicRCU_config_List_List-RCU.queryResult	GCFNavSubViewConfigList	""	0x101	17.02.2005 09:06:50.550
+__nav_TLcuPicRack_config_List_List-Rack.queryResult	GCFNavSubViewConfigList	""	0x101	17.02.2005 09:06:50.580
+__nav_TLcuPicMaintenance_config_List_List-Main.queryResult	GCFNavSubViewConfigList	""	0x101	17.02.2005 09:06:50.701
+__nav_TLcuPicSubRack_config_List_List-SubRack.queryResult	GCFNavSubViewConfigList	""	0x101	17.02.2005 09:06:50.711
+__nav_System1_config_List_List-System.trigger	GCFNavSubViewConfigList	0	0x101	17.02.2005 09:06:50.731
+__nav_System1_config_List_List-System.queryResult	GCFNavSubViewConfigList	""	0x101	17.02.2005 09:12:22.788
+__gcf_DPA_client_UIM1_1.	GCFDistPort	"647C3100"	0x101	17.02.2005 10:20:57.024
+__nav_subview_trend.caption	GCFNavSubView	"Trend"	0x101	17.02.2005 09:06:47.035
+__nav_subview_trend.filename	GCFNavSubView	"trend_view.pnl"	0x101	17.02.2005 09:06:47.035
+__gcf_DPA_client_UIM1_9.	GCFDistPort	"647C3900"	0x101	17.02.2005 09:38:40.897
+__nav_subview_Panel_Station-Racks.caption	GCFNavSubView	"Station Racks"	0x101	17.02.2005 09:20:49.957
+__nav_subview_Panel_Station-Racks.filename	GCFNavSubView	"Station.pnl"	0x101	17.02.2005 09:20:54.914
+__nav_subview_Panel_Station-Subrack.caption	GCFNavSubView	"Station Subrack"	0x101	17.02.2005 09:25:22.770
+__nav_subview_Panel_Station-Subrack.filename	GCFNavSubView	"Station_Subrack.pnl"	0x101	17.02.2005 09:25:35.899
+__nav_subview_Panel_Subrack-details.caption	GCFNavSubView	"Subrack details"	0x101	17.02.2005 09:26:34.963
+__nav_subview_Panel_Subrack-details.filename	GCFNavSubView	"Station_Subrack_RCU.pnl"	0x101	17.02.2005 09:26:41.423
+__nav_subview_Control_Control-1.caption	GCFNavSubView	"Control_1"	0x101	17.02.2005 09:53:15.435
+__nav_subview_Control_Control-1.filename	GCFNavSubView	"control_view.pnl"	0x101	17.02.2005 09:53:15.435
+__nav_TLcuPacVT_viewconfig.selectedView	GCFNavViewConfiguration	3	0x101	17.02.2005 10:05:07.088
+__nav_TLcuPacVT_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	17.02.2005 10:19:54.955
+__nav_TLcuPacVT_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	17.02.2005 09:53:15.595
+__nav_TLcuPacVT_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_Control_Control-1	0x101	17.02.2005 09:53:15.615
+__nav_TLcuPacVT_viewconfig.configs	GCFNavViewConfiguration	__nav_TLcuPacVT_config_Control_Control-1	0x101	17.02.2005 09:53:15.615
+__nav_TLcuPacVT_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 1, 0, 0	0x101	17.02.2005 09:53:15.615

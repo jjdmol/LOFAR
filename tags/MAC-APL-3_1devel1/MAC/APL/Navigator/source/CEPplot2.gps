@@ -1,0 +1,8 @@
+#set xrange [69.8:73.9]
+set xrange [60:80]
+set xlabel "MHz"
+set yrange [0:80]
+set ylabel "dB"
+set boxwidth 0.1
+plot "C:\\temp\\spectrum2.dat" using (160/1024.0*($1+447)):(10*log10($2)) title "Auto correlatie output CEP[2]" with boxes fill solid
+#[--------------- End of file ---------------------------]

@@ -1,0 +1,5 @@
+#
+# Configuration of the CaptureStats communication ports.
+#
+mac.ns.CaptureStats.server.type=TCP
+mac.top.CaptureStats.server.remoteservice=RSPDriver:acceptor

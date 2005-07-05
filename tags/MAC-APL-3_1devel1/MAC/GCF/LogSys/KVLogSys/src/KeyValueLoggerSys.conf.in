@@ -1,0 +1,8 @@
+mac.ns.GCF-KVLM.server.type=TCP
+mac.ns.GCF-KVLM.server.port=25001
+mac.ns.GCF-KVLM.server.host=sun
+mac.top.GCF-KVLD.client.remoteservice=GCF-KVLM:server
+mac.ns.GCF-KVLD.server.type=TCP
+mac.ns.GCF-KVLD.server.port=25002
+mac.ns.GCF-KVLD.server.host=sun
+mac.top.GCF-KVLC.client.remoteservice=GCF-KVLD:server

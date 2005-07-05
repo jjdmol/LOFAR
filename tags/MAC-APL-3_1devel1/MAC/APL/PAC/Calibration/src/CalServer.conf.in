@@ -1,0 +1,11 @@
+#
+# Configuration of the Calibration Server
+#
+
+#
+# Calibration Server configuration
+#
+mac.ns.CalServer.acceptor.type=TCP
+mac.ns.CalServer.acmserver.type=TCP
+mac.top.BeamServer.acmserver.remoteservice=ACMServer:acceptor
+

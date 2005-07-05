@@ -1,0 +1,129 @@
+V 10
+2
+LANG:1 7 Warning
+LANG:0 7 Warnung
+PANEL,569 232 404 105 N "_3DFace" 1
+"$1"
+EEE E E 1 -1 -1 0  251 55
+"" 0 1
+EE 2
+"CBRef""0"
+"EClose"E
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 5
+"imgWarning"
+""
+1 14 14 E E E 1 E 1 E N "_3DFace" E N "_3DFace" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_warning.bmp" 13434828 E 14 14 51 51
+2 10
+"text"
+""
+1 73 15 E E E 1 E 0 E N "_3DText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  int w,h;
+
+  getValue(\"\",\"size\",w,h);
+  setValue(\"\",\"text\",makeCR($1,w),
+              \"visible\",true);
+}" 0
+ E 0 1 1 0 1 E U  0 E 73 15 396 31
+0 0 0 "s" 0 0 0 192 0 0  73 15
+ 1
+2
+LANG:1 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0 ""
+2
+LANG:1 47 Error messagexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+LANG:0 47 Fehlermeldungxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+13 8
+"cmdOK"
+""
+1 160 70 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+0
+2
+LANG:1 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0 ""
+160 70 258 98
+T 
+2
+LANG:1 2 OK
+LANG:0 2 OK
+"main()
+{
+  dyn_anytype da, daa;
+  
+  da[1] = myModuleName();
+  da[2] = myPanelName();
+  daa[1] = 0.0;
+  da[3] = daa;
+
+  if ( isEvConnOpen() )
+    PanelOff();
+  else
+    panelOff(da);
+}
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
