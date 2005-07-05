@@ -45,7 +45,8 @@ WH_Storage::WH_Storage(const string& name,
     sprintf(str, "DH_in_%d", i);
     getDataManager().addInDataHolder(i, new DH_Vis(str, i)); // set correct
   }                                                          // startfreq?
-  // To do: add outholders  
+
+  // create MSwriter object
 }
 
 WH_Storage::~WH_Storage() {
@@ -64,5 +65,5 @@ WH_Storage* WH_Storage::make(const string& name)
 
 void WH_Storage::process() 
 {
-  // transform input to correct data format (MS?) 
+  // Write data in MS 
 }
