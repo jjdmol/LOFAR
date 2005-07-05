@@ -20,6 +20,8 @@
 //
 //  $Id$
 
+#include <lofar_config.h>
+
 #include <unistd.h>
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
@@ -44,7 +46,7 @@ TH_Socket::TH_Socket (const string& service,
 {
 	LOG_TRACE_FLOW("TH_Socket<server>");
 
-	ASSERTSTR(itsServerSocket->ok(), "Cannot start listener");
+	ASSERTSTR(itsServerSocket && itsServerSocket->ok(), "Cannot start listener");
 
 	itsServerSocket->setBlocking (sync);
 }
@@ -65,7 +67,7 @@ TH_Socket::TH_Socket (const string&	hostName,
 {
 	LOG_TRACE_FLOW("TH_Socket<client>");
 
-	ASSERTSTR(itsDataSocket, "Cannot allocate client socket");
+	ASSERTSTR(itsDataSocket && itsDataSocket->ok(), "Cannot allocate client socket");
 
 	itsDataSocket->setBlocking (sync);		// Set correct mode.
 
