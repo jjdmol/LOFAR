@@ -30,13 +30,13 @@ AH_DelayCompensation::~AH_DelayCompensation() {
 void AH_DelayCompensation::undefine() {
 }  
 
-void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
+void AH_DelayCompensation::define(const LOFAR::KeyValueMap& kvm) {
 
   LOG_TRACE_FLOW_STR("Start of AH_DelayCompensation::define()");
   undefine();
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
-  Composite comp;
+  Composite comp(0, 0, "topComposite");
   setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
 
   int nRSP = itsParamSet.getInt("NRSP");
