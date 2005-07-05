@@ -22,7 +22,7 @@ namespace LOFAR {
 // connect to the BGLProcessing application Holder (using only tinyCEP). 
 // The interface between these is defined in  the SB_Stub class.
 // The InputSection receives data from RSP boards using the WH_RSP class.
-// This class has an internal buffer and sends output to the WH_Transpose class.
+// This class has an internal buffer and sends output to the WH_SBSplit class.
 // 
 
 class AH_InputSection: public LOFAR::ApplicationHolder
