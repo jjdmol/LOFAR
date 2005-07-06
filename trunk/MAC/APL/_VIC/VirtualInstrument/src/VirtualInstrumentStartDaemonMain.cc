@@ -24,6 +24,8 @@
 
 #include <APLCommon/StartDaemon.h>
 #include "VirtualInstrumentFactory.h"
+#include <ArrayReceptorGroup/ArrayReceptorGroupFactory.h>
+#include <ArrayOperations/ArrayOperationsFactory.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;
@@ -31,15 +33,21 @@ using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
 using namespace LOFAR::APLCommon;
 using namespace LOFAR::AVI;  // A)pplication layer V)irtual I)nstrument
+using namespace LOFAR::AAO;  // A)pplication layer A)rray O)perations
+using namespace LOFAR::AAR;  // A)pplication layer A)rray R)eceptor group
 
 int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
   
-  boost::shared_ptr<VirtualInstrumentFactory> viFactory(new VirtualInstrumentFactory);
+  boost::shared_ptr<VirtualInstrumentFactory>   viFactory(new VirtualInstrumentFactory);
+  boost::shared_ptr<ArrayReceptorGroupFactory>  argFactory(new ArrayReceptorGroupFactory);
+  boost::shared_ptr<ArrayOperationsFactory>     aoFactory(new ArrayOperationsFactory);
   
   StartDaemon sd(string("VIC_VIStartDaemon"));
   sd.registerFactory(LDTYPE_VIRTUALINSTRUMENT,viFactory);
+  sd.registerFactory(LDTYPE_VIRTUALARRAY,argFactory);
+  sd.registerFactory(LDTYPE_ARRAYOPERATIONS,aoFactory);
   sd.start(); // make initial transition
 
   GCFTask::run();
