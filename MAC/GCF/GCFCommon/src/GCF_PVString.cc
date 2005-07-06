@@ -73,7 +73,7 @@ string GCFPVString::getValueAsString(const string& format) const
   }
   else
   {
-    retVal = formatString(format.c_str(), _value);
+    retVal = formatString(format.c_str(), _value.c_str());
   }  
   return retVal;
 }
