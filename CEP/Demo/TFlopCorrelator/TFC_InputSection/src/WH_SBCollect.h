@@ -34,11 +34,12 @@ namespace LOFAR
   {
   public:
 
-    explicit WH_SBCollect(const string& name, int sbID, const ACC::ParameterSet pset);
+    explicit WH_SBCollect(const string& name, int sbID, 
+			  const ACC::APS::ParameterSet pset);
     virtual ~WH_SBCollect();
     
     static WorkHolder* construct(const string& name, int sbID, 
-				 const ACC::ParameterSet& pset);
+				 const ACC::APS::ParameterSet& pset);
     virtual WH_SBCollect* make(const string& name);
 
     virtual void process();
@@ -49,7 +50,7 @@ namespace LOFAR
     /// forbid assignment
     WH_SBCollect& operator= (const WH_SBCollect&);
 
-    ACC::ParameterSet itsPS;
+    ACC::APS::ParameterSet itsPS;
     int itsSubBandID;
 
   };

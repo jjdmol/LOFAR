@@ -50,7 +50,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   undefine();
 
   int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt("NSBF");  // number of SubBand filters in the application
+  itsNSBF  = itsParamSet.getInt32("NSBF");  // number of SubBand filters in the application
   
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
@@ -86,12 +86,12 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   // DataHolders in the RSPInput Steps.
   // Note that the number of SubBandFilters per TRanspose Step
   // is hard codes as 2.
-  const int NSBF = itsParamSet.getInt("NSBF");
+  const int NSBF = itsParamSet.getInt32("NSBF");
   DBGASSERTSTR(NSBF%2 == 0, "NSBF should be an even number");
   const int NrTransposeNodes = NSBF/2;
   vector<Step*>        RSPSteps;
   vector<WH_RSPInput*> RSPNodes;
-  int noRSPs = itsParamSet.getInt("NRSP");
+  int noRSPs = itsParamSet.getInt32("NRSP");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   for (int r=0; r<noRSPs; r++) {
