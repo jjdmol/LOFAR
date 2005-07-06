@@ -142,14 +142,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   
   string psDetailsType("");
   
-  try
-  {
-    m_parameterSet.adoptFile(_getShareLocation() + parameterFile);
-  }
-  catch(Exception& e)
-  {
-    THROW(APLCommon::ParameterFileNotFoundException,e.message());
-  }
+  adoptParameterFile(parameterFile);
   
   // check version number
   string receivedVersion = m_parameterSet.getVersionNr();
@@ -197,6 +190,18 @@ LogicalDevice::~LogicalDevice()
   m_childStartDaemonPorts.clear();
   m_connectedChildPorts.clear();
   m_childPorts.clear();
+}
+
+void LogicalDevice::adoptParameterFile(const string& parameterFile)
+{
+  try
+  {
+    m_parameterSet.adoptFile(_getShareLocation() + parameterFile);
+  }
+  catch(Exception& e)
+  {
+    THROW(APLCommon::ParameterFileNotFoundException,e.message());
+  }
 }
 
 string& LogicalDevice::getServerPortName()

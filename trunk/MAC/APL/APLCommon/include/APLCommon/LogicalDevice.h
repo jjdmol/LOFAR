@@ -121,6 +121,7 @@ namespace APLCommon
                                                            APLCommon::WrongVersionException);
       virtual ~LogicalDevice();
 
+      void adoptParameterFile(const string& parameterFile);
       string& getServerPortName();
       virtual bool isPrepared(vector<string>& parameters);
       TLogicalDeviceState getLogicalDeviceState() const;
