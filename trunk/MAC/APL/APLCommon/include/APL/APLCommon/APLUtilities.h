@@ -52,6 +52,7 @@ class APLUtilities
     static void string2Vector(const string& parametersString, vector<string>& parameters, const char delimiter=','); 
     static void string2Vector(const string& parametersString, vector<int>& parameters, const char delimiter=','); 
     static void string2Vector(const string& parametersString, vector<int16>& parameters, const char delimiter=','); 
+    static void vector2String(const vector<int16>& parameters, string& parametersString, const char delimiter=','); 
     static time_t getUTCtime();
     static time_t decodeTimeString(const string& timeStr);
     static int remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile);
