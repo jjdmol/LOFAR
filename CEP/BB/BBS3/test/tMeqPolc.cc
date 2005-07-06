@@ -49,6 +49,7 @@ void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
   MeqRequest req(domain, nx, ny);
   MeqResult res = polc.getResult (req);
   cout << "domain: " << domain << ' ' << nx << ' ' << ny << endl;
+  //  cout.precision(4);
   cout << "result: " << res.getValue() << endl;
   // Calculate the result for all perturbed values.
   int nspid = polc.makeSolvable (0);
