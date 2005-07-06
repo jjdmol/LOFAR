@@ -24,6 +24,7 @@ MNS/MeqExpr.h \
 MNS/MeqFunklet.h \
 MNS/MeqHist.h \
 MNS/MeqJonesCMul2.h \
+MNS/MeqJonesCMul3.h \
 MNS/MeqJonesExpr.h \
 MNS/MeqJonesNode.h \
 MNS/MeqJonesMul2.h \
@@ -99,6 +100,7 @@ MNS/MeqExpr.cc \
 MNS/MeqFunklet.cc \
 MNS/MeqHist.cc \
 MNS/MeqJonesCMul2.cc \
+MNS/MeqJonesCMul3.cc \
 MNS/MeqJonesExpr.cc \
 MNS/MeqJonesMul2.cc \
 MNS/MeqJonesMul3.cc \

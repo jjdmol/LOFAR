@@ -1,4 +1,4 @@
-//# MeqJonesMul3.cc: Calculate left*mid*right
+//# MeqJonesCMul3.cc: Calculate left*mid*conj(right)
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/Profiling/PerfProfile.h>
 
-#include <BBS3/MNS/MeqJonesMul3.h>
+#include <BBS3/MNS/MeqJonesCMul3.h>
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqJonesResult.h>
 #include <BBS3/MNS/MeqMatrix.h>
@@ -34,18 +34,18 @@ using namespace casa;
 
 namespace LOFAR {
 
-MeqJonesMul3::MeqJonesMul3 (const MeqJonesExpr& left,
-			    const MeqJonesExpr& mid,
-			    const MeqJonesExpr& right)
+MeqJonesCMul3::MeqJonesCMul3 (const MeqJonesExpr& left,
+			      const MeqJonesExpr& mid,
+			      const MeqJonesExpr& right)
 : itsLeft  (left),
   itsMid   (mid),
   itsRight (right)
 {}
 
-MeqJonesMul3::~MeqJonesMul3()
+MeqJonesCMul3::~MeqJonesCMul3()
 {}
 
-MeqJonesResult MeqJonesMul3::getResult (const MeqRequest& request)
+MeqJonesResult MeqJonesCMul3::getResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 
@@ -87,10 +87,10 @@ MeqJonesResult MeqJonesMul3::getResult (const MeqRequest& request)
   MeqMatrix t12(ml11*mm12 + ml12*mm22);
   MeqMatrix t21(ml21*mm11 + ml22*mm21);
   MeqMatrix t22(ml21*mm12 + ml22*mm22);
-  result11.setValue (t11*mr11 + t12*mr21);
-  result12.setValue (t11*mr12 + t12*mr22);
-  result21.setValue (t21*mr11 + t22*mr21);
-  result22.setValue (t21*mr12 + t22*mr22);
+  result11.setValue (t11*conj(mr11) + t12*conj(mr12));
+  result12.setValue (t11*conj(mr21) + t12*conj(mr22));
+  result21.setValue (t21*conj(mr11) + t22*conj(mr12));
+  result22.setValue (t21*conj(mr21) + t22*conj(mr22));
 
   // Determine which values are perturbed and determine the perturbation.
   MeqMatrix perturbation;
@@ -137,13 +137,13 @@ MeqJonesResult MeqJonesMul3::getResult (const MeqRequest& request)
 	perturbation = r11.getPerturbation(spinx);
 	eval11 = true;
 	eval21 = true;
-      } else if (r21.isDefined(spinx)) {
-	perturbation = r21.getPerturbation(spinx);
+      } else if (r12.isDefined(spinx)) {
+	perturbation = r12.getPerturbation(spinx);
 	eval11 = true;
 	eval21 = true;
       }
-      if (r12.isDefined(spinx)) {
-	perturbation = r12.getPerturbation(spinx);
+      if (r21.isDefined(spinx)) {
+	perturbation = r21.getPerturbation(spinx);
 	eval12 = true;
 	eval22 = true;
       } else if (r22.isDefined(spinx)) {
@@ -170,11 +170,11 @@ MeqJonesResult MeqJonesMul3::getResult (const MeqRequest& request)
 	MeqMatrix t12(ml11*mm12 + ml12*mm22);
 	if (eval11) { 
 	  result11.setPerturbation (spinx, perturbation);
-	  result11.setPerturbedValue (spinx, t11*mr11 + t12*mr21);
+	  result11.setPerturbedValue (spinx, t11*conj(mr11) + t12*conj(mr12));
 	}
 	if (eval12) {
 	  result12.setPerturbation (spinx, perturbation);
-	  result12.setPerturbedValue (spinx, t11*mr12 + t12*mr22);
+	  result12.setPerturbedValue (spinx, t11*conj(mr21) + t12*conj(mr22));
 	}
       }
       if (eval21 || eval22) {
@@ -182,11 +182,11 @@ MeqJonesResult MeqJonesMul3::getResult (const MeqRequest& request)
 	MeqMatrix t22(ml21*mm12 + ml22*mm22);
 	if (eval21) {
 	  result21.setPerturbation (spinx, perturbation);
-	  result21.setPerturbedValue (spinx, t21*mr11 + t22*mr21);
+	  result21.setPerturbedValue (spinx, t21*conj(mr11) + t22*conj(mr12));
 	}
 	if (eval22) {
 	  result22.setPerturbation (spinx, perturbation);
-	  result22.setPerturbedValue (spinx, t21*mr12 + t22*mr22);
+	  result22.setPerturbedValue (spinx, t21*conj(mr21) + t22*conj(mr22));
 	}
       }
     }
