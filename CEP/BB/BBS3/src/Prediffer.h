@@ -26,6 +26,7 @@
 // \file Prediffer.h
 // Read and predict read visibilities
 
+#include <casa/BasicSL/Complex.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Quanta/MVBaseline.h>
 #include <scimath/Fitting/LSQFit.h>
@@ -159,6 +160,11 @@ public:
   // Get the results instead of the equations.
   // This is mainly used for test purposes.
   vector<MeqResult> getResults (bool calcDeriv=true);
+
+  // Get the data and flags for a single time.
+  // This is mainly used for test purposes.
+  void getData (casa::Array<casa::Complex>& data,
+		casa::Array<casa::Bool>& flags);
 
   // Write the solved parms.
   void writeParms();

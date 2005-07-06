@@ -1,4 +1,4 @@
-//# MeqJonesMul3.h: Calculate left*mid*right
+//# MeqJonesCMul3.h: Calculate left*mid*conj(right)
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQJONESMUL3_H
-#define MNS_MEQJONESMUL3_H
+#ifndef MNS_MEQJONESCMUL3_H
+#define MNS_MEQJONESCMUL3_H
 
-// \file MNS/MeqJonesMul3.h
-// Calculate left*mid*right
+// \file MNS/MeqJonesCMul3.h
+// Calculate left*mid*conj(right)
 
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
@@ -36,16 +36,16 @@ namespace LOFAR {
 // @{
 
 
-// Calculate left*mid*right.
+// Calculate left*mid*conj(right).
 
-class MeqJonesMul3: public MeqJonesExprRep
+class MeqJonesCMul3: public MeqJonesExprRep
 {
 public:
-  MeqJonesMul3 (const MeqJonesExpr& left,
-		const MeqJonesExpr& mid,
-		const MeqJonesExpr& right);
+  MeqJonesCMul3 (const MeqJonesExpr& left,
+		 const MeqJonesExpr& mid,
+		 const MeqJonesExpr& right);
 
-  ~MeqJonesMul3();
+  ~MeqJonesCMul3();
 
   // Get the result of the expression for the given domain.
   MeqJonesResult getResult (const MeqRequest&);

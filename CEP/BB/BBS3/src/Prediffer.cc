@@ -35,7 +35,7 @@
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <BBS3/MNS/MeqParmSingle.h>
 #include <BBS3/MNS/MeqPointSource.h>
-#include <BBS3/MNS/MeqJonesMul3.h>
+#include <BBS3/MNS/MeqJonesCMul3.h>
 
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
@@ -570,9 +570,9 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
 	  }
 	  // Multiple by ionospheric gain/phase per station.
 	  if (useEJ) {
-	    vecAll.push_back (new MeqJonesMul3(grpEJ[ant1*nrgrp + grp],
-					       sum,
-					       grpEJ[ant2*nrgrp + grp]));
+	    vecAll.push_back (new MeqJonesCMul3(grpEJ[ant1*nrgrp + grp],
+						sum,
+						grpEJ[ant2*nrgrp + grp]));
 	  } else {
 	    vecAll.push_back (sum);
 	  }
@@ -585,9 +585,9 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
 	  sumAll = MeqJonesExpr (new MeqJonesSum(vecAll));
 	}
 	if (useStatParm) {
-	  itsExpr[blindex] = new MeqJonesMul3(statExpr[ant1],
-					      sumAll,
-					      statExpr[ant2]);
+	  itsExpr[blindex] = new MeqJonesCMul3(statExpr[ant1],
+					       sumAll,
+					       statExpr[ant2]);
 	} else {
 	  itsExpr[blindex] = sumAll;
 	}
@@ -1073,6 +1073,47 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
     }
   }
   return results;
+}
+
+//----------------------------------------------------------------------
+//
+// ~getData
+//
+// Get the mapped data for the selected baselines and domain.
+//
+//----------------------------------------------------------------------
+void Prediffer::getData (Array<Complex>& dataArr, Array<Bool>& flagArr)
+{
+  int nrchan = itsLastChan-itsFirstChan+1;
+  unsigned int freqOffset = itsDataFirstChan*itsNCorr;
+  dataArr.resize (IPosition(4, itsNrBl, itsNrTimes, nrchan, itsNCorr));
+  flagArr.resize (IPosition(4, itsNrBl, itsNrTimes, nrchan, itsNCorr));
+  Complex* datap = dataArr.data();
+  Bool* flagp = flagArr.data();
+
+  // Get the pointer to the mapped data.
+  fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
+  void* flagStart = itsFlagsMap->getStart();
+  int flagStartBit = itsFlagsMap->getStartBit();
+  ASSERTSTR(dataStart!=0 && flagStart!=0,
+	    "No memory region mapped. Call map(..) first."
+	    << " Perhaps you have forgotten to call nextInterval().");
+  for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
+  {
+    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
+    for (unsigned int bl=0; bl<itsNrBl; bl++)
+    {
+      // Get pointer to correct data part.
+      unsigned int blOffset = bl*itsNrChan*itsNCorr;
+      // Convert the flag bits to bools.
+      bitToBool (flagp, flagStart, nrchan*itsNCorr,
+		 timeOffset + blOffset + freqOffset + flagStartBit);
+      memcpy (datap, dataStart + timeOffset + blOffset + freqOffset,
+	      nrchan*itsNCorr*sizeof(Complex));
+      datap += nrchan*itsNCorr;
+      flagp += nrchan*itsNCorr;
+    }
+  }
 }
 
 //----------------------------------------------------------------------
