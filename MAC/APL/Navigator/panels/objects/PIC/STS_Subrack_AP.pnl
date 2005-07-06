@@ -7,16 +7,16 @@ PANEL,284 171 184 193 N "_3DFace" 2
 "main()
 {
   setValue(\"text_APNr\", \"text\", \"AP\" + $APNr);
-  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr);
+  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr);
 
-  if(dpAccessable($datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\"))
+  if(dpAccessable($datapoint + \"_Board0_AP\"+ $APNr +\".temperature:_online.._value\"))
   {
-    dpConnect(\"ControlGUIAP\", $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\",
-                              $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\",
-                              $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._invalid\");
+    dpConnect(\"ControlGUIAP\", $datapoint + \"_Board0_AP\"+ $APNr +\".temperature:_online.._value\",
+                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._value\",
+                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._invalid\");
     setValue(\"output_packetsReceived\", \"editable\", FALSE);
-    dpConnect(\"showVersion\", $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._value\",
-                             $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._invalid\");
+    dpConnect(\"showVersion\", $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._value\",
+                             $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._invalid\");
   }
   else
   {
@@ -72,7 +72,7 @@ ControlGUIAP(string dp1, float temperature,
 " 0
 "main()
 {
-  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr);
+  navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr);
 }" 0
 E E E 1 -1 -1 0  20 60
 "" 0 1
@@ -96,7 +96,7 @@ main(int iType)
   dyn_int      diType = makeDynInt();
   dyn_string   dsDps;
 
-  dsDps[1] = $datapoint+\"_Board1_AP\"+$APNr+\"_status.\" + \":_alert_hdl.._ack\";
+  dsDps[1] = $datapoint+\"_Board0_AP\"+$APNr+\"_status.\" + \":_alert_hdl.._ack\";
 
   if ( isFunctionDefined(\"isAckable\") )
   {
@@ -115,7 +115,7 @@ main(int iType)
 }
 // SimpleCtrlScript {EP_confirm}
 // dpCount {1}
-// dp1 {$datapoint  + \"_Board1_AP\"+ $APNr +\"_status.\"}
+// dp1 {$datapoint  + \"_Board0_AP\"+ $APNr +\"_status.\"}
 // SimpleCtrlScriptEnd {EP_confirm}
 " 0
 
@@ -285,7 +285,7 @@ E E 0 1 1 0 1 E U  0 E 148 32 162 48
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 2 °C
+LANG:1 2 ï¿½C
 14 12
 "output_errorCount"
 ""
@@ -384,9 +384,9 @@ E"main(int button, bool state)
     
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
-      if(!dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\") ||
-         !dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\") ||
-         !dpAccessable($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\"))
+      if(!dpAccessable($datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\") ||
+         !dpAccessable($datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\") ||
+         !dpAccessable($datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\"))
       {
         setValue(\"output_syncCount\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"output_sampleCount\", \"backCol\", \"_dpdoesnotexist\");
@@ -395,25 +395,25 @@ E"main(int button, bool state)
       }
       else
       {
-        navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus\");
+        navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus\");
         setValue(\"output_syncCount\", \"backCol\", \"white\");
         setValue(\"output_sampleCount\", \"backCol\", \"white\");
         setValue(\"output_errorCount\", \"backCol\", \"white\");
-        dpConnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
-                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
-                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
-                                     $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
+        dpConnect(\"FPGASyncDetails\", $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
+                                     $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
+                                     $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
+                                     $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
       }
                                    
     }
     else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
     {
     
-      dpDisconnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
-                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
-                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
-                                      $datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
-      navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus\");
+      dpDisconnect(\"FPGASyncDetails\", $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\",
+                                      $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\",
+                                      $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\",
+                                      $datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._invalid\");
+      navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr + \"_SYNCStatus\");
     }
 
       

@@ -754,7 +754,7 @@ LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-
 T 
 2
 LANG:1 19 Handling active for
-LANG:0 20 Behandlung aktiv für
+LANG:0 20 Behandlung aktiv fï¿½r
  0
 1
 LANG:1 0 
@@ -860,7 +860,7 @@ LANG:0 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
 T 
 2
 LANG:1 5 Apply
-LANG:0 10 Übernehmen
+LANG:0 10 ï¿½bernehmen
 "main()
 {
   int         Id=paMyModuleId();
@@ -948,7 +948,7 @@ LANG:0 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
 T 
 2
 LANG:1 11 Copy to all
-LANG:0 10 Übernehmen
+LANG:0 10 ï¿½bernehmen
 "main()
 {
   string tempDP;
@@ -1001,8 +1001,8 @@ LANG:0 10 Übernehmen
   for(int i=1; i<=dynlen(out1); i++)  
   {
     
-    //dpCopyConfig(\"STSLCU3:PIC_Rack1_SubRack1_Board1_AP1_RCU1.status\",
-    //             \"STSLCU3:PIC_Rack1_SubRack1_Board1_AP1_RCU2.status\", conf, error, drvNum);
+    //dpCopyConfig(\"STSLCU3:PIC_Rack0_SubRack0_Board0_AP0_RCU0.status\",
+    //             \"STSLCU3:PIC_Rack0_SubRack0_Board0_AP0_RCU1.status\", conf, error, drvNum);
     dpCopyConfig($1, out1[i]+\".status\", conf, error, drvNum);
     if(error!=0) DebugN(i+\"[error]\"+error);
     progressBar(maximumCount, i);

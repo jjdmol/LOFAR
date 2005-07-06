@@ -29,7 +29,7 @@ RecordFunction(string dp1, bool triggerRecord)
   DebugN(\"And here\");
   //\"CCU1:__navU0000_TLcuPicSubRack_config_Plot_Plot-1\"
   
-  //\"STSLCU2:PIC_Rack1_SubRack1_Board1_AP1_RCU2.statisticsSubbandPower\"
+  //\"STSLCU2:PIC_Rack0_SubRack0_Board0_AP0_RCU1.statisticsSubbandPower\"
   string dpName;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".dpRecord\", dpName);
   DebugN(\"dpName:\"+dpName);
@@ -68,7 +68,7 @@ void RecordSpectrum(string dp1, string spectrum)
   //DebugTN(\"#####################  Start   ######################\");  
 //  for(int j=0; j<=60; j++)
 //  {
-    //dpGet(\"STSLCU2:PIC_Rack1_SubRack1_Board1_AP3_RCU2.statisticsSubbandPower\", spectrum);
+    //dpGet(\"STSLCU2:PIC_Rack0_SubRack0_Board0_AP2_RCU1.statisticsSubbandPower\", spectrum);
     dyn_string out = strsplit(spectrum, \"\\n\");
     for(int i=0; i<=511; i++)
     {
@@ -342,10 +342,10 @@ void navViewPlotContextMenu()
       DebugN(\"case 2 - play\");
       break;
     case 3:    
-      dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 0);
+      dpSetWait($datapoint + \"_Board0_Maintenance.status:_original.._value\", 0);
       break;
     case 4:
-      dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 1);
+      dpSetWait($datapoint + \"_Board0_Maintenance.status:_original.._value\", 1);
       break;
     default:
       break;
@@ -389,28 +389,28 @@ void BPContextMenu()
   string txt_maintenance, txt_status;
   int Answer, maintenance, status;
   bool bOK;       //Variable with value FALSE
-  if(dpAccessable($datapoint + \"_Board1_BP.status:_original.._value\"))
+  if(dpAccessable($datapoint + \"_Board0_BP.status:_original.._value\"))
   {
-    dpGet($datapoint + \"_Board1_BP.status:_original.._value\", status);
-    dpGet($datapoint + \"_Board1_Maintenance.status:_original.._value\", maintenance);
+    dpGet($datapoint + \"_Board0_BP.status:_original.._value\", status);
+    dpGet($datapoint + \"_Board0_Maintenance.status:_original.._value\", maintenance);
     BuildContextMenu(status, maintenance, Answer);
 
     // Compute the chosen option
     switch (Answer)
     {
     case 2:
-      dpSetWait($datapoint + \"_Board1_BP.status:_original.._value\", 0);
+      dpSetWait($datapoint + \"_Board0_BP.status:_original.._value\", 0);
       break;
     case 3:
-      dpSetWait($datapoint + \"_Board1_BP.status:_original.._value\", 1);
+      dpSetWait($datapoint + \"_Board0_BP.status:_original.._value\", 1);
       break;
     case 10:    
-      dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 0);
-      //dpActivateAlert($datapoint + \"_Board1_BP.status\", bOK);
+      dpSetWait($datapoint + \"_Board0_Maintenance.status:_original.._value\", 0);
+      //dpActivateAlert($datapoint + \"_Board0_BP.status\", bOK);
       break;
     case 11:
-      dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 1);
-      //dpDeactivateAlert($datapoint + \"_Board1_BP.status\", bOK);
+      dpSetWait($datapoint + \"_Board0_Maintenance.status:_original.._value\", 1);
+      //dpDeactivateAlert($datapoint + \"_Board0_BP.status\", bOK);
       break;
     default:
       break;

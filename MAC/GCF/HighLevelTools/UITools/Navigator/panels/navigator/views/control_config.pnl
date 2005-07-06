@@ -9,7 +9,7 @@ PANEL,636 374 901 608 N "_3DFace" 5
 "$viewName"
 "main()
 {
-//  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+//  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
 }" 0
 EE E E 1 -1 -1 0  80 180
 "" 0 1

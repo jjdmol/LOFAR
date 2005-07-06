@@ -8,16 +8,16 @@ PANEL,284 171 95 138 N "_3DFace" 3
 "main()
 {
   //Function: Set background color of the LFA antenna
-  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\");
-  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance\");
+  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\");
+  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance\");
 
-  if(dpAccessable( $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\") &&
-  	 dpAccessable( $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\"))
+  if(dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\") &&
+  	 dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\"))
   {
     dpConnect(\"setBackGroundColorAEM\", 
-            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\",
-            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\",
-            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._invalid\");
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._invalid\");
   }
   else
   {
@@ -27,8 +27,8 @@ PANEL,284 171 95 138 N "_3DFace" 3
 }" 0
 "main()
 {
-  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\");
-  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance\");
+  navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\");
+  navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance\");
 
 }" 0
 E E E 1 -1 -1 0  28 79

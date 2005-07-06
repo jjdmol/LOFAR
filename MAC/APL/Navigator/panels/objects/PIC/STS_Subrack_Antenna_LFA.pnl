@@ -8,16 +8,16 @@ PANEL,273 356 70 164 N "_3DFace" 3
 "main()
 {
   //Function: Set background color of the LFA antenna
-  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
-  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
+  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
+  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
 
-  if(dpAccessable( $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\") &&
-  	 dpAccessable( $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\"))
+  if(dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\") &&
+  	 dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\"))
   {
     dpConnect(\"setBackGroundColorAEM\", 
-            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\",
-            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\",
-            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._invalid\");
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._invalid\");
   }
   else
   {
@@ -27,8 +27,8 @@ PANEL,273 356 70 164 N "_3DFace" 3
 }" 0
 "main()
 {
-navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
-navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
+navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
+navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
 
 }" 0
 E E E 1 -1 -1 0  28 79
