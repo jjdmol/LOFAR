@@ -26,10 +26,11 @@
 #include <Common/lofar_sstream.h>
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVDynArr.h>
+#include <GCF/GCF_PVDouble.h>
 #include <APLCommon/APLUtilities.h>
 #include <StationOperations/StationOperations.h>
+
+#include "RSP_Protocol.ph"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -44,15 +45,23 @@ namespace ASO
 {
 INIT_TRACER_CONTEXT(StationOperations,LOFARLOGGER_PACKAGE);
 
+PROPERTYCONFIGLIST_BEGIN(detailsPropertySetConf)
+  PROPERTYCONFIGLIST_ITEM(PROPERTY_SAMPLING_FREQUENCY, GCF_READABLE_PROP, "160.0")
+PROPERTYCONFIGLIST_END
+
+string StationOperations::m_RSPserverName("RSPserver");
+
 // Logical Device version
 const string StationOperations::SO_VERSION = string("1.0");
 
 StationOperations::StationOperations(const string& taskName, 
                                      const string& parameterFile, 
                                      GCFTask* pStartDaemon) :
-  LogicalDevice(taskName,parameterFile,pStartDaemon,SO_VERSION)
+  LogicalDevice(taskName,parameterFile,pStartDaemon,SO_VERSION),
+  m_RSPclient(*this, m_RSPserverName, GCFPortInterface::SAP, RSP_PROTOCOL)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  m_detailsPropertySet->initProperties(detailsPropertySetConf);
 }
 
 
@@ -78,11 +87,16 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
     case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+      if(strstr(pPropAnswer->pPropName, PROPERTY_SAMPLING_FREQUENCY) != 0)
+      {
+        double samplingFrequency = (static_cast<const GCFPVDouble*>(pPropAnswer->pValue))->getValue();
+
+        LOG_FATAL("TODO: Send sampling frequency to RSP driver");
+      }
       break;
     }
     case F_EXTPS_LOADED:
     {
-      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
       break;
     }
     case F_EXTPS_UNLOADED:
@@ -95,6 +109,14 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
     }
     case F_MYPS_ENABLED:
     {
+      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+      if(pPropAnswer->result == GCF_NO_ERROR)
+      {
+        boost::shared_ptr<GCFPVDouble> pvSamplingFrequency(static_cast<GCFPVDouble*>(m_detailsPropertySet->getValue(PROPERTY_SAMPLING_FREQUENCY)));
+        double samplingFrequency = pvSamplingFrequency->getValue();
+          
+        LOG_FATAL("TODO: Send sampling frequency to RSP driver");
+      }
       break;
     }
     case F_MYPS_DISABLED:
@@ -110,7 +132,7 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
   }
 }
 
-GCFEvent::TResult StationOperations::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_initial_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -119,9 +141,33 @@ GCFEvent::TResult StationOperations::concrete_initial_state(GCFEvent& event, GCF
   {
     case F_ENTRY:
     {
+      bool res=m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
+      LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
+      if(!res)
+      {
+        m_RSPclient.setTimer((long)3);
+      }  
       break;
     }
     
+    case F_CONNECTED:
+    {
+      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      if (m_RSPclient.isConnected())
+      {
+        newState=LOGICALDEVICE_STATE_IDLE;
+      }
+      break;
+    }
+
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)3); // try again in 3 seconds
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      port.close();
+      break;
+    }
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -148,7 +194,7 @@ GCFEvent::TResult StationOperations::concrete_idle_state(GCFEvent& event, GCFPor
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -163,38 +209,6 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
     case LOGICALDEVICE_CLAIMED:
     {
       LOG_TRACE_FLOW("CLAIMED received");
-      // check if all childs are not claiming anymore
-      // now only checking VB, because VT's are old style
-      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_CLAIMING))
-      {
-        LOG_TRACE_FLOW("No childs CLAIMING");
-        // ALL virtual backend childs must be claimed
-        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
-        {
-          LOG_TRACE_FLOW("100% VB's CLAIMED");
-          // 50% of the VT's must be claimed
-          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_CLAIMED))
-          {
-            LOG_TRACE_FLOW("00% VT's CLAIMED");
-            
-            LOG_TRACE_FLOW("need to check old style VT's");
-            
-            // enter claimed state
-            newState  = LOGICALDEVICE_STATE_CLAIMED;
-            errorCode = LD_RESULT_NO_ERROR;
-          }
-          else
-          {
-            newState  = LOGICALDEVICE_STATE_IDLE;
-            errorCode = LD_RESULT_LOW_QUALITY;
-          }
-        }
-        else
-        {
-          newState  = LOGICALDEVICE_STATE_IDLE;
-          errorCode = LD_RESULT_LOW_QUALITY;
-        }
-      }
       break;
     }
     
@@ -213,47 +227,17 @@ GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
   switch (event.signal)
   {
-    case LOGICALDEVICE_PREPARED:
-    {
-      LOG_TRACE_FLOW("PREPARED received");
-      // check if all childs are not preparing anymore
-      // now only checking VB, because VT's are old style
-      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_PREPARING))
-      {
-        LOG_TRACE_FLOW("No childs PREPARING");
-        // ALL virtual backend childs must be prepared
-        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
-        {
-          LOG_TRACE_FLOW("All VB's SUSPENDED");
-          // 00% of the VT's must be prepared
-          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_SUSPENDED))
-          {
-            LOG_TRACE_FLOW("00% VT's SUSPENDED");
-            // enter suspended state
-            newState=LOGICALDEVICE_STATE_SUSPENDED;
-          }
-          else
-          {
-            newState  = LOGICALDEVICE_STATE_CLAIMED;
-            errorCode = LD_RESULT_LOW_QUALITY;
-          }
-        }
-        else
-        {
-          newState  = LOGICALDEVICE_STATE_CLAIMED;
-          errorCode = LD_RESULT_LOW_QUALITY;
-        }
-      }
-      break;
-    }
-
+    // TODO: case RSP_SETSAMPLINGFREQUENCYACK
+    // TODO:   ack ok? newState=LOGICALDEVICE_STATE_SUSPENDED;
+    // TODO:   nack?   errorCode=?????;
+    // TODO:   break;
     default:
       break;
   }
@@ -297,6 +281,11 @@ void StationOperations::concreteClaim(GCFPortInterface& /*port*/)
 void StationOperations::concretePrepare(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  double samplingFrequency = m_parameterSet.getDouble(PROPERTY_SAMPLING_FREQUENCY);
+  m_detailsPropertySet->setValue(PROPERTY_SAMPLING_FREQUENCY,GCFPVDouble(samplingFrequency));
+  
+  LOG_FATAL("TODO: Send sampling frequency to RSP driver");
 }
 
 void StationOperations::concreteResume(GCFPortInterface& /*port*/)
@@ -324,7 +313,7 @@ void StationOperations::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void StationOperations::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
+void StationOperations::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
