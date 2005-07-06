@@ -48,7 +48,7 @@ namespace LOFAR {
 
   class NSTimer {
     public:
-			   NSTimer(const char *name = 0);
+			   NSTimer(const char *name = 0, bool print_on_destruction = false);
 			   ~NSTimer();
 
 	void		   start();
@@ -59,9 +59,16 @@ namespace LOFAR {
     private:
 	void		   print_time(std::ostream &, const char *which, double time) const;
 
-	long long	   total_time;
+	union {
+	  long long	   total_time;
+	  struct {
+	      int	   low, high;
+	  };
+	};
+
 	unsigned long long count;
 	char		   *const name;
+	const bool	   print_on_destruction;
 
 	static double	   CPU_speed_in_MHz, get_CPU_speed_in_MHz();
   };
@@ -77,9 +84,10 @@ namespace LOFAR {
   }
 
 
-  inline NSTimer::NSTimer(const char *name)
+  inline NSTimer::NSTimer(const char *name, bool print_on_destruction)
     :
-    name(name != 0 ? strdup(name) : 0)
+    name(name != 0 ? strdup(name) : 0),
+    print_on_destruction(print_on_destruction)
   {
     reset();
   }
@@ -87,6 +95,9 @@ namespace LOFAR {
 
   inline NSTimer::~NSTimer()
   {
+    if (print_on_destruction)
+      print(std::cerr);
+
     if (name != 0)
       free(name);
   }
@@ -94,15 +105,20 @@ namespace LOFAR {
 
   inline void NSTimer::start()
   {
-#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+#if (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
+    unsigned eax, edx;
+
+    asm volatile ("rdtsc" : "=a" (eax), "=d" (edx));
+
+    total_time -= ((unsigned long long) edx << 32) + eax;
+#elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
     asm volatile
     (
 	"rdtsc\n\t"
 	"subl %%eax, %0\n\t"
 	"sbbl %%edx, %1"
     :
-	"=m" ((reinterpret_cast<int *>(&total_time))[0]),
-	"=m" ((reinterpret_cast<int *>(&total_time))[1])
+	"+m" (low), "+m" (high)
     :
     :
 	"eax", "edx"
@@ -111,7 +127,7 @@ namespace LOFAR {
     total_time -= __getReg(_IA64_REG_AR_ITC);
 #elif defined __ia64__ && defined __GNUC__
     long long time;
-    __asm__ __volatile__("mov %0=ar.itc" : "=r" (time));
+    asm volatile ("mov %0=ar.itc" : "=r" (time));
     total_time -= time;
 #endif
   }
@@ -119,15 +135,19 @@ namespace LOFAR {
 
   inline void NSTimer::stop()
   {
-#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+#if (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
+    unsigned eax, edx;
+
+    asm volatile ("rdtsc\n\t" : "=a" (eax), "=d" (edx));
+    total_time += ((unsigned long long) edx << 32) + eax;
+#elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
     asm volatile
     (
 	"rdtsc\n\t"
 	"addl %%eax, %0\n\t"
 	"adcl %%edx, %1"
     :
-	"=m" ((reinterpret_cast<int *>(&total_time))[0]),
-	"=m" ((reinterpret_cast<int *>(&total_time))[1])
+	"+m" (low), "+m" (high)
     :
     :
 	"eax", "edx"
@@ -136,7 +156,7 @@ namespace LOFAR {
     total_time += __getReg(_IA64_REG_AR_ITC);
 #elif defined __ia64__ && defined __GNUC__
     long long time;
-    __asm__ __volatile__("mov %0=ar.itc" : "=r" (time));
+    asm volatile ("mov %0=ar.itc" : "=r" (time));
     total_time += time;
 #endif
 
