@@ -30,12 +30,12 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name, const ACC::ParameterSet& ps)
+DH_Vis::DH_Vis (const string& name, const ACC::APS::ParameterSet& ps)
 : DataHolder    (name, "DH_Vis"),
   itsBufferptr  (0),
   itsPS         (ps)
 {
-  itsBufSize = itsPS.getInt("general.nstations") * itsPS.getInt("general.nstations") 
+  itsBufSize = itsPS.getInt32("general.nstations") * itsPS.getInt32("general.nstations") 
     * sizeof(BufferType);
 }
 

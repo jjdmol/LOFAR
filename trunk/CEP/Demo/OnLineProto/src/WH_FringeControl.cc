@@ -40,7 +40,7 @@ namespace LOFAR
 
 WH_FringeControl::WH_FringeControl (const string& name,
 				    const int nout,
-				    const ACC::ParameterSet& ps)
+				    const ACC::APS::ParameterSet& ps)
   : WorkHolder    (1, nout, name,"WH_FringeControl"),
     itsPS        (ps)
 {
@@ -53,7 +53,7 @@ WH_FringeControl::WH_FringeControl (const string& name,
   // create the output dataholders
   for (int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addOutDataHolder(i,new DH_CorrectionMatrix (string("FringeCtrlout_") + str, ps.getInt("general.nstations"), ps.getInt("station.nchannels")));
+    getDataManager().addOutDataHolder(i,new DH_CorrectionMatrix (string("FringeCtrlout_") + str, ps.getInt32("general.nstations"), ps.getInt32("station.nchannels")));
   }
 }
 
@@ -63,7 +63,7 @@ WH_FringeControl::~WH_FringeControl()
 
 WorkHolder* WH_FringeControl::construct (const string& name,
 					 const int nout,
-					 const ACC::ParameterSet& ps)
+					 const ACC::APS::ParameterSet& ps)
 {
   return new WH_FringeControl (name, nout, ps);
 }

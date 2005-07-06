@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <tWH_Transpose.h>
 
 #include <Transport/TH_Mem.h>
@@ -54,7 +54,7 @@ namespace LOFAR
   void AH_Transpose::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
     myKvm["NoWH_RSP"] = 2;
-    ACC::ParameterSet myPset;
+    ACC::APS::ParameterSet myPset;
     myPset["NoWH_RSP"] = 2;
 
     itsInDH1 = new DH_RSP("DH_RSP1", myPset);

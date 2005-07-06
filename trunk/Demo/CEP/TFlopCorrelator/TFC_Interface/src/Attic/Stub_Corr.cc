@@ -11,10 +11,10 @@
 #include <TFC_Interface/Stub_Corr.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
@@ -23,8 +23,8 @@ namespace LOFAR {
       itsTHs          (0),
       itsConnections  (0)
   {
-    itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
-    itsNCorr = itsPS->getInt("NSBF")/2;
+    itsPS = new ACC::APS::ParameterSet("TFlopCorrelator.cfg");
+    itsNCorr = itsPS->getInt32("NSBF")/2;
     DBGASSERTSTR(NSBF%2 == 0, "NSBF should be an even number");
     LOG_TRACE_FLOW_STR("Total number of Correlators in the Stub_Corr is " << itsNCorr);
     ASSERTSTR(itsNCorr >= 0, "Number of Correlators in the Stub_Corr must be greater than 0");
@@ -54,7 +54,7 @@ namespace LOFAR {
     DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsNCorr)),
 		  "C_nr argument out of boundaries; " << C_nr << " / " << itsNCorr);
 
-    int port = itsPS->getInt("CorrConnection.RequestPort");
+    int port = itsPS->getInt32("CorrConnection.RequestPort");
     string service(formatString("%d", port));
 
     if (itsStubOnServer) // on the cluster side, so start server socket

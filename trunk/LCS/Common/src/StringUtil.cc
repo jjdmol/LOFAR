@@ -1,6 +1,6 @@
 //#  StringUtil.cc: implementation of the string utilities class.
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -117,6 +117,108 @@ char*	ltrim(char*	aCstring, char*	whiteSpace)
 	return (aCstring);
 }
 
+bool	StringToBool(const string& aString) throw(Exception)
+{
+	char	firstChar = aString.c_str()[0];
+	if ((firstChar == 't') || (firstChar == 'T') || (firstChar == 1))
+		return (true);
+
+	if ((firstChar == 'f') || (firstChar == 'F') || (firstChar == 0))
+		return (false);
+
+	THROW (Exception, aString + " is not a boolean value");
+}	
+
+int16	StringToInt16(const string& aString, const char* fmt) throw(Exception)
+{
+	int16		theShort;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theShort) : 
+			   sscanf(aString.c_str(), "%hd", &theShort)) != 1) {
+		THROW (Exception, aString + " is not an short value");
+	}
+
+	return (theShort);
+}	
+
+uint16	StringToUint16(const string& aString, const char* fmt) throw(Exception)
+{
+	uint16		theUshort;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theUshort) : 
+			   sscanf(aString.c_str(), "%hu", &theUshort)) != 1) {
+		THROW (Exception, aString + " is not an unsigned short value");
+	}
+
+	return (theUshort);
+}	
+
+int32	StringToInt32(const string& aString, const char* fmt) throw(Exception)
+{
+	int32		theInt;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theInt) : 
+			   sscanf(aString.c_str(), "%d", &theInt)) != 1) {
+		THROW (Exception, aString + " is not an integer value");
+	}
+
+	return (theInt);
+}	
+
+uint32	StringToUint32(const string& aString, const char* fmt) throw(Exception)
+{
+	uint32		theUint;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theUint) : 
+			   sscanf(aString.c_str(), "%u", &theUint)) != 1) {
+		THROW (Exception, aString + " is not an unsigned integer value");
+	}
+
+	return (theUint);
+}	
+
+#if HAVE_LONG_LONG
+int64	StringToInt64(const string& aString, const char* fmt) throw(Exception)
+{
+	int64		theLong;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theLong) : 
+			   sscanf(aString.c_str(), "%lld", &theLong)) != 1) {
+		THROW (Exception, aString + " is not a long integer value");
+	}
+
+	return (theLong);
+}	
+
+uint64	StringToUint64(const string& aString, const char* fmt) throw(Exception)
+{
+	uint64		theUlong;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theUlong) : 
+			   sscanf(aString.c_str(), "%llu", &theUlong)) != 1) {
+		THROW (Exception, aString + " is not an unsigned long integer value");
+	}
+
+	return (theUlong);
+}	
+#endif
+
+float	StringToFloat(const string& aString, const char* fmt) throw(Exception)
+{
+	float		theFloat;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theFloat) : 
+			   sscanf(aString.c_str(), "%g", &theFloat)) != 1) {
+		THROW (Exception, aString + " is not a float value");
+	}
+
+	return (theFloat);
+}	
+
+
+double	StringToDouble(const string& aString, const char* fmt) throw(Exception)
+{
+	double		theDouble;
+	if ((fmt ? sscanf(aString.c_str(), fmt, &theDouble) : 
+			   sscanf(aString.c_str(), "%lg", &theDouble)) != 1) {
+		THROW (Exception, aString + " is not a double value");
+	}
+
+	return (theDouble);
+}	
 
 
 } // namespace LOFAR

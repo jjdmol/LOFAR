@@ -11,7 +11,7 @@
 #define LOFAR_TFLOPCORRELATOR_SBSTUB_H
 
 #include <string>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 
 namespace LOFAR {
@@ -32,7 +32,7 @@ public:
 
 private:
   bool                itsStubOnServer;
-  ACC::ParameterSet*  itsPS;
+  ACC::APS::ParameterSet*  itsPS;
 };
 
 } //namespace

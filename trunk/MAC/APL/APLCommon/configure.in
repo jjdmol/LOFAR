@@ -62,7 +62,7 @@ lofar_COMPILETOOLS
 #lofar_MPI(0)
 lofar_PVSS(1)
 lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
-lofar_EXTERNAL(ACC,1,ACC/ParameterSet.h,,)
+lofar_EXTERNAL(ACC/APS,1,APS/ParameterSet.h,,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)

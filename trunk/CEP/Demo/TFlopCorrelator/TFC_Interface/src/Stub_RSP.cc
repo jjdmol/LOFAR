@@ -11,14 +11,14 @@
 
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
   Stub_RSP::Stub_RSP (bool stubOnServer)
     : itsStubOnServer (stubOnServer)
   {
-    itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
+    itsPS = new ACC::APS::ParameterSet("TFlopCorrelator.cfg");
     
     // todo: add DH_?? for pre-correlation correction factors 
     //    for (int i=0; i<itsNSBF; i++) {

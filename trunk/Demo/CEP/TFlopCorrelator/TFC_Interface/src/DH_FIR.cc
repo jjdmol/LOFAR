@@ -27,12 +27,11 @@ namespace LOFAR
       itsNPol        (0),
       itsMatrix      (0)
   {
-//     ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-//     //ParameterCollection	myPC(myPS);
-//     itsNFChannels = myPS.getInt("WH_FIR.freqs");
-//     itsNStations  = myPS.getInt("WH_FIR.stations");
-//     itsNTimes     = myPS.getInt("WH_FIR.times");
-//     itsNPol       = myPS.getInt("WH_FIR.pols");
+//     ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
+//     itsNFChannels = myPS.getInt32("WH_FIR.freqs");
+//     itsNStations  = myPS.getInt32("WH_FIR.stations");
+//     itsNTimes     = myPS.getInt32("WH_FIR.times");
+//     itsNPol       = myPS.getInt32("WH_FIR.pols");
     itsNFChannels = 2;
     itsNStations  = 3;
     itsNTimes     = 4;

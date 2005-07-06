@@ -8,10 +8,10 @@
 
 #include <DFTServer/BackEndStub.h>
 #include <Transport/TH_Socket.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
@@ -46,7 +46,7 @@ namespace LOFAR {
     const ParameterSet myPS(itsParmFileName);
 
     std::string FEIP = myPS.getString("BEConnection.FEIP");
-    int         Port = myPS.getInt("BEConnection.FE_Port_Offset") + corrNo;
+    int         Port = myPS.getInt32("BEConnection.FE_Port_Offset") + corrNo;
     LOG_TRACE_FLOW_STR("Create Socket"
 		       << " FE IP = " << FEIP
 		       << " Port  = " << Port );

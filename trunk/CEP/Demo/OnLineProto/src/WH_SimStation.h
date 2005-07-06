@@ -32,7 +32,7 @@
 #include "OnLineProto/DH_TimeDist.h"
 #include <Common/Lorrays.h>
 #include <Common/lofar_complex.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <Common/lofar_fstream.h>
 #include <OnLineProto/definitions.h>
 
@@ -48,7 +48,7 @@ public:
   explicit WH_SimStation (const string& name,
 			  const int nout,
 			  const string& fileName,
-			  const ACC::ParameterSet& ps,
+			  const ACC::APS::ParameterSet& ps,
 			  const int ID);
 
   virtual ~WH_SimStation();
@@ -57,7 +57,7 @@ public:
     static WorkHolder* construct (const string& name, 
 				  const int nout,
 				  const string fileName,
-				  const ACC::ParameterSet& ps,
+				  const ACC::APS::ParameterSet& ps,
 				  const int ID);
 
   /// Make a fresh copy of the WH object.
@@ -80,7 +80,7 @@ public:
      
    string itsFileName;
    ifstream itsInputFile;
-   ACC::ParameterSet itsPS;
+   ACC::APS::ParameterSet itsPS;
    int itsID;
    complex<float>* itsData;
    int itsCounter;

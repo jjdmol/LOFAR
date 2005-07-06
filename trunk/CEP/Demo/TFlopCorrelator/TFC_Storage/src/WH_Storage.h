@@ -35,11 +35,11 @@ namespace LOFAR
   public:
 
     explicit WH_Storage(const string& name, 
-			const ACC::ParameterSet& pset);
+			const ACC::APS::ParameterSet& pset);
     virtual ~WH_Storage();
     
     static WorkHolder* construct(const string& name, 
-                                 const ACC::ParameterSet& pset);
+                                 const ACC::APS::ParameterSet& pset);
     virtual WH_Storage* make(const string& name);
 
     virtual void process();
@@ -50,7 +50,7 @@ namespace LOFAR
     /// forbid assignment
     WH_Storage& operator= (const WH_Storage&);
 
-    const ACC::ParameterSet& itsPS;
+    const ACC::APS::ParameterSet& itsPS;
   };
 } // namespace LOFAR
 

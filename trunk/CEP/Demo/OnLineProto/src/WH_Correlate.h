@@ -28,7 +28,7 @@
 #include "tinyCEP/WorkHolder.h"
 #include "OnLineProto/DH_CorrCube.h"
 #include "OnLineProto/DH_Vis.h"
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <blitz/blitz.h>
 #include <blitz/array.h>
@@ -49,14 +49,14 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_Correlate (const string& name,
 			 unsigned int channels,
-			 const ACC::ParameterSet& ps);
+			 const ACC::APS::ParameterSet& ps);
 
   virtual ~WH_Correlate();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
 				unsigned int channels,
-				const ACC::ParameterSet& ps);
+				const ACC::APS::ParameterSet& ps);
 
   /// Make a fresh copy of the WH object.
   virtual WH_Correlate* make (const string& name);
@@ -92,7 +92,7 @@ private:
 
     const int itsNelements;  // number of stations/inputs
     const int itsNitems;     // number of frequency channels * number of time samples
-    const ACC::ParameterSet itsPS;
+    const ACC::APS::ParameterSet itsPS;
 
 };
 

@@ -12,7 +12,7 @@
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <AH_BGLProcessing.h>
 #include <TFC_Interface/Stub_FIR.h>
@@ -63,7 +63,7 @@ void AH_BGLProcessing::undefine() {
 void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
-  int itsNFIRF  = itsParamSet.getInt("NFIRF");  // number of FIR filters in the application
+  int itsNFIRF  = itsParamSet.getInt32("NFIRF");  // number of FIR filters in the application
   
   int lowestFreeNode = 0;
   
@@ -82,9 +82,9 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
   
   char WH_Name[40];
-  int noProcBlock = itsParamSet.getInt("NoProcessingBlocks");
-  int noFiltsPerBlock = itsParamSet.getInt("NoFiltersPerBlock");
-  int noCorsPerFilt = itsParamSet.getInt("NoCorsPerFilt");
+  int noProcBlock = itsParamSet.getInt32("NoProcessingBlocks");
+  int noFiltsPerBlock = itsParamSet.getInt32("NoFiltersPerBlock");
+  int noCorsPerFilt = itsParamSet.getInt32("NoCorsPerFilt");
   int subband = 0;
   for (int pb = 0; pb < noProcBlock; pb++) {
     int corID = 0;

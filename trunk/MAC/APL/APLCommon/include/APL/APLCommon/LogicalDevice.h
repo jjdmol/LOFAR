@@ -46,7 +46,7 @@
 #include <Common/lofar_vector.h>
 
 //# ACC Includes
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 // forward declaration
 
@@ -209,7 +209,7 @@ namespace APLCommon
       std::string                           m_basePropertySetName;
       GCFMyPropertySetSharedPtr             m_detailsPropertySet;
       std::string                           m_detailsPropertySetName;
-      ACC::ParameterSet                     m_parameterSet;
+      ACC::APS::ParameterSet                m_parameterSet;
 
       string                                m_serverPortName;
       TRemotePort                           m_serverPort; // listening port

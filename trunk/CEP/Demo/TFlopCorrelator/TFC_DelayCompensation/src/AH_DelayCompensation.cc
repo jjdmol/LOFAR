@@ -13,7 +13,7 @@
 #include <TFC_DelayCompensation/AH_DelayCompensation.h>
 #include <TFC_DelayCompensation/WH_DelayControl.h>
 #include <Common/lofar_iostream.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <CEPFrame/Step.h>
 #include <TFC_Interface/Stub_Delay.h>
 
@@ -39,7 +39,7 @@ void AH_DelayCompensation::define(const LOFAR::KeyValueMap& kvm) {
   Composite comp(0, 0, "topComposite");
   setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
 
-  int nRSP = itsParamSet.getInt("NRSP");
+  int nRSP = itsParamSet.getInt32("NRSP");
   WH_DelayControl delayWH("DelayContr", nRSP);
   Step delayStep(delayWH, "DelayContr");
   comp.addBlock(delayStep);

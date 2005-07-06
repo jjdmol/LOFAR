@@ -11,7 +11,7 @@
 //////////////////////////////////////////////////////////////////////
 #include <lofar_config.h>
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <DH_Vis.h>
 
@@ -24,9 +24,8 @@ DH_Vis::DH_Vis (const string& name, short startfreq)
   itsStartFreq  (startfreq), 
   itsNPols      (2)
 {
-   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-   //ParameterCollection	myPC(myPS);
-   itsNStations  = myPS.getInt("DH_CorrCube.stations");
+   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
+   itsNStations  = myPS.getInt32("DH_CorrCube.stations");
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)

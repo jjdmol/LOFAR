@@ -51,7 +51,7 @@
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
 #include <ACC/ConfigurationMgr.h>
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 // forward declaration
 
@@ -144,8 +144,8 @@ namespace GSO
       TSASResult _LDtoSASresult(const TLDResult& ldResult);
       TSASResult _SDtoSASresult(const TSDResult& sdResult);
 
-      void _convertRelativeTimes(boost::shared_ptr<ACC::ParameterSet> ps);
-      void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::ParameterSet> ps);
+      void _convertRelativeTimes(boost::shared_ptr<ACC::APS::ParameterSet> ps);
+      void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
       bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::ParameterSet> ps);
       

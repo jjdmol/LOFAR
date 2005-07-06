@@ -12,7 +12,7 @@
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <AH_Storage.h>
 #include <TFC_Interface/Stub_Corr.h>
 #include <TFC_Storage/WH_Storage.h>
@@ -46,7 +46,7 @@ void AH_Storage::define(const LOFAR::KeyValueMap&) {
   undefine();
 
   int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt("NSBF");  // number of SubBand filters in the application
+  itsNSBF  = itsParamSet.getInt32("NSBF");  // number of SubBand filters in the application
   
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");

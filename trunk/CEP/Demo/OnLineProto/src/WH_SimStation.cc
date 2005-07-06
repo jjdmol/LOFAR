@@ -39,7 +39,7 @@ namespace LOFAR
   WH_SimStation::WH_SimStation (const string& name,
 				const int nout,
 				const string& fileName,
-				const ACC::ParameterSet& ps,
+				const ACC::APS::ParameterSet& ps,
 				const int ID)
     : WorkHolder   (1, nout, name,"WH_SimStation"),
       itsFileName  (fileName),
@@ -52,7 +52,7 @@ namespace LOFAR
     // create the dummy input dataholder
     sprintf (str, "%d", 1);
     getDataManager().addInDataHolder(0, new DH_Empty (string("SimS_in_") + str));
-    int bs = itsPS.getInt("station.nbeamlets"); 
+    int bs = itsPS.getInt32("station.nbeamlets"); 
     
     // create the output dataholders
     for (int i = 0; i < bs; i++) {
@@ -63,13 +63,13 @@ namespace LOFAR
 							 itsPS.getFloat(string("station.beamlet.") + str),
 							 itsPS.getFloat("station.chan_bw"),
 							 itsPS.getFloat("observation.ha_0"),
-							 itsPS.getInt("station.nchannels")));
+							 itsPS.getInt32("station.nchannels")));
     }
 
     // Allocate buffer data, the add one is for the elapsed time
     // so the structure is t0 c1 ... cn  
     //                     t1 c1 ... cn  where n is the total number of channels
-    itsData = (complex<float>*)malloc((bs*itsPS.getInt("station.nchannels")+1) * sizeof (complex<float>));
+    itsData = (complex<float>*)malloc((bs*itsPS.getInt32("station.nchannels")+1) * sizeof (complex<float>));
     itsCounter = 0;
   }
   
@@ -82,7 +82,7 @@ namespace LOFAR
   WorkHolder* WH_SimStation::construct (const string& name, 
 					const int nout,
 					const string fileName,
-					const ACC::ParameterSet& ps,
+					const ACC::APS::ParameterSet& ps,
 					const int ID)
   {
     return new WH_SimStation (name, nout, fileName, ps, ID);
@@ -100,19 +100,19 @@ namespace LOFAR
 
     if (itsCounter == 0) {
       ReadData ();
-      itsCounter = itsPS.getInt("corr.tsize");
+      itsCounter = itsPS.getInt32("corr.tsize");
     } else {
       itsCounter--;
     }
 
-    float t = (float)(itsData[0].real())+ (0.05*(itsPS.getInt("corr.tsize")-itsCounter)
-					   /itsPS.getInt("corr.tsize"));
+    float t = (float)(itsData[0].real())+ (0.05*(itsPS.getInt32("corr.tsize")-itsCounter)
+					   /itsPS.getInt32("corr.tsize"));
     
-    for (int i = 0; i < itsPS.getInt("station.nbeamlets"); ++i) {
+    for (int i = 0; i < itsPS.getInt32("station.nbeamlets"); ++i) {
       ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(t);
-      for (int j = 0; j < itsPS.getInt("station.nchannels"); j++) { 
+      for (int j = 0; j < itsPS.getInt32("station.nchannels"); j++) { 
 	*((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
-	  = itsData[i * itsPS.getInt("station.nchannels") + j + 1];
+	  = itsData[i * itsPS.getInt32("station.nchannels") + j + 1];
       }
     }
   }
@@ -121,8 +121,8 @@ namespace LOFAR
   {
     cout << "WH_SimStation " << getName () << " Buffers:" << endl;
 
-    for (int i = 0; i < MIN(itsPS.getInt("station.nbeamlets"), 1) ; i++) { 
-      for (int j = 0; j < MIN(itsPS.getInt("station.nchannels"), 10) ; j++) { 
+    for (int i = 0; i < MIN(itsPS.getInt32("station.nbeamlets"), 1) ; i++) { 
+      for (int j = 0; j < MIN(itsPS.getInt32("station.nchannels"), 10) ; j++) { 
 	cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
       }
       cout << endl;
@@ -131,7 +131,7 @@ namespace LOFAR
 
   void WH_SimStation::ReadData ()
   {
-    std::streamsize buffersize = (NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1)*sizeof(complex<float>);
+    std::streamsize buffersize = (NINPUT_BEAMLETS*itsPS.getInt32("station.nchannels")+1)*sizeof(complex<float>);
     char* InputBuffer = (char*)malloc(buffersize);
 
     ASSERTSTR( itsInputFile.is_open(), "WH_SimStation input file " 
@@ -147,7 +147,7 @@ namespace LOFAR
       itsInputFile.read(InputBuffer, buffersize);
     }
 
-    memcpy (itsData, InputBuffer, itsPS.getInt("station.nbeamlets")*itsPS.getInt("station.nchannels")*sizeof(complex<float>));
+    memcpy (itsData, InputBuffer, itsPS.getInt32("station.nbeamlets")*itsPS.getInt32("station.nchannels")*sizeof(complex<float>));
     free (InputBuffer);
   }
 }// namespace LOFAR

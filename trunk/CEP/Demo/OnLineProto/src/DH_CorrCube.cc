@@ -30,15 +30,15 @@
 namespace LOFAR
 {
 
-DH_CorrCube::DH_CorrCube (const string& name, const ACC::ParameterSet& ps)
+DH_CorrCube::DH_CorrCube (const string& name, const ACC::APS::ParameterSet& ps)
 : DataHolder    (name, "DH_CorrCube"),
   itsBufferptr  (0),
   itsPS         (ps)
 {
   itsBufSize = 
-      itsPS.getInt("general.nstations")
-    * itsPS.getInt("corr.fsize")
-    * itsPS.getInt("corr.tsize") 
+      itsPS.getInt32("general.nstations")
+    * itsPS.getInt32("corr.fsize")
+    * itsPS.getInt32("corr.tsize") 
     * sizeof( complex<float> );
 }
 

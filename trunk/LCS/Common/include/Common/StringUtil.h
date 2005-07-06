@@ -30,6 +30,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/Exception.h>
 
 namespace LOFAR
 {
@@ -214,6 +215,32 @@ inline std::string toString(long double val, const char* fmt = 0)
   else return formatString("%Lg", val);
 }
 #endif
+
+// @}
+
+// @name Convert string to numeric value
+// Convert a string to the value of any of the fundamental arithmetic data 
+// types. Most of the StringTo...() methods provide the user with
+// a means to override the default formatting behaviour by supplying his/her
+// own formatting string, following the well-known <tt>scanf</tt>-like
+// conversions.
+//
+// \attention The user is responsible for the correctness of the optional
+// conversion string. No checks are done by the StringTo...() methods.
+
+// @{
+
+bool   StringToBool  (const string& aString)                   throw(Exception);
+int16  StringToInt16 (const string& aString,const char* fmt=0) throw(Exception);
+uint16 StringToUint16(const string& aString,const char* fmt=0) throw(Exception);
+int32  StringToInt32 (const string& aString,const char* fmt=0) throw(Exception);
+uint32 StringToUint32(const string& aString,const char* fmt=0) throw(Exception);
+#if HAVE_LONG_LONG
+int64  StringToInt64 (const string& aString,const char* fmt=0) throw(Exception);
+uint64 StringToUint64(const string& aString,const char* fmt=0) throw(Exception);
+#endif
+float  StringToFloat (const string& aString,const char* fmt=0) throw(Exception);
+double StringToDouble(const string& aString,const char* fmt=0) throw(Exception);
 
 // @}
 

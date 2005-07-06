@@ -27,7 +27,7 @@
 
 #include <tinyCEP/WorkHolder.h>
 #include <OnLineProto/DH_CorrectionMatrix.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -40,14 +40,14 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_FringeControl (const string& name,
 			     const int nout,
-			     const ACC::ParameterSet& ps);
+			     const ACC::APS::ParameterSet& ps);
 
   virtual ~WH_FringeControl();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name,
 				const int nout,
-				const ACC::ParameterSet& ps);
+				const ACC::APS::ParameterSet& ps);
 
   /// Make a fresh copy of the WH object.
   virtual WH_FringeControl* make (const string& name);
@@ -65,7 +65,7 @@ private:
   /// Forbid assignment.
   WH_FringeControl& operator= (const WH_FringeControl&);
   
-  ACC::ParameterSet itsPS;
+  ACC::APS::ParameterSet itsPS;
 };
 
 }

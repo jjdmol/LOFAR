@@ -58,7 +58,7 @@ lofar_DOCXX
 lofar_BLITZ
 
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/ACC,ACC,,1,ACC/ParameterSet.h,,)
+lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 
 dnl

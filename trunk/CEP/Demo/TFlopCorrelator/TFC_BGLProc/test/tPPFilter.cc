@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <tPPFilter.h>
 
 #include <Transport/TH_Mem.h>

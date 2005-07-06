@@ -11,7 +11,7 @@
 #define LOFAR_TFLOPCORRELATOR_FIRSTUB_H
 
 #include <string>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
 //#include <TFlopCorrelator/DH_FilterCoeff.h>
 
@@ -39,7 +39,7 @@ public:
 
 private:
   bool                itsStubOnServer;
-  ACC::ParameterSet*  itsPS;
+  ACC::APS::ParameterSet*  itsPS;
   int                 itsNFIRF;
   TH_Socket**         itsTHs;
   Connection**        itsConnections;

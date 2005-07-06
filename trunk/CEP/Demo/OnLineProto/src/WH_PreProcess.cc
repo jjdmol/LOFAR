@@ -39,14 +39,14 @@ namespace LOFAR
 {
 WH_PreProcess::WH_PreProcess (const string& name, 
 			      const int nbeamlets, 
-			      const ACC::ParameterSet& ps, 
+			      const ACC::APS::ParameterSet& ps, 
 			      const int StationID)
   : WorkHolder    (nbeamlets+1, nbeamlets, name,"WH_PreProcess"),
     itsPS (ps),
     itsStationID (StationID)
 {
   char str[8];
-  int bs = itsPS.getInt("station.nchannels"); 
+  int bs = itsPS.getInt32("station.nchannels"); 
     
   for (int i = 0; i < nbeamlets; i++) {
     sprintf (str, "%d", i);
@@ -57,7 +57,7 @@ WH_PreProcess::WH_PreProcess (const string& name,
 							itsPS.getFloat(string("station.beamlet.") + str),
 							itsPS.getFloat("station.chan_bw"),
 							itsPS.getFloat("observation.ha_0"),
-							itsPS.getInt("station.nchannels")));
+							itsPS.getInt32("station.nchannels")));
 
     // create the output dataholders
     getDataManager().addOutDataHolder(i, new DH_Beamlet (string("PP_out_") + str,
@@ -65,10 +65,10 @@ WH_PreProcess::WH_PreProcess (const string& name,
 							 itsPS.getFloat(string("station.beamlet.") + str),
 							 itsPS.getFloat("station.chan_bw"),
 							 itsPS.getFloat("observation.ha_0"),
-							 itsPS.getInt("station.nchannels")));
+							 itsPS.getInt32("station.nchannels")));
   }
 
-  getDataManager().addInDataHolder(nbeamlets, new DH_CorrectionMatrix ("in_fringe", 1, itsPS.getInt("station.nchannels")));  
+  getDataManager().addInDataHolder(nbeamlets, new DH_CorrectionMatrix ("in_fringe", 1, itsPS.getInt32("station.nchannels")));  
 }
   
 WH_PreProcess::~WH_PreProcess()
@@ -77,7 +77,7 @@ WH_PreProcess::~WH_PreProcess()
 
 WorkHolder* WH_PreProcess::construct (const string& name, 
 				      const int nbeamlets, 
-				      const ACC::ParameterSet& ps,
+				      const ACC::APS::ParameterSet& ps,
 				      const int StationID)
 {
   return new WH_PreProcess (name, nbeamlets, ps, StationID);
@@ -96,7 +96,7 @@ void WH_PreProcess::process()
   float ha;
   complex<float> phase;
   complex<float> i2pi (0,2*itsPS.getFloat("general.pi"));
-  int b =  itsPS.getInt("station.nbeamlets");
+  int b =  itsPS.getInt32("station.nbeamlets");
   char str[8];
   sprintf(str, "%d",itsStationID);
   string sID (string("station.")+str+string("."));
@@ -106,9 +106,9 @@ void WH_PreProcess::process()
     ((DH_Beamlet*)getDataManager().getOutHolder(i))->
       setElapsedTime(((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime());
 
-    for (int j = 0; j < itsPS.getInt("station.nchannels"); j++) {
+    for (int j = 0; j < itsPS.getInt32("station.nchannels"); j++) {
       
-      if (itsPS.getInt("general.enable_fs") == 1) 
+      if (itsPS.getInt32("general.enable_fs") == 1) 
 	{
 	  
 	  // calculate hourangle
@@ -151,8 +151,8 @@ void WH_PreProcess::process()
 void WH_PreProcess::dump()
 {    
   cout << "WH_PreProcess " << getName () << " Buffers:" << endl;
-  for (int i = 0; i < MIN(itsPS.getInt("station.nbeamlets"),1); i++) {
-    for (int j = 0; j < MIN(itsPS.getInt("station.nchannels"),10); j++) {
+  for (int i = 0; i < MIN(itsPS.getInt32("station.nbeamlets"),1); i++) {
+    for (int j = 0; j < MIN(itsPS.getInt32("station.nchannels"),10); j++) {
       cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
     }
     cout << endl;

@@ -28,7 +28,7 @@
 
 #include <Transport/DataHolder.h>
 #include <complex>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 using std::complex;
 
@@ -45,7 +45,7 @@ public:
   typedef complex<float> BufferType;
 
   explicit DH_CorrCube (const string& name, 
-			const ACC::ParameterSet& ps);
+			const ACC::APS::ParameterSet& ps);
 
   DH_CorrCube(const DH_CorrCube&);
 
@@ -84,7 +84,7 @@ private:
    complex<float>* itsBufferptr; // array containing frequency spectrum.
 
    int itsBufSize;  // calculate required buffer size in C'tor  
-   const ACC::ParameterSet itsPS; // necessary configuration parameters
+   const ACC::APS::ParameterSet itsPS; // necessary configuration parameters
 };
 
 inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
@@ -98,8 +98,8 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int station,
 							      int freq)
 { 
   // todo: cache corr. sizes
-  return itsBufferptr+station*itsPS.getInt("corr.tsize")*itsPS.getInt("corr.fsize")
-    +time*itsPS.getInt("corr.fsize")+freq;
+  return itsBufferptr+station*itsPS.getInt32("corr.tsize")*itsPS.getInt32("corr.fsize")
+    +time*itsPS.getInt32("corr.fsize")+freq;
 }
    
 inline void DH_CorrCube::setBufferElement(int station, 
@@ -108,8 +108,8 @@ inline void DH_CorrCube::setBufferElement(int station,
   			     DH_CorrCube::BufferType* valueptr) 
 {
   // todo: cache corr. sizes
-  complex<float>* ptr= itsBufferptr+station*itsPS.getInt("corr.tsize")*
-    itsPS.getInt("corr.fsize")+time*itsPS.getInt("corr.fsize")+freq;
+  complex<float>* ptr= itsBufferptr+station*itsPS.getInt32("corr.tsize")*
+    itsPS.getInt32("corr.fsize")+time*itsPS.getInt32("corr.fsize")+freq;
   *ptr = *valueptr;
 }
 

@@ -26,14 +26,14 @@
 #include <Common/LofarLogger.h>
 
 #include <tinyCEP/Profiler.h>
-#include <ACC/ProcControlServer.h>
-#include <ACC/ParameterSet.h>
-#include <ACC/ProcessControl.h>
+#include <PLC/ProcControlServer.h>
+#include <APS/ParameterSet.h>
+#include <PLC/ProcessControl.h>
 
 #include <StationCorrelator.h>
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::PLC;
 
 class StationCorrelatorController : public ProcessControl
 {
