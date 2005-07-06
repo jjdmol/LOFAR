@@ -30,13 +30,13 @@
 #include <arpa/inet.h>
 #include <Common/StringUtil.h>
 #include <Common/Net/Socket.h>
-#include <ACC/ApplControlClient.h>
-#include <ACC/ACRequest.h>
-#include <ACC/DH_ApplControl.h>
-#include <Common/hexdump.h>
+#include <ALC/ApplControlClient.h>
+#include <ALC/ACRequest.h>
+#include <ALC/DH_ApplControl.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
 ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 								  	 uint16			aNrProcs,
@@ -199,6 +199,7 @@ bool	ApplControlClient::processACmsgFromServer() const
 ApplControlClient::ApplControlClient() { }
 
 
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 

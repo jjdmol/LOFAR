@@ -27,9 +27,9 @@
 //#  $Id$
 
 #include <Common/LofarLogger.h>
-#include <ACC/ConfigurationMgr.h>
-#include <ACC/ParameterCollection.h>
-#include <ACC/ParCollRecord.h>
+#include <ACCbin/ConfigurationMgr.h>
+#include <APS/ParameterSet.h>
+#include <ACCbin/ParCollRecord.h>
 #include "database/PO_ParCollRecord.h"
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>

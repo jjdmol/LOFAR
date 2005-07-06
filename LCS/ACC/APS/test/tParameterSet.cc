@@ -20,9 +20,16 @@
 //#
 //#  $Id$
 
-#include <ACC/ParameterSet.h>
+//# Always #inlcude <lofar_config.h> first!
+#include <lofar_config.h>
+
+#include <Common/lofar_iostream.h>
+#include <iterator>
+
+#include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
+using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::ACC;
 
@@ -32,11 +39,11 @@ int main(int argc, char * argv[]) {
 	cout << "\nReading in parameterfile 'tParameterSet.ps'\n";
 	ParameterSet		myPS("tParameterSet.ps");
 
-	ParameterCollection	myPC(myPS);
+	ParameterSet		mySecondSet(myPS);
 
 	cout << "\nShowing some values\n";
-	cout << "a.b.c=" 			<< myPS.getInt("a.b.c") << endl;
-	cout << "a.b=" 				<< myPS.getInt("a.b") << endl;
+	cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
+	cout << "a.b=" 				<< myPS.getInt32("a.b") << endl;
 	cout.precision(20);
 	cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
 	cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;
@@ -45,8 +52,8 @@ int main(int argc, char * argv[]) {
 	myPS.adoptFile("merge.ps");
 
 	cout << "\nShowing the same keys again\n";
-	cout << "a.b.c=" 			<< myPS.getInt("a.b.c") << endl;
-	cout << "a.b=" 				<< myPS.getInt("a.b") << endl;
+	cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
+	cout << "a.b=" 				<< myPS.getInt32("a.b") << endl;
 	cout.precision(20);
 	cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
 	cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;
@@ -58,20 +65,20 @@ int main(int argc, char * argv[]) {
 	cout << "\nThe main ParameterSet contains:\n";
 	cout << myPS;
 
-	cout << "The name of the ParameterSet = " << myPS.getName() << endl;
-	cout << "The vers of the ParameterSet = " << myPS.getVersionNr() << endl;
-	if (isValidVersionNr(myPS.getVersionNr())) {
-		cout << "this is a valid version number" << endl;
-	} else {
-		cout << "this is NOT a valid version number" << endl;
-	}
+//	cout << "The name of the ParameterSet = " << myPS.getName() << endl;
+//	cout << "The vers of the ParameterSet = " << myPS.getVersionNr() << endl;
+//	if (isValidVersionNr(myPS.getVersionNr())) {
+//		cout << "this is a valid version number" << endl;
+//	} else {
+//		cout << "this is NOT a valid version number" << endl;
+//	}
 
-	string	psErrors;
-	if (!myPS.check(psErrors)) {
-		cout << "Parameter check says: " << psErrors << endl;
-	} else {
-		cout << "ParameterSet is OK." << endl;
-	}
+//	string	psErrors;
+//	if (!myPS.check(psErrors)) {
+//		cout << "Parameter check says: " << psErrors << endl;
+//	} else {
+//		cout << "ParameterSet is OK." << endl;
+//	}
 
 	cout << "isValidVersionNr(1.2.3.4)   = " << isValidVersionNr("1.2.3.4") << endl;
 	cout << "isValidVersionNr(1.2.3)     = " << isValidVersionNr("1.2.3") << endl;
@@ -91,7 +98,7 @@ int main(int argc, char * argv[]) {
 
 	cout << "\nTrying to read a non-existing key\n"; 
 	try {
-		myPS.getInt("is.er.niet");
+		myPS.getInt32("is.er.niet");
 	}
 	catch (LOFAR::Exception& ex) {
 		LOG_DEBUG ("Told you the key didn't exists.");
@@ -99,6 +106,18 @@ int main(int argc, char * argv[]) {
 
 	cout << "\nFinally write the parameterset to 'newset.ps'\n";
 	myPS.writeFile("newset.ps");
+
+	try {
+		cout << "\ntesting getInt32Vector\n";
+		vector<int32> intVector = myPS.getInt32Vector("vtest.intVector1Dim");
+		cout << intVector.size() << " elements in intVector1Dim\n";
+		copy (intVector.begin(), intVector.end(), 
+								std::ostream_iterator<int, char>(cout, ","));
+		//	cout << intVector << endl;
+	}
+	catch (LOFAR::Exception& ex) {
+		LOG_DEBUG_STR ("Exception:" << ex.what());
+	}
 
 	strlen(argv[argc-1]);			// satify compiler
 

@@ -27,11 +27,12 @@
 #include <time.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
-#include <ACC/ACCmdImpl.h>
-#include <ACC/APAdminPool.h>
+#include <ACCbin/ACCmdImpl.h>
+#include <ACCbin/APAdminPool.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
 ACCmdImpl::ACCmdImpl() :
 	ApplControl()
@@ -146,5 +147,6 @@ string	ACCmdImpl::askInfo   (const string& 	keylist) const
 
 
 
+    } // namespace ALC
   } // namespace ACC
 } // namespace LOFAR

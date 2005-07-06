@@ -22,19 +22,20 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_PROCCONTROLSERVER_H
-#define LOFAR_ACC_PROCCONTROLSERVER_H
+#ifndef LOFAR_PLC_PROCCONTROLSERVER_H
+#define LOFAR_PLC_PROCCONTROLSERVER_H
 
 // \file ProcControlServer.h
 // Server stub of the I/F to the Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ACC/ProcessControl.h>
-#include <ACC/ProcControlComm.h>
+#include <PLC/ProcessControl.h>
+#include <PLC/ProcControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace PLC {
 // \addtogroup ACC
 // @{
 
@@ -99,7 +100,8 @@ inline	DH_ProcControl*	ProcControlServer::getDataHolder() const {
 }
 
 // @} addgroup
-} // namespace ACC
+    } // namespace PLC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

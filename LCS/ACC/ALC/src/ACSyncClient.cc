@@ -27,11 +27,11 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/ACSyncClient.h>
-#include <Common/hexdump.h>
+#include <ALC/ACSyncClient.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
 ACSyncClient::ACSyncClient(const string&	aUniqUserName,
 				  		   uint16			aNrProcs,
@@ -57,6 +57,7 @@ ACSyncClient::~ACSyncClient()
 ACSyncClient::ACSyncClient() { }
 
 
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 

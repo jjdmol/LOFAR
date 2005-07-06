@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_APADMINPOOL_H
-#define LOFAR_ACC_APADMINPOOL_H
+#ifndef LOFAR_ACCBIN_APADMINPOOL_H
+#define LOFAR_ACCBIN_APADMINPOOL_H
 
 // \file APAdminPool.h
 // Collection of APAdmin classes used by the Application Controller for
@@ -33,7 +33,7 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Common/Net/FdSet.h>
-#include <ACC/APAdmin.h>
+#include <ACCbin/APAdmin.h>
 
 namespace LOFAR {
   namespace ACC {

@@ -22,18 +22,19 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_APPLCONTROL_H
-#define LOFAR_ACC_APPLCONTROL_H
+#ifndef LOFAR_ALC_APPLCONTROL_H
+#define LOFAR_ALC_APPLCONTROL_H
 
 // \file ApplControl.h
 // Defines the I/F of the Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ACC/DH_ApplControl.h>
+#include <ALC/DH_ApplControl.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 // \addtogroup ACC
 // @{
 
@@ -213,6 +214,7 @@ protected:
 
 
 // @} addgroup
+    } // namespace ALC
   } // namespace ACC
 } // namespace LOFAR
 

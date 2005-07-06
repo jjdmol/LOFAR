@@ -28,8 +28,7 @@
 #include <libgen.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarLogger.h>
-#include <ACC/ApplController.h>
-#include <ACC/ParameterSet.h>
+#include <ACCbin/ApplController.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;

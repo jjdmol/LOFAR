@@ -25,10 +25,10 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ACC/ApplController.h>
-#include <ACC/PR_Shell.h>			// TODO: factory!
-#include <ACC/PR_MPI.h>				// TODO: factory!
-#include <ACC/ItemList.h>			// @@
+#include <ACCbin/ApplController.h>
+#include <ACCbin/PR_Shell.h>			// TODO: factory!
+#include <ACCbin/PR_MPI.h>				// TODO: factory!
+#include <ACCbin/ItemList.h>			// @@
 
 namespace LOFAR {
   namespace ACC {
@@ -97,14 +97,14 @@ void ApplController::startupNetwork()
 
 	// Setup listener for ACC user and wait (max 10 sec) for connection
 	itsServerStub = new ApplControlServer(
-									itsBootParamSet->getInt("AC.userportnr"), 
+									itsBootParamSet->getInt32("AC.userportnr"), 
 									itsACCmdImpl);
 
 	// Setup listener for application processes
 	itsProcListener = new Socket("APlistener", 
 							 itsBootParamSet->getString("AC.processportnr"),
 							 Socket::TCP, 
-							 itsBootParamSet->getInt("AC.backlog"));
+							 itsBootParamSet->getInt32("AC.backlog"));
 	ASSERTSTR(itsProcListener->ok(), 
 						"Can't start listener for application processes");
 

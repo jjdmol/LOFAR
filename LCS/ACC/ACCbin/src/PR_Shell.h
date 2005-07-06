@@ -22,15 +22,15 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_PR_SHELL_H
-#define LOFAR_ACC_PR_SHELL_H
+#ifndef LOFAR_ACCBIN_PR_SHELL_H
+#define LOFAR_ACCBIN_PR_SHELL_H
 
 // \file PR_Shell.h
 // ProcessRule based on shell scripts
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ACC/ProcRule.h>
+#include <ACCbin/ProcRule.h>
 
 namespace LOFAR {
   namespace ACC {

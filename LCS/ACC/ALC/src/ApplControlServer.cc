@@ -29,10 +29,11 @@
 //# Includes
 #include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
-#include <ACC/ApplControlServer.h>
+#include <ALC/ApplControlServer.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
 //
 // Setup (wait for an) connection with the AC client
@@ -156,6 +157,7 @@ void ApplControlServer::sendResult(ACCmd			command,
 
 }
 
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 

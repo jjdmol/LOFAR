@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_APPLCONTROLLER_H
-#define LOFAR_ACC_APPLCONTROLLER_H
+#ifndef LOFAR_ACCBIN_APPLCONTROLLER_H
+#define LOFAR_ACCBIN_APPLCONTROLLER_H
 
 // \file ApplController.h
 // This is the main 'engine' of the Application Controller. It manages
@@ -35,16 +35,20 @@
 //# Includes
 #include <Common/Net/Socket.h>
 #include <Transport/TH_Socket.h>
-#include <ACC/ApplControlServer.h>	//# communication stub
-#include <ACC/ACCmdImpl.h>			//# the real implementation
-#include <ACC/ACDaemonComm.h>
-#include <ACC/CmdStack.h>
-#include <ACC/StateEngine.h>
-#include <ACC/APAdminPool.h>
-#include <ACC/DH_ProcControl.h>
-#include <ACC/ParameterSet.h>
-#include <ACC/ItemList.h>
-#include <ACC/ProcRuler.h>
+#include <ALC/ApplControlServer.h>	//# communication stub
+#include <PLC/DH_ProcControl.h>
+#include <APS/ParameterSet.h>
+#include <ACCbin/ACCmdImpl.h>		//# the real implementation
+#include <ACCbin/ACDaemonComm.h>
+#include <ACCbin/CmdStack.h>
+#include <ACCbin/StateEngine.h>
+#include <ACCbin/APAdminPool.h>
+#include <ACCbin/ItemList.h>
+#include <ACCbin/ProcRuler.h>
+
+using namespace LOFAR::ACC::APS;
+using namespace LOFAR::ACC::ALC;
+using namespace LOFAR::ACC::PLC;
 
 namespace LOFAR {
   namespace ACC {

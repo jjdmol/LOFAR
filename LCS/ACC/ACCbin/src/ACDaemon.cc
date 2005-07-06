@@ -27,9 +27,9 @@
 #include <unistd.h>                     // gethostname
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>		// TEMP!!!
-#include <ACC/ACRequest.h>
-#include <ACC/ACDaemon.h>
-#include <ACC/ACDaemonComm.h>
+#include <ALC/ACRequest.h>
+#include <ACCbin/ACDaemon.h>
+#include <ACCbin/ACDaemonComm.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -54,8 +54,8 @@ ACDaemon::ACDaemon(string	aParamFile) :
 							 Socket::UDP);
 
 	// Try to read in an old administration if it is available.
-	itsACPool = new ACRequestPool(itsParamSet->getInt("ACDaemon.ACpoolport"),
-								  itsParamSet->getInt("ACDaemon.ACpoolsize"),
+	itsACPool = new ACRequestPool(itsParamSet->getInt32("ACDaemon.ACpoolport"),
+								  itsParamSet->getInt32("ACDaemon.ACpoolsize"),
 								  itsParamSet->getString("ACDaemon.ACnodeIP"));
 	itsACPool->load(itsParamSet->getString("ACDaemon.adminfile"));
 

@@ -27,7 +27,7 @@
 #include <sys/stat.h>			// umask
 #include <unistd.h>                     // fork, basename
 #include <Common/LofarLogger.h>
-#include <ACC/ACDaemon.h>
+#include <ACCbin/ACDaemon.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;

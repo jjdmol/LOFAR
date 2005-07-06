@@ -3,10 +3,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
 #include <myACClientFunctions.h>
-#include <ACC/ACSyncClient.h>
+#include <ALC/ACSyncClient.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::ALC;
 
 myACClientFunctions		myACF;
 ApplControlClient*		ACClient    = 0;

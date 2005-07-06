@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_ACASYNCCLIENT_H
-#define LOFAR_ACC_ACASYNCCLIENT_H
+#ifndef LOFAR_ALC_ACASYNCCLIENT_H
+#define LOFAR_ALC_ACASYNCCLIENT_H
 
 // \file ACAsyncClient.h
 // This class implements the client API for using an Application 
@@ -31,11 +31,12 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ACC/ApplControlClient.h>
-#include <ACC/ACAsyncClient.h>
+#include <ALC/ApplControlClient.h>
+#include <ALC/ACAsyncClient.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
 // \addtogroup ACC
 // @{
@@ -123,7 +124,8 @@ private:
 };
 
 // @}
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

@@ -29,7 +29,7 @@
 #include <arpa/inet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
-#include <ACC/ACRequestPool.h>
+#include <ACCbin/ACRequestPool.h>
 
 namespace LOFAR {
   namespace ACC {

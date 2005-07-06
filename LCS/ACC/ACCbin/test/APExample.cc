@@ -27,12 +27,14 @@
 #include <time.h>
 #include <libgen.h>
 #include <Common/LofarLogger.h>
-#include <ACC/ProcControlServer.h>
-#include <ACC/ParameterSet.h>
+#include <PLC/ProcControlServer.h>
+#include <APS/ParameterSet.h>
 #include <APCmdImpl.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
+using namespace LOFAR::ACC::PLC;
 
 //
 // This program demonstrates how an Application Process should communicate
@@ -76,7 +78,7 @@ int main (int argc, char *argv[]) {
 
 		// [A] Connect to the Application Controller
 		ProcControlServer  itsPCcomm(itsParamSet.getString(itsProcID+".ACnode"),
-									 itsParamSet.getInt(itsProcID+".ACport"),
+									 itsParamSet.getUint16(itsProcID+".ACport"),
 									 &itsAPCmdImpl);
 
 		// IMPLEMENT: do other launch activities like processing the ParamSet

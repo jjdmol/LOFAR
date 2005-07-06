@@ -22,19 +22,20 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_APPLCONTROLCLIENT_H
-#define LOFAR_ACC_APPLCONTROLCLIENT_H
+#ifndef LOFAR_ALC_APPLCONTROLCLIENT_H
+#define LOFAR_ALC_APPLCONTROLCLIENT_H
 
 // \file ApplControlClient.h
 // Client stub of the interface to the Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ACC/ApplControl.h>
-#include <ACC/ApplControlComm.h>
+#include <ALC/ApplControl.h>
+#include <ALC/ApplControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 // \addtogroup ACC
 // @{
 
@@ -164,7 +165,8 @@ private:
 
 
 // @} addgroup
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

@@ -2,11 +2,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
 
-#include <ACC/ApplControlServer.h>
+#include <ALC/ApplControlServer.h>
 
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::ALC;
 
 class myACImpl : public ApplControl {
 public:
@@ -57,6 +57,10 @@ public:
 	bool	replace(const time_t	scheduleTime, const string& processList,
 					const string&	nodeList,     const string& configID) const {
 		cout << "Replace function called with:" << scheduleTime << endl;
+		return (true);
+	}
+	bool	cancelCmdQueue() const {
+		cout << "cancelCmdQueue function called" << endl;
 		return (true);
 	}
 

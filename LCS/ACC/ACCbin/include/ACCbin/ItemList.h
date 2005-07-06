@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_ITEMLIST_H
-#define LOFAR_ACC_ITEMLIST_H
+#ifndef LOFAR_ACCBIN_ITEMLIST_H
+#define LOFAR_ACCBIN_ITEMLIST_H
 
 // \file ItemList.h
 // Class that can substract and array of items from a parameter collection.
@@ -31,7 +31,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_vector.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
+
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
   namespace ACC {

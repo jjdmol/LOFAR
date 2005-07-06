@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_STATEENGINE_H
-#define LOFAR_ACC_STATEENGINE_H
+#ifndef LOFAR_ACCBIN_STATEENGINE_H
+#define LOFAR_ACCBIN_STATEENGINE_H
 
 // \file StateEngine.h
 // (internal) sequence definitions of the command states.
@@ -31,8 +31,11 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/Exception.h>
-#include <ACC/DH_ApplControl.h>
-#include <ACC/ParameterSet.h>
+#include <ALC/DH_ApplControl.h>
+#include <APS/ParameterSet.h>
+
+using namespace LOFAR::ACC::APS;
+using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {
   namespace ACC {

@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_ACREQUESTPOOL_H
-#define LOFAR_ACC_ACREQUESTPOOL_H
+#ifndef LOFAR_ACCBIN_ACREQUESTPOOL_H
+#define LOFAR_ACCBIN_ACREQUESTPOOL_H
 
 // \file ACRequestPool.h
 // Administrative pool of ACrequests used by the ACDaemon for managing the
@@ -33,7 +33,9 @@
 //# Includes
 #include <netinet/in.h>				// in_addr
 #include <Common/lofar_list.h>
-#include <ACC/ACRequest.h>
+#include <ALC/ACRequest.h>
+
+using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {
   namespace ACC {

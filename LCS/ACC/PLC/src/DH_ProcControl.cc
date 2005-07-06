@@ -28,11 +28,12 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/DH_ProcControl.h>
+#include <PLC/DH_ProcControl.h>
 
 
 namespace LOFAR {
   namespace ACC {
+    namespace PLC {
 
 // Constructor
 DH_ProcControl::DH_ProcControl() :
@@ -96,6 +97,7 @@ void	DH_ProcControl::fillDataPointers() {
 }
 
 
-} // namespace ACC
+    } // namespace PLC
+  } // namespace ACC
 } // namespace LOFAR
 
