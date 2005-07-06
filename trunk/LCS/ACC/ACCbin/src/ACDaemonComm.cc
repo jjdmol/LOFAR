@@ -27,7 +27,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
-#include<ACC/ACDaemonComm.h>
+#include<ACCbin/ACDaemonComm.h>
 
 namespace LOFAR {
   namespace ACC {

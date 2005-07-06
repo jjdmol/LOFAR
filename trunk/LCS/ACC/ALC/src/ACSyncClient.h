@@ -22,19 +22,20 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_ACSYNCCLIENT_H
-#define LOFAR_ACC_ACSYNCCLIENT_H
+#ifndef LOFAR_ALC_ACSYNCCLIENT_H
+#define LOFAR_ALC_ACSYNCCLIENT_H
 
 // \file ACSyncClient.h 
 // Synchrone version of a Application Control client
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ACC/ApplControlClient.h>
-#include <ACC/ACSyncClient.h>
+#include <ALC/ApplControlClient.h>
+#include <ALC/ACSyncClient.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 // \addtogroup ACC
 // @{
 
@@ -78,7 +79,8 @@ private:
 };
 
 // @} addgroup
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

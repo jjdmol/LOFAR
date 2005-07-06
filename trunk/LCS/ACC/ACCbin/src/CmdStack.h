@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_CMDSTACK_H
-#define LOFAR_ACC_CMDSTACK_H
+#ifndef LOFAR_ACCBIN_CMDSTACK_H
+#define LOFAR_ACCBIN_CMDSTACK_H
 
 // \file CmdStack.h
 // Time-ordered stack of DH_ApplControl structures used by the Application
@@ -32,8 +32,10 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <time.h>
-#include <ACC/DH_ApplControl.h>
+#include <ALC/DH_ApplControl.h>
 #include <Common/lofar_map.h>
+
+using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {
   namespace ACC {

@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_APADMIN_H
-#define LOFAR_ACC_APADMIN_H
+#ifndef LOFAR_ACCBIN_APADMIN_H
+#define LOFAR_ACCBIN_APADMIN_H
 
 // \file APAdmin.h
 // Internal information of an Application Process used by the
@@ -32,7 +32,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/Net/Socket.h>
-#include <ACC/DH_ProcControl.h>
+#include <PLC/DH_ProcControl.h>
+
+using namespace LOFAR::ACC::PLC;
 
 namespace LOFAR {
   namespace ACC {

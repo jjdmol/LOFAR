@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_ACDAEMONCOMM_H
-#define LOFAR_ACC_ACDAEMONCOMM_H
+#ifndef LOFAR_ACCBIN_ACDAEMONCOMM_H
+#define LOFAR_ACCBIN_ACDAEMONCOMM_H
 
 // \file ACDaemonComm.h
 // Small class that implements the communication to the ACDaemon (from the
@@ -32,7 +32,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/Net/Socket.h>
-#include <ACC/ACRequest.h>
+#include <ALC/ACRequest.h>
+
+using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {
   namespace ACC {

@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_DH_APPLCONTROL_H
-#define LOFAR_ACC_DH_APPLCONTROL_H
+#ifndef LOFAR_ALC_DH_APPLCONTROL_H
+#define LOFAR_ALC_DH_APPLCONTROL_H
 
 // \file DH_ApplControl.h
 // DataHolder for Application Control commands.
@@ -39,6 +39,7 @@
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 // \addtogroup ACC
 // @{
 
@@ -257,7 +258,8 @@ inline uint16	DH_ApplControl::getResult		() const
 }
 
 // @} addgroup
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

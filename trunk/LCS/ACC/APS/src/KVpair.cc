@@ -25,10 +25,11 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
-#include<ACC/KVpair.h>
+#include<APS/KVpair.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace APS {
 
 #define	OPTIONAL_TIMESTAMP		\
 	if (genTimestamp) { \
@@ -89,5 +90,6 @@ KVpair& KVpair::operator=(const KVpair& that)
 }
 
 
+    } // namespace APS
   } // namespace ACC
 } // namespace LOFAR

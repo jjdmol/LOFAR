@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_CONFIGURATIONMGR_H
-#define LOFAR_ACC_CONFIGURATIONMGR_H
+#ifndef LOFAR_ACCBIN_CONFIGURATIONMGR_H
+#define LOFAR_ACCBIN_CONFIGURATIONMGR_H
 
 // \file ConfigurationMgr.h
 // The ACC configuration manager handles all database actions for parameters.
@@ -31,15 +31,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/lofar_string.h>
 #include <PL/PersistenceBroker.h>
-#include <ACC/TemplateUnion.h>
-#include <ACC/ParameterTemplate.h>
-#include <ACC/ParameterUnion.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
-using LOFAR::ACC::ParameterTemplate;
-using LOFAR::ACC::TemplateUnion;
-using LOFAR::ACC::ParameterUnion;
-using LOFAR::ACC::ParameterSet;
+using LOFAR::ACC::APS::ParameterSet;
 
 namespace LOFAR {
   namespace ACC {

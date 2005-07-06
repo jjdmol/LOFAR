@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_PARCOLLRECORD_H
-#define LOFAR_ACC_PARCOLLRECORD_H
+#ifndef LOFAR_ACCBIN_PARCOLLRECORD_H
+#define LOFAR_ACCBIN_PARCOLLRECORD_H
 
 // \file ParCollRecord.h
 // Structure how PC's are stored in the DB

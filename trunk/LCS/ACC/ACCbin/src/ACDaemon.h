@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_ACDAEMON_H
-#define LOFAR_ACC_ACDAEMON_H
+#ifndef LOFAR_ACCBIN_ACDAEMON_H
+#define LOFAR_ACCBIN_ACDAEMON_H
 
 // \file ACDaemon.h
 // Daemon for launching Application Controllers
@@ -33,8 +33,10 @@
 #include <Common/Exception.h>
 #include <Common/Net/Socket.h>
 #include <Common/Net/FdSet.h>
-#include <ACC/ParameterSet.h>
-#include <ACC/ACRequestPool.h>
+#include <APS/ParameterSet.h>
+#include <ACCbin/ACRequestPool.h>
+
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
   namespace ACC {

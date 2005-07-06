@@ -25,7 +25,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
-#include<ACC/ItemList.h>
+#include<ACCbin/ItemList.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -33,7 +33,7 @@ namespace LOFAR {
 ItemList::ItemList(const ParameterSet&	aPS,
 				   const string&		prefix)
 {
-	int32	nrProcs = aPS.getInt(prefix+"[0].count");
+	int32	nrProcs = aPS.getInt32(prefix+"[0].count");
 	string	procName;
 	for (int32 p = 1; p <= nrProcs; p++) {
 		procName = aPS.getString(formatString("%s[%d].ID", prefix.c_str(), p));

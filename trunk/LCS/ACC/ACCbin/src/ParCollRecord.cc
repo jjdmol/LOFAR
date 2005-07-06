@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <ACC/ParCollRecord.h>
+#include <ACCbin/ParCollRecord.h>
 
 namespace LOFAR {
   namespace ACC {

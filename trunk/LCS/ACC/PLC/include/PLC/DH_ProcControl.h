@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_DH_PROCCONTROL_H
-#define LOFAR_ACC_DH_PROCCONTROL_H
+#ifndef LOFAR_PLC_DH_PROCCONTROL_H
+#define LOFAR_PLC_DH_PROCCONTROL_H
 
 // \file DH_ProcControl.h
 // DataHolder for Process Control commands.
@@ -38,6 +38,7 @@
 
 namespace LOFAR {
   namespace ACC {
+    namespace PLC {
 // \addtogroup ACC
 // @{
 
@@ -172,7 +173,8 @@ inline uint16	DH_ProcControl::getResult () const
 
 
 // @} addgroup
-} // namespace ACC
+    } // namespace PLC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

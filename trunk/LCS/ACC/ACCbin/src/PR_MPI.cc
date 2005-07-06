@@ -26,7 +26,7 @@
 //# Includes
 #include<Common/LofarLogger.h>
 #include<Common/lofar_fstream.h>
-#include<ACC/PR_MPI.h>
+#include<ACCbin/PR_MPI.h>
 
 namespace LOFAR {
   namespace ACC {

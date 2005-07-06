@@ -5,7 +5,7 @@
 #include <myACClientFunctions.h>
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::ALC;
 
 
 int main (int argc, char *argv[]) {

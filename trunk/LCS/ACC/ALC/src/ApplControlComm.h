@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_APPLCONTROLCOMM_H
-#define LOFAR_ACC_APPLCONTROLCOMM_H
+#ifndef LOFAR_ALC_APPLCONTROLCOMM_H
+#define LOFAR_ALC_APPLCONTROLCOMM_H
 
 // \file ApplControlComm.h
 // Implements the communication of Application Control commands, used by the
@@ -32,10 +32,11 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Transport/CSConnection.h>
-#include <ACC/DH_ApplControl.h>
+#include <ALC/DH_ApplControl.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 // \addtogroup ACC
 // @{
 
@@ -131,7 +132,8 @@ inline DH_ApplControl*	ApplControlComm::getDataHolder() const
 }
 
 // @} addgroup
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

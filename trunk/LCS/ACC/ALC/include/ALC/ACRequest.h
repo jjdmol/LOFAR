@@ -33,6 +33,7 @@
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 // \addtogroup ACC
 // @{
 
@@ -92,6 +93,7 @@ struct ACRequest
 };
 
 // @} addgroup
+    } // namespace ALC
   } // namespace ACC
 } // namespace LOFAR
 

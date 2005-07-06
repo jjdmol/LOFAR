@@ -26,11 +26,11 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <ACC/ACAsyncClient.h>
+#include <ALC/ACAsyncClient.h>
 
 namespace LOFAR {
-namespace ACC {
-
+  namespace ACC {
+    namespace ALC {
 
 // Description of class.
 class myACClientFunctions : public ACClientFunctions
@@ -51,7 +51,8 @@ class myACClientFunctions : public ACClientFunctions
 
 };
 
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

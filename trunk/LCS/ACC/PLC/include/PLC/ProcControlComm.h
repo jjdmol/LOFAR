@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_PROCCONTROLCOMM_H
-#define LOFAR_ACC_PROCCONTROLCOMM_H
+#ifndef LOFAR_PLC_PROCCONTROLCOMM_H
+#define LOFAR_PLC_PROCCONTROLCOMM_H
 
 // \file ProcControlComm.h
 // Implements the communication of Application processes.
@@ -31,10 +31,11 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Transport/CSConnection.h>
-#include <ACC/DH_ProcControl.h>
+#include <PLC/DH_ProcControl.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace PLC {
 // \addtogroup ACC
 // @{
 
@@ -121,7 +122,8 @@ inline DH_ProcControl*	ProcControlComm::getDataHolder() const
 
 
 // @} addgroup
-} // namespace ACC
+    } // namespace PLC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif

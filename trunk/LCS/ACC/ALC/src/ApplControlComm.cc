@@ -29,11 +29,12 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
-#include <ACC/ApplControlComm.h>
-#include <ACC/DH_ApplControl.h>
+#include <ALC/ApplControlComm.h>
+#include <ALC/DH_ApplControl.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
 
 //
@@ -173,6 +174,7 @@ bool	ApplControlComm::doRemoteCmd(const ACCmd		theCmd,
 }
 
 
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR
 

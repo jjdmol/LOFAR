@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_PR_MPI_H
-#define LOFAR_ACC_PR_MPI_H
+#ifndef LOFAR_ACCBIN_PR_MPI_H
+#define LOFAR_ACCBIN_PR_MPI_H
 
 // \file PR_MPI.h
 // ProcessRule based on mpirun
@@ -31,8 +31,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 
-#include <map.h>
-#include <ACC/ProcRule.h>
+#include <Common/lofar_map.h>
+#include <ACCbin/ProcRule.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -78,7 +78,7 @@ namespace LOFAR {
     private:
       PR_MPI_Group(const string& name);
 
-      int itsNumberOfNodes;
+      uint itsNumberOfNodes;
       string itsGroupName;
 
       PRList itsPRList;
@@ -131,7 +131,7 @@ namespace LOFAR {
       { itsIsStarted = false;};
 
     inline bool ProcIdCompare::operator()( const string& x, const string& y) {
-      int xpos, ypos, pos, xvalue, yvalue;
+      uint xpos, ypos, pos, xvalue, yvalue;
       for (pos=0; (pos<x.size()) && (pos<y.size()); pos++) {
 	if (isNumber(x[pos]) && isNumber(y[pos])) {
 	  // next char is a number

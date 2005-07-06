@@ -24,10 +24,11 @@
 
 //# Includes
 #include <Transport/TH_Socket.h>
-#include <ACC/ProcControlComm.h>
+#include <PLC/ProcControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace PLC {
 
 //
 // client constructor
@@ -140,6 +141,7 @@ bool	ProcControlComm::doRemoteCmd(const PCCmd		theCmd,
 }
 
 
-} // namespace ACC
+    } // namespace PLC
+  } // namespace ACC
 } // namespace LOFAR
 

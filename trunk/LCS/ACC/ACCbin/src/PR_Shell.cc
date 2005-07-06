@@ -25,7 +25,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
-#include<ACC/PR_Shell.h>
+#include<ACCbin/PR_Shell.h>
 
 namespace LOFAR {
   namespace ACC {

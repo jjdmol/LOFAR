@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_PROCRULER_H
-#define LOFAR_ACC_PROCRULER_H
+#ifndef LOFAR_ACCBIN_PROCRULER_H
+#define LOFAR_ACCBIN_PROCRULER_H
 
 // \file ProcRuler.h
 // Controller to start/stop processes.
@@ -31,7 +31,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_map.h>
-#include <ACC/ProcRule.h>
+#include <ACCbin/ProcRule.h>
 
 namespace LOFAR {
   namespace ACC {

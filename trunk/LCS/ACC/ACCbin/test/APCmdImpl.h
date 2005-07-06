@@ -26,7 +26,9 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <ACC/ProcessControl.h>
+#include <PLC/ProcessControl.h>
+
+using namespace LOFAR::ACC::PLC;
 
 namespace LOFAR {
   namespace ACC {

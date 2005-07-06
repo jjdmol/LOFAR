@@ -29,10 +29,11 @@
 //# Includes
 #include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
-#include <ACC/ProcControlServer.h>
+#include <PLC/ProcControlServer.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace PLC {
 
 //
 // Setup (wait for an) connection with the PC client
@@ -163,6 +164,7 @@ void ProcControlServer::sendResult(PCCmd			command,
 						  someOptions);
 }
 
-} // namespace ACC
+    } // namespace PLC
+  } // namespace ACC
 } // namespace LOFAR
 

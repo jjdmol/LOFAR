@@ -2,7 +2,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
 
-#include <ACC/ConfigurationMgr.h>
+#include <ACCbin/ConfigurationMgr.h>
 
 char* PTnames[] = { "moduleA.ps", "moduleC.ps",  "moduleE.ps",
 					"moduleD.ps", "processG.ps", "processF.ps",

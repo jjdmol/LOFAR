@@ -27,11 +27,12 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/ACAsyncClient.h>
+#include <ALC/ACAsyncClient.h>
 #include <Common/hexdump.h>
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
 ACAsyncClient::ACAsyncClient(ACClientFunctions*	ACClntFuncts,
 				  			 const string&		aUniqUserName,
@@ -95,5 +96,6 @@ bool	ACAsyncClient::processACmsgFromServer()	const
 // NOT default constructable;
 ACAsyncClient::ACAsyncClient() { }
 
-} // namespace ACC
+    } // namespace ALC
+  } // namespace ACC
 } // namespace LOFAR

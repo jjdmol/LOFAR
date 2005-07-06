@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_PROCRULE_H
-#define LOFAR_ACC_PROCRULE_H
+#ifndef LOFAR_ACCBIN_PROCRULE_H
+#define LOFAR_ACCBIN_PROCRULE_H
 
 // \file ProcRule.h
 // Information how to rule a process.

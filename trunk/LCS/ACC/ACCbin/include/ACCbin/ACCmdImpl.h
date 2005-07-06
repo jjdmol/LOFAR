@@ -22,18 +22,21 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_ACC_ACCMDIMPL_H
-#define LOFAR_ACC_ACCMDIMPL_H
+#ifndef LOFAR_ACCBIN_ACCMDIMPL_H
+#define LOFAR_ACCBIN_ACCMDIMPL_H
 
 // \file ACCmdImpl.h
 // The implementation of the AC commands from the Application Controller
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <ACC/ApplControl.h>
+#include <ALC/ApplControl.h>
+
+using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {
   namespace ACC {
+
 // \addtogroup ACC
 // @{
 
