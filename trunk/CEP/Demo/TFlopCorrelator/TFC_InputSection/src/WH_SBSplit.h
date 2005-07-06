@@ -34,10 +34,12 @@ namespace LOFAR
   {
   public:
 
-    explicit WH_SBSplit(const string& name, const ACC::ParameterSet pset);
+    explicit WH_SBSplit(const string& name, const ACC::APS::ParameterSet pset);
     virtual ~WH_SBSplit();
     
-    static WorkHolder* construct(const string& name, const ACC::ParameterSet& pset);
+    static WorkHolder* construct(const string& name, 
+				 const ACC::APS::ParameterSet& pset);
+
     virtual WH_SBSplit* make(const string& name);
 
     virtual void process();
@@ -48,7 +50,7 @@ namespace LOFAR
     /// forbid assignment
     WH_SBSplit& operator= (const WH_SBSplit&);
 
-    ACC::ParameterSet itsPS;
+    ACC::APS::ParameterSet itsPS;
 
   };
 } // namespace LOFAR

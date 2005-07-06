@@ -24,7 +24,7 @@
 
 // General includes
 #include <Common/LofarLogger.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 // Application specific includes
 #include <TFC_InputSection/WH_SBSplit.h>
@@ -33,9 +33,9 @@
 
 using namespace LOFAR;
 
-WH_SBSplit::WH_SBSplit(const string& name, const ACC::ParameterSet pset) 
+WH_SBSplit::WH_SBSplit(const string& name, const ACC::APS::ParameterSet pset) 
   : WorkHolder (1,
-		pset.getInt("NrFIRFilters"),
+		pset.getInt32("NrFIRFilters"),
 		name,
 		"WH_SBSplit"),
     itsPS      (pset)
@@ -53,7 +53,8 @@ WH_SBSplit::WH_SBSplit(const string& name, const ACC::ParameterSet pset)
 WH_SBSplit::~WH_SBSplit() {
 }
 
-WorkHolder* WH_SBSplit::construct(const string& name, const ACC::ParameterSet& pset) 
+WorkHolder* WH_SBSplit::construct(const string& name, 
+				  const ACC::APS::ParameterSet& pset) 
 {
   return new WH_SBSplit(name, pset);
 }

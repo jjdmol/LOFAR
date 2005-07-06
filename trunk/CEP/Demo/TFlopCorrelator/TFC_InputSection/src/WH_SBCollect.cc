@@ -24,7 +24,7 @@
 
 // General includes
 #include <Common/LofarLogger.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 // Application specific includes
 #include <TFC_InputSection/WH_SBCollect.h>
@@ -34,8 +34,8 @@
 using namespace LOFAR;
 
 WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
-			   const ACC::ParameterSet pset) 
-  : WorkHolder   (pset.getInt("NrStations"), 
+			   const ACC::APS::ParameterSet pset) 
+  : WorkHolder   (pset.getInt32("NrStations"), 
 		  1,
 		  name,
 		  "WH_SBCollect"),
@@ -57,7 +57,7 @@ WH_SBCollect::~WH_SBCollect() {
 }
 
 WorkHolder* WH_SBCollect::construct(const string& name, int sbID, 
-				    const ACC::ParameterSet& pset) 
+				    const ACC::APS::ParameterSet& pset) 
 {
   return new WH_SBCollect(name, sbID, pset);
 }
