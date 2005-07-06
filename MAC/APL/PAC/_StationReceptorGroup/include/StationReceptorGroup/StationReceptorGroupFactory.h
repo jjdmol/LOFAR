@@ -24,6 +24,8 @@
 #define StationReceptorGroupFactory_H
 
 //# Includes
+#include <Common/lofar_map.h>
+#include <boost/shared_ptr.hpp>
 #include <APLCommon/LogicalDeviceFactory.h>
 
 //# local includes
@@ -41,14 +43,25 @@ namespace ASR
   {
     public:
 
-      StationReceptorGroupFactory() {}; 
+      StationReceptorGroupFactory() : APLCommon::LogicalDeviceFactory(), m_theSRGinstances() {}; 
       virtual ~StationReceptorGroupFactory() {};
       
       virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, 
                                                                               const string& parameterFile,
                                                                               GCF::TM::GCFTask* pStartDaemon)
       {
-        return boost::shared_ptr<APLCommon::LogicalDevice>(new StationReceptorGroup(taskName, parameterFile, pStartDaemon));
+        map<string, boost::shared_ptr<APLCommon::LogicalDevice> >::iterator it = m_theSRGinstances.find(taskName);
+        if(it == m_theSRGinstances.end())
+        {
+          boost::shared_ptr<APLCommon::LogicalDevice> theInstance(new StationReceptorGroup(taskName, parameterFile, pStartDaemon));
+          m_theSRGinstances[taskName] = theInstance;
+          return theInstance;
+        }
+        else
+        {
+          it->second->adoptParameterFile(parameterFile);
+          return it->second;
+        }
       };
 
     protected:
@@ -58,6 +71,7 @@ namespace ASR
       StationReceptorGroupFactory& operator=(const StationReceptorGroupFactory&);
 
     private:
+      map<string, boost::shared_ptr<APLCommon::LogicalDevice> > m_theSRGinstances;
     
   };
 };//AVT
