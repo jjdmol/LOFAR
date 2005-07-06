@@ -1112,26 +1112,26 @@ void ProgressBar(float Maximum, float value)
 void jump2StationSubrackRCU()
 {
 
-  if(dpAccessable($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr + "__enabled"))
+  if(dpAccessable($datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr + "__enabled"))
   {
     if ("LOFAR Navigator" == myPanelName())
     { 
       //string datapointPath;
-      //convertOriginal2ReferenceDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr, datapointPath);
+      //convertOriginal2ReferenceDP($datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr, datapointPath);
       if($referenceDatapoint=="")
       {
-        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+        navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr);
       }
       else
       {
-        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+        navConfigTriggerNavigatorRefreshWithDP($referenceDatapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr);
       }
     }
     else
     {  
       RootPanelOn("navigator/views/Station_Subrack_RCU.pnl",
                   "Station - Subrack - RCU",
-                  makeDynString("$datapoint:" + $datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr));
+                  makeDynString("$datapoint:" + $datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr));
     }
   }
 }

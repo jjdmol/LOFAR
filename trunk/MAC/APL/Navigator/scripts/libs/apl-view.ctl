@@ -178,10 +178,10 @@ void RCUContextMenu()
   int Answer, status, maintenance;
   bool bOK;       //Variable with value FALSE
   
-  if(dpAccessable($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value"))
+  if(dpAccessable($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value"))
   {
-  dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", status);
-  dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", maintenance);
+  dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", status);
+  dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", maintenance);
 
   BuildContextMenu(status, maintenance, Answer);
 
@@ -189,16 +189,16 @@ void RCUContextMenu()
     switch (Answer)
     {
     case 2:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", 0);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", 0);
         break;
     case 3:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", 1);
         break;
     case 10:    
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", 0);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", 0);
         break;
     case 11:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", 1);
       break;
     default:
       break;
@@ -264,25 +264,25 @@ void AntennaContextMenu(string antenna)
   string txt_maintenance;
   int Answer, status, maintenance;
   bool bOK;       //Variable with value FALSE
-  if(dpAccessable($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_online.._value"))
+  if(dpAccessable($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_online.._value"))
   {
-    dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
-    dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
+    dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
+    dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
     BuildContextMenu(status, maintenance, Answer);
     // Compute the chosen option
     switch (Answer)
     {
       case 2:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
         break;
       case 3:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
         break;
       case 10:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
         break;
       case 11:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
         break;
       default:
         break;
@@ -311,19 +311,19 @@ void APContextMenu()
   int Answer;
   int status;
   bool bOK;       //Variable with value FALSE
-  if(dpAccessable($datapoint + "_Board1_AP"+ $APNr + ".status:_original.._value"))
+  if(dpAccessable($datapoint + "_Board0_AP"+ $APNr + ".status:_original.._value"))
   {
-    dpGet($datapoint + "_Board1_AP"+ $APNr + ".status:_original.._value", status);
+    dpGet($datapoint + "_Board0_AP"+ $APNr + ".status:_original.._value", status);
     BuildContextMenu(status, -1, Answer);
 
     // Compute the chosen option
     switch (Answer)
     {
     case 2:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +".status:_original.._value", 0);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +".status:_original.._value", 0);
         break;
     case 3:
-        dpSetWait($datapoint + "_Board1_AP"+ $APNr +".status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +".status:_original.._value", 1);
         break;
     default:
       break;
@@ -349,28 +349,28 @@ void BPContextMenu()
   string txt_maintenance, txt_status;
   int Answer, maintenance, status;
   bool bOK;       //Variable with value FALSE
-  if(dpAccessable($datapoint + "_Board1_BP.status:_original.._value"))
+  if(dpAccessable($datapoint + "_Board0_BP.status:_original.._value"))
   {
-    dpGet($datapoint + "_Board1_BP.status:_original.._value", status);
-    dpGet($datapoint + "_Board1_Maintenance.status:_original.._value", maintenance);
+    dpGet($datapoint + "_Board0_BP.status:_original.._value", status);
+    dpGet($datapoint + "_Board0_Maintenance.status:_original.._value", maintenance);
     BuildContextMenu(status, maintenance, Answer);
 
     // Compute the chosen option
     switch (Answer)
     {
     case 2:
-      dpSetWait($datapoint + "_Board1_BP.status:_original.._value", 0);
+      dpSetWait($datapoint + "_Board0_BP.status:_original.._value", 0);
       break;
     case 3:
-      dpSetWait($datapoint + "_Board1_BP.status:_original.._value", 1);
+      dpSetWait($datapoint + "_Board0_BP.status:_original.._value", 1);
       break;
     case 10:    
-      dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 0);
-      //dpActivateAlert($datapoint + "_Board1_BP.status", bOK);
+      dpSetWait($datapoint + "_Board0_Maintenance.status:_original.._value", 0);
+      //dpActivateAlert($datapoint + "_Board0_BP.status", bOK);
       break;
     case 11:
-      dpSetWait($datapoint + "_Board1_Maintenance.status:_original.._value", 1);
-      //dpDeactivateAlert($datapoint + "_Board1_BP.status", bOK);
+      dpSetWait($datapoint + "_Board0_Maintenance.status:_original.._value", 1);
+      //dpDeactivateAlert($datapoint + "_Board0_BP.status", bOK);
       break;
     default:
       break;
@@ -412,26 +412,26 @@ void AntennaContextMenuMain(string antenna)
   string txt_maintenance;
   int Answer, status, maintenance;
   bool bOK;       //Variable with value FALSE
-  if(dpAccessable($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value"))
+  if(dpAccessable($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value"))
   {
-    dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
-    dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
+    dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
+    dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
     BuildContextMenu(status, maintenance, Answer);
   
     // Compute the chosen option
     switch (Answer)
     {
       case 2:
-        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
         break;
       case 3:
-        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
         break;
       case 10:
-        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
         break;
       case 11:
-        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
+        dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
         break;
       default:
         break;
