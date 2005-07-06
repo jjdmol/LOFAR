@@ -50,6 +50,8 @@ using namespace std;
 void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
 {
   MeqParmGroup pgroup;
+  streamsize prec = cout.precision();
+  cout.precision(10);
   for (uint i=0; i<pData.size(); ++i) {
     cout << "Writing parm " << pData[i].getName() << " into "
 	 << pData[i].getTableName() << ' ' << pData[i].getDBName()
@@ -63,6 +65,7 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
     parm.save();
     ptab.unlock();
   }
+  cout.precision (prec);
 }
 
 void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
