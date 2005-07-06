@@ -23,7 +23,7 @@
 #ifndef TFLOPCORRELATOR_WH_RSPINPUT_H
 #define TFLOPCORRELATOR_WH_RSPINPUT_H
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <Common/lofar_string.h>
 #include <tinyCEP/TinyDataManager.h>
 #include <tinyCEP/WorkHolder.h>
@@ -64,7 +64,7 @@ namespace LOFAR
       //typedef TimeStamp timestamp_t;
 
       explicit WH_RSPInput(const string& name, 
-                           const ACC::ParameterSet pset,
+                           const ACC::APS::ParameterSet pset,
                            const string device,
                            const string srcMAC,
                            const string destMAC,
@@ -72,7 +72,7 @@ namespace LOFAR
       virtual ~WH_RSPInput();
     
       static WorkHolder* construct(const string& name, 
-                                   const ACC::ParameterSet pset,
+                                   const ACC::APS::ParameterSet pset,
                                    const string device,
                                    const string srcMAC,
                                    const string destMAC,
@@ -107,7 +107,7 @@ namespace LOFAR
       string itsSrcMAC;
       string itsDestMAC;
       
-      ACC::ParameterSet itsPset;
+      ACC::APS::ParameterSet itsPset;
       
       bool itsSyncMaster;
       int itsSzRSPframe;

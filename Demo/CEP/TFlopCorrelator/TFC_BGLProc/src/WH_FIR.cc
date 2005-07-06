@@ -10,7 +10,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <WH_FIR.h>
 
 #include <TFC_Interface/DH_FIR.h>
@@ -24,14 +24,13 @@ WH_FIR::WH_FIR(const string& name,
  itsSBID       (subBandID)
 {
 
-   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-   //ParameterCollection	myPC(myPS);
-   itsNFilters   = myPS.getInt("WH_FIR.filters");
-   itsNtaps      = myPS.getInt("WH_FIR.taps");
-   itsNStations  = myPS.getInt("WH_FIR.stations");
-   itsNTimes     = myPS.getInt("WH_FIR.times");
-   itsNPol       = myPS.getInt("WH_FIR.pols");
-   itsFFTs       = myPS.getInt("WH_FIR.FFTs");
+   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
+   itsNFilters   = myPS.getInt32("WH_FIR.filters");
+   itsNtaps      = myPS.getInt32("WH_FIR.taps");
+   itsNStations  = myPS.getInt32("WH_FIR.stations");
+   itsNTimes     = myPS.getInt32("WH_FIR.times");
+   itsNPol       = myPS.getInt32("WH_FIR.pols");
+   itsFFTs       = myPS.getInt32("WH_FIR.FFTs");
 
    getDataManager().addInDataHolder(0, new DH_FIR("input", itsSBID));
 

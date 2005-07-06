@@ -13,7 +13,7 @@
 #include <lofar_config.h>
 
 #include <DH_PPF.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 
 namespace LOFAR
@@ -25,12 +25,11 @@ namespace LOFAR
       itsBuffer      (0),
       itsNSamples    (0)
   {
-    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-//     //ParameterCollection	myPC(myPS);
-    itsNSamples = myPS.getInt("DH_PPF.samples");
-//     itsNStations  = myPS.getInt("WH_SubBand.stations");
-//     itsNTimes     = myPS.getInt("WH_SubBand.times");
-//     itsNPol       = myPS.getInt("WH_SubBand.pols");
+    ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
+    itsNSamples = myPS.getInt32("DH_PPF.samples");
+//     itsNStations  = myPS.getInt32("WH_SubBand.stations");
+//     itsNTimes     = myPS.getInt32("WH_SubBand.times");
+//     itsNPol       = myPS.getInt32("WH_SubBand.pols");
   }
   
 DH_PPF::DH_PPF(const DH_PPF& that)

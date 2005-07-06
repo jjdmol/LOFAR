@@ -10,7 +10,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <WH_FFT.h>
 
 // #include <TFC_Interface/DH_PPF.h>
@@ -23,12 +23,11 @@ using namespace LOFAR;
 WH_FFT::WH_FFT(const string& name) :
   WorkHolder( 1, 1, name, "WH_Correlator")
 {
-   ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-   //ParameterCollection	myPC(myPS);
-   itsNtaps      = myPS.getInt("WH_FFT.taps");
-   itsNSamples   = myPS.getInt("WH_FFT.times");
-   itsCpF        = myPS.getInt("Corr_per_Filter");
-   itsInputs     = myPS.getInt("WH_FFT.inputs");
+   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
+   itsNtaps      = myPS.getInt32("WH_FFT.taps");
+   itsNSamples   = myPS.getInt32("WH_FFT.times");
+   itsCpF        = myPS.getInt32("Corr_per_Filter");
+   itsInputs     = myPS.getInt32("WH_FFT.inputs");
    // todo: Pr-correlation correction DH in channel 0
    //   getDataManager().addInDataHolder(0, new DH_??("input", itsSBID));
 

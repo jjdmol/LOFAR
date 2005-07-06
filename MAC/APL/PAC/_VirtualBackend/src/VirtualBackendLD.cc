@@ -24,14 +24,14 @@
 
 #include "VirtualBackendLD.h"
 #include <APLCommon/LogicalDevice_Protocol.ph>
-#include <ACC/KVpair.h>
+#include <APS/KVpair.h>
 #include <GCF/GCF_PVChar.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/Utils.h>
 
 namespace LOFAR
 {
-using namespace ACC;
+using namespace ACC::APS;
 using namespace APLCommon;
 using namespace GCF::Common;
 using namespace GCF::TM;

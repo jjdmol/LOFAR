@@ -14,7 +14,7 @@
 #define TFLOPCORRELATOR_DH_RSP_H
 
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <Transport/DataHolder.h>
 #include <TFC_Interface/RSPTimeStamp.h>
 
@@ -27,7 +27,7 @@ public:
   typedef char BufferType;
 
   explicit DH_RSP (const string& name,
-                   const ACC::ParameterSet pset);
+                   const ACC::APS::ParameterSet pset);
 
   DH_RSP(const DH_RSP&);
 
@@ -75,7 +75,7 @@ public:
   int itsNoPolarisations;
   unsigned int itsBufSize;
 
-  ACC::ParameterSet itsPSet;
+  ACC::APS::ParameterSet itsPSet;
 };
 
 inline DH_RSP::BufferType* DH_RSP::getBuffer()

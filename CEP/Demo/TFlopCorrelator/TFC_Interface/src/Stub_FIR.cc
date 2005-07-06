@@ -12,7 +12,7 @@
 
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
@@ -21,8 +21,8 @@ namespace LOFAR {
       itsTHs          (0),
       itsConnections  (0)
   {
-    itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
-    itsNFIRF     = itsPS->getInt("NFIRF");  // number of SubBand filters in the application
+    itsPS = new ACC::APS::ParameterSet("TFlopCorrelator.cfg");
+    itsNFIRF     = itsPS->getInt32("NFIRF");  // number of SubBand filters in the application
     ASSERTSTR(itsNFIRF >= 0, "Number of subband filters must be greater than 0");
     itsTHs = new TH_Socket*[itsNFIRF];
     itsConnections = new Connection*[itsNFIRF];
@@ -51,7 +51,7 @@ namespace LOFAR {
   {
     DBGASSERTSTR(FIRF_nr <= itsNFIRF, "Subband filter number too large");
     const ParameterSet myPS("TFlopCorrelator.cfg");
-    int port = myPS.getInt("FIRConnection.RequestPort");
+    int port = myPS.getInt32("FIRConnection.RequestPort");
     string service(formatString("%d", port));
     if (itsStubOnServer)    // On the cluster side, so start a server socket
     {

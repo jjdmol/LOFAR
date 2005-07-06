@@ -12,7 +12,7 @@
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <AH_InputSection.h>
 

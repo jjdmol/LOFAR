@@ -42,9 +42,9 @@ namespace LOFAR
 WH_Transpose::WH_Transpose (const string& name,
 			    unsigned int nin,
 			    unsigned int nout,
-			    const ACC::ParameterSet& ps)
+			    const ACC::APS::ParameterSet& ps)
   : WorkHolder    (nin, nout, name,"WH_Transpose"),
-    itsFBW(ps.getInt("station.nchannels")),
+    itsFBW(ps.getInt32("station.nchannels")),
     itsIntegrationTime(0),
     itsPS(ps)
 {
@@ -70,7 +70,7 @@ WH_Transpose::~WH_Transpose()
 WorkHolder* WH_Transpose::construct (const string& name, 
 				     unsigned int nin,
 				     unsigned int nout,
-				     const ACC::ParameterSet& ps)
+				     const ACC::APS::ParameterSet& ps)
 {
   return new WH_Transpose (name, nin, nout, ps);
 }
@@ -99,7 +99,7 @@ void WH_Transpose::process()
 
   // loop over input stations and channels within the corresponding beamlets
   for (int station=0; station< getDataManager().getInputs(); station++) {
-    for (int freq=0; freq<itsPS.getInt("station.nchannels"); freq++) {
+    for (int freq=0; freq<itsPS.getInt32("station.nchannels"); freq++) {
      
       // in this version we make the corrcube monochromatic (see assert above)
       // therefore  the outholder channel corresponds to the freq.
@@ -127,7 +127,7 @@ void WH_Transpose::process()
   }
   // keep track of the time channel
   itsIntegrationTime++;
-  if (itsIntegrationTime == itsPS.getInt("corr.tsize")-1) itsIntegrationTime=0;
+  if (itsIntegrationTime == itsPS.getInt32("corr.tsize")-1) itsIntegrationTime=0;
   cout << itsIntegrationTime << " ";
 }
 
@@ -137,7 +137,7 @@ void WH_Transpose::dump()
   cout << "Dump WH_Transpose " << getName() << endl;
   cout << " input " << endl;
   int nrStations = getDataManager().getInputs();
-  int nrFreq = itsPS.getInt("station.nchannels");
+  int nrFreq = itsPS.getInt32("station.nchannels");
   for (int station=0; station < nrStations ; station++) {
     cout << "in station=" << station << ":  ";
     for (int freq=0; freq < nrFreq; freq++) {

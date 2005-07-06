@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 // General includes
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 #ifdef HAVE_MPI
@@ -38,11 +38,10 @@ WH_Correlator::WH_Correlator(const string& name) :
   itsNpolarisations (2)
 {
 
-  ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
-  //ParameterCollection	myPC(myPS);
-  itsNelements = myPS.getInt("WH_Corr.stations");
-  itsNsamples  = myPS.getInt("WH_Corr.samples");
-  itsNchannels = myPS.getInt("WH_Corr.channels"); 
+  ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
+  itsNelements = myPS.getInt32("WH_Corr.stations");
+  itsNsamples  = myPS.getInt32("WH_Corr.samples");
+  itsNchannels = myPS.getInt32("WH_Corr.channels"); 
   itsNtargets = 0; // not used?
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));

@@ -10,7 +10,7 @@
 #ifndef LOFAR_TFLOPCORRELATOR_CORRSTUB_H
 #define LOFAR_TFLOPCORRELATOR_CORRSTUB_H
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
 
 namespace LOFAR {
@@ -36,7 +36,7 @@ public:
 
 private:
   bool               itsStubOnServer;
-  ACC::ParameterSet* itsPS;
+  ACC::APS::ParameterSet* itsPS;
   int                itsNCorr;  // total number of correlators in this interface
   TH_Socket**        itsTHs;
   Connection**       itsConnections;

@@ -45,7 +45,7 @@ namespace LOFAR
 
 WH_Dump::WH_Dump (const string& name,
 		  unsigned int  nin,
-		  const ACC::ParameterSet& ps,
+		  const ACC::APS::ParameterSet& ps,
 		  int           rank)
   : WorkHolder    (nin, 1, name,"WH_Dump"),
     itsIndex   (1),
@@ -85,7 +85,7 @@ WH_Dump::~WH_Dump()
 
 WorkHolder* WH_Dump::construct (const string& name, 
 				int nin, 
-				const ACC::ParameterSet& ps,
+				const ACC::APS::ParameterSet& ps,
 				int rank)
 {
   return new WH_Dump (name, nin, ps, rank);
@@ -98,7 +98,7 @@ WH_Dump* WH_Dump::make (const string& name)
 
 void WH_Dump::process()
 {
-  int nstations = itsPS.getInt("general.nstations");
+  int nstations = itsPS.getInt32("general.nstations");
   blitz::Array<complex<float>, 2> corr(nstations, nstations);
   blitz::Array<float, 1> plotBuffer (PLOTSIZE) ;
   corr = complex<float> (0,0);

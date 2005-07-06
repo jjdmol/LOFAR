@@ -37,14 +37,14 @@ namespace LOFAR
 {
 WH_Sync::WH_Sync (const string& name, 
 			      const int nbeamlets, 
-			      const ACC::ParameterSet& ps, 
+			      const ACC::APS::ParameterSet& ps, 
 			      const int StationID)
   : WorkHolder    (nbeamlets+1, nbeamlets, name,"WH_Sync"),
     itsPS (ps),
     itsStationID (StationID)
 {
   char str[8];
-  int bs = itsPS.getInt("station.nchannels"); 
+  int bs = itsPS.getInt32("station.nchannels"); 
     
   for (int i = 0; i < nbeamlets; i++) {
     sprintf (str, "%d", i);
@@ -55,7 +55,7 @@ WH_Sync::WH_Sync (const string& name,
 							itsPS.getFloat(string("station.beamlet.") + str),
 							itsPS.getFloat("station.chan_bw"),
 							itsPS.getFloat("observation.ha_0"),
-							itsPS.getInt("station.nchannels")));
+							itsPS.getInt32("station.nchannels")));
 
     // create the output dataholders
     getDataManager().addOutDataHolder(i, new DH_Beamlet (string("out_") + str,
@@ -63,7 +63,7 @@ WH_Sync::WH_Sync (const string& name,
 							 itsPS.getFloat(string("station.beamlet.") + str),
 							 itsPS.getFloat("station.chan_bw"),
 							 itsPS.getFloat("observation.ha_0"),
-							 itsPS.getInt("station.nchannels")));
+							 itsPS.getInt32("station.nchannels")));
   }
 }
   
@@ -73,7 +73,7 @@ WH_Sync::~WH_Sync()
 
 WorkHolder* WH_Sync::construct (const string& name, 
 				      const int nbeamlets, 
-				      const ACC::ParameterSet& ps,
+				      const ACC::APS::ParameterSet& ps,
 				      const int StationID)
 {
   return new WH_Sync (name, nbeamlets, ps, StationID);
@@ -96,9 +96,9 @@ void WH_Sync::process()
     ((DH_Beamlet*)getDataManager().getOutHolder(i))->
       setElapsedTime(((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime());
 
-    for (int j = 0; j < itsPS.getInt("station.nchannels"); j++) {
+    for (int j = 0; j < itsPS.getInt32("station.nchannels"); j++) {
       
-      if (itsPS.getInt("general.enable_fs") == 1) 
+      if (itsPS.getInt32("general.enable_fs") == 1) 
 	{
 	  // apply phase shift
 	  *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
@@ -117,8 +117,8 @@ void WH_Sync::process()
 void WH_Sync::dump()
 {    
   cout << "WH_Sync " << getName () << " Buffers:" << endl;
-  for (int i = 0; i < MIN(itsPS.getInt("station.nbeamlets"),1); i++) {
-    for (int j = 0; j < MIN(itsPS.getInt("station.nchannels"),10); j++) {
+  for (int i = 0; i < MIN(itsPS.getInt32("station.nbeamlets"),1); i++) {
+    for (int j = 0; j < MIN(itsPS.getInt32("station.nchannels"),10); j++) {
       cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
     }
     cout << endl;

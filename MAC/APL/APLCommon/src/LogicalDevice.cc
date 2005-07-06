@@ -45,7 +45,7 @@
   str = str.c_str(); \
 }
 
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;

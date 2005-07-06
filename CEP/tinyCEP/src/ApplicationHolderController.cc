@@ -27,14 +27,15 @@
 #include <Common/LofarLogger.h>
 
 #include <tinyCEP/Profiler.h>
-#include <ACC/ProcControlServer.h>
-#include <ACC/ParameterSet.h>
-#include <ACC/ProcessControl.h>
+#include <PLC/ProcControlServer.h>
+#include <PLC/ProcessControl.h>
+#include <APS/ParameterSet.h>
 
 #include <ApplicationHolderController.h>
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
+using namespace LOFAR::ACC::PLC;
 
 ApplicationHolderController::ApplicationHolderController(TinyApplicationHolder& AH, int noRuns)
   : itsAH(AH),
@@ -153,7 +154,7 @@ int ApplicationHolderController::main (int argc, const char* argv[]) {
 
     if (itsPCcomm == 0) {
       itsPCcomm = new ProcControlServer(itsParamSet.getString("ACnode"),
-					itsParamSet.getInt("ACport"),
+					itsParamSet.getUint16("ACport"),
 					this);
     }
 

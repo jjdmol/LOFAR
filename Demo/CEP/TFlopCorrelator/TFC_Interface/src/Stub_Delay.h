@@ -10,7 +10,7 @@
 #ifndef LOFAR_TFC_INTERFACE_STUB_DELAY_H
 #define LOFAR_TFC_INTERFACE_STUB_DELAY_H
 
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
 
 namespace LOFAR {
@@ -36,7 +36,7 @@ public:
 
 private:
   bool               itsIsInput;    // Is this stub an input for a step
-  ACC::ParameterSet* itsPS;
+  ACC::APS::ParameterSet* itsPS;
   int                itsNRSP;  // total number of RSPinputs
   TH_Socket**        itsTHs;
   Connection**       itsConnections;

@@ -175,13 +175,13 @@ void* WriteToBufferThread(void* arguments)
 }
 
 WH_RSPInput::WH_RSPInput(const string& name, 
-                         const ACC::ParameterSet pset,
+                         const ACC::APS::ParameterSet pset,
                          const string device,
                          const string srcMAC,
                          const string destMAC,
                          const bool isSyncMaster)
   : WorkHolder ((isSyncMaster ? 1 : 2), 
-                1 + (isSyncMaster ? pset.getInt("NoWH_RSP")-1 : 0), 
+                1 + (isSyncMaster ? pset.getInt32("NoWH_RSP")-1 : 0), 
                 name, 
                 "WH_RSPInput"),
     itsDevice(device),
@@ -193,17 +193,17 @@ WH_RSPInput::WH_RSPInput(const string& name,
   char str[32];
   
   // total amount of RSP-board interfaces
-  itsNRSPOutputs = pset.getInt("NoWH_RSP");
+  itsNRSPOutputs = pset.getInt32("NoWH_RSP");
 
   // number of EPA packets per RSP frame
-  itsNpackets = pset.getInt("NoPacketsInFrame");
+  itsNpackets = pset.getInt32("NoPacketsInFrame");
  
   // size of an EPA packet in bytes 
-  int sizeofpacket   = ( pset.getInt("polarisations") * 
+  int sizeofpacket   = ( pset.getInt32("polarisations") * 
                           sizeof(complex<int16>) * 
-                          pset.getInt("NoRSPBeamlets")
+                          pset.getInt32("NoRSPBeamlets")
                        ) + 
-                       pset.getInt("SzEPAheader"); 
+                       pset.getInt32("SzEPAheader"); 
  
   // size of a RSP frame in bytes
   itsSzRSPframe = itsNpackets * sizeofpacket;
@@ -243,7 +243,7 @@ WH_RSPInput::~WH_RSPInput()
 
 
 WorkHolder* WH_RSPInput::construct(const string& name,
-                                   const ACC::ParameterSet pset,
+                                   const ACC::APS::ParameterSet pset,
                                    const string device,
                                    const string srcMAC,
                                    const string destMAC,

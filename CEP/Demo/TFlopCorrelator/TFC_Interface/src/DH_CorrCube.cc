@@ -11,7 +11,7 @@
 #include <lofar_config.h>
 
 #include <DH_CorrCube.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -22,11 +22,11 @@ namespace LOFAR
       itsSubBand     (subband),
       itsNPol        (2)
   {
-    ACC::ParameterSet  myPS("TFlopCorrelator.cfg");
+    ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
     //ParameterCollection	myPC(myPS);
-    itsNFChannels = myPS.getInt("DH_CorrCube.freqs");
-    itsNStations  = myPS.getInt("DH_CorrCube.stations");
-    itsNTimes     = myPS.getInt("DH_CorrCube.times");
+    itsNFChannels = myPS.getInt32("DH_CorrCube.freqs");
+    itsNStations  = myPS.getInt32("DH_CorrCube.stations");
+    itsNTimes     = myPS.getInt32("DH_CorrCube.times");
   }
   
 DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)

@@ -26,7 +26,7 @@
 #include <lofar_config.h>
 
 #include "tinyCEP/WorkHolder.h"
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <blitz/blitz.h>
 #include <blitz/array.h>
@@ -51,7 +51,7 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_Dump (const string& name,
 		    unsigned int nin,
-		    const ACC::ParameterSet& ps,
+		    const ACC::APS::ParameterSet& ps,
 		    int rank = 0);
 
   virtual ~WH_Dump();
@@ -59,7 +59,7 @@ public:
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
 				int nin,
-				const ACC::ParameterSet& ps,
+				const ACC::APS::ParameterSet& ps,
 				int rank);
 
   /// Make a fresh copy of the WH object.
@@ -88,7 +88,7 @@ private:
 
   gnuplot_ctrl* handle;
   
-  const ACC::ParameterSet itsPS;
+  const ACC::APS::ParameterSet itsPS;
   int itsRank;
   
 };

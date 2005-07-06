@@ -24,7 +24,7 @@
 
 // General includes
 #include <Common/LofarLogger.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 // Application specific includes
 #include <TFC_Storage/WH_Storage.h>
@@ -33,8 +33,8 @@
 using namespace LOFAR;
 
 WH_Storage::WH_Storage(const string& name, 
-		       const ACC::ParameterSet& pset) 
-  : WorkHolder (pset.getInt("NSBF")/2,
+		       const ACC::APS::ParameterSet& pset) 
+  : WorkHolder (pset.getInt32("NSBF")/2,
 		0,
 		name,
 		"WH_Storage"),
@@ -53,7 +53,7 @@ WH_Storage::~WH_Storage() {
 }
 
 WorkHolder* WH_Storage::construct(const string& name,
-				  const ACC::ParameterSet& pset) 
+				  const ACC::APS::ParameterSet& pset) 
 {
   return new WH_Storage(name, pset);
 }

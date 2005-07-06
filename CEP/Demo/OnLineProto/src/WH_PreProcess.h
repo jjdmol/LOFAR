@@ -28,7 +28,7 @@
 #include "tinyCEP/WorkHolder.h"
 #include "OnLineProto/DH_Beamlet.h"
 #include "OnLineProto/DH_CorrectionMatrix.h"
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <OnLineProto/definitions.h>
 
 namespace LOFAR
@@ -42,7 +42,7 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_PreProcess (const string& name, 
 			  const int nbeamlets, 
-			  const ACC::ParameterSet& ps,
+			  const ACC::APS::ParameterSet& ps,
 			  const int StationID);
 
   virtual ~WH_PreProcess();
@@ -50,7 +50,7 @@ public:
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
 				const int nbeamlets, 
-				const ACC::ParameterSet& ps,
+				const ACC::APS::ParameterSet& ps,
 				const int StationID);
 
   /// Make a fresh copy of the WH object.
@@ -69,7 +69,7 @@ private:
   /// Forbid assignment.
   WH_PreProcess& operator= (const WH_PreProcess&);
 
-  ACC::ParameterSet itsPS;
+  ACC::APS::ParameterSet itsPS;
   int itsStationID;
   int itsCounter;
 };

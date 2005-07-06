@@ -20,16 +20,16 @@ namespace LOFAR
 {
 
 DH_RSP::DH_RSP (const string& name,
-                const ACC::ParameterSet pset)
+                const ACC::APS::ParameterSet pset)
 : DataHolder (name, "DH_RSP"),
   itsBuffer  (0),
   itsPSet    (pset)
 {
 
-   itsEPAheaderSize   = pset.getInt("SzEPAheader");
-   itsNoBeamlets      = pset.getInt("NoRSPBeamlets");
-   itsNoPolarisations = pset.getInt("polarisations");
-   const int NoPacketsInFrame = pset.getInt("NoPacketsInFrame");
+   itsEPAheaderSize   = pset.getInt32("SzEPAheader");
+   itsNoBeamlets      = pset.getInt32("NoRSPBeamlets");
+   itsNoPolarisations = pset.getInt32("polarisations");
+   const int NoPacketsInFrame = pset.getInt32("NoPacketsInFrame");
    itsBufSize         =  NoPacketsInFrame * 
      (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<int16>));
 }

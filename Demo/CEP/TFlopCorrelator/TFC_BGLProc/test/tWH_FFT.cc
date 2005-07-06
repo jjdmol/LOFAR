@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 #include <tWH_FFT.h>
 
 #include <Transport/TH_Mem.h>

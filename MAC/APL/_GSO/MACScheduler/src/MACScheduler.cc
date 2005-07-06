@@ -190,18 +190,18 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
             {
               // read the parameterset from the database:
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-              boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
               ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
-              boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
               
               // replace the parent port (assigned by the ServiceBroker)
               unsigned int parentPort = m_VIparentPort.getPortNumber();
-              ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+              ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
               ps->replace(kvPair);
               
               // get some parameters and write it to the allocated CCU
@@ -261,18 +261,18 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
             {
               // read the parameterset from the database:
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-              boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
               ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
-              boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
               
               // replace the parent port (assigned by the ServiceBroker)
               unsigned int parentPort = m_VIparentPort.getPortNumber();
-              ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+              ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
               ps->replace(kvPair);
               
               string allocatedCCU = ps->getString("allocatedCCU");
@@ -329,12 +329,12 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent.fileName)
             {
               // read the parameterset from the database:
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-              boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
               ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
-              boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
               
@@ -807,18 +807,18 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
       {
         // read the parameterset from the database:
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-        boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(sasScheduleEvent.VIrootID, "latest");
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(sasScheduleEvent.VIrootID, "latest");
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
         ACC::ParameterCollection pc(shareLocation + sasScheduleEvent.VIrootID); // assume VIrootID is a file
-        boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
         // replace the parent port (assigned by the ServiceBroker)
         unsigned int parentPort = m_VIparentPort.getPortNumber();
-        ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+        ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
         ps->replace(kvPair);
         
         // get some parameters and write it to the allocated CCU
@@ -902,12 +902,12 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
       {
         // read the parameterset from the database:
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-        boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(sasCancelScheduleEvent.VIrootID, "latest");
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(sasCancelScheduleEvent.VIrootID, "latest");
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
         ACC::ParameterCollection pc(shareLocation + sasCancelScheduleEvent.VIrootID); // assume VIrootID is a file
-        boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
@@ -958,18 +958,18 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
       {
         // read the parameterset from the database:
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-        boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(sasUpdateScheduleEvent.VIrootID, "latest");
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(sasUpdateScheduleEvent.VIrootID, "latest");
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
         ACC::ParameterCollection pc(shareLocation + sasUpdateScheduleEvent.VIrootID); // assume VIrootID is a file
-        boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
         // replace the parent port (assigned by the ServiceBroker)
         unsigned int parentPort = m_VIparentPort.getPortNumber();
-        ACC::KVpair kvPair(string("parentPort"),(int)parentPort);
+        ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
         ps->replace(kvPair);
         
         string allocatedCCU = ps->getString("allocatedCCU");
@@ -1025,7 +1025,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
   }
 }
 
-void MACScheduler::_convertRelativeTimes(boost::shared_ptr<ACC::ParameterSet> ps)
+void MACScheduler::_convertRelativeTimes(boost::shared_ptr<ACC::APS::ParameterSet> ps)
 {
   try
   {
@@ -1036,7 +1036,7 @@ void MACScheduler::_convertRelativeTimes(boost::shared_ptr<ACC::ParameterSet> ps
   }
 }
 
-void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<ACC::ParameterSet> ps)
+void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps)
 {
   string keyPrefix("");
   if(child.length() > 0)
@@ -1054,13 +1054,13 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
   time_t startTime   = APLUtilities::decodeTimeString(ps->getString(startKey));
   time_t stopTime    = APLUtilities::decodeTimeString(ps->getString(stopKey));
 
-  ACC::KVpair kvPairClaimTime(claimKey,(int)claimTime);
+  ACC::APS::KVpair kvPairClaimTime(claimKey,(int)claimTime);
   ps->replace(kvPairClaimTime);
-  ACC::KVpair kvPairPrepareTime(prepareKey,(int)prepareTime);
+  ACC::APS::KVpair kvPairPrepareTime(prepareKey,(int)prepareTime);
   ps->replace(kvPairPrepareTime);
-  ACC::KVpair kvPairStartTime(startKey,(int)startTime);
+  ACC::APS::KVpair kvPairStartTime(startKey,(int)startTime);
   ps->replace(kvPairStartTime);
-  ACC::KVpair kvPairStopTime(stopKey,(int)stopTime);
+  ACC::APS::KVpair kvPairStopTime(stopKey,(int)stopTime);
   ps->replace(kvPairStopTime);
 
   // propagate into the child keys

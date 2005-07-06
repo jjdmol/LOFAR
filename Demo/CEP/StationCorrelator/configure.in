@@ -57,7 +57,8 @@ lofar_DOCXX
 
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
-lofar_INTERNAL(LCS/ACC,ACC,,1,ACC/ParameterSet.h,,)
+lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
+lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ProcessControl.h,,)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
 lofar_INTERNAL(MAC/GCF/PALlight, PALlight, ,1, , GCF/PALlight/CEPPropertySet.h, gcfceppallight)

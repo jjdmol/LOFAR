@@ -30,7 +30,7 @@
 
 //# Includes
 #include <tinyCEP/TinyDataManager.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 #include <Common/KeyValueMap.h>
 
@@ -54,7 +54,7 @@ namespace LOFAR
     void getarg (int* argc, const char** argv[]);
  
     /// Set the parameters with an ACC parameterset
-    void setParameters (const ACC::ParameterSet& params);
+    void setParameters (const ACC::APS::ParameterSet& params);
 
     virtual void baseDefine (const KeyValueMap& params = KeyValueMap());
     virtual void baseCheck();
@@ -105,7 +105,7 @@ namespace LOFAR
   protected:
     int    itsArgc;
     const char** itsArgv;
-    ACC::ParameterSet itsParamSet;
+    ACC::APS::ParameterSet itsParamSet;
 
   private:
  

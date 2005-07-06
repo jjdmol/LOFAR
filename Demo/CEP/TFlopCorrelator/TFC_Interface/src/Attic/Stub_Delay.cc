@@ -11,10 +11,10 @@
 #include <TFC_Interface/Stub_Delay.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
-#include <ACC/ParameterSet.h>
+#include <APS/ParameterSet.h>
 
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
@@ -23,8 +23,8 @@ Stub_Delay::Stub_Delay (bool isInput)
     itsTHs          (0),
     itsConnections  (0)
 {
-  itsPS = new ACC::ParameterSet("TFlopCorrelator.cfg");
-  itsNRSP = itsPS->getInt("NRSP");
+  itsPS = new ACC::APS::ParameterSet("TFlopCorrelator.cfg");
+  itsNRSP = itsPS->getInt32("NRSP");
   LOG_TRACE_FLOW_STR("Total number of RSPinputs in the Stub_Delay is " << itsNRSP);
   ASSERTSTR(itsNRSP >= 0, "Number of RSPinputs in the Stub_Delay must be greater than 0");
   
@@ -53,7 +53,7 @@ void Stub_Delay ::connect (int RSP_nr,
   DBGASSERTSTR(((RSP_nr >= 0) && (RSP_nr < itsNRSP)),
 	       "RSP_nr argument out of boundaries; " << RSP_nr << " / " << itsNRSP);
 
-  int port = itsPS->getInt("DelayConnection.RequestPort");
+  int port = itsPS->getInt32("DelayConnection.RequestPort");
   string service(formatString("%d", port));
   
   if (itsIsInput) // on the input side, start a client socket
