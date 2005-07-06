@@ -1,0 +1,5 @@
+Using: avttest
+
+Precondition:
+- The PropertAgent of GCF is running (see README in GCF)
+- be sure log4cplus.properties, test.top and test.ns are in the same path as the test Applications
