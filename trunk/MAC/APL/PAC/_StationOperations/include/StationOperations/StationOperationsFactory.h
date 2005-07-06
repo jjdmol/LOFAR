@@ -24,6 +24,7 @@
 #define StationOperationsFactory_H
 
 //# Includes
+#include <boost/shared_ptr.hpp>
 #include <APLCommon/LogicalDeviceFactory.h>
 
 //# local includes
@@ -41,14 +42,22 @@ namespace ASO // :-)
   {
     public:
 
-      StationOperationsFactory() {}; 
+      StationOperationsFactory() : APLCommon::LogicalDeviceFactory(), m_theSOinstance() {}; 
       virtual ~StationOperationsFactory() {};
       
       virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, 
                                                                               const string& parameterFile,
                                                                               GCF::TM::GCFTask* pStartDaemon)
       {
-        return boost::shared_ptr<APLCommon::LogicalDevice>(new StationOperations(taskName, parameterFile, pStartDaemon));
+        if(m_theSOinstance == 0)
+        {
+          m_theSOinstance.reset(new StationOperations(taskName, parameterFile, pStartDaemon));
+        }
+        else
+        {
+          m_theSOinstance->adoptParameterFile(parameterFile);
+        }
+        return m_theSOinstance;
       };
 
     protected:
@@ -58,6 +67,8 @@ namespace ASO // :-)
       StationOperationsFactory& operator=(const StationOperationsFactory&);
 
     private:
+    
+      boost::shared_ptr<APLCommon::LogicalDevice> m_theSOinstance;
     
   };
 };//ASO

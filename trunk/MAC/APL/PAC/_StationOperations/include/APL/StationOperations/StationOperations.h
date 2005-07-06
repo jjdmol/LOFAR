@@ -43,14 +43,14 @@ namespace LOFAR
 namespace ASO // :-)
 {
 
+// property defines
+#define PROPERTY_SAMPLING_FREQUENCY "samplingFrequency"
+
   class StationOperations : public APLCommon::LogicalDevice
   {
     public:
       // Logical Device version
       static const string SO_VERSION;
-
-      // property defines
-
 
       explicit StationOperations(const string& taskName, const string& parameterFile, GCF::TM::GCFTask* pStartDaemon);
       virtual ~StationOperations();
@@ -126,6 +126,9 @@ namespace ASO // :-)
     protected:    
 
     private:
+      static string     m_RSPserverName;
+      GCF::TM::GCFPort  m_RSPclient;
+      double            m_samplingFrequency;
 
       ALLOC_TRACER_CONTEXT  
   };
