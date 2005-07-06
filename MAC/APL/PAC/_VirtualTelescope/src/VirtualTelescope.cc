@@ -334,36 +334,41 @@ void VirtualTelescope::concretePrepare(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  vector<int> subbandsVector;
-  APLUtilities::string2Vector(m_parameterSet.getString(string("subbands")),subbandsVector);
-  
-  int spectral_window = m_parameterSet.getInt(string("spectralWindow"));
-  int n_subbands(subbandsVector.size());
-  
-  int subbandsArray[MEPHeader::N_BEAMLETS];
-  char tempLogStr[1000];
-  tempLogStr[0]=0;
-  
-  memset(subbandsArray,0,sizeof(subbandsArray[0])*MEPHeader::N_BEAMLETS);
-  vector<int>::iterator vectorIterator=subbandsVector.begin();
-  int arrayIndex(0);
-  while(arrayIndex<MEPHeader::N_BEAMLETS && vectorIterator!=subbandsVector.end())
+  try
   {
-    subbandsArray[arrayIndex]=*vectorIterator;
-    char tempStr[10];
-    sprintf(tempStr,"%d ",subbandsArray[arrayIndex]);
-    strcat(tempLogStr,tempStr);
-    ++arrayIndex;
-    ++vectorIterator;
+    vector<int> subbandsVector;
+    vector<int> beamletsVector;
+    APLUtilities::string2Vector(m_parameterSet.getString(string("subbands")),subbandsVector);
+    APLUtilities::string2Vector(m_parameterSet.getString(string("beamlets")),beamletsVector);
+    
+    int spectral_window = 0;
+    int n_subbands(subbandsVector.size());
+    
+    int subbandsArray[MEPHeader::N_BEAMLETS];
+    
+    memset(subbandsArray,0,sizeof(subbandsArray[0])*MEPHeader::N_BEAMLETS);
+    vector<int>::iterator vectorIterator=subbandsVector.begin();
+    int arrayIndex(0);
+    while(arrayIndex<MEPHeader::N_BEAMLETS && vectorIterator!=subbandsVector.end())
+    {
+      subbandsArray[arrayIndex]=*vectorIterator;
+      ++arrayIndex;
+      ++vectorIterator;
+    }
+    
+    
+    LOG_DEBUG(formatString("VirtualTelescope(%s)::allocate %d subbands",getName().c_str(),n_subbands));
+    ABSBeamallocEvent beamAllocEvent;
+    beamAllocEvent.spectral_window = spectral_window;
+    beamAllocEvent.n_subbands = n_subbands;
+    memcpy(beamAllocEvent.subbands,subbandsArray,sizeof(int)*MEPHeader::N_BEAMLETS);
+    m_beamServer.send(beamAllocEvent);
+  }
+  catch(Exception& e)
+  {
+    LOG_FATAL(formatString("Error preparing VT: %s",e.message().c_str()));
   }
   
-  
-  LOG_DEBUG(formatString("VirtualTelescope(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
-  ABSBeamallocEvent beamAllocEvent;
-  beamAllocEvent.spectral_window = spectral_window;
-  beamAllocEvent.n_subbands = n_subbands;
-  memcpy(beamAllocEvent.subbands,subbandsArray,sizeof(int)*MEPHeader::N_BEAMLETS);
-  m_beamServer.send(beamAllocEvent);
 }
 
 void VirtualTelescope::concreteResume(GCFPortInterface& /*port*/)
