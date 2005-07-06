@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <Common/LofarLogger.h>
+#include <Common/lofar_strstream.h>
 #include "APLCommon/APLUtilities.h"
 
 using namespace LOFAR;
@@ -130,6 +131,26 @@ void APLUtilities::string2Vector(const string& parametersString, vector<int16>& 
       delim=nextDelim+1;
     } 
   } while(delim<parametersStringLen);
+}
+
+/*
+ * Converts a , delimited string to a vector of ints
+ */
+void APLUtilities::vector2String(const vector<int16>& parameters, string& parametersString, const char delimiter)
+{
+  parametersString = "";
+  vector<int16>::const_iterator it=parameters.begin();
+  while(it!=parameters.end())
+  {
+    stringstream parstream;
+    parstream << *it;
+    ++it;
+    if(it!=parameters.end())
+    {
+      parstream << delimiter;
+    }
+    parametersString += parstream.str();
+  }
 }
 
 time_t APLUtilities::getUTCtime()
