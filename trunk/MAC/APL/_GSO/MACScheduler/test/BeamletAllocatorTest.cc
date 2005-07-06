@@ -29,7 +29,7 @@ using namespace LOFAR;
 using namespace LOFAR::GSO;
 using namespace LOFAR::APLCommon;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char** /*argv*/)
 {
   int retval=0;
   

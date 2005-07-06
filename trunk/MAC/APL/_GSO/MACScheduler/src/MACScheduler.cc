@@ -1083,42 +1083,66 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
 
 bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::ParameterSet> ps)
 {
-  bool allocationOk(true);
+  bool allocationOk(false);
   
-  m_beamletAllocator.logAllocation();
-
-  vector<string> childKeys;
-  string childs = ps->getString("childs");
-  APLUtilities::string2Vector(childs,childKeys,',');
-  
-  vector<string> stations;
-  string subbands     = ps->getString("subbands");
-  time_t startTime    = ps->getInt("claimTime");
-  time_t stopTime     = ps->getInt("stopTime");
-  vector<int16> subbandsVector;
-  APLUtilities::string2Vector(subbands,subbandsVector,'|');
-  
-  for(vector<string>::iterator childsIt=childKeys.begin();allocationOk && childsIt!=childKeys.end();++childsIt)
+  try
   {
-    string ldType = ps->getString(*childsIt + ".logicalDeviceType");
-    if(ldType == string("VIRTUALTELESCOPE") || atoi(ldType.c_str()) == static_cast<int>(LDTYPE_VIRTUALTELESCOPE))
+    m_beamletAllocator.logAllocation();
+  
+    vector<string> childKeys;
+    string childs = ps->getString("childs");
+    APLUtilities::string2Vector(childs,childKeys,',');
+    
+    vector<string> stations;
+    map<string,string> station2vtKeyMap;
+    string subbands     = ps->getString("subbands");
+    time_t startTime    = ps->getInt("claimTime");
+    time_t stopTime     = ps->getInt("stopTime");
+    vector<int16> subbandsVector;
+    APLUtilities::string2Vector(subbands,subbandsVector,'|');
+    
+    for(vector<string>::iterator childsIt=childKeys.begin();allocationOk && childsIt!=childKeys.end();++childsIt)
     {
-      stations.push_back(ps->getString(*childsIt + ".remoteSystem"));
+      string ldType = ps->getString(*childsIt + ".logicalDeviceType");
+      if(ldType == string("VIRTUALTELESCOPE") || atoi(ldType.c_str()) == static_cast<int>(LDTYPE_VIRTUALTELESCOPE))
+      {
+        string station = ps->getString(*childsIt + ".remoteSystem");
+        stations.push_back(station);
+        station2vtKeyMap[station] = *childsIt;
+      }
+    }
+    
+    BeamletAllocator::TStationBeamletAllocation allocation;
+    allocationOk = m_beamletAllocator.allocateBeamlets(
+      VIrootID,
+      stations,
+      startTime,
+      stopTime,
+      subbandsVector,
+      allocation);
+      
+    // do something with it
+    if(allocationOk)
+    {
+      m_beamletAllocator.logAllocation(true);
+    
+      BeamletAllocator::TStationBeamletAllocation::iterator allocIt;
+      for(allocIt = allocation.begin(); allocIt != allocation.end(); ++allocIt)
+      {
+        map<string,string>::iterator keyIt = station2vtKeyMap.find(allocIt->first);
+        if(keyIt != station2vtKeyMap.end())
+        {
+          string beamlets;
+          APLUtilities::vector2String(allocIt->second,beamlets,'|');
+          ps->replace(keyIt->second + string(".beamlets"),beamlets);
+        }
+      }
     }
   }
-  
-  BeamletAllocator::TStationBeamletAllocation allocation;
-  allocationOk = m_beamletAllocator.allocateBeamlets(
-    VIrootID,
-    stations,
-    startTime,
-    stopTime,
-    subbandsVector,
-    allocation);
-    
-  // do something with it
-
-  m_beamletAllocator.logAllocation(false);
+  catch(Exception& e)
+  {
+    LOG_FATAL(formatString("Error allocating beamlets: %s",e.message().c_str()));
+  }
 
   return allocationOk;
 }
