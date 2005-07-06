@@ -16,7 +16,9 @@ DataManager.h				\
 Block.h 					\
 BlockRep.h					\
 Composite.h					\
-CompositeRep.h					
+CompositeRep.h					\
+Lock.h						\
+CyclicBuffer.h
 
 NOINSTHDRS =
 
