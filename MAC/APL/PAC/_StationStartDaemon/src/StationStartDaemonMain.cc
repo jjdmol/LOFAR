@@ -22,6 +22,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <GCF/ParameterSet.h>
 #include <APLCommon/StartDaemon.h>
 #include <VirtualTelescope/VirtualTelescopeFactory.h>
 #include <StationReceptorGroup/StationReceptorGroupFactory.h>
@@ -35,6 +36,64 @@ using namespace LOFAR::APLCommon;
 using namespace LOFAR::AVT;
 using namespace LOFAR::ASR;
 using namespace LOFAR::ASO; // :-)
+
+const string SD_CONFIG_PREFIX            = string("mac.apl.sd.");
+const string SD_CONFIG_SHARELOCATION     = string("shareLocation");
+const string SD_CONFIG_TASKNAME          = string("taskName");
+const string SD_CONFIG_PARAMETERFILE     = string("parameterFile");
+
+string _getShareLocation()
+{
+  string shareLocation("/opt/lofar/MAC/parametersets/");
+  GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+  try
+  {
+    string tempShareLocation = pParamSet->getString(SD_CONFIG_PREFIX + SD_CONFIG_SHARELOCATION);
+    if(tempShareLocation.length()>0)
+    {
+      if(tempShareLocation[tempShareLocation.length()-1] != '/')
+      {
+        tempShareLocation+=string("/");
+      }
+      shareLocation=tempShareLocation;
+    }
+  } 
+  catch(Exception& e)
+  {
+    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using %s",e.message().c_str(),shareLocation.c_str()));
+  }
+  return shareLocation;
+}
+
+string _getStationOperationsParameterFile()
+{
+  string parameterFile("");
+  GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+  try
+  {
+    parameterFile = pParamSet->getString(SD_CONFIG_PREFIX + string("SO.") + SD_CONFIG_PARAMETERFILE);
+  } 
+  catch(Exception& e)
+  {
+    LOG_WARN(formatString("(%s) SO paramFile parameter not found.",e.message().c_str()));
+  }
+  return parameterFile;
+}
+
+string _getStationOperationsTaskName()
+{
+  string taskName("");
+  GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+  try
+  {
+    taskName = pParamSet->getString(SD_CONFIG_PREFIX + string("SO.") + SD_CONFIG_TASKNAME);
+  } 
+  catch(Exception& e)
+  {
+    LOG_WARN(formatString("(%s) SO taskName parameter not found.",e.message().c_str()));
+  }
+  return taskName;
+}
 
 int main(int argc, char* argv[])
 {
@@ -51,7 +110,13 @@ int main(int argc, char* argv[])
   sd.registerFactory(LDTYPE_STATIONOPERATIONS,soFactory);
   
   sd.start(); // make initial transition
-
+  
+  string shareLocation  = _getShareLocation();
+  string taskName       = _getStationOperationsTaskName();
+  string parameterFile  = _getStationOperationsParameterFile();
+  
+  sd.createLogicalDevice(LDTYPE_STATIONOPERATIONS,taskName,shareLocation+parameterFile);
+  
   GCFTask::run();
     
   return 0;
