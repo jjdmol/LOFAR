@@ -25,6 +25,8 @@
 using namespace LOFAR;
 
 AH_Storage::AH_Storage() 
+  : itsNSBF (0),
+    itsStub (0)
 {
 }
 
@@ -38,6 +40,7 @@ void AH_Storage::undefine() {
     delete *it;
   }
   itsWHs.clear();
+  delete itsStub;
 }  
 
 void AH_Storage::define(const LOFAR::KeyValueMap&) {
@@ -45,15 +48,13 @@ void AH_Storage::define(const LOFAR::KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Start of AH_Storage::define()");
   undefine();
 
-  int lowestFreeNode = 0;
   itsNSBF  = itsParamSet.getInt32("NSBF");  // number of SubBand filters in the application
-  
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
-  setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
+  setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
-  Stub_Corr instub(true);
+  itsStub = new Stub_Corr(true);
 
   WH_Storage itsWH("storage1", itsParamSet);
   Step stStep(itsWH);
@@ -61,8 +62,6 @@ void AH_Storage::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }
-
-
 
 void AH_Storage::prerun() {
   getComposite().preprocess();
