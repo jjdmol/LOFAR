@@ -35,6 +35,8 @@
 using namespace LOFAR;
 
 AH_BGLProcessing::AH_BGLProcessing() 
+  : itsInStub (0),
+    itsOutStub(0)
 {
 }
 
@@ -74,10 +76,10 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   // and correlators
 
   LOG_TRACE_FLOW_STR("Create input side interface stubs");
-  Stub_FIR inStub(true);
+  itsInStub = new Stub_FIR(true, itsParamSet);
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  Stub_Corr outStub(false);
+  itsOutStub = new Stub_Corr(false);
 
   LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
   
