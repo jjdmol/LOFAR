@@ -57,7 +57,7 @@ WH_SBCollect::~WH_SBCollect() {
 }
 
 WorkHolder* WH_SBCollect::construct(const string& name, int sbID, 
-				    const ACC::APS::ParameterSet& pset) 
+				    const ACC::APS::ParameterSet pset) 
 {
   return new WH_SBCollect(name, sbID, pset);
 }

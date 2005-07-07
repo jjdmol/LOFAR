@@ -215,7 +215,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   itsDataBuffer = new BufferController<dataType>(1000); // 1000 elements
  
   // create incoming dataholder holding the delay information 
-  getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay"));
+  getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
 
   // create outgoing dataholder holding the delay controlled RSP data
   getDataManager().addOutDataHolder(0, new DH_RSP("DH_RSP_out", pset));
@@ -289,8 +289,8 @@ void WH_RSPInput::process()
 
   // get delay offset
   inDHp = (DH_Delay*)getDataManager().getInHolder(0);
-  inDHp->getNextMainBeat(seqid, blockid);
-  syncstamp.setStamp(seqid, blockid);
+//   inDHp->getNextMainBeat(seqid, blockid);
+//   syncstamp.setStamp(seqid, blockid);
   
   // get data from cyclic buffer
   readptr = itsDataBuffer->getBufferReadPtr();

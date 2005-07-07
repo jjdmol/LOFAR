@@ -29,6 +29,9 @@
 using namespace LOFAR;
 
 AH_InputSection::AH_InputSection() 
+  : itsNSBF       (0),
+    itsInputStub  (0),
+    itsOutputStub (0)
 {
 }
 
@@ -42,6 +45,8 @@ void AH_InputSection::undefine() {
     delete *it;
   }
   itsWHs.clear();
+  delete itsInputStub;
+  delete itsOutputStub;
 }  
 
 void AH_InputSection::define(const LOFAR::KeyValueMap&) {
@@ -67,7 +72,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   //       connection involved, we do have to define the port/IP numbering schemes
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  Stub_FIR outStub(true);
+  itsOutputStub = new Stub_FIR(true);
 
   //todo: define simulated RSP boards here or in extra AH
 
@@ -78,7 +83,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   //todo: define Merge Step/WH
 
   LOG_TRACE_FLOW_STR("Create the input side delay stub");
-  Stub_Delay delayStub(true);
+  itsInputStub = new Stub_Delay(true, itsParamSet);
 
   LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
   // first determine the number of Transpose Steps that will be 
@@ -126,7 +131,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     //todo: set correct IP/Port numbers in WH_RSP
     
     // Connect the Delay Controller
-    delayStub.connect(r, RSPNodes[r]->getDataManager(), 0);
+    itsInputStub->connect(r, RSPNodes[r]->getDataManager(), 0);
     
   };
   
@@ -187,11 +192,10 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 #endif
     // connect output to FIR stub
     // Output channel 0
-    outStub.connect (nf,                           // Corr filter number
-		     collectNodes[nf]->getDataManager(), 
-		     0);  
+    itsOutputStub->connect (nf,                           // Corr filter number
+			    collectNodes[nf]->getDataManager(), 
+			    0);  
   }
-    
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }
