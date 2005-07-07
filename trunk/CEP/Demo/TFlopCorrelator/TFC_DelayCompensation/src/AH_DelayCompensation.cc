@@ -20,6 +20,7 @@
 using namespace LOFAR;
 
 AH_DelayCompensation::AH_DelayCompensation() 
+  : itsDelayStub(0)
 {
 }
 
@@ -28,22 +29,29 @@ AH_DelayCompensation::~AH_DelayCompensation() {
 }
 
 void AH_DelayCompensation::undefine() {
+  delete itsDelayStub;
 }  
 
-void AH_DelayCompensation::define(const LOFAR::KeyValueMap& kvm) {
+void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_DelayCompensation::define()");
   undefine();
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
-  setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
+  setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
   int nRSP = itsParamSet.getInt32("NRSP");
   WH_DelayControl delayWH("DelayContr", nRSP);
   Step delayStep(delayWH, "DelayContr");
   comp.addBlock(delayStep);
-  // to do: connect to stub
+
+  // Connect to stub
+  itsDelayStub = new Stub_Delay(false, itsParamSet);
+  for (int i=0; i<nRSP; i++)
+  {
+    itsDelayStub->connect(i, delayStep.getOutDataManager(i), i);
+  }
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }

@@ -23,11 +23,11 @@ WH_DelayControl::WH_DelayControl(const string& name,
 {
   char str[128];
     for (int i = 0; i < itsNinputs; i++) {
-      getDataManager().addInDataHolder(i, new DH_Delay(str)); 
+      getDataManager().addInDataHolder(i, new DH_Delay(str, nRSPInputs)); 
   }
   for (int i = 0; i < itsNoutputs; i++) {
     snprintf(str, 128, "output_%d_of _%d", i, itsNoutputs);
-    getDataManager().addOutDataHolder(i, new DH_Delay(str));
+    getDataManager().addOutDataHolder(i, new DH_Delay(str, nRSPInputs));
   }
 }
 
@@ -45,11 +45,11 @@ WH_DelayControl* WH_DelayControl::make(const string& name) {
 }
 
 void WH_DelayControl::process() {
-  DH_Delay* inp = (DH_Delay*)getDataManager().getInHolder(0);
+  //  DH_Delay* inp = (DH_Delay*)getDataManager().getInHolder(0);
   DH_Delay* outp = 0;
   for (int i = 0; i < itsNoutputs; i++) {
     outp = (DH_Delay*)getDataManager().getOutHolder(i);
-    // To to: copy delays from input to output
+    outp->setDelay(i, i-2);
   }
 }
 }
