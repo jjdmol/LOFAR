@@ -18,14 +18,16 @@
 namespace LOFAR
 {
 
-DH_Delay::DH_Delay (const string& name)
-    : DataHolder     (name, "DH_Delay")
+DH_Delay::DH_Delay (const string& name, int nrRSPs)
+  : DataHolder     (name, "DH_Delay"),
+    itsNrRSPs      (nrRSPs)
 {
   
 }
   
 DH_Delay::DH_Delay(const DH_Delay& that)
-  : DataHolder (that)
+  : DataHolder (that),
+    itsNrRSPs  (that.itsNrRSPs)
 {   
 }
 
@@ -41,19 +43,32 @@ DataHolder* DH_Delay::clone() const
 void DH_Delay::init()
 {
   // add the fields to the data definition
-  addField ("Delay", BlobField<int>(1, 1));
-  addField ("SeqId", BlobField<int>(1, 1));
-  addField ("BlockId", BlobField<int>(1, 1));
+  addField ("Delay", BlobField<int>(1, itsNrRSPs));
   
   // create the data blob
   createDataBlock();
+
+  for (int i=0; i<itsNrRSPs; i++) {
+    itsDelayPtr[i] = 0;
+  }
+
 }
 
 void DH_Delay::fillDataPointers() 
 {
   itsDelayPtr = getData<int> ("Delay");
-  itsSeqIdPtr = getData<int> ("SeqId");
-  itsBlockIdPtr = getData<int> ("BlockId");
+}
+
+const int DH_Delay::getDelay(int index) const
+{ 
+  ASSERTSTR((index < itsNrRSPs) && (index >= 0), "index is not within range");
+  return itsDelayPtr[index]; 
+}
+
+void DH_Delay::setDelay(int index, int value)
+{ 
+  ASSERTSTR((index < itsNrRSPs) && (index >= 0), "index is not within range");
+  itsDelayPtr[index] = value;
 }
 
 }  // end namespace

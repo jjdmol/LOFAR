@@ -25,7 +25,7 @@ class Stub_Delay
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit Stub_Delay (bool isInput);
+  explicit Stub_Delay (bool isInput, ACC::APS::ParameterSet pSet);
 
   ~Stub_Delay();
 
@@ -36,7 +36,7 @@ public:
 
 private:
   bool               itsIsInput;    // Is this stub an input for a step
-  ACC::APS::ParameterSet* itsPS;
+  ACC::APS::ParameterSet itsPS;
   int                itsNRSP;  // total number of RSPinputs
   TH_Socket**        itsTHs;
   Connection**       itsConnections;

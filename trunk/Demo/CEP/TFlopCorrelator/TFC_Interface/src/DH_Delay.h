@@ -16,7 +16,6 @@
 
 #include <lofar_config.h>
 #include <Transport/DataHolder.h>
-//#include <complex>
 
 using std::complex;
 
@@ -28,7 +27,7 @@ class DH_Delay: public DataHolder
 public:
   typedef char BufferType;
 
-  explicit DH_Delay (const string& name);
+  explicit DH_Delay (const string& name, int nrRSPs);
 
   DH_Delay(const DH_Delay&);
 
@@ -40,14 +39,8 @@ public:
   virtual void init();
 
   // accessor functions to the blob data
-  const int getDelay() const;
-  // return the primairy and secondary timestamps for the start of the next integration sequence
-  const void getNextMainBeat(int& seqid,
-			     int& blockid) const; 
-  void setDelay(int value);
-  // set the next sequence ID to process 
-  void setNextPrimairy(int seqid);
-		   
+  const int getDelay(int index) const;
+  void setDelay(int index, int value);
  
  private:
   /// Forbid assignment.
@@ -58,22 +51,10 @@ public:
 
   /// pointers to data in the blob
   int* itsDelayPtr;
-  int* itsSeqIdPtr;
-  int* itsBlockIdPtr;
+
+  int itsNrRSPs;
 };
 
-inline const int DH_Delay::getDelay() const
-  { return *itsDelayPtr; }
-
-inline const void DH_Delay::getNextMainBeat(int& seqid,
-			                   int& blockid) const
-  { seqid = *itsSeqIdPtr; blockid = *itsBlockIdPtr;} 
-
-inline void DH_Delay::setDelay(int delay)
-  { *itsDelayPtr = delay; *itsBlockIdPtr += delay;}
-
-inline void DH_Delay::setNextPrimairy(int seqid)
-  { *itsSeqIdPtr = seqid; }
 
 }
 #endif 
