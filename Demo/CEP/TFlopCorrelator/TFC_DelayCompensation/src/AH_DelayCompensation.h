@@ -15,6 +15,8 @@
 
 namespace LOFAR {
 
+class Stub_Delay;
+
 // This is the ApplicationHolder for the storage section of the TFLopCorrelator demo
 // This applicationholder uses the CEPFrame library and is supposed to
 // connect to the BGLProcessing application Holder (using only tinyCEP). 
@@ -34,6 +36,7 @@ class AH_DelayCompensation: public LOFAR::ApplicationHolder
   virtual void quit    ();
  private:
 
+  Stub_Delay* itsDelayStub;
 };
 }
 #endif
