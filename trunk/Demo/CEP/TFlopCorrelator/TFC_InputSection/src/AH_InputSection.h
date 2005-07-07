@@ -17,6 +17,9 @@
 
 namespace LOFAR {
 
+class Stub_Delay;
+class Stub_FIR;
+
 // This is the ApplicationHolder for the input section of the TFLopCorrelator demo
 // This applicationholder uses the CEPFrame library and is supposed to
 // connect to the BGLProcessing application Holder (using only tinyCEP). 
@@ -41,6 +44,8 @@ class AH_InputSection: public LOFAR::ApplicationHolder
   vector<WorkHolder*> itsWHs;
   vector<Step*> itsSteps;
   int itsNSBF;
+  Stub_Delay* itsInputStub;
+  Stub_FIR* itsOutputStub;
 
 };
 }

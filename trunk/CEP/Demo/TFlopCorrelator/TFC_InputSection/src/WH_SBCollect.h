@@ -39,7 +39,7 @@ namespace LOFAR
     virtual ~WH_SBCollect();
     
     static WorkHolder* construct(const string& name, int sbID, 
-				 const ACC::APS::ParameterSet& pset);
+				 const ACC::APS::ParameterSet pset);
     virtual WH_SBCollect* make(const string& name);
 
     virtual void process();
