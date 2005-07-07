@@ -82,7 +82,7 @@ int main(int /*argc*/, const char* const argv[])
     EarthCoord dwl(0.111646531, 0.921760253, 25);
     TimeCoord time(10.5);
     ASSERT (time.mjd() == 10.5);
-    TimeCoord someTime(2004, 11, 19, 15, 22);
+    TimeCoord someTime(2004, 11, 19, 15, 22, 39);
     cout << someTime.mjd() << endl;
     cout << someTime << endl;
     TimeCoord someTime2 (someTime.mjd(), 1./24);
