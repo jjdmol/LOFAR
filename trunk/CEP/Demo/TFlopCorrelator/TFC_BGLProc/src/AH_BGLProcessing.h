@@ -15,6 +15,10 @@
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR {
+
+class Stub_FIR;
+class Stub_Corr;
+
 // Description of class.
 class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
 {
@@ -35,6 +39,9 @@ class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
   vector<WorkHolder*> itsWHs;
   vector<Connection*> itsConnections;
   vector<TransportHolder*> itsTHs;
+  Stub_FIR* itsInStub;
+  Stub_Corr* itsOutStub;
+
 };
 }
 #endif
