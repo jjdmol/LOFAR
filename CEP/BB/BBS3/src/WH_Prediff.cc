@@ -174,6 +174,9 @@ void WH_Prediff::process()
     pred->fillFitter (fitter);
     Prediffer::marshall (fitter, dhRes->getDataBuffer(),
 			 dhRes->getBufferSize());
+    MeqDomain domain = pred->getDomain();
+    dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), 
+		     domain.endY());
     // send result to solver
     getDataManager().readyWithOutHolder(2);
   }
