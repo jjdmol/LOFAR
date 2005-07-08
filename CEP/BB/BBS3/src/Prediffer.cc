@@ -678,7 +678,8 @@ int Prediffer::setDomain (double fstart, double flength,
   // Find the times matching the given time interval.
   // Normally the times are in sequential order, so we can continue searching.
   // Otherwise start the search at the start.
-  if (tstart < itsTimes[itsTimeIndex]) {
+  if (itsTimeIndex >= itsTimes.nelements()
+  ||  tstart < itsTimes[itsTimeIndex]) {
     itsTimeIndex = 0;
   }
   // Find the time matching the start time.
@@ -1086,8 +1087,8 @@ void Prediffer::getData (Array<Complex>& dataArr, Array<Bool>& flagArr)
 {
   int nrchan = itsLastChan-itsFirstChan+1;
   unsigned int freqOffset = itsDataFirstChan*itsNCorr;
-  dataArr.resize (IPosition(4, itsNrBl, itsNrTimes, nrchan, itsNCorr));
-  flagArr.resize (IPosition(4, itsNrBl, itsNrTimes, nrchan, itsNCorr));
+  dataArr.resize (IPosition(4, itsNCorr, nrchan, itsNrBl, itsNrTimes));
+  flagArr.resize (IPosition(4, itsNCorr, nrchan, itsNrBl, itsNrTimes));
   Complex* datap = dataArr.data();
   Bool* flagp = flagArr.data();
 
