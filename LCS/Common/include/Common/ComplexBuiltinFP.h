@@ -53,26 +53,26 @@ namespace LOFAR {
   inline float real (TYPES::fcomplex x) { return __real__(x); }
   inline float imag (TYPES::fcomplex x) { return __imag__(x); }
   inline TYPES::fcomplex conj  (TYPES::fcomplex x) { return ~(x); }
-  inline TYPES::fcomplex sin   (TYPES::fcomplex x) { return csinf(x); }
-  inline TYPES::fcomplex cos   (TYPES::fcomplex x) { return ccosf(x); }
-  inline TYPES::fcomplex tan   (TYPES::fcomplex x) { return ctanf(x); }
-  inline TYPES::fcomplex asin  (TYPES::fcomplex x) { return casinf(x); }
-  inline TYPES::fcomplex acos  (TYPES::fcomplex x) { return cacosf(x); }
-  inline TYPES::fcomplex atan  (TYPES::fcomplex x) { return catanf(x); }
-  inline TYPES::fcomplex sinh  (TYPES::fcomplex x) { return csinhf(x); }
-  inline TYPES::fcomplex cosh  (TYPES::fcomplex x) { return ccoshf(x); }
-  inline TYPES::fcomplex tanh  (TYPES::fcomplex x) { return ctanhf(x); }
-  inline TYPES::fcomplex asinh (TYPES::fcomplex x) { return casinhf(x); }
-  inline TYPES::fcomplex acosh (TYPES::fcomplex x) { return cacoshf(x); }
-  inline TYPES::fcomplex atanh (TYPES::fcomplex x) { return catanhf(x); }
-  inline TYPES::fcomplex sqrt  (TYPES::fcomplex x) { return csqrtf(x); }
-  inline TYPES::fcomplex exp   (TYPES::fcomplex x) { return cexpf(x); }
-  inline TYPES::fcomplex log   (TYPES::fcomplex x) { return clogf(x); }
-  inline TYPES::fcomplex log10 (TYPES::fcomplex x) { return clog10f(x); }
-  inline float           abs   (TYPES::fcomplex x) { return cabsf(x); }
-  inline float           arg   (TYPES::fcomplex x) { return cargf(x); }
+  inline TYPES::fcomplex sin   (TYPES::fcomplex x) { return ::csinf(x); }
+  inline TYPES::fcomplex cos   (TYPES::fcomplex x) { return ::ccosf(x); }
+  inline TYPES::fcomplex tan   (TYPES::fcomplex x) { return ::ctanf(x); }
+  inline TYPES::fcomplex asin  (TYPES::fcomplex x) { return ::casinf(x); }
+  inline TYPES::fcomplex acos  (TYPES::fcomplex x) { return ::cacosf(x); }
+  inline TYPES::fcomplex atan  (TYPES::fcomplex x) { return ::catanf(x); }
+  inline TYPES::fcomplex sinh  (TYPES::fcomplex x) { return ::csinhf(x); }
+  inline TYPES::fcomplex cosh  (TYPES::fcomplex x) { return ::ccoshf(x); }
+  inline TYPES::fcomplex tanh  (TYPES::fcomplex x) { return ::ctanhf(x); }
+  inline TYPES::fcomplex asinh (TYPES::fcomplex x) { return ::casinhf(x); }
+  inline TYPES::fcomplex acosh (TYPES::fcomplex x) { return ::cacoshf(x); }
+  inline TYPES::fcomplex atanh (TYPES::fcomplex x) { return ::catanhf(x); }
+  inline TYPES::fcomplex sqrt  (TYPES::fcomplex x) { return ::csqrtf(x); }
+  inline TYPES::fcomplex exp   (TYPES::fcomplex x) { return ::cexpf(x); }
+  inline TYPES::fcomplex log   (TYPES::fcomplex x) { return ::clogf(x); }
+  inline TYPES::fcomplex log10 (TYPES::fcomplex x) { return ::clog10f(x); }
+  inline float           abs   (TYPES::fcomplex x) { return ::cabsf(x); }
+  inline float           arg   (TYPES::fcomplex x) { return ::cargf(x); }
   inline TYPES::fcomplex pow   (TYPES::fcomplex x, TYPES::fcomplex exp)
-    { return cpowf(x,exp); }
+    { return ::cpowf(x,exp); }
   // </group>
 
   // Functions operating on double precision complex numbers.
@@ -80,7 +80,6 @@ namespace LOFAR {
   inline double real (TYPES::dcomplex x) { return __real__(x); }
   inline double imag (TYPES::dcomplex x) { return __imag__(x); }
   inline TYPES::dcomplex conj  (TYPES::dcomplex x) { return ~(x); }
-  //  inline TYPES::dcomplex dconj (TYPES::dcomplex x) { return ~(x); }
   inline TYPES::dcomplex sin   (TYPES::dcomplex x) { return ::csin(x); }
   inline TYPES::dcomplex cos   (TYPES::dcomplex x) { return ::ccos(x); }
   inline TYPES::dcomplex tan   (TYPES::dcomplex x) { return ::ctan(x); }
@@ -95,7 +94,11 @@ namespace LOFAR {
   inline TYPES::dcomplex atanh (TYPES::dcomplex x) { return ::catanh(x); }
   inline TYPES::dcomplex sqrt  (TYPES::dcomplex x) { return ::csqrt(x); }
   inline TYPES::dcomplex exp   (TYPES::dcomplex x) { return ::cexp(x); }
+//# PVSS puts std::clog in the global namespace.
+//# Hence in that case clog is not defined and cannot be used.
+#ifndef HAVE_PVSS
   inline TYPES::dcomplex log   (TYPES::dcomplex x) { return ::clog(x); }
+#endif
   inline TYPES::dcomplex log10 (TYPES::dcomplex x) { return ::clog10(x); }
   inline double          abs   (TYPES::dcomplex x) { return ::cabs(x); }
   inline double          arg   (TYPES::dcomplex x) { return ::carg(x); }
