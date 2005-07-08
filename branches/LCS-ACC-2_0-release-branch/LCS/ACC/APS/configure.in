@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT(src/ParameterSet.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(APS, 1.0, no-define)
+AM_INIT_AUTOMAKE(APS, 2.0, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -54,7 +54,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
-lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_2,1,Common/LofarTypedefs.h,,)
 
 dnl
 dnl Output Makefiles

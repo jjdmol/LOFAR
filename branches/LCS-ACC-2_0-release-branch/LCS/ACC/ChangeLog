@@ -1,42 +1,209 @@
+2005-07-06 14:36  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS: %[ER: 0]%
+
+	  Merged relevant files from the release 1.1 branch into the main
+	  development line.
+
+2005-07-06 09:49  overeem
+
+	* Makefile.am, configure.in: %[ER:285]% Obsolete in ACC 1.1
+
+2005-07-06 09:11  overeem
+
+	* configure.in, lofarconf.in, ACCbin/Makefile.am, ACCbin/bootstrap,
+	  ACCbin/configure.in, ACCbin/src/ACCmdImpl.cc,
+	  ACCbin/src/ACCmdImpl.h, ACCbin/src/ACDaemon.cc,
+	  ACCbin/src/ACDaemon.h, ACCbin/src/ACDaemon.log_prop,
+	  ACCbin/src/ACDaemonComm.cc, ACCbin/src/ACDaemonComm.h,
+	  ACCbin/src/ACDaemonMain.cc, ACCbin/src/ACRequestPool.cc,
+	  ACCbin/src/ACRequestPool.h, ACCbin/src/APAdmin.cc,
+	  ACCbin/src/APAdmin.h, ACCbin/src/APAdminPool.cc,
+	  ACCbin/src/APAdminPool.h, ACCbin/src/ApplController.cc,
+	  ACCbin/src/ApplController.h, ACCbin/src/ApplControllerMain.cc,
+	  ACCbin/src/CmdStack.cc, ACCbin/src/CmdStack.h,
+	  ACCbin/src/ConfigurationMgr.cc, ACCbin/src/ConfigurationMgr.h,
+	  ACCbin/src/ItemList.cc, ACCbin/src/ItemList.h,
+	  ACCbin/src/Makefile.am, ACCbin/src/PR_MPI.cc,
+	  ACCbin/src/PR_MPI.h, ACCbin/src/PR_Shell.cc,
+	  ACCbin/src/PR_Shell.h, ACCbin/src/ParCollRecord.cc,
+	  ACCbin/src/ParCollRecord.h, ACCbin/src/ProcRule.cc,
+	  ACCbin/src/ProcRule.h, ACCbin/src/ProcRuler.cc,
+	  ACCbin/src/ProcRuler.h, ACCbin/src/StateEngine.cc,
+	  ACCbin/src/StateEngine.h, ACCbin/test/ACuserMenu.cc,
+	  ACCbin/test/APCmdImpl.cc, ACCbin/test/APCmdImpl.h,
+	  ACCbin/test/APExample.cc, ACCbin/test/APTest.cc,
+	  ACCbin/test/Makefile.am, ACCbin/test/myACClientFunctions.h,
+	  ACCbin/test/tConfMgr.cc, ALC/Makefile.am, ALC/bootstrap,
+	  ALC/configure.in, ALC/src/ACAsyncClient.cc,
+	  ALC/src/ACAsyncClient.h, ALC/src/ACRequest.h,
+	  ALC/src/ACSyncClient.cc, ALC/src/ACSyncClient.h,
+	  ALC/src/ApplControl.h, ALC/src/ApplControlClient.cc,
+	  ALC/src/ApplControlClient.h, ALC/src/ApplControlComm.cc,
+	  ALC/src/ApplControlComm.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/ApplControlServer.h, ALC/src/DH_ApplControl.cc,
+	  ALC/src/DH_ApplControl.h, ALC/src/Makefile.am,
+	  ALC/test/Makefile.am, ALC/test/myACClientFunctions.h,
+	  ALC/test/tACClient.cc, ALC/test/tACServer.cc, APS/Makefile.am,
+	  APS/bootstrap, APS/configure.in, APS/src/KVpair.cc,
+	  APS/src/KVpair.h, APS/src/Makefile.am, APS/src/ParameterSet.cc,
+	  APS/src/ParameterSet.h, APS/test/Makefile.am,
+	  APS/test/tParameterSet.cc, APS/test/tParameterSet.ps,
+	  APS/test/tParameterSet_test.sh, PLC/Makefile.am, PLC/bootstrap,
+	  PLC/configure.in, PLC/src/DH_ProcControl.cc,
+	  PLC/src/DH_ProcControl.h, PLC/src/Makefile.am,
+	  PLC/src/ProcControlComm.cc, PLC/src/ProcControlComm.h,
+	  PLC/src/ProcControlServer.cc, PLC/src/ProcControlServer.h,
+	  PLC/src/ProcessControl.h: %[ER:285]% Major file-move due to
+	  upgrade ACC 1.0 to ACC 1.1 ACC 1.1 now offers three seperate
+	  libraries: APS for ParameterSets, ALC for Application Lifecycle
+	  Control and PLC for Process Lifecycle Control.  All executables
+	  like ACDaemon and Application controller are moved to ACCbin.
+
+	  The ParameterSet is extended with a lot of new types and offers
+	  support for reading vectors of types.
+
+2005-07-06 08:47  cvs
+
+	* APS/test/tParameterSet.ps: Moved with cvsmv from
+	  LOFAR/LCS/ACC/test, creating new revision
+
+2005-07-06 08:46  cvs
+
+	* ACCbin/test/templates/: applicationQ.ps, moduleA.ps, moduleC.ps,
+	  moduleD.ps, moduleE.ps, processF.ps, processG.ps: Moved with
+	  cvsmv from LOFAR/LCS/ACC/test/templates, creating new revision
+
+2005-07-06 08:44  cvs
+
+	* ACCbin/test/ACuserMenu.cc, ACCbin/test/APCmdImpl.cc,
+	  ACCbin/test/APCmdImpl.h, ACCbin/test/APExample.cc,
+	  ACCbin/test/APTest.cc, ACCbin/test/Makefile.am,
+	  APS/test/merge.ps, ALC/test/myACClientFunctions.h,
+	  ALC/test/tACClient.cc, ALC/test/tACServer.cc,
+	  ACCbin/test/tConfMgr.cc, APS/test/tParameterSet.cc,
+	  APS/test/tParameterSet.log_prop, APS/test/tParameterSet.out:
+	  Moved with cvsmv from LOFAR/LCS/ACC/test, creating new revision
+
+2005-07-06 08:44  cvs
+
+	* ACCbin/src/: stopAP.sh, stopMPI.sh: Moved with cvsmv from
+	  LOFAR/LCS/ACC/src, creating new revision
+
+2005-07-06 08:41  cvs
+
+	* APS/src/ParameterSet.cc, APS/src/ParameterSet.h,
+	  ACCbin/src/ParCollRecord.cc, ACCbin/src/ParCollRecord.h,
+	  ACCbin/src/PR_MPI.cc, ACCbin/src/PR_MPI.h,
+	  PLC/src/ProcControlComm.cc, PLC/src/ProcControlComm.h,
+	  PLC/src/ProcControlServer.cc, PLC/src/ProcControlServer.h,
+	  PLC/src/ProcessControl.h, ACCbin/src/ProcRule.cc,
+	  ACCbin/src/ProcRule.h, ACCbin/src/ProcRuler.cc,
+	  ACCbin/src/ProcRuler.h, ACCbin/src/PR_Shell.cc,
+	  ACCbin/src/PR_Shell.h, ACCbin/src/startAP.sh,
+	  ACCbin/src/startMPI.sh, ACCbin/src/StateEngine.cc,
+	  ACCbin/src/StateEngine.h: Moved with cvsmv from
+	  LOFAR/LCS/ACC/src, creating new revision
+
+2005-07-06 08:38  cvs
+
+	* ALC/src/ApplControlComm.h, ALC/src/ApplControl.h,
+	  ACCbin/src/ApplController.cc, ACCbin/src/ApplController.h,
+	  ACCbin/src/ApplControllerMain.cc, ALC/src/ApplControlServer.cc,
+	  ALC/src/ApplControlServer.h, ACCbin/src/CmdStack.cc,
+	  ACCbin/src/CmdStack.h, ACCbin/src/ConfigurationMgr.cc,
+	  ACCbin/src/ConfigurationMgr.h, ALC/src/DH_ApplControl.cc,
+	  ALC/src/DH_ApplControl.h, PLC/src/DH_ProcControl.cc,
+	  PLC/src/DH_ProcControl.h, ACCbin/src/ItemList.cc,
+	  ACCbin/src/ItemList.h, APS/src/KVpair.cc, APS/src/KVpair.h,
+	  ACCbin/src/Observation-CygA.param,
+	  ACCbin/src/Observation-CygB.param: Moved with cvsmv from
+	  LOFAR/LCS/ACC/src, creating new revision
+
+2005-07-06 08:35  cvs
+
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/ACCmdImpl.h,
+	  ACCbin/src/ACDaemon.cc, ACCbin/src/ACDaemonComm.cc,
+	  ACCbin/src/ACDaemonComm.h, ACCbin/src/ACDaemon.h,
+	  ACCbin/src/ACDaemon.log_prop, ACCbin/src/ACDaemonMain.cc,
+	  ACCbin/src/ACDaemon.param, ALC/src/ACRequest.h,
+	  ACCbin/src/ACRequestPool.cc, ACCbin/src/ACRequestPool.h,
+	  ALC/src/ACSyncClient.cc, ALC/src/ACSyncClient.h,
+	  ACCbin/src/APAdmin.cc, ACCbin/src/APAdmin.h,
+	  ACCbin/src/APAdminPool.cc, ACCbin/src/APAdminPool.h,
+	  ALC/src/ApplControlClient.cc, ALC/src/ApplControlClient.h,
+	  ALC/src/ApplControlComm.cc: Moved with cvsmv from
+	  LOFAR/LCS/ACC/src, creating new revision
+
+2005-07-06 08:32  cvs
+
+	* ALC/src/: ACAsyncClient.cc, ACAsyncClient.h: Moved with cvsmv
+	  from LOFAR/LCS/ACC/src, creating new revision
+
+2005-06-24 17:44  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-17 14:45  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release 1.1
+
+2005-06-17 14:29  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, configure.in: %[ER:
+	  0]%
+
+	  Prepare for release 1.1
+
 2005-06-10 17:11  loose
 
-	* test/: APCmdImpl.cc, APCmdImpl.h: %[ER: 116]%
+	* ACCbin/test/: APCmdImpl.cc, APCmdImpl.h: %[ER: 116]%
 
 	  Made all overloaded virtuals non-const, just as in the base
 	  class.
 
 2005-06-10 11:35  zwart
 
-	* test/Makefile.am: %[ER: 242]%
+	* ACCbin/test/Makefile.am: %[ER: 242]%
 
 	  Changed bin_PROGRAMS to test_PROGRAMS
 
 2005-06-10 11:34  zwart
 
-	* src/: ProcControlServer.cc, ProcControlServer.h,
+	* PLC/src/: ProcControlServer.cc, ProcControlServer.h,
 	  ProcessControl.h: %[ER: 242]%
 
 	  Removed some const qualifiers
 
 2005-06-06 12:12  meijeren
 
-	* configure.in, src/ACAsyncClient.cc, src/ApplControlClient.cc,
-	  src/ApplControlComm.cc, src/ApplControlComm.h,
-	  src/ApplControlServer.cc, src/DH_ApplControl.cc,
-	  src/DH_ApplControl.h, src/DH_ProcControl.cc,
-	  src/DH_ProcControl.h, src/ProcControlComm.cc,
-	  src/ProcControlComm.h, src/ProcControlServer.cc: %[ER: 231]%
-	  Merge with branch ER231_development.
+	* configure.in, ALC/src/ACAsyncClient.cc,
+	  ALC/src/ApplControlClient.cc, ALC/src/ApplControlComm.cc,
+	  ALC/src/ApplControlComm.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/DH_ApplControl.cc, ALC/src/DH_ApplControl.h,
+	  PLC/src/DH_ProcControl.cc, PLC/src/DH_ProcControl.h,
+	  PLC/src/ProcControlComm.cc, PLC/src/ProcControlComm.h,
+	  PLC/src/ProcControlServer.cc: %[ER: 231]% Merge with branch
+	  ER231_development.
 
 2005-06-03 12:07  overeem
 
-	* configure.in, src/ACAsyncClient.cc, src/ApplControlClient.cc,
-	  src/ApplControlComm.cc, src/ApplControlComm.h,
-	  src/ApplControlServer.cc, src/DH_ApplControl.cc,
-	  src/DH_ApplControl.h, src/DH_ProcControl.cc,
-	  src/DH_ProcControl.h, src/ProcControlComm.cc,
-	  src/ProcControlComm.h, src/ProcControlServer.cc: %[ER:231]%
-	  Modified ACC for new libtransport.
+	* configure.in, ALC/src/ACAsyncClient.cc,
+	  ALC/src/ApplControlClient.cc, ALC/src/ApplControlComm.cc,
+	  ALC/src/ApplControlComm.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/DH_ApplControl.cc, ALC/src/DH_ApplControl.h,
+	  PLC/src/DH_ProcControl.cc, PLC/src/DH_ProcControl.h,
+	  PLC/src/ProcControlComm.cc, PLC/src/ProcControlComm.h,
+	  PLC/src/ProcControlServer.cc: %[ER:231]% Modified ACC for new
+	  libtransport.
 
 2005-05-27 17:03  coolen
 
@@ -46,12 +213,12 @@
 
 2005-05-10 16:43  overeem
 
-	* src/: ApplController.cc, ApplController.h: %[ER:116]% When Quit
-	  command fails the Kill phase is still executed.
+	* ACCbin/src/: ApplController.cc, ApplController.h: %[ER:116]% When
+	  Quit command fails the Kill phase is still executed.
 
 2005-05-10 09:53  zwart
 
-	* src/stopMPI.sh: %[ER: 242]%
+	* ACCbin/src/stopMPI.sh: %[ER: 242]%
 
 	  Made 15 the default signal to kill mpirun
 
@@ -62,68 +229,72 @@
 
 2005-05-04 14:47  overeem
 
-	* src/ApplController.cc: %[ER:116]% Writing final-result file
-	  before sending Ack on Quit command or request of tilman.
+	* ACCbin/src/ApplController.cc: %[ER:116]% Writing final-result
+	  file before sending Ack on Quit command or request of tilman.
 
 2005-05-03 08:10  overeem
 
-	* src/ApplController.cc, test/ACuserMenu.cc: %[ER:116]% Support for
-	  Cancel Command Queue also in ACusermenu program.
+	* ACCbin/: src/ApplController.cc, test/ACuserMenu.cc: %[ER:116]%
+	  Support for Cancel Command Queue also in ACusermenu program.
 
 2005-05-03 00:00  overeem
 
-	* src/: ACCmdImpl.cc, ACCmdImpl.h, ApplControl.h,
-	  ApplControlClient.cc, ApplControlClient.h, ApplController.cc,
-	  CmdStack.h, DH_ApplControl.h: %[ER:116]% Added command for
-	  cancelling command queue of Application Controller.
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/ACCmdImpl.h,
+	  ACCbin/src/ApplController.cc, ACCbin/src/CmdStack.h,
+	  ALC/src/ApplControl.h, ALC/src/ApplControlClient.cc,
+	  ALC/src/ApplControlClient.h, ALC/src/DH_ApplControl.h: %[ER:116]%
+	  Added command for cancelling command queue of Application
+	  Controller.
 
 2005-04-29 16:04  zwart
 
-	* src/: PR_MPI.cc, PR_MPI.h: %[ER: 242]%
+	* ACCbin/src/: PR_MPI.cc, PR_MPI.h: %[ER: 242]%
 
 	  Made the map of PR's sorted correctly, so machinefile will have
 	  right hostnames in right order
 
 2005-04-29 07:48  zwart
 
-	* src/: ApplController.cc, PR_MPI.cc: %[ER: 242]%
+	* ACCbin/src/: ApplController.cc, PR_MPI.cc: %[ER: 242]%
 
 	  bugfix for PR_MPI
 
 2005-04-28 14:13  zwart
 
-	* src/: ApplController.cc, Makefile.am, PR_MPI.cc, PR_MPI.h,
-	  ProcRule.h, startMPI.sh, stopMPI.sh: %[ER: 242]%
+	* ACCbin/src/: ApplController.cc, PR_MPI.cc, PR_MPI.h, ProcRule.h,
+	  startMPI.sh, stopMPI.sh: %[ER: 242]%
 
 	  Added functionality to start MPI programs using mpirun
 
 2005-04-26 13:34  overeem
 
-	* src/: ACDaemon.cc, ApplController.cc, ProcControlServer.cc,
-	  ProcControlServer.h: %[ER:116]% Added hostname in
-	  ProcControlServer and to paramfile of ApplController.
+	* ACCbin/src/ACDaemon.cc, ACCbin/src/ApplController.cc,
+	  PLC/src/ProcControlServer.cc, PLC/src/ProcControlServer.h:
+	  %[ER:116]% Added hostname in ProcControlServer and to paramfile
+	  of ApplController.
 
 2005-04-26 13:32  overeem
 
-	* test/: APExample.cc, APTest.cc: %[ER:116]% Added hostname to
-	  constructor of ProcControlServer.
+	* ACCbin/test/: APExample.cc, APTest.cc: %[ER:116]% Added hostname
+	  to constructor of ProcControlServer.
 
 2005-04-21 10:52  overeem
 
-	* src/: ApplControlClient.cc, ApplController.cc: %[ER:264]% Fixed
-	  bug. The result the ApplController returned sometimes referred to
-	  the wrong Command.
+	* ACCbin/src/ApplController.cc, ALC/src/ApplControlClient.cc:
+	  %[ER:264]% Fixed bug. The result the ApplController returned
+	  sometimes referred to the wrong Command.
 
 2005-04-21 09:10  overeem
 
-	* src/: ApplControlServer.cc, ApplControlServer.h,
-	  ApplController.cc, ApplController.h, ProcControlServer.cc,
-	  ProcControlServer.h: %[ER:264]% Fixed bug. The result the
-	  ApplController returned sometimes referred to the wrong Command.
+	* ACCbin/src/ApplController.cc, ACCbin/src/ApplController.h,
+	  ALC/src/ApplControlServer.cc, ALC/src/ApplControlServer.h,
+	  PLC/src/ProcControlServer.cc, PLC/src/ProcControlServer.h:
+	  %[ER:264]% Fixed bug. The result the ApplController returned
+	  sometimes referred to the wrong Command.
 
 2005-04-15 12:18  loose
 
-	* configure.in, test/myACClientFunctions.h: %[PR: 100]%
+	* configure.in, ALC/test/myACClientFunctions.h: %[PR: 100]%
 
 	  Removed all `#include <config.h>' and `#include <lofar_config.h>'
 	  from .h and .tcc files. Added `#include <lofar_config.h>' to .cc
@@ -131,7 +302,7 @@
 
 2005-04-14 23:59  loose
 
-	* configure.in, test/myACClientFunctions.h: %[PR: 100]%
+	* configure.in, ALC/test/myACClientFunctions.h: %[PR: 100]%
 
 	  Removed `#include <config.h>' and `#include <lofar_config.h>'
 	  from .h and .tcc files. Added `#include <lofar_config.h> to .cc
@@ -139,7 +310,7 @@
 
 2005-04-13 16:47  overeem
 
-	* src/: ACDaemon.cc, ACDaemon.param, ACRequestPool.cc,
+	* ACCbin/src/: ACDaemon.cc, ACDaemon.param, ACRequestPool.cc,
 	  ACRequestPool.h, ApplController.cc, Observation-CygA.param,
 	  Observation-CygB.param, PR_Shell.cc, PR_Shell.h, ProcRule.cc,
 	  ProcRule.h, startAP.sh, stopAP.sh: %[ER:116 ]% Update after first
@@ -149,11 +320,6 @@
 	  to specify the executable of a procestype.  Start and stop shells
 	  are updated to receive the nodename of the process as well.
 
-2005-04-11 12:17  overeem
-
-	* src/Makefile.am: %[ER:116]% Updates list of headerfiles to
-	  install.
-
 2005-03-11 16:24  loose
 
 	* package.doc: %[ER: 236]%
@@ -162,136 +328,151 @@
 
 2005-03-09 08:23  diepen
 
-	* src/: ACDaemon.cc, ACDaemonMain.cc: %[ER: 70]% Needed unistd.h
+	* ACCbin/src/: ACDaemon.cc, ACDaemonMain.cc: %[ER: 70]% Needed
+	  unistd.h
 
 2005-02-25 15:23  overeem
 
-	* src/: ACDaemon.cc, ACDaemon.h, ACDaemon.log_prop, APAdminPool.cc,
-	  APAdminPool.h, Observation-CygA.param: %[ER:116 ]% Uses FdSet
-	  class frm Common/Net.
-
-2005-02-25 15:21  overeem
-
-	* src/AC.param: %[ER:116]% File is generated by ACDaemon now.
+	* ACCbin/src/: ACDaemon.cc, ACDaemon.h, ACDaemon.log_prop,
+	  APAdminPool.cc, APAdminPool.h, Observation-CygA.param: %[ER:116
+	  ]% Uses FdSet class frm Common/Net.
 
 2005-02-21 14:46  overeem
 
-	* test/APTest.cc: %[ER:116]% Test AP now sends intermediate result
-	  at random intervals.
+	* ACCbin/test/APTest.cc: %[ER:116]% Test AP now sends intermediate
+	  result at random intervals.
 
 2005-02-21 14:45  overeem
 
-	* src/Observation-CygA.param: %[ER:116]% Weekly update
+	* ACCbin/src/Observation-CygA.param: %[ER:116]% Weekly update
 
 2005-02-21 14:44  overeem
 
-	* src/: ACAsyncClient.h, ACCmdImpl.h, ACDaemon.cc, ACDaemon.h,
-	  ACDaemonComm.cc, ACDaemonComm.h, ACRequest.h, ACRequestPool.cc,
-	  ACRequestPool.h, ACSyncClient.cc, ACSyncClient.h, APAdmin.h,
-	  APAdminPool.h, ApplControl.h, ApplControlClient.h,
-	  ApplControlComm.h, ApplControlServer.h, ApplController.cc,
-	  ApplController.h, ApplControllerMain.cc, CmdStack.h,
-	  ConfigurationMgr.cc, ConfigurationMgr.h, DH_ApplControl.h,
-	  DH_ProcControl.h, ItemList.h, KVpair.cc, KVpair.h, Makefile.am,
-	  PR_Shell.cc, PR_Shell.h, ParCollRecord.h, ParameterCollection.cc,
-	  ParameterCollection.h, ParameterSet.h, ParameterTemplate.h,
-	  ParameterUnion.h, ProcControlComm.h, ProcControlServer.cc,
-	  ProcControlServer.h, ProcRule.cc, ProcRule.h, ProcRuler.cc,
-	  ProcRuler.h, ProcessControl.h, StateEngine.cc, StateEngine.h,
-	  TemplateUnion.h, stopAP.sh: %[ER:116]% Weekly update.  AC sends
-	  pings to AM.	APs may send intermediate results to AC.  ProcRules
-	  are made more common.
+	* ACCbin/src/ACCmdImpl.h, ACCbin/src/ACDaemon.cc,
+	  ACCbin/src/ACDaemon.h, ACCbin/src/ACDaemonComm.cc,
+	  ACCbin/src/ACDaemonComm.h, ACCbin/src/ACRequestPool.cc,
+	  ACCbin/src/ACRequestPool.h, ACCbin/src/APAdmin.h,
+	  ACCbin/src/APAdminPool.h, ACCbin/src/ApplController.cc,
+	  ACCbin/src/ApplController.h, ACCbin/src/ApplControllerMain.cc,
+	  ACCbin/src/CmdStack.h, ACCbin/src/ConfigurationMgr.cc,
+	  ACCbin/src/ConfigurationMgr.h, ACCbin/src/ItemList.h,
+	  ACCbin/src/PR_Shell.cc, ACCbin/src/PR_Shell.h,
+	  ACCbin/src/ParCollRecord.h, ACCbin/src/ProcRule.cc,
+	  ACCbin/src/ProcRule.h, ACCbin/src/ProcRuler.cc,
+	  ACCbin/src/ProcRuler.h, ACCbin/src/StateEngine.cc,
+	  ACCbin/src/StateEngine.h, ACCbin/src/stopAP.sh,
+	  ALC/src/ACAsyncClient.h, ALC/src/ACRequest.h,
+	  ALC/src/ACSyncClient.cc, ALC/src/ACSyncClient.h,
+	  ALC/src/ApplControl.h, ALC/src/ApplControlClient.h,
+	  ALC/src/ApplControlComm.h, ALC/src/ApplControlServer.h,
+	  ALC/src/DH_ApplControl.h, APS/src/KVpair.cc, APS/src/KVpair.h,
+	  APS/src/ParameterSet.h, PLC/src/DH_ProcControl.h,
+	  PLC/src/ProcControlComm.h, PLC/src/ProcControlServer.cc,
+	  PLC/src/ProcControlServer.h, PLC/src/ProcessControl.h: %[ER:116]%
+	  Weekly update.  AC sends pings to AM.  APs may send intermediate
+	  results to AC.  ProcRules are made more common.
 
 2005-02-11 11:44  overeem
 
-	* test/: APExample.cc, APTest.cc: %[ER:116]% Weekly update.
+	* ACCbin/test/: APExample.cc, APTest.cc: %[ER:116]% Weekly update.
 
 2005-02-11 11:43  overeem
 
-	* src/: AC.param, ACAsyncClient.h, ACCmdImpl.h, ACDaemon.cc,
-	  ACDaemon.h, ACDaemon.param, ACDaemonMain.cc, ACRequest.h,
-	  ACRequestPool.cc, ACRequestPool.h, ACSyncClient.h, APAdmin.h,
-	  APAdminPool.h, ApplControl.h, ApplControlClient.cc,
-	  ApplControlClient.h, ApplControlComm.h, ApplControlServer.h,
-	  ApplController.cc, ApplController.h, ApplControllerMain.cc,
-	  CmdStack.h, ConfigurationMgr.h, DH_ApplControl.h,
-	  DH_ProcControl.h, ItemList.h, KVpair.h, Observation-CygA.param,
-	  ParCollRecord.h, ParameterCollection.h, ParameterSet.h,
-	  ParameterTemplate.h, ParameterUnion.h, ProcControlComm.h,
-	  ProcControlServer.h, ProcRule.h, ProcRuler.h, ProcessControl.h,
-	  StateEngine.h, TemplateUnion.h: %[ER:116]% Weekly update, mainly
-	  for doxygen. The ACDaemon was extended with an administration to
+	* ACCbin/src/ACCmdImpl.h, ACCbin/src/ACDaemon.cc,
+	  ACCbin/src/ACDaemon.h, ACCbin/src/ACDaemon.param,
+	  ACCbin/src/ACDaemonMain.cc, ACCbin/src/ACRequestPool.cc,
+	  ACCbin/src/ACRequestPool.h, ACCbin/src/APAdmin.h,
+	  ACCbin/src/APAdminPool.h, ACCbin/src/ApplController.cc,
+	  ACCbin/src/ApplController.h, ACCbin/src/ApplControllerMain.cc,
+	  ACCbin/src/CmdStack.h, ACCbin/src/ConfigurationMgr.h,
+	  ACCbin/src/ItemList.h, ACCbin/src/Observation-CygA.param,
+	  ACCbin/src/ParCollRecord.h, ACCbin/src/ProcRule.h,
+	  ACCbin/src/ProcRuler.h, ACCbin/src/StateEngine.h,
+	  ALC/src/ACAsyncClient.h, ALC/src/ACRequest.h,
+	  ALC/src/ACSyncClient.h, ALC/src/ApplControl.h,
+	  ALC/src/ApplControlClient.cc, ALC/src/ApplControlClient.h,
+	  ALC/src/ApplControlComm.h, ALC/src/ApplControlServer.h,
+	  ALC/src/DH_ApplControl.h, APS/src/KVpair.h,
+	  APS/src/ParameterSet.h, PLC/src/DH_ProcControl.h,
+	  PLC/src/ProcControlComm.h, PLC/src/ProcControlServer.h,
+	  PLC/src/ProcessControl.h: %[ER:116]% Weekly update, mainly for
+	  doxygen. The ACDaemon was extended with an administration to
 	  manage the AC more precisely and is able to survive crashes now.
 
 2005-02-02 16:18  overeem
 
-	* test/: ACuserMenu.cc, APCmdImpl.cc, APCmdImpl.h, APExample.cc,
-	  APTest.cc, Makefile.am, tACClient.cc: %[ER:116]% The constructor
-	  of ACclient is changed, the ACDaemon needs more info now to be
-	  able to choose the right machine to start the AC on.	APTest
-	  replaces the old tPPClient, it is based on the APExample source.
+	* ACCbin/test/ACuserMenu.cc, ACCbin/test/APCmdImpl.cc,
+	  ACCbin/test/APCmdImpl.h, ACCbin/test/APExample.cc,
+	  ACCbin/test/APTest.cc, ACCbin/test/Makefile.am,
+	  ALC/test/tACClient.cc: %[ER:116]% The constructor of ACclient is
+	  changed, the ACDaemon needs more info now to be able to choose
+	  the right machine to start the AC on.  APTest replaces the old
+	  tPPClient, it is based on the APExample source.
 
 2005-02-02 16:15  overeem
 
-	* src/: ACAsyncClient.cc, ACAsyncClient.h, ACCmdImpl.cc,
-	  ACDaemon.cc, ACDaemon.h, ACDaemon.param, ACRequest.h,
-	  ACRequestPool.cc, ACRequestPool.h, ACSyncClient.cc,
-	  ACSyncClient.h, APAdminPool.cc, APAdminPool.h,
-	  ApplControlClient.cc, ApplControlClient.h, ApplController.cc,
-	  ApplController.h, DH_ProcControl.cc, DH_ProcControl.h, KVpair.cc,
-	  KVpair.h, Makefile.am, ParameterCollection.cc,
-	  ParameterCollection.h, ProcControlComm.cc, ProcControlComm.h,
-	  ProcControlServer.cc, ProcControlServer.h, ProcessControl.h,
-	  StateEngine.h: %[ER:116]% Removed scheduletime in proces control.
-	  Introduced KVpair class for easier construction of
-	  ParameterCollections and as a preparation for the new database
-	  structure that must be implemented.  Made a start with a more
-	  intelligent ACDaemon that manages a pool of AC's and will be able
-	  to reconnect an ACuser to a still running AC.
-
-2005-02-02 09:40  overeem
-
-	* test/tPCClient.cc: %[ER:116]% Replaced with APTest.cc
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/ACDaemon.cc,
+	  ACCbin/src/ACDaemon.h, ACCbin/src/ACDaemon.param,
+	  ACCbin/src/ACRequestPool.cc, ACCbin/src/ACRequestPool.h,
+	  ACCbin/src/APAdminPool.cc, ACCbin/src/APAdminPool.h,
+	  ACCbin/src/ApplController.cc, ACCbin/src/ApplController.h,
+	  ACCbin/src/StateEngine.h, ALC/src/ACAsyncClient.cc,
+	  ALC/src/ACAsyncClient.h, ALC/src/ACRequest.h,
+	  ALC/src/ACSyncClient.cc, ALC/src/ACSyncClient.h,
+	  ALC/src/ApplControlClient.cc, ALC/src/ApplControlClient.h,
+	  APS/src/KVpair.cc, APS/src/KVpair.h, PLC/src/DH_ProcControl.cc,
+	  PLC/src/DH_ProcControl.h, PLC/src/ProcControlComm.cc,
+	  PLC/src/ProcControlComm.h, PLC/src/ProcControlServer.cc,
+	  PLC/src/ProcControlServer.h, PLC/src/ProcessControl.h: %[ER:116]%
+	  Removed scheduletime in proces control.  Introduced KVpair class
+	  for easier construction of ParameterCollections and as a
+	  preparation for the new database structure that must be
+	  implemented.	Made a start with a more intelligent ACDaemon that
+	  manages a pool of AC's and will be able to reconnect an ACuser to
+	  a still running AC.
 
 2005-01-31 10:16  overeem
 
-	* test/: APCmdImpl.cc, APCmdImpl.h: %[ER:116]% Different number of
-	  args for pause command.
+	* ACCbin/test/: APCmdImpl.cc, APCmdImpl.h: %[ER:116]% Different
+	  number of args for pause command.
 
 2005-01-21 16:35  overeem
 
-	* src/: ACAsyncClient.h, ACDaemon.h, ACRequest.h, ACSyncClient.h,
-	  APAdmin.h, APAdminPool.cc, APAdminPool.h, ApplControl.h,
-	  ApplControlClient.h, ApplControlComm.h, ApplControlServer.cc,
-	  ApplControlServer.h, CmdStack.h, DH_ApplControl.h,
-	  DH_ProcControl.h, ParameterCollection.cc, ParameterCollection.h,
-	  ParameterSet.h, ParameterTemplate.h, ParameterUnion.h,
-	  ProcControlComm.h, ProcControlServer.cc, ProcControlServer.h,
-	  ProcRule.h, ProcessControl.h, TemplateUnion.h: %[ER:116]% Added
-	  doxygen documentation in the sources.
+	* ACCbin/src/ACDaemon.h, ACCbin/src/APAdmin.h,
+	  ACCbin/src/APAdminPool.cc, ACCbin/src/APAdminPool.h,
+	  ACCbin/src/CmdStack.h, ACCbin/src/ProcRule.h,
+	  ALC/src/ACAsyncClient.h, ALC/src/ACRequest.h,
+	  ALC/src/ACSyncClient.h, ALC/src/ApplControl.h,
+	  ALC/src/ApplControlClient.h, ALC/src/ApplControlComm.h,
+	  ALC/src/ApplControlServer.cc, ALC/src/ApplControlServer.h,
+	  ALC/src/DH_ApplControl.h, APS/src/ParameterSet.h,
+	  PLC/src/DH_ProcControl.h, PLC/src/ProcControlComm.h,
+	  PLC/src/ProcControlServer.cc, PLC/src/ProcControlServer.h,
+	  PLC/src/ProcessControl.h: %[ER:116]% Added doxygen documentation
+	  in the sources.
 
 2005-01-14 16:39  overeem
 
-	* test/: ACuserMenu.cc, tPCClient.cc: %[ER:116]% Development
-	  update.
+	* ACCbin/test/ACuserMenu.cc: %[ER:116]% Development update.
 
 2005-01-14 16:37  overeem
 
-	* src/: ACCmdImpl.cc, APAdminPool.h, ApplControlClient.cc,
-	  ApplController.cc, ApplController.h, ItemList.cc,
-	  ParameterCollection.cc, ParameterCollection.h, ProcRule.cc,
-	  StateEngine.cc, StateEngine.h: %[ER:116]% Development update.
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/APAdminPool.h,
+	  ACCbin/src/ApplController.cc, ACCbin/src/ApplController.h,
+	  ACCbin/src/ItemList.cc, ACCbin/src/ProcRule.cc,
+	  ACCbin/src/StateEngine.cc, ACCbin/src/StateEngine.h,
+	  ALC/src/ApplControlClient.cc: %[ER:116]% Development update.
 	  Solved some small bugs and made some enhancements.
 
 2005-01-12 10:25  overeem
 
-	* src/: ACAsyncClient.cc, ACSyncClient.cc, ApplControlComm.cc:
+	* ALC/src/: ACAsyncClient.cc, ACSyncClient.cc, ApplControlComm.cc:
 	  %[ER:116]% Removed reference to DH_AC_Connect.
 
 2005-01-12 10:01  overeem
 
-	* test/: APCmdImpl.cc, APCmdImpl.h, APExample.cc, Makefile.am,
-	  tACMaster.cc: %[ER:116]% The temporarely tACMaster daemon is
+	* ACCbin/test/: APCmdImpl.cc, APCmdImpl.h, APExample.cc,
+	  Makefile.am: %[ER:116]% The temporarely tACMaster daemon is
 	  replaced by the more definitive ACDaemon program is de src
 	  directory. The communication with the ACDaemon is not longer li
 	  btransport compatible to solve a lot of problems.  APExample
@@ -299,141 +480,125 @@
 	  minimal implementation possible with a lot of comment to explain
 	  were other code could be inserted.
 
-2005-01-12 09:56  overeem
-
-	* src/: DH_AC_Connect.cc, DH_AC_Connect.h: %[ER:116]% These files
-	  are obsolete because the communication with the ACDaemon is no
-	  longer compatible with lib Transport.
-
 2005-01-12 09:54  overeem
 
-	* src/: AC.param, ACDaemon.cc, ACDaemon.h, ACDaemon.log_prop,
-	  ACDaemon.param, ACDaemonMain.cc, ACRequest.h,
-	  ApplControlClient.cc, ApplController.cc, ApplControllerMain.cc,
-	  Makefile.am, ProcControlServer.cc, ProcControlServer.h:
-	  %[ER:116]% The temporarely tACMaster daemon in the test directory
-	  is replaced by the more definitive ACDaemon program. The
-	  communication with the ACDaemon is not longer libtransport
-	  compatible to solve a lot of problems.
-
-2005-01-10 16:02  overeem
-
-	* test/tPCClient.cc: %[ER:116]% eaction time of test program is now
-	  random value for more realistic testing.
+	* ACCbin/src/ACDaemon.cc, ACCbin/src/ACDaemon.h,
+	  ACCbin/src/ACDaemon.log_prop, ACCbin/src/ACDaemon.param,
+	  ACCbin/src/ACDaemonMain.cc, ACCbin/src/ApplController.cc,
+	  ACCbin/src/ApplControllerMain.cc, ALC/src/ACRequest.h,
+	  ALC/src/ApplControlClient.cc, PLC/src/ProcControlServer.cc,
+	  PLC/src/ProcControlServer.h: %[ER:116]% The temporarely tACMaster
+	  daemon in the test directory is replaced by the more definitive
+	  ACDaemon program. The communication with the ACDaemon is not
+	  longer libtransport compatible to solve a lot of problems.
 
 2005-01-10 16:01  overeem
 
-	* src/: APAdminPool.h, ApplController.cc, CmdStack.cc, ProcRuler.h,
-	  StateEngine.cc, StateEngine.h, startAP.sh: %[ER:116]% Development
-	  update: timer for starting Apps runs ok now also.
+	* ACCbin/src/: APAdminPool.h, ApplController.cc, CmdStack.cc,
+	  ProcRuler.h, StateEngine.cc, StateEngine.h, startAP.sh:
+	  %[ER:116]% Development update: timer for starting Apps runs ok
+	  now also.
 
 2005-01-07 17:00  overeem
 
-	* test/: ACuserMenu.cc, tACMaster.cc: %[ER:116]% Development
-	  update. ACuserMenu supports delayed commands and specifying the
+	* ACCbin/test/ACuserMenu.cc: %[ER:116]% Development update.
+	  ACuserMenu supports delayed commands and specifying the
 	  parameterfile for the AP's. tACMaster starts the real
 	  ApplController program.
 
 2005-01-07 16:57  overeem
 
-	* src/: AC.param, ACCmdImpl.cc, ACCmdImpl.h, ApplControlServer.cc,
-	  ApplControlServer.h, ApplController.cc, ApplController.h,
-	  CmdStack.cc, CmdStack.h, DH_AC_Connect.cc, DH_AC_Connect.h,
-	  DH_ApplControl.cc, DH_ApplControl.h, Makefile.am,
-	  Observation-CygA.param, ParameterCollection.cc,
-	  ParameterCollection.h, ProcControlServer.cc, ProcControlServer.h,
-	  StateEngine.cc, StateEngine.h: %[ER:116]% Development update.
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/ACCmdImpl.h,
+	  ACCbin/src/ApplController.cc, ACCbin/src/ApplController.h,
+	  ACCbin/src/CmdStack.cc, ACCbin/src/CmdStack.h,
+	  ACCbin/src/Observation-CygA.param, ACCbin/src/StateEngine.cc,
+	  ACCbin/src/StateEngine.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/ApplControlServer.h, ALC/src/DH_ApplControl.cc,
+	  ALC/src/DH_ApplControl.h, PLC/src/ProcControlServer.cc,
+	  PLC/src/ProcControlServer.h: %[ER:116]% Development update.
 	  ApplController now has its own Parameterfile. State timers are
 	  optimized.
 
-2005-01-06 16:11  overeem
-
-	* src/: ACCommand.cc, ACCommand.h: %[ER:116]% Now copying and
-	  storing DH_ApplControl structures.
-
 2005-01-06 10:05  overeem
 
-	* test/myACClientFunctions.h: %[ER:116]% Check in compilable
+	* ALC/test/myACClientFunctions.h: %[ER:116]% Check in compilable
 	  version
 
 2005-01-06 09:55  overeem
 
-	* test/: ACuserMenu.cc, Makefile.am, tACClient.cc, tPCClient.cc:
-	  %[ER:116 ]% Check in of compilable version.
+	* ACCbin/test/ACuserMenu.cc, ACCbin/test/Makefile.am,
+	  ALC/test/tACClient.cc: %[ER:116 ]% Check in of compilable
+	  version.
 
 2005-01-06 09:54  overeem
 
-	* src/: AC.param, ACAsyncClient.cc, ACAsyncClient.h, ACCmdImpl.cc,
-	  ACCmdImpl.h, APAdminPool.h, ApplControl.h, ApplControlClient.cc,
-	  ApplControlClient.h, ApplController.cc, ApplController.h,
-	  ItemList.cc, ItemList.h, Makefile.am, ParameterCollection.cc,
-	  ParameterCollection.h, ProcRule.cc, ProcRule.h, ProcRuler.cc,
-	  ProcRuler.h, StateEngine.cc, StateEngine.h, startAP.sh,
-	  stopAP.sh: %[ER:116]% Check in of compilable version
-
-2005-01-03 09:10  overeem
-
-	* src/: AC.param, ParameterCollection.cc, ParameterCollection.h:
-	  %[ER:116]% Modified the syntax the ParameterCollection allows.  *
-	  whitespace is allowed around the = sign for outlined the files.
-	  * comment is allowed at the end of every line.  * multiline
-	  definitions are possible. The multiline definitions may even be
-	  interupted with comment lines.
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/ACCmdImpl.h,
+	  ACCbin/src/APAdminPool.h, ACCbin/src/ApplController.cc,
+	  ACCbin/src/ApplController.h, ACCbin/src/ItemList.cc,
+	  ACCbin/src/ItemList.h, ACCbin/src/ProcRule.cc,
+	  ACCbin/src/ProcRule.h, ACCbin/src/ProcRuler.cc,
+	  ACCbin/src/ProcRuler.h, ACCbin/src/StateEngine.cc,
+	  ACCbin/src/StateEngine.h, ACCbin/src/startAP.sh,
+	  ACCbin/src/stopAP.sh, ALC/src/ACAsyncClient.cc,
+	  ALC/src/ACAsyncClient.h, ALC/src/ApplControl.h,
+	  ALC/src/ApplControlClient.cc, ALC/src/ApplControlClient.h:
+	  %[ER:116]% Check in of compilable version
 
 2005-01-03 09:06  overeem
 
-	* test/: Makefile.am, tParameterSet.cc, tParameterSet.out,
-	  tParameterSet.ps: %[ER:116]% Update to test the more relaxes
-	  syntax with multiline lines, neatly aligned lines around the =
-	  sign and the new getTime routines.
+	* ACCbin/test/Makefile.am, APS/test/tParameterSet.cc,
+	  APS/test/tParameterSet.out, APS/test/tParameterSet.ps: %[ER:116]%
+	  Update to test the more relaxes syntax with multiline lines,
+	  neatly aligned lines around the = sign and the new getTime
+	  routines.
 
 2004-12-29 16:44  overeem
 
-	* test/: myACClientFunctions.h, tACClient.cc, tPCClient.cc:
-	  %[ER:116]% Development update.
+	* ALC/test/: myACClientFunctions.h, tACClient.cc: %[ER:116]%
+	  Development update.
 
 2004-12-29 16:43  overeem
 
-	* src/: AC.param, ACAsyncClient.cc, ACCmdImpl.cc, ACCmdImpl.h,
-	  ACCommand.cc, ACCommand.h, APAdmin.cc, APAdminPool.cc,
-	  ApplControl.h, ApplControlClient.cc, ApplControlClient.h,
-	  ApplControlServer.cc, ApplControlServer.h, ApplController.cc,
-	  ApplController.h, ApplControllerMain.cc, DH_ApplControl.cc,
-	  DH_ApplControl.h, DH_ProcControl.h, Makefile.am,
-	  ParameterCollection.cc, ParameterCollection.h,
-	  ProcControlServer.cc, StateEngine.cc, StateEngine.h: %[ER:116]%
-	  Development update. Multiple command states are implemented.
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/ACCmdImpl.h,
+	  ACCbin/src/APAdmin.cc, ACCbin/src/APAdminPool.cc,
+	  ACCbin/src/ApplController.cc, ACCbin/src/ApplController.h,
+	  ACCbin/src/ApplControllerMain.cc, ACCbin/src/StateEngine.cc,
+	  ACCbin/src/StateEngine.h, ALC/src/ACAsyncClient.cc,
+	  ALC/src/ApplControl.h, ALC/src/ApplControlClient.cc,
+	  ALC/src/ApplControlClient.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/ApplControlServer.h, ALC/src/DH_ApplControl.cc,
+	  ALC/src/DH_ApplControl.h, PLC/src/DH_ProcControl.h,
+	  PLC/src/ProcControlServer.cc: %[ER:116]% Development update.
+	  Multiple command states are implemented.
 
 2004-12-24 10:11  overeem
 
-	* src/: APAdminPool.cc, ApplController.cc: %[ER:116]% Development
-	  update.
+	* ACCbin/src/: APAdminPool.cc, ApplController.cc: %[ER:116]%
+	  Development update.
 
 2004-12-23 14:57  overeem
 
-	* test/: tACClient.cc, tPCClient.cc, Makefile.am: %[ER:116]%
+	* ALC/test/tACClient.cc, ACCbin/test/Makefile.am: %[ER:116]%
 	  Development update.
-
-2004-12-23 14:56  overeem
-
-	* src/: DH_ProcessControl.cc, DH_ProcessControl.h,
-	  DataHolderSelector.cc, DataHolderSelector.h: %[ER:30]% Renamed
-	  and/or replaced by APAdminPool.
 
 2004-12-23 14:54  overeem
 
-	* src/: ACAsyncClient.cc, ACCmdImpl.cc, ACCommand.cc, ACCommand.h,
-	  ACSyncClient.cc, APAdmin.cc, APAdmin.h, APAdminPool.cc,
-	  APAdminPool.h, ApplControl.h, ApplControlClient.cc,
-	  ApplControlComm.h, ApplControlServer.cc, ApplControlServer.h,
-	  ApplController.cc, DH_ApplControl.cc, DH_ApplControl.h,
-	  DH_ProcControl.cc, DH_ProcControl.h, Makefile.am,
-	  ProcControlComm.cc, ProcControlComm.h, ProcControlServer.cc,
-	  ProcControlServer.h, ProcessControl.h: %[ER:30]% Development
-	  update. The main loop of the Application controller is finally
-	  becomming simple and stable by using the APAdmin objects and not
-	  longer using libTransport. The I/O remains libTransport
-	  compatible so MAC and the Appl. processes may still use it.
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/APAdmin.cc,
+	  ACCbin/src/APAdmin.h, ACCbin/src/APAdminPool.cc,
+	  ACCbin/src/APAdminPool.h, ACCbin/src/ApplController.cc,
+	  ALC/src/ACAsyncClient.cc, ALC/src/ACSyncClient.cc,
+	  ALC/src/ApplControl.h, ALC/src/ApplControlClient.cc,
+	  ALC/src/ApplControlComm.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/ApplControlServer.h, ALC/src/DH_ApplControl.cc,
+	  ALC/src/DH_ApplControl.h, PLC/src/DH_ProcControl.cc,
+	  PLC/src/DH_ProcControl.h, PLC/src/ProcControlComm.cc,
+	  PLC/src/ProcControlComm.h, PLC/src/ProcControlServer.cc,
+	  PLC/src/ProcControlServer.h, PLC/src/ProcessControl.h: %[ER:30]%
+	  Development update. The main loop of the Application controller
+	  is finally becomming simple and stable by using the APAdmin
+	  objects and not longer using libTransport. The I/O remains
+	  libTransport compatible so MAC and the Appl. processes may still
+	  use it.
 
 2004-12-15 15:18  overeem
 
@@ -442,128 +607,100 @@
 
 2004-12-15 15:17  overeem
 
-	* test/: myACClientFunctions.h, tPCClient.cc: %[ER:116]% Prototype
-	  of an Application Process.
+	* ALC/test/myACClientFunctions.h: %[ER:116]% Prototype of an
+	  Application Process.
 
 2004-12-15 15:13  overeem
 
-	* test/: tACClient.cc, tACMaster.cc, Makefile.am, tACServer.cc:
-	  %[ER:116]% Development update.
+	* ALC/test/tACClient.cc, ACCbin/test/Makefile.am,
+	  ALC/test/tACServer.cc: %[ER:116]% Development update.
 
 2004-12-15 15:09  overeem
 
-	* src/: AC.param, ACCmdImpl.cc, ACCmdImpl.h, ACCommand.cc,
-	  ACCommand.h, ApplControlComm.cc, ApplControlComm.h,
-	  ApplController.cc, CmdStack.cc, CmdStack.h, DH_ProcessControl.cc,
-	  DataHolderSelector.cc, DataHolderSelector.h, ProcControlComm.h,
-	  ProcessControl.h: %[ER:116]% Development update.
+	* ACCbin/src/ACCmdImpl.cc, ACCbin/src/ACCmdImpl.h,
+	  ACCbin/src/ApplController.cc, ACCbin/src/CmdStack.cc,
+	  ACCbin/src/CmdStack.h, ALC/src/ApplControlComm.cc,
+	  ALC/src/ApplControlComm.h, PLC/src/ProcControlComm.h,
+	  PLC/src/ProcessControl.h: %[ER:116]% Development update.
 
 2004-12-15 15:02  overeem
 
-	* src/: ApplControl.h, ApplControlClient.cc, ApplControlClient.h,
-	  ApplControlServer.cc, ApplControlServer.h, DH_AC_Connect.h,
-	  DH_ApplControl.cc, DH_ApplControl.h, DH_ProcessControl.h,
-	  Makefile.am: %[ER:116]% Development update.
+	* ALC/src/: ApplControl.h, ApplControlClient.cc,
+	  ApplControlClient.h, ApplControlServer.cc, ApplControlServer.h,
+	  DH_ApplControl.cc, DH_ApplControl.h: %[ER:116]% Development
+	  update.
 
 2004-12-06 10:52  overeem
 
-	* src/: ACSyncClient.h, ApplControl.h, ApplControlClient.cc,
-	  ApplControlServer.cc, ApplControlServer.h, DH_ProcessControl.h:
-	  %[ER:161]% Development update.
-
-2004-12-06 10:47  overeem
-
-	* src/: ParameterCollection.cc, ParameterCollection.h: %[ER:116]%
-	  Added getBool function.
+	* ALC/src/: ACSyncClient.h, ApplControl.h, ApplControlClient.cc,
+	  ApplControlServer.cc, ApplControlServer.h: %[ER:161]% Development
+	  update.
 
 2004-11-30 14:58  overeem
 
-	* test/: tACMaster.cc, tACServer.cc: %[ER:116]% Development update
-	  after split of ApplControl.
-
-2004-11-30 14:56  overeem
-
-	* src/ApplControl.cc: %[ER:116]% Communication part was moved to
-	  ApplControlComm class, making this source empty.
+	* ALC/test/tACServer.cc: %[ER:116]% Development update after split
+	  of ApplControl.
 
 2004-11-30 14:55  overeem
 
-	* src/: ACAsyncClient.cc, ApplControl.h, ApplControlClient.cc,
-	  ApplControlClient.h, ApplControlServer.cc, ApplControlServer.h,
-	  ConfigurationMgr.cc, ParameterCollection.cc,
-	  ParameterCollection.h: %[ER:116]% Development update. ApplControl
-	  is split into ApplControl and ApplControlComm.  Added 'test'
-	  qualification to Parameter management.
-
-2004-11-26 15:54  overeem
-
-	* src/ApplCtrlFunctions.h: %[ER:116]% Obsolete in new setup of
-	  server and clients.
+	* ACCbin/src/ConfigurationMgr.cc, ALC/src/ACAsyncClient.cc,
+	  ALC/src/ApplControl.h, ALC/src/ApplControlClient.cc,
+	  ALC/src/ApplControlClient.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/ApplControlServer.h: %[ER:116]% Development update.
+	  ApplControl is split into ApplControl and ApplControlComm.  Added
+	  'test' qualification to Parameter management.
 
 2004-11-26 15:53  overeem
 
-	* src/ApplControl.cc, src/ApplControl.h, src/ApplControlClient.cc,
+	* ALC/: src/ApplControl.h, src/ApplControlClient.cc,
 	  src/ApplControlClient.h, src/DH_ApplControl.cc,
 	  src/DH_ApplControl.h, test/tACClient.cc: %[ER:116]% Just a weekly
 	  development update.
 
 2004-11-26 15:52  overeem
 
-	* src/: ACAsyncClient.cc, ACAsyncClient.h, ACSyncClient.cc,
+	* ALC/src/: ACAsyncClient.cc, ACAsyncClient.h, ACSyncClient.cc,
 	  ACSyncClient.h: %[ER:116]% Two flavor of ACC clients, a sync and
 	  an async version.
 
 2004-11-24 16:18  overeem
 
-	* test/templates/: applicationQ.ps, moduleA.ps, moduleC.ps,
+	* ACCbin/test/templates/: applicationQ.ps, moduleA.ps, moduleC.ps,
 	  moduleD.ps, moduleE.ps, processF.ps, processG.ps: Initial
 	  revision
 
 2004-11-24 16:18  overeem
 
-	* test/templates/: applicationQ.ps, moduleA.ps, moduleC.ps,
+	* ACCbin/test/templates/: applicationQ.ps, moduleA.ps, moduleC.ps,
 	  moduleD.ps, moduleE.ps, processF.ps, processG.ps:
 	  ParameterTemplates for testing the ConfigurationMgr class.
 
 2004-11-24 16:14  overeem
 
-	* test/tConfMgr.cc: %[ER:116 ]% Program for testing the
+	* ACCbin/test/tConfMgr.cc: %[ER:116 ]% Program for testing the
 	  ConfigurationMgr class.
 
 2004-11-24 16:13  overeem
 
-	* src/: ParCollRecord.cc, ParCollRecord.h: %[ER:116]% The
+	* ACCbin/src/: ParCollRecord.cc, ParCollRecord.h: %[ER:116]% The
 	  ParCollRecord class is the recordform how ParameterCollections
 	  are stored in the database.
 
-2004-11-24 16:12  overeem
-
-	* src/: ParameterCollection.cc, ParameterCollection.h,
-	  ParameterTemplate.h, ParameterUnion.h, TemplateUnion.h:
-	  %[ER:116]% Just a common development update.
-
 2004-11-24 16:08  overeem
 
-	* src/: ConfigurationMgr.cc, ConfigurationMgr.h: %[ER:116]% First
-	  (not complete!) working version of the configuration Manager.
-
-2004-11-18 13:33  overeem
-
-	* src/Makefile.am: %[ER:116]% Update of the flavors of parameter
-	  collections to the new design.
+	* ACCbin/src/: ConfigurationMgr.cc, ConfigurationMgr.h: %[ER:116]%
+	  First (not complete!) working version of the configuration
+	  Manager.
 
 2004-11-18 13:26  overeem
 
-	* test/tParameterSet.cc: %[ER:116]% Update of the flavors of
+	* APS/test/tParameterSet.cc: %[ER:116]% Update of the flavors of
 	  parameter collections to the new design.
 
 2004-11-18 13:22  overeem
 
-	* src/: ParameterCollection.cc, ParameterCollection.h,
-	  ParameterSet.cc, ParameterSet.h, ParameterTemplate.cc,
-	  ParameterTemplate.h, ParameterUnion.cc, ParameterUnion.h,
-	  TemplateUnion.cc, TemplateUnion.h: %[ER:116]% Update of the
-	  flavors of parameter collections to the new design.
+	* APS/src/: ParameterSet.cc, ParameterSet.h: %[ER:116]% Update of
+	  the flavors of parameter collections to the new design.
 
 2004-11-10 08:59  diepen
 
@@ -571,84 +708,65 @@
 
 2004-10-26 14:10  diepen
 
-	* configure.in, src/Makefile.am: %[ER: 70]% Change such that make
-	  install works correctly
+	* configure.in: %[ER: 70]% Change such that make install works
+	  correctly
 
 2004-10-25 16:46  overeem
 
-	* test/tACClient.cc, test/tACMaster.cc, test/tACServer.cc,
+	* ALC/: test/tACClient.cc, test/tACServer.cc,
 	  src/ApplControlClient.cc, src/ApplControlServer.cc: %[ER:116]%
 	  Update for new TH_Socket.
 
 2004-10-20 16:22  overeem
 
-	* configure.in, src/Makefile.am, test/Makefile.am: %[ER:116]% Don't
-	  make AC programs yet.
+	* configure.in, ACCbin/test/Makefile.am: %[ER:116]% Don't make AC
+	  programs yet.
 
 2004-10-18 15:08  overeem
 
-	* test/: tACClient.cc, tACMaster.cc, tACServer.cc,
-	  tParameterSet.cc: %[ER:116]% Moved everthing into namespace
-	  LOFAR::ACC.
+	* ALC/test/tACClient.cc, ALC/test/tACServer.cc,
+	  APS/test/tParameterSet.cc: %[ER:116]% Moved everthing into
+	  namespace LOFAR::ACC.
 
 2004-10-18 15:07  overeem
 
-	* src/: ApplControl.cc, ApplControlClient.cc, ApplControl.h,
-	  ApplControlClient.h, ApplControlServer.cc, ApplControlServer.h,
-	  ApplCtrlFunctions.h, DH_AC_Connect.cc, DH_AC_Connect.h,
-	  DH_ApplControl.cc, DH_ApplControl.h, DH_ProcessControl.h,
-	  ParameterSet.cc, ParameterSet.h: %[ER:116]% Moved everything into
+	* ALC/src/ApplControlClient.cc, ALC/src/ApplControl.h,
+	  ALC/src/ApplControlClient.h, ALC/src/ApplControlServer.cc,
+	  ALC/src/ApplControlServer.h, ALC/src/DH_ApplControl.cc,
+	  ALC/src/DH_ApplControl.h, APS/src/ParameterSet.cc,
+	  APS/src/ParameterSet.h: %[ER:116]% Moved everything into
 	  namespace LOFAR:ACC.
 
 2004-10-18 13:51  overeem
 
-	* test/Makefile.am: %[ER:116]% Only tParameterSet in makefile to
-	  assure weekly build.
+	* ACCbin/test/Makefile.am: %[ER:116]% Only tParameterSet in
+	  makefile to assure weekly build.
 
 2004-10-18 13:50  overeem
 
 	* configure.in: %[ER:116]% Added dependency with CEP/Transport
 	  (TH_Socket).
 
-2004-10-18 13:49  overeem
-
-	* src/Makefile.am: %[ER:116]% Only ParameterSet in Makefile to
-	  assure weekly build.
-
-2004-10-18 13:35  overeem
-
-	* src/: tParameterSet.cc, tParameterSet.log_prop, tParameterSet.ps,
-	  merge.ps: %[ER:116]% Moved to test directory.
-
-2004-10-18 13:33  overeem
-
-	* src/Makefile.am: %[ER:116]% Added Control classes to makefile.
-
 2004-10-18 13:30  overeem
 
-	* test/Makefile.am: %[ER:116]% Added testprograms for ACC classes.
+	* ACCbin/test/Makefile.am: %[ER:116]% Added testprograms for ACC
+	  classes.
 
 2004-10-18 13:28  overeem
 
-	* test/: tACClient.cc, tACMaster.cc, tACServer.cc: %[ER:116]%
-	  Simple testprograms for manually testing the ACC classes.
+	* ALC/test/: tACClient.cc, tACServer.cc: %[ER:116]% Simple
+	  testprograms for manually testing the ACC classes.
 
 2004-10-18 13:24  overeem
 
-	* src/: ApplControl.cc, ApplControl.h, ApplControlClient.cc,
+	* ALC/src/: ApplControl.h, ApplControlClient.cc,
 	  ApplControlClient.h, ApplControlServer.cc, ApplControlServer.h,
-	  ApplCtrlFunctions.h, DH_AC_Connect.cc, DH_AC_Connect.h,
-	  DH_ApplControl.cc, DH_ApplControl.h, DH_ProcessControl.h:
-	  %[ER:116]% New setup from the application control classes.
+	  DH_ApplControl.cc, DH_ApplControl.h: %[ER:116]% New setup from
+	  the application control classes.
 
 2004-10-18 12:32  overeem
 
 	* configure.in: %[ER:102]% Added test directory.
-
-2004-10-18 12:31  overeem
-
-	* src/Makefile.am: %[ER:102]% Test program is moved to test
-	  directory.
 
 2004-10-18 12:30  overeem
 
@@ -656,70 +774,25 @@
 
 2004-10-18 12:28  overeem
 
-	* test/: Makefile.am, merge.ps, tParameterSet.cc,
-	  tParameterSet.log_prop, tParameterSet.ps: Initial revision
+	* ACCbin/test/Makefile.am, APS/test/merge.ps,
+	  APS/test/tParameterSet.cc, APS/test/tParameterSet.log_prop,
+	  APS/test/tParameterSet.ps: Initial revision
 
 2004-10-18 12:28  overeem
 
-	* test/: Makefile.am, merge.ps, tParameterSet.cc,
-	  tParameterSet.log_prop, tParameterSet.ps: Moved from src.
-
-2004-10-18 11:47  overeem
-
-	* src/tParameterSet.log_prop: %[ER:30]% Given tParameterSet its own
-	  log_prop file.
-
-2004-10-18 11:45  overeem
-
-	* src/ACCdemo.log_prop: %[ER:30]% These prototypes are obsolete
-	  now.
-
-2004-10-18 11:40  overeem
-
-	* src/Makefile.am: %[ER:30]% Removed old prototypes from makelist.
-
-2004-10-18 11:36  overeem
-
-	* src/: ACCProcess.cc, ACCProcess.h, ACCProcessList.cc,
-	  ACCProcessList.h, DemoAC.cc, DemoAC.ps, DemoProgram.cc, Event.cc,
-	  Event.h, Event.ps, ProcessController.cc, ProcessState.h,
-	  Socket.cc, Socket.h, ACCEvents.h, ApplicationController.cc:
-	  %[ER:30]% These prototypes are obsolete now.
-
-2004-10-13 11:49  loose
-
-	* src/Makefile.am: %[ER: 161]%
-
-	  * Almost all code in the 'Common' package now resides in the
-	  namespace LOFAR.    Work is still in progress.  * The lofar_*.h
-	  files (like lofar_string.h) now make the using declarations of
-	  the standard types in the namespace LOFAR, instead of the global
-	  namespace.	For backward compatibility, the compiler
-	  MAKE_LOFAR_SYMBOLS_GLOBAL can be    used. It is recommended that
-	  you use these lofar_*.h header files instead of    the standard
-	  header files.  * The line 'AM_CPPFLAGS =
-	  MAKE_LOFAR_SYMBOLS_GLOBAL' has been added to most of	 the
-	  Makefile.am files. The packages that are currently being built in
-	    the weekly build are known to compile using the new 'Common'
-	  package when	 backward compatibility is enabled. Where
-	  necessary, source code or header   files were modified. This
-	  usually meant adding a line like e.g.    'using LOFAR::Thread'.
+	* ACCbin/test/Makefile.am, APS/test/merge.ps,
+	  APS/test/tParameterSet.cc, APS/test/tParameterSet.log_prop,
+	  APS/test/tParameterSet.ps: Moved from src.
 
 2004-05-13 11:09  gerdes
 
-	* src/: Makefile.am, ParameterSet.cc, ParameterSet.h: %[ER: 116]%
-	  Added a library target in the makefile and added a getFloat
-	  method.
+	* APS/src/: ParameterSet.cc, ParameterSet.h: %[ER: 116]% Added a
+	  library target in the makefile and added a getFloat method.
 
 2004-04-06 15:19  overeem
 
-	* src/: ACCProcess.cc, ACCProcess.h, Event.cc, Event.h,
-	  ParameterSet.cc, ParameterSet.h, Socket.cc, Socket.h: %[ER:102]%
-	  Passing strings by reference.
-
-2004-03-31 10:09  overeem
-
-	* src/tParameterSet.cc: %[ER:102]% Changed name of parameterfile.
+	* APS/src/: ParameterSet.cc, ParameterSet.h: %[ER:102]% Passing
+	  strings by reference.
 
 2004-03-31 10:08  overeem
 
@@ -727,25 +800,12 @@
 
 2004-03-31 09:44  overeem
 
-	* Makefile.am, README, bootstrap, configure.in, src/ACCEvents.h,
-	  src/ACCProcess.cc, src/ACCProcess.h, src/ACCProcessList.cc,
-	  src/ACCProcessList.h, src/ACCdemo.log_prop,
-	  src/ApplicationController.cc, src/DemoAC.cc, src/DemoAC.ps,
-	  src/DemoProgram.cc, src/Event.cc, src/Event.h, src/Event.ps,
-	  src/Makefile.am, src/ParameterSet.cc, src/ParameterSet.h,
-	  src/ProcessController.cc, src/ProcessState.h, src/Socket.cc,
-	  src/Socket.h, src/merge.ps, src/tParameterSet.cc,
-	  src/tParameterSet.ps: %[ER:102]% Tryout of ParameterSets.
+	* Makefile.am, README, bootstrap, configure.in,
+	  APS/src/ParameterSet.cc, APS/src/ParameterSet.h: %[ER:102]%
+	  Tryout of ParameterSets.
 
 2004-03-31 09:44  overeem
 
-	* Makefile.am, README, bootstrap, configure.in, src/ACCEvents.h,
-	  src/ACCProcess.cc, src/ACCProcess.h, src/ACCProcessList.cc,
-	  src/ACCProcessList.h, src/ACCdemo.log_prop,
-	  src/ApplicationController.cc, src/DemoAC.cc, src/DemoAC.ps,
-	  src/DemoProgram.cc, src/Event.cc, src/Event.h, src/Event.ps,
-	  src/Makefile.am, src/ParameterSet.cc, src/ParameterSet.h,
-	  src/ProcessController.cc, src/ProcessState.h, src/Socket.cc,
-	  src/Socket.h, src/merge.ps, src/tParameterSet.cc,
-	  src/tParameterSet.ps: Initial revision
+	* Makefile.am, README, bootstrap, configure.in,
+	  APS/src/ParameterSet.cc, APS/src/ParameterSet.h: Initial revision
 
