@@ -36,6 +36,10 @@ namespace LOFAR {
 // @{
 
 // This class defines a polynomial as a specialization of a funklet.
+//
+// It scales the X and Y values between 0 and 1. So the value to use for X is:
+//        (X - domain.startX()) / (domain.endX() - domain.startX())
+// Y is to be calculated similarly.
 
 class MeqPolc: public MeqFunklet
 {

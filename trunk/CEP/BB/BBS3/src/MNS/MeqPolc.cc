@@ -45,7 +45,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
   // In that way any value can be used for the default domain [-1,1].
   // Because the values are calculated for the center of each cell,
   // it is only checked if the centers are in the polc domain.
-  const MeqDomain& domain = request.domain();
+  //const MeqDomain& domain = request.domain();
   //ASSERT (domain.startX() + request.stepX()/2 >= itsDomain.startX());
   //ASSERT (domain.startY() + request.stepY()/2 >= itsDomain.startY());
   //ASSERT (domain.endX() - request.stepX()/2 <= itsDomain.endX());
@@ -71,16 +71,17 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     }
   } else {
     // The polynomial has multiple coefficients.
-    // Get the step and start values in the domain.
-    double stepx = request.stepX() / itsXScale;
-    double stepy = request.stepY() / itsYScale;
-    double stx = (domain.startX() - itsX0) / itsXScale + stepx * .5;
-    double sty = (domain.startY() - itsY0) / itsYScale + stepy * .5;
     // Get number of steps and coefficients in x and y.
     int ndx = request.nx();
     int ndy = request.ny();
     int ncx = itsCoeff.nx();
     int ncy = itsCoeff.ny();
+    // Values for x and y are scaled between 0 and 1.
+    // Get the step and start values in the domain.
+    double stepx = 1. / ndx;
+    double stepy = 1. / ndy;
+    double stx = 0;
+    double sty = 0;
     // Evaluate the expression (as double).
     const double* coeffData = itsCoeff.doubleStorage();
     const double* pertData = 0;
