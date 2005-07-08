@@ -53,10 +53,10 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
   streamsize prec = cout.precision();
   cout.precision(10);
   for (uint i=0; i<pData.size(); ++i) {
-    cout << "Writing parm " << pData[i].getName() << " into "
+    cout << "Writing parm " << pData[i].getName() << " into >>> "
 	 << pData[i].getTableName() << ' ' << pData[i].getDBName()
 	 << " (" << pData[i].getDBType()
-	 << ") values=" << pData[i].getValues() << endl;
+	 << ") <<< values=" << pData[i].getValues() << endl;
     ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
 		   pData[i].getDBName(), "", "localhost", 13157, 13157, true);
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);

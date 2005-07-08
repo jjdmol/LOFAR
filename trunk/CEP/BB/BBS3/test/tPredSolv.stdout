@@ -229,15 +229,15 @@ itsMu     : 0.01099723109
 itsStddev : 0.01099723109
 itsChi    : 0.1924140947
 
-Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.734004074]
-Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.4538001633]
-Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.6039471598]
-Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.734020395]
-Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.4536931018]
-Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.5973809337]
-Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.733981406]
-Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.4537583473]
-Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.6004009832]
+Writing parm RA.CP1 into >>> demo_gsm diepen (aips) <<< values=[2.734004074]
+Writing parm DEC.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.4538001633]
+Writing parm StokesI.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.6039471598]
+Writing parm RA.CP2 into >>> demo_gsm diepen (aips) <<< values=[2.734020395]
+Writing parm DEC.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.4536931018]
+Writing parm StokesI.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.5973809337]
+Writing parm RA.CP3 into >>> demo_gsm diepen (aips) <<< values=[2.733981406]
+Writing parm DEC.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.4537583473]
+Writing parm StokesI.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.6004009832]
 >>>
 <<<
 iter1:  [2.734004511,0.4538007895,0.6057240058,2.734017495,0.4536965748,0.5943667748,2.733984811,0.4537684948,0.5999195407]
@@ -248,15 +248,15 @@ itsMu     : 0.0001387250709
 itsStddev : 0.0001387250709
 itsChi    : 3.061823068e-05
 
-Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.734004511]
-Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.4538007895]
-Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.6057240058]
-Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.734017495]
-Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.4536965748]
-Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.5943667748]
-Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.733984811]
-Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.4537684948]
-Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.5999195407]
+Writing parm RA.CP1 into >>> demo_gsm diepen (aips) <<< values=[2.734004511]
+Writing parm DEC.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.4538007895]
+Writing parm StokesI.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.6057240058]
+Writing parm RA.CP2 into >>> demo_gsm diepen (aips) <<< values=[2.734017495]
+Writing parm DEC.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.4536965748]
+Writing parm StokesI.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.5943667748]
+Writing parm RA.CP3 into >>> demo_gsm diepen (aips) <<< values=[2.733984811]
+Writing parm DEC.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.4537684948]
+Writing parm StokesI.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.5999195407]
 >>>
 <<<
 iter2:  [2.734005359,0.4537966814,0.6077026265,2.734016629,0.4536953566,0.5925676337,2.733984825,0.4537734474,0.5997190639]
@@ -267,15 +267,15 @@ itsMu     : 4.860151327e-05
 itsStddev : 4.860151327e-05
 itsChi    : 3.758112383e-06
 
-Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.734005359]
-Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.4537966814]
-Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.6077026265]
-Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.734016629]
-Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.4536953566]
-Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.5925676337]
-Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.733984825]
-Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.4537734474]
-Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.5997190639]
+Writing parm RA.CP1 into >>> demo_gsm diepen (aips) <<< values=[2.734005359]
+Writing parm DEC.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.4537966814]
+Writing parm StokesI.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.6077026265]
+Writing parm RA.CP2 into >>> demo_gsm diepen (aips) <<< values=[2.734016629]
+Writing parm DEC.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.4536953566]
+Writing parm StokesI.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.5925676337]
+Writing parm RA.CP3 into >>> demo_gsm diepen (aips) <<< values=[2.733984825]
+Writing parm DEC.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.4537734474]
+Writing parm StokesI.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.5997190639]
 >>>
 <<<
 iter3:  [2.734005359,0.4537966814,0.6077026265,2.734016629,0.4536953566,0.5925676337,2.733984825,0.4537734474,0.5997190639]
@@ -286,15 +286,15 @@ itsMu     : 0
 itsStddev : 0
 itsChi    : 0
 
-Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.734005359]
-Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.4537966814]
-Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.6077026265]
-Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.734016629]
-Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.4536953566]
-Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.5925676337]
-Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.733984825]
-Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.4537734474]
-Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.5997190639]
+Writing parm RA.CP1 into >>> demo_gsm diepen (aips) <<< values=[2.734005359]
+Writing parm DEC.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.4537966814]
+Writing parm StokesI.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.6077026265]
+Writing parm RA.CP2 into >>> demo_gsm diepen (aips) <<< values=[2.734016629]
+Writing parm DEC.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.4536953566]
+Writing parm StokesI.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.5925676337]
+Writing parm RA.CP3 into >>> demo_gsm diepen (aips) <<< values=[2.733984825]
+Writing parm DEC.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.4537734474]
+Writing parm StokesI.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.5997190639]
 >>>
 <<<
 iter4:  [2.734005351,0.4537964622,0.6077289227,2.734016618,0.4536955494,0.5925240489,2.733984837,0.4537734924,0.5997427985]
@@ -305,13 +305,13 @@ itsMu     : 4.491003142e-05
 itsStddev : 4.491003142e-05
 itsChi    : 6.435962753e-06
 
-Writing parm RA.CP1 into demo_gsm diepen (aips) values=[2.734005351]
-Writing parm DEC.CP1 into demo_gsm diepen (aips) values=[0.4537964622]
-Writing parm StokesI.CP1 into demo_gsm diepen (aips) values=[0.6077289227]
-Writing parm RA.CP2 into demo_gsm diepen (aips) values=[2.734016618]
-Writing parm DEC.CP2 into demo_gsm diepen (aips) values=[0.4536955494]
-Writing parm StokesI.CP2 into demo_gsm diepen (aips) values=[0.5925240489]
-Writing parm RA.CP3 into demo_gsm diepen (aips) values=[2.733984837]
-Writing parm DEC.CP3 into demo_gsm diepen (aips) values=[0.4537734924]
-Writing parm StokesI.CP3 into demo_gsm diepen (aips) values=[0.5997427985]
+Writing parm RA.CP1 into >>> demo_gsm diepen (aips) <<< values=[2.734005351]
+Writing parm DEC.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.4537964622]
+Writing parm StokesI.CP1 into >>> demo_gsm diepen (aips) <<< values=[0.6077289227]
+Writing parm RA.CP2 into >>> demo_gsm diepen (aips) <<< values=[2.734016618]
+Writing parm DEC.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.4536955494]
+Writing parm StokesI.CP2 into >>> demo_gsm diepen (aips) <<< values=[0.5925240489]
+Writing parm RA.CP3 into >>> demo_gsm diepen (aips) <<< values=[2.733984837]
+Writing parm DEC.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.4537734924]
+Writing parm StokesI.CP3 into >>> demo_gsm diepen (aips) <<< values=[0.5997427985]
 End of test with updating parmtable
