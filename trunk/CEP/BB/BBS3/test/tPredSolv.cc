@@ -105,7 +105,9 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
     solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
   }
   vector<ParmData> pData = pre1.getSolvableParmData();
+  cout << ">>>" << endl;
   pre1.showSettings();
+  cout << "<<<" << endl;
   streamsize prec = cout.precision();
   cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
 
@@ -196,7 +198,9 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
   solver.initSolvableParmData (1);
   vector<ParmData> pData = pre1.getSolvableParmData();
   solver.setSolvableParmData (pData, 0);
+  cout << ">>>" << endl;
   pre1.showSettings();
+  cout << "<<<" << endl;
   streamsize prec = cout.precision();
   cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
 

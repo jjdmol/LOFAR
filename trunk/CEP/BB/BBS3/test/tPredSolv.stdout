@@ -1,6 +1,7 @@
 Starting first test
 >>>
 <<<
+>>>
 Prediffer settings:
   msname:    /tmp/diepen.demo
   mepname:   demo
@@ -10,6 +11,7 @@ Prediffer settings:
   endchan:   1
   calcuvw  : 0
 
+<<<
 Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
 >>>
 <<<
@@ -106,6 +108,7 @@ Starting double setEquations test
 >>>
 <<<
 use toblob
+>>>
 Prediffer settings:
   msname:    /tmp/diepen.demo
   mepname:   demo
@@ -115,6 +118,7 @@ Prediffer settings:
   endchan:   1
   calcuvw  : 0
 
+<<<
 Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
 >>>
 <<<
@@ -145,6 +149,7 @@ End of test with two prediffers
 Starting test with 21 antennas
 >>>
 <<<
+>>>
 Prediffer settings:
   msname:    /tmp/diepen.demo
   mepname:   demo
@@ -154,6 +159,7 @@ Prediffer settings:
   endchan:   1
   calcuvw  : 0
 
+<<<
 Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
 >>>
 <<<
@@ -209,6 +215,7 @@ End of test with 21 antennas
 Starting test with updating parmtable
 >>>
 <<<
+>>>
 Prediffer settings:
   msname:    /tmp/diepen.demo
   mepname:   demo
@@ -218,6 +225,7 @@ Prediffer settings:
   endchan:   3
   calcuvw  : 0
 
+<<<
 Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
 >>>
 <<<
