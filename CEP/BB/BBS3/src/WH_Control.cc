@@ -93,14 +93,18 @@ void WH_Control::preprocess()
     gethostname(hostnameBuffer, 128);
     string myHostName = hostnameBuffer;
 
-    itsParmTable = new ParmTable(dbkvm.getString("DBType", "aips"), 
-				 "dummy", 
-				 dbkvm.getString("DBName", "test"), 
-				 dbkvm.getString("DBPwd", ""), 
-				 myHostName,
-				 dbkvm.getInt("DBMasterPort", 13157), 
-				 dbkvm.getInt("DBMasterPort", 13157), 
-				 true);
+    string dbtype = dbkvm.getString("DBType", "aips");
+    if (dbtype == "bdbrepl") {
+      // Create master for bdb replication
+      itsParmTable = new ParmTable(dbtype,
+				   "dummy", 
+				   dbkvm.getString("DBName", "test"), 
+				   dbkvm.getString("DBPwd", ""), 
+				   myHostName,
+				   dbkvm.getInt("DBMasterPort", 13157), 
+				   dbkvm.getInt("DBMasterPort", 13157), 
+				   true);
+    }
   }
 }
 
