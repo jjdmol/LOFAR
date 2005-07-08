@@ -1570,10 +1570,13 @@ dyn_string splitDatapointPath(string newDatapoint)
 
 
 //////////////////////////////////////////////////////////////////////////////////
-//
-// FunctionName: ProgressBar
-// Function    : display
+// Function: progressBar
+//           With this function a progress bar can be made. The progress is shown
+//           horizontal and is going from the left to the right.
+//           [0                                  100%]
 // 
+//Input: 1. maximum value (range)== 100%
+//       2. current value to show in the progress bar.
 ///////////////////////////////////////////////////////////////////////////////////
 void progressBar(float Maximum, float value)
 {
@@ -1588,7 +1591,7 @@ void progressBar(float Maximum, float value)
 	
   setValue("progressBar", "scale", value/Maximum, 1.0);
   
-  if (Maximum==value)
+  if (Maximum>=value)
   {
     delay(0,200);
     setValue("progressBar", "visible", FALSE);

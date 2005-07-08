@@ -1063,36 +1063,6 @@ void NavConfigTrendFillDpeSelection(string datapoint)
 }
 
 
-//////////////////////////////////////////////////////////////////////////////////
-// Function: ProgressBar
-//           With this function a progress bar can be made. The progress is shown
-//           horizontal and is going from the left to the right.
-//           [0                                  100%]
-// 
-//Input: 1. maximum value (range)== 100%
-//       2. current value to show in the progress bar.
-///////////////////////////////////////////////////////////////////////////////////
-void ProgressBar(float Maximum, float value)
-{
-  float Minimum = 0;
-  int waarde;
-  float positie;
-	if (value>Minimum)
-	{
-    setValue("bar", "visible", TRUE);
-    setValue("bar_border", "visible", TRUE);
-  }
-	
-  setValue("bar", "scale", value/Maximum, 1.0);
-  
-  if (value>=Maximum)
-  {
-    delay(0,200);
-    setValue("bar", "visible", FALSE);
-    setValue("bar_border", "visible", FALSE);
-  }
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
@@ -1136,7 +1106,37 @@ void jump2StationSubrackRCU()
   }
 }
 */
-
+//////////////////////////////////////////////////////////////////////////////////
+// Function: ProgressBar
+//           With this function a progress bar can be made. The progress is shown
+//           horizontal and is going from the left to the right.
+//           [0                                  100%]
+// 
+//Input: 1. maximum value (range)== 100%
+//       2. current value to show in the progress bar.
+///////////////////////////////////////////////////////////////////////////////////
+/*
+void ProgressBar(float Maximum, float value)
+{
+  float Minimum = 0;
+  int waarde;
+  float positie;
+	if (value>Minimum)
+	{
+    setValue("bar", "visible", TRUE);
+    setValue("bar_border", "visible", TRUE);
+  }
+	
+  setValue("bar", "scale", value/Maximum, 1.0);
+  
+  if (value>=Maximum)
+  {
+    delay(0,200);
+    setValue("bar", "visible", FALSE);
+    setValue("bar_border", "visible", FALSE);
+  }
+}
+*/
 /*
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: jump2Station
