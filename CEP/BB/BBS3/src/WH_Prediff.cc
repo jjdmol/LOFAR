@@ -91,7 +91,7 @@ void WH_Prediff::process()
   DH_Prediff* dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
   //  dhRes->clearData();
 
-  KeyValueMap args;
+  ParameterSet args;
   vector<int> ant;
   vector<string> pNames;
   vector<int> peelSrcs;
@@ -205,7 +205,7 @@ void WH_Prediff::dump()
   LOG_TRACE_RTTI("WH_Prediff process()");
 }
 
-Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args, 
+Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args, 
 				    const vector<int>& antNrs, bool& isNew)
 {
   PrediffMap::iterator iter;
@@ -218,18 +218,18 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
   else
   {
     // Create a Prediffer object
-    string msName = args.getString("MSName", "empty");
-    string meqModel = args.getString("meqTableName", "meqmodel");
-    string skyModel = args.getString("skyTableName", "skymodel");
-    string dbType = args.getString("DBType", "postgres");
-    string dbName = args.getString("DBName", "test");
-    string dbHost = args.getString("DBHost", "dop50.astron.nl");
-    string dbPwd = args.getString("DBPwd", "");
-    int dbMasterPort = args.getInt("DBMasterPort", 13157); //random port number
+    string msName = args.getString("MSName");
+    string meqModel = args.getString("meqTableName");
+    string skyModel = args.getString("skyTableName");
+    string dbType = args.getString("DBType");
+    string dbName = args.getString("DBName");
+    string dbHost = args.getString("DBHost");
+    string dbPwd = args.getString("DBPwd");
+    int dbMasterPort = args.getInt32("DBMasterPort");
     int dbMyPort = dbMasterPort + id;
 
-    string modelType = args.getString("modelType", "LOFAR.RI");
-    bool calcUVW = args.getBool("calcUVW", false);
+    string modelType = args.getString("modelType");
+    bool calcUVW = args.getBool("calcUVW");
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
     Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
@@ -269,26 +269,20 @@ void WH_Prediff::readWorkOrder()
   wo->updateDB(*conn);
 }
 
-void WH_Prediff::getSrcGrp (const KeyValueMap& args,
+void WH_Prediff::getSrcGrp (const ParameterSet& args,
 			    vector<vector<int> >& srcgrp) const
 {
   srcgrp.resize (0);
-  KeyValueMap::const_iterator grpf = args.find("sourceGroups");
-  if (grpf != args.end()) {
-    const KeyValue& grpval = grpf->second;
-    // The keyword is given.
-    // The value should be a vector.
-    // Process the vector if not empty.
-    const vector<KeyValue>& sgval = grpval.getVector();
-    ASSERT (sgval.size() > 0);
-    // Please note that a specification of [1,2,3] is the same as
-    // [[1],[2],[3]]. Both result in 3 groups of 1 source.
-    srcgrp.reserve (sgval.size());
-    for (vector<KeyValue>::const_iterator iter = sgval.begin();
-	 iter != sgval.end();
-	 ++iter)
-    {
-      srcgrp.push_back (iter->getVecInt());
+  if (args.isDefined("sourceGroups")) {
+    vector<string> groupVectors = args.getStringVector("sourceGroups");
+    // each string in this vector holds a vector of source numbers (integers) in the format srcs=[0,1,2]
+    vector<string>::iterator git = groupVectors.begin();
+    for (; git != groupVectors.end(); git++) {
+      ParameterSet srcVectorSet;
+      // read the parameterSet from the string
+      srcVectorSet.adoptBuffer(*git);
+      // get the sources in this group
+      srcgrp.push_back(srcVectorSet.getInt32Vector("srcs"));
     }
   }
 }

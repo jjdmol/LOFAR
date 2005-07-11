@@ -31,7 +31,7 @@
 
 #include <Common/lofar_vector.h>
 #include <tinyCEP/WorkHolder.h>
-#include <Common/KeyValueMap.h>
+#include <APS/ParameterSet.h>
 #include <MNS/ParmTable.h>
 
 #include <Common/lofar_list.h>
@@ -42,11 +42,11 @@ namespace LOFAR
 // @{
 
 class StrategyController;
+using ACC::APS::ParameterSet; 
 
 /**
  This class implements the controller of the blackboard
 */
-
 class WH_Control: public LOFAR::WorkHolder
 {
 
@@ -56,7 +56,7 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   explicit WH_Control (const string& name, int nrPrediffers,
-		       const KeyValueMap& args);
+		       const ParameterSet& args);
 
   virtual ~WH_Control();
 
@@ -65,7 +65,7 @@ public:
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int nrPrediffers,
-				const KeyValueMap& args);
+				const ParameterSet& args);
 
   /// Preprocess
   virtual void preprocess();
@@ -92,7 +92,7 @@ private:
   void createStrategyControllers();
 
   int                      itsNrPrediffers;  // Number of available prediffers
-  KeyValueMap              itsArgs;          // Input parameters
+  ParameterSet             itsArgs;          // Input parameters
   ControllerList           itsControllers;   // All StrategyControllers   
   ControllerList::iterator itsCtrlIter;      // Iterator indicating the currently
                                              // active strategy controller.

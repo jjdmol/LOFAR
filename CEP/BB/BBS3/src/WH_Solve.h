@@ -28,7 +28,6 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <Common/KeyValueMap.h>
 
 namespace LOFAR
 {

@@ -27,7 +27,6 @@
 
 #include <BBS3/DH_WOSolve.h>
 #include <PL/TPersistentObject.h>
-#include <Common/KeyValueMap.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/LofarLogger.h>

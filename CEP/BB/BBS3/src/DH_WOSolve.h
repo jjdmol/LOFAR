@@ -44,8 +44,6 @@ namespace LOFAR
 /**
    This class is a DataHolder which contains the work orders for the Solver.
 */
- //# Forward Declarations
-class KeyValueMap;
 
 class DH_WOSolve: public DH_PL
 {

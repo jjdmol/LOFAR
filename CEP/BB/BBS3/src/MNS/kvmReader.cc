@@ -31,11 +31,8 @@
 
 using namespace LOFAR;
 using std::cout;
-using std::cin;
 using std::cerr;
 using std::endl;
-
-string dbHost, dbName, dbType, dbUser, tableName;
 
 void printValue(const KeyValueMap& kvm, char* keylist[], int noKeysLeft) {
   if (!kvm.isDefined(keylist[0])) {

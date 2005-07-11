@@ -27,7 +27,7 @@
 
 #include <BBS3/DH_WOPrediff.h>
 #include <PL/TPersistentObject.h>
-#include <Common/KeyValueMap.h>
+#include <APS/ParameterSet.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/LofarLogger.h>
@@ -212,14 +212,16 @@ void DH_WOPrediff::setModelType(const string& type)
   strcpy(ptr, type.c_str());
 }
 
-void DH_WOPrediff::setVarData(const KeyValueMap& predArgs,
+void DH_WOPrediff::setVarData(const ParameterSet& predArgs,
 			      vector<int>& antNrs,
 			      vector<string>& pNames,
 			      vector<int>& peelSrcs)
 {
   BlobOStream& bos = createExtraBlob();
   // Put prediffer arguments into extra blob
-  bos << predArgs;
+  string buffer;
+  predArgs.writeBuffer(buffer);
+  bos << buffer;
 
   // Put parameter names into extra blob
   bos.putStart("antNrs", 1);
@@ -256,7 +258,7 @@ void DH_WOPrediff::setVarData(const KeyValueMap& predArgs,
 
 }
 
-bool DH_WOPrediff::getVarData(KeyValueMap& predArgs,
+bool DH_WOPrediff::getVarData(ParameterSet& predArgs,
 			      vector<int>& antNrs,
 			      vector<string>& pNames,
 			      vector<int>& peelSrcs)
@@ -270,7 +272,10 @@ bool DH_WOPrediff::getVarData(KeyValueMap& predArgs,
   else
   {
     // Get prediffer arguments
-    bis >> predArgs;
+    string buffer;
+    bis >> buffer;
+    predArgs.clear();
+    predArgs.adoptBuffer(buffer);
 
     // Get antenna numbers.
     bis.getStart("antNrs");
@@ -334,25 +339,25 @@ void DH_WOPrediff::dump()
   cout << "Update parameters = " << getUpdateParms() << endl;
   cout << "Solution id = " << getSolutionID() << endl;
 
-  KeyValueMap sArguments;
+  ParameterSet sArguments;
   vector<int> antNrs;
   vector<string> pNames;
   vector<int> srcs;
   if (getVarData(sArguments, antNrs, pNames, srcs))
   { 
-    cout << "MS name = " << sArguments.getString ("MSName", "notfound") 
+    cout << "MS name = " << sArguments.getString ("MSName")
 	 << endl;
-    cout << "Database host = " << sArguments.getString ("DBHost", "notfound") 
+    cout << "Database host = " << sArguments.getString ("DBHost")
 	 << endl;
-    cout << "Database type = " << sArguments.getString ("DBType", "notfound") 
+    cout << "Database type = " << sArguments.getString ("DBType")
 	 << endl;
-    cout << "Database name = " << sArguments.getString ("DBName", "notfound")
+    cout << "Database name = " << sArguments.getString ("DBName")
 	 << endl;
-    cout << "Database password = " << sArguments.getString ("DBPwd", "notfound")
+    cout << "Database password = " << sArguments.getString ("DBPwd")
 	 << endl;
-    cout << "Meq table name = " << sArguments.getString ("meqTableName", "notfound")
+    cout << "Meq table name = " << sArguments.getString ("meqTableName")
 	 << endl;
-    cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound")
+    cout << "Sky table name = " << sArguments.getString ("skyTableName")
 	 << endl;
     cout << "Antenna numbers : [ " ;
     for (unsigned int i = 0; i < antNrs.size(); i++)

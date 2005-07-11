@@ -137,9 +137,9 @@ BBSTestLogger.cc
 
 
 #bin_PROGRAMS = BlackBoardDemo fillsqldb
-bin_PROGRAMS = BBS3 parmdb kvmReader
+bin_PROGRAMS = BBS3 parmdb psReader
 
-kvmReader_SOURCES = MNS/kvmReader.cc
+psReader_SOURCES = ParameterSetReader.cc
 
 parmdb_SOURCES = MNS/parmdb.cc
 parmdb_LDADD = libbbs3.la

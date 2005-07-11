@@ -24,44 +24,40 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <Common/LofarLogger.h>
 #include <BBSTestLogger.h>
 #include <sstream>
 
 namespace LOFAR{
 
-  ofstream* BBSTestLogger::theirOutFile = 0;
+int BBSTestLogger::theirRank = -1;
 
   BBSTestLogger::BBSTestLogger() {
-    getLogFile();    
+    init();
   }
-
-  ofstream& BBSTestLogger::getLogFile() {
-    if (theirOutFile == 0) {
-      string oFileName = "BBSTest.out";
-#ifdef HAVE_MPI
-      int isInitialized = 0;
-      MPI_Initialized(&isInitialized); 
-      // this class can also be used by parmdb (which can be built with HAVE_MPI)
-      // parmdb does not call MPI_INIT, so we can't get our rank
-      if (isInitialized) {
-	std::stringstream rankss;
-	rankss << TH_MPI::getCurrentRank();
-	oFileName = "BBSTest." + rankss.str() + ".out";
-      }
-#endif
-      theirOutFile = new ofstream(oFileName.c_str(), ofstream::trunc);
-    }
-    return *theirOutFile;
-  }    
 
   BBSTestLogger::~BBSTestLogger() {
   }
 
   void BBSTestLogger::log(const string& name, NSTimer& timer)
-  { getLogFile() << "BBSTest: timer "<<name; timer.print(getLogFile()); getLogFile()<<endl;}
+  { 
+    std::ostringstream ss;
+    ss << "timer "<<name;
+    timer.print(ss);
+    doLog(ss.str());
+  }
   void BBSTestLogger::log(const string& name, const MeqMatrix& mat)
-  { getLogFile() << "BBSTest: parm "<<name<<" "<<mat<<endl;}
+  { 
+    std::ostringstream ss;
+    ss << "parm " << name << " " << mat;
+    doLog(ss.str());
+  }
   void BBSTestLogger::log(const string& text)
-  { getLogFile() << "BBSTest: "<<text<<endl;}
+  { doLog(text);}
+  void BBSTestLogger::doLog(const string& text)
+  { 
+    init();
+    LOG_INFO_STR("BBSTest rank " << theirRank << ": " << text); 
+  }
 
 } // namespace LOFAR

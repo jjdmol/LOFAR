@@ -28,7 +28,6 @@
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/ParmData.h>
 #include <PL/TPersistentObject.h>
-#include <Common/KeyValueMap.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/LofarLogger.h>
