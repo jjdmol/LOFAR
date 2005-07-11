@@ -101,7 +101,7 @@ private:
   casa::ColumnsIndex*          itsInitIndex;
   casa::RecordFieldPtr<casa::String> itsInitIndexName;
 
-  string itsTableName;
+  string itsAIPSTableName;
 
 };
 

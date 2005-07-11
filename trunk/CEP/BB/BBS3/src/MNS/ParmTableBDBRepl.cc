@@ -55,11 +55,11 @@ namespace LOFAR {
     : ParmTableBDB(userName, tableName),
       itsIsMaster(isMaster)
   {
-    cout<<"creating replicating bdb";
+    LOG_TRACE_FLOW("creating replicating bdb");
     if (isMaster){
-      cout<<" master"<<endl;
+      LOG_TRACE_FLOW(" master");
     } else {
-      cout<<" client"<<endl;
+      LOG_TRACE_FLOW(" client");
     }
     string rank = "0";
 #ifdef HAVE_MPI    
@@ -71,7 +71,7 @@ namespace LOFAR {
       stringstream rankss;
       rankss << TH_MPI::getCurrentRank();
       rankss >> rank;
-      cout << "BDBRepl rank " << TH_MPI::getCurrentRank() << " -> " << rank << endl;
+      LOG_TRACE_FLOW_STR("BDBRepl rank " << TH_MPI::getCurrentRank() << " -> " << rank);
     }
 #endif    
     if (isMaster) {
@@ -79,7 +79,6 @@ namespace LOFAR {
     }
     if (theirReplicator==0) {
       string envName = "/tmp/" + userName + "." + rank + ".BBS3.ParmDB";
-      cout<<"Creating environment in "<<envName<<endl;
       
       mkdir(envName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
       theirReplicator = new BDBReplicator(envName, 
@@ -91,14 +90,14 @@ namespace LOFAR {
     }
     theirReplicatorRefCount ++;
 
-    itsTableName = tableName + ".bdb";
+    itsBDBTableName = tableName + ".bdb";
     delete itsDb;
     itsDb = 0;
   }
 
   ParmTableBDBRepl::~ParmTableBDBRepl()
   {
-    cout<<"closing database"<<endl;
+    LOG_TRACE_FLOW("closing database");
     if (itsDb != 0) {
       itsDb->sync(0);
       itsDb->close(0);
@@ -111,15 +110,15 @@ namespace LOFAR {
       delete theirReplicator;
       theirReplicator = 0;
     }
-    cout<<"database closed"<<endl;
+    LOG_TRACE_FLOW("database closed");
   }
 
   void ParmTableBDBRepl::connect(){
-    cout<<"connecting bdbrepl"<<endl;
+    LOG_TRACE_FLOW("connecting bdbrepl");
     theirReplicator->startReplication();
-    cout<<"replication started"<<endl;
+    LOG_TRACE_FLOW("replication started");
     DbEnv* myDbEnv = theirReplicator->getDbEnv();
-    cout<<"environment: "<<myDbEnv<<endl;
+    LOG_TRACE_FLOW_STR("environment: "<<myDbEnv);
     itsDb = new Db(myDbEnv, DB_CXX_NO_EXCEPTIONS);
 
     u_int32_t oFlags;
@@ -130,18 +129,18 @@ namespace LOFAR {
     }
     itsDb->set_flags(DB_DUPSORT);
     //  if (itsDb->open(transid, filename, database, dbtype, flags, mode) !=0) {
-    cout<<"opening replicated database "<<itsTableName<<endl;
+    LOG_TRACE_FLOW_STR("opening replicated database "<<itsBDBTableName);
     int ret = 1;
     while (ret != 0){
-      //ret = itsDb->open(NULL, itsTableName.c_str(), itsTableName.c_str(), DB_BTREE, oFlags, 0);
+      //ret = itsDb->open(NULL, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
       DbTxn* myTxn = 0;
       myDbEnv->txn_begin(NULL, &myTxn, 0);
-      ret = itsDb->open(myTxn, itsTableName.c_str(), itsTableName.c_str(), DB_BTREE, oFlags, 0);
+      ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
       if (ret != 0 ) {
 	itsDb->close(0);
 	char *homeName;
 	myDbEnv->get_home((const char**)&homeName);
-	cerr<<"BDBRepl while opening database "<<itsTableName<<" in "<<homeName<<": "<< myDbEnv->strerror(ret)<<endl;
+	cerr<<"BDBRepl while opening database "<<itsBDBTableName<<" in "<<homeName<<": "<< myDbEnv->strerror(ret)<<endl;
       }
       myTxn->commit(0);
     }
@@ -179,11 +178,11 @@ namespace LOFAR {
 
     string fullTableName = envName + "/" + tableName + ".bdb";
     // Do the same as the connect but now with the flag DB_CREATE
-    cout<<"Creating database: " << fullTableName<<endl;
+    LOG_TRACE_FLOW_STR("Creating database: " << fullTableName);
     u_int32_t oFlags = DB_CREATE;
     Db tmpDb(NULL, 0);
     tmpDb.set_flags(DB_DUPSORT);
-    cout<<"ready to open database"<<endl;
+    LOG_TRACE_FLOW("ready to open database");
     if (tmpDb.open(NULL, fullTableName.c_str(), fullTableName.c_str(), DB_BTREE, oFlags, 0) != 0 ) {
       tmpDb.close(0);
       ASSERTSTR(false, "could not create BDBRepl database");    

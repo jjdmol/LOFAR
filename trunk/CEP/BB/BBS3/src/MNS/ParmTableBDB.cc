@@ -40,9 +40,10 @@ using namespace casa;
 namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
-    itsTableName ("/tmp/" + userName + "." + tableName + ".bdb")
+    itsBDBTableName ("/tmp/" + userName + "." + tableName + ".bdb")
   {
-    itsDb = new Db(NULL, 0);
+    itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
+    itsDb = new Db(itsDbEnv, 0);
   }
 
   ParmTableBDB::~ParmTableBDB()
@@ -59,7 +60,7 @@ namespace LOFAR {
     u_int32_t oFlags = 0;
     itsDb->set_flags(DB_DUPSORT);
     //  if (itsDb->open(transid, filename, database, dbtype, flags, mode) !=0) {
-    if (itsDb->open(NULL, itsTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+    if (itsDb->open(NULL, itsBDBTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
       itsDb->close(0);
       ASSERTSTR(false, "no connection to database");    
     }
@@ -116,10 +117,13 @@ namespace LOFAR {
 
     MPHKey key(parmName);
     MPHValue value;  
+    value.set_flags(DB_DBT_MALLOC);
   
     string name = parmName;
     while (true) {
-      if (itsDb->get(NULL, &key, &value, 0) != 0) {
+      int ret = itsDb->get(NULL, &key, &value, 0);
+      if (ret != 0) {
+	LOG_WARN_STR("database error while getting initial parms"<<itsDbEnv->strerror(ret));
 	// key wasn't found or there was an error
 	string::size_type idx = name.rfind ('.');
 	// Exit loop if no more name parts.
@@ -185,7 +189,7 @@ namespace LOFAR {
     MPHKey key(parmName, polc.domain());
     MeqParmHolder mph(parmName, polc);
     MPHValue value(mph);
-    itsDb->put(NULL, &key, &value, 0);
+    itsDb->put(NULL, &key, &value, DB_AUTO_COMMIT);
   }
 
   void ParmTableBDB::putNewDefCoeff (const string& parmName,
@@ -204,6 +208,7 @@ namespace LOFAR {
     // right now: search on name only and add MPH with correct domain
     MPHKey key(parmName);
     MPHValue value;
+    value.set_flags(DB_DBT_MALLOC);
     MeqDomain pdomain;
     Dbc* cursorp;
     itsDb->cursor(NULL, &cursorp, 0);
@@ -248,7 +253,7 @@ namespace LOFAR {
       nams.push_back(name);
     }
   
-    LOG_TRACE_STAT_STR("finished retreiving "<<nams.size()<<" sources from "<<itsTableName);
+    LOG_TRACE_STAT_STR("finished retreiving "<<nams.size()<<" sources from "<<itsBDBTableName);
     cursorp->close();
     return nams;
   }
