@@ -18,7 +18,7 @@ using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
-Stub_Delay::Stub_Delay (bool isInput, ACC::APS::ParameterSet pSet)
+Stub_Delay::Stub_Delay (bool isInput, const ACC::APS::ParameterSet pSet)
   : itsIsInput      (isInput),
     itsPS           (pSet),
     itsTHs          (0),

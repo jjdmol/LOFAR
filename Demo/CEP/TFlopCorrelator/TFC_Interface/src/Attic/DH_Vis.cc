@@ -18,23 +18,29 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name, short startfreq)
+DH_Vis::DH_Vis (const string& name, short startfreq, const ACC::APS::ParameterSet pSet)
 : DataHolder    (name, "DH_Vis"),
+  itsPS         (pSet),
   itsBuffer     (0),
   itsStartFreq  (startfreq), 
-  itsNPols      (2)
+  itsNPols      (2),
+  itsMatrix      (0)
 {
-   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
-   itsNStations  = myPS.getInt32("DH_CorrCube.stations");
+   itsNPols = itsPS.getInt32("DH_Vis.NPols");
+   itsNStations  = itsPS.getInt32("DH_Vis.stations");
+   itsNBaselines = itsNStations * (itsNStations - 1);
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
-    itsBuffer(0)
-{
-  itsNPols = that.itsNPols;
-  itsNStations = that.itsNStations;
-}
+    itsPS     (that.itsPS),
+    itsBuffer (0),
+    itsStartFreq (that.itsStartFreq),
+    itsNStations (that.itsNStations),
+    itsNBaselines(that.itsNBaselines),
+    itsNPols  (that.itsNPols),
+    itsMatrix      (0)
+{}
 
 DH_Vis::~DH_Vis()
 {
@@ -47,18 +53,25 @@ DataHolder* DH_Vis::clone() const
 
 void DH_Vis::init()
 {
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsNStations * itsNStations * itsNFChannels * itsNPols*itsNPols;
-  addField("Buffer", BlobField<fcomplex>(1, itsBufSize));
+  // Determine the size of the buffer.
+  itsBufSize = itsNFChannels * itsNBaselines * itsNPols*itsNPols;
+  addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();  // calls fillDataPointers
-  //itsBuffer = getData<fcomplex> ("Buffer");
-  memset(itsBuffer, 0, itsBufSize*sizeof(fcomplex)); 
 
+  memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
+
+  vector<DimDef> vdd;
+  vdd.push_back(DimDef("Freq", itsNFChannels));
+  vdd.push_back(DimDef("Baseline", itsNBaselines));
+  vdd.push_back(DimDef("Polarisation", itsNPols));
+  
+  itsMatrix = new RectMatrix<BufferType> (vdd);
+  itsMatrix->setBuffer(itsBuffer, itsBufSize);
 }
 
-void DH_Vis::fillDataPointers() {
-  itsBuffer = getData<fcomplex> ("Buffer");
-
+void DH_Vis::fillDataPointers() 
+{
+  itsBuffer = getData<BufferType> ("Buffer");
 }
 
 

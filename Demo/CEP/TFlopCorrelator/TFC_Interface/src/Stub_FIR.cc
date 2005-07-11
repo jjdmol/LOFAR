@@ -16,13 +16,13 @@ using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
-  Stub_FIR::Stub_FIR (bool stubOnServer)
+  Stub_FIR::Stub_FIR (bool stubOnServer, const ACC::APS::ParameterSet pSet)
     : itsStubOnServer (stubOnServer),
+      itsPS           (pSet),
       itsTHs          (0),
       itsConnections  (0)
   {
-    itsPS = new ACC::APS::ParameterSet("TFlopCorrelator.cfg");
-    itsNFIRF     = itsPS->getInt32("NFIRF");  // number of SubBand filters in the application
+    itsNFIRF     = itsPS.getInt32("NFIRF");  // number of SubBand filters in the application
     ASSERTSTR(itsNFIRF >= 0, "Number of subband filters must be greater than 0");
     itsTHs = new TH_Socket*[itsNFIRF];
     itsConnections = new Connection*[itsNFIRF];

@@ -43,19 +43,9 @@ public:
   /// Get access to the Buffer in the DataPacket.
   const u16complex* getBuffer() const;
 
-  /// return pointer to array containing time/pol series for specified freqchannel and station 
-  /// to be used in correlator inner loop
+  const unsigned int getBufSize() const;
 
-  //todo: define usefull accessors 
-  //BufferType* getBufferTimePolSeries(int channel, int station);
-
-  /// get/set completely specified element in the buffer
-  BufferType* getBufferElement(int channel, int station, int sample, int polarisation);
-  //void setBufferElement(int channel, int station, int sample, int polarisation, BufferType* value); 
-
-   const unsigned int getBufSize() const;
-
-   RectMatrix<BufferType>& getDataMatrix() const;
+  RectMatrix<BufferType>& getDataMatrix() const;
 
 private:
   /// Forbid assignment.
