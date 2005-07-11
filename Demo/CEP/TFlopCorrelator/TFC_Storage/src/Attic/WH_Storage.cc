@@ -43,7 +43,7 @@ WH_Storage::WH_Storage(const string& name,
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
     sprintf(str, "DH_in_%d", i);
-    getDataManager().addInDataHolder(i, new DH_Vis(str, i)); // set correct
+    getDataManager().addInDataHolder(i, new DH_Vis(str, i, pset));// set correct
   }                                                          // startfreq?
 
   // create MSwriter object
