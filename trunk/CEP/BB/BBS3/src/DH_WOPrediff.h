@@ -30,7 +30,7 @@
 // DataHolder containing Prediffer workorders
 
 #include <Common/lofar_vector.h>
-
+#include <APS/ParameterSet.h>
 #include <TransportPL/DH_PL.h>
 #include <TransportPL/PO_DH_PL.h>
 #include <BBS3/Quality.h>
@@ -38,14 +38,14 @@
 namespace LOFAR
 {
 
+using ACC::APS::ParameterSet;
+
 // \addtogroup BBS3
 // @{
 
 /**
    This class is a DataHolder which contains the work orders.
 */
- //# Forward Declarations
-class KeyValueMap;
 
 class DH_WOPrediff: public DH_PL
 {
@@ -127,11 +127,11 @@ public:
   int getSolutionID() const;
   void setSolutionID(int id);
 
-  void setVarData(const KeyValueMap& predArgs,
+  void setVarData(const ParameterSet& predArgs,
 		  vector<int>& antNrs,
 		  vector<string>& pNames,
 		  vector<int>& peelSrcs);
-  bool getVarData(KeyValueMap& predArgs,
+  bool getVarData(ParameterSet& predArgs,
 		  vector<int>& antNrs,
 		  vector<string>& pNames,
 		  vector<int>& peelSrcs);

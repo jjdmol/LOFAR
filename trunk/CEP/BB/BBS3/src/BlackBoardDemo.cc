@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
+#include <APS/ParameterSet.h>
 #include <CEPFrame/Step.h>
 #include <tinyCEP/Profiler.h>
 #include <Transport/TH_MPI.h>
@@ -70,7 +71,7 @@ BlackBoardDemo::~BlackBoardDemo()
    Define function for the BlackBoardDemo simulation. It defines the steps that 
    process part of the data.
  */
-void BlackBoardDemo::define(const KeyValueMap& params)
+void BlackBoardDemo::define(const KeyValueMap& params_depr)
 {
   // Free any memory previously allocated
   undefine();
@@ -84,10 +85,10 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   topComposite.setCurAppl(0);
 
   // Get control properties
-  KeyValueMap ctrlParams = (const_cast<KeyValueMap&>(params))["CTRLparams"].getValueMap();
+  ACC::APS::ParameterSet ctrlParams = itsParamSet.makeSubset("CTRLparams.");
 
-  int itsNumberPD = params.getInt("nrPrediffers", 1);
-  string bbDBName = params.getString("BBDBname", "test");
+  int itsNumberPD = itsParamSet.getInt32("nrPrediffers");
+  string bbDBName = itsParamSet.getString("BBDBname"); 
 
   TH_PL::useDatabase(bbDBName); 
 

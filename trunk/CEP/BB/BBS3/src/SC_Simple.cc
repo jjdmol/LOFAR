@@ -24,7 +24,6 @@
 
 #include <BBS3/SC_Simple.h>
 #include <Common/LofarLogger.h>
-#include <Common/KeyValueMap.h>
 #include <TransportPL/DH_PL.h>
 #include <BBS3/DH_Solution.h>
 #include <BBS3/DH_WOPrediff.h>
@@ -35,9 +34,9 @@ namespace LOFAR
 
 SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn, 
 		     Connection* outWOSolveConn, int nrPrediffers,
-		     const KeyValueMap& args)
+		     const ParameterSet& args)
   : StrategyController(id, inSolConn, outWOPDConn, outWOSolveConn, 
-		       nrPrediffers, args.getInt("DBMasterPort", 13157)),
+		       nrPrediffers, args.getInt32("MSDBparams.DBMasterPort")), 
     itsFirstCall      (true),
     itsPrevWOID       (0),
     itsArgs           (args),
@@ -49,20 +48,20 @@ SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn,
     itsStartFreq      (0),
     itsFreqLength     (0)
 {
-  itsNrIterations = itsArgs.getInt("nrIterations", 0);
-  KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
-  string dbType = msParams.getString("DBType", "notfound");
-  string meqTableName = msParams.getString("meqTableName", "notfound");
-  string skyTableName = msParams.getString("skyTableName", "notfound");
-  string dbName = msParams.getString("DBName", "notfound");
-  string dbPwd = msParams.getString("DBPwd", "");
-  string dbHost = msParams.getString("DBHost", "");
+  itsNrIterations = itsArgs.getInt32("nrIterations");
+  ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
+  string dbType = msParams.getString("DBType");
+  string meqTableName = msParams.getString("meqTableName");
+  string skyTableName = msParams.getString("skyTableName");
+  string dbName = msParams.getString("DBName");
+  string dbPwd = msParams.getString("DBPwd");
+  string dbHost = msParams.getString("DBHost");
 
-  itsControlParmUpd = itsArgs.getBool ("controlParmUpdate", false);
-  itsStartTime = itsArgs.getFloat ("startTime", 0);
-  itsTimeLength = itsArgs.getFloat ("timeLength", 0);
-  itsStartFreq = itsArgs.getFloat ("startFreq", 0);
-  itsFreqLength = itsArgs.getFloat ("freqLength", 0);
+  itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
+  itsStartTime = itsArgs.getFloat ("startTime");
+  itsTimeLength = itsArgs.getFloat ("timeLength");
+  itsStartFreq = itsArgs.getFloat ("startFreq");
+  itsFreqLength = itsArgs.getFloat ("freqLength");
 }
 
 SC_Simple::~SC_Simple()
@@ -83,7 +82,7 @@ bool SC_Simple::execute()
     WOPD->setSubtractSources(false);
     WOPD->setUpdateParms(false);
     WOSolve->setNewDomain(true);
-    itsCurStartTime = itsArgs.getFloat ("startTime", 0);
+    itsCurStartTime = itsArgs.getFloat ("startTime");
   }
   else
   {
@@ -118,25 +117,28 @@ bool SC_Simple::execute()
     if (fmod(itsCurIter, itsNrIterations) == 0)
     {
       nextInter = true;
-      itsCurStartTime += itsArgs.getFloat ("timeLength", 10);
+      itsCurStartTime += itsArgs.getFloat ("timeLength");
     }
   }
 
   // Set prediffer workorder data
   WOPD->setStatus(DH_WOPrediff::New);
   WOPD->setKSType("Prediff1");
-  WOPD->setStartFreq (itsArgs.getFloat ("startFreq", 0));
-  WOPD->setFreqLength (itsArgs.getFloat ("freqLength", 0));
+  WOPD->setStartFreq (itsArgs.getFloat ("startFreq"));
+  WOPD->setFreqLength (itsArgs.getFloat ("freqLength"));
   WOPD->setStartTime (itsCurStartTime);
-  float timeLength = itsArgs.getFloat ("timeLength", 10);
+  float timeLength = itsArgs.getFloat ("timeLength");
   WOPD->setTimeLength (timeLength);
-  WOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
-  WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr", true));
-  WOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
-  KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
-  vector<int> ant = (const_cast<KeyValueMap&>(itsArgs))["antennas"].getVecInt();
-  vector<string> pNames = (const_cast<KeyValueMap&>(itsArgs))["solvableParams"].getVecString();
-  vector<int> srcs = (const_cast<KeyValueMap&>(itsArgs))["sources"].getVecInt();
+  WOPD->setModelType (itsArgs.getString ("modelType"));
+  WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr"));
+  WOPD->setCalcUVW (itsArgs.getBool ("calcUVW"));
+  ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
+  vector<int> ant = itsArgs.getInt32Vector("antennas");
+  vector<string> pNames = itsArgs.getStringVector("solvableParams");
+  vector<int> srcs = itsArgs.getInt32Vector("sources");
+  // the prediffer needs to know the modelType too
+  msParams["modelType"] = itsArgs.getString("modelType");
+  msParams["calcUVW"] = itsArgs.getString("calcUVW");
   WOPD->setVarData (msParams, ant, pNames, srcs);
 
   WOPD->setNewWorkOrderID();
@@ -147,7 +149,7 @@ bool SC_Simple::execute()
   // Set solver workorder data  
   WOSolve->setStatus(DH_WOSolve::New);
   WOSolve->setKSType("Solver");
-  WOSolve->setUseSVD (itsArgs.getBool ("useSVD", false));
+  WOSolve->setUseSVD (itsArgs.getBool ("useSVD"));
 
   WOSolve->setNewWorkOrderID();
   itsPrevWOID = WOSolve->getWorkOrderID();  // Remember the issued workorder id
@@ -182,7 +184,7 @@ bool SC_Simple::execute()
 
 void SC_Simple::postprocess()
 {
-  bool writeParms = itsArgs.getBool("writeParms", false);
+  bool writeParms = itsArgs.getBool("writeParms");
   if (writeParms)
   {
     readSolution();

@@ -31,6 +31,7 @@
 // This is a class that writes BBSTest loglines to the correct file
 
 #include <Common/lofar_string.h>
+#include <Transport/TH_MPI.h>
 #include <fstream>
 #include <MNS/MeqMatrix.h>
 #include <Common/Timer.h>
@@ -53,11 +54,20 @@ public:
   static void log(const string& name, const MeqMatrix& mat);
   static void log(const string& text);
 
-  static ofstream& getLogFile();
-
 private:
-  static ofstream* theirOutFile;
+  static void init();
+  
+  static int theirRank;
+  static void doLog(const string& text);
 };
+
+inline void BBSTestLogger::init(){
+#ifdef HAVE_MPI
+  if (theirRank == -1) {
+    theirRank = TH_MPI::getCurrentRank();
+  }
+#endif
+}
 
 // @}
 

@@ -44,7 +44,7 @@ string i2str(int i) {
 }
 
   WH_Control::WH_Control (const string& name, int nrPrediffers,
-			const KeyValueMap& args)
+			  const ParameterSet& args)
   : WorkHolder     (3, 3, name,"WH_Control"),
     itsNrPrediffers(nrPrediffers),
     itsArgs        (args),
@@ -78,7 +78,7 @@ WH_Control::~WH_Control()
 }
 
 WorkHolder* WH_Control::construct (const string& name, int nrPrediffers,
-				    const KeyValueMap& args)
+				    const ParameterSet& args)
 {
   return new WH_Control (name, nrPrediffers,args);
 }
@@ -86,23 +86,23 @@ WorkHolder* WH_Control::construct (const string& name, int nrPrediffers,
 void WH_Control::preprocess()
 {
   if (itsParmTable == 0) {
-    KeyValueMap sckvm = itsArgs["SC1params"].getValueMap();
-    KeyValueMap dbkvm = sckvm["MSDBparams"].getValueMap();
+    ParameterSet sckvm = itsArgs.makeSubset("SC1params.");
+    ParameterSet dbkvm = sckvm.makeSubset("MSDBparams.");
 
     char hostnameBuffer[128];
     gethostname(hostnameBuffer, 128);
     string myHostName = hostnameBuffer;
 
-    string dbtype = dbkvm.getString("DBType", "aips");
+    string dbtype = dbkvm.getString("DBType");
     if (dbtype == "bdbrepl") {
       // Create master for bdb replication
       itsParmTable = new ParmTable(dbtype,
 				   "dummy", 
-				   dbkvm.getString("DBName", "test"), 
-				   dbkvm.getString("DBPwd", ""), 
+				   dbkvm.getString("DBName"),
+				   dbkvm.getString("DBPwd"),
 				   myHostName,
-				   dbkvm.getInt("DBMasterPort", 13157), 
-				   dbkvm.getInt("DBMasterPort", 13157), 
+				   dbkvm.getInt32("DBMasterPort"),
+				   dbkvm.getInt32("DBMasterPort"),
 				   true);
     }
   }
@@ -156,15 +156,15 @@ void WH_Control::createStrategyControllers()
   Connection* inSolConn = getDataManager().getInConnection(0);
   Connection* outPDConn = getDataManager().getOutConnection(1);
   Connection* outSVConn = getDataManager().getOutConnection(2);
-  int nrStrat = itsArgs.getInt("nrStrategies", 0);
+  int nrStrat = itsArgs.getInt32("nrStrategies");
 
   for (int i=1; i<=nrStrat; i++)
   {
     // Get strategy type
     string nr = i2str(i);
-    string name = "SC" + nr + "params";
-    KeyValueMap params = (const_cast<KeyValueMap&>(itsArgs))[name].getValueMap();
-    string stratType = params.getString("strategy", "noneDefined");
+    string name = "SC" + nr + "params.";
+    ParameterSet params = itsArgs.makeSubset(name);
+    string stratType = params.getString("strategy");
     // Create StrategyController and add to list
     if (stratType == "Simple")
     {

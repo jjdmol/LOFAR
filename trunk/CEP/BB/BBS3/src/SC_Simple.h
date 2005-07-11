@@ -29,7 +29,7 @@
 //# Includes
 #include <BBS3/StrategyController.h>
 #include <Common/lofar_string.h>
-#include <Common/KeyValueMap.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -39,12 +39,14 @@ namespace LOFAR
 
 //# Forward Declarations
 
+using ACC::APS::ParameterSet;
+
 class SC_Simple : public StrategyController
 {
 public:
   SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn, 
 	    Connection* outWOSolveConn, int nrPrediffers,
-	    const KeyValueMap& args);
+	    const ParameterSet& args);
 
   virtual ~SC_Simple();
 
@@ -63,17 +65,17 @@ public:
 
   void readSolution();
 
-  bool        itsFirstCall;
-  int         itsPrevWOID;
-  KeyValueMap itsArgs;
-  int         itsNrIterations;
-  int         itsCurIter;
-  double      itsCurStartTime;
-  bool        itsControlParmUpd;    // Does this Controller update the parameters?
-  double      itsStartTime;
-  double      itsTimeLength;
-  double      itsStartFreq;
-  double      itsFreqLength;
+  bool         itsFirstCall;
+  int          itsPrevWOID;
+  ParameterSet itsArgs;
+  int          itsNrIterations;
+  int          itsCurIter;
+  double       itsCurStartTime;
+  bool         itsControlParmUpd;    // Does this Controller update the parameters?
+  double       itsStartTime;
+  double       itsTimeLength;
+  double       itsStartFreq;
+  double       itsFreqLength;
 };
 
 inline string SC_Simple::getType() const

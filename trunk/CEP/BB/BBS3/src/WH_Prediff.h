@@ -29,11 +29,12 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <Common/KeyValueMap.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
 
+using ACC::APS::ParameterSet;
 // \addtogroup BBS3
 // @{
 
@@ -76,21 +77,21 @@ class WH_Prediff : public LOFAR::WorkHolder
 
   // Create a Prediffer object or get it from the Map
   Prediffer* getPrediffer(int id, 
-			  const KeyValueMap& args, 
+			  const ParameterSet& args, 
 			  const vector<int>& antNrs,
 			  bool& isNew);
   // Read the next workorder
   void readWorkOrder();
 
   // Get the sourceGroups specification.
-  void getSrcGrp (const KeyValueMap& args, vector<vector<int> >& srcgrp) const;
+  void getSrcGrp (const ParameterSet& args, vector<vector<int> >& srcgrp) const;
 
   // Read a parameter solution
   void readSolution(int id, vector<ParmData>& solVec);
 
-  int         itsID;         // Identification number
-  KeyValueMap itsArgs;       // Arguments
-  PrediffMap  itsPrediffs;   // Map of Prediffer objects, each associated
+  int          itsID;         // Identification number
+  ParameterSet itsArgs;       // Arguments
+  PrediffMap   itsPrediffs;   // Map of Prediffer objects, each associated
   // with a strategy (controller)
 
   bool        itsFirstCall;  // Temporary!!! Needs to be done correctly for multiple strategies

@@ -124,28 +124,9 @@ int main (int argc, const char** argv)
     
     simulator.setarg (argc, argv);
 
- //    // Read the input script until eof.
-    // Remove // comments.
-    // Combine it into a single key=value command.
-    ifstream ifstr(name.c_str());
-    string keyv;
-    string str;
-    while (getline(ifstr, str)) {
-      if (str.size() > 0) {
-	// Remove possible comments.
-	string::size_type pos = str.find("//");
-	if (pos == string::npos) {
-	  keyv += str;
-	} else if (pos > 0) {
-	  keyv += str.substr(0,pos);
-	}
-      }
-    }
-    // Parse the command.
-    KeyValueMap params = KeyParser::parse (keyv);
+    ACC::APS::ParameterSet params (name.c_str());
 
-    KeyValueMap cmap(params["CTRLparams"].getValueMap()); 
-    int nrStrategies = cmap.getInt("nrStrategies", 0);
+    int nrStrategies = params.getInt32("CTRLparams.nrStrategies");
 
     // Loop over all strategies
     for (int i=1; i<=nrStrategies; i++)
@@ -153,14 +134,9 @@ int main (int argc, const char** argv)
       char nrStr[32];
       sprintf(nrStr, "%i", i);
       string name = "SC" + string(nrStr) + "params";
-      KeyValueMap smap(cmap[name].getValueMap());
       // Add the dbname if not defined.
-      KeyValueMap msdbmap(smap["MSDBparams"].getValueMap());
-      if (! msdbmap.isDefined("DBName")) {
-	msdbmap["DBName"] = usernm;
-	smap["MSDBparams"] = msdbmap;
-	cmap[name] = smap; 
-	params["CTRLparams"] = cmap;     
+      if (! params.isDefined(string("CTRLparams.")+name+".MSDBparams.DBName")) {
+	params[string("CTRLparams.")+name+".MSDBparams.DBName"] = usernm;
       }
       if (! params.isDefined("BBDBname")) {
 	params["BBDBname"] = usernm;
@@ -168,9 +144,10 @@ int main (int argc, const char** argv)
     }
     cout << params << endl;
 
-    int nrRuns = params.getInt("nrRuns", 1);
+    int nrRuns = params.getInt32("nrRuns");
 
-    simulator.baseDefine(params);
+    simulator.setParameters(params);
+    simulator.baseDefine();
     simulator.baseRun(nrRuns);
     simulator.baseQuit();
 
