@@ -99,8 +99,9 @@ namespace LOFAR {
     vector<MeqParmHolder> find (const string& parmName, 
 				const MeqDomain& domain);
 
+    DbEnv* itsDbEnv;
     Db* itsDb;
-    string itsTableName;
+    string itsBDBTableName;
     // class used as the index for the database
     class MPHKey : public Dbt {
     public:

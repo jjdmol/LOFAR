@@ -49,7 +49,7 @@ ParmTableAIPS::ParmTableAIPS (const string& userName, const string& tableName)
   itsIndexName   (itsIndex.accessKey(), "NAME"),
   itsInitIndex   (0)
 {
-  itsTableName = "/tmp/" + userName + "." + tableName + ".MEP";
+  itsAIPSTableName = "/tmp/" + userName + "." + tableName + ".MEP";
   // These things should be done in the connect
   // (just like the initialization of itsTable etc.).
   if (itsTable.keywordSet().isDefined ("DEFAULTVALUES")) {

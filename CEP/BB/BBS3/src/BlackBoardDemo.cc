@@ -31,7 +31,6 @@
 #include <Common/lofar_string.h>
 
 #include <CEPFrame/Step.h>
-#include <CEPFrame/WH_Empty.h>
 #include <tinyCEP/Profiler.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Mem.h>
