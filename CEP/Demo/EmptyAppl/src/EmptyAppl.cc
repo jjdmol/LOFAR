@@ -94,7 +94,7 @@ void EmptyAppl::define(const KeyValueMap&)
   //             targetStep.runOnNode(1, 0);
 
 
-  // Add all Step(s) to Simul
+  // Add all Step(s) to Composite
   // Example:    comp.addBlock(sourceStep);
   //             comp.addBlock(targetStep);
 
