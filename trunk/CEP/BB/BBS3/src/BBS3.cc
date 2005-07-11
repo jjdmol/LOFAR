@@ -60,7 +60,7 @@ int main (int argc, const char** argv)
     string usernm(userName);
 
 #ifdef HAVE_MPI
-    TH_MPI::init(argc, argv);
+    TH_MPI::initMPI(argc, argv);
 #endif
 
 #ifdef HAVE_MPICH
