@@ -73,7 +73,7 @@ void navConfigInitPathNames()
       g_path_temp    = "c:/temp";
 
     g_path_gnuplot = pathNames[g_path_gnuplot_index];
-    
+    g_path_pictureconverter = pathNames[g_path_pictureconverter_index];
   }
   else
   {
@@ -84,6 +84,7 @@ void navConfigInitPathNames()
       g_path_temp    = "/tmp";
       
     g_path_gnuplot = pathNames[g_path_gnuplot_index];
+    g_path_pictureconverter = pathNames[g_path_pictureconverter_index];
   }
 }
 
