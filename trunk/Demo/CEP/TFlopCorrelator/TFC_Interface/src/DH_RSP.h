@@ -17,6 +17,7 @@
 #include <APS/ParameterSet.h>
 #include <Transport/DataHolder.h>
 #include <TFC_Interface/RSPTimeStamp.h>
+#include <TFC_Interface/RectMatrix.h>
 
 namespace LOFAR
 {
@@ -24,7 +25,7 @@ namespace LOFAR
 class DH_RSP: public DataHolder
 {
 public:
-  typedef char BufferType;
+  typedef u16complex BufferType;
 
   explicit DH_RSP (const string& name,
                    const ACC::APS::ParameterSet pset);
@@ -38,13 +39,6 @@ public:
   /// Allocate the buffers.
   virtual void init();
 
-  /// accessor functions to the blob data
-  const int getStationID() const;
-  void setStationID(int);
-  const int getSeqID() const;
-  void setSeqID(int);
-  const int getBlockID() const;
-  void setBlockID(int);
   const int getFlag() const;
   void setFlag(int);
   const timestamp_t getSyncedStamp() const;
@@ -58,6 +52,8 @@ public:
   /// Reset the buffer
   void resetBuffer();
   
+  RectMatrix<BufferType>& getDataMatrix() const;
+
  private:
   /// Forbid assignment.
   DH_RSP& operator= (const DH_RSP&);
@@ -70,12 +66,16 @@ public:
   int* itsFlagPtr;
   timestamp_t* itsSyncedStampPtr;
 
-  int itsEPAheaderSize;
   int itsNoBeamlets;
+  int itsNFChannels;
+  int itsNTimes;
   int itsNoPolarisations;
   unsigned int itsBufSize;
 
   ACC::APS::ParameterSet itsPSet;
+
+  RectMatrix<BufferType>* itsMatrix;
+
 };
 
 inline DH_RSP::BufferType* DH_RSP::getBuffer()
@@ -84,38 +84,23 @@ inline DH_RSP::BufferType* DH_RSP::getBuffer()
 inline const DH_RSP::BufferType* DH_RSP::getBuffer() const
   { return itsBuffer; }
 
-inline const int DH_RSP::getStationID() const
-  { return ((int*)&itsBuffer[2])[0]; }
-
-inline const int DH_RSP::getSeqID() const
-  { return ((int*)&itsBuffer[6])[0]; }
-
-inline const int DH_RSP::getBlockID() const
-  { return ((int*)&itsBuffer[10])[0]; }
-
 inline const int DH_RSP::getFlag() const
   { return *itsFlagPtr; }
-
-inline const timestamp_t DH_RSP::getSyncedStamp() const
-  { return *itsSyncedStampPtr; }
-
-inline void DH_RSP::setStationID(int stationid)
-  { memcpy(&itsBuffer[2], &stationid, sizeof(int)); }
-
-inline void  DH_RSP::setSeqID(int seqid)
-  { memcpy(&itsBuffer[6], &seqid, sizeof(int)); }
-
-inline void  DH_RSP::setBlockID(int blockid)
-  { memcpy(&itsBuffer[10], &blockid, sizeof(int)); }
 
 inline void  DH_RSP::setFlag(int flag)
   { *itsFlagPtr = flag; }
 
+inline const timestamp_t DH_RSP::getSyncedStamp() const
+  { return *itsSyncedStampPtr; }
+
 inline void  DH_RSP::setSyncedStamp(timestamp_t stamp)
   { *itsSyncedStampPtr = stamp; }
 
-inline void DH_RSP:: resetBuffer()
+inline void DH_RSP::resetBuffer()
   { memset(itsBuffer, 0, itsBufSize); }
+
+inline RectMatrix<DH_RSP::BufferType>& DH_RSP::getDataMatrix() const 
+  { return *itsMatrix; }
 
 }
 

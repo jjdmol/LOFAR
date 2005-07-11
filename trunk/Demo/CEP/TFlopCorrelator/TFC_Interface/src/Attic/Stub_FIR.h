@@ -19,7 +19,7 @@
 namespace LOFAR {
 
 class Connection;
- class TH_Socket;
+class TH_Socket;
 
 // This class is a stub which is used to make the connection of the SubBandFilter
 // to the TflopCorrelator input section 
@@ -28,7 +28,7 @@ class Stub_FIR
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit Stub_FIR (bool onServer=false);
+  explicit Stub_FIR (bool onServer, const ACC::APS::ParameterSet pSet);
 
   ~Stub_FIR();
 
@@ -39,7 +39,7 @@ public:
 
 private:
   bool                itsStubOnServer;
-  ACC::APS::ParameterSet*  itsPS;
+  ACC::APS::ParameterSet  itsPS;
   int                 itsNFIRF;
   TH_Socket**         itsTHs;
   Connection**        itsConnections;

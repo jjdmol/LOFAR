@@ -9,16 +9,19 @@
 #ifndef TFLOPCORR_DH_VIS_H
 #define TFLOPCORR_DH_VIS_H
 
-
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
+#include <ACC/ParameterSet.h>
+#include <TFC_Interface/RectMatrix.h>
 
 namespace LOFAR
 {
 class DH_Vis: public DataHolder
 {
 public:
-  explicit DH_Vis (const string& name, short startfreq);
+  typedef u16complex BufferType;
+
+  explicit DH_Vis (const string& name, short startfreq, const LOFAR::ACC::APS::ParameterSet pSet);
 
   DH_Vis(const DH_Vis&);
 
@@ -29,55 +32,46 @@ public:
   /// Allocate the buffers.
   virtual void init();
 
-  /// Get write access to the Buffer in the DataPacket.
-  fcomplex* getBuffer();
-  /// Get read access to the Buffer in the DataPacket.
-  const fcomplex* getBuffer() const;
-
-  fcomplex* getBufferElement(int station1, int station2, int channel, int polarisation);
-  void      setBufferElement(int station1, int station2, int channel, int polarisation, fcomplex* valueptr);
+  /// Get write access to the Buffer.
+  BufferType* getBuffer();
+  /// Get read access to the Buffer.
+  const BufferType* getBuffer() const;
 
   const unsigned int getBufSize() const;
+
+  RectMatrix<BufferType>& getDataMatrix() const;
 
 private:
   /// Forbid assignment.
   DH_Vis& operator= (const DH_Vis&);
 
-  fcomplex*  itsBuffer;    // data array 
+  ACC::APS::ParameterSet itsPS;
+  BufferType*  itsBuffer;    // data array 
   unsigned int itsBufSize;
 
   short itsStartFreq; // first freq channel ID
-  short itsNStations; // #stations in the buffer 
+  short itsNStations; // #stations in the buffer
+  short itsNBaselines;
   short itsNPols;     // #polarisations 
   short itsNFChannels;
+
+  RectMatrix<BufferType>* itsMatrix;
 
   void fillDataPointers();
 };
 
 
-inline fcomplex* DH_Vis::getBuffer()
+inline DH_Vis::BufferType* DH_Vis::getBuffer()
   { return itsBuffer; }
  
-inline const fcomplex* DH_Vis::getBuffer() const
+inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
-
-#define VISADDRESS_FREQ(freq) itsNFChannels*(freq)    
-#define VISADDRESS_BASELINE(freq, station1, station2)  VISADDRESS_FREQ((freq)) + 
-#define VISADDRESS_POL(freq, station1, station2, pol) VISADDRESS_BASELINE((freq),(station1),(station2)) + itsNPols*pol
-
-inline fcomplex* DH_Vis::getBufferElement(int station1, int station2, int channel, int polarisation)
-  { 
-    return itsBuffer + VISADDRESS_POL(station1, station2, channel, polarisation);
-  }
- 
-inline void DH_Vis::setBufferElement(int station1, int station2, int channel, int polarisation, fcomplex* valueptr)
-{
-  *( itsBuffer + VISADDRESS_POL(station1, station2, channel, polarisation)  ) = *valueptr;
-};
-
 
 inline const unsigned int DH_Vis::getBufSize() const 
   { return itsBufSize; }  
+
+inline RectMatrix<DH_Vis::BufferType>& DH_Vis::getDataMatrix() const 
+  { return *itsMatrix; }
 
 }
 

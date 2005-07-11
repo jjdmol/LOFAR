@@ -24,9 +24,9 @@ namespace LOFAR
       itsSubband     (subband),
       itsMatrix      (0)
   {
-    itsNFChannels = 2;
-    itsNTimes     = 4;
-    itsNPol       = 5;
+    itsNFChannels = 5;
+    itsNTimes     = 1000;
+    itsNPol       = 2;
   }
   
 DH_StationSB::DH_StationSB(const DH_StationSB& that)

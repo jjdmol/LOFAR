@@ -25,20 +25,19 @@ DH_RSP::DH_RSP (const string& name,
   itsBuffer  (0),
   itsPSet    (pset)
 {
-
-   itsEPAheaderSize   = pset.getInt32("SzEPAheader");
    itsNoBeamlets      = pset.getInt32("NoRSPBeamlets");
+   itsNFChannels      = pset.getInt32("DH_RSP.freqs");
+   itsNTimes          = pset.getInt32("DH_RSP.times");
    itsNoPolarisations = pset.getInt32("polarisations");
-   const int NoPacketsInFrame = pset.getInt32("NoPacketsInFrame");
-   itsBufSize         =  NoPacketsInFrame * 
-     (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<int16>));
+   itsBufSize         = itsNFChannels * itsNTimes * itsNoPolarisations;
 }
 
 DH_RSP::DH_RSP(const DH_RSP& that)
 : DataHolder         (that),
   itsBuffer          (0),
-  itsEPAheaderSize   (that.itsEPAheaderSize),
   itsNoBeamlets      (that.itsNoBeamlets),
+  itsNFChannels      (that.itsNFChannels),
+  itsNTimes          (that.itsNTimes),
   itsNoPolarisations (that.itsNoPolarisations),
   itsBufSize         (that.itsBufSize),
   itsPSet            (that.itsPSet)
@@ -60,6 +59,14 @@ void DH_RSP::init()
   addField ("SyncedStamp", BlobField<char>(sizeof(timestamp_t)));
   // Create the data blob
   createDataBlock();
+
+  vector<DimDef> vdd;
+  vdd.push_back(DimDef("FreqChannel", itsNFChannels));
+  vdd.push_back(DimDef("Time", itsNTimes));
+  vdd.push_back(DimDef("Polarisation", itsNoPolarisations));
+  
+  itsMatrix = new RectMatrix<BufferType> (vdd);
+  itsMatrix->setBuffer(itsBuffer, itsBufSize);
 }
 
 void DH_RSP::fillDataPointers()
