@@ -404,12 +404,15 @@ vector<char*> splitVector(char*	target)
 
 	// strip off array marker and trim again.
 	target[lastPos] = '\0';
-	lastPos = rtrim(target = ltrim(target+1)) - 1;
+	lastPos = rtrim(target = ltrim(target+1));
+	// if we had an empty vector lastPos = 0
+	if (lastPos > 0 ) {
+	  lastPos -= 1;
 
-	// the comma seperated elements are left now.
-	// scan string and set pointers.
-	uint32	idx = 0;
-	while (idx <= lastPos) {
+	  // the comma seperated elements are left now.
+	  // scan string and set pointers.
+	  uint32	idx = 0;
+	  while (idx <= lastPos) {
 		// skip leading space.
 		while(idx <= lastPos && (target[idx]==' ' || target[idx]=='\t')) {
 			++idx;
@@ -440,6 +443,7 @@ vector<char*> splitVector(char*	target)
 			result.push_back(target+start);
 			target[idx++] = '\0'; 	// hop over , while removing it
 		}
+	  }
 	}
 
 	return (result);
