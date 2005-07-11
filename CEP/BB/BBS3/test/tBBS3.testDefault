@@ -1,46 +1,42 @@
-// Test1 with:
-//   demo3.MS (no noise)
-//   nrsrc=3
-//   nrstat=100
-//   nrtime=5
-//   nrfreq=50
-//   nrpol=4
-//   gain-polc is 0th order
-//   solve source parameters
-//   pert=1e-6
-//   model=LOFAR.RI
-//   time domain is all times
+# Test1 with:
+#   demo3.MS (no noise)
+#   nrsrc=3
+#   nrstat=100
+#   nrtime=5
+#   nrfreq=50
+#   nrpol=4
+#   gain-polc is 0th order
+#   solve source parameters
+#   pert=1e-6
+#   model=LOFAR.RI
+#   time domain is all times
 
+# this doesn't have to be defined   BBDBname="test"
 
-nrPrediffers=1,   // Number of Prediffers
-nrRuns=9,         // Number of (CEPFrame) runs
+nrPrediffers=1   # Number of Prediffers
+nrRuns=9         # Number of (CEPFrame) runs
 
-CTRLparams=[
-  nrStrategies=1,   // Number of Strategy Controllers
-
-  SC1params=[
-    strategy="Simple",     // Strategy type
-    nrIterations=9,        // Number of iterations per time interval
-    controlParmUpdate=F,   // Does the controller update the parameters?
-    solvableParams=["StokesI.*","RA.*","DEC.*"],
-    startTime=0.0e0,       // Start time
-    timeLength=1.0e12,         // Time interval (float)
-    antennas=[0,4,8,12,16],
-    startFreq=137500000,       // Start frequency
-    freqLength=1000000,     // Size of frequency interval
-    sources=[],       // Solvable source numbers (0 based)
-    modelType="LOFAR.RI",  // Model type
-    calcUVW=F,             // Calculate UVW coordinates?
-    useAutoCorr=F,         // Use auto correlations
-    useSVD=F,              // Use Singular Value Decomposition in solve?
-
-    MSDBparams=[
-      MSName="demo3_p1.MS",         // Name of the Measurement Set
-      DBHost="lofar17",          // Parameter database host name
-      DBType="bdbrepl",           // Parameter database type
-      DBPwd="",                // Parameter database password
-      meqTableName="demo",    // Meq model table name *       
-      skyTableName="demo_gsm" // Sky model table name *
-    ]
-  ]
-]
+CTRLparams.nrStrategies=1   # Number of Strategy Controllers
+CTRLparams.SC1params.writeParms=F
+CTRLparams.SC1params.strategy="Simple"     # Strategy type
+CTRLparams.SC1params.nrIterations=9        # Number of iterations per time interval
+CTRLparams.SC1params.controlParmUpdate=F   # Does the controller update the parameters?
+CTRLparams.SC1params.solvableParams=["StokesI.*","RA.*","DEC.*"]
+CTRLparams.SC1params.startTime=0.0e0       # Start time
+CTRLparams.SC1params.timeLength=1.0e12         # Time interval (float)
+CTRLparams.SC1params.antennas=[0,4,8,12,16]
+CTRLparams.SC1params.startFreq=137500000       # Start frequency
+CTRLparams.SC1params.freqLength=1000000     # Size of frequency interval
+CTRLparams.SC1params.sources=[]       # Solvable source numbers (0 based)
+CTRLparams.SC1params.modelType="LOFAR.RI"  # Model type
+CTRLparams.SC1params.calcUVW=F             # Calculate UVW coordinates?
+CTRLparams.SC1params.useAutoCorr=F         # Use auto correlations
+CTRLparams.SC1params.useSVD=F              # Use Singular Value Decomposition in solve?
+CTRLparams.SC1params.MSDBparams.MSName="demo3_p1.MS"         # Name of the Measurement Set
+CTRLparams.SC1params.MSDBparams.DBHost="lofar17"          # Parameter database host name
+CTRLparams.SC1params.MSDBparams.DBType="aips"           # Parameter database type
+CTRLparams.SC1params.MSDBparams.DBPwd=""                # Parameter database password
+CTRLparams.SC1params.MSDBparams.DBMasterPort=13157                # port on which the master db is listening
+CTRLparams.SC1params.MSDBparams.meqTableName="demo"    # Meq model table name *       
+CTRLparams.SC1params.MSDBparams.skyTableName="demo_gsm" # Sky model table name *
+#this doesn't have to be defined CTRLparams.SC1params.MSDBparams.sourceGroups = ["srcs=[0,1,2]", "srcs=[5,6,7]"]

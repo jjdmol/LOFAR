@@ -11,18 +11,23 @@ usernm=$2
 
 . ./initparms
 
-
 # Do testDefault
 echo ""
 echo "Doing testDefault"
 
+# read variables from ParameterSet
+PSET=tBBS3.testDefault
+DBTYPE=`../../src/psReader $PSET CTRLparams.SC1params.MSDBparams.DBType`
+MEQTN=`../../src/psReader $PSET CTRLparams.SC1params.MSDBparams.meqTableName`
+GSMTN=`../../src/psReader $PSET CTRLparams.SC1params.MSDBparams.skyTableName`
+
 echo "  Generating parm tables ..."
 # use functions in initparms to initialize parmtables
-beginParmdbInputFile "dbtype='bdbrepl', user='$usernm', tablename='demo'"
+beginParmdbInputFile "dbtype='$DBTYPE', user='$usernm', tablename='$MEQTN'"
 makeMeq
 applyfile
 
-beginParmdbInputFile "dbtype='bdbrepl', user='$usernm', tablename='demo_gsm'"
+beginParmdbInputFile "dbtype='$DBTYPE', user='$usernm', tablename='$GSMTN'"
 makeGsm
 perturbGsm
 applyfile
@@ -36,8 +41,7 @@ echo "localhost" > tBBS3_tmp.machinefile
 echo "localhost" >> tBBS3_tmp.machinefile
 echo "localhost" >> tBBS3_tmp.machinefile
 echo "localhost" >> tBBS3_tmp.machinefile
-./tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
+#./tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
 #  mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
 
-# mpirun_mpich -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.testDefault $usernm >& testDefault.out
-
+mpirun_mpich -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 $PSET $niter $usernm  &> testDefault.out
