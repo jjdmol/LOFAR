@@ -23,6 +23,8 @@ GCFNavigator.GCFNavigator	1#1
 	environmentGroups	9#9
 	treeAccess	9#10
 	shortCuts	9#11
+	pathNamesWindows	9#12
+	pathNamesLinux	9#13
 GCFNavSubViewConfigList.GCFNavSubViewConfigList	1#1
 	dummy	21#2
 	dummy2	25#3
@@ -271,50 +273,53 @@ GCFNavSubViewConfigPlot.GCFNavSubViewConfigPlot	1#1
 		dpName	25#3
 		Script	25#4
 		maxTimeslotSize	21#5
-		ColorPartition	1#6
-			Red	21#7
-			Yellow	21#8
-			Green	21#9
-			Blue	21#10
+		active	23#44
 	2	1#11
 		dpName	25#12
 		Script	25#13
 		maxTimeslotSize	21#14
-		ColorPartition	1#15
-			Red	21#16
-			Yellow	21#17
-			Green	21#18
-			Blue	21#19
+		active	23#45
 	3	1#20
 		dpName	25#21
 		Script	25#22
 		maxTimeslotSize	21#23
-		ColorPartition	1#24
-			Red	21#25
-			Yellow	21#26
-			Green	21#27
-			Blue	21#28
+		active	23#46
 	4	1#29
 		dpName	25#30
 		Script	25#31
 		maxTimeslotSize	21#32
-		ColorPartition	1#33
-			Red	21#34
-			Yellow	21#35
-			Green	21#36
-			Blue	21#37
-	nrOfPlots	21#38
-	ScriptDescription	9#39
-	ScriptContent	9#40
-	ScreenSize	25#41
-	SelectedPlot	25#42
-	FontSize	25#43
+		active	23#47
+	5	1#48
+		active	23#49
+		dpName	25#60
+	6	1#50
+		active	23#51
+		dpName	25#61
+	7	1#52
+		active	23#53
+		dpName	25#62
+	8	1#54
+		active	23#55
+		dpName	25#63
+	xrangeMin	21#56
+	xrangeMax	21#57
+	yrangeMin	21#58
+	yrangeMax	21#59
+	updateRate	20#64
+	scriptFilename	25#65
+	currentDatapoint	25#66
 GCFNavSubViewConfigPanel.GCFNavSubViewConfigPanel	1#1
 	Dummy1	25#2
 	Dummy2	25#3
 GCFNavSubViewConfigBar.GCFNavSubViewConfigBar	1#1
-	Dummy1	21#2
-	Dummy2	21#3
+	warnLevel	22#4
+	alertLevel	22#5
+	dpNames	9#6
+	queryDP	25#7
+	queryDPE	25#8
+	normalColor	25#9
+	firstLevelColor	25#10
+	secondLevelColor	25#11
 GCFNavSubViewConfigControl.GCFNavSubViewConfigControl	1#1
 	Dummy1	21#2
 	Dummy2	21#3
@@ -401,3 +406,8 @@ __nav_default_viewconfig.subViews	GCFNavViewConfiguration		0x101	01.03.2005 13:2
 __nav_default_viewconfig.configs	GCFNavViewConfiguration		0x101	02.03.2005 07:01:19.549
 __nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	01.03.2005 13:28:25.304
 __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
+__navigator.viewsPath	GCFNavigator	"navigator/views/"	0x101	07.07.2005 07:19:27.498
+__navigator.resourceRoots	GCFNavigator	"CTU1:PIC", "CTU1:PAC"	0x101	07.07.2005 07:19:49.490
+__navigator.environmentNames	GCFNavigator	"Personal"	0x101	07.07.2005 07:19:06.338
+__navigator.pathNamesWindows	GCFNavigator	"C:/temp"	0x101	30.06.2005 06:53:50.085
+__navigator.treeAccess	GCFNavigator	"*:*"	0x101	30.06.2005 06:53:50.085
