@@ -5,7 +5,7 @@
 include 'table.g'
 include 'trysplit.g'
 
-msconv := function (t, msout, selcommand='', datacolumn='DATA')
+msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
 {
     print 'Selecting subset',selcommand;
     t1 := t.query (selcommand, sortlist='TIME,ANTENNA1,ANTENNA2',
@@ -123,15 +123,21 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA')
 	t1.renamecol (datacolumn, 'DATA');
 	print 'Renamed column',datacolumn,'to DATA';
     }
-    # Add a column RESIDUAL_DATA (double precision) containing the residuals.
+    # Add a column containing the residuals.
     # Use a tiled column storage manager for it.
+    # If double complex has to be used, name it RESIDUAL_DATA and create
+    # a mapping column CORRECTED_DATA.
+    # Otherwise name it CORRECTED_DATA.
     dmres := [TYPE='TiledColumnStMan',
 	      NAME='TiledDataRes',
 	      SPEC=[DEFAULTTILESHAPE=[4,100000,1],
 		    TILESHAPE=[4,100000,1],
 		    MAXIMUMCACHESIZE=0]];
-    coldes := [name='RESIDUAL_DATA', desc=t1.getcoldesc ('DATA')];
-    coldes.desc.valueType := 'dcomplex';
+    coldes := [name='CORRECTED_DATA', desc=t1.getcoldesc ('DATA')];
+    if (usedouble) {
+	coldes.name := 'RESIDUAL_DATA';
+	coldes.desc.valueType := 'dcomplex';
+    }
     coldes.desc.comment := 'The residual data column';
     if (is_fail(t1.addcols (coldes, dmres))) fail;
     # Add a column CORRECTED_DATA mapping RESIDUAL_DATA to single precision.
@@ -139,9 +145,11 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA')
 	      NAME='CORRECTED_DATA',
 	      SPEC=[SOURCENAME='CORRECTED_DATA',
 		    TARGETNAME='RESIDUAL_DATA']];
-    coldes := [name='CORRECTED_DATA', desc=t1.getcoldesc ('DATA')];
-    coldes.desc.comment := 'The corrected data column';
-    if (is_fail(t1.addcols (coldes, dmcor))) fail;
+    if (usedouble) {
+	coldes := [name='CORRECTED_DATA', desc=t1.getcoldesc ('DATA')];
+	coldes.desc.comment := 'The corrected data column';
+	if (is_fail(t1.addcols (coldes, dmcor))) fail;
+    }
     # Copy all data to CORRECTED_DATA (thus to RESIDUAL_DATA).
     # Do it by using copyrows which copies all rows for columns with
     # equal names in source and target table.
@@ -150,7 +158,7 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA')
 ##    t1.putcol ('CORRECTED_DATA', t1.getcol('DATA'));
     tr1 := t1.query (columns='DATA');
     tr2 := t1.query (columns='CORRECTED_DATA');
-    print tr2.renamecol ('CORRECTED_DATA', 'DATA');
+    if (is_fail(tr2.renamecol ('CORRECTED_DATA', 'DATA'))) fail;
     if (is_fail(tr1.copyrows (tr2, 1, 1, tr1.nrows()))) fail;
     # Get the storage manager numbers of the various data files.
     dm := t1.getdminfo();
@@ -175,11 +183,16 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA')
     shell(spaste('ln -s ','table.f',nmr,'_TSM0 ',msout,'/vis.res'));
     shell(spaste('ln -s ','table.f',nmf,'_TSM0 ',msout,'/vis.flg'));
     shell(spaste('ln -s ','table.f',nmu,'_TSM0 ',msout,'/vis.uvw'));
+    # Create the description file.
+    print 'Creating the description file vis.des ...';
+    shell(paste('MSDesc',msout,'DATA'));
+    # Set the protections such that the world can read the MS created.
+    shell(paste('chmod -R +r',msout));
     return T;
 }
 
 
-mssplit := function (msin, nparts, datacolumn='DATA')
+mssplit := function (msin, nparts, datacolumn='DATA', usedouble=F)
 {
     t:=table (msin);
     if (is_fail(t)) fail;
@@ -202,7 +215,7 @@ mssplit := function (msin, nparts, datacolumn='DATA')
     }
     # No split needed if only 1 part.
     if (nparts < 2) {
-	msconv (t, spaste(msin,'_p1'), '', datacolumn);
+	msconv (t, spaste(msin,'_p1'), '', datacolumn, usedouble);
 	t.close();
 	return T;
     }
