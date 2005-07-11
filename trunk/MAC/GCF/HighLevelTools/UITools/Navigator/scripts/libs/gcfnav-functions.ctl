@@ -70,9 +70,10 @@ global int	UR_SYSTEMMANAGEMENT        = 24;
 //globals voor pathNames
 global string g_path_temp     = ""; 
 global string g_path_gnuplot  = ""; 
+global string g_path_pictureconverter  = "";
 global int g_path_temp_index     = 1;
 global int g_path_gnuplot_index  = 2;
-
+global int g_path_pictureconverter_index  = 3;
 
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: convertOriginal2ReferenceDP
