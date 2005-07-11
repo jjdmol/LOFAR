@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,284 171 730 540 N "_3DFace" 0
+PANEL,284 141 730 540 N "_3DFace" 0
 EEE E E 1 -1 -1 0  40 154
 "" 0 1
 EE 2
@@ -141,14 +141,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 30 115 82 131
+E E 0 1 1 0 1 E U  0 E 30 115 127 131
 0 2 0 "s" 0 0 0 192 0 0  30 115
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 8 Not used
+LANG:1 17 Picture converter
 2 73
 "Text4"
 ""
@@ -705,6 +705,9 @@ LANG:1 5 Apply
     pathNames[i]=pathName;
   }
   dpSet(getSystemName() + \"__navigator.pathNames\"+osType, pathNames);
+  
+  //Update the global variables concerning the pathNames
+  navConfigInitPathNames();
 }" 0
  E E "main()
 {
