@@ -67,7 +67,7 @@ void Stub_Delay ::connect (int RSP_nr,
     itsTHs[RSP_nr] = new TH_Socket(itsPS.getString("DelayConnection.ServerHost"),
 				 service);
     itsConnections[RSP_nr] = new Connection("fromInpSection", 0, 
-					  dm.getInHolder(dhNr), 
+					  dm.getGeneralInHolder(dhNr), 
 					  itsTHs[RSP_nr], true);
     dm.setInConnection(dhNr, itsConnections[RSP_nr]);
   } 
@@ -77,7 +77,8 @@ void Stub_Delay ::connect (int RSP_nr,
 		 " has already been connected.");
     // Create a server socket
     itsTHs[RSP_nr] = new TH_Socket(service);
-    itsConnections[RSP_nr] = new Connection("toBG", dm.getOutHolder(dhNr), 
+    itsConnections[RSP_nr] = new Connection("toBG", 
+					    dm.getGeneralOutHolder(dhNr), 
 					    0, itsTHs[RSP_nr], true);
     dm.setOutConnection(dhNr, itsConnections[RSP_nr]);
   }

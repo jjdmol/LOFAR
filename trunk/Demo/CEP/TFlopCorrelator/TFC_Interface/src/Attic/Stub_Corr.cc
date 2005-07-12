@@ -64,7 +64,7 @@ namespace LOFAR {
       // Create a server socket
       itsTHs[C_nr] = new TH_Socket(service);
       itsConnections[C_nr] = new Connection("fromInpSection", 0, 
-					    dm.getInHolder(dhNr), 
+					    dm.getGeneralInHolder(dhNr), 
 					    itsTHs[C_nr], true);
       dm.setInConnection(dhNr, itsConnections[C_nr]);
     } 
@@ -75,7 +75,8 @@ namespace LOFAR {
       // Create a client socket
       itsTHs[C_nr] = new TH_Socket(itsPS->getString("CorrConnection.ServerHost"),
 				   service);
-      itsConnections[C_nr] = new Connection("toBG", dm.getOutHolder(dhNr), 
+      itsConnections[C_nr] = new Connection("toBG", 
+					    dm.getGeneralOutHolder(dhNr), 
 					    0, itsTHs[C_nr], true);
       dm.setOutConnection(dhNr, itsConnections[C_nr]);
     }
