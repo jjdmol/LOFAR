@@ -145,14 +145,14 @@ LogicalDevice::LogicalDevice(const string& taskName,
   adoptParameterFile(parameterFile);
   
   // check version number
-  string receivedVersion = m_parameterSet.getString(string("versionnr"));
-  if(receivedVersion != m_version)
-  {
-    THROW(APLCommon::WrongVersionException,string("Expected version ") + m_version + string("; received version ") + receivedVersion);
-  }
-  
   try
   {
+    string receivedVersion = m_parameterSet.getString(string("versionnr"));
+    if(receivedVersion != m_version)
+    {
+      THROW(APLCommon::WrongVersionException,string("Expected version ") + m_version + string("; received version ") + receivedVersion);
+    }
+  
     m_basePropertySetName = m_parameterSet.getString("propertysetBaseName");
     psDetailsType = m_parameterSet.getString("propertysetDetailsType");
   }

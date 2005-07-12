@@ -1,3 +1,5 @@
-mac.apl.sd.shareLocation=/opt/lofar/MAC/parametersets/
+mac.apl.ld.retryTimeout=3600
+mac.apl.ld.retryPeriod=10
+mac.apl.ld.shareLocation=/opt/lofar/MAC/parametersets/
 mac.apl.sd.SO.taskName=SO
 mac.apl.sd.SO.parameterFile=stationOperationsDefaults.param
