@@ -181,7 +181,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
                          const string destMAC,
                          const bool isSyncMaster)
   : WorkHolder ((isSyncMaster ? 1 : 2), 
-                1 + (isSyncMaster ? pset.getInt32("NoWH_RSP")-1 : 0), 
+                1 + (isSyncMaster ? pset.getInt32("NRSP")-1 : 0), 
                 name, 
                 "WH_RSPInput"),
     itsDevice(device),
@@ -193,7 +193,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   char str[32];
   
   // total amount of RSP-board interfaces
-  itsNRSPOutputs = pset.getInt32("NoWH_RSP");
+  itsNRSPOutputs = pset.getInt32("NRSP");
 
   // number of EPA packets per RSP frame
   itsNpackets = pset.getInt32("NoPacketsInFrame");

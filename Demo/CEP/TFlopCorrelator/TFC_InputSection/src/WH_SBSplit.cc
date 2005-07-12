@@ -35,7 +35,7 @@ using namespace LOFAR;
 
 WH_SBSplit::WH_SBSplit(const string& name, const ACC::APS::ParameterSet pset) 
   : WorkHolder (1,
-		pset.getInt32("NrFIRFilters"),
+		pset.getInt32("NFIRF"),
 		name,
 		"WH_SBSplit"),
     itsPS      (pset)
