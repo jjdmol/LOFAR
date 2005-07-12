@@ -194,8 +194,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-              ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
-              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + parameters[0])); // assume VIrootID is a file
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
               
@@ -265,8 +264,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sdScheduleEvent.fileName)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-              ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
-              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + parameters[0])); // assume VIrootID is a file
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
               
@@ -333,8 +331,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent.fileName)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
               LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
               // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-              ACC::ParameterCollection pc(shareLocation + string("source/") + parameters[0]); // assume VIrootID is a file
-              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
+              boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + parameters[0])); // assume VIrootID is a file
               // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
               
@@ -811,8 +808,7 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-        ACC::ParameterCollection pc(shareLocation + sasScheduleEvent.VIrootID); // assume VIrootID is a file
-        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + sasScheduleEvent.VIrootID)); // assume VIrootID is a file
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
@@ -906,8 +902,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-        ACC::ParameterCollection pc(shareLocation + sasCancelScheduleEvent.VIrootID); // assume VIrootID is a file
-        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + sasCancelScheduleEvent.VIrootID)); // assume VIrootID is a file
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
@@ -962,8 +957,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(sasResponseEvent.VIrootID)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-        ACC::ParameterCollection pc(shareLocation + sasUpdateScheduleEvent.VIrootID); // assume VIrootID is a file
-        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(pc));
+        boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + sasUpdateScheduleEvent.VIrootID)); // assume VIrootID is a file
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
         
@@ -1054,20 +1048,18 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
   time_t startTime   = APLUtilities::decodeTimeString(ps->getString(startKey));
   time_t stopTime    = APLUtilities::decodeTimeString(ps->getString(stopKey));
 
-  ACC::APS::KVpair kvPairClaimTime(claimKey,(int)claimTime);
+  ACC::APS::KVpair kvPairClaimTime(claimKey,claimTime);
   ps->replace(kvPairClaimTime);
-  ACC::APS::KVpair kvPairPrepareTime(prepareKey,(int)prepareTime);
+  ACC::APS::KVpair kvPairPrepareTime(prepareKey,prepareTime);
   ps->replace(kvPairPrepareTime);
-  ACC::APS::KVpair kvPairStartTime(startKey,(int)startTime);
+  ACC::APS::KVpair kvPairStartTime(startKey,startTime);
   ps->replace(kvPairStartTime);
-  ACC::APS::KVpair kvPairStopTime(stopKey,(int)stopTime);
+  ACC::APS::KVpair kvPairStopTime(stopKey,stopTime);
   ps->replace(kvPairStopTime);
 
   // propagate into the child keys
-  string childs;
   vector<string> childKeys;
-  childs = ps->getString(childsKey);
-  APLUtilities::string2Vector(childs,childKeys,',');
+  childKeys = ps->getStringVector(childsKey);
   vector<string>::iterator chIt;
   for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
   {
@@ -1081,7 +1073,7 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
   }
 }
 
-bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::ParameterSet> ps)
+bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps)
 {
   bool allocationOk(false);
   
@@ -1090,16 +1082,14 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
     m_beamletAllocator.logAllocation();
   
     vector<string> childKeys;
-    string childs = ps->getString("childs");
-    APLUtilities::string2Vector(childs,childKeys,',');
-    
     vector<string> stations;
-    map<string,string> station2vtKeyMap;
-    string subbands     = ps->getString("subbands");
-    time_t startTime    = ps->getInt("claimTime");
-    time_t stopTime     = ps->getInt("stopTime");
     vector<int16> subbandsVector;
-    APLUtilities::string2Vector(subbands,subbandsVector,'|');
+    map<string,string> station2vtKeyMap;
+
+    childKeys         = ps->getStringVector("childs");
+    subbandsVector    = ps->getInt16Vector("subbands");
+    time_t startTime  = ps->getInt32("claimTime");
+    time_t stopTime   = ps->getInt32("stopTime");
     
     for(vector<string>::iterator childsIt=childKeys.begin();allocationOk && childsIt!=childKeys.end();++childsIt)
     {
@@ -1133,7 +1123,8 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
         if(keyIt != station2vtKeyMap.end())
         {
           string beamlets;
-          APLUtilities::vector2String(allocIt->second,beamlets,'|');
+          APLUtilities::vector2String(allocIt->second,beamlets,',');
+          beamlets = string("[") + beamlets + string("]");
           ps->replace(keyIt->second + string(".beamlets"),beamlets);
         }
       }

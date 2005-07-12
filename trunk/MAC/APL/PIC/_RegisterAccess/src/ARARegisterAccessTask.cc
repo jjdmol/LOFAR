@@ -1422,7 +1422,7 @@ void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, con
     if(rcu>=0)
     {
       RSPSetrcuEvent setrcu;
-      setrcu.timestamp = Timestamp(0,0);
+      setrcu.timestamp = RTC::Timestamp(0,0);
       setrcu.rcumask = 0;
       setrcu.rcumask.set(rcu);
           
