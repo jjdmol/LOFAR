@@ -49,17 +49,21 @@ namespace LOFAR {
 			 TinyDataManager& dm,
 			 int dhNr)
   {
-    DBGASSERTSTR(FIRF_nr <= itsNFIRF, "Subband filter number too large");
+    DBGASSERTSTR(((FIRF_nr >= 0) && (FIRF_nr < itsNFIRF)),
+		 "FIRF_nr argument out of boundaries; " << FIRF_nr 
+		 << " / " << itsNFIRF);
+
     const ParameterSet myPS("TFlopCorrelator.cfg");
     int port = myPS.getInt32("FIRConnection.RequestPort");
-    string service(formatString("%d", port));
+    string service(formatString("%d", port+FIRF_nr));
     if (itsStubOnServer)    // On the cluster side, so start a server socket
     {
       DBGASSERTSTR(itsTHs[FIRF_nr] == 0, "Stub input " << FIRF_nr << 
 		" has already been connected.");
       // Create a server socket
       itsTHs[FIRF_nr] = new TH_Socket(service);
-      itsConnections[FIRF_nr] = new Connection("toBG", dm.getOutHolder(dhNr), 
+      itsConnections[FIRF_nr] = new Connection("toBG", 
+					       dm.getGeneralOutHolder(dhNr), 
 					      0, itsTHs[FIRF_nr], true);
       dm.setOutConnection(dhNr, itsConnections[FIRF_nr]);
     }
@@ -70,7 +74,8 @@ namespace LOFAR {
       // Create a client socket
       itsTHs[FIRF_nr] = new TH_Socket(myPS.getString("FIRConnection.ServerHost"),
 				     service);
-      itsConnections[FIRF_nr] = new Connection("fromInpSection", 0, dm.getInHolder(dhNr), 
+      itsConnections[FIRF_nr] = new Connection("fromInpSection", 0, 
+					       dm.getGeneralInHolder(dhNr), 
 					      itsTHs[FIRF_nr], true);
       dm.setInConnection(dhNr, itsConnections[FIRF_nr]);
     }
