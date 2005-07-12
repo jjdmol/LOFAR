@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,350 258 923 749 N "_3DFace" 1
+PANEL,262 164 923 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -13,6 +13,7 @@ PANEL,350 258 923 749 N "_3DFace" 1
 	  dpConnect(\"ShownofOverflows\", $datapoint + \".VddVccEn:_online.._value\",
 	                                $datapoint + \".nofOverflow:_online.._value\",
 	                                $datapoint + \".nofOverflow:_online.._invalid\");
+	  setValue(\"copy_scope\",\"enabled\",TRUE);
   }
   else
   {
@@ -50,11 +51,14 @@ ShownofOverflows(string dp1, bool Status,
 }" 0
 "main()
 {
+DebugN(\"about to terminate: \"+$datapoint);
 navPMLunloadPropertySet($datapoint);
+DebugN(\"after unload: \"+$datapoint);
 }" 0
 E E E 1 -1 -1 0  130 290
 "" 0 1
-E"#uses \"apl-view.ctl\"" 0
+E"#uses \"apl-view.ctl\"
+#uses \"gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -66,7 +70,7 @@ LANG:1 6 Layer1
 6 129
 "Border31"
 ""
-1 210 665 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 220 665 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 48 0 0 0 0 0
 EE E
@@ -75,7 +79,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 210 160 650 665
+E E 0 1 1 0 1 E U  1 E 220 160 660 665
 4 36
 "Line1"
 ""
@@ -676,6 +680,32 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 1 0
+6 264
+"progressBar_border"
+""
+1 20 270 E E E 1 E 0 E N {0,0,0} E N "Weiss" E E
+ E E
+138 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 240 200 270
+6 265
+"progressBar"
+""
+1 20 260 E E E 1 E 0 E N "Lofar_maintenance" E N "Lofar_maintenance" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 240 200 260
 1 198 10 "" 2
 0
 1 211 13 "" 1
@@ -690,6 +720,171 @@ LANG:1 1 0
 0
 1 226 18 "" 1
 0
+19 262
+"copy_scope"
+""
+1 60 100 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+136 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+58 98 162 192
+5
+T 
+1
+LANG:1 7 Station
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 4 Rack
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 7 SubRack
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 2 AP
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 4 None
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+ 1
+E
+"main(int button)
+{
+  if (button==4) {
+    setValue(\"CopyButton\",\"enabled\",FALSE);
+  } else {
+    setValue(\"CopyButton\",\"enabled\",TRUE);
+  }
+}" 0
+
+13 263
+"CopyButton"
+""
+1 60 210 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+137 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+58 208 182 235
+T 
+1
+LANG:1 4 copy
+"main()
+{
+  dyn_string scopeName=makeDynString(\"PIC\",\"Rack\",\"SubRack\",\"AP\",\"None\");
+  int scopeNr;
+  getValue(\"copy_scope\",\"number\",scopeNr);
+  string attribute = \"_online.._value\";
+  
+  dyn_string dpSysSplit=strsplit($datapoint,\":\");
+  string aSystem=dpSysSplit[1]; 
+  dyn_string dpSplit=strsplit(dpSysSplit[2],\"_\");
+  
+//  DebugN(dpSysSplit);
+  
+  dyn_string aTmp=dynPatternMatch(scopeName[ConvIndex(scopeNr)]+\"*\",dpSplit);
+ 
+  if (dynlen(aTmp) == 0) {
+//    DebugN(\"aTmp=0\");
+//    DebugN(\"---dpsplit: \"+dpSplit);
+//    DebugN(\"---scopeNr : \"+scopeNr);
+  } 
+  if (dynlen(aTmp) >1) {
+//    DebugN(\"Too many matches in PatternMatch found\");
+  } else {
+    int index=dynContains(dpSplit,aTmp[1]);
+
+    string localDp=dpSplit[1];
+    for (int i=2; i<=index; i++){
+      localDp=localDp+\"_\"+dpSplit[i];
+    }
+//    DebugN(\"localDp found: \"+localDp);
+//    DebugTN(\"querydatabasefordp\");
+    dyn_string outputTemp = queryDatabaseForDP(attribute, aSystem+\":\"+localDp, FALSE);
+//    DebugN(outputTemp);
+//    DebugN(\"finished querydatabasefordp\");
+    
+    // liftout the elements with the right type;
+    string aTypeName=dpTypeName($datapoint);
+//    DebugN(\"type: \"+aTypeName+\" Dp:\"+$datapoint);
+    
+    dyn_string aMatch;
+    for (int i=1; i<= dynlen(outputTemp);i++) {
+       if (i==1) {
+//         DebugN(\"type made : \"+aSystem+\":\"+localDp+\"_\"+outputTemp[i]);
+       }
+      if (dpTypeName(aSystem+\":\"+localDp+\"_\"+outputTemp[i]) == aTypeName) {
+        aMatch[dynlen(aMatch)+1]=aSystem+\":\"+localDp+\"_\"+outputTemp[i];
+      }
+    }
+    
+    // get the present datapoint settings to be copied
+    bool VddVccEn;
+    bool VhEnable;
+    bool VlEnable;
+    bool filSelA;
+    bool filSelB;
+    bool bandSel;
+    bool HBAEnable;
+    bool LBAEnable;
+    dpGet($datapoint+\".VddVccEn\",VddVccEn);
+    dpGet($datapoint+\".VhEnable\",VhEnable);
+    dpGet($datapoint+\".VlEnable\",VlEnable);
+    dpGet($datapoint+\".filSelA\",filSelA);
+    dpGet($datapoint+\".filSelB\",filSelB);
+    dpGet($datapoint+\".bandSel\",bandSel);
+    dpGet($datapoint+\".HBAEnable\",HBAEnable);
+    dpGet($datapoint+\".LBAEnable\",LBAEnable);
+    
+    DebugTN(\"b4 copy\");
+     
+    // copy the settings to all found datapoints
+    for (int i=1; i<= dynlen(aMatch);i++) {
+      progressBar(dynlen(aMatch),i);
+      dpSet(aMatch[i]+\".VddVccEn\",VddVccEn);
+      dpSet(aMatch[i]+\".VhEnable\",VhEnable);
+      dpSet(aMatch[i]+\".VlEnable\",VlEnable);
+      dpSet(aMatch[i]+\".filSelA\",filSelA);
+      dpSet(aMatch[i]+\".filSelB\",filSelB);
+      dpSet(aMatch[i]+\".bandSel\",bandSel);
+      dpSet(aMatch[i]+\".HBAEnable\",HBAEnable);
+      dpSet(aMatch[i]+\".LBAEnable\",LBAEnable);
+    }
+  }
+}
+" 0
+ E E E
 0
 LAYER, 1 
 1

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,367 222 150 99 N "_3DFace" 1
+PANEL,262 164 150 99 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -123,7 +123,6 @@ LANG:1 0
 E
 "main(int button)
 {
-  setValue(\"Text1\", \"text\", button);
 	dpSet($datapoint + \".bandSel\", button);
 }" 0
 
