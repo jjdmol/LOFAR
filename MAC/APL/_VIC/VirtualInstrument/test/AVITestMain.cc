@@ -19,6 +19,10 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -28,11 +32,6 @@
 #include "AVITestDriverTask.h"
 #include <boost/shared_ptr.hpp>
 #include <Suite/suite.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace std;
 

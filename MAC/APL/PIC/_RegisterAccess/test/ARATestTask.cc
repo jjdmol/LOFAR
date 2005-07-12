@@ -19,6 +19,26 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
+#include <math.h>
+#include <GCF/GCF_PValue.h>
+#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDouble.h>
+#include "APLCommon/APL_Defines.h"
+#include "ARATestTask.h"
+#include "../src/ARAPropertyDefines.h"
+
+#include "RSP_Protocol.ph"
+
+#include <stdio.h>
+
+#include <bitset>
+#include <time.h>
 
 const char SCOPE_PAC_LDS[] = "PAC_LogicalDeviceScheduler";
 const char SCOPE_PIC_Rack0_SubRack0_Board0_AP0[] = "PIC_Rack0_SubRack0_Board0_AP";
@@ -62,29 +82,6 @@ const char SCOPE_PIC_Rack0_SubRack0_Board0_Alert[] = "PIC_Rack0_SubRack0_Board0_
     ABORT_TESTS; \
     break; \
   }
-
-#include <math.h>
-#include <GCF/GCF_PValue.h>
-#include <GCF/GCF_PVUnsigned.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVDouble.h>
-#include "APLCommon/APL_Defines.h"
-#include "ARATestTask.h"
-#include "../src/ARAPropertyDefines.h"
-
-#undef PACKAGE
-#undef VERSION
-#include "RSP_Protocol.ph"
-
-#include <stdio.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
-#include <bitset>
-#include <time.h>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
