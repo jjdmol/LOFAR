@@ -23,7 +23,6 @@
 #include <WH_Correlator.h>
 
 #ifdef HAVE_BGL
-// cheat by including the entire hummer_builtin.h file
 #include <hummer_builtin.h>
 #endif 
 
@@ -31,11 +30,12 @@
 #define DO_TIMING
 #define USE_BUILTIN
 
+#define UNROLL_FACTOR 4
+
 using namespace LOFAR;
 
 WH_Correlator::WH_Correlator(const string& name) : 
-  WorkHolder( 1, 1, name, "WH_Correlator"),
-  itsNpolarisations (2)
+  WorkHolder( 1, 1, name, "WH_Correlator")
 {
 
   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
@@ -45,7 +45,6 @@ WH_Correlator::WH_Correlator(const string& name) :
   itsNtargets = 0; // not used?
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
-
   getDataManager().addOutDataHolder(0, new DH_Vis("out", 1));
 
   t_start.tv_sec = 0;
@@ -55,6 +54,7 @@ WH_Correlator::WH_Correlator(const string& name) :
   agg_bandwidth=0.0;
 
   corr_perf=0.0;
+
 }
 
 WH_Correlator::~WH_Correlator() {
@@ -70,128 +70,80 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 }
 
 void WH_Correlator::process() {
-  DBGASSERTSTR(itsNpolarisations == 2, "Implementation of WH_Correlator only works for NPols==2; itsNPols =  " << itsNpolarisations);
-
   double starttime, stoptime, cmults;
+  const short ar_block = itsNelements / UNROLL_FACTOR;
 
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
-
-#ifdef DO_TIMING
-  if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
-    gettimeofday(&t_stop, NULL);
-    
-    bandwidth = 8.0 *
-      ((inDH->getBufSize()*sizeof(fcomplex)) +
-       (outDH->getBufSize()*sizeof(fcomplex))) /
-      (t_stop.tv_sec + 1.0e-6*t_stop.tv_usec - 
-       t_start.tv_sec + 1.0e-6*t_start.tv_usec);
-
-#ifdef HAVE_MPI
-    // collect partial bandwidths from all nodes
-    MPI_Reduce(&bandwidth, &agg_bandwidth, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (TH_MPI::getCurrentRank() == 0) {
-    }
-#endif
-  }
-#endif 
 
   // reset integrator.
   memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(fcomplex));
 
 
-
-  // todo: replace n_buffer by appropriate input data ptr 
-  _Complex float* in_buffer = new _Complex float[inDH->getBufSize()];
-
-  //
-  // This is the actual correlator
-  // Note that there is both a machine independent correlator as well as a BlueGene
-  // specific implementation.
-  // 
-
 #ifdef DO_TIMING
   starttime = timer();
 #endif
+
 #ifdef HAVE_BGL
-  
-  // BlueGene/L specific correlator code
-  // compared to earlier versions I have:
-  // * removed the prefetch statements since the compiler should be able to do this anyway
-  // * cleaned up the code by moving the platform independent stuff to it's own nested loop
-  // * changed the loop order to minimize stride size
-
-  _Complex double * out_ptr;
-
   __alignx(16, out_ptr);
   __alignx(8 , in_buffer);
+#endif
 
-  for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
-    int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
-    for (int station1 = 0; station1 < itsNelements; station1++) {
-      for (int station2 = 0; station2 <= station1; station2++) {
-	int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
-	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
-	//todo: use LOFAR_BUILTIN_COMPLEXFP* getBufferTimePolSeries(int channel, int station)
-	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
-#pragma unroll(10)
-	for (int sample = 0; sample < itsNsamples; sample++) {
-#if 1
-	  *out_ptr     += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample);     // XX	  
-	  *(out_ptr+1) += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample+1);   // XY
-	  *(out_ptr+2) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample);   // YX
-	  *(out_ptr+3) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
-#else
-	  // XX
-	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr) );
-	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr) );
-	  // XY
-	  *(out_ptr+1) = __fxcpmadd( *(out_ptr+1), *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr+1) );
-	  *(out_ptr+1) = __fxcxnpma( *(out_ptr+1), *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr+1) );
-	  // YX
-	  *(out_ptr+2) = __fxcpmadd( *(out_ptr+2), *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr) );
-	  *(out_ptr+2) = __fxcxnpma( *(out_ptr+2), *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr) );
-	  // YY
-	  *(out_ptr+3) = __fxcpmadd( *(out_ptr+3), *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr+1) );
-	  *(out_ptr+3) = __fxcxnpma( *(out_ptr+3), *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr+1) );
-#endif 
-	  s1_addr++;
-	  s2_addr++;
+  // The actual correlator loop
+  // Note that we don't make special considerations for polarisations X or Y
+  // We consider these completely seperate elements, thus removing an 
+  // extra dimension in the input and output data structure
+ 
+  for (int i = 0; i < itsNelements; i++) {
+    for (int y = 0; y < ar_block; y++) { 
+      
+      // prefetch a block of values to register
+      __complex__ double reg_x_0 = static_cast<__complex__ double>(in_buffer[0][i]);
+      __complex__ double reg_x_1 = static_cast<__complex__ double>(in_buffer[1][i]);
+      __complex__ double reg_x_2 = static_cast<__complex__ double>(in_buffer[2][i]);
+      __complex__ double reg_x_3 = static_cast<__complex__ double>(in_buffer[3][i]);
 
-	} // sample
-      } // station2
-    } // station1
-  } // fchannel
+      __complex__ double reg_y_0 = static_cast<__complex__ double>(in_buffer[y][i]);
+      __complex__ double reg_y_1 = static_cast<__complex__ double>(in_buffer[y+1][i]);
+      __complex__ double reg_y_2 = static_cast<__complex__ double>(in_buffer[y+2][i]);
+      __complex__ double reg_y_3 = static_cast<__complex__ double>(in_buffer[y+3][i]);
 
-#else   // NO BGL
+   
+      for (int x = 0; x <= y; x += 4) {
 
-//   complex<double> * out_ptr;
-  _Complex double * out_ptr;
+	out_ptr[x+0][y+0] += reg_x_0 * ~reg_y_0;
+	out_ptr[x+0][y+1] += reg_x_0 * ~reg_y_1;
+	out_ptr[x+0][y+2] += reg_x_0 * ~reg_y_2;
+	out_ptr[x+0][y+3] += reg_x_0 * ~reg_y_3;
 
-  for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
-    int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
-    for (int station1 = 0; station1 < itsNelements; station1++) {
-      for (int station2 = 0; station2 <= station1; station2++) {
-	int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
-	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
+	reg_x_0 = in_buffer[x+4][i];
 
- 	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
-//	out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
+	out_ptr[x+1][y+0] += reg_x_1 * ~reg_y_0;
+	out_ptr[x+1][y+1] += reg_x_1 * ~reg_y_1;
+	out_ptr[x+1][y+2] += reg_x_1 * ~reg_y_2;
+	out_ptr[x+1][y+3] += reg_x_1 * ~reg_y_3;
+	
+	reg_x_1 = in_buffer[x+5][i];
 
-	for (int sample = 0; sample < itsNsamples; sample++) {
-	  *out_ptr     += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
-	  *(out_ptr+1) += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
-	  *(out_ptr+2) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
-	  *(out_ptr+3) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
-	  s1_addr++; 
-	  s2_addr++;
-	} // sample
-      } // station2
-    } // station1
-  } // fchannel
+	out_ptr[x+2][y+0] += reg_x_2 * ~reg_y_0;
+	out_ptr[x+2][y+1] += reg_x_2 * ~reg_y_1;
+	out_ptr[x+2][y+2] += reg_x_2 * ~reg_y_2;
+	out_ptr[x+2][y+3] += reg_x_2 * ~reg_y_3;
 
-#endif // HAVE_BGL
+	reg_x_2 = in_buffer[x+6][i];
+
+	out_ptr[x+3][y+0] += reg_x_3 * ~reg_y_0;
+	out_ptr[x+3][y+1] += reg_x_3 * ~reg_y_1;
+	out_ptr[x+3][y+2] += reg_x_3 * ~reg_y_2;
+	out_ptr[x+3][y+3] += reg_x_3 * ~reg_y_3;
+
+	reg_x_3 = in_buffer[x+7][i];
+      }
+    }
+  }
+
+
+
 #ifdef DO_TIMING
   stoptime = timer();
 #endif
