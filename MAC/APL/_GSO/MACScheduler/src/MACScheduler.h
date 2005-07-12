@@ -147,7 +147,7 @@ namespace GSO
       void _convertRelativeTimes(boost::shared_ptr<ACC::APS::ParameterSet> ps);
       void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
-      bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::ParameterSet> ps);
+      bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
       string                                m_SASserverPortName;
       GCF::TM::GCFTCPPort                   m_SASserverPort;      // SAS-MAC communication

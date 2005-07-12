@@ -145,7 +145,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   adoptParameterFile(parameterFile);
   
   // check version number
-  string receivedVersion = m_parameterSet.getVersionNr();
+  string receivedVersion = m_parameterSet.getString(string("versionnr"));
   if(receivedVersion != m_version)
   {
     THROW(APLCommon::WrongVersionException,string("Expected version ") + m_version + string("; received version ") + receivedVersion);
@@ -876,15 +876,15 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
     }
     else if(timerEvent.id == m_retrySendTimerId)
     {
-      int retryPeriod = 10; // retry sending buffered events every 10 seconds
+      int32 retryPeriod = 10; // retry sending buffered events every 10 seconds
       if(m_eventBuffer.size() > 0)
       {
         m_retrySendTimerId = 0;
-        int retryTimeout = 1*60*60; // retry sending buffered events for 1 hour
+        int32 retryTimeout = 1*60*60; // retry sending buffered events for 1 hour
         GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
         try
         {
-          retryTimeout = pParamSet->getInt(LD_CONFIG_PREFIX + string("retryTimeout"));
+          retryTimeout = pParamSet->getInt(string(LD_CONFIG_PREFIX + string("retryTimeout")));
           retryPeriod  = pParamSet->getInt(LD_CONFIG_PREFIX + string("retryPeriod"));
         } 
         catch(Exception& e)
@@ -941,19 +941,10 @@ vector<string> LogicalDevice::_getChildKeys()
   vector<string> childKeys;
   try
   {
-    childs = m_parameterSet.getString("childs");
+    childKeys = m_parameterSet.getStringVector("childs");
   }
   catch(Exception& e)
   {
-  }
-  char* pch;
-  boost::shared_array<char> childsCopy(new char[childs.length()+1]);
-  strcpy(childsCopy.get(),childs.c_str());
-  pch = strtok (childsCopy.get(),",");
-  while (pch != NULL)
-  {
-    childKeys.push_back(string(pch));
-    pch = strtok (NULL, ",");
   }
   return childKeys;
 }
@@ -984,7 +975,7 @@ void LogicalDevice::_sendScheduleToClients()
         // extract the parameterset for the child
         string startDaemonKey = it->first;
         TPortSharedPtr startDaemonPort = it->second;
-        ACC::ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
+        ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
         string parameterFileName = startDaemonKey+string(".ps"); 
         string remoteSystem = psSubset.getString("startDaemonHost");
         
@@ -994,7 +985,7 @@ void LogicalDevice::_sendScheduleToClients()
         remove(tempFileName.c_str());
   
         // send the schedule to the startdaemon of the child
-        TLogicalDeviceTypes ldType = static_cast<TLogicalDeviceTypes>(psSubset.getInt("logicalDeviceType"));
+        TLogicalDeviceTypes ldType = static_cast<TLogicalDeviceTypes>(psSubset.getInt32("logicalDeviceType"));
         boost::shared_ptr<STARTDAEMONScheduleEvent> scheduleEvent(new STARTDAEMONScheduleEvent);
         scheduleEvent->logicalDeviceType = ldType;
         scheduleEvent->taskName = startDaemonKey;
@@ -1024,7 +1015,7 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
         string childKey = it->first;
         if(TPortSharedPtr pChildPort = it->second.lock())
         {
-          ACC::ParameterSet psSubset = m_parameterSet.makeSubset(childKey + string("."));
+          ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(childKey + string("."));
           string parameterFileName = childKey+string(".ps"); 
           string remoteSystem = psSubset.getString("startDaemonHost");
 
@@ -1158,7 +1149,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       else if(_isServerPort(port))
       {
         // replace my server port (assigned by the ServiceBroker) in all child sections    
-        unsigned int serverPort = m_serverPort.getPortNumber();
+        uint16 serverPort = m_serverPort.getPortNumber();
         
         // create the childs
         vector<string> childKeys = _getChildKeys();
@@ -1169,14 +1160,14 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
           try
           {
             string key = (*chIt) + string(".parentPort");
-            KVpair kvPair(key,(int)serverPort);
+            KVpair kvPair(key,serverPort);
             m_parameterSet.replace(kvPair);
             
-            string        remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
-            string        startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
-            unsigned int  startDaemonPortNr   = m_parameterSet.getInt((*chIt) + string(".startDaemonPort"));
-            string        startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
-            string        childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
+            string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
+            string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
+            uint16 startDaemonPortNr   = m_parameterSet.getUint16((*chIt) + string(".startDaemonPort"));
+            string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
+            string childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
             
             TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
             startDaemonPort->setHostName(startDaemonHostName);
@@ -1203,9 +1194,9 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
         }
         
         // connect to parent.
-        string       parentTaskName = m_parameterSet.getString("parentTask");
-        string       parentHost     = m_parameterSet.getString("parentHost");//TiMu
-        unsigned int parentPort     = (unsigned int) m_parameterSet.getInt("parentPort");//TiMu
+        string parentTaskName = m_parameterSet.getString("parentTask");
+        string parentHost     = m_parameterSet.getString("parentHost");//TiMu
+        uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
         m_parentPort.init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
         m_parentPort.setHostName(parentHost);//TiMu
         m_parentPort.setPortNumber(parentPort);//TiMu
@@ -1219,7 +1210,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
         _sendEvent(scheduledEvent,m_parentPort);
         
         // poll retry buffer every 10 seconds
-        int retryPeriod = 10; // retry sending buffered events every 10 seconds
+        int32 retryPeriod = 10; // retry sending buffered events every 10 seconds
         m_retrySendTimerId = 0;
         GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
         try
