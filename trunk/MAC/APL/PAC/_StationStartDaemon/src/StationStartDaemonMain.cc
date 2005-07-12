@@ -19,7 +19,10 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <boost/shared_ptr.hpp>
 #include <GCF/ParameterSet.h>
@@ -41,29 +44,6 @@ const string SD_CONFIG_PREFIX            = string("mac.apl.sd.");
 const string SD_CONFIG_SHARELOCATION     = string("shareLocation");
 const string SD_CONFIG_TASKNAME          = string("taskName");
 const string SD_CONFIG_PARAMETERFILE     = string("parameterFile");
-
-string _getShareLocation()
-{
-  string shareLocation("/opt/lofar/MAC/parametersets/");
-  GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
-  try
-  {
-    string tempShareLocation = pParamSet->getString(SD_CONFIG_PREFIX + SD_CONFIG_SHARELOCATION);
-    if(tempShareLocation.length()>0)
-    {
-      if(tempShareLocation[tempShareLocation.length()-1] != '/')
-      {
-        tempShareLocation+=string("/");
-      }
-      shareLocation=tempShareLocation;
-    }
-  } 
-  catch(Exception& e)
-  {
-    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using %s",e.message().c_str(),shareLocation.c_str()));
-  }
-  return shareLocation;
-}
 
 string _getStationOperationsParameterFile()
 {
@@ -97,28 +77,45 @@ string _getStationOperationsTaskName()
 
 int main(int argc, char* argv[])
 {
-  GCFTask::init(argc, argv);
+  int retval=0;
+  try
+  {
+    GCFTask::init(argc, argv);
   
-  boost::shared_ptr<VirtualTelescopeFactory>      vtFactory(new VirtualTelescopeFactory);
-  boost::shared_ptr<StationReceptorGroupFactory>  srgFactory(new StationReceptorGroupFactory);
-  boost::shared_ptr<StationOperationsFactory>     soFactory(new StationOperationsFactory);
-  
-  StartDaemon sd(string("PAC_StartDaemon"));
-  
-  sd.registerFactory(LDTYPE_VIRTUALTELESCOPE,vtFactory);
-  sd.registerFactory(LDTYPE_STATIONRECEPTORGROUP,srgFactory);
-  sd.registerFactory(LDTYPE_STATIONOPERATIONS,soFactory);
-  
-  sd.start(); // make initial transition
-  
-  string shareLocation  = _getShareLocation();
-  string taskName       = _getStationOperationsTaskName();
-  string parameterFile  = _getStationOperationsParameterFile();
-  
-  sd.createLogicalDevice(LDTYPE_STATIONOPERATIONS,taskName,shareLocation+parameterFile);
-  
-  GCFTask::run();
+    boost::shared_ptr<VirtualTelescopeFactory>      vtFactory(new VirtualTelescopeFactory);
+    boost::shared_ptr<StationReceptorGroupFactory>  srgFactory(new StationReceptorGroupFactory);
+    boost::shared_ptr<StationOperationsFactory>     soFactory(new StationOperationsFactory);
     
-  return 0;
+    StartDaemon sd(string("PAC_StartDaemon"));
+    
+    sd.registerFactory(LDTYPE_VIRTUALTELESCOPE,vtFactory);
+    sd.registerFactory(LDTYPE_STATIONRECEPTORGROUP,srgFactory);
+    sd.registerFactory(LDTYPE_STATIONOPERATIONS,soFactory);
+    
+    sd.start(); // make initial transition
+    
+    string taskName       = _getStationOperationsTaskName();
+    string parameterFile  = _getStationOperationsParameterFile();
+  
+    sd.createLogicalDevice(LDTYPE_STATIONOPERATIONS,taskName,parameterFile);
+
+    GCFTask::run();
+  } 
+  catch(APLCommon::WrongVersionException& e)
+  {
+    LOG_FATAL(formatString("(%s) Unable to start StationOperations Logical Device due to version conflict.",e.message().c_str()));
+    retval = -1;
+  }
+  catch(APLCommon::ParameterNotFoundException& e)
+  {
+    LOG_FATAL(formatString("(%s) Unable to start StationOperations Logical Device.",e.message().c_str()));
+    retval = -1;
+  }
+  catch(Exception& e)
+  {
+    LOG_FATAL(formatString("%s",e.message().c_str()));
+    retval = -1;
+  }
+  return retval;
 }
 
