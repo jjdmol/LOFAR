@@ -35,7 +35,7 @@ using namespace LOFAR;
 
 WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
 			   const ACC::APS::ParameterSet pset) 
-  : WorkHolder   (pset.getInt32("NrStations"), 
+  : WorkHolder   (pset.getInt32("NRSP"), 
 		  1,
 		  name,
 		  "WH_SBCollect"),
@@ -46,7 +46,7 @@ WH_SBCollect::WH_SBCollect(const string& name, int sbID,
   for (int i=0; i<itsNinputs; i++)
   {
     sprintf(str, "DH_in_%d", i);
-    getDataManager().addInDataHolder(0, new DH_StationSB(str, i));  // Add subband id
+    getDataManager().addInDataHolder(i, new DH_StationSB(str, i));  // Add subband id
   }
 
   getDataManager().addOutDataHolder(0, new DH_FIR(str, itsSubBandID));
