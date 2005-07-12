@@ -19,6 +19,10 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "APLCommon/APL_Defines.h"
 #include "APLCommon/StartDaemon.h"
@@ -28,10 +32,6 @@
 #include <blitz/array.h>
 #include <time.h>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 #include <GCF/ParameterSet.h>
 
 using namespace LOFAR::GCF::Common;

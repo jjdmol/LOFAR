@@ -19,18 +19,18 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-
-#include "ARAPhysicalModel.h"
-#include "ARAPropertyDefines.h"
-#include "ARAConstants.h"
-
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
 #include <GCF/PAL/GCF_ExtProperty.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/ParameterSet.h>
+
+#include "ARAPhysicalModel.h"
+#include "ARAPropertyDefines.h"
+#include "ARAConstants.h"
 
 using namespace std;
 using namespace boost;

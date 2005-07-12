@@ -19,9 +19,9 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#include <lofar_config.h>
 
 #include <boost/shared_ptr.hpp>
-
 #include <GCF/ParameterSet.h>
 #include <APLCommon/StartDaemon.h>
 #include <VirtualTelescope/VirtualTelescopeFactory.h>

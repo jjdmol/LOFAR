@@ -19,9 +19,12 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <sys/time.h>
-#include <Common/LofarLogger.h>
 #include <APLCommon/APLUtilities.h>
 #include "../src/BeamletAllocator.h"
 

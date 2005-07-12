@@ -19,14 +19,13 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-
-#include "AVITestAnswer.h"
-#include <GCF/TM/GCF_Task.h>
-
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#include "AVITestAnswer.h"
+#include <GCF/TM/GCF_Task.h>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;

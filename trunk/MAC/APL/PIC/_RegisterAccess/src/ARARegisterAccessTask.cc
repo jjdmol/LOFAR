@@ -20,12 +20,15 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 // this include needs to be first!
 #include "RSP_Protocol.ph"
 
 #include "ARARegisterAccessTask.h"
-
 #include "ARAConstants.h"
 
 #include <Common/lofar_iostream.h>
@@ -36,11 +39,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
 #include <GCF/ParameterSet.h>
-#include <Common/LofarLogger.h>
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVUnsigned.h>

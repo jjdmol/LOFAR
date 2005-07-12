@@ -19,9 +19,11 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
 #include <lofar_config.h>
-
 #include <Common/LofarLogger.h>
+
 #include <Common/lofar_strstream.h>
 #include "APLCommon/APLUtilities.h"
 

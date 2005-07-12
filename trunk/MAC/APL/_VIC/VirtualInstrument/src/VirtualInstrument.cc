@@ -19,13 +19,13 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-
 #undef PACKAGE
 #undef VERSION
-#include <boost/shared_ptr.hpp>
-#include <Common/lofar_sstream.h>
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#include <boost/shared_ptr.hpp>
+#include <Common/lofar_sstream.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
 #include <APLCommon/APLUtilities.h>
