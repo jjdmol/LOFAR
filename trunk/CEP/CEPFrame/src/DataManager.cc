@@ -171,7 +171,8 @@ void DataManager::readyWithInHolder(int channel)
     {
       if (getInConnection(channel)!=0)
       {
-	getInConnection(channel)->read();
+	ASSERTSTR(getInConnection(channel)->read()!=Connection::Error,
+		  "Error in reading input channel " << channel);
       }
       else
       {
@@ -214,7 +215,8 @@ void DataManager::readyWithOutHolder(int channel)
       if (getOutConnection(channel) != 0)
       {
 	LOG_TRACE_RTTI("DataManager::readyWithOutHolder synchronous write");
-	getOutConnection(channel)->write();
+	ASSERTSTR(getOutConnection(channel)->write() != Connection::Error,
+		  "Error in writing output channel " << channel);
       }
       else
       {
@@ -314,7 +316,8 @@ void DataManager::initializeInputs()
 	  LOG_TRACE_COND_STR("DM Allowed input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
 	  if (getInConnection(ch) != 0)
 	  {
-	    getInConnection(ch)->read();
+	    ASSERTSTR(getInConnection(ch)->read()!= Connection::Error,
+		      "Error in reading input channel " << ch);
 	  }
 	  else
 	  {

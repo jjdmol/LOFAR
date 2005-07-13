@@ -173,18 +173,17 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
     pConn->setDestinationDH(dh);           // Set connection to new DataHolder
     pConn->getTransportHolder()->reset();  // Reset TransportHolder
 
-    while (pConn->read() == false)
+    ASSERTSTR(pConn->read() != Connection::Error,
+	      "Reader thread encountered error in reading");
+    pthread_mutex_lock(&data->mutex);         /// Check stop condition
+    if (data->stopThread == true)
     {
-      pthread_mutex_lock(&data->mutex);         /// Check stop condition
-      if (data->stopThread == true)
-      {
-	manager->writeUnlock(id);
-	pthread_mutex_unlock(&data->mutex);
-	LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
-	pthread_exit(NULL);
-      }
+      manager->writeUnlock(id);
       pthread_mutex_unlock(&data->mutex);
+      LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
+      pthread_exit(NULL);
     }
+    pthread_mutex_unlock(&data->mutex);
     
     manager->writeUnlock(id);
   }
@@ -213,7 +212,8 @@ void* SynchronisityManager::startWriterThread(void* thread_arg)
     Connection* pConn = data->conn;
     pConn->setSourceDH(dh);               // Set connection to new DataHolder
     pConn->getTransportHolder()->reset(); // Reset TransportHolder
-    pConn->write();
+    ASSERTSTR(pConn->write()!=Connection::Error,
+	      "Writer thread encountered error in writing");
     manager->readUnlock(id);
   
   }
