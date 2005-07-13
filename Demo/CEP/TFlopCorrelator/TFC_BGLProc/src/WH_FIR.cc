@@ -80,8 +80,13 @@ void WH_FIR::process() {
     accum = makefcomplex(0,0);
     
     // get data from the input dataholder
-    filterData[ filter ].delayLine[ 0 ] = 
-      *(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBuffer() + filter);
+//     filterData[ filter ].delayLine[ 0 ] = 
+//       *(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBuffer() + filter);
+    memcpy(&filterData[filter].delayLine[0],
+	   (static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBuffer() + filter),
+	   sizeof(DH_FIR::BufferType));
+    
+
 
     for (int tap = 0; tap < itsNtaps; tap++) {
       accum += filterData[ filter ].filterTaps[ tap ] * 
