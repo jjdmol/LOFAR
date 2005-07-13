@@ -47,9 +47,13 @@ WH_DelayControl* WH_DelayControl::make(const string& name) {
 void WH_DelayControl::process() {
   //  DH_Delay* inp = (DH_Delay*)getDataManager().getInHolder(0);
   DH_Delay* outp = 0;
-  for (int i = 0; i < itsNoutputs; i++) {
+  for (int i = 0; i < itsNoutputs; i++)
+  {
     outp = (DH_Delay*)getDataManager().getOutHolder(i);
-    outp->setDelay(i, i-2);
+    for (int j = 0; j < itsNoutputs; j++) 
+    {    
+      outp->setDelay(j, j-3);
+    }
   }
 }
 }
