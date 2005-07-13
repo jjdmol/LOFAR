@@ -63,6 +63,7 @@ lofar_DTL(1)
 
 lofar_INTERNAL(LCS/databases/TransportPL,TransportPL,,1,TransportPL/DH_PL.h)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h)
+lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h)
 lofar_INTERNAL(CEP/BB/BDBReplication,BDBReplication,,1,BDBReplication/BDBReplicator.h)
 
 #lofar_EXTERNAL(psql,1,libpq-fe.h,pq)
