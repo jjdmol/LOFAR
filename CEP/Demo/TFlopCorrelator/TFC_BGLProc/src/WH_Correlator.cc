@@ -45,7 +45,7 @@ WH_Correlator::WH_Correlator(const string& name) :
   itsNtargets = 0; // not used?
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
-  getDataManager().addOutDataHolder(0, new DH_Vis("out", 1));
+  getDataManager().addOutDataHolder(0, new DH_Vis("out", 1, myPS));
 
   t_start.tv_sec = 0;
   t_start.tv_usec = 0;
@@ -78,7 +78,6 @@ void WH_Correlator::process() {
 
   // reset integrator.
   memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(fcomplex));
-
 
 #ifdef DO_TIMING
   starttime = timer();
@@ -147,28 +146,7 @@ void WH_Correlator::process() {
 #ifdef DO_TIMING
   stoptime = timer();
 #endif
-  
-  
-#ifdef DO_TIMING
-#ifdef HAVE_MPI
-  double elapsed_time = (stoptime-starttime);
-  double min_time;
-
-  // we're selecting the highest performance figure of the nodes. Since BG/L is a hard real-time 
-  // system, we expect these to be the same for each node. While debugging we're not interrested in 
-  // transient effects on the nodes, so the maximum performance is a reasonable estimate of the real 
-  // performance of the application.
-
-  cmults = itsNpolarisations * itsNpolarisations * itsNsamples * itsNchannels * itsNelements * itsNelements / 2;
-  MPI_Reduce(&elapsed_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
-
-  if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
-    corr_perf = 1.0e-6*cmults/min_time;
-  }
-
-#endif // HAVE_MPI
-  gettimeofday(&t_start, NULL);
-#endif // DO_TIMING
+ 
 }
 
 void WH_Correlator::dump() {
