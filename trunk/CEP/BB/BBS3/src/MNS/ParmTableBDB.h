@@ -102,6 +102,7 @@ namespace LOFAR {
     DbEnv* itsDbEnv;
     Db* itsDb;
     string itsBDBTableName;
+    string itsBDBHomeName;
     // class used as the index for the database
     class MPHKey : public Dbt {
     public:
