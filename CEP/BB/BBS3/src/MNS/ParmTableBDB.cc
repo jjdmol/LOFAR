@@ -34,13 +34,16 @@
 #include <casa/BasicMath/Math.h>
 #include <stdlib.h>
 #include <sstream>
+#include <sys/stat.h>         // for mkdir
+#include <sys/types.h>        // for mkdir
 
 using namespace casa;
 
 namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
-    itsBDBTableName ("/tmp/" + userName + "." + tableName + ".bdb")
+    itsBDBTableName(tableName),
+    itsBDBHomeName ("/tmp/" + userName + "." + tableName + ".bdb")
   {
     itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
     itsDb = new Db(itsDbEnv, 0);
@@ -54,33 +57,61 @@ namespace LOFAR {
       delete itsDb;
       itsDb = 0;
     }
+    if (itsDbEnv != 0) {
+      itsDbEnv->close(0);
+      delete itsDbEnv;
+      itsDbEnv = 0;
+    }
   }
 
   void ParmTableBDB::connect(){
-    u_int32_t oFlags = 0;
+    u_int32_t flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
+    LOG_TRACE_FLOW_STR("BDBR opening environment: "<<itsBDBHomeName);
+    mkdir(itsBDBHomeName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
+    int ret = itsDbEnv->open(itsBDBHomeName.c_str(), flags, 0);
+    if (ret != 0) {
+      ASSERTSTR(false, "could not open database environment " <<itsBDBHomeName << ": " << itsDbEnv->strerror(ret));
+    }
+
+    u_int32_t oFlags = DB_CREATE | DB_AUTO_COMMIT;
     itsDb->set_flags(DB_DUPSORT);
-    //  if (itsDb->open(transid, filename, database, dbtype, flags, mode) !=0) {
-    if (itsDb->open(NULL, itsBDBTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+    ret = itsDb->open(NULL, itsBDBTableName.c_str(), NULL, DB_BTREE, oFlags, 0);
+    if (ret != 0 ) {
       itsDb->close(0);
-      ASSERTSTR(false, "no connection to database");    
+      ASSERTSTR(false, "no connection to database" << itsDbEnv->strerror(ret));    
     }
     LOG_TRACE_STAT("connected to database");
   }
 
   void ParmTableBDB::createTable(const string& userName, const string& tableName){
-    string fullTableName = "/tmp/" + userName + "." + tableName + ".bdb";
+#if 1
+    ParmTableBDB pt(userName, tableName);
+    pt.connect();
+#else
+    string homeName = "/tmp/" + userName + "." + tableName + ".bdb";
     // Do the same as the connect but now with the flag DB_CREATE
-    cout<<"Creating database: " << fullTableName<<endl;
+    cout<<"Creating database: " << tableName<<endl;
+    DbEnv tmpEnv(DB_CXX_NO_EXCEPTIONS);
+    //    u_int32_t flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_MPOOL | DB_INIT_TXN;
+    u_int32_t flags = DB_CREATE | DB_THREAD | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
+    LOG_TRACE_FLOW_STR("BDBReplicator opening environment: "<<homeName.c_str());
+    int ret = tmpEnv.open(homeName.c_str(), flags, 0);
+    if (ret != 0) {
+      ASSERTSTR(false, "could not create database environment " <<homeName << ": " << tmpEnv.strerror(ret));
+    }
+
     u_int32_t oFlags = DB_CREATE;
-    Db tmpDb(NULL, 0);
+    Db tmpDb(&tmpEnv, 0);
     tmpDb.set_flags(DB_DUPSORT);
-    if (tmpDb.open(NULL, fullTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+    if (tmpDb.open(NULL, tableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
       tmpDb.close(0);
       ASSERTSTR(false, "could not create database");    
     }
     LOG_TRACE_STAT("created database");
     tmpDb.sync(0);
     tmpDb.close(0);
+    tmpEnv.close(0);
+#endif
   }
 
   void ParmTableBDB::clearTable(){
