@@ -24,7 +24,7 @@ CTRLparams.SC1params.controlParmUpdate=F   # Does the controller update the para
 CTRLparams.SC1params.solvableParams=["StokesI.*","RA.*","DEC.*"]
 CTRLparams.SC1params.startTime=0.0e0       # Start time
 CTRLparams.SC1params.timeLength=1.0e12         # Time interval (float)
-CTRLparams.SC1params.antennas=[0,4,8,12,16]
+CTRLparams.SC1params.antennas=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99]
 CTRLparams.SC1params.startFreq=137500000       # Start frequency
 CTRLparams.SC1params.freqLength=1000000     # Size of frequency interval
 CTRLparams.SC1params.sources=[]       # Solvable source numbers (0 based)
@@ -32,11 +32,11 @@ CTRLparams.SC1params.modelType="LOFAR.RI"  # Model type
 CTRLparams.SC1params.calcUVW=F             # Calculate UVW coordinates?
 CTRLparams.SC1params.useAutoCorr=F         # Use auto correlations
 CTRLparams.SC1params.useSVD=F              # Use Singular Value Decomposition in solve?
-CTRLparams.SC1params.MSDBparams.MSName="demo3_p1.MS"         # Name of the Measurement Set
+CTRLparams.SC1params.MSDBparams.MSName="demo3.MS_p1"         # Name of the Measurement Set
 CTRLparams.SC1params.MSDBparams.DBHost="lofar17"          # Parameter database host name
 CTRLparams.SC1params.MSDBparams.DBType="aips"           # Parameter database type
 CTRLparams.SC1params.MSDBparams.DBPwd=""                # Parameter database password
 CTRLparams.SC1params.MSDBparams.DBMasterPort=13157                # port on which the master db is listening
 CTRLparams.SC1params.MSDBparams.meqTableName="demo"    # Meq model table name *       
 CTRLparams.SC1params.MSDBparams.skyTableName="demo_gsm" # Sky model table name *
-#this doesn't have to be defined CTRLparams.SC1params.MSDBparams.sourceGroups = ["srcs=[0,1,2]", "srcs=[5,6,7]"]
+#this doesn't have to be defined CTRLparams.SC1params.MSDBparams.sourceGroups = ["srcs=[0,1,2]","srcs=[5,6,7]"]
