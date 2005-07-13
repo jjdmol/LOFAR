@@ -1,4 +1,4 @@
-# TestBDB with:
+# TestBDBRepl (for testing BDBReplication in 1 process) with:
 #   demo3.MS (no noise)
 #   nrsrc=3
 #   nrstat=100
@@ -10,6 +10,7 @@
 #   pert=1e-6
 #   model=LOFAR.RI
 #   time domain is all times
+
 
 
 # this doesn't have to be defined   BBDBname="test"
@@ -35,7 +36,7 @@ CTRLparams.SC1params.useAutoCorr=F         # Use auto correlations
 CTRLparams.SC1params.useSVD=F              # Use Singular Value Decomposition in solve?
 CTRLparams.SC1params.MSDBparams.MSName="demo3.MS_p1"         # Name of the Measurement Set
 CTRLparams.SC1params.MSDBparams.DBHost="localhost"          # Parameter database host name
-CTRLparams.SC1params.MSDBparams.DBType="bdb"           # Parameter database type
+CTRLparams.SC1params.MSDBparams.DBType="bdbrepl"           # Parameter database type
 CTRLparams.SC1params.MSDBparams.DBPwd=""                # Parameter database password
 CTRLparams.SC1params.MSDBparams.DBMasterPort=13157                # port on which the master db is listening
 CTRLparams.SC1params.MSDBparams.meqTableName="demo"    # Meq model table name *       

@@ -1,7 +1,7 @@
 #!/bin/sh
 # this script must be called with nriter and usernm
 
-TESTNAME=testBDB
+TESTNAME=testBDBRepl
 
 if [ "$#" != "2" ]; then
  echo "not the correct number of parameters"
