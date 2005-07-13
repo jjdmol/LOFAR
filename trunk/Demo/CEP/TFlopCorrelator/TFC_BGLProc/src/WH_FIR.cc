@@ -35,7 +35,6 @@ WH_FIR::WH_FIR(const string& name,
    getDataManager().addInDataHolder(0, new DH_FIR("input", itsSBID));
 
    for (int c=0; c<itsFFTs; c++) {
-     // this should probably be two DataHolders
      getDataManager().addOutDataHolder(c, new DH_PPF("output", itsSBID)); 
    }
    
@@ -78,8 +77,12 @@ void WH_FIR::process() {
   short      write_index;
 
   for (int filter = 0; filter < itsNFilters; filter++) {
-    accum = 0.0;
+    accum = makefcomplex(0,0);
     
+    // get data from the input dataholder
+    filterData[ filter ].delayLine[ 0 ] = 
+      *(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBuffer() + filter);
+
     for (int tap = 0; tap < itsNtaps; tap++) {
       accum += filterData[ filter ].filterTaps[ tap ] * 
 	filterData[ filter ].delayLine[ tap ];
