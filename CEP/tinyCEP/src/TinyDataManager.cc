@@ -205,7 +205,8 @@ namespace LOFAR
 	{
 	  LOG_TRACE_COND_STR("Execute Initial read call on channel = " 
 			     << ch << " step=1   rate= " << getInputRate(ch));
-	  getInConnection(ch)->read();
+	  ASSERTSTR(getInConnection(ch)->read()!=Connection::Error,
+		    "Error in reading channel " << ch);
 	}
 	else
 	{
@@ -236,7 +237,8 @@ namespace LOFAR
       setReadyInFlag(channel);
       if (getInConnection(channel)!= 0)
       {
-	getInConnection(channel)->read();
+	ASSERTSTR(getInConnection(channel)->read() != Connection::Error,
+		  "Error in reading channel "<< channel);
       }
       else
       {
@@ -255,7 +257,8 @@ namespace LOFAR
       setReadyOutFlag(channel);
       if (getOutConnection(channel)!= 0)
       {      
-	getOutConnection(channel)->write();
+	ASSERTSTR(getOutConnection(channel)->write() != Connection::Error,
+		  "Error in writing channel " << channel);
       }
       else
       {
