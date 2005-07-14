@@ -49,16 +49,6 @@ namespace LOFAR
     itsMMap.unmapFile();
   }
 
-  void FlagsMap::lockMappedMemory()
-  {
-    itsMMap.lockMappedMemory();
-  }
-
-  void FlagsMap::unlockMappedMemory()
-  {
-    itsMMap.unlockMappedMemory();
-  }
-
   void FlagsMap::setFlag (uint pos)
   {
     uint realpos = pos;
