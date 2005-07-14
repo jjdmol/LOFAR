@@ -43,31 +43,33 @@ class MMap
 {
 public:
 
-  enum protection{Read, Write, ReWr};
+  enum protection {Read, Write, ReWr};
 
-  // Constructor
+  // Constructor.
   MMap (const string& fileName, protection prot);
 
-  // Destructor
+  // Destructor.
   ~MMap();
 
-  // Map the desired area
-  void mapFile (int64 startOffset, size_t nrBytes);
+  // Map the desired region.
+  void mapFile (int64 offset, size_t size);
 
-  // Unmap the last area
+  // Flush the changed mapped data to the file.
+  void flush();
+
+  // Unmap the last region.
   void unmapFile();
 
-  // Guarantee this memory range is resident in RAM (disable paging).
-  // The memory range must be part of a mapped area.
-  void lockMappedMemory();
+  // Get offset of mapped region.
+  int64 getOffset() const;
 
-  // Reenable paging 
-  void unlockMappedMemory();
+  // Get size of mapped region.
+  size_t getSize() const;
 
-  // Get pointer to start of mapped region
+  // Get pointer to start of mapped region.
   void* getStart();
 
-  // Get name of mapped file
+  // Get name of mapped file.
   const string& getFileName() const;
 
 private:
@@ -78,12 +80,20 @@ private:
 
   string itsFileName;       // File name
   int    itsFd;             // File descriptor
-  size_t itsNrBytes;        // Number of mapped bytes 
+  size_t itsSize;           // Size of region to be mapped
+  int64  itsOffset;         // Offset of region to be mapped
+  size_t itsNrBytes;        // Actual number of mapped bytes 
   void*  itsPageStart;      // Pointer to the start of the mapped page(s)
   void*  itsPtr;            // Pointer to the start of requested map area
   protection itsProtection; // Read/write protection of mapped area
 
 };
+
+inline int64 MMap::getOffset() const
+  { return itsOffset; }
+
+inline size_t MMap::getSize() const
+  { return itsSize; }
 
 inline void* MMap::getStart()
   { return itsPtr; }
