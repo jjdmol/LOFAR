@@ -30,6 +30,9 @@
 #include <Transport/DataHolder.h>
 #include <Transport/BaseSim.h>
 
+namespace LOFAR
+{
+
 /**
    This class is a DataHolder example class used in ExampleSim.
 */
@@ -76,5 +79,6 @@ inline int* DH_ExampleSim::getBuffer()
 inline const int* DH_ExampleSim::getBuffer() const
   { return itsBuffer; }
 
+} // end namespace LOFAR
 
 #endif 

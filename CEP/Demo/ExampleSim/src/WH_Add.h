@@ -29,6 +29,8 @@
 #include <tinyCEP/WorkHolder.h>
 #include <ExampleSim/DH_ExampleSim.h>
 
+namespace LOFAR
+{
 
 /**
    This WorkHolder adds a constant to the input.
@@ -66,5 +68,6 @@ private:
 
 };
 
+} // end namespace LOFAR
 
 #endif
