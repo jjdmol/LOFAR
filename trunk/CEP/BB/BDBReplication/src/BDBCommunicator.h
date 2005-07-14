@@ -36,7 +36,7 @@ using namespace LOFAR;
 class BDBCommunicator {
  public:
   // called from outside the thread
-  BDBCommunicator(const string& hostname, const int port);
+  BDBCommunicator(const string& hostname);
 
   BDBCommunicator(const BDBCommunicator& other);
 
@@ -69,6 +69,9 @@ class BDBCommunicator {
   bool connectTo(const char* otherHostName,
 		 int otherPort);
 
+  // set port, this should be done after the connector has found an unused port
+  void setPort(int newPort);
+
  private:
   void handleMessage(Dbt* rec, Dbt* control, int envId);
 
@@ -89,5 +92,8 @@ class BDBCommunicator {
   int itsPort;
   ALLOC_TRACER_ALIAS(BDBSite);
 };
+
+inline void BDBCommunicator::setPort(int newPort)
+{ itsPort = newPort;};
 
 #endif
