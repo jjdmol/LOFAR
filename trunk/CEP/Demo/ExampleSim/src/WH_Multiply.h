@@ -29,6 +29,8 @@
 #include <tinyCEP/WorkHolder.h>
 #include <ExampleSim/DH_ExampleSim.h>
 
+namespace LOFAR
+{
 
 /**
    This WorkHolder multiplies all inputs.
@@ -66,5 +68,6 @@ private:
 
 };
 
+} // end namespace LOFAR
 
 #endif

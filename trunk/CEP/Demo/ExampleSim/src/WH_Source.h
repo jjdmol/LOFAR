@@ -29,6 +29,8 @@
 #include <tinyCEP/WorkHolder.h>
 #include <ExampleSim/DH_ExampleSim.h>
 
+namespace LOFAR
+{
 
 /**
    This is the work holder for the Tester test program.
@@ -67,5 +69,6 @@ private:
 
 };
 
+} // end namespace LOFAR
 
 #endif
