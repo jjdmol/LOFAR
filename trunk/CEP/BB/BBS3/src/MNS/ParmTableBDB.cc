@@ -43,10 +43,10 @@ namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
     itsBDBTableName(tableName),
-    itsBDBHomeName ("/tmp/" + userName + "." + tableName + ".bdb")
+    itsBDBHomeName ("/tmp/" + userName + "." + tableName + ".bdb"),
+    itsDbEnv(0),
+    itsDb(0)
   {
-    itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
-    itsDb = new Db(itsDbEnv, 0);
   }
 
   ParmTableBDB::~ParmTableBDB()
@@ -65,6 +65,8 @@ namespace LOFAR {
   }
 
   void ParmTableBDB::connect(){
+    itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
+    itsDb = new Db(itsDbEnv, 0);
     u_int32_t flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
     LOG_TRACE_FLOW_STR("BDBR opening environment: "<<itsBDBHomeName);
     mkdir(itsBDBHomeName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
@@ -154,13 +156,12 @@ namespace LOFAR {
     while (true) {
       int ret = itsDb->get(NULL, &key, &value, 0);
       if (ret != 0) {
-	LOG_WARN_STR("database error while getting initial parms"<<itsDbEnv->strerror(ret));
 	// key wasn't found or there was an error
 	string::size_type idx = name.rfind ('.');
 	// Exit loop if no more name parts.
 	if (idx == string::npos) 
 	  {
-	    LOG_TRACE_VAR("no match for default value or couldn't reach database");
+	    LOG_WARN_STR("no match for default value or couldn't reach database");
 	    break;
 	  }
 	// Remove last part and try again.
@@ -185,11 +186,16 @@ namespace LOFAR {
     MPHKey key(parmName);
     MPHValue value;
     MeqDomain pdomain;
+    DbTxn* transaction;
+    itsDbEnv->txn_begin(NULL, &transaction, 0);
     Dbc* cursorp;
-    itsDb->cursor(NULL, &cursorp, 0);
+    itsDb->cursor(transaction, &cursorp, 0);
 
     int flags = DB_SET;
+    bool found = false;
+    bool foundOne = false;
     while (cursorp->get(&key, &value, flags) == 0) {
+      foundOne = true;
       flags = DB_NEXT_DUP; // this means it will only walk through the MPHs with the same key (=name)
       pdomain = value.getMPH().getPolc().domain();
       if (near(domain.startX(), pdomain.startX())  &&
@@ -198,11 +204,16 @@ namespace LOFAR {
 	  near(domain.endY(),   pdomain.endY())) 
 	{
 	  // delete the MPH that has the same name and domain (because the combination should be unique) and then just add the right value
-	  cursorp->del(0);
+	  int ret = cursorp->del(0);
+	  ASSERTSTR(ret == 0, "Could not replace polc value: " << itsDbEnv->strerror(ret));
+	  found = true;
 	  break;
 	}
     }
+    ASSERTSTR(foundOne, "Could not update polc with name: " << parmName << ": no matching polc found")
+    ASSERTSTR(found, "Could not update polc with name: " << parmName << ": no matching domains found")
     cursorp->close();
+    transaction->commit(0);
     putNewCoeff (parmName, polc);
   }
 
@@ -220,7 +231,7 @@ namespace LOFAR {
     MPHKey key(parmName, polc.domain());
     MeqParmHolder mph(parmName, polc);
     MPHValue value(mph);
-    itsDb->put(NULL, &key, &value, DB_AUTO_COMMIT);
+    ASSERTSTR(itsDb->put(NULL, &key, &value, DB_AUTO_COMMIT) == 0, "Could not insert coeff with name " << parmName);
   }
 
   void ParmTableBDB::putNewDefCoeff (const string& parmName,
@@ -241,8 +252,10 @@ namespace LOFAR {
     MPHValue value;
     value.set_flags(DB_DBT_MALLOC);
     MeqDomain pdomain;
+    DbTxn* transaction;
+    itsDbEnv->txn_begin(NULL, &transaction, 0);
     Dbc* cursorp;
-    itsDb->cursor(NULL, &cursorp, 0);
+    itsDb->cursor(transaction, &cursorp, 0);
 
     int flags = DB_SET;
     while (cursorp->get(&key, &value, flags) == 0) {
@@ -257,6 +270,7 @@ namespace LOFAR {
 	}
     }
     cursorp->close();
+    transaction->commit(0);
     return set;
   }
 
@@ -272,8 +286,10 @@ namespace LOFAR {
     // later we should add "RA" as a key to the table
     // then we can first find RA and then walk the rest of the database
     // or we can use a secondary key on the first part of the name
+    DbTxn* transaction;
+    itsDbEnv->txn_begin(NULL, &transaction, 0);
     Dbc* cursorp;
-    itsDb->cursor(NULL, &cursorp, 0);
+    itsDb->cursor(transaction, &cursorp, 0);
     string name;
     int flags = DB_SET_RANGE; //go to RA or the first string that is bigger
     while (cursorp->get(&key, &value, flags) == 0) {
@@ -286,6 +302,7 @@ namespace LOFAR {
   
     LOG_TRACE_STAT_STR("finished retreiving "<<nams.size()<<" sources from "<<itsBDBTableName);
     cursorp->close();
+    transaction->commit(0);
     return nams;
   }
 

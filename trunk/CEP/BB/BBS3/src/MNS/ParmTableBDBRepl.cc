@@ -90,7 +90,7 @@ namespace LOFAR {
     }
     theirReplicatorRefCount ++;
 
-    itsBDBTableName = tableName + ".bdb";
+    itsBDBTableName = tableName + ".bdbrepl";
     delete itsDb;
     itsDb = 0;
   }
@@ -105,6 +105,9 @@ namespace LOFAR {
       itsDb = 0;
     }
 
+    // We shouldn't destroy the environment because it is owned by the BDBReplicator
+    itsDbEnv = 0;
+
     theirReplicatorRefCount--;
     if (theirReplicatorRefCount == 0) {
       delete theirReplicator;
@@ -117,9 +120,9 @@ namespace LOFAR {
     LOG_TRACE_FLOW("connecting bdbrepl");
     theirReplicator->startReplication();
     LOG_TRACE_FLOW("replication started");
-    DbEnv* myDbEnv = theirReplicator->getDbEnv();
-    LOG_TRACE_FLOW_STR("environment: "<<myDbEnv);
-    itsDb = new Db(myDbEnv, DB_CXX_NO_EXCEPTIONS);
+    itsDbEnv = theirReplicator->getDbEnv();
+    LOG_TRACE_FLOW_STR("environment: "<<itsDbEnv);
+    itsDb = new Db(itsDbEnv, DB_CXX_NO_EXCEPTIONS);
 
     u_int32_t oFlags;
     if (itsIsMaster) {
@@ -134,13 +137,13 @@ namespace LOFAR {
     while (ret != 0){
       //ret = itsDb->open(NULL, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
       DbTxn* myTxn = 0;
-      myDbEnv->txn_begin(NULL, &myTxn, 0);
+      itsDbEnv->txn_begin(NULL, &myTxn, 0);
       ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
       if (ret != 0 ) {
 	itsDb->close(0);
 	char *homeName;
-	myDbEnv->get_home((const char**)&homeName);
-	cerr<<"BDBRepl while opening database "<<itsBDBTableName<<" in "<<homeName<<": "<< myDbEnv->strerror(ret)<<endl;
+	itsDbEnv->get_home((const char**)&homeName);
+	cerr<<"BDBRepl while opening database "<<itsBDBTableName<<" in "<<homeName<<": "<< itsDbEnv->strerror(ret)<<endl;
       }
       myTxn->commit(0);
     }
@@ -173,8 +176,8 @@ namespace LOFAR {
 		       13157,
 		       true);
     BDBR.startReplication();
-    DbEnv* myDbEnv = BDBR.getDbEnv();
-    Db tmpDb(myDbEnv, DB_CXX_NO_EXCEPTIONS);
+    DbEnv* itsDbEnv = BDBR.getDbEnv();
+    Db tmpDb(itsDbEnv, DB_CXX_NO_EXCEPTIONS);
 
     string fullTableName = envName + "/" + tableName + ".bdb";
     // Do the same as the connect but now with the flag DB_CREATE
