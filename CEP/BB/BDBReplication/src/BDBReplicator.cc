@@ -45,7 +45,7 @@ BDBReplicator::BDBReplicator(const string& DbEnvName,
     itsMasterHostName(masterHostName),
     itsMasterPort(masterPort),
     itsIsMaster(master),
-    itsCommunicator(hostName, port),
+    itsCommunicator(hostName),
     itsCommunicatorThread(0),
     itsConnector(port, &itsCommunicator),
     itsConnectorThread(0),
@@ -69,6 +69,7 @@ void BDBReplicator::startReplication()
       sleep(1);
     }
     itsPort = itsConnector.getPort();
+    itsCommunicator.setPort(itsPort);
 
     if(!itsIsMaster) {
       // try to connect to master

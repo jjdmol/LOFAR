@@ -38,11 +38,11 @@ int BDBCommunicator::theirObjectCounter = 0;
 bool BDBCommunicator::theirShouldStop = false;
 int BDBCommunicator::theirLastEnvId = 2;
 
-BDBCommunicator::BDBCommunicator(const string& hostName, const int port)
+BDBCommunicator::BDBCommunicator(const string& hostName)
   : itsEnvId(1),
     itsDbEnv(0),
     itsHostName(hostName),
-    itsPort(port)
+    itsPort(0)
 {
   theirObjectCounter++;
 };
@@ -185,6 +185,7 @@ void BDBCommunicator::sendOne(const Dbt *control,
 
 bool BDBCommunicator::connectTo(const char* hostName, const int port)
 {
+  if (itsPort == 0) return false;
   Socket* newSocket = new Socket();
   BDBSite* newSite = new BDBSite(hostName, port, newSocket);
   LOG_TRACE_FLOW_STR("BDBConHandlThread connecting to "<<*newSite);
