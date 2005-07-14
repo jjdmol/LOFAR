@@ -34,6 +34,8 @@ namespace LOFAR
   
 MMap::MMap (const string& fileName, protection prot)
   : itsFileName  (fileName),
+    itsSize      (0),
+    itsOffset    (0),
     itsNrBytes   (0),
     itsPageStart (0),
     itsPtr       (0),
@@ -55,30 +57,28 @@ MMap::MMap (const string& fileName, protection prot)
     pr = O_RDONLY;
     LOG_WARN("Invalid protection argument in MMap construction. Using Read protection instead...");
   }
-  itsFd = open( fileName.c_str(), pr);
+  itsFd = ::open( fileName.c_str(), pr);
   ASSERTSTR (itsFd >= 0, "Opening of file " << fileName << " failed." );
 }
 
 MMap::~MMap()
 {
   unmapFile();
-  close(itsFd);
+  ::close(itsFd);
 }
 
-void MMap::mapFile (int64 startOffset, size_t nrBytes)
+void MMap::mapFile (int64 offset, size_t size)
 {
   // The actual mapped area will be a multiple of the page size
-  if (itsPtr != 0)
-  {
+  if (itsPtr != 0) {
     LOG_WARN("Previous region still mapped! Unmapping...");
     unmapFile();
   }
-
-  int sz = getpagesize();
-  // Calculate start of page on which startOffset is located.
-  int64 pageStartOffset = (startOffset/sz) * sz;
+  int64 sz = getpagesize();
+  // Calculate start of page on which offset is located.
+  int64 pageStartOffset = (offset/sz) * sz;
   // Add the difference to the nr of bytes to map.
-  itsNrBytes = nrBytes + startOffset-pageStartOffset;
+  itsNrBytes = size + offset-pageStartOffset;
 
   int protect;
   switch (itsProtection) {
@@ -97,42 +97,36 @@ void MMap::mapFile (int64 startOffset, size_t nrBytes)
   }
     
   // Do mmap
-  itsPageStart = mmap ( 0, itsNrBytes, protect, MAP_SHARED, itsFd,
-			pageStartOffset);
-  ASSERTSTR (itsPageStart != MAP_FAILED, "mmap failed: " << strerror(errno) ); 
+  itsPageStart = ::mmap (0, itsNrBytes, protect, MAP_SHARED, itsFd,
+			 pageStartOffset);
+  ASSERTSTR (itsPageStart != MAP_FAILED, "MMap::MMap - mmap failed: "
+	     << strerror(errno) ); 
   // Get requested pointer
-  itsPtr = (char*)itsPageStart + startOffset-pageStartOffset;
+  itsPtr = (char*)itsPageStart + offset-pageStartOffset;
+  itsOffset = offset;
+  itsSize   = size;
 }
 
 void MMap::unmapFile()
 {
-  if (itsPtr != 0)
-  {
-    int res = munmap(itsPageStart, itsNrBytes);
-    ASSERTSTR (res == 0, "munmap failed: " << strerror(errno));
+  if (itsPtr != 0) {
+    int res = ::munmap (itsPageStart, itsNrBytes);
+    ASSERTSTR (res == 0, "MMap::unmapFile - munmap failed: "
+	       << strerror(errno));
+    itsSize      = 0;
+    itsOffset    = 0;
+    itsNrBytes   = 0;
     itsPageStart = 0;
-    itsPtr = 0;
-    itsNrBytes = 0;
-    unlockMappedMemory();
+    itsPtr       = 0;
   }
 }
 
-void MMap::lockMappedMemory()
+void MMap::flush()
 {
-  ASSERTSTR(itsPtr > 0, "No area has been mapped. ");
-  int res;
-  res = mlock(itsPageStart, itsNrBytes);
-  ASSERTSTR(res != 0, "mlock failed: " << strerror(errno) ); 
-}
-
-void MMap::unlockMappedMemory()
-{
-  if (itsPageStart != 0)
-  {
-    int res = munlock(itsPageStart, itsNrBytes);
-    ASSERTSTR (res == 0, "munlock failed: " << strerror(errno));
+  if (itsPtr != 0) {
+    int res = ::msync (itsPageStart, itsNrBytes, MS_SYNC);
+    ASSERTSTR (res == 0, "MMap::flush - msync failed: " << strerror(errno));
   }
 }
-
 
 } // namespace LOFAR
