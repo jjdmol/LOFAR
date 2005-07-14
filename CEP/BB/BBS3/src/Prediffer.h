@@ -33,7 +33,6 @@
 
 #include <BBS3/ParmData.h>
 #include <BBS3/MNS/MeqDomain.h>
-#include <BBS3/MNS/MeqHist.h>
 #include <BBS3/MNS/MeqJonesExpr.h>
 #include <BBS3/MNS/MeqJonesNode.h>
 #include <BBS3/MNS/MeqMatrix.h>
@@ -50,7 +49,6 @@
 #include <Common/Timer.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
-#include <list>
 
 namespace LOFAR
 {
@@ -132,12 +130,17 @@ public:
   void fillFitter (casa::LSQFit&);
 
   // Set the source numbers to use in this peel step.
-  bool setPeelSources (const vector<int>& peelSources,
-		       const vector<int>& extraSources);
+  bool setPeelGroups (const vector<int>& peelGroups,
+		      const vector<int>& extraGroups);
 
-  // Subtract the peel source(s) from the data.
-  // If write=true, the data are written into a new file.
-  void subtractPeelSources (bool write=false);
+  // Subtract the peel source(s) from the data in the .res file.
+  // Optionally the mapped data are flushed to the file.
+  void subtractPeelSources (bool flush=false)
+    { saveResidualData (true, flush); }
+
+  // Write the predicted data into the .res file.
+  void writePredictedData()
+    { saveResidualData (false, true); }
 
   // There are three ways to update the solvable parms after the solver
   // found a new solution.
@@ -227,6 +230,14 @@ private:
 		    const MeqRequest& request,
 		    int blindex, int ant1, int ant2);
 
+  // Subtract the peel source(s) from the data.
+  // Optionally the mapped data are flushed to the file.
+  void saveResidualData (bool subtract, bool flush);
+
+  // Subtract the predicted data for this baseline from the data.
+  void saveData (bool subtract, fcomplex* data, const MeqRequest& request,
+		 int blindex, int ant1, int ant2);
+
   // Reset the loop variables for the getEquations loop.
   void resetEqLoop();
 
@@ -244,7 +255,7 @@ private:
   MeqSourceList         itsSources;
   vector<vector<int> >  itsSrcGrp;      //# sources in each group
   vector<int>           itsSrcNrMap;    //# map of all srcnr to used srcnr
-  casa::Vector<int>     itsPeelSourceNrs;
+  vector<int>           itsPeelSourceNrs;
   vector<MeqLMN*>       itsLMN;         //# LMN for sources used
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;     //# UVW values per station
@@ -287,6 +298,7 @@ private:
   unsigned int   itsNrTimesDone;   //# The number of times done in time domain
   unsigned int   itsBlNext;        //# Next baseline to do in time domain
 
+  bool           itsVisMapped;     //# True = .vis file is mapped (not .res)
   MMap*          itsDataMap;       //# Data file to map
   FlagsMap*      itsFlagsMap;      //# Flags file to map
   bool           itsLockMappedMem; //# Lock memory immediately after mapping?

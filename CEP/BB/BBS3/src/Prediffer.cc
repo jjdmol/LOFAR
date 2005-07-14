@@ -96,7 +96,7 @@ Prediffer::Prediffer(const string& msName,
 		     const vector<int>& ant,
 		     const string& modelType,
 		     const vector<vector<int> >& sourceGroups,
-		     bool    calcUVW)
+		     bool      calcUVW)
   :
   itsMSName       (msName),
   itsMEPName      (meqModel),
@@ -111,6 +111,7 @@ Prediffer::Prediffer(const string& msName,
   itsNrTimes      (0),
   itsNrTimesDone  (0),
   itsBlNext       (0),
+  itsVisMapped    (True),
   itsDataMap      (0),
   itsFlagsMap     (0)
 {
@@ -736,7 +737,7 @@ int Prediffer::setDomain (double fstart, double flength,
   BBSTest.log("initparms", parmTimer);
   // Return the (estimated) maximum buffer size needed to marshall the
   // fitter object.
-  return itsNrScid*itsNrScid/2 + 1000;
+  return (itsNrScid+1)*itsNrScid/2*8 + 1000;
 }
 
 
@@ -977,16 +978,12 @@ void Prediffer::getEquation (double* result, char* flagResult,
       // Get the difference (measured - predicted) for all channels.
       const MeqMatrix& val = predResults[corr]->getValue();
       const double* vals = (const double*)(val.dcomplexStorage());
-      if (showd) {
-	cout << "corr=" << corr << ' ' << val << endl;
-      }
       if (itsReverseChan) {
 	int dch = nrchan;
 	for (int ch=0; ch<nrchan; ++ch) {
 	  --dch;
 	  *result++ = real(data[corr+dch*itsNCorr]) - vals[2*ch];
 	  *result++ = imag(data[corr+dch*itsNCorr]) - vals[2*ch+1];
-	  if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
 	  // Use same flag for real and imaginary part.
 	  flagResult[0] = (flags[corr+dch*itsNCorr] ? 1:0);
 	  flagResult[1] = flagResult[0];
@@ -996,14 +993,20 @@ void Prediffer::getEquation (double* result, char* flagResult,
 	for (int ch=0; ch<nrchan; ++ch) {
 	  *result++ = real(data[corr+ch*itsNCorr]) - vals[2*ch];
 	  *result++ = imag(data[corr+ch*itsNCorr]) - vals[2*ch+1];
-	  if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
 	  // Use same flag for real and imaginary part.
 	  flagResult[0] = (flags[corr+ch*itsNCorr] ? 1:0);
 	  flagResult[1] = flagResult[0];
 	  flagResult += 2;
 	}
       }
-      if (showd) cout << endl;
+      if (showd) {
+	cout << "corr=" << corr << ' ' << val << endl;
+	for (int ch=0; ch<nrchan; ++ch) {
+	  cout << real(data[corr+ch*itsNCorr]) - vals[2*ch] << ' '
+	       << imag(data[corr+ch*itsNCorr]) - vals[2*ch+1] << ' ';
+	}
+	cout << endl;
+      }
       // Get the derivative for all solvable parameters.
       for (int scinx=0; scinx<itsNrScid; ++scinx) {
 	if (! predResults[corr]->isDefined(scinx)) {
@@ -1016,15 +1019,17 @@ void Prediffer::getEquation (double* result, char* flagResult,
 	  double pert = predResults[corr]->getPerturbation(scinx).getDouble();
 	  const MeqMatrix& pertVal = predResults[corr]->getPerturbedValue(scinx);
 	  const double* pertVals = (const double*)(pertVal.dcomplexStorage());
+	  for (int ch=0; ch<2*nrchan; ++ch) {
+	    *result++ = (pertVals[ch] - vals[ch]) / pert;
+	  }
 	  if (showd) {
 	    cout << "corr=" << corr << " spid=" << scinx << ' '
 		 << pertVal << endl;
+	    for (int ch=0; ch<2*nrchan; ++ch) {
+	      cout << (pertVals[ch] - vals[ch]) / pert << ' ';
+	    }
+	    cout << endl;
 	  }
-	  for (int ch=0; ch<2*nrchan; ++ch) {
-	    *result++ = (pertVals[ch] - vals[ch]) / pert;
-	    if (showd) cout << *(result-1) << ' ';
-	  }
-	  if (showd) cout << endl;
 	}
       }
     }
@@ -1060,7 +1065,6 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
       uInt ant2 = itsAnt2[bl];
       if (itsBLSelection(ant1,ant2) == true)
       {
-	///showd = (ant1==4 && ant2==8);
 	// Get the result for this baseline.
 	int blindex = itsBLIndex(ant1,ant2);
 	MeqJonesExpr& expr = itsExpr[blindex];
@@ -1074,6 +1078,79 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
     }
   }
   return results;
+}
+
+//----------------------------------------------------------------------
+//
+// ~saveData
+//
+// Save the data for the given baseline.
+// Optionally it is subtracted from the current data.
+//
+//----------------------------------------------------------------------
+void Prediffer::saveData (bool subtract, fcomplex* data,
+			  const MeqRequest& request,
+			  int blindex, int ant1, int ant2)
+{
+  itsPredTimer.start();
+  MeqJonesExpr& expr = itsExpr[blindex];
+  // Do the actual predict.
+  MeqJonesResult jresult = expr.getResult (request); 
+  itsPredTimer.stop();
+
+  itsEqTimer.start();
+  int nrchan = request.nx();
+  bool showd = false;
+  /// showd = (ant1==4 && ant2==8);
+  // Put the results in a single array for easier handling.
+  const MeqResult* predResults[4];
+  predResults[0] = &(jresult.getResult11());
+  if (itsNCorr == 2) {
+    predResults[1] = &(jresult.getResult22());
+  } else if (itsNCorr == 4) {
+    predResults[1] = &(jresult.getResult12());
+    predResults[2] = &(jresult.getResult21());
+    predResults[3] = &(jresult.getResult22());
+  }
+  // Loop through the correlations.
+  for (int corr=0; corr<itsNCorr; ++corr) {
+    if (itsCorr[corr]) {
+      const MeqMatrix& val = predResults[corr]->getValue();
+      const double* vals = (const double*)(val.dcomplexStorage());
+      // Subtract predicted from the data or store the predict in data.
+      if (itsReverseChan) {
+	int dch = nrchan;
+	if (subtract) {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    --dch;
+	    data[corr+dch*itsNCorr] -= makefcomplex(vals[2*ch], vals[2*ch+1]);
+	  }
+	} else {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    --dch;
+	    data[corr+dch*itsNCorr] = makefcomplex(vals[2*ch], vals[2*ch+1]);
+	  }
+	}
+      } else {
+	if (subtract) {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    data[corr+ch*itsNCorr] -= makefcomplex(vals[2*ch], vals[2*ch+1]);
+	  }
+	} else {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    data[corr+ch*itsNCorr] = makefcomplex(vals[2*ch], vals[2*ch+1]);
+	  }
+	}
+      }
+      if (showd) {
+	cout << "corr=" << corr << ' ' << val << endl;
+	for (int ch=0; ch<nrchan; ++ch) {
+	  cout << data[corr+ch*itsNCorr] << ' ';
+	}
+	cout << endl;
+      }
+    }
+  }
 }
 
 //----------------------------------------------------------------------
@@ -1119,138 +1196,74 @@ void Prediffer::getData (Array<Complex>& dataArr, Array<Bool>& flagArr)
 
 //----------------------------------------------------------------------
 //
-// ~subtractPeelSources
+// ~ssaveResidualData
 //
-// Save the colA - colB in residualCol.
+// Save data-predict or predict in data.
 //
 //----------------------------------------------------------------------
-void Prediffer::subtractPeelSources (bool write)
+void Prediffer::saveResidualData (bool subtract, bool write)
 {
-  /*
-  if (itsDataMap->getFileName() != itsMSName+".res")
-  {
-    // copy file <msname>.dat to <msname>.res
-    ifstream dataFile((itsDataMap->getFileName()).c_str()); 
-    string resFileName(itsMSName+".res");
-    ofstream resFile(resFileName.c_str());
-    resFile << dataFile.rdbuf();
-    dataFile.close();
-    resFile.close();
-
-    // Use residuals file for further solving
-    delete itsDataMap;
-    itsDataMap = new MMap(resFileName, MMap::ReWr);
-  }
-
   cout << "saveResidualData to '" << itsDataMap->getFileName() << "'" << endl;
 
-  // Map the correct data subset (this time interval) for writing
-  int64 startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
-  size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
-  itsDataMap->mapFile(startOffset, nrBytes);
-  if (itsLockMappedMem) {
-    // Make sure mapped data is resident in RAM
-    itsDataMap->lockMappedMemory();
+  // Map .res file if not mapped yet.
+  if (itsVisMapped) {
+    size_t size = 0;
+    int64  offs = 0;
+    if (itsDataMap) {
+      size = itsDataMap->getSize();
+      offs = itsDataMap->getOffset();
+      delete itsDataMap;
+      itsDataMap = 0;
+    }
+    itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::ReWr);
+    if (size > 0) {
+      itsDataMap->mapFile (offs, size);
+    }
   }
 
-  vector<int> src(itsPeelSourceNrs.nelements());
-  cout << "Using peel sources ";
-  for (unsigned int i=0; i<src.size(); i++) {
-    src[i] = itsPeelSourceNrs[i];
-    cout << src[i] << ',';
-  }
-  cout << endl;
-  itsSources.setSelected (src);
+  cout << "Using peel sources " << itsPeelSourceNrs << endl;;
+  itsSources.setSelected (itsPeelSourceNrs);
 
+  int nrchan = itsLastChan-itsFirstChan+1;
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
-  int nrchan = 1+itsLastChan-itsFirstChan;
+  unsigned int freqOffset = itsDataFirstChan*itsNCorr;
 
-  // Loop over all times in current time interval.
-  for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
-  {
+  // Get the pointer to the mapped data.
+  fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
+  ASSERTSTR(dataStart!=0,
+	    "No memory region mapped. Call map(..) first."
+	    << " Perhaps you have forgotten to call nextInterval().");
+
+  // Loop through all baselines/times and create a request.
+  for (uint tStep=0; tStep<itsNrTimes; ++tStep) {
     unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
-
+    
     MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
     MeqRequest request(domain, nrchan, 1, itsNrScid);
-    
-    for (unsigned int bl=0; bl<itsNrBl; bl++)
-    {
-      uInt ant1 = itsAnt1[bl];
-      uInt ant2 = itsAnt2[bl];
-      if (itsBLSelection(ant1,ant2) == true)
-      {
-        unsigned int blOffset = bl*itsNrChan*itsNCorr;
-        unsigned int freqOffset = itsFirstChan*itsNCorr;
-        // Set the data pointer
-        Complex* dataStart = (Complex*)itsDataMap->getStart();
-
-        ASSERTSTR(dataStart!=0, "No memory region mapped. Call map(..) first."
-                  << " Perhaps you have forgotten to call nextInterval().");
-        Complex* dataPtr = dataStart + timeOffset + blOffset + freqOffset;
-
-	ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
-		&&  itsBLIndex(ant1,ant2) >= 0);
+    // Loop through all baselines and subtract the predict from the data.
+    for (uint bl=0; bl<itsNrBl; ++bl) {
+      uint ant1 = itsAnt1[bl];
+      uint ant2 = itsAnt2[bl];
+      ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow());
+      if (itsBLSelection(ant1,ant2)  &&  itsBLIndex(ant1,ant2) >= 0) {
+	// Get pointer to correct data part.
+	unsigned int blOffset = bl*itsNrChan*itsNCorr;
+	fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
+	// Subtract for this baseline.
 	int blindex = itsBLIndex(ant1,ant2);
-
-	itsExpr[blindex]->calcResult (request);
-	
-	// Create a matrix from selected frequencies and all correlations.
-	Matrix<Complex> data(IPosition(2, itsNCorr, nrchan), dataPtr, SHARE);
-
-	Slice sliceFreq(0, nrchan);
-	// Convert the DComplex predicted results to a Complex data array.
-	Matrix<Complex> tmpPredict(IPosition(2,1,nrchan));
-	convertArray (tmpPredict,
-		      itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
-
-	// Subtract data for all frequencies of correlation 1
-	Matrix<Complex> dataCorr0 (data(Slice(0,1), sliceFreq));
-	dataCorr0 -= tmpPredict;
-
-	if (4 == itsNCorr) 
-	{
-	  // Subtract data for all frequencies of correlation 2
-	  convertArray (tmpPredict,
-			itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataCorr1 (data(Slice(1,1), sliceFreq));
-	  dataCorr1 -= tmpPredict;
-
-	  // Subtract data for all frequencies of correlation 3
-	  convertArray (tmpPredict,
-			itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataCorr2 (data(Slice(2,1), sliceFreq));
-	  dataCorr2 -= tmpPredict;
-
-	  // Subtract data for all frequencies of correlation 4
-	  convertArray (tmpPredict,
-			itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataCorr3 (data(Slice(3,1), sliceFreq));
-	  dataCorr3 -= tmpPredict;
-	} 
-	else if (2 == itsNCorr)
-	{
-	  // Subtract data for all frequencies of correlation 2
-	  convertArray (tmpPredict,
-			itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataCorr1 (data(Slice(1,1), sliceFreq));
-	  dataCorr1 -= tmpPredict;
-	} 
-	else if (1 != itsNCorr)
-	{
-	  throw AipsError("Number of correlations should be 1, 2, or 4");
-	}
-	///    if (MeqDFTPS::doshow) cout << "result: " << data << endl;
-
-      } // End if (itsBLSelection(ant1,ant2) == ...)
-    } // End loop bl
-  } // End loop tStep
-
-  // Make sure file is updated
-  itsDataMap->unmapFile();
-*/
+	saveData (subtract, data, request, blindex, ant1, ant2);
+      }
+    }
+  }
+  BBSTestLogger::log("predict", itsPredTimer);
+  BBSTestLogger::log("saveData", itsEqTimer);
+  // Make sure data is written.
+  if (write) {
+    itsDataMap->flush();
+  }
 }
 
 
@@ -1431,42 +1444,31 @@ void Prediffer::fillUVW()
 // Define the source numbers to use in a peel step.
 //
 //----------------------------------------------------------------------
-bool Prediffer::setPeelSources (const vector<int>& peelSources,
-				const vector<int>& extraSources)
+bool Prediffer::setPeelGroups (const vector<int>& peelGroups,
+			       const vector<int>& extraGroups)
 {
-  Vector<Int> peelSourceNrs(peelSources.size());
-  for (unsigned int i=0; i<peelSources.size(); i++)
-  {
-    peelSourceNrs[i] = peelSources[i];
+  vector<int> allNrs;
+  for (uint i=0; i<extraGroups.size(); ++i) {
+    ASSERT (extraGroups[i] >= 0  &&  extraGroups[i] < int(itsSrcGrp.size()));
+    const vector<int>& grp = itsSrcGrp[i];
+    for (uint j=0; j<grp.size(); ++j) {
+      allNrs.push_back (grp[j]);
+    }
   }
-  Vector<Int> extraSourceNrs(extraSources.size());
-  for (unsigned int i=0; i<extraSources.size(); i++)
-  {
-    extraSourceNrs[i] = extraSources[i];
+  vector<int> peelNrs;
+  for (uint i=0; i<peelGroups.size(); ++i) {
+    ASSERT (peelGroups[i] >= 0  &&  peelGroups[i] < int(itsSrcGrp.size()));
+    const vector<int>& grp = itsSrcGrp[i];
+    for (uint j=0; j<grp.size(); ++j) {
+      peelNrs.push_back (grp[j]);
+      allNrs.push_back (grp[j]);
+    }
   }
-
-  // Make a shallow copy to get a non-const object.  
-  Vector<Int> tmpPeel(peelSourceNrs);
-  Vector<Int> sourceNrs;
-  if (extraSourceNrs.nelements() == 0) {
-    sourceNrs.reference (tmpPeel);
-  } else {
-    sourceNrs.resize (peelSourceNrs.nelements() + extraSourceNrs.nelements());
-    sourceNrs(Slice(0,peelSourceNrs.nelements())) = peelSourceNrs;
-    sourceNrs(Slice(peelSourceNrs.nelements(), extraSourceNrs.nelements())) =
-      extraSourceNrs;
-  }
-  LOG_TRACE_OBJ_STR( "peel: sources " << tmpPeel << " predicting sources "
-	    << sourceNrs );
-
-  ASSERT (peelSourceNrs.nelements() > 0);
-  vector<int> src(sourceNrs.nelements());
-  for (unsigned int i=0; i<src.size(); i++) {
-    src[i] = sourceNrs[i];
-    LOG_TRACE_OBJ_STR( "Predicting source " << sourceNrs[i] );
-  }
-  itsSources.setSelected (src);
-  itsPeelSourceNrs.reference (tmpPeel);
+  LOG_TRACE_OBJ_STR( "peel sources " << peelNrs << "; predict sources "
+		     << allNrs );
+  ASSERT (peelNrs.size() > 0);
+  itsSources.setSelected (allNrs);
+  itsPeelSourceNrs = peelNrs;
   return true;
 }
 
