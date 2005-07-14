@@ -47,13 +47,6 @@ namespace LOFAR
     // Unmap the last area
     void unmapFile();
 
-    // Guarantee this memory range is resident in RAM (disable paging).
-    // The memory range must be part of a mapped area.
-    void lockMappedMemory();
-
-    // Reenable paging 
-    void unlockMappedMemory();
-
     // Get pointer to start of mapped region
     void* getStart();
 
