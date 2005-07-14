@@ -1,5 +1,5 @@
 
-Reading in parameterfile 'tParameterSet.ps'
+Reading in parameterfile 'tParameterSet.in_param'
 
 Showing some values
 a.b.c=700
@@ -7,7 +7,7 @@ a.b=0
 a.b.double=3.1415926535897931
 a.b.lange_naam=dit is een wat langere naam
 
-Merging ParameterSet with file 'merge.ps'
+Merging ParameterSet with file 'tParameterSet.in_merge'
 
 Showing the same keys again
 a.b.c=5
@@ -31,11 +31,7 @@ The main ParameterSet contains:
 [a.c.a],[nog een afkorting]
 [e.g],[een voorbeeld]
 [egg],[een ei]
-The name of the ParameterSet = a
-The vers of the ParameterSet = 
-this is NOT a valid version number
-Parameter check says: No versionnumber found
-
+[vtest.intVector1Dim],[[ 3, "20485", 	002, '4904' , 25 ]]
 isValidVersionNr(1.2.3.4)   = 0
 isValidVersionNr(1.2.3)     = 1
 isValidVersionNr(1.2)       = 0
@@ -58,5 +54,10 @@ Subset a.b. contains:
 [time3],[15 hour]
 
 Trying to read a non-existing key
+DEBUG [tParameterSet@lofar17]LCS.ACC.APS - Told you the key didn't exists.
 
-Finally write the parameterset to 'newset.ps'
+Finally write the parameterset to 'newset.out_param'
+
+testing getInt32Vector
+5 elements in intVector1Dim
+3,20485,2,4904,25,

@@ -48,8 +48,8 @@ int main(int argc, char * argv[]) {
 	cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
 	cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;
 
-	cout << "\nMerging ParameterSet with file 'merge.in_param'\n";
-	myPS.adoptFile("merge.in_param");
+	cout << "\nMerging ParameterSet with file 'tParameterSet.in_merge'\n";
+	myPS.adoptFile("tParameterSet.in_merge");
 
 	cout << "\nShowing the same keys again\n";
 	cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
