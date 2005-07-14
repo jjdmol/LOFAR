@@ -22,13 +22,12 @@ MNS/MeqDFTPS.h \
 MNS/MeqDomain.h \
 MNS/MeqExpr.h \
 MNS/MeqFunklet.h \
-MNS/MeqHist.h \
 MNS/MeqJonesCMul2.h \
 MNS/MeqJonesCMul3.h \
 MNS/MeqJonesExpr.h \
-MNS/MeqJonesNode.h \
 MNS/MeqJonesMul2.h \
 MNS/MeqJonesMul3.h \
+MNS/MeqJonesNode.h \
 MNS/MeqJonesResult.h \
 MNS/MeqJonesSum.h \
 MNS/MeqLMN.h \
@@ -98,7 +97,6 @@ MNS/MeqDFTPS.cc \
 MNS/MeqDomain.cc \
 MNS/MeqExpr.cc \
 MNS/MeqFunklet.cc \
-MNS/MeqHist.cc \
 MNS/MeqJonesCMul2.cc \
 MNS/MeqJonesCMul3.cc \
 MNS/MeqJonesExpr.cc \
