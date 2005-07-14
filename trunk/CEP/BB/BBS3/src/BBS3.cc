@@ -73,7 +73,7 @@ int main (int argc, const char** argv)
 	// Get input file name.
 	name = argv[1];
 	// Get user name
-	usernm = argv[3];
+	usernm = argv[2];
 	BlobOBufChar bufo;
 	// Fill the buffer
 	BlobOStream bos(bufo);
@@ -112,7 +112,7 @@ int main (int argc, const char** argv)
     }
     // Get user name
     if (argc > 2) {
-      usernm = argv[3];
+      usernm = argv[2];
     }
       
 #endif
