@@ -109,7 +109,7 @@ void WH_Prediff::process()
     vector<int> emptyS(0);
     if (peelSrcs.size() > 0)
     {
-      pred->setPeelSources(peelSrcs, emptyS);
+      pred->setPeelGroups(peelSrcs, emptyS);
     }
     pred->clearSolvableParms();
     vector<string> emptyP(0);
@@ -127,7 +127,7 @@ void WH_Prediff::process()
     vector<int> emptyS(0);
     if (peelSrcs.size() > 0)
     {
-      pred->setPeelSources(peelSrcs, emptyS);
+      pred->setPeelGroups(peelSrcs, emptyS);
     }
     pred->clearSolvableParms();
     vector<string> emptyP(0);
@@ -144,7 +144,7 @@ void WH_Prediff::process()
     vector<int> emptyS(0);
     if (peelSrcs.size() > 0)
     {
-      pred->setPeelSources(peelSrcs, emptyS);
+      pred->setPeelGroups(peelSrcs, emptyS);
     }
     pred->clearSolvableParms();
     vector<string> emptyP(0);
