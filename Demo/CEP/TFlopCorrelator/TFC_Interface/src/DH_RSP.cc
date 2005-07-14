@@ -56,7 +56,7 @@ void DH_RSP::init()
   // Add the fields to the data definition.
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
   addField ("Flag", BlobField<int>(1));
-  addField ("SyncedStamp", BlobField<char>(sizeof(timestamp_t)));
+  addField ("SyncedStamp", BlobField<char>(1, sizeof(timestamp_t)));
   // Create the data blob
   createDataBlock();
 
