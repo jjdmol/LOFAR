@@ -31,13 +31,13 @@
 
 using namespace std;
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 
 int main(int argc, char * argv[]) {
 	INIT_LOGGER("tParameterSet");
 
-	cout << "\nReading in parameterfile 'tParameterSet.ps'\n";
-	ParameterSet		myPS("tParameterSet.ps");
+	cout << "\nReading in parameterfile 'tParameterSet.in_param'\n";
+	ParameterSet		myPS("tParameterSet.in_param");
 
 	ParameterSet		mySecondSet(myPS);
 
@@ -48,8 +48,8 @@ int main(int argc, char * argv[]) {
 	cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
 	cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;
 
-	cout << "\nMerging ParameterSet with file 'merge.ps'\n";
-	myPS.adoptFile("merge.ps");
+	cout << "\nMerging ParameterSet with file 'merge.in_param'\n";
+	myPS.adoptFile("merge.in_param");
 
 	cout << "\nShowing the same keys again\n";
 	cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
@@ -104,8 +104,8 @@ int main(int argc, char * argv[]) {
 		LOG_DEBUG ("Told you the key didn't exists.");
 	}
 
-	cout << "\nFinally write the parameterset to 'newset.ps'\n";
-	myPS.writeFile("newset.ps");
+	cout << "\nFinally write the parameterset to 'newset.out_param'\n";
+	myPS.writeFile("newset.out_param");
 
 	try {
 		cout << "\ntesting getInt32Vector\n";
