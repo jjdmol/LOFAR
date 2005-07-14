@@ -13,7 +13,7 @@
 
 #include <lofar_config.h>
 
-#include <DH_Delay.h>
+#include <TFC_Interface/DH_Delay.h>
 
 namespace LOFAR
 {
