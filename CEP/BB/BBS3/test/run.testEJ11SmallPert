@@ -3,13 +3,12 @@
 
 TESTNAME=testEJ11SmallPert
 
-if [ "$#" != "2" ]; then
+if [ "$#" != "1" ]; then
  echo "not the correct number of parameters"
  exit 1
 fi
 
-niter=$1
-usernm=$2
+usernm=$1
 
 . ./initparms
 
@@ -37,13 +36,13 @@ applyfile
 echo "  Preparing BlackBoard ..."
 time ./clearBB -user $usernm
 echo "  Starting solve ..."
-# time ./tBBS3 tBBS3.${TESTNAME} $niter $usernm >& ${TESTNAME}.out
+# time ./tBBS3 tBBS3.${TESTNAME} $usernm >& ${TESTNAME}.out
 
 echo "localhost" > tBBS3_tmp.machinefile
 echo "localhost" >> tBBS3_tmp.machinefile
 echo "localhost" >> tBBS3_tmp.machinefile
 echo "localhost" >> tBBS3_tmp.machinefile
-#./tBBS3 tBBS3.${TESTNAME} $niter $usernm >& ${TESTNAME}.out
-#  mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.${TESTNAME} $niter $usernm >& ${TESTNAME}.out
+#./tBBS3 tBBS3.${TESTNAME} $usernm >& ${TESTNAME}.out
+#  mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.${TESTNAME} $usernm >& ${TESTNAME}.out
 
-mpirun_mpich -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 $PSET $niter $usernm  &> ${TESTNAME}.out
+mpirun_mpich -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 $PSET $usernm  &> ${TESTNAME}.out
