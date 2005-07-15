@@ -29,7 +29,7 @@
 
 #include <Transport/TH_Mem.h>
 #include <TFC_BGLProc/WH_FIR.h>
-#include <TFC_Interface/DH_RSP.h>
+#include <TFC_Interface/DH_FIR.h>
 #include <TFC_Interface/DH_PPF.h>
 
 namespace LOFAR
@@ -46,7 +46,7 @@ namespace LOFAR
   void AH_FIR::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
 
-//     itsInDH1 = new DH_RSP("itsInDH1", NULL);
+    itsInDH1 = new DH_FIR("itsInDH1", NULL);
     
     itsOutDH1 = new DH_PPF("itsOutDH1", 0);
     itsOutDH2 = new DH_PPF("itsOutDH2", 0);
@@ -54,21 +54,21 @@ namespace LOFAR
     itsWH = new WH_FIR("WH_FIR", 0);
     itsTH = new TH_Mem();
 
-//     itsInCon1 = new Connection("in1", 
-// 			       itsInDH1, 
-// 			       itsWH->getDataManager().getInHolder(0), 
-// 			       itsTH, 
-// 			       false);
+    itsInCon1 = new Connection("in1", 
+			       itsInDH1, 
+			       itsWH->getDataManager().getInHolder(0), 
+			       itsTH, 
+			       false);
 
     itsOutCon1 = new Connection("out1", 
-				itsOutDH1, 
 				itsWH->getDataManager().getOutHolder(0), 
+				itsOutDH1, 
 				itsTH, 
 				false);
 
     itsOutCon1 = new Connection("out2", 
-				itsOutDH2, 
 				itsWH->getDataManager().getOutHolder(1), 
+				itsOutDH2, 
 				itsTH, 
 				false);
   }
@@ -116,7 +116,7 @@ int main (int argc, const char** argv) {
     test.setarg(argc, argv);
     test.baseDefine();
     test.basePrerun();
-    test.baseRun(1);
+    test.baseRun(10);
     test.basePostrun();
     test.baseQuit();
 
