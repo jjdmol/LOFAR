@@ -156,7 +156,7 @@ inline void RectMatrix<valueType>::cpy2Matrix (cursorType srcCursor,
   DBGASSERTSTR(srcDim.memSize == dstDim.memSize, "Dimension to be copied  are not compatible");
   DBGASSERTSTR((dstCursor+noBlocks*dstDim.memSize)<=dstMatrix.itsTotalSize, "Index out of range in destination in RectMatrix::cpy2Matrix");
   DBGASSERTSTR((srcCursor+noBlocks*srcDim.memSize)<=itsTotalSize, "Index out of range in source in RectMatrix::cpy2Matrix");
-  memcpy(dstMatrix.itsData[dstCursor], itsData[srcCursor], noBlocks * srcDim.memSize * sizeof(valueType));
+  memcpy(&(dstMatrix.itsData[dstCursor]), &(itsData[srcCursor]), noBlocks * srcDim.memSize * sizeof(valueType));
 };
 template <typename valueType>
 inline void RectMatrix<valueType>::cpyFromBlock (valueType* srcPointer, 
@@ -177,7 +177,7 @@ inline void RectMatrix<valueType>::cpy2Block (cursorType srcCursor,
 					      int noBlocks) {
   DBGASSERTSTR(srcDim.memSize == blockSize, "Dimension to be copied  are not compatible");
   DBGASSERTSTR((srcCursor+noBlocks*srcDim.memSize)<=itsTotalSize, "Index out of range in source in RectMatrix::cpy2Block");
-  memcpy((void*)dstPointer, *(itsData[srcCursor]), noBlocks * blockSize * sizeof(valueType));
+  memcpy((void*)dstPointer, &(itsData[srcCursor]), noBlocks * blockSize * sizeof(valueType));
 }
 
 template <typename valueType>
