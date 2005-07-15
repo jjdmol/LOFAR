@@ -13,6 +13,7 @@
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <TFC_Interface/RectMatrix.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -27,7 +28,8 @@ public:
   typedef u16complex BufferType;
 
   explicit DH_FIR (const string& name,
-		       const short   subband); 
+		   const short   subband,
+		   const LOFAR::ACC::APS::ParameterSet pSet); 
 
 
   DH_FIR(const DH_FIR&);
@@ -44,7 +46,7 @@ public:
   /// Get access to the Buffer.
   const u16complex* getBuffer() const;
 
-  const unsigned int getBufSize() const;
+  const unsigned int getBufferSize() const;
 
    RectMatrix<BufferType>& getDataMatrix() const;
 
@@ -63,6 +65,8 @@ private:
 
   RectMatrix<BufferType>* itsMatrix;
 
+  ACC::APS::ParameterSet itsPS;
+
   void fillDataPointers();
 };
 
@@ -72,7 +76,7 @@ private:
  inline const DH_FIR::BufferType* DH_FIR::getBuffer() const
    { return itsBuffer; }
  
- inline const unsigned int DH_FIR::getBufSize() const {
+ inline const unsigned int DH_FIR::getBufferSize() const {
    return itsBufSize;
  }
 

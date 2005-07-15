@@ -49,6 +49,8 @@ public:
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
 
+  uint getBufferSize() const;
+
   /// Reset the buffer
   void resetBuffer();
   
@@ -80,6 +82,9 @@ public:
 
 inline DH_RSP::BufferType* DH_RSP::getBuffer()
   { return itsBuffer; }
+
+inline uint DH_RSP::getBufferSize() const
+  { return itsBufSize; }
    
 inline const DH_RSP::BufferType* DH_RSP::getBuffer() const
   { return itsBuffer; }

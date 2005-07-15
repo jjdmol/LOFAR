@@ -20,22 +20,19 @@ namespace LOFAR
 {
 
   DH_FIR::DH_FIR (const string& name, 
-			  const short   subband)
+		  const short   subband,
+		  const ACC::APS::ParameterSet pSet)
     : DataHolder     (name, "DH_FIR"),
       itsBuffer      (0),
-      itsFIR     (subband),
+      itsFIR         (subband),
       itsNPol        (0),
-      itsMatrix      (0)
+      itsMatrix      (0),
+      itsPS          (pSet)
   {
-//     ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
-//     itsNFChannels = myPS.getInt32("WH_FIR.freqs");
-//     itsNStations  = myPS.getInt32("WH_FIR.stations");
-//     itsNTimes     = myPS.getInt32("WH_FIR.times");
-//     itsNPol       = myPS.getInt32("WH_FIR.pols");
-    itsNFChannels = 2;
-    itsNStations  = 3;
-    itsNTimes     = 4;
-    itsNPol       = 5;
+    itsNStations  = itsPS.getInt32("NRSP");
+    itsNFChannels = itsPS.getInt32("DH_StationSB.freqs");
+    itsNTimes     = itsPS.getInt32("DH_StationSB.times");
+    itsNPol       = itsPS.getInt32("polarisations");
   }
   
 DH_FIR::DH_FIR(const DH_FIR& that)
@@ -43,11 +40,12 @@ DH_FIR::DH_FIR(const DH_FIR& that)
     itsBuffer(0),
     itsMatrix(0)
 {
-    itsFIR    = that.itsFIR;
+    itsFIR        = that.itsFIR;
     itsNFChannels = that.itsNFChannels;
     itsNStations  = that.itsNStations; 
     itsNTimes     = that.itsNTimes;
     itsNPol       = that.itsNPol;
+    itsPS         = that.itsPS;
 }
 
 DH_FIR::~DH_FIR()

@@ -24,8 +24,8 @@ namespace LOFAR {
       itsConnections  (0)
   {
     itsPS = new ACC::APS::ParameterSet("TFlopCorrelator.cfg");
-    itsNCorr = itsPS->getInt32("NSBF")/2;
-    DBGASSERTSTR(NSBF%2 == 0, "NSBF should be an even number");
+    itsNCorr = itsPS->getInt32("NBeamlets")/2;
+    DBGASSERTSTR(itsNCorr%2 == 0, "NBeamlets should be an even number");
     LOG_TRACE_FLOW_STR("Total number of Correlators in the Stub_Corr is " << itsNCorr);
     ASSERTSTR(itsNCorr >= 0, "Number of Correlators in the Stub_Corr must be greater than 0");
 

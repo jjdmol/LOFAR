@@ -18,21 +18,24 @@ namespace LOFAR
 {
 
   DH_StationSB::DH_StationSB (const string& name, 
-			      const short   subband)
+			      const short   subband,
+			      const ACC::APS::ParameterSet pSet)
     : DataHolder     (name, "DH_StationSB"),
       itsBuffer      (0),
       itsSubband     (subband),
-      itsMatrix      (0)
+      itsMatrix      (0),
+      itsPset        (pSet)
   {
-    itsNFChannels = 5;
-    itsNTimes     = 1000;
-    itsNPol       = 2;
+    itsNFChannels      = itsPset.getInt32("DH_StationSB.freqs");
+    itsNTimes          = itsPset.getInt32("DH_StationSB.times");
+    itsNPol            = itsPset.getInt32("polarisations");
   }
   
 DH_StationSB::DH_StationSB(const DH_StationSB& that)
   : DataHolder(that),
     itsBuffer(0),
-    itsMatrix(0)
+    itsMatrix(0),
+    itsPset  (that.itsPset)
 {
     itsSubband    = that.itsSubband;
     itsNFChannels = that.itsNFChannels;
@@ -74,5 +77,8 @@ void DH_StationSB::init()
 
 void DH_StationSB::fillDataPointers() {
   itsBuffer = getData<BufferType> ("Buffer");
+
+  // use memset to null the buffer instead of a for loop
+  memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
 }
 }

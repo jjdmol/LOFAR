@@ -25,11 +25,11 @@ DH_RSP::DH_RSP (const string& name,
   itsBuffer  (0),
   itsPSet    (pset)
 {
-   itsNoBeamlets      = pset.getInt32("NoRSPBeamlets");
+   itsNoBeamlets      = pset.getInt32("NBeamlets");
    itsNFChannels      = pset.getInt32("DH_RSP.freqs");
    itsNTimes          = pset.getInt32("DH_RSP.times");
    itsNoPolarisations = pset.getInt32("polarisations");
-   itsBufSize         = itsNFChannels * itsNTimes * itsNoPolarisations;
+   itsBufSize         = itsNoBeamlets * itsNFChannels * itsNTimes * itsNoPolarisations;
 }
 
 DH_RSP::DH_RSP(const DH_RSP& that)
@@ -61,6 +61,7 @@ void DH_RSP::init()
   createDataBlock();
 
   vector<DimDef> vdd;
+  vdd.push_back(DimDef("Beamlet", itsNoBeamlets));
   vdd.push_back(DimDef("FreqChannel", itsNFChannels));
   vdd.push_back(DimDef("Time", itsNTimes));
   vdd.push_back(DimDef("Polarisation", itsNoPolarisations));
