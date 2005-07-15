@@ -29,17 +29,15 @@
 
 #include <Transport/TH_Mem.h>
 #include <TFC_BGLProc/WH_Correlator.h>
-#include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_CorrCube.h>
+#include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR
 {
 
   AH_Correlator::AH_Correlator() :
     itsWH(0),
-    itsInDH1(0), itsInDH2(0), itsOutDH1(0), itsOutDH2(0), itsOutDH3(0),
-    itsOutDH4(0), itsOutDH5(0), itsInCon1(0), itsInCon2(0), itsOutCon1(0),
-    itsOutCon2(0), itsOutCon3(0), itsOutCon4(0), itsOutCon5(0)
+    itsInDH1(0), itsOutDH1(0), itsInCon1(0), itsOutCon1(0)
   {}
 
   AH_Correlator::~AH_Correlator() {
@@ -48,14 +46,12 @@ namespace LOFAR
   void AH_Correlator::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
 
-    itsInDH1 = new DH_PPF("itsInDH1", 0);
-    itsInDH2 = new DH_PPF("itsInDH2", 0);
-    
-    itsOutDH1 = new DH_CorrCube("itsOutDH1", 0);
-    itsOutDH2 = new DH_CorrCube("itsOutDH2", 0);
-    itsOutDH3 = new DH_CorrCube("itsOutDH3", 0);
-    itsOutDH4 = new DH_CorrCube("itsOutDH4", 0);
-    itsOutDH5 = new DH_CorrCube("itsOutDH5", 0);
+    ACC::APS::ParameterSet myPset;
+    myPset["DH_Vis.NPols"] = "2";
+    myPset["DH_Vis.stations"] = "2";
+
+    itsInDH1 = new DH_CorrCube("itsIn1",0);
+    itsOutDH1 = new DH_Vis("itsOutDH1", 0, myPset);
 
     itsWH = new WH_Correlator("WH_Correlator");
     itsTH = new TH_Mem();
@@ -66,36 +62,9 @@ namespace LOFAR
 			       itsTH, 
 			       false);
 
-    itsInCon2 = new Connection("in2", 
-			       itsInDH2, 
-			       itsWH->getDataManager().getInHolder(1), 
-			       itsTH,
-			       false);
-
     itsOutCon1 = new Connection("out1", 
-				itsOutDH1, 
 				itsWH->getDataManager().getOutHolder(0), 
-				itsTH, 
-				false);
-
-    itsOutCon2 = new Connection("out2", 
-				itsOutDH2, 
-				itsWH->getDataManager().getOutHolder(1), 
-				itsTH, 
-				false);
-    itsOutCon3 = new Connection("out3", 
-				itsOutDH3, 
-				itsWH->getDataManager().getOutHolder(2), 
-				itsTH, 
-				false);
-    itsOutCon4 = new Connection("out4", 
-				itsOutDH4, 
-				itsWH->getDataManager().getOutHolder(3), 
-				itsTH, 
-				false);
-    itsOutCon5 = new Connection("out5", 
-				itsOutDH5, 
-				itsWH->getDataManager().getOutHolder(4), 
+				itsOutDH1, 
 				itsTH, 
 				false);
   }

@@ -73,29 +73,32 @@ namespace LOFAR
 			       false);
 
     itsOutCon1 = new Connection("out1", 
-				itsOutDH1, 
 				itsWH->getDataManager().getOutHolder(0), 
+				itsOutDH1, 
 				itsTH, 
 				false);
 
     itsOutCon2 = new Connection("out2", 
-				itsOutDH2, 
 				itsWH->getDataManager().getOutHolder(1), 
+				itsOutDH2, 
 				itsTH, 
 				false);
+
     itsOutCon3 = new Connection("out3", 
-				itsOutDH3, 
 				itsWH->getDataManager().getOutHolder(2), 
+				itsOutDH3, 
 				itsTH, 
 				false);
+
     itsOutCon4 = new Connection("out4", 
-				itsOutDH4, 
 				itsWH->getDataManager().getOutHolder(3), 
+				itsOutDH4, 
 				itsTH, 
 				false);
+
     itsOutCon5 = new Connection("out5", 
-				itsOutDH5, 
 				itsWH->getDataManager().getOutHolder(4), 
+				itsOutDH5, 
 				itsTH, 
 				false);
   }

@@ -77,7 +77,6 @@ namespace LOFAR
 				itsFilterWH0->getDataManager().getInHolder(0),
 				itsTH, 
 				false);
-
     itsInCon1 = new Connection ("in1",
 				itsInDH1,
 				itsFilterWH1->getDataManager().getInHolder(0),
@@ -104,7 +103,6 @@ namespace LOFAR
 				      itsFFTWH1->getDataManager().getInHolder(1),
 				      itsTH,
 				      false);
-
     
     itsOutCon0 = new Connection("out0",
 				itsFFTWH0->getDataManager().getOutHolder(0),
