@@ -51,7 +51,7 @@ WH_Transpose::WH_Transpose(const string& name,
   
   for (int j=0; j<itsNoutputs; j++)
   {
-    getDataManager().addOutDataHolder(j, new DH_FIR("DH_Subband_0of2", j));
+    getDataManager().addOutDataHolder(j, new DH_FIR("DH_Subband_0of2", j, myPS));
   }
 
 }

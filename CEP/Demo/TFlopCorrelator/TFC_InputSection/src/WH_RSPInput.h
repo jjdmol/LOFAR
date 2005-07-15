@@ -116,6 +116,8 @@ namespace LOFAR
 
       // cyclic buffer for rsp-data
       BufferController<dataType> *itsDataBuffer;
+
+      static uint16 theirNextUID;  ///>>> Temporary: for testing purposes
   };
 
 } // namespace LOFAR

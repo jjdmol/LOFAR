@@ -32,9 +32,11 @@
 #include <TFC_Interface/DH_RSP.h>
 #include <TFC_Interface/DH_RSPSync.h>
       
+#include <Common/hexdump.h>
 
 using namespace LOFAR;
 
+uint16 WH_RSPInput::theirNextUID = 1;
 
 void* WriteToBufferThread(void* arguments)
 {
@@ -78,8 +80,8 @@ void* WriteToBufferThread(void* arguments)
         // we need to force a read, because this inHolder has a lower data rate
         // if the rate difference is 1000, the workholder will read for
         // the first time in the 1000th runstep.
-        datamanager->getInHolder(1);
-        datamanager->readyWithInHolder(1);
+//         datamanager->getInHolder(1);
+//         datamanager->readyWithInHolder(1);
         firstloop = false;
       }      
       DH_RSPSync* dhp = (DH_RSPSync*)datamanager->getInHolder(1);
@@ -201,7 +203,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   // size of an EPA packet in bytes 
   int sizeofpacket   = ( pset.getInt32("polarisations") * 
                           sizeof(complex<int16>) * 
-                          pset.getInt32("NoRSPBeamlets")
+                          pset.getInt32("NBeamlets")
                        ) + 
                        pset.getInt32("SzEPAheader"); 
  
@@ -271,39 +273,68 @@ void WH_RSPInput::preprocess()
   writerinfo.syncmaster = itsSyncMaster;
   writerinfo.stopthread = false;
   
-  if (pthread_create(&writerthread, NULL, WriteToBufferThread, &writerinfo) < 0)
-  {
-    perror("writer thread creation failure");
-    exit(1);
-  }
+//   if (pthread_create(&writerthread, NULL, WriteToBufferThread, &writerinfo) < 0)
+//   {
+//     perror("writer thread creation failure");
+//     exit(1);
+//   }
 }
 
 void WH_RSPInput::process() 
 { 
-   
-  DH_Delay* inDHp;
-  DH_RSP* outDHp;
+  
+  DH_Delay* inDHp = (DH_Delay*)getDataManager().getInHolder(0);
+  cout << "First delay = " << inDHp->getDelay(0);
+  DH_RSP* outDHp = (DH_RSP*)getDataManager().getOutHolder(0);
   dataType* readptr;
   timestamp_t syncstamp;
   int seqid, blockid;
 
   // get delay offset
-  inDHp = (DH_Delay*)getDataManager().getInHolder(0);
 //   inDHp->getNextMainBeat(seqid, blockid);
 //   syncstamp.setStamp(seqid, blockid);
   
-  // get data from cyclic buffer
-  readptr = itsDataBuffer->getBufferReadPtr();
+//   // get data from cyclic buffer
+//   readptr = itsDataBuffer->getBufferReadPtr();
+
+
   //to do: determine correct readptr using the delay from the delay controller
   //       (readptr = getBufferReadPtr + delay offset)
 
-  // write flag to outgoing dataholder
-  outDHp->setFlag(readptr->invalid);
+//   // write flag to outgoing dataholder
+//   outDHp->setFlag(readptr->invalid);
+
+  //>>>Temporary: for testing purposes
+  RectMatrix<DH_RSP::BufferType>& output = outDHp->getDataMatrix();
+  dimType beamletDim = output.getDim("Beamlet"); 
+  dimType freqDim = output.getDim("FreqChannel");
+  dimType timeDim = output.getDim("Time"); 
+  RectMatrix<DH_RSP::BufferType>::cursorType bcursor, fcursor, tcursor;
+  RectMatrix<DH_RSP::BufferType>::cursorType beginCursor = 
+                      output.getCursor(0*beamletDim + 0*freqDim + 0*timeDim);
+
+  for (int b=0, bcursor = beginCursor; b<output.getNElemInDim(beamletDim); 
+       output.moveCursor(&bcursor, beamletDim), b++) 
+  {
+    for (int f=0, fcursor = bcursor; f<output.getNElemInDim(freqDim); 
+	 output.moveCursor(&fcursor, freqDim), f++) 
+    {
+      for (int t=0, tcursor = fcursor; t<output.getNElemInDim(timeDim); 
+	   output.moveCursor(&tcursor, timeDim), t++)
+      {
+	u16complex dummyVal = makeu16complex(theirNextUID, theirNextUID); 
+	theirNextUID++;
+	output.setValue(tcursor, dummyVal);
+      }
+    }
+  }
+  cout << "WH_RSPInput output : " << endl;
+  hexdump(outDHp->getBuffer(), outDHp->getBufferSize() * sizeof(DH_RSP::BufferType));
 
   // to do: write a new delay-controlled timestamp to outgoing dataholder
 
   // write data to outgoing dataholder
-  memcpy(outDHp->getBuffer(), readptr->packet, itsSzRSPframe);
+//   memcpy(outDHp->getBuffer(), readptr->packet, itsSzRSPframe);
 }
 
 void WH_RSPInput::postprocess()

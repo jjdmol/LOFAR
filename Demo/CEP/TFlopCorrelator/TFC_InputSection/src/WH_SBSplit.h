@@ -52,6 +52,10 @@ namespace LOFAR
 
     ACC::APS::ParameterSet itsPS;
 
+    int itsNrInputTimes;
+    int itsOutputRate;
+    int itsCounter;
+
   };
 } // namespace LOFAR
 
