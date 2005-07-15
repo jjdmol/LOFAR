@@ -19,4 +19,13 @@ tse_CFLAGS = \
 	-I$(top_srcdir)/src/tsed \
 	-I$(top_srcdir)/src/dbg
 
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA = \
+	bse.ini
+
+%.ini: %.ini.in
+	cp $< $@
+	
+
 include $(lofar_sharedir)/Makefile.common
