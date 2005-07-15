@@ -42,7 +42,7 @@
 #include <ctype.h>
 #include "GCF_Protocols.h"
 
-#define VERSION "00.2"
+#define VERSION "00.2.1"
 #define OUTFILE_EXT ".tmp"
 
 FILE    *pcReadLofarProtFile;   /* filepointer voor inputfile */
@@ -59,7 +59,7 @@ unsigned int SearchIdAndCopyLines(unsigned int uiProtId);
 
 int main( int argc, char *argv[] )
 {
-  char pcFileName[25];
+  char pcFileName[500];
   char *pcSearch = NULL;
   unsigned int uiProtId = 0x00;
 
