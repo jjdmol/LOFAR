@@ -42,7 +42,7 @@
 #include <ctype.h>
 #include "GCF_Protocols.h"
 
-#define VERSION "00.2.1"
+#define VERSION "00.2.2"
 #define OUTFILE_EXT ".tmp"
 
 FILE    *pcReadLofarProtFile;   /* filepointer voor inputfile */
@@ -139,7 +139,7 @@ void DoConversion(unsigned int uiProtId)
             uiSignalDirection |= F_IN;
             uiSignalDirection <<= 14;
             uiSignalHeader = uiSignalDirection | uiProtocolId | iEventsCounted;
-            sprintf (cInternalLine, "SigNr = 0x%4x;\n", uiSignalHeader);
+            sprintf (cInternalLine, "SigNr = 0x%4X;\n", uiSignalHeader);
             strcat(cInputLine, cInternalLine); 
             break;
           }
@@ -149,7 +149,7 @@ void DoConversion(unsigned int uiProtId)
             uiSignalDirection |= F_OUT;
             uiSignalDirection <<= 14;
             uiSignalHeader = uiSignalDirection | uiProtocolId | iEventsCounted;
-            sprintf (cInternalLine, "SigNr = 0x%4x;\n", uiSignalHeader);
+            sprintf (cInternalLine, "SigNr = 0x%4X;\n", uiSignalHeader);
             strcat(cInputLine, cInternalLine); 
             break;
           }
@@ -159,7 +159,7 @@ void DoConversion(unsigned int uiProtId)
             uiSignalDirection |= F_INOUT;
             uiSignalDirection <<= 14;
             uiSignalHeader = uiSignalDirection | uiProtocolId | iEventsCounted;
-            sprintf (cInternalLine, "SigNr = 0x%4x;\n", uiSignalHeader);
+            sprintf (cInternalLine, "SigNr = 0x%4X;\n", uiSignalHeader);
             strcat(cInputLine, cInternalLine); 
             break;
           }
