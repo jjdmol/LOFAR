@@ -59,28 +59,29 @@ void Stub_Delay ::connect (int RSP_nr,
   int port = itsPS.getInt32("DelayConnection.RequestPort");
   string service(formatString("%d", port+RSP_nr));
   
-  if (itsIsInput) // on the input side, start a client socket
+  if (itsIsInput) // on the input side, start server socket
+  {
+    DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
+		 " has already been connected.");
+    // Create a server socket
+    itsTHs[RSP_nr] = new TH_Socket(service);
+    itsConnections[RSP_nr] = new Connection("toBG", 0, 
+					    dm.getGeneralInHolder(dhNr),
+					    itsTHs[RSP_nr], true);
+    dm.setInConnection(dhNr, itsConnections[RSP_nr]);
+  } 
+  else    // on the delay compensation side, start a client socket
   {
     DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub output " << RSP_nr << 
 		 " has already been connected.");
     // Create a client socket
     itsTHs[RSP_nr] = new TH_Socket(itsPS.getString("DelayConnection.ServerHost"),
 				 service);
-    itsConnections[RSP_nr] = new Connection("fromInpSection", 0, 
-					  dm.getGeneralInHolder(dhNr), 
-					  itsTHs[RSP_nr], true);
-    dm.setInConnection(dhNr, itsConnections[RSP_nr]);
-  } 
-  else    // on DelayControl side, start server socket
-  {
-    DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
-		 " has already been connected.");
-    // Create a server socket
-    itsTHs[RSP_nr] = new TH_Socket(service);
-    itsConnections[RSP_nr] = new Connection("toBG", 
+    itsConnections[RSP_nr] = new Connection("fromInpSection", 
 					    dm.getGeneralOutHolder(dhNr), 
 					    0, itsTHs[RSP_nr], true);
     dm.setOutConnection(dhNr, itsConnections[RSP_nr]);
+
   }
   
 };
