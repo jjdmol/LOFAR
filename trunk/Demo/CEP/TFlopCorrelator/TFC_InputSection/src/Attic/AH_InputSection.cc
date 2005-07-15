@@ -120,8 +120,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     // connect the RSP boards
     //todo: set correct IP/Port numbers in WH_RSP
     
-//     // Connect the Delay Controller
-//     itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+    // Connect the Delay Controller
+    itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
     
   };
   
