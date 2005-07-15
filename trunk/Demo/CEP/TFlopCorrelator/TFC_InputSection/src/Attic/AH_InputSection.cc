@@ -18,6 +18,7 @@
 
 // Transporters
 #include <Transport/TH_MPI.h>
+#include <Transport/TH_Mem.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <TFC_InputSection/WH_RSPInput.h>
@@ -55,12 +56,11 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   undefine();
 
   int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt32("NFIRF");  // number of SubBand filters in the application
-  
-  
+  itsNSBF  = itsParamSet.getInt32("NBeamlets");  // number of SubBand filters in the application
+    
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
-  setComposite(comp); // tell the AppllicationHolder this is the top-level compisite
+  setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
   // Create the InputSection using CEPFrame
   // The processing section consists of ...
@@ -71,25 +71,16 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   // todo: define this input interface; although there are no
   //       connection involved, we do have to define the port/IP numbering schemes
 
-  LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  itsOutputStub = new Stub_FIR(true, itsParamSet);
-
-  //todo: define simulated RSP boards here or in extra AH
-
-
-  LOG_TRACE_FLOW_STR("Create the FringeCorrection workholder");
-  //todo:define Fringe Step/WH
-  LOG_TRACE_FLOW_STR("Create the Merge  workholder");
-  //todo: define Merge Step/WH
-
   LOG_TRACE_FLOW_STR("Create the input side delay stub");
   itsInputStub = new Stub_Delay(true, itsParamSet);
+
+  //todo: define simulated RSP boards here or in extra AH
 
   LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
   // first determine the number of Transpose Steps that will be 
   // constructed later on; we need this number to define the output
   // DataHolders in the RSPInput Steps.
-  // Note that the number of SubBandFilters per TRanspose Step
+  // Note that the number of SubBandFilters per Transpose Step
   // is hard codes as 2.
   DBGASSERTSTR(itsNSBF%2 == 0, "NSBF should be an even number");
   const int NrTransposeNodes = itsNSBF/2;
@@ -129,8 +120,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     // connect the RSP boards
     //todo: set correct IP/Port numbers in WH_RSP
     
-    // Connect the Delay Controller
-    itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+//     // Connect the Delay Controller
+//     itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
     
   };
   
@@ -139,6 +130,10 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   vector<WH_SBSplit*> splitNodes;
   vector<Step*>       splitSteps;
   int splitStartNode;
+  int nrInputTimes = itsParamSet.getInt32("DH_RSP.times");
+  int nrOutputTimes = itsParamSet.getInt32("DH_StationSB.times");
+  ASSERT(nrOutputTimes >= nrInputTimes);
+  int lowRate = nrOutputTimes/nrInputTimes;
   for (int r=0; r < noRSPs; r++) {
     sprintf(WH_DH_Name, "Split_node_%d_of_%d", r, noRSPs);
     splitNodes.push_back(new WH_SBSplit(WH_DH_Name,      // name
@@ -150,7 +145,9 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     {
       splitStartNode = lowestFreeNode;
     }
-    splitSteps[r]->runOnNode(lowestFreeNode++);   
+    splitSteps[r]->runOnNode(lowestFreeNode++);
+    //Set output rate
+    splitSteps[r]->setOutRate(lowRate);
     comp.addBlock(splitSteps[r]);
 
 #ifdef HAVE_MPI
@@ -158,8 +155,13 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     splitSteps[r]->connect(0, RSPSteps[r], 0, 1, 
 			   new TH_MPI(splitStartNode-noRSPs+r, splitStartNode+r),
 			   true);
+#else
+    splitSteps[r]->connect(0, RSPSteps[r], 0, 1, new TH_Mem(), false);   
 #endif
   }
+
+  LOG_TRACE_FLOW_STR("Create output side interface stubs");
+  itsOutputStub = new Stub_FIR(true, itsParamSet);
 
   LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
   vector<WH_SBCollect*> collectNodes;
@@ -177,7 +179,11 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     {
       collectStartNode = lowestFreeNode;
     }
-    collectSteps[nf]->runOnNode(lowestFreeNode++);   
+    collectSteps[nf]->runOnNode(lowestFreeNode++); 
+    // Set to low rate
+    collectSteps[nf]->setInRate(lowRate);
+    collectSteps[nf]->setProcessRate(lowRate);
+    collectSteps[nf]->setOutRate(lowRate);
     comp.addBlock(collectSteps[nf]);
 
 #ifdef HAVE_MPI
@@ -188,12 +194,17 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 			       new TH_MPI(splitStartNode+st, collectStartNode+nf), 
 			       true);
     }
+#else
+    for (int st=0; st<noRSPs; st++)
+    {
+      collectSteps[nf]->connect(st, splitSteps[st], nf, 1, new TH_Mem(), false);
+    }
 #endif
     // connect output to FIR stub
     // Output channel 0
-    itsOutputStub->connect (nf,                           // Corr filter number
-			    collectNodes[nf]->getDataManager(), 
-			    0);  
+//     itsOutputStub->connect (nf,                           // Corr filter number
+// 			    collectNodes[nf]->getDataManager(), 
+// 			    0);  
   }
 
   LOG_TRACE_FLOW_STR("Finished define()");

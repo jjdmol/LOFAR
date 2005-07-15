@@ -31,6 +31,8 @@
 #include <TFC_Interface/DH_StationSB.h>
 #include <TFC_Interface/DH_FIR.h>
 
+#include <Common/hexdump.h>
+
 using namespace LOFAR;
 
 WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
@@ -46,10 +48,10 @@ WH_SBCollect::WH_SBCollect(const string& name, int sbID,
   for (int i=0; i<itsNinputs; i++)
   {
     sprintf(str, "DH_in_%d", i);
-    getDataManager().addInDataHolder(i, new DH_StationSB(str, i));  // Add subband id
+    getDataManager().addInDataHolder(i, new DH_StationSB(str, i, itsPS));  // Add subband id
   }
 
-  getDataManager().addOutDataHolder(0, new DH_FIR(str, itsSubBandID));
+  getDataManager().addOutDataHolder(0, new DH_FIR(str, itsSubBandID, itsPS));
 
 }
 
@@ -70,4 +72,34 @@ WH_SBCollect* WH_SBCollect::make(const string& name)
 void WH_SBCollect::process() 
 { 
   // pack all inputs into one output
+  DH_StationSB* inpDH;
+  DH_FIR* outpDH = (DH_FIR*)getDataManager().getOutHolder(0);
+  RectMatrix<DH_FIR::BufferType>& output = outpDH->getDataMatrix();
+  dimType stationDim = output.getDim("Station");
+  RectMatrix<DH_FIR::BufferType>::cursorType outCursor;
+
+  DH_StationSB::BufferType* inpPtr;
+  uint inpSize;
+  // Loop over all inputs (stations)
+  for (int nr=0; nr<itsNinputs; nr++)
+  {
+    inpDH = (DH_StationSB*)getDataManager().getInHolder(nr);
+    inpPtr = inpDH->getBuffer();
+    inpSize = inpDH->getBufferSize();
+
+    outCursor = output.getCursor( nr*stationDim );
+    // copy all freq, time and pol from an input to output
+    output.cpyFromBlock(inpPtr, inpSize, outCursor, stationDim, 1);
+  }
+
+  for (int nr=0; nr<itsNinputs; nr++)
+  {
+    cout << "WH_SBCollect input " << nr << " : " << endl;
+    DH_StationSB* inp = (DH_StationSB*)getDataManager().getInHolder(nr);
+    hexdump(inp->getBuffer(), inp->getBufferSize() * sizeof(DH_StationSB::BufferType));
+  }
+
+  cout << "WH_SBCollect output : " << endl;
+  hexdump(outpDH->getBuffer(), outpDH->getBufferSize() * sizeof(DH_FIR::BufferType));
+   
 }
