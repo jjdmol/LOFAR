@@ -20,7 +20,7 @@ using namespace LOFAR;
 
 WH_FIR::WH_FIR(const string& name,
 		       const short   subBandID):
- WorkHolder( 1, 1, name, "WH_Correlator"),
+ WorkHolder( 1, 2, name, "WH_Correlator"),
  itsSBID       (subBandID)
 {
 
@@ -80,14 +80,12 @@ void WH_FIR::process() {
     accum = makefcomplex(0,0);
     
     // get data from the input dataholder
-//     filterData[ filter ].delayLine[ 0 ] = 
-//       *(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBuffer() + filter);
+    //     filterData[ filter ].delayLine[ 0 ] = 
+    //       *(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBuffer() + filter);
     memcpy(&filterData[filter].delayLine[0],
 	   (static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBuffer() + filter),
 	   sizeof(DH_FIR::BufferType));
     
-
-
     for (int tap = 0; tap < itsNtaps; tap++) {
       accum += filterData[ filter ].filterTaps[ tap ] * 
 	filterData[ filter ].delayLine[ tap ];
@@ -95,7 +93,7 @@ void WH_FIR::process() {
     
     // make sure to write the output to the correct DataHolder
     // this may turn out to be a hotspot, since we're writing small amounts of data
-    static_cast<DH_PPF*>(getDataManager().getOutHolder( filter % (itsNFilters/itsFFTs) ))->setBufferElement( filter / (itsNFilters/itsFFTs) , accum );
+    static_cast<DH_PPF*>(getDataManager().getOutHolder( filter / (itsNFilters/itsFFTs) ))->setBufferElement( filter % (itsNFilters/itsFFTs) , accum );
     adjustDelayPtr(filterData[filter].delayLine);
   }
 

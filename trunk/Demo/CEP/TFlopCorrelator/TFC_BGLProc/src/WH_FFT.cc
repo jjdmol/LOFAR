@@ -21,7 +21,7 @@
 using namespace LOFAR;
 
 WH_FFT::WH_FFT(const string& name) :
-  WorkHolder( 1, 1, name, "WH_Correlator")
+  WorkHolder(2, 5, name, "WH_Correlator")
 {
    ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
    itsNtaps      = myPS.getInt32("WH_FFT.taps");
@@ -31,12 +31,12 @@ WH_FFT::WH_FFT(const string& name) :
    // todo: Pr-correlation correction DH in channel 0
    //   getDataManager().addInDataHolder(0, new DH_??("input", itsSBID));
 
-   for (int c = 0; c<itsInputs; c++) {
+   for (int c = 0; c < itsInputs; c++) {
      getDataManager().addInDataHolder(c, new DH_PPF("input", itsSBID));
    }
 
-   for (int c=0; c<itsCpF; c++) {
-     getDataManager().addOutDataHolder(0, new DH_CorrCube("output", itsSBID)); 
+   for (int c = 0; c < itsCpF; c++) {
+     getDataManager().addOutDataHolder(c, new DH_CorrCube("output", itsSBID)); 
    }
    
    // FFTW parameters

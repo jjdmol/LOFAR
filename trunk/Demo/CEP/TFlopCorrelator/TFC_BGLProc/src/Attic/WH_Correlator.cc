@@ -77,7 +77,9 @@ void WH_Correlator::process() {
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
   // reset integrator.
-  memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(fcomplex));
+  memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(DH_Vis::BufferType));
+
+//   memcpy(&in_buffer, inDH->getBuffer(), ELEMENTS*SAMPLES*sizeof(DH_CorrCube::BufferType));
 
 #ifdef DO_TIMING
   starttime = timer();
@@ -110,38 +112,38 @@ void WH_Correlator::process() {
    
       for (int x = 0; x <= y; x += 4) {
 
-	out_ptr[x+0][y+0] += reg_x_0 * ~reg_y_0;
-	out_ptr[x+0][y+1] += reg_x_0 * ~reg_y_1;
-	out_ptr[x+0][y+2] += reg_x_0 * ~reg_y_2;
-	out_ptr[x+0][y+3] += reg_x_0 * ~reg_y_3;
+	out_buffer[x+0][y+0] += reg_x_0 * ~reg_y_0;
+	out_buffer[x+0][y+1] += reg_x_0 * ~reg_y_1;
+	out_buffer[x+0][y+2] += reg_x_0 * ~reg_y_2;
+	out_buffer[x+0][y+3] += reg_x_0 * ~reg_y_3;
 
 	reg_x_0 = in_buffer[x+4][i];
 
-	out_ptr[x+1][y+0] += reg_x_1 * ~reg_y_0;
-	out_ptr[x+1][y+1] += reg_x_1 * ~reg_y_1;
-	out_ptr[x+1][y+2] += reg_x_1 * ~reg_y_2;
-	out_ptr[x+1][y+3] += reg_x_1 * ~reg_y_3;
+	out_buffer[x+1][y+0] += reg_x_1 * ~reg_y_0;
+	out_buffer[x+1][y+1] += reg_x_1 * ~reg_y_1;
+	out_buffer[x+1][y+2] += reg_x_1 * ~reg_y_2;
+	out_buffer[x+1][y+3] += reg_x_1 * ~reg_y_3;
 	
 	reg_x_1 = in_buffer[x+5][i];
 
-	out_ptr[x+2][y+0] += reg_x_2 * ~reg_y_0;
-	out_ptr[x+2][y+1] += reg_x_2 * ~reg_y_1;
-	out_ptr[x+2][y+2] += reg_x_2 * ~reg_y_2;
-	out_ptr[x+2][y+3] += reg_x_2 * ~reg_y_3;
+	out_buffer[x+2][y+0] += reg_x_2 * ~reg_y_0;
+	out_buffer[x+2][y+1] += reg_x_2 * ~reg_y_1;
+	out_buffer[x+2][y+2] += reg_x_2 * ~reg_y_2;
+	out_buffer[x+2][y+3] += reg_x_2 * ~reg_y_3;
 
 	reg_x_2 = in_buffer[x+6][i];
 
-	out_ptr[x+3][y+0] += reg_x_3 * ~reg_y_0;
-	out_ptr[x+3][y+1] += reg_x_3 * ~reg_y_1;
-	out_ptr[x+3][y+2] += reg_x_3 * ~reg_y_2;
-	out_ptr[x+3][y+3] += reg_x_3 * ~reg_y_3;
+	out_buffer[x+3][y+0] += reg_x_3 * ~reg_y_0;
+	out_buffer[x+3][y+1] += reg_x_3 * ~reg_y_1;
+	out_buffer[x+3][y+2] += reg_x_3 * ~reg_y_2;
+	out_buffer[x+3][y+3] += reg_x_3 * ~reg_y_3;
 
 	reg_x_3 = in_buffer[x+7][i];
       }
     }
   }
 
-
+//   memcpy(outDH->getBuffer(), out_buffer, ELEMENTS*ELEMENTS*sizeof(DH_Vis::BufferType));
 
 #ifdef DO_TIMING
   stoptime = timer();
