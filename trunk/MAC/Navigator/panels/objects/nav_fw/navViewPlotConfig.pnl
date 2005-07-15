@@ -1,0 +1,265 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,262 208 930 47 N "_3DFace" 3
+"$PlotNr"
+"$configDatapoint"
+"$datapoint"
+EEE E E 1 -1 -1 0  10 71
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2
+"Text16"
+""
+1 34 13 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 123 15 210 31
+0 2 0 "s" 0 0 0 194 0 0  123 15
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Configured DP:
+2 7
+"Text17"
+""
+1 728 14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 772 16 814 32
+0 2 0 "s" 0 0 0 194 0 0  772 16
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Status:
+2 8
+"txt_dpName"
+""
+1 131 13 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 133 15 145 31
+0 2 0 "s" 0 0 0 192 0 0  133 15
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+2 9
+"txt_Active"
+""
+1 780 14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 782 16 794 32
+0 2 0 "s" 0 0 0 192 0 0  782 16
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+6 12
+"Border2"
+""
+1 10 37 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 10 30 37
+6 0
+"Border18"
+""
+1 28 37 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 28 10 719 37
+6 11
+"Border1"
+""
+1 717 37 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 717 10 919 37
+2 13
+"txt_Title"
+""
+1 16 13 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 21 15 27 31
+0 2 0 "s" 0 0 0 193 0 0  21 15
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 0
+13 10
+"Button11"
+""
+1 858 11 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+856 9 920 36
+T 
+1
+LANG:1 6 Config
+"main()
+{
+  string dpName;
+  dpGet($configDatapoint + \".\" + $PlotNr + \".dpName\", dpName); 
+
+		ChildPanelOnCentralModal(\"navigator/views/plot_config_config_dp.pnl\",
+ 		                         \"Configure Plot \"+$PlotNr,
+  		                         makeDynString(\"$datapoint:\" + $datapoint,
+  		                                       \"$configDatapoint:\" + $configDatapoint,
+  		                                       \"$PlotNr:\" + $PlotNr,
+  		                                       \"$selectedDP:\" + dpName));
+}" 0
+ E E "main()
+{
+  setValue(\"txt_Title\", \"text\", $PlotNr);
+  if(navConfigConfigSubviewPermitted())
+  {  
+    dpConnect(\"navViewPlotDisplayDpNameActive\", $configDatapoint + \".\" + $PlotNr + \".active\",
+                                                $configDatapoint + \".\" + $PlotNr + \".dpName\");
+    setValue(\"\", \"enabled\", TRUE);
+  }
+  else
+  {
+    setValue(\"txt_dpName\", \"text\", \"No configuration data found\");
+    setValue(\"txt_Active\", \"text\", \"Unknown\");
+  }                                            
+   
+   
+}
+navViewPlotDisplayDpNameActive(string dp1, int Active,
+                               string dp2, string dpName)
+{
+  //Display the value of the Active state in the txt_Active
+  if(0==Active)
+  {
+    setValue(\"txt_Active\", \"text\", \"In-active\");
+  }
+  else if(1==Active)
+  {
+    setValue(\"txt_Active\", \"text\", \"Active\");
+  }
+  else if(1==Active)
+  {
+    setValue(\"txt_Active\", \"text\", \"State unknown\");
+  }
+  
+  //Display the value of the dpName in the txt_dpName
+  if(\"\"==dpName)
+  {
+    setValue(\"txt_dpName\", \"text\", \"None\");  
+  }
+  else
+  {
+    setValue(\"txt_dpName\", \"text\", dpName);
+  }
+  
+}
+
+
+" 0
+
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

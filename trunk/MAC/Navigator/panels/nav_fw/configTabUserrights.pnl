@@ -1,0 +1,1501 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,333 230 730 530 N "_3DFace" 0
+EEE E E 1 -1 -1 0  178 148
+"" 0 1
+E"#uses \"gcfnav-functions.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 0
+"Text1"
+""
+1 32 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 42 119 58
+0 2 0 "s" 0 0 0 192 0 0  34 42
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 1. Visialisation
+2 2
+"Text2"
+""
+1 32 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 62 141 78
+0 2 0 "s" 0 0 0 192 0 0  34 62
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 2. Normal operator
+2 3
+"Text3"
+""
+1 32 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 82 156 98
+0 2 0 "s" 0 0 0 192 0 0  34 82
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 20 3. Advanced operator
+2 4
+"Text4"
+""
+1 32 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 102 132 118
+0 2 0 "s" 0 0 0 192 0 0  34 102
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 4. Administration
+2 5
+"Text5"
+""
+1 32 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 122 155 138
+0 2 0 "s" 0 0 0 192 0 0  34 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 5. Acknowledgement
+2 6
+"Text6"
+""
+1 20 212 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 214 106 230
+0 2 0 "s" 0 0 0 192 0 0  22 214
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 6. TreeAcces1
+2 7
+"Text7"
+""
+1 20 235 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 237 106 253
+0 2 0 "s" 0 0 0 192 0 0  22 237
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 7. TreeAcces2
+2 8
+"Text8"
+""
+1 20 258 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 260 106 276
+0 2 0 "s" 0 0 0 192 0 0  22 260
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 8. TreeAcces3
+2 9
+"Text9"
+""
+1 20 282 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 284 106 300
+0 2 0 "s" 0 0 0 192 0 0  22 284
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 9. TreeAcces4
+2 10
+"Text10"
+""
+1 20 305 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 307 113 323
+0 2 0 "s" 0 0 0 192 0 0  22 307
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 10. TreeAcces5
+2 11
+"Text11"
+""
+1 20 328 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 330 113 346
+0 2 0 "s" 0 0 0 192 0 0  22 330
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 11. TreeAcces6
+2 12
+"Text12"
+""
+1 20 351 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 353 113 369
+0 2 0 "s" 0 0 0 192 0 0  22 353
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 12. TreeAcces7
+2 13
+"Text13"
+""
+1 20 374 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 376 113 392
+0 2 0 "s" 0 0 0 192 0 0  22 376
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 13. TreeAcces8
+2 14
+"Text14"
+""
+1 20 397 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 399 113 415
+0 2 0 "s" 0 0 0 192 0 0  22 399
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 14. TreeAcces9
+2 15
+"Text15"
+""
+1 20 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 422 116 438
+0 2 0 "s" 0 0 0 192 0 0  22 422
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 15 TreeAcces10
+2 16
+"Text16"
+""
+1 32 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 142 108 158
+0 2 0 "s" 0 0 0 192 0 0  34 142
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 16. Not used
+2 17
+"Text17"
+""
+1 32 160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 162 108 178
+0 2 0 "s" 0 0 0 192 0 0  34 162
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 17. Not used
+6 49
+"label_ur1"
+""
+1 20 54 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 44 30 54
+6 50
+"label_ur2"
+""
+1 20 74 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 64 30 74
+6 52
+"label_ur3"
+""
+1 20 94 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 84 30 94
+6 53
+"label_ur4"
+""
+1 20 114 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 104 30 114
+6 54
+"label_ur5"
+""
+1 20 134 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 124 30 134
+6 55
+"label_ur6"
+""
+1 139 232 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+49 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 211 149 232
+6 56
+"label_ur7"
+""
+1 139 255 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 234 149 255
+6 65
+"label_ur16"
+""
+1 20 154 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+59 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 144 30 154
+6 66
+"label_ur17"
+""
+1 20 174 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+60 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 164 30 174
+6 67
+"label_ur18"
+""
+1 20 194 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+61 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 184 30 194
+6 86
+"label_ur8"
+""
+1 139 279 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+80 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 257 149 279
+6 87
+"label_ur9"
+""
+1 139 302 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+81 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 281 149 302
+6 88
+"label_ur10"
+""
+1 139 325 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+82 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 304 149 325
+6 89
+"label_ur11"
+""
+1 139 348 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+83 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 327 149 348
+6 90
+"label_ur12"
+""
+1 139 371 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 350 149 371
+6 91
+"label_ur13"
+""
+1 139 394 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 373 149 394
+6 92
+"label_ur14"
+""
+1 139 417 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 396 149 417
+6 93
+"label_ur15"
+""
+1 139 440 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 139 419 149 440
+2 94
+"Text22"
+""
+1 280 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 42 430 58
+0 2 0 "s" 0 0 0 192 0 0  282 42
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 19. configSystemSubview
+6 95
+"Border45"
+""
+1 10 520 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+89 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 460 720 520
+2 96
+"Text23"
+""
+1 280 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 62 465 78
+0 2 0 "s" 0 0 0 192 0 0  282 62
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 26 20. AddRemoveSystemSubview
+2 97
+"Text24"
+""
+1 280 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 82 418 98
+0 2 0 "s" 0 0 0 192 0 0  282 82
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 20 21. commandsOperator
+2 98
+"Text25"
+""
+1 280 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+92 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 102 442 118
+0 2 0 "s" 0 0 0 192 0 0  282 102
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 22. commandsMaintenance
+2 99
+"Text26"
+""
+1 280 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+93 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 122 431 138
+0 2 0 "s" 0 0 0 192 0 0  282 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 23. commandsAstronomy
+2 100
+"Text27"
+""
+1 280 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 142 428 158
+0 2 0 "s" 0 0 0 192 0 0  282 142
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 24. System management
+2 101
+"Text28"
+""
+1 280 160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 162 356 178
+0 2 0 "s" 0 0 0 192 0 0  282 162
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 25. Not used
+2 102
+"Text29"
+""
+1 32 180 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+96 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 182 108 198
+0 2 0 "s" 0 0 0 192 0 0  34 182
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 18. Not used
+2 103
+"text"
+""
+1 540 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+97 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 542 42 616 58
+0 2 0 "s" 0 0 0 192 0 0  542 42
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 27. Not used
+2 104
+"sds"
+""
+1 540 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+98 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 542 62 616 78
+0 2 0 "s" 0 0 0 192 0 0  542 62
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 28. Not used
+2 105
+"rgf"
+""
+1 540 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+99 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 542 102 616 118
+0 2 0 "s" 0 0 0 192 0 0  542 102
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 30. Not used
+2 106
+"sssss"
+""
+1 540 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+100 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 542 82 616 98
+0 2 0 "s" 0 0 0 192 0 0  542 82
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 29. Not used
+2 108
+"fhghfgh"
+""
+1 540 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+102 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 542 122 616 138
+0 2 0 "s" 0 0 0 192 0 0  542 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 31. Not used
+2 109
+"Text36"
+""
+1 280 180 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+103 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 282 182 356 198
+0 2 0 "s" 0 0 0 192 0 0  282 182
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 26. Not used
+6 110
+"label_ur19"
+""
+1 268 54 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+104 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 44 278 54
+6 111
+"label_ur20"
+""
+1 268 74 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+105 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 64 278 74
+6 112
+"label_ur21"
+""
+1 268 94 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+106 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 84 278 94
+6 113
+"label_ur22"
+""
+1 268 114 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+107 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 104 278 114
+6 114
+"label_ur23"
+""
+1 268 134 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+108 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 124 278 134
+6 115
+"label_ur24"
+""
+1 268 154 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+109 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 144 278 154
+6 116
+"label_ur25"
+""
+1 268 174 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+110 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 164 278 174
+6 117
+"label_ur26"
+""
+1 268 194 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+111 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 268 184 278 194
+6 118
+"label_ur27"
+""
+1 528 54 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+112 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 528 44 538 54
+6 119
+"label_ur28"
+""
+1 528 74 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+113 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 528 64 538 74
+6 120
+"label_ur29"
+""
+1 528 94 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+114 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 528 84 538 94
+6 121
+"label_ur30"
+""
+1 528 114 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 528 104 538 114
+6 122
+"label_ur31"
+""
+1 528 134 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+116 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 528 124 538 134
+2 126
+"Text38"
+""
+1 80 470 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+120 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 82 472 230 488
+0 2 0 "s" 0 0 0 192 0 0  82 472
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 26 Show user-rights for user:
+2 127
+"Text39"
+""
+1 380 490 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+121 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 382 492 544 508
+0 2 0 "s" 0 0 0 192 0 0  382 492
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 26 Apply tree access changes:
+2 128
+"Text40"
+""
+1 540 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+122 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 542 142 616 158
+0 2 0 "s" 0 0 0 192 0 0  542 142
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 32. Not used
+6 129
+"label_ur32"
+""
+1 528 154 E E E 1 E 1 E N {102,102,102} E N "_3DFace" E E
+ E E
+123 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 528 144 538 154
+6 132
+"Border2"
+""
+1 10 450 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+126 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 30 720 450
+14 21
+"input_TreeAccess9"
+""
+1 150 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 278 662 305
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 22
+"input_TreeAccess10"
+""
+1 150 303 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 301 662 328
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 23
+"input_TreeAccess11"
+""
+1 150 326 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 324 662 351
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 24
+"input_TreeAccess12"
+""
+1 150 349 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 347 662 374
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 25
+"input_TreeAccess13"
+""
+1 150 372 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 370 662 397
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 26
+"input_TreeAccess14"
+""
+1 150 395 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+27 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 393 662 420
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 27
+"input_TreeAccess15"
+""
+1 150 418 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 416 662 443
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 28
+"input_TreeAccess6"
+""
+1 150 210 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 208 662 235
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 29
+"input_TreeAccess7"
+""
+1 150 233 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 231 662 258
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 30
+"input_TreeAccess8"
+""
+1 150 256 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+148 254 662 281
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 31
+"Button1"
+""
+1 550 490 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+548 488 617 515
+T 
+1
+LANG:1 5 Apply
+"main()
+{
+  dyn_string treeAccess;
+  dpGet(getSystemName() + \"__navigator.treeAccess\", treeAccess);
+  string dpName;
+  for(int i=6; i<=15;i++)
+  {
+    getValue(\"input_TreeAccess\"+i, \"text\", dpName);
+    treeAccess[i]=dpName;
+  }
+  dpSet(getSystemName() + \"__navigator.treeAccess\", treeAccess);
+}" 0
+ E E "main()
+{
+  dyn_string treeAccess;
+  dpGet(getSystemName() + \"__navigator.treeAccess\", treeAccess);
+  for(int i=6; i<=15;i++)
+  {
+    setValue(\"input_TreeAccess\"+i, \"text\", treeAccess[i]);
+  }
+ 
+}" 0
+
+13 32
+"cmdUser"
+""
+1 16 466 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+0
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+16 466 66 516
+P 
+14215660
+"32.bmp"
+1
+LANG:1 0 
+"main()
+{
+  ModuleOnWithPanel(  \"PVSS\", 100, 100, 0, 0, 1, 1, \"None\", \"vision/ud_main.pnl\", \"\", makeDynString());
+}" 0
+ E E "main()
+{
+this.enabled = getUserPermission (4);
+}" 0
+
+22 48
+"list_usernames"
+""
+1 80 490 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+42 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+78 488 272 515
+0
+"main()
+{
+dpConnect(\"fillListWithUserNames\", getSystemName() + \"_Users.UserName:_online.._value\");
+}
+
+fillListWithUserNames(string dp1, dyn_string userNames)
+{
+  list_usernames.deleteAllItems;
+  list_usernames.items = userNames;
+
+}" 0
+
+"main()
+{
+  string userName = list_usernames.selectedText;
+  
+  for(int i=1; i<=32;i++)
+  {
+  
+    if(getUserPermission(i, getUserId(userName)))
+    {
+     setValue(\"label_ur\"+i, \"backCol\", \"green\");
+    }
+    else
+    {
+      setValue(\"label_ur\"+i, \"backCol\", \"red\");
+    }
+  }
+
+}" 0
+
+E
+ 0 0
+13 130
+"Button2"
+""
+1 627 490 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+124 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+625 488 715 515
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
