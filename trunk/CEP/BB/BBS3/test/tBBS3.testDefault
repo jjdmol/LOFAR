@@ -13,6 +13,12 @@
 
 # this doesn't have to be defined   BBDBname="test"
 
+runscript.initCommand=""
+runscript.meqCommand="makeMeq"
+runscript.gsmCommand="makeGsm; perturbGsm"
+runscript.preCommand=""
+runscript.postCommand=""
+
 nrPrediffers=1   # Number of Prediffers
 nrRuns=9         # Number of (CEPFrame) runs
 

@@ -11,6 +11,11 @@
 #   model=LOFAR.RI
 #   time domain is all times
 
+runscript.initCommand=""
+runscript.meqCommand="makeMeq; perturbEJ11real"
+runscript.gsmCommand="makeGsm"
+runscript.preCommand=""
+runscript.postCommand=""
 
 # this doesn't have to be defined   BBDBname="test"
 

@@ -11,6 +11,12 @@
 #   model=LOFAR.RI
 #   time domain is all times
 
+runscript.initCommand=""
+runscript.meqCommand="makeMeq"
+runscript.gsmCommand="makeGsm; perturbGsm"
+runscript.preCommand=""
+runscript.postCommand=""
+
 # this doesn't have to be defined   BBDBname="test"
 
 nrPrediffers=1   # Number of Prediffers

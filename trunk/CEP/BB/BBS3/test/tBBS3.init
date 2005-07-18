@@ -14,6 +14,7 @@ ln -s ../../src/BBS3 tBBS3
 ln -s ../../src/parmdb . 
 ln -s ../../../../test/generalinfo.sh .
 ln -s ../../../../test/cp2web.sh .
+ln -s ../../../../test/tBBS3.machinefile tBBS3_tmp.machinefile
 # remove (links to) emacs backup files
 rm -f ./*~
 
