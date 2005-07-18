@@ -54,13 +54,12 @@ namespace LOFAR
     WH_FIR& operator= (const WH_FIR&);
 
     /// FIR Filter variables
+    short itsSBID; // subBandID
     short itsNFilters;
     short itsNtaps;
     short itsNStations;
     short itsNTimes;
     short itsNPol;
-    short itsSBID; // subBandID
-    short itsCpF;
     short itsFFTs;
     
     DH_FIR::BufferType* delayPtr;

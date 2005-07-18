@@ -65,7 +65,7 @@ void AH_BGLProcessing::undefine() {
 void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
-  int itsNFIRF  = itsParamSet.getInt32("NFIRF");  // number of FIR filters in the application
+//   int itsNFIRF  = itsParamSet.getInt32("NFIRF");  // number of FIR filters in the application
   
   int lowestFreeNode = 0;
   
@@ -79,7 +79,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   itsInStub = new Stub_FIR(true, itsParamSet);
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  itsOutStub = new Stub_Corr(false);
+  itsOutStub = new Stub_Corr(false, itsParamSet);
 
   LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
   
