@@ -11,7 +11,7 @@ PANEL,306 200 958 778 N "_3DFace" 1
 " 0
 EE E E 1 -1 -1 0  20 40
 "" 0 1
-E"#uses \"gcfnav-tab-functions.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-tab-functions.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

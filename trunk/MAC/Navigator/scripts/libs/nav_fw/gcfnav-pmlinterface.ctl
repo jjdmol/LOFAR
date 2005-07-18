@@ -25,8 +25,8 @@
 //# the administration of clientID's from the caller
 //#
 
-#uses "gcfpa-pml.ctl"
-#uses "gcf-util.ctl"
+#uses "nav_fw/gcfpa-pml.ctl"
+#uses "nav_fw/gcf-util.ctl"
 
 global unsigned g_PAclientId = 0;  // client ID used during all communication with the PML
 

@@ -1,4 +1,4 @@
-#uses "gcfpa-com.ctl"
+#uses "nav_fw/gcfpa-com.ctl"
 const string GCF_WD_DP = "__gcf_wd";
 main()
 {

@@ -1,13 +1,11 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,350 258 1260 960 N "_3DFace" 0
+PANEL,394 346 1260 960 N "_3DFace" 0
 "main()
 {
   navPMLinitialize();
-	Navigator_HandleEventInitialize();
-  //navPMLunloadPropertySet();
-  //navPMLloadPropertySet();
+  Navigator_HandleEventInitialize();
   navConfigInitPathNames();
 }
 
@@ -80,7 +78,7 @@ E E E 1 -1 -1 0  10 570
 "" 0 1
 E"// global functions. All event handlers are implemented here
 
-#uses \"gcfnav-functions.ctl\"
+#uses \"nav_fw/gcfnav-functions.ctl\"
 
 " 0
  2
@@ -153,7 +151,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/logo.bmp" 13434828 E 1134 0 1249 39
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/STS/logo.bmp" 13434828 E 1134 0 1249 39
 1 11 7 "" 114
 0
 28 2
@@ -223,7 +221,7 @@ LANG:1 102 -adobe-courier-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-12,0,0,0
 248 8 272 32
 P 
 13434828
-"pictures/maximize.bmp"
+"pictures/nav_fw/maximize.bmp"
 1
 LANG:1 0 
 "main()
@@ -410,7 +408,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 8 4 41 37
 P 
 13434828
-"pictures/icon_logoff.bmp"
+"pictures/nav_fw/icon_logoff.bmp"
 1
 LANG:1 0 
 "main()
@@ -615,12 +613,12 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 48 4 81 37
 P 
 16777215
-"pictures/ico_tool.gif"
+"pictures/nav_fw/ico_tool.gif"
 1
 LANG:1 0 
 "main()
 {
-  ChildPanelOnCentralModal(\"navigator/configTab.pnl\",
+  ChildPanelOnCentralModal(\"nav_fw/configTab.pnl\",
 	  		                         \"Configure System\",\"\");
 }" 0
  E E "main()
@@ -880,7 +878,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 3 "TreeView1"
-"fwTreeView\\fwTreeView.pnl" 30 30 T 17 1 0 1.441281138790036  -19 -1.914590747330962  
+"nav_fw\\fwTreeView.pnl" 30 30 T 17 1 0 1.441281138790036  -19 -1.914590747330962  
 5
 "$sOnCollapse""TreeView_OnCollapse"
 "$sOnExpand""TreeView_OnExpand"
@@ -888,6 +886,6 @@ LANG:1 6 Layer8
 "$sOnRightClick"""
 "$sOnSelect""TreeView_OnSelect"
 3 7 "PANEL_REF2"
-"navigator/navigator_infoPanel_3_1.pnl" 360 920 T 20 1 0 1  0 -10  
+"nav_fw/navigator_infoPanel_3_1.pnl" 360 920 T 20 1 0 1  0 -10  
 0
 0

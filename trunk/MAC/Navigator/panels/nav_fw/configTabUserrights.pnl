@@ -4,7 +4,7 @@ LANG:1 8 (NoName)
 PANEL,333 230 730 530 N "_3DFace" 0
 EEE E E 1 -1 -1 0  178 148
 "" 0 1
-E"#uses \"gcfnav-functions.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-functions.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

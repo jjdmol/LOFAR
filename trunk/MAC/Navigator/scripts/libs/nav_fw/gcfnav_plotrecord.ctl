@@ -1,6 +1,6 @@
-#uses "gcf-common.ctl"
-#uses "gcfnav-functions.ctl"
-#uses "gcfnav_view.ctl"
+#uses "nav_fw/gcf-common.ctl"
+#uses "nav_fw/gcfnav-functions.ctl"
+#uses "nav_fw/gcfnav_view.ctl"
 global int g_counter=0;
 global string g_path_temp = "c:/aa";
 global dyn_string recordList;

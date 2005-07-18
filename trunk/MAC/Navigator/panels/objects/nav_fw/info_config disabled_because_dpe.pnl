@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,295 138 343 81 N "_3DFace" 1
+PANEL,394 346 343 81 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -64,7 +64,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_info.bmp" 13434828 E 20 22 60 59
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_fw/icon_info.bmp" 13434828 E 20 22 60 59
 2 2
 "txt_info"
 ""

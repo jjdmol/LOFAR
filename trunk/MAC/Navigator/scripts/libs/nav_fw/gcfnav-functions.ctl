@@ -24,16 +24,16 @@
 //# global functions for the Navigator. All event handlers are implemented here
 //#
 
-#uses "gcfnav-pmlinterface.ctl"
-#uses "gcf-util.ctl"
-#uses "gcf-common.ctl"
-#uses "gcfnav-configuration-functions.ctl"
+#uses "nav_fw/gcfnav-pmlinterface.ctl"
+#uses "nav_fw/gcf-util.ctl"
+#uses "nav_fw/gcf-common.ctl"
+#uses "nav_fw/gcfnav-configuration-functions.ctl"
 
 global string   ACTIVEX_TREE_CTRL      = "NOT FlyTreeXCtrl.FlyTreeX";
 global string   ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
 global string   LIST_TREE_CTRL_NAME    = "list";
 global string   TAB_VIEWS_CTRL_NAME    = "TabViews";
-global string   NAVIGATOR_TAB_FILENAME = "navigator/navigator_tab.pnl";
+global string   NAVIGATOR_TAB_FILENAME = "nav_fw/navigator_tab.pnl";
 global bool     ACTIVEX_SUPPORTED      = false;
 global int      NR_OF_VIEWS            = 10;
 global dyn_string  g_itemID2datapoint;
@@ -376,7 +376,7 @@ void showActiveView(string dpViewConfig, string datapointPath)
     if(tabId != selectedViewTabId)
     {
       // load empty panel in non-visible tabs to enhance performance
-      tabCtrl.registerPanel(tabId-1,"navigator/views/nopanel.pnl",makeDynString(""));
+      tabCtrl.registerPanel(tabId-1,"nav_fw/nopanel.pnl",makeDynString(""));
     }
     else
     {
@@ -426,7 +426,7 @@ void showView(string dpViewConfig, string datapointPath)
       {
         if(caption==selectedViewCaption)
         {
-          tabCtrl.registerPanel(tabId-1,"navigator/views/nopanel.pnl",makeDynString(""));
+          tabCtrl.registerPanel(tabId-1,"nav_fw/nopanel.pnl",makeDynString(""));
         }
       }
     }
@@ -1891,7 +1891,7 @@ string getDpTypeFromEnabled(string datapointPath)
 ///////////////////////////////////////////////////////////////////////////////////
 void navConfigMessageWarning(string message)
 {
-  ChildPanelOnCentralModal("navigator/MessageWarning", "Warning", makeDynString("$1:"+message));
+  ChildPanelOnCentralModal("nav_fw/MessageWarning", "Warning", makeDynString("$1:"+message));
 }
 
 

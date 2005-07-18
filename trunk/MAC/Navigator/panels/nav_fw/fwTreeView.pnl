@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 tree/tree.pnl v1.1
-PANEL,286 70 260 560 N "FwBackground" 5
+PANEL,284 201 260 560 N "FwBackground" 5
 "$sOnCollapse"
 "$sOnExpand"
 "$sOnInit"
@@ -32,8 +32,8 @@ main(){
 }" 0
 EE E E 1 -1 -1 0  2 2
 "" 0 1
-E"#uses \"fwUtil.ctl\"
-#uses \"fwTreeView.ctl\"" 0
+E"#uses \"nav_fw/fwUtil.ctl\"
+#uses \"nav_fw/fwTreeView.ctl\"" 0
  2
 "CBRef""0"
 "EClose"E

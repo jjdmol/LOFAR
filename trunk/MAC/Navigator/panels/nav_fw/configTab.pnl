@@ -30,22 +30,22 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E4
 "Environment" 1
 LANG:1 11 Environment
-1 "navigator\\configTabEnvironment.pnl" 1
+1 "nav_fw\\configTabEnvironment.pnl" 1
 LANG:1 0 
 0
 "Userrights" 1
 LANG:1 10 Userrights
-1 "navigator\\configTabUserrights.pnl" 1
+1 "nav_fw\\configTabUserrights.pnl" 1
 LANG:1 0 
 0
 "Shortcuts" 1
 LANG:1 9 Shortcuts
-1 "navigator\\configTabShortCuts.pnl" 1
+1 "nav_fw\\configTabShortCuts.pnl" 1
 LANG:1 0 
 0
 "Path" 1
 LANG:1 4 Path
-1 "navigator\\configTabPathNames.pnl" 1
+1 "nav_fw\\configTabPathNames.pnl" 1
 LANG:1 0 
 0
 0

@@ -1,9 +1,9 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,328 229 95 42 N "_3DFace" 1
+PANEL,284 201 95 42 N "_3DFace" 1
 "$Nr"
-EEE E E 1 -1 -1 0  -1 -1
+EEE E E 1 -1 -1 0  10 10
 "" 0 1
 EE 2
 "CBRef""1"
@@ -30,7 +30,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 8 8 40 34
 P 
 13434828
-"pictures/icon_fileselector.bmp"
+"pictures/nav_fw/icon_fileselector.bmp"
 1
 LANG:1 0 
 "main()
