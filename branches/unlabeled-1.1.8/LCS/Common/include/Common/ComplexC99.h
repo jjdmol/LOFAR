@@ -45,7 +45,11 @@ extern "C" {
   LOFAR_DCOMPLEX csqrt  (LOFAR_DCOMPLEX x);
   LOFAR_DCOMPLEX cexp   (LOFAR_DCOMPLEX x);
   LOFAR_DCOMPLEX cpow   (LOFAR_DCOMPLEX x, LOFAR_DCOMPLEX exp);
+//# PVSS puts std::clog in the global namespace.
+//# Hence do not define clog in that case.
+#ifndef HAVE_PVSS
   LOFAR_DCOMPLEX clog   (LOFAR_DCOMPLEX x);
+#endif
   LOFAR_DCOMPLEX clog10 (LOFAR_DCOMPLEX x);
   double         cabs   (LOFAR_DCOMPLEX x);
   double         carg   (LOFAR_DCOMPLEX x);
