@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 160 900 250 N "_3DFace" 3
+PANEL,242 106 900 250 N "_3DFace" 3
 "$barNr"
 "$configDatapoint"
 "$datapoint"
