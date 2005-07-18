@@ -18,16 +18,16 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name, short startfreq, const ACC::APS::ParameterSet pSet)
+DH_Vis::DH_Vis (const string& name, short startfreq, 
+		const ACC::APS::ParameterSet pSet)
 : DataHolder    (name, "DH_Vis"),
   itsPS         (pSet),
   itsBuffer     (0),
   itsStartFreq  (startfreq), 
-  itsNPols      (2),
   itsMatrix      (0)
 {
-   itsNPols = itsPS.getInt32("DH_Vis.NPols");
-   itsNStations  = itsPS.getInt32("DH_Vis.stations");
+   itsNPols = itsPS.getInt32("polarisations");
+   itsNStations  = itsPS.getInt32("NRSP");
    itsNBaselines = itsNStations * (itsNStations - 1);
 }
 

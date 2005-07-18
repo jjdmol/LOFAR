@@ -18,18 +18,20 @@ using namespace LOFAR::ACC::APS;
 
 namespace LOFAR { 
 
-  Stub_Corr::Stub_Corr (bool stubOnServer)
+  Stub_Corr::Stub_Corr (bool stubOnServer, const ACC::APS::ParameterSet pSet)
     : itsStubOnServer (stubOnServer),
       itsTHs          (0),
-      itsConnections  (0)
+      itsConnections  (0),
+      itsPS           (pSet)
   {
-    itsPS = new ACC::APS::ParameterSet("TFlopCorrelator.cfg");
-    itsNCorr = itsPS->getInt32("NBeamlets")/2;
-    DBGASSERTSTR(itsNCorr%2 == 0, "NBeamlets should be an even number");
-    LOG_TRACE_FLOW_STR("Total number of Correlators in the Stub_Corr is " << itsNCorr);
-    ASSERTSTR(itsNCorr >= 0, "Number of Correlators in the Stub_Corr must be greater than 0");
+    itsNChan = itsPS.getInt32("NCorrCollectOutputs");
+    LOG_TRACE_FLOW_STR("Total number of channels in the Stub_Corr is " << itsNChan);
+    ASSERTSTR(itsNChan >= 0, "Number of channels in the Stub_Corr must be greater than 0");
 
-    for (int i=0; i<itsNCorr; i++) {
+    itsTHs = new TH_Socket*[itsNChan];
+    itsConnections = new Connection*[itsNChan];
+
+    for (int i=0; i<itsNChan; i++) {
       itsTHs[i] = 0;
       itsConnections[i] = 0;
     }
@@ -38,7 +40,7 @@ namespace LOFAR {
   
   Stub_Corr::~Stub_Corr()
   {
-    for (int i=0; i<itsNCorr; i++)
+    for (int i=0; i<itsNChan; i++)
     {
       delete itsTHs[i];
       delete itsConnections[i];
@@ -51,11 +53,11 @@ namespace LOFAR {
 			   TinyDataManager& dm,
 			   int dhNr)
   {
-    DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsNCorr)),
-		  "C_nr argument out of boundaries; " << C_nr << " / " << itsNCorr);
+    DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsNChan)),
+		  "C_nr argument out of boundaries; " << C_nr << " / " << itsNChan);
 
-    int port = itsPS->getInt32("CorrConnection.RequestPort");
-    string service(formatString("%d", port));
+    int port = itsPS.getInt32("CorrConnection.RequestPort");
+    string service(formatString("%d", port+C_nr));
 
     if (itsStubOnServer) // on the cluster side, so start server socket
     {
@@ -73,7 +75,7 @@ namespace LOFAR {
       DBGASSERTSTR(itsTHs[C_nr] == 0, "Stub input " << C_nr << 
 		" has already been connected.");
       // Create a client socket
-      itsTHs[C_nr] = new TH_Socket(itsPS->getString("CorrConnection.ServerHost"),
+      itsTHs[C_nr] = new TH_Socket(itsPS.getString("CorrConnection.ServerHost"),
 				   service);
       itsConnections[C_nr] = new Connection("toBG", 
 					    dm.getGeneralOutHolder(dhNr), 

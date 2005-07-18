@@ -25,7 +25,7 @@ class Stub_Corr
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit Stub_Corr (bool onServer=false);
+  explicit Stub_Corr (bool onServer, const ACC::APS::ParameterSet pSet);
 
   ~Stub_Corr();
 
@@ -36,10 +36,11 @@ public:
 
 private:
   bool               itsStubOnServer;
-  ACC::APS::ParameterSet* itsPS;
-  int                itsNCorr;  // total number of correlators in this interface
+  int                itsNChan;  // total number of channels in this interface
   TH_Socket**        itsTHs;
   Connection**       itsConnections;
+
+  ACC::APS::ParameterSet itsPS;
 };
 
 } //namespace

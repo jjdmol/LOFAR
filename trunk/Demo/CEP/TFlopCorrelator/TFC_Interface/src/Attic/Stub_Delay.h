@@ -25,7 +25,7 @@ class Stub_Delay
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit Stub_Delay (bool isInput, ACC::APS::ParameterSet pSet);
+  explicit Stub_Delay (bool isInput, const ACC::APS::ParameterSet pSet);
 
   ~Stub_Delay();
 
