@@ -1,24 +1,24 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,284 171 328 89 N "_3DFace" 1
+PANEL,452 259 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
   //Load the property set for this datapoint
-  navPMLloadPropertySet($datapoint + \"_Board0_BP\");
-  navPMLloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
+  navPMLloadPropertySet($datapoint + \"_Board1_BP\");
+  navPMLloadPropertySet($datapoint + \"_Board1_BP_Maintenance\");
 
-  if(dpAccessable($datapoint + \"_Board0_BP.status:_online.._value\") &&
-     dpAccessable($datapoint + \"_Board0_Maintenance.status:_online.._value\"))
+  if(dpAccessable($datapoint + \"_Board1_BP.status:_online.._value\") &&
+     dpAccessable($datapoint + \"_Board1_Maintenance.status:_online.._value\"))
   {
-    dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board0_Maintenance.status:_online.._value\",
-					                             $datapoint + \"_Board0_BP.status:_online.._value\",
-					                             $datapoint + \"_Board0_BP.status:_online.._invalid\");
-    dpConnect(\"showVersion\", $datapoint + \"_Board0_BP.version:_online.._value\",
-                             $datapoint + \"_Board0_BP.version:_online.._invalid\");
-    dpConnect(\"navViewShowTemp\", $datapoint + \"_Board0_BP.version:_online.._value\",
-                                 $datapoint + \"_Board0_BP.version:_online.._invalid\");
+    dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
+					                             $datapoint + \"_Board1_BP.status:_online.._value\",
+					                             $datapoint + \"_Board1_BP.status:_online.._invalid\");
+    dpConnect(\"showVersion\", $datapoint + \"_Board1_BP.version:_online.._value\",
+                             $datapoint + \"_Board1_BP.version:_online.._invalid\");
+    dpConnect(\"navViewShowTemp\", $datapoint + \"_Board1_BP.version:_online.._value\",
+                                 $datapoint + \"_Board1_BP.version:_online.._invalid\");
   }
   else
   {
@@ -30,8 +30,8 @@ PANEL,284 171 328 89 N "_3DFace" 1
 " 0
 "main()
 {
-  navPMLloadPropertySet($datapoint + \"_Board0_BP\");
-  navPMLloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
+  navPMLloadPropertySet($datapoint + \"_Board1_BP\");
+  navPMLloadPropertySet($datapoint + \"_Board1_BP_Maintenance\");
 
 }" 0
 E E E 1 -1 -1 0  20 60
@@ -56,7 +56,7 @@ main(int iType)
   dyn_int      diType = makeDynInt();
   dyn_string   dsDps;
 
-  dsDps[1] = $datapoint+\"_Board0_BP_status.\" + \":_alert_hdl.._ack\";
+  dsDps[1] = $datapoint+\"_Board1_BP_status.\" + \":_alert_hdl.._ack\";
 
   if ( isFunctionDefined(\"isAckable\") )
   {
@@ -75,7 +75,7 @@ main(int iType)
 }
 // SimpleCtrlScript {EP_confirm}
 // dpCount {1}
-// dp1 {$datapoint + \"_Board0_BP_status.\"}
+// dp1 {$datapoint + \"_Board1_BP_status.\"}
 // SimpleCtrlScriptEnd {EP_confirm}
 " 0
 
@@ -129,7 +129,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_fw/icon_maintenance.gif" 16777215 E 140 20 180 60
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 140 20 180 60
 2 5
 "txt_version"
 ""
@@ -182,7 +182,7 @@ E E 0 1 1 0 1 E U  0 E 292 27 306 43
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 2 ï¿½C
+LANG:1 2 °C
 2 8
 "txt_temperature"
 ""

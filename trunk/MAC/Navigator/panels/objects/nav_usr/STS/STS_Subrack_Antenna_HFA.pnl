@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,284 171 95 138 N "_3DFace" 3
+PANEL,496 317 95 138 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -191,7 +191,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 13 13 53 53
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 13 13 53 53
 0
 LAYER, 1 
 1
