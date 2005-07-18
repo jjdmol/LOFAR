@@ -1,3 +1,11 @@
+LCS/Common: Version 2.2 patch 1, date: 2005/07/18
+=================================================
+
+Due to backward compatibility issues with PVSS the declaration of the clog()
+math functions for doubles has been excluded from the LOFAR built-in complex
+declarations when HAVE_PVSS is defined.
+
+
 LCS/Common: Version 2.2, date: 2005/06/15
 =========================================
 
