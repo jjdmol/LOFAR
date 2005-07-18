@@ -46,6 +46,12 @@ namespace LOFAR
 
   void AH_PPFilter::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
+    
+    ACC::APS::ParameterSet myPset;
+    myPset["NRSP"] = "1";
+    myPset["DH_StationSB.freqs"] = "1";
+    myPset["DH_StationSB.times"] = "1000";
+    myPset["polarisations"] = "2";
 
     itsFilterWH0 = (WorkHolder*) new WH_FIR("itsFilterWH0",0);
     itsFilterWH1 = (WorkHolder*) new WH_FIR("itsFilterWH1",0);
@@ -59,8 +65,8 @@ namespace LOFAR
     itsWHs.push_back(itsFFTWH0);
     itsWHs.push_back(itsFFTWH1);
 
-    itsInDH0 = (DataHolder*) new DH_FIR("itsInDH0", 0);
-    itsInDH1 = (DataHolder*) new DH_FIR("itsInDH1", 0);
+    itsInDH0 = (DataHolder*) new DH_FIR("itsInDH0", 0, myPset);
+    itsInDH1 = (DataHolder*) new DH_FIR("itsInDH1", 0, myPset);
 
 //     itsInternalDH00 = (DataHolder*) new DH_PPF("itsInternalDH00", 0);
 //     itsInternalDH01 = (DataHolder*) new DH_PPF("itsInternalDH01", 0);
