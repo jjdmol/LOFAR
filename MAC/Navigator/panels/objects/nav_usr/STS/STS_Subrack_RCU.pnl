@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,473 288 139 149 N "_3DFace" 4
+PANEL,518 346 139 149 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -10,16 +10,16 @@ PANEL,473 288 139 149 N "_3DFace" 4
 {
   //Function: Set background color of RCU
   setValue(\"text_RCUNr\", \"text\", \"RCU\" + $RCUNr );
-  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
-  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
 
-  if(dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\") &&
-  	 dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\"))
+  if(dpAccessable( $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\") &&
+  	 dpAccessable( $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\"))
   {
     dpConnect(\"setBackGroundColorAEM\", 
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._invalid\");
+            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\",
+            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\",
+            $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._invalid\");
   }
   else
   {
@@ -30,8 +30,8 @@ PANEL,473 288 139 149 N "_3DFace" 4
 " 0
 "main()
 {
-  navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
-  navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
+  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr);
+  navPMLunloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr + \"_Maintenance\");
 
 }" 0
 E E E 1 -1 -1 0  20 140
@@ -56,7 +56,7 @@ main(int iType)
   dyn_int      diType = makeDynInt();
   dyn_string   dsDps;
 
-  dsDps[1] = $datapoint+\"_Board0_AP\"+$APNr+\"_RCU\"+$RCUNr+\"_status.\" + \":_alert_hdl.._ack\";
+  dsDps[1] = $datapoint+\"_Board1_AP\"+$APNr+\"_RCU\"+$RCUNr+\"_status.\" + \":_alert_hdl.._ack\";
 
   if ( isFunctionDefined(\"isAckable\") )
   {
@@ -75,7 +75,7 @@ main(int iType)
 }
 // SimpleCtrlScript {EP_confirm}
 // dpCount {1}
-// dp1 {$datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_status.\"}
+// dp1 {$datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_status.\"}
 // SimpleCtrlScriptEnd {EP_confirm}
 " 0
 
@@ -94,7 +94,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board0_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board1_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
  0 1 1 0 1 E U  1 E 40 40 100 110
 2 5
@@ -135,9 +135,9 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board0_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board1_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  2 0 1 "pictures/nav_fw/icon_maintenance.gif" 16777215 E 50 68 90 108
+ 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 50 68 90 108
 0
 LAYER, 1 
 1
