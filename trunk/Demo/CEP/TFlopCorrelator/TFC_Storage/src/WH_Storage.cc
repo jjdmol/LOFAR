@@ -34,7 +34,7 @@ using namespace LOFAR;
 
 WH_Storage::WH_Storage(const string& name, 
 		       const ACC::APS::ParameterSet& pset) 
-  : WorkHolder (pset.getInt32("NSBF")/2,
+  : WorkHolder (pset.getInt32("NCorrCollectOutputs")/2,
 		0,
 		name,
 		"WH_Storage"),
