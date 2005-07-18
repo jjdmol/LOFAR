@@ -174,7 +174,6 @@ void ComboBoxViewsSelectionChanged()
   {
     selectedPanel= g_subViews[selectedSubView];
   }
-  DebugN("##selectedPanel:"+selectedPanel);
 
   //if for selectedSubView a mapping has been found, use this name,
   //otherwise parse an empty string to prevent WARNINGS
@@ -303,7 +302,9 @@ bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string select
   bool success;
   dyn_float resultFloat;
   dyn_string resultString;
-  string panelName = "nav_fw/navigator_newsubview.pnl";
+  string viewsPath = "";
+  dpGet("__navigator." + ELNAME_VIEWSPATH, viewsPath);
+  string panelName = viewsPath + "navigator_newsubview.pnl";
   ChildPanelOnCentralModalReturn(
     panelName,
     "Add Sub-view",
@@ -314,7 +315,6 @@ bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string select
                   "$configDatapoint:" + configDatapoint),
     resultFloat,
     resultString);
-  DebugN("panelName :"+panelName);
   success = resultFloat[1];
   nrOfSubViews = resultFloat[2];
   if(success)
@@ -335,8 +335,11 @@ bool ConfigTabRemoveSubViewClicked(string viewName, int selectedView, string sel
   bool success;
   dyn_float resultFloat;
   dyn_string resultString;
+  string viewsPath = "";
+  dpGet("__navigator." + ELNAME_VIEWSPATH, viewsPath);
+
   ChildPanelOnCentralModalReturn(
-    "nav_fw/navigator_newsubview.pnl",
+    viewsPath + "navigator_newsubview.pnl",
     "Remove Sub-view",
     makeDynString("$addView:FALSE", 
                   "$viewName:" + viewName,

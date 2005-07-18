@@ -1,15 +1,11 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 654 216 N "_3DFace" 1
+PANEL,416 375 654 216 N "_3DFace" 1
 "$configDatapoint"
 EEE E E 1 -1 -1 0  20 20
 "" 0 1
-E"bool SETTINGS_FROM_DATABASE;
-//   = xrangeMin;
-//   = xrangeMax;
-//   = yrangeMin;
-//   = yrangeMax;" 0
+E"bool SETTINGS_FROM_DATABASE;" 0
  2
 "CBRef""1"
 "EClose"E
@@ -397,7 +393,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 613 8 645 34
 P 
 13434828
-"pictures/icon_fileselector.bmp"
+"pictures/nav_fw/icon_fileselector.bmp"
 1
 LANG:1 0 
 "main()

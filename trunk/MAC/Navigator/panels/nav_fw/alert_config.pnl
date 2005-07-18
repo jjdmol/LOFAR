@@ -356,41 +356,41 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 7 ""
-"objects\\Nav\\alert_config_area.pnl" 210 440 T 83 1 0 1  -200 -310  
+"objects\\nav_fw\\alert_config_area.pnl" 210 440 T 83 1 0 1  -200 -310  
 3
 "$AreaNr""1"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 8 "Group7"
-"objects\\Nav\\alert_config_area.pnl" 10 80 T 84 1 0 1  0 170  
+"objects\\nav_fw\\alert_config_area.pnl" 10 80 T 84 1 0 1  0 170  
 3
 "$AreaNr""2"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 9 "Group9"
-"objects\\Nav\\alert_config_area.pnl" 10 210 T 85 1 0 1  0 160  
+"objects\\nav_fw\\alert_config_area.pnl" 10 210 T 85 1 0 1  0 160  
 3
 "$AreaNr""3"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 12 ""
-"navigator\\navigator_config_tab.pnl" 30 520 T 96 1 0 1  -11 -476  
+"objects\\nav_fw\\navigator_config_tab.pnl" 30 520 T 96 1 0 1  -11 -476  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
 3 13 "Group8"
-"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 600 T 96 1 0 1  0 50  
+"objects\\nav_fw\\info_config disabled_because_dpe.pnl" 90 600 T 96 1 0 1  0 50  
 1
 "$datapoint""$datapoint"
 3 14 ""
-"objects\\Nav\\warning_panel_height_exceeded.pnl" 460 540 T 96 1 0 1  -370 110  
+"objects\\nav_fw\\warning_panel_height_exceeded.pnl" 460 540 T 96 1 0 1  -370 110  
 2
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 11 ""
-"objects\\Nav\\nav_combobox_min_max_dp.pnl" 297 502 T 86 1 0 1  -112 -12  
+"objects\\nav_fw\\nav_combobox_min_max_dp.pnl" 297 502 T 86 1 0 1  -112 -12  
 4
 "$Maximum""26"
 "$Minimum""4"

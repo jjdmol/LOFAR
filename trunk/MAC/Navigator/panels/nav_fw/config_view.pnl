@@ -28,8 +28,8 @@ PANEL,553 438 950 740 N "_3DFace" 1
 }" 0
 EE E E 1 -1 -1 0  684 1565
 "" 0 1
-E"#uses \"gcfnav-functions.ctl\"
-#uses \"gcfnav_view.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-functions.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

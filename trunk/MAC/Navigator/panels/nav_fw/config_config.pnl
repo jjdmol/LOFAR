@@ -54,7 +54,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 ""
-"navigator\\navigator_config_tab.pnl" 150 70 T 1 1 0 1  -131 -26  
+"objects\\nav_fw\\navigator_config_tab.pnl" 150 70 T 1 1 0 1  -131 -26  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"
