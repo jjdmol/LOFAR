@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,295 138 95 31 N "_3DFace" 4
+PANEL,588 506 95 31 N "_3DFace" 4
 "$Maximum"
 "$Minimum"
 "$datapoint"
@@ -58,7 +58,7 @@ int fill_combobox()
   {
 	  if (Minimum<Maximum)
 	  {
-		  dpGet($dp + \":_online.._value\", ElementValue);
+		  dpGet($dp, ElementValue);
 	    for (i=Minimum; i<=Maximum ;i++)
 	    {
 	      ComboBox.appendItem(i);
@@ -66,6 +66,11 @@ int fill_combobox()
  	  		{
 	  			ComboBox.selectedPos = ComboBox.itemCount;
 	  	  }
+	    }
+	    if(ElementValue==0)
+	    {
+	      ElementValue = 1;
+	      dpSet($dp, ElementValue);
 	    }
 	  }
 	}

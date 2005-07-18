@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 5 panel
-PANEL,636 374 1006 750 N "_3DFace" 2
+PANEL,416 375 1006 750 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -292,8 +292,8 @@ ArrangeAlertList(string dp1, float nrOfRowsList,
 " 0
 EE E E 1 -1 -1 0  0 0
 "" 0 1
-E"#uses \"gcfnav-functions.ctl\"
-#uses \"gcfnav_view.ctl\"
+E"#uses \"nav_fw/gcfnav-functions.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
 dyn_string dpAlertList;" 0
  2
 "CBRef""1"

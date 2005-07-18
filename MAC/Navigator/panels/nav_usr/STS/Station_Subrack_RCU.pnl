@@ -1,10 +1,11 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,262 164 923 749 N "_3DFace" 1
+PANEL,340 285 923 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
+  navViewCheckDpType($datapoint,\"TLcuPicRCU\");
   navPMLloadPropertySet($datapoint);
   string RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
   if (dpAccessable($datapoint + \".VddVccEn:_online.._value\") &&
@@ -48,7 +49,21 @@ ShownofOverflows(string dp1, bool Status,
     setValue(\"txt_overflow\" , \"visible\", FALSE);
     setValue(\"rect_lowBandFilter\", \"backCol\", \"_dpdoesnotexist\");
   }
-}" 0
+}
+
+navViewCheckDpType(string aDp, string aCheckType){
+  DebugN(aCheckType);
+  DebugN(dpTypeName($datapoint));
+  if (aCheckType != dpTypeName($datapoint)){
+    ChildPanelOnCentralModal(\"objects/nav/warning_wrong_datatype.pnl\",
+		                         \"WRONG datapointtype\",
+		                         makeDynString(\"$datapointType:\" + aCheckType,
+		                                       \"$typeName:\" +dpTypeName($datapoint)));
+   
+  }
+}
+
+" 0
 "main()
 {
 DebugN(\"about to terminate: \"+$datapoint);
@@ -57,8 +72,8 @@ DebugN(\"after unload: \"+$datapoint);
 }" 0
 E E E 1 -1 -1 0  130 290
 "" 0 1
-E"#uses \"apl-view.ctl\"
-#uses \"gcfnav_view.ctl\"" 0
+E"#uses \"nav_fw/apl-view.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -811,38 +826,29 @@ LANG:1 4 copy
   string aSystem=dpSysSplit[1]; 
   dyn_string dpSplit=strsplit(dpSysSplit[2],\"_\");
   
-//  DebugN(dpSysSplit);
   
   dyn_string aTmp=dynPatternMatch(scopeName[ConvIndex(scopeNr)]+\"*\",dpSplit);
  
-  if (dynlen(aTmp) == 0) {
-//    DebugN(\"aTmp=0\");
-//    DebugN(\"---dpsplit: \"+dpSplit);
-//    DebugN(\"---scopeNr : \"+scopeNr);
-  } 
+
   if (dynlen(aTmp) >1) {
-//    DebugN(\"Too many matches in PatternMatch found\");
+    DebugN(\"Too many matches in PatternMatch found\");
   } else {
+    setValue(\"progressBar_border\",\"visible\",TRUE);
+    
     int index=dynContains(dpSplit,aTmp[1]);
 
     string localDp=dpSplit[1];
     for (int i=2; i<=index; i++){
       localDp=localDp+\"_\"+dpSplit[i];
     }
-//    DebugN(\"localDp found: \"+localDp);
-//    DebugTN(\"querydatabasefordp\");
     dyn_string outputTemp = queryDatabaseForDP(attribute, aSystem+\":\"+localDp, FALSE);
-//    DebugN(outputTemp);
-//    DebugN(\"finished querydatabasefordp\");
     
     // liftout the elements with the right type;
     string aTypeName=dpTypeName($datapoint);
-//    DebugN(\"type: \"+aTypeName+\" Dp:\"+$datapoint);
     
     dyn_string aMatch;
     for (int i=1; i<= dynlen(outputTemp);i++) {
        if (i==1) {
-//         DebugN(\"type made : \"+aSystem+\":\"+localDp+\"_\"+outputTemp[i]);
        }
       if (dpTypeName(aSystem+\":\"+localDp+\"_\"+outputTemp[i]) == aTypeName) {
         aMatch[dynlen(aMatch)+1]=aSystem+\":\"+localDp+\"_\"+outputTemp[i];
@@ -867,7 +873,6 @@ LANG:1 4 copy
     dpGet($datapoint+\".HBAEnable\",HBAEnable);
     dpGet($datapoint+\".LBAEnable\",LBAEnable);
     
-    DebugTN(\"b4 copy\");
      
     // copy the settings to all found datapoints
     for (int i=1; i<= dynlen(aMatch);i++) {
@@ -915,39 +920,39 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 10 ""
-"objects\\PIC\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  147 125  
+"objects\\nav_usr\\STS\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  147 125  
 1
 "$datapoint""$datapoint"
 3 13 ""
-"objects\\PIC\\STS_RCU_bandSelection.pnl" 475 403 T 102 1 0 1  -45 112  
+"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 475 403 T 102 1 0 1  -45 112  
 1
 "$datapoint""$datapoint"
 3 14 ""
-"objects\\PIC\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  209 -259  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  209 -259  
 3
 "$Caption""LFA-Receiver"
 "$Component""VlEnable"
 "$datapoint""$datapoint"
 3 15 "Group11"
-"objects\\PIC\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  411 45  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  411 45  
 3
 "$Caption""HFA-Receiver"
 "$Component""VhEnable"
 "$datapoint""$datapoint"
 3 16 "Group13"
-"objects\\PIC\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  50 270  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  50 270  
 3
 "$Caption""AD-Convertor"
 "$Component""VddVccEn"
 "$datapoint""$datapoint"
 3 17 "Group15"
-"objects\\PIC\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  231 -75  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  231 -75  
 3
 "$Caption""LFA-Amplifier"
 "$Component""LBAEnable"
 "$datapoint""$datapoint"
 3 18 "Group17"
-"objects\\PIC\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  411 110  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  411 110  
 3
 "$Caption""HFA-Amplifier"
 "$Component""HBAEnable"

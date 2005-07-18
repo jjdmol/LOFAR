@@ -261,7 +261,7 @@ LANG:1 15 Configure table
 "main()
 {
 
-  ChildPanelOnCentralModal(\"navigator/views/alert_config_table.pnl\",
+  ChildPanelOnCentralModal(\"nav_fw/alert_config_table.pnl\",
                            \"Configure Alert Area -\" + $AreaNr,
                             makeDynString(\"$datapoint:\" + $datapoint,
                                           \"$configDatapoint:\" + $configDatapoint,
@@ -322,26 +322,26 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 5 ""
-"objects\\Nav\\nav_radiobutton_dp.pnl" 403 74 T 29 1 0 1  -114 0  
+"objects\\nav_fw\\nav_radiobutton_dp.pnl" 403 74 T 29 1 0 1  -114 0  
 3
 "$datapoint""$datapoint"
 "$dp""$configDatapoint + \".\" + $AreaNr + \".Active\""
 "$label""Active"
 3 0 "Group2"
-"objects\\Nav\\trend_title.pnl" 75 93 T 1 1 0 1  -10 -70  
+"objects\\nav_fw\\trend_title.pnl" 75 93 T 1 1 0 1  -10 -70  
 3
 "$TrendNr""$AreaNr"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 1 ""
-"objects\\Nav\\nav_combobox_min_max_dp.pnl" 420 73 T 24 1 0 1  -245 -23  
+"objects\\nav_fw\\nav_combobox_min_max_dp.pnl" 420 73 T 24 1 0 1  -245 -23  
 4
 "$Maximum""15"
 "$Minimum""1"
 "$datapoint""$datapoint"
 "$dp""$configDatapoint + \".\" + $AreaNr + \".nrOfRows\""
 3 2 "Group4"
-"objects\\Nav\\nav_combobox_min_max_dp.pnl" 410 50 T 25 1 0 1  -235 25  
+"objects\\nav_fw\\nav_combobox_min_max_dp.pnl" 410 50 T 25 1 0 1  -235 25  
 4
 "$Maximum""15"
 "$Minimum""1"

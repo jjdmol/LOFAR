@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,350 288 950 740 N "_3DFace" 5
+PANEL,416 375 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -9,7 +9,7 @@ PANEL,350 288 950 740 N "_3DFace" 5
 "$viewName"
 EEE E E 1 -1 -1 0  20 20
 "" 0 1
-E"#uses \"gcfnav_view.ctl\"" 0
+E"#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

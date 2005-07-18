@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,306 200 429 103 N "_3DFace" 4
+PANEL,372 317 429 103 N "_3DFace" 4
 "$addView"
 "$selectedElementDpType"
 "$selectedView"
@@ -482,15 +482,13 @@ LANG:1 0
 LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
 0 ""
 468 28 500 55
-P 
-13434828
-"pictures/icon_fileselector.bmp"
+T 
 1
 LANG:1 0 
 "main()
 {
-  string viewsPath=\"navigator/views\";
-  dpGet(\"__navigator.viewsPath\",viewsPath);
+  string viewsPath;
+  dpGet(\"__navigator.\" + ELNAME_VIEWSPATH, viewsPath);
   viewsPath = getPath(PANELS_REL_PATH) + viewsPath;
   DebugTN(viewsPath);
   string fileName;

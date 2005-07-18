@@ -540,7 +540,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 "Group2"
-"objects\\Nav\\nav_SysDpDpeSelection.pnl" -80 40 T 39 1 0 1  90 2  
+"objects\\nav_fw\\nav_SysDpDpeSelection.pnl" -80 40 T 39 1 0 1  90 2  
 2
 "$datapoint""$datapoint"
 "$selectedDP""$selectedDP"

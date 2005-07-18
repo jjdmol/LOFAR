@@ -342,56 +342,56 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 ""
-"navigator\\navigator_config_tab.pnl" 90 40 T 1 1 0 1  -71 4  
+"objects\\nav_fw\\navigator_config_tab.pnl" 90 40 T 1 1 0 1  -71 4  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
 3 2 ""
-"objects\\Nav\\navViewPlotConfig.pnl" 316 205 T 137 1 0 1  -306 -24  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 316 205 T 137 1 0 1  -306 -24  
 3
 "$PlotNr""1"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 3 "Group4"
-"objects\\Nav\\navViewPlotConfig.pnl" 10 90 T 138 1 0 1  0 121  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 10 90 T 138 1 0 1  0 121  
 3
 "$PlotNr""2"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 4 "Group6"
-"objects\\Nav\\navViewPlotConfig.pnl" 10 190 T 139 1 0 1  0 51  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 10 190 T 139 1 0 1  0 51  
 3
 "$PlotNr""3"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 5 "Group8"
-"objects\\Nav\\navViewPlotConfig.pnl" 10 290 T 140 1 0 1  0 -19  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 10 290 T 140 1 0 1  0 -19  
 3
 "$PlotNr""4"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 6 "Group7"
-"objects\\Nav\\navViewPlotConfig.pnl" 10 280 T 140 1 0 1  0 51  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 10 280 T 140 1 0 1  0 51  
 3
 "$PlotNr""6"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 7 "Group9"
-"objects\\Nav\\navViewPlotConfig.pnl" 10 350 T 141 1 0 1  0 -49  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 10 350 T 141 1 0 1  0 -49  
 3
 "$PlotNr""5"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 8 "Group11"
-"objects\\Nav\\navViewPlotConfig.pnl" 10 420 T 142 1 0 1  0 -59  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 10 420 T 142 1 0 1  0 -59  
 3
 "$PlotNr""7"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 9 "Group13"
-"objects\\Nav\\navViewPlotConfig.pnl" 10 490 T 143 1 0 1  0 -99  
+"objects\\nav_fw\\navViewPlotConfig.pnl" 10 490 T 143 1 0 1  0 -99  
 3
 "$PlotNr""8"
 "$configDatapoint""$configDatapoint"

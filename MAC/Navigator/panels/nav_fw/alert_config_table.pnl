@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,456 312 950 471 N "_3DFace" 3
+PANEL,416 375 950 471 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -155,7 +155,7 @@ E
   	case 2:
 				setValue (\"Table1\", \"cellBackCol\", \"white\");
 				DebugN(\"navViewAlertGetDpFromColumn(Row,Column):\"+navViewAlertGetDpFromColumn(Row,Column));
-        ChildPanelOnCentralModal(\"navigator/views/alert_config_table_cell.pnl\",
+        ChildPanelOnCentralModal(\"nav_fw/alert_config_table_cell.pnl\",
 				                         \"Select DP\", makeDynString(\"$Row:\" + Row,
 				                                                    \"$Column:\" + Column,
 				                                                    \"$configDatapoint:\" + $configDatapoint,
