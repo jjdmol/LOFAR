@@ -46,7 +46,9 @@ namespace LOFAR
   void AH_FIR::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
 
-    itsInDH1 = new DH_FIR("itsInDH1", NULL);
+    ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
+
+    itsInDH1 = new DH_FIR("itsInDH1", NULL, myPset);
     
     itsOutDH1 = new DH_PPF("itsOutDH1", 0);
     itsOutDH2 = new DH_PPF("itsOutDH2", 0);

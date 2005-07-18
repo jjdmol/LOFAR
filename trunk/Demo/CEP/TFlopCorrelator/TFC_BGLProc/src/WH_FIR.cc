@@ -21,7 +21,13 @@ using namespace LOFAR;
 WH_FIR::WH_FIR(const string& name,
 		       const short   subBandID):
  WorkHolder( 1, 2, name, "WH_Correlator"),
- itsSBID       (subBandID)
+ itsSBID       (subBandID),
+ itsNFilters   (0),
+ itsNtaps      (0),
+ itsNStations  (0),
+ itsNTimes     (0),
+ itsNPol       (0),
+ itsFFTs       (0)
 {
 
    ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
@@ -32,7 +38,7 @@ WH_FIR::WH_FIR(const string& name,
    itsNPol       = myPS.getInt32("WH_FIR.pols");
    itsFFTs       = myPS.getInt32("WH_FIR.FFTs");
 
-   getDataManager().addInDataHolder(0, new DH_FIR("input", itsSBID));
+   getDataManager().addInDataHolder(0, new DH_FIR("input", itsSBID, myPS));
 
    for (int c=0; c<itsFFTs; c++) {
      getDataManager().addOutDataHolder(c, new DH_PPF("output", itsSBID)); 
@@ -40,7 +46,7 @@ WH_FIR::WH_FIR(const string& name,
    
    filterData = new filterBox[itsNFilters];
    
-   for (int filter = 0; filter<itsNFilters; filter++) {
+   for (int filter = 0; filter < itsNFilters; filter++) {
      filterData[filter].filter_id = filter;
      filterData[filter].delayLine = new FilterType[itsNtaps];
      filterData[filter].filterTaps = new float[itsNtaps];

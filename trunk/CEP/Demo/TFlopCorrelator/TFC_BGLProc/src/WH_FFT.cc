@@ -21,26 +21,34 @@
 using namespace LOFAR;
 
 WH_FFT::WH_FFT(const string& name) :
-  WorkHolder(2, 5, name, "WH_Correlator")
+  WorkHolder (2, 5, name, "WH_Correlator"),
+  itsNtaps   (0),
+  itsNSamples(0),
+  itsCpF     (0),
+  itsInputs  (0)
 {
-   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
-   itsNtaps      = myPS.getInt32("WH_FFT.taps");
-   itsNSamples   = myPS.getInt32("WH_FFT.times");
-   itsCpF        = myPS.getInt32("Corr_per_Filter");
-   itsInputs     = myPS.getInt32("WH_FFT.inputs");
-   // todo: Pr-correlation correction DH in channel 0
-   //   getDataManager().addInDataHolder(0, new DH_??("input", itsSBID));
-
-   for (int c = 0; c < itsInputs; c++) {
-     getDataManager().addInDataHolder(c, new DH_PPF("input", itsSBID));
-   }
-
-   for (int c = 0; c < itsCpF; c++) {
-     getDataManager().addOutDataHolder(c, new DH_CorrCube("output", itsSBID)); 
-   }
-   
-   // FFTW parameters
-   itsFFTDirection = FFTW_FORWARD;
+  ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
+  itsNtaps      = myPS.getInt32("WH_FFT.taps");
+  itsNSamples   = myPS.getInt32("WH_FFT.times");
+  itsCpF        = myPS.getInt32("Corr_per_Filter");
+  itsInputs     = myPS.getInt32("WH_FFT.inputs");
+  // todo: Pr-correlation correction DH in channel 0
+  //   getDataManager().addInDataHolder(0, new DH_??("input", itsSBID));
+  
+  for (int c = 0; c < itsInputs; c++) {
+    getDataManager().addInDataHolder(c, new DH_PPF("input", itsSBID));
+  }
+  
+  for (int c = 0; c < itsCpF; c++) {
+    getDataManager().addOutDataHolder(c, new DH_CorrCube("output", itsSBID)); 
+  }
+  
+  // FFTW parameters
+  itsFFTDirection = FFTW_FORWARD;
+  itsFFTPlan = fftw_create_plan(itsNtaps, itsFFTDirection, FFTW_MEASURE);
+  
+  fft_in  = static_cast<FilterType*>(malloc(itsNtaps * sizeof(FilterType)));
+  fft_out = static_cast<FilterType*>(malloc(itsNtaps * sizeof(FilterType)));
 }
 
 WH_FFT::~WH_FFT() {
@@ -55,17 +63,13 @@ WH_FFT* WH_FFT::make(const string& name) {
 }
 
 void WH_FFT::preprocess() {
-  itsFFTPlan = fftw_create_plan(itsNtaps, itsFFTDirection, FFTW_MEASURE);
-
-  fft_in  = static_cast<FilterType*> (malloc(itsNtaps * sizeof(FilterType)));
-  fft_out = static_cast<FilterType*> (malloc(itsNtaps * sizeof(FilterType)));
 }
 
 void WH_FFT::process() {
 
   for (int i = 0; i < itsNinputs; i++) {
     // merge the input DH's into one buffer (!! POTENTIAL HOTSPOT !!)
-    memcpy(fft_in + i*itsNSamples, getDataManager().getInHolder(i)->getDataPtr(), itsNSamples * sizeof(FilterType));
+    memcpy(fft_in, getDataManager().getInHolder(i)->getDataPtr(), itsNtaps * sizeof(FilterType));
   }
 
   fftw_one(itsFFTPlan, 
@@ -79,7 +83,7 @@ void WH_FFT::process() {
     // can we do this without memcpy?
     memcpy(static_cast<DH_CorrCube*>(getDataManager().getOutHolder(cor))->getBuffer(),  
 	   fft_out + 1 + cor * ( itsNtaps - 1 ) / itsCpF,
-	   (itsNtaps - 1) / itsCpF);
+	   itsNtaps);
 
     // static_cast<DH_CorrCube*>(getDataManager().getOutHolder(cor))->getBuffer() = fft_out + 1 + cor * ( itsNtaps - 1 ) / itsCpF ;
   }
