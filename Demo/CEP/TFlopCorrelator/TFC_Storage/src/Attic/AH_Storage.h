@@ -39,7 +39,6 @@ class AH_Storage: public LOFAR::ApplicationHolder
 
   vector<WorkHolder*> itsWHs;
   vector<Step*> itsSteps;
-  int itsNSBF;
   Stub_Corr* itsStub;
 
 };
