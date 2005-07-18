@@ -1,4 +1,4 @@
-#uses "gcfpa-com.ctl"
+#uses "nav_fw/gcfpa-com.ctl"
 
 global dyn_dyn_string gCallBackList; // 1 == callBackFuncName; 2 == ID; 3 == myManNum
 global dyn_dyn_string gSeqList;	// 1 == seqNr ; 2 == ID; 3 == scope

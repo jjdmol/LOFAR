@@ -24,7 +24,7 @@
 //# configuration storage functions for the Navigator.
 //#
 
-#uses "gcf-util.ctl"
+#uses "nav_fw/gcf-util.ctl"
 
 global string   DPNAME_NAVIGATOR                = "__navigator";
 global string   ELNAME_RESOURCEROOTS            = "resourceRoots";
@@ -285,7 +285,7 @@ void navConfigSetSelectedElement(string datapointPath)
 ///////////////////////////////////////////////////////////////////////////
 string navConfigGetViewsPath()
 {
-  string viewsPath = "navigator/views/";
+  string viewsPath = "nav_fw/";
   dpGet(DPNAME_NAVIGATOR+ "." + ELNAME_VIEWSPATH,viewsPath);
   return viewsPath;
 }

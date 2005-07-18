@@ -24,9 +24,9 @@
 //# global functions for the Tabs of the Navigator. All event handlers are implemented here
 //#
 
-#uses "gcf-util.ctl"
-#uses "gcfnav-configuration-functions.ctl"
-#uses "gcfnav-functions.ctl"
+#uses "nav_fw/gcf-util.ctl"
+#uses "nav_fw/gcfnav-configuration-functions.ctl"
+#uses "nav_fw/gcfnav-functions.ctl"
 
 global string  VIEW_COMBOBOX_CTRL      = "ComboBoxViews";
 global string  VIEW_TABS_CTRL          = "TabViews";
@@ -169,7 +169,12 @@ void ComboBoxViewsSelectionChanged()
   // if config tab is selected, some more actions may be required
   
   string selectedSubView = viewsComboBoxCtrl.selectedText();
-  string selectedPanel = g_subViews[selectedSubView];
+  string selectedPanel = "";
+  if(mappinglen(g_subViews)>0)
+  {
+    selectedPanel= g_subViews[selectedSubView];
+  }
+  DebugN("##selectedPanel:"+selectedPanel);
 
   //if for selectedSubView a mapping has been found, use this name,
   //otherwise parse an empty string to prevent WARNINGS
@@ -208,12 +213,12 @@ void ComboBoxViewsSelectionChanged()
   //5. panelfile not present and accessable
   if(viewsComboBoxCtrl.itemCount==0)
   {
-    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nosubview.pnl",panelParameters);
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nosubview.pnl",panelParameters);
     LOG_DEBUG("1. No subview configured for this datapoint type");
   }
 //  else if(!dpAccessable(g_datapoint))
 //  {
-//    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nodpfound.pnl",panelParameters);
+//    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nodpfound.pnl",panelParameters);
 //    LOG_DEBUG("2. Datapoint selected in tree not found.");
 //  }
   else if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
@@ -223,14 +228,14 @@ void ComboBoxViewsSelectionChanged()
   }
   else if (selectedPanel=="0")
   {
-    selectedPanel = "navigator/views/nopanel.pnl";
-    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanel.pnl",panelParameters);
+    selectedPanel = "nav_fw/nopanel.pnl";
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nopanel.pnl",panelParameters);
     LOG_DEBUG("4 No panel configured for this subview");
   }
   else  //3. The configured panel file for this subview has not been found
   {
 	  string oldSelectedPanel = selectedPanel;
-	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanelfound.pnl",panelParameters);
+	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nopanelfound.pnl",panelParameters);
     LOG_DEBUG("5. File does not exist:",oldSelectedPanel);
   }            
  
@@ -298,8 +303,9 @@ bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string select
   bool success;
   dyn_float resultFloat;
   dyn_string resultString;
+  string panelName = "nav_fw/navigator_newsubview.pnl";
   ChildPanelOnCentralModalReturn(
-    "navigator/navigator_newsubview.pnl",
+    panelName,
     "Add Sub-view",
     makeDynString("$addView:TRUE", 
                   "$viewName:" + viewName,
@@ -308,7 +314,7 @@ bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string select
                   "$configDatapoint:" + configDatapoint),
     resultFloat,
     resultString);
-    
+  DebugN("panelName :"+panelName);
   success = resultFloat[1];
   nrOfSubViews = resultFloat[2];
   if(success)
@@ -330,7 +336,7 @@ bool ConfigTabRemoveSubViewClicked(string viewName, int selectedView, string sel
   dyn_float resultFloat;
   dyn_string resultString;
   ChildPanelOnCentralModalReturn(
-    "navigator/navigator_newsubview.pnl",
+    "nav_fw/navigator_newsubview.pnl",
     "Remove Sub-view",
     makeDynString("$addView:FALSE", 
                   "$viewName:" + viewName,

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,306 200 950 740 N "_3DFace" 5
+PANEL,350 288 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -82,18 +82,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 0 
-1 14 1 "" 57
-0
-1 18 2 "" 0
-0
-1 19 2 "" 4
-0
-1 19 2 "" 1
-0
-1 20 2 "" 2
-0
-1 21 2 "" 3
-0
 2 22
 "txt_Dedicated_panel"
 ""
@@ -272,11 +260,17 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 0 ""
 1
 LANG:1 5 Title
-1 15 1 "" 54
+1 41 0 "" 0
 0
-1 16 1 "" 55
+1 42 0 "" 4
 0
-1 17 1 "" 58
+1 43 0 "" 1
+0
+1 44 0 "" 2
+0
+1 45 0 "" 3
+0
+1 46 1 "" 57
 0
 22 30
 "messageWindow"
@@ -454,6 +448,12 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 E
 E
+1 47 1 "" 54
+0
+1 48 1 "" 55
+0
+1 49 1 "" 58
+0
 0
 LAYER, 1 
 1
@@ -483,15 +483,15 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 ""
+"objects\\nav_fw\\info_config disabled_because_dpe.pnl" 160 40 T 31 1 0 1  -70 610  
+1
+"$datapoint""$datapoint"
 3 1 ""
-"navigator\\navigator_config_tab.pnl" 120 250 T 11 1 0 1  -101 -206  
+"objects\\nav_fw\\navigator_config_tab.pnl" 150 20 T 32 1 0 1  -131 24  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
-3 2 "Group3"
-"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 590 T 11 1 0 1  10 70  
-1
-"$datapoint""$datapoint"
 0

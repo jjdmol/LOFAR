@@ -1,7 +1,8 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,306 200 954 748 N "_3DFace" 2
+PANEL,249 165 954 748 N "_3DFace" 3
+"$configDataPoint"
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -26,6 +27,9 @@ PANEL,306 200 954 748 N "_3DFace" 2
   dpConnect(\"ArrangeTrendPlots\", $configDatapoint + \".Standard\",
 	                               $configDatapoint + \".Trend2Active\",
 	                               $configDatapoint + \".Dedicated\");
+	
+	dpConnect(\"setTraceColor\",$configDataPoint + \".traceColor\");                               
+	                               
 	}
 	else
 	{
@@ -203,7 +207,8 @@ void dpConnectTrend(int TrendNumber, int TraceNumber)
 												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".AutoScale\",
 												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".ScaleMin\",
 												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".ScaleMax\",
-												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".LegendName\");
+												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".LegendName\",
+												 $configDatapoint + \".\" + TrendNumber + \".Trace\" + TraceNumber + \".traceColor\");
 }
 
 
@@ -278,7 +283,7 @@ void setTrendVisible(int TrendNumber, bool Visible)
 /////////////////////////////////////////////////////////////////////
 void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 								string dp3, int ScaleMin,  string dp4, int ScaleMax,
-								string dp5, string LegendName)
+								string dp5, string LegendName, string dp6, string traceColor)
 {
   //load dpName, without element
 	int TraceNumber, TrendNumber;
@@ -315,6 +320,9 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
         setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, TRUE);
         setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, TRUE);
         setValue(\"Trend\"+TrendNumber, \"curveAutoscale\", \"curve\"+TraceNumber, AutoScale);
+        if (traceColor != \"\" ) {
+          setValue(\"Trend\"+TrendNumber, \"curveColor\",traceColor);
+        }
       }
       else
       {

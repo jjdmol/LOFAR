@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,355 259 917 684 N "_3DFace" 5
+PANEL,350 288 917 684 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -9,7 +9,7 @@ PANEL,355 259 917 684 N "_3DFace" 5
 "$viewName"
 EEE E E 1 -1 -1 0  40 120
 "" 0 1
-E"#uses \"gcfnav_view.ctl\"" 0
+E"#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -18,8 +18,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-1 9 1 "" 57
-0
 2 13
 "Text3"
 ""
@@ -71,16 +69,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 0 
-1 15 2 "" 0
-0
-1 16 2 "" 4
-0
-1 17 2 "" 1
-0
-1 18 2 "" 2
-0
-1 19 2 "" 3
-0
 6 61
 "Border7"
 ""
@@ -272,6 +260,18 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  110 207 10 207
+1 84 1 "" 0
+0
+1 85 1 "" 4
+0
+1 86 1 "" 1
+0
+1 87 1 "" 2
+0
+1 88 1 "" 3
+0
+1 89 2 "" 57
+0
 19 8
 "ListType"
 ""
@@ -343,12 +343,6 @@ LANG:1 0
   }
 }" 0
 
-1 10 1 "" 54
-0
-1 11 1 "" 55
-0
-1 12 1 "" 58
-0
 13 60
 "btn_apply"
 ""
@@ -518,6 +512,12 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 E
 E
+1 90 2 "" 54
+0
+1 91 2 "" 55
+0
+1 92 2 "" 58
+0
 0
 LAYER, 1 
 1
@@ -548,14 +548,14 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 1 ""
-"navigator\\navigator_config_tab.pnl" 90 0 T 7 1 0 1  -71 44  
+"objects\\nav_fw\\info_config disabled_because_dpe.pnl" 110 530 T 71 1 0 1  0 60  
+1
+"$datapoint""$datapoint"
+3 2 ""
+"objects\\nav_fw\\navigator_config_tab.pnl" 70 20 T 72 1 0 1  -51 24  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
-3 2 "Group4"
-"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 600 T 10 1 0 1  10 70  
-1
-"$datapoint""$datapoint"
 0

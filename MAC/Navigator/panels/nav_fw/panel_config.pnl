@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,284 171 950 740 N "_3DFace" 5
+PANEL,350 288 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -102,18 +102,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 10 130 691 154
-1 14 1 "" 57
-0
-1 18 2 "" 0
-0
-1 19 2 "" 4
-0
-1 19 2 "" 1
-0
-1 20 2 "" 2
-0
-1 21 2 "" 3
-0
 6 22
 "Border20"
 ""
@@ -173,6 +161,18 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  60 117 10 117
+1 26 0 "" 0
+0
+1 27 0 "" 4
+0
+1 28 0 "" 1
+0
+1 29 0 "" 2
+0
+1 30 0 "" 3
+0
+1 31 1 "" 57
+0
 14 8
 "txt_fileName"
 ""
@@ -277,11 +277,11 @@ LANG:1 4 Load
 
 }" 0
 
-1 15 1 "" 54
+1 32 1 "" 54
 0
-1 16 1 "" 55
+1 33 1 "" 55
 0
-1 17 1 "" 58
+1 34 1 "" 58
 0
 0
 LAYER, 1 
@@ -312,15 +312,15 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 ""
+"objects\\nav_fw\\info_config disabled_because_dpe.pnl" 140 350 T 14 1 0 1  0 60  
+1
+"$datapoint""$datapoint"
 3 1 ""
-"navigator\\navigator_config_tab.pnl" 120 250 T 11 1 0 1  -101 -206  
+"objects\\nav_fw\\navigator_config_tab.pnl" 130 10 T 15 1 0 1  -111 34  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
-3 2 "Group3"
-"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 590 T 11 1 0 1  10 70  
-1
-"$datapoint""$datapoint"
 0

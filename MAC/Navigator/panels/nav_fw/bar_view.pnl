@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 barview
-PANEL,258 160 800 600 N "_3DFace" 2
+PANEL,248 161 1001 600 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -18,7 +18,7 @@ PANEL,258 160 800 600 N "_3DFace" 2
     setValue(\"warn_txt\",\"visible\",\"false\");
     setValue(\"alert_txt\",\"visible\",\"false\");
   }
-    
+  
 }
 showClippings(string aDp,string warnLevel,string aDp2, string alertLevel) {
    setValue(\"txt_warn_level\",\"text\",warnLevel+\" %\");
@@ -30,12 +30,13 @@ makeQueryList(string aDP1,string queryDP,string aDP2, string queryDPE) {
   dyn_string output;
   string attribute = \"_online.._value\";
   int first=0;
-  string aStr=\"_\";
 
-  if (queryDP=\"*\") aStr=\"\";
-  dyn_string outputTemp = queryDatabaseForDP(attribute, $datapoint + aStr+ queryDP, FALSE);
+  dyn_string outputTemp = queryDatabaseForDP(attribute, $datapoint + queryDP, FALSE);
+  // take present datapoint also in elements search
+  if (queryDP==\"*\")  dynInsertAt(outputTemp,$datapoint,1);
+
   dyn_string elementsOutput;
-
+  
   int maximumCount = dynlen(outputTemp);
   string selectionQueryDPE;
   for(int i=1; i<=dynlen(outputTemp);i++)
@@ -88,27 +89,44 @@ dyn_string queryDatabaseForDpElements(string datapointPath)
 }
 
 prepareButtons(string aDp1,dyn_string aDpNamesList) {
-  int dpNamesListLen=dynlen(aDpNamesList);
-  if (dpNamesListLen >=1 ) {
-    setValue(\"cmdUp\",\"enabled\",true);
-    setValue(\"cmdDown\",\"enabled\",true);
-    if (dpNamesListLen >=15) {
-      setValue(\"cmdFastUp\",\"enabled\",true);
-      setValue(\"cmdFastDown\",\"enabled\",true);
-    } else {
-      setValue(\"cmdFastUp\",\"enabled\",false);
-      setValue(\"cmdFastDown\",\"enabled\",false);
-    }
+  dpNamesListLen=dynlen(aDpNamesList);
+  if (bottomLineNr + 15 > dpNamesListLen) {
+    setValue(\"cmdFastUp\",\"enabled\",false);
   } else {
-    setValue(\"cmdUp\",\"enabled\",false);
-    setValue(\"cmdDown\",\"enabled\",false);
+    setValue(\"cmdFastUp\",\"enabled\",true);
   }
+  
+  if (bottomLineNr + 1 > dpNamesListLen) {
+    setValue(\"cmdUp\",\"enabled\",false);
+  } else {
+    setValue(\"cmdUp\",\"enabled\",true);
+  }
+  
+      
+  if (topLineNr-1 <= 0) {
+    setValue(\"cmdDown\",\"enabled\",false);
+  } else {
+    setValue(\"cmdDown\",\"enabled\",true);
+  }
+    
+  if (topLineNr-15 <= 0) {
+    setValue(\"cmdFastDown\",\"enabled\",false);
+  } else {
+    setValue(\"cmdFastDown\",\"enabled\",true);
+  }
+
+  setValue(\"totalLineNr\",\"text\",dpNamesListLen);
+  setValue(\"topLineNr\",\"text\",topLineNr);
+  setValue(\"bottomLineNr\",\"text\",bottomLineNr);
 }" 0
 EE E E 1 -1 -1 0  -1 -1
 "" 0 1
 E"//Include a library where functions are stored, which you what to use
 #uses \"gcfnav_view.ctl\" 
-dyn_string dpNamesList;" 0
+dyn_string dpNamesList;
+int topLineNr=1;
+int bottomLineNr=15;
+int dpNamesListLen=0;" 0
  2
 "CBRef""1"
 "EClose"E
@@ -334,20 +352,6 @@ LANG:1 0
 0
 1 172 22 "" 12
 0
-1 173 23 "" 0
-0
-1 174 23 "" 1
-0
-1 175 23 "" 4
-0
-1 176 23 "" 9
-0
-1 177 23 "" 10
-0
-1 178 23 "" 11
-0
-1 179 23 "" 12
-0
 1 180 24 "" 0
 0
 1 181 24 "" 1
@@ -361,20 +365,6 @@ LANG:1 0
 1 185 24 "" 11
 0
 1 186 24 "" 12
-0
-1 187 25 "" 0
-0
-1 188 25 "" 1
-0
-1 189 25 "" 4
-0
-1 190 25 "" 9
-0
-1 191 25 "" 10
-0
-1 192 25 "" 11
-0
-1 193 25 "" 12
 0
 1 194 26 "" 0
 0
@@ -460,10 +450,191 @@ LANG:1 0
 0
 1 235 31 "" 12
 0
+2 253
+"topLineNr"
+""
+1 180 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+60 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 203 48 224 64
+0 2 0 "4d" 4 0 0 194 0 0  203 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 000
+2 255
+"bottomLineNr"
+""
+1 247 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+62 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 270 48 291 64
+0 2 0 "4d" 4 0 0 194 0 0  270 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 000
+1 263 33 "" 0
+0
+1 264 33 "" 1
+0
+1 265 33 "" 4
+0
+1 266 33 "" 9
+0
+1 267 33 "" 10
+0
+1 268 33 "" 11
+0
+1 269 33 "" 12
+0
+1 270 34 "" 0
+0
+1 271 34 "" 1
+0
+1 272 34 "" 4
+0
+1 273 34 "" 9
+0
+1 274 34 "" 10
+0
+1 275 34 "" 11
+0
+1 276 34 "" 12
+0
+6 277
+"Border3"
+""
+1 70 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+64 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 70 40 710 70
+2 278
+"Text1"
+""
+1 78 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+65 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 80 48 164 64
+0 2 0 "s" 0 0 0 192 0 0  80 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Displaying line
+2 279
+"Text2"
+""
+1 217 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+66 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 219 47 230 63
+0 2 0 "s" 0 0 0 192 0 0  219 47
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 to
+2 280
+"Text4"
+""
+1 285 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+67 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 287 47 370 63
+0 2 0 "s" 0 0 0 192 0 0  287 47
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 from a total of 
+2 281
+"totalLineNr"
+""
+1 376 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 413 48 448 64
+0 2 0 "5d" 5 0 0 194 0 0  413 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 00000
+2 282
+"Text6"
+""
+1 423 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+69 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 425 48 452 64
+0 2 0 "s" 0 0 0 192 0 0  425 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 lines
 13 245
 "cmdDown"
 ""
-1 20 310 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+1 20 353 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 52 0 0 0 0 0
 EE E
@@ -476,7 +647,7 @@ LANG:0 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-18 308 62 352
+18 351 62 395
 P 
 10040064
 "pictures/arrowdown.gif"
@@ -484,16 +655,27 @@ P
 LANG:1 0 
 "main()
 {
-  string aDpName=dpNamesList[dynlen(dpNamesList)];
-  dynRemove(dpNamesList,dynlen(dpNamesList));
-  dynInsertAt(dpNamesList,aDpName,1);
-  dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  bool action=false;
+  if (topLineNr-1 > 0) {
+    topLineNr--;
+    bottomLineNr--;
+    action=true;
+  }
+   
+  if (action) {   
+    string aDpName=dpNamesList[dynlen(dpNamesList)];
+    dynRemove(dpNamesList,dynlen(dpNamesList));
+    dynInsertAt(dpNamesList,aDpName,1);
+ 
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
+
 }" 0
  E E E
 13 247
 "cmdFastDown"
 ""
-1 20 270 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+1 20 313 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 54 0 0 0 0 0
 EE E
@@ -506,7 +688,7 @@ LANG:0 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-18 268 62 312
+18 311 62 355
 P 
 13434828
 "pictures/arrowfastdown.bmp"
@@ -515,18 +697,28 @@ LANG:1 0
 "main()
 {
   string aDpName;
-  for (int i=0;i<=15;i++) {
-    aDpName=dpNamesList[dynlen(dpNamesList)];
-    dynRemove(dpNamesList,dynlen(dpNamesList));
-    dynInsertAt(dpNamesList,aDpName,1);
+  bool action=false;
+  if (topLineNr-15 > 0) {
+    topLineNr-=15;
+    bottomLineNr-=15;
+    action=true;
   }
-  dpSet($configDatapoint+\".dpNames\",dpNamesList);
+
+
+  if (action) {   
+    for (int i=0;i<=15;i++) {
+      aDpName=dpNamesList[dynlen(dpNamesList)];
+      dynRemove(dpNamesList,dynlen(dpNamesList));
+      dynInsertAt(dpNamesList,aDpName,1);
+    }
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
 }" 0
  E E E
 13 249
 "cmdFastUp"
 ""
-1 20 230 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+1 20 273 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 56 0 0 0 0 0
 EE E
@@ -539,7 +731,7 @@ LANG:0 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-18 228 62 272
+18 271 62 315
 P 
 13434828
 "pictures/arrowfastup.bmp"
@@ -547,19 +739,31 @@ P
 LANG:1 0 
 "main()
 {
+  bool action=false;
   string aDpName;
-  for (int i=0;i<=15;i++) {
-    aDpName=dpNamesList[1];
-    dynRemove(dpNamesList,1);
-    dynAppend(dpNamesList,aDpName);
+
+  if (bottomLineNr+15 <= dpNamesListLen) {
+    topLineNr+=15;
+    bottomLineNr+=15;
+    action=true;
   }
-  dpSet($configDatapoint+\".dpNames\",dpNamesList);
+
+   
+  if (action) {   
+    for (int i=0;i<=15;i++) {
+      aDpName=dpNamesList[1];
+      dynRemove(dpNamesList,1);
+      dynAppend(dpNamesList,aDpName);
+    }
+ 
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
 }" 0
  E E E
 13 251
 "cmdUp"
 ""
-1 20 190 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+1 20 233 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 58 0 0 0 0 0
 EE E
@@ -572,7 +776,7 @@ LANG:0 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-18 188 62 232
+18 231 62 275
 P 
 10040064
 "pictures/arrowup.gif"
@@ -580,11 +784,22 @@ P
 LANG:1 0 
 "main()
 {
-  string aDpName=dpNamesList[1];
-  dynRemove(dpNamesList,1);
-  dynAppend(dpNamesList,aDpName);
-  dpSet($configDatapoint+\".dpNames\",dpNamesList);
-}" 0
+  bool action=false;
+  if (bottomLineNr+1 <= dpNamesListLen) {
+    topLineNr++;
+    bottomLineNr++;
+    action=true;
+  }
+   
+  if (action) {   
+    string aDpName=dpNamesList[1];
+    dynRemove(dpNamesList,1);
+    dynAppend(dpNamesList,aDpName);
+ 
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
+}
+" 0
  E E E
 0
 LAYER, 1 
@@ -616,93 +831,93 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 ""
-"objects\\Nav\\bar_ref.pnl" 106 51 T 1 1 0 1  -16 6  
+"objects\\Nav\\bar_ref.pnl" 106 51 T 1 1 0 1  -16 49  
 3
 "$barNr""1"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 1 ""
-"objects\\Nav\\bar_ref.pnl" 121 134 T 2 1 0 1  -31 -47  
+"objects\\Nav\\bar_ref.pnl" 121 134 T 2 1 0 1  -31 -4  
 3
 "$barNr""2"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 2 ""
-"objects\\Nav\\bar_ref.pnl" 90 196 T 3 1 0 1  0 -79  
+"objects\\Nav\\bar_ref.pnl" 90 196 T 3 1 0 1  0 -36  
 3
 "$barNr""3"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 3 ""
-"objects\\Nav\\bar_ref.pnl" 92 185 T 4 1 0 1  -2 -38  
+"objects\\Nav\\bar_ref.pnl" 92 185 T 4 1 0 1  -2 5  
 3
 "$barNr""4"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 21 ""
-"objects\\Nav\\bar_ref.pnl" 91 360 T 32 1 0 1  -1 -183  
+"objects\\Nav\\bar_ref.pnl" 91 360 T 32 1 0 1  -1 -140  
 3
 "$barNr""5"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 22 ""
-"objects\\Nav\\bar_ref.pnl" 152 329 T 33 1 0 1  -62 -122  
+"objects\\Nav\\bar_ref.pnl" 152 329 T 33 1 0 1  -62 -79  
 3
 "$barNr""6"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
-3 23 ""
-"objects\\Nav\\bar_ref.pnl" 139 343 T 34 1 0 1  -49 -106  
-3
-"$barNr""7"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
 3 24 ""
-"objects\\Nav\\bar_ref.pnl" 132 310 T 35 1 0 1  -42 -43  
+"objects\\Nav\\bar_ref.pnl" 132 310 T 35 1 0 1  -42 0  
 3
 "$barNr""8"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
-3 25 ""
-"objects\\Nav\\bar_ref.pnl" 117 369 T 36 1 0 1  -27 -72  
-3
-"$barNr""9"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
 3 26 ""
-"objects\\Nav\\bar_ref.pnl" 116 377 T 37 1 0 1  -26 -50  
+"objects\\Nav\\bar_ref.pnl" 116 377 T 37 1 0 1  -26 -7  
 3
 "$barNr""10"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 27 ""
-"objects\\Nav\\bar_ref.pnl" 98 386 T 38 1 0 1  -8 1  
+"objects\\Nav\\bar_ref.pnl" 98 386 T 38 1 0 1  -8 44  
 3
 "$barNr""12"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 28 ""
-"objects\\Nav\\bar_ref.pnl" 78 366 T 39 1 0 1  12 -9  
+"objects\\Nav\\bar_ref.pnl" 78 366 T 39 1 0 1  12 34  
 3
 "$barNr""11"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 29 ""
-"objects\\Nav\\bar_ref.pnl" 103 438 T 40 1 0 1  -13 -21  
+"objects\\Nav\\bar_ref.pnl" 103 438 T 40 1 0 1  -13 22  
 3
 "$barNr""13"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 30 ""
-"objects\\Nav\\bar_ref.pnl" 95 450 T 41 1 0 1  -5 -3  
+"objects\\Nav\\bar_ref.pnl" 95 450 T 41 1 0 1  -5 40  
 3
 "$barNr""14"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 3 31 ""
-"objects\\Nav\\bar_ref.pnl" 76 479 T 42 1 0 1  14 -2  
+"objects\\Nav\\bar_ref.pnl" 76 479 T 42 1 0 1  14 41  
 3
 "$barNr""15"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 33 ""
+"objects\\Nav\\bar_ref.pnl" 93 243 T 62 1 0 1  -3 37  
+3
+"$barNr""7"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 34 ""
+"objects\\Nav\\bar_ref.pnl" 85 308 T 63 1 0 1  5 32  
+3
+"$barNr""9"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 0

@@ -10,7 +10,7 @@ PANEL,394 286 800 679 N "_3DFace" 5
 EEE E E 1 -1 -1 0  30 30
 "" 0 1
 E"//Include of ctl file
-#uses \"gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
 " 0
  2
 "CBRef""1"

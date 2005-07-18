@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,367 222 690 338 N "_3DFace" 5
+PANEL,255 161 697 398 N "_3DFace" 5
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -9,8 +9,7 @@ PANEL,367 222 690 338 N "_3DFace" 5
 "$selectedDP"
 "main()
 {
-//  startThread(\"FillSelectionList\");
-  
+
   int ScaleMin, ScaleMax;
   bool AutoScale;
 	string dpName, legendName;
@@ -21,55 +20,30 @@ PANEL,367 222 690 338 N "_3DFace" 5
   dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".AutoScale:_online.._value\", AutoScale);
 	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName:_online.._value\", dpName);
   dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".LegendName:_online.._value\", legendName);
+  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".traceColor:_online.._value\", traceColor);
     
   //Set the values in the graphical objects
 	setValue(\"txt_legendName\", \"text\", legendName);  
 	setValue(\"txt_scaleMax\", \"text\", ScaleMax);
 	setValue(\"txt_scaleMin\", \"text\", ScaleMin);
   setValue(\"btn_AutoScale\", \"state\", 0, AutoScale);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////
-//
-// FunctionName: FillSelectionList
-// Function    : Fills the selection list with retrieved datapoint from the 
-//               PVSS database
- ///////////////////////////////////////////////////////////////////////////////////
-/*
-void FillSelectionList()
-{
-  string attribute = \"_online.._value\";
-  string datapointPath = buildPathFromNode(g_curSelNode);
-	string dpName;
-  int first=0;
-  int searchDepth=0;
-  bool showProgress=TRUE;
-  bool singleElement=FALSE;
-
-  dyn_string output = queryDatabase(attribute, datapointPath + \"*\", first, searchDepth, showProgress, singleElement);
-  for(int i=1; i<=dynlen(output);i++ )
-  {
-    strreplace(output[i], datapointPath, \"\");
-    if(strpos(output[i], \"_\")==0)
-    {
-      output[i] = strltrim(output[i], \"_\");
-    }
+  if (traceColor != \"\") {
+    setValue(\"btn_traceColor\",\"text\",traceColor);
+    setValue(\"btn_traceColor\",\"backCol\",traceColor);  
+  } else {
+    setValue(\"btn_traceColor\",\"text\",\"auto\");
+    setValue(\"btn_traceColor\",\"backCol\",\"_3DFace\");
   }
-  //Get input from use to perform the Query
-	dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", dpName);
-
-  SelectionList1.items(output);  //Insert all items in one time, faster the inserting every item apart
-  SelectionList1.selectedPos(dynContains(output, dpName));
-
-
-}*/" 0
+}
+" 0
 EE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
 #uses \"gcfnav_view.ctl\"
 #uses \"gcf-common.ctl\"
-#uses \"gcfnav-functions.ctl\"" 0
+#uses \"gcfnav-functions.ctl\"
+string traceColor=\"\";
+string newTraceColor=\"\";" 0
  2
 "CBRef""1"
 "EClose"E
@@ -413,6 +387,39 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  71 30 11 30
+2 74
+"Text8"
+""
+1 17 327 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 329 163 345
+0 2 0 "s" 0 0 0 64 0 0  19 329
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Trace Color
+6 75
+"Border11"
+""
+1 10 341 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+57 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 326 178 350
 20 8
 "btn_AutoScale"
 ""
@@ -618,6 +625,13 @@ void navViewTrendConfigApplyTraceSettings()
     {
       dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", selectedConfigDpName);
     }
+    
+    //Check whether the current selected tracecolor is different from the stored one
+    if (traceColor != newTraceColor)
+    {
+      dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".traceColor\", newTraceColor);
+    }
+    
     PanelOff();
   }
   else
@@ -660,6 +674,43 @@ LANG:1 6 Cancel
 0
 1 69 1 "" 2
 0
+13 77
+"btn_traceColor"
+""
+1 177 326 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+59 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+175 324 392 352
+T 
+1
+LANG:1 4 Auto
+"main()
+{
+   string aColor=traceColor;
+   if (newTraceColor != \"\" ) {
+     aColor=newTraceColor;
+   } else {
+     aColor=\"_3DFace\";
+   }
+   
+   int ok=colorEditor(aColor);
+   if (ok == -1) {
+      DebugN(\"Color chooser failed.\");
+   } else {
+      setValue(\"btn_traceColor\",\"backCol\",aColor);
+      setValue(\"btn_traceColor\",\"text\",aColor);
+      newTraceColor=aColor;
+   }
+}" 0
+ E E E
 0
 LAYER, 1 
 1
