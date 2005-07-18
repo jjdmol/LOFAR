@@ -35,8 +35,14 @@ using namespace LOFAR;
 int main (int argc, char **argv) {
 
   try {
-    DH_FIR srcDH("subband", 1);
-    DH_FIR dstDH("subband", 1);
+    ACC::APS::ParameterSet myPset;
+    myPset.add("NRSP", "2");
+    myPset.add("DH_StationSB.freqs", "3");
+    myPset.add("DH_StationSB.times", "4");
+    myPset.add("polarisations", "5");
+
+    DH_FIR srcDH("subband", 1, myPset);
+    DH_FIR dstDH("subband", 1, myPset);
     srcDH.init();
     dstDH.init();
     TH_Mem TH;
