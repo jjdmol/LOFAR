@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 160 950 740 N "_3DFace" 5
+PANEL,271 105 950 730 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -60,8 +60,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-1 0 0 "" 57
-0
 2 4
 "Text3"
 ""
@@ -113,16 +111,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 0 
-1 21 3 "" 0
-0
-1 22 3 "" 4
-0
-1 23 3 "" 1
-0
-1 24 3 "" 2
-0
-1 25 3 "" 3
-0
 6 26
 "Border20"
 ""
@@ -511,11 +499,17 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 400 340 550 370
-1 1 0 "" 54
+1 116 0 "" 57
 0
-1 2 0 "" 55
+1 120 1 "" 0
 0
-1 3 0 "" 58
+1 121 1 "" 4
+0
+1 122 1 "" 1
+0
+1 123 1 "" 2
+0
+1 124 1 "" 3
 0
 14 51
 "setWarnLevel"
@@ -811,6 +805,12 @@ LANG:1 5 Reset
 	  newSecondLevelColor=\"\";
 }" 0
  E E E
+1 117 0 "" 54
+0
+1 118 0 "" 55
+0
+1 119 0 "" 58
+0
 0
 LAYER, 1 
 1
@@ -877,14 +877,14 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 ""
-"navigator\\navigator_config_tab.pnl" 160 70 T 1 1 0 1  -141 -26  
+"objects\\nav_fw\\navigator_config_tab.pnl" 270 50 T 105 1 0 1  -251 -6  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
-3 3 "Group7"
-"objects\\Nav\\info_config disabled_because_dpe.pnl" 100 610 T 18 1 0 1  20 40  
+3 1 ""
+"objects\\nav_fw\\info_config disabled_because_dpe.pnl" 290 650 T 106 1 0 1  -120 -80  
 1
 "$datapoint""$datapoint"
 0
