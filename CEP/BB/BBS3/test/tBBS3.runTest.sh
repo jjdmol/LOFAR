@@ -49,14 +49,7 @@ GETPARAM="$PSREADER $PSET"
 #execute commands that are defined in the parameterFile
 # with the prefix runscript.<name>....
 doPSCommands () {
-    NOCOM=`$GETPARAM runscript.$1.number`
-    declare -i CURCOM
-    CURCOM=1
-    while [ $CURCOM -le $NOCOM ]
-      do
-      `$GETPARAM runscript.$1.${CURCOM}`
-      CURCOM=`expr $CURCOM + 1`
-    done
+    `$GETPARAM runscript.$1`
 }
 
 doPSCommands initCommand
