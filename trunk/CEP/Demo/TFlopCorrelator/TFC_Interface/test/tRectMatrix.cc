@@ -126,30 +126,82 @@ asm volatile ("nop");
     }
 #endif
 
-    // TODO test 2 : copy matrix block
+    // test 2 : copy matrix from memory block
     int srcBuffer[12];
     memset (srcBuffer, 0, 12*sizeof(int));
     RectMatrix<int>::cursorType cpyCursor = myMatrix.getCursor(1*tijdDim);
     myMatrix.cpyFromBlock((int*)srcBuffer, 12, cpyCursor, tijdDim, 1);
     {
-    value = 0;
-    tcursor = myMatrix.getCursor(0*tijdDim + 0*freqDim + 0*chanDim);
-    MATRIX_FOR_LOOP(myMatrix, tijdDim, tcursor) {
-      fcursor = tcursor;
-      MATRIX_FOR_LOOP(myMatrix, freqDim, fcursor) {
-	ccursor = fcursor;
-	MATRIX_FOR_LOOP(myMatrix, chanDim, ccursor) {
-	  //cerr<<myMatrix.getValue(ccursor)<<endl;
-	  if (value > 11) {
-	    ASSERTSTR(myMatrix.getValue(ccursor) == 0, "wrong value in matrix after cpyBlock");
-	  } else {
+      value = 0;
+      tcursor = myMatrix.getCursor(0*tijdDim + 0*freqDim + 0*chanDim);
+      MATRIX_FOR_LOOP(myMatrix, tijdDim, tcursor) {
+	fcursor = tcursor;
+	MATRIX_FOR_LOOP(myMatrix, freqDim, fcursor) {
+	  ccursor = fcursor;
+	  MATRIX_FOR_LOOP(myMatrix, chanDim, ccursor) {
+	    //cerr<<myMatrix.getValue(ccursor)<<endl;
+	    if (value > 11) {
+	      ASSERTSTR(myMatrix.getValue(ccursor) == 0, "wrong value in matrix after cpyBlock");
+	    } else {
+	      ASSERTSTR(myMatrix.getValue(ccursor) == value++, "wrong value found in matrix");
+	    }
+	  }
+	}
+      }
+    }
+    // test 3 : copy to memory block from matrix
+    {
+      value = 0;
+      tcursor = myMatrix.getCursor(0*tijdDim + 0*freqDim + 0*chanDim);
+      MATRIX_FOR_LOOP(myMatrix, tijdDim, tcursor) {
+	fcursor = tcursor;
+	MATRIX_FOR_LOOP(myMatrix, freqDim, fcursor) {
+	  ccursor = fcursor;
+	  MATRIX_FOR_LOOP(myMatrix, chanDim, ccursor) {
+	    myMatrix.setValue(ccursor, value++);
+	  }
+	}
+      }
+    }
+    int dstBuffer[12];
+    memset (dstBuffer, 0, 12*sizeof(int));
+    cpyCursor = myMatrix.getCursor(0*tijdDim);
+    myMatrix.cpy2Block(cpyCursor, tijdDim, dstBuffer, 12, 1);
+    for (int index = 0; index < 12; index++) {
+      ASSERTSTR(index == dstBuffer[index], "cpy2Block went wrong");
+    }
+    // test 4 : copy from matrix to matrix
+    {
+      RectMatrix<int> dstMatrix(vdd);
+
+      // allocate the memory for the matrix
+      char dstMBuffer[memsize];
+      memset(dstMBuffer, 0, memsize);
+      dstMatrix.setBuffer((int*)dstMBuffer, 2*3*4);
+    
+      // get the dimension ids from the matrix
+      dimType tijdDimDst, freqDimDst, chanDimDst;
+      tijdDimDst = myMatrix.getDim("tijd");
+      freqDimDst = myMatrix.getDim("freq");
+      chanDimDst = myMatrix.getDim("chan");
+
+      RectMatrix<int>::cursorType srcCursor = myMatrix.getCursor(0*tijdDim);
+      RectMatrix<int>::cursorType dstCursor = dstMatrix.getCursor(0*tijdDimDst);
+
+      myMatrix.cpy2Matrix(srcCursor, tijdDim, dstMatrix, dstCursor, tijdDimDst, 2);
+
+      value = 0;
+      tcursor = dstMatrix.getCursor(0*tijdDimDst + 0*freqDimDst + 0*chanDimDst);
+      MATRIX_FOR_LOOP(dstMatrix, tijdDimDst, tcursor) {
+	fcursor = tcursor;
+	MATRIX_FOR_LOOP(dstMatrix, freqDimDst, fcursor) {
+	  ccursor = fcursor;
+	  MATRIX_FOR_LOOP(dstMatrix, chanDimDst, ccursor) {
 	    ASSERTSTR(myMatrix.getValue(ccursor) == value++, "wrong value found in matrix");
 	  }
 	}
       }
     }
-    }
-    // TODO also add tests to see if copying imcompatible blocks goes wrong
 
 
   } catch (LOFAR::Exception e) {
