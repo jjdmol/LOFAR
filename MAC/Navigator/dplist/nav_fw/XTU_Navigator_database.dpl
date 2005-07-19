@@ -406,8 +406,10 @@ __nav_default_viewconfig.subViews	GCFNavViewConfiguration		0x101	01.03.2005 13:2
 __nav_default_viewconfig.configs	GCFNavViewConfiguration		0x101	02.03.2005 07:01:19.549
 __nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	0, 0, 0, 0, 0, 0, 0, 0, 0, 0	0x101	01.03.2005 13:28:25.304
 __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
-__navigator.viewsPath	GCFNavigator	"navigator/views/"	0x101	07.07.2005 07:19:27.498
+__navigator.viewsPath	GCFNavigator	"nav_fw/"	0x101	07.07.2005 07:19:27.498
 __navigator.resourceRoots	GCFNavigator	"CTU1:PIC", "CTU1:PAC"	0x101	07.07.2005 07:19:49.490
 __navigator.environmentNames	GCFNavigator	"Personal"	0x101	07.07.2005 07:19:06.338
-__navigator.pathNamesWindows	GCFNavigator	"C:/temp"	0x101	30.06.2005 06:53:50.085
-__navigator.treeAccess	GCFNavigator	"*:*"	0x101	30.06.2005 06:53:50.085
+__navigator.treeAccess	GCFNavigator	"", "", "", "", "", "", "", "", "*:*", "", "", "", "", "", "", "", ""	0x101	15.07.2005 13:49:56.495
+__navigator.pathNamesWindows	GCFNavigator	"C:/temp", "C:/temp", "C:/temp", "...", "...", "...", "...", "...", "...", "..."	0x101	15.07.2005 13:56:35.268
+__navigator.pathNamesLinux	GCFNavigator	"/tmp", "/tmp", "/tmp", "...", "...", "...", "...", "...", "...", "..."	0x101	15.07.2005 13:56:35.268
+
