@@ -77,8 +77,8 @@ void MeqStatSources::calculate (const MeqRequest& request)
     const MeqResult& mrk  = src.getM(request);
     const MeqResult& nrk  = src.getN(request);
     MeqResult result(request.nspid());
-    MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() + w*nrk.getValue()) *
-                   wavel0;
+    MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() +
+		    w*(nrk.getValue() - 1.)) * wavel0;
     result.setValue (tocomplex(cos(r1), sin(r1)));
     MeqResult delta;
     if (calcDelta) {
