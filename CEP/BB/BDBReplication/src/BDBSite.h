@@ -25,6 +25,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_map.h>
 #include <Common/Net/Socket.h>
 #include <boost/thread.hpp>
 #include <db_cxx.h>
@@ -60,5 +61,45 @@ class BDBSite {
 //{ return itsSocket;};
 inline Dbt* BDBSite::getConnectionData()
 { return &itsConnectionData; };
+
+class BDBSiteMap {
+ public:
+  BDBSiteMap();
+  ~BDBSiteMap();
+  BDBSite& getSite(int index);
+  void addSite(int index, BDBSite& newSite);
+  map<int, BDBSite*>::iterator beginIterator();
+  map<int, BDBSite*>::iterator getEnd();
+  void destroyIterator();
+ private:
+  void lock();
+  boost::mutex itsMutex;
+  boost::mutex::scoped_lock itsLock;
+  void unlock();
+  map<int, BDBSite*> itsSiteMap;
+};
+inline void BDBSiteMap::lock() {
+  itsLock.lock(); };
+inline void BDBSiteMap::unlock() {
+  itsLock.unlock(); };
+
+inline BDBSite& BDBSiteMap::getSite (int index) {
+  lock();
+  BDBSite* site = itsSiteMap[index];
+  unlock();
+  return *site;
+};
+inline void BDBSiteMap::addSite (int index, BDBSite& newSite) {
+  lock(); itsSiteMap[index] = &newSite; unlock();};
+inline map<int, BDBSite*>::iterator BDBSiteMap::getEnd() {
+  return itsSiteMap.end(); };
+inline map<int, BDBSite*>::iterator BDBSiteMap::beginIterator() {
+  while (itsLock.locked()) {
+    LOG_TRACE_FLOW("BDBSiteMap is locked, maybe you forgot to call destroyIterator?");
+    sleep(1);
+  }
+  lock(); return itsSiteMap.begin(); };
+inline void BDBSiteMap::destroyIterator() {
+  unlock(); };
 
 #endif

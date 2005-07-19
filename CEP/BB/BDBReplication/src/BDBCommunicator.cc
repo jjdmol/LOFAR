@@ -190,7 +190,6 @@ bool BDBCommunicator::connectTo(const char* hostName, const int port)
   BDBSite* newSite = new BDBSite(hostName, port, newSocket);
   LOG_TRACE_FLOW_STR("BDBConHandlThread connecting to "<<*newSite);
   LOG_TRACE_FLOW_STR("BDBConHandlThread connecting from "<<itsHostName<<":"<<itsPort);
-  LOG_TRACE_FLOW_STR("BDBConHandlThread connecting to "<<*newSite);
 
   char service[20];
   snprintf(service, 20, "%d", port);
