@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include "Application1.h"
 #include "Defines.h"
 #include <RTC/RTDefines.h>

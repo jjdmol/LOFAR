@@ -51,7 +51,7 @@ DataHolder* DH_EchoPing::clone() const
   return new DH_EchoPing(*this);
 }
 
-void DH_EchoPing::preprocess()
+void DH_EchoPing::init()
 {
   // Initialize the fieldset.
   initDataFields();
@@ -70,11 +70,6 @@ void DH_EchoPing::fillDataPointers()
   itsPingTime = getData<uint64> ("PingTime");
 }
 
-void DH_EchoPing::postprocess()
-{
-  itsSeqNr = 0;
-  itsPingTime = 0;
-}
   } // namespace Test
  } // namespace GCF
 } // namespace LOFAR

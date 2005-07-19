@@ -20,12 +20,15 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <DH_EchoPing.h>
 #include <Transport/TH_Socket.h>
 #include <GCF/PALlight/CEPPropertySet.h>
 #include <GCF/GCF_PVInteger.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <Transport/CSConnection.h>
 
 namespace LOFAR
 {
@@ -51,14 +54,12 @@ void ping ()
   
   pingPS.enable();
 
-  DH_EchoPing DH_Echo("echo");
-  DH_EchoPing DH_Ping("ping");
-  DH_Ping.setID(1);
-  DH_Echo.setID(2);
-  TH_Socket proto("localhost", "", 8923, false);
-  TH_Socket proto2("", "localhost", 8923, true);
-  DH_Ping.connectBidirectional (DH_Echo, proto, proto2, true);
-  DH_Ping.init();
+  DH_EchoPing DH_Echo;
+  DH_Echo.init();
+  TH_Socket proto("localhost", 8923, false);
+  proto.init();
+  CSConnection readConn("read",  0, &DH_Echo, &proto, false);
+  CSConnection writeConn("write", &DH_Echo, 0, &proto, false);
     
   sleep(1);
   uint seqnr(0);
@@ -69,13 +70,13 @@ void ping ()
   {
     gettimeofday(&pingTime, 0);
 
-    DH_Ping.setSeqNr(seqnr++);
-    DH_Ping.setPingTime(pingTime);
+    DH_Echo.setSeqNr(seqnr++);
+    DH_Echo.setPingTime(pingTime);
 
-    fprintf(stderr, "PING sent (seqnr=%d)\n", DH_Ping.getSeqNr());
+    fprintf(stderr, "PING sent (seqnr=%d)\n", DH_Echo.getSeqNr());
 
     usleep(300000);
-    DH_Ping.write();
+    writeConn.write();
     if (seqnr >= max) 
     {
       pingPS.disable();
@@ -89,13 +90,13 @@ void ping ()
     
     if (pingPS.isMonitoringOn())
     {
-      pingPS["sn"].setValue(GCFPVInteger(DH_Ping.getSeqNr()));
+      pingPS["sn"].setValue(GCFPVInteger(DH_Echo.getSeqNr()));
     }
 
-    DH_Ping.read();  
+    readConn.read();  
     gettimeofday(&echoTime, 0);
-    pingTime = DH_Ping.getPingTime();
-    fprintf(stderr, "ECHO received (seqnr=%d): elapsed = %f sec.\n", DH_Ping.getSeqNr(),
+    pingTime = DH_Echo.getPingTime();
+    fprintf(stderr, "ECHO received (seqnr=%d): elapsed = %f sec.\n", DH_Echo.getSeqNr(),
         time_elapsed(&pingTime, &echoTime));  
   }
 }

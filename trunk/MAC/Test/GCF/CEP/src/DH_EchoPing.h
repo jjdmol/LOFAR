@@ -63,10 +63,8 @@ class DH_EchoPing: public DataHolder
     timeval getPingTime() const;
 
     /// Allocate the buffers.
-    virtual void preprocess();
+    virtual void init();
   
-    /// Deallocate the buffers.
-    virtual void postprocess();
    
    private:
     /// Forbid assignment.

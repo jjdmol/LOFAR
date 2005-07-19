@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include "Application3.h"
 #include "Defines.h"
 #include <GCF/GCF_PVInteger.h>
@@ -10,6 +12,7 @@
 #include <stdio.h>
 #include "TST_Protocol.ph"
 #include <Suite/suite.h>
+#include <unistd.h>
 
 using std::cerr;
 using std::endl;
