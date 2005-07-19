@@ -34,6 +34,7 @@ INSTHDRS = \
 	MeqWsrtInt.h \
 	MeqWsrtPoint.h \
 	ParmTable.h \
+	ParmTableAIPS.h \
 	MeqParmHolder.h
 
 NOINSTHDRS = 
@@ -84,6 +85,7 @@ libmns_la_SOURCES = \
 	MeqWsrtInt.cc \
 	MeqWsrtPoint.cc \
 	ParmTable.cc \
+	ParmTableAIPS.cc \
 	TPOParm.cc
 
 AM_YFLAGS               = -d -p KeyParse
@@ -97,5 +99,3 @@ LEX_OUTPUT_ROOT         = lex.KeyTokenize
 #parmdb_DEPENDENCIES	= ./libmns.la $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
-
-AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

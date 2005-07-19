@@ -28,6 +28,7 @@
 #include <MNS/MeqResult.h>
 #include <MNS/MeqRequest.h>
 #include <Common/lofar_string.h>
+using std::string;
 
 //# Forward Declarations
 class MeqPhaseRef;

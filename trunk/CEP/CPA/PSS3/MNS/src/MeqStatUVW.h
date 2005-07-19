@@ -28,6 +28,7 @@
 #include <MNS/MeqRequest.h>
 #include <Common/lofar_map.h>
 #include <measures/Measures/MeasFrame.h>
+using std::map;
 
 //# Forward declarations
 class MeqStation;

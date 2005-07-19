@@ -36,6 +36,9 @@ class MeqMatrixComplexArr;
 #include <Common/lofar_iostream.h>
 #include <casa/iosfwd.h>
 
+using std::ostream;
+using std::endl;
+
 
 class MeqMatrixRep
 {
