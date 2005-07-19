@@ -12,7 +12,7 @@
 #   time domain is all times
 
 runscript.initCommand=""
-runscript.meqCommand="makeMeq 1e-8; perturbEJ11real 1e-8"
+runscript.meqCommand="makeMeq 1e-8 ; perturbEJ11real 1e-8"
 runscript.gsmCommand="makeGsm 1e-8"
 runscript.preCommand=""
 runscript.postCommand=""

@@ -13,7 +13,7 @@
 
 runscript.initCommand=""
 runscript.meqCommand="makeMeq"
-runscript.gsmCommand="makeGsm 1e-8; perturbGsm 1e-8"
+runscript.gsmCommand="makeGsm 1e-8 ; perturbGsm 1e-8"
 runscript.preCommand=""
 runscript.postCommand=""
 
