@@ -1,4 +1,4 @@
-//#  OTDBeventList.h: Collection of OTDBevents.
+//#  OTDBvalue.h: Collection of helper classes.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,18 +20,20 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_OTDB_OTDBEVENTLIST_H
-#define LOFAR_OTDB_OTDBEVENTLIST_H
+#ifndef LOFAR_OTDB_OTDBVALUE_H
+#define LOFAR_OTDB_OTDBVALUE_H
 
-// \file OTDBeventList.h
-// Collection of OTDBevents.
+// \file OTDBvalue.h
+// C structure for holding a KVT triple.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/lofar_datetime.h>
-#include <Common/lofar_vector.h>
+#include <OTDB/OTDBconstants.h>
 #include <OTDB/OTDBtypes.h>
-#include <OTDB/OTDBevent.h>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <pqxx/pqxx>
+
+using namespace boost::posix_time;
 
 namespace LOFAR {
   namespace OTDB {
@@ -40,35 +42,48 @@ namespace LOFAR {
 // @{
 
 //# --- Forward Declarations ---
-//# classes mentioned as parameter or returntype without virtual functions.
-class OTDBcontrol;
+class OTDBinfo;
+class VICadmin;
 
-typedef		int32		mEventStatus;
-
-// Gets an collection of OTDBevents from the database.
-// 
-class OTDBeventList : vector<OTDBevent>
-{
+// The OTDBvalue structure contains one value of one OTDB item.
+class OTDBvalue {
 public:
-	OTDBeventList(const OTDBcontrol&		control,
-				  const mEventStatus		eventStatusSet,
-				  const ptime&				periodBegin,
-				  const ptime&				periodEnd);
-	~OTDBeventList();
+	OTDBvalue() : itsNodeID(0) {};
+	OTDBvalue(const string&		aName,
+			  const string&		aValue, 
+			  const ptime&		aTime) :
+		name(aName), value(aValue), time(aTime), itsNodeID(0) {};
+	~OTDBvalue() {};
+
+	nodeIDType		nodeID() const	{ return (itsNodeID); }
+	string			name;
+	string			value;
+	ptime			time;
+
+	// Show treeinfo
+	ostream& print (ostream& os) const;
+
+	// Friends may change the database key
+	friend class OTDBinfo;
+	friend class VICadmin;
 
 private:
-	// Copying is not allowed
-	OTDBeventList(const OTDBeventList&	that);
+	//# Prevent changing the database key
+	OTDBvalue(nodeIDType aNodeID) : itsNodeID(aNodeID) {};
+	OTDBvalue(const pqxx::result::tuple&	row);
 
-	OTDBeventList& operator=(const OTDBeventList& that);
-
-	//# --- Datamembers ---
-	//# -- none --
+	nodeIDType		itsNodeID;
 };
 
-//# --- Inline functions ---
 
-
+//#
+//# operator<<
+//#
+inline ostream& operator<< (ostream&			os,
+							const OTDBvalue		aOTDBvalue)
+{
+	return (aOTDBvalue.print(os));
+}
 
 // @}
   } // namespace OTDB

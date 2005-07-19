@@ -1,4 +1,4 @@
-//#  OTDBtree.h: Structure containing the metadata of a tree.
+//#  OTDBnode.h: Structure containing a tree node.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_OTDB_OTDBTREE_H
-#define LOFAR_OTDB_OTDBTREE_H
+#ifndef LOFAR_OTDB_OTDBNODE_H
+#define LOFAR_OTDB_OTDBNODE_H
 
-// \file OTDBtree.h
-// Structure containing the metadata of a tree.
+// \file OTDBnode.h
+// Structure containing a tree node.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
@@ -43,47 +43,60 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-class OTDBconnection;
+class OTDBinfo;
+class VICadmin;
 
-
-// A OTDBtree structure contains the major info of a tree in the database.
-// The the last few fields will be empty for PIC trees.
-class OTDBtree {
+// A OTDBnode struct describes one item/element of the OTDB. An item can
+// be node or an parameter.
+// Note: it does NOT contain the value of the item.
+class OTDBnode {
 public:
-	OTDBtree() : itsTreeID(0) {};
-	~OTDBtree() {};
+	OTDBnode() : 
+		itsTreeID(0), itsNodeID(0), itsParentID(0), itsParamDefID(0) {};
+	~OTDBnode() {};
 
-	treeIDType		treeID() const 		{ return (itsTreeID); }
-	treeClassifType	classification; // experimental / operational / etc.
-	string			creator;
-	ptime			creationDate;	
-	treeType		type;			// template / schedule / etc.
-	// -- VIC only --
-	treeIDType		originalTree;
-	string			campaign;
-	ptime			starttime;
-	ptime			stoptime;
+	treeIDType		treeID() 	 const	{ return (itsTreeID); }
+	nodeIDType		nodeID() 	 const	{ return (itsNodeID); }
+	nodeIDType		parentID() 	 const	{ return (itsParentID); }
+	nodeIDType		paramDefID() const	{ return (itsParamDefID); }
+	string			name;
+	int16			index;
+	bool			leaf;
+	int16			instances;		//# only VICtemplate
+	string			limits;			//# only VICtemplate
+	string			description;	//# only VICtemplate
 
 	// Show treeinfo
 	ostream& print (ostream& os) const;
 
-	// Friends may change the data references keys.
-	friend	class OTDBconnection;
+	// Friend may change the database reference keys.
+	friend class OTDBinfo;
+	friend class VICadmin;
+	friend class PICadmin;
 
 private:
-//# Prevent changing the database keys
-	OTDBtree(treeIDType		aTreeID) : itsTreeID(aTreeID) {};
-	OTDBtree(const pqxx::result::tuple&	row);
+	//# Prevent changing the database keys
+	OTDBnode(treeIDType	aTreeID, 
+			 nodeIDType aNodeID, 
+			 nodeIDType aParentID,
+			 nodeIDType aParamDefID) : 
+		itsTreeID(aTreeID), itsNodeID(aNodeID), 
+		itsParentID(aParentID), itsParamDefID(aParamDefID) {};
+	OTDBnode(treeIDType	treeID, const pqxx::result::tuple&	row);
+
 	treeIDType		itsTreeID;
+	nodeIDType		itsNodeID;
+	nodeIDType		itsParentID;
+	nodeIDType		itsParamDefID;
 };
 
 //#
 //# operator<<
 //#
 inline ostream& operator<< (ostream&			os,
-							const OTDBtree		aOTDBtree)
+							const OTDBnode		aOTDBnode)
 {
-	return (aOTDBtree.print(os));
+	return (aOTDBnode.print(os));
 }
 
 

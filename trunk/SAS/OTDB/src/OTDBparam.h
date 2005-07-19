@@ -1,4 +1,4 @@
-//#  OTDBtree.h: Structure containing the metadata of a tree.
+//#  OTDBparam.h: Structure describing one parameter.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_OTDB_OTDBTREE_H
-#define LOFAR_OTDB_OTDBTREE_H
+#ifndef LOFAR_OTDB_PARAMDEF_H
+#define LOFAR_OTDB_PARAMDEF_H
 
-// \file OTDBtree.h
-// Structure containing the metadata of a tree.
+// \file OTDBparam.h
+// Structure describing one parameter.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
@@ -43,49 +43,51 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-class OTDBconnection;
+class VICadmin;
 
-
-// A OTDBtree structure contains the major info of a tree in the database.
-// The the last few fields will be empty for PIC trees.
-class OTDBtree {
+class OTDBparam {
 public:
-	OTDBtree() : itsTreeID(0) {};
-	~OTDBtree() {};
+	OTDBparam() : itsTreeID(0), itsParamID(0), itsNodeID(0) {};
+	~OTDBparam() {};
 
-	treeIDType		treeID() const 		{ return (itsTreeID); }
-	treeClassifType	classification; // experimental / operational / etc.
-	string			creator;
-	ptime			creationDate;	
-	treeType		type;			// template / schedule / etc.
-	// -- VIC only --
-	treeIDType		originalTree;
-	string			campaign;
-	ptime			starttime;
-	ptime			stoptime;
+	treeIDType		treeID()  const	{ return (itsTreeID); }
+	nodeIDType		paramID() const	{ return (itsParamID); }
+	nodeIDType		nodeID()  const	{ return (itsNodeID); }
+	string			name;
+	int16			index;
+	paramType		type;			// node / bool / int / long / float / etc.
+	int16			unit;
+	int16			pruning;
+	int16			valMoment;
+	bool			runtimeMod;
+	string			limits;
+	string			description;
 
 	// Show treeinfo
 	ostream& print (ostream& os) const;
 
-	// Friends may change the data references keys.
-	friend	class OTDBconnection;
+	// Friends may change the database reference keys.
+	friend class VICadmin;
 
 private:
-//# Prevent changing the database keys
-	OTDBtree(treeIDType		aTreeID) : itsTreeID(aTreeID) {};
-	OTDBtree(const pqxx::result::tuple&	row);
-	treeIDType		itsTreeID;
-};
+	//# Prevent changing the database keys
+	OTDBparam(treeIDType aTreeID, nodeIDType aParamID, nodeIDType aNodeID) :
+			itsTreeID(aTreeID), itsParamID(aParamID), itsNodeID(aNodeID) {};
+	OTDBparam(treeIDType	aTreeID, const pqxx::result::tuple&	row);
 
+	treeIDType		itsTreeID;
+	nodeIDType		itsParamID;
+	nodeIDType		itsNodeID;
+};
+	
 //#
 //# operator<<
 //#
 inline ostream& operator<< (ostream&			os,
-							const OTDBtree		aOTDBtree)
+							const OTDBparam		aParamDef)
 {
-	return (aOTDBtree.print(os));
+	return (aParamDef.print(os));
 }
-
 
 // @}
   } // namespace OTDB

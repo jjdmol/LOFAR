@@ -1,4 +1,4 @@
-//#  OTDBevent.cc: Event an operator should pay attention to.
+//#  OTDBvalue.cc: For retrieving and modifying OTDB trees.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,27 +24,43 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/lofar_datetime.h>
-#include <Common/LofarLogger.h>
-#include <OTDB/OTDBevent.h>
+#include<Common/LofarLogger.h>
+#include<Common/lofar_datetime.h>
+#include<OTDB/OTDBvalue.h>
+
+using namespace pqxx;
 
 namespace LOFAR {
   namespace OTDB {
 
 //
-// OTDBevent()
+// Construct OTDBvalue from tuple
 //
-OTDBevent::OTDBevent()
-{}
+OTDBvalue::OTDBvalue(const result::tuple&	row)
+{
+	row["paramid"].to(itsNodeID);
+	row["name"].to(name);
+	row["value"].to(value);
+	string	aTime;
+	row["time"].to(aTime);
+	if (!aTime.empty()) {
+		time = time_from_string(aTime);
+	}
+}
 
 //
-// ~OTDBevent()
+// print(ostream&): os&
 //
-OTDBevent::~OTDBevent()
-{}
+// Show Tree charateristics.
+ostream& OTDBvalue::print (ostream& os) const
+{
+	os << "paramID: " << itsNodeID << endl;
+	os << "name   : " << name << endl;
+	os << "value  : " << value << endl;
+	os << "time   : " << time << endl;
 
-
-
+	return (os);
+}
 
   } // namespace OTDB
 } // namespace LOFAR

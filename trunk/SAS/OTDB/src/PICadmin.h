@@ -39,7 +39,7 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-//# class ...;
+class OTDBnode;
 
 
 // The PICadmin class is the interface to the PIC trees. The PIC trees 
@@ -65,6 +65,11 @@ public:
 	// Reason of failure can be obtainedwith the errorMsg function.
 	bool	classify (treeIDType		aTreeID,
 					  treeClassifType	aClassification);
+
+	// Get some levels of nodes from the PIC tree.
+	vector<OTDBnode> getItemList (treeIDType	aTreeID,
+								  nodeIDType	topNode,
+								  uint32		depth);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.

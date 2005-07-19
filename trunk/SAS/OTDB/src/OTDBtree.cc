@@ -1,4 +1,4 @@
-//#  OTDBtree.cc: For retrieving and modifying OTDB trees.
+//#  OTDBtree.cc: Structure that describes the tree information.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,215 +28,57 @@
 #include<Common/lofar_datetime.h>
 #include<OTDB/OTDBtree.h>
 
+using namespace pqxx;
+
 namespace LOFAR {
   namespace OTDB {
 
-//
-// OTDBtree()
-//
-OTDBtree::OTDBtree (OTDBconnection* 	aConn,
-		 	  		treeIDType			aTreeID) :
-	itsConn  (aConn),
-	itsTreeID(aTreeID),
-	itsError ("")
+OTDBtree::OTDBtree(const result::tuple&		row) 
 {
-	ASSERTSTR(aConn, "Null pointer for connection not allowed");
-	ASSERTSTR(aTreeID, "TreeID may not be 0");
+	// construct OTDBtree class with right ID
+	// Note: names refer to SQL OTDBtree type
+	row["treeid"].to(itsTreeID);
+
+	// fill in rest of the fields
+	row["classification"].to(classification);
+	row["creator"].to(creator);
+	string crea;
+	row["creationDate"].to(crea);
+	creationDate = time_from_string(crea);
+	row["type"].to(type);
+
+	// next values are optional
+	row["originalTree"].to(originalTree);
+	row["campaign"].to(campaign);
+	string start;
+	row["starttime"].to(start);
+	if (start.length() > 0) {
+		starttime = time_from_string(start);
+	}
+	string stop;
+	row["stoptime"].to(stop);
+	if (stop.length() > 0) {
+		stoptime = time_from_string(stop);
+	}
 }
 
 //
-// ~OTDBtree()
+// print(ostream&): os&
 //
-OTDBtree::~OTDBtree()
+// Show Tree charateristics.
+ostream& OTDBtree::print (ostream& os) const
 {
-	// Do not delete the connection, we just borrowed it.
-}
+	os << "treeID        : " << itsTreeID << endl;
+	os << "classification: " << classification << endl;
+	os << "creator       : " << creator << endl;
+	os << "creationdate  : " << creationDate << endl;
+	os << "tree type     : " << type << endl;
+	os << "original tree : " << originalTree << endl;
+	os << "campaign      : " << campaign << endl;
+	os << "starttime     : " << starttime << endl;
+	os << "stoptime      : " << stoptime << endl;
 
-//
-// getItemList
-//
-// Once an treeID is chosen, the user can retrieve the definition of that
-// tree. A nodeID may be passed to get a sub-tree in stead of the full
-// PIC tree.
-vector<OTDBnode> OTDBtree::getItemList (nodeIDType	topNode,
-								  		uint32		depth)
-{
-	if (!itsConn->connect()) {
-		vector<OTDBnode>	empty;
-		return (empty);
-	}
-
-	vector<OTDBnode>	resultVec;
-	for (uint32 queryDepth = 1; queryDepth <= depth; ++queryDepth) {
-		// construct a query that call a stored procedure.
-		work	xAction(*(itsConn->getConn()), "getItemList");
-		string	query("SELECT * from getItemList('" +
-					toString(itsTreeID) + "','" +
-					toString(topNode) + "','" +
-					toString(queryDepth) + "')");
-		try {
-			result res = xAction.exec(query);
-
-			// show how many records found
-			result::size_type	nrRecords = res.size();
-			LOG_DEBUG_STR (nrRecords << " records in itemList(" <<
-							topNode << ", " << queryDepth << ")");
-			if (nrRecords == 0) {
-				break;
-			}
-
-			// copy information to output vector
-			OTDBnode	newNode;
-			for (result::size_type	i = 0; i < nrRecords; ++i) {
-				res[i]["paramid"].to(newNode.ID);
-				res[i]["parentid"].to(newNode.parentID);
-				res[i]["name"].to(newNode.name);
-				res[i]["index"].to(newNode.index);
-				bool	leaf;
-				res[i]["leaf"].to(leaf);
-				if (leaf) {
-					res[i]["par_type"].to(newNode.type);
-				}
-				else {
-					newNode.type = 0;
-				}
-				newNode.unit = 0;
-				res[i]["unit"].to(newNode.unit);
-				res[i]["description"].to(newNode.description);
-				// Finally add to vector.
-				resultVec.push_back(newNode);
-			}
-		}
-		catch (std::exception&	ex) {
-			itsError = string("Exception during retrieval of getItemList:")
-					 + ex.what();
-			vector<OTDBnode>	empty;
-			return (empty);
-		}
-	}	// for
-
-	return (resultVec);
-
-}
-
-//
-// addKVT (key, value, time)
-//
-// Adds a key to the KVT tables
-//
-bool OTDBtree::addKVT (const string&	key,
-					   const string&	value,
-					   ptime			time)
-{
-	if (!itsConn->connect()) {
-		vector<OTDBnode>	empty;
-		return (false);
-	}
-
-	// construct a query that call a stored procedure.
-	work	xAction(*(itsConn->getConn()), "addKVT");
-	string	query("SELECT * from addKVT('" +
-				key + "','" +
-				value+ "','" +
-				to_simple_string(time)+ "')");
-
-	try {
-		result res = xAction.exec(query);
-		bool	insertResult;
-		res[0]["addKVT"].to(insertResult);
-		if (insertResult) {
-			xAction.commit();
-		}
-		return (insertResult);
-	}
-	catch (std::exception&	ex) {
-		itsError = string("Exception during insert of KVT:") + ex.what();
-		return (false);
-	}
-
-	return (false);
-}
-
-//
-// addKVTList(vector<OTDBvalue>): bool
-//
-bool 	OTDBtree::addKVTlist (vector<OTDBvalue>	theValues) 
-{
-	bool	result = true;
-	for (uint32 i = 0; i < theValues.size(); ++i) {
-		result &= addKVT(theValues[i].name,
-						 theValues[i].value,
-						 theValues[i].time);
-	}
-	return (result);
-}
-
-//
-// searchInPeriod(topNode, depth, begindate, enddate) : vector<value>
-//
-vector<OTDBvalue> OTDBtree::searchInPeriod (nodeIDType		topNode,
-									  	   uint32			depth,
-									  	   const ptime&		beginDate,
-									  	   const ptime&		endDate)
-{
-	if (!itsConn->connect()) {
-		vector<OTDBvalue>	empty;
-		return (empty);
-	}
-
-	vector<OTDBvalue>	resultVec;
-	for (uint32 queryDepth = 1; queryDepth <= depth; ++queryDepth) {
-		// construct a query that call a stored procedure.
-		work	xAction(*(itsConn->getConn()), "searchInPeriod");
-		string	query("SELECT * from searchInPeriod('" +
-					toString(itsTreeID) + "','" +
-					toString(topNode) + "','" +
-					toString(queryDepth) + "','" +
-					to_simple_string(beginDate) + "','" +
-					to_simple_string(endDate) + "')");
-		try {
-			result res = xAction.exec(query);
-
-			// show how many records found
-			result::size_type	nrRecords = res.size();
-			LOG_DEBUG_STR (nrRecords << " records in itemList(" <<
-							topNode << ", " << queryDepth << ")");
-			if (nrRecords == 0) {
-				break;
-			}
-
-			// copy information to output vector
-			OTDBvalue	newKVT;
-			for (result::size_type	i = 0; i < nrRecords; ++i) {
-				res[i]["name"].to(newKVT.name);
-				res[i]["value"].to(newKVT.value);
-				string	eventTime;
-				res[i]["time"].to(eventTime);
-				newKVT.time = time_from_string(eventTime);
-				// Finally add to vector.
-				resultVec.push_back(newKVT);
-			}
-		}
-		catch (std::exception&	ex) {
-			itsError = string("Exception during searchInPeriod:")
-					 + ex.what();
-			vector<OTDBvalue>	empty;
-			return (empty);
-		}
-	}	// for
-
-	return (resultVec);
-}
-
-//
-// getSchedulableItems
-//
-vector<OTDBvalue> OTDBtree::getSchedulableItems (nodeIDType	topNode)
-{
-	LOG_INFO("OTDBtree::getSchedulableItems is not yet implemented");
-
-	vector<OTDBvalue>	empty;
-	return (empty);
+	return (os);
 }
 
   } // namespace OTDB

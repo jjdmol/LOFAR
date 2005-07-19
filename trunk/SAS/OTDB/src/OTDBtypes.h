@@ -1,4 +1,4 @@
-//#  OTDBtypes.h: Collection of helper classes.
+//#  OTDBtypes.h: Size definitions of database identifier-fields.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,23 +24,13 @@
 #define LOFAR_OTDB_OTDBTYPES_H
 
 // \file OTDBtypes.h
-// Collection of helper classes.
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-//# Includes
-#include <OTDB/OTDBconstants.h>
-#include <boost/date_time/posix_time/ptime.hpp>
-
-using namespace boost::posix_time;
+// Size definitions of database identifier-fields.
 
 namespace LOFAR {
   namespace OTDB {
 
 // \addtogroup OTDB
 // @{
-
-//# --- Forward Declarations ---
-//# classes mentioned as parameter or returntype without virtual functions.
 
 typedef		int32		treeIDType;
 //typedef		int64		nodeIDType;	TODO: long long not supported by pqxx
@@ -52,65 +42,6 @@ typedef		int16		treeType;
 typedef		int16		paramType;
 typedef		int16		actionType;
 typedef		int16		eventType;
-
-//#
-//# Helper classes for PIC and VIC
-//#
-
-// A treeInfo structure contains the major info of a tree in the database.
-// The the last few fields will be empty for PIC trees.
-class treeInfo {
-public:
-//#	treeInfo();
-//#	~treeInfo();
-
-	treeIDType		ID;
-	treeClassifType	classification; // experimental / operational / etc.
-	string			creator;
-	ptime			creationDate;	
-	treeType		type;			// template / schedule / etc.
-	// -- VIC only --
-	treeIDType		originalTree;
-	string			campaign;
-	ptime			starttime;
-	ptime			stoptime;
-};
-
-
-// A OTDBnode struct describes one item/element of the OTDB. An item can
-// be node or an parameter.
-// Note: it does NOT contain the value of the item.
-class OTDBnode {
-public:
-//#	OTDBnode();
-//#	~OTDBnode();
-
-	nodeIDType		ID;
-	nodeIDType		parentID;
-	string			name;
-	int16			index;
-	paramType		type;			// node / bool / int / long / float / etc.
-	int16			unit;
-	string			description;
-};
-
-
-// The OTDBvalue structure contains one value of one OTDB item.
-class OTDBvalue {
-public:
-	OTDBvalue() {};
-	OTDBvalue(const string&		aName,
-			  const string&		aValue, 
-			  const ptime&		aTime) :
-		name(aName), value(aValue), time(aTime) {};
-	~OTDBvalue() {};
-
-//	nodeIDType		ID;
-	string			name;
-	string			value;
-	ptime			time;
-};
-
 
 // @}
   } // namespace OTDB

@@ -1,5 +1,5 @@
 --
---  hPICsearchParamID.sql: search parameterID in hierarchical PICtree.
+--  updateVTnode.sql: function updating a Node of a VIC template tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,52 +23,45 @@
 --
 
 --
--- hPICsearchParamID (treeID, paramname): paramID
+-- updateVTnode (authToken, treeID, nodeID, instances, limits)
 --
--- Tries to resolve a parametername like a.b.c.d to an entry in an
--- hierarchical PIC tree.
+-- Saves the new values to the database
 --
--- Authorisation: none
+-- Authorisation: yes
 --
--- Tables:	PIChierarchy read
+-- Tables:	VICtemplate	update
 --
--- Types:	none
+-- Types:	OTDBnode
 --
-CREATE OR REPLACE FUNCTION hPICsearchParamID(INT4, VARCHAR(120))
-  RETURNS INT4 AS '
+CREATE OR REPLACE FUNCTION updateVTnode(INT4, INT4, INT4, INT2, TEXT)
+  RETURNS BOOLEAN AS '
 	DECLARE
-	  vDotPos		INT4;
-	  vFieldnr		INT4;
-	  vNodeID		INT4;
-	  vParentID		INT4;
-	  vNodename		VARCHAR(40);
-	  vKey			VARCHAR(120);
+		vFunction		INT2 := 1;
+		vIsAuth			BOOLEAN;
+		vAuthToken		ALIAS FOR $1;
 
 	BEGIN
-	  vKey      := translate($2, \':_\', \'..\');		-- use uniform seperator
-	  vFieldnr  := 1;
-	  vParentID := 0;
-	  vNodeID   := 0;
-	  LOOP
-		vNodename := split_part(vKey, \'.\', vFieldnr);
-		EXIT WHEN length(vNodename) <= 0;
-
-		SELECT	nodeID
-		INTO  	vNodeID
-		FROM	PIChierarchy
-		WHERE	treeID   = $1
-		AND		parentID = vParentID
-		AND		name     = vNodename;
-		IF NOT FOUND THEN
-		  RETURN 0;
+		-- check authorisation(authToken, tree, func, parameter)
+		vIsAuth := FALSE;
+		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
+		INTO   vIsAuth;
+		IF NOT vIsAuth THEN
+			RAISE EXCEPTION \'Not authorized\';
+			RETURN FALSE;
 		END IF;
 
-		vFieldnr := vFieldnr + 1;
-		vParentID:= vNodeID;
-	  END LOOP;
-		
-	  RETURN vNodeID;
+		-- get ParentID of node to duplicate
+		UPDATE	VICtemplate
+		SET		instances = $4,
+				limits    = $5
+		WHERE	treeID = $2
+		AND 	nodeID = $3;
+		IF NOT FOUND THEN
+		  RAISE EXCEPTION \'Node % could not be updated\', $3;
+		  RETURN FALSE;
+		END IF;
+
+		RETURN TRUE;
 	END;
 ' LANGUAGE plpgsql;
-
 

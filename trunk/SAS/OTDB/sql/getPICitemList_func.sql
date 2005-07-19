@@ -1,5 +1,5 @@
 --
---  searchInPeriod.sql: Search values of subtrees witihn a period
+--  getPICitemList.sql: function for getting some layers of a PIC tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,30 +23,28 @@
 --
 
 --
--- searchInPeriod (treeID, topNode, depth, begindate, enddate)
+-- getPICitemList (treeID, topNode, depth)
 -- 
--- Get a list of values.
+-- Get a list of items.
 --
 -- Authorisation: none
 --
--- Tables: 	otdbtree		read
+-- Tables: 	picparamref		read
 --			pichierarchy	read
---			vichierarchy	read
 --
--- Types:	OTDBvalue
+-- Types:	OTDBnode
 --
--- NOTE: For now the depth is always 1.
---
-CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP)
-  RETURNS SETOF OTDBvalue AS '
+CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
+  RETURNS SETOF OTDBnode AS '
 	DECLARE
 		vRecord		RECORD;
 		vFullname	VARCHAR(120);
-		vNodename	VARCHAR(120);
-		vQuery		TEXT;
+		vNodename	VARCHAR(100);
+		vQuery		VARCHAR(100);
+		i			INTEGER;
 
 	BEGIN
-	  -- Find name of top parameter
+	  -- Find name of parameter
 	  SELECT r.pvssname
 	  INTO	 vFullname
 	  FROM	 PICparamRef r, PIChierarchy h
@@ -66,29 +64,27 @@ CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP
 	  END LOOP;
 	  vQuery := vQuery || chr(39);
 
-	  -- append query with one or two time limits
-	  IF $5 IS NULL
-	  THEN
-	    vQuery := vQuery || \' AND k.time > \' || chr(39) || $4 || chr(39);
-	  ELSE
-	    vQuery := vQuery || \' AND k.time BETWEEN \' 
-						 || chr(39) || $4 || chr(39) 
-				   		 || \' AND \' || chr(39) || $5 || chr(39);
-	  END IF;
-	  -- get record in paramref table
+	  -- finally get result
 	  FOR vRecord IN EXECUTE \'
-	    SELECT k.paramid,
-			   r.pvssname,
-			   k.value,
-			   k.time
+	    SELECT h.nodeid,
+			   h.parentid, 
+			   h.paramrefid,
+			   h.name, 
+			   h.index, 
+			   h.leaf,
+			   1::int2,
+			   \\\'\\\'::text,
+			   r.description 
 		FROM   PICparamref r
-			   INNER JOIN PICkvt k ON r.paramid = k.paramid
-	    WHERE  r.pvssname similar to \' || vQuery 
+			   INNER JOIN PIChierarchy h ON r.paramid = h.paramrefID
+		WHERE  h.treeID = \' || $1 || \'
+	    AND	   r.pvssname similar to \' || vQuery 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
 ' LANGUAGE plpgsql;
+
 
 

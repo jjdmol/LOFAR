@@ -36,24 +36,20 @@
 CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
   RETURNS BOOLEAN AS '
 	DECLARE
+		vFunction				INT2 := 1;
 		vTreeID					OTDBtree.treeID%TYPE;
 		vClassif				OTDBtree.classif%TYPE;
 		vTreeType				OTDBtree.treetype%TYPE;
-		vOwner					OTDBtree.owner%TYPE;
-		vUserID					OTDBuser.userid%TYPE;
 		vIsAuth					BOOLEAN;
 		vAuthToken				ALIAS FOR $1;
 		TThardware CONSTANT		INT2 := 10;
 		TCoperational CONSTANT	INT2 := 2;
 
 	BEGIN
-		-- check authorisation
+		-- check authorisation(authToken, treeID, func, classification)
 		vIsAuth := FALSE;
-		-- TBW: function number
-		-- authToken, func, classification
-		SELECT isAuthorized(vAuthToken, 2::int2, $3::int4) 
+		SELECT isAuthorized(vAuthToken, $2, vFunction, $3::int4) 
 		INTO   vIsAuth;
-
 		IF NOT vIsAuth THEN
 			RAISE EXCEPTION \'Not authorized.\';
 			RETURN FALSE;
@@ -69,29 +65,18 @@ CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
 			RETURN FALSE;
 		END IF;
 
-		-- get current values
-		SELECT 	treeid, classif, treetype, owner
-		INTO   	vTreeID, vClassif, vTreeType, vOwner
+		-- get current treetype. 
+		-- Note: tree existance is checked during auth.check
+		SELECT 	treetype
+		INTO   	vTreeType
 		FROM	OTDBtree
 		WHERE	treeID = $2;
-		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Tree % does not exist\', $2;
-			RETURN FALSE;
-		END IF;
-
-		-- resolve userid
-		SELECT whoIs(vAuthToken)
-		INTO   vUserID;
-		IF vUserID != vOwner THEN
-			RAISE EXCEPTION \'Not owner of the tree.\';
-			RETURN FALSE;
-		END IF;
 
 		-- changing PIC tree to operational?
 		-- restriction: only 1 PIC may be operational
 		IF $3 = TCoperational AND vTreeType = TThardware THEN
 			SELECT	treeid
-			INTO	vTreeID
+			INTO	vTreeID		-- dummy
 			FROM	OTDBtree
 			WHERE	treetype = TThardware
 			AND		classif = TCoperational;

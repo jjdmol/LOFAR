@@ -1,5 +1,5 @@
 --
---  hPICsearchParamID.sql: search parameterID in hierarchical PICtree.
+--  getVTitemList.sql: function for getting some layers of a VIC template tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,52 +23,44 @@
 --
 
 --
--- hPICsearchParamID (treeID, paramname): paramID
---
--- Tries to resolve a parametername like a.b.c.d to an entry in an
--- hierarchical PIC tree.
+-- getVTitemList (treeID, nodeList)
+-- 
+-- Get a list of items.
 --
 -- Authorisation: none
 --
--- Tables:	PIChierarchy read
+-- Tables: 	victemplate		read
 --
--- Types:	none
+-- Types:	OTDBnode
 --
-CREATE OR REPLACE FUNCTION hPICsearchParamID(INT4, VARCHAR(120))
-  RETURNS INT4 AS '
+-- TODO: we should also use the index??
+--
+CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
+  RETURNS SETOF OTDBnode AS '
 	DECLARE
-	  vDotPos		INT4;
-	  vFieldnr		INT4;
-	  vNodeID		INT4;
-	  vParentID		INT4;
-	  vNodename		VARCHAR(40);
-	  vKey			VARCHAR(120);
+		vRecord		RECORD;
 
 	BEGIN
-	  vKey      := translate($2, \':_\', \'..\');		-- use uniform seperator
-	  vFieldnr  := 1;
-	  vParentID := 0;
-	  vNodeID   := 0;
+perform logmsg($2);
+
+	  -- get result
+	  FOR vRecord IN EXECUTE \'
+	    SELECT t.nodeid,
+			   t.parentid, 
+			   t.originid,
+			   t.name, 
+			   t.index, 
+			   t.leaf,
+			   t.instances,
+			   t.limits,
+			   \\\'\\\'::text 
+		FROM   VICtemplate t
+		WHERE  t.treeID = \' || $1 || \'
+		AND	   t.parentID in (\' || $2 || \')\'
 	  LOOP
-		vNodename := split_part(vKey, \'.\', vFieldnr);
-		EXIT WHEN length(vNodename) <= 0;
-
-		SELECT	nodeID
-		INTO  	vNodeID
-		FROM	PIChierarchy
-		WHERE	treeID   = $1
-		AND		parentID = vParentID
-		AND		name     = vNodename;
-		IF NOT FOUND THEN
-		  RETURN 0;
-		END IF;
-
-		vFieldnr := vFieldnr + 1;
-		vParentID:= vNodeID;
+		RETURN NEXT vRecord;
 	  END LOOP;
-		
-	  RETURN vNodeID;
-	END;
+	  RETURN;
+	END
 ' LANGUAGE plpgsql;
-
 

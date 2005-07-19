@@ -35,14 +35,14 @@ using namespace LOFAR::OTDB;
 //
 // show the result
 //
-void showList(const vector<treeInfo>&	trees) {
+void showList(const vector<OTDBtree>&	trees) {
 
 
 	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
 	cout << "------+-------+----------+--------------------+----+--------+------------------" << endl;
 	for (uint32	i = 0; i < trees.size(); ++i) {
 		string row(formatString("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%s",
-			trees[i].ID,
+			trees[i].treeID(),
 			trees[i].classification,
 			trees[i].creator.c_str(),
 			to_simple_string(trees[i].creationDate).c_str(),
@@ -82,7 +82,7 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR("New tree has ID: " << treeID);
 
 		LOG_DEBUG("Trying to classify the tree");
-		pa.classify(treeID, 23);
+		pa.classify(treeID, 3);
 
 	}
 	catch (std::exception&	ex) {

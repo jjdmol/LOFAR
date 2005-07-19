@@ -40,7 +40,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
   RETURNS INT4 AS '
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
-		vParamID	PIChierarchy.paramID%TYPE;
+		vNodeID		PIChierarchy.nodeID%TYPE;
 		vParentID	PIChierarchy.parentID%TYPE;
 		vFullname	VARCHAR(120);
 		vNodename	VARCHAR(40);
@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 	BEGIN
 	  -- be sure parameter exists in reference table.
 	  vParRefID := 0;
-	  SELECT paramid 
+	  SELECT paramID 
 	  INTO	 vParRefID
 	  FROM   PICparamRef
 	  WHERE  PVSSname = $2
@@ -62,7 +62,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 	    INSERT INTO PICparamRef(PVSSname, par_type)
 	    VALUES ($2, $3);
 		-- and retrieve its ID
-	    SELECT paramid 
+	    SELECT paramID 
 	    INTO   vParRefID
 	    FROM   PICparamRef
 	    WHERE  PVSSname = $2;
@@ -73,36 +73,36 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 	  vFullname := translate($2, \':_\', \'..\');
 	  vFieldnr  := 1;
 	  vParentID := 0;
-	  vParamId  := 0;
+	  vNodeID   := 0;
 	  vParamIndex := 0;		-- TODO
 	  LOOP
 		vNodename := split_part(vFullname, \'.\', vFieldnr);
 		EXIT WHEN length(vNodename) <= 0;
 
-		SELECT	paramID
-		INTO  	vParamID
+		SELECT	nodeID
+		INTO  	vNodeID
 		FROM	PIChierarchy
 		WHERE	treeID   = $1
 		AND		parentID = vParentID
 		AND		name     = vNodename;
 		IF NOT FOUND THEN
-		  vParamID  := nextval(\'PIChierarchID\');
+		  vNodeID  := nextval(\'PIChierarchID\');
 		  IF length(split_part(vFullname, \'.\', vFieldnr+1)) <= 0 THEN
 			vLeaf := TRUE;
 		  ELSE
 			vLeaf := FALSE;
 		  END IF;
-		  INSERT INTO PIChierarchy(treeID, paramID, parentID, 
+		  INSERT INTO PIChierarchy(treeID, nodeID, parentID, 
 								   paramRefID, name, index, leaf)
-		  VALUES ($1, vParamID, vParentID, 
+		  VALUES ($1, vNodeID, vParentID, 
 				  vParRefID, vNodename, vParamIndex, vLeaf);
 		END IF;
 
 		vFieldnr := vFieldnr + 1;
-		vParentID:= vParamID;
+		vParentID:= vNodeID;
 	  END LOOP;
 
-	  RETURN vParamID;
+	  RETURN vNodeID;
 	END;
 ' LANGUAGE plpgsql;
 
