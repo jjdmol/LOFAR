@@ -33,7 +33,7 @@ using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
 
-int main(int argc, char * argv[]) {
+int main() {
 	INIT_LOGGER("tParameterSet");
 
 	cout << "\nReading in parameterfile 'tParameterSet.in_param'\n";
@@ -101,7 +101,7 @@ int main(int argc, char * argv[]) {
 		myPS.getInt32("is.er.niet");
 	}
 	catch (LOFAR::Exception& ex) {
-		LOG_DEBUG ("Told you the key didn't exists.");
+	  cout << "Told you the key didn't exist." << endl;
 	}
 
 	cout << "\nFinally write the parameterset to 'newset.out_param'\n";
@@ -114,12 +114,11 @@ int main(int argc, char * argv[]) {
 		copy (intVector.begin(), intVector.end(), 
 								std::ostream_iterator<int, char>(cout, ","));
 		//	cout << intVector << endl;
+		cout << endl;
 	}
 	catch (LOFAR::Exception& ex) {
 		LOG_DEBUG_STR ("Exception:" << ex.what());
 	}
-
-	strlen(argv[argc-1]);			// satify compiler
 
 	return 0;
 
