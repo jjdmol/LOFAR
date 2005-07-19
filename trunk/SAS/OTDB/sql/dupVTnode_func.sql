@@ -95,6 +95,11 @@ CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
 	 	RETURN 0;
 	  END IF;
 
+	  -- dedicated nodes (index!=0) can only exist once
+	  IF $3 != 0 THEN
+		vOrgNode.instances := 1;
+	  END IF;
+
 	  -- add node itself
 	  vNodeID := nextval(\'VICtemplateID\');
 	  INSERT INTO 
