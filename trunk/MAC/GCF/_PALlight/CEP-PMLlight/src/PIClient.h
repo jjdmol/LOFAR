@@ -46,6 +46,8 @@
 namespace LOFAR 
 {
 class TH_Socket;
+class CSConnection;
+
  namespace GCF 
  {
   namespace Common
@@ -118,6 +120,8 @@ class PIClient
   private: // data members     
     // the protocol
     DH_PIProtocol   _dhPIClient;
+    CSConnection*   _pReadConn;
+    CSConnection*   _pWriteConn;
     
     typedef map<string /* scope */, CEPPropertySet*>  TMyPropertySets;
     TMyPropertySets _myPropertySets;

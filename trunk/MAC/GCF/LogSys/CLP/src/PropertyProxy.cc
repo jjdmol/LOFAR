@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "PropertyProxy.h"
 
 namespace LOFAR

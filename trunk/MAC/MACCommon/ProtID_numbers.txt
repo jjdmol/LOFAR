@@ -1,0 +1,35 @@
+// This file contains the reserved unique protocol id's specified for MAC controller with
+// at least one GCF (M)SPP port. If necessary add your new unique protocol id in the table 
+// below. If you want change or delete id's, please contact the MAC integrator first. 
+//
+// Note: The enum below can be found in the GCF_Protocols.h
+// Note: The id "F_APL_PROTOCOL" (value 10) will commonly be used for test applications 
+// 			 in GCF. It is recommended to NOT use this 'id' in APL.
+// Note: The id's are specified in <ServerName>_Protocol.prot files. 
+
+enum 
+{ 
+	F_FSM_PROTOCOL = 1,		// state machine protocol (encoded in msb)
+	F_PORT_PROTOCOL,			// port connection protocol
+	F_GCF_PROTOCOL,				// GCF specific protocol numbers start here
+	F_APL_PROTOCOL = 10, 	// APPlication specific protocol numbers start here
+};
+
+ServerName		| id									| value
+--------------+---------------------+-------
+FSM							F_FSM_PROTOCOL			      1
+PORT						F_PORT_PROTOCOL			      2
+PI							F_GCF_PROTOCOL +  1       4
+PA							F_GCF_PROTOCOL +  2	      5
+SB							F_GCF_PROTOCOL +  3       6
+KVL							F_GCF_PROTOCOL +  4	      7
+LogicalDevice	 	F_APL_PROTOCOL +  1      11
+StartDaemon			F_APL_PROTOCOL +  2	     12
+SAS							F_APL_PROTOCOL +  3	     13
+THPVSSBridge		F_APL_PROTOCOL +  4	     14
+MIS							F_APL_PROTOCOL +  5			 15
+ABS							F_APL_PROTOCOL + 10	     20
+EPA							F_APL_PROTOCOL + 11      21
+RSP							F_APL_PROTOCOL + 12      22
+CAL							F_APL_PROTOCOL + 13      23
+NM							F_APL_PROTOCOL + 20      30

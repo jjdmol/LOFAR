@@ -20,4 +20,6 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "GPI_PropertyProxy.h"

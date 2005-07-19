@@ -1,5 +1,7 @@
 // Ctrl extension for TCP communication
 
+#include <lofar_config.h>
+
 #include "GPA_Converter.h"
 #include <GCF/Protocols/PA_Protocol.ph>
 #include <GCF/GCF_PVString.h>

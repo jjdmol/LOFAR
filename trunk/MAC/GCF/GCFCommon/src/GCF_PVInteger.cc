@@ -21,6 +21,8 @@
 //#  $Id$
 
 
+#include <lofar_config.h>
+
 #include <GCF/GCF_PVInteger.h>
 #include <Common/DataConvert.h>
 

@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/PALlight/GCF_RTAnswer.h>
 
 namespace LOFAR 

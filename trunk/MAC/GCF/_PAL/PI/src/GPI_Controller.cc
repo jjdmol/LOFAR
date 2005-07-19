@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "GPI_Controller.h"
 #include "GPI_CEPServer.h"
 #include "GPI_RTCServer.h"

@@ -148,6 +148,8 @@ class GCFPValue
     
     /// provides the possibility to change the dataformat of a value
     void setDataFormat(LOFAR::DataFormat dfmt = LOFAR::dataFormat()) {_dataFormat = dfmt; }
+    
+    virtual string getTypeName() const;
          
   protected:
     friend class GCFPVDynArr;

@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "GPA_PropertySet.h"
 #include "GPA_Controller.h"
 #include <GCF/GCF_PVString.h>
@@ -182,7 +184,7 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
       _state = S_DISABLING;
       _counter = 0;
       GCFPVString indication("d|" + _name);
-      dpeSet("__pa_PSIndication", indication);
+      dpeSet("__pa_PSIndication", indication, 0.0, false);
       if (GCFPVSSInfo::propExists(_name + "__enabled"))
       {
         LOG_INFO(formatString (
@@ -587,10 +589,10 @@ void GPAPropertySet::dpCreated(const string& dpName)
       
       GCFPVString pvEnabledDPContent(enabledDPContent);
       
-      dpeSet(_name + "__enabled", pvEnabledDPContent);
+      dpeSet(_name + "__enabled", pvEnabledDPContent, 0.0, false);
       
       GCFPVString indication("e|" + _name);
-      dpeSet("__pa_PSIndication", indication);
+      dpeSet("__pa_PSIndication", indication, 0.0, false);
 
       _state = S_ENABLED;
       PAScopeRegisteredEvent response;

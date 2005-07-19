@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #define LOFARLOGGER_SUBPACKAGE "SAL"
 
 #include <GCF/PAL/GCF_PVSSInfo.h>
@@ -38,6 +40,7 @@ using namespace Common;
 string GCFPVSSInfo::_sysName = "";
 string GCFPVSSInfo::_projName = "";
 unsigned int GCFPVSSInfo::_lastSysNr = 0;
+timeval GCFPVSSInfo::_lastTimestamp =  {0, 0};
 
 TMACValueType macValueTypes[] = 
 {
@@ -146,11 +149,6 @@ const string& GCFPVSSInfo::getProjectName()
     _projName += (const char*) projName;
   }
   return _projName;
-}
-
-unsigned int GCFPVSSInfo::getLastEventSysId()
-{
-  return _lastSysNr;
 }
 
 unsigned int GCFPVSSInfo::getSysId(const string& name)

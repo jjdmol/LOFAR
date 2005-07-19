@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/PALlight/CEPProperty.h>
 #include <GCF/PALlight/CEPPropertySet.h>
 

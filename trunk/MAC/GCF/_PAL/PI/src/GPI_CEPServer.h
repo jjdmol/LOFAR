@@ -28,6 +28,9 @@
 
 namespace LOFAR 
 {
+
+class CSConnection;
+
  namespace GCF 
  {
   namespace PAL
@@ -73,6 +76,8 @@ class GPICEPServer: public GPIPMLlightServer
 
 	private: // data members
     DH_PIProtocol   _dhServer;
+    CSConnection*   _pReadConn;
+    CSConnection*   _pWriteConn;
         
   private: // admin. data members
     char*         _valueBuf;

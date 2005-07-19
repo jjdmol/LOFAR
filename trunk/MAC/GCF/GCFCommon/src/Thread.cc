@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include <GCF/Thread.h>
 
 #include <Common/CheckConfig.h>

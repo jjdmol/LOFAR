@@ -67,7 +67,8 @@ class GSAService
     virtual TSAResult dpeGet (const string& dpeName);
     virtual TSAResult dpeSet (const string& dpeName, 
                               const Common::GCFPValue& value, 
-                              bool wantAnswer = false);
+                              double timestamp,
+                              bool wantAnswer);
     
     virtual void dpCreated (const string& /*dpName*/) = 0;
     virtual void dpDeleted (const string& /*dpName*/) = 0;

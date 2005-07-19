@@ -134,9 +134,9 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
         case 5:
         {
           GCFPVBool wrongTestVal(true);
-          _pService->dpeSet(propName + "_test", wrongTestVal);
+          _pService->dpeSet(propName + "_test", wrongTestVal, 0.0);
           GCFPVInteger goodTestVal(1000);
-          _pService->dpeSet(propName + "_test", goodTestVal);
+          _pService->dpeSet(propName + "_test", goodTestVal, 0.0);
           break;
         }
         case 6:
@@ -147,7 +147,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
         case 7:
         {
           GCFPVInteger testVal(2000);
-          _pService->dpeSet(propName + "_test", testVal, true);
+          _pService->dpeSet(propName + "_test", testVal, 0.0, true);
           break;
         }
         case 8:
@@ -155,7 +155,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
           _pService->dpeSubscribe(propName);
           _pService->dpeUnsubscribe(propName);
           GCFPVBool testVal(true);
-          _pService->dpeSet(propName, testVal);
+          _pService->dpeSet(propName, testVal, 0.0);
           break;
         }
         case 9:
@@ -171,7 +171,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
           _pService->dpeUnsubscribe(propName);
           _pService->dpeSubscribe(propName);
           GCFPVBool testVal(false);
-          _pService->dpeSet(propName, testVal);
+          _pService->dpeSet(propName, testVal, 0.0);
           break;
         }
         case 12:

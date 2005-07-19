@@ -89,6 +89,16 @@ class GCFPropertySet
     Common::TGCFResult setValue (const string& propName,
                          const string& value, 
                          bool wantAnswer = false);
+
+    Common::TGCFResult setValueTimed (const string& propName, 
+                         const Common::GCFPValue& value, 
+                         double timestamp,
+                         bool wantAnswer = false);
+
+    Common::TGCFResult setValueTimed (const string& propName,
+                         const string& value, 
+                         double timestamp,
+                         bool wantAnswer = false);
     // </group>
 
     // changes the answerobject pointer for all properties
@@ -140,6 +150,20 @@ class GCFPropertySet
     GCFProperty _dummyProperty;
     bool        _isBusy;
 };
+
+inline Common::TGCFResult GCFPropertySet::setValue (const string& propName, 
+                     const Common::GCFPValue& value, 
+                     bool wantAnswer)
+{
+  return setValueTimed(propName, value, 0.0, wantAnswer);
+}
+
+inline Common::TGCFResult GCFPropertySet::setValue (const string& propName,
+                     const string& value, 
+                     bool wantAnswer)
+{
+  return setValueTimed(propName, value, 0.0, wantAnswer);
+}
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

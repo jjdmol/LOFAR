@@ -35,9 +35,9 @@ TSAResult Service::dpeGet(const string& propName)
   return GSAService::dpeGet(propName);
 }
 
-TSAResult Service::dpeSet(const string& propName, const GCFPValue& value, bool wantAnswer)
+TSAResult Service::dpeSet(const string& propName, const GCFPValue& value, double timestamp, bool wantAnswer)
 {
-  return GSAService::dpeSet(propName, value, wantAnswer);
+  return GSAService::dpeSet(propName, value, timestamp, wantAnswer);
 }
 
 bool Service::dpeExists(const string& propName)

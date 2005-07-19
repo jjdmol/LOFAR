@@ -59,7 +59,7 @@ class KeyValueLoggerMaster : public TM::GCFTask
     {
       TM::GCFPortInterface* pPort;
       unsigned long hourTimerID;
-      uint32 curSeqNr;
+      uint64 curSeqNr;
     };
     
     typedef map<uint8 /*clientID*/, TClient> TRegisteredClients;

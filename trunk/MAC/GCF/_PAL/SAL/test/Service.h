@@ -42,7 +42,7 @@ class Service : public GSAService
     virtual TSAResult dpeSubscribe(const string& propName);
     virtual TSAResult dpeUnsubscribe(const string& propName);
     virtual TSAResult dpeGet(const string& propName);
-    virtual TSAResult dpeSet(const string& propName, const Common::GCFPValue& value, bool wantAnswer = false);
+    virtual TSAResult dpeSet(const string& propName, const Common::GCFPValue& value, double timestamp, bool wantAnswer = false);
     virtual bool dpeExists(const string& propName);
     
   protected:

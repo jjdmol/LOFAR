@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include <GCF/Utils.h>
 #include <stdio.h>
 #include <GCF/GCF_Defines.h>

@@ -82,6 +82,11 @@ class GCFPropertyProxy
                                      const Common::GCFPValue& value, 
                                      bool wantAnswer = false);
 
+    // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
+    virtual Common::TGCFResult setPropValueTimed (const string& propName, 
+                                     const Common::GCFPValue& value, 
+                                     double timestamp,
+                                     bool wantAnswer = false);
   protected:
     friend class GPMPropertyProxy;
 
@@ -114,6 +119,14 @@ class GCFPropertyProxy
   
     GPMPropertyProxy* _pPMProxy;
 };
+
+inline Common::TGCFResult GCFPropertyProxy::setPropValue (const string& propName, 
+                                     const Common::GCFPValue& value, 
+                                     bool wantAnswer)
+{
+  return setPropValueTimed(propName, value, 0.0, wantAnswer);
+}
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

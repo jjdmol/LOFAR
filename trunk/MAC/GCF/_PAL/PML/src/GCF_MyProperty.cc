@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/PAL/GCF_MyProperty.h>
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_Answer.h>
@@ -65,7 +67,7 @@ GCFMyProperty::~GCFMyProperty()
   _pCurValue = 0;
 }
 
-TGCFResult GCFMyProperty::setValue(const string& value, bool wantAnswer)
+TGCFResult GCFMyProperty::setValueTimed(const string& value, double timestamp, bool wantAnswer)
 {
   TGCFResult result(GCF_NO_ERROR);
   if (!_pOldValue || !_pCurValue) 
@@ -80,14 +82,14 @@ TGCFResult GCFMyProperty::setValue(const string& value, bool wantAnswer)
       result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
-    result = GCFProperty::setValue(*_pCurValue, wantAnswer);    
+    result = GCFProperty::setValueTimed(*_pCurValue, timestamp, wantAnswer);    
     assert(result == GCF_NO_ERROR);
   }
   
   return result;
 }
 
-TGCFResult GCFMyProperty::setValue(const GCFPValue& value, bool wantAnswer)
+TGCFResult GCFMyProperty::setValueTimed(const GCFPValue& value, double timestamp, bool wantAnswer)
 {
   TGCFResult result(GCF_NO_ERROR);
   if (!_pOldValue || !_pCurValue) 
@@ -103,7 +105,7 @@ TGCFResult GCFMyProperty::setValue(const GCFPValue& value, bool wantAnswer)
       result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
-    result = GCFProperty::setValue(*_pCurValue, wantAnswer);    
+    result = GCFProperty::setValueTimed(*_pCurValue, timestamp, wantAnswer);    
     assert(result == GCF_NO_ERROR);
   }
   

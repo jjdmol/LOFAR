@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "GTM_Device.h"
 #include "GTM_FileHandler.h"
 #include <GCF/TM/GCF_DevicePort.h>

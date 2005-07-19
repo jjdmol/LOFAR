@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "KeyValueLoggerMaster.h"
 #include <GCF/ParameterSet.h>
 #include <KVLDefines.h>
@@ -173,7 +175,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
       DBGASSERT(iter != _clients.end());
       
       LOG_DEBUG(formatString(
-          "^-Receives update collection with seqnr. %d.",
+          "^-Receives update collection with seqnr. %ld.",
           inEvent.seqNr, 
           iter->first));
       if (((iter->second.curSeqNr + 1) % 0xFFFF) == inEvent.seqNr)
@@ -182,7 +184,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
         outAnswer.seqNr = inEvent.seqNr;      
         p.send(outAnswer);
         LOG_DEBUG(formatString(
-            "^-Processing update collection with seqnr. %d.",
+            "^-Processing update collection with seqnr. %ld.",
             inEvent.seqNr, 
             iter->first));
         iter->second.curSeqNr = inEvent.seqNr;
@@ -227,7 +229,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
       else
       {
         LOG_DEBUG(formatString(
-            "^-Skip update collection with seqnr. %d!",
+            "^-Skip update collection with seqnr. %ld!",
             inEvent.seqNr, 
             iter->first));
       }

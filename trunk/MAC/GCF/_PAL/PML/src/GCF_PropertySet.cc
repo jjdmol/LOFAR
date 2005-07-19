@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/PAL/GCF_PropertySet.h>
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/PAL/GCF_Property.h>
@@ -118,14 +120,15 @@ GCFProperty& GCFPropertySet::operator[] (const string& propName)
   return *pProperty;
 }
 
-TGCFResult GCFPropertySet::setValue (const string& propName, 
+TGCFResult GCFPropertySet::setValueTimed (const string& propName, 
                                      const GCFPValue& value,
+                                     double timestamp, 
                                      bool wantAnswer)
 {
   GCFProperty* pProperty = getProperty(propName);
   if (pProperty)
   {
-    return pProperty->setValue(value, wantAnswer);    
+    return pProperty->setValueTimed(value, timestamp, wantAnswer);    
   }
   else 
   {
@@ -133,14 +136,15 @@ TGCFResult GCFPropertySet::setValue (const string& propName,
   }
 }
 
-TGCFResult GCFPropertySet::setValue (const string& propName, 
+TGCFResult GCFPropertySet::setValueTimed (const string& propName, 
                                      const string& value,
+                                     double timestamp, 
                                      bool wantAnswer)
 {
   GCFProperty* pProperty = getProperty(propName);
   if (pProperty)
   {
-    return pProperty->setValue(value, wantAnswer);    
+    return pProperty->setValueTimed(value, timestamp, wantAnswer);    
   }
   else 
   {

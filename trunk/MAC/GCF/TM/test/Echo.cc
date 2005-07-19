@@ -21,6 +21,7 @@
 //
 //  $Id$
 
+#include <lofar_config.h>
 #include "Echo.h"
 #include "Echo_Protocol.ph"
 #include <Common/lofar_iostream.h>
@@ -39,7 +40,6 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 
   // initialize the port
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);
-  spidDriver.init(*this, "spid", GCFPortInterface::SAP, 0, true);
 }
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
@@ -55,12 +55,10 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_TIMER:
       if (!server.isConnected())
         server.open();
-      if (!spidDriver.isConnected())
-        spidDriver.open();
       break;
 
     case F_CONNECTED:
-      if (server.isConnected() && spidDriver.isConnected())
+      if (server.isConnected())
       {
         TRAN(Echo::connected);
       }
@@ -69,8 +67,6 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_DISCONNECTED:
       if (!server.isConnected())
         server.setTimer(1.0); // try again after 1 second
-      else
-        spidDriver.setTimer(1.0);
       break;
 
 
@@ -105,9 +101,6 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       // Send a string, which starts with a 'S'|'s' means simulate an clock pulse interrupt 
       // (in the case below only one character is even valid)
       // otherwise an interrupt will be forced by means of setting the pin 9.
-      EchoClockEvent c;
-      c.clockpulse = 'S';
-      //spidDriver.send(c);
       cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
       
       timeval echo_time;

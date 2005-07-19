@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #define LOFARLOGGER_SUBPACKAGE "SAL"
 
 #include "GSA_SysConnGuard.h"

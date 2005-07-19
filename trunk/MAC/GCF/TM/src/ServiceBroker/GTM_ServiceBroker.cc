@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "GTM_ServiceBroker.h"
 #include <SB_Protocol.ph>
 #include <GCF/ParameterSet.h>

@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GPI_PMLlightServer.h>
 #include <GPI_Controller.h>
 #include <GPI_PropertySet.h>

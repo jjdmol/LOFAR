@@ -71,8 +71,8 @@ class GCFMyProperty : public GCFProperty
     // updated too.
     // @return can be GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
     // <group>
-    Common::TGCFResult setValue (const string& value, bool wantAnswer = false);
-    Common::TGCFResult setValue (const Common::GCFPValue& value, bool wantAnswer = false);
+    Common::TGCFResult setValueTimed (const string& value, double timestamp, bool wantAnswer = false);
+    Common::TGCFResult setValueTimed (const Common::GCFPValue& value, double timestamp, bool wantAnswer = false);
     // </group>
     
     bool isMonitoringOn () const {return _isLinked && !_isBusy;}

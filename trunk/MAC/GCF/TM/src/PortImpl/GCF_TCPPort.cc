@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>

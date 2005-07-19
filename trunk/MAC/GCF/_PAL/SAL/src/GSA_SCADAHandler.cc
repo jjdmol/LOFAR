@@ -21,6 +21,10 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
+#include <lofar_config.h>
+
 #define LOFARLOGGER_SUBPACKAGE "SAL"
 
 #include "GSA_SCADAHandler.h"

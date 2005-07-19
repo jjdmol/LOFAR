@@ -68,15 +68,29 @@ class GCFProperty
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     virtual Common::TGCFResult requestValue ();
       
-    // Synchronous (!) action
+    // (A)Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     virtual Common::TGCFResult setValue(const Common::GCFPValue& value, bool wantAnswer = false);
       
-    // Synchronous (!) action
+    // (A)Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     virtual Common::TGCFResult setValue(const string& value, bool wantAnswer = false);
+
+    // (A)Synchronous (!) action
+    // Performs a set operation on the SCADA DB with a timestamp
+    // @return can be GCF_NO_ERROR or GCF_PML_ERROR
+    virtual Common::TGCFResult setValueTimed(const Common::GCFPValue& value, 
+                                             double timestamp, 
+                                             bool wantAnswer = false);
+      
+    // (A)Synchronous (!) action
+    // Performs a set operation on the SCADA DB with a timestamp
+    // @return can be GCF_NO_ERROR or GCF_PML_ERROR
+    virtual Common::TGCFResult setValueTimed(const string& value, 
+                                             double timestamp, 
+                                             bool wantAnswer = false);
 
     // Synchronous (!) action
     // Checks whether the property exists in the SCADA DB or not
@@ -166,6 +180,16 @@ class GCFProperty
   private: // admin. data members
     bool                  _isIndependedProp;
 };
+
+inline Common::TGCFResult GCFProperty::setValue (const string& value, bool wantAnswer)
+{
+  return setValueTimed(value, 0.0, wantAnswer);
+}
+
+inline Common::TGCFResult GCFProperty::setValue (const Common::GCFPValue& value, bool wantAnswer)
+{
+  return setValueTimed(value, 0.0, wantAnswer);
+}
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

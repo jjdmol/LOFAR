@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/TM/GCF_Event.h>
 
 using namespace std;
@@ -36,7 +38,7 @@ GCFEvent::~GCFEvent()
   if (_buffer) delete [] _buffer; 
 }
 
-void* GCFEvent::pack(unsigned int& packsize) 
+void* GCFEvent::pack(uint32& packsize) 
 {   
   // packs the base event fields     
   memcpy(_buffer, &signal, sizeof(signal));
@@ -45,7 +47,7 @@ void* GCFEvent::pack(unsigned int& packsize)
   return _buffer;
 }
 
-void GCFEvent::resizeBuf(unsigned int requiredSize)
+void GCFEvent::resizeBuf(uint32 requiredSize)
 {
   // resizes the buffer if needed
   if (requiredSize > _upperbound && _buffer)
@@ -61,39 +63,39 @@ void GCFEvent::resizeBuf(unsigned int requiredSize)
   length = requiredSize - sizeof(length) - sizeof(signal);
 }
 
-void* GCFEvent::unpackMember(char* data, unsigned int& offset, unsigned int& memberDim, unsigned int sizeofMemberType)
+void* GCFEvent::unpackMember(char* data, uint32& offset, uint32& memberNOE, uint32 sizeofMemberType)
 {
   void* seqPtr(0);
-  memcpy(&memberDim, data + offset, sizeof(unsigned int));
-  seqPtr = data + offset + sizeof(unsigned int);
-  offset += sizeof(unsigned int) + memberDim * sizeofMemberType;
+  memcpy(&memberNOE, data + offset, sizeof(memberNOE));
+  seqPtr = data + offset + sizeof(memberNOE);
+  offset += sizeof(memberNOE) + memberNOE * sizeofMemberType;
   return seqPtr;
 }
 
-unsigned int GCFEvent::packMember(unsigned int offset, const void* member, unsigned int memberDim, unsigned int sizeofMemberType)
+uint32 GCFEvent::packMember(uint32 offset, const void* member, uint32 memberNOE, uint32 sizeofMemberType)
 {
   assert(_buffer);
-  memcpy(_buffer + offset, &memberDim, sizeof(memberDim));
-  offset += sizeof(memberDim);
-  memcpy(_buffer + offset, member, memberDim * sizeofMemberType);
-  return (memberDim * sizeofMemberType) + sizeof(memberDim);
+  memcpy(_buffer + offset, &memberNOE, sizeof(memberNOE));
+  offset += sizeof(memberNOE);
+  memcpy(_buffer + offset, member, memberNOE * sizeofMemberType);
+  return (memberNOE * sizeofMemberType) + sizeof(memberNOE);
 }
 
-unsigned int GCFEvent::unpackString(string& value, char* buffer)
+uint32 GCFEvent::unpackString(string& value, char* buffer)
 {
-  unsigned int stringLength(0);
-  memcpy((void *) &stringLength, buffer,  + sizeof(unsigned int));
+  uint16 stringLength(0);
+  memcpy((void *) &stringLength, buffer, sizeof(stringLength));
   value.clear();
-  value.append(buffer + sizeof(unsigned int), stringLength);
-  return stringLength + sizeof(unsigned int);
+  value.append(buffer + sizeof(stringLength), stringLength);
+  return stringLength + sizeof(stringLength);
 }
 
-unsigned int GCFEvent::packString(char* buffer, const string& value)
+uint32 GCFEvent::packString(char* buffer, const string& value)
 {
-  unsigned int neededBufLength = value.size() + sizeof(unsigned int);
-  unsigned int stringLength(value.size());
-  memcpy(buffer, (void *) &stringLength,  + sizeof(unsigned int));
-  memcpy(buffer + sizeof(unsigned int), (void *) value.c_str(), value.size());
+  uint16 stringLength(value.size());
+  uint32 neededBufLength = value.size() + sizeof(stringLength);
+  memcpy(buffer, (void *) &stringLength, sizeof(stringLength));
+  memcpy(buffer + sizeof(stringLength), (void *) value.c_str(), value.size());
   return neededBufLength;
 }  
   } // namespace TM
