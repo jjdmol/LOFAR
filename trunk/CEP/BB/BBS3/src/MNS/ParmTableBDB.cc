@@ -42,10 +42,10 @@ using namespace casa;
 namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
-    itsBDBTableName(tableName),
-    itsBDBHomeName ("/tmp/" + userName + "." + tableName + ".bdb"),
     itsDbEnv(0),
-    itsDb(0)
+    itsDb(0),
+    itsBDBTableName(tableName),
+    itsBDBHomeName ("/tmp/" + userName + "." + tableName + ".bdb")
   {
   }
 
