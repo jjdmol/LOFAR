@@ -170,7 +170,11 @@ time_t APLUtilities::decodeTimeString(const string& timeStr)
   {
     returnTime += atoi(timeStr.substr(plusPos+1).c_str());
   }
-  else
+  else if(timeStr.find("-1") != string::npos)
+  {
+    returnTime = INT_MAX;
+  }
+  else if(timeStr != string("0"))
   {
     returnTime = atoi(timeStr.c_str());
   }

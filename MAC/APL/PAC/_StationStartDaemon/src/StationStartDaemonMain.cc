@@ -97,9 +97,15 @@ int main(int argc, char* argv[])
     string taskName       = _getStationOperationsTaskName();
     string parameterFile  = _getStationOperationsParameterFile();
   
-    sd.createLogicalDevice(LDTYPE_STATIONOPERATIONS,taskName,parameterFile);
-
-    GCFTask::run();
+    TSDResult result = sd.createLogicalDevice(LDTYPE_STATIONOPERATIONS,taskName,parameterFile);
+    if(result == SD_RESULT_NO_ERROR)
+    {
+      GCFTask::run();
+    }
+    else
+    {
+      retval=-1;
+    }
   } 
   catch(APLCommon::WrongVersionException& e)
   {

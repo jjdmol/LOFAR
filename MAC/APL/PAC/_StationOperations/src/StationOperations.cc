@@ -49,7 +49,7 @@ PROPERTYCONFIGLIST_BEGIN(detailsPropertySetConf)
   PROPERTYCONFIGLIST_ITEM(PROPERTY_SAMPLING_FREQUENCY, GCF_READABLE_PROP, "160.0")
 PROPERTYCONFIGLIST_END
 
-string StationOperations::m_RSPserverName("RSPserver");
+string StationOperations::m_RSPDriverName("RSPDriver");
 
 // Logical Device version
 const string StationOperations::SO_VERSION = string("1.0");
@@ -58,7 +58,7 @@ StationOperations::StationOperations(const string& taskName,
                                      const string& parameterFile, 
                                      GCFTask* pStartDaemon) :
   LogicalDevice(taskName,parameterFile,pStartDaemon,SO_VERSION),
-  m_RSPclient(*this, m_RSPserverName, GCFPortInterface::SAP, RSP_PROTOCOL)
+  m_RSPclient(*this, m_RSPDriverName, GCFPortInterface::SAP, RSP_PROTOCOL)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   m_detailsPropertySet->initProperties(detailsPropertySetConf);
@@ -92,6 +92,7 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
         double samplingFrequency = (static_cast<const GCFPVDouble*>(pPropAnswer->pValue))->getValue();
 
         LOG_FATAL("TODO: Send sampling frequency to RSP driver");
+        // TODO: m_RSPclient.send()
       }
       break;
     }
@@ -115,7 +116,8 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
         boost::shared_ptr<GCFPVDouble> pvSamplingFrequency(static_cast<GCFPVDouble*>(m_detailsPropertySet->getValue(PROPERTY_SAMPLING_FREQUENCY)));
         double samplingFrequency = pvSamplingFrequency->getValue();
           
-        LOG_FATAL("TODO: Send sampling frequency to RSP driver");
+        LOG_FATAL("TODO: PropertySet change: Send sampling frequency to RSP driver");
+        // TODO: m_RSPclient.send()
       }
       break;
     }
@@ -141,33 +143,10 @@ GCFEvent::TResult StationOperations::concrete_initial_state(GCFEvent& event, GCF
   {
     case F_ENTRY:
     {
-      bool res=m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
-      LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
-      if(!res)
-      {
-        m_RSPclient.setTimer((long)3);
-      }  
+      newState=LOGICALDEVICE_STATE_IDLE;
       break;
     }
     
-    case F_CONNECTED:
-    {
-      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-      if (m_RSPclient.isConnected())
-      {
-        newState=LOGICALDEVICE_STATE_IDLE;
-      }
-      break;
-    }
-
-    case F_DISCONNECTED:
-    {
-      port.setTimer((long)3); // try again in 3 seconds
-      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-      port.close();
-      break;
-    }
-
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -183,9 +162,7 @@ GCFEvent::TResult StationOperations::concrete_idle_state(GCFEvent& event, GCFPor
   switch (event.signal)
   {
     case F_ENTRY:
-    {
       break;
-    }
     
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -194,10 +171,44 @@ GCFEvent::TResult StationOperations::concrete_idle_state(GCFEvent& event, GCFPor
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  newState=LOGICALDEVICE_STATE_NOSTATE;
+
+  switch (event.signal)
+  {
+    case F_ENTRY:
+    {
+      bool res=m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
+      LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
+      if(!res)
+      {
+        m_RSPclient.setTimer((long)3);
+      }  
+      break;
+    }
+
+    case F_CONNECTED:
+    {
+      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      newState=LOGICALDEVICE_STATE_CLAIMED;
+      break;
+    }
+
+    default:
+      break;
+  }
+  
+  return status;
+}
+
+GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  newState=LOGICALDEVICE_STATE_NOSTATE;
 
   switch (event.signal)
   {
@@ -206,9 +217,38 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
       break;
     }
     
-    case LOGICALDEVICE_CLAIMED:
+    case F_DISCONNECTED:
     {
-      LOG_TRACE_FLOW("CLAIMED received");
+      newState=LOGICALDEVICE_STATE_CLAIMING;
+      break;
+    }
+    
+    default:
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  newState=LOGICALDEVICE_STATE_NOSTATE;
+
+  switch (event.signal)
+  {
+    // TODO: case RSP_SETSAMPLINGFREQUENCYACK
+    case F_ENTRY:
+    {
+      newState=LOGICALDEVICE_STATE_SUSPENDED;
+      // TODO:   nack?   errorCode=?????;
+      break;
+    }
+
+    case F_DISCONNECTED:
+    {
+      newState=LOGICALDEVICE_STATE_CLAIMING;
       break;
     }
     
@@ -219,33 +259,7 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-
-  return status;
-}
-
-GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-
-  switch (event.signal)
-  {
-    // TODO: case RSP_SETSAMPLINGFREQUENCYACK
-    // TODO:   ack ok? newState=LOGICALDEVICE_STATE_SUSPENDED;
-    // TODO:   nack?   errorCode=?????;
-    // TODO:   break;
-    default:
-      break;
-  }
-  
-  return status;
-}
-
-GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFPortInterface& port, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -257,6 +271,13 @@ GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFP
       break;
     }
           
+    case F_DISCONNECTED:
+    {
+      LOG_ERROR(formatString("port '%s' disconnected", port.getName().c_str()));
+      _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+      break;
+    }
+    
     default:
       break;
   }  
@@ -285,7 +306,8 @@ void StationOperations::concretePrepare(GCFPortInterface& /*port*/)
   double samplingFrequency = m_parameterSet.getDouble(PROPERTY_SAMPLING_FREQUENCY);
   m_detailsPropertySet->setValue(PROPERTY_SAMPLING_FREQUENCY,GCFPVDouble(samplingFrequency));
   
-  LOG_FATAL("TODO: Send sampling frequency to RSP driver");
+  LOG_FATAL("TODO: concretePrepare: Send sampling frequency to RSP driver");
+  // TODO: m_RSPclient.send()
 }
 
 void StationOperations::concreteResume(GCFPortInterface& /*port*/)
@@ -301,6 +323,8 @@ void StationOperations::concreteSuspend(GCFPortInterface& /*port*/)
 void StationOperations::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  m_RSPclient.close();
 }
 
 void StationOperations::concreteParentDisconnected(GCFPortInterface& /*port*/)
@@ -313,7 +337,7 @@ void StationOperations::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void StationOperations::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
+void StationOperations::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
