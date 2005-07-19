@@ -186,7 +186,7 @@ namespace LOFAR {
     MPHKey key(parmName);
     MPHValue value;
     MeqDomain pdomain;
-    DbTxn* transaction;
+    DbTxn* transaction = 0;
     itsDbEnv->txn_begin(NULL, &transaction, 0);
     Dbc* cursorp;
     itsDb->cursor(transaction, &cursorp, 0);
@@ -252,7 +252,7 @@ namespace LOFAR {
     MPHValue value;
     value.set_flags(DB_DBT_MALLOC);
     MeqDomain pdomain;
-    DbTxn* transaction;
+    DbTxn* transaction = 0;
     itsDbEnv->txn_begin(NULL, &transaction, 0);
     Dbc* cursorp;
     itsDb->cursor(transaction, &cursorp, 0);
@@ -286,9 +286,9 @@ namespace LOFAR {
     // later we should add "RA" as a key to the table
     // then we can first find RA and then walk the rest of the database
     // or we can use a secondary key on the first part of the name
-    DbTxn* transaction;
+    DbTxn* transaction = 0;
     itsDbEnv->txn_begin(NULL, &transaction, 0);
-    Dbc* cursorp;
+    Dbc* cursorp = 0;
     itsDb->cursor(transaction, &cursorp, 0);
     string name;
     int flags = DB_SET_RANGE; //go to RA or the first string that is bigger
