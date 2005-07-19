@@ -1452,7 +1452,7 @@ bool Prediffer::setPeelGroups (const vector<int>& peelGroups,
     ASSERT (extraGroups[i] >= 0  &&  extraGroups[i] < int(itsSrcGrp.size()));
     const vector<int>& grp = itsSrcGrp[i];
     for (uint j=0; j<grp.size(); ++j) {
-      allNrs.push_back (grp[j]);
+      allNrs.push_back (grp[j] - 1);
     }
   }
   vector<int> peelNrs;
@@ -1460,8 +1460,8 @@ bool Prediffer::setPeelGroups (const vector<int>& peelGroups,
     ASSERT (peelGroups[i] >= 0  &&  peelGroups[i] < int(itsSrcGrp.size()));
     const vector<int>& grp = itsSrcGrp[i];
     for (uint j=0; j<grp.size(); ++j) {
-      peelNrs.push_back (grp[j]);
-      allNrs.push_back (grp[j]);
+      peelNrs.push_back (grp[j] - 1);
+      allNrs.push_back (grp[j] - 1);
     }
   }
   LOG_TRACE_OBJ_STR( "peel sources " << peelNrs << "; predict sources "
