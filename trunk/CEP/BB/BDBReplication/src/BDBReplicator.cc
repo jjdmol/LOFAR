@@ -82,20 +82,17 @@ void BDBReplicator::startReplication()
     LOG_TRACE_FLOW("BDBReplicator starting replication");
     itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
     //  LOG_TRACE_FLOW("BDBReplicator setting rep_transport");
-    if (itsDbEnv->set_rep_transport(1, &BDBCommunicator::send) !=0 )
-      LOG_TRACE_FLOW("cannot set rep transport in BDBReplicator");
+    ASSERTSTR (itsDbEnv->set_rep_transport(1, &BDBCommunicator::send) == 0, "cannot set rep transport in BDBReplicator");
     u_int32_t flags = DB_CREATE | DB_THREAD | DB_INIT_REP |
       DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
     LOG_TRACE_FLOW_STR("BDBReplicator opening environment: "<<itsDbEnvName.c_str());
-    if (itsDbEnv->open(itsDbEnvName.c_str(), flags, 0) != 0) {
-      LOG_TRACE_FLOW("Cannot open db environment");
-    }
+    ASSERTSTR(itsDbEnv->open(itsDbEnvName.c_str(), flags, 0) == 0, "Cannot open db environment");
     
     // set connection data
     char *buffer = new char[sizeof(int)+itsHostName.size() + 2];
     memset(buffer, 0, sizeof(int)+itsHostName.size() + 2);
     memcpy(buffer, &itsPort, sizeof(int));
-    strcpy(buffer+sizeof(int), itsHostName.c_str());
+    strncpy(&buffer[sizeof(int)], itsHostName.c_str(), itsHostName.size());
     Dbt connectionData(buffer, sizeof(int)+itsHostName.size() + 2);
 
     if (itsIsMaster) {
@@ -104,8 +101,7 @@ void BDBReplicator::startReplication()
       flags = DB_REP_CLIENT;
     };
     //  LOG_TRACE_FLOW("BDBReplicator executing rep_start");
-    if (itsDbEnv->rep_start(&connectionData, flags) != 0)
-      LOG_TRACE_FLOW ("could not execute rep start in BDBReplicator");
+    ASSERTSTR(itsDbEnv->rep_start(&connectionData, flags) == 0, "could not execute rep start in BDBReplicator");
     
     itsCommunicator.setEnv(itsDbEnv);
     

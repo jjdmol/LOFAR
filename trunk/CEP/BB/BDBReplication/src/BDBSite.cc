@@ -74,3 +74,7 @@ int BDBSite::recv(void* buffer, int bufferSize) {
   boost::mutex::scoped_lock sl(itsSocketMutex);
   return itsSocket->readBlocking(buffer, bufferSize);
 } 
+
+BDBSiteMap::BDBSiteMap() :
+  itsLock(itsMutex, false)
+{};

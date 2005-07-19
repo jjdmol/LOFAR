@@ -80,9 +80,8 @@ void BDBConnectorRep::operator()()
       itsIsListening = true;
     }
   };
-  LOG_TRACE_FLOW("Server initted");
+  LOG_TRACE_FLOW("BDBConnector starting to listen");
   while (!shouldStop()) {
-    LOG_TRACE_FLOW("BDBConnector starting to listen");
     Socket* newSocket = listenSocket.accept(500); // wait 500 ms for new connection
     if (newSocket != 0){
       int port=0;
@@ -94,10 +93,9 @@ void BDBConnectorRep::operator()()
       newSocket->readBlocking(hostname, messageSize);
       BDBSite* newSite = new BDBSite(hostname, port, newSocket);
 
-      LOG_TRACE_FLOW_STR("Accepted connection from "<<newSocket->host()<<":"<<newSocket->port());
+      LOG_TRACE_FLOW_STR("Accepted connection from "<<hostname<<":"<<port);
       itsConnectionHandler.addSite(newSite);
     }
-    LOG_TRACE_FLOW("BDBConnector accepted connection");
     boost::thread::yield();
   }
 }

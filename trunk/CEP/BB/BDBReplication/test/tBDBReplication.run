@@ -7,9 +7,12 @@ mkdir masterDir
 
 sleep 10
 
-rm slaveDir -rf
-mkdir slaveDir
-./tBDBReplication -h slaveDir -m 8020 -o 8021 &> slave.log
+rm slave1Dir -rf
+mkdir slave1Dir
+./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log &
+#rm slave2Dir -rf
+#mkdir slave2Dir
+#./tBDBReplication -h slave2Dir -m 8020 -o 8022 &> slave2.log
 result=$?
 
 killall tBDBReplication
