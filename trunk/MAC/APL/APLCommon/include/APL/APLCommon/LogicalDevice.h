@@ -122,6 +122,7 @@ namespace APLCommon
       virtual ~LogicalDevice();
 
       void adoptParameterFile(const string& parameterFile);
+      void updateParameterFile(const string& parameterFile);
       string& getServerPortName();
       virtual bool isPrepared(vector<string>& parameters);
       TLogicalDeviceState getLogicalDeviceState() const;
@@ -150,15 +151,33 @@ namespace APLCommon
 #else      
       typedef GCF::PAL::GCFPVSSPort TRemotePort;
 #endif
+
+      APL_DECLARE_SHARED_POINTER(GCF::TM::GCFEvent)
+      typedef struct TBufferedEventInfo
+      {
+        TBufferedEventInfo(time_t t,GCF::TM::GCFPortInterface* p,GCFEventSharedPtr e) : 
+          entryTime(t),
+          port(static_cast<TRemotePort*>(p)),
+          event(e){};
+        
+        time_t            entryTime;
+        TRemotePort*      port;
+        GCFEventSharedPtr event;
+      };
       
       typedef boost::shared_ptr<TRemotePort>  TPortSharedPtr;
       typedef boost::weak_ptr<TRemotePort>    TPortWeakPtr;
-      APL_DECLARE_SHARED_POINTER(GCF::TM::GCFEvent)
-
+      typedef vector<TPortSharedPtr>          TPortVector;
+      typedef map<string,TPortSharedPtr>      TPortMap;
+      typedef map<string,TPortWeakPtr>        TPortWeakPtrMap;
+      typedef vector<TBufferedEventInfo>      TEventBufferVector;
+      typedef map<string,TLogicalDeviceTypes> TString2LDTypeMap;
+      typedef map<string,TLogicalDeviceState> TString2LDStateMap;
+      
       /**
       * returns true if the specified port is the logicalDevice SPP
       */
-      bool _isParentPort(GCF::TM::GCFPortInterface& port);
+      TPortMap::iterator _findParentPort(GCF::TM::GCFPortInterface& port);
       bool _isServerPort(GCF::TM::GCFPortInterface& port);
       bool _isChildPort(GCF::TM::GCFPortInterface& port);
       bool _isChildStartDaemonPort(GCF::TM::GCFPortInterface& port, string& startDaemonKey);
@@ -171,6 +190,7 @@ namespace APLCommon
       void _apcLoaded();
       void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode=LD_RESULT_NO_ERROR);
       void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
+      void _handleServerConnected();
       vector<string> _getChildKeys();
       void _sendEvent(GCFEventSharedPtr eventPtr, GCF::TM::GCFPortInterface& port);
       void _addChildPort(TPortSharedPtr childPort);
@@ -216,25 +236,6 @@ namespace APLCommon
       TRemotePort                           m_serverPort; // listening port
 
     private:
-      struct TBufferedEventInfo
-      {
-        TBufferedEventInfo(time_t t,GCF::TM::GCFPortInterface* p,GCFEventSharedPtr e) : 
-          entryTime(t),
-          port(static_cast<TRemotePort*>(p)),
-          event(e){};
-        
-        time_t            entryTime;
-        TRemotePort*      port;
-        GCFEventSharedPtr event;
-      };
-      
-      typedef vector<TPortSharedPtr>          TPortVector;
-      typedef map<string,TPortSharedPtr>      TPortMap;
-      typedef map<string,TPortWeakPtr>        TPortWeakPtrMap;
-      typedef vector<TBufferedEventInfo>      TEventBufferVector;
-      typedef map<string,TLogicalDeviceTypes> TString2LDTypeMap;
-      typedef map<string,TLogicalDeviceState> TString2LDStateMap;
-      
       void _schedule();
       void _claim();
       void _prepare();
@@ -247,7 +248,7 @@ namespace APLCommon
       string _getConnectedChildName(GCF::TM::GCFPortInterface& port);
       TLogicalDeviceTypes _convertLogicalDeviceType(const string& ldTypeString);
 
-      TRemotePort                           m_parentPort; // connection with parent, if any
+      TPortMap                              m_parentPorts; // connection with parents
       unsigned long                         m_parentReconnectTimerId;
       
       // the vector and map both contain the child ports. The vector is used

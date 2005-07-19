@@ -112,7 +112,11 @@ TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, con
       TLogicalDeviceMap::iterator itDevices = m_logicalDevices.find(taskName);
       if(itDevices != m_logicalDevices.end())
       {
-        result = SD_RESULT_ALREADY_EXISTS;
+        // The LD exists already. Two options:
+        // 1. The one and only LD with this name is rescheduled
+        // 2. The LD can be shared with several parents (SO, SRG). The paramset
+        //    contains the details about the new parent.
+        itDevices->second->updateParameterFile(fileName);
       }
       else
       {

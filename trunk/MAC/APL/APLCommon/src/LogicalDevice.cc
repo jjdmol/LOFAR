@@ -106,7 +106,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_parameterSet(),
   m_serverPortName(string("server")),
   m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
-  m_parentPort(),
+  m_parentPorts(),
   m_parentReconnectTimerId(0),
   m_childPorts(),
   m_connectedChildPorts(),
@@ -144,15 +144,8 @@ LogicalDevice::LogicalDevice(const string& taskName,
   
   adoptParameterFile(parameterFile);
   
-  // check version number
   try
   {
-    string receivedVersion = m_parameterSet.getString(string("versionnr"));
-    if(receivedVersion != m_version)
-    {
-      THROW(APLCommon::WrongVersionException,string("Expected version ") + m_version + string("; received version ") + receivedVersion);
-    }
-  
     m_basePropertySetName = m_parameterSet.getString("propertysetBaseName");
     psDetailsType = m_parameterSet.getString("propertysetDetailsType");
   }
@@ -160,6 +153,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   {
     THROW(APLCommon::ParameterNotFoundException,e.message());
   }
+
   m_detailsPropertySetName = m_basePropertySetName + string("_details");
   
   m_basePropertySet = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(
@@ -202,6 +196,28 @@ void LogicalDevice::adoptParameterFile(const string& parameterFile)
   {
     THROW(APLCommon::ParameterFileNotFoundException,e.message());
   }
+  
+  // check version number
+  try
+  {
+    string receivedVersion = m_parameterSet.getString(string("versionnr"));
+    if(receivedVersion != m_version)
+    {
+      THROW(APLCommon::WrongVersionException,string("Expected version ") + m_version + string("; received version ") + receivedVersion);
+    }
+  }
+  catch(Exception& e)
+  {
+    THROW(APLCommon::ParameterNotFoundException,e.message());
+  }
+}
+
+void LogicalDevice::updateParameterFile(const string& parameterFile)
+{
+  adoptParameterFile(parameterFile);
+  
+  // connect to the parent if it is a new parent
+  
 }
 
 string& LogicalDevice::getServerPortName()
@@ -533,36 +549,50 @@ void LogicalDevice::_cancelSchedule(const TLDResult& errorCode)
 void LogicalDevice::_claim()
 {
   LOGICALDEVICEClaimEvent claimEvent;
-  dispatch(claimEvent,m_parentPort);
+  dispatch(claimEvent,m_serverPort);
 }
 
 void LogicalDevice::_prepare()
 {
   LOGICALDEVICEPrepareEvent prepareEvent;
-  dispatch(prepareEvent,m_parentPort);
+  dispatch(prepareEvent,m_serverPort);
 }
 
 void LogicalDevice::_resume()
 {
   LOGICALDEVICEResumeEvent resumeEvent;
-  dispatch(resumeEvent,m_parentPort);
+  dispatch(resumeEvent,m_serverPort);
 }
 
 void LogicalDevice::_suspend()
 {
   LOGICALDEVICESuspendEvent suspendEvent;
-  dispatch(suspendEvent,m_parentPort);
+  dispatch(suspendEvent,m_serverPort);
 }
 
 void LogicalDevice::_release()
 {
   LOGICALDEVICEReleaseEvent releaseEvent;
-  dispatch(releaseEvent,m_parentPort);
+  dispatch(releaseEvent,m_serverPort);
 }
 
-bool LogicalDevice::_isParentPort(GCFPortInterface& port)
+LogicalDevice::TPortMap::iterator LogicalDevice::_findParentPort(GCFPortInterface& port)
 {
-  return (&port == &m_parentPort); // comparing two pointers. yuck?
+  TPortMap::iterator it=m_parentPorts.begin();
+  bool found=false;
+  while(!found && it != m_parentPorts.end())
+  {
+    if(&port == it->second.get()) // comparing two pointers. yuck?
+    {
+      found=true;
+    }
+    else
+    {
+      ++it;
+    }
+    
+  }
+  return it;
 }
    
 bool LogicalDevice::_isServerPort(GCFPortInterface& port)
@@ -750,6 +780,8 @@ bool LogicalDevice::_childsNotInState(const double requiredPercentage, const TLo
 
 void LogicalDevice::_disconnectedHandler(GCFPortInterface& port)
 {
+  LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+
   string startDaemonKey;
   port.close();
   if(_isServerPort(port))
@@ -761,7 +793,7 @@ void LogicalDevice::_disconnectedHandler(GCFPortInterface& port)
     LOG_ERROR(formatString("Connection with child %s failed",_getConnectedChildName(port).c_str()));
     concreteChildDisconnected(port);
   }
-  else if(_isParentPort(port))
+  else if(_findParentPort(port)!=m_parentPorts.end())
   {
     LOG_ERROR(formatString("Connection with parent %s failed",getName().c_str()));
     concreteParentDisconnected(port);
@@ -836,11 +868,12 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
   if(event.signal == F_TIMER)
   {
     GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-    if(timerEvent.id == m_parentReconnectTimerId && _isParentPort(port))
+    TPortMap::iterator it = _findParentPort(port);
+    if(timerEvent.id == m_parentReconnectTimerId && it != m_parentPorts.end())
     {
       m_parentReconnectTimerId = 0;
-      port.cancelTimer(timerEvent.id);
-      m_parentPort.open();
+      it->second->cancelTimer(timerEvent.id);
+      it->second->open();
     }
     else if(timerEvent.id == m_claimTimerId)
     {
@@ -932,6 +965,81 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       // try to open the port
       port.open();
     }
+  }
+}
+
+void LogicalDevice::_handleServerConnected()
+{
+  // replace my server port (assigned by the ServiceBroker) in all child sections    
+  uint16 serverPort = m_serverPort.getPortNumber();
+  
+  // create the childs
+  vector<string> childKeys = _getChildKeys();
+  vector<string>::iterator chIt;
+  for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
+  {
+    // connect to child startdaemon.
+    try
+    {
+      string key = (*chIt) + string(".parentPort");
+      KVpair kvPair(key,serverPort);
+      m_parameterSet.replace(kvPair);
+      
+      string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
+      string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
+      uint16 startDaemonPortNr   = m_parameterSet.getUint16((*chIt) + string(".startDaemonPort"));
+      string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
+      string childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
+      
+      TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
+      startDaemonPort->setHostName(startDaemonHostName);
+      startDaemonPort->setPortNumber(startDaemonPortNr);
+      startDaemonPort->open();
+      m_childStartDaemonPorts[(*chIt)] = startDaemonPort;
+      
+      // add reference in propertyset
+      boost::shared_ptr<GCFPVDynArr> childRefs(static_cast<GCFPVDynArr*>(m_basePropertySet->getValue(LD_PROPNAME_CHILDREFS)));
+      if(childRefs != 0)
+      {
+        GCFPValueArray refsVector(childRefs->getValue()); // create a copy 
+        GCFPVString newRef((*chIt) + string("=") + childPsName);
+        refsVector.push_back(&newRef);
+        GCFPVDynArr newChildRefs(LPT_STRING,refsVector);
+        m_basePropertySet->setValue(LD_PROPNAME_CHILDREFS,newChildRefs);
+        LOG_DEBUG(formatString("Added child reference %s to %s",newRef.getValue().c_str(),m_basePropertySetName.c_str()));
+      }
+    }
+    catch(Exception& e)
+    {
+      LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
+    }
+  }
+  
+  // connect to parent.
+  string parentTaskName = m_parameterSet.getString("parentTask");
+  string parentHost     = m_parameterSet.getString("parentHost");//TiMu
+  uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
+  
+  // it is possible that parents do not yet exist while constructing this LD
+  // (e.g. SO starts when a station starts, even if there are no CCU's)
+  TPortSharedPtr parentPortPtr(new TRemotePort);
+  if(parentTaskName.length() > 0)
+  {
+    parentPortPtr->init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
+    parentPortPtr->setHostName(parentHost);//TiMu
+    parentPortPtr->setPortNumber(parentPort);//TiMu
+    parentPortPtr->open();
+    m_parentPorts[parentTaskName] = parentPortPtr;
+  }
+  
+  _schedule();
+    
+  if(parentTaskName.length() > 0)
+  {
+    // send initialized event to the parent
+    boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
+    scheduledEvent->result=LD_RESULT_NO_ERROR;//OK
+    _sendEvent(scheduledEvent,*(parentPortPtr.get()));
   }
 }
 
@@ -1139,8 +1247,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
     
     case F_CONNECTED:
     {
-      string startDaemonKey;
-      if(_isParentPort(port))
+      if(_findParentPort(port)!=m_parentPorts.end())
       {
         boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
         connectEvent->nodeId = getName();
@@ -1148,66 +1255,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       }
       else if(_isServerPort(port))
       {
-        // replace my server port (assigned by the ServiceBroker) in all child sections    
-        uint16 serverPort = m_serverPort.getPortNumber();
-        
-        // create the childs
-        vector<string> childKeys = _getChildKeys();
-        vector<string>::iterator chIt;
-        for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
-        {
-          // connect to child startdaemon.
-          try
-          {
-            string key = (*chIt) + string(".parentPort");
-            KVpair kvPair(key,serverPort);
-            m_parameterSet.replace(kvPair);
-            
-            string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
-            string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
-            uint16 startDaemonPortNr   = m_parameterSet.getUint16((*chIt) + string(".startDaemonPort"));
-            string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
-            string childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
-            
-            TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
-            startDaemonPort->setHostName(startDaemonHostName);
-            startDaemonPort->setPortNumber(startDaemonPortNr);
-            startDaemonPort->open();
-            m_childStartDaemonPorts[(*chIt)] = startDaemonPort;
-            
-            // add reference in propertyset
-            boost::shared_ptr<GCFPVDynArr> childRefs(static_cast<GCFPVDynArr*>(m_basePropertySet->getValue(LD_PROPNAME_CHILDREFS)));
-            if(childRefs != 0)
-            {
-              GCFPValueArray refsVector(childRefs->getValue()); // create a copy 
-              GCFPVString newRef((*chIt) + string("=") + childPsName);
-              refsVector.push_back(&newRef);
-              GCFPVDynArr newChildRefs(LPT_STRING,refsVector);
-              m_basePropertySet->setValue(LD_PROPNAME_CHILDREFS,newChildRefs);
-              LOG_DEBUG(formatString("Added child reference %s to %s",newRef.getValue().c_str(),m_basePropertySetName.c_str()));
-            }
-          }
-          catch(Exception& e)
-          {
-            LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
-          }
-        }
-        
-        // connect to parent.
-        string parentTaskName = m_parameterSet.getString("parentTask");
-        string parentHost     = m_parameterSet.getString("parentHost");//TiMu
-        uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
-        m_parentPort.init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
-        m_parentPort.setHostName(parentHost);//TiMu
-        m_parentPort.setPortNumber(parentPort);//TiMu
-        m_parentPort.open();
-  
-        _schedule();
-        
-        // send initialized event to the parent
-        boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
-        scheduledEvent->result=LD_RESULT_NO_ERROR;//OK
-        _sendEvent(scheduledEvent,m_parentPort);
+        _handleServerConnected();
         
         // poll retry buffer every 10 seconds
         int32 retryPeriod = 10; // retry sending buffered events every 10 seconds
@@ -1298,7 +1346,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
     case F_DISCONNECTED:
     {
       port.close();
-      if(_isParentPort(port))
+      if(_findParentPort(port)!=m_parentPorts.end())
       {
         m_parentReconnectTimerId = port.setTimer(3L);
       }
@@ -1348,6 +1396,15 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
       _acceptChildConnection();
       break;
 
+    case F_CONNECTED:
+    {
+      if(_isServerPort(port))
+      {
+        _handleServerConnected();
+      }
+      break;
+    }
+    
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
@@ -1531,11 +1588,14 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
       GCFPVString state(LD_STATE_STRING_CLAIMED);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
 
-      // send claimed message to the parent.
+      // send claimed message to all parents.
       boost::shared_ptr<LOGICALDEVICEClaimedEvent> claimedEvent(new LOGICALDEVICEClaimedEvent);
       claimedEvent->result = m_globalError;
-      _sendEvent(claimedEvent,m_parentPort);
-      
+      TPortMap::iterator it = m_parentPorts.begin();
+      while(it != m_parentPorts.end())
+      {
+        _sendEvent(claimedEvent,*(it->second.get()));
+      }
       break;
     }
     
@@ -1615,8 +1675,11 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       // send prepared message to the parent.
       boost::shared_ptr<LOGICALDEVICEPreparedEvent> preparedEvent(new LOGICALDEVICEPreparedEvent);
       preparedEvent->result = m_globalError;
-      _sendEvent(preparedEvent,m_parentPort);
-      
+      TPortMap::iterator it = m_parentPorts.begin();
+      while(it != m_parentPorts.end())
+      {
+        _sendEvent(preparedEvent,*(it->second.get()));
+      }
       break;
     }
       
@@ -1723,7 +1786,11 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       // send to parent
       boost::shared_ptr<LOGICALDEVICESuspendedEvent> suspendedEvent(new LOGICALDEVICESuspendedEvent);
       suspendedEvent->result = m_globalError;
-      _sendEvent(suspendedEvent,m_parentPort);
+      TPortMap::iterator it = m_parentPorts.begin();
+      while(it != m_parentPorts.end())
+      {
+        _sendEvent(suspendedEvent,*(it->second.get()));
+      }
       break;
     }
   
@@ -1827,7 +1894,11 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       // send resumed message to parent.
       boost::shared_ptr<LOGICALDEVICEResumedEvent> resumedEvent(new LOGICALDEVICEResumedEvent);
       resumedEvent->result = m_globalError;
-      _sendEvent(resumedEvent,m_parentPort);
+      TPortMap::iterator it = m_parentPorts.begin();
+      while(it != m_parentPorts.end())
+      {
+        _sendEvent(resumedEvent,*(it->second.get()));
+      }
       break;
     }
   
@@ -1911,8 +1982,11 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       // send released message to the parent.
       boost::shared_ptr<LOGICALDEVICEReleasedEvent> releasedEvent(new LOGICALDEVICEReleasedEvent);
       releasedEvent->result = m_globalError;
-      _sendEvent(releasedEvent,m_parentPort);
-      
+      TPortMap::iterator it = m_parentPorts.begin();
+      while(it != m_parentPorts.end())
+      {
+        _sendEvent(releasedEvent,*(it->second.get()));
+      }
       break;
     }      
     

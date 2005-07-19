@@ -126,7 +126,7 @@ namespace ASO // :-)
     protected:    
 
     private:
-      static string     m_RSPserverName;
+      static string     m_RSPDriverName;
       GCF::TM::GCFPort  m_RSPclient;
       double            m_samplingFrequency;
 
