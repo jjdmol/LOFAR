@@ -21,6 +21,8 @@
 //#  $Id$
 
 
+#include <lofar_config.h>
+
 #include <GCF/GCF_PVChar.h>
 
 namespace LOFAR 

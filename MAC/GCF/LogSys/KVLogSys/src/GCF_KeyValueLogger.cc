@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <GCF/ParameterSet.h>
 #include <KVL_Protocol.ph>
@@ -104,15 +106,20 @@ GCFEvent::TResult GCFKeyValueLogger::operational(GCFEvent& e, GCFPortInterface& 
     case F_ENTRY:
     {    
       KVLUpdateEvent* pUpdateEvent;
-      for (TLogQueue::iterator iter = _logQueue.begin();
-           iter != _logQueue.end(); ++iter)
+      GCFEvent* pEvent;
+      for (TMsgQueue::iterator iter = _msgQueue.begin();
+           iter != _msgQueue.end(); ++iter)
       {
-        pUpdateEvent = (KVLUpdateEvent*)*iter;
-        _kvlClientPort.send(*pUpdateEvent);
-        delete pUpdateEvent->value._pValue;
-        delete pUpdateEvent;
+        pEvent = *iter;
+        _kvlClientPort.send(*pEvent);
+        if (pEvent->signal == KVL_UPDATES)
+        {
+          pUpdateEvent = (KVLUpdateEvent*)pEvent;
+          delete pUpdateEvent->value._pValue;
+        }
+        delete pEvent;
       }
-      _logQueue.clear();
+      _msgQueue.clear();
       break;
     }  
     default:
@@ -123,13 +130,16 @@ GCFEvent::TResult GCFKeyValueLogger::operational(GCFEvent& e, GCFPortInterface& 
   return status;
 }
 
-void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value, TKVLOrigin origin, const timeval& timestamp)
+void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value, 
+                                    TKVLOrigin origin, const timeval& timestamp, 
+                                    const string& description)
 {
   KVLUpdateEvent* pIndication = new KVLUpdateEvent;
   pIndication->key = key;
   pIndication->value._pValue = &value;
   pIndication->origin = origin;
   pIndication->timestamp = timestamp;
+  pIndication->description = description;
 
   if (_kvlClientPort.isConnected())
   {
@@ -139,17 +149,62 @@ void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value, TK
   else
   {
     pIndication->value._pValue = value.clone();
-    _logQueue.push_back(pIndication);    
+    _msgQueue.push_back(pIndication);    
   }
 }
 
-void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value, TKVLOrigin origin)
+void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value, TKVLOrigin origin, const string& description)
 {
   timeval timestamp;
   struct timezone timeZone;
   gettimeofday(&timestamp, &timeZone); // TODO: find out whether this is the utc time or not
 
-  logKeyValue(key, value, origin, timestamp);
+  logKeyValue(key, value, origin, timestamp, description);
+}
+
+void GCFKeyValueLogger::addAction(const string& key, uint8 action, 
+                                  TKVLOrigin origin, timeval timestamp, 
+                                  const string& description)
+{
+
+  if (timestamp.tv_sec == 0 && timestamp.tv_usec == 0)
+  {
+    struct timezone timeZone;
+    gettimeofday(&timestamp, &timeZone); // TODO: find out whether this is the utc time or not
+  }
+
+  KVLAddActionEvent* pIndication = new KVLAddActionEvent;
+  pIndication->key = key;
+  pIndication->action = action;
+  pIndication->origin = origin;
+  pIndication->timestamp = timestamp;
+  pIndication->description = description;
+
+  if (_kvlClientPort.isConnected())
+  {
+    _kvlClientPort.send(*pIndication);
+    delete pIndication;
+  }
+  else
+  {
+    _msgQueue.push_back(pIndication);    
+  }
+}
+
+void GCFKeyValueLogger::skipUpdatesFrom(uint8 manId)
+{
+  KVLSkipUpdatesFromEvent* pIndication = new KVLSkipUpdatesFromEvent;
+  pIndication->man_id = manId;
+
+  if (_kvlClientPort.isConnected())
+  {
+    _kvlClientPort.send(*pIndication);
+    delete pIndication;
+  }
+  else
+  {
+    _msgQueue.push_back(pIndication);    
+  }
 }
   } // namespace LogSys
  } // namespace GCF

@@ -23,9 +23,8 @@
 #ifndef GCF_EVENT_H
 #define GCF_EVENT_H
 
-#include <assert.h>
-#include <sys/types.h>
-#include <string>
+#include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR 
 {
@@ -92,16 +91,16 @@ class GCFEvent
      * packs all fields of the event into the event buffer and returns its 
      * pointer and the number of packed bytes (output argument
      */
-    virtual void* pack(unsigned int& packsize);
+    virtual void* pack(uint32& packsize);
 
   protected: // helper methods
     
-    unsigned int unpackString(std::string& value, char* buffer);   
-    unsigned int packString(char* buffer, const std::string& value);  
+    uint32 unpackString(string& value, char* buffer);   
+    uint32 packString(char* buffer, const string& value);  
 
-    void resizeBuf(unsigned int requiredSize);
-    void* unpackMember(char* data, unsigned int& offset, unsigned int& memberDim, unsigned int sizeofMemberType);
-    unsigned int packMember(unsigned int offset, const void* member, unsigned int memberDim, unsigned int sizeofMemberType);
+    void resizeBuf(uint32 requiredSize);
+    void* unpackMember(char* data, uint32& offset, uint32& memberNOE, uint32 sizeofMemberType);
+    uint32 packMember(uint32 offset, const void* member, uint32 memberNOE, uint32 sizeofMemberType);
 
   public: // data members
   	/**
@@ -120,9 +119,9 @@ class GCFEvent
   	* <- I/O-><--- protocol ---------><--------- signal -------------->
   	* @endcode
   	*/
-  	unsigned short  signal; // lsb contains signal id (0-255)
-  	                      // msb contains protocol id (0-255)
-  	size_t          length; // payload length of the event (thus excl. signal and length) should be <= SSIZE_MAX)
+  	uint16  signal; // lsb contains signal id (0-255)
+  	                // msb contains protocol id (0-255)
+  	uint32  length; // payload length of the event (thus excl. signal and length) should be <= SSIZE_MAX)
 
   protected:
     /// indicates wether the event is unpacked or not

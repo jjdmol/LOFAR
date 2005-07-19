@@ -24,7 +24,6 @@
 #ifndef GPI_TH_PORT_H
 #define GPI_TH_PORT_H
 
-#include <lofar_config.h>
 #include <Transport/TransportHolder.h>
 #include <GCF/TM/GCF_Event.h>
 #include <Common/LofarTypes.h>
@@ -43,10 +42,11 @@ class GCFPortInterface;
 class GPITH_Port: public TransportHolder
 {
   public:
-    GPITH_Port (TM::GCFPortInterface& port) : _port(port) {}
+    GPITH_Port (TM::GCFPortInterface& port);
     
     virtual ~GPITH_Port();
     
+    virtual bool init();
     // Make an instance of the transportholder
     virtual GPITH_Port* make() const;
   
@@ -54,19 +54,18 @@ class GPITH_Port: public TransportHolder
     virtual string getType() const;
   
     /// Read the data.
-    virtual bool recvNonBlocking 	(void* buf, int32 nbytes, int32 tag);
-    virtual bool recvVarNonBlocking (int32 tag);
+            bool  recvBlocking       (void*, int, int, int = 0, LOFAR::DataHolder* = 0);
+    virtual int32 recvNonBlocking 	 (void* buf, int32 nbytes, int32 tag, int offset = 0, LOFAR::DataHolder* = 0);
   
     /// Write the data.
-    virtual bool sendNonBlocking	(void* buf, int32 nbytes, int32 tag);
-  
-    virtual bool connectionPossible (int32 srcRank, int32 dstRank) const;
-    
-    virtual bool isBidirectional() const
-    	{ return (true); }
-  
-    virtual bool isBlocking() const
-      { return (false); }
+            bool sendBlocking    (void*, int, int, LOFAR::DataHolder* = 0);    
+    virtual bool sendNonBlocking (void* buf, int32 nbytes, int32 tag, DataHolder* dh = 0);
+
+            void waitForSent(void* buf, int nbytes, int tag);
+            void waitForReceived(void* buf, int nbytes, int tag);
+
+            bool isClonable() const;
+            void reset();
     
   private:
     TM::GCFPortInterface& _port;
@@ -85,8 +84,35 @@ class GPITH_Port: public TransportHolder
       private:
         GPIBlobEvent(GPIBlobEvent&);
         GPIBlobEvent& operator= (const GPIBlobEvent&);
-    }; 
+    };
+    
+    typedef enum {
+      CmdNone = 0,
+      CmdRecvNonBlock,
+    } CmdTypes;
+     
+    int32   itsReadOffset;      // For partial reads.
+  
+   // Administration for non-blocking receiving. In the recv-call
+    // these fields are filled so that waitForRecv knows what to do.
+    int16   itsLastCmd;
 };
+
+inline GPITH_Port::GPITH_Port(TM::GCFPortInterface& port) : 
+  _port(port) 
+{}
+
+
+inline void GPITH_Port::waitForSent(void*, int, int) { }
+
+inline void GPITH_Port::waitForReceived(void*, int, int) {}
+
+inline bool GPITH_Port::isClonable() const
+  { return false; }  
+
+inline void GPITH_Port::reset()
+  { }
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

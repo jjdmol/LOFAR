@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_RawPort.h>

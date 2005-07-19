@@ -61,14 +61,14 @@ class KeyValueLoggerDaemon : public TM::GCFTask
     TClients        _clients;
 
   private: // admin members
-    typedef map<unsigned int /*seqnr */, KVLUpdatesEvent*> TSequenceList;
+    typedef map<uint64 /*seqnr */, KVLUpdatesEvent*> TSequenceList;
     TSequenceList   _seqList;
     TClients        _clientsGarbage;
     unsigned char   _logBuf[MAX_LOG_BUFF_SIZE];
     unsigned int    _nrOfBufferedUpdates;
     unsigned int    _curLogBufSize;
     uint8           _registerID;
-    uint16          _curSeqNr;
+    uint64          _curSeqNr;
 };
   } // namespace LogSys
  } // namespace GCF

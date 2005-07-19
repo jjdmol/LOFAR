@@ -47,6 +47,7 @@ class GCFPVSSInfo
     static const string& getProjectName();
     static const string getSystemName(unsigned int sysnr);
     static unsigned int getLastEventSysId();
+    static timeval getLastEventTimestamp();
     static unsigned int getSysId(const string& name);
     static unsigned int getManNum();
     static Common::TGCFResult getTypeStruct(const string& typeName, 
@@ -58,6 +59,7 @@ class GCFPVSSInfo
     static string _sysName;
     static string _projName;
     static unsigned int _lastSysNr;
+    static timeval _lastTimestamp;
   
     // Construction methods
     // Don't allow to (con/de)struct an instance of this class
@@ -71,6 +73,16 @@ class GCFPVSSInfo
     GCFPVSSInfo& operator= (const GCFPVSSInfo&);
     // </group>
 };
+
+inline unsigned int GCFPVSSInfo::getLastEventSysId()
+{
+  return _lastSysNr;
+}
+
+inline timeval GCFPVSSInfo::getLastEventTimestamp()
+{
+  return _lastTimestamp;
+}
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

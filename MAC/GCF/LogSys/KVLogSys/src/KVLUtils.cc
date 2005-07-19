@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "KVLUtils.h"
 #include <GCF/ParameterSet.h>
 #include <KVLDefines.h>

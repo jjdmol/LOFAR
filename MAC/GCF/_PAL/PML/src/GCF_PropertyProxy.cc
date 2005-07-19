@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/PAL/GCF_PropertyProxy.h>
 #include <GPM_PropertyProxy.h>
 
@@ -57,9 +59,12 @@ TGCFResult GCFPropertyProxy::requestPropValue(const string& propName)
   return (_pPMProxy->getPM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
-TGCFResult GCFPropertyProxy::setPropValue(const string& propName, const GCFPValue& value, bool wantAnswer)
+TGCFResult GCFPropertyProxy::setPropValueTimed(const string& propName, 
+                                               const GCFPValue& value, 
+                                               double timestamp, 
+                                               bool wantAnswer)
 {
-  return (_pPMProxy->setPM(propName, value, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMProxy->setPM(propName, value, timestamp, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
   } // namespace PAL
  } // namespace GCF

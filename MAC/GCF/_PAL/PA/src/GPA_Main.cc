@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GPA_Controller.h>
 #include <GCF/TM/GCF_Control.h>
 

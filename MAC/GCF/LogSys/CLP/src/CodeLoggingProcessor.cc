@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "CodeLoggingProcessor.h"
 #include <log4cplus/helpers/socketbuffer.h>
 #include <log4cplus/socketappender.h>
@@ -215,7 +217,7 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
       kvlTimestamp.tv_usec = l4pTimestamp.usec();
 
       // log!
-      LOG_KEYVALUE(key[0], value, KVL_ORIGIN_MAC, kvlTimestamp);
+      LOG_KEYVALUE_TS(key[0], value, KVL_ORIGIN_MAC, kvlTimestamp);
       
       // convert logger event to DP log msg
       string plMsg = event.getTimestamp().getFormattedTime("%d-%m-%y %H:%M:%S.%q") + "|" + msg;

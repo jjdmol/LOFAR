@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #define LOFARLOGGER_SUBPACKAGE "SAL"
 
 #include "GSA_PortService.h"
@@ -100,7 +102,7 @@ ssize_t GSAPortService::send (void* buf, size_t count, const string& destDpName)
       pBlobMsg = &convBv;
     }
   }
-  dpeSet(destDpName, *pBlobMsg);
+  dpeSet(destDpName, *pBlobMsg, 0.0, false);
   return count;
 }
 

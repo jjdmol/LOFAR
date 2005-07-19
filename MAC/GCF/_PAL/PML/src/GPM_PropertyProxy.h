@@ -42,7 +42,8 @@ class GPMPropertyProxy : public GSAService
     TSAResult subscribePM(const string& propName);
     TSAResult unsubscribePM(const string& propName);
     TSAResult getPM(const string& propName);
-    TSAResult setPM(const string& propName, const Common::GCFPValue& value, bool wantAnswer);
+    TSAResult setPM(const string& propName, const Common::GCFPValue& value, 
+                    double timestamp, bool wantAnswer);
 
   protected:
     void dpCreated(const string& /*propName*/);
@@ -82,9 +83,10 @@ inline TSAResult GPMPropertyProxy::getPM(const string& propName)
 
 inline TSAResult GPMPropertyProxy::setPM(const string& propName, 
                                          const Common::GCFPValue& value, 
+                                         double timestamp,
                                          bool wantAnswer)
 {
-  return GSAService::dpeSet(propName, value, wantAnswer);
+  return GSAService::dpeSet(propName, value, timestamp, wantAnswer);
 }
 
 inline void GPMPropertyProxy::dpCreated(const string& /*propName*/) 

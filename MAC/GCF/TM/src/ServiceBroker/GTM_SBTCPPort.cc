@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "GTM_SBTCPPort.h"
 #include <GTM_Defines.h>
 #include "GSB_Defines.h"

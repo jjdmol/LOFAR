@@ -48,9 +48,17 @@ class GCFKeyValueLogger : public TM::GCFTask
     static GCFKeyValueLogger* instance();
 
   public: // member functions
-    void logKeyValue(const string key, const Common::GCFPValue& value, Common::TKVLOrigin origin, const timeval& timestamp);
-    void logKeyValue(const string key, const Common::GCFPValue& value, Common::TKVLOrigin origin);
+    void logKeyValue(const string key, const Common::GCFPValue& value, 
+                     Common::TKVLOrigin origin, const timeval& timestamp, 
+                     const string& description = "");
+    void logKeyValue(const string key, const Common::GCFPValue& value, 
+                     Common::TKVLOrigin origin, const string& description = "");
+    
+    void addAction(const string& key, uint8 action, Common::TKVLOrigin origin, 
+                   timeval timestamp, const string& description = "");
   
+    void skipUpdatesFrom(uint8 manId);         
+
   private:
     GCFKeyValueLogger ();
     virtual ~GCFKeyValueLogger () {}
@@ -66,17 +74,29 @@ class GCFKeyValueLogger : public TM::GCFTask
     static GCFKeyValueLogger* _pInstance;
 
   private: // admin members
-    typedef list<TM::GCFEvent*> TLogQueue;
-    TLogQueue _logQueue;
+    typedef list<TM::GCFEvent*> TMsgQueue;
+    TMsgQueue _msgQueue;
 };
   } // namespace LogSys
  } // namespace GCF
 } // namespace LOFAR
 
-#define LOG_KEYVALUE(key, value, origin, timestamp) \
+#define LOG_KEYVALUE_TSD(key, value, origin, timestamp, desc) \
+  LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin, timestamp, desc);
+
+#define LOG_KEYVALUE_TS(key, value, origin, timestamp) \
   LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin, timestamp);
   
-#define LOG_KEYVALUE_DT(key, value, origin) \
+#define LOG_KEYVALUE_D(key, value, origin, desc) \
+  LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin, desc);
+
+#define LOG_KEYVALUE(key, value, origin) \
   LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin);
+
+#define ADD_ACTION(key, value, origin, timestamp, desc) \
+  LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->addAction(key, value, origin, timestamp, desc);
+  
+#define SKIP_UPDATES_FROM(manID) \
+  LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->skipUpdatesFrom(manID);
 
 #endif

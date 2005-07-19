@@ -20,6 +20,8 @@
 //
 //  $Id$
 
+#include <lofar_config.h>
+
 #include <GPI_TH_Port.h>
 #include <Transport/Transporter.h>
 #include <Transport/DataHolder.h>
@@ -44,66 +46,80 @@ GPITH_Port* GPITH_Port::make() const
   return (new GPITH_Port(_port));
 }
   
+bool GPITH_Port::init()
+{
+  return _port.isConnected();
+}
+
 string GPITH_Port::getType() const
 {
 	return ("GPITH_Port");
 }
   
-bool GPITH_Port::connectionPossible (int32 srcRank, int32 dstRank) const
+int32 GPITH_Port::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/, int offset, LOFAR::DataHolder*)
 {
-	return (srcRank == dstRank);
-}
-  
-bool GPITH_Port::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/)
-{
-	if (!_port.isConnected()) 
-  {
-		return (false);
-	}
+  // Note: buf, offset and nrBytes are outerWorld view on databuffer contents
+  // itsReadOffset is innerWorld view on databuffer contents
 
-	// Now we should have a connection
-	if (_port.recv (buf, nrBytes) != nrBytes) 
-  {
-		THROW(AssertError, "GPITH_Port: data not succesfully received");
-	}
-	return (true);
-}
+  LOG_TRACE_OBJ(formatString(
+      "TH_Socket::recvNonBlocking(%d), offset=%d", 
+      nrBytes, offset));
 
-bool GPITH_Port::recvVarNonBlocking(int32	tag)
-{
-  if (!_port.isConnected()) 
-  {
-		return (false);
-	}
+  if (itsReadOffset >= offset+nrBytes) // already in buffer?
+  {    
+    itsReadOffset = 0;            // reset internal offset
+    itsLastCmd = CmdNone;         // async admin.
+    return (nrBytes);
+  }
 
-	// Read the blob header.
-	DataHolder* target = getTransporter()->getDataHolder();
-	void*	buf   = target->getDataPtr();
-	int32	hdrsz = target->getHeaderSize();
+  if (itsLastCmd == CmdNone) // adopt offset on fresh entry
+  {        
+    itsReadOffset = offset;
+  }
+  itsLastCmd  = CmdRecvNonBlock;        // remember where to wait for.
 
-	if (!recvNonBlocking(buf, hdrsz, tag)) {
-		return (false);
-	}
+  if (!init()) // be sure we are connected
+  {                
+    return (0);
+  }
 
-	// Extract the length and resize the buffer.
-	int32 size = DataHolder::getDataLength (buf);
-	target->resizeBuffer (size);
-	buf = target->getDataPtr();
-	// Read the remainder.
-	bool result = recvNonBlocking (static_cast<char*>(buf)+hdrsz, size-hdrsz, tag);
+  // read remaining bytes
+  int32 bytesRead = _port.recv((char*)buf - offset + itsReadOffset, 
+                               (offset + nrBytes) - itsReadOffset);
+  LOG_TRACE_VAR_STR("Read " << bytesRead << " bytes from socket");
 
-  return (result);
+  // Errors are reported with negative numbers
+  if (bytesRead < 0) // serious error?
+  {            
+    // It's a total mess, anything could have happend. Bail out.
+    LOG_DEBUG_STR("TH_Socket: serious read-error, result=" << bytesRead);
+    itsLastCmd    = CmdNone;
+    itsReadOffset = 0;            // it's a total mess
+    return (false);
+  }
+
+  // Some data was read
+  if (bytesRead+itsReadOffset < offset+nrBytes) // everthing read?
+  { 
+    itsReadOffset += bytesRead;       // No, update readoffset.
+    return(0);
+  }
+
+  itsReadOffset = 0;              // message complete, reset
+  itsLastCmd    = CmdNone;          // async admin.
+
+  return (nrBytes);
 }
 
 //
 // sendNonBlocking(buf, nrBytes, tag)
 //
-bool GPITH_Port::sendNonBlocking(void*	buf, int32	nrBytes, int32	 /*tag*/)
+bool GPITH_Port::sendNonBlocking(void* buf, int32 nrBytes, int32 /*tag*/, DataHolder* /*dh*/)
 {
-  if (!_port.isConnected()) 
+  if (!init()) 
   {
-		return (false);
-	}
+    return (false);
+  }
   
   GPIBlobEvent e;
   e.blobData = buf;
@@ -125,6 +141,21 @@ void* GPITH_Port::GPIBlobEvent::pack(unsigned int& packsize)
   packsize = blobSize;
   return _buffer;
 }
+
+bool GPITH_Port::recvBlocking (void*, int, int, int, LOFAR::DataHolder*)
+{
+  THROW(LOFAR::Exception, "No recvBlocking method implemented in this TransportHolder: " 
+        + getType());
+  return false;
+}
+
+bool GPITH_Port::sendBlocking (void*, int, int, LOFAR::DataHolder*)
+{
+  THROW(LOFAR::Exception, "No sendBlocking method implemented in this TransportHolder: "
+        + getType());
+ return false;
+}
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

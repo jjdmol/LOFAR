@@ -57,6 +57,7 @@ class DH_PIProtocol: public DataHolder
     virtual ~DH_PIProtocol();
   
     DataHolder* clone() const;
+    DH_PIProtocol* makeDataCopy() const;
   
     // Set the EventID data member.
     void setEventID (TEventID EventID);
@@ -69,11 +70,10 @@ class DH_PIProtocol: public DataHolder
     uint16 getSeqNr() const;
     
     // init protocol static fields.
-    virtual void preprocess();
+    virtual void init();
   
-    // leave protocol static fields.
-    virtual void postprocess();
-
+    BlobOStream& createExtraBlob();
+    BlobIStream& getExtraBlob();
   private:
     // Forbid assignment.
     DH_PIProtocol& operator= (const DH_PIProtocol&);
@@ -103,6 +103,15 @@ inline void DH_PIProtocol::setSeqNr (uint16 seqNr)
 inline uint16 DH_PIProtocol::getSeqNr() const
   { return *_seqNr; }
 
+inline BlobOStream& DH_PIProtocol::createExtraBlob()
+{
+  return DataHolder::createExtraBlob();
+}
+
+inline BlobIStream& DH_PIProtocol::getExtraBlob()
+{
+  return DataHolder::getExtraBlob();
+}
   } // namespace GCF
 } // namespace LOFAR
 

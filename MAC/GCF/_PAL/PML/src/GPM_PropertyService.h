@@ -43,7 +43,10 @@ class GPMPropertyService : public GSAService
     Common::TGCFResult subscribeProp(const string& propName);
     Common::TGCFResult unsubscribeProp(const string& propName);
     Common::TGCFResult requestPropValue(const string& propName);
-    Common::TGCFResult setPropValue(const string& propName, const Common::GCFPValue& value, bool wantAnswer);
+    Common::TGCFResult setPropValue(const string& propName, 
+                                    const Common::GCFPValue& value, 
+                                    double timestamp, 
+                                    bool wantAnswer);
         
   protected:
     void dpCreated(const string& /*propName*/);
@@ -84,9 +87,10 @@ inline Common::TGCFResult GPMPropertyService::requestPropValue(const string& pro
 
 inline Common::TGCFResult GPMPropertyService::setPropValue(const string& propName, 
                                                    const Common::GCFPValue& value, 
+                                                   double timestamp, 
                                                    bool wantAnswer)
 {
-  return (dpeSet(propName, value, wantAnswer) == SA_NO_ERROR ? Common::GCF_NO_ERROR : Common::GCF_PML_ERROR);
+  return (dpeSet(propName, value, timestamp, wantAnswer) == SA_NO_ERROR ? Common::GCF_NO_ERROR : Common::GCF_PML_ERROR);
 }
 
 inline void GPMPropertyService::dpCreated(const string& /*propName*/) 

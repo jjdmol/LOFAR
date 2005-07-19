@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_MyProperty.h>
 #include <GPM_Controller.h>

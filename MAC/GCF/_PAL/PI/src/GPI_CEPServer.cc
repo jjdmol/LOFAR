@@ -20,11 +20,14 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GPI_CEPServer.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobOStream.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GPI_TH_Port.h>
+#include <Transport/CSConnection.h>
 
 namespace LOFAR 
 {
@@ -36,24 +39,32 @@ using namespace Common;
   {
 GPICEPServer::GPICEPServer(GPIController& controller) : 
   GPIPMLlightServer(controller, PI_CEPPLS_TASK_NAME, true),
-  _dhServer("Server"),
+  _pReadConn(0),
+  _pWriteConn(0),
   _valueBuf(0),
   _upperboundValueBuf(0)
 {
-  _dhServer.setID(2);
-  // placeholder for the remote port (TH_Socket) in the PIClient (CEP application)
-  DH_PIProtocol dhPIClient("dummy"); 
-  dhPIClient.setID(1);
-
-  GPITH_Port   thFrom(getClientPort());
-  GPITH_Port   thTo(getClientPort());
-  
-  dhPIClient.connectBidirectional(_dhServer, thFrom, thTo, false);
   _dhServer.init();
+
+  GPITH_Port* pTHServer = new GPITH_Port(getClientPort());
+  ASSERTSTR(pTHServer, "Unable to allocate a transportHolder");
+  pTHServer->init();  
+  
+  _pReadConn  = new CSConnection("read",  0, &_dhServer, pTHServer, false);
+  _pWriteConn = new CSConnection("write", &_dhServer, 0, pTHServer, false);
+  ASSERTSTR(_pReadConn,  "Unable to allocate connection for reading");
+  ASSERTSTR(_pWriteConn, "Unable to allocate connection for writing");
 }
 
 GPICEPServer::~GPICEPServer()
 {
+  // Retrieve pointer to transportholder
+  GPITH_Port*  pTHServer = dynamic_cast<GPITH_Port*>
+                  (_pReadConn->getTransportHolder());
+  
+  if (pTHServer) delete pTHServer;
+  if (_pReadConn) delete _pReadConn;
+  if (_pWriteConn) delete _pWriteConn;
   if (_valueBuf) delete [] _valueBuf;
 }
 
@@ -82,7 +93,8 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
       // so read the data from the "port" via dataholder and transportholder
       try
       {
-        _dhServer.read();
+        CSConnection::State state = _pReadConn->read();
+        ASSERTSTR(state == CSConnection::Finished, "Could not read the whole datat");
         BlobIStream& blob = _dhServer.getExtraBlob();
         uint16 result;
         // The conversion from Blob to the GCFEvent concept!!!
@@ -217,7 +229,7 @@ void GPICEPServer::sendMsgToClient(GCFEvent& msg)
         converted = false;
         break;
     }
-    if (converted) _dhServer.write();
+    if (converted) _pWriteConn->write();
   }
   catch (std::exception& x) 
   {

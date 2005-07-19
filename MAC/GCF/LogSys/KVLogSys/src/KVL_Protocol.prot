@@ -39,6 +39,35 @@ event = {
 		name = "timestamp";
 		type = "timeval";
 	};
+	param = {
+	  name = description;
+	  type = string;
+	};
+};
+
+event = {
+	signal = ADD_ACTION;
+	dir = IN;
+	param = {
+		name = "key";
+		type = "string";
+	};
+	param = {
+		name = "action";
+		type = uint8;
+	};
+	param = {
+		name = "origin";
+		type = "LOFAR::GCF::Common::TKVLOrigin";
+	};
+	param = {
+		name = "timestamp";
+		type = "timeval";
+	};
+	param = {
+	  name = description;
+	  type = string;
+	};
 };
 
 event = {
@@ -46,7 +75,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "seqNr";
-		type = "uint16";
+		type = "uint64";
 	};
 	param = {
 		name = "daemonID";
@@ -68,7 +97,7 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqNr";
-		type = "uint16";
+		type = "uint64";
 	};
 };
 
@@ -81,7 +110,7 @@ event = {
 	};
 	param = {
 		name = "firstSeqNr";
-		type = "uint16";
+		type = "uint64";
 	};
 };
 
@@ -94,7 +123,7 @@ event = {
 	};
 	param = {
 		name = "curSeqNr";
-		type = "uint16";
+		type = "uint64";
 	};
 };
 
@@ -107,3 +136,12 @@ event = {
 	};
 };
 
+event = {
+	signal = SKIP_UPDATES_FROM;
+	dir = IN;
+	param = {
+		name = man_id;
+		type = uint8;
+	};
+	
+};

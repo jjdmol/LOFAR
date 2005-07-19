@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 
 #define LOFARLOGGER_SUBPACKAGE "SAL"
 
@@ -94,6 +95,11 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
   GCFPValue* pPropertyValue(0);
   CharString pvssTypeName;
   
+  TimeVar ts(answer.getOriginTime());
+  
+  GCFPVSSInfo::_lastTimestamp.tv_sec = ts.getSeconds();
+  GCFPVSSInfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+
   for (AnswerGroup *pGrItem = answer.getFirstGroup();
        pGrItem; pGrItem = answer.getNextGroup())
   {
@@ -131,13 +137,14 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
                 dpName.c_str()));   
             dpeSubscribed(dpName);
             break;
+
           case DP_MSG_REQ_NEW_DP:
             LOG_INFO(formatString (
                 "DP %s was created successful", 
                 dpName.c_str()));   
             dpCreated(dpName);
             break;
-            break;
+
           case DP_MSG_SIMPLE_REQUEST:
           {
             varPtr = pAnItem->getValuePtr();
@@ -206,13 +213,16 @@ void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& w
   string dpName;
   GCFPValue* pPropertyValue(0);
   ErrClass* pErr(0);
+  TimeVar ts(group.getOriginTime());
   
+  GCFPVSSInfo::_lastTimestamp.tv_sec = ts.getSeconds();
+  GCFPVSSInfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+      
   if ((pErr = group.getErrorPtr()) != 0)
   {
+    // The only error, which can occur here means always that the subscriptions 
+    // to the DPE is lost
     dpeSubscriptionLost(wait.getDpName());
-    //LOG_INFO(formatString (
-    //        "PVSS Error: (%s) in hotlink",
-    //        (const char*) pErr->getErrorText()));
   }
   // A group consists of pairs of DpIdentifier and values called items.
   // There is exactly one item for all configs we are connected.
@@ -595,7 +605,8 @@ TSAResult GSAService::dpeGet(const string& dpeName)
 }
 
 TSAResult GSAService::dpeSet(const string& dpeName, 
-                             const GCFPValue& value, 
+                             const GCFPValue& value,
+                             double timestamp, 
                              bool wantAnswer)
 {
   TSAResult result(SA_NO_ERROR);
@@ -637,53 +648,51 @@ TSAResult GSAService::dpeSet(const string& dpeName,
   }
   else 
   {
+    GSAWaitForAnswer* pWFA(0);
     if (wantAnswer)
     {
       GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this); // will be deleted by PVSS API
       pWFA->setDpName(dpeName);
-      if (Manager::dpSet(dpId, *pVar, pWFA) == PVSS_FALSE)
-      {
-        ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
-                      ErrClass::ERR_PARAM,        // wrong name: blame others
-                      ErrClass::UNEXPECTEDSTATE,  // fits all
-                      "GSAService",               // our file name
-                      "dpeSet(Wait)",                      // our function name
-                      CharString("Value of datapoint ") + dpeName.c_str() + 
-                      CharString(" could not be set"));
+    }
+    PVSSboolean retVal;
     
-        LOG_ERROR(formatString (
-            "PVSS: Unable to set value of property: '%s' (with 'answer')",
-            dpeName.c_str()));
-    
-        result = SA_SETPROP_FAILED;
-        // default the PVSS API is configured to delete this object
-        // but if there is an error occured PVSS API will not do this
-        delete pWFA;
-      }
-      else
+    if (timestamp == 0.0)
+    {
+      retVal = Manager::dpSet(dpId, *pVar, pWFA);      
+    }  
+    else
+    {
+      TimeVar ts;
+      ts.setSeconds((time_t)timestamp);
+      ts.setMilli((time_t)(timestamp - ((time_t) timestamp)) * 1000);
+      retVal = Manager::dpSetTimed(ts, dpId, *pVar, pWFA);
+    }
+    if (retVal == PVSS_FALSE)
+    {
+      ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
+                    ErrClass::ERR_PARAM,        // wrong name: blame others
+                    ErrClass::UNEXPECTEDSTATE,  // fits all
+                    "GSAService",               // our file name
+                    "dpeSet()",                      // our function name
+                    CharString("Value of datapoint ") + dpeName.c_str() + 
+                    CharString(" could not be set"));
+  
+      LOG_ERROR(formatString (
+          "PVSS: Unable to set value of property: '%s' (with 'answer')",
+          dpeName.c_str()));
+  
+      result = SA_SETPROP_FAILED;
+      // default the PVSS API is configured to delete this object
+      // but if there is an error occured PVSS API will not do this
+      delete pWFA;
+    }
+    else
+    {
+      if (wantAnswer)
       {
         LOG_DEBUG(formatString (
             "Setting the value of property '%s' is requested successful", 
             dpeName.c_str()));
-      }
-    }
-    else 
-    {
-      if (Manager::dpSet(dpId, *pVar) == PVSS_FALSE)
-      {
-        ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
-                      ErrClass::ERR_PARAM,        // wrong name: blame others
-                      ErrClass::UNEXPECTEDSTATE,  // fits all
-                      "GSAService",               // our file name
-                      "dpeSet",                      // our function name
-                      CharString("Value of datapoint ") + dpeName.c_str() + 
-                      CharString(" could not be set"));
-    
-        LOG_ERROR(formatString (
-            "PVSS: Unable to set value of property: '%s'", 
-            dpeName.c_str()));
-    
-        result = SA_SETPROP_FAILED;
       }
       else
       {

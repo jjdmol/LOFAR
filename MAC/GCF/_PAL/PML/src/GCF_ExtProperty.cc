@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GCF/PAL/GCF_ExtProperty.h>
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/Utils.h>

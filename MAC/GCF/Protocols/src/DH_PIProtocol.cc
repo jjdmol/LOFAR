@@ -50,7 +50,18 @@ DataHolder* DH_PIProtocol::clone() const
   return new DH_PIProtocol(*this);
 }
 
-void DH_PIProtocol::preprocess()
+DH_PIProtocol* DH_PIProtocol::makeDataCopy() const
+{
+  DH_PIProtocol* newDHPI = new DH_PIProtocol;
+  newDHPI->init();
+  newDHPI->setEventID (getEventID());
+  newDHPI->setSeqNr   (getSeqNr());
+  newDHPI->pack();
+
+  return (newDHPI);
+} 
+
+void DH_PIProtocol::init()
 {
   // Initialize the fieldset.
   initDataFields();
@@ -69,10 +80,5 @@ void DH_PIProtocol::fillDataPointers()
   _seqNr  = getData<uint16> ("seqNr");
 }
 
-void DH_PIProtocol::postprocess()
-{
-  setEventID(NO_EVENTID_SET);
-  setSeqNr(0);
-}
   } // namespace GCF
 } // namespace LOFAR

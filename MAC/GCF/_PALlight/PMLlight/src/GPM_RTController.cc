@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <GPM_RTController.h>
 #include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <stdio.h>

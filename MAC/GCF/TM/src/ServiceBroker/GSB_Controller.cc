@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include "GSB_Controller.h"
 #include <../SB_Protocol.ph>
 #include <GCF/ParameterSet.h>

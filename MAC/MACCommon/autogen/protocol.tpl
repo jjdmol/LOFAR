@@ -84,9 +84,9 @@ extern const char* [+ protocol_name +]_signalnames[];
       virtual ~[+ event_class_name +]();
 
       [+ FOR param ";" +]
-      [+ IF (== (get "type") "string") +]std::[+ ENDIF +][+ event_class_member +][+ IF (*== (get "type") "[]") +]; unsigned int [+ (get "name") +]Dim[+ ENDIF +][+ ENDFOR +];
+      [+ IF (== (get "type") "string") +]std::[+ ENDIF +][+ event_class_member +][+ IF (*== (get "type") "[]") +]; uint32 [+ (get "name") +]NOE[+ ENDIF +][+ ENDFOR +];
 
-      void* pack(unsigned int& packsize);
+      void* pack(uint32& __packsize);
 
     private:
       [+ event_class_name +]([+ event_class_name +]&);
@@ -97,7 +97,7 @@ extern const char* [+ protocol_name +]_signalnames[];
 [+ event_class_name +]::[+ event_class_name +](GCF::TM::GCFEvent& e)
   : GCF::TM::GCFEvent(e)[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
-    [+ (get "name") +]Dim(0)[+ ENDIF +][+ ENDFOR +]
+    [+ (get "name") +]NOE(0)[+ ENDIF +][+ ENDFOR +]
 {
 	unpack();
 }
@@ -105,7 +105,7 @@ extern const char* [+ protocol_name +]_signalnames[];
 [+ event_class_name +]::[+ event_class_name +]()
   : GCF::TM::GCFEvent([+ signal_name +])[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
-    [+ (get "name") +]Dim(0)[+ ENDIF +][+ ENDFOR +]
+    [+ (get "name") +]NOE(0)[+ ENDIF +][+ ENDFOR +]
 {        
 }
 
@@ -117,38 +117,41 @@ extern const char* [+ protocol_name +]_signalnames[];
   }
 }
     
-void* [+ event_class_name +]::pack(unsigned int& packsize)
+void* [+ event_class_name +]::pack(uint32& __packsize)
 {
   [+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +]assert([+ (get "name") +]);[+ ENDIF +]
   [+ ENDFOR +]
-  unsigned int requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length)[+ ELSE +]0[+ ENDIF +][+ FOR param "" +]
+  uint32 __requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length)[+ ELSE +]0[+ ENDIF +][+ FOR param "" +]
     [+ IF (exist? "userdefined") +]+ [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
-    [+ ELIF (not (*== (get "type") "]")) +]+ [+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(unsigned int)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
-    [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]Dim) + ([+ (get "name") +]Dim * sizeof([+ (get "name") +][0]))
+    [+ ELIF (not (*== (get "type") "]")) +]+ [+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(uint16)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
+    [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]NOE) + ([+ (get "name") +]NOE * sizeof([+ (get "name") +][0]))
     [+ ELSE +]+ sizeof([+ (get "name") +])[+ ENDIF +][+ ENDFOR +];
 
-  resizeBuf(requiredSize);
-  unsigned int offset = 0;
+  resizeBuf(__requiredSize);
+  uint32 __offset = __packsize = 0;
   [+ IF (not (exist? "noheader")) +]
-  GCF::TM::GCFEvent::pack(offset);[+ ENDIF +]
+  GCF::TM::GCFEvent::pack(__offset);[+ ENDIF +]
   [+ FOR param "" +]
   [+ IF (exist? "userdefined") +]
-  offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]pack(_buffer + offset);
+  __offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]pack(_buffer + __offset);
   [+ ELIF (not (*== (get "type") "]")) +]
     [+ IF (== (get "type") "string") +]
-  offset += packMember(offset, [+ (get "name") +].c_str(), [+ (get "name") +].length(),  sizeof(char));
+  __offset += packString(_buffer + __offset, [+ (get "name") +]);
     [+ ELSE +]
-  memcpy(_buffer + offset, &[+ (get "name") +], sizeof([+ (get "type") +]));
-  offset += sizeof([+ (get "type") +]);
+  memcpy(_buffer + __offset, &[+ (get "name") +], sizeof([+ (get "type") +]));
+  __offset += sizeof([+ (get "type") +]);
     [+ ENDIF +]
   [+ ELIF (*== (get "type") "[]") +]
-  offset += packMember(offset, [+ (get "name") +], [+ (get "name") +]Dim, sizeof([+ (get "name") +][0]));
+  __offset += packMember(__offset, [+ (get "name") +], [+ (get "name") +]NOE, sizeof([+ (get "name") +][0]));
   [+ ELSE +]
-  memcpy(_buffer + offset, [+ (get "name") +], sizeof([+ (get "name") +]));
-  offset += sizeof([+ (get "name") +]);
+  memcpy(_buffer + __offset, [+ (get "name") +], sizeof([+ (get "name") +]));
+  __offset += sizeof([+ (get "name") +]);
   [+ ENDIF +][+ ENDFOR +]
+	[+ IF (= (count "param") 0) +]
+  // no params in this event to pack
+	[+ ENDIF +]
           
-  packsize = offset;
+  __packsize = __offset;
   return _buffer;
 }
 
@@ -156,26 +159,30 @@ void [+ event_class_name +]::unpack()
 {
   if (length > 0)
   {
-  	unsigned int offset = sizeof(GCF::TM::GCFEvent);
-    char* data = (char*) _base;
+  	[+ IF (> (count "param") 0) +]
+  	uint32 __offset = sizeof(GCF::TM::GCFEvent);
+    char* __data = (char*) _base;
+    [+ ELSE +]
+    // no params in this event to unpack
+    [+ ENDIF +]
     [+ FOR param "" +]
     [+ IF (exist? "userdefined") +]
       [+ IF (*== (get "type") "*") +]
     [+ (get "name") +] = new [+ (substring (get "type") 0 (string-index (get "type") #\*)) +]();
       [+ ENDIF +]
-    offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]unpack(data + offset);
+    __offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]unpack(__data + __offset);
     [+ ELIF (not (*== (get "type") "]")) +]
       [+ IF (== (get "type") "string") +]
-    offset += GCF::TM::GCFEvent::unpackString([+ (get "name") +], data + offset);
+    __offset += GCF::TM::GCFEvent::unpackString([+ (get "name") +], __data + __offset);
       [+ ELSE +]
-    memcpy(&[+ (get "name") +], data + offset, sizeof([+ (get "type") +]));
-    offset += sizeof([+ (get "type") +]);
+    memcpy(&[+ (get "name") +], __data + __offset, sizeof([+ (get "type") +]));
+    __offset += sizeof([+ (get "type") +]);
       [+ ENDIF +]
     [+ ELIF (*== (get "type") "[]") +]
-    [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(data, offset, [+ (get "name") +]Dim,  sizeof([+ (get "name") +][0]));
+    [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(__data, __offset, [+ (get "name") +]NOE,  sizeof([+ (get "name") +][0]));
     [+ ELSE +]
-    memcpy([+ (get "name") +], (data + offset), sizeof([+ (get "name") +]));
-    offset += sizeof([+ (get "name") +]);
+    memcpy([+ (get "name") +], (__data + __offset), sizeof([+ (get "name") +]));
+    __offset += sizeof([+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
   }
 }[+ ENDIF +][+ ENDFOR +]

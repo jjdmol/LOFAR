@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVBool.h>
@@ -125,6 +126,32 @@ unsigned int GCFPValue::pack(char* valBuf) const
   // at this moment only the type will be packed, later maybe a timestamp can 
   // be assigned to a value.
   return 2 + packConcrete(valBuf + 2);
+}
+
+string GCFPValue::getTypeName() const
+{
+  string retVal;
+  static const char* typeNames[] = 
+  {
+    "NO_TYPE", 
+    "bool", 
+    "char", 
+    "unsigned", 
+    "integer",
+    "NO_TYPE", 
+    "blob"
+    "NO_TYPE", 
+    "float", 
+    "NO_TYPE", 
+    "string", 
+    "NO_TYPE",    
+  };
+  if (_type >= LPT_DYNARR)
+  {
+    retVal = "dyn_";
+  }
+  retVal += typeNames[_type & ~LPT_DYNARR];
+  return retVal;
 }
   } // namespace Common
  } // namespace GCF

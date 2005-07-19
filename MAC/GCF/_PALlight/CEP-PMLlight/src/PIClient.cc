@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <PIClient.h>
 #include <GCF/PALlight/CEPPropertySet.h>
 #include <GCF/Utils.h>
@@ -27,6 +29,7 @@
 #include <Transport/TH_Socket.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
+#include <Transport/CSConnection.h>
 using LOFAR::BlobIStream;
 using LOFAR::BlobOStream;
 
@@ -51,6 +54,8 @@ bool operator == (const PIClient::TAction& a, const PIClient::TAction& b)
 void logResult(TPIResult result, CEPPropertySet& propSet);
 
 PIClient::PIClient() : 
+  _pReadConn(0),
+  _pWriteConn(0),
   _usecount(0),
   _valueBuf(0),
   _upperboundValueBuf(0),
@@ -108,27 +113,22 @@ void PIClient::run()
     retry = false;
     try
     {
-      ParameterSet::instance()->adoptFile("PropertyInterface.conf");
-      TH_Socket TCPto(ParameterSet::instance()->getString(PARAM_PI_HOST), 
-                      "",
-                      ParameterSet::instance()->getInt(PARAM_PI_PORT),
-                      false,
-                      false);
-    
-      TH_Socket TCPfrom("", 
-                        ParameterSet::instance()->getString(PARAM_PI_HOST), 
-                        ParameterSet::instance()->getInt(PARAM_PI_PORT),
-                        true,
-                        false);
-      _dhPIClient.setID(1);
-      // this dummy dataholder represents the remote server (Property Interface)
-      DH_PIProtocol dhServer("dummy");
-      dhServer.setID(2);
-      
       LOG_DEBUG("Setup connection");
+      ParameterSet::instance()->adoptFile("PropertyInterface.conf");
+
+      _dhPIClient.init();
+      TH_Socket*  pTH = new TH_Socket(ParameterSet::instance()->getString(PARAM_PI_HOST), 
+                                      ParameterSet::instance()->getInt(PARAM_PI_PORT), 
+                                      false);
+      LOG_DEBUG("Try to connect");
+      pTH->init();
+
+      LOG_DEBUG("Connected to PropertyInterface of MAC");
     
-      // initilizes a virtual connection with the Property Interface
-      _dhPIClient.connectBidirectional(dhServer, TCPto, TCPfrom, false);
+      _pReadConn  = new CSConnection("read",  0, &_dhPIClient, pTH, false);
+      _pWriteConn = new CSConnection("write", &_dhPIClient, 0, pTH, false);
+      ASSERTSTR(_pReadConn, "Unable to allocate connection for reading");
+      ASSERTSTR(_pWriteConn, "Unable to allocate connection for writing");
     }
     catch (std::exception& e)
     {
@@ -146,25 +146,12 @@ void PIClient::run()
     retry = false;
     try
     {
-      LOG_DEBUG("Try to connect");
-      // real synchronous connect with the Property Interface
-      if (_dhPIClient.init())
-      {    
-        connected = true;
-        LOG_DEBUG("Connected to PropertyInterface of MAC");
-      }
-      else
-      {
-        retry = true;
-        continue;
-      }
-  
       // the main loop of the thread
       while (true)
       {
         processOutstandingActions();
         
-        if (_dhPIClient.read())
+        if (_pReadConn->read() == CSConnection::Finished)
         {
           switch (_dhPIClient.getEventID())
           {
@@ -194,7 +181,7 @@ void PIClient::run()
           "Exception: %s! RETRY after 10s", 
           e.what()));
       retry = true;
- 
+      // TODO: find out this is still necessary
       if (connected)
       {
         _bufferMutex.lock();
@@ -619,7 +606,7 @@ void PIClient::processOutstandingActions()
     action = *iter;
     _bufferMutex.unlock();  
     
-    sent = _dhPIClient.write();
+    sent = _pWriteConn->write();
     if (sent)
     {
       // now the action can be removed
@@ -667,7 +654,7 @@ void PIClient::processOutstandingActions()
     action = *iter;
     _bufferMutex.unlock();
     
-    sent = _dhPIClient.write();
+    sent = _pWriteConn->write();
     if (sent)
     {
       // see description for the following above

@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <KeyValueLoggerMaster.h>
 #include <GCF/TM/GCF_Control.h>
 

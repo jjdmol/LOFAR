@@ -22,6 +22,8 @@
 //  $Id$
 //
 
+#include <lofar_config.h>
+
 #include "Ping.h"
 #include "Echo_Protocol.ph"
 #include <Common/lofar_iostream.h>
