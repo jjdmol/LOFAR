@@ -1,3 +1,5 @@
+#include <lofar_config.h>
+
 #include "Application2.h"
 #include "Defines.h"
 #include <GCF/GCF_PVInteger.h>

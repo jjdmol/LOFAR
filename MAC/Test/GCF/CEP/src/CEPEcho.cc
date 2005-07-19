@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <DH_EchoPing.h>
 #include <Transport/TH_Socket.h>
+#include <Transport/CSConnection.h>
 
 namespace LOFAR
 {
@@ -32,21 +35,19 @@ namespace LOFAR
 
 void echo ()
 {
-  DH_EchoPing DH_Echo("echo");
-  DH_EchoPing DH_Ping("ping");
-  DH_Ping.setID(1);
-  DH_Echo.setID(2);
-  TH_Socket proto("localhost", "", 8923, false);
-  TH_Socket proto2("", "localhost", 8923, true);
-  DH_Ping.connectBidirectional (DH_Echo, proto, proto2, true);
+  DH_EchoPing DH_Echo;
   DH_Echo.init();
+  TH_Socket proto("localhost", 8923, false);
+  proto.init();
+  CSConnection readConn("read",  0, &DH_Echo, &proto, false);
+  CSConnection writeConn("write", &DH_Echo, 0, &proto, false);
 
   while(1)
   {
-    DH_Echo.read();
+    readConn.read();
     
     fprintf(stderr, "PING received (seqnr=%d)\n", DH_Echo.getSeqNr());
-    DH_Echo.write();
+    writeConn.write();
   }
 }
   } // namespace Test

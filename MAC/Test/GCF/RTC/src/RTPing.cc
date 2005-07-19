@@ -22,6 +22,8 @@
 //  $Id$
 //
 
+#include <lofar_config.h>
+
 #include "RTPing.h"
 #include "RTDefines.h"
 #include <GCF/GCF_PVInteger.h>

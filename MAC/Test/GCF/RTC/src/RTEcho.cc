@@ -21,6 +21,8 @@
 //
 //  $Id$
 
+#include <lofar_config.h>
+
 #include "RTEcho.h"
 #include "Echo_Protocol.ph"
 #include <GCF/CmdLine.h>
