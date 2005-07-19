@@ -54,7 +54,7 @@ Subset a.b. contains:
 [time3],[15 hour]
 
 Trying to read a non-existing key
-DEBUG [tParameterSet@lofar17]LCS.ACC.APS - Told you the key didn't exists.
+Told you the key didn't exist.
 
 Finally write the parameterset to 'newset.out_param'
 
