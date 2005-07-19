@@ -78,10 +78,10 @@ namespace LOFAR {
       rank = "master";
     }
     if (theirReplicator==0) {
-      string envName = "/tmp/" + userName + "." + rank + ".BBS3.ParmDB";
+      itsBDBHomeName = "/tmp/" + userName + "." + rank + ".BBS3.ParmDB";
       
-      mkdir(envName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
-      theirReplicator = new BDBReplicator(envName, 
+      mkdir(itsBDBHomeName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
+      theirReplicator = new BDBReplicator(itsBDBHomeName, 
 					  hostName,
 					  port,
 					  masterHostName,
@@ -121,7 +121,10 @@ namespace LOFAR {
     theirReplicator->startReplication();
     LOG_TRACE_FLOW("replication started");
     itsDbEnv = theirReplicator->getDbEnv();
-    LOG_TRACE_FLOW_STR("environment: "<<itsDbEnv);
+    DbTxn* myTxn = 0;
+    int ret = itsDbEnv->txn_begin(NULL, &myTxn, 0);
+    LOG_TRACE_FLOW_STR("environment: "<<itsDbEnv<<" transaction: "<<myTxn);
+    ASSERTSTR(ret == 0, "BDBRepl no transaction while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
     itsDb = new Db(itsDbEnv, DB_CXX_NO_EXCEPTIONS);
 
     u_int32_t oFlags;
@@ -133,20 +136,21 @@ namespace LOFAR {
     itsDb->set_flags(DB_DUPSORT);
     //  if (itsDb->open(transid, filename, database, dbtype, flags, mode) !=0) {
     LOG_TRACE_FLOW_STR("opening replicated database "<<itsBDBTableName);
-    int ret = 1;
+#if 1
+    ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
+    ASSERTSTR( ret == 0, "BDBRepl while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
+#else
+    ret = 1;
     while (ret != 0){
       //ret = itsDb->open(NULL, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
-      DbTxn* myTxn = 0;
-      itsDbEnv->txn_begin(NULL, &myTxn, 0);
       ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
       if (ret != 0 ) {
 	itsDb->close(0);
-	char *homeName;
-	itsDbEnv->get_home((const char**)&homeName);
-	cerr<<"BDBRepl while opening database "<<itsBDBTableName<<" in "<<homeName<<": "<< itsDbEnv->strerror(ret)<<endl;
+	cerr<<"BDBRepl while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret)<<endl;
       }
-      myTxn->commit(0);
     }
+#endif
+    myTxn->commit(0);
 
     LOG_TRACE_STAT("connected to database");
   }
