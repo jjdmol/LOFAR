@@ -28,6 +28,7 @@
 #include <MNS/MeqMatrixRep.h>
 #include <Common/lofar_complex.h>
 #include <Common/lofar_stack.h>
+using std::deque;
 
 class MeqMatrixComplexArr : public MeqMatrixRep
 {

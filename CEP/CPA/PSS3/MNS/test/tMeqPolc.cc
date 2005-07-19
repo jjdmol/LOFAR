@@ -28,6 +28,7 @@
 #include <Common/Debug.h>
 
 using namespace casa;
+using std::cout;
 
 
 bool compare(const MeqMatrix& m1, const MeqMatrix& m2)

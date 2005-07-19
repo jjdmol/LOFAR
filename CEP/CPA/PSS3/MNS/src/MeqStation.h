@@ -26,6 +26,7 @@
 //# Includes
 #include <MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
+using std::string;
 
 // Class holding the ITRF position expressions of a station.
 

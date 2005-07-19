@@ -27,6 +27,7 @@
 #include <MNS/MeqDomain.h>
 #include <MNS/MeqMatrix.h>
 #include <Common/lofar_vector.h>
+using std::vector;
 
 //# Forward declarations
 class MeqRequest;

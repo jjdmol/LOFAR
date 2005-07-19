@@ -28,6 +28,8 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
 
+using std::vector;
+
 // This class represents a result of a domain for which an expression
 // has been evaluated.
 

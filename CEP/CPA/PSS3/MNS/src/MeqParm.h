@@ -28,6 +28,8 @@
 #include <MNS/MeqResult.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+using std::string;
+using std::vector;
 
 //# Forward declarations
 class MeqDomain;

@@ -26,6 +26,7 @@
 //# Includes
 #include <MNS/MeqExpr.h>
 #include <Common/lofar_vector.h>
+using std::vector;
 
 //# Forward declarations
 class MeqStatSources;
