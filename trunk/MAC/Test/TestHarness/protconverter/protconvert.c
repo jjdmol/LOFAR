@@ -42,7 +42,7 @@
 #include <ctype.h>
 #include "GCF_Protocols.h"
 
-#define VERSION "00.2.2"
+#define VERSION "00.2.3"
 #define OUTFILE_EXT ".tmp"
 
 FILE    *pcReadLofarProtFile;   /* filepointer voor inputfile */
@@ -56,6 +56,7 @@ void  ReadInputFile(FILE *pcFile);
 void  DoConversion(unsigned int uiProtId);
 char  TestForDirection(char *pcStartOfLine);
 unsigned int SearchIdAndCopyLines(unsigned int uiProtId);
+void  PrintMessageHeader(char* cInternalLine, unsigned int uiSignalDirection, unsigned int uiProtocolId, int iEventsCounted);
 
 int main( int argc, char *argv[] )
 {
@@ -102,7 +103,7 @@ void DoConversion(unsigned int uiProtId)
 {
   char  *pcFinder = NULL;
   char  cInputLine[0xFF];
-  char  cInternalLine[0x30];
+  char  cInternalLine[0x60];
   int   iEventsCounted = 0x00;
   unsigned int uiSignalDirection = 0x00;
   unsigned int uiSignalHeader = 0x00;
@@ -137,9 +138,7 @@ void DoConversion(unsigned int uiProtId)
           {
             *pcFinder = '\0';
             uiSignalDirection |= F_IN;
-            uiSignalDirection <<= 14;
-            uiSignalHeader = uiSignalDirection | uiProtocolId | iEventsCounted;
-            sprintf (cInternalLine, "SigNr = 0x%4X;\n", uiSignalHeader);
+            PrintMessageHeader(cInternalLine,uiSignalDirection,uiProtocolId,iEventsCounted);
             strcat(cInputLine, cInternalLine); 
             break;
           }
@@ -147,9 +146,7 @@ void DoConversion(unsigned int uiProtId)
           {
             *pcFinder = '\0';
             uiSignalDirection |= F_OUT;
-            uiSignalDirection <<= 14;
-            uiSignalHeader = uiSignalDirection | uiProtocolId | iEventsCounted;
-            sprintf (cInternalLine, "SigNr = 0x%4X;\n", uiSignalHeader);
+            PrintMessageHeader(cInternalLine,uiSignalDirection,uiProtocolId,iEventsCounted);
             strcat(cInputLine, cInternalLine); 
             break;
           }
@@ -157,9 +154,7 @@ void DoConversion(unsigned int uiProtId)
           {
             *pcFinder = '\0';
             uiSignalDirection |= F_INOUT;
-            uiSignalDirection <<= 14;
-            uiSignalHeader = uiSignalDirection | uiProtocolId | iEventsCounted;
-            sprintf (cInternalLine, "SigNr = 0x%4X;\n", uiSignalHeader);
+            PrintMessageHeader(cInternalLine,uiSignalDirection,uiProtocolId,iEventsCounted);
             strcat(cInputLine, cInternalLine); 
             break;
           }
@@ -287,4 +282,11 @@ FILE *OpenFile(char *pcFileName, char ucRW)
 void CloseFile(FILE *pcFile)
 {
   fclose(pcFile);
+}
+
+void PrintMessageHeader(char* cInternalLine, unsigned int uiSignalDirection, unsigned int uiProtocolId, int iEventsCounted)
+{
+  uiSignalDirection <<= 14;
+  unsigned int uiSignalHeader = uiSignalDirection | uiProtocolId | iEventsCounted;
+  sprintf (cInternalLine, "SigNr = 0x%02X%02X;\n", (uiSignalHeader&0xFF),(uiSignalHeader>>8));
 }
