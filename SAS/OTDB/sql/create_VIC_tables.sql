@@ -148,6 +148,7 @@ CREATE TABLE VIChierarchy (
 	name		VARCHAR(40)		NOT NULL,
 	index		INT2			NOT NULL DEFAULT 0,
 	leaf		BOOLEAN			DEFAULT TRUE,
+	value		TEXT,			-- empty for nodes, filled for params
 
 	CONSTRAINT	Vparam_uniq_in_tree	UNIQUE(treeID, nodeID)
 ) WITHOUT OIDS;

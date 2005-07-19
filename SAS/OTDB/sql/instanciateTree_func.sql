@@ -45,14 +45,14 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4)
 	BEGIN
 perform logmsg(\'VHparams:\' || $1 || \',\' || $2 || \',\' || $3 );
 	  FOR vParam IN 
-		SELECT	originID, name
+		SELECT	originID, name, limits
 		FROM 	VICtemplate
 		WHERE	parentID = $1
 		AND		leaf = TRUE
 	  LOOP
 		INSERT 
-		INTO 	VIChierarchy(treeID, parentID, paramrefID, name)
-	    VALUES 	($2, $3, vParam.originID, vParam.name);
+		INTO 	VIChierarchy(treeID, parentID, paramrefID, name, value)
+	    VALUES 	($2, $3, vParam.originID, vParam.name, vParam.limits);
 		-- note: nodeId, index and leaf are defaulted.
 	  END LOOP;
 	  RETURN;
@@ -83,10 +83,10 @@ perform logmsg(\'VHleaf:\' || $1 || \',\' || $2 || \',\' || $3 || \',\' || $4);
 	  SELECT originID, name
 	  INTO	 vNode
 	  FROM	 VICtemplate
-	  WHERE	 nodeID = $1
-	  AND	 index = 0;
+	  WHERE	 nodeID = $1;
 	  IF NOT FOUND THEN
 		RAISE EXCEPTION \'node % with index 0 does not exist\', $1;
+		RETURN 0;
 	  END IF;
 
 	  vNewNodeID := NEXTVAL(\'VIChierarchID\');
@@ -123,9 +123,9 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4)
 	DECLARE
 	  vNode				RECORD;
 	  vVTnode			RECORD;
-	  vIndex			INT2;
 	  vIndexCounter		INT2;
 	  vNewNodeID		VIChierarchy.nodeID%TYPE;
+	  vNodeID			VIChierarchy.nodeID%TYPE;
 	  vDummy			VIChierarchy.nodeID%TYPE;
 
 	BEGIN
@@ -137,24 +137,28 @@ perform logmsg(\'VHsubtree:\' || $1 || \',\' || $2 || \',\' || $3 );
 	  WHERE	 nodeID = $1;
 	  
 	  -- loop through nr of instances
+	  -- check each instance if is was specialized.
 	  FOR vIndexCounter IN 1 .. vNode.instances LOOP
-		SELECT index
-		INTO	vIndex
+		SELECT  nodeID
+		INTO	vNodeID
 		FROM	VICtemplate
-		WHERE	nodeID = $1
-		AND		index = vIndex;
+		WHERE	parentID = vNode.parentID
+		AND		name = vNode.name
+		AND		index = vIndexCounter;
 		IF NOT FOUND THEN
-		  vIndex := vIndexCounter;
+		  -- no specialisation, use master node (index=0)
+		  vNodeID := $1;
 		END IF;
 
 		-- instanciate node itself
-	    vNewNodeID := instanciateVHleafNode($1, $2, $3, vIndex);
+	    vNewNodeID := instanciateVHleafNode(vNodeID, $2, $3, vIndexCounter::int2);
 
 		-- dive into the childen
 		FOR vVTnode IN 
 		  SELECT nodeID 
 		  FROM	 VICtemplate
-		  WHERE	 parentID = $1
+		  WHERE	 parentID = vNodeID
+		  AND	 index = 0
 		  AND	 leaf = FALSE
 		LOOP
 		  vDummy := instanciateVHsubTree(vVTnode.nodeID, $2, vNewNodeID);
