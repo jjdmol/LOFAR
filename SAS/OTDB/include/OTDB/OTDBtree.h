@@ -1,4 +1,4 @@
-//#  OTDBtree.h: For retrieving and modifying OTDB trees.
+//#  OTDBtree.h: Structure containing the metadata of a tree.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,12 +24,16 @@
 #define LOFAR_OTDB_OTDBTREE_H
 
 // \file OTDBtree.h
-// For retrieving and modifying OTDB trees.
+// Structure containing the metadata of a tree.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <OTDB/OTDBconnection.h>
+#include <OTDB/OTDBconstants.h>
 #include <OTDB/OTDBtypes.h>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <pqxx/pqxx>
+
+using namespace boost::posix_time;
 
 namespace LOFAR {
   namespace OTDB {
@@ -39,79 +43,47 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-//# class ...;
+class OTDBconnection;
 
-// For retrieving and modifying OTDB trees.
-// ...
-class OTDBtree
-{
+
+// A OTDBtree structure contains the major info of a tree in the database.
+// The the last few fields will be empty for PIC trees.
+class OTDBtree {
 public:
-	// Connect the PIC interface to an OTDB database.
-	OTDBtree (OTDBconnection*	aConn,
-		 	  treeIDType		aTreeID);
+	OTDBtree() : itsTreeID(0) {};
+	~OTDBtree() {};
 
-	~OTDBtree();
+	treeIDType		treeID() const 		{ return (itsTreeID); }
+	treeClassifType	classification; // experimental / operational / etc.
+	string			creator;
+	ptime			creationDate;	
+	treeType		type;			// template / schedule / etc.
+	// -- VIC only --
+	treeIDType		originalTree;
+	string			campaign;
+	ptime			starttime;
+	ptime			stoptime;
 
-	// Once an treeID is chosen, the user can retrieve the definition of that
-	// tree. A nodeID may be passed to get a sub-tree in stead of the full
-	// PIC tree.
-	vector<OTDBnode> getItemList (nodeIDType	topNode,
-								  uint32		depth);
+	// Show treeinfo
+	ostream& print (ostream& os) const;
 
-	// PVSS will continuously add value-changes to the offline PIC.
-	// There two ways PVSS can do this.
-	// The function returns false if the PIC node can not be found.
-	bool	addKVT (const string&	key,
-					const string&	value,
-					ptime			time);
-	bool	addKVT (const OTDBvalue&		aKVT);
-	// Note: This form will probably be used by SAS and OTB when committing
-	// a list of modified node.
-	bool 	addKVTlist (vector<OTDBvalue>	theValues);
-
-	//# SHM queries
-	// With searchInPeriod a list of all valuechanges in the OTDB tree can
-	// be retrieved from the database.
-	// By chosing the topItem right one node or a sub tree of the whole tree
-	// (you probably don't want this!) can be retrieved.
-	// When the endDate is not specified all value changes from beginDate
-	// till 'now' are retrieved, otherwise the selection is limited to
-	// [beginDate..endDate>.
-	vector<OTDBvalue> searchInPeriod (nodeIDType		topNode,
-									  uint32			depth,
-									  const ptime&		beginDate,
-									  const ptime&		endDate = ptime());
-	//# SAS queries
-	// For scheduling the VIC tree on the OTDB tree SAS must know what
-	// resources exist in the OTDB tree. This list can be retrieved with
-	// this function.
-	// TBW: Is this realy what SAS needs???
-	vector<OTDBvalue> getSchedulableItems (nodeIDType	topNode = 0);
-
-	// Whenever an error occurs in one the OTDB functions the message can
-	// be retrieved with this function.
-	string	errorMsg();
+	// Friends may change the data references keys.
+	friend	class OTDBconnection;
 
 private:
-	// Copying is not allowed
-	OTDBtree();
-	OTDBtree(const OTDBtree&	that);
-	OTDBtree& operator=(const OTDBtree& that);
-
-	//# --- Datamembers ---
-	OTDBconnection*		itsConn;
-	treeIDType			itsTreeID;
-	string				itsError;
+//# Prevent changing the database keys
+	OTDBtree(treeIDType		aTreeID) : itsTreeID(aTreeID) {};
+	OTDBtree(const pqxx::result::tuple&	row);
+	treeIDType		itsTreeID;
 };
 
-//# --- Inline functions ---
-inline bool	OTDBtree::addKVT (const OTDBvalue&		aKVT)
+//#
+//# operator<<
+//#
+inline ostream& operator<< (ostream&			os,
+							const OTDBtree		aOTDBtree)
 {
-	return (addKVT(aKVT.name, aKVT.value, aKVT.time));
-}
-
-inline string OTDBtree::errorMsg() {
-	return (itsError);
+	return (aOTDBtree.print(os));
 }
 
 

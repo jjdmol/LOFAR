@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <fstream>
 #include <OTDB/PICadmin.h>
+#include <OTDB/OTDBnode.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -170,5 +171,47 @@ bool	PICadmin::classify (treeIDType			aTreeID,
 	}
 }
 
+//
+// getItemList(treeID, topNode, depth): vector<OTDBnode>
+//
+vector<OTDBnode> PICadmin::getItemList (treeIDType	aTreeID,
+										   nodeIDType	topNode,
+								  		   uint32		depth)
+{
+	vector<OTDBnode>	resultVec;
+
+	// loop through the levels and construct the vector
+	for (uint32 queryDepth = 1; queryDepth <= depth; ++queryDepth) {
+		// construct a query that calls a stored procedure.
+		string	query("SELECT * from getPICitemList('" +
+					toString(aTreeID) + "','" +
+					toString(topNode) + "','" +
+					toString(queryDepth) + "')");
+
+		work	xAction(*(itsConn->getConn()), "getPICitemList");
+		try {
+			result res = xAction.exec(query);
+
+			// show how many records found
+			result::size_type	nrRecords = res.size();
+			LOG_DEBUG_STR (nrRecords << " records in itemList(" <<
+							topNode << ", " << queryDepth << ")");
+			if (nrRecords == 0) {
+				break;
+			}
+
+			// copy information to output vector
+			for (result::size_type	i = 0; i < nrRecords; ++i) {
+				resultVec.push_back(OTDBnode(aTreeID, res[i]));
+			}
+		}
+		catch (std::exception&	ex) {
+			itsError = string("Exception during retrieval of getPICitemList:")
+					 + ex.what();
+		}
+	}	// for
+
+	return (resultVec);
+}
   } // namespace OTDB
 } // namespace LOFAR

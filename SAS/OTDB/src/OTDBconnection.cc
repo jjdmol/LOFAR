@@ -56,6 +56,7 @@ OTDBconnection::~OTDBconnection ()
 {
 	if (itsConnection) {
 		delete itsConnection;
+		itsConnection = 0;
 	}
 }
 
@@ -108,18 +109,54 @@ bool OTDBconnection::connect()
 	return (true);
 }
 
+//
+// getTreeInfo (treeID)
+//
+// Get info of one specific tree
+//
+OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID)
+{
+	OTDBtree 	empty;
+
+	if (!itsIsConnected && !connect()) {
+		return (empty); 
+	}
+
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "getTreeInfo");
+		string	query("SELECT * from getTreeInfo('" +
+						toString(aTreeID) + "')");
+
+		// execute query
+		result	res = xAction.exec(query);
+
+		// any records found?
+		if (res.empty()) {
+			return (empty); 
+		}
+
+		return (resultToTreeInfo (res[0]));
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of TreeInfo:")
+					 + ex.what();
+	}
+
+	return (empty); 
+}
 
 //
-// getTreeList(treeType, classification): vector<treeInfo>
+// getTreeList(treeType, classification): vector<OTDBtree>
 //
 // To get a list of the OTDB trees available in the database.
 //
-vector<treeInfo> OTDBconnection::getTreeList(
+vector<OTDBtree> OTDBconnection::getTreeList(
 					treeType	 		aTreeType,
 					treeClassifType		aClassification)
 {
 	if (!itsIsConnected && !connect()) {
-		vector<treeInfo> 	empty;
+		vector<OTDBtree> 	empty;
 		return (empty); 
 	}
 
@@ -137,31 +174,11 @@ vector<treeInfo> OTDBconnection::getTreeList(
 		result::size_type	nrRecords = res.size();
 		LOG_DEBUG_STR (nrRecords << " records in treeList(" 
 						<< aTreeType << ", " << aClassification << ")");
-
+	
 		// copy information to output vector
-		vector<treeInfo>	resultVec(nrRecords);
+		vector<OTDBtree>	resultVec;
 		for (result::size_type i = 0; i < nrRecords; ++i) {
-			res[i]["id"].to(resultVec[i].ID);
-			res[i]["classification"].to(resultVec[i].classification);
-			res[i]["creator"].to(resultVec[i].creator);
-			string crea;
-			res[i]["creationdate"].to(crea);
-			resultVec[i].creationDate = time_from_string(crea);
-			res[i]["type"].to(resultVec[i].type);
-
-			// next values are optional
-			res[i]["originaltree"].to(resultVec[i].originalTree);
-			res[i]["campaign"].to(resultVec[i].campaign);
-			string start;
-			res[i]["starttime"].to(start);
-			if (start.length() > 0) {
-				resultVec[i].starttime = time_from_string(start);
-			}
-			string stop;
-			res[i]["stoptime"].to(stop);
-			if (stop.length() > 0) {
-				resultVec[i].stoptime = time_from_string(stop);
-			}
+			resultVec.push_back(resultToTreeInfo(res[i]));
 		}
 
 		return (resultVec);
@@ -171,7 +188,7 @@ vector<treeInfo> OTDBconnection::getTreeList(
 					 + ex.what();
 	}
 
-	vector<treeInfo> 	empty;
+	vector<OTDBtree> 	empty;
 	return (empty);
 }
 
@@ -187,6 +204,55 @@ ostream& OTDBconnection::print (ostream& os) const
 		os << "NOT ";
 	}
 	return (os << "connected.");
+}
+
+// -------------------- private functions --------------------
+//
+// resultToTreeInfo(result::tuple)
+//
+// Converts a result tuple to a OTDBtree structure
+//
+OTDBtree OTDBconnection::resultToTreeInfo(const result::tuple&		row) 
+{
+	OTDBtree	empty;
+
+	try {
+		// construct OTDBtree class with right ID
+		// Note: names refer to SQL OTDBtree type
+		treeIDType 	treeID;
+		row["treeid"].to(treeID);
+		OTDBtree		tInfo(treeID);
+
+		// fill in rest of the fields
+		row["classification"].to(tInfo.classification);
+		row["creator"].to(tInfo.creator);
+		string crea;
+		row["creationDate"].to(crea);
+		tInfo.creationDate = time_from_string(crea);
+		row["type"].to(tInfo.type);
+
+		// next values are optional
+		row["originalTree"].to(tInfo.originalTree);
+		row["campaign"].to(tInfo.campaign);
+		string start;
+		row["starttime"].to(start);
+		if (start.length() > 0) {
+			tInfo.starttime = time_from_string(start);
+		}
+		string stop;
+		row["stoptime"].to(stop);
+		if (stop.length() > 0) {
+			tInfo.stoptime = time_from_string(stop);
+		}
+
+		return (tInfo);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during conversion of TreeInfo:")
+					 + ex.what();
+	}
+
+	return (empty);
 }
 
   } // namespace OTDB

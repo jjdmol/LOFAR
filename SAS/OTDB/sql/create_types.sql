@@ -26,12 +26,13 @@
 -- Creates the general types equal to the types in OTDBtypes.h
 --
 
-DROP TYPE	treeInfo	CASCADE;
-DROP TYPE	OTDBnode	CASCADE;
-DROP TYPE	OTDBvalue	CASCADE;
+DROP TYPE	treeInfo		CASCADE;
+DROP TYPE	OTDBnode		CASCADE;
+DROP TYPE	OTDBparamDef	CASCADE;
+DROP TYPE	OTDBvalue		CASCADE;
 
 CREATE TYPE treeInfo AS (
-	ID				INT4,			-- OTDBtree.treeID%TYPE,
+	treeID			INT4,			-- OTDBtree.treeID%TYPE,
 	classification	INT2,			-- classification.ID%TYPE,
 	creator			VARCHAR(20),	-- OTDBuser.username%TYPE,
 	creationDate	timestamp(0),
@@ -43,19 +44,48 @@ CREATE TYPE treeInfo AS (
 );
 
 CREATE TYPE OTDBnode AS (
-	paramID			INT4,
+	nodeID			INT4,
 	parentID		INT4,
+	paramDefID		INT4,
 	name			VARCHAR(40),
 	index			SMALLINT,
 	leaf			BOOLEAN,
+	instances		INT2,			-- only filled for VIC template
+	limits			TEXT,			-- only filled for VIC template
+	description		TEXT			-- only filled for VIC template
+);
+
+-- make constructor for OTDBnode
+CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(40),INT2,BOOLEAN,INT2,TEXT,TEXT)
+  RETURNS OTDBnode AS '
+	DECLARE
+	  vResult	RECORD;
+
+	BEGIN
+	  SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9 INTO vResult;
+	  RETURN vResult;
+	END;
+' LANGUAGE plpgsql;
+
+
+CREATE TYPE OTDBparamDef AS (
+	paramID			INT4,
+	nodeID			INT4,
+	name			VARCHAR(40),
+	index			SMALLINT,
 	par_type		INT2,			-- param_type.ID%TYPE,
-	unit			INT2,
 --	unit			VARCHAR(4),		-- unit.name%TYPE,
+	unit			INT2,
+	pruning			INT2,
+	valmoment		INT2,
+	RTmod			BOOLEAN,
+	limits			TEXT,
 	description		TEXT
 );
 
 
 CREATE TYPE OTDBvalue AS (
+	paramID			INT4,
 	name			VARCHAR(120),
 	value			TEXT,
 	time			timestamp(0)

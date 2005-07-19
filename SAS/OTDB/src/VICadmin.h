@@ -39,7 +39,7 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-//# class ...;
+class OTDBnode;
 
 
 // The VICadmin class is the interface to the VIC trees. The VIC trees 
@@ -58,7 +58,7 @@ public:
 
 	// Before any components can be loaded into a component tree a new
 	// (empty) tree must be created.
-	treeIDType createNewTree ();
+//	treeIDType createNewTree ();
 
 	// a VIC tree is build up from single components. The definition of a
 	// component can loaded from a file with this call
@@ -69,6 +69,29 @@ public:
 	// tree only the structure of the tree is created, there is no replication
 	// of nodes on the same level.
 	treeIDType buildFoldedTree (treeIDType	baseTree);
+
+	// Get a single node from the VIC template tree
+	OTDBnode getNode (treeIDType	aTreeID,
+					  nodeIDType	aNodeID);
+
+	// Get a number of levels of children.
+	vector<OTDBnode> getItemList (treeIDType	aTreeID,
+								  nodeIDType	topNode,
+								  uint32		depth);
+
+	// Duplicates the given node (and its parameters and children)
+	// in the template database. The duplicate gets the new index.
+	nodeIDType	dupNode (treeIDType		aTreeID,
+						 nodeIDType		orgNodeID,
+					 	 int16			newIndex);
+
+	// Updates the (vector of) OTDBnodes to the database.
+	bool	saveNode    (OTDBnode&			aNode);
+	bool	saveNodeList(vector<OTDBnode>&	aNodeList);
+
+	// Updates the (vector of) OTDBnodes to the database.
+	bool	deleteNode    (OTDBnode&			aNode);
+	bool	deleteNodeList(vector<OTDBnode>&	aNodeList);
 
 	// From a foldedTree a fully instanciated tree can be build.
 	treeIDType instanciateTree (treeIDType	baseTree);

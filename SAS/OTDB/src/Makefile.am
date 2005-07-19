@@ -1,7 +1,11 @@
 INSTHDRS			= OTDBconnection.h	\
 					  OTDBconstants.h	\
-					  OTDBtree.h	\
 					  OTDBtypes.h	\
+					  OTDBtree.h	\
+					  OTDBnode.h	\
+					  OTDBvalue.h	\
+					  OTDBparam.h	\
+					  OTDBinfo.h	\
 					  PICadmin.h	\
 					  VICadmin.h	\
 					  OTDBaction.h	\
@@ -24,6 +28,10 @@ lib_LTLIBRARIES			= libotdb.la
 libotdb_la_SOURCES 		= $(DOCHDRS) \
 							OTDBconnection.cc	\
 							OTDBtree.cc	\
+							OTDBnode.cc	\
+							OTDBvalue.cc	\
+							OTDBparam.cc	\
+							OTDBinfo.cc	\
 							PICadmin.cc	\
 							VICadmin.cc		\
 							OTDBaction.cc	\

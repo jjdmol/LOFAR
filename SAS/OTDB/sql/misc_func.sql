@@ -23,9 +23,9 @@
 --
 
 --
--- isAuthorized (authToken, function, value)
+-- isAuthorized (authToken, treeID, function, value)
 --
--- checks if the fucntion may be executed with the given value.
+-- checks if the function may be executed with the given value.
 --
 -- Authorisation: n/a
 --
@@ -33,9 +33,36 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT2, INT4)
+CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT4, INT2, INT4)
   RETURNS BOOLEAN AS '
+	DECLARE
+		vTreeType		OTDBtree.treetype%TYPE;
+		vCallerID		INT2 := 0;
+
 	BEGIN
+		-- get treetype and owner for authorisation
+		IF $2 != 0 THEN
+		  SELECT	treetype
+		  INTO	vTreeType
+		  FROM	OTDBtree
+		  WHERE	treeID = $2;
+		  IF NOT FOUND THEN
+		    RAISE EXCEPTION \'Tree % does not exist!\', $2;
+		    RETURN FALSE;
+		  END IF;
+		END IF;
+
+		-- Resolve creator and check it.
+		SELECT whoIs($1)
+		INTO   vCallerID;
+		IF NOT FOUND OR vCallerID = 0 THEN
+			RAISE EXCEPTION \'Illegal authorisation token\';
+			RETURN FALSE;
+		END IF;
+
+		-- TODO: search auth tables 
+		-- SELECT .. vCallerID, vTreeType, $3, $4
+
 		RETURN TRUE;		-- for now everthing is allowed
 	END;
 ' LANGUAGE plpgsql;

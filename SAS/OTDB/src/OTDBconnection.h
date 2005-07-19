@@ -28,8 +28,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <pqxx/pqxx>
-#include <OTDB/OTDBtypes.h>
+#include <OTDB/OTDBtree.h>
 
 using namespace pqxx;
 
@@ -62,8 +61,11 @@ public:
 	// To connect or reconnect in case the connection was lost
 	bool connect();
 
+	// get OTDBtree of one specific tree
+	OTDBtree	getTreeInfo (treeIDType		atreeID);
+
 	// To get a list of all OTDB trees available in the database.
-	vector<treeInfo> getTreeList(treeType	 	 aTreeType,
+	vector<OTDBtree> getTreeList(treeType	 	 aTreeType,
 								 treeClassifType aClassification=TCoperational);
 
 	// Show connection characteristics.
@@ -78,6 +80,7 @@ private:
 	// Copying is not allowed
 	OTDBconnection(const OTDBconnection&	that);
 	OTDBconnection& operator=(const OTDBconnection& that);
+	OTDBtree	resultToTreeInfo(const result::tuple&	row);
 
 	//# --- Datamembers --- 
 	string		itsUser;

@@ -36,17 +36,16 @@
 CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT4)
   RETURNS INT4 AS '
 	DECLARE
+		vFunction		INT2 := 1;
 		vNewTreeID		OTDBtree.treeID%TYPE;
 		vCreatorID		OTDBtree.creator%TYPE;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
 
 	BEGIN
-		-- check authorisation
+		-- check authorisation(authToken, treeID, func, treetype)
 		vIsAuth := FALSE;
-		-- TBW: function number
-		-- authToken, func, treetype
-		SELECT isAuthorized(vAuthToken, 1::int2, $4::int4) 
+		SELECT isAuthorized(vAuthToken, $2, vFunction, $4::int4) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
 			RETURN 0;
