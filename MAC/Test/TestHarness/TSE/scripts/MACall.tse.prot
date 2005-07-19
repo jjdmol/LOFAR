@@ -1,4 +1,3 @@
-
 //
 //  MACall.tseprot: All mac Protocols for TSE
 //
@@ -89,7 +88,7 @@ t_B16                 = {  16 }
 
 //    The Lofar types:
 
-t_Double              =  {   4 }
+t_Double              =  {   8 }
 t_Int                 =  {   4 }
 t_uInt                =  {   4 }
 t_Long                =  {   4 }
@@ -102,6 +101,8 @@ int16									=  {   2 }
 uint16								=  {   2 }
 int32									=  {   4 }
 uint32								=  {   4 }
+int                   =  {   4 }
+time_t                =  {   4 }
 
 t_dontknow            =  { 65535-, ASCII }
 
@@ -173,6 +174,11 @@ TSDResult =
 
 
 //
+//  ABS_Protocol.tseprot: Protocol for the Beam Server
+//
+t_SubbandsArray            =  {  512 }
+t_AngleArray               =  {   16 }
+//
 //  RSP_Protocol.tseprot: Protocol for the RSP driver interface
 //
 
@@ -205,6 +211,18 @@ TSASResult =
   0x0000000F : "SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED"
 }
   
+//
+//  SB_Protocol.tseprot: Protocol for the Service Broker deamon
+//
+TSBResult  =
+{
+  4,0x00000000,0xFFFFFFFF,ENUM,
+  0x00000000 : "SB_NO_ERROR", 
+  0x00000001 : "SB_UNKNOWN_ERROR",
+  0x00000002 : "SB_SERVICE_ALREADY_EXIST",
+  0x00000003 : "SB_NO_FREE_PORTNR",
+  0x00000004 : "SB_UNKNOWN_SERVICE"
+}
   
 //
 //  PA_Protocol.tseprot: Protocol for the PA server
@@ -226,6 +244,14 @@ TPAResult =
   0x0000000A : "PA_APC_NOT_EXISTS",
   0x0000000B : "PA_LINK_TIME_OUT",
   0x0000000C : "PA_SERVER_GONE"
+}
+
+TPSCategory = 
+{
+  4,0x00000000,0xFFFFFFFF,ENUM,
+  0x00000000 : "PS_CAT_TEMPORARY", 
+  0x00000001 : "PS_CAT_PERMANENT", 
+  0x00000002 : "PS_CAT_PERM_AUTOLOAD"
 }
 
 //
@@ -276,6 +302,37 @@ TEchoRoutingEnum =
   0x00000003 : "ECHOROUTING_ENUM_THIRD"
 }
 
+//
+//  THPVSSBridge_Protocol.tseprot: Protocol for the THPVSSBridge server
+//
+
+TGCFResult =
+{
+  4,0x00000000,0xFFFFFFFF,ENUM,
+  0x00000000 : "GCF_NO_ERROR", 
+  0x00000001 : "GCF_UNKNOWN_ERROR",
+  0x00000002 : "GCF_PML_ERROR", 
+  0x00000003 : "GCF_EXTPS_LOAD_ERROR",
+  0x00000004 : "GCF_PS_CONFIGURE_ERROR",
+  0x00000005 : "GCF_EXTPS_UNLOAD_ERROR",
+  0x00000006 : "GCF_MYPS_ENABLE_ERROR",
+  0x00000007 : "GCF_MYPS_DISABLE_ERROR",
+  0x00000008 : "GCF_VALUESTRING_NOT_VALID",
+  0x00000009 : "GCF_DIFFERENT_TYPES",
+  0x0000000A : "GCF_BUSY",
+  0x0000000B : "GCF_ALREADY_LOADED",
+  0x0000000C : "GCF_NOT_LOADED",
+  0x0000000D : "GCF_PROP_NOT_VALID",
+  0x0000000E : "GCF_PROP_WRONG_TYPE",
+  0x0000000F : "GCF_PROP_NOT_IN_SET",
+  0x00000010 : "GCF_NO_PROPER_DATA",
+  0x00000011 : "GCF_SCOPE_ALREADY_REG",
+  0x00000012 : "GCF_ALREADY_SUBSCRIBED",
+  0x00000013 : "GCF_NOT_SUBSCRIBED",
+  0x00000014 : "GCF_WRONG_STATE",
+  0x00000015 : "GCF_PVSS_ERROR"
+}
+
 
 
 
@@ -286,125 +343,125 @@ TEchoRoutingEnum =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-LOGICALDEVICE_CONNECT =
+F_LOGICALDEVICE_CONNECT =
 {
-  0x4b01,
+  0x014B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   nodeId : t_String [ nrOfChars ]
   
 }
 
-LOGICALDEVICE_CONNECTED =
+F_LOGICALDEVICE_CONNECTED =
 {
-  0x8b02,
+  0x028B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
 }
 
-LOGICALDEVICE_SCHEDULE =
+F_LOGICALDEVICE_SCHEDULE =
 {
-  0x8b03,
+  0x038B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   fileName : t_String [ nrOfChars ]
   
 }
 
-LOGICALDEVICE_SCHEDULED =
+F_LOGICALDEVICE_SCHEDULED =
 {
-  0x4b04,
+  0x044B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
 }
 
-LOGICALDEVICE_CANCELSCHEDULE =
+F_LOGICALDEVICE_CANCELSCHEDULE =
 {
-  0x8b05,
+  0x058B, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
 
-LOGICALDEVICE_SCHEDULECANCELLED =
+F_LOGICALDEVICE_SCHEDULECANCELLED =
 {
-  0x4b06,
+  0x064B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
 }
 
-LOGICALDEVICE_CLAIM =
+F_LOGICALDEVICE_CLAIM =
 {
-  0x8b07,
+  0x078B, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
 
-LOGICALDEVICE_CLAIMED =
+F_LOGICALDEVICE_CLAIMED =
 {
-  0x4b08,
+  0x084B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
 }
 
-LOGICALDEVICE_PREPARE =
+F_LOGICALDEVICE_PREPARE =
 {
-  0x8b09,
+  0x098B, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
 
-LOGICALDEVICE_PREPARED =
+F_LOGICALDEVICE_PREPARED =
 {
-  0x4b0a,
+  0x0A4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
 }
 
-LOGICALDEVICE_RESUME =
+F_LOGICALDEVICE_RESUME =
 {
-  0x8b0b,
+  0x0B8B, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
 
-LOGICALDEVICE_RESUMED =
+F_LOGICALDEVICE_RESUMED =
 {
-  0x4b0c,
+  0x0C4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
 }
 
-LOGICALDEVICE_SUSPEND =
+F_LOGICALDEVICE_SUSPEND =
 {
-  0x8b0d,
+  0x0D8B, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
 
-LOGICALDEVICE_SUSPENDED =
+F_LOGICALDEVICE_SUSPENDED =
 {
-  0x4b0e,
+  0x0E4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
 }
 
-LOGICALDEVICE_RELEASE =
+F_LOGICALDEVICE_RELEASE =
 {
-  0x8b0f,
+  0x0F8B, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
 
-LOGICALDEVICE_RELEASED =
+F_LOGICALDEVICE_RELEASED =
 {
-  0x4b10,
+  0x104B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TLDResult
   
@@ -416,9 +473,9 @@ LOGICALDEVICE_RELEASED =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-STARTDAEMON_SCHEDULE =
+F_STARTDAEMON_SCHEDULE =
 {
-  0x4c01,
+  0x014C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   logicalDeviceType : TLogicalDeviceTypes,
   nrOfChars1 : t_B4,
@@ -428,9 +485,9 @@ STARTDAEMON_SCHEDULE =
   
 }
 
-STARTDAEMON_SCHEDULED =
+F_STARTDAEMON_SCHEDULED =
 {
-  0x8c02,
+  0x028C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TSDResult,
   nrOfChars : t_B4,
@@ -438,18 +495,18 @@ STARTDAEMON_SCHEDULED =
   
 }
 
-STARTDAEMON_DESTROY_LOGICALDEVICE =
+F_STARTDAEMON_DESTROY_LOGICALDEVICE =
 {
-  0x4c03,
+  0x034C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   name : t_String [ nrOfChars ]
   
 }
 
-STARTDAEMON_STOP =
+F_STARTDAEMON_STOP =
 {
-  0x4c04,
+  0x044C, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
@@ -461,80 +518,80 @@ STARTDAEMON_STOP =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-ABS_BEAMALLOC =
+F_ABS_BEAMALLOC =
 {
-  0x5401,
+  0x0154, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   spectral_window : t_Int,
   n_subbands : t_Int,
-  subbands : int[MEPHeader::N_BEAMLETS]
+  subbands : t_SubbandsArray
   
 }
 
-ABS_BEAMALLOC_ACK =
+F_ABS_BEAMALLOC_ACK =
 {
-  0x9402,
+  0x0294, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   handle : t_Int,
   status : t_Int
   
 }
 
-ABS_BEAMFREE =
+F_ABS_BEAMFREE =
 {
-  0x5403,
+  0x0354, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   handle : t_Int
   
 }
 
-ABS_BEAMFREE_ACK =
+F_ABS_BEAMFREE_ACK =
 {
-  0x9404,
+  0x0494, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   handle : t_Int,
   status : t_Int
   
 }
 
-ABS_BEAMPOINTTO =
+F_ABS_BEAMPOINTTO =
 {
-  0x5405,
+  0x0554, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   handle : t_Int,
   time : time_t,
   type : t_Int,
-  angle : double[2]
+  angle : t_AngleArray
   
 }
 
-ABS_WGSETTINGS =
+F_ABS_WGSETTINGS =
 {
-  0x5406,
+  0x0654, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   frequency : t_Double,
-  amplitude : unsigned short
+  amplitude : uint16
   
 }
 
-ABS_WGSETTINGS_ACK =
+F_ABS_WGSETTINGS_ACK =
 {
-  0x9407,
+  0x0794, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int
   
 }
 
-ABS_WGENABLE =
+F_ABS_WGENABLE =
 {
-  0x5408,
+  0x0854, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
 
-ABS_WGDISABLE =
+F_ABS_WGDISABLE =
 {
-  0x5409,
+  0x0954, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
@@ -545,226 +602,16 @@ ABS_WGDISABLE =
 //  EPA_Protocol.tseprot: Protocol for the EPA Demonstrator Board
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
-
-EPA_WRITE =
-{
-  0x5501,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  payload : MEPData
-  
-}
-
-EPA_WRITEACK =
-{
-  0x5502,
-  msgLength : t_B4,
-  hdr : MEPHeader
-  
-}
-
-EPA_WRITEACK_ERROR =
-{
-  0x9503,
-  msgLength : t_B4,
-  hdr : MEPHeader
-  
-}
-
-EPA_READ =
-{
-  0x5504,
-  msgLength : t_B4,
-  hdr : MEPHeader
-  
-}
-
-EPA_READACK =
-{
-  0x5505,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  payload : MEPData
-  
-}
-
-EPA_READACK_ERROR =
-{
-  0x9506,
-  msgLength : t_B4,
-  hdr : MEPHeader
-  
-}
-
-EPA_RSR_STATUS =
-{
-  0x9507,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  board : BoardStatus
-  
-}
-
-EPA_RSR_VERSION =
-{
-  0x9508,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  rsp_version : uint8,
-  bp_version : uint8,
-  ap_version : uint8
-  
-}
-
-EPA_TST_SELFTEST =
-{
-  0xd509,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  test : uint8
-  
-}
-
-EPA_CFG_RESET =
-{
-  0xd50a,
-  msgLength : t_B4,
-  hdr : MEPHeader
-  
-}
-
-EPA_CFG_REPROGRAM =
-{
-  0xd50b,
-  msgLength : t_B4,
-  hdr : MEPHeader
-  
-}
-
-EPA_WG_SETTINGS =
-{
-  0xd50c,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  freq : uint16,
-  phase : uint8,
-  ampl : uint8,
-  nof_samples : uint16,
-  mode : uint8
-  
-}
-
-EPA_WG_WAVE =
-{
-  0xd50d,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  samples : int16[N_WAVE_SAMPLES]
-  
-}
-
-EPA_SS_SELECT =
-{
-  0xd50e,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  ch : uint16[MEPHeader::N_BEAMLETS * MEPHeader::N_POL]
-  
-}
-
-EPA_BF_COEFS =
-{
-  0xd50f,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  coef : int16[N_COEF]
-  
-}
-
-EPA_STATS =
-{
-  0x9510,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  stat : uint32[N_STATS]
-  
-}
-
-EPA_RCU_SETTINGS =
-{
-  0xd511,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  x : uint8,
-  y : uint8
-  
-}
-
-EPA_CRR_SOFTRESET =
-{
-  0xd512,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  trigger : uint8
-  
-}
-
-EPA_CRR_SOFTPPS =
-{
-  0xd513,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  trigger : uint8
-  
-}
-
-EPA_CRB_SOFTRESET =
-{
-  0xd514,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  trigger : uint8
-  
-}
-
-EPA_CRB_SOFTPPS =
-{
-  0xd515,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  trigger : uint8
-  
-}
-
-EPA_CDO_SETTINGS =
-{
-  0xd516,
-  msgLength : t_B4,
-  hdr : MEPHeader,
-  station_id : uint32,
-  configuration_id : uint16,
-  format : uint16,
-  antenna_id : uint16
-  
-}
-
-EPA_TRIGGER_CLOCK =
-{
-  0x9517,
-  msgLength : t_B4,
-  value : uint8
-  
-}
-
+// no support for this protocol yet....
 
 //
 //  RSP_Protocol.tseprot: Protocol for the RSP driver interface
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-RSP_SETWEIGHTS =
+F_RSP_SETWEIGHTS =
 {
-  0x5601,
+  0x0156, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   blpmask : t_bitsetBLP,
@@ -772,18 +619,18 @@ RSP_SETWEIGHTS =
   
 }
 
-RSP_SETWEIGHTSACK =
+F_RSP_SETWEIGHTSACK =
 {
-  0x9602,
+  0x0296, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16
   
 }
 
-RSP_GETWEIGHTS =
+F_RSP_GETWEIGHTS =
 {
-  0x5603,
+  0x0356, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   blpmask : t_bitsetBLP,
@@ -791,9 +638,9 @@ RSP_GETWEIGHTS =
   
 }
 
-RSP_GETWEIGHTSACK =
+F_RSP_GETWEIGHTSACK =
 {
-  0x9604,
+  0x0496, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -801,9 +648,9 @@ RSP_GETWEIGHTSACK =
   
 }
 
-RSP_SETSUBBANDS =
+F_RSP_SETSUBBANDS =
 {
-  0x5605,
+  0x0556, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   blpmask : t_bitsetBLP,
@@ -811,18 +658,18 @@ RSP_SETSUBBANDS =
   
 }
 
-RSP_SETSUBBANDSACK =
+F_RSP_SETSUBBANDSACK =
 {
-  0x9606,
+  0x0696, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16
   
 }
 
-RSP_GETSUBBANDS =
+F_RSP_GETSUBBANDS =
 {
-  0x5607,
+  0x0756, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   blpmask : t_bitsetBLP,
@@ -830,9 +677,9 @@ RSP_GETSUBBANDS =
   
 }
 
-RSP_GETSUBBANDSACK =
+F_RSP_GETSUBBANDSACK =
 {
-  0x9608,
+  0x0896, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -840,9 +687,9 @@ RSP_GETSUBBANDSACK =
   
 }
 
-RSP_SETRCU =
+F_RSP_SETRCU =
 {
-  0x5609,
+  0x0956, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -850,18 +697,18 @@ RSP_SETRCU =
   
 }
 
-RSP_SETRCUACK =
+F_RSP_SETRCUACK =
 {
-  0x960a,
+  0x0A96, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16
   
 }
 
-RSP_GETRCU =
+F_RSP_GETRCU =
 {
-  0x560b,
+  0x0B56, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -869,9 +716,9 @@ RSP_GETRCU =
   
 }
 
-RSP_GETRCUACK =
+F_RSP_GETRCUACK =
 {
-  0x960c,
+  0x0C96, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -879,9 +726,9 @@ RSP_GETRCUACK =
   
 }
 
-RSP_SETWG =
+F_RSP_SETWG =
 {
-  0x560d,
+  0x0D56, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -889,18 +736,18 @@ RSP_SETWG =
   
 }
 
-RSP_SETWGACK =
+F_RSP_SETWGACK =
 {
-  0x960e,
+  0x0E96, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16
   
 }
 
-RSP_GETWG =
+F_RSP_GETWG =
 {
-  0x560f,
+  0x0F56, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -908,9 +755,9 @@ RSP_GETWG =
   
 }
 
-RSP_GETWGACK =
+F_RSP_GETWGACK =
 {
-  0x9610,
+  0x1096, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -918,9 +765,9 @@ RSP_GETWGACK =
   
 }
 
-RSP_SUBSTATUS =
+F_RSP_SUBSTATUS =
 {
-  0x5611,
+  0x1156, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -928,9 +775,9 @@ RSP_SUBSTATUS =
   
 }
 
-RSP_SUBSTATUSACK =
+F_RSP_SUBSTATUSACK =
 {
-  0x9612,
+  0x1296, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -938,17 +785,17 @@ RSP_SUBSTATUSACK =
   
 }
 
-RSP_UNSUBSTATUS =
+F_RSP_UNSUBSTATUS =
 {
-  0x5613,
+  0x1356, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   handle : uint32
   
 }
 
-RSP_UNSUBSTATUSACK =
+F_RSP_UNSUBSTATUSACK =
 {
-  0x9614,
+  0x1496, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -956,9 +803,9 @@ RSP_UNSUBSTATUSACK =
   
 }
 
-RSP_UPDSTATUS =
+F_RSP_UPDSTATUS =
 {
-  0x9615,
+  0x1596, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -967,9 +814,9 @@ RSP_UPDSTATUS =
   
 }
 
-RSP_GETSTATUS =
+F_RSP_GETSTATUS =
 {
-  0x5616,
+  0x1656, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -977,9 +824,9 @@ RSP_GETSTATUS =
   
 }
 
-RSP_GETSTATUSACK =
+F_RSP_GETSTATUSACK =
 {
-  0x9617,
+  0x1796, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -987,9 +834,9 @@ RSP_GETSTATUSACK =
   
 }
 
-RSP_SUBSTATS =
+F_RSP_SUBSTATS =
 {
-  0x5618,
+  0x1856, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -999,9 +846,9 @@ RSP_SUBSTATS =
   
 }
 
-RSP_SUBSTATSACK =
+F_RSP_SUBSTATSACK =
 {
-  0x9619,
+  0x1996, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -1009,17 +856,17 @@ RSP_SUBSTATSACK =
   
 }
 
-RSP_UNSUBSTATS =
+F_RSP_UNSUBSTATS =
 {
-  0x561a,
+  0x1A56, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   handle : uint32
   
 }
 
-RSP_UNSUBSTATSACK =
+F_RSP_UNSUBSTATSACK =
 {
-  0x961b,
+  0x1B96, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -1027,9 +874,9 @@ RSP_UNSUBSTATSACK =
   
 }
 
-RSP_UPDSTATS =
+F_RSP_UPDSTATS =
 {
-  0x961c,
+  0x1C96, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -1038,9 +885,9 @@ RSP_UPDSTATS =
   
 }
 
-RSP_GETSTATS =
+F_RSP_GETSTATS =
 {
-  0x561d,
+  0x1D56, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   rcumask : t_bitsetRCU,
@@ -1049,9 +896,9 @@ RSP_GETSTATS =
   
 }
 
-RSP_GETSTATSACK =
+F_RSP_GETSTATSACK =
 {
-  0x961e,
+  0x1E96, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -1059,18 +906,18 @@ RSP_GETSTATSACK =
   
 }
 
-RSP_GETVERSION =
+F_RSP_GETVERSION =
 {
-  0x561f,
+  0x1F56, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   cache : uint8
   
 }
 
-RSP_GETVERSIONACK =
+F_RSP_GETVERSIONACK =
 {
-  0x9620,
+  0x2096, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   timestamp : t_Timestamp,
   status : int16,
@@ -1084,9 +931,9 @@ RSP_GETVERSIONACK =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-CAL_CREATESUBARRAY =
+F_CAL_CREATESUBARRAY =
 {
-  0x5701,
+  0x0157, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   srgname : t_String [ nrOfChars ],
@@ -1095,9 +942,9 @@ CAL_CREATESUBARRAY =
   
 }
 
-CAL_CREATESUBARRAY_ACK =
+F_CAL_CREATESUBARRAY_ACK =
 {
-  0x9702,
+  0x0297, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
   nrOfChars : t_B4,
@@ -1105,37 +952,18 @@ CAL_CREATESUBARRAY_ACK =
   
 }
 
-CAL_STARTCAL =
+F_CAL_STARTCAL =
 {
-  0x5703,
+  0x0357, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   srgname : t_String [ nrOfChars ]
   
 }
 
-CAL_STARTCAL_ACK =
+F_CAL_STARTCAL_ACK =
 {
-  0x9704,
-  msgLength : t_B4,
-  status : t_Int,
-  nrOfChars : t_B4,
-  srgname : t_String [ nrOfChars ]
-  
-}
-
-CAL_DESTROYSUBARRAY =
-{
-  0x5705,
-  msgLength : t_B4,
-  nrOfChars : t_B4,
-  srgname : t_String [ nrOfChars ]
-  
-}
-
-CAL_DESTROYSUBARRAY_ACK =
-{
-  0x5706,
+  0x0497, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
   nrOfChars : t_B4,
@@ -1143,28 +971,18 @@ CAL_DESTROYSUBARRAY_ACK =
   
 }
 
-CAL_SUBCAL =
+F_CAL_DESTROYSUBARRAY =
 {
-  0x5707,
+  0x0557, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   srgname : t_String [ nrOfChars ]
   
 }
 
-CAL_SUBCAL_ACK =
+F_CAL_DESTROYSUBARRAY_ACK =
 {
-  0x9708,
-  msgLength : t_B4,
-  status : t_Int,
-  nrOfChars : t_B4,
-  srgname : t_String [ nrOfChars ]
-  
-}
-
-CAL_UPDCAL =
-{
-  0x9709,
+  0x0657, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
   nrOfChars : t_B4,
@@ -1172,18 +990,47 @@ CAL_UPDCAL =
   
 }
 
-CAL_UNSUBCAL =
+F_CAL_SUBCAL =
 {
-  0x570a,
+  0x0757, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   srgname : t_String [ nrOfChars ]
   
 }
 
-CAL_UNSUBCAL_ACK =
+F_CAL_SUBCAL_ACK =
 {
-  0x970b,
+  0x0897, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+F_CAL_UPDCAL =
+{
+  0x0997, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+F_CAL_UNSUBCAL =
+{
+  0x0A57, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+F_CAL_UNSUBCAL_ACK =
+{
+  0x0B97, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
   nrOfChars : t_B4,
@@ -1197,18 +1044,18 @@ CAL_UNSUBCAL_ACK =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-NM_CLAIM =
+F_NM_CLAIM =
 {
-  0x4a01,
+  0x014A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   nodesToClaim : t_String [ nrOfChars ]
   
 }
 
-NM_CLAIMED =
+F_NM_CLAIMED =
 {
-  0x8a02,
+  0x028A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   newClaimedNodes : t_String [ nrOfChars1 ],
@@ -1219,18 +1066,18 @@ NM_CLAIMED =
   
 }
 
-NM_RELEASE =
+F_NM_RELEASE =
 {
-  0x4a03,
+  0x034A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   nodesToRelease : t_String [ nrOfChars ]
   
 }
 
-NM_RELEASED =
+F_NM_RELEASED =
 {
-  0x8a04
+  0x048A, // LSB first: signal, protocol, in/out
   msgLength : t_B4
   
 }
@@ -1241,36 +1088,36 @@ NM_RELEASED =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-SAS_SCHEDULE =
+F_SAS_SCHEDULE =
 {
-  0x4d01,
+  0x014D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   VIrootID : t_String [ nrOfChars ]
   
 }
 
-SAS_UPDATESCHEDULE =
+F_SAS_UPDATESCHEDULE =
 {
-  0x4d02,
+  0x024D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   VIrootID : t_String [ nrOfChars ]
   
 }
 
-SAS_CANCELSCHEDULE =
+F_SAS_CANCELSCHEDULE =
 {
-  0x4d03,
+  0x034D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   VIrootID : t_String [ nrOfChars ]
   
 }
 
-SAS_RESPONSE =
+F_SAS_RESPONSE =
 {
-  0x8d04,
+  0x048D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TSASResult,
   nrOfChars : t_B4,
@@ -1278,9 +1125,9 @@ SAS_RESPONSE =
   
 }
 
-SAS_REPLACEMENTREQUEST =
+F_SAS_REPLACEMENTREQUEST =
 {
-  0x8d05,
+  0x058D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   nodeID : t_String [ nrOfChars ]
@@ -1292,75 +1139,18 @@ SAS_REPLACEMENTREQUEST =
 //  KVL_Protocol.tseprot: Protocol for the KVL system
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
-
-KVL_UPDATE =
-{
-  0x4301,
-  msgLength : t_B4,
-  nrOfChars : t_B4,
-  key : t_String [ nrOfChars ],
-  value : LOFAR::GCF::LogSys::Value,
-  origin : LOFAR::GCF::Common::TKVLOrigin,
-  timestamp : timeval
-  
-}
-
-KVL_UPDATES =
-{
-  0x4302,
-  msgLength : t_B4,
-  seqNr : uint16,
-  daemonID : uint8,
-  nrOfUpdates : uint16,
-  updates : LOFAR::GCF::LogSys::LoggingCollection
-  
-}
-
-KVL_ANSWER =
-{
-  0x8303,
-  msgLength : t_B4,
-  seqNr : uint16
-  
-}
-
-KVL_REGISTER =
-{
-  0x4304,
-  msgLength : t_B4,
-  curID : uint8,
-  firstSeqNr : uint16
-  
-}
-
-KVL_REGISTERED =
-{
-  0x8305,
-  msgLength : t_B4,
-  ID : uint8,
-  curSeqNr : uint16
-  
-}
-
-KVL_UNREGISTER =
-{
-  0x4306,
-  msgLength : t_B4,
-  curID : uint8
-  
-}
-
+//  not supported yet
 
 //
 //  SB_Protocol.tseprot: Protocol for the Service Broker deamon
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-SB_REGISTER_SERVICE =
+F_SB_REGISTER_SERVICE =
 {
-  0x4301,
+  0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars1 : t_B4,
   servicename : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
@@ -1368,50 +1158,50 @@ SB_REGISTER_SERVICE =
   
 }
 
-SB_UNREGISTER_SERVICE =
+F_SB_UNREGISTER_SERVICE =
 {
-  0x4302,
+  0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   servicename : t_String [ nrOfChars ]
   
 }
 
-SB_GET_SERVICEINFO =
+F_SB_GET_SERVICEINFO =
 {
-  0x4303,
+  0x0343, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars : t_B4,
   servicename : t_String [ nrOfChars ]
   
 }
 
-SB_SERVICE_REGISTERED =
+F_SB_SERVICE_REGISTERED =
 {
-  0x8304,
+  0x0483, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   portnumber : t_uInt,
-  result : GCF::SB::TSBResult
+  result : TSBResult
   
 }
 
-SB_SERVICE_INFO =
+F_SB_SERVICE_INFO =
 {
-  0x8305,
+  0x0583, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   portnumber : t_uInt,
   nrOfChars : t_B4,
   host : t_String [ nrOfChars ],
-  result : GCF::SB::TSBResult
+  result : TSBResult
   
 }
 
-SB_SERVICE_GONE =
+F_SB_SERVICE_GONE =
 {
-  0x8306,
+  0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   servicename : t_String [ nrOfChars ]
@@ -1424,30 +1214,30 @@ SB_SERVICE_GONE =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-ECHO_PING =
+F_ECHO_PING =
 {
-  0x4a01,
+  0x014A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  ping_time : timeval
+  ping_time : time_t
   
 }
 
-ECHO_ECHO =
+F_ECHO_ECHO =
 {
-  0x8a02,
+  0x028A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  ping_time : timeval,
-  echo_time : timeval
+  ping_time : time_t,
+  echo_time : time_t
   
 }
 
-ECHO_CLOCK =
+F_ECHO_CLOCK =
 {
-  0x8a03,
+  0x038A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  clockpulse : char
+  clockpulse : t_B1
   
 }
 
@@ -1457,31 +1247,31 @@ ECHO_CLOCK =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-PA_LOAD_PROP_SET =
+F_PA_LOAD_PROP_SET =
 {
-  0x4301,
+  0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PA_UNLOAD_PROP_SET =
+F_PA_UNLOAD_PROP_SET =
 {
-  0x4302,
+  0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PA_CONF_PROP_SET =
+F_PA_CONF_PROP_SET =
 {
-  0x4303,
+  0x0343, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
@@ -1489,97 +1279,97 @@ PA_CONF_PROP_SET =
   
 }
 
-PA_PROP_SET_LOADED =
+F_PA_PROP_SET_LOADED =
 {
-  0x8304,
+  0x0483, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   result : TPAResult
   
 }
 
-PA_PROP_SET_UNLOADED =
+F_PA_PROP_SET_UNLOADED =
 {
-  0x8305,
+  0x0583, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   result : TPAResult
   
 }
 
-PA_PROP_SET_CONF =
+F_PA_PROP_SET_CONF =
 {
-  0x8306,
+  0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars : t_B4,
   apcName : t_String [ nrOfChars ],
   result : TPAResult
   
 }
 
-PA_REGISTER_SCOPE =
+F_PA_REGISTER_SCOPE =
 {
-  0x4307,
+  0x0743, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
   type : t_String [ nrOfChars2 ],
-  category : LOFAR::GCF::Common::TPSCategory
+  category : TPSCategory
   
 }
 
-PA_UNREGISTER_SCOPE =
+F_PA_UNREGISTER_SCOPE =
 {
-  0x4308,
+  0x0843, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PA_SCOPE_REGISTERED =
+F_PA_SCOPE_REGISTERED =
 {
-  0x8309,
+  0x0983, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   result : TPAResult
   
 }
 
-PA_SCOPE_UNREGISTERED =
+F_PA_SCOPE_UNREGISTERED =
 {
-  0x830a,
+  0x0A83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPAResult,
-  seqnr : unsigned short
+  seqnr : uint16
   
 }
 
-PA_LINK_PROP_SET =
+F_PA_LINK_PROP_SET =
 {
-  0x830b,
+  0x0B83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PA_UNLINK_PROP_SET =
+F_PA_UNLINK_PROP_SET =
 {
-  0x830c,
+  0x0C83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PA_PROP_SET_LINKED =
+F_PA_PROP_SET_LINKED =
 {
-  0x430d,
+  0x0D43, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ],
@@ -1587,9 +1377,9 @@ PA_PROP_SET_LINKED =
   
 }
 
-PA_PROP_SET_UNLINKED =
+F_PA_PROP_SET_UNLINKED =
 {
-  0x430e,
+  0x0E43, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ],
@@ -1597,9 +1387,9 @@ PA_PROP_SET_UNLINKED =
   
 }
 
-PA_PROP_SET_GONE =
+F_PA_PROP_SET_GONE =
 {
-  0x830f,
+  0x0F83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
@@ -1612,68 +1402,68 @@ PA_PROP_SET_GONE =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-PI_REGISTER_SCOPE =
+F_PI_REGISTER_SCOPE =
 {
-  0x4301,
+  0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
   type : t_String [ nrOfChars2 ],
-  category : LOFAR::GCF::Common::TPSCategory
+  category : TPSCategory
   
 }
 
-PI_UNREGISTER_SCOPE =
+F_PI_UNREGISTER_SCOPE =
 {
-  0x4302,
+  0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PI_SCOPE_REGISTERED =
+F_PI_SCOPE_REGISTERED =
 {
-  0x8303,
+  0x0383, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  seqnr : unsigned short,
+  seqnr : uint16,
   result : TPIResult
   
 }
 
-PI_SCOPE_UNREGISTERED =
+F_PI_SCOPE_UNREGISTERED =
 {
-  0x8304,
+  0x0483, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPIResult,
-  seqnr : unsigned short
+  seqnr : uint16
   
 }
 
-PI_LINK_PROP_SET =
+F_PI_LINK_PROP_SET =
 {
-  0x8305,
+  0x0583, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PI_UNLINK_PROP_SET =
+F_PI_UNLINK_PROP_SET =
 {
-  0x8306,
+  0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-PI_PROP_SET_LINKED =
+F_PI_PROP_SET_LINKED =
 {
-  0x4307,
+  0x0743, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPIResult,
   nrOfChars1 : t_B4,
@@ -1683,9 +1473,9 @@ PI_PROP_SET_LINKED =
   
 }
 
-PI_PROP_SET_UNLINKED =
+F_PI_PROP_SET_UNLINKED =
 {
-  0x4308,
+  0x0843, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPIResult,
   nrOfChars : t_B4,
@@ -1693,126 +1483,104 @@ PI_PROP_SET_UNLINKED =
   
 }
 
-PI_VALUE_SET =
-{
-  0x4309,
-  msgLength : t_B4,
-  nrOfChars : t_B4,
-  name : t_String [ nrOfChars ],
-  value : PValue
-  
-}
-
-PI_VALUE_CHANGED =
-{
-  0x830a,
-  msgLength : t_B4,
-  scopeLength : unsigned short,
-  nrOfChars : t_B4,
-  name : t_String [ nrOfChars ],
-  value : PValue
-  
-}
-
-
 //
 //  THEcho_Protocol.tseprot: Protocol for the TestHarness Echo server
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-THECHO_PING_UINT =
+F_THECHO_PING_UINT =
 {
-  0x4a01,
+  0x014A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   uintParam : t_uInt
   
 }
 
-THECHO_ECHO_UINT =
+F_THECHO_ECHO_UINT =
 {
-  0x8a02,
+  0x028A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   uintParam : t_uInt
   
 }
 
-THECHO_PING_INT =
+F_THECHO_PING_INT =
 {
-  0x4a03,
+  0x034A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   intParam : t_Int
   
 }
 
-THECHO_ECHO_INT =
+F_THECHO_ECHO_INT =
 {
-  0x8a04,
+  0x048A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   intParam : t_Int
   
 }
 
-THECHO_PING_LONG =
+F_THECHO_PING_LONG =
 {
-  0x4a05,
+  0x054A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   longParam : t_Long
   
 }
 
-THECHO_ECHO_LONG =
+F_THECHO_ECHO_LONG =
 {
-  0x8a06,
+  0x068A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   longParam : t_Long
   
 }
 
-THECHO_PING_ENUM =
+F_THECHO_PING_ENUM =
 {
-  0x4a07,
+  0x074A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   enumParam : TEchoEnum
   
 }
 
-THECHO_ECHO_ENUM =
+F_THECHO_ECHO_ENUM =
 {
-  0x8a08,
+  0x088A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   enumParam : TEchoEnum
   
 }
 
-THECHO_PING_DOUBLE =
+F_THECHO_PING_DOUBLE =
 {
-  0x4a09,
+  0x094A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   doubleParam : t_Double
   
 }
 
-THECHO_ECHO_DOUBLE =
+F_THECHO_ECHO_DOUBLE =
 {
-  0x8a0a,
+  0x0A8A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   doubleParam : t_Double
   
 }
 
-THECHO_PING_STRING =
+F_THECHO_PING_STRING =
 {
-  0x4a0b,
+  0x0B4A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   nrOfChars : t_B4,
@@ -1820,9 +1588,9 @@ THECHO_PING_STRING =
   
 }
 
-THECHO_ECHO_STRING =
+F_THECHO_ECHO_STRING =
 {
-  0x8a0c,
+  0x0C8A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   nrOfChars : t_B4,
@@ -1830,167 +1598,134 @@ THECHO_ECHO_STRING =
   
 }
 
-THECHO_PING_STOP =
+F_THECHO_PING_STOP =
 {
-  0x4a0d,
+  0x0D4A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt
   
 }
 
-THECHO_PING_INT_ARRAY =
+F_THECHO_PING_INT_ARRAY =
 {
-  0x4a0e,
+  0x0E4A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  intArrayParam : int[10]
-  
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
 }
 
-THECHO_ECHO_INT_ARRAY =
+F_THECHO_ECHO_INT_ARRAY =
 {
-  0x8a0f,
+  0x0F8A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  intArrayParam : int[10]
-  
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
 }
-
-THECHO_PING_INT_ARRAY_20 =
-{
-  0x4a10,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[20]
-  
-}
-
-THECHO_ECHO_INT_ARRAY_20 =
-{
-  0x8a11,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[20]
-  
-}
-
-THECHO_PING_INT_ARRAY_61 =
-{
-  0x4a12,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[61]
-  
-}
-
-THECHO_ECHO_INT_ARRAY_61 =
-{
-  0x8a13,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[61]
-  
-}
-
 
 //
 //  THEchoRouting_Protocol.tseprot: Protocol for the TestHarness Echo Routing server
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-THECHOROUTING_PING_UINT =
+F_THECHOROUTING_PING_UINT =
 {
-  0x4b01,
+  0x014B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   uintParam : t_uInt
   
 }
 
-THECHOROUTING_ECHO_UINT =
+F_THECHOROUTING_ECHO_UINT =
 {
-  0x4b02,
+  0x024B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   uintParam : t_uInt
   
 }
 
-THECHOROUTING_PING_INT =
+F_THECHOROUTING_PING_INT =
 {
-  0x4b03,
+  0x034B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   intParam : t_Int
   
 }
 
-THECHOROUTING_ECHO_INT =
+F_THECHOROUTING_ECHO_INT =
 {
-  0x4b04,
+  0x044B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   intParam : t_Int
   
 }
 
-THECHOROUTING_PING_LONG =
+F_THECHOROUTING_PING_LONG =
 {
-  0x4b05,
+  0x054B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   longParam : t_Long
   
 }
 
-THECHOROUTING_ECHO_LONG =
+F_THECHOROUTING_ECHO_LONG =
 {
-  0x4b06,
+  0x064B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   longParam : t_Long
   
 }
 
-THECHOROUTING_PING_ENUM =
+F_THECHOROUTING_PING_ENUM =
 {
-  0x4b07,
+  0x074B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   enumParam : TEchoRoutingEnum
   
 }
 
-THECHOROUTING_ECHO_ENUM =
+F_THECHOROUTING_ECHO_ENUM =
 {
-  0x4b08,
+  0x084B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   enumParam : TEchoRoutingEnum
   
 }
 
-THECHOROUTING_PING_DOUBLE =
+F_THECHOROUTING_PING_DOUBLE =
 {
-  0x4b09,
+  0x094B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   doubleParam : t_Double
   
 }
 
-THECHOROUTING_ECHO_DOUBLE =
+F_THECHOROUTING_ECHO_DOUBLE =
 {
-  0x4b0a,
+  0x0A4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   doubleParam : t_Double
   
 }
 
-THECHOROUTING_PING_STRING =
+F_THECHOROUTING_PING_STRING =
 {
-  0x4b0b,
+  0x0B4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   nrOfChars : t_B4,
@@ -1998,9 +1733,9 @@ THECHOROUTING_PING_STRING =
   
 }
 
-THECHOROUTING_ECHO_STRING =
+F_THECHOROUTING_ECHO_STRING =
 {
-  0x4b0c,
+  0x0C4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
   nrOfChars : t_B4,
@@ -2008,66 +1743,34 @@ THECHOROUTING_ECHO_STRING =
   
 }
 
-THECHOROUTING_PING_STOP =
+F_THECHOROUTING_PING_STOP =
 {
-  0x4b0d,
+  0x0D4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt
   
 }
 
-THECHOROUTING_PING_INT_ARRAY =
+F_THECHOROUTING_PING_INT_ARRAY =
 {
-  0x4b0e,
+  0x0E4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  intArrayParam : int[10]
-  
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
 }
 
-THECHOROUTING_ECHO_INT_ARRAY =
+F_THECHOROUTING_ECHO_INT_ARRAY =
 {
-  0x4b0f,
+  0x0F4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  intArrayParam : int[10]
-  
-}
-
-THECHOROUTING_PING_INT_ARRAY_20 =
-{
-  0x4b10,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[20]
-  
-}
-
-THECHOROUTING_ECHO_INT_ARRAY_20 =
-{
-  0x4b11,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[20]
-  
-}
-
-THECHOROUTING_PING_INT_ARRAY_61 =
-{
-  0x4b12,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[61]
-  
-}
-
-THECHOROUTING_ECHO_INT_ARRAY_61 =
-{
-  0x4b13,
-  msgLength : t_B4,
-  seqnr : t_uInt,
-  intArrayParam : int[61]
-  
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
 }
 
 
@@ -2076,50 +1779,50 @@ THECHOROUTING_ECHO_INT_ARRAY_61 =
 //
 // Note: For each function remove the last ',' before the '}'  !!!!
 
-THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET =
+F_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET =
 {
-  0x4e01,
+  0x014E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
   type : t_String [ nrOfChars2 ],
-  category : LOFAR::GCF::Common::TPSCategory
+  category : TPSCategory
   
 }
 
-THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET_RESPONSE =
+F_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET_RESPONSE =
 {
-  0x8e02,
+  0x028E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
+  response : TGCFResult,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET =
+F_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET =
 {
-  0x4e03,
+  0x034E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET_RESPONSE =
+F_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET_RESPONSE =
 {
-  0x8e04,
+  0x048E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
+  response : TGCFResult,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
   
 }
 
-THPVSSBRIDGE_MY_GET_VALUE =
+F_THPVSSBRIDGE_MY_GET_VALUE =
 {
-  0x4e05,
+  0x054E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2128,9 +1831,9 @@ THPVSSBRIDGE_MY_GET_VALUE =
   
 }
 
-THPVSSBRIDGE_MY_GET_VALUE_RESPONSE =
+F_THPVSSBRIDGE_MY_GET_VALUE_RESPONSE =
 {
-  0x8e06,
+  0x068E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2141,9 +1844,9 @@ THPVSSBRIDGE_MY_GET_VALUE_RESPONSE =
   
 }
 
-THPVSSBRIDGE_MY_SET_VALUE =
+F_THPVSSBRIDGE_MY_SET_VALUE =
 {
-  0x4e07,
+  0x074E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2154,11 +1857,11 @@ THPVSSBRIDGE_MY_SET_VALUE =
   
 }
 
-THPVSSBRIDGE_MY_SET_VALUE_RESPONSE =
+F_THPVSSBRIDGE_MY_SET_VALUE_RESPONSE =
 {
-  0x8e08,
+  0x088E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
+  response : TGCFResult,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
@@ -2166,9 +1869,9 @@ THPVSSBRIDGE_MY_SET_VALUE_RESPONSE =
   
 }
 
-THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET =
+F_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET =
 {
-  0x4e09,
+  0x094E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2177,35 +1880,35 @@ THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET =
   
 }
 
-THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE =
+F_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE =
 {
-  0x8e0a,
+  0x0A8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
+  response : TGCFResult,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
 }
 
-THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET =
+F_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET =
 {
-  0x4e0b,
+  0x0B4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
 }
 
-THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE =
+F_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE =
 {
-  0x8e0c,
+  0x0C8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
+  response : TGCFResult,
   nrOfChars : t_B4,
   scope : t_String [ nrOfChars ]
 }
 
-THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY =
+F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY =
 {
-  0x4e0d,
+  0x0D4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2213,41 +1916,20 @@ THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY =
   property : t_String [ nrOfChars2 ]
 }
 
-THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE =
+F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE =
 {
-  0x8e0e,
+  0x0E8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
+  response : TGCFResult,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
   property : t_String [ nrOfChars2 ]
 }
 
-THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY =
+F_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY =
 {
-  0x4e0f,
-  msgLength : t_B4,
-  nrOfChars1 : t_B4,
-  scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
-  property : t_String [ nrOfChars2 ]
-}
-
-THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE =
-{
-  0x8e10,
-  msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
-  nrOfChars1 : t_B4,
-  scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
-  property : t_String [ nrOfChars2 ]
-}
-
-THPVSSBRIDGE_EXT_GET_VALUE =
-{
-  0x4e11,
+  0x0F4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2255,9 +1937,30 @@ THPVSSBRIDGE_EXT_GET_VALUE =
   property : t_String [ nrOfChars2 ]
 }
 
-THPVSSBRIDGE_EXT_GET_VALUE_RESPONSE =
+F_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE =
 {
-  0x8e12,
+  0x108E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+F_THPVSSBRIDGE_EXT_GET_VALUE =
+{
+  0x114E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+F_THPVSSBRIDGE_EXT_GET_VALUE_RESPONSE =
+{
+  0x128E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2267,9 +1970,9 @@ THPVSSBRIDGE_EXT_GET_VALUE_RESPONSE =
   value : t_String [ nrOfChars3 ]  
 }
 
-THPVSSBRIDGE_EXT_SET_VALUE =
+F_THPVSSBRIDGE_EXT_SET_VALUE =
 {
-  0x4e13,
+  0x134E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2279,20 +1982,20 @@ THPVSSBRIDGE_EXT_SET_VALUE =
   value : t_String [ nrOfChars3 ]
 }
 
-THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE =
+F_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE =
 {
-  0x8e14,
+  0x148E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  response : LOFAR::GCF::Common::TGCFResult,
+  response : TGCFResult,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_B4,
   property : t_String [ nrOfChars2 ]
 }
 
-THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
+F_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
 {
-  0x8e15,
+  0x158E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   nrOfChars1 : t_B4,
   scope : t_String [ nrOfChars1 ],
@@ -2304,3 +2007,1670 @@ THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
 
 
 [events]
+
+//
+//  LogicalDevice_Protocol.tseprot: Protocol for LogicalDevice servers
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_LOGICALDEVICE_CONNECT =
+{
+  0x014B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  nodeId : t_String [ nrOfChars ]
+  
+}
+
+E_LOGICALDEVICE_CONNECTED =
+{
+  0x028B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+E_LOGICALDEVICE_SCHEDULE =
+{
+  0x038B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  fileName : t_String [ nrOfChars ]
+  
+}
+
+E_LOGICALDEVICE_SCHEDULED =
+{
+  0x044B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+E_LOGICALDEVICE_CANCELSCHEDULE =
+{
+  0x058B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+E_LOGICALDEVICE_SCHEDULECANCELLED =
+{
+  0x064B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+E_LOGICALDEVICE_CLAIM =
+{
+  0x078B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+E_LOGICALDEVICE_CLAIMED =
+{
+  0x084B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+E_LOGICALDEVICE_PREPARE =
+{
+  0x098B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+E_LOGICALDEVICE_PREPARED =
+{
+  0x0A4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+E_LOGICALDEVICE_RESUME =
+{
+  0x0B8B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+E_LOGICALDEVICE_RESUMED =
+{
+  0x0C4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+E_LOGICALDEVICE_SUSPEND =
+{
+  0x0D8B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+E_LOGICALDEVICE_SUSPENDED =
+{
+  0x0E4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+E_LOGICALDEVICE_RELEASE =
+{
+  0x0F8B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+E_LOGICALDEVICE_RELEASED =
+{
+  0x104B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TLDResult
+  
+}
+
+
+//
+//  StartDaemon_Protocol.tseprot: Protocol for Logical Device StartDaemon servers
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_STARTDAEMON_SCHEDULE =
+{
+  0x014C, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  logicalDeviceType : TLogicalDeviceTypes,
+  nrOfChars1 : t_B4,
+  taskName : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  fileName : t_String [ nrOfChars2 ]
+  
+}
+
+E_STARTDAEMON_SCHEDULED =
+{
+  0x028C, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TSDResult,
+  nrOfChars : t_B4,
+  VIrootID : t_String [ nrOfChars ]
+  
+}
+
+E_STARTDAEMON_DESTROY_LOGICALDEVICE =
+{
+  0x034C, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  name : t_String [ nrOfChars ]
+  
+}
+
+E_STARTDAEMON_STOP =
+{
+  0x044C, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+
+
+//
+//  ABS_Protocol.tseprot: Protocol for the Beam Server
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_ABS_BEAMALLOC =
+{
+  0x0154, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  spectral_window : t_Int,
+  n_subbands : t_Int,
+  subbands : t_SubbandsArray
+  
+}
+
+E_ABS_BEAMALLOC_ACK =
+{
+  0x0294, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  handle : t_Int,
+  status : t_Int
+  
+}
+
+E_ABS_BEAMFREE =
+{
+  0x0354, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  handle : t_Int
+  
+}
+
+E_ABS_BEAMFREE_ACK =
+{
+  0x0494, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  handle : t_Int,
+  status : t_Int
+  
+}
+
+E_ABS_BEAMPOINTTO =
+{
+  0x0554, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  handle : t_Int,
+  time : time_t,
+  type : t_Int,
+  angle : t_AngleArray
+  
+}
+
+E_ABS_WGSETTINGS =
+{
+  0x0654, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  frequency : t_Double,
+  amplitude : uint16
+  
+}
+
+E_ABS_WGSETTINGS_ACK =
+{
+  0x0794, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int
+  
+}
+
+E_ABS_WGENABLE =
+{
+  0x0854, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+E_ABS_WGDISABLE =
+{
+  0x0954, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+
+
+//
+//  EPA_Protocol.tseprot: Protocol for the EPA Demonstrator Board
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+// no support for this protocol yet....
+//
+//  RSP_Protocol.tseprot: Protocol for the RSP driver interface
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_RSP_SETWEIGHTS =
+{
+  0x0156, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  blpmask : t_bitsetBLP,
+  weights : t_dontknow //BeamletWeights
+  
+}
+
+E_RSP_SETWEIGHTSACK =
+{
+  0x0296, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16
+  
+}
+
+E_RSP_GETWEIGHTS =
+{
+  0x0356, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  blpmask : t_bitsetBLP,
+  cache : uint8
+  
+}
+
+E_RSP_GETWEIGHTSACK =
+{
+  0x0496, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  weights : t_dontknow //BeamletWeights
+  
+}
+
+E_RSP_SETSUBBANDS =
+{
+  0x0556, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  blpmask : t_bitsetBLP,
+  subbands : t_dontknow //SubbandSelection
+  
+}
+
+E_RSP_SETSUBBANDSACK =
+{
+  0x0696, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16
+  
+}
+
+E_RSP_GETSUBBANDS =
+{
+  0x0756, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  blpmask : t_bitsetBLP,
+  cache : uint8
+  
+}
+
+E_RSP_GETSUBBANDSACK =
+{
+  0x0896, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  subbands : t_dontknow //SubbandSelection
+  
+}
+
+E_RSP_SETRCU =
+{
+  0x0956, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  settings : t_dontknow //RCUSettings
+  
+}
+
+E_RSP_SETRCUACK =
+{
+  0x0A96, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16
+  
+}
+
+E_RSP_GETRCU =
+{
+  0x0B56, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  cache : uint8
+  
+}
+
+E_RSP_GETRCUACK =
+{
+  0x0C96, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  settings : t_dontknow //RCUSettings
+  
+}
+
+E_RSP_SETWG =
+{
+  0x0D56, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  settings : t_dontknow //WGSettings
+  
+}
+
+E_RSP_SETWGACK =
+{
+  0x0E96, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16
+  
+}
+
+E_RSP_GETWG =
+{
+  0x0F56, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  cache : uint8
+  
+}
+
+E_RSP_GETWGACK =
+{
+  0x1096, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  settings : t_dontknow //WGSettings
+  
+}
+
+E_RSP_SUBSTATUS =
+{
+  0x1156, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  period : uint16
+  
+}
+
+E_RSP_SUBSTATUSACK =
+{
+  0x1296, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  handle : uint32
+  
+}
+
+E_RSP_UNSUBSTATUS =
+{
+  0x1356, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  handle : uint32
+  
+}
+
+E_RSP_UNSUBSTATUSACK =
+{
+  0x1496, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  handle : uint32
+  
+}
+
+E_RSP_UPDSTATUS =
+{
+  0x1596, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  handle : uint32,
+  sysstatus : t_dontknow //SystemStatus
+  
+}
+
+E_RSP_GETSTATUS =
+{
+  0x1656, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  cache : uint8
+  
+}
+
+E_RSP_GETSTATUSACK =
+{
+  0x1796, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  sysstatus : t_dontknow //SystemStatus
+  
+}
+
+E_RSP_SUBSTATS =
+{
+  0x1856, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  period : uint16,
+  type : uint8,
+  reduction : t_dontknow //StatsReduction
+  
+}
+
+E_RSP_SUBSTATSACK =
+{
+  0x1996, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  handle : uint32
+  
+}
+
+E_RSP_UNSUBSTATS =
+{
+  0x1A56, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  handle : uint32
+  
+}
+
+E_RSP_UNSUBSTATSACK =
+{
+  0x1B96, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  handle : uint32
+  
+}
+
+E_RSP_UPDSTATS =
+{
+  0x1C96, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  handle : uint32,
+  stats : t_dontknow //Statistics
+  
+}
+
+E_RSP_GETSTATS =
+{
+  0x1D56, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  rcumask : t_bitsetRCU,
+  cache : uint8,
+  type : uint8
+  
+}
+
+E_RSP_GETSTATSACK =
+{
+  0x1E96, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  stats : t_dontknow //Statistics
+  
+}
+
+E_RSP_GETVERSION =
+{
+  0x1F56, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  cache : uint8
+  
+}
+
+E_RSP_GETVERSIONACK =
+{
+  0x2096, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  timestamp : t_Timestamp,
+  status : int16,
+  versions : t_dontknow //Versions
+  
+}
+
+
+//
+//  CAL_Protocol.tseprot: Protocol for the Calibration Server
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_CAL_CREATESUBARRAY =
+{
+  0x0157, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ],
+  pos : t_Int,
+  sampling_frequency : t_Double
+  
+}
+
+E_CAL_CREATESUBARRAY_ACK =
+{
+  0x0297, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_STARTCAL =
+{
+  0x0357, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_STARTCAL_ACK =
+{
+  0x0497, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_DESTROYSUBARRAY =
+{
+  0x0557, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_DESTROYSUBARRAY_ACK =
+{
+  0x0657, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_SUBCAL =
+{
+  0x0757, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_SUBCAL_ACK =
+{
+  0x0897, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_UPDCAL =
+{
+  0x0997, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_UNSUBCAL =
+{
+  0x0A57, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+E_CAL_UNSUBCAL_ACK =
+{
+  0x0B97, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  status : t_Int,
+  nrOfChars : t_B4,
+  srgname : t_String [ nrOfChars ]
+  
+}
+
+
+//
+//  NM_Protocol.tseprot: Protocol for the NodeManager
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_NM_CLAIM =
+{
+  0x014A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  nodesToClaim : t_String [ nrOfChars ]
+  
+}
+
+E_NM_CLAIMED =
+{
+  0x028A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  newClaimedNodes : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  releasedNodes : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_B4,
+  faultyNodes : t_String [ nrOfChars3 ]
+  
+}
+
+E_NM_RELEASE =
+{
+  0x034A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  nodesToRelease : t_String [ nrOfChars ]
+  
+}
+
+E_NM_RELEASED =
+{
+  0x048A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4
+  
+}
+
+
+//
+//  SAS_Protocol.tseprot: Protocol for the communication between SAS and MAC
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_SAS_SCHEDULE =
+{
+  0x014D, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  VIrootID : t_String [ nrOfChars ]
+  
+}
+
+E_SAS_UPDATESCHEDULE =
+{
+  0x024D, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  VIrootID : t_String [ nrOfChars ]
+  
+}
+
+E_SAS_CANCELSCHEDULE =
+{
+  0x034D, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  VIrootID : t_String [ nrOfChars ]
+  
+}
+
+E_SAS_RESPONSE =
+{
+  0x048D, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TSASResult,
+  nrOfChars : t_B4,
+  VIrootID : t_String [ nrOfChars ]
+  
+}
+
+E_SAS_REPLACEMENTREQUEST =
+{
+  0x058D, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  nodeID : t_String [ nrOfChars ]
+  
+}
+
+
+//
+//  KVL_Protocol.tseprot: Protocol for the KVL system
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+//  not supported yet
+
+//
+//  SB_Protocol.tseprot: Protocol for the Service Broker deamon
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_SB_REGISTER_SERVICE =
+{
+  0x0143, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars1 : t_B4,
+  servicename : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  host : t_String [ nrOfChars2 ]
+  
+}
+
+E_SB_UNREGISTER_SERVICE =
+{
+  0x0243, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  servicename : t_String [ nrOfChars ]
+  
+}
+
+E_SB_GET_SERVICEINFO =
+{
+  0x0343, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars : t_B4,
+  servicename : t_String [ nrOfChars ]
+  
+}
+
+E_SB_SERVICE_REGISTERED =
+{
+  0x0483, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  portnumber : t_uInt,
+  result : TSBResult
+  
+}
+
+E_SB_SERVICE_INFO =
+{
+  0x0583, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  portnumber : t_uInt,
+  nrOfChars : t_B4,
+  host : t_String [ nrOfChars ],
+  result : TSBResult
+  
+}
+
+E_SB_SERVICE_GONE =
+{
+  0x0683, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  servicename : t_String [ nrOfChars ]
+  
+}
+
+
+//
+//  Echo_Protocol.tseprot: Protocol for the Echo server
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_ECHO_PING =
+{
+  0x014A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  ping_time : time_t
+  
+}
+
+E_ECHO_ECHO =
+{
+  0x028A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  ping_time : time_t,
+  echo_time : time_t
+  
+}
+
+E_ECHO_CLOCK =
+{
+  0x038A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  clockpulse : t_B1
+  
+}
+
+
+//
+//  PA_Protocol.tseprot: Protocol for the PA server
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_PA_LOAD_PROP_SET =
+{
+  0x0143, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PA_UNLOAD_PROP_SET =
+{
+  0x0243, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PA_CONF_PROP_SET =
+{
+  0x0343, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  apcName : t_String [ nrOfChars2 ]
+  
+}
+
+E_PA_PROP_SET_LOADED =
+{
+  0x0483, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  result : TPAResult
+  
+}
+
+E_PA_PROP_SET_UNLOADED =
+{
+  0x0583, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  result : TPAResult
+  
+}
+
+E_PA_PROP_SET_CONF =
+{
+  0x0683, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars : t_B4,
+  apcName : t_String [ nrOfChars ],
+  result : TPAResult
+  
+}
+
+E_PA_REGISTER_SCOPE =
+{
+  0x0743, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  type : t_String [ nrOfChars2 ],
+  category : TPSCategory
+  
+}
+
+E_PA_UNREGISTER_SCOPE =
+{
+  0x0843, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PA_SCOPE_REGISTERED =
+{
+  0x0983, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  result : TPAResult
+  
+}
+
+E_PA_SCOPE_UNREGISTERED =
+{
+  0x0A83, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TPAResult,
+  seqnr : uint16
+  
+}
+
+E_PA_LINK_PROP_SET =
+{
+  0x0B83, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PA_UNLINK_PROP_SET =
+{
+  0x0C83, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PA_PROP_SET_LINKED =
+{
+  0x0D43, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ],
+  result : TPAResult
+  
+}
+
+E_PA_PROP_SET_UNLINKED =
+{
+  0x0E43, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ],
+  result : TPAResult
+  
+}
+
+E_PA_PROP_SET_GONE =
+{
+  0x0F83, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+
+//
+//  PI_Protocol.tseprot: Protocol definition for the RTC-PMLlight/Property Interface(MAC/GCF)
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_PI_REGISTER_SCOPE =
+{
+  0x0143, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  type : t_String [ nrOfChars2 ],
+  category : TPSCategory
+  
+}
+
+E_PI_UNREGISTER_SCOPE =
+{
+  0x0243, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PI_SCOPE_REGISTERED =
+{
+  0x0383, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : uint16,
+  result : TPIResult
+  
+}
+
+E_PI_SCOPE_UNREGISTERED =
+{
+  0x0483, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TPIResult,
+  seqnr : uint16
+  
+}
+
+E_PI_LINK_PROP_SET =
+{
+  0x0583, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PI_UNLINK_PROP_SET =
+{
+  0x0683, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_PI_PROP_SET_LINKED =
+{
+  0x0743, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TPIResult,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  propList : t_String [ nrOfChars2 ]
+  
+}
+
+E_PI_PROP_SET_UNLINKED =
+{
+  0x0843, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  result : TPIResult,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+//
+//  THEcho_Protocol.tseprot: Protocol for the TestHarness Echo server
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_THECHO_PING_UINT =
+{
+  0x014A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  uintParam : t_uInt
+  
+}
+
+E_THECHO_ECHO_UINT =
+{
+  0x028A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  uintParam : t_uInt
+  
+}
+
+E_THECHO_PING_INT =
+{
+  0x034A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  intParam : t_Int
+  
+}
+
+E_THECHO_ECHO_INT =
+{
+  0x048A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  intParam : t_Int
+  
+}
+
+E_THECHO_PING_LONG =
+{
+  0x054A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  longParam : t_Long
+  
+}
+
+E_THECHO_ECHO_LONG =
+{
+  0x068A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  longParam : t_Long
+  
+}
+
+E_THECHO_PING_ENUM =
+{
+  0x074A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  enumParam : TEchoEnum
+  
+}
+
+E_THECHO_ECHO_ENUM =
+{
+  0x088A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  enumParam : TEchoEnum
+  
+}
+
+E_THECHO_PING_DOUBLE =
+{
+  0x094A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  doubleParam : t_Double
+  
+}
+
+E_THECHO_ECHO_DOUBLE =
+{
+  0x0A8A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  doubleParam : t_Double
+  
+}
+
+E_THECHO_PING_STRING =
+{
+  0x0B4A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  nrOfChars : t_B4,
+  stringParam : t_String [ nrOfChars ]
+  
+}
+
+E_THECHO_ECHO_STRING =
+{
+  0x0C8A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  nrOfChars : t_B4,
+  stringParam : t_String [ nrOfChars ]
+  
+}
+
+E_THECHO_PING_STOP =
+{
+  0x0D4A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt
+  
+}
+
+E_THECHO_PING_INT_ARRAY =
+{
+  0x0E4A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
+}
+
+E_THECHO_ECHO_INT_ARRAY =
+{
+  0x0F8A, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
+}
+
+
+//
+//  THEchoRouting_Protocol.tseprot: Protocol for the TestHarness Echo Routing server
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_THECHOROUTING_PING_UINT =
+{
+  0x014B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  uintParam : t_uInt
+  
+}
+
+E_THECHOROUTING_ECHO_UINT =
+{
+  0x024B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  uintParam : t_uInt
+  
+}
+
+E_THECHOROUTING_PING_INT =
+{
+  0x034B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  intParam : t_Int
+  
+}
+
+E_THECHOROUTING_ECHO_INT =
+{
+  0x044B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  intParam : t_Int
+  
+}
+
+E_THECHOROUTING_PING_LONG =
+{
+  0x054B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  longParam : t_Long
+  
+}
+
+E_THECHOROUTING_ECHO_LONG =
+{
+  0x064B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  longParam : t_Long
+  
+}
+
+E_THECHOROUTING_PING_ENUM =
+{
+  0x074B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  enumParam : TEchoRoutingEnum
+  
+}
+
+E_THECHOROUTING_ECHO_ENUM =
+{
+  0x084B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  enumParam : TEchoRoutingEnum
+  
+}
+
+E_THECHOROUTING_PING_DOUBLE =
+{
+  0x094B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  doubleParam : t_Double
+  
+}
+
+E_THECHOROUTING_ECHO_DOUBLE =
+{
+  0x0A4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  doubleParam : t_Double
+  
+}
+
+E_THECHOROUTING_PING_STRING =
+{
+  0x0B4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  nrOfChars : t_B4,
+  stringParam : t_String [ nrOfChars ]
+  
+}
+
+E_THECHOROUTING_ECHO_STRING =
+{
+  0x0C4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  nrOfChars : t_B4,
+  stringParam : t_String [ nrOfChars ]
+  
+}
+
+E_THECHOROUTING_PING_STOP =
+{
+  0x0D4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt
+  
+}
+
+E_THECHOROUTING_PING_INT_ARRAY =
+{
+  0x0E4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
+}
+
+E_THECHOROUTING_ECHO_INT_ARRAY =
+{
+  0x0F4B, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  seqnr : t_uInt,
+  NoOfInts : t_B1,
+  {
+  	intArrayParam : int
+ 	}[NoOfInts]
+}
+
+
+//
+//  THPVSSBridge_Protocol.tseprot: Protocol for the THPVSSBridge server
+//
+// Note: For each function remove the last ',' before the '}'  !!!!
+
+E_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET =
+{
+  0x014E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  type : t_String [ nrOfChars2 ],
+  category : TPSCategory
+  
+}
+
+E_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET_RESPONSE =
+{
+  0x028E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET =
+{
+  0x034E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET_RESPONSE =
+{
+  0x048E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+  
+}
+
+E_THPVSSBRIDGE_MY_GET_VALUE =
+{
+  0x054E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_MY_GET_VALUE_RESPONSE =
+{
+  0x068E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_B4,
+  value : t_String [ nrOfChars3 ]
+  
+}
+
+E_THPVSSBRIDGE_MY_SET_VALUE =
+{
+  0x074E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_B4,
+  value : t_String [ nrOfChars3 ]
+  
+}
+
+E_THPVSSBRIDGE_MY_SET_VALUE_RESPONSE =
+{
+  0x088E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET =
+{
+  0x094E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  type : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE =
+{
+  0x0A8E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+}
+
+E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET =
+{
+  0x0B4E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+}
+
+E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE =
+{
+  0x0C8E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars : t_B4,
+  scope : t_String [ nrOfChars ]
+}
+
+E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY =
+{
+  0x0D4E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE =
+{
+  0x0E8E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY =
+{
+  0x0F4E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE =
+{
+  0x108E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+E_THPVSSBRIDGE_EXT_GET_VALUE =
+{
+  0x114E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+E_THPVSSBRIDGE_EXT_GET_VALUE_RESPONSE =
+{
+  0x128E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_B4,
+  value : t_String [ nrOfChars3 ]  
+}
+
+E_THPVSSBRIDGE_EXT_SET_VALUE =
+{
+  0x134E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_B4,
+  value : t_String [ nrOfChars3 ]
+}
+
+E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE =
+{
+  0x148E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ]
+}
+
+E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
+{
+  0x158E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_B4,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_B4,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_B4,
+  value : t_String [ nrOfChars3 ]
+}
