@@ -1,91 +1,21 @@
 V 10
 1
 LANG:1 4 view
-PANEL,284 141 950 740 N "_3DFace" 2
+PANEL,351 404 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-  startThread(\"triggerRecord\");
 
   if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".1.active\"))
   {
     dpSet($configDatapoint + \".currentDatapoint\", $datapoint);
     navViewPlotChangeState();
     navViewPlotMain();
-    
-  }
-
-}
-
-
-void triggerRecord()
-{
-  dpConnect(\"RecordFunction\", DPNAME_NAVIGATOR + g_navigatorID + \".triggerRecord\");
-}
-
-RecordFunction(string dp1, bool triggerRecord)
-{
-  DebugN(\"And here\");
-  //\"CCU1:__navU0000_TLcuPicSubRack_config_Plot_Plot-1\"
-  
-  //\"STSLCU2:PIC_Rack0_SubRack0_Board0_AP0_RCU1.statisticsSubbandPower\"
-  string dpName;
-  dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".dpRecord\", dpName);
-  DebugN(\"dpName:\"+dpName);
-  if(triggerRecord)
-  { 
-    DebugN(\"Recording has started\");
-    dpConnect(\"RecordSpectrum\", dpName);
-    file f;
-    f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.dat\", \"w+\");
-    fclose(f);
-
-  }
-  else
-  {
-    DebugN(\"Recording has stopped\");
-    dpDisconnect(\"RecordSpectrum\", dpName);
-    g_counter = 0;
   }
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 
-void RecordSpectrum(string dp1, string spectrum)
-{
-  g_counter++;
-  //writeToFile(spectrumData);
-//}
-
-//void writeToFile(string spectrum)
-//{
-  //string spectrum;
-  file f;
-  //f = fopen(\"c:\\\\aa\\\\test.dat\", \"w+\");
-  f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.tmp\", \"w+\");
-  //DebugTN(\"#####################  Start   ######################\");  
-//  for(int j=0; j<=60; j++)
-//  {
-    //dpGet(\"STSLCU2:PIC_Rack0_SubRack0_Board0_AP2_RCU1.statisticsSubbandPower\", spectrum);
-    dyn_string out = strsplit(spectrum, \"\\n\");
-    for(int i=0; i<=511; i++)
-    {
-      strreplace(out[i+1], i + \" \", g_counter + \" \" + i + \" \");
-      fputs (out[i+1] + \"\\n\", f );    
-    }
-    fputs (\"\\n\", f );
-
-//    delay(1,0);
-//  }
-  fclose(f);
-  system(\"type \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.tmp >> \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.dat\");
-  //DebugN(\"type \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.tmp >> \" + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + \"record_1.dat\");
-  DebugTN(\"##  Ready ## \"+g_counter+\" ##\");
-}
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 void navViewPlotMain()
 {
   bool dpActive;       // TRUE if dp must be used for plotting 
@@ -226,40 +156,7 @@ void navViewPlotMain()
       }
 
   }
-}
-
-
-//OLD code to try to change bmp's without blinking!!!
-/*
-      if(plotOneActive)
-      {
-        setValue(\"plot\", \"text\", \"2\");
-        setValue(\"plotarea2\", \"fill\",\"[pattern,[tile,bmp,gnuplot2.bmp]]\");
-        delay(1, 0.300); 
-        setValue(\"plot\", \"text\", \"22\");
-        setValue(\"plotarea2\", \"visible\", TRUE);
-        //setValue(\"plotarea2\", \"position\", 10,40);
-        delay(1, 0.300); 
-        setValue(\"plot\", \"text\", \"222\");
-        setValue(\"plotarea1\", \"visible\", FALSE);
-        //setValue(\"plotarea1\", \"position\", 940,40);
-        plotOneActive = FALSE;
-      }
-      else
-      { 
-        setValue(\"plot\", \"text\", \"1\");
-        setValue(\"plotarea1\", \"fill\",\"[pattern,[tile,bmp,gnuplot1.bmp]]\");
-        delay(1, 0.300); 
-        setValue(\"plot\", \"text\", \"11\");
-        setValue(\"plotarea1\", \"visible\", TRUE);
-        //setValue(\"plotarea1\", \"position\", 10, 40);
-        delay(1, 0.300); 
-        setValue(\"plot\", \"text\", \"111\");
-        setValue(\"plotarea2\", \"visible\", FALSE);
-        //setValue(\"plotarea2\", \"position\", 940,40);
-        plotOneActive = TRUE;
-      }
-*/" 0
+}" 0
 "main()
 {
 
@@ -273,7 +170,7 @@ void navViewPlotMain()
 }" 0
 E E E 1 -1 -1 0  18 10
 "" 0 1
-E"#uses \"gcfnav_view.ctl\"
+E"#uses \"nav_fw/gcfnav_view.ctl\"
 int local_plotSizeX;
 int local_plotSizeY;
 string PICTURE_PATH = PROJ_PATH + \"pictures/\";
@@ -439,6 +336,7 @@ E E 0 1 1 0 1 E U  1 E 10 40 940 740
   navViewPlotContextMenu();
 }
 
+
 void navViewPlotContextMenu()
 {
   int Answer;
@@ -448,7 +346,7 @@ void navViewPlotContextMenu()
   string COPY_COMMAND = \"\";
   dyn_float resultFloat;
   dyn_string resultString;
-
+  string txt_record, txt_recordDisplay, txt_recordStopAll;
 
   if (PLOT_STATE==\"PLAY\")
   {
@@ -471,10 +369,26 @@ void navViewPlotContextMenu()
     txt_play  = \"PUSH_BUTTON, Play,  2, 1\";
   }
 
-  txt_step  = \"PUSH_BUTTON, Step,  13, 1\"; 
-  txt_ranges = \"PUSH_BUTTON, Configure ..., 3, 1\";
-  txt_saveData = \"PUSH_BUTTON, Save current data, 12, 1\";
-  
+  txt_step      = \"PUSH_BUTTON, Step,  13, 1\"; 
+  txt_ranges    = \"PUSH_BUTTON, Configure ..., 3, 1\";
+  txt_saveData  = \"PUSH_BUTTON, Save current data, 12, 1\";
+  string recordStatus = navViewPlotGetRecordStatus($configDatapoint, $datapoint);
+  DebugN(\"recordStatus:\"+recordStatus);
+  if(recordStatus==\"recording\")
+  {
+    txt_record        = \"PUSH_BUTTON, Stop record,  5, 1\";
+  }
+  else if (recordStatus==\"idle\")
+  {
+    txt_record        = \"PUSH_BUTTON, Start record,  4, 1\";
+  }
+  else
+  {
+    txt_record        = \"PUSH_BUTTON, Start record,  4, 0\";
+  }
+  //txt_record        = \"PUSH_BUTTON, Start record,  4, 1\";
+  txt_recordDisplay = \"PUSH_BUTTON, Display all recordings,  6, 1\";
+  txt_recordStopAll = \"PUSH_BUTTON, Stop all recordings,  7, 1\";
   // Use of CASCADE button
   /*popupMenu(makeDynString(txt_pause, txt_play, txt_step, txt_ranges,
                           \"CASCADE_BUTTON,Update rate, 1\",
@@ -491,8 +405,10 @@ void navViewPlotContextMenu()
                           \"PUSH_BUTTON, 30 sec. ,11,1\"), Answer);
                    */
   popupMenu(makeDynString(txt_pause, txt_play, txt_step, txt_ranges,
+                          \"SEPARATOR\", txt_record, txt_recordDisplay, txt_recordStopAll,
                           \"SEPARATOR\", txt_saveData), Answer);
-                          
+    string viewsPath = \"\";                          
+    string cmd = \"\";
     switch (Answer)
     {
     case 1: // PAUSE
@@ -504,7 +420,8 @@ void navViewPlotContextMenu()
       navViewPlotChangeState();
       break;
     case 3:
-      ChildPanelOnCentralModalReturn(\"navigator/views/plot_view_ranges.pnl\",
+      dpGet(\"__navigator.viewsPath\", viewsPath);
+      ChildPanelOnCentralModalReturn(viewsPath + \"plot_view_ranges.pnl\",
 	                             \"Configure local settings\",
 	                             makeDynString(\"$configDatapoint:\" + $configDatapoint,
 				                                     \"$datapoint:\" + $datapoint,
@@ -519,17 +436,30 @@ void navViewPlotContextMenu()
       yrangeMax = resultString[4];
       UPDATE_RATE = resultString[5];
       break;
-    case 4:
-      UPDATE_RATE = 1;
+    case 4: //Start recording
+      cmd = $configDatapoint+\"|\"+$datapoint+\"|start\";
+      dpSet(\"__navigator.recordCMD\", cmd);
       break;
-    case 5:
-      UPDATE_RATE = 2;
+    case 5: //Stop recording
+      cmd = $configDatapoint+\"|\"+$datapoint+\"|stop\";
+      dpSet(\"__navigator.recordCMD\", cmd);
       break;
-    case 6:
-      UPDATE_RATE = 3;
+    case 6:  //Show all recording
+      cmd = $configDatapoint+\"|\"+$datapoint+\"|show all\";
+      dpSet(\"__navigator.recordCMD\", cmd);
+      delay(1);
+      dyn_string rcv;
+      dpGet(\"__navigator.recordRCV\", rcv);
+      DebugN(\"#####  RCV ####\");
+      DebugN(rcv);//$showDatapoints
+      dpGet(\"__navigator.viewsPath\", viewsPath);
+      ChildPanelOnCentralModal(viewsPath + \"plot_view_display_recordings.pnl\",
+	                             \"Configure local settings\",
+	                             makeDynString(\"$showDatapoints:\" + rcv));
       break;
-    case 7:
-      UPDATE_RATE = 4;
+    case 7:  //stop all recording
+      cmd = $configDatapoint+\"|\"+$datapoint+\"|stop all\";
+      dpSet(\"__navigator.recordCMD\", cmd);
       break;
     case 8:
       UPDATE_RATE = 5;
@@ -580,7 +510,39 @@ void navViewPlotContextMenu()
     default:
       break;
     }
-}" 0
+}
+
+
+string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
+{
+ string recordStatus, messageRCV;
+ dyn_string messageRCVsplit;
+ bool messageReceived = FALSE;
+ dpSet(\"__navigator.recordRCV\", \"\");
+ dpSet(\"__navigator.recordCMD\", configDatapoint + \"|\" + datapoint + \"|status\");
+ while(!messageReceived)
+ {
+  dpGet(\"__navigator.recordRCV\", messageRCV);
+  if(patternMatch(configDatapoint + \"|\" + datapoint + \"|*\", messageRCV))
+  {
+    messageReceived = TRUE;
+    messageRCVsplit = strsplit(messageRCV, \"|\");
+  }
+  delay(0,0.025);
+ }
+ if(dynlen(messageRCVsplit)>=3)
+ {
+   return messageRCVsplit[3];
+ }
+ else
+ {
+   return \"unknown\";
+ }
+}
+
+
+
+" 0
  E
 76 0 0 0 0 0
 EE E
@@ -645,6 +607,111 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 20 20 10 10
+13 107
+"Button1"
+""
+1 120 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+118 8 172 35
+T 
+1
+LANG:1 5 Start
+"main()
+{
+  string cmd = $configDatapoint+\"|\"+$datapoint+\"|start\";
+  dpSet(\"System1:__navigator.recordCMD\", cmd);
+}" 0
+ E E E
+13 108
+"Button2"
+""
+1 180 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+178 8 232 35
+T 
+1
+LANG:1 4 Stop
+"main()
+{
+  string cmd = $configDatapoint+\"|\"+$datapoint+\"|stop\";
+  dpSet(\"System1:__navigator.recordCMD\", cmd);
+}" 0
+ E E E
+14 109
+"TextField1"
+""
+1 240 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+96 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+238 8 832 35
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( \"System1:__navigator.recordRCV:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            \"System1:__navigator.recordRCV:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, string sNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:__navigator.recordRCV}
+// DPConfig {:_online.._value}
+// DPType {string}
+// UseDPUnit {FALSE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
 0
 LAYER, 1 
 1
