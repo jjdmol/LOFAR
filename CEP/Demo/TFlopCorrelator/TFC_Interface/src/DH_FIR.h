@@ -58,7 +58,6 @@ private:
   unsigned int itsBufSize;
   
   short itsFIR;
-  short itsNFChannels;
   short itsNStations;      // #stations per buffer
   short itsNTimes;         // #time samples per buffer
   short itsNPol;           // #polarisations per sample
