@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 4 view
-PANEL,351 404 950 740 N "_3DFace" 2
+PANEL,285 317 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -377,33 +377,21 @@ void navViewPlotContextMenu()
   if(recordStatus==\"recording\")
   {
     txt_record        = \"PUSH_BUTTON, Stop record,  5, 1\";
+    txt_recordDisplay = \"PUSH_BUTTON, Display all recordings,  6, 1\";
+    txt_recordStopAll = \"PUSH_BUTTON, Stop all recordings,  7, 1\";
   }
   else if (recordStatus==\"idle\")
   {
     txt_record        = \"PUSH_BUTTON, Start record,  4, 1\";
+    txt_recordDisplay = \"PUSH_BUTTON, Display all recordings,  6, 1\";
+    txt_recordStopAll = \"PUSH_BUTTON, Stop all recordings,  7, 1\";
   }
   else
   {
     txt_record        = \"PUSH_BUTTON, Start record,  4, 0\";
+    txt_recordDisplay = \"PUSH_BUTTON, Display all recordings,  6, 0\";
+    txt_recordStopAll = \"PUSH_BUTTON, Stop all recordings,  7, 0\";
   }
-  //txt_record        = \"PUSH_BUTTON, Start record,  4, 1\";
-  txt_recordDisplay = \"PUSH_BUTTON, Display all recordings,  6, 1\";
-  txt_recordStopAll = \"PUSH_BUTTON, Stop all recordings,  7, 1\";
-  // Use of CASCADE button
-  /*popupMenu(makeDynString(txt_pause, txt_play, txt_step, txt_ranges,
-                          \"CASCADE_BUTTON,Update rate, 1\",
-                          \"SEPARATOR\",
-                          txt_saveData,
-                          \"Update rate\",
-                          \"PUSH_BUTTON,  1 sec. ,4,1\",
-                          \"PUSH_BUTTON,  2 sec. ,5,1\",
-                          \"PUSH_BUTTON,  3 sec. ,6,1\",
-                          \"PUSH_BUTTON,  4 sec. ,7,1\",
-                          \"PUSH_BUTTON,  5 sec. ,8,1\",
-                          \"PUSH_BUTTON, 10 sec. ,9,1\",
-                          \"PUSH_BUTTON, 20 sec. ,10,1\",
-                          \"PUSH_BUTTON, 30 sec. ,11,1\"), Answer);
-                   */
   popupMenu(makeDynString(txt_pause, txt_play, txt_step, txt_ranges,
                           \"SEPARATOR\", txt_record, txt_recordDisplay, txt_recordStopAll,
                           \"SEPARATOR\", txt_saveData), Answer);
@@ -518,9 +506,10 @@ string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
  string recordStatus, messageRCV;
  dyn_string messageRCVsplit;
  bool messageReceived = FALSE;
+ int retryCounter = 0;
  dpSet(\"__navigator.recordRCV\", \"\");
  dpSet(\"__navigator.recordCMD\", configDatapoint + \"|\" + datapoint + \"|status\");
- while(!messageReceived)
+ while(!messageReceived && (retryCounter<=80))
  {
   dpGet(\"__navigator.recordRCV\", messageRCV);
   if(patternMatch(configDatapoint + \"|\" + datapoint + \"|*\", messageRCV))
@@ -529,6 +518,7 @@ string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
     messageRCVsplit = strsplit(messageRCV, \"|\");
   }
   delay(0,0.025);
+  retryCounter++;
  }
  if(dynlen(messageRCVsplit)>=3)
  {
