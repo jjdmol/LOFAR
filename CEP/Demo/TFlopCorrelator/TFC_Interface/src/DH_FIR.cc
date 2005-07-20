@@ -30,7 +30,7 @@ namespace LOFAR
       itsPS          (pSet)
   {
     itsNStations  = itsPS.getInt32("NRSP");
-    itsNTimes     = itsPS.getInt32("DH_StationSB.times");
+    itsNTimes     = itsPS.getInt32("DH_RSP.times");
     itsNPol       = itsPS.getInt32("polarisations");
   }
   
