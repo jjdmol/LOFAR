@@ -22,7 +22,6 @@
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <TFC_InputSection/WH_RSPInput.h>
-#include <TFC_InputSection/WH_SBSplit.h>
 #include <TFC_InputSection/WH_SBCollect.h>
 #include <TFC_Interface/Stub_FIR.h>
 #include <TFC_Interface/Stub_Delay.h>
@@ -89,6 +88,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   int noRSPs = itsParamSet.getInt32("NRSP");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
+  int rspStartNode;
   for (int r=0; r<noRSPs; r++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, noRSPs);
     // todo: get interface and MACs from parameterset
@@ -101,6 +101,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 					 "srcMac",
 					 "dstMac",
 					 true));
+      rspStartNode = lowestFreeNode;
     }
     else
     {
@@ -120,46 +121,11 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     // connect the RSP boards
     //todo: set correct IP/Port numbers in WH_RSP
     
-    // Connect the Delay Controller
-    itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+//     // Connect the Delay Controller
+//     itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
     
   };
   
-
-  LOG_TRACE_FLOW_STR("Create the Subband splitter workholders");
-  vector<WH_SBSplit*> splitNodes;
-  vector<Step*>       splitSteps;
-  int splitStartNode;
-  int nrInputTimes = itsParamSet.getInt32("DH_RSP.times");
-  int nrOutputTimes = itsParamSet.getInt32("DH_StationSB.times");
-  ASSERT(nrOutputTimes >= nrInputTimes);
-  int lowRate = nrOutputTimes/nrInputTimes;
-  for (int r=0; r < noRSPs; r++) {
-    sprintf(WH_DH_Name, "Split_node_%d_of_%d", r, noRSPs);
-    splitNodes.push_back(new WH_SBSplit(WH_DH_Name,      // name
-					itsParamSet)); // inputs  
-    splitSteps.push_back(new Step(splitNodes[r],WH_DH_Name,false));
-    itsWHs.push_back((WorkHolder*) splitNodes[r]);
-    itsSteps.push_back(splitSteps[r]);
-    if (r==0)
-    {
-      splitStartNode = lowestFreeNode;
-    }
-    splitSteps[r]->runOnNode(lowestFreeNode++);
-    //Set output rate
-    splitSteps[r]->setOutRate(lowRate);
-    comp.addBlock(splitSteps[r]);
-
-#ifdef HAVE_MPI
-    // Connect RSP steps to splitters
-    splitSteps[r]->connect(0, RSPSteps[r], 0, 1, 
-			   new TH_MPI(splitStartNode-noRSPs+r, splitStartNode+r),
-			   true);
-#else
-    splitSteps[r]->connect(0, RSPSteps[r], 0, 1, new TH_Mem(), false);   
-#endif
-  }
-
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
   itsOutputStub = new Stub_FIR(true, itsParamSet);
 
@@ -180,33 +146,27 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
       collectStartNode = lowestFreeNode;
     }
     collectSteps[nf]->runOnNode(lowestFreeNode++); 
-    // Set to low rate
-    collectSteps[nf]->setInRate(lowRate);
-    collectSteps[nf]->setProcessRate(lowRate);
-    collectSteps[nf]->setOutRate(lowRate);
     comp.addBlock(collectSteps[nf]);
 
 #ifdef HAVE_MPI
     // Connect splitters to mergers (transpose)
     for (int st=0; st<noRSPs; st++)
     {
-      collectSteps[nf]->connect(st, splitSteps[st], nf, 1,
-			       new TH_MPI(splitStartNode+st, collectStartNode+nf), 
+      collectSteps[nf]->connect(st, RSPSteps[st], nf, 1,
+			       new TH_MPI(rspStartNode+st, collectStartNode+nf), 
 			       true);
     }
 #else
     for (int st=0; st<noRSPs; st++)
     {
-      collectSteps[nf]->connect(st, splitSteps[st], nf, 1, new TH_Mem(), false);
+      collectSteps[nf]->connect(st, RSPSteps[st], nf, 1, new TH_Mem(), false);
     }
 #endif
     // connect output to FIR stub
-    // Output channel 0
-//     itsOutputStub->connect (nf,                           // Corr filter number
-// 			    collectNodes[nf]->getDataManager(), 
-// 			    0);  
+    itsOutputStub->connect (nf,                           // Corr filter number
+			    (collectSteps.back())->getOutDataManager(0), 
+			    0);  
   }
-
   LOG_TRACE_FLOW_STR("Finished define()");
 }
 
