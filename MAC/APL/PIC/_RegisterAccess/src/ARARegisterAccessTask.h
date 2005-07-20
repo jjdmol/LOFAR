@@ -28,6 +28,7 @@
 #include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
+#include <blitz/array.h>
 
 #include "ARAAnswer.h"
 #include "ARAPhysicalModel.h"
@@ -177,10 +178,15 @@ namespace ARA
       void updateVersion(string scope, string version);
       
     private:
+      typedef blitz::Array<double, 2> TStatistics;
+      
       void getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr);
       void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);    
       int getRCUHardwareNr(const string& property);
       TMyPropertySetMap::iterator getPropertySetFromScope(const string& property);
+      void _addStatistics(TStatistics& statistics, uint32 statsHandle);
+      void _integrateStatistics();
+      void _writeStatistics(TStatistics& statistics, uint32 statsHandle);
       
       // member variables
       ARAAnswer   m_answer;
@@ -211,9 +217,17 @@ namespace ARA
       int               m_status_update_interval;
       int               m_stats_update_interval;
       bool              m_centralized_stats;
-
+      
+      int32             m_integrationTime;
+      int32             m_integrationMethod;
+      TStatistics       m_integratingStatisticsSubband;
+      TStatistics       m_lastReceivedStatisticsSubband;
+      int32             m_numStatisticsSubband;
+      TStatistics       m_integratingStatisticsBeamlet;
+      TStatistics       m_lastReceivedStatisticsBeamlet;
+      int32             m_numStatisticsBeamlet;
+      unsigned long     m_integrationTimerID;
   };
-
 };
 
 } // namespace LOFAR

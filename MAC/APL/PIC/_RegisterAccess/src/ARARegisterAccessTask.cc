@@ -42,6 +42,7 @@
 #include <GCF/ParameterSet.h>
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_PValue.h>
+#include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDouble.h>
@@ -87,7 +88,16 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_n_rcus(2),
       m_status_update_interval(1),
       m_stats_update_interval(1),
-      m_centralized_stats(false)
+      m_centralized_stats(false),
+      m_integrationTime(0),
+      m_integrationMethod(0),
+      m_integratingStatisticsSubband(),
+      m_lastReceivedStatisticsSubband(),
+      m_numStatisticsSubband(0),
+      m_integratingStatisticsBeamlet(),
+      m_lastReceivedStatisticsBeamlet(),
+      m_numStatisticsBeamlet(0),
+      m_integrationTimerID(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -721,11 +731,51 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_VDDVCCEN,*pPropAnswer->pValue);
       }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_INTEGRATIONTIME) != 0)
+      {
+        GCFPVInteger pvInt;
+        pvInt.copy(*pPropAnswer->pValue);
+        m_integrationTime = pvInt.getValue();
+        if(m_integrationTime == 0)
+        {
+          m_RSPclient.cancelTimer(m_integrationTimerID);
+          m_integratingStatisticsSubband.free();
+          m_numStatisticsSubband=0;
+          m_integratingStatisticsBeamlet.free();
+          m_numStatisticsBeamlet=0;
+        }
+        else
+        {
+          m_integratingStatisticsSubband.free();
+          m_numStatisticsSubband=0;
+          m_integratingStatisticsBeamlet.free();
+          m_numStatisticsBeamlet=0;
+          m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
+        }
+      }
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_INTEGRATIONMETHOD) != 0)
+      {
+        GCFPVInteger pvInt;
+        pvInt.copy(*pPropAnswer->pValue);
+        m_integrationMethod = pvInt.getValue();
+      }
+      break;
+    }
+    
+    case F_TIMER:
+    {
+      GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(e);
+      if(timerEvent.id == m_integrationTimerID)
+      {
+        _integrateStatistics();
+      }
       break;
     }
     
     case F_EXIT:
     {
+      m_RSPclient.cancelTimer(m_integrationTimerID);
+      
       // unsubscribe from status updates
       RSPUnsubstatusEvent unsubStatus;
       unsubStatus.handle = m_subStatusHandle; // remove subscription with this handle
@@ -954,102 +1004,8 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         updStatsEvent.status,
         updStatsEvent.handle));
 
-    blitz::Array<double, 2>& statistics = updStatsEvent.stats();
-    int maxRCUs     = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
-    int maxSubbands = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
-    LOG_DEBUG(formatString("maxRCUs:%d maxSubbands:%d",maxRCUs,maxSubbands));
-
-    if(m_centralized_stats)
-    {
-      LOG_DEBUG("Writing statistics to a dynamic array of doubles");
-      // build a vector of doubles that will be stored in one datapoint
-      GCFPValueArray valuePointerVector;
-    
-      // first elements indicate the length of the array
-      valuePointerVector.push_back(new GCFPVDouble(maxRCUs));
-      valuePointerVector.push_back(new GCFPVDouble(maxSubbands));
-    
-      // then for each rcu, the statistics of the beamlets or subbands
-      int rcu,subband;
-      for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
-      {
-        for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
-        {
-          double stat = statistics(rcu,subband);
-          valuePointerVector.push_back(new GCFPVDouble(stat));
-        }
-      }
-
-      // convert the vector of unsigned values to a dynamic array
-      GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
-      
-      // set the property
-      TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
-      if(propSetIt != m_myPropertySetMap.end())
-      {
-        if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
-        {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
-        }
-        else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
-        {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
-        }
-      }
-    
-      // cleanup
-      GCFPValueArray::iterator it=valuePointerVector.begin();
-      while(it!=valuePointerVector.end())
-      {
-        delete *it;
-        valuePointerVector.erase(it);
-        it=valuePointerVector.begin();
-      }
-    }
-    else
-    {
-      LOG_DEBUG("Writing statistics to one string");
-      // statistics will be stored as a string in an element of each rcu
-      // then for each rcu, the statistics of the beamlets or subbands
-      int rcu,subband;
-      for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
-      {
-        LOG_DEBUG(formatString("rcu:%d",rcu));
-        
-        stringstream statisticsStream;
-        statisticsStream.setf(ios_base::fixed);
-        for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
-        {
-          double stat = statistics(rcu,subband);
-          statisticsStream << subband << " ";
-          statisticsStream << stat << endl;
-        }
-        LOG_DEBUG(formatString("first part of statistics:%s",statisticsStream.str().substr(0,30).c_str()));
-        
-        GCFPVString statisticsString(statisticsStream.str());
-        // set the property
-        char scopeString[300];
-        int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
-        getRCURelativeNumbers(rcu,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
-        TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(scopeString);
-        if(propSetIt != m_myPropertySetMap.end())
-        {
-          if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
-          {
-            TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
-            LOG_DEBUG(formatString("Writing subband statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
-          }
-          else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
-          {
-            TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
-            LOG_DEBUG(formatString("Writing beamlet statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
-          }
-        }
-      }
-    }
+    _addStatistics(updStatsEvent.stats(), updStatsEvent.handle);
   }
-  
   return status;
 }
 void RegisterAccessTask::updateBoardProperties(string scope,
@@ -1303,7 +1259,7 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
   }
 }
 
-void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 status,uint32 nof_overflow)
+void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/, uint32 nof_overflow)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1504,6 +1460,200 @@ RegisterAccessTask::TMyPropertySetMap::iterator RegisterAccessTask::getPropertyS
   }
   return it;
   
+}
+
+
+void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHandle)
+{
+  if(statsHandle == m_subStatsHandleSubbandPower)
+  {
+    if(m_lastReceivedStatisticsSubband.size() == 0)
+      m_lastReceivedStatisticsSubband.resize(statistics.shape());
+    m_lastReceivedStatisticsSubband = statistics;
+  
+    if(m_integrationTime == 0)
+    {
+      _writeStatistics(statistics, statsHandle);
+    }
+    else
+    {
+      if(m_integratingStatisticsSubband.size() == 0)
+        m_integratingStatisticsSubband.resize(statistics.shape());
+    
+      m_integratingStatisticsSubband += statistics;
+      m_numStatisticsSubband++;
+    }
+  }
+  else if(statsHandle == m_subStatsHandleBeamletPower)
+  {
+    if(m_lastReceivedStatisticsBeamlet.size() == 0)
+      m_lastReceivedStatisticsBeamlet.resize(statistics.shape());
+    m_lastReceivedStatisticsBeamlet = statistics;
+  
+    if(m_integrationTime == 0)
+    {
+      _writeStatistics(statistics, statsHandle);
+    }
+    else
+    {
+      if(m_integratingStatisticsBeamlet.size() == 0)
+        m_integratingStatisticsBeamlet.resize(statistics.shape());
+    
+      m_integratingStatisticsBeamlet += statistics;
+      m_numStatisticsBeamlet++;
+    }
+  }
+}
+
+void RegisterAccessTask::_integrateStatistics()
+{
+  TStatistics statisticsSubband;
+  TStatistics statisticsBeamlet;
+  
+  if(m_numStatisticsSubband == 0)
+  { // no updates received yet. Just return the last received statistics
+    statisticsSubband.resize(m_lastReceivedStatisticsSubband.shape());
+    statisticsSubband = m_lastReceivedStatisticsSubband;
+  }
+  else
+  {
+    statisticsSubband.resize(m_integratingStatisticsSubband.shape());
+    
+    switch(m_integrationMethod)
+    {
+      case 0: // average
+      default:
+        statisticsSubband = m_integratingStatisticsSubband/static_cast<double>(m_numStatisticsSubband);
+        break;
+  //    case 1: // NYI
+  //      break;
+    }
+  
+    m_integratingStatisticsSubband.free();
+    m_numStatisticsSubband=0;
+  }
+  if(m_numStatisticsBeamlet == 0)
+  { // no updates received yet. Just return the last received statistics
+    statisticsBeamlet.resize(m_lastReceivedStatisticsBeamlet.shape());
+    statisticsBeamlet = m_lastReceivedStatisticsBeamlet;
+  }
+  else
+  {
+    statisticsBeamlet.resize(m_integratingStatisticsBeamlet.shape());
+    
+    switch(m_integrationMethod)
+    {
+      case 0: // average
+      default:
+        statisticsBeamlet = m_integratingStatisticsBeamlet/static_cast<double>(m_numStatisticsBeamlet);
+        break;
+  //    case 1: // NYI
+  //      break;
+    }
+  
+    m_integratingStatisticsBeamlet.free();
+    m_numStatisticsBeamlet=0;
+  }
+  
+  _writeStatistics(statisticsSubband, m_subStatsHandleSubbandPower);
+  _writeStatistics(statisticsBeamlet, m_subStatsHandleBeamletPower);
+}
+
+void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsHandle)
+{
+  int maxRCUs     = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
+  int maxSubbands = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
+  LOG_DEBUG(formatString("maxRCUs:%d maxSubbands:%d",maxRCUs,maxSubbands));
+    
+  if(m_centralized_stats)
+  {
+    LOG_DEBUG("Writing statistics to a dynamic array of doubles");
+    // build a vector of doubles that will be stored in one datapoint
+    GCFPValueArray valuePointerVector;
+  
+    // first elements indicate the length of the array
+    valuePointerVector.push_back(new GCFPVDouble(maxRCUs));
+    valuePointerVector.push_back(new GCFPVDouble(maxSubbands));
+  
+    // then for each rcu, the statistics of the beamlets or subbands
+    int rcu,subband;
+    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
+    {
+      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
+      {
+        double stat = statistics(rcu,subband);
+        valuePointerVector.push_back(new GCFPVDouble(stat));
+      }
+    }
+
+    // convert the vector of unsigned values to a dynamic array
+    GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
+    
+    // set the property
+    TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
+    if(propSetIt != m_myPropertySetMap.end())
+    {
+      if(statsHandle == m_subStatsHandleSubbandPower)
+      {
+        propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
+      }
+      else if(statsHandle == m_subStatsHandleBeamletPower)
+      {
+        propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
+      }
+    }
+  
+    // cleanup
+    GCFPValueArray::iterator it=valuePointerVector.begin();
+    while(it!=valuePointerVector.end())
+    {
+      delete *it;
+      valuePointerVector.erase(it);
+      it=valuePointerVector.begin();
+    }
+  }
+  else
+  {
+    LOG_DEBUG("Writing statistics to one string");
+    // statistics will be stored as a string in an element of each rcu
+    // then for each rcu, the statistics of the beamlets or subbands
+    int rcu,subband;
+    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
+    {
+      LOG_DEBUG(formatString("rcu:%d",rcu));
+      
+      stringstream statisticsStream;
+      statisticsStream.setf(ios_base::fixed);
+      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
+      {
+        double stat = statistics(rcu,subband);
+        statisticsStream << subband << " ";
+        statisticsStream << stat << endl;
+      }
+      LOG_DEBUG(formatString("first part of statistics:%s",statisticsStream.str().substr(0,30).c_str()));
+      
+      GCFPVString statisticsString(statisticsStream.str());
+      // set the property
+      char scopeString[300];
+      int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
+      getRCURelativeNumbers(rcu,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+      TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(scopeString);
+      if(propSetIt != m_myPropertySetMap.end())
+      {
+        if(statsHandle == m_subStatsHandleSubbandPower)
+        {
+          TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
+          LOG_DEBUG(formatString("Writing subband statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
+        }
+        else if(statsHandle == m_subStatsHandleBeamletPower)
+        {
+          TGCFResult res = propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
+          LOG_DEBUG(formatString("Writing beamlet statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
+        }
+      }
+    }
+  }
 }
 
 } // namespace ARA
