@@ -30,7 +30,6 @@ namespace LOFAR
       itsPS          (pSet)
   {
     itsNStations  = itsPS.getInt32("NRSP");
-    itsNFChannels = itsPS.getInt32("DH_StationSB.freqs");
     itsNTimes     = itsPS.getInt32("DH_StationSB.times");
     itsNPol       = itsPS.getInt32("polarisations");
   }
@@ -41,7 +40,6 @@ DH_FIR::DH_FIR(const DH_FIR& that)
     itsMatrix(0)
 {
     itsFIR        = that.itsFIR;
-    itsNFChannels = that.itsNFChannels;
     itsNStations  = that.itsNStations; 
     itsNTimes     = that.itsNTimes;
     itsNPol       = that.itsNPol;
@@ -62,7 +60,7 @@ DataHolder* DH_FIR::clone() const
 void DH_FIR::init()
 {
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
+  itsBufSize = itsNStations * itsNTimes * itsNPol;
   
   addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
@@ -73,7 +71,6 @@ void DH_FIR::init()
 
   vector<DimDef> vdd;
   vdd.push_back(DimDef("Station", itsNStations));
-  vdd.push_back(DimDef("FreqChannel", itsNFChannels));
   vdd.push_back(DimDef("Time", itsNTimes));
   vdd.push_back(DimDef("Polarisation", itsNPol));
   
