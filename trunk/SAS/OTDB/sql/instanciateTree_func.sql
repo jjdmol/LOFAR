@@ -43,7 +43,6 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4)
 		vParam	RECORD;
 
 	BEGIN
-perform logmsg(\'VHparams:\' || $1 || \',\' || $2 || \',\' || $3 );
 	  FOR vParam IN 
 		SELECT	originID, name, limits
 		FROM 	VICtemplate
@@ -79,7 +78,6 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2)
 		vNewNodeID	VICtemplate.nodeID%TYPE;
 
 	BEGIN
-perform logmsg(\'VHleaf:\' || $1 || \',\' || $2 || \',\' || $3 || \',\' || $4);
 	  SELECT originID, name
 	  INTO	 vNode
 	  FROM	 VICtemplate
@@ -90,6 +88,9 @@ perform logmsg(\'VHleaf:\' || $1 || \',\' || $2 || \',\' || $3 || \',\' || $4);
 	  END IF;
 
 	  vNewNodeID := NEXTVAL(\'VIChierarchID\');
+	  IF $4 != 0 THEN
+		vNode.name := vNode.name || \'[\' || $4 || \']\';
+	  END IF;
 
 	  INSERT
 	  INTO	 VIChierarchy(treeID, nodeID, parentID, 
@@ -124,12 +125,12 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4)
 	  vNode				RECORD;
 	  vVTnode			RECORD;
 	  vIndexCounter		INT2;
+	  vIndexNr			INT2;
 	  vNewNodeID		VIChierarchy.nodeID%TYPE;
 	  vNodeID			VIChierarchy.nodeID%TYPE;
 	  vDummy			VIChierarchy.nodeID%TYPE;
 
 	BEGIN
-perform logmsg(\'VHsubtree:\' || $1 || \',\' || $2 || \',\' || $3 );
 	  -- get orgnode (master record: index = 0)
 	  SELECT parentID, name, instances
 	  INTO	 vNode
@@ -150,8 +151,15 @@ perform logmsg(\'VHsubtree:\' || $1 || \',\' || $2 || \',\' || $3 );
 		  vNodeID := $1;
 		END IF;
 
+		-- if there is only 1 instance tell VHleafnode this with index = 0
+		IF vNode.instances = 1 THEN
+		  vIndexnr := 0;
+		ELSE
+		  vIndexnr := vIndexCounter;
+		END IF;
+
 		-- instanciate node itself
-	    vNewNodeID := instanciateVHleafNode(vNodeID, $2, $3, vIndexCounter::int2);
+	    vNewNodeID := instanciateVHleafNode(vNodeID, $2, $3, vIndexnr::int2);
 
 		-- dive into the childen
 		FOR vVTnode IN 

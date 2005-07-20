@@ -24,9 +24,11 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<OTDB/VICadmin.h>
-#include<OTDB/OTDBnode.h>
+#include <Common/LofarLogger.h>
+#include <fstream>
+#include <OTDB/VICadmin.h>
+#include <OTDB/OTDBnode.h>
+
 
 namespace LOFAR {
   namespace OTDB {
@@ -187,15 +189,38 @@ bool	VICadmin::exportTree (treeIDType		aTreeID,
 							  const formatType	outputFormat,
 							  bool				folded)
 {
-
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
 
-	//TODO: ...
+	work	xAction(*(itsConn->getConn()), "exportFile");
 
-	return (true);
+	try {
+		ofstream	outFile;
+		outFile.open (filename.c_str());
+		if (!outFile) {
+			LOG_ERROR_STR ("Cannot open exportfile: " << filename);
+			return (false);
+		}
+
+		result	res = xAction.exec("SELECT * from exportTree(" +
+								    toString(itsConn->getAuthToken()) + "," +
+									toString(aTreeID) + "," +
+									toString(topItem) + ")");
+		// Get result
+		string		params;
+		res[0]["exporttree"].to(params);
+		outFile << params;
+		outFile.close();
+		return (true);
+	}
+	catch (Exception&	ex) {
+		cout << ex.what();
+		return (false);
+	}
+
+	return (false);
 }
 
 //

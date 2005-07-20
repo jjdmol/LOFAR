@@ -1,12 +1,12 @@
 INSERT INTO OTDBtree values   ( 33, 0, 1, 20, 1, 'now', 0, null, null, 1);
 
-INSERT INTO VICtemplate values( 33, 1051, 1059,  1, 'Virt.Backend',  0, false,   1, 'limits');
+INSERT INTO VICtemplate values( 33, 1051, 1059,  1, 'Virt_Backend',  0, false,   1, 'limits');
 INSERT INTO VICtemplate values( 33, 1052, 1051,  2, 'RFI_detector',  0, false,  40, 'limits');
 INSERT INTO VICtemplate values( 33, 1053, 1051,  3, 'Correlator', 	  0, false, 600, 'limits');
 INSERT INTO VICtemplate values( 33, 1054, 1051,  4, 'Storage', 	  0, false, 100, 'limits');
 INSERT INTO VICtemplate values( 33, 1055, 1051,  5, 'Visualisation', 0, false,  24, 'limits');
-INSERT INTO VICtemplate values( 33, 1056, 1059,  6, 'Virt.Telescope',0, false,   8, 'limits');
-INSERT INTO VICtemplate values( 33, 1057, 1056,  7, 'Rec.Group',	  0, false,   1, 'limits');
+INSERT INTO VICtemplate values( 33, 1056, 1059,  6, 'Virt_Telescope',0, false,   8, 'limits');
+INSERT INTO VICtemplate values( 33, 1057, 1056,  7, 'Rec_Group',	  0, false,   1, 'limits');
 INSERT INTO VICtemplate values( 33, 1058, 1056,  8, 'Beamformer',	  0, false,   4, 'limits');
 INSERT INTO VICtemplate values( 33, 1059,    0,  9, 'Observation',	  0, false,   1, 'limits');
 
@@ -34,8 +34,8 @@ INSERT INTO VICtemplate values( 33, 1121, 1057, 27, 'Ram usage', 	  0, true,   1
 INSERT INTO VICtemplate values( 33, 1122, 1057, 28, 'GFLOPS', 		  0, true,   1, '0.4');
 INSERT INTO VICtemplate values( 33, 1123, 1057, 29, 'NodeType', 	  0, true,   1, '2');
 INSERT INTO VICtemplate values( 33, 1124, 1057, 30, 'Sharable', 	  0, true,   1, 'TRUE');
-INSERT INTO VICtemplate values( 33, 1125, 1057, 31, 'Freq.bands',	  0, true,   1, '4');
-INSERT INTO VICtemplate values( 33, 1126, 1057, 32, 'Sample Freq.',  0, true,   1, '160');
+INSERT INTO VICtemplate values( 33, 1125, 1057, 31, 'Freq_bands',	  0, true,   1, '4');
+INSERT INTO VICtemplate values( 33, 1126, 1057, 32, 'Sample Freq',  0, true,   1, '160');
 INSERT INTO VICtemplate values( 33, 1127, 1058, 33, 'Ram usage', 	  0, true,   1, '60');
 INSERT INTO VICtemplate values( 33, 1128, 1058, 34, 'GFLOPS', 		  0, true,   1, '1.2');
 INSERT INTO VICtemplate values( 33, 1129, 1058, 35, 'NodeType', 	  0, true,   1, '2');
