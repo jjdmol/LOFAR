@@ -65,4 +65,11 @@ else
         setenv LD_LIBRARY_PATH $LOFARROOT/lib:$LD_LIBRARY_PATH
     endif
 
+    # Now define the new LOFARDATAROOT
+    set data_path = `echo $LOFARROOT | sed -e 's/\/installed.*$//'`
+    if ( ! -d $data_path/data ) then
+       mkdir $data_path/data
+    endif
+    setenv LOFARDATAROOT $data_path/data
+
 endif

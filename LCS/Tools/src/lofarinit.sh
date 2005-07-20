@@ -69,4 +69,12 @@ else
         LD_LIBRARY_PATH=$LOFARROOT/lib:$LD_LIBRARY_PATH
     fi
     export LD_LIBRARY_PATH
+
+    # Now define the new LOFARDATAROOT
+    data_path=`echo $LOFARROOT | sed -e 's/\/installed.*$//'`
+    LOFARDATAROOT=$data_path/data
+    if [ ! -d $LOFARDATAROOT ]; then
+       mkdir -p $LOFARDATAROOT
+    fi
+    export LOFARDATAROOT
 fi
