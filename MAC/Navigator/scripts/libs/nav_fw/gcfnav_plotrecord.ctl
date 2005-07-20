@@ -6,12 +6,11 @@ global string g_path_temp = "c:/aa";
 global dyn_string recordList;
 main()
 {
+  //Set the output to ""
+  dpSet("__navigator.recordRCV", "");
   //Connects to the datapoint .CMD, this is the command input the this
   //function.
-  // DENK AAN LOAD EN UNLOAD FUNCTIES!!!!!
-  // navPMLunloadPropertySet / navPMLloadPropertySet
-  dpConnect("navViewPlotRecordMain", FALSE, "System1:recordFunction.CMD");
-  DebugN("tempdir:"+g_path_temp);
+  dpConnect("navViewPlotRecordMain", FALSE, "System1:__navigator.recordCMD");
 }
 
 
@@ -53,7 +52,22 @@ navViewPlotRecordMain(string dp1, string commandInput)
   switch (cmd_command)
   {
   case "status":
+    // There is asked for the status of this cmd_configDatapoint and cmd_datapoint,
+    // the status is returned to "__navigator.recordRCV" so the requester can handle this
+    // response for further computation.
     DebugN("[case status]");
+    string match = cmd_configDatapoint+"|"+cmd_datapoint+"*";
+    dyn_string searchResult = dynPatternMatch(match, recordList);
+    dyn_string dpToDisconnect;
+    if(dynlen(searchResult)<=0)
+    {
+      dpSet("__navigator.recordRCV", cmd_configDatapoint+"|"+cmd_datapoint+"|idle");
+    }
+    else
+    {
+      dpSet("__navigator.recordRCV", cmd_configDatapoint+"|"+cmd_datapoint+"|recording");
+    }
+    
     break;
   case "start":
     DebugN("[case start]");
@@ -61,9 +75,17 @@ navViewPlotRecordMain(string dp1, string commandInput)
     navViewPlotRecordListAddItems(dpNamesToRecord);
     navViewPlotRecordControl(TRUE, dpNamesToRecord);
     break;
+  case "show all":
+    DebugN("[case show all]");
+    dyn_string showAllDPs;
+    for(int i=1; i<=dynlen(recordList); i++)
+    {
+      showAllDPs[dynlen(showAllDPs)+1] = navViewPlotGetSplitPart(recordList[i], 2);
+    }
+    dpSet("__navigator.recordRCV", showAllDPs);
+    break;
   case "stop":    
     DebugN("[case stop]");
-    //navViewPlotRecordListRemoveItems(cmd_configDatapoint, cmd_datapoint);
     dyn_string searchResult = dynPatternMatch(cmd_configDatapoint+"|"+cmd_datapoint+"*", recordList);
     dyn_string dpToDisconnect;
     if(dynlen(searchResult)>0)
@@ -77,11 +99,16 @@ navViewPlotRecordMain(string dp1, string commandInput)
       navViewPlotRecordControl(FALSE, dpToDisconnect);
     }
     break;
+  case "stop all":
+    DebugN("[case stop all]");
+    break;
+    
   default:
     DebugN("[case default]");
-    dpSet("System1:recordFunction.RCV", "");
+    dpSet("__navigator.recordRCV", "");
     break;
   }
+  DebugN("###############  recordList  ###################");
   DebugN(recordList);
 }
  
@@ -116,7 +143,7 @@ dyn_string navViewPlotRecordGetDpNamesToRecord(string configDatapoint)
 
   if(dpAccessable(configDatapoint))
   {
-    dpSet("System1:recordFunction.RCV", "dpExists");
+    dpSet("__navigator.recordRCV", "dpExists");
     dpGet(configDatapoint +".currentDatapoint", currentDatapoint);
     dpGet(configDatapoint + ".fileNamePrefix",  fileNamePrefix);
     fileNamePrefix = fileNamePrefix + navViewGetTimeString();
@@ -135,7 +162,7 @@ dyn_string navViewPlotRecordGetDpNamesToRecord(string configDatapoint)
         }
       }
     }
-    dpSet("System1:recordFunction.admin", newDatapoints);
+    dpSet("System1:__navigator.recordAdmin", newDatapoints);
   }
   return newDatapoints;
 }
@@ -154,8 +181,10 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
   {
     for(int i=1; i<=dynlen(newDatapoints); i++)
     {
-      DebugN("dpConnect:"+navViewPlotGetSplitPart(newDatapoints[i],2 ));
-      dpConnect("RecordSpectrum", FALSE, navViewPlotGetSplitPart(newDatapoints[i],2 ));
+      string dpToConnect = navViewPlotGetSplitPart(newDatapoints[i],2 );
+      DebugN("dpConnect:" + dpToConnect);
+      navPMLloadPropertySet(dpToConnect);
+      dpConnect("RecordSpectrum", FALSE, dpToConnect);
       //Write file record info to disc
       navViewPlotWithRecordDesciptionFile(newDatapoints[i]);
     }
@@ -165,11 +194,18 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
     for(int i=1; i<=dynlen(newDatapoints); i++)
     {
       DebugN("dpDisconnect:"+newDatapoints[i]);
+      navPMLloadPropertySet(newDatapoints[i]);
       dpDisconnect("RecordSpectrum", newDatapoints[i]);
     }
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotWithRecordDesciptionFile;
+//                                            
+// Input:  1. Record configuration data
+// Output: 1. Data is stored in the ".dat" file as header
+///////////////////////////////////////////////////////////////////////////
 navViewPlotWithRecordDesciptionFile(string datapoint)
 {
   dyn_string searchMatch = dynPatternMatch("*" + datapoint + "*", recordList);
@@ -177,21 +213,25 @@ navViewPlotWithRecordDesciptionFile(string datapoint)
   string dpName = navViewPlotGetSplitPart(searchMatch[1],2);
   string plotNumber = navViewPlotGetSplitPart(searchMatch[1],3);
   string prefixFileName = navViewPlotGetSplitPart(searchMatch[1],4);
-  file f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber+".txt", "w+");
-  fputs ("+---------------------------------------------------------------------+\n", f );
-  fputs ("| Automatic generated file                                            |\n", f );
-  fputs ("| By Navigator recordFunction                                         |\n", f );
-  fputs ("+---------------------------------------------------------------------+\n", f );
-   string timeString = getCurrentTime();
-   string userName = getUserName(getUserId());
+  if(""==prefixFileName)
+  {
+    prefixFileName = "NoPrefix";
+  }
+  file f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber+".dat", "w+");
+  fputs ("#---------------------------------------------------------------------#\n", f );
+  fputs ("# Automatic generated file                                            #\n", f );
+  fputs ("# By Navigator recordFunction                                         #\n", f );
+  fputs ("#---------------------------------------------------------------------#\n", f );
+  string timeString = getCurrentTime();
+  string userName = getUserName(getUserId());
 
-  fputs ("Record started on: " + timeString +"\n", f );
-  fputs ("By user          : " + userName+"\n", f );
-  fputs ("For datapoint    : " + dpName+"\n", f );
-  fputs ("Config datapoint : " + configDpName+"\n", f );
-  fputs ("Plot number      : " + plotNumber+"\n", f );
-  fputs ("Data fileName    : " + prefixFileName + "_record_"+plotNumber+".dat"+"\n", f );
-  fputs ("+-------------------------------EOF ----------------------------------+\n", f );
+  fputs ("# Record started on: " + timeString +"\n", f );
+  fputs ("# By user          : " + userName+"\n", f );
+  fputs ("# For datapoint    : " + dpName+"\n", f );
+  fputs ("# Config datapoint : " + configDpName+"\n", f );
+  fputs ("# Plot number      : " + plotNumber+"\n", f );
+  fputs ("# Data fileName    : " + prefixFileName + "_record_"+plotNumber+".dat"+"\n", f );
+  fputs ("#-------------------------------EOF ----------------------------------#\n", f );
   fclose(f);
 }
 
@@ -247,7 +287,6 @@ void RecordSpectrum(string dp1, string spectrum)
   //Write the complete config back to recordList with the changed counter info
   counter++;
   recordList[position]= configDpName +"|"+ dpName +"|"+ plotNumber +"|"+ prefixFileName +"|"+ counter;
-  DebugTN("##  Ready ## "+ prefixFileName + "_record_"+plotNumber+".dat "+counter+" ##");
 }
 
 
