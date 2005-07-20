@@ -136,7 +136,7 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID)
 			return (empty); 
 		}
 
-		return (resultToTreeInfo (res[0]));
+		return (OTDBtree (res[0]));
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during retrieval of TreeInfo:")
@@ -178,7 +178,7 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 		// copy information to output vector
 		vector<OTDBtree>	resultVec;
 		for (result::size_type i = 0; i < nrRecords; ++i) {
-			resultVec.push_back(resultToTreeInfo(res[i]));
+			resultVec.push_back(OTDBtree(res[i]));
 		}
 
 		return (resultVec);
@@ -204,55 +204,6 @@ ostream& OTDBconnection::print (ostream& os) const
 		os << "NOT ";
 	}
 	return (os << "connected.");
-}
-
-// -------------------- private functions --------------------
-//
-// resultToTreeInfo(result::tuple)
-//
-// Converts a result tuple to a OTDBtree structure
-//
-OTDBtree OTDBconnection::resultToTreeInfo(const result::tuple&		row) 
-{
-	OTDBtree	empty;
-
-	try {
-		// construct OTDBtree class with right ID
-		// Note: names refer to SQL OTDBtree type
-		treeIDType 	treeID;
-		row["treeid"].to(treeID);
-		OTDBtree		tInfo(treeID);
-
-		// fill in rest of the fields
-		row["classification"].to(tInfo.classification);
-		row["creator"].to(tInfo.creator);
-		string crea;
-		row["creationDate"].to(crea);
-		tInfo.creationDate = time_from_string(crea);
-		row["type"].to(tInfo.type);
-
-		// next values are optional
-		row["originalTree"].to(tInfo.originalTree);
-		row["campaign"].to(tInfo.campaign);
-		string start;
-		row["starttime"].to(start);
-		if (start.length() > 0) {
-			tInfo.starttime = time_from_string(start);
-		}
-		string stop;
-		row["stoptime"].to(stop);
-		if (stop.length() > 0) {
-			tInfo.stoptime = time_from_string(stop);
-		}
-
-		return (tInfo);
-	}
-	catch (std::exception&	ex) {
-		itsError = string("Exception during conversion of TreeInfo:")
-					 + ex.what();
-	}
-
-	return (empty);
 }
 
   } // namespace OTDB

@@ -37,3 +37,4 @@
 \i getVTnode_func.sql
 \i getVTchildren_func.sql
 \i instanciateTree_func.sql
+\i exportTree_func.sql

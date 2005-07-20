@@ -59,6 +59,9 @@ public:
 	~OTDBinfo();
 
 	//# -------------------- OTDBnode interface --------------------
+	// Retrieve the topNode of the tree
+	OTDBnode getTopNode ();
+
 	// Once an treeID is chosen, the user can retrieve the definition of that
 	// tree. A nodeID may be passed to get a sub-tree in stead of the full
 	// PIC tree.

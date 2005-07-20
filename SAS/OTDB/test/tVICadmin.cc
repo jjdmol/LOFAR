@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 #include <OTDB/VICadmin.h>
+#include <OTDB/OTDBinfo.h>
 #include <OTDB/OTDBnode.h>
 
 using namespace LOFAR;
@@ -119,6 +120,15 @@ int main (int	argc, char*	argv[]) {
 		if (!newTreeID) {
 			LOG_ERROR(va.errorMsg());
 		}
+
+		LOG_DEBUG_STR("Building an export file of whole tree " << newTreeID);
+		OTDBnode	topNode = OTDBinfo(&conn, newTreeID).getTopNode();
+		LOG_DEBUG_STR("ID of topnode is " << topNode.nodeID());
+		if (!va.exportTree(newTreeID, topNode.nodeID(), 
+							"treeExport", VICadmin::FtKVList, true)){
+			LOG_ERROR(va.errorMsg());
+		}
+		
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

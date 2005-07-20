@@ -59,6 +59,35 @@ OTDBinfo::~OTDBinfo()
 
 // -------------------- OTDBnode interface --------------------
 //
+// getTopNode
+//
+// Retrieve the topNode from the tree
+//
+OTDBnode OTDBinfo::getTopNode()
+{
+	OTDBnode	empty;
+
+	if (!itsConn->connect()) {
+		return (empty);
+	}
+
+	// construct a query that call a stored procedure.
+	work	xAction(*(itsConn->getConn()), "getTopNode");
+
+	try {
+		result res = xAction.exec("SELECT * from getTopNode(" + 
+									toString(itsTree.treeID()) + ")");
+		return (OTDBnode(itsTree.treeID(), res[0]));
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during insert of KVT:") + ex.what();
+		return (empty);
+	}
+
+	return (empty);
+}
+
+//
 // getItemList
 //
 // Once an treeID is chosen, the user can retrieve the definition of that

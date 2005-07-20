@@ -80,7 +80,6 @@ private:
 	// Copying is not allowed
 	OTDBconnection(const OTDBconnection&	that);
 	OTDBconnection& operator=(const OTDBconnection& that);
-	OTDBtree	resultToTreeInfo(const result::tuple&	row);
 
 	//# --- Datamembers --- 
 	string		itsUser;
