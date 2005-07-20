@@ -55,7 +55,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
     // There is asked for the status of this cmd_configDatapoint and cmd_datapoint,
     // the status is returned to "__navigator.recordRCV" so the requester can handle this
     // response for further computation.
-    DebugN("[case status]");
+    DebugN("case status");
     string match = cmd_configDatapoint+"|"+cmd_datapoint+"*";
     dyn_string searchResult = dynPatternMatch(match, recordList);
     dyn_string dpToDisconnect;
@@ -70,13 +70,18 @@ navViewPlotRecordMain(string dp1, string commandInput)
     
     break;
   case "start":
-    DebugN("[case start]");
+    // Place all as active configured DP's in a dyn_string, add only the not already
+    // recorded datapoints. Then start the record function.
+    DebugN("case start");
     dyn_string dpNamesToRecord = navViewPlotRecordGetDpNamesToRecord(cmd_configDatapoint);
-    navViewPlotRecordListAddItems(dpNamesToRecord);
-    navViewPlotRecordControl(TRUE, dpNamesToRecord);
+    dpNamesToRecord = navViewPlotRecordListAddItems(dpNamesToRecord);
+    if(dynlen(dpNamesToRecord)>0)
+    {
+      navViewPlotRecordControl(TRUE, dpNamesToRecord);
+    }
     break;
   case "show all":
-    DebugN("[case show all]");
+    DebugN("case show all");
     dyn_string showAllDPs;
     for(int i=1; i<=dynlen(recordList); i++)
     {
@@ -85,7 +90,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
     dpSet("__navigator.recordRCV", showAllDPs);
     break;
   case "stop":    
-    DebugN("[case stop]");
+    DebugN("case stop");
     dyn_string searchResult = dynPatternMatch(cmd_configDatapoint+"|"+cmd_datapoint+"*", recordList);
     dyn_string dpToDisconnect;
     if(dynlen(searchResult)>0)
@@ -100,29 +105,45 @@ navViewPlotRecordMain(string dp1, string commandInput)
     }
     break;
   case "stop all":
-    DebugN("[case stop all]");
+    DebugN("case stop all");
+    dyn_string stopAllDPs;
+    for(int i=1; i<=dynlen(recordList); i++)
+    {
+      stopAllDPs[dynlen(stopAllDPs)+1] = navViewPlotGetSplitPart(recordList[i], 2);
+    }
+    navViewPlotRecordControl(FALSE, stopAllDPs);
+    dynClear(recordList);
     break;
-    
   default:
-    DebugN("[case default]");
-    dpSet("__navigator.recordRCV", "");
+    DebugN("case default");
+    dpSet("__navigator.recordRCV", "unknown command");
     break;
   }
   DebugN("###############  recordList  ###################");
   DebugN(recordList);
 }
  
-
 ///////////////////////////////////////////////////////////////////////////
 // Function: navViewPlotRecordListAddItems; add's new datapoint with 
-//           addional information to the global recordList
+//           addional information to the global recordList. But only if
+//           they are unique!! Otherwise the are ignored.
 //                                            
 // Input:  1. datapoint names with config to add to recordList
-// Output: 1. none
+// Output: 1. dyn_string with unique datapoint to add
 ///////////////////////////////////////////////////////////////////////////
-void navViewPlotRecordListAddItems(dyn_string dpNamesToAdd)
+dyn_string navViewPlotRecordListAddItems(dyn_string dpNamesToAdd)
 {
-  dynAppend(recordList, dpNamesToAdd);
+  dyn_string matchedDPs;
+  for(int i=1; i<=dynlen(dpNamesToAdd); i++)
+  {
+    dyn_string match = dynPatternMatch("*"+navViewPlotGetSplitPart(dpNamesToAdd[i], 2)+"*", recordList); 
+    if(dynlen(match)==0)
+    {
+      dynAppend(recordList, dpNamesToAdd[i]);
+      matchedDPs[dynlen(matchedDPs)+1] = dpNamesToAdd[i];
+    }
+  }
+  return matchedDPs;
 }
 
 
@@ -143,9 +164,12 @@ dyn_string navViewPlotRecordGetDpNamesToRecord(string configDatapoint)
 
   if(dpAccessable(configDatapoint))
   {
-    dpSet("__navigator.recordRCV", "dpExists");
-    dpGet(configDatapoint +".currentDatapoint", currentDatapoint);
+    dpGet(configDatapoint + ".currentDatapoint", currentDatapoint);
     dpGet(configDatapoint + ".fileNamePrefix",  fileNamePrefix);
+    if(fileNamePrefix=="")
+    {
+      fileNamePrefix = "NoPrefixDefined";   
+    }
     fileNamePrefix = fileNamePrefix + navViewGetTimeString();
     for(int i=1;i<=8;i++)
     {
@@ -162,7 +186,6 @@ dyn_string navViewPlotRecordGetDpNamesToRecord(string configDatapoint)
         }
       }
     }
-    dpSet("System1:__navigator.recordAdmin", newDatapoints);
   }
   return newDatapoints;
 }
@@ -186,7 +209,7 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
       navPMLloadPropertySet(dpToConnect);
       dpConnect("RecordSpectrum", FALSE, dpToConnect);
       //Write file record info to disc
-      navViewPlotWithRecordDesciptionFile(newDatapoints[i]);
+      navViewPlotWriteRecordDesciptionFile(newDatapoints[i]);
     }
   }
   else
@@ -201,12 +224,12 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotWithRecordDesciptionFile;
+// Function: navViewPlotWriteRecordDesciptionFile;
 //                                            
 // Input:  1. Record configuration data
 // Output: 1. Data is stored in the ".dat" file as header
 ///////////////////////////////////////////////////////////////////////////
-navViewPlotWithRecordDesciptionFile(string datapoint)
+navViewPlotWriteRecordDesciptionFile(string datapoint)
 {
   dyn_string searchMatch = dynPatternMatch("*" + datapoint + "*", recordList);
   string configDpName = navViewPlotGetSplitPart(searchMatch[1],1);
@@ -217,21 +240,20 @@ navViewPlotWithRecordDesciptionFile(string datapoint)
   {
     prefixFileName = "NoPrefix";
   }
-  file f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber+".dat", "w+");
-  fputs ("#---------------------------------------------------------------------#\n", f );
-  fputs ("# Automatic generated file                                            #\n", f );
-  fputs ("# By Navigator recordFunction                                         #\n", f );
-  fputs ("#---------------------------------------------------------------------#\n", f );
   string timeString = getCurrentTime();
   string userName = getUserName(getUserId());
-
-  fputs ("# Record started on: " + timeString +"\n", f );
-  fputs ("# By user          : " + userName+"\n", f );
-  fputs ("# For datapoint    : " + dpName+"\n", f );
-  fputs ("# Config datapoint : " + configDpName+"\n", f );
-  fputs ("# Plot number      : " + plotNumber+"\n", f );
-  fputs ("# Data fileName    : " + prefixFileName + "_record_"+plotNumber+".dat"+"\n", f );
-  fputs ("#-------------------------------EOF ----------------------------------#\n", f );
+  file f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber+".dat", "w+");
+    fputs ("#---------------------------------------------------------------------#\n", f );
+    fputs ("# Automatic generated file                                            #\n", f );
+    fputs ("# By Navigator recordFunction                                         #\n", f );
+    fputs ("#---------------------------------------------------------------------#\n", f );
+    fputs ("# Record started on: " + timeString +"\n", f );
+    fputs ("# By user          : " + userName+"\n", f );
+    fputs ("# For datapoint    : " + dpName+"\n", f );
+    fputs ("# Config datapoint : " + configDpName+"\n", f );
+    fputs ("# Plot number      : " + plotNumber+"\n", f );
+    fputs ("# Data fileName    : " + prefixFileName + "_record_"+plotNumber+".dat"+"\n", f );
+    fputs ("#-------------------------------EOF ----------------------------------#\n", f );
   fclose(f);
 }
 
