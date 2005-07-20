@@ -18,6 +18,9 @@
 \i getTreeInfo_func.sql
 \i newTree_func.sql
 
+-- OTDBinfo
+\i getTopNode_func.sql
+
 -- PICadmin
 \i create_PIC_tables.sql
 \i hPICsearchParamID_func.sql
