@@ -76,7 +76,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   // and correlators
 
   LOG_TRACE_FLOW_STR("Create input side interface stubs");
-  itsInStub = new Stub_FIR(true, itsParamSet);
+  itsInStub = new Stub_FIR(false, itsParamSet);
 
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
   itsOutStub = new Stub_Corr(false, itsParamSet);
