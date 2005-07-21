@@ -88,6 +88,13 @@ namespace RTC
 	  bool       operator==(const Timestamp& rhs) const;
 	  bool       operator!=(const Timestamp& rhs) const;
 	  /*@}*/
+    
+    /*@{*/
+    /**
+     * Conversion operators.
+     */
+               operator double() const;
+    /*@}*/
 
 	  /*@{*/
 	  /**
@@ -182,6 +189,11 @@ namespace RTC
   inline bool Timestamp::operator!=(const Timestamp& rhs) const
   {
     return timercmp(&m_tv, &rhs.m_tv, !=);
+  }
+  
+  inline Timestamp::operator double() const
+  {
+    return (static_cast<double>(m_tv.tv_sec)+static_cast<double>(m_tv.tv_usec/1000000.0));
   }
 
   inline long Timestamp::sec()  const { return m_tv.tv_sec;  }
