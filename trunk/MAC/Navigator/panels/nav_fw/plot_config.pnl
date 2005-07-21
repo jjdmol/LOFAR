@@ -307,7 +307,7 @@ T
 LANG:1 14 General config
 "main()
 {
- ChildPanelOnCentralModal(\"navigator/views/plot_config_config.pnl\",
+ ChildPanelOnCentralModal(\"nav_fw/plot_config_config.pnl\",
 	                             \"Configure general settings\",
 	                             makeDynString(\"$configDatapoint:\"+$configDatapoint));
 }" 0
