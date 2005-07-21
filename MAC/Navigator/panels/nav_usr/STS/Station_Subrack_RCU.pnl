@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,340 285 923 749 N "_3DFace" 1
+PANEL,273 116 923 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -72,7 +72,7 @@ DebugN(\"after unload: \"+$datapoint);
 }" 0
 E E E 1 -1 -1 0  130 290
 "" 0 1
-E"#uses \"nav_fw/apl-view.ctl\"
+E"#uses \"nav_usr/STS/STS-functions.ctl\"
 #uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
