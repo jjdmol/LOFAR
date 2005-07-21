@@ -361,7 +361,7 @@ LANG:1 2 OK
   {
     //If the current subview name already exists, show message on screen
     string message = \"Entered caption already exists. \\nPlease enter a new one.\";
-    ChildPanelOnCentralModal(\"navigator/MessageWarning\", \"Warning\", makeDynString(\"$1:\"+message));
+    ChildPanelOnCentralModal(\"nav_fw/MessageWarning\", \"Warning\", makeDynString(\"$1:\"+message));
     return;
   }
   //########################################################

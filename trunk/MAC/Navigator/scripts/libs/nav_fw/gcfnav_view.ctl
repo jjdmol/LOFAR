@@ -1095,7 +1095,7 @@ void jump2StationSubrackRCU()
     }
     else
     {  
-      RootPanelOn("navigator/views/Station_Subrack_RCU.pnl",
+      RootPanelOn("nav_usr/STS/Station_Subrack_RCU.pnl",
                   "Station - Subrack - RCU",
                   makeDynString("$datapoint:" + $datapoint + "_Board0_AP" + $APNr + "_RCU"+$RCUNr));
     }
@@ -1156,7 +1156,7 @@ void jump2Station()
     }
     else
     {  
-      RootPanelOn("navigator/views/Station.pnl",
+      RootPanelOn("nav_usr/STS/Station.pnl",
                   "Station ",
                   makeDynString("$datapoint:" + $datapoint + "_Station01"));
     }
@@ -1189,7 +1189,7 @@ void jump2StationSubrack()
     }
     else // Panel is undocked.
     {  
-      RootPanelOn("navigator/views/Station_Subrack.pnl",
+      RootPanelOn("nav_usr/STS/Station_Subrack.pnl",
                   "Station - Subrack",
                   makeDynString("$datapoint:" + $datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr));
     }

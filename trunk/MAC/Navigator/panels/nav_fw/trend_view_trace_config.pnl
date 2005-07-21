@@ -39,9 +39,9 @@ PANEL,255 161 697 398 N "_3DFace" 5
 EE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
-#uses \"gcfnav_view.ctl\"
-#uses \"gcf-common.ctl\"
-#uses \"gcfnav-functions.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcf-common.ctl\"
+#uses \"nav_fw/gcfnav-functions.ctl\"
 string traceColor=\"\";
 string newTraceColor=\"\";" 0
  2
@@ -741,7 +741,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 1 ""
-"objects\\Nav\\nav_SysDpDpeSelection.pnl" 141 201 T 52 1 0 1  -131 -159  
+"objects\\nav_fw\\nav_SysDpDpeSelection.pnl" 141 201 T 52 1 0 1  -131 -159  
 2
 "$datapoint""$datapoint"
 "$selectedDP""$selectedDP"

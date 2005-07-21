@@ -344,7 +344,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 EE E E 1 -1 -1 0  20 30
 "" 0 1
 E"//Include of ctl file
-#uses \"gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
 " 0
  2
 "CBRef""1"
@@ -546,7 +546,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_warning.bmp" 13434828 E 260 360 300 400
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_fw/icon_warning.bmp" 13434828 E 260 360 300 400
 1 48 0 "" 0
 0
 1 49 0 "" 4
@@ -849,7 +849,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 ""
-"objects\\Nav\\warning_trend_dp_illegal.pnl" 230 340 T 33 1 0 1  80 70  
+"objects\\nav_fw\\warning_trend_dp_illegal.pnl" 230 340 T 33 1 0 1  80 70  
 2
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"

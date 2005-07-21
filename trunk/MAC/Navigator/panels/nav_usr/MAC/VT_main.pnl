@@ -177,7 +177,7 @@ dyn_errClass err;
                               \"$SRG:\"+srgName,
                               \"$TYPE:\"+directionType);
   
-  ChildPanelOnReturn(\"navigator/views/VT_Schedule.pnl\",
+  ChildPanelOnReturn(\"nav-usr/MAC/VT_Schedule.pnl\",
       \"VT\" + vt + \" - Schedule\",
       curSettings,
       50,50,df,ds);
@@ -278,7 +278,7 @@ void showStatisticsPanel(int vt)
                               \"$SUBSTART:\"+subbandStart,
                               \"$SUBEND:\"+subbandEnd);
   
-  RootPanelOn(\"navigator/views/Station_Statistics.pnl\",
+  RootPanelOn(\"nav_fw/Station_Statistics.pnl\",
       title,
       curSettings);
 }

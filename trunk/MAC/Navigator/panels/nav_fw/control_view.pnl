@@ -145,9 +145,9 @@ navViewControlDisplayCommand(string dp1, string command)
 }" 0
 EE E E 1 -1 -1 0  108 128
 "" 0 1
-E"#uses \"gcfnav-pmlinterface.ctl\"
-#uses \"gcfnav_view.ctl\"
-#uses \"gcfnav-functions.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-pmlinterface.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnav-functions.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -802,7 +802,7 @@ T
 LANG:1 8 Commands
 "main()
 {
-  ChildPanelOnCentralModal(\"navigator/views/control_view_commands.pnl\",
+  ChildPanelOnCentralModal(\"nav_fw/control_view_commands.pnl\",
 	                         \"Commands\", makeDynString(\"$configDatapoint:\" + $configDatapoint,
 				                                             \"$datapoint:\" + $datapoint));
 }" 0

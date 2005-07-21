@@ -177,7 +177,7 @@ LANG:1 6 Config
   string dpName;
   dpGet($configDatapoint + \".\" + $PlotNr + \".dpName\", dpName); 
 
-		ChildPanelOnCentralModal(\"navigator/views/plot_config_config_dp.pnl\",
+		ChildPanelOnCentralModal(\"nav_fw/plot_config_config_dp.pnl\",
  		                         \"Configure Plot \"+$PlotNr,
   		                         makeDynString(\"$datapoint:\" + $datapoint,
   		                                       \"$configDatapoint:\" + $configDatapoint,

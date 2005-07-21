@@ -10,7 +10,7 @@ PANEL,553 438 950 740 N "_3DFace" 1
   dpGet($datapoint + \":_alert_hdl.._orig_hdl\", alertHdlContent);
 	if (dpGetElementName($datapoint)==\"\" || \"\"==alertHdlContent)
   {
-    Tab1.namedRegisterPanel(\"Alert\", \"navigator/views/nopanelConfigNotPossible.pnl\", makeDynString(\"\"));
+    Tab1.namedRegisterPanel(\"Alert\", \"nav_fw/nopanelConfigNotPossible.pnl\", makeDynString(\"\"));
   }
   else
   {
@@ -18,11 +18,11 @@ PANEL,553 438 950 740 N "_3DFace" 1
     anytype elementNumber = dpElementType($datapoint);
     if((elementNumber>=3 && elementNumber<=10) || 29==elementNumber || 44==elementNumber || 48==elementNumber || -1==elementNumber)
     {
-      Tab1.namedRegisterPanel(\"Alert\", \"navigator/views/nopanelConfigNotPossible.pnl\", makeDynString(\"\"));
+      Tab1.namedRegisterPanel(\"Alert\", \"nav_fw/nopanelConfigNotPossible.pnl\", makeDynString(\"\"));
     }
     else
     {
-    Tab1.namedRegisterPanel(\"Alert\", \"navigator/views/config_view_alert.pnl\", makeDynString(\"$1:\" + $datapoint));
+    Tab1.namedRegisterPanel(\"Alert\", \"nav_fw/config_view_alert.pnl\", makeDynString(\"$1:\" + $datapoint));
     }
   }
 }" 0

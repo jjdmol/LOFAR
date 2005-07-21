@@ -132,9 +132,9 @@ SimulationLogger()
 " 0
 EE E E 1 -1 -1 0  10 200
 "" 0 1
-E"#uses \"gcfnav-pmlinterface.ctl\"
-#uses \"gcf-common.ctl\"
-#uses \"gcfnav_view.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-pmlinterface.ctl\"
+#uses \"nav_fw/gcf-common.ctl\"
+#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

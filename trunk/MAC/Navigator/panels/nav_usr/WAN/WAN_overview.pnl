@@ -5,7 +5,7 @@ PANEL,327 188 950 740 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  80 350
 "" 0 1
-E"#uses \"gcfnav_view.ctl\"" 0
+E"#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -559,7 +559,7 @@ T
 LANG:1 7 Button2
 "main()
 {
-ChildPanelOnCentralModal(\"navigator/views/pleasewait.pnl\",
+ChildPanelOnCentralModal(\"nav_fw/pleasewait.pnl\",
 				                         \"Please wait\", makeDynString(\"\"));
 navConfigTriggerNavigatorRefreshWithDP(\"System1:PIC_WAN_Switch01\");
 }" 0

@@ -24,7 +24,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/LOFAR_main.bmp" 13434828 E 180 110 780 624
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/STS/LOFAR_main.bmp" 13434828 E 180 110 780 624
 7 241
 "Ellipse14"
 ""
@@ -1211,7 +1211,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/compass.gif" 16777215 E 196 130 284 217
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/compass.gif" 16777215 E 196 130 284 217
 6 193
 "Border8"
 ""

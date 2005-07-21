@@ -55,7 +55,7 @@ navViewCheckDpType(string aDp, string aCheckType){
   DebugN(aCheckType);
   DebugN(dpTypeName($datapoint));
   if (aCheckType != dpTypeName($datapoint)){
-    ChildPanelOnCentralModal(\"objects/nav/warning_wrong_datatype.pnl\",
+    ChildPanelOnCentralModal(\"objects/nav_fw/warning_wrong_datatype.pnl\",
 		                         \"WRONG datapointtype\",
 		                         makeDynString(\"$datapointType:\" + aCheckType,
 		                                       \"$typeName:\" +dpTypeName($datapoint)));

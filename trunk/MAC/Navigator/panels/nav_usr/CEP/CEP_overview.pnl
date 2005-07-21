@@ -1547,7 +1547,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 388 410 430 452
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_fw/icon_maintenance.gif" 16777215 E 388 410 430 452
 6 165
 "Border32"
 ""
@@ -1560,7 +1560,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 165 410 207 452
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_fw/icon_maintenance.gif" 16777215 E 165 410 207 452
 2 166
 "Text31"
 ""
