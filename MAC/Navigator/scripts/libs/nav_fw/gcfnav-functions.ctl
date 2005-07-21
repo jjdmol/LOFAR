@@ -960,6 +960,8 @@ void Navigator_HandleEventInitialize()
   
   // before the first thing, we check the sanity of the configuration
   string sanityMessage;
+  
+
   if(!navConfigSanityCheck(sanityMessage))
   {
     gcfUtilMessageWarning("Sanity check failed",sanityMessage);
@@ -1894,7 +1896,33 @@ void navConfigMessageWarning(string message)
   ChildPanelOnCentralModal("nav_fw/MessageWarning", "Warning", makeDynString("$1:"+message));
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: navConfigCheckResourceRoots,  used to check the current systemname
+// and fill GCFNavigator resourceroots with the present Systemname
+// 
+///////////////////////////////////////////////////////////////////////////////////
 
-
-
+void navConfigCheckResourceRoots()
+{
+	dyn_string roots;
+	dpGet("__navigator.resourceRoots",roots);
+	string aSystemName=getSystemName();
+    strreplace(aSystemName,':',"");
+	bool replaced=false;
+	
+	for(int i=1; i<=dynlen(roots);i++)
+    {
+    	dyn_string aS=strsplit(roots[i],':');
+    	if (aS[1] != aSystemName) 
+    	{
+    		strreplace(roots[i],aS[1],aSystemName);
+    		replaced=true;
+    	}
+    }
+    
+    if (replaced)
+    {
+    	dpSet("__navigator.resourceRoots",roots);
+    }
+}
 
