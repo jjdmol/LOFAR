@@ -25,7 +25,7 @@
 //# And are NOT part of the MAC Navigator framework.
 //#
 
-#uses "gcfnav_view.ctl"
+#uses "nav_fw/gcfnav_view.ctl"
 
 //////////////////////////////////////////////////////////////////////////////////
 // Function: aplViewNavigateTo. 
