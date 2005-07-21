@@ -749,7 +749,7 @@ void ARATestDriverTask::updateSystemStatus()
 {
   // send new status to RA application
   RSPUpdstatusEvent updStatusEvent;
-  updStatusEvent.timestamp.setNow();
+  updStatusEvent.timestamp.setNow(600.0);
   updStatusEvent.status=SUCCESS;
   updStatusEvent.handle=1; // ignore
   updStatusEvent.sysstatus.board().reference(m_systemStatus.board().copy());
@@ -762,7 +762,7 @@ void ARATestDriverTask::updateStats()
 {
   // send new stats to RA application
   RSPUpdstatsEvent updStatsEvent;
-  updStatsEvent.timestamp.setNow();
+  updStatsEvent.timestamp.setNow(600.0);
   updStatsEvent.status=SUCCESS;
   
   int rcu;
@@ -955,7 +955,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       m_updStatusTimerId = port.setTimer(m_substatusPeriod);
 
       RSPSubstatusackEvent ack;
-      ack.timestamp.setNow();
+      ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
       ack.handle = (int)&ack;
       port.send(ack);
@@ -971,7 +971,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       m_updStatusTimerId = 0;
 
       RSPUnsubstatusackEvent ack;
-      ack.timestamp.setNow();
+      ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
       ack.handle = (int)&ack;
       port.send(ack);
@@ -984,7 +984,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       RSPSubstatsEvent substats(event);
       
       RSPSubstatsackEvent ack;
-      ack.timestamp.setNow();
+      ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
       if(substats.type == RSP_Protocol::Statistics::SUBBAND_POWER)
       {
@@ -1017,7 +1017,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       m_updStatsTimerId = 0;
 
       RSPUnsubstatsackEvent ack;
-      ack.timestamp.setNow();
+      ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
       ack.handle = (int)&ack;
       port.send(ack);
@@ -1047,7 +1047,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       }
       
       RSPGetversionackEvent ack;
-      ack.timestamp.setNow();
+      ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
       ack.versions.rsp().reference(versions.rsp().copy());
       ack.versions.bp().reference(versions.bp().copy());
@@ -1062,7 +1062,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       LOG_INFO("RSP_SETRCU received");
       
       RSPSetrcuackEvent ack;
-      ack.timestamp.setNow();
+      ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
      
       port.send(ack);
