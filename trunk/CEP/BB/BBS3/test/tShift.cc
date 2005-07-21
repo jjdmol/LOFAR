@@ -28,6 +28,10 @@
 #include <cmath>
 #include <stdexcept>
 
+#if defined __SSE__
+#include <emmintrin.h>
+#endif
+
 using namespace LOFAR;
 using namespace std;
 using namespace casa;
@@ -59,11 +63,15 @@ void doShift()
        << endl;
 
   // Define some fake data.
-  vector<dcomplex> datavec(ncorr*nfreq);
+  //vector<fcomplex> datavec(ncorr*nfreq+1);
+  fcomplex datavec[ncorr*nfreq] __attribute__ ((aligned(16)));
+  float out_r[ncorr*nfreq] __attribute__ ((aligned(16)));
+  float out_i[ncorr*nfreq] __attribute__ ((aligned(16)));
+
   for (int i=0; i<ncorr*nfreq; ++i) {
-    datavec[i] = makedcomplex(1e-3*i, 1e-4*i);
+    datavec[i] = makefcomplex(1e-3*i, 1e-4*i);
   }
-  dcomplex* data = &(datavec[0]);
+  fcomplex* data = &(datavec[0]);
 
   // Arrays for U,V,W per station per time stamp.
   vector<double> u(nstat*ntime);
@@ -80,8 +88,8 @@ void doShift()
   const double nk = 1 - sqrt(lk*lk + mk*mk);
   const double wavel0 = C::_2pi * f0 / C::c;
   const double dwavel = df / f0;
-  vector<dcomplex> sf0(nstat);
-  vector<dcomplex> sdf(nstat);
+  vector<fcomplex> sf0(nstat);
+  vector<fcomplex> sdf(nstat);
   NSTimer timer, timerl;
   timer.start();
 
@@ -93,29 +101,54 @@ void doShift()
     // Calculate phase shift terms per station for f0 and df.
     for (int is=0; is<nstat; ++is) {
       double r1 = (us[is]*lk + vs[is]*mk +  ws[is]*nk) * wavel0;
-      sf0[is] = makedcomplex(cos(r1), sin(r1));
+      sf0[is] = makefcomplex(cos(r1), sin(r1));
       r1 *= dwavel;
-      sdf[is] = makedcomplex(cos(r1), sin(r1));
+      sdf[is] = makefcomplex(cos(r1), sin(r1));
     }
     // Calculate phase shift per baseline and frequency.
     for (int is2=0; is2<nstat; ++is2) {
       for (int is1=0; is1<is2; ++is1) {
-	dcomplex val0 = sf0[is2] * conj(sf0[is1]);
-	dcomplex dval = sdf[is2] * conj(sdf[is1]);
-	dcomplex* datap = data;
+	fcomplex val0 = sf0[is2] * conj(sf0[is1]);
+	fcomplex dval = sdf[is2] * conj(sdf[is1]);
 	timerl.start();
+	  // Shift the data.
+#if defined __SSE__
+	__m128 val0_r = _mm_set_ps1(real(val0));
+	__m128 val0_i = _mm_set_ps1(imag(val0));
+	__m128 dval_r = _mm_set_ps1(real(dval));
+	__m128 dval_i = _mm_set_ps1(imag(dval));
+
+	for (int ifr=0; ifr<nfreq; ++ifr) {
+	  __m128 tmp = _mm_sub_ps(_mm_mul_ps(val0_r, dval_r), _mm_mul_ps(val0_i, dval_i));
+	  val0_i = _mm_add_ps(_mm_mul_ps(val0_r, dval_i), _mm_mul_ps(val0_i, dval_r));
+	  val0_r = tmp;
+
+	  __m128 first  = ((__m128 *) (data + 4 * ifr)) [0];
+	  __m128 second = ((__m128 *) (data + 4 * ifr)) [1];
+
+	  __m128 data_r = _mm_shuffle_ps(first, second, _MM_SHUFFLE(2,0,2,0));
+	  __m128 data_i = _mm_shuffle_ps(first, second, _MM_SHUFFLE(3,1,3,1));
+
+	  ((__m128 *) out_r)[ifr] = _mm_sub_ps(_mm_mul_ps(data_r, val0_r), _mm_mul_ps(data_i, val0_i));
+	  ((__m128 *) out_i)[ifr] = _mm_add_ps(_mm_mul_ps(data_r, val0_i), _mm_mul_ps(data_i, val0_r));
+	}
+#else
 	for (int ifr=0; ifr<nfreq; ++ifr) {
 	  val0 *= dval;
-	  // Shift the data.
-	  for (int ic=0; ic<ncorr; ++ic) {
-	    *datap++ *= dval;
+	  for (int ico = 0; ico < ncorr; ico ++) {
+	    fcomplex val = data[ncorr*ifr+ico] * val0;
+	    out_r[ncorr*ifr+ico] = real(val);
+	    out_i[ncorr*ifr+ico] = imag(val);
 	  }
 	}
+#endif
 	timerl.stop();
       }
     }
   }
   timer.stop();
+  for (int i = 0; i < 10; i ++)
+    cout << '(' << out_r[i] << ',' << out_i[i] << ")\n";
   timerl.print (cout);
   timer.print (cout);
 }
