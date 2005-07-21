@@ -136,7 +136,8 @@ namespace ARA
                                  uint8  voltage_15,
                                  uint8  voltage_33,
                                  uint8  ffi0,
-                                 uint8  ffi1);
+                                 uint8  ffi1,
+                                 double timestamp);
       /**
        * update eth properties based on status bits
        */
@@ -145,42 +146,49 @@ namespace ARA
                                             uint8  lastError,
                                             uint8  ffi0,
                                             uint8  ffi1,
-                                            uint8  ffi2);
+                                            uint8  ffi2,
+                                            double timestamp);
       /**
        * update MEP status properties 
        */
       void updateMEPStatusProperties(string scope,uint32 seqnr,
                                                   uint8  error,
-                                                  uint8  ffi0);
+                                                  uint8  ffi0,
+                                                  double timestamp);
       /**
        * update SYNC status properties 
        */
       void updateSYNCStatusProperties(string scope,uint32 sample_count,
                                                    uint32 sync_count,
-                                                   uint32 error_count);
+                                                   uint32 error_count,
+                                                   double timestamp);
       /**
        * update fpga board properties based on status bits
        */
-      void updateFPGAboardProperties(string scope);
+      void updateFPGAboardProperties(string scope,double timestamp);
       /**
        * update fpga properties based on status bits
        */
       void updateFPGAproperties(string scope, uint8 status, 
-                                              uint8 temp);
+                                              uint8 temp,
+                                              double timestamp);
       /**
        * update rcu board properties
        */
       void updateBoardRCUproperties(string scope,uint8  ffi0,
-                                                 uint8  ffi1);
+                                                 uint8  ffi1,
+                                                 double timestamp);
       /**
        * update rcu properties based on status bits
        */
-      void updateBoardRCUproperties(string scope,uint8 status,uint32 nof_overflow);
-      void updateRCUproperties(string scope,uint8 status);
+      void updateBoardRCUproperties(string scope,uint8 status,
+                                                 uint32 nof_overflow,
+                                                 double timestamp);
+      void updateRCUproperties(string scope,uint8 status,double timestamp);
       /**
        * update version string
        */
-      void updateVersion(string scope, string version);
+      void updateVersion(string scope, string version, double timestamp);
       
     private:
       typedef blitz::Array<double, 2> TStatistics;

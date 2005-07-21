@@ -449,12 +449,12 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
           sprintf(version,"%d.%d",ack.versions.rsp()(board) >> 4,ack.versions.rsp()(board) & 0xF);
           LOG_INFO(formatString("board[%d].version = 0x%x",board,ack.versions.rsp()(board)));
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
-          updateVersion(scopeString,string(version));
+          updateVersion(scopeString,string(version),double(ack.timestamp));
           
           sprintf(version,"%d.%d",ack.versions.bp()(board)  >> 4,ack.versions.bp()(board)  & 0xF);
           LOG_INFO(formatString("bp[%d].version = 0x%x",board,ack.versions.bp()(board)));
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
-          updateVersion(scopeString,string(version));
+          updateVersion(scopeString,string(version),double(ack.timestamp));
   
           for (int ap = 0; ap < EPA_Protocol::N_AP; ap++)
           {
@@ -462,7 +462,7 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
                                     ack.versions.ap()(board * EPA_Protocol::N_AP + ap) &  0xF);
             LOG_INFO(formatString("ap[%d][%d].version = 0x%x",board,ap,ack.versions.ap()(board * EPA_Protocol::N_AP + ap)));
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,ap);
-            updateVersion(scopeString,string(version));
+            updateVersion(scopeString,string(version),double(ack.timestamp));
           }
         }
       }
@@ -849,6 +849,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
     int subRackNr;
     int relativeBoardNr;
     char scopeString[300];
+    double timestamp = double(updStatusEvent.timestamp);
 
     int boardNr;
     for(boardNr=boardStatus.lbound(blitz::firstDim); boardNr <= boardStatus.ubound(blitz::firstDim); ++boardNr)
@@ -862,7 +863,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8   rspFfi1       = boardStatus(boardNr).rsp.ffi1;
       LOG_INFO(formatString("UpdStatus:RSP voltage_15:%d:voltage_33:%d:ffi0:%d:ffi1:%d",rspVoltage_15,rspVoltage_33,rspFfi0,rspFfi1));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
-      updateBoardProperties(scopeString,rspVoltage_15,rspVoltage_33,rspFfi0,rspFfi1);
+      updateBoardProperties(scopeString,rspVoltage_15,rspVoltage_33,rspFfi0,rspFfi1,timestamp);
       
       uint8   bpStatus  = boardStatus(boardNr).fpga.bp_status;
       uint8   bpTemp    = boardStatus(boardNr).fpga.bp_temp;
@@ -880,18 +881,18 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       LOG_INFO(formatString("UpdStatus:AP3 status:%d:temp:%d",ap3Status,ap3Temp));
       LOG_INFO(formatString("UpdStatus:AP4 status:%d:temp:%d",ap4Status,ap4Temp));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
-      updateFPGAboardProperties(scopeString);
+      updateFPGAboardProperties(scopeString,timestamp);
       
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
-      updateFPGAproperties(scopeString,bpStatus,bpTemp);
+      updateFPGAproperties(scopeString,bpStatus,bpTemp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,0);
-      updateFPGAproperties(scopeString,ap1Status,ap1Temp);
+      updateFPGAproperties(scopeString,ap1Status,ap1Temp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,1);
-      updateFPGAproperties(scopeString,ap2Status,ap2Temp);
+      updateFPGAproperties(scopeString,ap2Status,ap2Temp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,2);
-      updateFPGAproperties(scopeString,ap3Status,ap3Temp);
+      updateFPGAproperties(scopeString,ap3Status,ap3Temp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,3);
-      updateFPGAproperties(scopeString,ap4Status,ap4Temp);
+      updateFPGAproperties(scopeString,ap4Status,ap4Temp,timestamp);
 
       uint32    ethFrames     = boardStatus(boardNr).eth.nof_frames;
       uint32    ethErrors     = boardStatus(boardNr).eth.nof_errors;
@@ -901,42 +902,42 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8     ethFfi2       = boardStatus(boardNr).eth.ffi2;
       LOG_INFO(formatString("UpdStatus:ETH frames:%d:errors:%d:last_error:%d:ffi0:%d:ffi1:%d:ffi2:%d",ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rackNr,subRackNr,relativeBoardNr);
-      updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2);  
+      updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2,timestamp);  
   
       uint32    mepSeqnr = boardStatus(boardNr).mep.seqnr;
       uint8     mepError = boardStatus(boardNr).mep.error;
       uint8     mepFfi0  = boardStatus(boardNr).mep.ffi0;
       LOG_INFO(formatString("UpdStatus:MEP seqnr:%d:error:%d:ffi:%d",mepSeqnr,mepError,mepFfi0));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rackNr,subRackNr,relativeBoardNr);
-      updateMEPStatusProperties(scopeString,mepSeqnr,mepError,mepFfi0);  
+      updateMEPStatusProperties(scopeString,mepSeqnr,mepError,mepFfi0,timestamp);  
       
       uint32    syncSample_count = boardStatus(boardNr).ap1_sync.sample_count;
       uint32    syncSync_count   = boardStatus(boardNr).ap1_sync.sync_count;
       uint32    syncError_count  = boardStatus(boardNr).ap1_sync.error_count;
       LOG_INFO(formatString("SyncStatus ap1:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,0);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
 
       syncSample_count = boardStatus(boardNr).ap2_sync.sample_count;
       syncSync_count   = boardStatus(boardNr).ap2_sync.sync_count;
       syncError_count  = boardStatus(boardNr).ap2_sync.error_count;
       LOG_INFO(formatString("SyncStatus ap2:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,1);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
 
       syncSample_count = boardStatus(boardNr).ap3_sync.sample_count;
       syncSync_count   = boardStatus(boardNr).ap3_sync.sync_count;
       syncError_count  = boardStatus(boardNr).ap3_sync.error_count;
       LOG_INFO(formatString("SyncStatus ap3:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,2);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
 
       syncSample_count = boardStatus(boardNr).ap4_sync.sample_count;
       syncSync_count   = boardStatus(boardNr).ap4_sync.sync_count;
       syncError_count  = boardStatus(boardNr).ap4_sync.error_count;
       LOG_INFO(formatString("SyncStatus ap4:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,3);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
 
       int apNr=0;
       uint8     boardRCUstatusStatusX       = boardStatus(boardNr).ap1_rcu.statusx;
@@ -947,13 +948,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint32    boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap1_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap1:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
       int rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY,timestamp);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap2_rcu.statusx;
@@ -964,13 +965,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap2_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap2:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
       rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY,timestamp);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap3_rcu.statusx;
@@ -981,13 +982,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap3_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap3:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
       rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY,timestamp);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap4_rcu.statusx;
@@ -998,13 +999,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap4_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap4:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
       rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY,timestamp);
     }
 
     for(int rcuNr=rcuStatus.lbound(blitz::firstDim); rcuNr <= rcuStatus.ubound(blitz::firstDim); ++rcuNr)
@@ -1017,7 +1018,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
 
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
       LOG_DEBUG(formatString("RCU[%d]= %s",rcuNr,scopeString));
-      updateRCUproperties(scopeString,rcuStatusBits);
+      updateRCUproperties(scopeString,rcuStatusBits,timestamp);
     }
   }
   
@@ -1044,7 +1045,8 @@ void RegisterAccessTask::updateBoardProperties(string scope,
                                                uint8  voltage_15,
                                                uint8  voltage_33,
                                                uint8  ffi0,
-                                               uint8  ffi1)
+                                               uint8  ffi1,
+                                               double timestamp)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1055,18 +1057,18 @@ void RegisterAccessTask::updateBoardProperties(string scope,
   {
     double v15 = static_cast<double>(voltage_15) * (2.5/192.0);
     GCFPVDouble pvDouble15(v15);
-    it->second->setValue(string(PROPNAME_VOLTAGE15),pvDouble15);
+    it->second->setValueTimed(string(PROPNAME_VOLTAGE15),pvDouble15,timestamp);
     
     double v33 = static_cast<double>(voltage_33) * (5.0/192.0);
     GCFPVDouble pvDouble33(v33);
-    it->second->setValue(string(PROPNAME_VOLTAGE33),pvDouble33);
+    it->second->setValueTimed(string(PROPNAME_VOLTAGE33),pvDouble33, timestamp);
 
     GCFPVUnsigned pvTemp;
     pvTemp.setValue(ffi0);
-    it->second->setValue(string(PROPNAME_FFI0),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FFI0),pvTemp, timestamp);
 
     pvTemp.setValue(ffi1);
-    it->second->setValue(string(PROPNAME_FFI1),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FFI1),pvTemp, timestamp);
   }
 }
 
@@ -1076,7 +1078,8 @@ void RegisterAccessTask::updateETHproperties(string scope,
                                              uint8  lastError,
                                              uint8  ffi0,
                                              uint8  ffi1,
-                                             uint8  ffi2)
+                                             uint8  ffi2,
+                                             double timestamp)
 {
   // layout eth status: 
   // 31......24  23.....16  15........8  7........0       
@@ -1089,22 +1092,22 @@ void RegisterAccessTask::updateETHproperties(string scope,
   else
   {
     GCFPVUnsigned pvTemp(frames);
-    it->second->setValue(string(PROPNAME_FRAMESRECEIVED),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FRAMESRECEIVED),pvTemp, timestamp);
     
     pvTemp.setValue(errors);
-    it->second->setValue(string(PROPNAME_FRAMESERROR),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FRAMESERROR),pvTemp, timestamp);
 
     pvTemp.setValue(lastError);
-    it->second->setValue(string(PROPNAME_LASTERROR),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_LASTERROR),pvTemp, timestamp);
 
     pvTemp.setValue(ffi0);
-    it->second->setValue(string(PROPNAME_FFI0),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FFI0),pvTemp, timestamp);
 
     pvTemp.setValue(ffi1);
-    it->second->setValue(string(PROPNAME_FFI1),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FFI1),pvTemp, timestamp);
 
     pvTemp.setValue(ffi2);
-    it->second->setValue(string(PROPNAME_FFI2),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FFI2),pvTemp, timestamp);
   }
 }
 
@@ -1113,7 +1116,8 @@ void RegisterAccessTask::updateETHproperties(string scope,
  */
 void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
                                                                 uint8  error,
-                                                                uint8  ffi0)
+                                                                uint8  ffi0,
+                                                                double timestamp)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1123,19 +1127,20 @@ void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
   else
   {
     GCFPVUnsigned pvTemp(seqnr);
-    it->second->setValue(string(PROPNAME_SEQNR),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_SEQNR),pvTemp, timestamp);
     
     pvTemp.setValue(error);
-    it->second->setValue(string(PROPNAME_ERROR),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_ERROR),pvTemp, timestamp);
 
     pvTemp.setValue(ffi0);
-    it->second->setValue(string(PROPNAME_FFI0),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_FFI0),pvTemp, timestamp);
   }
 }
 
 void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 sample_count,
                                                                  uint32 sync_count,
-                                                                 uint32 error_count)
+                                                                 uint32 error_count,
+                                                                 double timestamp)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1145,17 +1150,17 @@ void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 sample_c
   else
   {
     GCFPVUnsigned pvTemp(sample_count);
-    it->second->setValue(string(PROPNAME_SAMPLECOUNT),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_SAMPLECOUNT),pvTemp, timestamp);
     
     pvTemp.setValue(sync_count);
-    it->second->setValue(string(PROPNAME_SYNCCOUNT),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_SYNCCOUNT),pvTemp, timestamp);
 
     pvTemp.setValue(error_count);
-    it->second->setValue(string(PROPNAME_ERRORCOUNT),pvTemp);
+    it->second->setValueTimed(string(PROPNAME_ERRORCOUNT),pvTemp, timestamp);
   }
 }
                                              
-void RegisterAccessTask::updateFPGAboardProperties(string scope)
+void RegisterAccessTask::updateFPGAboardProperties(string scope, double /*timestamp*/)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1168,7 +1173,8 @@ void RegisterAccessTask::updateFPGAboardProperties(string scope)
 }
 
 void RegisterAccessTask::updateFPGAproperties(string scope, uint8 status, 
-                                                            uint8 temp)
+                                                            uint8 temp,
+                                                            double timestamp)
 {
   // layout fpga status: 
   // 15..9 8       7........0       
@@ -1183,15 +1189,16 @@ void RegisterAccessTask::updateFPGAproperties(string scope, uint8 status,
     LOG_INFO(formatString("FPGA status field is not yet used: %s.status=0x%x",scope.c_str(),status));
 //    GCFPVUnsigned pvUns(status);
     GCFPVUnsigned pvUns(0);
-    it->second->setValue(string(PROPNAME_STATUS),pvUns);
+    it->second->setValueTimed(string(PROPNAME_STATUS),pvUns, timestamp);
     
     GCFPVDouble pvDouble(static_cast<double>(temp));
-    it->second->setValue(string(PROPNAME_TEMPERATURE),pvDouble);
+    it->second->setValueTimed(string(PROPNAME_TEMPERATURE),pvDouble, timestamp);
   }
 }
 
 void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
-                                                               uint8  ffi1)
+                                                               uint8  ffi1,
+                                                               double timestamp)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1201,13 +1208,13 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
   else
   {
     GCFPVUnsigned pvUns(ffi0);
-    it->second->setValue(string(PROPNAME_FFI0),pvUns);
+    it->second->setValueTimed(string(PROPNAME_FFI0),pvUns, timestamp);
     pvUns.setValue(ffi1);
-    it->second->setValue(string(PROPNAME_FFI1),pvUns);
+    it->second->setValueTimed(string(PROPNAME_FFI1),pvUns, timestamp);
   }
 }
 
-void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
+void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double timestamp)
 {
   // layout rcu status (for both statusX and statusY): 
   // 7         6         5         4        3        2       1          0
@@ -1224,56 +1231,56 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
     GCFPVBool pvBoolVddVccEn(tempStatus);
     if(pvBoolVddVccEn.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VDDVCCEN)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_VDDVCCEN),pvBoolVddVccEn);
+      it->second->setValueTimed(string(PROPNAME_VDDVCCEN),pvBoolVddVccEn, timestamp);
     }
     
     tempStatus = (status >> 6) & 0x01;
     GCFPVBool pvBoolVhEnable(tempStatus);
     if(pvBoolVhEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VHENABLE)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_VHENABLE),pvBoolVhEnable);
+      it->second->setValueTimed(string(PROPNAME_VHENABLE),pvBoolVhEnable, timestamp);
     }
     
     tempStatus = (status >> 5) & 0x01;
     GCFPVBool pvBoolVlEnable(tempStatus);
     if(pvBoolVlEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VLENABLE)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_VLENABLE),pvBoolVlEnable);
+      it->second->setValueTimed(string(PROPNAME_VLENABLE),pvBoolVlEnable, timestamp);
     }
     
     tempStatus = (status >> 4) & 0x01;
     GCFPVBool pvBoolFilSel1(tempStatus);
     if(pvBoolFilSel1.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL1)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_FILSEL1),pvBoolFilSel1);
+      it->second->setValueTimed(string(PROPNAME_FILSEL1),pvBoolFilSel1, timestamp);
     }
     
     tempStatus = (status >> 3) & 0x01;
     GCFPVBool pvBoolFilSel0(tempStatus);
     if(pvBoolFilSel0.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL0)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_FILSEL0),pvBoolFilSel0);
+      it->second->setValueTimed(string(PROPNAME_FILSEL0),pvBoolFilSel0, timestamp);
     }
     
     tempStatus = (status >> 2) & 0x01;
     GCFPVBool pvBoolBandSel(tempStatus);
     if(pvBoolBandSel.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_BANDSEL)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_BANDSEL),pvBoolBandSel);
+      it->second->setValueTimed(string(PROPNAME_BANDSEL),pvBoolBandSel, timestamp);
     }
     
     tempStatus = (status >> 1) & 0x01;
     GCFPVBool pvBoolHBAEnable(tempStatus);
     if(pvBoolHBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_HBAENABLE)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_HBAENABLE),pvBoolHBAEnable);
+      it->second->setValueTimed(string(PROPNAME_HBAENABLE),pvBoolHBAEnable, timestamp);
     }
     
     tempStatus = (status >> 0) & 0x01;
     GCFPVBool pvBoolLBAEnable(tempStatus);
     if(pvBoolLBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_LBAENABLE)))->getValue())
     {
-      it->second->setValue(string(PROPNAME_LBAENABLE),pvBoolLBAEnable);
+      it->second->setValueTimed(string(PROPNAME_LBAENABLE),pvBoolLBAEnable, timestamp);
     }
       
     if(!pvBoolVddVccEn.getValue() ||
@@ -1281,17 +1288,17 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
        (!pvBoolHBAEnable.getValue() && !pvBoolLBAEnable.getValue()))
     {
       GCFPVUnsigned pvUnsignedStatus(STATUS_ERROR);
-      it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
+      it->second->setValueTimed(string(PROPNAME_STATUS),pvUnsignedStatus, timestamp);
     }       
     else
     {
       GCFPVUnsigned pvUnsignedStatus(STATUS_OK);
-      it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
+      it->second->setValueTimed(string(PROPNAME_STATUS),pvUnsignedStatus, timestamp);
     }       
   }
 }
 
-void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/, uint32 nof_overflow)
+void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/, uint32 nof_overflow, double timestamp)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1302,11 +1309,11 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/,
   {
     LOG_WARN("ignoring status field in BoardRCUStatus");
     GCFPVUnsigned pvUns(nof_overflow);
-    it->second->setValue(string(PROPNAME_NOFOVERFLOW),pvUns);
+    it->second->setValueTimed(string(PROPNAME_NOFOVERFLOW),pvUns, timestamp);
   }
 }
 
-void RegisterAccessTask::updateVersion(string scope, string version)
+void RegisterAccessTask::updateVersion(string scope, string version, double timestamp)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1316,7 +1323,7 @@ void RegisterAccessTask::updateVersion(string scope, string version)
   else
   {
     GCFPVString pvString(version);
-    it->second->setValue(string(PROPNAME_VERSION),pvString);
+    it->second->setValueTimed(string(PROPNAME_VERSION),pvString,timestamp);
   }    
 }
 
