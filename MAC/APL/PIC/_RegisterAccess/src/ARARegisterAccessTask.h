@@ -125,7 +125,12 @@ namespace ARA
       /**
        * create propertyset object, add it to the map
        */
-      void addMyPropertySet(const char* scope,const char* type, GCF::Common::TPSCategory category, const GCF::Common::TPropertyConfig propconfig[]);
+      void addMyPropertySet(
+          const char* scope,
+          const char* type, 
+          GCF::Common::TPSCategory category, 
+          const GCF::Common::TPropertyConfig propconfig[],
+          GCF::PAL::GCFMyPropertySet::TDefaultUse defaultUse = GCF::PAL::GCFMyPropertySet::USE_MY_DEFAULTS);
 
       void updateBoardProperties(string scope,
                                  uint8  voltage_15,
@@ -221,10 +226,8 @@ namespace ARA
       int32             m_integrationTime;
       int32             m_integrationMethod;
       TStatistics       m_integratingStatisticsSubband;
-      TStatistics       m_lastReceivedStatisticsSubband;
       int32             m_numStatisticsSubband;
       TStatistics       m_integratingStatisticsBeamlet;
-      TStatistics       m_lastReceivedStatisticsBeamlet;
       int32             m_numStatisticsBeamlet;
       unsigned long     m_integrationTimerID;
   };

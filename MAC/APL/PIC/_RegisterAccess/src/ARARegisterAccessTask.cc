@@ -92,10 +92,8 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_integrationTime(0),
       m_integrationMethod(0),
       m_integratingStatisticsSubband(),
-      m_lastReceivedStatisticsSubband(),
       m_numStatisticsSubband(0),
       m_integratingStatisticsBeamlet(),
-      m_lastReceivedStatisticsBeamlet(),
       m_numStatisticsBeamlet(0),
       m_integrationTimerID(0)
 {
@@ -127,7 +125,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
   m_centralized_stats      = (0!=ParameterSet::instance()->getInt(PARAM_STATISTICS_CENTRALIZED));
   
   // fill MyPropertySets map
-  addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station);
+  addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station, GCFMyPropertySet::USE_DB_DEFAULTS);
   addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
   for(rack=0;rack<m_n_racks;rack++)
   {
@@ -151,16 +149,19 @@ RegisterAccessTask::RegisterAccessTask(string name)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
+        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
+        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
+        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Ethernet, PSCAT_LCU_PIC_Ethernet, PROPS_Ethernet);
+        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
     
@@ -205,9 +206,13 @@ RegisterAccessTask::~RegisterAccessTask()
 {
 }
 
-void RegisterAccessTask::addMyPropertySet(const char* scope,const char* type, TPSCategory category, const TPropertyConfig propconfig[])
+void RegisterAccessTask::addMyPropertySet(const char* scope,
+    const char* type, 
+    TPSCategory category, 
+    const TPropertyConfig propconfig[],
+    GCFMyPropertySet::TDefaultUse defaultUse)
 {
-  boost::shared_ptr<GCFMyPropertySet> propsPtr(new GCFMyPropertySet(scope,type,category,&m_answer));
+  boost::shared_ptr<GCFMyPropertySet> propsPtr(new GCFMyPropertySet(scope,type,category,&m_answer, defaultUse));
   m_myPropertySetMap[scope]=propsPtr;
   
   propsPtr->initProperties(propconfig);
@@ -243,6 +248,12 @@ GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*p
 
     case F_MYPS_ENABLED:
     {
+      GCFPropSetAnswerEvent* pPropAnswer = static_cast<GCFPropSetAnswerEvent*>(&e);
+      assert(pPropAnswer);
+      if(pPropAnswer->result != 0)
+      {
+        LOG_WARN(formatString("MyPropset %s could not be enabled: %d",pPropAnswer->pScope,pPropAnswer->result));
+      }
       m_myPropsLoadCounter++;
       LOG_INFO(formatString("MyPropset %d enabled", m_myPropsLoadCounter));
       if(m_myPropsLoadCounter == m_myPropertySetMap.size())
@@ -657,6 +668,22 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       
     case F_ENTRY:
     {
+      TMyPropertySetMap::iterator propsetIt = m_myPropertySetMap.find(SCOPE_PIC);
+      if(propsetIt != m_myPropertySetMap.end())
+      {
+        boost::shared_ptr<GCFPVInteger> pvIntegrationTime(static_cast<GCFPVInteger*>(propsetIt->second->getValue(PROPNAME_INTEGRATIONTIME)));
+        if(pvIntegrationTime != 0)
+        {
+          m_integrationTime = pvIntegrationTime->getValue();
+          m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
+        }
+        boost::shared_ptr<GCFPVInteger> pvIntegrationMethod(static_cast<GCFPVInteger*>(propsetIt->second->getValue(PROPNAME_INTEGRATIONMETHOD)));
+        if(pvIntegrationMethod != 0)
+        {
+          m_integrationMethod = pvIntegrationMethod->getValue();
+        }
+      }
+      
       break;
     }
 
@@ -736,9 +763,12 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
         GCFPVInteger pvInt;
         pvInt.copy(*pPropAnswer->pValue);
         m_integrationTime = pvInt.getValue();
+        LOG_INFO(formatString("integration time changed to %d",m_integrationTime));
+
+        m_RSPclient.cancelTimer(m_integrationTimerID);
+        
         if(m_integrationTime == 0)
         {
-          m_RSPclient.cancelTimer(m_integrationTimerID);
           m_integratingStatisticsSubband.free();
           m_numStatisticsSubband=0;
           m_integratingStatisticsBeamlet.free();
@@ -758,6 +788,7 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
         GCFPVInteger pvInt;
         pvInt.copy(*pPropAnswer->pValue);
         m_integrationMethod = pvInt.getValue();
+        LOG_INFO(formatString("integration method changed to %d",m_integrationMethod));
       }
       break;
     }
@@ -768,6 +799,7 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       if(timerEvent.id == m_integrationTimerID)
       {
         _integrateStatistics();
+        m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
       }
       break;
     }
@@ -1467,10 +1499,6 @@ void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHan
 {
   if(statsHandle == m_subStatsHandleSubbandPower)
   {
-    if(m_lastReceivedStatisticsSubband.size() == 0)
-      m_lastReceivedStatisticsSubband.resize(statistics.shape());
-    m_lastReceivedStatisticsSubband = statistics;
-  
     if(m_integrationTime == 0)
     {
       _writeStatistics(statistics, statsHandle);
@@ -1478,18 +1506,21 @@ void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHan
     else
     {
       if(m_integratingStatisticsSubband.size() == 0)
+      {
         m_integratingStatisticsSubband.resize(statistics.shape());
+        m_integratingStatisticsSubband = 0;
+      }
     
       m_integratingStatisticsSubband += statistics;
       m_numStatisticsSubband++;
+
+      stringstream statisticsStream;
+      statisticsStream << m_integratingStatisticsSubband(blitz::Range(0,2),blitz::Range(0,2));
+      LOG_DEBUG(formatString("subband: n_stats:%d; statistics:%s",m_numStatisticsSubband, statisticsStream.str().c_str()));
     }
   }
   else if(statsHandle == m_subStatsHandleBeamletPower)
   {
-    if(m_lastReceivedStatisticsBeamlet.size() == 0)
-      m_lastReceivedStatisticsBeamlet.resize(statistics.shape());
-    m_lastReceivedStatisticsBeamlet = statistics;
-  
     if(m_integrationTime == 0)
     {
       _writeStatistics(statistics, statsHandle);
@@ -1497,10 +1528,17 @@ void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHan
     else
     {
       if(m_integratingStatisticsBeamlet.size() == 0)
+      {
         m_integratingStatisticsBeamlet.resize(statistics.shape());
+        m_integratingStatisticsBeamlet = 0;
+      }
     
       m_integratingStatisticsBeamlet += statistics;
       m_numStatisticsBeamlet++;
+
+      stringstream statisticsStream;
+      statisticsStream << m_integratingStatisticsBeamlet(blitz::Range(0,2),blitz::Range(0,2));
+      LOG_DEBUG(formatString("beamlet: n_stats:%d; statistics:%s",m_numStatisticsBeamlet, statisticsStream.str().c_str()));
     }
   }
 }
@@ -1510,14 +1548,10 @@ void RegisterAccessTask::_integrateStatistics()
   TStatistics statisticsSubband;
   TStatistics statisticsBeamlet;
   
-  if(m_numStatisticsSubband == 0)
-  { // no updates received yet. Just return the last received statistics
-    statisticsSubband.resize(m_lastReceivedStatisticsSubband.shape());
-    statisticsSubband = m_lastReceivedStatisticsSubband;
-  }
-  else
+  if(m_numStatisticsSubband != 0)
   {
     statisticsSubband.resize(m_integratingStatisticsSubband.shape());
+    statisticsSubband = 0;
     
     switch(m_integrationMethod)
     {
@@ -1529,17 +1563,19 @@ void RegisterAccessTask::_integrateStatistics()
   //      break;
     }
   
-    m_integratingStatisticsSubband.free();
+    stringstream statisticsStream;
+    statisticsStream << statisticsSubband(blitz::Range(0,2),blitz::Range(0,2));
+    LOG_DEBUG(formatString("subband integrated: n_stats:%d; statistics:%s",m_numStatisticsSubband, statisticsStream.str().c_str()));
+
+    m_integratingStatisticsSubband = 0;
     m_numStatisticsSubband=0;
+
+    _writeStatistics(statisticsSubband, m_subStatsHandleSubbandPower);
   }
-  if(m_numStatisticsBeamlet == 0)
-  { // no updates received yet. Just return the last received statistics
-    statisticsBeamlet.resize(m_lastReceivedStatisticsBeamlet.shape());
-    statisticsBeamlet = m_lastReceivedStatisticsBeamlet;
-  }
-  else
+  if(m_numStatisticsBeamlet != 0)
   {
     statisticsBeamlet.resize(m_integratingStatisticsBeamlet.shape());
+    statisticsBeamlet = 0;
     
     switch(m_integrationMethod)
     {
@@ -1550,13 +1586,15 @@ void RegisterAccessTask::_integrateStatistics()
   //    case 1: // NYI
   //      break;
     }
-  
+
+    stringstream statisticsStream;
+    statisticsStream << statisticsSubband(blitz::Range(0,2),blitz::Range(0,2));
+    LOG_DEBUG(formatString("beamlet integrated: n_stats:%d; statistics:%s",m_numStatisticsBeamlet, statisticsStream.str().c_str()));
+
     m_integratingStatisticsBeamlet.free();
     m_numStatisticsBeamlet=0;
+    _writeStatistics(statisticsBeamlet, m_subStatsHandleBeamletPower);
   }
-  
-  _writeStatistics(statisticsSubband, m_subStatsHandleSubbandPower);
-  _writeStatistics(statisticsBeamlet, m_subStatsHandleBeamletPower);
 }
 
 void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsHandle)
