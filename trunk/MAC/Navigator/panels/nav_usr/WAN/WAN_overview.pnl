@@ -561,7 +561,7 @@ LANG:1 7 Button2
 {
 ChildPanelOnCentralModal(\"nav_fw/pleasewait.pnl\",
 				                         \"Please wait\", makeDynString(\"\"));
-navConfigTriggerNavigatorRefreshWithDP(\"System1:PIC_WAN_Switch01\");
+navConfigTriggerNavigatorRefreshWithDP(getSystemName()+\":PIC_WAN_Switch01\");
 }" 0
  E E E
 0

@@ -461,35 +461,35 @@ LANG:1 6 Layer1
       	break;
    	case 10:
 			  dpSetWait($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_original.._value\", 0);
-/* 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status\", bOK);
- 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0.status\", bOK);
- 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1.status\", bOK);
- 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2.status\", bOK);
- 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1.status\", bOK); */
+/* 		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status\", bOK);
+ 		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0.status\", bOK);
+ 		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1.status\", bOK);
+ 		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2.status\", bOK);
+ 		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0.status\", bOK);
+		  	dpActivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1.status\", bOK); */
       	break;
    	case 11:
 			  dpSetWait($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_original.._value\", 1);
-/* 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status\", bOK);
- 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0.status\", bOK);
- 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1.status\", bOK);
- 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2.status\", bOK);
- 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0.status.\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1.status\", bOK);*/
+/* 		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status\", bOK);
+ 		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0.status\", bOK);
+ 		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1.status\", bOK);
+ 		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2.status\", bOK);
+ 		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3.status\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0.status.\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1.status\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0.status\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1.status\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0.status\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1.status\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0.status\", bOK);
+		  	dpDeactivateAlert(getSystemName()+\":PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1.status\", bOK);*/
      	break;
     default:
     	break;
