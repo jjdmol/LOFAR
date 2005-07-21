@@ -172,8 +172,6 @@ void ComboBoxViewsSelectionChanged()
   
   string selectedSubView = viewsComboBoxCtrl.selectedText();
   string selectedPanel = "";
-  DebugN("## g_subViews ##");
-  DebugN(g_subViews);
   if(mappinglen(g_subViews)>0)
   {
     selectedPanel= g_subViews[selectedSubView];
@@ -214,8 +212,6 @@ void ComboBoxViewsSelectionChanged()
   //3. panelfile present and accessable
   //4. There is no panelfile configured for this DP-Type
   //5. panelfile not present and accessable
-  DebugN("1. PANELS_REL_PATH:"+PANELS_REL_PATH);
-  DebugN("2. selectedPanel:"+selectedPanel);
   if(viewsComboBoxCtrl.itemCount==0)
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nosubview.pnl",panelParameters);
