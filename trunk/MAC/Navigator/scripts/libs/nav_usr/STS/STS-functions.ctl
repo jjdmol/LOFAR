@@ -62,7 +62,7 @@ void aplViewNavigateTo(string datapoint, string referenceDatapoint, string addin
     {  
       if(panelName!="")
       {
-        RootPanelOn("navigator/views/" + panelName,
+        RootPanelOn("nav_usr/STS/" + panelName,
                     panelName,
                     makeDynString("$datapoint:" + datapoint + addingPart));
         LOG_TRACE("Navigate to[undocked]: ",datapoint + addingPart);
