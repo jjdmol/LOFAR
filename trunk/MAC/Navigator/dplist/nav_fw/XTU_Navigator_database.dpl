@@ -25,6 +25,8 @@ GCFNavigator.GCFNavigator	1#1
 	shortCuts	9#11
 	pathNamesWindows	9#12
 	pathNamesLinux	9#13
+	recordCMD	25#14
+	recordRCV	9#17
 GCFNavSubViewConfigList.GCFNavSubViewConfigList	1#1
 	dummy	21#2
 	dummy2	25#3
@@ -356,9 +358,9 @@ __loglevel	GCFLogLevel	48254
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status	_original.._stime
 __nav_view_list.caption	GCFNavView	"List"	0x101	17.02.2005 10:35:48.746
-__nav_view_list.configPanel	GCFNavView	"list_config.pnl"	0x101	17.02.2005 10:35:48.746
+__nav_view_list.configPanel	GCFNavView	"nav_fw/list_config.pnl"	0x101	17.02.2005 10:35:48.746
 __nav_view_plot.caption	GCFNavView	"Plot"	0x101	17.02.2005 10:35:48.756
-__nav_view_plot.configPanel	GCFNavView	"plot_config.pnl"	0x101	17.02.2005 10:35:48.756
+__nav_view_plot.configPanel	GCFNavView	"nav_fw/plot_config.pnl"	0x101	17.02.2005 10:35:48.756
 __nav_SingleElement_Trend.1.Trace1.dpName	GCFNavSubViewConfigTrend	"PIC_Stations_Station01_Rack1_SubRack1_Board1.status"	0x101	15.04.2005 07:24:24.371
 __nav_SingleElement_Trend.1.Trace1.AutoScale	GCFNavSubViewConfigTrend	1	0x101	17.02.2005 10:35:48.776
 __nav_SingleElement_Trend.1.Trace1.ScaleMin	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 10:35:48.786
@@ -384,21 +386,21 @@ __nav_SingleElement_Trend.Trend2Active	GCFNavSubViewConfigTrend	1	0x101	17.02.20
 __nav_SingleElement_Trend.DedicatedPanelName	GCFNavSubViewConfigTrend	"Station.pnl"	0x101	17.02.2005 10:35:48.876
 __nav_SingleElement_Trend.Dedicated	GCFNavSubViewConfigTrend	0	0x101	17.02.2005 10:35:48.876
 __nav_view_trend.caption	GCFNavView	"Trend"	0x101	17.02.2005 10:35:48.907
-__nav_view_trend.configPanel	GCFNavView	"trend_config.pnl"	0x101	17.02.2005 10:35:48.917
+__nav_view_trend.configPanel	GCFNavView	"nav_fw/trend_config.pnl"	0x101	17.02.2005 10:35:48.917
 __nav_view_panel.caption	GCFNavView	"Panel"	0x101	17.02.2005 10:35:49.848
-__nav_view_panel.configPanel	GCFNavView	"panel_config.pnl"	0x101	17.02.2005 10:35:49.858
+__nav_view_panel.configPanel	GCFNavView	"nav_fw/panel_config.pnl"	0x101	17.02.2005 10:35:49.858
 __nav_view_alert.caption	GCFNavView	"Alert"	0x101	17.02.2005 10:35:49.938
-__nav_view_alert.configPanel	GCFNavView	"alert_config.pnl"	0x101	17.02.2005 10:35:49.948
+__nav_view_alert.configPanel	GCFNavView	"nav_fw/alert_config.pnl"	0x101	17.02.2005 10:35:49.948
 __nav_view_bar.caption	GCFNavView	"Bar"	0x101	17.02.2005 10:35:50.138
-__nav_view_bar.configPanel	GCFNavView	"bar_config.pnl"	0x101	17.02.2005 10:35:50.148
+__nav_view_bar.configPanel	GCFNavView	"nav_fw/bar_config.pnl"	0x101	17.02.2005 10:35:50.148
 __nav_view_control.caption	GCFNavView	"Control"	0x101	17.02.2005 10:35:50.148
-__nav_view_control.configPanel	GCFNavView	"control_config.pnl"	0x101	17.02.2005 10:35:50.158
+__nav_view_control.configPanel	GCFNavView	"nav_fw/control_config.pnl"	0x101	17.02.2005 10:35:50.158
 __nav_view_config.caption	GCFNavView	"Config"	0x101	17.02.2005 10:35:50.158
-__nav_view_config.configPanel	GCFNavView	"nopanel.pnl"	0x101	17.02.2005 10:35:50.168
+__nav_view_config.configPanel	GCFNavView	"nav_fw/nopanel.pnl"	0x101	17.02.2005 10:35:50.168
 __nav_view_log.caption	GCFNavView	"Log"	0x101	17.02.2005 10:35:50.168
-__nav_view_log.configPanel	GCFNavView	"log_config.pnl"	0x101	25.04.2005 13:51:25.293
+__nav_view_log.configPanel	GCFNavView	"nav_fw/log_config.pnl"	0x101	25.04.2005 13:51:25.293
 __nav_view_archive.caption	GCFNavView	"Archive"	0x101	17.02.2005 10:35:50.939
-__nav_view_archive.configPanel	GCFNavView	"archive_config.pnl"	0x101	17.02.2005 10:35:50.939
+__nav_view_archive.configPanel	GCFNavView	"nav_fw/archive_config.pnl"	0x101	17.02.2005 10:35:50.939
 __nav_default_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	03.05.2005 06:02:43.918
 __nav_default_viewconfig.selectedSubView	GCFNavViewConfiguration	0	0x101	03.05.2005 06:02:48.775
 __nav_default_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_panel, __nav_view_trend, __nav_view_alert, __nav_view_archive, __nav_view_plot, __nav_view_bar, __nav_view_control, __nav_view_log, __nav_view_config	0x101	01.03.2005 13:28:07.508
