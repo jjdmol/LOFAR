@@ -4738,7 +4738,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/compass.gif" 16777215 E 776 41 864 128
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/compass.gif" 16777215 E 776 41 864 128
 2 1810
 "Text26"
 ""

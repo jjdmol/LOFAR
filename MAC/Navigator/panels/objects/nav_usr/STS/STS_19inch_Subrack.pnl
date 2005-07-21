@@ -694,7 +694,7 @@ E "main()
 {
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Rack\" + $RackNr + \"_SubRack\" + $SubrackNr, \"Station_Subrack.pnl\");
 }" 0
- 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 76 33 116 73
+ 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 76 33 116 73
 0
 LAYER, 1 
 1

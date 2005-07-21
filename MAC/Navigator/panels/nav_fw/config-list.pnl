@@ -165,7 +165,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 "PANEL_REF0"
-"navigator/navigator_config_tab.pnl" 20 41 T 62 U  
+"objects/nav_fw/navigator_config_tab.pnl" 20 41 T 62 U  
 4
 "$configDatapoint""$configDatapoint"
 "$selectedElementDpType""$selectedElementDpType"

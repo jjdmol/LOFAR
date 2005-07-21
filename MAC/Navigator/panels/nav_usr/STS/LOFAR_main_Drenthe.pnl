@@ -24,7 +24,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/LOFAR_main_Drenthe.gif" -1 E 200 120 743 597
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/LOFAR_main_Drenthe.gif" -1 E 200 120 743 597
 7 216
 "Ellipse2"
 ""
@@ -651,7 +651,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/compass.gif" 16777215 E 222 166 310 253
+E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/compass.gif" 16777215 E 222 166 310 253
 6 193
 "Border8"
 ""

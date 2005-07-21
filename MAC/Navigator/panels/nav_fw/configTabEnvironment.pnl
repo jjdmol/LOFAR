@@ -681,7 +681,7 @@ LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 478 88 507 115
 P 
 14215660
-"pictures/arrow_left.xpm"
+"pictures/nav_fw/arrow_left.xpm"
 1
 LANG:1 0 
 "main()
@@ -775,7 +775,7 @@ LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 478 118 507 145
 P 
 14215660
-"pictures/arrow_right.xpm"
+"pictures/nav_fw/arrow_right.xpm"
 1
 LANG:1 0 
 "main()

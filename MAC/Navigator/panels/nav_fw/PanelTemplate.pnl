@@ -34,7 +34,7 @@ $referenceDatapoint
 E E E 1 -1 -1 0  370 280
 "" 0 1
 E"//Include a library where functions are stored, which you what to use
-#uses \"gcfnav_view.ctl\" 
+#uses \"nav_fw/gcfnav_view.ctl\" 
 
 // Declare a global variable within THIS panel
 // It is not allowed to initialize this variable with a 
