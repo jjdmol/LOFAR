@@ -47,7 +47,7 @@ GCFNavigatorInstance.GCFNavigatorInstance	1#1
 	newDatapoint	25#7
 	message	25#8
 	selectedEnvironment	25#9
-GCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
+GGCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
 	1	1#8
 		Trace1	1#55
 			dpName	25#56
@@ -55,48 +55,56 @@ GCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
 			ScaleMin	21#58
 			ScaleMax	21#59
 			LegendName	25#60
+			traceColor	25#171
 		Trace2	1#61
 			dpName	25#62
 			AutoScale	23#63
 			ScaleMin	21#64
 			ScaleMax	21#65
 			LegendName	25#66
+			traceColor	25#172
 		Trace3	1#67
 			dpName	25#68
 			AutoScale	23#69
 			ScaleMin	21#70
 			ScaleMax	21#71
 			LegendName	25#72
+			traceColor	25#173
 		Trace4	1#73
 			dpName	25#74
 			AutoScale	23#75
 			ScaleMin	21#76
 			ScaleMax	21#77
 			LegendName	25#78
+			traceColor	25#174
 		Trace5	1#79
 			dpName	25#80
 			AutoScale	23#81
 			ScaleMin	21#82
 			ScaleMax	21#83
 			LegendName	25#84
+			traceColor	25#175
 		Trace6	1#85
 			dpName	25#86
 			AutoScale	23#87
 			ScaleMin	21#88
 			ScaleMax	21#89
 			LegendName	25#90
+			traceColor	25#176
 		Trace7	1#91
 			dpName	25#92
 			AutoScale	23#93
 			ScaleMin	21#94
 			ScaleMax	21#95
 			LegendName	25#96
+			traceColor	25#177
 		Trace8	1#97
 			dpName	25#98
 			AutoScale	23#99
 			ScaleMin	21#100
 			ScaleMax	21#101
 			LegendName	25#102
+			traceColor	25#178
 		Title	25#103
 		Days	21#104
 		Hours	21#105
@@ -109,48 +117,56 @@ GCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
 			ScaleMin	21#112
 			ScaleMax	21#113
 			LegendName	25#114
+			traceColor	25#179
 		Trace2	1#115
 			dpName	25#116
 			AutoScale	23#117
 			ScaleMin	21#118
 			ScaleMax	21#119
 			LegendName	25#120
+			traceColor	25#180
 		Trace3	1#121
 			dpName	25#122
 			AutoScale	23#123
 			ScaleMin	21#124
 			ScaleMax	21#125
 			LegendName	25#126
+			traceColor	25#181
 		Trace4	1#127
 			dpName	25#128
 			AutoScale	23#129
 			ScaleMin	21#130
 			ScaleMax	21#131
 			LegendName	25#132
+			traceColor	25#182
 		Trace5	1#133
 			dpName	25#134
 			AutoScale	23#135
 			ScaleMin	21#136
 			ScaleMax	21#137
 			LegendName	25#138
+			traceColor	25#183
 		Trace6	1#139
 			dpName	25#140
 			AutoScale	23#141
 			ScaleMin	21#142
 			ScaleMax	21#143
 			LegendName	25#144
+			tracColor	25#184
 		Trace7	1#145
 			dpName	25#146
 			AutoScale	23#147
 			ScaleMin	21#148
 			ScaleMax	21#149
 			LegendName	25#150
+			traceColor	25#185
 		Trace8	1#151
 			dpName	25#152
 			AutoScale	23#153
 			ScaleMin	21#154
 			ScaleMax	21#155
 			LegendName	25#156
+			traceColor	25#186
 		Title	25#157
 		Days	21#158
 		Hours	21#159
@@ -162,6 +178,7 @@ GCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
 	Dedicated	23#168
 	dummy	25#169
 	dummy2	25#170
+
 GCFNavSubViewConfigAlert.GCFNavSubViewConfigAlert	1#1
 	1	1#2
 		Title	25#3
