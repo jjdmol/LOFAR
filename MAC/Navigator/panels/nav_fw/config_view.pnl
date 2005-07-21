@@ -82,7 +82,7 @@ dpGet($datapoint + \":_alert_hdl.._orig_hdl\", content);
 DebugN(\"content:\"+content);
 
 DebugN(\"Accessable?: \"+dpAccessable($datapoint + \":_alert_hdl.._orig_hdl\"));
-//CCU1:_mp_TLcuPicLFA.status:_alert_hdl.._orig_hdl
+//getSystemName()+":_mp_TLcuPicLFA.status:_alert_hdl.._orig_hdl"
 }" 0
  E E E
 13 2

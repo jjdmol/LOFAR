@@ -171,7 +171,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 "main()
 {
-setValue(\"\", \"text\", \"System1:PAC*\");
+setValue(\"\", \"text\", getSystemName()+\":PAC*\");
 }" 0
 
 E
