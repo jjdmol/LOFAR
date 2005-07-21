@@ -175,7 +175,7 @@ string navViewRetrieveDpName(string dollarDatapoint, string dpName)
   }
   else
   {
-    dpToConnect = $datapoint + dpName;
+    dpToConnect = datapoint + dpName;
   }
   return dpToConnect;
 }

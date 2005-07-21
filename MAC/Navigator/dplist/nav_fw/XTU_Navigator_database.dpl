@@ -327,6 +327,7 @@ GCFNavSubViewConfigPlot.GCFNavSubViewConfigPlot	1#1
 	updateRate	20#64
 	scriptFilename	25#65
 	currentDatapoint	25#66
+	fileNamePrefix	25#67
 GCFNavSubViewConfigPanel.GCFNavSubViewConfigPanel	1#1
 	Dummy1	25#2
 	Dummy2	25#3
