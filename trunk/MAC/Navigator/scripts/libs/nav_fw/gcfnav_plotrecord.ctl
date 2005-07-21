@@ -10,7 +10,7 @@ main()
   dpSet("__navigator.recordRCV", "");
   //Connects to the datapoint .CMD, this is the command input the this
   //function.
-  dpConnect("navViewPlotRecordMain", FALSE, "System1:__navigator.recordCMD");
+  dpConnect("navViewPlotRecordMain", FALSE, getSystemName()+":__navigator.recordCMD");
 }
 
 
