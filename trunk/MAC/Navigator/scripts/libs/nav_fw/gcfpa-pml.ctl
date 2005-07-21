@@ -17,14 +17,14 @@ unsigned gcfInit(string callBackFuncName)
 		ID++;
 	} while (dynContains(IDlist, ID) > 0);
 	
-	DebugTN("GCF: ID " + ID + " is claimed for unique communication with PA of GCF.");
+	//DebugTN("GCF: ID " + ID + " is claimed for unique communication with PA of GCF.");
 	dyn_string newItem;
 	string callBackDP = "__gcfportUIM" + myManNum() +"_" + ID + "_DPAclient";
 	if (!dpExists(callBackDP))
 	{
 		dpCreate(callBackDP, "GCFDistPort");
 	}
-	DebugTN("GCF: " + callBackDP + " will be used for communication with PA.");
+	//DebugTN("GCF: " + callBackDP + " will be used for communication with PA.");
 	dpConnect("gcfMainCallBack", FALSE, callBackDP + ".");			
 	newItem = makeDynString(callBackFuncName, ID, myManNum());
 	gCallBackList[dynlen(gCallBackList) + 1] = newItem;
@@ -34,14 +34,14 @@ unsigned gcfInit(string callBackFuncName)
 
 void gcfLeave(unsigned ID)
 {
-	DebugTN("GCF: ID " + ID + " will be freed.");
+	//DebugTN("GCF: ID " + ID + " will be freed.");
 	
 	for (int i = 1; i <= dynlen(gCallBackList); i++)
 	{
 		if (gCallBackList[i][2] == ID)
 		{
 			string callBackDP = buildCallBackDP(ID) + ".";
-			DebugTN("GCF: " + callBackDP + " will not be used anymore.");
+			//DebugTN("GCF: " + callBackDP + " will not be used anymore.");
 			dpDisconnect("gcfMainCallBack", callBackDP);
 			dynRemove(gCallBackList, i);
 			break;
@@ -77,7 +77,7 @@ void gcfLeave(unsigned ID)
 void gcfLoadPS(unsigned ID, string psScope)
 {
 	correctScope(psScope);
-	DebugTN("GCF: Request to load property set " + psScope);
+	//DebugTN("GCF: Request to load property set " + psScope);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
 	{
 		string portID = buildPortId(ID);
@@ -91,7 +91,7 @@ void gcfLoadPS(unsigned ID, string psScope)
 void gcfUnloadPS(unsigned ID, string psScope)
 {
 	correctScope(psScope);
-	DebugTN("GCF: Request to unload property set " + psScope);
+	//DebugTN("GCF: Request to unload property set " + psScope);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
 	{
 		string portID = buildPortId(ID);
@@ -106,7 +106,7 @@ void gcfUnloadPS(unsigned ID, string psScope)
 void gcfConfigurePS(unsigned ID, string psScope, string psApcName)
 {
 	correctScope(psScope);
-	DebugTN("GCF: Request to configure property set " + psScope + " with APC " + psApcName);
+	//DebugTN("GCF: Request to configure property set " + psScope + " with APC " + psApcName);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
 	{
 		string portID = buildPortId(ID);
@@ -130,7 +130,7 @@ void gcfMainCallBack(string callBackDP, blob value)
 	dyn_string msg;
 	string msgValue;
 	blobGetValue(value, 0, msgValue, bloblen(value));
-	DebugTN("GCF: Incomming message: " + msgValue);
+	//DebugTN("GCF: Incomming message: " + msgValue);
 	msg = strsplit(msgValue, "|");
 	dyn_string response;
 	if (msg[1] == "m")

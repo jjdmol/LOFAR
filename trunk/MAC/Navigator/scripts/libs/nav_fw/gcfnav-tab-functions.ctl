@@ -126,7 +126,8 @@ void NavTabInitialize(string datapoint)
       if(navConfigGetSubViewConfigElements(subViews[i],subViewCaption,subViewFileName))
       {
         LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
-        g_subViews[subViewCaption] = viewsPath+subViewFileName;
+        //g_subViews[subViewCaption] = viewsPath+subViewFileName;
+        g_subViews[subViewCaption] = subViewFileName;  //viewsPath+ removed
         g_subViewConfigs[subViewCaption] = configs[i];
       }
     }
@@ -141,7 +142,8 @@ void NavTabInitialize(string datapoint)
 
     // get the config panel filename    
     g_configPanelFileName = navConfigGetViewConfigPanel(views[g_selectedView]);
-    g_configPanelFileName = viewsPath + g_configPanelFileName;
+    //g_configPanelFileName = viewsPath + g_configPanelFileName;
+    g_configPanelFileName = g_configPanelFileName;  //viewsPath+ is removed
     
     viewsComboBoxCtrl.selectedPos(selectedSubView);
     ComboBoxViewsSelectionChanged();
@@ -170,6 +172,8 @@ void ComboBoxViewsSelectionChanged()
   
   string selectedSubView = viewsComboBoxCtrl.selectedText();
   string selectedPanel = "";
+  DebugN("## g_subViews ##");
+  DebugN(g_subViews);
   if(mappinglen(g_subViews)>0)
   {
     selectedPanel= g_subViews[selectedSubView];
@@ -210,16 +214,18 @@ void ComboBoxViewsSelectionChanged()
   //3. panelfile present and accessable
   //4. There is no panelfile configured for this DP-Type
   //5. panelfile not present and accessable
+  DebugN("1. PANELS_REL_PATH:"+PANELS_REL_PATH);
+  DebugN("2. selectedPanel:"+selectedPanel);
   if(viewsComboBoxCtrl.itemCount==0)
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nosubview.pnl",panelParameters);
     LOG_DEBUG("1. No subview configured for this datapoint type");
   }
-//  else if(!dpAccessable(g_datapoint))
-//  {
-//    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nodpfound.pnl",panelParameters);
-//    LOG_DEBUG("2. Datapoint selected in tree not found.");
-//  }
+  //  else if(!dpAccessable(g_datapoint))
+  //  {
+  //    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nodpfound.pnl",panelParameters);
+  //    LOG_DEBUG("2. Datapoint selected in tree not found.");
+  //  }
   else if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
@@ -242,10 +248,10 @@ void ComboBoxViewsSelectionChanged()
   //DebugTN("g_datapoint",g_datapoint);
   //getDpTypeFromEnabled( + "__enabled.")
   //This was the original one AdB 25-5-2005
- // if(dpAccessable(g_datapoint))
-//    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled.");
- //else
-//    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled."); //original was only <= g_datapoint>
+  // if(dpAccessable(g_datapoint))
+  //    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled.");
+  //else
+  //    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled."); //original was only <= g_datapoint>
   //////////////////////////////////////////////////////////////
   if(dpAccessable(g_datapoint+"__enabled"))
   {
