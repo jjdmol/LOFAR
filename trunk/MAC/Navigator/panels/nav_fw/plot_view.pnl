@@ -392,6 +392,9 @@ void navViewPlotContextMenu()
     txt_recordDisplay = \"PUSH_BUTTON, Display all recordings,  6, 0\";
     txt_recordStopAll = \"PUSH_BUTTON, Stop all recordings,  7, 0\";
   }
+  DebugN(\"txt_record:\"+txt_record);
+  DebugN(\"txt_recordDisplay:\"+txt_recordDisplay);
+  DebugN(\"txt_recordStopAll:\"+txt_recordStopAll);
   popupMenu(makeDynString(txt_pause, txt_play, txt_step, txt_ranges,
                           \"SEPARATOR\", txt_record, txt_recordDisplay, txt_recordStopAll,
                           \"SEPARATOR\", txt_saveData), Answer);
@@ -618,7 +621,7 @@ LANG:1 5 Start
 "main()
 {
   string cmd = $configDatapoint+\"|\"+$datapoint+\"|start\";
-  dpSet(getSystemName()+\":__navigator.recordCMD\", cmd);
+  dpSet(\"System1:__navigator.recordCMD\", cmd);
 }" 0
  E E E
 13 108
@@ -642,7 +645,7 @@ LANG:1 4 Stop
 "main()
 {
   string cmd = $configDatapoint+\"|\"+$datapoint+\"|stop\";
-  dpSet(getSystemName()+\":__navigator.recordCMD\", cmd);
+  dpSet(\"System1:__navigator.recordCMD\", cmd);
 }" 0
  E E E
 14 109
@@ -672,14 +675,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( getSystemName()+\":__navigator.recordRCV:_online.._value\"))
+  if( !dpExists( \"System1:__navigator.recordRCV:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            getSystemName()+\":__navigator.recordRCV:_online.._value\");
+            \"System1:__navigator.recordRCV:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -693,7 +696,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 }
 
 // SimpleCtrlScript {EP_textFieldIn}
-// DP {getSystemName()+:__navigator.recordRCV}
+// DP {System1:__navigator.recordRCV}
 // DPConfig {:_online.._value}
 // DPType {string}
 // UseDPUnit {FALSE}

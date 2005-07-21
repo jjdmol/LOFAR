@@ -10,7 +10,7 @@ main()
   dpSet("__navigator.recordRCV", "");
   //Connects to the datapoint .CMD, this is the command input the this
   //function.
-  dpConnect("navViewPlotRecordMain", FALSE, getSystemName()+":__navigator.recordCMD");
+  dpConnect("navViewPlotRecordMain", FALSE, "__navigator.recordCMD");
 }
 
 
@@ -55,7 +55,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
     // There is asked for the status of this cmd_configDatapoint and cmd_datapoint,
     // the status is returned to "__navigator.recordRCV" so the requester can handle this
     // response for further computation.
-    DebugN("case status");
+    LOG_TRACE("record received cmd: status");
     string match = cmd_configDatapoint+"|"+cmd_datapoint+"*";
     dyn_string searchResult = dynPatternMatch(match, recordList);
     dyn_string dpToDisconnect;
@@ -72,7 +72,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
   case "start":
     // Place all as active configured DP's in a dyn_string, add only the not already
     // recorded datapoints. Then start the record function.
-    DebugN("case start");
+    LOG_TRACE("record received cmd: start");
     dyn_string dpNamesToRecord = navViewPlotRecordGetDpNamesToRecord(cmd_configDatapoint);
     dpNamesToRecord = navViewPlotRecordListAddItems(dpNamesToRecord);
     if(dynlen(dpNamesToRecord)>0)
@@ -81,7 +81,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
     }
     break;
   case "show all":
-    DebugN("case show all");
+    LOG_TRACE("record received cmd: show all");
     dyn_string showAllDPs;
     for(int i=1; i<=dynlen(recordList); i++)
     {
@@ -89,8 +89,8 @@ navViewPlotRecordMain(string dp1, string commandInput)
     }
     dpSet("__navigator.recordRCV", showAllDPs);
     break;
-  case "stop":    
-    DebugN("case stop");
+  case "stop":
+    LOG_TRACE("record received cmd: stop");    
     dyn_string searchResult = dynPatternMatch(cmd_configDatapoint+"|"+cmd_datapoint+"*", recordList);
     dyn_string dpToDisconnect;
     if(dynlen(searchResult)>0)
@@ -105,7 +105,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
     }
     break;
   case "stop all":
-    DebugN("case stop all");
+    LOG_TRACE("record received cmd: stop all");    
     dyn_string stopAllDPs;
     for(int i=1; i<=dynlen(recordList); i++)
     {
@@ -115,12 +115,10 @@ navViewPlotRecordMain(string dp1, string commandInput)
     dynClear(recordList);
     break;
   default:
-    DebugN("case default");
+    LOG_TRACE("record received cmd: unknown (default)");      
     dpSet("__navigator.recordRCV", "unknown command");
     break;
   }
-  DebugN("###############  recordList  ###################");
-  DebugN(recordList);
 }
  
 ///////////////////////////////////////////////////////////////////////////
@@ -205,7 +203,6 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
     for(int i=1; i<=dynlen(newDatapoints); i++)
     {
       string dpToConnect = navViewPlotGetSplitPart(newDatapoints[i],2 );
-      DebugN("dpConnect:" + dpToConnect);
       navPMLloadPropertySet(dpToConnect);
       dpConnect("RecordSpectrum", FALSE, dpToConnect);
       //Write file record info to disc
@@ -216,7 +213,6 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
   {
     for(int i=1; i<=dynlen(newDatapoints); i++)
     {
-      DebugN("dpDisconnect:"+newDatapoints[i]);
       navPMLloadPropertySet(newDatapoints[i]);
       dpDisconnect("RecordSpectrum", newDatapoints[i]);
     }
@@ -344,7 +340,6 @@ RecordFunction(string dp1, bool triggerRecord)
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + ".dpRecord", dpName);
   if(triggerRecord)
   { 
-    DebugN("Recording has started");
     dpConnect("RecordSpectrum", dpName);
     file f;
     f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + "record_1.dat", "w+");
@@ -352,7 +347,6 @@ RecordFunction(string dp1, bool triggerRecord)
   }
   else
   {
-    DebugN("dpDisconnect: "+dpName);
     dpDisconnect("RecordSpectrum", dpName);
     g_counter = 0;
   }
