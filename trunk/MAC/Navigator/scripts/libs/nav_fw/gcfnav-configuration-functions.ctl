@@ -1056,7 +1056,7 @@ navConfigAddRemoveSubView()
       else
       {
         dpSet(subViewDpName+".caption",textFieldCaption.text,
-              subViewDpName+".filename",textFieldFileName.text);
+              subViewDpName+".filename", "nav_fw/"+textFieldFileName.text);
       }
     }      
     err = getLastError();
