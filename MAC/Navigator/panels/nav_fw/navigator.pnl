@@ -1,9 +1,10 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,394 346 1260 960 N "_3DFace" 0
+PANEL,467 200 1260 960 N "_3DFace" 0
 "main()
 {
+  navConfigCheckResourceRoots();
   navPMLinitialize();
   Navigator_HandleEventInitialize();
   navConfigInitPathNames();
