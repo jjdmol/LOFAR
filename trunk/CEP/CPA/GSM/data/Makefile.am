@@ -15,4 +15,5 @@ gsmfiles := $(addprefix $(gsmtable)/,$(aipspp_tablefiles))
 gsmdir = $(datadir)/GSM/$(gsmtable)
 dist_gsm_DATA = $(gsmfiles)
 
-AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL
+
+include $(lofar_sharedir)/Makefile.common
