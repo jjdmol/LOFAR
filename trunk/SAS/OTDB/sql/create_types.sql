@@ -72,7 +72,6 @@ CREATE TYPE OTDBparamDef AS (
 	paramID			INT4,
 	nodeID			INT4,
 	name			VARCHAR(40),
-	index			SMALLINT,
 	par_type		INT2,			-- param_type.ID%TYPE,
 --	unit			VARCHAR(4),		-- unit.name%TYPE,
 	unit			INT2,

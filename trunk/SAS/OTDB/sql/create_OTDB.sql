@@ -25,8 +25,8 @@
 \i create_PIC_tables.sql
 \i hPICsearchParamID_func.sql
 \i addPICparam_func.sql
+\i getPICparamDef_func.sql
 \i getPICitemList_func.sql
-\i addKVT_func.sql
 \i searchInPeriod_func.sql
 
 -- Events and Actions
@@ -34,6 +34,8 @@
 
 -- VICadmin
 \i create_VIC_tables.sql
+\i hVICsearchParamID_func.sql
+\i getVICparamDef_func.sql
 \i dupVTnode_func.sql
 \i updateVTnode_func.sql
 \i deleteVTnode_func.sql
@@ -41,3 +43,13 @@
 \i getVTchildren_func.sql
 \i instanciateTree_func.sql
 \i exportTree_func.sql
+
+-- values
+\i addKVT_func.sql
+
+-- multi treetype
+\i copyVHtree_func.sql
+\i copyVTtree_func.sql
+\i copyTree_func.sql
+\i deleteTree_func.sql
+
