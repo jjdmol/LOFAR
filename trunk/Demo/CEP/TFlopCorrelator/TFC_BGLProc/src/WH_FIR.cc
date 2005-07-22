@@ -51,7 +51,7 @@ WH_FIR::WH_FIR(const string& name, const short subBandID):
     filterData[filter].filterTaps = new float[itsNtaps];
     
     memset(filterData[filter].delayLine, 0, itsNtaps*sizeof(FilterType));
-    memset(filterData[filter].filterTaps, 0, itsNtaps*sizeof(float));
+    memset(filterData[filter].filterTaps, 1, itsNtaps*sizeof(float));
   }
 }
 
