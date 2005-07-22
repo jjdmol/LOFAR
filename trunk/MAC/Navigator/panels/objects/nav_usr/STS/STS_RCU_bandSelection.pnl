@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,262 164 150 99 N "_3DFace" 1
+PANEL,347 186 150 99 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -124,6 +124,48 @@ E
 "main(int button)
 {
 	dpSet($datapoint + \".bandSel\", button);
+	
+	// disable/enable rest of the panel depending on
+	// Low-band or High-band selected.
+	// Also set the according datapoints.
+  // Take into account that first the  ON settings need to be done
+  // and after that the OUT Settings, otherwise there will be an 
+  // Alert raised.
+  
+  // LowBand Objects:
+  // LBAEnable
+  // rect_lowBandFilter
+  // VIEnable
+  
+  // Highband Objects:
+  // HFAEnable
+  // combobox1 & rect_filter
+  // VhEnable
+  
+  
+  // VddVccEn
+  
+  // LowBand Selected
+  if (button == FALSE) {
+    dpSet($datapoint + \".LBAEnable\",TRUE);
+    dpSet($datapoint + \".HBAEnable\",FALSE);
+    dpSet($datapoint + \".VlEnable\",TRUE);
+    dpSet($datapoint + \".VhEnable\",FALSE);
+    setValue(\"rect_lowBandFilter\",\"backCol\",\"Lofar_device_active\");
+    setValue(\"ComboBox1\",\"enabled\",FALSE);
+    setValue(\"rect_filter\",\"backCol\",\"_3DFace\");    
+  } else {
+    dpSet($datapoint + \".HBAEnable\",TRUE);
+    dpSet($datapoint + \".LBAEnable\",FALSE);
+    dpSet($datapoint + \".VhEnable\",TRUE);
+    dpSet($datapoint + \".VlEnable\",FALSE);
+    setValue(\"ComboBox1\",\"enabled\",TRUE);
+    setValue(\"rect_filter\",\"backCol\",\"Lofar_device_active\");    
+    setValue(\"rect_lowBandFilter\",\"backCol\",\"_3DFace\");
+  }
+  
+  dpSet($datapoint + \".VddVccEn\",TRUE);
+	
 }" 0
 
 0
