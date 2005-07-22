@@ -53,14 +53,14 @@ EP_setEnabled()
 {
 dyn_errClass err;
 
-  if( !dpExists( getSystemName()+\":\"+ $DPReference +\".number_of_plots:_online.._value\"))
+  if( !dpExists( getSystemName()+\"\"+ $DPReference +\".number_of_plots:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_setEnabledCB\",
-            getSystemName()+\":\"+ $DPReference+\".number_of_plots:_online.._value\");
+            getSystemName()+\"\"+ $DPReference+\".number_of_plots:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");

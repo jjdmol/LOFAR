@@ -61,7 +61,7 @@ EP_setBackColorCB(string dpSource, int iNewValue)
 }
 
 // SimpleCtrlScript {EP_setBackColor}
-// DP {getSystemName()+:Switch3300XM.Ports.2.Link}
+// DP {getSystemName()+Switch3300XM.Ports.2.Link}
 // DPConfig {:_online.._value}
 // DPType {int}
 // AlertHdl {FALSE}
