@@ -46,9 +46,7 @@ namespace LOFAR
   void AH_Correlator::define(const KeyValueMap& kvm) {
     KeyValueMap myKvm(kvm);
 
-    ACC::APS::ParameterSet myPset;
-    myPset["DH_Vis.NPols"] = "2";
-    myPset["DH_Vis.stations"] = "2";
+    ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
     itsInDH1 = new DH_CorrCube("itsIn1",0);
     itsOutDH1 = new DH_Vis("itsOutDH1", 0, myPset);
@@ -71,6 +69,9 @@ namespace LOFAR
 
   void AH_Correlator::init() {
     itsWH->basePreprocess();
+
+    // Fill inDHs here
+    static_cast<DH_CorrCube*>(itsInDH1)->setTestPattern();
   }
 
   void AH_Correlator::run(int steps) {

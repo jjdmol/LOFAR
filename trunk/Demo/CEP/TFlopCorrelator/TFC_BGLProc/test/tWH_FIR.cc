@@ -48,7 +48,7 @@ namespace LOFAR
 
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
-    itsInDH1 = new DH_FIR("itsInDH1", NULL, myPset);
+    itsInDH1 = new DH_FIR("itsInDH1", 0, myPset);
     
     itsOutDH1 = new DH_PPF("itsOutDH1", 0);
     itsOutDH2 = new DH_PPF("itsOutDH2", 0);
