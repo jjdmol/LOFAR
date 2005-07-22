@@ -261,6 +261,7 @@ BlobIStream& DataHolder::getExtraBlob (bool& found, int& version)
 
 void DataHolder::putExtra (const void* data, uint size)
 {
+  ASSERTSTR (itsData != 0, "create/openDataBlock not done");
   char* oldPtr = itsData->data();
   itsDataFields.putExtraBlob (*itsDataBlob, data, size);
   if (oldPtr != itsData->data()) {
