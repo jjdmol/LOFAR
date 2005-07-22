@@ -43,6 +43,8 @@ public:
   /// Get access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
 
+  void setBuffer(BufferType*);
+
   /// return pointer to array containing time/pol series for specified freqchannel and station 
   /// to be used in correlator inner loop
   BufferType* getBufferTimePolSeries(int channel, int station);
@@ -52,6 +54,8 @@ public:
   void setBufferElement(int channel, int station, int sample, int polarisation, BufferType* value); 
 
   const unsigned int getBufSize() const;
+
+  void setTestPattern();
 
 private:
   /// Forbid assignment.
@@ -81,6 +85,10 @@ private:
  inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
    { return itsBuffer; }
  
+ inline void DH_CorrCube::setBuffer(DH_CorrCube::BufferType* buffer)
+   { itsBuffer = buffer; }
+   
+
  inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int channel, 
 						  int station,
 						  int sample,
@@ -102,5 +110,8 @@ private:
    return itsBufSize;
  }
  
+ inline void DH_CorrCube::setTestPattern() 
+   { memset(itsBuffer, 1, itsBufSize); }
+
 }
 #endif 

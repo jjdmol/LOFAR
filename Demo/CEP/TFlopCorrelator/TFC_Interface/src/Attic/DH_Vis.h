@@ -18,7 +18,7 @@ namespace LOFAR
 class DH_Vis: public DataHolder
 {
 public:
-  typedef u16complex BufferType;
+  typedef dcomplex BufferType;
 
   explicit DH_Vis (const string& name, short startfreq, const LOFAR::ACC::APS::ParameterSet pSet);
 
@@ -33,6 +33,9 @@ public:
 
   /// Get write access to the Buffer.
   BufferType* getBuffer();
+
+  void setBuffer(DH_Vis::BufferType*);
+
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
 
@@ -62,6 +65,9 @@ private:
 
 inline DH_Vis::BufferType* DH_Vis::getBuffer()
   { return itsBuffer; }
+
+inline void DH_Vis::setBuffer(DH_Vis::BufferType* buffer)
+  { itsBuffer = buffer; }
  
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
