@@ -43,11 +43,13 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
   RETURNS BOOLEAN AS '
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
-		vTime		timestamp;
+		vTime		timestamp := NULL;
 
 	BEGIN
 	  -- convert timestamp
-	  vTime := to_timestamp($3, \'YYYY-Mon-DD HH24:MI:SS.US\');
+	  IF LENGTH($3) > 0 THEN
+		  vTime := to_timestamp($3, \'YYYY-Mon-DD HH24:MI:SS.US\');
+	  END IF;
 	  IF vTime IS NULL THEN
 		vTime := now();
 	  END IF;
@@ -60,14 +62,22 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
 	  WHERE  PVSSname = $1
 	  LIMIT  1;
 
-	  IF NOT FOUND THEN
-		-- its a VIC parameter
-		-- TODO: implement VIC part
-		RETURN FALSE;
-	  ELSE
+	  IF FOUND THEN
 		-- its a PIC parameter
 	    INSERT INTO PICkvt(paramID, value, time)
 		VALUES (vParRefID, $2, vTime);
+		RETURN TRUE;
+	  END IF;
+
+	  -- its a VIC parameter
+	  vParRefID := hVICsearchParamID($1);
+	  IF vParRefID = 0 THEN
+		-- not found? probably a shared param, store on name
+		INSERT INTO VICkvt (paramName, nodeID, value, time)
+		VALUES ($1, 0, $2, vTime);
+	  ELSE
+	    INSERT INTO VICkvt(nodeID, value, time)
+	    VALUES (vParRefID, $2, vTime);
 	  END IF;
 
 	  RETURN TRUE;
