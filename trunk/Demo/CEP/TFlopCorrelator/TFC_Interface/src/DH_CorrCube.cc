@@ -20,13 +20,14 @@ namespace LOFAR
     : DataHolder     (name, "DH_CorrCube"),
       itsBuffer      (0),
       itsSubBand     (subband),
-      itsNPol        (2)
+      itsNPol        (0)
   {
     ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
     //ParameterCollection	myPC(myPS);
     itsNFChannels = myPS.getInt32("DH_CorrCube.freqs");
     itsNStations  = myPS.getInt32("DH_CorrCube.stations");
     itsNTimes     = myPS.getInt32("DH_CorrCube.times");
+    itsNPol       = myPS.getInt32("polarisations");
   }
   
 DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)

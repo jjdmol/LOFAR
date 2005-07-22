@@ -28,7 +28,8 @@ DH_Vis::DH_Vis (const string& name, short startfreq,
 {
    itsNPols = itsPS.getInt32("polarisations");
    itsNStations  = itsPS.getInt32("NRSP");
-   itsNBaselines = itsNStations * (itsNStations - 1);
+//    itsNBaselines = itsNStations * (itsNStations - 1);
+   itsNBaselines = itsNStations * itsNStations;
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)
@@ -54,7 +55,7 @@ DataHolder* DH_Vis::clone() const
 void DH_Vis::init()
 {
   // Determine the size of the buffer.
-  itsBufSize = itsNFChannels * itsNBaselines * itsNPols*itsNPols;
+  itsBufSize = itsNBaselines * itsNPols*itsNPols;
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();  // calls fillDataPointers
 
