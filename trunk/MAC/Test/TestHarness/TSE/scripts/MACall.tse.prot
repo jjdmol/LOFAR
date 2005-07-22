@@ -94,6 +94,7 @@ t_uInt                =  {   4 }
 t_Long                =  {   4 }
 t_uLong               =  {   4 }
 t_String              = -{ 65535-, ASCII } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_StringLen						=	 {   2 }
 
 int8 									=  {   1 }
 uint8									=  {   1 }
@@ -347,7 +348,7 @@ F_LOGICALDEVICE_CONNECT =
 {
   0x014B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodeId : t_String [ nrOfChars ]
   
 }
@@ -364,7 +365,7 @@ F_LOGICALDEVICE_SCHEDULE =
 {
   0x038B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   fileName : t_String [ nrOfChars ]
   
 }
@@ -478,9 +479,9 @@ F_STARTDAEMON_SCHEDULE =
   0x014C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   logicalDeviceType : TLogicalDeviceTypes,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   taskName : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   fileName : t_String [ nrOfChars2 ]
   
 }
@@ -490,7 +491,7 @@ F_STARTDAEMON_SCHEDULED =
   0x028C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TSDResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -499,7 +500,7 @@ F_STARTDAEMON_DESTROY_LOGICALDEVICE =
 {
   0x034C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   name : t_String [ nrOfChars ]
   
 }
@@ -935,7 +936,7 @@ F_CAL_CREATESUBARRAY =
 {
   0x0157, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ],
   pos : t_Int,
   sampling_frequency : t_Double
@@ -947,7 +948,7 @@ F_CAL_CREATESUBARRAY_ACK =
   0x0297, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -956,7 +957,7 @@ F_CAL_STARTCAL =
 {
   0x0357, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -966,7 +967,7 @@ F_CAL_STARTCAL_ACK =
   0x0497, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -975,7 +976,7 @@ F_CAL_DESTROYSUBARRAY =
 {
   0x0557, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -985,7 +986,7 @@ F_CAL_DESTROYSUBARRAY_ACK =
   0x0657, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -994,7 +995,7 @@ F_CAL_SUBCAL =
 {
   0x0757, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -1004,7 +1005,7 @@ F_CAL_SUBCAL_ACK =
   0x0897, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -1014,7 +1015,7 @@ F_CAL_UPDCAL =
   0x0997, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -1023,7 +1024,7 @@ F_CAL_UNSUBCAL =
 {
   0x0A57, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -1033,7 +1034,7 @@ F_CAL_UNSUBCAL_ACK =
   0x0B97, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -1048,7 +1049,7 @@ F_NM_CLAIM =
 {
   0x014A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodesToClaim : t_String [ nrOfChars ]
   
 }
@@ -1057,11 +1058,11 @@ F_NM_CLAIMED =
 {
   0x028A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   newClaimedNodes : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   releasedNodes : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   faultyNodes : t_String [ nrOfChars3 ]
   
 }
@@ -1070,7 +1071,7 @@ F_NM_RELEASE =
 {
   0x034A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodesToRelease : t_String [ nrOfChars ]
   
 }
@@ -1092,7 +1093,7 @@ F_SAS_SCHEDULE =
 {
   0x014D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -1101,7 +1102,7 @@ F_SAS_UPDATESCHEDULE =
 {
   0x024D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -1110,7 +1111,7 @@ F_SAS_CANCELSCHEDULE =
 {
   0x034D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -1120,7 +1121,7 @@ F_SAS_RESPONSE =
   0x048D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TSASResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -1129,7 +1130,7 @@ F_SAS_REPLACEMENTREQUEST =
 {
   0x058D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodeID : t_String [ nrOfChars ]
   
 }
@@ -1151,9 +1152,9 @@ F_SB_REGISTER_SERVICE =
   0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   servicename : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   host : t_String [ nrOfChars2 ]
   
 }
@@ -1162,7 +1163,7 @@ F_SB_UNREGISTER_SERVICE =
 {
   0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   servicename : t_String [ nrOfChars ]
   
 }
@@ -1172,7 +1173,7 @@ F_SB_GET_SERVICEINFO =
   0x0343, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   servicename : t_String [ nrOfChars ]
   
 }
@@ -1193,7 +1194,7 @@ F_SB_SERVICE_INFO =
   msgLength : t_B4,
   seqnr : uint16,
   portnumber : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   host : t_String [ nrOfChars ],
   result : TSBResult
   
@@ -1203,7 +1204,7 @@ F_SB_SERVICE_GONE =
 {
   0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   servicename : t_String [ nrOfChars ]
   
 }
@@ -1252,7 +1253,7 @@ F_PA_LOAD_PROP_SET =
   0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1262,7 +1263,7 @@ F_PA_UNLOAD_PROP_SET =
   0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1272,9 +1273,9 @@ F_PA_CONF_PROP_SET =
   0x0343, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   apcName : t_String [ nrOfChars2 ]
   
 }
@@ -1302,7 +1303,7 @@ F_PA_PROP_SET_CONF =
   0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   apcName : t_String [ nrOfChars ],
   result : TPAResult
   
@@ -1313,9 +1314,9 @@ F_PA_REGISTER_SCOPE =
   0x0743, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ],
   category : TPSCategory
   
@@ -1326,7 +1327,7 @@ F_PA_UNREGISTER_SCOPE =
   0x0843, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1353,7 +1354,7 @@ F_PA_LINK_PROP_SET =
 {
   0x0B83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1362,7 +1363,7 @@ F_PA_UNLINK_PROP_SET =
 {
   0x0C83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1371,7 +1372,7 @@ F_PA_PROP_SET_LINKED =
 {
   0x0D43, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ],
   result : TPAResult
   
@@ -1381,7 +1382,7 @@ F_PA_PROP_SET_UNLINKED =
 {
   0x0E43, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ],
   result : TPAResult
   
@@ -1391,7 +1392,7 @@ F_PA_PROP_SET_GONE =
 {
   0x0F83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1407,9 +1408,9 @@ F_PI_REGISTER_SCOPE =
   0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ],
   category : TPSCategory
   
@@ -1420,7 +1421,7 @@ F_PI_UNREGISTER_SCOPE =
   0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1447,7 +1448,7 @@ F_PI_LINK_PROP_SET =
 {
   0x0583, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1456,7 +1457,7 @@ F_PI_UNLINK_PROP_SET =
 {
   0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1466,9 +1467,9 @@ F_PI_PROP_SET_LINKED =
   0x0743, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPIResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   propList : t_String [ nrOfChars2 ]
   
 }
@@ -1478,7 +1479,7 @@ F_PI_PROP_SET_UNLINKED =
   0x0843, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPIResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1583,7 +1584,7 @@ F_THECHO_PING_STRING =
   0x0B4A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -1593,7 +1594,7 @@ F_THECHO_ECHO_STRING =
   0x0C8A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -1728,7 +1729,7 @@ F_THECHOROUTING_PING_STRING =
   0x0B4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -1738,7 +1739,7 @@ F_THECHOROUTING_ECHO_STRING =
   0x0C4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -1783,9 +1784,9 @@ F_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET =
 {
   0x014E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ],
   category : TPSCategory
   
@@ -1796,7 +1797,7 @@ F_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET_RESPONSE =
   0x028E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1805,7 +1806,7 @@ F_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET =
 {
   0x034E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1815,7 +1816,7 @@ F_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET_RESPONSE =
   0x048E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -1824,9 +1825,9 @@ F_THPVSSBRIDGE_MY_GET_VALUE =
 {
   0x054E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
   
 }
@@ -1835,11 +1836,11 @@ F_THPVSSBRIDGE_MY_GET_VALUE_RESPONSE =
 {
   0x068E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
   
 }
@@ -1848,11 +1849,11 @@ F_THPVSSBRIDGE_MY_SET_VALUE =
 {
   0x074E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
   
 }
@@ -1862,9 +1863,9 @@ F_THPVSSBRIDGE_MY_SET_VALUE_RESPONSE =
   0x088E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
   
 }
@@ -1873,9 +1874,9 @@ F_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET =
 {
   0x094E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ]
   
 }
@@ -1885,7 +1886,7 @@ F_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE =
   0x0A8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
 }
 
@@ -1893,7 +1894,7 @@ F_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET =
 {
   0x0B4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
 }
 
@@ -1902,7 +1903,7 @@ F_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE =
   0x0C8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
 }
 
@@ -1910,9 +1911,9 @@ F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY =
 {
   0x0D4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -1921,9 +1922,9 @@ F_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE =
   0x0E8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -1931,9 +1932,9 @@ F_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY =
 {
   0x0F4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -1942,9 +1943,9 @@ F_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE =
   0x108E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -1952,9 +1953,9 @@ F_THPVSSBRIDGE_EXT_GET_VALUE =
 {
   0x114E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -1962,11 +1963,11 @@ F_THPVSSBRIDGE_EXT_GET_VALUE_RESPONSE =
 {
   0x128E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]  
 }
 
@@ -1974,11 +1975,11 @@ F_THPVSSBRIDGE_EXT_SET_VALUE =
 {
   0x134E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
 }
 
@@ -1987,9 +1988,9 @@ F_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE =
   0x148E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -1997,11 +1998,11 @@ F_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
 {
   0x158E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
 }
 
@@ -2017,7 +2018,7 @@ E_LOGICALDEVICE_CONNECT =
 {
   0x014B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodeId : t_String [ nrOfChars ]
   
 }
@@ -2034,7 +2035,7 @@ E_LOGICALDEVICE_SCHEDULE =
 {
   0x038B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   fileName : t_String [ nrOfChars ]
   
 }
@@ -2148,9 +2149,9 @@ E_STARTDAEMON_SCHEDULE =
   0x014C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   logicalDeviceType : TLogicalDeviceTypes,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   taskName : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   fileName : t_String [ nrOfChars2 ]
   
 }
@@ -2160,7 +2161,7 @@ E_STARTDAEMON_SCHEDULED =
   0x028C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TSDResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -2169,7 +2170,7 @@ E_STARTDAEMON_DESTROY_LOGICALDEVICE =
 {
   0x034C, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   name : t_String [ nrOfChars ]
   
 }
@@ -2604,7 +2605,7 @@ E_CAL_CREATESUBARRAY =
 {
   0x0157, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ],
   pos : t_Int,
   sampling_frequency : t_Double
@@ -2616,7 +2617,7 @@ E_CAL_CREATESUBARRAY_ACK =
   0x0297, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2625,7 +2626,7 @@ E_CAL_STARTCAL =
 {
   0x0357, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2635,7 +2636,7 @@ E_CAL_STARTCAL_ACK =
   0x0497, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2644,7 +2645,7 @@ E_CAL_DESTROYSUBARRAY =
 {
   0x0557, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2654,7 +2655,7 @@ E_CAL_DESTROYSUBARRAY_ACK =
   0x0657, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2663,7 +2664,7 @@ E_CAL_SUBCAL =
 {
   0x0757, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2673,7 +2674,7 @@ E_CAL_SUBCAL_ACK =
   0x0897, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2683,7 +2684,7 @@ E_CAL_UPDCAL =
   0x0997, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2692,7 +2693,7 @@ E_CAL_UNSUBCAL =
 {
   0x0A57, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2702,7 +2703,7 @@ E_CAL_UNSUBCAL_ACK =
   0x0B97, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   status : t_Int,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   srgname : t_String [ nrOfChars ]
   
 }
@@ -2717,7 +2718,7 @@ E_NM_CLAIM =
 {
   0x014A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodesToClaim : t_String [ nrOfChars ]
   
 }
@@ -2726,11 +2727,11 @@ E_NM_CLAIMED =
 {
   0x028A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   newClaimedNodes : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   releasedNodes : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   faultyNodes : t_String [ nrOfChars3 ]
   
 }
@@ -2739,7 +2740,7 @@ E_NM_RELEASE =
 {
   0x034A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodesToRelease : t_String [ nrOfChars ]
   
 }
@@ -2761,7 +2762,7 @@ E_SAS_SCHEDULE =
 {
   0x014D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -2770,7 +2771,7 @@ E_SAS_UPDATESCHEDULE =
 {
   0x024D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -2779,7 +2780,7 @@ E_SAS_CANCELSCHEDULE =
 {
   0x034D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -2789,7 +2790,7 @@ E_SAS_RESPONSE =
   0x048D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TSASResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   VIrootID : t_String [ nrOfChars ]
   
 }
@@ -2798,7 +2799,7 @@ E_SAS_REPLACEMENTREQUEST =
 {
   0x058D, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   nodeID : t_String [ nrOfChars ]
   
 }
@@ -2820,9 +2821,9 @@ E_SB_REGISTER_SERVICE =
   0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   servicename : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   host : t_String [ nrOfChars2 ]
   
 }
@@ -2831,7 +2832,7 @@ E_SB_UNREGISTER_SERVICE =
 {
   0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   servicename : t_String [ nrOfChars ]
   
 }
@@ -2841,7 +2842,7 @@ E_SB_GET_SERVICEINFO =
   0x0343, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   servicename : t_String [ nrOfChars ]
   
 }
@@ -2862,7 +2863,7 @@ E_SB_SERVICE_INFO =
   msgLength : t_B4,
   seqnr : uint16,
   portnumber : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   host : t_String [ nrOfChars ],
   result : TSBResult
   
@@ -2872,7 +2873,7 @@ E_SB_SERVICE_GONE =
 {
   0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   servicename : t_String [ nrOfChars ]
   
 }
@@ -2921,7 +2922,7 @@ E_PA_LOAD_PROP_SET =
   0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -2931,7 +2932,7 @@ E_PA_UNLOAD_PROP_SET =
   0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -2941,9 +2942,9 @@ E_PA_CONF_PROP_SET =
   0x0343, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   apcName : t_String [ nrOfChars2 ]
   
 }
@@ -2971,7 +2972,7 @@ E_PA_PROP_SET_CONF =
   0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   apcName : t_String [ nrOfChars ],
   result : TPAResult
   
@@ -2982,9 +2983,9 @@ E_PA_REGISTER_SCOPE =
   0x0743, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ],
   category : TPSCategory
   
@@ -2995,7 +2996,7 @@ E_PA_UNREGISTER_SCOPE =
   0x0843, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3022,7 +3023,7 @@ E_PA_LINK_PROP_SET =
 {
   0x0B83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3031,7 +3032,7 @@ E_PA_UNLINK_PROP_SET =
 {
   0x0C83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3040,7 +3041,7 @@ E_PA_PROP_SET_LINKED =
 {
   0x0D43, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ],
   result : TPAResult
   
@@ -3050,7 +3051,7 @@ E_PA_PROP_SET_UNLINKED =
 {
   0x0E43, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ],
   result : TPAResult
   
@@ -3060,7 +3061,7 @@ E_PA_PROP_SET_GONE =
 {
   0x0F83, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3076,9 +3077,9 @@ E_PI_REGISTER_SCOPE =
   0x0143, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ],
   category : TPSCategory
   
@@ -3089,7 +3090,7 @@ E_PI_UNREGISTER_SCOPE =
   0x0243, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : uint16,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3116,7 +3117,7 @@ E_PI_LINK_PROP_SET =
 {
   0x0583, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3125,7 +3126,7 @@ E_PI_UNLINK_PROP_SET =
 {
   0x0683, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3135,9 +3136,9 @@ E_PI_PROP_SET_LINKED =
   0x0743, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPIResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   propList : t_String [ nrOfChars2 ]
   
 }
@@ -3147,7 +3148,7 @@ E_PI_PROP_SET_UNLINKED =
   0x0843, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   result : TPIResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3252,7 +3253,7 @@ E_THECHO_PING_STRING =
   0x0B4A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -3262,7 +3263,7 @@ E_THECHO_ECHO_STRING =
   0x0C8A, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -3398,7 +3399,7 @@ E_THECHOROUTING_PING_STRING =
   0x0B4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -3408,7 +3409,7 @@ E_THECHOROUTING_ECHO_STRING =
   0x0C4B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   seqnr : t_uInt,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   stringParam : t_String [ nrOfChars ]
   
 }
@@ -3453,9 +3454,9 @@ E_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET =
 {
   0x014E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ],
   category : TPSCategory
   
@@ -3466,7 +3467,7 @@ E_THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET_RESPONSE =
   0x028E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3475,7 +3476,7 @@ E_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET =
 {
   0x034E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3485,7 +3486,7 @@ E_THPVSSBRIDGE_DISABLE_MY_PROPERTY_SET_RESPONSE =
   0x048E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
   
 }
@@ -3494,9 +3495,9 @@ E_THPVSSBRIDGE_MY_GET_VALUE =
 {
   0x054E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
   
 }
@@ -3505,11 +3506,11 @@ E_THPVSSBRIDGE_MY_GET_VALUE_RESPONSE =
 {
   0x068E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
   
 }
@@ -3518,11 +3519,11 @@ E_THPVSSBRIDGE_MY_SET_VALUE =
 {
   0x074E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
   
 }
@@ -3532,9 +3533,9 @@ E_THPVSSBRIDGE_MY_SET_VALUE_RESPONSE =
   0x088E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
   
 }
@@ -3543,9 +3544,9 @@ E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET =
 {
   0x094E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   type : t_String [ nrOfChars2 ]
   
 }
@@ -3555,7 +3556,7 @@ E_THPVSSBRIDGE_LOAD_EXT_PROPERTY_SET_RESPONSE =
   0x0A8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
 }
 
@@ -3563,7 +3564,7 @@ E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET =
 {
   0x0B4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
 }
 
@@ -3572,7 +3573,7 @@ E_THPVSSBRIDGE_UNLOAD_EXT_PROPERTY_SET_RESPONSE =
   0x0C8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars : t_B4,
+  nrOfChars : t_StringLen,
   scope : t_String [ nrOfChars ]
 }
 
@@ -3580,9 +3581,9 @@ E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY =
 {
   0x0D4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -3591,9 +3592,9 @@ E_THPVSSBRIDGE_SUBSCRIBE_EXT_PROPERTY_RESPONSE =
   0x0E8E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -3601,9 +3602,9 @@ E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY =
 {
   0x0F4E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -3612,9 +3613,9 @@ E_THPVSSBRIDGE_UNSUBSCRIBE_EXT_PROPERTY_RESPONSE =
   0x108E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -3622,9 +3623,9 @@ E_THPVSSBRIDGE_EXT_GET_VALUE =
 {
   0x114E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -3632,11 +3633,11 @@ E_THPVSSBRIDGE_EXT_GET_VALUE_RESPONSE =
 {
   0x128E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]  
 }
 
@@ -3644,11 +3645,11 @@ E_THPVSSBRIDGE_EXT_SET_VALUE =
 {
   0x134E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
 }
 
@@ -3657,9 +3658,9 @@ E_THPVSSBRIDGE_EXT_SET_VALUE_RESPONSE =
   0x148E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
   response : TGCFResult,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
 }
 
@@ -3667,10 +3668,10 @@ E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
 {
   0x158E, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars1 : t_B4,
+  nrOfChars1 : t_StringLen,
   scope : t_String [ nrOfChars1 ],
-  nrOfChars2 : t_B4,
+  nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ],
-  nrOfChars3 : t_B4,
+  nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
 }
