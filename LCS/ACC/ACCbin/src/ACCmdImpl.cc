@@ -32,7 +32,6 @@
 
 namespace LOFAR {
   namespace ACC {
-    namespace ALC {
 
 ACCmdImpl::ACCmdImpl() :
 	ApplControl()
@@ -147,6 +146,5 @@ string	ACCmdImpl::askInfo   (const string& 	keylist) const
 
 
 
-    } // namespace ALC
   } // namespace ACC
 } // namespace LOFAR
