@@ -67,7 +67,7 @@ void FillSelectionList()
     {
       //DebugTN(\"-----------------------\");
       //DebugTN(\"----- get ------\");
-      //getSystemName()+":PIC_WAN_Switch01.status:_alert_hdl.._class"
+      //getSystemName()+"PIC_WAN_Switch01.status:_alert_hdl.._class"
       //dpGet(tab[i][1] + \":_alert_hdl.._class\", CurrentAlertClass); // Get the alertclass of the DPE
       //dpGet(tab[i][1] + \":_alert_hdl.._active\", AlertActive);
       

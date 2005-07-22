@@ -1584,19 +1584,19 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 "main()
 {
-  navPMLloadPropertySet(getSystemName()+\":VIC_VI1\");
+  navPMLloadPropertySet(getSystemName()+\"VIC_VI1\");
   delay(1,0);
   setValue(\"\", \"text\", \"...\");
-  if(dpAccessable(getSystemName()+\":VIC_VI1.state\"))
+  if(dpAccessable(getSystemName()+\"VIC_VI1.state\"))
   {
-    dpConnect(\"showStatusLD\", getSystemName()+\":VIC_VI1.state\");
+    dpConnect(\"showStatusLD\", getSystemName()+\"VIC_VI1.state\");
   }
   else
   {
-    dpConnect(\"displayLD\", getSystemName()+\":__pa_PSIndication.\");
+    dpConnect(\"displayLD\", getSystemName()+\"__pa_PSIndication.\");
   }
   
-  //:_online.._value
+  //_online.._value
 }
 
 
@@ -1607,16 +1607,16 @@ displayLD(string dp1, string value)
   if((value!=\"\") && strpos(value, \"|\")>0)
   {
     dyn_string splitValue = strsplit(value, \"|\");
-    if((getDpTypeFromEnabled(getSystemName()+\":\"+splitValue[2]+\"__enabled.\")==\"TAplLogicalDevice\") && (splitValue[1])==\"e\")
+    if((getDpTypeFromEnabled(getSystemName()+\"\"+splitValue[2]+\"__enabled.\")==\"TAplLogicalDevice\") && (splitValue[1])==\"e\")
     {
-      navPMLloadPropertySet(getSystemName()+\":\"+splitValue[2]);   
+      navPMLloadPropertySet(getSystemName()+\"\"+splitValue[2]);   
       bool check = TRUE;
       while(check)
       {
-        check = !dpAccessable(getSystemName()+\":\"+splitValue[2]+\".state\"); 
+        check = !dpAccessable(getSystemName()+\"\"+splitValue[2]+\".state\"); 
         delay(0, 0.500);
       }
-      dpConnect(\"showStatusLD\", getSystemName()+\":\"+splitValue[2]+\".state\");
+      dpConnect(\"showStatusLD\", getSystemName()+\"\"+splitValue[2]+\".state\");
     }
   }
 

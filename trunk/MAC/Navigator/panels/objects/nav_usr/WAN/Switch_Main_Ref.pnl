@@ -137,14 +137,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( getSystemName()+\":\"+$SwitchNr+\".Name:_online.._value\"))
+  if( !dpExists( getSystemName()+\"\"+$SwitchNr+\".Name:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            getSystemName()+\":\"+$SwitchNr+\".Name:_online.._value\");
+            getSystemName()+\"\"+$SwitchNr+\".Name:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -158,7 +158,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 }
 
 // SimpleCtrlScript {EP_textFieldIn}
-// DP {getSystemName()+:SW01.Name}
+// DP {getSystemName()+SW01.Name}
 // DPConfig {:_online.._value}
 // DPType {string}
 // UseDPUnit {TRUE}
@@ -194,14 +194,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( getSystemName()+\":\"+$SwitchNr+\".Type:_online.._value\"))
+  if( !dpExists( getSystemName()+\"\"+$SwitchNr+\".Type:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            getSystemName()+\":\"+$SwitchNr+\".Type:_online.._value\");
+            getSystemName()+\"\"+$SwitchNr+\".Type:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -215,7 +215,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 }
 
 // SimpleCtrlScript {EP_textFieldIn}
-// DP {getSystemName()+:SW01.Type}
+// DP {getSystemName()+SW01.Type}
 // DPConfig {:_online.._value}
 // DPType {string}
 // UseDPUnit {TRUE}
@@ -251,14 +251,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( getSystemName()+\":\"+$SwitchNr+\".Location:_online.._value\"))
+  if( !dpExists( getSystemName()+\"\"+$SwitchNr+\".Location:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            getSystemName()+\":\"+$SwitchNr+\".Location:_online.._value\");
+            getSystemName()+\"\"+$SwitchNr+\".Location:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -272,7 +272,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 }
 
 // SimpleCtrlScript {EP_textFieldIn}
-// DP {getSystemName()+:SW01.Location}
+// DP {getSystemName()+SW01.Location}
 // DPConfig {:_online.._value}
 // DPType {string}
 // UseDPUnit {TRUE}
@@ -308,14 +308,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( getSystemName()+\":\"+$SwitchNr+\".IP:_online.._value\"))
+  if( !dpExists( getSystemName()+\"\"+$SwitchNr+\".IP:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            getSystemName()+\":\"+$SwitchNr+\".IP:_online.._value\");
+            getSystemName()+\"\"+$SwitchNr+\".IP:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -329,7 +329,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 }
 
 // SimpleCtrlScript {EP_textFieldIn}
-// DP {getSystemName()+:SW01.IPAddress}
+// DP {getSystemName()+SW01.IPAddress}
 // DPConfig {:_online.._value}
 // DPType {string}
 // UseDPUnit {TRUE}
