@@ -45,6 +45,7 @@ DH_Vis::DH_Vis(const DH_Vis& that)
 
 DH_Vis::~DH_Vis()
 {
+  delete itsMatrix;
 }
 
 DataHolder* DH_Vis::clone() const
