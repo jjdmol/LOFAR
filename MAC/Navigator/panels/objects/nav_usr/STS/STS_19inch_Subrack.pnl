@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,473 288 182 113 N "_3DFace" 5
+PANEL,426 404 182 113 N "_3DFace" 5
 "$RackNr"
 "$SubrackNr"
 "$configDatapoint"
@@ -76,7 +76,9 @@ dyn_errClass err;
             $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status:_online.._invalid\");
   err = getLastError();
   if (dynlen(err) > 0)
+  {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
+  }
 
 }
 

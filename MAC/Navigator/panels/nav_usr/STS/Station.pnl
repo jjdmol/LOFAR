@@ -1,13 +1,13 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,375 234 994 514 N "_3DFace" 3
+PANEL,426 404 994 514 N "_3DFace" 3
 "$configDatapoint"
 "$datapoint"
 "$referenceDatapoint"
 EEE E E 1 -1 -1 0  188 128
 "" 0 1
-E"#uses \"apl-view.ctl\"" 0
+E"#uses \"nav_usr/STS/STS-functions.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
