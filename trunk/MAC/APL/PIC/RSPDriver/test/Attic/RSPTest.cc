@@ -120,11 +120,11 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       sw.timestamp.setNow(10);
       LOG_INFO_STR("sw.time=" << sw.timestamp);
 
-      sw.blpmask.reset();
-      sw.blpmask.set(0);
+      sw.rcumask.reset();
+      sw.rcumask.set(0);
 
-      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
-      sw.weights()(0, 0, Range::all(), Range::all()) = complex<int16>(0xdead, 0xbeaf);
+      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS);
+      sw.weights()(0, 0, Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
 
       TESTC_ABORT(m_server.send(sw), RSPTest::final);
@@ -178,8 +178,8 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
 	  RSPGetweightsEvent sw;
 	  sw.timestamp.setNow(5);
 	  LOG_INFO_STR("sw.time= " << sw.timestamp);
-	  sw.blpmask.reset();
-	  sw.blpmask.set(0);
+	  sw.rcumask.reset();
+	  sw.rcumask.set(0);
 	  sw.cache = false;
 	  
 	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
@@ -235,12 +235,12 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
       RSPSetweightsEvent sw;
       sw.timestamp = Timestamp(0,0);
       LOG_INFO_STR("sw.time=" << sw.timestamp);
-      sw.blpmask.reset();
-      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+      sw.rcumask.reset();
+      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS);
 
-      sw.weights()(0, 0, Range::all(), Range::all()) = complex<int16>(0xdead, 0xbeaf);
+      sw.weights()(0, 0, Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
-      sw.blpmask.set(0);
+      sw.rcumask.set(0);
 
       TESTC_ABORT(m_server.send(sw), RSPTest::final);
     }
@@ -295,14 +295,14 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
       // 20 seconds from now
       sw.timestamp.setNow(20);
       LOG_INFO_STR("sw.time=" << sw.timestamp);
-      sw.blpmask.reset();
+      sw.rcumask.reset();
 
       // send weights for 10 timesteps
-      sw.weights().resize(10, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+      sw.weights().resize(10, 1, MEPHeader::N_BEAMLETS);
 
-      sw.weights()(Range::all(), 0, Range::all(), Range::all()) = complex<int16>(0xdead, 0xbeaf);
+      sw.weights()(Range::all(), 0, Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
-      sw.blpmask.set(0);
+      sw.rcumask.set(0);
 
       TESTC_ABORT(m_server.send(sw), RSPTest::final);
     }
@@ -355,9 +355,11 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       RSPSetsubbandsEvent ss;
 
       ss.timestamp.setNow(5);
-      ss.blpmask.reset();
-      ss.blpmask.set(0);
-      ss.blpmask.set(1);
+      ss.rcumask.reset();
+      ss.rcumask.set(0);
+      ss.rcumask.set(1);
+      ss.rcumask.set(2);
+      ss.rcumask.set(3);
       
       ss.subbands().resize(1, 10); // 10 subbands selected
 
@@ -475,8 +477,8 @@ GCFEvent::TResult RSPTest::test007(GCFEvent& e, GCFPortInterface& port)
       RSPGetsubbandsEvent ss;
 
       ss.timestamp.setNow(6);
-      ss.blpmask.reset(0);
-      ss.blpmask.set(0);
+      ss.rcumask.reset(0);
+      ss.rcumask.set(0);
       ss.cache = false;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
@@ -641,10 +643,11 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("ack.time=" << ack.timestamp);
       
       LOG_INFO_STR("freq            =" << ack.settings()(0).freq << endl << 
-		   "phase           =" << ack.settings()(0).phase << endl <<
-		   "ampl            =" << ack.settings()(0).ampl << endl <<
+		   "phase           =" << (int)ack.settings()(0).phase << endl <<
+		   "ampl            =" << (int)ack.settings()(0).ampl << endl <<
 		   "nof_usersamples =" << ack.settings()(0).nof_samples << endl <<
-		   "mode            =" << ack.settings()(0).mode << endl);
+		   "mode            =" << (int)ack.settings()(0).mode << endl <<
+		   "preset          =" << (int)ack.settings()(0).preset);
 
       TRAN(RSPTest::test010);
     }

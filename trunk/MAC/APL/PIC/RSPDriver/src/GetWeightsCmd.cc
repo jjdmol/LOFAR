@@ -59,29 +59,28 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   ack.status = SUCCESS;
 
   ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-		       m_event->blpmask.count(),
-		       cache.getBeamletWeights()().extent(thirdDim),
-		       MEPHeader::N_POL);
+		       m_event->rcumask.count(),
+		       cache.getBeamletWeights()().extent(thirdDim));
 
-  int result_blp = 0;
-  for (int cache_blp = 0;
-       cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
-       cache_blp++)
+  int result_rcu = 0;
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+       cache_rcu++)
   {
-    if (m_event->blpmask[cache_blp])
+    if (m_event->rcumask[cache_rcu])
     {
-      if (cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
       {
-	ack.weights()(0, result_blp, Range::all(), Range::all())
-	  = cache.getBeamletWeights()()(0, cache_blp, Range::all(), Range::all());
+	ack.weights()(0, result_rcu, Range::all())
+	  = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
       }
       else
       {
-	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
+			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
       }
       
-      result_blp++;
+      result_rcu++;
     }
   }
   
@@ -110,7 +109,7 @@ void GetWeightsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetWeightsCmd::validate() const
 {
-  return (m_event->blpmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
 }
 
 bool GetWeightsCmd::readFromCache() const

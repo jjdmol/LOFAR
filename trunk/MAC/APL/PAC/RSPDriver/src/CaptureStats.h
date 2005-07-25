@@ -83,12 +83,14 @@ public:
   /**
    * Load and integrate statistics
    */
-  bool capture_statistics(blitz::Array<double, 2>& stats);
+  bool capture_statistics(blitz::Array<double,   2>& stats);
+  bool capture_xcstatistics(blitz::Array<std::complex<double>, 4>& stats);
 
   /**
    * Write statistics to file
    */
-  void output_statistics(blitz::Array<double, 2>& stats);
+  void output_statistics(blitz::Array<double,   2>& stats);
+  void output_xcstatistics(blitz::Array<std::complex<double>, 4>& stats);
 
   /**
    * Run the tests.
@@ -111,6 +113,7 @@ private:
   Options m_options;
 
   blitz::Array<double, 2> m_values;
+  blitz::Array<std::complex<double>, 4> m_xcvalues;
   int m_nseconds;
   FILE** m_file;  // array of file descriptors
   string m_format; // format of xinetd output

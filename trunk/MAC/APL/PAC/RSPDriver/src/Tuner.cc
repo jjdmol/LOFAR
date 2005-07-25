@@ -179,12 +179,12 @@ GCFEvent::TResult Tuner::initialize(GCFEvent& e, GCFPortInterface& port)
 	RSPSetsubbandsEvent ss;
 	ss.timestamp = Timestamp(0,0);
 
-	ss.blpmask.reset();
+	ss.rcumask.reset();
 	for (int i = 0;
-	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
+	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
 	     i++)
 	  {
-	    ss.blpmask.set(i); // all blps
+	    ss.rcumask.set(i); // all rcu's
 	  }
 
 	ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
@@ -214,16 +214,16 @@ GCFEvent::TResult Tuner::initialize(GCFEvent& e, GCFPortInterface& port)
 	RSPSetweightsEvent sw;
 	sw.timestamp = Timestamp(0,0);
 
-	sw.blpmask.reset();
+	sw.rcumask.reset();
 	for (int i = 0;
-	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
+	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
 	     i++)
 	  {
-	    sw.blpmask.set(i);
+	    sw.rcumask.set(i);
 	  }
 
-	sw.weights().resize(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i),
-			    MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+	sw.weights().resize(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL,
+			    MEPHeader::N_BEAMLETS);
 	sw.weights() = complex<int16>(0,0);
 	
 	if (!m_server.send(sw))
@@ -281,20 +281,9 @@ GCFEvent::TResult Tuner::tunein(GCFEvent& e, GCFPortInterface& port)
 	RSPSetsubbandsEvent ss;
 	ss.timestamp = Timestamp(0,0);
 
-	ss.blpmask.reset();
-	for (int i = 0;
-	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
-	     i++)
-	  {
-	    if (m_device_set[i * MEPHeader::N_POL]
-		|| m_device_set[i * MEPHeader::N_POL + 1])
-	    {
-	      LOG_INFO_STR("selecting blp " << i);
-	      ss.blpmask.set(i); // only selected blp
-	    }
-	  }
+	ss.rcumask = m_device_set;
 
-	ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
+	ss.subbands().resize(1, MEPHeader::N_BEAMLETS);
 	ss.subbands() = 0;
 
 	int s = 0;
@@ -332,34 +321,23 @@ GCFEvent::TResult Tuner::tunein(GCFEvent& e, GCFPortInterface& port)
 	RSPSetweightsEvent sw;
 	sw.timestamp = Timestamp(0,0);
 
-	sw.blpmask.reset();
-	for (int i = 0;
-	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
-	     i++)
-	  {
-	    if (m_device_set[i * MEPHeader::N_POL]
-		|| m_device_set[i * MEPHeader::N_POL + 1])
-	    {
-	      LOG_INFO_STR("selecting blp " << i);
-	      sw.blpmask.set(i); // only selected blp
-	    }
-	  }
+	sw.rcumask = m_device_set;
 
-	Array<complex<double>, 4> weights(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i),
-					  MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+	Array<complex<double>, 3> weights(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL,
+					  MEPHeader::N_BEAMLETS);
 
-	weights(0, Range::all(), Range::all(), Range::all()) = complex<double>(0,0);
+	weights(0, Range::all(), Range::all()) = complex<double>(0,0);
 	for (int rcu = 0;
 	     rcu < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
 	     rcu++)
 	  {
 	    if (m_device_set[rcu]) {
-	      weights(0, rcu/2, Range::all(), rcu%2) = complex<double>(1,0);
+	      weights(0, rcu, Range::all()) = complex<double>(1,0);
 	    }
 	  }
 
-	sw.weights().resize(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i),
-			    MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+	sw.weights().resize(1, GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL,
+			    MEPHeader::N_BEAMLETS);
 	sw.weights() = convert2complex_int16_t(conj(weights));
 	
 	if (!m_server.send(sw))

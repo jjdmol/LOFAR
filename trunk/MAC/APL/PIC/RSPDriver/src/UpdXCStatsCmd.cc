@@ -41,8 +41,6 @@ UpdXCStatsCmd::UpdXCStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation 
 {
   m_event = new RSPSubxcstatsEvent(event);
 
-  m_n_devices = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-
   setOperation(oper);
   setPeriod(m_event->period);
   setPort(port);
@@ -72,19 +70,21 @@ void UpdXCStatsCmd::complete(CacheBuffer& cache)
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
   TinyVector<int, 4> s = cache.getXCStats()().shape();
-  s(2) = m_event->rcumask.count() / 2;
+  s(2) = (m_event->rcumask.count()+1) / 2;
   ack.stats().resize(s);
   
-  int result_device = 0;
-  for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++)
+  int result_rcu = 0;
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+       cache_rcu++)
   {
-    if (m_event->rcumask[cache_device])
+    if (m_event->rcumask[cache_rcu])
     {
       Range all = Range::all();
-      ack.stats()(result_device % MEPHeader::N_POL, all, result_device / MEPHeader::N_POL, all) 
-	= cache.getXCStats()()(cache_device % MEPHeader::N_POL, all, cache_device / MEPHeader::N_POL, all);
+      ack.stats()(result_rcu % MEPHeader::N_POL, all, result_rcu / MEPHeader::N_POL, all) 
+	= cache.getXCStats()()(cache_rcu % MEPHeader::N_POL, all, cache_rcu / MEPHeader::N_POL, all);
       
-      result_device++;
+      result_rcu++;
     }
   }
 
@@ -103,5 +103,5 @@ void UpdXCStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdXCStatsCmd::validate() const
 {
-  return (m_event->rcumask.count() <= m_n_devices);
+  return ((int)m_event->rcumask.count() <= GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
 }

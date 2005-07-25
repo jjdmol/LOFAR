@@ -1,0 +1,97 @@
+#!/bin/bash
+#
+# rspd		This shell script takes care of starting and stopping
+#		the RSPDriver
+#
+# chkconfig: - 58 74
+# description: rspd is the script that starts or stops the RSPDriver. \
+# The RSPDriver controls one or more RSP boards
+
+# Source function library.
+. /etc/init.d/functions
+
+if [ -f @PREFIX@/etc/sysconfig/rspd ];then
+        . @PREFIX@/etc/sysconfig/rspd
+fi
+
+# Check preconditions
+# These files must exist
+[ -x @PREFIX@/bin/RSPDriver ] || exit 0
+[ -e @PREFIX@/etc/RSPDriver.conf ] || exit 0
+[ -e @PREFIX@/etc/RSPDriverPorts.conf ] || exit 0
+[ -e @PREFIX@/etc/RemoteStation.conf ] || exit 0
+
+RETVAL=0
+prog="RSPDriver"
+
+start() {
+    #
+    # Check if running as root
+    #
+    if [ "$USER" != "root" ]; then
+        echo Must run as root.
+	exit 0
+    fi
+
+    # set OPTIONS
+    OPTIONS=--root
+
+    # Start RSPDriver
+    echo -n $"Starting $prog: "
+    touch /var/run/$prog.pid
+    mkdir -p @PREFIX@/var/log/
+    nohup @PREFIX@/bin/$prog $OPTIONS > @PREFIX@/var/log/RSPDriver.log &
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog && success $"$prog startup"
+    echo
+    return $RETVAL
+}
+
+stop() {
+    #
+    # Check if running as root
+    #
+    if [ "$USER" != "root" ]; then
+	echo Must run as root.
+	exit 0
+    fi
+
+    # Stop RSPDriver
+    echo -n $"Shutting down $prog: "
+    killproc $prog
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+        ;;
+  stop)
+	stop
+        ;;
+  status)
+	status $prog
+	RETVAL=$?
+	;;
+  restart|reload)
+	stop
+	start
+	RETVAL=$?
+	;;
+  condrestart)
+	if [ -f /var/lock/subsys/$prog ]; then
+	    stop
+	    start
+	    RETVAL=$?
+	fi
+	;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+        exit 1
+esac
+
+exit $RETVAL

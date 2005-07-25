@@ -435,212 +435,285 @@ GCFEvent::TResult CaptureStats::handlecommand(GCFEvent& e, GCFPortInterface& por
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (e.signal)
-  {
-    case F_ENTRY:
     {
-      if (XINETD_MODE == m_options.xinetd_mode) {
-	cout << "250-Acquiring sensor data." << endl;
-	cout << "250-" << endl;
-	cout << "250-META sensor = statistics " << m_line << endl;
-	cout << "250-" << endl;
-      }
-
-      // subscribe to status updates
-      RSPSubstatusEvent substatus;
-
-      substatus.timestamp = Timestamp(0,0);
-
-      substatus.rcumask = m_options.device_set;
-      
-      substatus.period = 1;
-      
-      if (!m_server.send(substatus))
+    case F_ENTRY:
       {
-	cout << "500 Error: failed to send subscription for status updates" << endl;
-	exit(EXIT_FAILURE);
+	if (XINETD_MODE == m_options.xinetd_mode) {
+	  cout << "250-Acquiring sensor data." << endl;
+	  cout << "250-" << endl;
+	  cout << "250-META sensor = statistics " << m_line << endl;
+	  cout << "250-" << endl;
+	}
+
+	// subscribe to status updates
+	RSPSubstatusEvent substatus;
+
+	substatus.timestamp = Timestamp(0,0);
+
+	substatus.rcumask = m_options.device_set;
+      
+	substatus.period = 1;
+      
+	if (!m_server.send(substatus))
+	  {
+	    cout << "500 Error: failed to send subscription for status updates" << endl;
+	    exit(EXIT_FAILURE);
+	  }
       }
-    }
-    break;
+      break;
     
     case RSP_SUBSTATUSACK:
-    {
-      RSPSubstatusackEvent ack(e);
-
-      if (SUCCESS != ack.status)
       {
-	cout << "500 Error: failed to subscribe to status updates" << endl;
-	exit(EXIT_FAILURE);
-      }
-      m_statushandle = ack.handle;
+	RSPSubstatusackEvent ack(e);
 
-      // subscribe to statistics updates
-      RSPSubstatsEvent substats;
-
-      substats.timestamp = Timestamp(0,0);
-
-      substats.rcumask = m_options.device_set;
-      
-      substats.period = 1;
-      substats.type = m_options.type;
-      substats.reduction = SUM;
-      
-      if (!m_server.send(substats))
-      {
-	cout << "500 Error: failed to send subscription for statistics updates" << endl;
-	exit(EXIT_FAILURE);
-      }
-    }
-    break;
-
-    case RSP_SUBSTATSACK:
-    {
-      RSPSubstatsackEvent ack(e);
-
-      if (SUCCESS != ack.status)
-      {
-	cout << "500 Error: failed to subscribe to statistics updates" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      m_statshandle = ack.handle;
-    }
-    break;
-
-    case RSP_UPDSTATUS:
-    {
-      RSPUpdstatusEvent upd(e);
-      
-      if (SUCCESS != upd.status)
-      {
-	cout << "500 Error: invalid update" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      switch (m_options.xinetd_mode)
-	{
-	case CMDLINE_MODE:
-	  cout << "time=" << upd.timestamp << endl;
-	  break;
-	case XINETD_MODE:
-	  cout << "250-META time status = " << upd.timestamp << endl;
-	  break;
-	}
-
-      if (CMDLINE_MODE == m_options.xinetd_mode
-	  || XINETD_MODE == m_options.xinetd_mode)
-      {
-	int result = 0;
-	for (int device = 0; device < m_options.n_devices; device++)
-	{
-	  if (!m_options.device_set[device]) continue;
-	  
-	  if (XINETD_MODE == m_options.xinetd_mode) {
-	    cout << formatString("250-META status, rcu[%02d](status=0x%02x, noverflow=%d)",
-				 device,
-				 upd.sysstatus.rcu()(result).status,
-				 upd.sysstatus.rcu()(result).nof_overflow) << endl;
-	  } else {
-	    printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
-		   device,
-		   upd.sysstatus.rcu()(result).status,
-		   upd.sysstatus.rcu()(result).nof_overflow);
+	if (SUCCESS != ack.status)
+	  {
+	    cout << "500 Error: failed to subscribe to status updates" << endl;
+	    exit(EXIT_FAILURE);
 	  }
-	  result++;
-	}
-      }
-    }
-    break;
+	m_statushandle = ack.handle;
 
-    case RSP_UPDSTATS:
-    {
-      RSPUpdstatsEvent upd(e);
+	if (m_options.type <= Statistics::BEAMLET_POWER) {
+	  // subscribe to statistics updates
+	  RSPSubstatsEvent substats;
 
-      if (SUCCESS != upd.status)
-      {
-	cout << "500 Error: invalid update" << endl;
-	exit(EXIT_FAILURE);
-      }
+	  substats.timestamp = Timestamp(0,0);
 
-      switch (m_options.xinetd_mode)
-	{
-	case CMDLINE_MODE:
-	  cout << "time=" << upd.timestamp << endl;
-	  break;
-	case XINETD_MODE:
-	  cout << "250-META time status = " << upd.timestamp << endl;
-	  break;
-	}
-
-      if (capture_statistics(upd.stats())) {
-	if (XINETD_MODE == m_options.xinetd_mode) {
-	  m_nseconds = 0; // reset counter
-	  cout << "250 Data acquisition done." << endl;
-
-	  // unsubscribe from status and subband statistics
-	  RSPUnsubstatusEvent unsubstatus;
-	  unsubstatus.handle = m_statushandle;
-	  if (!m_server.send(unsubstatus))
+	  substats.rcumask = m_options.device_set;
+      
+	  substats.period = 1;
+	  substats.type = m_options.type;
+	  substats.reduction = SUM;
+      
+	  if (!m_server.send(substats))
 	    {
-	      cout << "500 Error: failed to send subscription for status updates" << endl;
+	      cout << "500 Error: failed to send subscription for statistics updates" << endl;
 	      exit(EXIT_FAILURE);
 	    }
 	} else {
-	  exit(EXIT_SUCCESS);
+	  // subscribe to statistics updates
+	  RSPSubxcstatsEvent subxcstats;
+
+	  subxcstats.timestamp = Timestamp(0,0);
+
+	  subxcstats.rcumask.reset();
+	  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++) {
+	    subxcstats.rcumask[i] = 1;
+	  }
+      	  subxcstats.period = 1;
+      
+	  if (!m_server.send(subxcstats))
+	    {
+	      cout << "500 Error: failed to send subscription for statistics updates" << endl;
+	      exit(EXIT_FAILURE);
+	    }
 	}
       }
-    }
-    break;
+      break;
+
+    case RSP_SUBSTATSACK:
+      {
+	RSPSubstatsackEvent ack(e);
+
+	if (SUCCESS != ack.status)
+	  {
+	    cout << "500 Error: failed to subscribe to statistics updates" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+
+	m_statshandle = ack.handle;
+      }
+      break;
+
+    case RSP_SUBXCSTATSACK:
+      {
+	RSPSubxcstatsackEvent ack(e);
+
+	if (SUCCESS != ack.status)
+	  {
+	    cout << "500 Error: failed to subscribe to statistics updates" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+
+	m_statshandle = ack.handle;
+      }
+      break;
+
+    case RSP_UPDSTATUS:
+      {
+	RSPUpdstatusEvent upd(e);
+      
+	if (SUCCESS != upd.status)
+	  {
+	    cout << "500 Error: invalid update" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+
+	switch (m_options.xinetd_mode)
+	  {
+	  case CMDLINE_MODE:
+	    cout << "time=" << upd.timestamp << endl;
+	    break;
+	  case XINETD_MODE:
+	    cout << "250-META time status = " << upd.timestamp << endl;
+	    break;
+	  }
+
+	if (CMDLINE_MODE == m_options.xinetd_mode
+	    || XINETD_MODE == m_options.xinetd_mode)
+	  {
+	    int result = 0;
+	    for (int device = 0; device < m_options.n_devices; device++)
+	      {
+		if (!m_options.device_set[device]) continue;
+	  
+		if (XINETD_MODE == m_options.xinetd_mode) {
+		  cout << formatString("250-META status, rcu[%02d](status=0x%02x, noverflow=%d)",
+				       device,
+				       upd.sysstatus.rcu()(result).status,
+				       upd.sysstatus.rcu()(result).nof_overflow) << endl;
+		} else {
+		  printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
+			 device,
+			 upd.sysstatus.rcu()(result).status,
+			 upd.sysstatus.rcu()(result).nof_overflow);
+		}
+		result++;
+	      }
+	  }
+      }
+      break;
+
+    case RSP_UPDSTATS:
+      {
+	RSPUpdstatsEvent upd(e);
+
+	if (SUCCESS != upd.status)
+	  {
+	    cout << "500 Error: invalid update" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+
+	switch (m_options.xinetd_mode)
+	  {
+	  case CMDLINE_MODE:
+	    cout << "time=" << upd.timestamp << endl;
+	    break;
+	  case XINETD_MODE:
+	    cout << "250-META time status = " << upd.timestamp << endl;
+	    break;
+	  }
+
+	if (capture_statistics(upd.stats())) {
+	  if (XINETD_MODE == m_options.xinetd_mode) {
+	    m_nseconds = 0; // reset counter
+	    cout << "250 Data acquisition done." << endl;
+
+	    // unsubscribe from status and subband statistics
+	    RSPUnsubstatusEvent unsubstatus;
+	    unsubstatus.handle = m_statushandle;
+	    if (!m_server.send(unsubstatus))
+	      {
+		cout << "500 Error: failed to send subscription for status updates" << endl;
+		exit(EXIT_FAILURE);
+	      }
+	  } else {
+	    exit(EXIT_SUCCESS);
+	  }
+	}
+      }
+      break;
+
+    case RSP_UPDXCSTATS:
+      {
+	RSPUpdxcstatsEvent upd(e);
+
+	if (SUCCESS != upd.status)
+	  {
+	    cout << "500 Error: invalid update" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+
+	switch (m_options.xinetd_mode)
+	  {
+	  case CMDLINE_MODE:
+	    cout << "time=" << upd.timestamp << endl;
+	    break;
+	  case XINETD_MODE:
+	    cout << "250-META time status = " << upd.timestamp << endl;
+	    break;
+	  }
+
+	if (capture_xcstatistics(upd.stats())) {
+	  if (XINETD_MODE == m_options.xinetd_mode) {
+	    m_nseconds = 0; // reset counter
+	    cout << "250 Data acquisition done." << endl;
+
+	    // unsubscribe from status and subband statistics
+	    RSPUnsubstatusEvent unsubstatus;
+	    unsubstatus.handle = m_statushandle;
+	    if (!m_server.send(unsubstatus))
+	      {
+		cout << "500 Error: failed to send subscription for status updates" << endl;
+		exit(EXIT_FAILURE);
+	      }
+	  } else {
+	    exit(EXIT_SUCCESS);
+	  }
+	}
+      }
+      break;
 
     case RSP_UNSUBSTATUSACK:
-    {
-      RSPUnsubstatusackEvent ack(e);
-      
-      if (SUCCESS != ack.status)
       {
-	cout << "500 Error: unsubscribe failure" << endl;
-	exit(EXIT_FAILURE);
-      }
+	RSPUnsubstatusackEvent ack(e);
+      
+	if (SUCCESS != ack.status)
+	  {
+	    cout << "500 Error: unsubscribe failure" << endl;
+	    exit(EXIT_FAILURE);
+	  }
 
-      // unsubscribe from stats updates
-      RSPUnsubstatsEvent unsubstats;
-      unsubstats.handle = m_statshandle;
-      if (!m_server.send(unsubstats))
-	{
-	  cout << "500 Error: failed to send subscription for status updates" << endl;
-	  exit(EXIT_FAILURE);
-	}
-    }
-    break;
+	// unsubscribe from stats updates
+	RSPUnsubstatsEvent unsubstats;
+	unsubstats.handle = m_statshandle;
+	if (!m_server.send(unsubstats))
+	  {
+	    cout << "500 Error: failed to send subscription for status updates" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+      }
+      break;
 
     case RSP_UNSUBSTATSACK:
-    {
-      RSPUnsubstatsackEvent ack(e);
-
-      if (SUCCESS != ack.status)
       {
-	cout << "500 Error: unsubscribe failure" << endl;
-	exit(EXIT_FAILURE);
-      }
+	RSPUnsubstatsackEvent ack(e);
 
-      if (HTTP_MODE == m_options.xinetd_mode) {
-	exit(EXIT_SUCCESS);
+	if (SUCCESS != ack.status)
+	  {
+	    cout << "500 Error: unsubscribe failure" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+
+	if (HTTP_MODE == m_options.xinetd_mode) {
+	  exit(EXIT_SUCCESS);
+	}
+	TRAN(CaptureStats::wait4command);
       }
-      TRAN(CaptureStats::wait4command);
-    }
-    break;
+      break;
 
     case F_DISCONNECTED:
-    {
-      port.close();
-      cout << "500 Error: port '" << port.getName() << "' disconnected." << endl;
-      exit(EXIT_FAILURE);
-    }
-    break;
+      {
+	port.close();
+	cout << "500 Error: port '" << port.getName() << "' disconnected." << endl;
+	exit(EXIT_FAILURE);
+      }
+      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-  }
+    }
 
   return status;
 }
@@ -718,84 +791,229 @@ bool CaptureStats::capture_statistics(Array<double, 2>& stats)
   return false;
 }
 
+bool CaptureStats::capture_xcstatistics(Array<complex<double>, 4>& stats)
+{
+  if (0 == m_nseconds)
+  {
+    // initialize values array
+    m_xcvalues.resize(stats.shape());
+    m_xcvalues = 0.0;
+  }
+  else
+  {
+    if ( sum(stats.shape()) != sum(m_xcvalues.shape()) ) {
+      cout << "500 Error: shape mismatch" << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  m_xcvalues += stats; // integrate
+
+  m_nseconds++; // advance to next second
+
+  if (0 == m_nseconds % m_options.integration)
+  {
+    if (m_options.integration > 0) 
+    {
+      m_xcvalues /= m_options.integration;
+
+      output_xcstatistics(m_xcvalues); // write (optionally integrated) statistics
+
+      if (!m_options.onefile && m_file)
+      {
+	for (int i = 0; i < m_options.n_devices; i++)
+	{
+	  if (m_file[i]) fclose(m_file[i]);
+	  m_file[i] = 0;
+	}
+      }
+    }
+    else
+    {
+      output_xcstatistics(stats); // write interval sampled statistics
+
+      if (!m_options.onefile && m_file)
+      {
+	for (int i = 0; i < m_options.n_devices; i++)
+	{
+	  if (m_file[i]) fclose(m_file[i]);
+	  m_file[i] = 0;
+	}
+      }
+    }
+    
+    m_xcvalues = 0.0;
+  }
+
+  // check if duration has been reached
+  if (m_nseconds >= m_options.duration)
+  {
+    if (m_file) {
+      for (int i = 0; i < m_options.n_devices; i++)
+	{
+	  if (m_file[i]) fclose(m_file[i]);
+	  m_file[i] = 0;
+	}
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 void CaptureStats::output_statistics(Array<double, 2>& stats)
 {
   int result_device = 0;
 
   for (int device = 0; device < m_options.n_devices; device++)
-  {
-    if (!m_options.device_set[device]) continue;
+    {
+      if (!m_options.device_set[device]) continue;
     
-    time_t now = time(0);
-    struct tm* t = localtime(&now);
+      time_t now = time(0);
+      struct tm* t = localtime(&now);
 
-    if (!t)
+      if (!t)
+	{
+	  cout << "500 Error: localtime?" << endl;
+	  exit(EXIT_FAILURE);
+	}
+
+      if (m_file && !m_file[device] && (CMDLINE_MODE == m_options.xinetd_mode))
+	{
+	  char filename[PATH_MAX];
+	  switch (m_options.type)
+	    {
+	    case Statistics::SUBBAND_POWER:
+	      snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
+		       t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+		       t->tm_hour, t->tm_min, t->tm_sec, device);
+	      break;
+	    case Statistics::BEAMLET_POWER:
+	      snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_pol%02d.dat",
+		       t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+		       t->tm_hour, t->tm_min, t->tm_sec, device);
+	      break;
+
+	    default:
+	      cout << "500 Error: invalid type" << endl;
+	      exit(EXIT_FAILURE);
+	      break;
+	    }
+	  m_file[device] = fopen(filename, "w");
+
+	  if (!m_file[device])
+	    {
+	      cout << "500 Error: Failed to open file: " << filename << endl;
+	      exit(EXIT_FAILURE);
+	    }
+	}
+    
+      switch (m_options.xinetd_mode)
+	{
+	case CMDLINE_MODE:
+	  if (stats.extent(secondDim)
+	      != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
+			     stats.extent(secondDim), m_file[device]))
+	    {
+	      cout << "500 Error: fwrite" << endl;
+	      exit(EXIT_FAILURE);
+	    }
+	  break;
+
+	case XINETD_MODE:
+	  cout << "250-META rcu " << device << endl;
+	  cout << "250-BEGIN" << endl;
+	  for (int i = 0; i < stats.extent(secondDim); i++) {
+	    printf(m_format.c_str(), stats(result_device, i));
+	  }
+	  cout << "250-END" << endl;
+	  cout << "250-" << endl;
+	  break;
+
+	case HTTP_MODE:
+	  for (int i = 0; i < stats.extent(secondDim); i++) {
+	    printf("%f\n", stats(result_device, i));
+	  }
+	  break;
+	}
+
+      result_device++; // next
+    }
+
+}
+
+void CaptureStats::output_xcstatistics(Array<complex<double>, 4>& stats)
+{
+  time_t now = time(0);
+  struct tm* t = localtime(&now);
+
+#if 0
+  // sanity check
+  Range all = Range::all();
+  stats(0,0,all,all) = 1;
+  stats(0,1,all,all) = 2;
+  stats(1,0,all,all) = 3;
+  stats(1,1,all,all) = 4;
+#endif
+
+  Array<complex<double>, 2> thestats;
+
+  thestats.resize(stats.extent(firstDim) * stats.extent(thirdDim),
+		  stats.extent(secondDim) * stats.extent(fourthDim));
+
+  for (int i = 0; i < thestats.extent(firstDim); i++)
+    for (int j = 0; j < thestats.extent(secondDim); j++)
+      thestats(i,j) = stats(i % 2, j % 2, i/2, j/2);
+
+  if (!t)
     {
       cout << "500 Error: localtime?" << endl;
       exit(EXIT_FAILURE);
     }
 
-    if (m_file && !m_file[device] && (CMDLINE_MODE == m_options.xinetd_mode))
+  if (m_file && !m_file[0] && (CMDLINE_MODE == m_options.xinetd_mode))
     {
       char filename[PATH_MAX];
-      switch (m_options.type)
-      {
-	case Statistics::SUBBAND_POWER:
-	  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
-		   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		   t->tm_hour, t->tm_min, t->tm_sec, device);
-	  break;
-	case Statistics::BEAMLET_POWER:
-	  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_pol%02d.dat",
-		   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		   t->tm_hour, t->tm_min, t->tm_sec, device);
-	  break;
-	default:
-	  cout << "500 Error: invalid type" << endl;
-	  exit(EXIT_FAILURE);
-	  break;
-      }
-      m_file[device] = fopen(filename, "w");
+      snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_xst.dat",
+	       t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+	       t->tm_hour, t->tm_min, t->tm_sec);
+      m_file[0] = fopen(filename, "w");
 
-      if (!m_file[device])
-      {
-	cout << "500 Error: Failed to open file: " << filename << endl;
-	exit(EXIT_FAILURE);
-      }
+      if (!m_file[0])
+	{
+	  cout << "500 Error: Failed to open file: " << filename << endl;
+	  exit(EXIT_FAILURE);
+	}
     }
     
-    switch (m_options.xinetd_mode)
+  switch (m_options.xinetd_mode)
+    {
+    case CMDLINE_MODE:
       {
-      case CMDLINE_MODE:
-	if (stats.extent(secondDim)
-	    != (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
-			   stats.extent(secondDim), m_file[device]))
-	{
-	  cout << "500 Error: fwrite" << endl;
-	  exit(EXIT_FAILURE);
-	}
-	break;
+	//cout << "xcstats=" << thestats << endl;
+	if (thestats.size()
+	    != (int)fwrite(thestats.data(), sizeof(complex<double>),
+			   thestats.size(), m_file[0]))
+	  {
+	    cout << "500 Error: fwrite" << endl;
+	    exit(EXIT_FAILURE);
+	  }
+      }
+      break;
 
-      case XINETD_MODE:
-	cout << "250-META rcu " << device << endl;
-	cout << "250-BEGIN" << endl;
-	for (int i = 0; i < stats.extent(secondDim); i++) {
-	  printf(m_format.c_str(), stats(result_device, i));
-	}
-	cout << "250-END" << endl;
-	cout << "250-" << endl;
-	break;
+    case XINETD_MODE:
+      cout << "250-META crosscorrelations " << endl;
+      cout << "250-BEGIN" << endl;
+      cout << thestats << endl;
+      cout << "250-END" << endl;
+      cout << "250-" << endl;
+      break;
 
-      case HTTP_MODE:
-	for (int i = 0; i < stats.extent(secondDim); i++) {
-	  printf("%f\n", stats(result_device, i));
-	}
-	break;
+    case HTTP_MODE:
+      cout << thestats << endl;
+      break;
     }
-
-    result_device++; // next
-  }
-
 }
 
 void CaptureStats::run()
@@ -823,7 +1041,7 @@ static void usage(const char* xinetdprefix)
   cout << p << "    --integration[=N]        # or -i; default equal to duration" << endl;
   cout << p << "        Note: integration < 0 means don't itegrate but sample with the specified interval." << endl;
   cout << p << endl;
-  cout << p << "    --statstype=0|1          # or -s; default 0, 0 = subbands, 1 = beamlets" << endl;
+  cout << p << "    --statstype=subband|beamlet|xc # or -s; default subband" << endl;
   cout << p << endl;
 
   if (!xinetdprefix) {
@@ -883,7 +1101,7 @@ static int parse_options(int argc, char** argv, CaptureStats::Options& options)
         { "rcu",          required_argument, 0, 'r' },
 	{ "duration",     required_argument, 0, 'd' },
 	{ "integration",  optional_argument, 0, 'i' },
-	{ "statstype",    required_argument, 0, 's' },
+	{ "statstype",    required_argument, 0, 't' },
 	{ "onefile",      no_argument,       0, 'o' },
 	{ "xinetd",       no_argument,       0, 'x' },
 	{ "help",         no_argument,       0, 'h' },
@@ -929,14 +1147,20 @@ static int parse_options(int argc, char** argv, CaptureStats::Options& options)
 	
       case 't':
 	if (optarg) {
-	  if (1 != sscanf(optarg, "%d", &options.type)) {
-	    cout << "500 format error for type option" << endl;
+	  if (!strcmp(optarg, "subband")) {
+	    options.type = Statistics::SUBBAND_POWER;
+	  } else if (!strcmp(optarg, "beamlet")) {
+	    options.type = Statistics::BEAMLET_POWER;
+	  } else if (!strcmp(optarg, "xc")) {
+	    options.type = 2; // cross correlation
+	  } else {
+	    cout << "500 " << "Error: invalid statistics type on --statstype option" << endl;
 	    return -1;
 	  }
 
-	  if (options.type < 0 || options.type >= Statistics::N_STAT_TYPES)
+	  if (options.type < 0 || options.type >= Statistics::N_STAT_TYPES + 1)
 	  {
-	    cout << "500 " << formatString("Error: invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
+	    cout << "500 " << formatString("Error: invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES + 1) << endl;
 	    return -1;
 	  }
 	} else {

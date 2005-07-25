@@ -52,15 +52,14 @@ CacheBuffer::CacheBuffer()
   m_timestamp.set(tv);
 
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			    GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
-			    MEPHeader::N_BEAMLETS,
-			    MEPHeader::N_POL);
-  m_subbandselection().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
-			      MEPHeader::N_BEAMLETS * MEPHeader::N_POL);
+			    GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
+			    MEPHeader::N_BEAMLETS);
+  m_subbandselection().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
+			      MEPHeader::N_BEAMLETS);
 
   if (!GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
   {
-    m_beamletweights()(Range::all(), Range::all(), Range::all(), Range::all()) =
+    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
       complex<int16>(0, 0);
     m_subbandselection() = 0;
   }
@@ -68,16 +67,25 @@ CacheBuffer::CacheBuffer()
   {
     // these weights ensure that the beamlet statistics
     // exactly match the subband statistics
-    m_beamletweights()(Range::all(), Range::all(), Range::all(), 0) =
+    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
       complex<int16>(0x4000, 0);
-    m_beamletweights()(Range::all(), Range::all(), Range::all(), 1) =
-      complex<int16>(0, 0);
+
+    // set weights on first 8 beamlets for cross correlation
+    m_beamletweights()(Range::all(), Range::all(), Range(0, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL - 1)) =
+      complex<int16>(0,0);
+
+    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i)* GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++) {
+      LOG_INFO_STR("setting " << i);
+      m_beamletweights()(0, i, i) = complex<int16>(0x4000,0);
+    }
+
+    LOG_INFO_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
+
 
     //
     // Set subbands selection in increasing value
     //
-    secondIndex i;
-    m_subbandselection()(Range::all(), Range::all()) = (i + GET_CONFIG("RSPDriver.FIRST_SUBBAND", i)
+    m_subbandselection()(Range::all(), Range::all()) = (tensor::j + GET_CONFIG("RSPDriver.FIRST_SUBBAND", i)
 							% (MEPHeader::N_SUBBANDS * MEPHeader::N_POL));
 
     LOG_WARN_STR("m_subbandselection()=" << m_subbandselection());

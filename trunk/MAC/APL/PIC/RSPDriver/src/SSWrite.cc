@@ -66,12 +66,13 @@ void SSWrite::sendrequest()
   ss.hdr.set(MEPHeader::SS_SELECT_HDR, getCurrentBLP());
     
   // create array to contain the subband selection
-  Array<uint16, 1> subbands((uint16*)&ss.ch,
-			    MEPHeader::N_BEAMLETS * MEPHeader::N_POL,
+  Array<uint16, 2> subbands((uint16*)&ss.ch,
+			    shape(MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
 			    neverDeleteData);
     
   // copy the actual values from the cache
-  subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all()); // (0, N_BEAMLETS - 1));
+  subbands(Range::all(), 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     Range::all()); // x
+  subbands(Range::all(), 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, Range::all()); // y
 
   m_hdr = ss.hdr;
   getBoardPort().send(ss);

@@ -39,10 +39,9 @@ namespace RSP_Protocol
    * When used in a SETSUBBANDS event the dimensions of the arrays
    * should be:
    *  - subbands[1][nr_selected_subbands].
-   *  - nrsubbands[1]
    *
    * When used in the Cache the dimensions should be:
-   *  - subbands[N_BLPS][N_BEAMLETS * 2]
+   *  - subbands[N_RCUS][N_BEAMLETS]
    *
    * The values in the subbands array should be 0 <= value < N_SUBBANDS * EPA_Protocol::N_POL
    */
@@ -78,8 +77,8 @@ namespace RSP_Protocol
     private:
       /**
        * Subband selection array.
-       * dim 1 = n_blps (== 1 on SETSUBBANDS, == count(blpmask) on GETSUBBANDS_ACK)
-       * dim 2 = n_beamlets * 2.
+       * dim 1 = n_rcus (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
+       * dim 2 = n_beamlets
        */
       blitz::Array<uint16, 2> m_subbands;
   };

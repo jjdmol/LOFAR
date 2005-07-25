@@ -90,13 +90,14 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 			 getBoardPort().getName().c_str(), global_blp));
   
   // create array point to data in the response event
-  Array<uint16, 1> subbands((uint16*)&ss.ch,
-			    shape(MEPHeader::N_BEAMLETS * MEPHeader::N_POL),
+  Array<uint16, 2> subbands((uint16*)&ss.ch,
+			    shape(MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
 			    neverDeleteData);
 
   if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
   {
-    subbands -= Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all());
+    subbands(Range::all(), 0) -= Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     Range::all());
+    subbands(Range::all(), 1) -= Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, Range::all());
     uint16 ssum = sum(subbands);
 
     if (0 != ssum)
@@ -108,8 +109,10 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   else
   {
     // copy into the cache
-    Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all())
-      = subbands;
+    Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2, Range::all())
+      = subbands(Range::all(), 0); // x
+    Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, Range::all())
+      = subbands(Range::all(), 1); // y
   }
   return GCFEvent::HANDLED;
 }

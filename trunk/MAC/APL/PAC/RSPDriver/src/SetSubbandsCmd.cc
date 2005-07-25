@@ -63,27 +63,22 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
-  for (int cache_blp = 0;
-       cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
-       cache_blp++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; cache_rcu++)
   {
-    if (m_event->blpmask[cache_blp])
+    if (m_event->rcumask[cache_rcu])
     {
-      if (cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
       {
-//	cache.getSubbandSelection()()(cache_blp, Range(0, N_BEAMLETS * 2 - 1))
-//	  = m_event->subbands()(0, Range(0, N_BEAMLETS * 2 - 1));
-
-	cache.getSubbandSelection()()(cache_blp, Range::all()) = 0;
-	cache.getSubbandSelection()()(cache_blp, Range(0, m_event->subbands().extent(secondDim) - 1))
-	  = m_event->subbands()(0, Range(0, m_event->subbands().extent(secondDim) - 1));
+	cache.getSubbandSelection()()(cache_rcu, Range::all()) = 0;
+	cache.getSubbandSelection()()(cache_rcu, Range(0, m_event->subbands().extent(secondDim) - 1))
+	  = m_event->subbands()(0, Range(0, m_event->subbands().extent(secondDim) - 1)) * 2 + (cache_rcu % MEPHeader::N_POL);
 
 	LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
       }
       else
       {
-	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
+			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
       }
     }
   }
@@ -106,7 +101,7 @@ void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetSubbandsCmd::validate() const
 {
-  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
 	  && (2 == m_event->subbands().dimensions())
 	  && (1 == m_event->subbands().extent(firstDim)));
 }

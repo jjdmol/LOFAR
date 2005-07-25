@@ -107,6 +107,10 @@ libepa_la_SOURCES = \
 	RawEvent.h \
 	RawEvent.cc
 
+bin_SCRIPTS = \
+	rspd.ul \
+	rspd
+
 bin_PROGRAMS = \
 	RSPDriver \
 	ViewStats \

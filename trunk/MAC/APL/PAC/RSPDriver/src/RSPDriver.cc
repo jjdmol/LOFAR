@@ -292,17 +292,6 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_XST", i))
-    {
-      XstRead* xstread = 0;
-
-      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_MAX_STATS; i++)
-      {
-	xstread = new XstRead(m_board[boardid], boardid, i);
-	m_scheduler.addSyncAction(xstread);
-      }
-    }
-
     if (1 == GET_CONFIG("RSPDriver.READ_SST", i))
     {
       SstRead* sstread = 0;
@@ -370,6 +359,17 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(writereg);
     }
   
+    if (1 == GET_CONFIG("RSPDriver.READ_XST", i))
+    {
+      XstRead* xstread = 0;
+
+      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_MAX_STATS; i++)
+      {
+	xstread = new XstRead(m_board[boardid], boardid, i);
+	m_scheduler.addSyncAction(xstread);
+      }
+    }
+
   } // for (boardid...)
 }
 
@@ -880,9 +880,8 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   /* range check on parameters */
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
       || (sw_event->weights().extent(firstDim) < 1)
-      || (sw_event->weights().extent(secondDim) > GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
-      || (sw_event->weights().extent(thirdDim) != MEPHeader::N_BEAMLETS)
-      || (sw_event->weights().extent(fourthDim) != MEPHeader::N_POL))
+      || (sw_event->weights().extent(secondDim) > GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+      || (sw_event->weights().extent(thirdDim) != MEPHeader::N_BEAMLETS))
   {
     LOG_ERROR("SETWEIGHTS: invalid parameter");
     

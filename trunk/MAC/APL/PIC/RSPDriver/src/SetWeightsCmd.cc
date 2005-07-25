@@ -44,7 +44,7 @@ SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& por
   m_event = event;
   
   event->timestamp = sw_event.timestamp + timestep;
-  event->blpmask   = sw_event.blpmask;
+  event->rcumask   = sw_event.rcumask;
 
   setOperation(oper);
   setPeriod(0);
@@ -61,7 +61,7 @@ void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weigh
   RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
   
   event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			  event->blpmask.count(), weights.extent(thirdDim), MEPHeader::N_POL);
+			  event->rcumask.count(), weights.extent(thirdDim));
   event->weights() = weights;
 }
 
@@ -77,25 +77,23 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetWeightsCmd::apply(CacheBuffer& cache)
 {
-  int input_blp = 0;
-  for (int cache_blp = 0;
-       cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
-       cache_blp++)
+  int input_rcu = 0;
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; cache_rcu++)
   {
-    if (m_event->blpmask[cache_blp])
+    if (m_event->rcumask[cache_rcu])
     {
-      if (cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
       {
-	cache.getBeamletWeights()()(0, cache_blp, Range::all(), Range::all())
-	  = m_event->weights()(0, input_blp, Range::all(), Range::all());
+	cache.getBeamletWeights()()(0, cache_rcu, Range::all())
+	  = m_event->weights()(0, input_rcu, Range::all());
       }
       else
       {
-	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
+			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
       }
 
-      input_blp++;
+      input_rcu++;
     }
   }
 }

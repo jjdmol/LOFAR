@@ -107,10 +107,16 @@ void BWWrite::sendrequest()
 					  (offset /MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
 #endif
   
-  weights = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp,
-								 Range(offset / MEPHeader::N_PHASEPOL,
-								       (offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1),
-								 Range::all());
+  // X
+  weights(Range::all(), 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2,
+										  Range(offset / MEPHeader::N_PHASEPOL,
+											(offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
+
+  // Y
+  weights(Range::all(), 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1,
+										  Range(offset / MEPHeader::N_PHASEPOL,
+											(offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
+
 
   switch (m_regid)
   {
