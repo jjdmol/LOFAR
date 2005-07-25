@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,285 317 429 103 N "_3DFace" 4
+PANEL,545 331 429 103 N "_3DFace" 4
 "$addView"
 "$selectedElementDpType"
 "$selectedView"
@@ -196,11 +196,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 3 "s" 0 0 0 0 0 0 
 E
 E
-"main()
-{
-  navConfigAddRemoveSubView();
-}" 0
-
+E
 13 5
 "btnOK"
 ""
