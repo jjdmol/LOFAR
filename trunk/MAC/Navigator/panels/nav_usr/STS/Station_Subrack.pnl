@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,350 258 986 776 N "_3DFace" 2
+PANEL,426 404 986 776 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 E"//main()
@@ -10,7 +10,7 @@ E"//main()
 //}" 0
 E E E 1 -1 -1 0  120 205
 "" 0 1
-E"#uses \"nav_usr/STS-functions.ctl\"
+E"#uses \"nav_usr/STS/STS-functions.ctl\"
 //#uses \"nav_fw/gcfpa-pml.ctl\"" 0
  2
 "CBRef""1"
