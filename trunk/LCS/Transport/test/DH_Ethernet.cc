@@ -45,14 +45,16 @@ DH_Ethernet::DH_Ethernet(const DH_Ethernet& that)
 {}
 
 DH_Ethernet::~DH_Ethernet()
-{}
+{
+  itsBuffer = 0;
+}
 
 DataHolder* DH_Ethernet::clone() const
 {
   return new DH_Ethernet(*this);
 }
 
-void DH_Ethernet::preprocess()
+void DH_Ethernet::init()
 {
   initDataFields();
   
@@ -71,18 +73,13 @@ void DH_Ethernet::preprocess()
 void DH_Ethernet::setBufferSize (unsigned int nelements)
 {
   itsBufSize = nelements;
-  preprocess();
+  init();
 }
 
 void DH_Ethernet::fillDataPointers()
 {
   // Fill in the buffer pointer.
   itsBuffer  = getData<BufferType> ("Buffer");
-}
-
-void DH_Ethernet::postprocess()
-{
-  itsBuffer = 0;
 }
 
 DH_Ethernet::BufferType& DH_Ethernet::getBufferElement(unsigned int element)
