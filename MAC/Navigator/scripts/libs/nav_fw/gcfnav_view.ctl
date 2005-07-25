@@ -29,7 +29,12 @@ global string CURRENT_DP_MESSAGE = "Current selection in tree";
 global dyn_string g_ContectMenuDpAccessableErrorText = "PUSH_BUTTON, No actions possible, 2, 0";
 
 ///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotGetRecordStatus; This functions checks
+// Function: navViewPlotGetRecordStatus; This functions checks for the
+//           the current selected view, the status of the recording.
+//           options: 1. "recording"; for these dp's a recording is running
+//                    2. "idle"; for these dp's NO recording is running
+//                    3. "unknown"; the status is unknown or the record
+//                       control manager can no be reached.
 //                                            
 // Input:  1. $datapoint
 //         2. $configDatapoint
