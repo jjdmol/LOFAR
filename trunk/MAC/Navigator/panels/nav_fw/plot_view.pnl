@@ -1,12 +1,20 @@
 V 10
 1
 LANG:1 4 view
-PANEL,545 331 950 740 N "_3DFace" 2
+PANEL,426 404 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-
+  /////////////////////////////////////////////////////////////////////////////////
+  // The last version of gnuplot must be downloaded from \"http://www.gnuplot.info/\"
+  // Install this package and configure in the \"System configuration\" the gnuplot path
+  //
+  // The last version of iview (image convertor) must be downloaded from
+  // \"http://www.irfanview.com/\". Install this package and configure in the
+  // \"System configuration\" the picture converter path.
+  ////////////////////////////////////////////////////////////////////////////////
+  
   if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".1.active\"))
   {
     dpSet($configDatapoint + \".currentDatapoint\", $datapoint);
@@ -374,8 +382,9 @@ void navViewPlotContextMenu()
   txt_step      = \"PUSH_BUTTON, Step,  13, 1\"; 
   txt_ranges    = \"PUSH_BUTTON, Configure ..., 3, 1\";
   txt_saveData  = \"PUSH_BUTTON, Save current data, 12, 1\";
+  
+  // Get the record status from the record control manager. Then handle the result
   string recordStatus = navViewPlotGetRecordStatus($configDatapoint, $datapoint);
-  DebugN(\"recordStatus:\"+recordStatus);
   if(recordStatus==\"recording\")
   {
     txt_record        = \"PUSH_BUTTON, Stop record,  5, 1\";
@@ -439,7 +448,6 @@ void navViewPlotContextMenu()
     case 6:  //Show all recording
       cmd = $configDatapoint+\"|\"+$datapoint+\"|show all\";
       dpSet(\"__navigator.recordCMD\", cmd);
-      RECORD_STATE = \"RECORDSTOP\";
       delay(1);
       dyn_string rcv;
       dpGet(\"__navigator.recordRCV\", rcv);
@@ -454,12 +462,12 @@ void navViewPlotContextMenu()
     case 7:  //stop all recording
       cmd = $configDatapoint+\"|\"+$datapoint+\"|stop all\";
       dpSet(\"__navigator.recordCMD\", cmd);
+      RECORD_STATE = \"RECORDSTOP\";
       break;
     case 12:
       PLOT_STATE=\"PAUSE\";
       navViewPlotChangeState();
       folderSelector(folderSelection);
-      DebugN(\"folderSelection: \"+folderSelection);
       if(folderSelection!=\"\")
       {
         if(_WIN32)
@@ -574,63 +582,6 @@ LANG:1 0
   {*/
 }" 0
  E 0 1 1 0 1 E U  1 E 20 20 10 10
-14 109
-"TextField1"
-""
-1 100 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-96 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-98 8 832 35
-3 "s" 0 0 0 0 0 0 
-E
-"// SimpleCtrlScriptStart {valid}
-main()
-{
-  EP_textFieldIn();
-}
-
-EP_textFieldIn()
-{
-dyn_errClass err;
-
-  if( !dpExists( \"System1:__navigator.recordRCV:_online.._value\"))
-  {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-    return;
-  }
-
-  dpConnect(\"EP_textFieldInCB\",
-            \"System1:__navigator.recordRCV:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-
-}
-
-
-EP_textFieldInCB(string dp, string sNewValue)
-{
-  setValue(\"\", \"text\", dpValToString(dp, sNewValue, FALSE) );
-}
-
-// SimpleCtrlScript {EP_textFieldIn}
-// DP {System1:__navigator.recordRCV}
-// DPConfig {:_online.._value}
-// DPType {string}
-// UseDPUnit {FALSE}
-// UseDPFormat {TRUE}
-// SimpleCtrlScriptEnd {EP_textFieldIn}
-" 0
-
-E
 0
 LAYER, 1 
 1

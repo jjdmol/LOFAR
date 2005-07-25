@@ -87,6 +87,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
     {
       showAllDPs[dynlen(showAllDPs)+1] = navViewPlotGetSplitPart(recordList[i], 2);
     }
+    dynSortAsc(showAllDPs);
     dpSet("__navigator.recordRCV", showAllDPs);
     break;
   case "stop":
