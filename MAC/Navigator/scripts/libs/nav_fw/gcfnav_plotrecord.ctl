@@ -8,7 +8,7 @@ main()
 {
   //Set the output to ""
   dpSet("__navigator.recordRCV", "");
-  //Connects to the datapoint .CMD, this is the command input the this
+  //Connects to the datapoint .CMD, this is the commandInput the this
   //function.
   dpConnect("navViewPlotRecordMain", FALSE, "__navigator.recordCMD");
 }
@@ -33,6 +33,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
   
   //////////////////////////////////////////////////////////////
   // Split the incomming CMD in a config datapoint and a command
+  //////////////////////////////////////////////////////////////
   commandInputSplit = strsplit(commandInput, "|");
   if(dynlen(commandInputSplit)>=1)
   {
@@ -49,6 +50,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
   
   ////////////////////////////
   // Compute the chosen option
+  ////////////////////////////
   switch (cmd_command)
   {
   case "status":
@@ -100,7 +102,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
       {
         int position = dynContains(recordList, searchResult[i]);
         dpToDisconnect[dynlen(dpToDisconnect)+1]= navViewPlotGetSplitPart(recordList[position], 2);
-        dynRemove(recordList, position);
+        //dynRemove(recordList, position); replaced to function navViewPlotWriteRecordDesciptionFile
       }
       navViewPlotRecordControl(FALSE, dpToDisconnect);
     }
@@ -113,13 +115,15 @@ navViewPlotRecordMain(string dp1, string commandInput)
       stopAllDPs[dynlen(stopAllDPs)+1] = navViewPlotGetSplitPart(recordList[i], 2);
     }
     navViewPlotRecordControl(FALSE, stopAllDPs);
-    dynClear(recordList);
+    //dynClear(recordList); replaced to function navViewPlotWriteRecordDesciptionFile
     break;
   default:
     LOG_TRACE("record received cmd: unknown (default)");      
     dpSet("__navigator.recordRCV", "unknown command");
     break;
   }
+  //DebugN("###  recordList  ###");
+  //DebugN(recordList);
 }
  
 ///////////////////////////////////////////////////////////////////////////
@@ -207,14 +211,15 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
       navPMLloadPropertySet(dpToConnect);
       dpConnect("RecordSpectrum", FALSE, dpToConnect);
       //Write file record info to disc
-      navViewPlotWriteRecordDesciptionFile(newDatapoints[i]);
+      navViewPlotWriteRecordDesciptionFile(newDatapoints[i], TRUE);
     }
   }
   else
   {
     for(int i=1; i<=dynlen(newDatapoints); i++)
     {
-      navPMLloadPropertySet(newDatapoints[i]);
+      navPMLloadPropertySet(newDatapoints[i], FALSE);
+      navViewPlotWriteRecordDesciptionFile(newDatapoints[i], FALSE);
       dpDisconnect("RecordSpectrum", newDatapoints[i]);
     }
   }
@@ -226,32 +231,64 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
 // Input:  1. Record configuration data
 // Output: 1. Data is stored in the ".dat" file as header
 ///////////////////////////////////////////////////////////////////////////
-navViewPlotWriteRecordDesciptionFile(string datapoint)
+navViewPlotWriteRecordDesciptionFile(string datapoint, bool startRecord)
 {
   dyn_string searchMatch = dynPatternMatch("*" + datapoint + "*", recordList);
+  int position = dynContains(recordList, searchMatch[1]);
   string configDpName = navViewPlotGetSplitPart(searchMatch[1],1);
   string dpName = navViewPlotGetSplitPart(searchMatch[1],2);
   string plotNumber = navViewPlotGetSplitPart(searchMatch[1],3);
   string prefixFileName = navViewPlotGetSplitPart(searchMatch[1],4);
+  
+  // If no prefix is givin, display this in filename
   if(""==prefixFileName)
   {
     prefixFileName = "NoPrefix";
   }
+  
+  // Next if statement set the environment for the header(startRecord=TRUE)
+  // or footer (startRecord=FALSE) in the dat file
+  string fileExtention;
+  if(startRecord)
+  {
+    fileExtention = ".dat";
+  }
+  else
+  {
+    fileExtention = ".tmp";
+  }
+  
   string timeString = getCurrentTime();
   string userName = getUserName(getUserId());
-  file f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber+".dat", "w+");
-    fputs ("#---------------------------------------------------------------------#\n", f );
-    fputs ("# Automatic generated file                                            #\n", f );
-    fputs ("# By Navigator recordFunction                                         #\n", f );
-    fputs ("#---------------------------------------------------------------------#\n", f );
-    fputs ("# Record started on: " + timeString +"\n", f );
-    fputs ("# By user          : " + userName+"\n", f );
-    fputs ("# For datapoint    : " + dpName+"\n", f );
-    fputs ("# Config datapoint : " + configDpName+"\n", f );
-    fputs ("# Plot number      : " + plotNumber+"\n", f );
-    fputs ("# Data fileName    : " + prefixFileName + "_record_"+plotNumber+".dat"+"\n", f );
-    fputs ("#-------------------------------EOF ----------------------------------#\n", f );
+  file f = fopen(navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber + fileExtention, "w+");
+    fputs ("#----------------------------------------------------------------------#\n", f );
+    fputs ("# Automatic generated file                                             #\n", f );
+    fputs ("# By Navigator recordFunction                                          #\n", f );
+    fputs ("#----------------------------------------------------------------------#\n", f );
+    if(startRecord)
+    {
+      fputs ("# Record started on: " + timeString +"\n", f );
+      fputs ("# By user          : " + userName+"\n", f );
+      fputs ("# For datapoint    : " + dpName+"\n", f );
+      fputs ("# Config datapoint : " + configDpName+"\n", f );
+      fputs ("# Plot number      : " + plotNumber+"\n", f );
+      fputs ("# Data fileName    : " + prefixFileName + "_record_"+plotNumber+".dat"+"\n", f );
+      fputs ("#----------------------------------------------------------------------#\n", f );
+    }
+    else
+    {
+      fputs ("# Record stopped on: " + timeString +"\n", f );
+      fputs ("# By user          : " + userName+"\n", f );
+      fputs ("#------------------------------- EOF ----------------------------------#\n", f );
+    }
   fclose(f);
+  
+  // if footer, then perform atlast a type <tmp-file> >> <dat-file>
+  if(!startRecord)
+  {
+    dynRemove(recordList, position);
+    system("type " + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber+".tmp >> " + navConfigGetPathName(g_path_temp)+navConfigGetSlashes() + prefixFileName + "_record_"+plotNumber+".dat");
+  }
 }
 
 
