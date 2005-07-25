@@ -17,8 +17,23 @@ PANEL,426 404 950 740 N "_3DFace" 2
   
   if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint + \".1.active\"))
   {
+    string plotState;
     dpSet($configDatapoint + \".currentDatapoint\", $datapoint);
+    dpGet($configDatapoint + \".plotState\", plotState);
+    if(\"\" == plotState)
+    {
+      plotState = \"PAUSE\";
+      dpSet($configDatapoint + \".plotState\", plotState);
+    }
+    string recordStatus = navViewPlotGetRecordStatus($configDatapoint, $datapoint);
+    if(recordStatus==\"recording\")
+    {
+      RECORD_STATE = \"RECORDSTART\";
+    }
+    PLOT_STATE = plotState;
     navViewPlotChangeState();
+
+    //Start the main plot-view sequence
     navViewPlotMain();
   }
 }
@@ -124,7 +139,7 @@ void navViewPlotMain()
         delay(0,0.400);
         navViewPlotConvertGnuplotOutput(plotNumber);        
         // Delay, minimal 1 second. Config item for user
-        setValue(\"plotarea1\", \"fill\",\"[pattern,[tile,bmp,gnuplot1.bmp]]\");
+        setValue(\"plotarea1\", \"fill\",\"[pattern,[tile,bmp,pictures\"+navConfigGetPathName(\"/\")+\"gnuplot1.bmp]]\");
         if(\"STEP\"==PLOT_STATE) 
         {
           PLOT_STATE=\"PAUSE\";
@@ -185,7 +200,7 @@ int local_plotSizeY;
 string PICTURE_PATH = PROJ_PATH + \"pictures/\";
 string TEMP_PATH    = \"c:\\\\temp\\\\\";
 string GNUPLOT_PATH = \"C:\\\\ETM\\\\GNUplot\\\\gnuplot\\\\bin\\\\\";
-string PLOT_STATE = \"PLAY\";
+string PLOT_STATE = \"\";
 string RECORD_STATE = \"\";
 dyn_string dpsLoaded;
 int UPDATE_RATE = 0;

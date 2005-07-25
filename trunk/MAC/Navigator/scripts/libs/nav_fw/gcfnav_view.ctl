@@ -56,7 +56,7 @@ string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
     messageReceived = TRUE;
     messageRCVsplit = strsplit(messageRCV, "|");
   }
-  delay(0,0.025);
+  delay(0,0.050);
   retryCounter++;
  }
  if(dynlen(messageRCVsplit)>=3)
@@ -198,20 +198,14 @@ navViewPlotWhenActive(string dp1, int active,
                       string dp2, string dpName)
 {
   dyn_string dp1Split = strsplit(dp1, ".");
- // string dpName;
-//  dpGet($configDatapoint + "." + dp1Split[2] + ".dpName", dpName);
   if(1==active)
   {
-    // if(PLOT_DPNAMES[dp1Split[2]]!=$datapoint+dpName)
-    // dpDisconnect("navViewPlotMainPlotSequence" + dp1Split[2], PLOT_DPNAMES[dp1Split[2]]); 
     string dpToConnect = navViewRetrieveDpName($datapoint, dpName);
     navPMLloadPropertySet(dpToConnect);
     dpConnect("navViewPlotMainPlotSequence" + dp1Split[2], dpToConnect);
-//    PLOT_DPNAMES[dp1Split[2]]=$datapoint+dpName;
   }
   else
   {
-//    if(PLOT_DPNAMES[dp1Split[2]]==$datapoint+dpName)
       dpDisconnect("navViewPlotMainPlotSequence" + dp1Split[2], $datapoint+dpName);
   }
   
@@ -335,12 +329,14 @@ int navViewPlotConvertGnuplotOutput(int plotNumber)
     if ((access(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".png", R_OK)==0) &&
         (access(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe", F_OK)==0))
     {
-      system("start /b rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + +"gnuplot"+plotNumber+ ".bmp");
-      system(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber + ".png /convert=" + navConfigGetPathName(PROJ_PATH) + "gnuplot" + plotNumber+ ".bmp");
+      //system("start /b rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + +"gnuplot"+plotNumber+ ".png");
+      //DebugN("rm: "+navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + +"gnuplot"+plotNumber+ ".png");
+      system(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber + ".png /convert=" + navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
+      //DebugN("path: "+navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
     }
     else
     {
-      system("start /b copy " + navConfigGetPathName(g_path_picture) + navConfigGetPathName("/") + "gnuplot_error.bmp " + navConfigGetPathName(PROJ_PATH) + "gnuplot" + plotNumber+ ".bmp");
+      system("start /b copy " + navConfigGetPathName(g_path_picture) + navConfigGetPathName("/") + "gnuplot_error.bmp " + navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
     }
 
 return 0;
@@ -380,11 +376,13 @@ int navViewPlotGenerateGnuPlotScriptFile(int plotNumber, string plotTitle,
   fputs ("set output \"C:\\\\temp\\\\gnuplot" + plotNumber+ ".png\"\n" , f );
   fputs ("set title \"Plot time: "+current_time+"\" \n", f );
   fputs ("show title\n", f );
-  if(xRangeMin!=0 && xRangeMax!=0)
+  //if(xRangeMin!=0 && xRangeMax!=0)
+  if(!(0==xRangeMin && 0==xRangeMax))
   {
     fputs ("set xrange["+xRangeMin+":"+xRangeMax+"] \n", f );
   }
-  if(yRangeMin!=0 && yRangeMax!=0)
+  //if(yRangeMin!=0 && yRangeMax!=0)
+  if(!(0==yRangeMin && 0==yRangeMax))
   {
     fputs ("set yrange["+yRangeMin+":"+yRangeMax+"] \n", f );
   }
