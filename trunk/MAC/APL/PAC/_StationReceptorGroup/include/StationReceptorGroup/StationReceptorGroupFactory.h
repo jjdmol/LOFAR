@@ -59,7 +59,11 @@ namespace ASR
         }
         else
         {
-          it->second->adoptParameterFile(parameterFile);
+        // The LD exists already. Two options:
+        // 1. The one and only LD with this name is rescheduled
+        // 2. The LD can be shared with several parents (SO, SRG). The paramset
+        //    contains the details about the new parent.
+          it->second->updateParameterFile(parameterFile);
           return it->second;
         }
       };

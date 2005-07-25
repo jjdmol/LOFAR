@@ -55,7 +55,11 @@ namespace ASO // :-)
         }
         else
         {
-          m_theSOinstance->adoptParameterFile(parameterFile);
+        // The LD exists already. Two options:
+        // 1. The one and only LD with this name is rescheduled
+        // 2. The LD can be shared with several parents (SO, SRG). The paramset
+        //    contains the details about the new parent.
+          m_theSOinstance->updateParameterFile(parameterFile);
         }
         return m_theSOinstance;
       };
