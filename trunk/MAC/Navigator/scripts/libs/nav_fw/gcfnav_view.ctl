@@ -28,6 +28,43 @@
 global string CURRENT_DP_MESSAGE = "Current selection in tree";
 global dyn_string g_ContectMenuDpAccessableErrorText = "PUSH_BUTTON, No actions possible, 2, 0";
 
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotGetRecordStatus; This functions checks
+//                                            
+// Input:  1. $datapoint
+//         2. $configDatapoint
+// Output: 1. record status of the specific $configDatapoint and $datapoint
+///////////////////////////////////////////////////////////////////////////
+string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
+{
+ string recordStatus, messageRCV;
+ dyn_string messageRCVsplit;
+ bool messageReceived = FALSE;
+ int retryCounter = 0;
+ dpSet("__navigator.recordRCV", "");
+ dpSet("__navigator.recordCMD", configDatapoint + "|" + datapoint + "|status");
+ while(!messageReceived && (retryCounter<=80))
+ {
+  dpGet("__navigator.recordRCV", messageRCV);
+  if(patternMatch(configDatapoint + "|" + datapoint + "|*", messageRCV))
+  {
+    messageReceived = TRUE;
+    messageRCVsplit = strsplit(messageRCV, "|");
+  }
+  delay(0,0.025);
+  retryCounter++;
+ }
+ if(dynlen(messageRCVsplit)>=3)
+ {
+   return messageRCVsplit[3];
+ }
+ else
+ {
+   return "unknown";
+ }
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: trendApplySettings
 //
@@ -112,6 +149,7 @@ navViewPlotMainPlotSequence3(string dp1, string spectrum_data)
 //            is pauzed or running it's sequence.
 // Output: 1. PLOT_STATE == "PLAY", icon_play visible
 //         2. PLOT_STATE == "PAUSE", icon_play visible
+//         3. PLOT_STATE with record is handled seperatly
 ///////////////////////////////////////////////////////////////////////////
 void navViewPlotChangeState()
 {
@@ -132,6 +170,15 @@ void navViewPlotChangeState()
     setValue("icon_play",   "visible", FALSE);
     setValue("icon_pause1", "visible", FALSE);
     setValue("icon_pause2", "visible", FALSE);
+  }
+  
+  if("RECORDSTART"==RECORD_STATE)
+  {
+    setValue("icon_record",   "visible", TRUE);
+  }
+  else if ("RECORDSTOP"==RECORD_STATE)
+  {
+    setValue("icon_record",   "visible", FALSE);
   }
 }
 
@@ -175,7 +222,7 @@ string navViewRetrieveDpName(string dollarDatapoint, string dpName)
   }
   else
   {
-    dpToConnect = datapoint + dpName;
+    dpToConnect = dollarDatapoint + dpName;
   }
   return dpToConnect;
 }
