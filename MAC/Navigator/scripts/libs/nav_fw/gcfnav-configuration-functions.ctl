@@ -25,6 +25,7 @@
 //#
 
 #uses "nav_fw/gcf-util.ctl"
+#uses "nav_fw/gcfnav_view.ctl"
 
 global string   DPNAME_NAVIGATOR                = "__navigator";
 global string   ELNAME_RESOURCEROOTS            = "resourceRoots";
@@ -790,7 +791,7 @@ bool navConfigSanityCheck(string &message)
       for(i=1;i<=dynlen(tab[viewsIndex][2]) && sane;i++)
       {
         sane = dpAccessable(tab[viewsIndex][2][i]);
-        DebugTN("check view existance:",sane,tab[viewsIndex][2][i]);
+        LOG_TRACE("check view existance:",sane,tab[viewsIndex][2][i]);
       }
       if(!sane)
       {
