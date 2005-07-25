@@ -254,9 +254,9 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
           
           try
           {
-            angleTimes = getStringVector(string("angleTimes"));
-            angles1 = getDoubleVector(string("angle1"));
-            angles2 = getDoubleVector(string("angle2"));
+            angleTimes = m_parameterSet.getStringVector(string("angleTimes"));
+            angles1 = m_parameterSet.getDoubleVector(string("angle1"));
+            angles2 = m_parameterSet.getDoubleVector(string("angle2"));
           }
           catch(Exception &e)
           {
