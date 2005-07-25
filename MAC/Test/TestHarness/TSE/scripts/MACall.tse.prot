@@ -348,8 +348,7 @@ F_LOGICALDEVICE_CONNECT =
 {
   0x014B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_StringLen,
-  nodeId : t_String [ nrOfChars ]
+  nrOfChars : t_StringLen, nodeId : t_String [ nrOfChars ]
   
 }
 

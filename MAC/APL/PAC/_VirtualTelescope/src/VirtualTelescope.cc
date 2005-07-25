@@ -246,18 +246,51 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
           m_beamID=ackEvent.handle;
           
           int directionType=_convertDirection(m_parameterSet.getString(string("directionType")));
-          double directionAngle1=m_parameterSet.getDouble(string("angle1"));
-          double directionAngle2=m_parameterSet.getDouble(string("angle2"));
-  
+          double directionAngle1(0.0);
+          double directionAngle2(0.0);
+          vector<string> angleTimes;
+          vector<double> angles1;
+          vector<double> angles2;
+          
+          try
+          {
+            angleTimes = getStringVector(string("angleTimes"));
+            angles1 = getDoubleVector(string("angle1"));
+            angles2 = getDoubleVector(string("angle2"));
+          }
+          catch(Exception &e)
+          {
+          }
+          
           // point the new beam
-          time_t time_arg(0); // now
           ABSBeampointtoEvent beamPointToEvent;
           beamPointToEvent.handle = m_beamID;
-          beamPointToEvent.time   = time_arg;
           beamPointToEvent.type   = directionType;
-          beamPointToEvent.angle[0] = directionAngle1;
-          beamPointToEvent.angle[1] = directionAngle2;
-          m_beamServer.send(beamPointToEvent);
+          
+          if(angleTimes.size() == 0 || angleTimes.size() != angles1.size() || angleTimes.size() != angles2.size())
+          {
+            // key angleTimes not found: use one fixed angle
+            directionAngle1=m_parameterSet.getDouble(string("angle1"));
+            directionAngle2=m_parameterSet.getDouble(string("angle2"));
+
+            beamPointToEvent.time   = 0; // now
+            beamPointToEvent.angle[0] = directionAngle1;
+            beamPointToEvent.angle[1] = directionAngle2;
+            m_beamServer.send(beamPointToEvent);
+          }
+          else
+          {
+            vector<double>::iterator angle1It = angles1.begin();
+            vector<double>::iterator angle2It = angles2.begin();
+            for(vector<string>::iterator timesIt=angleTimes.begin();timesIt!=angleTimes.end();++timesIt)
+            {
+              beamPointToEvent.time   = APLUtilities::decodeTimeString(*timesIt);
+              beamPointToEvent.angle[0] = *angle1It++;
+              beamPointToEvent.angle[1] = *angle2It++;
+              m_beamServer.send(beamPointToEvent);
+            }
+          }
+          
           newState = LOGICALDEVICE_STATE_SUSPENDED;
         }
         else
@@ -399,7 +432,7 @@ void VirtualTelescope::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualTelescope::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
+void VirtualTelescope::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }

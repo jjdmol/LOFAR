@@ -212,12 +212,91 @@ void LogicalDevice::adoptParameterFile(const string& parameterFile)
   }
 }
 
+
 void LogicalDevice::updateParameterFile(const string& parameterFile)
 {
+  // this method adopts the new parameter file,
+  // widens the schedule times if necessary,
+  // connects to the parent if it is a new parent
+  // sends the new schedule to all its childs
+  // This method is called by LogicalDeviceFactories that support LD-sharing:
+  // SRG, SO
   adoptParameterFile(parameterFile);
   
-  // connect to the parent if it is a new parent
+ // adjust scheduling times
+  // specified times are in UTC, seconds since 1-1-1970
+  time_t timeNow = APLUtilities::getUTCtime();
+  time_t claimTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("claimTime"));
+  time_t prepareTime = APLUtilities::decodeTimeString(m_parameterSet.getString("prepareTime"));
+  time_t startTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("startTime"));
+  time_t stopTime    = APLUtilities::decodeTimeString(m_parameterSet.getString("stopTime"));
   
+  // timerId's can be zero if the LD has been released
+  if((claimTime >= timeNow && claimTime < m_claimTime) || m_claimTimerId==0)
+  {
+    // earlier claim
+    m_claimTime = claimTime;
+    m_serverPort.cancelTimer(m_claimTimerId);
+    m_claimTimerId = m_serverPort.setTimer(m_claimTime - timeNow);
+  }
+  if((prepareTime >= timeNow && prepareTime < m_prepareTime) || m_prepareTimerId==0)
+  {
+    // earlier prepare
+    m_prepareTime = prepareTime;
+    m_serverPort.cancelTimer(m_prepareTimerId);
+    m_prepareTimerId = m_serverPort.setTimer(m_prepareTime - timeNow);
+  }
+  if((startTime >= timeNow && startTime < m_startTime) || m_startTimerId==0)
+  {
+    // earlier start
+    m_startTime = startTime;
+    m_serverPort.cancelTimer(m_startTimerId);
+    m_startTimerId = m_serverPort.setTimer(m_startTime - timeNow);
+  }
+  if((stopTime >= timeNow && stopTime > m_stopTime) || m_stopTimerId==0)
+  {
+    // later stop
+    m_stopTime = stopTime;
+    m_serverPort.cancelTimer(m_stopTimerId);
+    m_stopTimerId = m_serverPort.setTimer(m_stopTime - timeNow);
+  }
+
+  // set properties
+  m_basePropertySet->setValue(LD_PROPNAME_CLAIMTIME,GCFPVInteger(m_claimTime));
+  m_basePropertySet->setValue(LD_PROPNAME_PREPARETIME,GCFPVInteger(m_prepareTime));
+  m_basePropertySet->setValue(LD_PROPNAME_STARTTIME,GCFPVInteger(m_startTime));
+  m_basePropertySet->setValue(LD_PROPNAME_STOPTIME,GCFPVInteger(m_stopTime));
+ 
+  // connect to the parent if it is a new parent
+  string parentTaskName = m_parameterSet.getString("parentTask");
+  
+  if(m_parentPorts.find(parentTaskName) == m_parentPorts.end())
+  {  
+    string parentHost     = m_parameterSet.getString("parentHost");//TiMu
+    uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
+    
+    // it is possible that parents do not yet exist while constructing this LD
+    // (e.g. SO starts when a station starts, even if there are no CCU's)
+    TPortSharedPtr parentPortPtr(new TRemotePort);
+    if(parentTaskName.length() > 0)
+    {
+      parentPortPtr->init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
+      parentPortPtr->setHostName(parentHost);//TiMu
+      parentPortPtr->setPortNumber(parentPort);//TiMu
+      parentPortPtr->open();
+      m_parentPorts[parentTaskName] = parentPortPtr;
+    }
+/*
+    if(parentTaskName.length() > 0)
+    {
+      // send initialized event to the parent
+      boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
+      scheduledEvent->result=LD_RESULT_NO_ERROR;//OK
+      _sendEvent(scheduledEvent,*(parentPortPtr.get()));
+    }
+*/
+  } 
+  _sendScheduleToClients();
 }
 
 string& LogicalDevice::getServerPortName()
@@ -1034,6 +1113,7 @@ void LogicalDevice::_handleServerConnected()
   
   _schedule();
     
+/*
   if(parentTaskName.length() > 0)
   {
     // send initialized event to the parent
@@ -1041,6 +1121,7 @@ void LogicalDevice::_handleServerConnected()
     scheduledEvent->result=LD_RESULT_NO_ERROR;//OK
     _sendEvent(scheduledEvent,*(parentPortPtr.get()));
   }
+*/
 }
 
 vector<string> LogicalDevice::_getChildKeys()
@@ -1398,7 +1479,13 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
 
     case F_CONNECTED:
     {
-      if(_isServerPort(port))
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+        connectEvent->nodeId = getName();
+        _sendEvent(connectEvent,port);
+      }
+      else if(_isServerPort(port))
       {
         _handleServerConnected();
       }
@@ -1509,6 +1596,17 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       break;
     }
   
+    case F_CONNECTED:
+    {
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+        connectEvent->nodeId = getName();
+        _sendEvent(connectEvent,port);
+      }
+      break;
+    }
+    
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
@@ -1591,10 +1689,20 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
       // send claimed message to all parents.
       boost::shared_ptr<LOGICALDEVICEClaimedEvent> claimedEvent(new LOGICALDEVICEClaimedEvent);
       claimedEvent->result = m_globalError;
-      TPortMap::iterator it = m_parentPorts.begin();
-      while(it != m_parentPorts.end())
+      for(TPortMap::iterator it = m_parentPorts.begin();it != m_parentPorts.end();++it)
       {
         _sendEvent(claimedEvent,*(it->second.get()));
+      }
+      break;
+    }
+    
+    case F_CONNECTED:
+    {
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+        connectEvent->nodeId = getName();
+        _sendEvent(connectEvent,port);
       }
       break;
     }
@@ -1675,8 +1783,7 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       // send prepared message to the parent.
       boost::shared_ptr<LOGICALDEVICEPreparedEvent> preparedEvent(new LOGICALDEVICEPreparedEvent);
       preparedEvent->result = m_globalError;
-      TPortMap::iterator it = m_parentPorts.begin();
-      while(it != m_parentPorts.end())
+      for(TPortMap::iterator it = m_parentPorts.begin();it != m_parentPorts.end();++it)
       {
         _sendEvent(preparedEvent,*(it->second.get()));
       }
@@ -1695,6 +1802,17 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       _sendToAllChilds(prepareEvent);
 
       concretePrepare(port);
+      break;
+    }
+    
+    case F_CONNECTED:
+    {
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+        connectEvent->nodeId = getName();
+        _sendEvent(connectEvent,port);
+      }
       break;
     }
     
@@ -1786,14 +1904,24 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       // send to parent
       boost::shared_ptr<LOGICALDEVICESuspendedEvent> suspendedEvent(new LOGICALDEVICESuspendedEvent);
       suspendedEvent->result = m_globalError;
-      TPortMap::iterator it = m_parentPorts.begin();
-      while(it != m_parentPorts.end())
+      for(TPortMap::iterator it = m_parentPorts.begin();it != m_parentPorts.end();++it)
       {
         _sendEvent(suspendedEvent,*(it->second.get()));
       }
       break;
     }
   
+    case F_CONNECTED:
+    {
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+        connectEvent->nodeId = getName();
+        _sendEvent(connectEvent,port);
+      }
+      break;
+    }
+    
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
@@ -1894,14 +2022,24 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       // send resumed message to parent.
       boost::shared_ptr<LOGICALDEVICEResumedEvent> resumedEvent(new LOGICALDEVICEResumedEvent);
       resumedEvent->result = m_globalError;
-      TPortMap::iterator it = m_parentPorts.begin();
-      while(it != m_parentPorts.end())
+      for(TPortMap::iterator it = m_parentPorts.begin();it != m_parentPorts.end();++it)
       {
         _sendEvent(resumedEvent,*(it->second.get()));
       }
       break;
     }
   
+    case F_CONNECTED:
+    {
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+        connectEvent->nodeId = getName();
+        _sendEvent(connectEvent,port);
+      }
+      break;
+    }
+    
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
@@ -1982,8 +2120,7 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       // send released message to the parent.
       boost::shared_ptr<LOGICALDEVICEReleasedEvent> releasedEvent(new LOGICALDEVICEReleasedEvent);
       releasedEvent->result = m_globalError;
-      TPortMap::iterator it = m_parentPorts.begin();
-      while(it != m_parentPorts.end())
+      for(TPortMap::iterator it = m_parentPorts.begin();it != m_parentPorts.end();++it)
       {
         _sendEvent(releasedEvent,*(it->second.get()));
       }
@@ -2015,6 +2152,17 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       break;
     }
   
+    case F_CONNECTED:
+    {
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+        connectEvent->nodeId = getName();
+        _sendEvent(connectEvent,port);
+      }
+      break;
+    }
+    
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;

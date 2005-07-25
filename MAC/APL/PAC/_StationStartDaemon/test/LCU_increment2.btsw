@@ -14,17 +14,17 @@
 
 [statemachines]
 
-Statemachine_StationStartDaemonClient (ready, RSPDriver_stop, ArrayOperations_stop, sampfreq_ack) =
+Statemachine_StationStartDaemonClient (ready, RSPDriver_stop, ArrayOperations_stop) =
 {
   s000 : CONNECTION_ESTABLISHED ; s001.
-  s001 : TIMER(0x0A) ; s010.
+  s001 : TIMER(10) ; s010.
 // ------------------------------------------------------------------------------
   s010 : F_STARTDAEMON_SCHEDULE(0x00000012,0x00000006,0x0002,"SO",0x0008,"SO.param") ; s020.
   s020 : E_STARTDAEMON_SCHEDULED(,0x00000000,,) ; s030.
   s020 : E_STARTDAEMON_SCHEDULED(,,,) ; error.
-  s030 : TIMER(0x30); s090. // kweenieweenie
+  s030 : TIMER(30); s090. // kweenieweenie
   
-  s090 : TIMER(0x1) ; finish.     // wait for schedule to finish
+  s090 : TIMER(1) ; finish.     // wait for schedule to finish
 // ------------------------------------------------------------------------------
 
 
@@ -38,27 +38,37 @@ Statemachine_StationStartDaemonClient (ready, RSPDriver_stop, ArrayOperations_st
   error   : TERMINATE ; error.
 }
 
-Statemachine_RSPDriver  ( stop, sampfreq_ack ) =
+Statemachine_RSPDriver( stop ) =
 {
-  s000   : CONNECTION_ESTABLISHED ; s001.
-  s001   : TIMER(1) ; s002.
+  s000   : CONNECTION_ESTABLISHED ; s002.
   s002   : E_RSP_SETWEIGHTS (,,,) ; s010.
   s002   : R_SIG( stop ) ; finish.
   
-  s010   : S_SIG( sampfreq_ack )
-           F_RSP_SETWEIGHTSACK ( 0x0000000E, 0x000000000000000000000000, 0x0000 ) ; s002.
+  s010   : F_RSP_SETWEIGHTSACK ( 0x0000000E, 0x000000000000000000000000, 0x0000 ) ; s002.
   
   finish : TERMINATE ; finish.
 }
 
 Statemachine_ArrayOperations  ( stop ) =
 {
-  s000   : CONNECTION_ESTABLISHED ; s001.
-  s001   : TIMER(1) ; s002.
-  s002   : E_LOGICALDEVICE_CONNECT (,,) ; s010.
+	// s000 accepts both the CONNECTION_ESTABLISHED event and the E_LOGICALDEVICE_CONNECT event
+	// because the latter may be the first event that this state machine receives.
+	// Yes, even before the connection seems to be established!
+  s000   : CONNECTION_ESTABLISHED ; s002.	
+  s000   : E_LOGICALDEVICE_CONNECT(,,) ; s010.
+  
+  s002   : E_LOGICALDEVICE_CONNECT(,,) ; s010.
   s002   : R_SIG( stop ) ; finish.
   
   s010   : F_LOGICALDEVICE_CONNECTED( 0x00000004,0x00000000) ; s002.
+
+  s020   : TIMER(10) ; finish. //s030.
+
+// test setting other frequency
+//  s030   : F_LOGICALDEVICE_SUSPEND(0x00000000) ; s040.
+//  s040   : E_LOGICALDEVICE_SUSPENDED( , ) ; s050.
+//  s050   : 
+  
   
   finish : TERMINATE ; finish.
 }
@@ -170,12 +180,12 @@ VAR scope.
 
 
 [testscript]
-VAR     SM1_done, SM2_stop, SM3_stop, sampfreq_ack.
+VAR     SM1_done, SM2_stop, SM3_stop.
 
-COM1 :  Statemachine_StationStartDaemonClient (SM1_done, SM2_stop, SM3_stop, sampfreq_ack)
+COM1 :  Statemachine_StationStartDaemonClient (SM1_done, SM2_stop, SM3_stop)
         WaitUntilTestEnd (SM1_done).
 
-COM2 :  Statemachine_RSPDriver     (SM2_stop, sampfreq_ack).
+COM2 :  Statemachine_RSPDriver(SM2_stop).
 
 COM3 :  Statemachine_ArrayOperations(SM3_stop).
 

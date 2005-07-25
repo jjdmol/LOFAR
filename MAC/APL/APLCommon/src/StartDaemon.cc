@@ -109,18 +109,11 @@ TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, con
   {
     try
     {
+      boost::shared_ptr<LogicalDevice> ld = itFactories->second->createLogicalDevice(taskName,fileName,this);
+      
       TLogicalDeviceMap::iterator itDevices = m_logicalDevices.find(taskName);
-      if(itDevices != m_logicalDevices.end())
+      if(itDevices == m_logicalDevices.end())
       {
-        // The LD exists already. Two options:
-        // 1. The one and only LD with this name is rescheduled
-        // 2. The LD can be shared with several parents (SO, SRG). The paramset
-        //    contains the details about the new parent.
-        itDevices->second->updateParameterFile(fileName);
-      }
-      else
-      {
-        boost::shared_ptr<LogicalDevice> ld = itFactories->second->createLogicalDevice(taskName,fileName,this);
         m_logicalDevices[taskName] = ld;
         ld->start(); // make initial transition
       }
