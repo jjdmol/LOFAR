@@ -4511,7 +4511,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 137 ""
-"objects\\PIC\\STS_Antenna_LFA.pnl" 312 34 T 160 1 0 1  -191 116  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 312 34 T 160 1 0 1  -191 116  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4519,7 +4519,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 138 ""
-"objects\\PIC\\STS_Antenna_LFA.pnl" 385 19 T 161 1 0 1  -264 161  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 385 19 T 161 1 0 1  -264 161  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4527,7 +4527,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 139 "Group133"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 700 300 T 162 1 0 1  -549 -150  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 700 300 T 162 1 0 1  -549 -150  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4535,7 +4535,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 140 "Group134"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 700 330 T 163 1 0 1  -549 -150  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 700 330 T 163 1 0 1  -549 -150  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4543,7 +4543,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 141 "Group137"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 730 300 T 164 1 0 1  -549 -150  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 730 300 T 164 1 0 1  -549 -150  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4551,7 +4551,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 142 "Group138"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 730 330 T 165 1 0 1  -549 -150  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 730 330 T 165 1 0 1  -549 -150  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -4559,7 +4559,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 143 "Group141"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 760 300 T 166 1 0 1  -549 -150  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 760 300 T 166 1 0 1  -549 -150  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -4567,7 +4567,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 144 "Group142"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 760 330 T 167 1 0 1  -549 -150  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 760 330 T 167 1 0 1  -549 -150  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -4575,7 +4575,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 145 "Group137"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 78 T 168 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 78 T 168 1 0 1  -9 142  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4583,7 +4583,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 146 "Group138"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 108 T 169 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 108 T 169 1 0 1  -9 142  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4591,7 +4591,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 147 "Group139"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 78 T 170 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 78 T 170 1 0 1  -9 142  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4599,7 +4599,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 148 "Group140"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 108 T 171 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 108 T 171 1 0 1  -9 142  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4607,7 +4607,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 149 "Group141"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 78 T 172 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 78 T 172 1 0 1  -9 142  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4615,7 +4615,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 150 "Group142"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 108 T 173 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 108 T 173 1 0 1  -9 142  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -4623,7 +4623,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 151 "Group143"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 78 T 174 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 78 T 174 1 0 1  -9 142  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -4631,7 +4631,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 152 "Group144"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 108 T 175 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 108 T 175 1 0 1  -9 142  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -4639,7 +4639,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 153 "Group153"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 148 T 176 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 148 T 176 1 0 1  -9 142  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4647,7 +4647,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 154 "Group154"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 178 T 177 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 178 T 177 1 0 1  -9 142  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4655,7 +4655,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 155 "Group155"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 148 T 178 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 148 T 178 1 0 1  -9 142  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4663,7 +4663,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 156 "Group156"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 178 T 179 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 178 T 179 1 0 1  -9 142  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4671,7 +4671,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 157 "Group157"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 148 T 180 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 148 T 180 1 0 1  -9 142  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4679,7 +4679,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 158 "Group158"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 178 T 181 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 178 T 181 1 0 1  -9 142  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -4687,7 +4687,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 159 "Group159"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 148 T 182 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 148 T 182 1 0 1  -9 142  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -4695,7 +4695,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 160 "Group160"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 178 T 183 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 178 T 183 1 0 1  -9 142  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -4703,7 +4703,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 161 "Group169"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 218 T 184 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 218 T 184 1 0 1  -9 142  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4711,7 +4711,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 162 "Group170"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 248 T 185 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 248 T 185 1 0 1  -9 142  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4719,7 +4719,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 163 "Group171"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 218 T 186 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 218 T 186 1 0 1  -9 142  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4727,7 +4727,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 164 "Group172"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 248 T 187 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 248 T 187 1 0 1  -9 142  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4735,7 +4735,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 165 "Group173"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 218 T 188 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 218 T 188 1 0 1  -9 142  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4743,7 +4743,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 166 "Group174"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 248 T 189 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 248 T 189 1 0 1  -9 142  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -4751,7 +4751,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 167 "Group175"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 218 T 190 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 218 T 190 1 0 1  -9 142  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -4759,7 +4759,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 168 "Group176"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 248 T 191 1 0 1  -9 142  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 248 T 191 1 0 1  -9 142  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -4767,7 +4767,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 169 "Group209"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 78 T 192 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 78 T 192 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4775,7 +4775,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 170 "Group210"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 108 T 193 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 108 T 193 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4783,7 +4783,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 171 "Group211"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 78 T 194 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 78 T 194 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4791,7 +4791,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 172 "Group212"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 108 T 195 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 108 T 195 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4799,7 +4799,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 173 "Group213"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 78 T 196 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 78 T 196 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4807,7 +4807,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 174 "Group214"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 108 T 197 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 108 T 197 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -4815,7 +4815,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 175 "Group215"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 78 T 198 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 78 T 198 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -4823,7 +4823,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 176 "Group216"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 108 T 199 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 108 T 199 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -4831,7 +4831,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 177 "Group217"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 148 T 200 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 148 T 200 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4839,7 +4839,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 178 "Group218"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 178 T 201 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 178 T 201 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4847,7 +4847,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 179 "Group219"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 148 T 202 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 148 T 202 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4855,7 +4855,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 180 "Group220"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 178 T 203 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 178 T 203 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4863,7 +4863,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 181 "Group221"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 148 T 204 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 148 T 204 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4871,7 +4871,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 182 "Group222"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 178 T 205 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 178 T 205 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -4879,7 +4879,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 183 "Group223"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 148 T 206 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 148 T 206 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -4887,7 +4887,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 184 "Group224"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 178 T 207 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 178 T 207 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -4895,7 +4895,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 185 "Group225"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 218 T 208 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 218 T 208 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4903,7 +4903,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 186 "Group226"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 248 T 209 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 248 T 209 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4911,7 +4911,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 187 "Group227"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 218 T 210 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 218 T 210 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4919,7 +4919,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 188 "Group228"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 248 T 211 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 248 T 211 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4927,7 +4927,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 189 "Group229"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 218 T 212 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 218 T 212 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4935,7 +4935,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 190 "Group230"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 248 T 213 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 248 T 213 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -4943,7 +4943,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 191 "Group231"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 218 T 214 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 218 T 214 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -4951,7 +4951,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 192 "Group232"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 248 T 215 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 248 T 215 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -4959,7 +4959,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 193 "Group233"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 288 T 216 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 288 T 216 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -4967,7 +4967,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 194 "Group234"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 130 318 T 217 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 130 318 T 217 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -4975,7 +4975,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 195 "2"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 288 T 218 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 288 T 218 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -4983,7 +4983,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 196 "Group236"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 160 318 T 219 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 160 318 T 219 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -4991,7 +4991,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 197 "Group237"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 288 T 220 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 288 T 220 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -4999,7 +4999,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 198 "Group238"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 190 318 T 221 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 190 318 T 221 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5007,7 +5007,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 199 "Group239"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 288 T 222 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 288 T 222 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5015,7 +5015,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 200 "Group240"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 220 318 T 223 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 220 318 T 223 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5023,7 +5023,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 201 "Group273"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 78 T 224 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 78 T 224 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5031,7 +5031,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 202 "Group274"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 108 T 225 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 108 T 225 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5039,7 +5039,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 203 "3"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 78 T 226 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 78 T 226 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5047,7 +5047,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 204 "Group276"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 108 T 227 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 108 T 227 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5055,7 +5055,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 205 "Group277"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 78 T 228 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 78 T 228 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5063,7 +5063,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 206 "Group278"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 108 T 229 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 108 T 229 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5071,7 +5071,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 207 "Group279"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 78 T 230 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 78 T 230 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5079,7 +5079,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 208 "Group280"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 108 T 231 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 108 T 231 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5087,7 +5087,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 209 "Group281"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 148 T 232 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 148 T 232 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5095,7 +5095,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 210 "Group282"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 178 T 233 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 178 T 233 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5103,7 +5103,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 211 "Group283"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 148 T 234 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 148 T 234 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5111,7 +5111,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 212 "Group284"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 178 T 235 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 178 T 235 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5119,7 +5119,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 213 "Group285"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 148 T 236 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 148 T 236 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5127,7 +5127,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 214 "Group286"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 178 T 237 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 178 T 237 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5135,7 +5135,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 215 "Group287"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 148 T 238 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 148 T 238 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5143,7 +5143,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 216 "Group288"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 178 T 239 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 178 T 239 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5151,7 +5151,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 217 "Group289"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 218 T 240 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 218 T 240 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5159,7 +5159,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 218 "Group290"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 248 T 241 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 248 T 241 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5167,7 +5167,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 219 "Group291"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 218 T 242 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 218 T 242 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5175,7 +5175,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 220 "Group292"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 248 T 243 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 248 T 243 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5183,7 +5183,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 221 "Group293"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 218 T 244 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 218 T 244 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5191,7 +5191,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 222 "Group294"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 248 T 245 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 248 T 245 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5199,7 +5199,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 223 "Group295"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 218 T 246 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 218 T 246 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5207,7 +5207,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 224 "Group296"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 248 T 247 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 248 T 247 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5215,7 +5215,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 225 "Group297"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 288 T 248 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 288 T 248 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5223,7 +5223,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 226 "Group298"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 270 318 T 249 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 270 318 T 249 1 0 1  110 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5231,7 +5231,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 227 "Group299"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 288 T 250 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 288 T 250 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5239,7 +5239,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 228 "Group300"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 300 318 T 251 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 300 318 T 251 1 0 1  110 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5247,7 +5247,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 229 "Group301"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 288 T 252 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 288 T 252 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5255,7 +5255,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 230 "Group302"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 330 318 T 253 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 330 318 T 253 1 0 1  110 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5263,7 +5263,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 231 "Group303"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 288 T 254 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 288 T 254 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5271,7 +5271,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 232 "Group304"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 360 318 T 255 1 0 1  110 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 360 318 T 255 1 0 1  110 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5279,7 +5279,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 233 "Group337"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 78 T 256 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 78 T 256 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5287,7 +5287,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 234 "Group338"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 108 T 257 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 108 T 257 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5295,7 +5295,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 235 "Group339"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 78 T 258 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 78 T 258 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5303,7 +5303,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 236 "Group340"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 108 T 259 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 108 T 259 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5311,7 +5311,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 237 "Group341"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 78 T 260 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 78 T 260 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5319,7 +5319,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 238 "Group342"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 108 T 261 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 108 T 261 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5327,7 +5327,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 239 "Group343"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 78 T 262 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 78 T 262 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5335,7 +5335,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 240 "Group344"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 108 T 263 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 108 T 263 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5343,7 +5343,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 241 "Group345"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 148 T 264 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 148 T 264 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5351,7 +5351,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 242 "Group346"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 178 T 265 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 178 T 265 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5359,7 +5359,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 243 "Group347"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 148 T 266 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 148 T 266 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5367,7 +5367,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 244 "Group348"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 178 T 267 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 178 T 267 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5375,7 +5375,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 245 "Group349"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 148 T 268 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 148 T 268 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5383,7 +5383,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 246 "Group350"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 178 T 269 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 178 T 269 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5391,7 +5391,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 247 "Group351"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 148 T 270 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 148 T 270 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5399,7 +5399,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 248 "Group352"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 178 T 271 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 178 T 271 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5407,7 +5407,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 249 "Group353"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 218 T 272 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 218 T 272 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5415,7 +5415,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 250 "Group354"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 248 T 273 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 248 T 273 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5423,7 +5423,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 251 "Group355"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 218 T 274 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 218 T 274 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5431,7 +5431,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 252 "Group356"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 248 T 275 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 248 T 275 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5439,7 +5439,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 253 "Group357"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 218 T 276 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 218 T 276 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5447,7 +5447,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 254 "Group358"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 248 T 277 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 248 T 277 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5455,7 +5455,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 255 "Group359"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 218 T 278 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 218 T 278 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5463,7 +5463,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 256 "Group360"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 248 T 279 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 248 T 279 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5471,7 +5471,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 257 "Group361"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 288 T 280 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 288 T 280 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5479,7 +5479,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 258 "Group362"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 390 318 T 281 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 390 318 T 281 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5487,7 +5487,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 259 "Group363"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 288 T 282 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 288 T 282 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5495,7 +5495,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 260 "Group364"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 420 318 T 283 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 420 318 T 283 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5503,7 +5503,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 261 "Group365"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 288 T 284 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 288 T 284 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5511,7 +5511,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 262 "Group366"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 450 318 T 285 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 450 318 T 285 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5519,7 +5519,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 263 "Group367"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 288 T 286 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 288 T 286 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5527,7 +5527,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 264 "Group368"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 480 318 T 287 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 480 318 T 287 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5535,7 +5535,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 265 "Group401"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 78 T 288 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 78 T 288 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5543,7 +5543,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 266 "Group402"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 108 T 289 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 108 T 289 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5551,7 +5551,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 267 "Group403"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 78 T 290 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 78 T 290 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5559,7 +5559,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 268 "Group404"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 108 T 291 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 108 T 291 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5567,7 +5567,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 269 "Group405"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 78 T 292 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 78 T 292 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5575,7 +5575,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 270 "Group406"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 108 T 293 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 108 T 293 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5583,7 +5583,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 271 "Group407"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 78 T 294 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 78 T 294 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5591,7 +5591,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 272 "Group408"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 108 T 295 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 108 T 295 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5599,7 +5599,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 273 "Group409"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 148 T 296 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 148 T 296 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5607,7 +5607,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 274 "Group410"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 178 T 297 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 178 T 297 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5615,7 +5615,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 275 "Group411"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 148 T 298 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 148 T 298 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5623,7 +5623,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 276 "Group412"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 178 T 299 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 178 T 299 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5631,7 +5631,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 277 "Group413"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 148 T 300 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 148 T 300 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5639,7 +5639,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 278 "Group414"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 178 T 301 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 178 T 301 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5647,7 +5647,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 279 "Group415"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 148 T 302 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 148 T 302 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5655,7 +5655,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 280 "Group416"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 178 T 303 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 178 T 303 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5663,7 +5663,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 281 "Group417"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 218 T 304 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 218 T 304 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5671,7 +5671,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 282 "Group418"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 248 T 305 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 248 T 305 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5679,7 +5679,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 283 "Group419"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 218 T 306 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 218 T 306 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5687,7 +5687,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 284 "Group420"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 248 T 307 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 248 T 307 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5695,7 +5695,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 285 "Group421"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 218 T 308 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 218 T 308 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5703,7 +5703,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 286 "Group422"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 248 T 309 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 248 T 309 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5711,7 +5711,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 287 "Group423"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 218 T 310 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 218 T 310 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5719,7 +5719,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 288 "Group424"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 248 T 311 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 248 T 311 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5727,7 +5727,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 289 "Group425"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 288 T 312 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 288 T 312 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5735,7 +5735,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 290 "Group426"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 520 318 T 313 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 520 318 T 313 1 0 1  120 72  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5743,7 +5743,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 291 "Group427"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 288 T 314 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 288 T 314 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5751,7 +5751,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 292 "Group428"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 550 318 T 315 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 550 318 T 315 1 0 1  120 72  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5759,7 +5759,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 293 "Group429"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 288 T 316 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 288 T 316 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5767,7 +5767,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 294 "Group430"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 580 318 T 317 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 580 318 T 317 1 0 1  120 72  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5775,7 +5775,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 295 "Group431"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 288 T 318 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 288 T 318 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5783,7 +5783,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 296 "Group432"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 610 318 T 319 1 0 1  120 72  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 610 318 T 319 1 0 1  120 72  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5791,7 +5791,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 297 "Group465"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 78 T 320 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 78 T 320 1 0 1  -529 354  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5799,7 +5799,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 298 "Group466"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 108 T 321 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 108 T 321 1 0 1  -529 354  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5807,7 +5807,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 299 "Group467"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 78 T 322 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 78 T 322 1 0 1  -529 354  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5815,7 +5815,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 300 "Group468"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 108 T 323 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 108 T 323 1 0 1  -529 354  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5823,7 +5823,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 301 "Group469"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 78 T 324 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 78 T 324 1 0 1  -529 354  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5831,7 +5831,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 302 "Group470"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 108 T 325 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 108 T 325 1 0 1  -529 354  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5839,7 +5839,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 303 "Group471"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 78 T 326 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 78 T 326 1 0 1  -529 354  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5847,7 +5847,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 304 "Group472"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 108 T 327 1 0 1  -529 354  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 108 T 327 1 0 1  -529 354  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5855,7 +5855,7 @@ LANG:1 6 Layer8
 "$SubrackNr""0"
 "$datapoint""$datapoint"
 3 305 "Group473"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 148 T 328 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 148 T 328 1 0 1  -400 284  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5863,7 +5863,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 306 "Group474"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 178 T 329 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 178 T 329 1 0 1  -400 284  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5871,7 +5871,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 307 "Group475"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 148 T 330 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 148 T 330 1 0 1  -400 284  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5879,7 +5879,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 308 "Group476"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 178 T 331 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 178 T 331 1 0 1  -400 284  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5887,7 +5887,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 309 "Group477"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 148 T 332 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 148 T 332 1 0 1  -400 284  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5895,7 +5895,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 310 "Group478"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 178 T 333 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 178 T 333 1 0 1  -400 284  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5903,7 +5903,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 311 "Group479"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 148 T 334 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 148 T 334 1 0 1  -400 284  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5911,7 +5911,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 312 "Group480"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 178 T 335 1 0 1  -400 284  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 178 T 335 1 0 1  -400 284  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5919,7 +5919,7 @@ LANG:1 6 Layer8
 "$SubrackNr""1"
 "$datapoint""$datapoint"
 3 313 "Group481"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 218 T 336 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 218 T 336 1 0 1  -270 214  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5927,7 +5927,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 314 "Group482"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 248 T 337 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 248 T 337 1 0 1  -270 214  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5935,7 +5935,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 315 "Group483"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 218 T 338 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 218 T 338 1 0 1  -270 214  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -5943,7 +5943,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 316 "Group484"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 248 T 339 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 248 T 339 1 0 1  -270 214  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -5951,7 +5951,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 317 "Group485"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 218 T 340 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 218 T 340 1 0 1  -270 214  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -5959,7 +5959,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 318 "Group486"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 248 T 341 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 248 T 341 1 0 1  -270 214  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -5967,7 +5967,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 319 "Group487"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 218 T 342 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 218 T 342 1 0 1  -270 214  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -5975,7 +5975,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 320 "Group488"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 248 T 343 1 0 1  -270 214  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 248 T 343 1 0 1  -270 214  
 5
 "$APNr""3"
 "$RCUNr""1"
@@ -5983,7 +5983,7 @@ LANG:1 6 Layer8
 "$SubrackNr""2"
 "$datapoint""$datapoint"
 3 321 "Group489"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 288 T 344 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 288 T 344 1 0 1  -140 144  
 5
 "$APNr""0"
 "$RCUNr""0"
@@ -5991,7 +5991,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 322 "Group490"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 650 318 T 345 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 650 318 T 345 1 0 1  -140 144  
 5
 "$APNr""0"
 "$RCUNr""1"
@@ -5999,7 +5999,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 323 "Group491"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 288 T 346 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 288 T 346 1 0 1  -140 144  
 5
 "$APNr""1"
 "$RCUNr""0"
@@ -6007,7 +6007,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 324 "Group492"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 680 318 T 347 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 680 318 T 347 1 0 1  -140 144  
 5
 "$APNr""1"
 "$RCUNr""1"
@@ -6015,7 +6015,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 325 "Group493"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 288 T 348 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 288 T 348 1 0 1  -140 144  
 5
 "$APNr""2"
 "$RCUNr""0"
@@ -6023,7 +6023,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 326 "Group494"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 710 318 T 349 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 710 318 T 349 1 0 1  -140 144  
 5
 "$APNr""2"
 "$RCUNr""1"
@@ -6031,7 +6031,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 327 "Group495"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 288 T 350 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 288 T 350 1 0 1  -140 144  
 5
 "$APNr""3"
 "$RCUNr""0"
@@ -6039,7 +6039,7 @@ LANG:1 6 Layer8
 "$SubrackNr""3"
 "$datapoint""$datapoint"
 3 328 "Group496"
-"objects\\PIC\\STS_Antenna_LFA.pnl" 740 318 T 351 1 0 1  -140 144  
+"objects\\nav_usr\\STS\\STS_Antenna_LFA.pnl" 740 318 T 351 1 0 1  -140 144  
 5
 "$APNr""3"
 "$RCUNr""1"
