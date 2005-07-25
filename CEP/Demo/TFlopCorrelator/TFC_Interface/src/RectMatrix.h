@@ -118,6 +118,7 @@ RectMatrix<valueType>::RectMatrix(vector<DimDef>& dimdefv) :
 
 template <typename valueType>
 inline dimType& RectMatrix<valueType>::getDim(string dimName) {
+  DBGASSERTSTR(itsDimMap.find(dimName) != itsDimMap.end(), "Cannot find dimension " << dimName << " in this RectMatrix");
   return *itsDimMap[dimName];};
 
 template <typename valueType>
