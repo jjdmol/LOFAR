@@ -29,7 +29,7 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <bitset>
-#include <set>
+#include <list>
 
 #include <Timestamp.h>
 
@@ -59,7 +59,7 @@ namespace rspctl
       /**
        * Set selection.
        */
-      void setSelect(std::set<int> select) { m_select = select; }
+      void setSelect(std::list<int> select) { m_select = select; }
 
       /**
        * Get the RCU mask.
@@ -69,7 +69,7 @@ namespace rspctl
 	  std::bitset<MAX_N_RCUS> rcumask;
 
 	  rcumask.reset();
-	  std::set<int>::iterator it;
+	  std::list<int>::const_iterator it;
 	  for (it = m_select.begin(); it != m_select.end(); it++)
 	    {
 	      if (*it < MAX_N_RCUS) rcumask.set(*it);
@@ -102,9 +102,9 @@ namespace rspctl
       Command() : m_get(true) {}
 
     private:
-      std::set<int> m_select;
-      bool          m_get; // get or set
-      int           m_nrcus;
+      std::list<int> m_select;
+      bool           m_get; // get or set
+      int            m_nrcus;
     };
 
   class WeightsCommand : public Command
@@ -126,9 +126,9 @@ namespace rspctl
       virtual ~SubbandsCommand() {}
       virtual void send(GCFPortInterface& port);
       virtual GCFEvent::TResult ack(GCFEvent& e);
-      void setSubbandSet(std::set<int> subbandset) { m_subbandset = subbandset; }
+      void setSubbandList(std::list<int> subbandlist) { m_subbandlist = subbandlist; }
     private:
-      std::set<int> m_subbandset;
+      std::list<int> m_subbandlist;
     };
 
   class RCUCommand : public Command

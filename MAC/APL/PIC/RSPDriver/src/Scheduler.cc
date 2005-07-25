@@ -385,12 +385,15 @@ void Scheduler::scheduleCommands()
     if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
       //
-      // only schedule the period command when the period == 0
-      // or when update period has arrived (0 == m_current_time.sec() % command->getPeriod())
+      // only schedule the periodic command when the period == 0
+      // or when the time between now and the previous update is greater
+      // than the period. The timestamp of the command in the period queue
+      // is adjusted at each update to remember the previous update time.
       //
       if ((0 == command->getPeriod())
-	  || (0 == (m_current_time.sec() % command->getPeriod())))
+	  || (m_current_time >= command->getTimestamp() + command->getPeriod()))
       {
+	command->setTimestamp(command->getTimestamp() + command->getPeriod());
 	m_now_queue.push(command);
       }
     }

@@ -40,8 +40,6 @@ namespace RSP_Protocol
     MAX,
     MIN,
     PRODUCT,
-    MIN_INDEX,
-    MAX_INDEX,
   };
 
   class Statistics

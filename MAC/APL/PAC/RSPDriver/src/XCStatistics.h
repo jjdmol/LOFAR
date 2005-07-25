@@ -33,20 +33,6 @@ namespace LOFAR {
 
 namespace RSP_Protocol
 {
-#if 0 // not needed?
-  typedef enum XCStatsReduction
-  {
-    SUM = 1,
-    REPLACE,
-    MEAN,
-    MAX,
-    MIN,
-    PRODUCT,
-    MIN_INDEX,
-    MAX_INDEX,
-  };
-#endif
-
   class XCStatistics
   {
     public:

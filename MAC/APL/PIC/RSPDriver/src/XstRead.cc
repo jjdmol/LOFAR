@@ -144,7 +144,7 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 				       neverDeleteData);
 
     // convert and reorder dimensions
-    for (int i = offset; i < cache.extent(thirdDim); i++) {
+    for (int i = offset; i < cache.extent(fourthDim); i++) {
       for (int j = 0; j < MEPHeader::N_POL; j++) {
 	cache(m_regid % 2, j, global_blp, i)
 	  = convert_cuint32_to_cdouble(xststats(i-offset, j));

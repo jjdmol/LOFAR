@@ -17,6 +17,9 @@ AC_DEFINE_UNQUOTED([RSP_SYSCONF],["${prefix}/etc"],[Path to RSP install prefix d
 RSP_SYSCONF="${prefix}/etc"
 AC_SUBST([RSP_SYSCONF])
 
+PREFIX="${prefix}"
+AC_SUBST([PREFIX])
+
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC
@@ -81,5 +84,7 @@ dnl
 AC_OUTPUT(
 	Makefile
 	src/Makefile
+	src/rspd.ul
+	src/rspd
 	test/Makefile
 )

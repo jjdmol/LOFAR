@@ -25,18 +25,21 @@
 //#
 //# Usage:
 //#
-//# rspctl --weights        [--select=<set>] # get weights
-//# rspctl --weights=(0|1)  [--select=<set>] # set weights
-//# rspctl --subbands       [--select=<set>] # get subband selection
-//# rspctl --subbands=<set> [--select=<set>] # set subband selection
-//# rspctl --rcu            [--select=<set>] # get RCU control
-//# rspctl --rcu=0xce       [--select=<set>] # set RCU control
-//# rspctl --wg             [--select=<set>] # get waveform generator settings
-//# rspctl --wg=freq        [--select=<set>] # set wg freq is in Hz (float)
-//# rspctl --status         [--select=<set>] # get status
+//# rspctl --weights         [--select=<set>]  # get weights
+//# rspctl --weights=(0|1)   [--select=<set>]  # set weights
+//# rspctl --subbands        [--select=<set>]  # get subband selection
+//# rspctl --subbands=<list> [--select=<set>]  # set subband selection
+//#
+//# rspctl --rcu             [--select=<set>]  # get RCU control
+//# rspctl --rcu=0xce        [--select=<set>]  # set RCU control
+//# rspctl --wg              [--select=<set>]  # get waveform generator settings
+//# rspctl --wg=freq         [--select=<set>]  # set wg freq is in Hz (float)
+//# rspctl --status          [--select=<set>]  # get status
 //# rspctl --statistics[=(subband|beamlet)]
-//#                         [--select=<set>] # get subband (default) or beamlet statistics
-//# rspctl --version        [--select=<set>] # get version information
+//#                          [--select=<set>]  # get subband (default) or beamlet statistics
+//# rspctl --xcstatistics    [--select=<set>]  # get cross correlation statistics
+//# rspctl --xcsubband=<int>                   # set the subband to cross correlate
+//# rspctl --version         [--select=<set>]  # get version information
 //#
 
 #include "rspctl.h"
@@ -80,14 +83,14 @@ static Command* parse_options(int argc, char** argv);
 //
 #define SAMPLE_FREQUENCY 160.0e6
 
-static std::set<int> strtoset(const char* str, int max)
+static std::list<int> strtolist(const char* str, int max)
 {
   string inputstring(str);
   char* start = (char*)inputstring.c_str();
   char* end   = 0;
   bool  range = false;
   long prevval = 0;
-  set<int> resultset;
+  list<int> resultset;
 
   resultset.clear();
 
@@ -118,12 +121,12 @@ static std::set<int> strtoset(const char* str, int max)
 	      resultset.clear();
 	      return resultset;
 	    }
-	    for (long i = prevval; i <= val; i++) resultset.insert(i);
+	    for (long i = prevval; i <= val; i++) resultset.push_back(i);
 	  }
 	    
 	  else
 	  {
-	    resultset.insert(val);
+	    resultset.push_back(val);
 	  }
 	  range=false;
 	}
@@ -158,11 +161,7 @@ void WeightsCommand::send(GCFPortInterface& port)
 
     getweights.timestamp = Timestamp(0,0);
 
-    bitset<MAX_N_RCUS> mask = getRCUMask();
-    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
-      if (mask[rcu]) getweights.blpmask.set(rcu/2);
-    }
-
+    getweights.rcumask = getRCUMask();
     getweights.cache = true;
 
     port.send(getweights);
@@ -170,17 +169,11 @@ void WeightsCommand::send(GCFPortInterface& port)
     // SET
     RSPSetweightsEvent setweights;
     setweights.timestamp = Timestamp(0,0);
-    bitset<MAX_N_RCUS> mask = getRCUMask();
-    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
-      if (mask[rcu]) {
-	cerr << "blpmask[" << rcu/2 << "] set" << endl;
-	setweights.blpmask.set(rcu/2);
-      }
-    }
+    setweights.rcumask = getRCUMask();
 
-    cerr << "blpmask.count()=" << setweights.blpmask.count() << endl;
+    cerr << "rcumask.count()=" << setweights.rcumask.count() << endl;
 
-    setweights.weights().resize(1, get_nrcus()/2, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+    setweights.weights().resize(1, setweights.rcumask.count(), MEPHeader::N_BEAMLETS);
 
     // -1 < m_value <= 1
     double value = m_value;
@@ -203,13 +196,12 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 	bitset<MAX_N_RCUS> mask = getRCUMask();
 
 	if (SUCCESS == ack.status) {
-	  int blpin = 0;
+	  int rcuin = 0;
 	  for (int rcuout = 0; rcuout < get_nrcus(); rcuout++) {
 
 	    if (mask[rcuout]) {
 	      printf("RCU[%02d].weights=", rcuout);
-	      cout << ack.weights()(0, blpin++, Range::all(), Range::all()) << endl;
-	      rcuout++;
+	      cout << ack.weights()(0, rcuin++, Range::all()) << endl;
 	    }
 	  }
 	} else {
@@ -249,12 +241,7 @@ void SubbandsCommand::send(GCFPortInterface& port)
     RSPGetsubbandsEvent getsubbands;
 
     getsubbands.timestamp = Timestamp(0,0);
-
-    bitset<MAX_N_RCUS> mask = getRCUMask();
-    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
-      if (mask[rcu]) getsubbands.blpmask.set(rcu/2);
-    }
-
+    getsubbands.rcumask = getRCUMask();
     getsubbands.cache = true;
 
     port.send(getsubbands);
@@ -262,23 +249,17 @@ void SubbandsCommand::send(GCFPortInterface& port)
     // SET
     RSPSetsubbandsEvent setsubbands;
     setsubbands.timestamp = Timestamp(0,0);
-    bitset<MAX_N_RCUS> mask = getRCUMask();
-    for (int rcu = 0; rcu < get_nrcus(); rcu++) {
-      if (mask[rcu]) {
-	cerr << "blpmask[" << rcu/2 << "] set" << endl;
-	setsubbands.blpmask.set(rcu/2);
-      }
-    }
+    setsubbands.rcumask = getRCUMask();
 
-    cerr << "blpmask.count()=" << setsubbands.blpmask.count() << endl;
+    cerr << "rcumask.count()=" << setsubbands.rcumask.count() << endl;
 
-    setsubbands.subbands().resize(1,m_subbandset.size()*2);
+    setsubbands.subbands().resize(1, m_subbandlist.size());
 
-    std::set<int>::iterator it;
-    int i;
-    for (i = 0, it = m_subbandset.begin(); it != m_subbandset.end(); it++, i+=2) {
-      setsubbands.subbands()(0, i)   = (*it)*2;
-      setsubbands.subbands()(0, i+1) = (*it)*2+1;
+    int i = 0;
+    std::list<int>::iterator it;
+    for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++) {
+      if (i >= MEPHeader::N_SUBBANDS) break;
+      setsubbands.subbands()(0, i) = (*it);
     }
 
     port.send(setsubbands);
@@ -297,13 +278,12 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 	bitset<MAX_N_RCUS> mask = getRCUMask();
 
 	if (SUCCESS == ack.status) {
-	  int blpin = 0;
+	  int rcuin = 0;
 	  for (int rcuout = 0; rcuout < get_nrcus(); rcuout++) {
 
 	    if (mask[rcuout]) {
 	      printf("RCU[%02d].subbands=", rcuout);
-	      cout << ack.subbands()(blpin++, Range::all()) << endl;
-	      rcuout++;
+	      cout << ack.subbands()(rcuin++, Range::all()) << endl;
 	    }
 	  }
 	} else {
@@ -704,14 +684,10 @@ void XCStatisticsCommand::send(GCFPortInterface& port)
 void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, const Timestamp& timestamp)
 {
   LOG_INFO_STR("plot_xcstatistics (shape=" << xcstats.shape() << ") @ " << timestamp);
-  LOG_INFO_STR("XX.real()=" << real(xcstats(0,0,Range::all(),Range::all())));
-  LOG_INFO_STR("XX.imag()=" << imag(xcstats(0,0,Range::all(),Range::all())));
-  LOG_INFO_STR("XY.real()=" << real(xcstats(0,1,Range::all(),Range::all())));
-  LOG_INFO_STR("XY.imag()=" << imag(xcstats(0,1,Range::all(),Range::all())));
-  LOG_INFO_STR("YX.real()=" << real(xcstats(1,0,Range::all(),Range::all())));
-  LOG_INFO_STR("YX.imag()=" << imag(xcstats(1,0,Range::all(),Range::all())));
-  LOG_INFO_STR("YY.real()=" << real(xcstats(1,1,Range::all(),Range::all())));
-  LOG_INFO_STR("YY.imag()=" << imag(xcstats(1,1,Range::all(),Range::all())));
+  LOG_INFO_STR("XX()=" << xcstats(0,0,Range::all(),Range::all()));
+  LOG_INFO_STR("XY()=" << xcstats(0,1,Range::all(),Range::all()));
+  LOG_INFO_STR("YX()=" << xcstats(1,0,Range::all(),Range::all()));
+  LOG_INFO_STR("YY()=" << xcstats(1,1,Range::all(),Range::all()));
 
   xcstats(0,0,2,2) = 1.0;
 
@@ -801,7 +777,11 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
   RSPUpdxcstatsEvent upd(e);
 
   if (SUCCESS == upd.status) {
-    plot_xcstatistics(upd.stats(), upd.timestamp);
+    LOG_INFO_STR("XX()=" << upd.stats()(0,0,Range::all(),Range::all()));
+    LOG_INFO_STR("XY()=" << upd.stats()(0,1,Range::all(),Range::all()));
+    LOG_INFO_STR("YX()=" << upd.stats()(1,0,Range::all(),Range::all()));
+    LOG_INFO_STR("YY()=" << upd.stats()(1,1,Range::all(),Range::all()));
+    //plot_xcstatistics(upd.stats(), upd.timestamp);
   }
 #endif
 
@@ -977,19 +957,21 @@ static void usage()
   cout << "rspctl --status         [--select=<set>] # get status" << endl;
   cout << "rspctl --statistics[=(subband|beamlet)]" << endl;
   cout << "                        [--select=<set>] # get subband (default) or beamlet statistics" << endl;
+  cout << "rspctl --xcstatistics   [--select=<set>] # get crosscorrelation statistics" << endl;
+  cout << "rspctl --xcsubband=<int>                 # set the subband to cross correlate" << endl;
   cout << "rspctl --version        [--select=<set>] # get version information" << endl;
 }
 
 static Command* parse_options(int argc, char** argv)
 {
   Command *command = 0;
-  set<int> select;
+  list<int> select;
 
   //
   // --select defaults to all
   //
   for (int i = 0; i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL; i++) {
-    select.insert(i);
+    select.push_back(i);
   }
 
   optind = 0; // reset option parsing
@@ -1006,6 +988,7 @@ static Command* parse_options(int argc, char** argv)
 	  { "status",     no_argument,       0, 'q' },
 	  { "statistics", optional_argument, 0, 't' },
 	  { "xcstatistics", no_argument,     0, 'x' },
+	  { "xcsubband",  required_argument, 0, 'z' },
 	  { "version",    no_argument,       0, 'v' },
 	  { "help",       no_argument,       0, 'h' },
 	  
@@ -1022,10 +1005,10 @@ static Command* parse_options(int argc, char** argv)
 	{
 	case 'l':
 	  if (optarg) {
-	    select = strtoset(optarg,
-			      GET_CONFIG("RS.N_BLPS", i) *
-			      GET_CONFIG("RS.N_RSPBOARDS", i) *
-			      MEPHeader::N_POL);
+	    select = strtolist(optarg,
+			       GET_CONFIG("RS.N_BLPS", i) *
+			       GET_CONFIG("RS.N_RSPBOARDS", i) *
+			       MEPHeader::N_POL);
 	    if (select.empty()) {
 	      cerr << "Error: invalid or missing '--select' option" << endl;
 	      exit(EXIT_FAILURE);
@@ -1062,12 +1045,12 @@ static Command* parse_options(int argc, char** argv)
 	    
 	    if (optarg) {
 	      subbandscommand->setMode(false);
-	      set<int> subbandset = strtoset(optarg, MEPHeader::N_SUBBANDS);
-	      if (subbandset.empty()) {
+	      list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
+	      if (subbandlist.empty()) {
 		cerr << "Error: invalid or empty '--subbands' option" << endl;
 		exit(EXIT_FAILURE);
 	      }
-	      subbandscommand->setSubbandSet(subbandset);
+	      subbandscommand->setSubbandList(subbandlist);
 	    }
 	  }
 	  break;
@@ -1135,7 +1118,7 @@ static Command* parse_options(int argc, char** argv)
 		// default for beamlet stats select is N_RSPBOARDS * N_POL
 		select.clear();
 		for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL; i++) {
-		  select.insert(i);
+		  select.push_back(i);
 		}
 	      }
 	    }
@@ -1147,6 +1130,33 @@ static Command* parse_options(int argc, char** argv)
 	    if (command) delete command;
 	    XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand();
 	    command = xcstatscommand;
+	  }
+	  break;
+
+	case 'z':
+	  {
+	    if (command) delete command;
+	    SubbandsCommand* subbandscommand = new SubbandsCommand();
+	    command = subbandscommand;
+	    
+	    if (optarg) {
+	      subbandscommand->setMode(false);
+
+	      int subband = atoi(optarg);
+
+	      if (subband < 0 || subband >= MEPHeader::N_SUBBANDS) {
+		cerr << "Error: argument to --xcsubband out of range, value must be >= 0 and < " << MEPHeader::N_SUBBANDS << endl;
+		exit(EXIT_FAILURE);
+	      }
+
+	      list<int> subbandlist;
+	      for (int rcu = 0;
+		   rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
+		   rcu++) {
+		subbandlist.push_back(subband);
+	      }
+	      subbandscommand->setSubbandList(subbandlist);
+	    }
 	  }
 	  break;
 

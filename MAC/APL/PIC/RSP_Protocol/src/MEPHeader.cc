@@ -110,6 +110,7 @@ void MEPHeader::set(MEPHeader::FieldsType hdrtemplate,
 		    uint16 size,
 		    uint16 offset)
 {
+  memset(&m_fields, 0, sizeof(m_fields));
   m_fields = hdrtemplate;
 
   if (MEPHeader::TYPE_UNSET != type) m_fields.type = type;

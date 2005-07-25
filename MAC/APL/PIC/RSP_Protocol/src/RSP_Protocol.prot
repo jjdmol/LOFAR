@@ -28,10 +28,9 @@ include = '"MEPHeader.h"';
 
 prelude = << PRELUDE_END
 
-  static const int MAX_N_BLPS     = 128;
-  static const int MAX_N_RCUS     = MAX_N_BLPS * MEPHeader::N_POL;
-  static const int SUCCESS = 1;
-  static const int FAILURE = 0;
+  static const int MAX_N_RCUS = 128 * MEPHeader::N_POL;
+  static const int SUCCESS    = 1;
+  static const int FAILURE    = 0;
 
 PRELUDE_END;
 
@@ -55,8 +54,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "blpmask";
-    type = "std::bitset<MAX_N_BLPS>";
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "weights";
@@ -88,8 +87,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "blpmask";
-    type = "std::bitset<MAX_N_BLPS>";
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -128,8 +127,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "blpmask";
-    type = "std::bitset<MAX_N_BLPS>";
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "subbands";
@@ -161,8 +160,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "blpmask";
-    type = "std::bitset<MAX_N_BLPS>";
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "cache";
