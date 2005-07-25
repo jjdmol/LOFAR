@@ -74,11 +74,9 @@ DataHolder::DataHolder(const DataHolder& that)
 				     that.itsExtraPtr->getVersion(),
 				     this);
   }
-  if (that.itsBlobType != 0)
-  {
+  if (that.itsBlobType != 0) {
     itsBlobType = new BlobStringType(*(that.itsBlobType));
   }
-
   // Note: The data blob is not copied.
 }
   
@@ -202,7 +200,7 @@ void DataHolder::createDataBlock()
 //      itsIsAddMax = !itsDataCanGrow;	// @@@
     }
     // If no or an additive maximum, determine the blob length.
-    int  initsz    = itsMaxDataSize;
+    int initsz = itsMaxDataSize;
     if (itsMaxDataSize == 0  ||  !itsDataCanGrow) {
       initsz += itsDataFields.findBlobSize();
     }
@@ -228,6 +226,11 @@ void DataHolder::openDataBlock()
 
 void DataHolder::resizeBuffer (uint newSize)
 {
+  // If there is only an extra blob, the user might not have called
+  // createDataBlock. So call it if needed.
+  if (itsData == 0) {
+    createDataBlock();
+  }
   char* oldPtr = itsData->data();
   itsDataBlob->resize (newSize);
   if (oldPtr != itsData->data()) {
