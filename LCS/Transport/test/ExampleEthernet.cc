@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 #include "DH_Ethernet.h"
+#include <Transport/Connection.h>
 #include <Transport/TH_Ethernet.h>
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
@@ -35,62 +36,50 @@
 
 using namespace LOFAR;
 
+#define MESSAGE_SIZE 1000
 
-void sendData (DH_Ethernet& sender)
+void sendData (DH_Ethernet& sender, Connection& con)
 {
-  for (int i=0;i<368;i++) {
-    if (i <3 || i > 364) sender.getBuffer()[i] = '*';
-    else sender.getBuffer()[i] = '-';
+  for (int i=0;i<MESSAGE_SIZE;i++) {
+    if (i <3 || i > MESSAGE_SIZE - 4) 
+      sender.getBuffer()[i] = '*';
+    else 
+      sender.getBuffer()[i] = '-';
   }
-  sender.write();
-  if (sender.getID() == 1) cout << "sent " << sender.getDataSize() << " bytes" << endl; 
+  ASSERTSTR(con.write(), "Couldn't write");
+  cout << "sent " << sender.getDataSize() << " bytes" << endl; 
 }
 
-void receiveData (DH_Ethernet& receiver, DH_Ethernet& result)
+void receiveData (DH_Ethernet& receiver, Connection& con)
 {
-  result.read();
-  receiver.read();
-  ASSERT(receiver.getDataSize() == result.getDataSize());
-  cout << "Received " << result.getDataSize() << " bytes" << endl;
-  const char* data1 = static_cast<char*>(result.getDataPtr());
-  const char* data2 = static_cast<char*>(receiver.getDataPtr());
-  
-  for (int i=0; i<receiver.getDataSize(); i++) {
-    ASSERT(data1[i] == data2[i]);
+  ASSERTSTR(con.read(), "could not read");
+  cout << "Received " << receiver.getDataSize() << " bytes" << endl;
+  const char* data2 = static_cast<char*>(receiver.getBuffer());
+
+  for (int i=0;i<MESSAGE_SIZE;i++) {
+    if (i <3 || i > MESSAGE_SIZE - 4) {
+      ASSERTSTR(data2[i] == '*', "Received "<<data2[i]<<" instead of *");
+    } else {
+      ASSERTSTR(data2[i] == '-', "Received "<<data2[i]<<" instead of -");
+    }
   }
 }
 
 void test (bool isReceiver, string interface, string remoteMac, string ownMac)
 {
-  DH_Ethernet DH_Sender("dh_sender", 368);
-  DH_Ethernet DH_Receiver("dh_receiver", 368);
-  DH_Sender.setID(1);
-  DH_Receiver.setID(2);
+  DH_Ethernet DH_Sender("dh_sender", MESSAGE_SIZE);
+  DH_Ethernet DH_Receiver("dh_receiver", MESSAGE_SIZE);
   TH_Ethernet proto(interface, remoteMac, ownMac, 0x000);
-  
-  DH_Sender.connectTo (DH_Receiver, proto, true);
+  proto.init();
+  Connection conn("connection1", &DH_Sender, &DH_Receiver, &proto, true);
+
   if (isReceiver) { 
-    ASSERT(DH_Receiver.init() == true);
+    DH_Receiver.init();
+    receiveData (DH_Receiver, conn);
   }
   else { 
-    ASSERT(DH_Sender.init() == true);
-  }
-
-  //Use a TH_Mem to check if the ethernet receiver gets the correct data
-  DH_Ethernet dh1("dh1mem",368);
-  DH_Ethernet dh2("dh2mem",368);
-  dh1.setID(3);
-  dh2.setID(4);
-  dh1.connectTo(dh2, TH_Mem(), false);
-  dh1.init();
-  dh2.init();
-
-  if (isReceiver) {  
-    sendData (dh1);   
-    receiveData (DH_Receiver, dh2);
-  } else {
-    cout << "Send data1" << endl;
-    sendData(DH_Sender);
+    DH_Sender.init();
+    sendData(DH_Sender, conn);
   }
 }
 
@@ -120,7 +109,6 @@ int main (int argc, const char** argv)
       isReceiver = true;
       which = "Receiver";
     }
-    
 
     // Execute test
     test(isReceiver, (string)argv[2], (string)argv[3], ownMac);

@@ -50,10 +50,7 @@ public:
   DataHolder* clone() const;
 
   /// Allocate the buffers.
-  virtual void preprocess();
-
-  /// Deallocate the buffers.
-  virtual void postprocess();
+  virtual void init();
 
   /// Reset the buffer size.
   void setBufferSize (unsigned int nelements);
@@ -83,7 +80,6 @@ inline DH_Ethernet::BufferType* DH_Ethernet::getBuffer()
    
 inline const DH_Ethernet::BufferType* DH_Ethernet::getBuffer() const
   { return itsBuffer; }
-
 
 }
 

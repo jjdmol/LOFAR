@@ -14,6 +14,7 @@ check_PROGRAMS		  = Example \
 			    ExampleShMem \
 			    ExampleMPI \
 			    ExampleSocket \
+			    ExampleEthernet \
 			    tServer tClient
 
 Example_SOURCES 	  = Example.cc DH_Example.cc
@@ -33,6 +34,8 @@ ExampleMPI_SOURCES 	  = ExampleMPI.cc DH_Example.cc DH_ExampleExtra.cc
 TestBidirectional_SOURCES = TestBidirectional.cc DH_Example.cc
 
 ExampleSocket_SOURCES     = ExampleSocket.cc DH_Socket.cc
+
+ExampleEthernet_SOURCES	  = ExampleEthernet.cc DH_Ethernet.cc
 
 tServer_SOURCES		  = tServer.cc DH_Socket.cc
 
