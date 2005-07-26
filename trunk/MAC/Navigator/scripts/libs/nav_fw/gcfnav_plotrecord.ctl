@@ -2,14 +2,17 @@
 #uses "nav_fw/gcfnav-functions.ctl"
 #uses "nav_fw/gcfnav_view.ctl"
 global int g_counter=0;
-global string g_path_temp = "c:/aa";
+global string g_path_temp = "";
 global dyn_string recordList;
+global string g_path_gnuplot;
+global string g_path_pictureconverter;
+
 main()
 {
-  //Set the output to ""
-  dpSet("__navigator.recordRCV", "");
+  dpSet("__navigator.recordRCV", "");    //Set the output to ""
   //Connects to the datapoint .CMD, this is the commandInput the this
   //function.
+  navConfigInitPathNames();
   dpConnect("navViewPlotRecordMain", FALSE, "__navigator.recordCMD");
 }
 
