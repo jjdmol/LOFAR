@@ -27,6 +27,9 @@ int main (int argc, const char** argv) {
       LOG_TRACE_FLOW("Main program not started by ACC");
       // there are no commandline arguments, so we were not called by ACC
       AH_InputSection myAH;
+
+      ACC::APS::ParameterSet ps("TFlopCorrelator.cfg"); 
+      myAH.setParameters(ps);
       
       myAH.setarg(argc, argv);
       myAH.baseDefine();

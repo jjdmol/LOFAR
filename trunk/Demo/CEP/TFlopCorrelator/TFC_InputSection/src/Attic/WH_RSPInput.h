@@ -40,28 +40,35 @@ namespace LOFAR
   
   typedef struct 
   {
-    char packet[9000];
+    char data[8]; // (2 * u16complex)
+  } subbandType;
+
+  typedef struct
+  {
+    int stationid;
     int invalid;
     timestamp_t timestamp;
-  } dataType;
+  } metadataType;
 
   typedef struct 
   {
-    BufferController<dataType>* databuffer;
-    TH_Ethernet* connection; 
-    int framesize;
-    int packetsinframe;
+    BufferController<subbandType>** SubbandBuffer;
+    BufferController<metadataType>** MetadataBuffer;
+    TH_Ethernet* Connection; 
+    int FrameSize;
+    int SubbandSize;
+    int nrPacketsInFrame;
+    int nrSubbandsInPacket;
     int nrRSPoutputs;
-    TinyDataManager* datamanager;
-    bool syncmaster;
-    bool stopthread;
+    TinyDataManager* Datamanager;
+    bool Syncmaster;
+    bool Stopthread;
   }  thread_args;
 
   
   class WH_RSPInput: public WorkHolder
   {
     public:
-      //typedef TimeStamp timestamp_t;
 
       explicit WH_RSPInput(const string& name, 
                            const ACC::APS::ParameterSet pset,
@@ -113,11 +120,13 @@ namespace LOFAR
       int itsSzRSPframe;
       int itsNpackets;
       int itsNRSPOutputs;
-
-      // cyclic buffer for rsp-data
-      BufferController<dataType> *itsDataBuffer;
-
-      static uint16 theirNextUID;  ///>>> Temporary: for testing purposes
+      int itsNSubbands;
+      int itsNSamplesToCopy;
+      int itsNPolarisations;
+      int itsCyclicBufferSize;
+     
+      BufferController<subbandType> **itsSubbandBuffer;
+      BufferController<metadataType> **itsMetadataBuffer;
   };
 
 } // namespace LOFAR
