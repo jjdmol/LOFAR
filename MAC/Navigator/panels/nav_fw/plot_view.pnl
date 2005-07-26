@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 4 view
-PANEL,426 404 950 740 N "_3DFace" 2
+PANEL,246 168 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -436,7 +436,7 @@ void navViewPlotContextMenu()
     case 3:
       dpGet(\"__navigator.viewsPath\", viewsPath);
       ChildPanelOnCentralModalReturn(viewsPath + \"plot_view_ranges.pnl\",
-	                             \"Configure local settings\",
+	                             \"Configure X and Y ranges\",
 	                             makeDynString(\"$configDatapoint:\" + $configDatapoint,
 				                                     \"$datapoint:\" + $datapoint,
 				                                     \"$xrangeMin:\" + xrangeMin,
