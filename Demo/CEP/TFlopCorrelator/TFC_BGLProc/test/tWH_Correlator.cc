@@ -41,10 +41,12 @@ namespace LOFAR
   {}
 
   AH_Correlator::~AH_Correlator() {
+    
+    this->undefine();
+
   }
   
-  void AH_Correlator::define(const KeyValueMap& kvm) {
-    KeyValueMap myKvm(kvm);
+  void AH_Correlator::define(const KeyValueMap& /*kvm*/) {
 
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
@@ -65,19 +67,25 @@ namespace LOFAR
 				itsOutDH1, 
 				itsTH, 
 				false);
+
+    
   }
 
   void AH_Correlator::init() {
     itsWH->basePreprocess();
 
     // Fill inDHs here
-    static_cast<DH_CorrCube*>(itsInDH1)->setTestPattern();
+    static_cast<DH_CorrCube*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
   }
 
   void AH_Correlator::run(int steps) {
     for (int i = 0; i<steps; i++) {
       itsWH->baseProcess();
     }
+  }
+
+  void AH_Correlator::dump() const {
+    itsWH->dump();
   }
 
   void AH_Correlator::postrun() {
@@ -89,22 +97,10 @@ namespace LOFAR
     delete itsWH;
 
     delete itsInDH1; 
-    delete itsInDH2; 
-
     delete itsOutDH1;
-    delete itsOutDH2;
-    delete itsOutDH3;
-    delete itsOutDH4;
-    delete itsOutDH5;
     
     delete itsInCon1;
-    delete itsInCon2;
-
     delete itsOutCon1;
-    delete itsOutCon2;
-    delete itsOutCon3;
-    delete itsOutCon4;
-    delete itsOutCon5;
   }
 
   void AH_Correlator::quit() {
@@ -122,6 +118,7 @@ int main (int argc, const char** argv) {
     test.baseDefine();
     test.basePrerun();
     test.baseRun(1);
+    test.baseDump();
     test.basePostrun();
     test.baseQuit();
 
