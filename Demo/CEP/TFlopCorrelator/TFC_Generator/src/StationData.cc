@@ -21,24 +21,37 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 #include <TFC_Generator/StationData.h>
 
 namespace LOFAR
 {
-  EpaPacket::EpaPacket(char* bufferSpace, int bufferSize, ParameterSet ps)
-    : itsBufferp(bufferSpace)
-  {
-    int noSubBands = ps.getInt("noSubBands");
-    itsBufferSize = sizeof(EpaHeader) + noSubBands * 2 * sizeof(complex<int16>);
+  // EpaHeader constructor and destructor
+  EpaHeader::EpaHeader(char* bufferP)
+    : itsBufferp(bufferP)
+  {};
 
-    ASSERSTR(bufferSize == itsBufferSize, "EpaPacket received the wrong amount of buffer data");
+  EpaHeader::~EpaHeader()
+  {};
+
+
+  // EpaPacket constructor and destructor
+  EpaPacket::EpaPacket(char* bufferSpace, int bufferSize, ParameterSet ps)
+    : itsBufferp(bufferSpace),
+      itsEpaHeader(bufferSpace),
+      itsMatrix(0)
+  {
+    int NoSubbands = ps.getInt32("NoSubbands");
+    int BufferSize = EpaHeader::getSize() + NoSubbands * 2 * sizeof(dataType);
+
+    ASSERTSTR(bufferSize == BufferSize, "EpaPacket received the wrong amount of buffer data");
     
     // create the RectMatrix
     vector<DimDef> vdd;
-    vdd.push_back(DimDef("subband", noSubBands));
+    vdd.push_back(DimDef("subband", NoSubbands));
     vdd.push_back(DimDef("polarisatie", 2));
-    itsMatrix = new RectMatrix<complex<int16> >(vdd);
-    itsMatrix->setBuffer(itsBufferp + sizeof(EpaHeader), 2*noSubBands);
+    itsMatrix = new RectMatrix<dataType>(vdd);
+    itsMatrix->setBuffer((dataType*)(itsBufferp + EpaHeader::getSize()), 2*NoSubbands);
   };
 
   EpaPacket::~EpaPacket()
@@ -46,14 +59,16 @@ namespace LOFAR
     delete itsMatrix;
   };
 
+  // EthernetFrame constructor and destructor
   EthernetFrame::EthernetFrame(ParameterSet ps) 
   {
-    int noEpaP = ps.getInt("noEpaPackets");
-    int noSubBands = ps.getInt("noSubBands");
-    int epaSize = sizeof(EpaHeader) + noSubBands * 2 * sizeof(complex<int16>);
-    itsBufferp = new char[noEpap * epaSize];
+    int noEpaP = ps.getInt32("NoPacketsInFrame");
+    int NoSubbands = ps.getInt32("NoSubbands");
+    int epaSize = EpaHeader::getSize() + NoSubbands * 2 * sizeof(dataType);
+    itsBufferSize = noEpaP * epaSize;
+    itsBufferp = new char[itsBufferSize];
     for (int epap = 0; epap < noEpaP; epap++) {
-      itsEpaPackets.append(new EpaPacket(itsBufferp[epap * epaSize], epaSize, ps));
+      itsEpaPackets.push_back(new EpaPacket(&(itsBufferp[epap * epaSize]), epaSize, ps));
     }
   };
 
@@ -61,11 +76,65 @@ namespace LOFAR
   {
     vector<EpaPacket*>::iterator epap = itsEpaPackets.begin();
     for (; epap != itsEpaPackets.end(); epap++) {
-      delete epap->second;
+      delete *epap;
     }
     delete [] itsBufferp;
   };
+
+
+  // Some accessors to the EpaHeader that could not be inlined because
+  //   of the ifdef WORDS_BIGENDIAN
+  int16 EpaHeader::getProtocol()
+  { 
+#ifdef WORDS_BIGENDIAN
+    int16 ret;
+    char* valuep = (char*)&ret;
+    valuep[0] = itsBufferp[1];
+    valuep[1] = itsBufferp[0];
+    return ret;
+#else 
+    return (int16)itsBufferp[0];
+#endif
+  };
+  void EpaHeader::setProtocol(int16 newProt)
+  {
+#ifdef WORDS_BIGENDIAN
+    itsBufferp[0] = ((const char*)(&newProt))[1];
+    itsBufferp[1] = ((const char*)(&newProt))[0];
+#else 
+    itsBufferp[0] = ((const char*)(&newProt))[0];
+    itsBufferp[1] = ((const char*)(&newProt))[1];
+#endif
+  };
+
+  int32 EpaHeader::getInt32(char* memLoc)
+  {
+#ifdef WORDS_BIGENDIAN
+    int32 ret;
+    char* valuep = &ret;
+    valuep[0] = memloc[3];
+    valuep[1] = memloc[2];
+    valuep[2] = memloc[1];
+    valuep[3] = memloc[0];
+    return ret;
+#else 
+    return ((int32*)memLoc)[0];
+#endif
+  }
+  void EpaHeader::setInt32(char* memLoc, const char* newValueP)
+  {
+#ifdef WORDS_BIGENDIAN
+    memLoc[0] = (newValueP)[3];
+    memLoc[1] = (newValueP)[2];
+    memLoc[2] = (newValueP)[1];
+    memLoc[3] = (newValueP)[0];
+#else 
+    memLoc[0] = (newValueP)[0];
+    memLoc[1] = (newValueP)[1];
+    memLoc[2] = (newValueP)[2];
+    memLoc[3] = (newValueP)[3];
+#endif
+  }
   
 } // namespace LOFAR
 
-#endif

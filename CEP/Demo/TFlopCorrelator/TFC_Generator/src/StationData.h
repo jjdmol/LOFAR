@@ -24,58 +24,113 @@
 #define TFC_STATIONDATA_H
 
 #include <APS/ParameterSet.h>
-#include <lofar_vector.h>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_complex.h>
 #include <TFC_Interface/RectMatrix.h>
 
 namespace LOFAR
 {
-  struct EpaHeader
+  typedef TYPES::i16complex dataType;
+  using ACC::APS::ParameterSet;
+  
+  // EpaHeader is the class that represents the header data of the epa packet
+  // it contains the following fields:
+  //   protocol(int16)
+  //   stationId(int32)
+  //   sequenceId(int32)
+  //   blockId(int32)
+  // Because there is an int16 in here, we need to do some strange copying with pointers
+  // These operations are defined below.
+  class EpaHeader
   {
-    int16 protocol;
-    int32 stationId;
-    int32 seqId;
-    int32 blockId;
-  }
+  public:
+    ~EpaHeader();
 
+    int16 getProtocol();
+    void setProtocol(int16 newProt);
+    int32 getStationId();
+    void setStationId(int32 newSid);
+    int32 getSeqId();
+    void setSeqId(int32 newSid);
+    int32 getBlockId();
+    void setBlockId(int32 newBid);
+    static int getSize();
+  protected:
+    EpaHeader(EpaHeader&);
+    int32 getInt32(char* memLoc);
+    void setInt32(char* memLoc, const char* newValueP);
+    friend class EpaPacket;
+    EpaHeader(char* bufferSpace);
+    char* itsBufferp;
+  };
+
+
+  // EpaPacket represents 1 packet in an ethernet frame
+  // it contains:
+  //    1 EpaHeader 
+  //    a matrix containing:
+  //       NoSubbands * noPolarisations(=2) * complex<int16>
   class EpaPacket
   {
   public:
     ~EpaPacket();
 
     EpaHeader& getHeader();
-    void setHeader(EpaHeader& newHeader);
-    RectMatrix< complex<int16> >& getMatrix();
+    RectMatrix<dataType>& getMatrix();
   protected:
+    EpaPacket(EpaPacket&);
     friend class EthernetFrame;
     // a packet should be constructed only by a EthernetFrame
     EpaPacket(char* bufferSpace, int bufferSize, ParameterSet ps);
 
     char* itsBufferp;
-    RectMatrix* itsMatrix;
-  }
+    EpaHeader itsEpaHeader;
+    RectMatrix<dataType>* itsMatrix;
+  };
 
+  // EthernetFrame represents the contents of an Ethernet frame
+  // it contains a NoPacketsInFrame EpaPackets
+  // it contains a buffer that holds all the actual data (from the header and the packets)
+  // this data can be retreived by using getPayloadp() and getPayloadSize()
   class EthernetFrame
   {
   public:
-    EthernetFrame(itsPS);
+    EthernetFrame(ParameterSet ps);
     ~EthernetFrame();
+    int getNoPacketsInFrame();
     EpaPacket& getEpaPacket(int index);
     char* getPayloadp();
     int getPayloadSize();
     void reset();
   protected:
+    EthernetFrame(EthernetFrame&);
     vector<EpaPacket*> itsEpaPackets;
     char* itsBufferp;
     int itsBufferSize;
   };
 
+  inline int EpaHeader::getSize()
+  { return 14; };
+  inline int32 EpaHeader::getStationId()
+  { return getInt32(&itsBufferp[2]); };
+  inline void EpaHeader::setStationId(int32 sid)
+  { setInt32(&itsBufferp[2], (const char*)&sid); };
+  inline int32 EpaHeader::getSeqId()
+  { return getInt32(&itsBufferp[6]); };
+  inline void EpaHeader::setSeqId(int32 sid)
+  { setInt32(&itsBufferp[6], (const char*)&sid); };
+  inline int32 EpaHeader::getBlockId()
+  { return getInt32(&itsBufferp[10]); };
+  inline void EpaHeader::setBlockId(int32 bid)
+  { setInt32(&itsBufferp[10], (const char*)&bid); };
+
   inline EpaHeader& EpaPacket::getHeader()
-    { return *((EpaHeader*)itsBufferp); };
-  inline void EpaPacket::setHeader(EpaHeader& newHeader)
-    { memcpy(itsBufferp, &newHeader, sizeof(EpaHeader));};
-  inline RectMatrix< complex<int16> >& EpaPacket::getMatrix()
+    { return itsEpaHeader; };
+  inline RectMatrix<dataType>& EpaPacket::getMatrix()
     { return *itsMatrix; };
 
+  inline int EthernetFrame::getNoPacketsInFrame()
+    { return itsEpaPackets.size(); };
   inline EpaPacket& EthernetFrame::getEpaPacket(int index)
     { return *(itsEpaPackets[index]); };
   inline char* EthernetFrame::getPayloadp()
@@ -83,8 +138,8 @@ namespace LOFAR
   inline int EthernetFrame::getPayloadSize()
     { return itsBufferSize; };
   inline void EthernetFrame::reset()
-    { memset(itsBufferp, 0, itsBufferSize);};
-  }   
+    { memset(itsBufferp, 0, itsBufferSize); };
+  
 
 } // namespace LOFAR
 

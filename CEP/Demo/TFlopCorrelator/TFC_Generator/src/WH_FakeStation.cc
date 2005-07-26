@@ -33,30 +33,40 @@
 
 using namespace LOFAR;
 
+int WH_FakeStation::theirNoRunningWHs = 0;
+int WH_FakeStation::theirNoAlarms = 0;
+bool WH_FakeStation::theirTimerSet = 0;
+
 WH_FakeStation::WH_FakeStation(const string& name, 
 			       const ParameterSet ps,
-			       TransportHolder& th)
+			       TransportHolder& th,
+			       const int stationID)
   : WorkHolder (0, 0,
 		name, 
 		"WH_FakeStation"),
     itsPS(ps),
-    itsTH(th)
+    itsTH(th),
+    itsEthFrame(ps)
 {
+  itsFrequency = ps.getDouble("Generator.OutputRate") / ps.getInt32("NoPacketsInFrame");
+  itsStationId = stationID;
+  // cout<<"myStationId = "<<itsStationId<<endl;
 }
 
 WH_FakeStation::~WH_FakeStation() {
 }
 
 WorkHolder* WH_FakeStation::construct(const string& name,
-			       const ParameterSet ps,
-			       TransportHolder& th)
+				      const ParameterSet ps,
+				      TransportHolder& th,
+				      const int stationID)
 {
-  return new WH_FakeStation(name, ps, th);
+  return new WH_FakeStation(name, ps, th, stationID);
 }
 
 WH_FakeStation* WH_FakeStation::make(const string& name)
 {
-  return new WH_FakeStation(name, itsPS, itsTH);
+  return new WH_FakeStation(name, itsPS, itsTH, itsStationId);
 }
 
 void WH_FakeStation::preprocess() 
@@ -67,10 +77,13 @@ void WH_FakeStation::preprocess()
     ASSERTSTR(ret != SIG_ERR, "WH_FakeStation couldn't set signal handler for timer");    
     struct itimerval value;
     memset (&value, 0, sizeof(itimerval));
-    value.it_interval.tv_sec = ;
-    value.it_interval.tv_usec = ;
-    value.it_value.tv_sec = ;
-    value.it_value.tv_usec = ;
+
+    double time = 1/itsFrequency;    
+    value.it_interval.tv_sec = (__time_t) floor(time);
+    value.it_interval.tv_usec = (__time_t) (1e6 * (time - floor(time)));
+    value.it_value.tv_sec = (__time_t) floor(time);
+    value.it_value.tv_usec = (__time_t) (1e6 * (time - floor(time)));
+
     setitimer(ITIMER_REAL, &value, 0);
   }
   theirNoRunningWHs++;
@@ -79,27 +92,39 @@ void WH_FakeStation::preprocess()
 void WH_FakeStation::process() 
 {
   itsEthFrame.reset();
-  EpaHeader myHeader;
-  myHeader.protocol = 0; // what was the number here?
-  myHeader.stationId = itsStationId;
 
-  for (int epap = 0; epap < noEpaP; epap++) {
-    myHeader.seqId = itsStamp.getSeqId();
-    myHeader.blockId = itsStamp.getBlockId();
-    itsEthFrame.getEpaPacket(epap).setHeader(myHeader);
+  for (int epap = 0; epap < itsEthFrame.getNoPacketsInFrame(); epap++) {
+    EpaHeader& header = itsEthFrame.getEpaPacket(epap).getHeader();
+    header.setProtocol(43691);
+    header.setStationId(itsStationId);
+    header.setSeqId(itsStamp.getSeqId());
+    header.setBlockId(itsStamp.getBlockId());
     itsStamp++;
     // don't touch the data, it is already zero
+
+    RectMatrix<dataType>& myMatrix = itsEthFrame.getEpaPacket(epap).getMatrix();
+    dimType sbDim = myMatrix.getDim("subband");
+    RectMatrix<dataType>::cursorType cursor = myMatrix.getCursor(0*sbDim);
+    for (int sb = 0; sb < myMatrix.getNElemInDim(sbDim); myMatrix.moveCursor(&cursor, sbDim), sb++) {
+      myMatrix.setValue(cursor, makei16complex(sb, 0));
+    }
   }
 
+  int timerCount = 0;
   while (theirNoAlarms == 0) 
   {
+    timerCount ++;
     // wait for alarm to go off
     boost::thread::yield();
   };
+  cout<<"yield was called "<< timerCount << " times"<<endl;
 
   // we handled one alarm, so decrease it
   theirNoAlarms--;
-  itsTH.sendBlocking(itsEthFrame.getPayloadp(), itsEthFrame.getPayloadSize(), 0);
+  //cout<<"sending from "<<(void*)itsEthFrame.getPayloadp()<<" size "<< itsEthFrame.getPayloadSize()<<endl;
+  bool ret = itsTH.sendBlocking(itsEthFrame.getPayloadp(), itsEthFrame.getPayloadSize(), 0);
+  ASSERTSTR(ret, "TH couldn't send data");
+  //cout<<"succesfully sent"<<endl;
 }
 
 void WH_FakeStation::postprocess() 

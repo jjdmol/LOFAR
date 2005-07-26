@@ -12,6 +12,7 @@
 #define AH_INPUTSECTION_H
 
 #include <CEPFrame/ApplicationHolder.h>
+#include <Transport/TransportHolder.h>
 #include <tinyCEP/WorkHolder.h>
 #include <CEPFrame/Step.h>
 
@@ -34,6 +35,7 @@ class AH_FakeStation: public LOFAR::ApplicationHolder
  private:
 
   vector<WorkHolder*> itsWHs;
+  vector<TransportHolder*> itsTHs;
   vector<Step*> itsSteps;
 
 };
