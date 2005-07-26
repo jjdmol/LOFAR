@@ -120,7 +120,7 @@ void WH_Transpose::process() {
 }
 
 
-void WH_Transpose::dump() {
+void WH_Transpose::dump() const {
   
 
   

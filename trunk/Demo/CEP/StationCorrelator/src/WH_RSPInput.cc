@@ -266,7 +266,7 @@ void WH_RSPInput::postprocess() {
   cout<<"[P="<<itsNoPackets<<",M="<<itsNoMissed<<",O="<<itsNoOld<<",OK="<<itsNoOk<<"]"<<endl;
 }
 
-void WH_RSPInput::dump() {
+void WH_RSPInput::dump() const {
   cout<<"DUMP OF WH_RSPInput: "<<getName()<<endl;
   cout<<"[P="<<itsNoPackets<<",M="<<itsNoMissed<<",O="<<itsNoOld<<",OK="<<itsNoOk<<"]"<<endl;
   DH_RSP* inDHp;

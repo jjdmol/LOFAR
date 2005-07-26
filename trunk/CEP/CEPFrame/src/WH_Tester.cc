@@ -64,7 +64,7 @@ void WH_Tester::process()
              ((DH_Tester*)getDataManager().getInHolder(0))->getCounter() + 1);
 }
 
-void WH_Tester::dump()
+void WH_Tester::dump() const
 {
   cout << "WH_Tester" << endl;
   cout << "Counter   " << 0 << " = "

@@ -142,7 +142,7 @@ void WH_RSP::process()
   theirInvalidDataState.leave();
 }
 
-void WH_RSP::dump() {
+void WH_RSP::dump() const{
   cout<<"DUMP OF WH_RSP: "<<getName()<<endl;
   DH_RSP* inDHp;
   DH_StationData* outDHp;

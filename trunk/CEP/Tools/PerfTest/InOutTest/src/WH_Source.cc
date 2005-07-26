@@ -65,7 +65,7 @@ void WH_Source::process()
   itsIteration++;
 }
 
-void WH_Source::dump()
+void WH_Source::dump() const
 {
   cout << "WH_Source " << getName() << " dump:" << endl;
   getDataManager().getOutHolder(0)->dump();

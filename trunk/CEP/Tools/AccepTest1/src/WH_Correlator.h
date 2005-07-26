@@ -42,7 +42,7 @@ class WH_Correlator: public WorkHolder
   virtual WH_Correlator* make (const string& name);
   
   virtual void process();
-  virtual void dump();
+  virtual void dump() const;
 
   double getBandwidth() ;
   double getAggBandwidth() ;

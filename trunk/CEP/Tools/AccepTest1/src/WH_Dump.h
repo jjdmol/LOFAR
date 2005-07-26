@@ -45,7 +45,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump();
+  virtual void dump() const;
 
   float getBandwidth();
 

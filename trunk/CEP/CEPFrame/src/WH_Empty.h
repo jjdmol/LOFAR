@@ -59,7 +59,7 @@ class WH_Empty: public WorkHolder
   void process();
 
   /// Show the work holder on stdout.
-  void dump();
+  void dump() const;
 
   /// Example Monitoring output
   virtual int getMonitorValue(const char* name);

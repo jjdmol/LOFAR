@@ -118,7 +118,7 @@ WorkHolder* WorkHolder::baseMake()
   return whp;
 }
 
-void WorkHolder::dump()
+void WorkHolder::dump() const
 {
   if (shouldProcess())
   {

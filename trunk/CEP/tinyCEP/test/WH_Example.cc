@@ -113,7 +113,7 @@ namespace LOFAR
     }
   }
   
-  void WH_Example::dump() {
+  void WH_Example::dump() const{
     
     DH_Example* InDHptr = (DH_Example*)getDataManager().getInHolder(0);
     DH_Example* OutDHptr = (DH_Example*)getDataManager().getOutHolder(0);

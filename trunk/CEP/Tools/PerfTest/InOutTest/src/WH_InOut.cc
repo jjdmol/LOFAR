@@ -77,7 +77,7 @@ void WH_InOut::process()
     cout << outbuf[0] << ',' << outbuf[itsBufLength-1] << endl;
 }
 
-void WH_InOut::dump()
+void WH_InOut::dump() const
 {
   cout << "WH_InOut " << getName() << " dump:" << endl;
  ((DH_Example*)getDataManager().getInHolder(0))->dump();

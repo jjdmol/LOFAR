@@ -69,7 +69,7 @@ void WH_TestAutoTrigger::process()
   }
 }
 
-void WH_TestAutoTrigger::dump()
+void WH_TestAutoTrigger::dump() const
 {
    cout << "Cnt=" << itsEventCount << ",  Input buffer=";
    cout << ((DH_Tester*)getDataManager().getInHolder(0))->getCounter() << "   ";

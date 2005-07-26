@@ -155,7 +155,7 @@ void WH_Dump::postProcess() {
   itsOutputFile = 0;
 }
 
-void WH_Dump::dump() {
+void WH_Dump::dump() const{
   cout<<"DUMP OF WH_DUMP: "<<getName()<<endl;
   DH_Vis* dhp;
   for (int i=0; i<itsNinputs; i++) {

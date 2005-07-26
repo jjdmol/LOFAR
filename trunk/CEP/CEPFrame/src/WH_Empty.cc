@@ -55,7 +55,7 @@ WH_Empty* WH_Empty::make (const string& name)
 void WH_Empty::process()
 {}
 
-void WH_Empty::dump()
+void WH_Empty::dump() const
 {
   LOG_TRACE_FLOW("WH_Empty Dump");
 }

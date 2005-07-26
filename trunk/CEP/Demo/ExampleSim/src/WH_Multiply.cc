@@ -89,7 +89,7 @@ void WH_Multiply::process()
   dump();
 }
 
-void WH_Multiply::dump()
+void WH_Multiply::dump() const
 {
   cout << getName() << endl;
   cout << "Counter" << " = "
