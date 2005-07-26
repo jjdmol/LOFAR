@@ -72,7 +72,7 @@ namespace RSP_Protocol
        * Dimension 1: nr_timesteps (>1)
        * Dimension 2: count(rcumask)
        * Dimension 3: N_BEAMLETS
-       * REMOVED, now using rcumask... Dimension 4: 2 (polarizations)
+       * REMOVED Dimension 4, now using rcumask...
        */
       blitz::Array<std::complex<int16>, NDIM> m_weights;
   };
