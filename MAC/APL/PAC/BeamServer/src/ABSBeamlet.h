@@ -112,7 +112,7 @@ namespace ABS
 	   * for the specified number of time steps.
 	   */
 	  static void calculate_weights(const blitz::Array<W_TYPE, 3>&               pos,
-					      blitz::Array<std::complex<W_TYPE>, 4>& weights);
+					      blitz::Array<std::complex<W_TYPE>, 3>& weights);
 
       protected:
 	  Beamlet(); // no direct construction

@@ -70,8 +70,8 @@ using namespace RSP_Protocol;
 BeamServerTask::BeamServerTask(string name, int n_blps)
     : GCFTask((State)&BeamServerTask::initial, name),
       m_pos(n_blps, MEPHeader::N_POL, N_DIM),
-      m_weights(COMPUTE_INTERVAL, n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
-      m_weights16(COMPUTE_INTERVAL, n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
+      m_weights(COMPUTE_INTERVAL, n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS),
+      m_weights16(COMPUTE_INTERVAL, n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS),
       m_beams_modified(false),
       m_n_blps(n_blps)
 {
@@ -615,13 +615,6 @@ void BeamServerTask::compute_weights(long current_seconds)
   
   Beamlet::calculate_weights(m_pos, m_weights);
 
-  //cout << "m_weights(t=0,element=0,beamlet=0,pol=all) = " << m_weights(0,0,0,Range::all()) << endl;
-  //cout << "m_weights(t=0,element=0,beamlet=N_BEAMLETS - 1,pol=all) = " << m_weights(0,0,N_BEAMLETS - 1,Range::all()) << endl;
-
-  // show weights for timestep 0, element 0, all subbands, both polarizations
-  //Range all = Range::all();
-  //cout << "m_weights=" << m_weights(0, 0, all, all) << endl;
-
   //
   // need complex conjugate of the weights
   // as 16bit signed integer to send to the board
@@ -641,10 +634,10 @@ void BeamServerTask::send_weights()
     LOG_DEBUG_STR("sw.time=" << sw.timestamp);
 
     // select all BLPS, no subarraying
-    sw.blpmask.reset();
-    for (int i = 0; i < m_n_blps; i++) sw.blpmask.set(i);
+    sw.rcumask.reset();
+    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) sw.rcumask.set(i);
 
-    sw.weights().resize(COMPUTE_INTERVAL, m_n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+    sw.weights().resize(COMPUTE_INTERVAL, m_n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS);
     sw.weights() = m_weights16;
 
     m_rspdriver.send(sw);
@@ -677,8 +670,8 @@ void BeamServerTask::send_sbselection()
     ss.timestamp.setNow(0);
 
     // select all BLPS, no subarraying
-    ss.blpmask.reset();
-    for (int i = 0; i < m_n_blps; i++) ss.blpmask.set(i);
+    ss.rcumask.reset();
+    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) ss.rcumask.set(i);
 
     //
     // Always allocate the array as if all beamlets were
