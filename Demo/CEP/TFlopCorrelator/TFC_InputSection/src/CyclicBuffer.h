@@ -74,24 +74,23 @@ class CyclicBuffer
   void  RemoveItems();
 
   // write an item and adjust head and count
-  TYPE GetBufferWritePtr(int& ID);
+  TYPE GetAutoWritePtr(int& ID);
 
   // read oldest item and adjust tail and count
-  const TYPE GetBufferReadPtr(int& ID);
+  const TYPE GetAutoReadPtr(int& ID);
+
+  // read a block beginning at oldest item + offset and adjust tail and count
+  const TYPE GetBlockReadPtr(int offset, int Nelements, int& ID);
 
   // read oldest item without adjusting tail and count 
   const TYPE GetFirstReadPtr(int& ID);
 
-  // read and remove item 'offset' items after oldest
-  // item and adjust tail and count
-  const TYPE GetUserReadPtr(int offset, int& ID);
-
   // (over)write an item without adjusting head and count
-  TYPE GetUserWritePtr(int ID);
+  TYPE GetManualWritePtr(int ID);
   
   // release locks
-  void  WriteUnlockItem(int ID);
-  void  ReadUnlockItem(int ID);
+  void WriteUnlockItem(int ID);
+  void ReadUnlockItems(int ID, int NElements);
 
   // print head, tail and count pointers
   void Dump();
@@ -110,7 +109,7 @@ class CyclicBuffer
 
  private:
 
-  void ReadLockItem(int ID);
+  void ReadLockItems(int ID, int NElements);
   void WriteLockItem(int ID);
   
   vector< BufferItem <TYPE> > itsBuffer;
@@ -185,7 +184,7 @@ void CyclicBuffer<TYPE>::RemoveItems(void)
 }
 
 template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetBufferWritePtr(int& ID)
+TYPE CyclicBuffer<TYPE>::GetAutoWritePtr(int& ID)
 {
 
   pthread_mutex_lock(&buffer_mutex);
@@ -221,19 +220,19 @@ TYPE CyclicBuffer<TYPE>::GetBufferWritePtr(int& ID)
 }
 
 template<class TYPE>
-const TYPE CyclicBuffer<TYPE>::GetBufferReadPtr(int& ID)
+const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until enough elements are available
-  while (itsCount <= itsMinCount) 
+  while ((itsCount <= itsMinCount)) 
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   // CONDITION: itsCount > itsMinCount
   
   ID = itsTailIdx;
-  itsBuffer[ID].itsRWLock.ReadLock();
+  ReadLockElements(ID, 1);
  
   // adjust the tail
   itsTailIdx++;
@@ -242,6 +241,45 @@ const TYPE CyclicBuffer<TYPE>::GetBufferReadPtr(int& ID)
     itsTailIdx = 0;
   }
   itsCount--;
+  
+  // signal that space has become available
+  pthread_cond_broadcast(&space_available);
+
+  pthread_mutex_unlock(&buffer_mutex);
+  
+  return itsBuffer[ID].itsItem;
+}
+
+template<class TYPE>
+const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int Nelements, int& ID)
+{
+  pthread_mutex_lock(&buffer_mutex);
+
+  // wait until enough elements are available
+  while ((itsCount <= itsMinCount) || (itsCount<=offset)) 
+  {
+    pthread_cond_wait(&data_available, &buffer_mutex);
+  }
+  // CONDITION: itsCount > itsMinCount &&  itscount > offset
+  
+  // set offset
+  itsTailIdx += offset;
+  ID = itsTailIdx;
+  
+  // lock the elements
+  ReadLockItems(ID, Nelements); 
+
+  for (int i=0;i<Nelements;i++) {
+    itsBuffer[ID+i].itsRWLock.ReadLock();
+ }
+ 
+  // adjust the tail
+  itsTailIdx += Nelements;
+  if (itsTailIdx >= (int)itsBuffer.size())
+  {
+    itsTailIdx = itsTailIdx-(int)itsBuffer.size();
+  }
+  itsCount = itsCount-offset-Nelements;
   
   // signal that space has become available
   pthread_cond_broadcast(&space_available);
@@ -264,7 +302,7 @@ const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
   // CONDITION: itsCount > 0
   
   ID = itsTailIdx;
-  itsBuffer[ID].itsRWLock.ReadLock();
+  ReadLockItems(ID, 1);
  
   pthread_mutex_unlock(&buffer_mutex);
   
@@ -273,53 +311,7 @@ const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
 
 
 template<class TYPE>
-const TYPE CyclicBuffer<TYPE>::GetUserReadPtr(int offset, int& ID)
-{
-  if ( (offset >= (int)itsBuffer.size()) || (offset < 0)) 
-  {
-    LOG_TRACE_RTTI("CyclicBuffer:: offset has invalid value");
-    return 0;
-  }
-
-  pthread_mutex_lock(&buffer_mutex);
-
-  // wait until enough elements are available
-  while (itsCount <= (itsMinCount+offset)) 
-  {
-    pthread_cond_wait(&data_available, &buffer_mutex);
-  }
-  // CONDITION: itsCount > (itsMinCount + offset)
-  
-  if ( (itsTailIdx+offset) < (int)itsBuffer.size()) 
-  {
-    ID = itsTailIdx+offset;
-  }
-  else {
-    ID = itsTailIdx + offset - (int)itsBuffer.size(); 
-  }
-  itsBuffer[ID].itsRWLock.ReadLock();
- 
-  // adjust the tail
-  itsTailIdx = ID+1;
-  if (itsTailIdx >= (int)itsBuffer.size()) 
-  {
-    itsTailIdx = 0;
-  }
-  
-  // adjust counter
-  itsCount -= (offset+1);
-  
-  // signal that space has become available
-  pthread_cond_broadcast(&space_available);
-
-  pthread_mutex_unlock(&buffer_mutex);
-  
-  return itsBuffer[ID].itsItem;
-}
-
-
-template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetUserWritePtr(int ID)
+TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
 {
   if ( (ID >= (int)itsBuffer.size()) || (ID < 0))
   {
@@ -343,15 +335,19 @@ void CyclicBuffer<TYPE>::WriteUnlockItem(int ID)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::ReadUnlockItem(int ID)
+void CyclicBuffer<TYPE>::ReadUnlockItems(int ID, int Nelements)
 {
-  itsBuffer[ID].itsRWLock.ReadUnlock();
+  for (int i=0; i<Nelements; i++) {
+    itsBuffer[ID+i].itsRWLock.ReadUnlock();
+  }
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::ReadLockItem(int ID)
+void CyclicBuffer<TYPE>::ReadLockItems(int ID, int Nelements)
 {
-  itsBuffer[ID].itsRWLock.ReadLock();
+  for (int i=0; i<Nelements; i++) {
+    itsBuffer[ID+i].itsRWLock.ReadLock();
+  }
 }
 
 template<class TYPE>

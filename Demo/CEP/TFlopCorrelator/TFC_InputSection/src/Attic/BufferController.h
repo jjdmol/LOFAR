@@ -43,12 +43,16 @@ public:
   BufferController(int size);
   ~BufferController();
   
-  TYPE* getBufferReadPtr();
-  TYPE* getBufferWritePtr();
-
+  // read first element 
+  TYPE* getAutoReadPtr();
+  // write element
+  TYPE* getAutoWritePtr();
+  // read a block of elements beginning at AutoReadPtr+offset
+  TYPE* getBlockReadPtr(int offset, int size);
+  // get pointer and id of first element
   TYPE* getFirstReadPtr(int& ID);
-  TYPE* getUserReadPtr(uint offset);
-  TYPE* getUserWritePtr(uint ID);
+  // get pointer of specific element
+  TYPE* getManualWritePtr(int ID);
   
   void readyReading();
   void readyWriting();
@@ -71,6 +75,9 @@ private:
   int itsBufferSize;
 
   TYPE* itsBufferItems;  
+
+  int itsReadItemsLocked;
+  int itsWriteItemsLocked;
 };
   
 template<class TYPE>
@@ -105,21 +112,33 @@ BufferController<TYPE>::~BufferController()
 }
 
 template<class TYPE>
-TYPE* BufferController<TYPE>::getBufferReadPtr()
+TYPE* BufferController<TYPE>::getAutoReadPtr()
 {
   if (itsCurrentReadPtr == 0) {
-    itsCurrentReadPtr = itsBuffer.GetBufferReadPtr(itsCurrentReadID);
+    itsCurrentReadPtr = itsBuffer.GetAutoReadPtr(itsCurrentReadID);
+    itsReadItemsLocked = 1;
   }
   return itsCurrentReadPtr; 
 }
 
 template<class TYPE>
-TYPE*  BufferController<TYPE>::getBufferWritePtr()
+TYPE*  BufferController<TYPE>::getAutoWritePtr()
 {
   if (itsCurrentWritePtr == 0) {
-    itsCurrentWritePtr = itsBuffer.GetBufferWritePtr(itsCurrentWriteID);
+    itsCurrentWritePtr = itsBuffer.GetAutoWritePtr(itsCurrentWriteID);
+    itsWriteItemsLocked = 1;
   }
   return itsCurrentWritePtr; 
+}
+
+template<class TYPE>
+TYPE* BufferController<TYPE>::getBlockReadPtr(int offset, int Nelements)
+{
+  if (itsCurrentReadPtr == 0) {
+    itsCurrentReadPtr = itsBuffer.GetBlockReadPtr(offset, Nelements, itsCurrentReadID);
+    itsReadItemsLocked = Nelements;
+  }
+  return itsCurrentReadPtr;
 }
 
 template<class TYPE>
@@ -133,19 +152,10 @@ TYPE* BufferController<TYPE>::getFirstReadPtr(int& ID)
 }
 
 template<class TYPE>
-TYPE* BufferController<TYPE>::getUserReadPtr(uint offset)
-{
-  if (itsCurrentReadPtr == 0) {
-    itsCurrentReadPtr = itsBuffer.GetUserReadPtr(offset, itsCurrentReadID);
-  }
-  return itsCurrentReadPtr; 
-}
-
-template<class TYPE>
-TYPE* BufferController<TYPE>::getUserWritePtr(uint ID)
+TYPE* BufferController<TYPE>::getManualWritePtr(int ID)
 {
   if (itsCurrentWritePtr == 0) {
-    itsCurrentWritePtr = itsBuffer.GetUserWritePtr(ID);
+    itsCurrentWritePtr = itsBuffer.GetManualWritePtr(ID);
     itsCurrentWriteID = ID;
   }
   return itsCurrentWritePtr; 
@@ -156,7 +166,7 @@ void BufferController<TYPE>::readyReading()
 {
   if (itsCurrentReadID >= 0) 
   {
-    itsBuffer.ReadUnlockItem(itsCurrentReadID); 
+    itsBuffer.ReadUnlockItems(itsCurrentReadID, itsReadItemsLocked); 
   }
   else
   {
