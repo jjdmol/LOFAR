@@ -55,7 +55,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   undefine();
 
   int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt32("NBeamlets");  // number of SubBand filters in the application
+  itsNSBF  = itsParamSet.getInt32("NoSubbands");  // number of SubBand filters in the application
     
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");

@@ -203,7 +203,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   // size of an EPA packet in bytes 
   int sizeofpacket   = ( pset.getInt32("polarisations") * 
                           sizeof(complex<int16>) * 
-                          pset.getInt32("NBeamlets")
+                          pset.getInt32("NoSubbands")
                        ) + 
                        pset.getInt32("SzEPAheader"); 
  
