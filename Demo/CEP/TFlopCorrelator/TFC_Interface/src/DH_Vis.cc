@@ -28,8 +28,10 @@ DH_Vis::DH_Vis (const string& name, short startfreq,
 {
    itsNPols = itsPS.getInt32("polarisations");
    itsNStations  = itsPS.getInt32("NRSP");
-//    itsNBaselines = itsNStations * (itsNStations - 1);
+   //    itsNBaselines = itsNStations * (itsNStations - 1);
    itsNBaselines = itsNStations * itsNStations;
+   
+   itsNsamples = itsPS.getInt32("WH_Corr.samples");
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)
