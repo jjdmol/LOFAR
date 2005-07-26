@@ -106,7 +106,8 @@ void WH_FakeStation::process()
     dimType sbDim = myMatrix.getDim("subband");
     RectMatrix<dataType>::cursorType cursor = myMatrix.getCursor(0*sbDim);
     for (int sb = 0; sb < myMatrix.getNElemInDim(sbDim); myMatrix.moveCursor(&cursor, sbDim), sb++) {
-      myMatrix.setValue(cursor, makei16complex(sb, 0));
+      myMatrix.setValue(cursor, makei16complex(sb, itsStamp.getBlockId()));  // the real value is the beamlet number, the imag value is the slice count
+      // the y polarisations are all 0
     }
   }
 

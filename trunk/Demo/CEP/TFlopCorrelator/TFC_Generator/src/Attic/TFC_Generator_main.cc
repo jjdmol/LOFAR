@@ -29,7 +29,8 @@ int main (int argc, const char** argv) {
       // there are no commandline arguments, so we were not called by ACC
       AH_FakeStation myAH;
 
-      ACC::APS::ParameterSet ps("Generator.ParamSet"); 
+      ACC::APS::ParameterSet ps("TFlopCorrelator.cfg"); 
+      int NoRuns = ps.getInt32("Generator.NoRuns");
       myAH.setParameters(ps);
       
       myAH.setarg(argc, argv);
@@ -40,7 +41,13 @@ int main (int argc, const char** argv) {
       cout << "init done" << endl;
       Profiler::activate();
       cout << "run" << endl;
-      myAH.baseRun(3);
+      if (NoRuns == 0) {
+	while (1) {
+	  myAH.baseRun(1000);
+	};
+      } else {
+	myAH.baseRun(NoRuns);
+      }
       cout << "run complete" << endl;
       myAH.baseDump();
       myAH.baseQuit();
