@@ -39,10 +39,15 @@ public:
   /// Allocate the buffers.
   virtual void init();
 
-  const int getFlag() const;
-  void setFlag(int);
-  const timestamp_t getSyncedStamp() const;
-  void setSyncedStamp(timestamp_t);
+  /// Accessor functions
+  const int getStationID() const;
+  void setStationID(int);
+  const int getInvalidCount() const;
+  void setInvalidCount(int);
+  const timestamp_t getTimeStamp() const;
+  void setTimeStamp(timestamp_t);
+  const int getDelay() const;
+  void setDelay(int);
 
   BufferType* getBuffer();
   
@@ -65,11 +70,11 @@ public:
 
   /// pointers to data in the blob
   BufferType*  itsBuffer;
-  int* itsFlagPtr;
-  timestamp_t* itsSyncedStampPtr;
+  int* itsStationID;
+  int* itsInvalidCount;
+  int* itsDelay;
+  timestamp_t* itsTimeStamp;
 
-  int itsNoBeamlets;
-  int itsNFChannels;
   int itsNTimes;
   int itsNoPolarisations;
   unsigned int itsBufSize;
@@ -89,17 +94,29 @@ inline uint DH_RSP::getBufferSize() const
 inline const DH_RSP::BufferType* DH_RSP::getBuffer() const
   { return itsBuffer; }
 
-inline const int DH_RSP::getFlag() const
-  { return *itsFlagPtr; }
+inline const int DH_RSP::getStationID() const
+  { return *itsStationID; }
 
-inline void  DH_RSP::setFlag(int flag)
-  { *itsFlagPtr = flag; }
+inline void DH_RSP::setStationID(int id)
+  { *itsStationID = id; }
 
-inline const timestamp_t DH_RSP::getSyncedStamp() const
-  { return *itsSyncedStampPtr; }
+inline const int DH_RSP::getInvalidCount() const
+  { return *itsInvalidCount; }
 
-inline void  DH_RSP::setSyncedStamp(timestamp_t stamp)
-  { *itsSyncedStampPtr = stamp; }
+inline void DH_RSP::setInvalidCount(int count)
+  { *itsInvalidCount = count; }
+
+inline const timestamp_t DH_RSP::getTimeStamp() const
+  { return *itsTimeStamp; }
+
+inline void DH_RSP::setTimeStamp(timestamp_t timestamp)
+  { *itsTimeStamp = timestamp; }
+
+inline const int DH_RSP::getDelay() const
+  { return *itsDelay; }
+
+inline void DH_RSP::setDelay(int delay)
+  { *itsDelay = delay; }
 
 inline void DH_RSP::resetBuffer()
   { memset(itsBuffer, 0, itsBufSize); }

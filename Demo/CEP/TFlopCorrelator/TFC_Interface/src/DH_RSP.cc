@@ -25,18 +25,14 @@ DH_RSP::DH_RSP (const string& name,
   itsBuffer  (0),
   itsPSet    (pset)
 {
-   itsNoBeamlets      = pset.getInt32("NoSubbands");
-   itsNFChannels      = pset.getInt32("DH_RSP.freqs");
-   itsNTimes          = pset.getInt32("DH_RSP.times");
-   itsNoPolarisations = pset.getInt32("polarisations");
-   itsBufSize         = itsNoBeamlets * itsNFChannels * itsNTimes * itsNoPolarisations;
+  itsNTimes          = pset.getInt32("DH_RSP.times");
+  itsNoPolarisations = pset.getInt32("polarisations");
+  itsBufSize         = itsNTimes * itsNoPolarisations;
 }
 
 DH_RSP::DH_RSP(const DH_RSP& that)
 : DataHolder         (that),
   itsBuffer          (0),
-  itsNoBeamlets      (that.itsNoBeamlets),
-  itsNFChannels      (that.itsNFChannels),
   itsNTimes          (that.itsNTimes),
   itsNoPolarisations (that.itsNoPolarisations),
   itsBufSize         (that.itsBufSize),
@@ -55,16 +51,17 @@ void DH_RSP::init()
 {
   // Add the fields to the data definition.
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
-  addField ("Flag", BlobField<int>(1));
-  addField ("SyncedStamp", BlobField<char>(1, sizeof(timestamp_t)));
+  addField ("StationID", BlobField<int>(1));
+  addField ("InvalidCount", BlobField<int>(1));
+  addField ("Delay", BlobField<int>(1));
+  addField ("TimeStamp", BlobField<char>(1, sizeof(timestamp_t)));
+  
   // Create the data blob
   createDataBlock();
 
   vector<DimDef> vdd;
-  vdd.push_back(DimDef("Beamlet", itsNoBeamlets));
-  vdd.push_back(DimDef("FreqChannel", itsNFChannels));
-  vdd.push_back(DimDef("Time", itsNTimes));
-  vdd.push_back(DimDef("Polarisation", itsNoPolarisations));
+  vdd.push_back(DimDef("Times", itsNTimes));
+  vdd.push_back(DimDef("Polarisations", itsNoPolarisations));
   
   itsMatrix = new RectMatrix<BufferType> (vdd);
   itsMatrix->setBuffer(itsBuffer, itsBufSize);
@@ -74,12 +71,20 @@ void DH_RSP::fillDataPointers()
 {
   // Fill in the buffer pointer.
   itsBuffer  = getData<BufferType> ("Buffer");
-  // Fill in the flag pointer.
-  itsFlagPtr = getData<int> ("Flag");
-  // Fill in Synchronized timestamp
-  itsSyncedStampPtr = (timestamp_t*)getData<char> ("SyncedStamp");
 
-  // use memset to null the buffer instead of a for loop
+  // Fill in the StationID pointer
+  itsStationID = getData<int> ("StationID");
+  
+  // Fill in the InvalidCount pointer
+  itsInvalidCount = getData<int> ("InvalidCount");
+
+  // Fill in the Delay pointer
+  itsDelay = getData<int> ("Delay");
+  
+  // Fill in TimeStamp pointer
+  itsTimeStamp = (timestamp_t*)getData<char> ("TimeStamp");
+
+  // use memset to null the buffer
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
 }
 
