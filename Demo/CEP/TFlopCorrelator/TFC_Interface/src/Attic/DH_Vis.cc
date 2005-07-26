@@ -28,8 +28,7 @@ DH_Vis::DH_Vis (const string& name, short startfreq,
 {
    itsNPols = itsPS.getInt32("polarisations");
    itsNStations  = itsPS.getInt32("NRSP");
-   //    itsNBaselines = itsNStations * (itsNStations - 1);
-   itsNBaselines = itsNStations * itsNStations;
+   itsNBaselines = (itsNStations*itsNPols) * (itsNStations*itsNPols);
    
    itsNsamples = itsPS.getInt32("WH_Corr.samples");
 }
@@ -58,16 +57,15 @@ DataHolder* DH_Vis::clone() const
 void DH_Vis::init()
 {
   // Determine the size of the buffer.
-  itsBufSize = itsNBaselines * itsNPols*itsNPols;
+  itsBufSize = itsNBaselines;
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();  // calls fillDataPointers
 
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
 
   vector<DimDef> vdd;
-  vdd.push_back(DimDef("Freq", itsNFChannels));
-  vdd.push_back(DimDef("Baseline", itsNBaselines));
-  vdd.push_back(DimDef("Polarisation", itsNPols));
+  vdd.push_back(DimDef("Dimension1", itsNBaselines));
+  vdd.push_back(DimDef("Dimension2", itsNBaselines));
   
   itsMatrix = new RectMatrix<BufferType> (vdd);
   itsMatrix->setBuffer(itsBuffer, itsBufSize);
