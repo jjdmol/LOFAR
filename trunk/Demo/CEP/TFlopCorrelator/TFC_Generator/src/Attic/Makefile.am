@@ -16,6 +16,7 @@ bin_PROGRAMS 		= TFC_Generator
 
 TFC_Generator_SOURCES	= $(DOCHDRS) \
 TFC_Generator_main.cc	\
+StationData.cc		\
 WH_FakeStation.cc      	\
 AH_FakeStation.cc			
 

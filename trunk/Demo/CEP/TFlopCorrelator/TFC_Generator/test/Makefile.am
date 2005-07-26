@@ -1,6 +1,6 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = 
+# check_PROGRAMS = 
 
 
 AM_CXXFLAGS = \
@@ -10,8 +10,7 @@ AM_CXXFLAGS = \
 # tWH_Transpose.cc				
 # ../src/WH_Transpose.cc				
 
-TESTS   =
-tWH_Transpose.sh				
+# TESTS   =
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \

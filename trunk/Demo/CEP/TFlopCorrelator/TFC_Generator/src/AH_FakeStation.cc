@@ -17,156 +17,81 @@
 #include <AH_FakeStation.h>
 
 // Transporters
-#include <Transport/TH_MPI.h>
-#include <Transport/TH_Mem.h>
+#include <Transport/TH_File.h>
+#include <Transport/TH_Ethernet.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <TFC_FakeStation/WH_RSPInput.h>
-#include <TFC_FakeStation/WH_SBCollect.h>
-#include <TFC_Interface/Stub_FIR.h>
-#include <TFC_Interface/Stub_Delay.h>
+#include <TFC_Generator/WH_FakeStation.h>
 
 using namespace LOFAR;
 
 AH_FakeStation::AH_FakeStation() 
-  : itsNSBF       (0),
-    itsInputStub  (0),
-    itsOutputStub (0)
 {
 }
 
-AH_FakeStation::~AH_FakeStation() {
+AH_FakeStation::~AH_FakeStation() 
+{
   this->undefine();
 }
 
 void AH_FakeStation::undefine() {
-  vector<WorkHolder*>::iterator it = itsWHs.begin();
-  for (; it!=itsWHs.end(); it++) {
-    delete *it;
+  vector<WorkHolder*>::iterator wit = itsWHs.begin();
+  for (; wit!=itsWHs.end(); wit++) {
+    delete *wit;
   }
   itsWHs.clear();
-  delete itsInputStub;
-  delete itsOutputStub;
+  vector<Step*>::iterator sit = itsSteps.begin();
+  for (; sit!=itsSteps.end(); sit++) {
+    delete *sit;
+  }
+  itsSteps.clear();
+  vector<TransportHolder*>::iterator tit = itsTHs.begin();
+  for (; tit!=itsTHs.end(); tit++) {
+    delete *tit;
+  }
+  itsTHs.clear();
 }  
 
 void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
-
   LOG_TRACE_FLOW_STR("Start of AH_FakeStation::define()");
   undefine();
-
-  int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt32("NBeamlets");  // number of SubBand filters in the application
     
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
   setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
-  // Create the FakeStation using CEPFrame
-  // The processing section consists of ...
-  //todo: finish description
-
-  LOG_TRACE_FLOW_STR("Create input side interface stubs");
-  // RSP_Stub inStub(true);
+  LOG_TRACE_FLOW_STR("Create output side interface stubs");
   // todo: define this input interface; although there are no
   //       connection involved, we do have to define the port/IP numbering schemes
 
-  LOG_TRACE_FLOW_STR("Create the input side delay stub");
-  itsInputStub = new Stub_Delay(true, itsParamSet);
-
-  //todo: define simulated RSP boards here or in extra AH
-
-  LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
-  // first determine the number of Transpose Steps that will be 
-  // constructed later on; we need this number to define the output
-  // DataHolders in the RSPInput Steps.
-  // Note that the number of SubBandFilters per Transpose Step
-  // is hard codes as 2.
-  DBGASSERTSTR(itsNSBF%2 == 0, "NSBF should be an even number");
-  const int NrTransposeNodes = itsNSBF/2;
-  vector<Step*>        RSPSteps;
-  vector<WH_RSPInput*> RSPNodes;
-  int noRSPs = itsParamSet.getInt32("NRSP");
+  int NRSP = itsParamSet.getInt32("NRSP");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
-  int rspStartNode;
-  for (int r=0; r<noRSPs; r++) {
-    snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, noRSPs);
-    // todo: get interface and MACs from parameterset
-    // todo: replace kvm by parameterSet
-    if (r==0)
-    {
-      RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create sync master
-					 itsParamSet,
-					 "eth1",
-					 "srcMac",
-					 "dstMac",
-					 true));
-      rspStartNode = lowestFreeNode;
+  bool useEth = itsParamSet.getBool("Generator.UseEth");
+  vector<string> interfaces = itsParamSet.getStringVector("Generator.Interfaces");
+  vector<string> remMacs = itsParamSet.getStringVector("Generator.RemMacs");
+  vector<string> ownMacs = itsParamSet.getStringVector("Generator.OwnMacs");
+  vector<int32> stationIds = itsParamSet.getInt32Vector("Generator.StationIds");
+  
+  for (int s=0; s<NRSP; s++) {
+    snprintf(WH_DH_Name, WH_DH_NameSize, "FakeStation_%d_of_%d", s, NRSP);
+    if (useEth) {
+      // cout<<"interface: "<<interfaces[s]<<" remote: "<<remMacs[s]<<" own: "<<ownMacs[s]<<endl;
+      itsTHs.push_back(new TH_Ethernet(interfaces[s], 
+				       remMacs[s],
+				       ownMacs[s]));
+    } else {
+      itsTHs.push_back(new TH_File("Generator.out", TH_File::Write));
     }
-    else
-    {
-      RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create slave
-					 itsParamSet,
-					 "eth1",
-					 "srcMac",
-					 "dstMac",
-					 false));
-    }
-    RSPSteps.push_back(new Step(RSPNodes[r],WH_DH_Name,false));
-    itsWHs.push_back((WorkHolder*) RSPNodes[r]);
-    itsSteps.push_back(RSPSteps[r]);
-    RSPSteps[r]->runOnNode(lowestFreeNode++);   
-    comp.addBlock(RSPSteps[r]);
-
-    // connect the RSP boards
-    //todo: set correct IP/Port numbers in WH_RSP
-    
-//     // Connect the Delay Controller
-//     itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
-    
+    ASSERTSTR(itsTHs.back()->init(), "Could not init TransportHolder");
+    itsWHs.push_back(new WH_FakeStation(WH_DH_Name,
+					itsParamSet,
+					*itsTHs.back(),
+					stationIds[s]));
+    itsSteps.push_back(new Step(itsWHs.back(),WH_DH_Name,false));
+    comp.addBlock(itsSteps.back());
   };
   
-  LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  itsOutputStub = new Stub_FIR(true, itsParamSet);
-
-  LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
-  vector<WH_SBCollect*> collectNodes;
-  vector<Step*>         collectSteps;
-  int collectStartNode;
-  for (int nf=0; nf < itsNSBF; nf++) {
-    sprintf(WH_DH_Name, "Collect_node_%d_of_%d", nf, noRSPs);
-    collectNodes.push_back(new WH_SBCollect(WH_DH_Name,      // name
-					    nf,              // Subband ID
- 					    itsParamSet));   // inputs  
-    collectSteps.push_back(new Step(collectNodes[nf],WH_DH_Name,false));
-    itsWHs.push_back((WorkHolder*) collectNodes[nf]);
-    itsSteps.push_back(collectSteps[nf]);
-    if (nf==0)
-    {
-      collectStartNode = lowestFreeNode;
-    }
-    collectSteps[nf]->runOnNode(lowestFreeNode++); 
-    comp.addBlock(collectSteps[nf]);
-
-#ifdef HAVE_MPI
-    // Connect splitters to mergers (transpose)
-    for (int st=0; st<noRSPs; st++)
-    {
-      collectSteps[nf]->connect(st, RSPSteps[st], nf, 1,
-			       new TH_MPI(rspStartNode+st, collectStartNode+nf), 
-			       true);
-    }
-#else
-    for (int st=0; st<noRSPs; st++)
-    {
-      collectSteps[nf]->connect(st, RSPSteps[st], nf, 1, new TH_Mem(), false);
-    }
-#endif
-    // connect output to FIR stub
-    itsOutputStub->connect (nf,                           // Corr filter number
-			    (collectSteps.back())->getOutDataManager(0), 
-			    0);  
-  }
   LOG_TRACE_FLOW_STR("Finished define()");
 }
 

@@ -15,6 +15,7 @@
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
 #include <TFC_Generator/AH_FakeStation.h>
+#include <APS/ParameterSet.h>
 
 using namespace LOFAR;
 
@@ -27,6 +28,9 @@ int main (int argc, const char** argv) {
       LOG_TRACE_FLOW("Main program not started by ACC");
       // there are no commandline arguments, so we were not called by ACC
       AH_FakeStation myAH;
+
+      ACC::APS::ParameterSet ps("Generator.ParamSet"); 
+      myAH.setParameters(ps);
       
       myAH.setarg(argc, argv);
       myAH.baseDefine();
@@ -36,7 +40,7 @@ int main (int argc, const char** argv) {
       cout << "init done" << endl;
       Profiler::activate();
       cout << "run" << endl;
-      myAH.baseRun(1);
+      myAH.baseRun(3);
       cout << "run complete" << endl;
       myAH.baseDump();
       myAH.baseQuit();

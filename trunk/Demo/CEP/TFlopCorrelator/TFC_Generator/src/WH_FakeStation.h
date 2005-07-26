@@ -26,21 +26,28 @@
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TransportHolder.h>
+#include <TFC_Generator/StationData.h>
+#include <TFC_Interface/RSPTimeStamp.h>
 
 namespace LOFAR
 {
+
+  using ACC::APS::ParameterSet;
+
   class WH_FakeStation: public WorkHolder
   {
   public:
 
     explicit WH_FakeStation(const string& name, 
 			    const ParameterSet ps,
-			    TransportHolder& th);
+			    TransportHolder& th,
+			    const int StationID);
     virtual ~WH_FakeStation();
     
     static WorkHolder* construct(const string& name, 
                                  const ParameterSet ps,
-				 TransportHolder& th);
+				 TransportHolder& th,
+				 const int StationID);
     virtual WH_FakeStation* make(const string& name);
 
     virtual void preprocess();
@@ -59,8 +66,12 @@ namespace LOFAR
     ParameterSet itsPS;
     TransportHolder& itsTH;
     EthernetFrame itsEthFrame;
+    double itsFrequency;
+    int itsStationId;
+    TimeStamp itsStamp;
 
     static int theirNoRunningWHs;
+    static int theirNoAlarms;
     static bool theirTimerSet;
   };
 
