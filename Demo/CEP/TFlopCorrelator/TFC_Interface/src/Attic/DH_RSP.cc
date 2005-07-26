@@ -25,7 +25,7 @@ DH_RSP::DH_RSP (const string& name,
   itsBuffer  (0),
   itsPSet    (pset)
 {
-   itsNoBeamlets      = pset.getInt32("NBeamlets");
+   itsNoBeamlets      = pset.getInt32("NoSubbands");
    itsNFChannels      = pset.getInt32("DH_RSP.freqs");
    itsNTimes          = pset.getInt32("DH_RSP.times");
    itsNoPolarisations = pset.getInt32("polarisations");

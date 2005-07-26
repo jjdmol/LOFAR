@@ -22,7 +22,7 @@ namespace LOFAR {
       itsTHs          (0),
       itsConnections  (0)
   {
-    itsNFIRF     = itsPS.getInt32("NBeamlets");  // number of SubBand filters in the application
+    itsNFIRF     = itsPS.getInt32("NoSubbands");  // number of SubBand filters in the application
     ASSERTSTR(itsNFIRF >= 0, "Number of subband filters must be greater than 0");
     itsTHs = new TH_Socket*[itsNFIRF];
     itsConnections = new Connection*[itsNFIRF];
