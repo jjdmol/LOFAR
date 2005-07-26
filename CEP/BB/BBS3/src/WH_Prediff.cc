@@ -200,7 +200,7 @@ void WH_Prediff::process()
 
 }
 
-void WH_Prediff::dump()
+void WH_Prediff::dump() const
 {
   LOG_TRACE_RTTI("WH_Prediff process()");
 }

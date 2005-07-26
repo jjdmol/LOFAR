@@ -195,7 +195,7 @@ void WH_Solve::process()
   }
 }
 
-void WH_Solve::dump()
+void WH_Solve::dump() const
 {
   LOG_TRACE_RTTI("WH_Solve process()");
 }
