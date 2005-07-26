@@ -109,9 +109,12 @@ private:
  inline const unsigned int DH_CorrCube::getBufSize() const {
    return itsBufSize;
  }
- 
- inline void DH_CorrCube::setTestPattern() 
-   { memset(itsBuffer, 1, itsBufSize); }
+
+ inline void DH_CorrCube::setTestPattern() { 
+   for (unsigned int i = 0; i < itsBufSize; i++) {
+     *(itsBuffer + i) = 1.0 + 1.i;
+   }
+ }
 
 }
 #endif 
