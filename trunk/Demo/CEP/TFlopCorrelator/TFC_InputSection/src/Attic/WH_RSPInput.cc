@@ -343,6 +343,6 @@ void WH_RSPInput::postprocess()
   writerinfo.stopthread = true;
 }
 
-void WH_RSPInput::dump() 
+void WH_RSPInput::dump() const 
 {
 }
