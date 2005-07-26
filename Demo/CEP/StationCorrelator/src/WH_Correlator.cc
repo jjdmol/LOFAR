@@ -157,7 +157,7 @@ void WH_Correlator::process() {
   
 }
 
-void WH_Correlator::dump() {
+void WH_Correlator::dump() const {
 
 }
 

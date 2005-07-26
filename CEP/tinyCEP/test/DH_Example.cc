@@ -65,7 +65,7 @@ void DH_Example::init()
   }
 }
 
-void DH_Example::dump()
+void DH_Example::dump() const
 {
   cout << "DH_Example: " << itsBuffer << endl;
 }

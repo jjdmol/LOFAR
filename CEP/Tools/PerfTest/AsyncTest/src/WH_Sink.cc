@@ -142,7 +142,7 @@ void WH_Sink::process()
   //dump();
 }
 
-void WH_Sink::dump()
+void WH_Sink::dump() const
 {
   cout << "WH_Sink " << getName() << " dump:" << endl;
   for (int i = 0; i < getDataManager().getInputs(); i++)

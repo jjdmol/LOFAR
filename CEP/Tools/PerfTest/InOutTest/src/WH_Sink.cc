@@ -114,7 +114,7 @@ void WH_Sink::process()
 
 }
 
-void WH_Sink::dump()
+void WH_Sink::dump() const
 {
   cout << "WH_Sink " << getName() << " dump:" << endl;
   ((DH_Example*)getDataManager().getInHolder(0))->dump();

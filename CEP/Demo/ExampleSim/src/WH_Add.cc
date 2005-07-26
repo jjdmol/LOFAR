@@ -64,7 +64,7 @@ void WH_Add::process()
   dump();
 }
 
-void WH_Add::dump()
+void WH_Add::dump() const
 {
   cout << getName() << endl;
   cout << "Counter" << " = "

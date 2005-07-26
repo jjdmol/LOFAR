@@ -64,7 +64,7 @@ public:
   char getBufferElement(unsigned int element);
 
   /// Print first character from buffer
-  void dump();
+  void dump() const;
 
  private:
   /// Forbid assignment.
@@ -90,7 +90,7 @@ inline char* DH_Buffer::getBuffer()
 inline const char* DH_Buffer::getBuffer() const
   { return itsBuffer; }
 
-inline void DH_Buffer::dump()
+inline void DH_Buffer::dump() const
   { cout << *itsBuffer << endl; }
 
 }

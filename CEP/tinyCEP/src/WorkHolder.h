@@ -85,7 +85,7 @@ public:
       data in the last output DataHolders are shown to cout, but
       other output sources or targets are valid as well.
   */
-  virtual void dump();
+  virtual void dump() const;
 
   /** The preprocess method is called before process.
       It can be used to initialize the WorkHolder.
@@ -126,7 +126,7 @@ public:
   int getOutChannel (const string& name);
 
   // Get/set its DataManager
-  TinyDataManager& getDataManager();
+  TinyDataManager& getDataManager() const;
   void setDataManager(TinyDataManager* dmptr);
 
   // Register a static constructor functions.
@@ -198,7 +198,7 @@ private:
 };
 
 
-inline TinyDataManager& WorkHolder::getDataManager()
+inline TinyDataManager& WorkHolder::getDataManager() const
   { return *itsDataManager; }
 
 inline const string& WorkHolder::getType() const

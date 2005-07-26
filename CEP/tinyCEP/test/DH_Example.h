@@ -60,7 +60,7 @@ public:
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
   
-  void dump();
+  void dump() const;
 
 private:
   /// Forbid assignment.

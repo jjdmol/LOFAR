@@ -100,7 +100,7 @@ void WH_Example::process()
   cout << buf[0] << ',' << buf[itsBufLength-1] << endl;
 }
 
-void WH_Example::dump()
+void WH_Example::dump() const
 {
   cout << "WH_Example " << getName() << " Buffers:" << endl;
   for (int i=0; i<getDataManager().getOutputs(); i++) {

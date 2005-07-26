@@ -129,6 +129,6 @@ namespace LOFAR
   }
 
 
-  void WH_Random::dump() {
+  void WH_Random::dump() const {
   }
 } // namespace LOFAR

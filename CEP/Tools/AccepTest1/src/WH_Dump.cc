@@ -83,6 +83,6 @@ void WH_Dump::process() {
   gettimeofday(&starttime, NULL);
 }
 
-void WH_Dump::dump() {
+void WH_Dump::dump() const {
 }
 		 

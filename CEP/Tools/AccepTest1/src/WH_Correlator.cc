@@ -257,7 +257,7 @@ void WH_Correlator::process() {
 #endif // DO_TIMING
 }
 
-void WH_Correlator::dump() {
+void WH_Correlator::dump() const{
 
 }
 

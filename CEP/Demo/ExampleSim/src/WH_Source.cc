@@ -70,7 +70,7 @@ void WH_Source::process()
   dump();
 }
 
-void WH_Source::dump()
+void WH_Source::dump() const
 {
   cout << getName() << endl;
   for (unsigned int i=0; i<itsNOutputs; i++)
