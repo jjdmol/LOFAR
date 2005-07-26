@@ -59,7 +59,7 @@ class WH_Solve : public LOFAR::WorkHolder
   virtual void process();
   
   // Show the workholder on stdout.
-  virtual void dump();
+  virtual void dump() const;
 
  private:
   typedef map<int, Solver*> SolverMap;

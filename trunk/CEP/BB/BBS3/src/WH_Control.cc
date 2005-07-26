@@ -138,7 +138,7 @@ void WH_Control::process()
 
 }
 
-void WH_Control::dump()
+void WH_Control::dump() const
 {
 }
 
