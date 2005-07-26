@@ -43,6 +43,10 @@ public:
 
   RectMatrix<BufferType>& getDataMatrix() const;
 
+  /// Test pattern methods used for regression tests
+  void setTestPattern();
+  bool checkTestPattern();
+
 private:
   /// Forbid assignment.
   DH_Vis& operator= (const DH_Vis&);
@@ -56,7 +60,11 @@ private:
   short itsNBaselines;
   short itsNPols;     // #polarisations 
   short itsNFChannels;
-
+  
+  // this value is not strictly necessary, but we can 
+  // check the testpattern with it.
+  short itsNsamples;
+  
   RectMatrix<BufferType>* itsMatrix;
 
   void fillDataPointers();
@@ -78,6 +86,19 @@ inline const unsigned int DH_Vis::getBufSize() const
 inline RectMatrix<DH_Vis::BufferType>& DH_Vis::getDataMatrix() const 
   { return *itsMatrix; }
 
+inline bool DH_Vis::checkTestPattern() {
+  bool result = true;
+  
+  for (int i = 0; i < itsNStations; i++) {
+    for (int j = 0; j <= i; j++) {
+      // this would be the correct answer for a test pattern consisting 
+      // of only (1 + 1I) values
+      result = result && ( *(itsBuffer+j*itsNStations+i) == 2 * itsNsamples + 0.i);
+    }
+  }
+  return result;
+}
+ 
 }
 
 #endif 
