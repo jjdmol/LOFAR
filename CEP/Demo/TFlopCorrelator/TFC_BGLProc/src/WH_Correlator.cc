@@ -171,7 +171,7 @@ void WH_Correlator::process() {
  
 }
 
-void WH_Correlator::dump() {
+void WH_Correlator::dump() const{
   for (int x = 0; x < ELEMENTS; x++) {
     for (int y = 0; y <= x; y++) {
       // show transposed correlation matrix, this looks more natural.

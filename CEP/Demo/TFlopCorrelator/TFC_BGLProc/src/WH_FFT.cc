@@ -97,6 +97,6 @@ void WH_FFT::postprocess() {
   free(fft_out);
 }
 
-void WH_FFT::dump() {
+void WH_FFT::dump() const{
 }
 

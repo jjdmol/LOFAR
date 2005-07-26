@@ -87,7 +87,7 @@ namespace LOFAR
       virtual void postprocess();
     
       // Show the work holder on stdout.
-      virtual void dump();
+      virtual void dump() const;
 
     private:
     

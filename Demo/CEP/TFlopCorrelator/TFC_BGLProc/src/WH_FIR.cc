@@ -105,7 +105,7 @@ void WH_FIR::process() {
 void WH_FIR::postprocess() {
 }
 
-void WH_FIR::dump() {
+void WH_FIR::dump() const{
 }
 
 void WH_FIR::adjustDelayPtr(FilterType* dLine) { 
