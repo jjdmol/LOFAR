@@ -26,7 +26,6 @@
 #include <hummer_builtin.h>
 #endif 
 
-
 #define DO_TIMING
 #define USE_BUILTIN
 
@@ -69,6 +68,15 @@ WH_Correlator* WH_Correlator::make (const string& name) {
   return new WH_Correlator(name);
 }
 
+void WH_Correlator::preprocess() {
+
+  ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
+  ASSERTSTR(static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBufSize() == ELEMENTS*ELEMENTS, "OutHolder size not equal to defined size");
+
+  // prevent stupid mistakes in the future by assuming we can easily change the unroll factor
+  ASSERTSTR(UNROLL_FACTOR == 4, "Code is normally only unrolled by a factor of 4, make sure this is really what you want!");
+}
+
 void WH_Correlator::process() {
   double starttime, stoptime, cmults;
   const short ar_block = itsNelements / UNROLL_FACTOR;
@@ -76,17 +84,22 @@ void WH_Correlator::process() {
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
+  in_ptr = &(in_buffer[0][0]);
+  out_ptr = &(out_buffer[0][0]);
+
   // reset integrator.
   memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(DH_Vis::BufferType));
 
-//   memcpy(&in_buffer, inDH->getBuffer(), ELEMENTS*SAMPLES*sizeof(DH_CorrCube::BufferType));
+  // fill the input buffer
+  // could this be done without a memcpy?
+  memcpy(&in_buffer, inDH->getBuffer(), inDH->getBufSize()*sizeof(DH_CorrCube::BufferType));
 
 #ifdef DO_TIMING
   starttime = timer();
 #endif
 
 #ifdef HAVE_BGL
-  __alignx(16, out_ptr);
+  __alignx(16, out_buffer);
   __alignx(8 , in_buffer);
 #endif
 
@@ -95,9 +108,14 @@ void WH_Correlator::process() {
   // We consider these completely seperate elements, thus removing an 
   // extra dimension in the input and output data structure
  
-  for (int i = 0; i < itsNelements; i++) {
-    for (int y = 0; y < ar_block; y++) { 
-      
+  // Also note that this algorithm calculates slightly more correlation products than 
+  // strictly necessary. For now we assume that the extra overhead introduced by 
+  // exactly calculating half the matrix is more than what we calculate extra now.
+  // This may be optimized in a later version.
+
+  for (int i = 0; i < itsNsamples; i++) {
+    for (int y = 0; y < itsNelements; y+=4) { 
+
       // prefetch a block of values to register
       __complex__ double reg_x_0 = static_cast<__complex__ double>(in_buffer[0][i]);
       __complex__ double reg_x_1 = static_cast<__complex__ double>(in_buffer[1][i]);
@@ -109,8 +127,7 @@ void WH_Correlator::process() {
       __complex__ double reg_y_2 = static_cast<__complex__ double>(in_buffer[y+2][i]);
       __complex__ double reg_y_3 = static_cast<__complex__ double>(in_buffer[y+3][i]);
 
-   
-      for (int x = 0; x <= y; x += 4) {
+      for (int x = 0; x <= y; x+=4) {
 
 	out_buffer[x+0][y+0] += reg_x_0 * ~reg_y_0;
 	out_buffer[x+0][y+1] += reg_x_0 * ~reg_y_1;
@@ -143,7 +160,10 @@ void WH_Correlator::process() {
     }
   }
 
-//   memcpy(outDH->getBuffer(), out_buffer, ELEMENTS*ELEMENTS*sizeof(DH_Vis::BufferType));
+  // this is allowed since we're sure the outDH is equal in size to the 
+  // out_buffer (the assert didn't fail in the preprocess method)
+  outDH->setBuffer(out_ptr);
+  //   memcpy(outDH->getBuffer(), out_buffer, ELEMENTS*ELEMENTS*sizeof(DH_Vis::BufferType));
 
 #ifdef DO_TIMING
   stoptime = timer();
@@ -152,7 +172,13 @@ void WH_Correlator::process() {
 }
 
 void WH_Correlator::dump() {
-
+  for (int x = 0; x < ELEMENTS; x++) {
+    for (int y = 0; y <= x; y++) {
+      // show transposed correlation matrix, this looks more natural.
+      cout << out_buffer[y][x] << "  ";
+    }
+    cout << endl;
+  }
 }
 
 double timer() {
