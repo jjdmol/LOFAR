@@ -15,6 +15,7 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	ABS_Protocol.ph \
+	ABS_Protocol_v2.ph \
 	BeamServerPorts.conf \
 	BeamServer.conf
 
@@ -28,7 +29,8 @@ sysconf_DATA = \
 	BeamServer.conf
 
 include_HEADERS = \
-	$(top_builddir)/src/ABS_Protocol.ph
+	$(top_builddir)/src/ABS_Protocol.ph \
+	$(top_builddir)/src/ABS_Protocol_v2.ph
 
 %.properties: %.properties.in
 	cp $< $@
