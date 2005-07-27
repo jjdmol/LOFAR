@@ -52,8 +52,8 @@ DataHolder* DH_PPF::clone() const
 
 void DH_PPF::init()
 {
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsNSamples;
+  // Determine the number of elements needed for DataPacket and buffer.
+  itsBufSize = itsNStations * itsNPol * itsNTimes; 
   
   addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
@@ -61,9 +61,37 @@ void DH_PPF::init()
   createDataBlock();  // calls fillDataPointers
   itsBuffer = getData<BufferType> ("Buffer");
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
+
+  vector<DimDef> vdd;
+  vdd.push_back(DimDef("Station", itsNStations));
+  vdd.push_back(DimDef("Polarisation", itsNPol));
+  vdd.push_back(DimDef("Time",itsNTimes/itsNFilters)); // the number of FFTs in a dataholder
+  vdd.push_back(DimDef("Bank", itsNFilters));
+  
+  itsMatrix = new RectMatrix<BufferType> (vdd);
+  itsMatrix->setBuffer(itsBuffer, itsBufSize);
+
+  itsStationDim = itsMatrix->getDim("Station");
+  itsPolDim     = itsMatrix->getDim("Polarisation");
+  itsTimeDim  = itsMatrix->getDim("Time");
+  itsBankDim    = itsMatrix->getDim("Bank");
 }
 
 void DH_PPF::fillDataPointers() {
   itsBuffer = getData<BufferType> ("Buffer");
 }
+
+void DH_FIR::InitTimeCursor(short station, short pol, short time)
+{
+  RectMatrix<DH_FIR::BufferType>::cursorType itsBankCursor;
+  itsBankCursor = itsMatrix->getCursor(station*itsStationDim+pol*itsPolDim+time*itsTimeDim);
+}
+
+void DH_FIR::setNextBank(DH_FIR::BufferType &value)
+{
+  Matrix->setValue(itsBankCursor, value);
+  itsMatrix->moveCursor(&itsBankCursor, itsBankDim);
+  return;
+}
+
 }
