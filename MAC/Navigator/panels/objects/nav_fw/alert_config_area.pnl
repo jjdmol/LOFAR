@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,463 241 695 112 N "_3DFace" 3
+PANEL,269 267 695 112 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -286,11 +286,11 @@ LANG:1 15 Configure table
   }
 }" 0
 
-1 23 1 "" 0
-0
-1 24 2 "" 0
-0
 1 29 5 "" 1
+0
+1 30 6 "" 0
+0
+1 31 7 "" 0
 0
 0
 LAYER, 1 
@@ -333,15 +333,15 @@ LANG:1 6 Layer8
 "$TrendNr""$AreaNr"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
-3 1 ""
-"objects\\nav_fw\\nav_combobox_min_max_dp.pnl" 420 73 T 24 1 0 1  -245 -23  
+3 6 "Group7"
+"objects\\nav_fw\\nav_combobox_min_max_dp.pnl" 185 60 T 30 1 0 1  -10 -10  
 4
 "$Maximum""15"
 "$Minimum""1"
 "$datapoint""$datapoint"
 "$dp""$configDatapoint + \".\" + $AreaNr + \".nrOfRows\""
-3 2 "Group4"
-"objects\\nav_fw\\nav_combobox_min_max_dp.pnl" 410 50 T 25 1 0 1  -235 25  
+3 7 "Group8"
+"objects\\nav_fw\\nav_combobox_min_max_dp.pnl" 185 85 T 31 1 0 1  -10 -10  
 4
 "$Maximum""15"
 "$Minimum""1"
