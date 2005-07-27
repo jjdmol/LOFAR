@@ -38,23 +38,39 @@ int main(int, const char* argv[])
   INIT_LOGGER(argv[0]);
 
   try {
+
     EarthCoord ec0;
     EarthCoord ec1(0.25*M_PI, -0.33*M_PI);
-    EarthCoord ec2(-0.67*M_PI, 0.75*M_PI, 249.98);
+    EarthCoord ec2(-0.67*M_PI, 0.75*M_PI, 249.98, EarthCoord::WGS84);
+    EarthCoord ec3(0.5*M_PI, 0.2*M_PI, -115.11, 
+                   static_cast<EarthCoord::Types>(1294));
 
-    ASSERT(ec0.longitude() == 0 && 
+    ASSERT(ec0.isValid() &&
+           ec0.longitude() == 0 && 
            ec0.latitude() == 0 && 
-           ec0.height() == 0);
-    ASSERT(ec1.longitude() == 0.25*M_PI && 
+           ec0.height() == 0 &&
+           ec0.type() == EarthCoord::ITRF);
+    ASSERT(ec1.isValid() &&
+           ec1.longitude() == 0.25*M_PI && 
            ec1.latitude() == -0.33*M_PI &&
-           ec1.height() == 0);
-    ASSERT(ec2.longitude() == -0.67*M_PI
-           && ec2.latitude() == 0.75*M_PI
-           && ec2.height() == 249.98);
+           ec1.height() == 0 &&
+           ec1.type() == EarthCoord::ITRF);
+    ASSERT(ec2.isValid() &&
+           ec2.longitude() == -0.67*M_PI && 
+           ec2.latitude() == 0.75*M_PI &&
+           ec2.height() == 249.98 && 
+           ec2.type() == EarthCoord::WGS84);
+    ASSERT(!ec3.isValid() &&
+           ec3.longitude() == 0.5*M_PI &&
+           ec3.latitude() == 0.2*M_PI &&
+           ec3.height() == -115.11 &&
+           ec3.type() == EarthCoord::INVALID);
 
     cout << "ec0 = " << ec0 << endl;
     cout << "ec1 = " << ec1 << endl;
     cout << "ec2 = " << ec2 << endl;
+    cout << "ec3 = " << ec3 << endl;
+
   }
 
   catch (Exception& e) {

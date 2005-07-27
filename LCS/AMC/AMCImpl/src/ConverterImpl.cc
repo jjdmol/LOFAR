@@ -97,6 +97,11 @@ namespace LOFAR
                                 const vector<EarthCoord>& earthCoord,
                                 const vector<TimeCoord>& timeCoord)
     {
+      // Check precondition.
+      for (uint i=0; i<skyCoord.size(); ++i) {
+        ASSERT(skyCoord[i].type() == SkyCoord::J2000);
+      }
+
       // This vector will hold the result of the conversion operation.
       vector<SkyCoord> result;
 
@@ -126,7 +131,19 @@ namespace LOFAR
             MVPosition pos((Quantity(earthCoord[j].height(), "m")),
                            (Quantity(earthCoord[j].longitude(), "rad")),
                            (Quantity(earthCoord[j].latitude(), "rad")));
-            frame.set (MPosition(pos));
+            MPosition::Types ref;
+            switch(earthCoord[j].type()) {
+            case EarthCoord::ITRF:  
+              ref = MPosition::ITRF;  
+              break;
+            case EarthCoord::WGS84: 
+              ref = MPosition::WGS84; 
+              break;
+            default: 
+              THROW(ConverterError, "Invalid EarthCoord type: " 
+                    << earthCoord[j].type());
+            }
+            frame.set (MPosition(pos, ref));
 
             // Set-up the conversion engine, using reference direction AZEL.
             // \note Since we're only using \a dir as a dummy argument, we
@@ -318,6 +335,58 @@ namespace LOFAR
     }
     
     
+    SkyCoord 
+    ConverterImpl::j2000ToItrf(const SkyCoord& skyCoord, 
+                               const EarthCoord& earthCoord, 
+                               const TimeCoord& timeCoord)
+    {
+      return j2000ToItrf(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord)) [0];
+    }
+
+
+    vector<SkyCoord> 
+    ConverterImpl::j2000ToItrf (const vector<SkyCoord>& skyCoord,
+                                const EarthCoord& earthCoord,
+                                const TimeCoord& timeCoord)
+    {
+      return j2000ToItrf(skyCoord,
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord));
+    }
+
+
+    vector<SkyCoord>
+    ConverterImpl::j2000ToItrf (const SkyCoord& skyCoord,
+                                const vector<EarthCoord>& earthCoord,
+                                const TimeCoord& timeCoord)
+    {
+      return j2000ToItrf(vector<SkyCoord>  (1, skyCoord),
+                         earthCoord,
+                         vector<TimeCoord> (1, timeCoord));
+    }
+
+
+    vector<SkyCoord> 
+    ConverterImpl::j2000ToItrf (const SkyCoord& skyCoord,
+                                const EarthCoord& earthCoord,
+                                const vector<TimeCoord>& timeCoord)
+    {
+      return j2000ToItrf(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         timeCoord);
+    }
+
+
+    vector<SkyCoord> 
+    ConverterImpl::j2000ToItrf (const vector<SkyCoord>& skyCoord,
+                                const vector<EarthCoord>& earthCoord,
+                                const vector<TimeCoord>& timeCoord)
+    {
+    }
+
+
   } // namespace AMC
   
 } // namespace LOFAR

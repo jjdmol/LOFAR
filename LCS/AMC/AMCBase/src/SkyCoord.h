@@ -28,6 +28,7 @@
 
 //# Forward Declarations.
 #include <Common/lofar_iosfwd.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -46,14 +47,25 @@ namespace LOFAR
     class SkyCoord
     {
     public:
-      // Default constructor uses 0 for the angles.
-      SkyCoord()
-        : itsAngle0(0), itsAngle1(0) {}
+      // Types of sky coordinates. Currently, only three types are supported:
+      // J2000, AZEL and ITRF.
+      enum Types {
+        INVALID = -1,   ///< Used when specified value is out of range.
+        J2000,         
+        AZEL,
+        ITRF,
+        //# Insert new types HERE !!
+        N_Types         ///< Number of reference types.
+      };
 
-      // Create a sky coordinate by giving the longitude and latitude in
-      // radians.
-      SkyCoord (double angle0, double angle1)
-        : itsAngle0(angle0), itsAngle1(angle1) {}
+      // Default constructor uses 0 for the angles and J2000 as reference
+      // type.
+      SkyCoord()
+        : itsAngle0(0), itsAngle1(0), itsType(J2000) {}
+
+      // Create a sky coordinate by giving the longitude \a angle0 and
+      // latitude \a angle1 in radians and the reference type \a typ.
+      SkyCoord (double angle0, double angle1, Types typ = J2000);
 
       // Return angle0 in radians. This could be, for example, right ascension
       // (RA) or azimuth (AZ).
@@ -65,16 +77,34 @@ namespace LOFAR
       double angle1() const
       { return itsAngle1; }
 
+      // Return the reference type.
+      Types type() const
+      { return itsType; }
+
+      // Return the reference type as a string.
+      const string& showType() const;
+
+      // Return whether sky coordinate type is valid.
+      bool isValid() const
+      { return itsType != INVALID; }
+
     private:
       // Angle0 in radians.
       double itsAngle0;
 
       // Angle1 in radians.
       double itsAngle1;
+
+      // Type of sky coordinate.
+      Types itsType;
     };
 
     // Output a SkyCoord in ASCII format.
     ostream& operator<< (ostream&, const SkyCoord&);
+
+    // Compare two SkyCoord objects for equality. 
+    // \note Two invalid objects can \e never be equal.
+    bool operator==(const SkyCoord& lhs, const SkyCoord& rhs);
 
     // @}
 

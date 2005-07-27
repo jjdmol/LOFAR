@@ -45,24 +45,24 @@ int main(int, const char* argv[])
     int yy,mm,dd,h,m;
     double s;
 
-    ASSERT(abs(now.utc() - TimeCoord(now.mjd()).utc()) < usec);
-    ASSERT(abs(now.utc() - TimeCoord(now.getDay(), now.getFraction()).utc())
-           < usec);
+    ASSERT(now == TimeCoord(now.mjd()));
+    ASSERT(now == TimeCoord(now.getDay(), now.getFraction()));
     ASSERT(abs(now.utc() - now.local() + now.getUTCDiff()) < usec);
 
-    now.ymd(yy, mm, dd); now.hms(h, m, s);
-    ASSERT(abs(now.utc() - TimeCoord(yy, mm, dd, h, m, s).utc())
-           < usec);
+    now.ymd(yy, mm, dd);
+    now.hms(h, m, s);
+    ASSERT(now == TimeCoord(yy, mm, dd, h, m, s));
 
-    now.ymd(yy, mm, dd, true); now.hms(h, m, s, true);
+    now.ymd(yy, mm, dd, true); 
+    now.hms(h, m, s, true);
     ASSERT(abs(now.local() - TimeCoord(yy, mm, dd, h, m, s).utc()) < usec);
 
     then.utc(now.utc());
-    ASSERT(abs(then.local() - now.local()) < usec);
-    then.mjd(0);
+    ASSERT(now == then);
+    then.mjd(0); 
 
     then.local(now.local());
-    ASSERT(abs(then.utc() - now.utc()) < usec);
+    ASSERT(now == then);
     then.mjd(0);
 
     then.mjd(now.mjd());

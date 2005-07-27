@@ -78,6 +78,27 @@ namespace LOFAR
       virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& azel,
                                             const vector<EarthCoord>& pos,
                                             const vector<TimeCoord>& time);
+
+      virtual SkyCoord j2000ToItrf(const SkyCoord& radec, 
+                                   const EarthCoord& pos, 
+                                   const TimeCoord& time);
+
+      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& radec,
+                                            const EarthCoord& pos,
+                                            const TimeCoord& time);
+
+      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& radec,
+                                            const vector<EarthCoord>& pos,
+                                            const TimeCoord& time);
+
+      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& radec,
+                                            const EarthCoord& pos,
+                                            const vector<TimeCoord>& time);
+
+      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& radec,
+                                            const vector<EarthCoord>& pos,
+                                            const vector<TimeCoord>& time);
+
     private:
 
     };

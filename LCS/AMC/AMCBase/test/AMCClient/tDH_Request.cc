@@ -45,7 +45,6 @@ int main(int /*argc*/, const char* const argv[])
     double usec = 1e-6;
 
     ConverterCommand sendCmd(ConverterCommand::J2000toAZEL);
-    
     vector<SkyCoord> sendSky;
     sendSky.push_back(SkyCoord());
     sendSky.push_back(SkyCoord(0.4, -0.19));
@@ -63,11 +62,9 @@ int main(int /*argc*/, const char* const argv[])
     DH_Request sendReq;
     DH_Request recvReq;
     Connection conn("conn", &sendReq, &recvReq, &aTH, false);
-    
 
     sendReq.writeBuf(sendCmd, sendSky, sendEarth, sendTime);
     conn.write();
-//    sendConn.waitForWrite();  // !!?? no TH_Mem::waitForSent() ??!!
 
     ConverterCommand recvCmd;
     vector<SkyCoord> recvSky;
@@ -75,7 +72,6 @@ int main(int /*argc*/, const char* const argv[])
     vector<TimeCoord> recvTime;
 
     conn.read();
-//     recvConn.waitForRead();
     recvReq.readBuf(recvCmd, recvSky, recvEarth, recvTime);
 
     ASSERT(sendCmd.get() == recvCmd.get());

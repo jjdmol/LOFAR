@@ -35,17 +35,42 @@ using namespace std;
 int main(int /*argc*/, const char* argv[])
 {
   INIT_LOGGER(argv[0]);
+
   try {
+
     SkyCoord sc0;
-    ASSERT(sc0.angle0() == 0 && sc0.angle1() == 0);
+    SkyCoord sc1(0.4, -0.19, SkyCoord::ITRF);
+    SkyCoord sc2(-1.2, 2.38, SkyCoord::AZEL);
+    SkyCoord sc3(-0.3, 1.75, static_cast<SkyCoord::Types>(1294));
+
+    ASSERT(sc0.isValid() && 
+           sc0.angle0() == 0 && 
+           sc0.angle1() == 0 && 
+           sc0.type() == SkyCoord::J2000);
+    ASSERT(sc1.isValid() &&
+           sc1.angle0() == 0.4 && 
+           sc1.angle1() == -0.19 &&
+           sc1.type() == SkyCoord::ITRF);
+    ASSERT(sc2.isValid() &&
+           sc2.angle0() == -1.2 && 
+           sc2.angle1() == 2.38 &&
+           sc2.type() == SkyCoord::AZEL);
+    ASSERT(!sc3.isValid() &&
+           sc3.angle0() == -0.3 && 
+           sc3.angle1() == 1.75 && 
+           sc3.type() == SkyCoord::INVALID);
+
     cout << "sc0 = " << sc0 << endl;
-    SkyCoord sc1(0.4, -0.19);
-    ASSERT(sc1.angle0() == 0.4 && sc1.angle1() == -0.19);
     cout << "sc1 = " << sc1 << endl;
+    cout << "sc2 = " << sc2 << endl;
+    cout << "sc3 = " << sc3 << endl;
+
   }
+
   catch (Exception& e) {
     LOG_ERROR_STR(e);
     return 1;
   }
+
   return 0;
 }
