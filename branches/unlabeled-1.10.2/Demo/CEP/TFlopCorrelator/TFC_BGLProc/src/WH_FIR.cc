@@ -38,6 +38,7 @@ WH_FIR::WH_FIR(const string& name, const short subBandID):
   itsFFTs           = myPS.getInt32("WH_FIR.FFTs");
   
   DBGASSERTSTR(itsNTimes%itsNFilters == 0,"times should be multiple of FIR banks.");
+  DBGASSERTSTR(itsNFFTs == 1,             "Currently only 1 FFT workholder connection supported");
   itsOutTime = itsNTimes%itsNFilters;
 
   getDataManager().addInDataHolder(0, new DH_FIR("input", itsSBID, myPS));
@@ -87,16 +88,24 @@ void WH_FIR::preprocess() {
 
 void WH_FIR::process() {
   
+  DH_FIR *inDH  = (DH_FIR*)(getDataManager().getInHolder(0));
+  DH_FIR *outDH = (DH_FIR*)(getDataManager().getOutHolder(0)); // see ASSERT(itsNFFTs == 1,...)
+  //todo: handle the pols
+  int pol=1;
+
   for (int station=0; station<itsNStations; station++) {
+    inDH->InitTimeCursor(station, pol);
     for (int outtime=0; outtime<itsOutTimes; outtime++) {
+      outDH->InitBankCursor(station, pol, outtime);
       // within this loop we have to get itsNFilterBanks samples from the input;
       // each filter bank receives one time sample and produces one new output 
       // (weighted sum over all elements in the delay line)
+      
       for (int filter = 0; filter < itsNFilterBanks; filter++) {
 	
-	outDH->getBufferElement[][][filter] = FIR(inDH->getBufferElement[][][],
-						  station,
-						  filter); 
+	outDH->setNextBank( FIR(inDH->getNextTime(), // next time sample; advances cursor
+				station,
+				filter) ); 
 	
 	//OLD accum = makefcomplex(0,0);
 	//OLD get data from the input dataholder
