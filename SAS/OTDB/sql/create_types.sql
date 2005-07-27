@@ -30,6 +30,7 @@ DROP TYPE	treeInfo		CASCADE;
 DROP TYPE	OTDBnode		CASCADE;
 DROP TYPE	OTDBparamDef	CASCADE;
 DROP TYPE	OTDBvalue		CASCADE;
+DROP TYPE	OTDBnodeDef		CASCADE;
 
 CREATE TYPE treeInfo AS (
 	treeID			INT4,			-- OTDBtree.treeID%TYPE,
@@ -88,4 +89,14 @@ CREATE TYPE OTDBvalue AS (
 	name			VARCHAR(120),
 	value			TEXT,
 	time			timestamp(0)
+);
+
+
+CREATE TYPE OTDBnodeDef AS (
+	nodeID			INT4,
+	name			VARCHAR(40),
+	version			INT4,
+	classif			INT2,
+	constraints		TEXT,
+	description		TEXT
 );

@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <fstream>
+#include <Common/lofar_fstream.h>
 #include <OTDB/VICadmin.h>
 #include <OTDB/OTDBnode.h>
 
@@ -67,25 +67,6 @@ VICadmin::~VICadmin()
 //
 //	return (0);
 //}
-
-//
-// loadComponentFile(treeID, filename): nodeID
-//
-// a VIC tree is build up from single components. The definition of a
-// component can loaded from a file with this call
-nodeIDType	VICadmin::loadComponentFile (treeIDType			aTreeID,
-						   			 const string&	filename)
-{
-	if (!itsConn->connect()) {
-		itsError = itsConn->errorMsg();
-		return (0);
-	}
-
-	//TODO: ...
-
-	return (0);
-
-}
 
 //
 // buildFoldedTree(treeID, topNode): treeID
