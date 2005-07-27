@@ -11,6 +11,7 @@ THPVSSBridge_CPPFLAGS= \
 	-fdiagnostics-show-location=once
 
 THPVSSBridge_SOURCES 		= \
+	PropertyProxy.cc \
 	THPVSSBridge.cc \
 	THPVSSBridgeMain.cc \
 	THPVSSBridge_Protocol.cc
