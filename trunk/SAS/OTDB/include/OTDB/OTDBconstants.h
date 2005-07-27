@@ -40,18 +40,18 @@ const int16	TCobsolete			= 3;
 
 
 // Enumeration of parameter types. Used in VIC and PIC trees.
-const int16 PTnode				= 0;		// not a parameter
-const int16	PTbool				= 101;
-const int16	PTint				= 102;
-const int16	PTlong				= 103;
-const int16	PTfloat				= 104;
-const int16	PTdouble			= 105;
-const int16	PTicomplex			= 106;
-const int16	PTlcomplex			= 107;
-const int16	PT_fcomplex			= 108;
-const int16	PTdcomplex			= 109;
-const int16	PTtext				= 110;
-const int16	PTbin				= 111;
+//const string PTbool		("bool");
+//const string PTint		("int");
+//const string PTuint		("uint");
+//const string PTlong		("long");
+//const string PTfloat	("flt");
+//const string PTdouble	("dbl");
+//const string PTicomplex	("icpx");
+//const string PTlcomplex	("lcpx");
+//const string PTfcomplex	("fcpx");
+//const string PTdcomplex	("dcpx");
+//const string PTtext		("text");
+//const string PTbin		("bin");
 
 
 // Enumeration of tree types.

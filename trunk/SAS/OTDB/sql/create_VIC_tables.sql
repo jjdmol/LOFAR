@@ -62,18 +62,14 @@ CREATE SEQUENCE	VICnodedefID;
 
 CREATE TABLE VICnodedef (
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICnodedefID'),
---	parentID	INT4			NOT NULL DEFAULT 0,
 	name		VARCHAR(40)		NOT NULL,
 	version		INT4			NOT NULL DEFAULT 010000,
 	classif		INT2			NOT NULL REFERENCES classification(ID),
---	instances	INT2			NOT NULL DEFAULT 1,
---	limits		TEXT,			-- interpreted by GUI: range, enum, default
 	constraints	TEXT,			-- interpreted by OTDB
 	description	TEXT,
 
-	CONSTRAINT	Vnodedef_node_uniq	UNIQUE(nodeID)
-	-- next constraint should be added but may have performance impact!
-	-- CONSTRAINT Vnodedef_name_uniq  UNIQUE(parentID, name, version, classif)
+	CONSTRAINT	Vnodedef_node_uniq	UNIQUE(nodeID),
+	CONSTRAINT	Vnodedef_name_uniq  UNIQUE(name, version, classif)
 ) WITHOUT OIDS;
 
 

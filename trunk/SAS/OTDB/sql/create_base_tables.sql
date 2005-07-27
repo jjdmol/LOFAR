@@ -42,7 +42,8 @@ CREATE TABLE classification (
 	baseID		BOOL			DEFAULT TRUE,
 	reference	BOOL			DEFAULT TRUE,
 
-	CONSTRAINT class_id_uniq	UNIQUE (ID)
+	CONSTRAINT class_id_uniq	UNIQUE (ID),
+	CONSTRAINT class_name_uniq	UNIQUE (name)
 ) WITHOUT OIDS;
 INSERT INTO classification VALUES (1, 'development', TRUE, TRUE);
 INSERT INTO classification VALUES (2, 'test', 		 TRUE, TRUE);
@@ -57,9 +58,10 @@ INSERT INTO classification VALUES (5, 'obsolete', 	 TRUE, FALSE);
 --
 CREATE TABLE constr_type (
 	ID			INT2			NOT NULL,
-	name		VARCHAR(6)		NOT NULL,
+	name		VARCHAR(10)		NOT NULL,
 
-	CONSTRAINT constr_type_uniq		UNIQUE (ID)
+	CONSTRAINT constr_type_uniq		UNIQUE (ID),
+	CONSTRAINT constr_name_uniq		UNIQUE (name)
 ) WITHOUT OIDS;
 INSERT INTO constr_type VALUES (0, 'none');
 INSERT INTO constr_type VALUES (1, 'shell');
@@ -78,6 +80,7 @@ CREATE TABLE param_type (
 
 	CONSTRAINT param_type_uniq		UNIQUE (ID)
 ) WITHOUT OIDS;
+INSERT INTO param_type VALUES (  0, 'node');
 INSERT INTO param_type VALUES (101, 'bool');
 INSERT INTO param_type VALUES (102, 'int');
 INSERT INTO param_type VALUES (103, 'long');
@@ -111,7 +114,8 @@ CREATE TABLE validation (
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
-	CONSTRAINT validation_id_uniq		UNIQUE (ID)
+	CONSTRAINT validation_id_uniq		UNIQUE (ID),
+	CONSTRAINT validation_name_uniq		UNIQUE (name)
 ) WITHOUT OIDS;
 INSERT INTO validation VALUES (0, 'never');
 INSERT INTO validation VALUES (1, 'request');
@@ -128,15 +132,15 @@ INSERT INTO validation VALUES (3, 'resource');
 --
 CREATE TABLE unit (
 	ID			INT2			NOT NULL,
-	label		VARCHAR(10)		NOT NULL,
-	name		VARCHAR(5),
+	name 		VARCHAR(10)		NOT NULL,
+	label		VARCHAR(5),
 	format		VARCHAR(15),
 	scalable	BOOL			DEFAULT FALSE,
 
 	CONSTRAINT unit_id_uniq		UNIQUE (ID),
-	CONSTRAINT unit_label_uniq	UNIQUE (label)
+	CONSTRAINT unit_name_uniq	UNIQUE (name)
 ) WITHOUT OIDS;
-INSERT INTO unit values (0, '',			'',		 '',			false);
+INSERT INTO unit values (0, '-',		'',		 '',			false);
 INSERT INTO unit values (1, 'ampere',	'A',	 '',			true);
 INSERT INTO unit values (2, 'm/s',		'm/s',	 '',			false);
 INSERT INTO unit values (3, 'dB',		'dB',	 '',			false);
@@ -156,7 +160,8 @@ CREATE TABLE treetype (
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
-	CONSTRAINT treetype_uniq	UNIQUE(ID)
+	CONSTRAINT treetype_uniq	UNIQUE(ID),
+	CONSTRAINT treename_uniq	UNIQUE(name)
 )WITHOUT OIDS;
 INSERT INTO treetype VALUES (10, 'hardware');
 INSERT INTO treetype VALUES (20, 'VItemplate');

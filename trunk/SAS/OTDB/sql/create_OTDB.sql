@@ -44,6 +44,11 @@
 \i instanciateTree_func.sql
 \i exportTree_func.sql
 
+-- VICcomponent
+\i saveVCnode_func.sql
+\i saveVICparamDef_func.sql
+\i getVICnodeDef_func.sql
+
 -- values
 \i addKVT_func.sql
 

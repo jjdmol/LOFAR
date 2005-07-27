@@ -40,6 +40,8 @@ namespace LOFAR {
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
 class OTDBnode;
+class OTDBparam;
+class VICnodeDef;
 
 
 // The VICadmin class is the interface to the VIC trees. The VIC trees 
@@ -62,8 +64,14 @@ public:
 
 	// a VIC tree is build up from single components. The definition of a
 	// component can loaded from a file with this call
-	nodeIDType loadComponentFile (treeIDType		aTreeID,
-							   	  const string&	filename);
+	nodeIDType	loadComponentFile (const string&	filename);
+	bool		saveNode	(VICnodeDef&	aNode);
+	bool		saveParam	(OTDBparam&		aParam);
+	bool		deleteNode	(VICnodeDef&	aNode);
+	VICnodeDef	getNode		(nodeIDType		aNodeID);
+	VICnodeDef	getNode		(const string&		name,
+							 uint32				version,
+							 treeClassifType	classif);
 
 	// From a component tree a (folded) tree can be constructed. In a folded
 	// tree only the structure of the tree is created, there is no replication

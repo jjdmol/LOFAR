@@ -1,5 +1,10 @@
 INSTHDRS			= OTDBconnection.h	\
 					  OTDBconstants.h	\
+					  Converter.h \
+					  ParamType.h \
+					  UnitType.h \
+					  ClassifType.h \
+					  misc.h \
 					  OTDBtypes.h	\
 					  OTDBtree.h	\
 					  OTDBnode.h	\
@@ -13,7 +18,7 @@ INSTHDRS			= OTDBconnection.h	\
 					  OTDBevent.h	\
 					  OTDBeventList.h	
 
-NOINSTHDRS			=
+NOINSTHDRS			= VICnodeDef.h wSpaceSplit.h
 
 TCCHDRS				=
 
@@ -27,13 +32,18 @@ lib_LTLIBRARIES			= libotdb.la
 
 libotdb_la_SOURCES 		= $(DOCHDRS) \
 							OTDBconnection.cc	\
+							misc.cc \
 							OTDBtree.cc	\
 							OTDBnode.cc	\
 							OTDBvalue.cc	\
 							OTDBparam.cc	\
+							VICnodeDef.cc \
+							Converter.cc \
+							wSpaceSplit.cc \
 							OTDBinfo.cc	\
 							PICadmin.cc	\
 							VICadmin.cc		\
+							loadCompFile.cc \
 							OTDBaction.cc	\
 						    OTDBactionList.cc	\
 						    OTDBevent.cc	\
