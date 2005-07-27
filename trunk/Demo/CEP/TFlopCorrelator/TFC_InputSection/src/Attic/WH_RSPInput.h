@@ -45,7 +45,7 @@ namespace LOFAR
 
   typedef struct
   {
-    int stationid;
+    //int stationid;
     int invalid;
     timestamp_t timestamp;
   } metadataType;
@@ -60,6 +60,7 @@ namespace LOFAR
     int nrPacketsInFrame;
     int nrSubbandsInPacket;
     int nrRSPoutputs;
+    int* StationIDptr;
     TinyDataManager* Datamanager;
     bool Syncmaster;
     bool Stopthread;
@@ -124,6 +125,7 @@ namespace LOFAR
       int itsNSamplesToCopy;
       int itsNPolarisations;
       int itsCyclicBufferSize;
+      int itsStationID;
      
       BufferController<subbandType> **itsSubbandBuffer;
       BufferController<metadataType> **itsMetadataBuffer;

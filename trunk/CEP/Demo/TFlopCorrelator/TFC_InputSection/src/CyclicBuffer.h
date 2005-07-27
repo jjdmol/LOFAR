@@ -23,14 +23,20 @@
 #ifndef TFLOPCORRELATOR_CYCLICBUFFER_H
 #define TFLOPCORRELATOR_CYCLIC_BUFFER_H
 
-
 #include <CEPFrame/Lock.h>
 #include <Common/lofar_vector.h>
+
+// minumum written elements before reading is allowed
+#define MIN_COUNT  (0.1 * itsBuffer.size()) 
+
+// maximum of written elements in buffer to avoid that 
+// writeptr is catching up readptr
+#define MAX_COUNT  (itsBuffer.size() - 5)    
 
 namespace LOFAR
 {
 
-// an item of the CyclicBuffer
+// Item of the CyclicBuffer
 template <class TYPE>
 class BufferItem
 {
@@ -190,14 +196,12 @@ TYPE CyclicBuffer<TYPE>::GetAutoWritePtr(int& ID)
   pthread_mutex_lock(&buffer_mutex);
   
   // wait until space becomes available
-  while (itsCount >= (int)itsBuffer.size())
+  while (itsCount >= MAX_COUNT)
   {
     pthread_cond_wait(&space_available, &buffer_mutex);
   }
 
-  // CONDITION: itsCount < itsBuffer.size()
-  // space available for at least one element
-  
+  // CONDITION: itsCount < MAX_COUNT
   ID = itsHeadIdx;
   itsBuffer[ID].itsRWLock.WriteLock();
   
@@ -225,12 +229,12 @@ const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until enough elements are available
-  while ((itsCount <= itsMinCount)) 
+  while ((itsCount <= MIN_COUNT)) 
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
-  // CONDITION: itsCount > itsMinCount
   
+  // CONDITION: itsCount > MIN_COUNT
   ID = itsTailIdx;
   ReadLockElements(ID, 1);
  
@@ -256,30 +260,25 @@ const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int Nelements, int& I
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until enough elements are available
-  while ((itsCount <= itsMinCount) || (itsCount<=offset)) 
+  while ((itsCount <= MIN_COUNT) || (itsCount <= offset+Nelements)) 
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
-  // CONDITION: itsCount > itsMinCount &&  itscount > offset
+  // CONDITION: itsCount > MIN_COUNT &&  itscount > offset + Nelements
   
-  // set offset
-  itsTailIdx += offset;
-  ID = itsTailIdx;
+  // set offset (note: offset can be less than 0
+  ID = itsTailIdx + offset;
   
   // lock the elements
   ReadLockItems(ID, Nelements); 
 
-  for (int i=0;i<Nelements;i++) {
-    itsBuffer[ID+i].itsRWLock.ReadLock();
- }
- 
   // adjust the tail
   itsTailIdx += Nelements;
   if (itsTailIdx >= (int)itsBuffer.size())
   {
     itsTailIdx = itsTailIdx-(int)itsBuffer.size();
   }
-  itsCount = itsCount-offset-Nelements;
+  itsCount = itsCount-Nelements;
   
   // signal that space has become available
   pthread_cond_broadcast(&space_available);
