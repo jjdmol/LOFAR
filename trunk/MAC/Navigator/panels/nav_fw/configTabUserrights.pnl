@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,333 230 730 530 N "_3DFace" 0
+PANEL,269 267 730 530 N "_3DFace" 0
 EEE E E 1 -1 -1 0  178 148
 "" 0 1
 E"#uses \"nav_fw/gcfnav-functions.ctl\"" 0
@@ -1384,8 +1384,8 @@ LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 16 466 66 516
 P 
-14215660
-"32.bmp"
+12632256
+"pictures/nav_fw/icon_usermanagement.gif"
 1
 LANG:1 0 
 "main()
