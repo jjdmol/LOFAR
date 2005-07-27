@@ -74,6 +74,7 @@ namespace LOFAR
       // time.size()</tt> elements which can be seen as a cube with shape
       // <tt>[nsky,npos,ntime]</tt> in Fortran order (thus with sky as the
       // most rapidly varying axis).
+      // \pre \a radec must be given in \c J2000.
       virtual vector<SkyCoord> j2000ToAzel (const vector<SkyCoord>& radec,
                                             const vector<EarthCoord>& pos,
                                             const vector<TimeCoord>& time) = 0;
@@ -87,6 +88,9 @@ namespace LOFAR
       // Convert a series of azimuth/elevations for the given earth position
       // and time to ra/dec. The output vector has the same length as the
       // input \a azel vector.
+      // \pre \a azel must be given in \c AZEL.
+      // \post size of return vector is equal to size of vector \a azel.
+      // \return vector of SkyCoord in \c J2000.
       virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& azel,
                                             const EarthCoord& pos,
                                             const TimeCoord& time) = 0;
@@ -94,10 +98,47 @@ namespace LOFAR
       // Convert a series of azimuth/elevations for the given earth positions
       // and times to ra/dec. The output vector has the same length as the
       // input \a azel vector.
-      // All input vectors must have the same length.
-      // The difference with the function above is that here each \a azel has
-      // its own earth position and time.
+      // \pre All input vectors must have the same length.
+      //      \a azel must be given in \c AZEL.
+      // \post size of return vector is equal to size of vector \a azel.
+      // \return vector of SkyCoord in \c J2000.
+      // \note The difference with the function above is that here each \a
+      // azel has its own earth position and time.
       virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& azel,
+                                            const vector<EarthCoord>& pos,
+                                            const vector<TimeCoord>& time) = 0;
+
+
+      // Convert the given equatorial J2000 sky coordinate to ITRF 
+      // (in radians) for the given earth position and time.
+      virtual SkyCoord j2000ToItrf(const SkyCoord& radec, 
+                                   const EarthCoord& pos, 
+                                   const TimeCoord& time) = 0;
+
+      // Convert a series of sky coordinates.
+      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& radec,
+                                            const EarthCoord& pos,
+                                            const TimeCoord& time) = 0;
+
+      // Convert a sky coordinate for a series of earth positions.
+      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& radec,
+                                            const vector<EarthCoord>& pos,
+                                            const TimeCoord& time) = 0;
+
+      // Convert a sky coordinate for a series of times.
+      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& radec,
+                                            const EarthCoord& pos,
+                                            const vector<TimeCoord>& time) = 0;
+
+      // Convert a series of sky coordinates for a series of earth positions
+      // and times.
+      // The output vector contains <tt>radec.size() * pos.size() *
+      // time.size()</tt> elements which can be seen as a cube with shape
+      // <tt>[nsky,npos,ntime]</tt> in Fortran order (thus with sky as the
+      // most rapidly varying axis).
+      // \pre \a radec must be given in \c J2000;
+      // \return vector of SkyCoord given in \c ITRF.
+      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& radec,
                                             const vector<EarthCoord>& pos,
                                             const vector<TimeCoord>& time) = 0;
 

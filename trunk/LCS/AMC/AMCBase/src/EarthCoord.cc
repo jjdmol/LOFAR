@@ -32,11 +32,44 @@ namespace LOFAR
   namespace AMC
   {
 
-    ostream& operator<< (ostream& os, const EarthCoord& pos)
+    EarthCoord::EarthCoord (double longitude, double latitude, double height,
+                            Types typ)
+      : itsLong(longitude), itsLat(latitude), itsHeight(height)
     {
-      os << '[' << pos.longitude() << ", " << pos.latitude()
-         << ", " << pos.height() << ']';
+      if (INVALID < typ && typ < N_Types) itsType = typ; 
+      else itsType = INVALID;
+    }
+
+
+    const string& EarthCoord::showType() const
+    {
+      //# Caution: Always keep this array of strings in sync with the enum
+      //#          Types that is defined in the header file!
+      static const string types[EarthCoord::N_Types] = {
+        "ITRF",
+        "WGS84",
+      };
+      return types[itsType];
+    }
+
+
+    ostream& operator<<(ostream& os, const EarthCoord& pos)
+    {
+      if (!pos.isValid()) os << "<INVALID>";
+      else os << "[" << pos.longitude() << ", " << pos.latitude()
+              << ", " << pos.height() << "] (" << pos.showType() << ")";
       return os;
+    }
+
+
+    bool operator==(const EarthCoord& lhs, const EarthCoord& rhs)
+    {
+      return 
+        lhs.isValid()   && rhs.isValid()   &&
+        lhs.longitude() == rhs.longitude() &&
+        lhs.latitude()  == rhs.latitude()  &&
+        lhs.height()    == rhs.height()    &&
+        lhs.type()      == rhs.type();
     }
 
   } // namespace AMC

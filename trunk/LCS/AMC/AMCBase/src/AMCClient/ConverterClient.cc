@@ -166,6 +166,73 @@ namespace LOFAR
     }
 
 
+    SkyCoord 
+    ConverterClient::j2000ToItrf (const SkyCoord& skyCoord, 
+                                  const EarthCoord& earthCoord, 
+                                  const TimeCoord& timeCoord)
+    {
+      return j2000ToItrf(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord)) [0];
+    }
+
+
+    vector<SkyCoord> 
+    ConverterClient::j2000ToItrf (const vector<SkyCoord>& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const TimeCoord& timeCoord)
+    {
+      return j2000ToItrf(skyCoord, 
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord));
+    }
+
+
+    vector<SkyCoord> 
+    ConverterClient::j2000ToItrf (const SkyCoord& skyCoord,
+                                  const vector<EarthCoord>& earthCoord,
+                                  const TimeCoord& timeCoord)
+    {
+      return j2000ToItrf(vector<SkyCoord> (1, skyCoord),
+                         earthCoord, 
+                         vector<TimeCoord>(1, timeCoord));
+    }
+
+
+    vector<SkyCoord> 
+    ConverterClient::j2000ToItrf (const SkyCoord& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const vector<TimeCoord>& timeCoord)
+    {
+      return j2000ToItrf(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         timeCoord);
+    }
+
+
+    vector<SkyCoord> 
+    ConverterClient::j2000ToItrf (const vector<SkyCoord>& skyCoord,
+                                  const vector<EarthCoord>& earthCoord,
+                                  const vector<TimeCoord>& timeCoord)
+    {
+      // Set the value of ConverterCommand equal to J2000->ITRF
+      ConverterCommand cmd(ConverterCommand::J2000toITRF);
+                                
+      // Send the request to the server
+      sendRequest(cmd, skyCoord, earthCoord, timeCoord);
+
+      // Vectors to hold the conversion result.
+      vector<SkyCoord> sc;
+
+      // Receive the result from the server.
+      // \note This method is blocking.
+      recvResult(sc);
+
+      // Return the result of the conversion.
+      return sc;
+    }
+
+
     void ConverterClient::sendRequest(const ConverterCommand& cmd,
                                       const vector<SkyCoord>& skyCoord,
                                       const vector<EarthCoord>& earthCoord,

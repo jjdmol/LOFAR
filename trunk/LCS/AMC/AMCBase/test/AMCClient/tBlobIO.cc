@@ -81,7 +81,8 @@ void test(const SkyCoord& sco)
   bis.getEnd();
 
   ASSERTSTR(sci.angle0() == sco.angle0() && 
-            sci.angle1() == sco.angle1(), 
+            sci.angle1() == sco.angle1() &&
+            sci.type()   == sco.type(), 
             "sci = " << sci << "; sco = " << sco);
 }
 
@@ -104,8 +105,9 @@ void test(const EarthCoord& eco)
   bis.getEnd();
 
   ASSERTSTR(eci.longitude() == eco.longitude() && 
-            eci.latitude() == eco.latitude() &&
-            eci.height() == eco.height(), 
+            eci.latitude()  == eco.latitude()  &&
+            eci.height()    == eco.height()    &&
+            eci.type()      == eco.type(),
             "eci = " << eci << "; eco = " << eco);
 }
 
@@ -142,17 +144,23 @@ int main(int /*argc*/, const char* const argv[])
 
   try {
 
-    test(ConverterCommand(ConverterCommand::INVALID));
-    test(ConverterCommand(ConverterCommand::AZELtoJ2000));
+    try { 
+      test(ConverterCommand(ConverterCommand::INVALID)); 
+    } catch (AssertError& e) {}
     test(ConverterCommand(ConverterCommand::J2000toAZEL));
-    test(ConverterCommand(1000));
+    test(ConverterCommand(ConverterCommand::J2000toITRF));
+    test(ConverterCommand(ConverterCommand::AZELtoJ2000));
+    try {
+      test(ConverterCommand(1000));
+    } catch (AssertError& e) {}
 
     test(SkyCoord());
-    test(SkyCoord(0.4, -0.19));
+    test(SkyCoord(0.4, -0.19, SkyCoord::ITRF));
+    test(SkyCoord(-1.2, 2.38, SkyCoord::AZEL));
 
     test(EarthCoord());
     test(EarthCoord(0.25*M_PI, -0.33*M_PI));
-    test(EarthCoord(-0.67*M_PI, 0.75*M_PI, 249.98));
+    test(EarthCoord(-0.67*M_PI, 0.75*M_PI, 249.98, EarthCoord::WGS84));
 
     test(TimeCoord());
     test(TimeCoord(0));

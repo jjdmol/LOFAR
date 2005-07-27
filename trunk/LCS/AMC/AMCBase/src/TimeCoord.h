@@ -95,6 +95,11 @@ namespace LOFAR
     // Output in ASCII (in UTC).
     ostream& operator<< (ostream&, const TimeCoord&);
 
+    // Compare two TimeCoord objects for equality.
+    // \attention Two TimeCoord objects are considered equal when the absolute
+    // time difference between the two is less than one microsecond.
+    bool operator==(const TimeCoord& lhs, const TimeCoord& rhs);
+
     // @}
 
 

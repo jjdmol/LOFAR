@@ -28,6 +28,7 @@
 
 //# Forward Declarations.
 #include <Common/lofar_iosfwd.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -46,14 +47,24 @@ namespace LOFAR
     class EarthCoord
     {
     public:
+      // Types of earth coordinates. 
+      enum Types {
+        INVALID = -1,   ///< Used when specified value is out of range.
+        ITRF,
+        WGS84,
+        //# Insert new types HERE !!
+        N_Types         ///< Number of reference types.
+      };
+
       // Default constructor uses 0 for the values.
       EarthCoord()
-        : itsLong(0), itsLat(0), itsHeight(0) {}
+        : itsLong(0), itsLat(0), itsHeight(0), itsType(ITRF) {}
 
       // Create a earth coordinate by giving the longitude and latitude in
-      // radians and the height in meters.
-      EarthCoord (double longitude, double latitude, double height=0)
-        : itsLong(longitude), itsLat(latitude), itsHeight(height) {}
+      // radians and the height in meters. Reference type can be either ITRF
+      // (default), or WGS84.
+      EarthCoord (double longitude, double latitude, double height=0,
+                  Types typ = ITRF);
 
       // Return the longitude in radians.
       double longitude() const
@@ -67,6 +78,17 @@ namespace LOFAR
       double height() const
       { return itsHeight; }
 
+      // Return the reference type.
+      Types type() const
+      { return itsType; }
+
+      // Return the reference type as a string.
+      const string& showType() const;
+
+      // Return whether sky coordinate type is valid.
+      bool isValid() const
+      { return itsType != INVALID; }
+
     private:
       // Longitude in radians.
       double itsLong;
@@ -76,10 +98,17 @@ namespace LOFAR
 
       // Height in meters.
       double itsHeight;
+
+      // Type of earth coordinate.
+      Types itsType;
     };
 
     // Output an EarthCoord in ASCII format.
     ostream& operator<< (ostream&, const EarthCoord&);
+
+    // Compare two EarthCoord objects for equality.
+    // \note Two invalid objects can \e never be equal.
+    bool operator==(const EarthCoord& lhs, const EarthCoord& rhs);
 
     // @}
 

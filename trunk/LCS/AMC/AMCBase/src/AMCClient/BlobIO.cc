@@ -30,6 +30,7 @@
 #include <AMCBase/AMCClient/ConverterCommand.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -39,7 +40,8 @@ namespace LOFAR
     BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc)
     {
       bos << sc.angle0()
-          << sc.angle1();
+          << sc.angle1()
+          << static_cast<int32>(sc.type());
       return bos;
     }
 
@@ -47,7 +49,8 @@ namespace LOFAR
     {
       bos << ec.longitude()
           << ec.latitude()
-          << ec.height();
+          << ec.height()
+          << static_cast<int32>(ec.type());
       return bos;
     }
 
@@ -60,7 +63,7 @@ namespace LOFAR
 
     BlobOStream& operator<<(BlobOStream& bos, const ConverterCommand& cc)
     {
-      bos << cc.get();
+      bos << static_cast<int32>(cc.get());
       return bos;
     }
 
@@ -68,16 +71,21 @@ namespace LOFAR
     BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc)
     {
       double angle0, angle1;
-      bis >> angle0 >> angle1;
-      sc = SkyCoord(angle0, angle1);
+      int32 type;
+      bis >> angle0 >> angle1 >> type;
+      sc = SkyCoord(angle0, angle1, static_cast<SkyCoord::Types>(type));
+      ASSERT(sc.isValid());
       return bis;
     }
 
     BlobIStream& operator>>(BlobIStream& bis, EarthCoord& ec)
     {
       double longitude, latitude, height;
-      bis >> longitude >> latitude >> height;
-      ec = EarthCoord(longitude, latitude, height);
+      int32 type;
+      bis >> longitude >> latitude >> height >> type;
+      ec = EarthCoord(longitude, latitude, height, 
+                      static_cast<EarthCoord::Types>(type));
+      ASSERT(ec.isValid());
       return bis;
     }
 
@@ -91,9 +99,10 @@ namespace LOFAR
 
     BlobIStream& operator>>(BlobIStream& bis, ConverterCommand& cc)
     {
-      int32 iCmd;
-      bis >> iCmd;
-      cc = ConverterCommand(iCmd);
+      int32 cmd;
+      bis >> cmd;
+      cc = ConverterCommand(cmd);
+      ASSERT(cc.isValid());
       return bis;
     }
 

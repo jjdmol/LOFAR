@@ -88,6 +88,27 @@ namespace LOFAR
                                             const vector<EarthCoord>& pos,
                                             const vector<TimeCoord>& time);
 
+      virtual SkyCoord j2000ToItrf(const SkyCoord& radec, 
+                                   const EarthCoord& pos, 
+                                   const TimeCoord& time);
+ 
+      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& radec,
+                                            const EarthCoord& pos,
+                                            const TimeCoord& time);
+ 
+      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& radec,
+                                            const vector<EarthCoord>& pos,
+                                            const TimeCoord& time);
+ 
+      virtual vector<SkyCoord> j2000ToItrf (const SkyCoord& radec,
+                                            const EarthCoord& pos,
+                                            const vector<TimeCoord>& time);
+ 
+      virtual vector<SkyCoord> j2000ToItrf (const vector<SkyCoord>& radec,
+                                            const vector<EarthCoord>& pos,
+                                            const vector<TimeCoord>& time);
+ 
+
       // Send a conversion command to the server. The input data are stored in
       // three vectors.
       void sendRequest(const ConverterCommand&,

@@ -36,8 +36,8 @@ namespace LOFAR
   namespace AMC
   {
     
-    const static double usecPerSec = double(1000000);
-    const static double secPerDay  = double(24*3600);
+    static const double usecPerSec = double(1000000);
+    static const double secPerDay  = double(24*3600);
 
     TimeCoord::TimeCoord()
     {
@@ -162,6 +162,12 @@ namespace LOFAR
          << setw(2) << is << "." << setw(6) << us;
       os.fill(c);
       return os;
+    }
+
+    bool operator==(const TimeCoord& lhs, const TimeCoord& rhs)
+    {
+      static double usec = 1/usecPerSec;
+      return std::abs(lhs.utc() - rhs.utc()) < usec;
     }
 
     double TimeCoord::getUTCDiff()

@@ -124,7 +124,7 @@ int main(int /*argc*/, const char* const argv[])
           }
           vector<SkyCoord> res2 = conv->azelToJ2000 (sk, poss[j], times[i]);
           for (unsigned int k=0; k<4; k++) {
-            cout << res2[k];
+            cout << res2[k] << "; ";
           }
           cout << endl;
         }

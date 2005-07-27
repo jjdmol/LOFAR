@@ -32,10 +32,42 @@ namespace LOFAR
   namespace AMC
   {
 
-    ostream& operator<< (ostream& os, const SkyCoord& sky)
+    SkyCoord::SkyCoord (double angle0, double angle1, Types typ)
+      : itsAngle0(angle0), itsAngle1(angle1) 
     {
-      os << '[' << sky.angle0() << ", " << sky.angle1() << ']';
+      if (INVALID < typ && typ < N_Types) itsType = typ; 
+      else itsType = INVALID;
+    }
+    
+    const string& SkyCoord::showType() const
+    {
+      //# Caution: Always keep this array of strings in sync with the enum
+      //#          Types that is defined in the header file!
+      static const string types[SkyCoord::N_Types] = {
+        "J2000",
+        "AZEL",
+        "ITRF"
+      };
+      return types[itsType];
+    }
+
+
+    ostream& operator<<(ostream& os, const SkyCoord& sky)
+    {
+      if (!sky.isValid()) os << "<INVALID>";
+      else os << "[" << sky.angle0() << ", " << sky.angle1()
+              << "] (" << sky.showType() << ")";
       return os;
+    }
+
+
+    bool operator==(const SkyCoord& lhs, const SkyCoord& rhs)
+    {
+      return 
+        lhs.isValid() && rhs.isValid() &&
+        lhs.angle0()  == rhs.angle0()  && 
+        lhs.angle1()  == rhs.angle1()  &&
+        lhs.type()    == rhs.type();
     }
 
   } // namespace AMC

@@ -47,6 +47,11 @@ int main(int /*argc*/, const char* const argv[])
       ASSERT(c.get() == ConverterCommand::J2000toAZEL);
     }
     {
+      ConverterCommand c(ConverterCommand::J2000toITRF);
+      ASSERT(c.isValid());
+      ASSERT(c.get() == ConverterCommand::J2000toITRF);
+    }
+    {
       ConverterCommand c(ConverterCommand::AZELtoJ2000);
       ASSERT(c.isValid());
       ASSERT(c.get() == ConverterCommand::AZELtoJ2000);
