@@ -48,10 +48,10 @@ class GCFKeyValueLogger : public TM::GCFTask
     static GCFKeyValueLogger* instance();
 
   public: // member functions
-    void logKeyValue(const string key, const Common::GCFPValue& value, 
+    void logKeyValue(const string& key, const Common::GCFPValue& value, 
                      Common::TKVLOrigin origin, const timeval& timestamp, 
                      const string& description = "");
-    void logKeyValue(const string key, const Common::GCFPValue& value, 
+    void logKeyValue(const string& key, const Common::GCFPValue& value, 
                      Common::TKVLOrigin origin, const string& description = "");
     
     void addAction(const string& key, uint8 action, Common::TKVLOrigin origin, 
@@ -93,8 +93,8 @@ class GCFKeyValueLogger : public TM::GCFTask
 #define LOG_KEYVALUE(key, value, origin) \
   LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin);
 
-#define ADD_ACTION(key, value, origin, timestamp, desc) \
-  LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->addAction(key, value, origin, timestamp, desc);
+#define ADD_ACTION(key, action, origin, timestamp, desc) \
+  LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->addAction(key, action, origin, timestamp, desc);
   
 #define SKIP_UPDATES_FROM(manID) \
   LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->skipUpdatesFrom(manID);

@@ -28,6 +28,7 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <KVL_Protocol.ph>
 #include <KVLDefines.h>
+#include <PropertyLogger.h>
 
 namespace LOFAR 
 {
@@ -52,23 +53,25 @@ class KeyValueLoggerDaemon : public TM::GCFTask
     TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
         
   private: // helper methods
-    void sendLoggingBuffer();
+    void sendEventsBuffer();
     
   private: // data members        
     TM::GCFTCPPort  _kvlDaemonPortProvider;
     TM::GCFPort     _kvlMasterClientPort;
     typedef list<TM::GCFPortInterface*> TClients;
-    TClients        _clients;
 
   private: // admin members
-    typedef map<uint64 /*seqnr */, KVLUpdatesEvent*> TSequenceList;
+    typedef map<uint64 /*seqnr */, KVLEventCollectionEvent*> TSequenceList;
     TSequenceList   _seqList;
     TClients        _clientsGarbage;
-    unsigned char   _logBuf[MAX_LOG_BUFF_SIZE];
-    unsigned int    _nrOfBufferedUpdates;
-    unsigned int    _curLogBufSize;
+    unsigned char   _eventsBuf[MAX_EVENTS_BUFF_SIZE];
+    unsigned int    _nrOfBufferedEvents;
+    unsigned int    _curEventsBufSize;
     uint8           _registerID;
     uint64          _curSeqNr;
+    uint64          _oldestUnanswerdSeqNr;
+    PropertyLogger  _propertyLogger;
+    
 };
   } // namespace LogSys
  } // namespace GCF

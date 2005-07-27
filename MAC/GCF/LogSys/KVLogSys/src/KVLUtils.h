@@ -53,12 +53,12 @@ class Value : public TM::GCFTransportable
     bool _unpacked;
 };
 
-class LoggingCollection : public TM::GCFTransportable
+class EventCollection : public TM::GCFTransportable
 {
   public:
-    LoggingCollection() {};
+    EventCollection() {};
 
-    virtual ~LoggingCollection() {};
+    virtual ~EventCollection() {};
 
     unsigned int pack(char* buffer);
     unsigned int unpack(char* buffer);
@@ -67,12 +67,12 @@ class LoggingCollection : public TM::GCFTransportable
     Common::GCFPVBlob buf;
 };
 
-inline unsigned int LoggingCollection::pack(char* buffer)
+inline unsigned int EventCollection::pack(char* buffer)
 {
   return buf.pack(buffer);
 }
 
-inline unsigned int LoggingCollection::getSize()
+inline unsigned int EventCollection::getSize()
 {
   return buf.getSize();
 }
