@@ -71,7 +71,7 @@ event = {
 };
 
 event = {
-	signal = UPDATES;
+	signal = EVENT_COLLECTION;
 	dir = IN;
 	param = {
 		name = "seqNr";
@@ -82,12 +82,12 @@ event = {
 		type = "uint8";
 	};
 	param = {
-		name = "nrOfUpdates";
+		name = "nrOfEvents";
 		type = "uint16";
 	};
 	param = {
-		name = "updates";
-		type = "LOFAR::GCF::LogSys::LoggingCollection";
+		name = "events";
+		type = "LOFAR::GCF::LogSys::EventCollection";
 		userdefined;
 	};
 };

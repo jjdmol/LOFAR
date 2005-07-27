@@ -163,9 +163,9 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
       garbageTimerID = _kvlMasterPortProvider.setTimer(1.0, 5.0); 
       break;
 
-    case KVL_UPDATES:
+    case KVL_EVENT_COLLECTION:
     {
-      KVLUpdatesEvent inEvent(e);
+      KVLEventCollectionEvent inEvent(e);
       TRegisteredClients::iterator iter = _clients.find(inEvent.daemonID);
 
       LOG_DEBUG(formatString(
@@ -175,7 +175,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
       DBGASSERT(iter != _clients.end());
       
       LOG_DEBUG(formatString(
-          "^-Receives update collection with seqnr. %ld.",
+          "^-Receives event collection with seqnr. %ld.",
           inEvent.seqNr, 
           iter->first));
       if (((iter->second.curSeqNr + 1) % 0xFFFF) == inEvent.seqNr)
@@ -184,52 +184,71 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
         outAnswer.seqNr = inEvent.seqNr;      
         p.send(outAnswer);
         LOG_DEBUG(formatString(
-            "^-Processing update collection with seqnr. %ld.",
+            "^-Processing event collection with seqnr. %ld.",
             inEvent.seqNr, 
             iter->first));
         iter->second.curSeqNr = inEvent.seqNr;
         
-        unsigned char* updatesData = inEvent.updates.buf.getValue();
-        uint16 updatesDataLength = inEvent.updates.buf.getLen();
-        GCFEvent rawEvent(KVL_UPDATE);
-        GCFEvent* fullUpdateEvent(0);
+        unsigned char* eventsData = inEvent.events.buf.getValue();
+        uint16 eventsDataLength = inEvent.events.buf.getLen();
+        GCFEvent rawEvent(KVL_UPDATE); // KVL_UPDATE == default
+        GCFEvent* fullEvent(0);
         char* eventBuf(0);
 
-        for (uint16 i = 0; i < inEvent.nrOfUpdates; i++)
+        for (uint16 i = 0; i < inEvent.nrOfEvents; i++)
         {  
           // expects and reads the length field
-          DBGASSERT(updatesDataLength > sizeof(rawEvent.length));
-          memcpy(&rawEvent.length, updatesData, sizeof(rawEvent.length));
-          updatesDataLength -= sizeof(rawEvent.length);
-          updatesData += sizeof(rawEvent.length);
+          DBGASSERT(eventsDataLength > sizeof(rawEvent.length));
+          memcpy(&rawEvent.signal, eventsData, sizeof(rawEvent.signal));
+          memcpy(&rawEvent.length, eventsData + sizeof(rawEvent.signal), sizeof(rawEvent.length));
+          eventsDataLength -= (sizeof(rawEvent.length) + sizeof(rawEvent.signal));
+          eventsData += sizeof(rawEvent.length) + sizeof(rawEvent.signal);
 
           // expects and reads the payload
           DBGASSERT(rawEvent.length > 0);
-          DBGASSERT(rawEvent.length <= updatesDataLength);
+          DBGASSERT(rawEvent.length <= eventsDataLength);
           eventBuf = new char[sizeof(rawEvent) + rawEvent.length];
-          fullUpdateEvent = (GCFEvent*)eventBuf;
+          fullEvent = (GCFEvent*)eventBuf;
           memcpy(eventBuf, &rawEvent, sizeof(rawEvent));
         
           // read the payload right behind the just memcopied basic event structure
-          memcpy(eventBuf + sizeof(rawEvent), updatesData, rawEvent.length);
-  
-          KVLUpdateEvent updateEvent(*fullUpdateEvent);
+          memcpy(eventBuf + sizeof(rawEvent), eventsData, rawEvent.length);
           
-          LOG_DEBUG(formatString(
-              "key: %s, unr: %d, udl: %d",
-              updateEvent.key.c_str(),
-              i,
-              updatesDataLength));
+          switch (rawEvent.signal)
+          {
+            case KVL_UPDATE:
+            {
+              KVLUpdateEvent updateEvent(*fullEvent);
+              
+              LOG_DEBUG(formatString(
+                  "key: %s, unr: %d, udl: %d",
+                  updateEvent.key.c_str(),
+                  i,
+                  eventsDataLength));
+              break;
+            }
+            case KVL_ADD_ACTION:
+            {
+              KVLAddActionEvent addActionEvent(*fullEvent);
+              
+              LOG_DEBUG(formatString(
+                  "key: %s, unr: %d, udl: %d",
+                  addActionEvent.key.c_str(),
+                  i,
+                  eventsDataLength));
+              break;
+            } 
+          }
           
           delete [] eventBuf;
-          updatesDataLength -= rawEvent.length;
-          updatesData += rawEvent.length;
+          eventsDataLength -= rawEvent.length;
+          eventsData += rawEvent.length;
         }
       }
       else
       {
         LOG_DEBUG(formatString(
-            "^-Skip update collection with seqnr. %ld!",
+            "^-Skip event collection with seqnr. %ld!",
             inEvent.seqNr, 
             iter->first));
       }

@@ -33,8 +33,8 @@ namespace LOFAR
   namespace LogSys 
   {
 
-#define MAX_LOG_BUFF_SIZE 1400
-#define MAX_NR_OF_UPDATES 250
+#define MAX_EVENTS_BUFF_SIZE 1400
+#define MAX_NR_OF_EVENTS 250
 #define MAX_NR_OF_RETRY_MSG 10
 #define CONNECTION_TIMEOUT 3600.0 // == 1 hour
 

@@ -61,7 +61,7 @@ unsigned int Value::getSize()
   return _pValue->getSize();
 }
 
-unsigned int LoggingCollection::unpack(char* buffer)
+unsigned int EventCollection::unpack(char* buffer)
 {
   GCFPValue* pValue(GCFPValue::unpackValue(buffer));
   assert(pValue);

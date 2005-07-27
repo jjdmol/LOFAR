@@ -15,6 +15,7 @@ DOCHDRS	=	$(pkginclude_HEADERS) \
 	KeyValueLoggerDaemon.h \
 	KeyValueLoggerMaster.h \
 	KVLUtils.h \
+	PropertyLogger.h \
 	KVL_Protocol.ph
    
 lib_LTLIBRARIES 	= libgcfkvlc.la
@@ -34,7 +35,8 @@ libkvlprot_la_SOURCES= $(DOCHDRS) \
   KVLUtils.cc
 
 libkvld_la_SOURCES	= $(DOCHDRS) \
-	KeyValueLoggerDaemon.cc
+	KeyValueLoggerDaemon.cc \
+	PropertyLogger.cc
 
 libkvld_la_LIBADD		= libkvlprot.la
 libkvld_la_CPPFLAGS= -DLOFARLOGGER_SUBPACKAGE=\"KVLD\"

@@ -27,6 +27,9 @@
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
+#include <GCF/PAL/GCF_Answer.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
+#include <ManagerIdentifier.hxx>
 
 namespace LOFAR 
 {
@@ -34,15 +37,19 @@ using TYPES::uint8;
  namespace GCF 
  {
 using namespace TM;
+using namespace PAL;
+using namespace Common;
   namespace LogSys 
   {
 
 KeyValueLoggerDaemon::KeyValueLoggerDaemon() :
   GCFTask((State)&KeyValueLoggerDaemon::initial, KVL_DAEMON_TASK_NAME),
-  _nrOfBufferedUpdates(0),
-  _curLogBufSize(0),
+  _nrOfBufferedEvents(0),
+  _curEventsBufSize(0),
   _registerID(0),
-  _curSeqNr(0)
+  _curSeqNr(0),
+  _oldestUnanswerdSeqNr(1),
+  _propertyLogger(*this)
 {
   // register the protocol for debugging purposes
   registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
@@ -151,25 +158,54 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
         {           
           if (_seqList.empty())
           {
-            if (_nrOfBufferedUpdates > 0)
+            if (_nrOfBufferedEvents > 0)
             {
               // send current collected updates
-              sendLoggingBuffer();
+              sendEventsBuffer();
             }
           }
           else if (_kvlMasterClientPort.isConnected())
           {
             // resend max. 10 not answered messages
             uint8 i = 0;
-            for (TSequenceList::iterator iter = _seqList.begin();
-                 iter != _seqList.end() && i < MAX_NR_OF_RETRY_MSG; ++iter)
+            KVLEventCollectionEvent* pUpdateEvents;
+            TSequenceList::iterator iter;
+            // find the first not yet sent events buffer
+            for (iter = _seqList.find(_oldestUnanswerdSeqNr);
+                 i < MAX_NR_OF_RETRY_MSG; ++iter)
             {
-              if (iter->second->daemonID == 0)
+              if (iter == _seqList.end())
               {
-                iter->second->daemonID = _registerID;
+                _oldestUnanswerdSeqNr++;
               }
-              _kvlMasterClientPort.send(*iter->second);
+              else
+              {
+                // found
+                break;
+              }
               i++;
+            }
+            for (i = 0; i < MAX_NR_OF_RETRY_MSG; i++)
+            {
+              if (iter == _seqList.end())
+              {
+                // because the map is sorted, we have to force jump from end to begin;
+                iter = _seqList.begin();
+              }
+              if (iter != _seqList.end())
+              {               
+                pUpdateEvents = iter->second;
+                if (pUpdateEvents->daemonID == 0)
+                {
+                  pUpdateEvents->daemonID = _registerID;
+                }
+                _kvlMasterClientPort.send(*pUpdateEvents);
+              }
+              else
+              {
+                break;
+              }
+              ++iter;
             }
           }
         }
@@ -184,8 +220,8 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
       }            
       else
       {
-        _clients.remove(&p);
         _clientsGarbage.push_back(&p);
+        _propertyLogger.clientGone(p);        
       }
       break;
       
@@ -198,7 +234,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
         request.curID = _registerID;
         if (_seqList.size() > 0)
         {
-          request.firstSeqNr = _seqList.begin()->first - 1;
+          request.firstSeqNr = _oldestUnanswerdSeqNr - 1;
         }
         else
         {
@@ -206,10 +242,6 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
         }
         _kvlMasterClientPort.send(request);
         hourTimerID = -1;
-      }
-      else
-      {
-        _clients.push_back(&p);
       }
       break;
       
@@ -231,39 +263,38 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
       break;
 
     case KVL_UPDATE:
+    case KVL_ADD_ACTION:
     {
       if (hourTimerID == -2) 
       {
-        LOG_DEBUG("More than 1 hour no connection with the master, so dump all key value updates.");        
+        LOG_DEBUG("More than 1 hour no connection with the master, so dump all key value updates.");
         break;
       }
       
       if (_seqList.size() == 0xFFFF)
       {
-        LOG_DEBUG("Cannot buffer more updates. Dump as long as the buffer decreases.");        
+        LOG_DEBUG("Cannot buffer more events. Dump as long as the buffer not decreases.");        
         break;
       }
-      KVLUpdateEvent event(e);
-      
-      unsigned int neededSize;
-      void* buf = event.pack(neededSize);
-      // skip the signal field, not needed anymore
-      neededSize -= sizeof(e.signal);
-      char* packedEvent = (char*) buf;
-      packedEvent += sizeof(e.signal);
-      
-      if (_curLogBufSize + neededSize > MAX_LOG_BUFF_SIZE)
+
+      unsigned int neededSize = SIZEOF_EVENT(e);
+
+      if (_curEventsBufSize + neededSize > MAX_EVENTS_BUFF_SIZE)
       {
-        sendLoggingBuffer();
+        sendEventsBuffer();
       }
-
-      memcpy(_logBuf + _curLogBufSize, packedEvent, neededSize);
-      _curLogBufSize += neededSize;
-
-      _nrOfBufferedUpdates++;
-      if (_nrOfBufferedUpdates == MAX_NR_OF_UPDATES)
+      memcpy(_eventsBuf + _curEventsBufSize, &e.signal, sizeof(e.signal));
+      _curEventsBufSize += sizeof(e.signal);
+      memcpy(_eventsBuf + _curEventsBufSize, &e.length, sizeof(e.length));
+      _curEventsBufSize += sizeof(e.length);
+      char* eBuf = (char*) &e;
+      memcpy(_eventsBuf + _curEventsBufSize, eBuf + sizeof(GCFEvent), e.length);
+      _curEventsBufSize += e.length;
+               
+      _nrOfBufferedEvents++;
+      if (_nrOfBufferedEvents == MAX_NR_OF_EVENTS)
       {
-        sendLoggingBuffer();
+        sendEventsBuffer();
       }      
       break;
     }
@@ -280,6 +311,8 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
         delete iter->second;
       }
       _seqList.erase(answer.seqNr);
+      assert(answer.seqNr == _oldestUnanswerdSeqNr);
+      _oldestUnanswerdSeqNr++;
       break;
     }
     
@@ -294,11 +327,46 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
       }
       _registerID = response.ID;
 
-      for (uint16 i = 0; i < MAX_NR_OF_RETRY_MSG; i++)
+      for (uint64 i = 0; i < MAX_NR_OF_RETRY_MSG; i++)
       {
         _seqList.erase(response.curSeqNr - i);
       }
       _kvlMasterClientPort.setTimer(1.0, 1.0); // start the (re)send heartbeat
+      break;
+    }    
+    case KVL_SKIP_UPDATES_FROM:
+    {
+      KVLSkipUpdatesFromEvent request(e);
+      _propertyLogger.skipUpdatesFrom(request.man_id, p);
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent& pve = (GCFPropValueEvent&) e;
+      KVLUpdateEvent ue;
+      ue.key = pve.pPropName;
+      ue.value._pValue = pve.pValue;
+      ue.origin = (GCFPVSSInfo::getLastEventManType() == API_MAN ? 
+                   KVL_ORIGIN_MAC : KVL_ORIGIN_OPERATOR);
+      ue.timestamp = GCFPVSSInfo::getLastEventTimestamp();
+      ue.description = "";
+
+      unsigned int neededSize;
+      void* buf = ue.pack(neededSize);
+      
+      if (_curEventsBufSize + neededSize > MAX_EVENTS_BUFF_SIZE)
+      {
+        sendEventsBuffer();
+      }
+
+      memcpy(_eventsBuf + _curEventsBufSize, buf, neededSize);
+      _curEventsBufSize += neededSize;
+
+      _nrOfBufferedEvents++;
+      if (_nrOfBufferedEvents == MAX_NR_OF_EVENTS)
+      {
+        sendEventsBuffer();
+      }      
       break;
     }
     default:
@@ -309,7 +377,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
   return status;
 }
 
-void KeyValueLoggerDaemon::sendLoggingBuffer()
+void KeyValueLoggerDaemon::sendEventsBuffer()
 {
   _curSeqNr++;
 
@@ -317,19 +385,19 @@ void KeyValueLoggerDaemon::sendLoggingBuffer()
       "Message with nr. %d is prepared to send.",
       _curSeqNr));        
 
-  KVLUpdatesEvent* pUpdatesEvent = new KVLUpdatesEvent;
-  pUpdatesEvent->seqNr = _curSeqNr;
-  pUpdatesEvent->daemonID = _registerID;
-  pUpdatesEvent->nrOfUpdates = _nrOfBufferedUpdates;
-  pUpdatesEvent->updates.buf.setValue(_logBuf, _curLogBufSize, true);
+  KVLEventCollectionEvent* pCollectionEvent = new KVLEventCollectionEvent;
+  pCollectionEvent->seqNr = _curSeqNr;
+  pCollectionEvent->daemonID = _registerID;
+  pCollectionEvent->nrOfEvents = _nrOfBufferedEvents;
+  pCollectionEvent->events.buf.setValue(_eventsBuf, _curEventsBufSize, true);
 
   if (_kvlMasterClientPort.isConnected())
   {
-    _kvlMasterClientPort.send(*pUpdatesEvent);
+    _kvlMasterClientPort.send(*pCollectionEvent);
   }
-  _seqList.insert(_seqList.end(), std::make_pair(_curSeqNr, pUpdatesEvent));
-  _curLogBufSize = 0;
-  _nrOfBufferedUpdates = 0;        
+  _seqList[_curSeqNr] = pCollectionEvent;
+  _curEventsBufSize = 0;
+  _nrOfBufferedEvents = 0;        
 }
 
   } // namespace LogSys

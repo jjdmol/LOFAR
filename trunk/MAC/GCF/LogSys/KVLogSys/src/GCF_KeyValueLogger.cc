@@ -112,7 +112,7 @@ GCFEvent::TResult GCFKeyValueLogger::operational(GCFEvent& e, GCFPortInterface& 
       {
         pEvent = *iter;
         _kvlClientPort.send(*pEvent);
-        if (pEvent->signal == KVL_UPDATES)
+        if (pEvent->signal == KVL_UPDATE)
         {
           pUpdateEvent = (KVLUpdateEvent*)pEvent;
           delete pUpdateEvent->value._pValue;
@@ -130,7 +130,7 @@ GCFEvent::TResult GCFKeyValueLogger::operational(GCFEvent& e, GCFPortInterface& 
   return status;
 }
 
-void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value, 
+void GCFKeyValueLogger::logKeyValue(const string& key, const GCFPValue& value, 
                                     TKVLOrigin origin, const timeval& timestamp, 
                                     const string& description)
 {
@@ -153,7 +153,8 @@ void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value,
   }
 }
 
-void GCFKeyValueLogger::logKeyValue(const string key, const GCFPValue& value, TKVLOrigin origin, const string& description)
+void GCFKeyValueLogger::logKeyValue(const string& key, const GCFPValue& value, 
+                                    TKVLOrigin origin, const string& description)
 {
   timeval timestamp;
   struct timezone timeZone;
