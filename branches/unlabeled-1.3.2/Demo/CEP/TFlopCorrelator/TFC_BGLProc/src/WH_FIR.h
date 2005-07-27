@@ -47,6 +47,13 @@ namespace LOFAR
     virtual void postprocess();
 
   private:
+    DH_FIR::BufferType WH_FIR::FIR_basic(DH_FIR::BufferType &sample,
+				 short station,
+				 short bank); 
+    DH_FIR::BufferType WH_FIR::FIR_circular(DH_FIR::BufferType &sample,
+				    short station,
+				    short bank); 
+    
     /// forbid copy constructor
     WH_FIR(const WH_FIR&);
     
@@ -55,25 +62,29 @@ namespace LOFAR
 
     /// FIR Filter variables
     short itsSBID; // subBandID
-    short itsNFilters;
+    short itsNFilterBanks; // =FFT length
     short itsNtaps;
     short itsNStations;
     short itsNTimes;
     short itsNPol;
     short itsFFTs;
+    short itsOutTime; // number of output time slices (= #FFT calls) per input 
     
-    DH_FIR::BufferType* delayPtr;
-    DH_FIR::BufferType* delayLine;
+    // attributes for the implementation of the FIR filters
+    DH_FIR::BufferType ***itsDelayLine; // will be addresed as [station][bank][tab]
+    float               **itsCoeff;     // will be addresed as [bank][tab]
+    short               **itsBankState  // will be addresed as [station][bank];
 
-    filterBox* filterData;
+    //OLD    DH_FIR::BufferType* delayPtr;
+    //OLD    DH_FIR::BufferType* delayLine;
+    //OLD    filterBox* filterData;
+    //OLD    float**      coeffPtr;
+    //OLD    FilterType*  inputPtr;
+    //OLD    FilterType*  fft_in;
+    //OLD    FilterType*  fft_out;
 
-    float**      coeffPtr;
-    FilterType*  inputPtr;
+      //OLD    void adjustDelayPtr(FilterType* dLine);
 
-    FilterType*  fft_in;
-    FilterType*  fft_out;
-
-    void adjustDelayPtr(FilterType* dLine);
   };
 
 } // namespace LOFAR
