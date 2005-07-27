@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,438 374 124 85 N "_3DFace" 3
+PANEL,269 267 124 85 N "_3DFace" 3
 "$Caption"
 "$Component"
 "$datapoint"
@@ -11,19 +11,19 @@ PANEL,438 374 124 85 N "_3DFace" 3
 	{
 	  setValue(\"txt_component\", \"text\", $Caption);
 	  dpConnect(\"ControlComponent\", $datapoint + \".\" + $Component + \":_online.._value\",
-	                                $datapoint + \".\" + $Component + \":_original.._invalid\");
+	                                //$datapoint + \".\" + $Component + \":_original.._invalid\");
+	                                $datapoint + \".\" + $Component + \":_online.._invalid\");
   }
   else
   {
-    //set color
     setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
   }
 }
 
+
 ControlComponent(string dp1, bool Status,
                  string dp2, bool invalid)
 {
-  DebugN(\"dp1:\"+dp1+\"  |invalid:\"+invalid);
   if(!invalid)
   {
     CheckButton1.enabled = TRUE;
@@ -43,8 +43,6 @@ ControlComponent(string dp1, bool Status,
     CheckButton1.enabled = FALSE;
     setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
   }
-   
-   
 }" 0
 EE E E 1 -1 -1 0  10 41
 "" 0 1

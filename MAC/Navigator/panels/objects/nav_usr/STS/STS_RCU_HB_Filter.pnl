@@ -1,17 +1,17 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,438 374 142 95 N "_3DFace" 1
+PANEL,269 267 142 95 N "_3DFace" 1
 "$datapoint"
 "main()
 {
 
-  if(dpAccessable($datapoint + \".filSelA\") && 
-     dpAccessable($datapoint + \".filSelB\"))
+  if(dpAccessable($datapoint + \".filSel0\") && 
+     dpAccessable($datapoint + \".filSel1\"))
 	{
-    dpConnect(\"ControlHBFilter\", $datapoint + \".filSelA:_online.._value\",
-                                 $datapoint + \".filSelB:_online.._value\",
-                                 $datapoint + \".filSelB:_online.._invalid\");
+    dpConnect(\"ControlHBFilter\", $datapoint + \".filSel0:_online.._value\",
+                                 $datapoint + \".filSel1:_online.._value\",
+                                 $datapoint + \".filSel1:_online.._invalid\");
   }
   else
   {
@@ -20,43 +20,40 @@ PANEL,438 374 142 95 N "_3DFace" 1
 }
 
 
-ControlHBFilter(string dp1, bool filSelA,
-                string dp2, bool filSelB,
+ControlHBFilter(string dp1, bool filSel0,
+                string dp2, bool filSel1,
                 string dp3, bool invalid)
 {
-//  if(!invalid)
- // {
+
+  if(!invalid)
+  {
     ComboBox1.enabled = TRUE;
-    if (!filSelA && !filSelB)
+    if (!filSel1 && !filSel0)
     {
-      ComboBox1.selectedPos=1;
+      ComboBox1.selectedPos=1;    //110-190MHz
       setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
-      DebugN(\"NOT filSelA &&  NOT filSelB\");
     }
-    else if (!filSelA && filSelB)
+    else if (!filSel1 && filSel0)
     {
-      ComboBox1.selectedPos=2;
+      ComboBox1.selectedPos=2;    //170-230MHz
       setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
-      DebugN(\"NOT filSelA && filSelB\");
     }
-    else if (filSelA && !filSelB)
+    else if (filSel1 && !filSel0)
     {
-      ComboBox1.selectedPos=3;
+      ComboBox1.selectedPos=3;    //210-250MHz
       setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
-      DebugN(\"filSelA &&  NOT filSelB\");
     }
-    else if (filSelA && filSelB)
+    else if (filSel1 && filSel0)
     {
-      ComboBox1.selectedPos=4;
+      ComboBox1.selectedPos=4;    //Filter OFF
       setValue(\"rect_filter\", \"backCol\", \"grey\");
-      DebugN(\"filSelA && filSelB\");
     }
-/*  }
+  }
   else
   {
     ComboBox1.enabled = FALSE;
     setValue(\"rect_filter\", \"backCol\", \"_dpdoesnotexist\");
-  }*/
+  }
 }" 0
 EE E E 1 -1 -1 0  10 70
 "" 0 1
@@ -132,25 +129,34 @@ LANG:1 10 Filter off
 E
 "main()
 {
+
+  ////////////////////////////////////////////////////////
+  //FILSEL_0   FILSEL_1   Filter     [Date: July 27  2005]
+  //   0          0       110-190MHz
+  //   0          1       210-250MHz
+  //   1          0       170-230MHz
+  //   1          1       filter off
+  ////////////////////////////////////////////////////////
+  DebugN(\"ComboBox1.selectedPos:\"+ComboBox1.selectedPos);
   if (ComboBox1.selectedPos==1)          //110-190MHz
   {
-	dpSet($datapoint + \".filSelA\", FALSE);
-	dpSet($datapoint + \".filSelB\", FALSE);
+    dpSet($datapoint + \".filSel1\", FALSE);
+    dpSet($datapoint + \".filSel0\", FALSE);
   }
   else if (ComboBox1.selectedPos==2)     //170-230MHz
   {
-	  dpSet($datapoint + \".filSelA\", FALSE);
-  	dpSet($datapoint + \".filSelB\", TRUE);
+    dpSet($datapoint + \".filSel1\", FALSE);
+    dpSet($datapoint + \".filSel0\", TRUE);
   }
   else if (ComboBox1.selectedPos==3)     //210-250MHz
   {
-  	dpSet($datapoint + \".filSelA\", TRUE);
-  	dpSet($datapoint + \".filSelB\", FALSE);
+    dpSet($datapoint + \".filSel1\", TRUE);
+    dpSet($datapoint + \".filSel0\", FALSE);
   }
   else if (ComboBox1.selectedPos==4)     //Filter OFF
   {
-  	dpSet($datapoint + \".filSelA\", TRUE);
-  	dpSet($datapoint + \".filSelB\", TRUE);
+    dpSet($datapoint + \".filSel1\", TRUE);
+    dpSet($datapoint + \".filSel0\", TRUE);
   }
 
 }" 0
