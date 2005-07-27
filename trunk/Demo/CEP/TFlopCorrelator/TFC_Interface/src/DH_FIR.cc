@@ -59,7 +59,7 @@ DataHolder* DH_FIR::clone() const
 
 void DH_FIR::init()
 {
-  // Determine the number of bytes needed for DataPacket and buffer.
+  // Determine the number of elements needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNTimes * itsNPol;
   
   addField ("Flag", BlobField<int>(1, 1));

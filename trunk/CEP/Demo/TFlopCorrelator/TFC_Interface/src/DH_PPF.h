@@ -38,8 +38,10 @@ public:
   /// Allocate the buffers.
   virtual void init();
 
-  /// set completely specified element in the buffer
-  void setBufferElement(int sample, BufferType value);
+  void InitBankCursor(short station, short pol, short time);
+  //void InitTimeCursor(short station, short pol);
+  void setNextBank(BufferType &value);
+  //BufferType** getnextTime();
 
 private:
   /// Forbid assignment.
@@ -49,12 +51,16 @@ private:
   unsigned int itsBufSize;
   unsigned int itsNSamples;
 
+  // attributes needed to access the RectMatrix
+  dimType itsStationDim;
+  dimType itsPolDim;
+  dimType itsTimeDim;
+  dimType itsBankDim;
+  RectMatrix<DH_FIR::BufferType>::cursorType itsBankCursor;
+
   void fillDataPointers();
 };
 
-inline void DH_PPF::setBufferElement(int sample, DH_PPF::BufferType value) {
-   itsBuffer[sample] = value;
- }
    
 }
 #endif 
