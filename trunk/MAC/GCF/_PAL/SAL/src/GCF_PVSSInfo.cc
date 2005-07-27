@@ -120,13 +120,33 @@ bool GCFPVSSInfo::typeExists (const string& dpTypeName)
 
 TMACValueType GCFPVSSInfo::getMACTypeId (const string& dpeName)
 {
-  CharString pvssTypeName(dpeName.c_str());
-  DpTypeId dpTypeId; 
-  TMACValueType type(NO_LPT);
-  if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE)
+  vector<string> splittedDpeName = StringUtil::split(dpeName, ':');
+  // first find out whether there is a system name specified or not
+  int8 sysNr = getSysId(splittedDpeName[0]);
+  CharString pvssDpeName;
+  if (sysNr < 1)
   {
-    type = macValueTypes[dpTypeId];
-  } 
+    // system name was not specified
+    // so therefore the first part is the real dpeName
+    pvssDpeName = splittedDpeName[0].c_str();
+    // get the default local system nr
+    sysNr = getLocalSystemId();
+  }
+  else
+  {
+    pvssDpeName = splittedDpeName[1].c_str();
+  }
+  
+  DpElementType dpElType; 
+  TMACValueType type(NO_LPT);
+  DpIdentifier dpId;
+  if (Manager::getId(pvssDpeName, dpId) == PVSS_TRUE)
+  {
+    if (Manager::getTypeContainerPtr(sysNr)->getElementType(dpId, dpElType) == DpTypeContOK)
+    {
+      type = macValueTypes[dpElType];
+    } 
+  }
   return type;
 }
 

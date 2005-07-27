@@ -76,8 +76,10 @@ TGCFResult GCFPropertyProxy::setPropValueTimed(const string& propName,
   GCFPValue* pValue = GCFPValue::createMACTypeObject(GCFPVSSInfo::getMACTypeId(propName));
   if (pValue) 
   {  
+   pValue->setValue(value);
     return (_pPMProxy->setPM(propName, *pValue, timestamp, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
   }
+  return GCF_PML_ERROR;
 }
 
 TGCFResult GCFPropertyProxy::dpQuerySubscribeSingle(const string& queryWhere, const string& queryFrom)
