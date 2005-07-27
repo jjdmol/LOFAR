@@ -62,7 +62,7 @@ void* WriteToBufferThread(void* arguments)
     }
 
     // get stationid
-    stationid =((int*)&recvframe[2])[0]; 
+    *args->StationIDptr =((int*)&recvframe[2])[0]; 
    
     // get the actual timestamp
     seqid   = ((int*)&recvframe[6])[0];
@@ -156,7 +156,7 @@ void* WriteToBufferThread(void* arguments)
         subband = (subbandType*)args->SubbandBuffer[s]->getAutoWritePtr();
         memset(subband->data,0,args->SubbandSize);
         metadata = (metadataType*)args->MetadataBuffer[s]->getAutoWritePtr();
-        metadata->stationid = stationid;
+        //metadata->stationid = stationid;
         metadata->invalid = 1;
         metadata->timestamp = nextstamp; 
         
@@ -178,7 +178,7 @@ void* WriteToBufferThread(void* arguments)
           idx = p*args->nrPacketsInFrame + s*args->SubbandSize;
           memcpy(subband->data, &recvframe[idx], args->SubbandSize);
           metadata = (metadataType*)args->MetadataBuffer[s]->getAutoWritePtr();
-          metadata->stationid = stationid;
+          //metadata->stationid = stationid;
           metadata->invalid = 0;
           metadata->timestamp = actualstamp;      
      
@@ -302,6 +302,7 @@ void WH_RSPInput::preprocess()
   writerinfo.Datamanager        = &getDataManager();
   writerinfo.Syncmaster         = itsSyncMaster;
   writerinfo.Stopthread         = false;
+  writerinfo.StationIDptr       = &itsStationID;
   
   if (pthread_create(&writerthread, NULL, WriteToBufferThread, &writerinfo) < 0)
   {
@@ -317,7 +318,8 @@ void WH_RSPInput::process()
   
   // get delay 
   DH_Delay* delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
-  int delay = delayDHp->getDelay(0); // stationid??
+  ASSERTSTR(((itsStationID < 0) && (itsStationID > 2)), "WH_RSPInput: Invalid station ID");
+  int delay = delayDHp->getDelay(itsStationID); 
 
   for (int s=0; s < itsNSubbands; s++) {
 
@@ -337,7 +339,7 @@ void WH_RSPInput::process()
 	count++;
       }
       if (t==0) {
-        rspDHp->setStationID(metadata->stationid);
+        rspDHp->setStationID(itsStationID);
         rspDHp->setTimeStamp(metadata->timestamp);
       }
     }
