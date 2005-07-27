@@ -47,8 +47,10 @@ public:
   const u16complex* getBuffer() const;
 
   const unsigned int getBufferSize() const;
-
-   RectMatrix<BufferType>& getDataMatrix() const;
+  
+  RectMatrix<BufferType>& getDataMatrix() const;
+  void InitTimeCursor(short station, short pol);
+  BufferType getNextTime();
 
 private:
   /// Forbid assignment.
@@ -63,6 +65,13 @@ private:
   short itsNPol;           // #polarisations per sample
 
   RectMatrix<BufferType>* itsMatrix;
+
+
+  // attributes needed to access the RectMatrix
+  dimType itsStationDim;
+  dimType itsPolDim;
+  dimType itsTimeDim;
+  RectMatrix<DH_FIR::BufferType>::cursorType itsTimeCursor;
 
   ACC::APS::ParameterSet itsPS;
 
