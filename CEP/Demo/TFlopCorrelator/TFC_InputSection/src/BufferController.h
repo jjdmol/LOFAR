@@ -98,7 +98,6 @@ BufferController<TYPE>::BufferController(int size)
   {  
     itsBuffer.AddBufferItem(&itsBufferItems[i]);
   }
-  itsBuffer.setWrittenBeforeReading(0); 
 }
 
 template<class TYPE>
@@ -148,6 +147,7 @@ TYPE* BufferController<TYPE>::getFirstReadPtr(int& ID)
     itsCurrentReadPtr = itsBuffer.GetFirstReadPtr(itsCurrentReadID);
   }
   ID = itsCurrentReadID; 
+  itsReadItemsLocked = 1;
   return itsCurrentReadPtr; 
 }
 

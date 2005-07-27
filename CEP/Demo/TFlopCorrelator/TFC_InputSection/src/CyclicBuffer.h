@@ -27,7 +27,7 @@
 #include <Common/lofar_vector.h>
 
 // minumum written elements before reading is allowed
-#define MIN_COUNT  (0.1 * itsBuffer.size()) 
+#define MIN_COUNT   1 
 
 // maximum of written elements in buffer to avoid that 
 // writeptr is catching up readptr
@@ -106,12 +106,6 @@ class CyclicBuffer
   
   // actual number of written items in buffer
   int  getCount(); 
-  
-  /* Use setWrittenBeforeReading(uint x) to force that cyclic buffer must 
-     contain at least x% of its maximum items before reading from buffer 
-     is possible (x=0 means that reading is possible if buffer contains 
-     at least 1 item */
-  void setWrittenBeforeReading(uint percentage);
 
  private:
 
@@ -214,7 +208,7 @@ TYPE CyclicBuffer<TYPE>::GetAutoWritePtr(int& ID)
   itsCount++;
 
   // signal that data has become available 
-  if (itsMinCount+1 == itsCount)
+  if (itsCount >= MIN_COUNT)
   {
     pthread_cond_broadcast(&data_available);
   }
@@ -229,14 +223,14 @@ const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until enough elements are available
-  while ((itsCount <= MIN_COUNT)) 
+  while ((itsCount < MIN_COUNT)) 
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   
-  // CONDITION: itsCount > MIN_COUNT
+  // CONDITION: itsCount >= MIN_COUNT
   ID = itsTailIdx;
-  ReadLockElements(ID, 1);
+  ReadLockItems(ID, 1);
  
   // adjust the tail
   itsTailIdx++;
@@ -260,14 +254,20 @@ const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int Nelements, int& I
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until enough elements are available
-  while ((itsCount <= MIN_COUNT) || (itsCount <= offset+Nelements)) 
+  while ((itsCount < MIN_COUNT) || (itsCount < offset+Nelements)) 
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
-  // CONDITION: itsCount > MIN_COUNT &&  itscount > offset + Nelements
+  // CONDITION: itsCount >= MIN_COUNT &&  itscount >= offset + Nelements
   
   // set offset (note: offset can be less than 0
   ID = itsTailIdx + offset;
+  if (ID >= (int)itsBuffer.size()) {
+    ID = ID - (int)itsBuffer.size();
+  }
+  if (ID < 0) {
+    ID = (int)itsBuffer.size() + ID;
+  }
   
   // lock the elements
   ReadLockItems(ID, Nelements); 
@@ -278,7 +278,7 @@ const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int Nelements, int& I
   {
     itsTailIdx = itsTailIdx-(int)itsBuffer.size();
   }
-  itsCount = itsCount-Nelements;
+  itsCount -= Nelements;
   
   // signal that space has become available
   pthread_cond_broadcast(&space_available);
@@ -379,11 +379,6 @@ int CyclicBuffer<TYPE>::getCount(void)
   return itsCount;
 }
 
-template<class TYPE>
-void CyclicBuffer<TYPE>::setWrittenBeforeReading(uint percentage)
-{
-  itsMinCount =  ((float)percentage/100) * itsBuffer.size();
-}
 
 
 }
