@@ -76,9 +76,27 @@ void DH_FIR::init()
   
   itsMatrix = new RectMatrix<BufferType> (vdd);
   itsMatrix->setBuffer(itsBuffer, itsBufSize);
+
+  itsStationDim = itsMatrix->getDim("Station");
+  itsTimeDim    = itsMatrix->getDim("Time");
+  itsPolDim     = itsMatrix->getDim("Polarisation");
 }
 
 void DH_FIR::fillDataPointers() {
   itsBuffer = getData<BufferType> ("Buffer");
 }
+
+void DH_FIR::InitTimeCursor(short station, short pol)
+{
+  RectMatrix<DH_FIR::BufferType>::cursorType itsTimeCursor;
+  itsTimeCursor = itsMatrix->getCursor(station*itsStationDim+pol*itsPolDim);
+}
+
+DH_FIR::BufferType DH_FIR::getNextTime()
+{
+  DH_FIR::BufferType value = itsMatrix->getValue(itsTimeCursor);
+  itsMatrix->moveCursor(&itsTimeCursor, itsTimeDim);
+  return value;
+}
+
 }
