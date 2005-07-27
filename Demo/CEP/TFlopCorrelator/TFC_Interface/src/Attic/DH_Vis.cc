@@ -64,8 +64,8 @@ void DH_Vis::init()
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
 
   vector<DimDef> vdd;
-  vdd.push_back(DimDef("Dimension1", itsNBaselines));
-  vdd.push_back(DimDef("Dimension2", itsNBaselines));
+  vdd.push_back(DimDef("Dimension1", itsNStations*itsNPols));
+  vdd.push_back(DimDef("Dimension2", itsNStations*itsNPols));
   
   itsMatrix = new RectMatrix<BufferType> (vdd);
   itsMatrix->setBuffer(itsBuffer, itsBufSize);
