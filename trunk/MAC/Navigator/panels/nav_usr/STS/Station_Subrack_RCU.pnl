@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,258 100 923 749 N "_3DFace" 1
+PANEL,269 267 923 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -52,8 +52,8 @@ ShownofOverflows(string dp1, bool Status,
 }
 
 navViewCheckDpType(string aDp, string aCheckType){
-  DebugN(aCheckType);
-  DebugN(dpTypeName($datapoint));
+  //DebugN(aCheckType);
+  //DebugN(dpTypeName($datapoint));
   if (aCheckType != dpTypeName($datapoint)){
     ChildPanelOnCentralModal(\"objects/nav_fw/warning_wrong_datatype.pnl\",
 		                         \"WRONG datapointtype\",
