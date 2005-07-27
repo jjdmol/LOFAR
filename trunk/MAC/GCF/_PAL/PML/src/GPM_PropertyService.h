@@ -128,6 +128,7 @@ inline void GPMPropertyService::dpeValueSet(const string& propName)
 {
   _gcfProperty.propValueSet(propName);
 }
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

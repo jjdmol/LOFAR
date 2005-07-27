@@ -44,6 +44,9 @@ class GPMPropertyProxy : public GSAService
     TSAResult getPM(const string& propName);
     TSAResult setPM(const string& propName, const Common::GCFPValue& value, 
                     double timestamp, bool wantAnswer);
+    TSAResult dpQuerySubscribeSinglePM(const string& queryWhere, 
+                                       const string& queryFrom);
+    TSAResult dpQueryUnsubscribePM(uint32 /*queryId*/);
 
   protected:
     void dpCreated(const string& /*propName*/);
@@ -54,6 +57,7 @@ class GPMPropertyProxy : public GSAService
     void dpeValueGet(const string& propName, const Common::GCFPValue& value);
     void dpeValueChanged(const string& propName, const Common::GCFPValue& value);
     void dpeValueSet(const string& propName);
+    void dpQuerySubscribed(uint32 queryId);
     
   private:
     GCFPropertyProxy& _gcfProxy;
@@ -87,6 +91,17 @@ inline TSAResult GPMPropertyProxy::setPM(const string& propName,
                                          bool wantAnswer)
 {
   return GSAService::dpeSet(propName, value, timestamp, wantAnswer);
+}
+
+inline TSAResult GPMPropertyProxy::dpQuerySubscribeSinglePM(const string& queryWhere, 
+                                                            const string& queryFrom)
+{
+  return GSAService::dpQuerySubscribeSingle(queryWhere, queryFrom);
+}
+
+inline TSAResult GPMPropertyProxy::dpQueryUnsubscribePM(uint32 queryId)
+{
+  return GSAService::dpQueryUnsubscribe(queryId);
 }
 
 inline void GPMPropertyProxy::dpCreated(const string& /*propName*/) 
@@ -123,6 +138,11 @@ inline void GPMPropertyProxy::dpeValueChanged(const string& propName, const Comm
 inline void GPMPropertyProxy::dpeValueSet(const string& propName)
 {
   _gcfProxy.propValueSet(propName);
+}
+
+inline void GPMPropertyProxy::dpQuerySubscribed(uint32 queryId)
+{
+  _gcfProxy.dpQuerySubscribed(queryId);
 }
   } // namespace PAL
  } // namespace GCF

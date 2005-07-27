@@ -30,7 +30,7 @@
 namespace LOFAR 
 {
  namespace GCF 
- {
+ {  
   namespace PAL
   {
 
@@ -42,24 +42,39 @@ class GCFPVSSInfo
   public:
     static bool propExists (const string& dpeName);
     static bool typeExists (const string& dpTypeName);
+    static Common::TMACValueType getMACTypeId (const string& dpeName);
+
+    static const string getSystemName(int8 sysnr);
     static const string& getLocalSystemName();
-    static unsigned int getLocalSystemId();
+    static int8 getLocalSystemId();
+    static int8 getSysId(const string& name);
+    static int8 getLastEventSysId();
+
     static const string& getProjectName();
-    static const string getSystemName(unsigned int sysnr);
-    static unsigned int getLastEventSysId();
+
     static timeval getLastEventTimestamp();
-    static unsigned int getSysId(const string& name);
-    static unsigned int getManNum();
+
+    static uint8 getLastEventManNum();
+    static uint8 getOwnManNum();
+    static uint8 getLastEventManType();
+
     static Common::TGCFResult getTypeStruct(const string& typeName, 
                                             list<Common::TPropertyInfo>& propInfo, 
-                                            unsigned int sysNr);    
+                                            int8 sysNr = getLocalSystemId());
+
+    static void getAllProperties(const string& typeFilter, const string& dpFitler, 
+                                 vector<string>& foundProperties);
     
+    static void getAllTypes(const string& typeFilter, 
+                            vector<string>& foundTypes);
   private:
     friend class GSAService;
     static string _sysName;
     static string _projName;
-    static unsigned int _lastSysNr;
+    static int8 _lastSysNr;
     static timeval _lastTimestamp;
+    static uint8 _lastManNum;
+    static uint8 _lastManType;
   
     // Construction methods
     // Don't allow to (con/de)struct an instance of this class
@@ -74,7 +89,7 @@ class GCFPVSSInfo
     // </group>
 };
 
-inline unsigned int GCFPVSSInfo::getLastEventSysId()
+inline int8 GCFPVSSInfo::getLastEventSysId()
 {
   return _lastSysNr;
 }
@@ -82,6 +97,16 @@ inline unsigned int GCFPVSSInfo::getLastEventSysId()
 inline timeval GCFPVSSInfo::getLastEventTimestamp()
 {
   return _lastTimestamp;
+}
+
+inline uint8 GCFPVSSInfo::getLastEventManNum()
+{
+  return _lastManNum;
+}
+
+inline uint8 GCFPVSSInfo::getLastEventManType()
+{
+  return _lastManType;
 }
   } // namespace PAL
  } // namespace GCF
