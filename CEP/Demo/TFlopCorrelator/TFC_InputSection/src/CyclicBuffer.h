@@ -24,7 +24,7 @@
 #define TFLOPCORRELATOR_CYCLIC_BUFFER_H
 
 
-#include <Transport/Lock.h>
+#include <CEPFrame/Lock.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
