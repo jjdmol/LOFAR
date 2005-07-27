@@ -568,11 +568,7 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
       THPVSSBridgeSetValueResponseEvent pvssBridgeResponseEvent;
       pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
       pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
-
- //TODO: construct GCFPValue object based solely on its scope and property name
-LOG_FATAL("setValue through propertyProxy not implemented yet. Depends on bug 219");      
-//TODO      pvssBridgeResponseEvent.response = m_propertyProxy.setPropValue(pvssBridgeEvent.scope+string(".")+pvssBridgeEvent.property,pvssBridgeEvent.value);
-      pvssBridgeResponseEvent.response = GCF_UNKNOWN_ERROR;
+      pvssBridgeResponseEvent.response = m_propertyProxy.setPropValue(pvssBridgeEvent.scope+string(".")+pvssBridgeEvent.property,pvssBridgeEvent.value);
       m_serverPort.send(pvssBridgeResponseEvent);
       break;
     }
