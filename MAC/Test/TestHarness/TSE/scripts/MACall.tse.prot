@@ -348,7 +348,8 @@ F_LOGICALDEVICE_CONNECT =
 {
   0x014B, // LSB first: signal, protocol, in/out
   msgLength : t_B4,
-  nrOfChars : t_StringLen, nodeId : t_String [ nrOfChars ]
+  nrOfChars : t_StringLen
+  , nodeId : t_String [ nrOfChars ]
   
 }
 
@@ -2005,6 +2006,101 @@ F_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
   value : t_String [ nrOfChars3 ]
 }
 
+F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY =
+{
+  0x164E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+F_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE =
+{
+  0x178E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+F_THPVSSBRIDGE_UNSUBSCRIBE_PROPERTY =
+{
+  0x184E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+F_THPVSSBRIDGE_UNSUBSCRIBE_PROPERTY_RESPONSE =
+{
+  0x198E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+F_THPVSSBRIDGE_GET_VALUE =
+{
+  0x1A4E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+F_THPVSSBRIDGE_GET_VALUE_RESPONSE =
+{
+  0x1B8E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_StringLen,
+  value : t_String [ nrOfChars3 ]
+  
+}
+
+F_THPVSSBRIDGE_SET_VALUE =
+{
+  0x1C4E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_StringLen,
+  value : t_String [ nrOfChars3 ]
+  
+}
+
+F_THPVSSBRIDGE_SET_VALUE_RESPONSE =
+{
+  0x1D8E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
 
 [events]
 
@@ -3673,4 +3769,100 @@ E_THPVSSBRIDGE_VALUE_CHANGE_RESPONSE =
   property : t_String [ nrOfChars2 ],
   nrOfChars3 : t_StringLen,
   value : t_String [ nrOfChars3 ]
+}
+
+E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY =
+{
+  0x164E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_SUBSCRIBE_PROPERTY_RESPONSE =
+{
+  0x178E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_UNSUBSCRIBE_PROPERTY =
+{
+  0x184E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_UNSUBSCRIBE_PROPERTY_RESPONSE =
+{
+  0x198E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_GET_VALUE =
+{
+  0x1A4E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
+}
+
+E_THPVSSBRIDGE_GET_VALUE_RESPONSE =
+{
+  0x1B8E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_StringLen,
+  value : t_String [ nrOfChars3 ]
+  
+}
+
+E_THPVSSBRIDGE_SET_VALUE =
+{
+  0x1C4E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ],
+  nrOfChars3 : t_StringLen,
+  value : t_String [ nrOfChars3 ]
+  
+}
+
+E_THPVSSBRIDGE_SET_VALUE_RESPONSE =
+{
+  0x1D8E, // LSB first: signal, protocol, in/out
+  msgLength : t_B4,
+  response : TGCFResult,
+  nrOfChars1 : t_StringLen,
+  scope : t_String [ nrOfChars1 ],
+  nrOfChars2 : t_StringLen,
+  property : t_String [ nrOfChars2 ]
+  
 }

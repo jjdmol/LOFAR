@@ -41,6 +41,8 @@
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
 
+#include "PropertyProxy.h"
+
 namespace LOFAR
 {
   
@@ -83,6 +85,13 @@ class THPVSSBridge : public GCF::TM::GCFTask,
    */
   GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
 
+  void proxyPropSubscribed(const string& propName);
+  void proxyPropSubscriptionLost(const string& propName);
+  void proxyPropUnsubscribed(const string& propName);
+  void proxyPropValueGet(const string& propName,const string& value);
+  void proxyPropValueChanged(const string& propName,const string& value);
+  void proxyPropValueSet(const string& propName);
+
 protected:
   // protected copy constructor
   THPVSSBridge(const THPVSSBridge&);
@@ -102,6 +111,8 @@ private:
   
   string                        m_serverPortName;
   GCF::TM::GCFTCPPort           m_serverPort;      // TH communication
+  
+  PropertyProxy                 m_propertyProxy;
 
   ALLOC_TRACER_CONTEXT  
 };

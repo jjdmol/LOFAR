@@ -29,13 +29,6 @@ include = '<GCF/GCF_Defines.h>';
 prelude = << PRELUDE_END
 // define namespace and enumerations here
 
-//enum TEchoEnum
-//{
-//  ECHO_ENUM_FIRST = 1, 
-//  ECHO_ENUM_SECOND, 
-//  ECHO_ENUM_THIRD,
-//};
-
 PRELUDE_END;
 
 //
@@ -345,6 +338,134 @@ event = {
   };
   param = {
     name = "value";
+    type = "string";
+  };
+};
+
+event = {
+  signal = SUBSCRIBE_PROPERTY;
+  dir = IN;
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
+    type = "string";
+  };
+};
+
+event = {
+  signal = SUBSCRIBE_PROPERTY_RESPONSE;
+  dir = OUT;
+  param = {
+    name = "response";
+    type = "LOFAR::GCF::Common::TGCFResult";
+  };
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
+    type = "string";
+  };
+};
+
+event = {
+  signal = UNSUBSCRIBE_PROPERTY;
+  dir = IN;
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
+    type = "string";
+  };
+};
+
+event = {
+  signal = UNSUBSCRIBE_PROPERTY_RESPONSE;
+  dir = OUT;
+  param = {
+    name = "response";
+    type = "LOFAR::GCF::Common::TGCFResult";
+  };
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
+    type = "string";
+  };
+};
+
+event = {
+  signal = GET_VALUE;
+  dir = IN;
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
+    type = "string";
+  };
+};
+
+event = {
+  signal = GET_VALUE_RESPONSE;
+  dir = OUT;
+  param = {
+    name = "response";
+    type = "LOFAR::GCF::Common::TGCFResult";
+  };
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
+    type = "string";
+  };
+  param = {
+    name = "value";
+    type = "string";
+  };
+};
+
+event = {
+  signal = SET_VALUE;
+  dir = IN;
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
+    type = "string";
+  };
+  param = {
+    name = "value";
+    type = "string";
+  };
+};
+
+event = {
+  signal = SET_VALUE_RESPONSE;
+  dir = OUT;
+  param = {
+    name = "response";
+    type = "LOFAR::GCF::Common::TGCFResult";
+  };
+  param = {
+    name = "scope";
+    type = "string";
+  };
+  param = {
+    name = "property";
     type = "string";
   };
 };
