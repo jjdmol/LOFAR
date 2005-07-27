@@ -290,23 +290,15 @@ GCFNavSubViewConfigAlert.GCFNavSubViewConfigAlert	1#1
 GCFNavSubViewConfigPlot.GCFNavSubViewConfigPlot	1#1
 	1	1#2
 		dpName	25#3
-		Script	25#4
-		maxTimeslotSize	21#5
 		active	23#44
 	2	1#11
 		dpName	25#12
-		Script	25#13
-		maxTimeslotSize	21#14
 		active	23#45
 	3	1#20
 		dpName	25#21
-		Script	25#22
-		maxTimeslotSize	21#23
 		active	23#46
 	4	1#29
 		dpName	25#30
-		Script	25#31
-		maxTimeslotSize	21#32
 		active	23#47
 	5	1#48
 		active	23#49
@@ -328,6 +320,7 @@ GCFNavSubViewConfigPlot.GCFNavSubViewConfigPlot	1#1
 	scriptFilename	25#65
 	currentDatapoint	25#66
 	fileNamePrefix	25#67
+	plotState	25#69
 GCFNavSubViewConfigPanel.GCFNavSubViewConfigPanel	1#1
 	Dummy1	25#2
 	Dummy2	25#3
@@ -429,6 +422,7 @@ __loglevel.	GCFLogLevel	30000	0x101	05.04.2005 11:43:25.652
 __navigator.viewsPath	GCFNavigator	"nav_fw/"	0x101	07.07.2005 07:19:27.498
 __navigator.resourceRoots	GCFNavigator	"CTU1:PIC", "CTU1:PAC"	0x101	07.07.2005 07:19:49.490
 __navigator.environmentNames	GCFNavigator	"Personal"	0x101	07.07.2005 07:19:06.338
+__navigator.environmentGroups	GCFNavigator	""	0x101	25.07.2005 08:48:35.944
 __navigator.treeAccess	GCFNavigator	"", "", "", "", "", "", "", "", "*:*", "", "", "", "", "", "", "", ""	0x101	15.07.2005 13:49:56.495
 __navigator.pathNamesWindows	GCFNavigator	"C:/temp", "C:/temp", "C:/temp", "...", "...", "...", "...", "...", "...", "..."	0x101	15.07.2005 13:56:35.268
 __navigator.pathNamesLinux	GCFNavigator	"/tmp", "/tmp", "/tmp", "...", "...", "...", "...", "...", "...", "..."	0x101	15.07.2005 13:56:35.268
