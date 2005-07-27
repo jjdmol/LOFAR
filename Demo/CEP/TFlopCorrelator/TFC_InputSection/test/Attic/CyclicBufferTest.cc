@@ -26,12 +26,13 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <Common/hexdump.h>
 
 using namespace LOFAR;
 
 typedef struct
 {
-  char data[100];
+  char data[15];
 } dataformat;
 
 
@@ -40,7 +41,9 @@ typedef dataformat BufferType;
 typedef struct
 {
   BufferController<BufferType>* buffer;
-  int size;
+  int buffersize;
+  int blocksize;
+  int offset;
 } thread_args;
 
 
@@ -50,16 +53,16 @@ void* produce(void* arguments)
 
   thread_args* args = (thread_args*)arguments;
   BufferController<BufferType>* buffer = args->buffer;
-  int size = args->size;
+  int buffersize = args->buffersize;
+  int blocksize = args->blocksize;
   BufferType *pelement;
-  char buf[100];
+  char buf[15];
   int id;
 
-  for (int i=0;i<size;i++) {
-    pelement = buffer->getBufferWritePtr();
+  for (int i=1;i<=10 * buffersize;i++) {
+    pelement = buffer->getAutoWritePtr();
     sprintf(pelement->data, "element %d", i);
     buffer->readyWriting();
-    buffer->dump();
   }
 }
 
@@ -69,13 +72,16 @@ void* consume(void* arguments)
 
   thread_args* args = (thread_args*)arguments;
   BufferController<BufferType>* buffer = args->buffer;
-  int size = args->size;
+  int buffersize = args->buffersize;
+  int blocksize = args->blocksize;
+  int offset = args->offset;
   BufferType *pelement;
 
-  for (int i=0;i<size;i++) {
-    pelement = buffer->getBufferReadPtr();
+  for (int i=0;i<10 * buffersize;i+=blocksize) {
+    //pelement = buffer->getAutoReadPtr();
+    hexdump(buffer->getBlockReadPtr(offset,blocksize),blocksize*sizeof(BufferType));
+    cout << endl;
     buffer->readyReading();
-    buffer->dump();
   }
 }
 
@@ -84,24 +90,25 @@ int main (int argc, const char** argv)
 { 
   try {
 
-    
-    if (argc < 2) {
-      cout << "\nusage: CyclicBufferTest [buffersize]\n" << endl;
+    if (argc < 4) {
+      cout << "\nusage: CyclicBufferTest [buffersize] [readblocksize] [readblockoffset]\n" << endl;
       exit (1);
     }
     
    // get buffersize
-   int size = atoi(argv[1]);
+   int buffersize = atoi(argv[1]);
+   int blocksize = atoi(argv[2]);
+   int offset = atoi(argv[3]);   
 
    // create BufferController Object
-    BufferController<BufferType>* DataBuffer = new  BufferController<BufferType>(size); 
+    BufferController<BufferType>* DataBuffer = new  BufferController<BufferType>(buffersize); 
     
    // start producing data thread
    pthread_t producer;
    thread_args producerdata;
     
    producerdata.buffer = DataBuffer;
-   producerdata.size = size;
+   producerdata.buffersize = buffersize;
 
    if (pthread_create(&producer, NULL, produce, &producerdata) < 0)
    {
@@ -114,7 +121,9 @@ int main (int argc, const char** argv)
    thread_args consumerdata;
 
    consumerdata.buffer = DataBuffer;
-   consumerdata.size = size;
+   consumerdata.buffersize = buffersize;
+   consumerdata.blocksize = blocksize;
+   consumerdata.offset = offset;
 
    if (pthread_create(&consumer, NULL, consume, &consumerdata) < 0)
    {
