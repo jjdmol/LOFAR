@@ -41,21 +41,18 @@ namespace LOFAR
     explicit WH_FakeStation(const string& name, 
 			    const ParameterSet ps,
 			    TransportHolder& th,
-			    const int StationID);
+			    const int StationID,
+			    const int delay);
     virtual ~WH_FakeStation();
     
     static WorkHolder* construct(const string& name, 
                                  const ParameterSet ps,
 				 TransportHolder& th,
-				 const int StationID);
+				 const int StationID,
+				 const int delay);
     virtual WH_FakeStation* make(const string& name);
 
-    virtual void preprocess();
     virtual void process();
-    virtual void postprocess();
-
-    //handle timer alarm
-    static void timerSignal(int signal);    
 
   private:
     /// forbid copy constructor
@@ -65,14 +62,9 @@ namespace LOFAR
 
     ParameterSet itsPS;
     TransportHolder& itsTH;
-    EthernetFrame itsEthFrame;
-    double itsFrequency;
     int itsStationId;
     TimeStamp itsStamp;
-
-    static int theirNoRunningWHs;
-    static int theirNoAlarms;
-    static bool theirTimerSet;
+    int itsDelay;
   };
 
 } // namespace LOFAR

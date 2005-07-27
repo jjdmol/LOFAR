@@ -1,4 +1,4 @@
-//#  WH_FakeStation.h: Emulate a station
+//#  WH_Signal.h: Create a signal
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,51 +20,60 @@
 //#
 //#  $Id$
 
-#ifndef STATIONCORRELATOR_WH_FAKESTATION_H
-#define STATIONCORRELATOR_WH_FAKESTATION_H
+#ifndef STATIONCORRELATOR_WH_SIGNAL_H
+#define STATIONCORRELATOR_WH_SIGNAL_H
 
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TransportHolder.h>
-#include <TFC_Generator/StationData.h>
-#include <TFC_Interface/RSPTimeStamp.h>
+#include <TFC_Generator/DH_RSP.h>
 
 namespace LOFAR
 {
 
   using ACC::APS::ParameterSet;
 
-  class WH_FakeStation: public WorkHolder
+  class WH_Signal: public WorkHolder
   {
   public:
+    enum SignalType {
+      ZERO,
+      PATTERN,
+      RANDOM};
 
-    explicit WH_FakeStation(const string& name, 
-			    const ParameterSet ps,
-			    TransportHolder& th,
-			    const int StationID,
-			    const int delay);
-    virtual ~WH_FakeStation();
+    explicit WH_Signal(const string& name, 
+		       const int noOutputs,
+		       const ParameterSet ps,
+		       const SignalType st = PATTERN);
+    virtual ~WH_Signal();
     
     static WorkHolder* construct(const string& name, 
+				 const int noOutputs,
                                  const ParameterSet ps,
-				 TransportHolder& th,
-				 const int StationID,
-				 const int delay);
-    virtual WH_FakeStation* make(const string& name);
+				 const SignalType st);
+    virtual WH_Signal* make(const string& name);
 
+    virtual void preprocess();
     virtual void process();
+    virtual void postprocess();
+
+    //handle timer alarm
+    static void timerSignal(int signal);    
 
   private:
     /// forbid copy constructor
-    WH_FakeStation (const WH_FakeStation&);
+    WH_Signal (const WH_Signal&);
     /// forbid assignment
-    WH_FakeStation& operator= (const WH_FakeStation&);
+    WH_Signal& operator= (const WH_Signal&);
 
     ParameterSet itsPS;
-    TransportHolder& itsTH;
-    int itsStationId;
+    double itsFrequency;
     TimeStamp itsStamp;
-    int itsDelay;
+    SignalType itsSignalType;
+
+    static int theirNoRunningWHs;
+    static int theirNoAlarms;
+    static bool theirTimerSet;
   };
 
 } // namespace LOFAR

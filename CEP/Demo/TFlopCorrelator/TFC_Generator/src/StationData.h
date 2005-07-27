@@ -30,7 +30,7 @@
 
 namespace LOFAR
 {
-  typedef TYPES::i16complex dataType;
+  typedef TYPES::i16complex RSPDataType;
   using ACC::APS::ParameterSet;
   
   // EpaHeader is the class that represents the header data of the epa packet
@@ -76,7 +76,8 @@ namespace LOFAR
     ~EpaPacket();
 
     EpaHeader& getHeader();
-    RectMatrix<dataType>& getMatrix();
+    RectMatrix<RSPDataType>& getMatrix();
+    static int getSize(ParameterSet& ps);
   protected:
     EpaPacket(EpaPacket&);
     friend class EthernetFrame;
@@ -85,7 +86,7 @@ namespace LOFAR
 
     char* itsBufferp;
     EpaHeader itsEpaHeader;
-    RectMatrix<dataType>* itsMatrix;
+    RectMatrix<RSPDataType>* itsMatrix;
   };
 
   // EthernetFrame represents the contents of an Ethernet frame
@@ -95,18 +96,20 @@ namespace LOFAR
   class EthernetFrame
   {
   public:
-    EthernetFrame(ParameterSet ps);
+    EthernetFrame(ParameterSet ps, char* bufferP = 0, int bufferSize = 0);
     ~EthernetFrame();
     int getNoPacketsInFrame();
     EpaPacket& getEpaPacket(int index);
     char* getPayloadp();
     int getPayloadSize();
     void reset();
+    static int getSize(ParameterSet& ps);
   protected:
     EthernetFrame(EthernetFrame&);
     vector<EpaPacket*> itsEpaPackets;
     char* itsBufferp;
     int itsBufferSize;
+    bool itsIsMemoryMine;
   };
 
   inline int EpaHeader::getSize()
@@ -126,8 +129,11 @@ namespace LOFAR
 
   inline EpaHeader& EpaPacket::getHeader()
     { return itsEpaHeader; };
-  inline RectMatrix<dataType>& EpaPacket::getMatrix()
+  inline RectMatrix<RSPDataType>& EpaPacket::getMatrix()
     { return *itsMatrix; };
+  inline int EpaPacket::getSize(ParameterSet& ps)
+    { return EpaHeader::getSize() + ps.getInt32("NoSubbands") * \
+	ps.getInt32("polarisations") * sizeof(RSPDataType); };
 
   inline int EthernetFrame::getNoPacketsInFrame()
     { return itsEpaPackets.size(); };
@@ -139,6 +145,8 @@ namespace LOFAR
     { return itsBufferSize; };
   inline void EthernetFrame::reset()
     { memset(itsBufferp, 0, itsBufferSize); };
+  inline int EthernetFrame::getSize(ParameterSet& ps)
+    { return EpaPacket::getSize(ps) * ps.getInt32("NoPacketsInFrame"); };
   
 
 } // namespace LOFAR
