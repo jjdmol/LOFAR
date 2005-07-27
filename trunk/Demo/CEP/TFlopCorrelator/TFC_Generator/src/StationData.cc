@@ -42,16 +42,16 @@ namespace LOFAR
       itsMatrix(0)
   {
     int NoSubbands = ps.getInt32("NoSubbands");
-    int BufferSize = EpaHeader::getSize() + NoSubbands * 2 * sizeof(dataType);
+    int BufferSize = EpaPacket::getSize(ps);
 
     ASSERTSTR(bufferSize == BufferSize, "EpaPacket received the wrong amount of buffer data");
     
     // create the RectMatrix
     vector<DimDef> vdd;
     vdd.push_back(DimDef("subband", NoSubbands));
-    vdd.push_back(DimDef("polarisatie", 2));
-    itsMatrix = new RectMatrix<dataType>(vdd);
-    itsMatrix->setBuffer((dataType*)(itsBufferp + EpaHeader::getSize()), 2*NoSubbands);
+    vdd.push_back(DimDef("polarisation", 2));
+    itsMatrix = new RectMatrix<RSPDataType>(vdd);
+    itsMatrix->setBuffer((RSPDataType*)(itsBufferp + EpaHeader::getSize()), 2*NoSubbands);
   };
 
   EpaPacket::~EpaPacket()
@@ -60,13 +60,23 @@ namespace LOFAR
   };
 
   // EthernetFrame constructor and destructor
-  EthernetFrame::EthernetFrame(ParameterSet ps) 
+  EthernetFrame::EthernetFrame(ParameterSet ps, char* bufferP, int bufferSize) 
   {
+    if (((int)bufferP)*bufferSize == 0) {
+      // if either bufferP or the size is 0, allocate the memory myself
+      itsIsMemoryMine = true;
+    } else {
+      itsIsMemoryMine = false;
+    }
     int noEpaP = ps.getInt32("NoPacketsInFrame");
-    int NoSubbands = ps.getInt32("NoSubbands");
-    int epaSize = EpaHeader::getSize() + NoSubbands * 2 * sizeof(dataType);
-    itsBufferSize = noEpaP * epaSize;
-    itsBufferp = new char[itsBufferSize];
+    int epaSize = EpaPacket::getSize(ps);
+    itsBufferSize = EthernetFrame::getSize(ps);
+    if (itsIsMemoryMine) {
+      itsBufferp = new char[itsBufferSize];
+    } else {
+      ASSERTSTR(itsBufferSize <= bufferSize, "EthernetFrame received too little memory");
+      itsBufferp = bufferP;
+    }
     for (int epap = 0; epap < noEpaP; epap++) {
       itsEpaPackets.push_back(new EpaPacket(&(itsBufferp[epap * epaSize]), epaSize, ps));
     }
@@ -78,7 +88,9 @@ namespace LOFAR
     for (; epap != itsEpaPackets.end(); epap++) {
       delete *epap;
     }
-    delete [] itsBufferp;
+    if (itsIsMemoryMine) {
+      delete [] itsBufferp;
+    }
   };
 
 

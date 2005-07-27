@@ -17,11 +17,13 @@
 #include <AH_FakeStation.h>
 
 // Transporters
+#include <Transport/TH_Mem.h>
 #include <Transport/TH_File.h>
 #include <Transport/TH_Ethernet.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <TFC_Generator/WH_FakeStation.h>
+#include <WH_Signal.h>
+#include <WH_FakeStation.h>
 
 using namespace LOFAR;
 
@@ -68,11 +70,35 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   bool useEth = itsParamSet.getBool("Generator.UseEth");
+  vector<string> outFileNames = itsParamSet.getStringVector("Generator.OutputFiles");
   vector<string> interfaces = itsParamSet.getStringVector("Generator.Interfaces");
   vector<string> remMacs = itsParamSet.getStringVector("Generator.RemMacs");
   vector<string> ownMacs = itsParamSet.getStringVector("Generator.OwnMacs");
   vector<int32> stationIds = itsParamSet.getInt32Vector("Generator.StationIds");
+  vector<int32> delays = itsParamSet.getInt32Vector("Generator.StationDelays");
   
+  snprintf(WH_DH_Name, WH_DH_NameSize, "Signal");
+
+  WH_Signal::SignalType st;
+  string signalType = itsParamSet.getString("Generator.SignalType");
+  if (signalType == "ZERO") {
+    st = WH_Signal::ZERO;
+  } else if (signalType == "RANDOM") {
+    st = WH_Signal::RANDOM;
+  } else if (signalType == "PATTERN") {
+    st = WH_Signal::PATTERN;
+  } else {
+    ASSERTSTR(false, "Signaltype unknown. Generator.SignalType should be one of {ZERO, PATTERN, RANDOM}");
+  }  
+  
+  itsWHs.push_back(new WH_Signal(WH_DH_Name, 
+				 NRSP,
+				 itsParamSet,
+				 st));
+  Step* itsSignalStep = new Step(itsWHs.back(), WH_DH_Name);
+  itsSteps.push_back(itsSignalStep);
+  comp.addBlock(itsSignalStep);
+
   for (int s=0; s<NRSP; s++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "FakeStation_%d_of_%d", s, NRSP);
     if (useEth) {
@@ -81,15 +107,19 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
 				       remMacs[s],
 				       ownMacs[s]));
     } else {
-      itsTHs.push_back(new TH_File("Generator.out", TH_File::Write));
+      itsTHs.push_back(new TH_File(outFileNames[s], TH_File::Write));
     }
     ASSERTSTR(itsTHs.back()->init(), "Could not init TransportHolder");
     itsWHs.push_back(new WH_FakeStation(WH_DH_Name,
 					itsParamSet,
 					*itsTHs.back(),
-					stationIds[s]));
-    itsSteps.push_back(new Step(itsWHs.back(),WH_DH_Name,false));
+					stationIds[s],
+					delays[s]));
+    itsSteps.push_back(new Step(itsWHs.back(), WH_DH_Name));
     comp.addBlock(itsSteps.back());
+    itsSteps.back()->connect(0, itsSignalStep, s, 1,
+			     new TH_Mem(),
+			     false);
   };
   
   LOG_TRACE_FLOW_STR("Finished define()");
