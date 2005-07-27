@@ -24,6 +24,7 @@
 
 #include <GCF/PAL/GCF_PropertyProxy.h>
 #include <GPM_PropertyProxy.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 namespace LOFAR 
 {
@@ -66,6 +67,29 @@ TGCFResult GCFPropertyProxy::setPropValueTimed(const string& propName,
 {
   return (_pPMProxy->setPM(propName, value, timestamp, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
+
+TGCFResult GCFPropertyProxy::setPropValueTimed(const string& propName, 
+                                               const string& value, 
+                                               double timestamp, 
+                                               bool wantAnswer)
+{
+  GCFPValue* pValue = GCFPValue::createMACTypeObject(GCFPVSSInfo::getMACTypeId(propName));
+  if (pValue) 
+  {  
+    return (_pPMProxy->setPM(propName, *pValue, timestamp, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  }
+}
+
+TGCFResult GCFPropertyProxy::dpQuerySubscribeSingle(const string& queryWhere, const string& queryFrom)
+{
+  return (_pPMProxy->dpQuerySubscribeSinglePM(queryWhere, queryFrom) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+}
+
+TGCFResult GCFPropertyProxy::dpQueryUnsubscribe(uint32 queryId)
+{
+  return (_pPMProxy->dpQueryUnsubscribePM(queryId) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+}
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

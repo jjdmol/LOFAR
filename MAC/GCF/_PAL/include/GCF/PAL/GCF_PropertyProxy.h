@@ -87,6 +87,21 @@ class GCFPropertyProxy
                                      const Common::GCFPValue& value, 
                                      double timestamp,
                                      bool wantAnswer = false);
+
+    virtual Common::TGCFResult setPropValue (const string& propName, 
+                                     const string& value, 
+                                     bool wantAnswer = false);
+
+    // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
+    virtual Common::TGCFResult setPropValueTimed (const string& propName, 
+                                     const string& value, 
+                                     double timestamp,
+                                     bool wantAnswer = false);
+
+    virtual Common::TGCFResult dpQuerySubscribeSingle(const string& queryWhere, 
+                                                      const string& queryFrom);
+    virtual Common::TGCFResult dpQueryUnsubscribe(uint32 queryId);
+
   protected:
     friend class GPMPropertyProxy;
 
@@ -110,6 +125,8 @@ class GCFPropertyProxy
     // Response on 'setPropValue' request, only if wantAnswer was set to true
     virtual void propValueSet (const string& propName) = 0;
 
+    virtual void dpQuerySubscribed(uint32 queryId);
+
   private:
     // Don't allow copying this object.
     // <group>
@@ -125,6 +142,17 @@ inline Common::TGCFResult GCFPropertyProxy::setPropValue (const string& propName
                                      bool wantAnswer)
 {
   return setPropValueTimed(propName, value, 0.0, wantAnswer);
+}
+
+inline Common::TGCFResult GCFPropertyProxy::setPropValue (const string& propName, 
+                                     const string& value, 
+                                     bool wantAnswer)
+{
+  return setPropValueTimed(propName, value, 0.0, wantAnswer);
+}
+
+inline void GCFPropertyProxy::dpQuerySubscribed(uint32 /*queryId*/)
+{
 }
 
   } // namespace PAL

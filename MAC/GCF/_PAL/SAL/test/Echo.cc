@@ -51,6 +51,7 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name) , _pService(0)
 Echo::~Echo()
 {
   cout << "Deleting (SAL)echoapp" << endl;
+  if (_pService) delete _pService;
 }
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
@@ -120,8 +121,12 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
           _pService->dpCreate(propName, "ExampleDP_Bit");
           break;
         case 1:
+        {
           _pService->dpCreate(propName + "_test", "ExampleDP_Int");
+          vector<string> allProps;
+          GCFPVSSInfo::getAllProperties("T*", "*", allProps);  
           break;
+        }
         case 2:
           _pService->dpeSubscribe(propName);
           break;

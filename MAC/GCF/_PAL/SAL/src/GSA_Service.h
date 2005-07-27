@@ -69,6 +69,9 @@ class GSAService
                               const Common::GCFPValue& value, 
                               double timestamp,
                               bool wantAnswer);
+    virtual TSAResult dpQuerySubscribeSingle(const string& queryWhere, 
+                                             const string& queryFrom);
+    virtual TSAResult dpQueryUnsubscribe(uint32 /*queryId*/);
     
     virtual void dpCreated (const string& /*dpName*/) = 0;
     virtual void dpDeleted (const string& /*dpName*/) = 0;
@@ -80,6 +83,7 @@ class GSAService
     virtual void dpeValueChanged (const string& /*dpeName*/, 
                                   const Common::GCFPValue& /*value*/) = 0;        
     virtual void dpeValueSet (const string& /*dpeName*/) = 0;
+    virtual void dpQuerySubscribed(uint32 /*queryId*/);        
 
   private: // methods
     // interface for GSAWaitForAnswer
@@ -108,11 +112,17 @@ class GSAService
                              bool willReadValue);
     void convDpConfigToProp (const string& pvssDPEConfigName, 
                              string& dpeName);    
+
+    void convAndForwardValueChange(const DpIdentifier& dpId, const Variable& pvssVar);
     
   private: // data members    
     GSAWaitForAnswer* _pWFA;
     GSASCADAHandler*  _pSCADAHandler;
 };                                 
+
+inline void GSAService::dpQuerySubscribed(uint32 /*queryId*/)
+{
+}
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

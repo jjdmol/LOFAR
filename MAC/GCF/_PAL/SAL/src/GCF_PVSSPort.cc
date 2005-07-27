@@ -111,7 +111,7 @@ bool GCFPVSSPort::open()
         _portAddr.setValue(formatString(
             "%s:__gcfportAPI%d_%d_%s", 
             GCFPVSSInfo::getLocalSystemName().c_str(),
-            GCFPVSSInfo::getManNum(), 
+            GCFPVSSInfo::getOwnManNum(), 
             pvssPortNr,
             getRealName().c_str()));
       }
@@ -122,7 +122,7 @@ bool GCFPVSSPort::open()
       _portId.setValue(formatString(
           "%d:Api:%d:%d:",
           GCFPVSSInfo::getLocalSystemId(),
-          GCFPVSSInfo::getManNum(),
+          GCFPVSSInfo::getOwnManNum(),
           pvssPortNr));
     }
   }

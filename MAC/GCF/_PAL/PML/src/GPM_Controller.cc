@@ -28,7 +28,6 @@
 #include <GCF/PAL/GCF_SysConnGuard.h>
 #include <GCF/Utils.h>
 #include <GCF/ParameterSet.h>
-#include <Resources.hxx>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
 #include <stdio.h>

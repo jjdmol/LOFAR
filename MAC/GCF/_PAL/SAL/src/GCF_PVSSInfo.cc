@@ -29,6 +29,9 @@
 #include "GSA_Service.h"
 #include "GSA_Defines.h"
 #include <Manager.hxx>
+#include <Datapoint.hxx>
+#include <DpContainer.hxx>
+#include <DpIdentification.hxx>
 
 namespace LOFAR 
 {
@@ -39,8 +42,10 @@ using namespace Common;
   {
 string GCFPVSSInfo::_sysName = "";
 string GCFPVSSInfo::_projName = "";
-unsigned int GCFPVSSInfo::_lastSysNr = 0;
-timeval GCFPVSSInfo::_lastTimestamp =  {0, 0};
+int8 GCFPVSSInfo::_lastSysNr = 0;
+timeval GCFPVSSInfo::_lastTimestamp = {0, 0};
+uint8 GCFPVSSInfo::_lastManNum = 0;
+uint8 GCFPVSSInfo::_lastManType = 0;
 
 TMACValueType macValueTypes[] = 
 {
@@ -113,6 +118,18 @@ bool GCFPVSSInfo::typeExists (const string& dpTypeName)
   return (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE);
 }
 
+TMACValueType GCFPVSSInfo::getMACTypeId (const string& dpeName)
+{
+  CharString pvssTypeName(dpeName.c_str());
+  DpTypeId dpTypeId; 
+  TMACValueType type(NO_LPT);
+  if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE)
+  {
+    type = macValueTypes[dpTypeId];
+  } 
+  return type;
+}
+
 const string& GCFPVSSInfo::getLocalSystemName()
 {
   if (_sysName.length() == 0)
@@ -126,12 +143,12 @@ const string& GCFPVSSInfo::getLocalSystemName()
   return _sysName;
 }
 
-unsigned int GCFPVSSInfo::getLocalSystemId()
+int8 GCFPVSSInfo::getLocalSystemId()
 {
   return Resources::getSystem();
 }
 
-const string GCFPVSSInfo::getSystemName(unsigned int sysnr)
+const string GCFPVSSInfo::getSystemName(int8 sysnr)
 {
   CharString sysName;
   if (Manager::getSystemName(sysnr, sysName) == PVSS_TRUE)
@@ -151,7 +168,7 @@ const string& GCFPVSSInfo::getProjectName()
   return _projName;
 }
 
-unsigned int GCFPVSSInfo::getSysId(const string& name)
+int8 GCFPVSSInfo::getSysId(const string& name)
 {
   string::size_type index = name.find(':');
   if (index > name.length())
@@ -178,14 +195,82 @@ unsigned int GCFPVSSInfo::getSysId(const string& name)
   return sysNr;
 }
 
-unsigned int GCFPVSSInfo::getManNum()
+uint8 GCFPVSSInfo::getOwnManNum()
 {
   return Resources::getManNum();
 }
 
+void GCFPVSSInfo::getAllProperties(const string& typeFilter, 
+                                   const string& dpFilter, 
+                                   vector<string>& foundProperties)
+{
+  foundProperties.clear();
+  DpIdentification::TypeIdNamePair* typeArray(0);
+  DpIdentification::DpIdNamePair* dpIdArray(0);
+  PVSSlong howManyTypes, howManyDpIds;
+
+  // get all DP types which meats with a "typeFilter"
+  Manager::getDpIdentificationPtr()->getSortedTypeNames(typeFilter.c_str(), typeArray, howManyTypes, PVSS_FALSE);
+
+  list<TPropertyInfo> propInfos;
+  string dpeName;
+  for (PVSSlong i = 0; i < howManyTypes; i++)
+  {
+    // Get all DP's for each type
+    Manager::getDpIdentificationPtr()->getSortedDpIdNames(dpFilter.c_str(), dpIdArray, howManyDpIds, PVSS_FALSE, typeArray[i].id);    
+
+    for (PVSSlong j = 0; j < howManyDpIds; j++)
+    {
+      if (j == 0) 
+      {
+        // get type structure (type elements) of the current DPT only once for
+        // all found DP's
+        getTypeStruct((const char*) typeArray[i].text.getText(), propInfos);
+      }
+      for (list<TPropertyInfo>::iterator iter = propInfos.begin();
+           iter != propInfos.end(); iter++)
+      {
+        // concatenate DP name and element name to a DPE.
+        dpeName = formatString ("%s.%s",
+          (const char *)dpIdArray[j].id.toString(),
+          iter->propName.c_str());
+          
+        LOG_DEBUG(formatString (
+          "Found DPE: %s",
+          dpeName.c_str()));
+        foundProperties.push_back(dpeName);
+      }
+    }
+    if (dpIdArray) delete [] dpIdArray;
+    dpIdArray = 0;
+  }
+  if (typeArray) delete [] typeArray;  
+}
+
+void GCFPVSSInfo::getAllTypes(const string& typeFilter, 
+                              vector<string>& foundTypes)
+{
+  foundTypes.clear();
+  DpIdentification::TypeIdNamePair* typeArray(0);
+  PVSSlong howManyTypes;
+  
+  // get all DP types which meats with a "typeFilter"
+  Manager::getDpIdentificationPtr()->getSortedTypeNames(typeFilter.c_str(), typeArray, howManyTypes, PVSS_FALSE);
+
+  for (PVSSlong i = 0; i < howManyTypes; i++)
+  {
+    LOG_DEBUG(formatString (
+      "Found type: %s",
+      (const char *)typeArray[i].text.getText()));
+    foundTypes.push_back((const char *)typeArray[i].text.getText());
+  }
+  if (typeArray) delete [] typeArray;  
+}                             
+
+// forward declaration
 void buildTypeStructTree(const string path, const DpType* pType, const DpElementId elId, list<TPropertyInfo>& propInfos);
 
-TGCFResult GCFPVSSInfo::getTypeStruct(const string& typeName, list<TPropertyInfo>& propInfos, unsigned int sysNr)
+TGCFResult GCFPVSSInfo::getTypeStruct(const string& typeName, list<TPropertyInfo>& propInfos, int8 sysNr)
 {
   TGCFResult result(GCF_NO_ERROR);
   propInfos.clear();
@@ -231,11 +316,6 @@ void buildTypeStructTree(const string path,
   {
     char* elName;
     Manager::getDpIdentificationPtr()->getElementName(pType->getName(), elId, elName);
-    if (strcmp(elName, "__internal") == 0)
-    {
-      delete [] elName;
-      return;
-    }
     if (elType != DPELEMENT_TYPEREFERENCE)
     {
       if (propName.length() > 0) propName += '.';
@@ -246,8 +326,7 @@ void buildTypeStructTree(const string path,
   if (elType != DPELEMENT_RECORD && elType != DPELEMENT_TYPEREFERENCE)
   {
     if (macValueTypes[elType] != NO_LPT)
-    {
-      
+    {      
       if (Utils::isValidPropName(propName.c_str()))
       {
         TPropertyInfo propInfo;
@@ -265,7 +344,7 @@ void buildTypeStructTree(const string path,
     else
     {
       LOG_ERROR(formatString(
-          "TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). No add!!!",
+          "TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). Not add!!!",
           elType, 
           propName.c_str()));      
     }
