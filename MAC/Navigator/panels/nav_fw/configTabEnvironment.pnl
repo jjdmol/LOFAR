@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,354 192 730 540 N "_3DFace" 0
+PANEL,269 267 730 540 N "_3DFace" 0
 EEE E E 1 -1 -1 0  80 120
 "" 0 1
 E"#uses \"nav_fw/gcfnav-functions.ctl\"" 0
@@ -671,7 +671,7 @@ E
 EE E
 0
 2
-LANG:1 11 Select area
+LANG:1 16 Remove as member
 LANG:0 17 Bereich auswählen
 0
 2
@@ -680,8 +680,8 @@ LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 478 88 507 115
 P 
-14215660
-"pictures/nav_fw/arrow_left.xpm"
+10040064
+"pictures/nav_fw/arrowleft.gif"
 1
 LANG:1 0 
 "main()
@@ -765,7 +765,7 @@ LANG:1 5 Apply
 EE E
 0
 2
-LANG:1 14 Deselect  area
+LANG:1 13 Add as member
 LANG:0 16 Bereich abwählen
 0
 2
@@ -774,8 +774,8 @@ LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 478 118 507 145
 P 
-14215660
-"pictures/nav_fw/arrow_right.xpm"
+10040064
+"pictures/nav_fw/arrowright.gif"
 1
 LANG:1 0 
 "main()
