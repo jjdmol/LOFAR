@@ -44,7 +44,7 @@ class MeqJonesExprRep
 public:
   // The default constructor.
   MeqJonesExprRep()
-    : itsCount(0), itsLastReqId(InitMeqRequestId)
+    : itsCount(0)
     {};
 
   virtual ~MeqJonesExprRep();
@@ -64,7 +64,6 @@ private:
   MeqJonesExprRep& operator= (const MeqJonesExprRep&);
 
   int          itsCount;
-  MeqRequestId itsLastReqId;
 };
 
 
