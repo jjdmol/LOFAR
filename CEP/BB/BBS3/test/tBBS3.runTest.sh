@@ -26,7 +26,7 @@ echo Test = $TESTNAME, user = $USERNAME
 if [ "$TESTNAME" == "all" ]; then
   for TEST in `ls tBBS3.test*`; do
     TESTNAME=${TEST##tBBS3.}
-    ./tBBS3.runTest.sh $TESTNAME $USERNAME
+    ./tBBS3.runTest.sh $TESTNAME $USERNAME &> ${TESTNAME}.log
   done
   exit 0
 fi
