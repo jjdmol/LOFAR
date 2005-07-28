@@ -44,7 +44,6 @@ MNS/MeqParmPolc.h \
 MNS/MeqParmSingle.h \
 MNS/MeqPhaseRef.h \
 MNS/MeqPointSource.h \
-MNS/MeqPointSourceList.h \
 MNS/MeqPolc.h \
 MNS/MeqRequest.h \
 MNS/MeqRequestId.h \
