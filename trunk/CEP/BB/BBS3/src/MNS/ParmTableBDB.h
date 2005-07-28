@@ -27,9 +27,9 @@
 // Object to hold parameters in a database table.
 
 //# Includes
-#include <MNS/ParmTable.h>
-#include <MNS/MeqParmHolder.h>
-#include <MNS/MeqPolc.h>
+#include <BBS3/MNS/ParmTable.h>
+#include <BBS3/MNS/MeqParmHolder.h>
+#include <BBS3/MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <db_cxx.h>
