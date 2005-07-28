@@ -163,7 +163,7 @@ void ComboBoxViewsSelectionChanged()
   
   shape viewsComboBoxCtrl = getShape(VIEW_COMBOBOX_CTRL);  
   shape viewTabsCtrl      = getShape(VIEW_TABS_CTRL);  
-  
+  string viewsPath = navConfigGetViewsPath();
   // store the selected subview:
   int selectedSubViewIndex = viewsComboBoxCtrl.selectedPos();
   navConfigSetSelectedSubView(g_datapoint,selectedSubViewIndex);
@@ -214,12 +214,12 @@ void ComboBoxViewsSelectionChanged()
   //5. panelfile not present and accessable
   if(viewsComboBoxCtrl.itemCount==0)
   {
-    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nosubview.pnl",panelParameters);
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nosubview.pnl",panelParameters);
     LOG_DEBUG("1. No subview configured for this datapoint type");
   }
   //  else if(!dpAccessable(g_datapoint))
   //  {
-  //    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nodpfound.pnl",panelParameters);
+  //    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nodpfound.pnl",panelParameters);
   //    LOG_DEBUG("2. Datapoint selected in tree not found.");
   //  }
   else if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
@@ -229,14 +229,14 @@ void ComboBoxViewsSelectionChanged()
   }
   else if (selectedPanel=="0")
   {
-    selectedPanel = "nav_fw/nopanel.pnl";
-    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nopanel.pnl",panelParameters);
+    selectedPanel = viewsPath + "nopanel.pnl";
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nopanel.pnl",panelParameters);
     LOG_DEBUG("4 No panel configured for this subview");
   }
   else  //3. The configured panel file for this subview has not been found
   {
 	  string oldSelectedPanel = selectedPanel;
-	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"nav_fw/nopanelfound.pnl",panelParameters);
+	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME, viewsPath + "nopanelfound.pnl",panelParameters);
     LOG_DEBUG("5. File does not exist:",oldSelectedPanel);
   }            
  
