@@ -95,8 +95,8 @@ class CyclicBuffer
   TYPE GetManualWritePtr(int ID);
   
   // release locks
-  void WriteUnlockItem(int ID);
-  void ReadUnlockItems(int ID, int NElements);
+  void WriteUnlockItems(int ID, int Nelements);
+  void ReadUnlockItems(int ID, int Nelements);
 
   // print head, tail and count pointers
   void Dump();
@@ -109,8 +109,8 @@ class CyclicBuffer
 
  private:
 
-  void ReadLockItems(int ID, int NElements);
-  void WriteLockItem(int ID);
+  void ReadLockItems(int ID, int Nelements);
+  void WriteLockItems(int ID, int Nelements);
   
   vector< BufferItem <TYPE> > itsBuffer;
 
@@ -266,7 +266,7 @@ const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int Nelements, int& I
     ID = ID - (int)itsBuffer.size();
   }
   if (ID < 0) {
-    ID = (int)itsBuffer.size() + ID;
+    ID = ID  + (int)itsBuffer.size();
   }
   
   // lock the elements
@@ -308,7 +308,6 @@ const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
   return itsBuffer[ID].itsItem;
 }
 
-
 template<class TYPE>
 TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
 {
@@ -316,7 +315,7 @@ TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
   {
    LOG_TRACE_RTTI("CyclicBuffer::getWriteUserItem: ID has invalid value");
    return 0;
- } 
+  } 
 
   pthread_mutex_lock(&buffer_mutex); 
 
@@ -328,16 +327,19 @@ TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::WriteUnlockItem(int ID)
+void CyclicBuffer<TYPE>::WriteLockItems(int ID, int Nelements)
 {
-  itsBuffer[ID].itsRWLock.WriteUnlock();
+  for (int i=0; i<Nelements; i++) {
+    itsBuffer[ID+i].itsRWLock.WriteLock();
+  }
+
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::ReadUnlockItems(int ID, int Nelements)
+void CyclicBuffer<TYPE>::WriteUnlockItems(int ID, int Nelements)
 {
   for (int i=0; i<Nelements; i++) {
-    itsBuffer[ID+i].itsRWLock.ReadUnlock();
+    itsBuffer[ID+i].itsRWLock.WriteUnlock();
   }
 }
 
@@ -350,9 +352,11 @@ void CyclicBuffer<TYPE>::ReadLockItems(int ID, int Nelements)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::WriteLockItem(int ID)
+void CyclicBuffer<TYPE>::ReadUnlockItems(int ID, int Nelements)
 {
-  itsBuffer[ID].itsRWLock.WriteLock();
+  for (int i=0; i<Nelements; i++) {
+    itsBuffer[ID+i].itsRWLock.ReadUnlock();
+  }
 }
 
 template<class TYPE>
