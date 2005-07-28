@@ -1295,7 +1295,7 @@ void Prediffer::saveResidualData (bool subtract, bool write)
       delete itsDataMap;
       itsDataMap = 0;
     }
-    itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::Read);
+    itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::ReWr);
     if (size > 0) {
       itsDataMap->mapFile (offs, size);
     }
