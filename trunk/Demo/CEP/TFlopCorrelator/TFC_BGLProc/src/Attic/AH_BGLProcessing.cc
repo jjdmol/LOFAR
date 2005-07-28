@@ -85,10 +85,16 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
   
   char WH_Name[40];
-  int noProcBlock = itsParamSet.getInt32("NoProcessingBlocks");
-  int noFiltsPerBlock = itsParamSet.getInt32("NoFiltersPerBlock");
+//   int noProcBlock = itsParamSet.getInt32("NoProcessingBlocks");
+//   int noFiltsPerBlock = itsParamSet.getInt32("NoFiltersPerBlock");
+//   int subband = 0;
+
   int noCorsPerFilt = itsParamSet.getInt32("NoCorsPerFilt");
-  int subband = 0;
+  int itsBasePort = itsParamSet.getInt32("BasePort");
+  string itsInServer = itsParamSet.getString("InServer");
+  string itsOutServer = itsParamSet.getString("OutServer");
+
+
 //   for (int pb = 0; pb < noProcBlock; pb++) {
 
     // This is the basic define for the next version of the BGL processing pipe
@@ -138,7 +144,6 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
 
   // define a block of correlators
-  int itsBasePort = 4000;
 
   for (int cor = 0; cor < noCorsPerFilt; cor++) {
 
@@ -149,9 +154,6 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
     DataHolder* itsInDH = new DH_FIR("itsIn1", 0, itsParamSet);
     DataHolder* itsOutDH = new DH_Vis("itsOut1", 0, itsParamSet);
-    
-    char* itsInServer = "127.0.0.1";
-    char* itsOutServer = "127.0.0.1";
         
     string itsInService(formatString("%d", itsBasePort+2*cor));
     string itsOutService(formatString("%d", itsBasePort+2*cor+1));
