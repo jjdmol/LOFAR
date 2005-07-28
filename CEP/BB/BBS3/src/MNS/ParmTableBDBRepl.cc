@@ -122,9 +122,12 @@ namespace LOFAR {
     LOG_TRACE_FLOW("replication started");
     itsDbEnv = theirReplicator->getDbEnv();
     DbTxn* myTxn = 0;
-    int ret = itsDbEnv->txn_begin(NULL, &myTxn, 0);
-    LOG_TRACE_FLOW_STR("environment: "<<itsDbEnv<<" transaction: "<<myTxn);
-    ASSERTSTR(ret == 0, "BDBRepl no transaction while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
+    int ret = 0;
+    //    if (itsIsMaster) {
+      ret = itsDbEnv->txn_begin(NULL, &myTxn, 0);
+      LOG_TRACE_FLOW_STR("environment: "<<itsDbEnv<<" transaction: "<<myTxn);
+      ASSERTSTR(ret == 0, "BDBRepl no transaction while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
+      //    }
     itsDb = new Db(itsDbEnv, DB_CXX_NO_EXCEPTIONS);
 
     u_int32_t oFlags;
@@ -138,6 +141,7 @@ namespace LOFAR {
     LOG_TRACE_FLOW_STR("opening replicated database "<<itsBDBTableName);
 #if 1
     ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
+    cout<<" OPEN FAILED : "<<itsDbEnv->strerror(ret)<<endl;
     ASSERTSTR( ret == 0, "BDBRepl while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
 #else
     ret = 1;

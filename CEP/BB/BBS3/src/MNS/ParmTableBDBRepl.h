@@ -27,9 +27,9 @@
 // Replicated Berkeley database
 
 //# Includes
-#include <MNS/ParmTableBDB.h>
-#include <MNS/MeqParmHolder.h>
-#include <MNS/MeqPolc.h>
+#include <BBS3/MNS/ParmTableBDB.h>
+#include <BBS3/MNS/MeqParmHolder.h>
+#include <BBS3/MNS/MeqPolc.h>
 #include <BDBReplication/BDBReplicator.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
