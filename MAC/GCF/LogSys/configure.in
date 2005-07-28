@@ -43,10 +43,10 @@ lofar_QATOOLS
 lofar_LOG4CPLUS
 lofar_DOCXX
 lofar_PVSS
-lofar_INTERNAL(LCS/Common, common, LCS-Common-2_1, 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-5_1, 1, GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-5_1, 1, GCF/TM/GCF_Task.h,,)
-lofar_INTERNAL(MAC/GCF/PAL, gcfpal, MAC-GCF-5_1, 1, GCF/PAL/GCF_PVSSInfo.h,,)
+lofar_INTERNAL(LCS/Common, common, LCS-Common-2_2patch1, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, HEAD, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, HEAD, 1, GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(MAC/GCF/PAL, gcfpal, HEAD, 1, GCF/PAL/GCF_PVSSInfo.h,,)
 
 dnl
 dnl Output Makefiles
