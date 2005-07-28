@@ -47,7 +47,7 @@ GCFNavigatorInstance.GCFNavigatorInstance	1#1
 	newDatapoint	25#7
 	message	25#8
 	selectedEnvironment	25#9
-GGCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
+GCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
 	1	1#8
 		Trace1	1#55
 			dpName	25#56
@@ -152,7 +152,7 @@ GGCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
 			ScaleMin	21#142
 			ScaleMax	21#143
 			LegendName	25#144
-			tracColor	25#184
+			traceColor	25#184
 		Trace7	1#145
 			dpName	25#146
 			AutoScale	23#147
@@ -176,9 +176,6 @@ GGCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
 	Trend2Active	23#166
 	DedicatedPanelName	25#167
 	Dedicated	23#168
-	dummy	25#169
-	dummy2	25#170
-
 GCFNavSubViewConfigAlert.GCFNavSubViewConfigAlert	1#1
 	1	1#2
 		Title	25#3
