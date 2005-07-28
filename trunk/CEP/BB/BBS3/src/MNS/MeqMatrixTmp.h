@@ -82,11 +82,13 @@ public:
   double* doubleStorage()
     { return (double*)(itsRep->doubleStorage()); }
 
+#if 0
   const dcomplex* dcomplexStorage() const
     { return (dcomplex*)(itsRep->dcomplexStorage()); }
 
   dcomplex* dcomplexStorage()
     { return (dcomplex*)(itsRep->dcomplexStorage()); }
+#endif
 
   double getDouble (int x, int y) const
     { return itsRep->getDouble (x, y); }

@@ -37,7 +37,7 @@ bool compare (const MeqMatrix& m1, const MeqMatrix& m2)
     return false;
   }
   MeqMatrix res = sum(sqr(m1-m2));
-  if (res.isDouble()) {
+  if (!res.isComplex()) {
     return (res.getDouble() < 1.e-7);
   }
   dcomplex resc = res.getDComplex();

@@ -20,12 +20,18 @@
 //#
 //# $Id$
 
+#undef TIMER
+
 #include <lofar_config.h>
 #include <BBS3/MNS/MeqMatrixRealSca.h>
 #include <BBS3/MNS/MeqMatrixRealArr.h>
 #include <BBS3/MNS/MeqMatrixComplexSca.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
 #include <Common/LofarLogger.h>
+
+#if defined TIMER
+#include <Common/Timer.h>
+#endif
 
 namespace LOFAR {
 
@@ -61,16 +67,19 @@ MeqMatrixRep* MeqMatrixComplexSca::divide (MeqMatrixRep& right, bool rightTmp)
   return right.divRep (*this, rightTmp);
 }
 
-const dcomplex* MeqMatrixComplexSca::dcomplexStorage() const
+void MeqMatrixComplexSca::dcomplexStorage(const double *&realPtr, const double *&imagPtr) const
 {
-  return &itsValue;
+  realPtr = (double *) &itsValue;
+  imagPtr = realPtr + 1;
 }
+
 double MeqMatrixComplexSca::getDouble (int, int) const
 {
   ASSERTSTR (imag(itsValue)==0,
 	     "MeqMatrix: dcomplex->double conversion not possible");
   return real(itsValue);
 }
+
 dcomplex MeqMatrixComplexSca::getDComplex (int, int) const
 {
   return itsValue;
@@ -93,23 +102,6 @@ MeqMatrixRep* MeqMatrixComplexSca::NAME (MeqMatrixComplexSca& left, \
 { \
   left.itsValue OP itsValue; \
   return &left; \
-} \
-MeqMatrixRep* MeqMatrixComplexSca::NAME (MeqMatrixRealArr& left,  \
-					 bool) \
-{ \
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny()); \
-  for (int i=0; i<left.nelements(); i++) { \
-    v->itsValue[i] = left.itsValue[i] OP2 itsValue; \
-  } \
-  return v; \
-} \
-MeqMatrixRep* MeqMatrixComplexSca::NAME (MeqMatrixComplexArr& left, \
-					 bool) \
-{ \
-  for (int i=0; i<left.nelements(); i++) { \
-    left.itsValue[i] OP itsValue; \
-  } \
-  return &left; \
 }
 
 MNSMATRIXCOMPLEXSCA_OP(addRep,+=,+);
@@ -117,6 +109,142 @@ MNSMATRIXCOMPLEXSCA_OP(subRep,-=,-);
 MNSMATRIXCOMPLEXSCA_OP(mulRep,*=,*);
 MNSMATRIXCOMPLEXSCA_OP(divRep,/=,/);
 
+MeqMatrixRep* MeqMatrixComplexSca::addRep(MeqMatrixRealArr& left, bool)
+{
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  double re = real(itsValue), im = imag(itsValue);
+
+  for (int i=0; i<left.nelements(); i++) {
+    v->itsReal[i] = left.itsValue[i] + re;
+    v->itsImag[i] = im;
+  }
+  return v;
+}
+
+MeqMatrixRep* MeqMatrixComplexSca::addRep(MeqMatrixComplexArr& left, bool)
+{
+#if defined TIMER
+  static NSTimer timer("add CS CA", true);
+  timer.start();
+#endif
+
+  double re = real(itsValue), im = imag(itsValue);
+
+  for (int i=0; i<left.nelements(); i++) {
+    left.itsReal[i] += re;
+    left.itsImag[i] += im;
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return &left;
+}
+
+MeqMatrixRep* MeqMatrixComplexSca::subRep(MeqMatrixRealArr& left, bool)
+{
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  double re = real(itsValue), im = imag(itsValue);
+
+  for (int i=0; i<left.nelements(); i++) {
+    v->itsReal[i] = left.itsValue[i] - re;
+    v->itsImag[i] = im;
+  }
+  return v;
+}
+
+MeqMatrixRep* MeqMatrixComplexSca::subRep(MeqMatrixComplexArr& left, bool)
+{
+#if defined TIMER
+  static NSTimer timer("sub CS CA", true);
+  timer.start();
+#endif
+
+  double re = real(itsValue), im = imag(itsValue);
+
+  for (int i=0; i<left.nelements(); i++) {
+    left.itsReal[i] -= re;
+    left.itsImag[i] -= im;
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return &left;
+}
+
+MeqMatrixRep* MeqMatrixComplexSca::mulRep(MeqMatrixRealArr& left, bool)
+{
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  double re = real(itsValue), im = imag(itsValue);
+
+  for (int i=0; i<left.nelements(); i++) {
+    v->itsReal[i] = left.itsValue[i] * re;
+    v->itsImag[i] = left.itsValue[i] * im;
+  }
+  return v;
+}
+
+MeqMatrixRep* MeqMatrixComplexSca::mulRep(MeqMatrixComplexArr& left, bool)
+{
+#if defined TIMER
+  static NSTimer timer("mul CS CA", true);
+  timer.start();
+#endif
+
+  double re = real(itsValue), im = imag(itsValue);
+
+  for (int i=0; i<left.nelements(); i++) {
+    double left_r = left.itsReal[i], left_i = left.itsImag[i];
+    left.itsReal[i] = re * left_r - im * left_i;
+    left.itsImag[i] = re * left_i + im * left_r;
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return &left;
+}
+
+MeqMatrixRep* MeqMatrixComplexSca::divRep(MeqMatrixRealArr& left, bool)
+{
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
+  double re = real(itsValue), im = imag(itsValue);
+  double tmp = re * re + im * im;
+
+  for (int i=0; i<left.nelements(); i++) {
+    double t = left.itsValue[i] / tmp;
+    v->itsReal[i] = re * t;
+    v->itsImag[i] = - im * t;
+  }
+  return v;
+}
+
+MeqMatrixRep* MeqMatrixComplexSca::divRep(MeqMatrixComplexArr& left, bool)
+{
+#if defined TIMER
+  static NSTimer timer("div CS CA", true);
+  timer.start();
+#endif
+
+  double re = real(itsValue), im = imag(itsValue);
+  double tmp = 1.0 / (re * re + im * im);
+
+  for (int i=0; i<left.nelements(); i++) {
+    double left_r = left.itsReal[i], left_i = left.itsImag[i];
+    left.itsReal[i] = (left_r * re + left_i * im) * tmp;
+    left.itsImag[i] = (left_i * im - left_r * re) * tmp;
+  }
+
+#if defined TIMER
+  timer.stop();
+#endif
+
+  return &left;
+}
 
 MeqMatrixRep* MeqMatrixComplexSca::negate()
 {

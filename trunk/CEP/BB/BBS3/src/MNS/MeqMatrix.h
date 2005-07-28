@@ -99,18 +99,20 @@ public:
     { return MeqMatrix (itsRep->clone()); }
 
   // Change the type/or shape if different.
-  double* setDouble (int nrx, int nry)
-    { if (itsRep == 0  ||  !isDouble()  ||  nrx != nx()  ||  nry != ny()) {
+  double* setDoubleFormat (int nrx, int nry)
+    { if (itsRep == 0  ||  isComplex()  ||  nrx != nx()  ||  nry != ny()) {
         setDMat (nrx, nry);
       }
       return doubleStorage();
     }
-  dcomplex* setDComplex (int nrx, int nry)
-    { if (itsRep == 0  ||  isDouble()  ||  nrx != nx()  ||  nry != ny()) {
+#if 0
+  dcomplex* setDComplexFormat (int nrx, int nry)
+    { if (itsRep == 0  ||  !isComplex()  ||  nrx != nx()  ||  nry != ny()) {
         setDCMat (nrx, nry);
       }
       return dcomplexStorage();
     }
+#endif
   void setDMat (int nx, int ny);
   void setDCMat (int nx, int ny);
 
@@ -129,8 +131,8 @@ public:
   void show (ostream& os) const
     { itsRep->show (os); }
 
-  bool isDouble() const
-    { return itsRep->isDouble(); }
+  bool isComplex() const
+    { return itsRep->isComplex(); }
 
   casa::Matrix<double> getDoubleMatrix() const;
   casa::Matrix<dcomplex> getDComplexMatrix() const;
@@ -141,11 +143,11 @@ public:
   double* doubleStorage()
     { return (double*)(itsRep->doubleStorage()); }
 
-  const dcomplex* dcomplexStorage() const
-    { return itsRep->dcomplexStorage(); }
+  void dcomplexStorage(const double *&realPtr, const double *&imagPtr) const
+    { itsRep->dcomplexStorage(realPtr, imagPtr); }
 
-  dcomplex* dcomplexStorage()
-    { return (dcomplex*)(itsRep->dcomplexStorage()); }
+  void dcomplexStorage(double *&realPtr, double *&imagPtr)
+    { itsRep->dcomplexStorage((const double *&) realPtr, (const double *&) imagPtr); }
 
   double getDouble (int x, int y) const
     { return itsRep->getDouble (x, y); }
@@ -187,6 +189,11 @@ public:
   MeqMatrixTmp operator/ (const MeqMatrixTmp& right) const;
 
   MeqMatrixTmp operator-() const;
+
+  void fillWithProducts(dcomplex v0, dcomplex factor)
+    {
+       itsRep->fillWithProducts(v0, factor);
+    }
 
   friend MeqMatrixTmp posdiff (const MeqMatrix&, const MeqMatrix&);
   friend MeqMatrixTmp posdiff (const MeqMatrix&, const MeqMatrixTmp&);

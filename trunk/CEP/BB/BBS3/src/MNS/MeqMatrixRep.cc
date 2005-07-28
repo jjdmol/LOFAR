@@ -39,22 +39,12 @@ MeqMatrixRep::~MeqMatrixRep()
   ndtor++;
 }
 
-void MeqMatrixRep::deallocate()
-{
-  throw (AipsError ("MeqMatrixRep::deallocate()"));
-}
-
-bool MeqMatrixRep::isDouble() const
-{
-  return false;
-}
-
 const double* MeqMatrixRep::doubleStorage() const
 {
   throw (AipsError ("MeqMatrixRep::doubleStorage()"));
 }
 
-const dcomplex* MeqMatrixRep::dcomplexStorage() const
+void MeqMatrixRep::dcomplexStorage(const double *&, const double *&) const
 {
   throw (AipsError ("MeqMatrixRep::dcomplexStorage()"));
 }
@@ -82,6 +72,11 @@ MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealSca&)
 MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealArr&)
 {
   throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
+}
+
+void MeqMatrixRep::fillWithProducts(dcomplex v0, dcomplex factor)
+{
+  throw (AipsError ("MeqMatrixRep::fillWithProducts(dcomplex, dcomplex) not implemented"));
 }
 
 }

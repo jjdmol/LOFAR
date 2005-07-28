@@ -44,10 +44,13 @@ MeqJonesResult MeqJonesNode::getResult (const MeqRequest& request)
   PERFPROFILE(__PRETTY_FUNCTION__);
 
   MeqJonesResult res;
-  res.result11() = itsExpr11.getResult (request);
-  res.result12() = itsExpr12.getResult (request);
-  res.result21() = itsExpr21.getResult (request);
-  res.result22() = itsExpr22.getResult (request);
+#pragma omp critical(MeqTree)
+  {
+    res.result11() = itsExpr11.getResult (request);
+    res.result12() = itsExpr12.getResult (request);
+    res.result21() = itsExpr21.getResult (request);
+    res.result22() = itsExpr22.getResult (request);
+  }
   return res;
 }
 

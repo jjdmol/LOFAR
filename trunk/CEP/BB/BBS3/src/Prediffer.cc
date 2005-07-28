@@ -32,6 +32,7 @@
 #include <BBS3/MNS/MeqStatExpr.h>
 #include <BBS3/MNS/MeqJonesSum.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
+#include <BBS3/MNS/MeqMatrixComplexArr.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <BBS3/MNS/MeqParmSingle.h>
 #include <BBS3/MNS/MeqPointSource.h>
@@ -71,7 +72,39 @@
 
 #include <BBS3/BBSTestLogger.h>
 
+#if defined _OPENMP
+#include <omp.h>
+#endif
+
 using namespace casa;
+
+#if 0
+void *operator new(size_t size)
+{
+    long *ptr = (long *) malloc(size + 24);
+
+    size += 23, size >>= 3;
+    ptr[0] = size;
+    ptr[1] = 0x6161F898097771BC;
+    ptr[size] = 0x6161F898097771BD;
+    return (void *) (ptr + 2);
+}
+
+void operator delete(void *addr)
+{
+    if (addr != 0) {
+	long *ptr = (long *) addr - 2;
+	if (ptr[1] != 0x6161F898097771BC || ptr[ptr[0]] != 0x6161F898097771BD) {
+	    std::cerr << ptr << ": " << ptr[0] << ' ' << ptr[1] << ' ' << ptr[ptr[0]] << '\n';
+	    for (;;);
+	}
+	long value = 0x7777000000000000 + (long) __builtin_return_address(0);
+	for (size_t size = ptr[0], i = 0; i <= size; i ++)
+	    ptr[i] = value;
+	free(ptr);
+    }
+}
+#endif
 
 namespace LOFAR
 {
@@ -170,7 +203,7 @@ Prediffer::Prediffer(const string& msName,
   // initialize the ComplexArr pool with the most frequently used size
   // itsNrChan is the number of frequency channels
   // 1 is the number of time steps. This code is limited to one timestep only
-  //  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
+  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
@@ -840,6 +873,13 @@ void Prediffer::setSolvableParms (const vector<string>& parms,
 void Prediffer::fillFitter (casa::LSQFit& fitter)
 {
   fitter.set (itsNrScid);
+
+#if defined _OPENMP
+  vector<LSQFit> threadPrivateFitters(omp_get_max_threads() - 1);
+  for (int i = 0; i < omp_get_max_threads() - 1; i ++)
+    threadPrivateFitters[i].set(itsNrScid);
+#endif
+
   LOG_TRACE_FLOW("Prediffer::fillFitter");
   int nrchan = itsLastChan-itsFirstChan+1;
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
@@ -854,10 +894,6 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 	    "No memory region mapped. Call map(..) first."
 	    << " Perhaps you have forgotten to call nextInterval().");
 
-  // Allocate a buffer to convert flags from bits to bools.
-  // Use Block instead of vector, because vector uses bits.
-  Block<bool> flags(nrchan*itsNCorr);
-  bool* flagsPtr = &(flags[0]);
   // Loop through all baselines/times and create a request.
   for (uint tStep=0; tStep<itsNrTimes; ++tStep) {
     unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
@@ -866,28 +902,55 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
     
     MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
     MeqRequest request(domain, nrchan, 1, itsNrScid);
-    vector<double> result(nrchan*itsNSelCorr*(itsNrScid+1)*2);
-    vector<char> flagResult(nrchan*itsNSelCorr*2);
     // Loop through all baselines and fill its equations if selected.
-    for (uint bl=0; bl<itsNrBl; ++bl) {
-      uint ant1 = itsAnt1[bl];
-      uint ant2 = itsAnt2[bl];
-      ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow());
-      if (itsBLSelection(ant1,ant2)  &&  itsBLIndex(ant1,ant2) >= 0) {
-	// Get pointer to correct data part.
-	unsigned int blOffset = bl*itsNrChan*itsNCorr;
-	fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
-	// Convert the flag bits to bools.
-	bitToBool (flagsPtr, flagStart, nrchan*itsNCorr,
-		   timeOffset + blOffset + freqOffset + flagStartBit);
-	// Get an equation for this baseline.
-	int blindex = itsBLIndex(ant1,ant2);
-	fillEquation (fitter, itsNSelCorr, nrchan*2,
-		      &(result[0]), &(flagResult[0]), data, flagsPtr,
-		      request, blindex, ant1, ant2);
+    //static NSTimer timer("Prediffer::fillFitter", true);
+    //timer.start();
+#pragma omp parallel
+    {
+      // Allocate a buffer to convert flags from bits to bools.
+      // Use Block instead of vector, because vector uses bits.
+      Block<bool> flags(nrchan*itsNCorr);
+      bool* flagsPtr = &(flags[0]);
+
+      vector<double> result(nrchan*itsNSelCorr*(itsNrScid+1)*2);
+      vector<char> flagResult(nrchan*itsNSelCorr*2);
+
+      LSQFit *myFitter = &fitter;
+#if defined _OPENMP
+      int threadNr = omp_get_thread_num();
+
+      if (threadNr > 0)
+	myFitter = &threadPrivateFitters[threadNr - 1];
+#endif
+
+#pragma omp for
+      for (int bl=0; bl< (int) itsNrBl; ++bl) {
+	uint ant1 = itsAnt1[bl];
+	uint ant2 = itsAnt2[bl];
+	ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow());
+	if (itsBLSelection(ant1,ant2)  &&  itsBLIndex(ant1,ant2) >= 0) {
+	  // Get pointer to correct data part.
+	  unsigned int blOffset = bl*itsNrChan*itsNCorr;
+	  fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
+	  // Convert the flag bits to bools.
+	  bitToBool (flagsPtr, flagStart, nrchan*itsNCorr,
+		     timeOffset + blOffset + freqOffset + flagStartBit);
+	  // Get an equation for this baseline.
+	  int blindex = itsBLIndex(ant1,ant2);
+	  fillEquation (*myFitter, itsNSelCorr, nrchan*2,
+			&(result[0]), &(flagResult[0]), data, flagsPtr,
+			request, blindex, ant1, ant2);
+	}
       }
     }
+  //timer.stop();
   }
+
+#if defined _OPENMP
+  for (int i = omp_get_max_threads() - 1; -- i >= 0;)
+    fitter.merge(threadPrivateFitters[i]);
+#endif
+
   BBSTestLogger::log("predict", itsPredTimer);
   BBSTestLogger::log("formeqs", itsEqTimer);
 }
@@ -955,7 +1018,9 @@ void Prediffer::getEquation (double* result, char* flagResult,
   itsPredTimer.start();
   MeqJonesExpr& expr = itsExpr[blindex];
   // Do the actual predict.
-  MeqJonesResult jresult = expr.getResult (request); 
+  MeqJonesResult jresult;
+#pragma omp critical(TreeLock)
+  jresult = expr.getResult (request); 
   itsPredTimer.stop();
 
   itsEqTimer.start();
@@ -977,13 +1042,14 @@ void Prediffer::getEquation (double* result, char* flagResult,
     if (itsCorr[corr]) {
       // Get the difference (measured - predicted) for all channels.
       const MeqMatrix& val = predResults[corr]->getValue();
-      const double* vals = (const double*)(val.dcomplexStorage());
+      const double *realVals, *imagVals;
+      val.dcomplexStorage(realVals, imagVals);
       if (itsReverseChan) {
 	int dch = nrchan;
 	for (int ch=0; ch<nrchan; ++ch) {
 	  --dch;
-	  *result++ = real(data[corr+dch*itsNCorr]) - vals[2*ch];
-	  *result++ = imag(data[corr+dch*itsNCorr]) - vals[2*ch+1];
+	  *result++ = real(data[corr+dch*itsNCorr]) - realVals[ch];
+	  *result++ = imag(data[corr+dch*itsNCorr]) - imagVals[ch];
 	  // Use same flag for real and imaginary part.
 	  flagResult[0] = (flags[corr+dch*itsNCorr] ? 1:0);
 	  flagResult[1] = flagResult[0];
@@ -991,8 +1057,8 @@ void Prediffer::getEquation (double* result, char* flagResult,
 	}
       } else {
 	for (int ch=0; ch<nrchan; ++ch) {
-	  *result++ = real(data[corr+ch*itsNCorr]) - vals[2*ch];
-	  *result++ = imag(data[corr+ch*itsNCorr]) - vals[2*ch+1];
+	  *result++ = real(data[corr+ch*itsNCorr]) - realVals[ch];
+	  *result++ = imag(data[corr+ch*itsNCorr]) - imagVals[ch];
 	  // Use same flag for real and imaginary part.
 	  flagResult[0] = (flags[corr+ch*itsNCorr] ? 1:0);
 	  flagResult[1] = flagResult[0];
@@ -1002,8 +1068,8 @@ void Prediffer::getEquation (double* result, char* flagResult,
       if (showd) {
 	cout << "corr=" << corr << ' ' << val << endl;
 	for (int ch=0; ch<nrchan; ++ch) {
-	  cout << real(data[corr+ch*itsNCorr]) - vals[2*ch] << ' '
-	       << imag(data[corr+ch*itsNCorr]) - vals[2*ch+1] << ' ';
+	  cout << real(data[corr+ch*itsNCorr]) - realVals[ch] << ' '
+	       << imag(data[corr+ch*itsNCorr]) - imagVals[ch] << ' ';
 	}
 	cout << endl;
       }
@@ -1016,20 +1082,17 @@ void Prediffer::getEquation (double* result, char* flagResult,
 	  }
 	} else {
 	  // Calculate the derivative for each channel (real and imaginary part).
-	  double pert = predResults[corr]->getPerturbation(scinx).getDouble();
+	  //double invPert = 1.0 / predResults[corr]->getPerturbation(scinx).getDouble();
+	  double invPert = 1.0 / predResults[corr]->getPerturbation(scinx).getDouble();
 	  const MeqMatrix& pertVal = predResults[corr]->getPerturbedValue(scinx);
-	  const double* pertVals = (const double*)(pertVal.dcomplexStorage());
-	  for (int ch=0; ch<2*nrchan; ++ch) {
-	    *result++ = (pertVals[ch] - vals[ch]) / pert;
+	  const double *pertRealVals, *pertImagVals;
+	  pertVal.dcomplexStorage(pertRealVals, pertImagVals);
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    *result++ = (pertRealVals[ch] - realVals[ch]) * invPert;
+	    *result++ = (pertImagVals[ch] - imagVals[ch]) * invPert;
+	    if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
 	  }
-	  if (showd) {
-	    cout << "corr=" << corr << " spid=" << scinx << ' '
-		 << pertVal << endl;
-	    for (int ch=0; ch<2*nrchan; ++ch) {
-	      cout << (pertVals[ch] - vals[ch]) / pert << ' ';
-	    }
-	    cout << endl;
-	  }
+	  if (showd) cout << endl;
 	}
       }
     }
@@ -1116,29 +1179,46 @@ void Prediffer::saveData (bool subtract, fcomplex* data,
   for (int corr=0; corr<itsNCorr; ++corr) {
     if (itsCorr[corr]) {
       const MeqMatrix& val = predResults[corr]->getValue();
-      const double* vals = (const double*)(val.dcomplexStorage());
+      const double *realVals, *imagVals;
+      val.dcomplexStorage(realVals, imagVals);
       // Subtract predicted from the data or store the predict in data.
       if (itsReverseChan) {
 	int dch = nrchan;
 	if (subtract) {
 	  for (int ch=0; ch<nrchan; ++ch) {
 	    --dch;
+#if 0
 	    data[corr+dch*itsNCorr] -= makefcomplex(vals[2*ch], vals[2*ch+1]);
+#else
+	    data[corr+dch*itsNCorr] -= makefcomplex(realVals[ch], imagVals[ch]);
+#endif
 	  }
 	} else {
 	  for (int ch=0; ch<nrchan; ++ch) {
 	    --dch;
+#if 0
 	    data[corr+dch*itsNCorr] = makefcomplex(vals[2*ch], vals[2*ch+1]);
+#else
+	    data[corr+dch*itsNCorr] = makefcomplex(realVals[ch], imagVals[ch]);
+#endif
 	  }
 	}
       } else {
 	if (subtract) {
 	  for (int ch=0; ch<nrchan; ++ch) {
+#if 0
 	    data[corr+ch*itsNCorr] -= makefcomplex(vals[2*ch], vals[2*ch+1]);
+#else
+	    data[corr+ch*itsNCorr] -= makefcomplex(realVals[ch], imagVals[ch]);
+#endif
 	  }
 	} else {
 	  for (int ch=0; ch<nrchan; ++ch) {
+#if 0
 	    data[corr+ch*itsNCorr] = makefcomplex(vals[2*ch], vals[2*ch+1]);
+#else
+	    data[corr+ch*itsNCorr] = makefcomplex(realVals[ch], imagVals[ch]);
+#endif
 	  }
 	}
       }
@@ -1215,7 +1295,7 @@ void Prediffer::saveResidualData (bool subtract, bool write)
       delete itsDataMap;
       itsDataMap = 0;
     }
-    itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::ReWr);
+    itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::Read);
     if (size > 0) {
       itsDataMap->mapFile (offs, size);
     }

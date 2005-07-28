@@ -41,6 +41,7 @@ MeqBaseDFTPS::MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right,
 MeqBaseDFTPS::~MeqBaseDFTPS()
 {}
 
+
 MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
@@ -113,28 +114,18 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
     }
   dcomplex tmpl = left.getValue().getDComplex();
   dcomplex tmpr = right.getValue().getDComplex();
-  dcomplex deltal;
-  dcomplex deltar;
-  if (multFreq) {
-    deltal = leftDelta.getValue().getDComplex();
-    deltar = rightDelta.getValue().getDComplex();
-  }
   MeqMatrix res(makedcomplex(0,0), request.nx(), request.ny(), false);
-  dcomplex* resdata = res.dcomplexStorage();
-  dcomplex dval, val0;
   // We have to divide by N.
   // However, we divide by 2N to get the factor 0.5 needed in (I+Q)/2, etc.
   // in MeqBaseLinPS.
   double tmpnk = 2. * nk.getValue().getDouble();
-  val0 = tmpr * conj(tmpl) / tmpnk;
-  *resdata++ = val0;
+  dcomplex factor;
   if (multFreq) {
-    dval = deltar * conj(deltal);
-    for (int j=1; j<request.nx(); j++) {
-      val0 *= dval;
-      *resdata++ = val0;
-    }
+    dcomplex deltal = leftDelta.getValue().getDComplex();
+    dcomplex deltar = rightDelta.getValue().getDComplex();
+    factor = deltar * conj(deltal);
   }
+  res.fillWithProducts(tmpr * conj(tmpl) / tmpnk, factor);
   result.setValue (res);
 
   // Evaluate (if needed) for the perturbed parameter values.
@@ -153,22 +144,15 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
     if (eval) {
       tmpl = left.getPerturbedValue(spinx).getDComplex();
       tmpr = right.getPerturbedValue(spinx).getDComplex();
-      if (multFreq) {
-	deltal = leftDelta.getPerturbedValue(spinx).getDComplex();
-	deltar = rightDelta.getPerturbedValue(spinx).getDComplex();
-      }
       MeqMatrix pres(makedcomplex(0,0), request.nx(), 1, false);
-      dcomplex* presdata = pres.dcomplexStorage();
       tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble();
-      val0 = tmpr * conj(tmpl) / tmpnk;
-      *presdata++ = val0;
+      dcomplex factor;
       if (multFreq) {
-	dval = deltar * conj(deltal);
-	for (int j=1; j<request.nx(); j++) {
-	  val0 *= dval;
-	  *presdata++ = val0;
-	}
+	dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex();
+	dcomplex deltar = rightDelta.getPerturbedValue(spinx).getDComplex();
+	factor = deltar * conj(deltal);
       }
+      pres.fillWithProducts(tmpr * conj(tmpl) / tmpnk, factor);
       result.setPerturbedValue (spinx, pres);
       result.setPerturbation (spinx, perturbation);
     }

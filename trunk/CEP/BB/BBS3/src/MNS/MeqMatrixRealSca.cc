@@ -71,10 +71,6 @@ MeqMatrixRep* MeqMatrixRealSca::tocomplex (MeqMatrixRep& right)
   return right.tocomplexRep (*this);
 }
 
-bool MeqMatrixRealSca::isDouble() const
-{
-  return true;
-}
 const double* MeqMatrixRealSca::doubleStorage() const
 {
   return &itsValue;
@@ -111,23 +107,50 @@ MeqMatrixRep* MeqMatrixRealSca::NAME (MeqMatrixRealArr& left,  \
     *value++ OP itsValue; \
   } \
   return &left; \
-} \
-MeqMatrixRep* MeqMatrixRealSca::NAME (MeqMatrixComplexArr& left, \
-				      bool) \
-{ \
-  dcomplex* value = left.itsValue; \
-  int n = left.nelements(); \
-  for (int i=0; i<n; i++) { \
-    *value OP itsValue; \
-    value++; \
-  } \
-  return &left; \
 }
 
 MNSMATRIXREALSCA_OP(addRep,+=,'+');
 MNSMATRIXREALSCA_OP(subRep,-=,'-');
 MNSMATRIXREALSCA_OP(mulRep,*=,'*');
 MNSMATRIXREALSCA_OP(divRep,/=,'/');
+
+MeqMatrixRep *MeqMatrixRealSca::addRep(MeqMatrixComplexArr &left, bool)
+{
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    left.itsReal[i] += itsValue;
+  }
+  return &left;
+}
+
+MeqMatrixRep *MeqMatrixRealSca::subRep(MeqMatrixComplexArr &left, bool)
+{
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    left.itsReal[i] -= itsValue;
+  }
+  return &left;
+}
+
+MeqMatrixRep *MeqMatrixRealSca::mulRep(MeqMatrixComplexArr &left, bool)
+{
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    left.itsReal[i] *= itsValue;
+    left.itsImag[i] *= itsValue;
+  }
+  return &left;
+}
+
+MeqMatrixRep *MeqMatrixRealSca::divRep(MeqMatrixComplexArr &left, bool)
+{
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    left.itsReal[i] /= itsValue;
+    left.itsImag[i] /= itsValue;
+  }
+  return &left;
+}
 
 MeqMatrixRep* MeqMatrixRealSca::posdiffRep (MeqMatrixRealSca& left)
 {
@@ -167,12 +190,10 @@ MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealSca& left)
 MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealArr& left)
 {
   MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
-  dcomplex* value = v->itsValue;
-  double  rvalue = itsValue;
-  double* lvalue = left.itsValue;
   int n = left.nelements();
   for (int i=0; i<n; i++) {
-    value[i] = makedcomplex (lvalue[i], rvalue);
+    v->itsReal[i] = left.itsValue[i];
+    v->itsImag[i] = itsValue;
   }
   return v;
 }

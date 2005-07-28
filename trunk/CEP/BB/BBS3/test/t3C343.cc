@@ -26,6 +26,7 @@
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <stdexcept>
 #include <iostream>
 #include <iomanip>
@@ -33,6 +34,7 @@
 
 using namespace LOFAR;
 using namespace std;
+
 
 // Note:
 // 3C343/10008336.MS contains 64 frequency channels of 156250 Hz with
