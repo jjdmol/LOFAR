@@ -991,7 +991,7 @@ GCFEvent::TResult Application::test6_4(GCFEvent& e, GCFPortInterface& /*p*/)
       TESTC(receivedVal == expectedVal);
       _counter++;
       cerr << "Received prop. val: " << receivedVal << " Expected prop. val: " << expectedVal << endl;
-      LOG_KEYVALUE_DT(pResponse->pPropName, *pResponse->pValue, KVL_ORIGIN_MAC);
+      LOG_KEYVALUE(pResponse->pPropName, *pResponse->pValue, KVL_ORIGIN_MAC);
       if (_counter == 100 )
       {
         char propName[] = "J.P00";
