@@ -77,6 +77,10 @@ GCFPropertySet::~GCFPropertySet()
 void GCFPropertySet::loadPropSetIntoRam()
 {
   int8 sysNr = GCFPVSSInfo::getSysId(_scope);
+  if (sysNr == 0)
+  {
+    sysNr = GCFPVSSInfo::getLocalSystemId();
+  }
   GCFPVSSInfo::getTypeStruct(_type, _propSetInfo, sysNr);
   GCFProperty* pProperty;
   TPropertyInfo* pPropInfo;

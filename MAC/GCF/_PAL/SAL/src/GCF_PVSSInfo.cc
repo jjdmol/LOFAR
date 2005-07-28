@@ -122,19 +122,11 @@ TMACValueType GCFPVSSInfo::getMACTypeId (const string& dpeName)
 {
   vector<string> splittedDpeName = StringUtil::split(dpeName, ':');
   // first find out whether there is a system name specified or not
-  int8 sysNr = getSysId(splittedDpeName[0]);
-  CharString pvssDpeName;
-  if (sysNr < 1)
+  int8 sysNr = getSysId(dpeName);
+  CharString pvssDpeName(dpeName.c_str());
+  if (sysNr == 0)
   {
-    // system name was not specified
-    // so therefore the first part is the real dpeName
-    pvssDpeName = splittedDpeName[0].c_str();
-    // get the default local system nr
-    sysNr = getLocalSystemId();
-  }
-  else
-  {
-    pvssDpeName = splittedDpeName[1].c_str();
+    sysNr = GCFPVSSInfo::getLocalSystemId();
   }
   
   DpElementType dpElType; 
@@ -191,7 +183,7 @@ const string& GCFPVSSInfo::getProjectName()
 int8 GCFPVSSInfo::getSysId(const string& name)
 {
   string::size_type index = name.find(':');
-  if (index > name.length())
+  if (index == string::npos)
   {
     index = name.length();
   }
@@ -199,7 +191,7 @@ int8 GCFPVSSInfo::getSysId(const string& name)
   SystemNumType sysNr;
   // workaround - start
   DpIdentifier dpId;
-  Manager::getId(sysName + ".", dpId);
+  Manager::getId(sysName + ":", dpId);
   sysNr = dpId.getSystem();
   // workaround - end
   /*
@@ -307,7 +299,7 @@ TGCFResult GCFPVSSInfo::getTypeStruct(const string& typeName, list<TPropertyInfo
         sysName.c_str()));
     result = GCF_PVSS_ERROR;
   }
-  else if ((pType = Manager::getTypeContainerPtr()->getTypePtr(typeId)) == 0)
+  else if ((pType = Manager::getTypeContainerPtr(sysNr)->getTypePtr(typeId)) == 0)
   {
     LOG_ERROR(formatString(
         "PVSS internal error on type information (%s:%s)",
