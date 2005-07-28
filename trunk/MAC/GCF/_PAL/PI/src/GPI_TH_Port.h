@@ -99,7 +99,9 @@ class GPITH_Port: public TransportHolder
 };
 
 inline GPITH_Port::GPITH_Port(TM::GCFPortInterface& port) : 
-  _port(port) 
+  _port          (port),
+  itsReadOffset  (0),
+  itsLastCmd     (CmdNone) 
 {}
 
 

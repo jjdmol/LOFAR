@@ -24,7 +24,7 @@
 
 #include <DH_EchoPing.h>
 #include <Transport/TH_Socket.h>
-#include <Transport/CSConnection.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
@@ -37,10 +37,10 @@ void echo ()
 {
   DH_EchoPing DH_Echo;
   DH_Echo.init();
-  TH_Socket proto("localhost", 8923, false);
+  TH_Socket proto(string("localhost"), string("8923"), true);
   proto.init();
-  CSConnection readConn("read",  0, &DH_Echo, &proto, false);
-  CSConnection writeConn("write", &DH_Echo, 0, &proto, false);
+  Connection readConn("read",  0, &DH_Echo, &proto, true);
+  Connection writeConn("write", &DH_Echo, 0, &proto, true);
 
   while(1)
   {

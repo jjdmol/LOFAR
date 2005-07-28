@@ -59,7 +59,7 @@ GPICEPServer::GPICEPServer(GPIController& controller) :
 GPICEPServer::~GPICEPServer()
 {
   // Retrieve pointer to transportholder
-  GPITH_Port*  pTHServer = dynamic_cast<GPITH_Port*>
+  GPITH_Port*  pTHServer = (GPITH_Port*)
                   (_pReadConn->getTransportHolder());
   
   if (pTHServer) delete pTHServer;
@@ -94,7 +94,7 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
       try
       {
         CSConnection::State state = _pReadConn->read();
-        ASSERTSTR(state == CSConnection::Finished, "Could not read the whole datat");
+        ASSERTSTR(state == CSConnection::Finished, "Could not read the whole data.");
         BlobIStream& blob = _dhServer.getExtraBlob();
         uint16 result;
         // The conversion from Blob to the GCFEvent concept!!!

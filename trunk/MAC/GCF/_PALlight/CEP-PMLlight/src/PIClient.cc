@@ -118,7 +118,7 @@ void PIClient::run()
 
       _dhPIClient.init();
       TH_Socket*  pTH = new TH_Socket(ParameterSet::instance()->getString(PARAM_PI_HOST), 
-                                      ParameterSet::instance()->getInt(PARAM_PI_PORT), 
+                                      ParameterSet::instance()->getString(PARAM_PI_PORT), 
                                       false);
       LOG_DEBUG("Try to connect");
       pTH->init();
