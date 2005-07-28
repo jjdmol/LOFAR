@@ -28,7 +28,7 @@
 #include <GCF/GCF_PVInteger.h>
 #include <sys/time.h>
 #include <signal.h>
-#include <Transport/CSConnection.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
@@ -56,10 +56,10 @@ void ping ()
 
   DH_EchoPing DH_Echo;
   DH_Echo.init();
-  TH_Socket proto("localhost", 8923, false);
+  TH_Socket proto("8923", true);
   proto.init();
-  CSConnection readConn("read",  0, &DH_Echo, &proto, false);
-  CSConnection writeConn("write", &DH_Echo, 0, &proto, false);
+  Connection readConn("read",  0, &DH_Echo, &proto, true);
+  Connection writeConn("write", &DH_Echo, 0, &proto, true);
     
   sleep(1);
   uint seqnr(0);
