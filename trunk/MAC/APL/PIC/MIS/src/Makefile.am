@@ -39,7 +39,7 @@ EXTRA_DIST = \
 	
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	MIS.conf
+	MACInformationServer.conf
 	
 %.conf: %.conf.in
 	cp $< $@

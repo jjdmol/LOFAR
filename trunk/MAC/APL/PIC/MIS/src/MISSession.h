@@ -48,7 +48,7 @@ class MISSession : public GCF::TM::GCFTask
 {
   public:
     MISSession (MISDaemon& daemon);
-    virtual ~MISSession () {}
+    virtual ~MISSession ();
     
   public: // member functions
     void subscribed(MISPvssDpSubscriptionResponseEvent& e);

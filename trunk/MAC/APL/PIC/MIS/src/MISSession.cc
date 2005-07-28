@@ -32,6 +32,7 @@
 #include <APLCommon/APL_Defines.h>
 #include <GCF/GCF_PVInteger.h>
 #include <PSAccess.h>
+#include <GCF/LogSys/GCF_KeyValueLogger.h>
 
 using namespace blitz;
 
@@ -73,12 +74,21 @@ MISSession::MISSession(MISDaemon& daemon) :
   GCFTask((State)&MISSession::initial, MISS_TASK_NAME),
   _daemon(daemon),
   _propertyProxy(*this),
-  _curSeqNr(0),
+  _curSeqNr(1),
   _curReplyNr(0)
 {
   _missPort.init(*this, MISS_PORT_NAME, GCFPortInterface::SPP, MIS_PROTOCOL);
   _rspDriverPort.init(*this, MIS_RSP_PORT_NAME, GCFPortInterface::SAP, RSP_PROTOCOL);
   _daemon.getPortProvider().accept(_missPort);
+}
+
+MISSession::~MISSession () 
+{
+  for (TSubscriptions::iterator iter = _subscriptions.begin();
+       iter != _subscriptions.end(); ++iter)
+  {
+    delete iter->second;
+  }
 }
 
 GCFEvent::TResult MISSession::initial(GCFEvent& e, GCFPortInterface& p)
@@ -219,7 +229,6 @@ void MISSession::genericPingpong(GCFEvent& e)
   setCurrentTime(out.timestamp_sec, out.timestamp_nsec);
   out.ttl = (in.ttl > 0 ? in.ttl - 1 : 0);
   _missPort.send(out);
-  TRAN(MISSession::waiting);
 }
 
 void MISSession::getGenericIdentity(GCFEvent& e)
@@ -230,7 +239,9 @@ void MISSession::getGenericIdentity(GCFEvent& e)
   out.seqnr = _curSeqNr++;
   out.replynr = in.seqnr;
   out.response = (_busy ? "BUSY" : "ACK");
-  out.node_id = 
+  char hostName[200];
+  gethostname(hostName, 200);
+  out.node_id = hostName;
   out.sw_version = formatString("%d.%d.%d (%s, %s)", 
                                 MIS_MAJOR_VER, 
                                 MIS_MIDOR_VER, 
@@ -239,7 +250,6 @@ void MISSession::getGenericIdentity(GCFEvent& e)
                                 __TIME__);
   setCurrentTime(out.timestamp_sec, out.timestamp_nsec);
   _missPort.send(out);
-  TRAN(MISSession::waiting);
 }
 
 GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
@@ -247,7 +257,8 @@ GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   static MISDiagnosisNotificationEvent* pIn = 0;
-  static string resourceStatusPropName = 0;
+  static string resourceStatusPropName = "";
+  
   switch (e.signal)
   {
     case MIS_DIAGNOSIS_NOTIFICATION:
@@ -256,6 +267,8 @@ GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
       pIn = new MISDiagnosisNotificationEvent(e);
       LOGMSGHDR(*pIn);
       resourceStatusPropName = pIn->component;
+      // first try to get the current status value of the component
+      // for this purpose it is important that the component name contains ".status"
       if (resourceStatusPropName.find(".status") == string::npos)
       {
         resourceStatusPropName += ".status";
@@ -282,6 +295,19 @@ GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
       if (response == "ACK")
       {
         _propertyProxy.setPropValue(resourceStatusPropName, resourceState);
+        if (resourceStatusPropName.find(":") == string::npos)
+        {
+          resourceStatusPropName = GCFPVSSInfo::getLocalSystemName() + resourceStatusPropName;
+        }
+        timeval ts = {pIn->timestamp_sec, pIn->timestamp_nsec / 1000};
+        string descr(formatString (
+            "%s(cl:%d, url:%d)",
+            pIn->diagnosis.c_str(),
+            pIn->confidence,
+            pIn->diagnosis_id.c_str()));
+        
+        LOG_KEYVALUE_TSD(resourceStatusPropName, resourceState, 
+                         KVL_ORIGIN_SHM, ts, descr);
       }
       SEND_RESP_MSG((*pIn), DiagnosisResponse, response);
       TRAN(MISSession::waiting);      
@@ -358,7 +384,7 @@ GCFEvent::TResult MISSession::subscribe(GCFEvent& e, GCFPortInterface& p)
         TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
         if (iter != _subscriptions.end())
         {
-          iter->second->unsubscribe();
+          iter->second->unsubscribe(in.seqnr);
         }
         else
         {
@@ -414,7 +440,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
         nrOfRCUs = (GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
         ackout.rcu_settingsNOE = nrOfRCUs;
         ackout.rcu_settings = new uint8[nrOfRCUs];
-        ackout.invalidNOE = nrOfRCUs;
+        ackout.invalidNOE = 0;// TODO: nrOfRCUs;
         ackout.invalid = new uint8[nrOfRCUs];
         ackout.dataNOE = nrOfRCUs * 512;
         ackout.data = new double[nrOfRCUs * 512];
@@ -459,7 +485,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
         break;
       }
 
-      memcpy(ackout.invalid, ack.sysstatus.rcu().data(), nrOfRCUs * sizeof(ackout.invalid[0]));
+      //memcpy(ackout.invalid, ack.sysstatus.rcu().data(), nrOfRCUs * sizeof(ackout.invalid[0]));
      
       RSPGetrcuEvent getrcu;
       
@@ -556,23 +582,23 @@ GCFEvent::TResult MISSession::getAntennaCorrelation(GCFEvent& e, GCFPortInterfac
   return status;
 }
 
-GCFEvent::TResult MISSession::closing(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::closing(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   switch (e.signal)
   {
     case F_ENTRY:
-    {
-      if (&p == &_missPort)
+      if (!_missPort.isConnected())
       {
         LOG_INFO("Client gone. Stop all subsessions.");
-        p.close();
+        _missPort.close();
       }
       else
       {
         _daemon.clientClosed(*this);
       }
-    }
+      break;
+
     case F_CLOSED:
       _daemon.clientClosed(*this);
       break;

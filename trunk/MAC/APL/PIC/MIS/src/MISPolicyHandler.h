@@ -67,8 +67,8 @@ class MISPolicyHandler
     {
       string resourceNameFilter;
       string diagnosis;
-      int16 lowConf;
-      int16 highConf;
+      uint16 lowConf;
+      uint16 highConf;
       TAction action;
     } TPolicyRule;
 
