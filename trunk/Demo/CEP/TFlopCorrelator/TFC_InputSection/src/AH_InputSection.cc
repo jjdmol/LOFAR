@@ -89,17 +89,21 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   int rspStartNode;
+  
+  vector<string> interfaces = itsParamSet.getStringVector("Input.Interfaces");
+  vector<string> remMacs = itsParamSet.getStringVector("Input.RemMacs");
+  vector<string> ownMacs = itsParamSet.getStringVector("Input.OwnMacs");
+  
   for (int r=0; r<noRSPs; r++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, noRSPs);
-    // todo: get interface and MACs from parameterset
-    // todo: replace kvm by parameterSet
+ 
     if (r==0)
     {
       RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create sync master
 					 itsParamSet,
-					 "eth1",
-					 "srcMac",
-					 "dstMac",
+					 interfaces[r],
+					 remMacs[r],
+					 ownMacs[r],
 					 true));
       rspStartNode = lowestFreeNode;
     }
@@ -107,9 +111,9 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     {
       RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create slave
 					 itsParamSet,
-					 "eth1",
-					 "srcMac",
-					 "dstMac",
+					 interfaces[r],
+					 remMacs[r],
+					 ownMacs[r],
 					 false));
     }
     RSPSteps.push_back(new Step(RSPNodes[r],WH_DH_Name,false));
