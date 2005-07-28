@@ -63,9 +63,9 @@ void MeqStatUVW::calculate (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
   // Make sure the MeqResult/Matrix objects have the correct size.
-  double* uptr = itsU.setDouble (1, request.ny());
-  double* vptr = itsV.setDouble (1, request.ny());
-  double* wptr = itsW.setDouble (1, request.ny());
+  double* uptr = itsU.setDoubleFormat (1, request.ny());
+  double* vptr = itsV.setDoubleFormat (1, request.ny());
+  double* wptr = itsW.setDoubleFormat (1, request.ny());
   double step = request.stepY();
   double time = request.domain().startY() + step/2;
   // Use the UVW coordinates if already calculated for this time.

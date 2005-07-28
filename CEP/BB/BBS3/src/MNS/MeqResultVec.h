@@ -29,6 +29,7 @@
 //# Includes
 #include <BBS3/MNS/MeqResult.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_vector.h>
 
 // This class represents multiple results.
 // It is faster than a vector<MeqResult>.

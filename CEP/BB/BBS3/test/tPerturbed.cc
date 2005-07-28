@@ -95,6 +95,7 @@ void doTest (Prediffer& pre1, const vector<string>& solv)
 		 "nres1=" << resm1->nelements()
 		 << " nres2=" << resm2->nelements()
 		 << " valnr=" << j << " nspid=" << i);
+#if 0
       const dcomplex* resv1 = resm1->dcomplexStorage();
       const dcomplex* resv2 = resm2->dcomplexStorage();
       for (int k=0; k<resm1->nelements(); ++k) {
@@ -104,6 +105,18 @@ void doTest (Prediffer& pre1, const vector<string>& solv)
 		   << " res2=" << std::setprecision(10) << resv2[k]
 		   << " rnr=" << k
 		   << " valnr=" << j << " spid=" << i);
+#else
+      const double *resv1_r, *resv1_i, *resv2_r, *resv2_i;
+      resm1->dcomplexStorage(resv1_r, resv1_i);
+      resm2->dcomplexStorage(resv2_r, resv2_i);
+      for (int k=0; k<resm1->nelements(); ++k) {
+	ASSERTSTR (casa::near(resv1_r[k],resv2_r[k]) &&
+		   casa::near(resv1_i[k],resv2_i[k]),
+		   "res1=(" << std::setprecision(10) << resv1_r[k] << ',' <<
+		   resv1_i[k] << ") res2=" << std::setprecision(10) <<
+		   resv2_r[k] << ',' << resv2_i[k] << ") rnr=" << k <<
+		   " valnr=" << j << " spid=" << i);
+#endif
       }
     }
     if (nrv > 0) {

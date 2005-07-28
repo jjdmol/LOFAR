@@ -58,7 +58,6 @@ public:
 
   virtual void show (ostream& os) const;
 
-  virtual bool isDouble() const;
   virtual const double* doubleStorage() const;
   virtual double getDouble (int x, int y) const;
   virtual dcomplex getDComplex (int x, int y) const;

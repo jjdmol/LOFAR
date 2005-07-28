@@ -32,8 +32,9 @@ int MeqResultRep::ndtor = 0;
 MeqResultRep::MeqResultRep (int nspid)
 : itsCount           (0),
   itsDefPert         (0.),
-  itsPerturbedValues (nspid),
-  itsPerturbation    (nspid)
+  itsNspid	     (nspid),
+  itsPerturbedValues (0),
+  itsPerturbation    (0)
 {
   nctor++;
 }
@@ -47,32 +48,33 @@ MeqResultRep::~MeqResultRep()
 
 void MeqResultRep::clear()
 {
-  for (unsigned int i=0; i<itsPerturbedValues.size(); i++) {
-    delete itsPerturbedValues[i];
-    itsPerturbedValues[i] = 0;
-    delete itsPerturbation[i];
-    itsPerturbation[i] = 0;
+  if (itsPerturbedValues != 0) {
+    delete itsPerturbedValues;
+    itsPerturbedValues = 0;
+  }
+
+  if (itsPerturbation != 0) {
+    delete itsPerturbation;
+    itsPerturbation = 0;
   }
 }
 
   
 void MeqResultRep::setPerturbedValue (int i, const MeqMatrix& value)
 {
-  if (itsPerturbedValues[i] == 0) {
-    itsPerturbedValues[i] = new MeqMatrix();
-  }
-  *(itsPerturbedValues[i]) = value;
+  if (itsPerturbedValues == 0) itsPerturbedValues = new map<int, MeqMatrix>;
+  (*itsPerturbedValues)[i] = value;
 }
 
-void MeqResultRep::show (ostream& os) const
+void MeqResultRep::show (ostream& os) // const
 {
   os << "Value: " << itsValue << endl;
-  for (unsigned int i=0; i<itsPerturbedValues.size(); i++) {
+  for (int i=0; i<itsNspid; i++) {
     if (isDefined(i)) {
-      os << "deriv parm " << i << " with " << *(itsPerturbation[i]) << endl;
-      os << "   " << (*(itsPerturbedValues[i]) - itsValue) << endl;
-      os << "   " << (*(itsPerturbedValues[i]) - itsValue) /
-	 *(itsPerturbation[i]) << endl;
+      os << "deriv parm " << i << " with " << (*itsPerturbation)[i] << endl;
+      os << "   " << ((*itsPerturbedValues)[i] - itsValue) << endl;
+      os << "   " << ((*itsPerturbedValues)[i] - itsValue) /
+	 (*itsPerturbation)[i] << endl;
     }
   }
 }
@@ -81,9 +83,8 @@ void MeqResultRep::show (ostream& os) const
 
 
 MeqResult::MeqResult (int nspid)
-: itsRep (0)
+: itsRep (new MeqResultRep(nspid))
 {
-  itsRep = new MeqResultRep(nspid);
   itsRep->link();
 }
 

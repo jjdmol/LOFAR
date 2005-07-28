@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBS3/MNS/MeqMatrix.h>
-#include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 #include <Common/lofar_iostream.h>
 
 // This class represents a result of a domain for which an expression
@@ -52,7 +52,7 @@ public:
     { itsCount++; return this; }
 
   static void unlink (MeqResultRep* rep)
-    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
+    { if (rep != 0 && --rep->itsCount == 0) delete rep; }
 
   // Get the value.
   const MeqMatrix& getValue() const
@@ -62,17 +62,32 @@ public:
 
   // Is the i-th perturbed value defined?
   bool isDefined (int i) const
-    { return i<int(itsPerturbedValues.size()) && itsPerturbedValues[i] != 0; }
+    { return itsPerturbedValues != 0 && /*i<itsNspid &&*/ itsPerturbedValues->find(i) != itsPerturbedValues->end(); }
 
   // Get the i-th perturbed value.
-  const MeqMatrix& getPerturbedValue (int i) const
-    { return (isDefined(i)  ?  *(itsPerturbedValues[i]) : itsValue); }
+  const MeqMatrix& getPerturbedValue (int i) // const
+    {
+      //if (i >= itsNspid) return itsValue;
+      if (itsPerturbedValues == 0) return itsValue;
+      map<int, MeqMatrix>::iterator it = itsPerturbedValues->find(i);
+      return it == itsPerturbedValues->end() ? itsValue : it->second;
+    }
+
   MeqMatrix& getPerturbedValueRW (int i)
-    { return *(itsPerturbedValues[i]); }
+    {
+      if (itsPerturbedValues == 0) itsPerturbedValues = new map<int, MeqMatrix>;
+      return (*itsPerturbedValues)[i];
+    }
 
   // Get the i-th perturbed parameter.
-  const MeqMatrix& getPerturbation (int i) const
-    { return (isDefined(i)  ?  *(itsPerturbation[i]) : itsDefPert); }
+  const MeqMatrix& getPerturbation (int i) // const
+    {
+      //if (i >= itsNspid) return itsDefPert;
+      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
+      map<int, MeqMatrix>::iterator it = itsPerturbation->find(i);
+      return it == itsPerturbation->end() ? itsDefPert : it->second;
+    }
+
 
   // Set the value.
   // The current value is replaced by the new one.
@@ -81,16 +96,18 @@ public:
 
   // Set the value with a given type and shape.
   // It won't change if the current value type and shape match.
-  double* setDouble (int nx, int ny)
-    { return itsValue.setDouble (nx, ny); }
-  dcomplex* setDComplex (int nx, int ny)
-    { return itsValue.setDComplex (nx, ny); }
+  double* setDoubleFormat (int nx, int ny)
+    { return itsValue.setDoubleFormat (nx, ny); }
+#if 0
+  dcomplex* setDComplexFormat (int nx, int ny)
+    { return itsValue.setDComplexFormat (nx, ny); }
+#endif
 
   // Remove all perturbed values.
   void clear();
 
   int nperturbed() const
-    { return itsPerturbation.size(); }
+    { return itsNspid; }
 
   // Set the i-th perturbed value.
   void setPerturbedValue (int i, const MeqMatrix&);
@@ -98,27 +115,37 @@ public:
   // Set the i-th perturbed value with a given type and shape.
   // It won't change if the current value type and shape matches.
   double* setPerturbedDouble (int i, int nx, int ny)
-    { if (!isDefined(i)) {
-        itsPerturbedValues[i] = new MeqMatrix();
-      }
-      return itsPerturbedValues[i]->setDouble (nx, ny);
+    {
+      if (itsPerturbedValues == 0) itsPerturbedValues = new map<int, MeqMatrix>;
+      return (*itsPerturbedValues)[i].setDoubleFormat (nx, ny);
     } 
+#if 0
   dcomplex* setPerturbedDComplex (int i, int nx, int ny)
     { if (!isDefined(i)) {
         itsPerturbedValues[i] = new MeqMatrix();
       }
-      return itsPerturbedValues[i]->setDComplex (nx, ny);
+      return itsPerturbedValues[i]->setDComplexFormat (nx, ny);
     } 
+#endif
   
   // Set the i-th perturbed parameter.
   void setPerturbation (int i, const MeqMatrix& value)
-    { itsPerturbation[i] = new MeqMatrix(value); }
+    {
+      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
+      (*itsPerturbation)[i] = MeqMatrix(value);
+    }
   void setPerturbation (int i, const double& value)
-    { itsPerturbation[i] = new MeqMatrix(value); }
+    {
+      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
+      (*itsPerturbation)[i] = MeqMatrix(value);
+    }
   void setPerturbation (int i, const dcomplex& value)
-    { itsPerturbation[i] = new MeqMatrix(value); }
+    {
+      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
+      (*itsPerturbation)[i] = MeqMatrix(value);
+    }
 
-  void show (ostream&) const;
+  void show (ostream&) /*const*/;
 
   static int nctor;
   static int ndtor;
@@ -131,9 +158,8 @@ private:
   int       itsCount;
   MeqMatrix itsValue;
   MeqMatrix itsDefPert;
-  ///  int       itsFirstPert;     // spid of first perturbed value
-  vector<MeqMatrix*> itsPerturbedValues;
-  vector<MeqMatrix*> itsPerturbation;
+  int	    itsNspid;
+  map<int, MeqMatrix> *itsPerturbedValues, *itsPerturbation;
 };
 
 
@@ -178,10 +204,12 @@ public:
   // Set the value with a given type and shape.
   // It won't change if the current value type and shape matches.
   // It returns a pointer to the internal storage.
-  double* setDouble (int nx, int ny)
-    { return itsRep->setDouble (nx, ny); }
-  dcomplex* setDComplex (int nx, int ny)
-    { return itsRep->setDComplex (nx, ny); }
+  double* setDoubleFormat (int nx, int ny)
+    { return itsRep->setDoubleFormat (nx, ny); }
+#if 0
+  dcomplex* setDComplexFormat (int nx, int ny)
+    { return itsRep->setDComplexFormat (nx, ny); }
+#endif
 
   // Remove all perturbed values.
   void clear()
@@ -198,8 +226,10 @@ public:
   // It won't change if the current value type and shape matches.
   double* setPerturbedDouble (int i, int nx, int ny)
     { return itsRep->setPerturbedDouble (i, nx, ny); }
+#if 0
   dcomplex* setPerturbedDComplex (int i, int nx, int ny)
     { return itsRep->setPerturbedDComplex (i, nx, ny); }
+#endif
 
   // Set the i-th perturbed parameter.
   void setPerturbation (int i, const MeqMatrix& value)

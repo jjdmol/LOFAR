@@ -31,6 +31,10 @@
 #include <Common/lofar_iostream.h>
 #include <casa/iosfwd.h>
 
+#if defined _OPENMP
+#include <omp.h>
+#endif
+
 namespace LOFAR {
 
 // \ingroup BBS3
@@ -47,13 +51,19 @@ class MeqMatrixComplexArr;
 class MeqMatrixRep
 {
 public:
-  MeqMatrixRep (int nx, int ny)
-    : itsCount     (0),
+  enum type {
+    RealScalar     = 0,  // don't change; they may be interpreted as bitfields
+    RealArray      = 1,
+    ComplexScalar  = 2,
+    ComplexArray   = 3
+  };
+
+  MeqMatrixRep (int nx, int ny, enum type type)
+    : type(type),
+      itsCount     (0),
       itsNx        (nx),
       itsNy        (ny),
-      itsLength    (nx*ny),
-      itsInPool    (false),
-      itsIsMalloced(false)
+      itsLength    (nx*ny)
     {
       nctor++;
     }
@@ -63,18 +73,13 @@ public:
   virtual MeqMatrixRep* clone() const = 0;
 
   MeqMatrixRep* link()
-    { itsCount++; return this; }
+    {
+      itsCount++;
+      return this;
+    }
 
   static void unlink (MeqMatrixRep* rep)
-    {
-      if (rep != 0  &&  --rep->itsCount == 0) {
-	if (rep->isMalloced()) {
-	  rep->deallocate();
-	} else {
-	  delete rep; 
-	}
-      }
-    }
+    { if (rep != 0 && -- rep->itsCount == 0) delete rep; }
 
   int nx() const
     { return itsNx; }
@@ -85,25 +90,16 @@ public:
   int nelements() const
     { return itsLength; }
 
-  bool inPool() const
-    { return itsInPool; }
-
-  void setInPool (bool inPool)
-    { itsInPool = inPool; }
-
-  bool isMalloced() const
-    { return itsIsMalloced; }
-
-  void setIsMalloced (bool isMalloced)
-    { itsIsMalloced = isMalloced; }
-
-  virtual void deallocate();
-
   virtual void show (ostream& os) const = 0;
 
-  virtual bool isDouble() const;
+  bool isComplex() const
+    { return (type & 2) != 0; }
+
+  bool isArray() const
+    { return (type & 1) != 0; }
+
   virtual const double* doubleStorage() const;
-  virtual const dcomplex* dcomplexStorage() const;
+  virtual void dcomplexStorage(const double *&realPtr, const double *&imagPtr) const;
   virtual double getDouble (int x, int y) const = 0;
   virtual dcomplex getDComplex (int x, int y) const = 0;
 
@@ -161,10 +157,14 @@ public:
   virtual MeqMatrixRep* mean() = 0;
   virtual MeqMatrixRep* sum() = 0;
 
+  virtual void fillWithProducts(dcomplex v0, dcomplex factor);
+
   static int nctor;
   static int ndtor;
   static int nreused;
   static int ndeleted;
+
+  const enum type type;
 
 protected:
   inline int offset (int x, int y) const
@@ -175,8 +175,7 @@ private:
   int  itsNx;
   int  itsNy;
   int  itsLength;
-  bool itsInPool;
-  bool itsIsMalloced;
+  int  itsCreator;
 };
 
 // @}

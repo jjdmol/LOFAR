@@ -43,7 +43,7 @@ friend class MeqMatrixComplexArr;
 
 public:
   MeqMatrixRealSca (double value)
-    : MeqMatrixRep(1,1), itsValue (value) {}
+    : MeqMatrixRep(1,1,RealScalar), itsValue (value) {}
 
   virtual ~MeqMatrixRealSca();
 
@@ -51,7 +51,6 @@ public:
 
   virtual void show (ostream& os) const;
 
-  virtual bool isDouble() const;
   virtual const double* doubleStorage() const;
   virtual double getDouble (int x, int y) const;
   virtual dcomplex getDComplex (int x, int y) const;

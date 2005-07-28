@@ -44,7 +44,7 @@ friend class MeqMatrixComplexArr;
 
 public:
   MeqMatrixComplexSca (dcomplex value)
-    : MeqMatrixRep(1,1), itsValue (value) {}
+    : MeqMatrixRep(1,1,ComplexScalar), itsValue (value) {}
 
   virtual ~MeqMatrixComplexSca();
 
@@ -57,7 +57,7 @@ public:
   virtual MeqMatrixRep* multiply (MeqMatrixRep& right, bool rightTmp);
   virtual MeqMatrixRep* divide   (MeqMatrixRep& right, bool rightTmp);
 
-  virtual const dcomplex* dcomplexStorage() const;
+  virtual void dcomplexStorage(const double *&realPtr, const double *&imagPtr) const;
   virtual double getDouble (int x, int y) const;
   virtual dcomplex getDComplex (int x, int y) const;
 

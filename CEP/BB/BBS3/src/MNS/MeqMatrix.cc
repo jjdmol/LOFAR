@@ -319,6 +319,7 @@ MeqMatrixTmp sum(const MeqMatrix& arg)
 LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
 {
   bs.putStart ("MeqMatrix", 1);
+#if 0
   bs<<(vec.rep() == 0);
   if (vec.rep() != 0) {
     bs << vec.isDouble() << (vec.nelements()==1);
@@ -336,6 +337,30 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
       }
     }
   }
+#else
+  MeqMatrixRep *rep = vec.rep();
+  bs << (rep == 0);
+  if (rep != 0) {
+    bs << (unsigned char) rep->type;
+    switch (rep->type) {
+      case MeqMatrixRep::RealScalar :
+	bs << vec.getDouble();
+	break;
+
+      case MeqMatrixRep::RealArray :
+	bs << vec.getDoubleMatrix();
+	break;
+
+      case MeqMatrixRep::ComplexScalar :
+	bs << vec.getDComplex();
+	break;
+
+      case MeqMatrixRep::ComplexArray :
+	bs << vec.getDComplexMatrix();
+	break;
+    }
+  }
+#endif
   bs.putEnd();
   return bs;
 }
@@ -343,6 +368,7 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
 LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 {
   bs.getStart ("MeqMatrix");
+#if 0
   bool isRepNull, isDouble, isScalar;
   bs >> isRepNull;
   if (isRepNull) {
@@ -371,6 +397,43 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
       }
     }
   }
+#else
+  bool isRepNull;
+  bs >> isRepNull;
+  if (isRepNull) {
+    vec = MeqMatrix();
+  } else {
+    double rval;
+    Matrix<double> rmat;
+    dcomplex cval;
+    Matrix<dcomplex > cmat;
+    unsigned char type;
+
+    bs >> type;
+    switch (type) {
+      case MeqMatrixRep::RealScalar :
+	bs >> rval;
+	vec = MeqMatrix(rval);
+	break;
+
+      case MeqMatrixRep::RealArray :
+	bs >> rmat;
+	vec = MeqMatrix(rmat);
+	break;
+
+      case MeqMatrixRep::ComplexScalar :
+	bs >> cval;
+	vec = MeqMatrix(cval);
+	break;
+
+      case MeqMatrixRep::ComplexArray :
+	bs >> cmat;
+	vec = MeqMatrix(cmat);
+	break;
+    }
+  }
+#endif
+
   bs.getEnd();
   return bs;
 }

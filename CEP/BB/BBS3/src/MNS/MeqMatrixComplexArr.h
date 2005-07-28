@@ -43,8 +43,10 @@ friend class MeqMatrixRealSca;
 friend class MeqMatrixRealArr;
 friend class MeqMatrixComplexSca;
 
+private:
+  MeqMatrixComplexArr(int nx, int ny); // use "allocate" instead
+
 public:
-  MeqMatrixComplexArr (int nx, int ny);
 
   virtual ~MeqMatrixComplexArr();
 
@@ -53,15 +55,24 @@ public:
   void set (dcomplex value);
 
   void set (int x, int y, dcomplex value)
-    { itsValue[offset(x,y)] = value; }
+    { int off = offset(x,y);
+      itsReal[off] = real(value);
+      itsImag[off] = imag(value);
+    }
 
   void set (const dcomplex* values)
-    { memcpy (itsValue, values, nelements() * sizeof(dcomplex)); }
+    {
+      for (int i = 0; i < nelements(); i ++) {
+	itsReal[i] = real(values[i]);
+	itsImag[i] = imag(values[i]);
+      }
+    }
 
   virtual void show (ostream& os) const;
 
   static MeqMatrixComplexArr* allocate(int nx, int ny);
-  virtual void deallocate();
+  void operator delete(void *);
+
   static void poolActivate(int nelements);
   static void poolDeactivate();
 
@@ -70,7 +81,7 @@ public:
   virtual MeqMatrixRep* multiply (MeqMatrixRep& right, bool rightTmp);
   virtual MeqMatrixRep* divide   (MeqMatrixRep& right, bool rightTmp);
 
-  virtual const dcomplex* dcomplexStorage() const;
+  virtual void dcomplexStorage(const double *&realPtr, const double *&imagPtr) const;
   virtual double getDouble (int x, int y) const;
   virtual dcomplex getDComplex (int x, int y) const;
 
@@ -108,12 +119,14 @@ private:
   virtual MeqMatrixRep* mean();
   virtual MeqMatrixRep* sum();
 
+  virtual void fillWithProducts(dcomplex v0, dcomplex factor);
 
-  dcomplex* itsValue;
 
-  static deque<MeqMatrixComplexArr*> theirPool;
+  double *itsReal, *itsImag;
+
+  static stack<MeqMatrixComplexArr*> theirPool;
   static int theirNElements;
-  static size_t theirHeaderSize;
+  static size_t theirPoolArraySize;
 };
 
 // @}
