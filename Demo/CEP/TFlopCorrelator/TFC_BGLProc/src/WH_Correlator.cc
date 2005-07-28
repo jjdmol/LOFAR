@@ -35,10 +35,15 @@ WH_Correlator::WH_Correlator(const string& name) :
   WorkHolder( 1, 1, name, "WH_Correlator")
 {
   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
-  itsNelements = myPS.getInt32("WH_Corr.stations");
-  itsNsamples  = myPS.getInt32("WH_Corr.samples");
-  itsNchannels = myPS.getInt32("WH_Corr.channels"); 
-  itsNtargets = 0; // not used?
+  itsNelements      = myPS.getInt32("NRSP");                                 //myPS.getInt32("WH_Corr.stations");
+  itsNsamples       = myPS.getInt32("WH_Corr.samples");
+  itsNpolarisations = myPS.getInt32("polarisations");
+
+  itsNinputs = itsNpolarisations*itsNelements;
+
+//   itsNchannels = myPS.getInt32("WH_Corr.channels"); 
+//   itsNtargets = 0; // not used?
+
 
   getDataManager().addInDataHolder(0, new DH_FIR("in", 1, myPS));
   //  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
@@ -67,6 +72,8 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 }
 
 void WH_Correlator::preprocess() {
+  ASSERTSTR(itsNinputs == ELEMENTS, "configuration from file does not match defined configuration");
+  ASSERTSTR(itsNsamples == SAMPLES, "configuration from file does not match defined configuration");
 
   ASSERTSTR(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBufferSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
 //   ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
@@ -78,7 +85,7 @@ void WH_Correlator::preprocess() {
 
 void WH_Correlator::process() {
   double starttime, stoptime, cmults;
-  const short ar_block = itsNelements / UNROLL_FACTOR;
+  const short ar_block = itsNinputs / UNROLL_FACTOR;
 
   DH_FIR *inDH  = (DH_FIR*)(getDataManager().getInHolder(0));
 //   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
@@ -115,7 +122,7 @@ void WH_Correlator::process() {
   // This may be optimized in a later version.
 
   for (int i = 0; i < itsNsamples; i++) {
-    for (int y = 0; y < itsNelements; y+=4) { 
+    for (int y = 0; y < itsNinputs; y+=4) { 
 
       // prefetch a block of values to register
       __complex__ double reg_x_0 = in_buffer[0][i];
