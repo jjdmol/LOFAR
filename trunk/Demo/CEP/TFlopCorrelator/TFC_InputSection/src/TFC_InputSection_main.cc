@@ -15,6 +15,7 @@
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
 #include <TFC_InputSection/AH_InputSection.h>
+#include <APS/ParameterSet.h>
 
 using namespace LOFAR;
 
@@ -39,7 +40,7 @@ int main (int argc, const char** argv) {
       cout << "init done" << endl;
       Profiler::activate();
       cout << "run" << endl;
-      myAH.baseRun(1);
+      myAH.baseRun(1000);
       cout << "run complete" << endl;
       myAH.baseDump();
       myAH.baseQuit();

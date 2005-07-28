@@ -111,16 +111,6 @@ BufferController<TYPE>::~BufferController()
 }
 
 template<class TYPE>
-TYPE* BufferController<TYPE>::getAutoReadPtr()
-{
-  if (itsCurrentReadPtr == 0) {
-    itsCurrentReadPtr = itsBuffer.GetAutoReadPtr(itsCurrentReadID);
-    itsReadItemsLocked = 1;
-  }
-  return itsCurrentReadPtr; 
-}
-
-template<class TYPE>
 TYPE*  BufferController<TYPE>::getAutoWritePtr()
 {
   if (itsCurrentWritePtr == 0) {
@@ -128,6 +118,27 @@ TYPE*  BufferController<TYPE>::getAutoWritePtr()
     itsWriteItemsLocked = 1;
   }
   return itsCurrentWritePtr; 
+}
+
+template<class TYPE>
+TYPE* BufferController<TYPE>::getManualWritePtr(int ID)
+{
+  if (itsCurrentWritePtr == 0) {
+    itsCurrentWritePtr = itsBuffer.GetManualWritePtr(ID);
+    itsCurrentWriteID = ID;
+    itsWriteItemsLocked = 1;
+  }
+  return itsCurrentWritePtr; 
+}
+
+template<class TYPE>
+TYPE* BufferController<TYPE>::getAutoReadPtr()
+{
+  if (itsCurrentReadPtr == 0) {
+    itsCurrentReadPtr = itsBuffer.GetAutoReadPtr(itsCurrentReadID);
+    itsReadItemsLocked = 1;
+  }
+  return itsCurrentReadPtr; 
 }
 
 template<class TYPE>
@@ -152,16 +163,6 @@ TYPE* BufferController<TYPE>::getFirstReadPtr(int& ID)
 }
 
 template<class TYPE>
-TYPE* BufferController<TYPE>::getManualWritePtr(int ID)
-{
-  if (itsCurrentWritePtr == 0) {
-    itsCurrentWritePtr = itsBuffer.GetManualWritePtr(ID);
-    itsCurrentWriteID = ID;
-  }
-  return itsCurrentWritePtr; 
-}
-
-template<class TYPE>
 void BufferController<TYPE>::readyReading()
 {
   if (itsCurrentReadID >= 0) 
@@ -183,7 +184,7 @@ void BufferController<TYPE>::readyWriting()
 {
   if (itsCurrentWriteID >= 0) 
   {
-    itsBuffer.WriteUnlockItem(itsCurrentWriteID);
+    itsBuffer.WriteUnlockItems(itsCurrentWriteID, itsWriteItemsLocked);
   }
   else {
     LOG_TRACE_RTTI("BufferController::writepointer not previously requested with getWritePtr() function");

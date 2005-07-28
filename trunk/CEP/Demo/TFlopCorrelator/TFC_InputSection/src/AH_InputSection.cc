@@ -55,7 +55,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   undefine();
 
   int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt32("NoSubbands");  // number of SubBand filters in the application
+  itsNSBF  = itsParamSet.getInt32("Input.NSubbands");  // number of SubBand filters in the application
     
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
@@ -85,7 +85,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   const int NrTransposeNodes = itsNSBF/2;
   vector<Step*>        RSPSteps;
   vector<WH_RSPInput*> RSPNodes;
-  int noRSPs = itsParamSet.getInt32("NRSP");
+  int noRSPs = itsParamSet.getInt32("Input.NRSP");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   int rspStartNode;
