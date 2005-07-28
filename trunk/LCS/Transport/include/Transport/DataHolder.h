@@ -232,7 +232,6 @@ private:
   // Put the extra data block into the main data blob.
   // If possible and needed the buffer is resized.
   // If resized, the data pointers are refilled.
-  // Function createDataBlock will be called first, if not done yet.
   void putExtra (const void* data, uint size);
 
   // Let the derived class fill its pointers to the data in the blob.
