@@ -1011,7 +1011,7 @@ navConfigAddRemoveSubView()
   dyn_string dsReturn; // not used
   dfReturn[1] = 0; // 0 = failure, 1 = success
   dfReturn[2] = 0; // new nr of subviews
-
+  string viewsPath = navConfigGetViewsPath();
   string subViewName;
   if(comboCaption.visible == true) // adding existing subview
     subViewName = comboCaption.selectedText;
@@ -1057,7 +1057,7 @@ navConfigAddRemoveSubView()
       else
       {
         dpSet(subViewDpName+".caption",textFieldCaption.text,
-              subViewDpName+".filename", "nav_fw/"+textFieldFileName.text);
+              subViewDpName+".filename", viewsPath + textFieldFileName.text);
       }
     }      
     err = getLastError();
@@ -1145,7 +1145,7 @@ navConfigAddRemoveSubView()
   {
     //If the current subview name already exists, show message on screen
     string message = "Entered caption already exists. \nPlease enter a new one.";
-    ChildPanelOnCentralModal("nav_fw/MessageWarning", "Warning", makeDynString("$1:"+message));
+    ChildPanelOnCentralModal(viewsPath + "MessageWarning.pnl", "Warning", makeDynString("$1:"+message));
     return;
   }
   //########################################################

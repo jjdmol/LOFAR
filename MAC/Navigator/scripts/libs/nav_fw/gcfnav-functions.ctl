@@ -33,7 +33,7 @@ global string   ACTIVEX_TREE_CTRL      = "NOT FlyTreeXCtrl.FlyTreeX";
 global string   ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
 global string   LIST_TREE_CTRL_NAME    = "list";
 global string   TAB_VIEWS_CTRL_NAME    = "TabViews";
-global string   NAVIGATOR_TAB_FILENAME = "nav_fw/navigator_tab.pnl";
+global string   NAVIGATOR_TAB_FILENAME = "navigator_tab.pnl";
 global bool     ACTIVEX_SUPPORTED      = false;
 global int      NR_OF_VIEWS            = 10;
 global dyn_string  g_itemID2datapoint;
@@ -376,7 +376,7 @@ void showActiveView(string dpViewConfig, string datapointPath)
     if(tabId != selectedViewTabId)
     {
       // load empty panel in non-visible tabs to enhance performance
-      tabCtrl.registerPanel(tabId-1,"nav_fw/nopanel.pnl",makeDynString(""));
+      tabCtrl.registerPanel(tabId-1, viewsPath + "nopanel.pnl",makeDynString(""));
     }
     else
     {
@@ -426,7 +426,7 @@ void showView(string dpViewConfig, string datapointPath)
       {
         if(caption==selectedViewCaption)
         {
-          tabCtrl.registerPanel(tabId-1,"nav_fw/nopanel.pnl",makeDynString(""));
+          tabCtrl.registerPanel(tabId-1, viewsPath + "nopanel.pnl",makeDynString(""));
         }
       }
     }
@@ -961,7 +961,9 @@ void Navigator_HandleEventInitialize()
   // before the first thing, we check the sanity of the configuration
   string sanityMessage;
   
-
+  // Set the global variable: NAVIGATOR_TAB_FILENAME
+  NAVIGATOR_TAB_FILENAME = navConfigGetViewsPath() + "navigator_tab.pnl";
+  
   if(!navConfigSanityCheck(sanityMessage))
   {
     gcfUtilMessageWarning("Sanity check failed",sanityMessage);
@@ -1893,7 +1895,7 @@ string getDpTypeFromEnabled(string datapointPath)
 ///////////////////////////////////////////////////////////////////////////////////
 void navConfigMessageWarning(string message)
 {
-  ChildPanelOnCentralModal("nav_fw/MessageWarning", "Warning", makeDynString("$1:"+message));
+  ChildPanelOnCentralModal(navConfigGetViewsPath() + "MessageWarning.pnl", "Warning", makeDynString("$1:"+message));
 }
 
 //////////////////////////////////////////////////////////////////////////////////
