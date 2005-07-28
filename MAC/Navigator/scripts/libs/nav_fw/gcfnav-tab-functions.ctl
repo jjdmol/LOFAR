@@ -80,9 +80,7 @@ void NavTabInitialize(string datapoint)
   
   g_datapoint = datapoint;
   g_configPanelFileName = "";
-  
   string viewsPath = navConfigGetViewsPath();
-  
   string dpNameConfig = navConfigGetViewConfig(g_datapoint);
   
   int selectedSubView;
@@ -126,8 +124,7 @@ void NavTabInitialize(string datapoint)
       if(navConfigGetSubViewConfigElements(subViews[i],subViewCaption,subViewFileName))
       {
         LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
-        //g_subViews[subViewCaption] = viewsPath+subViewFileName;
-        g_subViews[subViewCaption] = subViewFileName;  //viewsPath+ removed
+        g_subViews[subViewCaption] = subViewFileName;
         g_subViewConfigs[subViewCaption] = configs[i];
       }
     }
@@ -142,8 +139,7 @@ void NavTabInitialize(string datapoint)
 
     // get the config panel filename    
     g_configPanelFileName = navConfigGetViewConfigPanel(views[g_selectedView]);
-    //g_configPanelFileName = viewsPath + g_configPanelFileName;
-    g_configPanelFileName = g_configPanelFileName;  //viewsPath+ is removed
+    g_configPanelFileName = g_configPanelFileName;
     
     viewsComboBoxCtrl.selectedPos(selectedSubView);
     ComboBoxViewsSelectionChanged();
