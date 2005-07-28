@@ -5,7 +5,8 @@ MSDIR=/data/PSS3/diepen/BBS2
 rm -rf tBBS3_tmp
 mkdir tBBS3_tmp
 cd tBBS3_tmp
-ln -s ../../../../test/tBBS3.sh .
+# ln -s ../../../../test/tBBS3.sh .
+ln -s ../../../../test/tBBS3.runTest.sh .
 ln -s ../../../../test/tBBS3.test* .
 ln -s ../../../../src/clearBB .
 ln -s ../../../../src/initparms .
