@@ -78,6 +78,12 @@ class GCFTCPPort : public GCFRawPort
     virtual ~GCFTCPPort ();
   
   public: // GCFPortInterface overloaded/defined methods
+    void init (GCFTask& task, 
+               string name, 
+               TPortType type, 
+               int protocol, 
+               bool transportRawData = false); 
+
     /**
      * open/close methods
      */
