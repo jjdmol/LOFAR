@@ -54,6 +54,7 @@ class WH_Correlator: public WorkHolder
   int itsNchannels;
   int itsNpolarisations;
   int itsNtargets;
+  int itsNinputs;
 
   int itsRank;
 
