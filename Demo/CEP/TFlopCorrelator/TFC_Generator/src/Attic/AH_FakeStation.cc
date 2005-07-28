@@ -72,8 +72,8 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
   bool useEth = itsParamSet.getBool("Generator.UseEth");
   vector<string> outFileNames = itsParamSet.getStringVector("Generator.OutputFiles");
   vector<string> interfaces = itsParamSet.getStringVector("Generator.Interfaces");
-  vector<string> remMacs = itsParamSet.getStringVector("Generator.RemMacs");
-  vector<string> ownMacs = itsParamSet.getStringVector("Generator.OwnMacs");
+  vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
+  vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
   vector<int32> stationIds = itsParamSet.getInt32Vector("Generator.StationIds");
   vector<int32> delays = itsParamSet.getInt32Vector("Generator.StationDelays");
   
@@ -102,10 +102,10 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
   for (int s=0; s<NRSP; s++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "FakeStation_%d_of_%d", s, NRSP);
     if (useEth) {
-      // cout<<"interface: "<<interfaces[s]<<" remote: "<<remMacs[s]<<" own: "<<ownMacs[s]<<endl;
+      // cout<<"interface: "<<interfaces[s]<<" remote: "<<dstMacs[s]<<" own: "<<srcMacs[s]<<endl;
       itsTHs.push_back(new TH_Ethernet(interfaces[s], 
-				       remMacs[s],
-				       ownMacs[s]));
+				       dstMacs[s],
+				       srcMacs[s]));
     } else {
       itsTHs.push_back(new TH_File(outFileNames[s], TH_File::Write));
     }
