@@ -103,16 +103,19 @@ private:
   typedef boost::shared_ptr<GCF::PAL::GCFExtPropertySet>  TExtPropertySetPtr;
   typedef std::map<string,TMyPropertySetPtr>              TMyPropertySetMap;
   typedef std::map<string,TExtPropertySetPtr>             TExtPropertySetMap;
+  
+  void _flushSubscriptions();
+  void _removeProxySubscription(const string& propName);
 
   APLCommon::PropertySetAnswer  m_propertySetAnswer;
   TMyPropertySetMap             m_myPropertySets;
   TExtPropertySetMap            m_extPropertySets;
   
-  
   string                        m_serverPortName;
   GCF::TM::GCFTCPPort           m_serverPort;      // TH communication
   
   PropertyProxy                 m_propertyProxy;
+  vector<string>                m_proxySubscriptions;
 
   ALLOC_TRACER_CONTEXT  
 };

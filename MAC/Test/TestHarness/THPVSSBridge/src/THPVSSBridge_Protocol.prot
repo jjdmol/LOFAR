@@ -470,3 +470,8 @@ event = {
   };
 };
 
+event = {
+  signal = FLUSH_SUBSCRIPTIONS;
+  dir = IN;
+};
+

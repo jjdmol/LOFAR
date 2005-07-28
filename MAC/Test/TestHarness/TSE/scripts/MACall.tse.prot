@@ -2102,6 +2102,12 @@ F_THPVSSBRIDGE_SET_VALUE_RESPONSE =
   
 }
 
+F_THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS =
+{
+  0x1E4E, // LSB first: signal, protocol, in/out
+  0x00000000
+}
+
 [events]
 
 //
@@ -3865,4 +3871,10 @@ E_THPVSSBRIDGE_SET_VALUE_RESPONSE =
   nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
   
+}
+
+E_THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS =
+{
+  0x1E4E, // LSB first: signal, protocol, in/out
+  0x00000000
 }

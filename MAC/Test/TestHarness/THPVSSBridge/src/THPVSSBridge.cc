@@ -62,7 +62,8 @@ THPVSSBridge::THPVSSBridge(string name) :
   m_extPropertySets(),
   m_serverPortName(string("server")),
   m_serverPort(*this, m_serverPortName, GCFPortInterface::SPP, THPVSSBRIDGE_PROTOCOL),
-  m_propertyProxy(*this)
+  m_propertyProxy(*this),
+  m_proxySubscriptions()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
@@ -73,6 +74,8 @@ THPVSSBridge::THPVSSBridge(string name) :
 THPVSSBridge::~THPVSSBridge()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  _flushSubscriptions();
 }
 
 void THPVSSBridge::handlePropertySetAnswer(GCFEvent& answer)
@@ -219,6 +222,7 @@ GCFEvent::TResult THPVSSBridge::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ENTRY:
+      _flushSubscriptions();
       m_serverPort.open();
       break;
 
@@ -252,11 +256,10 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
 
     case F_DISCONNECTED:
       p.close();
-      p.setTimer(5.0); // try again after 5 seconds
       break;
 
-    case F_TIMER:
-      p.open(); // try again
+    case F_CLOSED:
+      TRAN(THPVSSBridge::initial);
       break;
 
     case THPVSSBRIDGE_ENABLE_MY_PROPERTY_SET:
@@ -522,11 +525,15 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
       THPVSSBridgeSubscribePropertyEvent pvssBridgeEvent(e);
       LOG_DEBUG(formatString("%s(%s,%s)","THPVSSBRIDGE_SUBSCRIBE_PROPERTY_SET",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str()));
       
-      THPVSSBridgeSubscribePropertyResponseEvent pvssBridgeResponseEvent;
-      pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
-      pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
-      pvssBridgeResponseEvent.response = m_propertyProxy.subscribeProp(pvssBridgeEvent.scope+string(".")+pvssBridgeEvent.property);
-      m_serverPort.send(pvssBridgeResponseEvent);
+      TGCFResult res = m_propertyProxy.subscribeProp(pvssBridgeEvent.scope+string(".")+pvssBridgeEvent.property);
+      if(GCF_NO_ERROR != res)
+      {
+        THPVSSBridgeSubscribePropertyResponseEvent pvssBridgeResponseEvent;
+        pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
+        pvssBridgeResponseEvent.property = pvssBridgeEvent.property;
+        pvssBridgeResponseEvent.response = res;
+        m_serverPort.send(pvssBridgeResponseEvent);
+      }
       break;
     }
 
@@ -534,6 +541,8 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
     {
       THPVSSBridgeUnsubscribePropertyEvent pvssBridgeEvent(e);
       LOG_DEBUG(formatString("%s(%s,%s)","THPVSSBRIDGE_UNSUBSCRIBE_PROPERTY_SET",pvssBridgeEvent.scope.c_str(),pvssBridgeEvent.property.c_str()));
+      
+      _removeProxySubscription(pvssBridgeEvent.scope+string(".")+pvssBridgeEvent.property);
 
       THPVSSBridgeUnsubscribePropertyResponseEvent pvssBridgeResponseEvent;
       pvssBridgeResponseEvent.scope = pvssBridgeEvent.scope;
@@ -573,6 +582,13 @@ GCFEvent::TResult THPVSSBridge::connected(GCFEvent& e, GCFPortInterface& p)
       break;
     }
 
+    case THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS:
+    {
+      LOG_DEBUG(formatString("%s","THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS"));
+      _flushSubscriptions();
+      break;
+    }
+    
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -585,6 +601,8 @@ void THPVSSBridge::proxyPropSubscribed(const string& propName)
 {
   LOG_DEBUG(formatString("%s(%s)","proxyPropSubscribed",propName.c_str()));
   
+  m_proxySubscriptions.push_back(propName);
+  
   THPVSSBridgeSubscribePropertyResponseEvent pvssBridgeEvent;
   pvssBridgeEvent.scope = stripProperty(propName);
   pvssBridgeEvent.property = getProperty(propName);
@@ -595,11 +613,15 @@ void THPVSSBridge::proxyPropSubscribed(const string& propName)
 void THPVSSBridge::proxyPropSubscriptionLost(const string& propName)
 {
   LOG_DEBUG(formatString("%s(%s)","proxyPropSubscriptionLost",propName.c_str()));
+  
+  _removeProxySubscription(propName);
 }
 
 void THPVSSBridge::proxyPropUnsubscribed(const string& propName)
 {
   LOG_DEBUG(formatString("%s(%s)","proxyPropUnsubscribed",propName.c_str()));
+  
+  _removeProxySubscription(propName);
 
   THPVSSBridgeUnsubscribePropertyResponseEvent pvssBridgeEvent;
   pvssBridgeEvent.scope = stripProperty(propName);
@@ -639,4 +661,51 @@ void THPVSSBridge::proxyPropValueSet(const string& propName)
   pvssBridgeEvent.property = getProperty(propName);
   pvssBridgeEvent.response = GCF_NO_ERROR;
   m_serverPort.send(pvssBridgeEvent);
+}
+
+void THPVSSBridge::_flushSubscriptions()
+{
+  // unsubscribe from all properties subscribed through the proxy
+  while(m_proxySubscriptions.size() > 0)
+  {
+    vector<string>::reference ref=m_proxySubscriptions.back();
+    m_propertyProxy.unsubscribeProp(ref);
+    m_proxySubscriptions.pop_back();
+  }
+  
+  // unload all ext propsets
+  TExtPropertySetMap::iterator extIt=m_extPropertySets.begin();
+  while(extIt != m_extPropertySets.end())
+  {
+    extIt->second->unload();
+    m_extPropertySets.erase(extIt);
+    extIt=m_extPropertySets.begin();
+  }
+  
+  // disable all my propsets
+  TMyPropertySetMap::iterator myIt=m_myPropertySets.begin();
+  while(myIt != m_myPropertySets.end())
+  {
+    myIt->second->disable();
+    m_myPropertySets.erase(myIt);
+    myIt=m_myPropertySets.begin();
+  }
+}
+
+void THPVSSBridge::_removeProxySubscription(const string& propName)
+{
+  bool found(false);
+  vector<string>::iterator it=m_proxySubscriptions.begin();
+  while(!found && it!=m_proxySubscriptions.end())
+  {
+    found = ((*it) == propName);
+    if(found)
+    {
+      m_proxySubscriptions.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
 }
