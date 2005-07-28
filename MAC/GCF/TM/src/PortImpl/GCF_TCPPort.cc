@@ -89,6 +89,21 @@ GCFTCPPort::~GCFTCPPort()
   }
 }
 
+void GCFTCPPort::init(GCFTask& task, 
+                      string name, 
+                      TPortType type, 
+                      int protocol,
+                      bool transportRawData)
+{
+    _state = S_DISCONNECTED;
+    GCFRawPort::init(task, name, type, protocol, transportRawData);
+    _portNumber = 0;
+    _addrIsSet = false;
+    if (_pSocket) delete _pSocket;
+    _pSocket = 0;
+    _host = "";
+}
+
 bool GCFTCPPort::open()
 {
   if (isConnected())
