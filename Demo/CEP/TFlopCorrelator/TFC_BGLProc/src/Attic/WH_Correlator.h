@@ -16,7 +16,8 @@
 #include <sys/time.h>  // for gettimeofday
 #include <tinyCEP/WorkHolder.h>
 
-#include <TFC_Interface/DH_CorrCube.h>
+#include <TFC_Interface/DH_FIR.h>
+/* #include <TFC_Interface/DH_CorrCube.h> */
 #include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR
@@ -63,8 +64,10 @@ class WH_Correlator: public WorkHolder
   double agg_bandwidth;
   double corr_perf;
 
-  DH_CorrCube::BufferType  in_buffer[ELEMENTS][SAMPLES];
-  DH_CorrCube::BufferType* in_ptr;
+  DH_FIR::BufferType  in_buffer[ELEMENTS][SAMPLES];
+  DH_FIR::BufferType* in_ptr;
+/*   DH_CorrCube::BufferType  in_buffer[ELEMENTS][SAMPLES]; */
+/*   DH_CorrCube::BufferType* in_ptr; */
   DH_Vis::BufferType       out_buffer[ELEMENTS][ELEMENTS];
   DH_Vis::BufferType*      out_ptr;
 };
