@@ -38,7 +38,7 @@ class MISSubscription : public GCF::PAL::GCFPropertyProxy
     virtual ~MISSubscription ();
 
     void subscribe();
-    void unsubscribe();
+    void unsubscribe(uint64 seqnr);
     
   private:
     void propSubscribed (const string& propName);
@@ -63,17 +63,14 @@ class MISSubscription : public GCF::PAL::GCFPropertyProxy
     MISSession&   _session;
     const string  _propName;
     uint64        _curReplySeqNr;
-    bool          _onlyOnce;
+    bool          _onlyOnce;    
   
   private:
     GCF::Common::GCFPValue* _pFirstValue;
+    bool _isSubscribed;
     
     ALLOC_TRACER_CONTEXT
 };
-
-inline MISSubscription::~MISSubscription ()
-{
-}
 
  } // namespace AMI
 } // namespace LOFAR

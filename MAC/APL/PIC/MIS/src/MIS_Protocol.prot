@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for MAC Information Exchange";
 prefix = "MIS"; // for the signal names
-id = "(LOFAR::GCF::TM::F_APL_PROTOCOL + 5)"; 
+id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+5)"; 
 include = '<Common/LofarTypes.h>';
 
 // The "MIS" (MAC Information Server) protocol describes all possible
@@ -106,7 +106,7 @@ include = '<Common/LofarTypes.h>';
 
 event = {
     signal = "GENERIC_PINGPONG";
-    dir = "INOUT"; // SHM <-> MAC
+    dir = INOUT; // SHM <-> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -135,7 +135,7 @@ event = {
 
 event = {
     signal = "GENERIC_IDENTIFY_REQUEST";
-    dir = "INOUT"; // SHM <-> MAC
+    dir = INOUT; // SHM <-> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -156,7 +156,7 @@ event = {
 
 event = {
     signal = "GENERIC_IDENTIFY_RESPONSE";
-    dir = "INOUT"; // SHM <-> MAC
+    dir = INOUT; // SHM <-> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -200,7 +200,7 @@ event = {
 
 event = {
     signal = "DIAGNOSIS_NOTIFICATION";
-    dir = "IN"; // SHM -> MAC
+    dir = IN; // SHM -> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -271,7 +271,7 @@ event = {
 
 event = {
     signal = "DIAGNOSIS_RESPONSE";
-    dir = "OUT"; // MAC -> SHM
+    dir = OUT; // MAC -> SHM
     param = {
         name = "seqnr";
         type = "uint64";
@@ -302,7 +302,7 @@ event = {
 
 event = {
     signal = "RECONFIGURATION_REQUEST";  
-    dir = "IN"; // SHM -> MAC
+    dir = IN; // SHM -> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -329,7 +329,7 @@ event = {
 
 event = {
     signal = "RECONFIGURATION_RESPONSE";  
-    dir = "OUT"; // MAC -> SHM
+    dir = OUT; // MAC -> SHM
     param = {
         name = "seqnr";
         type = "uint64";
@@ -367,7 +367,7 @@ event = {
 
 event = {
     signal = "LOFAR_STRUCTURE_REQUEST";
-    dir = "IN"; // SHM -> MAC
+    dir = IN; // SHM -> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -392,7 +392,7 @@ event = {
 
 event = {
     signal = "LOFAR_STRUCTURE_RESPONSE";
-    dir = "OUT"; // MAC -> SHM
+    dir = OUT; // MAC -> SHM
     param = {
         name = "seqnr";
         type = "uint64";
@@ -439,7 +439,7 @@ event = {
 
 event = {
     signal = "LOFAR_STRUCTURE_CHANGED_ASYNC";
-    dir = "OUT"; // MAC -> SHM (asynchronous)
+    dir = OUT; // MAC -> SHM (asynchronous)
     param = {
         name = "seqnr";
         type = "uint64";
@@ -485,7 +485,7 @@ event = {
 
 event = {
     signal = "PVSS_DP_SUBSCRIPTION_REQUEST";
-    dir = "IN"; // SHM -> MAC
+    dir = IN; // SHM -> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -514,7 +514,7 @@ event = {
 
 event = {
     signal = "PVSS_DP_SUBSCRIPTION_RESPONSE";
-    dir = "OUT"; // MAC -> SHM
+    dir = OUT; // MAC -> SHM
     param = {
         name = "seqnr";
         type = "uint64";
@@ -544,7 +544,7 @@ event = {
 
 event = {
     signal = "PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC";
-    dir = "OUT"; // MAC -> SHM (asynchronous)
+    dir = OUT; // MAC -> SHM (asynchronous)
     param = {
         name = "seqnr";
         type = "uint64";
@@ -585,7 +585,7 @@ event = {
 /// TBD: control bit format as in RSP driver
 event = {
     signal = "SUBBAND_STATISTICS_REQUEST";
-    dir = "IN"; // SHM -> MAC
+    dir = IN; // SHM -> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -606,7 +606,7 @@ event = {
 
 event = {
     signal = "SUBBAND_STATISTICS_RESPONSE";
-    dir = "OUT"; // MAC -> SHM
+    dir = OUT; // MAC -> SHM
     param = {
         name = "seqnr";
         type = "uint64";
@@ -665,7 +665,7 @@ event = {
 
 event = {
     signal = "ANTENNA_CORRELATION_MATRIX_REQUEST";
-    dir = "IN"; // SHM -> MAC
+    dir = IN; // SHM -> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -690,7 +690,7 @@ event = {
 
 event = {
     signal = "ANTENNA_CORRELATION_MATRIX_RESPONSE";
-    dir = "OUT"; // MAC -> SHM
+    dir = OUT; // MAC -> SHM
     param = {
         name = "seqnr";
         type = "uint64";

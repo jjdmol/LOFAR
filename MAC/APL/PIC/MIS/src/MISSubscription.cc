@@ -46,8 +46,18 @@ MISSubscription::MISSubscription (MISSession& session, const string& propName, u
   _propName(propName),
   _curReplySeqNr(replyNr), 
   _onlyOnce(onlyOnce),
-  _pFirstValue(0)  
+  _pFirstValue(0),
+  _isSubscribed(false)  
 {
+}
+
+MISSubscription::~MISSubscription ()
+{
+  if (_isSubscribed && GCFPVSSInfo::propExists(_propName))
+  {
+    unsubscribeProp(_propName);
+  }
+  if (_pFirstValue) delete _pFirstValue;
 }
 
 void MISSubscription::subscribe()
@@ -55,8 +65,7 @@ void MISSubscription::subscribe()
   string response("ACK");
   if (GCFPVSSInfo::propExists(_propName))
   {
-    if (requestPropValue(_propName) != GCF_NO_ERROR)
-    if (subscribeProp(_propName) != GCF_NO_ERROR)
+    if (requestPropValue(_propName) != GCF_NO_ERROR)    
     {
       response = "NAK (could not retrieve first value)";
     }
@@ -67,7 +76,7 @@ void MISSubscription::subscribe()
   }  
   
   if (response != "ACK")
-  {
+  {   
     MISPvssDpSubscriptionResponseEvent nak;
     nak.replynr = _curReplySeqNr;
     MISSession::setCurrentTime(nak.timestamp_sec, nak.timestamp_nsec);
@@ -77,7 +86,7 @@ void MISSubscription::subscribe()
   }
 }
 
-void MISSubscription::unsubscribe()
+void MISSubscription::unsubscribe(uint64 seqnr)
 {
   string response("ACK");
   if (GCFPVSSInfo::propExists(_propName))
@@ -91,9 +100,9 @@ void MISSubscription::unsubscribe()
   {
     response = "NAK (DPE does not exists)";
   }  
-  
+  _isSubscribed = false;
   MISPvssDpSubscriptionResponseEvent resp;
-  resp.replynr = _curReplySeqNr;
+  resp.replynr = seqnr;
   MISSession::setCurrentTime(resp.timestamp_sec, resp.timestamp_nsec);
   resp.response = response;
   _session.subscribed(resp);    
@@ -102,20 +111,21 @@ void MISSubscription::unsubscribe()
 
 void MISSubscription::propSubscribed (const string& propName)
 {
-  ASSERTSTR(propName == _propName, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
   MISPvssDpSubscriptionResponseEvent ack;
   ack.replynr = _curReplySeqNr;
   MISSession::setCurrentTime(ack.timestamp_sec, ack.timestamp_nsec);
   ack.response = "ACK";
   ASSERTSTR(_pFirstValue, "Value was not requested from PVSS");
   ack.dptype = _pFirstValue->getTypeName();
+  _isSubscribed = true;
   _session.subscribed(ack);    
-  propValueChanged(_propName, *_pFirstValue);
+  propValueChanged(_propName, *_pFirstValue);  
 }
 
 void MISSubscription::propValueChanged (const string& propName, const GCFPValue& newValue)
 {
-  ASSERTSTR(propName == _propName, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
   MISPvssDpSubscriptionValueChangedAsyncEvent vce;
   vce.replynr = _curReplySeqNr;
   MISSession::setCurrentTime(vce.timestamp_sec, vce.timestamp_nsec);
@@ -123,15 +133,18 @@ void MISSubscription::propValueChanged (const string& propName, const GCFPValue&
   vce.payload_timestamp_sec = ts.tv_sec;
   vce.payload_timestamp_nsec = ts.tv_usec * 1000;
   vce.value = newValue.getValueAsString();
+  _session.valueChanged(vce);
 }
 
 void MISSubscription::propValueGet (const string& propName, const GCFPValue& newValue)
 {
-  ASSERTSTR(propName == _propName, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
   _pFirstValue = newValue.clone();
   if (_onlyOnce)
   {
-    propSubscribed (_propName);    
+    propSubscribed (_propName);
+    _isSubscribed = false;
+    _session.mayDelete(_propName);    
   }
   else
   {
@@ -149,11 +162,11 @@ void MISSubscription::propValueGet (const string& propName, const GCFPValue& new
 
 void MISSubscription::propSubscriptionLost(const string& propName)
 {
-  ASSERTSTR(propName == _propName, "Propnames should be the same");
+  ASSERTSTR(propName.find(_propName) < string::npos, "Propnames should be the same");
   LOG_DEBUG(formatString (
       "Lost subscription of %s",
       propName.c_str()));
-
+  _isSubscribed = false;
   _session.mayDelete(_propName);
 }
   } // namespace AMI

@@ -29,9 +29,8 @@
 #include <Common/lofar_fstream.h>
 #include <APLCommon/APL_Defines.h>
 #include <GCF/GCF_PVInteger.h>
-#include <boost/regex.hpp>
+#include <fnmatch.h>
 
-using namespace boost;
 using std::ifstream;
 
 #define ASCII_LINE_SIZE 1024
@@ -46,9 +45,15 @@ using namespace GCF::Common;
 string trim(string source)
 {  
   string::size_type pos = source.find_first_not_of(" \t");
-  source.erase(0, pos);
+  if (pos != string::npos)
+  {
+    source.erase(0, pos);
+  }
   pos = source.find_first_of(" \t");
-  source.erase(pos);
+  if (pos != string::npos)
+  {
+    source.erase(pos);
+  }
   return source;
 }
 
@@ -61,7 +66,7 @@ void MISPolicyHandler::rereadPolicyFile()
   
   if (!policyRulesFile)
   {
-    LOG_ERROR("File 'mis.pol' with policy rules could not be opend. No rules loaded!");
+    LOG_ERROR("File 'mis.pol' with policy rules could not be opend. No rules (re)loaded!");
     return;
   }
   
@@ -70,8 +75,10 @@ void MISPolicyHandler::rereadPolicyFile()
   _rules.clear();
 
   // Read the file line by line and convert to rules.
+  uint16 lineNr(0);
   while (policyRulesFile.getline (asciiLine, ASCII_LINE_SIZE))
   {
+    lineNr++;
     if (strlen(asciiLine) == 0) // empty row -> skip
     {
       continue;
@@ -86,7 +93,9 @@ void MISPolicyHandler::rereadPolicyFile()
       int confFound;
       if (ruleElements.size() != 5)
       {
-        LOG_ERROR("A policy rule row should have five colums.");
+        LOG_ERROR(formatString(
+            "Line %d: A policy rule row should have five colums.",
+            lineNr));
         continue;      
       }
       TPolicyRule newRule;
@@ -95,24 +104,26 @@ void MISPolicyHandler::rereadPolicyFile()
       if (newRule.diagnosis != "FAULTY" && newRule.diagnosis != "HEALTHY")
       {
         LOG_ERROR(formatString(
-            "\"%s\" not a possible diagnosis. Chose from (FAULTY | HEALTHY)",
+            "Line %d: \"%s\" not a possible diagnosis. Chose from (FAULTY | HEALTHY). Skipped!",
+            lineNr,
             newRule.diagnosis.c_str()));              
         continue;
       }
       confFound = sscanf(ruleElements[2].c_str(), "%hd", &newRule.lowConf);
-      if (confFound == 0)
+      if (confFound < 1)
       {
-        newRule.lowConf = -1;
+        newRule.lowConf = 0;
       }
       confFound = sscanf(ruleElements[3].c_str(), "%hd", &newRule.highConf);
-      if (confFound == 0)
+      if (confFound < 1)
       {
-        newRule.highConf = -1;
+        newRule.highConf = 0xFFFF;
       }
       if (newRule.lowConf > newRule.highConf)
       {
         LOG_ERROR(formatString(
-            "Lowest confidence level (%d) is higher then highest confidence level (%d)!. Skipped",
+            "Line %d: Lowest confidence level (%d) is higher then highest confidence level (%d)!. Skipped!",
+            lineNr,
             newRule.lowConf,
             newRule.highConf))              
         continue;
@@ -132,7 +143,8 @@ void MISPolicyHandler::rereadPolicyFile()
       else
       {
         LOG_ERROR(formatString(
-            "\"%s\" not a possible action. Choose from (LOG | MANUAL | AUTO)",
+            "Line %d: \"%s\" not a possible action. Choose from (LOG | MANUAL | AUTO). Skipped!",
+            lineNr,
             trim(ruleElements[4]).c_str()))              
         continue;
       }
@@ -140,6 +152,10 @@ void MISPolicyHandler::rereadPolicyFile()
     }    
   }
   policyRulesFile.close();  
+  LOG_DEBUG(formatString(
+      "Reading policy file ready. It contains %d valid rules on %d lines.",
+      _rules.size(),
+      lineNr));
 }
 
 string MISPolicyHandler::checkDiagnose(const MISDiagnosisNotificationEvent& diag, 
@@ -166,37 +182,46 @@ string MISPolicyHandler::checkDiagnose(const MISDiagnosisNotificationEvent& diag
     response = formatString("NAK (Component has the wrong resource state (=%d) for given diagnosis!)", 
                curResStateValue.getValue());
   }
-  
-  regex expression("");
 
-  for (TRules::iterator iter = _rules.begin(); iter != _rules.end() && response == "ACK"; ++iter)
+  for (TRules::iterator iter = _rules.begin(); iter != _rules.end(); ++iter)
   {    
     curRule = *iter;
-    expression = curRule.resourceNameFilter;
-    if (!regex_match(diag.component, expression))
-    {
-    }    
-    else if (diag.diagnosis.find(curRule.diagnosis) == string::npos)
-    {
-    }
-    else if (curRule.lowConf >= 0 && curRule.lowConf > diag.confidence)
+    
+    if (curRule.lowConf > diag.confidence)
     {      
     }
-    else if (curRule.highConf >= 0 && curRule.highConf < diag.confidence)
+    else if (curRule.highConf < diag.confidence)
+    {
+    }
+    else if (diag.diagnosis.find(curRule.diagnosis) == string::npos)
     {
     }
     else
     {
+      if (fnmatch(curRule.resourceNameFilter.c_str(), diag.component.c_str(), FNM_NOESCAPE) != 0)
+      {
+        continue;
+      }
       // bingo this rule applies to the diagnosis
-      int16 curState = curResStateValue.getValue();
+      int32 curState = curResStateValue.getValue();
+      response = "ACK";
       switch (curRule.action)
       {
         case LOG:
+        {
           LOG_INFO("Rule found. Operator has specified 'LOG' action in the found rule.");
-          response  = "NAK (ignored by policy)";
-          // TODO: add action logging (ignored)
+          response = "NAK (ignored by policy)";
+          timeval ts = {diag.timestamp_sec, diag.timestamp_nsec / 1000};
+          string descr(formatString (
+              "%s(cl:%d, url:%d)",
+              diag.diagnosis.c_str(),
+              diag.confidence,
+              diag.diagnosis_id.c_str()));          
+
+          // 1 means ignore action state
+          ADD_ACTION(diag.component, 1, KVL_ORIGIN_SHM, ts, descr);
           break;
-          
+        }
         case MANUAL:
           LOG_INFO("Rule found. Operator has specified 'MANUAL' action in the found rule.");
           MAKE_SUSPECT(curState);

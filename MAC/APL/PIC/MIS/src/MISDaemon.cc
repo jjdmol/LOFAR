@@ -24,16 +24,17 @@
 
 #include "MISDaemon.h"
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
-#include <GCF/Utils.h>
 #include <MISSession.h>
 #include <MIS_Protocol.ph>
 #include <MISDefines.h>
 #include <GCF/ParameterSet.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 namespace LOFAR 
 {
 using namespace GCF::Common;
 using namespace GCF::TM;
+using namespace GCF::PAL;
  namespace AMI
  {
 
@@ -47,7 +48,7 @@ MISDaemon::MISDaemon() :
   _misdPortProvider.init(*this, MISD_PORT_NAME, GCFPortInterface::MSPP, MIS_PROTOCOL);
   try
   {
-    GCF::ParameterSet::instance()->adoptFile("./RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
   }
   catch (Exception e)
   {
@@ -93,14 +94,16 @@ GCFEvent::TResult MISDaemon::accepting(GCFEvent& e, GCFPortInterface& p)
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned long garbageTimerID = 0;
   static unsigned long rereadPolicyTimerID = 0;
+  static bool hasPVSS = false; 
 
   switch (e.signal)
   {
     case F_ENTRY:
+    {
       garbageTimerID = _misdPortProvider.setTimer(5.0, 5.0); 
       rereadPolicyTimerID = _misdPortProvider.setTimer(60.0, 60.0); 
       break;
-
+    }
     case F_DISCONNECTED:
       DBGFAILWHEN(&_misdPortProvider == &p && "MISD port provider may not be disconnected."); 
       break;
@@ -140,6 +143,15 @@ GCFEvent::TResult MISDaemon::accepting(GCFEvent& e, GCFPortInterface& p)
       LOG_INFO("New MIS client accepted!");
       MISSession* miss = new MISSession(*this);
       miss->start();
+      if (!hasPVSS)
+      {
+        // now we have PVSS connection
+        hasPVSS = true;        
+        // the GCFPVSSInfo::getOwnManNum() method only returns a valid
+        // man number if a PVSS connections has been established
+        // is will be automatically done by the MISSession
+        SKIP_UPDATES_FROM(GCFPVSSInfo::getOwnManNum());
+      }
       break;
     }
     
