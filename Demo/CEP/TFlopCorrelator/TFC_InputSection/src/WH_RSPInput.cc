@@ -212,12 +212,12 @@ WH_RSPInput::WH_RSPInput(const string& name,
   char str[32];
 
   // get parameters
-  itsCyclicBufferSize = pset.getInt32("WH_RSP.cylicbuffersize");
-  itsNRSPOutputs = pset.getInt32("NRSP");
-  itsNpackets = pset.getInt32("NPacketsInFrame");
-  itsNSubbands = pset.getInt32("NSubbands");
-  itsNPolarisations = pset.getInt32("polarisations");
-  itsNSamplesToCopy = pset.getInt32("DH_RSP.times");
+  itsCyclicBufferSize = pset.getInt32("Input.Cylicbuffersize");
+  itsNRSPOutputs = pset.getInt32("Input.NRSP");
+  itsNpackets = pset.getInt32("Input.NPacketsInFrame");
+  itsNSubbands = pset.getInt32("Input.NSubbands");
+  itsNPolarisations = pset.getInt32("Input.NPolarisations");
+  itsNSamplesToCopy = pset.getInt32("Input.NSamplesToDH");
  
   // size of an EPA packet in bytes 
   int sizeofpacket   = ( itsNPolarisations * 
