@@ -125,6 +125,7 @@ void DataHolder::pack ()
 void DataHolder::unpack()
 {
   LOG_TRACE_RTTI("DataHolder unpack()");
+  DBGASSERT (itsData != 0);
   // Check the data header in debug mode.
 #ifdef ENABLE_DBGASSERT
   BlobIBufChar bibc(itsData->data(), itsData->size());
@@ -226,11 +227,7 @@ void DataHolder::openDataBlock()
 
 void DataHolder::resizeBuffer (uint newSize)
 {
-  // If there is only an extra blob, the user might not have called
-  // createDataBlock. So call it if needed.
-  if (itsData == 0) {
-    createDataBlock();
-  }
+  DBGASSERT (itsData != 0);
   char* oldPtr = itsData->data();
   itsDataBlob->resize (newSize);
   if (oldPtr != itsData->data()) {
@@ -264,11 +261,7 @@ BlobIStream& DataHolder::getExtraBlob (bool& found, int& version)
 
 void DataHolder::putExtra (const void* data, uint size)
 {
-  // If there is only an extra blob, the user might not have called
-  // createDataBlock. So call it if needed.
-  if (itsData == 0) {
-    createDataBlock();
-  }
+  DBGASSERT (itsData != 0);
   char* oldPtr = itsData->data();
   itsDataFields.putExtraBlob (*itsDataBlob, data, size);
   if (oldPtr != itsData->data()) {
