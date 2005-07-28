@@ -18,8 +18,6 @@
 #endif
 
 // Application specific includes
-#include <TFC_Interface/DH_Vis.h>
-#include <TFC_Interface/DH_CorrCube.h>
 #include <WH_Correlator.h>
 
 #ifdef HAVE_BGL
@@ -36,14 +34,14 @@ using namespace LOFAR;
 WH_Correlator::WH_Correlator(const string& name) : 
   WorkHolder( 1, 1, name, "WH_Correlator")
 {
-
   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
   itsNelements = myPS.getInt32("WH_Corr.stations");
   itsNsamples  = myPS.getInt32("WH_Corr.samples");
   itsNchannels = myPS.getInt32("WH_Corr.channels"); 
   itsNtargets = 0; // not used?
 
-  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
+  getDataManager().addInDataHolder(0, new DH_FIR("in", 1, myPS));
+  //  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
   getDataManager().addOutDataHolder(0, new DH_Vis("out", 1, myPS));
 
   t_start.tv_sec = 0;
@@ -70,7 +68,8 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 
 void WH_Correlator::preprocess() {
 
-  ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
+  ASSERTSTR(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBufferSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
+//   ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
   ASSERTSTR(static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBufSize() == ELEMENTS*ELEMENTS, "OutHolder size not equal to defined size");
 
   // prevent stupid mistakes in the future by assuming we can easily change the unroll factor
@@ -81,7 +80,8 @@ void WH_Correlator::process() {
   double starttime, stoptime, cmults;
   const short ar_block = itsNelements / UNROLL_FACTOR;
 
-  DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
+  DH_FIR *inDH  = (DH_FIR*)(getDataManager().getInHolder(0));
+//   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
   in_ptr = &(in_buffer[0][0]);
@@ -92,7 +92,8 @@ void WH_Correlator::process() {
 
   // fill the input buffer
   // could this be done without a memcpy?
-  memcpy(&in_buffer, inDH->getBuffer(), inDH->getBufSize()*sizeof(DH_CorrCube::BufferType));
+  memcpy(&in_buffer, inDH->getBuffer(), inDH->getBufferSize()*sizeof(DH_FIR::BufferType));
+//   memcpy(&in_buffer, inDH->getBuffer(), inDH->getBufSize()*sizeof(DH_CorrCube::BufferType));
 
 #ifdef DO_TIMING
   starttime = timer();
@@ -117,15 +118,15 @@ void WH_Correlator::process() {
     for (int y = 0; y < itsNelements; y+=4) { 
 
       // prefetch a block of values to register
-      __complex__ double reg_x_0 = static_cast<__complex__ double>(in_buffer[0][i]);
-      __complex__ double reg_x_1 = static_cast<__complex__ double>(in_buffer[1][i]);
-      __complex__ double reg_x_2 = static_cast<__complex__ double>(in_buffer[2][i]);
-      __complex__ double reg_x_3 = static_cast<__complex__ double>(in_buffer[3][i]);
+      __complex__ double reg_x_0 = in_buffer[0][i];
+      __complex__ double reg_x_1 = in_buffer[1][i];
+      __complex__ double reg_x_2 = in_buffer[2][i];
+      __complex__ double reg_x_3 = in_buffer[3][i];
 
-      __complex__ double reg_y_0 = static_cast<__complex__ double>(in_buffer[y][i]);
-      __complex__ double reg_y_1 = static_cast<__complex__ double>(in_buffer[y+1][i]);
-      __complex__ double reg_y_2 = static_cast<__complex__ double>(in_buffer[y+2][i]);
-      __complex__ double reg_y_3 = static_cast<__complex__ double>(in_buffer[y+3][i]);
+      __complex__ double reg_y_0 = in_buffer[y][i];
+      __complex__ double reg_y_1 = in_buffer[y+1][i];
+      __complex__ double reg_y_2 = in_buffer[y+2][i];
+      __complex__ double reg_y_3 = in_buffer[y+3][i];
 
       for (int x = 0; x <= y; x+=4) {
 
