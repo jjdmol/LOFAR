@@ -1,8 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,249 165 954 748 N "_3DFace" 3
-"$configDataPoint"
+PANEL,246 168 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -27,9 +26,6 @@ PANEL,249 165 954 748 N "_3DFace" 3
   dpConnect(\"ArrangeTrendPlots\", $configDatapoint + \".Standard\",
 	                               $configDatapoint + \".Trend2Active\",
 	                               $configDatapoint + \".Dedicated\");
-	
-	dpConnect(\"setTraceColor\",$configDataPoint + \".traceColor\");                               
-	                               
 	}
 	else
 	{

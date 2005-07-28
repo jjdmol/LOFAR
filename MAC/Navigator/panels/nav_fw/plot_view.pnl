@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 4 view
-PANEL,360 317 950 740 N "_3DFace" 2
+PANEL,272 201 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -98,7 +98,10 @@ void navViewPlotMain()
       for(int i=1; i<=8; i++)
       {
         dpGet($configDatapoint + \".\" + i + \".active\", dpActive);
-        if(dpActive)
+        dpGet($configDatapoint + \".\" + i + \".dpName\", dpNameToPlot);
+        dpToConnect = navViewRetrieveDpName($datapoint, dpNameToPlot);
+
+        if(dpActive && dpAccessable(dpToConnect))
         {
           dpGet($configDatapoint + \".\" + i + \".dpName\", dpNameToPlot);
           dpToConnect = navViewRetrieveDpName($datapoint, dpNameToPlot);
@@ -444,11 +447,15 @@ void navViewPlotContextMenu()
 				                                     \"$yrangeMin:\" + yrangeMin, 
 				                                     \"$yrangeMax:\" + yrangeMax,
 				                                     \"$updateRate:\" + UPDATE_RATE), resultFloat, resultString);
-      xrangeMin = resultString[1];
-      xrangeMax = resultString[2];
-      yrangeMin = resultString[3];
-      yrangeMax = resultString[4];
-      UPDATE_RATE = resultString[5];
+      //If dynlen == 0, cancel button is used.
+      if(dynlen(resultString)>0)
+      {
+        xrangeMin = resultString[1];
+        xrangeMax = resultString[2];
+        yrangeMin = resultString[3];
+        yrangeMax = resultString[4];
+        UPDATE_RATE = resultString[5];
+      }
       break;
     case 4: //Start recording
       cmd = $configDatapoint+\"|\"+$datapoint+\"|start\";
