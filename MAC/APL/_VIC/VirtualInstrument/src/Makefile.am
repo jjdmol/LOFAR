@@ -14,6 +14,7 @@ VirtualInstrument_CPPFLAGS= \
 
 VirtualInstrument_SOURCES 		= \
 	VirtualInstrument.cc \
+	MaintenanceVI.cc \
 	VirtualInstrumentStartDaemonMain.cc
 	
 VirtualInstrument_LDADD		    = $(LOFAR_DEPEND)

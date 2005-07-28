@@ -149,6 +149,10 @@ namespace GSO
       
       bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
+      void _schedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
+      void _updateSchedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
+      void _cancelSchedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
+      
       string                                m_SASserverPortName;
       GCF::TM::GCFTCPPort                   m_SASserverPort;      // SAS-MAC communication
       TTCPPortVector                        m_SASclientPorts;     // connected SAS clients

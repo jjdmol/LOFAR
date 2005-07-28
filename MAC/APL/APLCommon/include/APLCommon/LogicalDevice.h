@@ -235,6 +235,11 @@ namespace APLCommon
       string                                m_serverPortName;
       TRemotePort                           m_serverPort; // listening port
 
+      time_t                                m_claimTime; // in UTC, seconds since 1-1-1970
+      time_t                                m_prepareTime; // in UTC, seconds since 1-1-1970
+      time_t                                m_startTime;   // in UTC, seconds since 1-1-1970
+      time_t                                m_stopTime;    // in UTC, seconds since 1-1-1970
+
     private:
       void _schedule();
       void _claim();
@@ -269,11 +274,6 @@ namespace APLCommon
       unsigned long                         m_startTimerId; // LD becomes active
       unsigned long                         m_stopTimerId; // LD becomes suspended
       
-      time_t                                m_claimTime; // in UTC, seconds since 1-1-1970
-      time_t                                m_prepareTime; // in UTC, seconds since 1-1-1970
-      time_t                                m_startTime;   // in UTC, seconds since 1-1-1970
-      time_t                                m_stopTime;    // in UTC, seconds since 1-1-1970
-
       unsigned long                         m_retrySendTimerId;
       TEventBufferVector                    m_eventBuffer;
       

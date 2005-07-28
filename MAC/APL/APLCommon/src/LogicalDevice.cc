@@ -34,17 +34,6 @@
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
 
-#define ADJUSTEVENTSTRINGPARAMTOBSE(str) \
-{ \
-  LOG_DEBUG("Adjust " #str " string size for test tool"); \
-  str.resize(50,0); \
-}
-#define ADJUSTEVENTSTRINGPARAMFROMBSE(str) \
-{ \
-  LOG_DEBUG("Adjust " #str " string size for test tool"); \
-  str = str.c_str(); \
-}
-
 using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -106,6 +95,10 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_parameterSet(),
   m_serverPortName(string("server")),
   m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
+  m_claimTime(0),
+  m_prepareTime(0),
+  m_startTime(0),
+  m_stopTime(0),
   m_parentPorts(),
   m_parentReconnectTimerId(0),
   m_childPorts(),
@@ -117,10 +110,6 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_prepareTimerId(0),
   m_startTimerId(0),
   m_stopTimerId(0),
-  m_claimTime(0),
-  m_prepareTime(0),
-  m_startTime(0),
-  m_stopTime(0),
   m_retrySendTimerId(0),
   m_eventBuffer(),
   m_globalError(LD_RESULT_NO_ERROR),
@@ -1180,9 +1169,6 @@ void LogicalDevice::_sendScheduleToClients()
         scheduleEvent->taskName = startDaemonKey;
         scheduleEvent->fileName = parameterFileName;
 
-ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->taskName)
-ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
-
         _sendEvent(scheduleEvent,*startDaemonPort);
       }
       catch(Exception& e)
@@ -1216,8 +1202,6 @@ ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
           // send the schedule to the child
           boost::shared_ptr<LOGICALDEVICEScheduleEvent> scheduleEvent(new LOGICALDEVICEScheduleEvent);
           scheduleEvent->fileName = parameterFileName;
-
-ADJUSTEVENTSTRINGPARAMTOBSE(scheduleEvent->fileName)
 
           _sendEvent(scheduleEvent,*pChildPort);
         }
@@ -1362,8 +1346,7 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       if(it != m_childPorts.end())
       {
         LOGICALDEVICEConnectEvent connectEvent(event);
-        string tempString(connectEvent.nodeId.c_str()); // workaround for char[50] received from BSE
-        m_connectedChildPorts[tempString] = TPortWeakPtr(*it);
+        m_connectedChildPorts[connectEvent.nodeId] = TPortWeakPtr(*it);
         
         boost::shared_ptr<LOGICALDEVICEConnectedEvent> connectedEvent(new LOGICALDEVICEConnectedEvent);
         if(m_logicalDeviceState == LOGICALDEVICE_STATE_DISABLED)
@@ -1506,8 +1489,7 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
       if(it != m_childPorts.end())
       {
         LOGICALDEVICEConnectEvent connectEvent(event);
-        string tempString(connectEvent.nodeId.c_str()); // workaround for char[50] received from BSE
-        m_connectedChildPorts[tempString] = TPortWeakPtr(*it);
+        m_connectedChildPorts[connectEvent.nodeId] = TPortWeakPtr(*it);
         
         boost::shared_ptr<LOGICALDEVICEConnectedEvent> connectedEvent(new LOGICALDEVICEConnectedEvent);
         connectedEvent->result = LD_RESULT_NO_ERROR;
@@ -1519,8 +1501,6 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
     case LOGICALDEVICE_SCHEDULE:
     {
       LOGICALDEVICEScheduleEvent scheduleEvent(event);
-
-ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.fileName)
 
       m_parameterSet.adoptFile(_getShareLocation() + scheduleEvent.fileName);
       _schedule();
@@ -1718,8 +1698,6 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
     case LOGICALDEVICE_SCHEDULE:
     {
       LOGICALDEVICEScheduleEvent scheduleEvent(event);
-
-ADJUSTEVENTSTRINGPARAMFROMBSE(scheduleEvent.fileName)
 
       m_parameterSet.adoptFile(_getShareLocation() + scheduleEvent.fileName);
       _schedule();
