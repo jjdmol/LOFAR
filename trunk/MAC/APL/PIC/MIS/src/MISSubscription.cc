@@ -72,7 +72,7 @@ void MISSubscription::subscribe()
   }
   else
   {
-    response = "NAK (DPE not existing)";
+    response = "NAK (DPE does not exists)";
   }  
   
   if (response != "ACK")
