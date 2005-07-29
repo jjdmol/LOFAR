@@ -24,9 +24,9 @@
 //# global functions for the views of the Navigator.
 //#
 
-
 global string CURRENT_DP_MESSAGE = "Current selection in tree";
 global dyn_string g_ContectMenuDpAccessableErrorText = "PUSH_BUTTON, No actions possible, 2, 0";
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Function: navViewPlotGetRecordStatus; This functions checks for the
@@ -70,40 +70,41 @@ string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
 }
 
 
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: trendApplySettings
+///////////////////////////////////////////////////////////////////////////
+// Function: trendApplySettings; This functions checks for the
 //
-//  
-///////////////////////////////////////////////////////////////////////////////////
+// Input : All elements of the config screen
+// Output: Only the changed settings are stored into the PVSS database
+///////////////////////////////////////////////////////////////////////////
 void TrendConfigApplyTraceSettings()
 {
   int ScaleMin, ScaleMax;
   bool AutoScale;
-	string dpName, dpeName, legendName;
+  string dpName, dpeName, legendName;
 
   //Set the values in the graphical objects
-	getValue("txt_legendName", "text", legendName);
-	getValue("txt_scaleMax", "text", ScaleMax);
-	getValue("txt_scaleMin", "text", ScaleMin);
+  getValue("txt_legendName", "text", legendName);
+  getValue("txt_scaleMax", "text", ScaleMax);
+  getValue("txt_scaleMin", "text", ScaleMin);
   getValue("btn_AutoScale", "state", 0, AutoScale);
   getValue("list_dp",  "selectedText", dpName);
   getValue("list_dpe", "selectedText", dpeName);
 
   //Get the values from the PVSS database
   dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".AutoScale", AutoScale);
-	dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".dpName", dpName+"."+dpeName);
+  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".dpName", dpName+"."+dpeName);
   dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".LegendName", legendName);
 
   if (ScaleMin<ScaleMax)
   {
     dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMax", ScaleMax);
-	  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
-	}
-	else
+	dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
+  }
+  else
   {
     setValue("txt_scaleMax", "text", ScaleMax + 10);
     dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMax", ScaleMin+10);
-	  dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
+    dpSet($configDatapoint + "." + $TrendNr + ".Trace" + $TraceNr + ".ScaleMin", ScaleMin);
   }
 }
 
@@ -134,16 +135,6 @@ string navViewGetDpFromDpSelectionList(string dollarDatapoint)
     datapoint = list_system.selectedText + list_dp.selectedText;
   }
   return datapoint;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence3, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence3(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 3);
 }
 
 
@@ -187,6 +178,7 @@ void navViewPlotChangeState()
   }
 }
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Function: navViewPlotWhenActive
 //
@@ -211,6 +203,18 @@ navViewPlotWhenActive(string dp1, int active,
   
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewRetrieveDpName; The configured datapoint can be relative
+//                                  or can be absolute. This function returns
+//                                  a absolute path, so it can be used for
+//                                  further processing in the panels 
+//
+// Input : 1. configured datapoint dpName
+//         2. $datapoint
+// Output: if active==1; dpConnect datapoint.
+//         if active!=1; dpDisconnect datapoint.
+///////////////////////////////////////////////////////////////////////////
 string navViewRetrieveDpName(string dollarDatapoint, string dpName)
 {
   string systemName = dpSubStr(dpName, DPSUB_SYS);
@@ -225,73 +229,6 @@ string navViewRetrieveDpName(string dollarDatapoint, string dpName)
   }
   return dpToConnect;
 }
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlot
-//
-// Input : variable off all the plots, whether they are active or not.
-///////////////////////////////////////////////////////////////////////////
-navViewPlotArrangePlots(string dp1, int dp1Active,
-                        string dp2, int dp2Active,
-                        string dp3, int dp3Active,
-                        string dp4, int dp4Active,
-                        string dp5, int dp5Active,
-                        string dp6, int dp6Active,
-                        string dp7, int dp7Active,
-                        string dp8, int dp8Active)
-{
-  int panelSizeX=930;
-  int panelSizeY=730;
-  int totalActive = dp1Active + dp2Active + dp3Active + dp4Active;
-  
-  setValue("plot_1", "visible", dp1Active );
-  setValue("plot_2", "visible", dp2Active );
-  setValue("plot_3", "visible", dp3Active );
-  setValue("plot_4", "visible", dp4Active );
-
-  //Make a list of all the active plots
-  dyn_string activePlots;
-  if(dp1Active==1)
-    activePlots[dynlen(activePlots)+1] = 1;
-  if(dp2Active==1)
-    activePlots[dynlen(activePlots)+1] = 2;
-  if(dp3Active==1)
-    activePlots[dynlen(activePlots)+1] = 3;
-  if(dp4Active==1)
-    activePlots[dynlen(activePlots)+1] = 4;
-
-  float divider = dynlen(activePlots);
-  if(totalActive>=1)
-  {
-    for(int i=1; i<=dynlen(activePlots); i++)
-    {
-      if(dynlen(activePlots)<5)
-      {
-        setValue("plot_"+activePlots[i], "scale",  1.0, 1.0/divider);
-        setValue("plot_"+activePlots[i], "position", 10, (10 + (i-1)*(panelSizeY/divider)));
-      }
-      else
-      {
-        setValue("plot_"+activePlots[i], "scale",  0.5, 0.25);
-      }
-    }
-    getValue("plot_"+activePlots[1], "size", local_plotSizeX, local_plotSizeY);
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlot
-//
-// Input : 1. datapoint name to plot
-// Output: starts a specific plot, given as argument to the general
-//         function
-///////////////////////////////////////////////////////////////////////////
-//navViewPlot(string dp1, string dpName)
-//{
-//  dyn_string dp1Split = strsplit(dp1, ".");
-//  dpConnect("navViewPlotMainPlotSequence" + dp1Split[2], $datapoint+dpName);
-//}
-
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -326,22 +263,18 @@ void navViewPlotApplyChanges()
 int navViewPlotConvertGnuplotOutput(int plotNumber)
 {
 
-    if ((access(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".png", R_OK)==0) &&
-        (access(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe", F_OK)==0))
-    {
-      //system("start /b rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + +"gnuplot"+plotNumber+ ".png");
-      //DebugN("rm: "+navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + +"gnuplot"+plotNumber+ ".png");
-      system(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber + ".png /convert=" + navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
-      //DebugN("path: "+navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
-    }
-    else
-    {
-      system("start /b copy " + navConfigGetPathName(g_path_picture) + navConfigGetPathName("/") + "gnuplot_error.bmp " + navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
-    }
-
-return 0;
+  if ((access(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".png", R_OK)==0) &&
+      (access(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe", F_OK)==0))
+  {
+    //system("start /b rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + +"gnuplot"+plotNumber+ ".png");
+    system(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber + ".png /convert=" + navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
+  }
+  else
+  {
+    system("start /b copy " + navConfigGetPathName(PROJ_PATH) + "pictures" +navConfigGetPathName("/") + "gnuplot_error.bmp " + navConfigGetPathName(PROJ_PATH) + "pictures" + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".bmp");
+  }
+  return 0;
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -459,118 +392,6 @@ int navViewPlotGenerateGnuplotOutput(int plotNumber)
   return 0;
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence4, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence4(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 4);
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence5, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence5(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 5);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence6, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence6(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 6);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence7, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence7(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 7);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence8, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence8(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 8);
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence1, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence1(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 1);
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence2, used to start a specific gnuplot
-//                                         sequence
-// Input: 1. datapoint name  and spectrum data
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence2(string dp1, string spectrum_data)
-{
-  navViewPlotMainPlotSequence(spectrum_data, 2);
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Function: navViewPlotMainPlotSequence
-//
-//
-// Input: 1. datapoint name to plot
-// Output: 
-///////////////////////////////////////////////////////////////////////////
-navViewPlotMainPlotSequence(string spectrum_data, int plotNumber)
-{	
-
-	file fSpectrum;
-	int timeslot_size = 1;
-  string plotTitle;
-	//write content of string to spectrum[DP_number].dat
-	fSpectrum = fopen(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") +"spectrum" + plotNumber+ ".tmp", "w+");
-	fputs (spectrum_data, fSpectrum );
-	fclose(fSpectrum);
-
-	if (timeslot_size<=1)
-	{
-		system("rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
-		system("copy " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".tmp " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
-	}
-	else
-	{
-		system("type " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".tmp >> " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
-	}
-	
-  dpGet($configDatapoint + "." + plotNumber + ".title", plotTitle);
-  string timeString = getCurrentTime();
-  plotTitle = plotTitle + " ["+timeString+"]";
-  
-  navViewPlotGenerateGnuPlotScriptFile(plotNumber, plotTitle);
-  navViewPlotGenerateGnuplotOutput(plotNumber);
-  navViewPlotConvertGnuplotOutput(plotNumber);
-  delay(1,0);
-  setValue("plot_" + plotNumber+ "", "fill","[pattern,[tile,bmp,gnuplot" + plotNumber+ ".bmp]]");
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Function navViewAlertGetDpFromColumn: Gets the selectedDP 
@@ -584,7 +405,7 @@ navViewPlotMainPlotSequence(string spectrum_data, int plotNumber)
 
 navViewAlertApplyCellSettings(string RowNumber, string Column)
 {
-	dyn_string ColumndpNames, ColumnTitles;
+  dyn_string ColumndpNames, ColumnTitles;
  
   dpGet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "dpNames", ColumndpNames); 
   dpGet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "Titles", ColumnTitles);
@@ -611,6 +432,8 @@ navViewControlDisplayText(string dp1, string textToDisplay)
   setValue("txt_" + elementName, "text", textToDisplay);
   controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + textToDisplay;
 }
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Function navViewControlDisplayStatus: Displays the text: textToDisplay
 //                                     
@@ -661,7 +484,6 @@ navViewControlDisplayStatus(string dp1, int statusNumber)
 }
 
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Function navViewControlDisplayTime: converts the serialtime to the a  
 //                                     normal, readable time notation
@@ -677,13 +499,10 @@ navViewControlDisplayTime(string dp1, int serialTime)
   strreplace(elementName, ".", "");
   time t;
   setPeriod(t, serialTime); 
-  //formatTime("%H:%M:%S %d-%m-%Y", t)
   controllerLog.appendItem = timeToDisplay + " | " + elementName + ": " + formatTime("%H:%M:%S %d-%m-%Y", t);
   setValue("txt_"+elementName, "text", formatTime("%H:%M:%S %d-%m-%Y", t));
 
 }
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -828,7 +647,6 @@ connectActualValue(string dp1, anytype actualValue)
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: elementTypeValid
 //
@@ -946,13 +764,14 @@ string dpGetElementName(string DPName)
 /////////////////////////////////////////////////////////////////////
 int dpGetElementValueInt(string DPName, string ViewType, string SubElement, int &Value)
 {
-return dpGet("__navigator_" +
+  return dpGet("__navigator_" +
                dpTypeName(DPName)  +
                "_" +
                ViewType +
                dpGetElementName(DPName) +
                "." +SubElement, Value);
 }
+
 
 /////////////////////////////////////////////////////////////////////
 // Funtion: dpSetElementValueInt
@@ -961,7 +780,7 @@ return dpGet("__navigator_" +
 /////////////////////////////////////////////////////////////////////
 int dpSetElementValueInt(string DPName, string ViewType, string SubElement, int Value)
 {
-return dpSet("__navigator_" +
+  return dpSet("__navigator_" +
                dpTypeName(DPName)  +
                "_" +
                ViewType +
@@ -977,7 +796,7 @@ return dpSet("__navigator_" +
 /////////////////////////////////////////////////////////////////////
 int dpGetElementValueString(string DPName, string ViewType, string SubElement, string &Value)
 {
-return dpGet("__navigator_" +
+  return dpGet("__navigator_" +
                dpTypeName(DPName)  +
                "_" +
                ViewType +
@@ -1029,10 +848,7 @@ void getTrendNumber(string dp1, int &TrendNumber)
   dyn_string HulpSplit;
   
   split       = strsplit(dp1, ".");
-//split2      = strsplit(split[1], "_");
-//split3      = strsplit(split2[dynlen(split2)], "rend");
-//TrendNumber = split3[dynlen(split3)];
-	TrendNumber = split[2];
+  TrendNumber = split[2];
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1119,6 +935,7 @@ void NavConfigTrendFillDpeSelection(string datapoint)
 //////////////////////////////////////////////////////////////////////////////////
 
 //             GARBAGE  GARBAGE  GARBAGE  GARBAGE  GARBAGE  GARBAGE
+//             No longer in use
 /*
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: jump2StationSubrackRCU
@@ -1184,6 +1001,65 @@ void ProgressBar(float Maximum, float value)
 }
 */
 /*
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlot 
+//
+// Input : variable off all the plots, whether they are active or not.
+///////////////////////////////////////////////////////////////////////////
+navViewPlotArrangePlots(string dp1, int dp1Active,
+                        string dp2, int dp2Active,
+                        string dp3, int dp3Active,
+                        string dp4, int dp4Active,
+                        string dp5, int dp5Active,
+                        string dp6, int dp6Active,
+                        string dp7, int dp7Active,
+                        string dp8, int dp8Active)
+{
+  int panelSizeX=930;
+  int panelSizeY=730;
+  int totalActive = dp1Active + dp2Active + dp3Active + dp4Active;
+  
+  setValue("plot_1", "visible", dp1Active );
+  setValue("plot_2", "visible", dp2Active );
+  setValue("plot_3", "visible", dp3Active );
+  setValue("plot_4", "visible", dp4Active );
+
+  //Make a list of all the active plots
+  dyn_string activePlots;
+  if(dp1Active==1)
+    activePlots[dynlen(activePlots)+1] = 1;
+  if(dp2Active==1)
+    activePlots[dynlen(activePlots)+1] = 2;
+  if(dp3Active==1)
+    activePlots[dynlen(activePlots)+1] = 3;
+  if(dp4Active==1)
+    activePlots[dynlen(activePlots)+1] = 4;
+
+  float divider = dynlen(activePlots);
+  if(totalActive>=1)
+  {
+    for(int i=1; i<=dynlen(activePlots); i++)
+    {
+      if(dynlen(activePlots)<5)
+      {
+        setValue("plot_"+activePlots[i], "scale",  1.0, 1.0/divider);
+        setValue("plot_"+activePlots[i], "position", 10, (10 + (i-1)*(panelSizeY/divider)));
+      }
+      else
+      {
+        setValue("plot_"+activePlots[i], "scale",  0.5, 0.25);
+      }
+    }
+    getValue("plot_"+activePlots[1], "size", local_plotSizeX, local_plotSizeY);
+  }
+}
+*/
+
+
+
+
+
+/*
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: jump2Station
 //
@@ -1248,3 +1124,137 @@ void jump2StationSubrack()
 
 */
 
+/*
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence
+//
+//
+// Input: 1. datapoint name to plot
+// Output: 
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence(string spectrum_data, int plotNumber)
+{   
+
+    file fSpectrum;
+    int timeslot_size = 1;
+  string plotTitle;
+  //write content of string to spectrum[DP_number].dat
+  fSpectrum = fopen(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") +"spectrum" + plotNumber+ ".tmp", "w+");
+  fputs (spectrum_data, fSpectrum );
+  fclose(fSpectrum);
+
+  if (timeslot_size<=1)
+  {
+    system("rm " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
+    system("copy " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".tmp " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
+  }
+  else
+  {
+    system("type " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".tmp >> " + navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "output" + plotNumber+ ".dat");
+  }
+
+  dpGet($configDatapoint + "." + plotNumber + ".title", plotTitle);
+  string timeString = getCurrentTime();
+  plotTitle = plotTitle + " ["+timeString+"]";
+  
+  navViewPlotGenerateGnuPlotScriptFile(plotNumber, plotTitle);
+  navViewPlotGenerateGnuplotOutput(plotNumber);
+  navViewPlotConvertGnuplotOutput(plotNumber);
+  delay(1,0);
+  setValue("plot_" + plotNumber+ "", "fill","[pattern,[tile,bmp,gnuplot" + plotNumber+ ".bmp]]");
+}
+*/
+
+/*
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence4, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence4(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 4);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence5, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence5(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 5);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence6, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence6(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 6);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence7, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence7(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 7);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence8, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence8(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 8);
+}
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence3, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence3(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 3);
+}
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence1, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence1(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 1);
+}
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlot
+//
+// Input : 1. datapoint name to plot
+// Output: starts a specific plot, given as argument to the general
+//         function
+///////////////////////////////////////////////////////////////////////////
+//navViewPlot(string dp1, string dpName)
+//{
+//  dyn_string dp1Split = strsplit(dp1, ".");
+//  dpConnect("navViewPlotMainPlotSequence" + dp1Split[2], $datapoint+dpName);
+//}
+///////////////////////////////////////////////////////////////////////////
+// Function: navViewPlotMainPlotSequence2, used to start a specific gnuplot
+//                                         sequence
+// Input: 1. datapoint name  and spectrum data
+///////////////////////////////////////////////////////////////////////////
+navViewPlotMainPlotSequence2(string dp1, string spectrum_data)
+{
+  navViewPlotMainPlotSequence(spectrum_data, 2);
+}
+*/

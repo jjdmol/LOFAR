@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,549 383 330 330 N "_3DFace" 6
+PANEL,450 259 330 330 N "_3DFace" 6
 "$configDatapoint"
 "$updateRate"
 "$xrangeMax"
@@ -372,6 +372,19 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  80 176 21 176
+6 43
+"Border10"
+""
+1 20 318 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+39 0 0 0 0 0
+EE E
+0
+1
+LANG:1 30 This is a \n balloon "\n" text
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_fw/icon_info.bmp" 13434828 E 20 280 60 318
 13 5
 "btn_cancel"
 ""
