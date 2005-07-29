@@ -26,8 +26,8 @@ DH_Vis::DH_Vis (const string& name, double centerFreq,
   itsCenterFreq  (centerFreq), 
   itsMatrix      (0)
 {
-   itsNPols = itsPS.getInt32("polarisations");
-   itsNStations  = itsPS.getInt32("NRSP");
+   itsNPols = itsPS.getInt32("Input.NPolarisations");
+   itsNStations  = itsPS.getInt32("Input.NRSP");
    itsNBaselines = (itsNStations*itsNPols) * (itsNStations*itsNPols);
    
    itsNsamples = itsPS.getInt32("WH_Corr.samples");
