@@ -24,7 +24,7 @@ Stub_Delay::Stub_Delay (bool isInput, const ACC::APS::ParameterSet pSet)
     itsTHs          (0),
     itsConnections  (0)
 {
-  itsNRSP = itsPS.getInt32("NRSP");
+  itsNRSP = itsPS.getInt32("Input.NRSP");
   LOG_TRACE_FLOW_STR("Total number of RSPinputs in the Stub_Delay is " << itsNRSP);
   ASSERTSTR(itsNRSP >= 0, "Number of RSPinputs in the Stub_Delay must be greater than 0");
 

@@ -27,7 +27,7 @@ namespace LOFAR
     itsNFChannels = myPS.getInt32("DH_CorrCube.freqs");
     itsNStations  = myPS.getInt32("DH_CorrCube.stations");
     itsNTimes     = myPS.getInt32("DH_CorrCube.times");
-    itsNPol       = myPS.getInt32("polarisations");
+    itsNPol       = myPS.getInt32("Input.NPolarisations");
   }
   
 DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)
