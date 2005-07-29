@@ -25,17 +25,65 @@
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 #include <BBS3/MNS/MeqRequest.h>
+#include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 
 namespace LOFAR {
 
 MeqExprRep::~MeqExprRep()
-{}
+{
+  delete itsResult;
+  delete itsResVec;
+}
+
+const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
+					 MeqResult& result)
+{
+  // The value has to be calculated.
+  // Do not cache if no multiple parents.
+  if (itsNParents <= 1) {
+    result = getResult (request);
+    return result;
+  }
+  // Use a cache.
+  // Synchronize the calculations.
+// ## start critical section ##
+  // Only calculate if not already calculated in another thread.
+  if (itsReqId != request.getId()) {
+    if (!itsResult) itsResult = new MeqResult;
+    *itsResult = getResult (request);
+    itsReqId = request.getId();
+  }
+//## end critical section ##
+  return *itsResult;
+}
 
 MeqResult MeqExprRep::getResult (const MeqRequest&)
 {
   THROW (LOFAR::Exception,
 	 "MeqExpr::getResult not implemented in derived class");
+}
+
+const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
+					       MeqResultVec& result)
+{
+  // The value has to be calculated.
+  // Do not cache if no multiple parents.
+  if (itsNParents <= 1) {
+    result = getResultVec (request);
+    return result;
+  }
+  // Use a cache.
+  // Synchronize the calculations.
+// ## start critical section ##
+  // Only calculate if not already calculated in another thread.
+  if (itsReqId != request.getId()) {
+    if (!itsResVec) itsResVec = new MeqResultVec;
+    *itsResVec = getResultVec (request);
+    itsReqId = request.getId();
+  }
+//## end critical section ##
+  return *itsResVec;
 }
 
 MeqResultVec MeqExprRep::getResultVec (const MeqRequest& request)
@@ -68,13 +116,23 @@ MeqExpr& MeqExpr::operator= (const MeqExpr& that)
 
 
 
+MeqExprToComplex::MeqExprToComplex (MeqExpr real, MeqExpr imag)
+  : itsReal(real),
+    itsImag(imag)
+{
+  itsReal.incrNParents();
+  itsImag.incrNParents();
+}
+
 MeqExprToComplex::~MeqExprToComplex()
 {}
 
 MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
 {
-  MeqResult real = itsReal.getResult (request);
-  MeqResult imag = itsImag.getResult (request);
+  MeqResult realRes;
+  MeqResult imagRes;
+  const MeqResult& real = itsReal.getResultSynced (request, realRes);
+  const MeqResult& imag = itsImag.getResultSynced (request, imagRes);
   MeqResult result(request.nspid());
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     if (real.isDefined(spinx)) {
@@ -96,15 +154,25 @@ MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
 
 
 
+MeqExprAPToComplex::MeqExprAPToComplex (MeqExpr ampl, MeqExpr phase)
+  : itsAmpl (ampl),
+    itsPhase(phase)
+{
+  itsAmpl.incrNParents();
+  itsPhase.incrNParents();
+}
+
 MeqExprAPToComplex::~MeqExprAPToComplex()
 {}
 
 MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
 {
-  MeqResult ampl  = itsAmpl.getResult (request);
-  MeqResult phase = itsPhase.getResult (request);
+  MeqResult amplRes;
+  MeqResult phaseRes;
+  const MeqResult& ampl  = itsAmpl.getResultSynced (request, amplRes);
+  const MeqResult& phase = itsPhase.getResultSynced (request, phaseRes);
   MeqResult result(request.nspid());
-  MeqMatrixTmp res (tocomplex(cos(phase.getValue()), sin(phase.getValue())));
+  MeqMatrixTmp matt (tocomplex(cos(phase.getValue()), sin(phase.getValue())));
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     if (phase.isDefined(spinx)) {
       const MeqMatrix& ph = phase.getPerturbedValue(spinx);
@@ -115,11 +183,11 @@ MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
     } else if (ampl.isDefined(spinx)) {
       result.setPerturbedValue (spinx,
 				ampl.getPerturbedValue(spinx) *
-				res.clone());
+				matt.clone());
       result.setPerturbation (spinx, ampl.getPerturbation(spinx));
     }
   }
-  result.setValue (res * ampl.getValue());
+  result.setValue (matt * ampl.getValue());
   return result;
 }
 

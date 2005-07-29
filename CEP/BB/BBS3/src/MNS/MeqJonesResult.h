@@ -41,8 +41,12 @@ namespace LOFAR {
   class MeqJonesResult : public MeqResultVec
   {
   public:
+    // Create an null object.
+    MeqJonesResult()
+      : MeqResultVec() {}
+    
     // Create a time,frequency result for the given number of parameters.
-    explicit MeqJonesResult (int nspid = 0)
+    explicit MeqJonesResult (int nspid)
       : MeqResultVec(4, nspid) {}
 
     MeqJonesResult (const MeqJonesResult& that)

@@ -27,8 +27,7 @@
 // Class holding the LMN values of a point source
 
 //# Includes
-#include <BBS3/MNS/MeqResultVec.h>
-#include <BBS3/MNS/MeqRequest.h>
+#include <BBS3/MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR {
@@ -42,7 +41,7 @@ class MeqPointSource;
 class MeqPhaseRef;
 
 
-class MeqLMN
+class MeqLMN: public MeqExprRep
 {
 public:
   // Construct for the given point source.
@@ -61,8 +60,6 @@ public:
 private:
   MeqPointSource*    itsSource;
   const MeqPhaseRef* itsPhaseRef;
-  MeqRequestId itsLastReqId;
-  MeqResultVec itsResult;
 };
 
 // @}

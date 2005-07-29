@@ -29,7 +29,9 @@
 namespace LOFAR {
 
 MeqJonesExprRep::~MeqJonesExprRep()
-{}
+{
+  delete itsResult;
+}
 
 MeqJonesExpr::MeqJonesExpr (const MeqJonesExpr& that)
 : itsRep (that.itsRep)
@@ -48,6 +50,28 @@ MeqJonesExpr& MeqJonesExpr::operator= (const MeqJonesExpr& that)
     }
   }
   return *this;
+}
+
+const MeqJonesResult& MeqJonesExprRep::calcResult (const MeqRequest& request,
+						   MeqJonesResult& result)
+{
+  // The value has to be calculated.
+  // Do not cache if no multiple parents.
+  if (itsNParents <= 1) {
+    result = getResult (request);
+    return result;
+  }
+  // Use a cache.
+  // Synchronize the calculations.
+// ## start critical section ##
+  // Only calculate if not already calculated in another thread.
+  if (itsReqId != request.getId()) {
+    if (!itsResult) itsResult = new MeqJonesResult;
+    *itsResult = getResult (request);
+    itsReqId = request.getId();
+  }
+//## end critical section ##
+  return *itsResult;
 }
 
 }

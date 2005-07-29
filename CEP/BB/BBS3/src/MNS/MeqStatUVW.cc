@@ -44,6 +44,9 @@ MeqStatUVW::MeqStatUVW (MeqStation* station,
 			const MeqPhaseRef* phaseRef)
 : itsStation   (station),
   itsPhaseRef  (phaseRef),
+  itsU         (0),
+  itsV         (0),
+  itsW         (0),
   itsLastReqId (InitMeqRequestId)
 {
   itsFrame.set (itsPhaseRef->direction());

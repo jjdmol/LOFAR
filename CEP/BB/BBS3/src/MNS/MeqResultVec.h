@@ -75,6 +75,10 @@ private:
 class MeqResultVec
 {
 public:
+  // Create a null object.
+  MeqResultVec()
+    : itsRep(0) {}
+
   // Create a time,frequency result for the given number of parameters.
   explicit MeqResultVec (int size, int nspid = 0);
 

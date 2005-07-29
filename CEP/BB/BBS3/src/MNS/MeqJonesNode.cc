@@ -34,7 +34,12 @@ MeqJonesNode::MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
   itsExpr12 (elem12),
   itsExpr21 (elem21),
   itsExpr22 (elem22)
-{}
+{
+  itsExpr11.incrNParents();
+  itsExpr12.incrNParents();
+  itsExpr21.incrNParents();
+  itsExpr22.incrNParents();
+}
 
 MeqJonesNode::~MeqJonesNode()
 {}
@@ -43,13 +48,12 @@ MeqJonesResult MeqJonesNode::getResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 
-  MeqJonesResult res;
-#pragma omp critical(MeqTree)
+  MeqJonesResult res(0);
   {
-    res.result11() = itsExpr11.getResult (request);
-    res.result12() = itsExpr12.getResult (request);
-    res.result21() = itsExpr21.getResult (request);
-    res.result22() = itsExpr22.getResult (request);
+    itsExpr11.getResultSynced (request, res.result11());
+    itsExpr12.getResultSynced (request, res.result12());
+    itsExpr21.getResultSynced (request, res.result21());
+    itsExpr22.getResultSynced (request, res.result22());
   }
   return res;
 }

@@ -31,7 +31,11 @@ namespace LOFAR {
 
   MeqJonesSum::MeqJonesSum (const std::vector<MeqJonesExpr>& expr)
     : itsExpr (expr)
-  {}
+  {
+    for (uint i=0; i<itsExpr.size(); ++i) {
+      itsExpr[i].incrNParents();
+    }
+  }
 
   MeqJonesSum::~MeqJonesSum()
   {}
@@ -56,7 +60,8 @@ namespace LOFAR {
     for (std::vector<MeqJonesExpr>::iterator iter=itsExpr.begin();
 	 iter != itsExpr.end();
 	 ++iter) {
-      MeqJonesResult er = iter->getResult (request);
+      MeqJonesResult erBuf;
+      const MeqJonesResult& er = iter->getResultSynced (request, erBuf);
       const MeqResult& er11 = er.getResult11();
       const MeqResult& er12 = er.getResult12();
       const MeqResult& er21 = er.getResult21();

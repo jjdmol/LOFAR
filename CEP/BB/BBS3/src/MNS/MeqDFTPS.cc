@@ -36,7 +36,7 @@ using namespace casa;
 namespace LOFAR {
 
 
-MeqDFTPS::MeqDFTPS (MeqLMN* lmn, MeqStatUVW* uvw)
+MeqDFTPS::MeqDFTPS (const MeqExpr& lmn, MeqStatUVW* uvw)
 : itsLMN (lmn),
   itsUVW (uvw)
 {}
@@ -67,7 +67,8 @@ MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
   const MeqMatrix& v = resV.getValue();
   const MeqMatrix& w = resW.getValue();
   // Calculate the DFT contribution for this station for the source.
-  MeqResultVec lmn = itsLMN->getResultVec (request);
+  MeqResultVec lmnBuf;
+  const MeqResultVec& lmn = itsLMN.getResultVecSynced (request, lmnBuf);
   const MeqResult& lrk  = lmn[0];
   const MeqResult& mrk  = lmn[1];
   const MeqResult& nrk  = lmn[2];

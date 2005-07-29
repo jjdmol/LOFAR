@@ -51,19 +51,20 @@ MeqJonesResult MeqBaseLinPS::getResult (const MeqRequest& request)
   ASSERT (request.ny() == 1);
   // Allocate the result.
   MeqJonesResult result(request.nspid());
-#pragma omp critical(MeqTree)
   {
     MeqResult& resXX = result.result11();
     MeqResult& resXY = result.result12();
     MeqResult& resYX = result.result21();
     MeqResult& resYY = result.result22();
-    // Calculate the source fluxes.
-    MeqResult ik = itsSource->getI().getResult (request);
-    MeqResult qk = itsSource->getQ().getResult (request);
-    MeqResult uk = itsSource->getU().getResult (request);
-    MeqResult vk = itsSource->getV().getResult (request);
+    // Calculate the source fluxes. 
+    MeqResult ikBuf, qkBuf, ukBuf, vkBuf;
+    const MeqResult& ik = itsSource->getI().getResultSynced (request, ikBuf);
+    const MeqResult& qk = itsSource->getQ().getResultSynced (request, qkBuf);
+    const MeqResult& uk = itsSource->getU().getResultSynced (request, ukBuf);
+    const MeqResult& vk = itsSource->getV().getResultSynced (request, vkBuf);
     // Calculate the baseline DFT.
-    MeqResult dft = itsDFT.getResult (request);
+    MeqResult dftBuf;
+    const MeqResult& dft = itsDFT.getResultSynced (request, dftBuf);
     // Calculate the XX values, etc.
     MeqMatrix uvk = tocomplex(uk.getValue(), vk.getValue());
     resXX.setValue ((ik.getValue() + qk.getValue()) * dft.getValue());

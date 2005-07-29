@@ -28,6 +28,8 @@
 
 //# Includes
 #include <Common/lofar_vector.h>
+#include <BBS3/MNS/MeqRequestId.h>
+#include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqResultVec.h>
 
@@ -37,9 +39,6 @@ namespace LOFAR {
 // \addtogroup MNS
 // @{
 
-//# Forward declarations
-class MeqRequest;
-
 
 // This class is the (abstract) base class for an expression.
 
@@ -48,24 +47,50 @@ class MeqExprRep
 public:
   // The default constructor.
   MeqExprRep()
-    : itsCount(0)
+    : itsCount   (0),
+      itsNParents(0),
+      itsResult  (0),
+      itsResVec  (0),
+      itsReqId   (InitMeqRequestId)
     {}
 
   virtual ~MeqExprRep();
 
+  // Link to this node (incrementing the refcount).
   void link()
     { itsCount++; }
 
+  // Link to this node (decrementing the refcount).
+  // The object is deleted if the refcount gets zero.
   static void unlink (MeqExprRep* rep)
     { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
 
+  // Increment nr of parents.
+  void incrNParents()
+    { itsNParents++; }
+
   // Get the single result of the expression for the given domain.
+  // The return value is a reference to the true result. This can either
+  // be a reference to the cached value (if the object maintains a cache)
+  // or to the result object in the parameter list (if no cache).
+  // If the result is stored in the cache, it is done in a thread-safe way.
+  // Note that a cache is used if the expression has multiple parents.
+  const MeqResult& getResultSynced (const MeqRequest& request,
+				    MeqResult& result)
+    { return itsReqId == request.getId()  ?
+	*itsResult : calcResult(request,result); }
+
+  // Get the actual result.
   // The default implementation throw an exception.
   virtual MeqResult getResult (const MeqRequest&);
 
   // Get the multi result of the expression for the given domain.
   // The default implementation calls getResult.
-  virtual MeqResultVec getResultVec (const MeqRequest& request);
+  const MeqResultVec& getResultVecSynced (const MeqRequest& request,
+					  MeqResultVec& result)
+    { return itsReqId == request.getId()  ?
+	*itsResVec : calcResultVec(request,result); }
+  virtual MeqResultVec getResultVec (const MeqRequest&);
   // </group>
 
 private:
@@ -73,7 +98,17 @@ private:
   MeqExprRep (const MeqExprRep&);
   MeqExprRep& operator= (const MeqExprRep&);
 
-  int itsCount;
+  // Calculate the actual result in a cache thread-safe way.
+  // <group>
+  const MeqResult& calcResult (const MeqRequest&, MeqResult&);
+  const MeqResultVec& calcResultVec (const MeqRequest&, MeqResultVec&);
+  // </group>
+
+  int           itsCount;      //# Reference count
+  int           itsNParents;   //# Nr of parents
+  MeqResult*    itsResult;     //# Possibly cached result
+  MeqResultVec* itsResVec;     //# Possibly cached result vector
+  MeqRequestId  itsReqId;      //# Request-id of cached result.
 };
 
 
@@ -96,14 +131,24 @@ public:
   // Assignment (reference semantics).
   MeqExpr& operator= (const MeqExpr&);
 
+  // Increment nr of parents.
+  void incrNParents()
+    { itsRep->incrNParents(); }
+
   // Get the result of the expression for the given domain.
   // getResult will throw an exception if the node has a multi result.
   // getResultVec will always succeed.
   // <group>
-  MeqResult getResult (const MeqRequest& request)
+  const MeqResult getResult (const MeqRequest& request)
     { return itsRep->getResult (request); }
-  MeqResultVec getResultVec (const MeqRequest& request)
+  const MeqResult& getResultSynced (const MeqRequest& request,
+				    MeqResult& result)
+    { return itsRep->getResultSynced (request, result); }
+  const MeqResultVec getResultVec (const MeqRequest& request)
     { return itsRep->getResultVec (request); }
+  const MeqResultVec& getResultVecSynced (const MeqRequest& request,
+					  MeqResultVec& result)
+    { return itsRep->getResultVecSynced (request, result); }
   // </group>
 
 private:
@@ -115,8 +160,7 @@ private:
 class MeqExprToComplex: public MeqExprRep
 {
 public:
-  MeqExprToComplex (MeqExpr real, MeqExpr imag)
-    : itsReal(real), itsImag(imag) {;}
+  MeqExprToComplex (MeqExpr real, MeqExpr imag);
 
   virtual ~MeqExprToComplex();
 
@@ -132,14 +176,12 @@ private:
 class MeqExprAPToComplex: public MeqExprRep
 {
 public:
-  MeqExprAPToComplex (MeqExpr ampl, MeqExpr phase)
-    : itsAmpl(ampl), itsPhase(phase) {;}
+  MeqExprAPToComplex (MeqExpr ampl, MeqExpr phase);
 
   virtual ~MeqExprAPToComplex();
 
   virtual MeqResult getResult (const MeqRequest&);
 
-private:
   MeqExpr itsAmpl;
   MeqExpr itsPhase;
 };
