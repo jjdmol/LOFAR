@@ -18,12 +18,12 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name, short startfreq, 
+DH_Vis::DH_Vis (const string& name, double centerFreq, 
 		const ACC::APS::ParameterSet pSet)
 : DataHolder    (name, "DH_Vis"),
   itsPS         (pSet),
   itsBuffer     (0),
-  itsStartFreq  (startfreq), 
+  itsCenterFreq  (centerFreq), 
   itsMatrix      (0)
 {
    itsNPols = itsPS.getInt32("polarisations");
@@ -37,7 +37,7 @@ DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
     itsPS     (that.itsPS),
     itsBuffer (0),
-    itsStartFreq (that.itsStartFreq),
+    itsCenterFreq (that.itsCenterFreq),
     itsNStations (that.itsNStations),
     itsNBaselines(that.itsNBaselines),
     itsNPols  (that.itsNPols),
