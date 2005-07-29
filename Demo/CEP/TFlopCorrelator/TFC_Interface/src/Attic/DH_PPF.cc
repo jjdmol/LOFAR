@@ -27,9 +27,10 @@ namespace LOFAR
   {
     ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
     itsNSamples = myPS.getInt32("DH_PPF.samples");
-//     itsNStations  = myPS.getInt32("WH_SubBand.stations");
-//     itsNTimes     = myPS.getInt32("WH_SubBand.times");
-//     itsNPol       = myPS.getInt32("WH_SubBand.pols");
+    itsNStations  = myPS.getInt32("WH_SubBand.stations");
+    itsNTimes     = myPS.getInt32("WH_SubBand.times");
+    itsNPol       = myPS.getInt32("WH_SubBand.pols");
+    itsNFilters   = myPS.getInt32("WH_SubBand.filters");
   }
   
 DH_PPF::DH_PPF(const DH_PPF& that)
@@ -81,15 +82,15 @@ void DH_PPF::fillDataPointers() {
   itsBuffer = getData<BufferType> ("Buffer");
 }
 
-void DH_FIR::InitTimeCursor(short station, short pol, short time)
+void DH_PPF::InitTimeCursor(short station, short pol, short time)
 {
-  RectMatrix<DH_FIR::BufferType>::cursorType itsBankCursor;
+  RectMatrix<DH_PPF::BufferType>::cursorType itsBankCursor;
   itsBankCursor = itsMatrix->getCursor(station*itsStationDim+pol*itsPolDim+time*itsTimeDim);
 }
 
-void DH_FIR::setNextBank(DH_FIR::BufferType &value)
+void DH_PPF::setNextBank(DH_PPF::BufferType &value)
 {
-  Matrix->setValue(itsBankCursor, value);
+  itsMatrix->setValue(itsBankCursor, value);
   itsMatrix->moveCursor(&itsBankCursor, itsBankDim);
   return;
 }

@@ -10,6 +10,8 @@
 #ifndef TFLOPCORRELATOR_DH_PPF_H
 #define TFLOPCORRELATOR_DH_PPF_H
 
+#include <TFC_Interface/RectMatrix.h>
+#include <TFC_Interface/DH_FIR.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 
@@ -43,6 +45,9 @@ public:
   void setNextBank(BufferType &value);
   //BufferType** getnextTime();
 
+  void InitTimeCursor(short station, short pol, short time);
+  void setNextBank(BufferType value);
+
 private:
   /// Forbid assignment.
   DH_PPF& operator= (const DH_PPF&);
@@ -50,6 +55,12 @@ private:
   BufferType*  itsBuffer; 
   unsigned int itsBufSize;
   unsigned int itsNSamples;
+  unsigned int itsNStations;
+  unsigned int itsNTimes;
+  unsigned int itsNPol;
+  unsigned int itsNFilters;
+
+  RectMatrix<BufferType>* itsMatrix;
 
   // attributes needed to access the RectMatrix
   dimType itsStationDim;
