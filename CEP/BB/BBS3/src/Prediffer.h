@@ -28,7 +28,6 @@
 
 #include <casa/BasicSL/Complex.h>
 #include <casa/Arrays/Matrix.h>
-#include <casa/Quanta/MVBaseline.h>
 #include <scimath/Fitting/LSQFit.h>
 
 #include <BBS3/ParmData.h>
@@ -256,13 +255,13 @@ private:
   vector<vector<int> >  itsSrcGrp;      //# sources in each group
   vector<int>           itsSrcNrMap;    //# map of all srcnr to used srcnr
   vector<int>           itsPeelSourceNrs;
-  vector<MeqLMN*>       itsLMN;         //# LMN for sources used
+  vector<MeqExpr>       itsLMN;         //# LMN for sources used
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;     //# UVW values per station
-  vector<casa::MVBaseline> itsBaselines;
   vector<MeqJonesExpr>  itsExpr;        //# solve expression tree per baseline
   vector<MeqJonesExpr>  itsResExpr;     //# residual expr tree per baseline
 
+  int    itsNrSelBl;                  //# nr of selected baselines
   double itsStartFreq;                //# start frequency of observation
   double itsEndFreq;
   double itsStepFreq;
@@ -291,7 +290,6 @@ private:
   casa::Matrix<bool>   itsBLSelection; //# true = baseline is selected
   casa::Matrix<int>    itsBLIndex;     //# baseline index of antenna pair
                                        //# -1 is baseline is absent
-  unsigned int   itsNrSelBl;       //# nr of selected baselines
   unsigned int   itsTimeIndex;     //# The index of the current time
   unsigned int   itsNrTimes;       //# The number of times in the time domain
   unsigned int   itsNrBufTB;       //# Nr of times/baselines fitting in buffer

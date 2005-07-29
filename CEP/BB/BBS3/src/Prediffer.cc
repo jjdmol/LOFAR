@@ -231,17 +231,12 @@ Prediffer::~Prediffer()
        iter++) {
     delete *iter;
   }
-  for (vector<MeqLMN*>::iterator iter = itsLMN.begin();
-       iter != itsLMN.end();
-       iter++) {
-    delete *iter;
-  }
 
   delete itsDataMap;
   delete itsFlagsMap;
 
   // clear up the matrix pool
-  //  MeqMatrixComplexArr::poolDeactivate();
+  MeqMatrixComplexArr::poolDeactivate();
 }
 
 
@@ -346,9 +341,6 @@ void Prediffer::fillStations (const vector<int>& antnrs)
 //----------------------------------------------------------------------
 void Prediffer::fillBaselines (const vector<int>& antnrs)
 {
-  MeqDomain  domain;
-  MeqRequest req(domain, 1, 1);
-
   // Convert antnrs to bools.
   uint maxAnt = itsStations.size();
   Vector<bool> useAnt(maxAnt);
@@ -358,7 +350,7 @@ void Prediffer::fillBaselines (const vector<int>& antnrs)
     ASSERT (ant < maxAnt);
     useAnt[ant] = true;
   }
-  itsBaselines.reserve (itsAnt1.size());
+  itsNrSelBl = 0;
   itsBLIndex.resize (maxAnt, maxAnt);
   itsBLIndex = -1;
   itsBLSelection.resize (maxAnt, maxAnt);
@@ -370,18 +362,8 @@ void Prediffer::fillBaselines (const vector<int>& antnrs)
     ASSERT (a1 < maxAnt  &&  a2 < maxAnt);
     if (useAnt[a1] && useAnt[a2]) {
       // Assign a baseline number and set to selected.
-      itsBLIndex(a1,a2) = itsBaselines.size();
       itsBLSelection(a1,a2) = true;
-      // Create an MVBaseline object for each antenna pair.
-      MVPosition pos1
-	(itsStations[a1]->getPosX().getResult(req).getValue().getDouble(),
-	 itsStations[a1]->getPosY().getResult(req).getValue().getDouble(),
-	 itsStations[a1]->getPosZ().getResult(req).getValue().getDouble());
-      MVPosition pos2
-	(itsStations[a2]->getPosX().getResult(req).getValue().getDouble(),
-	 itsStations[a2]->getPosY().getResult(req).getValue().getDouble(),
-	 itsStations[a2]->getPosZ().getResult(req).getValue().getDouble());
-      itsBaselines.push_back (MVBaseline (pos1, pos2));
+      itsBLIndex(a1,a2) = itsNrSelBl++;
     }
   }
   countBaseCorr();
@@ -396,15 +378,15 @@ void Prediffer::fillBaselines (const vector<int>& antnrs)
 //----------------------------------------------------------------------
 void Prediffer::countBaseCorr()
 {
-  itsNrSelBl = 0;
+  int nrSelBl = 0;
   const bool* sel = itsBLSelection.data();
   const int*  inx = itsBLIndex.data();
   for (uint i=0; i<itsBLSelection.nelements(); ++i) {
     if (sel[i]  &&  inx[i] >= 0) {
-      itsNrSelBl++;
+      nrSelBl++;
     }
   }
-  ASSERTSTR (itsNrSelBl > 0, "No valid baselines selected");
+  ASSERTSTR (nrSelBl > 0, "No valid baselines selected");
   itsNSelCorr = 0;
   for (int i=0; i<itsNCorr; ++i) {
     if (itsCorr[i]) {
@@ -461,8 +443,9 @@ void Prediffer::getSources()
   itsLMN.reserve (nrused);
   for (int i=0; i<nrused; ++i) {
     int src = itsSrcNrMap[i];
-    itsLMN.push_back (new MeqLMN(&(itsSources[src])));
-    itsLMN[i]->setPhaseRef (&itsPhaseRef);
+    MeqLMN* lmn = new MeqLMN(&(itsSources[src]));
+    lmn->setPhaseRef (&itsPhaseRef);
+    itsLMN.push_back (lmn);
   }
 }
 
@@ -570,9 +553,9 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
   }    
 
   // Make an expression for each baseline.
-  itsExpr.resize (itsBaselines.size());
+  itsExpr.resize (itsNrSelBl);
   if (useStatParm) {
-    itsResExpr.resize (itsBaselines.size());
+    itsResExpr.resize (itsNrSelBl);
   }
   int nrant = itsBLIndex.nrow();
   for (int ant2=0; ant2<nrant; ant2++) {
