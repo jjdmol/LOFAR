@@ -20,7 +20,9 @@ class DH_Vis: public DataHolder
 public:
   typedef dcomplex BufferType;
 
-  explicit DH_Vis (const string& name, short startfreq, const LOFAR::ACC::APS::ParameterSet pSet);
+  // Constructor with centerFreq being the center frequency of the subband
+  explicit DH_Vis (const string& name, double centerFreq, 
+		   const LOFAR::ACC::APS::ParameterSet pSet);
 
   DH_Vis(const DH_Vis&);
 
@@ -33,8 +35,6 @@ public:
 
   /// Get write access to the Buffer.
   BufferType* getBuffer();
-
-  void setBuffer(DH_Vis::BufferType*);
 
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
@@ -55,7 +55,7 @@ private:
   BufferType*  itsBuffer;    // data array 
   unsigned int itsBufSize;
 
-  short itsStartFreq; // first freq channel ID
+  double itsCenterFreq; // Subband center frequency
   short itsNStations; // #stations in the buffer
   short itsNBaselines;
   short itsNPols;     // #polarisations 
@@ -74,9 +74,6 @@ private:
 inline DH_Vis::BufferType* DH_Vis::getBuffer()
   { return itsBuffer; }
 
-inline void DH_Vis::setBuffer(DH_Vis::BufferType* buffer)
-  { itsBuffer = buffer; }
- 
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
 
