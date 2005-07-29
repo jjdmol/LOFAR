@@ -151,7 +151,8 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
     // Array is larger than arrays in pool.
     // So allocate it separately.
     // Still use new to get enough memory for alignment.
-    newArr = (MeqMatrixComplexArr*) new char[sizeof(MeqMatrixComplexArr) + 8 +
+    newArr = (MeqMatrixComplexArr*) new char[
+			    ((sizeof(MeqMatrixComplexArr)+7) & -7) + 8 +
 			    2 * ((nx * ny + 1) & ~1) * sizeof(double)];
     // placement new
     // set inPool to false so this matrix will be deleted.
@@ -180,7 +181,7 @@ void MeqMatrixComplexArr::operator delete(void *ptr)
     theirPool.push((MeqMatrixComplexArr *) ptr);
   } else {
     MeqMatrixRep::ndeleted++;
-    delete (char *) ptr;
+    delete [] (char *) ptr;
   }
 
 #if defined TIMER
@@ -194,7 +195,8 @@ void MeqMatrixComplexArr::poolActivate(int nelements)
   if (nelements != theirNElements) {
     poolDeactivate();
     theirNElements     = nelements;
-    theirPoolArraySize = sizeof(MeqMatrixComplexArr) + 8 + 2 * ((theirNElements + 1) & ~1) * sizeof(double);
+    theirPoolArraySize = ((sizeof(MeqMatrixComplexArr) + 7) & -7) + 8 +
+			 2 * ((theirNElements + 1) & ~1) * sizeof(double);
   }
 }
 
@@ -204,7 +206,7 @@ void MeqMatrixComplexArr::poolDeactivate()
   deque<MeqMatrixComplexArr*>::iterator pos;
 #pragma omp critical(poolLock)
   while (!theirPool.empty()) {
-    delete (char *) theirPool.top();
+    delete [] (char *) theirPool.top();
     theirPool.pop();
     MeqMatrixRep::ndeleted++;
   }
