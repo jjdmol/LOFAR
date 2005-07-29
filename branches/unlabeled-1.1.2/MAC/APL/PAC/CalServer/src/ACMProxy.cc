@@ -84,7 +84,6 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 	m_update_subband = 0;
 
 	LOG_DEBUG("opening port: m_rspdriver");
-
 	m_rspdriver.open();
 	
 	//
@@ -111,9 +110,17 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
       {
-	LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-	port.close();
-	port.setTimer(2.0);
+	// if we get disconnected, but we're in test mode, simply continue to the idle state
+	if (GET_CONFIG("CalServer.ACCTestEnable", i))
+	{
+	  TRAN(ACMProxy::idle);
+	}
+	else
+	{  
+	  LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+	  port.close();
+	  port.setTimer(2.0);
+	}
       }
       break;
 
