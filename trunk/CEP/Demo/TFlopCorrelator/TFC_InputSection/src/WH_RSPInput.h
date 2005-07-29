@@ -23,16 +23,14 @@
 #ifndef TFLOPCORRELATOR_WH_RSPINPUT_H
 #define TFLOPCORRELATOR_WH_RSPINPUT_H
 
-#include <APS/ParameterSet.h>
-#include <Common/lofar_string.h>
+#include <pthread.h>
 #include <tinyCEP/TinyDataManager.h>
 #include <tinyCEP/WorkHolder.h>
-#include <Transport/TH_Ethernet.h>
-
-#include <pthread.h>
-
+#include <APS/ParameterSet.h>
+//#include <Common/lofar_string.h>
+#include <Transport/TransportHolder.h>
 #include <TFC_Interface/RSPTimeStamp.h>
-#include <BufferController.h>
+#include <TFC_InputSection/BufferController.h>
 
 
 namespace LOFAR
@@ -54,7 +52,7 @@ namespace LOFAR
   {
     BufferController<subbandType>** SubbandBuffer;
     BufferController<metadataType>** MetadataBuffer;
-    TH_Ethernet* Connection; 
+    TransportHolder& Connection; 
     int FrameSize;
     int SubbandSize;
     int nrPacketsInFrame;
@@ -72,18 +70,14 @@ namespace LOFAR
     public:
 
       explicit WH_RSPInput(const string& name, 
-                           const ACC::APS::ParameterSet pset,
-                           const string device,
-                           const string srcMAC,
-                           const string destMAC,
+                           const ACC::APS::ParameterSet ps,
+                           TransportHolder& th,
                            const bool isSyncMaster);
       virtual ~WH_RSPInput();
     
       static WorkHolder* construct(const string& name, 
-                                   const ACC::APS::ParameterSet pset,
-                                   const string device,
-                                   const string srcMAC,
-                                   const string destMAC,
+                                   const ACC::APS::ParameterSet ps,
+                                   TransportHolder& th,
 				   const bool isSyncMaster);
 	
       virtual WH_RSPInput* make(const string& name);
@@ -110,14 +104,14 @@ namespace LOFAR
       thread_args writerinfo;
 
       // raw ethernet interface 
-      TH_Ethernet* itsInputConnection;
-      string itsDevice;
-      string itsSrcMAC;
-      string itsDestMAC;
+      TransportHolder& itsTH;
       
-      ACC::APS::ParameterSet itsPset;
+      // ACC parameters interface
+      ACC::APS::ParameterSet itsPS;
       
+      // Sync Master or slave
       bool itsSyncMaster;
+     
       int itsSzRSPframe;
       int itsNpackets;
       int itsNRSPOutputs;

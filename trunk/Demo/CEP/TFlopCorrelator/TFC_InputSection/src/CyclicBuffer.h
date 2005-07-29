@@ -118,8 +118,6 @@ class CyclicBuffer
   int itsTailIdx;
   int itsCount;
 
-  int itsMinCount;
-
   pthread_mutex_t buffer_mutex;
   pthread_cond_t  data_available;
   pthread_cond_t  space_available;
@@ -129,8 +127,7 @@ template<class TYPE>
 CyclicBuffer<TYPE>::CyclicBuffer() :
     itsHeadIdx(0),
     itsTailIdx(0),
-    itsCount(0),
-    itsMinCount(0)
+    itsCount(0)
 {
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);

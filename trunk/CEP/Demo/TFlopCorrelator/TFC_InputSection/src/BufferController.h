@@ -31,7 +31,6 @@
 /* Main purpose of the BufferController class is to control a type independant
    cyclic buffer */
 
-
 namespace LOFAR
 {
 
@@ -45,9 +44,9 @@ public:
   
   // read first element 
   TYPE* getAutoReadPtr();
-  // write element
+  // write element at the end
   TYPE* getAutoWritePtr();
-  // read a block of elements beginning at AutoReadPtr+offset
+  // read a block of elements beginning at first element+offset
   TYPE* getBlockReadPtr(int offset, int size);
   // get pointer and id of first element
   TYPE* getFirstReadPtr(int& ID);

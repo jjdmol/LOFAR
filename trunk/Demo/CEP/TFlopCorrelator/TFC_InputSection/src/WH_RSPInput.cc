@@ -42,7 +42,7 @@ void* WriteToBufferThread(void* arguments)
   thread_args* args = (thread_args*)arguments;
   
   char recvframe[9000];
-  int stationid, seqid, blockid, itemid, offset;
+  int seqid, blockid, itemid, offset;
   timestamp_t actualstamp, nextstamp;
   subbandType* subband;
   metadataType* metadata;
@@ -58,7 +58,7 @@ void* WriteToBufferThread(void* arguments)
    
     // catch a frame from input connection
     if (readnew) {
-      args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
+      args->Connection.recvBlocking( (void*)recvframe, args->FrameSize, 0);
     }
 
     // get stationid
@@ -194,41 +194,34 @@ void* WriteToBufferThread(void* arguments)
 }
 
 WH_RSPInput::WH_RSPInput(const string& name, 
-                         const ACC::APS::ParameterSet pset,
-                         const string device,
-                         const string srcMAC,
-                         const string destMAC,
+                         const ACC::APS::ParameterSet ps,
+                         TransportHolder& th,
                          const bool isSyncMaster)
   : WorkHolder ((isSyncMaster ? 1 : 2), 
-                1 + (isSyncMaster ? pset.getInt32("NRSP")-1 : 0), 
+                1 + (isSyncMaster ? ps.getInt32("Input.NRSP")-1 : 0), 
                 name, 
                 "WH_RSPInput"),
-    itsDevice(device),
-    itsSrcMAC(srcMAC),
-    itsDestMAC(destMAC),
-    itsPset (pset),
+    itsTH(th),
+    itsPS (ps),
     itsSyncMaster(isSyncMaster)
 {
   char str[32];
 
   // get parameters
-  itsCyclicBufferSize = pset.getInt32("Input.Cylicbuffersize");
-  itsNRSPOutputs = pset.getInt32("Input.NRSP");
-  itsNpackets = pset.getInt32("Input.NPacketsInFrame");
-  itsNSubbands = pset.getInt32("Input.NSubbands");
-  itsNPolarisations = pset.getInt32("Input.NPolarisations");
-  itsNSamplesToCopy = pset.getInt32("Input.NSamplesToDH");
+  itsCyclicBufferSize = ps.getInt32("Input.Cylicbuffersize");
+  itsNRSPOutputs = ps.getInt32("Input.NRSP");
+  itsNpackets = ps.getInt32("Input.NPacketsInFrame");
+  itsNSubbands = ps.getInt32("Input.NSubbands");
+  itsNPolarisations = ps.getInt32("Input.NPolarisations");
+  itsNSamplesToCopy = ps.getInt32("Input.NSamplesToDH");
  
   // size of an EPA packet in bytes 
   int sizeofpacket   = ( itsNPolarisations * 
                          sizeof(u16complex) * 
-                         itsNSubbands) + pset.getInt32("SzEPAheader"); 
+                         itsNSubbands) + ps.getInt32("SzEPAheader"); 
  
   // size of a RSP frame in bytes
   itsSzRSPframe = itsNpackets * sizeofpacket;
-
-  // create raw ethernet interface to catch incoming RSP data
-  itsInputConnection = new TH_Ethernet(itsDevice, itsSrcMAC, itsDestMAC, 0x000 );
  
   // create incoming dataholder holding the delay information 
   getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
@@ -240,7 +233,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
     itsSubbandBuffer[s] =  new BufferController<subbandType>(itsCyclicBufferSize);
     itsMetadataBuffer[s] = new BufferController<metadataType>(itsCyclicBufferSize);  
     snprintf(str, 32, "DH_RSP_out_%d", s);
-    getDataManager().addOutDataHolder(s, new DH_RSP(str, pset)); 
+    getDataManager().addOutDataHolder(s, new DH_RSP(str, ps)); 
   }
    
   // create dataholders for RSPInput synchronization
@@ -266,25 +259,21 @@ WH_RSPInput::~WH_RSPInput()
   }
   delete [] itsSubbandBuffer;
   delete [] itsMetadataBuffer;
-
-  delete itsInputConnection;
 }
 
 
 WorkHolder* WH_RSPInput::construct(const string& name,
-                                   const ACC::APS::ParameterSet pset,
-                                   const string device,
-                                   const string srcMAC,
-                                   const string destMAC,
+                                   const ACC::APS::ParameterSet ps,
+                                   TransportHolder& th,
 				   const bool isSyncMaster)
 {
-  return new WH_RSPInput(name, pset, device, srcMAC, destMAC, isSyncMaster);
+  return new WH_RSPInput(name, ps, th, isSyncMaster);
 }
 
 
 WH_RSPInput* WH_RSPInput::make(const string& name)
 {
-  return new WH_RSPInput(name, itsPset, itsDevice, itsSrcMAC, itsDestMAC, itsSyncMaster);
+  return new WH_RSPInput(name, itsPS, itsTH, itsSyncMaster);
 }
 
 
@@ -293,7 +282,7 @@ void WH_RSPInput::preprocess()
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
   writerinfo.SubbandBuffer      = itsSubbandBuffer;
-  writerinfo.Connection         = itsInputConnection;
+  writerinfo.Connection         = itsTH;
   writerinfo.FrameSize          = itsSzRSPframe;
   writerinfo.nrPacketsInFrame   = itsNpackets;
   writerinfo.nrSubbandsInPacket = itsNSubbands;
