@@ -20,17 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/05/03 11:23:06  gvd
-//  Changed for new build environment
-//
-//  Revision 1.2  2002/03/01 08:29:35  gvd
-//  Use new lofar_*.h for namespaces
-//  Use Debug.h instead of firewall.h
-//
-//  Revision 1.1  2001/03/29 11:24:38  gvd
-//  Added classes to write an MS
-//
 //////////////////////////////////////////////////////////////////////
 
 
@@ -39,6 +28,7 @@
 
 //# Includes
 #include <Common/LofarTypes.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -51,14 +41,13 @@ class MSWriter
 {
 public:
   // Construct the MS with a given name.
-  // The time of construction is used as the starting time of
-  // the observation. The timeStep is used by the write function
+  // The timeStep is used by the write function
   // to calculate the time from the starting time and the timeCounter.
   // The antenna positions have to be given as xpos,ypos (in meters).
   // The WSRT is taken as the center of the array.
   // Thus antPos must have shape [2,nantennas].
-  MSWriter (const char* msName, double timeStep, int nantennas,
-	    const float** antPos);
+  MSWriter (const char* msName, double startTime, double timeStep, uint nantennas,
+	    const vector<double>& antPos);
 
   // Destructor
   ~MSWriter();
@@ -98,8 +87,9 @@ public:
   // All data will be written with sigma=0 and weight=1.
   // <br>The number of data points (nrdata) given should match the
   // number of antennas, bands, and polarizations for this bandId.
-  void write (int bandId, int fieldId, int timeCounter, int nrdata,
-	      const fcomplex* data, const bool* flags = 0);
+  void write (int& rowNr, int bandId, int fieldId, int channelId, 
+	      int timeCounter, int nrdata,
+	      const dcomplex* data, const bool* flags = 0);
 
   // Get the number of antennas.
   int nrAntennas() const;

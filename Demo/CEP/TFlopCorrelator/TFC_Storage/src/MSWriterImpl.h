@@ -20,23 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.5  2002/05/03 11:23:06  gvd
-//  Changed for new build environment
-//
-//  Revision 1.4  2002/03/01 08:29:35  gvd
-//  Use new lofar_*.h for namespaces
-//  Use Debug.h instead of firewall.h
-//
-//  Revision 1.3  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.2  2001/04/04 14:31:12  gvd
-//  Write better UVW coordinates; improved writing in general
-//
-//  Revision 1.1  2001/03/29 11:24:38  gvd
-//  Added classes to write an MS
-//
 //////////////////////////////////////////////////////////////////////
 
 #ifndef TFLOPCORRELATOR_TFC_STORAGE_MSWRITERIMPL_H
@@ -44,12 +27,10 @@
 
 //# Includes
 #include <Common/LofarTypes.h>
-#ifdef HAVE_AIPSPP
 #include <casa/aips.h>
-#endif
+#include <Common/lofar_vector.h>
 
 //# Forward Declarations
-#ifdef HAVE_AIPSPP
 namespace casa
 {
 class MPosition;
@@ -60,7 +41,6 @@ template<class T> class Block;
 template<class T> class Vector;
 template<class T> class Cube;
 }
-#endif
 
 namespace LOFAR
 {
@@ -79,8 +59,8 @@ public:
   // The antenna positions have to be given in meters (x,y,z)
   // relative to the center (which is set to Westerbork). So antPos
   // must have shape [3,nantennas].
-  MSWriterImpl (const char* msName, double timeStep,
-		int nantennas, const double* antPos);
+  MSWriterImpl (const char* msName, double startTime, double timeStep,
+		int nantennas, const vector<double>& antPos);
 
   // Destructor
   ~MSWriterImpl();
@@ -108,8 +88,9 @@ public:
   // means the the corresponding data point is flagged as invalid.
   // The flag array is optional. If not given, all flags are False.
   // All data will be written with sigma=0 and weight=1.
-  void write (int bandId, int fieldId, int timeCounter, int nrdata,
-	      const fcomplex* data, const bool* flags);
+  void write (int& rowNr, int bandId, int fieldId, int channelId, 
+	      int timeCounter, int nrdata,
+	      const dcomplex* data, const bool* flags);
 
   // Get the number of antennas.
   int nrAntennas() const
@@ -137,7 +118,6 @@ private:
   MSWriterImpl& operator= (const MSWriterImpl&);
   // </group>
 
-#ifdef HAVE_AIPSPP
   // Create the MS and fill its subtables as much as possible.
   void createMS (const char* msName, 
 		 const casa::Block<casa::MPosition>& antPos);
@@ -162,14 +142,12 @@ private:
 
   // Update the times in various subtables at the end of the observation.
   void updateTimes();
-#endif
 
   //# Define the data.
   int itsNrBand;                     //# nr of bands
   int itsNrField;                    //# nr of fields (beams)
   int itsNrAnt;                      //# nr of antennas (stations)
   int itsNrTimes;                    //# nr of exposures
-#ifdef HAVE_AIPSPP
   double itsTimeStep;                //# duration of each exposure (sec)
   double itsStartTime;               //# start time of observation (sec)
   casa::Block<casa::Int>* itsNrPol;  //# nr of polarizations for each band
@@ -181,7 +159,6 @@ private:
   casa::MeasFrame*      itsFrame;    //# Frame to convert to apparent coordinates
   casa::MeasurementSet* itsMS;
   casa::MSMainColumns*  itsMSCol;
-#endif
 };
 
 } // namespace LOFAR

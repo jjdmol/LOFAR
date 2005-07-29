@@ -29,31 +29,37 @@
 // Application specific includes
 #include <TFC_Storage/WH_Storage.h>
 #include <TFC_Interface/DH_Vis.h>
+#include <TFC_Storage/MSWriter.h>
 
 using namespace LOFAR;
 
 WH_Storage::WH_Storage(const string& name, 
 		       const ACC::APS::ParameterSet& pset) 
-  : WorkHolder (pset.getInt32("NCorrCollectOutputs")/2,
-		0,
+  : WorkHolder (pset.getInt32("Input.NSubbands"),        // for now number of correlator outputs
+		0,                                  // is equal to number of subbands
 		name,
 		"WH_Storage"),
-    itsPS      (pset)
+    itsPS      (pset),
+    itsWriter  (0),
+    itsCounter (0)
 {
+  vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
+  ASSERTSTR(refFreqs.size() == itsPS.getInt32("Input.NSubbands"), 
+	    "Wrong number of refFreqs specified!");
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
     sprintf(str, "DH_in_%d", i);
-    getDataManager().addInDataHolder(i, new DH_Vis(str, i, pset));// set correct
-  }                                                          // startfreq?
+    getDataManager().addInDataHolder(i, new DH_Vis(str, refFreqs[i], pset));
+  }
+ }
 
-  // create MSwriter object
-}
-
-WH_Storage::~WH_Storage() {
+WH_Storage::~WH_Storage() 
+{
+  delete itsWriter;
 }
 
 WorkHolder* WH_Storage::construct(const string& name,
-				  const ACC::APS::ParameterSet& pset) 
+				  const ACC::APS::ParameterSet& pset)
 {
   return new WH_Storage(name, pset);
 }
@@ -63,7 +69,48 @@ WH_Storage* WH_Storage::make(const string& name)
   return new WH_Storage(name, itsPS);
 }
 
+void WH_Storage::preprocess()
+{
+  // create MSWriter object
+  string msName = itsPS.getString("Storage.MSName");
+  double startTime = itsPS.getDouble("Storage.startTime");
+  double timeStep = itsPS.getDouble("Storage.timeStep");
+  uint nAntennas = itsPS.getUint32("Storage.nStations");
+  vector<double> antPos = itsPS.getDoubleVector("Storage.stationPositions");
+  itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, nAntennas, antPos);
+
+  int nPolarisations = itsPS.getInt32("Input.NPolarisations");
+  int nChannels = itsPS.getInt32("Storage.nChannels");
+  double chanWidth = itsPS.getDouble("Storage.chanWidth");
+  vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
+  vector<double>::iterator iter;
+  // Add the subbands
+  for (iter=refFreqs.begin(); iter!=refFreqs.end(); iter++)
+  {
+    int bandId = itsWriter->addBand (nPolarisations*nPolarisations,  nChannels,
+				     *iter, chanWidth);
+    itsBandIds.push_back(bandId);
+  }
+  double azimuth = itsPS.getDouble("Storage.beamAzimuth");
+  double elevation = itsPS.getDouble("Storage.beamElevation");
+  double pi = itsPS.getDouble("Storage.pi");
+  // For nr of beams
+  itsFieldId = itsWriter->addField (azimuth*pi/180., elevation*pi/180.);
+}
+
 void WH_Storage::process() 
 {
   // Write data in MS 
+  // loop over all inputs
+  DH_Vis* inputDH = 0;
+  for (int i=0; i<itsNinputs; i++)
+  {
+    inputDH = (DH_Vis*)getDataManager().getInHolder(i);
+    int rownr = -1;
+    // Write 1 frequency
+    itsWriter->write (rownr, itsBandIds[i], itsFieldId, 0, 
+		      itsCounter, inputDH->getBufSize(),
+		      inputDH->getBuffer());   // To do: add flags
+   }
+  itsCounter++;
 }

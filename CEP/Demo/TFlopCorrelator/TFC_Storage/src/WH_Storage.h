@@ -30,7 +30,10 @@
 
 namespace LOFAR
 {
-  class WH_Storage: public WorkHolder
+
+class MSWriter;
+
+class WH_Storage: public WorkHolder
   {
   public:
 
@@ -42,6 +45,8 @@ namespace LOFAR
                                  const ACC::APS::ParameterSet& pset);
     virtual WH_Storage* make(const string& name);
 
+    void preprocess();
+
     virtual void process();
 
   private:
@@ -51,6 +56,13 @@ namespace LOFAR
     WH_Storage& operator= (const WH_Storage&);
 
     const ACC::APS::ParameterSet& itsPS;
+
+    MSWriter* itsWriter;
+
+    vector<int> itsBandIds;       // MS ID s of frequency bands
+    int itsFieldId;
+    int itsCounter;
+
   };
 } // namespace LOFAR
 

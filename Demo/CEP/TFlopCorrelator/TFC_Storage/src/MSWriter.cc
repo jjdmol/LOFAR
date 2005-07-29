@@ -20,53 +20,31 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.4  2002/05/03 11:23:06  gvd
-//  Changed for new build environment
-//
-//  Revision 1.3  2002/03/01 08:29:35  gvd
-//  Use new lofar_*.h for namespaces
-//  Use Debug.h instead of firewall.h
-//
-//  Revision 1.2  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.1  2001/03/29 11:24:38  gvd
-//  Added classes to write an MS
-//
 //////////////////////////////////////////////////////////////////////
 
 #include <lofar_config.h>
 
 #include <TFC_Storage/MSWriter.h>
 #include <TFC_Storage/MSWriterImpl.h>
-#ifdef HAVE_AIPSPP
-# include <casa/Exceptions/Error.h>
-#endif
+#include <casa/Exceptions/Error.h>
 #include <Common/lofar_iostream.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace casa;
 
-MSWriter::MSWriter (const char* msName, double timeStep, int nantennas,
-		    const float** antPos)
+MSWriter::MSWriter (const char* msName, double startTime, double timeStep, 
+		    uint nantennas, const vector<double>& antPos)
 : itsWriter (0)
 {
-  // Form the antenna position vector.
-  double* antPosOut = new double[3*nantennas];
-  for (int i=0; i<nantennas; i++) {
-    antPosOut[3*i + 0] = antPos[i][0];
-    antPosOut[3*i + 1] = antPos[i][1];
-    antPosOut[3*i + 2] = 0.;
-  }
+  ASSERTSTR(antPos.size() == 3*nantennas, 
+	    "Antenna position vector does not have the right size!");
   try {
-    itsWriter = new MSWriterImpl (msName, timeStep, nantennas, antPosOut);
-    delete [] antPosOut;
-#ifdef HAVE_AIPSPP
+    itsWriter = new MSWriterImpl (msName, startTime, timeStep, nantennas, 
+				  antPos);
   } catch (AipsError x) {
     cerr << "MSWriter exception: " << x.getMesg() << endl;
     exit(0);
-#endif
   } catch (...) {
     cerr << "Unexpected MSWriter exception" << endl;
     exit(0);
@@ -97,10 +75,11 @@ int MSWriter::addField (double azimuth, double elevation)
   return itsWriter->addField (azimuth, elevation);
 }
 
-void MSWriter::write (int bandId, int fieldId, int timeCounter, int nrdata,
-		      const fcomplex* data, const bool* flags)
+void MSWriter::write (int& rowNr, int bandId, int fieldId, int timeCounter, 
+		      int channelId, int nrdata, const dcomplex* data, 
+		      const bool* flags)
 {
-  itsWriter->write (bandId, fieldId, timeCounter, nrdata,
+  itsWriter->write (rowNr, bandId, fieldId, channelId, timeCounter, nrdata,
 		    data, flags);
 }
 
