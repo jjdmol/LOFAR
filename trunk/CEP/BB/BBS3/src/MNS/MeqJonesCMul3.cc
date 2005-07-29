@@ -47,7 +47,11 @@ MeqJonesCMul3::MeqJonesCMul3 (const MeqJonesExpr& left,
 : itsLeft  (left),
   itsMid   (mid),
   itsRight (right)
-{}
+{
+  itsLeft.incrNParents();
+  itsMid.incrNParents();
+  itsRight.incrNParents();
+}
 
 MeqJonesCMul3::~MeqJonesCMul3()
 {}
@@ -449,9 +453,10 @@ MeqJonesResult MeqJonesCMul3::getResult (const MeqRequest& request)
   MeqResult& result21 = result.result21();
   MeqResult& result22 = result.result22();
   // Calculate the children.
-  MeqJonesResult left  = itsLeft.getResult (request);
-  MeqJonesResult mid   = itsMid.getResult (request);
-  MeqJonesResult right = itsRight.getResult (request);
+  MeqJonesResult leftBuf, midBuf, rightBuf;
+  const MeqJonesResult& left  = itsLeft.getResultSynced (request, leftBuf);
+  const MeqJonesResult& mid   = itsMid.getResultSynced (request, midBuf);
+  const MeqJonesResult& right = itsRight.getResultSynced (request, rightBuf);
   const MeqResult& l11 = left.getResult11();
   const MeqResult& l12 = left.getResult12();
   const MeqResult& l21 = left.getResult21();

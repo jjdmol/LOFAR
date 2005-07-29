@@ -28,7 +28,6 @@
 
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
-#include <BBS3/MNS/MeqLMN.h>
 
 namespace LOFAR {
   
@@ -39,7 +38,8 @@ namespace LOFAR {
 class MeqBaseDFTPS: public MeqExprRep
 {
 public:
-  MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right, MeqLMN* lmn);
+  MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right,
+		const MeqExpr& lmn);
        
   ~MeqBaseDFTPS();
 
@@ -49,7 +49,7 @@ public:
 private:
   MeqExpr itsLeft;
   MeqExpr itsRight;
-  MeqLMN* itsLMN;
+  MeqExpr itsLMN;
 };
 
 // @}

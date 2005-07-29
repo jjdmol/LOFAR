@@ -46,7 +46,7 @@ class MeqDFTPS: public MeqExprRep
 {
 public:
   // Construct from source list, phase reference position and uvw.
-  explicit MeqDFTPS (MeqLMN*, MeqStatUVW*);
+  explicit MeqDFTPS (const MeqExpr& lmn, MeqStatUVW*);
 
   virtual ~MeqDFTPS();
 
@@ -54,7 +54,7 @@ public:
   virtual MeqResultVec getResultVec (const MeqRequest&);
 
 private:
-  MeqLMN*     itsLMN;
+  MeqExpr     itsLMN;
   MeqStatUVW* itsUVW;
 };
 

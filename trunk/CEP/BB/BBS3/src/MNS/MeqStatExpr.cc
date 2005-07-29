@@ -64,11 +64,12 @@ MeqJonesResult MeqStatExpr::getResult (const MeqRequest& request)
     MeqResult& result21 = result.result21();
     MeqResult& result22 = result.result22();
     // Get the values (also perturbed) for the expressions.
-    MeqResult frot = itsFarRot.getResult (request);
-    MeqResult drot = itsDipRot.getResult (request);
-    MeqResult dell = itsDipEll.getResult (request);
-    MeqResult g1  = itsGain1.getResult (request);
-    MeqResult g2  = itsGain2.getResult (request);
+    MeqResult frotBuf, drotBuf, dellBuf, g1Buf, g2Buf;
+    const MeqResult& frot = itsFarRot.getResultSynced (request, frotBuf);
+    const MeqResult& drot = itsDipRot.getResultSynced (request, drotBuf);
+    const MeqResult& dell = itsDipEll.getResultSynced (request, dellBuf);
+    const MeqResult& g1  = itsGain1.getResultSynced (request, g1Buf);
+    const MeqResult& g2  = itsGain2.getResultSynced (request, g2Buf);
     // Precalculate reused subexpressions.
     // They might also be reused in calculating the perturbed values,
     // so do not use a MeqMatrixTmp for them.

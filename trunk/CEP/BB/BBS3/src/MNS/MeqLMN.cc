@@ -34,24 +34,20 @@
 namespace LOFAR {
 
 MeqLMN::MeqLMN (MeqPointSource* source)
-: itsSource    (source),
-  itsLastReqId (InitMeqRequestId),
-  itsResult    (0)
+: itsSource    (source)
 {}
 
 MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 
-  if (request.getId() == itsLastReqId) {
-    return itsResult;
-  }
   MeqResultVec result(3, request.nspid());
   MeqResult& resL = result[0];
   MeqResult& resM = result[1];
   MeqResult& resN = result[2];
-  MeqResult rak  = itsSource->getRa().getResult (request);
-  MeqResult deck = itsSource->getDec().getResult (request);
+  MeqResult raRes, deRes;
+  const MeqResult& rak  = itsSource->getRa().getResultSynced (request, raRes);
+  const MeqResult& deck = itsSource->getDec().getResultSynced (request, deRes);
   double refRa  = itsPhaseRef->getRa();
   double refDec = itsPhaseRef->getDec();
   double refSinDec = itsPhaseRef->getSinDec();
@@ -102,9 +98,7 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
       resN.setPerturbation   (spinx, perturbation);
     }
   }
-  itsLastReqId = request.getId();
-  itsResult = result;
-  return itsResult;
+  return result;
 }
 
 }

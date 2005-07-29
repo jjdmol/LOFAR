@@ -167,8 +167,12 @@ private:
 class MeqResult
 {
 public:
+  // Create a null object.
+  MeqResult()
+    : itsRep(0) {}
+
   // Create a time,frequency result for the given number of parameters.
-  explicit MeqResult (int nspid = 0);
+  explicit MeqResult (int nspid);
 
   MeqResult (const MeqResult&);
 

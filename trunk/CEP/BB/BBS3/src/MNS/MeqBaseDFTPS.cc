@@ -32,11 +32,15 @@ using namespace casa;
 namespace LOFAR {
 
 MeqBaseDFTPS::MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right,
-			    MeqLMN* lmn)
+			    const MeqExpr& lmn)
   : itsLeft  (left),
     itsRight (right),
     itsLMN   (lmn)
-{}
+{
+  itsLeft.incrNParents();
+  itsRight.incrNParents();
+  itsLMN.incrNParents();
+}
 
 MeqBaseDFTPS::~MeqBaseDFTPS()
 {}
@@ -52,15 +56,17 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
 
   // Get N (for the division).
   // Assert it is a scalar value.
-  MeqResultVec lmn = itsLMN->getResultVec (request);
+  MeqResultVec lmnRes;
+  const MeqResultVec& lmn = itsLMN.getResultVecSynced (request, lmnRes);
   const MeqResult& nk = lmn[2];
   ASSERT (nk.getValue().nelements() == 1);
   // Calculate the left and right station Jones matrix elements.
   // A delta in the station source predict is only available if multiple
   // frequency channels are used.
   bool multFreq = request.nx() > 1;
-  MeqResultVec resl = itsLeft.getResultVec (request);
-  MeqResultVec resr = itsRight.getResultVec (request);
+  MeqResultVec reslBuf, resrBuf;
+  const MeqResultVec& resl = itsLeft.getResultVecSynced (request, resrBuf);
+  const MeqResultVec& resr = itsRight.getResultVecSynced (request, reslBuf);
   const MeqResult& left = resl[0];
   const MeqResult& right = resr[0];
   const MeqResult& leftDelta = resl[1];

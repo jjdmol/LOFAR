@@ -44,8 +44,11 @@ class MeqJonesExprRep
 public:
   // The default constructor.
   MeqJonesExprRep()
-    : itsCount(0)
-    {};
+    : itsCount   (0),
+      itsNParents(0),
+      itsResult  (0),
+      itsReqId   (InitMeqRequestId)
+    {}
 
   virtual ~MeqJonesExprRep();
 
@@ -55,7 +58,23 @@ public:
   static void unlink (MeqJonesExprRep* rep)
     { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
 
-  // Calculate the result of its members.
+  // Increment nr of parents.
+  void incrNParents()
+    { itsNParents++; }
+
+  // Get the single result of the expression for the given domain.
+  // The return value is a reference to the true result. This can either
+  // be a reference to the cached value (if the object maintains a cache)
+  // or to the result object in the parameter list (if no cache).
+  // If the result is stored in the cache, it is done in a thread-safe way.
+  // Note that a cache is used if the expression has multiple parents.
+  const MeqJonesResult& getResultSynced (const MeqRequest& request,
+					 MeqJonesResult& result)
+    { return itsReqId == request.getId()  ?
+	*itsResult : calcResult(request,result); }
+
+  // Get the actual result.
+  // The default implementation throw an exception.
   virtual MeqJonesResult getResult (const MeqRequest&) = 0;
 
 private:
@@ -63,7 +82,13 @@ private:
   MeqJonesExprRep (const MeqJonesExprRep&);
   MeqJonesExprRep& operator= (const MeqJonesExprRep&);
 
-  int          itsCount;
+  // Calculate the actual result in a cache thread-safe way.
+  const MeqJonesResult& calcResult (const MeqRequest&, MeqJonesResult&);
+
+  int             itsCount;
+  int             itsNParents;   //# Nr of parents
+  MeqJonesResult* itsResult;     //# Possibly cached result
+  MeqRequestId    itsReqId;      //# Request-id of cached result.
 };
 
 
@@ -83,9 +108,18 @@ public:
 
   MeqJonesExpr& operator= (const MeqJonesExpr&);
 
+  // Increment nr of parents.
+  void incrNParents()
+    { itsRep->incrNParents(); }
+
   // Get the result of the expression for the given domain.
+  // <group>
   MeqJonesResult getResult (const MeqRequest& request)
     { return itsRep->getResult (request); }
+  const MeqJonesResult& getResultSynced (const MeqRequest& request,
+					MeqJonesResult& result)
+    { return itsRep->getResultSynced (request, result); }
+  // </group>
 
 private:
   MeqJonesExprRep* itsRep;
