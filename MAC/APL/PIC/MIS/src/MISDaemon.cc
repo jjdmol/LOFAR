@@ -29,6 +29,7 @@
 #include <MISDefines.h>
 #include <GCF/ParameterSet.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
+#include <RSP_Protocol.ph>
 
 namespace LOFAR 
 {
@@ -43,6 +44,7 @@ MISDaemon::MISDaemon() :
 {
   // register the protocol for debugging purposes
   registerProtocol(MIS_PROTOCOL, MIS_PROTOCOL_signalnames);
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
   // initialize the port
   _misdPortProvider.init(*this, MISD_PORT_NAME, GCFPortInterface::MSPP, MIS_PROTOCOL);
@@ -52,8 +54,7 @@ MISDaemon::MISDaemon() :
   }
   catch (Exception e)
   {
-    LOG_FATAL_STR("Error: failed to load configuration files: " << e.text());
-    exit(EXIT_FAILURE);
+    LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
   }  
 }
 

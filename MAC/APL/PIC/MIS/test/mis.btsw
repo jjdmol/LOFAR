@@ -23,9 +23,9 @@ Statemachine_MISClient (ready, updateValue) =
 // GENERIC
 
 	s010 : F_MIS_GENERIC_PINGPONG(0x0000000000000001,  // seqnr 1
-															  0x0000000000000000,  // replynr not set
-															  0x0000000000000000,  // ts.sec
-															  0x00000000, 				 // ts.nsec
+															  0x0000000000000003,  // replynr not set
+															  0x0000000000006666,  // ts.sec
+															  0x00000457, 				 // ts.nsec
 															  0x00000000)					 // tti
 																										 ; s011.
 																										 

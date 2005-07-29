@@ -45,13 +45,13 @@ using namespace RTC;
  namespace AMI
  {
 
-#define LOGMSGHDR(in)   \
+#define LOGMSGHDR(_in_)   \
     LOG_TRACE_FLOW(formatString( \
-        "Session %p receives msg with seqnr: %d, timestamp: %d.%06d", \
+        "Session %p receives msg with seqnr: %llu, timestamp: %llu.%09lu", \
         this, \
-        (in).seqnr, \
-        (in).timestamp_sec, \
-        (in).timestamp_nsec));
+        _in_.seqnr,\
+        _in_.timestamp_sec,\
+        _in_.timestamp_nsec));
 
 #define RETURN_NOACK_MSG(_eventin_, _eventout_, _response_) \
   { \
@@ -94,18 +94,13 @@ MISSession::~MISSession ()
 GCFEvent::TResult MISSession::initial(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static bool retryConnect = false;
+  
   switch (e.signal)
   {
     case F_INIT:
       break;
 
     case F_ENTRY:
-    case F_TIMER:
-      if (!_rspDriverPort.isConnected())
-      {       
-        _rspDriverPort.open();
-      }
       break;
 
     case F_CONNECTED:
@@ -113,15 +108,7 @@ GCFEvent::TResult MISSession::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_DISCONNECTED:
-      if (&_rspDriverPort == &p && !retryConnect)
-      {
-        retryConnect = true;
-        p.setTimer(5.0);
-      }
-      else
-      {
-        TRAN(MISSession::closing);
-      }
+      TRAN(MISSession::closing);
       break;
       
     default:
@@ -223,6 +210,7 @@ void MISSession::genericPingpong(GCFEvent& e)
 {
   MISGenericPingpongEvent in(e);
   LOGMSGHDR(in);
+       
   MISGenericPingpongEvent out;
   out.seqnr = _curSeqNr++;
   out.replynr = in.seqnr;
@@ -265,7 +253,7 @@ GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
     {
       if (pIn) delete pIn;
       pIn = new MISDiagnosisNotificationEvent(e);
-      LOGMSGHDR(*pIn);
+      LOGMSGHDR((*pIn));
       resourceStatusPropName = pIn->component;
       // first try to get the current status value of the component
       // for this purpose it is important that the component name contains ".status"
@@ -431,6 +419,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
   static MISSubbandStatisticsResponseEvent ackout;
   static MISSubbandStatisticsRequestEvent* pIn = 0;
   static uint16 nrOfRCUs = 0;
+  static bool isConnecting = false;
 
   switch (e.signal)
   {
@@ -438,9 +427,12 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
       if (nrOfRCUs == 0)
       {
         nrOfRCUs = (GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
+        LOG_DEBUG(formatString (
+            "NrOfRCUs %d",
+            nrOfRCUs));
         ackout.rcu_settingsNOE = nrOfRCUs;
         ackout.rcu_settings = new uint8[nrOfRCUs];
-        ackout.invalidNOE = 0;// TODO: nrOfRCUs;
+        ackout.invalidNOE = nrOfRCUs;
         ackout.invalid = new uint8[nrOfRCUs];
         ackout.dataNOE = nrOfRCUs * 512;
         ackout.data = new double[nrOfRCUs * 512];
@@ -453,24 +445,57 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
       
       if (pIn) delete pIn;
       pIn = 0;
+      if (!_rspDriverPort.isConnected())
+      {       
+        isConnecting = true;
+        _rspDriverPort.open();
+      }
       break;
          
+    case F_CONNECTED:
+    case F_DISCONNECTED:
+      if (&_rspDriverPort == &p)
+      {
+        isConnecting = false;
+        
+        RSPGetstatusEvent getstatus;
+        getstatus.timestamp = Timestamp(0, 0);
+        getstatus.cache = true;
+      
+        getstatus.rcumask = allRCUSMask;
+        
+        if (!_rspDriverPort.send(getstatus))
+        {
+          SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
+          _rspDriverPort.open();
+          TRAN(MISSession::waiting);      
+        }      
+      }
+      else
+      {
+        status = defaultHandling(e, p);
+        break;
+      }      
+      
     case MIS_SUBBAND_STATISTICS_REQUEST:
     {
       pIn = new MISSubbandStatisticsRequestEvent(e);
       LOGMSGHDR((*pIn));
-
-      RSPGetstatusEvent getstatus;
-      getstatus.timestamp = Timestamp(0, 0);
-      getstatus.cache = true;
       
-      getstatus.rcumask = allRCUSMask;
-      
-      if (!_rspDriverPort.send(getstatus))
+      if (!isConnecting)
       {
-        SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
-        _rspDriverPort.open();
-        TRAN(MISSession::waiting);      
+        RSPGetstatusEvent getstatus;
+        getstatus.timestamp = Timestamp(0, 0);
+        getstatus.cache = true;
+        
+        getstatus.rcumask = allRCUSMask;
+        
+        if (!_rspDriverPort.send(getstatus))
+        {
+          SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
+          _rspDriverPort.open();
+          TRAN(MISSession::waiting);      
+        }
       }
       break;
     }
@@ -689,10 +714,10 @@ void MISSession::mayDelete(const string& propName)
 
 void MISSession::setCurrentTime(int64& sec, uint32& nsec)
 {
-  Timestamp timestamp;
-  timestamp.setNow();
-  sec = timestamp.sec();
-  nsec = timestamp.usec() * 1000;
+  struct timeval tv;
+  (void)gettimeofday(&tv, 0);
+  sec = tv.tv_sec;
+  nsec = tv.tv_usec * 1000;
 }
  } // namespace AMI
 } // namespace LOFAR
