@@ -10,15 +10,17 @@
 # calls mpirun and remembers the pid
 #
 
+# now all ACC processes expect to be started with ACC as first parameter
+
 # start process
 # TODO: in future something like: rsh $1 start_script $2 $3 $4
 if [ "$1" = "scampi" ]; then
-    echo "mpirun -np $2 -machinefile $3 $5 $6 " > startMPI.output
-    ( ( mpirun -np $2 -machinefile $3 $5 $6 ) &> $4.output ) &
+    echo "mpirun -np $2 -machinefile $3 $5 ACC $6 " > startMPI.output
+    ( ( mpirun -np $2 -machinefile $3 $5 ACC $6 ) &> $4.output ) &
 fi
 
 if [ "$1" = "mpich" ]; then
-  ( mpirun_mpich -np $2 -mf $3 $5 $6 ) &
+  ( mpirun_mpich -np $2 -mf $3 $5 ACC $6 ) &
 fi
 
 # get its pid

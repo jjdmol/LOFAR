@@ -33,6 +33,9 @@
 
 #include <ApplicationHolderController.h>
 
+// for strncmp
+#include <string.h>
+
 using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::PLC;
@@ -147,7 +150,11 @@ int ApplicationHolderController::main (int argc, const char* argv[]) {
 
     // Read in parameterfile and get my name
     ParameterSet itsOrigParamSet; // may throw
-    itsOrigParamSet.adoptFile(argv[1]);
+
+    // Now all ACC processes expect "ACC" as first argument
+    // So the parameter file is the second argument
+    ASSERTSTR(strncmp(argv[1], "ACC", 3), "Program wasn't started by ACC, but ApplicationHolderController::main was called");
+    itsOrigParamSet.adoptFile(argv[2]);
     string itsProcID = itsOrigParamSet.getString("process.name");
     ParameterSet itsParamSet = itsOrigParamSet.makeSubset(itsProcID);
     itsAH.setParameters(itsParamSet);
