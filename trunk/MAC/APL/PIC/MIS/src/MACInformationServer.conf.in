@@ -1,3 +1,4 @@
 mac.ns.APL-MISD.server.type=TCP
 mac.ns.APL-MISD.server.port=27010
 mac.top.APL-MIS.client.remoteservice=APL-MISD:server
+mac.top.APL-MIS.client.remoteservice=RSPDriver:acceptor
