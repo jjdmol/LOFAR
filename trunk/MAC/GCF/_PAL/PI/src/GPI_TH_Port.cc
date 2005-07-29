@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 
 #include <GPI_TH_Port.h>
-#include <Transport/Transporter.h>
 #include <Transport/DataHolder.h>
 #include <GCF/TM/GCF_PortInterface.h>
 
