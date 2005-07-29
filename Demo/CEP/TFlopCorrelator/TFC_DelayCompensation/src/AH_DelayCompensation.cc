@@ -41,7 +41,7 @@ void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
   Composite comp(0, 0, "topComposite");
   setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
-  int nRSP = itsParamSet.getInt32("NRSP");
+  int nRSP = itsParamSet.getInt32("Input.NRSP");
   WH_DelayControl delayWH("DelayContr", nRSP);
   Step delayStep(delayWH, "DelayContr");
   comp.addBlock(delayStep);
