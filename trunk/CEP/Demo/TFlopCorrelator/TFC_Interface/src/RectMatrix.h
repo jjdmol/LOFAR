@@ -19,6 +19,23 @@ using LOFAR::string;
 using LOFAR::vector;
 using LOFAR::map;
 
+// 3 macros are provided which can be used to construct a for loop:
+//
+// MATRIX_FOR_LOOP(matrix, dim, cursor)
+//   loops through 1 full dimension(dim) of matrix from cursor to end
+//
+// MATRIX_FOR_LOOP_PART(matrix, dim, cursor, noElem)
+//   loops through from cursor to cursor + noElem in the dimension dim of the matrix 
+//
+// e.g.
+// cursor = matrix.getCursor(0)
+// MATRIX_FOR_LOOP(matrix, dim, cursor) {
+//   matrix.setValue(cursor, 0);
+// } 
+
+
+// the definition of a dimension
+// this class is only used when constructing a rectmatrix
 class DimDef {
  public:
   DimDef(const string& newName, const int newSize):
@@ -29,6 +46,8 @@ class DimDef {
   int size;
 };
 
+
+// a dimension of a RectMatrix
 class dimType{
  public:
   dimType(int ms = 0, int ne = 0) :
@@ -46,7 +65,6 @@ class dimType{
 
 // this class holds a matrix
 // for example programs using this class see tRectMatrix.cc in the test directory
-
 template <typename valueType>
 class RectMatrix {
  public:
@@ -72,6 +90,9 @@ class RectMatrix {
   // move the cursor in a dimension a certain number of steps
   void moveCursorN(cursorType* cursor, const dimType& dim, const int& steps) const;
   
+  // get a block of memory
+  valueType* getBlock(const cursorType& cursor, const dimType& dim, const int noElem, const int noTotalElem) const;
+
   // copy a subblock of the matrix
   // note that the lower dimensions of both matrixes have to match
   // it makes no sense to copy a block of information if it doesn't have the same
@@ -95,7 +116,14 @@ class RectMatrix {
   // point the matrix to the memory it should use
   void setBuffer(valueType* buffer, int size);
     
+#ifdef ENABLE_DBGASSERT
+  // cursors are only made invalid when DBGASSERT is enabled
+  bool isCursorValid(const cursorType& cursor) const;
+#endif
+
  private:
+  bool areInSameDim(cursorType cur1, cursorType cur2, const dimType& dim) const;
+
   friend class DataHolder;
 
   valueType* itsData;
@@ -103,94 +131,32 @@ class RectMatrix {
   int itsTotalSize;
 };
 
-template <typename valueType>
-RectMatrix<valueType>::RectMatrix(vector<DimDef>& dimdefv) :
-  itsData(0)
-{
-  vector<DimDef>::reverse_iterator it = dimdefv.rbegin();
-  int lastSize = 1;
-  for (; it<dimdefv.rend(); it++) {
-    itsDimMap[it->name] = new dimType(lastSize, it->size);
-    lastSize *= it->size;
-  }
-  itsTotalSize = lastSize;
-}
+#ifdef ENABLE_DBGASSERT
 
-template <typename valueType>
-inline dimType& RectMatrix<valueType>::getDim(string dimName) {
-  DBGASSERTSTR(itsDimMap.find(dimName) != itsDimMap.end(), "Cannot find dimension " << dimName << " in this RectMatrix");
-  return *itsDimMap[dimName];};
-
-template <typename valueType>
-inline int RectMatrix<valueType>::getNElemInDim(const dimType& dim) const {
-  return dim.noElem;};
-
-template <typename valueType>
-inline typename RectMatrix<valueType>::cursorType RectMatrix<valueType>::getCursor(const int pos) const { 
-  return pos; };
-
-template <typename valueType>
-inline valueType& RectMatrix<valueType>::getValue(const cursorType& cursor) const {
-  DBGASSERTSTR(cursor<itsTotalSize, "Index out of range in RectMatrix::getValue()");
-  return itsData[cursor];};
-
-template <typename valueType>
-inline void RectMatrix<valueType>::setValue(const cursorType& cursor, const valueType& value) {
-  DBGASSERTSTR(cursor<itsTotalSize, "Index out of range in RectMatrix::setValue()");
-  itsData[cursor] = value; };
-
-template <typename valueType>
-inline void RectMatrix<valueType>::moveCursor(cursorType* cursorp, const dimType& dim) const {
-  *cursorp += dim.memSize;};
-
-template <typename valueType>
-inline void RectMatrix<valueType>::moveCursorN(cursorType* cursorp, const dimType& dim, const int& steps) const {
-  *cursorp += dim.memSize*steps; };
-
-template <typename valueType>
-inline void RectMatrix<valueType>::cpy2Matrix (cursorType srcCursor, 
-					       dimType& srcDim,
-					       RectMatrix& dstMatrix,
-					       cursorType dstCursor, 
-					       dimType& dstDim,
-					       int noBlocks) {
-  DBGASSERTSTR(srcDim.memSize == dstDim.memSize, "Dimension to be copied  are not compatible");
-  DBGASSERTSTR((dstCursor+noBlocks*dstDim.memSize)<=dstMatrix.itsTotalSize, "Index out of range in destination in RectMatrix::cpy2Matrix");
-  DBGASSERTSTR((srcCursor+noBlocks*srcDim.memSize)<=itsTotalSize, "Index out of range in source in RectMatrix::cpy2Matrix");
-  memcpy(&(dstMatrix.itsData[dstCursor]), &(itsData[srcCursor]), noBlocks * srcDim.memSize * sizeof(valueType));
-};
-template <typename valueType>
-inline void RectMatrix<valueType>::cpyFromBlock (valueType* srcPointer, 
-						 int blockSize,
-						 cursorType dstCursor, 
-						 dimType& dstDim,
-						 int noBlocks) {
-  DBGASSERTSTR(blockSize == dstDim.memSize, "Dimension to be copied  are not compatible");
-  cerr<<dstCursor<<" "<<dstDim.memSize<<" "<<itsTotalSize<<endl;
-  DBGASSERTSTR((dstCursor+noBlocks*dstDim.memSize)<=itsTotalSize, "Index out of range in destination in RectMatrix::cpyFromBlock");
-  memcpy(&(itsData[dstCursor]), srcPointer, noBlocks * blockSize * sizeof(valueType));
-}
-template <typename valueType>
-inline void RectMatrix<valueType>::cpy2Block (cursorType srcCursor, 
-					      dimType& srcDim,
-					      valueType* dstPointer, 
-					      int blockSize,
-					      int noBlocks) {
-  DBGASSERTSTR(srcDim.memSize == blockSize, "Dimension to be copied  are not compatible");
-  DBGASSERTSTR((srcCursor+noBlocks*srcDim.memSize)<=itsTotalSize, "Index out of range in source in RectMatrix::cpy2Block");
-  memcpy((void*)dstPointer, &(itsData[srcCursor]), noBlocks * blockSize * sizeof(valueType));
-}
-
-template <typename valueType>
-inline void RectMatrix<valueType>::setBuffer(valueType* buffer, int size){
-  DBGASSERTSTR(size == itsTotalSize, "cannot set buffer because of size mismatch");
-  itsData = buffer;
-};
-    
+// Macro for defining a for-loop that walks through all the elements of 1 dimension
+// for unoptimized code we can loop until the cursor is invalid
 #define MATRIX_FOR_LOOP(matrix, dim, cursor) \
-int cursorMax = cursor + dim.total;\
-    for (; cursor < cursorMax; matrix.moveCursor(&cursor, dim))
-#define MATRIX_FOR_LOOP_OLD(matrix, dim, cursor) \
-    for (int cursorIT = 0; cursorIT < matrix.getNElemInDim(dim); cursorIT ++ , matrix.moveCursor(&cursor, dim))
+    for (; matrix.isCursorValid(cursor); matrix.moveCursor(&cursor, dim)) 
+
+// Macro for defining a for-loop that walks through 1 dimension from cursor to cursor + noElem
+#define MATRIX_FOR_LOOP_PART(matrix, dim, cursor, noElem) \
+    int cursorMax = cursor + dim.memsize * noElem;\
+    for (; matrix.isCursorValid(cursor)&&(cursor < cursorMax); matrix.moveCursor(&cursor, dim)) 
+
+#else //ENABLE_DBGASSERT
+
+    // for optimized code we use a slightly different stop condition
+    // this algorithm can only be used when the cursor is not invalidated
+#define MATRIX_FOR_LOOP(matrix, dim, cursor) \
+    int cursorMax = cursor + dim.total; \
+    for (; cursor < cursorMax; matrix.moveCursor(&cursor, dim)) 
+
+#define MATRIX_FOR_LOOP_PART(matrix, dim, cursor, noElem) \
+    int cursorMax = cursor + dim.memsize * noElem;\
+    for (; cursor < cursorMax; matrix.moveCursor(&cursor, dim)) 
+
+#endif //ENABLE_DBGASSERT
+
+#include <RectMatrix.tcc>
 
 #endif

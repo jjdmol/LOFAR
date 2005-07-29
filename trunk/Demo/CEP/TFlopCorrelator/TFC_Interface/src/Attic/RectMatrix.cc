@@ -12,18 +12,3 @@
 
 #include <RectMatrix.h>
 
-#if 0
-template <typename valueType>
-RectMatrix<valueType>::RectMatrix(vector<DimDef> dimdefv) :
-  itsData(0)
-{
-  vector<DimDef>::iterator it = dimdefv.rbegin();
-  lastSize = 1;
-  for (; it<dimdefv.rend(); it++) {
-    itsDimMap[it->itsName] = lastSize;
-    itsDimSizeMap[lastSize] = it->itsSize;
-    lastSize *= it->itsSize;
-  }
-  itsTotalSize = lastSize;
-}
-#endif
