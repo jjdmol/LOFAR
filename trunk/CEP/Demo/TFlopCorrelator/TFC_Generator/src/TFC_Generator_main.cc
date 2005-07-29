@@ -9,6 +9,9 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+// for strncmp
+#include <string.h>
+
 #include <Common/lofar_iostream.h> 
 #include <Common/LofarLogger.h>
 
@@ -24,7 +27,7 @@ int main (int argc, const char** argv) {
 
   // Check invocation syntax
   try {
-    if (argc < 2) {
+    if (strncmp("ACC", argv[1], 3) != 0) {
       LOG_TRACE_FLOW("Main program not started by ACC");
       // there are no commandline arguments, so we were not called by ACC
       AH_FakeStation myAH;
