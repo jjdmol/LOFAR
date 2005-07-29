@@ -15,7 +15,7 @@ Stub_Delay.h
 
 NOINSTHDRS 		=
 
-TCCHDRS 		=
+TCCHDRS 		= RectMatrix.tcc
 
 pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
 
@@ -37,7 +37,6 @@ DH_Vis.cc			\
 Stub_FIR.cc               	\
 Stub_RSP.cc			\
 Stub_Corr.cc			\
-Stub_Delay.cc			\
-RectMatrix.cc			
+Stub_Delay.cc			
 
 include $(lofar_sharedir)/Makefile.common
