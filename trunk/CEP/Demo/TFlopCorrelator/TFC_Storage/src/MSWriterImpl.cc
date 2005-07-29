@@ -20,32 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.6  2002/05/03 11:23:06  gvd
-//  Changed for new build environment
-//
-//  Revision 1.5  2002/03/01 08:29:35  gvd
-//  Use new lofar_*.h for namespaces
-//  Use Debug.h instead of firewall.h
-//
-//  Revision 1.4  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.3  2001/09/18 12:08:28  gvd
-//  Changed for Step/Simul changes in BaseSim
-//
-//  Revision 1.2  2001/04/04 14:31:12  gvd
-//  Write better UVW coordinates; improved writing in general
-//
-//  Revision 1.1  2001/03/29 11:24:38  gvd
-//  Added classes to write an MS
-//
 //////////////////////////////////////////////////////////////////////
 
 #include <lofar_config.h>
 
 #include <TFC_Storage/MSWriterImpl.h>
-#ifdef HAVE_AIPSPP
 # include <ms/MeasurementSets.h>
 # include <tables/Tables/IncrementalStMan.h>
 # include <tables/Tables/StandardStMan.h>
@@ -73,21 +52,19 @@
 # include <casa/BasicSL/Constants.h>
 # include <casa/Utilities/Assert.h>
 # include <casa/Exceptions/Error.h>
-#endif
+#include <casa/Arrays/Slicer.h>
 
 using namespace LOFAR;
 using namespace casa;
 
-MSWriterImpl::MSWriterImpl (const char* msName, double timeStep,
-			    int nantennas, const double* antPos)
+MSWriterImpl::MSWriterImpl (const char* msName, double startTime, double timeStep,
+			    int nantennas, const vector<double>& antPos)
 : itsNrBand   (0),
   itsNrField  (0),
   itsNrAnt    (nantennas),
-  itsNrTimes  (0)
-#ifdef HAVE_AIPSPP
-                 ,
+  itsNrTimes  (0),
   itsTimeStep (timeStep),
-  itsStartTime(MVEpoch(Time().modifiedJulianDay()).getTime().getValue("s")),
+  itsStartTime(MVEpoch(startTime).getTime().getValue("s")),
   itsNrPol    (0),
   itsNrChan   (0),
   itsPolnr    (0),
@@ -95,9 +72,7 @@ MSWriterImpl::MSWriterImpl (const char* msName, double timeStep,
   itsFrame    (0),
   itsMS       (0),
   itsMSCol    (0)
-#endif
 {
-#ifdef HAVE_AIPSPP
   AlwaysAssert (nantennas >= 0, AipsError);
   // Get the position of Westerbork in WGS84.
   MPosition arrayPosTmp;
@@ -139,12 +114,10 @@ MSWriterImpl::MSWriterImpl (const char* msName, double timeStep,
   // Make a frame for the calculation of apparent coordinates.
   // Store position of array center in it.
   itsFrame = new MeasFrame(*itsArrayPos);
-#endif
 }
 
 MSWriterImpl::~MSWriterImpl()
 {
-#ifdef HAVE_AIPSPP
   if (itsMS != 0) {
     updateTimes();
   }
@@ -156,20 +129,14 @@ MSWriterImpl::~MSWriterImpl()
   delete itsFrame;
   delete itsMSCol;
   delete itsMS;
-#endif
 }
 
 int MSWriterImpl::nrPolarizations() const
 {
-#ifdef HAVE_AIPSPP
   return itsMS->polarization().nrow();
-#else
-  return 0;
-#endif
 }
 
 
-#ifdef HAVE_AIPSPP
 void MSWriterImpl::createMS (const char* msName,
 			     const Block<MPosition>& antPos)
 {
@@ -211,41 +178,29 @@ void MSWriterImpl::createMS (const char* msName,
   fillObservation();
   fillState();
 }
-#endif
 
 int MSWriterImpl::addBand (int npolarizations, int nchannels,
 			   double refFreq, double chanWidth)
 {
-#ifdef HAVE_AIPSPP
   AlwaysAssert (nchannels > 0, AipsError);
   Vector<double> chanWidths(nchannels);
   chanWidths = chanWidth;
   Vector<double> chanFreqs(nchannels);
   indgen (chanFreqs, refFreq - (nchannels-1)*chanWidth/2., chanWidth);
   return addBand (npolarizations, nchannels, refFreq, chanFreqs, chanWidths);
-#else
-  itsNrBand++;
-  return itsNrBand-1;
-#endif
 }
 
 int MSWriterImpl::addBand (int npolarizations, int nchannels,
 			   double refFreq, const double* chanFreqs,
 			   const double* chanWidths)
 {
-#ifdef HAVE_AIPSPP
   AlwaysAssert (nchannels > 0, AipsError);
   IPosition shape(1, nchannels);
   Vector<double> freqs (shape, const_cast<double*>(chanFreqs), SHARE);
   Vector<double> widths(shape, const_cast<double*>(chanWidths), SHARE);
   return addBand (npolarizations, nchannels, refFreq, freqs, widths);
-#else
-  itsNrBand++;
-  return itsNrBand-1;
-#endif
 }
 
-#ifdef HAVE_AIPSPP
 int MSWriterImpl::addBand (int npolarizations, int nchannels,
 			   double refFreq, const Vector<double>& chanFreqs,
 			   const Vector<double>& chanWidths)
@@ -336,11 +291,9 @@ int MSWriterImpl::addPolarization (int npolarizations)
   mspol.flush();
   return rownr;
 }
-#endif
 
 int MSWriterImpl::addField (double azimuth, double elevation)
 {
-#ifdef HAVE_AIPSPP
   // Convert AZEL to J2000 RADEC.
   Quantity qtime(itsStartTime, "s");
   itsFrame->set (MEpoch(qtime, MEpoch::UTC));
@@ -384,12 +337,10 @@ int MSWriterImpl::addField (double azimuth, double elevation)
       rownr++;
     }
   }
-#endif
   itsNrField++;
   return itsNrField-1;
 }
 
-#ifdef HAVE_AIPSPP
 void MSWriterImpl::fillAntenna (const Block<MPosition>& antPos)
 {
   // Determine constants for the ANTENNA subtable.
@@ -542,12 +493,11 @@ void MSWriterImpl::updateTimes()
     }
   }
 }
-#endif
 
-void MSWriterImpl::write (int bandId, int fieldId, int timeCounter, int nrdata,
-			  const fcomplex* data, const bool* flags)
+void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId, 
+			  int timeCounter, int nrdata, const dcomplex* data, 
+			  const bool* flags)
 {
-#ifdef HAVE_AIPSPP
   AlwaysAssert (bandId >= 0  &&  bandId < itsNrBand, AipsError);
   AlwaysAssert (fieldId >= 0  &&  fieldId < itsNrField, AipsError);
   AlwaysAssert (data != 0, AipsError);
@@ -556,81 +506,111 @@ void MSWriterImpl::write (int bandId, int fieldId, int timeCounter, int nrdata,
   }
   // Find the shape of the data array in each table row.
   IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);
-  Int nrel = shape.product();
+  Int nrel = shape[0];       // == number of polarisations/correlations
   if (nrdata != itsNrAnt*itsNrAnt*nrel) {
     throw AipsError ("incorrect nr of data points for this band; should be " +
 		     String::toString(itsNrAnt*itsNrAnt*nrel));
   }
-  // Add the number of rows needed.
-  int nrbasel = itsNrAnt*(itsNrAnt-1)/2;
-  int rownr = itsMS->nrow();
-  itsMS->addRow (nrbasel);
   Array<Bool> defFlags(shape);
-  defFlags = False;
-  Array<Float> sigma(IPosition(1, shape(0)));
-  sigma = 0;
-  Array<Float> weight(IPosition(1, shape(0)));
-  weight = 1;
-  Double time = itsStartTime + timeCounter*itsTimeStep;
-  // Calculate the apparent HA and DEC for the array center.
-  // First store time in frame.
-  Quantity qtime(time, "s");
-  itsFrame->set (MEpoch(qtime, MEpoch::UTC));
-  MDirection::Ref outref(MDirection::HADEC, *itsFrame);
-  MDirection outdir = MDirection::Convert (*itsArrayPos, outref) ();
-  Double ha = outdir.getAngle().getValue()(0);
-  Double dec = outdir.getAngle().getValue()(1);
-  Double sinha = std::sin(ha);
-  Double cosha = std::cos(ha);
-  Double sindec = std::sin(dec);
-  Double cosdec = std::cos(dec);
-  Vector<Double> uvw(3);
-  const Cube<Double>& basel = *itsBaselines;
-  // Write all the data.
-  // The input data array has shape nrpol,nrchan,nrant,nrant.
-  // So we can form an AIPS++ array for each baseline.
-  for (int i=0; i<itsNrAnt; i++) {
-    for (int j=0; j<itsNrAnt; j++) {
-      if (j < i) {
-	uvw(0) = sinha*basel(0,i,j) + cosha*basel(1,i,j);
-	uvw(1) = -sindec*cosha*basel(0,i,j) + sindec*sinha*basel(1,i,j) +
-	         cosdec*basel(2,i,j);
-	uvw(2) = cosdec*cosha*basel(0,i,j) - cosdec*sinha*basel(1,i,j) +
-	         sindec*basel(2,i,j);
-	Array<Complex> array(shape, (Complex*)(data), SHARE);
-	itsMSCol->data().put (rownr, array);
-	if (flags == 0) {
-	  itsMSCol->flag().put (rownr, defFlags);
-	} else {
-	  Array<Bool> flagArray(shape, const_cast<Bool*>(flags), SHARE);
-	  itsMSCol->flag().put (rownr, flagArray);
+
+  if (rowNr < 0)  // Do this once per band
+  {
+    // Add the number of rows needed.
+    int nrbasel = itsNrAnt*(itsNrAnt-1)/2;
+    rowNr = itsMS->nrow();
+    itsMS->addRow (nrbasel);
+    defFlags = False;
+    Array<Float> sigma(IPosition(1, shape(0)));
+    sigma = 0;
+    Array<Float> weight(IPosition(1, shape(0)));
+    weight = 1;
+    Double time = itsStartTime + timeCounter*itsTimeStep;
+    // Calculate the apparent HA and DEC for the array center.
+    // First store time in frame.
+    Quantity qtime(time, "s");
+    itsFrame->set (MEpoch(qtime, MEpoch::UTC));
+    MDirection::Ref outref(MDirection::HADEC, *itsFrame);
+    MDirection outdir = MDirection::Convert (*itsArrayPos, outref) ();
+    Double ha = outdir.getAngle().getValue()(0);
+    Double dec = outdir.getAngle().getValue()(1);
+    Double sinha = std::sin(ha);
+    Double cosha = std::cos(ha);
+    Double sindec = std::sin(dec);
+    Double cosdec = std::cos(dec);
+    Vector<Double> uvw(3);
+    const Cube<Double>& basel = *itsBaselines;
+    // Write all the data.
+    // The input data array has shape nrpol,nrchan,nrant,nrant.
+    // So we can form an AIPS++ array for each baseline.
+    for (int i=0; i<itsNrAnt; i++) {
+      for (int j=0; j<itsNrAnt; j++) {
+	if (j < i) {
+	  uvw(0) = sinha*basel(0,i,j) + cosha*basel(1,i,j);
+	  uvw(1) = -sindec*cosha*basel(0,i,j) + sindec*sinha*basel(1,i,j) +
+	    cosdec*basel(2,i,j);
+	  uvw(2) = cosdec*cosha*basel(0,i,j) - cosdec*sinha*basel(1,i,j) +
+	    sindec*basel(2,i,j);
+	  itsMSCol->flagRow().put (rowNr, False);
+	  itsMSCol->time().put (rowNr, time);
+	  itsMSCol->antenna1().put (rowNr, j);
+	  itsMSCol->antenna2().put (rowNr, i);
+	  itsMSCol->feed1().put (rowNr, 0);
+	  itsMSCol->feed2().put (rowNr, 0);
+	  itsMSCol->dataDescId().put (rowNr, bandId);
+	  itsMSCol->processorId().put (rowNr, 0);
+	  itsMSCol->fieldId().put (rowNr, fieldId);
+	  itsMSCol->interval().put (rowNr, itsTimeStep);
+	  itsMSCol->exposure().put (rowNr, itsTimeStep);
+	  itsMSCol->timeCentroid().put (rowNr, time);
+	  itsMSCol->scanNumber().put (rowNr, 0);
+	  itsMSCol->arrayId().put (rowNr, 0);
+	  itsMSCol->observationId().put (rowNr, 0);
+	  itsMSCol->stateId().put (rowNr, 0);
+	  itsMSCol->uvw().put (rowNr, uvw);
+	  itsMSCol->weight().put (rowNr, weight);
+	  itsMSCol->sigma().put (rowNr, sigma);
 	}
-	itsMSCol->flagRow().put (rownr, False);
-	itsMSCol->time().put (rownr, time);
-	itsMSCol->antenna1().put (rownr, j);
-	itsMSCol->antenna2().put (rownr, i);
-	itsMSCol->feed1().put (rownr, 0);
-	itsMSCol->feed2().put (rownr, 0);
-	itsMSCol->dataDescId().put (rownr, bandId);
-	itsMSCol->processorId().put (rownr, 0);
-	itsMSCol->fieldId().put (rownr, fieldId);
-	itsMSCol->interval().put (rownr, itsTimeStep);
-	itsMSCol->exposure().put (rownr, itsTimeStep);
-	itsMSCol->timeCentroid().put (rownr, time);
-	itsMSCol->scanNumber().put (rownr, 0);
-	itsMSCol->arrayId().put (rownr, 0);
-	itsMSCol->observationId().put (rownr, 0);
-	itsMSCol->stateId().put (rownr, 0);
-	itsMSCol->uvw().put (rownr, uvw);
-	itsMSCol->weight().put (rownr, weight);
-	itsMSCol->sigma().put (rownr, sigma);
-	rownr++;
-      }
-      data += nrel;
-      if (flags != 0) {
-	flags += nrel;
       }
     }
   }
-#endif
+
+  int nPol = 2;
+  if (nrel == 1) {
+    nPol = 1;
+  }
+
+   // Write all the data.
+  // So we can form an AIPS++ array for each baseline.
+    for (int i=0; i<itsNrAnt; i++) {
+      for (int j=0; j<itsNrAnt; j++) {
+	if (j < i) {
+	  
+	  Matrix<Complex> dataArr(IPosition(2, nrel, 1));
+	  Complex* dataPtr = dataArr.data();
+	  uint startInd = i*nrel*itsNrAnt + j*nPol;
+	  dataPtr[0] = ((Complex*)data)[startInd];
+	  if (nPol == 2)
+	  {
+	    dataPtr[1] = ((Complex*)data)[startInd + 1];
+	    dataPtr[2] = ((Complex*)data)[startInd + nPol*itsNrAnt];
+	    dataPtr[3] = ((Complex*)data)[startInd + nPol*itsNrAnt + 1];
+	  }
+	  IPosition start(2, 0, channelId);
+	  IPosition length(2, nPol, 1);
+	  Slicer slice(start, length);
+	  itsMSCol->data().putSlice(rowNr, slice, dataArr);
+
+	  if (flags == 0) {
+	    itsMSCol->flag().putSlice (rowNr, slice, defFlags);
+	  } else {
+// 	    // >>> change this!!
+// 	    Array<Bool> flagArray(shape, const_cast<Bool*>(flags), SHARE);
+// 	    itsMSCol->flag().put (rownr, flagArray);
+	  }
+	}
+// 	if (flags != 0) {
+// 	  flags += nrel;
+// 	}
+      }
+    }
 }
