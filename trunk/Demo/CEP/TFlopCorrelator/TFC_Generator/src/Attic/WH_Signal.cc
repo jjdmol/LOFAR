@@ -51,7 +51,7 @@ WH_Signal::WH_Signal(const string& name,
     itsPS(ps),
     itsSignalType(st)
 {
-  itsFrequency = ps.getDouble("Generator.OutputRate") / ps.getInt32("NoPacketsInFrame");
+  itsFrequency = ps.getDouble("Generator.OutputRate") / ps.getInt32("Input.NPacketsInFrame");
   
   for (int outDH = 0; outDH < noOutputs; outDH++) {
     getDataManager().addOutDataHolder(outDH, new DH_RSP("signal_out", itsPS));
