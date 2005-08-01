@@ -1,0 +1,16 @@
+###########################
+# Station Operations
+###########################
+versionnr=1.0
+qualification=development
+name=SO
+propertysetBaseName=PAC_SO
+propertysetDetailsType=TAplPacSO
+parentTask= 	# leave empty
+parentHost=	# leave empty
+parentPort=0	# leave empty
+claimTime=+5	# +5 = 5 seconds from now
+prepareTime=+6	
+startTime=+7	
+stopTime=-1	# -1 = indefinitely
+samplingFrequency=160.0

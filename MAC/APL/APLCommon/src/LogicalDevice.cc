@@ -1163,7 +1163,8 @@ void LogicalDevice::_sendScheduleToClients()
         remove(tempFileName.c_str());
   
         // send the schedule to the startdaemon of the child
-        TLogicalDeviceTypes ldType = static_cast<TLogicalDeviceTypes>(psSubset.getInt32("logicalDeviceType"));
+        string ldTypeString = psSubset.getString("logicalDeviceType");
+        TLogicalDeviceTypes ldType = _convertLogicalDeviceType(ldTypeString);
         boost::shared_ptr<STARTDAEMONScheduleEvent> scheduleEvent(new STARTDAEMONScheduleEvent);
         scheduleEvent->logicalDeviceType = ldType;
         scheduleEvent->taskName = startDaemonKey;
@@ -1268,6 +1269,10 @@ TLogicalDeviceTypes LogicalDevice::_convertLogicalDeviceType(const string& ldTyp
   else if(ldTypeString == "VIRTUALBACKEND")
   {
     ldType = LDTYPE_VIRTUALBACKEND;
+  }
+  else if(ldTypeString == "MAINTENANCEVI")
+  {
+    ldType = LDTYPE_MAINTENANCEVI;
   }
   else
   {
