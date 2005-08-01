@@ -27,7 +27,13 @@ int main (int argc, const char** argv) {
 
   // Check invocation syntax
   try {
-    if (strncmp("ACC", argv[1], 3) != 0) {
+    if ((argc==3) && (strncmp("ACC", argv[1], 3) == 0)) {
+      LOG_TRACE_FLOW("Main program started by ACC");
+      // we were called by ACC so execute the ACCmain
+      AH_InputSection myAH;
+      ApplicationHolderController myAHController(myAH);
+      myAHController.main(argc, argv);
+    } else {
       LOG_TRACE_FLOW("Main program not started by ACC");
       // there are no commandline arguments, so we were not called by ACC
       AH_InputSection myAH;
@@ -48,12 +54,6 @@ int main (int argc, const char** argv) {
       myAH.baseDump();
       myAH.baseQuit();
       Profiler::deActivate();
-    } else {
-      LOG_TRACE_FLOW("Main program started by ACC");
-      // we were called by ACC so execute the ACCmain
-      AH_InputSection myAH;
-      ApplicationHolderController myAHController(myAH);
-      myAHController.main(argc, argv);
     }
   } catch (Exception& ex) {
     LOG_FATAL_STR("Caught exception: " << ex << endl);
