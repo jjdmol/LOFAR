@@ -18,7 +18,7 @@ namespace LOFAR
 class DH_Vis: public DataHolder
 {
 public:
-  typedef dcomplex BufferType;
+  typedef fcomplex BufferType;
 
   // Constructor with centerFreq being the center frequency of the subband
   explicit DH_Vis (const string& name, double centerFreq, 
@@ -41,8 +41,6 @@ public:
 
   const unsigned int getBufSize() const;
 
-  RectMatrix<BufferType>& getDataMatrix() const;
-
   /// Test pattern methods used for regression tests
   void setTestPattern();
   bool checkTestPattern();
@@ -64,9 +62,9 @@ private:
   // this value is not strictly necessary, but we can 
   // check the testpattern with it.
   short itsNsamples;
-  
-  RectMatrix<BufferType>* itsMatrix;
 
+  short itsNCorrs;  // #polarisations*#polarisations
+  
   void fillDataPointers();
 };
 
@@ -79,9 +77,6 @@ inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
 
 inline const unsigned int DH_Vis::getBufSize() const 
   { return itsBufSize; }  
-
-inline RectMatrix<DH_Vis::BufferType>& DH_Vis::getDataMatrix() const 
-  { return *itsMatrix; }
 
 inline bool DH_Vis::checkTestPattern() {
   bool result = true;
