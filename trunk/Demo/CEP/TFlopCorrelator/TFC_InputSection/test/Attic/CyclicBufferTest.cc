@@ -59,7 +59,7 @@ void* produce(void* arguments)
   char buf[15];
   int id;
 
-  for (int i=1;i<=10 * buffersize;i++) {
+  for (int i=1;i<=buffersize;i++) {
     pelement = buffer->getAutoWritePtr();
     sprintf(pelement->data, "element %d", i);
     buffer->readyWriting();
@@ -75,11 +75,9 @@ void* consume(void* arguments)
   int buffersize = args->buffersize;
   int blocksize = args->blocksize;
   int offset = args->offset;
-  BufferType *pelement;
 
-  for (int i=0;i<10 * buffersize;i+=blocksize) {
-    //pelement = buffer->getAutoReadPtr();
-    hexdump(buffer->getBlockReadPtr(offset,blocksize),blocksize*sizeof(BufferType));
+  for (int i=0;i<buffersize;i+=blocksize) {
+    hexdump(buffer->getBlockReadPtr(offset,blocksize),blocksize*sizeof(dataformat));
     cout << endl;
     buffer->readyReading();
   }
@@ -115,7 +113,7 @@ int main (int argc, const char** argv)
      perror("pthread_create");
      exit(1);
    }
-   
+
    // start consuming data thread
    pthread_t consumer;
    thread_args consumerdata;
