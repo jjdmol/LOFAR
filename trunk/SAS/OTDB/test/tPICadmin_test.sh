@@ -1,3 +1,3 @@
 #!/bin/sh
 cp ../../../test/PICmasterfile.txt .
-./tPICadmin PICmasterfile.txt 2>&1 > tPICadmin_test.log
+$lofar_sharedir/runtest.sh tPICadmin PICmasterfile.txt 2>&1 > tPICadmin_test.log
