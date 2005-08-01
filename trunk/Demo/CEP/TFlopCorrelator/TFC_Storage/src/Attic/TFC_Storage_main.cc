@@ -36,6 +36,10 @@ int main (int argc, const char** argv) {
       // there are no commandline arguments, so we were not called by ACC
 
       AH_Storage myAH;
+
+      ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
+      myAH.setParameters(ps);
+
       myAH.setarg(argc, argv);
       myAH.baseDefine();
       cout << "defined" << endl;
