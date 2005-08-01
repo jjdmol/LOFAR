@@ -132,8 +132,8 @@ namespace LOFAR
   inline RectMatrix<RSPDataType>& EpaPacket::getMatrix()
     { return *itsMatrix; };
   inline int EpaPacket::getSize(ParameterSet& ps)
-    { return EpaHeader::getSize() + ps.getInt32("NoSubbands") * \
-	ps.getInt32("polarisations") * sizeof(RSPDataType); };
+    { return EpaHeader::getSize() + ps.getInt32("Input.NSubbands") * \
+	ps.getInt32("Input.NPolarisations") * sizeof(RSPDataType); };
 
   inline int EthernetFrame::getNoPacketsInFrame()
     { return itsEpaPackets.size(); };
@@ -146,7 +146,7 @@ namespace LOFAR
   inline void EthernetFrame::reset()
     { memset(itsBufferp, 0, itsBufferSize); };
   inline int EthernetFrame::getSize(ParameterSet& ps)
-    { return EpaPacket::getSize(ps) * ps.getInt32("NoPacketsInFrame"); };
+    { return EpaPacket::getSize(ps) * ps.getInt32("Input.NPacketsInFrame"); };
   
 
 } // namespace LOFAR

@@ -41,7 +41,7 @@ namespace LOFAR
       itsEpaHeader(bufferSpace),
       itsMatrix(0)
   {
-    int NoSubbands = ps.getInt32("NoSubbands");
+    int NoSubbands = ps.getInt32("Input.NSubbands");
     int BufferSize = EpaPacket::getSize(ps);
 
     ASSERTSTR(bufferSize == BufferSize, "EpaPacket received the wrong amount of buffer data");
@@ -68,7 +68,7 @@ namespace LOFAR
     } else {
       itsIsMemoryMine = false;
     }
-    int noEpaP = ps.getInt32("NoPacketsInFrame");
+    int noEpaP = ps.getInt32("Input.NPacketsInFrame");
     int epaSize = EpaPacket::getSize(ps);
     itsBufferSize = EthernetFrame::getSize(ps);
     if (itsIsMemoryMine) {

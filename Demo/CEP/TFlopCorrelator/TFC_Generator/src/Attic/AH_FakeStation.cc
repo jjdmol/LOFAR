@@ -66,7 +66,7 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
   // todo: define this input interface; although there are no
   //       connection involved, we do have to define the port/IP numbering schemes
 
-  int NRSP = itsParamSet.getInt32("NRSP");
+  int NRSP = itsParamSet.getInt32("Input.NRSP");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   bool useEth = itsParamSet.getBool("Generator.UseEth");
