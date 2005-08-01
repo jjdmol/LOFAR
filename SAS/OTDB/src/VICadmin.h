@@ -58,10 +58,6 @@ public:
 
 	~VICadmin();
 
-	// Before any components can be loaded into a component tree a new
-	// (empty) tree must be created.
-//	treeIDType createNewTree ();
-
 	// a VIC tree is build up from single components. The definition of a
 	// component can loaded from a file with this call
 	nodeIDType	loadComponentFile (const string&	filename);
@@ -69,14 +65,17 @@ public:
 	bool		saveParam	(OTDBparam&		aParam);
 	bool		deleteNode	(VICnodeDef&	aNode);
 	VICnodeDef	getNode		(nodeIDType		aNodeID);
-	VICnodeDef	getNode		(const string&		name,
-							 uint32				version,
-							 treeClassifType	classif);
+	VICnodeDef	getNode		(const string&		aNameFragment,
+							 uint32				aVersion = 0,
+							 treeClassifType	aClassification = 0);
+	vector<VICnodeDef> getTopComponentList (const string&	name = "%");
 
 	// From a component tree a (folded) tree can be constructed. In a folded
 	// tree only the structure of the tree is created, there is no replication
 	// of nodes on the same level.
-	treeIDType buildFoldedTree (treeIDType	baseTree);
+	treeIDType buildFoldedTree (treeIDType			baseTree,
+							    nodeIDType			topNodeID,
+							    treeClassifType		aClassif);
 
 	// Get a single node from the VIC template tree
 	OTDBnode getNode (treeIDType	aTreeID,
@@ -86,6 +85,9 @@ public:
 	vector<OTDBnode> getItemList (treeIDType	aTreeID,
 								  nodeIDType	topNode,
 								  uint32		depth);
+	// Get a list of nodes based on a namefragment. Use '%' as wildchar.
+	vector<OTDBnode> getItemList (treeIDType	aTreeID,
+								  const string&	aNameFragment);
 
 	// Duplicates the given node (and its parameters and children)
 	// in the template database. The duplicate gets the new index.

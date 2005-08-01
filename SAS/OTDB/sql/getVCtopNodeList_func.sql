@@ -1,5 +1,5 @@
 --
---  getVTitemList.sql: function for getting some layers of a VIC template tree
+--  getVCtopNodeList.sql: gets the topnode of the tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,43 +23,40 @@
 --
 
 --
--- getVTitemList (treeID, nodeList)
--- 
--- Get a list of items.
+-- getVCtopNodeList (namefragment)
 --
--- Authorisation: none
+-- Get a list with the top components
 --
--- Tables: 	victemplate		read
+-- Authorisation: no
 --
--- Types:	OTDBnode
+-- Tables:	VICnodedef	read
 --
--- TODO: we should also use the index??
+-- Types:	OTDBnodeDef
 --
-CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
-  RETURNS SETOF OTDBnode AS '
+CREATE OR REPLACE FUNCTION getVCtopNodeList(VARCHAR(40))
+  RETURNS SETOF OTDBnodeDef AS '
 	DECLARE
-		vRecord		RECORD;
+		vRecord			RECORD;
 
 	BEGIN
-
-	  -- get result
-	  FOR vRecord IN EXECUTE \'
-	    SELECT t.nodeid,
-			   t.parentid, 
-			   t.originid,
-			   t.name, 
-			   t.index, 
-			   t.leaf,
-			   t.instances,
-			   t.limits,
-			   \\\'\\\'::text 
-		FROM   VICtemplate t
-		WHERE  t.treeID = \' || $1 || \'
-		AND	   t.parentID in (\' || $2 || \')\'
+	  -- do selection
+	  FOR vRecord IN 
+		SELECT nodeID,
+			   name,
+			   version,
+			   classif,
+			   constraints,
+			   description
+		FROM   VICnodedef 
+		WHERE  name LIKE $1
+		EXCEPT
+		  SELECT	n.*
+		  FROM		VICnodeDef n, VICparamDef p
+		  WHERE		substr(p.name,2) = n.name
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
-	END
+	END;
 ' LANGUAGE plpgsql;
 

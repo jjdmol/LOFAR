@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh tOTDBtree 2>&1 > tOTDBtree_test.log
+$lofar_sharedir/runtest.sh tOTDBinfo 2>&1 > tOTDBinfo_test.log

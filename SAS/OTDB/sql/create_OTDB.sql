@@ -48,6 +48,7 @@
 \i saveVCnode_func.sql
 \i saveVICparamDef_func.sql
 \i getVICnodeDef_func.sql
+\i getVCtopNodeList_func.sql
 
 -- values
 \i addKVT_func.sql
