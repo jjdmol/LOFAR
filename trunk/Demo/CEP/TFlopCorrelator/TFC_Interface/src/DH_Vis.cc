@@ -72,7 +72,7 @@ void DH_Vis::setStorageTestPattern()
   BufferType* dataPtr = itsBuffer;
   for (int i=0; i<itsNStations; i++)
   {
-    for (int j=i+1; j<itsNStations; j++)
+    for (int j=i; j<itsNStations; j++)
     {
       dataPtr[0] = makefcomplex(i, j);
       if (itsNCorrs == 4)
