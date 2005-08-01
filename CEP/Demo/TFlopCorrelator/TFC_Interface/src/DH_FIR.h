@@ -52,6 +52,11 @@ public:
   void InitTimeCursor(short station, short pol);
   BufferType getNextTime();
 
+  /// This accessor is designed specifically for the first version 
+  /// TFlopCorrelator. To maintain compatibility with the DH_CorrCube
+  /// interface, a channel parameter is also defined, but not used.
+  BufferType getBufferElement(short channel, short station, short time, short pol);
+
 private:
   /// Forbid assignment.
   DH_FIR& operator= (const DH_FIR&);
