@@ -40,6 +40,9 @@ public:
 
   const unsigned int getBufSize() const;
 
+  /// Test pattern methods used for regression tests
+  void setStorageTestPattern();
+
   /// Test pattern methods used for regression tests of the correlator
   bool checkCorrelatorTestPattern();
 
