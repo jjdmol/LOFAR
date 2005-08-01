@@ -312,27 +312,27 @@ void WH_RSPInput::process()
 
   for (int s=0; s < itsNSubbands; s++) {
 
+    // get outgoing dataholder
     rspDHp = (DH_RSP*)getDataManager().getOutHolder(s);
 
-    // copy block of subband samples from cyclic buffer to outgoing dataholder
+    // copy 'itsNSamplesToCopy' subband samples from buffer to outgoing dataholder
     memcpy(rspDHp->getBuffer(), 
            itsSubbandBuffer[s]->getBlockReadPtr(delay, itsNSamplesToCopy),
            itsNSamplesToCopy * itsNPolarisations * sizeof(u16complex));
-
-    int count = 0;
     
     // copy metadata from cyclic buffer to outgoing dataholder
+    int count = 0;
     for (int t=0; t<itsNSamplesToCopy; t++) {
       metadata = itsMetadataBuffer[s]->getBlockReadPtr(delay, 1);
       if (metadata->invalid > 0) {
 	count++;
       }
       if (t==0) {
-        rspDHp->setStationID(itsStationID);
-        rspDHp->setTimeStamp(metadata->timestamp);
+        rspDHp->setStationID(itsStationID);        // station involved
+        rspDHp->setTimeStamp(metadata->timestamp); // timestamp of first subband sample
       }
     }
-    rspDHp->setInvalidCount(count);
+    rspDHp->setInvalidCount(count);                // number invalid subband samples
   } 
   
   // dump the output (for debugging)

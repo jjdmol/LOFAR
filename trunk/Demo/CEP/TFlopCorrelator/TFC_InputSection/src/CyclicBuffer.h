@@ -85,8 +85,11 @@ class CyclicBuffer
   // read oldest item and adjust tail and count
   const TYPE GetAutoReadPtr(int& ID);
 
+  // write a block and adjust tail and count
+  const TYPE GetBlockWritePtr(int nelements, int& ID);
+
   // read a block beginning at oldest item + offset and adjust tail and count
-  const TYPE GetBlockReadPtr(int offset, int Nelements, int& ID);
+  const TYPE GetBlockReadPtr(int offset, int nelements, int& ID);
 
   // read oldest item without adjusting tail and count 
   const TYPE GetFirstReadPtr(int& ID);
@@ -95,8 +98,8 @@ class CyclicBuffer
   TYPE GetManualWritePtr(int ID);
   
   // release locks
-  void WriteUnlockItems(int ID, int Nelements);
-  void ReadUnlockItems(int ID, int Nelements);
+  void WriteUnlockElements(int ID, int nelements);
+  void ReadUnlockElements(int ID, int nelements);
 
   // print head, tail and count pointers
   void Dump();
@@ -109,8 +112,8 @@ class CyclicBuffer
 
  private:
 
-  void ReadLockItems(int ID, int Nelements);
-  void WriteLockItems(int ID, int Nelements);
+  void ReadLockElements(int ID, int nelements);
+  void WriteLockElements(int ID, int nelements);
   
   vector< BufferItem <TYPE> > itsBuffer;
 
@@ -194,11 +197,11 @@ TYPE CyclicBuffer<TYPE>::GetAutoWritePtr(int& ID)
 
   // CONDITION: itsCount < MAX_COUNT
   ID = itsHeadIdx;
-  itsBuffer[ID].itsRWLock.WriteLock();
+  WriteLockElements(ID, 1);
   
   // adjust the head (points to first free position)
   itsHeadIdx++;
-  if (itsHeadIdx >= (int)itsBuffer.size())
+  if (itsHeadIdx >= itsBuffer.size())
   {
     itsHeadIdx = 0;
   }
@@ -227,11 +230,11 @@ const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
   
   // CONDITION: itsCount >= MIN_COUNT
   ID = itsTailIdx;
-  ReadLockItems(ID, 1);
+  ReadLockElements(ID, 1);
  
   // adjust the tail
   itsTailIdx++;
-  if (itsTailIdx >= (int)itsBuffer.size())
+  if (itsTailIdx >= itsBuffer.size())
   {
     itsTailIdx = 0;
   }
@@ -246,12 +249,48 @@ const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
 }
 
 template<class TYPE>
-const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int Nelements, int& ID)
+const TYPE CyclicBuffer<TYPE>::GetBlockWritePtr(int nelements, int& ID)
+{
+  pthread_mutex_lock(&buffer_mutex);
+  
+  // wait until enough space becomes available
+  while (itsCount + nelements > MAX_COUNT)
+  {
+    pthread_cond_wait(&space_available, &buffer_mutex);
+  }
+
+  // CONDITION: itsCount + nelements <= MAX_COUNT
+  ID = itsHeadIdx;
+  
+  // lock the elements
+  WriteLockElements(ID, nelements);
+
+  // adjust the head (point to first free position)
+  itsHeadIdx += nelements;
+  if (itsHeadIdx >= itsBuffer.size())
+  {
+    itsHeadIdx -= itsBuffer.size();;
+  }
+  itsCount += nelements;
+
+  // signal that data has become available 
+  if (itsCount >= MIN_COUNT)
+  {
+    pthread_cond_broadcast(&data_available);
+  }
+  pthread_mutex_unlock(&buffer_mutex);
+
+  return itsBuffer[ID].itsItem;
+}
+
+
+template<class TYPE>
+const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int nelements, int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until enough elements are available
-  while ((itsCount < MIN_COUNT) || (itsCount < offset+Nelements)) 
+  while (itsCount - (offset + nelements) < MIN_COUNT) 
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
@@ -259,23 +298,23 @@ const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int Nelements, int& I
   
   // set offset (note: offset can be less than 0
   ID = itsTailIdx + offset;
-  if (ID >= (int)itsBuffer.size()) {
-    ID = ID - (int)itsBuffer.size();
+  if (ID >= itsBuffer.size()) {
+    ID -= itsBuffer.size();
   }
   if (ID < 0) {
-    ID = ID  + (int)itsBuffer.size();
+    ID += itsBuffer.size();
   }
   
   // lock the elements
-  ReadLockItems(ID, Nelements); 
+  ReadLockElements(ID, nelements); 
 
   // adjust the tail
-  itsTailIdx += Nelements;
+  itsTailIdx += nelements;
   if (itsTailIdx >= (int)itsBuffer.size())
   {
-    itsTailIdx = itsTailIdx-(int)itsBuffer.size();
+    itsTailIdx -= (int)itsBuffer.size();
   }
-  itsCount -= Nelements;
+  itsCount -= nelements;
   
   // signal that space has become available
   pthread_cond_broadcast(&space_available);
@@ -298,7 +337,7 @@ const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
   // CONDITION: itsCount > 0
   
   ID = itsTailIdx;
-  ReadLockItems(ID, 1);
+  ReadLockElements(ID, 1);
  
   pthread_mutex_unlock(&buffer_mutex);
   
@@ -308,7 +347,7 @@ const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
 template<class TYPE>
 TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
 {
-  if ( (ID >= (int)itsBuffer.size()) || (ID < 0))
+  if ( (ID >= itsBuffer.size()) || (ID < 0))
   {
    LOG_TRACE_RTTI("CyclicBuffer::getWriteUserItem: ID has invalid value");
    return 0;
@@ -316,7 +355,8 @@ TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
 
   pthread_mutex_lock(&buffer_mutex); 
 
-  itsBuffer[ID].itsRWLock.WriteLock();
+  // lock the elements
+  WriteLockElements(ID, 1);
 
   pthread_mutex_unlock(&buffer_mutex);
 
@@ -324,35 +364,54 @@ TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::WriteLockItems(int ID, int Nelements)
+void CyclicBuffer<TYPE>::WriteLockElements(int ID, int nelements)
 {
-  for (int i=0; i<Nelements; i++) {
-    itsBuffer[ID+i].itsRWLock.WriteLock();
-  }
-
-}
-
-template<class TYPE>
-void CyclicBuffer<TYPE>::WriteUnlockItems(int ID, int Nelements)
-{
-  for (int i=0; i<Nelements; i++) {
-    itsBuffer[ID+i].itsRWLock.WriteUnlock();
+  int idx = ID;
+  for (int i=0; i<nelements; i++) {
+    if (idx >= itsBuffer.size()) {
+      idx = 0;
+    }
+    itsBuffer[idx].itsRWLock.WriteLock();
+    idx++;
   }
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::ReadLockItems(int ID, int Nelements)
+void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
 {
-  for (int i=0; i<Nelements; i++) {
-    itsBuffer[ID+i].itsRWLock.ReadLock();
+  int idx = ID;
+  for (int i=0; i<nelements; i++) {
+    if (idx >= itsBuffer.size()) {
+      idx = 0;
+    }
+    itsBuffer[idx].itsRWLock.WriteUnlock();
+    idx++;
   }
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::ReadUnlockItems(int ID, int Nelements)
+void CyclicBuffer<TYPE>::ReadLockElements(int ID, int nelements)
 {
-  for (int i=0; i<Nelements; i++) {
-    itsBuffer[ID+i].itsRWLock.ReadUnlock();
+  int idx = ID;
+  for (int i=0; i<nelements; i++) {
+    if (idx >= itsBuffer.size()) {
+      idx = 0;
+    }
+    itsBuffer[idx].itsRWLock.ReadLock();
+    idx++;
+  }
+}
+
+template<class TYPE>
+void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
+{
+  int idx = ID;
+  for (int i=0; i<nelements; i++) {
+    if (idx >= itsBuffer.size()) {
+      idx = 0;
+    }
+    itsBuffer[idx].itsRWLock.ReadUnlock();
+    idx++;
   }
 }
 
