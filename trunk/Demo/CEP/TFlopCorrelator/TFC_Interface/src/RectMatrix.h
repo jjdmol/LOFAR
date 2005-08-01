@@ -19,6 +19,8 @@ using LOFAR::string;
 using LOFAR::vector;
 using LOFAR::map;
 
+namespace LOFAR {
+
 // 3 macros are provided which can be used to construct a for loop:
 //
 // MATRIX_FOR_LOOP(matrix, dim, cursor)
@@ -159,4 +161,5 @@ class RectMatrix {
 
 #include <RectMatrix.tcc>
 
+}
 #endif
