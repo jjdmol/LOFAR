@@ -28,7 +28,7 @@ DH_Vis::DH_Vis (const string& name, double centerFreq,
    itsNPols = itsPS.getInt32("Input.NPolarisations");
    itsNCorrs = itsNPols*itsNPols;
    itsNStations  = itsPS.getInt32("Input.NRSP");
-   itsNBaselines = itsNStations * (itsNStations - 1)/2;
+   itsNBaselines = itsNStations * (itsNStations + 1)/2;
    
    itsNsamples = itsPS.getInt32("WH_Corr.samples");
 }
