@@ -159,7 +159,7 @@ class RectMatrix {
 
 #endif //ENABLE_DBGASSERT
 
-#include <RectMatrix.tcc>
+#include <TFC_Interface/RectMatrix.tcc>
 
 }
 #endif
