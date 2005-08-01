@@ -41,6 +41,7 @@
 \i deleteVTnode_func.sql
 \i getVTnode_func.sql
 \i getVTchildren_func.sql
+\i buildTemplateTree_func.sql
 \i instanciateTree_func.sql
 \i exportTree_func.sql
 

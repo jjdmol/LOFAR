@@ -60,7 +60,7 @@ int main (int	argc, char*	argv[]) {
 	INIT_LOGGER(basename(argv[0]));
 	LOG_INFO_STR("Starting " << argv[0]);
 
-	if (argc < 2) {
+	if (argc != 1) {
 		cout << "Usage: tPICadmin pvssdumpfile" << endl;
 		return (1);
 	}
@@ -77,7 +77,7 @@ int main (int	argc, char*	argv[]) {
 		PICadmin	pa(&conn);
 
 		LOG_DEBUG("Trying to load a master PIC file");
-		treeIDType	treeID = pa.loadMasterFile (argv[1]);
+		treeIDType	treeID = pa.loadMasterFile ("PICmasterfile.txt");
 
 		LOG_INFO_STR("New tree has ID: " << treeID);
 
