@@ -1,9 +1,9 @@
 SUBDIRS						= . 
 
-check_PROGRAMS				= tConnection \
-							  tPICadmin \
+check_PROGRAMS				= tPICadmin \
+							  tVICadmin \
 							  tOTDBinfo \
-							  tVICadmin 
+							  tConnection
 
 tConnection_SOURCES			= tConnection.cc
 tConnection_LDADD			= ../src/libotdb.la -lpqxx
@@ -22,10 +22,10 @@ tOTDBinfo_LDADD				= ../src/libotdb.la -lpqxx
 tOTDBinfo_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
 
 
-TESTS						= tConnection_test.sh \
-							  tPICadmin_test.sh \
+TESTS						= tPICadmin_test.sh \
 							  tVICadmin_test.sh \
-							  tOTDBinfo_test.sh
+							  tOTDBinfo_test.sh \
+							  tConnection_test.sh
 
 TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir)
 

@@ -1,3 +1,3 @@
 #!/bin/sh
 cp ../../../test/VICcomponentFile.in .
-./tVICadmin 2>&1 > tVICadmin_test.log
+$lofar_sharedir/runtest.sh tVICadmin 2>&1 > tVICadmin_test.log

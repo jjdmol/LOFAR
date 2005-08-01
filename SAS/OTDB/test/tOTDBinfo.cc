@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 #include <OTDB/OTDBconnection.h>
+#include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBinfo.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/OTDBvalue.h>
@@ -103,12 +104,14 @@ int main (int	argc, char*	argv[]) {
 			}
 		}
 
+		vector<OTDBtree> 	treeList = conn.getTreeList(10,3);
 		LOG_DEBUG("Trying to construct a info(I/F) object for a VIC tree");
-		OTDBinfo	VICinfo(&conn, 33);
+		treeIDType	PtreeID = treeList[0].treeID();
+		OTDBinfo	VICinfo(&conn, PtreeID);
 
 		for (int i = 1; i < 5; ++i) {
-			LOG_INFO_STR("getItemList(1059," << i << ") of tree 33");
-			vector<OTDBnode>	itemList = VICinfo.getItemList(1059,i);
+			LOG_INFO_STR("getItemList(2," << i << ") of tree PtreeID");
+			vector<OTDBnode>	itemList = VICinfo.getItemList(2,i);
 			if (itemList.size() == 0) {
 				LOG_INFO_STR("No items found");
 			}
