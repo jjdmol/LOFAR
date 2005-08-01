@@ -152,7 +152,7 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
     // So allocate it separately.
     // Still use new to get enough memory for alignment.
     newArr = (MeqMatrixComplexArr*) new char[
-			    ((sizeof(MeqMatrixComplexArr)+7) & -7) + 8 +
+			    ((sizeof(MeqMatrixComplexArr)+7) & ~7) + 8 +
 			    2 * ((nx * ny + 1) & ~1) * sizeof(double)];
     // placement new
     // set inPool to false so this matrix will be deleted.
@@ -195,7 +195,7 @@ void MeqMatrixComplexArr::poolActivate(int nelements)
   if (nelements != theirNElements) {
     poolDeactivate();
     theirNElements     = nelements;
-    theirPoolArraySize = ((sizeof(MeqMatrixComplexArr) + 7) & -7) + 8 +
+    theirPoolArraySize = ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 8 +
 			 2 * ((theirNElements + 1) & ~1) * sizeof(double);
   }
 }
