@@ -11,7 +11,6 @@
 
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
-#include <TFC_Interface/RectMatrix.h>
 
 namespace LOFAR
 {
