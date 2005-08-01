@@ -42,22 +42,29 @@ public:
   BufferController(int size);
   ~BufferController();
   
-  // read first element 
+  // get readptr to read first element 
   TYPE* getAutoReadPtr();
-  // write element at the end
+  // get writeptr to write an element
   TYPE* getAutoWritePtr();
-  // read a block of elements beginning at first element+offset
-  TYPE* getBlockReadPtr(int offset, int size);
-  // get pointer and id of first element
+  // get ptr at readptr+offset to read a block of elemets
+  TYPE* getBlockReadPtr(int offset, int nelements);
+  // get readptr to read first element but don't move readptr
   TYPE* getFirstReadPtr(int& ID);
-  // get pointer of specific element
+  // get ptr of element 'ID' to (over)write this element but don't move writeptr
   TYPE* getManualWritePtr(int ID);
+  // get writeptr to write a block of elements
+  TYPE* getBlockWritePtr(int nelements);
   
+  // unlock the elements
   void readyReading();
   void readyWriting();
+  
+  // dump function for debugging
   void dump();
   
-  int getBufferSize(); // maximum number of elements in Cyclic Buffer
+  // maximum number of elements in Cyclic Buffer
+  int getBufferSize();
+  // actual number of elements in Cyclic Buffer
   int getBufferCount();// actual number of elements in Cyclic Buffer
 
 private:
@@ -120,17 +127,6 @@ TYPE*  BufferController<TYPE>::getAutoWritePtr()
 }
 
 template<class TYPE>
-TYPE* BufferController<TYPE>::getManualWritePtr(int ID)
-{
-  if (itsCurrentWritePtr == 0) {
-    itsCurrentWritePtr = itsBuffer.GetManualWritePtr(ID);
-    itsCurrentWriteID = ID;
-    itsWriteItemsLocked = 1;
-  }
-  return itsCurrentWritePtr; 
-}
-
-template<class TYPE>
 TYPE* BufferController<TYPE>::getAutoReadPtr()
 {
   if (itsCurrentReadPtr == 0) {
@@ -141,13 +137,34 @@ TYPE* BufferController<TYPE>::getAutoReadPtr()
 }
 
 template<class TYPE>
-TYPE* BufferController<TYPE>::getBlockReadPtr(int offset, int Nelements)
+TYPE* BufferController<TYPE>::getBlockWritePtr(int nelements)
+{
+  if (itsCurrentWritePtr == 0) {
+    itsCurrentWritePtr = itsBuffer.GetBlockWritePtr(nelements, itsCurrentWriteID);
+    itsWriteItemsLocked = nelements;
+  }
+  return itsCurrentWritePtr;
+}
+
+template<class TYPE>
+TYPE* BufferController<TYPE>::getBlockReadPtr(int offset, int nelements)
 {
   if (itsCurrentReadPtr == 0) {
-    itsCurrentReadPtr = itsBuffer.GetBlockReadPtr(offset, Nelements, itsCurrentReadID);
-    itsReadItemsLocked = Nelements;
+    itsCurrentReadPtr = itsBuffer.GetBlockReadPtr(offset, nelements, itsCurrentReadID);
+    itsReadItemsLocked = nelements;
   }
   return itsCurrentReadPtr;
+}
+
+template<class TYPE>
+TYPE* BufferController<TYPE>::getManualWritePtr(int ID)
+{
+  if (itsCurrentWritePtr == 0) {
+    itsCurrentWritePtr = itsBuffer.GetManualWritePtr(ID);
+    itsCurrentWriteID = ID;
+    itsWriteItemsLocked = 1;
+  }
+  return itsCurrentWritePtr; 
 }
 
 template<class TYPE>
@@ -166,11 +183,11 @@ void BufferController<TYPE>::readyReading()
 {
   if (itsCurrentReadID >= 0) 
   {
-    itsBuffer.ReadUnlockItems(itsCurrentReadID, itsReadItemsLocked); 
+    itsBuffer.ReadUnlockElements(itsCurrentReadID, itsReadItemsLocked); 
   }
   else
   {
-    LOG_TRACE_RTTI("BufferController::readpointer not previously requested with getradPtr() function");
+    LOG_TRACE_RTTI("BufferController::readpointer not previously requested with getReadPtr() function");
   }
   itsCurrentReadPtr = (TYPE*)0;
   itsCurrentReadID = -1;
@@ -183,7 +200,7 @@ void BufferController<TYPE>::readyWriting()
 {
   if (itsCurrentWriteID >= 0) 
   {
-    itsBuffer.WriteUnlockItems(itsCurrentWriteID, itsWriteItemsLocked);
+    itsBuffer.WriteUnlockElements(itsCurrentWriteID, itsWriteItemsLocked);
   }
   else {
     LOG_TRACE_RTTI("BufferController::writepointer not previously requested with getWritePtr() function");
