@@ -91,87 +91,106 @@ void WH_Correlator::process() {
 //   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
-  in_ptr = &(in_buffer[0][0]);
-  out_ptr = &(out_buffer[0][0]);
-
   // reset integrator.
   memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(DH_Vis::BufferType));
 
-  // fill the input buffer
-  // could this be done without a memcpy?
-  memcpy(&in_buffer, inDH->getBuffer(), inDH->getBufferSize()*sizeof(DH_FIR::BufferType));
-//   memcpy(&in_buffer, inDH->getBuffer(), inDH->getBufSize()*sizeof(DH_CorrCube::BufferType));
 
 #ifdef DO_TIMING
   starttime = timer();
 #endif
 
+
+  __complex__ double reg_x_0, reg_x_1, reg_x_2, reg_x_3;
+  __complex__ double reg_y_0, reg_y_1, reg_y_2, reg_y_3;
+  
+  __complex__ double outData[ELEMENTS*ELEMENTS*4];  // large enough; can be made smaller; 4 pol 
+  __complex__ double *outptr;
+
 #ifdef HAVE_BGL
-  __alignx(16, out_buffer);
-  __alignx(8 , in_buffer);
+  __alignx(16, outptr);
+  //  __alignx(8 , in_buffer);
 #endif
 
-  // The actual correlator loop
-  // Note that we don't make special considerations for polarisations X or Y
-  // We consider these completely seperate elements, thus removing an 
-  // extra dimension in the input and output data structure
- 
-  // Also note that this algorithm calculates slightly more correlation products than 
-  // strictly necessary. For now we assume that the extra overhead introduced by 
-  // exactly calculating half the matrix is more than what we calculate extra now.
-  // This may be optimized in a later version.
+  int A;
+  for (int time=0; time< SAMPLES; time++) {
+    outptr = outData;  // point to start of out buffer
+    // the output data will be sequentially written in this buffer
+    // after completion of the outer (time) loop data
+    // will be copied correctly into the output DH.
 
-  for (int i = 0; i < itsNsamples; i++) {
-    for (int y = 0; y < itsNinputs; y+=4) { 
-
-      // prefetch a block of values to register
-      __complex__ double reg_x_0 = in_buffer[0][i];
-      __complex__ double reg_x_1 = in_buffer[1][i];
-      __complex__ double reg_x_2 = in_buffer[2][i];
-      __complex__ double reg_x_3 = in_buffer[3][i];
-
-      __complex__ double reg_y_0 = in_buffer[y][i];
-      __complex__ double reg_y_1 = in_buffer[y+1][i];
-      __complex__ double reg_y_2 = in_buffer[y+2][i];
-      __complex__ double reg_y_3 = in_buffer[y+3][i];
-
-      for (int x = 0; x <= y; x+=4) {
-
-	out_buffer[x+0][y+0] += reg_x_0 * ~reg_y_0;
-	out_buffer[x+0][y+1] += reg_x_0 * ~reg_y_1;
-	out_buffer[x+0][y+2] += reg_x_0 * ~reg_y_2;
-	out_buffer[x+0][y+3] += reg_x_0 * ~reg_y_3;
-
-	reg_x_0 = in_buffer[x+4][i];
-
-	out_buffer[x+1][y+0] += reg_x_1 * ~reg_y_0;
-	out_buffer[x+1][y+1] += reg_x_1 * ~reg_y_1;
-	out_buffer[x+1][y+2] += reg_x_1 * ~reg_y_2;
-	out_buffer[x+1][y+3] += reg_x_1 * ~reg_y_3;
+    //loop over the Y dimension
+    for (int B=0; B< ELEMENTS; B+=2) {
+      // addressing:   getBufferElement(    channel, station, time, pol)
+      reg_B0_X = inDH->getBufferElement(int channel, B,       time, 0);     
+      reg_B0_Y = inDH->getBufferElement(int channel, B,       time, 1);     
+      reg_B1_X = inDH->getBufferElement(int channel, B+1,     time, 0);     
+      reg_B1_Y = inDH->getBufferElement(int channel, B+1,     time, 1);     
+      // now loop over the A dimension
+      for (A=0; A<ELEMENTS-2-B; A+=2) {
+	// now correlate stations A,A+1,B,B+1 in both polarisations
+	//cout << A   << " - " << B   << endl;
+	//cout << A   << " - " << B+1 << endl;
+	//cout << A+1 << " - " << B   << endl;
+	//cout << A+1 << " - " << B+1 << endl;
+ 	// load A inputs into registers
+	reg_A0_X = inDH->getBufferElement(int channel, A  , time, 0);     
+	reg_A0_Y = inDH->getBufferElement(int channel, A  , time, 1);     
+	reg_A1_X = inDH->getBufferElement(int channel, A+1, time, 0);     
+	reg_A1_Y = inDH->getBufferElement(int channel, A+1, time, 1);      
+	// calculate all correlations; 
+	// todo: prefetch new A dimesnsions on the way
+	*(outptr++) += reg_A0_X * ~reg_B0_X;
+	*(outptr++) += reg_A0_X * ~reg_B0_Y;
+	*(outptr++) += reg_A0_X * ~reg_B1_X;
+	*(outptr++) += reg_A0_X * ~reg_B1_Y;
 	
-	reg_x_1 = in_buffer[x+5][i];
-
-	out_buffer[x+2][y+0] += reg_x_2 * ~reg_y_0;
-	out_buffer[x+2][y+1] += reg_x_2 * ~reg_y_1;
-	out_buffer[x+2][y+2] += reg_x_2 * ~reg_y_2;
-	out_buffer[x+2][y+3] += reg_x_2 * ~reg_y_3;
-
-	reg_x_2 = in_buffer[x+6][i];
-
-	out_buffer[x+3][y+0] += reg_x_3 * ~reg_y_0;
-	out_buffer[x+3][y+1] += reg_x_3 * ~reg_y_1;
-	out_buffer[x+3][y+2] += reg_x_3 * ~reg_y_2;
-	out_buffer[x+3][y+3] += reg_x_3 * ~reg_y_3;
-
-	reg_x_3 = in_buffer[x+7][i];
+	*(outptr++) += reg_A0_Y * ~reg_B0_X;
+	*(outptr++) += reg_A0_Y * ~reg_B0_Y;
+	*(outptr++) += reg_A0_Y * ~reg_B1_X;
+	*(outptr++) += reg_A0_Y * ~reg_B1_Y;
+	
+	*(outptr++) += reg_A1_X * ~reg_B0_X;
+	*(outptr++) += reg_A1_X * ~reg_B0_Y;
+	*(outptr++) += reg_A1_X * ~reg_B1_X;
+	*(outptr++) += reg_A1_X * ~reg_B1_Y;
+	
+	*(outptr++) += reg_A1_Y * ~reg_B0_X;
+	*(outptr++) += reg_A1_Y * ~reg_B0_Y;
+	*(outptr++) += reg_A1_Y * ~reg_B1_X;
+	*(outptr++) += reg_A1_Y * ~reg_B1_Y;
+	
       }
     }
+    // done all sqaures
+    // now correlate the last triangle;
+    //cout << A   << " - " << B   << endl;
+    //cout << A   << " - " << B+1 << endl;
+    //cout << A+1 << " - " << B   << endl;
+    reg_A0_X = getBufferElement(int channel, A  , time, 0);     
+    reg_A0_Y = getBufferElement(int channel, A  , time, 1);     
+    reg_A1_X = getBufferElement(int channel, A+1, time, 0);     
+    reg_A1_Y = getBufferElement(int channel, A+1, time, 1);     
+    // calculate all correlations in the triangle; 
+    // todo: prefetch new A dimesnsions on the way
+    *(outptr++) += reg_A0_X * ~reg_B0_X;
+    *(outptr++) += reg_A0_X * ~reg_B0_Y;
+    *(outptr++) += reg_A0_X * ~reg_B1_X;
+    *(outptr++) += reg_A0_X * ~reg_B1_Y;
+    
+    *(outptr++) += reg_A0_Y * ~reg_B0_X;
+    *(outptr++) += reg_A0_Y * ~reg_B0_Y;
+    *(outptr++) += reg_A0_Y * ~reg_B1_X;
+    *(outptr++) += reg_A0_Y * ~reg_B1_Y;
+   
+    *(outptr++) += reg_A1_X * ~reg_B0_X;
+    *(outptr++) += reg_A1_X * ~reg_B0_Y;
+    
+    *(outptr++) += reg_A1_Y * ~reg_B0_X;
+    *(outptr++) += reg_A1_Y * ~reg_B0_Y;
+     
   }
 
-  // this is allowed since we're sure the outDH is equal in size to the 
-  // out_buffer (the assert didn't fail in the preprocess method)
-  outDH->setBuffer(out_ptr);
-  //   memcpy(outDH->getBuffer(), out_buffer, ELEMENTS*ELEMENTS*sizeof(DH_Vis::BufferType));
+  // todo: write the Outptr data into DH_Vis.
 
 #ifdef DO_TIMING
   stoptime = timer();
