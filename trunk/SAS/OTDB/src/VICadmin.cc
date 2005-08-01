@@ -74,7 +74,9 @@ VICadmin::~VICadmin()
 // From a component tree a (folded) tree can be constructed. In a folded
 // tree only the structure of the tree is created, there is no replication
 // of nodes on the same level.
-treeIDType	VICadmin::buildFoldedTree (treeIDType		baseTree)
+treeIDType	VICadmin::buildFoldedTree (treeIDType			baseTree,
+									   nodeIDType			topNodeID,
+									   treeClassifType		aClassif)
 {
 
 	if (!itsConn->connect()) {
@@ -82,8 +84,27 @@ treeIDType	VICadmin::buildFoldedTree (treeIDType		baseTree)
 		return (0);
 	}
 
-	//TODO: ...
+	work	xAction(*(itsConn->getConn()), "buildTree");
+	try {
+		result res = xAction.exec("SELECT * from instanciateVTtree(" +
+								  toString(itsConn->getAuthToken()) + ",'" +
+								  toString(topNodeID) + "','" + 
+								  toString(aClassif)  + "')");
 
+		// analyse result
+		treeIDType		treeID = 0;
+		res[0]["instanciateVTtree"].to(treeID);
+		if (treeID == 0) {
+			itsError = "Unable to instanciate the tree";
+			return (0);
+		}
+		xAction.commit();
+		return (treeID);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during VICadmin:buidlFoldedTree:") + 
+					ex.what();
+	}
 	return (0);
 }
 
@@ -234,6 +255,43 @@ OTDBnode VICadmin::getNode (treeIDType	aTreeID,
 	}
 	return (empty);
 }
+
+//
+// getNode(treeID, namefragment): vector<OTDBnode>
+//
+// Get a (collection of) node from the VIC template tree
+//
+vector<OTDBnode> VICadmin::getItemList (treeIDType		aTreeID,
+										const string&	aNameFragment)
+{
+	vector<OTDBnode>	resultVec;
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (resultVec);
+	}
+
+	// construct a query that calls a stored procedure.
+	string	query("SELECT * from getVTitemList('" +
+				toString(aTreeID) + "','" +
+				aNameFragment + "')");
+	work	xAction(*(itsConn->getConn()), "getVTitemList");
+	try {
+		result res = xAction.exec(query);
+
+		// copy information to output vector
+		result::size_type	nrRecords = res.size();
+		for (result::size_type	i = 0; i < nrRecords; ++i) {
+			resultVec.push_back(OTDBnode(aTreeID, res[i]));
+		}
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of getVTitemList:")
+				 + ex.what();
+	}
+
+	return (resultVec);
+}
+
 
 //
 // getItemList(treeID, topNode, depth): vector<OTDBnode>

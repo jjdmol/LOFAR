@@ -209,6 +209,35 @@ VICnodeDef	VICadmin::getNode (const string&	name,
 	return (empty);
 }
 
+vector<VICnodeDef>	VICadmin::getTopComponentList (const string& namefragment)
+{
+	vector<VICnodeDef>		resultVec;
+
+	if (!itsConn->connect()) {
+		return (resultVec);
+	}
+
+	work	xAction(*(itsConn->getConn()), "getTopCompList");
+	try {
+		result res = xAction.exec("SELECT * from getVCtopNodeList('" +
+								  namefragment + "')");
+		if (res.empty()) {
+			return (resultVec);
+		}
+
+		for (result::size_type i = 0; i < res.size(); ++i) {
+			resultVec.push_back(VICnodeDef(res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during VICadmin:getTopComponentList:") 
+						+ ex.what();
+	}
+	return (resultVec);
+}
+
 //
 // loadComponentFile(treeID, filename): nodeID
 //

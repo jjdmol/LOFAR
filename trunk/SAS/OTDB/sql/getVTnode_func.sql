@@ -61,3 +61,42 @@ CREATE OR REPLACE FUNCTION getVTnode(INT4, INT4)
 	END
 ' LANGUAGE plpgsql;
 
+
+--
+-- getVTitemList (treeID, name fragment)
+-- 
+-- Get a list of items based on a name fragment.
+--
+-- Authorisation: none
+--
+-- Tables: 	victemplate		read
+--
+-- Types:	OTDBnode
+--
+CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(40))
+  RETURNS SETOF OTDBnode AS '
+	DECLARE
+		vRecord		RECORD;
+
+	BEGIN
+	  FOR vRecord IN
+	    SELECT t.nodeid,
+			   t.parentid, 
+			   t.originid,
+			   t.name, 
+			   t.index, 
+			   t.leaf,
+			   t.instances,
+			   t.limits,
+			   \'\'::text 
+		FROM   VICtemplate t
+		WHERE  t.treeID = $1
+		AND	   t.name LIKE $2
+	  LOOP
+		RETURN NEXT vRecord;
+	  END LOOP;
+
+	  RETURN;
+	END
+' LANGUAGE plpgsql;
+
