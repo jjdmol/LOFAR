@@ -92,7 +92,7 @@ inline void RectMatrix<valueType>::moveCursor(cursorType* cursorp, const dimType
 
 template <typename valueType>
 inline void RectMatrix<valueType>::moveCursorN(cursorType* cursorp, const dimType& dim, const int& steps) const {
-  DBGASSERTSTR(isCursorValid(cursor), "Invalid cursor RectMatrix::moveCursorN()");
+  DBGASSERTSTR(isCursorValid(*cursorp), "Invalid cursor RectMatrix::moveCursorN()");
 #if ENABLE_DBGASSERT
   if (!areInSameDim(*cursorp, (*cursorp) + dim.memSize * steps, dim)) 
   {
