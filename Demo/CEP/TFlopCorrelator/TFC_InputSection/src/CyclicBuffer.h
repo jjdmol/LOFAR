@@ -31,7 +31,7 @@
 
 // maximum of written elements in buffer to avoid that 
 // writeptr is catching up readptr
-#define MAX_COUNT  (itsBuffer.size() - 5)    
+#define MAX_COUNT  (itsBuffer.size()-5)    
 
 namespace LOFAR
 {
@@ -156,7 +156,7 @@ int CyclicBuffer<TYPE>::AddBufferItem(TYPE DataItem)
   pthread_mutex_unlock(&buffer_mutex);
 
   // the ID will be the index in the deque
-  return (itsBuffer.size()-1);
+  return ((int)itsBuffer.size()-1);
 }
 
 template<class TYPE>
@@ -201,7 +201,7 @@ TYPE CyclicBuffer<TYPE>::GetAutoWritePtr(int& ID)
   
   // adjust the head (points to first free position)
   itsHeadIdx++;
-  if (itsHeadIdx >= itsBuffer.size())
+  if (itsHeadIdx >= (int)itsBuffer.size())
   {
     itsHeadIdx = 0;
   }
@@ -234,7 +234,7 @@ const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
  
   // adjust the tail
   itsTailIdx++;
-  if (itsTailIdx >= itsBuffer.size())
+  if (itsTailIdx >= (int)itsBuffer.size())
   {
     itsTailIdx = 0;
   }
@@ -267,9 +267,9 @@ const TYPE CyclicBuffer<TYPE>::GetBlockWritePtr(int nelements, int& ID)
 
   // adjust the head (point to first free position)
   itsHeadIdx += nelements;
-  if (itsHeadIdx >= itsBuffer.size())
+  if (itsHeadIdx >= (int)itsBuffer.size())
   {
-    itsHeadIdx -= itsBuffer.size();;
+    itsHeadIdx -= (int)itsBuffer.size();;
   }
   itsCount += nelements;
 
@@ -289,25 +289,32 @@ const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int nelements, int& I
 {
   pthread_mutex_lock(&buffer_mutex);
 
-  // wait until enough elements are available
-  while (itsCount - (offset + nelements) < MIN_COUNT) 
-  {
-    pthread_cond_wait(&data_available, &buffer_mutex);
+  int minelements;
+  if (offset >= 0) {
+    minelements = offset + nelements;
+  } else {
+    minelements = nelements;
   }
-  // CONDITION: itsCount >= MIN_COUNT &&  itscount >= offset + Nelements
+    
+  // wait until enough elements are available
+  while (itsCount < MIN_COUNT || itsCount < minelements) 
+  {
+     pthread_cond_wait(&data_available, &buffer_mutex);
+  }
+  // CONDITION: itsCount >= MIN_COUNT &&  itscount >= minelements
   
   // set offset (note: offset can be less than 0
   ID = itsTailIdx + offset;
-  if (ID >= itsBuffer.size()) {
-    ID -= itsBuffer.size();
+  if (ID >= (int)itsBuffer.size()) {
+    ID -= (int)itsBuffer.size();
   }
   if (ID < 0) {
-    ID += itsBuffer.size();
+    ID += (int)itsBuffer.size();
   }
-  
+
   // lock the elements
   ReadLockElements(ID, nelements); 
-
+  
   // adjust the tail
   itsTailIdx += nelements;
   if (itsTailIdx >= (int)itsBuffer.size())
@@ -368,7 +375,7 @@ void CyclicBuffer<TYPE>::WriteLockElements(int ID, int nelements)
 {
   int idx = ID;
   for (int i=0; i<nelements; i++) {
-    if (idx >= itsBuffer.size()) {
+    if (idx >= (int)itsBuffer.size()) {
       idx = 0;
     }
     itsBuffer[idx].itsRWLock.WriteLock();
@@ -381,7 +388,7 @@ void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
 {
   int idx = ID;
   for (int i=0; i<nelements; i++) {
-    if (idx >= itsBuffer.size()) {
+    if (idx >= (int)itsBuffer.size()) {
       idx = 0;
     }
     itsBuffer[idx].itsRWLock.WriteUnlock();
@@ -394,7 +401,7 @@ void CyclicBuffer<TYPE>::ReadLockElements(int ID, int nelements)
 {
   int idx = ID;
   for (int i=0; i<nelements; i++) {
-    if (idx >= itsBuffer.size()) {
+    if (idx >= (int)itsBuffer.size()) {
       idx = 0;
     }
     itsBuffer[idx].itsRWLock.ReadLock();
@@ -407,7 +414,7 @@ void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
 {
   int idx = ID;
   for (int i=0; i<nelements; i++) {
-    if (idx >= itsBuffer.size()) {
+    if (idx >= (int)itsBuffer.size()) {
       idx = 0;
     }
     itsBuffer[idx].itsRWLock.ReadUnlock();
@@ -430,7 +437,7 @@ void CyclicBuffer<TYPE>::Dump(void)
 template<class TYPE>
 int CyclicBuffer<TYPE>::getSize(void)
 {
-  return itsBuffer.size();
+  return (int)itsBuffer.size();
 }
 
 template<class TYPE>
