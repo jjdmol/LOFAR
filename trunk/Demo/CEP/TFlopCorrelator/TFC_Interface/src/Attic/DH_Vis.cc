@@ -23,31 +23,29 @@ DH_Vis::DH_Vis (const string& name, double centerFreq,
 : DataHolder    (name, "DH_Vis"),
   itsPS         (pSet),
   itsBuffer     (0),
-  itsCenterFreq  (centerFreq), 
-  itsMatrix      (0)
+  itsCenterFreq  (centerFreq) 
 {
    itsNPols = itsPS.getInt32("Input.NPolarisations");
+   itsNCorrs = itsNPols*itsNPols;
    itsNStations  = itsPS.getInt32("Input.NRSP");
-   itsNBaselines = (itsNStations*itsNPols) * (itsNStations*itsNPols);
+   itsNBaselines = itsNCorrs * itsNStations * (itsNStations + 1)/2;
    
    itsNsamples = itsPS.getInt32("WH_Corr.samples");
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)
-  : DataHolder(that),
-    itsPS     (that.itsPS),
-    itsBuffer (0),
+  : DataHolder    (that),
+    itsPS         (that.itsPS),
+    itsBuffer     (0),
     itsCenterFreq (that.itsCenterFreq),
-    itsNStations (that.itsNStations),
-    itsNBaselines(that.itsNBaselines),
-    itsNPols  (that.itsNPols),
-    itsMatrix      (0)
+    itsNStations  (that.itsNStations),
+    itsNBaselines (that.itsNBaselines),
+    itsNPols      (that.itsNPols),
+    itsNCorrs     (that.itsNCorrs)
 {}
 
 DH_Vis::~DH_Vis()
-{
-  delete itsMatrix;
-}
+{}
 
 DataHolder* DH_Vis::clone() const
 {
@@ -62,13 +60,6 @@ void DH_Vis::init()
   createDataBlock();  // calls fillDataPointers
 
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
-
-  vector<DimDef> vdd;
-  vdd.push_back(DimDef("Dimension1", itsNStations*itsNPols));
-  vdd.push_back(DimDef("Dimension2", itsNStations*itsNPols));
-  
-  itsMatrix = new RectMatrix<BufferType> (vdd);
-  itsMatrix->setBuffer(itsBuffer, itsBufSize);
 }
 
 void DH_Vis::fillDataPointers() 
