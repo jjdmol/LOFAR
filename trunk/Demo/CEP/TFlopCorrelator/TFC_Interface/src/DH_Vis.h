@@ -40,9 +40,8 @@ public:
 
   const unsigned int getBufSize() const;
 
-  /// Test pattern methods used for regression tests
-  void setTestPattern();
-  bool checkTestPattern();
+  /// Test pattern methods used for regression tests of the correlator
+  bool checkCorrelatorTestPattern();
 
 private:
   /// Forbid assignment.
@@ -77,7 +76,7 @@ inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
 inline const unsigned int DH_Vis::getBufSize() const 
   { return itsBufSize; }  
 
-inline bool DH_Vis::checkTestPattern() {
+inline bool DH_Vis::checkCorrelatorTestPattern() {
   bool result = true;
   
   for (int i = 0; i < itsNStations*itsNPols; i++) {
