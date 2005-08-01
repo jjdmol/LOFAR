@@ -99,4 +99,10 @@ DH_FIR::BufferType DH_FIR::getNextTime()
   return value;
 }
 
+DH_FIR::BufferType DH_FIR::getBufferElement(short /*channel*/, short station, short time, short pol) {
+  this->InitTimeCursor(station, pol);
+  itsMatrix->moveCursorN(&itsTimeCursor, itsTimeDim, time);
+  return itsMatrix->getValue(itsTimeCursor);
+}
+
 }
