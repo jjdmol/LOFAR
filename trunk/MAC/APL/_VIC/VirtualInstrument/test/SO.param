@@ -1,0 +1,16 @@
+###########################
+# Station Operations
+###########################
+versionnr=1.0
+qualification=development
+name=SO
+propertysetBaseName=PAC_SO
+propertysetDetailsType=TAplPacSO
+parentTask=VA1
+parentHost=localhost
+parentPort=27002
+claimTime=+5	# +5 = 5 seconds from now
+prepareTime=+10
+startTime=+15	
+stopTime=+20	# -1 = indefinitely
+samplingFrequency=200.0
