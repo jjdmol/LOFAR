@@ -84,8 +84,10 @@ void WH_Correlator::preprocess() {
 }
 
 void WH_Correlator::process() {
-  double starttime, stoptime, cmults;
-  const short ar_block = itsNinputs / UNROLL_FACTOR;
+  double starttime, stoptime /*, cmults*/;
+  // const short ar_block = itsNinputs / UNROLL_FACTOR;
+  // dummy channel parameter; not used in the first correlator version
+  const int channel = 0;
 
   DH_FIR *inDH  = (DH_FIR*)(getDataManager().getInHolder(0));
 //   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
@@ -98,10 +100,10 @@ void WH_Correlator::process() {
 #ifdef DO_TIMING
   starttime = timer();
 #endif
-
-
-  __complex__ double reg_x_0, reg_x_1, reg_x_2, reg_x_3;
-  __complex__ double reg_y_0, reg_y_1, reg_y_2, reg_y_3;
+  
+  __complex__ double reg_A0_X, reg_A0_Y, reg_A1_X, reg_A1_Y;
+  __complex__ double reg_B0_X, reg_B0_Y, reg_B1_X, reg_B1_Y;
+    
   
   __complex__ double outData[ELEMENTS*ELEMENTS*4];  // large enough; can be made smaller; 4 pol 
   __complex__ double *outptr;
@@ -121,10 +123,10 @@ void WH_Correlator::process() {
     //loop over the Y dimension
     for (int B=0; B< ELEMENTS; B+=2) {
       // addressing:   getBufferElement(    channel, station, time, pol)
-      reg_B0_X = inDH->getBufferElement(int channel, B,       time, 0);     
-      reg_B0_Y = inDH->getBufferElement(int channel, B,       time, 1);     
-      reg_B1_X = inDH->getBufferElement(int channel, B+1,     time, 0);     
-      reg_B1_Y = inDH->getBufferElement(int channel, B+1,     time, 1);     
+      reg_B0_X = inDH->getBufferElement(channel, B,       time, 0);     
+      reg_B0_Y = inDH->getBufferElement(channel, B,       time, 1);     
+      reg_B1_X = inDH->getBufferElement(channel, B+1,     time, 0);     
+      reg_B1_Y = inDH->getBufferElement(channel, B+1,     time, 1);     
       // now loop over the A dimension
       for (A=0; A<ELEMENTS-2-B; A+=2) {
 	// now correlate stations A,A+1,B,B+1 in both polarisations
@@ -133,10 +135,10 @@ void WH_Correlator::process() {
 	//cout << A+1 << " - " << B   << endl;
 	//cout << A+1 << " - " << B+1 << endl;
  	// load A inputs into registers
-	reg_A0_X = inDH->getBufferElement(int channel, A  , time, 0);     
-	reg_A0_Y = inDH->getBufferElement(int channel, A  , time, 1);     
-	reg_A1_X = inDH->getBufferElement(int channel, A+1, time, 0);     
-	reg_A1_Y = inDH->getBufferElement(int channel, A+1, time, 1);      
+	reg_A0_X = inDH->getBufferElement(channel, A  , time, 0);     
+	reg_A0_Y = inDH->getBufferElement(channel, A  , time, 1);     
+	reg_A1_X = inDH->getBufferElement(channel, A+1, time, 0);     
+	reg_A1_Y = inDH->getBufferElement(channel, A+1, time, 1);      
 	// calculate all correlations; 
 	// todo: prefetch new A dimesnsions on the way
 	*(outptr++) += reg_A0_X * ~reg_B0_X;
@@ -166,10 +168,10 @@ void WH_Correlator::process() {
     //cout << A   << " - " << B   << endl;
     //cout << A   << " - " << B+1 << endl;
     //cout << A+1 << " - " << B   << endl;
-    reg_A0_X = getBufferElement(int channel, A  , time, 0);     
-    reg_A0_Y = getBufferElement(int channel, A  , time, 1);     
-    reg_A1_X = getBufferElement(int channel, A+1, time, 0);     
-    reg_A1_Y = getBufferElement(int channel, A+1, time, 1);     
+    reg_A0_X = inDH->getBufferElement(channel, A  , time, 0);     
+    reg_A0_Y = inDH->getBufferElement(channel, A  , time, 1);     
+    reg_A1_X = inDH->getBufferElement(channel, A+1, time, 0);     
+    reg_A1_Y = inDH->getBufferElement(channel, A+1, time, 1);     
     // calculate all correlations in the triangle; 
     // todo: prefetch new A dimesnsions on the way
     *(outptr++) += reg_A0_X * ~reg_B0_X;
