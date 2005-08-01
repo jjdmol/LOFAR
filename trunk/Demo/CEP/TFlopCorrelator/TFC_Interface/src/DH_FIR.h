@@ -57,6 +57,9 @@ public:
   /// interface, a channel parameter is also defined, but not used.
   BufferType getBufferElement(short channel, short station, short time, short pol);
 
+  /// Test pattern used in regression tests of the correlator
+  void setCorrelatorTestPattern();
+
 private:
   /// Forbid assignment.
   DH_FIR& operator= (const DH_FIR&);
@@ -97,5 +100,11 @@ private:
    return *itsMatrix; 
  };
  
+ inline void DH_FIR::setCorrelatorTestPattern() {
+   for (unsigned int i = 0; i < itsBufSize; i++) {
+     *(itsBuffer + i) = 1.0 + 1.i;
+   }
+ }
+
 }
 #endif 
