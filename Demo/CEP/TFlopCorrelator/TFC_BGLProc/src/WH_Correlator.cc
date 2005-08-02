@@ -106,90 +106,96 @@ void WH_Correlator::process() {
     
   
   __complex__ double outData[ELEMENTS*ELEMENTS*4];  // large enough; can be made smaller; 4 pol 
-  __complex__ double *outptr;
+  __complex__ double *outptr0, *outptr1;
 
 #ifdef HAVE_BGL
-  __alignx(16, outptr);
+  __alignx(16, outptr0);
+  __alignx(16, outptr1);
   //  __alignx(8 , in_buffer);
 #endif
 
   int A;
   for (int time=0; time< SAMPLES; time++) {
-    outptr = outData;  // point to start of out buffer
-    // the output data will be sequentially written in this buffer
-    // after completion of the outer (time) loop data
-    // will be copied correctly into the output DH.
-
-    //loop over the Y dimension
-    for (int B=0; B< ELEMENTS; B+=2) {
+    // refer to addressing in DH_Vis.h::getBufferElement() 
+    //loop over the vertical(rows) dimension in the correlation matrix
+    for (int A=0; A< ELEMENTS; A+=2) {
       // addressing:   getBufferElement(    channel, station, time, pol)
-      reg_B0_X = inDH->getBufferElement(channel, B,       time, 0);     
-      reg_B0_Y = inDH->getBufferElement(channel, B,       time, 1);     
-      reg_B1_X = inDH->getBufferElement(channel, B+1,     time, 0);     
-      reg_B1_Y = inDH->getBufferElement(channel, B+1,     time, 1);     
-      // now loop over the A dimension
-      for (A=0; A<ELEMENTS-2-B; A+=2) {
-	// now correlate stations A,A+1,B,B+1 in both polarisations
-	//cout << A   << " - " << B   << endl;
-	//cout << A   << " - " << B+1 << endl;
-	//cout << A+1 << " - " << B   << endl;
-	//cout << A+1 << " - " << B+1 << endl;
- 	// load A inputs into registers
-	reg_A0_X = inDH->getBufferElement(channel, A  , time, 0);     
-	reg_A0_Y = inDH->getBufferElement(channel, A  , time, 1);     
-	reg_A1_X = inDH->getBufferElement(channel, A+1, time, 0);     
-	reg_A1_Y = inDH->getBufferElement(channel, A+1, time, 1);      
+      reg_A0_X = inDH->getBufferElement(channel, A,       time, 0);     
+      reg_A0_Y = inDH->getBufferElement(channel, A,       time, 1);     
+      reg_A1_X = inDH->getBufferElement(channel, A+1,     time, 0);     
+      reg_A1_Y = inDH->getBufferElement(channel, A+1,     time, 1);     
+      //
+      // get pointers to the two rows we calculate in the next loop
+      outptr0 = outDH->getBufferelement(A  ,B,0); // first row
+      outptr1 = outDH->getBufferelement(A+1,B,0); // second row
+      // now loop over the B dimension
+      for (B=0; B<A; B+=2) {
+	// these are the full squares
+	// now correlate stations B,B+1,A,A+1 in both polarisations
+	//cout << B   << " - " << A   << endl;
+	//cout << B   << " - " << A+1 << endl;
+	//cout << B+1 << " - " << A   << endl;
+	//cout << B+1 << " - " << A+1 << endl;
+ 	// load B inputs into registers
+	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
+	reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
+	reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
+	reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);      
 	// calculate all correlations; 
-	// todo: prefetch new A dimesnsions on the way
-	*(outptr++) += reg_A0_X * ~reg_B0_X;
-	*(outptr++) += reg_A0_X * ~reg_B0_Y;
-	*(outptr++) += reg_A0_X * ~reg_B1_X;
-	*(outptr++) += reg_A0_X * ~reg_B1_Y;
+	// todo: prefetch new B dimesnsions on the way
+	DBGASSRT(outptr0 == outDH->getBufferElement(A,B,0));
+	*(outptr0++) += reg_A0_X * ~reg_B0_X;
+	*(outptr0++) += reg_A0_X * ~reg_B0_Y;
+	*(outptr0++) += reg_A0_Y * ~reg_B0_X;
+	*(outptr0++) += reg_A0_Y * ~reg_B0_Y;
 	
-	*(outptr++) += reg_A0_Y * ~reg_B0_X;
-	*(outptr++) += reg_A0_Y * ~reg_B0_Y;
-	*(outptr++) += reg_A0_Y * ~reg_B1_X;
-	*(outptr++) += reg_A0_Y * ~reg_B1_Y;
+	DBGASSRT(outptr0 == outDH->getBufferElement(A,B+1,2));
+	*(outptr0++) += reg_A0_X * ~reg_B1_X;
+	*(outptr0++) += reg_A0_X * ~reg_B1_Y;
+	*(outptr0++) += reg_A0_Y * ~reg_B1_X;
+	*(outptr0++) += reg_A0_Y * ~reg_B1_Y;
 	
-	*(outptr++) += reg_A1_X * ~reg_B0_X;
-	*(outptr++) += reg_A1_X * ~reg_B0_Y;
-	*(outptr++) += reg_A1_X * ~reg_B1_X;
-	*(outptr++) += reg_A1_X * ~reg_B1_Y;
+	DBGASSRT(outptr1 == outDH->getBufferElement(A+1,B,0));
+	*(outptr1++) += reg_A1_X * ~reg_B0_X;
+	*(outptr1++) += reg_A1_X * ~reg_B0_Y;
+	*(outptr1++) += reg_A1_Y * ~reg_B0_X;
+	*(outptr1++) += reg_A1_Y * ~reg_B0_Y;
 	
-	*(outptr++) += reg_A1_Y * ~reg_B0_X;
-	*(outptr++) += reg_A1_Y * ~reg_B0_Y;
-	*(outptr++) += reg_A1_Y * ~reg_B1_X;
-	*(outptr++) += reg_A1_Y * ~reg_B1_Y;
-	
+	DBGASSRT(outptr1 == outDH->getBufferElement(A+1,B+1,0));
+	*(outptr1++) += reg_A1_X * ~reg_B1_X;
+	*(outptr1++) += reg_A1_X * ~reg_B1_Y;
+	*(outptr1++) += reg_A1_Y * ~reg_B1_X;
+	*(outptr1++) += reg_A1_Y * ~reg_B1_Y;
       }
     }
     // done all sqaures
     // now correlate the last triangle;
-    //cout << A   << " - " << B   << endl;
-    //cout << A   << " - " << B+1 << endl;
-    //cout << A+1 << " - " << B   << endl;
-    reg_A0_X = inDH->getBufferElement(channel, A  , time, 0);     
-    reg_A0_Y = inDH->getBufferElement(channel, A  , time, 1);     
-    reg_A1_X = inDH->getBufferElement(channel, A+1, time, 0);     
-    reg_A1_Y = inDH->getBufferElement(channel, A+1, time, 1);     
+    //cout << B   << " - " << A   << endl;
+    //cout << B   << " - " << A+1 << endl;
+    //cout << B+1 << " - " << A   << endl;
+    reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
+    reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
+    reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
+    reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);     
     // calculate all correlations in the triangle; 
-    // todo: prefetch new A dimesnsions on the way
-    *(outptr++) += reg_A0_X * ~reg_B0_X;
-    *(outptr++) += reg_A0_X * ~reg_B0_Y;
-    *(outptr++) += reg_A0_X * ~reg_B1_X;
-    *(outptr++) += reg_A0_X * ~reg_B1_Y;
+    // todo: prefetch new B dimesnsions on the way
+    DBGASSRT(outptr0 == outDH->getBufferElement(A,B,0));
+    *(outptr0++) += reg_A0_X * ~reg_B0_X;
+    *(outptr0++) += reg_A0_X * ~reg_B0_Y;
+    *(outptr0++) += reg_A0_Y * ~reg_B0_X;
+    *(outptr0++) += reg_A0_Y * ~reg_B0_Y;
     
-    *(outptr++) += reg_A0_Y * ~reg_B0_X;
-    *(outptr++) += reg_A0_Y * ~reg_B0_Y;
-    *(outptr++) += reg_A0_Y * ~reg_B1_X;
-    *(outptr++) += reg_A0_Y * ~reg_B1_Y;
-   
-    *(outptr++) += reg_A1_X * ~reg_B0_X;
-    *(outptr++) += reg_A1_X * ~reg_B0_Y;
-    
-    *(outptr++) += reg_A1_Y * ~reg_B0_X;
-    *(outptr++) += reg_A1_Y * ~reg_B0_Y;
-     
+    DBGASSRT(outptr1 == outDH->getBufferElement(A+1,B,0));
+    *(outptr1++) += reg_A1_X * ~reg_B0_X;
+    *(outptr1++) += reg_A1_X * ~reg_B0_Y;  
+    *(outptr1++) += reg_A1_Y * ~reg_B0_X;
+    *(outptr1++) += reg_A1_Y * ~reg_B0_Y;
+
+    DBGASSRT(outptr0 == outDH->getBufferElement(A,B+1,0));
+    *(outptr0++) += reg_A0_X * ~reg_B1_X;
+    *(outptr0++) += reg_A0_X * ~reg_B1_Y;
+    *(outptr0++) += reg_A0_Y * ~reg_B1_X;
+    *(outptr0++) += reg_A0_Y * ~reg_B1_Y;        
   }
 
   // todo: write the Outptr data into DH_Vis.
