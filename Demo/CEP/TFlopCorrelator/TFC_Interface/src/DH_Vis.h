@@ -94,15 +94,15 @@ inline DH_Vis::BufferType* DH_Vis::getBuffer()
     //
     // This is the start address for the (stationA,stationB) data
     // add pol word to get to the requested polarisation.
-    DBGASSERTSR(stationB <= stationA,"only lower part of correlation matrix is accessible");
+    DBGASSERTSTR(stationB <= stationA,"only lower part of correlation matrix is accessible");
     return (2*(stationA*stationA+stationA)+4*stationB)+pol; 
   }
 
  inline DH_Vis::BufferType* DH_Vis::getBufferElement(short stationA, // row
 	 					     short stationB, // column
-		 				     short pol)
-   DBGASSERTSR(stationB <= stationA,"only lower part of correlation matrix is accessible");
-   return itsBuffer + getBufferOffset;
+						     short pol) {
+   DBGASSERTSTR(stationB <= stationA, "only lower part of correlation matrix is accessible");
+   return &itsBuffer[getBufferOffset(stationA, stationB, pol)];
 }
 
 
@@ -115,13 +115,14 @@ inline const unsigned int DH_Vis::getBufSize() const
 inline bool DH_Vis::checkCorrelatorTestPattern() {
   bool result = true;
   
-  for int (p=0; p< itsNPols; p++) {
+  for (int p=0; p< itsNPols; p++) {
     for (int i = 0; i < itsNStations; i++) {
       for (int j = 0; j <= i; j++) {
 	// this would be the correct answer for a test pattern consisting 
 	// of only (1 + 1I) values
-	result = result && (getBufferElement(i,j,p) == 1+0.i );
+	result = result && (*getBufferElement(i,j,p) == 1+0.i );
       }
+    }
   }
   return result;
 }
