@@ -114,7 +114,8 @@ void WH_Correlator::process() {
   //  __alignx(8 , in_buffer);
 #endif
 
-  int A;
+  int B = 0;
+
   for (int time=0; time< SAMPLES; time++) {
     // refer to addressing in DH_Vis.h::getBufferElement() 
     //loop over the vertical(rows) dimension in the correlation matrix
@@ -126,8 +127,8 @@ void WH_Correlator::process() {
       reg_A1_Y = inDH->getBufferElement(channel, A+1,     time, 1);     
       //
       // get pointers to the two rows we calculate in the next loop
-      outptr0 = outData + outDH->getBufferOffset(A  ,B,0); // first row
-      outptr1 = outData + outDH->getBufferOffset(A+1,B,0); // second row
+      outptr0 = &outData[outDH->getBufferOffset(A  , B, 0)]; // first row
+      outptr1 = &outData[outDH->getBufferOffset(A+1, B, 0)]; // second row
       // now loop over the B dimension
       for (B=0; B<A; B+=2) {
 	// these are the full squares
@@ -137,65 +138,66 @@ void WH_Correlator::process() {
 	//cout << B+1 << " - " << A   << endl;
 	//cout << B+1 << " - " << A+1 << endl;
  	// load B inputs into registers
-	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
+	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);
 	reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
 	reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
 	reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);      
 	// calculate all correlations; 
 	// todo: prefetch new B dimesnsions on the way
-	DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B,0));
+	DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B,0)]);
 	*(outptr0++) += reg_A0_X * ~reg_B0_X;
 	*(outptr0++) += reg_A0_X * ~reg_B0_Y;
 	*(outptr0++) += reg_A0_Y * ~reg_B0_X;
 	*(outptr0++) += reg_A0_Y * ~reg_B0_Y;
 	
-	DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B+1,2));
+	DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B+1,2)]);
 	*(outptr0++) += reg_A0_X * ~reg_B1_X;
 	*(outptr0++) += reg_A0_X * ~reg_B1_Y;
 	*(outptr0++) += reg_A0_Y * ~reg_B1_X;
 	*(outptr0++) += reg_A0_Y * ~reg_B1_Y;
 	
-	DBGASSRT(outptr1 == outData + outDH->getBufferOffset(A+1,B,0));
+	DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B,0)]);
 	*(outptr1++) += reg_A1_X * ~reg_B0_X;
 	*(outptr1++) += reg_A1_X * ~reg_B0_Y;
 	*(outptr1++) += reg_A1_Y * ~reg_B0_X;
 	*(outptr1++) += reg_A1_Y * ~reg_B0_Y;
 	
-	DBGASSRT(outptr1 == outData + outDH->getBufferOffset(A+1,B+1,0));
+	DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B+1,0)]);
 	*(outptr1++) += reg_A1_X * ~reg_B1_X;
 	*(outptr1++) += reg_A1_X * ~reg_B1_Y;
 	*(outptr1++) += reg_A1_Y * ~reg_B1_X;
 	*(outptr1++) += reg_A1_Y * ~reg_B1_Y;
       }
-    }
-    // done all sqaures
-    // now correlate the last triangle;
-    //cout << B   << " - " << A   << endl;
-    //cout << B   << " - " << A+1 << endl;
-    //cout << B+1 << " - " << A   << endl;
-    reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
-    reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
-    reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
-    reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);     
-    // calculate all correlations in the triangle; 
-    // todo: prefetch new B dimesnsions on the way
-    DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B,0));
-    *(outptr0++) += reg_A0_X * ~reg_B0_X;
-    *(outptr0++) += reg_A0_X * ~reg_B0_Y;
-    *(outptr0++) += reg_A0_Y * ~reg_B0_X;
-    *(outptr0++) += reg_A0_Y * ~reg_B0_Y;
     
-    DBGASSRT(outptr1 == outData + outDH->getBufferOffset(A+1,B,0));
-    *(outptr1++) += reg_A1_X * ~reg_B0_X;
-    *(outptr1++) += reg_A1_X * ~reg_B0_Y;  
-    *(outptr1++) += reg_A1_Y * ~reg_B0_X;
-    *(outptr1++) += reg_A1_Y * ~reg_B0_Y;
-
-    DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B+1,0));
-    *(outptr0++) += reg_A0_X * ~reg_B1_X;
-    *(outptr0++) += reg_A0_X * ~reg_B1_Y;
-    *(outptr0++) += reg_A0_Y * ~reg_B1_X;
-    *(outptr0++) += reg_A0_Y * ~reg_B1_Y;        
+      // done all sqaures
+      // now correlate the last triangle;
+      //cout << B   << " - " << A   << endl;
+      //cout << B   << " - " << A+1 << endl;
+      //cout << B+1 << " - " << A   << endl;
+      reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
+      reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
+      reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
+      reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);     
+      // calculate all correlations in the triangle; 
+      // todo: prefetch new B dimesnsions on the way
+      DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B,0)]);
+      *(outptr0++) += reg_A0_X * ~reg_B0_X;
+      *(outptr0++) += reg_A0_X * ~reg_B0_Y;
+      *(outptr0++) += reg_A0_Y * ~reg_B0_X;
+      *(outptr0++) += reg_A0_Y * ~reg_B0_Y;
+      
+      DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B,0)]);
+      *(outptr1++) += reg_A1_X * ~reg_B0_X;
+      *(outptr1++) += reg_A1_X * ~reg_B0_Y;  
+      *(outptr1++) += reg_A1_Y * ~reg_B0_X;
+      *(outptr1++) += reg_A1_Y * ~reg_B0_Y;
+      
+      DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B+1,0)]);
+      *(outptr0++) += reg_A0_X * ~reg_B1_X;
+      *(outptr0++) += reg_A0_X * ~reg_B1_Y;
+      *(outptr0++) += reg_A0_Y * ~reg_B1_X;
+      *(outptr0++) += reg_A0_Y * ~reg_B1_Y;        
+    }
   }
 
   // todo: write the Outptr data into DH_Vis.
@@ -204,9 +206,9 @@ void WH_Correlator::process() {
 
   DH_Vis::BufferType *dhptr = outDH->getBufferElement(0,0,0);
   outptr0 = &outData[0];
-  int loopsize = outDH->getBufferOffset(ELEMENTS,ELEMENTS,4);
-  for (i=0; i < loopsize; i++) {
-    *dhptr[i] = outptr0[i]; 
+  int loopsize = outDH->getBufferOffset(ELEMENTS,ELEMENTS,4) - outDH->getBufferOffset(0,0,0);
+  for (int i=0; i < loopsize; i++) {
+    dhptr[i] = outptr0[i]; 
   }
 
 #ifdef DO_TIMING
