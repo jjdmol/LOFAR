@@ -267,6 +267,8 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	  m_subarrays.creator();     // bring new subarrays to life
 	  m_subarrays.mutex_unlock();
 
+	  if (GET_CONFIG("CalServer.WriteACCToFile", i)) write_acc();
+
 #ifdef USE_CAL_THREAD
 	  // start calibration thread
 	  m_calthread->setACC(&m_accs.getFront());
@@ -481,6 +483,44 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
   port.send(ack);
 
   return status;
+}
+
+void CalServer::write_acc()
+{
+  time_t now = time(0);
+  struct tm* t = localtime(&now);
+  char filename[PATH_MAX];
+  const Array<std::complex<double>, 5>& acc = m_accs.getFront().getACC();
+  Array<std::complex<double>, 3> newacc;
+
+  newacc.resize(acc.extent(firstDim),
+		acc.extent(secondDim)*acc.extent(fourthDim),
+		acc.extent(thirdDim)*acc.extent(fifthDim));
+
+  for (int s = 0; s < newacc.extent(firstDim); s++)
+    for (int i = 0; i < newacc.extent(secondDim); i++)
+      for (int j = 0; j < newacc.extent(thirdDim); j++)
+	newacc(s,i,j) = acc(s,i%2,j%2,i/2,j/2);
+
+  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_acc_%dx%dx%d.dat",
+	   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+	   t->tm_hour, t->tm_min, t->tm_sec,
+	   newacc.extent(firstDim),
+	   newacc.extent(secondDim),
+	   newacc.extent(thirdDim));
+  FILE* accfile = fopen(filename, "w");
+
+  if (!accfile) {
+    LOG_FATAL_STR("failed to open file: " << filename);
+    exit(EXIT_FAILURE);
+  }
+
+  if ((size_t)newacc.size() != fwrite(newacc.data(), sizeof(complex<double>), newacc.size(), accfile)) {
+    LOG_FATAL_STR("failed to write to file: " << filename);
+    exit(EXIT_FAILURE);
+  }
+
+  (void)fclose(accfile);
 }
 
 int main(int argc, char** argv)

@@ -233,10 +233,12 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	m_starttime.setNow();
 	m_starttime = m_starttime + START_DELAY; // start START_DELAY seconds from now
 
+	LOG_INFO_STR("starttime for ACM collection: " << m_starttime);
+
 	ss.timestamp = m_starttime;
-	ss.blpmask.reset();
-	for (int i = 0; i < 4; i++) {
-	  ss.blpmask.set(i);
+	ss.rcumask.reset();
+	for (int i = 0; i < 8; i++) {
+	  ss.rcumask.set(i);
 	}
 
 	m_request_subband = 0;
@@ -262,9 +264,9 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	    RSPSetsubbandsEvent ss;
 	  
 	    ss.timestamp = m_starttime + m_request_subband;
-	    ss.blpmask.reset();
-	    for (int i = 0; i < 4; i++) {
-	      ss.blpmask.set(i);
+	    ss.rcumask.reset();
+	    for (int i = 0; i < 8; i++) {
+	      ss.rcumask.set(i);
 	    }
 	    
 	    ss.subbands().resize(1, 4*2);
@@ -307,7 +309,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	// subscribe to statistics
 	RSPSubxcstatsEvent subxc;
 
-	subxc.timestamp = m_starttime;
+	subxc.timestamp = m_starttime + 1; // wait 1 second to get result
 	subxc.rcumask.reset();
 
 	LOG_DEBUG_STR("nRCU's=" << m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol());
@@ -344,7 +346,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	      LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
 	      LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
 
-	      if (upd.timestamp != m_starttime + m_update_subband) {
+	      if (upd.timestamp != m_starttime + m_update_subband + 1) {
 		LOG_WARN("incorrect timestamp on XC statistics");
 	      }
 	      
@@ -366,9 +368,9 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  RSPSetsubbandsEvent ss;
 	  
 	  ss.timestamp = m_starttime + m_request_subband;
-	  ss.blpmask.reset();
-	  for (int i = 0; i < 4; i++) {
-	    ss.blpmask.set(i);
+	  ss.rcumask.reset();
+	  for (int i = 0; i < 8; i++) {
+	    ss.rcumask.set(i);
 	  }
 	    
 	  ss.subbands().resize(1, 4*2);

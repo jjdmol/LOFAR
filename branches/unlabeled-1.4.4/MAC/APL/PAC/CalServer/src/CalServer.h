@@ -81,6 +81,11 @@ namespace LOFAR {
       GCFEvent::TResult handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port);
       /*@}*/
 
+      /**
+       * Write ACC to file if configured to do so.
+       */
+      void write_acc();
+
     private:
       AntennaArrays               m_arrays;       // antenna arrays (read from file)
       Sources                     m_sources;      // source catalog (read from file)
