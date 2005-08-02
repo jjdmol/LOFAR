@@ -90,7 +90,7 @@ public:
   // All data will be written with sigma=0 and weight=1.
   void write (int& rowNr, int bandId, int fieldId, int channelId, 
 	      int timeCounter, int nrdata,
-	      const dcomplex* data, const bool* flags);
+	      const fcomplex* data, const bool* flags);
 
   // Get the number of antennas.
   int nrAntennas() const

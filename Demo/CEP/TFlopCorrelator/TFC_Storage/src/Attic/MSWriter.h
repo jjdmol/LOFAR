@@ -89,7 +89,7 @@ public:
   // number of antennas, bands, and polarizations for this bandId.
   void write (int& rowNr, int bandId, int fieldId, int channelId, 
 	      int timeCounter, int nrdata,
-	      const dcomplex* data, const bool* flags = 0);
+	      const fcomplex* data, const bool* flags = 0);
 
   // Get the number of antennas.
   int nrAntennas() const;
