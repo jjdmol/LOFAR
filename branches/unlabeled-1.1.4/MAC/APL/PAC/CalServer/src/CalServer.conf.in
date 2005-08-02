@@ -13,7 +13,7 @@ mac.ns.CalServer.acceptor.type=TCP
 CalServer.NSUBBANDS=512
 # ITS-spec: CalServer.NSUBBANDS=101
 # 512
-CalServer.NANTENNAS=4
+CalServer.NANTENNAS=8
 # ITS-spec: CalServer.NANTENNAS=60
 # 4
 # 60
