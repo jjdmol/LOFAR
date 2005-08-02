@@ -37,6 +37,9 @@ public:
   BufferType* getBufferElement(short station1,
 			       short station2,
 			       short pol); //todo: also frequency
+  int getBufferOffset (short station1,
+		       short station2,
+		       short pol); //todo: also frequency
 
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
@@ -76,9 +79,9 @@ private:
 inline DH_Vis::BufferType* DH_Vis::getBuffer()
   { return itsBuffer; }
 
- inline DH_Vis::BufferType* DH_Vis::getBufferElement(short stationA, // row
-						     short stationB, // column
-						     short pol)
+ inline int DH_Vis::getBufferOffset(short stationA, // row
+				    short stationB, // column
+				    short pol)
   {
     // Addressing: 
     // First determine the start position of the (stationA,stationB) data:
@@ -92,8 +95,16 @@ inline DH_Vis::BufferType* DH_Vis::getBuffer()
     // This is the start address for the (stationA,stationB) data
     // add pol word to get to the requested polarisation.
     DBGASSERTSR(stationB <= stationA,"only lower part of correlation matrix is accessible");
-    return itsBuffer+(2*(stationA*stationA+stationA)+4*stationB)+pol; 
+    return (2*(stationA*stationA+stationA)+4*stationB)+pol; 
   }
+
+ inline DH_Vis::BufferType* DH_Vis::getBufferElement(short stationA, // row
+	 					     short stationB, // column
+		 				     short pol)
+   DBGASSERTSR(stationB <= stationA,"only lower part of correlation matrix is accessible");
+   return itsBuffer + getBufferOffset;
+}
+
 
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
