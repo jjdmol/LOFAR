@@ -382,7 +382,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 WGCommand::WGCommand() :
   m_frequency(0.0),
   m_phase(0),
-  m_amplitude(100)
+  m_amplitude(64)
 {
 }
 
@@ -684,12 +684,12 @@ void XCStatisticsCommand::send(GCFPortInterface& port)
 void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, const Timestamp& timestamp)
 {
   LOG_INFO_STR("plot_xcstatistics (shape=" << xcstats.shape() << ") @ " << timestamp);
-  LOG_INFO_STR("XX()=" << xcstats(0,0,Range::all(),Range::all()));
-  LOG_INFO_STR("XY()=" << xcstats(0,1,Range::all(),Range::all()));
-  LOG_INFO_STR("YX()=" << xcstats(1,0,Range::all(),Range::all()));
-  LOG_INFO_STR("YY()=" << xcstats(1,1,Range::all(),Range::all()));
+  //LOG_INFO_STR("XX()=" << xcstats(0,0,Range::all(),Range::all()));
+  //LOG_INFO_STR("XY()=" << xcstats(0,1,Range::all(),Range::all()));
+  //LOG_INFO_STR("YX()=" << xcstats(1,0,Range::all(),Range::all()));
+  //LOG_INFO_STR("YY()=" << xcstats(1,1,Range::all(),Range::all()));
 
-  xcstats(0,0,2,2) = 1.0;
+  //xcstats(0,0,2,2) = 1.0;
 
   static gnuplot_ctrl* handle = 0;
   int n_ant = xcstats.extent(thirdDim);
@@ -730,6 +730,8 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 	      "set border 0\n");
 
   gnuplot_cmd(handle, "splot \"-\" matrix with points ps 12 pt 5 palette");
+
+  xcstats = 10.0*log(real(xcstats)*real(xcstats))/log(10.0);
 
   gnuplot_write_matrix(handle, real(xcstats(0,0,Range::all(),Range::all())), true);
 }
@@ -781,7 +783,7 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
     LOG_INFO_STR("XY()=" << upd.stats()(0,1,Range::all(),Range::all()));
     LOG_INFO_STR("YX()=" << upd.stats()(1,0,Range::all(),Range::all()));
     LOG_INFO_STR("YY()=" << upd.stats()(1,1,Range::all(),Range::all()));
-    //plot_xcstatistics(upd.stats(), upd.timestamp);
+    plot_xcstatistics(upd.stats(), upd.timestamp);
   }
 #endif
 
@@ -1150,9 +1152,7 @@ static Command* parse_options(int argc, char** argv)
 	      }
 
 	      list<int> subbandlist;
-	      for (int rcu = 0;
-		   rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
-		   rcu++) {
+	      for (int rcu = 0; rcu < GET_CONFIG("RS.N_BLPS", i); rcu++) {
 		subbandlist.push_back(subband);
 	      }
 	      subbandscommand->setSubbandList(subbandlist);

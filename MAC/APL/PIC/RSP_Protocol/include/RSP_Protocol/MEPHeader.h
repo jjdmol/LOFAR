@@ -170,12 +170,13 @@ namespace EPA_Protocol
        * The N_BEAMLETS are a selection from this
        * number of beamlets.
        */
-      static const uint16 N_SUBBANDS = 512;
-      static const uint16 N_BEAMLETS = 128; // FTS-1 spec, final remote station will have 256 beamlets
-      static const uint16 N_XLETS    = 54;  // FTS-1.5 spec, final remote station will have 96 crosslets
-      static const uint16 N_POL      = 2;                // number of polarizations
-      static const uint16 N_PHASE    = 2;                // number of phases in a complex number
-      static const uint16 N_PHASEPOL = N_PHASE * N_POL;  // number of phase polarizations
+      static const uint16 N_SUBBANDS     = 512;
+      static const uint16 N_GLOBAL_XLETS = 54;  // Total number of crosslets over whole station (FTS-1.5 spec)
+      static const uint16 N_XLETS        = 4;   // Number of crosslets per RSP board
+      static const uint16 N_BEAMLETS     = 54 + N_XLETS; // FTS-1.5 spec, final design will have > 200 BEAMLETS + N_XLETS
+      static const uint16 N_POL          = 2;                // number of polarizations
+      static const uint16 N_PHASE        = 2;                // number of phases in a complex number
+      static const uint16 N_PHASEPOL     = N_PHASE * N_POL;  // number of phase polarizations
  
       //
       // Registers too large to send in a single ethernet frame
@@ -184,10 +185,10 @@ namespace EPA_Protocol
       static const uint16 FRAGMENT_SIZE = 1024;
     
       //
-      // XST register will be too large to get in one message when X_NLETS = 96
+      // XST register will be too large to get in one message when N_GLOBAL_XLETS = 96
       // When 96 crosslets are supported, the XST_FRAGMENT_SIZE should be divided by 2.
       //
-      static const uint16 XST_FRAGMENT_SIZE = N_XLETS * N_POL * sizeof(std::complex<uint32>);
+      static const uint16 XST_FRAGMENT_SIZE = N_GLOBAL_XLETS * N_POL * sizeof(std::complex<uint32>);
       
       /**
        * Read/write sizes in octets (= bytes)
@@ -225,7 +226,7 @@ namespace EPA_Protocol
       
       static const uint16 CDO_SETTINGS_SIZE  = 10;
 
-      static const uint16 XST_STATS_SIZE     = N_XLETS * N_POL * sizeof(std::complex<uint32>);
+      static const uint16 XST_STATS_SIZE     = N_GLOBAL_XLETS * N_POL * sizeof(std::complex<uint32>);
       /*@}*/
 
     public:

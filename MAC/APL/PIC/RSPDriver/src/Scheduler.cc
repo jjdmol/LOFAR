@@ -107,12 +107,12 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
     //        t-1        t         t+1
     //            XXXX|<--->|XXXX
     //
-    unsigned long second = timeout->sec;
-    if (timeout->usec >= 1e6-1000) second++; // round to next whole second
+    unsigned long topofsecond = timeout->sec;
+    if (timeout->usec >= 1e6-1000) topofsecond++; // round to next whole second
     if (timeout->usec > 1000 && timeout->usec < 1e6 - 1000) {
       LOG_WARN_STR("Scheduler time too far off from top off second: usec=" << timeout->usec);
     }
-    setCurrentTime(timeout->sec, 0);
+    setCurrentTime(topofsecond, 0);
 
     scheduleCommands();
     processCommands();
@@ -268,31 +268,7 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
     
     scheduled_time = m_current_time + SCHEDULING_DELAY;
   }
-  else if (Command::READ == command->getOperation())
-  {
-    /**
-     * A read command for time t should be
-     * scheduled for time t + SYNC_INTERVAL_INT, to get the values
-     * on time t.
-     */
-    scheduled_time = scheduled_time + SYNC_INTERVAL_INT;
-  }
   
-#if 0
-  //
-  // add increasing (in time) usec to commands that
-  // are entered within the same second, to order
-  // them properly
-  //
-  {
-    struct timeval tv, now;
-    scheduled_time.get(&tv);
-    (void)gettimeofday(&now, 0);
-    tv.tv_usec = now.tv_usec;
-    scheduled_time.set(tv);
-  }
-#endif
-
   // set the actual time at which the command is sent to the boards
   command->setTimestamp(scheduled_time);
     
@@ -338,6 +314,8 @@ Timestamp Scheduler::getCurrentTime() const
 
 void Scheduler::scheduleCommands()
 {
+  int scheduling_offset = 0;
+
   /**
    * All commands with a timestamp equal to the
    * wall-clock time (m_current_time) plus one second
@@ -347,25 +325,22 @@ void Scheduler::scheduleCommands()
   {
     Ptr<Command> command = m_later_queue.top();
 
-/* Never discard commands */
-#if 0
-    if (command->getTimestamp() < m_current_time)
+    // write commands need to be scheduled on sync period ahead of time
+    // to be effective in the hardware at the specified timestamp
+    scheduling_offset = 0;
+    if (Command::WRITE == command->getOperation())
     {
-      /* discard old commands, the're too late! */
-      LOG_WARN("discarding late command");
-
-      m_later_queue.pop();
-      //delete command;
+      scheduling_offset = SYNC_INTERVAL_INT;
     }
-    else
-#else
-    if (command->getTimestamp() < m_current_time)
+
+    /* detect late commands, but just execute them */
+    if (command->getTimestamp() <= m_current_time + (scheduling_offset - SYNC_INTERVAL_INT))
     {
       LOG_WARN_STR("command is late, timestamp=" << command->getTimestamp()
 		   << ", current_time=" << m_current_time);
     }
-#endif
-    if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
+
+    if (command->getTimestamp() <= m_current_time + scheduling_offset)
     {
       LOG_INFO_STR("scheduling command with time=" << command->getTimestamp());
 
@@ -382,20 +357,25 @@ void Scheduler::scheduleCommands()
   {
     Ptr<Command> command = pq.top();
 
-    if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
+    // read commands need to be scheduled on sync period ahead of time
+    // to be effective in the hardware at the specified timestamp
+    scheduling_offset = 0;
+    if (Command::WRITE == command->getOperation())
     {
-      //
-      // only schedule the periodic command when the period == 0
-      // or when the time between now and the previous update is greater
-      // than the period. The timestamp of the command in the period queue
-      // is adjusted at each update to remember the previous update time.
-      //
-      if ((0 == command->getPeriod())
-	  || (m_current_time >= command->getTimestamp() + command->getPeriod()))
-      {
-	command->setTimestamp(command->getTimestamp() + command->getPeriod());
-	m_now_queue.push(command);
-      }
+      scheduling_offset = SYNC_INTERVAL_INT;
+    }
+
+    /* detect late commands, but just execute them */
+    if (command->getTimestamp() <= m_current_time + (scheduling_offset - SYNC_INTERVAL_INT))
+    {
+      LOG_WARN_STR("periodic command is late, timestamp=" << command->getTimestamp()
+		   << ", current_time=" << m_current_time);
+    }
+
+    if (command->getTimestamp() <= m_current_time + scheduling_offset)
+    {
+      LOG_INFO_STR("scheduling periodic command with time=" << command->getTimestamp());
+      m_now_queue.push(command);
     }
 
     pq.pop(); // next
@@ -485,9 +465,14 @@ void Scheduler::completeCommands()
   {
     Ptr<Command> command = m_done_queue.top();
     
-    /* set the timestamp */
-    command->setTimestamp(getCurrentTime());
+    //command->setTimestamp(getCurrentTime() + SYNC_INTERVAL_INT);
     command->complete(Cache::getInstance().getFront());
+    
+    // re-timestamp periodic commands for the next period
+    if (command->getPeriod())
+    {
+      command->setTimestamp(command->getTimestamp() + command->getPeriod());
+    }
 
     m_done_queue.pop();
   }

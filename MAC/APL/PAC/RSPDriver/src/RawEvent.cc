@@ -172,7 +172,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     { 0,
       EPA_READ,      /* READ    */
       0,
-      EPA_STATS,     /* READACK */
+      EPA_BST_STATS,     /* READACK */
       0,
     },
 
@@ -180,7 +180,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     { 0,
       EPA_READ,      /* READ    */
       0,
-      EPA_STATS,     /* READACK */
+      EPA_BST_STATS,     /* READACK */
       0,
     },
   },
@@ -191,7 +191,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     { 0,
       EPA_READ,      /* READ */
       0,
-      EPA_STATS,     /* READACK */
+      EPA_SST_STATS,     /* READACK */
       0,
     },
 
@@ -199,7 +199,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     { 0,
       EPA_READ,      /* READ */
       0,
-      EPA_STATS,     /* READACK */
+      EPA_SST_STATS,     /* READACK */
       0,
     },
   },

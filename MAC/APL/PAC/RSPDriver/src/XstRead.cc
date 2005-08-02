@@ -52,7 +52,13 @@ XstRead::~XstRead()
 
 void XstRead::sendrequest()
 {
+  // offset in bytes
   uint16 offset = (getCurrentBLP() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE;
+
+  // firmware indexes from board 1 instead of 0
+  offset += (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i)+1) * MEPHeader::N_XLETS * MEPHeader::N_POL * sizeof(complex<uint32>);
+
+  LOG_DEBUG_STR("XstRead::offset=" << offset);
 
   if (m_regid < MEPHeader::XST_0_X || m_regid > MEPHeader::XST_3_Y)
   {
@@ -75,6 +81,20 @@ void XstRead::sendrequest_status()
   // intentionally left empty
 }
 
+#define CONVERT_UINT32_TO_INT64(val,val64)	\
+do {						\
+  uint32 e = val & (1<<31);			\
+  uint32 s = val & (1<<30);			\
+  int32  m = val & ((1<<30)-1);			\
+						\
+  if (s) m = m - (1<<30);			\
+  if (e) {					\
+    val64 = (int64)m << 23;			\
+  } else {					\
+    val64 = m;					\
+  }						\
+} while (0)
+
 /**
  * Function to convert the complex semi-floating point representation used by the
  * EPA firmware to a complex<double>.
@@ -82,13 +102,12 @@ void XstRead::sendrequest_status()
 BZ_DECLARE_FUNCTION_RET(convert_cuint32_to_cdouble, complex<double>)
 inline complex<double> convert_cuint32_to_cdouble(complex<uint32> val)
 {
-  uint64 val64_re = real(val);
-  uint64 val64_im = imag(val);
-  
-  // check if bit 31 is set
-  if ((1<<31) & val64_re) val64_re = (val64_re & ((1<<31)-1)) << 25;
-  if ((1<<31) & val64_im) val64_im = (val64_im & ((1<<31)-1)) << 25;
+  int64 val64_re, val64_im;
 
+  CONVERT_UINT32_TO_INT64(real(val), val64_re);
+  CONVERT_UINT32_TO_INT64(imag(val), val64_im);
+
+  // convert two int64's to complex double
   return complex<double>(val64_re, val64_im);
 }
 
@@ -115,7 +134,6 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   }
 
   uint16 offset = ((getCurrentBLP() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE) / sizeof(uint32);
-  ASSERT(offset == ack.hdr.m_fields.offset / sizeof(uint32));
 
   int global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (m_regid/2);
   
@@ -152,7 +170,7 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     }
 
   } else {
-    LOG_DEBUG("ignoring EPA_XSTSTATS event, RCUs out of range");
+    LOG_WARN("ignoring EPA_XSTSTATS event, RCUs out of range");
   }
 
   return GCFEvent::HANDLED;
