@@ -22,19 +22,22 @@ prelude = << PRELUDE_END
  * Protocol constants.
  */
 
+#define MIN(a,b) ((a)<(b)?(a):(b))
+
   /*@{*/
   /**
    * Constants used in the EPA protocol.
    * These constants are all derived from the leading
    * constants in MEPHeader.h.
    */
-  static const int N_AP            = 4;    // number of AP's per board
-  static const int N_COEF          = MEPHeader::FRAGMENT_SIZE / sizeof(int16);
-  static const int BF_N_FRAGMENTS  = MEPHeader::BF_XROUT_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int N_AP            = 4; // number of AP's per board
+  static const int N_COEF          = MIN(MEPHeader::FRAGMENT_SIZE, MEPHeader::BF_XROUT_SIZE) / sizeof(int16);
+  static const int BF_N_FRAGMENTS  = 1; // MEPHeader::BF_XROUT_SIZE / MEPHeader::FRAGMENT_SIZE
   static const int N_WAVE_SAMPLES  = MEPHeader::WG_XWAVE_SIZE / sizeof(int16);
-  static const int BST_N_FRAGMENTS = MEPHeader::BST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int BST_N_FRAGMENTS = 1; // MEPHeader::BST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
   static const int SST_N_FRAGMENTS = MEPHeader::SST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
-  static const int N_STATS         = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
+  static const int N_SST_STATS     = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
+  static const int N_BST_STATS     = MIN(MEPHeader::FRAGMENT_SIZE, MEPHeader::BST_POWER_SIZE) / sizeof(uint32);
   static const int XST_N_FRAGMENTS = MEPHeader::XST_STATS_SIZE / MEPHeader::XST_FRAGMENT_SIZE;
   static const int N_XST_STATS     = MEPHeader::XST_FRAGMENT_SIZE / sizeof(uint32);
 
@@ -488,7 +491,7 @@ event = {
 
 event = {
   noheader;
-  signal = STATS; // hdr should specify SST_POWER or BST_POWER
+  signal = SST_STATS; // hdr should specify SST_POWER or BST_POWER
   dir = OUT;
   param = {
     name = "hdr";
@@ -497,7 +500,22 @@ event = {
   };
   param = {
     name = "stat";
-    type = "uint32[N_STATS]";
+    type = "uint32[N_SST_STATS]";
+  };
+};
+
+event = {
+  noheader;
+  signal = BST_STATS; // hdr should specify SST_POWER or BST_POWER
+  dir = OUT;
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "stat";
+    type = "uint32[N_BST_STATS]";
   };
 };
 

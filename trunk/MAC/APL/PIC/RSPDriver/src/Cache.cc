@@ -70,14 +70,10 @@ CacheBuffer::CacheBuffer()
     m_beamletweights()(Range::all(), Range::all(), Range::all()) =
       complex<int16>(0x4000, 0);
 
-    // set weights on first 8 beamlets for cross correlation
+    // reset weights on first 8 beamlets for cross correlation
+    // they will be set again in BWWrite::sendrequest()
     m_beamletweights()(Range::all(), Range::all(), Range(0, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL - 1)) =
       complex<int16>(0,0);
-
-    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i)* GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++) {
-      LOG_INFO_STR("setting " << i);
-      m_beamletweights()(0, i, i) = complex<int16>(0x4000,0);
-    }
 
     LOG_INFO_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
 

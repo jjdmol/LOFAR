@@ -56,7 +56,7 @@ void SstRead::sendrequest()
   uint16 byteoffset = (getCurrentBLP() % SST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
 
   sstread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP() / SST_N_FRAGMENTS,
-		  MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
+		  MEPHeader::READ, N_SST_STATS * sizeof(uint32), byteoffset);
 
   m_hdr = sstread.hdr;
   getBoardPort().send(sstread);
@@ -74,23 +74,31 @@ void SstRead::sendrequest_status()
 BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, double)
 inline double convert_uint32_to_double(uint32 val)
 {
-  uint64 val64 = val;
-  
-  // check if bit 31 is set
-  if ((1<<31) & val64) val64 = (val64 & ((1<<31)-1)) << 25;
+  int64 val64;
+
+  uint32 e = val & (1<<31);
+  uint32 s = val & (1<<30);
+  int32  m = val & ((1<<30)-1);
+
+  if (s) m = m - (1<<30);
+  if (e) {
+    val64 = (int64)m << 23;
+  } else {
+    val64 = m;
+  }
 
   return (double)val64;
 }
 
 GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_STATS != event.signal)
+  if (EPA_SST_STATS != event.signal)
   {
     LOG_WARN("SstRead::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
 
-  EPAStatsEvent ack(event);
+  EPASstStatsEvent ack(event);
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
@@ -106,7 +114,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 			 global_blp, offset));
 
   Range fragment_range(offset / MEPHeader::N_POL,
-		       (offset / MEPHeader::N_POL) + (N_STATS / MEPHeader::N_POL) - 1);
+		       (offset / MEPHeader::N_POL) + (N_SST_STATS / MEPHeader::N_POL) - 1);
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
@@ -117,7 +125,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   }
 
   Array<uint32, 2> stats((uint32*)&ack.stat,
-			 shape(N_STATS / MEPHeader::N_POL,
+			 shape(N_SST_STATS / MEPHeader::N_POL,
 			       MEPHeader::N_POL),
 			 neverDeleteData);
 
