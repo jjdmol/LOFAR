@@ -296,7 +296,8 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_WG_WAVE:
     case EPA_SS_SELECT:
     case EPA_BF_COEFS:
-    case EPA_STATS:
+    case EPA_SST_STATS:
+    case EPA_BST_STATS:
     case EPA_RCU_SETTINGS:
     case EPA_CRR_SOFTRESET:
     case EPA_CRR_SOFTPPS:
@@ -427,7 +428,7 @@ GCFEvent::TResult EPAStub::read_rsr_version(EPAReadEvent& event, GCFPortInterfac
 
 GCFEvent::TResult EPAStub::read_stats(EPAReadEvent& event, GCFPortInterface& port)
 {
-  EPAStatsEvent stats;
+  EPASstStatsEvent stats;
 
   stats.hdr = event.hdr;
   stats.hdr.m_fields.type  = MEPHeader::READACK;
