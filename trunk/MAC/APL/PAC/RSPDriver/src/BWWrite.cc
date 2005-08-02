@@ -124,6 +124,9 @@ void BWWrite::sendrequest()
     {
       // weights for x-real part
       // no added conversions needed
+
+      // overwrite first weights for cross correlation
+      weights(getCurrentBLP(), 0) = complex<int16>(0x4000, 0);
     }
     break;
 
@@ -131,6 +134,9 @@ void BWWrite::sendrequest()
     {
       // weights for x-imaginary part
       weights *= complex<int16>(0,1);
+
+      // overwrite first weights for cross correlation
+      weights(getCurrentBLP(), 0) = complex<int16>(0, 0x4000);
     }
     break;
     
@@ -138,6 +144,9 @@ void BWWrite::sendrequest()
     {
       // weights for y-real part
       // no added conversions needed
+
+      // overwrite first weights for cross correlation
+      weights(getCurrentBLP(), 1) = complex<int16>(0x4000, 0);
     }
     break;
     
@@ -145,6 +154,9 @@ void BWWrite::sendrequest()
     {
       // weights for y-imaginary part
       weights *= complex<int16>(0,1);
+
+      // overwrite first weights for cross correlation
+      weights(getCurrentBLP(), 1) = complex<int16>(0, 0x4000);
     }
     break;
   }
