@@ -126,8 +126,8 @@ void WH_Correlator::process() {
       reg_A1_Y = inDH->getBufferElement(channel, A+1,     time, 1);     
       //
       // get pointers to the two rows we calculate in the next loop
-      outptr0 = outDH->getBufferelement(A  ,B,0); // first row
-      outptr1 = outDH->getBufferelement(A+1,B,0); // second row
+      outptr0 = outData + outDH->getBufferOffset(A  ,B,0); // first row
+      outptr1 = outData + outDH->getBufferOffset(A+1,B,0); // second row
       // now loop over the B dimension
       for (B=0; B<A; B+=2) {
 	// these are the full squares
@@ -143,25 +143,25 @@ void WH_Correlator::process() {
 	reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);      
 	// calculate all correlations; 
 	// todo: prefetch new B dimesnsions on the way
-	DBGASSRT(outptr0 == outDH->getBufferElement(A,B,0));
+	DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B,0));
 	*(outptr0++) += reg_A0_X * ~reg_B0_X;
 	*(outptr0++) += reg_A0_X * ~reg_B0_Y;
 	*(outptr0++) += reg_A0_Y * ~reg_B0_X;
 	*(outptr0++) += reg_A0_Y * ~reg_B0_Y;
 	
-	DBGASSRT(outptr0 == outDH->getBufferElement(A,B+1,2));
+	DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B+1,2));
 	*(outptr0++) += reg_A0_X * ~reg_B1_X;
 	*(outptr0++) += reg_A0_X * ~reg_B1_Y;
 	*(outptr0++) += reg_A0_Y * ~reg_B1_X;
 	*(outptr0++) += reg_A0_Y * ~reg_B1_Y;
 	
-	DBGASSRT(outptr1 == outDH->getBufferElement(A+1,B,0));
+	DBGASSRT(outptr1 == outData + outDH->getBufferOffset(A+1,B,0));
 	*(outptr1++) += reg_A1_X * ~reg_B0_X;
 	*(outptr1++) += reg_A1_X * ~reg_B0_Y;
 	*(outptr1++) += reg_A1_Y * ~reg_B0_X;
 	*(outptr1++) += reg_A1_Y * ~reg_B0_Y;
 	
-	DBGASSRT(outptr1 == outDH->getBufferElement(A+1,B+1,0));
+	DBGASSRT(outptr1 == outData + outDH->getBufferOffset(A+1,B+1,0));
 	*(outptr1++) += reg_A1_X * ~reg_B1_X;
 	*(outptr1++) += reg_A1_X * ~reg_B1_Y;
 	*(outptr1++) += reg_A1_Y * ~reg_B1_X;
@@ -179,19 +179,19 @@ void WH_Correlator::process() {
     reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);     
     // calculate all correlations in the triangle; 
     // todo: prefetch new B dimesnsions on the way
-    DBGASSRT(outptr0 == outDH->getBufferElement(A,B,0));
+    DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B,0));
     *(outptr0++) += reg_A0_X * ~reg_B0_X;
     *(outptr0++) += reg_A0_X * ~reg_B0_Y;
     *(outptr0++) += reg_A0_Y * ~reg_B0_X;
     *(outptr0++) += reg_A0_Y * ~reg_B0_Y;
     
-    DBGASSRT(outptr1 == outDH->getBufferElement(A+1,B,0));
+    DBGASSRT(outptr1 == outData + outDH->getBufferOffset(A+1,B,0));
     *(outptr1++) += reg_A1_X * ~reg_B0_X;
     *(outptr1++) += reg_A1_X * ~reg_B0_Y;  
     *(outptr1++) += reg_A1_Y * ~reg_B0_X;
     *(outptr1++) += reg_A1_Y * ~reg_B0_Y;
 
-    DBGASSRT(outptr0 == outDH->getBufferElement(A,B+1,0));
+    DBGASSRT(outptr0 == outData + outDH->getBufferOffset(A,B+1,0));
     *(outptr0++) += reg_A0_X * ~reg_B1_X;
     *(outptr0++) += reg_A0_X * ~reg_B1_Y;
     *(outptr0++) += reg_A0_Y * ~reg_B1_X;
@@ -199,6 +199,15 @@ void WH_Correlator::process() {
   }
 
   // todo: write the Outptr data into DH_Vis.
+  // since the addressing in outptr is exactly the same as in DH_Vis, we can now 
+  // copy and convert to float element for element
+
+  DH_Vis::BufferType *dhptr = outDH->getBufferElement(0,0,0);
+  outptr0 = &outData[0];
+  int loopsize = outDH->getBufferOffset(ELEMENTS,ELEMENTS,4);
+  for (i=0; i < loopsize; i++) {
+    *dhptr[i] = outptr0[i]; 
+  }
 
 #ifdef DO_TIMING
   stoptime = timer();
