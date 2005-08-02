@@ -25,6 +25,7 @@ DH_Vis::DH_Vis (const string& name, double centerFreq,
   itsBuffer     (0),
   itsCenterFreq  (centerFreq) 
 {
+  //todo: support for multiple freq channels
    itsNPols = itsPS.getInt32("Input.NPolarisations");
    itsNCorrs = itsNPols*itsNPols;
    itsNStations  = itsPS.getInt32("Input.NRSP");
@@ -55,6 +56,7 @@ DataHolder* DH_Vis::clone() const
 void DH_Vis::init()
 {
   // Determine the size of the buffer.
+  //todo: support for multiple freq channels
   itsBufSize = itsNCorrs * itsNBaselines;
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();  // calls fillDataPointers
