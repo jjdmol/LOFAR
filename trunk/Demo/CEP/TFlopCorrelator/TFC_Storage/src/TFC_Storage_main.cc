@@ -59,7 +59,7 @@ int main (int argc, const char** argv) {
     LOG_FATAL_STR(argv[0] << " terminated by exception!");
     exit(1);
   } catch (...) {
-    LOG_FATAL_STR("Caught unknown exception, exitting");
+    LOG_FATAL_STR("Caught unknown exception, exiting");
     exit (1);
   }  
   LOG_INFO_STR(argv[0] << " terminated normally");

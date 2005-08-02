@@ -76,7 +76,7 @@ int MSWriter::addField (double azimuth, double elevation)
 }
 
 void MSWriter::write (int& rowNr, int bandId, int fieldId, int timeCounter, 
-		      int channelId, int nrdata, const dcomplex* data, 
+		      int channelId, int nrdata, const fcomplex* data, 
 		      const bool* flags)
 {
   itsWriter->write (rowNr, bandId, fieldId, channelId, timeCounter, nrdata,

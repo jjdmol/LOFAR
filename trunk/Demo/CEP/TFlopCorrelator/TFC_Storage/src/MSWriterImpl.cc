@@ -53,6 +53,7 @@
 # include <casa/Utilities/Assert.h>
 # include <casa/Exceptions/Error.h>
 #include <casa/Arrays/Slicer.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace casa;
@@ -495,122 +496,101 @@ void MSWriterImpl::updateTimes()
 }
 
 void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId, 
-			  int timeCounter, int nrdata, const dcomplex* data, 
+			  int timeCounter, int nrdata, const fcomplex* data, 
 			  const bool* flags)
 {
-  AlwaysAssert (bandId >= 0  &&  bandId < itsNrBand, AipsError);
-  AlwaysAssert (fieldId >= 0  &&  fieldId < itsNrField, AipsError);
-  AlwaysAssert (data != 0, AipsError);
+  ASSERT(bandId >= 0  &&  bandId < itsNrBand);
+  ASSERT(fieldId >= 0  &&  fieldId < itsNrField);
+  ASSERT(data != 0);
   if (timeCounter >= itsNrTimes) {
     itsNrTimes = timeCounter+1;
   }
   // Find the shape of the data array in each table row.
   IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);
   Int nrel = shape[0];       // == number of polarisations/correlations
-  if (nrdata != itsNrAnt*itsNrAnt*nrel) {
-    throw AipsError ("incorrect nr of data points for this band; should be " +
-		     String::toString(itsNrAnt*itsNrAnt*nrel));
-  }
+  ASSERTSTR (nrdata == nrel*itsNrAnt*(itsNrAnt+1)/2, 
+	     "incorrect nr of data points for this band; should be " +  
+	     String::toString(nrel*itsNrAnt*(itsNrAnt+1)/2));
   Array<Bool> defFlags(shape);
 
-  if (rowNr < 0)  // Do this once per band
-  {
-    // Add the number of rows needed.
-    int nrbasel = itsNrAnt*(itsNrAnt-1)/2;
-    rowNr = itsMS->nrow();
-    itsMS->addRow (nrbasel);
-    defFlags = False;
-    Array<Float> sigma(IPosition(1, shape(0)));
-    sigma = 0;
-    Array<Float> weight(IPosition(1, shape(0)));
-    weight = 1;
-    Double time = itsStartTime + timeCounter*itsTimeStep;
-    // Calculate the apparent HA and DEC for the array center.
-    // First store time in frame.
-    Quantity qtime(time, "s");
-    itsFrame->set (MEpoch(qtime, MEpoch::UTC));
-    MDirection::Ref outref(MDirection::HADEC, *itsFrame);
-    MDirection outdir = MDirection::Convert (*itsArrayPos, outref) ();
-    Double ha = outdir.getAngle().getValue()(0);
-    Double dec = outdir.getAngle().getValue()(1);
-    Double sinha = std::sin(ha);
-    Double cosha = std::cos(ha);
-    Double sindec = std::sin(dec);
-    Double cosdec = std::cos(dec);
-    Vector<Double> uvw(3);
-    const Cube<Double>& basel = *itsBaselines;
-    // Write all the data.
-    // The input data array has shape nrpol,nrchan,nrant,nrant.
-    // So we can form an AIPS++ array for each baseline.
-    for (int i=0; i<itsNrAnt; i++) {
-      for (int j=0; j<itsNrAnt; j++) {
-	if (j < i) {
-	  uvw(0) = sinha*basel(0,i,j) + cosha*basel(1,i,j);
-	  uvw(1) = -sindec*cosha*basel(0,i,j) + sindec*sinha*basel(1,i,j) +
-	    cosdec*basel(2,i,j);
-	  uvw(2) = cosdec*cosha*basel(0,i,j) - cosdec*sinha*basel(1,i,j) +
-	    sindec*basel(2,i,j);
-	  itsMSCol->flagRow().put (rowNr, False);
-	  itsMSCol->time().put (rowNr, time);
-	  itsMSCol->antenna1().put (rowNr, j);
-	  itsMSCol->antenna2().put (rowNr, i);
-	  itsMSCol->feed1().put (rowNr, 0);
-	  itsMSCol->feed2().put (rowNr, 0);
-	  itsMSCol->dataDescId().put (rowNr, bandId);
-	  itsMSCol->processorId().put (rowNr, 0);
-	  itsMSCol->fieldId().put (rowNr, fieldId);
-	  itsMSCol->interval().put (rowNr, itsTimeStep);
-	  itsMSCol->exposure().put (rowNr, itsTimeStep);
-	  itsMSCol->timeCentroid().put (rowNr, time);
-	  itsMSCol->scanNumber().put (rowNr, 0);
-	  itsMSCol->arrayId().put (rowNr, 0);
-	  itsMSCol->observationId().put (rowNr, 0);
-	  itsMSCol->stateId().put (rowNr, 0);
-	  itsMSCol->uvw().put (rowNr, uvw);
-	  itsMSCol->weight().put (rowNr, weight);
-	  itsMSCol->sigma().put (rowNr, sigma);
-	}
-      }
-    }
-  }
-
-  int nPol = 2;
-  if (nrel == 1) {
-    nPol = 1;
-  }
-
-   // Write all the data.
+  // Add the number of rows needed.
+  int nrbasel = itsNrAnt*(itsNrAnt+1)/2;
+  rowNr = itsMS->nrow();
+  itsMS->addRow (nrbasel);
+  defFlags = False;
+  Array<Float> sigma(IPosition(1, shape(0)));
+  sigma = 0;
+  Array<Float> weight(IPosition(1, shape(0)));
+  weight = 1;
+  Double time = itsStartTime + timeCounter*itsTimeStep;
+  // Calculate the apparent HA and DEC for the array center.
+  // First store time in frame.
+  Quantity qtime(time, "s");
+  itsFrame->set (MEpoch(qtime, MEpoch::UTC));
+  MDirection::Ref outref(MDirection::HADEC, *itsFrame);
+  MDirection outdir = MDirection::Convert (*itsArrayPos, outref) ();
+  Double ha = outdir.getAngle().getValue()(0);
+  Double dec = outdir.getAngle().getValue()(1);
+  Double sinha = std::sin(ha);
+  Double cosha = std::cos(ha);
+  Double sindec = std::sin(dec);
+  Double cosdec = std::cos(dec);
+  Vector<Double> uvw(3);
+  const Cube<Double>& basel = *itsBaselines;
+  // Write all the data.
+  // The input data array has shape nrpol,nrchan,nrant,nrant.
   // So we can form an AIPS++ array for each baseline.
-    for (int i=0; i<itsNrAnt; i++) {
-      for (int j=0; j<itsNrAnt; j++) {
-	if (j < i) {
-	  
-	  Matrix<Complex> dataArr(IPosition(2, nrel, 1));
-	  Complex* dataPtr = dataArr.data();
-	  uint startInd = i*nrel*itsNrAnt + j*nPol;
-	  dataPtr[0] = ((Complex*)data)[startInd];
-	  if (nPol == 2)
-	  {
-	    dataPtr[1] = ((Complex*)data)[startInd + 1];
-	    dataPtr[2] = ((Complex*)data)[startInd + nPol*itsNrAnt];
-	    dataPtr[3] = ((Complex*)data)[startInd + nPol*itsNrAnt + 1];
-	  }
-	  IPosition start(2, 0, channelId);
-	  IPosition length(2, nPol, 1);
-	  Slicer slice(start, length);
-	  itsMSCol->data().putSlice(rowNr, slice, dataArr);
+  for (int i=0; i<itsNrAnt; i++) {
+    for (int j=0; j<=i; j++) {
+      uvw(0) = sinha*basel(0,i,j) + cosha*basel(1,i,j);
+      uvw(1) = -sindec*cosha*basel(0,i,j) + sindec*sinha*basel(1,i,j) +
+	cosdec*basel(2,i,j);
+      uvw(2) = cosdec*cosha*basel(0,i,j) - cosdec*sinha*basel(1,i,j) +
+	sindec*basel(2,i,j);
 
-	  if (flags == 0) {
-	    itsMSCol->flag().putSlice (rowNr, slice, defFlags);
-	  } else {
-// 	    // >>> change this!!
-// 	    Array<Bool> flagArray(shape, const_cast<Bool*>(flags), SHARE);
-// 	    itsMSCol->flag().put (rownr, flagArray);
-	  }
-	}
-// 	if (flags != 0) {
-// 	  flags += nrel;
-// 	}
+      Array<Complex> array(shape, (Complex*)data, SHARE);
+      try
+      {
+	itsMSCol->data().put(rowNr, array);
+      }
+      catch (AipsError& e)
+      {
+	cout << "AipsError in put: " <<  e.what() << endl;
+      }
+      if (flags == 0) {
+	itsMSCol->flag().put(rowNr, defFlags);
+      } else {
+	Array<Bool> flagArray(shape, const_cast<Bool*>(flags), SHARE);
+	itsMSCol->flag().put (rowNr, flagArray);
+      }
+
+      itsMSCol->flagRow().put (rowNr, False);
+      itsMSCol->time().put (rowNr, time);
+      itsMSCol->antenna1().put (rowNr, i);
+      itsMSCol->antenna2().put (rowNr, j);
+      itsMSCol->feed1().put (rowNr, 0);
+      itsMSCol->feed2().put (rowNr, 0);
+      itsMSCol->dataDescId().put (rowNr, bandId);
+      itsMSCol->processorId().put (rowNr, 0);
+      itsMSCol->fieldId().put (rowNr, fieldId);
+      itsMSCol->interval().put (rowNr, itsTimeStep);
+      itsMSCol->exposure().put (rowNr, itsTimeStep);
+      itsMSCol->timeCentroid().put (rowNr, time);
+      itsMSCol->scanNumber().put (rowNr, 0);
+      itsMSCol->arrayId().put (rowNr, 0);
+      itsMSCol->observationId().put (rowNr, 0);
+      itsMSCol->stateId().put (rowNr, 0);
+      itsMSCol->uvw().put (rowNr, uvw);
+      itsMSCol->weight().put (rowNr, weight);
+      itsMSCol->sigma().put (rowNr, sigma);
+      rowNr++;
+      data += nrel;
+      if (flags != 0) {
+	flags += nrel;
       }
     }
+  }
 }
+
+
+
