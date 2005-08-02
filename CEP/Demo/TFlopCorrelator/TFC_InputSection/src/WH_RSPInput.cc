@@ -194,21 +194,23 @@ void* WriteToBufferThread(void* arguments)
 }
 
 WH_RSPInput::WH_RSPInput(const string& name, 
-                         const ACC::APS::ParameterSet ps,
+                         ParameterSet& ps,
                          TransportHolder& th,
                          const bool isSyncMaster)
   : WorkHolder ((isSyncMaster ? 1 : 2), 
-                1 + (isSyncMaster ? ps.getInt32("Input.NRSP")-1 : 0), 
+                ps.getInt32("Input.NSubbands") + (isSyncMaster ? ps.getInt32("Input.NRSP")-1 : 0) , 
                 name, 
                 "WH_RSPInput"),
     itsTH(th),
     itsPS (ps),
     itsSyncMaster(isSyncMaster)
 {
+  LOG_TRACE_FLOW_STR("WH_RSPInput constructor");    
+
   char str[32];
 
   // get parameters
-  itsCyclicBufferSize = ps.getInt32("Input.Cylicbuffersize");
+  itsCyclicBufferSize = ps.getInt32("Input.CyclicBufferSize");
   itsNRSPOutputs = ps.getInt32("Input.NRSP");
   itsNpackets = ps.getInt32("Input.NPacketsInFrame");
   itsNSubbands = ps.getInt32("Input.NSubbands");
@@ -218,7 +220,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   // size of an EPA packet in bytes 
   int sizeofpacket   = ( itsNPolarisations * 
                          sizeof(u16complex) * 
-                         itsNSubbands) + ps.getInt32("SzEPAheader"); 
+                         itsNSubbands) + ps.getInt32("Input.SzEPAheader"); 
  
   // size of a RSP frame in bytes
   itsSzRSPframe = itsNpackets * sizeofpacket;
@@ -233,7 +235,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
     itsSubbandBuffer[s] =  new BufferController<subbandType>(itsCyclicBufferSize);
     itsMetadataBuffer[s] = new BufferController<metadataType>(itsCyclicBufferSize);  
     snprintf(str, 32, "DH_RSP_out_%d", s);
-    getDataManager().addOutDataHolder(s, new DH_RSP(str, ps)); 
+    getDataManager().addOutDataHolder(s, new DH_RSP(str, itsPS)); 
   }
    
   // create dataholders for RSPInput synchronization
@@ -263,7 +265,7 @@ WH_RSPInput::~WH_RSPInput()
 
 
 WorkHolder* WH_RSPInput::construct(const string& name,
-                                   const ACC::APS::ParameterSet ps,
+                                   ParameterSet& ps,
                                    TransportHolder& th,
 				   const bool isSyncMaster)
 {

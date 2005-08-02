@@ -27,7 +27,6 @@
 #include <tinyCEP/TinyDataManager.h>
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
-//#include <Common/lofar_string.h>
 #include <Transport/TransportHolder.h>
 #include <TFC_Interface/RSPTimeStamp.h>
 #include <TFC_InputSection/BufferController.h>
@@ -35,6 +34,8 @@
 
 namespace LOFAR
 {
+
+  using ACC::APS::ParameterSet;
   
   typedef struct 
   {
@@ -70,13 +71,13 @@ namespace LOFAR
     public:
 
       explicit WH_RSPInput(const string& name, 
-                           const ACC::APS::ParameterSet ps,
+                           ParameterSet& ps,
                            TransportHolder& th,
                            const bool isSyncMaster);
       virtual ~WH_RSPInput();
     
       static WorkHolder* construct(const string& name, 
-                                   const ACC::APS::ParameterSet ps,
+                                   ParameterSet& ps,
                                    TransportHolder& th,
 				   const bool isSyncMaster);
 	
@@ -107,7 +108,7 @@ namespace LOFAR
       TransportHolder& itsTH;
       
       // ACC parameters interface
-      ACC::APS::ParameterSet itsPS;
+      ParameterSet &itsPS;
       
       // Sync Master or slave
       bool itsSyncMaster;

@@ -93,7 +93,6 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   int rspStartNode;
-  
   vector<string> interfaces = itsParamSet.getStringVector("Input.Interfaces");
   vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
   vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
