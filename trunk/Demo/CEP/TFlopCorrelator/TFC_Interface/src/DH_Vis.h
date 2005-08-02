@@ -34,6 +34,9 @@ public:
 
   /// Get write access to the Buffer.
   BufferType* getBuffer();
+  BufferType* getBufferElement(short station1,
+			       short station2,
+			       short pol); //todo: also frequency
 
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
@@ -73,6 +76,25 @@ private:
 inline DH_Vis::BufferType* DH_Vis::getBuffer()
   { return itsBuffer; }
 
+ inline DH_Vis::BufferType* DH_Vis::getBufferElement(short stationA, // row
+						     short stationB, // column
+						     short pol)
+  {
+    // Addressing: 
+    // First determine the start position of the (stationA,stationB) data:
+    // start at "upper left" corner with stationA=stationB=0 and
+    // call this column 0, row 0. 
+    // now address each row sequentially and
+    // start with with column0 for the next stationA
+    // Finally multiply by 4 to account for all polarisations
+    //  (sA,sB) -> (sA*sA+sA)/2+sB
+    //
+    // This is the start address for the (stationA,stationB) data
+    // add pol word to get to the requested polarisation.
+    DBGASSERTSR(stationB <= stationA,"only lower part of correlation matrix is accessible");
+    return itsBuffer+(2*(stationA*stationA+stationA)+4*stationB)+pol; 
+  }
+
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
 
@@ -82,12 +104,13 @@ inline const unsigned int DH_Vis::getBufSize() const
 inline bool DH_Vis::checkCorrelatorTestPattern() {
   bool result = true;
   
-  for (int i = 0; i < itsNStations*itsNPols; i++) {
-    for (int j = 0; j <= i; j++) {
-      // this would be the correct answer for a test pattern consisting 
-      // of only (1 + 1I) values
-      result = result && ( *(itsBuffer+j*(itsNStations*itsNPols)+i) == 2 * itsNsamples + 0.i);
-    }
+  for int (p=0; p< itsNPols; p++) {
+    for (int i = 0; i < itsNStations; i++) {
+      for (int j = 0; j <= i; j++) {
+	// this would be the correct answer for a test pattern consisting 
+	// of only (1 + 1I) values
+	result = result && (getBufferElement(i,j,p) == 1+0.i );
+      }
   }
   return result;
 }
@@ -95,3 +118,6 @@ inline bool DH_Vis::checkCorrelatorTestPattern() {
 }
 
 #endif 
+
+
+
