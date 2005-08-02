@@ -18,6 +18,7 @@
 
 // Transporters
 #include <Transport/TH_MPI.h>
+#include <Transport/TH_File.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_Ethernet.h>
 // Workholders
@@ -93,18 +94,26 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   int rspStartNode;
+  
+  bool useEth = itsParamSet.getBool("Input.UseEth");
   vector<string> interfaces = itsParamSet.getStringVector("Input.Interfaces");
   vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
   vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
-  
+  vector<string> inFiles = itsParamSet.getStringVector("Input.InputFiles");
+    
   for (int r=0; r<NRSP; r++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, NRSP);
     
-    itsTHs.push_back(new TH_Ethernet(interfaces[r], 
-	   		             dstMacs[r],
-				     srcMacs[r], 
-                                     0x000));
-    DBGASSERTSTR(itsTHs.back()->init(), "Couldn't init Ethernet device");
+    if (useEth) {
+      itsTHs.push_back(new TH_Ethernet(interfaces[r], 
+				       dstMacs[r],
+				       srcMacs[r], 
+				       0x000));
+    } else {
+      itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));
+    }
+
+    DBGASSERTSTR(itsTHs.back()->init(), "Couldn't init input TransportHolder");
      
     if (r==0)
     {
