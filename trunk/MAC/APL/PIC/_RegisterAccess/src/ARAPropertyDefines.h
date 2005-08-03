@@ -97,6 +97,11 @@ const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance[] =  "PIC_Ra
 const char SCOPE_PIC_RackN_Alert[] =                                  "PIC_Rack%d_Alert";
 const char SCOPE_PIC_RackN_SubRackN_Alert[] =                         "PIC_Rack%d_SubRack%d_Alert";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%d_SubRack%d_Board%d_Alert";
+const char SCOPE_PIC_Command[] =                                      "PIC_Command";
+const char SCOPE_PIC_RackN_SubRackN_Command[] =                       "PIC_Rack%d_SubRack%d_Command";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_Command[] =                "PIC_Rack%d_SubRack%d_Board%d_Command";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Command[] =       "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_Command";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Command[] =   "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_HFA_Command";
 
 const char TYPE_LCU_PIC[]               = "TLcuPic";
 const char TYPE_LCU_PIC_Maintenance[]   = "TLcuPicMaintenance";
@@ -113,6 +118,7 @@ const char TYPE_LCU_PIC_RCU[]           = "TLcuPicRCU";
 const char TYPE_LCU_PIC_ADCStatistics[] = "TLcuPicADCStatistics";
 const char TYPE_LCU_PIC_LFA[]           = "TLcuPicLFA";
 const char TYPE_LCU_PIC_HFA[]           = "TLcuPicHFA";
+const char TYPE_LCU_PIC_Command[]       = "TLcuPicCommand";
 const char TYPE_LCU_PAC_LogicalDeviceScheduler[]  = "TLcuPacLogicalDeviceScheduler";
 
 const GCF::Common::TPSCategory PSCAT_LCU_PIC               = GCF::Common::PS_CAT_PERM_AUTOLOAD;
@@ -130,11 +136,14 @@ const GCF::Common::TPSCategory PSCAT_LCU_PIC_RCU           = GCF::Common::PS_CAT
 const GCF::Common::TPSCategory PSCAT_LCU_PIC_ADCStatistics = GCF::Common::PS_CAT_PERMANENT;
 const GCF::Common::TPSCategory PSCAT_LCU_PIC_LFA           = GCF::Common::PS_CAT_PERM_AUTOLOAD;
 const GCF::Common::TPSCategory PSCAT_LCU_PIC_HFA           = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Command       = GCF::Common::PS_CAT_PERM_AUTOLOAD;
 
 
 // the following constants cannot be defined as const char because they are used
 // as char* elsewhere
 #define PROPNAME_STATUS          "status"
+#define PROPNAME_COMMAND         "command"
+#define PROPNAME_RESULT          "result"
 #define PROPNAME_VOLTAGE15       "voltage15"
 #define PROPNAME_VOLTAGE33       "voltage33"
 #define PROPNAME_FRAMESRECEIVED  "packetsReceived"
@@ -168,6 +177,32 @@ const GCF::Common::TPSCategory PSCAT_LCU_PIC_HFA           = GCF::Common::PS_CAT
 #define PROPNAME_ERRORCOUNT      "errorCount"
 #define PROPNAME_NOFOVERFLOW     "nofOverflow"
 
+const string commandGetID("getID");
+const string commandTestRegisterReadWrite("testRegisterReadWrite");
+const string commandTestPPS("testPPS");
+const string commandReadSattelitePositions("readSattelitePositions");
+const string commandReadTimeConstant("readTimeConstant");
+const string commandReadConfiguration("readConfiguration");
+const string commandReadStatistics("readStatistics");
+const string commandReadPPSlockStatus("readPPSlockStatus");
+const string commandReadPLLlockStatus("readPLLlockStatus");
+const string commandReadCurrent("readCurrent");
+const string commandTestRSPlinkSpeed("testRSPlinkSpeed");
+const string commandTestRCUlinkSpeed("testRCUlinkSpeed");
+const string commandTestSerdesSpeed("testSerdesSpeed");
+const string commandTestTBBlinkSpeed("testTBBlinkSpeed");
+const string commandTestBoundaryScan("testBoundaryScan");
+const string commandTestWaveform("testWaveform");
+const string commandTestTransient("testTransient");
+const string commandTestClock("testClock");
+const string commandTestFPGAlinkSpeed("testFPGAlinkSpeed");
+const string commandTestEthernetLoopBack("testEthernetLoopBack");
+const string commandTestSerdesLoopBack("testSerdesLoopBack");
+const string commandTestFPGAmemoryRandom("testFPGAmemoryRandom");
+const string commandTestFPGAmemory("testFPGAmemory");
+const string commandTestDataReception("testDataReception");
+const string commandTestRoundTripSpeed("testRoundTripSpeed");
+const string commandReset("reset");
 
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
@@ -274,6 +309,11 @@ PROPERTYCONFIG_END
 
 PROPERTYCONFIG_BEGIN(PROPS_Alert)
 PROPERTYCONFIG_ITEM(PROPNAME_STATUS, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0")
+PROPERTYCONFIG_END
+
+PROPERTYCONFIG_BEGIN(PROPS_Command)
+PROPERTYCONFIG_ITEM(PROPNAME_COMMAND, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "")
+PROPERTYCONFIG_ITEM(PROPNAME_RESULT, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "")
 PROPERTYCONFIG_END
 
 };
