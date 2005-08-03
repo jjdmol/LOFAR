@@ -49,6 +49,7 @@ DH_FIR::DH_FIR(const DH_FIR& that)
 DH_FIR::~DH_FIR()
 {
   //  delete [] (char*)(itsDataPacket);
+  delete itsMatrix;
   itsBuffer = 0;
 }
 
