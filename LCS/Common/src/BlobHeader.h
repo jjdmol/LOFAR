@@ -136,7 +136,7 @@ namespace LOFAR {
       static uint32 eobMagicValue()
 	{ return 0xbfbfbfbf; }
       
-      bool BlobHeader::checkMagicValue() const
+      bool checkMagicValue() const
 	{ return itsMagicValue == bobMagicValue(); }
       
       // Get the length of the total header (thus including objecttype).
