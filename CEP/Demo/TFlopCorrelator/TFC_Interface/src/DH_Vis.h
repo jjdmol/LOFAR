@@ -94,14 +94,14 @@ inline DH_Vis::BufferType* DH_Vis::getBuffer()
     //
     // This is the start address for the (stationA,stationB) data
     // add pol word to get to the requested polarisation.
-    DBGASSERTSTR(stationB <= stationA,"only lower part of correlation matrix is accessible");
+    DBGASSERTSTR(stationB <= stationA,"DH_Vis::getBufferOffset: only lower part of correlation matrix is accessible");
     return (2*(stationA*stationA+stationA)+4*stationB)+pol; 
   }
 
  inline DH_Vis::BufferType* DH_Vis::getBufferElement(short stationA, // row
 	 					     short stationB, // column
 						     short pol) {
-   DBGASSERTSTR(stationB <= stationA, "only lower part of correlation matrix is accessible");
+   DBGASSERTSTR(stationB <= stationA, "DH_Vis::getBufferElement: only lower part of correlation matrix is accessible");
    return &itsBuffer[getBufferOffset(stationA, stationB, pol)];
 }
 
