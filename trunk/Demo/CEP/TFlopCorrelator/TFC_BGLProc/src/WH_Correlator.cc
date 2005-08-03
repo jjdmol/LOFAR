@@ -44,7 +44,6 @@ WH_Correlator::WH_Correlator(const string& name) :
 //   itsNchannels = myPS.getInt32("WH_Corr.channels"); 
 //   itsNtargets = 0; // not used?
 
-
   getDataManager().addInDataHolder(0, new DH_FIR("in", 1, myPS));
   //  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
   getDataManager().addOutDataHolder(0, new DH_Vis("out", 1, myPS));
@@ -77,7 +76,9 @@ void WH_Correlator::preprocess() {
 
   ASSERTSTR(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBufferSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
 //   ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
-  ASSERTSTR(static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBufSize() == ELEMENTS*ELEMENTS, "OutHolder size not equal to defined size");
+  ASSERTSTR(static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBufSize() == 
+	    itsNpolarisations*itsNpolarisations*itsNelements*(itsNelements+1)/2, 
+	    "OutHolder size not equal to defined size");
 
   // prevent stupid mistakes in the future by assuming we can easily change the unroll factor
   ASSERTSTR(UNROLL_FACTOR == 4, "Code is normally only unrolled by a factor of 4, make sure this is really what you want!");
@@ -108,6 +109,10 @@ void WH_Correlator::process() {
   __complex__ double outData[ELEMENTS*ELEMENTS*4];  // large enough; can be made smaller; 4 pol 
   __complex__ double *outptr0, *outptr1;
 
+  /// initialize output buffer
+  memset(&outData[0], 0, ELEMENTS*ELEMENTS*4*sizeof(__complex__ double));
+  
+
 #ifdef HAVE_BGL
   __alignx(16, outptr0);
   __alignx(16, outptr1);
@@ -119,7 +124,7 @@ void WH_Correlator::process() {
   for (int time=0; time< SAMPLES; time++) {
     // refer to addressing in DH_Vis.h::getBufferElement() 
     //loop over the vertical(rows) dimension in the correlation matrix
-    for (int A=0; A< ELEMENTS; A+=2) {
+    for (int A=0; A < itsNelements; A+=2) {
       // addressing:   getBufferElement(    channel, station, time, pol)
       reg_A0_X = inDH->getBufferElement(channel, A,       time, 0);     
       reg_A0_Y = inDH->getBufferElement(channel, A,       time, 1);     
@@ -127,16 +132,18 @@ void WH_Correlator::process() {
       reg_A1_Y = inDH->getBufferElement(channel, A+1,     time, 1);     
       //
       // get pointers to the two rows we calculate in the next loop
-      outptr0 = &outData[outDH->getBufferOffset(A  , B, 0)]; // first row
-      outptr1 = &outData[outDH->getBufferOffset(A+1, B, 0)]; // second row
+      
+      outptr0 = &outData[outDH->getBufferOffset(A  , 0, 0)]; // first row
+      outptr1 = &outData[outDH->getBufferOffset(A+1, 0, 0)]; // second row
       // now loop over the B dimension
       for (B=0; B<A; B+=2) {
 	// these are the full squares
 	// now correlate stations B,B+1,A,A+1 in both polarisations
-	//cout << B   << " - " << A   << endl;
-	//cout << B   << " - " << A+1 << endl;
-	//cout << B+1 << " - " << A   << endl;
-	//cout << B+1 << " - " << A+1 << endl;
+// 	cout << B   << " - " << A   << endl;
+// 	cout << B   << " - " << A+1 << endl;
+// 	cout << B+1 << " - " << A   << endl;
+// 	cout << B+1 << " - " << A+1 << endl;
+
  	// load B inputs into registers
 	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);
 	reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
@@ -150,7 +157,7 @@ void WH_Correlator::process() {
 	*(outptr0++) += reg_A0_Y * ~reg_B0_X;
 	*(outptr0++) += reg_A0_Y * ~reg_B0_Y;
 	
-	DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B+1,2)]);
+	DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B+1,0)]);
 	*(outptr0++) += reg_A0_X * ~reg_B1_X;
 	*(outptr0++) += reg_A0_X * ~reg_B1_Y;
 	*(outptr0++) += reg_A0_Y * ~reg_B1_X;
@@ -171,9 +178,10 @@ void WH_Correlator::process() {
     
       // done all sqaures
       // now correlate the last triangle;
-      //cout << B   << " - " << A   << endl;
-      //cout << B   << " - " << A+1 << endl;
-      //cout << B+1 << " - " << A   << endl;
+//       cout << B   << " - " << A   << endl;
+//       cout << B   << " - " << A+1 << endl;
+//       cout << B+1 << " - " << A+1 << endl;
+
       reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
       reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
       reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
@@ -191,12 +199,13 @@ void WH_Correlator::process() {
       *(outptr1++) += reg_A1_X * ~reg_B0_Y;  
       *(outptr1++) += reg_A1_Y * ~reg_B0_X;
       *(outptr1++) += reg_A1_Y * ~reg_B0_Y;
+
+      DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B+1,0)]);
+      *(outptr1++) += reg_A0_X * ~reg_B1_X;
+      *(outptr1++) += reg_A0_X * ~reg_B1_Y;
+      *(outptr1++) += reg_A0_Y * ~reg_B1_X;
+      *(outptr1++) += reg_A0_Y * ~reg_B1_Y;        
       
-      DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B+1,0)]);
-      *(outptr0++) += reg_A0_X * ~reg_B1_X;
-      *(outptr0++) += reg_A0_X * ~reg_B1_Y;
-      *(outptr0++) += reg_A0_Y * ~reg_B1_X;
-      *(outptr0++) += reg_A0_Y * ~reg_B1_Y;        
     }
   }
 
@@ -206,7 +215,12 @@ void WH_Correlator::process() {
 
   DH_Vis::BufferType *dhptr = outDH->getBufferElement(0,0,0);
   outptr0 = &outData[0];
-  int loopsize = outDH->getBufferOffset(ELEMENTS,ELEMENTS,4) - outDH->getBufferOffset(0,0,0);
+//   int loopsize = outDH->getBufferOffset(ELEMENTS,ELEMENTS,4) - outDH->getBufferOffset(0,0,0);
+//   cout << "Loopsize 1 : " << loopsize/sizeof(DH_Vis::BufferType) << endl;
+
+  int loopsize = outDH->getBufSize();
+//   cout << "Loopsize 2 : " << loopsize << endl;
+
   for (int i=0; i < loopsize; i++) {
     dhptr[i] = outptr0[i]; 
   }
@@ -218,10 +232,17 @@ void WH_Correlator::process() {
 }
 
 void WH_Correlator::dump() const{
-  for (int x = 0; x < ELEMENTS; x++) {
-    for (int y = 0; y <= x; y++) {
+  DH_Vis *outDH = static_cast<DH_Vis*>(getDataManager().getOutHolder(0));
+
+  for (short x = 0; x < itsNelements; x++) {
+    for (short y = 0; y <= x; y++) {
+
       // show transposed correlation matrix, this looks more natural.
-      cout << out_buffer[y][x] << "  ";
+      cout << *outDH->getBufferElement(x, y, 0) << " ";
+      cout << *outDH->getBufferElement(x, y, 1) << " ";
+      cout << *outDH->getBufferElement(x, y, 2) << " ";
+      cout << *outDH->getBufferElement(x, y, 3) << " ";
+
     }
     cout << endl;
   }
