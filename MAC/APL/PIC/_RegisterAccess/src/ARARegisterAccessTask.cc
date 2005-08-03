@@ -127,6 +127,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
   // fill MyPropertySets map
   addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station, GCFMyPropertySet::USE_DB_DEFAULTS);
   addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+  addMyPropertySet(SCOPE_PIC_Command, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
   for(rack=0;rack<m_n_racks;rack++)
   {
     sprintf(scopeString,SCOPE_PIC_RackN,rack);
@@ -144,24 +145,24 @@ RegisterAccessTask::RegisterAccessTask(string name)
       addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
       addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Command,rack,subrack);
+      addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
       
       for(board=0;board<m_n_boards_per_subrack;board++)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
-        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
-        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Command,rack,subrack,board);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
         
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_Ethernet, PSCAT_LCU_PIC_Ethernet, PROPS_Ethernet);
-        
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
         addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
     
@@ -177,6 +178,8 @@ RegisterAccessTask::RegisterAccessTask(string name)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_RCU, PSCAT_LCU_PIC_RCU, PROPS_RCU);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Command,rack,subrack,board,ap,rcu);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
 
             m_propertySet2RCUMap[string(scopeString)] = globalRcuNr++;
 
@@ -192,6 +195,8 @@ RegisterAccessTask::RegisterAccessTask(string name)
             addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance,rack,subrack,board,ap,rcu);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Command,rack,subrack,board,ap,rcu);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
           }
         }
       }
@@ -384,6 +389,12 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
       {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
+      else if(strstr(pPropAnswer->pPropName,"Command") != 0)
+      {
+        handleCommand(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      
+      
       break;
     }
     
@@ -725,6 +736,10 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       if(strstr(pPropAnswer->pPropName,"Maintenance") != 0)
       {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName,"Command") != 0)
+      {
+        handleCommand(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
       else if(strstr(pPropAnswer->pPropName,PROPNAME_LBAENABLE) != 0)
       {
@@ -1337,6 +1352,198 @@ void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& val
   int pos=propName.find_last_of("_.");
   string resource = propName.substr(0,pos);
   m_physicalModel.inMaintenance(maintenanceFlag,resource);
+}
+
+void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
+{
+  GCFPVString pvString;
+  pvString.copy(value);
+  string command(pvString.getValue());
+  
+  // strip last part of the property name to get the resource name.
+  int pos=propName.find_last_of("_.");
+  string resource = propName.substr(0,pos);
+  
+  if(commandGetID == command.substr(0,commandGetID.length()))
+  {
+    // determine the property
+    if(resource.find("HFA") != string::npos)
+    {
+      //TODO int rcuNr = getRCUHardwareNr(resource);
+      //TODO RSPTestGetHBAIDEvent getIDevent;
+      //TODO getIDevent.timestamp.setNow();
+      //TODO getIDevent.rcu = rcuNr;
+      //TODO m_RSPclient.send(getIDevent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+    else if(resource.find("RCU") != string::npos)
+    {
+      //TODO int rcuNr = getRCUHardwareNr(resource);
+      //TODO RSPTestGetRCUIDEvent getIDevent;
+      //TODO getIDevent.timestamp.setNow();
+      //TODO getIDevent.rcu = rcuNr;
+      //TODO m_RSPclient.send(getIDevent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+    else if(resource.find("Board") != string::npos)
+    {
+      //TODO RSPTestGetRSPIDEvent getIDevent;
+      //TODO getIDevent.timestamp.setNow();
+      //TODO m_RSPclient.send(getIDevent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+    else if(resource.find("SubRack") != string::npos)
+    {
+      //TODO RSPTestGetTDSIDEvent getIDevent;
+      //TODO getIDevent.timestamp.setNow();
+      //TODO m_RSPclient.send(getIDevent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+    else if(resource.find("TBB") != string::npos)
+    {
+      //TODO RSPTestGetTBBIDEvent getIDevent;
+      //TODO getIDevent.timestamp.setNow();
+      //TODO m_RSPclient.send(getIDevent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+    else if(resource.find("PIC") != string::npos)
+    {
+      //TODO RSPTestGetGPSIDEvent getIDevent;
+      //TODO getIDevent.timestamp.setNow();
+      //TODO m_RSPclient.send(getIDevent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+  }
+  else if(commandTestRegisterReadWrite == command.substr(0,commandTestRegisterReadWrite.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestPPS == command.substr(0,commandTestPPS.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReadSattelitePositions == command.substr(0,commandReadSattelitePositions.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReadTimeConstant == command.substr(0,commandReadTimeConstant.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReadConfiguration == command.substr(0,commandReadConfiguration.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReadStatistics == command.substr(0,commandReadStatistics.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReadPPSlockStatus == command.substr(0,commandReadPPSlockStatus.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReadPLLlockStatus == command.substr(0,commandReadPLLlockStatus.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReadCurrent == command.substr(0,commandReadCurrent.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestRSPlinkSpeed == command.substr(0,commandTestRSPlinkSpeed.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestRCUlinkSpeed == command.substr(0,commandTestRCUlinkSpeed.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestSerdesSpeed == command.substr(0,commandTestSerdesSpeed.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestTBBlinkSpeed == command.substr(0,commandTestTBBlinkSpeed.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestBoundaryScan == command.substr(0,commandTestBoundaryScan.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestWaveform == command.substr(0,commandTestWaveform.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestTransient == command.substr(0,commandTestTransient.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestClock == command.substr(0,commandTestClock.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestFPGAlinkSpeed == command.substr(0,commandTestFPGAlinkSpeed.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestEthernetLoopBack == command.substr(0,commandTestEthernetLoopBack.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestSerdesLoopBack == command.substr(0,commandTestSerdesLoopBack.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestFPGAmemoryRandom == command.substr(0,commandTestFPGAmemoryRandom.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestFPGAmemory == command.substr(0,commandTestFPGAmemory.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestDataReception == command.substr(0,commandTestDataReception.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandTestRoundTripSpeed == command.substr(0,commandTestRoundTripSpeed.length()))
+  {
+    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+  }
+  else if(commandReset == command.substr(0,commandReset.length()))
+  {
+    // determine the property
+    if(resource.find("RCU") != string::npos)
+    {
+      //TODO int rcuNr = getRCUHardwareNr(resource);
+      //TODO RSPResetRCUEvent resetEvent;
+      //TODO resetEvent.timestamp.setNow();
+      //TODO resetEvent.rcu = rcuNr;
+      //TODO m_RSPclient.send(resetEvent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+    else if(resource.find("Board") != string::npos)
+    {
+      //TODO int rcuNr = getRCUHardwareNr(resource);
+      //TODO int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
+      //TODO getRCURelativeNumbers(rcuNr,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+      //TODO RSPResetRSPEvent resetEvent;
+      //TODO resetEvent.timestamp.setNow();
+      //TODO resetEvent.rack = rackRelativeNr;
+      //TODO resetEvent.subrack = subRackRelativeNr;
+      //TODO resetEvent.board = boardRelativeNr;
+      //TODO m_RSPclient.send(resetEvent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+    else if(resource.find("TBB") != string::npos)
+    {
+      //TODO RSPResetTBBEvent resetEvent;
+      //TODO resetEvent.timestamp.setNow();
+      //TODO m_RSPclient.send(resetEvent);
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    }
+  }
+  
 }
 
 void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, const GCFPValue& value)

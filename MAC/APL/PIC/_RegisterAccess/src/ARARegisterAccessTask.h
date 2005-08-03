@@ -109,6 +109,11 @@ namespace ARA
        * Handle a change of the Maintenance status field
        */
       void handleMaintenance(string propName, const GCF::Common::GCFPValue& value);
+
+      /**
+       * Handle a change of the Command field
+       */
+      void handleCommand(string propName, const GCF::Common::GCFPValue& value);
       
       /**
        * Handle a change of one of the RCU settings fields
@@ -194,7 +199,7 @@ namespace ARA
       typedef blitz::Array<double, 2> TStatistics;
       
       void getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr);
-      void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);    
+      void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);
       int getRCUHardwareNr(const string& property);
       TMyPropertySetMap::iterator getPropertySetFromScope(const string& property);
       void _addStatistics(TStatistics& statistics, uint32 statsHandle);
