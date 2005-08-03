@@ -29,7 +29,8 @@
 
 #include <Transport/TH_Mem.h>
 #include <TFC_BGLProc/WH_Correlator.h>
-#include <TFC_Interface/DH_CorrCube.h>
+#include <TFC_Interface/DH_FIR.h>
+// #include <TFC_Interface/DH_CorrCube.h>
 #include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR
@@ -50,7 +51,8 @@ namespace LOFAR
 
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
-    itsInDH1 = new DH_CorrCube("itsIn1",0);
+    itsInDH1 = new DH_FIR("itsIn1",0, myPset);
+//     itsInDH1 = new DH_CorrCube("itsIn1",0);
     itsOutDH1 = new DH_Vis("itsOutDH1", 0, myPset);
 
     itsWH = new WH_Correlator("WH_Correlator");
@@ -75,7 +77,8 @@ namespace LOFAR
     itsWH->basePreprocess();
 
     // Fill inDHs here
-    static_cast<DH_CorrCube*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
+    static_cast<DH_FIR*>(itsWH->getDataManager().getInHolder(0))->setCorrelatorTestPattern();
+//     static_cast<DH_CorrCube*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
   }
 
   void AH_Correlator::run(int steps) {
@@ -90,7 +93,9 @@ namespace LOFAR
 
   void AH_Correlator::postrun() {
     // check result here
-    
+    cout << "Result = " << 
+      (bool) static_cast<DH_Vis*>(itsWH->getDataManager().getOutHolder(0))->checkCorrelatorTestPattern()
+    << endl;
   }
 
   void AH_Correlator::undefine() {
@@ -101,6 +106,8 @@ namespace LOFAR
     
     delete itsInCon1;
     delete itsOutCon1;
+
+    delete itsTH;
   }
 
   void AH_Correlator::quit() {
