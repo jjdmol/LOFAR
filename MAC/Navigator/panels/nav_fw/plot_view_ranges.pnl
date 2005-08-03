@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,450 259 330 330 N "_3DFace" 6
+PANEL,560 404 330 330 N "_3DFace" 6
 "$configDatapoint"
 "$updateRate"
 "$xrangeMax"
@@ -381,7 +381,7 @@ E E 0 1 1 0 1 E  80 176 21 176
 EE E
 0
 1
-LANG:1 30 This is a \n balloon "\n" text
+LANG:1 42 Range min and max set to 0 means autorange
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_fw/icon_info.bmp" 13434828 E 20 280 60 318
