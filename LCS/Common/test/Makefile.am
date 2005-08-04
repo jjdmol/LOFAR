@@ -2,13 +2,13 @@ check_PROGRAMS	      =	tDebug testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
 			tDataConvert tKeyValueMap tStringUtil tHexdump \
 			tLorrays testSocket tComplex \
-			tRunOnNode tTimer
+			tRunOnNode tTimer tNumeric
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
 			tDataConvert tKeyValueMap tStringUtil tHexdump \
-			tLorrays tTimer
+			tLorrays tTimer tNumeric
 #ENDCHECKTOOLPROGS
 
 TESTS	= tDebug_test.sh \
@@ -24,7 +24,8 @@ TESTS	= tDebug_test.sh \
 	  tLorrays_test.sh    \
 	  tComplex.sh \
 	  tRunOnNode.sh \
-	  tTimer
+	  tTimer \
+	  tNumeric.sh
 
 XFAIL_TESTS		= tLorrays_test.sh
 
@@ -87,6 +88,10 @@ tTimer_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 tComplex_SOURCES		= tComplex.cc
 tComplex_LDADD			= ../src/libcommon.la	
 tComplex_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tNumeric_SOURCES		= tNumeric.cc
+tNumeric_LDADD			= ../src/libcommon.la	
+tNumeric_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \

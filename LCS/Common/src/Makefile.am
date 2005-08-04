@@ -65,6 +65,7 @@ INSTHDRS = \
         Lonumerics.h \
         Lorrays-Blitz.h \
         Lorrays.h \
+	Numeric.h \
         RunOnNode.h \
         Stopwatch.h \
         StringUtil.h \
@@ -124,6 +125,7 @@ libcommon_la_SOURCES 	= \
         KeyValueMap.cc \
         LofarLogCout.cc \
         LofarLogger.cc \
+	Numeric.cc \
         RunOnNode.cc \
         Stopwatch.cc \
         StringUtil.cc \
