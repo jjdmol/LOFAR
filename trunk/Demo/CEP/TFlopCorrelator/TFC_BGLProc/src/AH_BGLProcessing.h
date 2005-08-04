@@ -27,9 +27,9 @@ class AH_BGLProcessing: public LOFAR::TinyApplicationHolder
   virtual ~AH_BGLProcessing();
   virtual void undefine();
   virtual void define  (const LOFAR::KeyValueMap&);
-  virtual void prerun  ();
+  virtual void init  ();
   virtual void run     (int nsteps);
-  virtual void postrun  ();
+/*   virtual void postrun  (); */
   virtual void dump    () const;
   virtual void quit    ();
 
