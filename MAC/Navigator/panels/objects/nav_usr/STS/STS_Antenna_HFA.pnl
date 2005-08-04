@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,279 127 95 64 N "_3DFace" 5
+PANEL,360 230 95 64 N "_3DFace" 5
 "$APNr"
 "$RCUNr"
 "$RackNr"
@@ -40,8 +40,8 @@ LANG:1 0
 
 EP_setBackColor()
 {
-dyn_errClass err;
-
+  dyn_errClass err;
+  rect_HFA.toolTipText = $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\";
   if( !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\") ||
 		  !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\"))
   {

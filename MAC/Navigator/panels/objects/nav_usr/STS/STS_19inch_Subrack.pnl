@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,426 404 182 113 N "_3DFace" 5
+PANEL,360 230 182 113 N "_3DFace" 5
 "$RackNr"
 "$SubrackNr"
 "$configDatapoint"
@@ -17,8 +17,9 @@ PANEL,426 404 182 113 N "_3DFace" 5
 
 EP_setBackColor()
 {
-dyn_errClass err;
-
+  dyn_errClass err;
+  rect_Subrack.toolTipText = $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr;
+  icon_maintenance.toolTipText = $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr;
   if( !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0.status:_online.._value\") ||
       !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0_Maintenance.status:_online.._value\") ||
       !dpAccessable( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1.status:_online.._value\") ||

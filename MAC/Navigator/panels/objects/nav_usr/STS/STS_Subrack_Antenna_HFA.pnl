@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,496 317 95 138 N "_3DFace" 3
+PANEL,360 230 95 138 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -10,6 +10,8 @@ PANEL,496 317 95 138 N "_3DFace" 3
   //Function: Set background color of the LFA antenna
   navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\");
   navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance\");
+  backGround.toolTipText       = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\";
+  icon_maintenance.toolTipText = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA\";
 
   if(dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\") &&
   	 dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\"))
