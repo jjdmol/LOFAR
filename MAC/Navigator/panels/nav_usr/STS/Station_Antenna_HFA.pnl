@@ -1,11 +1,11 @@
 V 10
 1
 LANG:1 12 HFA Antennas
-PANEL,350 258 994 514 N "_3DFace" 1
+PANEL,382 244 994 514 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  28 10
 "" 0 1
-E"#uses \"apl-view.ctl\"" 0
+E"#uses \"nav_usr/STS/STS-functions.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -197,7 +197,7 @@ E E 0 1 1 0 1 E U  0 E 28 93 48 107
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 3 AP1
+LANG:1 3 AP0
 2 92
 "Text5"
 ""
@@ -217,7 +217,7 @@ E E 0 1 1 0 1 E U  0 E 58 93 78 107
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 3 AP2
+LANG:1 3 AP1
 2 93
 "Text6"
 ""
@@ -237,7 +237,7 @@ E E 0 1 1 0 1 E U  0 E 88 93 108 107
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 3 AP3
+LANG:1 3 AP2
 2 94
 "Text7"
 ""
@@ -257,7 +257,7 @@ E E 0 1 1 0 1 E U  0 E 118 93 138 107
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 3 AP4
+LANG:1 3 AP3
 2 95
 "Text8"
 ""
@@ -370,7 +370,7 @@ E E 0 1 1 0 1 E U  0 E 69 72 98 86
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 5 R1 S1
+LANG:1 5 R0 S0
 1 101 10 "" 21
 0
 1 102 10 "" 22

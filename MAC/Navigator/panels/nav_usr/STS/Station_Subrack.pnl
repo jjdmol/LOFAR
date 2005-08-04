@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,426 404 986 776 N "_3DFace" 2
+PANEL,441 248 986 776 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 E"//main()
