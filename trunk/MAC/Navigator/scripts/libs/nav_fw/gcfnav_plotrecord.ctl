@@ -221,7 +221,7 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
   {
     for(int i=1; i<=dynlen(newDatapoints); i++)
     {
-      navPMLloadPropertySet(newDatapoints[i], FALSE);
+      navPMLunloadPropertySet(newDatapoints[i]);
       navViewPlotWriteRecordDesciptionFile(newDatapoints[i], FALSE);
       dpDisconnect("RecordSpectrum", newDatapoints[i]);
     }
