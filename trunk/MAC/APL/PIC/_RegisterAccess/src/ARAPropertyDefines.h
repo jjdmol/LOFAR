@@ -144,6 +144,7 @@ const GCF::Common::TPSCategory PSCAT_LCU_PIC_Command       = GCF::Common::PS_CAT
 #define PROPNAME_STATUS          "status"
 #define PROPNAME_COMMAND         "command"
 #define PROPNAME_RESULT          "result"
+#define PROPNAME_RESULT_CODE     "resultCode"
 #define PROPNAME_VOLTAGE15       "voltage15"
 #define PROPNAME_VOLTAGE33       "voltage33"
 #define PROPNAME_FRAMESRECEIVED  "packetsReceived"
@@ -203,6 +204,13 @@ const string commandTestFPGAmemory("testFPGAmemory");
 const string commandTestDataReception("testDataReception");
 const string commandTestRoundTripSpeed("testRoundTripSpeed");
 const string commandReset("reset");
+
+typedef enum
+{
+  COMMAND_RESULT_OK=0,
+  COMMAND_RESULT_EXECUTING,
+  COMMAND_RESULT_ERROR
+} TCommandResultCode;
 
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
@@ -314,6 +322,7 @@ PROPERTYCONFIG_END
 PROPERTYCONFIG_BEGIN(PROPS_Command)
 PROPERTYCONFIG_ITEM(PROPNAME_COMMAND, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "")
 PROPERTYCONFIG_ITEM(PROPNAME_RESULT, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "")
+PROPERTYCONFIG_ITEM(PROPNAME_RESULT_CODE, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0")
 PROPERTYCONFIG_END
 
 };

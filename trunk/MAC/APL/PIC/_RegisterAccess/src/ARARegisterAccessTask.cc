@@ -95,7 +95,9 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_numStatisticsSubband(0),
       m_integratingStatisticsBeamlet(),
       m_numStatisticsBeamlet(0),
-      m_integrationTimerID(0)
+      m_integrationTimerID(0),
+      m_commandHandle(0),
+      m_pendingCommands()
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -389,11 +391,6 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
       {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,"Command") != 0)
-      {
-        handleCommand(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
-      }
-      
       
       break;
     }
@@ -717,6 +714,13 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       LOG_INFO("RSP_SETRCUACK received");
       break;
     }
+    
+//TODO    case RSP_COMMANDRESULT:
+//TODO    {
+//TODO      LOG_INFO("RSP_COMMANDRESULT received");
+//TODO      handleCommandResult(e);
+//TODO      break;
+//TODO    }
     
     case F_DISCONNECTED:
     {
@@ -1056,6 +1060,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
   }
   return status;
 }
+
 void RegisterAccessTask::updateBoardProperties(string scope,
                                                uint8  voltage_15,
                                                uint8  voltage_33,
@@ -1356,194 +1361,406 @@ void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& val
 
 void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
 {
-  GCFPVString pvString;
-  pvString.copy(value);
-  string command(pvString.getValue());
+  TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(propName);
+  if(propsetIt == m_myPropertySetMap.end())
+  {
+    LOG_FATAL(formatString("PropertySet not found: %s",propName.c_str()));
+  }
+  else
+  {
+    GCFPVString pvString;
+    pvString.copy(value);
+    string command(pvString.getValue());
+    
+    // strip last part of the property name to get the resource name.
+    int pos=propName.find_last_of("_.");
+    string resource = propName.substr(0,pos);
+    string result("Command not supported");
+    TCommandResultCode resultCode(COMMAND_RESULT_ERROR);
+    
+    if(commandGetID == command.substr(0,commandGetID.length()))
+    {
+      // determine the property
+      if(resource.find("HFA") != string::npos)
+      {
+        //TODO int rcuNr = getRCUHardwareNr(resource);
+        //TODO RSPTestGetHBAIDEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.rcu = rcuNr;
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else if(resource.find("RCU") != string::npos)
+      {
+        //TODO int rcuNr = getRCUHardwareNr(resource);
+        //TODO RSPTestGetRCUIDEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.rcu = rcuNr;
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else if(resource.find("Board") != string::npos)
+      {
+        //TODO RSPTestGetRSPIDEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else if(resource.find("SubRack") != string::npos)
+      {
+        //TODO RSPTestGetTDSIDEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else if(resource.find("TBB") != string::npos)
+      {
+        //TODO RSPTestGetTBBIDEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else if(resource.find("PIC") != string::npos)
+      {
+        //TODO RSPTestGetGPSIDEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else
+      {
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Command not supported for the selected resource";
+      }
+    }
+    else if(commandTestRegisterReadWrite == command.substr(0,commandTestRegisterReadWrite.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestPPS == command.substr(0,commandTestPPS.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReadSattelitePositions == command.substr(0,commandReadSattelitePositions.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReadTimeConstant == command.substr(0,commandReadTimeConstant.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReadConfiguration == command.substr(0,commandReadConfiguration.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReadStatistics == command.substr(0,commandReadStatistics.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReadPPSlockStatus == command.substr(0,commandReadPPSlockStatus.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReadPLLlockStatus == command.substr(0,commandReadPLLlockStatus.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReadCurrent == command.substr(0,commandReadCurrent.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestRSPlinkSpeed == command.substr(0,commandTestRSPlinkSpeed.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestRCUlinkSpeed == command.substr(0,commandTestRCUlinkSpeed.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestSerdesSpeed == command.substr(0,commandTestSerdesSpeed.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestTBBlinkSpeed == command.substr(0,commandTestTBBlinkSpeed.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestBoundaryScan == command.substr(0,commandTestBoundaryScan.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestWaveform == command.substr(0,commandTestWaveform.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestTransient == command.substr(0,commandTestTransient.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestClock == command.substr(0,commandTestClock.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestFPGAlinkSpeed == command.substr(0,commandTestFPGAlinkSpeed.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestEthernetLoopBack == command.substr(0,commandTestEthernetLoopBack.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestSerdesLoopBack == command.substr(0,commandTestSerdesLoopBack.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestFPGAmemoryRandom == command.substr(0,commandTestFPGAmemoryRandom.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestFPGAmemory == command.substr(0,commandTestFPGAmemory.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestDataReception == command.substr(0,commandTestDataReception.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandTestRoundTripSpeed == command.substr(0,commandTestRoundTripSpeed.length()))
+    {
+      //TODO resultCode = COMMAND_RESULT_EXECUTING;
+      //TODO result="Executing...";
+      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      resultCode = COMMAND_RESULT_ERROR;
+      result="Not implemented";
+    }
+    else if(commandReset == command.substr(0,commandReset.length()))
+    {
+      // determine the property
+      if(resource.find("RCU") != string::npos)
+      {
+        //TODO int rcuNr = getRCUHardwareNr(resource);
+        //TODO RSPResetRCUEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.rcu = rcuNr;
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else if(resource.find("Board") != string::npos)
+      {
+        //TODO int rcuNr = getRCUHardwareNr(resource);
+        //TODO int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
+        //TODO getRCURelativeNumbers(rcuNr,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+        //TODO RSPResetRSPEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.rack = rackRelativeNr;
+        //TODO commandEvent.subrack = subRackRelativeNr;
+        //TODO commandEvent.board = boardRelativeNr;
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else if(resource.find("TBB") != string::npos)
+      {
+        //TODO RSPResetTBBEvent commandEvent;
+        //TODO commandEvent.timestamp.setNow();
+        //TODO commandEvent.handle = m_commandHandle;
+        m_pendingCommands[m_commandHandle++] = propName;
+        //TODO m_RSPclient.send(commandEvent);
+        //TODO resultCode = COMMAND_RESULT_EXECUTING;
+        //TODO result="Executing...";
+        LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Not implemented";
+      }
+      else
+      {
+        resultCode = COMMAND_RESULT_ERROR;
+        result="Command not supported for the selected resource";
+      }
+    }
   
-  // strip last part of the property name to get the resource name.
-  int pos=propName.find_last_of("_.");
-  string resource = propName.substr(0,pos);
+    // set the result property.
+    propsetIt->second->setValue(string(PROPNAME_RESULT_CODE),GCFPVInteger(resultCode));
+    propsetIt->second->setValue(string(PROPNAME_RESULT),GCFPVString(result));
+  }
+}
+
+GCFEvent::TResult RegisterAccessTask::handleCommandResult(GCFEvent& e)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+/*TODO
+  RSPCommandresultEvent commandResultEvent(e);
   
-  if(commandGetID == command.substr(0,commandGetID.length()))
+  double timestamp = double(commandResultEvent.timestamp);
+  time_t curTime=(time_t)timestamp;
+  LOG_INFO(formatString("CommandResult:time:%s:status:%d:value:%s:handle:%d", 
+      ctime(&curTime),
+      commandResultEvent.status,
+      commandResultEvent.value.c_str(),
+      commandResultEvent.handle));
+
+  map<uint32,string>::iterator it=m_pendingCommands.find(commandResultEvent.handle);
+  if(it != m_pendingCommands.end())
   {
-    // determine the property
-    if(resource.find("HFA") != string::npos)
+    TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(it->second);
+    if(propsetIt == m_myPropertySetMap.end())
     {
-      //TODO int rcuNr = getRCUHardwareNr(resource);
-      //TODO RSPTestGetHBAIDEvent getIDevent;
-      //TODO getIDevent.timestamp.setNow();
-      //TODO getIDevent.rcu = rcuNr;
-      //TODO m_RSPclient.send(getIDevent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      LOG_FATAL(formatString("PropertySet not found: %s. Unable to write command result property",it->second.c_str()));
     }
-    else if(resource.find("RCU") != string::npos)
+    else
     {
-      //TODO int rcuNr = getRCUHardwareNr(resource);
-      //TODO RSPTestGetRCUIDEvent getIDevent;
-      //TODO getIDevent.timestamp.setNow();
-      //TODO getIDevent.rcu = rcuNr;
-      //TODO m_RSPclient.send(getIDevent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+      // set the result property.
+      propsetIt->second->setValueTimed(string(PROPNAME_RESULT_CODE),GCFPVInteger(commandResultEvent.status),timestamp);
+      propsetIt->second->setValueTimed(string(PROPNAME_RESULT),GCFPVString(commandResultEvent.value),timestamp);
     }
-    else if(resource.find("Board") != string::npos)
-    {
-      //TODO RSPTestGetRSPIDEvent getIDevent;
-      //TODO getIDevent.timestamp.setNow();
-      //TODO m_RSPclient.send(getIDevent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-    }
-    else if(resource.find("SubRack") != string::npos)
-    {
-      //TODO RSPTestGetTDSIDEvent getIDevent;
-      //TODO getIDevent.timestamp.setNow();
-      //TODO m_RSPclient.send(getIDevent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-    }
-    else if(resource.find("TBB") != string::npos)
-    {
-      //TODO RSPTestGetTBBIDEvent getIDevent;
-      //TODO getIDevent.timestamp.setNow();
-      //TODO m_RSPclient.send(getIDevent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-    }
-    else if(resource.find("PIC") != string::npos)
-    {
-      //TODO RSPTestGetGPSIDEvent getIDevent;
-      //TODO getIDevent.timestamp.setNow();
-      //TODO m_RSPclient.send(getIDevent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-    }
+    m_pendingCommands.erase(it);
   }
-  else if(commandTestRegisterReadWrite == command.substr(0,commandTestRegisterReadWrite.length()))
+  else
   {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
+    LOG_ERROR(formatString("Command handle %d not found. Unable to write command result property",commandResultEvent.handle));
   }
-  else if(commandTestPPS == command.substr(0,commandTestPPS.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReadSattelitePositions == command.substr(0,commandReadSattelitePositions.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReadTimeConstant == command.substr(0,commandReadTimeConstant.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReadConfiguration == command.substr(0,commandReadConfiguration.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReadStatistics == command.substr(0,commandReadStatistics.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReadPPSlockStatus == command.substr(0,commandReadPPSlockStatus.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReadPLLlockStatus == command.substr(0,commandReadPLLlockStatus.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReadCurrent == command.substr(0,commandReadCurrent.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestRSPlinkSpeed == command.substr(0,commandTestRSPlinkSpeed.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestRCUlinkSpeed == command.substr(0,commandTestRCUlinkSpeed.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestSerdesSpeed == command.substr(0,commandTestSerdesSpeed.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestTBBlinkSpeed == command.substr(0,commandTestTBBlinkSpeed.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestBoundaryScan == command.substr(0,commandTestBoundaryScan.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestWaveform == command.substr(0,commandTestWaveform.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestTransient == command.substr(0,commandTestTransient.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestClock == command.substr(0,commandTestClock.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestFPGAlinkSpeed == command.substr(0,commandTestFPGAlinkSpeed.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestEthernetLoopBack == command.substr(0,commandTestEthernetLoopBack.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestSerdesLoopBack == command.substr(0,commandTestSerdesLoopBack.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestFPGAmemoryRandom == command.substr(0,commandTestFPGAmemoryRandom.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestFPGAmemory == command.substr(0,commandTestFPGAmemory.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestDataReception == command.substr(0,commandTestDataReception.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandTestRoundTripSpeed == command.substr(0,commandTestRoundTripSpeed.length()))
-  {
-    LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-  }
-  else if(commandReset == command.substr(0,commandReset.length()))
-  {
-    // determine the property
-    if(resource.find("RCU") != string::npos)
-    {
-      //TODO int rcuNr = getRCUHardwareNr(resource);
-      //TODO RSPResetRCUEvent resetEvent;
-      //TODO resetEvent.timestamp.setNow();
-      //TODO resetEvent.rcu = rcuNr;
-      //TODO m_RSPclient.send(resetEvent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-    }
-    else if(resource.find("Board") != string::npos)
-    {
-      //TODO int rcuNr = getRCUHardwareNr(resource);
-      //TODO int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
-      //TODO getRCURelativeNumbers(rcuNr,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
-      //TODO RSPResetRSPEvent resetEvent;
-      //TODO resetEvent.timestamp.setNow();
-      //TODO resetEvent.rack = rackRelativeNr;
-      //TODO resetEvent.subrack = subRackRelativeNr;
-      //TODO resetEvent.board = boardRelativeNr;
-      //TODO m_RSPclient.send(resetEvent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-    }
-    else if(resource.find("TBB") != string::npos)
-    {
-      //TODO RSPResetTBBEvent resetEvent;
-      //TODO resetEvent.timestamp.setNow();
-      //TODO m_RSPclient.send(resetEvent);
-      LOG_FATAL("TODO: send operational test event messages to RSP Driver");
-    }
-  }
-  
+*/
+  return status;
 }
 
 void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, const GCFPValue& value)

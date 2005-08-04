@@ -114,6 +114,10 @@ namespace ARA
        * Handle a change of the Command field
        */
       void handleCommand(string propName, const GCF::Common::GCFPValue& value);
+      /**
+       * Handle reception of a command result message
+       */
+      GCF::TM::GCFEvent::TResult handleCommandResult(GCF::TM::GCFEvent& e);
       
       /**
        * Handle a change of one of the RCU settings fields
@@ -243,6 +247,9 @@ namespace ARA
       TStatistics       m_integratingStatisticsBeamlet;
       int32             m_numStatisticsBeamlet;
       unsigned long     m_integrationTimerID;
+      
+      uint32            m_commandHandle;
+      map<uint32,string> m_pendingCommands;
   };
 };
 
