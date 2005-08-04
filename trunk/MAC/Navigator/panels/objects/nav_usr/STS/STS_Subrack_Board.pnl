@@ -1,13 +1,13 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,518 346 417 182 N "_3DFace" 1
+PANEL,360 230 417 182 N "_3DFace" 1
 "$datapoint"
 "main()
 {
   navPMLloadPropertySet($datapoint + \"_Board0\");
   navPMLloadPropertySet($datapoint + \"_Board0_Maintenance\");
-
+  backGround.toolTipText = $datapoint + \"_Board0\";
   if(dpAccessable($datapoint + \"_Board0.version:_online.._value\") &&
      dpAccessable($datapoint + \"_Board0_Maintenance.status:_online.._value\"))
   {

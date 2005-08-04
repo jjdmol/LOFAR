@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,414 203 70 164 N "_3DFace" 3
+PANEL,360 230 70 164 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -10,6 +10,8 @@ PANEL,414 203 70 164 N "_3DFace" 3
   //Function: Set background color of the LFA antenna
   navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
   navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
+  icon_maintenance.toolTipText = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\";
+  backGround.toolTipText       = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\";
 
   if(dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\") &&
   	 dpAccessable( $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\"))
@@ -54,7 +56,7 @@ LANG:1 6 Layer1
 EE E
 0
 1
-LANG:1 0 
+LANG:1 26 En dit is ook tootip tekst
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 30 80 20 20

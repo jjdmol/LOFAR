@@ -1,22 +1,22 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,284 171 184 193 N "_3DFace" 2
+PANEL,360 230 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
 {
   setValue(\"text_APNr\", \"text\", \"AP\" + $APNr);
-  navPMLloadPropertySet($datapoint + \"_Board1_AP\"+ $APNr);
-
-  if(dpAccessable($datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\"))
+  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr);
+  rect_AP.toolTipText = $datapoint + \"_Board0_AP\"+ $APNr;
+  if(dpAccessable($datapoint + \"_Board0_AP\"+ $APNr +\".temperature:_online.._value\"))
   {
-    dpConnect(\"ControlGUIAP\", $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\",
-                              $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\",
-                              $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._invalid\");
+    dpConnect(\"ControlGUIAP\", $datapoint + \"_Board0_AP\"+ $APNr +\".temperature:_online.._value\",
+                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._value\",
+                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._invalid\");
     setValue(\"output_packetsReceived\", \"editable\", FALSE);
-    dpConnect(\"showVersion\", $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._value\",
-                             $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._invalid\");
+    dpConnect(\"showVersion\", $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._value\",
+                             $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._invalid\");
   }
   else
   {

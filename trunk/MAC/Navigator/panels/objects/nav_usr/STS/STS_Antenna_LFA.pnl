@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,288 169 95 62 N "_3DFace" 5
+PANEL,374 296 95 62 N "_3DFace" 5
 "$APNr"
 "$RCUNr"
 "$RackNr"
@@ -18,7 +18,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 5
-"Border1"
+"rect_LFA"
 ""
 1 10 40 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  "main()
@@ -40,8 +40,8 @@ LANG:1 0
 
 EP_setBackColor()
 {
-dyn_errClass err;
-
+  dyn_errClass err;
+  rect_LFA.toolTipText = $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\";
   if( !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\") ||
 		  !dpExists( $datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\"))
   {
