@@ -42,23 +42,35 @@ double NSTimer::CPU_speed_in_MHz = NSTimer::get_CPU_speed_in_MHz();
 
 double NSTimer::get_CPU_speed_in_MHz()
 {
-#if defined __linux__ && (defined __i386__ || defined __x86_64__ || defined __ia64__) && (defined __GNUC__ || defined __INTEL_COMPILER || defined __PATHSCALE__)
     // first a few sanity checks
     assert(sizeof(int) == 4);
     assert(sizeof(long long) == 8);
 
+#if defined __linux__ && \
+    (defined __i386__ || defined __x86_64__ || defined __ia64__ || defined __PPC__) && \
+    (defined __GNUC__ || defined __INTEL_COMPILER || defined __PATHSCALE__ || defined __xlC__)
     ifstream infile("/proc/cpuinfo");
     char     buffer[256], *colon;
 
     while (infile.good()) {
 	infile.getline(buffer, 256);
 
+#if defined __PPC__
+	if (strncmp("timebase", buffer, 8) == 0 && (colon = strchr(buffer, ':')) != 0)
+	    return atof(colon + 2) / 1e6;
+#else
 	if (strncmp("cpu MHz", buffer, 7) == 0 && (colon = strchr(buffer, ':')) != 0)
 	    return atof(colon + 2);
-    }
 #endif
+    }
 
     return 0.0;
+#elif defined __blrts__ // BlueGene/L
+    return 700.0;
+#else
+#warning unsupported architecture
+    return 0.0;
+#endif
 }
 
 
