@@ -36,8 +36,9 @@
 using namespace LOFAR;
 
 AH_BGLProcessing::AH_BGLProcessing() 
-  : itsInStub (0),
-    itsOutStub(0)
+  : itsWHs(0),
+    itsConnections(0),
+    itsTHs(0)
 {
 }
 
@@ -66,6 +67,9 @@ void AH_BGLProcessing::undefine() {
 void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
+
+  ACC::APS::ParameterSet itsParamSet("TFlopCorrelator.cfg");
+
 //   int itsNFIRF  = itsParamSet.getInt32("NFIRF");  // number of FIR filters in the application
   
   int lowestFreeNode = 0;
@@ -76,13 +80,13 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   // The processing section consists of the FIR filter
   // and correlators
 
-  LOG_TRACE_FLOW_STR("Create input side interface stubs");
-  itsInStub = new Stub_FIR(false, itsParamSet);
+//   LOG_TRACE_FLOW_STR("Create input side interface stubs");
+//   itsInStub = new Stub_FIR(false, itsParamSet);
 
-  LOG_TRACE_FLOW_STR("Create output side interface stubs");
-  itsOutStub = new Stub_Corr(false, itsParamSet);
+//   LOG_TRACE_FLOW_STR("Create output side interface stubs");
+//   itsOutStub = new Stub_Corr(false, itsParamSet);
 
-  LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
+//   LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
   
   char WH_Name[40];
 //   int noProcBlock = itsParamSet.getInt32("NoProcessingBlocks");
@@ -93,7 +97,6 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   int itsBasePort = itsParamSet.getInt32("BasePort");
   string itsInServer = itsParamSet.getString("InServer");
   string itsOutServer = itsParamSet.getString("OutServer");
-
 
 //   for (int pb = 0; pb < noProcBlock; pb++) {
 
@@ -158,23 +161,29 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     string itsInService(formatString("%d", itsBasePort+2*cor));
     string itsOutService(formatString("%d", itsBasePort+2*cor+1));
 
+//     TransportHolder* itsInTH = new TH_Mem();
     TransportHolder* itsInTH = new TH_Socket(itsInServer, itsInService);
     itsTHs.push_back(itsInTH);
     
     Connection* itsInConnection = new Connection("itsInCon",
 						 itsInDH,
 						 itsWHs.back()->getDataManager().getInHolder(0),
-						 itsTHs.back());
+						 itsTHs.back(),
+						 true); // connection is blocking
     itsConnections.push_back(itsInConnection);
+    itsWHs.back()->getDataManager().setInConnection(0, itsConnections.back());
 
+//     TransportHolder* itsOutTH = new TH_Mem();
     TransportHolder* itsOutTH = new TH_Socket(itsOutServer, itsOutService);
     itsTHs.push_back(itsOutTH);
     
     Connection* itsOutConnection = new Connection("itsOutCon",
-						 itsWHs.back()->getDataManager().getOutHolder(0),
-						 itsOutDH,
-						 itsTHs.back());
+						  itsWHs.back()->getDataManager().getOutHolder(0),
+						  itsOutDH,
+						  itsTHs.back(), 
+						  true); // connection is blocking
     itsConnections.push_back(itsOutConnection);
+    itsWHs.back()->getDataManager().setOutConnection(0, itsConnections.back());
   }
   
   LOG_TRACE_FLOW_STR("Finished define()");

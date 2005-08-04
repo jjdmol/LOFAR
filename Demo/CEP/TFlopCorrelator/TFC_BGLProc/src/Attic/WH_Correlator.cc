@@ -35,9 +35,9 @@ WH_Correlator::WH_Correlator(const string& name) :
   WorkHolder( 1, 1, name, "WH_Correlator")
 {
   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
-  itsNelements      = myPS.getInt32("NRSP");                                 //myPS.getInt32("WH_Corr.stations");
+  itsNelements      = myPS.getInt32("Input.NRSP");
   itsNsamples       = myPS.getInt32("WH_Corr.samples");
-  itsNpolarisations = myPS.getInt32("polarisations");
+  itsNpolarisations = myPS.getInt32("Input.NPolarisations");
 
   itsNinputs = itsNpolarisations*itsNelements;
 
@@ -55,7 +55,6 @@ WH_Correlator::WH_Correlator(const string& name) :
   agg_bandwidth=0.0;
 
   corr_perf=0.0;
-
 }
 
 WH_Correlator::~WH_Correlator() {
@@ -126,6 +125,7 @@ void WH_Correlator::process() {
     //loop over the vertical(rows) dimension in the correlation matrix
     for (int A=0; A < itsNelements; A+=2) {
       // addressing:   getBufferElement(    channel, station, time, pol)
+      cout << A << " " << time << endl;
       reg_A0_X = inDH->getBufferElement(channel, A,       time, 0);     
       reg_A0_Y = inDH->getBufferElement(channel, A,       time, 1);     
       reg_A1_X = inDH->getBufferElement(channel, A+1,     time, 0);     
@@ -215,11 +215,7 @@ void WH_Correlator::process() {
 
   DH_Vis::BufferType *dhptr = outDH->getBufferElement(0,0,0);
   outptr0 = &outData[0];
-//   int loopsize = outDH->getBufferOffset(ELEMENTS,ELEMENTS,4) - outDH->getBufferOffset(0,0,0);
-//   cout << "Loopsize 1 : " << loopsize/sizeof(DH_Vis::BufferType) << endl;
-
-  int loopsize = outDH->getBufSize();
-//   cout << "Loopsize 2 : " << loopsize << endl;
+  int loopsize = outDH->getBufferOffset(itsNelements-1, itsNelements-1, 4) - outDH->getBufferOffset(0,0,0);
 
   for (int i=0; i < loopsize; i++) {
     dhptr[i] = outptr0[i]; 
