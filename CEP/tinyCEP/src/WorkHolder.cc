@@ -61,7 +61,8 @@ WorkHolder::WorkHolder (int inputs, int outputs,
       itsName             (name),
       itsType             (type),
       itsNode             (0),
-      itsAppl             (0)
+      itsAppl             (0),
+      itsIsPreProcessed   (false)
 
 {
 //   TRACER2("WorkHolder constructor");
@@ -88,7 +89,8 @@ WorkHolder::WorkHolder (const WorkHolder& that)
   itsName             (that.itsName),
   itsType             (that.itsType),
   itsNode             (that.itsNode),
-  itsAppl             (that.itsAppl)
+  itsAppl             (that.itsAppl),
+  itsIsPreProcessed   (false)
 {}
 
 WorkHolder::~WorkHolder()
@@ -105,6 +107,7 @@ WorkHolder& WorkHolder::operator= (const WorkHolder& that)
     itsType             = that.itsType;
     itsFirstProcessCall = that.itsFirstProcessCall;
     itsDataManager      = 0;
+    itsIsPreProcessed   = false;
   }
   return *this;
 }
@@ -139,6 +142,7 @@ void WorkHolder::basePreprocess()
 // 	    << getNode() << '/' << getAppl() << ')');
     getDataManager().preprocess();
     preprocess();
+    itsIsPreProcessed = true;
   }
 }
 
@@ -150,6 +154,7 @@ void WorkHolder::baseProcess ()
 {
  if (shouldProcess()) 
  {
+   DBGASSERT(itsIsPreProcessed);
 //    TRACER4("WorkHolder::baseprocess()");
    Profiler::enterState (theirReadProfilerState);
    if (itsFirstProcessCall) {
