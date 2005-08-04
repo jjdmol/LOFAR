@@ -10,8 +10,8 @@
 #ifndef BGL_WH_CORRELATE_H
 #define BGL_WH_CORRELATE_H
 
-#define ELEMENTS 12
-#define SAMPLES  100
+/* #define ELEMENTS 12 */
+/* #define SAMPLES  100 */
 
 #include <sys/time.h>  // for gettimeofday
 #include <tinyCEP/WorkHolder.h>
@@ -65,11 +65,11 @@ class WH_Correlator: public WorkHolder
   double agg_bandwidth;
   double corr_perf;
 
-  DH_FIR::BufferType  in_buffer[ELEMENTS][SAMPLES];
+/*   DH_FIR::BufferType  in_buffer[ELEMENTS][SAMPLES]; */
   DH_FIR::BufferType* in_ptr;
 /*   DH_CorrCube::BufferType  in_buffer[ELEMENTS][SAMPLES]; */
 /*   DH_CorrCube::BufferType* in_ptr; */
-  DH_Vis::BufferType       out_buffer[ELEMENTS][ELEMENTS];
+/*   DH_Vis::BufferType       out_buffer[ELEMENTS][ELEMENTS]; */
   DH_Vis::BufferType*      out_ptr;
 };
 
