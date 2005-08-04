@@ -62,7 +62,11 @@ namespace LOFAR {
 	union {
 	  long long	   total_time;
 	  struct {
+#if defined __PPC__
+	      int	   high, low;
+#else
 	      int	   low, high;
+#endif
 	  };
 	};
 
@@ -102,7 +106,6 @@ namespace LOFAR {
       free(name);
   }
 
-
   inline void NSTimer::start()
   {
 #if (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
@@ -129,6 +132,24 @@ namespace LOFAR {
     long long time;
     asm volatile ("mov %0=ar.itc" : "=r" (time));
     total_time -= time;
+#elif defined __PPC__ && (defined __GNUC__ || defined __xlC__)
+    int high_reg, low_reg, retry_reg;
+
+    asm
+    (
+	"0:\n\t"
+	"mftbu %0\n\t"
+	"mftb %1\n\t"
+	"mftbu %2\n\t"
+	"cmpw %2,%0\n\t"
+	"bne 0b\n\t"
+	"subfc %3,%1,%3\n\t"
+	"subfe %4,%0,%4"
+    :
+	"=r" (high_reg), "=r" (low_reg), "=r" (retry_reg), "=r" (low), "=r" (high)
+    :
+	"3" (low), "4" (high)
+    );
 #endif
   }
 
@@ -158,6 +179,24 @@ namespace LOFAR {
     long long time;
     asm volatile ("mov %0=ar.itc" : "=r" (time));
     total_time += time;
+#elif defined __PPC__ && (defined __GNUC__ || defined __xlC__)
+    int high_reg, low_reg, retry_reg;
+
+    asm
+    (
+	"0:\n\t"
+	"mftbu %0\n\t"
+	"mftb %1\n\t"
+	"mftbu %2\n\t"
+	"cmpw %2,%0\n\t"
+	"bne 0b\n\t"
+	"addc %3,%3,%1\n\t"
+	"adde %4,%4,%0"
+    :
+	"=r" (high_reg), "=r" (low_reg), "=r" (retry_reg), "=r" (low), "=r" (high)
+    :
+	"3" (low), "4" (high)
+    );
 #endif
 
     ++ count;
