@@ -195,6 +195,8 @@ private:
   static int          theirProcessProfilerState; 
   static int          theirWriteProfilerState; 
 
+  bool itsIsPreProcessed;      // Flag to indicate if preprocess has taken place
+
 };
 
 
