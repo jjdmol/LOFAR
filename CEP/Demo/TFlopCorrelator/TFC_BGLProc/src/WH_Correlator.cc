@@ -70,11 +70,12 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 }
 
 void WH_Correlator::preprocess() {
-  ASSERTSTR(itsNinputs == ELEMENTS, "configuration from file does not match defined configuration");
-  ASSERTSTR(itsNsamples == SAMPLES, "configuration from file does not match defined configuration");
 
-  ASSERTSTR(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBufferSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
+  ASSERTSTR(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBufferSize() == 
+	    itsNelements*itsNpolarisations*itsNsamples, 
+	    "InHolder size not equal to defined size");
 //   ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
+
   ASSERTSTR(static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBufSize() == 
 	    itsNpolarisations*itsNpolarisations*itsNelements*(itsNelements+1)/2, 
 	    "OutHolder size not equal to defined size");
@@ -105,11 +106,14 @@ void WH_Correlator::process() {
   __complex__ double reg_B0_X, reg_B0_Y, reg_B1_X, reg_B1_Y;
     
   
-  __complex__ double outData[ELEMENTS*ELEMENTS*4];  // large enough; can be made smaller; 4 pol 
+//   __complex__ double outData[ELEMENTS*ELEMENTS*4];  // large enough; can be made smaller; 4 pol 
+  __complex__ double outData[itsNelements*itsNelements*itsNpolarisations*itsNpolarisations];  // large enough; 
   __complex__ double *outptr0, *outptr1;
 
   /// initialize output buffer
-  memset(&outData[0], 0, ELEMENTS*ELEMENTS*4*sizeof(__complex__ double));
+  memset(&outData[0], 
+	 0,
+	 itsNelements*itsNelements*itsNpolarisations*itsNpolarisations*sizeof(__complex__ double));
   
 
 #ifdef HAVE_BGL
@@ -120,12 +124,11 @@ void WH_Correlator::process() {
 
   int B = 0;
 
-  for (int time=0; time< SAMPLES; time++) {
+  for (int time=0; time< itsNsamples; time++) {
     // refer to addressing in DH_Vis.h::getBufferElement() 
-    //loop over the vertical(rows) dimension in the correlation matrix
+    // loop over the vertical(rows) dimension in the correlation matrix
     for (int A=0; A < itsNelements; A+=2) {
       // addressing:   getBufferElement(    channel, station, time, pol)
-      cout << A << " " << time << endl;
       reg_A0_X = inDH->getBufferElement(channel, A,       time, 0);     
       reg_A0_Y = inDH->getBufferElement(channel, A,       time, 1);     
       reg_A1_X = inDH->getBufferElement(channel, A+1,     time, 0);     
@@ -139,10 +142,10 @@ void WH_Correlator::process() {
       for (B=0; B<A; B+=2) {
 	// these are the full squares
 	// now correlate stations B,B+1,A,A+1 in both polarisations
-// 	cout << B   << " - " << A   << endl;
-// 	cout << B   << " - " << A+1 << endl;
-// 	cout << B+1 << " - " << A   << endl;
-// 	cout << B+1 << " - " << A+1 << endl;
+	cout << B   << " - " << A   << endl;
+	cout << B   << " - " << A+1 << endl;
+	cout << B+1 << " - " << A   << endl;
+	cout << B+1 << " - " << A+1 << endl;
 
  	// load B inputs into registers
 	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);
@@ -178,9 +181,9 @@ void WH_Correlator::process() {
     
       // done all sqaures
       // now correlate the last triangle;
-//       cout << B   << " - " << A   << endl;
-//       cout << B   << " - " << A+1 << endl;
-//       cout << B+1 << " - " << A+1 << endl;
+      cout << B   << " - " << A   << endl;
+      cout << B   << " - " << A+1 << endl;
+      cout << B+1 << " - " << A+1 << endl;
 
       reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
       reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
@@ -201,10 +204,10 @@ void WH_Correlator::process() {
       *(outptr1++) += reg_A1_Y * ~reg_B0_Y;
 
       DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B+1,0)]);
-      *(outptr1++) += reg_A0_X * ~reg_B1_X;
-      *(outptr1++) += reg_A0_X * ~reg_B1_Y;
-      *(outptr1++) += reg_A0_Y * ~reg_B1_X;
-      *(outptr1++) += reg_A0_Y * ~reg_B1_Y;        
+      *(outptr1++) += reg_A1_X * ~reg_B1_X;
+      *(outptr1++) += reg_A1_X * ~reg_B1_Y;
+      *(outptr1++) += reg_A1_Y * ~reg_B1_X;
+      *(outptr1++) += reg_A1_Y * ~reg_B1_Y;        
       
     }
   }
@@ -230,18 +233,19 @@ void WH_Correlator::process() {
 void WH_Correlator::dump() const{
   DH_Vis *outDH = static_cast<DH_Vis*>(getDataManager().getOutHolder(0));
 
-  for (short x = 0; x < itsNelements; x++) {
-    for (short y = 0; y <= x; y++) {
+  for (short pol = 0; pol < itsNpolarisations*itsNpolarisations; pol++) { 
+    cout << "POL : " << pol << endl;
+    for (short x = 0; x < itsNelements; x++) {
+      for (short y = 0; y <= x; y++) {
+      
 
-      // show transposed correlation matrix, this looks more natural.
-      cout << *outDH->getBufferElement(x, y, 0) << " ";
-      cout << *outDH->getBufferElement(x, y, 1) << " ";
-      cout << *outDH->getBufferElement(x, y, 2) << " ";
-      cout << *outDH->getBufferElement(x, y, 3) << " ";
-
-    }
+	// show transposed correlation matrix, this looks more natural.
+	cout << *outDH->getBufferElement(x, y, pol) << " ";
+      }
+      cout << endl;
+    } 
     cout << endl;
-  }
+  } 
 }
 
 double timer() {
