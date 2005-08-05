@@ -65,6 +65,10 @@ lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 lofar_INTERNAL(CEP/Demo/TFlopCorrelator/TFC_Interface,TFC_Interface,,1,TFC_Interface/DH_RSP.h,,)
+lofar_INTERNAL(MAC/GCF/PALlight,PALlight,,1,GCF/PALlight/CEPPropertySet.h,gcfceppallight)
+lofar_INTERNAL(MAC/GCF/GCFCommon,GCFCommon,,1,GCF/GCF_PVString.h,gcfcommon)
+lofar_INTERNAL(MAC/GCF/TM,TM,,1,GCF/TM/GCF_Event.h,gcftm)
+lofar_INTERNAL(MAC/GCF/Protocols,Protocols,,1,GCF/Protocols/DH_PIProtocol.h,gcfpicepprot)
 
 dnl
 dnl Output Makefiles

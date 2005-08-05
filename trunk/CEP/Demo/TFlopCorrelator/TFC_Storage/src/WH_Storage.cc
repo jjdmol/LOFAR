@@ -30,6 +30,8 @@
 #include <TFC_Storage/WH_Storage.h>
 #include <TFC_Interface/DH_Vis.h>
 #include <TFC_Storage/MSWriter.h>
+#include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVString.h>
 
 using namespace LOFAR;
 
@@ -41,8 +43,14 @@ WH_Storage::WH_Storage(const string& name,
 		"WH_Storage"),
     itsPS      (pset),
     itsWriter  (0),
-    itsCounter (0)
+    itsCounter (0),
+    itsPropertySet(0)
 {
+  itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
+  itsNstations = itsPS.getInt32("Input.NRSP");
+  int pols = itsPS.getInt32("Input.NPolarisations");
+  itsNpolSquared = pols*pols;
+
   vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
   ASSERTSTR(refFreqs.size() == itsPS.getInt32("Input.NSubbands"), 
 	    "Wrong number of refFreqs specified!");
@@ -56,6 +64,13 @@ WH_Storage::WH_Storage(const string& name,
 WH_Storage::~WH_Storage() 
 {
   delete itsWriter;
+  delete itsPropertySet;
+
+  GCF::Common::GCFPValueArray::iterator it;
+  for (it = itsVArray.begin(); it != itsVArray.end(); it++){
+    delete *it;
+  }
+  itsVArray.clear();
 }
 
 WorkHolder* WH_Storage::construct(const string& name,
@@ -69,8 +84,16 @@ WH_Storage* WH_Storage::make(const string& name)
   return new WH_Storage(name, itsPS);
 }
 
-void WH_Storage::preprocess()
-{
+void WH_Storage::preprocess() {
+  LOG_TRACE_FLOW("WH_Storage enabling PropertySet");
+  if (itsWriteToMAC) {
+    itsPropertySet = new GCF::CEPPMLlight::CEPPropertySet("CEP_TFC", "TTFlopCorrelator", GCF::Common::PS_CAT_PERMANENT);
+    itsPropertySet->enable();
+    LOG_TRACE_FLOW("WH_Storage PropertySet enabled");
+  } else {
+    LOG_TRACE_FLOW("WH_Storage PropertySet not enabled");
+  };
+
   // create MSWriter object
   string msName = itsPS.getString("Storage.MSName");
   double startTime = itsPS.getDouble("Storage.startTime");
@@ -106,7 +129,6 @@ void WH_Storage::preprocess()
 
 void WH_Storage::process() 
 {
-  // Write data in MS 
   // loop over all inputs
   DH_Vis* inputDH = 0;
   for (int i=0; i<itsNinputs; i++)
@@ -117,6 +139,34 @@ void WH_Storage::process()
     itsWriter->write (rownr, itsBandIds[i], itsFieldId, 0, 
 		      itsCounter, inputDH->getBufSize(),
 		      inputDH->getBuffer());   // To do: add flags
-   }
+  }
   itsCounter++;
+
+  if (itsWriteToMAC) {
+    DBGASSERT_STR(itsPropertySet != 0, "no propertySet constructed yet");
+    LOG_TRACE_FLOW("WH_Storage setting properties");
+    GCF::Common::GCFPValueArray::iterator it;
+    for (it = itsVArray.begin(); it != itsVArray.end(); it++){
+      delete *it;
+    }
+    itsVArray.clear();
+    
+    // loop over values
+    for (int i=0; i<itsNinputs; i++) {
+      inputDH = (DH_Vis*)getDataManager().getInHolder(i);
+      int rownr = -1;
+      // Write 1 frequency
+      for (int s1 = 0; s1 < itsNstations; s1++) {
+	for (int s2 = 0; s2 < itsNstations; s2++) {
+	  for (int p = 0; p < itsNpolSquared; p++) {
+	    itsVArray.push_back(new GCF::Common::GCFPVDouble((double)*inputDH->getBufferElement(s1, s2, p)));
+	  }
+	}
+      }
+    }
+
+    (*itsPropertySet)["data"].setValue(GCF::Common::GCFPVDynArr(GCF::Common::LPT_DOUBLE, itsVArray));
+    (*itsPropertySet)["beamlet"].setValue(GCF::Common::GCFPVString("1"));
+    LOG_TRACE_FLOW("WH_Storage properties set");
+  };
 }
