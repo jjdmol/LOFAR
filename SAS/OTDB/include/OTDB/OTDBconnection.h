@@ -65,8 +65,8 @@ public:
 	OTDBtree	getTreeInfo (treeIDType		atreeID);
 
 	// To get a list of all OTDB trees available in the database.
-	vector<OTDBtree> getTreeList(treeType	 	 aTreeType,
-								 treeClassifType aClassification=TCoperational);
+	vector<OTDBtree> getTreeList(treeType	  aTreeType,
+								 classifType aClassification=TCoperational);
 
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;

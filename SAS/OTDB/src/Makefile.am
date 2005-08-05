@@ -1,18 +1,18 @@
 INSTHDRS			= OTDBconnection.h	\
 					  OTDBconstants.h	\
 					  Converter.h \
-					  ParamType.h \
-					  UnitType.h \
-					  ClassifType.h \
+					  ParamTypeConv.h \
+					  UnitConv.h \
+					  TreeTypeConv.h \
+					  ClassifConv.h \
 					  misc.h \
 					  OTDBtypes.h	\
 					  OTDBtree.h	\
 					  OTDBnode.h	\
 					  OTDBvalue.h	\
 					  OTDBparam.h	\
-					  OTDBinfo.h	\
-					  PICadmin.h	\
-					  VICadmin.h	\
+					  TreeMaintenance.h \
+					  TreeValue.h \
 					  OTDBaction.h	\
 					  OTDBactionList.h	\
 					  OTDBevent.h	\
@@ -40,9 +40,8 @@ libotdb_la_SOURCES 		= $(DOCHDRS) \
 							VICnodeDef.cc \
 							Converter.cc \
 							wSpaceSplit.cc \
-							OTDBinfo.cc	\
-							PICadmin.cc	\
-							VICadmin.cc		\
+							TreeMaintenance.cc \
+							TreeValue.cc \
 							loadCompFile.cc \
 							OTDBaction.cc	\
 						    OTDBactionList.cc	\

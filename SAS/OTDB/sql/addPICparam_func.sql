@@ -70,7 +70,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 
 	  -- add record to the PIC hierachical tree
 	  -- PVSSname has format like xxx:aaa_bbb_ccc.ddd
-	  vFullname := translate($2, \':_\', \'..\');
+	  vFullname := translate($2, \'_\', \'.\');
 	  vFieldnr  := 1;
 	  vParentID := 0;
 	  vNodeID   := 0;

@@ -1,4 +1,4 @@
-//#  loadCompFile.cc: Routine from VICadmin for loading the node definitions.
+//#  loadCompFile.cc: Routine from TreeMaint for loading the node definitions.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,26 +27,30 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_vector.h>
-#include <OTDB/VICadmin.h>
+#include <OTDB/TreeMaintenance.h>
 #include <OTDB/wSpaceSplit.h>
 #include <OTDB/VICnodeDef.h>
 #include <OTDB/OTDBparam.h>
-#include <OTDB/ParamType.h>
-#include <OTDB/UnitType.h>
-#include <OTDB/ClassifType.h>
+#include <OTDB/ParamTypeConv.h>
+#include <OTDB/UnitConv.h>
+#include <OTDB/ClassifConv.h>
 #include <OTDB/misc.h>
 
 namespace LOFAR {
   namespace OTDB {
 
-bool VICadmin::saveNode	(VICnodeDef&	aNode)
+//
+// saveNode (VICnodeDef) : bool
+//
+bool TreeMaintenance::saveNode	(VICnodeDef&	aNode)
 {
+	// Check connection
 	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
 		return (false);
 	}
 
 	work	xAction(*(itsConn->getConn()), "saveVCnode");
-
 	try {
 		// execute the insert action
 		result res = xAction.exec(
@@ -72,21 +76,26 @@ bool VICadmin::saveNode	(VICnodeDef&	aNode)
 		return (true);
 	}
 	catch (Exception& ex) {
-		LOG_FATAL_STR(ex.what());
+		itsError = string("Exception during save of VICnode:") + ex.what();
+		LOG_FATAL(ex.what());
 		return (false);
 	}
 
 	return (false);
 }
 
-bool VICadmin::saveParam(OTDBparam&	aParam)
+//
+// saveParam(OTDBparam) : bool
+//
+bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 {
+	// Check connection
 	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
 		return (false);
 	}
 
 	work	xAction(*(itsConn->getConn()), "saveVICparam");
-
 	try {
 		// execute the insert action
 		result res = xAction.exec(
@@ -115,53 +124,24 @@ bool VICadmin::saveParam(OTDBparam&	aParam)
 		return (true);
 	}
 	catch (Exception& ex) {
-		LOG_FATAL_STR(ex.what());
+		itsError = string("Exception during saving VICparam:") + ex.what();
+		LOG_FATAL(ex.what());
 		return (false);
 	}
 
 	return (false);
 }
-bool VICadmin::deleteNode (VICnodeDef&	aNode)
-{
-	if (!itsConn->connect()) {
-		return (false);
-	}
 
-	work	xAction(*(itsConn->getConn()), "removeVCnode");
-
-	try {
-		// execute the insert action
-		result res = xAction.exec(
-			 formatString("SELECT removeVCnode(%d,%d,%d)",
-							itsConn->getAuthToken(),
-							aNode.nodeID()));
-
-		// Analyse result
-		bool		removeOK;
-		res[0]["removevcnode"].to(removeOK);
-		if (!removeOK) {
-			itsError = "Unable to remove the node.";
-			return (false);
-		}
-		// invalidate the nodeID of the object.
-		xAction.commit();
-		aNode.itsNodeID = 0;
-		return (true);
-	}
-	catch (Exception& ex) {
-		LOG_FATAL_STR(ex.what());
-		return (false);
-	}
-
-	return (false);
-
-}
-
-VICnodeDef VICadmin::getNode (nodeIDType		aNodeID)
+//
+// getNode (nodeID) : VICnodeDef
+//
+VICnodeDef TreeMaintenance::getNode (nodeIDType		aNodeID)
 {
 	VICnodeDef		empty;
 
+	// Check connection
 	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
 		return (empty);
 	}
 
@@ -176,18 +156,24 @@ VICnodeDef VICadmin::getNode (nodeIDType		aNodeID)
 		return (VICnodeDef(res[0]));
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during VICadmin:getVCnode:") + ex.what();
+		itsError = string("Exception during getVCnode:") + ex.what();
+		LOG_FATAL(ex.what());
 	}
 	return (empty);
 }
 
-VICnodeDef	VICadmin::getNode (const string&	name,
-							   uint32			version,
-							   treeClassifType	classif)
+//
+// getNode (name, version, classif) : VICnodedef
+//
+VICnodeDef	TreeMaintenance::getNode (const string&	name,
+							   uint32		version,
+							   classifType	classif)
 {
 	VICnodeDef		empty;
 
+	// Check connection
 	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
 		return (empty);
 	}
 
@@ -204,16 +190,22 @@ VICnodeDef	VICadmin::getNode (const string&	name,
 		return (VICnodeDef(res[0]));
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during VICadmin:getVCnode:") + ex.what();
+		itsError = string("Exception during getVCnode:") + ex.what();
+		LOG_FATAL(ex.what());
 	}
 	return (empty);
 }
 
-vector<VICnodeDef>	VICadmin::getTopComponentList (const string& namefragment)
+//
+// getTopComponentList(namefragment): vector<VICnodedef>
+//
+vector<VICnodeDef>	TreeMaintenance::getTopComponentList (const string& namefragment)
 {
 	vector<VICnodeDef>		resultVec;
 
+	// Check connection
 	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
 		return (resultVec);
 	}
 
@@ -232,8 +224,9 @@ vector<VICnodeDef>	VICadmin::getTopComponentList (const string& namefragment)
 		return (resultVec);
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during VICadmin:getTopComponentList:") 
+		itsError = string("Exception during getTopComponentList:") 
 						+ ex.what();
+		LOG_FATAL(ex.what());
 	}
 	return (resultVec);
 }
@@ -243,8 +236,9 @@ vector<VICnodeDef>	VICadmin::getTopComponentList (const string& namefragment)
 //
 // a VIC tree is build up from single components. The definition of a
 // component can loaded from a file with this call
-nodeIDType	VICadmin::loadComponentFile (const string&	filename)
+nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 {
+	// Check connection
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
 		return (0);
@@ -255,14 +249,15 @@ nodeIDType	VICadmin::loadComponentFile (const string&	filename)
 	LOG_DEBUG_STR("Opening componentfile " << filename);
 	inFile.open(filename.c_str());
 	if (!inFile) {
-		LOG_ERROR_STR("Cannot open input file " << filename);
+		itsError = string("Cannot open input file ") + filename;
+		LOG_ERROR_STR(itsError);
 	 	return (0);
 	}
 
 	// get convertors (from database)
-	ParamType	PTconv(itsConn);
-	UnitType	UTconv(itsConn);
-	ClassifType	CTconv(itsConn);
+	ParamTypeConv	PTconv(itsConn);
+	UnitConv		UTconv(itsConn);
+	ClassifConv		CTconv(itsConn);
 
 	// scan the inputfile
 	const uint16	maxLineLen = 1024;
@@ -283,7 +278,7 @@ nodeIDType	VICadmin::loadComponentFile (const string&	filename)
 		if (args.empty()) {
 			continue;
 		}
-		LOG_TRACE_FLOW_STR (lineNr << ":" << line);
+		LOG_TRACE_CALC_STR (lineNr << ":" << line);
 
 		// -- NODE --
 		if (!args[0].compare("node")) {
@@ -291,7 +286,9 @@ nodeIDType	VICadmin::loadComponentFile (const string&	filename)
 			// syntax: node name version qual node-constraint description
 			// all elements are required
 			if (args.size() < 6) {
-				LOG_FATAL_STR(lineNr << ": Too less arguments for node-line");
+				itsError = toString(lineNr) + 
+										": Too less arguments for node-line";
+				LOG_ERROR_STR(itsError);
 				inError = true;
 				break;
 			}
@@ -306,7 +303,9 @@ nodeIDType	VICadmin::loadComponentFile (const string&	filename)
 			vector<string>	args = wSpaceSplit(line,5);
 			// syntax: uses name min_version classif instances
 			if (args.size() < 5) {
-				LOG_FATAL_STR(lineNr << ": Too less arguments for uses-line");
+				itsError = toString(lineNr) + 
+										": Too less arguments for uses-line";
+				LOG_FATAL(itsError);
 				inError = true;
 				break;
 			}
@@ -316,8 +315,9 @@ nodeIDType	VICadmin::loadComponentFile (const string&	filename)
 											VersionNr(args[2]), 
 											CTconv.get(args[3]));
 			if (!ChildNode.nodeID()) {
-				LOG_FATAL_STR (lineNr << ": Node "<< args[1] << "," << args[2] 
-									  << "," << args[3] << " not found");
+				itsError = toString(lineNr) + ": Node " + args[1] +"," +
+									args[2] + "," + args[3] + " not found";
+				LOG_FATAL(itsError);
 				inError = true;
 				break;
 			}
@@ -343,7 +343,9 @@ nodeIDType	VICadmin::loadComponentFile (const string&	filename)
 			// syntax: par name type unit valMoment RTmod pruning 
 			//									value constraint description
 			if (args.size() < 9) {
-				LOG_FATAL_STR(lineNr << ": Too less arguments for par-line");
+				itsError = toString(lineNr) + 
+										": Too less arguments for par-line";
+				LOG_FATAL(itsError);
 				inError = true;
 				break;
 			}
@@ -368,7 +370,9 @@ nodeIDType	VICadmin::loadComponentFile (const string&	filename)
 		}
 		// -- UNKNOWN --
 		else {
-			LOG_FATAL_STR("line " << lineNr << " does not start with keyword");
+			itsError = formatString("line %d does not start with a keyword",
+									lineNr);
+			LOG_FATAL(itsError);
 			inError = true;
 			break;
 		}

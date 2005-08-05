@@ -24,7 +24,7 @@
 #define LOFAR_OTDB_WSPACESPLIT_H
 
 // \file wSpaceSplit.h
-// one_line_description
+// Splits a string in substrings with whitespace as seperator.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
@@ -33,7 +33,7 @@
 namespace LOFAR {
   namespace OTDB {
 
-// \addtogroup package
+// \addtogroup OTDB
 // @{
 
 // Splits the given string into a vector of substring using white space
@@ -49,7 +49,7 @@ vector<string> wSpaceSplit(const string& targetStr, uint16	maxStrings = 16384);
 
 
 // @}
-  } // namespace PACKAGE
+  } // namespace OTDB
 } // namespace LOFAR
 
 #endif

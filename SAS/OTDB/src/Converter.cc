@@ -65,7 +65,7 @@ Converter::Converter(OTDBconnection*	aConn, const string&	aTypeName) :
 //
 // convert string to id
 //
-int16	Converter::get(const string&	aType) const
+int16	Converter::convert(const string&	aType) const
 {
 	const_iterator	iter = itsMap.find(aType);
 	return ((iter == itsMap.end()) ? -1 : iter->second);
@@ -74,7 +74,7 @@ int16	Converter::get(const string&	aType) const
 //
 // convert id to string
 //
-string	Converter::get(int16			aTypeID) const
+string	Converter::convert(int16			aTypeID) const
 {
 	const_iterator	iter = itsMap.begin();
 

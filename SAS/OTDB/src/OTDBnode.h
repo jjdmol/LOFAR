@@ -43,8 +43,7 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-class OTDBinfo;
-class VICadmin;
+
 
 // A OTDBnode struct describes one item/element of the OTDB. An item can
 // be node or an parameter.
@@ -52,6 +51,7 @@ class VICadmin;
 class OTDBnode {
 public:
 	OTDBnode() : 
+		index(0), leaf(false), instances(0),
 		itsTreeID(0), itsNodeID(0), itsParentID(0), itsParamDefID(0) {};
 	~OTDBnode() {};
 
@@ -70,9 +70,7 @@ public:
 	ostream& print (ostream& os) const;
 
 	// Friend may change the database reference keys.
-	friend class OTDBinfo;
-	friend class VICadmin;
-	friend class PICadmin;
+	friend class TreeMaintenance;
 
 private:
 	//# Prevent changing the database keys

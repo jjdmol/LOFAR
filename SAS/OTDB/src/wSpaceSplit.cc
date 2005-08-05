@@ -103,6 +103,5 @@ vector<string> wSpaceSplit(const string& targetStr, uint16	maxStrings)
 	return (result);
 }
 
-
-  } // namespace PACKAGE
+  } // namespace OTDB
 } // namespace LOFAR

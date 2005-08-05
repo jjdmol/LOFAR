@@ -54,7 +54,7 @@ public:
 	~OTDBtree() {};
 
 	treeIDType		treeID() const 		{ return (itsTreeID); }
-	treeClassifType	classification; // experimental / operational / etc.
+	classifType		classification; // experimental / operational / etc.
 	string			creator;
 	ptime			creationDate;	
 	treeType		type;			// template / schedule / etc.

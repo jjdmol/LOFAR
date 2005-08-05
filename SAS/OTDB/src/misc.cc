@@ -40,9 +40,9 @@ uint32	VersionNr(const string&		VersString)
 
 string	VersionNr(int32		VersNumber)
 {
-	return (formatString("%d.%02d.%02d", VersNumber/10000, 
-										 (VersNumber/100)%100,
-										 VersNumber%100));
+	return (formatString("%d.%d.%d", VersNumber/10000, 
+									(VersNumber/100)%100,
+									 VersNumber%100));
 }
 
   } // namespace OTDB

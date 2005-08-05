@@ -47,10 +47,6 @@ public:
 	typedef map<string, int16>::iterator			iterator;
 	typedef map<string, int16>::const_iterator		const_iterator;
 
-	// Conversion routines
-	int16	get(const string&	aType)   const;
-	string	get(int16			aTypeID) const;
-
 	// Show whole conversiontable
 	ostream& print (ostream& os) const;
 
@@ -58,6 +54,10 @@ protected:
 	// Only derived classes may construct me
 	Converter(OTDBconnection* aConn, const string&	aTypeName);
 	~Converter() {};
+
+	// Conversion routines to be called by derived classes
+	int16	convert(const string&	aType)   const;
+	string	convert(int16			aTypeID) const;
 
 private:
 	// Copying is not allowed

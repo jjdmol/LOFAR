@@ -43,7 +43,6 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
-class VICadmin;
 
 class OTDBparam {
 public:
@@ -56,7 +55,7 @@ public:
 	string			name;
 	int16			index;
 	paramType		type;			// node / bool / int / long / float / etc.
-	int16			unit;
+	unitType		unit;
 	int16			pruning;
 	int16			valMoment;
 	bool			runtimeMod;
@@ -67,7 +66,7 @@ public:
 	ostream& print (ostream& os) const;
 
 	// Friends may change the database reference keys.
-	friend class VICadmin;
+	friend class TreeMaintenance;
 
 private:
 	//# Prevent changing the database keys

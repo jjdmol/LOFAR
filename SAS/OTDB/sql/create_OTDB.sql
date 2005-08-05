@@ -39,8 +39,8 @@
 \i dupVTnode_func.sql
 \i updateVTnode_func.sql
 \i deleteVTnode_func.sql
-\i getVTnode_func.sql
 \i getVTchildren_func.sql
+\i getVTitemList_func.sql
 \i buildTemplateTree_func.sql
 \i instanciateTree_func.sql
 \i exportTree_func.sql
@@ -55,6 +55,7 @@
 \i addKVT_func.sql
 
 -- multi treetype
+\i getNode_func.sql
 \i copyVHtree_func.sql
 \i copyVTtree_func.sql
 \i copyTree_func.sql

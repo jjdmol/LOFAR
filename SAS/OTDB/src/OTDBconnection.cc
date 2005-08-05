@@ -152,8 +152,8 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID)
 // To get a list of the OTDB trees available in the database.
 //
 vector<OTDBtree> OTDBconnection::getTreeList(
-					treeType	 		aTreeType,
-					treeClassifType		aClassification)
+					treeType 		aTreeType,
+					classifType		aClassification)
 {
 	if (!itsIsConnected && !connect()) {
 		vector<OTDBtree> 	empty;

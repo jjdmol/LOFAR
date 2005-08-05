@@ -37,8 +37,10 @@ typedef		int32		treeIDType;
 typedef		int32		nodeIDType;
 typedef		int32		actionIDType;
 typedef		int32		eventIDType;
-typedef		int16		treeClassifType;
+
+typedef		int16		classifType;
 typedef		int16		treeType;
+typedef		int16		unitType;
 typedef		int16		paramType;
 typedef		int16		actionType;
 typedef		int16		eventType;
