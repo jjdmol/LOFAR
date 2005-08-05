@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 	  -- construct query
 	  vQuery := chr(39) || vNodename;
 	  FOR i in 1..$3 LOOP
-		vQuery := vQuery || \'[\\\\\\\\_][^\\\\\\\\_]+\';
+		vQuery := vQuery || \'_[^\\\\\\\\_]+\';
 	  END LOOP;
 	  vQuery := vQuery || chr(39);
 

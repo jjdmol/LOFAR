@@ -1,5 +1,5 @@
 --
---  getVTitemList.sql: function for getting some layers of a VIC template tree
+--  getVTchildren.sql: function for getting some layers of a VIC template tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 --
 
 --
--- getVTitemList (treeID, nodeList)
+-- getVTchildren (treeID, nodeList)
 -- 
 -- Get a list of items.
 --

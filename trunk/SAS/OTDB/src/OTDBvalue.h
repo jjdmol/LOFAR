@@ -42,8 +42,7 @@ namespace LOFAR {
 // @{
 
 //# --- Forward Declarations ---
-class OTDBinfo;
-class VICadmin;
+
 
 // The OTDBvalue structure contains one value of one OTDB item.
 class OTDBvalue {
@@ -64,8 +63,7 @@ public:
 	ostream& print (ostream& os) const;
 
 	// Friends may change the database key
-	friend class OTDBinfo;
-	friend class VICadmin;
+	friend class TreeValue;
 
 private:
 	//# Prevent changing the database key

@@ -1,6 +1,8 @@
 SUBDIRS						= . 
 
 check_PROGRAMS				= tPICadmin \
+							  tVICcomp \
+							  tVTtree \
 							  tVICadmin \
 							  tOTDBinfo \
 							  tConnection
@@ -12,6 +14,14 @@ tConnection_DEPENDENCIES	= ../src/libotdb.la $(LOFAR_DEPEND)
 tPICadmin_SOURCES			= tPICadmin.cc
 tPICadmin_LDADD				= ../src/libotdb.la -lpqxx
 tPICadmin_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
+
+tVICcomp_SOURCES			= tVICcomp.cc
+tVICcomp_LDADD				= ../src/libotdb.la -lpqxx
+tVICcomp_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
+
+tVTtree_SOURCES				= tVTtree.cc
+tVTtree_LDADD				= ../src/libotdb.la -lpqxx
+tVTtree_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
 
 tVICadmin_SOURCES			= tVICadmin.cc
 tVICadmin_LDADD				= ../src/libotdb.la -lpqxx

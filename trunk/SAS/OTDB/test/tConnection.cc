@@ -34,7 +34,7 @@ using namespace LOFAR::OTDB;
 //
 // show the result
 //
-void showList(const vector<OTDBtree>&	trees) {
+void showTreeList(const vector<OTDBtree>&	trees) {
 
 
 	cout << "treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime" << endl;
@@ -66,6 +66,7 @@ int main (int	argc, char*	argv[]) {
 		LOG_DEBUG_STR(conn);
 		LOG_DEBUG("Trying to connect to the database");
 		ASSERTSTR(conn.connect(), "Connnection failed");
+		ASSERTSTR(conn.isConnected(), "Connnection flag failed");
 
 		LOG_INFO_STR("Connection succesful: " << conn);
 
@@ -75,7 +76,7 @@ int main (int	argc, char*	argv[]) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());
 		}
 		else {
-			showList(treeList);
+			showTreeList(treeList);
 		}
 		LOG_INFO("getTreeList(0,1)");
 		treeList = conn.getTreeList(00, 1);
@@ -83,7 +84,7 @@ int main (int	argc, char*	argv[]) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());
 		}
 		else {
-			showList(treeList);
+			showTreeList(treeList);
 		}
 		LOG_INFO("getTreeList(20,0)");
 		treeList = conn.getTreeList(20, 0);
@@ -91,7 +92,7 @@ int main (int	argc, char*	argv[]) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());
 		}
 		else {
-			showList(treeList);
+			showTreeList(treeList);
 		}
 
 		LOG_INFO("getTreeList(20,1)");
@@ -100,7 +101,7 @@ int main (int	argc, char*	argv[]) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());
 		}
 		else {
-			showList(treeList);
+			showTreeList(treeList);
 		}
 
 	 	LOG_INFO("getTreeInfo(1)");
