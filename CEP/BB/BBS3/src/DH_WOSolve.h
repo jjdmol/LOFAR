@@ -83,6 +83,9 @@ public:
   string getKSType() const;
   void setKSType(const string& ksType);
 
+  bool getDoNothing() const;
+  void setDoNothing(bool doNothing);
+
   bool getNewDomain() const;
   void setNewDomain(bool newDomain);
 
@@ -109,6 +112,7 @@ private:
   int*          itsSCID;                    // ID of sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
+  unsigned int* itsDoNothing;               // Do nothing?
   unsigned int* itsNewDomain;               // Solve on a new domain?
   unsigned int* itsUseSVD;                  // UseSVD in solver?
   unsigned int* itsCleanUp;                 // Clean up Solver when finished?
@@ -140,6 +144,12 @@ inline void DH_WOSolve::setStatus(unsigned int status)
 
 inline string DH_WOSolve::getKSType() const
 {  return string(itsKSType); }
+
+inline bool DH_WOSolve::getDoNothing() const
+{ return ((*itsDoNothing==0)?(false):(true)); }
+
+inline void DH_WOSolve::setDoNothing(bool doNothing)
+{ *itsDoNothing = doNothing; }
 
 inline bool DH_WOSolve::getNewDomain() const
 { return ((*itsNewDomain==0)?(false):(true)); }
@@ -174,6 +184,7 @@ namespace PL {
       int          itsSCID;         // in order to facilitate debugging
       unsigned int itsStatus;
       string       itsKSType;
+      unsigned int itsDoNothing;
       unsigned int itsNewDomain;
       unsigned int itsUseSVD;
       unsigned int itsCleanUp;

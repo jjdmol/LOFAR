@@ -69,6 +69,7 @@ public:
   int          itsPrevWOID;
   ParameterSet itsArgs;
   int          itsNrIterations;
+  double       itsFitCriterium;
   int          itsCurIter;
   double       itsCurStartTime;
   bool         itsControlParmUpd;    // Does this Controller update the parameters?
@@ -76,6 +77,7 @@ public:
   double       itsTimeLength;
   double       itsStartFreq;
   double       itsFreqLength;
+  bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
 };
 
 inline string SC_Simple::getType() const
