@@ -46,6 +46,7 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
+    itsDoNothing       (0),
     itsNewBaselines    (0),
     itsNewDomain       (0),
     itsNewPeelSources  (0),
@@ -72,6 +73,7 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
+    itsDoNothing       (0),
     itsNewBaselines    (0),
     itsNewDomain       (0),
     itsNewPeelSources  (0),
@@ -122,6 +124,7 @@ void DH_WOPrediff::init()
   addField ("SCID", BlobField<int>(1));
   addField ("Status", BlobField<unsigned int>(1));
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
+  addField ("DoNothing", BlobField<unsigned int>(1));
   addField ("NewBaselines", BlobField<unsigned int>(1));
   addField ("NewDomain", BlobField<unsigned int>(1));
   addField ("NewPeelSources", BlobField<unsigned int>(1));
@@ -153,6 +156,7 @@ void DH_WOPrediff::init()
   *itsWOID = 0;
   *itsSCID = -1;
   *itsStatus = DH_WOPrediff::New;
+  *itsDoNothing = 0;
   *itsNewBaselines = 0;
   *itsNewDomain = 0;
   *itsNewPeelSources = 0;
@@ -175,6 +179,7 @@ void DH_WOPrediff::fillDataPointers()
   itsSCID = getData<int> ("SCID");
   itsStatus = getData<unsigned int> ("Status");
   itsKSType = getData<char> ("KSType");
+  itsDoNothing = getData<unsigned int> ("DoNothing");
   itsNewBaselines = getData<unsigned int> ("NewBaselines");
   itsNewDomain = getData<unsigned int> ("NewDomain");
   itsNewPeelSources = getData<unsigned int> ("NewPeelSources");
@@ -324,6 +329,7 @@ void DH_WOPrediff::dump()
   cout << "Controller ID = " << getStrategyControllerID() << endl;
   cout << "Status = " << getStatus() << endl;
   cout << "KS Type = " << getKSType() << endl;
+  cout << "Do nothing? = " << getDoNothing() << endl;
   cout << "New baselines? = " << getNewBaselines() << endl;
   cout << "New domain? = " << getNewDomain() << endl;
   cout << "New peel sources? = " << getNewPeelSources() << endl;
@@ -389,6 +395,7 @@ void DH_WOPrediff::clearData()
   setStrategyControllerID(-1);
   setStatus(DH_WOPrediff::New);
   setKSType("");
+  setDoNothing(false);
   setNewBaselines(true);
   setNewDomain(true);
   setNewPeelSources(true);
@@ -414,6 +421,7 @@ void DBRep<DH_WOPrediff>::bindCols (dtl::BoundIOs& cols)
   cols["SCID"] == itsSCID;
   cols["STATUS"] == itsStatus;
   cols["KSTYPE"] == itsKSType;
+  cols["DONOTHING"] == itsDoNothing;
   cols["NEWBASELINES"] == itsNewBaselines;
   cols["NEWDOMAIN"] == itsNewDomain;
   cols["NEWSOURCES"] == itsNewPeelSources;
@@ -434,6 +442,7 @@ void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
   itsSCID = obj.getStrategyControllerID();
   itsStatus = obj.getStatus();
   itsKSType = obj.getKSType();
+  itsDoNothing = obj.getDoNothing();
   itsNewBaselines = obj.getNewBaselines();
   itsNewDomain = obj.getNewDomain();
   itsNewPeelSources = obj.getNewPeelSources();

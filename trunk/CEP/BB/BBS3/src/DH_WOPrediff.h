@@ -85,6 +85,9 @@ public:
   string getKSType() const;
   void setKSType(const string& ksType);
 
+  bool getDoNothing() const;
+  void setDoNothing(bool doNothing);
+
   bool getNewBaselines() const;
   void setNewBaselines(bool newBaselines);
 
@@ -153,6 +156,7 @@ private:
   int*          itsSCID;                    // ID of the sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
+  unsigned int* itsDoNothing;               // Do nothing?
   unsigned int* itsNewBaselines;            // New baseline selection?
   unsigned int* itsNewDomain;               // New domain selection?
   unsigned int* itsNewPeelSources;          // New peel sources selection?
@@ -195,7 +199,13 @@ inline void DH_WOPrediff::setStatus(unsigned int status)
 { *itsStatus = status; }
 
 inline string DH_WOPrediff::getKSType() const
-{  return string(itsKSType); }
+{ return string(itsKSType); }
+
+inline bool DH_WOPrediff::getDoNothing() const
+{ return ((*itsDoNothing==0)?(false):(true)); }
+
+inline void DH_WOPrediff::setDoNothing(bool doNothing)
+{ *itsDoNothing = doNothing; }
 
 inline bool DH_WOPrediff::getNewBaselines() const
 { return ((*itsNewBaselines==0)?(false):(true)); }
@@ -289,6 +299,7 @@ namespace PL {
       int          itsSCID;                    // in order to facilitate debugging
       unsigned int itsStatus;
       string       itsKSType;
+      unsigned int itsDoNothing;
       unsigned int itsNewBaselines;
       unsigned int itsNewDomain;
       unsigned int itsNewPeelSources;

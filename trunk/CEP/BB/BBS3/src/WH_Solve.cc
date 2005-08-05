@@ -121,78 +121,84 @@ void WH_Solve::process()
   wo->setStatus(DH_WOSolve::Assigned);
   woPtr->updateDB(*connWO);
 
-  int contrID = wo->getStrategyControllerID();
-  Solver* solver = getSolver(contrID);
-  DBGASSERTSTR(solver!=0, "The solver has not been created and initialized.");
-
-  if (wo->getNewDomain())         // New domain 
+  if (wo->getDoNothing() == false)
   {
-     setParmData(solver);
-     readInputs(solver, false);   // Skip first read
-  }
-  else
-  {
-    readInputs(solver, true);     // Read inputs first
-  }
+    int contrID = wo->getStrategyControllerID();
+    Solver* solver = getSolver(contrID);
+    DBGASSERTSTR(solver!=0, "The solver has not been created and initialized.");
 
-  Quality resultQuality;
-  // Do the solve
-  // Do the solve.
-  vector<double> res = solver->getSolvableValues();
-  char strVal[20];
-  cout << "Before: [ " ;
-  for (unsigned int i = 0; i < res.size(); i++)
-  {
-    sprintf(strVal, "%1.10f ", res[i]);
-    cout << strVal << " ";
-  }
-  cout << " ]" << endl;
+    if (wo->getNewDomain())         // New domain 
+    {
+      setParmData(solver);
+      readInputs(solver, false);   // Skip first read
+    }
+    else
+    {
+      readInputs(solver, true);     // Read inputs first
+    }
 
-  solver->solve(wo->getUseSVD(), resultQuality);
+    Quality resultQuality;
+    // Do the solve
+    // Do the solve.
+    vector<double> res = solver->getSolvableValues();
+    char strVal[20];
+    cout << "Before: [ " ;
+    for (unsigned int i = 0; i < res.size(); i++)
+    {
+      sprintf(strVal, "%1.10f ", res[i]);
+      cout << strVal << " ";
+    }
+    cout << " ]" << endl;
 
-  // Do the solve.
-  res = solver->getSolvableValues();
-  cout << "After: [ ";
-  for (unsigned int i = 0; i < res.size(); i++)
-  {
-    sprintf(strVal, "%1.10f ", res[i]);
-    cout << strVal << " ";
-  }
-  cout << " ]" << endl;
+    solver->solve(wo->getUseSVD(), resultQuality);
 
-  //>>>Temporary:
-  streamsize prec = cout.precision();
-  cout.precision(10);
-  cout << "Per prediffer: " << solver->getSolutions() << endl;
-  cout.precision (prec);
+    // Do the solve.
+    res = solver->getSolvableValues();
+    cout << "After: [ ";
+    for (unsigned int i = 0; i < res.size(); i++)
+    {
+      sprintf(strVal, "%1.10f ", res[i]);
+      cout << strVal << " ";
+    }
+    cout << " ]" << endl;
+
+    //>>>Temporary:
+    streamsize prec = cout.precision();
+    cout.precision(10);
+    cout << "Per prediffer: " << solver->getSolutions() << endl;
+    cout.precision (prec);
 
 
-  // Write result
-  // Get solution dataholder DH_Solution* sol;
-  DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(1));
-  sol->clearData();
-  DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
-  Connection* connSol = getDataManager().getOutConnection(1);
-  ASSERTSTR(connSol != 0, "Output 1 not connected!");
-  sol->setSolution(solver->getSolvableParmData());
-  sol->setQuality(resultQuality);
-  sol->setWorkOrderID(wo->getWorkOrderID());
-  wo->setStatus(DH_WOSolve::Executed);
+    // Write result
+    // Get solution dataholder DH_Solution* sol;
+    DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(1));
+    sol->clearData();
+    DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
+    Connection* connSol = getDataManager().getOutConnection(1);
+    ASSERTSTR(connSol != 0, "Output 1 not connected!");
+    sol->setSolution(solver->getSolvableParmData());
+    sol->setQuality(resultQuality);
+    sol->setWorkOrderID(wo->getWorkOrderID());
 
-  //>>>> For now: Assume all prediffer domains are equal!!
-  DH_Prediff* predInp1 = 
-    dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(2));
-  sol->setDomain(predInp1->getStartFreq(), predInp1->getEndFreq(),
-		 predInp1->getStartTime(), predInp1->getEndTime());
+    //>>>> For now: Assume all prediffer domains are equal!!
+    DH_Prediff* predInp1 = 
+      dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(2));
+    sol->setDomain(predInp1->getStartFreq(), predInp1->getEndFreq(),
+		   predInp1->getStartTime(), predInp1->getEndTime());
 
-  // Add solution to database and update work order
-  solPtr->insertDB(*connSol);
-  woPtr->updateDB(*connWO);
+    // Add solution to database
+    solPtr->insertDB(*connSol);
   
-  if (wo->getCleanUp())   // If Solver (cache) is no longer needed: clean up  
-  {
-    itsSolvers.erase(contrID);
+    if (wo->getCleanUp())   // If Solver (cache) is no longer needed: clean up  
+    {
+      itsSolvers.erase(contrID);
+    }
   }
+  
+  // Update workorder status
+  wo->setStatus(DH_WOSolve::Executed);
+  woPtr->updateDB(*connWO);
+
 }
 
 void WH_Solve::dump() const

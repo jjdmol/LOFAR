@@ -35,13 +35,132 @@
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
+#include <Common/BlobIBufStream.h>
+#include <Common/BlobArray.h>
 
+#include <casa/Arrays/Matrix.h>
 
 using namespace LOFAR;
 using namespace std;
 
 // This program should be called with input file name(1) and user name(2) as
 // arguments
+
+void readMSTimes(const string& fileName, double& startTime, double& endTime,
+		 double& interval)
+{
+  // Get meta data from description file.
+  string name(fileName+"/vis.des");
+  std::ifstream istr(name.c_str());
+  ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
+  BlobIBufStream bbs(istr);
+  BlobIStream bis(bbs);
+  bis.getStart("ms.des");
+  double ra, dec;
+  bis >> ra;
+  bis >> dec;
+  int itsNCorr, itsNrChan;
+  bis >> itsNCorr;
+  bis >> itsNrChan;
+  double itsStartFreq, itsEndFreq, itsStepFreq;
+  bis >> itsStartFreq;
+  bis >> itsEndFreq;
+  bis >> itsStepFreq;
+  vector<int> itsAnt1, itsAnt2;
+  vector<double> itsTimes, itsIntervals;
+  bis >> itsAnt1;
+  bis >> itsAnt2;
+  bis >> itsTimes;
+  bis >> itsIntervals;
+  casa::Matrix<double> itsAntPos;
+  bis >> itsAntPos;
+  bis.getEnd();
+  istr.close();
+  // Get startTime, endTime and interval size
+  startTime = itsTimes.front();
+  endTime = itsTimes.back();
+  interval = itsIntervals[0];  //Assuming all intervals are equal!
+}
+
+void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
+{
+  int nrStrategies = params.getInt32("CTRLparams.nrStrategies");
+  
+  int totalNrRuns=0;
+
+  // Loop over all strategies
+  for (int i=1; i<=nrStrategies; i++)
+  {
+    char nrStr[32];
+    sprintf(nrStr, "%i", i);
+    string stratName = "CTRLparams.SC" + string(nrStr) + "params.";
+      // Add the dbname if not defined.
+    if (! params.isDefined(stratName+"MSDBparams.DBName")) {
+      params[stratName+"MSDBparams.DBName"] = usernm;
+    }
+    if (! params.isDefined("BBDBname")) {
+      params["BBDBname"] = usernm;
+    }
+
+    // Get time parameters
+    double intervalSize = params.getDouble(stratName + "timeInterval");
+    double startTime = -1;
+    if (params.isDefined(stratName + "startTime"))
+    {
+      startTime = params.getDouble(stratName + "startTime");
+    }
+    double endTime = -1;
+    if (params.isDefined(stratName + "endTime"))
+    {
+      endTime = params.getDouble(stratName + "endTime");
+    }
+
+    // Read MS description file
+    string msName = params.getString(stratName + "MSDBparams.MSName");   
+    double msStartTime, msEndTime, msInterval;
+    readMSTimes(msName, msStartTime, msEndTime, msInterval);
+    // Correct start- and endtime and interval size if necessary
+    if (msStartTime > startTime)
+    {
+      LOG_INFO_STR("Replacing start time with MS start time " << msStartTime
+		   << " for strategy " << string(nrStr));
+      startTime = msStartTime;
+      params.replace(ACC::APS::KVpair(stratName+ "startTime", msStartTime));
+    }
+    if (endTime==-1 || msEndTime < endTime)
+    {
+      LOG_INFO_STR("Replacing end time with MS end time " << msEndTime
+		   << " for strategy " << string(nrStr));
+      endTime = msEndTime;
+      params.replace(ACC::APS::KVpair(stratName+ "endTime", msEndTime));
+    }
+    if (msInterval > intervalSize)
+    {
+      LOG_INFO_STR("Replacing time interval size with MS interval size " << msInterval
+		   << " for strategy " << string(nrStr));
+      intervalSize = msInterval;
+      params.replace(ACC::APS::KVpair(stratName+ "timeInterval", msInterval));
+    }
+    // Determine number of CEPFrame runs
+    int maxIter = params.getInt32(stratName +"maxNrIterations");
+    int nrIntervals = 0;
+    if (intervalSize >= endTime-startTime)
+    {
+      nrIntervals = 1;
+    }
+    else
+    {
+      nrIntervals = (int)floor((endTime-startTime)/intervalSize)+1;
+    }
+    int maxRuns = maxIter*nrIntervals;
+    LOG_INFO_STR("Strategy " << string(nrStr) << " max number of runs " << maxRuns);
+    totalNrRuns += maxRuns;
+  }
+
+  // Set total number of CEPFrame runs
+  params.replace(ACC::APS::KVpair("nrCEPFrameRuns", totalNrRuns));
+  cout << params << endl;
+}
 
 int main (int argc, const char** argv)
 {
@@ -126,29 +245,13 @@ int main (int argc, const char** argv)
 
     ACC::APS::ParameterSet params (name.c_str());
 
-    int nrStrategies = params.getInt32("CTRLparams.nrStrategies");
+    checkParameters(params, usernm);
 
-    // Loop over all strategies
-    for (int i=1; i<=nrStrategies; i++)
-    {
-      char nrStr[32];
-      sprintf(nrStr, "%i", i);
-      string name = "SC" + string(nrStr) + "params";
-      // Add the dbname if not defined.
-      if (! params.isDefined(string("CTRLparams.")+name+".MSDBparams.DBName")) {
-	params[string("CTRLparams.")+name+".MSDBparams.DBName"] = usernm;
-      }
-      if (! params.isDefined("BBDBname")) {
-	params["BBDBname"] = usernm;
-      }
-    }
-    cout << params << endl;
-
-    int nrRuns = params.getInt32("nrRuns");
+    int nrCEPFrameRuns = params.getInt32("nrCEPFrameRuns");
 
     simulator.setParameters(params);
     simulator.baseDefine();
-    simulator.baseRun(nrRuns);
+    simulator.baseRun(nrCEPFrameRuns);
     simulator.baseQuit();
 
   }

@@ -46,9 +46,18 @@ SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn,
     itsStartTime      (0),
     itsTimeLength     (0),
     itsStartFreq      (0),
-    itsFreqLength     (0)
+    itsFreqLength     (0),
+    itsSendDoNothingWO(false)
 {
-  itsNrIterations = itsArgs.getInt32("nrIterations");
+  itsNrIterations = itsArgs.getInt32("maxNrIterations");
+  if (itsArgs.isDefined("fitCriterium"))
+  {
+    itsFitCriterium = itsArgs.getDouble("fitCriterium");
+  }
+  else
+  {
+    itsFitCriterium = -1;
+  }
   ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
   string dbType = msParams.getString("DBType");
   string meqTableName = msParams.getString("meqTableName");
@@ -58,10 +67,10 @@ SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn,
   string dbHost = msParams.getString("DBHost");
 
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
-  itsStartTime = itsArgs.getFloat ("startTime");
-  itsTimeLength = itsArgs.getFloat ("timeLength");
-  itsStartFreq = itsArgs.getFloat ("startFreq");
-  itsFreqLength = itsArgs.getFloat ("freqLength");
+  itsStartTime = itsArgs.getDouble ("startTime");
+  itsTimeLength = itsArgs.getDouble ("timeInterval");
+  itsStartFreq = itsArgs.getDouble ("startFreq");
+  itsFreqLength = itsArgs.getDouble ("freqLength");
 }
 
 SC_Simple::~SC_Simple()
@@ -82,12 +91,10 @@ bool SC_Simple::execute()
     WOPD->setSubtractSources(false);
     WOPD->setUpdateParms(false);
     WOSolve->setNewDomain(true);
-    itsCurStartTime = itsArgs.getFloat ("startTime");
+    itsCurStartTime = itsArgs.getDouble ("startTime");
   }
   else
   {
-    // Read solution of previously issued workorders
-    readSolution();
 
     WOPD->setNewBaselines(false);
     WOPD->setNewPeelSources(false);
@@ -95,57 +102,81 @@ bool SC_Simple::execute()
     WOPD->setUpdateParms(true);
     WOSolve->setNewDomain(false);
 
-    if (itsControlParmUpd)   // If Controller handles parameter writing
+    if (itsSendDoNothingWO==false)  /// if previous sent WorkOrder was a "do nothing", do not read solution
     {
-      // Controller writes new parameter values directly to the tables
-      vector<ParmData> pData;
-      getSolution()->getSolution(pData);
-      double fStart = getSolution()->getStartFreq();
-      double fEnd = getSolution()->getEndFreq();
-      double tStart = getSolution()->getStartTime();
-      double tEnd = getSolution()->getEndTime();
-      getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+      // Read solution of previously issued workorders
+      readSolution();
+
+      if (itsControlParmUpd)   // If Controller handles parameter writing
+      {
+	// Controller writes new parameter values directly to the tables
+	vector<ParmData> pData;
+	getSolution()->getSolution(pData);
+	double fStart = getSolution()->getStartFreq();
+	double fEnd = getSolution()->getEndFreq();
+	double tStart = getSolution()->getStartTime();
+	double tEnd = getSolution()->getEndTime();
+	getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+      }
+      else
+      {
+	// Send the (reference to) parameter values to Prediffers.
+	WOPD->setSolutionID(itsPrevWOID);
+      }
     }
-    else
+     
+    // Take absolute value of fit
+    double fit = getSolution()->getQuality().itsFit;
+    if (fit<0)
     {
-      // Send the (reference to) parameter values to Prediffers.
-      WOPD->setSolutionID(itsPrevWOID);
+      fit = -fit;
     }
 
-    // If solution for this interval is good enough, go to next. TBA
-    // For now: if number of iterations reached: go to next interval.
+    itsSendDoNothingWO = false;
+    // If max number of iterations reached, go to next interval.
+    // If solution for this interval is good enough, send "do nothing" workorders until 
+    // max number of iterations reached.
     if (fmod(itsCurIter, itsNrIterations) == 0)
     {
       nextInter = true;
-      itsCurStartTime += itsArgs.getFloat ("timeLength");
+      itsCurStartTime += itsArgs.getFloat ("timeInterval");
+    }
+    else if (fit < itsFitCriterium)
+    {
+      LOG_INFO_STR("Fit criterium met after " << itsCurIter << " iterations");
+      itsSendDoNothingWO = true;
     }
   }
 
-  // Set prediffer workorder data
-  WOPD->setStatus(DH_WOPrediff::New);
-  WOPD->setKSType("Prediff1");
-  WOPD->setStartFreq (itsArgs.getFloat ("startFreq"));
-  WOPD->setFreqLength (itsArgs.getFloat ("freqLength"));
-  WOPD->setStartTime (itsCurStartTime);
-  float timeLength = itsArgs.getFloat ("timeLength");
-  WOPD->setTimeLength (timeLength);
-  WOPD->setModelType (itsArgs.getString ("modelType"));
-  WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr"));
-  WOPD->setCalcUVW (itsArgs.getBool ("calcUVW"));
-  ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
-  vector<int> ant = itsArgs.getInt32Vector("antennas");
-  vector<string> pNames = itsArgs.getStringVector("solvableParams");
-  vector<int> srcs = itsArgs.getInt32Vector("sources");
-  // the prediffer needs to know the modelType too
-  msParams["modelType"] = itsArgs.getString("modelType");
-  msParams["calcUVW"] = itsArgs.getString("calcUVW");
-  WOPD->setVarData (msParams, ant, pNames, srcs);
+  WOPD->setDoNothing(itsSendDoNothingWO);
+  WOSolve->setDoNothing(itsSendDoNothingWO);
+  if (itsSendDoNothingWO==false)
+  {
+    // Set prediffer workorder data
+    WOPD->setStatus(DH_WOPrediff::New);
+    WOPD->setKSType("Prediff1");
+    WOPD->setStartFreq (itsArgs.getFloat ("startFreq"));
+    WOPD->setFreqLength (itsArgs.getFloat ("freqLength"));
+    WOPD->setStartTime (itsCurStartTime);
+    float timeLength = itsArgs.getFloat ("timeInterval");
+    WOPD->setTimeLength (timeLength);
+    WOPD->setModelType (itsArgs.getString ("modelType"));
+    WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr"));
+    WOPD->setCalcUVW (itsArgs.getBool ("calcUVW"));
+    ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
+    vector<int> ant = itsArgs.getInt32Vector("antennas");
+    vector<string> pNames = itsArgs.getStringVector("solvableParams");
+    vector<int> srcs = itsArgs.getInt32Vector("sources");
+    // the prediffer needs to know the modelType too
+    msParams["modelType"] = itsArgs.getString("modelType");
+    msParams["calcUVW"] = itsArgs.getString("calcUVW");
+    WOPD->setVarData (msParams, ant, pNames, srcs);
+  }
 
   WOPD->setNewWorkOrderID();
   WOPD->setStrategyControllerID(getID());
   WOPD->setNewDomain(nextInter);
 
-  
   // Set solver workorder data  
   WOSolve->setStatus(DH_WOSolve::New);
   WOSolve->setKSType("Solver");
@@ -184,18 +215,21 @@ bool SC_Simple::execute()
 
 void SC_Simple::postprocess()
 {
-  bool writeParms = itsArgs.getBool("writeParms");
-  if (writeParms)
+  if (itsSendDoNothingWO == false) // Only read solution if previous workorder was not a "do nothing"
   {
-    readSolution();
-    // Controller writes found parameter values in the tables
-    vector<ParmData> pData;
-    getSolution()->getSolution(pData);
-    double fStart = getSolution()->getStartFreq();
-    double fEnd = getSolution()->getEndFreq();
-    double tStart = getSolution()->getStartTime();
-    double tEnd = getSolution()->getEndTime();
-    getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+    bool writeParms = itsArgs.getBool("writeParms");
+    if (writeParms)
+    {
+      readSolution();
+      // Controller writes found parameter values in the tables
+      vector<ParmData> pData;
+      getSolution()->getSolution(pData);
+      double fStart = getSolution()->getStartFreq();
+      double fEnd = getSolution()->getEndFreq();
+      double tStart = getSolution()->getStartTime();
+      double tEnd = getSolution()->getEndTime();
+      getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+    }
   }
 }
 
