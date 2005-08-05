@@ -1,4 +1,4 @@
-//#  UnitType.h: Structure containing unit type conversions
+//#  ParamTypeConv.h: Structure containing parameter type conversions
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_OTDB_UNITTYPE_H
-#define LOFAR_OTDB_UNITTYPE_H
+#ifndef LOFAR_OTDB_PARAMTYPE_H
+#define LOFAR_OTDB_PARAMTYPE_H
 
-// \file UnitType.h
+// \file ParamTypeConv.h
 // Structure for conversion of parameter types.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
@@ -41,12 +41,20 @@ namespace LOFAR {
 //#class OTDBconnection;
 
 //# Converter class for parameter types.
-class UnitType : public Converter {
+class ParamTypeConv : public Converter {
 public:
-	//# We only have to make the constructor and desctuctor public
-	explicit UnitType(OTDBconnection* aConn) :
-		Converter(aConn, "Unit") {};
-	~UnitType() {};
+	//# Redefine the constructor and destructor
+	explicit ParamTypeConv(OTDBconnection* aConn) :
+		Converter(aConn, "Param_type") {};
+	~ParamTypeConv() {};
+
+	// string to value
+	inline paramType	get(const string&	aType)   const 
+	{ return (convert(aType));	}
+
+	// value to string
+	inline string	get(paramType		aTypeID) const
+	{ return (convert(aTypeID));	}
 };
 
 // @}

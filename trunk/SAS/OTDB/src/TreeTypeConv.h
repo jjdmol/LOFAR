@@ -1,4 +1,4 @@
-//#  ParamType.h: Structure containing parameter type conversions
+//#  TreeTypeConv.h: Structure containing unit type conversions
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_OTDB_PARAMTYPE_H
-#define LOFAR_OTDB_PARAMTYPE_H
+#ifndef LOFAR_OTDB_UNITTYPE_H
+#define LOFAR_OTDB_UNITTYPE_H
 
-// \file ParamType.h
+// \file TreeTypeConv.h
 // Structure for conversion of parameter types.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
@@ -41,12 +41,20 @@ namespace LOFAR {
 //#class OTDBconnection;
 
 //# Converter class for parameter types.
-class ParamType : public Converter {
+class TreeTypeConv : public Converter {
 public:
-	//# We only have to make the constructor and desctuctor public
-	explicit ParamType(OTDBconnection* aConn) :
-		Converter(aConn, "Param_type") {};
-	~ParamType() {};
+	// Redefine the constructor and destructor
+	explicit TreeTypeConv(OTDBconnection* aConn) :
+		Converter(aConn, "TreeType") {};
+	~TreeTypeConv() {};
+
+	// string to value
+	inline treeType	get(const string&	aType)   const 
+	{ return (convert(aType));	}
+
+	// value to string
+	inline string	get(treeType		aTypeID) const
+	{ return (convert(aTypeID));	}
 };
 
 // @}
