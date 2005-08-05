@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,246 168 954 748 N "_3DFace" 2
+PANEL,233 201 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -11,17 +11,10 @@ PANEL,246 168 954 748 N "_3DFace" 2
 	    dpExists($configDatapoint + \".Trend2Active\") &&
 	    dpExists($configDatapoint + \".Dedicated\"))
 	{
+
 	// Check if the timeinterval is greater the zero seconds!	
-  CheckTimeInterval($configDatapoint + \".1.Days\", 
-                    $configDatapoint + \".1.Hours\",
-                    $configDatapoint + \".1.Minutes\",
-                    $configDatapoint + \".1.Seconds\",
-                    1);
-  CheckTimeInterval($configDatapoint + \".2.Days\", 
-                    $configDatapoint + \".2.Hours\",
-                    $configDatapoint + \".2.Minutes\",
-                    $configDatapoint + \".2.Seconds\",
-                    2);
+  CheckTimeInterval($configDatapoint, 1);
+  CheckTimeInterval($configDatapoint, 2);
 
   dpConnect(\"ArrangeTrendPlots\", $configDatapoint + \".Standard\",
 	                               $configDatapoint + \".Trend2Active\",
@@ -41,12 +34,18 @@ PANEL,246 168 954 748 N "_3DFace" 2
 // Function    : Check the time interval for a tred
 // 
 ///////////////////////////////////////////////////////////////////////////////////
-CheckTimeInterval(int Days, int Hours, int Minutes, int Seconds, string TrendNumber)
+CheckTimeInterval(string configDatapoint, int TrendNumber)
 {
+  int Days, Hours, Minutes, Seconds;
+  dpGet(configDatapoint + \".\"+TrendNumber+\".Days\", Days);
+  dpGet(configDatapoint + \".\"+TrendNumber+\".Hours\", Hours);
+  dpGet(configDatapoint + \".\"+TrendNumber+\".Minutes\", Minutes);
+  dpGet(configDatapoint + \".\"+TrendNumber+\".Seconds\", Seconds);
+
   if ((0==Days) && (0==Hours) && (0==Minutes) && (Seconds<2))
   { 
-    dpSet($configDatapoint + \".\"+TrendNumber+\".Minutes\", 5);
-    dpSet($configDatapoint + \".\"+TrendNumber+\".Seconds\", 2);
+    dpSet(configDatapoint + \".\"+TrendNumber+\".Minutes\", 5);
+    dpSet(configDatapoint + \".\"+TrendNumber+\".Seconds\", 2);
   }
 }
 
