@@ -72,6 +72,49 @@ void aplViewNavigateTo(string datapoint, string referenceDatapoint, string addin
 }
 
 //////////////////////////////////////////////////////////////////////////////////
+// Function: stsSubRackHandleContextMenu
+//           Handles the contextmenu, triggerd by using the right-mouse-button on the
+//           object. Options to choose:
+//           1. set maintenance state
+//           2. set error state
+//
+///////////////////////////////////////////////////////////////////////////////////
+void stsSubRackHandleContextMenu()
+{
+  string txt_maintenance, txt_status;
+  int iAnswer, maintenance;
+  bool bOK;             //Variable with value FALSE
+    
+    dpGet($datapoint + "_Rack"+ $RackNr +"_SubRack"+ $SubrackNr +"_Maintenance.status:_original.._value", maintenance);
+    if (maintenance==1)
+      txt_maintenance = "PUSH_BUTTON, Turn off maintenance, 10, 1";
+    else
+      txt_maintenance = "PUSH_BUTTON, Turn on maintenance, 11, 1";
+      
+    popupMenu(makeDynString(txt_maintenance), iAnswer);
+    ///////////////////////////////////////////////////
+    //  Compute the chosen option
+    switch (iAnswer)
+    {
+    case 2:
+              dpSetWait($datapoint + "_Rack"+ $RackNr +"_SubRack"+ $SubrackNr +".status:_original.._value", 0);
+        break;
+    case 3:
+              dpSetWait($datapoint + "_Rack"+ $RackNr +"_SubRack"+ $SubrackNr +".status:_original.._value", 1);
+        break;
+    case 10:
+              dpSetWait($datapoint + "_Rack"+ $RackNr +"_SubRack"+ $SubrackNr +"_Maintenance.status:_original.._value", 0);
+        break;
+    case 11:
+              dpSetWait($datapoint + "_Rack"+ $RackNr +"_SubRack"+ $SubrackNr +"_Maintenance.status:_original.._value", 1);
+        break;
+    default:
+        break;
+    }       
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
 // Function: setBackGroundColorAEM
 //           Sets the background color and set the visibility of
 //           the "icon_maintenance". Maintenance overrules and error status
