@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,338 201 1260 960 N "_3DFace" 0
+PANEL,417 201 1272 960 N "_3DFace" 0
 "main()
 {
   navConfigCheckResourceRoots();
@@ -143,7 +143,7 @@ E E 0 1 1 0 1 E U  1 E 4 -106 130
 6 65
 "Border1"
 ""
-1 1134 39 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 1144 39 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 38 0 0 0 0 0
 EE E
@@ -152,13 +152,13 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/STS/logo.bmp" 13434828 E 1134 0 1249 39
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/STS/logo.bmp" 13434828 E 1144 0 1259 39
 1 11 7 "" 114
 0
 28 2
 "TabViews"
 ""
-1 0 30 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 10 30 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -173,7 +173,7 @@ LANG:1 0
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-288 38 1252 852
+298 38 1262 852
 E10
 "tab1" 1
 LANG:1 4 tab1
@@ -652,7 +652,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0
 "main()
 {
-  delay(1);
   dpConnect(\"navConfigfillEnvironmentListInitial\", DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES,
                                                    DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTGROUPS); 
 }
@@ -669,13 +668,14 @@ navConfigfillEnvironmentListInitial(string dp1, dyn_string environmentNames)
   string selectedEnvironment;
   environmentNames = environmentsAvailableToUser();
   int itemCount=0;
-  int error=4;  //must not have a initial value -1 or 0
-  error = dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
-  while(error!=0)
+  bool dpFound;
+  dpFound = dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT);
+  while(!dpFound)
   {
     delay(0.050); //wait until the datapoint navigator instance is created.
-    error = dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
-  }  
+    dpFound = dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT);
+  }
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);  
   for(int i=1; i<= dynlen(environmentNames); i++)
   {
     if(environmentNames[i]!=\"\")
@@ -706,7 +706,7 @@ E
 14 93
 "input_shortCut"
 ""
-1 620 10 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+1 420 10 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
  E E
 57 0 0 0 0 0
 EE E
@@ -717,7 +717,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-618 8 682 35
+418 8 482 35
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -821,35 +821,6 @@ E"main(int button, bool state)
     g_showDPE=FALSE;
     
 }" 0
-13 97
-"Button4"
-""
-1 500 10 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-59 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-498 8 622 35
-T 
-1
-LANG:1 7 Button4
-"main()
-{
-  //TreeView_OnSelect(1);  werkt niet
-
-//  fwTreeView_setSelectedPosition(1, \"\");
-  shape treeList    = getShape(LIST_TREE_CTRL_NAME);
-  LOG_TRACE(\"Init,  set selected node[1]\",g_curSelNode);
-  g_curSelNode = 1;
-  treeList.selectedPos = 1;
-}" 0
- E E E
 0
 LAYER, 1 
 1
@@ -888,6 +859,6 @@ LANG:1 6 Layer8
 "$sOnRightClick"""
 "$sOnSelect""TreeView_OnSelect"
 3 7 "PANEL_REF2"
-"nav_fw/navigator_infoPanel_3_1.pnl" 360 920 T 20 1 0 1  0 -10  
+"nav_fw/navigator_infoPanel_3_1.pnl" 360 920 T 20 1 0 1  10 -10  
 0
 0
