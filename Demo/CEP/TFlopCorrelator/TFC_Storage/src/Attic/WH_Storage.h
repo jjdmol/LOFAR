@@ -26,6 +26,8 @@
 
 #include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
+#include <GCF/PALlight/CEPPropertySet.h>
+#include <GCF/GCF_PVDynArr.h>
 
 
 namespace LOFAR
@@ -56,6 +58,8 @@ class WH_Storage: public WorkHolder
     WH_Storage& operator= (const WH_Storage&);
 
     const ACC::APS::ParameterSet& itsPS;
+    int itsNstations;
+    int itsNpolSquared;
 
     MSWriter* itsWriter;
 
@@ -63,6 +67,9 @@ class WH_Storage: public WorkHolder
     int itsFieldId;
     int itsCounter;
 
+    bool itsWriteToMAC;
+    GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;
+    GCF::Common::GCFPValueArray itsVArray; 
   };
 } // namespace LOFAR
 
