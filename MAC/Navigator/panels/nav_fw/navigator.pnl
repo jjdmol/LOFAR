@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,467 200 1260 960 N "_3DFace" 0
+PANEL,338 201 1260 960 N "_3DFace" 0
 "main()
 {
   navConfigCheckResourceRoots();
@@ -655,8 +655,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
   delay(1);
   dpConnect(\"navConfigfillEnvironmentListInitial\", DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTNAMES,
                                                    DPNAME_NAVIGATOR + \".\" + ELNAME_ENVIRONMENTGROUPS); 
-  //environmentsAvailableToUser()
-
 }
 
 
@@ -671,7 +669,13 @@ navConfigfillEnvironmentListInitial(string dp1, dyn_string environmentNames)
   string selectedEnvironment;
   environmentNames = environmentsAvailableToUser();
   int itemCount=0;
-  dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  int error=4;  //must not have a initial value -1 or 0
+  error = dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  while(error!=0)
+  {
+    delay(0.050); //wait until the datapoint navigator instance is created.
+    error = dpGet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
+  }  
   for(int i=1; i<= dynlen(environmentNames); i++)
   {
     if(environmentNames[i]!=\"\")
@@ -687,10 +691,7 @@ navConfigfillEnvironmentListInitial(string dp1, dyn_string environmentNames)
     setValue(\"\",\"selectedPos\",1);
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_SELECTEDENVIRONMENT, \"Personal\");
   }
-
-}
-
-" 0
+}" 0
 
 "main()
 {
