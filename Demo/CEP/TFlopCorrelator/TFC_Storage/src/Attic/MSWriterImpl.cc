@@ -538,7 +538,7 @@ void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId,
   Vector<Double> uvw(3);
   const Cube<Double>& basel = *itsBaselines;
   // Write all the data.
-  // The input data array has shape nrpol,nrchan,nrant,nrant.
+  // The input data array has shape nrpol,nrant,nrant.
   // So we can form an AIPS++ array for each baseline.
   for (int i=0; i<itsNrAnt; i++) {
     for (int j=0; j<=i; j++) {

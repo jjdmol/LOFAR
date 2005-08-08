@@ -82,8 +82,6 @@ public:
   int addField (double azimuth, double elevation);
 
   // Write a data array for the given band and field.
-  // The data array is a 4D complex array with axes polarization, channel,
-  // antenna2, antenna1. Only the part where antenna2>antenna1 is used.
   // The flag array has the same shape as the data array. Flag==True
   // means the the corresponding data point is flagged as invalid.
   // The flag array is optional. If not given, all flags are False.
