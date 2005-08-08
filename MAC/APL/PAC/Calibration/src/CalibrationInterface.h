@@ -26,24 +26,27 @@
 
 #include "SubArray.h"
 #include "ACC.h"
-#include "CalibrationResult.h"
+#include "AntennaGains.h"
 
-namespace CAL
-{
-  class CalibrationInterface
-  {
-  public:
-    //CalibrationInterface() = 0;
-    virtual ~CalibrationInterface() {}
+namespace LOFAR {
+  namespace CAL {
+
+    class CalibrationInterface
+    {
+    public:
+      //CalibrationInterface() = 0;
+      virtual ~CalibrationInterface() {}
       
-    /**
-     * Calibrate the specified subarray. Store the result in the CalibrationResult object.
-     * @param subarray The subarray to calibrate. Use SubArray methods to get relevant parameters.
-     * @param result The calibration result should be stored in this object.
-     */
-    virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result) = 0;
-  };
-};
+      /**
+       * Calibrate the specified subarray. Store the result in the AntennaGains object.
+       * @param subarray The subarray to calibrate. Use SubArray methods to get relevant parameters.
+       * @param result The calibration result should be stored in this object.
+       */
+      virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& gains) = 0;
+    };
+
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* CALIBRATIONINTERFACE_H_ */
 

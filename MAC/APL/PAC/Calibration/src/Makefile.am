@@ -1,17 +1,15 @@
 
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir)/src \
-	-DEPA_Y_POL_IMAG_FIX \
-	-DWEIGHTS_IN_NETWORK_ORDER \
-	-DUSE_GNUPLOT
+AM_CPPFLAGS = -DUSE_CAL_THREAD
+
+#-fmessage-length=0 // needed for Eclipse
 
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(lofar_root)/MAC/MACCommon/autogen $<
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(lofar_root)/MAC/MACCommon/autogen $<
 
 BUILT_SOURCES = \
 	CAL_Protocol.ph \
@@ -21,8 +19,10 @@ BUILT_SOURCES = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
-	ACC.conf \
+	AntennaArrays.conf \
 	CalServer.log_prop
+
+#	ACC.conf
 
 EXTRA_DIST = \
 	CAL_Protocol.ph
@@ -34,8 +34,10 @@ sysconf_DATA = \
 	SourceCatalog.conf \
 	LBAntennas.conf \
 	HBAntennas.conf \
-	ACC.conf \
+	AntennaArrays.conf \
 	CalServer.log_prop
+
+#	ACC.conf 
 
 include_HEADERS = \
 	$(top_builddir)/src/CAL_Protocol.ph
@@ -46,40 +48,72 @@ include_HEADERS = \
 %.conf: %.conf.in
 	cp $< $@
 
+# protocol library, use this to use the CAL protocol
 lib_LTLIBRARIES = libcal.la
 
 libcal_la_SOURCES = \
-	Documentation.h \
 	$(top_builddir)/src/CAL_Protocol.cc \
+	AntennaGains.h \
+	AntennaGains.cc
+
+# convenience library
+noinst_LTLIBRARIES = libcaldevel.la
+
+libcaldevel_la_SOURCES = \
+	Documentation.h \
+	SharedResource.h \
 	ACC.h \
 	ACC.cc \
 	Source.h \
 	Source.cc \
-	SourceCatalog.h \
-	SourceCatalog.cc \
+	SourceData.h \
+	SourceData.cc \
 	DipoleModel.h \
 	DipoleModel.cc \
+	DipoleModelData.h \
+	DipoleModelData.cc \
 	SpectralWindow.h \
 	SpectralWindow.cc \
 	AntennaArray.h \
 	AntennaArray.cc \
+	AntennaArrayData.h \
+	AntennaArrayData.cc \
 	SubArray.h \
 	SubArray.cc \
+	SubArraySubscription.h \
+	SubArraySubscription.cc \
 	CalibrationInterface.h \
 	CalibrationAlgorithm.h \
 	CalibrationAlgorithm.cc \
-	CalibrationResult.h \
-	CalibrationResult.cc \
 	RemoteStationCalibration.h \
-	RemoteStationCalibration.cc
+	RemoteStationCalibration.cc \
+	CalibrationThread.h \
+	CalibrationThread.cc
 
-bin_PROGRAMS = CalServer
+bin_PROGRAMS = \
+	CalServer \
+	juggle_acc
 
 CalServer_SOURCES = \
+	CalConstants.h \
 	CalServer.h \
-	CalServer.cc
+	CalServer.cc \
+	ACMProxy.h \
+	ACMProxy.cc
 
 CalServer_LDADD = \
-	$(top_builddir)/src/libcal.la -lrsp
+	$(top_builddir)/src/libcal.la \
+	$(top_builddir)/src/libcaldevel.la \
+	-lrtccommon
+
+juggle_acc_SOURCES = \
+	juggle_acc.cc
+
+CalServer_DEPEND = $(LOFAR_DEPEND)
+#	libcal.la \
+#	libcaldevel.la \
+#	librtccommon.la
+
+#	-lrsp
 
 include $(lofar_sharedir)/Makefile.common

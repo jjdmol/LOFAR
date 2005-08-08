@@ -26,13 +26,15 @@
 
 #include <complex>
 #include <blitz/array.h>
+#include <map>
 
-namespace CAL
-{
+namespace LOFAR {
+namespace CAL {
+
   class DipoleModel
   {
   public:
-    DipoleModel(std::string name);
+    DipoleModel(std::string name, const blitz::Array<std::complex<double>, 4>& sens);
     virtual ~DipoleModel();
 
     /**
@@ -55,23 +57,29 @@ namespace CAL
     blitz::Array<std::complex<double>, 4> m_sens;
   };
 
-  class DipoleModelLoader
+  class DipoleModels
   {
   public:
-    
+    DipoleModels();
+    virtual ~DipoleModels();
+
     /**
-     * Load dipole model from file.
-     *
-     * File format: Blitz++ array of appropriate dimensions.
-     * 
-     * @param name Name of the model.
-     * @param sens 4-dimensional sensitivity array.
-     * @return The newly allocated dipole model instance.
+     * Get all models from file or database.
+     * @param url the resource location (e.g. filename or database table),
+     * currently only filename is supported.
      */
-    static /*const*/ DipoleModel* loadFromFile(std::string filename);
+    void getAll(std::string url);
+
+    /**
+     * Get model by name.
+     */
+    const DipoleModel* getByName(std::string name) { return m_models[name]; }
+  private:
+    std::map<std::string, const DipoleModel*> m_models;
   };
 
-};
+}; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* DIPOLEMODEL_H_ */
 

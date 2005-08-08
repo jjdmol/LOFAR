@@ -24,34 +24,35 @@
 #ifndef REMOTESTATIONCALIBRATION_H_
 #define REMOTESTATIONCALIBRATION_H_
 
-#include "SourceCatalog.h"
+#include "Source.h"
 #include "DipoleModel.h"
 #include "CalibrationAlgorithm.h"
-#include "CalibrationResult.h"
+#include "AntennaGains.h"
 #include "SubArray.h"
 #include <blitz/array.h>
 
-namespace CAL
-{
-  class RemoteStationCalibration : public CalibrationAlgorithm
+namespace LOFAR {
+  namespace CAL {
+
+    class RemoteStationCalibration : public CalibrationAlgorithm
     {
     public:
-      RemoteStationCalibration(const SourceCatalog& catalog, const DipoleModel& dipolemodel);
+      RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels);
 
       /**
        * Destructor: delete any dynamically allocated member variables
        */
       virtual ~RemoteStationCalibration() {}
 
-      virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result);
+      virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& result);
       
     private:
-      const std::vector<Source> make_local_sky_model(const SourceCatalog& catalog, double obstime);
+      const std::vector<Source> make_local_sky_model(const Sources& sources, double obstime);
 
       blitz::Array<std::complex<double>, 2> make_ref_acm(const std::vector<Source>& LSM, blitz::Array<double, 3>& AntennaPos, const DipoleModel& dipolemodel, double freq);
       blitz::Array<bool, 2> set_restriction(blitz::Array<double, 3>& AntennaPos, double minbaseline);
-      blitz::Array<std::complex<double>, 2> computeAlpha(blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
-      blitz::Array<std::complex<double>, 1> computeGain(blitz::Array<std::complex<double>, 2>& alpha, blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
+      blitz::Array<std::complex<double>, 2> computeAlpha(const blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2>& restriction);
+      blitz::Array<std::complex<double>, 1> computeGain(blitz::Array<std::complex<double>, 2>& alpha, const blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
       bool issuitable(const ACC& acc, int sb);
 
       blitz::Array<double, 2> matmult(blitz::Array<double, 2> A, blitz::Array<double, 2> B);
@@ -62,7 +63,9 @@ namespace CAL
 
       // member variables needed to store local state
     };
-};
+
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* REMOTESTATIONCALIBRATION_H_ */
 

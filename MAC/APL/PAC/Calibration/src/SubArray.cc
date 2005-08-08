@@ -25,14 +25,19 @@
 #include "CalibrationInterface.h"
 #include <Common/LofarLogger.h>
 
-using namespace CAL;
 using namespace std;
 using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
     
 SubArray::SubArray(string                 name,
 		   const Array<double,3>& pos,
 		   const Array<bool, 2>&  select,
-		   const SpectralWindow&  spw) : AntennaArray(name, pos), m_spw(spw)
+		   double sampling_frequency,
+		   int nyquist_zone,
+		   int nsubbands) :
+  AntennaArray(name, pos),
+  m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands)
 {
   // assert sizes
   ASSERT(select.extent(firstDim) == pos.extent(firstDim)
@@ -57,32 +62,34 @@ SubArray::SubArray(string                 name,
   // TODO: compact array by removing antennas of which both polarizations have not been selected
 
   // create calibration result objects
-  m_result[FRONT] = new CalibrationResult(pos.extent(firstDim), spw.getNumSubbands());
-  m_result[BACK]  = new CalibrationResult(pos.extent(firstDim), spw.getNumSubbands());
+  m_result[FRONT] = new AntennaGains(pos.extent(firstDim), pos.extent(secondDim), m_spw.getNumSubbands());
+  m_result[BACK]  = new AntennaGains(pos.extent(firstDim), pos.extent(secondDim), m_spw.getNumSubbands());
+  ASSERT(m_result[FRONT] && m_result[BACK]);
 }
 
 SubArray::~SubArray()
-{}
-
-void SubArray::startCalibration(CalibrationInterface* cal, const ACC& acc)
 {
-  if (!cal) return;
-
-  cal->calibrate(*this, acc, *m_result[BACK]);
+  if (m_result[FRONT]) delete m_result[FRONT];
+  if (m_result[BACK])  delete m_result[BACK];
 }
 
-bool SubArray::getCalibration(const CalibrationResult*& cal, int buffer)
+void SubArray::calibrate(CalibrationInterface* cal, const ACC& acc)
+{
+  ASSERT(m_result[FRONT]);
+
+  if (cal) cal->calibrate(*this, acc, *m_result[FRONT]);
+
+  m_result[FRONT]->setDone();
+}
+
+bool SubArray::getGains(AntennaGains*& cal, int buffer)
 {
   cal = 0;
+  ASSERT(buffer >= FRONT && buffer <= BACK && m_result[buffer]);
 
-  if (buffer >= FRONT && buffer <= BACK
-      && m_result[buffer] && m_result[buffer]->isComplete())
-    {
-      cal = m_result[buffer];
-      return true;
-    }
-
-  return false;
+  cal = m_result[buffer];
+  
+  return m_result[buffer]->isDone();
 }
 
 void SubArray::abortCalibration()
@@ -92,3 +99,201 @@ const SpectralWindow& SubArray::getSPW() const
 {
   return m_spw;
 }
+
+bool SubArray::isDone()
+{
+  ASSERT(m_result[FRONT]);
+  return m_result[FRONT]->isDone();
+}
+
+void SubArray::clearDone()
+{
+  ASSERT(m_result[FRONT]);
+  m_result[FRONT]->setDone(false);
+}
+
+SubArrays::SubArrays()
+{}
+
+SubArrays::~SubArrays()
+{
+  // delete subarrays from m_new_arrays map and clear map
+  for (map<string, SubArray*>::const_iterator it = m_new_arrays.begin();
+       it != m_new_arrays.begin(); ++it)
+  {
+    if ((*it).second) delete (*it).second;
+  }
+  m_new_arrays.clear();
+
+  // delete subarrays from m_arrays map and clear map
+  for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
+       it != m_arrays.end(); ++it)
+  {
+    if ((*it).second) delete (*it).second;
+  }
+  m_arrays.clear();
+
+  // clear m_dead_arrays list, subarrays have already been delete
+  // because they were also in the m_arrays map
+  m_dead_arrays.clear();
+}
+
+void SubArrays::schedule_add(SubArray* array)
+{
+  if (array) {
+    m_new_arrays[array->getName()] = array;
+  }
+}
+
+bool SubArrays::schedule_remove(string name)
+{
+  // find in m_new_arrays
+  map<string,SubArray*>::iterator it = m_new_arrays.find(name);
+
+  // if found then remove
+  if (it != m_new_arrays.end()) {
+    delete (*it).second;
+    m_new_arrays.erase(it);
+    return true;
+  }
+
+  // if not found in m_new_arrays, try to find in m_arrays
+  it = m_arrays.find(name);
+
+  // if found then move to m_dead_arrays
+  if (it != m_arrays.end()) {
+    m_dead_arrays.push_back((*it).second);
+    return true;
+  }
+
+  return false;
+}
+
+bool SubArrays::schedule_remove(SubArray*& subarray)
+{
+  return (subarray?schedule_remove(subarray->getName()):false);
+}
+
+void SubArrays::creator()
+{
+  /**
+   * New subarrays are listed in m_new_arrays.
+   * This method moves these subarrays to the m_arrays map.
+   */
+  for (map<string, SubArray*>::const_iterator it = m_new_arrays.begin(); it != m_new_arrays.end(); ++it) {
+    m_arrays[(*it).second->getName()] = (*it).second; // add to m_arrays
+  }
+  m_new_arrays.clear(); // clear m_new_array
+}
+
+void SubArrays::undertaker()
+{
+  /**
+   * Subarrays that should be removed are listed in m_dead_arrays.
+   * This method deletes these subarrays and removes them from the m_arrays.
+   * The m_dead_arrays list is cleared when done.
+   */
+  map<string, SubArray*>::iterator findit;
+  for (list<SubArray*>::const_iterator it = m_dead_arrays.begin(); it != m_dead_arrays.end(); ++it) {
+
+    /* Remove from the m_arrays map*/
+    findit = m_arrays.find((*it)->getName());
+    if (findit != m_arrays.end()) {
+      m_arrays.erase(findit);
+    } else {
+      LOG_FATAL_STR("trying to remove non-existing subarray " << (*findit).second->getName());
+      exit(EXIT_FAILURE);
+    }
+
+    delete (*it);
+  }
+  m_dead_arrays.clear();
+}
+
+SubArray* SubArrays::getByName(std::string name)
+{
+  // find in m_new_arrays
+  map<string,SubArray*>::const_iterator it = m_new_arrays.find(name);
+
+  if (it != m_new_arrays.end()) {
+    return (*it).second;
+  }
+
+  // if not found in m_new_arrays, try to find in m_arrays
+  it = m_arrays.find(name);
+
+  if (it != m_arrays.end()) {
+    return (*it).second;
+  }
+  return 0;
+}
+
+void SubArrays::updateAll()
+{
+  for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
+       it != m_arrays.end(); ++it)
+  {
+    SubArray* subarray = (*it).second;
+    
+    // notify subarrays that have completed calibration
+    if (subarray) {
+      if (subarray->isDone()) {
+	subarray->notify();
+	subarray->clearDone(); // we've notified all subscribers, clear done flag
+      }
+    }
+  }
+}
+
+void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc)
+{
+  bool done = false;
+
+  ASSERT(0 != cal);
+
+  mutex_lock();
+  if (acc.isValid()) {
+    for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
+	 it != m_arrays.end(); ++it)
+      {
+	SubArray* subarray = (*it).second;
+	ASSERT(0 != subarray);
+
+	if (!subarray->isDone()) {
+	  LOG_INFO_STR("start calibration of subarray: " << subarray->getName());
+	  subarray->calibrate(cal, acc);
+	  LOG_INFO_STR("finished calibration of subarray: " << subarray->getName());
+	  done = true;
+	}
+      }
+  }
+  mutex_unlock();
+
+  //
+  // prevent reuse of this acc by next calibrate call
+  // TODO: this should be done elsewhere once calibrate
+  // is running in its own thread
+  //
+  if (done) acc.invalidate();
+}
+
+bool SubArrays::remove(string name)
+{
+  // find SubArray
+  map<string,SubArray*>::iterator it = m_arrays.find(name);
+
+  // if found then remove
+  if (it != m_arrays.end()) {
+    if ((*it).second) delete ((*it).second);
+    m_arrays.erase(it);
+    return true;
+  }
+
+  return false;
+}
+
+bool SubArrays::remove(SubArray*& subarray)
+{
+  return (subarray?remove(subarray->getName()):false);
+}
+
