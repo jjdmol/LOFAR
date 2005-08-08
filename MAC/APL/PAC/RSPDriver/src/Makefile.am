@@ -84,6 +84,7 @@ include_HEADERS = \
 	Statistics.h \
 	XCStatistics.h \
 	Versions.h \
+	Clocks.h \
 	\
 	EPA_Protocol.ph \
 	MEPHeader.h \
@@ -98,6 +99,7 @@ librsp_la_SOURCES = \
 	Statistics.cc \
 	XCStatistics.cc \
 	Versions.cc \
+	Clocks.cc \
 	RSP_Protocol.cc
 
 libepa_la_SOURCES = \
@@ -160,6 +162,12 @@ RSPDriver_SOURCES = \
 	GetXCStatsCmd.cc \
 	UpdXCStatsCmd.h \
 	UpdXCStatsCmd.cc \
+	SetClocksCmd.h \
+	SetClocksCmd.cc \
+	GetClocksCmd.h \
+	GetClocksCmd.cc \
+	UpdClocksCmd.h \
+	UpdClocksCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \

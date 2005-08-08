@@ -41,6 +41,9 @@
 #include "UpdStatsCmd.h"
 #include "GetXCStatsCmd.h"
 #include "UpdXCStatsCmd.h"
+#include "SetClocksCmd.h"
+#include "GetClocksCmd.h"
+#include "UpdClocksCmd.h"
 
 #include "BWWrite.h"
 #include "BWRead.h"
@@ -673,6 +676,26 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_getversions(event, port);
       break;
 
+    case RSP_GETCONFIG:
+      rsp_getconfig(event, port);
+      break;
+
+    case RSP_SETCLOCKS:
+      rsp_setclocks(event, port);
+      break;
+
+    case RSP_GETCLOCKS:
+      rsp_getclocks(event, port);
+      break;
+
+    case RSP_SUBCLOCKS:
+      rsp_subclocks(event, port);
+      break;
+
+    case RSP_UNSUBCLOCKS:
+      rsp_unsubclocks(event, port);
+      break;
+
     case F_TIMER:
     {
       if (&port == &m_board[0])
@@ -1055,6 +1078,7 @@ void RSPDriver::rsp_getrcu(GCFEvent& event, GCFPortInterface& port)
     RSPGetrcuackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
+    ack.settings().resize(1);
     port.send(ack);
     return;
   }
@@ -1374,6 +1398,125 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
   {
     (void)m_scheduler.enter(Ptr<Command>(&(*command)));
   }
+}
+
+void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPGetconfigEvent get(event);
+  RSPGetconfigackEvent ack;
+
+  ack.n_rcus = GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+  ack.n_rspboards = GET_CONFIG("RS.N_RSPBOARDS", i);
+  ack.n_tdboards = GET_CONFIG("RS.N_TDBOARDS", i);
+
+  port.send(ack);
+}
+
+void RSPDriver::rsp_setclocks(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<SetClocksCmd> command = new SetClocksCmd(event, port, Command::WRITE);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SETCLOCKS: invalid parameter");
+    
+    RSPSetclocksackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  // if timestamp == Timestamp(0,0) apply changes immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    LOG_INFO("applying Clock control immediately");
+    command->apply(Cache::getInstance().getFront());
+    command->apply(Cache::getInstance().getBack());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+  command->ack(Cache::getInstance().getFront());
+}
+
+void RSPDriver::rsp_getclocks(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetClocksCmd> command = new GetClocksCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    LOG_ERROR("GETCLOCKS: invalid parameter");
+    
+    RSPGetclocksackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+  
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ( (Timestamp(0,0) == command->getTimestamp())
+       && (true == command->readFromCache()))
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+}
+
+void RSPDriver::rsp_subclocks(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<UpdClocksCmd> command = new UpdClocksCmd(event, port, Command::READ);
+
+  RSPSubclocksackEvent ack;
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SUBCLOCKS: invalid parameter");
+    
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = FAILURE;
+    ack.handle = 0;
+
+    port.send(ack);
+    return;
+  }
+  else
+  {
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)&(*command);
+    port.send(ack);
+  }
+
+  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+			  Scheduler::PERIODIC);
+}
+
+void RSPDriver::rsp_unsubclocks(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPUnsubclocksEvent unsub(event);
+
+  RSPUnsubclocksackEvent ack;
+  ack.timestamp = m_scheduler.getCurrentTime();
+  ack.status = FAILURE;
+  ack.handle = unsub.handle;
+
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
+  {
+    ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBCLOCKS: failed to remove subscription");
+  }
+
+  port.send(ack);
 }
 
 int main(int argc, char** argv)
