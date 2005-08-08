@@ -1,5 +1,5 @@
 //#
-//#  ABSBeamServerTask.cc: implementation of ABSBeamServerTask class
+//#  BeamServer.cc: implementation of BeamServer class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,10 +26,10 @@
 #include "ABS_Protocol.ph"
 #include "RSP_Protocol.ph"
 
-#include "ABSBeamServerTask.h"
+#include "BeamServer.h"
 
-#include "ABSBeam.h"
-#include "ABSBeamlet.h"
+#include "Beam.h"
+#include "Beamlet.h"
 
 #include <iostream>
 #include <sstream>
@@ -67,8 +67,8 @@ using namespace RSP_Protocol;
 
 #define SYSTEM_CLOCK_FREQ 120e6 // 120 MHz
 
-BeamServerTask::BeamServerTask(string name, int n_blps)
-    : GCFTask((State)&BeamServerTask::initial, name),
+BeamServer::BeamServer(string name, int n_blps)
+    : GCFTask((State)&BeamServer::initial, name),
       m_pos(n_blps, MEPHeader::N_POL, N_DIM),
       m_weights(COMPUTE_INTERVAL, n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS),
       m_weights16(COMPUTE_INTERVAL, n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS),
@@ -101,15 +101,15 @@ BeamServerTask::BeamServerTask(string name, int n_blps)
   m_weights16 = complex<int16_t>(0,0);
 }
 
-BeamServerTask::~BeamServerTask()
+BeamServer::~BeamServer()
 {}
 
-bool BeamServerTask::isEnabled()
+bool BeamServer::isEnabled()
 {
   return m_rspdriver.isConnected();
 }
 
-GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned long update_timer = (unsigned long)-1;
@@ -139,7 +139,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO(formatString("CONNECTED: port '%s' connected", port.getName().c_str()));
       if (isEnabled())
       {
-	TRAN(BeamServerTask::enabled);
+	TRAN(BeamServer::enabled);
       }
     }
     break;
@@ -171,7 +171,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-void BeamServerTask::collect_garbage()
+void BeamServer::collect_garbage()
 {
   for (list<GCFPortInterface*>::iterator it = m_garbage_list.begin();
        it != m_garbage_list.end();
@@ -182,7 +182,7 @@ void BeamServerTask::collect_garbage()
   m_garbage_list.clear();
 }
 
-GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -299,7 +299,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       if (&m_rspdriver == &port || &m_acceptor == &port)
       {
 	m_acceptor.close();
-	TRAN(BeamServerTask::initial);
+	TRAN(BeamServer::initial);
       }
       else
       {
@@ -336,7 +336,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult BeamServerTask::handle_abs_request(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult BeamServer::handle_abs_request(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -390,7 +390,7 @@ GCFEvent::TResult BeamServerTask::handle_abs_request(GCFEvent& e, GCFPortInterfa
   return status;  
 }
 
-void BeamServerTask::beamalloc_action(ABSBeamallocEvent& ba,
+void BeamServer::beamalloc_action(ABSBeamallocEvent& ba,
 				      GCFPortInterface& port)
 {
   Beam* beam = 0;
@@ -442,7 +442,7 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent& ba,
   }
 }
 
-void BeamServerTask::beamfree_action(ABSBeamfreeEvent& bf,
+void BeamServer::beamfree_action(ABSBeamfreeEvent& bf,
 				     GCFPortInterface& port)
 {
   ABSBeamfreeAckEvent ack;
@@ -475,7 +475,7 @@ void BeamServerTask::beamfree_action(ABSBeamfreeEvent& bf,
   port.send(ack);
 }
 
-void BeamServerTask::beampointto_action(ABSBeampointtoEvent& pt,
+void BeamServer::beampointto_action(ABSBeampointtoEvent& pt,
 					GCFPortInterface& /*port*/)
 {
   Beam* beam = Beam::getFromHandle(pt.handle);
@@ -504,7 +504,7 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent& pt,
   else LOG_ERROR(formatString("BEAMPOINTTO: invalid beam handle (%d)", pt.handle));
 }
 
-void BeamServerTask::wgsettings_action(ABSWgsettingsEvent& wgs,
+void BeamServer::wgsettings_action(ABSWgsettingsEvent& wgs,
 				       GCFPortInterface& port)
 {
   ABSWgsettingsAckEvent sa;
@@ -531,7 +531,7 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent& wgs,
   port.send(sa);
 }
 
-void BeamServerTask::wgenable_action()
+void BeamServer::wgenable_action()
 {
   if (!GET_CONFIG("BeamServer.DISABLE_SETWG", i))
   {
@@ -553,7 +553,7 @@ void BeamServerTask::wgenable_action()
   }
 }
 
-void BeamServerTask::wgdisable_action()
+void BeamServer::wgdisable_action()
 {
   if (!GET_CONFIG("BeamServer.DISABLE_SETWG", i)) {
     RSPSetwgEvent wg;
@@ -593,7 +593,7 @@ inline complex<int16_t> convert2complex_int16_t(complex<W_TYPE> cd)
  * This method is called once every second
  * to calculate the weights for all beamlets.
  */
-void BeamServerTask::compute_weights(long current_seconds)
+void BeamServer::compute_weights(long current_seconds)
 {
   // convert_pointings for all beams for the next deadline
   Array<W_TYPE,2> lmns(COMPUTE_INTERVAL, N_DIM);  // l,m,n coordinates
@@ -625,7 +625,7 @@ void BeamServerTask::compute_weights(long current_seconds)
   LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
-void BeamServerTask::send_weights()
+void BeamServer::send_weights()
 {
   if (!GET_CONFIG("BeamServer.DISABLE_SETWEIGHTS", i)) {
     RSPSetweightsEvent sw;
@@ -644,7 +644,7 @@ void BeamServerTask::send_weights()
   }
 }
 
-void BeamServerTask::update_sbselection()
+void BeamServer::update_sbselection()
 {
   // update subband selection to take
   // the new beamlets for this beam into account
@@ -658,11 +658,11 @@ void BeamServerTask::update_sbselection()
   m_beams_modified = true;
 }
 
-// void BeamServerTask::update_rcusettings()
+// void BeamServer::update_rcusettings()
 // {
 // }
 
-void BeamServerTask::send_sbselection()
+void BeamServer::send_sbselection()
 {
   if (!GET_CONFIG("BeamServer.DISABLE_SETSUBBANDS", i)) {
     RSPSetsubbandsEvent ss;
@@ -717,7 +717,7 @@ void BeamServerTask::send_sbselection()
   }
 }
 
-void BeamServerTask::send_rcusettings()
+void BeamServer::send_rcusettings()
 {
   if (!GET_CONFIG("BeamServer.DISABLE_SETRCU", i)) {
     RSPSetrcuEvent rcu;
@@ -778,7 +778,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
   
-  BeamServerTask abs("BeamServer", n_blps);
+  BeamServer abs("BeamServer", n_blps);
 
   abs.start(); // make initial transition
 

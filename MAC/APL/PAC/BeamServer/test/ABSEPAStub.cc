@@ -28,8 +28,8 @@
 
 #include "ABSEPAStub.h"
 
-#include "ABSBeam.h"
-#include "ABSBeamlet.h"
+#include "Beam.h"
+#include "Beamlet.h"
 
 #include <iostream>
 #include <sys/time.h>

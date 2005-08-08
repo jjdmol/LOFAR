@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#ifndef ABSSPECTRALWINDOW_H_
-#define ABSSPECTRALWINDOW_H_
+#ifndef SPECTRALWINDOW_H_
+#define SPECTRALWINDOW_H_
 
-#include "ABSDirection.h"
+#include "Direction.h"
 
 #include <Common/LofarTypes.h>
 #include <sys/time.h>
@@ -92,4 +92,4 @@ namespace ABS
       }
 };
 
-#endif /* ABSSPECTRALWINDOW_H_ */
+#endif /* SPECTRALWINDOW_H_ */

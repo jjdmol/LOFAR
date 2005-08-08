@@ -20,13 +20,13 @@
 //#
 //#  $Id$
 
-#ifndef ABSBEAM_H_
-#define ABSBEAM_H_
+#ifndef BEAM_H_
+#define BEAM_H_
 
-#include "ABSPointing.h"
-#include "ABSSpectralWindow.h"
+#include "Pointing.h"
+#include "SpectralWindow.h"
 #include "SpectralWindowConfig.h"
-#include "ABSBeamlet.h"
+#include "Beamlet.h"
 #include <time.h>
 
 #include <queue>
@@ -201,4 +201,4 @@ namespace ABS
   inline Pointing Beam::pointing() const { return m_pointing; }
 };
      
-#endif /* ABSBEAM_H_ */
+#endif /* BEAM_H_ */

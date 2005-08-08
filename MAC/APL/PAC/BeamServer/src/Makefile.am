@@ -20,9 +20,6 @@ BUILT_SOURCES = \
 	BeamServer.conf
 
 EXTRA_DIST = $(BUILT_SOURCES)
-#	ABS_Protocol.ph \
-#	BeamServerPorts.conf \
-#	BeamServer.conf
 
 sysconf_DATA = \
 	BeamServerPorts.conf \
@@ -41,31 +38,30 @@ include_HEADERS = \
 lib_LTLIBRARIES = libabs.la
 
 libabs_la_SOURCES = \
-	ABSDirection.h \
-	ABSDirection.cc \
-	ABSPointing.h \
-	ABSPointing.cc \
-	ABSSpectralWindow.h \
-	ABSSpectralWindow.cc \
+	Beamlet2SubbandMap.h \
+	Beamlet2SubbandMap.cc \
+	Direction.h \
+	Direction.cc \
+	Pointing.h \
+	Pointing.cc \
+	SpectralWindow.h \
+	SpectralWindow.cc \
 	SpectralWindowConfig.h \
 	SpectralWindowConfig.cc \
-	ABSBeam.h \
-	ABSBeam.cc \
-	ABSBeamlet.h \
-	ABSBeamlet.cc \
+	Beam.h \
+	Beam.cc \
+	Beamlet.h \
+	Beamlet.cc \
 	gnuplot_i.h \
 	gnuplot_i.cc \
-	$(top_builddir)/src/ABS_Protocol.cc
-
-#	ABSBeamletStats.h \
-#	ABSBeamletStats.cc \
-#	ABSBeamletStatsPSet.h
+	$(top_builddir)/src/ABS_Protocol.cc \
+	$(top_builddir)/src/ABS_Protocol_v2.cc
 
 bin_PROGRAMS = BeamServer
 
 BeamServer_SOURCES = \
-	ABSBeamServerTask.h \
-	ABSBeamServerTask.cc
+	BeamServer.h \
+	BeamServer.cc
 
 BeamServer_LDADD = \
 	$(top_builddir)/src/libabs.la -lrsp

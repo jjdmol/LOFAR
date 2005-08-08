@@ -21,9 +21,9 @@
 //#
 //#  $Id$
 
-#include "ABSSpectralWindow.h"
-#include "ABSBeam.h"
-#include "ABSBeamlet.h"
+#include "SpectralWindow.h"
+#include "Beam.h"
+#include "Beamlet.h"
 
 #include <Suite/suite.h>
 
@@ -126,8 +126,8 @@ public:
 	  TESTC(0 == m_beam[0]->convertPointings(begintime));
 
 	  Array<W_TYPE, 3>           pos(N_ELEMENTS, N_POLARIZATIONS, 3);
-	  Array<complex<W_TYPE>, 4>  weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS);
-	  Array<complex<int16_t>, 4> weights16(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS);
+	  Array<complex<W_TYPE>, 3>  weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_SUBBANDS);
+	  Array<complex<int16_t>, 3> weights16(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_SUBBANDS);
 
 	  weights   = complex<W_TYPE>(0,0);
 	  weights16 = complex<int16_t>(0,0);
@@ -147,17 +147,16 @@ public:
 	  //weights16 = convert2complex_int16_t(conj(weights));
 
 	  for (int i = 0; i < COMPUTE_INTERVAL; i++)
-	    for (int j = 0; j < N_ELEMENTS; j++)
+	    for (int j = 0; j < N_ELEMENTS * N_POLARIZATIONS; j++)
 	      for (int k = 0; k < N_SUBBANDS; k++)
-		for (int l = 0; l < N_POLARIZATIONS; l++)
 		  {
 		    //weights16(i,j,k,l) = conj(weights16(i,j,k,l));
-		    weights16(i,j,k,l) = complex<int16_t>((int16_t)round(weights(i,j,k,l).real()*SCALE),
-							  -1*(int16_t)round(weights(i,j,k,l).imag()*SCALE));
+		    weights16(i,j,k) = complex<int16_t>((int16_t)round(weights(i,j,k).real()*SCALE),
+							-1*(int16_t)round(weights(i,j,k).imag()*SCALE));
 		  }	  
 	  cout << "weights16 = " << weights16 << endl;
 	  
-	  imag(weights16(all, all, all, 1)) *= -1;
+	  imag(weights16(all, all, all)) *= -1;
 
 	  cout << "weights16_imag_neg = " << weights16 << endl;
 

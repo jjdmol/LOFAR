@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#include <ABSBeamlet.h>
-#include <ABSBeam.h>
+#include <Beamlet.h>
+#include <Beam.h>
 
 #include <iostream>
 #include <queue>

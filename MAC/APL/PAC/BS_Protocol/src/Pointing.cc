@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "ABSPointing.h"
+#include "Pointing.h"
 
 using namespace ABS;
 

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "SpectralWindowConfig.h"
-#include "ABSSpectralWindow.h"
+#include "SpectralWindow.h"
 #include "PSAccess.h"
 
 #include <sstream>

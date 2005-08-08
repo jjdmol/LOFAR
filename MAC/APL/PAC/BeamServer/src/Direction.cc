@@ -1,4 +1,4 @@
-//#  ABSSpectralWindow.cc: implementation of the ABS::SpectralWindow class
+//#  ABSDirection.cc: implementation of the ABS::Direction class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,13 @@
 //#
 //#  $Id$
 
-#include "ABSSpectralWindow.h"
+#include "Direction.h"
 
 using namespace ABS;
 
-SpectralWindow::SpectralWindow(double start, double width, int nsubbands, uint8 rcusettings) :
-  m_start(start), m_width(width), m_nsubbands(nsubbands), m_rcusettings(rcusettings)
-{
-}
+Direction::Direction(double angle1, double angle2, Types type) :
+    m_angle1(angle1), m_angle2(angle2), m_type(type)
+{}
+
+Direction::~Direction()
+{}

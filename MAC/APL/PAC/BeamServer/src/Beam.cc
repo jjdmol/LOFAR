@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "ABSBeam.h"
+#include "Beam.h"
 
 #include <math.h>
 #include <iostream>
