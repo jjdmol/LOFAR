@@ -83,4 +83,4 @@ namespace RSP_Protocol
   inline blitz::Array<uint8, 1>& Versions::ap()  { return m_ap_versions; }
 };
 }; // namespace LOFAR
-#endif /* STATISTICS_H_ */
+#endif /* VERSIONS_H_ */

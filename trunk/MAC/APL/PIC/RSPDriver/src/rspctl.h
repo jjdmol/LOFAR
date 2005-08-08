@@ -55,27 +55,56 @@ namespace rspctl
        * Check the acknowledgement sent by the RSPDriver.
        */
       virtual GCFEvent::TResult ack(GCFEvent& e) = 0;
-     
+
+      /**
+       * Set seletable.
+       */
+      void setSelectable(bool selectable) { m_selectable = selectable; }
+
+      /**
+       * Get selectable.
+       */
+       bool getSelectable() { return m_selectable; }
+
       /**
        * Set selection.
        */
       void setSelect(std::list<int> select) { m_select = select; }
 
       /**
-       * Get the RCU mask.
+       * Get the mask (MAX_N_RCUS bits).
        */
       std::bitset<MAX_N_RCUS> getRCUMask() const
 	{
-	  std::bitset<MAX_N_RCUS> rcumask;
+	  std::bitset<MAX_N_RCUS> mask;
 
-	  rcumask.reset();
+	  mask.reset();
 	  std::list<int>::const_iterator it;
-	  for (it = m_select.begin(); it != m_select.end(); it++)
-	    {
-	      if (*it < MAX_N_RCUS) rcumask.set(*it);
-	    }
+	  int count = 0; // limit to ndevices
+	  for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
+	    if (count >= get_ndevices()) break;
+	    if (*it < MAX_N_RCUS) mask.set(*it);
+	  }
 
-	  return rcumask;
+	  return mask;
+	}
+
+      /**
+       * Get the mask (MAX_N_TDS bits).
+       */
+      std::bitset<MAX_N_TDS> getTDMask() const
+	{
+	  std::bitset<MAX_N_TDS> mask;
+
+	  mask.reset();
+	  std::list<int>::const_iterator it;
+	  int count = 0; // limit to ndevices
+	  for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
+	    if (count >= get_ndevices()) break;
+	    if (*it < MAX_N_TDS) mask.set(*it);
+	  }
+
+	  return mask;
 	}
 
       /**
@@ -89,22 +118,23 @@ namespace rspctl
       bool getMode() const { return m_get; }
 
       /**
-       * Set nrcus.
+       * Set ndevices.
        */
-      void set_nrcus(int nrcus) { m_nrcus = nrcus; }
+      void set_ndevices(int ndevices) { m_ndevices = ndevices; }
 
       /**
-       * Get nrcus.
+       * Get ndevices.
        */
-      int get_nrcus() const { return m_nrcus; }
+      int get_ndevices() const { return m_ndevices; }
 
     protected:
-      Command() : m_get(true) {}
+      Command() : m_get(true), m_selectable(true), m_ndevices(0) {}
 
     private:
       std::list<int> m_select;
       bool           m_get; // get or set
-      int            m_nrcus;
+      bool           m_selectable; // is selection possible?
+      int            m_ndevices;
     };
 
   class WeightsCommand : public Command
@@ -194,6 +224,19 @@ namespace rspctl
     private:
     };
 
+  class ClocksCommand : public Command
+    {
+    public:
+      ClocksCommand();
+      virtual ~ClocksCommand() {}
+      virtual void send(GCFPortInterface& port);
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+
+      void setClock(uint32 clock) { m_clock = clock; }
+    private:
+      uint32 m_clock;
+    };
+
   class VersionCommand : public Command
     {
     public:
@@ -217,7 +260,7 @@ namespace rspctl
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      RSPCtl(string name, Command& command);
+      RSPCtl(string name, int argc, char** argv);
       virtual ~RSPCtl();
 
       // state methods
@@ -241,14 +284,24 @@ namespace rspctl
       void mainloop();
 
     private:
-      // member variables
+      // private methods
+      Command* parse_options(int argc, char** argv);
 
     private:
       // ports
       GCFPort m_server;
 
       // the command to execute
-      Command& m_command;
+      Command* m_command;
+
+      // dimensions of the connected hardware
+      int m_nrcus;
+      int m_nrspboards;
+      int m_ntdboards;
+
+      // commandline parameters
+      int    m_argc;
+      char** m_argv;
     };
 
 };

@@ -24,11 +24,13 @@ include = '"SystemStatus.h"';
 include = '"Statistics.h"';
 include = '"XCStatistics.h"';
 include = '"Versions.h"';
+include = '"Clocks.h"';
 include = '"MEPHeader.h"';
 
 prelude = << PRELUDE_END
 
   static const int MAX_N_RCUS = 128 * MEPHeader::N_POL;
+  static const int MAX_N_TDS  = MAX_N_RCUS / (8 * 2); // assuming 8 RCU's per RSP board and 1 TD board for every 2 RSP boards
   static const int SUCCESS    = 1;
   static const int FAILURE    = 0;
 
@@ -748,6 +750,180 @@ event = {
   };
 };
 
-    
+event = {
+  signal = GETCONFIG;
+  dir = IN;
+};
 
+event = {
+  signal = GETCONFIGACK;
+  dir = OUT;
+  param = {
+    name = "n_rcus";
+    type = "int16";
+  };
+  param = {
+    name = "n_rspboards";
+    type = "int16";
+  };
+  param = {
+    name = "n_tdboards";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = SETCLOCKS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "tdmask";
+    type = "std::bitset<MAX_N_TDS>";
+  };
+  param = {
+    name = "clocks";
+    type = "Clocks";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETCLOCKSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
   
+event = {
+  signal = GETCLOCKS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+  param = {
+    name = "tdmask";
+    type = "std::bitset<MAX_N_TDS>";
+  };
+};
+
+event = {
+  signal = GETCLOCKSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "clocks";
+    type = "Clocks";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SUBCLOCKS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "tdmask";
+    type = "std::bitset<MAX_N_TDS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBCLOCKSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UPDCLOCKS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+  param = {
+    name = "clocks";
+    type = "Clocks";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBCLOCKS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBCLOCKSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};

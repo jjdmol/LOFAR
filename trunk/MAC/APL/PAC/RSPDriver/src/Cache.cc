@@ -154,6 +154,9 @@ CacheBuffer::CacheBuffer()
   m_versions.ap().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_versions.ap() = 0;
 
+  m_clocks().resize(GET_CONFIG("RS.N_TDBOARDS", i));
+  m_clocks() = 0;
+
   // print sizes of the cache
   LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
   LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
@@ -234,6 +237,11 @@ XCStatistics& CacheBuffer::getXCStats()
 Versions& CacheBuffer::getVersions()
 {
   return m_versions;
+}
+
+Clocks& CacheBuffer::getClocks()
+{
+  return m_clocks;
 }
 
 /**

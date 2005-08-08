@@ -27,6 +27,7 @@
 
 #include "RSP_Protocol.ph"
 #include <blitz/array.h>
+#include <Common/LofarTypes.h>
 
 namespace RSP
 {
@@ -46,16 +47,17 @@ namespace RSP
       /**
        * Data access methods.
        */
-      RTC::Timestamp                  getTimestamp() const;
-      RSP_Protocol::BeamletWeights&   getBeamletWeights();
-      RSP_Protocol::SubbandSelection& getSubbandSelection();
-      RSP_Protocol::RCUSettings&      getRCUSettings();
-      RSP_Protocol::WGSettings&       getWGSettings();
-      RSP_Protocol::SystemStatus&     getSystemStatus();
-      RSP_Protocol::Statistics&       getSubbandStats();
-      RSP_Protocol::Statistics&       getBeamletStats();
-      RSP_Protocol::XCStatistics&     getXCStats();
-      RSP_Protocol::Versions&         getVersions();
+      RTC::Timestamp                   getTimestamp() const;
+      RSP_Protocol::BeamletWeights&    getBeamletWeights();
+      RSP_Protocol::SubbandSelection&  getSubbandSelection();
+      RSP_Protocol::RCUSettings&       getRCUSettings();
+      RSP_Protocol::WGSettings&        getWGSettings();
+      RSP_Protocol::SystemStatus&      getSystemStatus();
+      RSP_Protocol::Statistics&        getSubbandStats();
+      RSP_Protocol::Statistics&        getBeamletStats();
+      RSP_Protocol::XCStatistics&      getXCStats();
+      RSP_Protocol::Versions&          getVersions();
+      RSP_Protocol::Clocks&            getClocks();
       /*@}*/
 
     private:
@@ -70,6 +72,7 @@ namespace RSP
       RSP_Protocol::XCStatistics     m_xcstats;
       RSP_Protocol::SystemStatus     m_systemstatus;
       RSP_Protocol::Versions         m_versions;
+      RSP_Protocol::Clocks           m_clocks;
   };
 
   /**
