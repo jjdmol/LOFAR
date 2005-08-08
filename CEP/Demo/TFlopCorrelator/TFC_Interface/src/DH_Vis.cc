@@ -59,7 +59,7 @@ void DH_Vis::init()
   //todo: support for multiple freq channels
   itsBufSize = itsNCorrs * itsNBaselines;
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
-  addField("Flag", BlobField<int>(1);
+  addField("Flag", BlobField<int>(1));
   createDataBlock();  // calls fillDataPointers
 
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); 
