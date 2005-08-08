@@ -101,8 +101,16 @@ private:
  };
  
  inline void DH_FIR::setCorrelatorTestPattern() {
-   for (unsigned int i = 0; i < itsBufSize; i++) {
-     *(itsBuffer + i) = 1.0 + 1.i;
+   BufferType value;
+
+   for (int k = 0; k < itsNStations; k++) {
+     for (int l = 0; l < itsNPol; l++) {
+       for (int m = 0; m < itsNTimes; m++) {
+	 value = k*itsNPol + l*1.i;
+
+	 itsMatrix->setValue(itsMatrix->getCursor(k*itsStationDim + l*itsPolDim + m*itsTimeDim), value);
+       }
+     }
    }
  }
 
