@@ -10,11 +10,11 @@ mac.ns.CalServer.acceptor.type=TCP
 #
 # Define dimensions of the ACC array
 #
-CalServer.NSUBBANDS=512
-# ITS-spec: CalServer.NSUBBANDS=101
+CalServer.N_SUBBANDS=100
+# ITS-spec: CalServer.N_SUBBANDS=101
 # 512
-CalServer.NANTENNAS=8
-# ITS-spec: CalServer.NANTENNAS=60
+CalServer.N_ANTENNAS=4
+# ITS-spec: CalServer.N_ANTENNAS=60
 # 4
 # 60
 

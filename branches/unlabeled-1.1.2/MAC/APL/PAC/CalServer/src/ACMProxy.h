@@ -78,8 +78,9 @@ namespace LOFAR {
       uint32  m_handle; // handle for the UPDXCSTATS events
 
       RTC::Timestamp m_starttime; // first ACM will be received at this time
-      int     m_request_subband; // current index for request subband
-      int     m_update_subband;  // current index for update subband
+      int     m_request_subband;  // current index for request subband
+      int     m_update_subband;   // current index for update subband
+      int     m_nrcus;            // the number of RCU's in the station (as reported by the RSPDriver)
     };
 
   }; // namespace CAL

@@ -60,7 +60,8 @@ ACMProxy::ACMProxy(string name, ACCs& accs)
     m_accs(accs),
     m_handle(0),
     m_request_subband(0),
-    m_update_subband(0)
+    m_update_subband(0),
+    m_nrcus(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -103,8 +104,22 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	if (m_rspdriver.isConnected())
 	{
-	  TRAN(ACMProxy::idle);
+	  RSPGetconfigEvent getconfig;
+	  m_rspdriver.send(getconfig);
 	}
+      }
+      break;
+
+    case RSP_GETCONFIGACK:
+      {
+	RSPGetconfigackEvent ack(e);
+	m_nrcus = ack.n_rcus;
+	if (m_nrcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol())
+	{
+	  LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
+	  exit(EXIT_FAILURE);
+	}
+	TRAN(ACMProxy::idle);
       }
       break;
 
@@ -339,7 +354,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
       {
 	RSPUpdxcstatsEvent upd(e);
 
-	if (m_update_subband < GET_CONFIG("CalServer.NSUBBANDS", i)) {
+	if (m_update_subband < GET_CONFIG("CalServer.N_SUBBANDS", i)) {
 	  if (m_handle == upd.handle) {
 	    if (SUCCESS == upd.status) {
 
@@ -363,7 +378,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  TRAN(ACMProxy::unsubscribing);
 	}
 
-	if (m_request_subband < GET_CONFIG("CalServer.NSUBBANDS", i)) {
+	if (m_request_subband < GET_CONFIG("CalServer.N_SUBBANDS", i)) {
 	  // request next subband
 	  RSPSetsubbandsEvent ss;
 	  

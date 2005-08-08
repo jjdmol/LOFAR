@@ -376,7 +376,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
     LOG_DEBUG_STR("positions.shape()" << positions.shape());
 
-    ASSERT(m_accs.getBack().getACC().extent(firstDim)   == GET_CONFIG("CalServer.NSUBBANDS", i));
+    ASSERT(m_accs.getBack().getACC().extent(firstDim)   == GET_CONFIG("CalServer.N_SUBBANDS", i));
     ASSERT(m_accs.getFront().getACC().extent(secondDim) == positions.extent(secondDim));
     ASSERT(m_accs.getFront().getACC().extent(thirdDim)  == positions.extent(secondDim));
     ASSERT(m_accs.getFront().getACC().extent(fourthDim) == positions.extent(firstDim));
@@ -388,7 +388,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 				      select,
 				      start.sampling_frequency,
 				      start.nyquist_zone,
-				      GET_CONFIG("CalServer.NSUBBANDS", i));
+				      GET_CONFIG("CalServer.N_SUBBANDS", i));
 
     m_subarrays.schedule_add(subarray);
 
@@ -530,8 +530,8 @@ int main(int argc, char** argv)
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   ACCs* accs; // the ACC buffers
-  accs = new ACCs(GET_CONFIG("CalServer.NSUBBANDS", i),
-		  GET_CONFIG("CalServer.NANTENNAS", i),
+  accs = new ACCs(GET_CONFIG("CalServer.N_SUBBANDS", i),
+		  GET_CONFIG("CalServer.N_ANTENNAS", i),
 		  NPOL);
 
   if (!accs) {
