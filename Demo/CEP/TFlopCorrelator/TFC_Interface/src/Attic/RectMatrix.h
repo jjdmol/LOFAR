@@ -124,7 +124,7 @@ class RectMatrix {
 #endif
 
  private:
-  bool areInSameDim(cursorType cur1, cursorType cur2, const dimType& dim) const;
+  bool areInSameDim(const cursorType& cur1, const cursorType& cur2, const dimType& dim) const;
 
   friend class DataHolder;
 

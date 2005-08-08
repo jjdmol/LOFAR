@@ -109,10 +109,10 @@ inline void RectMatrix<valueType>::moveCursorN(cursorType* cursorp, const dimTyp
 template <typename valueType>
 inline valueType* RectMatrix<valueType>::getBlock(const cursorType& cursor, const dimType& dim, const int noElemOfDim, const int noTotalElem) const {
   DBGASSERTSTR(isCursorValid(cursor), "Invalid cursor RectMatrix::getBlock()");
-  DBGASSERTSTR(areInSameDim(cursor, cursor + dim.memSize * (noElem-1)), "Attempted to get block that crosses end of dimension");
+  DBGASSERTSTR(areInSameDim(cursor, cursor + dim.memSize * (noElemOfDim-1), dim), "Attempted to get block that crosses end of dimension");
   // this assert is only needed if we want to forbid getting pointers to higher dimension blocks
   //  DBGASSERTSTR(dim.memSize == sizeof(valueType), "Attempted to get block that is not of the lowest dimension");
-  DBGASSERTSTR(dim.memSize * noElem == noTotalElem, "Attempted to get block but noTotalElem, noElemOfDim and dimension do not match");
+  DBGASSERTSTR(dim.memSize * noElemOfDim == noTotalElem, "Attempted to get block but noTotalElem, noElemOfDim and dimension do not match");
   return &(itsData[cursor]); };
 
 
@@ -171,7 +171,7 @@ inline void RectMatrix<valueType>::setBuffer(valueType* buffer, int size){
 
 
 template <typename valueType>
-inline bool RectMatrix<valueType>::areInSameDim(cursorType cur1, cursorType cur2, const dimType& dim) const {
+inline bool RectMatrix<valueType>::areInSameDim(const cursorType& cur1, const cursorType& cur2, const dimType& dim) const {
   DBGASSERTSTR(isCursorValid(cur1), "Invalid cursor RectMatrix::areInSameDim()");
   DBGASSERTSTR(isCursorValid(cur2), "Invalid cursor RectMatrix::areInSameDim()");
   // check if the cursors have the same position in this dimension
