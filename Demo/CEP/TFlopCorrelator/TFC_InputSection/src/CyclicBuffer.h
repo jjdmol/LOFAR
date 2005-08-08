@@ -36,21 +36,21 @@
 namespace LOFAR
 {
 
-// Item of the CyclicBuffer
+// Element of the CyclicBuffer
 template <class TYPE>
-class BufferItem
+class BufferElement
 {
  public:
-  BufferItem(TYPE DataItem) :
-    itsItem(DataItem)
+  BufferElement(TYPE DataElement) :
+    itsElement(DataElement)
     {
     }
-
+    
     // Control single write multiple read access
     ThreadRWLock itsRWLock;
-  
+    
     // Pointer to the TYPE object.
-    TYPE itsItem;
+    TYPE itsElement;
 
  private:
     
@@ -67,35 +67,31 @@ class CyclicBuffer
 {
  public:
 
-  CyclicBuffer();
+  CyclicBuffer(int nelements);
   ~CyclicBuffer();
   
-  // add item into buffer
-  int   AddBufferItem(TYPE DataItem);
-  
-  // clear item from buffer
-  void  RemoveBufferItem(int ID);
-  
-  // clear the buffer
-  void  RemoveItems();
 
   // write an item and adjust head and count
-  TYPE GetAutoWritePtr(int& ID);
+  TYPE* getAutoWritePtr(int& ID);
 
   // read oldest item and adjust tail and count
-  const TYPE GetAutoReadPtr(int& ID);
+  TYPE* getAutoReadPtr(int& ID);
 
   // write a block and adjust tail and count
-  const TYPE GetBlockWritePtr(int nelements, int& ID);
+  TYPE* getBlockWritePtr(int nelements, int& ID);
 
-  // read a block beginning at oldest item + offset and adjust tail and count
-  const TYPE GetBlockReadPtr(int offset, int nelements, int& ID);
+  // read a block and adjust tail and count
+  TYPE* getBlockReadPtr(int nelements, int& ID);
 
   // read oldest item without adjusting tail and count 
-  const TYPE GetFirstReadPtr(int& ID);
+  TYPE* getFirstReadPtr(int& ID);
 
-  // (over)write an item without adjusting head and count
-  TYPE GetManualWritePtr(int ID);
+  //int getFirstWriteID();
+
+  // (over)write elements without adjusting head and count
+  TYPE* getManualWritePtr(int nelements, int startID);
+
+  void setOffset(int offset, int& ID);
   
   // release locks
   void WriteUnlockElements(int ID, int nelements);
@@ -112,10 +108,21 @@ class CyclicBuffer
 
  private:
 
+  // add elements to buffer
+  int   AddBufferElement(TYPE DataElement);
+  
+  // clear element from buffer
+  void  RemoveBufferElement(int ID);
+  
+  // clear the buffer
+  void  RemoveElements();
+
+  // set locks
   void ReadLockElements(int ID, int nelements);
   void WriteLockElements(int ID, int nelements);
   
-  vector< BufferItem <TYPE> > itsBuffer;
+  vector< BufferElement <TYPE> > itsBuffer;
+  TYPE* itsElements;
 
   int itsHeadIdx;
   int itsTailIdx;
@@ -127,7 +134,7 @@ class CyclicBuffer
 };
 
 template<class TYPE>
-CyclicBuffer<TYPE>::CyclicBuffer() :
+CyclicBuffer<TYPE>::CyclicBuffer(int nelements) :
     itsHeadIdx(0),
     itsTailIdx(0),
     itsCount(0)
@@ -135,18 +142,26 @@ CyclicBuffer<TYPE>::CyclicBuffer() :
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);
   pthread_cond_init (&space_available, NULL);
+
+  // create the cyclic buffer
+  itsElements = new TYPE[nelements];
+  for (int i=0; i< nelements; i++) {
+    AddBufferElement(itsElements[i]);
+  }
 }
 
 template<class TYPE>
 CyclicBuffer<TYPE>::~CyclicBuffer()
-{
-  itsBuffer.clear();
+{ 
+  // clear the cyclic buffer
+  RemoveElements();
+  delete[] itsElements;
 }
 
 template<class TYPE>
-int CyclicBuffer<TYPE>::AddBufferItem(TYPE DataItem)
+int CyclicBuffer<TYPE>::AddBufferElement(TYPE DataElement)
 {
-  BufferItem<TYPE> elem(DataItem);
+  BufferElement<TYPE> elem(DataElement);
 
   pthread_mutex_lock(&buffer_mutex);
 
@@ -160,7 +175,7 @@ int CyclicBuffer<TYPE>::AddBufferItem(TYPE DataItem)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::RemoveBufferItem(int ID)
+void CyclicBuffer<TYPE>::RemoveBufferElement(int ID)
 {
   // lock the buffer for the duration of this routine
   pthread_mutex_lock(&buffer_mutex);
@@ -172,7 +187,7 @@ void CyclicBuffer<TYPE>::RemoveBufferItem(int ID)
 }
 
 template<class TYPE>
-void CyclicBuffer<TYPE>::RemoveItems(void)
+void CyclicBuffer<TYPE>::RemoveElements(void)
 {
   // lock the buffer for the duration of this routine
   pthread_mutex_lock(&buffer_mutex);
@@ -184,7 +199,7 @@ void CyclicBuffer<TYPE>::RemoveItems(void)
 }
 
 template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetAutoWritePtr(int& ID)
+TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
 {
 
   pthread_mutex_lock(&buffer_mutex);
@@ -214,11 +229,11 @@ TYPE CyclicBuffer<TYPE>::GetAutoWritePtr(int& ID)
   }
   pthread_mutex_unlock(&buffer_mutex);
 
-  return itsBuffer[ID].itsItem;
+  return &itsBuffer[ID].itsElement;
 }
 
 template<class TYPE>
-const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
+TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
@@ -244,12 +259,14 @@ const TYPE CyclicBuffer<TYPE>::GetAutoReadPtr(int& ID)
   pthread_cond_broadcast(&space_available);
 
   pthread_mutex_unlock(&buffer_mutex);
+
+  Dump();
   
-  return itsBuffer[ID].itsItem;
+  return &itsBuffer[ID].itsElement;
 }
 
 template<class TYPE>
-const TYPE CyclicBuffer<TYPE>::GetBlockWritePtr(int nelements, int& ID)
+TYPE* CyclicBuffer<TYPE>::getBlockWritePtr(int nelements, int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
   
@@ -280,37 +297,23 @@ const TYPE CyclicBuffer<TYPE>::GetBlockWritePtr(int nelements, int& ID)
   }
   pthread_mutex_unlock(&buffer_mutex);
 
-  return itsBuffer[ID].itsItem;
+  return &itsBuffer[ID].itsElement;
 }
 
 
 template<class TYPE>
-const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int nelements, int& ID)
+TYPE* CyclicBuffer<TYPE>::getBlockReadPtr(int nelements, int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
-
-  int minelements;
-  if (offset >= 0) {
-    minelements = offset + nelements;
-  } else {
-    minelements = nelements;
-  }
-    
+ 
   // wait until enough elements are available
-  while (itsCount < MIN_COUNT || itsCount < minelements) 
+  while (itsCount - nelements < MIN_COUNT) 
   {
      pthread_cond_wait(&data_available, &buffer_mutex);
   }
-  // CONDITION: itsCount >= MIN_COUNT &&  itscount >= minelements
+  // CONDITION: itsCount - nelements >= MIN_COUNT
   
-  // set offset (note: offset can be less than 0
-  ID = itsTailIdx + offset;
-  if (ID >= (int)itsBuffer.size()) {
-    ID -= (int)itsBuffer.size();
-  }
-  if (ID < 0) {
-    ID += (int)itsBuffer.size();
-  }
+  ID = itsTailIdx;
 
   // lock the elements
   ReadLockElements(ID, nelements); 
@@ -328,11 +331,11 @@ const TYPE CyclicBuffer<TYPE>::GetBlockReadPtr(int offset, int nelements, int& I
 
   pthread_mutex_unlock(&buffer_mutex);
   
-  return itsBuffer[ID].itsItem;
+  return &itsBuffer[ID].itsElement;
 }
 
 template<class TYPE>
-const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
+TYPE* CyclicBuffer<TYPE>::getFirstReadPtr(int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
@@ -348,13 +351,19 @@ const TYPE CyclicBuffer<TYPE>::GetFirstReadPtr(int& ID)
  
   pthread_mutex_unlock(&buffer_mutex);
   
-  return itsBuffer[ID].itsItem;
+  return &itsBuffer[ID].itsElement;
 }
 
+/* template<class TYPE> */
+/* int CyclicBuffer<TYPE>::getFirstWriteID() */
+/* { */
+/*   return itsHeadIdx; */
+/* } */
+
 template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
+TYPE* CyclicBuffer<TYPE>::getManualWritePtr(int nelements, int startID)
 {
-  if ( (ID >= itsBuffer.size()) || (ID < 0))
+  if ( (startID >= itsBuffer.size()) || (startID < 0))
   {
    LOG_TRACE_RTTI("CyclicBuffer::getWriteUserItem: ID has invalid value");
    return 0;
@@ -363,11 +372,37 @@ TYPE CyclicBuffer<TYPE>::GetManualWritePtr(int ID)
   pthread_mutex_lock(&buffer_mutex); 
 
   // lock the elements
-  WriteLockElements(ID, 1);
+  WriteLockElements(startID, nelements);
 
   pthread_mutex_unlock(&buffer_mutex);
 
-  return itsBuffer[ID].itsItem;
+  return &itsBuffer[startID].itsElement;
+}
+
+template<class TYPE>
+void CyclicBuffer<TYPE>::setOffset(int offset, int& ID)
+{
+  pthread_mutex_lock(&buffer_mutex);
+
+  // wait until enough space becomes available
+  while (itsCount - offset < MIN_COUNT)
+  {
+    pthread_cond_wait(&space_available, &buffer_mutex);
+  }
+
+  // CONDITION: itsCount - offset >= MIN_COUNT
+  
+  itsTailIdx += offset;
+  if (itsTailIdx >= (int)itsBuffer.size()) {
+    itsTailIdx -= (int)itsBuffer.size();
+  }
+  else if (itsTailIdx < 0) {
+    itsTailIdx += (int)itsBuffer.size();
+  }
+  ID = itsTailIdx;
+  itsCount -= offset;
+   
+  pthread_mutex_unlock(&buffer_mutex);
 }
 
 template<class TYPE>
