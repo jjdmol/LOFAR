@@ -72,10 +72,10 @@ WH_SBCollect* WH_SBCollect::make(const string& name)
 void WH_SBCollect::process() 
 { 
   RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-  RectMatrix<DH_FIR::BufferType>& outMatrix = ((DH_FIR*)getDataManager().getInHolder(0))->getDataMatrix();
+  RectMatrix<DH_FIR::BufferType>& outMatrix = ((DH_FIR*)getDataManager().getOutHolder(0))->getDataMatrix();
 
   dimType outStationDim = outMatrix.getDim("Station");
-  dimType inStationDim = inMatrix->getDim("Station");
+  dimType inStationDim = inMatrix->getDim("Stations");
 
   RectMatrix<DH_FIR::BufferType>::cursorType outCursor = outMatrix.getCursor( 0 * outStationDim);
   RectMatrix<DH_RSP::BufferType>::cursorType inCursor = inMatrix->getCursor( 0 * inStationDim);
@@ -85,9 +85,9 @@ void WH_SBCollect::process()
   {
     inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
     inCursor = inMatrix->getCursor(0*inStationDim);
-    outMatrix.moveCursor(&outCursor, outStationDim);
     // copy all freq, time and pol from an input to output
     inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
+    outMatrix.moveCursor(&outCursor, outStationDim);
   }
 
 #if 0

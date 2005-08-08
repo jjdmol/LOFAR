@@ -1,4 +1,4 @@
-//#  tWH_Transpose.h: Application holder for FIR filter tester
+//#  tWH_SBCollect.h: Application holder for FIR filter tester
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,11 +32,11 @@
 
 namespace LOFAR
 {
-  class AH_Transpose: public LOFAR::TinyApplicationHolder {
+  class AH_SBCollect: public LOFAR::TinyApplicationHolder {
 
   public:
-    AH_Transpose();
-    virtual ~AH_Transpose();
+    AH_SBCollect();
+    virtual ~AH_SBCollect();
 
     virtual void define (const KeyValueMap& kvm);
     void undefine();
@@ -50,12 +50,10 @@ namespace LOFAR
     DataHolder* itsInDH1;
     DataHolder* itsInDH2;
     DataHolder* itsOutDH1;
-    DataHolder* itsOutDH2;
     Connection* itsInCon1;
     Connection* itsInCon2;
     Connection* itsOutCon1;
-    Connection* itsOutCon2;
-    TransportHolder* itsTH;
+    vector<TransportHolder*> itsTHs;
   };
 } // namespace LOFAR
 
