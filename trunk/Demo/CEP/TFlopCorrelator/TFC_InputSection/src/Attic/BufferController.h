@@ -61,7 +61,7 @@ class BufferController
    ~BufferController();
 
    timestamp_t getFirstStamp();
-   bool getElements(void* buf, int* invalidcount, timestamp_t startstamp, int nelements);
+   bool getElements(void* buf, int& invalidcount, timestamp_t startstamp, int nelements);
    bool writeElements(void* buf, timestamp_t rspstamp, int nelements, int invalid);
    bool rewriteElements(void* buf, timestamp_t startstamp, int nelements);
  

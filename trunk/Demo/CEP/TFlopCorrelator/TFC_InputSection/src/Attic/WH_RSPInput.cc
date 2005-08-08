@@ -299,7 +299,7 @@ void WH_RSPInput::process()
 
     // copy 'itsNSamplesToCopy' subband samples from buffer into outgoing dataholder
     itsBufControl[s]->getElements(rspDHp->getBuffer(),
-                                  &invalidcount, 
+                                  invalidcount, 
                                   delayedstamp, 
                                   itsNSamplesToCopy);
 
