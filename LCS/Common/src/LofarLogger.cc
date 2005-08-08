@@ -137,6 +137,7 @@ void initTraceModule (void) {
 	traceProp.setProperty("log4cplus.additivity.TRC", "false");
 	traceProp.setProperty("log4cplus.appender.STDERR", "log4cplus::ConsoleAppender");
 	traceProp.setProperty("log4cplus.appender.STDERR.logToStdErr", "true");
+	traceProp.setProperty("log4cplus.appender.STDERR.ImmediateFlush", "true");
 	traceProp.setProperty("log4cplus.appender.STDERR.layout","log4cplus::PatternLayout");
 	traceProp.setProperty("log4cplus.appender.STDERR.layout.ConversionPattern",
 							"%D{%y%m%d %H%M%S,%q} [%t] %-6p %c{3} - %m%n");
