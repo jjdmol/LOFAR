@@ -811,25 +811,33 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
     _convertRelativeTimes(ps);
     
     TLogicalDeviceTypes ldType = (TLogicalDeviceTypes)ps->getInt32("logicalDeviceType");
-    bool beamletsAllocated = false;
-    if(ldType == LDTYPE_VIRTUALINSTRUMENT) 
+    bool beamletsAllocated = true;
+    
+    // find the subbands allocations in VI sections
+    childKeys         = ps->getStringVector("childs");
+    for(vector<string>::iterator childsIt=childKeys.begin();beamletsAllocated && childsIt!=childKeys.end();++childsIt)
     {
-      // allocate beamlets for VI's
-      beamletsAllocated = _allocateBeamlets(VIrootID,ps);
-      if(!beamletsAllocated)
+      string ldType = ps->getString(*childsIt + ".logicalDeviceType");
+      if(ldType == string("VIRTUALINSTRUMENT") || atoi(ldType.c_str()) == static_cast<int>(LDTYPE_VIRTUALINSTRUMENT))
       {
-        SASResponseEvent sasResponseEvent;
-        sasResponseEvent.result = SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED;
-        sasResponseEvent.VIrootID = VIrootID;
-
-        if(port != 0)
+        boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(*childsIt)));
+        // allocate beamlets for VI's
+        beamletsAllocated = _allocateBeamlets(VIrootID,psVI);
+        if(!beamletsAllocated)
         {
-          port->send(sasResponseEvent);      
+          SASResponseEvent sasResponseEvent;
+          sasResponseEvent.result = SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED;
+          sasResponseEvent.VIrootID = VIrootID;
+  
+          if(port != 0)
+          {
+            port->send(sasResponseEvent);      
+          }
+          m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
         }
-        m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
       }
     }
-    if(beamletsAllocated || ldType != LDTYPE_VIRTUALINSTRUMENT)
+    if(beamletsAllocated)
     {
       string tempFileName = APLUtilities::getTempFileName();
       ps->writeFile(tempFileName);

@@ -28,6 +28,7 @@
 #include <APLCommon/StartDaemon.h>
 #include "VirtualInstrumentFactory.h"
 #include "MaintenanceVIFactory.h"
+#include "ObservationVIFactory.h"
 #include <ArrayReceptorGroup/ArrayReceptorGroupFactory.h>
 #include <ArrayOperations/ArrayOperationsFactory.h>
 
@@ -48,12 +49,14 @@ int main(int argc, char* argv[])
   boost::shared_ptr<ArrayReceptorGroupFactory>  argFactory(new ArrayReceptorGroupFactory);
   boost::shared_ptr<ArrayOperationsFactory>     aoFactory(new ArrayOperationsFactory);
   boost::shared_ptr<MaintenanceVIFactory>       mviFactory(new MaintenanceVIFactory);
+  boost::shared_ptr<ObservationVIFactory>       oviFactory(new ObservationVIFactory);
   
   StartDaemon sd(string("VIC_VIStartDaemon"));
   sd.registerFactory(LDTYPE_VIRTUALINSTRUMENT,viFactory);
   sd.registerFactory(LDTYPE_VIRTUALARRAY,argFactory);
   sd.registerFactory(LDTYPE_ARRAYOPERATIONS,aoFactory);
   sd.registerFactory(LDTYPE_MAINTENANCEVI,mviFactory);
+  sd.registerFactory(LDTYPE_OBSERVATION,oviFactory);
   sd.start(); // make initial transition
 
   GCFTask::run();
