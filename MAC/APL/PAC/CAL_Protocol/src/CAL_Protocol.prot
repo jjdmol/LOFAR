@@ -123,6 +123,15 @@ event = {
 	    name = "handle";
 	    type = "uint32";
       };
+      param = { // sampling_frequency
+	    name = "sampling_frequency";
+	    type = "double";
+      };
+      param = { // nyquist_zone
+	    name = "nyquist_zone";
+	    type = "int";
+      };
+      // sampling_frequency and nyquist_zone determine the spectral window
 };
 
 event = {

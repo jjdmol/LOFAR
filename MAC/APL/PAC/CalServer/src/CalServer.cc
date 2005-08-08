@@ -454,6 +454,11 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
     // attach subscription to the subarray
     subarray->attach(subscription);
 
+    // return sampling_frequency and nyquist_zone
+    const SpectralWindow& spw = subarray->getSPW();
+    ack.sampling_frequency = spw.getSamplingFrequency();
+    ack.nyquist_zone = spw.getNyquistZone();
+
   } else {
 
     ack.status = ERR_NO_SUBARRAY;
