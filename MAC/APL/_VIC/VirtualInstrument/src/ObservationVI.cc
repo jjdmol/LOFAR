@@ -1,4 +1,4 @@
-//#  ArrayOperations.cc: Implementation of the ArrayOperations task
+//#  ObservationVI.cc: Implementation of the Observation VirtualInstrument task
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,11 +25,8 @@
 #include <Common/LofarLogger.h>
 
 #include <boost/shared_ptr.hpp>
-#include <Common/lofar_sstream.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVDynArr.h>
 #include <APLCommon/APLUtilities.h>
-#include <ArrayOperations/ArrayOperations.h>
+#include "ObservationVI.h"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -40,28 +37,28 @@ namespace LOFAR
   using namespace ACC;
   using namespace APLCommon;
   
-namespace AAO
+namespace AVI
 {
-INIT_TRACER_CONTEXT(ArrayOperations,LOFARLOGGER_PACKAGE);
+INIT_TRACER_CONTEXT(ObservationVI,LOFARLOGGER_PACKAGE);
 
 // Logical Device version
-const string ArrayOperations::SO_VERSION = string("1.0");
+const string ObservationVI::VI_VERSION = string("1.0");
 
-ArrayOperations::ArrayOperations(const string& taskName, 
+ObservationVI::ObservationVI(const string& taskName, 
                                      const string& parameterFile, 
                                      GCFTask* pStartDaemon) :
-  LogicalDevice(taskName,parameterFile,pStartDaemon,SO_VERSION)
+  LogicalDevice(taskName,parameterFile,pStartDaemon,VI_VERSION)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
 
-ArrayOperations::~ArrayOperations()
+ObservationVI::~ObservationVI()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
+void ObservationVI::concrete_handlePropertySetAnswer(GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(answer)).c_str());
   switch(answer.signal)
@@ -77,12 +74,10 @@ void ArrayOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
     case F_VGETRESP:
     case F_VCHANGEMSG:
     {
-      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       break;
     }
     case F_EXTPS_LOADED:
     {
-      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
       break;
     }
     case F_EXTPS_UNLOADED:
@@ -110,7 +105,7 @@ void ArrayOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
   }
 }
 
-GCFEvent::TResult ArrayOperations::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult ObservationVI::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -129,7 +124,7 @@ GCFEvent::TResult ArrayOperations::concrete_initial_state(GCFEvent& event, GCFPo
   return status;
 }
 
-GCFEvent::TResult ArrayOperations::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult ObservationVI::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -148,7 +143,7 @@ GCFEvent::TResult ArrayOperations::concrete_idle_state(GCFEvent& event, GCFPortI
   return status;
 }
 
-GCFEvent::TResult ArrayOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult ObservationVI::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -157,19 +152,9 @@ GCFEvent::TResult ArrayOperations::concrete_claiming_state(GCFEvent& event, GCFP
   {
     case F_ENTRY:
     {
-      break;
-    }
-    
-    case LOGICALDEVICE_CLAIMED:
-    {
-      LOG_TRACE_FLOW("CLAIMED received");
-      // check if all childs are claimed
-      if(_childsInState(100.0, LDTYPE_STATIONOPERATIONS, LOGICALDEVICE_STATE_CLAIMED))
-      {
-        // enter claimed state
-        newState  = LOGICALDEVICE_STATE_CLAIMED;
-        errorCode = LD_RESULT_NO_ERROR;
-      }
+      // enter claimed state
+      newState  = LOGICALDEVICE_STATE_CLAIMED;
+      errorCode = LD_RESULT_NO_ERROR;
       break;
     }
     
@@ -180,7 +165,7 @@ GCFEvent::TResult ArrayOperations::concrete_claiming_state(GCFEvent& event, GCFP
   return status;
 }
 
-GCFEvent::TResult ArrayOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult ObservationVI::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -188,32 +173,7 @@ GCFEvent::TResult ArrayOperations::concrete_claimed_state(GCFEvent& event, GCFPo
   return status;
 }
 
-GCFEvent::TResult ArrayOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-
-  switch (event.signal)
-  {
-    case LOGICALDEVICE_PREPARED:
-    {
-      LOG_TRACE_FLOW("PREPARED received");
-      // check if all childs are prepared
-      if(_childsInState(100.0, LDTYPE_STATIONOPERATIONS, LOGICALDEVICE_STATE_SUSPENDED))
-      {
-        newState=LOGICALDEVICE_STATE_SUSPENDED;
-      }
-      break;
-    }
-
-    default:
-      break;
-  }
-  
-  return status;
-}
-
-GCFEvent::TResult ArrayOperations::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult ObservationVI::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -222,65 +182,78 @@ GCFEvent::TResult ArrayOperations::concrete_active_state(GCFEvent& event, GCFPor
   {
     case F_ENTRY:
     {
+      // preparing is not necessary
+      // enter suspended state
+      newState=LOGICALDEVICE_STATE_SUSPENDED;
+      errorCode = LD_RESULT_NO_ERROR;
       break;
     }
-          
+    
     default:
       break;
-  }  
+  }
+  
   return status;
 }
 
-GCFEvent::TResult ArrayOperations::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult ObservationVI::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  newState=LOGICALDEVICE_STATE_IDLE;
   return status;
 }
 
-void ArrayOperations::concreteClaim(GCFPortInterface& /*port*/)
+GCFEvent::TResult ObservationVI::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+
+  newState=LOGICALDEVICE_STATE_GOINGDOWN;
+  return status;
 }
 
-void ArrayOperations::concretePrepare(GCFPortInterface& /*port*/)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-}
-
-void ArrayOperations::concreteResume(GCFPortInterface& /*port*/)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-}
-
-void ArrayOperations::concreteSuspend(GCFPortInterface& /*port*/)
+void ObservationVI::concreteClaim(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayOperations::concreteRelease(GCFPortInterface& /*port*/)
+void ObservationVI::concretePrepare(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayOperations::concreteParentDisconnected(GCFPortInterface& /*port*/)
+void ObservationVI::concreteResume(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayOperations::concreteChildDisconnected(GCFPortInterface& /*port*/)
+void ObservationVI::concreteSuspend(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayOperations::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
+void ObservationVI::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-}; // namespace AAO
+void ObservationVI::concreteParentDisconnected(GCFPortInterface& /*port*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+}
+
+void ObservationVI::concreteChildDisconnected(GCFPortInterface& /*port*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+}
+
+void ObservationVI::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+}
+
+}; // namespace VIC
 }; // namespace LOFAR
 
