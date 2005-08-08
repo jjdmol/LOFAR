@@ -1,5 +1,5 @@
 //#
-//#  CALTest.cc: implementation of CALTest class
+//#  CalTest.cc: implementation of CalTest class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -40,12 +40,13 @@
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
+using namespace CAL;
 using namespace RTC;
 using namespace CAL_Protocol;
-using namespace CAL_Test;
 
-CalTest::CalTest(string name)
-  : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0)
+CalTest::CalTest(string name, string arrayname, int nantennas, int clock, int nyquistzone)
+  : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
+  m_arrayname(arrayname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
@@ -130,20 +131,18 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	m_name = name.str();
 	START_TEST(m_name, "test START");
 
-	m_counter1 = 0;
-
 	CALStartEvent start;
 
 	start.name   = m_name;
-	start.parent = "FTS-1-LBA";
+	start.parent = m_arrayname;
 	start.subset.reset();
 
-	// first 8 antennas (16 receivers)
-	for (int i = 0; i < 8; i++) {
+	// select antennas
+	for (int i = 0; i < 2 * m_nantennas; i++) {
 	  start.subset.set(i);
 	}
-	start.sampling_frequency = 160e6; // 160 MHz
-	start.nyquist_zone = 1;
+	start.sampling_frequency = m_clock;
+	start.nyquist_zone = m_nyquistzone;
 
 	TESTC_ABORT(m_server.send(start), CalTest::final);
       }
@@ -187,14 +186,13 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
 
-	if (m_counter1++ >= 2) {
+	//LOG_INFO_STR("gains=" << update.gains.getGains());
 
-	  CALUnsubscribeEvent unsubscribe;
+	CALUnsubscribeEvent unsubscribe;
 	
-	  unsubscribe.handle = m_handle;
-
-	  TESTC_ABORT(m_server.send(unsubscribe), CalTest::final);
-	}
+	unsubscribe.handle = m_handle;
+	
+	TESTC_ABORT(m_server.send(unsubscribe), CalTest::final);
       }
       break;
 
@@ -219,263 +217,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	TESTC_ABORT(ack.name == m_name, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
-	TRAN(CalTest::test002); // next test
-      }
-      break;
-
-    case F_DISCONNECTED:
-      {
-	port.close();
-
-	FAIL_ABORT("unexpected disconnect", CalTest::final);
-      }
-      break;
-
-    case F_EXIT:
-      {
-	STOP_TEST();
-      }
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-    }
-
-  return status;
-}
-
-GCFEvent::TResult CalTest::test002(GCFEvent& e, GCFPortInterface& port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  //
-  // Scenario for test002 (successful start, subscribe, update, stop [no unsubscribe])
-  // 
-  // START       ->
-  //             <- STARTACK
-  // SUBSCRIBE   ->
-  //             <- SUBSCRIBEACK
-  //
-  //             <- UPDATE (*) (1st update)
-  // STOP        ->
-  //             <- STOPACK
-  //
-  
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
-	ostringstream name;
-	name << "test002_pid=" << (int)getpid();
-	m_name = name.str();
-	START_TEST(m_name, "test START");
-
-	m_counter1 = 0; // reset update counter
-
-	CALStartEvent start;
-
-	start.name   = m_name;
-	start.parent = "FTS-1-LBA";
-	start.subset.reset();
-
-	// first 8 antennas (16 receivers)
-	for (int i = 0; i < 8; i++) {
-	  start.subset.set(i);
-	}
-	start.sampling_frequency = 160e6; // 160 MHz
-	start.nyquist_zone = 1;
-
-	TESTC_ABORT(m_server.send(start), CalTest::final);
-      }
-      break;
-
-    case CAL_STARTACK:
-      {
-	CALStartackEvent ack(e);
-
-	TESTC_ABORT(ack.name == m_name, CalTest::final);
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
-
-	// send subscribe
-	CALSubscribeEvent subscribe;
-
-	subscribe.name = m_name;
-	subscribe.subbandset.reset();
-	subscribe.subbandset.set(100);
-
-	TESTC_ABORT(m_server.send(subscribe), CalTest::final);
-      }
-      break;
-
-    case CAL_SUBSCRIBEACK:
-      {
-	CALSubscribeackEvent ack(e);
-
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
-	m_handle = ack.handle;
-      }
-      break;
-
-    case CAL_UPDATE:
-      {
-	CALUpdateEvent update(e);
-
-	LOG_INFO_STR("CAL_UPDATE @ " << update.timestamp);
-	TESTC_ABORT(update.status == SUCCESS, CalTest::final);
-	TESTC_ABORT(update.handle == m_handle, CalTest::final);
-	
-	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
-	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
-
-	if (++m_counter1 >= 1) {
-	  CALStopEvent stop;
-	  stop.name = m_name;
-	  TESTC_ABORT(m_server.send(stop), CalTest::final);
-	}
-      }
-      break;
-
-    case CAL_STOPACK:
-      {
-	CALStopackEvent ack(e);
-	TESTC_ABORT(ack.name == m_name, CalTest::final);
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
-
-	m_handle = 0;
-
-	TRAN(CalTest::test003); // next test
-      }
-      break;
-
-    case F_DISCONNECTED:
-      {
-	port.close();
-
-	FAIL_ABORT("unexpected disconnect", CalTest::final);
-      }
-      break;
-
-    case F_EXIT:
-      {
-	STOP_TEST();
-      }
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-    }
-
-  return status;
-}
-
-GCFEvent::TResult CalTest::test003(GCFEvent& e, GCFPortInterface& port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  //
-  // Scenario for test003 (successful start, subscribe, stop [no unsubscribe], 50 x as fast as possible)
-  // 
-  // START       ->
-  //             <- STARTACK
-  // SUBSCRIBE   ->
-  //             <- SUBSCRIBEACK
-  // STOP        ->
-  //             <- STOPACK
-  //
-  
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
-	ostringstream name;
-	name << "test003_pid=" << (int)getpid();
-	m_name = name.str();
-	START_TEST(m_name, "test START");
-
-	m_counter1 = 0; // reset update counter
-
-	CALStartEvent start;
-
-	start.name   = m_name;
-	start.parent = "FTS-1-LBA";
-	start.subset.reset();
-
-	// first 8 antennas (16 receivers)
-	for (int i = 0; i < 8; i++) {
-	  start.subset.set(i);
-	}
-	start.sampling_frequency = 160e6; // 160 MHz
-	start.nyquist_zone = 1;
-
-	TESTC_ABORT(m_server.send(start), CalTest::final);
-      }
-      break;
-
-    case CAL_STARTACK:
-      {
-	CALStartackEvent ack(e);
-
-	TESTC_ABORT(ack.name == m_name, CalTest::final);
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
-
-	// send subscribe
-	CALSubscribeEvent subscribe;
-
-	subscribe.name = m_name;
-	subscribe.subbandset.reset();
-	subscribe.subbandset.set(100);
-
-	TESTC_ABORT(m_server.send(subscribe), CalTest::final);
-      }
-      break;
-
-    case CAL_SUBSCRIBEACK:
-      {
-	CALSubscribeackEvent ack(e);
-
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
-	m_handle = ack.handle;
-
-	usleep(100000); // wait 100 msec
-
-	CALStopEvent stop;
-	stop.name = m_name;
-	TESTC_ABORT(m_server.send(stop), CalTest::final);
-      }
-      break;
-
-    case CAL_STOPACK:
-      {
-	CALStopackEvent ack(e);
-	TESTC_ABORT(ack.name == m_name, CalTest::final);
-	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
-
-	m_handle = 0;
-	
-	m_counter1++;
-
-	if (m_counter1 > 10) {
-	  TRAN(CalTest::final);
-	} else {
-
-	  // again
-	  CALStartEvent start;
-
-	  start.name   = m_name;
-	  start.parent = "FTS-1-LBA";
-	  start.subset.reset();
-	  
-	  // first 8 antennas (16 receivers)
-	  for (int i = 0; i < 8; i++) {
-	    start.subset.set(i);
-	  }
-	  start.sampling_frequency = 160e6; // 160 MHz
-	  start.nyquist_zone = 1;
-	  
-	  TESTC_ABORT(m_server.send(start), CalTest::final);
-	}
+	TRAN(CalTest::final); // next test
       }
       break;
 
@@ -532,10 +274,18 @@ int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
+  if (argc != 5)
+  {
+    cerr << "usage: CalTest arrayname nantennas samplingfrequency nyquistzone" << endl;
+    cerr << "e.g.   CalTest FTS-1-LBA    8         160000000           1" << endl;
+    cerr << "(see AntennaArrays.conf for other configurations)" << endl;
+    exit(EXIT_FAILURE);
+  }
+
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("RSPDriver Test driver", &cerr);
-  s.addTest(new CalTest("CalTest"));
+  s.addTest(new CalTest("CalTest", argv[1], atoi(argv[2]), atoi(argv[3]), atoi(argv[4])));
   s.run();
   long nFail = s.report();
   s.free();

@@ -5,16 +5,13 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/test
 
 #TESTS = \
-#	CalTest \
-#	ITSCalTest
+#	CalTest
 
 bin_PROGRAMS = \
-	CalTest \
-	ITSCalTest
+	CalTest
 
 check_PROGRAMS = \
-	CalTest \
-	ITSCalTest
+	CalTest
 
 CalTest_SOURCES = \
 	CalTest.cc
@@ -23,22 +20,13 @@ CalTest_LDADD = \
 	$(top_builddir)/src/libcal.la \
 	-lsuite
 
-ITSCalTest_SOURCES = \
-	ITSCalTest.cc
-
-ITSCalTest_LDADD = \
-	$(top_builddir)/src/libcal.la \
-	-lsuite
-
 BUILT_SOURCES = \
-	CalTest.conf \
-	ITSCalTest.conf
+	CalTest.conf
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
-	CalTest.conf \
-	ITSCalTest.conf
+	CalTest.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

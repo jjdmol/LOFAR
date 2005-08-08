@@ -1,6 +1,0 @@
-
-#
-# Configuration to connect ITSCalTest to the RPSDriver
-#
-mac.ns.ITSCalTest.server.type=TCP
-mac.top.ITSCalTest.server.remoteservice=CalServer:acceptor

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  CalTest.h: class definition for the CAL stub task
+//#  CalTest.h: class definition for the CalTest program
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,58 +29,64 @@
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
 
-namespace CAL_Test
+namespace LOFAR
 {
-  class CalTest : public GCFTask, public Test
-  {
-  public:
-    /**
-     * The constructor of the CalTest task.
-     * @param name The name of the task. The name is used for looking
-     * up connection establishment information using the GTMNameService and
-     * GTMTopologyService classes.
-     */
-    CalTest(string name);
-    virtual ~CalTest();
+  namespace CAL
+    {
 
-    // state methods
+      class CalTest : public GCFTask, public Test
+	{
+	public:
+	  /**
+	   * The constructor of the CalTest task.
+	   * @param name The name of the task. The name is used for looking
+	   * up connection establishment information using the GTMNameService and
+	   * GTMTopologyService classes.
+	   */
+	  CalTest(string name, string arrayname, int nantennas, int clock, int nyquistzone);
+	  virtual ~CalTest();
 
-    /**
-     * The initial and final state.
-     */
-    /*@{*/
-    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
-    GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
-    /*@}*/
+	  // state methods
 
-    /*@{*/
-    /**
-     * The test scenarios. Each state represents one test scenario.
-     * Each successful test transitions to the next test state.
-     */
-    GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
-    GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
-    GCFEvent::TResult test003(GCFEvent& e, GCFPortInterface &p);
-    /*@}*/
+	  /**
+	   * The initial and final state.
+	   */
+	  /*@{*/
+	  GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+	  GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
+	  /*@}*/
 
-    /**
-     * Run the tests.
-     */
-    void run();
+	  /*@{*/
+	  /**
+	   * The test scenarios. Each state represents one test scenario.
+	   * Each successful test transitions to the next test state.
+	   */
+	  GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
+	  /*@}*/
 
-  private:
-    // member variables
+	  /**
+	   * Run the tests.
+	   */
+	  void run();
 
-  private:
-    // ports
-    GCFPort m_server;
+	private:
+	  // member variables
 
-    LOFAR::uint32 m_handle; // subscription handle
+	private:
+	  // ports
+	  GCFPort m_server;
 
-    string m_name; // name of the current array
-    int m_counter1; // general purpose test counter, semantics assigned per test
-  };
+	  LOFAR::uint32 m_handle; // subscription handle
+	  int m_counter1; // general purpose test counter, semantics assigned per test
 
+	  string m_name; // name of the current array
+	  string m_arrayname; // name of the array on which to calibrate
+	  int    m_nantennas; // number of antennas in the array
+	  int    m_clock;     // frequency of the sampling clock
+	  int    m_nyquistzone; // nyquistzone of interest
+	};
+
+    };
 };
      
 #endif /* CALTEST_H_ */
