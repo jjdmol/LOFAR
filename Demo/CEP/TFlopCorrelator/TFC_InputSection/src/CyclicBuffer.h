@@ -259,8 +259,6 @@ TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
   pthread_cond_broadcast(&space_available);
 
   pthread_mutex_unlock(&buffer_mutex);
-
-  Dump();
   
   return &itsBuffer[ID].itsElement;
 }
