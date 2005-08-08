@@ -82,7 +82,7 @@ class RectMatrix {
   int getNElemInDim(const dimType& dim) const;
   // get a cursor at a certain position in the matrix
   // use this as 4*firstDim + 2* secondDim for element(4,2)
-  cursorType getCursor(const int pos) const; 
+  cursorType getCursor(const int pos = 0) const; 
   // get the value at the position of the cursor
   valueType& getValue(const cursorType& cursor) const;
   // set the value at the position of the cursor
@@ -138,24 +138,24 @@ class RectMatrix {
 // Macro for defining a for-loop that walks through all the elements of 1 dimension
 // for unoptimized code we can loop until the cursor is invalid
 #define MATRIX_FOR_LOOP(matrix, dim, cursor) \
-    for (; matrix.isCursorValid(cursor); matrix.moveCursor(&cursor, dim)) 
+    for (; (matrix).isCursorValid(cursor); (matrix).moveCursor(&cursor, dim)) 
 
 // Macro for defining a for-loop that walks through 1 dimension from cursor to cursor + noElem
 #define MATRIX_FOR_LOOP_PART(matrix, dim, cursor, noElem) \
-    int cursorMax = cursor + dim.memsize * noElem;\
-    for (; matrix.isCursorValid(cursor)&&(cursor < cursorMax); matrix.moveCursor(&cursor, dim)) 
+    int cursorMax = cursor + (dim).memsize * noElem;\
+    for (; (matrix).isCursorValid(cursor)&&(cursor < cursorMax); (matrix).moveCursor(&cursor, dim)) 
 
 #else //ENABLE_DBGASSERT
 
     // for optimized code we use a slightly different stop condition
     // this algorithm can only be used when the cursor is not invalidated
 #define MATRIX_FOR_LOOP(matrix, dim, cursor) \
-    int cursorMax = cursor + dim.total; \
-    for (; cursor < cursorMax; matrix.moveCursor(&cursor, dim)) 
+    int cursorMax = cursor + (dim).total; \
+    for (; cursor < cursorMax; (matrix).moveCursor(&cursor, dim)) 
 
 #define MATRIX_FOR_LOOP_PART(matrix, dim, cursor, noElem) \
-    int cursorMax = cursor + dim.memsize * noElem;\
-    for (; cursor < cursorMax; matrix.moveCursor(&cursor, dim)) 
+    int cursorMax = cursor + (dim).memsize * noElem;\
+    for (; cursor < cursorMax; (matrix).moveCursor(&cursor, dim)) 
 
 #endif //ENABLE_DBGASSERT
 
