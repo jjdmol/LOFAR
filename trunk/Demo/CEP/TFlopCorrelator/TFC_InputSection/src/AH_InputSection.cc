@@ -86,8 +86,11 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
      DataHolders in the RSPInput Steps.
      Note that the number of SubBandFilters per Transpose Step
      is hard coded as 2 */
-  DBGASSERTSTR(itsNSBF%2 == 0, "NSBF should be an even number");
-  const int NrTransposeNodes = itsNSBF/2;
+//   DBGASSERTSTR(itsNSBF%2 == 0, "NSBF should be an even number");
+//   const int NrTransposeNodes = itsNSBF/2;
+
+  // Right now there is 1 Transpose node per subbandFilter
+  
   vector<Step*>        RSPSteps;
   vector<WH_RSPInput*> RSPNodes;
   int NRSP = itsParamSet.getInt32("Input.NRSP");
@@ -138,7 +141,24 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     
 //     // Connect the Delay Controller
 //     itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
-    
+    if (r!=0) {
+      int sourceStep = itsSteps.size() - r - 1;
+#ifdef HAVE_MPI
+      itsSteps.back()->connect(1,  // input number 0 is the delay, 1 is the sync
+			       itsSteps[sourceStep],
+			       itsNSBF + r - 1,   // there are NSubbands outputs
+			       1, // connect 1 DH
+			       new TH_MPI(itsSteps.getNode(), itsSteps[sourceStep].getNode()),
+			       true);
+#else
+      itsSteps.back()->connect(1,  // input number 0 is the delay
+			      itsSteps[sourceStep],
+			      itsNSBF + r - 1,
+			      1,
+			      new TH_Mem(),
+			      false);
+#endif
+    }    
   };
   
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
@@ -163,20 +183,17 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     collectSteps[nf]->runOnNode(lowestFreeNode++); 
     comp.addBlock(collectSteps[nf]);
 
-#ifdef HAVE_MPI
     // Connect splitters to mergers (transpose)
-    for (int st=0; st<noRSPs; st++)
+    for (int st=0; st<NRSP; st++)
     {
+#ifdef HAVE_MPI
       collectSteps[nf]->connect(st, RSPSteps[st], nf, 1,
 			       new TH_MPI(rspStartNode+st, collectStartNode+nf), 
 			       true);
-    }
 #else
-    for (int st=0; st<NRSP; st++)
-    {
       collectSteps[nf]->connect(st, RSPSteps[st], nf, 1, new TH_Mem(), false);
-    }
 #endif
+    }
     // connect output to FIR stub
     itsOutputStub->connect (nf,                           // Corr filter number
 			    (collectSteps.back())->getOutDataManager(0), 
@@ -207,5 +224,4 @@ void AH_InputSection::dump() const {
 void AH_InputSection::quit() {
 
 }
-
 
