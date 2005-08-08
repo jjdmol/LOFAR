@@ -1,20 +1,20 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_Transpose CyclicBufferTest
+check_PROGRAMS = tWH_SBCollect CyclicBufferTest
 
 
 AM_CXXFLAGS = \
 	-I../../../src
 
-tWH_Transpose_SOURCES =				\
-tWH_Transpose.cc				\
-../src/WH_Transpose.cc				
+tWH_SBCollect_SOURCES =				\
+tWH_SBCollect.cc				\
+../src/WH_SBCollect.cc				
 
 CyclicBufferTest_SOURCES =                      \
 CyclicBufferTest.cc
 
 TESTS   = 					\
-tWH_Transpose.sh				
+tWH_SBCollect.sh				
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
