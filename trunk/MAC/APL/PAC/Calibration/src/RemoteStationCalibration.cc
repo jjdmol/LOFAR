@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#include "SourceCatalog.h"
+#include "Source.h"
 #include "DipoleModel.h"
 #include "RemoteStationCalibration.h"
 
@@ -31,104 +31,130 @@
 #include <math.h>
 #include "cpplapack.h"
 
+using namespace std;
+using namespace blitz;
+using namespace LOFAR;
 using namespace CAL;
+using namespace RTC;
 using namespace blitz;
 using namespace std;
-using namespace LOFAR::RSP_Protocol;
+//using namespace LOFAR::RSP_Protocol;
 using namespace CPPL;
 
-RemoteStationCalibration::RemoteStationCalibration(const SourceCatalog& catalog, const DipoleModel& dipolemodel)
-  : CalibrationAlgorithm(catalog, dipolemodel)
+RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels)
+  : CalibrationAlgorithm(sources, dipolemodels)
 {
 }
 
-void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result)
+void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& gains)
 {
-  const SpectralWindow&   spw = subarray.getSPW();        // get spectral window
-  const DipoleModel&   dipolemodel = getDipoleModel();    // get dipole model
-  const SourceCatalog& sources     = getSourceCatalog();  // get sky model
+  //
+  // BIG WARNING: The order of the axes in the acc array have changed.
+  // The order now is: nsubbands x nantennas x nantennas x npol x npol array of complex doubles.
+  //
+  // This warning can be removed when the code in this file has been adapted to that change.
+  //
 
-  cout << "calibrate: spectral window name=" << spw.getName() << endl;
-  cout << "calibrate: subband width=" << spw.getSubbandWidth() << " Hz" << endl;
-  cout << "calibrate: num_subbnads=" << spw.getNumSubbands() << endl;
-  cout << "calibrate: subarray name=" << subarray.getName() << endl;
-  cout << "calibrate: num_antennas=" << subarray.getNumAntennas() << endl;
+  const SpectralWindow& spw = subarray.getSPW();         // get spectral window
+  DipoleModels&   dipolemodels = getDipoleModels(); // get dipole models
+  const Sources&        sources      = getSources();      // get sky model
+  const DipoleModel*    dipolemodel  = dipolemodels.getByName("LBAntenna");
+
+  if (!dipolemodel) {
+    LOG_FATAL("Failed to load dipolemodel 'LBAntenna'");
+    exit(EXIT_FAILURE);
+  }
+
+  LOG_INFO_STR("calibrate: spectral window name=" << spw.getName());
+  LOG_INFO_STR("calibrate: subband width=" << spw.getSubbandWidth() << " Hz");
+  LOG_INFO_STR("calibrate: num_subbnads=" << spw.getNumSubbands());
+  LOG_INFO_STR("calibrate: subarray name=" << subarray.getName());
+  LOG_INFO_STR("calibrate: num_antennas=" << subarray.getNumAntennas());
 
   int nloops = 1;
   for (int niter = 0; niter < nloops; niter++) {
     cout << "calibrate: working on loop " << niter << " of " << nloops << endl;
-  for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
-    Timestamp acmtime;
-    const Array<complex<double>, 4> acm = acc.getACM(sb, acmtime);
-    struct timeval tv;
-    
-    // check whether channel is RFI free
-    if (sb > 0 && sb < spw.getNumSubbands()-1 && issuitable(acc, sb)) {
+    for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
+      sleep(1);
 
-      // construct local sky model (LSM)
-      acmtime.get(&tv);
-      // the big number is de number of seconds passed between 1-1-1970, 0h0m0s
-      // and the time of the first measurement of the ITS deep integration
-      // campaign (24-9-2004, 12h21m49.65s
-      const vector<Source> LSM = make_local_sky_model(sources, 1096028509.65);
+      Timestamp acmtime;
+      const Array<complex<double>, 2> acm = acc.getACM(sb, 0, 0, acmtime); // get XX acm
     
-      Array<double, 3> AntennaPos = subarray.getAntennaPos();
+      // since acmtime is currently returning 0, we set it to the current
+      // time for debug purposes, i.e. these lines need to be removed in the
+      // final version!
+      struct timeval tv;
+    
+      // check whether channel is RFI free
+      if (sb > 0 && sb < spw.getNumSubbands()-1 && issuitable(acc, sb)) {
+
+	// construct local sky model (LSM)
+	acmtime.get(&tv);
+	// the big number is de number of seconds passed between 1-1-1970, 0h0m0s
+	// and the time of the first measurement of the ITS deep integration
+	// campaign (24-9-2004, 12h21m49.65s
+	const vector<Source> LSM = make_local_sky_model(sources, 1096028509.65);
+    
+	Array<double, 3> AntennaPos = subarray.getAntennaPos();
       
-      cout << "calibrate: working on subband " << sb + 1 << " of "
-	 << spw.getNumSubbands() << endl;
-      double freq = sb * spw.getSubbandWidth() + spw.getSamplingFrequency() * (spw.getNyquistZone() - 1);
-      // for testing purposes we overrule the calculation above
-      freq = 3.0254e7;
+	cout << "calibrate: working on subband " << sb + 1 << " of "
+	     << spw.getNumSubbands() << endl;
+	double freq = sb * spw.getSubbandWidth() + spw.getSamplingFrequency() * (spw.getNyquistZone() - 1);
+	// for testing purposes we overrule the calculation above
+	freq = 3.0254e7;
     
-      Array<complex<double>, 2> R0(make_ref_acm(LSM, AntennaPos, dipolemodel, freq));
-      // mark baselines of at least 40m
-      Array<bool, 2> mask(set_restriction(AntennaPos, 40));
+	Array<complex<double>, 2> R0(make_ref_acm(LSM, AntennaPos, *dipolemodel, freq));
+	// mark baselines of at least 40m
+	Array<bool, 2> mask(set_restriction(AntennaPos, 40));
     
-      // estimate alpha = g * (1 ./ g)
-      Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
-      Array<complex<double>, 2> alpha(computeAlpha(acm1pol, R0, mask));
-      // extract g from alpha
-      Array<complex<double>, 1> gain(computeGain(alpha, acm1pol, R0, mask));
-    } else
-      cout << "calibrate: subband " << sb + 1 << " was not processed" << endl;
-  }
+	// estimate alpha = g * (1 ./ g)
+	//Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
+	Array<complex<double>, 2> alpha(computeAlpha(acm, R0, mask));
+	// extract g from alpha
+	Array<complex<double>, 1> gain(computeGain(alpha, acm, R0, mask));
+	ASSERT(gains.getGains().extent(firstDim) == gain.extent(firstDim));
+	gains.getGains()(Range::all(), 0/*X-pol*/, sb) = gain;
+
+	cout << "gains[" << sb << "]=" << gain << endl;
+	
+      } else
+	cout << "calibrate: subband " << sb + 1 << " was not processed" << endl;
+    }
   }
   //interpolate_bad_subbands();
    
-  result.setComplete(true); // when finished
+  gains.setDone(true); // when finished
 }
 
 bool RemoteStationCalibration::issuitable(const ACC& acc, int sb)
 {
   Timestamp acmtime;
   Array<complex<double>, 1> test(3);
-  firstIndex it1;
-  secondIndex it2;
+
   for (int idx = sb - 1; idx <= sb + 1; idx++) {
-    const Array<complex<double>, 4> acm = acc.getACM(idx, acmtime);
-    Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
-    Array<complex<double>, 1> ac(acm1pol.extent(firstDim));
-    ac = acm1pol(it1, it1);
-    acm1pol = acm1pol(it1, it2) / sqrt(ac(it1) * ac(it2));
-    Array<complex<double>, 2> prod(acm1pol.extent(firstDim), acm1pol.extent(firstDim));
-    Array<complex<double>, 2> acm1polH(conj(acm1pol.transpose(1, 0)));
-    prod = matmultc(acm1pol, acm1polH);
-    Array<complex<double>, 1> diagprod(acm1pol.extent(firstDim));
-    diagprod = prod(it1, it1);
+    Array<complex<double>, 2> acm = acc.getACM(idx, 0, 0, acmtime).copy();
+    Array<complex<double>, 1> ac(acm.extent(firstDim));
+    ac = acm(tensor::i, tensor::i);
+    acm = acm(tensor::i, tensor::j) / sqrt(ac(tensor::i) * ac(tensor::j));
+    Array<complex<double>, 2> prod(acm.extent(firstDim), acm.extent(firstDim));
+    Array<complex<double>, 2> acmH(conj(acm.transpose(1, 0)));
+    prod = matmultc(acm, acmH);
+    Array<complex<double>, 1> diagprod(acm.extent(firstDim));
+    diagprod = prod(tensor::i, tensor::i);
     test(idx + 1 - sb) = sum(diagprod);
   }
   return (abs(test(0) - test(1)) < 0.05 && abs(test(1) - test(2)) < 0.05);
 }
 
-const vector<Source> RemoteStationCalibration::make_local_sky_model(const SourceCatalog& catalog, double obstime)
+const vector<Source> RemoteStationCalibration::make_local_sky_model(const Sources& sources, double obstime)
 {
-  const std::vector<Source> skymodel = catalog.getCatalog();
+  const std::vector<Source> skymodel = sources.getSources();
 
   // obstime is in UTC seconds since Jan 1, 1970, 0h0m0s
   // This was Julian Day 2440587.5
   // number of seconds in a day: 86400
   double JulianDay = obstime / 86400 + 2440587.5;
-  cout << "calibrate: time of observation in Julian Days: " << JulianDay - 2453500 << endl;
+  LOG_INFO_STR("calibrate: time of observation in Julian Days: " << JulianDay - 2453500);
 
   // geographical location if station needed
   // currently location Dwingeloo is taken
@@ -182,8 +208,6 @@ Array<complex<double>, 2> RemoteStationCalibration::make_ref_acm(const vector<So
   double k = 2 * M_PI * freq / 2.99792e8;
 
   // actual calculation of the reference ACM
-  firstIndex it1;
-  secondIndex it2;
   for (int idx = 0; idx < nsrc; idx++) {
     double
       l = (LSM.begin() + idx)->getRA(),
@@ -201,13 +225,13 @@ Array<complex<double>, 2> RemoteStationCalibration::make_ref_acm(const vector<So
     // Next lines contain meta information. It would be nice to put this in a
     // config file
     Array<double, 1> fgrid(10), lgrid(51), mgrid(51);
-    fgrid = (it1 + 1) * 10e6;
-    lgrid = it1 * 0.04 - 1;
-    mgrid = it1 * 0.04 - 1;
+    fgrid = (tensor::i + 1) * 10e6;
+    lgrid = tensor::i * 0.04 - 1;
+    mgrid = tensor::i * 0.04 - 1;
 
     double
       att = interp3d(lgrid, mgrid, fgrid, dipoleRespons(0, Range::all(), Range::all(), Range::all()), l, m, freq);
-    res += flux * att * asrc(it1) * conj(asrc(it2));
+    res += flux * att * asrc(tensor::i) * conj(asrc(tensor::j));
   }
   return res;
 }
@@ -220,15 +244,12 @@ Array<bool, 2> RemoteStationCalibration::set_restriction(Array<double, 3>& Anten
   // zpos not needed, since the baseline restriction is taken to be a
   // baseline restriction with the phase center in the zenith
 
-  firstIndex it1;
-  secondIndex it2;
-
   Array<double, 2>
     u(xpos.size(), xpos.size()),
     v(xpos.size(), xpos.size());
 
-  u = xpos(it2) - xpos(it1);
-  v = ypos(it2) - ypos(it1);
+  u = xpos(tensor::j) - xpos(tensor::i);
+  v = ypos(tensor::j) - ypos(tensor::i);
 
   Array<bool, 2>
     mask(xpos.size(), xpos.size());
@@ -236,7 +257,7 @@ Array<bool, 2> RemoteStationCalibration::set_restriction(Array<double, 3>& Anten
   return mask;
 }
 
-Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2> restriction)
+Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(const Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2>& restriction)
 {
   int nelem = acm.extent(firstDim);
   Array<complex<double>, 2> alpha(nelem, nelem);
@@ -255,7 +276,7 @@ Array<complex<double>, 2> RemoteStationCalibration::computeAlpha(Array<complex<d
   return alpha;
 }
 
-Array<complex<double>, 1> RemoteStationCalibration::computeGain(Array<complex<double>, 2>& alpha, Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2> restriction)
+Array<complex<double>, 1> RemoteStationCalibration::computeGain(Array<complex<double>, 2>& alpha, const Array<complex<double>, 2>& acm, Array<complex<double>, 2>& R0, Array<bool, 2> restriction)
 {
   int nelem = alpha.extent(firstDim);
 
@@ -278,9 +299,8 @@ Array<complex<double>, 1> RemoteStationCalibration::computeGain(Array<complex<do
 
   // normalization
   Array<complex<double>, 2> Rtest(nelem, nelem);
-  firstIndex it1;
-  secondIndex it2;
-  Rtest = gain(it1) * gain(it2) * R0(it1, it2);
+
+  Rtest = gain(tensor::i) * gain(tensor::j) * R0(tensor::i, tensor::j);
   int Nnonzero = 0;
   double total = 0;
   for (int idx1 = 1; idx1 < nelem; idx1++) {

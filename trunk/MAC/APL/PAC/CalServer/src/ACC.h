@@ -26,61 +26,164 @@
 
 #include <blitz/array.h>
 #include <complex>
+#include "SharedResource.h"
 #include "Timestamp.h"
 
-namespace CAL
-{
-  class ACC
-  {
-  public:
-    ACC(blitz::Array<std::complex<double>, 5>& acc);
-    virtual ~ACC();
+namespace LOFAR {
+  namespace CAL {
 
+    class ACC : public SharedResource
+    {
+    public:
+      ACC() : m_valid(false) {}
+      ACC(int nsubbands, int nantennas, int npol);
+      virtual ~ACC();
+
+      /**
+       * Get a subband and single polarized slice of the ACC cube.
+       * @param subband Subband for which to return the ACM.
+       * @param pol1 0 == x, 1 == y
+       * @param pol2 0 == x, 1 == y
+       * @param timestamp The timestamp of the specified subband is returned.
+       * If an invalid subband is specified Timestamp(0,0) is returned.
+       * @return The ACM for the specified subband and polarizations is returned.
+       */
+      const blitz::Array<std::complex<double>, 2> getACM(int subband, int pol1, int pol2, RTC::Timestamp& timestamp) const;
+    
+      /**
+       * Update an ACM.
+       */
+      void updateACM(int subband, RTC::Timestamp timestamp,
+		     blitz::Array<std::complex<double>, 4>& newacm);
+
+      /**
+       * Get the size of the array.
+       */
+      int getSize() const { return m_acc.size(); }
+
+      /**
+       * Get number of subbands.
+       */
+      int getNSubbands() const { return m_acc.extent(blitz::firstDim); }
+
+      /**
+       * Get number of antennas
+       */
+      int getNAntennas() const { return m_acc.extent(blitz::secondDim); }
+
+      /**
+       * Get number of polarizations
+       */
+      int getNPol() const { return m_acc.extent(blitz::fourthDim); }
+
+      /**
+       * Get a reference to the ACC array.
+       * @return The 5-dimensional ACC array.
+       */
+      const blitz::Array<std::complex<double>, 5>& getACC() const { return m_acc; }
+    
+      /**
+       * Initialize the ACC array.
+       */
+      void setACC(blitz::Array<std::complex<double>, 5>& acc);
+
+      /**
+       * Is the array valid? If not don't use it.
+       */
+      bool isValid()
+      {
+	bool result;
+	mutex_lock();
+	result = m_valid;
+	mutex_unlock();
+	return result; 
+      }
+
+      /**
+       * Set to valid
+       */
+      void validate()
+      {
+	mutex_lock();
+	m_valid = true; 
+	mutex_unlock();
+      }
+
+      /**
+       * Set to invalid.
+       */
+      void invalidate() 
+      {
+	mutex_lock();
+	m_valid = false;
+	mutex_unlock();
+      }
+
+      /**
+       * Get the ACC from file. The ACC in the file needs
+       * to have the shape that is already defined.
+       * @param filename Name of the file to read.
+       * @return 0 on success, !0 on failure.
+       */
+      int getFromFile(std::string filename);
+
+    private:
+
+      /**
+       * ACC is a five dimensional array of complex numbers with dimensions
+       *
+       * nsubbands x  npol x npol x nantennas x nantennas
+       */
+      blitz::Array<std::complex<double>, 5>    m_acc;
+
+      /**
+       * m_time is a 1 dimensional array with a timestamp for each subband.
+       */
+      blitz::Array<RTC::Timestamp, 1> m_time;
+
+      bool m_valid; // does the array contain valid data?
+    };
+  
     /**
-     * Get a subband slice of the ACC cube.
-     * @param subband Subband for which to return the ACM.
-     * @param timestamp The timestamp of the specified subband is returned.
-     * If an invalid subband is specified Timestamp(0,0) is returned.
-     * @return The ACM for the specified subband is returned. If an invalid
-     * subband is specified an empty array is returned.
+     * Factory class for ACC (Array Correlation Cube) instances.
+     * This class manages ACC instances: the front and back ACC buffers.
+     * The calibration algorithm works with the front ACC buffer while 
+     * in the background the next ACC buffer is filled by the CAL::ACCService.
      */
-    const blitz::Array<std::complex<double>, 4> getACM(int subband, LOFAR::RSP_Protocol::Timestamp& timestamp) const;
+    class ACCs
+    {
+    public:
 
-    /**
-     * Get the size of the array.
-     */
-    int getSize() const { return m_acc.size(); }
+      ACCs(int nsubbands, int nantennas, int npol);
+      virtual ~ACCs();
+	
+      /**
+       * @return a reference to the front ACC buffer. This buffer can be used
+       * to pass to the calibration algorithm.
+       */
+      ACC& getFront() const;
+	
+      /**
+       * @return a reference to the back ACC buffer. This buffer can be filled
+       * for the next calibration iteration.
+       */
+      ACC& getBack() const;
+	
+      /**
+       * Swap the front and back buffers after the calibration has completed and
+       * the back buffer is filled with the most recent ACC for use in the next
+       * calibration iteration.
+       */
+      void swap();
 
-    /**
-     * Get a reference to the ACC array.
-     * @return The 5-dimensional ACC array.
-     */
-    const blitz::Array<std::complex<double>, 5>& getACC() const { return m_acc; }
+    private:
+      int m_front;
+      int m_back;
+      ACC* m_buffer[2];
+    };
 
-  private:
-
-    friend class ACCLoader;
-
-    /**
-     * ACC is a five dimensional array of complex numbers with dimensions
-     * nantennas x nantennas x nsubbands x npol x npol.
-     */
-    blitz::Array<std::complex<double>, 5>    m_acc;
-
-    /**
-     * m_time is a 1 dimensional array with a timestamp for each subband.
-     */
-    blitz::Array<LOFAR::RSP_Protocol::Timestamp, 1> m_time;
-  };
-
-
-  class ACCLoader
-  {
-  public:
-    static const ACC* loadFromFile(std::string filename);
-  };
-
-};
+  }; // namespace CAL
+}; // namespace LOFAR
 
 #endif /* ACC_H_ */
 

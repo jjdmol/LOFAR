@@ -21,14 +21,22 @@
 //#
 //#  $Id$
 
+#include "CalConstants.h"
 #include "AntennaArray.h"
+#include "AntennaArrayData.h"
 
 #include <blitz/array.h>
 #include <fstream>
 
-using namespace CAL;
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 using namespace std;
 using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
 
 AntennaArray::AntennaArray(string                  name,
 			   const Array<double, 3>& pos,
@@ -52,28 +60,39 @@ AntennaArray::~AntennaArray()
 {
 }
 
-AntennaArray* AntennaArrayLoader::loadFromBlitzString(std::string name, std::string array)
+AntennaArrays::AntennaArrays()
 {
-  Array<double, 3> positions;
-  istringstream arraystream(array);
-
-  arraystream >> positions;
-
-  return new AntennaArray(name, positions);
 }
 
-AntennaArray* AntennaArrayLoader::loadFromFile(std::string name, std::string filename)
+AntennaArrays::~AntennaArrays()
 {
-  AntennaArray* newarray = 0;
-  Array<double, 3> positions;
+  for (map<string, const AntennaArray*>::const_iterator it = m_arrays.begin();
+       it != m_arrays.end(); ++it)
+  {
+    if ((*it).second) delete (*it).second;
+  }
+}
 
-  ifstream antstream(filename.c_str());
+const AntennaArray* AntennaArrays::getByName(std::string name)
+{
+  // find AntennaArray
+  map<string,const AntennaArray*>::iterator it = m_arrays.find(name);
 
-  if (antstream.is_open())
-    {
-      antstream >> positions;
-      newarray = new AntennaArray(name, positions);
-    }
+  if (it != m_arrays.end()) {
+    return (*it).second;
+  }
 
-  return newarray;
+  return 0;
+}
+
+void AntennaArrays::getAll(std::string url)
+{
+  AntennaArrayData arraydata;
+
+  while (arraydata.getNextFromFile(url)) {
+    AntennaArray* newarray = new AntennaArray(arraydata.getName(),
+					      arraydata.getPositions());
+
+    m_arrays[arraydata.getName()] = newarray;
+  }
 }

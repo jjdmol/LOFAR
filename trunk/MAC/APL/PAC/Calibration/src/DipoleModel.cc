@@ -23,6 +23,7 @@
 
 
 #include "DipoleModel.h"
+#include "DipoleModelData.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -31,11 +32,13 @@
 #include <fstream>
 #include <blitz/array.h>
 
-using namespace CAL;
-using namespace blitz;
 using namespace std;
+using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
 
-DipoleModel::DipoleModel(string name) : m_name(name)
+DipoleModel::DipoleModel(string name, const Array<complex<double>, 4>& sens) :
+  m_name(name), m_sens(sens)
 {
 }
 
@@ -43,24 +46,26 @@ DipoleModel::~DipoleModel()
 {
 }
 
-/*const*/ DipoleModel* DipoleModelLoader::loadFromFile(string filename)
+DipoleModels::DipoleModels()
 {
-  DipoleModel* model = new DipoleModel(filename);
+}
 
-  if (!model) return 0;
+DipoleModels::~DipoleModels()
+{
+  for (map<string, const DipoleModel*>::const_iterator it = m_models.begin();
+       it != m_models.end(); ++it)
+  {
+    if ((*it).second) delete (*it).second;
+  }
+}
 
-  ifstream modelfile(filename.c_str());
+void DipoleModels::getAll(string url)
+{
+  DipoleModelData data;
 
-  if (!modelfile)
-    {
-      LOG_FATAL_STR("Failed to open dipole model: " << filename);
-      exit(EXIT_FAILURE);
-    }
-
-  modelfile >> model->m_sens;
-
-  modelfile.close();
-
-  return model;
+  while (data.getNextFromFile(url)) {
+    DipoleModel* model = new DipoleModel(data.getName(), data.getSens());
+    m_models[data.getName()] = model;
+  }
 }
 

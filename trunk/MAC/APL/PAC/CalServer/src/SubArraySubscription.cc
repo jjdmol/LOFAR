@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  CalibrationResult.cc: implementation of the CalibrationResult class.
+//#  SubArraySubscription.cc: class implementation
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,27 +21,32 @@
 //#
 //#  $Id$
 
-#include "CalibrationResult.h"
+#include "SubArray.h"
+#include "SubArraySubscription.h"
+#include "CAL_Protocol.ph"
+#include <Common/LofarLogger.h>
 
+using namespace LOFAR;
 using namespace CAL;
-using namespace std;
-using namespace blitz;
+using namespace RTC;
 
-CalibrationResult::CalibrationResult(int nantennas, int nsubbands) : m_complete(false)
+void SubArraySubscription::update(Subject* subject)
 {
-  if (nantennas < 0 || nsubbands < 0)
-    {
-      nantennas = 0;
-      nsubbands = 0;
-    }
-   
-  m_gains.resize(nantennas, 2, nsubbands);
-  m_gains = 1;
+  ASSERT(subject == static_cast<Subject*>(m_subarray));
 
-  m_quality.resize(nsubbands);
-  m_quality = 1;
+  AntennaGains* calibratedGains = 0;
+
+  // get gains from the FRONT buffer
+  if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
+
+    CALUpdateEvent update;
+    update.timestamp.setNow(0);
+    update.status = SUCCESS;
+    update.handle = (uint32)this;
+
+    update.gains.copy(*calibratedGains);
+
+    if (m_port.isConnected()) m_port.send(update);
+  }
 }
-
-CalibrationResult::~CalibrationResult()
-{}
 

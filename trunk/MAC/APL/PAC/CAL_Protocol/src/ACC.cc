@@ -25,12 +25,21 @@
 #include <blitz/array.h>
 #include <fstream>
 
-using namespace CAL;
-using namespace blitz;
-using namespace LOFAR::RSP_Protocol;
-using namespace std;
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
-ACC::ACC(Array<complex<double>, 5>& acc) : m_acc(acc), m_time(acc.extent(thirdDim))
+using namespace std;
+using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
+using namespace RTC;
+
+ACC::ACC(int nsubbands, int nantennas, int npol) :
+  SharedResource(1,1), // at most one reader or one writer
+  m_acc(nsubbands, npol, npol, nantennas, nantennas),
+  m_time(nsubbands), m_valid(false)
 {
 }
 
@@ -38,39 +47,100 @@ ACC::~ACC()
 {
 }
 
-const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp) const
+const Array<complex<double>, 2> ACC::getACM(int subband, int pol1, int pol2, Timestamp& timestamp) const
 {
+  Range all = Range::all();
   timestamp = Timestamp(0,0);
 
   // check range of subband argument
-  if (subband < 0 || subband > m_acc.extent(thirdDim)) return Array<complex<double>,4>();
+  ASSERT(subband >= 0 && subband < m_acc.extent(firstDim));
+  ASSERT(pol1 == 0 || pol1 == 1);
+  ASSERT(pol2 == 0 || pol2 == 1);
 
   timestamp = m_time(subband);
 
-#if 0
-  Array<complex<double>, 4> slice(m_acc(Range::all(), Range::all(),
-					subband, Range::all(), Range::all()));
-#endif
-
-  return m_acc(Range::all(), Range::all(),
-	       subband, Range::all(), Range::all());
+  return m_acc(subband, pol1, pol2, all, all);
 }
 
-const ACC* ACCLoader::loadFromFile(string filename)
+void ACC::updateACM(int subband, Timestamp timestamp, Array<complex<double>, 4>& newacm)
 {
-  ACC* acc = 0;
+  Range all = Range::all();
+
+  LOG_DEBUG_STR("m_acc.shape()=" << m_acc.shape());
+  LOG_DEBUG_STR("newacm.shape()=" << newacm.shape());
+
+  ASSERT(newacm.extent(firstDim)  == m_acc.extent(secondDim));
+  ASSERT(newacm.extent(secondDim) == m_acc.extent(thirdDim));
+  ASSERT(newacm.extent(thirdDim)  == m_acc.extent(fourthDim));
+  ASSERT(newacm.extent(fourthDim) == m_acc.extent(fifthDim));
+
+  m_acc(subband, all, all, all, all) = newacm;
+  m_time(subband) = timestamp;
+}
+
+void ACC::setACC(blitz::Array<std::complex<double>, 5>& acc)
+{
+  m_acc.reference(acc);
+  m_time.resize(acc.extent(firstDim));
+  m_time = Timestamp(0,0);
+}
+
+int ACC::getFromFile(string filename)
+{
   Array<complex<double>, 5> acc_array;
 
+  LOG_INFO_STR("Attempting to read ACC array with shape='" << m_acc.shape() << "' from '" << filename);
+
   ifstream accstream(filename.c_str());
+  
+  if (accstream.is_open()) {
+    accstream >> acc_array;
+  } else {
+    LOG_WARN_STR("Failed to open file: " << filename);
+    return -1;
+  }
 
-  if (accstream.is_open())
-    {
-      accstream >> acc_array;
-      acc = new ACC(acc_array);
-    }
+  for (int i = 0; i < 5; i++) {
+    ASSERT(acc_array.extent(i) == m_acc.extent(i));
+  }
 
-  return acc;
+  setACC(acc_array);
+
+  LOG_INFO_STR("Done reading ACC array");
+
+  return 0;
 }
+
+ACCs::ACCs(int nsubbands, int nantennas, int npol) : 
+	m_front(0), m_back(1)
+{
+  m_buffer[m_front] = new ACC(nsubbands, nantennas, npol);
+  m_buffer[m_back]  = new ACC(nsubbands, nantennas, npol);
+}
+
+ACCs::~ACCs()
+{
+  delete m_buffer[m_front];
+  delete m_buffer[m_back];
+}
+
+ACC& ACCs::getFront() const
+{
+  return *m_buffer[m_front];
+}
+
+ACC& ACCs::getBack() const
+{
+  return *m_buffer[m_back];
+}
+
+void ACCs::swap()
+{
+  int tmp = m_front;
+  m_front = m_back;
+  m_back = tmp;
+}
+
 
 
 

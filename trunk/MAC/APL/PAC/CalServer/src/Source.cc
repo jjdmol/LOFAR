@@ -22,9 +22,11 @@
 //#  $Id$
 
 #include "Source.h"
+#include "SourceData.h"
 
-using namespace CAL;
 using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
 
 Source::~Source()
 {
@@ -55,4 +57,42 @@ bool Source::getFlux(int n, double& freq, double& flux) const
 blitz::Array<double, 2> const & Source::getFluxes() const
 {
   return m_flux;
+}
+
+Sources::Sources()
+{
+}
+
+Sources::~Sources()
+{
+}
+
+const Array<double, 2> Sources::getSourcePositions() const
+{
+  Array<double, 2> pos(m_sources.size(), 2);
+
+  vector<Source>::const_iterator it;
+
+  int i = 0;
+  for (it = m_sources.begin(); it < m_sources.end(); ++it, i++)
+    {
+      pos(i, 0) = (*it).getRA();
+      pos(i, 1) = (*it).getDEC();
+      i++;
+    }
+
+  return pos.copy();
+}
+
+void Sources::getAll(std::string url)
+{
+  SourceData data;
+
+  m_sources.clear(); // clear old sources
+  while (data.getNextFromFile(url)) {
+    m_sources.push_back(Source(data.getName(),
+			       data.getRA(),
+			       data.getDEC(),
+			       data.getFlux()));
+  }
 }

@@ -26,9 +26,10 @@
 #include <blitz/array.h>
 #include <sstream>
 
-using namespace CAL;
 using namespace std;
 using namespace blitz;
+using namespace LOFAR;
+using namespace CAL;
 
 #define SPW_DIMS    2
 #define SPW_NPARAMS 3 /* sampling_freq, nyquist_zone, numsubbands */

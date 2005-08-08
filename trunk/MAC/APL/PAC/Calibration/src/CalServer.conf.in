@@ -3,9 +3,45 @@
 #
 
 #
-# Calibration Server configuration
+# CalServer task configuration
 #
 mac.ns.CalServer.acceptor.type=TCP
-mac.ns.CalServer.acmserver.type=TCP
-mac.top.BeamServer.acmserver.remoteservice=ACMServer:acceptor
+
+#
+# Define dimensions of the ACC array
+#
+CalServer.N_SUBBANDS=100
+# ITS-spec: CalServer.N_SUBBANDS=101
+# 512
+CalServer.N_ANTENNAS=4
+# ITS-spec: CalServer.N_ANTENNAS=60
+# 4
+# 60
+
+#
+# Set name for various configuration files
+#
+CalServer.DipoleModelFile=DipoleModel.conf
+CalServer.SourceCatalogFile=SourceCatalog.conf
+CalServer.AntennaArraysFile=AntennaArrays.conf
+
+#
+# For testing purposes, read ACC from file
+#
+# Set ACCTestEnable to 1 to enable reading from file ACCTestFile
+# If ACCTestEnable is set to 0 then the ACC is collected from the RSP hardware.
+#
+CalServer.ACCTestEnable=0
+CalServer.ACCTestFile=ACC.txt
+
+#
+# Write ACC's to file for debugging?
+#
+CalServer.WriteACCToFile=1
+
+#
+# ACMProxy task configuration
+#
+mac.ns.ACMProxy.rspdriver.type=TCP
+mac.top.ACMProxy.rspdriver.remoteservice=RSPDriver:acceptor
 
