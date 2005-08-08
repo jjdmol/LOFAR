@@ -376,23 +376,33 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     LOG_DEBUG_STR("m_accs.getBack().getACC().shape()=" << m_accs.getBack().getACC().shape());
     LOG_DEBUG_STR("positions.shape()" << positions.shape());
 
-    ASSERT(m_accs.getBack().getACC().extent(firstDim)   == GET_CONFIG("CalServer.N_SUBBANDS", i));
-    ASSERT(m_accs.getFront().getACC().extent(secondDim) == positions.extent(secondDim));
-    ASSERT(m_accs.getFront().getACC().extent(thirdDim)  == positions.extent(secondDim));
-    ASSERT(m_accs.getFront().getACC().extent(fourthDim) == positions.extent(firstDim));
-    ASSERT(m_accs.getFront().getACC().extent(fifthDim)  == positions.extent(firstDim));
+    // check dimensions of the various arrays for compatibility
+    if (   m_accs.getFront().getACC().extent(firstDim) != GET_CONFIG("CalServer.N_SUBBANDS", i)
+	|| m_accs.getFront().getACC().extent(secondDim) != positions.extent(secondDim)
+	|| m_accs.getFront().getACC().extent(thirdDim)  != positions.extent(secondDim)
+	|| m_accs.getFront().getACC().extent(fourthDim) != positions.extent(firstDim)
+	|| m_accs.getFront().getACC().extent(fifthDim)  != positions.extent(firstDim))
+      {
+	LOG_ERROR("ACC shape and parent array positions shape don't match.");
+	LOG_ERROR_STR("ACC.shape=" << m_accs.getFront().getACC().shape());
+	LOG_ERROR_STR("'" << start.parent << "'.shape=" << positions.shape());
 
-    // create subarray to calibrate
-    SubArray* subarray = new SubArray(start.name,
-				      positions,
-				      select,
-				      start.sampling_frequency,
-				      start.nyquist_zone,
-				      GET_CONFIG("CalServer.N_SUBBANDS", i));
+	ack.status = ERR_RANGE;
+      }
+    else
+      {
+	// create subarray to calibrate
+	SubArray* subarray = new SubArray(start.name,
+					  positions,
+					  select,
+					  start.sampling_frequency,
+					  start.nyquist_zone,
+					  GET_CONFIG("CalServer.N_SUBBANDS", i));
+	
+	m_subarrays.schedule_add(subarray);
 
-    m_subarrays.schedule_add(subarray);
-
-    // calibration will start within one second
+	// calibration will start within one second
+      }
   }
 
   port.send(ack); // send ack
