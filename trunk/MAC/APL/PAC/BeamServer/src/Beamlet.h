@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#ifndef ABSBEAMLET_H_
-#define ABSBEAMLET_H_
+#ifndef BEAMLET_H_
+#define BEAMLET_H_
 
-#include <ABSSpectralWindow.h>
+#include <SpectralWindow.h>
 
 #include <blitz/array.h>
 
@@ -157,4 +157,4 @@ namespace ABS
   inline int  Beamlet::index()     const            { return m_index; }
 };
      
-#endif /* ABSBEAMLET_H_ */
+#endif /* BEAMLET_H_ */

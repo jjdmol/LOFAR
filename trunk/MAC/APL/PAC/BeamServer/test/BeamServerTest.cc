@@ -21,8 +21,8 @@
 //#
 //#  $Id$
 
-#include "ABSSpectralWindow.h"
-#include "ABSBeam.h"
+#include "SpectralWindow.h"
+#include "Beam.h"
 
 #include "ABSTest.h"
 
@@ -229,7 +229,7 @@ public:
 	  TESTC(0 == m_beam[0]->convertPointings(begintime + COMPUTE_INTERVAL));
 
 	  Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
-	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_BEAMLETS, N_POLARIZATIONS);
+	  Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_BEAMLETS);
 
 	  pos = 1.0; // x,y coordiante = 1
 	  pos(all, all, 2) = 0.0; // z-coordinate = 0

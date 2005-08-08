@@ -1,4 +1,4 @@
-//#  ABSBeamServerTask.h: class definition for the Beam Server task.
+//#  ABSBeamServer.h: class definition for the Beam Server task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,12 +20,12 @@
 //#
 //#  $Id$
 
-#ifndef ABSBEAMSERVERTASK_H_
-#define ABSBEAMSERVERTASK_H_
+#ifndef BEAMSERVER_H_
+#define BEAMSERVER_H_
 
-#include "ABSSpectralWindow.h"
+#include "SpectralWindow.h"
 #include "ABS_Protocol.ph"
-#include "ABSBeamlet.h"
+#include "Beamlet.h"
 #include "SpectralWindowConfig.h"
 
 #include <GCF/TM/GCF_Control.h>
@@ -40,17 +40,17 @@ namespace ABS
   class Beamlet;
   class Subband;
 
-    class BeamServerTask : public GCFTask
+    class BeamServer : public GCFTask
     {
     public:
 	/**
-	 * The constructor of the BeamServerTask task.
+	 * The constructor of the BeamServer task.
 	 * @param name The name of the task. The name is used for looking
 	 * up connection establishment information using the GTMNameService and
 	 * GTMTopologyService classes.
 	 */
-	BeamServerTask(string name, int n_blps);
-	virtual ~BeamServerTask();
+	BeamServer(string name, int n_blps);
+	virtual ~BeamServer();
 
 	// state methods
 
@@ -216,4 +216,4 @@ namespace ABS
 
 };
      
-#endif /* ABSBEAMSERVERTASK_H_ */
+#endif /* BEAMSERVER_H_ */

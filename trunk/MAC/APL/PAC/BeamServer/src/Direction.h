@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef ABSDIRECTION_H_
-#define ABSDIRECTION_H_
+#ifndef DIRECTION_H_
+#define DIRECTION_H_
 
 namespace ABS
 {
@@ -87,4 +87,4 @@ namespace ABS
   inline Direction::Types Direction::type()const             { return m_type;    }
 };
 
-#endif /* ABSDIRECTION_H_ */
+#endif /* DIRECTION_H_ */

@@ -10,7 +10,8 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+10)";
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
-include = '<RSP_Protocol.ph>';
+include = '"Beamlet2SubbandMap.h"';
+include = '"Timestamp.h"';
 
 prelude = << PRELUDE_END
 
@@ -36,7 +37,7 @@ event = {
       // Name of the station receptor group (SRG) on which this beam will be allocated.
       // The SRG determines the sampling frequency and nyquist_zone.
       param = {
-	    name = "srgname";
+	    name = "subarrayname";
 	    type = "string";
       };
 
@@ -48,13 +49,13 @@ event = {
       // etc.
       param = {
 	    name = "allocation";
-	    type = "Beamlet2SubbandMap";
+	    type = "ABS_Protocol::Beamlet2SubbandMap";
 	    userdefined;
       };
 };
 
 event = {
-      signal = BEAMALLOC_ACK;
+      signal = BEAMALLOCACK;
       dir = OUT;
       param = {
 	    name = "handle";
@@ -70,24 +71,25 @@ event = {
 	signal = BEAMALLOCMODIFY;
 	dir = IN;
 
-	// handle to the beam, previously received in BEAMALLOC_ACK
+	// handle to the beam, previously received in BEAMALLOCACK
 	param = {
 		name = "handle";
 		type = "uint32";
 	};
 	
-	// new mapping of to subbands, allocation of beamlets remains unchanged
-	// length of this list must be equal to size of the map provided
-	// in BEAMALLOC
+	// New mapping of beamlets to subbands, the left-hand side of
+	// the mapping (the beamlets) must be identical to the left-hand
+	// side of the mapping specified in the BEAMALLOC event.
+	// Only the subbands can be modified, not the beamlets allocated.
 	param = {
 		name = "allocation";
-		type = "SubbandList";
+		type = "ABS_Protocol::Beamlet2SubbandMap";
 		userdefined;
 	};
 };
 
 event = {
-	signal = BEAMALLOCMODIFY_ACK;
+	signal = BEAMALLOCMODIFYACK;
 	dir = OUT;
 	
 	// handle
@@ -111,7 +113,7 @@ event = {
 };
 
 event = {
-      signal = BEAMFREE_ACK;
+      signal = BEAMFREEACK;
       dir = OUT;
       param = {
 	    name = "handle";
@@ -133,7 +135,7 @@ event = {
       param = {
             // time at which the new direction should be effective
 	    name = "timestamp";
-	    type = "Timestamp";
+	    type = "RTC::Timestamp";
       };
       param = {
 	    name = "type"; // 1 == J2000, 2 = AZEL, 3 = LOFAR_LMN

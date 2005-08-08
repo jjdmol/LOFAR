@@ -21,8 +21,8 @@
 //#
 //#  $Id$
 
-#include "ABSSpectralWindow.h"
-#include "ABSBeam.h"
+#include "SpectralWindow.h"
+#include "Beam.h"
 
 #include <Suite/suite.h>
 
@@ -122,7 +122,7 @@ public:
 	  TESTC(0 == m_beam[0]->convertPointings(begintime));
 
 	  Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
-	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS);
+	  Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_SUBBANDS);
 
 	  for (int pol = 0; pol < N_POLARIZATIONS; pol++)
 	  {
@@ -151,7 +151,7 @@ public:
 	  //
 	  // read in reference data
 	  //
-	  FILE* wfile = fopen("../../test/weights.dat", "r");
+	  FILE* wfile = fopen("../../../test/weights.dat", "r");
 	  TESTC(wfile);
 	  if (!wfile) return;
 
@@ -160,11 +160,11 @@ public:
 	    TESTC((size_t)weights_ref.size()
 		  == fread(weights_ref.data(), sizeof(complex<W_TYPE>), weights_ref.size(), wfile));
 
-	    error = weights_ref - weights(all, all, bl, 0);
+	    error = weights_ref - weights(all, Range(0,weights.extent(secondDim)-1,2), bl);
 	    cout << "error = abs(sum(error)) = " << abs(sum(error)) << endl;
 	    TESTC(abs(sum(error)) < 1e-8);
 
-	    error = weights_ref - weights(all, all, bl, 1);
+	    error = weights_ref - weights(all, Range(1,weights.extent(secondDim),2), bl);
 	    cout << "error = abs(sum(error)) = " << abs(sum(error)) << endl;
 	    TESTC(abs(sum(error)) < 1e-8);
 	  }

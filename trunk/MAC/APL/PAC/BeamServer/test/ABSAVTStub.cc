@@ -26,7 +26,7 @@
 #include <Suite/suite.h>
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
-#include "ABSDirection.h"
+#include "Direction.h"
 
 #include "ABSAVTStub.h"
 

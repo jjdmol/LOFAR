@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#ifndef ABSPOINTING_H_
-#define ABSPOINTING_H_
+#ifndef POINTING_H_
+#define POINTING_H_
 
-#include "ABSDirection.h"
+#include "Direction.h"
 #include <time.h>
 #include <sys/time.h>
 
@@ -86,4 +86,4 @@ namespace ABS
       }
 };
 
-#endif /* ABSPOINTING_H_ */
+#endif /* POINTING_H_ */
