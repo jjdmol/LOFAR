@@ -38,7 +38,7 @@ namespace LOFAR
 
   AH_Correlator::AH_Correlator() :
     itsWH(0),
-    itsInDH1(0), itsOutDH1(0), itsInCon1(0), itsOutCon1(0)
+    itsInDH1(0), itsOutDH1(0), itsInCon1(0), itsOutCon1(0), itsTH(0)
   {}
 
   AH_Correlator::~AH_Correlator() {
