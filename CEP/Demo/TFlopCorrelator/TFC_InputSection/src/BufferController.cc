@@ -76,7 +76,7 @@ timestamp_t BufferController::getFirstStamp()
   return stamp;
 }
 
-bool BufferController::getElements(void* buf, int* invalidcount, timestamp_t startstamp, int nelements)
+bool BufferController::getElements(void* buf, int& invalidcount, timestamp_t startstamp, int nelements)
 {
   MetadataType* mt;
   int mid, startid;
@@ -90,9 +90,9 @@ bool BufferController::getElements(void* buf, int* invalidcount, timestamp_t sta
   // unlock element
   itsMetadataBuf->ReadUnlockElements(mid, 1);
   
-  if (std::abs(offset) > MAX_OFFSET) {
-    return false;
-  }
+  
+  DBGASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
+               "BufferController: timestamp offset invalid");
 
   // determine start position in buffer
   itsMetadataBuf->setOffset(offset,startid);
@@ -102,6 +102,7 @@ bool BufferController::getElements(void* buf, int* invalidcount, timestamp_t sta
   invalidcount = 0;
   for (int i=0; i<nelements; i++) {
     mt = itsMetadataBuf->getAutoReadPtr(mid);
+
     if (mt->invalid != 0) {
       invalidcount++;
     }
@@ -143,6 +144,8 @@ bool BufferController::writeElements(void* buf, timestamp_t rspstamp, int neleme
     if (i==0) {
       startid = mid;
     }
+    // increment rspstamp 
+    rspstamp++;
   }
   
   // write the subbanddata
@@ -189,7 +192,7 @@ bool BufferController::rewriteElements(void* buf, timestamp_t startstamp, int ne
   // rewrite the metadata for this block
   mid = startid;
   for (int i=0; i<nelements; i++) {
-    mt = itsMetadataBuf->getManualWritePtr(1, mid);
+    mt = itsMetadataBuf->getManualWritePtr(mid);
     mt->invalid = 0;
     mid++;
     if (mid >= itsCyclicBufferSize) {
