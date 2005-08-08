@@ -24,6 +24,7 @@ TFC_InputSection_main.cc	\
 WH_RSPInput.cc           	\
 WH_SBCollect.cc			\
 WH_Transpose.cc			\
-AH_InputSection.cc			
+AH_InputSection.cc		\
+BufferController.cc	
 
 include $(lofar_sharedir)/Makefile.common

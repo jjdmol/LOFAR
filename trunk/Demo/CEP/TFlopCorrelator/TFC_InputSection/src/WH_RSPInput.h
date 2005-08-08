@@ -51,20 +51,18 @@ namespace LOFAR
 
   typedef struct 
   {
-    BufferController<subbandType>** SubbandBuffer;
-    BufferController<metadataType>** MetadataBuffer;
+    BufferController** BufControl;
     TransportHolder& Connection; 
     int FrameSize;
     int SubbandSize;
+    int EPAHeaderSize;
+    int EPAPacketSize;
     int nrPacketsInFrame;
     int nrSubbandsInPacket;
     int nrRSPoutputs;
     int* StationIDptr;
-    TinyDataManager* Datamanager;
-    bool Syncmaster;
     bool Stopthread;
   }  thread_args;
-
   
   class WH_RSPInput: public WorkHolder
   {
@@ -112,18 +110,25 @@ namespace LOFAR
       
       // Sync Master or slave
       bool itsSyncMaster;
+
+      // detect First process loop
+      bool itsFirstProcessLoop;
+
+      // synced stamp
+      timestamp_t itsSyncedStamp;
      
       int itsSzRSPframe;
-      int itsNpackets;
+      int itsNPackets;
       int itsNRSPOutputs;
       int itsNSubbands;
       int itsNSamplesToCopy;
       int itsNPolarisations;
       int itsCyclicBufferSize;
       int itsStationID;
+      int itsEPAHeaderSize;
+      int itsEPAPacketSize;
      
-      BufferController<subbandType> **itsSubbandBuffer;
-      BufferController<metadataType> **itsMetadataBuffer;
+      BufferController** itsBufControl;
   };
 
 } // namespace LOFAR
