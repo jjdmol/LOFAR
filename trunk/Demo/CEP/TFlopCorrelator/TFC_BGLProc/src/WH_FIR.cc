@@ -95,7 +95,7 @@ void WH_FIR::process() {
     
     // make sure to write the output to the correct DataHolder
     // this may turn out to be a hotspot, since we're writing small amounts of data
-    static_cast<DH_PPF*>(getDataManager().getOutHolder( filter / (itsNFilters/itsFFTs) ))->setBufferElement( filter % (itsNFilters/itsFFTs) , accum );
+    //    static_cast<DH_PPF*>(getDataManager().getOutHolder( filter / (itsNFilters/itsFFTs) ))->setBufferElement( filter % (itsNFilters/itsFFTs) , accum );
     adjustDelayPtr(filterData[filter].delayLine);
   }
 
