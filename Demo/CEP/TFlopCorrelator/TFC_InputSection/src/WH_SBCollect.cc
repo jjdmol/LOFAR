@@ -71,27 +71,27 @@ WH_SBCollect* WH_SBCollect::make(const string& name)
 
 void WH_SBCollect::process() 
 { 
-  // pack all inputs into one output
-  DH_RSP* inpDH;
-  DH_FIR* outpDH = (DH_FIR*)getDataManager().getOutHolder(0);
-  RectMatrix<DH_FIR::BufferType>& output = outpDH->getDataMatrix();
-  dimType stationDim = output.getDim("Station");
-  RectMatrix<DH_FIR::BufferType>::cursorType outCursor;
+  RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
+  RectMatrix<DH_FIR::BufferType>& outMatrix = ((DH_FIR*)getDataManager().getInHolder(0))->getDataMatrix();
 
-  DH_RSP::BufferType* inpPtr;
-  uint inpSize;
+  dimType outStationDim = outMatrix.getDim("Station");
+  dimType inStationDim = inMatrix->getDim("Station");
+
+  RectMatrix<DH_FIR::BufferType>::cursorType outCursor = outMatrix.getCursor( 0 * outStationDim);
+  RectMatrix<DH_RSP::BufferType>::cursorType inCursor = inMatrix->getCursor( 0 * inStationDim);
+
   // Loop over all inputs (stations)
   for (int nr=0; nr<itsNinputs; nr++)
   {
-    inpDH = (DH_RSP*)getDataManager().getInHolder(nr);
-    inpPtr = inpDH->getBuffer();
-    inpSize = inpDH->getBufferSize();
-
-    outCursor = output.getCursor( nr*stationDim );
+    inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
+    inCursor = inMatrix->getCursor(0*inStationDim);
+    outMatrix.moveCursor(&outCursor, outStationDim);
     // copy all freq, time and pol from an input to output
-    output.cpyFromBlock(inpPtr, inpSize, outCursor, stationDim, 1);
+    inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
   }
 
+#if 0
+  // dump the contents of the DHs to stdout
   for (int nr=0; nr<itsNinputs; nr++)
   {
     cout << "WH_SBCollect input " << nr << " : " << endl;
@@ -101,5 +101,6 @@ void WH_SBCollect::process()
 
   cout << "WH_SBCollect output : " << endl;
   hexdump(outpDH->getBuffer(), outpDH->getBufferSize() * sizeof(DH_FIR::BufferType));
-   
+#endif
+
 }
