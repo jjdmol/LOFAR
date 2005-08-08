@@ -1,5 +1,5 @@
 SUBDIRS = \
-	src 
-#	test
+	src \
+	test
 
 include $(lofar_sharedir)/Makefile.common
