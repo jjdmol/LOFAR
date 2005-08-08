@@ -4,92 +4,29 @@ AM_CPPFLAGS = \
 	-I$(top_builddir)/src \
 	-I$(top_srcdir)/test
 
-TESTS = \
-	BeamServerTest \
-	CheckWeightsTest \
-	CheckWeightsTest2 \
-	avtstub.sh
+#TESTS = \
+#	CalTest
 
 bin_PROGRAMS = \
-	AVTStub \
-	EPATest
+	CalTest
 
 check_PROGRAMS = \
-	BeamServerTest \
-	CheckWeightsTest \
-	CheckWeightsTest2 \
-	EPAStub \
-	SweepTest \
-	SetFreq
+	CalTest
 
-BeamServerTest_SOURCES = \
-	BeamServerTest.cc
+CalTest_SOURCES = \
+	CalTest.cc
 
-BeamServerTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-CheckWeightsTest_SOURCES = \
-	CheckWeightsTest.cc
-
-CheckWeightsTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-CheckWeightsTest2_SOURCES = \
-	CheckWeightsTest2.cc
-
-CheckWeightsTest2_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-AVTStub_SOURCES = \
-	ABSAVTStub.h \
-	ABSAVTStub.cc
-
-AVTStub_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-EPATest_SOURCES = \
-	ABSEPATest.h \
-	ABSEPATest.cc
-
-EPATest_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-SweepTest_SOURCES = \
-	ABSSweepTest.h \
-	ABSSweepTest.cc
-
-SweepTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-SetFreq_SOURCES = \
-	ABSSetFreq.h \
-	ABSSetFreq.cc
-
-SetFreq_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-EPAStub_SOURCES = \
-	ABSEPAStub.h \
-	ABSEPAStub.cc
-
-EPAStub_LDADD = \
-	$(top_builddir)/src/libabs.la \
+CalTest_LDADD = \
+	$(top_builddir)/src/libcal.la \
 	-lsuite
 
 BUILT_SOURCES = \
-	AVTStub.conf \
-	EPATest.conf
+	CalTest.conf
+
+EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
-	AVTStub.conf \
-	EPATest.conf
+	CalTest.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
