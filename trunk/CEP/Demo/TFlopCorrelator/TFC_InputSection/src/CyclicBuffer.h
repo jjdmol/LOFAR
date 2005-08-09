@@ -222,10 +222,8 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   itsCount++;
 
   // signal that data has become available 
-  if (itsCount >= MIN_COUNT)
-  {
-    pthread_cond_broadcast(&data_available);
-  }
+  pthread_cond_broadcast(&data_available);
+  
   pthread_mutex_unlock(&buffer_mutex);
 
   return &itsBuffer[ID].itsElement;
@@ -234,8 +232,9 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
 template<class TYPE>
 TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
 {
+  
   pthread_mutex_lock(&buffer_mutex);
-
+ 
   // wait until enough elements are available
   while ((itsCount < MIN_COUNT)) 
   {
@@ -245,7 +244,7 @@ TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
   // CONDITION: itsCount >= MIN_COUNT
   ID = itsTailIdx;
   ReadLockElement(ID);
- 
+  
   // adjust the tail
   itsTailIdx++;
   if (itsTailIdx >= (int)itsBuffer.size())
@@ -412,13 +411,12 @@ void CyclicBuffer<TYPE>::WriteLockElement(int ID)
 template<class TYPE>
 void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
 {
-  int idx = ID;
   for (int i=0; i<nelements; i++) {
-    if (idx >= (int)itsBuffer.size()) {
-      idx = 0;
+    if (ID >= (int)itsBuffer.size()) {
+      ID = 0;
     }
-    itsBuffer[idx].itsRWLock.WriteUnlock();
-    idx++;
+    itsBuffer[ID].itsRWLock.WriteUnlock();
+    ID++;
   }
 }
 
@@ -431,13 +429,12 @@ void CyclicBuffer<TYPE>::ReadLockElement(int ID)
 template<class TYPE>
 void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
 {
-  int idx = ID;
   for (int i=0; i<nelements; i++) {
-    if (idx >= (int)itsBuffer.size()) {
-      idx = 0;
+    if (ID >= (int)itsBuffer.size()) {
+      ID = 0;
     }
-    itsBuffer[idx].itsRWLock.ReadUnlock();
-    idx++;
+    itsBuffer[ID].itsRWLock.ReadUnlock();
+    ID++;
   }
 }
 

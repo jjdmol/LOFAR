@@ -88,21 +88,18 @@ bool BufferController::getElements(void* buf, int& invalidcount, timestamp_t sta
   int offset = startstamp - mt->timestamp;
 
   // unlock element
-  itsMetadataBuf->ReadUnlockElements(mid, 1);
-  
+  itsMetadataBuf->ReadUnlockElements(mid, 1); 
   
   DBGASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
                "BufferController: timestamp offset invalid");
 
   // determine start position in buffer
-  itsMetadataBuf->setOffset(offset,startid);
- 
+  itsMetadataBuf->setOffset(offset, startid);
   
   // get metadata of requested block
   invalidcount = 0;
   for (int i=0; i<nelements; i++) {
     mt = itsMetadataBuf->getAutoReadPtr(mid);
-
     if (mt->invalid != 0) {
       invalidcount++;
     }
@@ -115,7 +112,7 @@ bool BufferController::getElements(void* buf, int& invalidcount, timestamp_t sta
     memcpy(buf, &itsSubbandData[startid], n1*sizeof(SubbandType));
 
     int n2 = nelements - n1;
-    (int*)buf += n1;
+    (char*)buf += n1*sizeof(SubbandType);
     memcpy(buf, &itsSubbandData[0], n2*sizeof(SubbandType));
   }
   else {
@@ -126,7 +123,6 @@ bool BufferController::getElements(void* buf, int& invalidcount, timestamp_t sta
   //reading is done so unlock the elements in the cyclic buffer
   itsMetadataBuf->ReadUnlockElements(startid, nelements);
   
-
   return true; 
 }
 
@@ -155,7 +151,7 @@ bool BufferController::writeElements(void* buf, timestamp_t rspstamp, int neleme
     memcpy(&itsSubbandData[startid], buf, n1*sizeof(SubbandType));
 
     int n2 = nelements - n1;
-    (int*)buf += n1;
+    (char*)buf += n1*sizeof(SubbandType);
     memcpy(&itsSubbandData[0], buf, n2*sizeof(SubbandType));
   }
   else {
@@ -207,7 +203,7 @@ bool BufferController::rewriteElements(void* buf, timestamp_t startstamp, int ne
     memcpy(&itsSubbandData[startid], buf, n1*sizeof(SubbandType));
 
     int n2 = nelements - n1;
-    (int*)buf += n1;
+    (char*)buf += n1*sizeof(SubbandType);
     memcpy(&itsSubbandData[0], buf, n2*sizeof(SubbandType));
   }
   else {
