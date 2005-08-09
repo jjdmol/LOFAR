@@ -26,6 +26,8 @@
 #include <Common/LofarLogger.h>
 #include <iostream>
 #include <boost/thread.hpp>
+#include <Transport/TransportHolder.h>
+#include <Transport/TH_Socket.h>
 
 // Application specific includes
 #include <BDBConnector.h>
@@ -79,7 +81,8 @@ bool BDBConnectorRep::connectTo(string hostName, int port) const
 				 service,
 				 Socket::TCP);
   newSocket->setBlocking(false);
-  BDBSite* newSite = new BDBSite(hostName.c_str(), port, newSocket);
+  TransportHolder* th = new TH_Socket(newSocket);
+  BDBSite* newSite = new BDBSite(hostName.c_str(), port, th);
 
   if (newSocket->connect(0) == Socket::SK_OK) {
     // send my connection data
@@ -135,7 +138,8 @@ bool BDBConnectorRep::listenOnce(){
     newSocket->readBlocking(hostname, messageSize);
     newSocket->setBlocking(false);
     newSocket->setName(string("incoming_from") + hostname);
-    BDBSite* newSite = new BDBSite(hostname, port, newSocket);
+    TransportHolder* th = new TH_Socket(newSocket);
+    BDBSite* newSite = new BDBSite(hostname, port, th);
     
     LOG_TRACE_FLOW_STR("Accepted connection from "<<hostname<<":"<<port);
     itsSiteMap.addSite(newSite);

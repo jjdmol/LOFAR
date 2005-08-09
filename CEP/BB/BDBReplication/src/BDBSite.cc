@@ -35,10 +35,12 @@ using namespace std;
 
 INIT_TRACER_CONTEXT(BDBSite, "BDBReplication");
 
-BDBSite::BDBSite(const char* hostName, const int port, Socket* socket)
-  :     itsHostName(hostName), 
+#define BDBTAG 85
+
+BDBSite::BDBSite(const char* hostName, const int port, TransportHolder* th)
+  : itsHostName(hostName), 
     itsPort(port),
-    itsSocket(socket)
+    itsTH(th)
   //itsLock(itsMutex, false),
 
 {
@@ -54,7 +56,7 @@ BDBSite::BDBSite(const char* hostName, const int port, Socket* socket)
 BDBSite:: ~BDBSite()
 {
   delete itsConnectionDataBuffer;
-  delete itsSocket;
+  delete itsTH;
 }
 
 bool BDBSite::operator==(BDBSite& other)
@@ -68,42 +70,25 @@ ostream& operator<<(ostream& os, BDBSite& site)
 }
 
 void BDBSite::send(void* buffer, int bufferSize) {
-  int send = 0;
-  while (send < bufferSize) {
-    int sendNow = itsSocket->writeBlocking((void*)((char*)buffer+send), bufferSize-send);
-    if (sendNow < 0){
-      cerr<<"Error while writing: "<<itsSocket->errstr()<<endl;
-    } else {
-      send += sendNow;
-    }      
-  }
+  if (!itsTH->sendBlocking(buffer, bufferSize, BDBTAG))
+    LOG_TRACE_FLOW("Error while writing to TH ");
 }
 
 int BDBSite::recv(void* buffer, int bufferSize) {
-  int received = itsSocket->read(buffer, bufferSize);
+  int received = itsTH->recvNonBlocking(buffer, bufferSize, BDBTAG);
   if (received == 0) {
     cerr<<"No data present on non-blocking receive"<<endl;
     return 0;
-  } else if (received < 0) {    
-    cerr<<"Error while receiving: "<<itsSocket->errstr()<<endl;
-    return 0;
   } else {
-    int recNow = itsSocket->readBlocking((void*)((char*)buffer+received), bufferSize-received);
-    if (recNow < 0){
-      cerr<<"Error while receiving(blocking): "<<itsSocket->errstr()<<endl;
-      return 0;
-    } else {
-      return bufferSize;
-    }      
-  }
+    recvBlocking((void*)((char*)buffer+received), bufferSize-received);
+    return bufferSize;
+  }        
 } 
 
 int BDBSite::recvBlocking(void* buffer, int bufferSize) {
-  int ret = itsSocket->readBlocking(buffer, bufferSize);
-  if (ret != Socket::SK_OK){
-    cerr<<"Error while receiving(non-Blocking): "<<itsSocket->errstr()<<endl;
-  };
-  return ret;
+  if (!itsTH->recvBlocking(buffer, bufferSize, BDBTAG))
+    LOG_TRACE_FLOW("Error while receiving(non-Blocking)");
+  return bufferSize;
 } 
 
 BDBSiteMap::BDBSiteMap() :
