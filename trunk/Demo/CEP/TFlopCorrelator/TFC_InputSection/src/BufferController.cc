@@ -88,7 +88,7 @@ bool BufferController::getElements(void* buf, int& invalidcount, timestamp_t sta
   int offset = startstamp - mt->timestamp;
 
   // unlock element
-  itsMetadataBuf->ReadUnlockElements(mid, 1); 
+  itsMetadataBuf->ReadUnlockElement(mid); 
   
   DBGASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
                "BufferController: timestamp offset invalid");
