@@ -43,9 +43,17 @@ CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP
 		vRecord		RECORD;
 		vFullname	VARCHAR(120);
 		vNodename	VARCHAR(120);
+		vLeaf		PIChierarchy.leaf%TYPE;
+		vParamRefID	PIChierarchy.paramRefID%TYPE;
 		vQuery		TEXT;
 
 	BEGIN
+	  -- Is topNode a node or a parameter?
+	  SELECT leaf, paramRefID
+	  INTO	 vLeaf, vParamRefID
+	  FROM	 PIChierarchy
+	  WHERE	 nodeID = $2;
+
 	  -- Find name of top parameter
 	  SELECT r.pvssname
 	  INTO	 vFullname
@@ -56,15 +64,19 @@ CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP
 		RETURN;
 	  END IF;
 
-	  -- take name of node
-	  vNodename := split_part(vFullname, \'.\', 1);
+	  IF vLeaf = TRUE OR $3 = 0 THEN
+		vQuery := chr(39) || vFullname || chr(39);
+	  ELSE
+	    -- take name of node
+	    vNodename := split_part(vFullname, \'.\', 1);
 
-	  -- construct query
-	  vQuery := chr(39) || vNodename;
-	  FOR i in 1..$3 LOOP
-		vQuery := vQuery || \'[\\\\\\\\_][^\\\\\\\\_]+\';
-	  END LOOP;
-	  vQuery := vQuery || chr(39);
+	    -- construct query
+	    vQuery := chr(39) || vNodename;
+	    FOR i in 1..$3 LOOP
+		  vQuery := vQuery || \'_[^\\\\\\\\_]+\';
+	    END LOOP;
+	    vQuery := vQuery || chr(39);
+	  END IF;
 
 	  -- append query with one or two time limits
 	  IF $5 IS NULL
@@ -83,7 +95,8 @@ CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP
 			   k.time
 		FROM   PICparamref r
 			   INNER JOIN PICkvt k ON r.paramid = k.paramid
-	    WHERE  r.pvssname similar to \' || vQuery 
+	    WHERE  r.pvssname similar to \' || vQuery || \'
+		ORDER BY k.paramid, k.time\'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;

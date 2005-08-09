@@ -1,9 +1,11 @@
 SUBDIRS						= . 
 
 check_PROGRAMS				= tPICadmin \
+							  tPICvalue \
 							  tVICcomp \
 							  tVTtree \
-							  tVICadmin \
+							  tVHtree \
+							  tVHvalue \
 							  tOTDBinfo \
 							  tConnection
 
@@ -15,6 +17,10 @@ tPICadmin_SOURCES			= tPICadmin.cc
 tPICadmin_LDADD				= ../src/libotdb.la -lpqxx
 tPICadmin_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
 
+tPICvalue_SOURCES			= tPICvalue.cc
+tPICvalue_LDADD				= ../src/libotdb.la -lpqxx -laps
+tPICvalue_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
+
 tVICcomp_SOURCES			= tVICcomp.cc
 tVICcomp_LDADD				= ../src/libotdb.la -lpqxx
 tVICcomp_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
@@ -23,9 +29,13 @@ tVTtree_SOURCES				= tVTtree.cc
 tVTtree_LDADD				= ../src/libotdb.la -lpqxx
 tVTtree_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
 
-tVICadmin_SOURCES			= tVICadmin.cc
-tVICadmin_LDADD				= ../src/libotdb.la -lpqxx
-tVICadmin_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
+tVHtree_SOURCES				= tVHtree.cc
+tVHtree_LDADD				= ../src/libotdb.la -lpqxx
+tVHtree_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
+
+tVHvalue_SOURCES			= tVHvalue.cc
+tVHvalue_LDADD				= ../src/libotdb.la -lpqxx -laps
+tVHvalue_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
 
 tOTDBinfo_SOURCES			= tOTDBinfo.cc
 tOTDBinfo_LDADD				= ../src/libotdb.la -lpqxx

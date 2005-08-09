@@ -51,6 +51,9 @@
 \i getVICnodeDef_func.sql
 \i getVCtopNodeList_func.sql
 
+-- VIChierarchy
+\i getVHchildren_func.sql
+
 -- values
 \i addKVT_func.sql
 

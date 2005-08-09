@@ -74,11 +74,13 @@ public:
 	// When the endDate is not specified all value changes from beginDate
 	// till 'now' are retrieved, otherwise the selection is limited to
 	// [beginDate..endDate>.
-	vector<OTDBvalue> searchInPeriod (nodeIDType		topNode,
-									  uint32			depth,
-									  const ptime&		beginDate,
-									  const ptime&		endDate = ptime(),
-									  bool				mostRecentOnly=false);
+	vector<OTDBvalue> searchInPeriod 
+						(nodeIDType		topNode,
+						 uint32			depth,
+						 const ptime&	beginDate  = ptime(min_date_time),
+						 const ptime&	endDate = ptime(max_date_time),
+						 bool			mostRecentOnly=false);
+
 	//# SAS queries
 	// For scheduling the VIC tree on the OTDB tree SAS must know what
 	// resources exist in the OTDB tree. This list can be retrieved with
