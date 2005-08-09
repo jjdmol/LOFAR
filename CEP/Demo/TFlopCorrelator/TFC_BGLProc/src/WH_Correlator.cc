@@ -36,7 +36,7 @@ WH_Correlator::WH_Correlator(const string& name) :
 {
   ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
   itsNelements      = myPS.getInt32("Input.NRSP");
-  itsNsamples       = myPS.getInt32("WH_Corr.samples");
+  itsNsamples       = myPS.getInt32("Input.NSamplesToDH");
   itsNpolarisations = myPS.getInt32("Input.NPolarisations");
 
   itsNinputs = itsNpolarisations*itsNelements;
@@ -73,12 +73,12 @@ void WH_Correlator::preprocess() {
 
   ASSERTSTR(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBufferSize() == 
 	    itsNelements*itsNpolarisations*itsNsamples, 
-	    "InHolder size not equal to defined size");
+	    "InHolder size not equal to workholder size");
 //   ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
 
   ASSERTSTR(static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBufSize() == 
 	    itsNpolarisations*itsNpolarisations*itsNelements*(itsNelements+1)/2, 
-	    "OutHolder size not equal to defined size");
+	    "OutHolder size not equal to workholder size");
 
   // prevent stupid mistakes in the future by assuming we can easily change the unroll factor
   ASSERTSTR(UNROLL_FACTOR == 4, "Code is normally only unrolled by a factor of 4, make sure this is really what you want!");
@@ -142,10 +142,10 @@ void WH_Correlator::process() {
       for (B=0; B<A; B+=2) {
 	// these are the full squares
 	// now correlate stations B,B+1,A,A+1 in both polarisations
-	cout << B   << " - " << A   << endl;
-	cout << B   << " - " << A+1 << endl;
-	cout << B+1 << " - " << A   << endl;
-	cout << B+1 << " - " << A+1 << endl;
+// 	cout << B   << " - " << A   << endl;
+// 	cout << B   << " - " << A+1 << endl;
+// 	cout << B+1 << " - " << A   << endl;
+// 	cout << B+1 << " - " << A+1 << endl;
 
  	// load B inputs into registers
 	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);
@@ -181,9 +181,9 @@ void WH_Correlator::process() {
     
       // done all sqaures
       // now correlate the last triangle;
-      cout << B   << " - " << A   << endl;
-      cout << B   << " - " << A+1 << endl;
-      cout << B+1 << " - " << A+1 << endl;
+//       cout << B   << " - " << A   << endl;
+//       cout << B   << " - " << A+1 << endl;
+//       cout << B+1 << " - " << A+1 << endl;
 
       reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
       reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
