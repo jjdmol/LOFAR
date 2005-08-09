@@ -63,8 +63,8 @@ void DH_FIR::init()
   // Determine the number of elements needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNTimes * itsNPol;
   
-  addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
+  addField ("Flag", BlobField<int>(1));
   
   createDataBlock();  // calls fillDataPointers
   itsBuffer = getData<BufferType> ("Buffer");

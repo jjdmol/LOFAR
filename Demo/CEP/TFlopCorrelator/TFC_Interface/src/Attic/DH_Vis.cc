@@ -30,9 +30,8 @@ DH_Vis::DH_Vis (const string& name, double centerFreq,
    itsNCorrs = itsNPols*itsNPols;
    itsNStations  = itsPS.getInt32("Input.NRSP");
    itsNBaselines = itsNStations * (itsNStations + 1)/2;
-   
-   itsNsamples = itsPS.getInt32("WH_Corr.samples");
-}
+}   
+
 
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder    (that),
