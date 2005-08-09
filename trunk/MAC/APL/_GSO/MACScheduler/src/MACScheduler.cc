@@ -737,8 +737,9 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
     
     for(vector<string>::iterator childsIt=childKeys.begin();allocationOk && childsIt!=childKeys.end();++childsIt)
     {
-      string ldType = ps->getString(*childsIt + ".logicalDeviceType");
-      if(ldType == string("VIRTUALTELESCOPE") || atoi(ldType.c_str()) == static_cast<int>(LDTYPE_VIRTUALTELESCOPE))
+      string ldTypeString = ps->getString(*childsIt + ".logicalDeviceType");
+      TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
+      if(ldType == LDTYPE_VIRTUALTELESCOPE)
       {
         string station = ps->getString(*childsIt + ".remoteSystem");
         stations.push_back(station);
@@ -796,7 +797,7 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
     boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + VIrootID)); // assume VIrootID is a file
     // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
-    
+
     // replace the parent port (assigned by the ServiceBroker)
     unsigned int parentPort = m_VIparentPort.getPortNumber();
     ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
@@ -805,22 +806,26 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
     // get some parameters and write it to the allocated CCU
     string allocatedCCU = ps->getString("allocatedCCU");
     string viName = ps->getString("name");
-    string parameterFileName = viName + string(".ps");
+    string parameterFileName = viName + string(".param");
     
     // make all relative times absolute
     _convertRelativeTimes(ps);
+
+    string ldTypeString = ps->getString("logicalDeviceType");
+    TLogicalDeviceTypes ldTypeRoot = APLUtilities::convertLogicalDeviceType(ldTypeString);
     
-    TLogicalDeviceTypes ldType = (TLogicalDeviceTypes)ps->getInt32("logicalDeviceType");
     bool beamletsAllocated = true;
     
     // find the subbands allocations in VI sections
+    vector<string> childKeys;
     childKeys         = ps->getStringVector("childs");
     for(vector<string>::iterator childsIt=childKeys.begin();beamletsAllocated && childsIt!=childKeys.end();++childsIt)
     {
-      string ldType = ps->getString(*childsIt + ".logicalDeviceType");
-      if(ldType == string("VIRTUALINSTRUMENT") || atoi(ldType.c_str()) == static_cast<int>(LDTYPE_VIRTUALINSTRUMENT))
+      string ldTypeString = ps->getString(*childsIt + ".logicalDeviceType");
+      TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
+      if(ldType == LDTYPE_VIRTUALINSTRUMENT)
       {
-        boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(*childsIt)));
+        boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(*childsIt + string("."))));
         // allocate beamlets for VI's
         beamletsAllocated = _allocateBeamlets(VIrootID,psVI);
         if(!beamletsAllocated)
@@ -854,7 +859,7 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
       }
       // send the schedule event to the VI-StartDaemon on the CCU
       STARTDAEMONScheduleEvent sdScheduleEvent;
-      sdScheduleEvent.logicalDeviceType = ldType;
+      sdScheduleEvent.logicalDeviceType = ldTypeRoot;
       sdScheduleEvent.taskName = viName;
       sdScheduleEvent.fileName = parameterFileName;
     
@@ -916,7 +921,7 @@ void MACScheduler::_updateSchedule(const string& VIrootID, GCFPortInterface* por
     
     string allocatedCCU = ps->getString("allocatedCCU");
     string viName = ps->getString("name");
-    string parameterFileName = viName + string(".ps");
+    string parameterFileName = viName + string(".param");
   
     // make all relative times absolute
     _convertRelativeTimes(ps);

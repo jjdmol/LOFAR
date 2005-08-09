@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   
   StartDaemon sd(string("VIC_VIStartDaemon"));
   sd.registerFactory(LDTYPE_VIRTUALINSTRUMENT,viFactory);
-  sd.registerFactory(LDTYPE_VIRTUALARRAY,argFactory);
+  sd.registerFactory(LDTYPE_ARRAYRECEPTORGROUP,argFactory);
   sd.registerFactory(LDTYPE_ARRAYOPERATIONS,aoFactory);
   sd.registerFactory(LDTYPE_MAINTENANCEVI,mviFactory);
   sd.registerFactory(LDTYPE_OBSERVATION,oviFactory);

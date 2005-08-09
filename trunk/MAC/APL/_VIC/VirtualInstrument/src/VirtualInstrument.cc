@@ -175,12 +175,9 @@ GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GC
         {
           LOG_TRACE_FLOW("100% VB's CLAIMED");
           // 50% of the VT's must be claimed
-          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_CLAIMED))
+          if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_CLAIMED))
           {
-            LOG_TRACE_FLOW("00% VT's CLAIMED");
-            
-            LOG_TRACE_FLOW("need to check old style VT's");
-            
+            LOG_TRACE_FLOW("50% VT's CLAIMED");
             // enter claimed state
             newState  = LOGICALDEVICE_STATE_CLAIMED;
             errorCode = LD_RESULT_NO_ERROR;
@@ -235,9 +232,9 @@ GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, G
         {
           LOG_TRACE_FLOW("All VB's SUSPENDED");
           // 00% of the VT's must be prepared
-          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_SUSPENDED))
+          if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_SUSPENDED))
           {
-            LOG_TRACE_FLOW("00% VT's SUSPENDED");
+            LOG_TRACE_FLOW("50% VT's SUSPENDED");
             // enter suspended state
             newState=LOGICALDEVICE_STATE_SUSPENDED;
           }
@@ -349,47 +346,6 @@ void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortI
   }
 }
 
-bool VirtualInstrument::_writeScheduleCommand(const string& name, TGCFExtPropertySetPtr& propset)
-{
-  bool scheduleSent(false);
-  try
-  {
-    stringstream schedule;
-    schedule << "SCHEDULE ";
-    // SCHEDULE <sch.nr>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-    //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
-    schedule << "1,";
-    schedule << "VT,";
-    schedule << name << ",";
-    
-    string childs = m_parameterSet.getString(name + string(".") + string("childs"));
-    vector<string> childsVector;
-    APLUtilities::string2Vector(childs,childsVector);
-    
-    schedule << childsVector[0] << ",";
-    schedule << childsVector[1] << ",";
-    time_t startTime = APLUtilities::decodeTimeString(m_parameterSet.getString(name + string(".") + string("startTime")));
-    schedule << startTime << ",";
-    time_t stopTime = APLUtilities::decodeTimeString(m_parameterSet.getString(name + string(".") + string("stopTime")));
-    schedule << stopTime << ",";
-    
-    schedule << m_parameterSet.getString(name + string(".") + string("frequency")) << ",";
-    schedule << m_parameterSet.getString(name + string(".") + string("subbands")) << ",";
-    schedule << m_parameterSet.getString(name + string(".") + string("directionType")) << ",";
-    schedule << m_parameterSet.getString(name + string(".") + string("angle1")) << ",";
-    schedule << m_parameterSet.getString(name + string(".") + string("angle2")) << ",";
-    
-    GCFPVString pvSchedule(schedule.str());
-    propset->setValue("command",pvSchedule);
-    scheduleSent = true;
-  }
-  catch(Exception& e)
-  {
-    LOG_FATAL(e.message().c_str());
-  }
-  return scheduleSent;
-}
-
 bool VirtualInstrument::_checkQualityRequirements()
 {
   bool requirementsMet = false;
@@ -399,9 +355,9 @@ bool VirtualInstrument::_checkQualityRequirements()
   {
     LOG_TRACE_FLOW("All VB's RESUMED");
     // 00% of the VT's must be active
-    if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_ACTIVE))
+    if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_ACTIVE))
     {
-      LOG_TRACE_FLOW("00% VT's RESUMED");
+      LOG_TRACE_FLOW("50% VT's RESUMED");
       requirementsMet=true;
     }
   }
