@@ -53,16 +53,30 @@ int readFromDb(DbEnv* myDbEnv, Db* myDb, char* key) {
   valueT.set_size(strlen(key));
 
   LOG_TRACE_FLOW_STR ("reading from client database: key = "<<key);
-  Dbc* cursorp;
-  myDb->cursor(NULL, &cursorp, 0);
+  Dbc* cursorp = 0;
+  int ret = 0;
+  try {
+    ret = myDb->cursor(0, &cursorp, 0);
+  } catch (DbException& e) {
+    cerr<<"exception while getting cursor: "<<e.what()<<endl;
+  } catch (...) {
+    cerr<<"general exception while getting cursor"<<endl;
+  }
+  if(ret !=0) {
+    LOG_TRACE_FLOW_STR("could not get cursor from database on client:"<<myDbEnv->strerror(ret));
+    return 0;
+  }
 
-  int ret = cursorp->get(&keyT, &valueT, DB_SET);
+  ret = cursorp->get(&keyT, &valueT, DB_SET);
 //   DbTxn* myTxn = 0;
 //   myDbEnv->txn_begin(NULL, &myTxn, 0);
-//myDb->get(NULL, &keyT, &valueT, DB_AUTO_COMMIT);
+//   myDb->get(NULL, &keyT, &valueT, DB_AUTO_COMMIT);
 //   myTxn->commit(0);
   cursorp->close();
 
+//   myDbEnv->set_msgfile(stdout);
+//   myDb->stat_print(0);
+//   ret = myDb->get(0, &keyT, &valueT, DB_AUTO_COMMIT);
   if(ret !=0) {
     LOG_TRACE_FLOW_STR("could not read from database on client:"<<myDbEnv->strerror(ret));
     cerr<<"could not read from database on client:"<<myDbEnv->strerror(ret)<<endl;;
@@ -80,7 +94,9 @@ master (DbEnv* myDbEnv)
   myDbEnv->txn_begin(NULL, &myTxn, 0);
   LOG_TRACE_FLOW_STR("creating db");  
   Db myDb(myDbEnv, 0);
-  LOG_TRACE_FLOW_STR("opening database on master");  
+  const char* home;
+  myDbEnv->get_home(&home);
+  LOG_TRACE_FLOW_STR("opening database on master in directory "<<home);  
   if (myDb.open(myTxn, "test", "test", DB_BTREE, DB_CREATE, 0)!=0)
     LOG_TRACE_FLOW("could not open database on master");
 
@@ -93,93 +109,74 @@ master (DbEnv* myDbEnv)
   // first a = 2, b = 3, a = 5, c = 7
   // the client knows now that a*b*c should be 105
 
-  write2db(myDbEnv, &myDb, "a", "2");
-  write2db(myDbEnv, &myDb, "b", "3");
-  write2db(myDbEnv, &myDb, "a", "5");
-  write2db(myDbEnv, &myDb, "c", "7");
+  write2db(myDbEnv, &myDb, "keya", "2");
+  write2db(myDbEnv, &myDb, "keyb", "3");
+  write2db(myDbEnv, &myDb, "keya", "5");
+  write2db(myDbEnv, &myDb, "keyc", "7");
   
-  while(1);
-
   return 0;
 }
 
 bool
-client (DbEnv* dbenv)
+openClientDB (DbEnv* dbenv, Db** myDb)
 {
   DbTxn* myTxn;
   dbenv->txn_begin(NULL, &myTxn, 0);
   
-  Db myDb(dbenv, DB_CXX_NO_EXCEPTIONS);
+  *myDb = new Db(dbenv, DB_CXX_NO_EXCEPTIONS);
 
   LOG_TRACE_FLOW_STR ("opening database in environment "<<dbenv);
   int minor, major, patch;
   dbenv->version(&major, &minor, &patch);
   LOG_TRACE_FLOW_STR("db version: "<<major<<"."<<minor<<"-"<<patch);
 
-  int retries = 3;
-  while(1) {
-    try{
-      int ret = myDb.open(myTxn, "test", "test", DB_BTREE, DB_RDONLY, 0);
-      if(ret !=0) {
-	cerr<<"Could not open database"<<dbenv->strerror(ret)<<endl;
-	LOG_TRACE_FLOW_STR("Could not open database"<<dbenv->strerror(ret));
-      } else {
-	cout<<"db opened"<<endl;	
-	break;
-      }
-    } catch (Exception &e) {
-      cout<<"Exception while opening database: "<<e.what()<<endl;
-      exit(1);
-    } catch (...) {
-      cout<<"caught unknown exception"<<endl;
-      exit(1);
-    }
-    retries--;
-    if (retries <= 0) exit(1);
-    sleep(3);
+  int ret = (*myDb)->open(myTxn, "test", "test", DB_BTREE, DB_RDONLY, 0);
+  if(ret !=0) {
+    cerr<<"Could not open database"<<dbenv->strerror(ret)<<endl;
+    LOG_TRACE_FLOW_STR("Could not open database"<<dbenv->strerror(ret));
+    myTxn->abort();
+    return false;
+  } else {
+    cout<<"db opened"<<endl;	
+    myTxn->commit(0);
+    return true;
   }
-  myTxn->commit(0);
-
-  bool testOK = false;
-  for (int i=0; i<3; i++) {    
-    LOG_TRACE_FLOW("Reading");
-    
-    int a = readFromDb(dbenv, &myDb, "a");
-    int b = readFromDb(dbenv, &myDb, "b");
-    int c = readFromDb(dbenv, &myDb, "c");
-
-    if (a*b*c == 105) {
-      cerr<<"The answer is 105"<<endl;
-      testOK = true;
-      break;
-    } else { 
-      cerr<<"The answer is not 105, but "<<a*b*c<<endl;
-      sleep(3); // wait a few seconds before a retry
-    }
-  }  
-  myDb.close(0);
-
-  return testOK;
 }
+bool doClientTest(DbEnv* dbenv, Db* myDb)
+{
+  LOG_TRACE_FLOW("Reading");
+    
+  int a = readFromDb(dbenv, myDb, "keya");
+  int b = readFromDb(dbenv, myDb, "keyb");
+  int c = readFromDb(dbenv, myDb, "keyc");
+  
+  if (a*b*c == 105) {
+    cerr<<"The answer is 105"<<endl;
+    return true;
+  } else { 
+    cerr<<"The answer is not 105, but "<<a*b*c<<endl;
+    return false;
+  }
+}
+
 
 int
 main (int argc, char *argv[])
 {
   try {
   INIT_LOGGER("tBDBReplication");
-  unsigned short myPort = 0;
-  unsigned short masterPort = 0;
+  unsigned short myPort = 8020;
+  unsigned short masterPort = 8020;
   
   extern char *optarg;
-  bool amMaster = false;
-  char *home = "";
+  bool amMaster = true;
+  char *home = "masterDir";
   char ch;
 
-  while ((ch = getopt (argc, argv, "fh:m:o:")) != EOF) {
+  while ((ch = getopt (argc, argv, "h:m:o:")) != EOF) {
     switch (ch)
       {
       case 'f':
-	amMaster = true;
 	break;
       case 'h':
 	home = optarg;
@@ -188,6 +185,7 @@ main (int argc, char *argv[])
 	myPort = atoi (optarg);
 	break;
       case 'm':
+	amMaster = false;
 	masterPort = atoi (optarg);
 	break;
       default:
@@ -212,15 +210,30 @@ main (int argc, char *argv[])
     {
       LOG_TRACE_FLOW_STR("starting master");
       master (myDbEnv);
+      while(1) BDBR->handleMessages();
     }
   else
     {
       LOG_TRACE_FLOW_STR("starting client");
-      sleep(5);
-      if(!client (myDbEnv)) return 1;
+      sleep(10);
+      Db* myDb = 0;
+      while (!openClientDB(myDbEnv, &myDb))
+	BDBR->handleMessages();
+	     
+      bool testSucceeded = false;
+      BDBR->handleMessages();
+      while(!doClientTest(myDbEnv, myDb)) {
+	BDBR->handleMessages();
+      };
+      myDb->close(0);
     }
 
+  delete BDBR;
+
   return 0;
+  } catch ( Exception& e ) {
+    cout<<"EXCEPTION: "<<e.what()<<endl;
+    return 1;
   } catch ( ... ) {
     return 1;
   }
