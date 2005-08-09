@@ -24,16 +24,16 @@
 #define BDBCONNECTOR_H
 
 #include <Common/Net/Socket.h>
+#include <BDBReplication/BDBSite.h>
  
-#include <BDBReplication/BDBCommunicator.h>
-
 using namespace LOFAR;
 
 class BDBConnectorRep {
  public:
   // called from outside the thread
-  BDBConnectorRep(int port,
-		  BDBCommunicator* ConnectionHandler);
+  BDBConnectorRep(const string hostName,
+		  int port,
+		  BDBSiteMap& siteMap);
 
   ~BDBConnectorRep();
 
@@ -43,11 +43,15 @@ class BDBConnectorRep {
 
   // this contains the loop of the thread
   void operator()();
+  bool listenOnce();
   
   int itsReferences;
 
+  bool connectTo(string hostName, int port) const;
+
  private:
-  BDBCommunicator& itsConnectionHandler;
+  BDBSiteMap& itsSiteMap;
+  string itsHostName;
   int itsPort;
   
   // used from outside and within so protected by a mutex
@@ -56,6 +60,7 @@ class BDBConnectorRep {
   bool shouldStop();
  
   ALLOC_TRACER_ALIAS(BDBSite);
+  Socket* itsListenSocket;
 };
 
 inline bool BDBConnectorRep::isListening() {
@@ -67,8 +72,9 @@ inline bool BDBConnectorRep::isListening() {
 class BDBConnector {
  public:
   // called from outside the thread
-  BDBConnector(const int port, 
-	       BDBCommunicator* ConnectionHandler);
+  BDBConnector(string hostName,
+	       const int port, 
+	       BDBSiteMap& siteMap);
   BDBConnector(const BDBConnector& other);
 
   ~BDBConnector();
@@ -79,9 +85,13 @@ class BDBConnector {
 
   // this contains the loop of the thread
   void operator()();
+  bool listenOnce();
+
+  bool connectTo(string hostName, int port) const;
 
  private:
   BDBConnectorRep* itsRep;
+  ALLOC_TRACER_ALIAS(BDBSite);
 };
 
 inline bool BDBConnector::isListening() 

@@ -26,12 +26,12 @@
 #include <map>
 #include <Common/lofar_string.h>
 #include <Common/LofarLogger.h>
-#include <Common/Net/Socket.h>
 #include <boost/thread.hpp>
 #include <db_cxx.h>
 
 #include <BDBReplication/BDBCommunicator.h>
 #include <BDBReplication/BDBConnector.h>
+#include <BDBReplication/BDBSite.h>
  
 using namespace LOFAR;
 
@@ -52,6 +52,9 @@ class BDBReplicator {
 
   ~BDBReplicator();
 
+  // handle outstanding messages
+  void handleMessages();
+
  private:
   bool itsReplicationStarted;
   string itsDbEnvName;
@@ -62,11 +65,13 @@ class BDBReplicator {
   int itsMasterPort;
   bool itsIsMaster;
 
-  BDBCommunicator itsCommunicator;
-  boost::thread* itsCommunicatorThread;
   BDBConnector itsConnector;
   boost::thread* itsConnectorThread;
+  BDBCommunicator itsCommunicator;
+  boost::thread* itsCommunicatorThread;
   DbEnv* itsDbEnv;
+
+  BDBSiteMap itsSiteMap;
 
   ALLOC_TRACER_ALIAS(BDBSite);
 };

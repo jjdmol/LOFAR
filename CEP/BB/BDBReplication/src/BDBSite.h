@@ -41,13 +41,17 @@ class BDBSite {
 
   void send(void* buffer, int bufferSize);
   int recv(void* buffer, int bufferSize);
+  int recvBlocking(void* buffer, int bufferSize);
 
   //  Socket* getSocket();
   Dbt* getConnectionData();
   bool operator==(BDBSite& other);
   friend ostream& operator<<(ostream& os, BDBSite& site);
+  void lock();
+  void unlock();
+  boost::mutex itsMutex;
  private:
-  boost::mutex itsSocketMutex;
+  //  boost::mutex::scoped_lock itsLock;
   string itsHostName;
   int itsPort;
   Socket* itsSocket;
@@ -57,8 +61,14 @@ class BDBSite {
   ALLOC_TRACER_CONTEXT;
 };
 
-//inline Socket* BDBSite::getSocket()
-//{ return itsSocket;};
+inline void BDBSite::lock() {
+  //  if (itsLock.locked()) cerr<<"BDBSite is already locked"<<endl;
+  //  itsLock.lock(); 
+};
+inline void BDBSite::unlock() {
+  //  if (!itsLock.locked()) cerr<<"BDBSite wasn't locked"<<endl;
+  //  itsLock.unlock(); 
+};
 inline Dbt* BDBSite::getConnectionData()
 { return &itsConnectionData; };
 
@@ -66,40 +76,53 @@ class BDBSiteMap {
  public:
   BDBSiteMap();
   ~BDBSiteMap();
-  BDBSite& getSite(int index);
-  void addSite(int index, BDBSite& newSite);
-  map<int, BDBSite*>::iterator beginIterator();
-  map<int, BDBSite*>::iterator getEnd();
-  void destroyIterator();
- private:
+  //  BDBSite& getSite(int index);
+  void addSite(BDBSite* newSite);
+
+  typedef map<int, BDBSite*>::iterator iterator;
+
+  BDBSite& find(int envid);
+  BDBSiteMap::iterator begin();
+  BDBSiteMap::iterator end();
   void lock();
-  boost::mutex itsMutex;
-  boost::mutex::scoped_lock itsLock;
   void unlock();
+  void print(ostream& os);
+  boost::mutex itsMutex;
+ private:
+  int itsLastEnvId;
+  //boost::mutex::scoped_lock itsLock;
   map<int, BDBSite*> itsSiteMap;
 };
 inline void BDBSiteMap::lock() {
-  itsLock.lock(); };
+  //  if (itsLock.locked()) 
+  //    cerr<<"BDBSiteMap is already locked"<<endl;
+  //  itsLock.lock(); 
+};
 inline void BDBSiteMap::unlock() {
-  itsLock.unlock(); };
+/*   if (!itsLock.locked())  */
+/*     cerr<<"BDBSiteMap wasn't locked"<<endl; */
+/*   itsLock.unlock();  */
+};
 
-inline BDBSite& BDBSiteMap::getSite (int index) {
-  lock();
-  BDBSite* site = itsSiteMap[index];
-  unlock();
+inline BDBSite& BDBSiteMap::find(int envid) {
+  BDBSite* site = itsSiteMap.find(envid)->second;
   return *site;
 };
-inline void BDBSiteMap::addSite (int index, BDBSite& newSite) {
-  lock(); itsSiteMap[index] = &newSite; unlock();};
-inline map<int, BDBSite*>::iterator BDBSiteMap::getEnd() {
+inline BDBSiteMap::iterator BDBSiteMap::begin() {
+  return itsSiteMap.begin(); };
+inline BDBSiteMap::iterator BDBSiteMap::end() {
   return itsSiteMap.end(); };
-inline map<int, BDBSite*>::iterator BDBSiteMap::beginIterator() {
-  while (itsLock.locked()) {
-    LOG_TRACE_FLOW("BDBSiteMap is locked, maybe you forgot to call destroyIterator?");
-    sleep(1);
-  }
-  lock(); return itsSiteMap.begin(); };
-inline void BDBSiteMap::destroyIterator() {
-  unlock(); };
+
+#define MAGIC_VALUE 85
+
+class BDBEnv : public DbEnv
+{
+ public:
+  BDBEnv(int flags, BDBSiteMap& siteMap) : DbEnv(flags), itsSiteMap(siteMap), magicValue(MAGIC_VALUE){};
+  BDBSiteMap& itsSiteMap;
+  void AssertCorrectInstance() {ASSERTSTR(magicValue = MAGIC_VALUE, "BDBEnv is not a correct instance");};
+ private:
+  int magicValue;  
+};
 
 #endif

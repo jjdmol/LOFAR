@@ -33,12 +33,16 @@
 using namespace LOFAR;
 using namespace std;
 
-BDBConnectorRep::BDBConnectorRep(const int port,
-				 BDBCommunicator* ConnectionHandler)
-  :itsConnectionHandler(*ConnectionHandler),
+BDBConnectorRep::BDBConnectorRep(const string hostName,
+				 const int port,
+				 BDBSiteMap& siteMap)
+  :itsSiteMap(siteMap),
+   itsHostName(hostName),
    itsPort(port),
    itsShouldStop(false),
-   itsIsListening(false)
+   itsIsListening(false),
+   itsReferences(0),
+   itsListenSocket(0)
 {
   //  LOG_TRACE_FLOW("BDBConnector constructor");
 }
@@ -63,47 +67,89 @@ bool BDBConnectorRep::shouldStop()
   return itsShouldStop;
 };
 
-void BDBConnectorRep::operator()()
+bool BDBConnectorRep::connectTo(string hostName, int port) const
 {
-  LOG_TRACE_FLOW("BDBConnector starting thread");
-  Socket listenSocket;
+  if (itsPort == 0) return false;
   char service[20];
-  snprintf(service, 20, "%d", itsPort);
-  LOG_TRACE_FLOW_STR("BDBConnector initting server on port "<<service);
-  while (!itsIsListening) {    
-    char service[20];
-    snprintf(service, 20, "%d", itsPort);
-    if (listenSocket.initServer(service) != Socket::SK_OK) {
-      LOG_TRACE_FLOW_STR("Could not init server ("<<listenSocket.errstr()<<"), retrying");
-      itsPort++;
-    } else {
-      itsIsListening = true;
-    }
-  };
-  LOG_TRACE_FLOW("BDBConnector starting to listen");
-  while (!shouldStop()) {
-    Socket* newSocket = listenSocket.accept(500); // wait 500 ms for new connection
-    if (newSocket != 0){
-      int port=0;
-      newSocket->readBlocking(&port, 4);
-      int messageSize=0;      
-      newSocket->readBlocking(&messageSize, 4);
-      char hostname[messageSize+1];
-      memset(hostname, 0, messageSize+1);
-      newSocket->readBlocking(hostname, messageSize);
-      BDBSite* newSite = new BDBSite(hostname, port, newSocket);
+  snprintf(service, 20, "%d", port);
+  LOG_TRACE_FLOW_STR("BDBConnector connecting to "<<hostName<<":"<<port);
+  LOG_TRACE_FLOW_STR("BDBConnector connecting from "<<itsHostName<<":"<<itsPort);
+  Socket* newSocket = new Socket((string("outgoing_to_") + hostName).c_str(),
+				 hostName.c_str(),
+				 service,
+				 Socket::TCP);
+  newSocket->setBlocking(false);
+  BDBSite* newSite = new BDBSite(hostName.c_str(), port, newSocket);
 
-      LOG_TRACE_FLOW_STR("Accepted connection from "<<hostname<<":"<<port);
-      itsConnectionHandler.addSite(newSite);
-    }
-    boost::thread::yield();
+  if (newSocket->connect(0) == Socket::SK_OK) {
+    // send my connection data
+    newSocket->writeBlocking(&itsPort,4);
+    int messageSize = itsHostName.size();
+    newSocket->writeBlocking(&messageSize, 4);
+    newSocket->writeBlocking(itsHostName.c_str(), messageSize);
+    
+    itsSiteMap.addSite(newSite);
+    return true;
+  } else {
+    delete newSite;
+    return false;
   }
 }
 
-BDBConnector::BDBConnector(const int port,
-			   BDBCommunicator* ConnectionHandler)
+
+void BDBConnectorRep::operator()()
 {
-  itsRep = new BDBConnectorRep(port, ConnectionHandler);
+  LOG_TRACE_FLOW("BDBConnector starting thread");
+  while (!shouldStop()) {
+    if (!listenOnce())
+      boost::thread::yield();
+  }
+};
+
+bool BDBConnectorRep::listenOnce(){
+  if (itsListenSocket == 0) {
+    itsListenSocket = new Socket("Listen socket of Connector");
+    char service[20];
+    snprintf(service, 20, "%d", itsPort);
+    LOG_TRACE_FLOW_STR("BDBConnector initting server on port "<<service);
+    while (!itsIsListening) {    
+      char service[20];
+      snprintf(service, 20, "%d", itsPort);
+      if (itsListenSocket->initServer(service) != Socket::SK_OK) {
+	LOG_TRACE_FLOW_STR("Could not init server ("<<itsListenSocket->errstr()<<"), retrying");
+	itsPort++;
+      } else {
+	itsIsListening = true;
+      }
+    }
+  }
+
+  Socket* newSocket = itsListenSocket->accept(100); // wait 500 ms for new connection
+  if (newSocket != 0){
+    int port=0;
+    newSocket->readBlocking(&port, 4);
+    int messageSize=0;      
+    newSocket->readBlocking(&messageSize, 4);
+    char hostname[messageSize+1];
+    memset(hostname, 0, messageSize+1);
+    newSocket->readBlocking(hostname, messageSize);
+    newSocket->setBlocking(false);
+    newSocket->setName(string("incoming_from") + hostname);
+    BDBSite* newSite = new BDBSite(hostname, port, newSocket);
+    
+    LOG_TRACE_FLOW_STR("Accepted connection from "<<hostname<<":"<<port);
+    itsSiteMap.addSite(newSite);
+    return true; // we had something to do
+  } else {
+    return false;
+  }
+}
+
+BDBConnector::BDBConnector(const string hostName,
+			   const int port,
+			   BDBSiteMap& siteMap)
+{
+  itsRep = new BDBConnectorRep(hostName, port, siteMap);
   itsRep->itsReferences++;
   //  LOG_TRACE_FLOW("BDBConnector constructor");
 }
@@ -122,4 +168,11 @@ BDBConnector::~BDBConnector()
   if (itsRep->itsReferences == 0)
     delete itsRep;
   //  LOG_TRACE_FLOW("BDBConnector detor");
+}
+
+bool BDBConnector::connectTo(string hostName, int port) const
+{ return itsRep->connectTo(hostName, port);};
+bool BDBConnector::listenOnce()
+{
+  return itsRep->listenOnce(); 
 }
