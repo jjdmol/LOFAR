@@ -540,7 +540,7 @@ void LogicalDevice::_schedule()
     try
     {
       string ldTypeString = m_parameterSet.getString((*chIt) + ".logicalDeviceType");
-      TLogicalDeviceTypes ldType = _convertLogicalDeviceType(ldTypeString);
+      TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
       m_childTypes[*chIt] = ldType;
       m_childStates[*chIt] = LOGICALDEVICE_STATE_IDLE;
     }
@@ -1154,7 +1154,7 @@ void LogicalDevice::_sendScheduleToClients()
         string startDaemonKey = it->first;
         TPortSharedPtr startDaemonPort = it->second;
         ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
-        string parameterFileName = startDaemonKey+string(".ps"); 
+        string parameterFileName = startDaemonKey+string(".param"); 
         string remoteSystem = psSubset.getString("startDaemonHost");
         
         string tempFileName = APLUtilities::getTempFileName();
@@ -1164,7 +1164,7 @@ void LogicalDevice::_sendScheduleToClients()
   
         // send the schedule to the startdaemon of the child
         string ldTypeString = psSubset.getString("logicalDeviceType");
-        TLogicalDeviceTypes ldType = _convertLogicalDeviceType(ldTypeString);
+        TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
         boost::shared_ptr<STARTDAEMONScheduleEvent> scheduleEvent(new STARTDAEMONScheduleEvent);
         scheduleEvent->logicalDeviceType = ldType;
         scheduleEvent->taskName = startDaemonKey;
@@ -1192,7 +1192,7 @@ void LogicalDevice::_sendScheduleToClients()
         if(TPortSharedPtr pChildPort = it->second.lock())
         {
           ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(childKey + string("."));
-          string parameterFileName = childKey+string(".ps"); 
+          string parameterFileName = childKey+string(".param"); 
           string remoteSystem = psSubset.getString("startDaemonHost");
 
           string tempFileName = APLUtilities::getTempFileName();
@@ -1237,48 +1237,6 @@ string LogicalDevice::_getShareLocation() const
     LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using %s",e.message().c_str(),shareLocation.c_str()));
   }
   return shareLocation;
-}
-
-TLogicalDeviceTypes LogicalDevice::_convertLogicalDeviceType(const string& ldTypeString)
-{
-  TLogicalDeviceTypes ldType = LDTYPE_NO_TYPE;
-  if(ldTypeString == "VIRTUALINSTRUMENT")
-  {
-    ldType = LDTYPE_VIRTUALINSTRUMENT;
-  }
-  else if(ldTypeString == "VIRTUALTELESCOPE")
-  {
-    ldType = LDTYPE_VIRTUALTELESCOPE;
-  }
-  else if(ldTypeString == "VIRTUALARRAY")
-  {
-    ldType = LDTYPE_VIRTUALARRAY;
-  }
-  else if(ldTypeString == "STATIONRECEPTORGROUP")
-  {
-    ldType = LDTYPE_STATIONRECEPTORGROUP;
-  }
-  else if(ldTypeString == "ARRAYOPERATIONS")
-  {
-    ldType = LDTYPE_ARRAYOPERATIONS;
-  }
-  else if(ldTypeString == "STATIONOPERATIONS")
-  {
-    ldType = LDTYPE_STATIONOPERATIONS;
-  }
-  else if(ldTypeString == "VIRTUALBACKEND")
-  {
-    ldType = LDTYPE_VIRTUALBACKEND;
-  }
-  else if(ldTypeString == "MAINTENANCEVI")
-  {
-    ldType = LDTYPE_MAINTENANCEVI;
-  }
-  else
-  {
-    ldType = static_cast<TLogicalDeviceTypes>(atoi(ldTypeString.c_str()));
-  }
-  return ldType;
 }
 
 GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface& port)

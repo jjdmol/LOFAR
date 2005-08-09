@@ -32,6 +32,7 @@
 //# GCF Includes
 
 //# local includes
+#include "APLCommon/StartDaemon_Protocol.ph"
 
 // forward declaration
 
@@ -57,6 +58,7 @@ class APLUtilities
     static time_t decodeTimeString(const string& timeStr);
     static int remoteCopy(const string& localFile, const string& remoteHost, const string& remoteFile);
     static string getTempFileName();
+    static TLogicalDeviceTypes convertLogicalDeviceType(const string& ldTypeString);
     
   protected:
     // protected copy constructor

@@ -225,3 +225,51 @@ string APLUtilities::getTempFileName()
   tmpnam(tempFileName);
   return string(tempFileName);
 }
+
+TLogicalDeviceTypes APLUtilities::convertLogicalDeviceType(const string& ldTypeString)
+{
+  TLogicalDeviceTypes ldType = LDTYPE_NO_TYPE;
+  if(ldTypeString == "VIRTUALINSTRUMENT")
+  {
+    ldType = LDTYPE_VIRTUALINSTRUMENT;
+  }
+  else if(ldTypeString == "VIRTUALTELESCOPE")
+  {
+    ldType = LDTYPE_VIRTUALTELESCOPE;
+  }
+  else if(ldTypeString == "ARRAYRECEPTORGROUP")
+  {
+    ldType = LDTYPE_ARRAYRECEPTORGROUP;
+  }
+  else if(ldTypeString == "STATIONRECEPTORGROUP")
+  {
+    ldType = LDTYPE_STATIONRECEPTORGROUP;
+  }
+  else if(ldTypeString == "ARRAYOPERATIONS")
+  {
+    ldType = LDTYPE_ARRAYOPERATIONS;
+  }
+  else if(ldTypeString == "STATIONOPERATIONS")
+  {
+    ldType = LDTYPE_STATIONOPERATIONS;
+  }
+  else if(ldTypeString == "VIRTUALBACKEND")
+  {
+    ldType = LDTYPE_VIRTUALBACKEND;
+  }
+  else if(ldTypeString == "MAINTENANCEVI")
+  {
+    ldType = LDTYPE_MAINTENANCEVI;
+  }
+  else if(ldTypeString == "OBSERVATION")
+  {
+    ldType = LDTYPE_OBSERVATION;
+  }
+  else
+  {
+    ldType = static_cast<TLogicalDeviceTypes>(atoi(ldTypeString.c_str()));
+    LOG_WARN(formatString("Unknown logical device type '%s'",ldTypeString.c_str()));
+  }
+  return ldType;
+}
+

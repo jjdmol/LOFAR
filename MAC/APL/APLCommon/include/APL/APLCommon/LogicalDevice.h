@@ -220,7 +220,6 @@ namespace APLCommon
       virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port)=0;
       virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port)=0;
       
-
     protected:    
       APL_DECLARE_SHARED_POINTER(GCF::PAL::GCFMyPropertySet)
       
@@ -251,7 +250,6 @@ namespace APLCommon
       void _setChildStates(TLogicalDeviceState ldState);
       void _setConnectedChildState(GCF::TM::GCFPortInterface& port, TLogicalDeviceState ldState);
       string _getConnectedChildName(GCF::TM::GCFPortInterface& port);
-      TLogicalDeviceTypes _convertLogicalDeviceType(const string& ldTypeString);
 
       TPortMap                              m_parentPorts; // connection with parents
       unsigned long                         m_parentReconnectTimerId;

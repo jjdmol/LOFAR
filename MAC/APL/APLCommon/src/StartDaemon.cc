@@ -401,7 +401,7 @@ void StartDaemon::handlePropertySetAnswer(GCFEvent& answer)
         {
           if(parameters.size()==3)
           {
-            TLogicalDeviceTypes logicalDeviceType = static_cast<TLogicalDeviceTypes>(atoi(parameters[0].c_str()));
+            TLogicalDeviceTypes logicalDeviceType = APLUtilities::convertLogicalDeviceType(parameters[0]);
             string taskName = parameters[1];
             string fileName = parameters[2];            
             
