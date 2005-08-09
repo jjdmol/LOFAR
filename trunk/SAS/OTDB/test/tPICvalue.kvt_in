@@ -1,0 +1,5 @@
+LCU3:PIC_Rack1.status = 1
+LCU3:PIC_Rack1.status = 2 {0}
+LCU3:PIC_Rack1.status = 3 {1}
+LCU3:PIC_Rack1.status = 4 {31536000}
+LCU3:PIC_Rack1.status = 5 {1123456789}
