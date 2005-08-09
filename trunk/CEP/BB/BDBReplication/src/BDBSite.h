@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
-#include <Common/Net/Socket.h>
+#include <Transport/TransportHolder.h>
 #include <boost/thread.hpp>
 #include <db_cxx.h>
  
@@ -36,7 +36,7 @@ class BDBReplicator;
 
 class BDBSite {
  public:
-  BDBSite(const char* hostName, const int port, Socket* socket);
+  BDBSite(const char* hostName, const int port, TransportHolder* th);
   ~BDBSite();
 
   void send(void* buffer, int bufferSize);
@@ -54,7 +54,7 @@ class BDBSite {
   //  boost::mutex::scoped_lock itsLock;
   string itsHostName;
   int itsPort;
-  Socket* itsSocket;
+  TransportHolder* itsTH;
   Dbt itsConnectionData;
   char* itsConnectionDataBuffer;
 
