@@ -25,18 +25,64 @@
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
-#include <Common/Net/Socket.h>
 #include <boost/thread.hpp>
 #include <db_cxx.h>
  
 #include <BDBReplication/BDBSite.h>
+#include <BDBReplication/BDBConnector.h>
 
 using namespace LOFAR;
+
+struct IncomingMessage {
+  Dbt rec;
+  Dbt control;
+  int envid;
+  char* cBuffer;
+  char* rBuffer;
+};
+
+class BDBCommunicatorRep {
+ public:
+  // called from outside the thread
+  BDBCommunicatorRep(const BDBConnector& connector, BDBSiteMap& map);
+
+  ~BDBCommunicatorRep();
+
+  void setEnv(DbEnv* DbEnv);
+
+  // signal the thread to stop
+  void stop();
+
+  // this contains the loop of the thread
+  void operator()();
+  // returns true if there was something to be done
+  //  and so we would like to be called again (soon)
+  bool listenOnce();
+
+  bool isStartupDone();
+
+  int itsReferences;
+ private:
+  void handleMessage(Dbt& rec, Dbt& control, int envId);
+
+  // used from outside and within so protected by a mutex
+  bool itsShouldStop;
+  bool shouldStop();
+  bool itsStartupDone;
+
+  const BDBConnector& itsConnector;
+
+  BDBSiteMap& itsSiteMap;
+  DbEnv* itsDbEnv;
+
+  ALLOC_TRACER_ALIAS(BDBSite);
+};
+
 
 class BDBCommunicator {
  public:
   // called from outside the thread
-  BDBCommunicator(const string& hostname);
+  BDBCommunicator(const BDBConnector& connector, BDBSiteMap& siteMap);
 
   BDBCommunicator(const BDBCommunicator& other);
 
@@ -60,40 +106,16 @@ class BDBCommunicator {
 
   // this contains the loop of the thread
   void operator()();
+  bool listenOnce();
 
-  // called from listen thread
-  void addSite(BDBSite* newSite);
-  // dump siteMap to cout
-  void printSiteMap();
-  // called from inside the ch thread
-  bool connectTo(const char* otherHostName,
-		 int otherPort);
+  bool isStartupDone();
 
-  // set port, this should be done after the connector has found an unused port
-  void setPort(int newPort);
+  void setSiteMap(BDBSiteMap& map);
 
  private:
-  void handleMessage(Dbt* rec, Dbt* control, int envId);
-
-  // used from outside and within so protected by a mutex
-  static bool theirShouldStop;
-  bool shouldStop();
-
-  // the list of sockets should be protected
-  // they are used from the static send function and it
-  // is probably possible that it is called in different threads
-  static boost::mutex theirSiteMapMutex;
-  static std::map<int, BDBSite*> theirSiteMap; //int or something else?
-  static int theirObjectCounter;
-  static int theirLastEnvId;
-  int itsEnvId;
-  DbEnv* itsDbEnv;
-  string itsHostName;
-  int itsPort;
+  BDBCommunicatorRep* itsRep;
   ALLOC_TRACER_ALIAS(BDBSite);
 };
 
-inline void BDBCommunicator::setPort(int newPort)
-{ itsPort = newPort;};
 
 #endif

@@ -32,208 +32,121 @@
 using namespace LOFAR;
 using namespace std;
 
-boost::mutex BDBCommunicator::theirSiteMapMutex;
-map<int, BDBSite*> BDBCommunicator::theirSiteMap;
-int BDBCommunicator::theirObjectCounter = 0;
-bool BDBCommunicator::theirShouldStop = false;
-int BDBCommunicator::theirLastEnvId = 2;
-
-BDBCommunicator::BDBCommunicator(const string& hostName)
-  : itsEnvId(1),
-    itsDbEnv(0),
-    itsHostName(hostName),
-    itsPort(0)
+BDBCommunicatorRep::BDBCommunicatorRep(const BDBConnector& connector, BDBSiteMap& siteMap)
+  : itsReferences(0),
+    itsShouldStop(false),
+    itsStartupDone(false),
+    itsConnector(connector),
+    itsSiteMap(siteMap),
+    itsDbEnv(0)
 {
-  theirObjectCounter++;
-};
-BDBCommunicator::BDBCommunicator(const BDBCommunicator& other)
-  : itsEnvId(other.itsEnvId),
-    itsDbEnv(other.itsDbEnv),
-    itsHostName(other.itsHostName),
-    itsPort(other.itsPort)
-{
-  theirObjectCounter++;
 };
 
-BDBCommunicator::~BDBCommunicator()
+BDBCommunicatorRep::~BDBCommunicatorRep()
 {
-  theirObjectCounter--;
-  if (theirObjectCounter == 0) {
-    map<int, BDBSite*>::iterator it;
-    for (it=theirSiteMap.begin(); it!=theirSiteMap.end(); it++) {
-      delete it->second;      
-    }
-  }
 }
-void BDBCommunicator::stop()
+
+void BDBCommunicatorRep::stop()
 {
-  theirShouldStop = true;
+  itsShouldStop = true;
   LOG_TRACE_FLOW("BDBConHandlThread stop set");
 };
 
-bool BDBCommunicator::shouldStop()
+bool BDBCommunicatorRep::shouldStop()
 {
-//   if (theirShouldStop) {
-//     LOG_TRACE_FLOW("conhandler should stop");
-//   } else {
-//     LOG_TRACE_FLOW("conhandler should not stop");
-//   }
-  return theirShouldStop;
+  return itsShouldStop;
 };
 
-void BDBCommunicator::operator()()
+
+void BDBCommunicatorRep::operator()()
 {
   LOG_TRACE_FLOW("BDBConHandlThread started");
   while(!shouldStop()) {
-    map<int, BDBSite*>::iterator it;
-    for (it=theirSiteMap.begin(); it!=theirSiteMap.end(); it++) {
-      char* cBuffer = 0;
-      char* rBuffer = 0;
-      int messageSize = 0;
-      Dbt rec, control;
-      bool isMessagePresent = false;
-      { // new scope because of scoped lock
-	boost::mutex::scoped_lock sl(theirSiteMapMutex);
+    if (!listenOnce()) 
+      boost::thread::yield();
+  }
+};
 
-	BDBSite& mySite = *(it->second);
+bool BDBCommunicatorRep::listenOnce() {
+  vector<IncomingMessage> messages;
+  bool isMessagePresent = false;
+  { 
+    boost::mutex::scoped_lock sml(itsSiteMap.itsMutex);
+    BDBSiteMap::iterator it;
+    for (it=itsSiteMap.begin(); it!=itsSiteMap.end(); it++) {
+      BDBSite& mySite = *(it->second);
+      LOG_TRACE_FLOW_STR("trying to read from:" <<mySite);
+      {
+	boost::mutex::scoped_lock sml(mySite.itsMutex);
 	// check if there is data available
-	// this loop could use more error checking
-	if (mySite.recv(&messageSize, 4) == 4) {
+	int messageSize = 0;
+	int availBytes = mySite.recv(&messageSize, 4);
+	if (availBytes == 4) {
 	  //LOG_TRACE_FLOW("Received message from env "<<it->first);
 	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
 	  LOG_TRACE_FLOW("BDBConHandlThread data present on socket");
-	  isMessagePresent = true;
+	  IncomingMessage message;
 	  // read control Dbt
-	  cBuffer = new char[messageSize];
+	  message.cBuffer = new char[messageSize];
 	  if (messageSize > 0) {
-	    mySite.recv(cBuffer, messageSize);
+	    mySite.recvBlocking(message.cBuffer, messageSize);
 	  }
-	  control.set_data(cBuffer);
-	  control.set_size(messageSize);
+	  message.control.set_data(message.cBuffer);
+	  message.control.set_size(messageSize);
 	  
 	  // read rec Dbt
-	  mySite.recv(&messageSize, 4);
-	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
-	  rBuffer = new char[messageSize];
+	  mySite.recvBlocking(&messageSize, 4);
+	  //	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
+	  message.rBuffer = new char[messageSize];
 	  if (messageSize > 0) {
-	    mySite.recv(rBuffer, messageSize);
+	    mySite.recvBlocking(message.rBuffer, messageSize);
 	  }
-	  rec.set_data(rBuffer);
-	  rec.set_size(messageSize);
-	};
+	  message.rec.set_data(message.rBuffer);
+	  message.rec.set_size(messageSize);
+	  message.envid = it->first;
+	  messages.push_back(message);
+	} else {
+	  // if there are not 4 Bytes there should be no data at all.
+	  ASSERTSTR( availBytes == 0, "Strange number of Bytes("<<availBytes<<") present, quitting");
+	}
       }
-      if (isMessagePresent) {
-	handleMessage(&rec, &control, it->first);
-      }
-      delete [] cBuffer;
-      delete [] rBuffer;
-    }
-    // TODO: remove the sleep here
-    //            sleep(10);
-    boost::thread::yield();
-  }
-}
-
-int BDBCommunicator::send(DbEnv *dbenv,
-		      const Dbt *control, 
-		      const Dbt *rec, 
-		      const DbLsn *lsnp,
-		      int envid, 
-		      u_int32_t flags)
-{
-  LOG_TRACE_FLOW("BDBConHandlThread send function");
-  // buffer or not
-
-  boost::mutex::scoped_lock sl(theirSiteMapMutex);
-  if (envid == DB_EID_BROADCAST) {
-    map<int, BDBSite*>::iterator it;
-    for (it=theirSiteMap.begin(); it!=theirSiteMap.end(); it++)
-    {
-      sendOne(control, rec, *(it->second));
-    }
-  } else {
-    map<int, BDBSite*>::iterator pos;
-    pos = theirSiteMap.find(envid);
-    if (pos != theirSiteMap.end()){
-      sendOne(control, rec, *(pos->second));
-    } else {
-      LOG_ERROR("BDB trying to send to unknown environment");
     }
   }
-  LOG_TRACE_FLOW("BDBConHandlThread send finished");
-  return 0;
+  vector<IncomingMessage>::iterator mit;
+  for(mit = messages.begin(); mit != messages.end(); mit++) {
+    handleMessage(mit->rec, mit->control, mit->envid);
+    delete [] mit->cBuffer;
+    delete [] mit->rBuffer;
+  };
+  
+  itsStartupDone = true;
+  return messages.size()>0;
 }
 
-void BDBCommunicator::sendOne(const Dbt *control, 
-			 const Dbt *rec, 
-			 BDBSite& mySite)
-{
-  //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
-  int size = control->get_size();
-  LOG_TRACE_FLOW_STR("writing size:" <<size);
-  mySite.send(&size, 4);
-  if (control->get_size() > 0)
-    mySite.send(control->get_data(), control->get_size());
-  size = rec->get_size();
-  LOG_TRACE_FLOW_STR("writing size:" <<size);
-  mySite.send(&size, 4);
-  if (rec->get_size() > 0)
-    mySite.send(rec->get_data(), rec->get_size());
-  //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
-}
-
-
-bool BDBCommunicator::connectTo(const char* hostName, const int port)
-{
-  if (itsPort == 0) return false;
-  Socket* newSocket = new Socket();
-  BDBSite* newSite = new BDBSite(hostName, port, newSocket);
-  LOG_TRACE_FLOW_STR("BDBConHandlThread connecting to "<<*newSite);
-  LOG_TRACE_FLOW_STR("BDBConHandlThread connecting from "<<itsHostName<<":"<<itsPort);
-
-  char service[20];
-  snprintf(service, 20, "%d", port);
-  newSocket->initClient(hostName, service);
-  if (newSocket->connect(0) == Socket::SK_OK) {
-    // send my connection data
-    newSocket->write(&itsPort,4);
-    int messageSize = itsHostName.size();
-    newSocket->write(&messageSize, 4);
-    newSocket->write(itsHostName.c_str(), messageSize);
-    
-    addSite(newSite);
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void BDBCommunicator::handleMessage(Dbt* rec, Dbt* control, int envId)
+void BDBCommunicatorRep::handleMessage(Dbt& rec, Dbt& control, int envId)
 {
   LOG_TRACE_FLOW("BDBConHandlThread handling message");
 
-  LOG_TRACE_FLOW_STR(control<<" "<<rec<<" "<<envId<<" "<<itsDbEnv);
-
   DbLsn retLSN;
   //  LOG_TRACE_FLOW("handling message ...";
-  int ret = itsDbEnv->rep_process_message(control, rec, &envId, &retLSN);
+  int ret = itsDbEnv->rep_process_message(&control, &rec, &envId, &retLSN);
   //  LOG_TRACE_FLOW("ready");
   
   int port = 0;
   char* hostName = NULL;
   switch (ret) {
-//   DB_REP_STARTUPDNE is not supported by older versions of libdb
-//   case DB_REP_STARTUPDONE:
-//     LOG_TRACE_FLOW("BDBConHandlThread startup done");
-//     break;
+  case DB_REP_STARTUPDONE:
+    LOG_TRACE_FLOW("BDBConHandlThread startup done");
+    itsStartupDone = true;
+    break;
 
   case DB_REP_NEWSITE:
     LOG_TRACE_FLOW("BDBConHandlThread new site detected");
-    port = *((int*)rec->get_data());
-    hostName =(char*)rec->get_data()+4;
+    port = *((int*)rec.get_data());
+    hostName =(char*)rec.get_data()+4;
 
     LOG_TRACE_FLOW_STR("new site detected by libdb: "<<hostName<<":"<<port);
-    connectTo(hostName, port);    
+    itsConnector.connectTo(hostName, port);    
     break;
     
   case DB_REP_DUPMASTER:
@@ -264,43 +177,110 @@ void BDBCommunicator::handleMessage(Dbt* rec, Dbt* control, int envId)
   LOG_TRACE_FLOW("message handled");
 }
 
-void BDBCommunicator::setEnv(DbEnv* dbenv)
+void BDBCommunicatorRep::setEnv(DbEnv* dbenv)
 {
   //  LOG_TRACE_FLOW_STR("Setting db environment to "<<dbenv);
   itsDbEnv = dbenv;
 };
 
-void BDBCommunicator::addSite(BDBSite* newSite)
+bool BDBCommunicatorRep::isStartupDone()
+{ return itsStartupDone;};
+
+
+BDBCommunicator::BDBCommunicator(const BDBConnector& connector, BDBSiteMap& siteMap)
 {
-  bool found = false;
-  map<int, BDBSite*>::iterator it;
-  {
-    boost::mutex::scoped_lock sl(theirSiteMapMutex);
-    for (it = theirSiteMap.begin(); it!=theirSiteMap.end(); it++) {
-      if (*(it->second) == *(newSite)) found = true;
+  itsRep = new BDBCommunicatorRep(connector, siteMap);
+  itsRep->itsReferences++;
+}
+BDBCommunicator::BDBCommunicator(const BDBCommunicator& other)
+  : itsRep(other.itsRep)
+{
+  ASSERTSTR(itsRep != 0, "Invalid BDBCommunicatorRep");
+  itsRep->itsReferences++;
+}
+BDBCommunicator::~BDBCommunicator()
+{
+  itsRep->itsReferences--;
+  if (itsRep->itsReferences == 0)
+    delete itsRep;
+}
+void BDBCommunicator::setEnv(DbEnv* DbEnv)
+{
+  itsRep->setEnv(DbEnv);
+}
+void BDBCommunicator::stop()
+{
+  itsRep->stop();
+}
+void BDBCommunicator::operator()()
+{
+  itsRep->operator()();
+}
+bool BDBCommunicator::listenOnce() {
+  itsRep->listenOnce();
+}
+
+bool BDBCommunicator::isStartupDone()
+{
+  return itsRep->isStartupDone();
+}
+  
+int BDBCommunicator::send(DbEnv *dbenv,
+		      const Dbt *control, 
+		      const Dbt *rec, 
+		      const DbLsn *lsnp,
+		      int envid, 
+		      u_int32_t flags)
+{
+  //  LOG_TRACE_FLOW("BDBConHandlThread send function");
+  // buffer or not
+
+  BDBEnv& myEnv = (BDBEnv&) *dbenv;
+  myEnv.AssertCorrectInstance();
+  BDBSiteMap& mySiteMap = myEnv.itsSiteMap;
+
+  if (envid == DB_EID_BROADCAST) {
+    boost::mutex::scoped_lock sml(mySiteMap.itsMutex);
+    //    mySiteMap.lock();
+    BDBSiteMap::iterator it;
+    for (it=mySiteMap.begin(); it!=mySiteMap.end(); it++)
+    {
+      LOG_TRACE_FLOW_STR("Sending(bc) to site " << it->first);
+      it->second->lock();
+      sendOne(control, rec, *(it->second));
+      it->second->unlock();
     }
-    if (!found) {
-      theirSiteMap[theirLastEnvId++] = newSite;
-      LOG_TRACE_FLOW_STR("New site "<<*newSite);
-      LOG_TRACE_FLOW_STR("site added: "<<*newSite);
-    } else {
-      LOG_TRACE_FLOW_STR("site already exists: "<<*newSite);
-      LOG_TRACE_FLOW_STR("Site "<<*newSite<<"already exists");
-      delete newSite;
-    };
+    //    mySiteMap.unlock();
+  } else {
+    boost::mutex::scoped_lock sml(mySiteMap.itsMutex);
+    //    mySiteMap.lock();
+    BDBSite& dstSite = mySiteMap.find(envid);
+    boost::mutex::scoped_lock sl(dstSite.itsMutex);
+    //    dstSite.lock();
+    sendOne(control, rec, dstSite);
+    //    dstSite.unlock();
+    //    mySiteMap.unlock();
   }
-  printSiteMap();
+  //  LOG_TRACE_FLOW("BDBConHandlThread send finished");
+  return 0;
 }
 
-void BDBCommunicator::printSiteMap()
+void BDBCommunicator::sendOne(const Dbt *control, 
+			      const Dbt *rec, 
+			      BDBSite& mySite)
 {
-  LOG_TRACE_FLOW_STR(endl
-      <<"    SITEMAP" << endl
-      <<"================"<<endl);
-
-  map<int, BDBSite*>::iterator it;
-  boost::mutex::scoped_lock sl(theirSiteMapMutex);
-  for (it = theirSiteMap.begin(); it!=theirSiteMap.end(); it++) {
-    LOG_TRACE_FLOW_STR(it->first<<": "<<*(it->second));
-  }
+  //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
+  int size = control->get_size();
+  //  LOG_TRACE_FLOW_STR("writing size:" <<size);
+  mySite.send(&size, 4);
+  if (control->get_size() > 0)
+    mySite.send(control->get_data(), control->get_size());
+  size = rec->get_size();
+  //  LOG_TRACE_FLOW_STR("writing size:" <<size);
+  mySite.send(&size, 4);
+  if (rec->get_size() > 0)
+    mySite.send(rec->get_data(), rec->get_size());
+  //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
 }
+
+

@@ -45,10 +45,10 @@ BDBReplicator::BDBReplicator(const string& DbEnvName,
     itsMasterHostName(masterHostName),
     itsMasterPort(masterPort),
     itsIsMaster(master),
-    itsCommunicator(hostName),
-    itsCommunicatorThread(0),
-    itsConnector(port, &itsCommunicator),
+    itsConnector(hostName, port, itsSiteMap),
     itsConnectorThread(0),
+    itsCommunicator(itsConnector, itsSiteMap),
+    itsCommunicatorThread(0),
     itsDbEnv(0)
 {
   if (master){
@@ -60,35 +60,43 @@ BDBReplicator::BDBReplicator(const string& DbEnvName,
 
 void BDBReplicator::startReplication()
 {
+#define BDBREPL_USE_THREADS
   if (!itsReplicationStarted) {
+#ifdef BDBREPL_USE_THREADS
     itsConnectorThread = new boost::thread(itsConnector);
-
     // wait until the listener is listening
     while(!itsConnector.isListening()) {
       LOG_TRACE_FLOW_STR("BDBReplicator waiting for listener");
       sleep(1);
     }
-    itsPort = itsConnector.getPort();
-    itsCommunicator.setPort(itsPort);
+#else
+    while(!itsConnector.isListening()) {
+      itsConnector.listenOnce();
+      LOG_TRACE_FLOW_STR("BDBReplicator waiting for listener");
+    }
+    while(itsConnector.listenOnce());
+#endif
 
     if(!itsIsMaster) {
       // try to connect to master
-      while (!itsCommunicator.connectTo(itsMasterHostName.c_str(), itsMasterPort)) {
+      while (!itsConnector.connectTo(itsMasterHostName.c_str(), itsMasterPort)) {
 	LOG_ERROR_STR("BDBReplicator trying to connect to master on port "<<itsMasterPort);
 	sleep(1);
       }
     }
     
     LOG_TRACE_FLOW("BDBReplicator starting replication");
-    itsDbEnv = new DbEnv(DB_CXX_NO_EXCEPTIONS);
+    itsDbEnv = new BDBEnv(DB_CXX_NO_EXCEPTIONS, itsSiteMap);
     //  LOG_TRACE_FLOW("BDBReplicator setting rep_transport");
     ASSERTSTR (itsDbEnv->set_rep_transport(1, &BDBCommunicator::send) == 0, "cannot set rep transport in BDBReplicator");
-    u_int32_t flags = DB_CREATE | DB_THREAD | DB_INIT_REP |
+    u_int32_t flags = DB_CREATE | DB_THREAD | DB_PRIVATE | DB_INIT_REP |
       DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
     LOG_TRACE_FLOW_STR("BDBReplicator opening environment: "<<itsDbEnvName.c_str());
-    ASSERTSTR(itsDbEnv->open(itsDbEnvName.c_str(), flags, 0) == 0, "Cannot open db environment");
+    int ret = itsDbEnv->open(itsDbEnvName.c_str(), flags, 0);
+    ASSERTSTR(ret == 0, "Cannot open db environment: "<<itsDbEnv->strerror(ret));
     
     // set connection data
+    itsPort = itsConnector.getPort();
     char *buffer = new char[sizeof(int)+itsHostName.size() + 2];
     memset(buffer, 0, sizeof(int)+itsHostName.size() + 2);
     memcpy(buffer, &itsPort, sizeof(int));
@@ -106,31 +114,62 @@ void BDBReplicator::startReplication()
     itsCommunicator.setEnv(itsDbEnv);
     
     //  LOG_TRACE_FLOW("BDBReplicator starting threads");
+#ifdef BDBREPL_USE_THREADS
     itsCommunicatorThread = new boost::thread(itsCommunicator);
+#else
+    handleMessages();
+#endif
     LOG_TRACE_FLOW("BDBReplicator replication started");  
 
-    if (!itsIsMaster) {
-    // give master and client some time to connect
-    sleep(3);
-    }
+//     while (!itsIsMaster && !itsCommunicator.isStartupDone()) {
+//       LOG_ERROR_STR("BDBReplicator waiting until startup is done");
+//       sleep(1);
+//     }
   }
   itsReplicationStarted = true;
 }
 
 BDBReplicator::~BDBReplicator()
 {
-  //  LOG_TRACE_FLOW("BDBReplicator destructor");
+  LOG_TRACE_FLOW("BDBReplicator destructor");
+#ifdef BDBREPL_USE_THREADS
   itsConnector.stop();
   itsCommunicator.stop();
 
+  
   itsConnectorThread->join();
   itsCommunicatorThread->join();
 
   delete itsConnectorThread;
   delete itsCommunicatorThread;
+#else
+  handleMessages();
+#endif
 
   if (itsDbEnv !=0) {
     itsDbEnv->close(0);
     delete itsDbEnv;
   }
+
+  boost::mutex::scoped_lock sml(itsSiteMap.itsMutex);
+  // itsSiteMap.lock();
+  BDBSiteMap::iterator it;
+  for (it=itsSiteMap.begin(); it!=itsSiteMap.end(); it++) {
+    delete it->second;      
+  }
+  //  itsSiteMap.unlock();
 } 
+
+void BDBReplicator::handleMessages() 
+{
+#ifndef BDBREPL_USE_THREADS
+  bool notReady = true;
+  while(notReady) {
+    // do this in seperate lines, because the part after the ||
+    // may not be called if the part before is true
+    notReady = itsConnector.listenOnce();
+    notReady = itsCommunicator.listenOnce() || notReady; 
+    boost::thread::yield();
+  }
+#endif
+}

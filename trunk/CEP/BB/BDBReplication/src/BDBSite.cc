@@ -36,9 +36,11 @@ using namespace std;
 INIT_TRACER_CONTEXT(BDBSite, "BDBReplication");
 
 BDBSite::BDBSite(const char* hostName, const int port, Socket* socket)
-  :itsHostName(hostName), 
-   itsPort(port),
-   itsSocket(socket)
+  :     itsHostName(hostName), 
+    itsPort(port),
+    itsSocket(socket)
+  //itsLock(itsMutex, false),
+
 {
   itsConnectionDataBuffer = new char[sizeof(int) + 2 + itsHostName.size()];
   memset(itsConnectionDataBuffer, 0, sizeof(int) + 2 + itsHostName.size());
@@ -66,15 +68,83 @@ ostream& operator<<(ostream& os, BDBSite& site)
 }
 
 void BDBSite::send(void* buffer, int bufferSize) {
-  boost::mutex::scoped_lock sl(itsSocketMutex);
-  itsSocket->write(buffer, bufferSize);
+  int send = 0;
+  while (send < bufferSize) {
+    int sendNow = itsSocket->writeBlocking((void*)((char*)buffer+send), bufferSize-send);
+    if (sendNow < 0){
+      cerr<<"Error while writing: "<<itsSocket->errstr()<<endl;
+    } else {
+      send += sendNow;
+    }      
+  }
 }
 
 int BDBSite::recv(void* buffer, int bufferSize) {
-  boost::mutex::scoped_lock sl(itsSocketMutex);
-  return itsSocket->readBlocking(buffer, bufferSize);
+  int received = itsSocket->read(buffer, bufferSize);
+  if (received == 0) {
+    cerr<<"No data present on non-blocking receive"<<endl;
+    return 0;
+  } else if (received < 0) {    
+    cerr<<"Error while receiving: "<<itsSocket->errstr()<<endl;
+    return 0;
+  } else {
+    int recNow = itsSocket->readBlocking((void*)((char*)buffer+received), bufferSize-received);
+    if (recNow < 0){
+      cerr<<"Error while receiving(blocking): "<<itsSocket->errstr()<<endl;
+      return 0;
+    } else {
+      return bufferSize;
+    }      
+  }
+} 
+
+int BDBSite::recvBlocking(void* buffer, int bufferSize) {
+  int ret = itsSocket->readBlocking(buffer, bufferSize);
+  if (ret != Socket::SK_OK){
+    cerr<<"Error while receiving(non-Blocking): "<<itsSocket->errstr()<<endl;
+  };
+  return ret;
 } 
 
 BDBSiteMap::BDBSiteMap() :
-  itsLock(itsMutex, false)
+  itsLastEnvId(2)
+  //  itsLock(itsMutex, false),
 {};
+BDBSiteMap::~BDBSiteMap()
+{};
+
+void BDBSiteMap::print(ostream& os)
+{
+  iterator it;
+  os<<"SiteMap"<<endl;
+  boost::mutex::scoped_lock sl(itsMutex);
+
+  //  lock();
+  for (it = itsSiteMap.begin(); it != itsSiteMap.end(); it++) {
+    os<<*it->second<<endl;
+  }
+  //  unlock();
+};
+
+void BDBSiteMap::addSite(BDBSite* newSite)
+{
+  bool found = false;
+  boost::mutex::scoped_lock sl(itsMutex);
+  //  lock();
+  iterator it;
+  for (it = this->begin(); it!=this->end(); it++) {
+    if (*(it->second) == *newSite) found = true;
+  }
+  if (!found) {
+    itsSiteMap[itsLastEnvId++] = newSite;
+    LOG_TRACE_FLOW_STR("New site "<<*newSite);
+    LOG_TRACE_FLOW_STR("site added: "<<*newSite);
+  } else {
+    LOG_TRACE_FLOW_STR("site already exists: "<<*newSite);
+    LOG_TRACE_FLOW_STR("Site "<<*newSite<<"already exists");
+    delete newSite;
+  };
+  //  unlock();
+  LOG_TRACE_FLOW_STR("SITE ADDED!");
+  //  print(cout);
+}
