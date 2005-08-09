@@ -157,7 +157,7 @@ void WH_Storage::process()
       int rownr = -1;
       // Write 1 frequency
       for (int s1 = 0; s1 < itsNstations; s1++) {
-	for (int s2 = 0; s2 < s1; s2++) {
+	for (int s2 = 0; s2 <= s1; s2++) {
 	  for (int p = 0; p < itsNpolSquared; p++) {
 	    itsVArray.push_back(new GCF::Common::GCFPVDouble((double)*inputDH->getBufferElement(s1, s2, p)));
 	  }
