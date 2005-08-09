@@ -96,6 +96,9 @@ class CyclicBuffer
   // release locks
   void WriteUnlockElements(int ID, int nelements);
   void ReadUnlockElements(int ID, int nelements);
+  void WriteUnlockElement(int ID);
+  void ReadUnlockElement(int ID);
+  
 
   // print head, tail and count pointers
   void Dump();
@@ -213,17 +216,6 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   ID = itsHeadIdx;
   WriteLockElement(ID);
   
-  // adjust the head (points to first free position)
-  itsHeadIdx++;
-  if (itsHeadIdx >= (int)itsBuffer.size())
-  {
-    itsHeadIdx = 0;
-  }
-  itsCount++;
-
-  // signal that data has become available 
-  pthread_cond_broadcast(&data_available);
-  
   pthread_mutex_unlock(&buffer_mutex);
 
   return &itsBuffer[ID].itsElement;
@@ -244,17 +236,6 @@ TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
   // CONDITION: itsCount >= MIN_COUNT
   ID = itsTailIdx;
   ReadLockElement(ID);
-  
-  // adjust the tail
-  itsTailIdx++;
-  if (itsTailIdx >= (int)itsBuffer.size())
-  {
-    itsTailIdx = 0;
-  }
-  itsCount--;
-  
-  // signal that space has become available
-  pthread_cond_broadcast(&space_available);
 
   pthread_mutex_unlock(&buffer_mutex);
   
@@ -411,6 +392,8 @@ void CyclicBuffer<TYPE>::WriteLockElement(int ID)
 template<class TYPE>
 void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
 {
+  pthread_mutex_lock(&buffer_mutex);
+
   for (int i=0; i<nelements; i++) {
     if (ID >= (int)itsBuffer.size()) {
       ID = 0;
@@ -418,6 +401,25 @@ void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
     itsBuffer[ID].itsRWLock.WriteUnlock();
     ID++;
   }
+  
+  // adjust the head 
+  itsHeadIdx += nelements;
+  if (itsHeadIdx >= (int)itsBuffer.size())
+  {
+    itsHeadIdx -= (int)itsBuffer.size();
+  }
+  itsCount += nelements;
+
+  // signal that data has become available 
+  pthread_cond_broadcast(&data_available);
+
+  pthread_mutex_unlock(&buffer_mutex);
+}
+
+template<class TYPE>
+void CyclicBuffer<TYPE>::WriteUnlockElement(int ID)
+{
+  itsBuffer[ID].itsRWLock.WriteUnlock();
 }
 
 template<class TYPE>
@@ -429,6 +431,8 @@ void CyclicBuffer<TYPE>::ReadLockElement(int ID)
 template<class TYPE>
 void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
 {
+  pthread_mutex_lock(&buffer_mutex);
+
   for (int i=0; i<nelements; i++) {
     if (ID >= (int)itsBuffer.size()) {
       ID = 0;
@@ -436,6 +440,26 @@ void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
     itsBuffer[ID].itsRWLock.ReadUnlock();
     ID++;
   }
+
+  // adjust the tail
+  itsTailIdx += nelements;;
+  if (itsTailIdx >= (int)itsBuffer.size())
+  {
+    itsTailIdx -= (int)itsBuffer.size();
+  }
+  itsCount -= nelements;;
+  
+  // signal that space has become available
+  pthread_cond_broadcast(&space_available);
+
+  pthread_mutex_unlock(&buffer_mutex);
+
+}
+
+template<class TYPE>
+void CyclicBuffer<TYPE>::ReadUnlockElement(int ID)
+{
+  itsBuffer[ID].itsRWLock.ReadUnlock();
 }
 
 template<class TYPE>
