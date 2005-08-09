@@ -68,7 +68,7 @@ bool TreeValue::addKVT (const string&	key,
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
-
+cout << "ADDKVT:" << key << "," << value << "," << to_simple_string(time) << endl;
 	// construct a query that call a stored procedure.
 	work	xAction(*(itsConn->getConn()), "addKVT");
 	string	query("SELECT * from addKVT('" +
@@ -109,6 +109,25 @@ bool 	TreeValue::addKVTlist (vector<OTDBvalue>	theValues)
 }
 
 //
+// addKVTparamSet (paramSet)
+//
+bool	TreeValue::addKVTparamSet (const ParameterSet&		aPS)
+{
+	bool	result = true;
+
+	ParameterSet::const_iterator	iter = aPS.begin();
+	while (iter != aPS.end()) {
+		uint32	timeval = indexValue(iter->first, "{}");
+		string	cleanKey(iter->first);
+		rtrim(cleanKey, "{0123456789}");
+		result &= addKVT(cleanKey, iter->second, from_time_t(timeval));
+		++iter;
+	}
+
+	return (result);
+}
+
+//
 // searchInPeriod(topNode, depth, begindate, enddate) : vector<value>
 //
 vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
@@ -127,39 +146,49 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 	}
 
 	vector<OTDBvalue>	resultVec;
-	for (uint32 queryDepth = 1; queryDepth <= depth; ++queryDepth) {
-		// construct a query that call a stored procedure.
-		work	xAction(*(itsConn->getConn()), "searchInPeriod");
-		string	query("SELECT * from searchInPeriod('" +
-					toString(itsTree.treeID()) + "','" +
-					toString(topNode) + "','" +
-					toString(queryDepth) + "','" +
-					to_simple_string(beginDate) + "','" +
-					to_simple_string(endDate) + "')");
-		try {
-			result res = xAction.exec(query);
+	// construct a query that call a stored procedure.
+	work	xAction(*(itsConn->getConn()), "searchInPeriod");
+	string	query("SELECT * from searchInPeriod('" +
+				toString(itsTree.treeID()) + "','" +
+				toString(topNode) + "','" +
+				toString(depth) + "','" +
+				to_simple_string(beginDate) + "','" +
+				to_simple_string(endDate) + "')");
+	try {
+		result res = xAction.exec(query);
 
-			// show how many records found
-			result::size_type	nrRecords = res.size();
-			LOG_DEBUG_STR (nrRecords << " records in itemList(" <<
-							topNode << ", " << queryDepth << ")");
-			if (nrRecords == 0) {
-				break;
+		// check result
+		result::size_type	nrRecords = res.size();
+		if (!nrRecords) {
+			return (resultVec);
+		}
+
+		if (mostRecentOnly) {
+			// filter out the old values.
+			OTDBvalue		prevKVT;
+			for (result::size_type	i = 0; i < nrRecords; ++i) {
+				OTDBvalue	thisKVT(res[i]);
+				if (i != 0 && thisKVT.nodeID() != prevKVT.nodeID()) {
+					resultVec.push_back(prevKVT);
+				}
+				prevKVT = thisKVT;
 			}
-
-			// copy information to output vector
+			resultVec.push_back(prevKVT);
+		}
+		else {
+			// simply copy information to output vector
 			for (result::size_type	i = 0; i < nrRecords; ++i) {
 				resultVec.push_back(res[i]);
 			}
 		}
-		catch (std::exception&	ex) {
-			itsError = string("Exception during searchInPeriod:")
-					 + ex.what();
-			LOG_FATAL(itsError);
-			vector<OTDBvalue>	empty;
-			return (empty);
-		}
-	}	// for
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during searchInPeriod:")
+				 + ex.what();
+		LOG_FATAL(itsError);
+		vector<OTDBvalue>	empty;
+		return (empty);
+	}
 
 	return (resultVec);
 }

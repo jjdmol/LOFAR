@@ -41,9 +41,17 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 		vFullname	VARCHAR(120);
 		vNodename	VARCHAR(100);
 		vQuery		VARCHAR(100);
+		vLeaf		PIChierarchy.leaf%TYPE;
+		vParamRefID	PIChierarchy.paramRefID%TYPE;
 		i			INTEGER;
 
 	BEGIN
+	  -- Is topNode a Node or a Parameter?
+	  SELECT leaf, paramRefID
+	  INTO	 vLeaf, vParamRefID
+	  FROM	 PIChierarchy
+	  WHERE	 nodeID = $2;
+
 	  -- Find name of parameter
 	  SELECT r.pvssname
 	  INTO	 vFullname
@@ -54,15 +62,23 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 		RETURN;
 	  END IF;
 
-	  -- take name of node
-	  vNodename := split_part(vFullname, \'.\', 1);
+	  IF vLeaf = TRUE OR $3 = 0 THEN
+		vQuery := chr(39) || vFullname || chr(39);
+	  ELSE
+	    -- take name of node
+	    vNodename := split_part(vFullname, \'.\', 1);
 
-	  -- construct query
-	  vQuery := chr(39) || vNodename;
-	  FOR i in 1..$3 LOOP
-		vQuery := vQuery || \'_[^\\\\\\\\_]+\';
-	  END LOOP;
-	  vQuery := vQuery || chr(39);
+	    -- construct query
+	    vQuery := chr(39) || vNodename;
+	    FOR i in 1..$3 LOOP
+		  vQuery := vQuery || \'_[^\\\\\\\\_]+\';
+	    END LOOP;
+	    vQuery := vQuery || chr(39);
+	  END IF;
+
+	  IF vLeaf = TRUE THEN
+		vQuery := vQuery || \' AND h.leaf=true \';
+	  END IF;
 
 	  -- finally get result
 	  FOR vRecord IN EXECUTE \'
@@ -79,6 +95,45 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 			   INNER JOIN PIChierarchy h ON r.paramid = h.paramrefID
 		WHERE  h.treeID = \' || $1 || \'
 	    AND	   r.pvssname similar to \' || vQuery 
+	  LOOP
+		RETURN NEXT vRecord;
+	  END LOOP;
+	  RETURN;
+	END
+' LANGUAGE plpgsql;
+
+--
+-- getPICitemList (treeID, namefragment)
+-- 
+-- Get a list of items.
+--
+-- Authorisation: none
+--
+-- Tables: 	picparamref		read
+--			pichierarchy	read
+--
+-- Types:	OTDBnode
+--
+CREATE OR REPLACE FUNCTION getPICitemList(INT4, VARCHAR(120))
+  RETURNS SETOF OTDBnode AS '
+	DECLARE
+		vRecord		RECORD;
+
+	BEGIN
+	  FOR vRecord IN 
+	    SELECT h.nodeid,
+			   h.parentid, 
+			   h.paramrefid,
+			   h.name, 
+			   h.index, 
+			   h.leaf,
+			   1::int2,
+			   \'\'::text,
+			   r.description 
+		FROM   PICparamref r
+			   INNER JOIN PIChierarchy h ON r.paramid = h.paramrefID
+		WHERE  h.treeID = $1
+	    AND	   r.pvssname like $2 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;

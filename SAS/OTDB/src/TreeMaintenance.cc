@@ -322,10 +322,52 @@ vector<OTDBnode> TreeMaintenance::getVHitemList (treeIDType	aTreeID,
 											     nodeIDType	topNode,
 											     uint32		depth)
 {
-	vector<OTDBnode>	empty;
-	itsError = "getItemList for VH trees is NOT YET IMPLEMENTED";
-	LOG_FATAL(itsError);
-	return (empty);
+	vector<OTDBnode>	resultVec;
+	string				nodeList(toString(topNode));
+	uint32				resultSize = 0;
+
+	// loop through the levels and construct the vector
+	for (uint32 queryDepth = 1; queryDepth <= depth && !nodeList.empty(); 
+															++queryDepth) {
+		// construct a query that calls a stored procedure.
+		string	query("SELECT * from getVHchildren('" +
+					toString(aTreeID) + "','" +
+					nodeList + "')");
+
+		work	xAction(*(itsConn->getConn()), "getVHchildren");
+		try {
+			result res = xAction.exec(query);
+
+			// show how many records found
+			result::size_type	nrRecords = res.size();
+			LOG_TRACE_CALC_STR (nrRecords << " records in itemList(" <<
+								topNode << ", " << queryDepth << ")");
+			if (nrRecords == 0) {
+				break;
+			}
+
+			// copy information to output vector and construct new nodeList
+			OTDBnode	newNode;
+			nodeList = "";
+			for (result::size_type	i = 0; i < nrRecords; ++i) {
+				resultVec.push_back(OTDBnode(aTreeID, res[i]));
+				if (queryDepth != depth && !resultVec[resultSize].leaf) {
+					if (!nodeList.empty()) {
+						nodeList += ",";
+					}
+					nodeList += toString(resultVec[resultSize].nodeID());
+				}
+				resultSize++;
+			}
+		}
+		catch (std::exception&	ex) {
+			itsError = string("Exception during retrieval of getVHItemList:")
+					 + ex.what();
+			LOG_FATAL(itsError);
+		}
+	}	// for
+
+	return (resultVec);
 }
 
 // [private]
@@ -361,28 +403,40 @@ vector<OTDBnode> TreeMaintenance::getPICitemList (treeIDType	aTreeID,
 	return (resultVec);
 }
 
-
 //
-// getItemList(treeID, namefragment): vector<OTDBnode>
+// getItemList(treeID, nameFragment): vector<OTDBnode>
 //
-// Get a (collection of) node from the VIC template tree
-//
+// get a number of levels of children
 vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 											   const string&	aNameFragment)
 {
-	vector<OTDBnode>	resultVec;
-
-	// Check connection
-	if (!itsConn->connect()) {
-		itsError = itsConn->errorMsg();
-		return (resultVec);
+	// First resolve function to call
+	string		functionName;
+	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
+	switch (theTree.type) {
+	case TThardware:
+		functionName = "getPICitemList";
+		break;
+	case TTtemplate:
+		functionName = "getVTitemList";
+		break;
+	case TTobsolete: {
+			itsError = "Tree is obsolete";
+			vector<OTDBnode>	empty;
+			return (empty);
+		}
+	default:
+		ASSERTSTR(false, "getItemList for VH tree NOT YET IMPLEMENTED");
+		functionName = "getVHitemList";
+		break;
 	}
 
+	vector<OTDBnode>	resultVec;
 	// construct a query that calls a stored procedure.
-	string	query("SELECT * from getVTitemList('" +
+	string	query("SELECT * from " + functionName + "('" +
 					toString(aTreeID) + "','" +
 					aNameFragment + "')");
-	work	xAction(*(itsConn->getConn()), "getVTitemList");
+	work	xAction(*(itsConn->getConn()), functionName);
 	try {
 		result res = xAction.exec(query);
 
@@ -393,7 +447,7 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 		}
 	}
 	catch (std::exception&	ex) {
-		itsError = string("Exception during retrieval of getVTitemList:")
+		itsError = string("Exception during retrieval of " + functionName + ":")
 				 + ex.what();
 		LOG_FATAL(itsError);
 	}
@@ -478,7 +532,7 @@ bool	TreeMaintenance::saveNode    (OTDBnode&			aNode)
 		bool		updateOK;
 		res[0]["updatevtnode"].to(updateOK);
 		if (!updateOK) {
-			itsError = "Unable to duplicate the node";
+			itsError = "Unable to update the node";
 			return (false);
 		}
 
@@ -687,7 +741,30 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 // Delete a tree (of any kind) from the database.
 bool	TreeMaintenance::deleteTree(treeIDType		aTreeID)
 {
-	// TODO: IMPLEMENT THIS FUNCTION
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	work	xAction(*(itsConn->getConn()), "deleteTree");
+	try {
+		result	res = xAction.exec("SELECT * from deleteTree(" +
+								    toString(itsConn->getAuthToken()) + "," +
+									toString(aTreeID) + ")");
+		// Get result
+		bool		succes;
+		res[0]["deletetree"].to(succes);
+		if (!succes) {
+			itsError = "Unable to delete tree";
+			return (false);
+		}
+	}
+	catch (Exception&	ex) {
+		itsError = string("Exception during deleteTree:") + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
 
 	return (false);
 }
