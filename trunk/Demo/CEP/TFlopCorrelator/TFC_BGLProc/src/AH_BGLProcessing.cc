@@ -91,10 +91,17 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 //   int noFiltsPerBlock = itsParamSet.getInt32("NoFiltersPerBlock");
 //   int subband = 0;
 
-  int noCorsPerFilt = itsParamSet.getInt32("NoCorsPerFilt");
-  int itsBasePort = itsParamSet.getInt32("BasePort");
-  string itsInServer = itsParamSet.getString("InServer");
-  string itsOutServer = itsParamSet.getString("OutServer");
+  int noCorsPerFilt = itsParamSet.getInt32("Input.NSubbands");
+
+//   int InputBasePort = itsParamSet.getInt32("FIRConnection.RequestPort");
+//   string itsInServer = itsParamSet.getString("FIRConnection.ServerHost");
+// //   string itsInServer = itsParamSet.getString("InServer");
+
+//   int OutputBasePort = itsParamSet.getInt32("CorrConnection.RequestPort");
+//   string itsOutServer = itsParamSet.getString("CorrConnection.ServerHost");
+
+//   int itsBasePort = itsParamSet.getInt32("BasePort");
+//   string itsOutServer = itsParamSet.getString("OutServer");
 
   // define a block of correlators
 
@@ -106,7 +113,8 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     itsWHs.back()->runOnNode(lowestFreeNode++);
 
     itsInStub->connect(cor, itsWHs.back()->getDataManager(), 0);
-    itsOutStub->connect(cor, itsWHs.back()->getDataManager(), 0);
+    // for the first test, don't connect the output
+//     itsOutStub->connect(cor, itsWHs.back()->getDataManager(), 0);
 
 //     DataHolder* itsInDH = new DH_FIR("itsIn1", 0, itsParamSet);
 //     DataHolder* itsOutDH = new DH_Vis("itsOut1", 0, itsParamSet);
