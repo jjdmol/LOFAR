@@ -3,13 +3,13 @@
 rm masterDir -rf
 mkdir masterDir
 
-./tBDBReplication -f -h masterDir -o 8020 &> master.log &
+./tBDBReplication -h masterDir -o 8020 &> master.log &
 
 sleep 10
 
 rm slave1Dir -rf
 mkdir slave1Dir
-./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log &
+./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log 
 #rm slave2Dir -rf
 #mkdir slave2Dir
 #./tBDBReplication -h slave2Dir -m 8020 -o 8022 &> slave2.log
