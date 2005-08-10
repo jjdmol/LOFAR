@@ -31,7 +31,7 @@
 
 // maximum of written elements in buffer to avoid that 
 // writeptr is catching up readptr
-#define MAX_COUNT  ((int)itsBuffer.size()-5)    
+#define MAX_COUNT  ((int)itsBuffer.size()-4)    
 
 namespace LOFAR
 {
@@ -76,12 +76,6 @@ class CyclicBuffer
 
   // read oldest item and adjust tail and count
   TYPE* getAutoReadPtr(int& ID);
-
-  /* // write a block and adjust tail and count */
-/*   TYPE* getBlockWritePtr(int nelements, int& ID); */
-
-/*   // read a block and adjust tail and count */
-/*   TYPE* getBlockReadPtr(int nelements, int& ID); */
 
   // read oldest item without adjusting tail and count 
   TYPE* getFirstReadPtr(int& ID);
@@ -130,6 +124,7 @@ class CyclicBuffer
   int itsHeadIdx;
   int itsTailIdx;
   int itsCount;
+  int itsBlockCount;
 
   pthread_mutex_t buffer_mutex;
   pthread_cond_t  data_available;
@@ -140,7 +135,8 @@ template<class TYPE>
 CyclicBuffer<TYPE>::CyclicBuffer(int nelements) :
     itsHeadIdx(0),
     itsTailIdx(0),
-    itsCount(0)
+    itsCount(0),
+    itsBlockCount(0)
 {
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);
@@ -207,7 +203,7 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   pthread_mutex_lock(&buffer_mutex);
   
   // wait until space becomes available
-  while (itsCount >= MAX_COUNT)
+  while (itsBlockCount >= MAX_COUNT)
   {
     pthread_cond_wait(&space_available, &buffer_mutex);
   }
@@ -215,6 +211,13 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   // CONDITION: itsCount < MAX_COUNT
   ID = itsHeadIdx;
   WriteLockElement(ID);
+  
+  itsHeadIdx++;
+  if (itsHeadIdx >= (int)itsBuffer.size()) {
+    itsHeadIdx = 0;
+  }
+  itsBlockCount++;
+  itsCount++;
   
   pthread_mutex_unlock(&buffer_mutex);
 
@@ -237,79 +240,15 @@ TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
   ID = itsTailIdx;
   ReadLockElement(ID);
 
+  itsTailIdx++;
+  if (itsTailIdx >= (int)itsBuffer.size()) {
+    itsTailIdx = 0;
+  }
+  itsCount --;
   pthread_mutex_unlock(&buffer_mutex);
   
   return &itsBuffer[ID].itsElement;
 }
-
-/* template<class TYPE> */
-/* TYPE* CyclicBuffer<TYPE>::getBlockWritePtr(int nelements, int& ID) */
-/* { */
-/*   pthread_mutex_lock(&buffer_mutex); */
-  
-/*   // wait until enough space becomes available */
-/*   while (itsCount + nelements > MAX_COUNT) */
-/*   { */
-/*     pthread_cond_wait(&space_available, &buffer_mutex); */
-/*   } */
-
-/*   // CONDITION: itsCount + nelements <= MAX_COUNT */
-/*   ID = itsHeadIdx; */
-  
-/*   // lock the elements */
-/*   WriteLockElements(ID, nelements); */
-
-/*   // adjust the head (point to first free position) */
-/*   itsHeadIdx += nelements; */
-/*   if (itsHeadIdx >= (int)itsBuffer.size()) */
-/*   { */
-/*     itsHeadIdx -= (int)itsBuffer.size();; */
-/*   } */
-/*   itsCount += nelements; */
-
-/*   // signal that data has become available  */
-/*   if (itsCount >= MIN_COUNT) */
-/*   { */
-/*     pthread_cond_broadcast(&data_available); */
-/*   } */
-/*   pthread_mutex_unlock(&buffer_mutex); */
-
-/*   return &itsBuffer[ID].itsElement; */
-/* } */
-
-
-/* template<class TYPE> */
-/* TYPE* CyclicBuffer<TYPE>::getBlockReadPtr(int nelements, int& ID) */
-/* { */
-/*   pthread_mutex_lock(&buffer_mutex); */
- 
-/*   // wait until enough elements are available */
-/*   while (itsCount - nelements < MIN_COUNT)  */
-/*   { */
-/*     pthread_cond_wait(&data_available, &buffer_mutex); */
-/*   } */
-/*   // CONDITION: itsCount - nelements >= MIN_COUNT */
-  
-/*   ID = itsTailIdx; */
-
-/*   // lock the elements */
-/*   ReadLockElements(ID, nelements);  */
-  
-/*   // adjust the tail */
-/*   itsTailIdx += nelements; */
-/*   if (itsTailIdx >= (int)itsBuffer.size()) */
-/*   { */
-/*     itsTailIdx -= (int)itsBuffer.size(); */
-/*   } */
-/*   itsCount -= nelements; */
-  
-/*   // signal that space has become available */
-/*   pthread_cond_broadcast(&space_available); */
-
-/*   pthread_mutex_unlock(&buffer_mutex); */
-  
-/*   return &itsBuffer[ID].itsElement; */
-/* } */
 
 template<class TYPE>
 TYPE* CyclicBuffer<TYPE>::getFirstReadPtr(int& ID)
@@ -330,12 +269,6 @@ TYPE* CyclicBuffer<TYPE>::getFirstReadPtr(int& ID)
   
   return &itsBuffer[ID].itsElement;
 }
-
-/* template<class TYPE> */
-/* int CyclicBuffer<TYPE>::getFirstWriteID() */
-/* { */
-/*   return itsHeadIdx; */
-/* } */
 
 template<class TYPE>
 TYPE* CyclicBuffer<TYPE>::getManualWritePtr(int startID)
@@ -376,9 +309,11 @@ void CyclicBuffer<TYPE>::setOffset(int offset, int& ID)
   else if (itsTailIdx < 0) {
     itsTailIdx += (int)itsBuffer.size();
   }
+  //itsReadIdx = itsTailIdx;
   ID = itsTailIdx;
 
   itsCount -= offset;
+  itsBlockCount = itsCount;
    
   pthread_mutex_unlock(&buffer_mutex);
 }
@@ -392,8 +327,6 @@ void CyclicBuffer<TYPE>::WriteLockElement(int ID)
 template<class TYPE>
 void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
 {
-  pthread_mutex_lock(&buffer_mutex);
-
   for (int i=0; i<nelements; i++) {
     if (ID >= (int)itsBuffer.size()) {
       ID = 0;
@@ -401,19 +334,13 @@ void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
     itsBuffer[ID].itsRWLock.WriteUnlock();
     ID++;
   }
+  pthread_mutex_lock(&buffer_mutex);
   
-  // adjust the head 
-  itsHeadIdx += nelements;
-  if (itsHeadIdx >= (int)itsBuffer.size())
-  {
-    itsHeadIdx -= (int)itsBuffer.size();
-  }
-  itsCount += nelements;
-
   // signal that data has become available 
   pthread_cond_broadcast(&data_available);
 
   pthread_mutex_unlock(&buffer_mutex);
+  
 }
 
 template<class TYPE>
@@ -431,7 +358,6 @@ void CyclicBuffer<TYPE>::ReadLockElement(int ID)
 template<class TYPE>
 void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
 {
-  pthread_mutex_lock(&buffer_mutex);
 
   for (int i=0; i<nelements; i++) {
     if (ID >= (int)itsBuffer.size()) {
@@ -440,14 +366,10 @@ void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
     itsBuffer[ID].itsRWLock.ReadUnlock();
     ID++;
   }
-
-  // adjust the tail
-  itsTailIdx += nelements;;
-  if (itsTailIdx >= (int)itsBuffer.size())
-  {
-    itsTailIdx -= (int)itsBuffer.size();
-  }
-  itsCount -= nelements;;
+  
+  pthread_mutex_lock(&buffer_mutex);
+  
+  itsBlockCount -= nelements;;
   
   // signal that space has become available
   pthread_cond_broadcast(&space_available);
