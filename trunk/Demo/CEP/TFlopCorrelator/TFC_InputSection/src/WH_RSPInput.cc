@@ -103,7 +103,7 @@ void* WriteToBufferThread(void* arguments)
     else if (nextstamp + (args->nrPacketsInFrame - 1) < actualstamp) {
       // missed a packet so create dummy
       for (int s=0; s<args->nrSubbandsInPacket; s++) {
-        args->BufControl[s]->writeElements(dummyblock, actualstamp,args-> nrPacketsInFrame, 1);
+        args->BufControl[s]->writeElements(dummyblock, actualstamp,args->nrPacketsInFrame, 1);
       }
       // read same frame again in next loop
       readnew = false;
@@ -152,12 +152,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
   itsNPolarisations = ps.getInt32("Input.NPolarisations");
   itsNSamplesToCopy = ps.getInt32("Input.NSamplesToDH");
   itsEPAHeaderSize =  ps.getInt32("Input.SzEPAheader");
-  
- 
-  // size of an EPA packet in bytes 
-  itsEPAPacketSize = ( itsNPolarisations * 
-                       sizeof(u16complex) * 
-                      itsNSubbands) + itsEPAHeaderSize; 
+  itsEPAPacketSize = ps.getInt32("Input.SzEPApayload") + itsEPAHeaderSize;
  
   // size of a RSP frame in bytes
   itsSzRSPframe = itsNPackets * itsEPAPacketSize;
