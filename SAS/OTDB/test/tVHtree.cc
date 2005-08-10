@@ -1,4 +1,4 @@
-//#  tPICadmin: test the actions on the PIC database
+//#  tVHtree: test the maintenance actions on the VH trees
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -64,10 +64,10 @@ void showTreeList(const vector<OTDBtree>&	trees) {
 void showNodeList(const vector<OTDBnode>&	nodes) {
 
 
-	cout << "treeID|nodeID|parent|name           |index|leaf|inst|description" << endl;
-	cout << "------+------+------+---------------+-----+----+----+------------------" << endl;
+	cout << "treeID|nodeID|parent|name                     |index|leaf|inst|description" << endl;
+	cout << "------+------+------+-------------------------+-----+----+----+------------------" << endl;
 	for (uint32	i = 0; i < nodes.size(); ++i) {
-		string row(formatString("%6d|%6d|%6d|%-15.15s|%5d|%s|%4d|%s",
+		string row(formatString("%6d|%6d|%6d|%-25.25s|%5d|%s|%4d|%s",
 			nodes[i].treeID(),
 			nodes[i].nodeID(),
 			nodes[i].parentID(),
