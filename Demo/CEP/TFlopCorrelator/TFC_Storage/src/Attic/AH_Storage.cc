@@ -58,10 +58,10 @@ void AH_Storage::define(const LOFAR::KeyValueMap&) {
   comp.addBlock(stStep);
 
   // Connect to BG output
-//   for (int nr=0; nr<stStep.getNrInputs(); nr++)
-//   {
-//     itsStub->connect(nr, stStep.getInDataManager(nr), nr);
-//   }
+  for (int nr=0; nr<stStep.getNrInputs(); nr++)
+  {
+    itsStub->connect(nr, stStep.getInDataManager(nr), nr);
+  }
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }
