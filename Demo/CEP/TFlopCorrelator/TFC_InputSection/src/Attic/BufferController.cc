@@ -173,7 +173,7 @@ bool BufferController::rewriteElements(void* buf, timestamp_t startstamp, int ne
   // get timestamp of first element in cyclic buffer to find offset
   mt = itsMetadataBuf->getFirstReadPtr(firstid);
   offset = startstamp - mt->timestamp;
-  itsMetadataBuf->ReadUnlockElements(firstid, 1);
+  itsMetadataBuf->ReadUnlockElement(firstid);
 
   
   // determine position in cyclic buffer where to start writing
