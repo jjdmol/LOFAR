@@ -61,7 +61,12 @@ void* WriteToBufferThread(void* arguments)
    
     // catch a frame from input connection
     if (readnew) {
-      args->Connection.recvBlocking( (void*)recvframe, args->FrameSize, 0);
+      try {
+	args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
+      } catch (Exception& e) {
+	LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
+	pthread_exit(NULL);
+      }	
     }
    
     // get the actual timestamp of first EPApacket in frame
@@ -111,6 +116,7 @@ void* WriteToBufferThread(void* arguments)
           idx = (p*args->EPAPacketSize) + args->EPAHeaderSize + (s*args->SubbandSize);
           args->BufControl[s]->writeElements(&recvframe[idx], actualstamp, 1, 0);
         }
+	actualstamp++;
       }
       // read new frame in next loop
       readnew = true;
@@ -214,7 +220,7 @@ void WH_RSPInput::preprocess()
   LOG_TRACE_FLOW_STR("WH_RSPInput preprocess");   
   
   writerinfo.BufControl         = itsBufControl;
-  writerinfo.Connection         = itsTH;
+  writerinfo.Connection         = &itsTH;
   writerinfo.FrameSize          = itsSzRSPframe;
   writerinfo.nrPacketsInFrame   = itsNPackets;
   writerinfo.nrSubbandsInPacket = itsNSubbands;
@@ -256,7 +262,7 @@ void WH_RSPInput::process()
     itsSyncedStamp = dhp->getSyncStamp(); 
     
     // we need to increment the stamp because it is written only once per second or so
-    dhp->incrementStamp(itsNPackets);
+    dhp->incrementStamp(itsNSamplesToCopy);
   } // (!args->itsSyncMaster)
   else {
     // we are the master, so increase the nextValue and send it to the slaves
@@ -264,7 +270,8 @@ void WH_RSPInput::process()
       // set startstamp equal to first stamp in cyclicbuffer
       itsSyncedStamp = itsBufControl[0]->getFirstStamp();
       // build in a delay to let the slaves catch up
-      itsSyncedStamp += itsNPackets * 1500;
+      // TODO: we need to skip the first packets
+      //      itsSyncedStamp += itsNPackets * 1500;
         
       // send the synced startstamp to the slaves
       for (int i = 1; i < itsNRSPOutputs; i++) {
@@ -276,7 +283,7 @@ void WH_RSPInput::process()
     }
     else {
       // increase the syncstamp
-      itsSyncedStamp += itsNPackets;
+      itsSyncedStamp += itsNSamplesToCopy;
       // send the syncstamp to the slaves
       for (int i = 1; i < itsNRSPOutputs; i++) {
         ((DH_RSPSync*)getDataManager().getOutHolder(i))->setSyncStamp(itsSyncedStamp);
@@ -286,7 +293,8 @@ void WH_RSPInput::process()
 
   // delay control
   delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
-  delayedstamp = itsSyncedStamp + delayDHp->getDelay(itsStationID);    
+  //  delayedstamp = itsSyncedStamp + delayDHp->getDelay(itsStationID);    
+  delayedstamp = itsSyncedStamp;
 
 
   /* startstamp is the synced and delay-controlled timestamp to 
@@ -307,11 +315,11 @@ void WH_RSPInput::process()
     rspDHp->setInvalidCount(invalidcount);  // number of invalid subbands
     rspDHp->setTimeStamp(delayedstamp);   
     rspDHp->setDelay(delayDHp->getDelay(itsStationID));
-  }
-    
-  // dump the output (for debugging)
-  cout << "WH_RSPInput output : " << endl;
-  hexdump(rspDHp->getBuffer(), rspDHp->getBufferSize() * sizeof(DH_RSP::BufferType)); 
+
+    // dump the output (for debugging)
+    cout << "WH_RSPInput output (stamp: "<<delayedstamp<<"): " << endl;
+    hexdump(rspDHp->getBuffer(), rspDHp->getBufferSize() * sizeof(DH_RSP::BufferType)); 
+  }    
 }
 
 void WH_RSPInput::postprocess()

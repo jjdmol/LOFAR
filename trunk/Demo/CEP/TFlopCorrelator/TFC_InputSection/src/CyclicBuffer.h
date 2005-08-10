@@ -294,10 +294,10 @@ void CyclicBuffer<TYPE>::setOffset(int offset, int& ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
-  // wait until enough space becomes available
+  // wait until enough data becomes available
   while (itsCount - offset < MIN_COUNT)
   {
-    pthread_cond_wait(&space_available, &buffer_mutex);
+    pthread_cond_wait(&data_available, &buffer_mutex);
   }
 
   // CONDITION: itsCount - offset >= MIN_COUNT
