@@ -39,10 +39,10 @@ using namespace LOFAR::OTDB;
 void showList(const vector<OTDBnode>&	nodes) {
 
 
-	cout << "treeID|nodeID|parent |name           |index|leaf|inst|description" << endl;
-	cout << "------+------+-------+---------------+-----+----+----+------------------" << endl;
+	cout << "treeID|nodeID|parent|name                     |index|leaf|inst|description" << endl;
+	cout << "------+------+------+-------------------------+-----+----+----+----------------" << endl;
 	for (uint32	i = 0; i < nodes.size(); ++i) {
-		string row(formatString("%6d|%6d|%6d|%-15.15s|%5d|%s|%4d|%s",
+		string row(formatString("%6d|%6d|%6d|%-25.25s|%5d|%s|%4d|%s",
 			nodes[i].treeID(),
 			nodes[i].nodeID(),
 			nodes[i].parentID(),
@@ -90,8 +90,12 @@ int main (int	argc, char*	argv[]) {
 		OTDBnode	topNode = tm.getTopNode(treeID);
 		LOG_INFO_STR(topNode);
 
+		LOG_DEBUG("Trying to get a collection of items on depth=0");
+		vector<OTDBnode> nodeList = tm.getItemList(treeID, topNode.nodeID(), 0);
+		showList(nodeList);
+
 		LOG_DEBUG("Trying to get a collection of items on depth=1");
-		vector<OTDBnode> nodeList = tm.getItemList(treeID, topNode.nodeID(), 1);
+		nodeList = tm.getItemList(treeID, topNode.nodeID(), 1);
 		showList(nodeList);
 
 		LOG_DEBUG("Trying to get a collection of items on depth=2");
@@ -99,7 +103,7 @@ int main (int	argc, char*	argv[]) {
 		showList(nodeList);
 		
 		uint32	elemNr = nodeList.size() - 1;
-		LOG_DEBUG_STR("Zooming in on element " << elemNr);
+		LOG_DEBUG_STR("Zooming in on node " << nodeList[elemNr].nodeID());
 		OTDBnode	aNode = tm.getNode(treeID, nodeList[elemNr].nodeID());
 		LOG_INFO_STR(aNode);
 

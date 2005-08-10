@@ -67,10 +67,10 @@ void showTreeList(const vector<OTDBtree>&	trees) {
 void showNodeList(const vector<OTDBnode>&	nodes) {
 
 
-	cout << "treeID|nodeID|parent|par.ID|name           |index|leaf|inst|description" << endl;
-	cout << "------+------+------+------+---------------+-----+----+----+------------------" << endl;
+	cout << "treeID|nodeID|parent|par.ID|name                     |index|leaf|inst|descr." << endl;
+	cout << "------+------+------+------+-------------------------+-----+----+----+---------" << endl;
 	for (uint32	i = 0; i < nodes.size(); ++i) {
-		string row(formatString("%6d|%6d|%6d|%6d|%-15.15s|%5d|%s|%4d|%s",
+		string row(formatString("%6d|%6d|%6d|%6d|%-25.25s|%5d|%s|%4d|%s",
 			nodes[i].treeID(),
 			nodes[i].nodeID(),
 			nodes[i].parentID(),
@@ -172,10 +172,15 @@ int main (int	argc, char*	argv[]) {
 			LOG_INFO("Could NOT add the vector of OTDBvalue classes");
 		}
 
+		TreeMaintenance		tm(&conn);
+		OTDBnode topNode = tm.getTopNode(treeID);
+		LOG_INFO_STR("Topnode = " << topNode.nodeID());
+		LOG_INFO("Testing searchInperiod on depth");
 		for (int i = 1; i < 3; ++i) {
-			LOG_INFO_STR("searchInPeriod(2," << i << ") of tree 1");
+			LOG_INFO_STR("searchInPeriod(" << topNode.nodeID() << "," << i 
+							<< ") of tree " << treeID);
 			vector<OTDBvalue>	valueList = 
-					tv.searchInPeriod(2,i,
+					tv.searchInPeriod(topNode.nodeID(),i,
 						ptime(second_clock::local_time()-seconds(10)),
 						ptime(second_clock::local_time()+seconds(10)));
 			if (valueList.size() == 0) {
@@ -194,33 +199,32 @@ int main (int	argc, char*	argv[]) {
 		ASSERTSTR(tv.addKVTparamSet(aPS), "Could NOT add the OTDBvalue class");
 		LOG_INFO("ParameterSet added, going to query it");
 
-		LOG_INFO ("Searching Node: LCU3:PIC_Rack1.%");
-		TreeMaintenance		tm(&conn);
-		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "LCU3:PIC_Rack1.%");
+		LOG_INFO ("Searching Node: LCU3:PIC.Rack1.status");
+		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "LCU3:PIC.Rack1.status");
 		showNodeList(nodeList);
 
 		nodeIDType		nodeID = nodeList[nodeList.size()-1].nodeID();
 		LOG_INFO_STR("Parameter ID = : " << nodeID);
 		LOG_INFO_STR("Getting all the values back");
-		vector<OTDBvalue>	valueList = tv.searchInPeriod(nodeID,1);
+		vector<OTDBvalue>	valueList = tv.searchInPeriod(nodeID,0);
 		ASSERTSTR(valueList.size(), "No values of PIC item found");
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting all the values back from 2005 on");
-		valueList = tv.searchInPeriod(nodeID,1,
+		valueList = tv.searchInPeriod(nodeID,0,
 					time_from_string("2005-01-01"));
 		ASSERTSTR(valueList.size(), "No values of PIC item found");
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting all the values back till 2005");
-		valueList = tv.searchInPeriod(nodeID,1,
+		valueList = tv.searchInPeriod(nodeID,0,
 					ptime(min_date_time),
 					time_from_string("2005-01-01"));
 		ASSERTSTR(valueList.size(), "No values of PIC item found");
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting only the latest value back");
-		valueList = tv.searchInPeriod(nodeID,1,
+		valueList = tv.searchInPeriod(nodeID,0,
 					ptime(min_date_time),
 					ptime(max_date_time),
 					true);
@@ -228,7 +232,6 @@ int main (int	argc, char*	argv[]) {
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting latest values from whole tree");
-		OTDBnode topNode = tm.getTopNode(treeID);
 		valueList = tv.searchInPeriod(topNode.nodeID(),3,
 					ptime(min_date_time),
 					ptime(max_date_time),
