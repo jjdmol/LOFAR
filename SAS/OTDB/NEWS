@@ -1,0 +1,15 @@
+SAS/OTDB: Version Candidate 1.0 date: 2005/08/10
+================================================
+
+Version Candidate 1.0
+---------------------
+Initial release of the OTDB package. Almost completely functional on all
+tree types.
+
+Known TODO's
+------------
+ + Implement getItemList(depth) for VIC components
+ + Implement checkTreeConstraints
+ + Implement pruneTree
+ + Modify ACC/APS/KVpair to place the timestamp in the key-field i.s.o. 
+   the value-field
