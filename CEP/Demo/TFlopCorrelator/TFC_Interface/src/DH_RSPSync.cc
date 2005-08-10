@@ -42,11 +42,12 @@ void DH_RSPSync::init()
   // any pointers
   addField("RSPsyncStamp", BlobField<char>(1, sizeof(timestamp_t)));
   createDataBlock();
+  fillDataPointers();
+  itsSyncStamp->setStamp(0, 0);
 }
 
 void DH_RSPSync::fillDataPointers() {
   itsSyncStamp = (timestamp_t*)getData<char> ("RSPsyncStamp");
-  itsSyncStamp->setStamp(0, 0);
 }
 
 }
