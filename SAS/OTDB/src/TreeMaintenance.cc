@@ -323,18 +323,17 @@ vector<OTDBnode> TreeMaintenance::getVHitemList (treeIDType	aTreeID,
 											     uint32		depth)
 {
 	vector<OTDBnode>	resultVec;
-	string				nodeList(toString(topNode));
-	uint32				resultSize = 0;
 
 	// loop through the levels and construct the vector
-	for (uint32 queryDepth = 1; queryDepth <= depth && !nodeList.empty(); 
-															++queryDepth) {
+	// only include level 0 (= own node) when explicitly asked for.
+	for (uint32 queryDepth=(depth ? 1 : 0); queryDepth <= depth; ++queryDepth) {
 		// construct a query that calls a stored procedure.
-		string	query("SELECT * from getVHchildren('" +
+		string	query("SELECT * from getVHitemList('" +
 					toString(aTreeID) + "','" +
-					nodeList + "')");
+					toString(topNode) + "','" +
+					toString(queryDepth) + "')");
 
-		work	xAction(*(itsConn->getConn()), "getVHchildren");
+		work	xAction(*(itsConn->getConn()), "getVHitemList");
 		try {
 			result res = xAction.exec(query);
 
@@ -346,22 +345,14 @@ vector<OTDBnode> TreeMaintenance::getVHitemList (treeIDType	aTreeID,
 				break;
 			}
 
-			// copy information to output vector and construct new nodeList
+			// copy information to output vector
 			OTDBnode	newNode;
-			nodeList = "";
 			for (result::size_type	i = 0; i < nrRecords; ++i) {
 				resultVec.push_back(OTDBnode(aTreeID, res[i]));
-				if (queryDepth != depth && !resultVec[resultSize].leaf) {
-					if (!nodeList.empty()) {
-						nodeList += ",";
-					}
-					nodeList += toString(resultVec[resultSize].nodeID());
-				}
-				resultSize++;
 			}
 		}
 		catch (std::exception&	ex) {
-			itsError = string("Exception during retrieval of getVHItemList:")
+			itsError = string("Exception during retrieval of getVHitemList:")
 					 + ex.what();
 			LOG_FATAL(itsError);
 		}
@@ -379,26 +370,38 @@ vector<OTDBnode> TreeMaintenance::getPICitemList (treeIDType	aTreeID,
 {
 	vector<OTDBnode>	resultVec;
 
-	// construct a query that calls a stored procedure.
-	string	query("SELECT * from getPICitemList('" +
-				toString(aTreeID) + "','" +
-				toString(topNode) + "','" +
-				toString(depth) + "')");
+	// loop through the levels and construct the vector
+	// only include level 0 (= own node) when explicitly asked for.
+	for (uint32 queryDepth=(depth ? 1 : 0); queryDepth <= depth; ++queryDepth) {
+		// construct a query that calls a stored procedure.
+		string	query("SELECT * from getPICitemList('" +
+					toString(aTreeID) + "','" +
+					toString(topNode) + "','" +
+					toString(queryDepth) + "')");
 
-	work	xAction(*(itsConn->getConn()), "getPICitemList");
-	try {
-		result res = xAction.exec(query);
+		work	xAction(*(itsConn->getConn()), "getPICitemList");
+		try {
+			result res = xAction.exec(query);
 
-		// copy information to output vector
-		result::size_type	nrRecords = res.size();
-		for (result::size_type	i = 0; i < nrRecords; ++i) {
-			resultVec.push_back(OTDBnode(aTreeID, res[i]));
+			// show how many records found
+			result::size_type	nrRecords = res.size();
+			LOG_TRACE_CALC_STR (nrRecords << " records in itemList(" <<
+								topNode << ", " << queryDepth << ")");
+			if (nrRecords == 0) {
+				break;
+			}
+
+			// copy information to output vector
+			for (result::size_type	i = 0; i < nrRecords; ++i) {
+				resultVec.push_back(OTDBnode(aTreeID, res[i]));
+			}
 		}
-	}
-	catch (std::exception&	ex) {
-		itsError = string("Exception during retrieval of getPICitemList:")
-				 + ex.what();
-	}
+		catch (std::exception&	ex) {
+			itsError = string("Exception during retrieval of getPICitemList:")
+					 + ex.what();
+			LOG_FATAL(itsError);
+		}
+	}	// for
 
 	return (resultVec);
 }
@@ -630,8 +633,8 @@ bool	TreeMaintenance::deleteNodeList(vector<OTDBnode>&	aNodeList)
 // checkTreeConstraints (treeID, topnode) : bool
 //
 // Evaluate the constraints from a (sub)tree.
-bool	checkTreeConstraints(treeIDType		aTreeID,
-							 nodeIDType		topNode = 0)
+bool	checkTreeConstraints(treeIDType		TODO_aTreeID,
+							 nodeIDType		TODO_topNode = 0)
 {
 	// TODO: IMPLEMENT THIS FUNCTION
 
@@ -681,7 +684,8 @@ treeIDType	TreeMaintenance::instanciateTree (treeIDType	baseTree)
 // pruneTree (treeID, level) : bool
 //
 // Prune an instanciated tree to get loss of depricated values.
-bool	TreeMaintenance::pruneTree(treeIDType	aTreeID, int16	pruningLevel)
+bool	TreeMaintenance::pruneTree(treeIDType	TODO_aTreeID, 
+								   int16		TODO_pruningLevel)
 {
 	// TODO: IMPLEMENT THIS FUNCTION
 
@@ -698,9 +702,11 @@ bool	TreeMaintenance::pruneTree(treeIDType	aTreeID, int16	pruningLevel)
 bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 									 nodeIDType			topItem,
 									 const string&		filename,
-									 const formatType	outputFormat,
-									 bool				folded)
+									 const formatType	TODO_outputFormat,
+									 bool				TODO_folded)
 {
+	// TODO: implement outputformat and folded parameters
+
 	// Check connection
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
