@@ -135,6 +135,8 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR("Zooming in on last element");
 		OTDBnode	aNode = tm.getNode(VHtreeID, nodeList[elemNr].nodeID());
 		LOG_INFO_STR(aNode);
+		// Save node ID far later (making a subtree export)
+		nodeIDType	subTreeNodeID = nodeList[elemNr].nodeID();
 
 		LOG_INFO_STR("Trying to classify the tree to " << 
 													CTconv.get("operational"));
@@ -179,6 +181,14 @@ int main (int	argc, char*	argv[]) {
 
 		treeInfo = conn.getTreeInfo(VHtreeID);
 		LOG_INFO_STR(treeInfo);
+
+		LOG_INFO("Exporting whole tree to 'treeExport'");
+		ASSERTSTR(tm.exportTree(VHtreeID, topNode.nodeID(), "treeExport"),
+										"Error during export of whole tree");
+
+		LOG_INFO("Exporting subtree to 'subtreeExport'");
+		ASSERTSTR(tm.exportTree(VHtreeID, subTreeNodeID, "subtreeExport"),
+										"Error during export of subtree");
 
 	}
 	catch (std::exception&	ex) {

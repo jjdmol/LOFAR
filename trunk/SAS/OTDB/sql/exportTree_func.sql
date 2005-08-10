@@ -24,7 +24,7 @@
 
 --
 -- recursive helper function
--- exportSubTree (treeID, topNodeID, basename)
+-- exportSubTree (treeID, topNodeID, prefixlength)
 --
 -- Makes a key-value list of a (sub)tree in usenet format.
 --
@@ -34,21 +34,13 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION exportSubTree(INT4, INT4, TEXT)
+CREATE OR REPLACE FUNCTION exportSubTree(INT4, INT4, INT4)
   RETURNS TEXT AS '
 	DECLARE
 	  vResult		TEXT := \'\';
-	  vOwnName		VIChierarchy.name%TYPE;
-	  vBaseName		VIChierarchy.name%TYPE;
 	  vRow			RECORD;
 
 	BEGIN
-	  -- construct basename for own parameters
-	  vBaseName := $3;
-	  IF length(vBasename) != 0 THEN
-		vBaseName := vBaseName || \'.\';
-	  END IF;
-
 	  -- first dump own parameters
 	  FOR vRow IN
 	    SELECT	name, value
@@ -57,8 +49,8 @@ CREATE OR REPLACE FUNCTION exportSubTree(INT4, INT4, TEXT)
 	    AND	 	parentID = $2
 		AND		leaf = true
 	  LOOP
-		vResult := vResult || vBasename || 
-				              vRow.name || \'=\' || vRow.value || chr(10);
+		vResult := vResult || substr(vRow.name,$3) || \'=\' 
+													|| vRow.value || chr(10);
 	  END LOOP;
 
 	  -- call myself for all the children
@@ -69,8 +61,7 @@ CREATE OR REPLACE FUNCTION exportSubTree(INT4, INT4, TEXT)
 	    AND	 	parentID = $2
 		AND		leaf = false
 	  LOOP
-		vResult := vResult || exportSubTree($1, vRow.nodeID, 
-											vBaseName || vRow.name);
+		vResult := vResult || exportSubTree($1, vRow.nodeID, $3);
 	  END LOOP;
 
 	  RETURN vResult;
@@ -93,12 +84,10 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
-		vBaseName		TEXT;
 		vResult			TEXT;
-		vFullName		TEXT;
 		vName			VIChierarchy.name%TYPE;
-		vParentID		VIChierarchy.parentID%TYPE;
-		vnodeID			VIChierarchy.nodeID%TYPE;
+		vDotPos			INTEGER;
+		vCount			INTEGER;
 
 		vNewTreeID		OTDBtree.treeID%TYPE;
 		vCreatorID		OTDBtree.creator%TYPE;
@@ -113,27 +102,28 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 			RAISE EXCEPTION \'Not authorized\';
 		END IF;
 
-
-		-- construct name from treetop till topNode
-		vBaseName := \'\';
-		vParentID := -1;
-		vNodeID   := $3;
-		WHILE vParentID != 0 LOOP
-		  SELECT name, nodeID, parentID
-		  INTO	 vName, vNodeID, vParentID
-		  FROM	 VIChierarchy
-		  WHERE	 treeID = $2
-		  AND	 nodeID = vNodeID;
-		  IF NOT FOUND THEN
-		    RAISE EXCEPTION \'Node % does not exist in tree %\', $3, $2;
-		  END IF;
-		  vBaseName := vName || \'.\' || vBaseName;
-		  vNodeID   := vParentID;
+		-- get name of topNode
+		SELECT name
+		INTO   vName
+		FROM   VIChierarchy
+		WHERE  treeID = $2
+		AND	   nodeID = $3;
+		IF NOT FOUND THEN
+		  RAISE EXCEPTION \'Node % does not exist in tree %\', $3, $2;
+		END IF;
+		-- determine prefix: is basename of retrieved node.
+		vCount    := 0;
+		vDotPos   := 1;
+		LOOP
+			vCount := strpos(substring(vName from vDotPos), \'.\');
+			EXIT WHEN vCount = 0;
+			vDotPos := vDotPos + vCount;
 		END LOOP;
-		vResult := \'prefix=\' || vBasename || chr(10);
+		vDotPos := vDotPos - 1;
+		vResult := \'prefix=\' || substr(vName,1,vDotPos) || chr(10);
 
 		-- construct entries for all nodes from here on.
-		vResult := vResult || exportSubTree($2, $3, \'\'::text);
+		vResult := vResult || exportSubTree($2, $3, vDotPos+1);
 		RETURN vResult;
 	END;
 ' LANGUAGE plpgsql;

@@ -25,7 +25,7 @@
 
 --
 -- helper function
--- instanciateVHparams(orgNodeID, newTreeID, newNodeID)
+-- instanciateVHparams(orgNodeID, newTreeID, newNodeID, basename)
 -- 
 -- Gives the newNodeID in the newTreeID the same parameters as the orgNode.
 -- Note: new node must already exist.
@@ -37,7 +37,7 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4)
+CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
   RETURNS VOID AS '
 	DECLARE
 		vParam	RECORD;
@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4)
 	  LOOP
 		INSERT 
 		INTO 	VIChierarchy(treeID, parentID, paramrefID, name, value)
-	    VALUES 	($2, $3, vParam.originID, vParam.name, vParam.limits);
+	    VALUES 	($2, $3, vParam.originID, $4 || vParam.name, vParam.limits);
 		-- note: nodeId, index and leaf are defaulted.
 	  END LOOP;
 	  RETURN;
@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4)
 
 --
 -- helper function
--- instanciateVHleafNode(orgNodeID, newTreeID, newParentID, index):newNodeID
+-- instanciateVHleafNode(orgNodeID, newTreeID, newParentID, index, basename):newNodeID
 --
 -- Duplicates a complete VT node to the VH tree
 -- 
@@ -71,7 +71,7 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4)
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2)
+CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
   RETURNS INT4 AS '
 	DECLARE
 		vNode		RECORD;
@@ -96,9 +96,10 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2)
 	  INTO	 VIChierarchy(treeID, nodeID, parentID, 
 						  paramrefID, name, index, leaf)
 	  VALUES ($2, vNewNodeID, $3, 
-			  vNode.originID, vNode.name, $4, FALSE);
+			  vNode.originID, $5 || vNode.name, $4, FALSE);
 
-	  PERFORM instanciateVHparams($1, $2, vNewNodeID);
+	  PERFORM instanciateVHparams($1, $2, vNewNodeID, 
+												$5 || vNode.name || \'.\');
 
 	  RETURN vNewNodeID;
 	END;
@@ -106,7 +107,7 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2)
 
 --
 -- helper function
--- instanciateVHsubTree(orgNodeID, newTreeID, newParentID): newNodeID
+-- instanciateVHsubTree(orgNodeID, newTreeID, newParentID, basename): newNodeID
 -- 
 -- Duplicates a subtree starting at node orgNode to VH tree newTreeID
 -- under node newParentID.
@@ -119,7 +120,7 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2)
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4)
+CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
   RETURNS INT4 AS '
 	DECLARE
 	  vNode				RECORD;
@@ -129,8 +130,16 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4)
 	  vNewNodeID		VIChierarchy.nodeID%TYPE;
 	  vNodeID			VIChierarchy.nodeID%TYPE;
 	  vDummy			VIChierarchy.nodeID%TYPE;
+	  vBasename			VIChierarchy.name%TYPE;
+	  vOwnname			VIChierarchy.name%TYPE;
 
 	BEGIN
+	  -- Append dot to basename if not topnode
+	  vBasename := $4;
+	  IF length(vBasename) != 0 THEN
+		vBasename := vBasename || \'.\';
+	  END IF;
+
 	  -- get orgnode (master record: index = 0)
 	  SELECT parentID, name, instances
 	  INTO	 vNode
@@ -154,22 +163,24 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4)
 		-- if there is only 1 instance tell VHleafnode this with index = 0
 		IF vNode.instances = 1 THEN
 		  vIndexnr := 0;
+		  vOwnname := vBasename || vNode.name;
 		ELSE
 		  vIndexnr := vIndexCounter;
+		  vOwnname := vBasename || vNode.name || \'[\' || vIndexCounter || \']\';
 		END IF;
 
 		-- instanciate node itself
-	    vNewNodeID := instanciateVHleafNode(vNodeID, $2, $3, vIndexnr::int2);
+	    vNewNodeID := instanciateVHleafNode(vNodeID, $2, $3, vIndexnr::int2, vBasename);
 
 		-- dive into the childen
 		FOR vVTnode IN 
-		  SELECT nodeID 
+		  SELECT nodeID, name
 		  FROM	 VICtemplate
 		  WHERE	 parentID = vNodeID
 		  AND	 index = 0
 		  AND	 leaf = FALSE
 		LOOP
-		  vDummy := instanciateVHsubTree(vVTnode.nodeID, $2, vNewNodeID);
+		  vDummy := instanciateVHsubTree(vVTnode.nodeID, $2, vNewNodeID, vOwnname);
 		END LOOP;
 	  END LOOP;
 
@@ -239,7 +250,7 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  END IF;
 
 	  -- recursively instanciate the tree
-	  vNewNodeID := instanciateVHsubTree(vOrgNodeID, vNewTreeID, 0);	
+	  vNewNodeID := instanciateVHsubTree(vOrgNodeID, vNewTreeID, 0, \'\'::text);	
 
 	  RETURN vNewTreeID;
 	END;

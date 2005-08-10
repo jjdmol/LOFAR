@@ -21,41 +21,40 @@
 -- OTDBinfo
 \i getTopNode_func.sql
 
--- PICadmin
+-- PICtree
 \i create_PIC_tables.sql
-\i hPICsearchParamID_func.sql
 \i addPICparam_func.sql
 \i getPICparamDef_func.sql
 \i getPICitemList_func.sql
-\i searchInPeriod_func.sql
 
 -- Events and Actions
 \i create_event_action.sql
 
--- VICadmin
+-- VICtemplate
 \i create_VIC_tables.sql
 \i hVICsearchParamID_func.sql
 \i getVICparamDef_func.sql
 \i dupVTnode_func.sql
 \i updateVTnode_func.sql
 \i deleteVTnode_func.sql
-\i getVTchildren_func.sql
 \i getVTitemList_func.sql
-\i buildTemplateTree_func.sql
+\i getVTchildren_func.sql
 \i instanciateTree_func.sql
-\i exportTree_func.sql
 
 -- VICcomponent
 \i saveVCnode_func.sql
 \i saveVICparamDef_func.sql
 \i getVICnodeDef_func.sql
 \i getVCtopNodeList_func.sql
+\i buildTemplateTree_func.sql
 
 -- VIChierarchy
-\i getVHchildren_func.sql
+\i getVHitemList_func.sql
+\i exportTree_func.sql
 
 -- values
 \i addKVT_func.sql
+\i searchInPeriod_func.sql
 
 -- multi treetype
 \i getNode_func.sql
