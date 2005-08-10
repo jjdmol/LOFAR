@@ -120,11 +120,6 @@ void WH_Storage::preprocess() {
   // For nr of beams
   itsFieldId = itsWriter->addField (azimuth*pi/180., elevation*pi/180.);
 
-  // >>> Temporary!
-  for (int i=0; i<itsNinputs; i++) {
-    ((DH_Vis*)getDataManager().getInHolder(i))->setStorageTestPattern();
-  }
-
 }
 
 void WH_Storage::process() 
