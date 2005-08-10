@@ -186,8 +186,8 @@ int main (int	argc, char*	argv[]) {
 			}
 		}
 
-		LOG_INFO("Opening parameterset tPICvalue.kvt_in");
-		ParameterSet	aPS("tPICvalue.kvt_in");
+		LOG_INFO("Opening parameterset tPICvalue.in");
+		ParameterSet	aPS("tPICvalue.in");
 		cout << aPS;
 
 		LOG_INFO("Adding a Paramset class to the PIC tree");
