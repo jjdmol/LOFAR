@@ -47,38 +47,24 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 
 	BEGIN
 	  -- Is topNode a Node or a Parameter?
-	  SELECT leaf, paramRefID
-	  INTO	 vLeaf, vParamRefID
+	  SELECT leaf, paramRefID, name
+	  INTO	 vLeaf, vParamRefID, vFullname
 	  FROM	 PIChierarchy
 	  WHERE	 nodeID = $2;
 
-	  -- Find name of parameter
-	  SELECT r.pvssname
-	  INTO	 vFullname
-	  FROM	 PICparamRef r, PIChierarchy h
-	  WHERE	 h.nodeid = $2
-	  AND	 r.paramid = h.paramRefID;
-	  IF NOT FOUND THEN
-		RETURN;
-	  END IF;
-
-	  IF vLeaf = TRUE OR $3 = 0 THEN
-		vQuery := chr(39) || vFullname || chr(39);
+	  IF vLeaf = TRUE AND $3 = 0 THEN
+		vQuery := \'=\' || chr(39) || vFullname || chr(39)
+					|| \' AND h.leaf=true \';
 	  ELSE
-	    -- take name of node
-	    vNodename := split_part(vFullname, \'.\', 1);
-
 	    -- construct query
-	    vQuery := chr(39) || vNodename;
+	    vQuery := \'similar to \' || chr(39) || vFullname;
 	    FOR i in 1..$3 LOOP
-		  vQuery := vQuery || \'_[^\\\\\\\\_]+\';
+		  vQuery := vQuery || \'.[^\\\\\\\\.]+\';
 	    END LOOP;
 	    vQuery := vQuery || chr(39);
 	  END IF;
 
-	  IF vLeaf = TRUE THEN
-		vQuery := vQuery || \' AND h.leaf=true \';
-	  END IF;
+perform logmsg (vQuery);
 
 	  -- finally get result
 	  FOR vRecord IN EXECUTE \'
@@ -91,10 +77,10 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 			   1::int2,
 			   \\\'\\\'::text,
 			   r.description 
-		FROM   PICparamref r
-			   INNER JOIN PIChierarchy h ON r.paramid = h.paramrefID
+		FROM   PIChierarchy h
+			   INNER JOIN PICparamRef r ON r.paramid = h.paramrefID
 		WHERE  h.treeID = \' || $1 || \'
-	    AND	   r.pvssname similar to \' || vQuery 
+	    AND	   h.name \' || vQuery 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;

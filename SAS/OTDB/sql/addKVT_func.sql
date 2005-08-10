@@ -59,7 +59,7 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
 	  SELECT paramid 
 	  INTO	 vParRefID
 	  FROM   PICparamRef
-	  WHERE  PVSSname = $1
+	  WHERE  PVSSname = translate($1, \'_\', \'.\')
 	  LIMIT  1;
 
 	  IF FOUND THEN

@@ -43,34 +43,52 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 		vNodeID		PIChierarchy.nodeID%TYPE;
 		vParentID	PIChierarchy.parentID%TYPE;
 		vFullname	VARCHAR(120);
-		vNodename	VARCHAR(40);
+		vNodename	VARCHAR(120);
+		vBasename	VARCHAR(120);
 		vParamIndex	INT2;
 		vFieldnr	INT4;
 		vLeaf		BOOLEAN;
 
 	BEGIN
-	  -- be sure parameter exists in reference table.
+	  -- be sure NODE exists in reference table.
+	  -- PVSSname has format like xxx:aaa_bbb_ccc.ddd
+	  vNodename := split_part($2, \'.\', 1);			-- xxx:aaa_bbb_ccc
+	  vNodename := translate(vNodename, \'_\', \'.\');	-- xxx:aaa.bbb.ccc
+	  vFullname := translate($2, \'_\', \'.\');			-- xxx:aaa.bbb.ccc.ddd
+	  IF length(vNodename) > 0 THEN
+	    SELECT paramID 
+	    INTO   vParRefID
+	    FROM   PICparamRef
+	    WHERE  PVSSname = vNodename
+	    LIMIT  1;
+	    IF NOT FOUND THEN
+		  -- node not yet in reference table, add it.
+	      INSERT INTO PICparamRef(PVSSname, par_type)
+	      VALUES (vNodename, $3);
+	    END IF;
+	  END IF;
+
+	  -- be sure PARAMETER exists in reference table.
 	  vParRefID := 0;
 	  SELECT paramID 
 	  INTO	 vParRefID
 	  FROM   PICparamRef
-	  WHERE  PVSSname = $2
+	  WHERE  PVSSname = vFullname
 	  LIMIT  1;
 	  IF NOT FOUND THEN
 		-- param not yet in reference table, add it.
 		-- TODO: add other fields also.
 	    INSERT INTO PICparamRef(PVSSname, par_type)
-	    VALUES ($2, $3);
+	    VALUES (vFullname, $3);
 		-- and retrieve its ID
-	    SELECT paramID 
-	    INTO   vParRefID
-	    FROM   PICparamRef
-	    WHERE  PVSSname = $2;
+--	    SELECT paramID 
+--	    INTO   vParRefID
+--	    FROM   PICparamRef
+--	    WHERE  PVSSname = vFullname;
 	  END IF;
 
 	  -- add record to the PIC hierachical tree
-	  -- PVSSname has format like xxx:aaa_bbb_ccc.ddd
-	  vFullname := translate($2, \'_\', \'.\');
+	  vBasename := \'\';
 	  vFieldnr  := 1;
 	  vParentID := 0;
 	  vNodeID   := 0;
@@ -78,13 +96,17 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 	  LOOP
 		vNodename := split_part(vFullname, \'.\', vFieldnr);
 		EXIT WHEN length(vNodename) <= 0;
+		IF vFieldnr != 1 THEN
+		  vBasename := vBasename || \'.\';
+		END IF;
+		vBasename := vBasename || vNodename;
 
-		SELECT	nodeID
-		INTO  	vNodeID
+		SELECT	nodeID, paramRefID
+		INTO  	vNodeID, vParRefID
 		FROM	PIChierarchy
 		WHERE	treeID   = $1
 		AND		parentID = vParentID
-		AND		name     = vNodename;
+		AND		name     = vBasename;
 		IF NOT FOUND THEN
 		  vNodeID  := nextval(\'PIChierarchID\');
 		  IF length(split_part(vFullname, \'.\', vFieldnr+1)) <= 0 THEN
@@ -92,10 +114,15 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 		  ELSE
 			vLeaf := FALSE;
 		  END IF;
+		  -- get id of original parameter
+	      SELECT paramID 
+	      INTO   vParRefID
+	      FROM   PICparamRef
+	      WHERE  PVSSname = vBasename;
 		  INSERT INTO PIChierarchy(treeID, nodeID, parentID, 
 								   paramRefID, name, index, leaf)
 		  VALUES ($1, vNodeID, vParentID, 
-				  vParRefID, vNodename, vParamIndex, vLeaf);
+				  vParRefID, vBasename, vParamIndex, vLeaf);
 		END IF;
 
 		vFieldnr := vFieldnr + 1;
