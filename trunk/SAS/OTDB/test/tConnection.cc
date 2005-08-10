@@ -63,8 +63,8 @@ int main (int	argc, char*	argv[]) {
 
 	try {
 
-		LOG_DEBUG_STR(conn);
-		LOG_DEBUG("Trying to connect to the database");
+		LOG_INFO_STR(conn);
+		LOG_INFO("Trying to connect to the database");
 		ASSERTSTR(conn.connect(), "Connnection failed");
 		ASSERTSTR(conn.isConnected(), "Connnection flag failed");
 
@@ -78,8 +78,8 @@ int main (int	argc, char*	argv[]) {
 		else {
 			showTreeList(treeList);
 		}
-		LOG_INFO("getTreeList(0,1)");
-		treeList = conn.getTreeList(00, 1);
+		LOG_INFO("getTreeList(0,3)");
+		treeList = conn.getTreeList(0, 1);
 		if (treeList.size() == 0) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());
 		}
@@ -95,7 +95,7 @@ int main (int	argc, char*	argv[]) {
 			showTreeList(treeList);
 		}
 
-		LOG_INFO("getTreeList(20,1)");
+		LOG_INFO("getTreeList(20,3)");
 		treeList = conn.getTreeList(20, 1);
 		if (treeList.size() == 0) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());

@@ -79,8 +79,8 @@ int main (int	argc, char*	argv[]) {
 		TreeMaintenance	tm(&conn);
 
 		LOG_DEBUG("Trying to load a master PIC file");
-		treeIDType	treeID = tm.loadMasterFile ("PICmasterfile.txt");
-		ASSERTSTR(treeID, "Loading of PIC masterfiel failed");
+		treeIDType	treeID = tm.loadMasterFile ("tPICtree.in");
+		ASSERTSTR(treeID, "Loading of PIC masterfile failed");
 
 		LOG_INFO_STR("New tree has ID: " << treeID);
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);

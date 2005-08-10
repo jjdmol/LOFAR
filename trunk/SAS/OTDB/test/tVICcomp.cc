@@ -77,8 +77,8 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO("Trying to construct a TreeMaintenance object");
 		TreeMaintenance	tm(&conn);
 
-		LOG_INFO("Trying to load the componentfile: VICcomponentFile.in");
-		nodeIDType	topNodeID = tm.loadComponentFile ("VICcomponentFile.in");
+		LOG_INFO("Trying to load the componentfile: tVICcomp.in");
+		nodeIDType	topNodeID = tm.loadComponentFile ("tVICcomp.in");
 		ASSERTSTR(topNodeID, "Loading of componentfile failed");
 		LOG_INFO_STR("ID of topnode is: " << topNodeID);
 		

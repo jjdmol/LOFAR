@@ -1,21 +1,16 @@
 SUBDIRS						= . 
 
-check_PROGRAMS				= tPICadmin \
+check_PROGRAMS				= tPICtree \
 							  tPICvalue \
 							  tVICcomp \
 							  tVTtree \
 							  tVHtree \
 							  tVHvalue \
-							  tOTDBinfo \
 							  tConnection
 
-tConnection_SOURCES			= tConnection.cc
-tConnection_LDADD			= ../src/libotdb.la -lpqxx
-tConnection_DEPENDENCIES	= ../src/libotdb.la $(LOFAR_DEPEND)
-
-tPICadmin_SOURCES			= tPICadmin.cc
-tPICadmin_LDADD				= ../src/libotdb.la -lpqxx
-tPICadmin_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
+tPICtree_SOURCES			= tPICtree.cc
+tPICtree_LDADD				= ../src/libotdb.la -lpqxx
+tPICtree_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
 
 tPICvalue_SOURCES			= tPICvalue.cc
 tPICvalue_LDADD				= ../src/libotdb.la -lpqxx -laps
@@ -37,14 +32,17 @@ tVHvalue_SOURCES			= tVHvalue.cc
 tVHvalue_LDADD				= ../src/libotdb.la -lpqxx -laps
 tVHvalue_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
 
-tOTDBinfo_SOURCES			= tOTDBinfo.cc
-tOTDBinfo_LDADD				= ../src/libotdb.la -lpqxx
-tOTDBinfo_DEPENDENCIES		= ../src/libotdb.la $(LOFAR_DEPEND)
+tConnection_SOURCES			= tConnection.cc
+tConnection_LDADD			= ../src/libotdb.la -lpqxx
+tConnection_DEPENDENCIES	= ../src/libotdb.la $(LOFAR_DEPEND)
 
 
-TESTS						= tPICadmin_test.sh \
-							  tVICadmin_test.sh \
-							  tOTDBinfo_test.sh \
+TESTS						= tPICtree_test.sh \
+							  tPICvalue_test.sh \
+							  tVICcomp_test.sh \
+							  tVTtree_test.sh \
+							  tVHtree_test.sh \
+							  tVHvalue_test.sh \
 							  tConnection_test.sh
 
 TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir)
