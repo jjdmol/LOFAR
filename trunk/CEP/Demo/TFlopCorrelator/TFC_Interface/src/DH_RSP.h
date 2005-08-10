@@ -25,7 +25,7 @@ namespace LOFAR
 class DH_RSP: public DataHolder
 {
 public:
-  typedef u16complex BufferType;
+  typedef i16complex BufferType;
 
   explicit DH_RSP (const string& name,
                    const ACC::APS::ParameterSet pset);

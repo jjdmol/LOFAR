@@ -25,7 +25,7 @@ namespace LOFAR
 class DH_FIR: public DataHolder
 {
 public:
-  typedef u16complex BufferType;
+  typedef i16complex BufferType;
 
   explicit DH_FIR (const string& name,
 		   const short   subband,
@@ -42,9 +42,9 @@ public:
   virtual void init();
 
   /// Get write access to the Buffer.
-  u16complex* getBuffer();
+  BufferType* getBuffer();
   /// Get access to the Buffer.
-  const u16complex* getBuffer() const;
+  const BufferType* getBuffer() const;
 
   const unsigned int getBufferSize() const;
   
