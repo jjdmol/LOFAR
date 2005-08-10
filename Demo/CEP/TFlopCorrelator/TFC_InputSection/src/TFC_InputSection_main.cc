@@ -49,7 +49,7 @@ int main (int argc, const char** argv) {
       cout << "init done" << endl;
       Profiler::activate();
       cout << "run" << endl;
-      myAH.baseRun(1000);
+      myAH.baseRun(ps.getInt32("Input.NRuns"));
       cout << "run complete" << endl;
       myAH.baseDump();
       myAH.baseQuit();

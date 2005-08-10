@@ -52,7 +52,7 @@ namespace LOFAR
   typedef struct 
   {
     BufferController** BufControl;
-    TransportHolder& Connection; 
+    TransportHolder* Connection; 
     int FrameSize;
     int SubbandSize;
     int EPAHeaderSize;
