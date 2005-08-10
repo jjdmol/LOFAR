@@ -316,9 +316,11 @@ void WH_RSPInput::process()
     rspDHp->setTimeStamp(delayedstamp);   
     rspDHp->setDelay(delayDHp->getDelay(itsStationID));
 
+#if 0
     // dump the output (for debugging)
     cout << "WH_RSPInput output (stamp: "<<delayedstamp<<"): " << endl;
     hexdump(rspDHp->getBuffer(), rspDHp->getBufferSize() * sizeof(DH_RSP::BufferType)); 
+#endif
   }    
 }
 

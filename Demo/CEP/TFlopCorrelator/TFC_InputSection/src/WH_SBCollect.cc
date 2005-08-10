@@ -92,15 +92,19 @@ void WH_SBCollect::process()
 
 #if 0
   // dump the contents of the DHs to stdout
-  for (int nr=0; nr<itsNinputs; nr++)
-  {
-    cout << "WH_SBCollect input " << nr << " : " << endl;
-    DH_RSP* inp = (DH_RSP*)getDataManager().getInHolder(nr);
-    hexdump(inp->getBuffer(), inp->getBufferSize() * sizeof(DH_RSP::BufferType));
-  }
-
   cout << "WH_SBCollect output : " << endl;
-  hexdump(outpDH->getBuffer(), outpDH->getBufferSize() * sizeof(DH_FIR::BufferType));
+  dimType outTimeDim = outMatrix.getDim("Time");
+  dimType outPolDim = outMatrix.getDim("Polarisation");
+  int matrixSize = itsNinputs * 
+    outMatrix.getNElemInDim(outTimeDim) * 
+    outMatrix.getNElemInDim(outPolDim);    
+
+  hexdump(outMatrix.getBlock(outMatrix.getCursor(0), 
+			     outStationDim, 
+			     itsNinputs,
+			     matrixSize),
+	  matrixSize * sizeof(DH_FIR::BufferType));
+  cout << "WH_SBCollect output done " << endl;
 #endif
 
 }
