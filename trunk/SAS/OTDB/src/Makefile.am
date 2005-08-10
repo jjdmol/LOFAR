@@ -11,14 +11,16 @@ INSTHDRS			= OTDBconnection.h	\
 					  OTDBnode.h	\
 					  OTDBvalue.h	\
 					  OTDBparam.h	\
+					  VICnodeDef.h \
 					  TreeMaintenance.h \
-					  TreeValue.h \
-					  OTDBaction.h	\
-					  OTDBactionList.h	\
-					  OTDBevent.h	\
-					  OTDBeventList.h	
+					  TreeValue.h 
 
-NOINSTHDRS			= VICnodeDef.h wSpaceSplit.h
+#					  OTDBaction.h	\
+#					  OTDBactionList.h	\
+#					  OTDBevent.h	\
+#					  OTDBeventList.h	
+
+NOINSTHDRS			= wSpaceSplit.h
 
 TCCHDRS				=
 
@@ -42,10 +44,11 @@ libotdb_la_SOURCES 		= $(DOCHDRS) \
 							wSpaceSplit.cc \
 							TreeMaintenance.cc \
 							TreeValue.cc \
-							loadCompFile.cc \
-							OTDBaction.cc	\
-						    OTDBactionList.cc	\
-						    OTDBevent.cc	\
-						    OTDBeventList.cc	
+							loadCompFile.cc
+
+#							OTDBaction.cc	\
+#						    OTDBactionList.cc	\
+#						    OTDBevent.cc	\
+#						    OTDBeventList.cc	
 
 include $(lofar_sharedir)/Makefile.common

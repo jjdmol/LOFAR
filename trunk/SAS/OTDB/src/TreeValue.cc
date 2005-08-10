@@ -68,7 +68,6 @@ bool TreeValue::addKVT (const string&	key,
 		itsError = itsConn->errorMsg();
 		return (false);
 	}
-cout << "ADDKVT:" << key << "," << value << "," << to_simple_string(time) << endl;
 	// construct a query that call a stored procedure.
 	work	xAction(*(itsConn->getConn()), "addKVT");
 	string	query("SELECT * from addKVT('" +
@@ -146,42 +145,47 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 	}
 
 	vector<OTDBvalue>	resultVec;
-	// construct a query that call a stored procedure.
+	// construct a query that calls a stored procedure.
 	work	xAction(*(itsConn->getConn()), "searchInPeriod");
-	string	query("SELECT * from searchInPeriod('" +
-				toString(itsTree.treeID()) + "','" +
-				toString(topNode) + "','" +
-				toString(depth) + "','" +
-				to_simple_string(beginDate) + "','" +
-				to_simple_string(endDate) + "')");
 	try {
-		result res = xAction.exec(query);
+		for (uint32 queryDepth = 0; queryDepth <= depth; ++queryDepth) {
+			string	query("SELECT * from searchInPeriod('" +
+						toString(itsTree.treeID()) + "','" +
+						toString(topNode) + "','" +
+						toString(queryDepth) + "','" +
+						to_simple_string(beginDate) + "','" +
+						to_simple_string(endDate) + "')");
 
-		// check result
-		result::size_type	nrRecords = res.size();
-		if (!nrRecords) {
-			return (resultVec);
-		}
+			result res = xAction.exec(query);
 
-		if (mostRecentOnly) {
-			// filter out the old values.
-			OTDBvalue		prevKVT;
-			for (result::size_type	i = 0; i < nrRecords; ++i) {
-				OTDBvalue	thisKVT(res[i]);
-				if (i != 0 && thisKVT.nodeID() != prevKVT.nodeID()) {
-					resultVec.push_back(prevKVT);
+			// check result
+			result::size_type	nrRecords = res.size();
+			LOG_TRACE_CALC_STR (nrRecords << " records in search(" <<
+								topNode << ", " << queryDepth << ")");
+			if (!nrRecords) {
+				continue;
+			}
+
+			if (mostRecentOnly) {
+				// filter out the old values.
+				OTDBvalue		prevKVT;
+				for (result::size_type	i = 0; i < nrRecords; ++i) {
+					OTDBvalue	thisKVT(res[i]);
+					if (i != 0 && thisKVT.nodeID() != prevKVT.nodeID()) {
+						resultVec.push_back(prevKVT);
+					}
+					prevKVT = thisKVT;
 				}
-				prevKVT = thisKVT;
+				resultVec.push_back(prevKVT);
 			}
-			resultVec.push_back(prevKVT);
-		}
-		else {
-			// simply copy information to output vector
-			for (result::size_type	i = 0; i < nrRecords; ++i) {
-				resultVec.push_back(res[i]);
+			else {
+				// simply copy information to output vector
+				for (result::size_type	i = 0; i < nrRecords; ++i) {
+					resultVec.push_back(res[i]);
+				}
 			}
-		}
-	}
+		} // for
+	} 
 	catch (std::exception&	ex) {
 		itsError = string("Exception during searchInPeriod:")
 				 + ex.what();
@@ -196,7 +200,7 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 //
 // getSchedulableItems
 //
-vector<OTDBvalue> TreeValue::getSchedulableItems (nodeIDType	topNode)
+vector<OTDBvalue> TreeValue::getSchedulableItems (nodeIDType	TODO_topNode)
 {
 	LOG_INFO("TreeValue::getSchedulableItems is not yet implemented");
 
