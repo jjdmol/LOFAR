@@ -131,7 +131,7 @@ public:
 	bool	exportTree (treeIDType			aTreeID,
 						nodeIDType			topItem,
 						const string&		filename,
-						const formatType	outputFormat,
+						const formatType	outputFormat = FtKVList,
 						bool				folded = false);
 
 

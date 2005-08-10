@@ -141,7 +141,7 @@ CREATE TABLE VIChierarchy (
 	nodeID		INT4			NOT NULL DEFAULT nextval('VIChierarchID'),
 	parentID	INT4			NOT NULL, -- REFERENCES VIChierachy(nodeID),
 	paramRefID	INT4			NOT NULL, -- REFERENCES VICparamref(paramID),
-	name		VARCHAR(40)		NOT NULL,
+	name		VARCHAR(120)	NOT NULL,
 	index		INT2			NOT NULL DEFAULT 0,
 	leaf		BOOLEAN			DEFAULT TRUE,
 	value		TEXT,			-- empty for nodes, filled for params
