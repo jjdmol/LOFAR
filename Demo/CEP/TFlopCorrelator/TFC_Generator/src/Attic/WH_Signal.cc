@@ -41,6 +41,11 @@ int WH_Signal::theirNoRunningWHs = 0;
 int WH_Signal::theirNoAlarms = 0;
 bool WH_Signal::theirTimerSet = 0;
 
+int16 randint16() {
+  int32 value = rand() - RAND_MAX / 2;  
+  return value / 4000000 ;
+};
+
 WH_Signal::WH_Signal(const string& name, 
 		     const int noOutputs,
 		     const ParameterSet ps,
@@ -111,9 +116,13 @@ void WH_Signal::process()
     } else if (itsSignalType == PATTERN) {
       RectMatrix<RSPDataType>& myMatrix = myEthFrame.getEpaPacket(epap).getMatrix();
       dimType sbDim = myMatrix.getDim("subband");
+      dimType polDim = myMatrix.getDim("polarisation");
       RectMatrix<RSPDataType>::cursorType cursor = myMatrix.getCursor(0*sbDim);
       for (int sb = 0; sb < myMatrix.getNElemInDim(sbDim); myMatrix.moveCursor(&cursor, sbDim), sb++) {
 	myMatrix.setValue(cursor, makei16complex(sb, itsStamp.getBlockId()));  // the real value is the beamlet number, the imag value is the slice count
+// 	RectMatrix<RSPDataType>::cursorType polC = cursor;
+// 	myMatrix.moveCursor(polC, polDim);
+// 	myMatrix.setValue(polC, makei16complex(sb, itsStamp.getBlockId()));  // the real value is the beamlet number, the imag value is the slice count
 	// the y polarisations are all 0
       }
     } else if (itsSignalType == RANDOM) {
@@ -124,18 +133,14 @@ void WH_Signal::process()
       RectMatrix<RSPDataType>::cursorType cursor = myMatrix.getCursor(0*sbDim);
       RectMatrix<RSPDataType>::cursorType pcursor;
       RSPDataType value;
-      int32* valuep = (int32*)&value;
       for (int sb = 0; sb < myMatrix.getNElemInDim(sbDim); myMatrix.moveCursor(&cursor, sbDim), sb++) {
-	// rand returns an int32, which is the same size as a complex<int16>
-	// so for speed we take the int32 and put it at the mem location of the complex<int16>
-	*valuep = rand();
-	myMatrix.setValue(cursor, value);
+	myMatrix.setValue(cursor, makei16complex(randint16(), randint16()));
+	cout<<myMatrix.getValue(cursor)<<endl;
 	pcursor = cursor;
 	myMatrix.moveCursor(&pcursor, pDim);
-	*valuep = rand();
-	myMatrix.setValue(pcursor, value);
+	myMatrix.setValue(pcursor, makei16complex(randint16(), randint16()));
+	cout<<myMatrix.getValue(pcursor)<<endl;
       }
-      
     }
   }
 
