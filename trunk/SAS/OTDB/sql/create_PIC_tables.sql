@@ -79,7 +79,7 @@ CREATE TABLE PIChierarchy (
 	nodeID		INT4			NOT NULL DEFAULT nextval('PIChierarchID'),
 	parentID	INT4			NOT NULL, --  REFERENCES PIChierachy(nodeID),
 	paramRefID	INT4			NOT NULL REFERENCES PICparamref(paramID),
-	name		VARCHAR(40)		NOT NULL,
+	name		VARCHAR(120)		NOT NULL,
 	index		INT2			NOT NULL DEFAULT 0,
 	leaf		BOOLEAN			DEFAULT TRUE,
 

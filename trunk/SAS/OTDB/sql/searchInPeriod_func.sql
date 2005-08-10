@@ -35,8 +35,6 @@
 --
 -- Types:	OTDBvalue
 --
--- NOTE: For now the depth is always 1.
---
 CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP)
   RETURNS SETOF OTDBvalue AS '
 	DECLARE
@@ -49,31 +47,18 @@ CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP
 
 	BEGIN
 	  -- Is topNode a node or a parameter?
-	  SELECT leaf, paramRefID
-	  INTO	 vLeaf, vParamRefID
+	  SELECT leaf, paramRefID, name
+	  INTO	 vLeaf, vParamRefID, vFullname
 	  FROM	 PIChierarchy
 	  WHERE	 nodeID = $2;
 
-	  -- Find name of top parameter
-	  SELECT r.pvssname
-	  INTO	 vFullname
-	  FROM	 PICparamRef r, PIChierarchy h
-	  WHERE	 h.nodeid = $2
-	  AND	 r.paramid = h.paramRefID;
-	  IF NOT FOUND THEN
-		RETURN;
-	  END IF;
-
-	  IF vLeaf = TRUE OR $3 = 0 THEN
-		vQuery := chr(39) || vFullname || chr(39);
+	  IF vLeaf = TRUE AND $3 = 0 THEN
+		vQuery := \'=\' || chr(39) || vFullname || chr(39);
 	  ELSE
-	    -- take name of node
-	    vNodename := split_part(vFullname, \'.\', 1);
-
 	    -- construct query
-	    vQuery := chr(39) || vNodename;
+	    vQuery := \'similar to \' || chr(39) || vFullname;
 	    FOR i in 1..$3 LOOP
-		  vQuery := vQuery || \'_[^\\\\\\\\_]+\';
+		  vQuery := vQuery || \'.[^\\\\\\\\.]+\';
 	    END LOOP;
 	    vQuery := vQuery || chr(39);
 	  END IF;
@@ -87,6 +72,7 @@ CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP
 						 || chr(39) || $4 || chr(39) 
 				   		 || \' AND \' || chr(39) || $5 || chr(39);
 	  END IF;
+
 	  -- get record in paramref table
 	  FOR vRecord IN EXECUTE \'
 	    SELECT k.paramid,
@@ -95,7 +81,7 @@ CREATE OR REPLACE FUNCTION searchInPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTAMP
 			   k.time
 		FROM   PICparamref r
 			   INNER JOIN PICkvt k ON r.paramid = k.paramid
-	    WHERE  r.pvssname similar to \' || vQuery || \'
+	    WHERE  r.pvssname \' || vQuery || \'
 		ORDER BY k.paramid, k.time\'
 	  LOOP
 		RETURN NEXT vRecord;
