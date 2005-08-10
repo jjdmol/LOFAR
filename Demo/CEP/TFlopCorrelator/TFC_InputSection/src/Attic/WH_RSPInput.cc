@@ -275,18 +275,17 @@ void WH_RSPInput::process()
         
       // send the synced startstamp to the slaves
       for (int i = 1; i < itsNRSPOutputs; i++) {
-	((DH_RSPSync*)getDataManager().getOutHolder(i))->setSyncStamp(itsSyncedStamp);
+	((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
         // force a write 
-        getDataManager().readyWithOutHolder(i);
+	// getDataManager().readyWithOutHolder(i);
       }
       itsFirstProcessLoop = false;      
-    }
-    else {
+    } else {
       // increase the syncstamp
       itsSyncedStamp += itsNSamplesToCopy;
       // send the syncstamp to the slaves
       for (int i = 1; i < itsNRSPOutputs; i++) {
-        ((DH_RSPSync*)getDataManager().getOutHolder(i))->setSyncStamp(itsSyncedStamp);
+        ((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
       }
     }
   } //end (itsIsSyncMaster)
@@ -317,12 +316,19 @@ void WH_RSPInput::process()
     rspDHp->setTimeStamp(delayedstamp);   
     rspDHp->setDelay(delayDHp->getDelay(itsStationID));
 
-#if 0
+#if 1
     // dump the output (for debugging)
     cout << "WH_RSPInput output (stamp: "<<delayedstamp<<"): " << endl;
     hexdump(rspDHp->getBuffer(), rspDHp->getBufferSize() * sizeof(DH_RSP::BufferType)); 
 #endif
   }    
+
+  if(itsSyncMaster) {
+    cout<<"master has stamp: "<<delayedstamp<<endl;
+  } else {
+    cout<<"slave has stamp: "<<delayedstamp<<endl;
+  }
+    
 }
 
 void WH_RSPInput::postprocess()
