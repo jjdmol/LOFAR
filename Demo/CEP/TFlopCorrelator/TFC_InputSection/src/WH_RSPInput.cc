@@ -293,7 +293,8 @@ void WH_RSPInput::process()
 
   // delay control
   delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
-  //  delayedstamp = itsSyncedStamp + delayDHp->getDelay(itsStationID);    
+  // TODO: get delay from the delay controller
+  //delayedstamp = itsSyncedStamp + delayDHp->getDelay(itsStationID);    
   delayedstamp = itsSyncedStamp;
 
 
