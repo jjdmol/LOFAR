@@ -53,6 +53,7 @@ namespace LOFAR
     itsReadyOutFlag = new bool[noutputs];
     for (int i = 0; i < ninputs; i++)
     {
+      itsInDHs[i]=0;
       itsDoAutoTriggerIn[i]=true;
       itsInputRates[i]=1;
       itsReadyInFlag[i]=false;
@@ -60,6 +61,7 @@ namespace LOFAR
     }
     for (int j = 0; j < noutputs; j++)
     {
+      itsOutDHs[j]=0;
       itsDoAutoTriggerOut[j]=true;
       itsOutputRates[j]=1;
       itsReadyOutFlag[j]=false;
