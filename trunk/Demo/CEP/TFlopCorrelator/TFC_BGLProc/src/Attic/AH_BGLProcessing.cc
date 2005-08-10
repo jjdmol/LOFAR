@@ -68,8 +68,6 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGLProcessing::define()");
 
-  ACC::APS::ParameterSet itsParamSet("TFlopCorrelator.cfg");
-
   int lowestFreeNode = 0;
   
   LOG_TRACE_FLOW_STR("Create the top-level composite");
@@ -114,7 +112,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
     itsInStub->connect(cor, itsWHs.back()->getDataManager(), 0);
     // for the first test, don't connect the output
-//     itsOutStub->connect(cor, itsWHs.back()->getDataManager(), 0);
+    itsOutStub->connect(cor, itsWHs.back()->getDataManager(), 0);
 
 //     DataHolder* itsInDH = new DH_FIR("itsIn1", 0, itsParamSet);
 //     DataHolder* itsOutDH = new DH_Vis("itsOut1", 0, itsParamSet);

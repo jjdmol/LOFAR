@@ -36,8 +36,10 @@ int main (int argc, const char** argv) {
       LOG_TRACE_FLOW("Main program not started by ACC");
       // there are no commandline arguments, so we were not called by ACC
       AH_BGLProcessing myAH;
-      
       myAH.setarg(argc, argv);
+      ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
+      myAH.setParameters(ps);
+
       myAH.baseDefine();
       cout << "defined" << endl;
       Profiler::init();
@@ -45,7 +47,7 @@ int main (int argc, const char** argv) {
       cout << "init done" << endl;
       Profiler::activate();
       cout << "run" << endl;
-      myAH.baseRun(1);
+      myAH.baseRun(ps.getInt32("Input.NRuns"));
       cout << "run complete" << endl;
       myAH.baseDump();
       myAH.baseQuit();
