@@ -81,7 +81,7 @@ namespace LOFAR
 	
       virtual WH_RSPInput* make(const string& name);
      
-      virtual void preprocess();
+      virtual void startThread();
     
       virtual void process();
 

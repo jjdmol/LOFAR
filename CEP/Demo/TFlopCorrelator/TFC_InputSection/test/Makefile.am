@@ -11,7 +11,8 @@ tWH_SBCollect.cc				\
 ../src/WH_SBCollect.cc				
 
 CyclicBufferTest_SOURCES =                      \
-CyclicBufferTest.cc
+CyclicBufferTest.cc				\
+../src/BufferController.cc
 
 TESTS   = 					\
 tWH_SBCollect.sh				
