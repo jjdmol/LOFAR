@@ -14,8 +14,7 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 
 BUILT_SOURCES = \
-	ABS_Protocol.ph \
-	ABS_Protocol_v2.ph \
+	BS_Protocol.ph \
 	BeamServerPorts.conf \
 	BeamServer.conf
 
@@ -26,8 +25,7 @@ sysconf_DATA = \
 	BeamServer.conf
 
 include_HEADERS = \
-	$(top_builddir)/src/ABS_Protocol.ph \
-	$(top_builddir)/src/ABS_Protocol_v2.ph
+	$(top_builddir)/src/BS_Protocol.ph
 
 %.properties: %.properties.in
 	cp $< $@
@@ -40,22 +38,15 @@ lib_LTLIBRARIES = libabs.la
 libabs_la_SOURCES = \
 	Beamlet2SubbandMap.h \
 	Beamlet2SubbandMap.cc \
-	Direction.h \
-	Direction.cc \
 	Pointing.h \
 	Pointing.cc \
-	SpectralWindow.h \
-	SpectralWindow.cc \
-	SpectralWindowConfig.h \
-	SpectralWindowConfig.cc \
 	Beam.h \
 	Beam.cc \
 	Beamlet.h \
 	Beamlet.cc \
 	gnuplot_i.h \
 	gnuplot_i.cc \
-	$(top_builddir)/src/ABS_Protocol.cc \
-	$(top_builddir)/src/ABS_Protocol_v2.cc
+	$(top_builddir)/src/BS_Protocol.cc
 
 bin_PROGRAMS = BeamServer
 
@@ -64,7 +55,7 @@ BeamServer_SOURCES = \
 	BeamServer.cc
 
 BeamServer_LDADD = \
-	$(top_builddir)/src/libabs.la -lrsp
+	$(top_builddir)/src/libabs.la -lcal -lcaldevel -lrsp
 
 #include $(lofar_sharedir)/Makefile.common
 include ../Makefile.common

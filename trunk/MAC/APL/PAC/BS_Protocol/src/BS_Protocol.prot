@@ -4,7 +4,7 @@
 autogen definitions protocol;
 
 description = "Protocol for the Beam Server";
-prefix = "ABS"; // for the signal names
+prefix = "BS"; // for the signal names
 id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+10)";
 
 // specify extra include files
@@ -49,7 +49,7 @@ event = {
       // etc.
       param = {
 	    name = "allocation";
-	    type = "ABS_Protocol::Beamlet2SubbandMap";
+	    type = "Beamlet2SubbandMap";
 	    userdefined;
       };
 };
@@ -83,7 +83,7 @@ event = {
 	// Only the subbands can be modified, not the beamlets allocated.
 	param = {
 		name = "allocation";
-		type = "ABS_Protocol::Beamlet2SubbandMap";
+		type = "Beamlet2SubbandMap";
 		userdefined;
 	};
 };

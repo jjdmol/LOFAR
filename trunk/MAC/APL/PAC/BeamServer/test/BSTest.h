@@ -1,4 +1,5 @@
-//#  ABSSpectralWindow.cc: implementation of the ABS::SpectralWindow class
+//#
+//#  BSTest.h: Macros for using the testsuite more effectively.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,12 +20,55 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+//#
 
-#include "SpectralWindow.h"
+#ifndef BSTEST_H_
+#define BSTEST_H_
 
-using namespace ABS;
+#include <Suite/suite.h>
 
-SpectralWindow::SpectralWindow(double start, double width, int nsubbands, uint8 rcusettings) :
-  m_start(start), m_width(width), m_nsubbands(nsubbands), m_rcusettings(rcusettings)
-{
-}
+#define START_TEST(_test_, _descr_) \
+  setCurSubTest(#_test_, _descr_)
+
+#define STOP_TEST() \
+  reportSubTest()
+
+#define NEXT_TEST(_test_, _descr_) \
+  { \
+    setCurSubTest(#_test_, _descr_); \
+    TRAN(_test_); \
+  }
+
+#define FINISH \
+  { \
+    reportSubTest(); \
+  }
+
+/* TRAN(Application::finished); */
+
+#define ABORT_TESTS \
+  { \
+    FINISH; \
+  }
+
+#define FAIL_AND_ABORT(_txt_) \
+  { \
+    FAIL(_txt_);  \
+    ABORT_TESTS; \
+  }
+
+#define TESTC_ABORT_ON_FAIL(cond) \
+  if (!TESTC(cond)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
+#define TESTC_DESCR_ABORT_ON_FAIL(cond, _descr_) \
+  if (!TESTC_DESCR(cond, _descr_)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
+#endif

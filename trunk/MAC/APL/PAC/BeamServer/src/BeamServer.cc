@@ -21,9 +21,7 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
-#define DECLARE_SIGNAL_NAMES
-#include "ABS_Protocol.ph"
+#include "BS_Protocol.ph"
 #include "RSP_Protocol.ph"
 
 #include "BeamServer.h"
@@ -40,10 +38,6 @@
 
 #include <PSAccess.h>
 
-#ifndef ABS_SYSCONF
-#define ABS_SYSCONF "."
-#endif
-
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -53,8 +47,9 @@
 
 using namespace LOFAR;
 using namespace blitz;
-using namespace ABS;
+using namespace BS;
 using namespace std;
+using namespace RTC;
 
 using namespace RSP_Protocol;
 
@@ -67,38 +62,19 @@ using namespace RSP_Protocol;
 
 #define SYSTEM_CLOCK_FREQ 120e6 // 120 MHz
 
-BeamServer::BeamServer(string name, int n_blps)
+BeamServer::BeamServer(string name)
     : GCFTask((State)&BeamServer::initial, name),
-      m_pos(n_blps, MEPHeader::N_POL, N_DIM),
-      m_weights(COMPUTE_INTERVAL, n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS),
-      m_weights16(COMPUTE_INTERVAL, n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS),
       m_beams_modified(false),
-      m_n_blps(n_blps)
+      m_sampling_frequency(160000000),
+      m_nyquist_zone(1),
+      m_beams(MEPHeader::N_BEAMLETS)
 {
-  registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
+  registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_signalnames);
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, ABS_PROTOCOL);
+  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, BS_PROTOCOL);
   m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
 
-  (void)Beam::init(MEPHeader::N_BEAMLETS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
-  (void)Beamlet::init(MEPHeader::N_BEAMLETS);
-
-  m_wgsetting.frequency     = 1.5625e6; // 1.5625 MHz
-  m_wgsetting.amplitude     = 128;
-  m_wgsetting.enabled       = false;
-
-  m_pos = 0;
-  m_spw_refcount = 0;
-
-  istringstream config_positions(GET_CONFIG_STRING("RS.LBA_POSITIONS"));
-  config_positions >> m_pos;
-
-  LOG_INFO_STR("RS.LBA_POSITIONS = " << m_pos);
-
-  // initialize weight matrix
-  m_weights   = complex<W_TYPE>(0,0);
-  m_weights16 = complex<int16_t>(0,0);
 }
 
 BeamServer::~BeamServer()
@@ -115,71 +91,87 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
   static unsigned long update_timer = (unsigned long)-1;
   
   switch(e.signal)
-  {
-    case F_INIT:
     {
-      if (!SpectralWindowConfig::getInstance().load())
-      {
-	LOG_ERROR("Failed to load spectral window configurations.");
-      }
-    }
-    break;
+    case F_INIT:
+      break;
 
     case F_ENTRY:
-    {
-      if (!m_rspdriver.isConnected()) m_rspdriver.open();
+      {
+	if (!m_rspdriver.isConnected()) m_rspdriver.open();
 
-      // start the update timer if it wasn't already started
-      if ((unsigned long)-1 == update_timer) update_timer = m_rspdriver.setTimer(0, 0, UPDATE_INTERVAL, 0);
-    }
-    break;
+	// start the update timer if it wasn't already started
+	if ((unsigned long)-1 == update_timer) update_timer = m_rspdriver.setTimer(0, 0, UPDATE_INTERVAL, 0);
+      }
+      break;
 
     case F_CONNECTED:
-    {
-      LOG_INFO(formatString("CONNECTED: port '%s' connected", port.getName().c_str()));
-      if (isEnabled())
       {
+	LOG_INFO(formatString("CONNECTED: port '%s' connected", port.getName().c_str()));
+	if (isEnabled())
+	  {
+	    RSPGetconfigEvent getconfig;
+	    m_rspdriver.send(getconfig);
+	  }
+      }
+      break;
+
+    case RSP_GETCONFIGACK:
+      {
+	RSPGetconfigackEvent ack(e);
+      
+	m_nrcus = ack.n_rcus;
+	m_pos.resize(m_nrcus / MEPHeader::N_POL, MEPHeader::N_POL, N_DIM);
+	m_weights.resize(COMPUTE_INTERVAL, m_nrcus, MEPHeader::N_BEAMLETS);
+	m_weights16.resize(COMPUTE_INTERVAL, m_nrcus, MEPHeader::N_BEAMLETS);
+
+	m_pos = 0;
+
+	LOG_INFO_STR("RS.LBA_POSITIONS = " << m_pos);
+
+	// initialize weight matrix
+	m_weights   = complex<W_TYPE>(0,0);
+	m_weights16 = complex<int16_t>(0,0);
+
 	TRAN(BeamServer::enabled);
       }
-    }
-    break;
+      break;
 
     case F_DISCONNECTED:
-    {
-      // no need to set this timer, the update timer will cause re-open anyway
-      //port.setTimer((long)3); // try again in 3 seconds
-      LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-      port.close();
-    }
-    break;
+      {
+	// no need to set this timer, the update timer will cause re-open anyway
+	//port.setTimer((long)3); // try again in 3 seconds
+	LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+	port.close();
+      }
+      break;
 
     case F_TIMER:
-    {
-      if (!port.isConnected())
       {
-	LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
-	port.open();
+	if (!port.isConnected())
+	  {
+	    LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
+	    port.open();
+	  }
       }
-    }
-    break;
+      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-  }
+    }
 
   return status;
 }
 
-void BeamServer::collect_garbage()
+void BeamServer::undertaker()
 {
-  for (list<GCFPortInterface*>::iterator it = m_garbage_list.begin();
-       it != m_garbage_list.end();
+  for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
+       it != m_dead_clients.end();
        it++)
   {
     delete (*it);
   }
-  m_garbage_list.clear();
+  m_dead_clients.clear();
 }
 
 GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
@@ -188,7 +180,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
   static int period = 0;
 
-  collect_garbage();
+  undertaker();
   
   switch (e.signal)
   {
@@ -201,7 +193,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
     case F_ACCEPT_REQ:
     {
       GCFTCPPort* client = new GCFTCPPort();
-      client->init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
+      client->init(*this, "client", GCFPortInterface::SPP, BS_PROTOCOL);
       m_acceptor.accept(*client);
       m_client_list.push_back(client);
 
@@ -227,7 +219,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	period = 0;
 
 	// compute new weights after sending weights
-	compute_weights(timer->sec);
+	compute_weights(Timestamp(timer->sec, 0));
 
 	send_weights();
       }
@@ -235,20 +227,16 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
       if (m_beams_modified)
       {
 	send_sbselection();
-	send_rcusettings();
 
 	m_beams_modified = false;
       }
     }
     break;
 
-    case ABS_BEAMPOINTTO:
-    case ABS_WGSETTINGS:
-    case ABS_BEAMALLOC:
-    case ABS_BEAMFREE:
-    case ABS_WGENABLE:
-    case ABS_WGDISABLE:
-      status = handle_abs_request(e, port);
+    case BS_BEAMPOINTTO:
+    case BS_BEAMALLOC:
+    case BS_BEAMFREE:
+      status = handle_request(e, port);
       break;
       
     case RSP_SETWEIGHTSACK:
@@ -271,26 +259,6 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
     }
     break;
 
-    case RSP_SETRCUACK:
-    {
-      RSPSetrcuackEvent ack(e);
-      if (RSP_Protocol::SUCCESS != ack.status)
-      {
-	LOG_ERROR("RSP_SETRCUACK: FAILURE");
-      }
-    }
-    break;
-      
-    case RSP_SETWGACK:
-    {
-      RSPSetwgackEvent ack(e);
-      if (RSP_Protocol::SUCCESS != ack.status)
-      {
-	LOG_ERROR("RSP_SETWGACK: FAILURE");
-      }
-    }
-    break;
-
     case F_DISCONNECTED:
     {
       LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
@@ -304,13 +272,13 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
       else
       {
 	// deallocate all beams for this client
-	for (set<int>::iterator handle = m_client_beams[&port].begin();
+	for (set<uint32>::iterator handle = m_client_beams[&port].begin();
 	     handle != m_client_beams[&port].end();
 	     ++handle)
 	{
-	  Beam* b = Beam::getFromHandle(*handle);
-	  b->deallocate();
-	  m_beams.erase(b);
+	  if (!m_beams.destroy((uint32)*handle)) {
+	    LOG_WARN("Beam not found...");
+	  }
 	}
 	m_client_beams.erase(&port);
 
@@ -318,7 +286,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	update_sbselection();
 
 	m_client_list.remove(&port);
-	m_garbage_list.push_back(&port);
+	m_dead_clients.push_back(&port);
       }
     }
     break;
@@ -336,49 +304,30 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult BeamServer::handle_abs_request(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult BeamServer::handle_request(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
-    case ABS_BEAMALLOC:
+    case BS_BEAMALLOC:
     {
-      ABSBeamallocEvent event(e);
+      BSBeamallocEvent event(e);
       beamalloc_action(event, port);
     }
     break;
 
-    case ABS_BEAMFREE:
+    case BS_BEAMFREE:
     {
-      ABSBeamfreeEvent event(e);
+      BSBeamfreeEvent event(e);
       beamfree_action(event, port);
     }
     break;
 
-    case ABS_BEAMPOINTTO:
+    case BS_BEAMPOINTTO:
     {
-      ABSBeampointtoEvent event(e);
+      BSBeampointtoEvent event(e);
       beampointto_action(event, port);
-    }
-    break;
-
-    case ABS_WGSETTINGS:
-    {
-      ABSWgsettingsEvent event(e);
-      wgsettings_action(event, port);
-    }
-    break;
-
-    case ABS_WGENABLE:
-    {
-      wgenable_action();
-    }
-    break;
-
-    case ABS_WGDISABLE:
-    {
-      wgdisable_action();
     }
     break;
 
@@ -390,187 +339,86 @@ GCFEvent::TResult BeamServer::handle_abs_request(GCFEvent& e, GCFPortInterface& 
   return status;  
 }
 
-void BeamServer::beamalloc_action(ABSBeamallocEvent& ba,
-				      GCFPortInterface& port)
+void BeamServer::beamalloc_action(BSBeamallocEvent& ba,
+				  GCFPortInterface& port)
 {
-  Beam* beam = 0;
-  ABSBeamallocAckEvent ack;
-  ack.handle = -1;
-  ack.status = ABS_Protocol::SUCCESS;
+  BSBeamallocackEvent ack;
+  ack.handle = 0;
+  ack.status = BS_Protocol::SUCCESS;
 
-  if (ba.n_subbands< 0 || ba.n_subbands > MEPHeader::N_BEAMLETS)
+  if (ba.allocation().size() > MEPHeader::N_BEAMLETS)
   {
-    LOG_ERROR("BEAMALLOC: n_subbands parameter out of range");
+    LOG_ERROR("BEAMALLOC: allocation larger than N_BEAMLETS");
     
-    ack.status = ERR_RANGE;
-    port.send(ack);
-    return;                          // RETURN
-  }
-
-  // create subband selection set
-  set<int> subbands;
-  for (int i = 0; i < ba.n_subbands; i++) subbands.insert(ba.subbands[i]);
-
-  // check if array of subbands did not contain any duplicate subband
-  // selection
-  if (ba.n_subbands != (int)subbands.size())
-  {
-    LOG_ERROR("BEAMALLOC: subband selection contains duplicates");
     ack.status = ERR_RANGE;
     port.send(ack);
     return;                          // RETURN
   }
 
   // allocate the beam
+  Beam* beam = m_beams.get(ba.allocation, m_sampling_frequency, m_nyquist_zone);
 
-  if (0 == (beam = Beam::allocate(ba.spectral_window, subbands)))
-  {
-    LOG_ERROR("BEAMALLOC: failed");
+  if (!beam) {
+
+    LOG_ERROR("BEAMALLOC failed.");
     ack.status = ERR_BEAMALLOC;
-    port.send(ack);
-  }
-  else
-  {
-    ack.handle = beam->handle();
-    LOG_DEBUG(formatString("ack.handle=%d", ack.handle));
 
-    m_beams.insert(beam);
-    m_client_beams[&port].insert(beam->handle());
+  } else {
 
+    ack.handle = (uint32)beam;
+    m_client_beams[&port].insert((uint32)beam);
     update_sbselection();
-    port.send(ack);
   }
-}
-
-void BeamServer::beamfree_action(ABSBeamfreeEvent& bf,
-				     GCFPortInterface& port)
-{
-  ABSBeamfreeAckEvent ack;
-  ack.handle = bf.handle;
-  ack.status = ABS_Protocol::SUCCESS;
-
-  Beam* beam = 0;
-  if (!(beam = Beam::getFromHandle(bf.handle)))
-  {
-    LOG_ERROR("BEAMFREE: unknown beam handle");
-    
-    ack.status = ERR_RANGE;
-    port.send(ack);
-    return;                      // RETURN
-  }
-
-  if (beam->deallocate() < 0)
-  {
-    LOG_ERROR("BEAMFREE: deallocate failed");
-    ack.status = ERR_BEAMFREE;
-    port.send(ack);
-    return;                     // RETURN
-  }
-
-  m_beams.erase(beam);
-  m_client_beams[&port].erase(beam->handle());
-
-  update_sbselection();
 
   port.send(ack);
 }
 
-void BeamServer::beampointto_action(ABSBeampointtoEvent& pt,
-					GCFPortInterface& /*port*/)
+void BeamServer::beamfree_action(BSBeamfreeEvent& bf,
+				 GCFPortInterface& port)
 {
-  Beam* beam = Beam::getFromHandle(pt.handle);
+  BSBeamfreeackEvent ack;
+  ack.handle = bf.handle;
+  ack.status = BS_Protocol::SUCCESS;
+
+  if (!m_beams.destroy(bf.handle)) {
+
+    LOG_ERROR("BEAMFREE failed");
+
+    ack.status = ERR_BEAMFREE;
+
+  } else {
+
+    //m_beams.erase(beam);
+    m_client_beams[&port].erase(bf.handle);
+    update_sbselection();
+
+  }
+
+  port.send(ack);
+}
+
+void BeamServer::beampointto_action(BSBeampointtoEvent& pt,
+				    GCFPortInterface& /*port*/)
+{
+  Beam* beam = m_beams.get(pt.handle);
 
   if (beam)
-  {
-      time_t pointto_time = pt.time;
-
-      LOG_INFO(formatString("received new coordinates: %f, %f, time=%d",
-			    pt.angle[0], pt.angle[1], pt.time));
+    {
+      LOG_INFO_STR("received new coordinates: " << pt.angle[0] << ", "
+		   << pt.angle[1] << ", time=" << pt.timestamp);
 
       //
       // If the time is not set, then activate the command
       // 2 * COMPUTE_INTERVAL seconds from now, because that's how
       // long it takes the command to flow through the pipeline.
       //
-      if (0 == pt.time) pointto_time = time(0) + 2 * COMPUTE_INTERVAL;
-      if (beam->addPointing(Pointing(Direction(pt.angle[0],
-					       pt.angle[1],
-					       (Direction::Types)pt.type),
-				     pointto_time)) < 0)
-      {
-	  LOG_ERROR("BEAMPOINTTO: failed");
-      }
-  }
+      if (Timestamp(0,0) == pt.timestamp) pt.timestamp.setNow(2 * COMPUTE_INTERVAL);
+      beam->addPointing(Pointing(pt.angle[0],
+				 pt.angle[1],
+				 pt.timestamp,
+				 (Pointing::Type)pt.type));
+    }
   else LOG_ERROR(formatString("BEAMPOINTTO: invalid beam handle (%d)", pt.handle));
-}
-
-void BeamServer::wgsettings_action(ABSWgsettingsEvent& wgs,
-				       GCFPortInterface& port)
-{
-  ABSWgsettingsAckEvent sa;
-  sa.status = ABS_Protocol::SUCCESS;
-
-  // max allowed frequency = 20MHz
-#if 0
-  if ((wgs.frequency >= 1e-6)
-      && (wgs.frequency <= SYSTEM_CLOCK_FREQ/4.0))
-#else
-  if (1)
-#endif
-  {
-    m_wgsetting.frequency     = wgs.frequency;
-    m_wgsetting.amplitude     = wgs.amplitude;
-  }
-  else
-  {
-    LOG_ERROR("WGSETTINGS: argument range error");
-    sa.status = ABS_Protocol::ERR_RANGE;
-  }
-
-  // send ack
-  port.send(sa);
-}
-
-void BeamServer::wgenable_action()
-{
-  if (!GET_CONFIG("BeamServer.DISABLE_SETWG", i))
-  {
-    RSPSetwgEvent wg;
-
-    wg.timestamp.setNow();
-    wg.rcumask.reset();
-    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) wg.rcumask.set(i);
-    wg.settings().resize(1);
-    // scale and convert to uint16
-    wg.settings()(0).freq = (uint16)(((m_wgsetting.frequency * (1 << 16)) / SYSTEM_CLOCK_FREQ) + 0.5);
-    wg.settings()(0).ampl = m_wgsetting.amplitude;
-    wg.settings()(0).phase = 0;
-    wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
-    wg.settings()(0).mode = WGSettings::MODE_CALC;
-    wg.settings()(0).preset = WGSettings::PRESET_SINE;
-
-    m_rspdriver.send(wg);
-  }
-}
-
-void BeamServer::wgdisable_action()
-{
-  if (!GET_CONFIG("BeamServer.DISABLE_SETWG", i)) {
-    RSPSetwgEvent wg;
-  
-    wg.timestamp.setNow();
-    wg.rcumask.reset();
-    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) wg.rcumask.set(i);
-    wg.settings().resize(1);
-    wg.settings()(0).freq = 0;
-    wg.settings()(0).ampl = 0;
-    wg.settings()(0).phase = 0;
-    wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
-    wg.settings()(0).mode = WGSettings::MODE_OFF;
-    wg.settings()(0).preset = WGSettings::PRESET_SINE;
-
-    m_rspdriver.send(wg);
-  }
 }
 
 BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
@@ -593,27 +441,10 @@ inline complex<int16_t> convert2complex_int16_t(complex<W_TYPE> cd)
  * This method is called once every second
  * to calculate the weights for all beamlets.
  */
-void BeamServer::compute_weights(long current_seconds)
+void BeamServer::compute_weights(Timestamp time)
 {
-  // convert_pointings for all beams for the next deadline
-  Array<W_TYPE,2> lmns(COMPUTE_INTERVAL, N_DIM);  // l,m,n coordinates
-  lmns = 0;
-
-  // iterate over all beams
-  for (set<Beam*>::iterator bi = m_beams.begin();
-       bi != m_beams.end(); ++bi)
-  {
-    (*bi)->convertPointings(current_seconds + COMPUTE_INTERVAL);
-
-    lmns = (*bi)->getLMNCoordinates();
-    LOG_INFO(formatString("current_pointing=(%f,%f)",
-			  (*bi)->pointing().direction().angle1(),
-			  (*bi)->pointing().direction().angle2()));
-  }
-
-  //cout << "lmns = " << lmns << endl;
-  
-  Beamlet::calculate_weights(m_pos, m_weights);
+  // calculate weights for all beamlets
+  m_beams.calculate_weights(time, COMPUTE_INTERVAL, m_pos, m_weights);
 
   //
   // need complex conjugate of the weights
@@ -635,9 +466,9 @@ void BeamServer::send_weights()
 
     // select all BLPS, no subarraying
     sw.rcumask.reset();
-    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) sw.rcumask.set(i);
+    for (int i = 0; i < m_nrcus; i++) sw.rcumask.set(i);
 
-    sw.weights().resize(COMPUTE_INTERVAL, m_n_blps * MEPHeader::N_POL, MEPHeader::N_BEAMLETS);
+    sw.weights().resize(COMPUTE_INTERVAL, m_nrcus, MEPHeader::N_BEAMLETS);
     sw.weights() = m_weights16;
 
     m_rspdriver.send(sw);
@@ -648,19 +479,10 @@ void BeamServer::update_sbselection()
 {
   // update subband selection to take
   // the new beamlets for this beam into account
-  m_sbsel.clear();
-  for (set<Beam*>::iterator bi = m_beams.begin();
-       bi != m_beams.end(); ++bi)
-  {
-      (*bi)->getSubbandSelection(m_sbsel);
-  }
+  m_sbsel = m_beams.getSubbandSelection();
 
   m_beams_modified = true;
 }
-
-// void BeamServer::update_rcusettings()
-// {
-// }
 
 void BeamServer::send_sbselection()
 {
@@ -671,7 +493,7 @@ void BeamServer::send_sbselection()
 
     // select all BLPS, no subarraying
     ss.rcumask.reset();
-    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) ss.rcumask.set(i);
+    for (int i = 0; i < m_nrcus; i++) ss.rcumask.set(i);
 
     //
     // Always allocate the array as if all beamlets were
@@ -685,12 +507,12 @@ void BeamServer::send_sbselection()
     ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
     ss.subbands() = 0;
 
-    int nrsubbands = m_sbsel.size() <= 0 ? 0 : m_sbsel.size() * 2;
+    int nrsubbands = m_sbsel().size() * 2;
     LOG_DEBUG(formatString("nrsubbands=%d", nrsubbands));
 
     int i = 0;
-    for (map<int,int>::iterator sel = m_sbsel.begin();
-	 sel != m_sbsel.end(); ++sel, ++i)
+    for (map<uint16,uint16>::iterator sel = m_sbsel().begin();
+	 sel != m_sbsel().end(); ++sel, ++i)
       {
 	LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
 
@@ -717,39 +539,6 @@ void BeamServer::send_sbselection()
   }
 }
 
-void BeamServer::send_rcusettings()
-{
-  if (!GET_CONFIG("BeamServer.DISABLE_SETRCU", i)) {
-    RSPSetrcuEvent rcu;
-  
-    rcu.timestamp.setNow(0);
-
-    // select all BLPS, no subarraying
-    rcu.rcumask.reset();
-    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++)
-      {
-	rcu.rcumask.set(i);
-      }
-
-    int current_spw = SpectralWindowConfig::getInstance().getCurrent();
-  
-    if (current_spw >= 0)
-      {
-	const SpectralWindow* spw = SpectralWindowConfig::getInstance().get(current_spw);
-	if (!spw)
-	  {
-	    LOG_WARN_STR("No spectral window definition found for spectral window index " << current_spw);
-	    return;
-	  }
-
-	rcu.settings().resize(1);
-	rcu.settings()(0).value = spw->rcusettings();
-
-	m_rspdriver.send(rcu);
-      }
-  }
-}
-
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
@@ -758,9 +547,8 @@ int main(int argc, char** argv)
 
   try 
   {
-    //GCF::ParameterSet::instance()->adoptFile(ABS_SYSCONF "/BeamServer.conf");
-    GCF::ParameterSet::instance()->adoptFile(ABS_SYSCONF "/BeamServerPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile(ABS_SYSCONF "/RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile(BS_SYSCONF "/BeamServerPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile(BS_SYSCONF "/RemoteStation.conf");
   }
   catch (Exception e)
   {
@@ -768,19 +556,9 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  int n_blps = GET_CONFIG("BeamServer.N_BLPS", i);
-  if (n_blps <= 0 || n_blps > GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
-  {
-    LOG_FATAL(formatString("Error: BeamServer.N_BLPS(%d) less or equal zero or greater than RS.N_RSPBOARDS(%d) * RS.N_BLPS(%d)",
-			   n_blps,
-			   GET_CONFIG("RS.N_RSPBOARDS", i),
-			   GET_CONFIG("RS.N_BLPS", i)));
-    exit(EXIT_FAILURE);
-  }
-  
-  BeamServer abs("BeamServer", n_blps);
+  BeamServer beamserver("BeamServer");
 
-  abs.start(); // make initial transition
+  beamserver.start(); // make initial transition
 
   try
   {

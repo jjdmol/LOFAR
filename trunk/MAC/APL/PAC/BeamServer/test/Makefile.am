@@ -4,82 +4,68 @@ AM_CPPFLAGS = \
 	-I$(top_builddir)/src \
 	-I$(top_srcdir)/test
 
+#	BeamServerTest 
+#	CheckWeightsTest 
+#	CheckWeightsTest2 
+
 TESTS = \
-	BeamServerTest \
-	CheckWeightsTest \
-	CheckWeightsTest2 \
 	avtstub.sh
 
 bin_PROGRAMS = \
 	AVTStub \
-	EPATest
+	EPATest \
+	SweepTest
 
-check_PROGRAMS = \
-	BeamServerTest \
-	CheckWeightsTest \
-	CheckWeightsTest2 \
-	EPAStub \
-	SweepTest \
-	SetFreq
+#	BeamServerTest 
+#	CheckWeightsTest 
+#	CheckWeightsTest2 
 
-BeamServerTest_SOURCES = \
-	ABSTest.h \
-	BeamServerTest.cc
+#check_PROGRAMS = \
+#	SweepTest
 
-BeamServerTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
+# BeamServerTest_SOURCES = \
+# 	BSTest.h \
+# 	BeamServerTest.cc
 
-CheckWeightsTest_SOURCES = \
-	CheckWeightsTest.cc
+# BeamServerTest_LDADD = \
+# 	$(top_builddir)/src/libabs.la \
+# 	-lsuite
 
-CheckWeightsTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
+# CheckWeightsTest_SOURCES = \
+# 	CheckWeightsTest.cc
 
-CheckWeightsTest2_SOURCES = \
-	CheckWeightsTest2.cc
+# CheckWeightsTest_LDADD = \
+# 	$(top_builddir)/src/libabs.la \
+# 	-lsuite
 
-CheckWeightsTest2_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
+# CheckWeightsTest2_SOURCES = \
+# 	CheckWeightsTest2.cc
+
+# CheckWeightsTest2_LDADD = \
+# 	$(top_builddir)/src/libabs.la \
+# 	-lsuite
 
 AVTStub_SOURCES = \
-	ABSAVTStub.h \
-	ABSAVTStub.cc
+	AVTStub.h \
+	AVTStub.cc
 
 AVTStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
 	-lsuite
 
 EPATest_SOURCES = \
-	ABSEPATest.h \
-	ABSEPATest.cc
+	EPATest.h \
+	EPATest.cc
 
 EPATest_LDADD = \
 	$(top_builddir)/src/libabs.la \
 	-lsuite
 
 SweepTest_SOURCES = \
-	ABSSweepTest.h \
-	ABSSweepTest.cc
+	SweepTest.h \
+	SweepTest.cc
 
 SweepTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-SetFreq_SOURCES = \
-	ABSSetFreq.cc
-
-SetFreq_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	-lsuite
-
-EPAStub_SOURCES = \
-	ABSEPAStub.h \
-	ABSEPAStub.cc
-
-EPAStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
 	-lsuite
 

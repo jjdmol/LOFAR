@@ -37,124 +37,138 @@
 #define W_TYPE_FLOAT
 #endif
 
-namespace ABS
-{
-  // forward declaration of Beam
-  class Beam;
+namespace LOFAR {
+  namespace BS {
+    // forward declaration of Beam
+    class Beam;
 
-  class Beamlet
+    class Beamlet
       {
       public:
-	  /**
-	   * Get an unallocated beamlet.
-	   * @return Pointer to a Beamlet instance, if no
-	   * more Beamlet instances are avialable, return 0.
-	   * @return 0 if Beamlet::setNInstances has not yet
-	   * been called.
-	   */
-	  static Beamlet* getInstance();
+	/**
+	 * Constructor
+	 */
+	Beamlet();
 
-	  /**
-	   * Set the number of beamlet instances that
-	   * should be created. After calling this method
-	   * once you can not alter the number of 
-	   * instances by calling it again.
-	   * @param ninstances The total number of instances
-	   * that should be created.
-	   * @return 0 on success, < 0 on failure.
-	   */
-	  static int init(int ninstances);
+	/**
+	 * Destructor
+	 */
+	virtual ~Beamlet();
 
-      public:
-	  /**
-	   * Allocate the beamlet.
-	   * @param spw Allocate within this spectral window.
-	   * @param subband Index of the subband to allocate
-	   * within the spectral window.
-	   * @return 0 if allocation succeeded, < 0 otherwise.
-	   */
-	  int allocate(const Beam& beam, SpectralWindow const& spw, int subband);
+	/**
+	 * Allocate the beamlet.
+	 * @param spw Allocate within this spectral window.
+	 * @param subband Index of the subband to allocate
+	 * within the spectral window.
+	 * @return 0 if allocation succeeded, < 0 otherwise.
+	 */
+	int allocate(const Beam& beam, CAL::SpectralWindow const& spw, int subband);
 
-	  /**
-	   * Deallocate the beamlet
-	   */
-	  int deallocate();
+	/**
+	 * Deallocate the beamlet
+	 */
+	int deallocate();
 
-	  /**
-	   * If the beam is allocated return true,
-	   * otherwise return false.
-	   */
-	  bool allocated() const;
+	/**
+	 * If the beam is allocated return true,
+	 * otherwise return false.
+	 */
+	bool allocated() const;
 
-	  /**
-	   * Get pointer to spectral window for this beamlet.
-	   */
-	  const SpectralWindow* spw() const;
+	/**
+	 * Get pointer to spectral window for this beamlet.
+	 */
+	const CAL::SpectralWindow* spw() const;
 
-	  /**
-	   * Get index (from 0) of the subband within the spectral window.
-	   */
-	  int subband() const;
+	/**
+	 * Get index (from 0) of the subband within the spectral window.
+	 */
+	int subband() const;
 
-	  /**
-	   * Get absolute index of this beamlet in the array
-	   * of all beamlets.
-	   */
-	  int index() const;
+	/**
+	 * Get absolute index of this beamlet in the array
+	 * of all beamlets.
+	 */
+	int index() const;
 
-	  /**
-	   * Get beam.
-	   */
-	  const Beam* getBeam() const;
+	/**
+	 * Get beam.
+	 */
+	const Beam* getBeam() const;
 
-	  /**
-	   * Calculate weights for all beamlets 
-	   * for the specified number of time steps.
-	   */
-	  static void calculate_weights(const blitz::Array<W_TYPE, 3>&               pos,
-					      blitz::Array<std::complex<W_TYPE>, 3>& weights);
-
-      protected:
-	  Beamlet(); // no direct construction
-	  virtual ~Beamlet();
 
       private:
-	  /** spectral window of the subband */
-	  const SpectralWindow * m_spw;
+	/** spectral window of the subband */
+	const CAL::SpectralWindow * m_spw;
 
-	  /** subband within the spectral window */
-	  int m_subband;
+	/** subband within the spectral window */
+	int m_subband;
 
-	  /** index of the beamlet in the total beamles array */
-	  int m_index;
+	// /** index of the beamlet in the total beamles array */
+	// int m_index;
 
-	  /**
-	   * Index of the beam to which this beamlet belongs.
-	   * -1 means beamlet is not allocated.
-	   * >= 0 means beamlet is allocated to the beam
-	   * with the specified index.
-	   */
-	  const Beam* m_beam;
-
-      private:
-	  //@{
-	  /** singleton implementation members */
-	  static int      m_ninstances;          // number of beamlets
-	  static Beamlet* m_beamlets;            // array of ninstances beamlets
-	  //@}
+	/**
+	 * Index of the beam to which this beamlet belongs.
+	 * -1 means beamlet is not allocated.
+	 * >= 0 means beamlet is allocated to the beam
+	 * with the specified index.
+	 */
+	const Beam* m_beam;
 
       private:
-	  /**
-	   * Don't allow copying this object.
-	   */
-	  Beamlet (const Beamlet&); // not implemented
-	  Beamlet& operator= (const Beamlet&); // not implemented
+	/**
+	 * Don't allow copying this object.
+	 */
+	Beamlet (const Beamlet&); // not implemented
+	Beamlet& operator= (const Beamlet&); // not implemented
       };
 
-  inline bool Beamlet::allocated() const            { return m_beam != 0; }
-  inline const SpectralWindow* Beamlet::spw() const { return m_spw; }
-  inline int  Beamlet::subband()   const            { return m_subband; }
-  inline int  Beamlet::index()     const            { return m_index; }
+    inline bool Beamlet::allocated() const            { return m_beam != 0; }
+    inline const CAL::SpectralWindow* Beamlet::spw() const { return m_spw; }
+    inline int  Beamlet::subband()   const            { return m_subband; }
+    //inline int  Beamlet::index()     const            { return m_index; }
+
+    /**
+     * Factory class for beamlets. It manages a fixed set of beamlet
+     * instances.
+     */
+    class Beamlets {
+
+    public:
+
+      /**
+       * Constructor
+       */
+      Beamlets(int nbeamlets);
+
+      /**
+       * Destructor
+       */
+      virtual ~Beamlets();
+
+      /**
+       * return beamlet at specified index
+       * @param index
+       * @return Beamlet& the specified beamlet
+       */
+      Beamlet* get(int index) const;
+      
+      /**
+       * Calculate weights for all beamlets 
+       * for the specified number of time steps.
+       */
+      void calculate_weights(const blitz::Array<W_TYPE, 3>&         pos,
+			     blitz::Array<std::complex<W_TYPE>, 3>& weights);
+
+    private:
+      // default constructor not allowed
+      Beamlets(); // no implementation
+
+    private:
+      Beamlet* m_beamlets;
+      int      m_nbeamlets;
+    };
+  };
 };
      
 #endif /* BEAMLET_H_ */

@@ -1,4 +1,4 @@
-//#  ABSBeamServer.h: class definition for the Beam Server task.
+//#  BeamServer.h: class definition for the Beam Server task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,9 +24,10 @@
 #define BEAMSERVER_H_
 
 #include "SpectralWindow.h"
-#include "ABS_Protocol.ph"
+#include "BS_Protocol.ph"
+#include "Beam.h"
 #include "Beamlet.h"
-#include "SpectralWindowConfig.h"
+#include <Timestamp.h>
 
 #include <GCF/TM/GCF_Control.h>
 
@@ -34,22 +35,19 @@
 #include <map>
 #include <list>
 
-namespace ABS
-{
-  class Beam;
-  class Beamlet;
-  class Subband;
+namespace LOFAR {
+  namespace BS {
 
     class BeamServer : public GCFTask
-    {
-    public:
+      {
+      public:
 	/**
 	 * The constructor of the BeamServer task.
 	 * @param name The name of the task. The name is used for looking
 	 * up connection establishment information using the GTMNameService and
 	 * GTMTopologyService classes.
 	 */
-	BeamServer(string name, int n_blps);
+	BeamServer(string name);
 	virtual ~BeamServer();
 
 	// state methods
@@ -57,7 +55,7 @@ namespace ABS
 	/**
 	 * Method to clean up disconnected client ports.
 	 */
-	void collect_garbage();
+	void undertaker();
 
 	/**
 	 * @return true if ready to transition to the enabled
@@ -66,15 +64,15 @@ namespace ABS
 	bool isEnabled();
 
 	/**
-	 * The initial state. This state is used to connect the client
-	 * and board ports. When they are both connected a transition
-	 * to the enabled state is made.
+	 * The initial state. This state is used to connect to
+	 * the RSPDriver and the CalibrationServer. When both 
+	 * are connected a transition to the enabled state is made.
 	 */
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
 	/**
-	 * The enabled state. In this state the task can receive
-	 * commands.
+	 * The enabled state. In this state the BeamServer can accept
+	 * client connections.
 	 */
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
@@ -90,47 +88,33 @@ namespace ABS
 	 * This handler handles all events that should be handled
 	 * irrespective of the state ('enabled' or 'waiting').
 	 */
-	GCFEvent::TResult handle_abs_request(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult handle_request(GCFEvent& e, GCFPortInterface &p);
 
 	// action methods
 
 	/**
 	 * allocate a new beam
 	 */
-	void beamalloc_action(ABSBeamallocEvent& ba,
+	void beamalloc_action(BSBeamallocEvent& ba,
 			      GCFPortInterface& port);
 
 	/**
 	 * free a beam
 	 */
-	void beamfree_action(ABSBeamfreeEvent& bf,
+	void beamfree_action(BSBeamfreeEvent& bf,
 			     GCFPortInterface& port);
 
 	/**
 	 * Change the direction of a beam.
 	 */
-	void beampointto_action(ABSBeampointtoEvent& pt,
+	void beampointto_action(BSBeampointtoEvent& pt,
 				GCFPortInterface& port);
 
-	/**
-	 * Enable or change setting of the waveform generator.
-	 * Enabling the waveform generator disables the ADC input.
-	 */
-	void wgsettings_action(ABSWgsettingsEvent& we,
-			       GCFPortInterface& port);
-	void wgenable_action();
-
-	/**
-	 * Disable the waveform generator.
-	 * This enables the ADC input.
-	 */
-	void wgdisable_action();
-			      
 	/**
 	 * Time to compute some more weights.
 	 * @param current_seconds Time in seconds since 1 Jan 1970
 	 */
-	void compute_weights(long current_seconds);
+	void compute_weights(RTC::Timestamp time);
 
 	/**
 	 * Send weights to the board.
@@ -148,43 +132,13 @@ namespace ABS
 	 */
 	void send_sbselection();
 
-	/**
-	 * Send rcu settings to the board.
-	 */
-	void send_rcusettings();
-
-    private:
+      private:
 	// member variables
-
-	/**
-	 * List of configured spectral windowds.
-	 */
-	std::map<int, SpectralWindow*> m_spws;
 
 	/**
 	 * Current subband selection
 	 */
-	std::map<int, int> m_sbsel;
-
-	/**
-	 * Current spectral window usage.
-	 * Reference count spectral window i is at m_spw_refcount[i].
-	 */
-	int* m_spw_refcount;
-
-	/**
-	 * Set of curently allocated beams.
-	 */
-	std::set<Beam*> m_beams;
-
-	/**
-	 * Current WG settings.
-	 */
-	struct {
-	    double frequency;
-	    uint8  amplitude;
-	    bool   enabled;
-	} m_wgsetting;
+	BS_Protocol::Beamlet2SubbandMap m_sbsel;
 
 	/**
 	 * Receptor positions in 3 dimensions (x, y and z)
@@ -199,21 +153,24 @@ namespace ABS
 	blitz::Array<std::complex<W_TYPE>,  3> m_weights;
 	blitz::Array<std::complex<int16_t>, 3> m_weights16;
 
-    private:
+      private:
 	// ports
 	GCFTCPPort       m_acceptor; // list for clients on this port
 	std::list<GCFPortInterface*> m_client_list; // list of currently connected clients
-	std::list<GCFPortInterface*> m_garbage_list; // list of disconnected clients to be removed
+	std::list<GCFPortInterface*> m_dead_clients; // list of disconnected clients to be removed
 
-	std::map<GCFPortInterface*, std::set<int> > m_client_beams; // mapping from client port to set of beam handles
+	std::map<GCFPortInterface*, std::set<uint32> > m_client_beams; // mapping from client port to set of beam handles
 
 	GCFPort          m_rspdriver;
-	std::list<char*> m_saveq;
 	bool             m_beams_modified;
 
-	int              m_n_blps;
-    };
+	int              m_nrcus;
 
+	int32    m_sampling_frequency;
+	int32    m_nyquist_zone;    
+	Beams    m_beams;
+      };
+  };
 };
      
 #endif /* BEAMSERVER_H_ */

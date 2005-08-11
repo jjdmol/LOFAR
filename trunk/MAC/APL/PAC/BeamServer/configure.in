@@ -11,13 +11,13 @@ dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
 dnl Define the prefix to allow the use of this path in programs
-AC_DEFINE_UNQUOTED([ABS_PREFIX],["${prefix}"],[Path to ABS install prefix directory.])
-ABS_PREFIX="${prefix}"
-AC_SUBST([ABS_PREFIX])
+AC_DEFINE_UNQUOTED([BS_PREFIX],["${prefix}"],[Path to BeamServer install prefix directory.])
+BS_PREFIX="${prefix}"
+AC_SUBST([BS_PREFIX])
 
-AC_DEFINE_UNQUOTED([ABS_SYSCONF],["${prefix}/etc"],[Path to ABS install prefix directory.])
-ABS_SYSCONF="${prefix}/etc"
-AC_SUBST([ABS_SYSCONF])
+AC_DEFINE_UNQUOTED([BS_SYSCONF],["${prefix}/etc"],[Path to BeamServer install prefix directory.])
+BS_SYSCONF="${prefix}/etc"
+AC_SUBST([BS_SYSCONF])
 
 dnl For the am_rpm_init.m4 macros
 RPM_RELEASE=1
@@ -78,6 +78,7 @@ lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 lofar_EXTERNAL(suite,1,Suite/suite.h,,)
 lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
+lofar_EXTERNAL(cal,1,CAL_Protocol.ph,,)
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 
