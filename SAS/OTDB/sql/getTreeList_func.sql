@@ -68,6 +68,7 @@ CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2)
 			   u.username, 
 			   t.d_creation, 
 			   t.treetype, 
+			   t.state, 
 			   t.originID, 
 			   c.name, 
 			   t.starttime, 

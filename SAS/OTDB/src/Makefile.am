@@ -4,6 +4,7 @@ INSTHDRS			= OTDBconnection.h	\
 					  ParamTypeConv.h \
 					  UnitConv.h \
 					  TreeTypeConv.h \
+					  TreeStateConv.h \
 					  ClassifConv.h \
 					  misc.h \
 					  OTDBtypes.h	\

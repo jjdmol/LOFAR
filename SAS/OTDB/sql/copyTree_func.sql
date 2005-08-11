@@ -78,6 +78,7 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 							  originid,
 							  classif,
 							  treetype,
+							  state,
 							  creator,
 							  campaign,
 							  starttime,
@@ -87,6 +88,7 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 				$2,				-- orgTree
 				vOldTree.classif,
 				vOldTree.treetype,
+				vOldTree.state,
 				vCreatorID,
 				vOldTree.campaign,
 				vOldTree.starttime,

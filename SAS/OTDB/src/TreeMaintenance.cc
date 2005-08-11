@@ -78,11 +78,12 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 	try {
 		// First create a new tree entry.
 		result res = xAction.exec(
-					formatString("SELECT newTree(%d,%d,%d::int2,%d::int2,%d)",
+					formatString("SELECT newTree(%d,%d,%d::int2,%d::int2,%d::int2,%d)",
 							itsConn->getAuthToken(),
 							0, 						// original tree
 							TCexperimental,			// classification
-							TThardware,				// hardware(PIC)
+							TThardware,
+							TSidle,
 							0));					// no campaign
 							
 		// Analyse result.
@@ -247,13 +248,10 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType	aTreeID,
 		return getPICitemList(aTreeID, topNode, depth);
 	case TTtemplate:
 		return getVTitemList (aTreeID, topNode, depth);
-	case TTobsolete: {
-			itsError = "Tree is obsolete";
-			vector<OTDBnode>	empty;
-			return (empty);
-		}
-	default:
+	case TTVHtree:
 		return getVHitemList (aTreeID, topNode, depth);
+	default:
+		ASSERTSTR (false, "Tree type " << theTree.type << "is unknown");
 	}
 }		
 
@@ -423,14 +421,11 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 	case TTtemplate:
 		functionName = "getVTitemList";
 		break;
-	case TTobsolete: {
-			itsError = "Tree is obsolete";
-			vector<OTDBnode>	empty;
-			return (empty);
-		}
-	default:
+	case TTVHtree:
 		functionName = "getVHitemList";
 		break;
+	default:
+		ASSERTSTR(false, "Treetype " << theTree.type << " is unknown");
 	}
 
 	vector<OTDBnode>	resultVec;
@@ -844,13 +839,13 @@ bool	TreeMaintenance::setClassification(treeIDType	aTreeID,
 }
 
 //
-// setTreeType(treetype): bool
+// setTreeState(treeState): bool
 //
-// Set the type/stage of the tree. When changing the type of a tree all
+// Set the state of the tree. When changing the type of a tree all
 // constraints/validations for the current type must be fulfilled.
 // When errors occur these can be retrieved with the errorMsg function.
-bool	TreeMaintenance::setTreeType(treeIDType		aTreeID,
-									 treeType		aType)
+bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
+									  treeState			aState)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -858,20 +853,20 @@ bool	TreeMaintenance::setTreeType(treeIDType		aTreeID,
 		return (false);
 	}
 
-	work 	xAction(*(itsConn->getConn()), "setTreeType");
+	work 	xAction(*(itsConn->getConn()), "setTreeState");
 	try {
 		// build and execute query
 		result res = xAction.exec(
-					formatString("SELECT settreetype(%d,%d,%d::int2)",
+					formatString("SELECT setTreeState(%d,%d,%d::int2)",
 							itsConn->getAuthToken(),
 							aTreeID,
-							aType));
+							aState));
 							
 		// Analyse result.
 		bool		succes;
-		res[0]["settreetype"].to(succes);
+		res[0]["settreestate"].to(succes);
 		if (!succes) {
-			itsError = "Unable to change the tree type";
+			itsError = "Unable to change the tree state";
 			return (false);
 		}
 
@@ -879,7 +874,7 @@ bool	TreeMaintenance::setTreeType(treeIDType		aTreeID,
 		return (true);
 	}
 	catch (Exception&	ex) {
-		itsError = string("Exception during setTreetype:") + ex.what();
+		itsError = string("Exception during setTreeState:") + ex.what();
 		LOG_FATAL(itsError);
 		return (false);
 	}

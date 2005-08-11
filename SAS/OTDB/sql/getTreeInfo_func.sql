@@ -46,6 +46,7 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4)
 				u.username, 
 				t.d_creation, 
 				t.treetype, 
+				t.state, 
 				t.originID, 
 				c.name, 
 				t.starttime, 

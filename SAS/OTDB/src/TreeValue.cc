@@ -152,11 +152,12 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 	case TTtemplate:
 		itsError = "Tree has no values";
 		return (resultVec);
-	case TTobsolete: 
-		itsError = "Tree is obsolete";
-		return (resultVec);
-	default:
+	case TTVHtree: 
 		functionName = "searchVHinPeriod";
+		break;
+	default:
+		ASSERTSTR(false, "Treetype " << itsTree.type << " is unknown");
+		return (resultVec);
 	}
 
 	// construct a query that calls a stored procedure.

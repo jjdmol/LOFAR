@@ -54,10 +54,11 @@ public:
 	~OTDBtree() {};
 
 	treeIDType		treeID() const 		{ return (itsTreeID); }
-	classifType		classification; // experimental / operational / etc.
+	classifType		classification; // development / test / operational
 	string			creator;
 	ptime			creationDate;	
-	treeType		type;			// template / schedule / etc.
+	treeType		type;			// hardware / VItemplate / VHtree
+	treeState		state;			// idle / configure / ... / active / ...
 	// -- VIC only --
 	treeIDType		originalTree;
 	string			campaign;

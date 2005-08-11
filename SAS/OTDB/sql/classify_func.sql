@@ -43,7 +43,7 @@ CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
 		vIsAuth					BOOLEAN;
 		vAuthToken				ALIAS FOR $1;
 		TThardware CONSTANT		INT2 := 10;
-		TCoperational CONSTANT	INT2 := 2;
+		TSactive   CONSTANT		INT2 := 400;
 
 	BEGIN
 		-- check authorisation(authToken, treeID, func, classification)
@@ -73,15 +73,16 @@ CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
 		WHERE	treeID = $2;
 
 		-- changing PIC tree to operational?
-		-- restriction: only 1 PIC may be operational
-		IF $3 = TCoperational AND vTreeType = TThardware THEN
+		-- restriction: only 1 PIC may be active of each classification
+		IF vTreeType = TThardware THEN
 			SELECT	treeid
 			INTO	vTreeID		-- dummy
 			FROM	OTDBtree
 			WHERE	treetype = TThardware
-			AND		classif = TCoperational;
+			AND		classif  = $3
+			AND		state    = TSactive;
 			IF FOUND THEN
-				RAISE EXCEPTION \'Already an operational TThardware tree.\';
+				RAISE EXCEPTION \'Already an active hardware tree with same classification.\';
 				RETURN FALSE;
 			END IF;
 		END IF;

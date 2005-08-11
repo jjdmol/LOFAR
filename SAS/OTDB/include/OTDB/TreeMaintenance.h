@@ -146,11 +146,11 @@ public:
 	bool	setClassification(treeIDType	aTreeID,
 							  classifType	aClassification);
 
-	// Set the type/stage of any tree. When changing the type of a tree all
+	// Set the state of any tree. When changing the state of a tree all
 	// constraints/validations for the current type must be fulfilled.
 	// When errors occur these can be retrieved with the errorMsg function.
-	bool	setTreeType(treeIDType		aTreeID,
-						treeType		aType);
+	bool	setTreeState(treeIDType		aTreeID,
+						 treeState		aState);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.

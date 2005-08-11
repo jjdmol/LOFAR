@@ -128,11 +128,11 @@ int main (int	argc, char*	argv[]) {
 		ASSERTSTR(conn.connect(), "Connnection failed");
 		LOG_INFO_STR("Connection succesful: " << conn);
 
-		LOG_INFO("Searching for a schedule tree");
+		LOG_INFO("Searching for a VH tree");
 		vector<OTDBtree>	treeList = 
-				conn.getTreeList(TTconv.get("schedule"), CTconv.get("operational"));
+				conn.getTreeList(TTconv.get("VHtree"), CTconv.get("operational"));
 		showTreeList(treeList);
-		ASSERTSTR(treeList.size(),"No schedule tree found");
+		ASSERTSTR(treeList.size(),"No VH tree found");
 
 		treeIDType	treeID = treeList[treeList.size()-1].treeID();
 		LOG_INFO_STR ("Using tree " << treeID << " for the tests");
