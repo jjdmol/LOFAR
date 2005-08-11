@@ -86,6 +86,7 @@ class CyclicBuffer
   TYPE* getManualWritePtr(int startID);
 
   void setOffset(int offset, int& ID);
+  void setOverwritingAllowed(bool allowed);
   
   // release locks
   void WriteUnlockElements(int ID, int nelements);
@@ -101,7 +102,7 @@ class CyclicBuffer
   int  getSize();
   
   // actual number of written items in buffer
-  int  getCount(); 
+  int  getCount();
 
  private:
 
@@ -126,6 +127,8 @@ class CyclicBuffer
   int itsCount;
   int itsBlockCount;
 
+  bool itsOverwritingAllowed;
+
   pthread_mutex_t buffer_mutex;
   pthread_cond_t  data_available;
   pthread_cond_t  space_available;
@@ -136,7 +139,8 @@ CyclicBuffer<TYPE>::CyclicBuffer(int nelements) :
     itsHeadIdx(0),
     itsTailIdx(0),
     itsCount(0),
-    itsBlockCount(0)
+    itsBlockCount(0),
+    itsOverwritingAllowed(false)  
 {
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);
@@ -203,7 +207,7 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   pthread_mutex_lock(&buffer_mutex);
   
   // wait until space becomes available
-  while (itsBlockCount >= MAX_COUNT)
+  while (itsBlockCount >= MAX_COUNT && !itsOverwritingAllowed)
   {
     pthread_cond_wait(&space_available, &buffer_mutex);
   }
@@ -218,6 +222,15 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   }
   itsBlockCount++;
   itsCount++;
+
+  if (itsHeadIdx == itsTailIdx && itsOverwritingAllowed) {
+    // Move itsHeadIdx 1 element forward
+    itsTailIdx++;
+
+    // Adjust counters
+    itsBlockCount--;
+    itsCount--;
+  }
   
   pthread_mutex_unlock(&buffer_mutex);
 
@@ -382,6 +395,12 @@ template<class TYPE>
 void CyclicBuffer<TYPE>::ReadUnlockElement(int ID)
 {
   itsBuffer[ID].itsRWLock.ReadUnlock();
+}
+
+template<class TYPE>
+void CyclicBuffer<TYPE>::setOverwritingAllowed(bool allowed)
+{
+  itsOverwritingAllowed = allowed;
 }
 
 template<class TYPE>

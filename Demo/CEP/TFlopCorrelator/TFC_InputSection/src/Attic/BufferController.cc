@@ -218,6 +218,12 @@ bool BufferController::rewriteElements(void* buf, timestamp_t startstamp, int ne
   return true;
 }
 
+bool BufferController::overwritingAllowed(bool allowed)
+{
+  itsMetadataBuf->setOverwritingAllowed(allowed);
+}
+
+
 
 
 }
