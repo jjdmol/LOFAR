@@ -152,6 +152,7 @@ namespace LOFAR
 
 
 
+
   DataHolder* TinyDataManager::getInHolder(int channel) {
     assertChannel(channel, true);
     return itsInDHs[channel];
@@ -187,11 +188,21 @@ namespace LOFAR
   void TinyDataManager::preprocess() {
     for (int i = 0; i < itsNinputs; i++) {
       itsInDHs[i]->init();
-    }
+      if (itsInConnections[i] != 0)
+      {
+	DBGASSERT(itsInConnections[i]->getTransportHolder() != 0);
+	itsInConnections[i]->getTransportHolder()->init();
+      }
+   }
     
 
     for (int i = 0; i < itsNoutputs; i++) {
       itsOutDHs[i]->init();
+      if (itsOutConnections[i] != 0)
+      {
+	DBGASSERT(itsOutConnections[i]->getTransportHolder() != 0);
+	itsOutConnections[i]->getTransportHolder()->init();
+      }
     }
   }
 
