@@ -255,6 +255,9 @@ void DataManager::setInConnection(int channel, Connection* conn)
   ASSERTSTR(itsInDHsinfo[channel].connection == 0, "Input " << channel 
 	    << " is already connected.");
   itsInDHsinfo[channel].connection = conn;
+  ASSERTSTR(itsInConnections[channel] == 0, "TinyDataManager input " << channel
+	    << " is already connected.");
+  itsInConnections[channel] = conn;
 }
 
 Connection* DataManager::getOutConnection(int channel) const
@@ -264,6 +267,7 @@ Connection* DataManager::getOutConnection(int channel) const
   return itsOutDHsinfo[channel].connection;
 }
 
+
 void DataManager::setOutConnection(int channel, Connection* conn)
 {
   DBGASSERTSTR(channel >= 0, "input channel too low");
@@ -271,6 +275,9 @@ void DataManager::setOutConnection(int channel, Connection* conn)
   ASSERTSTR(itsOutDHsinfo[channel].connection == 0, "Output " << channel 
 	    << " is already connected.");
   itsOutDHsinfo[channel].connection = conn;
+  ASSERTSTR(itsOutConnections[channel] == 0, "TinyDataManager output "
+	    << channel << " is already connected.");
+  itsOutConnections[channel] = conn;
 }
 
 DataHolder* DataManager::getGeneralInHolder(int channel) const
@@ -291,6 +298,23 @@ void DataManager::preprocess()
 {
   LOG_TRACE_FLOW("DataManager::preprocess()");
   itsSynMan->preprocess();
+  //Initialize all connections
+  for (int i=0; i<itsNinputs; i++)
+  {
+    if (itsInDHsinfo[i].connection != 0)
+    {
+      DBGASSERT((itsInDHsinfo[i].connection)->getTransportHolder() != 0);
+      (itsInDHsinfo[i].connection)->getTransportHolder()->init();
+    }
+  }
+  for (int j=0; j<itsNoutputs; j++)
+  {
+    if (itsOutDHsinfo[j].connection != 0)
+    {
+      DBGASSERT((itsOutDHsinfo[j].connection)->getTransportHolder() != 0);
+      (itsOutDHsinfo[j].connection)->getTransportHolder()->init();
+    }
+  }
 }
 
 void DataManager::postprocess()
