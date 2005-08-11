@@ -41,7 +41,8 @@ namespace LOFAR
       itsEpaHeader(bufferSpace),
       itsMatrix(0)
   {
-    int NoSubbands = ps.getInt32("Input.NSubbands");
+    int NoSubbands = ps.getInt32("Input.SzEPApayload") / ( 2 * sizeof(RSPDataType));
+    ASSERTSTR(NoSubbands * 2 * sizeof(RSPDataType) == ps.getInt32("Input.SzEPApayload"), "SzEPApayload is not a multiple of the size of 1 subband");
     int BufferSize = EpaPacket::getSize(ps);
 
     ASSERTSTR(bufferSize == BufferSize, "EpaPacket received the wrong amount of buffer data");

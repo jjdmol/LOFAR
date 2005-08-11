@@ -89,10 +89,15 @@ void WH_Signal::preprocess()
     memset (&value, 0, sizeof(itimerval));
 
     double time = 1/itsFrequency;    
-    value.it_interval.tv_sec = (__time_t) floor(time);
-    value.it_interval.tv_usec = (__time_t) (1e6 * (time - floor(time)));
-    value.it_value.tv_sec = (__time_t) floor(time);
-    value.it_value.tv_usec = (__time_t) (1e6 * (time - floor(time)));
+    __time_t secs = floor(time);
+    __time_t usecs = 1e6 * (time - secs);
+    // this means 1MHz is the highest frequency
+    if (secs + usecs == 0) usecs = 1;
+    value.it_interval.tv_sec = secs;
+    value.it_interval.tv_usec = usecs;
+    value.it_value.tv_sec = secs;
+    value.it_value.tv_usec = usecs;
+    cout << "Setting timer interval to " << secs << "secs and " << usecs << "ms" << endl;
 
     setitimer(ITIMER_REAL, &value, 0);
   }
@@ -135,11 +140,9 @@ void WH_Signal::process()
       RSPDataType value;
       for (int sb = 0; sb < myMatrix.getNElemInDim(sbDim); myMatrix.moveCursor(&cursor, sbDim), sb++) {
 	myMatrix.setValue(cursor, makei16complex(randint16(), randint16()));
-	cout<<myMatrix.getValue(cursor)<<endl;
 	pcursor = cursor;
 	myMatrix.moveCursor(&pcursor, pDim);
 	myMatrix.setValue(pcursor, makei16complex(randint16(), randint16()));
-	cout<<myMatrix.getValue(pcursor)<<endl;
       }
     }
   }
