@@ -22,6 +22,10 @@ clean-local:
 EXTRA_DIST = \
 	$(BUILT_SOURCES)
 
+etcdir=$(prefix)/etc
+etc_SCRIPTS = \
+	rc.status
+
 sysconf_DATA =
 
 lib_LTLIBRARIES = librtccommon.la libnetraw.la libgnuplot_i.la
