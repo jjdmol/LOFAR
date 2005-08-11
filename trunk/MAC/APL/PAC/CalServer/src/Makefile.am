@@ -14,7 +14,6 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	CAL_Protocol.ph \
 	CalServer.conf \
-	SpectralWindow.conf \
 	DipoleModel.conf \
 	SourceCatalog.conf \
 	LBAntennas.conf \
@@ -29,7 +28,6 @@ EXTRA_DIST = \
 
 sysconf_DATA = \
 	CalServer.conf \
-	SpectralWindow.conf \
 	DipoleModel.conf \
 	SourceCatalog.conf \
 	LBAntennas.conf \
@@ -39,9 +37,6 @@ sysconf_DATA = \
 
 #	ACC.conf 
 
-include_HEADERS = \
-	$(top_builddir)/src/CAL_Protocol.ph
-
 %.log_prop: %.log_prop.in
 	cp $< $@
 
@@ -49,7 +44,7 @@ include_HEADERS = \
 	cp $< $@
 
 # protocol library, use this to use the CAL protocol
-lib_LTLIBRARIES = libcal.la
+lib_LTLIBRARIES = libcal.la libcaldevel.la
 
 libcal_la_SOURCES = \
 	$(top_builddir)/src/CAL_Protocol.cc \
@@ -57,7 +52,11 @@ libcal_la_SOURCES = \
 	AntennaGains.cc
 
 # convenience library
-noinst_LTLIBRARIES = libcaldevel.la
+# lib_LTLIBRARIES = libcaldevel.la
+
+libcaldevel_ladir = $(prefix)/include
+libcaldevel_la_HEADERS = \
+	SpectralWindow.h
 
 libcaldevel_la_SOURCES = \
 	Documentation.h \
@@ -72,7 +71,6 @@ libcaldevel_la_SOURCES = \
 	DipoleModel.cc \
 	DipoleModelData.h \
 	DipoleModelData.cc \
-	SpectralWindow.h \
 	SpectralWindow.cc \
 	AntennaArray.h \
 	AntennaArray.cc \
@@ -89,6 +87,9 @@ libcaldevel_la_SOURCES = \
 	RemoteStationCalibration.cc \
 	CalibrationThread.h \
 	CalibrationThread.cc
+
+include_HEADERS = \
+	$(top_builddir)/src/CAL_Protocol.ph
 
 bin_PROGRAMS = \
 	CalServer \

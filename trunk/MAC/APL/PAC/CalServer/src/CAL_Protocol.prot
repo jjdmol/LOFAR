@@ -117,7 +117,7 @@ event = {
       dir = OUT;
       param = {
 	    name = "status";
-	    type = "int";
+	    type = "int16";
       };
       param = {
 	    name = "handle";
@@ -129,7 +129,7 @@ event = {
       };
       param = { // nyquist_zone
 	    name = "nyquist_zone";
-	    type = "int";
+	    type = "int16";
       };
       // sampling_frequency and nyquist_zone determine the spectral window
 };

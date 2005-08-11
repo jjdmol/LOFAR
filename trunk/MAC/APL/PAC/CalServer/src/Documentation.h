@@ -229,8 +229,6 @@ array over multiple lines.
 
 The following input files are required to run a calibration algorithm:
 
-\li <b>\c SpectralWindow.conf </b>: Definition of the spectral
-windows.
 \li <b>\c DipoleModel.conf </b>: Dipole sensitivity model as Blitz++ array.
 \li <b>\c Antennas.conf </b>: Array configuration (antenna locations) as
 two Blitz++ arrays. One for low band antennas and one for high band
@@ -241,29 +239,6 @@ astronomical source positions and fluxes for one or more frequencies.
 
 The format of each of these files will be described individually in
 the following sections.
-
-\subsection spw SpectralWindow.conf format
-
-This is a ParameterSet file (with key value pairs). The keys are
-"SpectralWindow.params" and "SpectralWindow.names" for which the
-values are expressed as Blitz++ arrays. The "params" array of doubles
-contains three consecutive values for each spectral window. The values
-are:
-\li The sampling frequency.
-\li The nyquist zone. Zone 1 goes from 0 MHz to SamplingFrequency/2
-MHz, zone 2 from SamplingFrequency/2 to SamplingFrequency, etc.
-\li The number of subbands for the spectral window.
-
-The "names" array of strings contains the name for each of the
-spectral windows.
-\code
-SpectralWindow.params= 6 x 3 [ 160e6 1 512 160e6 2 512 160e6 3 512 200e6 1 512 200e6 2 512 200e6 3 512 ]
-SpectralWindow.names=  6     [     "80"        "160"       "240"       "100"       "200"       "300"   ]
-\endcode
-
-<em>Warning: Remember that each key,value pair must be defined on a single line
-of the file. Multi-line key,value definitions are not (yet) supported
-by the ParameterSet reader.</em>
 
 \subsection dipolemodel DipoleModel.conf format
 
