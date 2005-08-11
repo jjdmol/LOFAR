@@ -132,8 +132,13 @@ namespace LOFAR
   inline RectMatrix<RSPDataType>& EpaPacket::getMatrix()
     { return *itsMatrix; };
   inline int EpaPacket::getSize(ParameterSet& ps)
-    { return EpaHeader::getSize() + ps.getInt32("Input.NSubbands") * \
-	ps.getInt32("Input.NPolarisations") * sizeof(RSPDataType); };
+    // This was:
+    // { return EpaHeader::getSize() + ps.getInt32("Input.NSubbands") * \
+    // ps.getInt32("Input.NPolarisations") * sizeof(RSPDataType); };
+    // but now the number of subbands to generate is:
+    // ps.getInt32("Input.SzEPApayload") / ( 2 * sizeof(RSPDataType))
+    { return EpaHeader::getSize() + sizeof(RSPDataType) * ps.getInt32("Input.NPolarisations") * \
+	(ps.getInt32("Input.SzEPApayload") / ( 2 * sizeof(RSPDataType))); }; //this is the number
 
   inline int EthernetFrame::getNoPacketsInFrame()
     { return itsEpaPackets.size(); };

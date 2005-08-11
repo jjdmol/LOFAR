@@ -121,7 +121,12 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
 			     new TH_Mem(),
 			     false);
   };
-  
+
+#ifdef HAVE_MPI
+  // TODO How do we want to distribute the steps across the nodes?
+  //  ASSERTSTR (lastFreeNode == TH_MPI::getNumberOfNodes(), lastFreeNode << " nodes needed, "<<TH_MPI::getNumberOfNodes()<<" available");
+#endif
+
   LOG_TRACE_FLOW_STR("Finished define()");
 }
 
