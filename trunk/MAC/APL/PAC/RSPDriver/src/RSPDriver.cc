@@ -1544,7 +1544,6 @@ int main(int argc, char** argv)
   
   try
   {
-    //GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriver.conf");
     GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriverPorts.conf");
     GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
   }
