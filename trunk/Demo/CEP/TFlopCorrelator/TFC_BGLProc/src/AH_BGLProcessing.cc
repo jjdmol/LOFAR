@@ -142,6 +142,10 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 // 						  true); // connection is blocking
 //     itsConnections.push_back(itsOutConnection);
   }
+
+#ifdef HAVE_MPI
+  ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "TFC_BGLProc needs " << lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
+#endif
   
   LOG_TRACE_FLOW_STR("Finished define()");
 }
