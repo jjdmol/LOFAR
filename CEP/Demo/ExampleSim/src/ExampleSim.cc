@@ -39,7 +39,9 @@
 #include <ExampleSim/WH_Add.h>
 #include <Transport/TH_Mem.h>
 
-#include TRANSPORTERINCLUDE
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
 
 using namespace LOFAR;
 
@@ -100,8 +102,11 @@ void ExampleSim::define(const KeyValueMap& params)
   topComposite.addBlock(composite);
 
   // Create the connections between Steps
+#ifdef HAVE_MPI
+  composite.connectInput(&sourceStep, new TH_MPI(0,1), false);
+#else
   composite.connectInput(&sourceStep, new TH_Mem(), false);
-
+#endif
 
 }
   
