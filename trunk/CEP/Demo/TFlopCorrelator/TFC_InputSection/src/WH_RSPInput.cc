@@ -25,6 +25,7 @@
 
 // General includes
 #include <Common/LofarLogger.h>
+#include <Transport/TransportHolder.h>
 
 // Application specific includes
 #include <TFC_InputSection/WH_RSPInput.h>
@@ -207,7 +208,7 @@ WH_RSPInput* WH_RSPInput::make(const string& name)
 }
 
 
-void WH_RSPInput::preprocess()
+void WH_RSPInput::startThread()
 {
   
   /* start up thread which writes RSP data from ethernet link
@@ -239,29 +240,17 @@ void WH_RSPInput::process()
   DH_Delay* delayDHp;
   timestamp_t delayedstamp;
 
-  // get delay from delaycontroller 
-  delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
-  
-  if (!itsSyncMaster) {
-    // we are a slave so read the syncstamp
-    if (itsFirstProcessLoop) {
-      // this is the first time
-      // we need to force a read, because this inHolder has a lower data rate
-      // if the rate difference is 1000, the workholder will read for
-      // the first time in the 1000th runstep.
-      getDataManager().getInHolder(1);
-      getDataManager().readyWithInHolder(1);
-      itsFirstProcessLoop = false;;
-    }      
-    DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
-    itsSyncedStamp = dhp->getSyncStamp(); 
-    
-    // we need to increment the stamp because it is written only once per second or so
-    dhp->incrementStamp(itsNSamplesToCopy);
-  } // (!args->itsSyncMaster)
-  else {
-    // we are the master, so increase the nextValue and send it to the slaves
-    if (itsFirstProcessLoop) {
+  if (itsFirstProcessLoop) {
+    itsFirstProcessLoop = false;
+    // For this demo we need to make sure that the connection with the Correlator is made
+    // before we start reading from the RSP boards.
+    // For mpi we check the connection and then do a barrier. The barrier is also called 
+    // in the first process of WH_RSPInput, so we are sure that process isn't started until
+    // the connection is made
+    // This also works for non-mpi because the WH_RSPInput::process isn't called until all the
+    // preprocess's are called.
+    startThread();
+    if (itsSyncMaster) {
       // set startstamp equal to first stamp in cyclicbuffer
       itsSyncedStamp = itsBufControl[0]->getFirstStamp();
       // build in a delay to let the slaves catch up
@@ -272,17 +261,34 @@ void WH_RSPInput::process()
       for (int i = 1; i < itsNRSPOutputs; i++) {
 	((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
         // force a write 
-	// getDataManager().readyWithOutHolder(i);
+	getDataManager().readyWithOutHolder(i);
       }
-      itsFirstProcessLoop = false;      
     } else {
-      // increase the syncstamp
-      itsSyncedStamp += itsNSamplesToCopy;
-      // send the syncstamp to the slaves
-      for (int i = 1; i < itsNRSPOutputs; i++) {
-        ((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
-      }
+      // this is the first time
+      // we need to force a read, because this inHolder has a lower data rate
+      // if the rate difference is 1000, the workholder will read for
+      // the first time in the 1000th runstep.
+      getDataManager().getInHolder(1);
+      getDataManager().readyWithInHolder(1);
     }
+  }
+      
+  if (!itsSyncMaster) {
+    // we are a slave so read the syncstamp
+    DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
+    itsSyncedStamp = dhp->getSyncStamp(); 
+    
+    // we need to increment the stamp because it is written only once per second or so
+    dhp->incrementStamp(itsNSamplesToCopy);
+  } // (!args->itsSyncMaster)
+  else {
+    // we are the master, so increase the nextValue and send it to the slaves
+    // increase the syncstamp
+    itsSyncedStamp += itsNSamplesToCopy;
+    // send the syncstamp to the slaves
+    for (int i = 1; i < itsNRSPOutputs; i++) {
+      ((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
+    }    
   } //end (itsIsSyncMaster)
 
   // delay control

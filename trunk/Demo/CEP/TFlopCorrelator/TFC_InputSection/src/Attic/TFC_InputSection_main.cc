@@ -20,6 +20,10 @@
 #include <TFC_InputSection/AH_InputSection.h>
 #include <APS/ParameterSet.h>
 
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
+
 using namespace LOFAR;
 
 int main (int argc, const char** argv) {
@@ -47,6 +51,12 @@ int main (int argc, const char** argv) {
       Profiler::init();
       myAH.basePrerun();
       cout << "init done" << endl;
+      // This is for synchronisation between WH_RSPInput and WH_SBCollect
+      // WH_SBCollect won't exit the preprocess before the connection is made
+      // WH_RSPInput won't start the bufferthread before the barrier is passed
+#ifdef HAVE_MPI
+  TH_MPI::synchroniseAllProcesses();
+#endif
       Profiler::activate();
       cout << "run" << endl;
       myAH.baseRun(ps.getInt32("Input.NRuns"));

@@ -148,15 +148,15 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 			       itsSteps[sourceStep],
 			       itsNSBF + r - 1,   // there are NSubbands outputs
 			       1, // connect 1 DH
-			       new TH_MPI(itsSteps.getNode(), itsSteps[sourceStep].getNode()),
+			       new TH_MPI(itsSteps[sourceStep]->getNode(), (itsSteps.back())->getNode()),
 			       true);
 #else
       itsSteps.back()->connect(1,  // input number 0 is the delay
-			      itsSteps[sourceStep],
-			      itsNSBF + r - 1,
-			      1,
-			      new TH_Mem(),
-			      false);
+			       itsSteps[sourceStep],
+			       itsNSBF + r - 1,
+			       1,
+			       new TH_Mem(),
+			       false);
 #endif
     }    
   };
@@ -200,6 +200,10 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 			    0);  
   }
   LOG_TRACE_FLOW_STR("Finished define()");
+
+#ifdef HAVE_MPI
+  ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "TFC_InputSection needs "<< lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
+#endif
 }
 
 
