@@ -64,8 +64,6 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 	    vQuery := vQuery || chr(39);
 	  END IF;
 
-perform logmsg (vQuery);
-
 	  -- finally get result
 	  FOR vRecord IN EXECUTE \'
 	    SELECT h.nodeid,

@@ -161,12 +161,10 @@ CREATE TABLE VIChierarchy (
 --
 CREATE TABLE VICkvt (
 	paramName	VARCHAR(120)	DEFAULT NULL, -- for shared applications
-	nodeID		INT4			NOT NULL, -- may refer to VIChierarchy(nodeID)
 	value		TEXT			NOT NULL,
 	time		TIMESTAMP		DEFAULT 'now'
 ) WITHOUT OIDS;
 
 CREATE INDEX VIC_kvt_name ON VICkvt(paramName);
-CREATE INDEX VIC_kvt_id   ON VICkvt(nodeID);
 CREATE INDEX VIC_kvt_time ON VICkvt(time);
 

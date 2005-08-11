@@ -67,19 +67,17 @@ void showTreeList(const vector<OTDBtree>&	trees) {
 void showNodeList(const vector<OTDBnode>&	nodes) {
 
 
-	cout << "treeID|nodeID|parent|par.ID|name           |index|leaf|inst|description" << endl;
-	cout << "------+------+------+------+---------------+-----+----+----+------------------" << endl;
+	cout << "treeID|nodeID|parent|par.ID|index|leaf|name" << endl;
+	cout << "------+------+------+------+-----+----+--------------------------------------" << endl;
 	for (uint32	i = 0; i < nodes.size(); ++i) {
-		string row(formatString("%6d|%6d|%6d|%6d|%-15.15s|%5d|%s|%4d|%s",
+		string row(formatString("%6d|%6d|%6d|%6d|%5d|%s|%s",
 			nodes[i].treeID(),
 			nodes[i].nodeID(),
 			nodes[i].parentID(),
 			nodes[i].paramDefID(),
-			nodes[i].name.c_str(),
 			nodes[i].index,
 			nodes[i].leaf ? " T  " : " F  ",
-			nodes[i].instances,
-			nodes[i].description.c_str()));
+			nodes[i].name.c_str()));
 		cout << row << endl;
 	}
 
@@ -92,10 +90,10 @@ void showNodeList(const vector<OTDBnode>&	nodes) {
 void showValueList(const vector<OTDBvalue>&	items) {
 
 
-	cout << "name                               |value |time" << endl;
-	cout << "-----------------------------------+------+--------------------" << endl;
+	cout << "name                                         |value |time" << endl;
+	cout << "---------------------------------------------+------+--------------------" << endl;
 	for (uint32	i = 0; i < items.size(); ++i) {
-		string row(formatString("%-35.35s|%-7.7s|%s",
+		string row(formatString("%-45.45s|%-7.7s|%s",
 			items[i].name.c_str(),
 			items[i].value.c_str(),
 			to_simple_string(items[i].time).c_str()));
@@ -189,41 +187,41 @@ int main (int	argc, char*	argv[]) {
 				showValueList(valueList);
 			}
 		}
-#if 0
-		LOG_INFO("Opening parameterset tPICvalue.kvt.in");
-		ParameterSet	aPS("tPICvalue.kvt_in");
+
+		LOG_INFO("Opening parameterset tVHvalue.in");
+		ParameterSet	aPS("tVHvalue.in");
 		cout << aPS;
 
 		LOG_INFO("Adding a Paramset class to the VH tree");
 		ASSERTSTR(tv.addKVTparamSet(aPS), "Could NOT add the OTDBvalue class");
 		LOG_INFO("ParameterSet added, going to query it");
 
-		LOG_INFO ("Searching Node: LCU3:PIC_Rack1.%");
-		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "LCU3:PIC_Rack1.%");
+		LOG_INFO ("Searching Node: Observation.Virt Telescope[4]%");
+		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "Observation.Virt Telescope[4]%");
 		showNodeList(nodeList);
 
-		nodeIDType		nodeID = nodeList[nodeList.size()-1].nodeID();
+		nodeIDType		nodeID = nodeList[0].nodeID();
 		LOG_INFO_STR("Parameter ID = : " << nodeID);
 		LOG_INFO_STR("Getting all the values back");
-		vector<OTDBvalue>	valueList = tv.searchInPeriod(nodeID,1);
+		vector<OTDBvalue>	valueList = tv.searchInPeriod(nodeID,3);
 		ASSERTSTR(valueList.size(), "No values of VH item found");
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting all the values back from 2005 on");
-		valueList = tv.searchInPeriod(nodeID,1,
+		valueList = tv.searchInPeriod(nodeID,3,
 					time_from_string("2005-01-01"));
 		ASSERTSTR(valueList.size(), "No values of VH item found");
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting all the values back till 2005");
-		valueList = tv.searchInPeriod(nodeID,1,
+		valueList = tv.searchInPeriod(nodeID,3,
 					ptime(min_date_time),
 					time_from_string("2005-01-01"));
 		ASSERTSTR(valueList.size(), "No values of VH item found");
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting only the latest value back");
-		valueList = tv.searchInPeriod(nodeID,1,
+		valueList = tv.searchInPeriod(nodeID,3,
 					ptime(min_date_time),
 					ptime(max_date_time),
 					true);
@@ -231,14 +229,13 @@ int main (int	argc, char*	argv[]) {
 		showValueList(valueList);
 
 		LOG_INFO_STR("Getting latest values from whole tree");
-		OTDBnode topNode = tm.getTopNode(treeID);
-		valueList = tv.searchInPeriod(topNode.nodeID(),3,
+		valueList = tv.searchInPeriod(topNode.nodeID(),6,
 					ptime(min_date_time),
 					ptime(max_date_time),
 					true);
 		ASSERTSTR(valueList.size(), "No values of VH item found");
 		showValueList(valueList);
-#endif
+
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

@@ -1,13 +1,13 @@
 SUBDIRS						= . 
 
-check_PROGRAMS				= tConnection
+#check_PROGRAMS				= tConnection
 
-tConnection_SOURCES			= tConnection.cc
-tConnection_LDADD			= ../src/libotdb.la
-tConnection_DEPENDENCIES	= ../src/libotdb.la $(LOFAR_DEPEND)
+#tConnection_SOURCES			= tConnection.cc
+#tConnection_LDADD			= ../src/libotdb.la
+#tConnection_DEPENDENCIES	= ../src/libotdb.la $(LOFAR_DEPEND)
 
 
-TESTS						= tConnection.sh 
+#TESTS						= tConnection.sh 
 
 TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir)
 

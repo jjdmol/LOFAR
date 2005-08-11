@@ -18,14 +18,12 @@
 \i getTreeInfo_func.sql
 \i newTree_func.sql
 
--- OTDBinfo
-\i getTopNode_func.sql
-
 -- PICtree
 \i create_PIC_tables.sql
 \i addPICparam_func.sql
 \i getPICparamDef_func.sql
 \i getPICitemList_func.sql
+\i searchPICinPeriod_func.sql
 
 -- Events and Actions
 \i create_event_action.sql
@@ -51,15 +49,14 @@
 -- VIChierarchy
 \i getVHitemList_func.sql
 \i exportTree_func.sql
-
--- values
-\i addKVT_func.sql
-\i searchInPeriod_func.sql
+\i searchVHinPeriod_func.sql
 
 -- multi treetype
+\i getTopNode_func.sql
 \i getNode_func.sql
 \i copyVHtree_func.sql
 \i copyVTtree_func.sql
 \i copyTree_func.sql
 \i deleteTree_func.sql
+\i addKVT_func.sql
 

@@ -127,7 +127,7 @@ bool	TreeValue::addKVTparamSet (const ParameterSet&		aPS)
 }
 
 //
-// searchInPeriod(topNode, depth, begindate, enddate) : vector<value>
+// searchPICInPeriod(topNode, depth, begindate, enddate) : vector<value>
 //
 vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 									  	     uint32			depth,
@@ -135,21 +135,35 @@ vector<OTDBvalue> TreeValue::searchInPeriod (nodeIDType		topNode,
 									  	     const ptime&	endDate,
 											 bool			mostRecentOnly)
 {
-	// TODO: implement mostRecentOnly
+	vector<OTDBvalue>	resultVec;
 
 	// Check connection
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
-		vector<OTDBvalue>	empty;
-		return (empty);
+		return (resultVec);
 	}
 
-	vector<OTDBvalue>	resultVec;
+	// Determine which function to call.
+	string	functionName;
+	switch (itsTree.type) {
+	case TThardware:
+		functionName = "searchPICinPeriod";
+		break;
+	case TTtemplate:
+		itsError = "Tree has no values";
+		return (resultVec);
+	case TTobsolete: 
+		itsError = "Tree is obsolete";
+		return (resultVec);
+	default:
+		functionName = "searchVHinPeriod";
+	}
+
 	// construct a query that calls a stored procedure.
-	work	xAction(*(itsConn->getConn()), "searchInPeriod");
+	work	xAction(*(itsConn->getConn()), functionName);
 	try {
 		for (uint32 queryDepth = 0; queryDepth <= depth; ++queryDepth) {
-			string	query("SELECT * from searchInPeriod('" +
+			string	query("SELECT * from " + functionName + "('" +
 						toString(itsTree.treeID()) + "','" +
 						toString(topNode) + "','" +
 						toString(queryDepth) + "','" +
