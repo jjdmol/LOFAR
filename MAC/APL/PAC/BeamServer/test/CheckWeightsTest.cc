@@ -38,7 +38,7 @@
 
 using namespace blitz;
 using namespace LOFAR;
-using namespace ABS;
+using namespace BS;
 using namespace std;
 
 #define N_BEAMS          1 // must always be greater than 0!

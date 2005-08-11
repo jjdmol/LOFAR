@@ -22,14 +22,14 @@
 
 #include "Pointing.h"
 
-using namespace ABS;
+using namespace LOFAR::BS;
 
-Pointing::Pointing() : m_time(0)
+Pointing::Pointing() : m_angle1(0.0), m_angle2(0.0), m_time(), m_type(J2000)
 {
 }
 
-Pointing::Pointing(const Direction direction, time_t time) :
-    m_direction(direction), m_time(time)
+Pointing::Pointing(double angle1, double angle2, RTC::Timestamp time, Type type) :
+  m_angle1(angle1), m_angle2(angle2), m_time(time), m_type(type)
 {}
 
 Pointing::~Pointing()

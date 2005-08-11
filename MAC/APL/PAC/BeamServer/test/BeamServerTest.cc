@@ -21,10 +21,9 @@
 //#
 //#  $Id$
 
-#include "SpectralWindow.h"
 #include "Beam.h"
 
-#include "ABSTest.h"
+#include "BSTest.h"
 
 #include <iostream>
 
@@ -41,7 +40,7 @@ using namespace LOFAR;
 #define N_BEAMLETS           (206)
 #define N_SUBBANDS_PER_BEAM  (N_BEAMLETS/N_BEAMS)
 
-using namespace ABS;
+using namespace BS;
 using namespace std;
 
 #define UPDATE_INTERVAL  1
@@ -49,210 +48,203 @@ using namespace std;
 #define N_ELEMENTS       100
 #define N_POLARIZATIONS  2
 
-class BeamServerTest : public Test
-{
+class BeamServerTest : public Test {
+
 private:
-    Beam*          m_beam[N_BEAMS];
+  Beams m_beams;
 
 public:
 
-    /**
-     * create a spectral window from 10MHz to 90Mhz
-     * steps of 256kHz
-     * SpectralWindow spw(10e6, 256*1e3, 80*(1000/250));
-     */
-    BeamServerTest() :
-	Test("BeamServerTest")
-	{
-	  //cerr << "c";
-	  Beam::init(N_BEAMS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
-	  Beamlet::init(N_BEAMLETS);
+  /**
+   */
+  BeamServerTest() :
+    Test("BeamServerTest")
+  {
+    //cerr << "c";
+  }
 
-	  SpectralWindow* window = new SpectralWindow(10e6, 256*1e3, 80*(1000/256), 0/*don't care*/);
-	  SpectralWindowConfig::getInstance().setSingle(window);
-	}
-
-    void run()
-	{
+  void run()
+  {
 #if 0
-	  allocate();
-	  deallocate();
+    allocate();
+    deallocate();
 #endif
-	  subbandSelection();
-	  oneTooManyBeam();
-	  oneTooManyBeamlet();
-	  emptyBeam();
-	  pointing();
-	  convert_pointings();
-	}
+    subbandSelection();
+    oneTooManyBeam();
+    oneTooManyBeamlet();
+    emptyBeam();
+    pointing();
+    convert_pointings();
+  }
 
-    void allocate()
-	{
-	  set<int> subbands;
+  void allocate()
+  {
+    set<int> subbands;
 
-	  subbands.clear();
-	  for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++)
-	  {
-	      subbands.insert(i);
-	  }
-	  for (int i = 0; i < N_BEAMS; i++)
-	  {
-	      TESTC(0 != (m_beam[i] = Beam::allocate(0, subbands)));
-	  }
-	}
+    subbands.clear();
+    for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++)
+      {
+	subbands.insert(i);
+      }
+    
+    for (int i = 0; i < N_BEAMS; i++)
+      {
+	TESTC(0 != (m_beams.get([i] = Beam::allocate(0, subbands)));
+      }
+  }
 
-    void deallocate()
-	{
-	  for (int i = 0; i < N_BEAMS; i++)
-	  {
-	      TESTC(m_beam[i]->deallocate() == 0);
-	  }
-	}
+  void deallocate()
+  {
+    for (int i = 0; i < N_BEAMS; i++)
+      {
+	TESTC(m_beam[i]->deallocate() == 0);
+      }
+  }
 
-    void subbandSelection()
-	{
-	  START_TEST("subbandsSelection", "test subband selection");
+  void subbandSelection()
+  {
+    START_TEST("subbandsSelection", "test subband selection");
 
-	  allocate();
+    allocate();
 
-	  map<int,int>   selection;
-	  selection.clear();
-	  for (int i = 0; i < N_BEAMS; i++)
-	  {
-	      m_beam[i]->getSubbandSelection(selection);
-	  }
+    map<int,int>   selection;
+    selection.clear();
+    for (int i = 0; i < N_BEAMS; i++)
+      {
+	m_beam[i]->getSubbandSelection(selection);
+      }
 
-	  TESTC(selection.size() == N_BEAMS*N_SUBBANDS_PER_BEAM);
+    TESTC(selection.size() == N_BEAMS*N_SUBBANDS_PER_BEAM);
 
-	  deallocate();
+    deallocate();
 
-	  STOP_TEST();
-	}
+    STOP_TEST();
+  }
 
-    void oneTooManyBeam()
-	{
-	  START_TEST("oneTooManyBeam", "test if allocation of one more beam than possible does indeed fail");
+  void oneTooManyBeam()
+  {
+    START_TEST("oneTooManyBeam", "test if allocation of one more beam than possible does indeed fail");
 
-	  allocate();
+    allocate();
 
-	  // and allocate one more
-	  Beam* beam = 0;
-	  set<int> subbands;
+    // and allocate one more
+    Beam* beam = 0;
+    set<int> subbands;
 
-	  subbands.clear();
-	  for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++) subbands.insert(i);
-	  TESTC(0 == (beam = Beam::allocate(0, subbands)));
+    subbands.clear();
+    for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++) subbands.insert(i);
+    TESTC(0 == (beam = Beam::allocate(0, subbands)));
 
-	  deallocate();
+    deallocate();
 
-	  STOP_TEST();
-	}
+    STOP_TEST();
+  }
 
-    void oneTooManyBeamlet()
-	{
-	  START_TEST("oneTooManyBeamlet", "test if allocation of one more subband fails");
+  void oneTooManyBeamlet()
+  {
+    START_TEST("oneTooManyBeamlet", "test if allocation of one more subband fails");
  
-	  // insert one too many subbands
-	  set<int> subbands;
-	  subbands.clear();
-	  for (int i = 0; i < N_BEAMLETS + 1; i++)
-	  {
-	      subbands.insert(i);
-	  }
-	  TESTC(0 == (m_beam[0] = Beam::allocate(0, subbands)));
+    // insert one too many subbands
+    set<int> subbands;
+    subbands.clear();
+    for (int i = 0; i < N_BEAMLETS + 1; i++)
+      {
+	subbands.insert(i);
+      }
+    TESTC(0 == (m_beam[0] = Beam::allocate(0, subbands)));
 
-	  STOP_TEST();
-	}
+    STOP_TEST();
+  }
 
-    void emptyBeam()
-	{
-	  START_TEST("emptyBeam", "check that empty beam allocation fails");
+  void emptyBeam()
+  {
+    START_TEST("emptyBeam", "check that empty beam allocation fails");
 
-	  set<int> subbands;
-	  subbands.clear();
-	  TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
-	  TESTC(m_beam[0]->deallocate() == 0);
+    set<int> subbands;
+    subbands.clear();
+    TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
+    TESTC(m_beam[0]->deallocate() == 0);
 
-	  STOP_TEST();
-	}
+    STOP_TEST();
+  }
 
-    void pointing()
-	{
-	  START_TEST("pointing", "check addPointing on allocated and deallocated beam");
+  void pointing()
+  {
+    START_TEST("pointing", "check addPointing on allocated and deallocated beam");
 
-	  set<int> subbands;
-	  subbands.clear();
+    set<int> subbands;
+    subbands.clear();
 
-	  time_t thetime = time(0) + 20;
+    time_t thetime = time(0) + 20;
 
-	  // allocate beam, addPointing, should succeed
-	  TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::J2000), thetime)) == 0);
+    // allocate beam, addPointing, should succeed
+    TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
+    TESTC(m_beam[0]->addPointing(Pointing(Direction(
+						    0.0, 0.0, Direction::J2000), thetime)) == 0);
 
-	  // deallocate beam, addPointing, should fail
-	  TESTC(m_beam[0]->deallocate() == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::J2000), thetime + 5)) < 0);
+    // deallocate beam, addPointing, should fail
+    TESTC(m_beam[0]->deallocate() == 0);
+    TESTC(m_beam[0]->addPointing(Pointing(Direction(
+						    0.0, 0.0, Direction::J2000), thetime + 5)) < 0);
 
-	  STOP_TEST();
-	}
+    STOP_TEST();
+  }
 
-    void convert_pointings()
-	{
-	  START_TEST("convert_pointings", "convert pointings and calculate weights");
+  void convert_pointings()
+  {
+    START_TEST("convert_pointings", "convert pointings and calculate weights");
 
-	  Range all = Range::all();
+    Range all = Range::all();
 
-	  allocate();
+    allocate();
 
-	  time_t now = time(0);
+    time_t now = time(0);
 
-	  // add a few pointings
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 1.0, Direction::LOFAR_LMN), now + 1)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.2, Direction::LOFAR_LMN), now + 3)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.3, 0.0, Direction::LOFAR_LMN), now + 5)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.4, 0.0, Direction::LOFAR_LMN), now + 8)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.5, 0.0, Direction::LOFAR_LMN), now + COMPUTE_INTERVAL)) == 0);
+    // add a few pointings
+    TESTC(m_beam[0]->addPointing(Pointing(Direction(
+						    0.0, 1.0, Direction::LOFAR_LMN), now + 1)) == 0);
+    TESTC(m_beam[0]->addPointing(Pointing(Direction(
+						    0.0, 0.2, Direction::LOFAR_LMN), now + 3)) == 0);
+    TESTC(m_beam[0]->addPointing(Pointing(Direction(
+						    0.3, 0.0, Direction::LOFAR_LMN), now + 5)) == 0);
+    TESTC(m_beam[0]->addPointing(Pointing(Direction(
+						    0.4, 0.0, Direction::LOFAR_LMN), now + 8)) == 0);
+    TESTC(m_beam[0]->addPointing(Pointing(Direction(
+						    0.5, 0.0, Direction::LOFAR_LMN), now + COMPUTE_INTERVAL)) == 0);
 
-	  struct timeval start, delay;
-	  gettimeofday(&start, 0);
-	  // iterate over all beams
-	  time_t begintime = now;
+    struct timeval start, delay;
+    gettimeofday(&start, 0);
+    // iterate over all beams
+    time_t begintime = now;
 
-	  TESTC(0 == m_beam[0]->convertPointings(begintime));
-	  TESTC(0 == m_beam[0]->convertPointings(begintime + COMPUTE_INTERVAL));
+    TESTC(0 == m_beam[0]->convertPointings(begintime));
+    TESTC(0 == m_beam[0]->convertPointings(begintime + COMPUTE_INTERVAL));
 
-	  Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
-	  Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_BEAMLETS);
+    Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
+    Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_BEAMLETS);
 
-	  pos = 1.0; // x,y coordiante = 1
-	  pos(all, all, 2) = 0.0; // z-coordinate = 0
+    pos = 1.0; // x,y coordiante = 1
+    pos(all, all, 2) = 0.0; // z-coordinate = 0
 
-	  Beamlet::calculate_weights(pos, weights);
-	  gettimeofday(&delay, 0);
+    Beamlet::calculate_weights(pos, weights);
+    gettimeofday(&delay, 0);
 
-	  //cout << "weights(0,0,:,:) = " << weights(0,0,Range::all(),Range::all()) << endl;
-	  //cout << "weights(0,0,:,:) = " << weights(0,1,Range::all(),Range::all()) << endl;
+    //cout << "weights(0,0,:,:) = " << weights(0,0,Range::all(),Range::all()) << endl;
+    //cout << "weights(0,0,:,:) = " << weights(0,1,Range::all(),Range::all()) << endl;
 
-	  delay.tv_sec -= start.tv_sec;
-	  delay.tv_usec -= start.tv_usec;
-	  if (delay.tv_usec < 0)
-	  {
-	      delay.tv_sec -= 1;
-	      delay.tv_usec = 1000000 + delay.tv_usec;
-	  }
-	  LOG_INFO(formatString("calctime = %d sec %d msec", delay.tv_sec, delay.tv_usec/1000));
+    delay.tv_sec -= start.tv_sec;
+    delay.tv_usec -= start.tv_usec;
+    if (delay.tv_usec < 0)
+      {
+	delay.tv_sec -= 1;
+	delay.tv_usec = 1000000 + delay.tv_usec;
+      }
+    LOG_INFO(formatString("calctime = %d sec %d msec", delay.tv_sec, delay.tv_usec/1000));
 
-	  deallocate();
+    deallocate();
 
-	  STOP_TEST();
-	}
+    STOP_TEST();
+  }
 
 };
 

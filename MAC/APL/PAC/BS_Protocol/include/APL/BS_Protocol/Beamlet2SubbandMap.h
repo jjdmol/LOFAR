@@ -34,11 +34,10 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  namespace BS_Protocol {
 
-namespace ABS_Protocol
-{
-  class Beamlet2SubbandMap
-  {
+    class Beamlet2SubbandMap
+    {
     public:
       /**
        * Constructors for a Beamlet2SubbandMap object.
@@ -51,7 +50,7 @@ namespace ABS_Protocol
       virtual ~Beamlet2SubbandMap() {}
 
       /* get references to the version arrays */
-      std::map<int16, int16>& operator()();
+      std::map<uint16, uint16>& operator()();
 
     public:
       /*@{*/
@@ -69,15 +68,15 @@ namespace ABS_Protocol
        *
        * map beamlet (first) to subband (second).
        */
-      std::map<int16, int16> m_beamlet2subband;
+      std::map<uint16, uint16> m_beamlet2subband;
       
       /**
        * the map is sent as a blitz array.
        */
-      blitz::Array<int16, 1> m_array;
-  };
+      blitz::Array<uint16, 1> m_array;
+    };
 
-  inline std::map<int16, int16>& Beamlet2SubbandMap::operator()() { return m_beamlet2subband; }
-};
+    inline std::map<uint16, uint16>& Beamlet2SubbandMap::operator()() { return m_beamlet2subband; }
+  };
 }; // namespace LOFAR
 #endif /* BEAMLET2SUBBANDMAP_H_ */

@@ -36,129 +36,77 @@ using namespace blitz;
 #include <Common/LofarLogger.h>
 using namespace LOFAR;
 
-using namespace ABS;
+using namespace BS;
+using namespace BS_Protocol;
 using namespace std;
+using namespace RTC;
 
-int            Beam::m_ninstances       = 0;
-Beam*          Beam::m_beams            = 0;
-unsigned short Beam::m_update_interval  = 0;
-unsigned short Beam::m_compute_interval = 0;
-
-Beam::Beam() :
-  m_allocated(false), m_pointing(), m_index(-1) 
+Beam::Beam(double sampling_frequency, int nyquist_zone, int nsubbands) :
+  m_spw("BeamSPW", sampling_frequency, nyquist_zone, nsubbands)
 {}
 
 Beam::~Beam()
 {
-  if (m_beams) delete [] m_beams;
-  m_ninstances = 0;
 }
 
-Beam* Beam::getInstance()
+bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets)
 {
-  // if not yet initialised, just return 0
-  if (!m_beams) return 0;
-  
-  for (int i = 0; i < m_ninstances; i++)
-  {
-      if (!m_beams[i].allocated())
-	  return &m_beams[i];
-  }
+  map<uint16,uint16>::iterator it;
 
-  // otherwise return 0
-  return 0;
-}
-
-Beam* Beam::getFromHandle(int handle)
-{
-  // if invalid handle return 0
-  if (!m_beams
-      || handle < 0
-      || handle > m_ninstances
-      || !m_beams[handle].allocated()) return 0;
-
-  return &m_beams[handle];
-}
-
-int Beam::init(int            ninstances,
-	       unsigned short update_interval,
-	       unsigned short compute_interval)
-{
-  // if already initialised just return
-  // only one initialisation is allowed
-  if (m_beams) return -1;
-
-  m_beams = new Beam[ninstances];
-  if (!m_beams) return -1;
-  m_ninstances = ninstances;
-
-  for (int i = 0; i < m_ninstances; i++)
-  {
-      // inplace constructor
-      m_beams[i].m_index = i; // assign index
-      m_beams[i].m_azels.resize(compute_interval,2);
-      m_beams[i].m_lmns.resize(compute_interval,3);
-  }
-
-  m_update_interval = update_interval;
-  m_compute_interval = compute_interval;
-
-  return 0;
-}
-
-Beam* Beam::allocate(int spw_index, set<int> subbands)
-{
-  const SpectralWindow* spw = SpectralWindowConfig::getInstance().get(spw_index);
-  
-  // check for valid spectral window, increase refcount on spectral window
-  if (!spw || (-1 == SpectralWindowConfig::getInstance().incRef(spw_index))) return 0;
-
-  // get a free beam instance
-  Beam* beam = Beam::getInstance();
-
-  if (!beam) return 0;
-  
   // clear the beamlet set just to be sure
-  beam->m_beamlets.clear();
+  m_beamlets.clear();
 
-  // obtain enough beamlet instances
-  for (set<int>::iterator sb = subbands.begin();
-       sb != subbands.end(); ++sb)
-  {
-      Beamlet* beamlet = Beamlet::getInstance();
+  for (it = allocation().begin(); it != allocation().end(); ++it) {
+    Beamlet* beamlet = beamlets.get((int)it->first);
 
-      if (!beamlet) goto failure;
-      if (beamlet->allocate(*beam, *spw, *sb) < 0) goto failure;
+    if (!beamlet) goto failure;
 
-      beam->m_beamlets.insert(beamlet);
+    m_beamlets.insert(beamlet);
+    if (beamlet->allocate(*this, m_spw, it->second) < 0) goto failure;
   }
-  
-  beam->m_allocated = true;
 
-  return beam;
+  return true;
 
  failure:
   //
   // cleanup on failure
-  // need to set allocated to true
-  // to prevent failure of deallocate
-  // will be reset to false in deallocate
   //
-  beam->m_allocated = true;
-  (void)beam->deallocate();
+  deallocate();
 
-  return 0;
+  return false;
 }
 
-int Beam::deallocate()
+bool Beam::modify(BS_Protocol::Beamlet2SubbandMap allocation)
 {
-  if (!m_allocated) return -1;
+  // check for equal size
+  if (allocation().size() != m_allocation().size()) return false;
+  
+  // check that keys match
+  map<uint16,uint16>::iterator it1;
+  map<uint16,uint16>::iterator it2;
+  for (it1 = allocation().begin(), it2 = m_allocation().begin();
+       it1 != allocation().end(); ++it1, ++it2) {
+    if ((*it1).first != (*it2).first) return false;
+  }
 
-  // deallocate all beamlets
+  // all ok, replace m_allocation by allocation
+  m_allocation = allocation;
+
+  return true;
+}
+
+Beamlet2SubbandMap Beam::getAllocation() const
+{
+  return m_allocation;
+}
+
+void Beam::deallocate()
+{
+  // release beamlets
   for (set<Beamlet*>::iterator bl = m_beamlets.begin();
        bl != m_beamlets.end(); ++bl)
   {
-      (*bl)->deallocate();
+    (*bl)->deallocate();
   }
   m_beamlets.clear();
 
@@ -167,45 +115,27 @@ int Beam::deallocate()
 
   // clear the pointing queue
   while (!m_pointing_queue.empty()) m_pointing_queue.pop();
-
-  m_allocated = false;
-
-  // decrease spectral window reference count
-  SpectralWindowConfig::getInstance().decRef();
-
-  return 0;
 }
 
-int Beam::addPointing(const Pointing& pointing)
+void Beam::addPointing(const Pointing& pointing)
 {
-  if (!m_allocated) return -1;
-
   m_pointing_queue.push(pointing);
-
-  return 0;
 }
 
-int Beam::convertPointings(time_t begintime)
+int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval)
 {
   // remember last pointing from previous call
   Pointing current_pointing = m_pointing;
 
-  bool pset[m_compute_interval];
-  for (int i = 0; i < m_compute_interval; i++) pset[i] = false;
+  bool pset[compute_interval];
+  for (int i = 0; i < compute_interval; i++) pset[i] = false;
 
-  // only works on allocated beams
-  if (!allocated()) return -1;
-
-#if 0
-  if (period.length().seconds() != m_compute_interval)
-  {
-    LOG_ERROR("\ninvalid time period\n");
-    return -1;
-  }
-#endif
-
-  // reset azel, lm arrays
+  // reset azels array
+  m_azels.resize(compute_interval, 2);
   m_azels = 0.0;
+
+  // reset lmns array
+  m_lmns.resize(compute_interval, 3);
   m_lmns = 0.0;
 
   LOG_DEBUG_STR("Begintime=" << begintime);
@@ -216,7 +146,7 @@ int Beam::convertPointings(time_t begintime)
 
       LOG_DEBUG_STR("Pointing time=" << pointing.time());
 
-      if (pointing.direction().type() != Direction::LOFAR_LMN)
+      if (pointing.getType() != Pointing::LOFAR_LMN)
       {
 	m_pointing_queue.pop(); // discard pointing
 	LOG_ERROR("\nDirection type not supported yet, pointing discarded.\n");
@@ -229,11 +159,9 @@ int Beam::convertPointings(time_t begintime)
 	// Deadline missed, print warning but execute the command anyway
 	// as soon as possible.
 	//
-	LOG_WARN(formatString("Deadline missed by %d seconds(%f,%f) @ %d",
-			      (begintime - pointing.time()),
-			      pointing.direction().angle1(),
-			      pointing.direction().angle2(),
-			      pointing.time()));
+	LOG_WARN_STR("Deadline missed by " << (begintime.sec() - pointing.time().sec())
+		     << " seconds (" << pointing.angle1() << "," << pointing.angle2() << ") "
+		     << "@ " << pointing.time());
 
 	pointing.setTime(begintime);
       }
@@ -244,7 +172,7 @@ int Beam::convertPointings(time_t begintime)
       else
 #endif
       
-      if (pointing.time() < begintime + m_compute_interval)
+      if (pointing.time() < begintime + compute_interval)
       {
 	  m_pointing_queue.pop(); // remove from queue
 
@@ -260,16 +188,16 @@ int Beam::convertPointings(time_t begintime)
 	  // insert converted LM coordinate at correct 
 	  // position in the m_lmns array
 	  //
-	  register int tsec = pointing.time() - begintime;
+	  register int tsec = pointing.time().sec() - begintime.sec();
 
-	  if ( (tsec < 0) || (tsec >= m_compute_interval) )
+	  if ( (tsec < 0) || (tsec >= compute_interval) )
 	  {
 	    LOG_ERROR_STR("\ninvalid pointing time" << pointing.time());
 	    continue;
 	  }
 	  
-	  m_lmns(tsec,0) = pointing.direction().angle1();
-	  m_lmns(tsec,1) = pointing.direction().angle2();
+	  m_lmns(tsec,0) = pointing.angle1();
+	  m_lmns(tsec,1) = pointing.angle2();
 	  m_lmns(tsec,2) = sqrt(1.0 - ((m_lmns(tsec,0)*m_lmns(tsec,0))
 				       + (m_lmns(tsec,1)*m_lmns(tsec,1))));
 	  pset[tsec] = true;
@@ -288,12 +216,12 @@ int Beam::convertPointings(time_t begintime)
   // there are not necessarily pointings at each second
   // these holes are fixed up in this loop
   //
-  for (int t=0; t < m_compute_interval; ++t)
+  for (int t=0; t < compute_interval; ++t)
   {
     if (!pset[t])
     {
-      m_lmns(t,0) = current_pointing.direction().angle1();
-      m_lmns(t,1) = current_pointing.direction().angle2();
+      m_lmns(t,0) = current_pointing.angle1();
+      m_lmns(t,1) = current_pointing.angle2();
       m_lmns(t,2) = sqrt(1.0 - ((m_lmns(t,0) * m_lmns(t,0))
 			      + (m_lmns(t,1) * m_lmns(t,1))));
     }
@@ -301,7 +229,7 @@ int Beam::convertPointings(time_t begintime)
     {
       double a1 = m_lmns(t,0);
       double a2 = m_lmns(t,1);
-      current_pointing.setDirection(Direction(a1,a2));
+      current_pointing.setDirection(a1, a2);
     }
 
     if ((fabs(m_lmns(t,0)) > 1.0)
@@ -314,7 +242,7 @@ int Beam::convertPointings(time_t begintime)
     }
 
     LOG_TRACE_VAR(formatString("direction@%d=(%f,%f,%f)",
-			       begintime + t,
+			       begintime.sec() + t,
 			       m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
   }
 
@@ -326,11 +254,85 @@ const Array<W_TYPE,2>& Beam::getLMNCoordinates() const
   return m_lmns;
 }
 
-void Beam::getSubbandSelection(map<int,int>& selection) const
+Beams::Beams(int nbeamlets) : m_beamlets(nbeamlets)
 {
-  for (set<Beamlet*>::iterator bl = m_beamlets.begin();
-       bl != m_beamlets.end(); ++bl)
-  {
-      selection[(*bl)->index()] = (*bl)->subband();
+}
+
+Beam* Beams::get(Beamlet2SubbandMap allocation,
+		 double sampling_frequency, int nyquist_zone)
+{
+  Beam* beam = new Beam(sampling_frequency, nyquist_zone, allocation().size());
+
+  if (beam) {
+
+    if (!beam->allocate(allocation, m_beamlets)) {
+      delete beam;
+      beam = 0;
+    } else {
+      // add to list of beams
+      m_beams.push_back(beam);
+    }
   }
+  return beam;
+}
+
+Beam* Beams::get(uint32 handle)
+{
+  Beam* beam = (Beam*)handle;
+
+  // if beam not found, return 0
+  list<Beam*>::const_iterator it = find(m_beams.begin(),
+					m_beams.end(),
+					beam);
+  if (it == m_beams.end()) {
+    beam = 0;
+  }
+  
+  return beam;
+}
+
+bool Beams::destroy(uint32 handle)
+{
+  Beam* beam = (Beam*)handle;
+
+  // if beam not found, return 0
+  list<Beam*>::iterator it = find(m_beams.begin(),
+				  m_beams.end(),
+				  beam);
+  if (it != m_beams.end()) {
+    delete beam;
+    m_beams.erase(it);
+    return true;
+  }
+
+  return false;
+}
+
+void Beams::calculate_weights(Timestamp timestamp,
+			      int compute_interval,
+			      const blitz::Array<W_TYPE, 3>&         pos,
+			      blitz::Array<std::complex<W_TYPE>, 3>& weights)
+{
+  // iterate over all beams
+  for (list<Beam*>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
+  {
+    (*bi)->convertPointings(timestamp, compute_interval);
+    LOG_INFO(formatString("current_pointing=(%f,%f)",
+			  (*bi)->getPointing().angle1(),
+			  (*bi)->getPointing().angle2()));
+  }
+
+  m_beamlets.calculate_weights(pos, weights);
+}
+
+Beamlet2SubbandMap Beams::getSubbandSelection()
+{
+  Beamlet2SubbandMap selection;
+  for (list<Beam*>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
+  {
+    Beamlet2SubbandMap beammap = (*bi)->getAllocation();
+    selection().insert(beammap().begin(), beammap().end());
+  }
+
+  return selection;
 }

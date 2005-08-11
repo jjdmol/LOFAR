@@ -1,5 +1,5 @@
 //#
-//#  ABSSweepTest.cc: implementation of SweepTest class
+//#  SweepTest.cc: implementation of SweepTest class
 //# 
 //#  This test creates N_BEAMLETS beams on the sky each beam
 //#  only one subband wide. Each beam has a different direction
@@ -29,11 +29,11 @@
 // this include needs to be first!
 
 #include <Suite/suite.h>
-#define DECLARE_SIGNAL_NAMES
-#include "ABS_Protocol.ph"
-#include "Direction.h"
+#include <MEPHeader.h>
+#include "BS_Protocol.ph"
+#include "Pointing.h"
 
-#include "ABSSweepTest.h"
+#include "SweepTest.h"
 
 #include <iostream>
 #include <sys/time.h>
@@ -45,16 +45,17 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-using namespace ABS;
-using namespace std;
 using namespace LOFAR;
+using namespace BS;
+using namespace std;
+using namespace EPA_Protocol;
 
 SweepTest::SweepTest(string name, int subband)
     : GCFTask((State)&SweepTest::initial, name), Test("SweepTest"), m_subband(subband)
 {
-  registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
+  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
-  beam_server.init(*this, "beam_server", GCFPortInterface::SAP, ABS_PROTOCOL);
+  beam_server.init(*this, "beam_server", GCFPortInterface::SAP, BS_PROTOCOL);
 }
 
 SweepTest::~SweepTest()
@@ -120,7 +121,7 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
-  static int beam_handle = -1;
+  static uint32 beam_handle = 0;
 
   static int beam_count = 0;
   
@@ -132,21 +133,19 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	  // send beam allocation, select a single subband
 	  // this creates the first beam of N_BEAMLETS beams
 	  //
-	  ABSBeamallocEvent alloc;
-	  alloc.spectral_window = 0;
-	  alloc.n_subbands = 1;
-	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
-	  alloc.subbands[0] = m_subband;
+	  BSBeamallocEvent alloc;
+	  alloc.subarrayname = "ITS-LBA";
+	  alloc.allocation()[0] = 0;
 
 	  TESTC(beam_server.send(alloc));
       }
       break;
       
-      case ABS_BEAMALLOC_ACK:
+      case BS_BEAMALLOCACK:
       {
-	ABSBeamallocAckEvent ack(e);
-	TESTC(ABS_Protocol::SUCCESS == ack.status);
-	if (ABS_Protocol::SUCCESS != ack.status)
+	BSBeamallocackEvent ack(e);
+	TESTC(BS_Protocol::SUCCESS == ack.status);
+	if (BS_Protocol::SUCCESS != ack.status)
 	{
 	  LOG_FATAL("Failed to allocate beam.");
 	  exit(EXIT_FAILURE);
@@ -160,11 +159,9 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	//
 	if (++beam_count < MEPHeader::N_BEAMLETS)
 	{
-	  ABSBeamallocEvent alloc;
-	  alloc.spectral_window = 0;
-	  alloc.n_subbands = 1;
-	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
-	  alloc.subbands[0] = m_subband;
+	  BSBeamallocEvent alloc;
+	  alloc.subarrayname = "ITS-LBA";
+	  alloc.allocation()[0] = 0;
 	  
 	  TESTC(beam_server.send(alloc));
 	}
@@ -173,16 +170,14 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	    // all beams created
 	    
 	    // send pointto commands from -90 through 0 to 90
-	    ABSBeampointtoEvent pointto;
-	    pointto.type=(int)Direction::LOFAR_LMN;
+	    BSBeampointtoEvent pointto;
+	    pointto.type=3;
 	    
-	    time_t now = time(0);
-
 	    // this sends N_BEAMLETS pointto messages, one for each beam
 	    for (int beam = 0; beam < MEPHeader::N_BEAMLETS; beam++)
 	    {
 		pointto.handle = beam;
-		pointto.time = now + 20;
+		pointto.timestamp.setNow(20);
 		pointto.angle[0]=0.0;
 		pointto.angle[1]=cos(((double)beam/MEPHeader::N_BEAMLETS)*M_PI);
 		
@@ -198,17 +193,17 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
       case F_TIMER:
       {
 	  // done => send BEAMFREE
-	  ABSBeamfreeEvent beamfree;
+	  BSBeamfreeEvent beamfree;
 	  beamfree.handle = beam_handle;
 
 	  TESTC(beam_server.send(beamfree));
       }
       break;
 
-      case ABS_BEAMFREE_ACK:
+      case BS_BEAMFREEACK:
       {
-	ABSBeamfreeAckEvent ack(e);
-	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	BSBeamfreeackEvent ack(e);
+	TESTC(BS_Protocol::SUCCESS == ack.status);
 	TESTC(beam_handle == ack.handle);
 
 	// test completed, next test

@@ -23,67 +23,93 @@
 #ifndef POINTING_H_
 #define POINTING_H_
 
-#include "Direction.h"
-#include <time.h>
-#include <sys/time.h>
+#include "Timestamp.h"
 
-namespace ABS
-{
+namespace LOFAR {
+  namespace BS {
 
-  /**
-   * Class with 
-   */
-  class Pointing
+    /**
+     * Class with 
+     */
+    class Pointing
       {
       public:
-	  //@{
-	  /**
-	   * Constructors and destructors for a pointing.
-	   */
-	  Pointing();
-	  Pointing(const Direction direction, time_t time);
-	  virtual ~Pointing();
-	  //@}
-
-	  //@{
-	  /**
-	   * 'set' methods to set the time and
-	   * direction of a pointing.
-	   */
-	  void setDirection(const Direction direction);
-	  void setTime(time_t time);
-          //@}
-
-	  //@{
-	  /**
-	   * Accessor methods. Get the time and
-	   * direction of a pointing.
-	   */
-	  Direction direction() const;
-	  time_t    time()      const;
-	  bool      isTimeSet() const;
-          //@}
+	/**
+	 * A direction can have one of these three types.
+	 */
+	enum Type {
+	  J2000 = 1,
+	  AZEL = 2,
 
 	  /**
-	   * Compare the time of two pointings.
+	   * The LOFAR station local coordinate system.
+	   * For the definition of this coordinate system see [ref].
 	   */
-	  bool operator<(Pointing const & right) const;
+	  LOFAR_LMN = 3,
+	};
+
+	//@{
+	/**
+	 * Constructors and destructors for a pointing.
+	 */
+	Pointing();
+	Pointing(double angle1, double angle2, RTC::Timestamp time, Type type);
+	virtual ~Pointing();
+	//@}
+
+	//@{
+	/**
+	 * 'set' methods to set the time and
+	 * direction of a pointing.
+	 */
+	void setDirection(double angle1, double angle2);
+	void setTime(RTC::Timestamp time);
+	void setType(Type type);
+	//@}
+
+	//@{
+	/**
+	 * Accessor methods. Get the time and
+	 * direction of a pointing.
+	 */
+	double         angle1()    const;
+	double         angle2()    const;
+	RTC::Timestamp time()      const;
+	bool           isTimeSet() const;
+	//@}
+
+	/**
+	 * Get the type of pointing.
+	 */
+	Type      getType() const;
+
+	/**
+	 * Compare the time of two pointings.
+	 * Needed for priority queue of pointings.
+	 */
+	bool operator<(Pointing const & right) const;
 
       private:
-	  Direction m_direction;
-	  time_t    m_time;
+	double         m_angle1;
+	double         m_angle2;
+	RTC::Timestamp m_time;
+	Type           m_type;
       };
 
-  inline void      Pointing::setTime(time_t time) { m_time = time; }
-  inline void      Pointing::setDirection(const Direction direction) { m_direction = direction; }
-  inline time_t    Pointing::time() const                      { return m_time;  }
-  inline bool      Pointing::isTimeSet() const                 { return m_time != 0; }
-  inline Direction Pointing::direction() const                 { return m_direction;  }
-  inline bool      Pointing::operator<(Pointing const & right) const
+    inline void   Pointing::setTime(RTC::Timestamp time) { m_time = time; }
+    inline void   Pointing::setType(Type type) { m_type = type; }
+    inline void   Pointing::setDirection(double angle1, double angle2) { m_angle1 = angle1; m_angle2 = angle2; }
+    inline RTC::Timestamp Pointing::time() const      { return m_time;  }
+    inline bool   Pointing::isTimeSet() const { return !(0 == m_time.sec() && 0 == m_time.usec()); }
+    inline Pointing::Type Pointing::getType() const   { return m_type; }
+    inline double Pointing::angle1() const    { return m_angle1; }
+    inline double Pointing::angle2() const    { return m_angle2; }
+    inline bool   Pointing::operator<(Pointing const & right) const
       {
-	// inverse priority, earlier times are at the front of the queue
-	return (m_time > right.m_time);
+        // inverse priority, earlier times are at the front of the queue
+        return (m_time > right.m_time);
       }
+  };
 };
 
 #endif /* POINTING_H_ */

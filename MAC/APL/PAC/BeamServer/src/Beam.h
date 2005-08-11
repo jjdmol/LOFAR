@@ -24,181 +24,212 @@
 #define BEAM_H_
 
 #include "Pointing.h"
-#include "SpectralWindow.h"
-#include "SpectralWindowConfig.h"
 #include "Beamlet.h"
+#include "Beamlet2SubbandMap.h"
+#include <Timestamp.h>
+#include <SpectralWindow.h>
 #include <time.h>
 
 #include <queue>
 #include <set>
-#include <map>
+#include <list>
 
 #include <blitz/array.h>
 
-namespace ABS
-{
+namespace LOFAR {
+  namespace BS {
 
-  /**
-   * Singleton class with exactly nbeams instances.
-   */
-  class Beam
-      {
-      public:
-	  static const int TIMESTEP = 1; // in seconds
-	  static const int N_TIMESTEPS = 20; // number of timesteps to calculate ahead
+    /**
+     * Class representing a single beam allocated by a client
+     * using a BEAMALLOC event.
+     */
+    class Beam {
+    public:
 
-	  /**
-	   * Get the beam with the matching handle.
-	   * @return 0 on invalid handle. Beam must have
-	   * been allocated before.
-	   */
-	  static Beam* getFromHandle(int handle);
+      /**
+       * Default constructor
+       */
+      Beam(double sampling_frequency, int nyquist_zone, int nsubbands);
 
-	  /**
-	   * Set the number of beam instances that
-	   * should be created. After calling this method
-	   * once you can not alter the number of 
-	   * instances by calling it again.
-	   * @param ninstances The total number of instances
-	   * that should be created.
-	   */
-	  static int init(int ninstances,
-			  unsigned short update_interval,
-			  unsigned short compute_interval);
+	
+      /**
+       * Default destructor.
+       */
+      virtual ~Beam();
 
-	  /**
-	   * Allocate the beam using the specified subband set
-	   * within the specified spectral window.
-	   * @param spw Spectral window in which to allocate.
-	   * @param subbands Which set of subbands to allocate
-	   * (indices in the spectral window).
-	   */
-	  static Beam* allocate(int spw_index, std::set<int> subbands);
+      /**
+       * Allocate a new beam.
+       * @param allocation Allocation of beamlet (indices) to subband (indices)
+       * @param beamlets Allocate from this set of beamlets.
+       * @return bool true if allocation successful, false if allocation failed
+       * because specified beamlet has already been allocated or there is 
+       * a range problem with the beamlet or subband indices.
+       */
+      bool allocate(BS_Protocol::Beamlet2SubbandMap allocation, Beamlets& beamlets);
 
-	  /**
-	   * Return allocation status of a beam.
-	   */
-	  bool allocated() const;
+      /**
+       * Modify beam by chaning the subbands
+       * of the beamlet2subband mapping. The lhs of the mapping
+       * can not be changed.
+       * @return bool true if modification succeeded, false if it failed
+       * because beamlet set was changed or if there is a range problem
+       * with the beamlet or subband indices.
+       */
+      bool modify(BS_Protocol::Beamlet2SubbandMap allocation);
 
-	  /**
-	   * @return Opaque handle of the beam.
-	   */
-	  int handle() const;
+      /**
+       * Get the allocation mapping for this beam.
+       * @return Beamlet2SubbandMap the mapping from beamlet to subband for this beam.
+       */
+      BS_Protocol::Beamlet2SubbandMap getAllocation() const;
 
-	  /**
-	   * @return Current pointing.
-	   */
-	  Pointing pointing() const;
+      /**
+       * @return Current pointing.
+       */
+      inline Pointing getPointing() const { return m_pointing; }
 
-	  /**
-	   * Deallocate a beam.
-	   */
-	  int deallocate();
+      /**
+       * Add a pointing to a beam.
+       */
+      void addPointing(const Pointing& pointing);
 
-	  /**
-	   * Add a pointing to a beam.
-	   */
-	  int addPointing(const Pointing& pointing);
+      /**
+       * Convert coordinates from the m_pointing_queue
+       * to the local coordinate system, for times >= begintime
+       * and begintime < begintime + m_compute_interval.
+       * Converted coordinates are put on the m_coordinate_track
+       * queue.
+       * @param begintime First time of pointing to convert, this is typically
+       * the last time the method was called. E.g.
+       * @code
+       * begintime=lasttime;
+       * gettimeofday(&lasttime, 0);
+       * lasttime.tv_sec += compute_interval; // compute_interval seconds ahead in time
+       * for (beam in beams)
+       * {
+       *   // convert coordinate for next compute_interval seconds
+       *   beam->convertPointings(begintime, compute_interval);
+       * }
+       * @endcode
+       * @param compute_interval the interval for which pointings must be computed
+       * @return int 0 if successful, < 0 otherwise
+       */
+      int convertPointings(RTC::Timestamp begintime, int compute_interval);
 
-	  /**
-	   * Convert coordinates from the m_pointing_queue
-	   * to the local coordinate system, for times >= begintime
-	   * and begintime < begintime + m_compute_interval.
-	   * Converted coordinates are put on the m_coordinate_track
-	   * queue.
-	   * @param begintime First time of pointing to convert, this is typically
-	   * the last time the method was called. E.g.
-	   * @code
-	   * begintime=lasttime;
-	   * gettimeofday(&lasttime, 0);
-	   * lasttime.tv_sec += compute_interval; // compute_interval seconds ahead in time
-	   * for (beam in beams)
-	   * {
-	   *   // convert coordinate for next compute_interval seconds
-	   *   beam->convertPointings(begintime);
-	   * }
-	   * @endcode
-	   * starting at time.
-	   */
-	  int convertPointings(time_t begintime);
+      /**
+       * Get converted time-stamped coordinates frobm the queue.
+       * This method is called by the Beamlet class to get a priority
+       * queue of coordinates.
+       * @return array with the coordinates for the next period.
+       */
+      const blitz::Array<W_TYPE,2>& getLMNCoordinates() const;
 
-	  /**
-	   * Get converted time-stamped coordinates from the queue.
-	   * This method is called by the Beamlet class to get a priority
-	   * queue of coordinates.
-	   * @return array with the coordinates for the next period.
-	   */
-	  const blitz::Array<W_TYPE,2>& getLMNCoordinates() const;
+    private: // methods
 
-	  /**
-	   * Get the mapping from input subbands to
-	   * output beamlets.
-	   * @note The map is NOT cleared.
-	   * New pairs are simply added. This allows the
-	   * caller to call this on a number of beams
-	   * to get the total mapping for all beams.
-	   */
-	  void getSubbandSelection(std::map<int, int>& selection) const;
+      /**
+       * Method to undo an allocation.
+       */
+      void deallocate();
 
-      protected:
-	  Beam(); // no construction outside class
-	  virtual ~Beam();
+    private:
 
-      private:
-	  /** is this beam in use? */
-	  bool m_allocated;
+      /**
+       * Allocation.
+       */
+      BS_Protocol::Beamlet2SubbandMap m_allocation;
+
+      /**
+       * SpectralWindow
+       */
+      CAL::SpectralWindow m_spw;
 	  
-	  /** current direction of the beam */
-	  Pointing m_pointing;
+      /** current direction of the beam */
+      Pointing m_pointing;
 
-	  /** index of this beam */
-	  int m_index;
+      /** queue of future pointings */
+      std::priority_queue<Pointing> m_pointing_queue;
 
-	  /** queue of future pointings */
-	  std::priority_queue<Pointing> m_pointing_queue;
+      /**
+       * Current coordinate track in station local coordinates.
+       * Two dimensional array for (l,m,n) coordinates
+       * The first dimension is always 3 (for the three
+       * coordinates) the second dimension is m_compute_interval
+       */
+      blitz::Array<W_TYPE,2> m_azels; // az,el coordinates
+      blitz::Array<W_TYPE,2> m_lmns;  // l,m,n coordinates
 
-	  /**
-	   * Current coordinate track in station local coordinates.
-	   * Two dimensional array for (l,m,n) coordinates
-	   * The first dimension is always 3 (for the three
-	   * coordinates) the second dimension is m_compute_interval
-	   */
-	  blitz::Array<W_TYPE,2> m_azels; // az,el coordinates
-	  blitz::Array<W_TYPE,2> m_lmns;  // l,m,n coordinates
+      /**
+       * Set of beamlets belonging to this beam.
+       * It is a set because there should be no
+       * duplicate beamlet instances in the set.
+       */
+      std::set<Beamlet*> m_beamlets;
 
-	  /**
-	   * Set of beamlets belonging to this beam.
-	   * It is a set because there should be no
-	   * duplicate beamlet instances in the set.
-	   */
-	  std::set<Beamlet*> m_beamlets;
+    private:
+      /**
+       * Don't allow copying this object.
+       */
+      Beam (const Beam&);            // not implemented
+      Beam& operator= (const Beam&); // not implemented
 
-      private:
-	  /**
-	   * Get the next available beam.
-	   * @return 0 if there are no more beams available.
-	   */
-	  static Beam* getInstance();
+    private:
+      /**
+       * Private constants.
+       */
+      static const int N_TIMESTEPS = 20; // number of timesteps to calculate ahead
+    };
 
-	  //@{
-	  /** singleton implementation members */
-	  static int            m_ninstances;
-	  static Beam*          m_beams; // array of ninstances beams
-	  static unsigned short m_update_interval;
-	  static unsigned short m_compute_interval;
-	  //@}
+    /**
+     * Factory class for Beam. This class manages the collection of Beams
+     * that are active in the BeamServer at a particular point in time.
+     */
+    class Beams {
+  
+    public:
+      Beams(int nbeamlets);
 
-      private:
-	  /**
-	   * Don't allow copying this object.
-	   */
-	  Beam (const Beam&); // not implemented
-	  Beam& operator= (const Beam&); // not implemented
-      };
+      /**
+       * Create a new beam.
+       */
+      Beam* get(BS_Protocol::Beamlet2SubbandMap allocation,
+		double sampling_frequency, int nyquist_zone);
 
-  inline bool Beam::allocated() const { return m_allocated; }
-  inline int  Beam::handle()    const { return m_index;     }
-  inline Pointing Beam::pointing() const { return m_pointing; }
+      /**
+       * Get an existing beam by handle.
+       */
+      Beam* get(uint32 handle);
+
+      /**
+       * Destroy a beam by handle.
+       * @return bool true if beam found (and destroyed), false otherwise
+       */
+      bool destroy(uint32 handle);
+
+      /**
+       * Calculate weights for all beamlet of all beams
+       * for the specified number of time steps.
+       */
+      void calculate_weights(RTC::Timestamp timestamp,
+			     int compute_interval,
+			     const blitz::Array<W_TYPE, 3>&         pos,
+			     blitz::Array<std::complex<W_TYPE>, 3>& weights);
+
+
+      /**
+       * Return the combined beamlet to subband
+       * mapping for all beams.
+       */
+      BS_Protocol::Beamlet2SubbandMap getSubbandSelection();
+
+    private:
+      /**
+       * List of active beams.
+       */
+      std::list<Beam*> m_beams;
+      Beamlets         m_beamlets; // collection of all beamlets
+    };
+
+  };
 };
      
 #endif /* BEAM_H_ */
