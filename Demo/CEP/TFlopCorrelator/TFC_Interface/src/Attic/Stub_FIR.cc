@@ -53,11 +53,11 @@ namespace LOFAR {
 		 "FIRF_nr argument out of boundaries; " << FIRF_nr 
 		 << " / " << itsNFIRF);
 
-    const ParameterSet myPS("TFlopCorrelator.cfg");
-    int port = myPS.getInt32("FIRConnection.RequestPort");
+    int port = itsPS.getInt32("FIRConnection.RequestPort");
     string service(formatString("%d", port+FIRF_nr));
     if (itsStubOnServer)    // On the cluster side, so start a server socket
     {
+      LOG_TRACE_FLOW_STR("Server Stub_FIR initting on port " << service);
       DBGASSERTSTR(itsTHs[FIRF_nr] == 0, "Stub input " << FIRF_nr << 
 		" has already been connected.");
       // Create a server socket
@@ -72,12 +72,13 @@ namespace LOFAR {
       DBGASSERTSTR(itsTHs[FIRF_nr] == 0, "Stub output " << FIRF_nr << 
 		" has already been connected.");
       // Create a client socket
-      itsTHs[FIRF_nr] = new TH_Socket(myPS.getString("FIRConnection.ServerHost"),
-				     service);
+      itsTHs[FIRF_nr] = new TH_Socket(itsPS.getString("FIRConnection.ServerHost"),
+				      service);
       itsConnections[FIRF_nr] = new Connection("fromInpSection", 0, 
 					       dm.getGeneralInHolder(dhNr), 
 					      itsTHs[FIRF_nr], true);
       dm.setInConnection(dhNr, itsConnections[FIRF_nr]);
+      
     }
 
   };
