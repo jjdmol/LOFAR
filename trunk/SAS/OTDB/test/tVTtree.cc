@@ -30,6 +30,7 @@
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/TreeTypeConv.h>
+#include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
 
 using namespace LOFAR;
@@ -96,6 +97,7 @@ int main (int	argc, char*	argv[]) {
 
 	// Use converters in this testprogram
 	TreeTypeConv	TTconv(&conn);
+	TreeStateConv	TSconv(&conn);
 	ClassifConv		CTconv(&conn);
 
 	try {
@@ -147,34 +149,11 @@ int main (int	argc, char*	argv[]) {
 		treeInfo = conn.getTreeInfo(VTtreeID);
 		LOG_INFO_STR(treeInfo);
 
-
-		treeType	aTreeType = TTconv.get("hardware");		
-		LOG_INFO_STR("Trying to change the type/state of the tree to " <<
-																	aTreeType);
-		try { // this is NOT allowed we should get an exception!
-			actionOK = tm.setTreeType(VTtreeID, aTreeType);
-			LOG_FATAL_STR("Changing the type to " << aTreeType << 
-							"should have failed!");
-			return (1);
-		}
-		catch (std::exception&	ex) {
-			LOG_INFO_STR("Setting treetype to " << aTreeType << 
-											" was NOT succesful, THIS IS OK");
-		}
-
-		aTreeType = TTconv.get("schedule");		
-		LOG_INFO_STR("Trying to change the type/state of the tree to " <<
-																	aTreeType);
-		try { // this is NOT allowed we should get an exception!
-			actionOK = tm.setTreeType(VTtreeID, aTreeType);
-			LOG_FATAL_STR("Changing the type to " << aTreeType << 
-							"should have failed!");
-			return (1);
-		}
-		catch (std::exception&	ex) {
-			LOG_INFO_STR("Setting treetype to " << aTreeType << 
-											" was NOT succesful, THIS IS OK");
-		}
+		treeState	aTreeState = TSconv.get("active");		
+		LOG_INFO_STR("Trying to change the state of the tree to "<< aTreeState);
+		actionOK = tm.setTreeState(VTtreeID, aTreeState);
+		ASSERTSTR(actionOK, "Changing the state to " << aTreeState << 
+							"should have NOT have failed!");
 
 		treeInfo = conn.getTreeInfo(VTtreeID);
 		LOG_INFO_STR(treeInfo);

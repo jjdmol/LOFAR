@@ -42,7 +42,7 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		vFunction		INT2 := 1;
 		TThardware 		CONSTANT INT2 := 10;
 		TTtemplate 		CONSTANT INT2 := 20;
-		TCoperational	CONSTANT INT2 := 3;
+		TSactive		CONSTANT INT2 := 400;
 		vOldTree		RECORD;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
@@ -61,8 +61,8 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		INTO	vOldTree
 		FROM	OTDBtree
 		WHERE	treeID = $2;
-		IF vOldTree.classif = TCoperational THEN
-		  RAISE EXCEPTION \'Operational trees may not be deleted\';
+		IF vOldTree.state = TSactive THEN
+		  RAISE EXCEPTION \'Active trees may not be deleted\';
 		END IF;
 
 		-- delete tree entry

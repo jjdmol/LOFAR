@@ -40,6 +40,7 @@ typedef		int32		eventIDType;
 
 typedef		int16		classifType;
 typedef		int16		treeType;
+typedef		int16		treeState;
 typedef		int16		unitType;
 typedef		int16		paramType;
 typedef		int16		actionType;

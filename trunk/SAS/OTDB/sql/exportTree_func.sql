@@ -86,11 +86,7 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 		vIsAuth			BOOLEAN;
 		vResult			TEXT;
 		vName			VIChierarchy.name%TYPE;
-		vDotPos			INTEGER;
-		vCount			INTEGER;
-
-		vNewTreeID		OTDBtree.treeID%TYPE;
-		vCreatorID		OTDBtree.creator%TYPE;
+		vPrefixLen		INTEGER;
 		vAuthToken		ALIAS FOR $1;
 
 	BEGIN
@@ -111,19 +107,12 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 		IF NOT FOUND THEN
 		  RAISE EXCEPTION \'Node % does not exist in tree %\', $3, $2;
 		END IF;
-		-- determine prefix: is basename of retrieved node.
-		vCount    := 0;
-		vDotPos   := 1;
-		LOOP
-			vCount := strpos(substring(vName from vDotPos), \'.\');
-			EXIT WHEN vCount = 0;
-			vDotPos := vDotPos + vCount;
-		END LOOP;
-		vDotPos := vDotPos - 1;
-		vResult := \'prefix=\' || substr(vName,1,vDotPos) || chr(10);
+
+		vPrefixLen = length(vName);
+		vResult := \'prefix=\' || vName || \'.\' || chr(10);
 
 		-- construct entries for all nodes from here on.
-		vResult := vResult || exportSubTree($2, $3, vDotPos+1);
+		vResult := vResult || exportSubTree($2, $3, vPrefixLen+2);
 		RETURN vResult;
 	END;
 ' LANGUAGE plpgsql;

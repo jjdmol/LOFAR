@@ -206,7 +206,8 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
   RETURNS INT4 AS '
 	DECLARE
 		vFunction  CONSTANT		INT2 := 1;
-		TTschedule CONSTANT		INT2 := 40;
+		TTVHtree   CONSTANT		INT2 := 30;
+		TSidle	   CONSTANT		INT2 := 0;
 		vIsAuth					BOOLEAN;
 	  	vClassif				OTDBtree.classif%TYPE;
 		vCampaign				OTDBtree.campaign%TYPE;
@@ -233,7 +234,7 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  -- note: tree exists, checked in authorisation check
 
 	  -- create a new tree
-	  SELECT newTree($1, $2, vClassif, TTschedule, vCampaign)
+	  SELECT newTree($1, $2, vClassif, TTVHtree, TSidle, vCampaign)
 	  INTO	 vNewTreeID;
 	  IF vNewTreeID = 0 THEN
 		RAISE EXCEPTION \'Tree can not be created\';

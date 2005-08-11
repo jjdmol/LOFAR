@@ -44,6 +44,7 @@ CREATE TABLE OTDBtree (
 	originID	INT4			NOT NULL,
 	classif		INT2			NOT NULL REFERENCES classification(ID),
 	treetype	INT2			NOT NULL REFERENCES treetype(ID),
+	state		INT2			NOT NULL REFERENCES treestate(ID),
 	creator		INT2			NOT NULL REFERENCES operator(ID),
 	d_creation	TIMESTAMP(0)	DEFAULT 'now',
 

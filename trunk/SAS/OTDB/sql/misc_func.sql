@@ -37,15 +37,16 @@ CREATE OR REPLACE FUNCTION isAuthorized(INT4, INT4, INT2, INT4)
   RETURNS BOOLEAN AS '
 	DECLARE
 		vTreeType		OTDBtree.treetype%TYPE;
+		vState			OTDBtree.state%TYPE;
 		vCallerID		INT2 := 0;
 
 	BEGIN
 		-- get treetype and owner for authorisation
 		IF $2 != 0 THEN
-		  SELECT	treetype
-		  INTO	vTreeType
-		  FROM	OTDBtree
-		  WHERE	treeID = $2;
+		  SELECT treetype, state
+		  INTO	 vTreeType, vState
+		  FROM	 OTDBtree
+		  WHERE	 treeID = $2;
 		  IF NOT FOUND THEN
 		    RAISE EXCEPTION \'Tree % does not exist!\', $2;
 		    RETURN FALSE;

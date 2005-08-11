@@ -38,7 +38,6 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 	DECLARE
 		TThardware CONSTANT	INT2 := 10;
 		TTtemplate CONSTANT	INT2 := 20;
-		TTschedule CONSTANT	INT2 := 40;
 		vNode			RECORD;
 		vTreeType		OTDBtree.treetype%TYPE;
 		vLeaf			VICtemplate.leaf%TYPE;

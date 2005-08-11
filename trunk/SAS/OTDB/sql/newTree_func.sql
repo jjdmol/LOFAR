@@ -23,7 +23,7 @@
 --
 
 --
--- newTree (authToken, orgTree, classif, treetype, campaign)
+-- newTree (authToken, orgTree, classif, treetype, state, campaign)
 --
 -- Creates a new tree record and returns the treeID of this new tree.
 --
@@ -33,7 +33,7 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT4)
+CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT2, INT4)
   RETURNS INT4 AS '
 	DECLARE
 		vFunction		INT2 := 1;
@@ -61,6 +61,7 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT4)
 							  originid,
 							  classif,
 							  treetype,
+							  state,
 							  creator,
 							  campaign,
 							  owner)
@@ -68,8 +69,9 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT4)
 				$2,				-- orgTree
 				$3,				-- classif
 				$4,				-- treeType
+				$5,				-- state
 				vCreatorID,
-				$5,				-- campaign
+				$6,				-- campaign
 				vCreatorID);
 
 		IF NOT FOUND THEN

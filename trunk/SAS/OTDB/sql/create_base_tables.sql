@@ -27,6 +27,7 @@ DROP TABLE param_type 	  CASCADE;
 DROP TABLE validation 	  CASCADE;
 DROP TABLE unit		 	  CASCADE;
 DROP TABLE treetype 	  CASCADE;
+DROP TABLE treestate 	  CASCADE;
 
 DROP TABLE campaign 	  CASCADE;
 DROP TABLE operator 	  CASCADE;
@@ -39,17 +40,13 @@ DROP TABLE operator 	  CASCADE;
 CREATE TABLE classification (
 	ID			INT2			NOT NULL,
 	name		VARCHAR(15)		NOT NULL,
-	baseID		BOOL			DEFAULT TRUE,
-	reference	BOOL			DEFAULT TRUE,
 
 	CONSTRAINT class_id_uniq	UNIQUE (ID),
 	CONSTRAINT class_name_uniq	UNIQUE (name)
 ) WITHOUT OIDS;
-INSERT INTO classification VALUES (1, 'development', TRUE, TRUE);
-INSERT INTO classification VALUES (2, 'test', 		 TRUE, TRUE);
-INSERT INTO classification VALUES (3, 'operational', TRUE, TRUE);
-INSERT INTO classification VALUES (4, 'equal', 		 FALSE, TRUE);
-INSERT INTO classification VALUES (5, 'obsolete', 	 TRUE, FALSE);
+INSERT INTO classification VALUES (1, 'development');
+INSERT INTO classification VALUES (2, 'test');
+INSERT INTO classification VALUES (3, 'operational');
 
 --
 -- Constraint table
@@ -154,23 +151,37 @@ INSERT INTO unit values (9, 'MHz',		'MHz',	 '',			false);
 --
 -- Treetype table
 -- 
--- Define states/lables for trees that indicate the phase of the
--- lifecycle the tree is in.
+-- Define the kind of tree the information refers to.
 CREATE TABLE treetype (
 	ID			INT2			NOT NULL,
 	name		VARCHAR(10)		NOT NULL,
 
-	CONSTRAINT treetype_uniq	UNIQUE(ID),
-	CONSTRAINT treename_uniq	UNIQUE(name)
+	CONSTRAINT typeID_uniq		UNIQUE(ID),
+	CONSTRAINT typename_uniq	UNIQUE(name)
 )WITHOUT OIDS;
 INSERT INTO treetype VALUES (10, 'hardware');
 INSERT INTO treetype VALUES (20, 'VItemplate');
-INSERT INTO treetype VALUES (30, 'configure');
-INSERT INTO treetype VALUES (40, 'schedule');
-INSERT INTO treetype VALUES (50, 'queued');
-INSERT INTO treetype VALUES (60, 'active');
-INSERT INTO treetype VALUES (70, 'finished');
-INSERT INTO treetype VALUES (80, 'obsolete');
+INSERT INTO treetype VALUES (30, 'VHtree');
+
+--
+-- Treetype table
+-- 
+-- Define states for trees that indicate the phase of the
+-- lifecycle the tree is in.
+CREATE TABLE treestate (
+	ID			INT2			NOT NULL,
+	name		VARCHAR(10)		NOT NULL,
+
+	CONSTRAINT stateid_uniq		UNIQUE(ID),
+	CONSTRAINT statename_uniq	UNIQUE(name)
+)WITHOUT OIDS;
+INSERT INTO treestate VALUES (  0, 'idle');
+INSERT INTO treestate VALUES (100, 'configure');
+INSERT INTO treestate VALUES (200, 'schedule');
+INSERT INTO treestate VALUES (300, 'queued');
+INSERT INTO treestate VALUES (400, 'active');
+INSERT INTO treestate VALUES (500, 'finished');
+INSERT INTO treestate VALUES (600, 'obsolete');
 
 --
 -- Campaign table

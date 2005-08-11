@@ -46,6 +46,7 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	row["creationDate"].to(crea);
 	creationDate = time_from_string(crea);
 	row["type"].to(type);
+	row["state"].to(state);
 
 	// next values are optional
 	row["originalTree"].to(originalTree);
@@ -73,6 +74,7 @@ ostream& OTDBtree::print (ostream& os) const
 	os << "creator       : " << creator << endl;
 	os << "creationdate  : " << creationDate << endl;
 	os << "tree type     : " << type << endl;
+	os << "state         : " << state << endl;
 	os << "original tree : " << originalTree << endl;
 	os << "campaign      : " << campaign << endl;
 	os << "starttime     : " << starttime << endl;

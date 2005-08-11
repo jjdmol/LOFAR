@@ -32,6 +32,7 @@
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBnode.h>
 #include <OTDB/TreeTypeConv.h>
+#include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
 
 using namespace LOFAR;
@@ -119,9 +120,11 @@ int main (int	argc, char*	argv[]) {
 	}
 
 	OTDBconnection conn("paulus", "boskabouter", "otdbtest");
+	TreeMaintenance		tm(&conn);
 
 	// Use converters in this testprogram
 	TreeTypeConv	TTconv(&conn);
+	TreeStateConv	TSconv(&conn);
 	ClassifConv		CTconv(&conn);
 
 	try {
@@ -134,13 +137,18 @@ int main (int	argc, char*	argv[]) {
 		vector<OTDBtree>	treeList = 
 				conn.getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
 		showTreeList(treeList);
-		ASSERTSTR(treeList.size(),"No hardware tree found");
+		ASSERTSTR(treeList.size(),"No hardware tree found, run tPICtree first");
 
 		treeIDType	treeID = treeList[treeList.size()-1].treeID();
 		LOG_INFO_STR ("Using tree " << treeID << " for the tests");
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 		
+		LOG_INFO("Trying to change the state of the tree to active(400)");
+		bool 	actionOK = tm.setTreeState(treeID, TSconv.get("active"));
+		ASSERTSTR(actionOK, 
+					"Changing the state to active should NOT have failed!");
+
 		LOG_INFO("Trying to construct a TreeValue object");
 		TreeValue	tv(&conn, treeID);
 
@@ -172,7 +180,6 @@ int main (int	argc, char*	argv[]) {
 			LOG_INFO("Could NOT add the vector of OTDBvalue classes");
 		}
 
-		TreeMaintenance		tm(&conn);
 		OTDBnode topNode = tm.getTopNode(treeID);
 		LOG_INFO_STR("Topnode = " << topNode.nodeID());
 		LOG_INFO("Testing searchInperiod on depth");

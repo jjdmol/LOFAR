@@ -10,6 +10,7 @@
 
 \i security_func.sql
 \i classify_func.sql
+\i setTreeState_func.sql
 
 \i misc_func.sql
 

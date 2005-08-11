@@ -1,5 +1,5 @@
 --
---  SetTreeType.sql: function for changing the type of the tree
+--  SetTreeState.sql: function for changing the State of the tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,9 +23,9 @@
 --
 
 --
--- setTreeType (authToken, treeID, treeType)
+-- setTreeState (authToken, treeID, treeState)
 --
--- Checks if the treetype is legal before assigning it.
+-- Checks if the treeState is legal before assigning it.
 --
 -- Authorisation: yes
 --
@@ -33,19 +33,21 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION setTreeType(INT4, INT4, INT2)
+CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
   RETURNS BOOLEAN AS '
 	DECLARE
 		vFunction				INT2 := 1;
-		vTreeType				OTDBtree.treetype%TYPE;
+		vTreeState				OTDBtree.state%TYPE;
+		vTreeID					OTDBtree.treeID%TYPE;
+		vTreeType				OTDBtree.treeType%TYPE;
+		vClassif				OTDBtree.classif%TYPE;
 		vIsAuth					BOOLEAN;
 		vAuthToken				ALIAS FOR $1;
 		TThardware CONSTANT		INT2 := 10;
-		TTtemplate CONSTANT		INT2 := 20;
-		TTobsolete CONSTANT		INT2 := 80;
+		TSactive   CONSTANT		INT2 := 400;
 
 	BEGIN
-		-- check authorisation(authToken, treeID, func, treeType)
+		-- check authorisation(authToken, treeID, func, treeState)
 		vIsAuth := FALSE;
 		SELECT isAuthorized(vAuthToken, $2, vFunction, $3::int4) 
 		INTO   vIsAuth;
@@ -56,39 +58,40 @@ CREATE OR REPLACE FUNCTION setTreeType(INT4, INT4, INT2)
 
 		-- check classification
 		SELECT	id
-		INTO	vTreeType
-		FROM	treetype
+		INTO	vTreeState
+		FROM	treeState
 		WHERE	id = $3;
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Treetype % does not exist\', $3;
+			RAISE EXCEPTION \'TreeState % does not exist\', $3;
 			RETURN FALSE;
 		END IF;
 
 		-- get current treetype. 
 		-- Note: tree existance is checked during auth.check
-		SELECT 	treetype
-		INTO   	vTreeType
+		SELECT 	treetype, classif
+		INTO   	vTreeType, vClassif
 		FROM	OTDBtree
 		WHERE	treeID = $2;
 
-		-- restriction 1: hardware and template trees may only be changed
-		-- to obsolete.
-		IF vTreeType = TThardware OR vTreeType = TTtemplate THEN
-		  IF $3 != TTobsolete THEN
-			RAISE EXCEPTION \'Tree may only be changed to type obsolete.\';
-			RETURN FALSE;
-		  END IF;
-		END IF;
-
-		-- restriction 2: nothing can be changed into hardware of template
-		IF $3 = TThardware OR $3 = TTtemplate THEN
-		  RAISE EXCEPTION \'Tree can not be changed to this type.\';
-		  RETURN FALSE;
-		END IF;
+        -- changing PIC tree to operational?
+        -- restriction: only 1 PIC may be active of each classification
+        IF vTreeType = TThardware AND $3 = TSactive THEN
+            SELECT  treeid
+            INTO    vTreeID     -- dummy
+            FROM    OTDBtree
+            WHERE   treetype = TThardware
+            AND     classif  = vClassif
+            AND     state    = TSactive
+			AND		treeID  <> $2;
+            IF FOUND THEN
+                RAISE EXCEPTION \'Already an active hardware tree of the same classification.\';
+                RETURN FALSE;
+            END IF;
+        END IF;
 
 		-- Finally update tree
 		UPDATE	OTDBtree
-		SET		treetype = $3
+		SET		state = $3
 		WHERE	treeid = $2;
 
 		RETURN TRUE;

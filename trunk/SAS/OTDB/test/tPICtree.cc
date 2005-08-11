@@ -29,6 +29,8 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBnode.h>
+#include <OTDB/TreeStateConv.h>
+#include <OTDB/ClassifConv.h>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
@@ -71,14 +73,14 @@ int main (int	argc, char*	argv[]) {
 
 	try {
 
-		LOG_DEBUG("Trying to connect to the database");
+		LOG_INFO("Trying to connect to the database");
 		ASSERTSTR(conn.connect(), "Connnection failed");
 		LOG_INFO_STR("Connection succesful: " << conn);
 
-		LOG_DEBUG("Trying to construct a TreeMaintenance object");
+		LOG_INFO("Trying to construct a TreeMaintenance object");
 		TreeMaintenance	tm(&conn);
 
-		LOG_DEBUG("Trying to load a master PIC file");
+		LOG_INFO("Trying to load a master PIC file");
 		treeIDType	treeID = tm.loadMasterFile ("tPICtree.in");
 		ASSERTSTR(treeID, "Loading of PIC masterfile failed");
 
@@ -86,29 +88,30 @@ int main (int	argc, char*	argv[]) {
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 		
-		LOG_DEBUG("Trying to get the topnode of the tree");
+		LOG_INFO("Trying to get the topnode of the tree");
 		OTDBnode	topNode = tm.getTopNode(treeID);
 		LOG_INFO_STR(topNode);
 
-		LOG_DEBUG("Trying to get a collection of items on depth=0");
+		LOG_INFO("Trying to get a collection of items on depth=0");
 		vector<OTDBnode> nodeList = tm.getItemList(treeID, topNode.nodeID(), 0);
 		showList(nodeList);
 
-		LOG_DEBUG("Trying to get a collection of items on depth=1");
+		LOG_INFO("Trying to get a collection of items on depth=1");
 		nodeList = tm.getItemList(treeID, topNode.nodeID(), 1);
 		showList(nodeList);
 
-		LOG_DEBUG("Trying to get a collection of items on depth=2");
+		LOG_INFO("Trying to get a collection of items on depth=2");
 		nodeList = tm.getItemList(treeID, topNode.nodeID(), 2);
 		showList(nodeList);
 		
 		uint32	elemNr = nodeList.size() - 1;
-		LOG_DEBUG_STR("Zooming in on node " << nodeList[elemNr].nodeID());
+		LOG_INFO_STR("Zooming in on node " << nodeList[elemNr].nodeID());
 		OTDBnode	aNode = tm.getNode(treeID, nodeList[elemNr].nodeID());
 		LOG_INFO_STR(aNode);
 
-		LOG_DEBUG("Trying to classify the tree to 3");
-		bool	actionOK = tm.setClassification(treeID, 3);
+		ClassifConv	CTconv(&conn);
+		LOG_INFO("Trying to classify the tree to operational");
+		bool	actionOK = tm.setClassification(treeID, CTconv.get("operational"));
 		if (actionOK) {
 			LOG_INFO("Setting classification was succesful");
 		}
@@ -118,26 +121,21 @@ int main (int	argc, char*	argv[]) {
 		treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 
-		// TODO: use a converter type for value 20.
-		LOG_DEBUG("Trying to change the type/state of the tree to 20");
+		LOG_INFO("Trying to change the state of the tree to 20");
 		try { // this is NOT allowed we should get an exception!
-			actionOK = tm.setTreeType(treeID, 20);
-			LOG_FATAL("Changing the type to 20 should have failed!");
+			actionOK = tm.setTreeState(treeID, 20);
+			LOG_FATAL("Changing the state to 20 should have failed!");
 			return (1);
 		}
 		catch (std::exception&	ex) {
-			LOG_INFO("Setting treetype to 20 was NOT succesful, THIS IS OK");
+			LOG_INFO("Setting treestate to 20 was NOT succesful, THIS IS OK");
 		}
 
-		LOG_DEBUG("Trying to change the type/state of the tree to 40");
-		try { // this is NOT allowed we should get an exception!
-			actionOK = tm.setTreeType(treeID, 40);
-			LOG_FATAL("Changing the type to 40 should have failed!");
-			return (1);
-		}
-		catch (std::exception&	ex) {
-			LOG_INFO("Setting treetype to 40 was NOT succesful, THIS IS OK");
-		}
+		TreeStateConv	TSconv(&conn);
+		LOG_INFO("Trying to change the state of the tree to schedule(200)");
+		actionOK = tm.setTreeState(treeID, TSconv.get("schedule"));
+		ASSERTSTR(actionOK, 
+					"Changing the state to schedule should NOT have failed!");
 
 		treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);

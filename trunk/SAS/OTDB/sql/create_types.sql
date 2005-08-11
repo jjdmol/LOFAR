@@ -38,6 +38,7 @@ CREATE TYPE treeInfo AS (
 	creator			VARCHAR(20),	-- OTDBuser.username%TYPE,
 	creationDate	timestamp(0),
 	type			INT2,			-- treetype.ID%TYPE,
+	state			INT2,			-- treestate.ID%TYPE,
 	originalTree	INT4,			-- OTDBtree.treeID%TYPE,
 	campaign		VARCHAR(30),	-- campaign.name%TYPE,
 	starttime		timestamp(0),

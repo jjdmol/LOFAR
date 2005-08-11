@@ -57,12 +57,15 @@ const int16	TCobsolete			= 3;
 // Enumeration of tree types.
 const int16	TThardware			= 10;
 const int16	TTtemplate			= 20;
-const int16	TTconfigure			= 30;
-const int16	TTschedule			= 40;
-const int16	TTqueued			= 50;
-const int16	TTactive			= 60;
-const int16	TTfinished			= 70;
-const int16	TTobsolete			= 80;
+const int16	TTVHtree			= 30;
+
+const int16	TSidle				= 0;
+const int16	TSconfigure			= 100;
+const int16	TSschedule			= 200;
+const int16	TSqueued			= 300;
+const int16	TSactive			= 400;
+const int16	TSfinished			= 500;
+const int16	TSobsolete			= 600;
 
 
 // @}
