@@ -65,8 +65,6 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
 	    vQuery := vQuery || chr(39);
 	  END IF;
 
-perform logmsg(vQuery);
-
 	  -- finally get result
 	  FOR vRecord IN EXECUTE \'
 	    SELECT h.nodeid,
@@ -79,10 +77,50 @@ perform logmsg(vQuery);
 			   h.value,
 			   \\\'\\\'::text	-- n.description 
 		FROM   VIChierarchy h
- --			   NOTE: join depends on leaf; see getNode function
+ --			   TODO: join depends on leaf; see getNode function
  --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
 		WHERE  h.treeID = \' || $1 || \'
 	    AND	   h.name \' || vQuery 
+	  LOOP
+		RETURN NEXT vRecord;
+	  END LOOP;
+	  RETURN;
+	END
+' LANGUAGE plpgsql;
+
+--
+-- getVHitemList (treeID, namefragment)
+-- 
+-- Get a list of items.
+--
+-- Authorisation: none
+--
+-- Tables: 	picparamref		read
+--			pichierarchy	read
+--
+-- Types:	OTDBnode
+--
+CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
+  RETURNS SETOF OTDBnode AS '
+	DECLARE
+		vRecord		RECORD;
+
+	BEGIN
+	  FOR vRecord IN 
+	    SELECT h.nodeid,
+			   h.parentid, 
+			   h.paramrefid,
+			   h.name, 
+			   h.index, 
+			   h.leaf,
+			   1::int2,
+			   h.value,
+			   \'\'::text -- n.description 
+		FROM   VIChierarchy h
+ --			   TODO: join depends on leaf; see getNode function
+ --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
+		WHERE  h.treeID = $1
+	    AND	   h.name like $2 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;

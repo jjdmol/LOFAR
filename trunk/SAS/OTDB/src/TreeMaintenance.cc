@@ -429,7 +429,6 @@ vector<OTDBnode> TreeMaintenance::getItemList (treeIDType		aTreeID,
 			return (empty);
 		}
 	default:
-		ASSERTSTR(false, "getItemList for VH tree NOT YET IMPLEMENTED");
 		functionName = "getVHitemList";
 		break;
 	}

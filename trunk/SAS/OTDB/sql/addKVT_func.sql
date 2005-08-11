@@ -37,8 +37,6 @@
 --
 -- Types:	none
 --
--- TODO: IMPLEMENT VIC PART
---
 CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
   RETURNS BOOLEAN AS '
 	DECLARE
@@ -69,16 +67,9 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(120), VARCHAR(120), VARCHAR(20))
 		RETURN TRUE;
 	  END IF;
 
-	  -- its a VIC parameter
-	  vParRefID := hVICsearchParamID($1);
-	  IF vParRefID = 0 THEN
-		-- not found? probably a shared param, store on name
-		INSERT INTO VICkvt (paramName, nodeID, value, time)
-		VALUES ($1, 0, $2, vTime);
-	  ELSE
-	    INSERT INTO VICkvt(nodeID, value, time)
-	    VALUES (vParRefID, $2, vTime);
-	  END IF;
+	  -- it is probably a VIC parameter, just store on name.
+	  INSERT INTO VICkvt (paramName, value, time)
+	  VALUES ($1, $2, vTime);
 
 	  RETURN TRUE;
 	END;
