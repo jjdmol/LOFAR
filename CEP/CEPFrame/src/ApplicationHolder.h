@@ -1,4 +1,4 @@
-//# ApplicationHolder.h: Abstract base class for simulator programs
+//# ApplicationHolder.h: Abstract base class for CEPFrame applications.
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -40,7 +40,7 @@ namespace LOFAR
 // @{
 
 /**
-   ApplicationHolder is the abstract base class for simulation application programs.
+   ApplicationHolder is the abstract base class for CEPFrame applications.
    It defines a few methods that need to be implemented in a derived class
    doing the simulation.
 
