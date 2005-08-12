@@ -37,14 +37,19 @@ int main (int argc, const char** argv) {
 
       AH_DelayCompensation myAH;
       myAH.setarg(argc, argv);
+
+      ACC::APS::ParameterSet pSet("TFlopCorrelator.cfg");
+      myAH.setParameters(pSet);
+
       myAH.baseDefine();
       cout << "defined" << endl;
       Profiler::init();
       myAH.basePrerun();
       cout << "init done" << endl;
       Profiler::activate();
-      cout << "run" << endl;
-      myAH.baseRun(1);
+      int nrRuns = pSet.getInt32("DelayCompensation.nrRuns");
+      cout << "run " << nrRuns << " times" << endl;
+      myAH.baseRun(nrRuns);
       cout << "run complete" << endl;
       myAH.baseDump();
       myAH.baseQuit();
