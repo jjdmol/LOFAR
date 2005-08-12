@@ -46,9 +46,12 @@ sysconf_DATA = \
 # protocol library, use this to use the CAL protocol
 lib_LTLIBRARIES = libcal.la libcaldevel.la
 
+libcal_ladir = $(prefix)/include
+libcal_la_HEADERS = \
+	AntennaGains.h
+
 libcal_la_SOURCES = \
 	$(top_builddir)/src/CAL_Protocol.cc \
-	AntennaGains.h \
 	AntennaGains.cc
 
 # convenience library
