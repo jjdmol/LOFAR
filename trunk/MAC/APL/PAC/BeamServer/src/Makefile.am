@@ -16,18 +16,23 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	BS_Protocol.ph \
 	BeamServerPorts.conf \
-	BeamServer.conf
+	BeamServer.conf \
+	BeamServer.log_prop
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
 	BeamServerPorts.conf \
-	BeamServer.conf
+	BeamServer.conf \
+	BeamServer.log_prop
 
 include_HEADERS = \
 	$(top_builddir)/src/BS_Protocol.ph
 
 %.properties: %.properties.in
+	cp $< $@
+
+%.log_prop: %.log_prop.in
 	cp $< $@
 
 %.conf: %.conf.in

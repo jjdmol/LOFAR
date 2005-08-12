@@ -148,7 +148,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	pointto.handle = ack.handle;
 	pointto.type=3;
 
-	for (int t = 0; t <= 10; t+=5)
+	for (int t = 20; t <= 40; t+=5)
 	{
 	    pointto.timestamp.setNow(t);
 	    pointto.angle[0]=0.0;

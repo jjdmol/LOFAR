@@ -136,7 +136,7 @@ void Beamlets::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	      continue;
 	    }
 
-	  LOG_DEBUG_STR("lmn(t=0)=" << (*lmn)(0,all));
+	  if (0 == bi) LOG_DEBUG_STR("lmn[" << bi << "=" << (*lmn));
 
 	  if (compute_interval != lmn->extent(firstDim))
 	    {
@@ -149,7 +149,7 @@ void Beamlets::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	  if (beamlet->spw())
 	    {
 	      freq = beamlet->spw()->getSubbandFreq(beamlet->subband());
-	      LOG_DEBUG_STR("freq = " << freq);
+	      if (0 == bi) LOG_DEBUG_STR("freq = " << freq);
 	    }
 
 	  //

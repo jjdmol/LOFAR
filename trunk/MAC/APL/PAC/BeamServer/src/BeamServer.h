@@ -76,20 +76,6 @@ namespace LOFAR {
 	 */
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
-	/**
-	 * The wait4ack state. This state is entered when a request has
-	 * been sent to the RSP driver and the BeamServer is waiting
-	 * for the acknowledgement. After receiving the acknowledgement
-	 * the statemachine returns to the 'enabled' state.
-	 */
-	GCFEvent::TResult wait4ack(GCFEvent& e, GCFPortInterface &p);
-
-	/**
-	 * This handler handles all events that should be handled
-	 * irrespective of the state ('enabled' or 'waiting').
-	 */
-	GCFEvent::TResult handle_request(GCFEvent& e, GCFPortInterface &p);
-
 	// action methods
 
 	/**
@@ -119,7 +105,7 @@ namespace LOFAR {
 	/**
 	 * Send weights to the board.
 	 */
-	void send_weights();
+	void send_weights(RTC::Timestamp time);
 
 	/**
 	 * Determine the new subband selection after a beam
@@ -159,10 +145,11 @@ namespace LOFAR {
 	std::list<GCFPortInterface*> m_client_list; // list of currently connected clients
 	std::list<GCFPortInterface*> m_dead_clients; // list of disconnected clients to be removed
 
-	std::map<GCFPortInterface*, std::set<uint32> > m_client_beams; // mapping from client port to set of beam handles
+	std::map<GCFPortInterface*, std::set<Beam*> > m_client_beams; // mapping from client port to set of beams
 
-	GCFPort          m_rspdriver;
-	bool             m_beams_modified;
+	GCFPort m_rspdriver;
+	GCFPort m_calserver;  
+	bool    m_beams_modified;
 
 	int              m_nrcus;
 

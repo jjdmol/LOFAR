@@ -195,15 +195,15 @@ namespace LOFAR {
 		double sampling_frequency, int nyquist_zone);
 
       /**
-       * Get an existing beam by handle.
+       * Check if a beam exists.
        */
-      Beam* get(uint32 handle);
+      bool exists(Beam* beam);
 
       /**
-       * Destroy a beam by handle.
-       * @return bool true if beam found (and destroyed), false otherwise
+       * Destroy a beam. The beam is 'delete'ed.
+       * @return bool true if beam has been found and deleted, false otherwise
        */
-      bool destroy(uint32 handle);
+      bool destroy(Beam* beam);
 
       /**
        * Calculate weights for all beamlet of all beams
