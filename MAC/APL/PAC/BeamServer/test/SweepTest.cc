@@ -121,52 +121,53 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
-  static uint32 beam_handle = 0;
 
   static int beam_count = 0;
+  static uint32 beam_handles[MEPHeader::N_BEAMLETS];
   
   switch (e.signal)
-  {
-      case F_ENTRY:
+    {
+    case F_ENTRY:
       {
-	  //
-	  // send beam allocation, select a single subband
-	  // this creates the first beam of N_BEAMLETS beams
-	  //
-	  BSBeamallocEvent alloc;
-	  alloc.subarrayname = "ITS-LBA";
-	  alloc.allocation()[0] = 0;
+	//
+	// send beam allocation, select a single subband
+	// this creates the first beam of N_BEAMLETS beams
+	//
+	BSBeamallocEvent alloc;
+	alloc.subarrayname = "ITS-LBA";
+	beam_count=0;
+	alloc.allocation()[beam_count] = 0;
 
-	  TESTC(beam_server.send(alloc));
+	TESTC(beam_server.send(alloc));
       }
       break;
       
-      case BS_BEAMALLOCACK:
+    case BS_BEAMALLOCACK:
       {
 	BSBeamallocackEvent ack(e);
 	TESTC(BS_Protocol::SUCCESS == ack.status);
 	if (BS_Protocol::SUCCESS != ack.status)
-	{
-	  LOG_FATAL("Failed to allocate beam.");
-	  exit(EXIT_FAILURE);
-	}
+	  {
+	    LOG_FATAL("Failed to allocate beam.");
+	    exit(EXIT_FAILURE);
+	  }
 
-	beam_handle = ack.handle;
-	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
+	beam_handles[beam_count] = ack.handle;
+	LOG_DEBUG(formatString("got beam_handle=%d", ack.handle));
 
 	//
 	// keep allocating beams until we have N_BEAMLETS beams
 	//
 	if (++beam_count < MEPHeader::N_BEAMLETS)
-	{
-	  BSBeamallocEvent alloc;
-	  alloc.subarrayname = "ITS-LBA";
-	  alloc.allocation()[0] = 0;
+	  {
+	    BSBeamallocEvent alloc;
+	    alloc.subarrayname = "ITS-LBA";
+	    alloc.allocation()[beam_count] = 0;
 	  
-	  TESTC(beam_server.send(alloc));
-	}
+	    TESTC(beam_server.send(alloc));
+	  }
 	else
-	{
+	  {
 	    // all beams created
 	    
 	    // send pointto commands from -90 through 0 to 90
@@ -175,43 +176,49 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	    
 	    // this sends N_BEAMLETS pointto messages, one for each beam
 	    for (int beam = 0; beam < MEPHeader::N_BEAMLETS; beam++)
-	    {
-		pointto.handle = beam;
+	      {
+		pointto.handle = beam_handles[beam];
 		pointto.timestamp.setNow(20);
 		pointto.angle[0]=0.0;
 		pointto.angle[1]=cos(((double)beam/MEPHeader::N_BEAMLETS)*M_PI);
 		
 		TESTC(beam_server.send(pointto));
-	    }
+	      }
 
 	    // let the beamformer compute for 120 seconds
 	    timerid = beam_server.setTimer((long)120);
-	}
+	  }
       }
       break;
 
-      case F_TIMER:
+    case F_TIMER:
       {
-	  // done => send BEAMFREE
-	  BSBeamfreeEvent beamfree;
-	  beamfree.handle = beam_handle;
+	TRAN(SweepTest::done);
 
-	  TESTC(beam_server.send(beamfree));
+#if 0
+	// done => send BEAMFREE
+	BSBeamfreeEvent beamfree;
+	beamfree.handle = beam_handles[beam_count];
+
+	TESTC(beam_server.send(beamfree));
+#endif
       }
       break;
 
-      case BS_BEAMFREEACK:
+#if 0
+    case BS_BEAMFREEACK:
       {
 	BSBeamfreeackEvent ack(e);
 	TESTC(BS_Protocol::SUCCESS == ack.status);
-	TESTC(beam_handle == ack.handle);
+	TESTC(beam_handles[beam_count++] == ack.handle);
 
 	// test completed, next test
 	TRAN(SweepTest::done);
       }
       break;
+#endif
 
-      case F_DISCONNECTED:
+    case F_DISCONNECTED:
       {
         FAIL("disconnected");
 	port.close();
@@ -219,19 +226,19 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_EXIT:
+    case F_EXIT:
       {
 	// before leaving, cancel the timer
 	beam_server.cancelTimer(timerid);
       }
       break;
 
-      default:
+    default:
       {
-	  status = GCFEvent::NOT_HANDLED;
+	status = GCFEvent::NOT_HANDLED;
       }
       break;
-  }
+    }
 
   return status;
 }

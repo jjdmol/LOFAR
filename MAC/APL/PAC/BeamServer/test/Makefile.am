@@ -71,7 +71,8 @@ SweepTest_LDADD = \
 
 BUILT_SOURCES = \
 	AVTStub.conf \
-	EPATest.conf
+	EPATest.conf \
+	SweepTest.conf
 
 EXTRA_DIST = \
 	$(BUILT_SOURCES) \
@@ -80,7 +81,8 @@ EXTRA_DIST = \
 
 sysconf_DATA = \
 	AVTStub.conf \
-	EPATest.conf
+	EPATest.conf \
+	SweepTest.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

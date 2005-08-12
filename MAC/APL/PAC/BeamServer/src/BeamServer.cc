@@ -23,6 +23,7 @@
 
 #include "BS_Protocol.ph"
 #include "RSP_Protocol.ph"
+#include "CAL_Protocol.ph"
 
 #include "BeamServer.h"
 
@@ -74,6 +75,7 @@ BeamServer::BeamServer(string name)
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, BS_PROTOCOL);
   m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
+  m_calserver.init(*this, "calserver", GCFPortInterface::SAP, CAL_PROTOCOL);
 
 }
 
@@ -82,13 +84,12 @@ BeamServer::~BeamServer()
 
 bool BeamServer::isEnabled()
 {
-  return m_rspdriver.isConnected();
+  return m_rspdriver.isConnected() && m_calserver.isConnected();
 }
 
 GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static unsigned long update_timer = (unsigned long)-1;
   
   switch(e.signal)
     {
@@ -98,9 +99,7 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
     case F_ENTRY:
       {
 	if (!m_rspdriver.isConnected()) m_rspdriver.open();
-
-	// start the update timer if it wasn't already started
-	if ((unsigned long)-1 == update_timer) update_timer = m_rspdriver.setTimer(0, 0, UPDATE_INTERVAL, 0);
+	if (!m_calserver.isConnected()) m_calserver.open();
       }
       break;
 
@@ -138,8 +137,8 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
       {
-	// no need to set this timer, the update timer will cause re-open anyway
-	//port.setTimer((long)3); // try again in 3 seconds
+	// try connecting again in 2 seconds
+	port.setTimer((long)2);
 	LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
 	port.close();
       }
@@ -186,6 +185,8 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
   {
     case F_ENTRY:
     {
+      // start update timer
+      m_rspdriver.setTimer(0, 0, UPDATE_INTERVAL, 0);
       if (!m_acceptor.isConnected()) m_acceptor.open();
     }
     break;
@@ -211,7 +212,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
     {
       GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
-      LOG_INFO(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+      LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
 
       period++;
       if (0 == (period % COMPUTE_INTERVAL))
@@ -219,9 +220,9 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	period = 0;
 
 	// compute new weights after sending weights
-	compute_weights(Timestamp(timer->sec, 0));
+	compute_weights(Timestamp(timer->sec, 0) + COMPUTE_INTERVAL);
 
-	send_weights();
+	send_weights(Timestamp(timer->sec,0) + COMPUTE_INTERVAL);
       }
 
       if (m_beams_modified)
@@ -233,11 +234,26 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
     }
     break;
 
-    case BS_BEAMPOINTTO:
     case BS_BEAMALLOC:
+    {
+      BSBeamallocEvent event(e);
+      beamalloc_action(event, port);
+    }
+    break;
+
     case BS_BEAMFREE:
-      status = handle_request(e, port);
-      break;
+    {
+      BSBeamfreeEvent event(e);
+      beamfree_action(event, port);
+    }
+    break;
+
+    case BS_BEAMPOINTTO:
+    {
+      BSBeampointtoEvent event(e);
+      beampointto_action(event, port);
+    }
+    break;
       
     case RSP_SETWEIGHTSACK:
     {
@@ -264,7 +280,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
       port.close();
 
-      if (&m_rspdriver == &port || &m_acceptor == &port)
+      if (&m_rspdriver == &port || &m_acceptor == &port || &m_calserver == &port)
       {
 	m_acceptor.close();
 	TRAN(BeamServer::initial);
@@ -272,11 +288,10 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
       else
       {
 	// deallocate all beams for this client
-	for (set<uint32>::iterator handle = m_client_beams[&port].begin();
-	     handle != m_client_beams[&port].end();
-	     ++handle)
+	for (set<Beam*>::iterator beamit = m_client_beams[&port].begin();
+	     beamit != m_client_beams[&port].end(); ++beamit)
 	{
-	  if (!m_beams.destroy((uint32)*handle)) {
+	  if (!m_beams.destroy(*beamit)) {
 	    LOG_WARN("Beam not found...");
 	  }
 	}
@@ -293,6 +308,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
     case F_EXIT:
     {
+      m_rspdriver.cancelAllTimers();
     }
     break;
 
@@ -302,41 +318,6 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
   }
 
   return status;
-}
-
-GCFEvent::TResult BeamServer::handle_request(GCFEvent& e, GCFPortInterface& port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case BS_BEAMALLOC:
-    {
-      BSBeamallocEvent event(e);
-      beamalloc_action(event, port);
-    }
-    break;
-
-    case BS_BEAMFREE:
-    {
-      BSBeamfreeEvent event(e);
-      beamfree_action(event, port);
-    }
-    break;
-
-    case BS_BEAMPOINTTO:
-    {
-      BSBeampointtoEvent event(e);
-      beampointto_action(event, port);
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;  
 }
 
 void BeamServer::beamalloc_action(BSBeamallocEvent& ba,
@@ -350,7 +331,7 @@ void BeamServer::beamalloc_action(BSBeamallocEvent& ba,
   {
     LOG_ERROR("BEAMALLOC: allocation larger than N_BEAMLETS");
     
-    ack.status = ERR_RANGE;
+    ack.status = BS_Protocol::ERR_RANGE;
     port.send(ack);
     return;                          // RETURN
   }
@@ -361,12 +342,12 @@ void BeamServer::beamalloc_action(BSBeamallocEvent& ba,
   if (!beam) {
 
     LOG_ERROR("BEAMALLOC failed.");
-    ack.status = ERR_BEAMALLOC;
+    ack.status = BS_Protocol::ERR_BEAMALLOC;
 
   } else {
 
     ack.handle = (uint32)beam;
-    m_client_beams[&port].insert((uint32)beam);
+    m_client_beams[&port].insert(beam);
     update_sbselection();
   }
 
@@ -379,17 +360,18 @@ void BeamServer::beamfree_action(BSBeamfreeEvent& bf,
   BSBeamfreeackEvent ack;
   ack.handle = bf.handle;
   ack.status = BS_Protocol::SUCCESS;
+  
+  Beam* beam = (Beam*)bf.handle;
 
-  if (!m_beams.destroy(bf.handle)) {
+  if (!m_beams.destroy(beam)) {
 
     LOG_ERROR("BEAMFREE failed");
 
-    ack.status = ERR_BEAMFREE;
+    ack.status = BS_Protocol::ERR_BEAMFREE;
 
   } else {
 
-    //m_beams.erase(beam);
-    m_client_beams[&port].erase(bf.handle);
+    m_client_beams[&port].erase(beam);
     update_sbselection();
 
   }
@@ -400,9 +382,9 @@ void BeamServer::beamfree_action(BSBeamfreeEvent& bf,
 void BeamServer::beampointto_action(BSBeampointtoEvent& pt,
 				    GCFPortInterface& /*port*/)
 {
-  Beam* beam = m_beams.get(pt.handle);
+  Beam* beam = (Beam*)pt.handle;
 
-  if (beam)
+  if (m_beams.exists(beam))
     {
       LOG_INFO_STR("received new coordinates: " << pt.angle[0] << ", "
 		   << pt.angle[1] << ", time=" << pt.timestamp);
@@ -438,7 +420,8 @@ inline complex<int16_t> convert2complex_int16_t(complex<W_TYPE> cd)
 }
 
 /**
- * This method is called once every second
+ * This method is called once every period
+ * of COMPUTE_INTERVAL seconds
  * to calculate the weights for all beamlets.
  */
 void BeamServer::compute_weights(Timestamp time)
@@ -456,12 +439,12 @@ void BeamServer::compute_weights(Timestamp time)
   LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
-void BeamServer::send_weights()
+void BeamServer::send_weights(Timestamp time)
 {
   if (!GET_CONFIG("BeamServer.DISABLE_SETWEIGHTS", i)) {
     RSPSetweightsEvent sw;
 
-    sw.timestamp.setNow(COMPUTE_INTERVAL); // activate after COMPUTE_INTERVAL seconds
+    sw.timestamp = time;
     LOG_DEBUG_STR("sw.time=" << sw.timestamp);
 
     // select all BLPS, no subarraying

@@ -47,6 +47,7 @@ Beam::Beam(double sampling_frequency, int nyquist_zone, int nsubbands) :
 
 Beam::~Beam()
 {
+  deallocate();
 }
 
 bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets)
@@ -276,32 +277,26 @@ Beam* Beams::get(Beamlet2SubbandMap allocation,
   return beam;
 }
 
-Beam* Beams::get(uint32 handle)
+bool Beams::exists(Beam *beam)
 {
-  Beam* beam = (Beam*)handle;
-
   // if beam not found, return 0
   list<Beam*>::const_iterator it = find(m_beams.begin(),
 					m_beams.end(),
 					beam);
-  if (it == m_beams.end()) {
-    beam = 0;
-  }
+  if (it == m_beams.end()) return false;
   
-  return beam;
+  return true;
 }
 
-bool Beams::destroy(uint32 handle)
+bool Beams::destroy(Beam* beam)
 {
-  Beam* beam = (Beam*)handle;
-
-  // if beam not found, return 0
+  // if beam not found, return false
   list<Beam*>::iterator it = find(m_beams.begin(),
 				  m_beams.end(),
 				  beam);
   if (it != m_beams.end()) {
-    delete beam;
     m_beams.erase(it);
+    delete(*it);
     return true;
   }
 
