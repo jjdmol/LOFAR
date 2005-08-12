@@ -119,7 +119,9 @@ void ApplicationHolder::prerun()
 }
 
 void ApplicationHolder::dump() const
-{}
+{ 
+  itsComposite.dump();
+}
 
 void ApplicationHolder::postrun()
 {
