@@ -75,19 +75,15 @@ void* WriteToBufferThread(void* arguments)
     }
    
     // get the actual timestamp of first EPApacket in frame
-    int hdr_stationid_idx = 4;
-    if (args->EPAHeaderSize == 14) {
-      hdr_stationid_idx = 2;
-    }
-    seqid   = ((int*)&recvframe[hdr_stationid_idx+4])[0];
-    blockid = ((int*)&recvframe[hdr_stationid_idx+8])[0];
+    seqid   = ((int*)&recvframe[8])[0];
+    blockid = ((int*)&recvframe[12])[0];
     actualstamp.setStamp(seqid ,blockid);
 
 
     // firstloop
     if (firstloop) {
       nextstamp.setStamp(seqid, blockid);  // init nextstamp
-      *args->StationIDptr =((int*)&recvframe[hdr_stationid_idx])[0]; // get stationid
+      *args->StationIDptr =((int*)&recvframe[4])[0]; // get stationid
       firstloop = false;
     }
 
