@@ -43,15 +43,20 @@ void* WriteToBufferThread(void* arguments)
   LOG_TRACE_FLOW_STR("WH_RSPInput WriterThread");   
    
   thread_args* args = (thread_args*)arguments;
-  
-  char recvframe[9000];
   int seqid, blockid;
   timestamp_t actualstamp, nextstamp;
   bool readnew = true;
   bool firstloop = true;
 
+  // buffer for incoming packet
+  char recvframe[args->FrameSize];
+
+  // define a block of dummy data
   char dummyblock[args->nrPacketsInFrame];
   memset(dummyblock,0,args->nrPacketsInFrame);
+
+  // used for debugging
+  int cnt_missed, cnt_old, cnt_rewritten = 0;
 
   while(1) {
    
@@ -59,7 +64,6 @@ void* WriteToBufferThread(void* arguments)
     if (args->Stopthread == true) {
       pthread_exit(NULL);
     }
-   
     // catch a frame from input connection
     if (readnew) {
       try {
@@ -71,15 +75,19 @@ void* WriteToBufferThread(void* arguments)
     }
    
     // get the actual timestamp of first EPApacket in frame
-    seqid   = ((int*)&recvframe[6])[0];
-    blockid = ((int*)&recvframe[10])[0];
+    int hdr_stationid_idx = 4;
+    if (args->EPAHeaderSize == 14) {
+      hdr_stationid_idx = 2;
+    }
+    seqid   = ((int*)&recvframe[hdr_stationid_idx+4])[0];
+    blockid = ((int*)&recvframe[hdr_stationid_idx+8])[0];
     actualstamp.setStamp(seqid ,blockid);
 
 
     // firstloop
     if (firstloop) {
-      nextstamp.setStamp(seqid, blockid);            // init nextstamp
-      *args->StationIDptr =((int*)&recvframe[2])[0]; // get stationid
+      nextstamp.setStamp(seqid, blockid);  // init nextstamp
+      *args->StationIDptr =((int*)&recvframe[hdr_stationid_idx])[0]; // get stationid
       firstloop = false;
     }
 
@@ -90,14 +98,23 @@ void* WriteToBufferThread(void* arguments)
          Otherwise this packet will be lost */
      
       // overwrite its previous created dummy
-      int idx;  //To do: rectmatrix?? 
+      int idx; 
       for (int p=0; p<args->nrPacketsInFrame; p++) {
         for (int s=0; s<args->nrSubbandsInPacket; s++) {
           idx = (p*args->EPAPacketSize) + args->EPAHeaderSize + (s*args->SubbandSize);
-          args->BufControl[s]->rewriteElements(&recvframe[idx], actualstamp, 1);
+          if (!args->BufControl[s]->rewriteElements(&recvframe[idx], actualstamp, 1)) {
+            cnt_old += args->nrPacketsInFrame;
+            cout << cnt_old << " delayed packets lost." << endl;  // debugging
+	    //force a break out these loops
+            p=args->nrPacketsInFrame;
+            break;  
+	  }
         }
+        cnt_rewritten++;
         actualstamp++;
       }
+      cout << cnt_rewritten << " delayed packets recovered." << endl;  // debugging
+
       // read new frame in next loop
       readnew = true;
     }
@@ -106,6 +123,8 @@ void* WriteToBufferThread(void* arguments)
       for (int s=0; s<args->nrSubbandsInPacket; s++) {
         args->BufControl[s]->writeElements(dummyblock, actualstamp,args->nrPacketsInFrame, 1);
       }
+      cnt_missed += args->nrPacketsInFrame;
+      cout << "Dummy created for " << cnt_missed << " missed packets." << endl; // debugging
       // read same frame again in next loop
       readnew = false;
     } 
@@ -124,6 +143,7 @@ void* WriteToBufferThread(void* arguments)
     }
     // increase the nextstamp
     nextstamp += args->nrPacketsInFrame; 
+
   }
 }
 
