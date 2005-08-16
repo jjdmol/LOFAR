@@ -1,4 +1,5 @@
-//  ExampleSim.cc: An example simulator class
+//  ExampleSim.cc: An example application used in the CEPFrame manual
+//                 LOFAR-ASTRON-MAN-005
 //
 //  Copyright (C) 2000, 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
