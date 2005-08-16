@@ -64,7 +64,11 @@ namespace LOFAR {
      DBGASSERTSTR(itsTHs[C_nr] == 0, "Stub output " << C_nr << 
                 " has already been connected.");
       // Create a server socket
-      itsTHs[C_nr] = new TH_Socket(service);
+      itsTHs[C_nr] = new TH_Socket(service,
+				   true,
+				   Socket::TCP,
+				   5,
+				   false);
       itsConnections[C_nr] = new Connection("fromInpSection", 0, 
 					    dm.getGeneralInHolder(dhNr), 
 					    itsTHs[C_nr], true);
@@ -76,7 +80,10 @@ namespace LOFAR {
 		" has already been connected.");
       // Create a client socket
       itsTHs[C_nr] = new TH_Socket(itsPS.getString("CorrConnection.ServerHost"),
-				   service);
+				   service,
+				   true,
+				   Socket::TCP,
+				   false);
       itsConnections[C_nr] = new Connection("toBG", 
 					    dm.getGeneralOutHolder(dhNr), 
 					    0, itsTHs[C_nr], true);
