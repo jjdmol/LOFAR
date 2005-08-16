@@ -79,8 +79,6 @@ void* WriteToBufferThread(void* arguments)
     blockid = ((int*)&recvframe[12])[0];
     actualstamp.setStamp(seqid ,blockid);
 
-    cout << actualstamp << endl;
-
     // firstloop
     if (firstloop) {
       nextstamp.setStamp(seqid, blockid);  // init nextstamp
