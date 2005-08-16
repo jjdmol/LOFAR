@@ -1,4 +1,4 @@
-[+ AutoGen5 template tseprot +]
+[+ AutoGen5 template tse.prot +]
 [+ (out-push-add "/dev/null") +]
 [+ DEFINE prefix_cap +][+ IF (exist? "prefix") +][+ (get "prefix") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE prefix_ucase +][+ IF (exist? "prefix") +][+ (string-upcase (get "prefix")) +][+ ENDIF +][+ ENDDEF +]
@@ -6,6 +6,10 @@
 [+ DEFINE signal_name +][+ prefix_ucase +]_[+ (get "signal") +][+ ENDDEF +]
 [+ DEFINE cap_signal +][+ (string-substitute (string-capitalize! (get "signal")) '( "_" )' ( "" )) +][+ ENDDEF +]
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
+[+ DEFINE event_parm +]
+	[+ IF (*== (get "type") "[]") +][+ (get "name") +]NOE : t_B4,
+	{ [+ (get "name") +] : [+ (substring (get "type") 0 (string-index (get "type") #\[)) +]}[[+ (get "name") +]NOE][+ ELIF (== (get "type") "string") +][+ (get "name") +]NOC : t_StringLen, 
+	[+ (get "name") +] : t_String[[+ (get "name") +]NOC][+ ELSE +][+ (get "name") +] : [+ CASE (get "type") +][+ == unsigned int +]t_uInt[+ == double +]t_Double[+ == long +]t_Long[+ * +][+ (get "type") +][+ ESAC +][+ ENDIF +][+ ENDDEF +]
 [+ (out-pop) +]
 //
 //  [+ (base-name) +].[+ (suffix) +]: [+ description +]
@@ -83,39 +87,45 @@ t_B16                 = {  16 }
 
 //    The Lofar types:
 
-t_Double              =  {   4 }
-t_Int                 =  {   4 }
+
 t_uInt                =  {   4 }
 t_Long                =  {   4 }
 t_uLong               =  {   4 }
-t_String              = -{ 100-, ASCII } // (-) indicates little endian
+t_String              = -{ 65535-, ASCII } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_StringLen						=	 {   2 }
 
-// Example type remove this when you converted the actual Lofar Enums!
-t_WrRegBitField       = { 1, 0x00, 0xFF, BITFIELD,
-                             0x01 : "Use CTRL",
-                             0x02 : "Unspecified",
-                             0x04 : "Unspecified",
-                             0x08 : "Unspecified",
-                             0x10 : "Unspecified",
-                             0x20 : "Unspecified",
-                             0x40 : "Unspecified",
-                             0x80 : "Unspecified"
-                       }
-                       
+int8 									=  {   1 }
+uint8									=  {   1 }
+int16									=  {   2 }
+uint16								=  {   2 }
+int32									=  {   4 }
+uint32								=  {   4 }
+int64									=  {   8 }
+uint64								=  {   8 }
+int                   =  {   4 }
+time_t                =  {   4 }
+timeval               =  {   8 }
+double              	=  {   8 }
+
 // Here are the types from the Lofar template that need conversion!!
 [+ (get "prelude") +]
 
 
 [functions]
 
-// Note: For each function remove the last ',' before the '}'  !!!!
 [+ FOR event "" +]
-[+ signal_name +] =
+F_[+ signal_name +] =
 {
   [+ (get "SigNr") +],
-  [+ FOR param "" +][+ (get "name") +] : [+ CASE (get "type") +][+ == unsigned int +]t_uInt[+ == int +]t_Int[+ == double +]t_Double[+ == long +]t_Long[+ == string +]t_String[+ * +][+ (get "type") +][+ ESAC +],
-  [+ ENDFOR +]
+  msgLength : t_B4[+ FOR param "" +],[+ event_parm +][+ ENDFOR +]
 }
 [+ ENDFOR +]
 
 [events]
+[+ FOR event "" +]
+E_[+ signal_name +] =
+{
+  [+ (get "SigNr") +],
+  msgLength : t_B4[+ FOR param "" +],[+ event_parm +][+ ENDFOR +]
+}
+[+ ENDFOR +]

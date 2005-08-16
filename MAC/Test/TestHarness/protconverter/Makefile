@@ -1,4 +1,4 @@
-CFLAGS  += -Wall -ggdb
+CFLAGS  += -Wall -ggdb -I../../../../installed/gnu_debug/include
 #CC = gcc
 CC = g++
 

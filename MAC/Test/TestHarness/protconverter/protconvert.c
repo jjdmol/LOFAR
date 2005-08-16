@@ -40,10 +40,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "GCF_Protocols.h"
+#include <GCF/TM/GCF_Protocols.h>
 
 #define VERSION "00.2.3"
 #define OUTFILE_EXT ".tmp"
+
+using namespace LOFAR::GCF::TM;
 
 FILE    *pcReadLofarProtFile;   /* filepointer voor inputfile */
 FILE    *pcOutputFile;          /* filepointer voor outputfile */
