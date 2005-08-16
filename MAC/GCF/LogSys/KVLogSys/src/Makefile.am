@@ -79,5 +79,8 @@ configfiles_DATA= \
 %.log_prop: KeyValueLoggerSys.log_prop.in
 	cp $< $@
 	
+clean-local:
+	rm -f *.ph
+
 include $(lofar_sharedir)/Makefile.common
 

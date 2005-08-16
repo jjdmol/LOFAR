@@ -34,5 +34,8 @@ EXTRA_DIST = \
 	PI_Protocol.ph \
 	PA_Protocol.ph
 
+clean-local:
+	rm -f *.ph
+
 include $(lofar_sharedir)/Makefile.common
 
