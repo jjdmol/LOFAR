@@ -107,16 +107,16 @@ SynchronisityManager::~SynchronisityManager()
 //      pthread_join(itsWriters[j], &thread_res);
   }
 
-  for (int k = 0; k < itsNinputs; k++)
-  {
-    delete itsInManagers[k];
-  }
   for (int m = 0; m < itsNoutputs; m++)
   {
     if (itsOutManagers[m]->getSharing() == false)
     {
       delete itsOutManagers[m];
     }
+  }
+  for (int k = 0; k < itsNinputs; k++)
+  {
+    delete itsInManagers[k];
   }
 
   delete [] itsInManagers;
