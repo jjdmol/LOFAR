@@ -14,6 +14,7 @@
 
 #include <APS/ParameterSet.h>
 #include <AH_Storage.h>
+#include <Transport/TH_MPI.h>
 #include <TFC_Interface/Stub_Corr.h>
 #include <TFC_Storage/WH_Storage.h>
 #include <CEPFrame/Step.h>
@@ -64,6 +65,11 @@ void AH_Storage::define(const LOFAR::KeyValueMap&) {
   }
 
   LOG_TRACE_FLOW_STR("Finished define()");
+
+#ifdef HAVE_MPI
+  ASSERTSTR (TH_MPI::getNumberOfNodes() == 1, "TFC_Storage should be started on just one node");
+#endif
+
 }
 
 void AH_Storage::prerun() {

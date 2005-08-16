@@ -70,6 +70,7 @@ class WH_Storage: public WorkHolder
     bool itsWriteToMAC;
     GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;
     GCF::Common::GCFPValueArray itsVArray; 
+    vector<GCF::Common::GCFPVString> itsSubbandStrings;
   };
 } // namespace LOFAR
 
