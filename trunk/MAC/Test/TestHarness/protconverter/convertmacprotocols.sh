@@ -10,13 +10,15 @@ fi
 #
 # Get list of prot files
 #
-files=`/usr/bin/find $1 -name *.prot`
+files=`/usr/bin/find $1 -name "*.prot"`
 
+echo "" > MACall.tse.prot
+echo $files
 #
 # for all .prot files
 #
 for f in $files; do
-
+	echo "Convert $f"
 	#
 	# check protocol type
 	#
@@ -24,11 +26,11 @@ for f in $files; do
 	proto=`grep F_APL_PROTOCOL $f`
 	if [ "$proto" != "" ] ; then
 		echo "$f": APL protocol
-                protNr=10
+    protNr=10
 	else
-        	proto=`grep F_GCF_PROTOCOL $f`
+    proto=`grep F_GCF_PROTOCOL $f`
 		if [ "$proto" != "" ] ; then
-	                echo "$f": GCF protocol
+	    echo "$f": GCF protocol
 			protNr=3
 		fi
 	fi
@@ -44,11 +46,12 @@ for f in $files; do
 		autogen -T TSE-protocol.tpl $fname.tmp
 
 		# concatenate it with previous converted prot files
-		cat $fbase.tseprot >> MACall.tseprot
+		cat $fbase.tse.prot >> MACall.tse.prot
 
 		# cleanup
 		rm -f $fname.tmp
-		rm -f $fbase.tseprot
+		rm -f $fbase.tse.prot
 		echo " "
 	fi
+	echo "Converted $f"
 done
