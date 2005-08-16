@@ -62,6 +62,11 @@ namespace LOFAR
     friend class EpaPacket;
     EpaHeader(char* bufferSpace);
     char* itsBufferp;
+
+    static const int theirHeaderSize = 16;
+    static const int theirStatIDOffset = 4;
+    static const int theirSeqIDOffset = 8;
+    static const int theirBlockIDOffset = 12;
   };
 
 
@@ -112,20 +117,26 @@ namespace LOFAR
     bool itsIsMemoryMine;
   };
 
+
+
+
+
+  //inline functions
+
   inline int EpaHeader::getSize()
-  { return 14; };
+  { return theirHeaderSize; };
   inline int32 EpaHeader::getStationId()
-  { return getInt32(&itsBufferp[2]); };
+  { return getInt32(&itsBufferp[theirStatIDOffset]); };
   inline void EpaHeader::setStationId(int32 sid)
-  { setInt32(&itsBufferp[2], (const char*)&sid); };
+  { setInt32(&itsBufferp[theirStatIDOffset], (const char*)&sid); };
   inline int32 EpaHeader::getSeqId()
-  { return getInt32(&itsBufferp[6]); };
+  { return getInt32(&itsBufferp[theirSeqIDOffset]); };
   inline void EpaHeader::setSeqId(int32 sid)
-  { setInt32(&itsBufferp[6], (const char*)&sid); };
+  { setInt32(&itsBufferp[theirSeqIDOffset], (const char*)&sid); };
   inline int32 EpaHeader::getBlockId()
-  { return getInt32(&itsBufferp[10]); };
+  { return getInt32(&itsBufferp[theirBlockIDOffset]); };
   inline void EpaHeader::setBlockId(int32 bid)
-  { setInt32(&itsBufferp[10], (const char*)&bid); };
+  { setInt32(&itsBufferp[theirBlockIDOffset], (const char*)&bid); };
 
   inline EpaHeader& EpaPacket::getHeader()
     { return itsEpaHeader; };
