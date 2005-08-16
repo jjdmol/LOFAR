@@ -575,7 +575,7 @@ Socket* Socket::accept(int32	waitMs)
 	LOG_DEBUG(formatString("Socket(%d):accept() failed: errno=%d(%s)", 
 										itsSocketID, errno, strerror(errno)));
 
-	if ((errno != EWOULDBLOCK) && (errno != EALREADY)) {
+	if ((errno != EWOULDBLOCK) && (errno != EALREADY) && (errno != EINTR)) {
 		// real error
 		setBlocking(blockingMode);
 		setErrno(ACCEPT);
