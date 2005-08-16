@@ -54,7 +54,7 @@ void Stub_Delay ::connect (int RSP_nr,
 			   int dhNr)
 {
   DBGASSERTSTR(((RSP_nr >= 0) && (RSP_nr < itsNRSP)),
-	       "RSP_nr argument out of boundaries; " << RSP_nr << " / " << itsNRSP);
+ 	       "RSP_nr argument out of boundaries; " << RSP_nr << " / " << itsNRSP);
 
   int port = itsPS.getInt32("DelayConnection.RequestPort");
   string service(formatString("%d", port+RSP_nr));
@@ -64,7 +64,11 @@ void Stub_Delay ::connect (int RSP_nr,
     DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
 		 " has already been connected.");
     // Create a server socket
-    itsTHs[RSP_nr] = new TH_Socket(service);
+    itsTHs[RSP_nr] = new TH_Socket(service,
+				   true,
+				   Socket::TCP,
+				   5,
+				   false);
     itsConnections[RSP_nr] = new Connection("toBG", 0, 
 					    dm.getGeneralInHolder(dhNr),
 					    itsTHs[RSP_nr], true);
@@ -76,7 +80,10 @@ void Stub_Delay ::connect (int RSP_nr,
 		 " has already been connected.");
     // Create a client socket
     itsTHs[RSP_nr] = new TH_Socket(itsPS.getString("DelayConnection.ServerHost"),
-				 service);
+				   service,
+				   true,
+				   Socket::TCP,
+				   false);
     itsConnections[RSP_nr] = new Connection("fromInpSection", 
 					    dm.getGeneralOutHolder(dhNr), 
 					    0, itsTHs[RSP_nr], true);
