@@ -24,7 +24,7 @@
 
 #include <Transport/BaseSim.h>
 #include <tinyCEP/TinyApplicationHolder.h>
-#include TRANSPORTERINCLUDE
+#include <Tranposrt/TH_MPI.h>
 
 namespace LOFAR
 {
@@ -47,7 +47,7 @@ namespace LOFAR
   void TinyApplicationHolder::baseDefine(const KeyValueMap& params) {
 #ifdef HAVE_MPI
     // Initialize MPI environment
-    TRANSPORTER::initMPI(itsArgc, itsArgv);
+    TH_MPI::initMPI(itsArgc, itsArgv);
 #endif
     // Let derived class define the Application
     define(params);
@@ -78,6 +78,9 @@ namespace LOFAR
 
   void TinyApplicationHolder::baseQuit() {
     quit();
+#ifdef HAVE_MPI
+    TH_MPI::finalize();
+#endif
   }
 
   void TinyApplicationHolder::define(const KeyValueMap&) {
