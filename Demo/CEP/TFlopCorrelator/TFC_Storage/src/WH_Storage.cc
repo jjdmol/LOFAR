@@ -87,7 +87,7 @@ WH_Storage* WH_Storage::make(const string& name)
 void WH_Storage::preprocess() {
   LOG_TRACE_FLOW("WH_Storage enabling PropertySet");
   if (itsWriteToMAC) {
-    itsPropertySet = new GCF::CEPPMLlight::CEPPropertySet("CEP_TFC", "TTFlopCorrelator", GCF::Common::PS_CAT_PERMANENT);
+    itsPropertySet = new GCF::CEPPMLlight::CEPPropertySet("CEP_TFCD", "TTeraFlopCorrelator", GCF::Common::PS_CAT_PERMANENT);
     itsPropertySet->enable();
     LOG_TRACE_FLOW("WH_Storage PropertySet enabled");
   } else {
@@ -120,6 +120,13 @@ void WH_Storage::preprocess() {
   // For nr of beams
   itsFieldId = itsWriter->addField (azimuth*pi/180., elevation*pi/180.);
 
+  // fill the strings that identify the subbands
+  vector<string> refFreqStr = itsPS.getStringVector("Storage.refFreqs");
+  vector<string>::iterator sb;
+  for (sb=refFreqStr.begin(); it!=refFreqStr.end(); it++)
+  {
+    itsSubbandStrings.push_back(GCF::Common::GCFPVString(*sb));
+  }
 }
 
 void WH_Storage::process() 
@@ -161,7 +168,7 @@ void WH_Storage::process()
     }
 
     (*itsPropertySet)["data"].setValue(GCF::Common::GCFPVDynArr(GCF::Common::LPT_DOUBLE, itsVArray));
-    (*itsPropertySet)["beamlet"].setValue(GCF::Common::GCFPVString("1"));
+    (*itsPropertySet)["subband"].setValue(GCF::Common::GCFPVString("1"));
     LOG_TRACE_FLOW("WH_Storage properties set");
   };
 }
