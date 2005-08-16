@@ -299,20 +299,29 @@ void DataManager::preprocess()
   LOG_TRACE_FLOW("DataManager::preprocess()");
   itsSynMan->preprocess();
   //Initialize all connections
-  for (int i=0; i<itsNinputs; i++)
-  {
-    if (itsInDHsinfo[i].connection != 0)
+  bool allTHsOK = false;
+  while (!allTHsOK) {
+    allTHsOK = true;
+    for (int i=0; i<itsNinputs; i++)
     {
-      DBGASSERT((itsInDHsinfo[i].connection)->getTransportHolder() != 0);
-      (itsInDHsinfo[i].connection)->getTransportHolder()->init();
+      if (itsInDHsinfo[i].connection != 0)
+      {
+	DBGASSERT((itsInDHsinfo[i].connection)->getTransportHolder() != 0);
+	allTHsOK &= (itsInDHsinfo[i].connection)->getTransportHolder()->init();
+      }
     }
-  }
-  for (int j=0; j<itsNoutputs; j++)
-  {
-    if (itsOutDHsinfo[j].connection != 0)
+    for (int j=0; j<itsNoutputs; j++)
     {
-      DBGASSERT((itsOutDHsinfo[j].connection)->getTransportHolder() != 0);
-      (itsOutDHsinfo[j].connection)->getTransportHolder()->init();
+      if (itsOutDHsinfo[j].connection != 0)
+      {
+	DBGASSERT((itsOutDHsinfo[j].connection)->getTransportHolder() != 0);
+	allTHsOK &= (itsOutDHsinfo[j].connection)->getTransportHolder()->init();
+      }
+    }
+    if (!allTHsOK) 
+    {
+      // sleep one second if not all THs are ok
+      sleep(1);
     }
   }
 }
