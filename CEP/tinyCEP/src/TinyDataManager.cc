@@ -188,20 +188,34 @@ namespace LOFAR
   void TinyDataManager::preprocess() {
     for (int i = 0; i < itsNinputs; i++) {
       itsInDHs[i]->init();
-      if (itsInConnections[i] != 0)
-      {
-	DBGASSERT(itsInConnections[i]->getTransportHolder() != 0);
-	itsInConnections[i]->getTransportHolder()->init();
-      }
-   }
-    
-
+    }
     for (int i = 0; i < itsNoutputs; i++) {
       itsOutDHs[i]->init();
-      if (itsOutConnections[i] != 0)
+    }
+
+    bool allTHsOK = false;
+    while (!allTHsOK) {
+      allTHsOK = true;
+      for (int i = 0; i < itsNinputs; i++) {
+	if (itsInConnections[i] != 0)
+	{
+	  DBGASSERT(itsInConnections[i]->getTransportHolder() != 0);
+	  allTHsOK &= itsInConnections[i]->getTransportHolder()->init();
+	}
+      }
+    
+
+      for (int i = 0; i < itsNoutputs; i++) {
+	if (itsOutConnections[i] != 0)
+	{
+	  DBGASSERT(itsOutConnections[i]->getTransportHolder() != 0);
+	  allTHsOK &= itsOutConnections[i]->getTransportHolder()->init();
+	}
+      }
+      if (!allTHsOK) 
       {
-	DBGASSERT(itsOutConnections[i]->getTransportHolder() != 0);
-	itsOutConnections[i]->getTransportHolder()->init();
+	  // sleep one second if not all THs are ok
+	  sleep(1);
       }
     }
   }
