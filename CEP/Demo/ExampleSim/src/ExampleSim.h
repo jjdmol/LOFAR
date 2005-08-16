@@ -1,4 +1,5 @@
-//  ExampleSim.h: An example simulator 
+//  ExampleSim.h: An example application used in the CEPFrame manual
+//                 LOFAR-ASTRON-MAN-005
 //
 //  Copyright (C) 2000, 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -40,7 +41,7 @@ public:
   ExampleSim();
   virtual ~ExampleSim();
 
-  // overloaded methods from the Simulator base class
+  // overloaded methods from the ApplicationHolder base class
   virtual void define(const LOFAR::KeyValueMap& params = LOFAR::KeyValueMap());
   virtual void run(int);
   virtual void dump() const;
