@@ -46,18 +46,20 @@ public:
 	//       a listener-socket and a datasocket whereas the other constructors
 	//       only contain a datasocket.
     TH_Socket (const string& 	service,
-			   const bool		sync = true,
-			   int32			protocol = Socket::TCP,
-			   int32			backlog = 5);
+	       const bool		sync = true,
+	       int32			protocol = Socket::TCP,
+	       int32			backlog = 5,
+	       const bool openSocketNow = true);
 
 	// Create a TH_Socket with a client socket.
     TH_Socket (const string&	hostName,
-			   const string& 	service,
-			   const bool		sync = true,
-			   int32			protocol = Socket::TCP);
+	       const string& 	service,
+	       const bool		sync = true,
+	       int32			protocol = Socket::TCP,
+	       const bool openSocketNow = true);
 
-	// Create a TH_Socket based on an existing data socket.
-	TH_Socket (Socket*		aDataSocket);
+    // Create a TH_Socket based on an existing data socket.
+    TH_Socket (Socket*		aDataSocket);
     
     virtual ~TH_Socket();
 
@@ -94,6 +96,7 @@ public:
 	bool		init();
 
 private:
+	bool            openSocket();
 	bool		connectToServer();
 	bool		connectToClient();
 
@@ -106,10 +109,17 @@ private:
 		CmdRecvNonBlock,
 	} CmdTypes;
 
+	bool            itsIsServer;
     Socket*		itsServerSocket;		// Listener socket (server only)
     Socket*		itsDataSocket;			// The transport channel.
 	bool		itsIsOwner;				// Owner of socket(s).
 	int32		itsReadOffset;			// For partial reads.
+
+	string itsHostName;
+	string itsService;
+	int32 itsProtocol;
+	int32 itsBacklog;
+	bool itsIsBlocking;
 
 	// Administration for non-blocking receiving. In the recv-call
 	// these fields are filled so that waitForRecv knows what to do.
