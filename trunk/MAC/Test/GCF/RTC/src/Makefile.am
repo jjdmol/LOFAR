@@ -48,5 +48,8 @@ MAC_CONFIG = $(top_srcdir)/../../../Config
 %.conf: gcf-test.conf.in
 	cp $< $@
 
+clean-local:
+  rm -f *.ph
+  
 include $(lofar_sharedir)/Makefile.common
 

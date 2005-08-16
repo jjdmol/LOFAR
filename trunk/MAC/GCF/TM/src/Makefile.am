@@ -69,5 +69,8 @@ BUILT_SOURCES = \
 EXTRA_DIST = \
 	SB_Protocol.ph
 	
+clean-local:
+	rm -f *.ph
+	
 include $(lofar_sharedir)/Makefile.common
 
