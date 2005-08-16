@@ -67,7 +67,7 @@ void* WriteToBufferThread(void* arguments)
     // catch a frame from input connection
     if (readnew) {
       try {
-	args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
+        args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
       } catch (Exception& e) {
 	LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
 	pthread_exit(NULL);
@@ -79,6 +79,7 @@ void* WriteToBufferThread(void* arguments)
     blockid = ((int*)&recvframe[12])[0];
     actualstamp.setStamp(seqid ,blockid);
 
+    cout << actualstamp << endl;
 
     // firstloop
     if (firstloop) {
@@ -191,6 +192,8 @@ WH_RSPInput::WH_RSPInput(const string& name,
     for (int i = 0; i < itsNRSPOutputs-1; i++) {
       snprintf(str, 32, "DH_RSPInputSync_out_%d", i);
       getDataManager().addOutDataHolder(itsNSubbands + i, new DH_RSPSync(str));
+      //don't use autotriggering when sending synced stamps to slaves
+      getDataManager().setAutoTriggerOut(itsNSubbands + i, false);
     }
   } else {
     // if we are a sync slave we need 1 extra input
@@ -273,19 +276,19 @@ void WH_RSPInput::process()
       // TODO: we need to skip the first packets
       //      itsSyncedStamp += itsNPackets * 1500;
         
-      // send the synced startstamp to the slaves
+      // send the startstamp to the slaves
       for (int i = 1; i < itsNRSPOutputs; i++) {
 	((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
-        // force a write 
-	getDataManager().readyWithOutHolder(i);
+        // force the write because autotriggering is off 
+	getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
       }
     } else {
       // this is the first time
       // we need to force a read, because this inHolder has a lower data rate
       // if the rate difference is 1000, the workholder will read for
       // the first time in the 1000th runstep.
-      getDataManager().getInHolder(1);
-      getDataManager().readyWithInHolder(1);
+      //getDataManager().getInHolder(1);
+      //getDataManager().readyWithInHolder(1);
     }
   }
       
@@ -304,6 +307,8 @@ void WH_RSPInput::process()
     // send the syncstamp to the slaves
     for (int i = 1; i < itsNRSPOutputs; i++) {
       ((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
+      // force the write because autotriggering is off 
+      getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
     }    
   } //end (itsIsSyncMaster)
 
