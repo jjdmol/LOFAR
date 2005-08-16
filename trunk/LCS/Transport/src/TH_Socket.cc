@@ -35,20 +35,27 @@ namespace LOFAR
 // Create TH_Socket with underlying listener.
 // At return the listener is always started.
 TH_Socket::TH_Socket (const string& service,
-					  bool			sync,
-					  int32			protocol,
-					  int32			backlog) :
-    itsServerSocket(new Socket(service+"_server", service, protocol, backlog)),
+		      bool			sync,
+		      int32			protocol,
+		      int32			backlog,
+		      const bool openSocketNow) :
+    itsIsServer    (true),
+    itsServerSocket(0),
     itsDataSocket  (0),
-	itsIsOwner     (true),
-	itsReadOffset  (0),
-	itsLastCmd     (CmdNone)
+    itsIsOwner     (true),
+    itsReadOffset  (0),
+    itsHostName    (),
+    itsService     (service),
+    itsProtocol    (protocol),
+    itsBacklog     (backlog),
+    itsIsBlocking  (sync),
+    itsLastCmd     (CmdNone)
 {
 	LOG_TRACE_FLOW("TH_Socket<server>");
 
-	ASSERTSTR(itsServerSocket && itsServerSocket->ok(), "Cannot start listener");
-
-	itsServerSocket->setBlocking (sync);
+	if (openSocketNow) {
+	  ASSERTSTR(openSocket(), "Could not open server socket");
+	}
 }
 
 //
@@ -56,21 +63,27 @@ TH_Socket::TH_Socket (const string& service,
 //
 // Create a TH_Socket with a client socket.
 TH_Socket::TH_Socket (const string&	hostName,
-					  const string& service,
-					  bool			sync,
-					  int32			protocol) :
+		      const string& service,
+		      bool			sync,
+		      int32			protocol,
+		      const bool openSocketNow) :
+    itsIsServer    (false),
     itsServerSocket(0),
-    itsDataSocket  (new Socket(hostName+"_client", hostName, service,protocol)),
-	itsIsOwner     (true),
-	itsReadOffset  (0),
-	itsLastCmd     (CmdNone)
+    itsDataSocket  (0),
+    itsIsOwner     (true),
+    itsReadOffset  (0),
+    itsHostName    (hostName),
+    itsService     (service),
+    itsProtocol    (protocol),
+    itsBacklog     (0),
+    itsIsBlocking  (sync),
+    itsLastCmd     (CmdNone)
 {
 	LOG_TRACE_FLOW("TH_Socket<client>");
 
-	ASSERTSTR(itsDataSocket && itsDataSocket->ok(), "Cannot allocate client socket");
-
-	itsDataSocket->setBlocking (sync);		// Set correct mode.
-
+	if (openSocketNow) {
+	  ASSERTSTR(openSocket(), "Could not start client socket");
+	}
 }
 
 //
@@ -78,16 +91,26 @@ TH_Socket::TH_Socket (const string&	hostName,
 //
 // Create a TH_Socket based on an existing data socket.
 TH_Socket::TH_Socket (Socket*		aDataSocket) :
+    itsIsServer(false),
     itsServerSocket(0),
     itsDataSocket  (0),
-	itsIsOwner     (false),
-	itsReadOffset  (0),
-	itsLastCmd     (CmdNone)
+    itsIsOwner     (false),
+    itsReadOffset  (0),
+    itsHostName    (),
+    itsService     (),
+    itsProtocol    (0),
+    itsBacklog     (0),
+    itsIsBlocking  (true),
+    itsLastCmd     (CmdNone)
 {
 	ASSERTSTR(aDataSocket && aDataSocket->ok(), 
 		      "Invalid dataSocket in constructor");
 
 	itsDataSocket = aDataSocket;
+	itsHostName = itsDataSocket->host();
+	itsService = itsDataSocket->port();
+	itsProtocol = itsDataSocket->getType();
+	itsIsBlocking = itsDataSocket->isBlocking();
 }
     
 //
@@ -137,7 +160,7 @@ bool TH_Socket::recvBlocking (void*	buf, int32	nrBytes, int32	/*tag*/,
 
 	if (btsRead == Socket::PEERCLOSED) {	// peer closed connection.
 		LOG_DEBUG("TH_Socket:shutdown datasocket after read-error");
-		if (itsServerSocket) {			// server role?
+		if (itsIsServer) {			// server role?
 			shutdown(itsDataSocket);	// completely delete datasocket
 		}
 		else {							// client role
@@ -199,7 +222,7 @@ int32 TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/,
 		}
 		// It's a total mess, anything could have happend. Bail out.
 		LOG_DEBUG_STR("TH_Socket: serious read-error, result=" << bytesRead);
-		if (itsServerSocket) {			// server role?
+		if (itsIsServer) {			// server role?
 			shutdown(itsDataSocket);	// completely delete datasocket
 		}
 		else {							// client role
@@ -293,6 +316,10 @@ bool TH_Socket::init()
 {
 	LOG_TRACE_FLOW("TH_Socket::init()");
 
+	if (!openSocket()) {
+	  return false;
+	}
+
 	if (isConnected()) {
 		return (true);
 	}
@@ -300,7 +327,7 @@ bool TH_Socket::init()
 	itsReadOffset = 0;
 	itsLastCmd    = CmdNone;
 	
-	if (itsServerSocket) {
+	if (itsIsServer) {
 		return(connectToClient());
 	}
 
@@ -367,6 +394,33 @@ bool TH_Socket::connectToClient ()
 
 	return (false);
 }
+
+//
+// openSocket
+//
+// open the socket, this method can be called if it is already open
+//
+bool TH_Socket::openSocket()
+{
+  if (itsIsServer) {
+    if (itsServerSocket == 0) {
+      LOG_TRACE_OBJ("TH_Socket::openSocket opening serverSocket");
+      itsServerSocket = new Socket(itsService+"_server", itsService, itsProtocol, itsBacklog);
+      ASSERTSTR(itsServerSocket && itsServerSocket->ok(), "Cannot start listener");
+      itsServerSocket->setBlocking (itsIsBlocking);
+    }
+  } else {
+    if (itsDataSocket == 0) {
+      LOG_TRACE_OBJ("TH_Socket::openSocket opening dataSocket");
+      itsDataSocket = new Socket(itsHostName+"_client", itsHostName, itsService, itsProtocol);
+      ASSERTSTR(itsDataSocket && itsDataSocket->ok(), "Cannot allocate client socket");
+      itsDataSocket->setBlocking (itsIsBlocking);		// Set correct mode.
+    }
+  }
+  return true; // right now we return true, because if the assert fails we won't get here
+}
+
+  
 
 void TH_Socket::shutdown(Socket*& aSocket)
 {
