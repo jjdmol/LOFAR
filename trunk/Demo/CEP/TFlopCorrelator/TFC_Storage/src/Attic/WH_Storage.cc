@@ -119,14 +119,6 @@ void WH_Storage::preprocess() {
   double pi = itsPS.getDouble("Storage.pi");
   // For nr of beams
   itsFieldId = itsWriter->addField (azimuth*pi/180., elevation*pi/180.);
-
-  // fill the strings that identify the subbands
-  vector<string> refFreqStr = itsPS.getStringVector("Storage.refFreqs");
-  vector<string>::iterator sb;
-  for (sb=refFreqStr.begin(); it!=refFreqStr.end(); it++)
-  {
-    itsSubbandStrings.push_back(GCF::Common::GCFPVString(*sb));
-  }
 }
 
 void WH_Storage::process() 

@@ -29,7 +29,6 @@
 #include <GCF/PALlight/CEPPropertySet.h>
 #include <GCF/GCF_PVDynArr.h>
 
-
 namespace LOFAR
 {
 
@@ -70,7 +69,6 @@ class WH_Storage: public WorkHolder
     bool itsWriteToMAC;
     GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;
     GCF::Common::GCFPValueArray itsVArray; 
-    vector<GCF::Common::GCFPVString> itsSubbandStrings;
   };
 } // namespace LOFAR
 
