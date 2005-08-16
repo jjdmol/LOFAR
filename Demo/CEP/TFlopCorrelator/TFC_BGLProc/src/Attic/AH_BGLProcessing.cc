@@ -181,7 +181,7 @@ void AH_BGLProcessing::dump() const {
   vector<WorkHolder*>::const_iterator it;
   for ( it = itsWHs.begin(); it < itsWHs.end(); it++) {
 #ifdef HAVE_MPI
-    if (*it->getNode() == TH_MPI::getCurrentRank()) {
+    if ((*it)->getNode() == TH_MPI::getCurrentRank()) {
       (*it)->dump();
     }
 #else
