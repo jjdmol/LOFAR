@@ -25,4 +25,9 @@ WH_SBCollect.cc			\
 AH_InputSection.cc		\
 BufferController.cc	
 
+configfilesdir=$(bindir)
+configfiles_DATA		=	\
+TFC_InputSection.machinefile		\
+TFC_InputSection.log_prop		
+
 include $(lofar_sharedir)/Makefile.common
