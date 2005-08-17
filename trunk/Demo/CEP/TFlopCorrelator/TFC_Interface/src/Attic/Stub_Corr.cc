@@ -56,8 +56,7 @@ namespace LOFAR {
     DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsNChan)),
 		  "C_nr argument out of boundaries; " << C_nr << " / " << itsNChan);
 
-    int port = itsPS.getInt32("CorrConnection.RequestPort");
-    string service(formatString("%d", port+C_nr));
+    string service = itsPS.getStringVector("CorrConnection.RequestPorts")[C_nr];
 
     if (itsStubOnServer) // on the cluster side, so start server socket
     {
@@ -79,7 +78,8 @@ namespace LOFAR {
       DBGASSERTSTR(itsTHs[C_nr] == 0, "Stub input " << C_nr << 
 		" has already been connected.");
       // Create a client socket
-      itsTHs[C_nr] = new TH_Socket(itsPS.getString("CorrConnection.ServerHost"),
+      string server = itsPS.getStringVector("CorrConnection.ServerHosts")[C_nr];
+      itsTHs[C_nr] = new TH_Socket(server,
 				   service,
 				   true,
 				   Socket::TCP,

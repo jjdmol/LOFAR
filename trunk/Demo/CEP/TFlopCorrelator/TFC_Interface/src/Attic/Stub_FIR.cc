@@ -53,8 +53,8 @@ namespace LOFAR {
 		 "FIRF_nr argument out of boundaries; " << FIRF_nr 
 		 << " / " << itsNFIRF);
 
-    int port = itsPS.getInt32("FIRConnection.RequestPort");
-    string service(formatString("%d", port+FIRF_nr));
+    string service = itsPS.getStringVector("FIRConnection.RequestPorts")[FIRF_nr];
+
     if (itsStubOnServer)    // On the cluster side, so start a server socket
     {
       LOG_TRACE_FLOW_STR("Server Stub_FIR initting on port " << service);
@@ -76,7 +76,8 @@ namespace LOFAR {
       DBGASSERTSTR(itsTHs[FIRF_nr] == 0, "Stub output " << FIRF_nr << 
 		" has already been connected.");
       // Create a client socket
-      itsTHs[FIRF_nr] = new TH_Socket(itsPS.getString("FIRConnection.ServerHost"),
+      string server = itsPS.getStringVector("FIRConnection.ServerHosts")[FIRF_nr];
+      itsTHs[FIRF_nr] = new TH_Socket(server,
 				      service,
 				      true,
 				      Socket::TCP,
