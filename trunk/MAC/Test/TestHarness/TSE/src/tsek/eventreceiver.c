@@ -48,6 +48,7 @@
 
 #include "executor_master.h"
 
+#define MAX_NO_EVENTS               ((int16) 10000)
 
 /*****************************************************************************/
 /* Local variables and stores                                                */
@@ -56,10 +57,10 @@ struct TRawEventList *_ptRawEventList;
 struct TRawEventList *ptLastRawEvent;
 
 
-int16     bStore = FALSE;
-int16     bWarnedForUnprocessedData = FALSE;
-int16     iBufferSem = 1;
-
+static int16     bStore = FALSE;
+static int16     bWarnedForUnprocessedData = FALSE;
+static int16     iBufferSem = 1;
+static int16     iNumberOfEvents=0;
 /*****************************************************************************/
 /* Local function headers                                                    */
 /*****************************************************************************/
@@ -123,23 +124,7 @@ void BSEK_ReceiveString(
   int16 iLength,
   char *pcData)
 {
-  if (bStore == TRUE)
-  {
-    StoreThisEvent(iDeviceNumber, iLength, pcData);
-  }
-  else
-  {
-    if (bWarnedForUnprocessedData == FALSE)
-    {
-      LogLine("Warning: Incoming events not processed");
-      bWarnedForUnprocessedData = TRUE;
-    }
-    else
-    {
-      /* We don't keep warning.. */
-    }
-    free(pcData);
-  }
+  StoreThisEvent(iDeviceNumber, iLength, pcData);
 }
 
 
@@ -172,19 +157,20 @@ struct TRawEvent *GetNextEvent(
     {
       /* If this was the one and only event in the buffer, the              */
       /* ptLastRawEvent pointer becomes invalid too. Therefore, remove it.  */
+      if (iNumberOfEvents != 1)
+      {
+        iNumberOfEvents = 1;
+      }          
       ptLastRawEvent = NULL;
     }
     ptFirstEvent = ptEventListHead->ptThis;
     free(ptEventListHead);
 
     ptReturnValue = (ptFirstEvent);     /* The invoker should free this record. */
+    iNumberOfEvents--;
   }
 
-  if (pthread_mutex_unlock(&RawEventBufferSemaphore) != -1)
-  {
-    /* ok, do nothing... */
-  }
-  else
+  if (pthread_mutex_unlock(&RawEventBufferSemaphore) == -1)
   {
     pcErrorString = (char*) malloc( 
       (strlen("internal error 1 releasing semaphores. ")+1) * sizeof(char));
@@ -212,40 +198,47 @@ void StoreThisEvent(
   if (pthread_mutex_lock(&RawEventBufferSemaphore) == -1)
   {
     pcErrorString = (char*) malloc( 
-      (strlen("ten seconds is too much...")+1) * sizeof(char));
-    strcpy( pcErrorString,"ten seconds is too much...");
+      (strlen("Failed to get mutex lock for event")+1) * sizeof(char));
+    strcpy( pcErrorString,"Failed to get mutex lock for event");
     BSEG_LogLine(pcErrorString);
     return;
   }
 
-  if (_ptRawEventList == NULL)
-  {
-    _ptRawEventList = newRawEventList();
-    _ptRawEventList->ptThis = newRawEvent();
-    ptNewEvent = _ptRawEventList->ptThis;
-    ptLastRawEvent = _ptRawEventList;
-  }
-  else
-  {
-    ptLastRawEvent->ptNext = newRawEventList();
-    ptLastRawEvent->ptNext->ptThis = newRawEvent();
-    ptLastRawEvent = ptLastRawEvent->ptNext;
-    ptNewEvent = ptLastRawEvent->ptThis;
-  }
-  ptNewEvent->pcEvent = pcData;
-  ptNewEvent->iEventLength = iLength;
-  ptNewEvent->iDeviceNumber = iDeviceNumber;
-
-  if (pthread_mutex_unlock(&RawEventBufferSemaphore) != -1)
-  {
-    /* ok, do nothing... */
+  if (iNumberOfEvents < MAX_NO_EVENTS)
+  { 
+    iNumberOfEvents++;
+	  if (_ptRawEventList == NULL)
+	  {
+	    _ptRawEventList = newRawEventList();
+	    _ptRawEventList->ptThis = newRawEvent();
+	    ptNewEvent = _ptRawEventList->ptThis;
+	    ptLastRawEvent = _ptRawEventList;
+	  }
+	  else
+	  {
+	    ptLastRawEvent->ptNext = newRawEventList();
+	    ptLastRawEvent->ptNext->ptThis = newRawEvent();
+	    ptLastRawEvent = ptLastRawEvent->ptNext;
+	    ptNewEvent = ptLastRawEvent->ptThis;
+	  }
+	  ptNewEvent->pcEvent = pcData;
+	  ptNewEvent->iEventLength = iLength;
+	  ptNewEvent->iDeviceNumber = iDeviceNumber;
+	
+	  if (pthread_mutex_unlock(&RawEventBufferSemaphore) == -1)
+	  {
+	    pcErrorString = (char*) malloc( 
+	      (strlen("internal error 2 releasing semaphores. ")+1) * sizeof(char));
+	    strcpy( pcErrorString,"internal error 2 releasing semaphores. ");
+	    /* weird. don't know what to do here... */
+	    BSEG_LogLine(pcErrorString);
+	  }
   }
   else
   {
     pcErrorString = (char*) malloc( 
-      (strlen("internal error 2 releasing semaphores. ")+1) * sizeof(char));
-    strcpy( pcErrorString,"internal error 2 releasing semaphores. ");
-    /* weird. don't know what to do here... */
+      (strlen("The event queue is full dropping the event.")+1) * sizeof(char));
+    strcpy( pcErrorString,"The event queue is full dropping the event.");
     BSEG_LogLine(pcErrorString);
   }
 }
