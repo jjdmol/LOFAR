@@ -1,12 +1,5 @@
 lib_LTLIBRARIES 	= libvirtualtelescope.la
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
-%.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
-
 pkginclude_HEADERS = \
 	../include/VirtualTelescope/VirtualTelescope.h \
 	../include/VirtualTelescope/VirtualTelescopeFactory.h

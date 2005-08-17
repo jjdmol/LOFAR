@@ -2,11 +2,6 @@ bin_PROGRAMS 		= avitest
 
 TESTS			= #avitest
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
-
 avitest_CPPFLAGS= \
 	-I$(top_srcdir)/../GCF/GCFCommon/src \
 	-I$(top_srcdir)/VIC/VirtualInstrument/src \

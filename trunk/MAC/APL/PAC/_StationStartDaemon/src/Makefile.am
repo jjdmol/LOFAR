@@ -1,10 +1,5 @@
 bin_PROGRAMS 		= StationStartDaemon
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
-
 StationStartDaemon_CPPFLAGS= \
 	-DBOOST_DISABLE_THREADS \
   -Wno-deprecated \

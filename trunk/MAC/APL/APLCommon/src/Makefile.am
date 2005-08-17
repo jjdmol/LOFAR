@@ -49,5 +49,8 @@ EXTRA_DIST = \
 	LogicalDevice_Protocol.ph \
 	StartDaemon_Protocol.ph
 
+clean-local:
+	rm -f *.ph
+
 include $(lofar_sharedir)/Makefile.common
 
