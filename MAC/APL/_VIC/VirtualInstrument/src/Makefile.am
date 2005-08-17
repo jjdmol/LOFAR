@@ -1,10 +1,5 @@
 bin_PROGRAMS 		= VirtualInstrument
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
-
 VirtualInstrument_CPPFLAGS= \
 	-DBOOST_DISABLE_THREADS \
   -Wno-deprecated \

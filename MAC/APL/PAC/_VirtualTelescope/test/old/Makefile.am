@@ -2,6 +2,9 @@ noinst_PROGRAMS 		= avttest
 
 TESTS			= #avttest
 
+clean-local:
+  rm -f *.ph
+  
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot

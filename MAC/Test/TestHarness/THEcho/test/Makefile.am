@@ -1,10 +1,5 @@
 bin_PROGRAMS 		= THEchoTest
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
-
 THEchoTest_CPPFLAGS= \
   -Wno-deprecated \
 	-fmessage-length=0 \

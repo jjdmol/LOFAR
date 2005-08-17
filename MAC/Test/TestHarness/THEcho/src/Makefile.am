@@ -39,4 +39,7 @@ configfiles_DATA = \
 %.conf: %.conf.in
 	cp $< $@
 
+clean-local:
+	rm -f *.ph
+
 include $(lofar_sharedir)/Makefile.common

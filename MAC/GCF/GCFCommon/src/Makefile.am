@@ -1,4 +1,4 @@
-INSTALL=/usr/bin/install -C
+INSTALL=/usr/bin/install 
 pkgincludedir = $(includedir)/GCF
 pkginclude_HEADERS = \
 	../include/GCF/GCF_PValue.h \
