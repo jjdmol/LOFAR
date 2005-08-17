@@ -24,4 +24,9 @@ WH_Correlator.cc		\
 AH_BGLProcessing.cc		
 #WH_Collect.cc
 
+configfilesdir=$(bindir)
+configfiles_DATA	=	\
+TFC_BGLProcessing.machinefile	\
+TFC_BGLProcessing.log_prop	
+
 include $(lofar_sharedir)/Makefile.common
