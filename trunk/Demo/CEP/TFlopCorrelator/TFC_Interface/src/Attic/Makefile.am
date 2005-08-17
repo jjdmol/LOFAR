@@ -39,4 +39,7 @@ Stub_RSP.cc			\
 Stub_Corr.cc			\
 Stub_Delay.cc			
 
+configfilesdir=$(bindir)
+configfiles_DATA=../../TFlopCorrelator.cfg
+
 include $(lofar_sharedir)/Makefile.common
