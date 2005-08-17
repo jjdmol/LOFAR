@@ -1,9 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../../MACCommon/autogen $< && \
-	chmod a+w $@
-
+	$(AUTOGEN) -L $(datadir)/GCF/TM
 libgcftest_la_DOCHDRS	=	\
 	SupervisedTask.h \
   PropertyProxy.h \

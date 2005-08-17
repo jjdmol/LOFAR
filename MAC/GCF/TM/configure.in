@@ -63,6 +63,7 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+autogen/Makefile
 src/Makefile
 src/ServiceBroker/Makefile
 test/Makefile
