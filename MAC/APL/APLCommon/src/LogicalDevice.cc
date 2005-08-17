@@ -1027,11 +1027,11 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
     else
     {
       concreteHandleTimers(timerEvent,port);
-    }
-    if(!port.isConnected())
-    {
-      // try to open the port
-      port.open();
+      if(!port.isConnected())
+      {
+        // try to open the port
+        port.open();
+      }
     }
   }
 }

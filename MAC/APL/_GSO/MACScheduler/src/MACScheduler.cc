@@ -735,7 +735,7 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
     time_t startTime  = ps->getInt32("claimTime");
     time_t stopTime   = ps->getInt32("stopTime");
     
-    for(vector<string>::iterator childsIt=childKeys.begin();allocationOk && childsIt!=childKeys.end();++childsIt)
+    for(vector<string>::iterator childsIt=childKeys.begin();childsIt!=childKeys.end();++childsIt)
     {
       string ldTypeString = ps->getString(*childsIt + ".logicalDeviceType");
       TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
