@@ -24,7 +24,7 @@
 
 #include <Transport/BaseSim.h>
 #include <tinyCEP/TinyApplicationHolder.h>
-#include <Tranposrt/TH_MPI.h>
+#include <Transport/TH_MPI.h>
 
 namespace LOFAR
 {
