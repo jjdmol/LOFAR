@@ -15,7 +15,7 @@ ping_CPPFLAGS=-I$(top_srcdir)/include
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
 	Echo_Protocol.ph \

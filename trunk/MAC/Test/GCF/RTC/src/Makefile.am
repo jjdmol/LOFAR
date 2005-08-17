@@ -1,11 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../../MACCommon/autogen $< && \
-	chmod a+w $@
-
-DOCHDRS	=	\
-  RTAnswer.h \
+	$(AUTOGEN) -L $(datadir)/GCF/TM.h \
   RTDefines.h
 
 noinst_LTLIBRARIES 	= librtc.la
