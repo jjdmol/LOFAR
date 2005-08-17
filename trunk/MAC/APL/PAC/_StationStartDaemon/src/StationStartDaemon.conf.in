@@ -3,10 +3,11 @@ mac.apl.ld.retryPeriod=10
 mac.apl.ld.shareLocation=/opt/lofar/MAC/parametersets/
 mac.apl.sd.SO.taskName=SO
 mac.apl.sd.SO.parameterFile=stationOperationsDefaults.param
+mac.apl.avt.BEAMSERVERPORT=BeamServer
 
 mac.ns.CCU1_PAC_StartDaemon.server.type=TCP
 mac.ns.CCU1_PAC_StartDaemon.server.host=localhost
-mac.ns.CCU1_PAC_StartDaemon.server.port=27000
+mac.ns.CCU1_PAC_StartDaemon.server.port=27011
 
 mac.ns.SO.RSPDriver.type=TCP
 mac.ns.SO.RSPDriver.host=localhost
