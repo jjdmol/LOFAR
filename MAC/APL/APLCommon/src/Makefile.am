@@ -1,4 +1,4 @@
-INSTALL=/usr/bin/install -C
+INSTALL=/usr/bin/install
 
 AUTOGEN = autogen
 SUFFIXES = .ph
