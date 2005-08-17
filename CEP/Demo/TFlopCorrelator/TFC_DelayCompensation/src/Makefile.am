@@ -20,4 +20,9 @@ TFC_DelayCompensation_main.cc 	\
 AH_DelayCompensation.cc		\
 WH_DelayControl.cc
 
+configfilesdir=$(bindir)
+configfiles_DATA		=	\
+TFC_DelayCompensation.machinefile		\
+TFC_DelayCompensation.log_prop		
+
 include $(lofar_sharedir)/Makefile.common
