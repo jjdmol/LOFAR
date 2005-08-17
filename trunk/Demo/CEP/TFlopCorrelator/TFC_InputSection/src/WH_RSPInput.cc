@@ -257,6 +257,9 @@ void WH_RSPInput::process()
   DH_Delay* delayDHp;
   timestamp_t delayedstamp;
 
+  // increase the syncstamp
+  itsSyncedStamp += itsNSamplesToCopy;
+
   if (itsFirstProcessLoop) {
     itsFirstProcessLoop = false;
     // For this demo we need to make sure that the connection with the Correlator is made
@@ -273,20 +276,6 @@ void WH_RSPInput::process()
       // build in a delay to let the slaves catch up
       // TODO: we need to skip the first packets
       //      itsSyncedStamp += itsNPackets * 1500;
-        
-      // send the startstamp to the slaves
-      for (int i = 1; i < itsNRSPOutputs; i++) {
-	((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
-        // force the write because autotriggering is off 
-	getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
-      }
-    } else {
-      // this is the first time
-      // we need to force a read, because this inHolder has a lower data rate
-      // if the rate difference is 1000, the workholder will read for
-      // the first time in the 1000th runstep.
-      //getDataManager().getInHolder(1);
-      //getDataManager().readyWithInHolder(1);
     }
   }
       
@@ -300,8 +289,6 @@ void WH_RSPInput::process()
   } // (!args->itsSyncMaster)
   else {
     // we are the master, so increase the nextValue and send it to the slaves
-    // increase the syncstamp
-    itsSyncedStamp += itsNSamplesToCopy;
     // send the syncstamp to the slaves
     for (int i = 1; i < itsNRSPOutputs; i++) {
       ((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
