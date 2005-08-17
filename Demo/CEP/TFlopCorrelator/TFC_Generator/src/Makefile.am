@@ -24,4 +24,9 @@ WH_FakeStation.cc      	\
 DH_RSP.cc		\
 AH_FakeStation.cc			
 
+configfilesdir=$(bindir)
+configfiles_DATA	=	\
+TFC_Generator.machinefile	\
+TFC_Generator.log_prop		
+
 include $(lofar_sharedir)/Makefile.common

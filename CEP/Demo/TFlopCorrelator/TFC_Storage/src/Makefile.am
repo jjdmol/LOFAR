@@ -23,4 +23,11 @@ WH_Storage.cc		\
 MSWriter.cc		\
 MSWriterImpl.cc
 
+configfilesdir=$(bindir)
+configfiles_DATA		=	\
+TFC_Storage.machinefile			\
+TFC_Storage.log_prop			\
+typeStruct_TTeraFlopCorrelator.dpl	\
+PropertyInterface.conf
+
 include $(lofar_sharedir)/Makefile.common
