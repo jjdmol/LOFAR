@@ -1,5 +1,3 @@
-INSTALL=/usr/bin/install -C
-
 DOCHDRS	=	 \
 	CEPApplicationManager.h \
 	VirtualBackendFactory.h \

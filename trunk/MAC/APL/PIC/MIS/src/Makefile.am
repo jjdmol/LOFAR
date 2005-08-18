@@ -1,10 +1,8 @@
-INSTALL=/usr/bin/install -C
-
 AUTOGEN = autogen
 SUFFIXES = .ph
 
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 DOCHDRS	=	 \
 	MISDaemon.h \
@@ -43,6 +41,9 @@ configfiles_DATA= \
 	
 %.conf: %.conf.in
 	cp $< $@
+
+clean-local:
+	rm -f *.ph
 
 include $(lofar_sharedir)/Makefile.common
 
