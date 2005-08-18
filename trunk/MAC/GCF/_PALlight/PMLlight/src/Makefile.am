@@ -1,4 +1,3 @@
-INSTALL=/usr/bin/install -C
 pkgincludedir = $(includedir)/GCF/PALlight
 pkginclude_HEADERS = \
 	../../include/GCF/PALlight/GCF_RTMyProperty.h \
