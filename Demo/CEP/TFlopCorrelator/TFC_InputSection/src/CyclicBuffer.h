@@ -36,6 +36,94 @@
 namespace LOFAR
 {
 
+class BufferIndex 
+{
+ public:
+
+  BufferIndex(const int maxidx = 0);
+  
+  void operator+= (int increment);
+  void operator++ (int); 
+  void operator+ (int increment);
+  void operator-= (int decrement);
+  void operator-- (int); 
+  int operator- (BufferIndex& other);
+  bool operator== (BufferIndex& other);
+  
+  int getIndex();
+
+ private:
+  int itsIndex;
+  int itsMaxIndex;
+  void checkIndex();
+};
+ 
+
+inline BufferIndex::BufferIndex(int maxidx) :
+  itsIndex(0),
+  itsMaxIndex(maxidx)
+{
+}
+
+inline void BufferIndex::checkIndex()
+{
+  if (itsIndex >= itsMaxIndex) {
+    itsIndex -= itsMaxIndex;
+  }
+  else if (itsIndex < 0) {
+    itsIndex += itsMaxIndex;
+  }
+}
+
+inline int BufferIndex::getIndex()
+{
+  return itsIndex;
+}
+
+inline void BufferIndex::operator+= (int increment)
+{
+  itsIndex += increment;
+  checkIndex();
+}
+
+inline void BufferIndex::operator++ (int)
+{
+  itsIndex++;
+  checkIndex();
+}
+
+inline void BufferIndex::operator+ (int increment)
+{
+  itsIndex += increment;
+  checkIndex();
+}
+
+inline void BufferIndex::operator-= (int decrement)
+{
+  itsIndex -= decrement;
+  checkIndex();
+}
+
+inline void BufferIndex::operator-- (int)
+{
+  itsIndex--;
+  checkIndex();
+}
+
+inline int BufferIndex::operator- (BufferIndex& other)
+{
+  int increment = itsIndex-other.itsIndex;  
+  if (increment < 0) {
+    return increment + itsMaxIndex;
+  }
+  return increment; 
+}
+
+inline bool BufferIndex::operator== (BufferIndex& other)
+{
+  return (itsIndex == other.itsIndex);
+}
+
 // Element of the CyclicBuffer
 template <class TYPE>
 class BufferElement
@@ -125,13 +213,14 @@ class CyclicBuffer
   vector< BufferElement <TYPE> > itsBuffer;
   TYPE* itsElements;
 
-  int itsHeadIdx;  // writepointer
-  int itsTailIdx;  // readpointer
-  int itsCount;    // number of elements in buffer 
+  BufferIndex itsHeadIdx;  // writepointer
+  BufferIndex itsTailIdx;  // readpointer
+
+  BufferIndex itsOldHead;
+  BufferIndex itsOldTail;
   
-  
-  int itsRCount;   // avoid writing in a readlocked block  
-  int itsWCount;   // avoid reading in a writelocked block
+  int itsCount;    // number of elements in buffer
+
   
   // permission to overwrite previous written elements
   bool itsOverwritingAllowed;
@@ -143,12 +232,12 @@ class CyclicBuffer
 
 template<class TYPE>
 CyclicBuffer<TYPE>::CyclicBuffer(int nelements) :
-    itsHeadIdx(0),
-    itsTailIdx(0),
-    itsCount(0),
-    itsRCount(0),
-    itsWCount(0),
-    itsOverwritingAllowed(false)  
+     itsOverwritingAllowed(false),
+     itsHeadIdx(nelements),
+     itsTailIdx(nelements),
+     itsOldHead(nelements),
+     itsOldTail(nelements),
+     itsCount(0)
 {
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);
@@ -213,29 +302,24 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   pthread_mutex_lock(&buffer_mutex);
   
   // wait until space becomes available
-  while (itsRCount >= MAX_COUNT && !itsOverwritingAllowed)
+  while ((itsHeadIdx - itsOldTail >= MAX_COUNT) && !itsOverwritingAllowed)
   {
     pthread_cond_wait(&space_available, &buffer_mutex);
   }
 
-  // CONDITION: itsRCount < MAX_COUNT
-  ID = itsHeadIdx;
+  ID = itsHeadIdx.getIndex();
   WriteLockElement(ID);
   
   itsHeadIdx++;
-  if (itsHeadIdx >= (int)itsBuffer.size()) {
-    itsHeadIdx = 0;
-  }
   itsCount++; 
-  itsRCount++; 
+
 
   // if allowed, overwrite previous written elements
   if (itsHeadIdx == itsTailIdx && itsOverwritingAllowed) {
     // push tail 1 element forward
     itsTailIdx++;
-    // decrement counters
+    itsOldTail++;
     itsCount--;
-    itsRCount--;
   }
   
   pthread_mutex_unlock(&buffer_mutex);
@@ -248,23 +332,21 @@ TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
 {
   
   pthread_mutex_lock(&buffer_mutex);
- 
+
+  // overwriting not allowed when reading is started
+  itsOverwritingAllowed = false;
+  
   // wait until enough elements are available
-  while ((itsWCount < MIN_COUNT)) 
+  while (itsOldHead-itsTailIdx < MIN_COUNT) 
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   
-  // CONDITION: itsWCount >= MIN_COUNT
-  ID = itsTailIdx;
+  ID = itsTailIdx.getIndex();
   ReadLockElement(ID);
 
   itsTailIdx++;
-  if (itsTailIdx >= (int)itsBuffer.size()) {
-    itsTailIdx = 0;
-  }
   itsCount --;
-  itsWCount--;
   
   pthread_mutex_unlock(&buffer_mutex);
   
@@ -283,7 +365,7 @@ TYPE* CyclicBuffer<TYPE>::getFirstReadPtr(int& ID)
   }
   // CONDITION: itsCount > 0
   
-  ID = itsTailIdx;
+  ID = itsTailIdx.getIndex();
   ReadLockElement(ID);
  
   pthread_mutex_unlock(&buffer_mutex);
@@ -316,22 +398,14 @@ void CyclicBuffer<TYPE>::setOffset(int offset, int& ID)
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until enough data becomes available
-  while (itsCount - offset < MIN_COUNT)
+  while (itsOldHead-itsTailIdx-offset < MIN_COUNT)
   {
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
-
-  // CONDITION: itsCount - offset >= MIN_COUNT
   
   itsTailIdx += offset;
-  if (itsTailIdx >= (int)itsBuffer.size()) {
-    itsTailIdx -= (int)itsBuffer.size();
-  }
-  else if (itsTailIdx < 0) {
-    itsTailIdx += (int)itsBuffer.size();
-  }
-  ID = itsTailIdx;
-
+  itsOldTail = itsTailIdx;
+  ID = itsTailIdx.getIndex();
   itsCount -= offset;
    
   pthread_mutex_unlock(&buffer_mutex);
@@ -374,8 +448,8 @@ void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
   }
   pthread_mutex_lock(&buffer_mutex);
   
-  // synchronize counters
-  itsWCount = itsCount;
+  // synchronize writepointers
+  itsOldHead = itsHeadIdx;
   
   // signal that data has become available 
   pthread_cond_broadcast(&data_available);
@@ -398,8 +472,8 @@ void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
   
   pthread_mutex_lock(&buffer_mutex);
   
-  // synchronize counters
-  itsRCount = itsCount;
+  // synchronize readpointers
+  itsOldTail = itsTailIdx;
   
   // signal that space has become available
   pthread_cond_broadcast(&space_available);
@@ -420,9 +494,11 @@ void CyclicBuffer<TYPE>::Dump(void)
 {
   pthread_mutex_lock(&buffer_mutex);
   
-  cerr << "itsHeadIdx = " << itsHeadIdx << endl;
-  cerr << "itsTailIdx = " << itsTailIdx << endl;
-  cerr << "itsCount   = " << itsCount   << endl;
+  cerr << "itsHeadIdx = " << itsHeadIdx.getIndex() << endl;
+  cerr << "itsOldHead = " << itsOldHead.getIndex() << endl;
+  cerr << "itsTailIdx = " << itsTailIdx.getIndex() << endl;
+  cerr << "itsOldTail = " << itsOldTail.getIndex() << endl;
+  cerr << "itsCount   = " << itsCount  << endl;
 
   pthread_mutex_unlock(&buffer_mutex);
 }
