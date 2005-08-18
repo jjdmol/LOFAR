@@ -1,5 +1,3 @@
-INSTALL=/usr/bin/install
-
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
