@@ -48,18 +48,22 @@ lib_LTLIBRARIES = libcal.la libcaldevel.la
 
 libcal_ladir = $(prefix)/include
 libcal_la_HEADERS = \
-	AntennaGains.h
+	AntennaGains.h \
+	AntennaArray.h \
+	AntennaArrayData.h \
+	SpectralWindow.h
 
 libcal_la_SOURCES = \
 	$(top_builddir)/src/CAL_Protocol.cc \
-	AntennaGains.cc
+	AntennaGains.cc \
+	AntennaArray.cc \
+	AntennaArrayData.cc \
+	SpectralWindow.cc
 
 # convenience library
 # lib_LTLIBRARIES = libcaldevel.la
 
 libcaldevel_ladir = $(prefix)/include
-libcaldevel_la_HEADERS = \
-	SpectralWindow.h
 
 libcaldevel_la_SOURCES = \
 	Documentation.h \
@@ -74,11 +78,6 @@ libcaldevel_la_SOURCES = \
 	DipoleModel.cc \
 	DipoleModelData.h \
 	DipoleModelData.cc \
-	SpectralWindow.cc \
-	AntennaArray.h \
-	AntennaArray.cc \
-	AntennaArrayData.h \
-	AntennaArrayData.cc \
 	SubArray.h \
 	SubArray.cc \
 	SubArraySubscription.h \

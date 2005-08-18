@@ -12,6 +12,8 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+13)";
 // include = '<sys/time.h>';
 
 include = '"AntennaGains.h"';
+include = '"AntennaArray.h"';
+include = '"SpectralWindow.h"';
 include = '"Timestamp.h"';
 
 include = '<bitset>';
@@ -123,15 +125,16 @@ event = {
 	    name = "handle";
 	    type = "uint32";
       };
-      param = { // sampling_frequency
-	    name = "sampling_frequency";
-	    type = "double";
+      param = { // the subarray
+	    name = "subarray";
+	    type = "CAL::AntennaArray";
+	    userdefined;
       };
-      param = { // nyquist_zone
-	    name = "nyquist_zone";
-	    type = "int16";
+      param = { // spectral window
+	    name = "spectral_window";
+	    type = "CAL::SpectralWindow";
+	    userdefined;
       };
-      // sampling_frequency and nyquist_zone determine the spectral window
 };
 
 event = {
