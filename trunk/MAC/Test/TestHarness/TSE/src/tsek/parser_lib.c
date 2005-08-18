@@ -75,7 +75,7 @@ struct TType TimerPar1Type = { "timer", /* pcName       */
   NULL,                         /* pcLowerLimit */
   NULL,                         /* pcUpperLimit */
   TIMEKIND,                     /* iKind        */
-  (float) 1.28,                 /* fTimeScaling */
+  (float) 1.00,                 /* fTimeScaling */
   NULL,                         /* ptDefinition */
   0                             /* iRefCount    */
 };
@@ -2013,6 +2013,8 @@ int FindInteraction(
 /*          are detected here.                                              */
 /****************************************************************************/
 {
+  if (strcmp(pcToken, "MTIMER") == 0)
+    return MTIMER_ACTION;
   if (strcmp(pcToken, "TIMER") == 0)
     return TIMER_ACTION;
   if (strcmp(pcToken, "WAIT") == 0)
@@ -3284,6 +3286,9 @@ void WriteAction(
   {
     case TIMER_ACTION:
       strcat(pcBuffer, "TIMER");
+      break;
+    case MTIMER_ACTION:
+      strcat(pcBuffer, "MTIMER");
       break;
     case CLEAR_ACTION:
       strcat(pcBuffer, "CLEAR");

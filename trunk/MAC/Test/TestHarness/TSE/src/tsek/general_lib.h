@@ -106,6 +106,7 @@
 #define SOCKET_UNKNOWN_ERROR    (135)
 #define CONNECTION_LOST         (136)
 #define CONNECTION_ESTABLISHED  (137)
+#define MTIMER_ACTION           (138)
 
 /****************************************************************************/
 /* The struct's                                                             */
