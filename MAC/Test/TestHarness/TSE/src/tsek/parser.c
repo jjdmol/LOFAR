@@ -2159,6 +2159,8 @@ int Parse_TAction(
     iAction = ptAction->iActionType;
     if (iAction == TIMER_ACTION)
       ptDefList = &TimerParamList;
+    else if (iAction == MTIMER_ACTION)
+      ptDefList = &TimerParamList;
     else if (iAction == WAIT_ACTION)
       ptDefList = &OneParam;
     else if (iAction == CLEAR_ACTION)
@@ -2327,6 +2329,8 @@ int Parse_TActionList(
         AddError1("Alternative statemachine doesn't work for arithmetric");
       if (ptActionList->ptThis->iActionType == TIMER_ACTION)
         AddError1("Alternative statemachine doesn't work for timers");
+      if (ptActionList->ptThis->iActionType == MTIMER_ACTION)
+        AddError1("Alternative statemachine doesn't work for mtimers");
       if (ptActionList->ptThis->iActionType == WAIT_ACTION)
         AddError1("Alternative statemachine doesn't work for wait");
       if (ptActionList->ptThis->iActionType == CLEAR_ACTION)

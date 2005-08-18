@@ -107,20 +107,24 @@ void MakeTimerTick(
   {
     iTimerElapsed = FALSE;
     gettimeofday(&tNow, NULL);
-    if (_ptTimerList->ptNext->ptThis->tExpirationMoment.tv_sec < tNow.tv_sec)
+    if (_ptTimerList->ptNext->ptThis->tExpirationMoment.tv_sec == tNow.tv_sec)
+    {
+      if (_ptTimerList->ptNext->ptThis->tExpirationMoment.tv_usec <= tNow.tv_usec)
+      {
+        iTimerElapsed = TRUE;
+      }
+      else
+      {
+        iTimerElapsed = FALSE;
+      }
+    }
+    else if (_ptTimerList->ptNext->ptThis->tExpirationMoment.tv_sec < tNow.tv_sec)
     {
       iTimerElapsed = TRUE;
     }
     else
     {
-      if (_ptTimerList->ptNext->ptThis->tExpirationMoment.tv_sec == tNow.tv_sec)
-      {
-        if (_ptTimerList->ptNext->ptThis->tExpirationMoment.tv_usec < 
-              tNow.tv_usec)
-        {
-          iTimerElapsed = TRUE;
-        }
-      }
+      iTimerElapsed = FALSE;
     }
     if (TRUE == iTimerElapsed)
     {
