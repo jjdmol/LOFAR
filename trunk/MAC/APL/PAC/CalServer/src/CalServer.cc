@@ -454,10 +454,18 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
     // attach subscription to the subarray
     subarray->attach(subscription);
 
+    // return subarray positions
+    ack.subarray = *(static_cast<AntennaArray*>(subarray));
+
+    // return spectral window
+    ack.spectral_window = subarray->getSPW();
+
+#if 0
     // return sampling_frequency and nyquist_zone
     const SpectralWindow& spw = subarray->getSPW();
     ack.sampling_frequency = spw.getSamplingFrequency();
     ack.nyquist_zone = spw.getNyquistZone();
+#endif
 
   } else {
 
@@ -499,6 +507,37 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
 
   return status;
 }
+
+#if 0
+GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  CALGetsubarrayEvent getsubarray(e);
+
+  // create ack
+  CALGetsubarrayackEvent ack;
+  ack.status = SUCCESS;
+
+  // find associated subarray
+  SubArray* subarray = m_subarrays.getByName(getsubarray.name);
+  if (subarray) {
+
+    // return antenna positions
+    ack.positions = *(static_cast<AntennaArray*>(subarray));
+
+  } else {
+
+    // TODO: need sensible value for ack.positions, it is not initialized at this point
+    ack.status = ERR_NO_SUBARRAY;
+
+  }
+
+  port.send(ack);
+
+  return status;
+}
+#endif
 
 void CalServer::write_acc()
 {

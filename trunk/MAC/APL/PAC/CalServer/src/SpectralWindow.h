@@ -26,12 +26,11 @@
 
 #include <string>
 #include <vector>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR {
   namespace CAL {
 
-    class SPWLoader;
-  
     /**
      * Class which represents a window on the electromagnetic spectrum.
      *
@@ -51,6 +50,11 @@ namespace LOFAR {
     class SpectralWindow
     {
     public:
+      /**
+       * Default constructor.
+       */
+      SpectralWindow();
+
       /**
        * Constructor
        */
@@ -99,42 +103,24 @@ namespace LOFAR {
 	HIGH 
       };
 
-    private:
-
-      friend class SPWLoader; // class to load spectral windows from file
-
+    public:
+      /*@{*/
       /**
-       * Prevent default construction.
+       * marshalling methods
        */
-      SpectralWindow();
+      unsigned int getSize();
+      unsigned int pack   (void* buffer);
+      unsigned int unpack (void* buffer);
+      /*@}*/
+
+    private:
 
       std::string m_name;          // name of the spectral window
       double      m_sampling_freq; // sampling frequency
-      int         m_nyquist_zone;  // defines the window
-      int         m_numsubbands;   // number of subbands
+      uint16      m_nyquist_zone;  // defines the window
+      uint16      m_numsubbands;   // number of subbands
     };
 
-    /**
-     * Class which loads spectral window definitions from file.
-     */
-    class SPWLoader
-    {
-    public:
-      /**
-       * Load one or more spectral window definitions from two Blitz array
-       * strings describing the spectral windows.
-       *
-       * Example strings:
-       *
-       *             sampling_frequency          nyquist_zone      nsubbands
-       *                   |                           |              |
-       * params= 6 x 3 [ 160e6 1 512 160e6 2 512 160e6 3 512 200e6 1 512 200e6 2 512 200e6 3 512 ]
-       * names=  6     [     "80"        "160"       "240"       "100"       "200"       "300"   ]
-       *
-       */
-      static std::vector<SpectralWindow> loadFromBlitzStrings(std::string params, std::string names);
-    };
-  
   }; // namespace CAL
 }; // namespace LOFAR
 

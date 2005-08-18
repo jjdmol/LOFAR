@@ -28,6 +28,8 @@
 #include <blitz/array.h>
 #include <map>
 
+#include <Common/LofarTypes.h>
+
 namespace LOFAR {
   namespace CAL {
 
@@ -49,9 +51,10 @@ namespace LOFAR {
        * @param rcuindex  The mapping from antenna to input RCU. If the mapping is one-on-one then this
        * parameter can be omitted. This is used for creating subarrays of an AntennaArray.
        */
+      AntennaArray(); // only used by CAL_Protocol.prot, should not be used directly
       AntennaArray(std::string                    name,
 		   const blitz::Array<double, 3>& pos,
-		   const blitz::Array<int, 2>*    rcuindex = 0);
+		   const blitz::Array<int16,  2>* rcuindex = 0);
       virtual ~AntennaArray();
 
       /**
@@ -74,17 +77,25 @@ namespace LOFAR {
       /**
        * Get the RCU index of a particular antenna.
        */
-      inline int getRCUIndex(int nantenna, int npol) const { return m_rcuindex(nantenna, npol); }
+      inline int16 getRCUIndex(int nantenna, int npol) const { return m_rcuindex(nantenna, npol); }
+
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack   (void* buffer);
+      unsigned int unpack (void* buffer);
+      /*@}*/
 
     private:
       std::string             m_name;     // name of this antenna array
 
     protected:
 
-      friend class AntennaArrayLoader;
-
       blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas x Npol x 3 (x,y,z)
-      blitz::Array<int, 2>    m_rcuindex; // the index of the rcu to which a dipole is connected, dimensions Nantennas x Npol
+      blitz::Array<int16, 2>  m_rcuindex; // the index of the rcu to which a dipole is connected, dimensions Nantennas x Npol
     };
 
     /**

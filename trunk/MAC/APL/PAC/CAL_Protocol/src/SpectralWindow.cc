@@ -26,6 +26,8 @@
 #include <blitz/array.h>
 #include <sstream>
 
+#include <Marshalling.h>
+
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
@@ -35,7 +37,7 @@ using namespace CAL;
 #define SPW_NPARAMS 3 /* sampling_freq, nyquist_zone, numsubbands */
 
 SpectralWindow::SpectralWindow() :
-  m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0)
+  m_name("undefined"), m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0)
 {
 }
 
@@ -67,32 +69,37 @@ double SpectralWindow::getSubbandFreq(int subband, int pos) const
   return freq;
 }
 
-vector<SpectralWindow> SPWLoader::loadFromBlitzStrings(string params, string names)
+unsigned int SpectralWindow::getSize()
 {
-  vector<SpectralWindow> spws;
-  Array<double, SPW_DIMS> paramsArray;
-  Array<string, 1>        namesArray;
-  
-  istringstream streamparams(params);
-  istringstream streamnames(names);
-  
-  streamparams >> paramsArray;
-  streamnames  >> namesArray;
-
-  // check for correct extent
-  if (paramsArray.extent(secondDim) != SPW_NPARAMS) return spws;
-  if (paramsArray.extent(firstDim) != namesArray.extent(firstDim)) return spws;
-
-  for (int i = 0; i < paramsArray.extent(firstDim); i++)
-  {
-    double sampling_freq = paramsArray(i, 0);
-    int    nyquist_zone  = int(floor(paramsArray(i, 1)));
-    int    numsubbands   = int(floor(paramsArray(i, 2)));
-    
-    spws.push_back(SpectralWindow(namesArray(i), sampling_freq, nyquist_zone, numsubbands));
-  }
-  
-  return spws;
+  return MSH_STRING_SIZE(m_name) + sizeof(double) + sizeof(uint16) + sizeof(uint16);
 }
 
+unsigned int SpectralWindow::pack(void* buffer)
+{
+  unsigned int offset = 0;
 
+  MSH_PACK_STRING(buffer, offset, m_name);
+  memcpy(buffer, &m_sampling_freq, sizeof(double));
+  offset += sizeof(double);
+  memcpy(buffer, &m_nyquist_zone, sizeof(uint16));
+  offset += sizeof(uint16);
+  memcpy(buffer, &m_numsubbands, sizeof(uint16));
+  offset += sizeof(uint16);
+
+  return offset;
+}
+
+unsigned int SpectralWindow::unpack(void* buffer)
+{
+  unsigned int offset = 0;
+
+  MSH_UNPACK_STRING(buffer, offset, m_name);
+  memcpy(&m_sampling_freq, buffer, sizeof(double));
+  offset += sizeof(double);
+  memcpy(&m_nyquist_zone, buffer, sizeof(uint16));
+  offset += sizeof(uint16);
+  memcpy(&m_numsubbands, buffer, sizeof(uint16));
+  offset += sizeof(uint16);
+
+  return offset;
+}

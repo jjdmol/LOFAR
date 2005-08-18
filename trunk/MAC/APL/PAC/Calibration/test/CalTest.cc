@@ -44,9 +44,9 @@ using namespace CAL;
 using namespace RTC;
 using namespace CAL_Protocol;
 
-CalTest::CalTest(string name, string arrayname, int nantennas, int clock, int nyquistzone)
+CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone)
   : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
-  m_arrayname(arrayname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone)
+    m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
@@ -126,15 +126,12 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
     {
     case F_ENTRY:
       {
-	ostringstream name;
-	name << "test001_pid=" << (int)getpid();
-	m_name = name.str();
-	START_TEST(m_name, "test START");
+	START_TEST("test001", "test START");
 
 	CALStartEvent start;
 
-	start.name   = m_name;
-	start.parent = m_arrayname;
+	start.name   = m_arrayname;
+	start.parent = m_parentname;
 	start.subset.reset();
 
 	// select antennas
@@ -152,13 +149,13 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	CALStartackEvent ack(e);
 
-	TESTC_ABORT(ack.name == m_name, CalTest::final);
+	TESTC_ABORT(ack.name == m_arrayname, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	// send subscribe
 	CALSubscribeEvent subscribe;
 
-	subscribe.name = m_name;
+	subscribe.name = m_arrayname;
 	subscribe.subbandset.reset();
 	subscribe.subbandset.set(100);
 
@@ -186,6 +183,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	LOG_INFO_STR("gains.shape = " << update.gains.getGains().shape());
 	LOG_INFO_STR("quality.shape = " << update.gains.getQuality().shape());
 
+#if 0
 	//LOG_INFO_STR("gains=" << update.gains.getGains());
 
 	CALUnsubscribeEvent unsubscribe;
@@ -193,6 +191,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	unsubscribe.handle = m_handle;
 	
 	TESTC_ABORT(m_server.send(unsubscribe), CalTest::final);
+#endif
       }
       break;
 
@@ -206,7 +205,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	m_handle = 0; // clear handle
 
 	CALStopEvent stop;
-	stop.name = m_name;
+	stop.name = m_arrayname;
 	TESTC_ABORT(m_server.send(stop), CalTest::final);
       }
       break;
@@ -214,7 +213,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
     case CAL_STOPACK:
       {
 	CALStopackEvent ack(e);
-	TESTC_ABORT(ack.name == m_name, CalTest::final);
+	TESTC_ABORT(ack.name == m_arrayname, CalTest::final);
 	TESTC_ABORT(ack.status == SUCCESS, CalTest::final);
 
 	TRAN(CalTest::final); // next test
@@ -274,10 +273,9 @@ int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-  if (argc != 5)
-  {
-    cerr << "usage: CalTest arrayname nantennas samplingfrequency nyquistzone" << endl;
-    cerr << "e.g.   CalTest FTS-1-LBA    8         160000000           1" << endl;
+  if (argc != 6) {
+    cerr << "usage: CalTest arrayname parentname nantennas samplingfrequency nyquistzone" << endl;
+    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1" << endl;
     cerr << "(see AntennaArrays.conf for other configurations)" << endl;
     exit(EXIT_FAILURE);
   }
@@ -285,7 +283,7 @@ int main(int argc, char** argv)
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("RSPDriver Test driver", &cerr);
-  s.addTest(new CalTest("CalTest", argv[1], atoi(argv[2]), atoi(argv[3]), atoi(argv[4])));
+  s.addTest(new CalTest("CalTest", argv[1], argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5])));
   s.run();
   long nFail = s.report();
   s.free();

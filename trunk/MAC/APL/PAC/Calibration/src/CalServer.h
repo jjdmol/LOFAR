@@ -79,6 +79,7 @@ namespace LOFAR {
       GCFEvent::TResult handle_cal_stop       (GCFEvent& e, GCFPortInterface &port);
       GCFEvent::TResult handle_cal_subscribe  (GCFEvent& e, GCFPortInterface &port);
       GCFEvent::TResult handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port);
+      //GCFEvent::TResult handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port);
       /*@}*/
 
       /**

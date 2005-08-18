@@ -43,7 +43,7 @@ namespace LOFAR
 	   * up connection establishment information using the GTMNameService and
 	   * GTMTopologyService classes.
 	   */
-	  CalTest(string name, string arrayname, int nantennas, int clock, int nyquistzone);
+	  CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone);
 	  virtual ~CalTest();
 
 	  // state methods
@@ -79,10 +79,11 @@ namespace LOFAR
 	  LOFAR::uint32 m_handle; // subscription handle
 	  int m_counter1; // general purpose test counter, semantics assigned per test
 
-	  string m_name; // name of the current array
-	  string m_arrayname; // name of the array on which to calibrate
-	  int    m_nantennas; // number of antennas in the array
-	  int    m_clock;     // frequency of the sampling clock
+	  string m_name;        // name of the current array
+	  string m_arrayname;   // name of the new subarray
+	  string m_parentname;  // name of the parent array of the subarray
+	  int    m_nantennas;   // number of antennas in the array
+	  int    m_clock;       // frequency of the sampling clock
 	  int    m_nyquistzone; // nyquistzone of interest
 	};
 
