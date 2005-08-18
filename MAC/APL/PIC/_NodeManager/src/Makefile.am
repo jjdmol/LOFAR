@@ -1,10 +1,8 @@
-INSTALL=/usr/bin/install -C
-
 AUTOGEN = autogen
 SUFFIXES = .ph
 
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 pkgincludedir = $(includedir)/APL
 pkginclude_HEADERS = \
@@ -15,7 +13,8 @@ DOCHDRS	=	$(pkginclude_HEADERS) \
 	NodeManagerDaemon.h \
 	NodeManagerClient.h \
 	PropertyProxy.h \
-	NM_Protocol.h
+	NMDefines.h \
+	NM_Protocol.ph
    
 lib_LTLIBRARIES 	= libnm.la
 
@@ -58,5 +57,8 @@ configfiles_DATA= \
 %.conf: %.conf.in
 	cp $< $@
 
+clean-local:
+	rm -f *.ph
+	
 include $(lofar_sharedir)/Makefile.common
 

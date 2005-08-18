@@ -1,5 +1,3 @@
-INSTALL=/usr/bin/install -C
-
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	VB1.param
