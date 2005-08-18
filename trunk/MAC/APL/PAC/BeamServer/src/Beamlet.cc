@@ -41,25 +41,21 @@ using namespace std;
 const W_TYPE SPEED_OF_LIGHT_MS = 299792458.0; // speed of light in meters/sec
 const complex<W_TYPE> I_COMPLEX = complex<W_TYPE>(0.0,1.0);
 
-Beamlet::Beamlet() :
-  m_spw(0), m_subband(0), /*m_index(-1),*/ m_beam(0)
+Beamlet::Beamlet() : m_subband(0), m_beam(0)
 {}
 
 Beamlet::~Beamlet()
 {
 }
 
-int Beamlet::allocate(const Beam& beam,
-		      CAL::SpectralWindow const& spw, int subband)
+int Beamlet::allocate(const Beam& beam, int subband, int nsubbands)
 {
   // don't allow second allocation
   if (m_beam) return -1;
 
   // check that the subband is within the spectral window
-  if ((subband >= spw.getNumSubbands()) 
-      || (subband < 0) ) return -1;
+  if ((subband >= nsubbands) || (subband < 0) ) return -1;
 
-  m_spw     = &spw;
   m_subband = subband;
   m_beam    = &beam;
 
@@ -70,7 +66,6 @@ int Beamlet::deallocate()
 {
   if (!m_beam) return -1;
 
-  m_spw     = 0;
   m_subband = -1;
   m_beam    = 0;
 
@@ -80,6 +75,11 @@ int Beamlet::deallocate()
 const Beam* Beamlet::getBeam() const
 {
   return m_beam;
+}
+
+const CAL::SpectralWindow* Beamlet::getSPW() const
+{
+  return (m_beam ? m_beam->getSPW() : 0);
 }
 
 Beamlets::Beamlets(int nbeamlets) : m_nbeamlets(nbeamlets)
@@ -99,7 +99,7 @@ Beamlet* Beamlets::get(int index) const
   return m_beamlets + index;
 }
 
-void Beamlets::calculate_weights(const Array<W_TYPE, 3>&          pos,
+void Beamlets::calculate_weights(const Array<W_TYPE, 3>&         pos,
 				      Array<complex<W_TYPE>, 3>& weights)
 {
   const Array<W_TYPE,2>* lmn = 0;
@@ -146,11 +146,9 @@ void Beamlets::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	    }
 
 	  W_TYPE freq = 0.0;
-	  if (beamlet->spw())
-	    {
-	      freq = beamlet->spw()->getSubbandFreq(beamlet->subband());
-	      if (0 == bi) LOG_DEBUG_STR("freq = " << freq);
-	    }
+	  ASSERT(beamlet->getSPW());
+	  freq = beamlet->getSPW()->getSubbandFreq(beamlet->subband());
+	  if (0 == bi) LOG_DEBUG_STR("freq = " << freq);
 
 	  //
 	  // calculate (xm - yl + zn) for both polarizations

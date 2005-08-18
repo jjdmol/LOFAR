@@ -28,11 +28,15 @@
 #include "Beamlet2SubbandMap.h"
 #include <Timestamp.h>
 #include <SpectralWindow.h>
+#include <AntennaArray.h>
+#include <AntennaGains.h>
+#include <MEPHeader.h>
 #include <time.h>
 
 #include <queue>
 #include <set>
-#include <list>
+#include <map>
+#include <bitset>
 
 #include <blitz/array.h>
 
@@ -49,7 +53,7 @@ namespace LOFAR {
       /**
        * Default constructor
        */
-      Beam(double sampling_frequency, int nyquist_zone, int nsubbands);
+      Beam(std::string name, int nsubbands);
 
 	
       /**
@@ -61,11 +65,12 @@ namespace LOFAR {
        * Allocate a new beam.
        * @param allocation Allocation of beamlet (indices) to subband (indices)
        * @param beamlets Allocate from this set of beamlets.
+       * @param nsubbands The maximum number of subbands for this beam.
        * @return bool true if allocation successful, false if allocation failed
        * because specified beamlet has already been allocated or there is 
        * a range problem with the beamlet or subband indices.
        */
-      bool allocate(BS_Protocol::Beamlet2SubbandMap allocation, Beamlets& beamlets);
+      bool allocate(BS_Protocol::Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubbands);
 
       /**
        * Modify beam by chaning the subbands
@@ -92,6 +97,21 @@ namespace LOFAR {
        * Add a pointing to a beam.
        */
       void addPointing(const Pointing& pointing);
+
+      /**
+       * Set the spectral window for this beam.
+       */
+      void setSpectralWindow(CAL::SpectralWindow& spw);
+
+      /**
+       * Set the subarray (positions & rcu_index)
+       */
+      void setSubarray(const CAL::AntennaArray& array);
+
+      /**
+       * setCalibration weights for the receivers
+       */
+      void setCalibration(const CAL::AntennaGains& gains);
 
       /**
        * Convert coordinates from the m_pointing_queue
@@ -124,6 +144,16 @@ namespace LOFAR {
        */
       const blitz::Array<W_TYPE,2>& getLMNCoordinates() const;
 
+      /**
+       * Return the spectral window for this beam.
+       */
+      const CAL::SpectralWindow* getSPW() const;
+
+      /**
+       * Get the name of the beam or subarray on which
+       */
+      std::string getName() const { return m_name; }
+
     private: // methods
 
       /**
@@ -134,6 +164,11 @@ namespace LOFAR {
     private:
 
       /**
+       * Name of the beam or subarray on which the beam is allocated.
+       */
+      std::string m_name;
+
+      /**
        * Allocation.
        */
       BS_Protocol::Beamlet2SubbandMap m_allocation;
@@ -141,7 +176,8 @@ namespace LOFAR {
       /**
        * SpectralWindow
        */
-      CAL::SpectralWindow m_spw;
+      CAL::SpectralWindow* m_spw;
+      int                  m_nsubbands;
 	  
       /** current direction of the beam */
       Pointing m_pointing;
@@ -164,6 +200,16 @@ namespace LOFAR {
        * duplicate beamlet instances in the set.
        */
       std::set<Beamlet*> m_beamlets;
+      
+      /**
+       * The antenna array.
+       */
+      CAL::AntennaArray m_array;
+
+      /**
+       * The antenna gains.
+       */
+      CAL::AntennaGains m_gains;
 
     private:
       /**
@@ -191,8 +237,22 @@ namespace LOFAR {
       /**
        * Create a new beam.
        */
-      Beam* get(BS_Protocol::Beamlet2SubbandMap allocation,
-		double sampling_frequency, int nyquist_zone);
+      Beam* get(std::string name, BS_Protocol::Beamlet2SubbandMap allocation, int nsubbands);
+
+      /**
+       * Set calibration handle for a beam
+       */
+      void setCalibrationHandle(Beam* beam, uint32 handle);
+
+      /**
+       * Find calibration handle.
+       */
+      uint32 findCalibrationHandle(Beam* beam) const;
+
+      /**
+       * Update gains
+       */
+      bool updateCalibration(uint32 handle, const CAL::AntennaGains& gains);
 
       /**
        * Check if a beam exists.
@@ -214,7 +274,6 @@ namespace LOFAR {
 			     const blitz::Array<W_TYPE, 3>&         pos,
 			     blitz::Array<std::complex<W_TYPE>, 3>& weights);
 
-
       /**
        * Return the combined beamlet to subband
        * mapping for all beams.
@@ -223,10 +282,20 @@ namespace LOFAR {
 
     private:
       /**
-       * List of active beams.
+       * Registry of active beams with mapping to calibration handle.
        */
-      std::list<Beam*> m_beams;
-      Beamlets         m_beamlets; // collection of all beamlets
+      std::map<Beam*, uint32> m_beams;
+
+      /**
+       * Reverde map from handle to beam to find beam corresponding to
+       * calibration update.
+       */
+      std::map<uint32, Beam*> m_handle2beam;
+
+      /**
+       * Collection of all beamlets;
+       */
+      Beamlets                m_beamlets; // collection of all beamlets
     };
 
   };

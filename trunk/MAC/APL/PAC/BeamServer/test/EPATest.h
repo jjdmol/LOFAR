@@ -29,6 +29,8 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
+#include <string>
+
 namespace LOFAR {
   namespace BS {
 
@@ -41,7 +43,7 @@ namespace LOFAR {
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      EPATest(string name);
+      EPATest(string name, char* subarrayname);
       virtual ~EPATest();
 
       // state methods
@@ -70,7 +72,9 @@ namespace LOFAR {
 
     private:
       // ports
-      GCFPort       beam_server;
+      GCFPort     beam_server;
+
+      std::string m_subarrayname;
 
     };
 

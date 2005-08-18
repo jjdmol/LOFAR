@@ -24,7 +24,6 @@
 #define BEAMLET_H_
 
 #include <SpectralWindow.h>
-
 #include <blitz/array.h>
 
 // define the datatype for the weight calculation
@@ -39,7 +38,7 @@
 
 namespace LOFAR {
   namespace BS {
-    // forward declaration of Beam
+
     class Beam;
 
     class Beamlet
@@ -57,12 +56,12 @@ namespace LOFAR {
 
 	/**
 	 * Allocate the beamlet.
-	 * @param spw Allocate within this spectral window.
 	 * @param subband Index of the subband to allocate
+	 * @param nsubbands Maximum number of subbands
 	 * within the spectral window.
 	 * @return 0 if allocation succeeded, < 0 otherwise.
 	 */
-	int allocate(const Beam& beam, CAL::SpectralWindow const& spw, int subband);
+	int allocate(const Beam& beam, int subband, int nsubbands);
 
 	/**
 	 * Deallocate the beamlet
@@ -78,7 +77,7 @@ namespace LOFAR {
 	/**
 	 * Get pointer to spectral window for this beamlet.
 	 */
-	const CAL::SpectralWindow* spw() const;
+	const CAL::SpectralWindow* getSPW() const;
 
 	/**
 	 * Get index (from 0) of the subband within the spectral window.
@@ -98,9 +97,6 @@ namespace LOFAR {
 
 
       private:
-	/** spectral window of the subband */
-	const CAL::SpectralWindow * m_spw;
-
 	/** subband within the spectral window */
 	int m_subband;
 
@@ -123,9 +119,8 @@ namespace LOFAR {
 	Beamlet& operator= (const Beamlet&); // not implemented
       };
 
-    inline bool Beamlet::allocated() const            { return m_beam != 0; }
-    inline const CAL::SpectralWindow* Beamlet::spw() const { return m_spw; }
-    inline int  Beamlet::subband()   const            { return m_subband; }
+    inline bool  Beamlet::allocated() const                   { return m_beam != 0; }
+    inline int   Beamlet::subband()   const                   { return m_subband; }
     //inline int  Beamlet::index()     const            { return m_index; }
 
     /**

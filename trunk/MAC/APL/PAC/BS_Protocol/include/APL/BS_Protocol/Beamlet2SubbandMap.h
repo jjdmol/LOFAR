@@ -26,10 +26,12 @@
 #define BEAMLET2SUBBANDMAP_H_
 
 #include "Marshalling.h"
+#include <EPA_Protocol.ph>
 
 #include <complex>
 #include <string>
 #include <map>
+#include <bitset>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
@@ -61,6 +63,10 @@ namespace LOFAR {
       unsigned int pack  (void* buffer);
       unsigned int unpack(void *buffer);
       /*@}*/
+
+    public:
+      /* other methods */
+      std::bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> getAsBitset() const;
 
     private:
       /**
