@@ -54,7 +54,6 @@ using namespace RTC;
 
 using namespace RSP_Protocol;
 
-#define MAX_N_SPECTRAL_WINDOWS 1
 #define COMPUTE_INTERVAL 10
 #define UPDATE_INTERVAL  1
 #define N_DIM 3 // x, y, z or l, m, n
@@ -72,11 +71,11 @@ BeamServer::BeamServer(string name)
 {
   registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_signalnames);
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, BS_PROTOCOL);
   m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
   m_calserver.init(*this, "calserver", GCFPortInterface::SAP, CAL_PROTOCOL);
-
 }
 
 BeamServer::~BeamServer()
@@ -100,6 +99,7 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	if (!m_rspdriver.isConnected()) m_rspdriver.open();
 	if (!m_calserver.isConnected()) m_calserver.open();
+	m_rspdriver.cancelAllTimers();
       }
       break;
 
@@ -130,6 +130,10 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 	// initialize weight matrix
 	m_weights   = complex<W_TYPE>(0,0);
 	m_weights16 = complex<int16_t>(0,0);
+
+	// start update timer and start accepting clients
+	m_rspdriver.setTimer(0, 0, UPDATE_INTERVAL, 0);
+	if (!m_acceptor.isConnected()) m_acceptor.open();
 
 	TRAN(BeamServer::enabled);
       }
@@ -182,225 +186,366 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
   undertaker();
   
   switch (e.signal)
-  {
-    case F_ENTRY:
     {
-      // start update timer
-      m_rspdriver.setTimer(0, 0, UPDATE_INTERVAL, 0);
-      if (!m_acceptor.isConnected()) m_acceptor.open();
-    }
-    break;
+    case F_ENTRY:
+      {
+      }
+      break;
 
     case F_ACCEPT_REQ:
-    {
-      GCFTCPPort* client = new GCFTCPPort();
-      client->init(*this, "client", GCFPortInterface::SPP, BS_PROTOCOL);
-      m_acceptor.accept(*client);
-      m_client_list.push_back(client);
+      {
+	GCFTCPPort* client = new GCFTCPPort();
+	client->init(*this, "client", GCFPortInterface::SPP, BS_PROTOCOL);
+	m_acceptor.accept(*client);
+	m_client_list.push_back(client);
 
-      LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
-    }
-    break;
+	LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
+      }
+      break;
       
     case F_CONNECTED:
-    {
-      LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
-    }
-    break;
+      {
+	LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
+      }
+      break;
 
     case F_TIMER:
-    {
-      GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
-
-      LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
-
-      period++;
-      if (0 == (period % COMPUTE_INTERVAL))
       {
-	period = 0;
+	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
-	// compute new weights after sending weights
-	compute_weights(Timestamp(timer->sec, 0) + COMPUTE_INTERVAL);
+	LOG_DEBUG_STR("timer=" << Timestamp(timer->sec, timer->usec));
 
-	send_weights(Timestamp(timer->sec,0) + COMPUTE_INTERVAL);
+	period++;
+	if (0 == (period % COMPUTE_INTERVAL))
+	  {
+	    period = 0;
+
+	    // compute new weights after sending weights
+	    compute_weights(Timestamp(timer->sec, 0) + COMPUTE_INTERVAL);
+
+	    send_weights(Timestamp(timer->sec,0) + COMPUTE_INTERVAL);
+	  }
+
+	if (m_beams_modified)
+	  {
+	    send_sbselection();
+
+	    m_beams_modified = false;
+	  }
       }
-
-      if (m_beams_modified)
-      {
-	send_sbselection();
-
-	m_beams_modified = false;
-      }
-    }
-    break;
+      break;
 
     case BS_BEAMALLOC:
-    {
-      BSBeamallocEvent event(e);
-      beamalloc_action(event, port);
-    }
-    break;
+      {
+	BSBeamallocEvent event(e);
+	if (beamalloc_start(event, port)) {
+	  TRAN(BeamServer::beamalloc_state);
+	}
+      }
+      break;
 
     case BS_BEAMFREE:
-    {
-      BSBeamfreeEvent event(e);
-      beamfree_action(event, port);
-    }
-    break;
+      {
+	BSBeamfreeEvent event(e);
+	if (beamfree_start(event, port)) {
+	  TRAN(BeamServer::beamfree_state);
+	}
+      }
+      break;
 
     case BS_BEAMPOINTTO:
-    {
-      BSBeampointtoEvent event(e);
-      beampointto_action(event, port);
-    }
-    break;
+      {
+	BSBeampointtoEvent event(e);
+	beampointto_action(event, port);
+      }
+      break;
       
     case RSP_SETWEIGHTSACK:
-    {
-      RSPSetweightsackEvent ack(e);
-      if (RSP_Protocol::SUCCESS != ack.status)
       {
-	LOG_ERROR("RSP_SETWEIGHTSACK: FAILURE");
+	RSPSetweightsackEvent ack(e);
+	if (RSP_Protocol::SUCCESS != ack.status)
+	  {
+	    LOG_ERROR("RSP_SETWEIGHTSACK: FAILURE");
+	  }
       }
-    }
-    break;
+      break;
       
     case RSP_SETSUBBANDSACK:
-    {
-      RSPSetsubbandsackEvent ack(e);
-      if (RSP_Protocol::SUCCESS != ack.status)
       {
-	LOG_ERROR("RSP_SETSUBBANDSACK: FAILURE");
+	RSPSetsubbandsackEvent ack(e);
+	if (RSP_Protocol::SUCCESS != ack.status)
+	  {
+	    LOG_ERROR("RSP_SETSUBBANDSACK: FAILURE");
+	  }
       }
-    }
-    break;
+      break;
 
     case F_DISCONNECTED:
-    {
-      LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
-      port.close();
+      {
+	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
+	port.close();
 
-      if (&m_rspdriver == &port || &m_acceptor == &port || &m_calserver == &port)
-      {
-	m_acceptor.close();
-	TRAN(BeamServer::initial);
-      }
-      else
-      {
-	// deallocate all beams for this client
-	for (set<Beam*>::iterator beamit = m_client_beams[&port].begin();
-	     beamit != m_client_beams[&port].end(); ++beamit)
-	{
-	  if (!m_beams.destroy(*beamit)) {
-	    LOG_WARN("Beam not found...");
+	if (&m_rspdriver == &port || &m_acceptor == &port || &m_calserver == &port)
+	  {
+	    m_acceptor.close();
+	    TRAN(BeamServer::initial);
 	  }
-	}
-	m_client_beams.erase(&port);
+	else
+	  {
+	    // deallocate all beams for this client
+	    for (set<Beam*>::iterator beamit = m_client_beams[&port].begin();
+		 beamit != m_client_beams[&port].end(); ++beamit)
+	      {
+		if (!m_beams.destroy(*beamit)) {
+		  LOG_WARN("Beam not found...");
+		}
+	      }
+	    m_client_beams.erase(&port);
 
-	// update the subband selection
-	update_sbselection();
+	    // update the subband selection
+	    update_sbselection();
 
-	m_client_list.remove(&port);
-	m_dead_clients.push_back(&port);
+	    m_client_list.remove(&port);
+	    m_dead_clients.push_back(&port);
+	  }
       }
-    }
-    break;
+      break;
 
     case F_EXIT:
-    {
-      m_rspdriver.cancelAllTimers();
-    }
-    break;
+      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-  }
+    }
+
+  return status;
+}
+GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      {
+	// subscribe to calibration updates
+	CALSubscribeEvent subscribe;
+	subscribe.name = m_bt.getBeam()->getName();
+	subscribe.subbandset = m_bt.getBeam()->getAllocation().getAsBitset();
+	m_calserver.send(subscribe);
+      }
+      break;
+
+    case CAL_SUBSCRIBEACK:
+      {
+	CALSubscribeackEvent ack(e);
+	BSBeamallocackEvent beamallocack;
+
+	if (CAL_Protocol::SUCCESS == ack.status) {
+
+	  // set positions on beam
+	  m_bt.getBeam()->setSubarray(ack.subarray);
+
+	  // set spectral window
+	  m_bt.getBeam()->setSpectralWindow(ack.spectral_window);
+
+	  // set calibration handle for this beam
+	  m_beams.setCalibrationHandle(m_bt.getBeam(), ack.handle);
+
+	  // send succesful ack
+	  beamallocack.status = BS_Protocol::SUCCESS;
+	  beamallocack.handle = (uint32)m_bt.getBeam();
+	  m_bt.getPort()->send(beamallocack);
+
+	} else {
+
+	  // failed to subscribe
+	  beamallocack.status = ERR_BEAMALLOC;
+	  beamallocack.handle = 0;
+	  m_bt.getPort()->send(beamallocack);
+
+	}
+
+	TRAN(BeamServer::enabled);
+      }
+      break;
+
+    case F_DISCONNECTED:
+      {
+	LOG_INFO("\n>>> deferring F_DISCONNECTED event <<<\n");
+	defer(e, port); // process F_DISCONNECTED again in enabled state
+
+	if (&port == m_bt.getPort()) TRAN(BeamServer::enabled);
+      }
+      break;
+
+    case F_EXIT:
+      {
+	// completed current transaction, reset
+	m_bt.reset();
+
+	// recall any deferred events
+	recall(port);
+      }
+      break;
+
+    default:
+      // all other events are handled in the enabled state
+      LOG_INFO("\n>>> deferring event <<<\n");
+      defer(e, port);
+      break;
+    }
 
   return status;
 }
 
-void BeamServer::beamalloc_action(BSBeamallocEvent& ba,
-				  GCFPortInterface& port)
+GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& e, GCFPortInterface& port)
 {
-  BSBeamallocackEvent ack;
-  ack.handle = 0;
-  ack.status = BS_Protocol::SUCCESS;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  if (ba.allocation().size() > MEPHeader::N_BEAMLETS)
-  {
-    LOG_ERROR("BEAMALLOC: allocation larger than N_BEAMLETS");
-    
-    ack.status = BS_Protocol::ERR_RANGE;
-    port.send(ack);
-    return;                          // RETURN
-  }
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      {
+	// unsubscribe
+	CALUnsubscribeEvent unsubscribe;
+	unsubscribe.handle = m_beams.findCalibrationHandle(m_bt.getBeam());
+	ASSERT(0 != unsubscribe.handle);
+	m_calserver.send(unsubscribe);
+      }
+      break;
 
+    case CAL_UNSUBSCRIBEACK:
+      {
+	CALUnsubscribeackEvent ack(e);
+	BSBeamfreeackEvent beamfreeack;
+
+	ASSERT(CAL_Protocol::SUCCESS == ack.status);
+
+	// send succesful ack
+	beamfreeack.status = BS_Protocol::SUCCESS;
+	beamfreeack.handle = (uint32)m_bt.getBeam();
+
+	// destroy beam
+	m_beams.destroy(m_bt.getBeam());
+	
+	m_bt.getPort()->send(beamfreeack);
+
+	TRAN(BeamServer::enabled);
+      }
+      break;
+
+    case F_DISCONNECTED:
+      {
+	LOG_INFO("\n>>> deferring F_DISCONNECTED event <<<\n");
+	defer(e, port); // process F_DISCONNECTED again in enabled state
+
+	if (&port == m_bt.getPort()) TRAN(BeamServer::enabled);
+      }
+      break;
+
+    case F_EXIT:
+      {
+	// completed current transaction, reset
+	m_bt.reset();
+
+	// recall any deferred events
+	recall(port);
+      }
+      break;
+
+    default:
+      // all other events are handled in the enabled state
+      LOG_INFO("\n>>> deferring event <<<\n");
+      defer(e, port);
+      break;
+    }
+
+  return status;
+}
+
+bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
+				 GCFPortInterface& port)
+{
   // allocate the beam
-  Beam* beam = m_beams.get(ba.allocation, m_sampling_frequency, m_nyquist_zone);
+  Beam* beam = m_beams.get(ba.subarrayname, ba.allocation, MEPHeader::N_SUBBANDS);
 
   if (!beam) {
 
-    LOG_ERROR("BEAMALLOC failed.");
-    ack.status = BS_Protocol::ERR_BEAMALLOC;
+    LOG_ERROR("BEAMALLOC: failed to allocate beam");
 
-  } else {
+    BSBeamallocackEvent ack;
+    ack.handle = 0;
+    ack.status = BS_Protocol::ERR_RANGE;
+    port.send(ack);
 
-    ack.handle = (uint32)beam;
-    m_client_beams[&port].insert(beam);
-    update_sbselection();
+    return false;
   }
 
-  port.send(ack);
+  m_bt.set(&port, beam);
+
+  // register new beam
+  m_client_beams[&port].insert(beam);
+  update_sbselection();
+
+  return true;
 }
 
-void BeamServer::beamfree_action(BSBeamfreeEvent& bf,
-				 GCFPortInterface& port)
+bool BeamServer::beamfree_start(BSBeamfreeEvent&  bf,
+				GCFPortInterface& port)
 {
-  BSBeamfreeackEvent ack;
-  ack.handle = bf.handle;
-  ack.status = BS_Protocol::SUCCESS;
-  
   Beam* beam = (Beam*)bf.handle;
 
-  if (!m_beams.destroy(beam)) {
+  if (!m_beams.exists(beam)) {
 
-    LOG_ERROR("BEAMFREE failed");
+    LOG_ERROR("BEAMFREE failed: beam does not exist");
 
+    BSBeamfreeackEvent ack;
+    ack.handle = bf.handle;
     ack.status = BS_Protocol::ERR_BEAMFREE;
+    port.send(ack);
 
-  } else {
-
-    m_client_beams[&port].erase(beam);
-    update_sbselection();
+    return false;
 
   }
 
-  port.send(ack);
+  // remember on which beam we're working
+  m_bt.set(&port, beam);
+
+  m_client_beams[&port].erase(beam);
+  update_sbselection();
+
+  return true;
 }
 
-void BeamServer::beampointto_action(BSBeampointtoEvent& pt,
+bool BeamServer::beampointto_action(BSBeampointtoEvent& pt,
 				    GCFPortInterface& /*port*/)
 {
+  bool status = true;
+
   Beam* beam = (Beam*)pt.handle;
 
-  if (m_beams.exists(beam))
-    {
-      LOG_INFO_STR("received new coordinates: " << pt.angle[0] << ", "
-		   << pt.angle[1] << ", time=" << pt.timestamp);
+  if (m_beams.exists(beam))  {
+    LOG_INFO_STR("received new coordinates: " << pt.angle[0] << ", "
+		 << pt.angle[1] << ", time=" << pt.timestamp);
 
-      //
-      // If the time is not set, then activate the command
-      // 2 * COMPUTE_INTERVAL seconds from now, because that's how
-      // long it takes the command to flow through the pipeline.
-      //
-      if (Timestamp(0,0) == pt.timestamp) pt.timestamp.setNow(2 * COMPUTE_INTERVAL);
-      beam->addPointing(Pointing(pt.angle[0],
-				 pt.angle[1],
-				 pt.timestamp,
-				 (Pointing::Type)pt.type));
-    }
-  else LOG_ERROR(formatString("BEAMPOINTTO: invalid beam handle (%d)", pt.handle));
+    //
+    // If the time is not set, then activate the command
+    // 2 * COMPUTE_INTERVAL seconds from now, because that's how
+    // long it takes the command to flow through the pipeline.
+    //
+    if (Timestamp(0,0) == pt.timestamp) pt.timestamp.setNow(2 * COMPUTE_INTERVAL);
+    beam->addPointing(Pointing(pt.angle[0],
+			       pt.angle[1],
+			       pt.timestamp,
+			       (Pointing::Type)pt.type));
+  } else {
+    LOG_ERROR(formatString("BEAMPOINTTO: invalid beam handle (%d)", pt.handle));
+    status = false;
+  }
+
+  return status;
 }
 
 BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
@@ -520,6 +665,27 @@ void BeamServer::send_sbselection()
 
     m_rspdriver.send(ss);
   }
+}
+
+void BeamServer::defer(GCFEvent& e, GCFPortInterface& p)
+{
+  char* event = new char[sizeof(e) + e.length];
+  memcpy(event, (const char*)&e, sizeof(e) + e.length);
+  m_deferred_queue[&p].push_back(event);
+}
+
+GCFEvent::TResult BeamServer::recall(GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+
+  if (m_deferred_queue[&p].size() > 0) {
+    char* event = m_deferred_queue[&p].front();
+    m_deferred_queue[&p].pop_front();
+    status = dispatch(*(GCFEvent*)event, p);
+    delete [] event;
+  }
+  
+  return status;
 }
 
 int main(int argc, char** argv)

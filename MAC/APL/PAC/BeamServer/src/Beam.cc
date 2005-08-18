@@ -41,29 +41,32 @@ using namespace BS_Protocol;
 using namespace std;
 using namespace RTC;
 
-Beam::Beam(double sampling_frequency, int nyquist_zone, int nsubbands) :
-  m_spw("BeamSPW", sampling_frequency, nyquist_zone, nsubbands)
+Beam::Beam(string name, int nsubbands) : m_name(name), m_spw(0), m_nsubbands(nsubbands)
 {}
 
 Beam::~Beam()
 {
   deallocate();
+  if (m_spw) delete m_spw; // delete spectral window
 }
 
-bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets)
+bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubbands)
 {
-  map<uint16,uint16>::iterator it;
+  if (   0 == allocation().size()
+      || allocation().size() > (unsigned)nsubbands) return false;
 
   // clear the beamlet set just to be sure
   m_beamlets.clear();
 
-  for (it = allocation().begin(); it != allocation().end(); ++it) {
+  for (map<uint16,uint16>::iterator it = allocation().begin();
+       it != allocation().end(); ++it) {
+
     Beamlet* beamlet = beamlets.get((int)it->first);
 
     if (!beamlet) goto failure;
 
     m_beamlets.insert(beamlet);
-    if (beamlet->allocate(*this, m_spw, it->second) < 0) goto failure;
+    if (beamlet->allocate(*this, it->second, nsubbands) < 0) goto failure;
   }
 
   return true;
@@ -121,6 +124,22 @@ void Beam::deallocate()
 void Beam::addPointing(const Pointing& pointing)
 {
   m_pointing_queue.push(pointing);
+}
+
+void Beam::setSpectralWindow(CAL::SpectralWindow& spw)
+{
+  m_spw = new CAL::SpectralWindow(spw);
+  ASSERT(m_spw);
+}
+
+void Beam::setSubarray(const CAL::AntennaArray& array)
+{
+  m_array = array;
+}
+
+void Beam::setCalibration(const CAL::AntennaGains& gains)
+{
+  m_gains = gains;
 }
 
 int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval)
@@ -255,34 +274,64 @@ const Array<W_TYPE,2>& Beam::getLMNCoordinates() const
   return m_lmns;
 }
 
+const CAL::SpectralWindow* Beam::getSPW() const
+{
+  return m_spw;
+}
+
 Beams::Beams(int nbeamlets) : m_beamlets(nbeamlets)
 {
 }
 
-Beam* Beams::get(Beamlet2SubbandMap allocation,
-		 double sampling_frequency, int nyquist_zone)
+Beam* Beams::get(string name, Beamlet2SubbandMap allocation, int nsubbands)
 {
-  Beam* beam = new Beam(sampling_frequency, nyquist_zone, allocation().size());
+  Beam* beam = new Beam(name, nsubbands);
 
   if (beam) {
 
-    if (!beam->allocate(allocation, m_beamlets)) {
+    if (!beam->allocate(allocation, m_beamlets, nsubbands)) {
       delete beam;
       beam = 0;
     } else {
-      // add to list of beams
-      m_beams.push_back(beam);
+      // add to list of active beams with 0 calibration handle
+      m_beams[beam] = 0;
     }
   }
   return beam;
 }
 
+void Beams::setCalibrationHandle(Beam* beam, uint32 handle)
+{
+  m_handle2beam[handle] = beam;
+}
+
+uint32 Beams::findCalibrationHandle(Beam* beam) const
+{
+  map<Beam*,uint32>::const_iterator it = m_beams.find(beam);
+
+  if (it != m_beams.end()) {
+    return it->second;
+  }
+
+  return 0;
+}
+
+bool Beams::updateCalibration(uint32 handle, const CAL::AntennaGains& gains)
+{
+  map<uint32,Beam*>::iterator it = m_handle2beam.find(handle);
+
+  if ( (it == m_handle2beam.end()) || (!it->second) ) return false;
+
+  it->second->setCalibration(gains);
+
+  return true;
+}
+
 bool Beams::exists(Beam *beam)
 {
   // if beam not found, return 0
-  list<Beam*>::const_iterator it = find(m_beams.begin(),
-					m_beams.end(),
-					beam);
+  map<Beam*,uint32>::iterator it = m_beams.find(beam);
+
   if (it == m_beams.end()) return false;
   
   return true;
@@ -290,13 +339,18 @@ bool Beams::exists(Beam *beam)
 
 bool Beams::destroy(Beam* beam)
 {
+  // remove from handle2beam map
+  for (map<uint32,Beam*>::iterator it = m_handle2beam.begin();
+       it != m_handle2beam.end(); ++it) {
+    if (beam == it->second) m_handle2beam.erase(it);
+  }
+  
   // if beam not found, return false
-  list<Beam*>::iterator it = find(m_beams.begin(),
-				  m_beams.end(),
-				  beam);
+  map<Beam*,uint32>::iterator it = m_beams.find(beam);
+
   if (it != m_beams.end()) {
+    delete(it->first);
     m_beams.erase(it);
-    delete(*it);
     return true;
   }
 
@@ -309,12 +363,12 @@ void Beams::calculate_weights(Timestamp timestamp,
 			      blitz::Array<std::complex<W_TYPE>, 3>& weights)
 {
   // iterate over all beams
-  for (list<Beam*>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
+  for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
   {
-    (*bi)->convertPointings(timestamp, compute_interval);
+    bi->first->convertPointings(timestamp, compute_interval);
     LOG_INFO(formatString("current_pointing=(%f,%f)",
-			  (*bi)->getPointing().angle1(),
-			  (*bi)->getPointing().angle2()));
+			  bi->first->getPointing().angle1(),
+			  bi->first->getPointing().angle2()));
   }
 
   m_beamlets.calculate_weights(pos, weights);
@@ -323,9 +377,9 @@ void Beams::calculate_weights(Timestamp timestamp,
 Beamlet2SubbandMap Beams::getSubbandSelection()
 {
   Beamlet2SubbandMap selection;
-  for (list<Beam*>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
+  for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
   {
-    Beamlet2SubbandMap beammap = (*bi)->getAllocation();
+    Beamlet2SubbandMap beammap = bi->first->getAllocation();
     selection().insert(beammap().begin(), beammap().end());
   }
 

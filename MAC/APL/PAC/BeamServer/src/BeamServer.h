@@ -68,32 +68,45 @@ namespace LOFAR {
 	 * the RSPDriver and the CalibrationServer. When both 
 	 * are connected a transition to the enabled state is made.
 	 */
-	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
 
 	/**
 	 * The enabled state. In this state the BeamServer can accept
 	 * client connections.
 	 */
-	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
+
+	/**
+	 * The beamalloc state. In this state the complete process
+	 * of allocating a beam, registering with the calibration
+	 * server, and getting the antenna positions is handled.
+	 */
+	GCFEvent::TResult beamalloc_state(GCFEvent& e, GCFPortInterface& p);
+
+	/**
+	 * The beamfree state. In this state the BeamServer unsubscribes
+	 * with the calibration server for the specified beam.
+	 */
+	GCFEvent::TResult beamfree_state(GCFEvent& e, GCFPortInterface& p);
 
 	// action methods
 
 	/**
-	 * allocate a new beam
+	 * start allocation of a new beam
 	 */
-	void beamalloc_action(BSBeamallocEvent& ba,
-			      GCFPortInterface& port);
+	bool beamalloc_start(BSBeamallocEvent& ba,
+			     GCFPortInterface& port);
 
 	/**
 	 * free a beam
 	 */
-	void beamfree_action(BSBeamfreeEvent& bf,
+	bool beamfree_start(BSBeamfreeEvent& bf,
 			     GCFPortInterface& port);
 
 	/**
 	 * Change the direction of a beam.
 	 */
-	void beampointto_action(BSBeampointtoEvent& pt,
+	bool beampointto_action(BSBeampointtoEvent& pt,
 				GCFPortInterface& port);
 
 	/**
@@ -118,6 +131,44 @@ namespace LOFAR {
 	 */
 	void send_sbselection();
 
+	/**
+	 * defer event
+	 */
+	void defer(GCFEvent& e, GCFPortInterface& p);
+
+	/**
+	 * recall event
+	 */
+	GCFEvent::TResult recall(GCFPortInterface& p);
+
+      private:
+
+	/**
+	 * Class to maintain state on current beam
+	 * transaction (albeit Beamalloc or Beamfree)
+	 */
+	class BeamTransaction
+	{
+	public:
+	  BeamTransaction() : m_port(0), m_beam(0) /*, event(0), calhandle(0)*/ {}
+
+	         void set(GCFPortInterface* port, Beam* beam) { m_port = port; m_beam = beam; }
+	  inline void reset() { set(0,0); }
+
+	  GCFPortInterface* getPort() const { return m_port; }
+	  Beam*             getBeam() const { return m_beam; }
+
+	private:
+	  // Port on which the transaction is taking place.
+	  GCFPortInterface* m_port;
+
+	  // Beam that is the subject of the transaction
+	  Beam* m_beam;
+
+	  //BS_Protocol::BSBeamallocEvent* event;
+	  //uint32                         calhandle;
+	};
+
       private:
 	// member variables
 
@@ -140,12 +191,19 @@ namespace LOFAR {
 	blitz::Array<std::complex<int16_t>, 3> m_weights16;
 
       private:
+	// ack events
+	//BS_Protocol::BeamallocackEvent m_beamallocack;
+	//BS_Protocol::BeamfreeackEvent  m_beamfreeack;
+
 	// ports
 	GCFTCPPort       m_acceptor; // list for clients on this port
 	std::list<GCFPortInterface*> m_client_list; // list of currently connected clients
 	std::list<GCFPortInterface*> m_dead_clients; // list of disconnected clients to be removed
 
-	std::map<GCFPortInterface*, std::set<Beam*> > m_client_beams; // mapping from client port to set of beams
+	std::map<GCFPortInterface*, std::set<Beam*> >  m_client_beams; // mapping from client port to set of beams
+	std::map<GCFPortInterface*, std::list<char*> > m_deferred_queue; // deferred events
+
+	BeamTransaction m_bt; // current beam transaction
 
 	GCFPort m_rspdriver;
 	GCFPort m_calserver;  

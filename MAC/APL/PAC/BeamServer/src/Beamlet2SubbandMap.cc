@@ -75,3 +75,16 @@ unsigned int Beamlet2SubbandMap::unpack(void *buffer)
 
   return offset;
 }
+
+bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> Beamlet2SubbandMap::getAsBitset() const
+{
+  bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> result;
+
+  for (map<uint16, uint16>::const_iterator it = m_beamlet2subband.begin();
+       it != m_beamlet2subband.end(); ++it) {
+    result.set(it->second);
+  }
+
+  return result;
+}
+

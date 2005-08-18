@@ -44,8 +44,8 @@ using namespace BS;
 using namespace std;
 using namespace EPA_Protocol;
 
-EPATest::EPATest(string name)
-  : GCFTask((State)&EPATest::initial, name), Test("EPATest")
+EPATest::EPATest(string name, char* subarrayname)
+  : GCFTask((State)&EPATest::initial, name), Test("EPATest"), m_subarrayname(subarrayname)
 {
   registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
@@ -125,7 +125,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	// send beam allocation, select all subbands
 	BSBeamallocEvent alloc;
-	alloc.subarrayname = "ITS-LBA";
+	alloc.subarrayname = m_subarrayname;
 	for (int i = 0; i < MEPHeader::N_BEAMLETS; i++)
 	{
 	    alloc.allocation()[i] = i;
@@ -231,21 +231,18 @@ void EPATest::run()
 
 int main(int argc, char** argv)
 {
-#if 0
-  char prop_path[PATH_MAX];
-  const char* mac_config = getenv("MAC_CONFIG");
-
-  snprintf(prop_path, PATH_MAX-1,
-	   "%s/%s", (mac_config?mac_config:"."),
-	   "log4cplus.properties");
-  INIT_LOGGER(prop_path);
-#endif
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-
   GCFTask::init(argc, argv);
 
+  if (argc != 2) {
+    cerr << "usage: EPATest subarrayname" << endl;
+    cerr << "e.g. EPATest FTS-1-LBA" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+
   Suite s("Beam Server Process Test Suite", &cerr);
-  s.addTest(new EPATest("EPATest"));
+  s.addTest(new EPATest("EPATest", argv[1]));
   s.run();
   long nFail = s.report();
   s.free();
