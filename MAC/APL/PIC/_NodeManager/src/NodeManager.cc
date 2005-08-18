@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <APL/NodeManager.h>
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <GCF/GCF_PVChar.h>

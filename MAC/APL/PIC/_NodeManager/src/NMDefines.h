@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef GPA_DEFINES_H
-#define GPA_DEFINES_H
+#ifndef NMDEFINES_H
+#define NMDEFINES_H
 
 #include <GCF/GCF_Defines.h>
 

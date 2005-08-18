@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <Common/LofarLogger.h>
 #include <APL/NMUtilities.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
