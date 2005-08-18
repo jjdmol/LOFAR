@@ -1,6 +1,6 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_SBCollect CyclicBufferTest
+check_PROGRAMS = tWH_SBCollect CyclicBufferTest RSPBufferingTest
 
 
 AM_CXXFLAGS = \
@@ -12,6 +12,10 @@ tWH_SBCollect.cc				\
 
 CyclicBufferTest_SOURCES =                      \
 CyclicBufferTest.cc				\
+../src/BufferController.cc
+
+RSPBufferingTest_SOURCES =                      \
+RSPBufferingTest.cc				\
 ../src/BufferController.cc
 
 TESTS   = 					\
