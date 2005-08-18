@@ -1,5 +1,3 @@
-INSTALL=/usr/bin/install -C
-
 pkgincludedir = $(includedir)/GCF/PAL
 pkginclude_HEADERS = \
 	../../include/GCF/PAL/GCF_ExtProperty.h \

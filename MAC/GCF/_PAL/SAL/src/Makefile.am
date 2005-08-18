@@ -1,4 +1,3 @@
-INSTALL=/usr/bin/install -C
 pkginclude_HEADERS = \
 	../../include/GCF/PAL/GCF_PVSSPort.h \
 	../../include/GCF/PAL/GCF_PVSSInfo.h \

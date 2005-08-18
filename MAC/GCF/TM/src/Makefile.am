@@ -1,6 +1,5 @@
 SUBDIRS	= . ServiceBroker
 
-INSTALL=/usr/bin/install -C
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: ServiceBroker/%.prot

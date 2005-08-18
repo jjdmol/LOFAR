@@ -1,5 +1,3 @@
-INSTALL=/usr/bin/install -C
-
 pkgincludedir = $(includedir)/GCF/LogSys
 pkginclude_HEADERS =
 	
