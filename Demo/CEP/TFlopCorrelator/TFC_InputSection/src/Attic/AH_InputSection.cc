@@ -109,8 +109,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     
     if (useEth) {
       itsTHs.push_back(new TH_Ethernet(interfaces[r], 
-				       dstMacs[r],
-				       srcMacs[r], 
+				       srcMacs[r],
+				       dstMacs[r], 
 				       0x000));
     } else {
       itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));
