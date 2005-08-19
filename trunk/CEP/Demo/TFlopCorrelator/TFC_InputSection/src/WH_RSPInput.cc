@@ -52,8 +52,8 @@ void* WriteToBufferThread(void* arguments)
   char recvframe[args->FrameSize];
 
   // define a block of dummy data
-  char dummyblock[args->nrPacketsInFrame];
-  memset(dummyblock,0,args->nrPacketsInFrame);
+  char dummyblock[args->nrPacketsInFrame*args->SubbandSize];
+  memset(dummyblock,0,args->nrPacketsInFrame*args->SubbandSize);
 
   // used for debugging
   int cnt_missed, cnt_old, cnt_rewritten = 0;
@@ -78,6 +78,8 @@ void* WriteToBufferThread(void* arguments)
     seqid   = ((int*)&recvframe[8])[0];
     blockid = ((int*)&recvframe[12])[0];
     actualstamp.setStamp(seqid ,blockid);
+  
+    cout << actualstamp << endl;
 
     // firstloop
     if (firstloop) {
