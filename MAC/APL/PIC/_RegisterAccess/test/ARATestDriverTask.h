@@ -73,6 +73,7 @@ namespace ARA
       void updateRCUstatus(string& propName,const GCF::Common::GCFPValue* pvalue);
       void updateSystemStatus();
       void updateStats();
+      void updatexcStats();
       bool isEnabled();
       GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       GCF::TM::GCFEvent::TResult enabled(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
@@ -88,21 +89,26 @@ namespace ARA
       
       RSP_Protocol::SystemStatus m_systemStatus;
       RSP_Protocol::Statistics   m_stats;
+      RSP_Protocol::XCStatistics m_xcstats;
       
       double          m_substatusPeriod;
       double          m_substatsPeriod;
+      double          m_subxcstatsPeriod;
       long            m_updStatusTimerId;
       long            m_updStatsTimerId;
+      long            m_updxcStatsTimerId;
       uint32          m_updStatsHandleSP;
       uint32          m_updStatsHandleSM;
       uint32          m_updStatsHandleBP;
       uint32          m_updStatsHandleBM;
+      uint32          m_updxcStatsHandle;
       int             n_racks;
       int             n_subracks_per_rack;
       int             n_boards_per_subrack;
       int             n_aps_per_board;
       int             n_rcus_per_ap;
       int             n_rcus;
+      int             n_pols;
       
       string          m_schedule;
       GCF::PAL::GCFExtPropertySet m_MACSchedulerPS;

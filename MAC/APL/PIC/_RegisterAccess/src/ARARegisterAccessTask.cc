@@ -80,6 +80,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_subStatusHandle(0),
       m_subStatsHandleSubbandPower(0),
       m_subStatsHandleBeamletPower(0),
+      m_subXcStatsHandle(0),
       m_n_racks(1),
       m_n_subracks_per_rack(1),
       m_n_boards_per_subrack(1),
@@ -95,6 +96,8 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_numStatisticsSubband(0),
       m_integratingStatisticsBeamlet(),
       m_numStatisticsBeamlet(0),
+      m_integratingXcStatistics(),
+      m_numXcStatistics(0),
       m_integrationTimerID(0),
       m_commandHandle(0),
       m_pendingCommands()
@@ -638,6 +641,68 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, 
         m_subStatsHandleBeamletPower = ack.handle;
       }
       
+      TRAN(RegisterAccessTask::subscribingXcStats);
+      break;
+    }
+    
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::APCsLoaded);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::subscribingXcStats(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
+      // subscribe to xc stats updates
+      RSPSubxcstatsEvent substats;
+      substats.timestamp.setNow();
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substats.period = m_stats_update_interval;
+      m_RSPclient.send(substats);
+      
+      break;
+    }
+
+    case RSP_SUBXCSTATSACK:
+    {
+      LOG_INFO("RSP_SUBXCSTATSACK received");
+      RSPSubxcstatsackEvent ack(e);
+
+      if(ack.status != SUCCESS)
+      {
+        LOG_ERROR("RSP_SUBXCSTATS failure");
+      }
+      else
+      {
+        m_subXcStatsHandle = ack.handle;
+      }
+      
       TRAN(RegisterAccessTask::operational);
       break;
     }
@@ -706,6 +771,13 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
     {
       LOG_INFO("RSP_UPDSTATS received");
       status = handleUpdStats(e,port);
+      break;
+    }
+    
+    case RSP_UPDXCSTATS:
+    {
+      LOG_INFO("RSP_UPDXCSTATS received");
+      status = handleUpdXcStats(e,port);
       break;
     }
     
@@ -838,6 +910,9 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       m_RSPclient.send(unsubStats);
       unsubStats.handle = m_subStatsHandleBeamletPower; // remove subscription with this handle
       m_RSPclient.send(unsubStats);
+      RSPUnsubxcstatsEvent unsubXcStats;
+      unsubXcStats.handle = m_subXcStatsHandle; // remove subscription with this handle
+      m_RSPclient.send(unsubXcStats);
       break;
     }
 
@@ -876,42 +951,37 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       getBoardRelativeNumbers(boardNr,rackNr,subRackNr,relativeBoardNr);
       LOG_INFO(formatString("UpdStatus:Rack:%d:SubRack:%d:Board::%d\n",rackNr,subRackNr,relativeBoardNr));
       
-      uint8   rspVoltage_15 = boardStatus(boardNr).rsp.voltage_15;
-      uint8   rspVoltage_33 = boardStatus(boardNr).rsp.voltage_33;
-      uint8   rspFfi0       = boardStatus(boardNr).rsp.ffi0;
-      uint8   rspFfi1       = boardStatus(boardNr).rsp.ffi1;
-      LOG_INFO(formatString("UpdStatus:RSP voltage_15:%d:voltage_33:%d:ffi0:%d:ffi1:%d",rspVoltage_15,rspVoltage_33,rspFfi0,rspFfi1));
+      uint8   rspVoltage_1_5 = boardStatus(boardNr).rsp.voltage_1_5;
+      uint8   rspVoltage_2_5 = boardStatus(boardNr).rsp.voltage_2_5;
+      uint8   rspVoltage_3_3 = boardStatus(boardNr).rsp.voltage_3_3;
+      uint8   rspVoltage_12 = boardStatus(boardNr).rsp.voltage_12;
+      LOG_INFO(formatString("UpdStatus:RSP voltage_1_5:%d:voltage_2_5:%d:voltage_3_3:%d:voltage_12:%d",rspVoltage_1_5,rspVoltage_2_5,rspVoltage_3_3,rspVoltage_12));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
-      updateBoardProperties(scopeString,rspVoltage_15,rspVoltage_33,rspFfi0,rspFfi1,timestamp);
+      updateBoardProperties(scopeString,rspVoltage_1_5,rspVoltage_2_5,rspVoltage_3_3,rspVoltage_12,timestamp);
       
-      uint8   bpStatus  = boardStatus(boardNr).fpga.bp_status;
       uint8   bpTemp    = boardStatus(boardNr).fpga.bp_temp;
-      uint8   ap1Status = boardStatus(boardNr).fpga.ap1_status;
+      uint8   ap0Temp   = boardStatus(boardNr).fpga.ap0_temp;
       uint8   ap1Temp   = boardStatus(boardNr).fpga.ap1_temp;
-      uint8   ap2Status = boardStatus(boardNr).fpga.ap2_status;
       uint8   ap2Temp   = boardStatus(boardNr).fpga.ap2_temp;
-      uint8   ap3Status = boardStatus(boardNr).fpga.ap3_status;
       uint8   ap3Temp   = boardStatus(boardNr).fpga.ap3_temp;
-      uint8   ap4Status = boardStatus(boardNr).fpga.ap4_status;
-      uint8   ap4Temp   = boardStatus(boardNr).fpga.ap4_temp;
-      LOG_INFO(formatString("UpdStatus:BP status:%d:temp:%d",bpStatus,bpTemp));
-      LOG_INFO(formatString("UpdStatus:AP1 status:%d:temp:%d",ap1Status,ap1Temp));
-      LOG_INFO(formatString("UpdStatus:AP2 status:%d:temp:%d",ap2Status,ap2Temp));
-      LOG_INFO(formatString("UpdStatus:AP3 status:%d:temp:%d",ap3Status,ap3Temp));
-      LOG_INFO(formatString("UpdStatus:AP4 status:%d:temp:%d",ap4Status,ap4Temp));
+      LOG_INFO(formatString("UpdStatus:BP temp:%d",bpTemp));
+      LOG_INFO(formatString("UpdStatus:AP0 temp:%d",ap0Temp));
+      LOG_INFO(formatString("UpdStatus:AP1 temp:%d",ap1Temp));
+      LOG_INFO(formatString("UpdStatus:AP2 temp:%d",ap2Temp));
+      LOG_INFO(formatString("UpdStatus:AP3 temp:%d",ap3Temp));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
       updateFPGAboardProperties(scopeString,timestamp);
       
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
-      updateFPGAproperties(scopeString,bpStatus,bpTemp,timestamp);
+      updateFPGAproperties(scopeString,bpTemp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,0);
-      updateFPGAproperties(scopeString,ap1Status,ap1Temp,timestamp);
+      updateFPGAproperties(scopeString,ap0Temp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,1);
-      updateFPGAproperties(scopeString,ap2Status,ap2Temp,timestamp);
+      updateFPGAproperties(scopeString,ap1Temp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,2);
-      updateFPGAproperties(scopeString,ap3Status,ap3Temp,timestamp);
+      updateFPGAproperties(scopeString,ap2Temp,timestamp);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,3);
-      updateFPGAproperties(scopeString,ap4Status,ap4Temp,timestamp);
+      updateFPGAproperties(scopeString,ap3Temp,timestamp);
 
       uint32    ethFrames     = boardStatus(boardNr).eth.nof_frames;
       uint32    ethErrors     = boardStatus(boardNr).eth.nof_errors;
@@ -930,45 +1000,62 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rackNr,subRackNr,relativeBoardNr);
       updateMEPStatusProperties(scopeString,mepSeqnr,mepError,mepFfi0,timestamp);  
       
-      uint32    syncSample_count = boardStatus(boardNr).ap1_sync.sample_count;
-      uint32    syncSync_count   = boardStatus(boardNr).ap1_sync.sync_count;
-      uint32    syncError_count  = boardStatus(boardNr).ap1_sync.error_count;
-      LOG_INFO(formatString("SyncStatus ap1:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      uint32    syncSample_offset = boardStatus(boardNr).ap0_sync.sample_offset;
+      uint32    syncSync_count    = boardStatus(boardNr).ap0_sync.sync_count;
+      uint32    syncSlice_count   = boardStatus(boardNr).ap0_sync.slice_count;
+      LOG_INFO(formatString("SyncStatus ap0:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,0);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
+      updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
-      syncSample_count = boardStatus(boardNr).ap2_sync.sample_count;
-      syncSync_count   = boardStatus(boardNr).ap2_sync.sync_count;
-      syncError_count  = boardStatus(boardNr).ap2_sync.error_count;
-      LOG_INFO(formatString("SyncStatus ap2:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      syncSample_offset = boardStatus(boardNr).ap1_sync.sample_offset;
+      syncSync_count    = boardStatus(boardNr).ap1_sync.sync_count;
+      syncSlice_count   = boardStatus(boardNr).ap1_sync.slice_count;
+      LOG_INFO(formatString("SyncStatus ap1:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,1);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
+      updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
-      syncSample_count = boardStatus(boardNr).ap3_sync.sample_count;
-      syncSync_count   = boardStatus(boardNr).ap3_sync.sync_count;
-      syncError_count  = boardStatus(boardNr).ap3_sync.error_count;
-      LOG_INFO(formatString("SyncStatus ap3:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      syncSample_offset = boardStatus(boardNr).ap2_sync.sample_offset;
+      syncSync_count    = boardStatus(boardNr).ap2_sync.sync_count;
+      syncSlice_count   = boardStatus(boardNr).ap2_sync.slice_count;
+      LOG_INFO(formatString("SyncStatus ap2:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,2);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
+      updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
-      syncSample_count = boardStatus(boardNr).ap4_sync.sample_count;
-      syncSync_count   = boardStatus(boardNr).ap4_sync.sync_count;
-      syncError_count  = boardStatus(boardNr).ap4_sync.error_count;
-      LOG_INFO(formatString("SyncStatus ap4:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      syncSample_offset = boardStatus(boardNr).ap3_sync.sample_offset;
+      syncSync_count    = boardStatus(boardNr).ap3_sync.sync_count;
+      syncSlice_count   = boardStatus(boardNr).ap3_sync.slice_count;
+      LOG_INFO(formatString("SyncStatus ap3:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,3);
-      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count,timestamp);
+      updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
       int apNr=0;
-      uint8     boardRCUstatusStatusX       = boardStatus(boardNr).ap1_rcu.statusx;
-      uint8     boardRCUstatusStatusY       = boardStatus(boardNr).ap1_rcu.statusy;
-      uint8     boardRCUstatusFFI0          = boardStatus(boardNr).ap1_rcu.ffi0;
-      uint8     boardRCUstatusFFI1          = boardStatus(boardNr).ap1_rcu.ffi1;
-      uint32    boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap1_rcu.nof_overflowx;
-      uint32    boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap1_rcu.nof_overflowy;
-      LOG_INFO(formatString("BoardRCUStatus ap1:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      uint8     boardRCUstatusStatusX       = boardStatus(boardNr).ap0_rcu.statusx;
+      uint8     boardRCUstatusStatusY       = boardStatus(boardNr).ap0_rcu.statusy;
+      uint8     boardRCUstatusFFI0          = boardStatus(boardNr).ap0_rcu.ffi0;
+      uint8     boardRCUstatusFFI1          = boardStatus(boardNr).ap0_rcu.ffi1;
+      uint32    boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap0_rcu.nof_overflowx;
+      uint32    boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap0_rcu.nof_overflowy;
+      LOG_INFO(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
       int rcuNr=0;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
+      rcuNr++;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY,timestamp);
+
+      apNr++;
+      boardRCUstatusStatusX       = boardStatus(boardNr).ap1_rcu.statusx;
+      boardRCUstatusStatusY       = boardStatus(boardNr).ap1_rcu.statusy;
+      boardRCUstatusFFI0          = boardStatus(boardNr).ap1_rcu.ffi0;
+      boardRCUstatusFFI1          = boardStatus(boardNr).ap1_rcu.ffi1;
+      boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap1_rcu.nof_overflowx;
+      boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap1_rcu.nof_overflowy;
+      LOG_INFO(formatString("BoardRCUStatus ap1:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
+      rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
       rcuNr++;
@@ -1000,23 +1087,6 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap3_rcu.nof_overflowx;
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap3_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap3:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
-      rcuNr=0;
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
-      rcuNr++;
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY,timestamp);
-
-      apNr++;
-      boardRCUstatusStatusX       = boardStatus(boardNr).ap4_rcu.statusx;
-      boardRCUstatusStatusY       = boardStatus(boardNr).ap4_rcu.statusy;
-      boardRCUstatusFFI0          = boardStatus(boardNr).ap4_rcu.ffi0;
-      boardRCUstatusFFI1          = boardStatus(boardNr).ap4_rcu.ffi1;
-      boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap4_rcu.nof_overflowx;
-      boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap4_rcu.nof_overflowy;
-      LOG_INFO(formatString("BoardRCUStatus ap4:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1,timestamp);
       rcuNr=0;
@@ -1057,6 +1127,23 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         updStatsEvent.handle));
 
     _addStatistics(updStatsEvent.stats(), updStatsEvent.handle);
+  }
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::handleUpdXcStats(GCFEvent& e, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  {
+    RSPUpdxcstatsEvent updXcStatsEvent(e);
+
+    time_t curTime=(time_t)updXcStatsEvent.timestamp.sec();
+    LOG_INFO(formatString("UpdXcStats:time:%s:status:%d:handle:%d", 
+        ctime(&curTime),
+        updXcStatsEvent.status,
+        updXcStatsEvent.handle));
+
+    _addXcStatistics(updXcStatsEvent.stats(), updXcStatsEvent.handle);
   }
   return status;
 }
@@ -1192,13 +1279,9 @@ void RegisterAccessTask::updateFPGAboardProperties(string scope, double /*timest
   }
 }
 
-void RegisterAccessTask::updateFPGAproperties(string scope, uint8 status, 
-                                                            uint8 temp,
+void RegisterAccessTask::updateFPGAproperties(string scope, uint8 temp,
                                                             double timestamp)
 {
-  // layout fpga status: 
-  // 15..9 8       7........0       
-  // ----- alive   temperature
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1206,11 +1289,6 @@ void RegisterAccessTask::updateFPGAproperties(string scope, uint8 status,
   }
   else
   {
-    LOG_INFO(formatString("FPGA status field is not yet used: %s.status=0x%x",scope.c_str(),status));
-//    GCFPVUnsigned pvUns(status);
-    GCFPVUnsigned pvUns(0);
-    it->second->setValueTimed(string(PROPNAME_STATUS),pvUns, timestamp);
-    
     GCFPVDouble pvDouble(static_cast<double>(temp));
     it->second->setValueTimed(string(PROPNAME_TEMPERATURE),pvDouble, timestamp);
   }
@@ -1724,7 +1802,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
   }
 }
 
-GCFEvent::TResult RegisterAccessTask::handleCommandResult(GCFEvent& e)
+GCFEvent::TResult RegisterAccessTask::handleCommandResult(GCFEvent& /*e*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -1978,6 +2056,7 @@ void RegisterAccessTask::_integrateStatistics()
 {
   TStatistics statisticsSubband;
   TStatistics statisticsBeamlet;
+  TXcStatistics xcstatistics;
   
   if(m_numStatisticsSubband != 0)
   {
@@ -2025,6 +2104,31 @@ void RegisterAccessTask::_integrateStatistics()
     m_integratingStatisticsBeamlet.free();
     m_numStatisticsBeamlet=0;
     _writeStatistics(statisticsBeamlet, m_subStatsHandleBeamletPower);
+  }
+  if(m_numXcStatistics != 0)
+  {
+    xcstatistics.resize(m_integratingXcStatistics.shape());
+    xcstatistics = 0;
+    
+    switch(m_integrationMethod)
+    {
+      case 0: // average
+      default:
+        xcstatistics = m_integratingXcStatistics/static_cast<double>(m_numXcStatistics);
+        break;
+  //    case 1: // NYI
+  //      break;
+    }
+  
+    // log the first elements
+    stringstream statisticsStream;
+    statisticsStream << xcstatistics(blitz::Range(0,2),blitz::Range(0,2),blitz::Range(0,2),blitz::Range(0,2));
+    LOG_DEBUG(formatString("subband integrated: n_stats:%d; statistics:%s",m_numXcStatistics, statisticsStream.str().c_str()));
+
+    m_integratingXcStatistics = 0;
+    m_numXcStatistics=0;
+
+    _writeXcStatistics(xcstatistics, m_subXcStatsHandle);
   }
 }
 
@@ -2122,6 +2226,96 @@ void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsH
         }
       }
     }
+  }
+}
+
+void RegisterAccessTask::_addXcStatistics(TXcStatistics& statistics, uint32 statsHandle)
+{
+  if(statsHandle == m_subXcStatsHandle)
+  {
+    if(m_integrationTime == 0)
+    {
+      _writeXcStatistics(statistics, statsHandle);
+    }
+    else
+    {
+      if(m_integratingXcStatistics.size() == 0)
+      {
+        m_integratingXcStatistics.resize(statistics.shape());
+        m_integratingXcStatistics = 0;
+      }
+    
+      m_integratingXcStatistics += statistics;
+      m_numXcStatistics++;
+
+      // log the first elements
+      stringstream statisticsStream;
+      statisticsStream << m_integratingXcStatistics(blitz::Range(0,2),blitz::Range(0,2),blitz::Range(0,2),blitz::Range(0,2));
+      LOG_DEBUG(formatString("Crosslet: n_stats:%d; statistics:%s",m_numXcStatistics, statisticsStream.str().c_str()));
+    }
+  }
+}
+
+void RegisterAccessTask::_writeXcStatistics(TXcStatistics& statistics, uint32 statsHandle)
+{
+  int dim1 = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
+  int dim2 = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
+  int dim3 = statistics.ubound(blitz::thirdDim) - statistics.lbound(blitz::thirdDim) + 1;
+  int dim4 = statistics.ubound(blitz::fourthDim) - statistics.lbound(blitz::fourthDim) + 1;
+  LOG_DEBUG(formatString("dimensions: %d x %d x %d x %d",dim1,dim2,dim3,dim4));
+    
+  if(!m_centralized_stats)
+  {
+    LOG_FATAL("NOT Writing XC statistics to one string because the string would be far too big");
+  }
+  
+  LOG_DEBUG("Writing statistics to a dynamic array of doubles");
+  // build a vector of doubles that will be stored in one datapoint
+  GCFPValueArray valuePointerVector;
+
+  // first elements indicate the dimensions
+  valuePointerVector.push_back(new GCFPVDouble(dim1));
+  valuePointerVector.push_back(new GCFPVDouble(dim2));
+  valuePointerVector.push_back(new GCFPVDouble(dim3));
+  valuePointerVector.push_back(new GCFPVDouble(dim4));
+
+  // then add all stats
+  for(dim1=statistics.lbound(blitz::firstDim);dim1<=statistics.ubound(blitz::firstDim);dim1++)
+  {
+    for(dim2=statistics.lbound(blitz::firstDim);dim2<=statistics.ubound(blitz::firstDim);dim2++)
+    {
+      for(dim3=statistics.lbound(blitz::firstDim);dim3<=statistics.ubound(blitz::firstDim);dim3++)
+      {
+        for(dim4=statistics.lbound(blitz::firstDim);dim4<=statistics.ubound(blitz::firstDim);dim4++)
+        {
+          complex<double> stat = statistics(dim1,dim2,dim3,dim4);
+          valuePointerVector.push_back(new GCFPVDouble(stat.real()));
+          valuePointerVector.push_back(new GCFPVDouble(stat.imag()));
+        }
+      }
+    }
+  }
+
+  // convert the vector of unsigned values to a dynamic array
+  GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
+  
+  // set the property
+  TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
+  if(propSetIt != m_myPropertySetMap.end())
+  {
+    if(statsHandle == m_subXcStatsHandle)
+    {
+      propSetIt->second->setValue(string(PROPNAME_XCSTATISTICS),dynamicArray);
+    }
+  }
+
+  // cleanup
+  GCFPValueArray::iterator it=valuePointerVector.begin();
+  while(it!=valuePointerVector.end())
+  {
+    delete *it;
+    valuePointerVector.erase(it);
+    it=valuePointerVector.begin();
   }
 }
 

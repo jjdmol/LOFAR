@@ -3,7 +3,7 @@ bin_PROGRAMS 		= MACScheduler
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 MACScheduler_CPPFLAGS= \
 	-DBOOST_DISABLE_THREADS \
