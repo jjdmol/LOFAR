@@ -712,10 +712,10 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       
       EPA_Protocol::BoardStatus boardStatus;
       memset(&boardStatus,0,sizeof(boardStatus));
-      boardStatus.fpga.ap1_temp = 2850;
-      boardStatus.fpga.ap2_temp = 2902;
-      boardStatus.fpga.ap3_temp = 2953;
-      boardStatus.fpga.ap4_temp = 3005;
+      boardStatus.fpga.ap0_temp = 2850;
+      boardStatus.fpga.ap1_temp = 2902;
+      boardStatus.fpga.ap2_temp = 2953;
+      boardStatus.fpga.ap3_temp = 3005;
 
       EPA_Protocol::RCUStatus rcuStatus;
       std::bitset<8> rcuBitStatus;
@@ -788,10 +788,10 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
 
       EPA_Protocol::BoardStatus boardStatus;
       memset(&boardStatus,0,sizeof(boardStatus));
-      boardStatus.fpga.ap1_temp = 28;
-      boardStatus.fpga.ap2_temp = 29;
-      boardStatus.fpga.ap3_temp = 30;
-      boardStatus.fpga.ap4_temp = 31;
+      boardStatus.fpga.ap0_temp = 28;
+      boardStatus.fpga.ap1_temp = 29;
+      boardStatus.fpga.ap2_temp = 30;
+      boardStatus.fpga.ap3_temp = 31;
 
       EPA_Protocol::RCUStatus rcuStatus;
       std::bitset<8> rcuBitStatus;
@@ -869,10 +869,10 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
 
       EPA_Protocol::BoardStatus boardStatus;
       memset(&boardStatus,0,sizeof(boardStatus));
-      boardStatus.fpga.ap1_temp = 28;
-      boardStatus.fpga.ap2_temp = 29;
-      boardStatus.fpga.ap3_temp = 30;
-      boardStatus.fpga.ap4_temp = 31;
+      boardStatus.fpga.ap0_temp = 28;
+      boardStatus.fpga.ap1_temp = 29;
+      boardStatus.fpga.ap2_temp = 30;
+      boardStatus.fpga.ap3_temp = 31;
 
       EPA_Protocol::RCUStatus rcuStatus;
       std::bitset<8> rcuBitStatus;

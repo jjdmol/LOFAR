@@ -28,6 +28,7 @@
 #include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
+#include <complex>
 #include <blitz/array.h>
 
 #include "ARAAnswer.h"
@@ -88,6 +89,7 @@ namespace ARA
        */
       GCF::TM::GCFEvent::TResult subscribingStatsSubbandPower(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       GCF::TM::GCFEvent::TResult subscribingStatsBeamletPower(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult subscribingXcStats(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
        * The operational state. In this state the task can receives
        * status and statistics updates from the rsp driver
@@ -104,6 +106,10 @@ namespace ARA
        * Handle the update stats event
        */
       GCF::TM::GCFEvent::TResult handleUpdStats(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& port);
+      /**
+       * Handle the update XcStats event
+       */
+      GCF::TM::GCFEvent::TResult handleUpdXcStats(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& port);
 
       /**
        * Handle a change of the Maintenance status field
@@ -178,8 +184,7 @@ namespace ARA
       /**
        * update fpga properties based on status bits
        */
-      void updateFPGAproperties(string scope, uint8 status, 
-                                              uint8 temp,
+      void updateFPGAproperties(string scope, uint8 temp,
                                               double timestamp);
       /**
        * update rcu board properties
@@ -201,6 +206,7 @@ namespace ARA
       
     private:
       typedef blitz::Array<double, 2> TStatistics;
+      typedef blitz::Array<std::complex<double>, 4> TXcStatistics;
       
       void getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr);
       void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);
@@ -209,6 +215,8 @@ namespace ARA
       void _addStatistics(TStatistics& statistics, uint32 statsHandle);
       void _integrateStatistics();
       void _writeStatistics(TStatistics& statistics, uint32 statsHandle);
+      void _addXcStatistics(TXcStatistics& statistics, uint32 statsHandle);
+      void _writeXcStatistics(TXcStatistics& statistics, uint32 statsHandle);
       
       // member variables
       ARAAnswer   m_answer;
@@ -229,6 +237,7 @@ namespace ARA
       uint32            m_subStatusHandle;
       uint32            m_subStatsHandleSubbandPower;
       uint32            m_subStatsHandleBeamletPower;
+      uint32            m_subXcStatsHandle;
 
       int               m_n_racks;
       int               m_n_subracks_per_rack;
@@ -246,6 +255,8 @@ namespace ARA
       int32             m_numStatisticsSubband;
       TStatistics       m_integratingStatisticsBeamlet;
       int32             m_numStatisticsBeamlet;
+      TXcStatistics     m_integratingXcStatistics;
+      int32             m_numXcStatistics;
       unsigned long     m_integrationTimerID;
       
       uint32            m_commandHandle;

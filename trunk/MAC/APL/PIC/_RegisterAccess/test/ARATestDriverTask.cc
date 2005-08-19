@@ -59,20 +59,25 @@ ARATestDriverTask::ARATestDriverTask() :
   m_propMap(),
   m_systemStatus(),
   m_stats(),
+  m_xcstats(),
   m_substatusPeriod(0.0),
   m_substatsPeriod(0.0),
+  m_subxcstatsPeriod(0.0),
   m_updStatusTimerId(0),
   m_updStatsTimerId(0),
+  m_updxcStatsTimerId(0),
   m_updStatsHandleSP(0),
   m_updStatsHandleSM(0),
   m_updStatsHandleBP(0),
   m_updStatsHandleBM(0),
+  m_updxcStatsHandle(0),
   n_racks(1),
   n_subracks_per_rack(1),
   n_boards_per_subrack(1),
   n_aps_per_board(1),
   n_rcus_per_ap(1),
   n_rcus(1),
+  n_pols(2),
   m_schedule(""),
   m_MACSchedulerPS("GSO_MACScheduler","TAplMacScheduler",&m_answer)
 {
@@ -104,6 +109,7 @@ ARATestDriverTask::ARATestDriverTask() :
   m_systemStatus.rcu()(blitz::Range::all()) = rcuStatus;
   
   m_stats().resize(n_rcus,MEPHeader::N_BEAMLETS);
+  m_xcstats().resize(n_pols,n_pols,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board);
   
   m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
   
@@ -575,27 +581,16 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
   {
     // nothing to be done here
   }
-  else if(propName.find(string(PROPNAME_ALIVE),0) != string::npos)
-  {
-    if(ap==1 && fpgaStatus.ap1_status != pvUnsigned.getValue())
-      m_systemStatus.board()(board-1).fpga.ap1_status = pvUnsigned.getValue();
-    else if(ap==2 && fpgaStatus.ap2_status != pvUnsigned.getValue())
-      m_systemStatus.board()(board-1).fpga.ap2_status = pvUnsigned.getValue();
-    else if(ap==3 && fpgaStatus.ap3_status != pvUnsigned.getValue())
-      m_systemStatus.board()(board-1).fpga.ap3_status = pvUnsigned.getValue();
-    else if(ap==4 && fpgaStatus.ap4_status != pvUnsigned.getValue())
-      m_systemStatus.board()(board-1).fpga.ap4_status = pvUnsigned.getValue();
-  }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
     if(ap==1)
-      m_systemStatus.board()(board-1).fpga.ap1_temp = (uint8)(pvDouble.getValue()*100);
+      m_systemStatus.board()(board-1).fpga.ap0_temp = (uint8)(pvDouble.getValue()*100);
     else if(ap==2)
-      m_systemStatus.board()(board-1).fpga.ap2_temp = (uint8)(pvDouble.getValue()*100);
+      m_systemStatus.board()(board-1).fpga.ap1_temp = (uint8)(pvDouble.getValue()*100);
     else if(ap==3)
-      m_systemStatus.board()(board-1).fpga.ap3_temp = (uint8)(pvDouble.getValue()*100);
+      m_systemStatus.board()(board-1).fpga.ap2_temp = (uint8)(pvDouble.getValue()*100);
     else
-        m_systemStatus.board()(board-1).fpga.ap4_temp = (uint8)(pvDouble.getValue()*100);
+        m_systemStatus.board()(board-1).fpga.ap3_temp = (uint8)(pvDouble.getValue()*100);
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -627,13 +622,6 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
   if(propName.find(string(PROPNAME_STATUS),0) != string::npos)
   {
     // nothing to be done here
-  }
-  else if(propName.find(string(PROPNAME_ALIVE),0) != string::npos)
-  {
-    if(fpgaStatus.bp_status != pvUnsigned.getValue())
-    {
-      m_systemStatus.board()(board-1).fpga.bp_status = pvUnsigned.getValue();
-    }
   }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
@@ -803,6 +791,45 @@ void ARATestDriverTask::updateStats()
   }
 }
 
+void ARATestDriverTask::updatexcStats()
+{
+  // send new stats to RA application
+  RSPUpdxcstatsEvent updxcStatsEvent;
+  updxcStatsEvent.timestamp.setNow(600.0);
+  updxcStatsEvent.status=SUCCESS;
+  
+  int pol0;
+  int pol1;
+  int ap0;
+  int ap1;
+  for(pol0=0;pol0<n_pols;pol0++)
+  {
+    for(pol1=0;pol1<n_pols;pol1++)
+    {
+      for(ap0=0;ap0<n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board;ap0++)
+      {
+        for(ap1=0;ap1<n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board;ap1++)
+        {
+          complex<double> noise((double)(rand()%1000)/500.0,(double)(rand()%1000)/500.0);
+          complex<double> noisepeak(4000.0+noise.real()*500.0,4000.0+noise.imag()*500.0);
+          if(ap1%3==0)
+            m_xcstats()(pol0,pol1,ap0,ap1) = noisepeak;
+          else      
+            m_xcstats()(pol0,pol1,ap0,ap1) = noise;
+        }
+      }
+    }
+  }
+  
+  updxcStatsEvent.stats().reference(m_xcstats().copy());
+  
+  if(m_updxcStatsHandle != 0)
+  {
+    updxcStatsEvent.handle=m_updxcStatsHandle; 
+    m_RSPserver.send(updxcStatsEvent);
+  }
+}
+
 bool ARATestDriverTask::isEnabled()
 {
   return (m_RSPserver.isConnected());
@@ -943,6 +970,13 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
         
         m_updStatsTimerId = port.setTimer(m_substatsPeriod);
       }
+      else if(timerEvent.id == (unsigned long)m_updxcStatsTimerId)
+      {
+        // send updxcstats message;
+        updatexcStats();
+        
+        m_updxcStatsTimerId = port.setTimer(m_subxcstatsPeriod);
+      }
       break;
     }
     
@@ -1017,6 +1051,41 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       m_updStatsTimerId = 0;
 
       RSPUnsubstatsackEvent ack;
+      ack.timestamp.setNow(600.0);
+      ack.status = SUCCESS;
+      ack.handle = (int)&ack;
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_SUBXCSTATS:
+    {
+      LOG_INFO("RSP_SUBXCSTATS received");
+      RSPSubxcstatsEvent subxcstats(event);
+      
+      RSPSubxcstatsackEvent ack;
+      ack.timestamp.setNow(600.0);
+      ack.status = SUCCESS;
+
+      m_updxcStatsHandle = 31;
+      ack.handle = m_updxcStatsHandle;
+
+      m_subxcstatsPeriod = (double)subxcstats.period;
+      m_updxcStatsTimerId = port.setTimer(m_subxcstatsPeriod);
+
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_UNSUBXCSTATS:
+    {
+      LOG_INFO("RSP_UNSUBXCSTATS received");
+      RSPUnsubxcstatsEvent unsubxcstats(event);
+      
+      m_subxcstatsPeriod = 0.0;
+      m_updxcStatsTimerId = 0;
+
+      RSPUnsubxcstatsackEvent ack;
       ack.timestamp.setNow(600.0);
       ack.status = SUCCESS;
       ack.handle = (int)&ack;
