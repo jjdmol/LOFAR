@@ -55,8 +55,8 @@ void XstRead::sendrequest()
   // offset in bytes
   uint16 offset = (getCurrentBLP() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE;
 
-  // firmware indexes from board 1 instead of 0
-  offset += (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i)+1) * MEPHeader::N_XLETS * MEPHeader::N_POL * sizeof(complex<uint32>);
+  // firmware now indexes from 0
+  offset += GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) * MEPHeader::N_XLETS * MEPHeader::N_POL * sizeof(complex<uint32>);
 
   LOG_DEBUG_STR("XstRead::offset=" << offset);
 
