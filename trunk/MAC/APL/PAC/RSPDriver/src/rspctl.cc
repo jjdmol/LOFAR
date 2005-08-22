@@ -53,6 +53,7 @@
 #include <string.h>
 #include <blitz/array.h>
 #include <getopt.h>
+#include <complex>
 
 #undef PACKAGE
 #undef VERSION
@@ -560,17 +561,6 @@ StatisticsCommand::StatisticsCommand() : m_type(Statistics::SUBBAND_POWER)
 void StatisticsCommand::send(GCFPortInterface& port)
 {
   if (getMode()) {
-#if 0
-    // GET
-    RSPGetstatsEvent getstats;
-
-    getstats.timestamp = Timestamp(0,0);
-    getstats.rcumask = getRCUMask();
-    getstats.cache = true;
-    getstats.type = m_type;
-
-    port.send(getstats);
-#else
     // SUBSCRIBE
     RSPSubstatsEvent substats;
 
@@ -581,7 +571,6 @@ void StatisticsCommand::send(GCFPortInterface& port)
     substats.reduction = SUM;
 
     port.send(substats);
-#endif
   } else {
     // SET 
     cerr << "Error: set mode not support for option '--statistics'" << endl;
@@ -678,36 +667,11 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 
   if (e.signal != RSP_UPDSTATS) return GCFEvent::NOT_HANDLED;
 
-#if 0
-  RSPGetstatsackEvent ack(e);
-  bitset<MAX_N_RCUS> mask = getRCUMask();
-
-  if (SUCCESS == ack.status) {
-    int rcuin = 0;
-    for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-	
-      if (mask[rcuout]) {
-	printf("RCU[%02d].statistics=\n", rcuout);
-	for (int subband = 0; subband < ack.stats().extent(secondDim); subband++) {
-	  printf("%20.10E\n", ack.stats()(rcuin, subband));
-	}
-	rcuin++;
-      }
-    }
-
-    plot_statistics(ack.stats());
-  } else {
-    cerr << "Error: RSP_GETSTATS command failed." << endl;
-  }
-  GCFTask::stop();
-
-#else
   RSPUpdstatsEvent upd(e);
 
   if (SUCCESS == upd.status) {
     plot_statistics(upd.stats(), upd.timestamp);
   }
-#endif
 
   return GCFEvent::HANDLED;
 }
@@ -719,17 +683,6 @@ XCStatisticsCommand::XCStatisticsCommand()
 void XCStatisticsCommand::send(GCFPortInterface& port)
 {
   if (getMode()) {
-#if 0
-    // GET
-    RSPGetxcstatsEvent getxcstats;
-
-    getxcstats.timestamp = Timestamp(0,0);
-    getxcstats.rcumask = getRCUMask();
-    getxcstats.cache = true;
-    getxcstats.type = m_type;
-
-    port.send(getxcstats);
-#else
     // SUBSCRIBE
     RSPSubxcstatsEvent subxcstats;
 
@@ -738,7 +691,6 @@ void XCStatisticsCommand::send(GCFPortInterface& port)
     subxcstats.period = 1;
 
     port.send(subxcstats);
-#endif
   } else {
     // SET 
     cerr << "Error: set mode not support for option '--xcstatistics'" << endl;
@@ -801,6 +753,38 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
   gnuplot_write_matrix(handle, real(xcstats(0,0,Range::all(),Range::all())), true);
 }
 
+/**
+ * Function to convert the complex semi-floating point representation used by the
+ * EPA firmware to a complex<double>.
+ */
+BZ_DECLARE_FUNCTION_RET(convert_to_powerangle, complex<double>)
+inline complex<double> convert_to_powerangle(complex<double> val)
+{
+  double angle = 0.0;
+  double power = real(val)*real(val) + imag(val)*imag(val);
+
+  if (power > 0.0) {
+    power = 12 + 5*log10(power); // adjust scaling to allow comparison to subband statistics
+  }
+
+  if (0.0 == real(val)) {
+
+    if (imag(val) > 0)  angle = 90.0;
+    else if (imag(val) < 0) angle = 270;
+
+  } else {
+
+    angle = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
+
+    if (real(val) > 0.0) {
+      if (imag(val) < 0) angle += 360.0;
+    } else angle += 180.0;
+
+  }
+
+  return complex<double>(power, angle);
+}
+
 GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 {
   if (e.signal == RSP_SUBXCSTATSACK)
@@ -817,40 +801,20 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
   if (e.signal != RSP_UPDXCSTATS) return GCFEvent::NOT_HANDLED;
 
-#if 0
-  RSPGetstatsackEvent ack(e);
-  bitset<MAX_N_RCUS> mask = getRCUMask();
-
-  if (SUCCESS == ack.status) {
-    int rcuin = 0;
-    for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-	
-      if (mask[rcuout]) {
-	printf("RCU[%02d].statistics=\n", rcuout);
-	for (int subband = 0; subband < ack.stats().extent(secondDim); subband++) {
-	  printf("%20.10E\n", ack.stats()(rcuin, subband));
-	}
-	rcuin++;
-      }
-    }
-
-    plot_statistics(ack.stats());
-  } else {
-    cerr << "Error: RSP_GETSTATS command failed." << endl;
-  }
-  GCFTask::stop();
-
-#else
   RSPUpdxcstatsEvent upd(e);
 
   if (SUCCESS == upd.status) {
-    LOG_INFO_STR("XX()=" << upd.stats()(0,0,Range::all(),Range::all()));
-    LOG_INFO_STR("XY()=" << upd.stats()(0,1,Range::all(),Range::all()));
-    LOG_INFO_STR("YX()=" << upd.stats()(1,0,Range::all(),Range::all()));
-    LOG_INFO_STR("YY()=" << upd.stats()(1,1,Range::all(),Range::all()));
+    upd.stats() = convert_to_powerangle(upd.stats());
+
+    for (int i = 0; i < upd.stats().extent(firstDim) * upd.stats().extent(thirdDim); i++) {
+      for (int j = 0; j < upd.stats().extent(secondDim) * upd.stats().extent(fourthDim); j++) {
+	printf("%3.0f:%03.0f ", real(upd.stats()(i%2,j%2,i/2,j/2)), imag(upd.stats()(i%2,j%2,i/2,j/2)));
+      }
+      printf("\n");
+    }
+	
     plot_xcstatistics(upd.stats(), upd.timestamp);
   }
-#endif
 
   return GCFEvent::HANDLED;
 }
@@ -1325,18 +1289,6 @@ int main(int argc, char** argv)
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-#if 0
-  try
-  {
-    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
-  }
-  catch (Exception e)
-  {
-    cout << "500 Error: failed to load configuration files: " << e.text() << endl;
-    exit(EXIT_FAILURE);
-  }
-#endif
-
   RSPCtl c("RSPCtl", argc, argv);
   
   try
@@ -1345,7 +1297,7 @@ int main(int argc, char** argv)
   }
   catch (Exception e)
   {
-    cout << "500 Error: exception: " << e.text() << endl;
+    cout << "Exception: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
 
