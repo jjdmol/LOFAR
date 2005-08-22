@@ -191,8 +191,26 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 	  LOG_INFO("collecting next batch of ACMs");
 
 	  if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
-	    if (0 != m_accs.getBack().getFromFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
-	      LOG_FATAL("Failed to get ACC.");
+	    const char* testfilename = GET_CONFIG_STRING("CalServer.ACCTestFile");
+	    const char* dot          = strrchr(testfilename, '.');
+	    if (dot) {
+	      dot++;
+	      if (0 == strncmp(dot, "txt", 3)) {
+		if (0 != m_accs.getBack().getFromFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
+		  LOG_FATAL("Failed to get ACC.");
+		  exit(EXIT_FAILURE);
+		}
+	      } else if (0 == strncmp(dot, "bin", 3)) {
+		if (0 != m_accs.getBack().getFromBinaryFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
+		  LOG_FATAL("Failed to get ACC.");
+		  exit(EXIT_FAILURE);
+		}
+	      } else dot = 0;
+	    }
+
+	    if (!dot) {
+	      LOG_FATAL_STR("CalServer.ACCTestFile must end in '.txt' or '.dat': offending value:" <<
+			    GET_CONFIG_STRING("CalServer.ACCTestFile"));
 	      exit(EXIT_FAILURE);
 	    }
 	    finalize(true); // done reading from file

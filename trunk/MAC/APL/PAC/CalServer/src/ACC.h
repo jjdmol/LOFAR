@@ -127,6 +127,11 @@ namespace LOFAR {
        */
       int getFromFile(std::string filename);
 
+      /**
+       * Get ACC from binary file assuming the m_acc dimensions.
+       */
+      int getFromBinaryFile(std::string filename);
+
     private:
 
       /**
