@@ -109,38 +109,40 @@ static std::list<int> strtolist(const char* str, int max)
     {
       switch (*end)
       {
-	case ',':
-	case 0:
-	{
-	  if (range)
-	  {
-	    if (0 == prevval && 0 == val) val = max - 1;
-	    if (val < prevval)
-	    {
-	      cerr << "Error: invalid range specification" << endl;
-	      resultset.clear();
-	      return resultset;
-	    }
-	    for (long i = prevval; i <= val; i++) resultset.push_back(i);
-	  }
-	    
-	  else
-	  {
-	    resultset.push_back(val);
-	  }
-	  range=false;
-	}
-	break;
+        case ',':
+        case 0:
+        {
+          if (range)
+          {
+            if (0 == prevval && 0 == val)
+              val = max - 1;
+            if (val < prevval)
+            {
+              cerr << "Error: invalid range specification" << endl;
+              resultset.clear();
+              return resultset;
+            }
+            for (long i = prevval; i <= val; i++)
+              resultset.push_back(i);
+          }
 
-	case ':':
-	  range=true;
-	  break;
+          else
+          {
+            resultset.push_back(val);
+          }
+          range=false;
+        }
+        break;
 
-	default:
-	  cerr << "Error: invalid character " << *end << endl;
-	  resultset.clear();
-	  return resultset;
-	  break;
+        case ':':
+          range=true;
+          break;
+
+        default:
+          cerr << "Error: invalid character " << *end << endl;
+          resultset.clear();
+          return resultset;
+          break;
       }
     }
     prevval = val;
@@ -155,7 +157,8 @@ WeightsCommand::WeightsCommand()
 
 void WeightsCommand::send(GCFPortInterface& port)
 {
-  if (getMode()) {
+  if (getMode())
+  {
     // GET
     RSPGetweightsEvent getweights;
 
@@ -164,7 +167,9 @@ void WeightsCommand::send(GCFPortInterface& port)
     getweights.cache = true;
 
     port.send(getweights);
-  } else {
+  }
+  else
+  {
     // SET
     RSPSetweightsEvent setweights;
     setweights.timestamp = Timestamp(0,0);
@@ -188,41 +193,47 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
-    {
+  {
     case RSP_GETWEIGHTSACK:
+    {
+      RSPGetweightsackEvent ack(e);
+      bitset<MAX_N_RCUS> mask = getRCUMask();
+
+      if (SUCCESS == ack.status)
       {
-	RSPGetweightsackEvent ack(e);
-	bitset<MAX_N_RCUS> mask = getRCUMask();
+        int rcuin = 0;
+        for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+        {
 
-	if (SUCCESS == ack.status) {
-	  int rcuin = 0;
-	  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-
-	    if (mask[rcuout]) {
-	      printf("RCU[%02d].weights=", rcuout);
-	      cout << ack.weights()(0, rcuin++, Range::all()) << endl;
-	    }
-	  }
-	} else {
-	  cerr << "Error: RSP_GETWEIGHTS command failed." << endl;
-	}
+          if (mask[rcuout])
+          {
+            printf("RCU[%02d].weights=", rcuout);
+            cout << ack.weights()(0, rcuin++, Range::all()) << endl;
+          }
+        }
       }
-      break;
+      else
+      {
+        cerr << "Error: RSP_GETWEIGHTS command failed." << endl;
+      }
+    }
+    break;
 
     case RSP_SETWEIGHTSACK:
-      {
-	RSPSetweightsackEvent ack(e);
+    {
+      RSPSetweightsackEvent ack(e);
 
-	if (SUCCESS != ack.status) {
-	  cerr << "Error: RSP_SETWEIGHTS command failed." << endl;
-	}
+      if (SUCCESS != ack.status)
+      {
+        cerr << "Error: RSP_SETWEIGHTS command failed." << endl;
       }
-      break;
+    }
+    break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-    }
+  }
 
   GCFTask::stop();
 
@@ -235,7 +246,8 @@ SubbandsCommand::SubbandsCommand()
 
 void SubbandsCommand::send(GCFPortInterface& port)
 {
-  if (getMode()) {
+  if (getMode())
+  {
     // GET
     RSPGetsubbandsEvent getsubbands;
 
@@ -244,7 +256,9 @@ void SubbandsCommand::send(GCFPortInterface& port)
     getsubbands.cache = true;
 
     port.send(getsubbands);
-  } else {
+  }
+  else
+  {
     // SET
     RSPSetsubbandsEvent setsubbands;
     setsubbands.timestamp = Timestamp(0,0);
@@ -256,8 +270,10 @@ void SubbandsCommand::send(GCFPortInterface& port)
 
     int i = 0;
     std::list<int>::iterator it;
-    for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++) {
-      if (i >= MEPHeader::N_SUBBANDS) break;
+    for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
+    {
+      if (i >= MEPHeader::N_SUBBANDS)
+        break;
       setsubbands.subbands()(0, i) = (*it);
     }
 
@@ -270,41 +286,47 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
-    {
+  {
     case RSP_GETSUBBANDSACK:
+    {
+      RSPGetsubbandsackEvent ack(e);
+      bitset<MAX_N_RCUS> mask = getRCUMask();
+
+      if (SUCCESS == ack.status)
       {
-	RSPGetsubbandsackEvent ack(e);
-	bitset<MAX_N_RCUS> mask = getRCUMask();
+        int rcuin = 0;
+        for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+        {
 
-	if (SUCCESS == ack.status) {
-	  int rcuin = 0;
-	  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-
-	    if (mask[rcuout]) {
-	      printf("RCU[%02d].subbands=", rcuout);
-	      cout << ack.subbands()(rcuin++, Range::all()) << endl;
-	    }
-	  }
-	} else {
-	  cerr << "Error: RSP_GETSUBBANDS command failed." << endl;
-	}
+          if (mask[rcuout])
+          {
+            printf("RCU[%02d].subbands=", rcuout);
+            cout << ack.subbands()(rcuin++, Range::all()) << endl;
+          }
+        }
       }
-      break;
+      else
+      {
+        cerr << "Error: RSP_GETSUBBANDS command failed." << endl;
+      }
+    }
+    break;
 
     case RSP_SETSUBBANDSACK:
-      {
-	RSPSetsubbandsackEvent ack(e);
+    {
+      RSPSetsubbandsackEvent ack(e);
 
-	if (SUCCESS != ack.status) {
-	  cerr << "Error: RSP_SETSUBBANDS command failed." << endl;
-	}
+      if (SUCCESS != ack.status)
+      {
+        cerr << "Error: RSP_SETSUBBANDS command failed." << endl;
       }
-      break;
+    }
+    break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-    }
+  }
 
   GCFTask::stop();
 
@@ -317,7 +339,8 @@ RCUCommand::RCUCommand()
 
 void RCUCommand::send(GCFPortInterface& port)
 {
-  if (getMode()) {
+  if (getMode())
+  {
     // GET
     RSPGetrcuEvent getrcu;
 
@@ -326,12 +349,14 @@ void RCUCommand::send(GCFPortInterface& port)
     getrcu.cache = true;
 
     port.send(getrcu);
-  } else {
+  }
+  else
+  {
     // SET
     RSPSetrcuEvent setrcu;
     setrcu.timestamp = Timestamp(0,0);
     setrcu.rcumask = getRCUMask();
-      
+
     setrcu.settings().resize(1);
     setrcu.settings()(0).value = m_control;
 
@@ -342,36 +367,42 @@ void RCUCommand::send(GCFPortInterface& port)
 GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 {
   switch (e.signal)
-    {
+  {
     case RSP_GETRCUACK:
+    {
+      RSPGetrcuackEvent ack(e);
+      bitset<MAX_N_RCUS> mask = getRCUMask();
+
+      if (SUCCESS == ack.status)
       {
-	RSPGetrcuackEvent ack(e);
-	bitset<MAX_N_RCUS> mask = getRCUMask();
+        int rcuin = 0;
+        for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+        {
 
-	if (SUCCESS == ack.status) {
-	  int rcuin = 0;
-	  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-
-	    if (mask[rcuout]) {
-	      printf("RCU[%02d].status=0x%02x\n",
-		     rcuout, ack.settings()(rcuin++).value);
-	    }
-	  }
-	} else {
-	  cerr << "Error: RSP_GETRCU command failed." << endl;
-	}
+          if (mask[rcuout])
+          {
+            printf("RCU[%02d].status=0x%02x\n",
+                   rcuout, ack.settings()(rcuin++).value);
+          }
+        }
       }
-      break;
-
-    case RSP_SETRCUACK:
+      else
       {
-	RSPSetrcuackEvent ack(e);
-
-	if (SUCCESS != ack.status) {
-	  cerr << "Error: RSP_SETRCU command failed." << endl;
-	}
+        cerr << "Error: RSP_GETRCU command failed." << endl;
       }
     }
+    break;
+
+    case RSP_SETRCUACK:
+    {
+      RSPSetrcuackEvent ack(e);
+
+      if (SUCCESS != ack.status)
+      {
+        cerr << "Error: RSP_SETRCU command failed." << endl;
+      }
+    }
+  }
 
   GCFTask::stop();
 
@@ -384,7 +415,8 @@ ClocksCommand::ClocksCommand()
 
 void ClocksCommand::send(GCFPortInterface& port)
 {
-  if (getMode()) {
+  if (getMode())
+  {
     // GET
     RSPGetclocksEvent getclocks;
 
@@ -393,7 +425,9 @@ void ClocksCommand::send(GCFPortInterface& port)
     getclocks.cache = true;
 
     port.send(getclocks);
-  } else {
+  }
+  else
+  {
     // SET
     RSPSetclocksEvent setclocks;
     setclocks.timestamp = Timestamp(0,0);
@@ -409,36 +443,41 @@ void ClocksCommand::send(GCFPortInterface& port)
 GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 {
   switch (e.signal)
-    {
+  {
     case RSP_GETCLOCKSACK:
+    {
+      RSPGetclocksackEvent ack(e);
+      bitset<MAX_N_TDS> mask = getTDMask();
+
+      if (SUCCESS == ack.status)
       {
-	RSPGetclocksackEvent ack(e);
-	bitset<MAX_N_TDS> mask = getTDMask();
+        int tdin = 0;
+        for (int tdout = 0; tdout < get_ndevices(); tdout++)
+        {
 
-	if (SUCCESS == ack.status) {
-	  int tdin = 0;
-	  for (int tdout = 0; tdout < get_ndevices(); tdout++) {
-
-	    if (mask[tdout]) {
-	      printf("TD[%02d] clock=%d\n",
-		     tdout, ack.clocks()(tdin++));
-	    }
-	  }
-	} else {
-	  cerr << "Error: RSP_GETCLOCKS command failed." << endl;
-	}
+          if (mask[tdout])
+          {
+            printf("TD[%02d] clock=%d\n",tdout, ack.clocks()(tdin++));
+          }
+        }
       }
-      break;
-
-    case RSP_SETCLOCKSACK:
+      else
       {
-	RSPSetclocksackEvent ack(e);
-
-	if (SUCCESS != ack.status) {
-	  cerr << "Error: RSP_SETCLOCKS command failed." << endl;
-	}
+        cerr << "Error: RSP_GETCLOCKS command failed." << endl;
       }
     }
+    break;
+
+    case RSP_SETCLOCKSACK:
+    {
+      RSPSetclocksackEvent ack(e);
+
+      if (SUCCESS != ack.status)
+      {
+        cerr << "Error: RSP_SETCLOCKS command failed." << endl;
+      }
+    }
+  }
 
   GCFTask::stop();
 
@@ -446,15 +485,16 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 }
 
 WGCommand::WGCommand() :
-  m_frequency(0.0),
-  m_phase(0),
-  m_amplitude(64)
+    m_frequency(0.0),
+    m_phase(0),
+    m_amplitude(64)
 {
 }
 
 void WGCommand::send(GCFPortInterface& port)
 {
-  if (getMode()) {
+  if (getMode())
+  {
     // GET
     RSPGetwgEvent wgget;
     wgget.timestamp = Timestamp(0,0);
@@ -462,7 +502,9 @@ void WGCommand::send(GCFPortInterface& port)
     wgget.cache = true;
     port.send(wgget);
 
-  } else {
+  }
+  else
+  {
     // SET
     RSPSetwgEvent wgset;
 
@@ -474,9 +516,12 @@ void WGCommand::send(GCFPortInterface& port)
     wgset.settings()(0).ampl = m_amplitude;
     wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
 
-    if (m_frequency > 1e-6) {
+    if (m_frequency > 1e-6)
+    {
       wgset.settings()(0).mode = WGSettings::MODE_CALC;
-    } else {
+    }
+    else
+    {
       wgset.settings()(0).mode = WGSettings::MODE_OFF;
     }
     wgset.settings()(0).preset = 0; // or one of PRESET_[SINE|SQUARE|TRIANGLE|RAMP]
@@ -490,49 +535,55 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
-    {
+  {
     case RSP_GETWGACK:
+    {
+      RSPGetwgackEvent ack(e);
+
+      if (SUCCESS == ack.status)
       {
-	RSPGetwgackEvent ack(e);
-      
-	if (SUCCESS == ack.status) {
-	  
-	  // print settings
-	  bitset<MAX_N_RCUS> mask = getRCUMask();
-	  int rcuin = 0;
-	  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-	    
-	    if (mask[rcuout]) {
-	      printf("RCU[%02d].wg=[freq=%6d, phase=%3d, ampl=%3d, nof_samples=%6d, mode=%3d]\n",
-		     rcuout,
-		     ack.settings()(rcuin).freq,
-		     ack.settings()(rcuin).phase,
-		     ack.settings()(rcuin).ampl,
-		     ack.settings()(rcuin).nof_samples,
-		     ack.settings()(rcuin).mode);
-	      rcuin++;
-	    }
-	  }
-	} else {
-	  cerr << "Error: RSP_GETWG command failed." << endl;
-	}
+
+        // print settings
+        bitset<MAX_N_RCUS> mask = getRCUMask();
+        int rcuin = 0;
+        for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+        {
+
+          if (mask[rcuout])
+          {
+            printf("RCU[%02d].wg=[freq=%6d, phase=%3d, ampl=%3d, nof_samples=%6d, mode=%3d]\n",
+                   rcuout,
+                   ack.settings()(rcuin).freq,
+                   ack.settings()(rcuin).phase,
+                   ack.settings()(rcuin).ampl,
+                   ack.settings()(rcuin).nof_samples,
+                   ack.settings()(rcuin).mode);
+            rcuin++;
+          }
+        }
       }
-      break;
+      else
+      {
+        cerr << "Error: RSP_GETWG command failed." << endl;
+      }
+    }
+    break;
 
     case RSP_SETWGACK:
+    {
+      RSPSetwgackEvent ack(e);
+
+      if (SUCCESS != ack.status)
       {
-	RSPSetwgackEvent ack(e);
-	
-	if (SUCCESS != ack.status) {
-	  cerr << "Error: RSP_SETWG command failed." << endl;
-	}
+        cerr << "Error: RSP_SETWG command failed." << endl;
       }
-      break;
+    }
+    break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-    }
+  }
 
   GCFTask::stop();
 
@@ -560,7 +611,8 @@ StatisticsCommand::StatisticsCommand() : m_type(Statistics::SUBBAND_POWER)
 
 void StatisticsCommand::send(GCFPortInterface& port)
 {
-  if (getMode()) {
+  if (getMode())
+  {
     // SUBSCRIBE
     RSPSubstatsEvent substats;
 
@@ -571,8 +623,10 @@ void StatisticsCommand::send(GCFPortInterface& port)
     substats.reduction = SUM;
 
     port.send(substats);
-  } else {
-    // SET 
+  }
+  else
+  {
+    // SET
     cerr << "Error: set mode not support for option '--statistics'" << endl;
     GCFTask::stop();
   }
@@ -586,11 +640,12 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
   // initialize the freq array
   firstIndex i;
-  
+
   if (!handle)
   {
     handle = gnuplot_init();
-    if (!handle) return;
+    if (!handle)
+      return;
 
     //gnuplot_setstyle(handle, "steps");
     gnuplot_cmd(handle, "set grid x y");
@@ -602,14 +657,14 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
   gnuplot_cmd(handle, "set yrange [0:140]");
 
   switch (m_type)
-    {
+  {
     case Statistics::SUBBAND_POWER:
       gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
       break;
     case Statistics::BEAMLET_POWER:
       gnuplot_cmd(handle, "set xrange [0:%d]", MEPHeader::N_BEAMLETS);
       break;
-    }
+  }
 
   char plotcmd[2048];
   time_t seconds = timestamp.sec();
@@ -620,27 +675,30 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
   strcpy(plotcmd, "plot ");
 
   int count = 0;
-  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
-    if (mask[rcuout]) {
-      if (count > 0) strcat(plotcmd, ",");
+  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+  {
+    if (mask[rcuout])
+    {
+      if (count > 0)
+        strcat(plotcmd, ",");
       count++;
 
       switch (m_type)
-	{
-	case Statistics::SUBBAND_POWER:
-	  snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
-		   SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
-	  break;
-	case Statistics::BEAMLET_POWER:
-	  //snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
-	  //SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
-	  snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ", rcuout);
-	  break;
-	default:
-	  cerr << "Error: invalid m_type" << endl;
-	  exit(EXIT_FAILURE);
-	  break;
-	}
+      {
+        case Statistics::SUBBAND_POWER:
+          snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
+                   SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+          break;
+        case Statistics::BEAMLET_POWER:
+          //snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
+          //SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+          snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ", rcuout);
+          break;
+        default:
+          cerr << "Error: invalid m_type" << endl;
+          exit(EXIT_FAILURE);
+          break;
+      }
     }
   }
 
@@ -654,22 +712,25 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 {
   if (e.signal == RSP_SUBSTATSACK)
+  {
+    RSPSubstatsackEvent ack(e);
+
+    if (SUCCESS != ack.status)
     {
-      RSPSubstatsackEvent ack(e);
-
-      if (SUCCESS != ack.status) {
-	cerr << "failed to subscribe to statistics" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      return GCFEvent::HANDLED;
+      cerr << "failed to subscribe to statistics" << endl;
+      exit(EXIT_FAILURE);
     }
 
-  if (e.signal != RSP_UPDSTATS) return GCFEvent::NOT_HANDLED;
+    return GCFEvent::HANDLED;
+  }
+
+  if (e.signal != RSP_UPDSTATS)
+    return GCFEvent::NOT_HANDLED;
 
   RSPUpdstatsEvent upd(e);
 
-  if (SUCCESS == upd.status) {
+  if (SUCCESS == upd.status)
+  {
     plot_statistics(upd.stats(), upd.timestamp);
   }
 
@@ -682,7 +743,8 @@ XCStatisticsCommand::XCStatisticsCommand()
 
 void XCStatisticsCommand::send(GCFPortInterface& port)
 {
-  if (getMode()) {
+  if (getMode())
+  {
     // SUBSCRIBE
     RSPSubxcstatsEvent subxcstats;
 
@@ -691,8 +753,10 @@ void XCStatisticsCommand::send(GCFPortInterface& port)
     subxcstats.period = 1;
 
     port.send(subxcstats);
-  } else {
-    // SET 
+  }
+  else
+  {
+    // SET
     cerr << "Error: set mode not support for option '--xcstatistics'" << endl;
     GCFTask::stop();
   }
@@ -715,11 +779,12 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 
   // initialize the freq array
   firstIndex i;
-  
+
   if (!handle)
   {
     handle = gnuplot_init();
-    if (!handle) return;
+    if (!handle)
+      return;
 
     //gnuplot_setstyle(handle, "steps");
     gnuplot_cmd(handle, "set grid x y");
@@ -738,13 +803,13 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
   gnuplot_cmd(handle, plotcmd);
 
   gnuplot_cmd(handle,
-	      "set view 0,0\n"
-	      "set ticslevel 0\n"
-	      "unset xtics\n"
-	      "unset ytics\n"
-	      "unset colorbox\n"
-	      "set key off\n"
-	      "set border 0\n");
+              "set view 0,0\n"
+              "set ticslevel 0\n"
+              "unset xtics\n"
+              "unset ytics\n"
+              "unset colorbox\n"
+              "set key off\n"
+              "set border 0\n");
 
   gnuplot_cmd(handle, "splot \"-\" matrix with points ps 12 pt 5 palette");
 
@@ -763,22 +828,32 @@ inline complex<double> convert_to_powerangle(complex<double> val)
   double angle = 0.0;
   double power = real(val)*real(val) + imag(val)*imag(val);
 
-  if (power > 0.0) {
+  if (power > 0.0)
+  {
     power = 12 + 5*log10(power); // adjust scaling to allow comparison to subband statistics
   }
 
-  if (0.0 == real(val)) {
+  if (0.0 == real(val))
+  {
 
-    if (imag(val) > 0)  angle = 90.0;
-    else if (imag(val) < 0) angle = 270;
+    if (imag(val) > 0)
+      angle = 90.0;
+    else if (imag(val) < 0)
+      angle = 270;
 
-  } else {
+  }
+  else
+  {
 
     angle = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
 
-    if (real(val) > 0.0) {
-      if (imag(val) < 0) angle += 360.0;
-    } else angle += 180.0;
+    if (real(val) > 0.0)
+    {
+      if (imag(val) < 0)
+        angle += 360.0;
+    }
+    else
+      angle += 180.0;
 
   }
 
@@ -788,31 +863,36 @@ inline complex<double> convert_to_powerangle(complex<double> val)
 GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 {
   if (e.signal == RSP_SUBXCSTATSACK)
+  {
+    RSPSubxcstatsackEvent ack(e);
+
+    if (SUCCESS != ack.status)
     {
-      RSPSubxcstatsackEvent ack(e);
-
-      if (SUCCESS != ack.status) {
-	cerr << "failed to subscribe to xcstatistics" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      return GCFEvent::HANDLED;
+      cerr << "failed to subscribe to xcstatistics" << endl;
+      exit(EXIT_FAILURE);
     }
 
-  if (e.signal != RSP_UPDXCSTATS) return GCFEvent::NOT_HANDLED;
+    return GCFEvent::HANDLED;
+  }
+
+  if (e.signal != RSP_UPDXCSTATS)
+    return GCFEvent::NOT_HANDLED;
 
   RSPUpdxcstatsEvent upd(e);
 
-  if (SUCCESS == upd.status) {
+  if (SUCCESS == upd.status)
+  {
     upd.stats() = convert_to_powerangle(upd.stats());
 
-    for (int i = 0; i < upd.stats().extent(firstDim) * upd.stats().extent(thirdDim); i++) {
-      for (int j = 0; j < upd.stats().extent(secondDim) * upd.stats().extent(fourthDim); j++) {
-	printf("%3.0f:%03.0f ", real(upd.stats()(i%2,j%2,i/2,j/2)), imag(upd.stats()(i%2,j%2,i/2,j/2)));
+    for (int i = 0; i < upd.stats().extent(firstDim) * upd.stats().extent(thirdDim); i++)
+    {
+      for (int j = 0; j < upd.stats().extent(secondDim) * upd.stats().extent(fourthDim); j++)
+      {
+        printf("%3.0f:%03.0f ", real(upd.stats()(i%2,j%2,i/2,j/2)), imag(upd.stats()(i%2,j%2,i/2,j/2)));
       }
       printf("\n");
     }
-	
+
     plot_xcstatistics(upd.stats(), upd.timestamp);
   }
 
@@ -837,15 +917,19 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 {
   RSPGetversionackEvent ack(e);
 
-  if (SUCCESS == ack.status) {
-    for (int rsp=0; rsp < get_ndevices(); rsp++) {
+  if (SUCCESS == ack.status)
+  {
+    for (int rsp=0; rsp < get_ndevices(); rsp++)
+    {
       printf("RSP[%02d].version=rsp:0x%02x bp:0x%02x ap:0x%02x\n",
-	     rsp,
-	     ack.versions.rsp()(rsp),
-	     ack.versions.bp()(rsp),
-	     ack.versions.ap()(rsp));
+             rsp,
+             ack.versions.rsp()(rsp),
+             ack.versions.bp()(rsp),
+             ack.versions.ap()(rsp));
     }
-  } else {
+  }
+  else
+  {
     cerr << "Error: RSP_GETVERSION command failed." << endl;
   }
   GCFTask::stop();
@@ -854,7 +938,7 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
 }
 
 RSPCtl::RSPCtl(string name, int argc, char** argv)
-  : GCFTask((State)&RSPCtl::initial, name), m_command(0),
+    : GCFTask((State)&RSPCtl::initial, name), m_command(0),
     m_nrcus(0), m_nrspboards(0), m_ntdboards(0), m_argc(argc), m_argv(argv)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
@@ -864,7 +948,8 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
 
 RSPCtl::~RSPCtl()
 {
-  if (m_command) delete m_command;
+  if (m_command)
+    delete m_command;
 }
 
 GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
@@ -874,13 +959,12 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
   switch(e.signal)
   {
     case F_INIT:
-    {
-    }
     break;
 
     case F_ENTRY:
     {
-      if (!m_server.isConnected()) m_server.open();
+      if (!m_server.isConnected())
+        m_server.open();
     }
     break;
 
@@ -888,8 +972,8 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
     {
       if (m_server.isConnected())
       {
-	RSPGetconfigEvent getconfig;
-	m_server.send(getconfig);
+        RSPGetconfigEvent getconfig;
+        m_server.send(getconfig);
       }
     }
     break;
@@ -932,27 +1016,28 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
-	if (0 == (m_command = parse_options(m_argc, m_argv))) {
-	  cout << "Warning: no command specified." << endl;
-	  exit(EXIT_FAILURE);
-	}
 
-	m_command->send(m_server);
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      if (0 == (m_command = parse_options(m_argc, m_argv)))
+      {
+        cout << "Warning: no command specified." << endl;
+        exit(EXIT_FAILURE);
       }
-      break;
+
+      m_command->send(m_server);
+    }
+    break;
 
     case F_DISCONNECTED:
-      {
-	port.close();
-	cout << "Error: port '" << port.getName() << "' disconnected." << endl;
-	exit(EXIT_FAILURE);
-      }
-      break;
+    {
+      port.close();
+      cout << "Error: port '" << port.getName() << "' disconnected." << endl;
+      exit(EXIT_FAILURE);
+    }
+    break;
 
     case RSP_GETRCUACK:
     case RSP_SETRCUACK:
@@ -977,7 +1062,7 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
       cerr << "Error: unhandled event." << endl;
       GCFTask::stop();
       break;
-    }
+  }
 
   return status;
 }
@@ -1027,254 +1112,290 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
   // select all by default
   select.clear();
-  for (int i = 0; i < MAX_N_RCUS; ++i) {
+  for (int i = 0; i < MAX_N_RCUS; ++i)
+  {
     select.push_back(i);
   }
 
   optind = 0; // reset option parsing
   //opterr = 0; // no error reporting to stderr
   while (1)
+  {
+    static struct option long_options[] =
+      {
+        { "select",     required_argument, 0, 'l'
+        },
+        { "weights",    optional_argument, 0, 'w' },
+        { "subbands",   optional_argument, 0, 's' },
+        { "rcu",        optional_argument, 0, 'r' },
+        { "wg",         optional_argument, 0, 'g' },
+        { "status",     no_argument,       0, 'q' },
+        { "statistics", optional_argument, 0, 't' },
+        { "xcstatistics", no_argument,     0, 'x' },
+        { "xcsubband",  required_argument, 0, 'z' },
+        { "clocks",     optional_argument, 0, 'c' },
+        { "version",    no_argument,       0, 'v' },
+        { "help",       no_argument,       0, 'h' },
+
+        { 0, 0, 0, 0 },
+      };
+
+    int option_index = 0;
+    int c = getopt_long(argc, argv,
+                        "l:w::s::r::g::qt::vc::h", long_options, &option_index);
+
+    if (c == -1)
+      break;
+
+    switch (c)
     {
-      static struct option long_options[] = 
-	{
-	  { "select",     required_argument, 0, 'l' },
-	  { "weights",    optional_argument, 0, 'w' },
-	  { "subbands",   optional_argument, 0, 's' },
-	  { "rcu",        optional_argument, 0, 'r' },
-	  { "wg",         optional_argument, 0, 'g' },
-	  { "status",     no_argument,       0, 'q' },
-	  { "statistics", optional_argument, 0, 't' },
-	  { "xcstatistics", no_argument,     0, 'x' },
-	  { "xcsubband",  required_argument, 0, 'z' },
-	  { "clocks",     optional_argument, 0, 'c' },
-	  { "version",    no_argument,       0, 'v' },
-	  { "help",       no_argument,       0, 'h' },
-	  
-	  { 0, 0, 0, 0 },
-	};
+      case 'l':
+        if (optarg)
+        {
+          if (!command || 0 == command->get_ndevices())
+          {
+            cerr << "Error: 'command' argument should come before --select argument" << endl;
+            exit(EXIT_FAILURE);
+          }
+          select = strtolist(optarg, command->get_ndevices());
+          if (select.empty())
+          {
+            cerr << "Error: invalid or missing '--select' option" << endl;
+            exit(EXIT_FAILURE);
+          }
+        }
+        else
+        {
+          cerr << "Error: option '--select' requires an argument" << endl;
+        }
+        break;
 
-      int option_index = 0;
-      int c = getopt_long(argc, argv,
-			  "l:w::s::r::g::qt::vc::h", long_options, &option_index);
-    
-      if (c == -1) break;
-    
-      switch (c)
-	{
-	case 'l':
-	  if (optarg) {
-	    if (!command || 0 == command->get_ndevices()) {
-	      cerr << "Error: 'command' argument should come before --select argument" << endl;
-	      exit(EXIT_FAILURE);
-	    }
-	    select = strtolist(optarg, command->get_ndevices());
-	    if (select.empty()) {
-	      cerr << "Error: invalid or missing '--select' option" << endl;
-	      exit(EXIT_FAILURE);
-	    }
-	  } else {
-	    cerr << "Error: option '--select' requires an argument" << endl;
-	  }
-	  break;
+      case 'w':
+      {
+        if (command)
+          delete command;
+        WeightsCommand* weightscommand = new WeightsCommand();
+        command = weightscommand;
 
-	case 'w':
-	  {
-	    if (command) delete command;
-	    WeightsCommand* weightscommand = new WeightsCommand();
-	    command = weightscommand;
-	    
-	    command->set_ndevices(m_nrcus);
+        command->set_ndevices(m_nrcus);
 
-	    if (optarg) {
-	      weightscommand->setMode(false);
-	      double value = atof(optarg);
-	      weightscommand->setValue(value);
-	      
-	      if (value <= -1.0 || value > 1.0) {
-		cerr << "Error: invalid weights value, should be: -1 < value <= 1" << endl;
-		exit(EXIT_FAILURE);
-	      }
-	    }
-	  }
-	  break;
+        if (optarg)
+        {
+          weightscommand->setMode(false);
+          double value = atof(optarg);
+          weightscommand->setValue(value);
 
-	case 's':
-	  {
-	    if (command) delete command;
-	    SubbandsCommand* subbandscommand = new SubbandsCommand();
-	    command = subbandscommand;
-	    
-	    command->set_ndevices(m_nrcus);
+          if (value <= -1.0 || value > 1.0)
+          {
+            cerr << "Error: invalid weights value, should be: -1 < value <= 1" << endl;
+            exit(EXIT_FAILURE);
+          }
+        }
+      }
+      break;
 
-	    if (optarg) {
-	      subbandscommand->setMode(false);
-	      list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
-	      if (subbandlist.empty()) {
-		cerr << "Error: invalid or empty '--subbands' option" << endl;
-		exit(EXIT_FAILURE);
-	      }
-	      subbandscommand->setSubbandList(subbandlist);
-	    }
-	  }
-	  break;
+      case 's':
+      {
+        if (command)
+          delete command;
+        SubbandsCommand* subbandscommand = new SubbandsCommand();
+        command = subbandscommand;
 
-	case 'r':
-	  {
-	    if (command) delete command;
-	    RCUCommand* rcucommand = new RCUCommand();
-	    command = rcucommand;
-	    
-	    command->set_ndevices(m_nrcus);
+        command->set_ndevices(m_nrcus);
 
-	    if (optarg) {
-	      rcucommand->setMode(false);
-	      unsigned long controlopt = strtoul(optarg, 0, 0);
-	      if ( controlopt > 0xFF )
-		{
-		  cerr << "Error: option '--rcu' parameter must be < 0xFF" << endl;
-		  delete command;
-		  return 0;
-		}
-	      rcucommand->setControl(controlopt);
-	    }
-	  }
-	  break;
+        if (optarg)
+        {
+          subbandscommand->setMode(false);
+          list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
+          if (subbandlist.empty())
+          {
+            cerr << "Error: invalid or empty '--subbands' option" << endl;
+            exit(EXIT_FAILURE);
+          }
+          subbandscommand->setSubbandList(subbandlist);
+        }
+      }
+      break;
 
-	case 'g':
-	  {
-	    if (command) delete command;
-	    WGCommand* wgcommand = new WGCommand();
-	    command = wgcommand;
-	    
-	    command->set_ndevices(m_nrcus);
+      case 'r':
+      {
+        if (command)
+          delete command;
+        RCUCommand* rcucommand = new RCUCommand();
+        command = rcucommand;
 
-	    if (optarg) {
-	      wgcommand->setMode(false);
-	      double frequency = atof(optarg);
-	      if ( frequency < 0 )
-		{
-		  cerr << "Error: option '--wg' parameter must be > 0" << endl;
-		  delete command;
-		  return 0;
-		}
-	      wgcommand->setFrequency(frequency);
-	    }
-	  }
-	  break;
+        command->set_ndevices(m_nrcus);
 
-	case 'q':
-	  {
-	    if (command) delete command;
-	    StatusCommand* statuscommand = new StatusCommand();
-	    command = statuscommand;
+        if (optarg)
+        {
+          rcucommand->setMode(false);
+          unsigned long controlopt = strtoul(optarg, 0, 0);
+          if ( controlopt > 0xFF )
+          {
+            cerr << "Error: option '--rcu' parameter must be < 0xFF" << endl;
+            delete command;
+            return 0;
+          }
+          rcucommand->setControl(controlopt);
+        }
+      }
+      break;
 
-	    command->set_ndevices(m_nrcus);
-	  }
-	  break;
+      case 'g':
+      {
+        if (command)
+          delete command;
+        WGCommand* wgcommand = new WGCommand();
+        command = wgcommand;
 
-	case 't':
-	  {
-	    if (command) delete command;
-	    StatisticsCommand* statscommand = new StatisticsCommand();
-	    command = statscommand;
+        command->set_ndevices(m_nrcus);
 
-	    command->set_ndevices(m_nrcus);
+        if (optarg)
+        {
+          wgcommand->setMode(false);
+          double frequency = atof(optarg);
+          if ( frequency < 0 )
+          {
+            cerr << "Error: option '--wg' parameter must be > 0" << endl;
+            delete command;
+            return 0;
+          }
+          wgcommand->setFrequency(frequency);
+        }
+      }
+      break;
 
-	    if (optarg) {
-	      if (!strcmp(optarg, "subband")) {
-		statscommand->setType(Statistics::SUBBAND_POWER);
-	      } else if (!strcmp(optarg, "beamlet")) {
-		statscommand->setType(Statistics::BEAMLET_POWER);
-	      }
-	    }
-	  }
-	  break;
+      case 'q':
+      {
+        if (command)
+          delete command;
+        StatusCommand* statuscommand = new StatusCommand();
+        command = statuscommand;
 
-	case 'x':
-	  {
-	    if (command) delete command;
-	    XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand();
-	    command = xcstatscommand;
-	    command->set_ndevices(m_nrcus);
-	    command->setSelectable(false); // no selection allowed
-	  }
-	  break;
+        command->set_ndevices(m_nrcus);
+      }
+      break;
 
-	case 'z':
-	  {
-	    if (command) delete command;
-	    SubbandsCommand* subbandscommand = new SubbandsCommand();
-	    command = subbandscommand;
-	    
-	    command->set_ndevices(m_nrcus);
+      case 't':
+      {
+        if (command)
+          delete command;
+        StatisticsCommand* statscommand = new StatisticsCommand();
+        command = statscommand;
 
-	    if (optarg) {
-	      subbandscommand->setMode(false);
+        command->set_ndevices(m_nrcus);
 
-	      int subband = atoi(optarg);
+        if (optarg)
+        {
+          if (!strcmp(optarg, "subband"))
+          {
+            statscommand->setType(Statistics::SUBBAND_POWER);
+          }
+          else if (!strcmp(optarg, "beamlet"))
+          {
+            statscommand->setType(Statistics::BEAMLET_POWER);
+          }
+        }
+      }
+      break;
 
-	      if (subband < 0 || subband >= MEPHeader::N_SUBBANDS) {
-		cerr << "Error: argument to --xcsubband out of range, value must be >= 0 and < " << MEPHeader::N_SUBBANDS << endl;
-		exit(EXIT_FAILURE);
-	      }
+      case 'x':
+      {
+        if (command)
+          delete command;
+        XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand();
+        command = xcstatscommand;
+        command->set_ndevices(m_nrcus);
+        command->setSelectable(false); // no selection allowed
+      }
+      break;
 
-	      list<int> subbandlist;
-	      for (int rcu = 0; rcu < m_nrcus / MEPHeader::N_POL; rcu++) {
-		subbandlist.push_back(subband);
-	      }
-	      subbandscommand->setSubbandList(subbandlist);
-	    }
-	  }
-	  break;
-	  
-	case 'c':
-	  {
-	    if (command) delete command;
-	    ClocksCommand* clockcommand = new ClocksCommand();
-	    command = clockcommand;
-	    
-	    command->set_ndevices(m_ntdboards);
+      case 'z':
+      {
+        if (command)
+          delete command;
+        SubbandsCommand* subbandscommand = new SubbandsCommand();
+        command = subbandscommand;
 
-	    if (optarg) {
-	      clockcommand->setMode(false);
-	      double clock = atof(optarg);
-	      if ( 160000000 != (uint32)clock && 200000000 != (uint32)clock)
-		{
-		  cerr << "Error: option '--clocks' parameter must be 160000000 or 200000000" << endl;
-		  delete command;
-		  return 0;
-		}
-	      clockcommand->setClock((uint32)clock);
+        command->set_ndevices(m_nrcus);
 
-	    }
-	  }
-	  break;
+        if (optarg)
+        {
+          subbandscommand->setMode(false);
 
-	case 'v':
-	  {
-	    if (command) delete command;
-	    VersionCommand* versioncommand = new VersionCommand();
-	    command = versioncommand;
-	    command->set_ndevices(m_nrspboards);
-	  }
-	  break;
+          int subband = atoi(optarg);
 
-	case 'h':
-	  usage();
-	  break;
+          if (subband < 0 || subband >= MEPHeader::N_SUBBANDS)
+          {
+            cerr << "Error: argument to --xcsubband out of range, value must be >= 0 and < " << MEPHeader::N_SUBBANDS << endl;
+            exit(EXIT_FAILURE);
+          }
 
-	case '?':
-	  exit(EXIT_FAILURE);
-	  break;
-	}
+          list<int> subbandlist;
+          for (int rcu = 0; rcu < m_nrcus / MEPHeader::N_POL; rcu++)
+          {
+            subbandlist.push_back(subband);
+          }
+          subbandscommand->setSubbandList(subbandlist);
+        }
+      }
+      break;
+
+      case 'c':
+      {
+        if (command)
+          delete command;
+        ClocksCommand* clockcommand = new ClocksCommand();
+        command = clockcommand;
+
+        command->set_ndevices(m_ntdboards);
+
+        if (optarg)
+        {
+          clockcommand->setMode(false);
+          double clock = atof(optarg);
+          if ( 160000000 != (uint32)clock && 200000000 != (uint32)clock)
+          {
+            cerr << "Error: option '--clocks' parameter must be 160000000 or 200000000" << endl;
+            delete command;
+            return 0;
+          }
+          clockcommand->setClock((uint32)clock);
+
+        }
+      }
+      break;
+
+      case 'v':
+      {
+        if (command)
+          delete command;
+        VersionCommand* versioncommand = new VersionCommand();
+        command = versioncommand;
+        command->set_ndevices(m_nrspboards);
+      }
+      break;
+
+      case 'h':
+        usage();
+        break;
+
+      case '?':
+      default:
+        exit(EXIT_FAILURE);
+        break;
     }
-  
-  if (command) {
-    if (!command->getSelectable()) {
+  }
+
+  if (command)
+  {
+    if (!command->getSelectable())
+    {
       // select all
       select.clear();
-      for (int i = 0; i < MAX_N_RCUS; ++i) {
-	select.push_back(i);
+      for (int i = 0; i < MAX_N_RCUS; ++i)
+      {
+        select.push_back(i);
       }
     }
     command->setSelect(select);
@@ -1290,7 +1411,7 @@ int main(int argc, char** argv)
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   RSPCtl c("RSPCtl", argc, argv);
-  
+
   try
   {
     c.mainloop();
