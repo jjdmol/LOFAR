@@ -24,6 +24,7 @@
 #include "ACC.h"
 #include <blitz/array.h>
 #include <fstream>
+#include <stdio.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -105,6 +106,31 @@ int ACC::getFromFile(string filename)
   }
 
   setACC(acc_array);
+
+  LOG_INFO_STR("Done reading ACC array");
+
+  return 0;
+}
+
+int ACC::getFromBinaryFile(string filename)
+{
+  LOG_INFO_STR("Attempting to read binary ACC array with shape='" << m_acc.shape() << "' from '" << filename);
+
+  FILE* f = fopen(filename.c_str(), "r");
+
+  if (!f) {
+    LOG_WARN_STR("Failed to open file: " << filename);
+    return -1;
+  }
+
+  size_t nread = fread(m_acc.data(), sizeof(complex<double>), m_acc.size(), f);
+  if (nread != m_acc.size()*sizeof(complex<double>)) {
+    LOG_WARN_STR("Warning: read " << nread << " bytes but expected " << m_acc.size() * sizeof(complex<double>));
+    fclose(f);
+    return -1;
+  }
+
+  fclose(f);
 
   LOG_INFO_STR("Done reading ACC array");
 
