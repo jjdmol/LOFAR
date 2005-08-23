@@ -100,8 +100,10 @@ namespace LOFAR
 
    inline int TimeStamp::operator- (TimeStamp& other)
     { 
-      //return abs(itsBlockId - other.itsBlockId);
-      return itsBlockId - other.itsBlockId;
+      int seqdecr = itsSeqId - other.itsSeqId;
+      int blockdecr = itsBlockId - other.itsBlockId;
+      
+      return  (seqdecr*MAX_BLOCK_ID) + blockdecr;
     }
 
   inline bool TimeStamp::operator > (TimeStamp& other)
