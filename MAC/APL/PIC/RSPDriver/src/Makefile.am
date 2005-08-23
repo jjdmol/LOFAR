@@ -12,8 +12,6 @@ endif
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src
 
-INSTALL=install -C
-
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
