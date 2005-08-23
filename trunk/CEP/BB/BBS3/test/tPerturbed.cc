@@ -64,7 +64,7 @@ void doTest (Prediffer& pre1, const vector<string>& solv)
     perts[i] = 0;
     for (uint j=0; j<results.size(); ++j) {
       if (results[j].isDefined (i)) {
-	perts[i] = results[j].getPerturbation(i).getDouble();
+	perts[i] = results[j].getPerturbation(i);
 	break;
       }
     }
