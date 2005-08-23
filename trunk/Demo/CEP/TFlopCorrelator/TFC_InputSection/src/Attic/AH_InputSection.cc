@@ -116,8 +116,6 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
       itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));
     }
 
-    DBGASSERTSTR(itsTHs.back()->init(), "Couldn't init input TransportHolder");
-     
     if (r==0)
     {
       RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create sync master
