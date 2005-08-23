@@ -34,7 +34,7 @@ namespace LOFAR {
     if (itsBlockId > MAX_BLOCK_ID) {
       int newBlockId = itsBlockId % MAX_BLOCK_ID;
       itsSeqId += itsBlockId / MAX_BLOCK_ID; 
-      itsBlockId = newBlockId; 
+      itsBlockId = newBlockId;
     };
   }
   
