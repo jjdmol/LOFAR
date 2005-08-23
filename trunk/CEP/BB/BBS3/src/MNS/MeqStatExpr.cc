@@ -123,7 +123,7 @@ MeqJonesResult MeqStatExpr::getResult (const MeqRequest& request)
 	  MeqMatrix pdf12 = df12;
 	  MeqMatrix pdf21 = df21;
 	  MeqMatrix pdf22 = df22;
-	  MeqMatrix perturbation;
+	  double perturbation;
 	  bool eval = false;
 	  if (drot.isDefined(spinx)) {
 	    eval = true;

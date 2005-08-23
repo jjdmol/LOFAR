@@ -1065,8 +1065,7 @@ void Prediffer::getEquation (double* result, char* flagResult,
 	  }
 	} else {
 	  // Calculate the derivative for each channel (real and imaginary part).
-	  //double invPert = 1.0 / predResults[corr]->getPerturbation(scinx).getDouble();
-	  double invPert = 1.0 / predResults[corr]->getPerturbation(scinx).getDouble();
+	  double invPert = 1.0 / predResults[corr]->getPerturbation(scinx);
 	  const MeqMatrix& pertVal = predResults[corr]->getPerturbedValue(scinx);
 	  const double *pertRealVals, *pertImagVals;
 	  pertVal.dcomplexStorage(pertRealVals, pertImagVals);

@@ -66,7 +66,7 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
   resN.setValue (nk);
 
   // Evaluate (if needed) for the perturbed parameter values.
-  MeqMatrix perturbation;
+  double perturbation;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     MeqMatrix pcosdec = cosdec;
     MeqMatrix pradiff = radiff;

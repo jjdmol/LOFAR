@@ -172,7 +172,7 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t21_i,r21_r),_mm_mul_pd(t21_r,r21_i))
   result22.setValue (v22); 
 
   // Determine which values are perturbed and determine the perturbation.
-  MeqMatrix perturbation;
+  double perturbation;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval11 = false;
     bool eval12 = false;
@@ -506,7 +506,7 @@ MeqJonesResult MeqJonesCMul3::getResult (const MeqRequest& request)
     result22.setValue (t21*conj(mr21) + t22*conj(mr22));
 
     // Determine which values are perturbed and determine the perturbation.
-    MeqMatrix perturbation;
+    double perturbation;
     for (int spinx=0; spinx<request.nspid(); spinx++) {
       bool eval11 = false;
       bool eval12 = false;
