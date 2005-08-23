@@ -19,7 +19,7 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-
+#include <lofar_config.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -56,7 +56,7 @@ BufferController::BufferController(ParameterSet &ps)
 
 BufferController::~BufferController()
 {
-  delete itsSubbandData;
+  delete [] itsSubbandData;
   delete itsMetadataBuf;
 }
  
@@ -91,7 +91,7 @@ bool BufferController::getElements(void* buf, int& invalidcount, timestamp_t sta
   itsMetadataBuf->ReadUnlockElement(mid); 
   
   DBGASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
-               "BufferController: timestamp offset invalid");
+	       "BufferController: timestamp offset invalid");
 
   // determine start position in buffer
   itsMetadataBuf->setOffset(offset, startid);
@@ -218,12 +218,32 @@ bool BufferController::rewriteElements(void* buf, timestamp_t startstamp, int ne
   return true;
 }
 
-bool BufferController::overwritingAllowed(bool allowed)
+timestamp_t  BufferController::startBufferRead()
 {
-  itsMetadataBuf->setOverwritingAllowed(allowed);
+  itsMetadataBuf->setOverwritingAllowed(false);
+  int mid;
+
+  // get newest stamp
+  timestamp_t newestStamp = itsMetadataBuf->getNewestReadPtr(mid)->timestamp;
+  itsMetadataBuf->ReadUnlockElements(mid, 1);
+
+  // return newest stamp
+  cout<<" oldest stamp " << newestStamp << endl;
+  return newestStamp;
 }
 
+void  BufferController::startBufferRead(timestamp_t stamp)
+{
+  
+  itsMetadataBuf->setOverwritingAllowed(false);
+  int mid;
+  // get oldest stamp
+  timestamp_t oldestStamp = itsMetadataBuf->getFirstReadPtr(mid)->timestamp;
+  cout<<" oldest stamp " << oldestStamp << " stamp " << stamp << endl;
+  itsMetadataBuf->ReadUnlockElements(mid, 1);
+  // set offset
+  itsMetadataBuf->setOffset(stamp - oldestStamp, mid);
 
-
+}
 
 }

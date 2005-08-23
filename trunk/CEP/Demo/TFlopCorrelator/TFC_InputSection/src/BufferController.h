@@ -64,8 +64,13 @@ class BufferController
    bool getElements(void* buf, int& invalidcount, timestamp_t startstamp, int nelements);
    bool writeElements(void* buf, timestamp_t rspstamp, int nelements, int invalid);
    bool rewriteElements(void* buf, timestamp_t startstamp, int nelements);
-   bool overwritingAllowed(bool allowed);
- 
+   
+   // disable overwriting and remember the newest element
+   // return the newest element (to be used on the master)
+   timestamp_t startBufferRead();
+   // disable overwrite at the given stamp (to be used on the client)
+   void startBufferRead(timestamp_t stamp);
+   
   private:
    
    // Cyclic buffer
