@@ -83,7 +83,7 @@ MeqResultVec MeqDFTPS::getResultVec (const MeqRequest& request)
   }
 
   // Evaluate (if needed) for the perturbed parameter values.
-  MeqMatrix perturbation;
+  double perturbation;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval = false;
     if (lrk.isDefined(spinx)) {

@@ -80,11 +80,11 @@ public:
     }
 
   // Get the i-th perturbed parameter.
-  const MeqMatrix& getPerturbation (int i) // const
+  double getPerturbation (int i) // const
     {
       //if (i >= itsNspid) return itsDefPert;
-      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
-      map<int, MeqMatrix>::iterator it = itsPerturbation->find(i);
+      if (itsPerturbation == 0) itsPerturbation = new map<int, double>;
+      map<int, double>::iterator it = itsPerturbation->find(i);
       return it == itsPerturbation->end() ? itsDefPert : it->second;
     }
 
@@ -129,20 +129,10 @@ public:
 #endif
   
   // Set the i-th perturbed parameter.
-  void setPerturbation (int i, const MeqMatrix& value)
+  void setPerturbation (int i, double value)
     {
-      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
-      (*itsPerturbation)[i] = MeqMatrix(value);
-    }
-  void setPerturbation (int i, const double& value)
-    {
-      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
-      (*itsPerturbation)[i] = MeqMatrix(value);
-    }
-  void setPerturbation (int i, const dcomplex& value)
-    {
-      if (itsPerturbation == 0) itsPerturbation = new map<int, MeqMatrix>;
-      (*itsPerturbation)[i] = MeqMatrix(value);
+      if (itsPerturbation == 0) itsPerturbation = new map<int, double>;
+      (*itsPerturbation)[i] = value;
     }
 
   void show (ostream&) /*const*/;
@@ -157,9 +147,10 @@ private:
 
   int       itsCount;
   MeqMatrix itsValue;
-  MeqMatrix itsDefPert;
+  double    itsDefPert;
   int	    itsNspid;
-  map<int, MeqMatrix> *itsPerturbedValues, *itsPerturbation;
+  map<int, MeqMatrix> *itsPerturbedValues;
+  map<int, double>    *itsPerturbation;
 };
 
 
@@ -198,7 +189,7 @@ public:
     { return itsRep->getPerturbedValueRW(i); }
 
   // Get the i-th perturbed parameter.
-  const MeqMatrix& getPerturbation (int i) const
+  double getPerturbation (int i) const
     { return itsRep->getPerturbation (i); }
 
   // Set the value.
@@ -236,11 +227,7 @@ public:
 #endif
 
   // Set the i-th perturbed parameter.
-  void setPerturbation (int i, const MeqMatrix& value)
-    { itsRep->setPerturbation (i, value); }
   void setPerturbation (int i, double value)
-    { itsRep->setPerturbation (i, value); }
-  void setPerturbation (int i, const dcomplex& value)
     { itsRep->setPerturbation (i, value); }
 
   friend ostream& operator<< (ostream& os, const MeqResult& result)

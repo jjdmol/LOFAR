@@ -137,7 +137,7 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
   // Evaluate (if needed) for the perturbed parameter values.
   // Note that we do not have to test for perturbed values in nk,
   // because the left and right value already depend on nk.
-  MeqMatrix perturbation;
+  double perturbation;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval = false;
     if (left.isDefined(spinx)) {

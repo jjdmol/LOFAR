@@ -73,7 +73,7 @@ MeqJonesResult MeqBaseLinPS::getResult (const MeqRequest& request)
     resYY.setValue ((ik.getValue() - qk.getValue()) * dft.getValue());
 
     // Evaluate (if needed) for the perturbed parameter values.
-    MeqMatrix perturbation;
+    double perturbation;
     for (int spinx=0; spinx<request.nspid(); spinx++) {
       bool eval1 = false;
       bool eval2 = false;

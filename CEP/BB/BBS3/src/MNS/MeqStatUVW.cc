@@ -158,7 +158,7 @@ void MeqStatUVW::calculate (const MeqRequest& request)
 
   // Evaluate (if needed) for the perturbed parameter values.
   // Only station positions can be perturbed.
-//   MeqMatrix perturbation;
+//   double perturbation;
 //   for (int spinx=0; spinx<request.nspid(); spinx++) {
 //     bool eval = false;
 //     bool evalu = false;

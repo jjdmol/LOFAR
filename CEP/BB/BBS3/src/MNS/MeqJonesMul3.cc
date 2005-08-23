@@ -98,7 +98,7 @@ MeqJonesResult MeqJonesMul3::getResult (const MeqRequest& request)
   result22.setValue (t21*mr12 + t22*mr22);
 
   // Determine which values are perturbed and determine the perturbation.
-  MeqMatrix perturbation;
+  double perturbation;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
     bool eval11 = false;
     bool eval12 = false;
