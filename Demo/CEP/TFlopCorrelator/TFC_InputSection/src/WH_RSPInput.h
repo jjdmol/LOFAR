@@ -83,6 +83,8 @@ namespace LOFAR
      
       virtual void startThread();
     
+      virtual void preprocess();
+
       virtual void process();
 
       virtual void postprocess();
