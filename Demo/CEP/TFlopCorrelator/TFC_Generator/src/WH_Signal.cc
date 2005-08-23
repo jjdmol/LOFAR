@@ -43,7 +43,9 @@ bool WH_Signal::theirTimerSet = 0;
 
 int16 randint16() {
   int32 value = rand() - RAND_MAX / 2;  
-  return value / 4000000 ;
+  // we need to return a int16 with 12 used bits
+  // so divide by 2^20
+  return value / 1048576 ;
 };
 
 WH_Signal::WH_Signal(const string& name, 
