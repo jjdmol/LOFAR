@@ -301,10 +301,7 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
 void Scheduler::setCurrentTime(long sec, long usec)
 {
   /* adjust the current time */
-  struct timeval tv;
-  tv.tv_sec  = sec;
-  tv.tv_usec = usec;
-  m_current_time.set(tv);
+  m_current_time = Timestamp(sec, usec);
 }
 
 Timestamp Scheduler::getCurrentTime() const
@@ -384,6 +381,9 @@ void Scheduler::scheduleCommands()
 
 void Scheduler::processCommands()
 {
+  Cache::getInstance().getFront().setTimestamp(getCurrentTime());
+  Cache::getInstance().getFront().setTimestamp(getCurrentTime());
+
   while (!m_now_queue.empty())
   {
     Ptr<Command> command = m_now_queue.top();

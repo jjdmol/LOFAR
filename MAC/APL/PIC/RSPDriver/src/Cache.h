@@ -60,6 +60,11 @@ namespace RSP
       RSP_Protocol::Clocks&            getClocks();
       /*@}*/
 
+      /**
+       * update timestamp
+       */
+      void setTimestamp(const RTC::Timestamp& timestamp);
+
     private:
       RTC::Timestamp                 m_timestamp;
 

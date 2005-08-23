@@ -244,6 +244,11 @@ Clocks& CacheBuffer::getClocks()
   return m_clocks;
 }
 
+void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)
+{
+  m_timestamp = timestamp;
+}
+
 /**
  * Cache implementation
  */
