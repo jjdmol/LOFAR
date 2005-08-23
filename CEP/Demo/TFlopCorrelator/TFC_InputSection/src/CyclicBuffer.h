@@ -168,6 +168,9 @@ class CyclicBuffer
   // read oldest item without adjusting tail and count 
   TYPE* getFirstReadPtr(int& ID);
 
+  // read newest item, throw older items away
+  TYPE* CyclicBuffer<TYPE>::getNewestReadPtr(int &ID);
+
   // (over)write element without adjusting head and count
   TYPE* getManualWritePtr(int startID);
 
@@ -232,7 +235,7 @@ class CyclicBuffer
 
 template<class TYPE>
 CyclicBuffer<TYPE>::CyclicBuffer(int nelements) :
-     itsOverwritingAllowed(false),
+     itsOverwritingAllowed(true),
      itsHeadIdx(nelements),
      itsTailIdx(nelements),
      itsOldHead(nelements),
@@ -309,9 +312,9 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
 
   ID = itsHeadIdx.getIndex();
   WriteLockElement(ID);
-  
+
   itsHeadIdx++;
-  itsCount++; 
+  //  itsCount++; 
 
 
   // if allowed, overwrite previous written elements
@@ -374,6 +377,33 @@ TYPE* CyclicBuffer<TYPE>::getFirstReadPtr(int& ID)
 }
 
 template<class TYPE>
+TYPE* CyclicBuffer<TYPE>::getNewestReadPtr(int &ID)
+{
+  pthread_mutex_lock(&buffer_mutex);
+
+  // wait until at least one element is available
+  while (itsCount <= 0) 
+  {
+    pthread_cond_wait(&data_available, &buffer_mutex);
+  }
+  // CONDITION: itsCount > 0
+  
+  // This method is called before the first read,
+  // so it is allowed to move the tails
+  BufferIndex bid = itsOldHead;
+  bid -= 1;
+  ID = bid.getIndex();
+  ReadLockElement(ID);
+  itsTailIdx = bid;
+  itsOldTail = bid;
+  itsCount = 1;
+ 
+  pthread_mutex_unlock(&buffer_mutex);
+  
+  return &itsBuffer[ID].itsElement;
+}
+
+template<class TYPE>
 TYPE* CyclicBuffer<TYPE>::getManualWritePtr(int startID)
 {
   if ( (startID >= itsBuffer.size()) || (startID < 0))
@@ -403,6 +433,8 @@ void CyclicBuffer<TYPE>::setOffset(int offset, int& ID)
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   
+  // This method is called when there is no reader,
+  // so tail == oldTail
   itsTailIdx += offset;
   itsOldTail = itsTailIdx;
   ID = itsTailIdx.getIndex();
@@ -414,25 +446,34 @@ void CyclicBuffer<TYPE>::setOffset(int offset, int& ID)
 template<class TYPE>
 void CyclicBuffer<TYPE>::WriteLockElement(int ID)
 {
+#define DO_LOCKING_NOT
+#ifdef DO_LOCKING
   itsBuffer[ID].itsRWLock.WriteLock();
+#endif
 }
 
 template<class TYPE>
 void CyclicBuffer<TYPE>::ReadLockElement(int ID)
 {
+#ifdef DO_LOCKING
   itsBuffer[ID].itsRWLock.ReadLock();
+#endif
 }
 
 template<class TYPE>
 void CyclicBuffer<TYPE>::WriteUnlockElement(int ID)
 {
+#ifdef DO_LOCKING
   itsBuffer[ID].itsRWLock.WriteUnlock();
+#endif
 }
 
 template<class TYPE>
 void CyclicBuffer<TYPE>::ReadUnlockElement(int ID)
 {
+#ifdef DO_LOCKING
   itsBuffer[ID].itsRWLock.ReadUnlock();
+#endif
 }
 
 
@@ -443,13 +484,17 @@ void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
     if (ID >= (int)itsBuffer.size()) {
       ID = 0;
     }
+#ifdef DO_LOCKING
     itsBuffer[ID].itsRWLock.WriteUnlock();
+#endif
     ID++;
   }
   pthread_mutex_lock(&buffer_mutex);
   
   // synchronize writepointers
   itsOldHead = itsHeadIdx;
+
+  itsCount += nelements;
   
   // signal that data has become available 
   pthread_cond_broadcast(&data_available);
@@ -466,7 +511,9 @@ void CyclicBuffer<TYPE>::ReadUnlockElements(int ID, int nelements)
     if (ID >= (int)itsBuffer.size()) {
       ID = 0;
     }
+#ifdef DO_LOCKING
     itsBuffer[ID].itsRWLock.ReadUnlock();
+#endif
     ID++;
   }
   
