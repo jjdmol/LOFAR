@@ -49,7 +49,7 @@ void WGSettings::initWaveformPresets()
   //
   for (int i = 0; i < N_WAVE_SAMPLES; i++)
   {
-    WGSettings::m_presets(PRESET_SINE, i) = (int16)(sin((double)i * 2.0 * M_PI / N_WAVE_SAMPLES) * (1<<15));
+    WGSettings::m_presets(PRESET_SINE, i) = (int16)(::sin((double)i * 2.0 * M_PI / N_WAVE_SAMPLES) * (1<<15));
   }
   cout << "sine=" << WGSettings::m_presets(PRESET_SINE, Range::all()) << endl;
 
