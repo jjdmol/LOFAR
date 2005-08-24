@@ -27,11 +27,11 @@
 #include <Common/lofar_vector.h>
 
 // minumum written elements before reading is allowed
-#define MIN_COUNT   1 
+#define MIN_COUNT   10
 
 // maximum of written elements in buffer to avoid that 
 // writeptr is catching up readptr
-#define MAX_COUNT  ((int)itsBuffer.size()-4)    
+#define MAX_COUNT  ((int)itsBuffer.size()-10)    
 
 namespace LOFAR
 {
@@ -222,9 +222,6 @@ class CyclicBuffer
   BufferIndex itsOldHead;
   BufferIndex itsOldTail;
   
-  int itsCount;    // number of elements in buffer
-
-  
   // permission to overwrite previous written elements
   bool itsOverwritingAllowed;
 
@@ -239,8 +236,7 @@ CyclicBuffer<TYPE>::CyclicBuffer(int nelements) :
      itsHeadIdx(nelements),
      itsTailIdx(nelements),
      itsOldHead(nelements),
-     itsOldTail(nelements),
-     itsCount(0)
+     itsOldTail(nelements)
 {
   pthread_mutex_init(&buffer_mutex, NULL);
   pthread_cond_init (&data_available,  NULL);
@@ -314,15 +310,12 @@ TYPE* CyclicBuffer<TYPE>::getAutoWritePtr(int& ID)
   WriteLockElement(ID);
 
   itsHeadIdx++;
-  //  itsCount++; 
-
 
   // if allowed, overwrite previous written elements
-  if (itsHeadIdx == itsTailIdx && itsOverwritingAllowed) {
+  if ((itsHeadIdx == itsTailIdx) && itsOverwritingAllowed) {
     // push tail 1 element forward
     itsTailIdx++;
     itsOldTail++;
-    itsCount--;
   }
   
   pthread_mutex_unlock(&buffer_mutex);
@@ -349,7 +342,6 @@ TYPE* CyclicBuffer<TYPE>::getAutoReadPtr(int& ID)
   ReadLockElement(ID);
 
   itsTailIdx++;
-  itsCount --;
   
   pthread_mutex_unlock(&buffer_mutex);
   
@@ -362,8 +354,10 @@ TYPE* CyclicBuffer<TYPE>::getFirstReadPtr(int& ID)
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until at least one element is available
-  while (itsCount <= 0) 
+  while (itsOldHead-itsTailIdx < 1) 
   {
+    cout<<"getFirstReadPtr"<<endl;
+    Dump();
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   // CONDITION: itsCount > 0
@@ -382,8 +376,10 @@ TYPE* CyclicBuffer<TYPE>::getNewestReadPtr(int &ID)
   pthread_mutex_lock(&buffer_mutex);
 
   // wait until at least one element is available
-  while (itsCount <= 0) 
+  while (itsOldHead-itsTailIdx < 1) 
   {
+    cout<<"getNewestReadPtr"<<endl;
+    Dump();
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   // CONDITION: itsCount > 0
@@ -396,7 +392,6 @@ TYPE* CyclicBuffer<TYPE>::getNewestReadPtr(int &ID)
   ReadLockElement(ID);
   itsTailIdx = bid;
   itsOldTail = bid;
-  itsCount = 1;
  
   pthread_mutex_unlock(&buffer_mutex);
   
@@ -438,7 +433,6 @@ void CyclicBuffer<TYPE>::setOffset(int offset, int& ID)
   itsTailIdx += offset;
   itsOldTail = itsTailIdx;
   ID = itsTailIdx.getIndex();
-  itsCount -= offset;
    
   pthread_mutex_unlock(&buffer_mutex);
 }
@@ -494,8 +488,6 @@ void CyclicBuffer<TYPE>::WriteUnlockElements(int ID, int nelements)
   // synchronize writepointers
   itsOldHead = itsHeadIdx;
 
-  itsCount += nelements;
-  
   // signal that data has become available 
   pthread_cond_broadcast(&data_available);
 
@@ -545,7 +537,7 @@ void CyclicBuffer<TYPE>::Dump(void)
   cerr << "itsOldHead = " << itsOldHead.getIndex() << endl;
   cerr << "itsTailIdx = " << itsTailIdx.getIndex() << endl;
   cerr << "itsOldTail = " << itsOldTail.getIndex() << endl;
-  cerr << "itsCount   = " << itsCount  << endl;
+  cerr << "itsCount   = " << getCount()  << endl;
 
   pthread_mutex_unlock(&buffer_mutex);
 }
@@ -559,7 +551,7 @@ int CyclicBuffer<TYPE>::getSize(void)
 template<class TYPE>
 int CyclicBuffer<TYPE>::getCount(void)
 {
-  return itsCount;
+  return itsOldHead - itsTailIdx;
 }
 
 

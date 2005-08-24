@@ -214,6 +214,7 @@ void AH_InputSection::run(int steps) {
   LOG_TRACE_FLOW_STR("Start AH_InputSection::run() "  );
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
+    cout<<"run "<<i+1<<" of "<<steps<<endl;
     getComposite().process();
   }
   LOG_TRACE_FLOW_STR("Finished AH_InputSection::run() "  );

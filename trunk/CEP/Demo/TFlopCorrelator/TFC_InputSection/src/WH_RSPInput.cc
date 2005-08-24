@@ -118,9 +118,11 @@ void* WriteToBufferThread(void* arguments)
 
       // read new frame in next loop
       readnew = true;
+      // do not increase the nextstamp
     }
     else if (nextstamp + (args->nrPacketsInFrame - 1) < actualstamp) {
       // missed a packet so create dummy
+      actualstamp = nextstamp;
       for (int s=0; s<args->nrSubbandsInPacket; s++) {
         args->BufControl[s]->writeElements(dummyblock, actualstamp,args->nrPacketsInFrame, 1);
       }
@@ -128,6 +130,8 @@ void* WriteToBufferThread(void* arguments)
       //cout << "Dummy created for " << cnt_missed << " missed packets." << endl; // debugging
       // read same frame again in next loop
       readnew = false;
+      // increase the nextstamp
+      nextstamp += args->nrPacketsInFrame; 
     } 
     else {
       // expected packet received so write data into corresponding buffer
@@ -141,10 +145,9 @@ void* WriteToBufferThread(void* arguments)
       }
       // read new frame in next loop
       readnew = true;
+      // increase the nextstamp
+      nextstamp += args->nrPacketsInFrame; 
     }
-    // increase the nextstamp
-    nextstamp += args->nrPacketsInFrame; 
-
   }
 }
 
@@ -181,7 +184,8 @@ WH_RSPInput::WH_RSPInput(const string& name,
  
   // create incoming dataholder holding the delay information 
   getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
-
+  getDataManager().setAutoTriggerIn(0, false);
+ 
   // create a buffer controller and outgoing dataholder per subband.
   itsBufControl = new BufferController*[itsNSubbands];
   for (int s=0; s < itsNSubbands; s++) {
@@ -202,8 +206,8 @@ WH_RSPInput::WH_RSPInput(const string& name,
   } else {
     // if we are a sync slave we need 1 extra input
     getDataManager().addInDataHolder(1, new DH_RSPSync("DH_RSPSync_in"));
+    getDataManager().setAutoTriggerIn(1, false);
   }
- 
 }
 
 
@@ -273,8 +277,6 @@ void WH_RSPInput::process()
   if (itsSyncMaster) {
 
     if (itsFirstProcessLoop) {
-      itsFirstProcessLoop = false;
-
       // let the buffer fill
       sleep(1);
 
@@ -287,6 +289,7 @@ void WH_RSPInput::process()
       for (int s = 1; s < itsNSubbands; s++) {
 	itsBufControl[s]->startBufferRead(itsSyncedStamp);
       }
+      cout<<"SyncedStamp on master: "<<itsSyncedStamp<<endl;
 
     } else { // not the first loop
       // increase the syncstamp
@@ -295,24 +298,35 @@ void WH_RSPInput::process()
 
     // we are the master, so send the syncstamp to the slaves
     // send the syncstamp to the slaves
-    for (int i = 1; i < itsNRSPOutputs; i++) {
-      ((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
-      // force the write because autotriggering is off 
-      getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
-    }    
+    
+    if (itsFirstProcessLoop) {
+      itsFirstProcessLoop = false;
+      for (int i = 1; i < itsNRSPOutputs; i++) {
+	((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
+	// force the write because autotriggering is off 
+	getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
+      }    
+    }
 
   } else {  // sync slave
 
     if (itsFirstProcessLoop) {
       //      startThread();
+      DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
+      getDataManager().readyWithInHolder(1);
+      dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
+      itsSyncedStamp = dhp->getSyncStamp(); 
+      cout<<"SyncedStamp on slave: "<<itsSyncedStamp<<endl;
+    } else {
+      itsSyncedStamp += itsNSamplesToCopy;
     }
 
     // we are a slave so read the syncstamp
-    DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
-    itsSyncedStamp = dhp->getSyncStamp(); 
+//     DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
+//     itsSyncedStamp = dhp->getSyncStamp(); 
     
     // we need to increment the stamp because it is written only once per second or so
-    dhp->incrementStamp(itsNSamplesToCopy);
+      //    dhp->incrementStamp(itsNSamplesToCopy);
 
     if (itsFirstProcessLoop) {
 
@@ -357,12 +371,13 @@ void WH_RSPInput::process()
 #endif
   }    
 
+#if 0
   if(itsSyncMaster) {
     cout<<"master has stamp: "<<delayedstamp<<endl;
   } else {
     cout<<"slave has stamp: "<<delayedstamp<<endl;
   }
-    
+#endif
 }
 
 void WH_RSPInput::postprocess()
