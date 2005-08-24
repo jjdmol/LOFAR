@@ -266,7 +266,7 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
 			    m_current_time.sec() - scheduled_time.sec()));
     }
     
-    scheduled_time = m_current_time + SCHEDULING_DELAY;
+    scheduled_time = m_current_time + (long)SCHEDULING_DELAY;
   }
   
   // set the actual time at which the command is sent to the boards
@@ -331,13 +331,13 @@ void Scheduler::scheduleCommands()
     }
 
     /* detect late commands, but just execute them */
-    if (command->getTimestamp() <= m_current_time + (scheduling_offset - SYNC_INTERVAL_INT))
+    if (command->getTimestamp() <= m_current_time + (long)(scheduling_offset - SYNC_INTERVAL_INT))
     {
       LOG_WARN_STR("command is late, timestamp=" << command->getTimestamp()
 		   << ", current_time=" << m_current_time);
     }
 
-    if (command->getTimestamp() <= m_current_time + scheduling_offset)
+    if (command->getTimestamp() <= m_current_time + (long)scheduling_offset)
     {
       LOG_INFO_STR("scheduling command with time=" << command->getTimestamp());
 
@@ -363,13 +363,13 @@ void Scheduler::scheduleCommands()
     }
 
     /* detect late commands, but just execute them */
-    if (command->getTimestamp() <= m_current_time + (scheduling_offset - SYNC_INTERVAL_INT))
+    if (command->getTimestamp() <= m_current_time + (long)(scheduling_offset - SYNC_INTERVAL_INT))
     {
       LOG_WARN_STR("periodic command is late, timestamp=" << command->getTimestamp()
 		   << ", current_time=" << m_current_time);
     }
 
-    if (command->getTimestamp() <= m_current_time + scheduling_offset)
+    if (command->getTimestamp() <= m_current_time + (long)scheduling_offset)
     {
       LOG_INFO_STR("scheduling periodic command with time=" << command->getTimestamp());
       m_now_queue.push(command);
@@ -465,13 +465,13 @@ void Scheduler::completeCommands()
   {
     Ptr<Command> command = m_done_queue.top();
     
-    //command->setTimestamp(getCurrentTime() + SYNC_INTERVAL_INT);
+    //command->setTimestamp(getCurrentTime() + (long)SYNC_INTERVAL_INT);
     command->complete(Cache::getInstance().getFront());
     
     // re-timestamp periodic commands for the next period
     if (command->getPeriod())
     {
-      command->setTimestamp(command->getTimestamp() + command->getPeriod());
+      command->setTimestamp(command->getTimestamp() + (long)command->getPeriod());
     }
 
     m_done_queue.pop();
