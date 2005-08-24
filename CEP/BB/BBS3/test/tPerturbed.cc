@@ -153,10 +153,6 @@ int main (int argc, const char* argv[])
       doTest (pre1, solv);
       cout << "End of first test" << endl;
     }
-    cout << "MeqMatrixRep::nctor:    " << MeqMatrixRep::nctor << endl;
-    cout << "MeqMatrixRep::ndtor:    " << MeqMatrixRep::ndtor << endl;
-    cout << "MeqMatrixRep::nreused:  " << MeqMatrixRep::nreused << endl;
-    cout << "MeqMatrixRep::ndeleted: " << MeqMatrixRep::ndeleted << endl;
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;
     return 1;

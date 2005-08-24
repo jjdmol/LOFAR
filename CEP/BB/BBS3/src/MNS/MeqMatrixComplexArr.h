@@ -121,12 +121,7 @@ private:
 
   virtual void fillWithProducts(dcomplex v0, dcomplex factor);
 
-
   double *itsReal, *itsImag;
-
-  static stack<MeqMatrixComplexArr*> theirPool;
-  static int theirNElements;
-  static size_t theirPoolArraySize;
 };
 
 // @}

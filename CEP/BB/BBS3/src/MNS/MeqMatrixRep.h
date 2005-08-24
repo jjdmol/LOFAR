@@ -47,7 +47,6 @@ class MeqMatrixComplexSca;
 class MeqMatrixRealArr;
 class MeqMatrixComplexArr;
 
-
 class MeqMatrixRep
 {
 public:
@@ -65,7 +64,6 @@ public:
       itsNy        (ny),
       itsLength    (nx*ny)
     {
-      nctor++;
     }
 
   virtual ~MeqMatrixRep();
@@ -159,11 +157,6 @@ public:
 
   virtual void fillWithProducts(dcomplex v0, dcomplex factor);
 
-  static int nctor;
-  static int ndtor;
-  static int nreused;
-  static int ndeleted;
-
   const enum type type;
 
 protected:
@@ -175,7 +168,6 @@ private:
   int  itsNx;
   int  itsNy;
   int  itsLength;
-  int  itsCreator;
 };
 
 // @}

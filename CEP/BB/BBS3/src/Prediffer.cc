@@ -78,7 +78,7 @@
 
 using namespace casa;
 
-#if 0
+#if 1
 void *operator new(size_t size)
 {
     long *ptr = (long *) malloc(size + 24);
@@ -184,11 +184,6 @@ Prediffer::Prediffer(const string& msName,
     }
   }
   makeLOFARExpr(useEJ, asAP, useStatParm);
-
-  LOG_INFO_STR( "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
-		<< ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor );
-  LOG_INFO_STR( "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
-		<< ' ' << MeqResultRep::nctor + MeqResultRep::ndtor );
 
   // Show frequency domain.
   LOG_INFO_STR( "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
@@ -925,8 +920,8 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 			request, blindex, ant1, ant2);
 	}
       }
-    }
-  //timer.stop();
+    } // end omp parallel
+    //timer.stop();
   }
 
 #if defined _OPENMP
@@ -1001,9 +996,7 @@ void Prediffer::getEquation (double* result, char* flagResult,
   itsPredTimer.start();
   MeqJonesExpr& expr = itsExpr[blindex];
   // Do the actual predict.
-  MeqJonesResult jresult;
-#pragma omp critical(TreeLock)
-  jresult = expr.getResult (request); 
+  MeqJonesResult jresult = expr.getResult (request); 
   itsPredTimer.stop();
 
   itsEqTimer.start();
@@ -1020,6 +1013,7 @@ void Prediffer::getEquation (double* result, char* flagResult,
     predResults[2] = &(jresult.getResult21());
     predResults[3] = &(jresult.getResult22());
   }
+
   // Loop through the correlations.
   for (int corr=0; corr<itsNCorr; ++corr) {
     if (itsCorr[corr]) {
@@ -1072,7 +1066,7 @@ void Prediffer::getEquation (double* result, char* flagResult,
 	  for (int ch=0; ch<nrchan; ++ch) {
 	    *result++ = (pertRealVals[ch] - realVals[ch]) * invPert;
 	    *result++ = (pertImagVals[ch] - imagVals[ch]) * invPert;
-	    if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
+	    if (showd) cout << result[-2] << ' ' << result[-1] << ' ';
 	  }
 	  if (showd) cout << endl;
 	}
@@ -1169,38 +1163,22 @@ void Prediffer::saveData (bool subtract, fcomplex* data,
 	if (subtract) {
 	  for (int ch=0; ch<nrchan; ++ch) {
 	    --dch;
-#if 0
-	    data[corr+dch*itsNCorr] -= makefcomplex(vals[2*ch], vals[2*ch+1]);
-#else
 	    data[corr+dch*itsNCorr] -= makefcomplex(realVals[ch], imagVals[ch]);
-#endif
 	  }
 	} else {
 	  for (int ch=0; ch<nrchan; ++ch) {
 	    --dch;
-#if 0
-	    data[corr+dch*itsNCorr] = makefcomplex(vals[2*ch], vals[2*ch+1]);
-#else
 	    data[corr+dch*itsNCorr] = makefcomplex(realVals[ch], imagVals[ch]);
-#endif
 	  }
 	}
       } else {
 	if (subtract) {
 	  for (int ch=0; ch<nrchan; ++ch) {
-#if 0
-	    data[corr+ch*itsNCorr] -= makefcomplex(vals[2*ch], vals[2*ch+1]);
-#else
 	    data[corr+ch*itsNCorr] -= makefcomplex(realVals[ch], imagVals[ch]);
-#endif
 	  }
 	} else {
 	  for (int ch=0; ch<nrchan; ++ch) {
-#if 0
-	    data[corr+ch*itsNCorr] = makefcomplex(vals[2*ch], vals[2*ch+1]);
-#else
 	    data[corr+ch*itsNCorr] = makefcomplex(realVals[ch], imagVals[ch]);
-#endif
 	  }
 	}
       }

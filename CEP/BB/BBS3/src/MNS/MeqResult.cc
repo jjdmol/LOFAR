@@ -26,9 +26,6 @@
 
 namespace LOFAR {
 
-int MeqResultRep::nctor = 0;
-int MeqResultRep::ndtor = 0;
-
 MeqResultRep::MeqResultRep (int nspid)
 : itsCount           (0),
   itsDefPert         (0.),
@@ -36,13 +33,11 @@ MeqResultRep::MeqResultRep (int nspid)
   itsPerturbedValues (0),
   itsPerturbation    (0)
 {
-  nctor++;
 }
 
 MeqResultRep::~MeqResultRep()
 {
   clear();
-  ndtor--;
 }
 
 
