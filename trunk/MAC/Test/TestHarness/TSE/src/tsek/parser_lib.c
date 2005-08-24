@@ -95,6 +95,14 @@ struct TParameterList TimerParamList = { &TimerPar1,    /* ptThis       */
   0                             /* iRefCount    */
 };
 
+struct TParameterList TimerTwoParametersList = { &TimerPar1, /* ptThis       */
+  0,                            /* iFollowedB.. */
+  {&TimerParamList,             /* aptNext[0]   */
+   NULL                         /* aptNext[1]   */
+   },
+  0                             /* iRefCount    */
+};
+
 struct TParameter JustAParam = { "parameter",   /* pcName       */
   0,                            /* iArray       */
   0,                            /* iOffset      */
@@ -2013,9 +2021,13 @@ int FindInteraction(
 /*          are detected here.                                              */
 /****************************************************************************/
 {
-  if (strcmp(pcToken, "MTIMER") == 0)
+  if (strncmp(pcToken, "MTIMER", 5) == 0)
     return MTIMER_ACTION;
-  if (strcmp(pcToken, "TIMER") == 0)
+  if (strncmp(pcToken, "RTIMER", 5) == 0)
+    return RTIMER_ACTION;
+  if (strncmp(pcToken, "RMTIMER", 6) == 0)
+    return RMTIMER_ACTION;
+  if (strncmp(pcToken, "TIMER", 4) == 0)
     return TIMER_ACTION;
   if (strcmp(pcToken, "WAIT") == 0)
     return WAIT_ACTION;
@@ -3289,6 +3301,12 @@ void WriteAction(
       break;
     case MTIMER_ACTION:
       strcat(pcBuffer, "MTIMER");
+      break;
+    case RTIMER_ACTION:
+      strcat(pcBuffer, "RTIMER");
+      break;
+    case RMTIMER_ACTION:
+      strcat(pcBuffer, "RMTIMER");
       break;
     case CLEAR_ACTION:
       strcat(pcBuffer, "CLEAR");

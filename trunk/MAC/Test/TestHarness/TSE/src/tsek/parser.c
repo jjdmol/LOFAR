@@ -1825,7 +1825,7 @@ int Parse_TParameterInvokeList(
           {
             if (ptDefList->ptRepRec->ptParameter->ptValue == NULL)
             {
-              AddError2("Parameter %s must be a constant!",
+              AddError2("Parameter %s must be a constant! ",
                         ptDefList->ptRepRec->ptParameter->pcName);
               i = 0;
             }
@@ -2161,6 +2161,10 @@ int Parse_TAction(
       ptDefList = &TimerParamList;
     else if (iAction == MTIMER_ACTION)
       ptDefList = &TimerParamList;
+    else if (iAction == RTIMER_ACTION)
+      ptDefList = &TimerTwoParametersList;
+    else if (iAction == RMTIMER_ACTION)
+      ptDefList = &TimerTwoParametersList;
     else if (iAction == WAIT_ACTION)
       ptDefList = &OneParam;
     else if (iAction == CLEAR_ACTION)
@@ -2331,6 +2335,10 @@ int Parse_TActionList(
         AddError1("Alternative statemachine doesn't work for timers");
       if (ptActionList->ptThis->iActionType == MTIMER_ACTION)
         AddError1("Alternative statemachine doesn't work for mtimers");
+      if (ptActionList->ptThis->iActionType == RTIMER_ACTION)
+        AddError1("Alternative statemachine doesn't work for rtimers");
+      if (ptActionList->ptThis->iActionType == RMTIMER_ACTION)
+        AddError1("Alternative statemachine doesn't work for rtimers");
       if (ptActionList->ptThis->iActionType == WAIT_ACTION)
         AddError1("Alternative statemachine doesn't work for wait");
       if (ptActionList->ptThis->iActionType == CLEAR_ACTION)

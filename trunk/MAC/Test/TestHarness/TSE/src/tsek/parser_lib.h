@@ -171,6 +171,7 @@ extern char *pcProtocol;
 extern char *pcDevice[16];
 
 extern struct TParameterList TimerParamList;
+extern struct TParameterList TimerTwoParametersList;
 extern struct TParameterList OneParam;
 extern struct TParameterList TwoParam;
 extern struct TParameterList ThreeParam;
