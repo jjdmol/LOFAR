@@ -107,6 +107,8 @@
 #define CONNECTION_LOST         (136)
 #define CONNECTION_ESTABLISHED  (137)
 #define MTIMER_ACTION           (138)
+#define RTIMER_ACTION           (139)
+#define RMTIMER_ACTION          (140)
 
 /****************************************************************************/
 /* The struct's                                                             */

@@ -27,7 +27,7 @@
 //
 //=========================================================================
 */
-
+#include <stdlib.h>
 
 #include "stepper.h"
 #include "stores.h"
@@ -102,6 +102,15 @@ int16     Intern_Timer(
   struct TTransition *ptTransition);
 
 int16     Intern_MTimer(
+  struct TVariableList *ptVarList,
+  struct TStateMachine *ptStateMachine,
+  struct TTransition *ptTransition);
+
+int16     Intern_RTimer(
+  struct TVariableList *ptVarList,
+  struct TStateMachine *ptStateMachine,
+  struct TTransition *ptTransition);
+int16     Intern_RMTimer(
   struct TVariableList *ptVarList,
   struct TStateMachine *ptStateMachine,
   struct TTransition *ptTransition);
@@ -360,6 +369,16 @@ int16 SingleStep(
             bDone |= Intern_MTimer(ptVarList,
                                    ptStateMachine, 
                                    ptTransitionWalker->ptThis);
+            break;
+          case RTIMER_ACTION:
+            bDone |= Intern_RTimer(ptVarList,
+                                   ptStateMachine, 
+                                   ptTransitionWalker->ptThis);
+            break;
+          case RMTIMER_ACTION:
+            bDone |= Intern_RMTimer(ptVarList,
+                                    ptStateMachine, 
+                                    ptTransitionWalker->ptThis);
             break;
           case CLEAR_ACTION:
             bDone |= Intern_Clear(ptVarList);
@@ -1431,6 +1450,188 @@ int16 Intern_MTimer(
       LogLine(pLogLine);
   
       return FALSE;           /* Because timer is set. Script cannot continue..   */
+    }
+  }
+  /* If no Timer record is added in the List Of Timers, return TRUE to     */
+  /* the invoker of this function.  This indicates that the timer is not   */
+  /* added, and a state-transition can be made.                            */
+   /*************************************************************************/
+  return TRUE;
+}
+
+int16 Intern_RTimer(
+  struct TVariableList * ptVarList,
+  struct TStateMachine * ptStateMachine,
+  struct TTransition * ptTransition)
+/****************************************************************************/
+/* Add a record in the _lot administration.                                 */
+/****************************************************************************/
+{
+  int16             lParameterValue  = 0;
+  int16             lParameterValue1 = 0;
+  int16             lParameterValue2 = 0;
+  float             fTimeScaling;
+  char              pLogLine[80];
+  struct TVariable *ptVar = NULL;
+
+  /* First determine if there is already a timer running for this state-   */
+  /* machine. If so, don't add a second one.                               */
+   /*************************************************************************/
+
+  if (ptStateMachine->ptRunningTimer != NULL)
+  {
+    return FALSE;
+  }
+
+  fTimeScaling = (float) 1.0;  /* the default..                        */
+
+
+  /* Calculate the amount of milliseconds the timer should last.           */
+   /*************************************************************************/
+  if (ptVarList != NULL)
+  {
+    ptVar = ptVarList->ptThis;
+    if (ptVar != NULL)
+    {
+      if ((ptVar->ptValue != NULL) && (ptVar->ptValue->pcValue != NULL))
+      {
+        lParameterValue1 = GetInteger(ptVar->ptValue->pcValue);
+      }
+    }
+  }
+  if (NULL != ptVarList->ptNext) 
+  {
+    ptVar = ptVarList->ptNext->ptThis;
+    if (ptVar != NULL)
+    {
+      if ((ptVar->ptValue != NULL) && (ptVar->ptValue->pcValue != NULL))
+      {
+        lParameterValue2 = GetInteger(ptVar->ptValue->pcValue);
+      }
+    }
+  }
+  if ( (lParameterValue1 != 0) && (lParameterValue2 != 0))
+  {
+    if (lParameterValue1 >= lParameterValue2)
+    {
+      LogLine("Warning: timer could not be set, first param should be less than param 2.");
+      return TRUE;            /* Because timer is not set. Script can continue..   */
+    }
+    else
+    {
+      lParameterValue = 
+      (int32) (((float)((lParameterValue2-lParameterValue1+1)*(rand()/(RAND_MAX+1.0))))+lParameterValue1);
+      ptStateMachine->ptRunningTimer = 
+        SetTimer(lParameterValue, fTimeScaling, ptStateMachine);
+      if (ptStateMachine->ptRunningTimer == NULL)
+      {
+        LogLine("Warning: timer could not be set.");
+        return TRUE;            /* Because timer is not set. Script can continue..   */
+      }
+      else
+      {
+        ptStateMachine->ptStateInTimer = ptStateMachine->ptCurrentState;
+        ptStateMachine->ptRunningTimerTransition = ptTransition;
+    
+        sprintf(pLogLine, "%s:%s RTIMER %.3f sec",
+                ptStateMachine->pcName,
+                ptStateMachine->ptCurrentState->pcName, 
+                lParameterValue*fTimeScaling);
+        LogLine(pLogLine);
+    
+        return FALSE;           /* Because timer is set. Script cannot continue..   */
+      }
+    }
+  }
+  /* If no Timer record is added in the List Of Timers, return TRUE to     */
+  /* the invoker of this function.  This indicates that the timer is not   */
+  /* added, and a state-transition can be made.                            */
+   /*************************************************************************/
+  return TRUE;
+}
+
+int16 Intern_RMTimer(
+  struct TVariableList * ptVarList,
+  struct TStateMachine * ptStateMachine,
+  struct TTransition * ptTransition)
+/****************************************************************************/
+/* Add a record in the _lot administration.                                 */
+/****************************************************************************/
+{
+  int16             lParameterValue  = 0;
+  int16             lParameterValue1 = 0;
+  int16             lParameterValue2 = 0;
+  float             fTimeScaling;
+  char              pLogLine[80];
+  struct TVariable *ptVar = NULL;
+
+  /* First determine if there is already a timer running for this state-   */
+  /* machine. If so, don't add a second one.                               */
+   /*************************************************************************/
+
+  if (ptStateMachine->ptRunningTimer != NULL)
+  {
+    return FALSE;
+  }
+
+  fTimeScaling = (float) 0.001;  /* the default..                        */
+
+
+  /* Calculate the amount of milliseconds the timer should last.           */
+   /*************************************************************************/
+  if (ptVarList != NULL)
+  {
+    ptVar = ptVarList->ptThis;
+    if (ptVar != NULL)
+    {
+      if ((ptVar->ptValue != NULL) && (ptVar->ptValue->pcValue != NULL))
+      {
+        lParameterValue1 = GetInteger(ptVar->ptValue->pcValue);
+      }
+    }
+  }
+  if (NULL != ptVarList->ptNext) 
+  {
+    ptVar = ptVarList->ptNext->ptThis;
+    if (ptVar != NULL)
+    {
+      if ((ptVar->ptValue != NULL) && (ptVar->ptValue->pcValue != NULL))
+      {
+        lParameterValue2 = GetInteger(ptVar->ptValue->pcValue);
+      }
+    }
+  }
+  if ( (lParameterValue1 != 0) && (lParameterValue2 != 0))
+  {
+    if (lParameterValue1 >= lParameterValue2)
+    {
+      LogLine("Warning: timer could not be set, first param should be less than param 2.");
+      return TRUE;            /* Because timer is not set. Script can continue..   */
+    }
+    else
+    {
+      lParameterValue = 
+      (int32) (((float)((lParameterValue2-lParameterValue1+1)*(rand()/(RAND_MAX+1.0))))+lParameterValue1);
+      ptStateMachine->ptRunningTimer = 
+        SetTimer(lParameterValue, fTimeScaling, ptStateMachine);
+      if (ptStateMachine->ptRunningTimer == NULL)
+      {
+        LogLine("Warning: timer could not be set.");
+        return TRUE;            /* Because timer is not set. Script can continue..   */
+      }
+      else
+      {
+        ptStateMachine->ptStateInTimer = ptStateMachine->ptCurrentState;
+        ptStateMachine->ptRunningTimerTransition = ptTransition;
+    
+        sprintf(pLogLine, "%s:%s RMTIMER %.3f msec",
+                ptStateMachine->pcName,
+                ptStateMachine->ptCurrentState->pcName, 
+                (lParameterValue*fTimeScaling*1000));
+        LogLine(pLogLine);
+    
+        return FALSE;           /* Because timer is set. Script cannot continue..   */
+      }
     }
   }
   /* If no Timer record is added in the List Of Timers, return TRUE to     */
