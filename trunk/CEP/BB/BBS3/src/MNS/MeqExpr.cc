@@ -27,6 +27,7 @@
 #include <BBS3/MNS/MeqRequest.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
+//#include <Common/Timer.h>
 
 namespace LOFAR {
 
@@ -45,16 +46,23 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
     result = getResult (request);
     return result;
   }
+
   // Use a cache.
   // Synchronize the calculations.
-// ## start critical section ##
   // Only calculate if not already calculated in another thread.
-  if (itsReqId != request.getId()) {
+  //static NSTimer timer("MeqExprRep::calcResult", true);
+  //timer.start();
+#if defined _OPENMP
+#pragma omp critical(calcResult)
+  if (itsReqId != request.getId())	// retry test in critical section
+#endif
+  {
     if (!itsResult) itsResult = new MeqResult;
     *itsResult = getResult (request);
     itsReqId = request.getId();
   }
-//## end critical section ##
+  //timer.stop();
+
   return *itsResult;
 }
 
@@ -73,16 +81,23 @@ const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
     result = getResultVec (request);
     return result;
   }
+
   // Use a cache.
   // Synchronize the calculations.
-// ## start critical section ##
   // Only calculate if not already calculated in another thread.
-  if (itsReqId != request.getId()) {
+  //static NSTimer timer("MeqExprRep::calcResultVec", true);
+  //timer.start();
+#if defined _OPENMP
+#pragma omp critical(calcResult)
+  if (itsReqId != request.getId())	// retry test in critical section
+#endif
+  {
     if (!itsResVec) itsResVec = new MeqResultVec;
     *itsResVec = getResultVec (request);
     itsReqId = request.getId();
   }
-//## end critical section ##
+  //timer.stop();
+
   return *itsResVec;
 }
 

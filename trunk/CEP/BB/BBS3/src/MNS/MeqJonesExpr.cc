@@ -25,6 +25,7 @@
 
 #include <BBS3/MNS/MeqJonesExpr.h>
 #include <Common/LofarLogger.h>
+//#include <Common/Timer.h>
 
 namespace LOFAR {
 
@@ -61,16 +62,23 @@ const MeqJonesResult& MeqJonesExprRep::calcResult (const MeqRequest& request,
     result = getResult (request);
     return result;
   }
+
   // Use a cache.
   // Synchronize the calculations.
-// ## start critical section ##
   // Only calculate if not already calculated in another thread.
-  if (itsReqId != request.getId()) {
+  //static NSTimer timer("MeqJonesExprRep::calcResult", true);
+  //timer.start();
+#if defined _OPENMP
+#pragma omp critical(calcResult)
+  if (itsReqId != request.getId())	// retry test in critical section
+#endif
+  {
     if (!itsResult) itsResult = new MeqJonesResult;
     *itsResult = getResult (request);
     itsReqId = request.getId();
   }
-//## end critical section ##
+  //timer.stop();
+
   return *itsResult;
 }
 

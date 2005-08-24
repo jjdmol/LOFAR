@@ -28,15 +28,9 @@ using namespace casa;
 
 namespace LOFAR {
 
-int MeqMatrixRep::nctor = 0;
-int MeqMatrixRep::ndtor = 0;
-int MeqMatrixRep::nreused = 0;
-int MeqMatrixRep::ndeleted = 0;
-
 
 MeqMatrixRep::~MeqMatrixRep()
 {
-  ndtor++;
 }
 
 const double* MeqMatrixRep::doubleStorage() const

@@ -135,8 +135,7 @@ MeqMatrix& MeqMatrix::operator= (const MeqMatrixTmp& that)
 void MeqMatrix::setDMat (int nx, int ny)
 {
     MeqMatrixRep::unlink (itsRep);
-    itsRep = 0;
-    if (nx == 1  &&  ny == 1) {
+    if (nx == 1 && ny == 1) {
         itsRep = new MeqMatrixRealSca (0.);
     } else {
         itsRep = new MeqMatrixRealArr (nx, ny);
@@ -146,8 +145,7 @@ void MeqMatrix::setDMat (int nx, int ny)
 void MeqMatrix::setDCMat (int nx, int ny)
 {
     MeqMatrixRep::unlink (itsRep);
-    itsRep = 0;
-    if (nx == 1  &&  ny == 1) {
+    if (nx == 1 && ny == 1) {
         itsRep = new MeqMatrixComplexSca (dcomplex());
     } else {
         itsRep = MeqMatrixComplexArr::allocate (nx, ny);

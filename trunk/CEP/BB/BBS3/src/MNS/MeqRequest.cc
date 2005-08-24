@@ -30,13 +30,10 @@ MeqRequestId MeqRequest::theirRequestId = 0;
 
 
 MeqRequest::MeqRequest (const MeqDomain& domain, int nx, int ny, int nrSpid)
-: itsRequestId (theirRequestId),
+: itsRequestId (theirRequestId ++),
   itsSourceNr  (0),
   itsNspids    (nrSpid)
 {
-#pragma omp atomic
-  ++ theirRequestId;
-
   setDomain (domain, nx, ny);
 }
 

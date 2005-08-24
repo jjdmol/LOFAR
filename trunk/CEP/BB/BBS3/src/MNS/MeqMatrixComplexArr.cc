@@ -43,11 +43,12 @@
 
 namespace LOFAR {
 
-// Allocation will be done from the pool containing matrices of theirNElements
+// Allocation will be done from the pool containing matrices of poolNElements
 // or less elements.
-std::stack<MeqMatrixComplexArr*> MeqMatrixComplexArr::theirPool;
-int MeqMatrixComplexArr::theirNElements = 0;
-size_t MeqMatrixComplexArr::theirPoolArraySize;
+static stack<MeqMatrixComplexArr *> pool;
+#pragma omp threadprivate(pool)
+static size_t			    poolArraySize;
+static int			    poolNElements = 0;
 
 MeqMatrixComplexArr::MeqMatrixComplexArr (int nx, int ny)
 : MeqMatrixRep (nx, ny, ComplexArray)
@@ -73,8 +74,20 @@ MeqMatrixRep* MeqMatrixComplexArr::clone() const
 #endif
 
   MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate(nx(), ny());
+
+#if defined __SSE2__
+  __m128d *src_r = (__m128d *) itsReal, *src_i = (__m128d *) itsImag;
+  __m128d *dst_r = (__m128d *) v->itsReal, *dst_i = (__m128d *) v->itsImag;
+  int n = (nelements() + 1) / 2;
+
+  for (int i = 0; i < n; i ++) {
+    dst_r[i] = src_r[i];
+    dst_i[i] = src_i[i];
+  }
+#else
   memcpy (v->itsReal, itsReal, sizeof(double) * nelements());
   memcpy (v->itsImag, itsImag, sizeof(double) * nelements());
+#endif
 
 #if defined TIMER
   timer.stop();
@@ -134,18 +147,16 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
 
   MeqMatrixComplexArr* newArr;
 
-  if (nx * ny <= theirNElements) {
-#pragma omp critical(poolLock)
-    if (theirPool.empty()) {
+  if (nx * ny <= poolNElements) {
+    if (pool.empty()) {
       // Allocate memory for the header and the maximum amount of data
-      // (theirNElements). Only nx * ny elements will be used, but the
-      // array can be reused for an array of size up to theirNElements.
-      newArr = (MeqMatrixComplexArr*) new char[theirPoolArraySize];
+      // (poolNElements). Only nx * ny elements will be used, but the
+      // array can be reused for an array of size up to poolNElements.
+      newArr = (MeqMatrixComplexArr*) new char[poolArraySize];
     } else {
       // Get an array from the pool.
-      newArr = theirPool.top();
-      theirPool.pop();
-      MeqMatrixRep::nreused++;
+      newArr = pool.top();
+      pool.pop();
     }
   } else {
     // Array is larger than arrays in pool.
@@ -154,8 +165,6 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
     newArr = (MeqMatrixComplexArr*) new char[
 			    ((sizeof(MeqMatrixComplexArr)+7) & ~7) + 8 +
 			    2 * ((nx * ny + 1) & ~1) * sizeof(double)];
-    // placement new
-    // set inPool to false so this matrix will be deleted.
   }
 
   // placement new to call constructor
@@ -176,11 +185,9 @@ void MeqMatrixComplexArr::operator delete(void *ptr)
   timer.start();
 #endif
 
-  if (((MeqMatrixComplexArr *) ptr)->nelements() <= theirNElements) {
-#pragma omp critical(poolLock)
-    theirPool.push((MeqMatrixComplexArr *) ptr);
+  if (((MeqMatrixComplexArr *) ptr)->nelements() <= poolNElements) {
+    pool.push((MeqMatrixComplexArr *) ptr);
   } else {
-    MeqMatrixRep::ndeleted++;
     delete [] (char *) ptr;
   }
 
@@ -192,27 +199,25 @@ void MeqMatrixComplexArr::operator delete(void *ptr)
 void MeqMatrixComplexArr::poolActivate(int nelements)
 {
   //std::cerr << "MeqMatrixComplexArr::poolActivate(" << nelements << ")\n";
-  if (nelements != theirNElements) {
+  if (nelements != poolNElements) {
     poolDeactivate();
-    theirNElements     = nelements;
-    theirPoolArraySize = ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 8 +
-			 2 * ((theirNElements + 1) & ~1) * sizeof(double);
+    poolNElements = nelements;
+    poolArraySize = ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 8 +
+			 2 * ((poolNElements + 1) & ~1) * sizeof(double);
   }
 }
 
 void MeqMatrixComplexArr::poolDeactivate()
 {
   // Free all objects remaining in the pool and clear the pool.
-  deque<MeqMatrixComplexArr*>::iterator pos;
-#pragma omp critical(poolLock)
-  while (!theirPool.empty()) {
-    delete [] (char *) theirPool.top();
-    theirPool.pop();
-    MeqMatrixRep::ndeleted++;
+#pragma omp parallel
+  while (!pool.empty()) {
+    delete [] (char *) pool.top();
+    pool.pop();
   }
-  // Setting theirNElements to zero will result in no pool usage;
+  // Setting poolNElements to zero will result in no pool usage;
   // allocate will simply 'new' memory, deallocate will 'delete' it.
-  theirNElements = 0;
+  poolNElements = 0;
 }
 
 
