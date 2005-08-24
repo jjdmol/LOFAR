@@ -78,7 +78,7 @@
 
 using namespace casa;
 
-#if 1
+#if 0
 void *operator new(size_t size)
 {
     long *ptr = (long *) malloc(size + 24);
