@@ -37,9 +37,10 @@
 
 namespace LOFAR {
 
-  // Low-overhead and high-resolution interval timer for use on i386 and x86_64
-  // platforms, using the processor's timestamp counter that is incremented each
-  // cycle.  Put timer.start() and timer.stop() calls around the piece of
+  // Low-overhead and high-resolution interval timer for use on i386, x86_64,
+  // ia64, and powerpc platforms, using the processor's timestamp counter that
+  // is incremented each cycle.
+  // Put timer.start() and timer.stop() calls around the piece of
   // code to be timed; make sure that start() and stop() calls alternate.
   // A timer can be started and stopped multiple times; both the average and
   // total time, as well as the number of iterations are printed.
@@ -63,14 +64,24 @@ namespace LOFAR {
 	  long long	   total_time;
 	  struct {
 #if defined __PPC__
-	      int	   high, low;
+	      int	   total_time_high, total_time_low;
 #else
-	      int	   low, high;
+	      int	   total_time_low, total_time_high;
 #endif
 	  };
 	};
 
+#if defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
+	union {
+	  unsigned long long count;
+	  struct {
+	    int		     count_low, count_high;
+	  };
+	};
+#else
 	unsigned long long count;
+#endif
+
 	char		   *const name;
 	const bool	   print_on_destruction;
 
@@ -108,7 +119,44 @@ namespace LOFAR {
 
   inline void NSTimer::start()
   {
-#if (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
+#if defined __x86_64__ && defined __INTEL_COMPILER && defined _OPENMP
+    asm volatile
+    (
+	"rdtsc\n\t"
+	"shlq $32,%%rdx\n\t"
+	"leaq (%%rax,%%rdx),%%rax\n\t"
+	"lock;subq %%rax,%0"
+    :
+	"+m" (total_time)
+    :
+    :
+	"rax", "rdx"
+    );
+#elif defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
+    asm volatile
+    (
+	"rdtsc\n\t"
+	"lock;subl %%eax,%0\n\t"
+	"lock;sbbl %%edx,%1"
+    :
+	"+m" (total_time_low), "+m" (total_time_high)
+    :
+    :
+	"eax", "edx"
+    );
+#elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+    asm volatile
+    (
+	"rdtsc\n\t"
+	"subl %%eax, %0\n\t"
+	"sbbl %%edx, %1"
+    :
+	"+m" (total_time_low), "+m" (total_time_high)
+    :
+    :
+	"eax", "edx"
+    );
+#elif (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
     unsigned eax, edx;
 
     asm volatile ("rdtsc" : "=a" (eax), "=d" (edx));
@@ -121,7 +169,7 @@ namespace LOFAR {
 	"subl %%eax, %0\n\t"
 	"sbbl %%edx, %1"
     :
-	"+m" (low), "+m" (high)
+	"+m" (total_time_low), "+m" (total_time_high)
     :
     :
 	"eax", "edx"
@@ -133,7 +181,7 @@ namespace LOFAR {
     asm volatile ("mov %0=ar.itc" : "=r" (time));
     total_time -= time;
 #elif defined __PPC__ && (defined __GNUC__ || defined __xlC__)
-    int high_reg, low_reg, retry_reg;
+    int high, low, retry;
 
     asm
     (
@@ -146,9 +194,10 @@ namespace LOFAR {
 	"subfc %3,%1,%3\n\t"
 	"subfe %4,%0,%4"
     :
-	"=r" (high_reg), "=r" (low_reg), "=r" (retry_reg), "=r" (low), "=r" (high)
+	"=r" (high), "=r" (low), "=r" (retry),
+	"=r" (total_time_low), "=r" (total_time_high)
     :
-	"3" (low), "4" (high)
+	"3" (total_time_low), "4" (total_time_high)
     );
 #endif
   }
@@ -156,7 +205,44 @@ namespace LOFAR {
 
   inline void NSTimer::stop()
   {
-#if (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
+#if defined __x86_64__ && defined __INTEL_COMPILER && defined _OPENMP
+    asm volatile
+    (
+	"rdtsc\n\t"
+	"shlq $32,%%rdx\n\t"
+	"leaq (%%rax,%%rdx),%%rax\n\t"
+	"lock;addq %%rax,%0"
+    :
+	"+m" (total_time)
+    :
+    :
+	"rax", "rdx"
+    );
+#elif defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
+    asm volatile
+    (
+	"rdtsc\n\t"
+	"lock;addl %%eax, %0\n\t"
+	"lock;adcl %%edx, %1"
+    :
+	"+m" (total_time_low), "+m" (total_time_high)
+    :
+    :
+	"eax", "edx"
+    );
+#elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+    asm volatile
+    (
+	"rdtsc\n\t"
+	"addl %%eax, %0\n\t"
+	"adcl %%edx, %1"
+    :
+	"+m" (total_time_low), "+m" (total_time_high)
+    :
+    :
+	"eax", "edx"
+    );
+#elif (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
     unsigned eax, edx;
 
     asm volatile ("rdtsc\n\t" : "=a" (eax), "=d" (edx));
@@ -168,7 +254,7 @@ namespace LOFAR {
 	"addl %%eax, %0\n\t"
 	"adcl %%edx, %1"
     :
-	"+m" (low), "+m" (high)
+	"+m" (total_time_low), "+m" (total_time_high)
     :
     :
 	"eax", "edx"
@@ -180,7 +266,7 @@ namespace LOFAR {
     asm volatile ("mov %0=ar.itc" : "=r" (time));
     total_time += time;
 #elif defined __PPC__ && (defined __GNUC__ || defined __xlC__)
-    int high_reg, low_reg, retry_reg;
+    int high, low, retry;
 
     asm
     (
@@ -193,13 +279,26 @@ namespace LOFAR {
 	"addc %3,%3,%1\n\t"
 	"adde %4,%4,%0"
     :
-	"=r" (high_reg), "=r" (low_reg), "=r" (retry_reg), "=r" (low), "=r" (high)
+	"=r" (high), "=r" (low), "=r" (retry),
+	"=r" (total_time_low), "=r" (total_time_high)
     :
-	"3" (low), "4" (high)
+	"3" (total_time_low), "4" (total_time_high)
     );
 #endif
 
+#if defined __x86_64__ && defined __INTEL_COMPILER && defined _OPENMP
+    asm volatile ("lock;addq $1,%0" : "+m" (count));
+#elif defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
+    asm volatile
+    (
+	"lock;addl $1,%0\n\t"
+	"lock;adcl $0,%1"
+    :
+	"+m" (count_low), "+m" (count_high)
+    );
+#else
     ++ count;
+#endif
   }
 }  // end namespace LOFAR
 
