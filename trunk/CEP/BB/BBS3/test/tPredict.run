@@ -5,7 +5,7 @@ cp -r /data/PSS3/diepen/BBS2/demo3.MS_p1 /tmp/$USER.demo
 cp -r /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
 cp -r /data/PSS3/diepen/BBS2/demo3_gsm.MEP_tPredict /tmp/$USER.demo_gsm.MEP
 
-./tPredict $USER /tmp/$USER.demo demo demo_gsm
+./tPredict $USER /tmp/$USER.demo /tmp/$USER.demo.MEP /tmp/$USER.demo_gsm.MEP
 status=$?
 #\rm -rf /tmp/$USER.demo*
 exit $status

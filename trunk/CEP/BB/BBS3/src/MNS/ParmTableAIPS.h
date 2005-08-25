@@ -43,8 +43,7 @@ class ParmTableAIPS : public ParmTableRep
 {
 public:
   // Create the ParmTableAIPS object.
-  // The extension .MEP is added to the table name.
-  explicit ParmTableAIPS (const string& userName, const string& tableName);
+  explicit ParmTableAIPS (const string& tableName);
 
   virtual ~ParmTableAIPS();
 
@@ -81,7 +80,7 @@ public:
   // Connect to the database.
   virtual void connect();
   // Create the database or table.
-  static void createTable (const string& userName, const string& tableName);
+  static void createTable (const string& tableName);
   // Clear database or table.
   virtual void clearTable();
 

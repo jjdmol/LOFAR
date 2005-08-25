@@ -340,11 +340,11 @@ void doIt()
 	dbType = kvmap.getString ("dbtype", "postgres");
 	tableName = kvmap.getString ("tablename", "MeqParm");
 	if (dbType=="aips") {
-	  PTR = new ParmTableAIPS (dbUser, tableName);
+	  PTR = new ParmTableAIPS (tableName);
 	} else if (dbType=="bdb") {
-	  PTR = new ParmTableBDB (dbUser, tableName);
+	  PTR = new ParmTableBDB (tableName);
 	} else if (dbType=="bdbrepl") {
-	  PTR = new ParmTableBDBRepl (dbUser, tableName, "localhost", 13157, "localhost", 13157, true);
+	  PTR = new ParmTableBDBRepl (tableName, "localhost", 13157, true);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
@@ -365,11 +365,11 @@ void doIt()
 	dbType = kvmap.getString ("dbtype", "postgres");
 	tableName = kvmap.getString ("tablename", "MeqParm");
 	if (dbType=="aips") {
-	  ParmTableAIPS::createTable(dbUser, tableName);
+	  ParmTableAIPS::createTable(tableName);
 	} else if (dbType=="bdb") {
-	  ParmTableBDB::createTable(dbUser, tableName);
+	  ParmTableBDB::createTable(tableName);
 	} else if (dbType=="bdbrepl") {
-	  ParmTableBDBRepl::createTable(dbUser, tableName);
+	  ParmTableBDBRepl::createTable(tableName);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);

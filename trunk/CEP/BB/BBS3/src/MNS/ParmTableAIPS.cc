@@ -43,13 +43,12 @@ using namespace casa;
 
 namespace LOFAR {
 
-ParmTableAIPS::ParmTableAIPS (const string& userName, const string& tableName)
-: itsTable       ("/tmp/" + userName + "." + tableName+".MEP"),
-  itsIndex       (itsTable, "NAME"),
-  itsIndexName   (itsIndex.accessKey(), "NAME"),
-  itsInitIndex   (0)
+ParmTableAIPS::ParmTableAIPS (const string& tableName) :
+  itsTable         (tableName),
+  itsIndex         (itsTable, "NAME"),
+  itsIndexName     (itsIndex.accessKey(), "NAME"),
+  itsInitIndex     (0)
 {
-  itsAIPSTableName = "/tmp/" + userName + "." + tableName + ".MEP";
   // These things should be done in the connect
   // (just like the initialization of itsTable etc.).
   if (itsTable.keywordSet().isDefined ("DEFAULTVALUES")) {
@@ -70,10 +69,8 @@ void ParmTableAIPS::connect()
   // connect was done in the constructor
 }
 
-void ParmTableAIPS::createTable (const string& userName,
-				 const string& tableName)
+void ParmTableAIPS::createTable (const string& tableName)
 {
-  string fullTableName = "/tmp/" + userName + "." + tableName + ".MEP";
   TableDesc td("PSS parameter table", TableDesc::New);
   td.comment() = String("Table containing parameters for PSS");
   td.addColumn (ScalarColumnDesc<String>("NAME"));
@@ -92,7 +89,7 @@ void ParmTableAIPS::createTable (const string& userName,
   td.addColumn (ScalarColumnDesc<double>("DIFF"));
   td.addColumn (ScalarColumnDesc<bool>  ("DIFF_REL"));
 
-  SetupNewTable newtab(fullTableName, td, Table::New);
+  SetupNewTable newtab(tableName, td, Table::New);
 
   TableDesc tddef("PSS default parameter values", TableDesc::New);
   tddef.comment() = String("Table containing default parameters for PSS");
@@ -108,7 +105,7 @@ void ParmTableAIPS::createTable (const string& userName,
   tddef.addColumn (ScalarColumnDesc<double>("DIFF"));
   tddef.addColumn (ScalarColumnDesc<bool>  ("DIFF_REL"));
 
-  SetupNewTable newdeftab(fullTableName+string("/DEFAULTVALUES"), tddef, Table::New);
+  SetupNewTable newdeftab(tableName+string("/DEFAULTVALUES"), tddef, Table::New);
 
   Table tab(newtab);
   Table deftab(newdeftab);

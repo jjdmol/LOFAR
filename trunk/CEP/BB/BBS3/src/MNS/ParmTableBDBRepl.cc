@@ -45,14 +45,11 @@ namespace LOFAR {
   BDBReplicator* ParmTableBDBRepl::theirReplicator = 0;
   int ParmTableBDBRepl::theirReplicatorRefCount = 0;
 
-  ParmTableBDBRepl::ParmTableBDBRepl (const string& userName, 
-				      const string& tableName,
-				      const string& hostName,
-				      const int port,
+  ParmTableBDBRepl::ParmTableBDBRepl (const string& tableName,
 				      const string& masterHostName,
 				      const int masterPort,
 				      const bool isMaster) 
-    : ParmTableBDB(userName, tableName),
+    : ParmTableBDB(tableName),
       itsIsMaster(isMaster)
   {
     LOG_TRACE_FLOW("creating replicating bdb");
@@ -78,12 +75,16 @@ namespace LOFAR {
       rank = "master";
     }
     if (theirReplicator==0) {
-      itsBDBHomeName = "/tmp/" + userName + "." + rank + ".BBS3.ParmDB";
-      
+      itsBDBHomeName = "BBS3.ParmBDBRepl." + rank;
+
+      char hostnameBuffer[128];
+      gethostname(hostnameBuffer, 128);
+      string myHostName = hostnameBuffer;
+
       mkdir(itsBDBHomeName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
       theirReplicator = new BDBReplicator(itsBDBHomeName, 
-					  hostName,
-					  port,
+					  myHostName,
+					  masterPort, //start looking for open ports at <masterPort>
 					  masterHostName,
 					  masterPort,
 					  isMaster);
@@ -121,14 +122,6 @@ namespace LOFAR {
     theirReplicator->startReplication();
     LOG_TRACE_FLOW("replication started");
     itsDbEnv = theirReplicator->getDbEnv();
-    DbTxn* myTxn = 0;
-    int ret = 0;
-    //    if (itsIsMaster) {
-      ret = itsDbEnv->txn_begin(NULL, &myTxn, 0);
-      LOG_TRACE_FLOW_STR("environment: "<<itsDbEnv<<" transaction: "<<myTxn);
-      ASSERTSTR(ret == 0, "BDBRepl no transaction while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
-      //    }
-    itsDb = new Db(itsDbEnv, DB_CXX_NO_EXCEPTIONS);
 
     u_int32_t oFlags;
     if (itsIsMaster) {
@@ -136,71 +129,46 @@ namespace LOFAR {
     } else {
       oFlags = DB_RDONLY;
     }
-    itsDb->set_flags(DB_DUPSORT);
-    //  if (itsDb->open(transid, filename, database, dbtype, flags, mode) !=0) {
-    LOG_TRACE_FLOW_STR("opening replicated database "<<itsBDBTableName);
-#if 1
-    ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
-    cout<<" OPEN FAILED : "<<itsDbEnv->strerror(ret)<<endl;
-    ASSERTSTR( ret == 0, "BDBRepl while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
+
+    bool dbOpened = false;
+    while(!dbOpened) {
+      DbTxn* myTxn = 0;
+      int ret = 0;
+      ret = itsDbEnv->txn_begin(NULL, &myTxn, 0);
+      LOG_TRACE_FLOW_STR("environment: "<<itsDbEnv<<" transaction: "<<myTxn);
+      ASSERTSTR(ret == 0, "BDBRepl no transaction while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
+      delete itsDb;
+      itsDb = new Db(itsDbEnv, DB_CXX_NO_EXCEPTIONS);
+
+      itsDb->set_flags(DB_DUPSORT);
+      //  if (itsDb->open(transid, filename, database, dbtype, flags, mode) !=0) {
+      LOG_TRACE_FLOW_STR("opening replicated database "<<itsBDBTableName);
+#if 0
+      ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
+      cout<<" OPEN FAILED : "<<itsDbEnv->strerror(ret)<<endl;
+      ASSERTSTR( ret == 0, "BDBRepl while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret));
 #else
-    ret = 1;
-    while (ret != 0){
       //ret = itsDb->open(NULL, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
       ret = itsDb->open(myTxn, itsBDBTableName.c_str(), itsBDBTableName.c_str(), DB_BTREE, oFlags, 0);
       if (ret != 0 ) {
 	itsDb->close(0);
+	myTxn->abort();
 	cerr<<"BDBRepl while opening database "<<itsBDBTableName<<" in "<<itsBDBHomeName<<": "<< itsDbEnv->strerror(ret)<<endl;
+	sleep(1);
+      } else {
+	myTxn->commit(0);
+	dbOpened = true;
       }
-    }
 #endif
-    myTxn->commit(0);
-
+    }
     LOG_TRACE_STAT("connected to database");
   }
 
-  void ParmTableBDBRepl::createTable(const string& userName, const string& tableName){
-#if 1
-
-    ParmTableBDBRepl PT(userName, 
-			tableName,
-			"localhost",
-			13157,
+  void ParmTableBDBRepl::createTable(const string& tableName){
+    ParmTableBDBRepl PT(tableName,
 			"localhost",
 			13157,
 			true);
     PT.connect();
-#else
-
-
-
-    string envName = "/tmp/" + userName + ".0.BBS3.ParmDB";
-    mkdir(envName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
-
-    BDBReplicator BDBR(envName, 
-		       "localhost",
-		       13157,
-		       "localhost",
-		       13157,
-		       true);
-    BDBR.startReplication();
-    DbEnv* itsDbEnv = BDBR.getDbEnv();
-    Db tmpDb(itsDbEnv, DB_CXX_NO_EXCEPTIONS);
-
-    string fullTableName = envName + "/" + tableName + ".bdb";
-    // Do the same as the connect but now with the flag DB_CREATE
-    LOG_TRACE_FLOW_STR("Creating database: " << fullTableName);
-    u_int32_t oFlags = DB_CREATE;
-    Db tmpDb(NULL, 0);
-    tmpDb.set_flags(DB_DUPSORT);
-    LOG_TRACE_FLOW("ready to open database");
-    if (tmpDb.open(NULL, fullTableName.c_str(), fullTableName.c_str(), DB_BTREE, oFlags, 0) != 0 ) {
-      tmpDb.close(0);
-      ASSERTSTR(false, "could not create BDBRepl database");    
-    }
-    LOG_TRACE_STAT("created database");
-    tmpDb.sync(0);
-    tmpDb.close(0);
-#endif
   }
 }

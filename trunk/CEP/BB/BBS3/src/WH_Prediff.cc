@@ -226,17 +226,17 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
     string skyModel = args.getString("skyTableName");
     string dbType = args.getString("DBType");
     string dbName = args.getString("DBName");
+    string dbUser = args.getString("DBUser");
     string dbHost = args.getString("DBHost");
     string dbPwd = args.getString("DBPwd");
     int dbMasterPort = args.getInt32("DBMasterPort");
-    int dbMyPort = dbMasterPort + id;
 
     string modelType = args.getString("modelType");
     bool calcUVW = args.getBool("calcUVW");
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
     Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
-				    dbName, dbHost, dbPwd, dbMasterPort, dbMyPort,
+				    dbName, dbUser, dbPwd, dbHost, dbMasterPort,
 				    antNrs, modelType, srcgrp, calcUVW);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));

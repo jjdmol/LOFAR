@@ -41,11 +41,11 @@ using namespace casa;
 
 namespace LOFAR {
 
-  ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
+  ParmTableBDB::ParmTableBDB (const string& tableName) : 
     itsDbEnv(0),
     itsDb(0),
     itsBDBTableName(tableName),
-    itsBDBHomeName ("/tmp/" + userName + "." + tableName + ".bdb")
+    itsBDBHomeName (tableName)
   {
   }
 
@@ -85,35 +85,9 @@ namespace LOFAR {
     LOG_TRACE_STAT("connected to database");
   }
 
-  void ParmTableBDB::createTable(const string& userName, const string& tableName){
-#if 1
-    ParmTableBDB pt(userName, tableName);
+  void ParmTableBDB::createTable(const string& tableName){
+    ParmTableBDB pt(tableName);
     pt.connect();
-#else
-    string homeName = "/tmp/" + userName + "." + tableName + ".bdb";
-    // Do the same as the connect but now with the flag DB_CREATE
-    cout<<"Creating database: " << tableName<<endl;
-    DbEnv tmpEnv(DB_CXX_NO_EXCEPTIONS);
-    //    u_int32_t flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_MPOOL | DB_INIT_TXN;
-    u_int32_t flags = DB_CREATE | DB_THREAD | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
-    LOG_TRACE_FLOW_STR("BDBReplicator opening environment: "<<homeName.c_str());
-    int ret = tmpEnv.open(homeName.c_str(), flags, 0);
-    if (ret != 0) {
-      ASSERTSTR(false, "could not create database environment " <<homeName << ": " << tmpEnv.strerror(ret));
-    }
-
-    u_int32_t oFlags = DB_CREATE;
-    Db tmpDb(&tmpEnv, 0);
-    tmpDb.set_flags(DB_DUPSORT);
-    if (tmpDb.open(NULL, tableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
-      tmpDb.close(0);
-      ASSERTSTR(false, "could not create database");    
-    }
-    LOG_TRACE_STAT("created database");
-    tmpDb.sync(0);
-    tmpDb.close(0);
-    tmpEnv.close(0);
-#endif
   }
 
   void ParmTableBDB::clearTable(){

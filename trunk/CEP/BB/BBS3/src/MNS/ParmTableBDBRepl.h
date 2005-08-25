@@ -56,10 +56,7 @@ namespace LOFAR {
 
     // If this object is not a master, an exception will occur when the user
     // tries to write to it.
-    ParmTableBDBRepl (const string& userName,
-		      const string& tableName,
-		      const string& hostName,
-		      const int port,
+    ParmTableBDBRepl (const string& tableName,
 		      const string& masterHostName,
 		      const int masterPort,
 		      const bool isMaster);
@@ -69,7 +66,7 @@ namespace LOFAR {
     // Connect to the database
     virtual void connect();
     // Create the database or table
-    static void createTable(const string& userName, const string& tableName);
+    static void createTable(const string& tableName);
 
   private:
     static BDBReplicator* theirReplicator;

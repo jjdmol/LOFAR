@@ -124,13 +124,18 @@ class ParmTable
 public:
   // Create the ParmTable object.
   // The dbType argument gives the database type.
-  // It can be postgres or aips. If aips is given, an AIPS++ table is used,
   // otherwise a database of the given type.
-  // For an AIPS++ table, the extension .MEP is added to the table name.
-  ParmTable (const string& dbType, const string& tableName,
-	     const string& dbName, const string& pwd,
-	     const string& hostName, const int masterPort,
-	     const int myPort, const bool isMaster);
+  ParmTable (const string& dbType, 
+	     const string& tableName,
+	     // these options are used for sql databases
+	     const string& dbName, 
+	     const string& userName,
+	     const string& pwd,
+	     // this one is used for sql and BDBReplication
+	     const string& hostName, 
+	     // these are used for BDBReplication
+	     const int masterPort,
+	     const bool isMaster);
 
   ~ParmTable()
     { delete itsRep; }
