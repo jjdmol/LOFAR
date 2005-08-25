@@ -29,7 +29,8 @@
 // Application specific includes
 #include <BDBReplicator.h>
 
-using namespace LOFAR;
+namespace LOFAR {
+namespace BDBReplication {
 using namespace std;
 
 BDBReplicator::BDBReplicator(const string& DbEnvName,
@@ -172,4 +173,6 @@ void BDBReplicator::handleMessages()
     boost::thread::yield();
   }
 #endif
+}
+}
 }
