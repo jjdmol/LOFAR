@@ -31,7 +31,8 @@
 #include <BDBReplication/BDBSite.h>
 #include <BDBReplication/BDBConnector.h>
 
-using namespace LOFAR;
+namespace LOFAR {
+namespace BDBReplication {
 
 struct IncomingMessage {
   Dbt rec;
@@ -117,5 +118,6 @@ class BDBCommunicator {
   ALLOC_TRACER_ALIAS(BDBSite);
 };
 
-
+}
+}
 #endif

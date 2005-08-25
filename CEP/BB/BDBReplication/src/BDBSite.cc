@@ -30,7 +30,8 @@
 
 // Application specific includes
 
-using namespace LOFAR;
+namespace LOFAR{
+  namespace BDBReplication{
 using namespace std;
 
 INIT_TRACER_CONTEXT(BDBSite, "BDBReplication");
@@ -91,6 +92,16 @@ int BDBSite::recvBlocking(void* buffer, int bufferSize) {
   return bufferSize;
 } 
 
+bool BDBSite::send(BDBMessage& message) const
+{
+  return message.send(itsTH);
+}
+
+bool BDBSite::recv(BDBMessage& message) const
+{
+  return message.receive(itsTH);
+};
+
 BDBSiteMap::BDBSiteMap() :
   itsLastEnvId(2)
   //  itsLock(itsMutex, false),
@@ -132,4 +143,6 @@ void BDBSiteMap::addSite(BDBSite* newSite)
   //  unlock();
   LOG_TRACE_FLOW_STR("SITE ADDED!");
   //  print(cout);
+}
+}
 }

@@ -29,7 +29,8 @@
 // Application specific includes
 #include <BDBCommunicator.h>
 
-using namespace LOFAR;
+namespace LOFAR{
+  namespace BDBReplication{
 using namespace std;
 
 BDBCommunicatorRep::BDBCommunicatorRep(const BDBConnector& connector, BDBSiteMap& siteMap)
@@ -284,3 +285,5 @@ void BDBCommunicator::sendOne(const Dbt *control,
 }
 
 
+}
+}

@@ -26,8 +26,8 @@
 #include <Common/Net/Socket.h>
 #include <BDBReplication/BDBSite.h>
  
-using namespace LOFAR;
-
+namespace LOFAR{
+  namespace BDBReplication {
 class BDBConnectorRep {
  public:
   // called from outside the thread
@@ -107,5 +107,6 @@ inline int BDBConnector::getPort()
 { return itsRep->getPort();}
 inline int BDBConnectorRep::getPort() 
 { return itsPort;}
-
+}
+}
 #endif

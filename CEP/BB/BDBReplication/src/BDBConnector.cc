@@ -32,7 +32,9 @@
 // Application specific includes
 #include <BDBConnector.h>
 
-using namespace LOFAR;
+
+namespace LOFAR{
+  namespace BDBReplication {
 using namespace std;
 
 BDBConnectorRep::BDBConnectorRep(const string hostName,
@@ -80,17 +82,13 @@ bool BDBConnectorRep::connectTo(string hostName, int port) const
 				 hostName.c_str(),
 				 service,
 				 Socket::TCP);
-  newSocket->setBlocking(false);
   TransportHolder* th = new TH_Socket(newSocket);
+  BDBMessage message(BDBMessage::CONNECT);
+  message.setHostName(hostName);
+  message.setPort(port);
   BDBSite* newSite = new BDBSite(hostName.c_str(), port, th);
 
-  if (newSocket->connect(0) == Socket::SK_OK) {
-    // send my connection data
-    newSocket->writeBlocking(&itsPort,4);
-    int messageSize = itsHostName.size();
-    newSocket->writeBlocking(&messageSize, 4);
-    newSocket->writeBlocking(itsHostName.c_str(), messageSize);
-    
+  if (message.send(th)) {
     itsSiteMap.addSite(newSite);
     return true;
   } else {
@@ -129,19 +127,15 @@ bool BDBConnectorRep::listenOnce(){
 
   Socket* newSocket = itsListenSocket->accept(100); // wait 500 ms for new connection
   if (newSocket != 0){
-    int port=0;
-    newSocket->readBlocking(&port, 4);
-    int messageSize=0;      
-    newSocket->readBlocking(&messageSize, 4);
-    char hostname[messageSize+1];
-    memset(hostname, 0, messageSize+1);
-    newSocket->readBlocking(hostname, messageSize);
-    newSocket->setBlocking(false);
-    newSocket->setName(string("incoming_from") + hostname);
+    BDBMessage message;
     TransportHolder* th = new TH_Socket(newSocket);
-    BDBSite* newSite = new BDBSite(hostname, port, th);
+    message.receive(th);
+    cerr<<"connect message received"<<endl;
+    LOG_TRACE_FLOW_STR("Accepted connection from "<<message.getHostName()<<":"<<message.getPort());
+    DBGASSERTSTR(message.getType() == BDBMessage::CONNECT, "Connector received wrong packet");
+    newSocket->setName(string("incoming_from") + message.getHostName());
+    BDBSite* newSite = new BDBSite(message.getHostName().c_str(), message.getPort(), th);
     
-    LOG_TRACE_FLOW_STR("Accepted connection from "<<hostname<<":"<<port);
     itsSiteMap.addSite(newSite);
     return true; // we had something to do
   } else {
@@ -179,4 +173,6 @@ bool BDBConnector::connectTo(string hostName, int port) const
 bool BDBConnector::listenOnce()
 {
   return itsRep->listenOnce(); 
+}
+}
 }

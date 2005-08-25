@@ -29,8 +29,10 @@
 #include <Transport/TransportHolder.h>
 #include <boost/thread.hpp>
 #include <db_cxx.h>
+#include <BDBReplication/BDBMessage.h>
  
-using namespace LOFAR;
+namespace LOFAR{
+namespace BDBReplication{
 
 class BDBReplicator;
 
@@ -42,6 +44,8 @@ class BDBSite {
   void send(void* buffer, int bufferSize);
   int recv(void* buffer, int bufferSize);
   int recvBlocking(void* buffer, int bufferSize);
+  bool send(BDBMessage& message) const;
+  bool recv(BDBMessage& message) const;
 
   //  Socket* getSocket();
   Dbt* getConnectionData();
@@ -125,4 +129,6 @@ class BDBEnv : public DbEnv
   int magicValue;  
 };
 
+}
+}
 #endif

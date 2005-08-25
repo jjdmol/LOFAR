@@ -33,8 +33,8 @@
 #include <BDBReplication/BDBConnector.h>
 #include <BDBReplication/BDBSite.h>
  
-using namespace LOFAR;
-
+namespace LOFAR {
+namespace BDBReplication {
 
 class BDBReplicator {
  public:
@@ -78,4 +78,7 @@ class BDBReplicator {
 
 inline DbEnv* BDBReplicator::getDbEnv()
 { return itsDbEnv; };
+
+}
+}
 #endif
