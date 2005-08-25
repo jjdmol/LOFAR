@@ -72,7 +72,7 @@ void MISSubscription::subscribe()
   }
   else
   {
-    response = "NAK (DPE does not exists)";
+    response = "NAK (DPE does not exist)";
   }  
   
   if (response != "ACK")
@@ -98,7 +98,7 @@ void MISSubscription::unsubscribe(uint64 seqnr)
   }
   else
   {
-    response = "NAK (DPE does not exists)";
+    response = "NAK (DPE does not exist)";
   }  
   _isSubscribed = false;
   MISPvssDpSubscriptionResponseEvent resp;

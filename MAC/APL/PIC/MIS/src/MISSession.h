@@ -27,8 +27,10 @@
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <PropertyProxy.h>
-#include <MIS_Protocol.ph>
 #include <MISSubscription.h>
+
+#include <MIS_Protocol.ph>
+#include <RSP_Protocol.ph>
 
 namespace blitz
 {
@@ -57,20 +59,24 @@ class MISSession : public GCF::TM::GCFTask
     static void setCurrentTime(int64& sec, uint32& nsec);
   
   private: // state methods
-    GCF::TM::GCFEvent::TResult initial (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult waiting (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult setDiagnosis(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult reconfigure(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult getPICStructure(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult subscribe(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult getSubbandStatistics(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult getAntennaCorrelation(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult defaultHandling(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult closing (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult initial_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult waiting_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult setDiagnosis_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult reconfigure_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult getPICStructure_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult subscribe_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult getSubbandStatistics_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult getAntennaCorrelation_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCF::TM::GCFEvent::TResult closing_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
         
+    GCF::TM::GCFEvent::TResult defaultHandling (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+
   private: // helper methods
-    void genericPingpong(GCF::TM::GCFEvent& e);
-    void getGenericIdentity(GCF::TM::GCFEvent& e);
+    void genericPingpong (GCF::TM::GCFEvent& e);
+    void getGenericIdentity (GCF::TM::GCFEvent& e);
+    void setDiagnosis (GCF::TM::GCFEvent& e);
+    void subscribe (GCF::TM::GCFEvent& e);
+    void getSubbandStatistics (GCF::TM::GCFEvent& e);
     
   private: // data members      
     typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
@@ -82,10 +88,13 @@ class MISSession : public GCF::TM::GCFTask
     PropertyProxy       _propertyProxy;
 
   private: // admin members
-    uint64              _curSeqNr;
-    uint64              _curReplyNr;
-    bool                _busy;
+    uint64                  _curSeqNr;
+    uint64                  _curReplyNr;
+    bool                    _busy;
     list<MISSubscription*>  _subscriptionsGarbage;
+    GCF::TM::GCFEvent*      _pRememberedEvent;
+    uint16                  _nrOfRCUs;
+    std::bitset<MAX_N_RCUS> _allRCUSMask;    
 };
  } // namespace AMI
 } // namespace LOFAR
