@@ -69,7 +69,7 @@ namespace LOFAR {
     static void createTable(const string& tableName);
 
   private:
-    static BDBReplicator* theirReplicator;
+    static BDBReplication::BDBReplicator* theirReplicator;
     static int theirReplicatorRefCount;
     bool itsIsMaster;
   };
