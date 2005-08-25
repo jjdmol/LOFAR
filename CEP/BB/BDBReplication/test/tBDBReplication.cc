@@ -27,6 +27,10 @@
 
 #include <BDBReplication/BDBReplicator.h>
 
+using namespace LOFAR;
+using namespace LOFAR::BDBReplication;
+
+
 void write2db(DbEnv* myDbEnv, Db* myDb, char* key, char* value) {
   Dbt keyT, valueT;
 
@@ -238,4 +242,3 @@ main (int argc, char *argv[])
     return 1;
   }
 }
-
