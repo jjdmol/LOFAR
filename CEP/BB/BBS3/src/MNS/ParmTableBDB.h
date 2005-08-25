@@ -53,8 +53,7 @@ namespace LOFAR {
     // Create the ParmTable object.
     // The dbType argument gives the database type.
     // It can be postgres.
-    ParmTableBDB (const string& userName,
-		  const string& tableName);
+    ParmTableBDB (const string& tableName);
 
     virtual ~ParmTableBDB();
 
@@ -91,7 +90,7 @@ namespace LOFAR {
     // Connect to the database
     virtual void connect();
     // Create the database or table
-    static void createTable(const string& userName, const string& tableName);
+    static void createTable(const string& tableName);
     // clear database or table
     virtual void clearTable();
 

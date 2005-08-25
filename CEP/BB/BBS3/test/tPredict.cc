@@ -69,7 +69,7 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1],
-		     "", "", 13157, 13157, 
+		     "", "", "", 13157, 
 		     antVec, "RI.USESP", srcgrp, false);
       doPredict (pre1);
       cout << "End of predict test" << endl;

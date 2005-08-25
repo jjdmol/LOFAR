@@ -99,9 +99,9 @@ void WH_Control::preprocess()
       itsParmTable = new ParmTable(dbtype,
 				   "dummy", 
 				   dbkvm.getString("DBName"),
+				   dbkvm.getString("UserName"),
 				   dbkvm.getString("DBPwd"),
 				   myHostName,
-				   dbkvm.getInt32("DBMasterPort"),
 				   dbkvm.getInt32("DBMasterPort"),
 				   true);
     }
