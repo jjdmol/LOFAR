@@ -24,19 +24,12 @@ BUILT_SOURCES = \
 	Echo_Protocol.ph \
 	echoapp.conf \
 	ping.conf \
-	ServiceBroker.conf \
-	mac.log_prop	
+	ServiceBroker.conf
 
 EXTRA_DIST = \
 	Echo_Protocol.ph \
 	echoapp.conf \
-	ping.conf \
-	mac.log_prop
-
-MAC_CONFIG = $(top_srcdir)/../../Config
-
-%.log_prop: $(MAC_CONFIG)/%.log_prop
-	cp $< $@
+	ping.conf
 
 %.conf: sal-test.conf.in
 	ln -sf $< $@

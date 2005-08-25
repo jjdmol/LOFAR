@@ -15,27 +15,20 @@ ping_CPPFLAGS=-I$(top_srcdir)/include
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
 BUILT_SOURCES = \
 	Echo_Protocol.ph \
 	echoapp.conf \
 	ping.conf \
-	ServiceBroker.conf \
-	mac.log_prop	
+	ServiceBroker.conf
 
 EXTRA_DIST = \
 	Echo_Protocol.ph \
 	echoapp.conf \
 	ping.conf \
-	ServiceBroker.conf \
-	mac.log_prop
+	ServiceBroker.conf
 	
-MAC_CONFIG = $(top_srcdir)/../../Config
-
-%.log_prop: $(MAC_CONFIG)/%.log_prop
-	cp $< $@
-
 %.conf:	tm-test.conf.in
 	ln -sf $< $@
 
