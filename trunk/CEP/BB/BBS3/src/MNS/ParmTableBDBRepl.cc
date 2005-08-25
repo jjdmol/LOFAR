@@ -42,6 +42,8 @@ using namespace casa;
 
 namespace LOFAR {
 
+  using BDBReplication::BDBReplicator;
+
   BDBReplicator* ParmTableBDBRepl::theirReplicator = 0;
   int ParmTableBDBRepl::theirReplicatorRefCount = 0;
 
