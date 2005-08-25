@@ -1,7 +1,8 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(datadir)/GCF/TM
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	
 libgcftest_la_DOCHDRS	=	\
 	SupervisedTask.h \
   PropertyProxy.h \
@@ -31,12 +32,10 @@ Application3_LDADD		      = libgcftest.la
 Application3_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
 
 BUILT_SOURCES = \
-	TST_Protocol.ph \
-	mac.log_prop
+	TST_Protocol.ph
 
 EXTRA_DIST = \
-	TST_Protocol.ph \
-	mac.log_prop
+	TST_Protocol.ph
 	
 AM_CXXFLAGS=-fmessage-length=0
 	
@@ -46,13 +45,8 @@ configfiles_DATA= \
 	Application1.conf \
 	Application2.conf \
 	Application3.conf \
-	mac.log_prop \
 	customPrepPVSSDB.ctl
 
-MAC_CONFIG = $(top_srcdir)/../../../Config
-%.log_prop: $(MAC_CONFIG)/%.log_prop
-	cp $< $@
-	
 %.conf: gcf-test.conf.in
 	cp $< $@
 
@@ -60,7 +54,7 @@ MAC_CONFIG = $(top_srcdir)/../../../Config
 	cp $< $@
 
 clean-local:
-  rm -f *.ph
+	rm -f *.ph
   
 include $(lofar_sharedir)/Makefile.common
 
