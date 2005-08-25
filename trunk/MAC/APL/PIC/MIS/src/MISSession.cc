@@ -27,7 +27,6 @@
 #include "MISDefines.h"
 #include "MISSubscription.h"
 #include <GCF/PAL/GCF_PVSSInfo.h>
-#include <RSP_Protocol.ph>
 #include <GCF/PAL/GCF_Answer.h>
 #include <APLCommon/APL_Defines.h>
 #include <GCF/GCF_PVInteger.h>
@@ -62,6 +61,9 @@ using namespace RTC;
 
 #define SEND_RESP_MSG(_eventin_, _eventout_, _response_) \
   { \
+    LOG_INFO(formatString( \
+        "Response value is: %s.", \
+        string(_response_).c_str()));  \
     MIS##_eventout_##Event out; \
     out.seqnr = _curSeqNr++; \
     out.replynr = _eventin_.seqnr; \
@@ -70,12 +72,26 @@ using namespace RTC;
     _missPort.send(out); \
   }
   
+#define SEND_RESP_MSG_A(_eventin_, _eventout_, _response_) \
+  { \
+    LOG_INFO(formatString( \
+        "Response value is: %s.", \
+        _response_.c_str()));  \
+    _eventout_.seqnr = _curSeqNr++; \
+    _eventout_.replynr = _eventin_.seqnr; \
+    _eventout_.response = _response_; \
+    setCurrentTime(out.timestamp_sec, out.timestamp_nsec); \
+    _missPort.send(_eventout_); \
+  }
+
 MISSession::MISSession(MISDaemon& daemon) :
-  GCFTask((State)&MISSession::initial, MISS_TASK_NAME),
+  GCFTask((State)&MISSession::initial_state, MISS_TASK_NAME),
   _daemon(daemon),
   _propertyProxy(*this),
   _curSeqNr(1),
-  _curReplyNr(0)
+  _curReplyNr(0),
+  _pRememberedEvent(0),
+  _nrOfRCUs(0)
 {
   _missPort.init(*this, MISS_PORT_NAME, GCFPortInterface::SPP, MIS_PROTOCOL);
   _rspDriverPort.init(*this, MIS_RSP_PORT_NAME, GCFPortInterface::SAP, RSP_PROTOCOL);
@@ -91,7 +107,7 @@ MISSession::~MISSession ()
   }
 }
 
-GCFEvent::TResult MISSession::initial(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -104,11 +120,11 @@ GCFEvent::TResult MISSession::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CONNECTED:
-      TRAN(MISSession::waiting);
+      TRAN(MISSession::waiting_state);
       break;
 
     case F_DISCONNECTED:
-      TRAN(MISSession::closing);
+      TRAN(MISSession::closing_state);
       break;
       
     default:
@@ -119,7 +135,7 @@ GCFEvent::TResult MISSession::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult MISSession::waiting(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned long garbageTimerID = 0;
@@ -129,6 +145,8 @@ GCFEvent::TResult MISSession::waiting(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
       _busy = false;
       garbageTimerID = _missPort.setTimer(5.0, 5.0);
+      if (_pRememberedEvent) delete _pRememberedEvent;
+      _pRememberedEvent = 0;
       break;
 
     case F_EXIT:
@@ -156,8 +174,11 @@ GCFEvent::TResult MISSession::waiting(GCFEvent& e, GCFPortInterface& p)
       break;
     }      
     case F_DISCONNECTED:
-      LOG_INFO("Connection lost to a MIS client.");
-      TRAN(MISSession::closing);
+      if (&_missPort == &p)
+      {
+        LOG_INFO("Connection lost to a MIS client.");
+        TRAN(MISSession::closing_state);
+      }
       break;
       
     case MIS_GENERIC_PINGPONG:
@@ -169,37 +190,34 @@ GCFEvent::TResult MISSession::waiting(GCFEvent& e, GCFPortInterface& p)
       break;
     
     case MIS_DIAGNOSIS_NOTIFICATION:
-      TRAN(MISSession::setDiagnosis);
-      dispatch(e, p);
+      setDiagnosis(e);
       break;
     
     case MIS_RECONFIGURATION_REQUEST:
-      TRAN(MISSession::reconfigure);
+      TRAN(MISSession::reconfigure_state);
       dispatch(e, p);
       break;
     
     case MIS_LOFAR_STRUCTURE_REQUEST:
-      TRAN(MISSession::getPICStructure);
+      TRAN(MISSession::getPICStructure_state);
       dispatch(e, p);
       break;
     
     case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
-      TRAN(MISSession::subscribe);
-      dispatch(e, p);
+      subscribe(e);
       break;
     
     case MIS_SUBBAND_STATISTICS_REQUEST:
-      TRAN(MISSession::getSubbandStatistics);
-      dispatch(e, p);
+      getSubbandStatistics(e);
       break;
     
     case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
-      TRAN(MISSession::getAntennaCorrelation);
+      TRAN(MISSession::getAntennaCorrelation_state);
       dispatch(e, p);
       break;
     
     default:
-      status = GCFEvent::NOT_HANDLED;
+      status = defaultHandling(e, p);
       break;
   }
 
@@ -240,20 +258,57 @@ void MISSession::getGenericIdentity(GCFEvent& e)
   _missPort.send(out);
 }
 
-GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
+void MISSession::setDiagnosis(GCFEvent& e)
+{
+  MISDiagnosisNotificationEvent* pIn(0);
+  static string resourceStatusPropName = "";
+
+  assert(_pRememberedEvent == 0);
+    
+  pIn = new MISDiagnosisNotificationEvent(e);
+  LOGMSGHDR((*pIn));
+  resourceStatusPropName = pIn->component;
+
+  // first try to get the current status value of the component
+  // for this purpose it is important that the component name contains ".status"
+  if (resourceStatusPropName.find(".status") == string::npos)
+  {
+    resourceStatusPropName += ".status";
+  }
+  if (GCFPVSSInfo::propExists(resourceStatusPropName))
+  {
+    if (_propertyProxy.requestPropValue(resourceStatusPropName) != GCF_NO_ERROR)
+    {
+      SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Error while requesting the current component status!)");
+    }
+    else
+    {
+      _pRememberedEvent = pIn;      
+      TRAN(MISSession::setDiagnosis_state);
+    }
+  }
+  else
+  {
+    SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Component has no status or does not exist!)");
+  }
+  if (_pRememberedEvent == 0)
+  {
+    delete pIn;
+  }
+}
+
+GCFEvent::TResult MISSession::setDiagnosis_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  static MISDiagnosisNotificationEvent* pIn = 0;
   static string resourceStatusPropName = "";
   
   switch (e.signal)
   {
-    case MIS_DIAGNOSIS_NOTIFICATION:
+    case F_VGETRESP:
     {
-      if (pIn) delete pIn;
-      pIn = new MISDiagnosisNotificationEvent(e);
-      LOGMSGHDR((*pIn));
+      assert (_pRememberedEvent);
+      MISDiagnosisNotificationEvent* pIn = (MISDiagnosisNotificationEvent*)_pRememberedEvent;
       resourceStatusPropName = pIn->component;
       // first try to get the current status value of the component
       // for this purpose it is important that the component name contains ".status"
@@ -261,21 +316,7 @@ GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
       {
         resourceStatusPropName += ".status";
       }
-      if (GCFPVSSInfo::propExists(resourceStatusPropName))
-      {
-        if (_propertyProxy.requestPropValue(resourceStatusPropName) != GCF_NO_ERROR)
-        {
-          SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Error while requesting the current component status!)");
-        }
-      }
-      else
-      {
-        SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Component has no status or does not exists!)");
-      }
-      break;
-    }
-    case F_VGETRESP:
-    {
+
       GCFPVInteger resourceState(RS_IDLE);
       GCFPropValueEvent* pE = (GCFPropValueEvent*)(&e);
       resourceState.copy(*pE->pValue); 
@@ -298,13 +339,9 @@ GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
                          KVL_ORIGIN_SHM, ts, descr);
       }
       SEND_RESP_MSG((*pIn), DiagnosisResponse, response);
-      TRAN(MISSession::waiting);      
+      TRAN(MISSession::waiting_state);      
       break;
     }  
-    case F_EXIT:
-      if (pIn) delete pIn;
-      pIn = 0;
-      break;
       
     default:
       status = defaultHandling(e, p);
@@ -315,7 +352,7 @@ GCFEvent::TResult MISSession::setDiagnosis(GCFEvent& e, GCFPortInterface& p)
 }
 
 
-GCFEvent::TResult MISSession::reconfigure(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::reconfigure_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -324,7 +361,7 @@ GCFEvent::TResult MISSession::reconfigure(GCFEvent& e, GCFPortInterface& p)
     case MIS_RECONFIGURATION_REQUEST:
     {
       RETURN_NOACK_MSG(ReconfigurationRequest, ReconfigurationResponse, "NAK (not supported yet)");
-      TRAN(MISSession::waiting);
+      TRAN(MISSession::waiting_state);
       break;
     }       
     default:
@@ -335,7 +372,7 @@ GCFEvent::TResult MISSession::reconfigure(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult MISSession::getPICStructure(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::getPICStructure_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -345,7 +382,7 @@ GCFEvent::TResult MISSession::getPICStructure(GCFEvent& e, GCFPortInterface& p)
     case MIS_LOFAR_STRUCTURE_REQUEST:
     {
       RETURN_NOACK_MSG(LofarStructureRequest, LofarStructureResponse, "NAK (not supported yet)");
-      TRAN(MISSession::waiting);
+      TRAN(MISSession::waiting_state);
       break;
     }       
     default:
@@ -356,54 +393,54 @@ GCFEvent::TResult MISSession::getPICStructure(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult MISSession::subscribe(GCFEvent& e, GCFPortInterface& p)
+void MISSession::subscribe(GCFEvent& e)
+{
+  MISPvssDpSubscriptionRequestEvent in(e);
+  LOGMSGHDR(in);
+  string response = "ACK";
+  if (in.request == "UNSUBSCRIBE")
+  {
+    TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
+    if (iter != _subscriptions.end())
+    {
+      iter->second->unsubscribe(in.seqnr);
+    }
+    else
+    {
+      response = "NAK (not subscribed; ignored)";
+    }
+  }
+  else if (in.request == "SUBSCRIBE" || in.request == "SINGLE-SHOT")
+  {
+    TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
+    if (iter != _subscriptions.end())
+    {
+      response = "NAK (subscription already made; ignored)";
+    }
+    else
+    {
+      MISSubscription* pNewSubscription = new MISSubscription(*this, 
+                                                            in.dpname, 
+                                                            in.seqnr, 
+                                                            (in.request == "SINGLE-SHOT"));
+      _subscriptions[in.dpname] = pNewSubscription;
+      TRAN(MISSession::subscribe_state);
+      pNewSubscription->subscribe();
+    }        
+  }
+  
+  if (response != "ACK")
+  {
+    SEND_RESP_MSG(in, PvssDpSubscriptionResponse, response);
+  }
+}
+
+GCFEvent::TResult MISSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
-    case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
-    {
-      MISPvssDpSubscriptionRequestEvent in(e);
-      LOGMSGHDR(in);
-      string response = "ACK";
-      if (in.request == "UNSUBSCRIBE")
-      {
-        TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
-        if (iter != _subscriptions.end())
-        {
-          iter->second->unsubscribe(in.seqnr);
-        }
-        else
-        {
-          response = "NAK (not subscribed; ignored)";
-        }
-      }
-      else if (in.request == "SUBSCRIBE" || in.request == "SINGLE-SHOT")
-      {
-        TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
-        if (iter != _subscriptions.end())
-        {
-          response = "NAK (subscription already made; ignored)";
-        }
-        else
-        {
-          MISSubscription* pNewSubscription = new MISSubscription(*this, 
-                                                                in.dpname, 
-                                                                in.seqnr, 
-                                                                (in.request == "SINGLE-SHOT"));
-          _subscriptions[in.dpname] = pNewSubscription;
-          pNewSubscription->subscribe();
-        }        
-      }
-      
-      if (response != "ACK")
-      {
-        SEND_RESP_MSG(in, PvssDpSubscriptionResponse, response);
-        TRAN(MISSession::waiting);
-      }
-      break;
-    }  
     default:
       status = defaultHandling(e, p);
       break;
@@ -412,93 +449,100 @@ GCFEvent::TResult MISSession::subscribe(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface& p)
+void MISSession::getSubbandStatistics(GCFEvent& e)
+{
+  assert(_pRememberedEvent == 0);
+  MISSubbandStatisticsRequestEvent* pIn = new MISSubbandStatisticsRequestEvent(e);
+  LOGMSGHDR((*pIn));
+
+  if (_nrOfRCUs == 0)
+  {
+    try
+    {
+      _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+      LOG_DEBUG(formatString (
+          "NrOfRCUs %d",
+          _nrOfRCUs));
+      _allRCUSMask.reset(); // init all bits to false value
+      _allRCUSMask.flip(); // flips all bits to the true value
+      // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
+      for (int i = _nrOfRCUs; i < MAX_N_RCUS; i++)
+      {
+        _allRCUSMask.set(i, false);
+      }
+    }
+    catch (...)
+    {
+      SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (no RSP configuration available)");
+      delete pIn;
+      return;
+    }    
+  }
+
+  if (_rspDriverPort.isConnected())
+  {
+    
+    RSPGetstatusEvent getstatus;
+    getstatus.timestamp = Timestamp(0, 0);
+    getstatus.cache = true;
+    
+    getstatus.rcumask = _allRCUSMask;
+    _rspDriverPort.send(getstatus);
+  }
+  else    
+  {
+    _rspDriverPort.open();
+  }
+  _pRememberedEvent = pIn;
+  TRAN(MISSession::getSubbandStatistics_state);
+
+
+}
+
+GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static std::bitset<MAX_N_RCUS> allRCUSMask;
   static MISSubbandStatisticsResponseEvent ackout;
-  static MISSubbandStatisticsRequestEvent* pIn = 0;
-  static uint16 nrOfRCUs = 0;
-  static bool isConnecting = false;
+  static MISSubbandStatisticsRequestEvent* pIn(0);
 
   switch (e.signal)
   {
     case F_ENTRY:
-      if (nrOfRCUs == 0)
+      if (ackout.rcu_settings == 0)
       {
-        nrOfRCUs = (GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
-        LOG_DEBUG(formatString (
-            "NrOfRCUs %d",
-            nrOfRCUs));
-        ackout.rcu_settingsNOE = nrOfRCUs;
-        ackout.rcu_settings = new uint8[nrOfRCUs];
-        ackout.invalidNOE = nrOfRCUs;
-        ackout.invalid = new uint8[nrOfRCUs];
-        ackout.dataNOE = nrOfRCUs * 512;
-        ackout.data = new double[nrOfRCUs * 512];
-        allRCUSMask.reset(); // init all bits to false value
-        allRCUSMask.flip(); // flips all bits to the true value
-        // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-        for (int i = nrOfRCUs; i < MAX_N_RCUS; i++)
-          allRCUSMask.set(nrOfRCUs, false);
+        ackout.rcu_settingsNOE = _nrOfRCUs;
+        ackout.rcu_settings = new uint8[_nrOfRCUs];
+        ackout.invalidNOE = _nrOfRCUs;
+        ackout.invalid = new uint8[_nrOfRCUs];
+        ackout.dataNOE = _nrOfRCUs * 512;
+        ackout.data = new double[_nrOfRCUs * 512];
       }
-      
-      if (pIn) delete pIn;
-      pIn = 0;
-      if (!_rspDriverPort.isConnected())
-      {       
-        isConnecting = true;
-        _rspDriverPort.open();
-      }
+      assert(_pRememberedEvent);
+      pIn = (MISSubbandStatisticsRequestEvent*) _pRememberedEvent;
       break;
          
     case F_CONNECTED:
     case F_DISCONNECTED:
       if (&_rspDriverPort == &p)
       {
-        isConnecting = false;
-        
         RSPGetstatusEvent getstatus;
         getstatus.timestamp = Timestamp(0, 0);
         getstatus.cache = true;
       
-        getstatus.rcumask = allRCUSMask;
+        getstatus.rcumask = _allRCUSMask;
         
         if (!_rspDriverPort.send(getstatus))
         {
-          SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
-          _rspDriverPort.open();
-          TRAN(MISSession::waiting);      
+          SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (connection to rsp driver could not be established)");
+          TRAN(MISSession::waiting_state);      
         }      
       }
       else
       {
         status = defaultHandling(e, p);
-        break;
-      }      
-      
-    case MIS_SUBBAND_STATISTICS_REQUEST:
-    {
-      pIn = new MISSubbandStatisticsRequestEvent(e);
-      LOGMSGHDR((*pIn));
-      
-      if (!isConnecting)
-      {
-        RSPGetstatusEvent getstatus;
-        getstatus.timestamp = Timestamp(0, 0);
-        getstatus.cache = true;
-        
-        getstatus.rcumask = allRCUSMask;
-        
-        if (!_rspDriverPort.send(getstatus))
-        {
-          SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
-          _rspDriverPort.open();
-          TRAN(MISSession::waiting);      
-        }
-      }
+      }  
       break;
-    }
+      
     case RSP_GETSTATUSACK:
     {
       RSPGetstatusackEvent ack(e);
@@ -506,7 +550,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
       if (SUCCESS != ack.status)
       {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
-        TRAN(MISSession::waiting);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
 
@@ -515,13 +559,12 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
       RSPGetrcuEvent getrcu;
       
       getrcu.timestamp = Timestamp(0, 0);
-      getrcu.rcumask = allRCUSMask;
+      getrcu.rcumask = _allRCUSMask;
       getrcu.cache = true;
       if (!_rspDriverPort.send(getrcu))
       {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
-        _rspDriverPort.open();
-        TRAN(MISSession::waiting);      
+        TRAN(MISSession::waiting_state);      
       }
       break;
     }
@@ -532,26 +575,25 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
       if (SUCCESS != ack.status)
       {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
-        TRAN(MISSession::waiting);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
 
-      memcpy(ackout.rcu_settings, ack.settings().data(), nrOfRCUs * sizeof(ackout.rcu_settings[0]));
+      memcpy(ackout.rcu_settings, ack.settings().data(), _nrOfRCUs * sizeof(ackout.rcu_settings[0]));
 
       // subscribe to statistics updates
       RSPGetstatsEvent getstats;
 
       getstats.timestamp = Timestamp(0,0);
 
-      getstats.rcumask = allRCUSMask;
+      getstats.rcumask = _allRCUSMask;
       getstats.cache = true;
       getstats.type = Statistics::SUBBAND_POWER;
       
       if (!_rspDriverPort.send(getstats))
       {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
-        _rspDriverPort.open();
-        TRAN(MISSession::waiting);      
+        TRAN(MISSession::waiting_state);      
       }
       break;
     }  
@@ -562,20 +604,24 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
       if (SUCCESS != ack.status)
       {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
-        TRAN(MISSession::waiting);      
+        TRAN(MISSession::waiting_state);      
         break;
       }
 
       ackout.seqnr = _curSeqNr++;
-      ackout.replynr = _curReplyNr;
-      memcpy(ackout.data, ack.stats().data(), nrOfRCUs * sizeof(ackout.data[0]) * sizeof(double));
+      ackout.replynr = pIn->seqnr;
+      memcpy(ackout.data, ack.stats().data(), _nrOfRCUs * 512 * sizeof(double));
 
       ackout.response = "ACK";
+      LOG_DEBUG(formatString(
+          "RSP Timestamp: %lu.%06lu",
+          ack.timestamp.sec(),
+          ack.timestamp.usec()));
       ackout.payload_timestamp_sec = ack.timestamp.sec();
       ackout.payload_timestamp_nsec = ack.timestamp.usec() * 1000;
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
       _missPort.send(ackout);
-      TRAN(MISSession::waiting);
+      TRAN(MISSession::waiting_state);
       break;
     }
     default:
@@ -586,7 +632,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics(GCFEvent& e, GCFPortInterface
   return status;
 }
 
-GCFEvent::TResult MISSession::getAntennaCorrelation(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -596,7 +642,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation(GCFEvent& e, GCFPortInterfac
     case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
     {
       RETURN_NOACK_MSG(AntennaCorrelationMatrixRequest, AntennaCorrelationMatrixResponse, "NAK (not supported yet)");
-      TRAN(MISSession::waiting);
+      TRAN(MISSession::waiting_state);
       break;
     }       
     default:
@@ -607,7 +653,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation(GCFEvent& e, GCFPortInterfac
   return status;
 }
 
-GCFEvent::TResult MISSession::closing(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult MISSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   switch (e.signal)
@@ -646,7 +692,7 @@ GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
       if (&p == &_missPort)
       {
         LOG_INFO("Connection lost to a MIS client.");
-        TRAN(MISSession::closing);
+        TRAN(MISSession::closing_state);
       }
       break;
       
@@ -694,7 +740,7 @@ void MISSession::subscribed(MISPvssDpSubscriptionResponseEvent& e)
 {
   e.seqnr = _curSeqNr++;
   _missPort.send(e);
-  TRAN(MISSession::waiting);
+  TRAN(MISSession::waiting_state);
 }
 
 void MISSession::valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e)
@@ -706,7 +752,7 @@ void MISSession::valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e)
 void MISSession::mayDelete(const string& propName)
 {
   TSubscriptions::iterator iter = _subscriptions.find(propName);
-  ASSERTSTR(iter != _subscriptions.end(), "Subscription should still exists here!");
+  ASSERTSTR(iter != _subscriptions.end(), "Subscription should still exist here!");
   MISSubscription* pSubs = iter->second;
   _subscriptions.erase(propName);
   _subscriptionsGarbage.push_back(pSubs);

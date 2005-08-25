@@ -135,7 +135,7 @@ event = {
 
 event = {
     signal = "GENERIC_IDENTIFY_REQUEST";
-    dir = INOUT; // SHM <-> MAC
+    dir = IN; // SHM -> MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -156,7 +156,7 @@ event = {
 
 event = {
     signal = "GENERIC_IDENTIFY_RESPONSE";
-    dir = INOUT; // SHM <-> MAC
+    dir = OUT; // SHM <- MAC
     param = {
         name = "seqnr";
         type = "uint64";
@@ -230,7 +230,7 @@ event = {
     };
     // PVSS property set name of the component being diagnosed.
     param = {
-        name = "component";  // e.g. "PIC_Rack0_SubRack0_AP0_RCU0_HFA"
+        name = "component";  // e.g. "PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA"
         type = "string";
     };
     // Format: <FAULTHY|HEALTHY> [(explanation)]"
