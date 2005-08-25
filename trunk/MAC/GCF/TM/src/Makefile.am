@@ -3,7 +3,7 @@ SUBDIRS	= . ServiceBroker
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: ServiceBroker/%.prot
-	$(AUTOGEN) --writable -L $(pkgdatadir) $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
 pkgincludedir = $(includedir)/GCF/TM
 pkginclude_HEADERS = \
@@ -63,11 +63,16 @@ libgcftm_la_CPPFLAGS=-I$(top_srcdir)/include \
 libgcftm_la_CXXFLAGS=-fmessage-length=0
 
 BUILT_SOURCES = \
-	SB_Protocol.ph
+	SB_Protocol.ph \
+	mac.log_prop
 
 EXTRA_DIST = \
-	SB_Protocol.ph
+	SB_Protocol.ph \
+	mac.log_prop
 	
+%.log_prop: %.log_prop.in
+	cp $< $@
+
 clean-local:
 	rm -f *.ph
 	
