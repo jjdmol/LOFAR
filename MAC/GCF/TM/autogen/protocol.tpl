@@ -119,12 +119,12 @@ extern const char* [+ protocol_name +]_signalnames[];
     
 void* [+ event_class_name +]::pack(uint32& __packsize)
 {
-  [+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +]assert([+ (get "name") +]);[+ ENDIF +]
+  [+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +][+ IF (*== (get "type") "[]") +]if ([+ (get "name") +]NOE > 0) [+ ENDIF +]assert([+ (get "name") +]);[+ ENDIF +]
   [+ ENDFOR +]
   uint32 __requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length)[+ ELSE +]0[+ ENDIF +][+ FOR param "" +]
     [+ IF (exist? "userdefined") +]+ [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
     [+ ELIF (not (*== (get "type") "]")) +]+ [+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(uint16)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
-    [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]NOE) + ([+ (get "name") +]NOE * sizeof([+ (get "name") +][0]))
+    [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]NOE) + ([+ (get "name") +]NOE * sizeof([+ event_class_member_type +]))
     [+ ELSE +]+ sizeof([+ (get "name") +])[+ ENDIF +][+ ENDFOR +];
 
   resizeBuf(__requiredSize);
@@ -142,7 +142,7 @@ void* [+ event_class_name +]::pack(uint32& __packsize)
   __offset += sizeof([+ (get "type") +]);
     [+ ENDIF +]
   [+ ELIF (*== (get "type") "[]") +]
-  __offset += packMember(__offset, [+ (get "name") +], [+ (get "name") +]NOE, sizeof([+ (get "name") +][0]));
+  __offset += packMember(__offset, [+ (get "name") +], [+ (get "name") +]NOE, sizeof([+ event_class_member_type +]));
   [+ ELSE +]
   memcpy(_buffer + __offset, [+ (get "name") +], sizeof([+ (get "name") +]));
   __offset += sizeof([+ (get "name") +]);
@@ -179,7 +179,7 @@ void [+ event_class_name +]::unpack()
     __offset += sizeof([+ (get "type") +]);
       [+ ENDIF +]
     [+ ELIF (*== (get "type") "[]") +]
-    [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(__data, __offset, [+ (get "name") +]NOE,  sizeof([+ (get "name") +][0]));
+    [+ (get "name") +] = ([+ event_class_member_type +]*) unpackMember(__data, __offset, [+ (get "name") +]NOE,  sizeof([+ event_class_member_type +]));
     [+ ELSE +]
     memcpy([+ (get "name") +], (__data + __offset), sizeof([+ (get "name") +]));
     __offset += sizeof([+ (get "name") +]);

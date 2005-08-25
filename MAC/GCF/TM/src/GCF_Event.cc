@@ -68,7 +68,7 @@ void* GCFEvent::unpackMember(char* data, uint32& offset, uint32& memberNOE, uint
   void* seqPtr(0);
   memcpy(&memberNOE, data + offset, sizeof(memberNOE));
   seqPtr = data + offset + sizeof(memberNOE);
-  offset += sizeof(memberNOE) + memberNOE * sizeofMemberType;
+  offset += sizeof(memberNOE) + (memberNOE * sizeofMemberType);
   return seqPtr;
 }
 
@@ -77,7 +77,10 @@ uint32 GCFEvent::packMember(uint32 offset, const void* member, uint32 memberNOE,
   assert(_buffer);
   memcpy(_buffer + offset, &memberNOE, sizeof(memberNOE));
   offset += sizeof(memberNOE);
-  memcpy(_buffer + offset, member, memberNOE * sizeofMemberType);
+  if (memberNOE > 0)
+  {
+    memcpy(_buffer + offset, member, memberNOE * sizeofMemberType);
+  }
   return (memberNOE * sizeofMemberType) + sizeof(memberNOE);
 }
 
