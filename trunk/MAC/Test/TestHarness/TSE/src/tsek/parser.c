@@ -353,7 +353,10 @@ int Parse_TType(
   }
 
   if (!ParseNumber(pcToken))
+  {
+    /* Failed to retreive the value of the type */
     return FALSE;
+  }
   ptType->iSizeInBytes = GetInteger(pcToken);
 
   Parse(pcToken);
@@ -367,6 +370,7 @@ int Parse_TType(
 
   if ((*pcToken) == ',')
   {
+    /* This must be an array of some kind...*/
     /* read minimum and maximum                                            */
 
     iTokenType = Parse(pcToken);
@@ -382,6 +386,21 @@ int Parse_TType(
         ptType->iKind = UNICODE0KIND;
       else if (strcmp(pcToken, "FILEDATA") == 0)
         ptType->iKind = FILEDATAKIND;
+      else if (strcmp(pcToken, "ARRAY") == 0)
+      {
+        /* Array has the following format:
+         * { NumberOfElements, ARRAY, sizeofElement } */
+        ptType->iKind = ARRAYKIND;
+        ptType->uiNumberOfElements = ptType->iSizeInBytes;
+        if (!ParseChar(','))
+          return FALSE;
+        if (!ParseNumber(pcToken))
+        {
+          return FALSE;
+        }
+        ptType->uiSizeOfElement = GetInteger(pcToken);
+        ptType->iSizeInBytes = ptType->uiNumberOfElements * ptType->uiSizeOfElement;
+      }
       else if (strcmp(pcToken, "DECIMAL") == 0)
       {
         if (!ParseChar(','))
@@ -451,6 +470,10 @@ int Parse_TType(
           ptType->iKind = UNICODE0KIND;
         else if (strcmp(pcToken, "FILEDATA") == 0)
           ptType->iKind = FILEDATAKIND;
+        else if (strcmp(pcToken, "ARRAY") == 0)
+        {
+          ptType->iKind = ARRAYKIND;
+        }
         else
         {
           AddError2("Unknown type kind %s", pcToken);
@@ -475,6 +498,19 @@ int Parse_TType(
             if (!ParseFloat(pcToken))
               return FALSE;
             sscanf(pcToken, "%f", &(ptType->fTimeScaling));
+            Parse(pcToken);
+          }
+          else if (ptType->iKind == ARRAYKIND)
+          {
+            ptType->uiNumberOfElements = ptType->iSizeInBytes;
+            /* For now only accepting number of bytes */
+            if (!ParseNumber(pcToken))
+            {
+              return FALSE;
+            }
+            ptType->uiSizeOfElement = GetInteger(pcToken);
+            ptType->iSizeInBytes = ptType->uiNumberOfElements * ptType->uiSizeOfElement;
+            /* Finished with array reading the next token for test at end of function*/
             Parse(pcToken);
           }
           else
@@ -1450,15 +1486,29 @@ int Parse_QFixedVar(
 
     iExpectedLength = ptList->ptThis->ptItsType->iSizeInBytes;
     iScannedLength = (strlen(pcToken) - 2) / 2;
-
-    if ((iScannedLength != iExpectedLength) && (iExpectedLength != 0))
+    if (ptList->ptThis->ptItsType->iLessAllowed == 0)
     {
-      sprintf(pcErrorLine,
-              "Expected parameter-type %s must be %d bytes. %s is %d%s bytes",
-              ptList->ptThis->ptItsType->pcName,
-              ptList->ptThis->ptItsType->iSizeInBytes, pcToken, iScannedLength,
-              (strlen(pcToken) % 2 == 0) ? "" : ".5");
-      AddError1(pcErrorLine);
+      if ((iScannedLength != iExpectedLength) && (iExpectedLength != 0))
+      {
+        sprintf(pcErrorLine,
+                "Expected parameter-type %s must be %d bytes. %s is %d%s bytes",
+                ptList->ptThis->ptItsType->pcName,
+                ptList->ptThis->ptItsType->iSizeInBytes, pcToken, iScannedLength,
+                (strlen(pcToken) % 2 == 0) ? "" : ".5");
+        AddError1(pcErrorLine);
+      }
+    }
+    else
+    {
+      if ((iScannedLength > iExpectedLength) && (iExpectedLength != 0))
+      {
+        sprintf(pcErrorLine,
+                "Expected parameter-type %s must be %d bytes. %s is %d%s bytes",
+                ptList->ptThis->ptItsType->pcName,
+                ptList->ptThis->ptItsType->iSizeInBytes, pcToken, iScannedLength,
+                (strlen(pcToken) % 2 == 0) ? "" : ".5");
+        AddError1(pcErrorLine);
+      }
     }
 
   }
@@ -1870,7 +1920,7 @@ int Parse_TParameterInvokeList(
     }
     if (ptDefList == NULL)
     {
-      AddError1("Too much parameters");
+      AddError1("Too many parameters");
       return FALSE;
     }
 

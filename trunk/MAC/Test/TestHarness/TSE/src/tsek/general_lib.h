@@ -67,6 +67,7 @@
 #define UNICODE0KIND   (7)
 #define DECIMALKIND    (8)
 #define FILEDATAKIND   (9)
+#define ARRAYKIND      (10)
 
 #define TIMER_ACTION            (100)
 #define WAIT_ACTION             (101)
@@ -136,6 +137,8 @@ struct TType
   int       iEndianess;         /* 0 : most cases (Intel way   )   */
   /* 1 : strings    (Motorola way)   */
   unsigned int iSizeInBytes;
+  unsigned int uiNumberOfElements;
+  unsigned int uiSizeOfElement;
   int       iLessAllowed;       /* 1 : Type can be less bytes ..   */
   char     *pcLowerLimit;       /* ptr to (SizeInBytes) bytes, de- */
   char     *pcUpperLimit;       /* fining lower and upper limit    */
