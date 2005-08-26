@@ -911,6 +911,13 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       break;
     }
 
+    case F_CLOSED:
+    {
+      port.setTimer((long)3); // try again in 3 seconds
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      break;
+    }
+    
     case F_TIMER:
     {
       LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
@@ -1122,6 +1129,16 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       ack.versions.bp().reference(versions.bp().copy());
       ack.versions.ap().reference(versions.ap().copy());
       
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_GETCONFIG:
+    {
+      RSPGetconfigackEvent ack;
+      ack.n_rcus=n_rcus;
+      ack.n_rspboards=n_boards_per_subrack*n_subracks_per_rack*n_racks;
+      ack.n_tdboards=1;
       port.send(ack);
       break;
     }
