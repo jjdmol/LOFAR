@@ -1,0 +1,469 @@
+V 10
+1
+LANG:1 12 CaptureStats
+PANEL,290 85 949 736 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+  if(!isDollarDefined(\"$datapoint\"))
+  {
+    DebugN(\"$datapoint not defined! Using PIC_CaptureStats1\");
+    datapoint=\"PIC_CaptureStats1\";
+    navPMLinitialize();
+  }
+  else
+  {
+    datapoint=$datapoint;
+  }
+  DebugN(\"CaptureStats using datapoint: \",datapoint);
+
+  navPMLloadPropertySet(datapoint);
+  for(int i=0;i<10 && !dpAccessable(datapoint); i++)
+  {
+    delay(1);
+  }
+
+  statusConnected=false;
+  connectStatusField();
+}
+
+" 0
+ "main()
+{
+  DebugN(\"Unloading propertyset: \",datapoint);
+  navPMLunloadPropertySet(datapoint);
+}" 0
+ E E E 1 -1 -1 0  188 128
+""0  1
+E "#uses \"nav_usr/STS/STS-functions.ctl\"
+#uses \"nav_fw/gcf-common.ctl\"
+#uses \"nav_fw/gcfnav-pmlinterface.ctl\"
+
+string datapoint;
+bool statusConnected;
+
+void connectStatusField()
+{
+  if(!statusConnected)
+  {
+    dpConnect(\"updateStatus\",datapoint + \".status:_online.._value\");
+    statusConnected=true;
+  }
+}
+
+updateStatus(string dp1, string status)
+{
+  if(status == \"rspctl stopped\")
+  {
+    setValue(\"PUSH_BUTTON_STARTSTOP\",\"text\",\"Start\");
+  }
+
+  setValue(\"TABLE_STATUS\",\"insertLineN\",0);
+  setValue(\"TABLE_STATUS\",\"currentCell\",0,0);
+  dyn_string tmp;
+  tmp[1]=status;
+  setValue(\"TABLE_STATUS\",\"cellValue\",tmp);
+  setValue(\"TABLE_STATUS\",\"lineVisible\",0);
+
+  if(status == \"rspctl stopped\")
+  {
+    setValue(\"PUSH_BUTTON_STARTSTOP\",\"text\",\"Start\");
+  }
+}" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+19 2008
+"RADIO_BOX_COMMAND"
+""
+1 20 41 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+835 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  20 41 214 125
+3
+T 
+1
+LANG:1 18 Subband statistics
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 18 Beamlet statistics
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 28 Cross-correlation statistics
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E E2 2009
+"PRIMITIVE_TEXT1"
+""
+1 40 22 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+819 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 0 0 1 E U  0 E 20 22 20 22
+1 2 2 "s" 0 0 0 192 0 0  20 22 1
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+"" 1
+LANG:1 8 Capture:
+2 2010
+"PRIMITIVE_TEXT1"
+""
+1 489 96 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+821 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 234 22 234 22
+1 2 2 "s" 0 0 0 192 0 0  234 22 1
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+"" 1
+LANG:1 40 RCU mask: (examples: 1,2,4:7 or 1:3,5:7)
+14 2011
+"TEXT_FIELD_MASK"
+""
+1 234 43 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+822 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  234 43 614 72
+3 "s" 0 0 0 0 0 -1  E E E
+2 2012
+"PRIMITIVE_TEXT1"
+""
+1 275 299 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+824 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 234 81 234 81
+1 2 2 "s" 0 0 0 192 0 0  234 81 1
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+"" 1
+LANG:1 26 Integration time (seconds)
+14 2013
+"TEXT_FIELD_INTEGRATIONTIME"
+""
+1 234 103 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+826 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  234 103 408 132
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"TEXT_FIELD_INTEGRATIONTIME\",\"text\",\"10\");
+}" 0
+ E
+2 2014
+"PRIMITIVE_TEXT1"
+""
+1 275 303 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+828 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 234 140 354 156
+1 2 0 "s" 0 0 0 192 0 0  234 140 1
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+"" 1
+LANG:1 18 Duration (seconds)
+14 2015
+"TEXT_FIELD_DURATION"
+""
+1 234 163 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+830 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  234 163 405 192
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"TEXT_FIELD_DURATION\",\"text\",\"60\");
+}" 0
+ E
+13 2017
+"PUSH_BUTTON_STARTSTOP"
+""
+1 20 267 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+833 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  20 267 117 294
+
+T 
+1
+LANG:1 5 Start
+"main()
+{
+  string buttonText;
+  string command;
+  int stat;
+  string tempText;
+
+  getValue(\"PUSH_BUTTON_STARTSTOP\",\"text\",buttonText);
+  if(buttonText == \"Start\")
+  {
+    getValue(\"RADIO_BOX_COMMAND\",\"number\",stat);
+    if(stat == 0)
+    {
+      command = \"--statistics=subband\";
+    }
+    else if(stat == 1)
+    {
+      command = \"--statistics=beamlet\";
+    }
+    else if(stat == 2)
+    {
+      command = \"--xcstatistics\";
+    }
+    getValue(\"TEXT_FIELD_MASK\",\"text\",tempText);
+    if(strlen(tempText) > 0)
+    {
+      command = command + \" --select=\" + tempText;
+    }
+    
+    getValue(\"TEXT_FIELD_INTEGRATIONTIME\",\"text\",tempText);
+    command = command + \" --integration=\" + tempText;
+
+    getValue(\"TEXT_FIELD_DURATION\",\"text\",tempText);
+    command = command + \" --duration=\" + tempText;
+
+    getValue(\"TEXT_FIELD_DIRECTORY\",\"text\",tempText);
+    if(strlen(tempText) > 0)
+    {
+      command = command + \" --directory=\" + tempText;
+    }
+
+    DebugN(\"command:\",command);
+    dpSet(datapoint + \".command\",command);
+    setValue(\"PUSH_BUTTON_STARTSTOP\",\"text\",\"Stop\");
+  }
+  else
+  {
+    dpSet(datapoint + \".command\",\"stop\");
+    setValue(\"PUSH_BUTTON_STARTSTOP\",\"text\",\"Start\");
+  }
+}" 0
+ E E E
+2 2018
+"PRIMITIVE_TEXT1"
+""
+1 63 364 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+838 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 0 0 1 E U  0 E 22 200 22 200
+1 2 2 "s" 0 0 0 192 0 0  22 200 1
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+"" 1
+LANG:1 16 Output directory
+14 2019
+"TEXT_FIELD_DIRECTORY"
+""
+1 22.00000000000001 223 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+840 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  22.00000000000001 223 613.9999999999999 252
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"TEXT_FIELD_DURATION\",\"text\",\"60\");
+}" 0
+ E
+13 2020
+"PUSH_BUTTON_BROWSE"
+""
+1 622 223 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+841 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  622 223 692 250
+
+T 
+1
+LANG:1 9 Browse...
+"main()
+{
+  int x;
+  string f;
+  x=folderSelector(f);
+  if(x==1)
+  {
+    setValue(\"TEXT_FIELD_DIRECTORY\",\"text\",f);
+  }
+}" 0
+ E E E
+25 2021
+"TABLE_STATUS"
+""
+1 19 440 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+869 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  19 440 919 722
+EE 0 0 1 1 16 "#1" 107 1 0 "s" 1
+LANG:1 2 #1
+E
+1
+LANG:1 0 
+
+870 
+17 17 "status" 1 1
+LANG:1 6 status
+"?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 "?" 0 10 84
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+"" 1 2 1 1 8
+1 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
