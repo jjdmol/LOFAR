@@ -26,6 +26,7 @@
 #define RSPCTL_H_
 
 #include "RSP_Protocol.ph"
+#include "RSPFE_Protocol.ph"
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <bitset>
@@ -38,271 +39,455 @@
 namespace rspctl
 {
 
-  /**
-   * Base class for control commands towards the RSPDriver.
-   */
-  class Command
-    {
-    public:
-      virtual ~Command() {}
-
-      /**
-       * Send the command to the RSPDriver
-       */
-      virtual void send(GCFPortInterface& port) = 0;
-
-      /**
-       * Check the acknowledgement sent by the RSPDriver.
-       */
-      virtual GCFEvent::TResult ack(GCFEvent& e) = 0;
-
-      /**
-       * Set seletable.
-       */
-      void setSelectable(bool selectable) { m_selectable = selectable; }
-
-      /**
-       * Get selectable.
-       */
-       bool getSelectable() { return m_selectable; }
-
-      /**
-       * Set selection.
-       */
-      void setSelect(std::list<int> select) { m_select = select; }
-
-      /**
-       * Get the mask (MAX_N_RCUS bits).
-       */
-      std::bitset<MAX_N_RCUS> getRCUMask() const
-	{
-	  std::bitset<MAX_N_RCUS> mask;
-
-	  mask.reset();
-	  std::list<int>::const_iterator it;
-	  int count = 0; // limit to ndevices
-	  for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
-	    if (count >= get_ndevices()) break;
-	    if (*it < MAX_N_RCUS) mask.set(*it);
-	  }
-
-	  return mask;
-	}
-
-      /**
-       * Get the mask (MAX_N_TDS bits).
-       */
-      std::bitset<MAX_N_TDS> getTDMask() const
-	{
-	  std::bitset<MAX_N_TDS> mask;
-
-	  mask.reset();
-	  std::list<int>::const_iterator it;
-	  int count = 0; // limit to ndevices
-	  for (it = m_select.begin(); it != m_select.end(); ++it, ++count) {
-	    if (count >= get_ndevices()) break;
-	    if (*it < MAX_N_TDS) mask.set(*it);
-	  }
-
-	  return mask;
-	}
-
-      /**
-       * Set mode (true == get, false = set)
-       */
-      void setMode(bool get) { m_get = get; }
-
-      /**
-       * Get mode
-       */
-      bool getMode() const { return m_get; }
-
-      /**
-       * Set ndevices.
-       */
-      void set_ndevices(int ndevices) { m_ndevices = ndevices; }
-
-      /**
-       * Get ndevices.
-       */
-      int get_ndevices() const { return m_ndevices; }
-
-    protected:
-      Command() : m_get(true), m_selectable(true), m_ndevices(0) {}
-
-    private:
-      std::list<int> m_select;
-      bool           m_get; // get or set
-      bool           m_selectable; // is selection possible?
-      int            m_ndevices;
-    };
-
-  class WeightsCommand : public Command
-    {
-    public:
-      WeightsCommand();
-      virtual ~WeightsCommand() {}
-      virtual void send(GCFPortInterface& port);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-      void setValue(double value) { m_value = value; }
-    private:
-      double m_value;
-    };
-
-  class SubbandsCommand : public Command
-    {
-    public:
-      SubbandsCommand();
-      virtual ~SubbandsCommand() {}
-      virtual void send(GCFPortInterface& port);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-      void setSubbandList(std::list<int> subbandlist) { m_subbandlist = subbandlist; }
-    private:
-      std::list<int> m_subbandlist;
-    };
-
-  class RCUCommand : public Command
-    {
-    public:
-      RCUCommand();
-      virtual ~RCUCommand() {}
-      virtual void send(GCFPortInterface& port);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-
-      void setControl(uint8 control) { m_control = control; }
-    private:
-      uint8 m_control;
-    };
-
-  class WGCommand : public Command
-    {
-    public:
-      WGCommand();
-      virtual ~WGCommand() {}
-      virtual void send(GCFPortInterface& port);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-      void setFrequency(double frequency) { m_frequency = frequency; }
-      void setPhase(int phase) { m_phase = phase; }
-      void setAmplitude(double amplitude) { m_amplitude = (uint8)(amplitude*(double)(1<<7)/100.0); }
-    private:
-      double m_frequency;
-      uint8  m_phase;
-      uint8  m_amplitude;
-    };
-
-  class StatusCommand : public Command
-    {
-    public:
-      StatusCommand();
-      virtual ~StatusCommand() {}
-      virtual void send(GCFPortInterface& port);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-    private:
-    };
-
-  class StatisticsCommand : public Command
-    {
-    public:
-      StatisticsCommand();
-      virtual ~StatisticsCommand() {}
-      virtual void send(GCFPortInterface& port);
-      void plot_statistics(blitz::Array<double, 2>& stats, const RTC::Timestamp& timestamp);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-      void setType(uint8 type) { m_type = type; }
-    private:
-      uint8 m_type;
-    };
-
-  class XCStatisticsCommand : public Command
-    {
-    public:
-      XCStatisticsCommand();
-      virtual ~XCStatisticsCommand() {}
-      virtual void send(GCFPortInterface& port);
-      void plot_xcstatistics(blitz::Array<std::complex<double>, 4>& stats, const RTC::Timestamp& timestamp);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-    private:
-    };
-
-  class ClocksCommand : public Command
-    {
-    public:
-      ClocksCommand();
-      virtual ~ClocksCommand() {}
-      virtual void send(GCFPortInterface& port);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-
-      void setClock(uint32 clock) { m_clock = clock; }
-    private:
-      uint32 m_clock;
-    };
-
-  class VersionCommand : public Command
-    {
-    public:
-      VersionCommand();
-      virtual ~VersionCommand() {}
-      virtual void send(GCFPortInterface& port);
-      virtual GCFEvent::TResult ack(GCFEvent& e);
-    private:
-    };
+/**
+ * Base class for control commands towards the RSPDriver.
+ */
+class Command
+{
+public:
+  virtual ~Command()
+  {}
 
   /**
-   * Controller class for rspctl
+   * Send the command to the RSPDriver
    */
-  class RSPCtl : public GCFTask
+  virtual void send() = 0;
+
+  /**
+   * rspctl is stopped. perform cleanup code here
+   */
+  virtual void stop()
+  {
+  }
+
+  /**
+   * Check the acknowledgement sent by the RSPDriver.
+   */
+  virtual GCFEvent::TResult ack(GCFEvent& e) = 0;
+
+  /**
+   * Set seletable.
+   */
+  void setSelectable(bool selectable)
+  {
+    m_selectable = selectable;
+  }
+
+  /**
+   * Get selectable.
+   */
+  bool getSelectable()
+  {
+    return m_selectable;
+  }
+
+  /**
+   * Set selection.
+   */
+  void setSelect(std::list<int> select)
+  {
+    m_select = select;
+  }
+
+  /**
+   * Get the mask (MAX_N_RCUS bits).
+   */
+  std::bitset<MAX_N_RCUS> getRCUMask() const
+  {
+    std::bitset<MAX_N_RCUS> mask;
+
+    mask.reset();
+    std::list<int>::const_iterator it;
+    int count = 0; // limit to ndevices
+    for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
     {
-    public:
+      if (count >= get_ndevices())
+        break;
+      if (*it < MAX_N_RCUS)
+        mask.set(*it);
+    }
 
-      /**
-       * The constructor of the RSPCtl task.
-       * @param name The name of the task. The name is used for looking
-       * up connection establishment information using the GTMNameService and
-       * GTMTopologyService classes.
-       */
-      RSPCtl(string name, int argc, char** argv);
-      virtual ~RSPCtl();
+    return mask;
+  }
 
-      // state methods
+  /**
+   * Get the mask (MAX_N_TDS bits).
+   */
+  std::bitset<MAX_N_TDS> getTDMask() const
+  {
+    std::bitset<MAX_N_TDS> mask;
 
-      /**
-       * The initial state. In this state a connection with the RSP
-       * driver is attempted. When the connection is established,
-       * a transition is made to the connected state.
-       */
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+    mask.reset();
+    std::list<int>::const_iterator it;
+    int count = 0; // limit to ndevices
+    for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
+    {
+      if (count >= get_ndevices())
+        break;
+      if (*it < MAX_N_TDS)
+        mask.set(*it);
+    }
 
-      /**
-       * In this state the command is sent and the acknowledge handled.
-       * Any relevant output is printed.
-       */
-      GCFEvent::TResult docommand(GCFEvent& e, GCFPortInterface &p);
+    return mask;
+  }
 
-      /**
-       * Start the controller main loop.
-       */
-      void mainloop();
+  /**
+   * Set mode (true == get, false = set)
+   */
+  void setMode(bool get
+                )
+  {
+    m_get = get
+              ;
+  }
 
-    private:
-      // private methods
-      Command* parse_options(int argc, char** argv);
+  /**
+   * Get mode
+   */
+  bool getMode() const
+  {
+    return m_get;
+  }
 
-    private:
-      // ports
-      GCFPort m_server;
+  /**
+   * Set ndevices.
+   */
+  void set_ndevices(int ndevices)
+  {
+    m_ndevices = ndevices;
+  }
 
-      // the command to execute
-      Command* m_command;
+  /**
+   * Get ndevices.
+   */
+  int get_ndevices() const
+  {
+    return m_ndevices;
+  }
+  
+  virtual void logMessage(ostream& stream, const string& message)
+  {
+    stream << message << endl;
+  }
 
-      // dimensions of the connected hardware
-      int m_nrcus;
-      int m_nrspboards;
-      int m_ntdboards;
+protected:
+  explicit Command(GCFPortInterface& port) : 
+    m_rspport(port),
+    m_select(),
+    m_get(true), 
+    m_selectable(true), 
+    m_ndevices(0)
+  {}
+  Command(); // no default construction allowed
 
-      // commandline parameters
-      int    m_argc;
-      char** m_argv;
-    };
+protected:
+  GCFPortInterface& m_rspport;
+
+private:
+  std::list<int> m_select;
+  bool           m_get; // get or set
+  bool           m_selectable; // is selection possible?
+  int            m_ndevices;
+};
+
+class FECommand : public Command
+{
+public:
+  virtual ~FECommand()
+  {}
+
+  void setFrontEnd(string frontend)
+  {
+    string::size_type sep=frontend.find(':');
+    m_host = frontend.substr(0,sep);
+    m_port = atoi(frontend.substr(sep+1).c_str());
+  }
+  
+  bool isFrontEndSet()
+  {
+    return (m_port != 0 && m_host.length() > 0);
+  }
+  
+  bool isConnected(GCFPortInterface& port)
+  {
+    return (&port == &m_feClient && m_feClient.isConnected());
+  }
+  
+  void connect(GCFTask& task)
+  {
+    m_feClient.init(task, "client", GCFPortInterface::SAP, RSPFE_PROTOCOL);
+    m_feClient.setHostName(m_host);
+    m_feClient.setPortNumber(m_port);
+    m_feClient.open();
+  }
+  
+  virtual void logMessage(ostream& stream, const string& message)
+  {
+    if(m_feClient.isConnected())
+    {
+      RSPFEStatusUpdateEvent statusUpdateEvent;
+      statusUpdateEvent.status = message;
+      m_feClient.send(statusUpdateEvent);
+    }
+    stream << message << endl;
+  }
+  
+protected:
+  explicit FECommand(GCFPortInterface& port) : Command(port),m_host(""),m_port(0),m_feClient()
+  {}
+  FECommand(); // no default construction allowed
+private:
+  string m_host;
+  uint16 m_port;
+  GCFTCPPort m_feClient;
+};
+
+class WeightsCommand : public Command
+{
+public:
+  WeightsCommand(GCFPortInterface& port);
+  virtual ~WeightsCommand()
+  {}
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+  void setValue(double value)
+  {
+    m_value = value;
+  }
+private:
+  double m_value;
+};
+
+class SubbandsCommand : public Command
+{
+public:
+  SubbandsCommand(GCFPortInterface& port);
+  virtual ~SubbandsCommand()
+  {}
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+  void setSubbandList(std::list<int> subbandlist)
+  {
+    m_subbandlist = subbandlist;
+  }
+private:
+  std::list<int> m_subbandlist;
+};
+
+class RCUCommand : public Command
+{
+public:
+  RCUCommand(GCFPortInterface& port);
+  virtual ~RCUCommand()
+  {}
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+
+  void setControl(uint8 control)
+  {
+    m_control = control;
+  }
+private:
+  uint8 m_control;
+};
+
+class WGCommand : public Command
+{
+public:
+  WGCommand(GCFPortInterface& port);
+  virtual ~WGCommand()
+  {}
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+  void setFrequency(double frequency)
+  {
+    m_frequency = frequency;
+  }
+  void setPhase(int phase)
+  {
+    m_phase = phase;
+  }
+  void setAmplitude(double amplitude)
+  {
+    m_amplitude = (uint8)(amplitude*(double)(1<<7)/100.0);
+  }
+private:
+  double m_frequency;
+  uint8  m_phase;
+  uint8  m_amplitude;
+};
+
+class StatusCommand : public Command
+{
+public:
+  StatusCommand(GCFPortInterface& port);
+  virtual ~StatusCommand()
+  {}
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+private:
+};
+
+class StatisticsBaseCommand : public FECommand
+{
+public:
+  StatisticsBaseCommand(GCFPortInterface& port);
+  virtual ~StatisticsBaseCommand()
+  {
+  }
+  void setDuration(uint16 duration)
+  {
+    m_duration=duration;
+    m_endTime.setNow((double)m_duration);
+  }
+  void setIntegration(uint16 integration)
+  {
+    if(integration > 0)
+      m_integration=integration;
+  }
+  void setDirectory(const char* dir)
+  {
+    m_directory = dir;
+    if(dir[strlen(dir)-1] != '/')
+    {
+      m_directory += "/";
+    }
+  }
+protected:
+  uint32 m_subscriptionHandle;
+  uint16 m_duration;
+  RTC::Timestamp m_endTime;
+  uint16 m_integration;
+  uint16 m_nseconds;
+  string m_directory;
+private:
+};
+
+class StatisticsCommand : public StatisticsBaseCommand
+{
+public:
+  StatisticsCommand(GCFPortInterface& port);
+  virtual ~StatisticsCommand()
+  {
+  }
+  virtual void send();
+  virtual void stop();
+  void capture_statistics(blitz::Array<double, 2>& stats, const RTC::Timestamp& timestamp);
+  void plot_statistics(blitz::Array<double, 2>& stats, const RTC::Timestamp& timestamp);
+  void dump_statistics(blitz::Array<double, 2>& stats, const RTC::Timestamp& timestamp);
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+  void setType(uint8 type)
+  {
+    m_type = type;
+  }
+private:
+  uint8 m_type;
+  blitz::Array<double, 2> m_stats;
+};
+
+class XCStatisticsCommand : public StatisticsBaseCommand
+{
+public:
+  XCStatisticsCommand(GCFPortInterface& port);
+  virtual ~XCStatisticsCommand()
+  {
+  }
+  virtual void send();
+  virtual void stop();
+  void capture_xcstatistics(blitz::Array<std::complex<double>, 4>& stats, const RTC::Timestamp& timestamp);
+  void plot_xcstatistics(blitz::Array<std::complex<double>, 4>& stats, const RTC::Timestamp& timestamp);
+  void dump_xcstatistics(blitz::Array<std::complex<double>, 4>& stats, const RTC::Timestamp& timestamp);
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+private:
+  blitz::Array<std::complex<double>, 4> m_stats;
+};
+
+class ClocksCommand : public Command
+{
+public:
+  ClocksCommand(GCFPortInterface& port);
+  virtual ~ClocksCommand()
+  {}
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+
+  void setClock(uint32 clock)
+  {
+    m_clock = clock;
+  }
+private:
+  uint32 m_clock;
+};
+
+class VersionCommand : public Command
+{
+public:
+  VersionCommand(GCFPortInterface& port);
+  virtual ~VersionCommand()
+  {}
+  virtual void send();
+  virtual GCFEvent::TResult ack(GCFEvent& e);
+private:
+};
+
+/**
+ * Controller class for rspctl
+ */
+class RSPCtl : public GCFTask
+{
+public:
+
+  /**
+   * The constructor of the RSPCtl task.
+   * @param name The name of the task. The name is used for looking
+   * up connection establishment information using the GTMNameService and
+   * GTMTopologyService classes.
+   */
+  RSPCtl(string name, int argc, char** argv);
+  virtual ~RSPCtl();
+
+  // state methods
+
+  /**
+   * The initial state. In this state a connection with the RSP
+   * driver is attempted. When the connection is established,
+   * a transition is made to the connected state.
+   */
+  GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+
+  /**
+   * In this state the command is sent and the acknowledge handled.
+   * Any relevant output is printed.
+   */
+  GCFEvent::TResult docommand(GCFEvent& e, GCFPortInterface &p);
+
+  /**
+   * Start the controller main loop.
+   */
+  void mainloop();
+
+private:
+  // private methods
+  Command* parse_options(int argc, char** argv);
+  std::list<int> strtolist(const char* str, int max);
+  void logMessage(ostream& stream, const string& message);
+  
+private:
+  // ports
+  GCFPort m_server;
+
+  // the command to execute
+  Command* m_command;
+
+  // dimensions of the connected hardware
+  int m_nrcus;
+  int m_nrspboards;
+  int m_ntdboards;
+
+  // commandline parameters
+  int    m_argc;
+  char** m_argv;
+};
 
 };
 
