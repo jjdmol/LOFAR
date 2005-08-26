@@ -39,14 +39,14 @@ MeqJonesMul2::MeqJonesMul2 (const MeqJonesExpr& left,
 : itsLeft  (left),
   itsRight (right)
 {
-  itsLeft.incrNParents();
-  itsRight.incrNParents();
+  addChild (itsLeft);
+  addChild (itsRight);
 }
 
 MeqJonesMul2::~MeqJonesMul2()
 {}
 
-MeqJonesResult MeqJonesMul2::getResult (const MeqRequest& request)
+MeqJonesResult MeqJonesMul2::getJResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 

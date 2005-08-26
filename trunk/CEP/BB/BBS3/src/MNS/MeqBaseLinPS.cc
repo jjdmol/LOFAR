@@ -35,12 +35,18 @@ namespace LOFAR {
 MeqBaseLinPS::MeqBaseLinPS (const MeqExpr& dft, MeqPointSource* source)
 : itsDFT    (dft),
   itsSource (source)
-{}
+{
+  addChild (itsDFT);
+  addChild (itsSource->getI());
+  addChild (itsSource->getQ());
+  addChild (itsSource->getU());
+  addChild (itsSource->getV());
+}
 
 MeqBaseLinPS::~MeqBaseLinPS()
 {}
 
-MeqJonesResult MeqBaseLinPS::getResult (const MeqRequest& request)
+MeqJonesResult MeqBaseLinPS::getJResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 

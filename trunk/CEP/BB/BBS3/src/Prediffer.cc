@@ -606,6 +606,38 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
       }
     }
   }
+  // Now set the levels of all nodes in the tree.
+  // The top nodes have level 0; lower nodes have 1, 2, etc..
+  int nrLev = -1;
+  for (uint i=0; i<itsExpr.size(); ++i) {
+    if (! itsExpr[i].isNull()) {
+      nrLev = std::max (nrLev, itsExpr[i].setLevel(0));
+    }
+  }
+  nrLev++;
+  ASSERT (nrLev > 0);
+  itsPrecalcNodes.resize (nrLev);
+  // Find the nodes to be precalculated at each level.
+  // That is not needed for the root nodes (the baselines).
+  // The nodes used by the baselines are always precalculated (even if
+  // having one parent).
+  // It may happen that a station is used by only one baseline. Calculating
+  // such a baseline is much more work if the station was not precalculated.
+  std::vector<std::vector<MeqExprRep*> > precalcNodes(nrLev);
+  for (int level=1; level<nrLev; ++level) {
+    std::vector<MeqExprRep*>& nodes = itsPrecalcNodes[level];
+    nodes.resize (0);
+    for (uint i=0; i<itsExpr.size(); ++i) {
+      if (! itsExpr[i].isNull()) {
+	itsExpr[i].getCachingNodes (nodes, level, false);
+      }
+    }
+  }
+  cerr << "#levels=" << nrLev << endl;
+  for (int i=0; i<nrLev; ++i) {
+    cerr << "#expr on level " << i << " is "
+	 << itsPrecalcNodes[i].size() << endl;
+  }
 }
 
 
@@ -880,6 +912,19 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
     
     MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
     MeqRequest request(domain, nrchan, 1, itsNrScid);
+
+    // Loop through expressions to be precalculated.
+    // We can parallellize them at each level.
+    // Level 0 is formed by itsExpr which are not calculated here.
+    for (int level=itsPrecalcNodes.size()-1; level>0; --level) {
+      vector<MeqExprRep*> exprs = itsPrecalcNodes[level];
+      // parallel
+      for (uint i=0; i<exprs.size(); ++i) {
+	exprs[i]->precalculate (request);
+      }
+      // end parallel
+    }
+
     // Loop through all baselines and fill its equations if selected.
     //static NSTimer timer("Prediffer::fillFitter", true);
     //timer.start();
@@ -1098,6 +1143,18 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
     if (calcDeriv) {
       request = MeqRequest(domain, nrchan, 1, itsNrScid);
     }
+    // Loop through expressions to be precalculated.
+    // We can parallellize them at each level.
+    // Level 0 is formed by itsExpr which are not calculated here.
+    for (int level=itsPrecalcNodes.size()-1; level>0; --level) {
+      vector<MeqExprRep*> exprs = itsPrecalcNodes[level];
+      // parallel
+      for (uint i=0; i<exprs.size(); ++i) {
+	exprs[i]->precalculate (request);
+      }
+      // end parallel
+    }
+
     for (unsigned int bl=0; bl<itsNrBl; bl++)
     {
       uInt ant1 = itsAnt1[bl];
@@ -1219,6 +1276,7 @@ void Prediffer::getData (Array<Complex>& dataArr, Array<Bool>& flagArr)
   for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
   {
     unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
+
     for (unsigned int bl=0; bl<itsNrBl; bl++)
     {
       // Get pointer to correct data part.
@@ -1283,6 +1341,17 @@ void Prediffer::saveResidualData (bool subtract, bool write)
     
     MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
     MeqRequest request(domain, nrchan, 1, itsNrScid);
+    // Loop through expressions to be precalculated.
+    // We can parallellize them at each level.
+    // Level 0 is formed by itsExpr which are not calculated here.
+    for (int level=itsPrecalcNodes.size()-1; level>0; --level) {
+      vector<MeqExprRep*> exprs = itsPrecalcNodes[level];
+      // parallel
+      for (uint i=0; i<exprs.size(); ++i) {
+	exprs[i]->precalculate (request);
+      }
+      // end parallel
+    }
     // Loop through all baselines and subtract the predict from the data.
     for (uint bl=0; bl<itsNrBl; ++bl) {
       uint ant1 = itsAnt1[bl];

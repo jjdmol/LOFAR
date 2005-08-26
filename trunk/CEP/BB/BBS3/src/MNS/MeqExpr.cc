@@ -31,10 +31,86 @@
 
 namespace LOFAR {
 
+MeqExprRep::MeqExprRep()
+  : itsCount    (0),
+    itsMinLevel (100000000),     // very high number
+    itsMaxLevel (-1),
+    itsLevelDone(-1),
+    itsResult   (0),
+    itsResVec   (0),
+    itsNParents (0),
+    itsReqId    (InitMeqRequestId)
+{}
+
 MeqExprRep::~MeqExprRep()
 {
   delete itsResult;
   delete itsResVec;
+}
+
+void MeqExprRep::addChild (MeqExpr& child)
+{
+  MeqExprRep* childRep = child.itsRep;
+  ASSERT (childRep != 0);
+  itsChildren.push_back (childRep);
+  childRep->incrNParents();
+}
+
+int MeqExprRep::setLevel (int level)
+{
+  if (level < itsMinLevel) itsMinLevel = level;
+  int nrLev = itsMaxLevel;
+  if (level > itsMaxLevel) {
+    nrLev = level;
+    itsMaxLevel = level;
+    for (uint i=0; i<itsChildren.size(); ++i) {
+      nrLev = std::max(nrLev, itsChildren[i]->setLevel (level+1));
+    }
+  }
+  return nrLev;
+}
+
+void MeqExprRep::clearDone()
+{
+  itsLevelDone = -1;
+  for (uint i=0; i<itsChildren.size(); ++i) {
+    // Avoid that a child is cleared multiple times.
+    if (itsChildren[i]->levelDone() >= 0) {
+      itsChildren[i]->clearDone();
+    }
+  }
+}
+
+void MeqExprRep::getCachingNodes (std::vector<MeqExprRep*>& nodes,
+				  int level, bool all)
+{
+  if (itsLevelDone != level) {
+    if (itsMaxLevel == level) {
+      // Possibly add this node.
+      if (all  ||  itsNParents > 1) {
+	nodes.push_back (this);
+      }
+    } else if (itsMaxLevel < level) {
+      // Handling the children is needed.
+      for (uint i=0; i<itsChildren.size(); ++i) {
+	if (itsChildren[i]->levelDone() != level) {
+	  itsChildren[i]->getCachingNodes (nodes, level, all);
+	}
+      }
+    }
+    itsLevelDone = level;
+  }
+}
+
+void MeqExprRep::precalculate (const MeqRequest& request)
+{
+  MeqResultVec result;
+  calcResultVec (request, result, true);
+  DBGASSERT (itsResVec);
+  if (itsResVec->nresult() == 1) {
+    if (!itsResult) itsResult = new MeqResult;
+    *itsResult = (*itsResVec)[0];
+  }
 }
 
 const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
@@ -46,6 +122,8 @@ const MeqResult& MeqExprRep::calcResult (const MeqRequest& request,
     result = getResult (request);
     return result;
   }
+  // It should never come past this.
+  ASSERT(false);
 
   // Use a cache.
   // Synchronize the calculations.
@@ -73,14 +151,17 @@ MeqResult MeqExprRep::getResult (const MeqRequest&)
 }
 
 const MeqResultVec& MeqExprRep::calcResultVec (const MeqRequest& request,
-					       MeqResultVec& result)
+					       MeqResultVec& result,
+					       bool useCache)
 {
   // The value has to be calculated.
   // Do not cache if no multiple parents.
-  if (itsNParents <= 1) {
+  if (itsNParents <= 1  &&  !useCache) {
     result = getResultVec (request);
     return result;
   }
+  // It should never come past this (unless called from precalculate).
+  ASSERT(useCache);
 
   // Use a cache.
   // Synchronize the calculations.
@@ -131,12 +212,13 @@ MeqExpr& MeqExpr::operator= (const MeqExpr& that)
 
 
 
-MeqExprToComplex::MeqExprToComplex (MeqExpr real, MeqExpr imag)
+MeqExprToComplex::MeqExprToComplex (const MeqExpr& real,
+				    const MeqExpr& imag)
   : itsReal(real),
     itsImag(imag)
 {
-  itsReal.incrNParents();
-  itsImag.incrNParents();
+  addChild (itsReal);
+  addChild (itsImag);
 }
 
 MeqExprToComplex::~MeqExprToComplex()
@@ -169,12 +251,13 @@ MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
 
 
 
-MeqExprAPToComplex::MeqExprAPToComplex (MeqExpr ampl, MeqExpr phase)
+MeqExprAPToComplex::MeqExprAPToComplex (const MeqExpr& ampl,
+					const MeqExpr& phase)
   : itsAmpl (ampl),
     itsPhase(phase)
 {
-  itsAmpl.incrNParents();
-  itsPhase.incrNParents();
+  addChild (itsAmpl);
+  addChild (itsPhase);
 }
 
 MeqExprAPToComplex::~MeqExprAPToComplex()

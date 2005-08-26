@@ -41,15 +41,15 @@ MeqJonesMul3::MeqJonesMul3 (const MeqJonesExpr& left,
   itsMid   (mid),
   itsRight (right)
 {
-  itsLeft.incrNParents();
-  itsMid.incrNParents();
-  itsRight.incrNParents();
+  addChild (itsLeft);
+  addChild (itsMid);
+  addChild (itsRight);
 }
 
 MeqJonesMul3::~MeqJonesMul3()
 {}
 
-MeqJonesResult MeqJonesMul3::getResult (const MeqRequest& request)
+MeqJonesResult MeqJonesMul3::getJResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 

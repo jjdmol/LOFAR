@@ -35,16 +35,16 @@ MeqJonesNode::MeqJonesNode (const MeqExpr& elem11, const MeqExpr& elem12,
   itsExpr21 (elem21),
   itsExpr22 (elem22)
 {
-  itsExpr11.incrNParents();
-  itsExpr12.incrNParents();
-  itsExpr21.incrNParents();
-  itsExpr22.incrNParents();
+  addChild (itsExpr11);
+  addChild (itsExpr12);
+  addChild (itsExpr21);
+  addChild (itsExpr22);
 }
 
 MeqJonesNode::~MeqJonesNode()
 {}
 
-MeqJonesResult MeqJonesNode::getResult (const MeqRequest& request)
+MeqJonesResult MeqJonesNode::getJResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 

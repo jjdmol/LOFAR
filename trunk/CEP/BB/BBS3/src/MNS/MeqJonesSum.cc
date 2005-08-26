@@ -33,14 +33,14 @@ namespace LOFAR {
     : itsExpr (expr)
   {
     for (uint i=0; i<itsExpr.size(); ++i) {
-      itsExpr[i].incrNParents();
+      addChild (itsExpr[i]);
     }
   }
 
   MeqJonesSum::~MeqJonesSum()
   {}
 
-  MeqJonesResult MeqJonesSum::getResult (const MeqRequest& request)
+  MeqJonesResult MeqJonesSum::getJResult (const MeqRequest& request)
   {
     PERFPROFILE(__PRETTY_FUNCTION__);
 

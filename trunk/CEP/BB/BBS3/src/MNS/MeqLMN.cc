@@ -35,7 +35,10 @@ namespace LOFAR {
 
 MeqLMN::MeqLMN (MeqPointSource* source)
 : itsSource    (source)
-{}
+{
+  addChild (itsSource->getRa());
+  addChild (itsSource->getDec());
+}
 
 MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
 {

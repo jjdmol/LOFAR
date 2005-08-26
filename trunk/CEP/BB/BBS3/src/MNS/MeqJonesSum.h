@@ -48,7 +48,7 @@ public:
   virtual ~MeqJonesSum();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getResult (const MeqRequest&);
+  virtual MeqJonesResult getJResult (const MeqRequest&);
 
 private:
   std::vector<MeqJonesExpr> itsExpr;
