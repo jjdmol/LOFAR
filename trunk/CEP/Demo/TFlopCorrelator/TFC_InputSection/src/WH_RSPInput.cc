@@ -48,19 +48,20 @@ void* WriteToBufferThread(void* arguments)
   bool readnew = true;
   bool firstloop = true;
 
-  // buffer for incoming packet
+  // buffer for incoming rsp data
   char recvframe[args->FrameSize];
 
   // define a block of dummy data
-  char dummyblock[args->nrPacketsInFrame*args->SubbandSize];
-  memset(dummyblock,0,args->nrPacketsInFrame*args->SubbandSize);
+  SubbandType dummyblock[args->nrPacketsInFrame];
+  memset(dummyblock, 0, args->nrPacketsInFrame*sizeof(SubbandType));
 
   // used for debugging
-  int cnt_missed, cnt_old, cnt_rewritten = 0;
+  int cnt_missed, cnt_rewritten = 0;
 
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
+  // init Transportholder
   ASSERTSTR(args->Connection->init(), "Could not init TransportHolder");
 
   while(1) {
@@ -97,22 +98,16 @@ void* WriteToBufferThread(void* arguments)
       /* old packet received 
 	 Packet can be saved when its dummy is available in cyclic buffer. 
          Otherwise this packet will be lost */
-     
-      // overwrite its previous created dummy
-      int idx; 
+
+      int idx;
       for (int p=0; p<args->nrPacketsInFrame; p++) {
-        for (int s=0; s<args->nrSubbandsInPacket; s++) {
-          idx = (p*args->EPAPacketSize) + args->EPAHeaderSize + (s*args->SubbandSize);
-          if (!args->BufControl[s]->rewriteElements(&recvframe[idx], actualstamp, 1)) {
-            cnt_old += args->nrPacketsInFrame;
-	    //cout << cnt_old << " delayed packets lost." << endl;  // debugging
-	    //force a break out these loops
-            p=args->nrPacketsInFrame;
-            break;  
-	  }
-        }
+        idx = (p*args->EPAPacketSize) + args->EPAHeaderSize;
         cnt_rewritten++;
-        actualstamp++;
+        if (!args->BufControl->rewriteElements((SubbandType*)&recvframe[idx], actualstamp)) {
+          cnt_rewritten--;
+          break;  
+	}
+        actualstamp++;   
       }
       //cout << cnt_rewritten << " delayed packets recovered." << endl;  // debugging
 
@@ -123,9 +118,7 @@ void* WriteToBufferThread(void* arguments)
     else if (nextstamp + (args->nrPacketsInFrame - 1) < actualstamp) {
       // missed a packet so create dummy
       actualstamp = nextstamp;
-      for (int s=0; s<args->nrSubbandsInPacket; s++) {
-        args->BufControl[s]->writeElements(dummyblock, actualstamp,args->nrPacketsInFrame, 1);
-      }
+      args->BufControl->writeDummy((SubbandType*)dummyblock, actualstamp, args->nrPacketsInFrame);
       cnt_missed += args->nrPacketsInFrame;
       //cout << "Dummy created for " << cnt_missed << " missed packets." << endl; // debugging
       // read same frame again in next loop
@@ -137,10 +130,8 @@ void* WriteToBufferThread(void* arguments)
       // expected packet received so write data into corresponding buffer
       int idx;
       for (int p=0; p<args->nrPacketsInFrame; p++) {
-        for (int s=0; s<args->nrSubbandsInPacket; s++) {
-          idx = (p*args->EPAPacketSize) + args->EPAHeaderSize + (s*args->SubbandSize);
-          args->BufControl[s]->writeElements(&recvframe[idx], actualstamp, 1, 0);
-        }
+        idx = (p*args->EPAPacketSize) + args->EPAHeaderSize;
+        args->BufControl->writeElements((SubbandType*)&recvframe[idx], actualstamp);
 	actualstamp++;
       }
       // read new frame in next loop
@@ -186,10 +177,11 @@ WH_RSPInput::WH_RSPInput(const string& name,
   getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
   getDataManager().setAutoTriggerIn(0, false);
  
-  // create a buffer controller and outgoing dataholder per subband.
-  itsBufControl = new BufferController*[itsNSubbands];
+  // create the buffer controller.
+  itsBufControl = new BufferController(itsCyclicBufferSize, itsNSubbands);
+
+  // create a outgoing dataholder for each subband
   for (int s=0; s < itsNSubbands; s++) {
-    itsBufControl[s] = new BufferController(itsPS);
     snprintf(str, 32, "DH_RSP_out_%d", s);
     getDataManager().addOutDataHolder(s, new DH_RSP(str, itsPS)); 
   }
@@ -213,10 +205,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
 
 WH_RSPInput::~WH_RSPInput() 
 {
-  for (int s=0; s < itsNSubbands; s++) {
-    delete itsBufControl[s];
-  }
-  delete [] itsBufControl;
+  delete itsBufControl;
   delete &itsTH;
 }
 
@@ -281,61 +270,41 @@ void WH_RSPInput::process()
       sleep(1);
 
       // start the buffer and get the stamp at which we need to start reading
-      itsSyncedStamp = itsBufControl[0]->startBufferRead();
-      //      itsSyncedStamp = itsBufControl[0]->getFirstStamp();
-      // build in a delay to let the slaves catch up ?
-      // TODO: we need to skip the first packets
-      //      itsSyncedStamp += itsNPackets * 1500;
-      for (int s = 1; s < itsNSubbands; s++) {
-	itsBufControl[s]->startBufferRead(itsSyncedStamp);
-      }
+      itsSyncedStamp = itsBufControl->startBufferRead();
       cout<<"SyncedStamp on master: "<<itsSyncedStamp<<endl;
+      
+      // we are the master, so send the syncstamp to the slaves
+      // send the syncstamp to the slaves
+      for (int i = 1; i < itsNRSPOutputs; i++) {
+	((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
+	// force the write because autotriggering is off 
+	getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
+      }
+      itsFirstProcessLoop = false;
 
     } else { // not the first loop
       // increase the syncstamp
       itsSyncedStamp += itsNSamplesToCopy;
     }
 
-    // we are the master, so send the syncstamp to the slaves
-    // send the syncstamp to the slaves
-    
-    if (itsFirstProcessLoop) {
-      itsFirstProcessLoop = false;
-      for (int i = 1; i < itsNRSPOutputs; i++) {
-	((DH_RSPSync*)getDataManager().getOutHolder(itsNSubbands + i - 1))->setSyncStamp(itsSyncedStamp);
-	// force the write because autotriggering is off 
-	getDataManager().readyWithOutHolder(itsNSubbands + i - 1);
-      }    
-    }
-
   } else {  // sync slave
 
     if (itsFirstProcessLoop) {
-      //      startThread();
+      // we are a slave so read the syncstamp
       DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
       getDataManager().readyWithInHolder(1);
       dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
       itsSyncedStamp = dhp->getSyncStamp(); 
       cout<<"SyncedStamp on slave: "<<itsSyncedStamp<<endl;
-    } else {
-      itsSyncedStamp += itsNSamplesToCopy;
-    }
-
-    // we are a slave so read the syncstamp
-//     DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
-//     itsSyncedStamp = dhp->getSyncStamp(); 
-    
-    // we need to increment the stamp because it is written only once per second or so
-      //    dhp->incrementStamp(itsNSamplesToCopy);
-
-    if (itsFirstProcessLoop) {
-
-      itsFirstProcessLoop = false;
       
-      for (int s = 0; s < itsNSubbands; s++) {
-	itsBufControl[s]->startBufferRead(itsSyncedStamp);
-      } 
-    }
+      // start the buffer and set the stamp at which we need to start reading
+      itsBufControl->startBufferRead(itsSyncedStamp);
+      itsFirstProcessLoop = false; 
+
+    } else {  //not the first loop
+      // increase the syncstamp
+      itsSyncedStamp += itsNSamplesToCopy;
+    }  
   }
 
   // delay control
@@ -348,21 +317,26 @@ void WH_RSPInput::process()
   /* startstamp is the synced and delay-controlled timestamp to 
      start from in cyclic buffer */
   int invalidcount;
+  vector<SubbandType*> subbandbuffer;
   for (int s=0; s < itsNSubbands; s++) {
-
-    // get outgoing dataholder
     rspDHp = (DH_RSP*)getDataManager().getOutHolder(s);
+    subbandbuffer[s] = (SubbandType*)rspDHp->getBuffer();
+  }
+  // get the data from the cyclic buffer
+  itsBufControl->getElements(subbandbuffer,
+                             invalidcount, 
+                             delayedstamp, 
+                             itsNSamplesToCopy);
 
-    // copy 'itsNSamplesToCopy' subband samples from buffer into outgoing dataholder
-    itsBufControl[s]->getElements(rspDHp->getBuffer(),
-                                  invalidcount, 
-                                  delayedstamp, 
-                                  itsNSamplesToCopy);
-
+  // fill in the outgoing dataholders
+  for (int s=0; s < itsNSubbands; s++) { 
+    rspDHp = (DH_RSP*)getDataManager().getOutHolder(s);
+    
+    // fill in the data
     rspDHp->setStationID(itsStationID);
-    rspDHp->setInvalidCount(invalidcount);  // number of invalid subbands
+    rspDHp->setInvalidCount(invalidcount);
     rspDHp->setTimeStamp(delayedstamp);   
-    //    rspDHp->setDelay(delayDHp->getDelay(itsStationID));
+    //rspDHp->setDelay(delayDHp->getDelay(itsStationID));
 
 #if 0
     // dump the output (for debugging)

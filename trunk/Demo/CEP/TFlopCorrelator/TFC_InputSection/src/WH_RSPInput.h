@@ -39,19 +39,7 @@ namespace LOFAR
   
   typedef struct 
   {
-    char data[8]; // (2 * u16complex)
-  } subbandType;
-
-  typedef struct
-  {
-    //int stationid;
-    int invalid;
-    timestamp_t timestamp;
-  } metadataType;
-
-  typedef struct 
-  {
-    BufferController** BufControl;
+    BufferController* BufControl;
     TransportHolder* Connection; 
     int FrameSize;
     int SubbandSize;
@@ -130,7 +118,7 @@ namespace LOFAR
       int itsEPAHeaderSize;
       int itsEPAPacketSize;
      
-      BufferController** itsBufControl;
+      BufferController* itsBufControl;
   };
 
 } // namespace LOFAR

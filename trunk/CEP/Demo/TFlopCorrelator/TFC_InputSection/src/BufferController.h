@@ -1,4 +1,4 @@
-//#  BufferController.h: template class to control a cyclic buffer.
+//#  BufferController.h: class to control a cyclic buffer containing RSP data
 //#
 //#  Copyright (C) 2000, 2001
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,12 +24,9 @@
 #ifndef TFLOPCORRELATOR_BUFFERCONTROLLER_H
 #define TFLOPCORRELATOR_BUFFERCONTROLLER_H
 
-#include <TFC_InputSection/CyclicBuffer.h>
 #include <TFC_Interface/RSPTimeStamp.h>
 #include <APS/ParameterSet.h>
 
-/* Main purpose of the BufferController class is to control the cyclic buffers of
-   a subband */
 
 namespace LOFAR
 {
@@ -37,12 +34,14 @@ namespace LOFAR
 
 using ACC::APS::ParameterSet;
 
-#define MAX_OFFSET 5
-
+#define MAX_OFFSET  5
+#define MIN_COUNT  10 
+#define MAX_COUNT  (itsBufferSize-10)
+    
 typedef struct 
 {
-  u16complex Xpol;
-  u16complex Ypol;
+  i16complex Xpol;
+  i16complex Ypol;
 } SubbandType;
 
 typedef struct
@@ -51,19 +50,38 @@ typedef struct
   timestamp_t timestamp;
 } MetadataType;
 
+class BufferIndex 
+{
+ public:
+
+  BufferIndex(const int maxidx = 0);
+  
+  void operator+= (int increment);
+  void operator++ (int); 
+  int operator+ (int increment);
+  void operator-= (int decrement);
+  void operator-- (int); 
+  int operator- (BufferIndex& other);
+  bool operator== (BufferIndex& other);
+  
+  int getIndex();
+
+ private:
+  int itsIndex;
+  int itsMaxIndex;
+  void checkIndex();
+};
 
 class BufferController
 {
  public:
  
-   BufferController();
-   BufferController(ParameterSet &ps);
+   BufferController(int buffersize, int nsubbands);
    ~BufferController();
-
-   timestamp_t getFirstStamp();
-   bool getElements(void* buf, int& invalidcount, timestamp_t startstamp, int nelements);
-   bool writeElements(void* buf, timestamp_t rspstamp, int nelements, int invalid);
-   bool rewriteElements(void* buf, timestamp_t startstamp, int nelements);
+   void getElements(vector<SubbandType*> buf, int& invalidcount, timestamp_t startstamp, int nelements);
+   void writeElements(SubbandType* buf, timestamp_t rspstamp);
+   void writeDummy(SubbandType* dum, timestamp_t startstamp, int nelements);
+   bool rewriteElements(SubbandType* buf, timestamp_t startstamp);
    
    // disable overwriting and remember the newest element
    // return the newest element (to be used on the master)
@@ -72,16 +90,38 @@ class BufferController
    void startBufferRead(timestamp_t stamp);
    
   private:
+
+   // the buffers
+   vector<SubbandType*> itsSubbandBuffer;
+   MetadataType* itsMetadataBuffer;
+
+   // index pointers
+   BufferIndex itsHead;
+   BufferIndex itsTail;
+   BufferIndex itsOldHead;
+   BufferIndex itsOldTail;
+
+   int itsBufferSize;
+   int itsNSubbands; 
+
+   // permission to overwrite previous written elements
+   bool itsOverwritingAllowed;
    
-   // Cyclic buffer
-   CyclicBuffer<MetadataType> *itsMetadataBuf;
+   pthread_mutex_t buffer_mutex;    // lock/unlock shared data
+   pthread_cond_t  data_available;  // 'buffer not empty' trigger
+   pthread_cond_t  space_available; // 'buffer not full' trigger
 
-   SubbandType* itsSubbandData;  
+   int getCount();
+   int getWritePtr();
+   int getReadPtr();
+   int setReadOffset(int offset);
+   int setRewriteOffset(int offset);   
+   void releaseWriteBlock();
+   void releaseReadBlock();
+   void releaseRewriteBlock();
+   timestamp_t getOldestStamp();
+   timestamp_t getNewestStamp();
 
-   // ACC parameters interface
-   ParameterSet itsPS;
-    
-    int itsCyclicBufferSize;
 };
 
 
