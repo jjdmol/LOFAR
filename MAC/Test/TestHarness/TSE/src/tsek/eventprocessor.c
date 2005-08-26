@@ -202,6 +202,10 @@ int16     SingleCharMatch(
   char cByte,
   char *pHexString);
 
+static int ConvertArray(char         *pcBuffer,
+                        char         *pcValue,
+                        int           iCodeLength,
+                        struct TType *ptType);
 
 
 /****************************************************************************/
@@ -863,8 +867,17 @@ void ParseReceivedVariables(
           }
           if (ptParameterList->ptThis->ptLengthIndicator)
           {
-            iReducedLength =
-              ptParameterList->ptThis->ptLengthIndicator->iLoopCount;
+            if (ptParameterList->ptThis->ptTypeDef->iKind == ARRAYKIND)
+            {
+              iReducedLength = 
+                ptParameterList->ptThis->ptLengthIndicator->iLoopCount *
+                ptParameterList->ptThis->ptTypeDef->uiSizeOfElement;
+            }
+            else
+            {
+              iReducedLength =
+                ptParameterList->ptThis->ptLengthIndicator->iLoopCount;
+            }
           }
           else
           {
@@ -1079,6 +1092,44 @@ void ParseReceivedVariables(
 
 }
 
+int ConvertArray(
+  char         *pcBuffer,
+  char         *pcValue,
+  int           iCodeLength,
+  struct TType *ptType
+)
+{
+  int   iIndexValue;
+  int   iIndexBuffer;
+  int   i;
+  int   j;
+  uint8 ucByte;
+
+
+  iIndexValue = 0;
+  iIndexBuffer = 2;
+  strcpy(pcBuffer,"0x");
+  for (; iIndexValue < iCodeLength; iIndexValue += ptType->uiSizeOfElement)
+  {
+    for (j=0; j < ptType->uiSizeOfElement; j++)
+    {
+      /* Little Endian... */
+      if (ptType->iEndianess == FALSE)
+      {
+        i = (iIndexValue+(ptType->uiSizeOfElement-j))-1;
+        sprintf(&pcBuffer[iIndexBuffer], "%02X", (uint8) pcValue[i]);
+        iIndexBuffer+=2;
+      }
+      /* Big Endian... */
+      else
+      {
+        sprintf(&pcBuffer[iIndexBuffer], "%02X", (uint8) pcValue[iIndexValue+j]);
+        iIndexBuffer+=2;
+      }
+    }
+  }
+}
+
 int16 ParseReceivedVariable(
   char         *pcValue,
   char         *pcInputStream,
@@ -1100,6 +1151,7 @@ int16 ParseReceivedVariable(
   int16     bErrorFree;
   char     *pErrorString;
   char     *pLogLine;
+  char     *pcNewValue;
   char      ByteString[3];
   
   unsigned char bSingleByte;
@@ -1126,8 +1178,6 @@ int16 ParseReceivedVariable(
     /* The received buffer is smaller than the expected number of bytes.  */
     /* Therefore, adjust the number of to be parsed bytes to a safe limit */
 
-    iParameterLength = iBufferLength;
-
     if (iEndianess == 0x00)
     {
       pLogLine = (char *) malloc(250);
@@ -1139,36 +1189,87 @@ int16 ParseReceivedVariable(
       LogLine("*******************************************");
       free(pLogLine);
     }
+    if (ptTypeDef->iKind != ARRAYKIND)
+    {
+      iParameterLength = iBufferLength;
+    }
+    else
+    {
+      LogLine("Paramter is an array not processing any further");
+      return 0;
+    }
   }
   if (FILEDATAKIND != ptTypeDef->iKind)
   {
-    /* if iEndianess is 0, we have to scan the next n bytes backwards. If    */
-    /* iEndianess != 0, we have to scan the next n bytes forwards.           */
-    if (iEndianess == 0)
+    if (ptTypeDef->iKind == ARRAYKIND)
     {
-      pcInputStream += iParameterLength;
-    }
-  
-    strcpy(pcValue, "0x");
-  
-    i = iParameterLength;
-    while (i > 0)
-    {
-  
-      if (iEndianess == 0)
-        bSingleByte = *(--pcInputStream);
+      if (ptTypeDef->uiSizeOfElement > 1)
+      {
+        ConvertArray(pcValue, pcInputStream, iParameterLength, ptTypeDef);
+        pcInputStream += iParameterLength;
+      }
       else
-        bSingleByte = *(pcInputStream++);
-  
-      sprintf(ByteString, "%02X", bSingleByte);
-      strcat(pcValue, ByteString);
-      i--;
+      {
+        /* if iEndianess is 0, we have to scan the next n bytes backwards. If    */
+        /* iEndianess != 0, we have to scan the next n bytes forwards.           */
+        if (iEndianess == 0)
+        {
+          pcInputStream += iParameterLength;
+        }
+      
+        strcpy(pcValue, "0x");
+      
+        i = iParameterLength;
+        while (i > 0)
+        {
+      
+          if (iEndianess == 0)
+            bSingleByte = *(--pcInputStream);
+          else
+            bSingleByte = *(pcInputStream++);
+      
+          sprintf(ByteString, "%02X", bSingleByte);
+          strcat(pcValue, ByteString);
+          i--;
+        }
+      
+        if (iEndianess == 0)
+        {
+          pcInputStream += iParameterLength;
+        }
+      }
     }
-  
-    if (iEndianess == 0)
+    else
     {
-      pcInputStream += iParameterLength;
+      /* if iEndianess is 0, we have to scan the next n bytes backwards. If    */
+      /* iEndianess != 0, we have to scan the next n bytes forwards.           */
+      if (iEndianess == 0)
+      {
+        pcInputStream += iParameterLength;
+      }
+    
+      strcpy(pcValue, "0x");
+    
+      i = iParameterLength;
+      while (i > 0)
+      {
+    
+        if (iEndianess == 0)
+          bSingleByte = *(--pcInputStream);
+        else
+          bSingleByte = *(pcInputStream++);
+    
+        sprintf(ByteString, "%02X", bSingleByte);
+        strcat(pcValue, ByteString);
+        i--;
+      }
+    
+      if (iEndianess == 0)
+      {
+        pcInputStream += iParameterLength;
+      }
     }
+    
   
     /* Now we have stored the indicated amount of bytes from the input   */
     /* buffer. Check the received value on boundaries.                   */

@@ -205,11 +205,10 @@ struct TParameterList *NextParameter(
   char *pcValue);
 
 int TransferValue(
-  char  *pcBuffer,
-  char  *pcValue,
-  int    iEndian,
-  int    iKind,
-  unsigned int uiLenght);
+  char         *pcBuffer,
+  char         *pcValue,
+  struct TType *ptType,
+  unsigned int  uiLenght);
 
 void DetailledLog(
   struct TParameter *ptParameter,
@@ -218,6 +217,18 @@ void DetailledLog(
 static struct TTimer *SetTimer( int32 lTimerValue,
                                 float fTimerScaling,
                                 struct TStateMachine * ptStateMachine);
+           
+/* Converts a byte array according to the Endianess defined */
+static int ConvertByteArray(char         *pcBuffer,
+                            char         *pcValue,
+                            int16         iCodeLength,
+                            int16         iEndian);
+/* Converts the array in Value to the Endiness required */                                
+static int ConvertArray(char         *pcBuffer,
+                        char         *pcValue,
+                        int           iCodeLength,
+                        struct TType *ptType );
+                                
 
 
 /*****************************************************************************/
@@ -2273,18 +2284,92 @@ char     *FindBufferInGlobalDataList(
   return NULL;
 }
 
+/* Converts a byte array according to the Endianess defined */
+int ConvertByteArray(
+  char         *pcBuffer,
+  char         *pcValue,
+  int16         iCodeLength,
+  int16         iEndian
+)
+{
+  int16 i;
+
+  if (iEndian == FALSE) 
+    i = (iCodeLength - 1);
+  else                  
+    i = 0;
+
+  while ((pcValue[0] != '\0') && (pcValue[1] != '\0'))
+  {
+     pcBuffer[i] = (int8) TO_BYTE(pcValue[0], pcValue[1]);
+
+     if (iEndian == FALSE)  
+      i--;
+     else                   
+      i++;
+
+     pcValue += 2;
+  }
+}
+
+int ConvertArray(
+  char         *pcBuffer,
+  char         *pcValue,
+  int           iCodeLength,
+  struct TType *ptType
+)
+{
+  int   iIndexValue;
+  int   iIndexBuffer;
+  int   i;
+  int   j;
+  uint8 ucByte;
+
+  if (pcValue[1]=='x') 
+  {
+    iIndexValue = 2;           /* skip the 0x prefix.                                  */
+  }
+  else
+  {
+    iIndexValue = 0;
+  }
+  iIndexBuffer = 0;
+  
+  for (; (iIndexValue/2) < iCodeLength; iIndexValue += (ptType->uiSizeOfElement*2))
+  {
+    for (j=0; j < ptType->uiSizeOfElement; j++)
+    {
+      /* Little Endian... */
+      if (ptType->iEndianess == FALSE)
+      {
+        i = (iIndexValue+((ptType->uiSizeOfElement*2)-(j*2)))-1;
+        pcBuffer[iIndexBuffer] = (uint8) TO_BYTE(pcValue[i-1], 
+                                                 pcValue[i]);
+        iIndexBuffer++;
+      }
+      /* Big Endian... */
+      else
+      {
+        
+        pcBuffer[iIndexBuffer] = (uint8) TO_BYTE(pcValue[iIndexValue+(j*2)], 
+                                                 pcValue[iIndexValue+(j*2)+1]);
+        iIndexBuffer++;
+      }
+    }
+  }
+}
+
 int TransferValue(
   char         *pcBuffer,
   char         *pcValue,
-  int           iEndian,
-  int           iKind,
+  struct TType *ptType,
   unsigned int  uiLenght)
 {
   int16 i;
   int16 iCodeLength;
   int16 iReturnValue;
 
-  if (iKind == FILEDATAKIND)
+  if (ptType->iKind == FILEDATAKIND)
   { 
     memcpy(pcBuffer, pcValue, uiLenght);
     iReturnValue = uiLenght;
@@ -2294,18 +2379,21 @@ int TransferValue(
     if (pcValue[1]=='x') pcValue += 2;           /* skip the 0x prefix.                                  */
     iCodeLength  = strlen(pcValue) / 2;
     iReturnValue = iCodeLength;
-  
-    if (iEndian == FALSE) i = (iCodeLength - 1);
-    else                  i = 0;
-  
-    while ((pcValue[0] != '\0') && (pcValue[1] != '\0'))
+    
+    if (ptType->iKind == ARRAYKIND)
     {
-       pcBuffer[i] = (int8) TO_BYTE(pcValue[0], pcValue[1]);
-  
-       if (iEndian == FALSE)  i--;
-       else                   i++;
-  
-       pcValue += 2;
+      if (ptType->uiSizeOfElement > 1)
+      {
+        ConvertArray(pcBuffer, pcValue, iCodeLength, ptType);
+      }
+      else
+      {
+        ConvertByteArray(pcBuffer, pcValue, iCodeLength, ptType->iEndianess);
+      }
+    }
+    else
+    {
+      ConvertByteArray(pcBuffer, pcValue, iCodeLength, ptType->iEndianess);
     }
   }
   return iReturnValue;
@@ -2390,6 +2478,7 @@ void SendFunction(
   char      pHex[10];
   char     *pcAsciiEntry;
   struct TParameterList *ptFunctionParameters = NULL;
+  struct TType          *EmptyType;
   int16     iVarSize;
 
   int16     iLFCounter = 0;
@@ -2472,13 +2561,26 @@ void SendFunction(
       {
         if (ptFunctionParameters->ptThis->ptTypeDef == NULL)
         {
+          EmptyType = (struct TType*) malloc( sizeof(struct TType) );
+          EmptyType->pcName = NULL;
+          EmptyType->iSizeInBytes = 0;
+          EmptyType->iLessAllowed = 0;
+          EmptyType->pcUpperLimit = NULL;
+          EmptyType->pcLowerLimit = NULL;
+          EmptyType->pcDecimalDescription = NULL;
+          EmptyType->iKind = 0;
+          EmptyType->fTimeScaling = (float) 1.00;       /* suprise! */
+          EmptyType->ptDefinition = NULL;
+          EmptyType->iEndianess = TRUE;
+          EmptyType->iRefCount = 1;
+           
           /* No typedef -> Predefined constant.                             */
           /* Retrieve value from ptFunctionParameters.                      */
           i += TransferValue( &(pcSendBuffer[i]),
                               ptFunctionParameters->ptThis->pcName,
-                              TRUE,
-                              0,
+                              EmptyType,
                               0);
+          free(EmptyType);
           ptFunctionParameters = ptFunctionParameters->aptNext[0];
         }
         else if ((ptFunctionParameters->ptThis->ptLengthFromField != NULL)
@@ -2502,8 +2604,7 @@ void SendFunction(
           ptFunctionParameters->ptThis->iLoopCount = GetInteger(pcValue);
           i += TransferValue(&(pcSendBuffer[i]),
                               ptVarList->ptThis->pcName,
-                              ptVarList->ptThis->ptItsType->iEndianess,
-                              ptVarList->ptThis->ptItsType->iKind,
+                              ptVarList->ptThis->ptItsType,
                               ptVarList->ptThis->ptValue->uiLength);
         }
         if (ptFunctionParameters) ptParameter[i] = ptFunctionParameters->ptThis;
@@ -2534,8 +2635,7 @@ void SendFunction(
         pcAsciiEntry = &pcSendBuffer[i]; /* just in case we need to log ASCII */
         i += TransferValue(&(pcSendBuffer[i]),
                             pcValue,
-                            ptVarList->ptThis->ptItsType->iEndianess,
-                            ptVarList->ptThis->ptItsType->iKind,
+                            ptVarList->ptThis->ptItsType,
                             ptVarList->ptThis->ptValue->uiLength);
         pcSendBuffer[i] = 0;             /* just in case we need to log ASCII.*/
 

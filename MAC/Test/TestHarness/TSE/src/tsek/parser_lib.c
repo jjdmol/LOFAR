@@ -69,13 +69,15 @@ void      delValue(
 /****************************************************************************/
 
 struct TType TimerPar1Type = { "timer", /* pcName       */
-  0,                            /* iEndianess   */
-  0,                            /* iSizeInBytes */
-  0,                            /* iLessAllowed */
-  NULL,                         /* pcLowerLimit */
-  NULL,                         /* pcUpperLimit */
-  TIMEKIND,                     /* iKind        */
-  (float) 1.00,                 /* fTimeScaling */
+  0,                            /* iEndianess         */
+  0,                            /* iSizeInBytes       */
+  0,                            /* uiNumberOfElements */
+  0,                            /* uiSizeOfElement    */
+  0,                            /* iLessAllowed       */
+  NULL,                         /* pcLowerLimit       */
+  NULL,                         /* pcUpperLimit       */
+  TIMEKIND,                     /* iKind              */
+  (float) 1.00,                 /* fTimeScaling       */
   NULL,                         /* ptDefinition */
   0                             /* iRefCount    */
 };
@@ -143,11 +145,13 @@ struct TParameterList FourParam = { &JustAParam,        /* ptThis       */
 };
 
 struct TType SignalType = { "t_signal", /* pcName       */
-  0,                            /* iEndianess   */
-  1,                            /* iByteCount   */
-  0,                            /* iLessAllowed */
-  NULL,                         /* pcLowerLimit */
-  NULL,                         /* pcUpperLimit */
+  0,                            /* iEndianess         */
+  1,                            /* iByteCount         */
+  0,                            /* uiNumberOfElements */
+  0,                            /* uiSizeOfElement    */
+  0,                            /* iLessAllowed       */
+  NULL,                         /* pcLowerLimit       */
+  NULL,                         /* pcUpperLimit       */
   0,                            /* iKind        */
   0.0,                          /* fTimeScaling */
   NULL,                         /* ptTypeDef    */
@@ -157,6 +161,8 @@ struct TType SignalType = { "t_signal", /* pcName       */
 struct TType CommSpecType = { "COMMAND_SPECIFIC",       /* pcName       */
   0,                            /* iEndianess   */
   1,                            /* iByteCount   */
+  0,                            /* uiNumberOfElements */
+  0,                            /* uiSizeOfElement    */
   0,                            /* iLessAllowed */
   NULL,                         /* pcLowerLimit */
   NULL,                         /* pcUpperLimit */
@@ -169,6 +175,8 @@ struct TType CommSpecType = { "COMMAND_SPECIFIC",       /* pcName       */
 struct TType CommPackType = { "COMMAND_PACKET", /* pcName       */
   0,                            /* iEndianess   */
   1,                            /* iByteCount   */
+  0,                            /* uiNumberOfElements */
+  0,                            /* uiSizeOfElement    */
   0,                            /* iLessAllowed */
   NULL,                         /* pcLowerLimit */
   NULL,                         /* pcUpperLimit */
@@ -207,6 +215,8 @@ struct TParameterList SignalParam = { &Signal,  /* ptThis       */
 struct TType DataType = { "just data",  /* pcName       */
   0,                            /* iEndianess   */
   0,                            /* iByteCount   */
+  0,                            /* uiNumberOfElements */
+  0,                            /* uiSizeOfElement    */
   0,                            /* iLessAllowed */
   NULL,                         /* pcLowerLimit */
   NULL,                         /* pcUpperLimit */
@@ -219,6 +229,8 @@ struct TType DataType = { "just data",  /* pcName       */
 struct TType BooleanType = { "boolean", /* pcName       */
   0,                            /* iEndianess   */
   1,                            /* iByteCount   */
+  0,                            /* uiNumberOfElements */
+  0,                            /* uiSizeOfElement    */
   0,                            /* iLessAllowed */
   "0x00",                       /* pcLowerLimit */
   "0x01",                       /* pcUpperLimit */
