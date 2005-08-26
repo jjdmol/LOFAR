@@ -15,12 +15,13 @@ AM_CPPFLAGS = \
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
 	RSP_Protocol.ph \
+	rspctlfe/src/RSPFE_Protocol.ph \
 	EPA_Protocol.ph \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
@@ -36,11 +37,14 @@ clean-local:
 	rm -f \
 	RSP_Protocol.ph \
 	RSP_Protocol.cc \
+	RSPFE_Protocol.ph \
+	RSPFE_Protocol.cc \
 	EPA_Protocol.ph \
 	EPA_Protocol.cc
 
 EXTRA_DIST = \
 	RSP_Protocol.ph \
+	RSPFE_Protocol.ph \
 	EPA_Protocol.ph \
 	$(BUILT_SOURCES)
 
@@ -70,10 +74,11 @@ sysconf_DATA = \
 %.top: %.top.in
 	cp $< $@
 
-lib_LTLIBRARIES = librsp.la libepa.la
+lib_LTLIBRARIES = librsp.la libepa.la librspfe.la 
 
 include_HEADERS = \
 	RSP_Protocol.ph \
+	RSPFE_Protocol.ph \
 	BeamletWeights.h \
 	SubbandSelection.h \
 	RCUSettings.h \
@@ -87,7 +92,7 @@ include_HEADERS = \
 	EPA_Protocol.ph \
 	MEPHeader.h \
 	MEPData.h
-
+	
 librsp_la_SOURCES = \
 	BeamletWeights.cc \
 	SubbandSelection.cc \
@@ -99,6 +104,9 @@ librsp_la_SOURCES = \
 	Versions.cc \
 	Clocks.cc \
 	RSP_Protocol.cc
+
+librspfe_la_SOURCES = \
+	RSPFE_Protocol.cc
 
 libepa_la_SOURCES = \
 	MEPHeader.cc \
@@ -243,6 +251,7 @@ rspctl_SOURCES = \
 
 rspctl_LDADD = \
 	$(top_builddir)/src/librsp.la \
+	$(top_builddir)/src/librspfe.la \
 	$(RTCCOMMON_LDADD) \
 	-lsuite \
 	-lgnuplot_i
