@@ -1329,6 +1329,9 @@ static void usage()
   cout << "             [--directory=<directory>]    # " << endl;
   cout << "             [--feport=<hostname>:<port>] # get subband (default) or beamlet statistics" << endl;
   cout << "rspctl --xcstatistics   [--select=<set>]" << endl;
+  cout << "             [--duration=<seconds>]       # " << endl;
+  cout << "             [--integration=<seconds>]    # " << endl;
+  cout << "             [--directory=<directory>]    # " << endl;
   cout << "             [--feport=<hostname>:<port>] # get crosscorrelation statistics" << endl;
   cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
   cout << "rspctl --clocks=<int>    [--select=<set>] # get or set the clock frequency of clocks in Hz" << endl;
