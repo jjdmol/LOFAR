@@ -2,7 +2,6 @@ INSTHDRS         	=\
 WH_RSPInput.h           \
 WH_SBCollect.h		\
 AH_InputSection.h	\
-CyclicBuffer.h          \
 BufferController.h   
 
 
