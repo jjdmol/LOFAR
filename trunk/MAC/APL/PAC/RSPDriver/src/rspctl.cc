@@ -35,12 +35,24 @@
 //# rspctl --wg=freq         [--select=<set>]  # set wg freq is in Hz (float)
 //# rspctl --status          [--select=<set>]  # get status
 //# rspctl --statistics[=(subband|beamlet)]
-//#                          [--select=<set>]  # get subband (default) or beamlet statistics
-//# rspctl --xcstatistics    [--select=<set>]  # get cross correlation statistics
+//#                          [--select=<set>]
+//#                          [--duration=<seconds>]
+//#                          [--integration=<seconds>]
+//#                          [--directory=<directory>]
+//#                          [--feport=<hostname>:<port>] # get subband (default) or beamlet statistics
+//# rspctl --xcstatistics    [--select=<set>]
+//#                          [--duration=<seconds>]
+//#                          [--integration=<seconds>]
+//#                          [--directory=<directory>]
+//#                          [--feport=<hostname>:<port>]  # get cross correlation statistics
 //# rspctl --xcsubband=<int>                   # set the subband to cross correlate
 //# rspctl --clocks          [--select=<set>]  # get or set the clock frequency of clocks
 //# rspctl --version         [--select=<set>]  # get version information
 //#
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "rspctl.h"
 #include "RSP_Protocol.ph"
@@ -49,18 +61,15 @@
 #include <PSAccess.h>
 
 #include <iostream>
+#include <Common/lofar_sstream.h>
 #include <sys/time.h>
 #include <string.h>
 #include <blitz/array.h>
 #include <getopt.h>
 #include <complex>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 #include <set>
@@ -83,79 +92,11 @@ static void usage();
 //
 #define SAMPLE_FREQUENCY 160.0e6
 
-static std::list<int> strtolist(const char* str, int max)
-{
-  string inputstring(str);
-  char* start = (char*)inputstring.c_str();
-  char* end   = 0;
-  bool  range = false;
-  long prevval = 0;
-  list<int> resultset;
-
-  resultset.clear();
-
-  while (start)
-  {
-    long val = strtol(start, &end, 10); // read decimal numbers
-    start = (end ? (*end ? end + 1 : 0) : 0); // advance
-    if (val >= max || val < 0)
-    {
-      cerr << "Error: value " << val << " out of range" << endl;
-      resultset.clear();
-      return resultset;
-    }
-
-    if (end)
-    {
-      switch (*end)
-      {
-        case ',':
-        case 0:
-        {
-          if (range)
-          {
-            if (0 == prevval && 0 == val)
-              val = max - 1;
-            if (val < prevval)
-            {
-              cerr << "Error: invalid range specification" << endl;
-              resultset.clear();
-              return resultset;
-            }
-            for (long i = prevval; i <= val; i++)
-              resultset.push_back(i);
-          }
-
-          else
-          {
-            resultset.push_back(val);
-          }
-          range=false;
-        }
-        break;
-
-        case ':':
-          range=true;
-          break;
-
-        default:
-          cerr << "Error: invalid character " << *end << endl;
-          resultset.clear();
-          return resultset;
-          break;
-      }
-    }
-    prevval = val;
-  }
-
-  return resultset;
-}
-
-WeightsCommand::WeightsCommand()
+WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port)
 {
 }
 
-void WeightsCommand::send(GCFPortInterface& port)
+void WeightsCommand::send()
 {
   if (getMode())
   {
@@ -166,7 +107,7 @@ void WeightsCommand::send(GCFPortInterface& port)
     getweights.rcumask = getRCUMask();
     getweights.cache = true;
 
-    port.send(getweights);
+    m_rspport.send(getweights);
   }
   else
   {
@@ -175,7 +116,7 @@ void WeightsCommand::send(GCFPortInterface& port)
     setweights.timestamp = Timestamp(0,0);
     setweights.rcumask = getRCUMask();
 
-    cerr << "rcumask.count()=" << setweights.rcumask.count() << endl;
+    logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
 
     setweights.weights().resize(1, setweights.rcumask.count(), MEPHeader::N_BEAMLETS);
 
@@ -184,7 +125,7 @@ void WeightsCommand::send(GCFPortInterface& port)
     value *= (1<<15)-1;
     setweights.weights() = complex<int16>((int16)value,0);
 
-    port.send(setweights);
+    m_rspport.send(setweights);
   }
 }
 
@@ -207,14 +148,15 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            printf("RCU[%02d].weights=", rcuout);
-            cout << ack.weights()(0, rcuin++, Range::all()) << endl;
+            std::ostringstream logStream;
+            logStream << ack.weights()(0, rcuin++, Range::all());
+            logMessage(cout,formatString("RCU[%02d].weights=%s", rcuout,logStream.str().c_str()));
           }
         }
       }
       else
       {
-        cerr << "Error: RSP_GETWEIGHTS command failed." << endl;
+        logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
       }
     }
     break;
@@ -225,7 +167,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 
       if (SUCCESS != ack.status)
       {
-        cerr << "Error: RSP_SETWEIGHTS command failed." << endl;
+        logMessage(cerr,"Error: RSP_SETWEIGHTS command failed.");
       }
     }
     break;
@@ -240,11 +182,11 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
   return status;
 }
 
-SubbandsCommand::SubbandsCommand()
+SubbandsCommand::SubbandsCommand(GCFPortInterface& port) : Command(port)
 {
 }
 
-void SubbandsCommand::send(GCFPortInterface& port)
+void SubbandsCommand::send()
 {
   if (getMode())
   {
@@ -255,7 +197,7 @@ void SubbandsCommand::send(GCFPortInterface& port)
     getsubbands.rcumask = getRCUMask();
     getsubbands.cache = true;
 
-    port.send(getsubbands);
+    m_rspport.send(getsubbands);
   }
   else
   {
@@ -264,7 +206,7 @@ void SubbandsCommand::send(GCFPortInterface& port)
     setsubbands.timestamp = Timestamp(0,0);
     setsubbands.rcumask = getRCUMask();
 
-    cerr << "rcumask.count()=" << setsubbands.rcumask.count() << endl;
+    logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
 
     setsubbands.subbands().resize(1, m_subbandlist.size());
 
@@ -277,7 +219,7 @@ void SubbandsCommand::send(GCFPortInterface& port)
       setsubbands.subbands()(0, i) = (*it);
     }
 
-    port.send(setsubbands);
+    m_rspport.send(setsubbands);
   }
 }
 
@@ -300,14 +242,15 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            printf("RCU[%02d].subbands=", rcuout);
-            cout << ack.subbands()(rcuin++, Range::all()) << endl;
+            std::ostringstream logStream;
+            logStream << ack.subbands()(rcuin++, Range::all());
+            logMessage(cout,formatString("RCU[%02d].subbands=%s", rcuout,logStream.str().c_str()));
           }
         }
       }
       else
       {
-        cerr << "Error: RSP_GETSUBBANDS command failed." << endl;
+        logMessage(cerr,"Error: RSP_GETSUBBANDS command failed.");
       }
     }
     break;
@@ -318,7 +261,7 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 
       if (SUCCESS != ack.status)
       {
-        cerr << "Error: RSP_SETSUBBANDS command failed." << endl;
+        logMessage(cerr,"Error: RSP_SETSUBBANDS command failed.");
       }
     }
     break;
@@ -333,11 +276,11 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
   return status;
 }
 
-RCUCommand::RCUCommand()
+RCUCommand::RCUCommand(GCFPortInterface& port) : Command(port)
 {
 }
 
-void RCUCommand::send(GCFPortInterface& port)
+void RCUCommand::send()
 {
   if (getMode())
   {
@@ -348,7 +291,7 @@ void RCUCommand::send(GCFPortInterface& port)
     getrcu.rcumask = getRCUMask();
     getrcu.cache = true;
 
-    port.send(getrcu);
+    m_rspport.send(getrcu);
   }
   else
   {
@@ -360,7 +303,7 @@ void RCUCommand::send(GCFPortInterface& port)
     setrcu.settings().resize(1);
     setrcu.settings()(0).value = m_control;
 
-    port.send(setrcu);
+    m_rspport.send(setrcu);
   }
 }
 
@@ -381,14 +324,13 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            printf("RCU[%02d].status=0x%02x\n",
-                   rcuout, ack.settings()(rcuin++).value);
+            logMessage(cout,formatString("RCU[%02d].status=0x%02x",rcuout, ack.settings()(rcuin++).value));
           }
         }
       }
       else
       {
-        cerr << "Error: RSP_GETRCU command failed." << endl;
+        logMessage(cerr,"Error: RSP_GETRCU command failed.");
       }
     }
     break;
@@ -399,7 +341,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
       if (SUCCESS != ack.status)
       {
-        cerr << "Error: RSP_SETRCU command failed." << endl;
+        logMessage(cerr,"Error: RSP_SETRCU command failed.");
       }
     }
   }
@@ -409,11 +351,11 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
-ClocksCommand::ClocksCommand()
+ClocksCommand::ClocksCommand(GCFPortInterface& port) : Command(port)
 {
 }
 
-void ClocksCommand::send(GCFPortInterface& port)
+void ClocksCommand::send()
 {
   if (getMode())
   {
@@ -424,7 +366,7 @@ void ClocksCommand::send(GCFPortInterface& port)
     getclocks.tdmask = getTDMask();
     getclocks.cache = true;
 
-    port.send(getclocks);
+    m_rspport.send(getclocks);
   }
   else
   {
@@ -436,7 +378,7 @@ void ClocksCommand::send(GCFPortInterface& port)
     setclocks.clocks().resize(1);
     setclocks.clocks()(0) = m_clock;
 
-    port.send(setclocks);
+    m_rspport.send(setclocks);
   }
 }
 
@@ -457,13 +399,13 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 
           if (mask[tdout])
           {
-            printf("TD[%02d] clock=%d\n",tdout, ack.clocks()(tdin++));
+            logMessage(cout,formatString("TD[%02d] clock=%d",tdout, ack.clocks()(tdin++)));
           }
         }
       }
       else
       {
-        cerr << "Error: RSP_GETCLOCKS command failed." << endl;
+        logMessage(cerr,"Error: RSP_GETCLOCKS command failed.");
       }
     }
     break;
@@ -474,7 +416,7 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 
       if (SUCCESS != ack.status)
       {
-        cerr << "Error: RSP_SETCLOCKS command failed." << endl;
+        logMessage(cerr,"Error: RSP_SETCLOCKS command failed.");
       }
     }
   }
@@ -484,14 +426,14 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
   return GCFEvent::HANDLED;
 }
 
-WGCommand::WGCommand() :
+WGCommand::WGCommand(GCFPortInterface& port) : Command(port),
     m_frequency(0.0),
     m_phase(0),
     m_amplitude(64)
 {
 }
 
-void WGCommand::send(GCFPortInterface& port)
+void WGCommand::send()
 {
   if (getMode())
   {
@@ -500,8 +442,7 @@ void WGCommand::send(GCFPortInterface& port)
     wgget.timestamp = Timestamp(0,0);
     wgget.rcumask = getRCUMask();
     wgget.cache = true;
-    port.send(wgget);
-
+    m_rspport.send(wgget);
   }
   else
   {
@@ -526,7 +467,7 @@ void WGCommand::send(GCFPortInterface& port)
     }
     wgset.settings()(0).preset = 0; // or one of PRESET_[SINE|SQUARE|TRIANGLE|RAMP]
 
-    port.send(wgset);
+    m_rspport.send(wgset);
   }
 }
 
@@ -551,20 +492,20 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            printf("RCU[%02d].wg=[freq=%6d, phase=%3d, ampl=%3d, nof_samples=%6d, mode=%3d]\n",
+            logMessage(cout,formatString("RCU[%02d].wg=[freq=%6d, phase=%3d, ampl=%3d, nof_samples=%6d, mode=%3d]",
                    rcuout,
                    ack.settings()(rcuin).freq,
                    ack.settings()(rcuin).phase,
                    ack.settings()(rcuin).ampl,
                    ack.settings()(rcuin).nof_samples,
-                   ack.settings()(rcuin).mode);
+                   ack.settings()(rcuin).mode));
             rcuin++;
           }
         }
       }
       else
       {
-        cerr << "Error: RSP_GETWG command failed." << endl;
+        logMessage(cerr,"Error: RSP_GETWG command failed.");
       }
     }
     break;
@@ -575,7 +516,7 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
 
       if (SUCCESS != ack.status)
       {
-        cerr << "Error: RSP_SETWG command failed." << endl;
+        logMessage(cerr,"Error: RSP_SETWG command failed.");
       }
     }
     break;
@@ -590,13 +531,13 @@ GCFEvent::TResult WGCommand::ack(GCFEvent& e)
   return status;
 }
 
-StatusCommand::StatusCommand()
+StatusCommand::StatusCommand(GCFPortInterface& port) : Command(port)
 {
 }
 
-void StatusCommand::send(GCFPortInterface& /*port*/)
+void StatusCommand::send()
 {
-  cerr << "Error: option '--status' not supported yet." << endl;
+  logMessage(cerr,"Error: option '--status' not supported yet.");
   exit(EXIT_FAILURE);
 }
 
@@ -605,14 +546,36 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& /*e*/)
   return GCFEvent::NOT_HANDLED;
 }
 
-StatisticsCommand::StatisticsCommand() : m_type(Statistics::SUBBAND_POWER)
+StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : FECommand(port),
+  m_subscriptionHandle(0),
+  m_duration(0),
+  m_endTime(),
+  m_integration(1),
+  m_nseconds(0),
+  m_directory("")
 {
 }
 
-void StatisticsCommand::send(GCFPortInterface& port)
+StatisticsCommand::StatisticsCommand(GCFPortInterface& port) : StatisticsBaseCommand(port),
+  m_type(Statistics::SUBBAND_POWER),
+  m_stats()
+{
+}
+
+void StatisticsCommand::send()
 {
   if (getMode())
   {
+    if(m_directory.length()>0)
+    {
+      logMessage(cout,formatString("Dumping statistics in %s",m_directory.c_str()));
+    }
+    else
+    {
+      char cwd[PATH_MAX];
+      logMessage(cout,formatString("Dumping statistics in %s",getcwd(cwd,PATH_MAX)));
+    }
+  
     // SUBSCRIBE
     RSPSubstatsEvent substats;
 
@@ -622,16 +585,78 @@ void StatisticsCommand::send(GCFPortInterface& port)
     substats.type = m_type;
     substats.reduction = SUM;
 
-    port.send(substats);
+    m_rspport.send(substats);
   }
   else
   {
     // SET
-    cerr << "Error: set mode not support for option '--statistics'" << endl;
+    logMessage(cerr,"Error: set mode not support for option '--statistics'");
     GCFTask::stop();
   }
 }
 
+void StatisticsCommand::stop()
+{
+  if (getMode())
+  {
+    // UNSUBSCRIBE
+    RSPUnsubstatsEvent unsubstats;
+    unsubstats.handle = m_subscriptionHandle;
+    m_rspport.send(unsubstats);
+  }
+}
+
+void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
+{
+  if (0 == m_nseconds)
+  {
+    // initialize values array
+    m_stats.resize(stats.shape());
+    m_stats = 0.0;
+  }
+  else
+  {
+    if ( sum(stats.shape()) != sum(m_stats.shape()) )
+    {
+      logMessage(cerr, "Error: statistics shape mismatch");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  m_stats += stats;
+  m_nseconds++; // advance to next second
+
+  if (0 == m_nseconds % m_integration)
+  {
+    if (m_integration > 0) 
+    {
+      m_stats /= m_integration;
+    }
+
+    std::ostringstream logStream;
+    logStream << "statistics update at " << timestamp;
+    logMessage(cout,logStream.str());
+    
+    if(m_duration == 0)
+    {
+      plot_statistics(m_stats, timestamp);
+    }
+    else
+    {
+      dump_statistics(m_stats, timestamp);
+      
+      Timestamp timeNow;
+      timeNow.setNow();
+      if(timeNow >= m_endTime)
+      {
+        logMessage(cout,"Statistics capturing successfully ended.");
+        stop();
+        GCFTask::stop();
+      }
+    }
+  }
+}
+  
 void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
 {
   static gnuplot_ctrl* handle = 0;
@@ -695,7 +720,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
           snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ", rcuout);
           break;
         default:
-          cerr << "Error: invalid m_type" << endl;
+          logMessage(cerr,"Error: invalid m_type");
           exit(EXIT_FAILURE);
           break;
       }
@@ -709,6 +734,52 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
   //gnuplot_cmd(handle, "set nomultiplot");
 }
 
+void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp& timestamp)
+{
+  bitset<MAX_N_RCUS> mask = getRCUMask();
+
+  int result_rcu=0;
+  for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+  {
+    if (mask[rcuout])
+    {
+      char timestring[256];
+      time_t seconds = timestamp.sec();
+      strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&seconds));
+      char filename[PATH_MAX];
+      switch (m_type)
+      {
+        case Statistics::SUBBAND_POWER:
+          snprintf(filename, PATH_MAX, "%s%s_sst_rcu%03d.dat",m_directory.c_str(),timestring, rcuout);
+          break;
+        case Statistics::BEAMLET_POWER:
+          snprintf(filename, PATH_MAX, "%s%s_bst_rcu%03d.dat",m_directory.c_str(),timestring, rcuout);
+          break;
+      
+        default:
+          logMessage(cerr,"Error: invalid m_type");
+          exit(EXIT_FAILURE);
+          break;
+      }
+      FILE* file = fopen(filename, "w+");
+      if (!file)
+      {
+        logMessage(cerr,formatString("Error: Failed to open file: %s",filename));
+        exit(EXIT_FAILURE);
+      }
+      if (stats.extent(secondDim)
+          != (int)fwrite(stats(result_rcu, Range::all()).data(), sizeof(double),
+             stats.extent(secondDim), file))
+      {
+        logMessage(cerr,formatString("Error: unable to write to file %s",filename));
+        exit(EXIT_FAILURE);
+      }
+      fclose(file);
+    }
+    result_rcu++;
+  }
+}
+
 GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 {
   if (e.signal == RSP_SUBSTATSACK)
@@ -717,7 +788,7 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 
     if (SUCCESS != ack.status)
     {
-      cerr << "failed to subscribe to statistics" << endl;
+      logMessage(cerr,"failed to subscribe to statistics");
       exit(EXIT_FAILURE);
     }
 
@@ -731,20 +802,35 @@ GCFEvent::TResult StatisticsCommand::ack(GCFEvent& e)
 
   if (SUCCESS == upd.status)
   {
-    plot_statistics(upd.stats(), upd.timestamp);
+    capture_statistics(upd.stats(),upd.timestamp);
+  }
+  else
+  {
+    logMessage(cerr,"Error: statistics update failed.");
   }
 
   return GCFEvent::HANDLED;
 }
 
-XCStatisticsCommand::XCStatisticsCommand()
+XCStatisticsCommand::XCStatisticsCommand(GCFPortInterface& port) : StatisticsBaseCommand(port),
+  m_stats()
 {
 }
 
-void XCStatisticsCommand::send(GCFPortInterface& port)
+void XCStatisticsCommand::send()
 {
   if (getMode())
   {
+    if(m_directory.length()>0)
+    {
+      logMessage(cout,formatString("Dumping statistics in %s",m_directory.c_str()));
+    }
+    else
+    {
+      char cwd[PATH_MAX];
+      logMessage(cout,formatString("Dumping statistics in %s",getcwd(cwd,PATH_MAX)));
+    }
+  
     // SUBSCRIBE
     RSPSubxcstatsEvent subxcstats;
 
@@ -752,23 +838,87 @@ void XCStatisticsCommand::send(GCFPortInterface& port)
     subxcstats.rcumask = getRCUMask();
     subxcstats.period = 1;
 
-    port.send(subxcstats);
+    m_rspport.send(subxcstats);
   }
   else
   {
     // SET
-    cerr << "Error: set mode not support for option '--xcstatistics'" << endl;
+    logMessage(cerr,"Error: set mode not support for option '--xcstatistics'");
     GCFTask::stop();
   }
 }
 
+void XCStatisticsCommand::stop()
+{
+  if (getMode())
+  {
+    // UNSUBSCRIBE
+    RSPUnsubxcstatsEvent unsubxcstats;
+    unsubxcstats.handle = m_subscriptionHandle;
+    m_rspport.send(unsubxcstats);
+  }
+}
+
+void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp)
+{
+  if (0 == m_nseconds)
+  {
+    // initialize values array
+    m_stats.resize(stats.shape());
+    m_stats = 0.0;
+  }
+  else
+  {
+    if ( sum(stats.shape()) != sum(m_stats.shape()) )
+    {
+      logMessage(cerr, "Error: xcstatistics shape mismatch");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  m_stats += stats;
+  m_nseconds++; // advance to next second
+
+  if (0 == m_nseconds % m_integration)
+  {
+    if (m_integration > 0) 
+    {
+      m_stats /= m_integration;
+    }
+
+    std::ostringstream logStream;
+    logStream << "xcstatistics update at " << timestamp;
+    logMessage(cout,logStream.str());
+    
+    if(m_duration == 0)
+    {
+      plot_xcstatistics(m_stats, timestamp);
+    }
+    else
+    {
+      dump_xcstatistics(m_stats, timestamp);
+      
+      Timestamp timeNow;
+      timeNow.setNow();
+      if(timeNow >= m_endTime)
+      {
+        logMessage(cout,"XCStatistics capturing successfully ended.");
+        stop();
+        GCFTask::stop();
+      }
+    }
+  }
+}
+  
 void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, const Timestamp& timestamp)
 {
-  LOG_INFO_STR("plot_xcstatistics (shape=" << xcstats.shape() << ") @ " << timestamp);
-  //LOG_INFO_STR("XX()=" << xcstats(0,0,Range::all(),Range::all()));
-  //LOG_INFO_STR("XY()=" << xcstats(0,1,Range::all(),Range::all()));
-  //LOG_INFO_STR("YX()=" << xcstats(1,0,Range::all(),Range::all()));
-  //LOG_INFO_STR("YY()=" << xcstats(1,1,Range::all(),Range::all()));
+  //std::ostringstream logStream;
+  //logStream << "plot_xcstatistics (shape=" << xcstats.shape() << ") @ " << timestamp;
+  //logStream << endl << "XX()=" << xcstats(0,0,Range::all(),Range::all());
+  //logStream << endl << "XY()=" << xcstats(0,1,Range::all(),Range::all());
+  //logStream << endl << "YX()=" << xcstats(1,0,Range::all(),Range::all());
+  //logStream << endl << "YY()=" << xcstats(1,1,Range::all(),Range::all());
+  //logMessage(cout,logStream.str());
 
   //xcstats(0,0,2,2) = 1.0;
 
@@ -816,6 +966,39 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
   //xcstats = 10.0*log(real(xcstats)*real(xcstats))/log(10.0);
 
   gnuplot_write_matrix(handle, real(xcstats(0,0,Range::all(),Range::all())), true);
+}
+
+void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp)
+{
+  Array<complex<double>, 2> thestats;
+
+  thestats.resize(stats.extent(firstDim) * stats.extent(thirdDim),
+      stats.extent(secondDim) * stats.extent(fourthDim));
+
+  for (int i = 0; i < thestats.extent(firstDim); i++)
+    for (int j = 0; j < thestats.extent(secondDim); j++)
+      thestats(i,j) = stats(i % 2, j % 2, i/2, j/2);
+
+  char timestring[256];
+  time_t seconds = timestamp.sec();
+  strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&seconds));
+  char filename[PATH_MAX];
+  snprintf(filename, PATH_MAX, "%s%s_xst.dat",m_directory.c_str(),timestring);
+
+  FILE* file = fopen(filename, "w+");
+  if (!file)
+  {
+    logMessage(cerr,formatString("Error: Failed to open file: %s",filename));
+    exit(EXIT_FAILURE);
+  }
+  if (thestats.size()
+      != (int)fwrite(thestats.data(), sizeof(complex<double>),
+         thestats.size(), file))
+  {
+    logMessage(cerr,formatString("Error: unable to write to file %s",filename));
+    exit(EXIT_FAILURE);
+  }
+  fclose(file);
 }
 
 /**
@@ -868,8 +1051,12 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
     if (SUCCESS != ack.status)
     {
-      cerr << "failed to subscribe to xcstatistics" << endl;
+      logMessage(cerr,"failed to subscribe to xcstatistics");
       exit(EXIT_FAILURE);
+    }
+    else
+    {
+      m_subscriptionHandle = ack.handle;
     }
 
     return GCFEvent::HANDLED;
@@ -884,33 +1071,34 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
   {
     upd.stats() = convert_to_powerangle(upd.stats());
 
-    for (int i = 0; i < upd.stats().extent(firstDim) * upd.stats().extent(thirdDim); i++)
-    {
-      for (int j = 0; j < upd.stats().extent(secondDim) * upd.stats().extent(fourthDim); j++)
-      {
-        printf("%3.0f:%03.0f ", real(upd.stats()(i%2,j%2,i/2,j/2)), imag(upd.stats()(i%2,j%2,i/2,j/2)));
-      }
-      printf("\n");
-    }
+//    for (int i = 0; i < upd.stats().extent(firstDim) * upd.stats().extent(thirdDim); i++)
+//    {
+//      string logString;
+//      for (int j = 0; j < upd.stats().extent(secondDim) * upd.stats().extent(fourthDim); j++)
+//      {
+//        logString += string(formatString("%3.0f:%03.0f ", real(upd.stats()(i%2,j%2,i/2,j/2)), imag(upd.stats()(i%2,j%2,i/2,j/2))));
+//      }
+//      logMessage(cout,logString);
+//    }
 
-    plot_xcstatistics(upd.stats(), upd.timestamp);
+    capture_xcstatistics(upd.stats(),upd.timestamp);
   }
 
   return GCFEvent::HANDLED;
 }
 
-VersionCommand::VersionCommand()
+VersionCommand::VersionCommand(GCFPortInterface& port) : Command(port)
 {
 }
 
-void VersionCommand::send(GCFPortInterface& port)
+void VersionCommand::send()
 {
   RSPGetversionEvent getversion;
 
   getversion.timestamp = Timestamp(0,0);
   getversion.cache = true;
 
-  port.send(getversion);
+  m_rspport.send(getversion);
 }
 
 GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
@@ -921,16 +1109,16 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
   {
     for (int rsp=0; rsp < get_ndevices(); rsp++)
     {
-      printf("RSP[%02d].version=rsp:0x%02x bp:0x%02x ap:0x%02x\n",
-             rsp,
-             ack.versions.rsp()(rsp),
-             ack.versions.bp()(rsp),
-             ack.versions.ap()(rsp));
+      logMessage(cout,formatString("RSP[%02d].version=rsp:0x%02x bp:0x%02x ap:0x%02x",
+                                   rsp,
+                                   ack.versions.rsp()(rsp),
+                                   ack.versions.bp()(rsp),
+                                   ack.versions.ap()(rsp)));
     }
   }
   else
   {
-    cerr << "Error: RSP_GETVERSION command failed." << endl;
+    logMessage(cerr,"Error: RSP_GETVERSION command failed.");
   }
   GCFTask::stop();
 
@@ -942,6 +1130,7 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
     m_nrcus(0), m_nrspboards(0), m_ntdboards(0), m_argc(argc), m_argv(argv)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+  registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_signalnames);
 
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
 }
@@ -984,9 +1173,9 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
       m_nrcus = ack.n_rcus;
       m_nrspboards = ack.n_rspboards;
       m_ntdboards = ack.n_tdboards;
-      LOG_DEBUG_STR("n_rcus     =" << m_nrcus);
-      LOG_DEBUG_STR("n_rspboards=" << m_nrspboards);
-      LOG_DEBUG_STR("n_tdboards =" << m_ntdboards);
+      logMessage(cout,formatString("n_rcus     =%d",m_nrcus));
+      logMessage(cout,formatString("n_rspboards=%d",m_nrspboards));
+      logMessage(cout,formatString("n_tdboards =%d",m_ntdboards));
       TRAN(RSPCtl::docommand);
     }
     break;
@@ -1023,18 +1212,48 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     {
       if (0 == (m_command = parse_options(m_argc, m_argv)))
       {
-        cout << "Warning: no command specified." << endl;
+        logMessage(cerr,"Warning: no command specified.");
         exit(EXIT_FAILURE);
       }
-
-      m_command->send(m_server);
+      // check if a connection must be made with a frontend. If so, connect first
+      // and send the command to the rspdriver when connected with the frontend
+      FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
+      if(feCommand != 0)
+      {
+        if(feCommand->isFrontEndSet())
+        {
+          feCommand->connect(*this);
+        }
+        else
+        {
+          m_command->send();
+        }
+      }
+      else
+      {
+        m_command->send();
+      }
     }
     break;
 
+    case F_CONNECTED:
+    {
+      // connection with te frontend! send the command to the rsp driver
+      FECommand* feCommand = dynamic_cast<FECommand*>(m_command);
+      if(feCommand != 0)
+      {
+        if(feCommand->isConnected(port))
+        {
+          m_command->send();
+        }
+      }
+    }
+    break;
+    
     case F_DISCONNECTED:
     {
       port.close();
-      cout << "Error: port '" << port.getName() << "' disconnected." << endl;
+      logMessage(cerr,formatString("Error: port '%s' disconnected.",port.getName().c_str()));
       exit(EXIT_FAILURE);
     }
     break;
@@ -1057,10 +1276,16 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETCLOCKSACK:
       status = m_command->ack(e); // handle the acknowledgement
       break;
+      
+    case RSPFE_STOP_RSPCTL:
+      logMessage(cout,"Rspctl stopped by frontend.");
+      m_command->stop();
+      GCFTask::stop();
+      break;
 
     default:
-      cerr << "Error: unhandled event." << endl;
-      GCFTask::stop();
+      logMessage(cerr,"Error: unhandled event.");
+//      GCFTask::stop(); ignore
       break;
   }
 
@@ -1098,8 +1323,13 @@ static void usage()
   cout << "rspctl --wg=freq        [--select=<set>]  # set waveform generator settings" << endl;
   cout << "rspctl --status         [--select=<set>]  # get status" << endl;
   cout << "rspctl --statistics[=(subband|beamlet)]" << endl;
-  cout << "                        [--select=<set>]  # get subband (default) or beamlet statistics" << endl;
-  cout << "rspctl --xcstatistics   [--select=<set>]  # get crosscorrelation statistics" << endl;
+  cout << "             [--select=<set>]" << endl;
+  cout << "             [--duration=<seconds>]       # " << endl;
+  cout << "             [--integration=<seconds>]    # " << endl;
+  cout << "             [--directory=<directory>]    # " << endl;
+  cout << "             [--feport=<hostname>:<port>] # get subband (default) or beamlet statistics" << endl;
+  cout << "rspctl --xcstatistics   [--select=<set>]" << endl;
+  cout << "             [--feport=<hostname>:<port>] # get crosscorrelation statistics" << endl;
   cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
   cout << "rspctl --clocks=<int>    [--select=<set>] # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --version         [--select=<set>] # get version information" << endl;
@@ -1123,8 +1353,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
   {
     static struct option long_options[] =
       {
-        { "select",     required_argument, 0, 'l'
-        },
+        { "select",     required_argument, 0, 'l' },
         { "weights",    optional_argument, 0, 'w' },
         { "subbands",   optional_argument, 0, 's' },
         { "rcu",        optional_argument, 0, 'r' },
@@ -1136,13 +1365,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         { "clocks",     optional_argument, 0, 'c' },
         { "version",    no_argument,       0, 'v' },
         { "help",       no_argument,       0, 'h' },
+        { "feport",     required_argument, 0, 'f' },
+        { "duration",   required_argument, 0, 'd' },
+        { "integration",required_argument, 0, 'i' },
+        { "directory"  ,required_argument, 0, 'D' },
 
         { 0, 0, 0, 0 },
       };
 
     int option_index = 0;
     int c = getopt_long(argc, argv,
-                        "l:w::s::r::g::qt::vc::h", long_options, &option_index);
+                        "l:w::s::r::g::qt::xz:vc::hf:d:i:", long_options, &option_index);
 
     if (c == -1)
       break;
@@ -1154,19 +1387,19 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         {
           if (!command || 0 == command->get_ndevices())
           {
-            cerr << "Error: 'command' argument should come before --select argument" << endl;
+            logMessage(cerr,"Error: 'command' argument should come before --select argument");
             exit(EXIT_FAILURE);
           }
           select = strtolist(optarg, command->get_ndevices());
           if (select.empty())
           {
-            cerr << "Error: invalid or missing '--select' option" << endl;
+            logMessage(cerr,"Error: invalid or missing '--select' option");
             exit(EXIT_FAILURE);
           }
         }
         else
         {
-          cerr << "Error: option '--select' requires an argument" << endl;
+          logMessage(cerr,"Error: option '--select' requires an argument");
         }
         break;
 
@@ -1174,7 +1407,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        WeightsCommand* weightscommand = new WeightsCommand();
+        WeightsCommand* weightscommand = new WeightsCommand(m_server);
         command = weightscommand;
 
         command->set_ndevices(m_nrcus);
@@ -1187,7 +1420,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
           if (value <= -1.0 || value > 1.0)
           {
-            cerr << "Error: invalid weights value, should be: -1 < value <= 1" << endl;
+            logMessage(cerr,"Error: invalid weights value, should be: -1 < value <= 1");
             exit(EXIT_FAILURE);
           }
         }
@@ -1198,7 +1431,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        SubbandsCommand* subbandscommand = new SubbandsCommand();
+        SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
         command = subbandscommand;
 
         command->set_ndevices(m_nrcus);
@@ -1209,7 +1442,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
           list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
           if (subbandlist.empty())
           {
-            cerr << "Error: invalid or empty '--subbands' option" << endl;
+            logMessage(cerr,"Error: invalid or empty '--subbands' option");
             exit(EXIT_FAILURE);
           }
           subbandscommand->setSubbandList(subbandlist);
@@ -1221,7 +1454,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        RCUCommand* rcucommand = new RCUCommand();
+        RCUCommand* rcucommand = new RCUCommand(m_server);
         command = rcucommand;
 
         command->set_ndevices(m_nrcus);
@@ -1232,7 +1465,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
           unsigned long controlopt = strtoul(optarg, 0, 0);
           if ( controlopt > 0xFF )
           {
-            cerr << "Error: option '--rcu' parameter must be < 0xFF" << endl;
+            logMessage(cerr,"Error: option '--rcu' parameter must be < 0xFF");
             delete command;
             return 0;
           }
@@ -1245,7 +1478,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        WGCommand* wgcommand = new WGCommand();
+        WGCommand* wgcommand = new WGCommand(m_server);
         command = wgcommand;
 
         command->set_ndevices(m_nrcus);
@@ -1256,7 +1489,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
           double frequency = atof(optarg);
           if ( frequency < 0 )
           {
-            cerr << "Error: option '--wg' parameter must be > 0" << endl;
+            logMessage(cerr,"Error: option '--wg' parameter must be > 0");
             delete command;
             return 0;
           }
@@ -1269,7 +1502,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        StatusCommand* statuscommand = new StatusCommand();
+        StatusCommand* statuscommand = new StatusCommand(m_server);
         command = statuscommand;
 
         command->set_ndevices(m_nrcus);
@@ -1280,7 +1513,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        StatisticsCommand* statscommand = new StatisticsCommand();
+        StatisticsCommand* statscommand = new StatisticsCommand(m_server);
         command = statscommand;
 
         command->set_ndevices(m_nrcus);
@@ -1303,7 +1536,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand();
+        XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(m_server);
         command = xcstatscommand;
         command->set_ndevices(m_nrcus);
         command->setSelectable(false); // no selection allowed
@@ -1314,7 +1547,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        SubbandsCommand* subbandscommand = new SubbandsCommand();
+        SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
         command = subbandscommand;
 
         command->set_ndevices(m_nrcus);
@@ -1327,7 +1560,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
           if (subband < 0 || subband >= MEPHeader::N_SUBBANDS)
           {
-            cerr << "Error: argument to --xcsubband out of range, value must be >= 0 and < " << MEPHeader::N_SUBBANDS << endl;
+            logMessage(cerr,formatString("Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MEPHeader::N_SUBBANDS));
             exit(EXIT_FAILURE);
           }
 
@@ -1345,7 +1578,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        ClocksCommand* clockcommand = new ClocksCommand();
+        ClocksCommand* clockcommand = new ClocksCommand(m_server);
         command = clockcommand;
 
         command->set_ndevices(m_ntdboards);
@@ -1356,7 +1589,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
           double clock = atof(optarg);
           if ( 160000000 != (uint32)clock && 200000000 != (uint32)clock)
           {
-            cerr << "Error: option '--clocks' parameter must be 160000000 or 200000000" << endl;
+            logMessage(cerr,"Error: option '--clocks' parameter must be 160000000 or 200000000");
             delete command;
             return 0;
           }
@@ -1370,7 +1603,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         if (command)
           delete command;
-        VersionCommand* versioncommand = new VersionCommand();
+        VersionCommand* versioncommand = new VersionCommand(m_server);
         command = versioncommand;
         command->set_ndevices(m_nrspboards);
       }
@@ -1378,6 +1611,94 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
       case 'h':
         usage();
+        break;
+
+      case 'f':
+        if (optarg)
+        {
+          if (!command || 0 == command->get_ndevices())
+          {
+            logMessage(cerr,"Error: 'command' argument should come before --feport argument");
+            exit(EXIT_FAILURE);
+          }
+          FECommand* feCommand = dynamic_cast<FECommand*>(command);
+          if (feCommand == 0)
+          {
+            logMessage(cerr,"Error: 'feport' argument can not be used in conjunction with the specified command");
+            exit(EXIT_FAILURE);
+          }
+          feCommand->setFrontEnd(optarg);
+        }
+        else
+        {
+          logMessage(cerr,"Error: option '--feport' requires an argument");
+        }
+        break;
+
+      case 'd':
+        if (optarg)
+        {
+          if (!command || 0 == command->get_ndevices())
+          {
+            logMessage(cerr,"Error: 'command' argument should come before --duration argument");
+            exit(EXIT_FAILURE);
+          }
+          StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
+          if (statisticsBaseCommand == 0)
+          {
+            logMessage(cerr,"Error: 'duration' argument can not be used in conjunction with the specified command");
+            exit(EXIT_FAILURE);
+          }
+          statisticsBaseCommand->setDuration(atoi(optarg));
+        }
+        else
+        {
+          logMessage(cerr,"Error: option '--duration' requires an argument");
+        }
+        break;
+
+      case 'i':
+        if (optarg)
+        {
+          if (!command || 0 == command->get_ndevices())
+          {
+            logMessage(cerr,"Error: 'command' argument should come before --integration argument");
+            exit(EXIT_FAILURE);
+          }
+          StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
+          if (statisticsBaseCommand == 0)
+          {
+            logMessage(cerr,"Error: 'integration' argument can not be used in conjunction with the specified command");
+            exit(EXIT_FAILURE);
+          }
+          statisticsBaseCommand->setIntegration(atoi(optarg));
+        }
+        else
+        {
+          logMessage(cerr,"Error: option '--integration' requires an argument");
+        }
+        break;
+
+      case 'D':
+        if (optarg)
+        {
+          if (!command || 0 == command->get_ndevices())
+          {
+            logMessage(cerr,"Error: 'command' argument should come before --directory argument");
+            exit(EXIT_FAILURE);
+          }
+          StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
+          if (statisticsBaseCommand == 0)
+          {
+            logMessage(cerr,"Error: 'directory' argument can not be used in conjunction with the specified command");
+            exit(EXIT_FAILURE);
+          }
+          statisticsBaseCommand->setDirectory(optarg);
+        }
+        else
+        {
+          logMessage(cerr,"Error: option '--directory' requires an argument");
+        }
         break;
 
       case '?':
@@ -1402,6 +1723,86 @@ Command* RSPCtl::parse_options(int argc, char** argv)
   }
 
   return command;
+}
+
+std::list<int> RSPCtl::strtolist(const char* str, int max)
+{
+  string inputstring(str);
+  char* start = (char*)inputstring.c_str();
+  char* end   = 0;
+  bool  range = false;
+  long prevval = 0;
+  list<int> resultset;
+
+  resultset.clear();
+
+  while (start)
+  {
+    long val = strtol(start, &end, 10); // read decimal numbers
+    start = (end ? (*end ? end + 1 : 0) : 0); // advance
+    if (val >= max || val < 0)
+    {
+      logMessage(cerr,formatString("Error: value %ld out of range",val));
+      resultset.clear();
+      return resultset;
+    }
+
+    if (end)
+    {
+      switch (*end)
+      {
+        case ',':
+        case 0:
+        {
+          if (range)
+          {
+            if (0 == prevval && 0 == val)
+              val = max - 1;
+            if (val < prevval)
+            {
+              logMessage(cerr,"Error: invalid range specification");
+              resultset.clear();
+              return resultset;
+            }
+            for (long i = prevval; i <= val; i++)
+              resultset.push_back(i);
+          }
+
+          else
+          {
+            resultset.push_back(val);
+          }
+          range=false;
+        }
+        break;
+
+        case ':':
+          range=true;
+          break;
+
+        default:
+          logMessage(cerr,formatString("Error: invalid character %c",*end));
+          resultset.clear();
+          return resultset;
+          break;
+      }
+    }
+    prevval = val;
+  }
+
+  return resultset;
+}
+
+void RSPCtl::logMessage(ostream& stream, const string& message)
+{
+  if(m_command != 0)
+  {
+    m_command->logMessage(stream,message);
+  }
+  else
+  {
+    stream << message << endl;
+  }
 }
 
 int main(int argc, char** argv)
