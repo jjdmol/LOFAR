@@ -42,12 +42,18 @@ MeqStatExpr::MeqStatExpr (const MeqExpr& faradayRotation,
   itsDipEll (dipoleEllipticity),
   itsGain1  (gain1),
   itsGain2  (gain2)
-{}
+{
+  addChild (itsFarRot);
+  addChild (itsDipRot);
+  addChild (itsDipEll);
+  addChild (itsGain1);
+  addChild (itsGain2);
+}
 
 MeqStatExpr::~MeqStatExpr()
 {}
 
-MeqJonesResult MeqStatExpr::getResult (const MeqRequest& request)
+MeqJonesResult MeqStatExpr::getJResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 

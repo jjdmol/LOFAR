@@ -48,7 +48,7 @@ public:
   ~MeqJonesCMul3();
 
   // Get the result of the expression for the given domain.
-  MeqJonesResult getResult (const MeqRequest&);
+  MeqJonesResult getJResult (const MeqRequest&);
 
 private:
   MeqJonesExpr itsLeft;

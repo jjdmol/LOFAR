@@ -39,7 +39,9 @@ namespace LOFAR {
 MeqDFTPS::MeqDFTPS (const MeqExpr& lmn, MeqStatUVW* uvw)
 : itsLMN (lmn),
   itsUVW (uvw)
-{}
+{
+  addChild (itsLMN);
+}
 
 MeqDFTPS::~MeqDFTPS()
 {}

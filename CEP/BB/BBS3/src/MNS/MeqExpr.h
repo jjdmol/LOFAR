@@ -27,13 +27,15 @@
 // The base class of an expression
 
 //# Includes
-#include <Common/lofar_vector.h>
 #include <BBS3/MNS/MeqRequestId.h>
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqResultVec.h>
+#include <vector>
 
 namespace LOFAR {
+//# Forward Declarations.
+class MeqExpr;
 
 // \ingroup BBS3
 // \addtogroup MNS
@@ -46,13 +48,7 @@ class MeqExprRep
 {
 public:
   // The default constructor.
-  MeqExprRep()
-    : itsCount   (0),
-      itsNParents(0),
-      itsResult  (0),
-      itsResVec  (0),
-      itsReqId   (InitMeqRequestId)
-    {}
+  MeqExprRep();
 
   virtual ~MeqExprRep();
 
@@ -68,6 +64,24 @@ public:
   // Increment nr of parents.
   void incrNParents()
     { itsNParents++; }
+
+  // Recursively set the lowest and highest level of the node as used
+  // in the tree.
+  // Return the number of levels used so far.
+  int setLevel (int level);
+
+  // Clear the done flag recursively.
+  void clearDone();
+
+  // At which level is the node done?
+  int levelDone() const
+    { return itsLevelDone; }
+
+  // Get the nodes at the given level.
+  // All nodes or only nodes with multiple parents can be retrieved.
+  // It is used to find the nodes with results to be cached.
+  void getCachingNodes (std::vector<MeqExprRep*>& nodes,
+			int level, bool all=false);
 
   // Get the single result of the expression for the given domain.
   // The return value is a reference to the true result. This can either
@@ -93,6 +107,14 @@ public:
   virtual MeqResultVec getResultVec (const MeqRequest&);
   // </group>
 
+  // Precalculate the result and store it in the cache.
+  virtual void precalculate (const MeqRequest&);
+
+protected:
+  // Add a child to this node.
+  // It also increases NParents in the child.
+  void addChild (MeqExpr&);
+
 private:
   // Forbid copy and assignment.
   MeqExprRep (const MeqExprRep&);
@@ -101,13 +123,20 @@ private:
   // Calculate the actual result in a cache thread-safe way.
   // <group>
   const MeqResult& calcResult (const MeqRequest&, MeqResult&);
-  const MeqResultVec& calcResultVec (const MeqRequest&, MeqResultVec&);
+  const MeqResultVec& calcResultVec (const MeqRequest&, MeqResultVec&,
+				     bool useCache=false);
   // </group>
 
   int           itsCount;      //# Reference count
-  int           itsNParents;   //# Nr of parents
+  int           itsMinLevel;   //# Minimum level of node as used in tree.
+  int           itsMaxLevel;   //# Maximum level of node as used in tree.
+  int           itsLevelDone;  //# Level the node is handled by some parent.
   MeqResult*    itsResult;     //# Possibly cached result
   MeqResultVec* itsResVec;     //# Possibly cached result vector
+  std::vector<MeqExprRep*> itsChildren;   //# All children
+
+protected:
+  int           itsNParents;   //# Nr of parents
   MeqRequestId  itsReqId;      //# Request-id of cached result.
 };
 
@@ -115,6 +144,8 @@ private:
 
 class MeqExpr
 {
+friend class MeqExprRep;
+
 public:
   // Construct from a rep object.
   // It takes over the pointer, so it takes care of deleting the object.
@@ -131,9 +162,30 @@ public:
   // Assignment (reference semantics).
   MeqExpr& operator= (const MeqExpr&);
 
-  // Increment nr of parents.
-  void incrNParents()
-    { itsRep->incrNParents(); }
+  // Recursively set the lowest and highest level of the node as used
+  // in the tree.
+  // Return the number of levels used so far.
+  int setLevel (int level)
+    { return itsRep->setLevel (level); }
+
+  // Is the node empty?
+  bool isNull() const
+    { return itsRep == 0; }
+
+  // Clear the done flag recursively.
+  void clearDone()
+    { itsRep->clearDone(); }
+
+  // Get the nodes at the given level.
+  // By default only nodes with multiple parents are retrieved.
+  // It is used to find the nodes with results to be cached.
+  void getCachingNodes (std::vector<MeqExprRep*>& nodes,
+		       int level, bool all=false)
+    { itsRep->getCachingNodes (nodes, level, all); }
+
+  // Precalculate the result and store it in the cache.
+  void precalculate (const MeqRequest& request)
+    { itsRep->precalculate (request); }
 
   // Get the result of the expression for the given domain.
   // getResult will throw an exception if the node has a multi result.
@@ -160,7 +212,7 @@ private:
 class MeqExprToComplex: public MeqExprRep
 {
 public:
-  MeqExprToComplex (MeqExpr real, MeqExpr imag);
+  MeqExprToComplex (const MeqExpr& real, const MeqExpr& imag);
 
   virtual ~MeqExprToComplex();
 
@@ -176,7 +228,7 @@ private:
 class MeqExprAPToComplex: public MeqExprRep
 {
 public:
-  MeqExprAPToComplex (MeqExpr ampl, MeqExpr phase);
+  MeqExprAPToComplex (const MeqExpr& ampl, const MeqExpr& phase);
 
   virtual ~MeqExprAPToComplex();
 

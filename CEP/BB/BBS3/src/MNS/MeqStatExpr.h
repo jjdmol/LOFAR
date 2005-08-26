@@ -54,7 +54,7 @@ public:
   virtual ~MeqStatExpr();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getResult (const MeqRequest&);
+  virtual MeqJonesResult getJResult (const MeqRequest&);
 
 private:
   MeqExpr itsFarRot;

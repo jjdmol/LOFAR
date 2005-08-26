@@ -53,7 +53,7 @@ public:
   virtual ~MeqJonesNode();
 
   // Calculate the result of its members.
-  virtual MeqJonesResult getResult (const MeqRequest&);
+  virtual MeqJonesResult getJResult (const MeqRequest&);
 
 private:
   MeqExpr itsExpr11;

@@ -49,7 +49,7 @@ public:
   ~MeqBaseLinPS();
 
   // Calculate the results for the given domain.
-  virtual MeqJonesResult getResult (const MeqRequest&);
+  virtual MeqJonesResult getJResult (const MeqRequest&);
 
 private:
   MeqExpr         itsDFT;

@@ -260,6 +260,7 @@ private:
   vector<MeqStatUVW*>   itsStatUVW;     //# UVW values per station
   vector<MeqJonesExpr>  itsExpr;        //# solve expression tree per baseline
   vector<MeqJonesExpr>  itsResExpr;     //# residual expr tree per baseline
+  vector<vector<MeqExprRep*> > itsPrecalcNodes;  //# nodes to be precalculated
 
   int    itsNrSelBl;                  //# nr of selected baselines
   double itsStartFreq;                //# start frequency of observation

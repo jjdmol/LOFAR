@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqJonesExpr.h>
 #include <Common/LofarLogger.h>
@@ -34,35 +33,18 @@ MeqJonesExprRep::~MeqJonesExprRep()
   delete itsResult;
 }
 
-MeqJonesExpr::MeqJonesExpr (const MeqJonesExpr& that)
-: itsRep (that.itsRep)
-{
-  if (itsRep != 0) {
-    itsRep->link();
-  }
-}
-MeqJonesExpr& MeqJonesExpr::operator= (const MeqJonesExpr& that)
-{
-  if (this != &that) {
-    MeqJonesExprRep::unlink (itsRep);
-    itsRep = that.itsRep;
-    if (itsRep != 0) {
-      itsRep->link();
-    }
-  }
-  return *this;
-}
-
-const MeqJonesResult& MeqJonesExprRep::calcResult (const MeqRequest& request,
-						   MeqJonesResult& result)
+const MeqJonesResult& MeqJonesExprRep::calcJResult (const MeqRequest& request,
+						    MeqJonesResult& result,
+						    bool useCache)
 {
   // The value has to be calculated.
   // Do not cache if no multiple parents.
-  if (itsNParents <= 1) {
-    result = getResult (request);
+  if (itsNParents <= 1  &&  !useCache) {
+    result = getJResult (request);
     return result;
   }
-
+  // It should never come past this.
+  ASSERT(useCache);
   // Use a cache.
   // Synchronize the calculations.
   // Only calculate if not already calculated in another thread.
@@ -74,12 +56,18 @@ const MeqJonesResult& MeqJonesExprRep::calcResult (const MeqRequest& request,
 #endif
   {
     if (!itsResult) itsResult = new MeqJonesResult;
-    *itsResult = getResult (request);
+    *itsResult = getJResult (request);
     itsReqId = request.getId();
   }
   //timer.stop();
-
   return *itsResult;
+}
+
+void MeqJonesExprRep::precalculate (const MeqRequest& request)
+{
+  MeqJonesResult result;
+  calcJResult (request, result, true);
+  DBGASSERT (itsResult);
 }
 
 }

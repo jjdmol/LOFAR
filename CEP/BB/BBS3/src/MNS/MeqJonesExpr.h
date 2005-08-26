@@ -27,6 +27,7 @@
 // The base class of a Jones matrix expression.
 
 //# Includes
+#include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqJonesResult.h>
 #include <BBS3/MNS/MeqRequest.h>
 
@@ -39,28 +40,15 @@ namespace LOFAR {
 
 // This class is the (abstract) base class for a Jones expression.
 
-class MeqJonesExprRep
+class MeqJonesExprRep : public MeqExprRep
 {
 public:
   // The default constructor.
   MeqJonesExprRep()
-    : itsCount   (0),
-      itsNParents(0),
-      itsResult  (0),
-      itsReqId   (InitMeqRequestId)
+    : itsResult (0)
     {}
 
   virtual ~MeqJonesExprRep();
-
-  void link()
-    { itsCount++; }
-
-  static void unlink (MeqJonesExprRep* rep)
-    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
-
-  // Increment nr of parents.
-  void incrNParents()
-    { itsNParents++; }
 
   // Get the single result of the expression for the given domain.
   // The return value is a reference to the true result. This can either
@@ -68,14 +56,17 @@ public:
   // or to the result object in the parameter list (if no cache).
   // If the result is stored in the cache, it is done in a thread-safe way.
   // Note that a cache is used if the expression has multiple parents.
-  const MeqJonesResult& getResultSynced (const MeqRequest& request,
-					 MeqJonesResult& result)
+  const MeqJonesResult& getJResultSynced (const MeqRequest& request,
+					  MeqJonesResult& result)
     { return itsReqId == request.getId()  ?
-	*itsResult : calcResult(request,result); }
+	*itsResult : calcJResult(request,result); }
 
   // Get the actual result.
   // The default implementation throw an exception.
-  virtual MeqJonesResult getResult (const MeqRequest&) = 0;
+  virtual MeqJonesResult getJResult (const MeqRequest&) = 0;
+
+  // Precalculate the result and store it in the cache.
+  virtual void precalculate (const MeqRequest&);
 
 private:
   // Forbid copy and assignment.
@@ -83,42 +74,46 @@ private:
   MeqJonesExprRep& operator= (const MeqJonesExprRep&);
 
   // Calculate the actual result in a cache thread-safe way.
-  const MeqJonesResult& calcResult (const MeqRequest&, MeqJonesResult&);
+  const MeqJonesResult& calcJResult (const MeqRequest&, MeqJonesResult&,
+				     bool useCache=false);
 
-  int             itsCount;
-  int             itsNParents;   //# Nr of parents
   MeqJonesResult* itsResult;     //# Possibly cached result
-  MeqRequestId    itsReqId;      //# Request-id of cached result.
 };
 
 
 
-class MeqJonesExpr
+class MeqJonesExpr : public MeqExpr
 {
 public:
   // The default constructor.
   // It takes over the pointer, so it takes care of deleting the object.
   MeqJonesExpr (MeqJonesExprRep* expr = 0)
-    { itsRep = expr; if (itsRep) itsRep->link(); }
+    : MeqExpr (expr),
+      itsRep  (expr)
+    {}
 
-  MeqJonesExpr (const MeqJonesExpr&);
+  MeqJonesExpr (const MeqJonesExpr& that)
+    : MeqExpr (that),
+      itsRep  (that.itsRep)
+    {}
 
   ~MeqJonesExpr()
-    { MeqJonesExprRep::unlink (itsRep); }
+    {}
 
-  MeqJonesExpr& operator= (const MeqJonesExpr&);
-
-  // Increment nr of parents.
-  void incrNParents()
-    { itsRep->incrNParents(); }
+  MeqJonesExpr& operator= (const MeqJonesExpr& that)
+  {
+    MeqExpr::operator= (that);
+    itsRep = that.itsRep;
+    return *this;
+  }
 
   // Get the result of the expression for the given domain.
   // <group>
   MeqJonesResult getResult (const MeqRequest& request)
-    { return itsRep->getResult (request); }
+    { return itsRep->getJResult (request); }
   const MeqJonesResult& getResultSynced (const MeqRequest& request,
-					MeqJonesResult& result)
-    { return itsRep->getResultSynced (request, result); }
+					 MeqJonesResult& result)
+    { return itsRep->getJResultSynced (request, result); }
   // </group>
 
 private:

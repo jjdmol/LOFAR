@@ -48,9 +48,9 @@ MeqJonesCMul3::MeqJonesCMul3 (const MeqJonesExpr& left,
   itsMid   (mid),
   itsRight (right)
 {
-  itsLeft.incrNParents();
-  itsMid.incrNParents();
-  itsRight.incrNParents();
+  addChild (itsLeft);
+  addChild (itsMid);
+  addChild (itsRight);
 }
 
 MeqJonesCMul3::~MeqJonesCMul3()
@@ -441,7 +441,7 @@ v22_i[_i]=_mm_add_pd(_mm_sub_pd(_mm_mul_pd(t11_i,r21_r),_mm_mul_pd(t11_r,r21_i))
 #endif
 
 
-MeqJonesResult MeqJonesCMul3::getResult (const MeqRequest& request)
+MeqJonesResult MeqJonesCMul3::getJResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 

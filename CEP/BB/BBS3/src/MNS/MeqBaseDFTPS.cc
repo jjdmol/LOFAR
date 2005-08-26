@@ -37,9 +37,9 @@ MeqBaseDFTPS::MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right,
     itsRight (right),
     itsLMN   (lmn)
 {
-  itsLeft.incrNParents();
-  itsRight.incrNParents();
-  itsLMN.incrNParents();
+  addChild (itsLeft);
+  addChild (itsRight);
+  addChild (itsLMN);
 }
 
 MeqBaseDFTPS::~MeqBaseDFTPS()
