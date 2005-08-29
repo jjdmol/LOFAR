@@ -227,13 +227,11 @@ public:
     { return itsRep->setOutBufferingProperties(channel, synchronous, shareDHs);}
 
   /** SetRate methods:
-      These methods set the rate at which input/output dataholders are
-      read/written.
+      These methods set the rate at which data is processed and input/output 
+      dataholders are read/written.
       The rate is the fraction of the events that is to be read/written.
       The dhIndex argument selects only the given input/output
       DataHolder; dhIndex=-1 sets all input/output DataHolders.
-      setRate calls both setInRate and setOutRate and also sets the
-      Block::itsRate.
   */
   void setProcessRate (int rate=1)
     { return itsRep->setProcessRate (rate); }
