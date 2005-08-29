@@ -118,24 +118,20 @@ namespace LOFAR
 //
 //----------------------------------------------------------------------
 Prediffer::Prediffer(const string& msName,
-		     const string& meqModel,
-		     const string& skyModel,
-		     const string& dbType,
-		     const string& dbName,
-		     const string& dbUser,
-		     const string& dbPwd,
-		     const string& dbHost,
-		     const int dbMasterPort,
+		     const string& meqModelName,
+		     const ParmTableData& meqPtd,
+		     const string& skyModelName,
+		     const ParmTableData& skyPtd,
 		     const vector<int>& ant,
 		     const string& modelType,
 		     const vector<vector<int> >& sourceGroups,
 		     bool      calcUVW)
   :
   itsMSName       (msName),
-  itsMEPName      (meqModel),
-  itsMEP          (dbType, meqModel, dbName, dbUser, dbPwd, dbHost, dbMasterPort, false),
-  itsGSMMEPName   (skyModel),
-  itsGSMMEP       (dbType, skyModel, dbName, dbUser, dbPwd, dbHost, dbMasterPort, false),
+  itsMEPName      (meqModelName),
+  itsMEP          (meqPtd),
+  itsGSMMEPName   (skyModelName),
+  itsGSMMEP       (skyPtd),
   itsCalcUVW      (calcUVW),
   itsSrcGrp       (sourceGroups),
   itsNCorr        (0),
@@ -150,8 +146,8 @@ Prediffer::Prediffer(const string& msName,
 {
   LOG_INFO_STR( "Prediffer constructor ("
 		<< "'" << msName   << "', "
-		<< "'" << meqModel << "', "
-		<< "'" << skyModel << "', "
+		<< "'" << meqModelName << "', "
+		<< "'" << skyModelName << "', "
 		<< itsCalcUVW << ")" );
 
   // Initially use all correlations.
@@ -665,9 +661,7 @@ void Prediffer::initParms (const MeqDomain& domain)
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
 	itsParmData.push_back (ParmData((*iter)->getName(),
-					(*iter)->getTableName(),
-					(*iter)->getDBType(),
-					(*iter)->getDBName(),
+					(*iter)->getParmTableData(),
 					nr, itsNrScid,
 					(*iter)->getCoeffValues()));
 	itsNrScid += nr;

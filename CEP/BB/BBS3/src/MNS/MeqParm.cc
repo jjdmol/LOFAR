@@ -43,19 +43,10 @@ MeqParm::~MeqParm()
   itsGroup->remove (itsParmId);
 }
 
-string MeqParm::getTableName() const
+ParmTableData MeqParm::getParmTableData() const
 {
-  return "";
+  return ParmTableData();
 }
-string MeqParm::getDBType() const
-{
-  return "";
-}
-string MeqParm::getDBName() const
-{
-  return "";
-}
-
 
 MeqParmGroup::MeqParmGroup()
   : itsNparm (0)

@@ -221,22 +221,19 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
   else
   {
     // Create a Prediffer object
-    string msName = args.getString("MSName");
-    string meqModel = args.getString("meqTableName");
-    string skyModel = args.getString("skyTableName");
-    string dbType = args.getString("DBType");
-    string dbName = args.getString("DBName");
-    string dbUser = args.getString("DBUser");
-    string dbHost = args.getString("DBHost");
-    string dbPwd = args.getString("DBPwd");
-    int dbMasterPort = args.getInt32("DBMasterPort");
+    ParameterSet myargs = args;
+    myargs["DBIsMaster"] = "F";
+    ParmTableData meqPtd("meqTableName", myargs);
+    ParmTableData skyPtd("skyTableName", myargs);
 
     string modelType = args.getString("modelType");
     bool calcUVW = args.getBool("calcUVW");
+    string msName = args.getString("MSName");
+
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
-    Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
-				    dbName, dbUser, dbPwd, dbHost, dbMasterPort,
+    Prediffer* pred = new Prediffer(msName, myargs.getString("meqTableName"), meqPtd, 
+				    myargs.getString("skyTableName"), skyPtd,
 				    antNrs, modelType, srcgrp, calcUVW);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));

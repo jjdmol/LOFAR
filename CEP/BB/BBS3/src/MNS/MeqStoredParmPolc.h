@@ -51,12 +51,8 @@ public:
 
   virtual ~MeqStoredParmPolc();
 
-  // Get the name and type of the table holding the parameter.
-  // <group>
-  virtual string getTableName() const;
-  virtual string getDBType() const;
-  virtual string getDBName() const;
-  // </group>
+  // Get the ParmTableInfo
+  virtual ParmTableData getParmTableData() const;
 
   // Read the polcs for the given domain.
   virtual void readPolcs (const MeqDomain& domain);

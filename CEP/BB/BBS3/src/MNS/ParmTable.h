@@ -29,6 +29,7 @@
 //# Includes
 #include <BBS3/MNS/MeqPolc.h>
 #include <BBS3/MNS/MeqSourceList.h>
+#include <BBS3/MNS/ParmTableData.h>
 #include <Common/lofar_vector.h>
 
 //# Forward Declarations
@@ -98,23 +99,13 @@ public:
 
   // Set or get the name and type.
   // <group>
-  const string& getTableName() const
-    { return itsTableName; }
-  const string& getDBType() const
-    { return itsDBType; }
-  const string& getDBName() const
-    { return itsDBName; }
-  void setTableName (const string& name)
-    { itsTableName = name; }
-  void setDBType (const string& type)
-    { itsDBType = type; }
-  void setDBName (const string& name)
-    { itsDBName = name; }
+  void setParmTableData(const ParmTableData& ptd)
+    { itsPTD = ptd;};
+  const ParmTableData& getParmTableData() const
+    { return itsPTD; };
   // </group>
 private:
-  string itsTableName;
-  string itsDBType;
-  string itsDBName;
+  ParmTableData itsPTD;
 };
 
 
@@ -125,17 +116,7 @@ public:
   // Create the ParmTable object.
   // The dbType argument gives the database type.
   // otherwise a database of the given type.
-  ParmTable (const string& dbType, 
-	     const string& tableName,
-	     // these options are used for sql databases
-	     const string& dbName, 
-	     const string& userName,
-	     const string& pwd,
-	     // this one is used for sql and BDBReplication
-	     const string& hostName, 
-	     // these are used for BDBReplication
-	     const int masterPort,
-	     const bool isMaster);
+  ParmTable (const ParmTableData& ptd);
 
   ~ParmTable()
     { delete itsRep; }
@@ -172,12 +153,8 @@ public:
 
   // Get the name and type.
   // <group>
-  const string& getTableName() const
-    { return itsRep->getTableName(); }
-  const string& getDBType() const
-    { return itsRep->getDBType(); }
-  const string& getDBName() const
-    { return itsRep->getDBName(); }
+  const ParmTableData& getParmTableData() const
+    { return itsRep->getParmTableData(); }
 
 private:
   // Forbid copy and assignment.

@@ -53,12 +53,9 @@ void ParmWriter::write(vector<ParmData>& pData, double fStart, double fEnd,
 
   MeqParmGroup pgroup;
   for (uint i=0; i<pData.size(); ++i) {
-    cout << "Writing parm " << pData[i].getName() << " into "
-	 << pData[i].getTableName() << ' ' << pData[i].getDBName()
-	 << " (" << pData[i].getDBType()
-	 << ") values=" << pData[i].getValues() << endl;
-    ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
-		   pData[i].getDBName(), "user", "", "localhost", itsDBMasterPort, true);
+    cout << "Writing parm " << pData[i].getName() 
+ 	 << " values=" << pData[i].getValues() << endl;
+    ParmTable ptab(pData[i].getParmTableData());
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());

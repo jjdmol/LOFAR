@@ -60,6 +60,16 @@ int main (int argc, const char* argv[])
 	   << endl;
       return 1;
     }
+    // Read the info for the ParmTables
+    ACC::APS::ParameterSet ps;
+    string meqModelName(argv[3]);
+    string skyModelName(argv[4]);
+    ps["meqModel"] = meqModelName;
+    ps["skyModel"] = skyModelName;
+    ps["DBType"] = "aips";
+    ParmTableData meqPdt("meqModel", ps);
+    ParmTableData skyPdt("skyModel", ps);
+
     // Do a predict.
     {
       cout << "Starting predict test" << endl;
@@ -68,8 +78,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1],
-		     "", "", "", 13157, 
+      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, "RI.USESP", srcgrp, false);
       doPredict (pre1);
       cout << "End of predict test" << endl;

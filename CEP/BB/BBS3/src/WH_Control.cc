@@ -89,21 +89,15 @@ void WH_Control::preprocess()
     ParameterSet sckvm = itsArgs.makeSubset("SC1params.");
     ParameterSet dbkvm = sckvm.makeSubset("MSDBparams.");
 
-    char hostnameBuffer[128];
-    gethostname(hostnameBuffer, 128);
-    string myHostName = hostnameBuffer;
-
     string dbtype = dbkvm.getString("DBType");
     if (dbtype == "bdbrepl") {
       // Create master for bdb replication
-      itsParmTable = new ParmTable(dbtype,
-				   "dummy", 
-				   dbkvm.getString("DBName"),
-				   dbkvm.getString("UserName"),
-				   dbkvm.getString("DBPwd"),
-				   myHostName,
-				   dbkvm.getInt32("DBMasterPort"),
-				   true);
+      // this object is made so that a master exists on the control node
+      // the table name does not matter
+      dbkvm["dummyTableName"] = "dummyTableName";
+      dbkvm["DBIsMaster"] = "T";
+      ParmTableData ptd("dummyTableName", dbkvm);
+      itsParmTable = new ParmTable(ptd);
     }
   }
 }

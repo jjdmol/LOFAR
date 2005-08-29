@@ -87,6 +87,18 @@ int main(int argc, char** argv)
       cout << "   datacolumn defaults to MODEL_DATA" << endl;
       return 0;
     }
+
+    // Read the info for the ParmTables
+    ACC::APS::ParameterSet ps;
+    string meqModelName(argv[4]);
+    string skyModelName(argv[5]);
+    ps["meqModel"] = meqModelName;
+    ps["skyModel"] = skyModelName;
+    ps["DBType"] = "aips";
+    ParmTableData meqPdt("meqModel", ps);
+    ParmTableData skyPdt("skyModel", ps);
+
+
     string column("MODEL_DATA");
     if (argc > 6) {
       column = argv[6];
@@ -96,8 +108,8 @@ int main(int argc, char** argv)
       antVec[i] = i;
     }
     vector<vector<int> > srcgrp;
-    Prediffer pre (argv[3], argv[4], argv[5], "aips", argv[2], "", "",
-		   "", 13157, antVec, "LOFAR", srcgrp, false);
+    Prediffer pre (argv[3], "meqModel", meqPdt, "skyModel", skyPdt, 
+		   antVec, "LOFAR", srcgrp, false);
     doIt (argv[1], pre, column, 0, 50);
     doIt (argv[1], pre, column, 10,10);
   } catch (exception& x) {

@@ -76,14 +76,10 @@ public:
   // Currently model types LOFAR.RI and LOFAR.AP are recognized.
   // The UVW coordinates can be recalculated or taken from the MS.
   Prediffer (const string& msName,
-	     const string& meqModel,
-	     const string& skyModel,
-	     const string& dbType,
-	     const string& dbName,
-	     const string& dbUser,
-	     const string& dbPwd,
-	     const string& dbHost,
-	     const int dbMasterPort,
+	     const string& meqModelName,
+	     const ParmTableData& meqPtd,
+	     const string& skyModelName,
+	     const ParmTableData& skyPtd,
 	     const vector<int>& ant,
 	     const string& modelType,
 	     const vector<vector<int> >& sourceGroups,

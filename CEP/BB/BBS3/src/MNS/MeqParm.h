@@ -29,6 +29,7 @@
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqResult.h>
+#include <BBS3/MNS/ParmTableData.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
@@ -63,13 +64,8 @@ public:
   void setName (const string& name)
     { itsName = name; }
 
-  // Get the name and type of the database and table holding the parameter.
-  // By default it returns an empty string.
-  // <group>
-  virtual string getTableName() const;
-  virtual string getDBType() const;
-  virtual string getDBName() const;
-  // </group>
+  // Get the ParmTableInfo
+  virtual ParmTableData getParmTableData() const;
 
   // Get the parameter id.
   unsigned int getParmId() const

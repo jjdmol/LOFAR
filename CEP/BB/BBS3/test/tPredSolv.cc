@@ -24,6 +24,7 @@
 #include <BBS3/Prediffer.h>
 #include <BBS3/Solver.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
+#include <BBS3/MNS/ParmTableData.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/BlobOBufChar.h>
@@ -54,11 +55,8 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
   cout.precision(10);
   for (uint i=0; i<pData.size(); ++i) {
     cout << "Writing parm " << pData[i].getName() << " into >>> "
-	 << pData[i].getTableName() << ' ' << pData[i].getDBName()
-	 << " (" << pData[i].getDBType()
 	 << ") <<< values=" << pData[i].getValues() << endl;
-    ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
-		   pData[i].getDBName(), "user", "", "localhost", 13157, true);
+    ParmTable ptab(pData[i].getParmTableData());
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());
@@ -233,6 +231,17 @@ int main (int argc, const char* argv[])
 	   << endl;
       return 1;
     }
+
+    // Read the info for the ParmTables
+    ACC::APS::ParameterSet ps;
+    string meqModelName(argv[3]);
+    string skyModelName(argv[4]);
+    ps["meqModel"] = meqModelName;
+    ps["skyModel"] = skyModelName;
+    ps["DBType"] = "aips";
+    ParmTableData meqPdt("meqModel", ps);
+    ParmTableData skyPdt("skyModel", ps);
+
     //    Do a solve for RA using a few stations.
     {
       cout << "Starting first test" << endl;
@@ -241,7 +250,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "",  "", "", 13157, 
+      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, "LOFAR.RI", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -267,7 +276,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", "", 13157, 
+      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, "LOFAR.RI", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -291,9 +300,9 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", "", 13157,  
+      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, "LOFAR.RI", srcgrp, false);
-      Prediffer pre2(argv[2], argv[3], argv[4], "aips", argv[1], "", "", "", 13157, 
+      Prediffer pre2(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, "LOFAR.RI", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
@@ -318,7 +327,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 4*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", "", 13157, 
+      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, "LOFAR.RI", srcgrp, false);
       // Only use first correlation.
       vector<int> corrVec(1, 0);
@@ -340,7 +349,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = 2*i;
       }
       vector<vector<int> > srcgrp;
-      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "", "", 13157, 
+      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, "LOFAR.RI", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
