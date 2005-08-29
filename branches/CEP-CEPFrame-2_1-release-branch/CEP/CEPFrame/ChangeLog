@@ -1,0 +1,1502 @@
+2005-06-14 16:08  meijeren
+
+	* src/: ApplicationHolder.h, BlockRep.h, CompositeRep.h,
+	  CycBufferManager.h, DHPoolManager.h, DH_Empty.h, DH_Example.h,
+	  DH_Tester.h, DataManager.h, NetworkBuilder.h,
+	  SynchronisityManager.h, VirtualMachine.h, WH_Empty.h,
+	  WH_Example.h, WH_Tester.h: %[ER: 231]% Added doxygen tags.
+
+2005-06-06 12:12  meijeren
+
+	* configure.in, src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/Block.cc, src/Block.h, src/BlockRep.cc, src/BlockRep.h,
+	  src/Composite.cc, src/Composite.h, src/CompositeRep.cc,
+	  src/CompositeRep.h, src/CycBufferManager.cc,
+	  src/CycBufferManager.h, src/CyclicBuffer.h, src/DHPoolManager.cc,
+	  src/DH_Empty.cc, src/DH_Example.cc, src/DH_Example.h,
+	  src/DH_Tester.cc, src/DH_Tester.h, src/DataManager.cc,
+	  src/DataManager.h, src/Lock.h, src/Makefile.am,
+	  src/NetworkBuilder.cc, src/NetworkBuilder.h, src/Step.cc,
+	  src/Step.h, src/StepRep.cc, src/StepRep.h,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  src/VirtualMachine.cc, src/WH_Empty.cc, src/WH_Example.cc,
+	  src/WH_TestAutoTrigger.cc, src/WH_TestAutoTrigger.h,
+	  src/WH_Tester.cc, src/CorbaExe/CorbaControlClient.cc,
+	  src/CorbaExe/CorbaMonitorClient.cc, src/CorbaExe/Makefile.am,
+	  test/CyclicBufferTest.cc, test/CyclicBufferTest.gnuplot,
+	  test/CyclicBufferTest.run, test/CyclicBufferTest.sh,
+	  test/CyclicBufferTest_check.sh, test/Example.cc,
+	  test/Example.out, test/Makefile.am, test/Simulator_Example.cc,
+	  test/Simulator_Example.out, test/TestAutoTrigger.cc,
+	  test/Tester.cc, test/Tester.out, test/WH_TestAutoTrigger.cc,
+	  test/WH_TestAutoTrigger.h: %[ER: 231]% Merge with branch
+	  ER231_development.
+
+2005-06-01 14:27  diepen
+
+	* configure.in: %[ER: 70]% Added check for LONG_LONG and LOG4CPLUS
+	  Removed MATLAB, XERCES and psql
+
+2005-05-31 15:43  meijeren
+
+	* src/: DH_Example.cc, DH_Example.h: %[ER: 231]% Removed irrelevant
+	  code.
+
+2005-05-30 10:53  loose
+
+	* test/CyclicBufferTest.sh: %[ER: 252]%
+
+	  Now uses enhanced runtest.sh to limit execution time.
+
+2005-05-27 17:06  coolen
+
+	* configure.in: %[ER: 273]%
+
+	  Changed lofar_PACKAGE into lofar_INTERNAL.
+
+2005-05-26 15:32  meijeren
+
+	* src/DH_Example.cc, src/Makefile.am, src/SynchronisityManager.cc,
+	  test/TestAutoTrigger.cc: %[ER: 231]% Added check in order to
+	  prevent setting of sharing twice.
+
+2005-05-23 11:13  meijeren
+
+	* test/: CyclicBufferTest.cc, CyclicBufferTest.gnuplot,
+	  CyclicBufferTest.run, CyclicBufferTest.sh,
+	  CyclicBufferTest_check.sh, Makefile.am: %[ER: 231]% Removed
+	  CyclicBufferTest
+
+2005-05-20 11:14  meijeren
+
+	* src/: BlockRep.cc, BlockRep.h, StepRep.cc, StepRep.h: %[ER: 231]%
+	  Fixed setting of Block ID.
+
+2005-05-19 15:43  meijeren
+
+	* test/Simulator_Example.cc: %[ER: 231]% Removed unneccesary
+	  connect.
+
+2005-05-19 13:48  meijeren
+
+	* src/ApplicationHolder.cc, src/DataManager.cc, src/DataManager.h,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  test/Example.cc, test/TestAutoTrigger.cc, test/Tester.cc: %[ER:
+	  231]% Modifications needed for buffering.
+
+2005-05-13 11:44  coolen
+
+	* configure.in, src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/Composite.cc, src/Composite.h, src/CompositeRep.cc,
+	  src/CompositeRep.h, src/CycBufferManager.cc,
+	  src/CycBufferManager.h, src/CyclicBuffer.cc, src/CyclicBuffer.h,
+	  src/DHPoolManager.cc, src/DHPoolManager.h, src/DH_Empty.cc,
+	  src/DH_Empty.h, src/DH_Example.cc, src/DH_Example.h,
+	  src/DH_Tester.cc, src/DH_Tester.h, src/DataManager.cc,
+	  src/DataManager.h, src/Lock.h, src/Makefile.am,
+	  src/NetworkBuilder.cc, src/NetworkBuilder.h, src/Step.cc,
+	  src/Step.h, src/StepRep.cc, src/StepRep.h,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  src/VirtualMachine.cc, src/VirtualMachine.h, src/WH_Empty.cc,
+	  src/WH_Empty.h, src/WH_Example.cc, src/WH_Example.h,
+	  src/WH_TestAutoTrigger.cc, src/WH_TestAutoTrigger.h,
+	  src/WH_Tester.cc, src/WH_Tester.h,
+	  src/CorbaExe/CorbaControlClient.cc,
+	  src/CorbaExe/CorbaMonitorClient.cc, test/CyclicBufferTest.cc,
+	  test/Example.cc, test/Makefile.am, test/Simulator_Example.cc,
+	  test/Simulator_Example.h, test/TestAutoTrigger.cc,
+	  test/TestAutoTrigger.h, test/TestOnDemandData.cc, test/Tester.cc,
+	  test/Tester.out, test/shmem_alloc1.cc, test/shmem_alloc2.cc,
+	  test/tmat.cc: all changes so far for the lofar_PACKAGE to
+	  lofar_INTERNAL step.	beware!!!  this branch also contains the
+	  ER231 changes , and those are NOT wanted in the main development
+	  tree....  Only take the configure.in stuff
+
+2005-05-10 16:03  meijeren
+
+	* configure.in, src/Block.h, src/BlockRep.cc, src/BlockRep.h,
+	  src/Composite.cc, src/Composite.h, src/CompositeRep.cc,
+	  src/CompositeRep.h, src/Step.cc, src/Step.h, src/StepRep.cc,
+	  src/StepRep.h, src/CorbaExe/CorbaControlClient.cc,
+	  src/CorbaExe/CorbaMonitorClient.cc, src/CorbaExe/Makefile.am:
+	  %[ER: 231]% Removed Corba related stuff (PR164)
+
+2005-05-10 14:46  meijeren
+
+	* src/ApplicationHolder.cc, src/ApplicationHolder.h, src/Block.cc,
+	  src/Block.h, src/BlockRep.cc, src/BlockRep.h, src/Composite.cc,
+	  src/Composite.h, src/CompositeRep.cc, src/CompositeRep.h,
+	  src/CycBufferManager.h, src/CyclicBuffer.cc, src/CyclicBuffer.h,
+	  src/DataManager.cc, src/DataManager.h, src/Lock.h,
+	  src/Makefile.am, src/NetworkBuilder.h, src/Step.cc, src/Step.h,
+	  src/StepRep.cc, src/StepRep.h, src/WH_TestAutoTrigger.cc,
+	  src/WH_TestAutoTrigger.h, test/CyclicBufferTest.cc,
+	  test/Example.cc, test/Example.out, test/Makefile.am,
+	  test/Simulator_Example.cc, test/Simulator_Example.out,
+	  test/TestAutoTrigger.cc, test/Tester.cc, test/Tester.out,
+	  test/WH_TestAutoTrigger.cc, test/WH_TestAutoTrigger.h,
+	  test/tmat.cc: %[ER: 231]% Major change in Composite/Step
+	  relationship (ER139).  - Introduced a base class for Step(Rep)
+	  and Composite(Rep).  - Removed superfluous CyclicBuffer class
+	  (use from Transport package instead) - Moved Lock.h to Transport
+	  package - Moved WH_TestAutoTrigger to test directory
+
+2005-05-02 17:41  loose
+
+	* src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/Composite.cc, src/Composite.h, src/CompositeRep.cc,
+	  src/CompositeRep.h, src/CycBufferManager.cc,
+	  src/CycBufferManager.h, src/CyclicBuffer.h, src/DHPoolManager.cc,
+	  src/DHPoolManager.h, src/DH_Empty.cc, src/DH_Empty.h,
+	  src/DH_Example.cc, src/DH_Example.h, src/DH_Tester.cc,
+	  src/DH_Tester.h, src/DataManager.cc, src/DataManager.h,
+	  src/Lock.h, src/NetworkBuilder.cc, src/NetworkBuilder.h,
+	  src/Step.cc, src/Step.h, src/StepRep.cc, src/StepRep.h,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  src/VirtualMachine.cc, src/VirtualMachine.h, src/WH_Empty.cc,
+	  src/WH_Empty.h, src/WH_Example.cc, src/WH_Example.h,
+	  src/WH_TestAutoTrigger.cc, src/WH_TestAutoTrigger.h,
+	  src/WH_Tester.cc, src/WH_Tester.h,
+	  src/CorbaExe/CorbaControlClient.cc,
+	  src/CorbaExe/CorbaMonitorClient.cc, test/CyclicBufferTest.cc,
+	  test/Example.cc, test/Simulator_Example.cc,
+	  test/Simulator_Example.h, test/TestAutoTrigger.cc,
+	  test/TestAutoTrigger.h, test/TestOnDemandData.cc, test/Tester.cc,
+	  test/shmem_alloc1.cc, test/shmem_alloc2.cc, test/tmat.cc: %[PR:
+	  100]%
+
+	  Merged PR100-task-branch into the main development line.
+
+2005-04-27 17:27  loose
+
+	* src/ApplicationHolder.cc: %[PR: 100]%
+
+	  Layout changes only.
+
+2005-04-27 15:21  loose
+
+	* src/CyclicBuffer.cc: %[PR: 100]%
+
+	  Did not contain any code.
+
+2005-04-27 13:48  zwart
+
+	* src/ApplicationHolder.cc: %[ER: PR100]%
+
+	  Added lofar_config.h
+
+2005-04-18 13:27  loose
+
+	* src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/Composite.cc, src/Composite.h, src/CompositeRep.cc,
+	  src/CompositeRep.h, src/CycBufferManager.cc,
+	  src/CycBufferManager.h, src/CyclicBuffer.cc, src/CyclicBuffer.h,
+	  src/DHPoolManager.cc, src/DHPoolManager.h, src/DH_Empty.cc,
+	  src/DH_Empty.h, src/DH_Example.cc, src/DH_Example.h,
+	  src/DH_Tester.cc, src/DH_Tester.h, src/DataManager.cc,
+	  src/DataManager.h, src/Lock.h, src/NetworkBuilder.cc,
+	  src/NetworkBuilder.h, src/Step.cc, src/Step.h, src/StepRep.cc,
+	  src/StepRep.h, src/SynchronisityManager.cc,
+	  src/SynchronisityManager.h, src/VirtualMachine.cc,
+	  src/VirtualMachine.h, src/WH_Empty.cc, src/WH_Empty.h,
+	  src/WH_Example.cc, src/WH_Example.h, src/WH_TestAutoTrigger.cc,
+	  src/WH_TestAutoTrigger.h, src/WH_Tester.cc, src/WH_Tester.h,
+	  src/CorbaExe/CorbaControlClient.cc,
+	  src/CorbaExe/CorbaMonitorClient.cc, test/CyclicBufferTest.cc,
+	  test/Example.cc, test/Simulator_Example.cc,
+	  test/Simulator_Example.h, test/TestAutoTrigger.cc,
+	  test/TestAutoTrigger.h, test/TestOnDemandData.cc, test/Tester.cc,
+	  test/shmem_alloc1.cc, test/shmem_alloc2.cc, test/tmat.cc: %[PR:
+	  100]%
+
+	  Removed all `#include <config.h>' and `#include <lofar_config.h>'
+	  from .h files. Added `#include <lofar_config.h>' to .cc files.
+
+2005-04-13 11:12  loose
+
+	* src/Makefile.am, test/Makefile.am, test/shmem_alloc1.cc,
+	  test/shmem_alloc2.cc, test/tmat.cc: %[ER: 0]%
+
+	  Merged 'bug fixes' on the release 1.0 branch to the trunk.
+
+2005-04-12 14:33  loose
+
+	* test/: shmem_alloc1.cc, shmem_alloc2.cc: %[ER: 0]%
+
+	  Prepared for release 1.0. Fixed include lines.
+
+2005-04-11 16:56  loose
+
+	* test/Makefile.am: %[ER: 0]%
+
+	  Prepared for release 1.0
+
+2005-04-11 16:10  meijeren
+
+	* src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/Composite.cc, src/Composite.h, src/CompositeRep.cc,
+	  src/CompositeRep.h, src/CycBufferManager.cc,
+	  src/CycBufferManager.h, src/CyclicBuffer.h, src/DHPoolManager.cc,
+	  src/DHPoolManager.h, src/DH_Empty.cc, src/DH_Empty.h,
+	  src/DH_Example.cc, src/DH_Example.h, src/DH_Tester.cc,
+	  src/DH_Tester.h, src/DataManager.cc, src/DataManager.h,
+	  src/Lock.h, src/NetworkBuilder.cc, src/NetworkBuilder.h,
+	  src/Step.cc, src/Step.h, src/StepRep.cc, src/StepRep.h,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  src/VirtualMachine.cc, src/VirtualMachine.h, src/WH_Empty.cc,
+	  src/WH_Empty.h, src/WH_Example.cc, src/WH_Example.h,
+	  src/WH_TestAutoTrigger.cc, src/WH_TestAutoTrigger.h,
+	  src/WH_Tester.cc, src/WH_Tester.h, test/Example.cc,
+	  test/Simulator_Example.cc, test/TestAutoTrigger.cc,
+	  test/Tester.cc, test/Tester.out: %[ER: 231]% Several changes
+	  needed to work with the new (ER231) Transport library. All tests
+	  succeed, except Example(problem with composites & two
+	  connections).
+
+	  CVS
+	  ----------------------------------------------------------------------
+
+2005-04-11 15:45  loose
+
+	* configure.in, src/Makefile.am, test/Makefile, test/Makefile.am,
+	  test/tmat.cc: %[ER: 0]%
+
+	  Prepared for release 1.0.
+
+2005-04-11 11:02  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Updated version number to 1.0
+
+2005-03-23 14:24  diepen
+
+	* src/WH_Example.cc: %[ER: 247]% Needed an explicit makedcomplex
+
+2005-03-23 10:15  diepen
+
+	* src/: DH_Example.cc, DH_Example.h, DH_Tester.cc, DH_Tester.h,
+	  WH_Example.cc, WH_Tester.cc: %[ER: 247]% Changes for new complex
+
+2005-03-09 13:05  zwart
+
+	* src/: CompositeRep.cc, CompositeRep.h: %[ER: 156]%
+
+	  Removed profiling because it is now in the WorkHolder
+
+2005-02-14 17:14  meijeren
+
+	* test/: Example.cc, Makefile.am, Simulator_Example.cc,
+	  TestAutoTrigger.cc, TestAutoTrigger.out, Tester.cc, Tester.out,
+	  Tester.run: %[ER: 0]% Modified tests to succeed in the gnu_mpich
+	  build variant as well.
+
+2005-01-25 08:41  romein
+
+	* test/: shmem_alloc1.cc, shmem_alloc2.cc: %[ER: 220]% Fix 64-bit
+	  arch bugs.
+
+2004-12-29 17:21  meijeren
+
+	* src/CompositeRep.cc, src/CycBufferManager.cc, src/CyclicBuffer.h,
+	  src/DHPoolManager.cc, src/DH_Example.h, src/DataManager.cc,
+	  src/DataManager.h, src/Lock.h, src/StepRep.cc,
+	  src/SynchronisityManager.cc, src/VirtualMachine.cc,
+	  src/WH_Empty.cc, src/WH_Example.cc, src/WH_Example.h,
+	  test/CyclicBufferTest.cc, test/Example.cc,
+	  test/Simulator_Example.cc, test/TestAutoTrigger.cc,
+	  test/TestOnDemandData.cc, test/Tester.cc: %[ER: 159]% Replaced
+	  the use of Debug.h with LofarLogger.h
+
+2004-12-27 09:38  zwart
+
+	* test/TestAutoTrigger.cc: %[ER: 219]%
+
+	  Profiler moved to tinyCEP
+
+2004-12-23 13:58  zwart
+
+	* test/: Example.cc, Simulator_Example.cc, TestOnDemandData.cc,
+	  Tester.cc: %[ER: 219]%
+
+	  Profiler moved to tinyCEP
+
+2004-12-23 11:14  zwart
+
+	* src/: StepRep.cc, StepRep.h: %[ER: 219]%
+
+	  Removed profiling (is now done in the WorkHolder)
+
+2004-12-23 11:00  zwart
+
+	* src/: Makefile.am, Profiler.cc, Profiler.h, StepRep.cc,
+	  CompositeRep.cc: %[ER: 219]%
+
+	  Moved Profiler to tinyCEP
+
+2004-12-20 11:45  meijeren
+
+	* src/: CycBufferManager.cc, DHPoolManager.cc: %[ER: 159]% Use
+	  DataHolder::init() instead of basePreprocess().
+
+2004-12-17 10:22  zwart
+
+	* src/Profiler.cc: %[ER: 4]%
+
+	  Moved initialization of statics into namespace lofar
+
+2004-10-21 14:49  loose
+
+	* test/Example.cc: %[ER: 161]%
+
+	  Several small changes related to the use of namespace LOFAR.
+
+2004-10-13 11:49  loose
+
+	* src/Makefile.am, src/CorbaExe/Makefile.am, test/Makefile.am:
+	  %[ER: 161]%
+
+	  * Almost all code in the 'Common' package now resides in the
+	  namespace LOFAR.    Work is still in progress.  * The lofar_*.h
+	  files (like lofar_string.h) now make the using declarations of
+	  the standard types in the namespace LOFAR, instead of the global
+	  namespace.	For backward compatibility, the compiler
+	  MAKE_LOFAR_SYMBOLS_GLOBAL can be    used. It is recommended that
+	  you use these lofar_*.h header files instead of    the standard
+	  header files.  * The line 'AM_CPPFLAGS =
+	  MAKE_LOFAR_SYMBOLS_GLOBAL' has been added to most of	 the
+	  Makefile.am files. The packages that are currently being built in
+	    the weekly build are known to compile using the new 'Common'
+	  package when	 backward compatibility is enabled. Where
+	  necessary, source code or header   files were modified. This
+	  usually meant adding a line like e.g.    'using LOFAR::Thread'.
+
+2004-09-29 15:45  meijeren
+
+	* src/: CompositeRep.cc, StepRep.cc, StepRep.h: %[ER: 137]%
+	  runOnNode functionality moved to tinyCEP
+
+2004-09-24 11:25  schaaf
+
+	* src/DataManager.cc: %[ER: 145]% basis quick-and-dirty skip of
+	  first inpu read is rate is set
+
+2004-08-27 15:46  diepen
+
+	* test/Simulator_Example.run: %[ER: 72]% It needed to read input
+	  from Simulator_Example.in
+
+2004-08-17 15:39  meijeren
+
+	* src/: Step.h, StepRep.cc, StepRep.h: %[ER: 128]% Fixed input,
+	  output and process rates.
+
+2004-08-12 17:13  meijeren
+
+	* test/: Example.cc, Example.out, Simulator_Example.cc,
+	  Simulator_Example.out, TestAutoTrigger.cc, Tester.cc: %[ER: 126]%
+	  Tests are now working (except CyclicBufferTest).
+
+2004-08-12 14:45  meijeren
+
+	* configure.in, src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/BaseSim.h, src/BaseTransport.cc, src/BaseTransport.h,
+	  src/Composite.cc, src/Composite.h, src/CompositeRep.cc,
+	  src/CompositeRep.h, src/CycBufferManager.h, src/CyclicBuffer.cc,
+	  src/CyclicOWBuffer.h, src/DHPoolManager.cc, src/DHPoolManager.h,
+	  src/DH_Database.cc, src/DH_Database.h, src/DH_Empty.h,
+	  src/DH_Example.cc, src/DH_Example.h, src/DH_PL.cc, src/DH_PL.h,
+	  src/DH_PL_MessageRecord.h, src/DH_Postgresql.cc,
+	  src/DH_Postgresql.h, src/DH_Tester.cc, src/DH_Tester.h,
+	  src/DataHolder.cc, src/DataHolder.h, src/DataManager.cc,
+	  src/DataManager.h, src/LCS_base.h, src/Makefile.am,
+	  src/NetworkBuilder.cc, src/NetworkBuilder.h, src/PHEX_Antenna.cc,
+	  src/PHEX_Antenna.h, src/PH_Int.cc, src/PH_Int.h,
+	  src/PO_DH_Database.cc, src/PO_DH_Database.h,
+	  src/PO_DH_PL_MessageRecord.h, src/PO_DH_PL_MessageRecord.tcc,
+	  src/ParamHolder.cc, src/ParamHolder.h, src/ParamManager.cc,
+	  src/ParamManager.h, src/ParamTransport.cc, src/ParamTransport.h,
+	  src/ParamTransportManager.cc, src/ParamTransportManager.h,
+	  src/SAXHandler.cc, src/SAXHandler.h, src/SAXSimulParser.cc,
+	  src/SAXSimulParser.h, src/Sel_Linked.cc, src/Sel_Linked.h,
+	  src/Sel_RoundRobin.cc, src/Sel_RoundRobin.h, src/Selector.cc,
+	  src/Selector.h, src/Simul.cc, src/Simul.h, src/Simul2XML.cc,
+	  src/Simul2XML.h, src/SimulBuilder.cc, src/SimulBuilder.h,
+	  src/SimulRep.cc, src/SimulRep.h, src/Simulator.cc,
+	  src/Simulator.h, src/SimulatorParse.yy,
+	  src/SimulatorParseClass.cc, src/SimulatorParseClass.h,
+	  src/SimulatorTokenize.ll, src/Socket.cc, src/Socket.h,
+	  src/Step.cc, src/Step.h, src/StepRep.cc, src/StepRep.h,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  src/TH_Database.cc, src/TH_Database.h, src/TH_File.cc,
+	  src/TH_File.h, src/TH_MPI.cc, src/TH_MPI.h, src/TH_Mem.cc,
+	  src/TH_Mem.h, src/TH_Mem_Bl.cc, src/TH_Mem_Bl.h,
+	  src/TH_Socket.cc, src/TH_Socket.h, src/Transport.cc,
+	  src/Transport.h, src/TransportHolder.cc, src/TransportHolder.h,
+	  src/Transportable.cc, src/Transportable.h, src/WH_Empty.h,
+	  src/WH_Example.cc, src/WH_Example.h, src/WH_TestAutoTrigger.cc,
+	  src/WH_TestAutoTrigger.h, src/WH_Tester.cc, src/WH_Tester.h,
+	  src/WorkHolder.cc, src/WorkHolder.h, src/four1.cc, src/four1.h,
+	  src/matlabmex.cc, src/realft.cc, src/realft.h,
+	  src/Corba/BS_Corba.cc, src/Corba/BS_Corba.h,
+	  src/Corba/CorbaControl.cc, src/Corba/CorbaControl.idl,
+	  src/Corba/CorbaController.cc, src/Corba/CorbaController.h,
+	  src/Corba/CorbaMonitor.cc, src/Corba/CorbaMonitor.h,
+	  src/Corba/CorbaTransport.cc, src/Corba/CorbaTransport.h,
+	  src/Corba/CorbaTransportIn.cc, src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportInterface.idl,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/CorbaTransportOut.h,
+	  src/Corba/MTCircularBuffer.h, src/Corba/Makefile,
+	  src/Corba/Makefile.am, src/Corba/TH_Corba.cc,
+	  src/Corba/TH_Corba.h, src/ShMem/Makefile.am,
+	  src/ShMem/TH_ShMem.cc, src/ShMem/TH_ShMem.h, test/Example.cc,
+	  test/Example.out, test/Simulator_Example.cc,
+	  test/Simulator_Example.h, test/TestAutoTrigger.cc,
+	  test/TestAutoTrigger.h, test/Tester.cc: %[ER: 126]% Merge of
+	  branch ER_126_development
+
+2004-08-05 17:22  meijeren
+
+	* src/: Composite.h, Step.h: %[ER: 126]% Removed TRANSPORTER
+	  references, because TH_MPI does not have a default constructor.
+
+2004-07-12 11:33  meijeren
+
+	* src/DataManager.cc: %[ER: 126]% Fixed bug in assert.
+
+2004-07-06 14:14  meijeren
+
+	* src/: DataManager.cc, StepRep.cc: %[ER: 126]% - Removed setID()
+	  method from StepRep.	- The setting of buffering properties now
+	  checks connectivity.
+
+2004-07-01 09:43  meijeren
+
+	* src/DataManager.cc, src/DataManager.h, src/StepRep.cc,
+	  src/WH_TestAutoTrigger.cc, test/Example.cc, test/Example.out,
+	  test/Simulator_Example.cc, test/Simulator_Example.h,
+	  test/TestAutoTrigger.cc, test/TestAutoTrigger.h, test/Tester.cc:
+	  %[ER: 126]% All tests (except CyclicBufferTest) now succeeding.
+
+2004-06-29 14:18  meijeren
+
+	* src/DHPoolManager.cc: %[ER: 126]% Fixed double DataHolder delete.
+	  TinyDataManager now takes care of DataHolder clean-up instead of
+	  DHPoolManager.
+
+2004-06-29 10:16  meijeren
+
+	* src/: ApplicationHolder.cc, ApplicationHolder.h, Composite.cc,
+	  Composite.h, CompositeRep.cc, CompositeRep.h, DataManager.cc,
+	  Step.h, StepRep.cc, StepRep.h, SynchronisityManager.cc: %[ER:
+	  126]% - changed connect method - updated ApplicationHolder class
+
+2004-06-28 11:23  meijeren
+
+	* src/: ApplicationHolder.cc, ApplicationHolder.h, Composit.cc,
+	  Composit.h, CompositRep.cc, CompositRep.h, Composite.cc,
+	  Composite.h, CompositeRep.cc, CompositeRep.h, Makefile.am,
+	  NetworkBuilder.h, Step.cc, Step.h, StepRep.cc, StepRep.h: %[ER:
+	  126]% Fixed typo in class name
+
+2004-06-25 15:41  meijeren
+
+	* src/: ApplicationHolder.cc, CompositRep.cc, CompositRep.h,
+	  CyclicBuffer.cc, DataManager.cc, DataManager.h, Makefile.am,
+	  Sel_Linked.cc, Sel_Linked.h, Sel_RoundRobin.cc, Sel_RoundRobin.h,
+	  Selector.cc, Selector.h, Step.h, StepRep.cc, StepRep.h,
+	  SynchronisityManager.cc, SynchronisityManager.h: %[ER: 126]% -
+	  moved Selector to tinyCEP.  - updated DataManager (creation of
+	  DataManager in StepRep).  - removed methods checkConnections etc.
+
+2004-06-23 15:56  meijeren
+
+	* src/: four1.cc, four1.h, matlabmex.cc, realft.cc, realft.h: %[ER:
+	  126]% Removed some more files.
+
+2004-06-23 14:41  meijeren
+
+	* src/: ApplicationHolder.cc, ApplicationHolder.h, Composit.cc,
+	  Composit.h, CompositRep.cc, CompositRep.h, Makefile.am,
+	  NetworkBuilder.cc, NetworkBuilder.h, Simul.cc, Simul.h,
+	  SimulBuilder.cc, SimulBuilder.h, SimulRep.cc, SimulRep.h,
+	  Simulator.cc, Simulator.h, Step.cc, Step.h, StepRep.cc,
+	  StepRep.h, WorkHolder.cc, WorkHolder.h: %[ER: 126]% Renamed Simul
+	  to Composit, Simulator to ApplicationHolder and SimulBuilder to
+	  NetworkBuilder.
+
+2004-06-23 12:30  meijeren
+
+	* src/: Makefile.am, SAXSimulParser.cc, Simul2XML.h: %[ER: 126]%
+	  Further removal of files.
+
+2004-06-22 14:24  meijeren
+
+	* configure.in, src/BaseSim.h, src/BaseTransport.cc,
+	  src/BaseTransport.h, src/CycBufferManager.h,
+	  src/CyclicOWBuffer.h, src/DHPoolManager.h, src/DH_Database.cc,
+	  src/DH_Database.h, src/DH_Empty.h, src/DH_Example.cc,
+	  src/DH_Example.h, src/DH_PL.cc, src/DH_PL.h,
+	  src/DH_PL_MessageRecord.h, src/DH_Postgresql.cc,
+	  src/DH_Postgresql.h, src/DH_Tester.cc, src/DH_Tester.h,
+	  src/DataHolder.cc, src/DataHolder.h, src/DataManager.cc,
+	  src/DataManager.h, src/LCS_base.h, src/Makefile.am,
+	  src/PHEX_Antenna.cc, src/PHEX_Antenna.h, src/PH_Int.cc,
+	  src/PH_Int.h, src/PO_DH_Database.cc, src/PO_DH_Database.h,
+	  src/PO_DH_PL_MessageRecord.h, src/PO_DH_PL_MessageRecord.tcc,
+	  src/ParamHolder.cc, src/ParamHolder.h, src/ParamManager.cc,
+	  src/ParamManager.h, src/ParamTransport.cc, src/ParamTransport.h,
+	  src/ParamTransportManager.cc, src/ParamTransportManager.h,
+	  src/SAXHandler.cc, src/SAXHandler.h, src/SAXSimulParser.h,
+	  src/Simul.h, src/Simul2XML.cc, src/SimulRep.cc, src/SimulRep.h,
+	  src/Simulator.cc, src/Simulator.h, src/SimulatorParse.yy,
+	  src/SimulatorParseClass.cc, src/SimulatorParseClass.h,
+	  src/SimulatorTokenize.ll, src/Socket.cc, src/Socket.h,
+	  src/Step.h, src/StepRep.cc, src/StepRep.h,
+	  src/SynchronisityManager.h, src/TH_Database.cc,
+	  src/TH_Database.h, src/TH_File.cc, src/TH_File.h, src/TH_MPI.cc,
+	  src/TH_MPI.h, src/TH_Mem.cc, src/TH_Mem.h, src/TH_Mem_Bl.cc,
+	  src/TH_Mem_Bl.h, src/TH_Socket.cc, src/TH_Socket.h,
+	  src/Transport.cc, src/Transport.h, src/TransportHolder.cc,
+	  src/TransportHolder.h, src/Transportable.cc, src/Transportable.h,
+	  src/WH_Empty.h, src/WH_Example.cc, src/WH_Example.h,
+	  src/WH_TestAutoTrigger.cc, src/WH_TestAutoTrigger.h,
+	  src/WH_Tester.cc, src/WH_Tester.h, src/Corba/BS_Corba.cc,
+	  src/Corba/BS_Corba.h, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaControl.idl, src/Corba/CorbaController.cc,
+	  src/Corba/CorbaController.h, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaMonitor.h, src/Corba/CorbaTransport.cc,
+	  src/Corba/CorbaTransport.h, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportInterface.idl,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/CorbaTransportOut.h,
+	  src/Corba/MTCircularBuffer.h, src/Corba/Makefile,
+	  src/Corba/Makefile.am, src/Corba/TH_Corba.cc,
+	  src/Corba/TH_Corba.h, src/ShMem/Makefile.am,
+	  src/ShMem/TH_ShMem.cc, src/ShMem/TH_ShMem.h: %[ER: 126]% Removed
+	  a bunch of files
+
+2004-04-21 09:32  tanaka
+
+	* src/: TH_Socket.cc, TH_Socket.h: %[ER: 108]%
+
+	  Addition of TH_Socket; initial creation.
+
+2004-04-19 11:42  tanaka
+
+	* src/: Socket.cc, Socket.h: %[ER: 108]%
+
+	  Addition of Socket class.
+
+2004-04-19 11:41  tanaka
+
+	* src/Makefile.am: %[ER: 108]%
+
+	  (Temporal) addition of Socket.h and Socket.cc.
+
+2004-04-07 15:22  broekema
+
+	* tinyCF/: Makefile.am, bootstrap, configure.in: %[ER: 105]%
+	  Removed old tinyCEP code. The new code is available in
+	  CEP/libTransport and CEP/tinyCEP
+
+2004-04-07 15:21  broekema
+
+	* tinyCF/src/: AppController.cc, AppController.h,
+	  AppControllerParse.yy, AppControllerParseClass.cc,
+	  AppControllerParseClass.h, AppControllerTokenize.ll, BaseSim.h,
+	  BaseTransport.cc, BaseTransport.h, CyclicBuffer.cc,
+	  CyclicBuffer.h, DataHolder.cc, DataHolder.h, Lock.h, Makefile.am,
+	  SimulatorParse.yy, SimulatorParseClass.cc, SimulatorParseClass.h,
+	  SimulatorTokenize.ll, TH_Database.cc, TH_Database.h, TH_File.cc,
+	  TH_File.h, TH_MPI.cc, TH_MPI.h, TH_Mem.cc, TH_Mem.h,
+	  TH_Mem_Bl.cc, TH_Mem_Bl.h, Transport.cc, Transport.h,
+	  TransportHolder.cc, TransportHolder.h, Transportable.cc,
+	  Transportable.h, WorkBlock.cc, WorkBlock.h: %[ER: 105]% removed
+	  old tiny CEPFrame code. The new versions are available in
+	  CEP/libTransport and CEP/tinyCEP.
+
+2004-03-29 11:29  schaaf
+
+	* src/WorkHolder.cc: %[ER: 103]%
+
+	  comments
+
+2004-03-29 09:25  broekema
+
+	* tinyCF/src/: AppController.cc, AppController.h,
+	  AppControllerParse.yy, AppControllerParseClass.cc,
+	  AppControllerParseClass.h, AppControllerTokenize.ll, Makefile.am,
+	  SimulatorParse.yy, SimulatorParseClass.cc, SimulatorParseClass.h,
+	  SimulatorTokenize.ll, WorkBlock.cc, WorkBlock.h: Entering first
+	  stab at tinyFrame code into CVS. It compiles, that's all I'm
+	  willing to say about it.
+
+2004-03-28 21:16  schaaf
+
+	* src/: WorkHolder.cc, WorkHolder.h: %[ER: 103]%
+
+	  removed procmode stuff
+
+2004-03-24 13:29  meijeren
+
+	* src/StepRep.cc: %[ER: 4]% Added extra check in
+	  simplifyConnections() method to prevent a blocking
+	  TransportHolder being replaced by TH_Mem.
+
+2004-03-22 16:32  tanaka
+
+	* src/DH_PL.cc: %[ER: 59]%
+
+	  Addition of comments.
+
+2004-03-22 16:31  tanaka
+
+	* src/DH_PL.h: %[ER: 59]%
+
+	  Addition of comments for transfer.
+
+2004-03-22 14:50  tanaka
+
+	* src/DH_Postgresql.h: %[ER: 59]%
+
+	  Removed unused member isConnected.
+
+2004-03-22 14:44  tanaka
+
+	* src/DH_Database.cc: %[ER: 59]%
+
+	  Removed obsolete include file PO_Database.h
+
+2004-03-22 14:12  tanaka
+
+	* src/DH_Postgresql.cc: %[ER: 59]%
+
+	  Removed unnecessary debug output on cerr.
+
+2004-03-22 14:09  tanaka
+
+	* src/DH_Postgresql.cc: %[ER: 59]% Addition of comments/
+
+2004-03-22 14:09  tanaka
+
+	* src/DH_Postgresql.h: %[ER: 59]% Addition of comments.
+
+2004-03-22 13:35  tanaka
+
+	* src/DH_Database.cc: %[ER: 59]%
+
+	  Moved constructor to .cc file (was inline in .h file)
+
+2004-03-22 13:35  tanaka
+
+	* src/DH_Database.h: %[ER: 59]%
+
+	  Moved constructor to .cc file (was inline).
+
+2004-03-22 12:08  tanaka
+
+	* src/DH_Database.cc: %[ER: 59]%
+
+	  Addition of comments.
+
+2004-03-22 12:05  tanaka
+
+	* src/DH_Database.h: Added comments.
+
+2004-03-01 13:59  lofar
+
+	* test/CyclicBufferTest.run: %[ER: 68]%
+
+	  Added .run script
+
+2004-02-17 15:44  broekema
+
+	* tinyCF/src/Makefile.in: Removed generated Makefile.in file from
+	  CVS
+
+2004-02-17 15:32  broekema
+
+	* tinyCF/: Makefile.am, bootstrap, configure.in, src/BaseSim.h,
+	  src/BaseTransport.cc, src/BaseTransport.h, src/CyclicBuffer.cc,
+	  src/CyclicBuffer.h, src/DataHolder.cc, src/DataHolder.h,
+	  src/Lock.h, src/Makefile.am, src/Makefile.in, src/TH_Database.cc,
+	  src/TH_Database.h, src/TH_File.cc, src/TH_File.h, src/TH_MPI.cc,
+	  src/TH_MPI.h, src/TH_Mem.cc, src/TH_Mem.h, src/TH_Mem_Bl.cc,
+	  src/TH_Mem_Bl.h, src/Transport.cc, src/Transport.h,
+	  src/TransportHolder.cc, src/TransportHolder.h,
+	  src/Transportable.cc, src/Transportable.h: Initial check-in
+
+2004-02-09 12:07  diepen
+
+	* src/DH_Postgresql.cc: %[ER: 72]% Needed an extra ifdef
+
+2004-02-06 16:09  diepen
+
+	* configure.in, src/DH_Postgresql.cc, src/DH_Postgresql.h,
+	  src/Makefile.am: %[ER: 72]% Added psql classes to Makefile and
+	  configure
+
+2004-02-04 16:45  meijeren
+
+	* test/TestAutoTrigger.out: %[ER:83]% Corrected output
+
+2004-02-04 16:07  meijeren
+
+	* src/DataManager.cc: %[ER:83]% Added check doAutoTriggerIn() to
+	  initializeInputs method. This makes sure input data is not read
+	  when auto trigger is set to false.
+
+2004-01-27 14:10  tanaka
+
+	* src/PO_DH_PL_MessageRecord.tcc: %[ER: 71]%
+
+	  Initial creation.
+
+2004-01-27 14:10  tanaka
+
+	* src/: PO_DH_PL_MessageRecord.h, LCS_base.h: %[ER: 71]% Initial
+	  creation.
+
+2004-01-27 14:05  tanaka
+
+	* src/DH_PL_MessageRecord.h: %[ER: 71]% Initial creation.
+
+2004-01-22 16:16  tanaka
+
+	* src/: DH_PL.h, DH_PL.cc: %[ER: 71]%
+
+	  Creation.
+
+2004-01-19 14:56  diepen
+
+	* test/: Makefile.am, Simulator_Example.cc, Simulator_Example.h,
+	  TestAutoTrigger.cc, TestAutoTrigger.h, tParamBlock.cc,
+	  tParamBlock.out, tParamBlock_test.sh, tmat.cc: %[ER: 72]%
+	  Replaced ParamBlock by KeyValueMap
+
+2004-01-19 14:54  diepen
+
+	* src/: BaseSim.h, BaseTransport.cc, BaseTransport.h,
+	  CycBufferManager.cc, CycBufferManager.h, CyclicBuffer.cc,
+	  CyclicBuffer.h, CyclicOWBuffer.h, DHPoolManager.cc,
+	  DHPoolManager.h, DH_Database.h, DH_Empty.h, DH_Example.h,
+	  DH_Postgresql.h, DH_Tester.h, DataHolder.cc, DataHolder.h,
+	  DataManager.h, Lock.h, Makefile.am, PHEX_Antenna.h,
+	  PO_DH_Database.h, ParamBlock.cc, ParamBlock.h, ParamHolder.cc,
+	  ParamHolder.h, ParamManager.cc, ParamManager.h,
+	  ParamTransport.cc, ParamTransport.h, ParamValue.cc, ParamValue.h,
+	  Profiler.cc, Profiler.h, SAXHandler.cc, SAXHandler.h,
+	  SAXSimulParser.cc, SAXSimulParser.h, Sel_Linked.h,
+	  Sel_RoundRobin.h, Selector.h, Simul.h, Simul2XML.h,
+	  SimulBuilder.h, SimulRep.cc, SimulRep.h, Simulator.cc,
+	  Simulator.h, SimulatorParse.yy, SimulatorParseClass.cc,
+	  SimulatorParseClass.h, SimulatorTokenize.ll, Step.h, StepRep.cc,
+	  StepRep.h, SynchronisityManager.cc, SynchronisityManager.h,
+	  TH_Database.h, TH_File.cc, TH_File.h, TH_MPI.cc, TH_MPI.h,
+	  TH_Mem.cc, TH_Mem.h, TH_Mem_Bl.cc, TH_Mem_Bl.h, Transport.cc,
+	  Transport.h, TransportHolder.h, Transportable.h,
+	  VirtualMachine.cc, VirtualMachine.h, WH_Empty.cc, WH_Empty.h,
+	  WH_Example.cc, WH_Example.h, WH_TestAutoTrigger.cc,
+	  WH_TestAutoTrigger.h, WH_Tester.cc, WH_Tester.h, WorkHolder.cc,
+	  WorkHolder.h, four1.h, matlabmex.cc, realft.h: %[ER: 72]%
+	  Replaced ParamBlock by KeyValueMap Enhanced headers
+
+2004-01-16 20:49  schaaf
+
+	* src/DataManager.h: %[PR: 62]% typo in setOutoTrigger out
+	  implementation
+
+2004-01-13 18:00  schaaf
+
+	* test/: Makefile.am, TestAutoTrigger.cc, TestAutoTrigger.h,
+	  TestAutoTrigger.out, TestAutoTrigger.run, TestAutoTrigger.sh:
+	  %[ER: 83]% Tester program for the AutoTrigger flags in
+	  DataManager; uses WH_TestAutoTrigger class
+
+2004-01-13 17:58  schaaf
+
+	* src/: WH_TestAutoTrigger.cc, WH_TestAutoTrigger.h: %[ER: 83]%
+	  workholders for TestAutoTrigger program (in test directory)
+
+2004-01-13 17:57  schaaf
+
+	* src/: DataManager.cc, DataManager.h, Makefile.am, WorkHolder.cc:
+	  %[ER: 83]% Added AutoTrigger flags to the DataManager
+
+2004-01-13 15:18  schaaf
+
+	* src/: DataHolder.cc, DataHolder.h, Transport.h: %[ER: 82]% moved
+	  doHandle back to DataHolder.cc
+
+2004-01-13 14:32  schaaf
+
+	* src/: DataHolder.h, DataHolder.cc: %[ER: 82]% inlined doHandle()
+
+2004-01-13 13:34  meijeren
+
+	* src/DH_Postgresql.h: %[PR:59]% Changed comment about UseDatabase
+	  method.
+
+2004-01-13 11:08  tanaka
+
+	* src/: CyclicBuffer.h, CyclicOWBuffer.h: %[ER: 61]%
+
+	  Fixed conflicting definition of macro MIN with DTL.
+
+2004-01-12 16:03  tanaka
+
+	* src/: DH_Database.h, DH_Postgresql.cc, DH_Postgresql.h: %[ER:
+	  59]% Fixed hard-coded database connection.
+
+2004-01-12 16:03  tanaka
+
+	* src/DH_Database.cc: %[ER: 56]%
+
+	  Fixed hard-coded database connection.
+
+2004-01-12 13:49  tanaka
+
+	* src/: DataHolder.cc, ParamTransport.cc, TH_Database.cc,
+	  Transport.cc: %[ER: 58]%
+
+	  Fix src/dst swap bug.
+
+2004-01-12 13:49  tanaka
+
+	* src/BaseTransport.h: %[ER: 58]% Fix src/dst swap bug.
+
+2003-12-23 14:55  tanaka
+
+	* src/TH_Database.h: %[ER: 56]% isBlocking () now returns true iso
+	  false.
+
+2003-12-17 11:49  ellen
+
+	* src/: DataHolder.cc, ParamHolder.cc, TH_File.cc: %[ER: 4]% Solved
+	  compiler warnings about TH_File and copy constructors of
+	  DataHolder and ParamHolder.
+
+2003-12-17 10:57  tanaka
+
+	* src/: DH_Postgresql.h, DH_Postgresql.cc: %[ER: 56]% Fixed the
+	  #define guards from PO_DH_DATABASE (old file name) to
+	  DH_POSTGRESQL (current filename). Renamed the local variable size
+	  to sizeRes in StoreInDatabase (), as it shadows the formal
+	  argument of the method. Added a comment at the top of the file to
+	  indicate that DH_Postgres is not included in the makefile.
+	  Created a protected datamember DataPacket.
+
+2003-12-16 16:50  ellen
+
+	* src/DH_Postgresql.h: %[ER: 4]% Changed path to Postgresql library
+
+2003-12-16 14:45  ellen
+
+	* test/: CyclicBufferTest.cc, Example.cc, Simulator_Example.cc,
+	  Simulator_Example.h, Tester.cc, tParamBlock.cc: %[ER: 4]% Changed
+	  tests to work with CEPFrame in namespace LOFAR.
+
+2003-12-16 14:41  ellen
+
+	* src/: BaseTransport.cc, BaseTransport.h, CycBufferManager.cc,
+	  CycBufferManager.h, CyclicBuffer.h, CyclicOWBuffer.h,
+	  DHPoolManager.cc, DHPoolManager.h, DH_Database.cc, DH_Database.h,
+	  DH_Empty.cc, DH_Empty.h, DH_Example.cc, DH_Example.h,
+	  DH_Postgresql.cc, DH_Postgresql.h, DH_Tester.cc, DH_Tester.h,
+	  DataHolder.cc, DataHolder.h, DataManager.cc, DataManager.h,
+	  Lock.h, PHEX_Antenna.cc, PHEX_Antenna.h, PH_Int.cc, PH_Int.h,
+	  PO_DH_Database.cc, PO_DH_Database.h, ParamBlock.cc, ParamBlock.h,
+	  ParamHolder.cc, ParamHolder.h, ParamManager.cc, ParamManager.h,
+	  ParamTransport.cc, ParamTransport.h, ParamTransportManager.cc,
+	  ParamTransportManager.h, ParamValue.cc, ParamValue.h,
+	  Profiler.cc, Profiler.h, SAXHandler.cc, SAXHandler.h,
+	  SAXSimulParser.cc, SAXSimulParser.h, Sel_Linked.cc, Sel_Linked.h,
+	  Sel_RoundRobin.cc, Sel_RoundRobin.h, Selector.cc, Selector.h,
+	  Simul.cc, Simul.h, Simul2XML.cc, Simul2XML.h, SimulBuilder.cc,
+	  SimulBuilder.h, SimulRep.cc, SimulRep.h, Simulator.cc,
+	  Simulator.h, SimulatorParse.yy, SimulatorParseClass.cc,
+	  SimulatorParseClass.h, SimulatorTokenize.ll, Step.cc, Step.h,
+	  StepRep.cc, StepRep.h, SynchronisityManager.cc,
+	  SynchronisityManager.h, TH_Database.cc, TH_Database.h,
+	  TH_File.cc, TH_File.h, TH_MPI.cc, TH_MPI.h, TH_Mem.cc, TH_Mem.h,
+	  TH_Mem_Bl.cc, TH_Mem_Bl.h, Transport.cc, Transport.h,
+	  TransportHolder.cc, TransportHolder.h, Transportable.cc,
+	  Transportable.h, VirtualMachine.cc, VirtualMachine.h,
+	  WH_Empty.cc, WH_Empty.h, WH_Example.cc, WH_Example.h,
+	  WH_Tester.cc, WH_Tester.h, WorkHolder.cc, WorkHolder.h, four1.cc,
+	  four1.h, realft.cc, realft.h, ShMem/TH_ShMem.cc,
+	  ShMem/TH_ShMem.h: %[ER: 4]% Put CEPFrame in namespace LOFAR
+
+2003-12-15 16:19  tanaka
+
+	* src/DH_Postgresql.cc:
+	  %[ER: 56]%
+
+	  Removal of debug prints for performance testing.
+
+2003-12-15 11:54  tanaka
+
+	* src/: DH_Postgresql.h, DH_Postgresql.cc:
+	  %[ER: 56]% First working version.
+
+2003-12-15 10:44  tanaka
+
+	* src/DH_Database.cc: %[ER: 56]% Removal of dependancy to
+	  PO_DH_Database.
+
+2003-12-15 10:17  tanaka
+
+	* src/DH_Postgresql.cc: %[ER: 56]% Initial creation.
+
+2003-12-15 10:16  tanaka
+
+	* src/DH_Postgresql.h: %[ER: 56]%
+
+	  First creation of DH_Postgres.
+
+2003-12-12 11:38  tanaka
+
+	* src/PO_DH_Database.cc: %[ER: 56]% HarmoniZed include with include
+	  file directory structure on lofar17.
+
+2003-12-10 08:14  diepen
+
+	* src/: SimulatorParseClass.cc, StepRep.cc: %[ER: 63]% Removed used
+	  of ends (is incorrect with stringstream)
+
+2003-12-10 08:12  diepen
+
+	* test/: checkipc, cleanipc, shmem_alloc1.cc, shmem_alloc2.cc:
+	  %[ER: 63]% Made shmem_alloc run well
+
+2003-12-09 17:43  tanaka
+
+	* src/TH_Database.cc:
+	  %[ER: 56]% added call to getBaseTransport.
+
+2003-12-09 17:42  tanaka
+
+	* src/TransportHolder.h:
+	  %[ER: 56]% Added new member itsBaseTransport.
+
+2003-12-09 17:42  tanaka
+
+	* src/BaseTransport.cc:
+	  %[ER: 56]% Added new members for transportable.
+
+2003-12-09 17:41  tanaka
+
+	* src/BaseTransport.h:
+	  %[ER: 56]% Added new member for recording transportable.
+
+2003-12-09 17:32  ellen
+
+	* src/ParamHolder.h:
+	  %[ER: 4]% Set base class for ParamHolder to Transportable
+
+2003-12-09 17:15  ellen
+
+	* src/: ParamTransport.cc, ParamTransport.h, Transport.cc,
+	  Transport.h:
+	  %[ER: 4]% Methods setTargetAddr and setSourceAddr set
+	  Transportable in BaseTransport.  (Necessary for TH_Database)
+
+2003-12-09 14:46  tanaka
+
+	* src/PO_DH_Database.cc:
+	  %[ER: 56]% Modifications for lofar3/MPI combination.
+
+2003-12-09 14:46  tanaka
+
+	* src/DH_Database.cc:
+	  %[ER: 56]%
+
+	  Modifications for lofar3/MPI combination.
+
+2003-12-08 13:57  tanaka
+
+	* src/PO_DH_Database.cc:
+	  %[ER: 56]%
+
+	  Added support for older libpq (7.0.3) version.
+
+2003-12-08 11:39  ellen
+
+	* src/BaseTransport.cc, src/BaseTransport.h,
+	  src/CycBufferManager.cc, src/CycBufferManager.h,
+	  src/CyclicBuffer.h, src/CyclicOWBuffer.h, src/DHPoolManager.cc,
+	  src/DHPoolManager.h, src/DH_Empty.cc, src/DH_Empty.h,
+	  src/DH_Example.cc, src/DH_Example.h, src/DH_Tester.cc,
+	  src/DH_Tester.h, src/DataHolder.cc, src/DataHolder.h,
+	  src/DataManager.cc, src/DataManager.h, src/Makefile.am,
+	  src/PH_Int.cc, src/PH_Int.h, src/ParamHolder.cc,
+	  src/ParamHolder.h, src/ParamManager.cc, src/ParamManager.h,
+	  src/ParamTransport.cc, src/ParamTransport.h,
+	  src/ParamTransportManager.cc, src/ParamTransportManager.h,
+	  src/Sel_Linked.cc, src/Sel_Linked.h, src/Sel_RoundRobin.cc,
+	  src/Sel_RoundRobin.h, src/Selector.cc, src/Selector.h,
+	  src/Simul.cc, src/Simul.h, src/Simul2XML.cc, src/SimulBuilder.h,
+	  src/SimulRep.cc, src/SimulRep.h, src/SimulatorParseClass.cc,
+	  src/Step.cc, src/Step.h, src/StepRep.cc, src/StepRep.h,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  src/TH_Database.h, src/TH_File.h, src/TH_MPI.cc, src/TH_MPI.h,
+	  src/TH_Mem.cc, src/TH_Mem.h, src/TH_Mem_Bl.cc, src/TH_Mem_Bl.h,
+	  src/Transport.cc, src/Transport.h, src/TransportHolder.h,
+	  src/WH_Empty.cc, src/WH_Empty.h, src/WH_Example.cc,
+	  src/WH_Example.h, src/WH_Tester.cc, src/WH_Tester.h,
+	  src/WorkHolder.cc, src/WorkHolder.h, src/ShMem/Makefile.am,
+	  src/ShMem/TH_ShMem.cc, src/ShMem/TH_ShMem.h, test/Example.cc,
+	  test/Example.out, test/Makefile.am, test/Simulator_Example.cc,
+	  test/Simulator_Example.out, test/Tester.out: %[ER: 4]% Merge of
+	  branch ER_4_development
+
+2003-12-05 16:09  tanaka
+
+	* src/: DH_Database.h, DH_Database.cc, PO_DH_Database.h,
+	  PO_DH_Database.cc: %[ER: 56]% (Temporarily) added support for
+	  Postgresql database.
+
+2003-12-05 15:00  ellen
+
+	* src/: DHPoolManager.h, DataManager.cc, DataManager.h,
+	  Makefile.am, ParamManager.cc, Sel_Linked.cc, Sel_Linked.h,
+	  Sel_RoundRobin.cc, Sel_RoundRobin.h, Selector.cc, Selector.h,
+	  WorkHolder.cc: %[ER: 4]% Addition of capability to select an
+	  input/output channel
+
+2003-12-04 15:31  ellen
+
+	* configure.in: %[ER: 4]% Common moved to LCS
+
+2003-12-02 10:54  ellen
+
+	* src/Makefile.am: %[ER: 4]% Excluded files which are not (yet)
+	  checked in CVS.
+
+2003-12-02 09:30  tanaka
+
+	* src/PO_DH_Database.cc: %[ER: 56]% Changed #include directive of
+	  libpq-fe.h for lofar16.
+
+2003-12-01 16:48  tanaka
+
+	* src/Makefile.am: %[ER: 56]% Excluded compilation of DH_Database
+	  and PO_DH_Database, as these (currently) depend on the presence
+	  of the postgres-devel package.
+
+2003-12-01 15:54  tanaka
+
+	* src/PO_DH_Database.cc: %[ER: 56]% Added PostgreSQL database
+	  support for the duration of the BlackBoard project.
+
+2003-12-01 15:54  tanaka
+
+	* src/PO_DH_Database.h: %[ER: 56]%
+
+	  Added support for PostgreSQL for the duration of the BlackBoard
+	  project.
+
+2003-11-28 12:07  ellen
+
+	* src/: BaseTransport.cc, BaseTransport.h, CyclicOWBuffer.h,
+	  Makefile.am, PH_Int.cc, PH_Int.h, ParamHolder.h, ParamManager.cc,
+	  ParamManager.h, ParamTransport.cc, ParamTransport.h,
+	  ParamTransportManager.cc, ParamTransportManager.h, Step.h,
+	  StepRep.cc, StepRep.h, Transport.cc, Transport.h, WorkHolder.h:
+	  %[ER: 4]% Added two-way communication between connected
+	  parameters in order to terminate a connection. Works, but does
+	  not terminate correctly at end of application.
+
+2003-11-27 14:13  tanaka
+
+	* src/PO_DH_Database.cc: %[ER: 56]%
+
+	  Added support for pseudo-blob, in preparation for connecting to a
+	  real database.
+
+2003-11-24 17:38  tanaka
+
+	* src/DataHolder.h: %[ER: 56]%
+
+	  DataHolder has become a subclass of Transportable.
+
+2003-11-24 17:23  tanaka
+
+	* src/Transportable.cc: %[ER: 56]%
+
+	  Extended the RetrieveFromDatabase() and StoreInDatabase()
+	  signature with pointer to buffer and length.
+
+2003-11-24 17:01  tanaka
+
+	* src/TH_Database.h: %[ER: 56]%
+
+	  Initial createion.
+
+2003-11-24 16:59  tanaka
+
+	* src/: DH_Database.h, DH_Database.cc, PO_DH_Database.h,
+	  PO_DH_Database.cc, TH_Database.cc: %[ER: 56]%
+
+	  Initial creation.
+
+2003-11-24 16:58  tanaka
+
+	* src/Makefile.am: %[ER: 56]%
+
+	  Addition of DH_Database, PO_DH_Database and TH_Database.
+
+2003-11-24 14:24  tanaka
+
+	* src/Transportable.h: %[ER: 56]% Added buffer and size to
+	  StoreIndataBase and RetrieveFromDatabase signatures.
+
+2003-11-24 12:13  tanaka
+
+	* src/Transportable.cc: %[ER: 56]%
+
+	  Addition of application id and tag parameters for Store and
+	  Retrieve methods.
+
+2003-11-24 12:12  tanaka
+
+	* src/Transportable.h: %[ER: 56]%
+
+	  Addition of application ID and tag parameters for Store and
+	  Retrieve methods for database.
+
+2003-11-24 11:48  tanaka
+
+	* src/: Transportable.h, Transportable.cc: %[ER: 56]%
+
+	  Initial creation.
+
+2003-11-24 11:46  tanaka
+
+	* src/Makefile.am: %[ER: 56]%
+
+	  Addition of the compilation of Transport.h/.cc
+
+2003-11-21 15:33  tanaka
+
+	* src/Transport.cc: %[ER: 56]% makeTransportHolder () now makes the
+	  created TransportHolder record the pointer to the creating
+	  Transport.
+
+2003-11-21 15:32  tanaka
+
+	* src/TransportHolder.h: %[ER: 56]% Addition of itsTransport
+	  member, accessor and mutator methods.
+
+2003-11-20 11:34  tanaka
+
+	* src/TH_File.cc: %[ER: 56]%
+
+2003-11-19 09:18  tanaka
+
+	* src/StepRep.cc: %[ER: 47]%
+
+	  Added include directive to sstream (with using namespace ustd).
+
+2003-11-18 16:39  tanaka
+
+	* src/StepRep.cc: %[ER: 47]% Replaced use of (deprecated)
+	  ostrstream with newer ostringstream in SetRep::setSeqNr().
+
+2003-11-18 16:20  tanaka
+
+	* src/SimulatorParseClass.cc: %[ER: 47]%
+
+	  Replaced use of deprecated strstream.h with ssteam.h.
+
+2003-11-10 09:06  ellen
+
+	* src/WorkHolder.cc: %[ER: 4]% Added call to getInHolder() and
+	  getOutHolder() in baseProcess() method. This means users are no
+	  longer obligated to call these functions in their own process()
+	  method.
+
+2003-11-10 08:59  ellen
+
+	* src/DataManager.cc: %[ER: 4]% Fixed bug in getGeneralInHolder()
+	  and isInSynchronous() functions
+
+2003-10-06 16:56  ellen
+
+	* src/ShMem/Makefile.am: %[ER: 4]% Undo previous change. Removed
+	  reference to non-existing file.
+
+2003-09-18 12:18  ellen
+
+	* src/: BaseTransport.cc, BaseTransport.h, CycBufferManager.cc,
+	  DataHolder.cc, DataHolder.h, DataManager.cc, DataManager.h,
+	  Makefile.am, ParamHolder.cc, ParamHolder.h, ParamManager.cc,
+	  ParamManager.h, ParamTransport.cc, ParamTransport.h,
+	  ParamTransportManager.cc, ParamTransportManager.h, SimulRep.cc,
+	  SimulatorParseClass.cc, Step.h, StepRep.cc, StepRep.h,
+	  Transport.cc, Transport.h, WorkHolder.cc, WorkHolder.h: %[ER: 4]%
+	  Added parameter transport functionality.  Working except for
+	  connection termination by a 'target' parameter. The current
+	  implementation with a broadcast will not work.
+
+2003-08-21 14:53  diepen
+
+	* configure.in: Common moved to LCS
+
+2003-07-30 11:30  ellen
+
+	* src/SynchronisityManager.cc: Changed destructor to work correctly
+	  when in- and outputholder are shared
+
+2003-07-29 18:45  ellen
+
+	* src/: TH_Mem.cc, TH_Mem.h: Changed firstCall flags in order to
+	  work correctly when in- and outholder are shared.
+
+2003-07-21 19:07  ellen
+
+	* src/CyclicBuffer.h, src/Simul2XML.cc, src/SimulRep.cc,
+	  src/SynchronisityManager.cc, src/SynchronisityManager.h,
+	  src/WH_Example.cc, src/WH_Example.h, src/WH_Tester.cc,
+	  src/WH_Tester.h, src/WorkHolder.cc, test/Example.cc,
+	  test/Example.out, test/Makefile.am, test/Simulator_Example.cc,
+	  test/Simulator_Example.out, test/Tester.out: Test programs in
+	  /test directory now working with DataManager functionality.
+	  Fixed bug in read/write of in- and outdata of Simul.
+
+2003-07-10 18:53  ellen
+
+	* src/DataHolder.cc: Removed cout
+
+2003-07-10 16:23  ellen
+
+	* src/: CycBufferManager.cc, CycBufferManager.h, DHPoolManager.h,
+	  DataHolder.cc, DataManager.cc, Makefile.am, SimulRep.cc,
+	  SynchronisityManager.cc, SynchronisityManager.h, TH_File.h,
+	  TH_MPI.cc, TH_MPI.h, TH_Mem.cc, TH_Mem.h, Transport.cc,
+	  TransportHolder.h, WorkHolder.cc, WorkHolder.h,
+	  ShMem/Makefile.am, ShMem/TH_ShMem.cc, ShMem/TH_ShMem.h: Working
+	  for synchronous reading and writing. No decrease in performance.
+
+2003-07-10 16:21  ellen
+
+	* src/: TH_Mem_Bl.cc, TH_Mem_Bl.h: Blocking TH_Mem needed for
+	  asynchronous data transport
+
+2003-06-02 18:44  ellen
+
+	* src/: CycBufferManager.cc, CyclicBuffer.h, DHPoolManager.h,
+	  DataHolder.cc, DataHolder.h, DataManager.cc, DataManager.h,
+	  SimulRep.cc, StepRep.cc, StepRep.h, SynchronisityManager.cc,
+	  SynchronisityManager.h, TH_Mem.cc, TH_Mem.h, Transport.cc,
+	  Transport.h, WorkHolder.cc, WorkHolder.h: Asynchronous read/write
+	  working for 1 process
+
+2003-04-22 14:32  ellen
+
+	* src/: CycBufferManager.cc, CycBufferManager.h, DHPoolManager.cc,
+	  DHPoolManager.h, DH_Empty.cc, DH_Empty.h, DH_Example.cc,
+	  DH_Example.h, DH_Tester.cc, DH_Tester.h, DataHolder.cc,
+	  DataHolder.h, DataManager.cc, DataManager.h, Makefile.am,
+	  Simul.cc, Simul.h, Simul2XML.cc, SimulBuilder.h, SimulRep.cc,
+	  SimulRep.h, Step.cc, Step.h, StepRep.cc, StepRep.h,
+	  SynchronisityManager.cc, SynchronisityManager.h, WH_Empty.cc,
+	  WH_Empty.h, WH_Example.cc, WH_Example.h, WH_Tester.cc,
+	  WH_Tester.h, WorkHolder.cc, WorkHolder.h: Added DataManager
+	  classes, working for synchronous read/write.
+
+2003-04-22 14:18  ellen
+
+	* src/CyclicBuffer.h: Added read/write access
+
+2003-03-19 09:36  schaaf
+
+	* src/TH_Mem.h: Use CEPFrame instead of BaseSim
+
+2003-03-17 16:58  schaaf
+
+	* src/TH_Mem.cc: use CEPFrame instead of BaseSim
+
+2003-03-17 12:14  ellen
+
+	* src/: TH_Mem.cc, TH_Mem.h: Optimization: reduced accessing of Msg
+	  map
+
+2003-03-11 13:36  schaaf
+
+	* test/Makefile.am: link libcepframe instead of basesim
+
+2003-03-11 12:55  schaaf
+
+	* test/: tSAXSimulParser_test.sh, tSAXSimulParser.cc: remove
+
+2003-03-11 12:55  schaaf
+
+	* test/: CyclicBufferTest.cc, Example.cc, Makefile.am,
+	  Simulator_Example.cc, Simulator_Example.h, TestOnDemandData.cc,
+	  Tester.cc, tParamBlock.cc: Use CEPFrame; Removed $
+
+2003-03-11 09:57  schaaf
+
+	* src/TH_MPI.cc: fixed bug with const casts...
+
+2003-03-11 09:56  schaaf
+
+	* configure.in: include package Common
+
+2003-03-10 14:37  schaaf
+
+	* src/: CyclicBuffer.h, Makefile.am, TH_MPI.cc, TH_MPI.h,
+	  Corba/BS_Corba.cc, Corba/BS_Corba.h, Corba/CorbaControl.cc,
+	  Corba/CorbaController.cc, Corba/CorbaController.h,
+	  Corba/CorbaMonitor.cc, Corba/CorbaMonitor.h,
+	  Corba/CorbaTransport.cc, Corba/CorbaTransport.h,
+	  Corba/CorbaTransportIn.cc, Corba/CorbaTransportIn.h,
+	  Corba/CorbaTransportInterface.cc, Corba/CorbaTransportOut.cc,
+	  Corba/CorbaTransportOut.h, Corba/MTCircularBuffer.h,
+	  Corba/TH_Corba.cc, Corba/TH_Corba.h,
+	  CorbaExe/CorbaControlClient.cc, CorbaExe/CorbaMonitorClient.cc,
+	  ShMem/TH_ShMem.cc, ShMem/TH_ShMem.h: replaced all BaseSim by
+	  CEPFrame; removed $
+
+2003-03-10 14:36  schaaf
+
+	* configure.in: removed PACKAGE(Common); not needed
+
+2003-02-21 13:25  schaaf
+
+	* src/: BaseSim.h, DH_Empty.cc, DH_Empty.h, DH_Example.cc,
+	  DH_Example.h, DH_Tester.cc, DH_Tester.h, DataHolder.cc,
+	  DataHolder.h, PHEX_Antenna.cc, PHEX_Antenna.h, ParamBlock.cc,
+	  ParamBlock.h, ParamHolder.cc, ParamHolder.h, ParamValue.cc,
+	  Profiler.cc, SAXHandler.cc, SAXSimulParser.cc, SAXSimulParser.h,
+	  Simul.cc, Simul.h, Simul2XML.cc, Simul2XML.h, SimulBuilder.cc,
+	  SimulBuilder.h, SimulRep.cc, SimulRep.h, Simulator.cc,
+	  Simulator.h, SimulatorParse.yy, SimulatorParseClass.cc,
+	  SimulatorParseClass.h, Step.cc, Step.h, StepRep.cc, StepRep.h,
+	  TH_File.cc, TH_File.h, TH_Mem.cc, TH_Mem.h, Transport.cc,
+	  Transport.h, TransportHolder.cc, TransportHolder.h,
+	  VirtualMachine.cc, VirtualMachine.h, WH_Empty.cc, WH_Empty.h,
+	  WH_Example.cc, WH_Example.h, WH_Tester.cc, WH_Tester.h,
+	  WorkHolder.cc, WorkHolder.h, four1.cc, realft.cc: Replaced all
+	  BaseSim includes with CEPFRame includes; removed $ fields
+
+2003-02-21 12:22  schaaf
+
+	* bootstrap: ed start directory for autoconf files
+
+2003-02-21 12:14  schaaf
+
+	* Makefile.am, bootstrap, configure.in, src/BaseSim.h,
+	  src/CyclicBuffer.cc, src/CyclicBuffer.h, src/DH_Empty.cc,
+	  src/DH_Empty.h, src/DH_Example.cc, src/DH_Example.h,
+	  src/DH_Tester.cc, src/DH_Tester.h, src/DataHolder.cc,
+	  src/DataHolder.h, src/Lock.h, src/Makedefs, src/Makefile.am,
+	  src/Makefile.tst, src/PHEX_Antenna.cc, src/PHEX_Antenna.h,
+	  src/ParamBlock.cc, src/ParamBlock.h, src/ParamHolder.cc,
+	  src/ParamHolder.h, src/ParamValue.cc, src/ParamValue.h,
+	  src/Profiler.cc, src/Profiler.h, src/SAXHandler.cc,
+	  src/SAXHandler.h, src/SAXSimulParser.cc, src/SAXSimulParser.h,
+	  src/Simul.cc, src/Simul.h, src/Simul2XML.cc, src/Simul2XML.h,
+	  src/SimulBuilder.cc, src/SimulBuilder.h, src/SimulRep.cc,
+	  src/SimulRep.h, src/Simulator.cc, src/Simulator.h,
+	  src/SimulatorParse.yy, src/SimulatorParseClass.cc,
+	  src/SimulatorParseClass.h, src/SimulatorTokenize.ll, src/Step.cc,
+	  src/Step.h, src/StepRep.cc, src/StepRep.h, src/TH_File.cc,
+	  src/TH_File.h, src/TH_MPI.cc, src/TH_MPI.h, src/TH_Mem.cc,
+	  src/TH_Mem.h, src/Transport.cc, src/Transport.h,
+	  src/TransportHolder.cc, src/TransportHolder.h,
+	  src/VirtualMachine.cc, src/VirtualMachine.h, src/WH_Empty.cc,
+	  src/WH_Empty.h, src/WH_Example.cc, src/WH_Example.h,
+	  src/WH_Tester.cc, src/WH_Tester.h, src/WorkHolder.cc,
+	  src/WorkHolder.h, src/four1.cc, src/four1.h, src/matlabmex.cc,
+	  src/realft.cc, src/realft.h, src/Corba/BS_Corba.cc,
+	  src/Corba/BS_Corba.h, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaControl.idl, src/Corba/CorbaController.cc,
+	  src/Corba/CorbaController.h, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaMonitor.h, src/Corba/CorbaTransport.cc,
+	  src/Corba/CorbaTransport.h, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportInterface.idl,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/CorbaTransportOut.h,
+	  src/Corba/MTCircularBuffer.h, src/Corba/Makefile,
+	  src/Corba/Makefile.am, src/Corba/TH_Corba.cc,
+	  src/Corba/TH_Corba.h, src/CorbaExe/CorbaControlClient.cc,
+	  src/CorbaExe/CorbaMonitorClient.cc, src/CorbaExe/Makefile.am,
+	  src/ShMem/Makefile.am, src/ShMem/TH_ShMem.cc,
+	  src/ShMem/TH_ShMem.h, test/CyclicBufferTest.cc,
+	  test/CyclicBufferTest.gnuplot, test/CyclicBufferTest.sh,
+	  test/CyclicBufferTest_check.sh, test/Example.cc,
+	  test/Example.out, test/Example.run, test/Example_test.sh,
+	  test/Makefile, test/Makefile.am, test/Simulator_Example.cc,
+	  test/Simulator_Example.h, test/Simulator_Example.in,
+	  test/Simulator_Example.out, test/Simulator_Example.run,
+	  test/Simulator_Example_test.sh, test/TestOnDemandData.cc,
+	  test/Tester.cc, test/Tester.out, test/Tester.run,
+	  test/Tester_test.sh, test/checkipc, test/cleanipc,
+	  test/shmem_alloc1.cc, test/shmem_alloc1.sh, test/shmem_alloc2.cc,
+	  test/shmem_alloc2.sh, test/tParamBlock.cc, test/tParamBlock.out,
+	  test/tParamBlock_test.sh, test/tSAXSimulParser.cc,
+	  test/tSAXSimulParser_test.sh, test/tmat.cc, test/tmat_test.sh:
+	  Initial revision
+
+2003-02-21 12:14  schaaf
+
+	* Makefile.am, bootstrap, configure.in, src/BaseSim.h,
+	  src/CyclicBuffer.cc, src/CyclicBuffer.h, src/DH_Empty.cc,
+	  src/DH_Empty.h, src/DH_Example.cc, src/DH_Example.h,
+	  src/DH_Tester.cc, src/DH_Tester.h, src/DataHolder.cc,
+	  src/DataHolder.h, src/Lock.h, src/Makedefs, src/Makefile.am,
+	  src/Makefile.tst, src/PHEX_Antenna.cc, src/PHEX_Antenna.h,
+	  src/ParamBlock.cc, src/ParamBlock.h, src/ParamHolder.cc,
+	  src/ParamHolder.h, src/ParamValue.cc, src/ParamValue.h,
+	  src/Profiler.cc, src/Profiler.h, src/SAXHandler.cc,
+	  src/SAXHandler.h, src/SAXSimulParser.cc, src/SAXSimulParser.h,
+	  src/Simul.cc, src/Simul.h, src/Simul2XML.cc, src/Simul2XML.h,
+	  src/SimulBuilder.cc, src/SimulBuilder.h, src/SimulRep.cc,
+	  src/SimulRep.h, src/Simulator.cc, src/Simulator.h,
+	  src/SimulatorParse.yy, src/SimulatorParseClass.cc,
+	  src/SimulatorParseClass.h, src/SimulatorTokenize.ll, src/Step.cc,
+	  src/Step.h, src/StepRep.cc, src/StepRep.h, src/TH_File.cc,
+	  src/TH_File.h, src/TH_MPI.cc, src/TH_MPI.h, src/TH_Mem.cc,
+	  src/TH_Mem.h, src/Transport.cc, src/Transport.h,
+	  src/TransportHolder.cc, src/TransportHolder.h,
+	  src/VirtualMachine.cc, src/VirtualMachine.h, src/WH_Empty.cc,
+	  src/WH_Empty.h, src/WH_Example.cc, src/WH_Example.h,
+	  src/WH_Tester.cc, src/WH_Tester.h, src/WorkHolder.cc,
+	  src/WorkHolder.h, src/four1.cc, src/four1.h, src/matlabmex.cc,
+	  src/realft.cc, src/realft.h, src/Corba/BS_Corba.cc,
+	  src/Corba/BS_Corba.h, src/Corba/CorbaControl.cc,
+	  src/Corba/CorbaControl.idl, src/Corba/CorbaController.cc,
+	  src/Corba/CorbaController.h, src/Corba/CorbaMonitor.cc,
+	  src/Corba/CorbaMonitor.h, src/Corba/CorbaTransport.cc,
+	  src/Corba/CorbaTransport.h, src/Corba/CorbaTransportIn.cc,
+	  src/Corba/CorbaTransportIn.h,
+	  src/Corba/CorbaTransportInterface.cc,
+	  src/Corba/CorbaTransportInterface.idl,
+	  src/Corba/CorbaTransportOut.cc, src/Corba/CorbaTransportOut.h,
+	  src/Corba/MTCircularBuffer.h, src/Corba/Makefile,
+	  src/Corba/Makefile.am, src/Corba/TH_Corba.cc,
+	  src/Corba/TH_Corba.h, src/CorbaExe/CorbaControlClient.cc,
+	  src/CorbaExe/CorbaMonitorClient.cc, src/CorbaExe/Makefile.am,
+	  src/ShMem/Makefile.am, src/ShMem/TH_ShMem.cc,
+	  src/ShMem/TH_ShMem.h, test/CyclicBufferTest.cc,
+	  test/CyclicBufferTest.gnuplot, test/CyclicBufferTest.sh,
+	  test/CyclicBufferTest_check.sh, test/Example.cc,
+	  test/Example.out, test/Example.run, test/Example_test.sh,
+	  test/Makefile, test/Makefile.am, test/Simulator_Example.cc,
+	  test/Simulator_Example.h, test/Simulator_Example.in,
+	  test/Simulator_Example.out, test/Simulator_Example.run,
+	  test/Simulator_Example_test.sh, test/TestOnDemandData.cc,
+	  test/Tester.cc, test/Tester.out, test/Tester.run,
+	  test/Tester_test.sh, test/checkipc, test/cleanipc,
+	  test/shmem_alloc1.cc, test/shmem_alloc1.sh, test/shmem_alloc2.cc,
+	  test/shmem_alloc2.sh, test/tParamBlock.cc, test/tParamBlock.out,
+	  test/tParamBlock_test.sh, test/tSAXSimulParser.cc,
+	  test/tSAXSimulParser_test.sh, test/tmat.cc, test/tmat_test.sh:
+	  copy from BaseSim tag "CEPFRAME"
+
