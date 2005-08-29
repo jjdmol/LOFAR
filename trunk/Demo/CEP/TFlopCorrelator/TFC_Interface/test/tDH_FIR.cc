@@ -36,10 +36,11 @@ int main (int argc, char **argv) {
 
   try {
     ACC::APS::ParameterSet myPset;
-    myPset.add("NRSP", "2");
-    myPset.add("DH_StationSB.freqs", "3");
-    myPset.add("DH_StationSB.times", "4");
-    myPset.add("polarisations", "5");
+    myPset.add("Input.NRSP", "2");
+    myPset.add("Input.NSamplesToDH", "20");
+ //    myPset.add("DH_StationSB.freqs", "3");
+//     myPset.add("DH_StationSB.times", "4");
+    myPset.add("Input.NPolarisations", "5");
 
     DH_FIR srcDH("subband", 1, myPset);
     DH_FIR dstDH("subband", 1, myPset);
@@ -52,20 +53,17 @@ int main (int argc, char **argv) {
     { // this is specific for DH_FIR
       RectMatrix<DH_FIR::BufferType>& srcMatrix = srcDH.getDataMatrix();
       dimType stationDim = srcMatrix.getDim("Station"); 
-      dimType freqDim = srcMatrix.getDim("FreqChannel"); 
       dimType timeDim = srcMatrix.getDim("Time"); 
       dimType polDim = srcMatrix.getDim("Polarisation"); 
 
       // put some data in the DataHolder
       DH_FIR::BufferType value = makei16complex(0,0);
-      RectMatrix<DH_FIR::BufferType>::cursorType beginCursor = srcMatrix.getCursor(0*stationDim + 0*freqDim + 0*polDim + 0*timeDim);
-      RectMatrix<DH_FIR::BufferType>::cursorType scursor, fcursor, tcursor, pcursor;
+      RectMatrix<DH_FIR::BufferType>::cursorType beginCursor = srcMatrix.getCursor(0*stationDim + 0*polDim + 0*timeDim);
+      RectMatrix<DH_FIR::BufferType>::cursorType scursor, tcursor, pcursor;
       for (int s=0, scursor = beginCursor; s<srcMatrix.getNElemInDim(stationDim); srcMatrix.moveCursor(&scursor, stationDim), s++) {
-	for (int f=0, fcursor = scursor; f<srcMatrix.getNElemInDim(freqDim); srcMatrix.moveCursor(&fcursor, freqDim), f++) {
-	  for (int t=0, tcursor = fcursor; t<srcMatrix.getNElemInDim(timeDim); srcMatrix.moveCursor(&tcursor, timeDim), t++) {
-	    for (int p=0, pcursor = tcursor; p<srcMatrix.getNElemInDim(polDim); srcMatrix.moveCursor(&pcursor, polDim), p++) {
-//  	      srcMatrix.setValue(pcursor, value++);
-	    }
+	for (int t=0, tcursor = scursor; t<srcMatrix.getNElemInDim(timeDim); srcMatrix.moveCursor(&tcursor, timeDim), t++) {
+	  for (int p=0, pcursor = tcursor; p<srcMatrix.getNElemInDim(polDim); srcMatrix.moveCursor(&pcursor, polDim), p++) {
+	    srcMatrix.setValue(pcursor, value++);
 	  }
 	}
       }
@@ -79,26 +77,21 @@ int main (int argc, char **argv) {
       // ask the dimensions in a different order
       RectMatrix<DH_FIR::BufferType>& dstMatrix = srcDH.getDataMatrix();
       dimType polDim = dstMatrix.getDim("Polarisation"); 
-      dimType freqDim = dstMatrix.getDim("FreqChannel"); 
       dimType stationDim = dstMatrix.getDim("Station"); 
       dimType timeDim = dstMatrix.getDim("Time"); 
 
       // check the data in the dataHolder
       DH_FIR::BufferType value = makei16complex(0,0);
-      RectMatrix<DH_FIR::BufferType>::cursorType scursor, fcursor, tcursor, pcursor;
+      RectMatrix<DH_FIR::BufferType>::cursorType scursor, tcursor, pcursor;
 
-      scursor = dstMatrix.getCursor(0*stationDim + 0*freqDim + 0*polDim + 0*timeDim);
-      cerr<<"freqDim.total: "<<freqDim.total<<endl;
+      scursor = dstMatrix.getCursor(0*stationDim + 0*polDim + 0*timeDim);
       MATRIX_FOR_LOOP(dstMatrix, stationDim, scursor) {
-	fcursor = scursor;
-	MATRIX_FOR_LOOP(dstMatrix, freqDim, fcursor) {
-	  tcursor = fcursor;
-	  MATRIX_FOR_LOOP(dstMatrix, timeDim, tcursor) {
-	    pcursor = tcursor;
-	    MATRIX_FOR_LOOP(dstMatrix, polDim, pcursor) {
-	      cerr<<"Expected: "<<value<<" found: "<< dstMatrix.getValue(pcursor)<<endl;
-//  	      ASSERTSTR(dstMatrix.getValue(pcursor) == value++, "wrong value found in matrix");
-	    }
+	tcursor = scursor;
+	MATRIX_FOR_LOOP(dstMatrix, timeDim, tcursor) {
+	  pcursor = tcursor;
+	  MATRIX_FOR_LOOP(dstMatrix, polDim, pcursor) {
+	    cerr<<"Expected: "<<value<<" found: "<< dstMatrix.getValue(pcursor)<<endl;
+	    ASSERTSTR(dstMatrix.getValue(pcursor) == value++, "wrong value found in matrix");
 	  }
 	}
       }
