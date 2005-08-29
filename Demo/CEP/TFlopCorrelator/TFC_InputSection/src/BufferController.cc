@@ -361,14 +361,14 @@ void BufferController::getElements(vector<SubbandType*> buf, int& invalidcount, 
     if (sid + nelements  > itsBufferSize) {
       // do copy in 2 blocks because end of subband data array will be crossed 
       n1 = itsBufferSize - sid;
-      memcpy(buf[s], &(itsSubbandBuffer[s][sid]), n1*sizeof(SubbandType));
+      memmove(buf[s], &(itsSubbandBuffer[s][sid]), n1*sizeof(SubbandType));
 
       n2 = nelements - n1;
-      memcpy(&(buf[s][n1]), &(itsSubbandBuffer[s][0]), n2*sizeof(SubbandType));
+      memmove(&(buf[s][n1]), &(itsSubbandBuffer[s][0]), n2*sizeof(SubbandType));
     }
     else {
       // copy can be executed in one block
-      memcpy(buf[s], &(itsSubbandBuffer[s][sid]), nelements*sizeof(SubbandType));
+      memmove(buf[s], &(itsSubbandBuffer[s][sid]), nelements*sizeof(SubbandType));
     }   
   }
  
@@ -387,7 +387,7 @@ void BufferController::writeElements(SubbandType* buf, timestamp_t rspstamp)
   
   // write the subbanddata
   for (int s=0; s<itsNSubbands; s++) {
-    memcpy(&(itsSubbandBuffer[s][bid]), &buf[s], sizeof(SubbandType));
+    itsSubbandBuffer[s][bid] = buf[s];
   }
  
   // writing is done, free block
@@ -414,44 +414,70 @@ void BufferController::writeDummy(SubbandType* dum, timestamp_t startstamp, int 
     if (sid + nelements  > itsBufferSize) {
       // do copy in 2 blocks because end of subband data array will be crossed 
       int n1 = itsBufferSize - sid;
-      memcpy(&(itsSubbandBuffer[s][sid]), dum, n1*sizeof(SubbandType));
+      memmove(&(itsSubbandBuffer[s][sid]), dum, n1*sizeof(SubbandType));
 
       int n2 = nelements - n1;
-      memcpy(&(itsSubbandBuffer[s][0]), &dum[n1], n2*sizeof(SubbandType));
+      memmove(&(itsSubbandBuffer[s][0]), &dum[n1], n2*sizeof(SubbandType));
     }
     else {
       // copy can be executed in one block
-      memcpy(&(itsSubbandBuffer[s][sid]), dum, nelements*sizeof(SubbandType));
+      memmove(&(itsSubbandBuffer[s][sid]), dum, nelements*sizeof(SubbandType));
     }
   }
+
+  releaseWriteBlock();
 }
 
 bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
 {
   // get oldest timestamp
-  timestamp_t oldestStamp = getOldestStamp();
+  int bid;
 
-  // calculate offset
-  int offset = startstamp - oldestStamp;
+  pthread_mutex_lock(&buffer_mutex);
 
-  // set offset, get startindexr
-  int bid = setRewriteOffset(offset);
-  if (bid == -1) {
+  if (getCount() <= 0) {
+    // no elements in the buffer
+    bid = -1;
+  } else {
+    bid = itsTail.getIndex();
+
+    // calculate offset
+    int offset = startstamp - itsMetadataBuffer[bid].timestamp;
+
+    // check if there are enough elements in buffer
+    if (offset >= getCount()) {
+      // not enough elements in the buffer
+      bid = -1;
+
+    } else {   
+
+      itsOldHead = itsTail + offset;
+      bid = itsOldHead.getIndex();
+
+    }
+  }
+
+  pthread_mutex_unlock(&buffer_mutex);
+
+  if (bid != -1) {
+
     return false;
-  }
- 
-  // rewrite the metadata 
-  itsMetadataBuffer[bid].invalid = 0;
-  
-  // rewrite the subbanddata
-  for (int s=0; s<itsNSubbands; s++) {
-    memcpy(&(itsSubbandBuffer[s][bid]), &buf[s], sizeof(SubbandType));
-  }
- 
-  // rewriting is done, free block
-  releaseRewriteBlock();
 
-  return true;
+  } else {
+ 
+    // rewrite the metadata 
+    itsMetadataBuffer[bid].invalid = 0;
+    
+    // rewrite the subbanddata
+    for (int s=0; s<itsNSubbands; s++) {
+      itsSubbandBuffer[s][bid] = buf[s];
+    }
+
+    // rewriting is done, free block
+    releaseRewriteBlock();
+    
+    return true;
+  } 
 }
 
 
