@@ -115,7 +115,8 @@ class BufferController
    int getWritePtr();
    int getReadPtr();
    int setReadOffset(int offset);
-   int setRewriteOffset(int offset);   
+   int setRewriteOffset(int offset);
+   void setStartOffset(int offset);  
    void releaseWriteBlock();
    void releaseReadBlock();
    void releaseRewriteBlock();

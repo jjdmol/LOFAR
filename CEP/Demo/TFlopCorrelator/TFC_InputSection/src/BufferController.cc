@@ -170,6 +170,27 @@ timestamp_t BufferController::getNewestStamp()
   return itsMetadataBuffer[bid].timestamp;
 }
 
+void BufferController::setStartOffset(int offset)
+{
+
+  pthread_mutex_lock(&buffer_mutex);
+
+  // wait until enough data becomes available
+  while (getCount() - offset < 1)
+  {
+    pthread_cond_wait(&data_available, &buffer_mutex);
+  }
+  
+  // This method is called when there is no reader,
+  // so tail == oldTail
+  itsTail += offset;
+  itsOldTail = itsTail;
+
+  pthread_cond_broadcast(&space_available);
+   
+  pthread_mutex_unlock(&buffer_mutex);
+}
+
 int BufferController::setReadOffset(int offset)
 {
   int bid;
@@ -297,25 +318,24 @@ void BufferController::releaseRewriteBlock()
   // synchronize writepointers
   itsOldHead = itsHead;
 
-  pthread_mutex_unlock(&buffer_mutex);
- 
+  // signal that data has become available 
+  pthread_cond_broadcast(&data_available);
+
+  pthread_mutex_unlock(&buffer_mutex); 
 }
 
 timestamp_t BufferController::startBufferRead()
 {
   // start reading so overwriting not allowed anymore 
   itsOverwritingAllowed = false;
- 
-  // get oldest stamp
-  timestamp_t oldestStamp = getOldestStamp();
 
-  // get newest stamp
   timestamp_t newestStamp = getNewestStamp();
-
+  timestamp_t oldestStamp = getOldestStamp();
+  
   // set offset
-  setReadOffset(newestStamp - oldestStamp);
+  setStartOffset(newestStamp - oldestStamp);
 
-  return newestStamp;
+  return getOldestStamp();
 }
 
 void BufferController::startBufferRead(timestamp_t stamp)
@@ -327,7 +347,7 @@ void BufferController::startBufferRead(timestamp_t stamp)
   timestamp_t oldestStamp = getOldestStamp();
 
   // set offset
-  setReadOffset(stamp - oldestStamp);
+  setStartOffset(stamp - oldestStamp);
 }
 
 void BufferController::getElements(vector<SubbandType*> buf, int& invalidcount, timestamp_t startstamp, int nelements)
@@ -344,6 +364,7 @@ void BufferController::getElements(vector<SubbandType*> buf, int& invalidcount, 
 
   // set offset, get startindex
   int sid = setReadOffset(offset);
+
 
   // get metadata for requested block
   invalidcount = 0;
