@@ -30,6 +30,7 @@
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqJonesResult.h>
 #include <BBS3/MNS/MeqRequest.h>
+#include <Common/LofarLogger.h>
 
 
 namespace LOFAR {
@@ -59,7 +60,7 @@ public:
   const MeqJonesResult& getJResultSynced (const MeqRequest& request,
 					  MeqJonesResult& result)
     { return itsReqId == request.getId()  ?
-	*itsResult : calcJResult(request,result); }
+	*itsResult : getJResult2(request, result); }
 
   // Get the actual result.
   // The default implementation throw an exception.
@@ -69,13 +70,15 @@ public:
   virtual void precalculate (const MeqRequest&);
 
 private:
+  // Helper function adding an extra check.
+  const MeqJonesResult& getJResult2 (const MeqRequest& request,
+				     MeqJonesResult& result)
+    { DBGASSERT(itsNParents<=1); return result = getJResult(request); }
+
   // Forbid copy and assignment.
   MeqJonesExprRep (const MeqJonesExprRep&);
   MeqJonesExprRep& operator= (const MeqJonesExprRep&);
 
-  // Calculate the actual result in a cache thread-safe way.
-  const MeqJonesResult& calcJResult (const MeqRequest&, MeqJonesResult&,
-				     bool useCache=false);
 
   MeqJonesResult* itsResult;     //# Possibly cached result
 };

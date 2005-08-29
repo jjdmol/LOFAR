@@ -33,41 +33,13 @@ MeqJonesExprRep::~MeqJonesExprRep()
   delete itsResult;
 }
 
-const MeqJonesResult& MeqJonesExprRep::calcJResult (const MeqRequest& request,
-						    MeqJonesResult& result,
-						    bool useCache)
-{
-  // The value has to be calculated.
-  // Do not cache if no multiple parents.
-  if (itsNParents <= 1  &&  !useCache) {
-    result = getJResult (request);
-    return result;
-  }
-  // It should never come past this.
-  ASSERT(useCache);
-  // Use a cache.
-  // Synchronize the calculations.
-  // Only calculate if not already calculated in another thread.
-  //static NSTimer timer("MeqJonesExprRep::calcResult", true);
-  //timer.start();
-#if defined _OPENMP
-#pragma omp critical(calcResult)
-  if (itsReqId != request.getId())	// retry test in critical section
-#endif
-  {
-    if (!itsResult) itsResult = new MeqJonesResult;
-    *itsResult = getJResult (request);
-    itsReqId = request.getId();
-  }
-  //timer.stop();
-  return *itsResult;
-}
-
 void MeqJonesExprRep::precalculate (const MeqRequest& request)
 {
-  MeqJonesResult result;
-  calcJResult (request, result, true);
-  DBGASSERT (itsResult);
+  // Use a cache.
+  DBGASSERT (itsReqId != request.getId());
+  if (!itsResult) itsResult = new MeqJonesResult;
+  *itsResult = getJResult (request);
+  itsReqId = request.getId();
 }
 
 }
