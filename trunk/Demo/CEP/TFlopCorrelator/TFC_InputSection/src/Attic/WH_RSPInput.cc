@@ -320,7 +320,7 @@ void WH_RSPInput::process()
   vector<SubbandType*> subbandbuffer;
   for (int s=0; s < itsNSubbands; s++) {
     rspDHp = (DH_RSP*)getDataManager().getOutHolder(s);
-    subbandbuffer[s] = (SubbandType*)rspDHp->getBuffer();
+    subbandbuffer.push_back((SubbandType*)rspDHp->getBuffer());
   }
   // get the data from the cyclic buffer
   itsBufControl->getElements(subbandbuffer,
