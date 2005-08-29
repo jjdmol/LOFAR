@@ -39,17 +39,9 @@ MeqStoredParmPolc::MeqStoredParmPolc (const string& name, MeqParmGroup* group,
 MeqStoredParmPolc::~MeqStoredParmPolc()
 {}
 
-string MeqStoredParmPolc::getTableName() const
+ParmTableData MeqStoredParmPolc::getParmTableData() const
 {
-  return itsTable->getTableName();
-}
-string MeqStoredParmPolc::getDBType() const
-{
-  return itsTable->getDBType();
-}
-string MeqStoredParmPolc::getDBName() const
-{
-  return itsTable->getDBName();
+  return itsTable->getParmTableData();
 }
 
 void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)

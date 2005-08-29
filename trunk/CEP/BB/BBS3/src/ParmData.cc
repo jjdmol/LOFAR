@@ -28,23 +28,19 @@
 namespace LOFAR {
 
   ParmData::ParmData()
-    : itsNrSpid   (0),
-      itsFirstSpid(0),
-      itsName     ("empty")
+    : itsName     ("empty"),
+      itsNrSpid   (0),
+      itsFirstSpid(0)
   {}
 
-  ParmData::ParmData (const std::string& name,
-		      const std::string& tableName,
-		      const std::string& dbType,
-		      const std::string& dbName,
+  ParmData::ParmData (const string& name,
+		      const ParmTableData& ptd,
 		      int nrSpid, int firstSpid,
 		      const MeqMatrix& values)
-    : itsNrSpid    (nrSpid),
+    : itsName(name),
+      itsPTD(ptd),
+      itsNrSpid    (nrSpid),
       itsFirstSpid (firstSpid),
-      itsName      (name),
-      itsTableName (tableName),
-      itsDBType    (dbType),
-      itsDBName    (dbName),
       itsValues    (values)
   {}
 
@@ -74,8 +70,8 @@ namespace LOFAR {
 
   BlobOStream& operator<< (BlobOStream& bos, const ParmData& parm)
   {
-    bos << parm.itsName << parm.itsTableName
-	<< parm.itsDBType << parm.itsDBName
+    bos << parm.itsName
+	<< parm.itsPTD
 	<< parm.itsNrSpid << parm.itsFirstSpid
 	<< parm.itsValues;
     return bos;
@@ -84,8 +80,8 @@ namespace LOFAR {
   // Read the object from a blob.
   BlobIStream& operator>> (BlobIStream& bis, ParmData& parm)
   {
-    bis >> parm.itsName >> parm.itsTableName
-	>> parm.itsDBType >> parm.itsDBName
+    bis >> parm.itsName
+	>> parm.itsPTD
 	>> parm.itsNrSpid >> parm.itsFirstSpid
 	>> parm.itsValues;
     return bis;

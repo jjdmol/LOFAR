@@ -46,12 +46,9 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
 {
   MeqParmGroup pgroup;
   for (uint i=0; i<pData.size(); ++i) {
-    cout << "Writing parm " << pData[i].getName() << " into "
-	 << pData[i].getTableName() << ' ' << pData[i].getDBName()
-	 << " (" << pData[i].getDBType()
-	 << ") values=" << pData[i].getValues() << endl;
-    ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
-		   pData[i].getDBName(), "", "localhost", "", 13157, true);
+    cout << "Writing parm " << pData[i].getName() 
+	 << " values=" << pData[i].getValues() << endl;
+    ParmTable ptab(pData[i].getParmTableData());
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);
     parm.update (pData[i].getValues());
@@ -180,6 +177,16 @@ int main (int argc, const char* argv[])
     cout << "       calcuvw:      " << calcuvw << endl;
     cout << "       dbtype:       " << dbtype << endl;
 
+    // Read the info for the ParmTables
+    ACC::APS::ParameterSet ps;
+    string meqModelName(argv[3]);
+    string skyModelName(argv[4]);
+    ps["meqModel"] = meqModelName;
+    ps["skyModel"] = skyModelName;
+    ps["DBType"] = "aips";
+    ParmTableData meqPdt("meqModel", ps);
+    ParmTableData skyPdt("skyModel", ps);
+
     // Do a solve.
     {
       vector<int> antVec(14);
@@ -191,7 +198,7 @@ int main (int argc, const char* argv[])
       grp1.push_back (1);
       grp1.push_back (2);
       srcgrp.push_back (grp1);
-      Prediffer pre1(argv[2], argv[3], argv[4], dbtype, argv[1], "", "", "", 13157,
+      Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, argv[5], srcgrp, calcuvw);
       // Do a further selection; only XX,YY and no autocorrelations.
       vector<int> corr(2,0);

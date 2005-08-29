@@ -1,4 +1,4 @@
-INSTHDRS         =                                \
+INSTHDRS          = 				\
 DH_Solution.h                                   \
 DH_WOSolve.h					\
 DH_WOPrediff.h					\
@@ -58,6 +58,7 @@ MNS/ParmTableAIPS.h \
 MNS/ParmTableBDB.h\
 MNS/ParmTableBDBRepl.h\
 MNS/ParmTable.h\
+MNS/ParmTableData.h\
 BBSTestLogger.h
 
 NOINSTHDRS =
@@ -72,7 +73,7 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES = libbbs3.la
 
-libbbs3_la_SOURCES = \
+libbbs3_la_SOURCES  = 					\
 DH_Solution.cc                                          \
 DH_WOSolve.cc						\
 DH_WOPrediff.cc						\
@@ -129,6 +130,7 @@ MNS/ParmTableAIPS.cc \
 MNS/ParmTableBDB.cc\
 MNS/ParmTableBDBRepl.cc\
 MNS/ParmTable.cc\
+MNS/ParmTableData.cc\
 BBSTestLogger.cc
 
 

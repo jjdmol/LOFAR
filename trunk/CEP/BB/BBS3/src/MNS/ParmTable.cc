@@ -35,28 +35,19 @@ using namespace casa;
 
 namespace LOFAR {
 
-ParmTable::ParmTable (const string& dbType, 
-		      const string& tableName,
-		      const string& dbName, 
-		      const string& userName, 
-		      const string& passwd,
-		      const string& hostName, 
-		      const int masterPort,
-		      const bool isMaster)
+ParmTable::ParmTable (const ParmTableData& ptd)
 : itsRep (0)
 {
-  if (dbType == "aips") {
-    itsRep = new ParmTableAIPS (tableName);
-  } else if (dbType == "bdb") {
-    itsRep = new ParmTableBDB (tableName);
-  } else if (dbType == "bdbrepl") {
-    itsRep = new ParmTableBDBRepl (tableName, hostName, masterPort, isMaster);
+  if (ptd.itsType == "aips") {
+    itsRep = new ParmTableAIPS (ptd.itsTableName);
+  } else if (ptd.itsType == "bdb") {
+    itsRep = new ParmTableBDB (ptd.itsTableName);
+  } else if (ptd.itsType == "bdbrepl") {
+    itsRep = new ParmTableBDBRepl (ptd.itsTableName, ptd.itsHostName, ptd.itsMasterPort, ptd.itsIsMaster);
   } else {
-    ASSERT (dbType=="aips");
+    ASSERTSTR(false, "unknown parmTableType: "<<ptd.itsType);
   }
-  itsRep->setTableName (tableName);
-  itsRep->setDBName    (dbName);
-  itsRep->setDBType    (dbType);
+  itsRep->setParmTableData(ptd);
   itsRep->connect();
 }
 
