@@ -29,6 +29,8 @@
 #include <Common/hexdump.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TH_Ethernet.h>
+#include <string.h>
+#include <Common/LofarLogger.h>
 
 
 using namespace LOFAR;
@@ -39,33 +41,79 @@ typedef struct
   BufferController* bc;
   TH_Ethernet* con;
   int packetsize;
-  int npackets;
-} thread_args;
+  int framesize;
+  int npacketsinframe;
+} producer_args;
+
+typedef struct
+{
+  BufferController* bc;
+  int nsubbands;
+  int nsamples;
+} consumer_args;
+
 
 
 void* write(void* argument)
 {
   cout << "bufferwriter thread started" << endl;
   
-  thread_args* args = (thread_args*)argument;
+  producer_args* args = (producer_args*)argument;
   
-  int framesize = args->npackets * args->packetsize;
-  char recvframe[framesize];
-  timestamp_t actualstamp;
+  char recvframe[args->framesize];
+  timestamp_t actualstamp, expectedstamp;
   int seqid, blockid;
+  bool readnew  = true;
+  bool firstloop = true;
+  int cnt_missed = 0;
+  int cnt_old = 0;
 
-  for (int t=0;t<10;t++)
+  // define a block of dummy data
+  SubbandType dummyblock[args->npacketsinframe];
+  memset(dummyblock, 0, args->npacketsinframe*sizeof(SubbandType));
+
+  while (1)
   {
     // catch frame from ethernet link
-    args->con->recvBlocking( (void*)recvframe, framesize, 0);
-  
-    // copy timestamps into cyclicbuffer
-    for (int i=0; i<args->npackets; i++) {
-      seqid   = ((int*)&recvframe[i*args->packetsize+8])[0];
-      blockid = ((int*)&recvframe[i*args->packetsize+12])[0];
-      actualstamp.setStamp(seqid ,blockid); 
-      cout << actualstamp << endl;
-      args->bc->writeElements(&actualstamp, actualstamp, 1, 0);
+    if (readnew) {
+      args->con->recvBlocking( (void*)recvframe, args->framesize, 0);
+    }
+    
+    // get timestamp of first packet in frame
+    seqid   = ((int*)&recvframe[8])[0];
+    blockid = ((int*)&recvframe[12])[0];
+    actualstamp.setStamp(seqid ,blockid); 
+    
+    if (firstloop) {
+      expectedstamp = actualstamp;
+      firstloop = false;
+    }
+    
+    if (actualstamp < expectedstamp) {
+      // old packet received
+      // do nothing
+      cnt_old += args->npacketsinframe;
+      cout << cnt_old << " old packets received" << endl;
+      readnew = true;
+    }
+    else if (actualstamp > expectedstamp) {
+      // missed a packet so create a dummy
+      actualstamp = expectedstamp;
+      args->bc->writeDummy((SubbandType*)dummyblock, actualstamp, args->npacketsinframe);
+      cnt_missed += args->npacketsinframe;
+      cout << cnt_missed << " dummies created" << endl;
+      readnew = false;
+      expectedstamp += args->npacketsinframe;
+    }
+    else {
+      //expected packet received  
+      for (int i=0; i<args->npacketsinframe;i++) {
+	args->bc->writeElements( (SubbandType*)&recvframe[i*args->packetsize+16], actualstamp);
+	actualstamp++;
+      }
+      cout << "expected packet received" << endl;
+      readnew = true;
+      expectedstamp += args->npacketsinframe;
     }
   } 
 }
@@ -74,25 +122,27 @@ void* read(void* argument)
 {
   cout << "buffer reader thread started" << endl;
 
-  thread_args* args = (thread_args*)argument;
-
-  timestamp_t bufferstamp, startstamp;
   int invalidcount;
-  
-  //get first timestamp in buffer
-  startstamp = args->bc->getFirstStamp();
-  
-  for (int t=0;t<500;t++) 
-  {
-    
-    args->bc->getElements(&bufferstamp,
-                           invalidcount, 
-                           startstamp, 
-                           1);
-    
-    cout << bufferstamp << endl;
-    startstamp++; 
-  }  
+  timestamp_t ts;
+  consumer_args* args = (consumer_args*)argument;
+
+  vector<SubbandType*> subbandbuffer;
+  for (int s=0; s < args->nsubbands; s++) {
+    subbandbuffer.push_back(new SubbandType[args->nsamples]);
+  }
+
+  ts = args->bc->startBufferRead();
+
+  while (1) {
+    args->bc->getElements(subbandbuffer, invalidcount, ts, args->nsamples);
+    //cout << "sample " << ts << " read" << endl;
+    // for (int i=0; i<args->nsubbands; i++) {
+//       for (int j=0; j<args->nsamples; j++) {
+//         cout <<  subbandbuffer[i][j].Xpol << "," << subbandbuffer[i][j].Ypol << endl;
+//       }
+//     }
+    ts+=args->nsamples;
+    }
 }
  
 
@@ -100,6 +150,8 @@ void* read(void* argument)
 int main (int argc, const char** argv)
 { 
   try {
+
+  INIT_LOGGER("RSPBufferingTest");
 
    // create Parameter Object
    ACC::APS::ParameterSet ps("TFlopCorrelator.cfg"); 
@@ -111,25 +163,28 @@ int main (int argc, const char** argv)
    
    // create TH_Ethernet object
    TH_Ethernet* connection = new TH_Ethernet(interfaces[0],
-                                             dstMacs[0],
                                              srcMacs[0],
+                                             dstMacs[0],
                                              0x000);
 
    // init connection
    connection->init();  
 
    // create BufferController Object
-   BufferController BufControl(ps);
-   BufControl.overwritingAllowed(false);
+   BufferController BufControl(ps.getInt32("Input.CyclicBufferSize"), 
+                               ps.getInt32("Input.NSubbands"));
     
    // start bufferwriter thread
    pthread_t  writer;
-   thread_args writerdata;
+   producer_args writerdata;
     
    writerdata.bc = &BufControl;
    writerdata.con = connection;
+   writerdata.npacketsinframe = ps.getInt32("Input.NPacketsInFrame");
    writerdata.packetsize = ps.getInt32("Input.SzEPApayload") + ps.getInt32("Input.SzEPAheader");
-   writerdata.npackets = ps.getInt32("Input.NPacketsInFrame");
+   writerdata.framesize = writerdata.packetsize *
+                          writerdata.npacketsinframe;
+
 
    if (pthread_create(&writer, NULL, write, &writerdata) < 0)
    {
@@ -139,10 +194,12 @@ int main (int argc, const char** argv)
 
    // start bufferreader thread
    pthread_t reader;
-   thread_args readerdata;
+   consumer_args readerdata;
 
    readerdata.bc = &BufControl;
-
+   readerdata.nsubbands = ps.getInt32("Input.NSubbands");
+   readerdata.nsamples = ps.getInt32("Input.NSamplesToDH");
+   
    if (pthread_create(&reader, NULL, read, &readerdata) < 0)
    {
      perror("reader pthread_create");
@@ -153,7 +210,6 @@ int main (int argc, const char** argv)
    pthread_join(reader, NULL);
 
    delete connection;
-   
      
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
