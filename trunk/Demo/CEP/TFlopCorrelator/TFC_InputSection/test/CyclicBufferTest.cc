@@ -35,6 +35,7 @@ using namespace LOFAR;
 typedef struct
 {
   BufferController* bc;
+  int nsubbands;
 } thread_args;
 
 
@@ -44,39 +45,52 @@ void* produce(void* argument)
 
   thread_args* arg = (thread_args*)argument;
   BufferController* bc = arg->bc;
-
+  int nsubbands = arg->nsubbands;
   
   timestamp_t ts(0,0);
-  for (int i=0; i< 120; i++) {
-    bc->writeElements(&ts,ts, 1, 0 );
-    ts++;
+  SubbandType data[nsubbands];
+  
+  //Fill the subbanddata
+  for (int i=0; i<nsubbands; i++) {
+    data[i].Xpol = makei16complex(1,1);
+    data[i].Ypol = makei16complex(0,0);
   }
 
+  while (1) {
+    bc->writeElements(data,ts);
+    ts++;   
+  }
 }
 
 void* consume(void* argument)
 {
   cout << "consumer thread started" << endl;
-
+  sleep(1); 
+  
   thread_args* arg = (thread_args*)argument;
   BufferController *bc = arg->bc;
-
-  int blocksize = 12;
-  timestamp_t ts(0,0);
-  timestamp_t data[blocksize];
+  int nsubbands = arg->nsubbands;
+  int nelements = 10;
   int invalidcount;
-  
-  for (int i=0; i< 10; i++) {
-    bc->getElements(data,invalidcount, ts, blocksize);
-    ts+=blocksize;
-    
-    for (int t=0; t<blocksize; t++) { 
-      cout << data[t].getSeqId() << "," << data[t].getBlockId() << endl;
-    }
-    cout << "invalid: " << invalidcount << endl;
-    cout << endl;
+  timestamp_t ts(0,0);
+
+  // create databuffer
+  vector<SubbandType*> databuffer;
+  for (int s=0; s<nsubbands; s++) {
+    databuffer.push_back(new SubbandType[nelements]);
   }
-  
+
+  ts = bc->startBufferRead();
+
+  while (1) {
+    bc->getElements(databuffer, invalidcount, ts, nelements);
+    for (int i=0; i<nsubbands; i++) {
+      for (int j=0; j<nelements; j++) {
+        cout <<  databuffer[i][j].Xpol << "," << databuffer[i][j].Ypol << endl;
+      }
+    }
+    ts+=nelements;
+  }
 }
 
 
@@ -86,17 +100,18 @@ int main (int argc, const char** argv)
   try {
 
    // create Parameter Object
-   ACC::APS::ParameterSet ps("TFlopCorrelator.cfg"); 
-
+   ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
+   
+   int nsubbands = 4;
    // create BufferController Object
-   //BufferController* BufControl = new BufferController(ps); 
-   BufferController BufControl(ps);
+   BufferController BufControl(1000, nsubbands);
     
    // start producing data thread
    pthread_t  producer;
    thread_args producerdata;
     
    producerdata.bc = &BufControl;
+   producerdata.nsubbands = nsubbands;
 
    if (pthread_create(&producer, NULL, produce, &producerdata) < 0)
    {
@@ -109,6 +124,7 @@ int main (int argc, const char** argv)
    thread_args consumerdata;
 
    consumerdata.bc = &BufControl;
+   consumerdata.nsubbands = nsubbands;
 
    if (pthread_create(&consumer, NULL, consume, &consumerdata) < 0)
    {
