@@ -3,9 +3,9 @@
 # their files can be used by the BBS software using file mapping.
 
 include 'table.g'
-include 'trysplit.g'
 
-msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
+msconv := function (t, msout, selcommand='', datacolumn='DATA',
+		    makeresidual=F, usedouble=F)
 {
     print 'Selecting subset',selcommand;
     t1 := t.query (selcommand, sortlist='TIME,ANTENNA1,ANTENNA2',
@@ -19,72 +19,41 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
     t1 := table (spaste(msout,'_tmp'), readonly=F);
     # Check if data column is present.
     cols := t1.colnames();
-    if (len(cols == datacolumn) == 0) {
+    if (len(cols[cols == datacolumn]) == 0) {
 	print 'Data column',datacolumn,'does not exist;',
 	      'column DATA will be used instead';
 	datacolumn := 'DATA';
     }
-    if (len(cols == datacolumn) == 0) {
+    if (len(cols[cols == datacolumn]) == 0) {
 	fail paste('Data column',datacolumn,'does not exist');
     }
     # Get the shape of the flags.
     shp := shape(t1.getcell('FLAG',1));
-    # Skip all other data columns.
-    cols := cols[cols ~ m/.*DATA$/];
-    cols := cols[cols != datacolumn];
+
+    # Skip all all data columns and the FLAG column.
+    colsn := cols[cols ~ m/.*DATA$/];
+    colsn := colsn[colsn != datacolumn];
     print spaste('Copying the MS selection (',t1.nrows(),' rows) ...');
-    print ' copying data column',datacolumn;
-    if (len(cols) > 0) {
-	print ' not copying columns',cols;
-	if (is_fail(t1.removecols (cols))) fail;
+    if (len(colsn) > 0) {
+	print ' not copying columns',colsn;
     }
-    # Create new dminfo for DATA, FLAG and UVW column.
-    nmd := -1;
-    nmf := -1;
+    colsc := cols[cols !~ m/.*DATA$/];
+    colsc := colsc[colsc != 'FLAG'];
+    t1c := t1.query(columns=paste(colsc,sep=','));
+    # Create new dminfo for UVW column.
+    # (use TiledColumnStMan to get it into a separate file).
     nmu := -1;
-    dmo := t1.getdminfo();
+    dmo := t1c.getdminfo();
     dm := dmo;
     for (i in [1:len(dm)]) {
 	cols := dm[i].COLUMNS;
-	colsn := cols[cols != datacolumn];
-	if (len(colsn) == 0) {
-	    nmd := i;
+	cols := cols[cols != 'UVW'];
+	if (len(cols) == 0) {
+	    nmu := i;
 	} else {
-	    colsn := colsn[colsn != 'FLAG'];
-	    if (len(colsn) == 0) {
-		nmf := i;
-	    } else {
-		colsn := colsn[colsn != 'UVW'];
-		if (len(colsn) == 0) {
-		    nmu := i;
-		}
-	    }
-	}
-	if (len(colsn) > 0) {
-	    dm[i].COLUMNS := colsn;
+	    dm[i].COLUMNS := cols;
 	}
     }
-    # Store for DATA all pol,freq and 1 row per tile.
-    if (nmd < 0) {
-	nmd := 1+len(dm);
-    }
-    dm[nmd] := [TYPE='TiledColumnStMan', NAME='TiledDataNew',
-		SPEC=[DEFAULTTILESHAPE=[4,100000,1],
-		      TILESHAPE=[4,100000,1],
-		      MAXIMUMCACHESIZE=0], COLUMNS=[datacolumn]];
-    # Determine how many rows fill a tile of 1KBytes.
-    # Use 8 times more rows, because the flags are stored as bits.
-    # In this way all bits in all bytes in a tile are used and the
-    # size of a tile is usually reasonable.
-    if (nmf < 0) {
-	nmf := 1+len(dm);
-    }
-    nrrt := as_integer(1024 / (shp[1] * shp[2]));
-    if (nrrt < 1) nrrt:=1;
-    dm[nmf] := [TYPE='TiledColumnStMan', NAME='TiledFlagNew',
-		SPEC=[DEFAULTTILESHAPE=[4,100000,8*nrrt],
-		      TILESHAPE=[4,100000,8*nrrt],
-		      MAXIMUMCACHESIZE=0], COLUMNS=['FLAG']];
     # Store for UVW with a reasonable tile size (1200 bytes).
     if (nmu < 0) {
 	nmu := 1+len(dm);
@@ -92,8 +61,53 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
     dm[nmu] := [TYPE='TiledColumnStMan', NAME='TiledUVWNew',
 		SPEC=[DEFAULTTILESHAPE=[3,100], TILESHAPE=[3,100],
 		      MAXIMUMCACHESIZE=0], COLUMNS=['UVW']];
-    t1.copy (msout, T, T, dm, 'local');
+    # Now copy the table and open the result.
+    # Copy to local endian format.
+    if (is_fail(t1c.copy (msout, T, T, dm, 'local'))) fail;
+    t1c.close();
+    t2 := table(msout, readonly=F);
+    if (is_fail(t2)) fail;
+
+    # The DATA and FLAG column still have to be copied.
+    # First add columns for them.
+    # Make them fixed shape arrays, so TiledColumnStMan can be used.
+    # Store for DATA all pol,freq and 1 row per tile.
+    print ' copying FLAG column and data column',datacolumn;
+    dmd := [TYPE='TiledColumnStMan', NAME='TiledDataNew',
+	    SPEC=[DEFAULTTILESHAPE=[4,100000,1],
+		  TILESHAPE=[4,100000,1],
+		  MAXIMUMCACHESIZE=0]];
+    coldes := [name='DATA', desc=t1.getcoldesc (datacolumn)];
+    coldes.desc.shape := shp;
+    if (is_fail(t2.addcols (coldes, dmd))) fail;
+    # Determine how many rows fill a tile of 1KBytes.
+    # Use 8 times more rows, because the flags are stored as bits.
+    # In this way all bits in all bytes in a tile are used and the
+    # size of a tile is usually reasonable.
+    nrrt := as_integer(1024 / (shp[1] * shp[2]));
+    if (nrrt < 1) nrrt:=1;
+    dmf := [TYPE='TiledColumnStMan', NAME='TiledFlagNew',
+	    SPEC=[DEFAULTTILESHAPE=[4,100000,8*nrrt],
+		  TILESHAPE=[4,100000,8*nrrt],
+		  MAXIMUMCACHESIZE=0], COLUMNS=['FLAG']];
+    coldes := [name='FLAG', desc=t1.getcoldesc ('FLAG')];
+    coldes.desc.shape := shp;
+    if (is_fail(t2.addcols (coldes, dmf))) fail;
+    # Now copy the DATA and the FLAG column.
+    # Do it by using copyrows which copies all rows for columns with
+    # equal names in source and target table.
+    tr1 := t1.query (columns=spaste(datacolumn,',FLAG'));
+    if (is_fail(tr1)) fail;
+    tr2 := t2.query (columns='DATA,FLAG');
+    if (is_fail(tr2)) fail;
+    if (datacolumn != 'DATA') {
+	if (is_fail(tr1.renamecol (datacolumn, 'DATA'))) fail;
+    }
+    if (is_fail(tr1.copyrows (tr2, 1, 1, tr1.nrows()))) fail;
+print 'copied'
+
     t1.close();
+    t2.close();
     # Delete the temporary table.
     tabledelete (spaste(msout,'_tmp'));
     # Set all flags if a row flag is true.
@@ -102,6 +116,7 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
     if (is_fail(t1)) fail;
     print 'Flags in',t1.nrows(),'rows have been set';
     t1.close();
+
     # Open the new table for update.
     t1 := table(msout, readonly=F);
     # Remove the SORT keywords (if existing).
@@ -118,48 +133,46 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
 	}
 	t1.removekeyword ('SORTED_TABLE');
     }
-    # Rename the selected column to DATA.
-    if (datacolumn != 'DATA') {
-	t1.renamecol (datacolumn, 'DATA');
-	print 'Renamed column',datacolumn,'to DATA';
-    }
-    # Add a column containing the residuals.
-    # Use a tiled column storage manager for it.
-    # If double complex has to be used, name it RESIDUAL_DATA and create
-    # a mapping column CORRECTED_DATA.
-    # Otherwise name it CORRECTED_DATA.
-    dmres := [TYPE='TiledColumnStMan',
-	      NAME='TiledDataRes',
-	      SPEC=[DEFAULTTILESHAPE=[4,100000,1],
-		    TILESHAPE=[4,100000,1],
-		    MAXIMUMCACHESIZE=0]];
-    coldes := [name='CORRECTED_DATA', desc=t1.getcoldesc ('DATA')];
-    if (usedouble) {
-	coldes.name := 'RESIDUAL_DATA';
-	coldes.desc.valueType := 'dcomplex';
-    }
-    coldes.desc.comment := 'The residual data column';
-    if (is_fail(t1.addcols (coldes, dmres))) fail;
-    # Add a column CORRECTED_DATA mapping RESIDUAL_DATA to single precision.
-    dmcor := [TYPE='MappedArrayEngine<Complex ,DComplex>',
-	      NAME='CORRECTED_DATA',
-	      SPEC=[SOURCENAME='CORRECTED_DATA',
-		    TARGETNAME='RESIDUAL_DATA']];
-    if (usedouble) {
+
+    if (makeresidual) {
+	# Add a column containing the residuals.
+	# Use a tiled column storage manager for it.
+	# If double complex has to be used, name it RESIDUAL_DATA and create
+	# a mapping column CORRECTED_DATA.
+	# Otherwise name it CORRECTED_DATA.
+	dmres := [TYPE='TiledColumnStMan',
+		  NAME='TiledDataRes',
+		  SPEC=[DEFAULTTILESHAPE=[4,100000,1],
+			TILESHAPE=[4,100000,1],
+			MAXIMUMCACHESIZE=0]];
 	coldes := [name='CORRECTED_DATA', desc=t1.getcoldesc ('DATA')];
-	coldes.desc.comment := 'The corrected data column';
-	if (is_fail(t1.addcols (coldes, dmcor))) fail;
+	if (usedouble) {
+	    coldes.name := 'RESIDUAL_DATA';
+	    coldes.desc.valueType := 'dcomplex';
+	}
+	coldes.desc.comment := 'The residual data column';
+	if (is_fail(t1.addcols (coldes, dmres))) fail;
+	# Add a column CORRECTED_DATA mapping RESIDUAL_DATA to single precision.
+	dmcor := [TYPE='MappedArrayEngine<Complex ,DComplex>',
+		  NAME='CORRECTED_DATA',
+		  SPEC=[SOURCENAME='CORRECTED_DATA',
+			TARGETNAME='RESIDUAL_DATA']];
+	if (usedouble) {
+	    coldes := [name='CORRECTED_DATA', desc=t1.getcoldesc ('DATA')];
+	    coldes.desc.comment := 'The corrected data column';
+	    if (is_fail(t1.addcols (coldes, dmcor))) fail;
+	}
+	# Copy all data to CORRECTED_DATA (thus to RESIDUAL_DATA).
+	# Do it by using copyrows which copies all rows for columns with
+	# equal names in source and target table.
+	# Make 2 tables with a single column and give them the same column name.
+	print 'Copying DATA to RESIDUAL_DATA ...';
+	tr1 := t1.query (columns='DATA');
+	tr2 := t1.query (columns='CORRECTED_DATA');
+	if (is_fail(tr2.renamecol ('CORRECTED_DATA', 'DATA'))) fail;
+	if (is_fail(tr1.copyrows (tr2, 1, 1, tr1.nrows()))) fail;
     }
-    # Copy all data to CORRECTED_DATA (thus to RESIDUAL_DATA).
-    # Do it by using copyrows which copies all rows for columns with
-    # equal names in source and target table.
-    # Make 2 tables with a single column and give them the same column name.
-    print 'Copying DATA to RESIDUAL_DATA ...';
-##    t1.putcol ('CORRECTED_DATA', t1.getcol('DATA'));
-    tr1 := t1.query (columns='DATA');
-    tr2 := t1.query (columns='CORRECTED_DATA');
-    if (is_fail(tr2.renamecol ('CORRECTED_DATA', 'DATA'))) fail;
-    if (is_fail(tr1.copyrows (tr2, 1, 1, tr1.nrows()))) fail;
+
     # Get the storage manager numbers of the various data files.
     dm := t1.getdminfo();
     t1.close();
@@ -180,9 +193,11 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
     }
     # Create symlinks for the data, flags and uvw file.
     shell(spaste('ln -s ','table.f',nmd,'_TSM0 ',msout,'/vis.dat'));
-    shell(spaste('ln -s ','table.f',nmr,'_TSM0 ',msout,'/vis.res'));
     shell(spaste('ln -s ','table.f',nmf,'_TSM0 ',msout,'/vis.flg'));
     shell(spaste('ln -s ','table.f',nmu,'_TSM0 ',msout,'/vis.uvw'));
+    if (makeresidual) {
+	shell(spaste('ln -s ','table.f',nmr,'_TSM0 ',msout,'/vis.res'));
+    }
     # Create the description file.
     print 'Creating the description file vis.des ...';
     shell(paste('MSDesc',msout,'DATA'));
@@ -192,7 +207,8 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA', usedouble=F)
 }
 
 
-mssplit := function (msin, nparts, datacolumn='DATA', usedouble=F)
+mssplit := function (msin, nparts, datacolumn='DATA',
+		     makeresidual=F, usedouble=F)
 {
     t:=table (msin);
     if (is_fail(t)) fail;
@@ -215,10 +231,12 @@ mssplit := function (msin, nparts, datacolumn='DATA', usedouble=F)
     }
     # No split needed if only 1 part.
     if (nparts < 2) {
-	msconv (t, spaste(msin,'_p1'), '', datacolumn, usedouble);
+	res := msconv (t, spaste(msin,'_p1'), '', datacolumn,
+		       makeresidual, usedouble);
 	t.close();
-	return T;
+	return res;
     }
+    include 'trysplit.g'
     # Determine nr of baselines
     t1:=t.query(sortlist='unique ANTENNA1,ANTENNA2');
     if (is_fail(t1)) fail;
@@ -239,10 +257,10 @@ mssplit := function (msin, nparts, datacolumn='DATA', usedouble=F)
 	vecsel := vecnrs[blvec == part];
         vecsela1 := spaste(vecsel%nra1) ~ s/].*/]/ ~ s/ /,/g;
         vecsela2 := spaste(as_integer(vecsel/nra1)) ~ s/].*/]/ ~ s/ /,/g;
-        msconv (t, spaste(msin,'_p',part),
-		spaste('any(ANTENNA1 == ', vecsela1,
-                      ' && ANTENNA2 == ', vecsela2, ')'),
-                datacolumn);
+        if (is_fail(msconv (t, spaste(msin,'_p',part),
+			    spaste('any(ANTENNA1 == ', vecsela1,
+				   ' && ANTENNA2 == ', vecsela2, ')'),
+			    datacolumn, makeresidual, usedouble))) fail;
         t1 := table (spaste(msin,'_p',part));
         tnrrow +:= t1.nrows();
         rows := [rows, t1.rownumbers(t)];
