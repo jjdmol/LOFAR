@@ -129,10 +129,17 @@ void WH_Correlator::process() {
     // loop over the vertical(rows) dimension in the correlation matrix
     for (int A=0; A < itsNelements; A+=2) {
       // addressing:   getBufferElement(    channel, station, time, pol)
+#ifdef HAVE_BGL
+      reg_A0_X = ficast(inDH->getBufferElement(channel, A,       time, 0));     
+      reg_A0_Y = ficast(inDH->getBufferElement(channel, A,       time, 1));     
+      reg_A1_X = ficast(inDH->getBufferElement(channel, A+1,     time, 0));     
+      reg_A1_Y = ficast(inDH->getBufferElement(channel, A+1,     time, 1));     
+#else
       reg_A0_X = inDH->getBufferElement(channel, A,       time, 0);     
       reg_A0_Y = inDH->getBufferElement(channel, A,       time, 1);     
       reg_A1_X = inDH->getBufferElement(channel, A+1,     time, 0);     
       reg_A1_Y = inDH->getBufferElement(channel, A+1,     time, 1);     
+#endif
       //
       // get pointers to the two rows we calculate in the next loop
       
@@ -148,10 +155,17 @@ void WH_Correlator::process() {
 // 	cout << B+1 << " - " << A+1 << endl;
 
  	// load B inputs into registers
+#ifdef HAVE_BGL
+	reg_B0_X = ficast(inDH->getBufferElement(channel, B  , time, 0));
+	reg_B0_Y = ficast(inDH->getBufferElement(channel, B  , time, 1));     
+	reg_B1_X = ficast(inDH->getBufferElement(channel, B+1, time, 0));     
+	reg_B1_Y = ficast(inDH->getBufferElement(channel, B+1, time, 1));      
+#else
 	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);
 	reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
 	reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
 	reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);      
+#endif
 	// calculate all correlations; 
 	// todo: prefetch new B dimesnsions on the way
 	DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B,0)]);
@@ -185,10 +199,17 @@ void WH_Correlator::process() {
 //       cout << B   << " - " << A+1 << endl;
 //       cout << B+1 << " - " << A+1 << endl;
 
+#ifdef HAVE_BGL
+      reg_B0_X = ficast(inDH->getBufferElement(channel, B  , time, 0));     
+      reg_B0_Y = ficast(inDH->getBufferElement(channel, B  , time, 1));     
+      reg_B1_X = ficast(inDH->getBufferElement(channel, B+1, time, 0));     
+      reg_B1_Y = ficast(inDH->getBufferElement(channel, B+1, time, 1));     
+#else
       reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
       reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
       reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
       reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);     
+#endif
       // calculate all correlations in the triangle; 
       // todo: prefetch new B dimesnsions on the way
       DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B,0)]);
@@ -253,4 +274,8 @@ double timer() {
   gettimeofday(&curtime, NULL);
 
   return (curtime.tv_sec + 1.0e-6*curtime.tv_usec);
+}
+
+fcomplex ficast(i16complex in) {
+  return makefcomplex(in.real(), in.imag());
 }
