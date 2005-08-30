@@ -26,12 +26,12 @@
 
 #include <TFC_Interface/RSPTimeStamp.h>
 #include <APS/ParameterSet.h>
-
+#include <boost/thread.hpp>
 
 namespace LOFAR
 {
 
-
+using namespace boost;
 using ACC::APS::ParameterSet;
 
 #define MAX_OFFSET  5
@@ -89,6 +89,8 @@ class BufferController
    // disable overwrite at the given stamp (to be used on the client)
    void startBufferRead(timestamp_t stamp);
    
+   void setAllowOverwrite(bool allow);
+
   private:
 
    // the buffers
@@ -107,9 +109,9 @@ class BufferController
    // permission to overwrite previous written elements
    bool itsOverwritingAllowed;
    
-   pthread_mutex_t buffer_mutex;    // lock/unlock shared data
-   pthread_cond_t  data_available;  // 'buffer not empty' trigger
-   pthread_cond_t  space_available; // 'buffer not full' trigger
+   mutex buffer_mutex;    // lock/unlock shared data
+   condition data_available;  // 'buffer not empty' trigger
+   condition space_available; // 'buffer not full' trigger
 
    int getCount();
    int getWritePtr();
