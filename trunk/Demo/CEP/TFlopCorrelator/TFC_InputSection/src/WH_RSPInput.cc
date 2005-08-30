@@ -26,6 +26,7 @@
 // General includes
 #include <Common/LofarLogger.h>
 #include <Transport/TransportHolder.h>
+#include <Transport/TH_File.h>
 
 // Application specific includes
 #include <TFC_InputSection/WH_RSPInput.h>
@@ -56,13 +57,17 @@ void* WriteToBufferThread(void* arguments)
   memset(dummyblock, 0, args->nrPacketsInFrame*sizeof(SubbandType));
 
   // used for debugging
-  int cnt_missed, cnt_rewritten = 0;
+  int cnt_missed = 0;
+  int cnt_rewritten = 0;
+  int cnt_total = 0;
 
   pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
   // init Transportholder
   ASSERTSTR(args->Connection->init(), "Could not init TransportHolder");
+
+  int speedCounter = 0;
 
   while(1) {
    
@@ -139,6 +144,12 @@ void* WriteToBufferThread(void* arguments)
       // increase the nextstamp
       nextstamp += args->nrPacketsInFrame; 
     }
+    cnt_total++;
+    if (speedCounter-- < 1) {
+      cout << cnt_total*args->nrPacketsInFrame <<" packets: "<< cnt_missed<<" missed and "<<cnt_rewritten<<" rewritten"<<endl;
+      cnt_total = cnt_missed = cnt_rewritten = 0;
+      speedCounter = 100;
+    }
   }
 }
 
@@ -206,7 +217,8 @@ WH_RSPInput::WH_RSPInput(const string& name,
 WH_RSPInput::~WH_RSPInput() 
 {
   delete itsBufControl;
-  delete &itsTH;
+  // itsTH is deleted by the AH because it is created there
+  // delete &itsTH;
 }
 
 
@@ -244,6 +256,12 @@ void WH_RSPInput::startThread()
   writerinfo.EPAHeaderSize      = itsEPAHeaderSize;
   writerinfo.EPAPacketSize      = itsEPAPacketSize;
   
+  if ((dynamic_cast<TH_File*> (&itsTH)) != 0) {
+    // if we are reading from file, overwriting the buffer should not be allowed
+    // this way we can work with smaller files
+    itsBufControl->setAllowOverwrite(false);
+  }
+
   if (pthread_create(&writerthread, NULL, WriteToBufferThread, &writerinfo) < 0)
   {
     perror("WH_RSPInput: thread creation failure");

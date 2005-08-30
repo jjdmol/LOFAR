@@ -23,9 +23,9 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <CEPFrame/Lock.h>
 #include <TFC_InputSection/BufferController.h>
 #include <Common/hexdump.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -111,11 +111,6 @@ BufferController::BufferController(int buffersize, int nsubbands)
   for (int s=0; s<itsNSubbands; s++) {
     itsSubbandBuffer.push_back(new SubbandType[itsBufferSize]);
   }
-  
-  // init buffer lock and -triggers
-  pthread_mutex_init(&buffer_mutex, NULL);
-  pthread_cond_init (&data_available,  NULL);
-  pthread_cond_init (&space_available, NULL);
 }
 
 BufferController::~BufferController()
@@ -133,17 +128,15 @@ timestamp_t BufferController::getOldestStamp()
 {
   int bid;
 
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
 
   // wait until at least one element is available
   while (getCount() <= 0) 
   {
-    pthread_cond_wait(&data_available, &buffer_mutex);
+    data_available.wait(sl);
   }
   // CONDITION: Count > 0
   bid = itsTail.getIndex();
-
-  pthread_mutex_unlock(&buffer_mutex);
 
   return itsMetadataBuffer[bid].timestamp;
 }
@@ -152,12 +145,12 @@ timestamp_t BufferController::getNewestStamp()
 {
   int bid;
 
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
 
   // wait until at least one element is available
   while (getCount() <= 0) 
   {
-    pthread_cond_wait(&data_available, &buffer_mutex);
+    data_available.wait(sl);
   }
   // CONDITION: Count > 0
 
@@ -165,20 +158,18 @@ timestamp_t BufferController::getNewestStamp()
   // so it is allowed to move the tails;
   bid = itsOldHead.getIndex() - 1;
 
-  pthread_mutex_unlock(&buffer_mutex);
-
   return itsMetadataBuffer[bid].timestamp;
 }
 
 void BufferController::setStartOffset(int offset)
 {
 
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
 
   // wait until enough data becomes available
   while (getCount() - offset < 1)
   {
-    pthread_cond_wait(&data_available, &buffer_mutex);
+    data_available.wait(sl);
   }
   
   // This method is called when there is no reader,
@@ -186,21 +177,19 @@ void BufferController::setStartOffset(int offset)
   itsTail += offset;
   itsOldTail = itsTail;
 
-  pthread_cond_broadcast(&space_available);
-   
-  pthread_mutex_unlock(&buffer_mutex);
+  space_available.notify_all();
 }
 
 int BufferController::setReadOffset(int offset)
 {
   int bid;
 
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
 
   // wait until enough data becomes available
   while (getCount() - offset < MIN_COUNT)
   {
-    pthread_cond_wait(&data_available, &buffer_mutex);
+    data_available.wait(sl);
   }
   
   // This method is called when there is no reader,
@@ -209,15 +198,12 @@ int BufferController::setReadOffset(int offset)
   itsOldTail = itsTail;
   bid = itsTail.getIndex();
    
-  pthread_mutex_unlock(&buffer_mutex);
-
   return bid;
 }
 
 int BufferController::setRewriteOffset(int offset)
 {
-
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
 
   // check if there are enough elements in buffer
   if (offset >= getCount()) {
@@ -227,8 +213,6 @@ int BufferController::setRewriteOffset(int offset)
    
   itsOldHead = itsTail + offset;
 
-  pthread_mutex_unlock(&buffer_mutex);
-
   return itsOldHead.getIndex();
 }
 
@@ -236,12 +220,12 @@ int BufferController::getWritePtr()
 {
   int bid;
 
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
   
   // wait until space becomes available
   while ((itsHead - itsOldTail >= MAX_COUNT) && !itsOverwritingAllowed)
   {
-    pthread_cond_wait(&space_available, &buffer_mutex);
+    space_available.wait(sl);
   }
   
   // CONDITION: Count < MAX_COUNT 
@@ -254,8 +238,6 @@ int BufferController::getWritePtr()
     itsTail++;
     itsOldTail++;
   }
-  
-  pthread_mutex_unlock(&buffer_mutex);
 
   return bid;
 }
@@ -264,7 +246,7 @@ int BufferController::getReadPtr()
 {
   int bid;
 
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
 
   // overwriting not allowed when reading is started
   itsOverwritingAllowed = false;
@@ -272,56 +254,47 @@ int BufferController::getReadPtr()
   // wait until enough elements are available
   while (getCount() < MIN_COUNT) 
   {
-    pthread_cond_wait(&data_available, &buffer_mutex);
+    data_available.wait(sl);
   }
   
   // CONDITION: Count >= MIN_COUNT 
   bid = itsTail.getIndex();
   itsTail++;
   
-  pthread_mutex_unlock(&buffer_mutex);
-  
   return bid;
 }
 
 void BufferController::releaseWriteBlock()
 {
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
   
   // synchronize writepointers
   itsOldHead = itsHead;
 
   // signal that data has become available 
-  pthread_cond_broadcast(&data_available);
-
-  pthread_mutex_unlock(&buffer_mutex);
- 
+  data_available.notify_all();
 }
 
 void BufferController::releaseReadBlock()
 {
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
   
   // synchronize readpointers
   itsOldTail = itsTail;
   
   // signal that space has become available
-  pthread_cond_broadcast(&space_available);
-
-  pthread_mutex_unlock(&buffer_mutex);
+  space_available.notify_all();
 }
 
 void BufferController::releaseRewriteBlock()
 {
-  pthread_mutex_lock(&buffer_mutex);
+  mutex::scoped_lock sl(buffer_mutex);
   
   // synchronize writepointers
   itsOldHead = itsHead;
 
   // signal that data has become available 
-  pthread_cond_broadcast(&data_available);
-
-  pthread_mutex_unlock(&buffer_mutex); 
+  data_available.notify_all();
 }
 
 timestamp_t BufferController::startBufferRead()
@@ -454,31 +427,33 @@ bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
   // get oldest timestamp
   int bid;
 
-  pthread_mutex_lock(&buffer_mutex);
+  { // this block is locked by the scoped_lock
+    mutex::scoped_lock sl(buffer_mutex);
 
-  if (getCount() <= 0) {
-    // no elements in the buffer
-    bid = -1;
-  } else {
-    bid = itsTail.getIndex();
-
-    // calculate offset
-    int offset = startstamp - itsMetadataBuffer[bid].timestamp;
-
-    // check if there are enough elements in buffer
-    if (offset >= getCount()) {
-      // not enough elements in the buffer
+    if (getCount() <= 0) {
+      // no elements in the buffer
       bid = -1;
+    } else {
+      bid = itsTail.getIndex();
+      
+      // calculate offset
+      int offset = startstamp - itsMetadataBuffer[bid].timestamp;
+      
+      // check if there are enough elements in buffer
+      if (offset >= getCount()) {
+	// not enough elements in the buffer
+	bid = -1;
 
-    } else {   
+      } else {   
 
-      itsOldHead = itsTail + offset;
+	itsOldHead = itsTail + offset;
       bid = itsOldHead.getIndex();
-
+      
+      }
     }
-  }
 
-  pthread_mutex_unlock(&buffer_mutex);
+  } // this block is locked by the scoped_lock
+
 
   if (bid != -1) {
 
@@ -501,6 +476,10 @@ bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
   } 
 }
 
+void BufferController::setAllowOverwrite(bool allow)
+{
+  itsOverwritingAllowed = allow;
+}
 
 int BufferController::getCount()
 {

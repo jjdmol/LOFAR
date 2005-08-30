@@ -63,6 +63,8 @@ void AH_InputSection::undefine() {
 
   delete itsInputStub;
   delete itsOutputStub;
+  itsInputStub = 0;
+  itsOutputStub = 0;
 }  
 
 void AH_InputSection::define(const LOFAR::KeyValueMap&) {
@@ -214,7 +216,7 @@ void AH_InputSection::run(int steps) {
   LOG_TRACE_FLOW_STR("Start AH_InputSection::run() "  );
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
-    cout<<"run "<<i+1<<" of "<<steps<<endl;
+    //    cout<<"run "<<i+1<<" of "<<steps<<endl;
     getComposite().process();
   }
   LOG_TRACE_FLOW_STR("Finished AH_InputSection::run() "  );
