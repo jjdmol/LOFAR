@@ -1,0 +1,62 @@
+
+Reading in parameterfile 'tParameterSet.ps'
+
+Showing some values
+a.b.c=700
+a.b=0
+a.b.double=3.1415926535897931
+a.b.lange_naam=dit is een wat langere naam
+
+Merging ParameterSet with file 'merge.ps'
+
+Showing the same keys again
+a.b.c=5
+a.b=0
+a.b.double=3.1415926535897931
+a.b.lange_naam=dit is nu een andere naam geworden met extra spaties aan het einde  
+a.b.time1=15
+a.b.time2=900
+a.b.time3=54000
+
+The main ParameterSet contains:
+[a.b],[0..3]
+[a.b.c],[5]
+[a.b.c.d.e.f.g.h],[tjee wat een levels!]
+[a.b.d],[7]
+[a.b.double],[3.1415926535897932384626433832795]
+[a.b.lange_naam],[dit is nu een andere naam geworden met extra spaties aan het einde  ]
+[a.b.time1],[15 s]
+[a.b.time2],[15m]
+[a.b.time3],[15 hour]
+[a.c.a],[nog een afkorting]
+[e.g],[een voorbeeld]
+[egg],[een ei]
+The name of the ParameterSet = a
+The vers of the ParameterSet = 
+this is NOT a valid version number
+Parameter check says: No versionnumber found
+
+isValidVersionNr(1.2.3.4)   = 0
+isValidVersionNr(1.2.3)     = 1
+isValidVersionNr(1.2)       = 0
+isValidVersionNr(stable)    = 0
+isValidVersionNrRef(1.2.3)  = 1
+isValidVersionNrRef(1.2)    = 0
+isValidVersionNrRef(stable) = 1
+isValidVersionNrRef(error)  = 0
+isValidVersionNrRef(1.2.3.AndALotOfGarbageBehindTheLastNumberPart)  = 0
+Creating a subset 'a.b.'
+
+Subset a.b. contains:
+[c],[5]
+[c.d.e.f.g.h],[tjee wat een levels!]
+[d],[7]
+[double],[3.1415926535897932384626433832795]
+[lange_naam],[dit is nu een andere naam geworden met extra spaties aan het einde  ]
+[time1],[15 s]
+[time2],[15m]
+[time3],[15 hour]
+
+Trying to read a non-existing key
+
+Finally write the parameterset to 'newset.ps'
