@@ -68,4 +68,18 @@ void DH_CorrCube::init()
 void DH_CorrCube::fillDataPointers() {
   itsBuffer = getData<BufferType> ("Buffer");
 }
+
+void DH_CorrCube::print()
+{
+  int lines = 0;
+  for (int channel = 0; channel < itsNFChannels; channel ++)
+    for (int station = 0; station < itsNStations; station ++)
+      for (int time = 0; time < itsNTimes; time ++)
+	for (int polarization = 0; polarization < itsNPol; polarization ++) {
+	  if (++ lines >= 100)
+	    std::cerr << channel << ' ' << station << ' ' << time << ' ' << polarization << ": " << *getBufferElement(channel, station, time, polarization) << '\n';
+	  if (lines == 110) return;
+	}
+}
+
 }
