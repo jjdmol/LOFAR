@@ -46,10 +46,6 @@ public:
 
   const unsigned int getBufSize() const;
 
-  /// get access to the center frequency
-  const double getCenterFreq() const;
-  void   setCenterFreq(double freq);
-
   /// Test pattern methods used for regression tests
   void setStorageTestPattern();
 
@@ -131,11 +127,6 @@ inline bool DH_Vis::checkCorrelatorTestPattern() {
   return result;
 }
  
-inline const double DH_Vis::getCenterFreq() const
-  { return itsCenterFreq; }
-
-inline void DH_Vis::setCenterFreq(double freq) 
-  { itsCenterFreq = freq; }
 }
 
 #endif 
