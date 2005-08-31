@@ -1,77 +1,83 @@
-//# DH_PPF.h: SubBand DataHolder
+//# DH_PPF.h: PPF DataHolder
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
 //#
 //#
-//# $Id$
 
 #ifndef TFLOPCORRELATOR_DH_PPF_H
 #define TFLOPCORRELATOR_DH_PPF_H
 
-#include <TFC_Interface/RectMatrix.h>
-#include <TFC_Interface/DH_FIR.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
+#include <APS/ParameterSet.h>
+#include <stdlib.h>
+
+
+#define NR_STATIONS             37
+#define NR_STATION_SAMPLES  200704 // FIR requires this to be multiple of 16*256
+#define NR_POLARIZATIONS         2
+#define NR_SUB_CHANNELS        256
+
+#define NR_SAMPLES_PER_INTEGRATION (NR_STATION_SAMPLES / NR_SUB_CHANNELS)
 
 namespace LOFAR
 {
 
-
-/**
-   TBW
-*/
 class DH_PPF: public DataHolder
 {
 public:
-  typedef u16complex BufferType;
+  typedef i16complex BufferType[NR_STATIONS][NR_STATION_SAMPLES][NR_POLARIZATIONS];
 
-  explicit DH_PPF (const string& name,
-		   const short   subband); 
+  explicit DH_PPF(const string& name,
+		  const short   subband,
+		  const LOFAR::ACC::APS::ParameterSet pSet); 
 
 
   DH_PPF(const DH_PPF&);
 
   virtual ~DH_PPF();
 
-  DataHolder* clone() const;
+  DataHolder *clone() const;
 
-  /// Allocate the buffers.
   virtual void init();
 
-  void InitBankCursor(short station, short pol, short time);
-  //void InitTimeCursor(short station, short pol);
-  void setNextBank(BufferType &value);
-  //BufferType** getnextTime();
+  BufferType *getBuffer()
+  {
+    return itsBuffer;
+  }
 
-  void InitTimeCursor(short station, short pol, short time);
-  void setNextBank(BufferType value);
+  const BufferType *getBuffer() const
+  {
+    return itsBuffer;
+  }
+
+  const size_t getBufferSize() const
+  {
+    return sizeof(BufferType) / sizeof(i16complex);
+  }
+  
+  void DH_PPF::setTestPattern()
+  {
+    (std::cerr << "DH_PPF::setTestPattern() ... ").flush();
+    for (size_t i = 0; i < getBufferSize(); i++) {
+      ((i16complex *) itsBuffer)[i] = makei16complex(rand() << 20 >> 20, rand() << 20 >> 20);
+    }
+    std::cerr << "done.\n";
+  }
 
 private:
   /// Forbid assignment.
-  DH_PPF& operator= (const DH_PPF&);
+  DH_PPF &operator = (const DH_PPF&);
 
-  BufferType*  itsBuffer; 
-  unsigned int itsBufSize;
-  unsigned int itsNSamples;
-  unsigned int itsNStations;
-  unsigned int itsNTimes;
-  unsigned int itsNPol;
-  unsigned int itsNFilters;
+  BufferType *itsBuffer;
 
-  RectMatrix<BufferType>* itsMatrix;
-
-  // attributes needed to access the RectMatrix
-  dimType itsStationDim;
-  dimType itsPolDim;
-  dimType itsTimeDim;
-  dimType itsBankDim;
-  RectMatrix<DH_FIR::BufferType>::cursorType itsBankCursor;
+  ACC::APS::ParameterSet itsPS;
 
   void fillDataPointers();
 };
 
-   
+
 }
 #endif 
