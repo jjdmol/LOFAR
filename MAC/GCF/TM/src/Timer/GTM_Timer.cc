@@ -1,3 +1,4 @@
+
 //#  GTM_Timer.cc: one line description
 //#
 //#  Copyright (C) 2002-2003
@@ -51,9 +52,9 @@ GTMTimer::GTMTimer(GCFRawPort& port,
  
 void GTMTimer::decreaseTime()
 {
-  unsigned long uSec = getElapsedTime();
+  long uSec = getElapsedTime();
   
-  if (_timeLeft > uSec)
+  if ((long)_timeLeft > uSec)
   {
     _timeLeft -= uSec;
   }
@@ -76,9 +77,11 @@ void GTMTimer::decreaseTime()
       if (_intervalTime < timeoverflow)
       {
         LOG_ERROR(formatString(
-            "Timerinterval %fsec of timer %d is to small for performance reasons.",
+            "Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %ld, tleft: %lu).",
             ((double) _intervalTime) / 1000000.0,
-            _id));
+            _id,
+            uSec,
+            _timeLeft));
         do 
         {
           timeoverflow -= _intervalTime;
@@ -99,19 +102,19 @@ void GTMTimer::saveTime()
   gettimeofday(&_savedTime, &timeZone);
 }
 
-unsigned long GTMTimer::getElapsedTime()
+long GTMTimer::getElapsedTime()
 {
   timeval oldTime(_savedTime);
-  unsigned long uSecDiff(0);
+  long uSecDiff(0);
   
   saveTime();
 
-  uSecDiff = ((unsigned long) (_savedTime.tv_usec) + 
-                  (unsigned long) (_savedTime.tv_sec) * 1000000) - 
-                 ((unsigned long) (oldTime.tv_usec) +
-                  (unsigned long) (oldTime.tv_sec) * 1000000);
+  uSecDiff = ((unsigned long long) (_savedTime.tv_usec) + 
+              (unsigned long long) (_savedTime.tv_sec) * 1000000) - 
+             ((unsigned long long) (oldTime.tv_usec) +
+              (unsigned long long) (oldTime.tv_sec) * 1000000);
 
-  return uSecDiff;                 
+  return uSecDiff;
 }
   } // namespace TM
  } // namespace GCF

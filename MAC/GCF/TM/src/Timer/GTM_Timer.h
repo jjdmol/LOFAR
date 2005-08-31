@@ -67,7 +67,7 @@ class GTMTimer
 
   private: // helper methods
     void saveTime ();
-    unsigned long getElapsedTime();
+    long getElapsedTime();
 
   private: // attributes
     GCFRawPort&     _port;
