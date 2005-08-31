@@ -64,7 +64,9 @@ class WH_Correlator: public WorkHolder
   double bandwidth;
   double agg_bandwidth;
   double corr_perf;
+#ifdef HAVE_BGL
   fcomplex ficast(i16complex in);
+#endif
 
 /*   DH_FIR::BufferType  in_buffer[ELEMENTS][SAMPLES]; */
   DH_FIR::BufferType* in_ptr;
@@ -78,8 +80,10 @@ class WH_Correlator: public WorkHolder
  inline double WH_Correlator::getAggBandwidth() { return agg_bandwidth; } 
  inline double WH_Correlator::getCorrPerf() { return corr_perf; } 
 
+#ifdef HAVE_BGL
  inline fcomplex WH_Correlator::ficast(i16complex in) 
    { return makefcomplex(in.real(), in.imag()); }
+#endif
 
 } // namespace LOFAR
 

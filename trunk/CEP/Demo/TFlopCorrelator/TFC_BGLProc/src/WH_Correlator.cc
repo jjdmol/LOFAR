@@ -275,7 +275,3 @@ double timer() {
 
   return (curtime.tv_sec + 1.0e-6*curtime.tv_usec);
 }
-
-fcomplex ficast(i16complex in) {
-  return makefcomplex(in.real(), in.imag());
-}
