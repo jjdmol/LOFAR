@@ -56,11 +56,8 @@ public:
   const unsigned int getBufSize() const;
 
   void setTestPattern();
-  void print();
 
 private:
-  size_t offset(int channel, int station, int sample, int polarisation);
-
   /// Forbid assignment.
   DH_CorrCube& operator= (const DH_CorrCube&);
 
@@ -77,12 +74,10 @@ private:
 };
 
 
-#if 0
 #define CCADDRESS_FREQ(freq) itsNPol*itsNTimes*itsNStations*itsNFChannels*(freq)
 #define CCADDRESS_STATION(freq, station) CCADDRESS_FREQ((freq)) +  itsNPol*itsNTimes*itsNStations*(station) 
 #define CCADDRESS_TIME(freq, station, time) CCADDRESS_STATION((freq),(station)) +  itsNPol*itsNTimes*(time) 
 #define CCADDRESS_POL(freq, station, time, pol) CCADDRESS_TIME((freq),(station),(time))  +  itsNPol*(pol)
-#endif
  
  inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
    { return itsBuffer; }
@@ -94,17 +89,11 @@ private:
    { itsBuffer = buffer; }
    
 
-  inline size_t DH_CorrCube::offset(int channel, int station, int sample, int polarisation)
-  {
-    return (((size_t) channel * itsNStations + station) * itsNTimes + sample) * itsNPol + polarisation;
-  }
-
  inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int channel, 
 						  int station,
 						  int sample,
 						  int pol)     
-   //{ return itsBuffer + CCADDRESS_POL(channel, station, sample, pol); }
-   { return itsBuffer + offset(channel, station, sample, pol); }
+   { return itsBuffer + CCADDRESS_POL(channel, station, sample, pol); }
  
 /*  inline BufferType* getBufferTimePolSeries(int channel, int station)  */
 /*    { return itsBuffer + CCADDRESS_STATION(channel, station); } */
@@ -114,8 +103,7 @@ private:
 					   int station, 
 					   int polarisation,
 					   BufferType* valueptr) {
-   //*(itsBuffer + CCADDRESS_POL(channel, station, sample, polarisation)) = *valueptr;
-   { itsBuffer[offset(channel, station, sample, polarisation)] = *valueptr; }
+   *(itsBuffer + CCADDRESS_POL(channel, station, sample, polarisation)) = *valueptr;
  }
  
  inline const unsigned int DH_CorrCube::getBufSize() const {
@@ -124,7 +112,7 @@ private:
 
  inline void DH_CorrCube::setTestPattern() { 
    for (unsigned int i = 0; i < itsBufSize; i++) {
-     itsBuffer[i] = makefcomplex(1.0f, 1.0f);
+     *(itsBuffer + i) = 1.0 + 1.i;
    }
  }
 

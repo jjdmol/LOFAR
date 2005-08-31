@@ -7,7 +7,6 @@ DH_FIR.h		\
 DH_PPF.h		\
 DH_CorrCube.h		\
 DH_Vis.h		\
-DH_VisArray.h		\
 RectMatrix.h		\
 Stub_FIR.h              \
 Stub_Corr.h		\
@@ -35,7 +34,6 @@ DH_FIR.cc			\
 DH_PPF.cc			\
 DH_CorrCube.cc			\
 DH_Vis.cc			\
-DH_VisArray.cc			\
 Stub_FIR.cc               	\
 Stub_RSP.cc			\
 Stub_Corr.cc			\
