@@ -8,7 +8,8 @@ msconv := function (t, msout, selcommand='', datacolumn='DATA',
 		    makeresidual=F, usedouble=F)
 {
     print 'Selecting subset',selcommand;
-    t1 := t.query (selcommand, sortlist='TIME,ANTENNA1,ANTENNA2',
+    t1 := t.query (selcommand,
+		   sortlist='ARRAY_ID,DATA_DESC_ID,TIME,ANTENNA1,ANTENNA2',
 		   name=spaste(msout,'_tmp'));
     if (is_fail(t1)) fail;
     nr := t1.nrows();
@@ -222,12 +223,15 @@ mssplit := function (msin, nparts, datacolumn='DATA',
     if (nr == 0) {
 	fail paste("No rows in MS",msin);
     }
-    if (nr > nparts) {
-	fail paste('Nr of subarrays and spectral windows (=', nr,
-		   ') exceeds nparts =(', nparts, ')');
-    }
-    if (nr > 1) {
-	fail 'Multiple subarrays or spectral windows cannot be handled yet';
+    # Multiple SPWs, etc. are allowed if only 1 part is to be made.
+    if (nparts > 1) {
+	if (nr > nparts) {
+	    fail paste('Nr of subarrays and spectral windows (=', nr,
+		       ') exceeds nparts =(', nparts, ')');
+	}
+	if (nr > 1) {
+	    fail 'Multiple subarrays or spectral windows cannot be handled yet';
+	}
     }
     # No split needed if only 1 part.
     if (nparts < 2) {
