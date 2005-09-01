@@ -28,7 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 #include <limits>
-#include <values.h>
+#include <cmath>
 
 using namespace LOFAR;
 using namespace std;
