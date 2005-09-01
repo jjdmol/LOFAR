@@ -1,7 +1,8 @@
 INSTHDRS         	=\
-WH_FIR.h		\
-WH_FFT.h		\
+WH_Distribute.h		\
+WH_PPF.h		\
 WH_Correlator.h		\
+WH_Concentrator.h	\
 AH_BGLProcessing.h	
 
 NOINSTHDRS 		=
@@ -17,12 +18,13 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 bin_PROGRAMS 		= TFC_BGLProcessing
 
 TFC_BGLProcessing_SOURCES	= $(DOCHDRS) \
-TFC_BGLProcessing_main.cc 	\
-WH_FIR.cc			\
-WH_FFT.cc			\
+WH_Distribute.cc		\
+WH_PPF.cc			\
+FIR.s				\
 WH_Correlator.cc		\
-AH_BGLProcessing.cc		
-#WH_Collect.cc
+WH_Concentrator.cc		
+# TFC_BGLProcessing_main.cc 	\
+# AH_BGLProcessing.cc		
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\
