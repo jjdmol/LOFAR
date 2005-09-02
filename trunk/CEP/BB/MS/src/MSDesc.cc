@@ -98,10 +98,12 @@ void doIt (const string& in, const string& column)
   // Open the table and make sure it is in the correct order.
   MS ms(in);
   {
-    Block<String> cols(3);
-    cols[0] = "TIME";
-    cols[1] = "ANTENNA1";
-    cols[2] = "ANTENNA2";
+    Block<String> cols(5);
+    cols[0] = "ARRAY_ID";
+    cols[1] = "DATA_DESC_ID";
+    cols[2] = "TIME";
+    cols[3] = "ANTENNA1";
+    cols[4] = "ANTENNA2";
     Table tab = ms.sort(cols);
     Vector<uInt> nrs(tab.nrow());
     indgen (nrs);
@@ -121,6 +123,17 @@ void doIt (const string& in, const string& column)
     a1 = ant1.getColumn();
     a2 = ant2.getColumn();
   }
+  // Get all unique array-ids and data-desc-ids.
+  ROScalarColumn<int> aidcol(ms, "ARRAY_ID");
+  Vector<int> aid = aidcol.getColumn();
+  uInt naid = GenSort<int>::sort (aid, Sort::Ascending,
+				  Sort::InsSort+Sort::NoDuplicates);
+  aid.resize (naid, True);
+  ROScalarColumn<int> ddidcol(ms, "DATA_DESC_ID");
+  Vector<int> ddid = ddidcol.getColumn();
+  uInt nddid = GenSort<int>::sort (ddid, Sort::Ascending,
+				   Sort::InsSort+Sort::NoDuplicates);
+  ddid.resize (nddid, True);
   // Get all unique times.
   ROScalarColumn<double> time(ms, "TIME");
   Vector<double> tim1 = time.getColumn();
@@ -138,8 +151,9 @@ void doIt (const string& in, const string& column)
     }
   }
   // Check if they span the entire table.
-  if (nt * a1.nelements() != ms.nrow()) {
-    throw AipsError("#rows in MS " + in + " mismatches #times * #baselines");
+  if (naid * nddid * nt * a1.nelements() != ms.nrow()) {
+    throw AipsError("#rows in MS " + in +
+		    " mismatches #array-ids * #dd-ids * #times * #baselines");
   }
 
   // Get npol,nfreq from data.
@@ -175,6 +189,8 @@ void doIt (const string& in, const string& column)
   cout << "      " << nfreq << " frequency channels" << endl;
   cout << "      " << a1.nelements() << " baselines" << endl;
   cout << "      " << tim2.nelements() << " times" << endl;
+  cout << "      DD-ids:    " << ddid << endl;
+  cout << "      Array-ids: " << aid << endl;
   cout << " in file " << in << "/vis.des" << endl;
 }
 
