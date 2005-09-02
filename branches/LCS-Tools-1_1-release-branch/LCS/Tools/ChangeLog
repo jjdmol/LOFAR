@@ -1,3 +1,27 @@
+2005-07-20 12:52  coolen
+
+	* src/: lofarinit.csh, lofarinit.sh: BugID:193
+
+	  Solved
+
+2005-07-06 14:43  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+
+	  Merged relevant changes from the 1.0 release branch into the main
+	  development line.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-15 16:28  loose
+
+	* INSTALL, NEWS, README, configure.in: %[ER: 241]%
+
+	  Prepare for release of version 1.0
+
 2005-06-13 16:29  loose
 
 	* src/: LimitExec.c, LimitExec.cc, Makefile.am: %[ER: 252]%
