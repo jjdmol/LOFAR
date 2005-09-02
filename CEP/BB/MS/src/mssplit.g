@@ -201,7 +201,7 @@ print 'copied'
     }
     # Create the description file.
     print 'Creating the description file vis.des ...';
-    shell(paste('MSDesc',msout,'DATA'));
+    print shell(paste('MSDesc',msout,'DATA'));
     # Set the protections such that the world can read the MS created.
     shell(paste('chmod -R +r',msout));
     return T;
