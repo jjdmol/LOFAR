@@ -67,7 +67,44 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_COMPILETOOLS
-#lofar_PVSS(1)
+dnl lofar_PVSS(1)
+
+dnl autoscan discovered requirements
+dnl
+dnl wanted by: src/Tuner.cc:490
+AC_CHECK_FUNCS([floor])
+dnl wanted by: src/RSPDriver.cc:873
+AC_CHECK_FUNCS([gettimeofday])
+dnl wanted by: test/EPAStub.cc:68
+AC_CHECK_FUNCS([memset])
+dnl wanted by: src/CaptureStats.cc:68
+AC_CHECK_FUNCS([strdup])
+dnl wanted by: src/RSPDriver.cc:405
+AC_CHECK_FUNCS([strerror])
+dnl wanted by: src/rspctl.cc:99
+AC_CHECK_FUNCS([strtol])
+dnl wanted by: src/CaptureStats.cc:169
+AC_CHECK_FUNCS([strtoul])
+dnl wanted by: src/RSPDriver.cc:81
+AC_CHECK_HEADERS([fcntl.h])
+dnl wanted by: src/StatusRead.cc:35
+AC_CHECK_HEADERS([netinet/in.h])
+dnl wanted by: test/EPAStub.cc:38
+AC_CHECK_HEADERS([sys/time.h])
+dnl wanted by: src/BeamletWeights.h:80
+AC_C_INLINE
+dnl wanted by: src/captest.c:152
+AC_FUNC_FORK
+dnl wanted by: src/RSPDriver.cc:724
+AC_FUNC_STRFTIME
+dnl wanted by: src/CaptureStats.cc:161
+AC_HEADER_STDBOOL
+dnl wanted by: src/Cache.cc:50
+AC_HEADER_TIME
+dnl wanted by: build/ltmain.sh:5083
+AC_PROG_RANLIB
+dnl wanted by: src/CaptureStats.cc:874
+AC_STRUCT_TM
 
 dnl lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
@@ -79,7 +116,7 @@ lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 lofar_EXTERNAL(RTCCommon,1,Marshalling.h,,)
 
 dnl PPS_API needed by RSPDriver
-AC_CHECK_HEADER(sys/timepps.h)
+AC_CHECK_HEADER([sys/timepps.h])
 
 dnl
 dnl Output Makefiles
