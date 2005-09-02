@@ -34,7 +34,13 @@ AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PA\"
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	loadAPC \
-	preparePVSS-DB \
+	preparePVSS-DB
+
+BUILT_SOURCES = 
+
+EXTRA_DIST = $(BUILT_SOURCES)
+
+sysconf_DATA= \
 	PropertyAgent.conf
 
 install-data-local:

@@ -43,8 +43,11 @@ libpml_la_CPPFLAGS= -I$(top_srcdir)/include \
 
 AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PML\"
 	
-configfilesdir=$(bindir)
-configfiles_DATA= \
+BUILT_SOURCES = 
+
+EXTRA_DIST = $(BUILT_SOURCES)
+
+sysconf_DATA= \
 	gcf-pml.conf
 
 %.conf: %.conf.in

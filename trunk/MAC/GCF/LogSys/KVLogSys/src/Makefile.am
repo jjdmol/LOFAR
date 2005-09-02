@@ -60,11 +60,9 @@ KeyValueLoggerMaster_CPPFLAGS			= -DLOFARLOGGER_SUBPACKAGE=\"KVLM\"
 BUILT_SOURCES = \
 	KVL_Protocol.ph
 
-EXTRA_DIST = \
-	KVL_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
 	
-configfilesdir=$(bindir)
-configfiles_DATA= \
+sysconf_DATA= \
 	KeyValueLoggerDaemon.conf \
 	KeyValueLoggerMaster.conf \
 	KeyValueLoggerDaemon.log_prop \

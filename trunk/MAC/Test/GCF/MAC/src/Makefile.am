@@ -34,18 +34,19 @@ Application3_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
 BUILT_SOURCES = \
 	TST_Protocol.ph
 
-EXTRA_DIST = \
-	TST_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
 	
 AM_CXXFLAGS=-fmessage-length=0
 	
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
+	customPrepPVSSDB.ctl
+
+sysconf_DATA= \
 	Application1.conf \
 	Application2.conf \
-	Application3.conf \
-	customPrepPVSSDB.ctl
+	Application3.conf
 
 %.conf: gcf-test.conf.in
 	cp $< $@

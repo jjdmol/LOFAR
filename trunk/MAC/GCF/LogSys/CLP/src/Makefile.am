@@ -25,8 +25,11 @@ CodeLoggingProcessor_DEPENDENCIES	= libclp.la $(LOFAR_DEPEND) \
 CodeLoggingProcessor_CPPFLAGS			= -DLOFARLOGGER_SUBPACKAGE=\"CLP\" \
 	-I$(top_srcdir)/include
 
-configfilesdir=$(bindir)
-configfiles_DATA= \
+BUILT_SOURCES =
+
+EXTRA_DIST = $(BUILT_SOURCES)
+
+sysconf_DATA= \
 	CodeLoggingProcessor.conf \
 	CodeLoggingProcessor.log_prop
 	
