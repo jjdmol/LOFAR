@@ -1,3 +1,57 @@
+LCS/Common: Version 2.3, date: 2005/09/02
+=========================================
+
+The following BugIDs have been resolved
+---------------------------------------
+
+#  51 : Profile the BBS code and optimize as much as possible
+
+        Added multi-threading support for i386 and x86_64 in Timer class.
+
+# 173 : Deprecate Thread and Profiling in LCS
+
+        Marked Thread.h and PerfProfile.h as deprecated.
+
+# 225 : update polyphase filter
+
+        Added timer support for PowerPC/BlueGene and PowerPC/Linux 
+        with xlC and g++
+
+
+# 239 : Add support for floating point comparison
+
+        First pretty rough version of some numeric functions, e.g. floating
+        point comparison using a "distance" measure.
+
+
+# 270 : integration of TFlopCorrelator parts
+
+        Added check to see if system call was interupted in Socket.cc
+
+
+The following Enhancement Requests have been implemented
+--------------------------------------------------------
+
+ER  70 : autoconf_share        : Track external dependencies
+
+         clog cannot be used with PVSS
+
+ER 161 : Common                : Place code in namespace LOFAR
+
+         Added missing clog declaration.
+
+ER 247 : Common                : Use builtin complex 
+
+         Fixed collision between std::clog and clog()
+
+ER 285 : ACC                   : Extend ACC with array support
+
+         Upgrade ACC 1.0 to 1.1 ParameterSet is now in ACC/APS.  
+         ProceControl is now in ACC/PLC.  
+         ParameterSet getInt changed to getInt32.
+
+
+
 LCS/Common: Version 2.2, date: 2005/06/15
 =========================================
 
