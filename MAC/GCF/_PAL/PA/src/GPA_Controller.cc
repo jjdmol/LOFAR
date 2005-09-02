@@ -75,7 +75,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
     {
       LOG_INFO("Prepare PVSS DB for proper use by PA");
       system("chmod 777 preparePVSS-DB");
-      system("preparePVSS-DB");
+      system("./preparePVSS-DB");
       break;
     }
     case F_ENTRY:
