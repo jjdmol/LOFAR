@@ -54,7 +54,8 @@ ParameterSet::ParameterSet()
 //#
 //# Construction by reading a parameter file.
 //#
-ParameterSet::ParameterSet(const string&	theFilename)
+ParameterSet::ParameterSet(const string&	theFilename, const string& searchPath) :
+  _searchPath(searchPath)
 {
 	readFile(theFilename, false);
 }
@@ -156,10 +157,20 @@ void ParameterSet::readFile(const	string&	theFilename,
 {
 	ifstream		paramFile;
 
+  string fullFileName(theFilename);
+  if (theFilename.find('/') == string::npos)
+  {
+    fullFileName = _searchPath;
+    if (_searchPath.length() > 0 && _searchPath.rfind('/') != (_searchPath.length() - 1))
+    {
+      fullFileName += '/';
+    }
+    fullFileName += theFilename;
+  }
 	//# Try to pen the file
-	paramFile.open(theFilename.c_str(), ifstream::in);
+	paramFile.open(fullFileName.c_str(), ifstream::in);
 	if (!paramFile) {
-		THROW (Exception, formatString("Unable to open file %s", theFilename.c_str()));
+		THROW (Exception, formatString("Unable to open file %s", fullFileName.c_str()));
 	}
 
 	addStream(paramFile, merge);

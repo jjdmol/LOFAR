@@ -56,12 +56,13 @@ public:
 	~ParameterSet();
 
 	// The ParameterSet may be construction by reading a parameter file.
-	explicit ParameterSet(const string&	theFilename);
+	explicit ParameterSet(const string&	theFilename, const string& searchPath = "");
 	
 	// Copying is allowed.
 	ParameterSet(const ParameterSet& that);
 	ParameterSet& 	operator=(const ParameterSet& that);
 
+  void      setSearchPath(const string& searchPath);
 	// Adds the Key-Values pair in the given file to the current ParameterSet.
 	void			adoptFile  (const string& theFilename);
 	void			adoptBuffer(const string& theBuffer);
@@ -76,8 +77,7 @@ public:
 	ParameterSet	makeSubset(const string& baseKey) const;
 
 	// Checks if the given Key is defined in the ParameterSet.
-	bool	isDefined (const string& searchKey) const
-				{ return (find(searchKey) != end()); };
+	bool	isDefined (const string& searchKey) const;
 
 	int		getInt   (const string& theKey) const;
 	double	getDouble(const string& theKey) const;
@@ -91,8 +91,19 @@ private:
 	void	readBuffer (const string& theFile, const	bool merge);
 	void	addStream  (istream&	inputStream, const	bool merge);
  
+  string _searchPath;
   static ParameterSet* _pInstance;
 };
+
+inline void ParameterSet::setSearchPath(const string& searchPath)
+{
+  _searchPath = searchPath;
+}
+
+inline bool ParameterSet::isDefined (const string& searchKey) const
+{ 
+  return (find(searchKey) != end()); 
+}
  } // namespace GCF 
 } // namespace LOFAR
 using namespace LOFAR::GCF;
