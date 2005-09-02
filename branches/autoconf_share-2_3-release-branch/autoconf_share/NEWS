@@ -1,0 +1,17 @@
+autoconf_share: Version 2.3, date: 2005/09/02
+=============================================
+
+
+The following Enhancement Requests have been implemented
+--------------------------------------------------------
+
+ER  70 : autoconf_share         : Track external dependencies 
+
+         rub now does an install by  default when doing a build.
+         Extra m4 macros for RPM support were added.
+         Minor changes in variant files.
+
+ER 127 : autoconf_share         : Add rules for BG/L compiler
+
+         Removed suppression of compiler warnings.
+
