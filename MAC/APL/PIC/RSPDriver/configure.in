@@ -78,6 +78,9 @@ lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 lofar_EXTERNAL(RTCCommon,1,Marshalling.h,,)
 
+dnl PPS_API needed by RSPDriver
+AC_CHECK_HEADER(sys/timepps.h)
+
 dnl
 dnl Output Makefiles
 dnl
