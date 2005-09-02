@@ -26,14 +26,12 @@ RTPing_DEPENDENCIES					= librtc.la $(LOFAR_DEPEND)
 BUILT_SOURCES = \
 	Echo_Protocol.ph
 
-EXTRA_DIST = \
-	Echo_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
 	
 AM_CXXFLAGS=-fmessage-length=0
 	
 #in case of make install these files will be copied to the bindir beside the test apps
-configfilesdir=$(bindir)
-configfiles_DATA= \
+sysconf_DATA= \
 	RTEcho.conf \
 	RTPing.conf
 	

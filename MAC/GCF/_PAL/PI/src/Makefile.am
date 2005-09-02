@@ -36,8 +36,11 @@ PropertyInterface_DEPENDENCIES	= libpi.la \
 
 AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PI\"
 
-configfilesdir=$(bindir)
-configfiles_DATA= \
+BUILT_SOURCES = 
+
+EXTRA_DIST = $(BUILT_SOURCES)
+
+sysconf_DATA= \
 	PropertyInterface.conf
 		
 %.conf: gcf-pi.conf.in

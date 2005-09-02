@@ -62,14 +62,14 @@ libgcftm_la_CPPFLAGS=-I$(top_srcdir)/include \
 
 libgcftm_la_CXXFLAGS=-fmessage-length=0
 
-BUILT_SOURCES = \
-	SB_Protocol.ph \
+BUILT_SOURCES =  \
+	SB_Protocol.ph
+
+EXTRA_DIST = $(BUILT_SOURCES)
+	
+sysconf_DATA = \
 	mac.log_prop
 
-EXTRA_DIST = \
-	SB_Protocol.ph \
-	mac.log_prop
-	
 %.log_prop: %.log_prop.in
 	cp $< $@
 

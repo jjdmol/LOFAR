@@ -32,8 +32,7 @@ VirtualBackend_CPPFLAGS			= \
 	-fdiagnostics-show-location=once \
 	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
-configfilesdir=$(bindir)
-configfiles_DATA= \
+sysconf_DATA= \
 	VirtualBackend.conf \
 	CEPAppDefault.param
 	

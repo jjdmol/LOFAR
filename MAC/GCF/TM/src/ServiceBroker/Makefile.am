@@ -22,19 +22,16 @@ ServiceBroker_DEPENDENCIES	= libsb.la $(LOFAR_DEPEND) \
 ServiceBroker_CPPFLAGS= -I$(top_srcdir)/include
 ServiceBroker_CXXFLAGS=-fmessage-length=0
 
-BUILT_SOURCES = \
-	ServiceBroker.conf
+BUILT_SOURCES = 
 
-EXTRA_DIST = \
-	ServiceBroker.conf
+EXTRA_DIST = $(BUILT_SOURCES)
 
-configfilesdir=$(bindir)
-configfiles_DATA= \
+sysconf_DATA= \
 	ServiceBroker.conf
 
 install-data-local:
-	echo "mac.gcf.sb.host=`hostname -s`" >> $(bindir)/ServiceBroker.conf
-	echo "mac.gcf.sb.range1.host=`hostname`" >> $(bindir)/ServiceBroker.conf
+	echo "mac.gcf.sb.host=`hostname -s`" >> $(sysconfdir)/ServiceBroker.conf
+	echo "mac.gcf.sb.range1.host=`hostname`" >> $(sysconfdir)/ServiceBroker.conf
 	
 %.conf: gcf-sb.conf.in
 	cp $< $@

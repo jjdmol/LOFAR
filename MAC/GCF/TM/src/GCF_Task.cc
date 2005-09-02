@@ -71,16 +71,33 @@ void GCFTask::init(int argc, char** argv)
   _argc = argc;
   _argv = argv;
   
-  string appName(argv[0]);
-
+  string procName(argv[0]);
+  
   ifstream    logPropFile;
 
-  // Try to open the log_prop file
-  string logPropFileName = appName + ".log_prop";
+  // Construct the etc path for config files
+  string etcPath(procName);
+  // Find last '/'
+  string::size_type pos = etcPath.rfind('/');
+  if (pos == string::npos) pos = 0; // not found: so erase whole filename
+  else pos++;                       // found : increase pos to avoid erasing the '/' too
+  
+  if (pos == 0 || pos == 1) etcPath = "/etc/"; // no '/' or only one '/' (at the 0 position)
+  else 
+  {
+    etcPath.erase(pos);
+    etcPath += "../etc/"; // becomes e.g. /opt/lofar/bin/../etc/
+  }
+  
+  procName.erase(0, pos); // erase path
+  
+  // Try to open the log_prop file, if process has its own log_prop file then use it in 
+  // the INIT_LOGGER otherwise use the default mac.log_prop
+  string logPropFileName = etcPath + procName + ".log_prop";
   logPropFile.open(logPropFileName.c_str(), ifstream::in);
   if (!logPropFile) 
   {
-    logPropFileName = "./mac.log_prop";
+    logPropFileName = etcPath + "mac.log_prop";
   }
   else
   {
@@ -90,7 +107,8 @@ void GCFTask::init(int argc, char** argv)
   INIT_LOGGER(logPropFileName.c_str());   
 
   ParameterSet* pParamSet = ParameterSet::instance();
-  pParamSet->adoptFile(appName + ".conf");
+  pParamSet->setSearchPath(etcPath);
+  pParamSet->adoptFile(procName + ".conf");
 
   if (_doExit)
     exit(-1);

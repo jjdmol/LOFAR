@@ -1,16 +1,14 @@
-check_PROGRAMS 		= echoapp ping
+bin_PROGRAMS 		= tmEcho tmPing
 
-TESTS			= #echoapp ping
+tmEcho_SOURCES 		= Echo.cc Echo_Protocol.cc
+tmEcho_LDADD		= ../src/libgcftm.la
+tmEcho_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+tmEcho_CPPFLAGS=-I$(top_srcdir)/include
 
-echoapp_SOURCES 		= Echo.cc Echo_Protocol.cc
-echoapp_LDADD		= ../src/libgcftm.la
-echoapp_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
-echoapp_CPPFLAGS=-I$(top_srcdir)/include
-
-ping_SOURCES 		= Ping.cc Echo_Protocol.cc
-ping_LDADD		= ../src/libgcftm.la
-ping_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
-ping_CPPFLAGS=-I$(top_srcdir)/include
+tmPing_SOURCES 		= Ping.cc Echo_Protocol.cc
+tmPing_LDADD		= ../src/libgcftm.la
+tmPing_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+tmPing_CPPFLAGS=-I$(top_srcdir)/include
 
 AUTOGEN = autogen
 SUFFIXES = .ph
@@ -18,23 +16,18 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
 BUILT_SOURCES = \
-	Echo_Protocol.ph \
-	echoapp.conf \
-	ping.conf \
-	ServiceBroker.conf
+	Echo_Protocol.ph
 
 EXTRA_DIST = \
-	Echo_Protocol.ph \
-	echoapp.conf \
-	ping.conf \
-	ServiceBroker.conf
+	Echo_Protocol.ph
+
+sysconf_DATA=\
+	tmEcho.conf \
+	tmPing.conf
 	
 %.conf:	tm-test.conf.in
 	ln -sf $< $@
 
-ServiceBroker.conf:	$(bindir)/ServiceBroker.conf
-	cp $< $@
-	
 clean-local:
 	rm -f *.ph
 

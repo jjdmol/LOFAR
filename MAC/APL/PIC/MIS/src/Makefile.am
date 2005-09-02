@@ -32,11 +32,9 @@ MACInformationServer_CPPFLAGS			=
 BUILT_SOURCES = \
 	MIS_Protocol.ph
 
-EXTRA_DIST = \
-	MIS_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES) 
 	
-configfilesdir=$(bindir)
-configfiles_DATA= \
+sysconf_DATA= \
 	MACInformationServer.conf
 	
 %.conf: %.conf.in

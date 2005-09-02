@@ -47,11 +47,9 @@ NodeManager_CPPFLAGS			=
 BUILT_SOURCES = \
 	NM_Protocol.ph
 
-EXTRA_DIST = \
-	NM_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
 	
-configfilesdir=$(bindir)
-configfiles_DATA= \
+sysconf_DATA= \
 	NodeManager.conf
 	
 %.conf: %.conf.in
