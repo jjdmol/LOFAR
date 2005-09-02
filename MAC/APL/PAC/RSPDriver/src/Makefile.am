@@ -6,11 +6,11 @@ CAPLIBS=
 endif
 
 #
-# Define ENABLE_CAP_NET_RAW to let RSPDriver run as setuid root
-# with only cap_net_raw capability enabled.
+# Define ENABLE_RSPFE to enable the rspctl frontend
 #
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src
+#	-DENABLE_RSPFE
 
 AUTOGEN = autogen
 SUFFIXES = .ph
@@ -92,7 +92,7 @@ include_HEADERS = \
 	EPA_Protocol.ph \
 	MEPHeader.h \
 	MEPData.h
-	
+
 librsp_la_SOURCES = \
 	BeamletWeights.cc \
 	SubbandSelection.cc \
