@@ -27,6 +27,7 @@
 // Threads SmartLock class.
 
 //# Includes
+#include <Common/Thread/deprecated_warning.h>
 #include <Common/Thread/Condition.h>
 
 namespace LOFAR 

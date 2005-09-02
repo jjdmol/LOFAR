@@ -23,6 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_THREAD_H
 #define LOFAR_COMMON_THREAD_THREAD_H
 
+#include <Common/Thread/deprecated_warning.h>
 #include <Common/Debug.h>
 #ifdef USE_THREADS
 #include <pthread.h>
