@@ -557,7 +557,7 @@ void GCFRTMyPropertySet::readTypeFile()
 
   char buffer[200];
   system("chmod 777 genTypeInfo");
-  sprintf(buffer, "genTypeInfo %d %s", getpid(), _type.c_str());
+  sprintf(buffer, "./genTypeInfo %d %s", getpid(), _type.c_str());
   system(buffer);
   //# Try to pen the file
   sprintf(buffer, "typeInfo_%d.dpl.tmp", getpid());
