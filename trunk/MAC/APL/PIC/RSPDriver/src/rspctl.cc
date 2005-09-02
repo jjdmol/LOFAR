@@ -1130,7 +1130,9 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
     m_nrcus(0), m_nrspboards(0), m_ntdboards(0), m_argc(argc), m_argv(argv)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+#ifdef ENABLE_RSPFE
   registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_signalnames);
+#endif
 
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
 }
@@ -1277,11 +1279,13 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
       status = m_command->ack(e); // handle the acknowledgement
       break;
       
+#ifdef ENABLE_RSPFE
     case RSPFE_STOP_RSPCTL:
       logMessage(cout,"Rspctl stopped by frontend.");
       m_command->stop();
       GCFTask::stop();
       break;
+#endif
 
     default:
       logMessage(cerr,"Error: unhandled event.");
@@ -1322,17 +1326,21 @@ static void usage()
   cout << "rspctl --wg             [--select=<set>]  # get waveform generator settings" << endl;
   cout << "rspctl --wg=freq        [--select=<set>]  # set waveform generator settings" << endl;
   cout << "rspctl --status         [--select=<set>]  # get status" << endl;
-  cout << "rspctl --statistics[=(subband|beamlet)]" << endl;
-  cout << "             [--select=<set>]" << endl;
-  cout << "             [--duration=<seconds>]       # " << endl;
-  cout << "             [--integration=<seconds>]    # " << endl;
-  cout << "             [--directory=<directory>]    # " << endl;
-  cout << "             [--feport=<hostname>:<port>] # get subband (default) or beamlet statistics" << endl;
-  cout << "rspctl --xcstatistics   [--select=<set>]" << endl;
-  cout << "             [--duration=<seconds>]       # " << endl;
-  cout << "             [--integration=<seconds>]    # " << endl;
-  cout << "             [--directory=<directory>]    # " << endl;
-  cout << "             [--feport=<hostname>:<port>] # get crosscorrelation statistics" << endl;
+  cout << "rspctl --statistics[=(subband|beamlet)]   # get subband (default) or beamlet statistics" << endl;
+  cout << "             [--select=<set>]             #" << endl;
+  cout << "             [--duration=<seconds>]       #" << endl;
+  cout << "             [--integration=<seconds>]    #" << endl;
+  cout << "             [--directory=<directory>]    #" << endl;
+#ifdef ENABLE_RSPFE
+  cout << "             [--feport=<hostname>:<port>] #" << endl;
+#endif
+  cout << "rspctl --xcstatistics   [--select=<set>]  # get crosscorrelation statistics" << endl;
+  cout << "             [--duration=<seconds>]       #" << endl;
+  cout << "             [--integration=<seconds>]    #" << endl;
+  cout << "             [--directory=<directory>]    #" << endl;
+#ifdef ENABLE_RSPFE
+  cout << "             [--feport=<hostname>:<port>] #" << endl;
+#endif
   cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
   cout << "rspctl --clocks=<int>    [--select=<set>] # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --version         [--select=<set>] # get version information" << endl;
@@ -1368,7 +1376,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         { "clocks",     optional_argument, 0, 'c' },
         { "version",    no_argument,       0, 'v' },
         { "help",       no_argument,       0, 'h' },
+#ifdef ENABLE_RSPFE
         { "feport",     required_argument, 0, 'f' },
+#endif
         { "duration",   required_argument, 0, 'd' },
         { "integration",required_argument, 0, 'i' },
         { "directory"  ,required_argument, 0, 'D' },
@@ -1616,6 +1626,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         usage();
         break;
 
+#ifdef ENABLE_RSPFE
       case 'f':
         if (optarg)
         {
@@ -1637,6 +1648,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
           logMessage(cerr,"Error: option '--feport' requires an argument");
         }
         break;
+#endif
 
       case 'd':
         if (optarg)

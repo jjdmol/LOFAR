@@ -26,7 +26,9 @@
 #define RSPCTL_H_
 
 #include "RSP_Protocol.ph"
+#ifdef ENABLE_RSPFE
 #include "RSPFE_Protocol.ph"
+#endif
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <bitset>
@@ -208,11 +210,16 @@ public:
     return (m_port != 0 && m_host.length() > 0);
   }
   
+#ifdef ENABLE_RSPFE
   bool isConnected(GCFPortInterface& port)
   {
     return (&port == &m_feClient && m_feClient.isConnected());
   }
+#else
+  bool isConnected(GCFPortInterface&) { return false; }
+#endif
   
+#ifdef ENABLE_RSPFE
   void connect(GCFTask& task)
   {
     m_feClient.init(task, "client", GCFPortInterface::SAP, RSPFE_PROTOCOL);
@@ -220,7 +227,11 @@ public:
     m_feClient.setPortNumber(m_port);
     m_feClient.open();
   }
+#else
+  void connect(GCFTask&) {}
+#endif
   
+#ifdef ENABLE_RSPFE
   virtual void logMessage(ostream& stream, const string& message)
   {
     if(m_feClient.isConnected())
@@ -231,6 +242,9 @@ public:
     }
     stream << message << endl;
   }
+#else
+  virtual void logMessage(ostream&, const string&) {}
+#endif
   
 protected:
   explicit FECommand(GCFPortInterface& port) : Command(port),m_host(""),m_port(0),m_feClient()
