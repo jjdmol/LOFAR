@@ -222,6 +222,8 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
   GCFPVSSInfo::_lastTimestamp.tv_usec = 0;
 }
 
+const Variable* extractArrayValue(Variable& var, uint8 index);
+
 // Handle incoming hotlinks.
 // This function is called from our hotlink object
 void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& wait)
@@ -292,23 +294,41 @@ void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& w
     assert(pItem);
     pVar = pItem->getValuePtr();
     assert(pVar);
-    assert(pVar->isA() == DYNDYNANYTYPE_VAR);
-    
-    DpIdentifierVar* pDpId = (DpIdentifierVar*)((AnyTypeVar*)((DynVar&)*((DynVar&)*pVar)[2])[1])->getVar();
-    ts = *(TimeVar*)((AnyTypeVar*)((DynVar&)*((DynVar&)*pVar)[2])[3])->getVar();
-        
+    assert(pVar->isDynDynVar());
+
+    const Variable* pTempVar;
+
+    // extrat the DPID of the changed DP (column 1)
+    if ((pTempVar = extractArrayValue(*pVar, 1)) == 0) return;
+    else if (pTempVar->isA() != DPIDENTIFIER_VAR) return;
+
+    DpIdentifierVar* pDpId = (DpIdentifierVar*) pTempVar;
+
+    // extrat the timestamp of the changed DP (column 3)
+    if ((pTempVar = extractArrayValue(*pVar, 3)) == 0) return;
+    else if (pTempVar->isA() != TIME_VAR) return;
+
+    ts = *(TimeVar*) pTempVar;
+       
     GCFPVSSInfo::_lastTimestamp.tv_sec = ts.getSeconds();
     GCFPVSSInfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
 
+    // extrat the originator mananger ID of the changed DP (column 4)
+    if ((pTempVar = extractArrayValue(*pVar, 4)) == 0) return;
+    else if (pTempVar->isA() != UINTEGER_VAR) return;
+
+    UIntegerVar* pManIdInt = (UIntegerVar*) pTempVar;
+
     ManagerIdentifier manId;
-    IntegerVar manIdInt = *(IntegerVar*)((AnyTypeVar*)((DynVar&)*((DynVar&)*pVar)[2])[4])->getVar();
-    manId.convFromInt(manIdInt.getValue());
+    manId.convFromInt(pManIdInt->getValue());
     GCFPVSSInfo::_lastManNum = manId.getManNum();
     GCFPVSSInfo::_lastManType = manId.getManType();
     GCFPVSSInfo::_lastSysNr = manId.getSystem();
-    pVar = ((AnyTypeVar*)((DynVar&)*((DynVar&)*pVar)[2])[2])->getVar();
 
-    convAndForwardValueChange(pDpId->getValue(), *pVar);
+    // extract the new value of the changed DP (column 2)
+    if ((pTempVar = extractArrayValue(*pVar, 2)) == 0) return;
+
+    convAndForwardValueChange(pDpId->getValue(), *pTempVar);
   }
   
   GCFPVSSInfo::_lastTimestamp.tv_sec = 0;
@@ -316,6 +336,20 @@ void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& w
   GCFPVSSInfo::_lastManNum = 0;
   GCFPVSSInfo::_lastManType = 0;
   GCFPVSSInfo::_lastSysNr = 0;
+}
+
+const Variable* extractArrayValue(Variable& var, uint8 index)
+{
+  Variable* pRetVar(0);
+  Variable* pVar = ((DynVar&)*((DynVar&)var)[2])[index];
+  if (pVar)
+  {
+    if (pVar->isA() == ANYTYPE_VAR)
+    {
+      pRetVar = ((AnyTypeVar*) pVar)->getVar();
+    }
+  }
+  return pRetVar;
 }
 
 void GSAService::convAndForwardValueChange(const DpIdentifier& dpId, const Variable& pvssVar)
