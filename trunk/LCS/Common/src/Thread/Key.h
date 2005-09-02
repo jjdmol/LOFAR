@@ -27,6 +27,7 @@
 // Thread key class.
 
 //# Includes
+#include <Common/Thread/deprecated_warning.h>
 #include <Common/Thread/Thread.h>
 
 namespace LOFAR

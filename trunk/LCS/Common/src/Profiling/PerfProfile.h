@@ -27,8 +27,9 @@
 // Profile class based on MPICH MPE library
 
 #ifdef __DEPRECATED
-#warning Use of <Profiling/PerfProfile.h> is deprecated. Pleae use \
-<tinyCEP/Profiler.h> instead.
+#warning Use of <Common/Profiling/PerfProfile.h> is deprecated. \
+         Please use <tinyCEP/Profiler.h> instead. \
+         To disable this warning use -Wno-deprecated.
 #endif
 
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)

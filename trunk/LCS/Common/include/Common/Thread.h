@@ -26,6 +26,7 @@
 // \file src/Thread.h
 // Basic header for the Thread package
 
+#include <Common/Thread/deprecated_warning.h>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Key.h>
 #include <Common/Thread/Mutex.h>

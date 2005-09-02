@@ -1,6 +1,6 @@
-//#  Thread.h: basic header for the Thread package
+//#  deprecated_warning.h: Issue a "deprecated" warning.
 //#
-//#  Copyright (C) 2002
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,25 +20,18 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_THREAD_H
-#define LOFAR_COMMON_THREAD_H
-   
-// \file src/Thread.h
-// Basic header for the Thread package
+#ifndef LOFAR_COMMON_THREAD_DEPRECATED_WARNING_H
+#define LOFAR_COMMON_THREAD_DEPRECATED_WARNING_H
 
-#include <Common/Thread/deprecated_warning.h>
-#include <Common/Thread/Thread.h>
-#include <Common/Thread/Key.h>
-#include <Common/Thread/Mutex.h>
-#include <Common/CheckConfig.h>
-    
-// You should invoke CHECK_CONFIG_THREADS(id) in every header file 
-// that defines a data structure that depends on USE_THREADs.
-#ifdef USE_THREADS
-  #define CHECK_CONFIG_THREADS(id) CHECK_CONFIG(id,UseThreads,yes);
-#else
-  #define CHECK_CONFIG_THREADS(id) CHECK_CONFIG(id,UseThreads,no);
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+
+// \file deprecated_warning.h
+// Issue a "deprecated" warning.
+
+#ifdef __DEPRECATED
+#warning Use of <Common/Thread.h> is deprecated. \
+         Please use <boost/thread.hpp> instead. \
+         To disable this warning use -Wno-deprecated.
 #endif
-    
+
 #endif
-    

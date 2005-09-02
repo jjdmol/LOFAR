@@ -27,6 +27,7 @@
 // Thread condition class.
 
 //# Includes
+#include <Common/Thread/deprecated_warning.h>
 #include <Common/Thread/Mutex.h>
 
 namespace LOFAR
