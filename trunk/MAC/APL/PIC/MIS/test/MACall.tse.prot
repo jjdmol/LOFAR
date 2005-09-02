@@ -95,6 +95,8 @@ t_uInt                =  {   4 }
 t_Long                =  {   4 }
 t_uLong               =  {   4 }
 t_String              = -{ 65535-, ASCII } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_doubleA             = -{ 65535-, ARRAY, 8 } // (-) indicates little endian, 100- indicates 100 characters or less 
+t_uint8A              = -{ 65535-, ARRAY, 1 } // (-) indicates little endian, 100- indicates 100 characters or less 
 t_StringLen						=	 {   2 }
 
 int8 									=  {   1 }
@@ -164,7 +166,7 @@ F_MIS_GENERIC_PINGPONG =
 
 F_MIS_GENERIC_IDENTIFY_REQUEST =
 {
-  0x02CF,
+  0x024F,
   0x1C000000,
 	seqnr : uint64,
 	replynr : uint64,
@@ -174,7 +176,7 @@ F_MIS_GENERIC_IDENTIFY_REQUEST =
 
 F_MIS_GENERIC_IDENTIFY_RESPONSE =
 {
-  0x03CF,
+  0x038F,
   msgLength : t_B4,
 	seqnr : uint64,
 	replynr : uint64,
@@ -350,11 +352,11 @@ F_MIS_SUBBAND_STATISTICS_RESPONSE =
 	payload_timestamp_sec : int64,
 	payload_timestamp_nsec : uint32,
 	invalidNOE : t_B4,
-	{ invalid : uint8}[invalidNOE],
+	invalid : t_uint8A[invalidNOE],
 	rcu_settingsNOE : t_B4,
-	{ rcu_settings : uint8}[rcu_settingsNOE],
+	rcu_settings : t_uint8A[rcu_settingsNOE],
 	dataNOE : t_B4,
-	{ data : double}[dataNOE]
+	data : t_doubleA[dataNOE]
 }
 
 F_MIS_ANTENNA_CORRELATION_MATRIX_REQUEST =
@@ -723,7 +725,7 @@ E_MIS_GENERIC_PINGPONG =
 
 E_MIS_GENERIC_IDENTIFY_REQUEST =
 {
-  0x02CF,
+  0x024F,
   0x1C000000, // 28 bytes msgLength
 	seqnr : uint64,
 	replynr : uint64,
@@ -733,7 +735,7 @@ E_MIS_GENERIC_IDENTIFY_REQUEST =
 
 E_MIS_GENERIC_IDENTIFY_RESPONSE =
 {
-  0x03CF,
+  0x038F,
   msgLength : t_B4,
 	seqnr : uint64,
 	replynr : uint64,
@@ -909,11 +911,11 @@ E_MIS_SUBBAND_STATISTICS_RESPONSE =
 	payload_timestamp_sec : int64,
 	payload_timestamp_nsec : uint32,
 	invalidNOE : t_B4,
-	{ invalid : uint8}[invalidNOE],
+	invalid : t_uint8A[invalidNOE],
 	rcu_settingsNOE : t_B4,
-	{ rcu_settings : uint8}[rcu_settingsNOE],
+	rcu_settings : t_uint8A[rcu_settingsNOE],
 	dataNOE : t_B4,
-	{ data : double}[dataNOE]
+	data : t_doubleA[dataNOE]
 }
 
 E_MIS_ANTENNA_CORRELATION_MATRIX_REQUEST =
@@ -1264,5 +1266,4 @@ E_THPVSSBRIDGE_SET_VALUE_RESPONSE =
   scope : t_String [ nrOfChars1 ],
   nrOfChars2 : t_StringLen,
   property : t_String [ nrOfChars2 ]
-  
 }

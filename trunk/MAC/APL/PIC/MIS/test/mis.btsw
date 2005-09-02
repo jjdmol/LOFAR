@@ -333,24 +333,24 @@ Statemachine_MISClient (ready, updateValue) =
 																					0x0000000000000000, // replynr : uint64,
 																					0x0000000000000000, // timestamp_sec : int64,
 																					0x00000000 				// timestamp_nsec : uint32
-																					) ; sleep.
+																					) ; s041.
 
-//	s041 : E_MIS_SUBBAND_STATISTICS_RESPONSE(, // msgLength : t_B4,
-//    																			 0x000000000000000D, // seqnr : uint64,
-//																					 0x0000000000000009, // replynr : uint64,
-//																					 , //	timestamp_sec : int64,
-//																					 , //	timestamp_nsec : uint32,
-//																					 , //	responseNOC : t_StringLen, 
-//																					 , //	response : t_String[responseNOC],
-//																					 , // payload_timestamp_sec : int64,
-//																					 , // payload_timestamp_nsec : uint32,
-//																					 , // invalidNOE : t_B4,
-//																					 , //	{ invalid : uint8}[invalidNOE],
-//																					 , // rcu_settingsNOE : t_B4,
-//																					 , // { rcu_settings : uint8}[rcu_settingsNOE],
-//																					 , //	dataNOE : t_B4,
-//																					  // { data : double}[dataNOE]
-//																					 ) ; finish.
+	s041 : E_MIS_SUBBAND_STATISTICS_RESPONSE(, // msgLength : t_B4,
+    																			 0x000000000000000D, // seqnr : uint64,
+																					 0x0000000000000009, // replynr : uint64,
+																					 , //	timestamp_sec : int64,
+																					 , //	timestamp_nsec : uint32,
+																					 , //	responseNOC : t_StringLen, 
+																					 , //	response : t_String[responseNOC],
+																					 , // payload_timestamp_sec : int64,
+																					 , // payload_timestamp_nsec : uint32,
+																					 , // invalidNOE : t_B4,
+																					 , // invalid : t_uint8A[invalidNOE],
+																					 , // rcu_settingsNOE : t_B4,
+																					 , // rcu_settings : t_uint8A[rcu_settingsNOE],
+																					 , // dataNOE : t_B4,
+																					   // data : t_doubleA[dataNOE]
+																					 ) ; finish.
 																					
 	sleep  : TIMER(360) ; finish.
   finish : S_SIG ( ready )  ; OK.
