@@ -398,6 +398,11 @@ void MISSession::subscribe(GCFEvent& e)
   MISPvssDpSubscriptionRequestEvent in(e);
   LOGMSGHDR(in);
   string response = "ACK";
+  
+  LOG_DEBUG(formatString(
+      "Subscription request (%s)",
+      in.request.c_str()));
+      
   if (in.request == "UNSUBSCRIBE")
   {
     TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
@@ -533,9 +538,13 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
         
         if (!_rspDriverPort.send(getstatus))
         {
-          SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (connection to rsp driver could not be established)");
-          TRAN(MISSession::waiting_state);      
-        }      
+          SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (connection to rsp driver could not be established or is lost)");
+          if (e.signal == F_DISCONNECTED)
+          {
+            p.close();
+          }
+          TRAN(MISSession::waiting_state);
+        }
       }
       else
       {
