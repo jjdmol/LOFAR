@@ -56,9 +56,9 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_PVSS(1)
 lofar_LOG4CPLUS
-lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-5_1, 1, GCF/PAL/GCF_Property.h,,)
-lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-5_1, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
-lofar_INTERNAL(MAC/GCF/LogSys, GCFKvlc, MAC-GCF-5_1, 1, GCF/LogSys/GCF_KeyValueLogger.h,,)
+lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-5_2rc1, 1, GCF/PAL/GCF_Property.h,,)
+lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-5_2rc1, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
+lofar_INTERNAL(MAC/GCF/LogSys, GCFKvlc, MAC-GCF-5_2rc1, 1, GCF/LogSys/GCF_KeyValueLogger.h,,)
 lofar_PACKAGE(MAC/Test/Suite)
 lofar_PACKAGE(MAC/Test/GCF/RTC)
 

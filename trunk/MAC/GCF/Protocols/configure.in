@@ -54,10 +54,10 @@ lofar_DEBUG_OPTIMIZE
 #lofar_QT
 lofar_QATOOLS
 lofar_DOCXX
-lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_2patch1, 1,Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_3, 1,Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-2_0, 1, Transport/DataHolder.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, HEAD, 1,GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/GCF/TM, GCFTM, HEAD, 1, GCF/TM/GCF_Event.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-5_2rc1, 1,GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-5_2rc1, 1, GCF/TM/GCF_Event.h,,)
 
 dnl
 dnl Output Makefiles
