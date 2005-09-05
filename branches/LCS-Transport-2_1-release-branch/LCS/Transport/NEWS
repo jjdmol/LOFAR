@@ -1,3 +1,25 @@
+LCS/Transport: Version 2.1, date: 2005/09/05
+============================================
+
+This version of the LCS/Transport library incorporates some bug-fixes to source
+code and tests. The CyclicBuffer and Lock classes have been moved to CEP/CEPFrame.
+
+The following Bugs have been fixed
+----------------------------------
+
+BugID 147 :     Transport  : Missing null-pointer check in DataHolder::putExtra()
+
+
+BugID 238 :     Transport  : ExampleEthernet fails to compile for gnu_fakebgl
+
+
+BugID 272 :     Transport  : TH_Socket opening socket in constructor
+
+       Added argument to constructor that determines if the socket is made
+        in the constructor. MPI-CEPFrame applications can use this argument
+        to postpone the creation of the socket until TH_Socket::init() is
+        called.
+
 LCS/Transport: Version 2.0, date: 2005/06/17
 ============================================
 
