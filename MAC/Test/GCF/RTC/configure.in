@@ -55,7 +55,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
-lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-5_1, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
+lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-5_2rc1, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
                        
 dnl
 dnl Output Makefiles
