@@ -63,7 +63,7 @@ void PropertyLogger::propValueChanged(const string& propName, const GCFPValue& v
     {      
       // this property change may not be send to KeyValueLoggerMaster
       LOG_DEBUG(formatString(
-          "This update is requested to be dumped by API manager '%d' on the same system.",
+          "API manager '%d' (of the local system) has requested to dump this update.",
           iter->second));
       return;
     }    
