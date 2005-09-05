@@ -58,7 +58,7 @@ namespace LOFAR
 
       int getType() { return itsType; };
 
-      bool receive(TransportHolder* th);
+      bool receive(TransportHolder* th, bool blocking = false);
       bool send(TransportHolder* th);
 
       // TODO: set and get functions

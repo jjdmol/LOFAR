@@ -98,6 +98,11 @@ void BDBReplicator::startReplication()
     
     // set connection data
     itsPort = itsConnector.getPort();
+    if (itsIsMaster) {
+      // the master should be able to get the right port or else the slaves won't be able to connect
+      ASSERTSTR(itsPort == itsMasterPort, "Master could not get correct port");
+    }
+
     char *buffer = new char[sizeof(int)+itsHostName.size() + 2];
     memset(buffer, 0, sizeof(int)+itsHostName.size() + 2);
     memcpy(buffer, &itsPort, sizeof(int));
