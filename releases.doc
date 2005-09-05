@@ -2,6 +2,9 @@
 Releases sorted by release date
 ===============================
 
+LCS/Common      :       version: 2.3;   date: 2005/09/02
+LCS/Tools       :       version: 1.1;   date: 2005/09/02
+autoconf_share  :       version: 2.3;   date: 2005/09/02
 LCS/AMC         :       version: 1.0;   date: 2005/07/04
 CEP/CEPFrame    :       version: 2.0;   date: 2005/06/24
 CEP/tinyCEP     :       version: 2.0;   date: 2005/06/24
@@ -26,6 +29,19 @@ Releases sorted by package
 
 autoconf_share
 --------------
+
+  Version: 2.3; date: 2005/09/02
+
+    required packages:
+      internal: <none>
+      external: autoconf (2.59)
+                automake (1.9.5)
+                libtool  (1.5.18)
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
 
   Version: 2.2; date: 2005/06/16
 
@@ -104,6 +120,20 @@ LCS/AMC
 LCS/Common
 ----------
 
+  Version: 2.3; date: 2005/09/02
+
+    required packages:
+      internal: autoconf_share (2.3)
+      external: <none>
+
+    optional packages:
+      internal: LCS/Tools (1.1)
+      external: log4cplus (1.0.x)
+                blitz++ (0.7)
+                mpich (1.2.5.2)
+                doxygen (1.3.x)
+
+
   Version: 2.2; date: 2005/06/16
 
     required packages:
@@ -116,6 +146,7 @@ LCS/Common
                 blitz++ (0.7)
                 mpich (1.2.5.2)
                 doxygen (1.3.x)
+
 
   Version: 2.1; date: 2005/03/16
 
@@ -148,6 +179,17 @@ LCS/Common
 
 LCS/Tools
 ---------
+
+  Version: 1.1; date: 2005/09/02
+
+    required packages:
+      internal: autoconf_share (2.x)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
 
   Version: 1.0; date: 2005/06/15
 
