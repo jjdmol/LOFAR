@@ -43,11 +43,17 @@ namespace LOFAR {
       delete [] itsRBuffer;
     }
     
-    bool BDBMessage::receive(TransportHolder* th){
+    bool BDBMessage::receive(TransportHolder* th, bool blocking){ //moet soms blocking (connect)
       // first get messageType
-      if (th->recvNonBlocking(&itsType, 4, BDBTAG)) {
+      int result = 0;
+      if (blocking == true) {
+	result = th->recvBlocking(&itsType, 4, BDBTAG);
+      } else {
+	result = th->recvNonBlocking(&itsType, 4, BDBTAG);
+      }
+      if (result) {
 	int size = 0;
-	char* hostName;
+	char* hostName = 0;
 	switch (itsType) {
 	case NO_MESSAGE:
 	  ASSERTSTR(false,"Received illegal message");
@@ -59,6 +65,7 @@ namespace LOFAR {
 	  memset(hostName, 0, size + 1);
 	  th->recvBlocking(hostName, size, BDBTAG);
 	  itsHostName = (string) hostName;
+	  LOG_TRACE_FLOW_STR("Received connect message from "<<hostName<<":"<<itsPort);
 	  delete [] hostName;
 	  hostName = 0;
 	  break;

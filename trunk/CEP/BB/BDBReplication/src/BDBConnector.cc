@@ -84,8 +84,8 @@ bool BDBConnectorRep::connectTo(string hostName, int port) const
 				 Socket::TCP);
   TransportHolder* th = new TH_Socket(newSocket);
   BDBMessage message(BDBMessage::CONNECT);
-  message.setHostName(hostName);
-  message.setPort(port);
+  message.setHostName(itsHostName);
+  message.setPort(itsPort);
   BDBSite* newSite = new BDBSite(hostName.c_str(), port, th);
 
   if (message.send(th)) {
@@ -129,7 +129,7 @@ bool BDBConnectorRep::listenOnce(){
   if (newSocket != 0){
     BDBMessage message;
     TransportHolder* th = new TH_Socket(newSocket);
-    message.receive(th);
+    message.receive(th, true);
     cerr<<"connect message received"<<endl;
     LOG_TRACE_FLOW_STR("Accepted connection from "<<message.getHostName()<<":"<<message.getPort());
     DBGASSERTSTR(message.getType() == BDBMessage::CONNECT, "Connector received wrong packet");
