@@ -1,20 +1,36 @@
 #!/bin/sh
 
+MAXRUNTIME=120
+
 rm masterDir -rf
 mkdir masterDir
 
 ./tBDBReplication -h masterDir -o 8020 &> master.log &
+MASTERPID=$!
+echo "master has pid $MASTERPID" >&2
 
 sleep 10
 
 rm slave1Dir -rf
 mkdir slave1Dir
-./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log 
-#rm slave2Dir -rf
-#mkdir slave2Dir
-#./tBDBReplication -h slave2Dir -m 8020 -o 8022 &> slave2.log
-result=$?
+./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log &
+SLAVEPID=$!
+echo "slave has pid $SLAVEPID" >&2
 
-killall tBDBReplication
+# this code was copied from LOFAR/autoconf_share/limitexec.sh
 
-exit $result
+sec=0
+while kill -0 $SLAVEPID 2> /dev/null; do
+  if test $sec -ge $MAXRUNTIME; then
+    echo "slave took too long and will be killed" >&2
+    kill -9 $SLAVEPID 2>/dev/null
+    kill -9 $MASTERPID 2>/dev/null
+    exit 255
+  fi
+  sec=`expr $sec + 1`
+  sleep 1
+done
+
+kill -9 $MASTERPID 2>/dev/null
+
+wait $SLAVEPID 2>/dev/null
