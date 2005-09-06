@@ -21,15 +21,13 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "EPA_Protocol.ph"
 #include "RawEvent.h"
 #include "MEPHeader.h"
 #include <GCF/TM/GCF_ETHRawPort.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace EPA_Protocol;

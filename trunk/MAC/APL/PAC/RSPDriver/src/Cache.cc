@@ -20,13 +20,11 @@
 //#
 //#  $Id$
 
-#include "Cache.h"
-#include <PSAccess.h>
-
-#undef PACKAGE
-#undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#include "Cache.h"
+#include <PSAccess.h>
 
 #include <blitz/array.h>
 

@@ -22,6 +22,7 @@ prelude = << PRELUDE_END
  * Protocol constants.
  */
 
+#undef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
   /*@{*/

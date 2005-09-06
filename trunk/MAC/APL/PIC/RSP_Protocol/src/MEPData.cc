@@ -20,14 +20,12 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "MEPData.h"
 
 #include <string.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace EPA_Protocol;

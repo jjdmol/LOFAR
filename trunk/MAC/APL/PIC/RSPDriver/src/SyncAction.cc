@@ -20,13 +20,11 @@
 //#
 //#  $Id$
 
-#include "SyncAction.h"
-#include "EPA_Protocol.ph"
-
-#undef PACKAGE
-#undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#include "SyncAction.h"
+#include "EPA_Protocol.ph"
 
 using namespace RSP;
 using namespace LOFAR;

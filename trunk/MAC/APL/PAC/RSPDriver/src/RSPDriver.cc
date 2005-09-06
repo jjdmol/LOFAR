@@ -21,6 +21,9 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
@@ -70,11 +73,6 @@
 #include <GCF/ParameterSet.h>
 
 #include <blitz/array.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

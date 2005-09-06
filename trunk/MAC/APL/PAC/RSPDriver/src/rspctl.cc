@@ -49,8 +49,7 @@
 //# rspctl --clocks          [--select=<set>]  # get or set the clock frequency of clocks
 //# rspctl --version         [--select=<set>]  # get version information
 //#
-#undef PACKAGE
-#undef VERSION
+
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
@@ -654,6 +653,8 @@ void StatisticsCommand::capture_statistics(Array<double, 2>& stats, const Timest
         GCFTask::stop();
       }
     }
+    
+    m_stats = 0.0; //reset statistics
   }
 }
   

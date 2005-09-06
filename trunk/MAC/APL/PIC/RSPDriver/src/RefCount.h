@@ -25,29 +25,21 @@
 #ifndef REFCOUNT_H_
 #define REFCOUNT_H_
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
 namespace RSP 
 {
   class RefCount {
       int crefs;
     public:
       RefCount(void) { crefs = 0; }
-      virtual ~RefCount() { /*LOG_INFO(LOFAR::formatString("goodbye(%d)\n", crefs)); */ }
+      virtual ~RefCount() { }
       
-      void upcount(void) { ++crefs; /*LOG_INFO(LOFAR::formatString("up to %d\n", crefs));*/ }
+      void upcount(void) { ++crefs; }
       void downcount(void)
       {
 	if (--crefs == 0)
 	{
 	  delete this;
 	}
-/*	else
-	  LOG_INFO(LOFAR::formatString("downto %d\n", crefs));
-*/
       }
   };
 
