@@ -15,9 +15,15 @@ INSTALL=install -C
 
 AUTOGEN = autogen
 SUFFIXES = .ph
+%.ph: %.prot
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+
 BUILT_SOURCES = 
 
 clean-local:
+	rm -f *.ph
 
 EXTRA_DIST = \
 	$(BUILT_SOURCES)
@@ -56,11 +62,6 @@ libnetraw_la_SOURCES = \
 libgnuplot_i_la_SOURCES = \
 	gnuplot_i.h \
 	gnuplot_i.cc
-
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
-%.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
