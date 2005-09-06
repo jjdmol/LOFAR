@@ -27,6 +27,8 @@
 
 #include <Common/LofarTypes.h>
 #include <blitz/array.h>
+#include <string.h>
+#include <string>
 
 #define MSH_ARRAY_SIZE(array, datatype)					     \
 (((array).dimensions()*sizeof(int32)) + ((array).size() * sizeof(datatype)))
@@ -69,6 +71,30 @@ do {										       \
 										       \
   memcpy(array.data(), ((char*)(bufptr)) + (offset), array.size() * sizeof(datatype)); \
   offset += array.size() * sizeof(datatype);					       \
+} while (0)
+
+#define MSH_STRING_SIZE(stdstring) (sizeof(uint32) + (stdstring).size() * sizeof(char))
+
+#define MSH_PACK_STRING(bufptr, offset, stdstring)					\
+do {											\
+  /* pack stdstring with length */							\
+  uint32 size = (stdstring).size() * sizeof(char);					\
+  memcpy(((char*)(bufptr)) + (offset), &size, sizeof(size));				\
+  offset += sizeof(size);								\
+  memcpy(((char*)(bufptr)) + (offset), (stdstring).c_str(), size * sizeof(char));	\
+  offset += size * sizeof(char);							\
+} while (0)
+
+#define MSH_UNPACK_STRING(bufptr, offset, stdstring)				\
+do {										\
+  uint32 size = 0;								\
+  memcpy(&size, ((char*)(bufptr)) + (offset), sizeof(size));			\
+  offset += sizeof(size);							\
+  char stringbuf[size + 1];							\
+  memcpy(stringbuf, ((char*)(bufptr)) + (offset), size * sizeof(char));	        \
+  stringbuf[size] = '\0';							\
+  (stdstring) = string(stringbuf); /* cast to std::string */			\
+  offset += size * sizeof(char);						\
 } while (0)
 
 #endif /* MARSHALLING_H_ */
