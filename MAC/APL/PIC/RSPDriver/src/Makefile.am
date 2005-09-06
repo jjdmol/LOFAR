@@ -34,13 +34,7 @@ BUILT_SOURCES = \
 	rspctl.conf
 
 clean-local:
-	rm -f \
-	RSP_Protocol.ph \
-	RSP_Protocol.cc \
-	RSPFE_Protocol.ph \
-	RSPFE_Protocol.cc \
-	EPA_Protocol.ph \
-	EPA_Protocol.cc
+	rm -f *.ph
 
 EXTRA_DIST = \
 	RSP_Protocol.ph \

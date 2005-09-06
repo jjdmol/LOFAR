@@ -20,12 +20,10 @@
 //#
 //#  $Id$
 
-#include "Command.h"
-
-#undef PACKAGE
-#undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#include "Command.h"
 
 using namespace RSP;
 using namespace LOFAR;

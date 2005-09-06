@@ -20,18 +20,16 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "SystemStatus.h"
 #include "EPA_Protocol.ph"
 #include "MEPHeader.h"
 #include "Marshalling.h"
 #include <blitz/array.h>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 using namespace LOFAR;
-
 using namespace RSP_Protocol;
 using namespace EPA_Protocol;
 using namespace std;

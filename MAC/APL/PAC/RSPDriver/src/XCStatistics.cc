@@ -20,15 +20,13 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "XCStatistics.h"
 #include "Marshalling.h"
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 using namespace LOFAR;
-
 using namespace RSP_Protocol;
 using namespace std;
 using namespace blitz;

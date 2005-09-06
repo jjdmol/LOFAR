@@ -20,14 +20,12 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <PSAccess.h>
 #include "Scheduler.h"
 #include "SyncAction.h"
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace RSP;
 using namespace LOFAR;

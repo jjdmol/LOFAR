@@ -21,8 +21,8 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
-#define DECLARE_SIGNAL_NAMES
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
@@ -36,11 +36,6 @@
 #include <string.h>
 #include <blitz/array.h>
 #include <getopt.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace LOFAR;

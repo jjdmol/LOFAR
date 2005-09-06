@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 #include "SSWrite.h"
@@ -30,11 +33,6 @@
 
 // needed if htons is used
 //#include <netinet/in.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 #define N_RETRIES 3
 

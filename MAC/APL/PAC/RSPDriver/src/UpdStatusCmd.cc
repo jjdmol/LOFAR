@@ -20,16 +20,14 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "RSP_Protocol.ph"
 #include "UpdStatusCmd.h"
 
 #include <PSAccess.h>
 #include <blitz/array.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace RSP;
 using namespace LOFAR;
