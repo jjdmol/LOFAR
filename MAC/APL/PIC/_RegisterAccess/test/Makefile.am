@@ -15,9 +15,7 @@ aratest_SOURCES 		= \
 	ARATestDriverTask.cc \
 	ARATestMain.cc
 	
-#in case of make install these files will be copied to the bindir beside the test apps
-configfilesdir=$(bindir)
-configfiles_DATA= \
+sysconf_DATA= \
 	aratest.conf \
 	aratest.log_prop
 	

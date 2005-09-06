@@ -1385,13 +1385,13 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double t
        (!pvBoolVhEnable.getValue() && !pvBoolVlEnable.getValue()) ||
        (!pvBoolHBAEnable.getValue() && !pvBoolLBAEnable.getValue()))
     {
-      GCFPVUnsigned pvUnsignedStatus(STATUS_ERROR);
-      it->second->setValueTimed(string(PROPNAME_STATUS),pvUnsignedStatus, timestamp);
+      GCFPVInteger pvStatus(STATUS_ERROR);
+      it->second->setValueTimed(string(PROPNAME_STATUS),pvStatus, timestamp);
     }       
     else
     {
-      GCFPVUnsigned pvUnsignedStatus(STATUS_OK);
-      it->second->setValueTimed(string(PROPNAME_STATUS),pvUnsignedStatus, timestamp);
+      GCFPVInteger pvStatus(STATUS_OK);
+      it->second->setValueTimed(string(PROPNAME_STATUS),pvStatus, timestamp);
     }       
   }
 }
