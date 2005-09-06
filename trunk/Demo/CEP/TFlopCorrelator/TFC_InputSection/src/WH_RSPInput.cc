@@ -44,15 +44,15 @@ void* WriteToBufferThread(void* arguments)
   LOG_TRACE_FLOW_STR("WH_RSPInput WriterThread");   
 
   thread_args* args = (thread_args*)arguments;
-  int seqid, blockid, statid;
-  timestamp_t actualstamp, nextstamp;
+  int seqid, blockid;
+  timestamp_t actualstamp, expectedstamp;
   bool readnew = true;
   bool firstloop = true;
 
   // buffer for incoming rsp data
   char recvframe[args->FrameSize];
 
-  // define a block of dummy data
+  // define a block of dummy subband data
   SubbandType dummyblock[args->nrPacketsInFrame];
   memset(dummyblock, 0, args->nrPacketsInFrame*sizeof(SubbandType));
 
@@ -86,20 +86,19 @@ void* WriteToBufferThread(void* arguments)
     }
    
     // get the actual timestamp of first EPApacket in frame
-    statid   = ((int*)&recvframe[4])[0];
     seqid   = ((int*)&recvframe[8])[0];
     blockid = ((int*)&recvframe[12])[0];
     actualstamp.setStamp(seqid ,blockid);
   
     // firstloop
     if (firstloop) {
-      nextstamp.setStamp(seqid, blockid);  // init nextstamp
+      expectedstamp.setStamp(seqid, blockid); // init expectedstamp
       *args->StationIDptr =((int*)&recvframe[4])[0]; // get stationid
       firstloop = false;
     }
 
     // check and process the incoming data
-    if (actualstamp < nextstamp) {
+    if (actualstamp < expectedstamp) {
       /* old packet received 
 	 Packet can be saved when its dummy is available in cyclic buffer. 
          Otherwise this packet will be lost */
@@ -118,18 +117,17 @@ void* WriteToBufferThread(void* arguments)
 
       // read new frame in next loop
       readnew = true;
-      // do not increase the nextstamp
+      // do not increase the expectedstamp
     }
-    else if (nextstamp + (args->nrPacketsInFrame - 1) < actualstamp) {
-      // missed a packet so create dummy
-      actualstamp = nextstamp;
-      args->BufControl->writeDummy((SubbandType*)dummyblock, actualstamp, args->nrPacketsInFrame);
+    else if (actualstamp > expectedstamp) {
+      // missed a packet so create dummy for that missing packet
+      args->BufControl->writeDummy((SubbandType*)dummyblock, expectedstamp, args->nrPacketsInFrame);
       cnt_missed += args->nrPacketsInFrame;
       //cout << "Dummy created for " << cnt_missed << " missed packets." << endl; // debugging
       // read same frame again in next loop
       readnew = false;
-      // increase the nextstamp
-      nextstamp += args->nrPacketsInFrame; 
+      // increase the expectedstamp
+      expectedstamp += args->nrPacketsInFrame; 
     } 
     else {
       // expected packet received so write data into corresponding buffer
@@ -141,8 +139,8 @@ void* WriteToBufferThread(void* arguments)
       }
       // read new frame in next loop
       readnew = true;
-      // increase the nextstamp
-      nextstamp += args->nrPacketsInFrame; 
+      // increase the expectedstamp
+      expectedstamp += args->nrPacketsInFrame; 
     }
     cnt_total++;
     if (speedCounter-- < 1) {
