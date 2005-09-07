@@ -31,7 +31,7 @@ namespace LOFAR {
   }
 
   void TimeStamp::checkOverflow() {
-    if (itsBlockId > MAX_BLOCK_ID) {
+    if (itsBlockId >= MAX_BLOCK_ID) {
       int newBlockId = itsBlockId % MAX_BLOCK_ID;
       itsSeqId += itsBlockId / MAX_BLOCK_ID; 
       itsBlockId = newBlockId;
