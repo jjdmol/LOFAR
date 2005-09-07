@@ -2,6 +2,7 @@
 Releases sorted by release date
 ===============================
 
+LCS/ACC         :       version: 2.0;   date: 2005/09/07
 LCS/Transport   :       version: 2.1;   date: 2005/09/05
 LCS/Common      :       version: 2.3;   date: 2005/09/02
 LCS/Tools       :       version: 1.1;   date: 2005/09/02
@@ -86,6 +87,19 @@ autoconf_share
 
 LCS/ACC
 -------
+
+  Version: 2.0; date: 2005/09/07
+
+    required packages:
+      internal: LCS/Transport (2.1)
+                LCS/Common (2.3)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: log4cplus (1.0.x)
+                doxygen (1.3.x)
+
 
   Version: 1.1; date: 2005/06/24
 
