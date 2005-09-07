@@ -31,13 +31,13 @@
 
 using namespace std;
 using namespace LOFAR;
-using namespace LOFAR::ACC;
+using namespace LOFAR::ACC::APS;
 
-int main(int argc, char * argv[]) {
+int main() {
 	INIT_LOGGER("tParameterSet");
 
-	cout << "\nReading in parameterfile 'tParameterSet.ps'\n";
-	ParameterSet		myPS("tParameterSet.ps");
+	cout << "\nReading in parameterfile 'tParameterSet.in_param'\n";
+	ParameterSet		myPS("tParameterSet.in_param");
 
 	ParameterSet		mySecondSet(myPS);
 
@@ -48,8 +48,8 @@ int main(int argc, char * argv[]) {
 	cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
 	cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;
 
-	cout << "\nMerging ParameterSet with file 'merge.ps'\n";
-	myPS.adoptFile("merge.ps");
+	cout << "\nMerging ParameterSet with file 'tParameterSet.in_merge'\n";
+	myPS.adoptFile("tParameterSet.in_merge");
 
 	cout << "\nShowing the same keys again\n";
 	cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
@@ -101,11 +101,11 @@ int main(int argc, char * argv[]) {
 		myPS.getInt32("is.er.niet");
 	}
 	catch (LOFAR::Exception& ex) {
-		LOG_DEBUG ("Told you the key didn't exists.");
+	  cout << "Told you the key didn't exist." << endl;
 	}
 
-	cout << "\nFinally write the parameterset to 'newset.ps'\n";
-	myPS.writeFile("newset.ps");
+	cout << "\nFinally write the parameterset to 'newset.out_param'\n";
+	myPS.writeFile("newset.out_param");
 
 	try {
 		cout << "\ntesting getInt32Vector\n";
@@ -114,12 +114,11 @@ int main(int argc, char * argv[]) {
 		copy (intVector.begin(), intVector.end(), 
 								std::ostream_iterator<int, char>(cout, ","));
 		//	cout << intVector << endl;
+		cout << endl;
 	}
 	catch (LOFAR::Exception& ex) {
 		LOG_DEBUG_STR ("Exception:" << ex.what());
 	}
-
-	strlen(argv[argc-1]);			// satify compiler
 
 	return 0;
 

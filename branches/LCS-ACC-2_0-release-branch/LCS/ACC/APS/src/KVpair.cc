@@ -55,7 +55,7 @@ KVpair::KVpair(const string& aKey, int			  aValue, bool genTimestamp) :
 }
 
 KVpair::KVpair(const string& aKey, double		  aValue, bool genTimestamp) :
-	pair<string, string> (aKey, formatString("%lg", aValue))
+	pair<string, string> (aKey, formatString("%.20lg", aValue))
 {
 	OPTIONAL_TIMESTAMP
 }

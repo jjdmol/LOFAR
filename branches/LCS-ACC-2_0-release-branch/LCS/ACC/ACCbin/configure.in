@@ -54,8 +54,8 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
-lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_2,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_0,1,Transport/TransportHolder.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_3,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_1,1,Transport/TransportHolder.h,,)
 lofar_INTERNAL(LCS/ACC/APS,APS,LCS-ACC-2_0,1,APS/ParameterSet.h,,)
 lofar_INTERNAL(LCS/ACC/ALC,ALC,LCS-ACC-2_0,1,ALC/ApplControl.h,,)
 lofar_INTERNAL(LCS/ACC/PLC,PLC,LCS-ACC-2_0,1,PLC/ProcessControl.h,,)

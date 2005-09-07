@@ -8,9 +8,11 @@
 # start the given executable and creates a corresponding pid file for stopping the process.
 #
 
+# now all ACC processes expect to be started with "ACC" as first parameter
+
 # start process
 # TODO: in future something like: rsh $1 start_script $2 $3 $4
-$3 $4 & 
+$3 ACC $4 & 
 
 # get its pid
 pid=`echo $!`

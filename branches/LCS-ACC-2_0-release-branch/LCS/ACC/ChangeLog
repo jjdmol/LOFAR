@@ -1,3 +1,66 @@
+2005-08-05 11:28  overeem
+
+	* APS/src/KVpair.cc: BugID: 78 More significant numbers for
+	  doubles.
+
+2005-07-29 13:35  zwart
+
+	* ACCbin/src/: startAP.sh, startMPI.sh: BugID: 235
+
+	  ACC now gives "ACC" as first parameter and the parameterfile as
+	  second
+
+2005-07-22 12:59  overeem
+
+	* ACCbin/src/ACCmdImpl.cc: BugID: 78 One namespace too deep.
+
+2005-07-19 12:21  diepen
+
+	* APS/test/: tParameterSet.cc, tParameterSet.out: %[ER: 70]% Make
+	  it compile without warnings and run without differences
+
+2005-07-14 08:49  overeem
+
+	* APS/test/: merge.in_param, tParameterSet.in_merge: %[ER:285]%
+	  Renaming of files
+
+2005-07-14 08:49  overeem
+
+	* APS/test/: tParameterSet.cc, tParameterSet.out,
+	  tParameterSet_test.sh: %[ER:285]% Renaming of files.
+
+2005-07-14 08:34  overeem
+
+	* APS/test/: merge.in_param, merge.ps, tParameterSet.in_param,
+	  tParameterSet.ps: %[ER:285]% Renaming of files.
+
+2005-07-14 08:32  overeem
+
+	* APS/test/tParameterSet.cc: %[ER:285]% Renaming of parameterfiles.
+
+2005-07-11 15:14  zwart
+
+	* APS/src/ParameterSet.cc: %[ER: 206]%
+
+	  Fixed bug (string constructor doesn't make a copy when called
+	  with a reference to another string as argument)
+
+2005-07-11 14:55  zwart
+
+	* APS/src/ParameterSet.cc: %[ER: 206]%
+
+	  Made splitVector work with empty vectors
+
+2005-07-08 16:59  overeem
+
+	* lofarconf.in: %[ER:285 ]% Typo.
+
+2005-07-08 13:54  overeem
+
+	* ChangeLog, INSTALL, NEWS, README, lofarconf.in,
+	  ACCbin/configure.in, ALC/configure.in, APS/configure.in,
+	  PLC/configure.in: %[ER:0]% Prepare for release 2.0
+
 2005-07-06 14:36  loose
 
 	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS: %[ER: 0]%

@@ -404,12 +404,15 @@ vector<char*> splitVector(char*	target)
 
 	// strip off array marker and trim again.
 	target[lastPos] = '\0';
-	lastPos = rtrim(target = ltrim(target+1)) - 1;
+	lastPos = rtrim(target = ltrim(target+1));
+	// if we had an empty vector lastPos = 0
+	if (lastPos > 0 ) {
+	  lastPos -= 1;
 
-	// the comma seperated elements are left now.
-	// scan string and set pointers.
-	uint32	idx = 0;
-	while (idx <= lastPos) {
+	  // the comma seperated elements are left now.
+	  // scan string and set pointers.
+	  uint32	idx = 0;
+	  while (idx <= lastPos) {
 		// skip leading space.
 		while(idx <= lastPos && (target[idx]==' ' || target[idx]=='\t')) {
 			++idx;
@@ -440,6 +443,7 @@ vector<char*> splitVector(char*	target)
 			result.push_back(target+start);
 			target[idx++] = '\0'; 	// hop over , while removing it
 		}
+	  }
 	}
 
 	return (result);
@@ -477,7 +481,7 @@ vector<char*> splitVector(char*	target)
 vector<bool> ParameterSet::getBoolVector(const string& theKey) const
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -495,7 +499,7 @@ vector<bool> ParameterSet::getBoolVector(const string& theKey) const
 vector<int16> ParameterSet::getInt16Vector(const string& theKey) const
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -513,7 +517,7 @@ vector<int16> ParameterSet::getInt16Vector(const string& theKey) const
 vector<uint16> ParameterSet::getUint16Vector(const string& theKey) const
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -531,7 +535,7 @@ vector<uint16> ParameterSet::getUint16Vector(const string& theKey) const
 vector<int32> ParameterSet::getInt32Vector(const string& theKey) const
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -549,7 +553,7 @@ vector<int32> ParameterSet::getInt32Vector(const string& theKey) const
 vector<uint32> ParameterSet::getUint32Vector(const string& theKey) const
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -568,7 +572,7 @@ vector<uint32> ParameterSet::getUint32Vector(const string& theKey) const
 vector<int64> ParameterSet::getInt64Vector(const string& theKey) const
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -586,7 +590,7 @@ vector<int64> ParameterSet::getInt64Vector(const string& theKey) const
 vector<uint64> ParameterSet::getUint64Vector(const string& theKey) const
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -605,7 +609,7 @@ vector<uint64> ParameterSet::getUint64Vector(const string& theKey) const
 vector<float> ParameterSet::getFloatVector(const string& theKey) const 
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -623,7 +627,7 @@ vector<float> ParameterSet::getFloatVector(const string& theKey) const
 vector<double> ParameterSet::getDoubleVector(const string& theKey) const 
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -641,7 +645,7 @@ vector<double> ParameterSet::getDoubleVector(const string& theKey) const
 vector<string> ParameterSet::getStringVector(const string& theKey) const 
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
@@ -659,7 +663,7 @@ vector<string> ParameterSet::getStringVector(const string& theKey) const
 vector<time_t> ParameterSet::getTimeVector(const string& theKey) const 
 {
 	// get destoyable copy of value part
-	string		value(findKV(theKey)->second);	
+	string		value(findKV(theKey)->second.c_str());	
 
 	// parse value part as an array
 	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
