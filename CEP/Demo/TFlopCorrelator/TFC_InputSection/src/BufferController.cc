@@ -395,7 +395,7 @@ void BufferController::writeDummy(SubbandType* dum, timestamp_t startstamp, int 
   // write the metadata for this dummy block
   for (int i=0; i<nelements; i++) {
     bid = getWritePtr();
-    itsMetadataBuffer[bid].invalid = 0;
+    itsMetadataBuffer[bid].invalid = 1;
     itsMetadataBuffer[bid].timestamp = startstamp;
     if (i==0) {
       sid = bid;
