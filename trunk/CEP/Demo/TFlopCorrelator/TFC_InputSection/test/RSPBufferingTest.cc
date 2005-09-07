@@ -65,8 +65,6 @@ void* write(void* argument)
   int seqid, blockid;
   bool readnew  = true;
   bool firstloop = true;
-  int cnt_missed = 0;
-  int cnt_old = 0;
 
   // define a block of dummy data
   SubbandType dummyblock[args->npacketsinframe];
@@ -77,11 +75,9 @@ void* write(void* argument)
     // catch frame from ethernet link
     if (readnew) {
       args->con->recvBlocking( (void*)recvframe, args->framesize, 0);
+      seqid   = ((int*)&recvframe[8])[0];
+      blockid = ((int*)&recvframe[12])[0];
     }
-    
-    // get timestamp of first packet in frame
-    seqid   = ((int*)&recvframe[8])[0];
-    blockid = ((int*)&recvframe[12])[0];
     actualstamp.setStamp(seqid ,blockid); 
     
     if (firstloop) {
@@ -92,16 +88,13 @@ void* write(void* argument)
     if (actualstamp < expectedstamp) {
       // old packet received
       // do nothing
-      cnt_old += args->npacketsinframe;
-      cout << cnt_old << " old packets received" << endl;
+      //cout << "** old packets received ** " << expectedstamp << " : " << actualstamp << endl;
       readnew = true;
     }
     else if (actualstamp > expectedstamp) {
       // missed a packet so create a dummy
-      actualstamp = expectedstamp;
-      args->bc->writeDummy((SubbandType*)dummyblock, actualstamp, args->npacketsinframe);
-      cnt_missed += args->npacketsinframe;
-      cout << cnt_missed << " dummies created" << endl;
+      args->bc->writeDummy((SubbandType*)dummyblock, expectedstamp, args->npacketsinframe);
+      cout << "** dummies created for timeblock " << expectedstamp << " to "<< expectedstamp+(args->npacketsinframe-1) << endl;
       readnew = false;
       expectedstamp += args->npacketsinframe;
     }
@@ -111,7 +104,7 @@ void* write(void* argument)
 	args->bc->writeElements( (SubbandType*)&recvframe[i*args->packetsize+16], actualstamp);
 	actualstamp++;
       }
-      cout << "expected packet received" << endl;
+      //cout << "expected packet received" << endl;
       readnew = true;
       expectedstamp += args->npacketsinframe;
     }
@@ -132,17 +125,24 @@ void* read(void* argument)
   }
 
   ts = args->bc->startBufferRead();
+  cout << "reader started on stamp " << ts << endl;
 
+ 
+  int seqid = 0;
+  int packets = 0;
+  int invalid = 0;
   while (1) {
     args->bc->getElements(subbandbuffer, invalidcount, ts, args->nsamples);
-    //cout << "sample " << ts << " read" << endl;
-    // for (int i=0; i<args->nsubbands; i++) {
-//       for (int j=0; j<args->nsamples; j++) {
-//         cout <<  subbandbuffer[i][j].Xpol << "," << subbandbuffer[i][j].Ypol << endl;
-//       }
-//     }
-    ts+=args->nsamples;
+    packets += args->nsamples;
+    if (invalidcount != 0) {
+      invalid += invalidcount;
     }
+    if (seqid != ts.getSeqId()) {
+      seqid = ts.getSeqId();
+      cout << "sequence "<< seqid << ", packets: " << packets << ", invalid: " << invalid << endl;
+    }
+    ts+=args->nsamples;
+  }
 }
  
 
