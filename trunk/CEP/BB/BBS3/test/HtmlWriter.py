@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This module contains the html structures
 The structure of a generated html document is:
@@ -13,15 +14,17 @@ document
 import sys
 import time
 import TestData
+import OutputParser
+from forgetHTML import *
 
-class BBSTestResultDocument(BasicDocument):
+class BBSTestResultDocument(SimpleDocument):
    """
    This document holds the results of a testrun.
    It contains a bargraph and table with all the times,
    some info about the host and the detailed output of the parameters
    """
-   def __init__(self):
-      BasicDocument.__init__(self)
+   def __init__(self, title):
+      SimpleDocument.__init__(self, title)
       self.testinfo = TestData.TestInfo()
       self.mysbg = StackedBarGraph()
       self.mytimertable = TimerTable()
@@ -34,19 +37,18 @@ class BBSTestResultDocument(BasicDocument):
       tp = TestParagraph(name, testrun)
       self.mytests.append(tp)
    def __str__(self):
-      self.append(Name("home",Heading(1,"BBSTest Results")))
       now = map(str, time.localtime()) # convert all int to a string
       nowstring = now[2] + "-" + now[1] + "-" + now[0] + " at " + now[3] + ":" + now[4]
-      self.append(Heading(2,"Generated on " + nowstring))
-      self.append(HR())
-      self.append(self.mysbg)
-      self.append(self.mytimertable)
-      self.append(TestInfoParagraph(self.testinfo))
+      self.body.append(Header("Generated on " + nowstring, 2))
+      self.body.append(Ruler())
+      #self.body.append(self.mysbg)
+      #self.body.append(self.mytimertable)
+      self.body.append(TestInfoParagraph(self.testinfo))
       for testrun in self.mytests:
-         self.append(testrun)
-      self.append(HR())
-      self.append("End of BBSTest Results")
-      return BasicDocument.__str__(self)
+         self.body.append(testrun)
+      self.body.append(Ruler())
+      self.body.append("End of BBSTest Results")
+      return SimpleDocument.__str__(self)
 
 class StackedBarGraph:
    def __init__(self):
@@ -184,21 +186,22 @@ class TestInfoParagraph(Table):
       for key in TestInfo.getTags():
          linelist = TestInfo[key]
          line = ''.join(linelist);
-         self.body.append([key, Small(PRE(line))])
+         self.body.append([key, Pre(Small(line))])
 
-class TestParagraph:
+class TestParagraph(Paragraph):
    def __init__(self, name, testrun):
       tdd = testrun.getTraceDicts()
       self.name = name
       self.settings = testrun.settings
       self.myPTraceTables = list()
       for int in range(0,len(tdd)):
-         self.myPTraceTables.append(ParmTraceTable(Bold("Interval " + str(int)), tdd[int]))
+         self.myPTraceTables.append(ParmTraceTable(Strong("Interval " + str(int)), tdd[int]))
+      Paragraph.__init__(self)
    def __str__(self):
       mypar = Paragraph()
-      mypar.append(Header(2, Name(self.name, self.name)))
+      mypar.append(Header(self.name, 2))
       mypar.append(Small(Href("#home", "back to top")))
-      mypar.append(Header(3, "Settings:"))
+      mypar.append(Header("Settings:", 3))
       mypar.append(self.settings)
       mypar.append(P())
       mypar.append(Href(self.name.split("/")[-1], "BBSTest output"))
@@ -207,32 +210,32 @@ class TestParagraph:
          mypar.append(pt)
       return mypar.__str__()      
 
-class ParmTraceTable(TableLite):
+class ParmTraceTable(SimpleTable):
    def __init__(self, name, traceDict):
-      TableLite.__init__(self, border=1, cellpadding=5, cellspacing=1)
-      self.append(Caption(name))
-      Header = TR()
-      Header.append(TH("Parameter name"))
-      Header.append(TH("real value"))
-      Header.append(TH("Q (small is bad)"))
-      Header.append(TH("ParameterValues"))
-      self.append(Header)
+      SimpleTable.__init__(self, border=1, cellpadding=5, cellspacing=1)
+      #self.append(Caption(name))
+      header = TableRow()
+      header.append(TableHeader("Parameter name"))
+      header.append(TableHeader("real value"))
+      header.append(TableHeader("Q (small is bad)"))
+      header.append(TableHeader("ParameterValues"))
+      self.append(header)
       for name in traceDict:
          self.append(ParmTraceRow(traceDict[name]))      
 
-class ParmTraceRow(TR):
+class ParmTraceRow(TableRow):
    def __init__(self, pTrace):
-      TR.__init__(self)
-      self.append(TD(Bold(pTrace.name)))
+      TableRow.__init__(self)
+      self.append(TableCell(Strong(pTrace.name)))
       realValue = pTrace.getRealValue()
       if realValue == None:
-         self.append(TD())
-         self.append(TD())
+         self.append(TableCell())
+         self.append(TableCell())
       else:
-         self.append(TD(Bold(', '.join(pTrace.getRealValue()))))
-         self.append(TD(Bold(pTrace.getQuality())))         
+         self.append(TableCell(Strong(', '.join(pTrace.getRealValue()))))
+         self.append(TableCell(Strong(pTrace.getQuality())))         
       for value in pTrace.valueList:
-         self.append(TD(', '.join(value)))
+         self.append(TableCell(', '.join(str(value))))
 
 def sortedkeys(origdict):
    """
@@ -278,9 +281,23 @@ class matrix:
       return l
 
 if __name__ == "__main__":
-   d = BBSBaseDocument()
-   p = ParmTraceElement("testtrace", [1, 2, 3, 4])
-   b = StackedBarGraph({'run1' : {'a': 4, 'b': 5}})
-   d.append(p)
-   d.append(b)
+   try:
+      f = open('testDefault.out', 'rb')
+   except:
+      f = None
+
+   if not f:
+      d = BBSTestResultDocument('HtmlWriter testdocument')
+      tr=TestData.TestRun()
+      tr.add(TestData.Interval())
+      tr.children[0].add(TestData.Iteration())
+      tr.children[0].children[0].add(TestData.Parameter('testparm', 2.5))
+   else:
+      d = BBSTestResultDocument('HtmlWriter testdocument from testDefault')
+      op = OutputParser.OutputParser('testDefault')
+      op.parseFileByName('testDefault.out')
+      tr = op.itsTestRun
+      tr.doPrint(' ')
+      
+   d.addTest('test', tr)
    open('output.html', 'w').write(str(d))
