@@ -89,6 +89,10 @@ public:
   ~Prediffer();
 
   // Make a selection of the MS to be used in the domain iteration.
+  // The size of the antenna vectors is the number of baselines to be used.
+  // They give the first and second antenna (i.e. station) of each baseline.
+  // <br>The correlation vector tells which correlations to use from the data.
+  // 0=XX, 1=XY, 2=YX, 3=YY. An empty vector means all correlations.
   void select (const vector<int>& ant1, const vector<int>& ant2,
 	       bool useAutoCorrelations, const vector<int>& corr);
 
