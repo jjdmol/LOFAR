@@ -44,16 +44,49 @@
 
 
 #define TO_HEX(a)   (((a)>'9')?((a)-'A'+10):((a)-'0'))
+#define LINELENGTH           ((int8) 100)
 
 char     *pcOverview;
-
+long      lSeedValue = 0;
 
 void MallocText(
   void)
 {
   pcOverview = (char *) malloc(1000000);
 }
-
+/* Reads the seed value from given filename */
+void GetSeedValue(char * pcFilename)
+{
+  FILE  *pFile;
+  int16  iFound;
+  char  *pcReturnValue;
+  char   pcLine[LINELENGTH];
+  
+  pFile  = NULL; 
+  iFound = 0; 
+  pcReturnValue = NULL;
+  
+  if (NULL != pcFilename)
+  {
+    pFile = fopen(pcFilename,"r");
+    if (NULL != pFile)
+    {
+      while((feof( pFile ) == 0) && 
+            (iFound == 0) )
+      {
+        pcReturnValue = fgets(pcLine, LINELENGTH, pFile);
+        if (NULL != pcReturnValue)
+        {
+          if( sscanf( pcLine,"Seed: %ld\n", &lSeedValue) != 0)
+          {
+            iFound = TRUE;
+          }
+        }
+      }
+      fclose(pFile); 
+    }
+  }
+}
 void FreeText(
   void)
 {

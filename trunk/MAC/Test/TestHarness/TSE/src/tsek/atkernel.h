@@ -285,12 +285,14 @@ extern    "C"
 
 
   int16     BSEK_OpenLogFile(
-  char *pcFileName);
+  char *pcFileName,
+  int16 iReplay);
 /* BSEK_OpenLogFile opens a logfile, to which exactly the same logging as    */
 /* sent to the GUI by the BSEG_LogLine function.                             */
 /* ------------------------------------------------------------------------ */
 /* Input parameters:                                                        */
-/* --                                                                       */
+/*               Replay - indicates if a scripy file is to be replayed(1) or*/ 
+/*               not(0).                                                    */
 /* Output parameters:                                                       */
 /* --                                                                       */
 /* Return value:                                                            */
@@ -363,11 +365,12 @@ extern    "C"
 
 
   int16     BSEK_RunBatch(
-  void);
+    int16 iReplay);
 /* BSEK_RunBatch will run a batch file.                                      */
 /* ------------------------------------------------------------------------ */
 /* Input parameters:                                                        */
-/* --                                                                       */
+/*               Replay - indicates if a batch file is to be replayed(1) or */ 
+/*               not(0).                                                    */
 /* Output parameters:                                                       */
 /* --                                                                       */
 /* Return value:                                                            */
@@ -378,11 +381,12 @@ extern    "C"
 
 
   int16     BSEK_RunScript(
-  void);
+    int16 iReplay);
 /* BSEK_RunScript starts/continues a test script.                            */
 /* ------------------------------------------------------------------------ */
 /* Input parameters:                                                        */
-/* --                                                                       */
+/*               Replay - indicates if a scripy file is to be replayed(1) or*/ 
+/*               not(0).                                                    */
 /* Output parameters:                                                       */
 /* --                                                                       */
 /* Return value:                                                            */

@@ -64,7 +64,7 @@ int       Parse_TType(
   struct TType *ptType);
 int       Parse_TTypeList(
   char *pcToken,
-  struct TTypeList *ptTypeList);
+  struct TTypeList **ptTypeList);
 int       Parse_TParameter(
   char *pcToken,
   struct TParameter *ptThis,
@@ -85,13 +85,13 @@ int       Parse_TFunction(
   struct TFunction *ptThis);
 int       Parse_TFunctionList(
   char *pcToken,
-  struct TFunctionList *ptList);
+  struct TFunctionList **ptList);
 int       Parse_TEvent(
   char *pcToken,
-  struct TEvent *pcThis);
+  struct TEvent *ptThis);
 int       Parse_TEventList(
   char *pcToken,
-  struct TEventList *ptList);
+  struct TEventList **ptList);
 void      Find_StateName(
   char *pcName,
   struct TStateList *ptStateList,
@@ -542,33 +542,89 @@ int Parse_TType(
 
 int Parse_TTypeList(
   char *pcToken,
-  struct TTypeList *ptTypeList)
+  struct TTypeList **ptTypeList)
 /****************************************************************************/
 /* TYPELIST  = TYPE                                                         */
 /* TYPELIST  = TYPE TYPELIST                                                */
 /****************************************************************************/
 {
-  ptTypeList->ptThis = newType();
-  Parse(pcToken);
+  struct TTypeList *ptNewTypeList;
+  struct TTypeList *ptWalker;
+  
+  ptNewTypeList = newTypeList();
+  ptNewTypeList->ptThis = newType();
 
+  Parse(pcToken);
   if (iLastParsedTokenType == IDENTIFIER_TOKEN) /* type name?               */
   {
-    if (!Parse_TType(pcToken, ptTypeList->ptThis))
+    if (!Parse_TType(pcToken, ptNewTypeList->ptThis))
+    {
+      free(ptNewTypeList->ptThis);
+      free(ptNewTypeList);
       return FALSE;
+    }
+    else
+    {
+      if (NULL == *ptTypeList)
+      {
+        *ptTypeList = ptNewTypeList;
+        ptWalker = ptNewTypeList;
+      }
+      else
+      {
+        if (CheckType(ptNewTypeList->ptThis) == TRUE)
+        {
+          ptWalker = *ptTypeList;
+          while (NULL != ptWalker->ptNext)
+          {
+            ptWalker = ptWalker->ptNext;
+          }
+          ptWalker->ptNext = ptNewTypeList;
+          ptWalker         = ptWalker->ptNext;
+        }
+        else
+        {
+          free(ptNewTypeList->ptThis);
+          free(ptNewTypeList);
+          return(FALSE);
+        }
+      }
+    }
+    while (iLastParsedTokenType == IDENTIFIER_TOKEN)      /* while type name parsd */
+    {
+      /* Allocate space for a new record                                      */
+      ptNewTypeList         = newTypeList();
+      ptNewTypeList->ptThis = newType();
+  
+      /* parse inputfile to fill new record.                                  */
+      if (!Parse_TType(pcToken, ptNewTypeList->ptThis))
+      {
+        free(ptNewTypeList->ptThis);
+        free(ptNewTypeList);
+        return FALSE;
+      }
+      else
+      {
+        if (CheckType(ptNewTypeList->ptThis) == TRUE)
+        {
+          ptWalker->ptNext = ptNewTypeList;
+          ptWalker         = ptWalker->ptNext;
+        }
+        else
+        {
+          free(ptNewTypeList->ptThis);
+          free(ptNewTypeList);
+          return FALSE;
+        }
+      }
+    }
   }
-
-  while (iLastParsedTokenType == IDENTIFIER_TOKEN)      /* while type name parsd */
+  else
   {
-    /* Allocate space for a new record                                      */
-    ptTypeList->ptNext = newTypeList();
-    ptTypeList = ptTypeList->ptNext;
-    ptTypeList->ptThis = newType();
-
-    /* parse inputfile to fill new record.                                  */
-    if (!Parse_TType(pcToken, ptTypeList->ptThis))
-      return FALSE;
-
+    free(ptNewTypeList->ptThis);
+    free(ptNewTypeList);
   }
+
 
   UngetToken();
 
@@ -1180,7 +1236,7 @@ int Parse_TFunction(
 
 int Parse_TFunctionList(
   char *pcToken,
-  struct TFunctionList *ptList)
+  struct TFunctionList **ptList)
 /****************************************************************************/
 /*                                                                          */
 /* FUNCTIONLIST = FUNCTION                                                  */
@@ -1188,29 +1244,85 @@ int Parse_TFunctionList(
 /*                                                                          */
 /****************************************************************************/
 {
-
-  ptList->ptThis = newFunction();
-
+  struct TFunctionList *ptNewFunctionList;
+  struct TFunctionList *ptWalker;
+   
+  ptNewFunctionList = newFunctionList();
+  ptNewFunctionList->ptThis = newFunction();
+  
   Parse(pcToken);
-
-  /* try to read at least one function.                                     */
-  if (!Parse_TFunction(pcToken, ptList->ptThis))
-    return FALSE;
-
-  /* while a function-name is parsed                                        */
-  while (Parse(pcToken) == IDENTIFIER_TOKEN)
+  if (iLastParsedTokenType == IDENTIFIER_TOKEN)
   {
-    /* make space for new function                                          */
-    ptList->ptNext = newFunctionList();
-    ptList = ptList->ptNext;
-    ptList->ptThis = newFunction();
-
-    /* and try to parse that new function.                                  */
-    if (!Parse_TFunction(pcToken, ptList->ptThis))
-      return FALSE;
-
+    if (!Parse_TFunction(pcToken, ptNewFunctionList->ptThis))
+    {
+      free(ptNewFunctionList->ptThis);
+      free(ptNewFunctionList);
+      return(FALSE);
+    } 
+    else
+    {
+      if (NULL == *ptList)
+      {
+        *ptList  = ptNewFunctionList;
+        ptWalker = *ptList;
+      }
+      else
+      {
+        if (TRUE == CheckFunction(ptNewFunctionList->ptThis))
+        {
+          ptWalker = *ptList;
+          while (NULL != ptWalker->ptNext)
+          {
+            ptWalker = ptWalker->ptNext;
+          }
+          
+          ptWalker->ptNext = ptNewFunctionList;
+          ptWalker = ptWalker->ptNext;
+        }
+        else
+        {
+          free(ptNewFunctionList->ptThis);
+          free(ptNewFunctionList);
+          return(FALSE);
+        }
+      }
+    }
+    
+    /* while a function-name is parsed                                        */
+    while (Parse(pcToken) == IDENTIFIER_TOKEN)
+    {
+      /* make space for new function                                          */
+      ptNewFunctionList = newFunctionList();
+      ptNewFunctionList->ptThis = newFunction();
+    
+      /* and try to parse that new function.                                  */
+      if (!Parse_TFunction(pcToken, ptNewFunctionList->ptThis))
+      {
+        free(ptNewFunctionList->ptThis);
+        free(ptNewFunctionList);
+        return FALSE;
+      }
+      else
+      {
+        if (TRUE == CheckFunction(ptNewFunctionList->ptThis))
+        {
+          ptWalker->ptNext = ptNewFunctionList;
+          ptWalker         = ptWalker->ptNext;
+        }
+        else
+        {
+          free(ptNewFunctionList->ptThis);
+          free(ptNewFunctionList);
+          return(FALSE);
+        }
+      }
+    }
   }
-
+  else
+  {
+    free(ptNewFunctionList->ptThis);
+    free(ptNewFunctionList);
+  }
   UngetToken();
 
   return TRUE;
@@ -1272,7 +1384,7 @@ int       CountTypeRefs(
 
 int Parse_TEventList(
   char *pcToken,
-  struct TEventList *ptList)
+  struct TEventList **ptList)
 /****************************************************************************/
 /*                                                                          */
 /* EVENTLIST = EVENT                                                        */
@@ -1280,40 +1392,90 @@ int Parse_TEventList(
 /*                                                                          */
 /****************************************************************************/
 {
-  /* at least one event is expected.                                        */
-  ptList->ptThis = newEvent();
-  Parse(pcToken);
+  struct TEventList *ptNewEventList;
+  struct TEventList *ptWalker;
+  
+  ptNewEventList         = newEventList();
+  ptNewEventList->ptThis = newEvent();
 
-  if (iLastParsedTokenType != IDENTIFIER_TOKEN)
+  Parse(pcToken);
+  if (iLastParsedTokenType == IDENTIFIER_TOKEN)
   {
-    AddError1("Event name expected");
-    return FALSE;
+    if (!Parse_TEvent(pcToken, ptNewEventList->ptThis))
+    {
+      free(ptNewEventList->ptThis);
+      free(ptNewEventList);
+      return(FALSE);
+    } 
+    else
+    {
+      if (NULL == (*ptList))
+      {
+        *ptList  =  ptNewEventList;
+        ptWalker = *ptList;
+      }
+      else
+      {
+        ptWalker = *ptList;
+        if (TRUE == CheckEvent(ptNewEventList->ptThis))
+        {
+          while (NULL != ptWalker->ptNext)
+          {
+            ptWalker = ptWalker->ptNext;
+          }
+          
+          ptWalker->ptNext = ptNewEventList;
+          ptWalker         = ptWalker->ptNext;
+        }
+        else
+        {
+          free(ptNewEventList->ptThis);
+          free(ptNewEventList);
+          return(FALSE);
+        }
+      }
+    }
+    
+    /* while a function-name is parsed                                        */
+    while (Parse(pcToken) == IDENTIFIER_TOKEN)
+    {
+      /* make space for new function                                          */
+      ptNewEventList = newEventList();
+      ptNewEventList->ptThis = newEvent();
+  
+      /* and try to parse that new function.                                  */
+      if (!Parse_TEvent(pcToken, ptNewEventList->ptThis))
+      {
+        free(ptNewEventList->ptThis);
+        free(ptNewEventList);
+        return FALSE;
+      }
+      else
+      {
+        if (TRUE == CheckEvent(ptNewEventList->ptThis))
+        {
+          ptWalker->ptNext = ptNewEventList;
+          ptWalker = ptWalker->ptNext;
+        }
+        else
+        {
+          free(ptNewEventList->ptThis);
+          free(ptNewEventList);
+          return(FALSE);
+        }
+      }
+    }
   }
-
-  if (!Parse_TEvent(pcToken, ptList->ptThis))
-    return FALSE;
-
-  /* One event is parsed successfully now. Parse the rest.                  */
-  Parse(pcToken);
-
-  /* while an event-name is parsed                                          */
-  while (iLastParsedTokenType == IDENTIFIER_TOKEN)
+  else
   {
-    /* new event name found. Allocate space for it.                         */
-    ptList->ptNext = newEventList();
-    ptList = ptList->ptNext;
-    ptList->ptThis = newEvent();
-
-    /* and parse the new found event.                                       */
-    if (!Parse_TEvent(pcToken, ptList->ptThis))
-      return FALSE;
-
-    Parse(pcToken);
+    free(ptNewEventList->ptThis);
+    free(ptNewEventList);
   }
 
   UngetToken();
 
   return TRUE;
+
 }
 
 /****************************************************************************/
@@ -3302,44 +3464,28 @@ int Parse_Specification_File(
     {
       if (strcmp(pcToken, "type") == 0)
       {
-        _ptTypeList = newTypeList();
-        if (!Parse_TTypeList(pcToken, _ptTypeList))
+        if (!Parse_TTypeList(pcToken, &_ptTypeList))
+        {
+          iErrorCounter++;
           iReady = 1;
+        }
       }
       else if (strcmp(pcToken, "functions") == 0)
       {
-        _ptFunctionList = newFunctionList();
-        if (!Parse_TFunctionList(pcToken, _ptFunctionList))
+        if (!Parse_TFunctionList(pcToken, &_ptFunctionList))
+        {
+          iErrorCounter++;
           iReady = 1;
+        }
       }
       else if (strcmp(pcToken, "events") == 0)
       {
-        _ptEventList = newEventList();
-        if (!Parse_TEventList(pcToken, _ptEventList))
-          iReady = 1;
-      }
-/*
-      else if (strcmp(pcToken,"io")==0)
-      {
-        ptNewIOList = newIOList();
-        if (Parse_TIOList(pcToken,ptNewIOList)) 
+        if (!Parse_TEventList(pcToken, &_ptEventList))
         {
-          CloseObsoleteIO(_ptIOList, ptNewIOList);
-          delIOList(&_ptIOList);
-          _ptIOList = ptNewIOList;
-          / * io section read successfully. Now configure the driver module  * /
-          if (!ConfigureDriver(_ptIOList)) iReady = 1;
-        }
-        else
-        {
+          iErrorCounter++;
           iReady = 1;
         }
       }
-      else if (strcmp(pcToken,"settings")==0)
-      {
-        if (!ParseSettings(pcToken)) iReady = 1;
-      }
-*/
       else
       {
         /* An unknown section is found. Ignore this section, probably the   */

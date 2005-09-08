@@ -67,7 +67,7 @@ int16     BP_LoadBatch(
 
 /* Run the batch file                                       */
 int16     BP_RunBatch(
-  void);
+  int16 iReplay);
 
 /* Stop the batch file                                      */
 void      BP_StopBatch(

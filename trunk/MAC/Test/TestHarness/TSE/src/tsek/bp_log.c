@@ -249,17 +249,25 @@ void bp_Message(
 /*-----------------------------------------------------------------------------*/
 /* Function     :   bp_StartFileLogging                                        */
 /* Description  :   Creates a batch log file                                   */
-/* Parameter    :   pcFileName, the batch filename                             */
+/* Parameter    :   FileName, the batch filename                               */
+/*                  Replay - indicates if a batch file is to be replayed(1) or */ 
+/*                  not(0).                                                    */
 /* Return value :   Error codes specified in                                   */
 /*-----------------------------------------------------------------------------*/
 int16 bp_StartFileLogging(
-  int8 * pcFileName)
+  int8 * pcFileName,
+  int16 iReplay)
 {
   int8     *pcLogFileName = NULL;
   int16     iStatus = BP_OK;
-
+  int       iReturnValue;
+  long      lOrgSeedValue;
+  
   pcLogFileName = bp_CreateLogFileName((int8 *) pcFileName);
-
+  if (iReplay == 1)
+  {
+    GetSeedValue(pcLogFileName);
+  }
   if ((_ptLogFile = fopen(pcLogFileName, "w+t")) == NULL)
   {
     /* Couldn't create the file */
@@ -456,6 +464,7 @@ void LogFileHeader(
     fprintf(_ptLogFile, "%s\n\n", BSEK_Version(&iVersion));
     fprintf(_ptLogFile, "Batch started at: %s\n\n", acTime);
     fprintf(_ptLogFile, "Started at  Status                Script\n");
+    fprintf(_ptLogFile, "Seed: %ld\n",lSeedValue);
     fflush(_ptLogFile);
   }
 

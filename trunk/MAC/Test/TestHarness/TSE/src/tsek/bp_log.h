@@ -64,7 +64,8 @@ void      bp_UpdateLogging(
 
 /* Start the batch logging to a file                                        */
 int16     bp_StartFileLogging(
-  int8 * pcFileName);
+  int8 * pcFileName,
+  int16  iReplay);
 
 /* Stop the batch logging                                                   */
 void      bp_StopFileLogging(

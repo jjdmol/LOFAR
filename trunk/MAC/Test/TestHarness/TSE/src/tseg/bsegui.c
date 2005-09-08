@@ -42,16 +42,20 @@
 /*------------------------------------------------------------------------- */
 /* LOCAL FUNCTIONS                                                          */
 /* ------------------------------------------------------------------------ */
-static int  LoadProtocolFile( char *pcFilename );
-static int  LoadIOFile      ( char *pcFilename );
-static int  LoadTestScript  ( char *pcFilename );
-static int  LoadBatchFile   ( char *pcFilename );
-static int  OpenLogFile     ( char *pcFilename );
-static void RunBatch        ( void );
-static void RunScript       ( void );
-static void StartBatch      ( char *pcIOFilename );
-static void StartScript     ( char *pcProtocolFilename, char *pcLogFilename);
-static int  SetupSignals    ( void );
+static char  *GetIniDirectoryName ( char  *pcFilename );
+static int    LoadProtocolFile    ( char  *pcFilename );
+static int    LoadIOFile          ( char  *pcFilename );
+static int    LoadTestScript      ( char  *pcFilename );
+static int    LoadBatchFile       ( char  *pcFilename );
+static int    OpenLogFile         ( char  *pcFilename, 
+                                    int16  iReplay );
+static void   RunBatch            ( void );
+static void   RunScript           ( int16  iReplay );
+static void   StartBatch          ( char  *pcIOFilename );
+static void   StartScript         ( char  *pcProtocolFilename, 
+                                    char  *pcLogFilename, 
+                                    int16  iReplay);
+static int    SetupSignals        ( void );
 
 /* ------------------------------------------------------------------------ */
 /* LOCAL VARIABLES                                                          */
@@ -314,7 +318,7 @@ void BSEG_Loop( void )
             break;
           }
         }
-        RunScript();
+        RunScript(ParsedIniSettings.iReplay);
       }
       else
       {
@@ -421,7 +425,7 @@ void BSEG_ScriptStopped(char* pcReason)
 /* BSEG_SetBatchStateImages not used                                        */
 /* ------------------------------------------------------------------------ */
 /* Input parameters :                                                       */
-/*    Filename, status - combinatie to identify the node of which the image */
+/*    Filename, status - combination to identify the node of which the image*/
 /*     is updated.                                                          */
 /* --                                                                       */
 /* Output parameters: None                                                  */
@@ -488,6 +492,7 @@ int BSEG_StopOnError(char *pcStatus)
 /* ------------------------------------------------------------------------ */
 int BSEG_UpdateProgressBar(int bReady)
 {
+  printf("*");
   return -1;
 }
 
@@ -515,6 +520,7 @@ int BSEG_UpdateProgressBar(int bReady)
 int main( int argc, char* argv[])
 {
   char *pcResultString;
+  char *pcIniDirectoryName;
   int   iResult;
   
   pcResultString = getcwd(NULL,_MAX_PATH);
@@ -528,7 +534,9 @@ int main( int argc, char* argv[])
   else
   {
     /* Read the ini file */
-    if (TRUE == ParseIniFile( "bse.ini" ))
+    pcIniDirectoryName = GetIniDirectoryName(argv[0]);
+    strcat(pcIniDirectoryName,"tse.ini");
+    if (TRUE == ParseIniFile( pcIniDirectoryName ))
     {
       /* Opening the log line file */
       if ((ParsedIniSettings.iLogToFile == 1) &&
@@ -560,13 +568,13 @@ int main( int argc, char* argv[])
         /* first store the global filename(s) */
         pcIOFilename     = argv[2];
         pcScriptFilename = argv[3];
-        StartScript(argv[1], argv[4]);
+        StartScript(argv[1], argv[4],(int16)ParsedIniSettings.iReplay);
       }
       else if (argc == NR_ARGUMENTS_TESTBATCH)
       {
         /* first store the global filename(s) */
         pcBatchFilename = argv[2];
-        StartBatch(argv[1] );
+        StartBatch(argv[1]);
       }
       /* Wait for it to finish */
       while (TRUE == iRunning)
@@ -579,7 +587,7 @@ int main( int argc, char* argv[])
     }
     else
     {
-      printf("Failed to open bse.ini\n");
+      printf("Failed to open %s\n",pcIniDirectoryName);
     }
   }
   if (NULL != fpLogLine)
@@ -604,6 +612,53 @@ int main( int argc, char* argv[])
 /* ------------------------------------------------------------------------ */
 /* INTERNAL FUNCTIONS                                                       */
 /* ------------------------------------------------------------------------ */
+
+static char *GetIniDirectoryName(char *pcFilename)
+{
+  int  iLengthFilename;
+  int  iLastBackSlashIndex;
+  int  iNOBackSlashes;
+  int  iDone;
+  char *pcResultString;
+  
+  iLengthFilename     = (int) strlen(pcFilename);
+  iLastBackSlashIndex = 0;
+  iNOBackSlashes      = 2;
+  iDone               = NOT_OK;
+  pcResultString      = (char*)calloc(80, sizeof(char));
+  
+  while ((iLengthFilename>=0) && (iDone == NOT_OK))
+  {
+    if( pcFilename[iLengthFilename] == '/')
+    {
+      iLastBackSlashIndex = iLengthFilename;
+      iNOBackSlashes--;
+      if ( 0 == iNOBackSlashes)
+      {
+        iDone = OK;
+      }
+    }
+    iLengthFilename--;
+  } 
+  if (OK == iDone)
+  {
+    strncpy( pcResultString, pcFilename, iLastBackSlashIndex);
+    strcat( pcResultString, "/etc/" );
+  }
+  else
+  {
+    if (iNOBackSlashes == 2)
+    {
+      /* Hmm not enough backslashes found */
+      strcpy( pcResultString, "../etc/");
+    }
+    else
+    {
+      strcpy( pcResultString, "etc/");
+    }
+  }
+  return(pcResultString);
+}
 
 /* LoadProtocolFile                                                         */
 /* ------------------------------------------------------------------------ */
@@ -639,7 +694,7 @@ static int LoadProtocolFile( char *pcFilename )
       break;
     case BSEK_SCRIPT_ERROR:
       BSEK_ErrorPosition(&pcReason);
-      printf("Error in protocol file %s.\nReason %s\n",pcFilename, pcReason);
+      printf("Error in protocol file %s\nReason %s\n",pcFilename, pcReason);
 
       free(pcReason);
       pcReason = NULL;
@@ -902,6 +957,7 @@ static int LoadBatchFile ( char *pcFilename )
 /* ------------------------------------------------------------------------ */
 /* Input parameters :                                                       */
 /*    Filename - name of the log-file                                       */
+/*    Replay   - Indicates if the script is replayed                        */
 /* --                                                                       */
 /* Output parameters: None                                                  */
 /* --                                                                       */
@@ -911,7 +967,7 @@ static int LoadBatchFile ( char *pcFilename )
 /* Checks the file for the correct extension. If it has the correct         */
 /*  extension let the Kernel open the log-file.                             */
 /* ------------------------------------------------------------------------ */
-static int OpenLogFile( char *pcFilename )
+static int OpenLogFile( char *pcFilename, int16 iReplay )
 {
   int   iResult;
   int   iOperationResult;
@@ -923,7 +979,7 @@ static int OpenLogFile( char *pcFilename )
   pcExtensionIndex = strstr( (const char *)pcFilename, pcLogFileExtension);
   if (NULL != pcExtensionIndex)
   {
-    iOperationResult = BSEK_OpenLogFile(pcFilename);
+    iOperationResult = BSEK_OpenLogFile(pcFilename, iReplay);
 
     switch (iOperationResult)
     {
@@ -954,6 +1010,7 @@ static int OpenLogFile( char *pcFilename )
 /* Input parameters :  None                                                 */
 /*     ProtocolFilename - The protocol file to be loaded                    */
 /*     LogFilename      - The log file to be loaded                         */
+/*     Replay           - Replay the script                                 */
 /* --                                                                       */
 /* Output parameters: None                                                  */
 /* --                                                                       */
@@ -963,7 +1020,9 @@ static int OpenLogFile( char *pcFilename )
 /* Loads the necessary files and when all succesfully loaded runs the       */
 /* script                                                                   */
 /* ------------------------------------------------------------------------ */
-static void StartScript(char *pcProtocolFilename, char *pcLogFilename)
+static void StartScript(char *pcProtocolFilename, 
+                        char *pcLogFilename,
+                        int16 iReplay)
 {
   int iResult;
   
@@ -973,22 +1032,21 @@ static void StartScript(char *pcProtocolFilename, char *pcLogFilename)
     /* Load the IO file */
     if (OK == LoadIOFile(pcIOFilename))
     {
-      if (OK == OpenLogFile(pcLogFilename))
-      {
         /* Load the Test script file */
-        iResult = LoadTestScript(pcScriptFilename);
-        if (OK == iResult)
+      if (OK == LoadTestScript(pcScriptFilename))
+      { 
+        if (OK == OpenLogFile(pcLogFilename, iReplay))
         {
-          RunScript();
+          RunScript(iReplay);
         }
         else
         {
-          printf("Failed to open script file %s\n",pcScriptFilename);
+          printf("Failed to log file %s\n",pcLogFilename);
         }
       }
       else
       {
-        printf("Failed to log file %s\n",pcLogFilename);
+        printf("Failed to open script file %s\n",pcScriptFilename);
       }
     }
     else
@@ -1003,7 +1061,8 @@ static void StartScript(char *pcProtocolFilename, char *pcLogFilename)
 }
 /* RunScript                                                              */
 /* ------------------------------------------------------------------------ */
-/* Input parameters :  None                                                 */
+/* Input parameters :                                                   */
+/*     Replay           - Replay the script                                 */
 /* --                                                                       */
 /* Output parameters: None                                                  */
 /* --                                                                       */
@@ -1012,12 +1071,12 @@ static void StartScript(char *pcProtocolFilename, char *pcLogFilename)
 /* Remarks:                                                                 */
 /* Runs the test script loaded during the LoadTestScript.                   */
 /* ------------------------------------------------------------------------ */
-static void RunScript( void )
+static void RunScript( int16 iReplay )
 {
   int     iOperationResult;
   char*   pcReason;
 
-  iOperationResult = BSEK_RunScript();
+  iOperationResult = BSEK_RunScript(iReplay);
 
   switch (iOperationResult)
   {
@@ -1103,7 +1162,7 @@ static void RunBatch(void)
   int16    iResult;
   char    *pcReason;
   
-  iResult = BSEK_RunBatch();
+  iResult = BSEK_RunBatch(ParsedIniSettings.iReplay);
 
   switch (iResult)
   {

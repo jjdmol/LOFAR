@@ -12,12 +12,13 @@
 /* ------------------------------------------------------------------------ */
 #define MAX_LINE_BUFFER       (132)
 #define TOKEN_COMMENT_CPP     ("//")
-#define NOF_OPTIONS           ((uint16) 5)
+#define NOF_OPTIONS           ((uint16) 6)
 #define LOOP                  ((uint16) 0)
 #define STOP_ON_ERROR         ((uint16) 1)
 #define LOG_VIEW              ((uint16) 2)
 #define LOG_LINE              ((uint16) 3)
 #define LOG_TO_FILE           ((uint16) 4)
+#define REPLAY                ((uint16) 5)
 /*------------------------------------------------------------------------- */
 /* LOCAL FUNCTIONS                                                          */
 /* ------------------------------------------------------------------------ */
@@ -34,7 +35,8 @@ static const char *pcOptions[] = { "loop",
                                     "stoponerror",
                                     "logview",
                                     "logline",
-                                    "logtofile"
+                                    "logtofile",
+                                    "replay"
                                   };
 
 
@@ -70,6 +72,7 @@ int16 ParseIniFile( char *pcFilename )
   ParsedIniSettings.iLogLine     = 0;
   ParsedIniSettings.iLogView     = 0;
   ParsedIniSettings.iLogToFile   = 0;
+  ParsedIniSettings.iReplay      = 0;
 
   iResult      = FALSE;
   iEndOfFile   = FALSE;
@@ -164,6 +167,10 @@ static void     ProcessLine( char* pcLine, int16 iLineCounter )
             break;
           case LOG_TO_FILE:
             sscanf(pcLine,"logtofile=%d",&ParsedIniSettings.iLogToFile);
+            ucFound = 1;
+            break;
+          case REPLAY:
+            sscanf(pcLine,"replay=%d",&ParsedIniSettings.iReplay);
             ucFound = 1;
             break;
           default:
