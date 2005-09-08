@@ -96,8 +96,10 @@ void WH_Prediff::process()
     ParameterSet args;
     vector<int> ant;
     vector<string> pNames;
+    vector<string> exPNames;
     vector<int> peelSrcs;
-    wo->getVarData(args, ant, pNames, peelSrcs);
+    vector<int> corrs;
+    wo->getVarData(args, ant, pNames, exPNames, peelSrcs, corrs);
     int contrID = wo->getStrategyControllerID();
     bool isNew = false;
     Prediffer* pred = getPrediffer(contrID, args, ant, isNew);
@@ -105,8 +107,7 @@ void WH_Prediff::process()
     // Execute workorder
     if (wo->getNewBaselines())
     {
-      vector<int> corr;
-      pred->select(ant, ant, wo->getUseAutoCorrelations(), corr);
+      pred->select(ant, ant, wo->getUseAutoCorrelations(), corrs);
       
       vector<int> emptyS(0);
       if (peelSrcs.size() > 0)
@@ -114,8 +115,7 @@ void WH_Prediff::process()
 	pred->setPeelGroups(peelSrcs, emptyS);
       }
       pred->clearSolvableParms();
-      vector<string> emptyP(0);
-      pred->setSolvableParms(pNames, emptyP, true);
+      pred->setSolvableParms(pNames, exPNames, true);
 
       int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
 				 wo->getStartTime(), wo->getTimeLength());
@@ -132,8 +132,7 @@ void WH_Prediff::process()
 	pred->setPeelGroups(peelSrcs, emptyS);
       }
       pred->clearSolvableParms();
-      vector<string> emptyP(0);
-      pred->setSolvableParms(pNames, emptyP, true);
+      pred->setSolvableParms(pNames, exPNames, true);
       
       int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
 				 wo->getStartTime(), wo->getTimeLength());
@@ -149,8 +148,7 @@ void WH_Prediff::process()
 	pred->setPeelGroups(peelSrcs, emptyS);
       }
       pred->clearSolvableParms();
-      vector<string> emptyP(0);
-      pred->setSolvableParms(pNames, emptyP, true);
+      pred->setSolvableParms(pNames, exPNames, true);
     }
 
     // Parameter update

@@ -133,11 +133,15 @@ public:
   void setVarData(const ParameterSet& predArgs,
 		  vector<int>& antNrs,
 		  vector<string>& pNames,
-		  vector<int>& peelSrcs);
+		  vector<string>& exPNames,
+		  vector<int>& peelSrcs,
+		  vector<int>& corrs);
   bool getVarData(ParameterSet& predArgs,
 		  vector<int>& antNrs,
 		  vector<string>& pNames,
-		  vector<int>& peelSrcs);
+		  vector<string>& exPNames,
+		  vector<int>& peelSrcs,
+		  vector<int>& corrs);
 
   void dump();
 

@@ -220,7 +220,9 @@ void DH_WOPrediff::setModelType(const string& type)
 void DH_WOPrediff::setVarData(const ParameterSet& predArgs,
 			      vector<int>& antNrs,
 			      vector<string>& pNames,
-			      vector<int>& peelSrcs)
+			      vector<string>& exPNames,
+			      vector<int>& peelSrcs,
+			      vector<int>& corrs)
 {
   BlobOStream& bos = createExtraBlob();
   // Put prediffer arguments into extra blob
@@ -250,6 +252,17 @@ void DH_WOPrediff::setVarData(const ParameterSet& predArgs,
   }
   bos.putEnd();
 
+  // Put exclude paramater names into extra blob
+  bos.putStart("exNames", 1);
+  vector<string>::const_iterator xIter;
+  int nExParam = exPNames.size();
+  bos << nExParam;
+  for (xIter = exPNames.begin(); xIter != exPNames.end(); xIter++)
+  {
+    bos << *xIter;
+  }
+  bos.putEnd();
+
   // Put start solutions into extra blob
   bos.putStart("peelSrcs", 1);
   unsigned int nPeelSrcs = peelSrcs.size();
@@ -258,15 +271,25 @@ void DH_WOPrediff::setVarData(const ParameterSet& predArgs,
   {
     bos << *iter;
   }
-
   bos.putEnd();
 
+  // Put correlations into extra blob
+  bos.putStart("correlations", 1);
+  unsigned int nCorrs = corrs.size();
+  bos << nCorrs;
+  for (iter = corrs.begin(); iter != corrs.end(); iter++)
+  {
+    bos << *iter;
+  }
+  bos.putEnd();
 }
 
 bool DH_WOPrediff::getVarData(ParameterSet& predArgs,
 			      vector<int>& antNrs,
 			      vector<string>& pNames,
-			      vector<int>& peelSrcs)
+			      vector<string>& exPNames,
+			      vector<int>& peelSrcs,
+			      vector<int>& corrs)
 {
   bool found;
   int version;
@@ -306,7 +329,19 @@ bool DH_WOPrediff::getVarData(ParameterSet& predArgs,
     }
     bis.getEnd();
 
-    // Get start solutions
+    // Get exclude parameter names.
+    bis.getStart("exNames");
+    exPNames.clear();
+    int nrExP;
+    bis >> nrExP;
+    exPNames.resize(nrExP);
+    for (int k=0; k < nrExP; k++)
+    {
+      bis >> exPNames[k];
+    }
+    bis.getEnd();
+
+    // Get source numbers
     bis.getStart("peelSrcs");
     peelSrcs.clear();
     int number;
@@ -317,6 +352,18 @@ bool DH_WOPrediff::getVarData(ParameterSet& predArgs,
       bis >> peelSrcs[j];
     }
     bis.getEnd();
+
+    bis.getStart("correlations");
+    corrs.clear();
+    int nrCorr;
+    bis >> nrCorr;
+    corrs.resize(nrCorr);
+    for (int l=0; l < nrCorr; l++)
+    {
+      bis >> corrs[l];
+    }
+    bis.getEnd();
+
     return true;
   }  
 
@@ -348,8 +395,10 @@ void DH_WOPrediff::dump()
   ParameterSet sArguments;
   vector<int> antNrs;
   vector<string> pNames;
+  vector<string> exPNames;
   vector<int> srcs;
-  if (getVarData(sArguments, antNrs, pNames, srcs))
+  vector<int> corrs;
+  if (getVarData(sArguments, antNrs, pNames, exPNames, srcs, corrs))
   { 
     cout << "MS name = " << sArguments.getString ("MSName")
 	 << endl;
@@ -379,11 +428,26 @@ void DH_WOPrediff::dump()
       cout << pNames[i] << endl ;
     }
 
+    cout << "Number of exclude parameters = "  << exPNames.size() << endl;
+    
+    cout << "Exclude parameter names : " << endl;
+    for (unsigned int i = 0; i < exPNames.size(); i++)
+    {
+      cout << exPNames[i] << endl ;
+    }
+
     cout << "Source numbers : " << endl;
     for (unsigned int i = 0; i < srcs.size(); i++)
     {
       cout << srcs[i] << endl ;
     }
+
+    cout << "Correlations : " << endl;
+    for (unsigned int i = 0; i < corrs.size(); i++)
+    {
+      cout << corrs[i] << endl ;
+    }
+
   }
 
 }
