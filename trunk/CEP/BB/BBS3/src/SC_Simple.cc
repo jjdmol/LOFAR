@@ -166,11 +166,21 @@ bool SC_Simple::execute()
     ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
     vector<int> ant = itsArgs.getInt32Vector("antennas");
     vector<string> pNames = itsArgs.getStringVector("solvableParams");
+    vector<string> exPNames;
+    if (itsArgs.isDefined("excludeParams"))
+    {
+      exPNames = itsArgs.getStringVector("excludeParams");
+    }
     vector<int> srcs = itsArgs.getInt32Vector("sources");
+    vector<int> corrs;
+    if (itsArgs.isDefined("correlations"))
+    {
+      corrs = itsArgs.getInt32Vector("correlations");
+    }
     // the prediffer needs to know the modelType too
     msParams["modelType"] = itsArgs.getString("modelType");
     msParams["calcUVW"] = itsArgs.getString("calcUVW");
-    WOPD->setVarData (msParams, ant, pNames, srcs);
+    WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);
   }
 
   WOPD->setNewWorkOrderID();
