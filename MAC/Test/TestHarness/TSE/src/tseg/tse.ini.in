@@ -6,3 +6,4 @@ StopOnError	= 1 // Stop when an error occured
 logview			= 0
 logline			= 0
 logtofile		= 0
+Replay			= 0

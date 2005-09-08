@@ -61,7 +61,7 @@ int8      cSemaphore = 1;       /* Semaphore for synchronization */
 int16     RunScript(
   void);
 void      FirstScript(
-  void);
+  int16 iReplay);
 int16     ConvertReturnValue(
   int16 iValue);
 void      ProcessFlowControl(
@@ -103,7 +103,7 @@ void BP_Init(
 int16 BP_LoadBatch(
   int8 * pcFileName)
 {
-  int16     iStatus = BP_OK;
+  int16         iStatus         = BP_OK;
   TScriptFiles *ptTmpScriptFile = NULL;
 
   /* If there was a batch file name, delete it */
@@ -195,17 +195,21 @@ int16 BP_LoadBatch(
 /* Return value : Return values specified in                                   */
 /*-----------------------------------------------------------------------------*/
 int16 BP_RunBatch(
-  void)
+  int16 iReplay)
 {
-  int16     iStatus = BP_OK;
+  int16          iStatus = BP_OK;
+  struct timeval tNow;
 
   /* Set to default again */
   _tAdmin.bRunning = FALSE;
   _tAdmin.bStopBatch = FALSE;
 
   /* Use the first script */
-  FirstScript();
-
+  gettimeofday( &tNow, NULL);
+  lSeedValue = tNow.tv_sec + tNow.tv_usec;
+  /* This function opens/creates the batch log file */
+  FirstScript(iReplay);
+  srandom(lSeedValue);
   /* There are scripts in the batch file, so continue */
   ProcessFlowControl("");
   iStatus = RunScript();
@@ -392,7 +396,9 @@ int16 RunScript(
         /* Create the script log file */
         pcLogFile =
           (int8 *) bp_CreateLogFileName((int8 *) _tAdmin.ptNxtScript->pcName);
-        iStatus = BSEK_OpenLogFile((int8 *) pcLogFile);
+        /* A test script is not replayed a batch is, so all scripts in the batch uses */
+        /* the same seed value */   
+        iStatus = BSEK_OpenLogFile((int8 *) pcLogFile, 0);
         if (pcLogFile != NULL)
           free((int8 *) pcLogFile);
 
@@ -445,7 +451,7 @@ int16 RunScript(
 /* Return value : Return values specified in                                   */
 /*-----------------------------------------------------------------------------*/
 void FirstScript(
-  void)
+  int16 iReplay)
 {
 
   /* Start with the first script file */
@@ -453,7 +459,7 @@ void FirstScript(
   _tAdmin.bRunning = TRUE;
 
   /* Start the batch logging */
-  bp_StartFileLogging((int8 *) _tAdmin.pcBatchFile);
+  bp_StartFileLogging((int8 *) _tAdmin.pcBatchFile, iReplay);
 
   /* Free the possible previous allocated memory */
   bp_FreeMemScriptStatus();

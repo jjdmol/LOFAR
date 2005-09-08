@@ -244,7 +244,7 @@ struct TType BooleanType = { "boolean", /* pcName       */
 /****************************************************************************/
 
 
-struct TTypeList *_ptTypeList = &PredefTypes;
+struct TTypeList *_ptTypeList = NULL;
 struct TFunctionList *_ptFunctionList = NULL;
 struct TEventList *_ptEventList = NULL;
 struct TStateMachineList *_ptStateMachineList = NULL;
@@ -1852,6 +1852,36 @@ struct TEvent *FindMatchingEvent(
   return NULL;
 }
 
+/* Checks the parsed event if it is an valid type. */
+/* For now it only checks if the name already exists */
+int16 CheckEvent( struct TEvent *ptEvent )
+{
+  int16              iResult;
+  struct TEventList *ptWalker;
+
+  iResult = TRUE;
+  
+  if (NULL != ptEvent)
+  {
+    ptWalker = _ptEventList;
+    
+    while ((NULL != ptWalker) && (FALSE == iResult))
+    {
+      /* For now the only test is to see if the name of the type is already defined */
+      if (strcmp( ptWalker->ptThis->pcName, ptEvent->pcName) == 0)
+      {
+        AddError2("Type %s already exists", ptEvent->pcName);
+        iResult = FALSE;
+      }
+      else
+      {
+        ptWalker = ptWalker->ptNext;
+      }
+    }
+  }
+  return(iResult);
+}
+
 struct TEvent *FindEvent(
   char *pcEventName)
 /****************************************************************************/
@@ -1963,6 +1993,35 @@ struct TEvent *FindEventOpcode(
   return NULL;
 }
 
+/* Checks the parsed function if it is an valid type. */
+/* For now it only checks if the name already exists */
+int16 CheckFunction( struct TFunction *ptFunction )
+{
+  int16                 iResult;
+  struct TFunctionList *ptWalker;
+
+  iResult = TRUE;
+  
+  if (NULL != ptFunction)
+  {
+    ptWalker = _ptFunctionList;
+    
+    while ((NULL != ptWalker) && (FALSE == iResult))
+    {
+      /* For now the only test is to see if the name of the type is already defined */
+      if (strcmp( ptWalker->ptThis->pcName, ptFunction->pcName) == 0)
+      {
+        AddError2("Function %s already exists", ptFunction->pcName);
+        iResult = FALSE;
+      }
+      else
+      {
+        ptWalker = ptWalker->ptNext;
+      }
+    }
+  }
+  return(iResult);
+}
 
 struct TFunction *FindFunction(
   char *pcFunctionName)
@@ -2119,9 +2178,6 @@ int FindInteraction(
   return 0;
 }
 
-
-
-
 struct TStateMachine *FindStateMachine(
   char *pcName)
 /****************************************************************************/
@@ -2147,6 +2203,35 @@ struct TStateMachine *FindStateMachine(
     ptWalker = ptWalker->ptNext;
   }
   return NULL;
+}
+
+/* Checks the parsed type if it is an valid type */
+int16 CheckType( struct TType *ptType )
+{
+  int16             iResult;
+  struct TTypeList *ptWalker;
+
+  iResult = TRUE;
+  
+  if (NULL != ptType)
+  {
+    ptWalker = _ptTypeList;
+    
+    while ((NULL != ptWalker) && (FALSE == iResult))
+    {
+      /* For now the only test is to see if the name of the type is already defined */
+      if (strcmp( ptWalker->ptThis->pcName, ptType->pcName) == 0)
+      {
+        AddError2("Type %s already exists", ptType->pcName);
+        iResult = FALSE;
+      }
+      else
+      {
+        ptWalker = ptWalker->ptNext;
+      }
+    }
+  }
+  return(iResult);
 }
 
 struct TType *FindType(
@@ -3219,6 +3304,10 @@ void WriteVar(
       {
         strncpy( b, ptVar->ptValue->pcValue, 240 );
         strcat(pcBuffer, b);
+        if (strlen( ptVar->ptValue->pcValue) > 240)
+        {
+          strcat(pcBuffer,"...");
+        }
       }
 
 

@@ -33,122 +33,122 @@
 #define OCF(x)          ((x)&0x3FF)
 
 
-struct TValue *newValue(
+extern struct TValue *newValue(
   void);
-struct TValueDef *newValueDef(
+extern struct TValueDef *newValueDef(
   void);
-struct TValueDefList *newValueDefList(
+extern struct TValueDefList *newValueDefList(
   void);
-struct TType *newType(
+extern struct TType *newType(
   void);
-struct TTypeList *newTypeList(
+extern struct TTypeList *newTypeList(
   void);
-struct TParameter *newParameter(
+extern struct TParameter *newParameter(
   void);
-struct TParameterList *newParameterList(
+extern struct TParameterList *newParameterList(
   void);
-struct TRepetition *newRepetition(
+extern struct TRepetition *newRepetition(
   void);
-struct TFunction *newFunction(
+extern struct TFunction *newFunction(
   void);
-struct TFunctionList *newFunctionList(
+extern struct TFunctionList *newFunctionList(
   void);
-struct TEvent *newEvent(
+extern struct TEvent *newEvent(
   void);
-struct TEventList *newEventList(
+extern struct TEventList *newEventList(
   void);
-struct TVariable *newVariable(
+extern struct TVariable *newVariable(
   struct TType *ptThisType);
-struct TVariableList *newVariableList(
+extern struct TVariableList *newVariableList(
   void);
-struct TAction *newAction(
+extern struct TAction *newAction(
   void);
-struct TActionList *newActionList(
+extern struct TActionList *newActionList(
   void);
-struct TTransition *newTransition(
+extern struct TTransition *newTransition(
   void);
-struct TTransitionList *newTransitionList(
+extern struct TTransitionList *newTransitionList(
   void);
-struct TState *newState(
+extern struct TState *newState(
   void);
-struct TStateList *newStateList(
+extern struct TStateList *newStateList(
   void);
-struct TStateMachine *newStateMachine(
+extern struct TStateMachine *newStateMachine(
   void);
-struct TStateMachineList *newStateMachineList(
+extern struct TStateMachineList *newStateMachineList(
   void);
-struct TData *newData(
+extern struct TData *newData(
   void);
-struct TDataList *newDataList(
+extern struct TDataList *newDataList(
   void);
-struct TTimerRecord *newTimerRecord(
+extern struct TTimerRecord *newTimerRecord(
   void);
-struct TTimerRecordList *newTimerRecordList(
+extern struct TTimerRecordList *newTimerRecordList(
   void);
-struct TBoard *newBoard(
+extern struct TBoard *newBoard(
   void);
-struct TBoardList *newBoardList(
+extern struct TBoardList *newBoardList(
   void);
-struct TIO *newIO(
+extern struct TIO *newIO(
   void);
-struct TIOList *newIOList(
+extern struct TIOList *newIOList(
   void);
 
 
 
-void      delValue(
+extern void      delValue(
   struct TValue **ppt);
-void      delValueDef(
+extern void      delValueDef(
   struct TValueDef **ppt);
-void      delValueDefList(
+extern void      delValueDefList(
   struct TValueDefList **ppt);
-void      delType(
+extern void      delType(
   struct TType **ppt);
-void      delTypeList(
+extern void      delTypeList(
   struct TTypeList **ppt);
-void      delParameter(
+extern void      delParameter(
   struct TParameter **ppt);
-void      delParameterList(
+extern void      delParameterList(
   struct TParameterList **ppt);
-void      delFunction(
+extern void      delFunction(
   struct TFunction **ppt);
-void      delFunctionList(
+extern void      delFunctionList(
   struct TFunctionList **ppt);
-void      delEvent(
+extern void      delEvent(
   struct TEvent **ppt);
-void      delEventList(
+extern void      delEventList(
   struct TEventList **ppt);
-void      delVariable(
+extern void      delVariable(
   struct TVariable **ppt);
-void      delVariableList(
+extern void      delVariableList(
   struct TVariableList **ppt);
-void      delAction(
+extern void      delAction(
   struct TAction **ppt);
-void      delActionList(
+extern void      delActionList(
   struct TActionList **ppt);
-void      delState(
+extern void      delState(
   struct TState **ppt);
-void      delStateList(
+extern void      delStateList(
   struct TStateList **ppt);
-void      delStateMachine(
+extern void      delStateMachine(
   struct TStateMachine **ppt);
-void      delStateMachineList(
+extern void      delStateMachineList(
   struct TStateMachineList **ppt);
-void      delData(
+extern void      delData(
   struct TData **ppt);
-void      delDataList(
+extern void      delDataList(
   struct TDataList **ppt);
-void      delTimerRecord(
+extern void      delTimerRecord(
   struct TTimerRecord **ppt);
-void      delTimerRecordList(
+extern void      delTimerRecordList(
   struct TTimerRecordList **ppt);
-void      delBoard(
+extern void      delBoard(
   struct TBoard **ppt);
-void      delBoardList(
+extern void      delBoardList(
   struct TBoardList **ppt);
-void      delIO(
+extern void      delIO(
   struct TIO **ppt);
-void      delIOList(
+extern void      delIOList(
   struct TIOList **ppt);
 
 
@@ -181,73 +181,79 @@ extern int iWarningCounter;
 extern int iErrorCounter;
 extern int *piChannels;         /* REMOVE IF NOT WORKING */
 
-void      CloseObsoleteIO(
+extern void      CloseObsoleteIO(
   struct TIOList *ptOldIOList,
   struct TIOList *ptNewIOList);
-void      LinkAllBranchesToOne(
+extern void      LinkAllBranchesToOne(
   struct TParameterList *ptRoot,
   struct TParameterList *ptOne);
-void      ConnectVarToVarList(
+extern void      ConnectVarToVarList(
   struct TVariable **pptVar,
   struct TVariableList *ptReferenceList,
   struct TDataList *ptDataList,
   struct TParameterList *ptDefList);
-int       Connect_Invocations(
+extern int       Connect_Invocations(
   struct TVariableList *ptParams,
   struct TVariableList *ptInvokes);
 
-struct TType *FindType(
+extern int16 CheckType( 
+  struct TType *ptType );
+extern struct TType *FindType(
   char *pcTypeName);
-struct TFunction *FindFunction(
+extern int16 CheckFunction( 
+  struct TFunction *ptFunction );
+extern struct TFunction *FindFunction(
   char *pcFunctionName);
-struct TFunction *FindFunctionOpcode(
+extern struct TFunction *FindFunctionOpcode(
   int iOpcode);
-struct TEvent *FindEvent(
+extern int16 CheckEvent( 
+  struct TEvent *ptEvent );
+extern struct TEvent *FindEvent(
   char *pcEventName);
-struct TEvent *FindEventOpcode(
+extern struct TEvent *FindEventOpcode(
   char cOpcode);
-int       FindInteraction(
+extern int       FindInteraction(
   char *pcToken);
-struct TVariable *FindVar(
+extern struct TVariable *FindVar(
   char *pcVarName,
   struct TVariableList *ptReference);
-struct TData *FindData(
+extern struct TData *FindData(
   char *pcVarName,
   struct TDataList *ptReference);
-struct TType *FindType(
+extern struct TType *FindType(
   char *pcTypeName);
-struct TStateMachine *FindStateMachine(
+extern struct TStateMachine *FindStateMachine(
   char *pcName);
-int       FindBoardNumber(
+extern int       FindBoardNumber(
   char *pcName);
-struct TParameter *FindParameterBackwards(
+extern struct TParameter *FindParameterBackwards(
   char *pcName,
   struct TParameterList *ptList);
-struct TParameter *FindParameter(
+extern struct TParameter *FindParameter(
   char *pcName,
   struct TParameterList *ptList);
-struct TEvent *FindMatchingEvent(
+extern struct TEvent *FindMatchingEvent(
   char *pcBuffer,
   int iLength);
 
-struct TStateMachine *Duplicate_StateMachine(
+extern struct TStateMachine *Duplicate_StateMachine(
   struct TStateMachine *ptM);
 
-void      InitParser(
+extern void      InitParser(
   void);
-void      ShutDownParser(
+extern void      ShutDownParser(
   void);
 
-void      LogError(
+extern void      LogError(
   char *pcError);
-void      LogMsg(
+extern void      LogMsg(
   char *pcMsg);
-void      LogWarning(
+extern void      LogWarning(
   char *pcWarning);
 
-void      Increment(
+extern void      Increment(
   int *i);
-void      Decrement(
+extern void      Decrement(
   int *i);
 
 /****************************************************************************/
@@ -256,13 +262,13 @@ void      Decrement(
 /****************************************************************************/
 
 extern char *_pcLine;
-void      Warn(
+extern void      Warn(
   char *_pcLine);
-void      Error(
+extern void      Error(
   char *_pcLine);
-void      Fatal(
+extern void      Fatal(
   char *_pcLine);
-void      ResetErrorLogging(
+extern void      ResetErrorLogging(
   void);
 
 
@@ -292,22 +298,22 @@ void      ResetErrorLogging(
 
 
 
-void      StoreFileVariableList(
+extern void      StoreFileVariableList(
   struct TVariableList *ptList);
 
-void      GenerateDebugOutput(
+extern void      GenerateDebugOutput(
   char *pcFile);
 
-void      WriteStateMachineList(
+extern void      WriteStateMachineList(
   char *pBuffer,
   struct TStateMachineList *ptStateMachineList,
   int iMode);
 
-void      WriteBoardList(
+extern void      WriteBoardList(
   char *pcBuffer,
   struct TBoardList *ptBoardList);
 
 
-void      WriteVar(
+extern void      WriteVar(
   char *pcBuffer,
   struct TVariable *ptVar);

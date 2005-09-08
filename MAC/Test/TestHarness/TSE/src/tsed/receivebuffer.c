@@ -634,7 +634,8 @@ extern    "C"
 	  }
 	  else
 	  {
-		  /* New message to big for the defined buffer */
+		  /* New message to big for the defined buffer */ 
+      LogLine("Message received to big for buffer maybe you should update the IO file!");
 		  tBuffer->tBuffer.iBufferIndex = 0; /* Ignore the new message and reset the buffer */
 		  iResult = BUFFER_OUT_OF_MEMORY;
 	  }

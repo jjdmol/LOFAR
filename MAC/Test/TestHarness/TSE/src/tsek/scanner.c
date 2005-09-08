@@ -1694,23 +1694,29 @@ static void      splitpath(
         iLastDirSeperator++;
       }
       iIndexFname = 0;
-      while ( ((iIndexFname+iLastDirSeperator) < iIndexDir) && 
-              (_MAX_FNAME > iIndexFname) )
+      if (NULL != fname)
       {
-        fname[iIndexFname] = dir[iLastDirSeperator+iIndexFname];
-        iIndexFname++;
+        while ( ((iIndexFname+iLastDirSeperator) < iIndexDir) && 
+                (_MAX_FNAME > iIndexFname) )
+        {
+          fname[iIndexFname] = dir[iLastDirSeperator+iIndexFname];
+          iIndexFname++;
+        }
+        fname[iIndexFname]     = 0;
       }
-      fname[iIndexFname]     = 0;
       dir[iLastDirSeperator] = 0;
 
       iExtIndex = 0;
-      while ((*pcInPathTemp != 0) && (iExtIndex < _MAX_EXT))
+      if (NULL != ext)
       {
-        ext[iExtIndex] = *pcInPathTemp;
-        pcInPathTemp++;
-        iExtIndex++;
+        while ((*pcInPathTemp != 0) && (iExtIndex < _MAX_EXT))
+        {
+          ext[iExtIndex] = *pcInPathTemp;
+          pcInPathTemp++;
+          iExtIndex++;
+        }
+        ext[iExtIndex] = 0;
       }
-      ext[iExtIndex] = 0;
     }
   }
 }

@@ -13,6 +13,8 @@ struct tIniSettings
   int16 iLogLine;
   /* LogToFile:   enabled = 1, disabled = 0 (default)*/
   int16 iLogToFile;
+  /* Replay:      enabled = 1, disabled = 0 (default)*/
+  int16 iReplay;
 } ;
 
 extern struct tIniSettings ParsedIniSettings;

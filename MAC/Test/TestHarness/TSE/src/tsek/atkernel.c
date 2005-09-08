@@ -83,7 +83,6 @@
 #define    UNDEFINED           ((int16) 0xA5A5)
 
 #define    VERSIONNUMBER       ((int16) 90)
-
 /****************************************************************************/
 /*                                                                          */
 /* Local variables, accessible via interface functions.                     */
@@ -645,13 +644,15 @@ int16 BSEK_LoadSpecification(
   return (iReturnCode);
 }
 
-
 int16 BSEK_OpenLogFile(
-  char *pcFileName)
+  char *pcFileName,
+  int16 iReplay)
 /* BSEK_OpenLogFile opens a logfile, to which exactly the same logging as   */
 /* sent to the GUI by the BSEG_LogLine function.                            */
 /* ------------------------------------------------------------------------ */
 /* Input parameters:                                                        */
+/*               Replay - indicates if a scripy file is to be replayed(1) or*/ 
+/*               not(0).                                                    */
 /* --                                                                       */
 /* Output parameters:                                                       */
 /* --                                                                       */
@@ -661,14 +662,14 @@ int16 BSEK_OpenLogFile(
 /* ------------------------------------------------------------------------ */
 {
 
-  char     *pString;
-  int       iVersionNumber;
-  struct stat tNewStat;
-
+  char        *pString;
+  int          iVersionNumber;
+  struct stat  tNewStat;
+  char         pcTimeStartedLog[25];
   /*---start------------------------------------------------------------ */
-  FILE     *tScriptFile;
-  char      c;
-  char     *ScriptHeader;       /*changes by epkkaal */
+  FILE        *tScriptFile;
+  char         c;
+  char        *ScriptHeader;       /*changes by epkkaal */
 
   /*---finish------------------------------------------------------------*/
 
@@ -678,7 +679,10 @@ int16 BSEK_OpenLogFile(
   }
 
   pcFileName = bp_CreateLogFileName(pcFileName);
-
+  if (iReplay == 1)
+  {
+    GetSeedValue(pcFileName);
+  }
   tLogFile = fopen(pcFileName, "w");
 
   if (tLogFile == NULL)
@@ -705,6 +709,7 @@ int16 BSEK_OpenLogFile(
     fprintf(tLogFile, "Start time          : %s\n", "xx:xx:xx (xxxx-xx-xx)");
     fprintf(tLogFile, "Stop time           : %s\n", "xx:xx:xx (xxxx-xx-xx)");
     fprintf(tLogFile, "Duration            : %s\n", "xx:xx:xx");
+    fprintf(tLogFile, "Seed: %s\n", "x");
 
     fprintf(tLogFile, "\n\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
 
@@ -827,7 +832,7 @@ int16 BSEK_ResetScript(
 
 
 int16 BSEK_RunBatch(
-  void)
+  int16 iReplay)
 /* BSEK_RunBatch will run a batch file.                                     */
 /* ------------------------------------------------------------------------ */
 /* Input parameters:                                                        */
@@ -865,7 +870,7 @@ int16 BSEK_RunBatch(
       iReturnCode = BSEK_NO_BATCH_TO_RUN;
       break;
     case BSEK_BATCH_LOADED:
-      iReturnCode = BP_RunBatch();
+      iReturnCode = BP_RunBatch(iReplay);
       if (iReturnCode == BP_OK)
       {
         iCurrentState = BSEK_BATCH_RUNNING;
@@ -910,11 +915,11 @@ int16 BSEK_RunBatch(
 
 
 int16 BSEK_RunScript(
-  void)
+  int16 iReplay)
 /* BSEK_RunScript starts/continues a test script.                           */
 /* ------------------------------------------------------------------------ */
 /* Input parameters:                                                        */
-/* --                                                                       */
+/*    Replay - indicates if the script is to be replayed. 1 replay, 0 not   */
 /* Output parameters:                                                       */
 /* --                                                                       */
 /* Return value:                                                            */
@@ -924,8 +929,8 @@ int16 BSEK_RunScript(
 /* Remarks:                                                                 */
 /* ------------------------------------------------------------------------ */
 {
-  int       iReturnCode;
-
+  int            iReturnCode;
+  struct timeval tNow;
   if (pcStartTime != NULL)
   {
     free(pcStartTime);
@@ -960,6 +965,21 @@ int16 BSEK_RunScript(
       iReturnCode = CheckScriptFileStatus();
       if (iReturnCode == 0)
       {
+        if (iReplay == 1)
+        {
+          if (lSeedValue == 0)
+          {
+            gettimeofday( &tNow, NULL);
+            lSeedValue = tNow.tv_sec + tNow.tv_usec;
+            LogLine("Failed to read seed value from log file");
+          }
+        }
+        else
+        {
+          gettimeofday( &tNow, NULL);
+          lSeedValue = tNow.tv_sec + tNow.tv_usec;
+        }
+        srandom(lSeedValue);
         StartExecutor();
         /* finalisation:                             */
         iHiddenStateMachine = 0;
@@ -1838,6 +1858,8 @@ void CloseLogFile(
   fprintf(tLogFile, "Stop time           : %s\n", pcStopTime);
   fflush(tLogFile);
   fprintf(tLogFile, "Duration            : %s\n", pcDuration);
+  fflush(tLogFile);
+  fprintf(tLogFile, "Seed: %ld\n", lSeedValue);
   fflush(tLogFile);
 
   fprintf(tLogFile, "\n\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n");
