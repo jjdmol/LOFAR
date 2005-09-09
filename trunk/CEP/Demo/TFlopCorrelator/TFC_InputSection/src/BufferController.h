@@ -25,6 +25,7 @@
 #define TFLOPCORRELATOR_BUFFERCONTROLLER_H
 
 #include <TFC_Interface/RSPTimeStamp.h>
+#include <TFC_InputSection/CyclicCounter.h>
 #include <APS/ParameterSet.h>
 #include <boost/thread.hpp>
 
@@ -49,28 +50,6 @@ typedef struct
   int invalid;
   timestamp_t timestamp;
 } MetadataType;
-
-class BufferIndex 
-{
- public:
-
-  BufferIndex(const int maxidx = 0);
-  
-  void operator+= (int increment);
-  void operator++ (int); 
-  int operator+ (int increment);
-  void operator-= (int decrement);
-  void operator-- (int); 
-  int operator- (BufferIndex& other);
-  bool operator== (BufferIndex& other);
-  
-  int getIndex();
-
- private:
-  int itsIndex;
-  int itsMaxIndex;
-  void checkIndex();
-};
 
 class BufferController
 {
@@ -98,10 +77,10 @@ class BufferController
    MetadataType* itsMetadataBuffer;
 
    // index pointers
-   BufferIndex itsHead;
-   BufferIndex itsTail;
-   BufferIndex itsOldHead;
-   BufferIndex itsOldTail;
+   CyclicCounter itsHead;
+   CyclicCounter itsTail;
+   CyclicCounter itsOldHead;
+   CyclicCounter itsOldTail;
 
    int itsBufferSize;
    int itsNSubbands; 
@@ -127,6 +106,15 @@ class BufferController
 
 };
 
+inline int BufferController::getCount()
+{
+  return itsOldHead - itsTail;
+}
+
+inline void BufferController::setAllowOverwrite(bool allow)
+{
+  itsOverwritingAllowed = allow;
+}
 
 
 }

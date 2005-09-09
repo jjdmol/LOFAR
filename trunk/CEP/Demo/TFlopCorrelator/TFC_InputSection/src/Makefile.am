@@ -2,7 +2,8 @@ INSTHDRS         	=\
 WH_RSPInput.h           \
 WH_SBCollect.h		\
 AH_InputSection.h	\
-BufferController.h   
+BufferController.h      \
+CyclicCounter.h
 
 
 NOINSTHDRS 		=
@@ -22,7 +23,8 @@ TFC_InputSection_main.cc	\
 WH_RSPInput.cc           	\
 WH_SBCollect.cc			\
 AH_InputSection.cc		\
-BufferController.cc	
+BufferController.cc	        \
+CyclicCounter.cc
 
 configfilesdir=$(bindir)
 configfiles_DATA		=	\

@@ -29,72 +29,6 @@
 
 namespace LOFAR {
 
-
-BufferIndex::BufferIndex(int maxidx) :
-  itsIndex(0),
-  itsMaxIndex(maxidx)
-{
-}
-
-void BufferIndex::checkIndex()
-{
-  if (itsIndex >= itsMaxIndex) {
-    itsIndex -= itsMaxIndex;
-  }
-  else if (itsIndex < 0) {
-    itsIndex += itsMaxIndex;
-  }
-}
-
-int BufferIndex::getIndex()
-{
-  return itsIndex;
-}
-
-void BufferIndex::operator+= (int increment)
-{
-  itsIndex += increment;
-  checkIndex();
-}
-
-void BufferIndex::operator++ (int)
-{
-  itsIndex++;
-  checkIndex();
-}
-
-int BufferIndex::operator+ (int increment)
-{
-  return itsIndex + increment;
-}
-
-void BufferIndex::operator-= (int decrement)
-{
-  itsIndex -= decrement;
-  checkIndex();
-}
-
-void BufferIndex::operator-- (int)
-{
-  itsIndex--;
-  checkIndex();
-}
-
-int BufferIndex::operator- (BufferIndex& other)
-{
-  int increment = itsIndex-other.itsIndex;  
-  if (increment < 0) {
-    return increment + itsMaxIndex;
-  }
-  return increment; 
-}
-
-bool BufferIndex::operator== (BufferIndex& other)
-{
-  return (itsIndex == other.itsIndex);
-}
-
-
 BufferController::BufferController(int buffersize, int nsubbands)
   : itsBufferSize(buffersize),
     itsNSubbands(nsubbands),
@@ -136,7 +70,7 @@ timestamp_t BufferController::getOldestStamp()
     data_available.wait(sl);
   }
   // CONDITION: Count > 0
-  bid = itsTail.getIndex();
+  bid = itsTail.getValue();
 
   return itsMetadataBuffer[bid].timestamp;
 }
@@ -156,7 +90,7 @@ timestamp_t BufferController::getNewestStamp()
 
   // this method is called before the first read,
   // so it is allowed to move the tails;
-  bid = itsOldHead.getIndex() - 1;
+  bid = itsOldHead.getValue() - 1;
 
   return itsMetadataBuffer[bid].timestamp;
 }
@@ -196,7 +130,7 @@ int BufferController::setReadOffset(int offset)
   // so tail == oldTail
   itsTail += offset;
   itsOldTail = itsTail;
-  bid = itsTail.getIndex();
+  bid = itsTail.getValue();
    
   return bid;
 }
@@ -213,7 +147,7 @@ int BufferController::setRewriteOffset(int offset)
    
   itsOldHead = itsTail + offset;
 
-  return itsOldHead.getIndex();
+  return itsOldHead.getValue();
 }
 
 int BufferController::getWritePtr()
@@ -229,7 +163,7 @@ int BufferController::getWritePtr()
   }
   
   // CONDITION: Count < MAX_COUNT 
-  bid = itsHead.getIndex();
+  bid = itsHead.getValue();
   itsHead++;
 
   // if allowed, overwrite previous written elements
@@ -258,7 +192,7 @@ int BufferController::getReadPtr()
   }
   
   // CONDITION: Count >= MIN_COUNT 
-  bid = itsTail.getIndex();
+  bid = itsTail.getValue();
   itsTail++;
   
   return bid;
@@ -434,7 +368,7 @@ bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
       // no elements in the buffer
       bid = -1;
     } else {
-      bid = itsTail.getIndex();
+      bid = itsTail.getValue();
       
       // calculate offset
       int offset = startstamp - itsMetadataBuffer[bid].timestamp;
@@ -445,10 +379,8 @@ bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
 	bid = -1;
 
       } else {   
-
-	itsOldHead = itsTail + offset;
-      bid = itsOldHead.getIndex();
-      
+        itsOldHead = itsTail + offset;
+        bid = itsOldHead.getValue();
       }
     }
 
@@ -476,14 +408,5 @@ bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
   } 
 }
 
-void BufferController::setAllowOverwrite(bool allow)
-{
-  itsOverwritingAllowed = allow;
-}
-
-int BufferController::getCount()
-{
-  return itsOldHead - itsTail;
-}
 
 }
