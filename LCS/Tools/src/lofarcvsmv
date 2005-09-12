@@ -76,7 +76,7 @@
     echo "- Moving an entire directory tree"
     echo "   lofarcvsmv -recursive LOFAR/LCS LOFAR/NewLCS"
     echo "     Note that this mode uses the directory tree in your shadow,"
-    echo "     thus not as it is in the CVS repository.
+    echo "     thus not as it is in the CVS repository."
     echo ""
     exit 0
   fi
