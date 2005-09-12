@@ -11,15 +11,8 @@
 #include <fftw.h>
 
 #include <tinyCEP/WorkHolder.h>
+#include <TFC_Interface/TFC_Config.h>
 
-#define NR_STATIONS			 37
-#define NR_POLARIZATIONS		  2
-#define NR_SUB_CHANNELS			256
-#define NR_TAPS				 16
-#define NR_CORRELATORS_PER_FILTER	  5
-#define NR_STATION_SAMPLES              784
-
-#define NR_CHANNELS_PER_CORRELATOR ((NR_SUB_CHANNELS - 1) / NR_CORRELATORS_PER_FILTER)
 
 namespace LOFAR
 {

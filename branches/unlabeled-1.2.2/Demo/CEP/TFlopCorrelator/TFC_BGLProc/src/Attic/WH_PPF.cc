@@ -14,11 +14,15 @@
 
 #include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_CorrCube.h>
+#include <TFC_Interface/TFC_Config.h>
 
 #include <Common/Timer.h>
 
+#include <hummer_builtin.h>
+
 #include <fftw.h>
 #include <assert.h>
+#include <complex.h>
 
 using namespace LOFAR;
 
@@ -33,30 +37,21 @@ FIR::FIR()
 
 extern "C"
 {
+  void _fft_16(const fcomplex *in, int in_stride, fcomplex *out, int out_stride);
+  void _prefetch(const i16complex *, int nr_samples);
+  void _transpose_2(fcomplex *out, const fcomplex *in);
+  void _transpose_3(fcomplex *out, const fcomplex *in);
   void _filter(fcomplex delayLine[NR_TAPS], const float weights[NR_TAPS], const i16complex samples[], fcomplex *out, int nr_samples_div_16);
-  //void _convert(fcomplex dest[], const i16complex src[], int size);
+  void _zero_area(fcomplex *ptr, int nr_cache_lines);
 }
 
 WH_PPF::WH_PPF(const string& name, const short subBandID):
   WorkHolder(1, NR_CORRELATORS_PER_FILTER, name, "WH_Correlator"),
   itsSubBandID(subBandID)
 {
-#if 0
-  //assert(((int)&itsFIRs[0][0][0].itsDelayLine[0])&7==0);
-  for (int tap = 0; tap < NR_TAPS; tap ++) {
-    itsWeights[0][tap] = itsWeights[0][tap] = tap + 2;
-    itsFIRs[0][0][0].itsDelayLine[tap] = makefcomplex(tap,1);
-  }
-  fcomplex dummy;
-  itsFIRs[0][0][0].test(&dummy,itsWeights[0],33,makefcomplex(2,3));
-  std::cerr << itsFIRs[0][0][0].itsDelayLine[0] << '\n';
-  std::cerr << itsFIRs[0][0][0].itsDelayLine[1] << '\n';
-  std::cerr << itsFIRs[0][0][0].itsDelayLine[2] << '\n';
-  std::cerr << dummy << '\n';
-  exit(0);
-#endif
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
+#if 0
   int NrTaps		     = myPS.getInt32("PPF.NrTaps");
   int NrStations	     = myPS.getInt32("PPF.NrStations");
   int NrStationSamples	     = myPS.getInt32("PPF.NrStationSamples");
@@ -70,6 +65,9 @@ WH_PPF::WH_PPF(const string& name, const short subBandID):
   assert(NrPolarizations	== NR_POLARIZATIONS);
   assert(NrSubChannels		== NR_SUB_CHANNELS);
   assert(NrCorrelatorsPerFilter == NR_CORRELATORS_PER_FILTER);
+#endif
+
+  assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
 
   getDataManager().addInDataHolder(0, new DH_PPF("input", itsSubBandID, myPS));
   
@@ -119,108 +117,110 @@ inline __complex__ float to_fcomplex(i16complex z)
 #endif
 
 
+
+void WH_PPF::process()
+{
 #if 0
-void WH_PPF::process()
-{
-  typedef i16complex inputType[NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS][NR_POLARIZATIONS];
-  typedef fcomplex (*outputType)[NR_CHANNELS_PER_CORRELATOR][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
+  static const fcomplex in[16] =
+  {
+    makefcomplex(1, 2),
+    makefcomplex(3, 4),
+    makefcomplex(5, 6),
+    makefcomplex(7, 8),
+    makefcomplex(9, 10),
+    makefcomplex(11, 12),
+    makefcomplex(13, 14),
+    makefcomplex(15, 16),
+    makefcomplex(17, 18),
+    makefcomplex(19, 20),
+    makefcomplex(21, 22),
+    makefcomplex(23, 24),
+    makefcomplex(25, 26),
+    makefcomplex(27, 28),
+    makefcomplex(29, 30),
+    makefcomplex(31, 32),
+  };
+  fcomplex out[16];
 
-  inputType *input = (inputType *) static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
-  outputType outputs[NR_CORRELATORS_PER_FILTER];
-  fcomplex   fftInData[NR_SUB_CHANNELS], fftOutData[NR_SUB_CHANNELS];
+  _fft_16(in, 8, out, 8);
 
-  for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-    outputs[corr] = (outputType) static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer();
-  }
+  for (int i = 0; i < 16; i ++)
+    std::cerr << out[i] << '\n';
 
-  for (int stat = 0; stat < NR_STATIONS; stat ++) {
-    for (int timeSlot = 0; timeSlot < NR_SAMPLES_PER_INTEGRATION; timeSlot ++) {
-      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
-	  fcomplex sample = to_fcomplex((*input)[stat][timeSlot][chan][pol]);
-	  fftInData[pol][chan] = itsFIRs[stat][chan][pol].processNextSample(sample,itsWeights[chan]);
-	}
+  exit(0);
+#endif
 
-	fftw_one(itsFFTWPlan, (fftw_complex *) fftInData, (fftw_complex *) fftOutData);
-
-	// Assume that channel 0 is bogus.  We now divide the remaining channels
-	// over the correlators.
-
-	for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-	  for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
-	    (*outputs[corr])[chan][stat][timeSlot][pol] = fftOutData[pol][corr * NR_CHANNELS_PER_CORRELATOR + chan + 1];
-	  }
-	}
-      }
-    }
-  }
-}
-
-#else
-
-void WH_PPF::process()
-{
   static NSTimer timer("WH_PPF::process()", true), fftTimer("FFT", true);
-  static NSTimer inTimer("inTimer", true), convertTimer("convert", true);
+  static NSTimer inTimer("inTimer", true), prefetchTimer("prefetch", true);
 
   timer.start();
 
   typedef i16complex inputType[NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS][NR_POLARIZATIONS];
-  typedef fcomplex (*outputType)[NR_CHANNELS_PER_CORRELATOR][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
 
   inputType *input = (inputType *) static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
-  outputType outputs[NR_CORRELATORS_PER_FILTER];
-  fcomplex   fftInData[NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS], fftOutData[NR_SUB_CHANNELS];
+  DH_CorrCube::BufferType *outputs[NR_CORRELATORS_PER_FILTER];
+  static fcomplex fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
+  static fcomplex fftOutData[2][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
+  static fcomplex tmp[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
 
   for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-    outputs[corr] = (outputType) static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer();
+    outputs[corr] = (DH_CorrCube::BufferType *) (static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer());
+    assert((ptrdiff_t) outputs[corr] % 32 == 0);
   }
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
-#if 0
-    static fcomplex converted[NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS][NR_POLARIZATIONS] __attribute__ ((aligned(8)));
-    convertTimer.start();
-    _convert(&converted[0][0][0], &(*input)[stat][0][0][0], sizeof converted / sizeof(fcomplex));
-    convertTimer.stop();
-#endif
+    inTimer.start();
 
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      inTimer.start();
-
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
 #if 0
-	for (int timeSlot = 0; timeSlot < NR_SAMPLES_PER_INTEGRATION; timeSlot ++) {
-	  fcomplex sample = to_fcomplex((*input)[stat][timeSlot][chan][pol]);
-	  fftInData[timeSlot][chan] = itsFIRs[stat][chan][pol].processNextSample(sample,itsWeights[chan]);
+	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
+	  fcomplex sample = to_fcomplex((*input)[stat][time][chan][pol]);
+	  fftInData[time][pol][chan] = itsFIRs[stat][chan][pol].processNextSample(sample,itsWeights[chan]);
 	}
 #else
-	_filter(itsFIRs[stat][chan][pol].itsDelayLine, itsWeights[chan], &(*input)[stat][0][chan][pol], &fftInData[0][chan], NR_SAMPLES_PER_INTEGRATION / 16);
+	_filter(itsFIRs[stat][chan][pol].itsDelayLine, itsWeights[chan], &(*input)[stat][0][chan][pol], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
+
+	if ((chan & 3) == 3) {
+	  _transpose_2(&fftInData[0][pol][chan - 3], &tmp[0][0]);
+	}
 #endif
       }
+    }
 
-      inTimer.stop();
+    inTimer.stop();
 
-      for (int timeSlot = 0; timeSlot < NR_SAMPLES_PER_INTEGRATION; timeSlot ++) {
-	fftTimer.start();
-	fftw_one(itsFFTWPlan, (fftw_complex *) fftInData[timeSlot], (fftw_complex *) fftOutData);
-	fftTimer.stop();
+    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
+      fftTimer.start();
 
-	// Assume that channel 0 is bogus.  We now divide the remaining channels
-	// over the correlators.
+      //_zero_area(fftOutData[0][0], sizeof fftOutData / 32);
 
-	for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-	  for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
-	    (*outputs[corr])[chan][stat][timeSlot][pol] = fftOutData[corr * NR_CHANNELS_PER_CORRELATOR + chan + 1];
+      for (int t = 0; t < 2; t ++) {
+	for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	  fftw_one(itsFFTWPlan, (fftw_complex *) fftInData[time + t][pol], (fftw_complex *) fftOutData[t][pol]);
+	}
+      }
+
+      fftTimer.stop();
+
+      for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
+#if 0
+	for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
+	  for (int t = 0; t < 2; t ++) {
+	    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	      (*outputs[corr])[chan][stat][time + t][pol] = fftOutData[t][pol][corr * NR_CHANNELS_PER_CORRELATOR + chan];
+	    }
 	  }
 	}
+#else
+	_transpose_3(&(*outputs[corr])[0][stat][time][0], &fftOutData[0][0][corr * NR_CHANNELS_PER_CORRELATOR]);
+#endif
       }
     }
   }
 
   timer.stop();
 }
-
-#endif
 
 
 void WH_PPF::postprocess()
