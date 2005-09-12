@@ -41,8 +41,6 @@ namespace RSP_Protocol
     public:
       /**
        * Constructors for a Clocks object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
        */
       Clocks() { }
 	  

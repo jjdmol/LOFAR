@@ -860,6 +860,48 @@ void XCStatisticsCommand::stop()
   }
 }
 
+/**
+ * Function to convert the complex semi-floating point representation used by the
+ * EPA firmware to a complex<double>.
+ */
+BZ_DECLARE_FUNCTION_RET(convert_to_powerangle, complex<double>)
+inline complex<double> convert_to_powerangle(complex<double> val)
+{
+  double angle = 0.0;
+  double power = real(val)*real(val) + imag(val)*imag(val);
+
+  if (power > 0.0)
+  {
+    power = 12 + 5*log10(power); // adjust scaling to allow comparison to subband statistics
+  }
+
+  if (0.0 == real(val))
+  {
+
+    if (imag(val) > 0)
+      angle = 90.0;
+    else if (imag(val) < 0)
+      angle = 270;
+
+  }
+  else
+  {
+
+    angle = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
+
+    if (real(val) > 0.0)
+    {
+      if (imag(val) < 0)
+        angle += 360.0;
+    }
+    else
+      angle += 180.0;
+
+  }
+
+  return complex<double>(power, angle);
+}
+
 void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp)
 {
   if (0 == m_nseconds)
@@ -893,6 +935,19 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
     
     if(m_duration == 0)
     {
+      blitz::Array<complex<double>, 4> pastats;
+      pastats.resize(m_stats.shape());
+      pastats = convert_to_powerangle(m_stats);
+
+      for (int i = 0; i < pastats.extent(firstDim) * pastats.extent(thirdDim); i++) {
+
+	string logString;
+	for (int j = 0; j < pastats.extent(secondDim) * pastats.extent(fourthDim); j++) {
+	  logString += string(formatString("%3.0f:%03.0f ", real(pastats(i%2,j%2,i/2,j/2)), imag(pastats(i%2,j%2,i/2,j/2))));
+	}
+	logMessage(cout,logString);
+      }
+
       plot_xcstatistics(m_stats, timestamp);
     }
     else
@@ -908,6 +963,8 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
         GCFTask::stop();
       }
     }
+
+    m_stats = 0.0; //reset statistics
   }
 }
   
@@ -1002,48 +1059,6 @@ void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, co
   fclose(file);
 }
 
-/**
- * Function to convert the complex semi-floating point representation used by the
- * EPA firmware to a complex<double>.
- */
-BZ_DECLARE_FUNCTION_RET(convert_to_powerangle, complex<double>)
-inline complex<double> convert_to_powerangle(complex<double> val)
-{
-  double angle = 0.0;
-  double power = real(val)*real(val) + imag(val)*imag(val);
-
-  if (power > 0.0)
-  {
-    power = 12 + 5*log10(power); // adjust scaling to allow comparison to subband statistics
-  }
-
-  if (0.0 == real(val))
-  {
-
-    if (imag(val) > 0)
-      angle = 90.0;
-    else if (imag(val) < 0)
-      angle = 270;
-
-  }
-  else
-  {
-
-    angle = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
-
-    if (real(val) > 0.0)
-    {
-      if (imag(val) < 0)
-        angle += 360.0;
-    }
-    else
-      angle += 180.0;
-
-  }
-
-  return complex<double>(power, angle);
-}
-
 GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 {
   if (e.signal == RSP_SUBXCSTATSACK)
@@ -1070,18 +1085,6 @@ GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
 
   if (SUCCESS == upd.status)
   {
-    upd.stats() = convert_to_powerangle(upd.stats());
-
-//    for (int i = 0; i < upd.stats().extent(firstDim) * upd.stats().extent(thirdDim); i++)
-//    {
-//      string logString;
-//      for (int j = 0; j < upd.stats().extent(secondDim) * upd.stats().extent(fourthDim); j++)
-//      {
-//        logString += string(formatString("%3.0f:%03.0f ", real(upd.stats()(i%2,j%2,i/2,j/2)), imag(upd.stats()(i%2,j%2,i/2,j/2))));
-//      }
-//      logMessage(cout,logString);
-//    }
-
     capture_xcstatistics(upd.stats(),upd.timestamp);
   }
 
