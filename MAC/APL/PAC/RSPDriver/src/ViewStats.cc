@@ -329,7 +329,7 @@ int main(int argc, char** argv)
 
   try
   {
-    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
   }
   catch (Exception e)
   {

@@ -243,7 +243,9 @@ public:
     stream << message << endl;
   }
 #else
-  virtual void logMessage(ostream&, const string&) {}
+  virtual void logMessage(ostream&stream , const string& message) {
+    stream << message << endl;
+  }
 #endif
   
 protected:
