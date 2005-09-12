@@ -77,9 +77,12 @@ void readMSTimes(const string& fileName, double& startTime, double& endTime,
   bis.getEnd();
   istr.close();
   // Get startTime, endTime and interval size
-  startTime = itsTimes.front();
-  endTime = itsTimes.back();
-  interval = itsIntervals[0];  //Assuming all intervals are equal!
+  double sTime = itsTimes.front();
+  interval = itsIntervals[0];
+  double eTime = itsTimes.back();
+  double eInterval = itsIntervals.back();
+  startTime = sTime-(interval/2);
+  endTime = eTime+(eInterval/2);
 }
 
 void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
