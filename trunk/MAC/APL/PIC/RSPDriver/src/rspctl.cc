@@ -233,6 +233,10 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
       RSPGetsubbandsackEvent ack(e);
       bitset<MAX_N_RCUS> mask = getRCUMask();
 
+      std::ostringstream msg;
+      msg << "getsubbandsack.timestamp=" << ack.timestamp;
+      logMessage(cout, msg.str());
+
       if (SUCCESS == ack.status)
       {
         int rcuin = 0;
@@ -257,6 +261,10 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
     case RSP_SETSUBBANDSACK:
     {
       RSPSetsubbandsackEvent ack(e);
+
+      std::ostringstream msg;
+      msg << "setsubbandsack.timestamp=" << ack.timestamp;
+      logMessage(cout, msg.str());
 
       if (SUCCESS != ack.status)
       {
