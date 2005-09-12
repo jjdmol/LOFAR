@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class GetVersionsCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class GetVersionsCmd : public Command
+    {
     public:
       /**
        * Constructors for a GetVersionsCmd object.
@@ -84,7 +85,8 @@ namespace RSP
       GetVersionsCmd();
 
       RSPGetversionEvent* m_event;
+    };
   };
 };
-     
+
 #endif /* GETVERSIONSCMD_H_ */

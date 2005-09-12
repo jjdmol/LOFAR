@@ -33,10 +33,10 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
-namespace RSP_Protocol
-{
-  class SystemStatus
-  {
+  namespace RSP_Protocol {
+
+    class SystemStatus
+    {
     public:
       /**
        * Constructors for a SystemStatus object.
@@ -78,17 +78,18 @@ namespace RSP_Protocol
       blitz::Array<EPA_Protocol::BoardStatus, 1> m_board_status;
       blitz::Array<EPA_Protocol::RCUStatus,   1> m_rcu_status;
       /*@}*/
+    };
+
+    inline blitz::Array<EPA_Protocol::BoardStatus, 1>& SystemStatus::board() 
+    {
+      return m_board_status;
+    }
+
+    inline blitz::Array<EPA_Protocol::RCUStatus,  1>& SystemStatus::rcu()
+    {
+      return m_rcu_status;
+    }
   };
-
-  inline blitz::Array<EPA_Protocol::BoardStatus, 1>& SystemStatus::board() 
-  {
-    return m_board_status;
-  }
-
-  inline blitz::Array<EPA_Protocol::RCUStatus,  1>& SystemStatus::rcu()
-  {
-    return m_rcu_status;
-  }
-};
 }; // namespace LOFAR
+
 #endif /* SYSTEMSTATUS_H_ */

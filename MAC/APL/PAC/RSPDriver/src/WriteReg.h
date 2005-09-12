@@ -29,10 +29,11 @@
 #include "MEPHeader.h"
 #include <Common/LofarTypes.h>
 
-namespace RSP
-{
-  class WriteReg : public SyncAction
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class WriteReg : public SyncAction
+    {
     public:
       /**
        * Constructors for a WriteReg object.
@@ -74,6 +75,7 @@ namespace RSP
       void*  m_source_address;
 
       EPA_Protocol::MEPHeader m_hdr;
+    };
   };
 };
      

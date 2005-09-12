@@ -25,9 +25,10 @@
 #ifndef REFCOUNT_H_
 #define REFCOUNT_H_
 
-namespace RSP 
-{
-  class RefCount {
+namespace LOFAR {
+  namespace RSP {
+
+    class RefCount {
       int crefs;
     public:
       RefCount(void) { crefs = 0; }
@@ -37,13 +38,13 @@ namespace RSP
       void downcount(void)
       {
 	if (--crefs == 0)
-	{
-	  delete this;
-	}
+	  {
+	    delete this;
+	  }
       }
-  };
+    };
 
-  template <class T> class Ptr {
+    template <class T> class Ptr {
       T* p;
     public:
       Ptr(T* p_) : p(p_) { p->upcount(); }
@@ -58,8 +59,9 @@ namespace RSP
       Ptr& operator=(T* p_) {
 	p->downcount(); p = p_; p->upcount(); return *this;
       }
-  };
+    };
 
+  };
 };
      
 #endif /* REFCOUNT_H_ */

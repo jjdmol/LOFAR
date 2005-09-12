@@ -29,10 +29,10 @@
 #include "MEPHeader.h"
 #include <Common/LofarTypes.h>
 
-namespace RSP
-{
-  class BWRead : public SyncAction
-  {
+namespace LOFAR {
+  namespace RSP {
+    class BWRead : public SyncAction
+    {
     public:
       /**
        * Constructors for a BWRead object.
@@ -60,6 +60,7 @@ namespace RSP
     private:
       int m_regid;
       EPA_Protocol::MEPHeader m_hdr;
+    };
   };
 };
      

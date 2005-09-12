@@ -30,23 +30,22 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  namespace RSP_Protocol {
 
-namespace RSP_Protocol
-{
-  /**
-   * This class is used to contain the subband selection for each RCU.
-   *
-   * When used in a SETSUBBANDS event the dimensions of the arrays
-   * should be:
-   *  - subbands[1][nr_selected_subbands].
-   *
-   * When used in the Cache the dimensions should be:
-   *  - subbands[N_RCUS][N_BEAMLETS]
-   *
-   * The values in the subbands array should be 0 <= value < N_SUBBANDS * EPA_Protocol::N_POL
-   */
-  class SubbandSelection
-  {
+    /**
+     * This class is used to contain the subband selection for each RCU.
+     *
+     * When used in a SETSUBBANDS event the dimensions of the arrays
+     * should be:
+     *  - subbands[1][nr_selected_subbands].
+     *
+     * When used in the Cache the dimensions should be:
+     *  - subbands[N_RCUS][N_BEAMLETS]
+     *
+     * The values in the subbands array should be 0 <= value < N_SUBBANDS * EPA_Protocol::N_POL
+     */
+    class SubbandSelection
+    {
     public:
       /**
        * Constructors for a SubbandSelection object.
@@ -81,7 +80,8 @@ namespace RSP_Protocol
        * dim 2 = n_beamlets
        */
       blitz::Array<uint16, 2> m_subbands;
+    };
   };
-};
 }; // namespace LOFAR
+
 #endif /* SUBBANDSELECTION_H_ */

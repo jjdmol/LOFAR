@@ -32,18 +32,19 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class Command : public RefCount
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class Command : public RefCount
+    {
     public:
 
       /** types */
       enum Operation
-      {
-	READ = 1,
-	WRITE,
-      };
+	{
+	  READ = 1,
+	  WRITE,
+	};
 
       /**
        * Constructors for a Command object.
@@ -122,15 +123,16 @@ namespace RSP
       GCFEvent*          m_event;
       GCFPortInterface*  m_port;
       Operation          m_operation;
-  };
+    };
 
-  /**
-   * Comparison function to order a priority_queue of Ptr<Command>* pointers
-   * as it is used in the Scheduler class.
-   */
-  struct Command_greater { 
+    /**
+     * Comparison function to order a priority_queue of Ptr<Command>* pointers
+     * as it is used in the Scheduler class.
+     */
+    struct Command_greater { 
       bool operator() (Ptr<Command>& x, Ptr<Command>& y) const 
       { return x->getTimestamp() > y->getTimestamp(); }
+    };
   };
 };
      

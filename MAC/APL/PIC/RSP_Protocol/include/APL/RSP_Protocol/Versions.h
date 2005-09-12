@@ -33,11 +33,10 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  namespace RSP_Protocol {
 
-namespace RSP_Protocol
-{
-  class Versions
-  {
+    class Versions
+    {
     public:
       /**
        * Constructors for a Versions object.
@@ -76,11 +75,12 @@ namespace RSP_Protocol
       blitz::Array<uint8, 1> m_rsp_versions;
       blitz::Array<uint8, 1> m_bp_versions;
       blitz::Array<uint8, 1> m_ap_versions;
-  };
+    };
 
-  inline blitz::Array<uint8, 1>& Versions::rsp() { return m_rsp_versions; }
-  inline blitz::Array<uint8, 1>& Versions::bp()  { return m_bp_versions; }
-  inline blitz::Array<uint8, 1>& Versions::ap()  { return m_ap_versions; }
-};
+    inline blitz::Array<uint8, 1>& Versions::rsp() { return m_rsp_versions; }
+    inline blitz::Array<uint8, 1>& Versions::bp()  { return m_bp_versions; }
+    inline blitz::Array<uint8, 1>& Versions::ap()  { return m_ap_versions; }
+  };
 }; // namespace LOFAR
+
 #endif /* VERSIONS_H_ */

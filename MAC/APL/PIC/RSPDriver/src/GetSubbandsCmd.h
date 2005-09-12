@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class GetSubbandsCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class GetSubbandsCmd : public Command
+    {
     public:
       /**
        * Constructors for a GetSubbandsCmd object.
@@ -84,6 +85,7 @@ namespace RSP
       GetSubbandsCmd();
 
       RSPGetsubbandsEvent* m_event;
+    };
   };
 };
      

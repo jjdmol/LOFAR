@@ -30,11 +30,11 @@
 
 #include <PSAccess.h>
 
-using namespace RSP;
+using namespace blitz;
 using namespace LOFAR;
+using namespace RSP;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
-using namespace blitz;
 using namespace RTC;
 
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)

@@ -28,10 +28,10 @@
 
 #include <blitz/array.h>
 
-using namespace LOFAR;
-using namespace RSP_Protocol;
 using namespace std;
 using namespace blitz;
+using namespace LOFAR;
+using namespace RSP_Protocol;
 
 unsigned int SubbandSelection::getSize()
 {

@@ -28,10 +28,10 @@
 
 #include <blitz/array.h>
 
-using namespace RSP;
-using namespace LOFAR;
-using namespace RSP_Protocol;
 using namespace blitz;
+using namespace LOFAR;
+using namespace RSP;
+using namespace RSP_Protocol;
 using namespace RTC;
 
 /**

@@ -37,10 +37,11 @@
 #include <list>
 #include <sys/timepps.h>
 
-namespace RSP
-{
-  class RSPDriver : public GCFTask
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class RSPDriver : public GCFTask
+    {
     public:
       /**
        * The constructor of the RSPDriver task.
@@ -148,8 +149,9 @@ namespace RSP
       int          m_ppsfd;     // file descriptor for PPS device
       pps_handle_t m_ppshandle; // handle to PPS API interface
       pps_info_t   m_ppsinfo;   // most recent ppsinfo
-  };
+    };
 
+  };
 };
      
 #endif /* RSPDRIVERTASK_H_ */

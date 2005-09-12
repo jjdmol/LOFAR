@@ -28,10 +28,11 @@
 #include "SyncAction.h"
 #include "MEPHeader.h"
 
-namespace RSP
-{
-  class VersionsRead : public SyncAction
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class VersionsRead : public SyncAction
+    {
     public:
       /**
        * Constructors for a VersionsRead object.
@@ -58,6 +59,7 @@ namespace RSP
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+    };
   };
 };
      

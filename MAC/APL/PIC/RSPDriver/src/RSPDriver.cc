@@ -80,10 +80,10 @@
 
 #define ETHERTYPE_EPA 0x10FA
 
-using namespace RSP;
+using namespace blitz;
 using namespace std;
 using namespace LOFAR;
-using namespace blitz;
+using namespace RSP;
 using namespace RTC;
 
 static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS

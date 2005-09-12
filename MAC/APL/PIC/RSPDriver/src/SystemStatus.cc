@@ -29,11 +29,11 @@
 #include "Marshalling.h"
 #include <blitz/array.h>
 
+using namespace std;
+using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace EPA_Protocol;
-using namespace std;
-using namespace blitz;
 
 unsigned int SystemStatus::getSize()
 {

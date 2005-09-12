@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class GetStatsCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class GetStatsCmd : public Command
+    {
     public:
       /**
        * Constructors for a GetStatsCmd object.
@@ -89,6 +90,7 @@ namespace RSP
       GetStatsCmd();
       RSPGetstatsEvent* m_event;
       unsigned int m_n_devices;
+    };
   };
 };
      

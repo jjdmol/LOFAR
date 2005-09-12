@@ -29,10 +29,11 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-namespace RSP_Test
-{
-  class EPAStub : public GCFTask, public Test
-  {
+namespace LOFAR {
+  namespace RSP_Test {
+
+    class EPAStub : public GCFTask, public Test
+    {
     public:
       /**
        * The constructor of the EPAStub task.
@@ -68,8 +69,8 @@ namespace RSP_Test
       /*@}*/
 
       /**
-      * Run the tests.
-      */
+       * Run the tests.
+       */
       void run();
 
     private:
@@ -82,13 +83,14 @@ namespace RSP_Test
       // lookup for register pointers
       typedef struct
       {
-	  char*  addr;
-	  uint16 size;
+	char*  addr;
+	uint16 size;
       } reginfo;
       
       reginfo m_reg[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1];
-  };
+    };
 
+  };
 };
      
 #endif /* EPASTUB_H_ */

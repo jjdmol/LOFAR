@@ -33,11 +33,10 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  namespace RSP_Protocol {
 
-namespace RSP_Protocol
-{
-  class Clocks
-  {
+    class Clocks
+    {
     public:
       /**
        * Constructors for a Clocks object.
@@ -68,9 +67,10 @@ namespace RSP_Protocol
        *  - m_clocks  [N_TDBOARDS]
        */
       blitz::Array<uint32, 1> m_clocks;
-  };
+    };
 
-  inline blitz::Array<uint32, 1>& Clocks::operator()() { return m_clocks; }
-};
+    inline blitz::Array<uint32, 1>& Clocks::operator()() { return m_clocks; }
+  };
 }; // namespace LOFAR
+
 #endif /* CLOCKS_H_ */

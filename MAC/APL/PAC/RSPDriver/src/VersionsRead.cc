@@ -27,8 +27,8 @@
 #include "EPA_Protocol.ph"
 #include "Cache.h"
 
-using namespace RSP;
 using namespace LOFAR;
+using namespace RSP;
 using namespace EPA_Protocol;
 
 VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)

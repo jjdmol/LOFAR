@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class GetRCUCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class GetRCUCmd : public Command
+    {
     public:
       /**
        * Constructors for a GetRCUCmd object.
@@ -84,6 +85,7 @@ namespace RSP
       GetRCUCmd();
 
       RSPGetrcuEvent* m_event;
+    };
   };
 };
      

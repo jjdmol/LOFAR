@@ -29,97 +29,101 @@
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <bitset>
 
-class CaptureStats : public GCFTask
-{
-public:
+namespace LOFAR {
 
-  static const int MAX_LINE_LENGTH = 256;
-  static const int MAX_OPTIONS     = 40; // maximum number of cmd line options
-  static const int CMDLINE_MODE = 0;
-  static const int XINETD_MODE  = 1;
-  static const int HTTP_MODE    = 2;
+  class CaptureStats : public GCFTask
+  {
+  public:
 
-  /**
-   * Options for statistics capturing.
-   */
-  typedef struct {
-    int                     type;
-    std::bitset<MAX_N_RCUS> device_set;
-    int                     n_devices;
-    int                     duration;
-    int                     integration;
-    bool                    onefile;
-    int                     xinetd_mode;
-  } Options;
+    static const int MAX_LINE_LENGTH = 256;
+    static const int MAX_OPTIONS     = 40; // maximum number of cmd line options
+    static const int CMDLINE_MODE = 0;
+    static const int XINETD_MODE  = 1;
+    static const int HTTP_MODE    = 2;
 
-  /**
-   * The constructor of the CaptureStats task.
-   * @param name The name of the task. The name is used for looking
-   * up connection establishment information using the GTMNameService and
-   * GTMTopologyService classes.
-   */
-  CaptureStats(string name, const Options& options);
-  virtual ~CaptureStats();
+    /**
+     * Options for statistics capturing.
+     */
+    typedef struct {
+      int                     type;
+      std::bitset<MAX_N_RCUS> device_set;
+      int                     n_devices;
+      int                     duration;
+      int                     integration;
+      bool                    onefile;
+      int                     xinetd_mode;
+    } Options;
 
-  // state methods
+    /**
+     * The constructor of the CaptureStats task.
+     * @param name The name of the task. The name is used for looking
+     * up connection establishment information using the GTMNameService and
+     * GTMTopologyService classes.
+     */
+    CaptureStats(string name, const Options& options);
+    virtual ~CaptureStats();
 
-  /**
-   * The initial state. In this state a connection with the RSP
-   * driver is attempted. When the connection is established,
-   * a transition is made to the enabled state.
-   */
-  GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+    // state methods
 
-  /**
-   * This state is used to wait for input (in xinetd_mode)
-   */
-  GCFEvent::TResult wait4command(GCFEvent& e, GCFPortInterface &p);
+    /**
+     * The initial state. In this state a connection with the RSP
+     * driver is attempted. When the connection is established,
+     * a transition is made to the enabled state.
+     */
+    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
-  /**
-   * This state is used to perform a command.
-   */
-  GCFEvent::TResult handlecommand(GCFEvent& e, GCFPortInterface &p);
+    /**
+     * This state is used to wait for input (in xinetd_mode)
+     */
+    GCFEvent::TResult wait4command(GCFEvent& e, GCFPortInterface &p);
 
-  /**
-   * Load and integrate statistics
-   */
-  bool capture_statistics(blitz::Array<double,   2>& stats);
-  bool capture_xcstatistics(blitz::Array<std::complex<double>, 4>& stats);
+    /**
+     * This state is used to perform a command.
+     */
+    GCFEvent::TResult handlecommand(GCFEvent& e, GCFPortInterface &p);
 
-  /**
-   * Write statistics to file
-   */
-  void output_statistics(blitz::Array<double,   2>& stats);
-  void output_xcstatistics(blitz::Array<std::complex<double>, 4>& stats);
+    /**
+     * Load and integrate statistics
+     */
+    bool capture_statistics(blitz::Array<double,   2>& stats);
+    bool capture_xcstatistics(blitz::Array<std::complex<double>, 4>& stats);
 
-  /**
-   * Run the tests.
-   */
-  void run();
+    /**
+     * Write statistics to file
+     */
+    void output_statistics(blitz::Array<double,   2>& stats);
+    void output_xcstatistics(blitz::Array<std::complex<double>, 4>& stats);
 
-  /**
-   * Parse URL options.
-   */
-  void parse_urloptions(char* url);
+    /**
+     * Run the tests.
+     */
+    void run();
 
-private:
-  // member variables
+    /**
+     * Parse URL options.
+     */
+    void parse_urloptions(char* url);
 
-private:
-  // ports
-  GCFPort m_server;
+  private:
+    // member variables
 
-  // options
-  Options m_options;
+  private:
+    // ports
+    GCFPort m_server;
 
-  blitz::Array<double, 2> m_values;
-  blitz::Array<std::complex<double>, 4> m_xcvalues;
-  int m_nseconds;
-  FILE** m_file;  // array of file descriptors
-  string m_format; // format of xinetd output
-  uint32 m_statushandle; // handle for status update subscripton
-  uint32 m_statshandle;  // handle for stats update subscription
-  char m_line[MAX_LINE_LENGTH]; // line buffer for getopt options
+    // options
+    Options m_options;
+
+    blitz::Array<double, 2> m_values;
+    blitz::Array<std::complex<double>, 4> m_xcvalues;
+    int m_nseconds;
+    FILE** m_file;  // array of file descriptors
+    string m_format; // format of xinetd output
+    uint32 m_statushandle; // handle for status update subscripton
+    uint32 m_statshandle;  // handle for stats update subscription
+    char m_line[MAX_LINE_LENGTH]; // line buffer for getopt options
+  };
+
 };
      
 #endif /* CAPTURESTATS_H_ */

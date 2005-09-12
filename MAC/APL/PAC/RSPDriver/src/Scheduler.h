@@ -31,19 +31,20 @@
 #include "SyncAction.h"
 #include "Timestamp.h"
 
-namespace RSP
-{
-  class Scheduler
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class Scheduler
+    {
     public:
       /**
        * Types of queue.
        */
       enum QueueID
-      {
-	LATER = 1,
-	PERIODIC
-      };
+	{
+	  LATER = 1,
+	  PERIODIC
+	};
       
       /**
        * Constructors for a Scheduler object.
@@ -146,6 +147,7 @@ namespace RSP
       RTC::Timestamp m_current_time;
 
       int m_current_priority;
+    };
   };
 };
      

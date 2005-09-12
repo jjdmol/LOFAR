@@ -27,8 +27,8 @@
 #include "Scheduler.h"
 #include "SyncAction.h"
 
-using namespace RSP;
 using namespace LOFAR;
+using namespace RSP;
 using namespace RSP_Protocol;
 using namespace RTC;
 

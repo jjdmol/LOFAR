@@ -28,10 +28,11 @@
 #include "MEPHeader.h"
 #include "SyncAction.h"
 
-namespace RSP
-{
-  class RCUWrite : public SyncAction
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class RCUWrite : public SyncAction
+    {
     public:
       /**
        * Constructors for a RCUWrite object.
@@ -58,6 +59,7 @@ namespace RSP
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+    };
   };
 };
      

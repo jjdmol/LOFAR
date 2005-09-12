@@ -30,23 +30,22 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  namespace RSP_Protocol {
 
-namespace RSP_Protocol
-{
-  class WGSettings
-  {
+    class WGSettings
+    {
     public:
       /**
        * Settings of the Waveform Generator
        */
       typedef struct WGRegisterType
       {
-	  uint16 freq;
-	  uint8  phase;
-	  uint8  ampl;
-	  uint16 nof_samples;
-	  uint8  mode;
-	  uint8  preset; // one of PRESET_SINE, PRESET_SQUARE, PRESET_TRIANGLE or PRESET_RAMP
+	uint16 freq;
+	uint8  phase;
+	uint8  ampl;
+	uint16 nof_samples;
+	uint8  mode;
+	uint8  preset; // one of PRESET_SINE, PRESET_SQUARE, PRESET_TRIANGLE or PRESET_RAMP
       };
 
       static const int MODE_OFF    = 0x0;
@@ -101,10 +100,11 @@ namespace RSP_Protocol
       bool                            m_modified; // has the value been modified?
 
       static blitz::Array<int16, 2>   m_presets;
-  };
+    };
 
-  inline blitz::Array<WGSettings::WGRegisterType, 1>& WGSettings::operator()() { return m_registers; }
-  inline blitz::Array<int16, 2>& WGSettings::waveforms() { return m_waveforms; }
-};
+    inline blitz::Array<WGSettings::WGRegisterType, 1>& WGSettings::operator()() { return m_registers; }
+    inline blitz::Array<int16, 2>& WGSettings::waveforms() { return m_waveforms; }
+  };
 }; // namespace LOFAR
+
 #endif /* WGSETTINGS_H_ */
