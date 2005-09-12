@@ -76,10 +76,6 @@ namespace LOFAR {
        */
       std::map<uint16, uint16> m_beamlet2subband;
       
-      /**
-       * the map is sent as a blitz array.
-       */
-      blitz::Array<uint16, 1> m_array;
     };
 
     inline std::map<uint16, uint16>& Beamlet2SubbandMap::operator()() { return m_beamlet2subband; }

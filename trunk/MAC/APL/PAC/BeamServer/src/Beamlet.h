@@ -26,16 +26,6 @@
 #include <SpectralWindow.h>
 #include <blitz/array.h>
 
-// define the datatype for the weight calculation
-#define W_TYPE_DOUBLE
-#ifdef W_TYPE_DOUBLE
-#define W_TYPE double
-#define W_TYPE_DOUBLE
-#else
-#define W_TYPE float
-#define W_TYPE_FLOAT
-#endif
-
 namespace LOFAR {
   namespace BS {
 
@@ -77,7 +67,7 @@ namespace LOFAR {
 	/**
 	 * Get pointer to spectral window for this beamlet.
 	 */
-	const CAL::SpectralWindow* getSPW() const;
+	const CAL::SpectralWindow& getSPW() const;
 
 	/**
 	 * Get index (from 0) of the subband within the spectral window.
@@ -152,8 +142,8 @@ namespace LOFAR {
        * Calculate weights for all beamlets 
        * for the specified number of time steps.
        */
-      void calculate_weights(const blitz::Array<W_TYPE, 3>&         pos,
-			     blitz::Array<std::complex<W_TYPE>, 3>& weights);
+      void calculate_weights(const blitz::Array<double, 3>&         pos,
+			     blitz::Array<std::complex<double>, 3>& weights);
 
     private:
       // default constructor not allowed

@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <Beamlet.h>
 #include <Beam.h>
 
@@ -27,19 +30,14 @@
 #include <queue>
 
 #include <blitz/array.h>
+
 using namespace blitz;
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 using namespace LOFAR;
-
 using namespace BS;
 using namespace std;
 
-const W_TYPE SPEED_OF_LIGHT_MS = 299792458.0; // speed of light in meters/sec
-const complex<W_TYPE> I_COMPLEX = complex<W_TYPE>(0.0,1.0);
+const double SPEED_OF_LIGHT_MS = 299792458.0; // speed of light in meters/sec
+const complex<double> I_COMPLEX = complex<double>(0.0,1.0);
 
 Beamlet::Beamlet() : m_subband(0), m_beam(0)
 {}
@@ -77,9 +75,10 @@ const Beam* Beamlet::getBeam() const
   return m_beam;
 }
 
-const CAL::SpectralWindow* Beamlet::getSPW() const
+const CAL::SpectralWindow& Beamlet::getSPW() const
 {
-  return (m_beam ? m_beam->getSPW() : 0);
+  ASSERT(m_beam);
+  return m_beam->getSPW();
 }
 
 Beamlets::Beamlets(int nbeamlets) : m_nbeamlets(nbeamlets)
@@ -99,10 +98,10 @@ Beamlet* Beamlets::get(int index) const
   return m_beamlets + index;
 }
 
-void Beamlets::calculate_weights(const Array<W_TYPE, 3>&         pos,
-				      Array<complex<W_TYPE>, 3>& weights)
+void Beamlets::calculate_weights(const Array<double, 3>&         pos,
+				      Array<complex<double>, 3>& weights)
 {
-  const Array<W_TYPE,2>* lmn = 0;
+  const Array<double,2>* lmn = 0;
   int compute_interval = weights.extent(firstDim);
   int nrcus            = weights.extent(secondDim);
   Range all = Range::all();
@@ -121,6 +120,9 @@ void Beamlets::calculate_weights(const Array<W_TYPE, 3>&         pos,
       if (beamlet && beamlet->allocated())
 	{
 	  const Beam* beam = beamlet->getBeam();
+	  const CAL::AntennaGains& gains = beam->getCalibration();
+
+	  LOG_DEBUG_STR("gains[" << (gains.isDone()?"valid":"invalid") << "]=" << gains.getGains().shape());
 
 	  // get coordinates from beam
 	  if (!beam)
@@ -145,9 +147,8 @@ void Beamlets::calculate_weights(const Array<W_TYPE, 3>&         pos,
 	      continue;
 	    }
 
-	  W_TYPE freq = 0.0;
-	  ASSERT(beamlet->getSPW());
-	  freq = beamlet->getSPW()->getSubbandFreq(beamlet->subband());
+	  double freq = 0.0;
+	  freq = beamlet->getSPW().getSubbandFreq(beamlet->subband());
 	  if (0 == bi) LOG_DEBUG_STR("freq = " << freq);
 
 	  //
@@ -157,23 +158,23 @@ void Beamlets::calculate_weights(const Array<W_TYPE, 3>&         pos,
 	  for (int rcu = 0; rcu < nrcus; rcu++)
 	    {
 	      weights(all, rcu, bi) =
-	        (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 0) * (*lmn)(all, 1))
-		- (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 1) * (*lmn)(all, 0))
+	        (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 0) * (*lmn)(all, 0))
+		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 1) * (*lmn)(all, 1))
 		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 2) * (*lmn)(all, 2));
 	    }
 	  
 	  weights(all, all, bi) =
-	    exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq) * weights(all, all, bi) / SPEED_OF_LIGHT_MS);
+	    (exp(2.0 * M_PI * freq * complex<double>(0.0,1.0))/SPEED_OF_LIGHT_MS) * weights(all, all, bi);
 	}
       else
 	{
-	  weights(all, all, bi) = complex<W_TYPE>(0.0, 0.0);
+	  weights(all, all, bi) = complex<double>(0.0, 0.0);
 	}
     }
 
   //cout << "weights(t=0) = " << weights(0,all,0) << endl;
 
-  LOG_DEBUG(formatString("sizeof weights() = %d bytes", weights.size()*sizeof(complex<W_TYPE>)));
+  LOG_DEBUG(formatString("sizeof weights() = %d bytes", weights.size()*sizeof(complex<double>)));
   LOG_DEBUG(formatString("contiguous storage? %s", (weights.isStorageContiguous()?"yes":"no")));
 }
 
