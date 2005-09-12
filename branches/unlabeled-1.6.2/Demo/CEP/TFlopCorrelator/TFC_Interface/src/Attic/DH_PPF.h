@@ -9,18 +9,12 @@
 #ifndef TFLOPCORRELATOR_DH_PPF_H
 #define TFLOPCORRELATOR_DH_PPF_H
 
+#include <TFC_Interface/TFC_Config.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <APS/ParameterSet.h>
 #include <stdlib.h>
 
-
-#define NR_STATIONS             37
-#define NR_STATION_SAMPLES  200704 // FIR requires this to be multiple of 16*256
-#define NR_POLARIZATIONS         2
-#define NR_SUB_CHANNELS        256
-
-#define NR_SAMPLES_PER_INTEGRATION (NR_STATION_SAMPLES / NR_SUB_CHANNELS)
 
 namespace LOFAR
 {
