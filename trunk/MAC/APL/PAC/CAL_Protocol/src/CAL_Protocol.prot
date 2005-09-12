@@ -12,7 +12,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+13)";
 // include = '<sys/time.h>';
 
 include = '"AntennaGains.h"';
-include = '"AntennaArray.h"';
+include = '"SubArray.h"';
 include = '"SpectralWindow.h"';
 include = '"Timestamp.h"';
 
@@ -125,14 +125,9 @@ event = {
 	    name = "handle";
 	    type = "uint32";
       };
-      param = { // the subarray
+      param = { // return the subarray class
 	    name = "subarray";
-	    type = "CAL::AntennaArray";
-	    userdefined;
-      };
-      param = { // spectral window
-	    name = "spectral_window";
-	    type = "CAL::SpectralWindow";
+	    type = "CAL::SubArray";
 	    userdefined;
       };
 };
@@ -164,6 +159,10 @@ event = {
       signal = UNSUBSCRIBE; // unsubscribe from updates
       dir = IN;
       param = {
+	    name = "name";
+	    type = "string";
+      };
+      param = {
 	    name = "handle";
 	    type = "uint32";
       };
@@ -175,6 +174,10 @@ event = {
       param = {
 	    name = "status";
 	    type = "int16";
+      };
+      param = {
+	    name = "name";
+	    type = "string";
       };
       param = {
 	    name = "handle";

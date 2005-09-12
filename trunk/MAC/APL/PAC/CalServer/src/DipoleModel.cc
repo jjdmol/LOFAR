@@ -21,14 +21,12 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "DipoleModel.h"
 #include "DipoleModelData.h"
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 #include <fstream>
 #include <blitz/array.h>
 

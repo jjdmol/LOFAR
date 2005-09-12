@@ -10,15 +10,6 @@ AM_INIT_AUTOMAKE(ABS, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-dnl Define the prefix to allow the use of this path in programs
-AC_DEFINE_UNQUOTED([CAL_PREFIX],["${prefix}"],[Path to CAL install prefix directory.])
-CAL_PREFIX="${prefix}"
-AC_SUBST([CAL_PREFIX])
-
-AC_DEFINE_UNQUOTED([CAL_SYSCONF],["${prefix}/etc"],[Path to CAL install prefix directory.])
-CAL_SYSCONF="${prefix}/etc"
-AC_SUBST([CAL_SYSCONF])
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC

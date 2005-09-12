@@ -188,6 +188,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	CALUnsubscribeEvent unsubscribe;
 	
+	unsubscribe.name = m_arrayname;
 	unsubscribe.handle = m_handle;
 	
 	TESTC_ABORT(m_server.send(unsubscribe), CalTest::final);

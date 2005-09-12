@@ -49,6 +49,8 @@ namespace LOFAR {
        * @param name The name of the task. The name is used for looking
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
+       * @param accs Reference to the global ACC's. These ACC's are shared between
+       * the calibration algorithm and the ACMProxy class.
        */
       CalServer(string name, ACCs& accs);
       virtual ~CalServer();

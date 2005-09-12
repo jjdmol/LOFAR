@@ -7,9 +7,9 @@ AM_CPPFLAGS = -DUSE_CAL_THREAD
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(lofar_root)/MAC/MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(lofar_root)/MAC/MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
 	CAL_Protocol.ph \
@@ -51,14 +51,17 @@ libcal_la_HEADERS = \
 	AntennaGains.h \
 	AntennaArray.h \
 	AntennaArrayData.h \
-	SpectralWindow.h
+	SpectralWindow.h \
+	SubArray.h \
+	SharedResource.h
 
 libcal_la_SOURCES = \
 	$(top_builddir)/src/CAL_Protocol.cc \
 	AntennaGains.cc \
 	AntennaArray.cc \
 	AntennaArrayData.cc \
-	SpectralWindow.cc
+	SpectralWindow.cc \
+	SubArray.cc
 
 # convenience library
 # lib_LTLIBRARIES = libcaldevel.la
@@ -67,7 +70,6 @@ libcaldevel_ladir = $(prefix)/include
 
 libcaldevel_la_SOURCES = \
 	Documentation.h \
-	SharedResource.h \
 	ACC.h \
 	ACC.cc \
 	Source.h \
@@ -78,8 +80,6 @@ libcaldevel_la_SOURCES = \
 	DipoleModel.cc \
 	DipoleModelData.h \
 	DipoleModelData.cc \
-	SubArray.h \
-	SubArray.cc \
 	SubArraySubscription.h \
 	SubArraySubscription.cc \
 	CalibrationInterface.h \
@@ -118,5 +118,8 @@ CalServer_DEPEND = $(LOFAR_DEPEND)
 #	librtccommon.la
 
 #	-lrsp
+
+clean-local:
+	rm -f *.ph
 
 include $(lofar_sharedir)/Makefile.common

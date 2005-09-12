@@ -21,8 +21,9 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
-#define DECLARE_SIGNAL_NAMES
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "CAL_Protocol.ph"
 
 #include "CalConstants.h"
@@ -43,14 +44,6 @@
 #include "Timestamp.h"
 #include "PSAccess.h"
 
-#ifndef CAL_SYSCONF
-#define CAL_SYSCONF "."
-#endif
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 #include <GCF/ParameterSet.h>
 #include <fstream>
 #include <signal.h>
@@ -77,7 +70,7 @@ CalServer::CalServer(string name, ACCs& accs)
 #endif
 
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
-  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, CAL_PROTOCOL);
+  m_acceptor.init(*this, "acceptor_v2", GCFPortInterface::MSPP, CAL_PROTOCOL);
 }
 
 CalServer::~CalServer()
@@ -131,17 +124,17 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  // load the dipole models
 	  //
-	  m_dipolemodels.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.DipoleModelFile")));
+	  m_dipolemodels.getAll(GET_CONFIG_PATH() + "/" + GET_CONFIG_STRING("CalServer.DipoleModelFile"));
 
 	  //
 	  // load the source catalog
 	  //
-	  m_sources.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.SourceCatalogFile")));
+	  m_sources.getAll(GET_CONFIG_PATH() + "/" + GET_CONFIG_STRING("CalServer.SourceCatalogFile"));
 
 	  //
 	  // Load antenna arrays
 	  //
-	  m_arrays.getAll(string(CAL_SYSCONF "/") + string(GET_CONFIG_STRING("CalServer.AntennaArraysFile")));
+	  m_arrays.getAll(GET_CONFIG_PATH() + "/" + GET_CONFIG_STRING("CalServer.AntennaArraysFile"));
 
 	  //
 	  // Setup calibration algorithm
@@ -393,6 +386,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
       {
 	// create subarray to calibrate
 	SubArray* subarray = new SubArray(start.name,
+					  parent->getGeoLoc(),
 					  positions,
 					  select,
 					  start.sampling_frequency,
@@ -455,10 +449,9 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
     subarray->attach(subscription);
 
     // return subarray positions
-    ack.subarray = *(static_cast<AntennaArray*>(subarray));
+    ack.subarray = *subarray;
 
-    // return spectral window
-    ack.spectral_window = subarray->getSPW();
+    //m_clients[&port] = string(subscribe.name); // register subarray with port
 
 #if 0
     // return sampling_frequency and nyquist_zone
@@ -470,6 +463,8 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
   } else {
 
     ack.status = ERR_NO_SUBARRAY;
+    ack.handle = 0;
+    ack.subarray = SubArray();
 
   }
 
@@ -486,11 +481,12 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
 
   // create ack
   CALUnsubscribeackEvent ack;
+  ack.name = unsubscribe.name;
   ack.handle = unsubscribe.handle;
   ack.status = SUCCESS;
 
   // find associated subarray
-  SubArray* subarray = m_subarrays.getByName(m_clients[&port]);
+  SubArray* subarray = m_subarrays.getByName(unsubscribe.name);
   if (subarray) {
 
     // detach subscription, this destroys the subscription

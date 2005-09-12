@@ -23,14 +23,12 @@
 
 #ifdef USE_CAL_THREAD
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <pthread.h>
 #include "SubArray.h"
 #include "CalibrationThread.h"
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace CAL;

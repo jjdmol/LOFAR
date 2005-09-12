@@ -21,6 +21,9 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "SpectralWindow.h"
 
 #include <blitz/array.h>
@@ -45,45 +48,29 @@ SpectralWindow::~SpectralWindow()
 {
 }
 
-double SpectralWindow::getSubbandFreq(int subband, int pos) const
+double SpectralWindow::getSubbandFreq(int subband) const
 {
-  double freq = -1.0; // invalid
+  ASSERT(m_numsubbands);
+  ASSERT(subband >= 0 && subband <= m_numsubbands);
 
-  if (subband < 0) return freq; // invalid index
-  
-  switch(pos)
-  {
-    case LOW:
-      freq = (subband % m_numsubbands) * getSubbandWidth();
-      break;
-
-    case CENTER:
-      freq = (((subband + 1) % m_numsubbands) - 0.5) * getSubbandWidth();
-      break;
-
-    case HIGH:
-      freq = ((subband + 1) % m_numsubbands) * getSubbandWidth();
-      break;
-  }
-
-  return freq;
+  return (subband % m_numsubbands) * getSubbandWidth();
 }
 
-unsigned int SpectralWindow::getSize()
+unsigned int SpectralWindow::getSize() const
 {
   return MSH_STRING_SIZE(m_name) + sizeof(double) + sizeof(uint16) + sizeof(uint16);
 }
 
-unsigned int SpectralWindow::pack(void* buffer)
+unsigned int SpectralWindow::pack(void* buffer) const
 {
   unsigned int offset = 0;
 
   MSH_PACK_STRING(buffer, offset, m_name);
-  memcpy(buffer, &m_sampling_freq, sizeof(double));
+  memcpy(((char*)buffer) + offset, &m_sampling_freq, sizeof(double));
   offset += sizeof(double);
-  memcpy(buffer, &m_nyquist_zone, sizeof(uint16));
+  memcpy(((char*)buffer) + offset, &m_nyquist_zone, sizeof(uint16));
   offset += sizeof(uint16);
-  memcpy(buffer, &m_numsubbands, sizeof(uint16));
+  memcpy(((char*)buffer) + offset, &m_numsubbands, sizeof(uint16));
   offset += sizeof(uint16);
 
   return offset;
@@ -94,11 +81,11 @@ unsigned int SpectralWindow::unpack(void* buffer)
   unsigned int offset = 0;
 
   MSH_UNPACK_STRING(buffer, offset, m_name);
-  memcpy(&m_sampling_freq, buffer, sizeof(double));
+  memcpy(&m_sampling_freq, ((char*)buffer) + offset, sizeof(double));
   offset += sizeof(double);
-  memcpy(&m_nyquist_zone, buffer, sizeof(uint16));
+  memcpy(&m_nyquist_zone, ((char*)buffer) + offset, sizeof(uint16));
   offset += sizeof(uint16);
-  memcpy(&m_numsubbands, buffer, sizeof(uint16));
+  memcpy(&m_numsubbands, ((char*)buffer) + offset, sizeof(uint16));
   offset += sizeof(uint16);
 
   return offset;
