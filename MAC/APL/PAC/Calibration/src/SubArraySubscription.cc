@@ -44,7 +44,7 @@ void SubArraySubscription::update(Subject* subject)
     update.status = SUCCESS;
     update.handle = (uint32)this;
 
-    update.gains.copy(*calibratedGains);
+    update.gains = *calibratedGains;
 
     if (m_port.isConnected()) m_port.send(update);
   }

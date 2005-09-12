@@ -21,7 +21,8 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "RSP_Protocol.ph"
 
@@ -31,14 +32,6 @@
 #include "Timestamp.h"
 #include "PSAccess.h"
 
-// #ifndef CAL_SYSCONF
-// #define CAL_SYSCONF "."
-// #endif
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 #include <GCF/ParameterSet.h>
 
 using namespace RSP_Protocol;
@@ -50,10 +43,6 @@ using namespace CAL;
 using namespace RTC;
 
 #define START_DELAY 4
-
-#ifndef CAL_SYSCONF
-#define CAL_SYSCONF "."
-#endif
 
 ACMProxy::ACMProxy(string name, ACCs& accs)
   : GCFTask((State)&ACMProxy::initial, name),
@@ -264,7 +253,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	RSPSetsubbandsEvent ss;
 
 	m_starttime.setNow();
-	m_starttime = m_starttime + START_DELAY; // start START_DELAY seconds from now
+	m_starttime = m_starttime + (long)START_DELAY; // start START_DELAY seconds from now
 
 	LOG_INFO_STR("starttime for ACM collection: " << m_starttime);
 
@@ -296,7 +285,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	    // request next subband
 	    RSPSetsubbandsEvent ss;
 	  
-	    ss.timestamp = m_starttime + m_request_subband;
+	    ss.timestamp = m_starttime + (long)m_request_subband;
 	    ss.rcumask.reset();
 	    for (int i = 0; i < 8; i++) {
 	      ss.rcumask.set(i);
@@ -342,7 +331,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	// subscribe to statistics
 	RSPSubxcstatsEvent subxc;
 
-	subxc.timestamp = m_starttime + 1; // wait 1 second to get result
+	subxc.timestamp = m_starttime + (long)1; // wait 1 second to get result
 	subxc.rcumask.reset();
 
 	LOG_DEBUG_STR("nRCU's=" << m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol());
@@ -379,7 +368,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	      LOG_DEBUG_STR("ACK: XC subband " << m_update_subband << " @ " << upd.timestamp);
 	      LOG_DEBUG_STR("upd.stats().shape=" << upd.stats().shape());
 
-	      if (upd.timestamp != m_starttime + m_update_subband + 1) {
+	      if (upd.timestamp != m_starttime + (long)m_update_subband + (long)1) {
 		LOG_WARN("incorrect timestamp on XC statistics");
 	      }
 	      
@@ -400,7 +389,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  // request next subband
 	  RSPSetsubbandsEvent ss;
 	  
-	  ss.timestamp = m_starttime + m_request_subband;
+	  ss.timestamp = m_starttime + (long)m_request_subband;
 	  ss.rcumask.reset();
 	  for (int i = 0; i < 8; i++) {
 	    ss.rcumask.set(i);

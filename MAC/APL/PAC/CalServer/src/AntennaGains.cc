@@ -21,32 +21,42 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "AntennaGains.h"
 #include "Marshalling.h"
 #include <Common/LofarTypes.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
 
-AntennaGains::AntennaGains()
+AntennaGains::AntennaGains() : m_mutex(new pthread_mutex_t)
 {
+  ASSERT(m_mutex);
 #ifdef USE_CAL_THREAD
-  pthread_mutex_init(&m_mutex, 0);
+  pthread_mutex_init((pthread_mutex_t*)m_mutex, 0);
 #endif
-  lock(); m_done = false; unlock();
+  lock();
+
+  m_done = false;
+
+  m_gains.resize(1,1,1);
+  m_gains = 0;
+  
+  m_quality.resize(1,1,1);
+  m_quality = 0;
+
+  unlock();
 }
 
-AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands)
+AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_mutex(new pthread_mutex_t)
 {
+  ASSERT(m_mutex);
 #ifdef USE_CAL_THREAD
-  pthread_mutex_init(&m_mutex, 0);
+  pthread_mutex_init((pthread_mutex_t*)m_mutex, 0);
 #endif
   lock(); m_done = false; unlock();
 
@@ -65,7 +75,9 @@ AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands)
 }
 
 AntennaGains::~AntennaGains()
-{}
+{
+  if (m_mutex) delete m_mutex;
+}
 
 unsigned int AntennaGains::getSize()
 {
@@ -103,18 +115,20 @@ unsigned int AntennaGains::unpack(void* buffer)
   return offset;
 }
 
-AntennaGains& AntennaGains::copy(AntennaGains& source)
+AntennaGains& AntennaGains::operator=(const AntennaGains& rhs)
 {
-  lock(); source.lock();
-  m_gains.resize(source.m_gains.shape());
-  m_gains = source.m_gains.copy();
+  if (this != &rhs) {
+    lock(); rhs.lock();
 
-  m_quality.resize(source.m_quality.shape());
-  m_quality = source.m_quality.copy();
-
-  m_done = source.m_done;
-  source.unlock(); unlock();
-
+    m_gains.resize(rhs.m_gains.shape());
+    m_gains = rhs.m_gains.copy();
+    
+    m_quality.resize(rhs.m_quality.shape());
+    m_quality = rhs.m_quality.copy();
+    
+    m_done = rhs.m_done;
+    rhs.unlock(); unlock();
+  }
   return *this;
 }
 

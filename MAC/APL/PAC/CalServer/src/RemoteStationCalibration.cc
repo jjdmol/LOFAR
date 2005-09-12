@@ -75,8 +75,6 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   for (int niter = 0; niter < nloops; niter++) {
     cout << "calibrate: working on loop " << niter << " of " << nloops << endl;
     for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
-      sleep(1);
-
       Timestamp acmtime;
       const Array<complex<double>, 2> acm = acc.getACM(sb, 0, 0, acmtime); // get XX acm
     
@@ -181,11 +179,11 @@ const vector<Source> RemoteStationCalibration::make_local_sky_model(const Source
     double
       alpha = (skymodel.begin() + idx)->getRA(),
       delta = (skymodel.begin() + idx)->getDEC(),
-      el = asin(sin(delta) * sin(delta0) + cos(delta0) * cos(delta) * cos(alpha0 - alpha)),
-      az = acos((sin(delta) - sin(el) * sin(delta0)) / (cos(el) * cos(delta0))) * ((sin(alpha0 - alpha) < 0) ? -1 : 1);
+      el = ::asin(::sin(delta) * ::sin(delta0) + ::cos(delta0) * ::cos(delta) * ::cos(alpha0 - alpha)),
+      az = ::acos((::sin(delta) - ::sin(el) * ::sin(delta0)) / (::cos(el) * ::cos(delta0))) * ((::sin(alpha0 - alpha) < 0) ? -1 : 1);
 
     if (el > 0)
-      local_skymodel.push_back(Source((skymodel.begin() + idx)->getName(), -cos(el) * sin(az), cos(el) * cos(az), const_cast<blitz::Array<double, 2>&>((skymodel.begin() + idx)->getFluxes())));
+      local_skymodel.push_back(Source((skymodel.begin() + idx)->getName(), -::cos(el) * ::sin(az), ::cos(el) * ::cos(az), const_cast<blitz::Array<double, 2>&>((skymodel.begin() + idx)->getFluxes())));
   }
 
   return local_skymodel;
@@ -212,7 +210,7 @@ Array<complex<double>, 2> RemoteStationCalibration::make_ref_acm(const vector<So
     double
       l = (LSM.begin() + idx)->getRA(),
       m = (LSM.begin() + idx)->getDEC(),
-      n = sqrt(1 - l * l - m * m);
+      n = ::sqrt(1 - l * l - m * m);
     Array<complex<double>, 1>
       asrc(exp(-complex<double>(0, 1) * k * (l * xpos + m * ypos + n * zpos)));
     Array<double, 2> fluxdata((LSM.begin() + idx)->getFluxes());
@@ -311,7 +309,7 @@ Array<complex<double>, 1> RemoteStationCalibration::computeGain(Array<complex<do
       }
     }
   }
-  double norm = 1.0 / sqrt(total / static_cast<double>(Nnonzero));
+  double norm = 1.0 / ::sqrt(total / static_cast<double>(Nnonzero));
   gain = norm * gain / (gain(0) / abs(gain(0)));
   return gain;
 }

@@ -43,9 +43,7 @@ namespace LOFAR {
      * ending at (nyquist_zone * (sampling_frequency / 2.0)) is filtered into
      * nsubband equal frequency bins.
      * 
-     * The method getSubbandFreq(subband, pos=CENTER) returns the center frequency of a subband by default.
-     * Passing position parameter pos=LOW returns the start frequency of the subband.
-     * Passing position parameter pos=HIGH return the end frequency of the subband.
+     * The method getSubbandFreq(subband) returns the center frequency of a subband.
      */
     class SpectralWindow
     {
@@ -90,26 +88,17 @@ namespace LOFAR {
       double getSubbandWidth() const { return m_sampling_freq / (2.0 * m_numsubbands); }
       
       /**
-       * Return the LOW, CENTER, HIGH frequency of a specific subband.
+       * Return frequency of a specific subband.
        */
-      double getSubbandFreq(int subband, int pos = CENTER) const;
-
-      /**
-       * Subband frequency position values
-       */
-      enum {
-	LOW = 1,
-	CENTER,
-	HIGH 
-      };
+      double getSubbandFreq(int subband) const;
 
     public:
       /*@{*/
       /**
        * marshalling methods
        */
-      unsigned int getSize();
-      unsigned int pack   (void* buffer);
+      unsigned int getSize() const;
+      unsigned int pack   (void* buffer) const;
       unsigned int unpack (void* buffer);
       /*@}*/
 

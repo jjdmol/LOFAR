@@ -62,7 +62,7 @@ namespace LOFAR {
        * @return a reference to the calibrated gains. A three dimensional array of
        * complex doubles with dimensions: nantennas x npol x nsubbands
        */
-      blitz::Array<std::complex<double>, 3>& getGains() { return m_gains; }
+      const blitz::Array<std::complex<double>, 3>& getGains() const { return m_gains; }
 
       /**
        * Get reference to the array with quality measure.
@@ -74,7 +74,7 @@ namespace LOFAR {
       /**
        * has the calibration algorithm producing this result completed?
        */
-      inline bool isDone() { bool done; lock(); done = m_done; unlock(); return done; }
+      inline bool isDone() const { bool done; lock(); done = m_done; unlock(); return done; }
 
       /**
        * set the complete status.
@@ -82,19 +82,21 @@ namespace LOFAR {
       inline void setDone(bool value = true) { lock(); m_done = value; unlock(); }
 
       /**
-       * Copy
+       * assignment operator
+       * @param rhs Right-hand-side of assignment. It is not const
+       * because the rhs must be locked during the assignment.
        */
-      AntennaGains& copy(AntennaGains& source);
+      AntennaGains& operator=(const AntennaGains& rhs);
 
       /**
        * lock/unlock
        */
 #ifdef USE_CAL_THREAD
-      inline int lock()   { return pthread_mutex_lock(&m_mutex);   }
-      inline int unlock() { return pthread_mutex_unlock(&m_mutex); }
+      inline int lock()   const { return pthread_mutex_lock((pthread_mutex_t*)m_mutex);   }
+      inline int unlock() const { return pthread_mutex_unlock((pthread_mutex_t*)m_mutex); }
 #else
-      inline int lock()   { return 0; }
-      inline int unlock() { return 0; }
+      inline int lock()   const { return 0; }
+      inline int unlock() const { return 0; }
 #endif
 
     public:
@@ -109,7 +111,7 @@ namespace LOFAR {
 
     private:
       /**
-       * Prevent copying
+       * Prevent copy constructor
        */
       AntennaGains(const AntennaGains & copy);
 
@@ -119,7 +121,7 @@ namespace LOFAR {
       bool                                  m_done; // has the calibration finished
 
 #ifdef USE_CAL_THREAD
-      pthread_mutex_t m_mutex; // control access to the m_done flag
+      const pthread_mutex_t* m_mutex; // control access to the m_done flag
 #endif
     };
 

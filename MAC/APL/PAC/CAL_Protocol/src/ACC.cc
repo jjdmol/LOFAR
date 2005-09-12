@@ -21,15 +21,13 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "ACC.h"
 #include <blitz/array.h>
 #include <fstream>
 #include <stdio.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace blitz;
