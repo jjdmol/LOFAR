@@ -61,11 +61,18 @@ namespace LOFAR {
        */
       const blitz::Array<double, 3>& getPositions() const { return m_positions; }
 
+      /**
+       * Get the geographical location of the array.
+       * @return 1-d array with 3 values for latitude, longitude and height.
+       */
+      const blitz::Array<double, 1>& getGeoLoc() const { return m_geoloc; }
+
     private:
       std::string             m_filename;
       std::ifstream           m_file;
 
       std::string             m_name;
+      blitz::Array<double, 1> m_geoloc;
       blitz::Array<double, 3> m_positions;
     };
   }; // namespace CAL

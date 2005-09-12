@@ -21,19 +21,15 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "CalConstants.h"
 #include "AntennaArray.h"
 #include "AntennaArrayData.h"
 
-#include <Marshalling.h>
-
 #include <blitz/array.h>
 #include <fstream>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace blitz;
@@ -44,6 +40,8 @@ AntennaArray::AntennaArray()
 {
   // dummy arrays
   m_name = "uninitialized";
+  m_geoloc.resize(3);
+  m_geoloc = 0.0;
   m_pos.resize(1,1,1);
   m_pos = 0.0;
   m_rcuindex.resize(1,1);
@@ -51,9 +49,10 @@ AntennaArray::AntennaArray()
 }
 
 AntennaArray::AntennaArray(string                  name,
+			   const Array<double, 1>& geoloc,
 			   const Array<double, 3>& pos,
 			   const Array<int16,  2>* rcuindex) 
-  : m_name(name), m_pos(pos), m_rcuindex(0)
+  : m_name(name), m_geoloc(geoloc), m_pos(pos)
 {
   m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
 
@@ -72,34 +71,24 @@ AntennaArray::~AntennaArray()
 {
 }
 
-unsigned int AntennaArray::getSize()
+AntennaArray& AntennaArray::operator=(const AntennaArray& rhs)
 {
-  return
-      MSH_STRING_SIZE(m_name)
-    + MSH_ARRAY_SIZE (m_pos,      double)
-    + MSH_ARRAY_SIZE (m_rcuindex, int16);
-}
+  if (this != &rhs) {
 
-unsigned int AntennaArray::pack(void* buffer)
-{
-  unsigned int offset = 0;
+    // copy members
+    m_name = rhs.m_name;
 
-  MSH_PACK_STRING(buffer, offset, m_name);
-  MSH_PACK_ARRAY(buffer,  offset, m_pos,      double);
-  MSH_PACK_ARRAY(buffer,  offset, m_rcuindex, int16);
+    m_geoloc.resize(rhs.m_geoloc.shape());
+    m_geoloc = rhs.m_geoloc;
 
-  return offset;
-}
+    m_pos.resize(rhs.m_pos.shape());
+    m_pos = rhs.m_pos;
 
-unsigned int AntennaArray::unpack(void* buffer)
-{
-  unsigned int offset = 0;
+    m_rcuindex.resize(rhs.m_rcuindex.shape());
+    m_rcuindex = rhs.m_rcuindex;
 
-  MSH_UNPACK_STRING(buffer, offset, m_name);
-  MSH_UNPACK_ARRAY(buffer,  offset, m_pos,      double, 3);
-  MSH_UNPACK_ARRAY(buffer,  offset, m_rcuindex, int16,  2);
-
-  return offset;
+  }
+  return *this;
 }
 
 AntennaArrays::AntennaArrays()
@@ -133,6 +122,7 @@ void AntennaArrays::getAll(std::string url)
 
   while (arraydata.getNextFromFile(url)) {
     AntennaArray* newarray = new AntennaArray(arraydata.getName(),
+					      arraydata.getGeoLoc(),
 					      arraydata.getPositions());
 
     m_arrays[arraydata.getName()] = newarray;

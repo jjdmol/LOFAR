@@ -32,30 +32,39 @@
 
 #include "SpectralWindow.h"
 #include "AntennaArray.h"
-#include "ACC.h"
+/*#include "ACC.h"*/
+#include "SharedResource.h"
 #include "AntennaGains.h"
 
 namespace LOFAR {
   namespace CAL {
 
-    class CalibrationInterface; // forward declaration
+    // forward declarations
+    class ACC;
+    class CalibrationInterface;
 
     class SubArray : public AntennaArray, public RTC::Subject
     {
     public:
 
       /**
+       * Default constructor.
+       */
+      SubArray();
+
+      /**
        * Construct a subarray.
        * @param name   The name of the subarray.
-       * @param array  The array of which this is a subarray.
+       * @param pos    The positions of the parent array
        * @param select Select for each polarization dipole of each antenna whether it is included (true) in the subarray.
        * @param spw    The spectral window of this subarray.
        */
       SubArray(std::string                    name,
-	       const blitz::Array<double, 3>& array,
+	       const blitz::Array<double, 1>& geoloc,
+	       const blitz::Array<double, 3>& pos,
 	       const blitz::Array<bool, 2>&   select,
 	       double                         sampling_frequency,
-	       int                            spectral_window,
+	       int                            nyquist_zone,
 	       int                            nsubbands);
       virtual ~SubArray();
 
@@ -94,6 +103,11 @@ namespace LOFAR {
       const SpectralWindow& getSPW() const;
 
       /**
+       * Assignement operator.
+       */
+      SubArray& operator=(const SubArray& rhs);
+
+      /**
        * Enumeration of buffer positions.
        */
       enum {
@@ -101,9 +115,23 @@ namespace LOFAR {
 	BACK = 1
       };
 
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack   (void* buffer);
+      unsigned int unpack (void* buffer);
+      /*@}*/
+
     private:
-      const SpectralWindow m_spw;              // reference to the spectral window for this subarray
-      AntennaGains*        m_result[BACK + 1]; // two calibration result records
+
+      /* prevent copy */
+      SubArray(const SubArray& other); // no implementation
+
+      SpectralWindow m_spw;              // reference to the spectral window for this subarray
+      AntennaGains*  m_result[BACK + 1]; // two calibration result records
     };
 
     class SubArrays : public SharedResource

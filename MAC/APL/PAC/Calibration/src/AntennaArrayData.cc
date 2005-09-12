@@ -28,6 +28,7 @@
 using namespace std;
 using namespace LOFAR;
 using namespace CAL;
+using namespace blitz;
 
 AntennaArrayData::AntennaArrayData()
 {
@@ -58,6 +59,11 @@ bool AntennaArrayData::getNextFromFile(string filename)
     return false;
   }
 
+  m_file >> m_geoloc; // get geographical location 1-d array with 3 elements
+  if ((1 != m_geoloc.dimensions())
+      || (3 != m_geoloc.extent(firstDim))) {
+    return false;
+  }
   m_file >> m_positions; // get positions
   m_file.ignore(80,'\n'); // read away newline
 

@@ -53,6 +53,7 @@ namespace LOFAR {
        */
       AntennaArray(); // only used by CAL_Protocol.prot, should not be used directly
       AntennaArray(std::string                    name,
+		   const blitz::Array<double, 1>& geoloc,
 		   const blitz::Array<double, 3>& pos,
 		   const blitz::Array<int16,  2>* rcuindex = 0);
       virtual ~AntennaArray();
@@ -62,6 +63,11 @@ namespace LOFAR {
        * @return The name of the array or subarray (e.g. LBA_ARRAY, HBA_ARRAY, SINGLEPOL_LBA_ARRAY, etc).
        */
       std::string getName() const { return m_name; }
+
+      /**
+       * Get geographical location.
+       */
+      const blitz::Array<double, 1>& getGeoLoc() const { return m_geoloc; }
 
       /**
        * Get the positions of the antennas.
@@ -79,21 +85,18 @@ namespace LOFAR {
        */
       inline int16 getRCUIndex(int nantenna, int npol) const { return m_rcuindex(nantenna, npol); }
 
-    public:
-      /*@{*/
       /**
-       * marshalling methods
+       * Assignment operator
        */
-      unsigned int getSize();
-      unsigned int pack   (void* buffer);
-      unsigned int unpack (void* buffer);
-      /*@}*/
-
-    private:
-      std::string             m_name;     // name of this antenna array
+      AntennaArray& operator=(const AntennaArray& other);
 
     protected:
 
+      /* prevent copy */
+      AntennaArray(const AntennaArray& other); // no implementation
+
+      std::string             m_name;     // name of this antenna array
+      blitz::Array<double, 1> m_geoloc;   // geographical location
       blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas x Npol x 3 (x,y,z)
       blitz::Array<int16, 2>  m_rcuindex; // the index of the rcu to which a dipole is connected, dimensions Nantennas x Npol
     };
