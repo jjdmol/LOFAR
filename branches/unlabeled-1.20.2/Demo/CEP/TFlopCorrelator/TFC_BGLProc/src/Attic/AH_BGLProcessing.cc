@@ -25,11 +25,10 @@
 #include <Transport/TH_Socket.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <WH_FIR.h>
-#include <WH_FFT.h>
+#include <WH_PPF.h>
 #include <WH_Correlator.h>
 // DataHolders
-#include <TFC_Interface/DH_FIR.h>
+#include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_CorrCube.h>
 #include <TFC_Interface/DH_Vis.h>
 
