@@ -23,6 +23,9 @@
 
 // this include needs to be first!
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <Suite/suite.h>
 #include <MEPHeader.h>
 #include "BS_Protocol.ph"
@@ -33,11 +36,6 @@
 #include <sys/time.h>
 #include <string.h>
 #include <time.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace BS;
@@ -146,20 +144,38 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	// send pointto command (zenith)
 	BSBeampointtoEvent pointto;
 	pointto.handle = ack.handle;
-	pointto.type=3;
 
-	for (int t = 20; t <= 40; t+=5)
+	for (int t = 0; t <= 4; t++)
 	{
-	    pointto.timestamp.setNow(t);
-	    pointto.angle[0]=0.0;
-	    pointto.angle[1]=sin(((double)t/600)*M_PI);
-	    pointto.type=3;
+	    switch (t) {
+	    case 0:
+	      //3C461 Cassiopeia A
+	      pointto.pointing = Pointing(6.123662, 1.026719, RTC::Timestamp::now(t*30+10), Pointing::J2000);
+	      break;
+
+	    case 1:
+	      // 3C405 Cygnus A
+	      pointto.pointing = Pointing(5.233748, 0.711018, RTC::Timestamp::now(t*30+10), Pointing::J2000);
+	      break;
+
+	    case 2:
+	      // 3C144 Crab nebula (NGC 1952)
+	      pointto.pointing = Pointing(1.459568, 0.384089, RTC::Timestamp::now(t*30+10), Pointing::J2000);
+	      break;
+
+	    case 3:
+	      // 3C274 Virgo NGC4486(M87)
+	      pointto.pointing = Pointing(3.276114, 0.216275, RTC::Timestamp::now(t*30+10), Pointing::J2000);
+	      break;
+	    default:
+	      break;
+	    }
 
 	    TESTC(beam_server.send(pointto));
 	}
 
-	// let the beamformer compute for 3 minutes
-	timerid = beam_server.setTimer((long)180);
+	// let the beamformer compute for 1 minute
+	//timerid = beam_server.setTimer((long)60);
       }
       break;
 

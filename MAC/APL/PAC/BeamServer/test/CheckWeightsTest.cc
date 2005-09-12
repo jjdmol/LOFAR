@@ -21,8 +21,12 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "SpectralWindow.h"
 #include "Beam.h"
+#include "Pointing.h"
 
 #include <Suite/suite.h>
 
@@ -31,13 +35,9 @@
 
 #include <stdio.h>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
 using namespace blitz;
 using namespace LOFAR;
+using namespace BS_Protocol;
 using namespace BS;
 using namespace std;
 
@@ -52,7 +52,8 @@ using namespace std;
 class CheckWeightsTest : public Test
 {
 private:
-  Beam*          m_beam[N_BEAMS];
+  Beams m_beams;
+  Beam* m_beam[N_BEAMS];
 
 public:
 
@@ -62,14 +63,12 @@ public:
      * SpectralWindow spw(10e6, 256*1e3, 80*(1000/250));
      */
     CheckWeightsTest() :
-      Test("CheckWeightsTest")
+      Test("CheckWeightsTest"), m_beams(N_BEAMLETS)
 	{
-	  //cerr << "c";
-	  Beam::init(N_BEAMS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
-	  Beamlet::init(N_BEAMLETS);
-
+#if 0
 	  SpectralWindow* window = new SpectralWindow(10e6, 256*1e3, 80*(1000/256), 0/*don't care*/);
 	  SpectralWindowConfig::getInstance().setSingle(window);
+#endif
 	}
 
     void run()
@@ -85,68 +84,67 @@ public:
 	  //
 	  // Compare result of this test with Octave/Matlab generated reference
 	  //
-	  subbands.clear();
-	  for (int i = 0; i < N_SUBBANDS; i++) subbands.insert(i);
-	  TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
+	  BS_Protocol::Beamlet2SubbandMap allocation;
+	  for (int i = 0; i < N_SUBBANDS; i++) allocation()[i] = i;
+	  TESTC(0 != (m_beam[0] = m_beams.get("CheckWeightsTest", allocation, N_SUBBANDS)));
 
-	  time_t now = time(0);
+	  RTC::Timestamp now;
+	  now.setNow();
 	  
 	  // add a few pointings
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0,
-			    Direction::LOFAR_LMN), now + 0)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 1.0,
-			    Direction::LOFAR_LMN), now + 1)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    1.0, 0.0,
-			    Direction::LOFAR_LMN), now + 2)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    sin(M_PI/4.0), sin(M_PI/4.0),
-			    Direction::LOFAR_LMN), now + 3)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    sin(M_PI/4.0), 0.0,
-			    Direction::LOFAR_LMN), now + 4)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, sin(M_PI/4.0),
-			    Direction::LOFAR_LMN), now + 5)) == 0);
-	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    sqrt(1.0/3.0), sqrt(1.0/3.0),
-			    Direction::LOFAR_LMN), now + 6)) == 0);
+	  m_beam[0]->addPointing(Pointing(0.0, 0.0, now,
+					  Pointing::LOFAR_LMN));
+	  m_beam[0]->addPointing(Pointing(0.0, 1.0, now + (long)1,
+					  Pointing::LOFAR_LMN));
+	  m_beam[0]->addPointing(Pointing(1.0, 0.0, now + (long)2,
+					  Pointing::LOFAR_LMN));
+	  m_beam[0]->addPointing(Pointing(::sin(M_PI/4.0), ::sin(M_PI/4.0), now + (long)3,
+					  Pointing::LOFAR_LMN));
+	  m_beam[0]->addPointing(Pointing(::sin(M_PI/4.0), 0.0, now + (long)4,
+					  Pointing::LOFAR_LMN));
+	  m_beam[0]->addPointing(Pointing(0.0, ::sin(M_PI/4.0), now + (long)5,
+					  Pointing::LOFAR_LMN));
+	  m_beam[0]->addPointing(Pointing(::sqrt(1.0/3.0), ::sqrt(1.0/3.0), now + (long)6,
+					  Pointing::LOFAR_LMN));
 
 	  struct timeval start, delay;
 	  gettimeofday(&start, 0);
 	  // iterate over all beams
-	  time_t begintime = now;
 
-	  TESTC(0 == m_beam[0]->convertPointings(begintime));
+	  TESTC(0 == m_beam[0]->convertPointings(now, COMPUTE_INTERVAL, 0));
 
-	  Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
-	  Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_SUBBANDS);
+	  Array<double, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
+	  Array<bool, 2>            select(N_ELEMENTS, N_POLARIZATIONS);
+	  Array<complex<double>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_SUBBANDS);
 
-	  for (int pol = 0; pol < N_POLARIZATIONS; pol++)
-	  {
-	    pos(0,pol,all) = 0.0, 0.0, 0.0;
-	    pos(1,pol,all) = 0.0, 0.0, 1.0;
-	    pos(2,pol,all) = 0.0, 1.0, 0.0;
-	    pos(3,pol,all) = 1.0, 0.0, 0.0;
-	    pos(4,pol,all) = 1.0, 1.0, 0.0;
-	    pos(5,pol,all) = 0.0, 1.0, 1.0;
-	    pos(6,pol,all) = 1.0, 0.0, 1.0;
-	  }
+	  select = true;
+
+	  pos = 0.0;
+	  pos(0,all,all) = 0.0, 0.0, 0.0;
+	  pos(1,all,all) = 0.0, 0.0, 1.0;
+	  pos(2,all,all) = 0.0, 1.0, 0.0;
+	  pos(3,all,all) = 1.0, 0.0, 0.0;
+	  pos(4,all,all) = 1.0, 1.0, 0.0;
+	  pos(5,all,all) = 0.0, 1.0, 1.0;
+	  pos(6,all,all) = 1.0, 0.0, 1.0;
+	  
+	  blitz::Array<double,1> geoloc(3);
+	  geoloc=0.0;
+	  CAL::SubArray subarray("subarray", geoloc, pos, select, 2.0 * N_SUBBANDS * 156.25e3, 1, 2);
+	  m_beam[0]->setSubarray(subarray);
 
 	  cout << "pos = " << pos << endl;
 
 	  cout << "lmn = " << m_beam[0]->getLMNCoordinates() << endl;
 
-	  Beamlet::calculate_weights(pos, weights);
+	  m_beams.calculate_weights(now, COMPUTE_INTERVAL, pos, weights, 0);
 	  gettimeofday(&delay, 0);
 
-	  //cout << "weights = " << weights << endl;
-	  //cout << "weights = " << weights << endl;
+	  cout << "weights(subband=0) = " << weights(all,all,0) << endl;
+	  cout << "weights(subband=1) = " << weights(all,all,1) << endl;
 
-	  Array<complex<W_TYPE>, 2> weights_ref(COMPUTE_INTERVAL, N_ELEMENTS);
-	  Array<complex<W_TYPE>, 2> error(COMPUTE_INTERVAL, N_ELEMENTS);
+	  Array<complex<double>, 3> weights_ref(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_SUBBANDS);
+	  Array<complex<double>, 3> error(COMPUTE_INTERVAL, N_ELEMENTS);
 
 	  //
 	  // read in reference data
@@ -158,15 +156,16 @@ public:
 	  for (int bl = 0; bl < N_BEAMLETS; bl++)
 	  {
 	    TESTC((size_t)weights_ref.size()
-		  == fread(weights_ref.data(), sizeof(complex<W_TYPE>), weights_ref.size(), wfile));
+		  == fread(weights_ref.data(), sizeof(complex<double>), weights_ref.size(), wfile));
 
-	    error = weights_ref - weights(all, Range(0,weights.extent(secondDim)-1,2), bl);
+	    error = weights_ref - weights; //(all, Range(0,weights.extent(secondDim)-1,2), bl);
 	    cout << "error = abs(sum(error)) = " << abs(sum(error)) << endl;
 	    TESTC(abs(sum(error)) < 1e-8);
-
+#if 0
 	    error = weights_ref - weights(all, Range(1,weights.extent(secondDim),2), bl);
 	    cout << "error = abs(sum(error)) = " << abs(sum(error)) << endl;
 	    TESTC(abs(sum(error)) < 1e-8);
+#endif
 	  }
 	  fclose(wfile);
 
@@ -179,7 +178,7 @@ public:
 	  }
 	  LOG_INFO(formatString("calctime = %d sec %d msec", delay.tv_sec, delay.tv_usec/1000));
 
-	  TESTC(m_beam[0]->deallocate() == 0);
+	  TESTC(m_beams.destroy(m_beam[0]) == true);
 	}
 };
 
@@ -188,20 +187,15 @@ int main(int /*argc*/, char** /*argv*/)
   Pointing p;
   p = p;
 
-#if 0
-  char prop_path[PATH_MAX];
-  const char* mac_config = getenv("MAC_CONFIG");
-
-  snprintf(prop_path, PATH_MAX-1,
-	   "%s/%s", (mac_config?mac_config:"."),
-	   "log4cplus.properties");
-  INIT_LOGGER(prop_path);
-#endif
-  
   Suite s("Check Weights Test Suite", &cout);
 
   s.addTest(new CheckWeightsTest);
-  s.run();
+  
+  try {
+    s.run();
+  } catch (string e) {
+    cerr << "Uncaught exception: " << e << endl;
+  }
   long nFail = s.report();
   s.free();
   return nFail;

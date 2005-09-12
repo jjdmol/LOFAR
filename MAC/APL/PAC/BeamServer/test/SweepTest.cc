@@ -26,7 +26,8 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <Suite/suite.h>
 #include <MEPHeader.h>
@@ -39,11 +40,6 @@
 #include <sys/time.h>
 #include <string.h>
 #include <time.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 using namespace BS;
@@ -172,15 +168,15 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	    
 	    // send pointto commands from -90 through 0 to 90
 	    BSBeampointtoEvent pointto;
-	    pointto.type=3;
 	    
 	    // this sends N_BEAMLETS pointto messages, one for each beam
 	    for (int beam = 0; beam < MEPHeader::N_BEAMLETS; beam++)
 	      {
 		pointto.handle = beam_handles[beam];
-		pointto.timestamp.setNow(20);
-		pointto.angle[0]=0.0;
-		pointto.angle[1]=cos(((double)beam/MEPHeader::N_BEAMLETS)*M_PI);
+		pointto.pointing = Pointing(0.0,
+					    ::cos(((double)beam/MEPHeader::N_BEAMLETS)*M_PI),
+					    RTC::Timestamp::now(20),
+					    Pointing::LOFAR_LMN);
 		
 		TESTC(beam_server.send(pointto));
 	      }
