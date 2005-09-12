@@ -26,8 +26,8 @@
 #include "SyncAction.h"
 #include "EPA_Protocol.ph"
 
-using namespace RSP;
 using namespace LOFAR;
+using namespace RSP;
 using namespace EPA_Protocol;
 
 #define N_RETRIES 10

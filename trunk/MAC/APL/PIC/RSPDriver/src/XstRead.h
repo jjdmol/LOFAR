@@ -29,10 +29,11 @@
 #include "MEPHeader.h"
 #include <Common/LofarTypes.h>
 
-namespace RSP
-{
-  class XstRead : public SyncAction
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class XstRead : public SyncAction
+    {
     public:
       /**
        * Constructors for a XstRead object.
@@ -60,6 +61,7 @@ namespace RSP
     private:
       int m_regid;
       EPA_Protocol::MEPHeader m_hdr;
+    };
   };
 };
      

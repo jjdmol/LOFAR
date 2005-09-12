@@ -32,11 +32,11 @@
 
 #include <netinet/in.h>
 
-using namespace RSP;
+using namespace blitz;
 using namespace LOFAR;
+using namespace RSP;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
-using namespace blitz;
 using namespace RTC;
 
 StatusRead::StatusRead(GCFPortInterface& board_port, int board_id)

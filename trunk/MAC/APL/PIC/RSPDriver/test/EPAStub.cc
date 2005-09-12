@@ -21,6 +21,9 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "EPA_Protocol.ph"
 #include "RawEvent.h"
 
@@ -38,14 +41,9 @@
 #include <sys/time.h>
 #include <string.h>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
-using namespace RSP_Test;
 using namespace std;
 using namespace LOFAR;
+using namespace RSP_Test;
 
 #define ETHERTYPE_EPA 0x10FA
 

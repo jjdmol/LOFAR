@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class GetWGCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class GetWGCmd : public Command
+    {
     public:
       /**
        * Constructors for a GetWGCmd object.
@@ -84,7 +85,8 @@ namespace RSP
       GetWGCmd();
 
       RSPGetwgEvent* m_event;
+    };
   };
-};
-     
+};     
+
 #endif /* GETWGCMD_H_ */

@@ -29,11 +29,11 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
-namespace RSP
-{
+namespace LOFAR {
+  namespace RSP {
 
-  class CacheBuffer
-  {
+    class CacheBuffer
+    {
     public:
       /**
        * Constructors for a Cache object.
@@ -78,13 +78,13 @@ namespace RSP
       RSP_Protocol::SystemStatus     m_systemstatus;
       RSP_Protocol::Versions         m_versions;
       RSP_Protocol::Clocks           m_clocks;
-  };
+    };
 
-  /**
-   * Singleton class containing the data caches.
-   */
-  class Cache
-  {
+    /**
+     * Singleton class containing the data caches.
+     */
+    class Cache
+    {
     public:
       /*@{*/
       /**
@@ -124,6 +124,7 @@ namespace RSP
        * Singleton class.
        */
       static Cache* m_instance;
+    };
   };
 };
      

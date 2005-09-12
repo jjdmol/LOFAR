@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class GetWeightsCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class GetWeightsCmd : public Command
+    {
     public:
       /**
        * Constructors for a GetWeightsCmd object.
@@ -83,6 +84,7 @@ namespace RSP
     private:
       GetWeightsCmd();
       RSPGetweightsEvent* m_event;
+    };
   };
 };
      

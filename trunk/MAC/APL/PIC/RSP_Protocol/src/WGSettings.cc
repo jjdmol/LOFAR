@@ -29,11 +29,11 @@
 
 #include <math.h>
 
+using namespace std;
+using namespace blitz;
 using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
-using namespace std;
-using namespace blitz;
 
 // preset waveforms for the 4 types sine, square, triangle and ramp
 Array<int16, 2> WGSettings::m_presets;

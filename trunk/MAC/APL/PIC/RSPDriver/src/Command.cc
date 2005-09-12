@@ -25,8 +25,8 @@
 
 #include "Command.h"
 
-using namespace RSP;
 using namespace LOFAR;
+using namespace RSP;
 
 Command::Command() : m_period(0), m_port(0), m_operation(READ)
 {

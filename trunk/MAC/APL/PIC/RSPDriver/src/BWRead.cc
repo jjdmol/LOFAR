@@ -36,10 +36,10 @@
 
 #define N_RETRIES 3
 
-using namespace RSP;
-using namespace LOFAR;
-using namespace EPA_Protocol;
 using namespace blitz;
+using namespace LOFAR;
+using namespace RSP;
+using namespace EPA_Protocol;
 
 BWRead::BWRead(GCFPortInterface& board_port, int board_id, int regid)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * BF_N_FRAGMENTS),

@@ -29,21 +29,20 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  namespace RSP_Protocol {
 
-namespace RSP_Protocol
-{
-  typedef enum StatsReduction
-  {
-    SUM = 1,
-    REPLACE,
-    MEAN,
-    MAX,
-    MIN,
-    PRODUCT,
-  };
+    typedef enum StatsReduction
+      {
+	SUM = 1,
+	REPLACE,
+	MEAN,
+	MAX,
+	MIN,
+	PRODUCT,
+      };
 
-  class Statistics
-  {
+    class Statistics
+    {
     public:
 
       //
@@ -88,10 +87,11 @@ namespace RSP_Protocol
        * 
        */
       blitz::Array<double, 2> m_statistics;
-  };
+    };
   
-  inline blitz::Array<double, 2>& Statistics::operator()() { return m_statistics; }
+    inline blitz::Array<double, 2>& Statistics::operator()() { return m_statistics; }
 
-};
+  };
 }; // namespace LOFAR     
+
 #endif /* STATISTICS_H_ */

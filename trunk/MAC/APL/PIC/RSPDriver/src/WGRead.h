@@ -28,10 +28,11 @@
 #include "SyncAction.h"
 #include "MEPHeader.h"
 
-namespace RSP
-{
-  class WGRead : public SyncAction
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class WGRead : public SyncAction
+    {
     public:
       /**
        * Constructors for a WGRead object.
@@ -63,6 +64,7 @@ namespace RSP
 
     private:
       EPA_Protocol::MEPHeader m_hdr;
+    };
   };
 };
      

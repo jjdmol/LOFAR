@@ -30,8 +30,8 @@
 #include <PSAccess.h>
 #include <string.h>
 
-using namespace RSP;
 using namespace LOFAR;
+using namespace RSP;
 using namespace EPA_Protocol;
 
 RCURead::RCURead(GCFPortInterface& board_port, int board_id)

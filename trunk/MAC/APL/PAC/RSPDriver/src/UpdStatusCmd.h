@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class UpdStatusCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class UpdStatusCmd : public Command
+    {
     public:
       /**
        * Constructors for a UpdStatusCmd object.
@@ -78,6 +79,7 @@ namespace RSP
     private:
       UpdStatusCmd();
       RSPSubstatusEvent* m_event;
+    };
   };
 };
      

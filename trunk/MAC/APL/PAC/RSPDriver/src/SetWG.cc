@@ -40,8 +40,8 @@
 #include <gnuplot_i.h>
 
 using namespace std;
-using namespace LOFAR;
 using namespace blitz;
+using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace RTC;

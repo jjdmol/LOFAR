@@ -30,11 +30,10 @@
 #include <complex>
 
 namespace LOFAR {
+  namespace RSP_Protocol {
 
-namespace RSP_Protocol
-{
-  class XCStatistics
-  {
+    class XCStatistics
+    {
     public:
 
       /**
@@ -69,10 +68,11 @@ namespace RSP_Protocol
        *                  N_RSPBOARDS * N_BLPS)
        */
       blitz::Array<std::complex<double>, 4> m_xstatistics;
-  };
+    };
   
-  inline blitz::Array<std::complex<double>, 4>& XCStatistics::operator()() { return m_xstatistics; }
+    inline blitz::Array<std::complex<double>, 4>& XCStatistics::operator()() { return m_xstatistics; }
 
-};
+  };
 }; // namespace LOFAR     
+
 #endif /* XCSTATISTICS_H_ */

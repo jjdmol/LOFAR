@@ -30,29 +30,28 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+  namespace RSP_Protocol {
 
-namespace RSP_Protocol
-{
-  class RCUSettings
-  {
+    class RCUSettings
+    {
     public:
       /**
        * Setting bitfield for an RCU.
        */
       typedef union RCURegisterType
       {
-	  struct
-	  {
-	      uint8 lba_enable:1; // bit 0
-	      uint8 hba_enable:1; // bit 1
-	      uint8 bandsel:1;    // bit 2
-	      uint8 filsel_a:1;   // bit 3
-	      uint8 filsel_b:1;   // bit 4
-	      uint8 vl_enable:1;  // bit 5
-	      uint8 vh_enable:1;  // bit 6
-	      uint8 vddvcc_en:1;  // bit 7
-	  };
-	  uint8 value;
+	struct
+	{
+	  uint8 lba_enable:1; // bit 0
+	  uint8 hba_enable:1; // bit 1
+	  uint8 bandsel:1;    // bit 2
+	  uint8 filsel_a:1;   // bit 3
+	  uint8 filsel_b:1;   // bit 4
+	  uint8 vl_enable:1;  // bit 5
+	  uint8 vh_enable:1;  // bit 6
+	  uint8 vddvcc_en:1;  // bit 7
+	};
+	uint8 value;
       };
 
       /**
@@ -80,10 +79,11 @@ namespace RSP_Protocol
 
     private:
       blitz::Array<RCURegisterType, 1> m_registers;
-  };
+    };
   
-  inline blitz::Array<RCUSettings::RCURegisterType, 1>& RCUSettings::operator()() { return m_registers; }
+    inline blitz::Array<RCUSettings::RCURegisterType, 1>& RCUSettings::operator()() { return m_registers; }
 
-};
+  };
 }; // namespace LOFAR
+
 #endif /* RCUSETTINGS_H_ */

@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class GetClocksCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class GetClocksCmd : public Command
+    {
     public:
       /**
        * Constructors for a GetClocksCmd object.
@@ -84,6 +85,7 @@ namespace RSP
       GetClocksCmd();
 
       RSPGetclocksEvent* m_event;
+    };
   };
 };
      

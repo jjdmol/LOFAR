@@ -30,11 +30,9 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
-
-namespace RSP_Protocol
-{
-  class BeamletWeights
-  {
+  namespace RSP_Protocol {
+    class BeamletWeights
+    {
     public:
       /**
        * Constants.
@@ -75,9 +73,9 @@ namespace RSP_Protocol
        * REMOVED Dimension 4, now using rcumask...
        */
       blitz::Array<std::complex<int16>, NDIM> m_weights;
-  };
+    };
 
-  inline blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::operator()() { return m_weights; }
-};
+    inline blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::operator()() { return m_weights; }
+  };
 }; //namespace LOFAR
 #endif /* BEAMLETWEIGHTS_H_ */

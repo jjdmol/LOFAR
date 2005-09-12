@@ -27,10 +27,11 @@
 
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class SyncAction : public GCFFsm
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class SyncAction : public GCFFsm
+    {
     public:
       /**
        * Constructors for a SyncAction object.
@@ -97,6 +98,7 @@ namespace RSP
       int               m_n_blps;
       int               m_current_blp;
       int               m_retries;
+    };
   };
 };
      

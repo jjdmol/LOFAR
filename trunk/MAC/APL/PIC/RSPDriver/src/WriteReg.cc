@@ -36,10 +36,10 @@
 
 #define N_RETRIES 3
 
-using namespace RSP;
-using namespace LOFAR;
-using namespace EPA_Protocol;
 using namespace blitz;
+using namespace LOFAR;
+using namespace RSP;
+using namespace EPA_Protocol;
 using namespace RTC;
 
 WriteReg::WriteReg(GCFPortInterface& board_port, int board_id,

@@ -31,10 +31,11 @@
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
 
-namespace RSP
-{
-  class SetRCUCmd : public Command
-  {
+namespace LOFAR {
+  namespace RSP {
+
+    class SetRCUCmd : public Command
+    {
     public:
       /**
        * Constructors for a SetRCUCmd object.
@@ -79,6 +80,7 @@ namespace RSP
       SetRCUCmd();
 
       RSPSetrcuEvent* m_event;
+    };
   };
 };
      

@@ -29,8 +29,10 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-class SetWG : public GCFTask, public Test
-{
+namespace LOFAR {
+
+  class SetWG : public GCFTask, public Test
+  {
   public:
     /**
      * The constructor of the SetWG task.
@@ -83,6 +85,7 @@ class SetWG : public GCFTask, public Test
     uint8  m_ampl;
     double m_freq;
     int    m_preset;
+  };
 };
      
 #endif /* SETWG_H_ */

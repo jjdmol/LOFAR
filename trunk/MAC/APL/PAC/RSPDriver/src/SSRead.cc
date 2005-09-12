@@ -33,9 +33,9 @@
 
 #define N_RETRIES 3
 
-using namespace RSP;
-using namespace LOFAR;
 using namespace blitz;
+using namespace LOFAR;
+using namespace RSP;
 using namespace RTC;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
