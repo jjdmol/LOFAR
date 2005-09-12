@@ -11,6 +11,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+10)";
 // e.g.
 include = '<sys/time.h>';
 include = '"Beamlet2SubbandMap.h"';
+include = '"Pointing.h"';
 include = '"Timestamp.h"';
 
 prelude = << PRELUDE_END
@@ -133,16 +134,23 @@ event = {
 	    type = "uint32";
       };
       param = {
+	    name = "pointing";
+	    type = "Pointing";
+            userdefined;
+      };
+/*
+      param = {
             // time at which the new direction should be effective
 	    name = "timestamp";
 	    type = "RTC::Timestamp";
       };
       param = {
-	    name = "type"; // 1 == J2000, 2 = AZEL, 3 = LOFAR_LMN
+	    name = "type"; // BS_Protocol::J2000, AZEL or LOFAR_LMN
 	    type = "int16";
       };
       param = {
 	    name = "angle";
 	    type = "double[2]";
       };
+*/
 };
