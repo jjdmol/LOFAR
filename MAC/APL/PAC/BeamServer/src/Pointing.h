@@ -25,8 +25,13 @@
 
 #include "Timestamp.h"
 
+#include <AMCBase/Converter.h>
+#include <AMCBase/SkyCoord.h>
+#include <AMCBase/EarthCoord.h>
+#include <AMCBase/TimeCoord.h>
+
 namespace LOFAR {
-  namespace BS {
+  namespace BS_Protocol {
 
     /**
      * Class with 
@@ -53,7 +58,7 @@ namespace LOFAR {
 	 * Constructors and destructors for a pointing.
 	 */
 	Pointing();
-	Pointing(double angle1, double angle2, RTC::Timestamp time, Type type);
+	Pointing(double angle0, double angle1, RTC::Timestamp time, Type type);
 	virtual ~Pointing();
 	//@}
 
@@ -62,7 +67,7 @@ namespace LOFAR {
 	 * 'set' methods to set the time and
 	 * direction of a pointing.
 	 */
-	void setDirection(double angle1, double angle2);
+	void setDirection(double angle0, double angle1);
 	void setTime(RTC::Timestamp time);
 	void setType(Type type);
 	//@}
@@ -72,8 +77,8 @@ namespace LOFAR {
 	 * Accessor methods. Get the time and
 	 * direction of a pointing.
 	 */
+	double         angle0()    const;
 	double         angle1()    const;
-	double         angle2()    const;
 	RTC::Timestamp time()      const;
 	bool           isTimeSet() const;
 	//@}
@@ -84,26 +89,44 @@ namespace LOFAR {
 	Type      getType() const;
 
 	/**
+	 * Convert pointing from J2000 or AZEL format to LMN format
+	 * if it is not already in LMN format.
+	 * param conv Pointer to the converter (must be != 0 for J2000 type).
+	 * param pos Pointer to position on earth for conversion (must be != 0 for J2000 type).
+	 */
+	Pointing convertToLMN(AMC::Converter* conv, AMC::EarthCoord* pos);
+
+	/**
 	 * Compare the time of two pointings.
 	 * Needed for priority queue of pointings.
 	 */
 	bool operator<(Pointing const & right) const;
 
+      public:
+	/*@{*/
+	/**
+	 * marshalling methods
+	 */
+	unsigned int getSize();
+	unsigned int pack  (void* buffer);
+	unsigned int unpack(void *buffer);
+	/*@}*/
+
       private:
+	double         m_angle0;
 	double         m_angle1;
-	double         m_angle2;
 	RTC::Timestamp m_time;
 	Type           m_type;
       };
 
     inline void   Pointing::setTime(RTC::Timestamp time) { m_time = time; }
     inline void   Pointing::setType(Type type) { m_type = type; }
-    inline void   Pointing::setDirection(double angle1, double angle2) { m_angle1 = angle1; m_angle2 = angle2; }
+    inline void   Pointing::setDirection(double angle0, double angle1) { m_angle0 = angle0; m_angle1 = angle1; }
     inline RTC::Timestamp Pointing::time() const      { return m_time;  }
     inline bool   Pointing::isTimeSet() const { return !(0 == m_time.sec() && 0 == m_time.usec()); }
     inline Pointing::Type Pointing::getType() const   { return m_type; }
+    inline double Pointing::angle0() const    { return m_angle0; }
     inline double Pointing::angle1() const    { return m_angle1; }
-    inline double Pointing::angle2() const    { return m_angle2; }
     inline bool   Pointing::operator<(Pointing const & right) const
       {
         // inverse priority, earlier times are at the front of the queue

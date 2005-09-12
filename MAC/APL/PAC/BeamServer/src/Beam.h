@@ -28,10 +28,12 @@
 #include "Beamlet2SubbandMap.h"
 #include <Timestamp.h>
 #include <SpectralWindow.h>
-#include <AntennaArray.h>
+#include <SubArray.h>
 #include <AntennaGains.h>
 #include <MEPHeader.h>
 #include <time.h>
+#include <AMCBase/Converter.h>
+#include <AMCBase/EarthCoord.h>
 
 #include <queue>
 #include <set>
@@ -52,9 +54,11 @@ namespace LOFAR {
 
       /**
        * Default constructor
+       * @param name The name of this beam.
+       * @param nsubbands The number of subbands of this beam.
+       * @param pos The position of this beam on earth (the LOFAR station position).
        */
-      Beam(std::string name, int nsubbands);
-
+      Beam(std::string name, int nsubbands, AMC::EarthCoord pos);
 	
       /**
        * Default destructor.
@@ -91,12 +95,12 @@ namespace LOFAR {
       /**
        * @return Current pointing.
        */
-      inline Pointing getPointing() const { return m_pointing; }
+      inline BS_Protocol::Pointing getPointing() const { return m_pointing; }
 
       /**
        * Add a pointing to a beam.
        */
-      void addPointing(const Pointing& pointing);
+      void addPointing(const BS_Protocol::Pointing& pointing);
 
       /**
        * Set the spectral window for this beam.
@@ -106,12 +110,25 @@ namespace LOFAR {
       /**
        * Set the subarray (positions & rcu_index)
        */
-      void setSubarray(const CAL::AntennaArray& array);
+      void setSubarray(const CAL::SubArray& array);
 
       /**
        * setCalibration weights for the receivers
        */
       void setCalibration(const CAL::AntennaGains& gains);
+
+      /**
+       * Get the current calibration values.
+       */
+      const CAL::AntennaGains& getCalibration() const;
+
+      /**
+       * Log pointing information of this beam
+       * to GET_CONFIG_PATH + "/indi_pipe" which should
+       * be a named pipe. The data on this named pipe
+       * is read by an INDI driver and passed on to KStars.
+       */
+      void logPointing(BS_Protocol::Pointing pointing);
 
       /**
        * Convert coordinates from the m_pointing_queue
@@ -122,9 +139,9 @@ namespace LOFAR {
        * @param begintime First time of pointing to convert, this is typically
        * the last time the method was called. E.g.
        * @code
-       * begintime=lasttime;
-       * gettimeofday(&lasttime, 0);
-       * lasttime.tv_sec += compute_interval; // compute_interval seconds ahead in time
+       * Timestamp begintime=lasttime;
+       * lasttime.setNow();
+       * lasttime += compute_interval; // compute_interval seconds ahead in time
        * for (beam in beams)
        * {
        *   // convert coordinate for next compute_interval seconds
@@ -132,9 +149,10 @@ namespace LOFAR {
        * }
        * @endcode
        * @param compute_interval the interval for which pointings must be computed
+       * @param conv The Converter object to use for coordinate conversions.
        * @return int 0 if successful, < 0 otherwise
        */
-      int convertPointings(RTC::Timestamp begintime, int compute_interval);
+      int convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::Converter* conv);
 
       /**
        * Get converted time-stamped coordinates frobm the queue.
@@ -142,12 +160,12 @@ namespace LOFAR {
        * queue of coordinates.
        * @return array with the coordinates for the next period.
        */
-      const blitz::Array<W_TYPE,2>& getLMNCoordinates() const;
+      const blitz::Array<double,2>& getLMNCoordinates() const;
 
       /**
        * Return the spectral window for this beam.
        */
-      const CAL::SpectralWindow* getSPW() const;
+      const CAL::SpectralWindow& getSPW() const;
 
       /**
        * Get the name of the beam or subarray on which
@@ -174,25 +192,21 @@ namespace LOFAR {
       BS_Protocol::Beamlet2SubbandMap m_allocation;
 
       /**
-       * SpectralWindow
+       * number of subbands
        */
-      CAL::SpectralWindow* m_spw;
       int                  m_nsubbands;
 	  
       /** current direction of the beam */
-      Pointing m_pointing;
+      BS_Protocol::Pointing m_pointing;
 
       /** queue of future pointings */
-      std::priority_queue<Pointing> m_pointing_queue;
+      std::priority_queue<BS_Protocol::Pointing> m_pointing_queue;
 
       /**
        * Current coordinate track in station local coordinates.
-       * Two dimensional array for (l,m,n) coordinates
-       * The first dimension is always 3 (for the three
-       * coordinates) the second dimension is m_compute_interval
+       * Two dimensional array of compute_interval x 3 (l,m,n) coordinates
        */
-      blitz::Array<W_TYPE,2> m_azels; // az,el coordinates
-      blitz::Array<W_TYPE,2> m_lmns;  // l,m,n coordinates
+      blitz::Array<double,2> m_lmns;  // l,m,n coordinates
 
       /**
        * Set of beamlets belonging to this beam.
@@ -204,12 +218,17 @@ namespace LOFAR {
       /**
        * The antenna array.
        */
-      CAL::AntennaArray m_array;
+      CAL::SubArray m_array;
 
       /**
        * The antenna gains.
        */
       CAL::AntennaGains m_gains;
+
+      /**
+       * Position of this beam on Earth.
+       */
+      AMC::EarthCoord m_pos;
 
     private:
       /**
@@ -232,7 +251,12 @@ namespace LOFAR {
     class Beams {
   
     public:
-      Beams(int nbeamlets);
+      /**
+       * Create a collection of beams with subbands allocated from nbeamlets.
+       * @param nbeamlets The maximum number of beamlets that can be allocated
+       * @param pos The position of the beams on earth (LOFAR station position).
+       */
+      explicit Beams(int nbeamlets, AMC::EarthCoord pos = AMC::EarthCoord(1.0,1.0,0.0));
 
       /**
        * Create a new beam.
@@ -252,7 +276,7 @@ namespace LOFAR {
       /**
        * Update gains
        */
-      bool updateCalibration(uint32 handle, const CAL::AntennaGains& gains);
+      bool updateCalibration(uint32 handle, CAL::AntennaGains& gains);
 
       /**
        * Check if a beam exists.
@@ -271,8 +295,9 @@ namespace LOFAR {
        */
       void calculate_weights(RTC::Timestamp timestamp,
 			     int compute_interval,
-			     const blitz::Array<W_TYPE, 3>&         pos,
-			     blitz::Array<std::complex<W_TYPE>, 3>& weights);
+			     const blitz::Array<double, 3>&         pos,
+			     blitz::Array<std::complex<double>, 3>& weights,
+			     AMC::Converter* conv);
 
       /**
        * Return the combined beamlet to subband
@@ -296,6 +321,11 @@ namespace LOFAR {
        * Collection of all beamlets;
        */
       Beamlets                m_beamlets; // collection of all beamlets
+
+      /**
+       * Position of all beams on earth.
+       */
+      AMC::EarthCoord m_pos;
     };
 
   };

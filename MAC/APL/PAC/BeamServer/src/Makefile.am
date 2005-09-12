@@ -1,17 +1,23 @@
 
 
+#
+# if USE_CAL_THREAD is defined in Calibration/src/Makefile.am it should be
+# defined here as well and vice versa
+#
+
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-DEPA_Y_POL_IMAG_FIX \
 	-DWEIGHTS_IN_NETWORK_ORDER \
-	-DUSE_GNUPLOT
+	-DUSE_GNUPLOT \
+	-DUSE_CAL_THREAD
 
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
 	BS_Protocol.ph \
@@ -61,6 +67,9 @@ BeamServer_SOURCES = \
 
 BeamServer_LDADD = \
 	$(top_builddir)/src/libabs.la -lcal -lcaldevel -lrsp
+
+clean-local:
+	rm -f *.ph
 
 #include $(lofar_sharedir)/Makefile.common
 include ../Makefile.common

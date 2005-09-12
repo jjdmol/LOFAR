@@ -29,6 +29,8 @@
 #include "Beamlet.h"
 #include <Timestamp.h>
 
+#include <AMCBase/AMCClient/ConverterClient.h>
+
 #include <GCF/TM/GCF_Control.h>
 
 #include <set>
@@ -40,6 +42,31 @@ namespace LOFAR {
 
     class BeamServer : public GCFTask
       {
+      private:
+
+	/**
+	 * Class to maintain state on current beam
+	 * transaction (albeit Beamalloc or Beamfree)
+	 */
+	class BeamTransaction
+	  {
+	  public:
+	    BeamTransaction() : m_port(0), m_beam(0) /*, event(0), calhandle(0)*/ {}
+
+	    void set(GCFPortInterface* port, Beam* beam) { m_port = port; m_beam = beam; }
+	    inline void reset() { set(0,0); }
+
+	    GCFPortInterface* getPort() const { return m_port; }
+	    Beam*             getBeam() const { return m_beam; }
+
+	  private:
+	    // Port on which the transaction is taking place.
+	    GCFPortInterface* m_port;
+
+	    // Beam that is the subject of the transaction
+	    Beam* m_beam;
+	  };
+
       public:
 	/**
 	 * The constructor of the BeamServer task.
@@ -56,6 +83,23 @@ namespace LOFAR {
 	 * Method to clean up disconnected client ports.
 	 */
 	void undertaker();
+
+	/**
+	 * Destroy all beams associated with port.
+	 */
+	void  destroyAllBeams(GCFPortInterface* port);
+
+	/**
+	 * Create new beam and update administration
+	 */
+	Beam* newBeam(BeamTransaction& bt, GCFPortInterface* port,
+		      std::string name, BS_Protocol::Beamlet2SubbandMap allocation, int nsubbands);
+
+	/**
+	 * Destroy beam of specified transaction.
+	 * @param bt the beamtransaction specifying the beam to destroy
+	 */
+	void deleteBeam(BeamTransaction& bt);
 
 	/**
 	 * @return true if ready to transition to the enabled
@@ -75,6 +119,13 @@ namespace LOFAR {
 	 * client connections.
 	 */
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
+
+	/**
+	 * Cleanup state, when the rspdriver, the calserver or the
+	 * acceptor disconnects, then disconnect all clients and
+	 * return to the initial state.
+	 */
+	GCFEvent::TResult cleanup(GCFEvent& e, GCFPortInterface& p);
 
 	/**
 	 * The beamalloc state. In this state the complete process
@@ -101,7 +152,7 @@ namespace LOFAR {
 	 * free a beam
 	 */
 	bool beamfree_start(BSBeamfreeEvent& bf,
-			     GCFPortInterface& port);
+			    GCFPortInterface& port);
 
 	/**
 	 * Change the direction of a beam.
@@ -121,12 +172,6 @@ namespace LOFAR {
 	void send_weights(RTC::Timestamp time);
 
 	/**
-	 * Determine the new subband selection after a beam
-	 * has been allocated or freed.
-	 */
-	void update_sbselection();
-
-	/**
 	 * Send subbands selection to the board.
 	 */
 	void send_sbselection();
@@ -142,34 +187,6 @@ namespace LOFAR {
 	GCFEvent::TResult recall(GCFPortInterface& p);
 
       private:
-
-	/**
-	 * Class to maintain state on current beam
-	 * transaction (albeit Beamalloc or Beamfree)
-	 */
-	class BeamTransaction
-	{
-	public:
-	  BeamTransaction() : m_port(0), m_beam(0) /*, event(0), calhandle(0)*/ {}
-
-	         void set(GCFPortInterface* port, Beam* beam) { m_port = port; m_beam = beam; }
-	  inline void reset() { set(0,0); }
-
-	  GCFPortInterface* getPort() const { return m_port; }
-	  Beam*             getBeam() const { return m_beam; }
-
-	private:
-	  // Port on which the transaction is taking place.
-	  GCFPortInterface* m_port;
-
-	  // Beam that is the subject of the transaction
-	  Beam* m_beam;
-
-	  //BS_Protocol::BSBeamallocEvent* event;
-	  //uint32                         calhandle;
-	};
-
-      private:
 	// member variables
 
 	/**
@@ -179,15 +196,13 @@ namespace LOFAR {
 
 	/**
 	 * Receptor positions in 3 dimensions (x, y and z)
-	 * \note The type is set to W_TYPE to make sure the computations
-	 * are all carried out in the same precision.
 	 */
-	blitz::Array<W_TYPE, 3> m_pos;
+	blitz::Array<double, 3> m_pos;
 
 	/**
 	 * Weight array
 	 */
-	blitz::Array<std::complex<W_TYPE>,  3> m_weights;
+	blitz::Array<std::complex<double>,  3> m_weights;
 	blitz::Array<std::complex<int16_t>, 3> m_weights16;
 
       private:
@@ -214,6 +229,8 @@ namespace LOFAR {
 	int32    m_sampling_frequency;
 	int32    m_nyquist_zone;    
 	Beams    m_beams;
+
+	AMC::ConverterClient m_converter;
       };
   };
 };
