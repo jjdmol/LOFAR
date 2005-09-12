@@ -9,21 +9,22 @@ AM_CPPFLAGS = \
 #	CheckWeightsTest2 
 
 TESTS = \
-	avtstub.sh
+	avtstub.sh \
+	CheckWeightsTest
 
 bin_PROGRAMS = \
 	AVTStub \
 	EPATest \
-	SweepTest
+	SweepTest \
+	CheckWeightsTest
 
 #	BeamServerTest 
-#	CheckWeightsTest 
 #	CheckWeightsTest2 
 
-#check_PROGRAMS = \
-#	SweepTest
+check_PROGRAMS = \
+	CheckWeightsTest
 
-# BeamServerTest_SOURCES = \
+BeamServerTest_SOURCES = \
 # 	BSTest.h \
 # 	BeamServerTest.cc
 
@@ -31,12 +32,12 @@ bin_PROGRAMS = \
 # 	$(top_builddir)/src/libabs.la \
 # 	-lsuite
 
-# CheckWeightsTest_SOURCES = \
-# 	CheckWeightsTest.cc
+CheckWeightsTest_SOURCES = \
+	CheckWeightsTest.cc
 
-# CheckWeightsTest_LDADD = \
-# 	$(top_builddir)/src/libabs.la \
-# 	-lsuite
+CheckWeightsTest_LDADD = \
+	$(top_builddir)/src/libabs.la \
+	-lsuite
 
 # CheckWeightsTest2_SOURCES = \
 # 	CheckWeightsTest2.cc

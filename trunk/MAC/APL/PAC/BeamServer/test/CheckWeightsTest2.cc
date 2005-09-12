@@ -21,6 +21,9 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "SpectralWindow.h"
 #include "Beam.h"
 #include "Beamlet.h"
@@ -32,11 +35,6 @@
 
 #include <stdio.h>
 #include <netinet/in.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace blitz;
 using namespace LOFAR;

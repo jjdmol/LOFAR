@@ -21,7 +21,8 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <Suite/suite.h>
 #include <MEPHeader.h>
@@ -33,11 +34,6 @@
 #include <sys/time.h>
 #include <string.h>
 #include <time.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 //
 // using half of the beamlets should allow two AVTStub clients
@@ -239,10 +235,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& port)
 	// send pointto command
 	BSBeampointtoEvent pointto;
 	pointto.handle = ack.handle;
-	pointto.timestamp.setNow(15);
-	pointto.type=3;
-	pointto.angle[0]=0.0;
-	pointto.angle[1]=-1.0;
+	pointto.pointing = Pointing(0.0, -1.0, RTC::Timestamp::now(15), Pointing::LOFAR_LMN);
 
 	TESTC(beam_server.send(pointto));
 
@@ -334,10 +327,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
 	    // send pointto command
 	    BSBeampointtoEvent pointto;
 	    pointto.handle = ack.handle;
-	    pointto.timestamp.setNow(15);
-	    pointto.type=3;
-	    pointto.angle[0]=0.0;
-	    pointto.angle[1]=-1.0;
+	    pointto.pointing = Pointing(0.0, -1.0, RTC::Timestamp::now(15), Pointing::LOFAR_LMN);
 
 	    TESTC(beam_server.send(pointto));
 
@@ -540,17 +530,12 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& port)
 	// send pointto command (zenith)
 	BSBeampointtoEvent pointto;
 	pointto.handle = ack.handle;
-	pointto.timestamp.setNow(20);
-	pointto.type=3;
-	pointto.angle[0]=0.0;
-	pointto.angle[1]=1.0;
+	pointto.pointing = Pointing(0.0, 1.0, RTC::Timestamp::now(20), Pointing::LOFAR_LMN);
 
 	TESTC(beam_server.send(pointto));
 
 	// send pointto command (northern horizon)
-	pointto.timestamp = pointto.timestamp + 5;
-	pointto.angle[0]=1.0;
-	pointto.angle[1]=0.0;
+	pointto.pointing = Pointing(1.0, 0.0, RTC::Timestamp::now(25), Pointing::LOFAR_LMN);
 
 	TESTC(beam_server.send(pointto));
 

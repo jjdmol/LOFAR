@@ -21,6 +21,9 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "Beam.h"
 
 #include "BSTest.h"
@@ -28,18 +31,13 @@
 #include <iostream>
 
 #include <blitz/array.h>
-using namespace blitz;
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-using namespace LOFAR;
 
 #define N_BEAMS              (8)
 #define N_BEAMLETS           (206)
 #define N_SUBBANDS_PER_BEAM  (N_BEAMLETS/N_BEAMS)
 
+using namespace blitz;
+using namespace LOFAR;
 using namespace BS;
 using namespace std;
 
