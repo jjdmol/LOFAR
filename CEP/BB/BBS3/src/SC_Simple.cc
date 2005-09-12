@@ -139,7 +139,7 @@ bool SC_Simple::execute()
     if (fmod(itsCurIter, itsNrIterations) == 0)
     {
       nextInter = true;
-      itsCurStartTime += itsArgs.getFloat ("timeInterval");
+      itsCurStartTime += itsArgs.getDouble ("timeInterval");
     }
     else if (fit < itsFitCriterium)
     {
@@ -155,10 +155,10 @@ bool SC_Simple::execute()
     // Set prediffer workorder data
     WOPD->setStatus(DH_WOPrediff::New);
     WOPD->setKSType("Prediff1");
-    WOPD->setStartFreq (itsArgs.getFloat ("startFreq"));
-    WOPD->setFreqLength (itsArgs.getFloat ("freqLength"));
+    WOPD->setStartFreq (itsArgs.getDouble ("startFreq"));
+    WOPD->setFreqLength (itsArgs.getDouble ("freqLength"));
     WOPD->setStartTime (itsCurStartTime);
-    float timeLength = itsArgs.getFloat ("timeInterval");
+    double timeLength = itsArgs.getDouble ("timeInterval");
     WOPD->setTimeLength (timeLength);
     WOPD->setModelType (itsArgs.getString ("modelType"));
     WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr"));
