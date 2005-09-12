@@ -21,7 +21,9 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
@@ -32,11 +34,6 @@
 #include <sys/time.h>
 #include <string.h>
 #include <blitz/array.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace blitz;
