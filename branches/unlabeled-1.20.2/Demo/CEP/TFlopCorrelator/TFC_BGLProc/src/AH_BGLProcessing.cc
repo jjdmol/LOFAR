@@ -105,7 +105,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   for (int cor = 0; cor < noCorsPerFilt; cor++) {
 
     snprintf(WH_Name, 40, "Correlator_%d_of_%d", cor, noCorsPerFilt);
-    WH_Correlator* CorNode = new WH_Correlator(WH_Name);
+    WH_Correlator* CorNode = new WH_Correlator(WH_Name, NR_CHANNELS_PER_CORRELATOR);
     itsWHs.push_back(CorNode);
     itsWHs.back()->runOnNode(lowestFreeNode++);
 
