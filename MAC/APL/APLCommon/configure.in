@@ -10,10 +10,6 @@ AM_INIT_AUTOMAKE(APLCommon, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-AC_DEFINE_UNQUOTED([ARA_SYSCONF],["${prefix}/etc"],[Path to ARA install prefix directory.])
-RSP_SYSCONF="${prefix}/etc"
-AC_SUBST([ARA_SYSCONF])
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC
