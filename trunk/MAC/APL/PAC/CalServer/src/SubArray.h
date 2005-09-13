@@ -130,7 +130,7 @@ namespace LOFAR {
       /* prevent copy */
       SubArray(const SubArray& other); // no implementation
 
-      SpectralWindow m_spw;              // reference to the spectral window for this subarray
+      SpectralWindow m_spw;              // the spectral window for this subarray
       AntennaGains*  m_result[BACK + 1]; // two calibration result records
     };
 
