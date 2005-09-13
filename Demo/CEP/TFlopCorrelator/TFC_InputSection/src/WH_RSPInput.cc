@@ -78,7 +78,9 @@ void* WriteToBufferThread(void* arguments)
     // catch a frame from input connection
     if (readnew) {
       try {
-        args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
+	if (args->Connection != 0){
+	  args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
+	}
       } catch (Exception& e) {
 	LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
 	pthread_exit(NULL);
@@ -144,9 +146,14 @@ void* WriteToBufferThread(void* arguments)
     }
     cnt_total++;
     if (speedCounter-- < 1) {
-      cout << cnt_total*args->nrPacketsInFrame <<" packets: "<< cnt_missed<<" missed and "<<cnt_rewritten<<" rewritten"<<endl;
+      if (args->IsMaster) {
+	cout<<"master: ";
+      } else {
+	cout<<"slave : ";
+      }
+      cout << cnt_total*args->nrPacketsInFrame <<" EPApackets: "<< cnt_missed<<" missed and "<<cnt_rewritten<<" rewritten"<<endl;
       cnt_total = cnt_missed = cnt_rewritten = 0;
-      speedCounter = 100;
+      speedCounter = 999;
     }
   }
 }
@@ -253,6 +260,7 @@ void WH_RSPInput::startThread()
   writerinfo.StationIDptr       = &itsStationID;
   writerinfo.EPAHeaderSize      = itsEPAHeaderSize;
   writerinfo.EPAPacketSize      = itsEPAPacketSize;
+  writerinfo.IsMaster           = itsSyncMaster;
   
   if ((dynamic_cast<TH_File*> (&itsTH)) != 0) {
     // if we are reading from file, overwriting the buffer should not be allowed
@@ -372,6 +380,8 @@ void WH_RSPInput::process()
 
 void WH_RSPInput::postprocess()
 {
+  cout<<"in WH_RSPInput postprocess"<<endl;
+  writerinfo.Connection         = 0;
   // stop writer thread
   pthread_cancel(writerthread);
 }

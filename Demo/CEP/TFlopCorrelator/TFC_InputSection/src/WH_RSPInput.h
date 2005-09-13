@@ -50,6 +50,7 @@ namespace LOFAR
     int nrRSPoutputs;
     int* StationIDptr;
     bool Stopthread;
+    bool IsMaster;
   }  thread_args;
   
   class WH_RSPInput: public WorkHolder
