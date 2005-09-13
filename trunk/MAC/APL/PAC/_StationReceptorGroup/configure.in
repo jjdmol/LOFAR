@@ -10,10 +10,6 @@ AM_INIT_AUTOMAKE(StationReceptorGroup, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-AC_DEFINE_UNQUOTED([ASR_SYSCONF],["${prefix}/etc"],[Path to ASR install prefix directory.])
-ASR_SYSCONF="${prefix}/etc"
-AC_SUBST([ASR_SYSCONF])
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC

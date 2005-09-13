@@ -10,10 +10,6 @@ AM_INIT_AUTOMAKE(ArrayOperations, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-AC_DEFINE_UNQUOTED([AAO_SYSCONF],["${prefix}/etc"],[Path to AAO install prefix directory.])
-AAO_SYSCONF="${prefix}/etc"
-AC_SUBST([AAO_SYSCONF])
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC

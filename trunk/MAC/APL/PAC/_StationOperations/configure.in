@@ -10,10 +10,6 @@ AM_INIT_AUTOMAKE(StationOperations, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-AC_DEFINE_UNQUOTED([ASO_SYSCONF],["${prefix}/etc"],[Path to ASO install prefix directory.])
-ASO_SYSCONF="${prefix}/etc"
-AC_SUBST([ASO_SYSCONF])
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC

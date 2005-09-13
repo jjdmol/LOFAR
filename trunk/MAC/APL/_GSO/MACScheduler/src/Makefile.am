@@ -33,7 +33,9 @@ EXTRA_DIST =   \
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA = \
-	customPrepPVSSDB.ctl \
+	customPrepPVSSDB.ctl
+
+sysconf_DATA= \
 	MACScheduler.conf \
 	MACScheduler.log_prop
 	

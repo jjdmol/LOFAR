@@ -10,10 +10,6 @@ AM_INIT_AUTOMAKE(VirtualTelescope, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-AC_DEFINE_UNQUOTED([AVT_SYSCONF],["${prefix}/etc"],[Path to AVT install prefix directory.])
-AVT_SYSCONF="${prefix}/etc"
-AC_SUBST([AVT_SYSCONF])
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC
