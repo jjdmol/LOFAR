@@ -93,7 +93,8 @@ namespace LOFAR {
 	 * Create new beam and update administration
 	 */
 	Beam* newBeam(BeamTransaction& bt, GCFPortInterface* port,
-		      std::string name, BS_Protocol::Beamlet2SubbandMap allocation);
+		      std::string nodeid, std::string subarrayname,
+		      BS_Protocol::Beamlet2SubbandMap allocation);
 
 	/**
 	 * Destroy beam of specified transaction.

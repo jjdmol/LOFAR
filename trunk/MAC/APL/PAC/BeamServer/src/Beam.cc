@@ -46,7 +46,8 @@ using namespace BS_Protocol;
 using namespace std;
 using namespace RTC;
 
-Beam::Beam(string name, int nsubbands, EarthCoord pos) : m_name(name), m_nsubbands(nsubbands), m_pos(pos)
+Beam::Beam(string nodeid, string subarrayname, int nsubbands, EarthCoord pos) :
+  m_nodeid(nodeid), m_subarrayname(subarrayname), m_nsubbands(nsubbands), m_pos(pos)
 {}
 
 Beam::~Beam()
@@ -181,7 +182,7 @@ void Beam::logPointing(Pointing pointing)
   LOG_INFO_STR("DEC=" << deg << "deg " << degmm << "' " << degss << "''");
 
   fprintf(pipe, "%s %d %lf %lf\n",
-	  getName().c_str(), 0, pointing.angle0(), pointing.angle1());
+	  getNodeid().c_str(), 0, pointing.angle0(), pointing.angle1());
   fflush(pipe);
 }
 
@@ -304,9 +305,9 @@ Beams::Beams(int nbeamlets, int nsubbands, EarthCoord pos) : m_beamlets(nbeamlet
 {
 }
 
-Beam* Beams::get(string name, Beamlet2SubbandMap allocation)
+Beam* Beams::get(string nodeid, string subarrayname, Beamlet2SubbandMap allocation)
 {
-  Beam* beam = new Beam(name, m_nsubbands, m_pos);
+  Beam* beam = new Beam(nodeid, subarrayname, m_nsubbands, m_pos);
 
   if (beam) {
 
