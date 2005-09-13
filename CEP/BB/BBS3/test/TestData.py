@@ -269,6 +269,6 @@ if __name__ == '__main__':
    tr=TestRun()
    tr.add(Interval())
    tr.children[0].add(Iteration())
-   tr.children[0].children[0].add(Parameter())
+   tr.children[0].children[0].add(Parameter('testparm', list()))
    tr.doPrint('')
    print('exitting')

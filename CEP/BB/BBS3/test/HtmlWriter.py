@@ -15,6 +15,7 @@ import sys
 import time
 import TestData
 import OutputParser
+import pdb
 from forgetHTML import *
 
 class BBSTestResultDocument(SimpleDocument):
@@ -45,6 +46,8 @@ class BBSTestResultDocument(SimpleDocument):
       #self.body.append(self.mytimertable)
       self.body.append(TestInfoParagraph(self.testinfo))
       for testrun in self.mytests:
+         pdb.set_trace()
+         self.body.append(Block(Text('testrun: ' + str(testrun))))
          self.body.append(testrun)
       self.body.append(Ruler())
       self.body.append("End of BBSTest Results")
@@ -198,7 +201,7 @@ class TestParagraph(Paragraph):
          self.myPTraceTables.append(ParmTraceTable(Strong("Interval " + str(int)), tdd[int]))
       Paragraph.__init__(self)
    def __str__(self):
-      mypar = Paragraph()
+      mypar = Block()
       mypar.append(Header(self.name, 2))
       mypar.append(Small(Href("#home", "back to top")))
       mypar.append(Header("Settings:", 3))
@@ -297,7 +300,7 @@ if __name__ == "__main__":
       op = OutputParser.OutputParser('testDefault')
       op.parseFileByName('testDefault.out')
       tr = op.itsTestRun
-      tr.doPrint(' ')
+      #      tr.doPrint(' ')
       
    d.addTest('test', tr)
    open('output.html', 'w').write(str(d))
