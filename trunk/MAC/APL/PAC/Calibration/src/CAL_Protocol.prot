@@ -43,7 +43,7 @@ PRELUDE_END;
 event = {
       signal = START; // start calibration of a subarray
       dir = IN;
-      param = { // name of the subarray
+      param = { // name of the subarray (used as nodeid in key-value logger)
 	    name = "name";
 	    type = "string";
       };
