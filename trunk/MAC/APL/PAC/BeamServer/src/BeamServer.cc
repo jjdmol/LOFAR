@@ -204,11 +204,11 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 }
 
 Beam* BeamServer::newBeam(BeamTransaction& bt, GCFPortInterface* port,
-			  std::string nodeid, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation)
+			  std::string name, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation)
 {
   ASSERT(port && 0 == bt.getPort() && 0 == bt.getBeam());
 
-  Beam* beam = m_beams.get(nodeid, subarrayname, allocation);
+  Beam* beam = m_beams.get(name, subarrayname, allocation);
 
   if (beam) {
     // register new beam
@@ -623,7 +623,7 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 				 GCFPortInterface& port)
 {
   // allocate the beam
-  Beam* beam = newBeam(m_bt, &port, ba.nodeid, ba.subarrayname, ba.allocation);
+  Beam* beam = newBeam(m_bt, &port, ba.name, ba.subarrayname, ba.allocation);
 
   if (!beam) {
 
