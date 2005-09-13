@@ -83,7 +83,7 @@ die "No env.var. SSH_ORIGINAL_COMMAND" unless defined $ENV{'SSH_ORIGINAL_COMMAND
 ##
 $line = $ENV{'SSH_ORIGINAL_COMMAND'};
 
-die "invalid command string" unless $line =~ m/^cvs\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)$/;
+die "invalid command string '$line'" unless $line =~ m/^cvs\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)$/;
 
 $cmd = $1;
 $subcmd = $2;
@@ -104,13 +104,22 @@ if ( scalar(@ARGV) == 0 ) {
     exit(0);
 }
 
-if ( $subcmd =~ /DIR$/ ) {
-    die "destination must be a directory" if -e "$CVS/$to" && ! -d "$CVS/$to";
-    die "destination must be a directory" if -e "$CVS/$to,v";
+if ( $subcmd =~ /^SHOWTREE$/ ) {
+    print "{$CVS}\n";
+    system( "find $CVS/$from -type d -print" );
+    exit(0);
+}
+
+if ( $subcmd =~ /^DIR$/ ) {
+    die "source '$from' must be a directory" if ! -d "$CVS/$from";
+    die "destination '$to' must be a directory" if -e "$CVS/$to" && ! -d "$CVS/$to";
+    die "destination '$to' must be a directory" if -e "$CVS/$to,v";
 }
 if ( $subcmd =~ /^FIL/ ) {
-    die "source must be a regular file" if -e "$CVS/$to,v" && -d "$CVS/$to,v";
+    die "source '$from' must be a regular file" if ! -e "$CVS/$from,v";
+    die "destination '$to' must be a file name (not a directory)" if -d "$CVS/$to";
 }
+die "dirname of destination '$to' must be an existing directory" if ! -d dirname("$CVS/$to");
 
 if ( -d "$CVS/$from" ) {
     die "cannot move a directory to a file" if -e "$CVS/$to" && ! -d "$CVS/$to";
@@ -124,10 +133,7 @@ if ( -d "$CVS/$from" ) {
     $message_to = $to;
 } elsif ( -f "$CVS/$from,v" ) {
     $from_path=dirname($from);
-    if ( -d "$CVS/$to" ) {
-	$to_path=$to;
-	push( @to_files, basename($from) );
-    } elsif ( -f "$CVS/$to,v" ) {
+    if ( -f "$CVS/$to,v" ) {
 	die "cannot overwrite existing file, $CVS/$to,v";
     } else {
 	$to_path=dirname($to);
@@ -213,6 +219,7 @@ die "could not change to $TMP" unless chdir "$TMP";
 ##
 ## increment & tag the copy
 ##
+print "$cvs -d $CVS co -l -d to $to \n";
 system( "$cvs -d $CVS co -l -d to $to" );
 die "could not change to 'to'" unless chdir "to";
 system( "$cvs commit -f -m '%lofarcvsmv%: Moved from $message_from, creating new revision' ."  );
