@@ -44,9 +44,9 @@ using namespace CAL;
 using namespace RTC;
 using namespace CAL_Protocol;
 
-CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone)
+CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint8 rcucontrol)
   : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
-    m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone)
+    m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone), m_rcucontrol(rcucontrol)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
@@ -139,7 +139,8 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  start.subset.set(i);
 	}
 	start.sampling_frequency = m_clock;
-	start.nyquist_zone = m_nyquistzone;
+	start.nyquist_zone       = m_nyquistzone;
+	start.rcucontrol.value   = m_rcucontrol;
 
 	TESTC_ABORT(m_server.send(start), CalTest::final);
       }
@@ -274,9 +275,9 @@ int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-  if (argc != 6) {
-    cerr << "usage: CalTest arrayname parentname nantennas samplingfrequency nyquistzone" << endl;
-    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1" << endl;
+  if (argc != 7) {
+    cerr << "usage: CalTest arrayname parentname nantennas samplingfrequency nyquistzone rcucontrol" << endl;
+    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1           0xB9" << endl;
     cerr << "(see AntennaArrays.conf for other configurations)" << endl;
     exit(EXIT_FAILURE);
   }
@@ -284,7 +285,10 @@ int main(int argc, char** argv)
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("RSPDriver Test driver", &cerr);
-  s.addTest(new CalTest("CalTest", argv[1], argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5])));
+
+  int rcucontrol;
+  sscanf(argv[6], "%i", &rcucontrol);
+  s.addTest(new CalTest("CalTest", argv[1], argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), rcucontrol));
   s.run();
   long nFail = s.report();
   s.free();
