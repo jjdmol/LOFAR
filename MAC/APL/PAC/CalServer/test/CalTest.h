@@ -43,7 +43,7 @@ namespace LOFAR
 	   * up connection establishment information using the GTMNameService and
 	   * GTMTopologyService classes.
 	   */
-	  CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone);
+	  CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint8 rcucontrol);
 	  virtual ~CalTest();
 
 	  // state methods
@@ -85,6 +85,7 @@ namespace LOFAR
 	  int    m_nantennas;   // number of antennas in the array
 	  int    m_clock;       // frequency of the sampling clock
 	  int    m_nyquistzone; // nyquistzone of interest
+	  uint8  m_rcucontrol;  // value for RCU control register for RCU's of this subarray
 	};
 
     };
