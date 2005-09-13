@@ -3,7 +3,7 @@ bin_PROGRAMS 		= THPVSSBridge
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 THPVSSBridge_CPPFLAGS= \
   -Wno-deprecated \
