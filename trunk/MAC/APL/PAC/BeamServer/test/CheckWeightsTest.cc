@@ -44,7 +44,7 @@ using namespace std;
 #define N_BEAMS          1 // must always be greater than 0!
 #define N_BEAMLETS       2
 #define UPDATE_INTERVAL  1
-#define COMPUTE_INTERVAL 7
+#define COMPUTE_INTERVAL 14
 #define N_ELEMENTS       7
 #define N_POLARIZATIONS  2
 #define N_SUBBANDS       N_BEAMLETS

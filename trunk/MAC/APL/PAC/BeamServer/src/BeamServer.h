@@ -93,7 +93,7 @@ namespace LOFAR {
 	 * Create new beam and update administration
 	 */
 	Beam* newBeam(BeamTransaction& bt, GCFPortInterface* port,
-		      std::string name, BS_Protocol::Beamlet2SubbandMap allocation, int nsubbands);
+		      std::string name, BS_Protocol::Beamlet2SubbandMap allocation);
 
 	/**
 	 * Destroy beam of specified transaction.
@@ -220,11 +220,11 @@ namespace LOFAR {
 
 	BeamTransaction m_bt; // current beam transaction
 
-	GCFPort m_rspdriver;
-	GCFPort m_calserver;  
-	bool    m_beams_modified;
+	GCFPort  m_rspdriver;
+	GCFPort  m_calserver;  
+	bool     m_beams_modified;
 
-	int              m_nrcus;
+	int      m_nrcus;
 
 	int32    m_sampling_frequency;
 	int32    m_nyquist_zone;    

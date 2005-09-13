@@ -25,225 +25,234 @@
 #include <Common/LofarLogger.h>
 
 #include "Beam.h"
-
 #include "BSTest.h"
+#include "MEPHeader.h"
+#include "Timestamp.h"
+#include "SubArray.h"
 
 #include <iostream>
 
 #include <blitz/array.h>
 
 #define N_BEAMS              (8)
-#define N_BEAMLETS           (206)
-#define N_SUBBANDS_PER_BEAM  (N_BEAMLETS/N_BEAMS)
+#define N_SUBBANDS_PER_BEAM  (MEPHeader::N_BEAMLETS/N_BEAMS)
 
 using namespace blitz;
+using namespace std;
 using namespace LOFAR;
 using namespace BS;
-using namespace std;
+using namespace EPA_Protocol;
+using namespace BS_Protocol;
+using namespace RTC;
+using namespace CAL;
 
 #define UPDATE_INTERVAL  1
 #define COMPUTE_INTERVAL 10
 #define N_ELEMENTS       100
 #define N_POLARIZATIONS  2
 
-class BeamServerTest : public Test {
+namespace LOFAR {
 
-private:
-  Beams m_beams;
+  class BeamServerTest : public Test {
 
-public:
+  private:
+    Beams m_beams;
+    Beam* m_beamptr[MEPHeader::N_BEAMLETS];
 
-  /**
-   */
-  BeamServerTest() :
-    Test("BeamServerTest")
-  {
-    //cerr << "c";
-  }
+  public:
 
-  void run()
-  {
+    BeamServerTest() :
+      Test("BeamServerTest"),
+      m_beams(MEPHeader::N_BEAMLETS,
+	      MEPHeader::N_SUBBANDS,
+	      AMC::EarthCoord(1.0,1.0,0.0))
+    {
+    }
+
+    void run()
+    {
 #if 0
-    allocate();
-    deallocate();
+      allocate();
+      deallocate();
 #endif
-    subbandSelection();
-    oneTooManyBeam();
-    oneTooManyBeamlet();
-    emptyBeam();
-    pointing();
-    convert_pointings();
-  }
+      subbandSelection();
+      oneTooManyBeam();
+      oneTooManyBeamlet();
+      emptyBeam();
+      pointing();
+      convert_pointings();
+    }
 
-  void allocate()
-  {
-    set<int> subbands;
+    void allocate()
+    {
+      Beamlet2SubbandMap allocation;
 
-    subbands.clear();
-    for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++)
-      {
-	subbands.insert(i);
-      }
+      for (int bi = 0; bi < N_BEAMS; bi++) {
+	allocation().clear();
+	for (int si = 0; si < N_SUBBANDS_PER_BEAM; si++) {
+	  allocation()[si + (N_SUBBANDS_PER_BEAM * bi)] = si;
+	}
+	
+	char name[32];
+	snprintf(name, 32, "beam%d", bi);
     
-    for (int i = 0; i < N_BEAMS; i++)
-      {
-	TESTC(0 != (m_beams.get([i] = Beam::allocate(0, subbands)));
+	TESTC(0 != (m_beamptr[bi] = m_beams.get(name, allocation)));
       }
-  }
+    }
 
-  void deallocate()
-  {
-    for (int i = 0; i < N_BEAMS; i++)
-      {
-	TESTC(m_beam[i]->deallocate() == 0);
+    void deallocate()
+    {
+      for (int i = 0; i < N_BEAMS; i++)
+	{
+	  TESTC(true == m_beams.destroy(m_beamptr[i]));
+	}
+    }
+
+    void subbandSelection()
+    {
+      START_TEST("subbandsSelection", "test subband selection");
+
+      allocate();
+
+      Beamlet2SubbandMap selection;
+      selection = m_beams.getSubbandSelection();
+
+      TESTC(selection().size() == N_BEAMS*N_SUBBANDS_PER_BEAM);
+
+      deallocate();
+
+      STOP_TEST();
+    }
+
+    void oneTooManyBeam()
+    {
+      START_TEST("oneTooManyBeam", "test if allocation of one more beam than possible does indeed fail");
+
+      allocate();
+
+      // and allocate one more
+      Beam* beam = 0;
+
+      Beamlet2SubbandMap allocation;
+
+      for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++) {
+	allocation()[i] = i;
       }
-  }
 
-  void subbandSelection()
-  {
-    START_TEST("subbandsSelection", "test subband selection");
+      TESTC(0 == (beam = m_beams.get("oneTooManyBeam", allocation)));
 
-    allocate();
+      deallocate();
 
-    map<int,int>   selection;
-    selection.clear();
-    for (int i = 0; i < N_BEAMS; i++)
-      {
-	m_beam[i]->getSubbandSelection(selection);
-      }
+      STOP_TEST();
+    }
 
-    TESTC(selection.size() == N_BEAMS*N_SUBBANDS_PER_BEAM);
-
-    deallocate();
-
-    STOP_TEST();
-  }
-
-  void oneTooManyBeam()
-  {
-    START_TEST("oneTooManyBeam", "test if allocation of one more beam than possible does indeed fail");
-
-    allocate();
-
-    // and allocate one more
-    Beam* beam = 0;
-    set<int> subbands;
-
-    subbands.clear();
-    for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++) subbands.insert(i);
-    TESTC(0 == (beam = Beam::allocate(0, subbands)));
-
-    deallocate();
-
-    STOP_TEST();
-  }
-
-  void oneTooManyBeamlet()
-  {
-    START_TEST("oneTooManyBeamlet", "test if allocation of one more subband fails");
+    void oneTooManyBeamlet()
+    {
+      START_TEST("oneTooManyBeamlet", "test if allocation of one more subband fails");
  
-    // insert one too many subbands
-    set<int> subbands;
-    subbands.clear();
-    for (int i = 0; i < N_BEAMLETS + 1; i++)
-      {
-	subbands.insert(i);
+      Beamlet2SubbandMap allocation;
+
+      for (int i = 0; i < MEPHeader::N_BEAMLETS + 1; i++) {
+	allocation()[i] = i;
       }
-    TESTC(0 == (m_beam[0] = Beam::allocate(0, subbands)));
 
-    STOP_TEST();
-  }
+      TESTC(0 == (m_beamptr[0] = m_beams.get("oneTooManyBeamlet", allocation)));
 
-  void emptyBeam()
-  {
-    START_TEST("emptyBeam", "check that empty beam allocation fails");
+      STOP_TEST();
+    }
 
-    set<int> subbands;
-    subbands.clear();
-    TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
-    TESTC(m_beam[0]->deallocate() == 0);
+    void emptyBeam()
+    {
+      START_TEST("emptyBeam", "check that empty beam allocation fails");
 
-    STOP_TEST();
-  }
+      Beamlet2SubbandMap allocation;
 
-  void pointing()
-  {
-    START_TEST("pointing", "check addPointing on allocated and deallocated beam");
+      TESTC(0 == (m_beamptr[0] = m_beams.get("empty", allocation)));
+      TESTC(false == m_beams.destroy(m_beamptr[0]));
 
-    set<int> subbands;
-    subbands.clear();
+      STOP_TEST();
+    }
 
-    time_t thetime = time(0) + 20;
+    void pointing()
+    {
+      START_TEST("pointing", "check addPointing on allocated and deallocated beam");
 
-    // allocate beam, addPointing, should succeed
-    TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
-    TESTC(m_beam[0]->addPointing(Pointing(Direction(
-						    0.0, 0.0, Direction::J2000), thetime)) == 0);
-
-    // deallocate beam, addPointing, should fail
-    TESTC(m_beam[0]->deallocate() == 0);
-    TESTC(m_beam[0]->addPointing(Pointing(Direction(
-						    0.0, 0.0, Direction::J2000), thetime + 5)) < 0);
-
-    STOP_TEST();
-  }
-
-  void convert_pointings()
-  {
-    START_TEST("convert_pointings", "convert pointings and calculate weights");
-
-    Range all = Range::all();
-
-    allocate();
-
-    time_t now = time(0);
-
-    // add a few pointings
-    TESTC(m_beam[0]->addPointing(Pointing(Direction(
-						    0.0, 1.0, Direction::LOFAR_LMN), now + 1)) == 0);
-    TESTC(m_beam[0]->addPointing(Pointing(Direction(
-						    0.0, 0.2, Direction::LOFAR_LMN), now + 3)) == 0);
-    TESTC(m_beam[0]->addPointing(Pointing(Direction(
-						    0.3, 0.0, Direction::LOFAR_LMN), now + 5)) == 0);
-    TESTC(m_beam[0]->addPointing(Pointing(Direction(
-						    0.4, 0.0, Direction::LOFAR_LMN), now + 8)) == 0);
-    TESTC(m_beam[0]->addPointing(Pointing(Direction(
-						    0.5, 0.0, Direction::LOFAR_LMN), now + COMPUTE_INTERVAL)) == 0);
-
-    struct timeval start, delay;
-    gettimeofday(&start, 0);
-    // iterate over all beams
-    time_t begintime = now;
-
-    TESTC(0 == m_beam[0]->convertPointings(begintime));
-    TESTC(0 == m_beam[0]->convertPointings(begintime + COMPUTE_INTERVAL));
-
-    Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
-    Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, N_BEAMLETS);
-
-    pos = 1.0; // x,y coordiante = 1
-    pos(all, all, 2) = 0.0; // z-coordinate = 0
-
-    Beamlet::calculate_weights(pos, weights);
-    gettimeofday(&delay, 0);
-
-    //cout << "weights(0,0,:,:) = " << weights(0,0,Range::all(),Range::all()) << endl;
-    //cout << "weights(0,0,:,:) = " << weights(0,1,Range::all(),Range::all()) << endl;
-
-    delay.tv_sec -= start.tv_sec;
-    delay.tv_usec -= start.tv_usec;
-    if (delay.tv_usec < 0)
-      {
-	delay.tv_sec -= 1;
-	delay.tv_usec = 1000000 + delay.tv_usec;
+      Beamlet2SubbandMap allocation;
+      for (int i = 0; i < MEPHeader::N_BEAMLETS; i++) {
+	allocation()[i] = i;
       }
-    LOG_INFO(formatString("calctime = %d sec %d msec", delay.tv_sec, delay.tv_usec/1000));
 
-    deallocate();
+      // allocate beam, addPointing, should succeed
+      TESTC(0 != (m_beamptr[0] = m_beams.get("pointing", allocation)));
+      if (m_beamptr[0]) {
+	m_beamptr[0]->addPointing(Pointing(0.0, 0.0, Timestamp::now(20), Pointing::J2000));
+      }
 
-    STOP_TEST();
-  }
+      TESTC(true == m_beams.destroy(m_beamptr[0]));
 
+      STOP_TEST();
+    }
+
+    void convert_pointings()
+    {
+      START_TEST("convert_pointings", "convert pointings and calculate weights");
+
+      Range all = Range::all();
+
+      //allocate();
+
+      Beamlet2SubbandMap allocation;
+      for (int i = 0; i < MEPHeader::N_BEAMLETS; i++) {
+	allocation()[i] = i;
+      }
+      TESTC(0 != (m_beamptr[0] = m_beams.get("beam", allocation)));
+
+      Timestamp now = Timestamp::now();
+
+      // add a few pointings
+      m_beamptr[0]->addPointing(Pointing(0.0, 1.0, now + (long)1, Pointing::LOFAR_LMN));
+      m_beamptr[0]->addPointing(Pointing(0.0, 0.2, now + (long)3, Pointing::LOFAR_LMN));
+      m_beamptr[0]->addPointing(Pointing(0.3, 0.0, now + (long)5, Pointing::LOFAR_LMN));
+      m_beamptr[0]->addPointing(Pointing(0.4, 0.0, now + (long)8, Pointing::LOFAR_LMN));
+      m_beamptr[0]->addPointing(Pointing(0.5, 0.0, now + (long)COMPUTE_INTERVAL, Pointing::LOFAR_LMN));
+
+      // start timer
+      struct timeval start, delay;
+      gettimeofday(&start, 0);
+
+      Array<double, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
+      Array<bool, 2>            select(N_ELEMENTS, N_POLARIZATIONS);
+      Array<complex<double>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, MEPHeader::N_BEAMLETS);
+      Array<double, 1> loc(3);
+
+      loc = 0.0, 0.0, 0.0;
+      select = true;
+      SubArray subarray("subarray", loc, pos, select, 160000000.0, 1, MEPHeader::N_SUBBANDS);
+
+      pos = 1.0; // x,y coordiante = 1
+      pos(all, all, 2) = 0.0; // z-coordinate = 0
+
+      m_beamptr[0]->setSubarray(subarray);
+      m_beams.calculate_weights(now, COMPUTE_INTERVAL,
+				pos, weights, 0);
+
+      // stop timer
+      gettimeofday(&delay, 0);
+      delay.tv_sec -= start.tv_sec;
+      delay.tv_usec -= start.tv_usec;
+      if (delay.tv_usec < 0)
+	{
+	  delay.tv_sec -= 1;
+	  delay.tv_usec = 1000000 + delay.tv_usec;
+	}
+      LOG_INFO(formatString("calctime = %d sec %d msec", delay.tv_sec, delay.tv_usec/1000));
+
+      TESTC(true == m_beams.destroy(m_beamptr[0]));
+
+      STOP_TEST();
+    }
+
+  };
 };
 
 int main(int /*argc*/, char** /*argv*/)
