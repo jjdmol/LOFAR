@@ -93,10 +93,10 @@ namespace LOFAR {
 	  allocation()[si + (N_SUBBANDS_PER_BEAM * bi)] = si;
 	}
 	
-	char name[32];
-	snprintf(name, 32, "beam%d", bi);
+	char nodeid[32];
+	snprintf(nodeid, 32, "beam.%d", bi);
     
-	TESTC(0 != (m_beamptr[bi] = m_beams.get(name, allocation)));
+	TESTC(0 != (m_beamptr[bi] = m_beams.get(nodeid, "unspecified", allocation)));
       }
     }
 
@@ -139,7 +139,7 @@ namespace LOFAR {
 	allocation()[i] = i;
       }
 
-      TESTC(0 == (beam = m_beams.get("oneTooManyBeam", allocation)));
+      TESTC(0 == (beam = m_beams.get("beam.0", "unspecified", allocation)));
 
       deallocate();
 
@@ -156,7 +156,7 @@ namespace LOFAR {
 	allocation()[i] = i;
       }
 
-      TESTC(0 == (m_beamptr[0] = m_beams.get("oneTooManyBeamlet", allocation)));
+      TESTC(0 == (m_beamptr[0] = m_beams.get("beam.100", "unspecified", allocation)));
 
       STOP_TEST();
     }
@@ -167,7 +167,7 @@ namespace LOFAR {
 
       Beamlet2SubbandMap allocation;
 
-      TESTC(0 == (m_beamptr[0] = m_beams.get("empty", allocation)));
+      TESTC(0 == (m_beamptr[0] = m_beams.get("beam.0", "unspecified", allocation)));
       TESTC(false == m_beams.destroy(m_beamptr[0]));
 
       STOP_TEST();
@@ -183,7 +183,7 @@ namespace LOFAR {
       }
 
       // allocate beam, addPointing, should succeed
-      TESTC(0 != (m_beamptr[0] = m_beams.get("pointing", allocation)));
+      TESTC(0 != (m_beamptr[0] = m_beams.get("beam.0", "unspecified", allocation)));
       if (m_beamptr[0]) {
 	m_beamptr[0]->addPointing(Pointing(0.0, 0.0, Timestamp::now(20), Pointing::J2000));
       }
@@ -199,13 +199,11 @@ namespace LOFAR {
 
       Range all = Range::all();
 
-      //allocate();
-
       Beamlet2SubbandMap allocation;
       for (int i = 0; i < MEPHeader::N_BEAMLETS; i++) {
 	allocation()[i] = i;
       }
-      TESTC(0 != (m_beamptr[0] = m_beams.get("beam", allocation)));
+      TESTC(0 != (m_beamptr[0] = m_beams.get("beam.0", "unspecified", allocation)));
 
       Timestamp now = Timestamp::now();
 

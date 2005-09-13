@@ -204,11 +204,11 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 }
 
 Beam* BeamServer::newBeam(BeamTransaction& bt, GCFPortInterface* port,
-			  std::string name, BS_Protocol::Beamlet2SubbandMap allocation)
+			  std::string nodeid, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation)
 {
   ASSERT(port && 0 == bt.getPort() && 0 == bt.getBeam());
 
-  Beam* beam = m_beams.get(name, allocation);
+  Beam* beam = m_beams.get(nodeid, subarrayname, allocation);
 
   if (beam) {
     // register new beam
@@ -473,7 +473,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
       {
 	// subscribe to calibration updates
 	CALSubscribeEvent subscribe;
-	subscribe.name = m_bt.getBeam()->getName();
+	subscribe.name = m_bt.getBeam()->getSubarrayName();
 	subscribe.subbandset = m_bt.getBeam()->getAllocation().getAsBitset();
 	m_calserver.send(subscribe);
       }
@@ -553,7 +553,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& e, GCFPortInterface& port
       {
 	// unsubscribe
 	CALUnsubscribeEvent unsubscribe;
-	unsubscribe.name = m_bt.getBeam()->getName();
+	unsubscribe.name = m_bt.getBeam()->getSubarrayName();
 	unsubscribe.handle = m_beams.findCalibrationHandle(m_bt.getBeam());
 	ASSERT(0 != unsubscribe.handle);
 	m_calserver.send(unsubscribe);
@@ -623,7 +623,7 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 				 GCFPortInterface& port)
 {
   // allocate the beam
-  Beam* beam = newBeam(m_bt, &port, ba.subarrayname, ba.allocation);
+  Beam* beam = newBeam(m_bt, &port, ba.nodeid, ba.subarrayname, ba.allocation);
 
   if (!beam) {
 

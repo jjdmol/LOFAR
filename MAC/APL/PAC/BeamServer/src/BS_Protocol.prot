@@ -53,6 +53,11 @@ event = {
 	    type = "Beamlet2SubbandMap";
 	    userdefined;
       };
+
+      param = { // nodeid used to log 
+	name = "nodeid";
+	type = "string";
+      };
 };
 
 event = {
