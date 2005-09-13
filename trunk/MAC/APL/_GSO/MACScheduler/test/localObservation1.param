@@ -11,6 +11,7 @@ parentPort=27100
 parentTask=MACScheduler
 propertysetBaseName=VIC_localObservation1
 propertysetDetailsType=TAplVicVI
+subbands=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 claimTime=+20
 prepareTime=+40
 startTime=+115
@@ -38,6 +39,7 @@ AO1.prepareTime=+40
 AO1.startTime=+115
 AO1.stopTime=+10915
 AO1.childs=[SO1]
+AO1.samplingFrequency=160000000
 
 ###########################
 # Station Operations
@@ -59,7 +61,6 @@ AO1.SO1.prepareTime=+40
 AO1.SO1.startTime=+115
 AO1.SO1.stopTime=+10915
 AO1.SO1.childs=
-AO1.SO1.samplingFrequency=160.0
 
 ###########################
 # Array Receptor Group
@@ -82,6 +83,13 @@ ARG1.prepareTime=+40
 ARG1.startTime=+115
 ARG1.stopTime=+10915
 ARG1.childs=[SRG1]
+ARG1.rcus=[0,1,2,3,4,5,6,7]
+ARG1.antennaArray=FTS-1-LBA
+ARG1.frequency=110.0
+# ARG1.frequencyTimes=[+0,+90]
+# ARG1.frequency=[110.0,130.0]
+ARG1.nyquistZone=1
+ARG1.maxRcusDefect=2
 
 ###########################
 # Station Receptor Group
@@ -103,8 +111,6 @@ ARG1.SRG1.prepareTime=+40
 ARG1.SRG1.startTime=+115
 ARG1.SRG1.stopTime=+10915
 ARG1.SRG1.childs=
-ARG1.SRG1.frequencyTimes=[+0,+90]
-ARG1.SRG1.frequency=[110.0,130.0]
 
 ###########################
 # Virtual Instrument      
@@ -129,6 +135,10 @@ VI1.stopTime=+10915
 VI1.subbandTimes=
 VI1.subbands=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 VI1.childs=[VT1]
+VI1.directionType=AZEL
+VI1.angleTimes=[+0,+60,+120,+180]
+VI1.angle1=[0.0,0.45,0.20,0.30]
+VI1.angle2=[0.0,0.0,0.0,0.0]
 
 ###########################
 # Virtual Telescope
@@ -150,8 +160,5 @@ VI1.VT1.prepareTime=+40
 VI1.VT1.startTime=+115
 VI1.VT1.stopTime=+10915
 VI1.VT1.childs=
-VI1.VT1.directionType=AZEL
-VI1.VT1.angleTimes=[+0,+60,+120,+180]
-VI1.VT1.angle1=[0.0,0.45,0.20,0.30]
-VI1.VT1.angle2=[0.0,0.0,0.0,0.0]
+VI1.VT1.subarrayName=SRG1
 

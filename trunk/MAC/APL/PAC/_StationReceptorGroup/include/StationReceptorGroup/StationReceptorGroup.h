@@ -24,6 +24,7 @@
 #define StationReceptorGroup_H
 
 //# Includes
+#include <boost/shared_ptr.hpp>
 
 //# GCF Includes
 #include <GCF/PAL/GCF_ExtPropertySet.h>
@@ -121,11 +122,32 @@ namespace ASR
       */
       virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port);
       virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port);
-
+      virtual void concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset);
+      
     protected:    
 
     private:
+      void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);
+      int getRCUHardwareNr(const string& property);
+      bool rcuPropsAvailable();
+      bool checkQuality();
+
+      typedef map<uint16,boost::shared_ptr<GCF::PAL::GCFExtPropertySet> > TRCUMap;
+      typedef map<uint16,int> TRCUStatusMap;
     
+      static string     m_CALserverName;
+      GCF::TM::GCFPort  m_CALclient;
+      TRCUMap           m_rcuMap;
+      TRCUStatusMap     m_rcuStatusMap;
+
+      uint16  m_n_racks;
+      uint16  m_n_subracks_per_rack;
+      uint16  m_n_boards_per_subrack;
+      uint16  m_n_aps_per_board;
+      uint16  m_n_rcus_per_ap;
+      uint16  m_n_rcus;
+      long    m_rcusPropertiesAvailableTimer;
+      long    m_connectTimer;
       
       ALLOC_TRACER_CONTEXT  
   };

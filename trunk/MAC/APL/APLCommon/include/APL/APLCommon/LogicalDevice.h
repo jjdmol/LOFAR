@@ -201,6 +201,7 @@ namespace APLCommon
       time_t getPrepareTime() const;
       time_t getStartTime() const;
       time_t getStopTime() const;
+      void   copyParentValue(ACC::APS::ParameterSet& psSubset, const string& key);
 
       virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
@@ -219,6 +220,8 @@ namespace APLCommon
       virtual void concreteParentDisconnected(GCF::TM::GCFPortInterface& port)=0;
       virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port)=0;
       virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port)=0;
+      virtual void concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset);
+      
       
     protected:    
       APL_DECLARE_SHARED_POINTER(GCF::PAL::GCFMyPropertySet)

@@ -525,6 +525,20 @@ time_t LogicalDevice::getStopTime() const
   return m_stopTime;
 }
 
+void LogicalDevice::copyParentValue(ACC::APS::ParameterSet& psSubset, const string& key)
+{
+  if(m_parameterSet.find(key) != m_parameterSet.end())
+  {
+    psSubset.add(key,m_parameterSet.getString(key));
+  }
+}
+
+void LogicalDevice::concreteAddExtraKeys(ACC::APS::ParameterSet& /*psSubset*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  // do nothing
+}
+
 void LogicalDevice::_schedule()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
@@ -1154,6 +1168,9 @@ void LogicalDevice::_sendScheduleToClients()
         string startDaemonKey = it->first;
         TPortSharedPtr startDaemonPort = it->second;
         ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
+        
+        concreteAddExtraKeys(psSubset);
+        
         string parameterFileName = startDaemonKey+string(".param"); 
         string remoteSystem = psSubset.getString("startDaemonHost");
         
@@ -1192,6 +1209,9 @@ void LogicalDevice::_sendScheduleToClients()
         if(TPortSharedPtr pChildPort = it->second.lock())
         {
           ACC::APS::ParameterSet psSubset = m_parameterSet.makeSubset(childKey + string("."));
+          
+          concreteAddExtraKeys(psSubset);
+          
           string parameterFileName = childKey+string(".param"); 
           string remoteSystem = psSubset.getString("startDaemonHost");
 
