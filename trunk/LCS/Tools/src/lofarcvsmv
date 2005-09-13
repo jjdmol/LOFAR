@@ -25,19 +25,25 @@
 
 
 #-----------------------------------------------------------------------------
-# Usage: lofarcvsmv [-recursive] <source> <destination>
+# Usage: lofarcvsmv option <source> <destination>
 #-----------------------------------------------------------------------------
-# lofarcvsmv moves a file or a directory full of files within the master
+# lofarcvsmv moves a files or a directories within the master
 # CVS repository. The change history is preserved with BOTH
 # the new copy and the deleted original. However, all tags are stripped from
 # the new copy. This is done so that (1) history is preserved, (2) old states
 # of the system can be retrieved using old tags, and (3) new tags do not
 # affect the deleted files.
 #
-# -recursive indicates that all subdirectories within the directory
-# are moved recursively. Subdirectories are found by looking in the
-# user's directory, not in the CVS directory. The build subdirectory
-# is not taken into account.
+# To make very clear what the user wants, the option must be given.
+#  -src indicates that a single source file is moved/renamed.
+#       The destination must be the full name (thus not only a directory).
+#  -multi indicates that one or more source files are moved to the
+#       destination directory.
+#  -all indicates that all source files must be moved from the source
+#       directory to the destination directory.
+#  -recursive indicates that the entire source directory tree must be moved
+#       to the destination directory. All subdirectories found in the
+#       CVS repository are moved.
 #
 # The actual move is done on the CVS server.
 # On the CVS server the authorized_keys file should contain entries
@@ -51,9 +57,16 @@
 #
 #=============================================================================
 
+  # The "cvs MOVE" command will be executed on the cvs server.
+  REMOTE_CMD="ssh -q cvs@dop50.astron.nl cvs" ###
+  #  REMOTE_CMD="ssh -q cvsmgr@cvs.astron.nl cvs"
+
   SOURCES=
   DESTINATION=
-  RECURSIVE=
+  RECURSIVE=NO
+  MULTI=NO
+  SRC=NO
+  ALL=NO
 
 # Check arguments.
   if [ "$1" = "-h" ]; then
@@ -61,35 +74,57 @@
     echo "lofarcvsmv can move source files and directories in the CVS repository"
     echo "while keeping the CVS history of the files."
     echo ""
-    echo "Usage: lofarcvsmv [-recursive] <source-list> <destination>" 1>&2
+    echo "Usage: lofarcvsmv option <source-list> <destination>" 1>&2
     echo "All file/directory names must be relative to the cvs root."
     echo " e.g.   LOFAR/LCS/Common/src/BlobOStream.h"
     echo ""
-    echo "lofarcvsmv has several modes:"
+    echo "lofarcvsmv has four options:"
     echo "- Renaming a single file"
-    echo "   lofarcvsmv LOFAR/LCS/Common/src/Timer.h LOFAR/LCS/Common/src/NSTimer.h"
+    echo "   lofarcvsmv -src LOFAR/LCS/Common/src/Timer.h LOFAR/LCS/Common/src/NSTimer.h"
     echo "- Moving one or more files to another directory"
-    echo "   lofarcvsmv LOFAR/LCS/Common/src/Timer.h LOFAR/LCS/Common/include"
-    echo "   lofarcvsmv LOFAR/LCS/Common/src/*.h LOFAR/LCS/Common/include"
+    echo "   lofarcvsmv -multi LOFAR/LCS/Common/src/Timer.h LOFAR/LCS/Common/include"
+    echo "   lofarcvsmv -multi LOFAR/LCS/Common/src/*.h LOFAR/LCS/Common/include"
     echo "- Moving all regular files in a directory to another directory"
-    echo "   lofarcvsmv LOFAR/LCS/Common/src LOFAR/LCS/Common/include"
+    echo "   lofarcvsmv -all LOFAR/LCS/Common/src LOFAR/LCS/Common/include"
     echo "- Moving an entire directory tree"
     echo "   lofarcvsmv -recursive LOFAR/LCS LOFAR/NewLCS"
-    echo "     Note that this mode uses the directory tree in your shadow,"
-    echo "     thus not as it is in the CVS repository."
     echo ""
+    echo "Note that for file name completion and wildcarding, it is usually"
+    echo "easiest if the working directory is just above the LOFAR directory".
     exit 0
   fi
+
+  options=
   if [ "$1" = "-recursive" ]; then
     RECURSIVE=YES
+    options="1$options"
     shift
   fi
-  if [ $# -lt 2 ]; then
-    echo "Usage: lofarcvsmv [-recursive] <source-list> <destination>" 1>&2
+  if [ "$1" = "-multi" ]; then
+    MULTI=YES
+    options="1$options"
+    shift
+  fi
+  if [ "$1" = "-all" ]; then
+    ALL=YES
+    options="1$options"
+    shift
+  fi
+  if [ "$1" = "-src" ]; then
+    SRC=YES
+    options="1$options"
+    shift
+  fi
+  NR=$#
+  if [ "$options" != "1"  -o  $NR -lt 2 ]; then
+    echo "Usage: lofarcvsmv option <source-list> <destination>" 1>&2
+    echo "  One option (-src, -multi, -all, -recursive) must be given" 1>&2
+    echo "  Use  lofarcvsmv -h  for help information" 1>& 2
     exit 1
   fi
 
-  NR=$#
+  # Get all source names.
+  SOURCE=$1
   while [ $# -gt 1 ]
   do
     SOURCES="$SOURCES $1"
@@ -97,60 +132,50 @@
   done
   DESTINATION=$1
 
-  for SOURCE in $SOURCES
-  do
+  # Check arguments.
+  if [ $MULTI != YES ]; then
+    if [ $NR != 2 ]; then
+      echo "Multiple sources can only be given with option -multi" 1>&2
+      exit 1
+    fi
     if [ "$SOURCE" = "$DESTINATION" ]; then
       echo "Source and destination are the same" 1>&2
       exit 1
     fi
-  done
+  fi
 
-  # The "cvs MOVE" command will be executed on the cvs server.
-  REMOTE_CMD="ssh -q cvs@dop50.astron.nl cvs" ###
-  #  REMOTE_CMD="ssh -q cvsmgr@cvs.astron.nl cvs"
-
-  # If multiple sources, they can only be files.
-  # The destination must be a directory.
-  if [ $NR != 2 ]; then
-    for SOURCE in $SOURCES
-    do
-      $REMOTE_CMD MOVE FIL2DIR $SOURCE $DESTINATION
-    done
+  # Move/rename a single source file.
+  if [ $SRC = YES ]; then
+    $REMOTE_CMD MOVE FIL $SOURCE $DESTINATION
     exit 0
   fi
-    
-  # A single source is handled immediately.
-  if [ "$RECURSIVE" != "YES" ]; then
-    # Check if the source is a directory.
-    # If not, a single source file is moved.
-    if [ ! -d $SOURCE ]; then
-      $REMOTE_CMD MOVE FIL $SOURCE $DESTINATION
-      exit 0
-    fi
-    # A directory is to be moved. Ask if this is what the user wants.
-    echo "All source files in CVS directory $SOURCE will be moved to $DESTINATION" 1>&2
-    echo "The move is NOT recursive (use -recursive for a recursive move)" 1>& 2
-    echo -n "Is this okay? (y,n) [n]: " 1>&2
-    read answer
-    if [ "$answer" != "y" ]; then
-      echo "exiting" 1>&2
-      exit 1
-    fi
+
+  # Move all source files in a directory.
+  if [ $ALL = YES ]; then
     $REMOTE_CMD MOVE DIR $SOURCE $DESTINATION
     exit 0
   fi
 
-  # Recursive, make sure the user's source directory exists.
-  cdir=`pwd`/
-  cbdir=`echo $cdir | sed 's%/LOFAR/.*%%'`
-  if [ "$cdir" = "$cbdir" ]; then
-    echo "-recursive given, but LOFAR directory could not be derived from your current path" 1>&2
-    exit 1
+  # Move multiple files.
+  if [ $MULTI = YES ]; then
+    for SOURCE in $SOURCES
+    do
+      dname=`dirname $SOURCE`
+      if [ "$dname" = "$DESTINATION" ]; then
+        echo "Source directory $dname and destination are the same" 1>&2
+        exit 1
+      fi
+    done
+    # Move each file separately.
+    for SOURCE in $SOURCES
+    do
+      bname=`basename $SOURCE`
+      $REMOTE_CMD MOVE FIL $SOURCE $DESTINATION/$bname
+    done
+    exit 0
   fi
-  if [ ! -d $cbdir/$SOURCE ]; then
-    echo "-recursive given, but source directory could not be found in your tree" 1>&2
-    exit 1
-  fi
+    
+  # Recursive.
   # Check that the destination is not a subdirectory of the source.
   rest=`echo $DESTINATION | sed "s%$SOURCE%%"`
   if [ "$rest" != "$DESTINATION" ]; then
@@ -162,25 +187,14 @@
       exit 1
     fi
   fi
-  # Now try to find all subdirectories.
-  newdirs=$SOURCE
-  while [ "$newdirs" != "" ]
-  do
-    alldirs="$alldirs $newdirs"
-    dirs=$newdirs
-    newdirs=
-    for dir in $dirs
-    do
-      ndirs=`ls -F $cbdir/$dir | grep '/$'`
-      ndirs=`echo $ndirs`           #remove newlines
-      ndirs=`echo " $ndirs " | sed 's%/ % %g' | sed -e 's/ build / /' -e 's/ CVS / /' -e s'/ [^ ]*\.cache / /'`
-      for ndir in $ndirs
-      do
-        newdirs="$newdirs $dir/$ndir"
-      done
-    done
-    newdirs=`echo $newdirs | sed 's/  */ /g' | sed 's/^ //'`
-  done
+  # Now find all subdirectories in the CVS repository.
+  result=`$REMOTE_CMD MOVE SHOWTREE $SOURCE dummy`
+  # Remove the parts added by ssh like '1: '.
+  result=`echo $result | sed 's%[0-9]\+: %%g'`
+  # The CVS root is given enclosed in braces.
+  cvsr=`echo $result | sed -e 's%}.*%%' -e 's%.*{%%'`
+  # Get all dirs relative to CVS root. Remove Attic directories.
+  alldirs=`echo " $result" | sed -e 's%{.*}%%' -e 's% [^ ]\+/Attic%%' -e "s%$cvsr/%%g"`
   # Show all directories to be moved.
   echo "The following CVS directories will be moved:" 1>&2
   for dir in $alldirs
