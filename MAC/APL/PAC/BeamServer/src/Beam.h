@@ -103,11 +103,6 @@ namespace LOFAR {
       void addPointing(const BS_Protocol::Pointing& pointing);
 
       /**
-       * Set the spectral window for this beam.
-       */
-      void setSpectralWindow(CAL::SpectralWindow& spw);
-
-      /**
        * Set the subarray (positions & rcu_index)
        */
       void setSubarray(const CAL::SubArray& array);
@@ -254,14 +249,16 @@ namespace LOFAR {
       /**
        * Create a collection of beams with subbands allocated from nbeamlets.
        * @param nbeamlets The maximum number of beamlets that can be allocated
+       * @param nsubbands The maximum number of subbands that can be selected (valid
+       * subbands are 0 <= subbands < nsubbands.
        * @param pos The position of the beams on earth (LOFAR station position).
        */
-      explicit Beams(int nbeamlets, AMC::EarthCoord pos = AMC::EarthCoord(1.0,1.0,0.0));
+      explicit Beams(int nbeamlets, int nsubbands, AMC::EarthCoord pos = AMC::EarthCoord(1.0,1.0,0.0));
 
       /**
        * Create a new beam.
        */
-      Beam* get(std::string name, BS_Protocol::Beamlet2SubbandMap allocation, int nsubbands);
+      Beam* get(std::string name, BS_Protocol::Beamlet2SubbandMap allocation);
 
       /**
        * Set calibration handle for a beam
@@ -321,6 +318,11 @@ namespace LOFAR {
        * Collection of all beamlets;
        */
       Beamlets                m_beamlets; // collection of all beamlets
+
+      /*
+       * The maximum number of subbands.
+       */
+      int m_nsubbands;
 
       /**
        * Position of all beams on earth.

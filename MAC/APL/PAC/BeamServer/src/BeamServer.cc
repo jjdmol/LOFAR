@@ -67,7 +67,7 @@ BeamServer::BeamServer(string name)
       m_beams_modified(false),
       m_sampling_frequency(160000000),
       m_nyquist_zone(1),
-      m_beams(MEPHeader::N_BEAMLETS, AMC::EarthCoord(1.0,1.0,0.0)),
+      m_beams(MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS, AMC::EarthCoord(1.0,1.0,0.0)),
       m_converter("localhost")
 {
   registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_signalnames);
@@ -204,11 +204,11 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 }
 
 Beam* BeamServer::newBeam(BeamTransaction& bt, GCFPortInterface* port,
-			  std::string name, BS_Protocol::Beamlet2SubbandMap allocation, int nsubbands)
+			  std::string name, BS_Protocol::Beamlet2SubbandMap allocation)
 {
   ASSERT(port && 0 == bt.getPort() && 0 == bt.getBeam());
 
-  Beam* beam = m_beams.get(name, allocation, nsubbands);
+  Beam* beam = m_beams.get(name, allocation);
 
   if (beam) {
     // register new beam
@@ -623,8 +623,7 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 				 GCFPortInterface& port)
 {
   // allocate the beam
-  Beam* beam = newBeam(m_bt, &port,
-		       ba.subarrayname, ba.allocation, MEPHeader::N_SUBBANDS);
+  Beam* beam = newBeam(m_bt, &port, ba.subarrayname, ba.allocation);
 
   if (!beam) {
 

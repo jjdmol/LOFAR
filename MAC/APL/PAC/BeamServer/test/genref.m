@@ -5,14 +5,21 @@
 %
 lmn_t=[                               % pointing towards
        0 0 1;                         % zenith
+       0 0 1;                         % zenith
+       0 1 0;                         % northern horizon
        0 1 0;                         % northern horizon
        1 0 0;                         % eastern horizon
+       1 0 0;                         % eastern horizon
+       sin(pi/4) sin(pi/4) 0;         % north-eastern horizon
        sin(pi/4) sin(pi/4) 0;         % north-eastern horizon
        sin(pi/4) 0 sin(pi/4);         % east-45 degrees elevation
+       sin(pi/4) 0 sin(pi/4);         % east-45 degrees elevation
+       0 sin(pi/4) sin(pi/4);         % north-45 degrees elevation
        0 sin(pi/4) sin(pi/4);         % north-45 degrees elevation
        sqrt(1/3) sqrt(1/3) sqrt(1/3); % north-east-45 degrees elevation
+       sqrt(1/3) sqrt(1/3) sqrt(1/3); % north-east-45 degrees elevation
 ]
-size(lmn_t);
+size(lmn_t)
 
 %
 % antenna locations 7 x 2 x 3 matrix 7 dual pol elements
@@ -26,7 +33,7 @@ pos=[
 0 1 1; 0 1 1; 
 1 0 1; 1 0 1 ]
 %pos=[0 0 0]
-size(pos);
+size(pos)
 
 %
 % create spectral window specification (2 subbands)
@@ -45,8 +52,8 @@ c=299792458.0;
 %
 % calculate weights dimensions 7 timesteps, 14 elements
 %
-M0 = zeros(7,14);
-M0 = lmn_t(:,2) * pos(:,1)' + lmn_t(:,1) * pos(:,2)' + lmn_t(:,3) * pos(:,3)';
+%M0 = zeros(14,14);
+M0 = lmn_t(:,1) * pos(:,1)' + lmn_t(:,2) * pos(:,2)' + lmn_t(:,3) * pos(:,3)'
 size(M0)
 % M0(1,:)
 
@@ -56,8 +63,8 @@ size(M0)
 wfile = fopen ("weights.dat", "w");
 for subband=1:2
   weights = exp(2*pi*j*freq(subband)*M0/c)
-  weights = reshape(weights.', 98, 1);
-  w = zeros(98,2);
+  weights = reshape(weights.', 196, 1);
+  w = zeros(196,2);
   w(:,1) = real(weights);
   w(:,2) = imag(weights);
   size(w);

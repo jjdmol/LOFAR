@@ -7,9 +7,6 @@
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
-	-DEPA_Y_POL_IMAG_FIX \
-	-DWEIGHTS_IN_NETWORK_ORDER \
-	-DUSE_GNUPLOT \
 	-DUSE_CAL_THREAD
 
 AUTOGEN = autogen

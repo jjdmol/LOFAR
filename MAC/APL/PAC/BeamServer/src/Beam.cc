@@ -300,17 +300,17 @@ const CAL::SpectralWindow& Beam::getSPW() const
   return m_array.getSPW();
 }
 
-Beams::Beams(int nbeamlets, EarthCoord pos) : m_beamlets(nbeamlets), m_pos(pos)
+Beams::Beams(int nbeamlets, int nsubbands, EarthCoord pos) : m_beamlets(nbeamlets), m_nsubbands(nsubbands), m_pos(pos)
 {
 }
 
-Beam* Beams::get(string name, Beamlet2SubbandMap allocation, int nsubbands)
+Beam* Beams::get(string name, Beamlet2SubbandMap allocation)
 {
-  Beam* beam = new Beam(name, nsubbands, m_pos);
+  Beam* beam = new Beam(name, m_nsubbands, m_pos);
 
   if (beam) {
 
-    if (!beam->allocate(allocation, m_beamlets, nsubbands)) {
+    if (!beam->allocate(allocation, m_beamlets, m_nsubbands)) {
       delete beam;
       beam = 0;
     } else {
