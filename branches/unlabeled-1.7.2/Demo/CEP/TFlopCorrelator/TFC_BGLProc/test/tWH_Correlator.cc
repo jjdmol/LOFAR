@@ -29,8 +29,8 @@
 
 #include <Transport/TH_Mem.h>
 #include <TFC_BGLProc/WH_Correlator.h>
-#include <TFC_Interface/DH_FIR.h>
-// #include <TFC_Interface/DH_CorrCube.h>
+// #include <TFC_Interface/DH_PPF.h>
+#include <TFC_Interface/DH_CorrCube.h>
 #include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR
@@ -51,11 +51,11 @@ namespace LOFAR
 
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
-    itsInDH1 = new DH_FIR("itsIn1",0, myPset);
-//     itsInDH1 = new DH_CorrCube("itsIn1",0);
+//     itsInDH1 = new DH_PPF("itsIn1",0, myPset);
+    itsInDH1 = new DH_CorrCube("itsIn1",0);
     itsOutDH1 = new DH_Vis("itsOutDH1", 0, myPset);
 
-    itsWH = new WH_Correlator("WH_Correlator");
+    itsWH = new WH_Correlator("WH_Correlator", NR_CHANNELS_PER_CORRELATOR);
     itsTH = new TH_Mem();
 
     itsInCon1 = new Connection("in1", 
@@ -77,8 +77,8 @@ namespace LOFAR
     itsWH->basePreprocess();
 
     // Fill inDHs here
-    static_cast<DH_FIR*>(itsWH->getDataManager().getInHolder(0))->setCorrelatorTestPattern();
-//     static_cast<DH_CorrCube*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
+//     static_cast<DH_PPF*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
+    static_cast<DH_CorrCube*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
   }
 
   void AH_Correlator::run(int steps) {

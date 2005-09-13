@@ -6,14 +6,19 @@ check_PROGRAMS = tWH_PPF tWH_Correlator
 AM_CXXFLAGS = \
 	-I../../../src
 
-tWH_PPF_SOURCES = 				\
-tWH_PPF.cc 					\
-../src/WH_PPF.cc				\
-../src/FIR.s
-
 tWH_Correlator_SOURCES = 			\
 tWH_Correlator.cc				\
-../src/WH_Correlator.cc
+../src/WH_Correlator.cc				\
+../src/Correlator.S
+
+tWH_PPF_SOURCES =	 			\
+tWH_PPF.cc					\
+../src/WH_PPF.cc				\
+../src/FFT.S					\
+../src/FIR.S
+
+CCAS = gcc
+CCASFLAGS = $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
 
 TESTS   = 					\
 tWH_PPF.sh					\

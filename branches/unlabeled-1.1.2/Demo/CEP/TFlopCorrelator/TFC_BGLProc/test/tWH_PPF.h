@@ -23,6 +23,8 @@
 #ifndef TFC_TWH_PPF_H
 #define TFC_TWH_PPF_H
 
+#include <TFC_Interface/TFC_Config.h>
+
 #include <tinyCEP/TinyApplicationHolder.h>
 #include <tinyCEP/WorkHolder.h>
 #include <Common/KeyValueMap.h>
@@ -30,7 +32,7 @@
 #include <Transport/TransportHolder.h>
 #include <Transport/DataHolder.h>
 
-#define NR_CORRELATORS_PER_FILTER	5
+/* #define NR_CORRELATORS_PER_FILTER	5  */
 
 
 namespace LOFAR {

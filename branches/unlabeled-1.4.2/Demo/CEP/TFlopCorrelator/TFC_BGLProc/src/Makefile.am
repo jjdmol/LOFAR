@@ -25,7 +25,8 @@ WH_PPF.cc			\
 WH_Correlator.cc		\
 AH_BGLProcessing.cc		\
 FFT.S				\
-FIR.S
+FIR.S				\
+Correlator.S			
 #WH_Collect.cc
 
 include $(lofar_sharedir)/Makefile.common

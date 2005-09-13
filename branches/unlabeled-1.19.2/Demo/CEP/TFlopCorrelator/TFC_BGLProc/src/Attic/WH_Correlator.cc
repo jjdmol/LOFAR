@@ -41,10 +41,10 @@ WH_Correlator::WH_Correlator(const string& name, int nchannels):
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
-  itsNsamples = myPS.getInt32("PPF.NrSamples");
+  itsNsamples = myPS.getInt32("PPF.NrStationSamples");
   itsNelements = myPS.getInt32("PPF.NrStations");
   itsNpolarisations = myPS.getInt32("PPF.NrPolarizations");
-  itsNchannels = myPS.getInt32("PPF.NrSubChannels") - 1 / myPS.getInt32("PPF.NrCorrelatorsPerFilter");
+  itsNchannels = myPS.getInt32("PPF.NrSubChannels") / myPS.getInt32("PPF.NrCorrelatorsPerFilter");
     
 
   ASSERTSTR(itsNelements      == NR_STATIONS, "Configuration doesn't match paramters: NrStations");
