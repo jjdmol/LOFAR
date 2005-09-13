@@ -48,6 +48,8 @@ enum TLDResult
   LD_RESULT_RANGE_ERROR,     // range error in message parameters
   LD_RESULT_BEAMALLOC_ERROR, // could not allocate beam
   LD_RESULT_BEAMFREE_ERROR,  // could not free beam
+  LD_RESULT_SETCLOCKS_ERROR, // error setting td clocks
+  LD_RESULT_STARTCAL_ERROR,  // error starting calibration
   
 };
 

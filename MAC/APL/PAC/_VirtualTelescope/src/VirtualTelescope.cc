@@ -31,7 +31,7 @@
 #include <GCF/ParameterSet.h>
 #include <APLCommon/APLUtilities.h>
 #include <VirtualTelescope/VirtualTelescope.h>
-#include "ABS_Protocol.ph"
+#include "BS_Protocol.ph"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -62,7 +62,7 @@ VirtualTelescope::VirtualTelescope(const string& taskName,
   m_beamID(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
+  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 }
 
 
@@ -148,7 +148,7 @@ GCFEvent::TResult VirtualTelescope::concrete_initial_state(GCFEvent& event, GCFP
     case F_ENTRY:
     {
       string bsName = GCF::ParameterSet::instance()->getString(PARAM_BEAMSERVERPORT);
-      m_beamServer.init(*this, bsName, GCFPortInterface::SAP, ABS_PROTOCOL);
+      m_beamServer.init(*this, bsName, GCFPortInterface::SAP, BS_PROTOCOL);
       break;
     }
     
@@ -235,12 +235,12 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
 
   switch (event.signal)
   {
-    case ABS_BEAMALLOC_ACK: 
+    case BS_BEAMALLOCACK: 
       // prepared event is received from the beam server
       if(_isBeamServerPort(port))
       {
         // check the beam ID and status of the ACK message
-        ABSBeamallocAckEvent ackEvent(event);
+        BSBeamallocackEvent ackEvent(event);
         if(ackEvent.status==0)
         {
           m_beamID=ackEvent.handle;
@@ -263,7 +263,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
           }
           
           // point the new beam
-          ABSBeampointtoEvent beamPointToEvent;
+          BSBeampointtoEvent beamPointToEvent;
           beamPointToEvent.handle = m_beamID;
           beamPointToEvent.type   = directionType;
           
@@ -273,7 +273,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
             directionAngle1=m_parameterSet.getDouble(string("angle1"));
             directionAngle2=m_parameterSet.getDouble(string("angle2"));
 
-            beamPointToEvent.time   = 0; // now
+            beamPointToEvent.timestamp   = RTC::Timestamp(); // asap
             beamPointToEvent.angle[0] = directionAngle1;
             beamPointToEvent.angle[1] = directionAngle2;
             m_beamServer.send(beamPointToEvent);
@@ -284,7 +284,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
             vector<double>::iterator angle2It = angles2.begin();
             for(vector<string>::iterator timesIt=angleTimes.begin();timesIt!=angleTimes.end();++timesIt)
             {
-              beamPointToEvent.time   = APLUtilities::decodeTimeString(*timesIt);
+              beamPointToEvent.timestamp = RTC::Timestamp(APLUtilities::decodeTimeString(*timesIt),0);
               beamPointToEvent.angle[0] = *angle1It++;
               beamPointToEvent.angle[1] = *angle2It++;
               m_beamServer.send(beamPointToEvent);
@@ -333,11 +333,11 @@ GCFEvent::TResult VirtualTelescope::concrete_releasing_state(GCFEvent& event, GC
 
   switch (event.signal)
   {
-    case ABS_BEAMFREE_ACK: 
+    case BS_BEAMFREEACK: 
       if(_isBeamServerPort(port))
       {
         // check the beam ID and status of the ACK message
-        ABSBeamfreeAckEvent ackEvent(event);
+        BSBeamfreeackEvent ackEvent(event);
         if(ackEvent.status==0 && ackEvent.handle == m_beamID)
         {
         }
@@ -374,27 +374,14 @@ void VirtualTelescope::concretePrepare(GCFPortInterface& /*port*/)
     APLUtilities::string2Vector(m_parameterSet.getString(string("subbands")),subbandsVector);
     APLUtilities::string2Vector(m_parameterSet.getString(string("beamlets")),beamletsVector);
     
-    int spectral_window = 0;
-    int n_subbands(subbandsVector.size());
-    
-    int subbandsArray[MEPHeader::N_BEAMLETS];
-    
-    memset(subbandsArray,0,sizeof(subbandsArray[0])*MEPHeader::N_BEAMLETS);
-    vector<int>::iterator vectorIterator=subbandsVector.begin();
-    int arrayIndex(0);
-    while(arrayIndex<MEPHeader::N_BEAMLETS && vectorIterator!=subbandsVector.end())
+    BSBeamallocEvent beamAllocEvent;
+    beamAllocEvent.subarrayname = m_parameterSet.getString(string("subarrayName"));
+    vector<int>::iterator beamletIt=beamletsVector.begin();
+    vector<int>::iterator subbandIt=subbandsVector.begin();
+    while(beamletIt!=beamletsVector.end() && subbandIt!=subbandsVector.end())
     {
-      subbandsArray[arrayIndex]=*vectorIterator;
-      ++arrayIndex;
-      ++vectorIterator;
+      beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
     }
-    
-    
-    LOG_DEBUG(formatString("VirtualTelescope(%s)::allocate %d subbands",getName().c_str(),n_subbands));
-    ABSBeamallocEvent beamAllocEvent;
-    beamAllocEvent.spectral_window = spectral_window;
-    beamAllocEvent.n_subbands = n_subbands;
-    memcpy(beamAllocEvent.subbands,subbandsArray,sizeof(int)*MEPHeader::N_BEAMLETS);
     m_beamServer.send(beamAllocEvent);
   }
   catch(Exception& e)
@@ -417,7 +404,7 @@ void VirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
 void VirtualTelescope::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  ABSBeamfreeEvent beamFreeEvent;
+  BSBeamfreeEvent beamFreeEvent;
   beamFreeEvent.handle=m_beamID;
   m_beamServer.send(beamFreeEvent);
 }
@@ -437,6 +424,16 @@ void VirtualTelescope::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortIn
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
+void VirtualTelescope::concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  // copy samplingFrequency from AO section to child section
+  copyParentValue(psSubset,string("directionType"));
+  copyParentValue(psSubset,string("angleTimes"));
+  copyParentValue(psSubset,string("angle1"));
+  copyParentValue(psSubset,string("angle2"));
+}
 
 }; // namespace AVT
 }; // namespace LOFAR

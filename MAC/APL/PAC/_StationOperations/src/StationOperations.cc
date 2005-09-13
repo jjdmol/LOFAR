@@ -46,7 +46,7 @@ namespace ASO
 INIT_TRACER_CONTEXT(StationOperations,LOFARLOGGER_PACKAGE);
 
 PROPERTYCONFIGLIST_BEGIN(detailsPropertySetConf)
-  PROPERTYCONFIGLIST_ITEM(PROPERTY_SAMPLING_FREQUENCY, GCF_READABLE_PROP, "160.0")
+  PROPERTYCONFIGLIST_ITEM(PROPERTY_SAMPLING_FREQUENCY, GCF_READABLE_PROP, "160000000")
 PROPERTYCONFIGLIST_END
 
 string StationOperations::m_RSPDriverName("RSPDriver");
@@ -58,7 +58,9 @@ StationOperations::StationOperations(const string& taskName,
                                      const string& parameterFile, 
                                      GCFTask* pStartDaemon) :
   LogicalDevice(taskName,parameterFile,pStartDaemon,SO_VERSION),
-  m_RSPclient(*this, m_RSPDriverName, GCFPortInterface::SAP, RSP_PROTOCOL)
+  m_RSPclient(*this, m_RSPDriverName, GCFPortInterface::SAP, RSP_PROTOCOL),
+  m_ntdboards(0),
+  m_connectTimer(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   m_detailsPropertySet->initProperties(detailsPropertySetConf);
@@ -68,6 +70,21 @@ StationOperations::StationOperations(const string& taskName,
 StationOperations::~StationOperations()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+}
+
+void StationOperations::sendSamplingFrequency(double samplingFrequency)
+{
+  LOG_INFO("Sending sampling frequency to RSP driver");
+  RSPSetclocksEvent setClocksEvent;
+  setClocksEvent.timestamp.setNow();
+  setClocksEvent.tdmask.reset(); // reset every bit
+  for(int16 td=0;td<m_ntdboards;td++)
+  {
+    setClocksEvent.tdmask.set(td);
+  }
+  setClocksEvent.clocks().resize(m_ntdboards);
+  setClocksEvent.clocks() = static_cast<uint32>(samplingFrequency);
+  m_RSPclient.send(setClocksEvent);
 }
 
 void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
@@ -90,9 +107,7 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
       if(strstr(pPropAnswer->pPropName, PROPERTY_SAMPLING_FREQUENCY) != 0)
       {
         double samplingFrequency = (static_cast<const GCFPVDouble*>(pPropAnswer->pValue))->getValue();
-
-        LOG_FATAL("TODO: Send sampling frequency to RSP driver");
-        // TODO: m_RSPclient.send()
+        sendSamplingFrequency(samplingFrequency);
       }
       break;
     }
@@ -115,9 +130,7 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
       {
         boost::shared_ptr<GCFPVDouble> pvSamplingFrequency(static_cast<GCFPVDouble*>(m_detailsPropertySet->getValue(PROPERTY_SAMPLING_FREQUENCY)));
         double samplingFrequency = pvSamplingFrequency->getValue();
-          
-        LOG_FATAL("TODO: PropertySet change: Send sampling frequency to RSP driver");
-        // TODO: m_RSPclient.send()
+        sendSamplingFrequency(samplingFrequency);
       }
       break;
     }
@@ -134,7 +147,7 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
   }
 }
 
-GCFEvent::TResult StationOperations::concrete_initial_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*port*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -185,7 +198,7 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
       LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
       if(!res)
       {
-        m_RSPclient.setTimer((long)3);
+        m_connectTimer = m_RSPclient.setTimer((long)3);
       }  
       break;
     }
@@ -193,10 +206,33 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
     case F_CONNECTED:
     {
       LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      
+      // get rsp config
+      RSPGetconfigEvent getconfig;
+      m_RSPclient.send(getconfig);
+      break;
+    }
+      
+    case F_DISCONNECTED:
+    {
+      m_connectTimer = m_RSPclient.setTimer((long)3); // try again in 3 seconds
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      m_RSPclient.close();
+      break;
+    }
+
+    case RSP_GETCONFIGACK:
+    {
+      RSPGetconfigackEvent ack(event);
+      m_ntdboards = ack.n_tdboards;
+      LOG_INFO(formatString("n_rcus     =%d",ack.n_rcus));
+      LOG_INFO(formatString("n_rspboards=%d",ack.n_rspboards));
+      LOG_INFO(formatString("n_tdboards =%d",m_ntdboards));
       newState=LOGICALDEVICE_STATE_CLAIMED;
       break;
     }
 
+
     default:
       break;
   }
@@ -204,7 +240,7 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*port*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -230,7 +266,7 @@ GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -238,11 +274,23 @@ GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, G
 
   switch (event.signal)
   {
-    // TODO: case RSP_SETSAMPLINGFREQUENCYACK
     case F_ENTRY:
     {
-      newState=LOGICALDEVICE_STATE_SUSPENDED;
-      // TODO:   nack?   errorCode=?????;
+      break;
+    }
+          
+    case RSP_SETCLOCKSACK:
+    {
+      RSPSetclocksackEvent ack(event);
+      if (SUCCESS == ack.status)
+      {
+        newState=LOGICALDEVICE_STATE_SUSPENDED;
+      }
+      else
+      {
+        newState=LOGICALDEVICE_STATE_CLAIMING;
+        errorCode = LD_RESULT_SETCLOCKS_ERROR;
+      }
       break;
     }
 
@@ -259,7 +307,7 @@ GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, G
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFPortInterface& port, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFPortInterface& port, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -271,6 +319,16 @@ GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFP
       break;
     }
           
+    case RSP_SETCLOCKSACK:
+    {
+      RSPSetclocksackEvent ack(event);
+      if (SUCCESS != ack.status)
+      {
+        errorCode = LD_RESULT_SETCLOCKS_ERROR;
+      }
+      break;
+    }
+
     case F_DISCONNECTED:
     {
       LOG_ERROR(formatString("port '%s' disconnected", port.getName().c_str()));
@@ -305,9 +363,7 @@ void StationOperations::concretePrepare(GCFPortInterface& /*port*/)
   
   double samplingFrequency = m_parameterSet.getDouble(PROPERTY_SAMPLING_FREQUENCY);
   m_detailsPropertySet->setValue(PROPERTY_SAMPLING_FREQUENCY,GCFPVDouble(samplingFrequency));
-  
-  LOG_FATAL("TODO: concretePrepare: Send sampling frequency to RSP driver");
-  // TODO: m_RSPclient.send()
+  sendSamplingFrequency(samplingFrequency);
 }
 
 void StationOperations::concreteResume(GCFPortInterface& /*port*/)
@@ -337,11 +393,25 @@ void StationOperations::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void StationOperations::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& port)
+void StationOperations::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+  if(timerEvent.id == m_connectTimer)
+  {
+    m_RSPclient.open();
+  }
 }
 
-}; // namespace VIC
+void StationOperations::concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  // copy samplingFrequency from AO section to child section
+  copyParentValue(psSubset,string("samplingFrequency"));
+}
+
+
+}; // namespace ASO
 }; // namespace LOFAR
 

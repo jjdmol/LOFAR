@@ -62,6 +62,7 @@ namespace ASO // :-)
       StationOperations(const StationOperations&);
       // protected assignment operator
       StationOperations& operator=(const StationOperations&);
+      void sendSamplingFrequency(double samplingFrequency);
 
       virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
       /**
@@ -122,13 +123,15 @@ namespace ASO // :-)
       */
       virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port);
       virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port);
+      virtual void concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset);
 
     protected:    
 
     private:
       static string     m_RSPDriverName;
       GCF::TM::GCFPort  m_RSPclient;
-      double            m_samplingFrequency;
+      int16             m_ntdboards;
+      long              m_connectTimer;
 
       ALLOC_TRACER_CONTEXT  
   };
