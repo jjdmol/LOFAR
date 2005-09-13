@@ -54,13 +54,13 @@ namespace LOFAR {
 
       /**
        * Default constructor
-       * @param nodeid String identifying this beam uniquely in the OTDB, used with
-       * key-value logger.
+       * @param name String identifying this beam uniquely in the OTDB, used with
+       * key-value logger as nodeid.
        * @param subarrayname The name of the subarray on which this beam is defined.
        * @param nsubbands The number of subbands of this beam.
        * @param pos The position of this beam on earth (the LOFAR station position).
        */
-      Beam(std::string nodeid, std::string subarrayname, int nsubbands, AMC::EarthCoord pos);
+      Beam(std::string name, std::string subarrayname, int nsubbands, AMC::EarthCoord pos);
 	
       /**
        * Default destructor.
@@ -170,9 +170,9 @@ namespace LOFAR {
       std::string getSubarrayName() const { return m_subarrayname; }
 
       /**
-       * Get nodeid for use with key-value logger.
+       * Get beam name (can be used as key in key-value logger).
        */
-      std::string getNodeid() const { return m_nodeid; }
+      std::string getName() const { return m_name; }
 
     private: // methods
 
@@ -184,9 +184,9 @@ namespace LOFAR {
     private:
 
       /**
-       * Nodeid used in key-value logger.
+       * Name used as key in key-value logger.
        */
-      std::string m_nodeid;
+      std::string m_name;
 
       /**
        * Name of the beam or subarray on which the beam is allocated.
@@ -270,7 +270,7 @@ namespace LOFAR {
       /**
        * Create a new beam.
        */
-      Beam* get(std::string nodeid, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation);
+      Beam* get(std::string name, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation);
 
       /**
        * Set calibration handle for a beam

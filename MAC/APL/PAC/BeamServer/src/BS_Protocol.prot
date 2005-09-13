@@ -35,6 +35,11 @@ event = {
       signal = BEAMALLOC;
       dir = IN;
 
+      param = { // name of the beam (nodeid)
+	name = "name";
+	type = "string";
+      };
+
       // Name of the station receptor group (SRG) on which this beam will be allocated.
       // The SRG determines the sampling frequency and nyquist_zone.
       param = {
@@ -52,11 +57,6 @@ event = {
 	    name = "allocation";
 	    type = "Beamlet2SubbandMap";
 	    userdefined;
-      };
-
-      param = { // nodeid used to log 
-	name = "nodeid";
-	type = "string";
       };
 };
 
