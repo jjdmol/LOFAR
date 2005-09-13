@@ -61,6 +61,9 @@ int main (int argc, const char** argv) {
       cout << "run" << endl;
       myAH.baseRun(ps.getInt32("Input.NRuns"));
       cout << "run complete" << endl;
+#ifdef HAVE_MPI
+      TH_MPI::synchroniseAllProcesses();
+#endif
       myAH.baseDump();
       myAH.baseQuit();
       Profiler::deActivate();
