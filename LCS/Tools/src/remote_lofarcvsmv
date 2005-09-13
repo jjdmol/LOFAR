@@ -90,7 +90,7 @@ $subcmd = $2;
 $from = $3;
 $to = $4;
 
-die "only MOVE is supported" unless $cmd =~ /^MOVE$/;
+die "only MOVE is supported" unless $cmd =~ /^MOVE$/ || $cmd =~ /^X$/;
 die "source should not begin with '/',\nsince it is relative to repository root" if $from =~ m#^/#;
 die "destination should not begin with '/',\nsince it is relative to repository root" if $to =~ m#^/#;
 
@@ -101,6 +101,19 @@ if ( scalar(@ARGV) == 0 ) {
     open( CHILD, "$0 redux 2>&1 | tee $LOG/$logfile |" );
     while ( <CHILD> ) { ++$lines; print "$lines: $_"; }
     close( CHILD );
+    exit(0);
+}
+
+# Handle the setting or clearing of the x bit.
+if ( $cmd =~ /^X$/ ) {
+    die "source '$from' must be a regular file" if ! -e "$CVS/$from,v";
+    if ( $subcmd =~ /^SET$/ ) {
+        chmod 0755, "$CVS/$from,v";
+	print "x-bit set for $from\n";
+    } else {
+        chmod 0644, "$CVS/$from,v";
+	print "x-bit cleared for $from\n";
+    }
     exit(0);
 }
 
