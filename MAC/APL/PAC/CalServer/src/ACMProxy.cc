@@ -34,11 +34,10 @@
 
 #include <GCF/ParameterSet.h>
 
-using namespace RSP_Protocol;
-
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
+using namespace RSP_Protocol;
 using namespace CAL;
 using namespace RTC;
 
