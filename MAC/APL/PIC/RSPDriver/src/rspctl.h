@@ -72,7 +72,7 @@ namespace LOFAR {
        */
       void setSelectable(bool selectable)
       {
-	m_selectable = selectable;
+        m_selectable = selectable;
       }
 
       /**
@@ -80,7 +80,7 @@ namespace LOFAR {
        */
       bool getSelectable()
       {
-	return m_selectable;
+        return m_selectable;
       }
 
       /**
@@ -88,7 +88,7 @@ namespace LOFAR {
        */
       void setSelect(std::list<int> select)
       {
-	m_select = select;
+        m_select = select;
       }
 
       /**
@@ -96,20 +96,20 @@ namespace LOFAR {
        */
       std::bitset<MAX_N_RCUS> getRCUMask() const
       {
-	std::bitset<MAX_N_RCUS> mask;
+        std::bitset<MAX_N_RCUS> mask;
+      
+        mask.reset();
+        std::list<int>::const_iterator it;
+        int count = 0; // limit to ndevices
+        for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
+        {
+          if (count >= get_ndevices())
+            break;
+          if (*it < MAX_N_RCUS)
+            mask.set(*it);
+        }
 
-	mask.reset();
-	std::list<int>::const_iterator it;
-	int count = 0; // limit to ndevices
-	for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
-	  {
-	    if (count >= get_ndevices())
-	      break;
-	    if (*it < MAX_N_RCUS)
-	      mask.set(*it);
-	  }
-
-	return mask;
+        return mask;
       }
 
       /**
@@ -117,30 +117,28 @@ namespace LOFAR {
        */
       std::bitset<MAX_N_TDS> getTDMask() const
       {
-	std::bitset<MAX_N_TDS> mask;
+        std::bitset<MAX_N_TDS> mask;
+      
+        mask.reset();
+        std::list<int>::const_iterator it;
+        int count = 0; // limit to ndevices
+        for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
+        {
+          if (count >= get_ndevices())
+            break;
+          if (*it < MAX_N_TDS)
+            mask.set(*it);
+        }
 
-	mask.reset();
-	std::list<int>::const_iterator it;
-	int count = 0; // limit to ndevices
-	for (it = m_select.begin(); it != m_select.end(); ++it, ++count)
-	  {
-	    if (count >= get_ndevices())
-	      break;
-	    if (*it < MAX_N_TDS)
-	      mask.set(*it);
-	  }
-
-	return mask;
+        return mask;
       }
 
       /**
        * Set mode (true == get, false = set)
        */
-      void setMode(bool get
-		   )
+      void setMode(bool get)
       {
-	m_get = get
-	  ;
+        m_get = get;
       }
 
       /**
@@ -148,7 +146,7 @@ namespace LOFAR {
        */
       bool getMode() const
       {
-	return m_get;
+        return m_get;
       }
 
       /**
@@ -156,7 +154,7 @@ namespace LOFAR {
        */
       void set_ndevices(int ndevices)
       {
-	m_ndevices = ndevices;
+        m_ndevices = ndevices;
       }
 
       /**
@@ -164,21 +162,21 @@ namespace LOFAR {
        */
       int get_ndevices() const
       {
-	return m_ndevices;
+        return m_ndevices;
       }
   
       virtual void logMessage(ostream& stream, const string& message)
       {
-	stream << message << endl;
+        stream << message << endl;
       }
 
     protected:
       explicit Command(GCFPortInterface& port) : 
-	m_rspport(port),
-	m_select(),
-	m_get(true), 
-	m_selectable(true), 
-	m_ndevices(0)
+        m_rspport(port),
+        m_select(),
+        m_get(true), 
+        m_selectable(true), 
+        m_ndevices(0)
       {}
       Command(); // no default construction allowed
 
@@ -200,20 +198,20 @@ namespace LOFAR {
 
       void setFrontEnd(string frontend)
       {
-	string::size_type sep=frontend.find(':');
-	m_host = frontend.substr(0,sep);
-	m_port = atoi(frontend.substr(sep+1).c_str());
+        string::size_type sep=frontend.find(':');
+        m_host = frontend.substr(0,sep);
+        m_port = atoi(frontend.substr(sep+1).c_str());
       }
   
       bool isFrontEndSet()
       {
-	return (m_port != 0 && m_host.length() > 0);
+        return (m_port != 0 && m_host.length() > 0);
       }
   
 #ifdef ENABLE_RSPFE
       bool isConnected(GCFPortInterface& port)
       {
-	return (&port == &m_feClient && m_feClient.isConnected());
+        return (&port == &m_feClient && m_feClient.isConnected());
       }
 #else
       bool isConnected(GCFPortInterface&) { return false; }
@@ -222,10 +220,10 @@ namespace LOFAR {
 #ifdef ENABLE_RSPFE
       void connect(GCFTask& task)
       {
-	m_feClient.init(task, "client", GCFPortInterface::SAP, RSPFE_PROTOCOL);
-	m_feClient.setHostName(m_host);
-	m_feClient.setPortNumber(m_port);
-	m_feClient.open();
+        m_feClient.init(task, "client", GCFPortInterface::SAP, RSPFE_PROTOCOL);
+        m_feClient.setHostName(m_host);
+        m_feClient.setPortNumber(m_port);
+        m_feClient.open();
       }
 #else
       void connect(GCFTask&) {}
@@ -234,17 +232,17 @@ namespace LOFAR {
 #ifdef ENABLE_RSPFE
       virtual void logMessage(ostream& stream, const string& message)
       {
-	if(m_feClient.isConnected())
-	  {
-	    RSPFEStatusUpdateEvent statusUpdateEvent;
-	    statusUpdateEvent.status = message;
-	    m_feClient.send(statusUpdateEvent);
-	  }
-	stream << message << endl;
+        if(m_feClient.isConnected())
+        {
+          RSPFEStatusUpdateEvent statusUpdateEvent;
+          statusUpdateEvent.status = message;
+          m_feClient.send(statusUpdateEvent);
+        }
+        stream << message << endl;
       }
 #else
       virtual void logMessage(ostream&stream , const string& message) {
-	stream << message << endl;
+        stream << message << endl;
       }
 #endif
   
@@ -268,7 +266,7 @@ namespace LOFAR {
       virtual GCFEvent::TResult ack(GCFEvent& e);
       void setValue(double value)
       {
-	m_value = value;
+        m_value = value;
       }
     private:
       double m_value;
@@ -284,7 +282,7 @@ namespace LOFAR {
       virtual GCFEvent::TResult ack(GCFEvent& e);
       void setSubbandList(std::list<int> subbandlist)
       {
-	m_subbandlist = subbandlist;
+        m_subbandlist = subbandlist;
       }
     private:
       std::list<int> m_subbandlist;
@@ -301,7 +299,7 @@ namespace LOFAR {
 
       void setControl(uint8 control)
       {
-	m_control = control;
+        m_control = control;
       }
     private:
       uint8 m_control;
@@ -317,15 +315,15 @@ namespace LOFAR {
       virtual GCFEvent::TResult ack(GCFEvent& e);
       void setFrequency(double frequency)
       {
-	m_frequency = frequency;
+        m_frequency = frequency;
       }
       void setPhase(int phase)
       {
-	m_phase = phase;
+        m_phase = phase;
       }
       void setAmplitude(double amplitude)
       {
-	m_amplitude = (uint8)(amplitude*(double)(1<<7)/100.0);
+        m_amplitude = (uint8)(amplitude*(double)(1<<7)/100.0);
       }
     private:
       double m_frequency;
@@ -350,24 +348,52 @@ namespace LOFAR {
       StatisticsBaseCommand(GCFPortInterface& port);
       virtual ~StatisticsBaseCommand()
       {
+        if(m_file)
+        {
+          delete[] m_file;
+          m_file=0;
+        }
       }
       void setDuration(uint16 duration)
       {
-	m_duration=duration;
-	m_endTime.setNow((double)m_duration);
+        m_duration=duration;
+        m_endTime.setNow((double)m_duration);
       }
       void setIntegration(uint16 integration)
       {
-	if(integration > 0)
-	  m_integration=integration;
+        if(integration > 0)
+          m_integration=integration;
       }
       void setDirectory(const char* dir)
       {
-	m_directory = dir;
-	if(dir[strlen(dir)-1] != '/')
-	  {
-	    m_directory += "/";
-	  }
+        m_directory = dir;
+        if(dir[strlen(dir)-1] != '/')
+        {
+          m_directory += "/";
+        }
+      }
+      FILE* getFile(int rcu, char* fileName)
+      {
+        if(!m_file)
+        {
+          m_file = new (FILE*)[get_ndevices()];
+          if(!m_file)
+          {
+            logMessage(cerr,"Error: failed to allocate memory for file handles.");
+            exit(EXIT_FAILURE);
+          }
+          memset(m_file,0,sizeof(FILE*)*get_ndevices());
+        }
+        if(!m_file[rcu])
+        {
+          m_file[rcu] = fopen(fileName, "w+");
+        }
+        if(!m_file[rcu])
+        {
+          logMessage(cerr,formatString("Error: Failed to open file: %s",fileName));
+          exit(EXIT_FAILURE);
+        }
+        return m_file[rcu];
       }
     protected:
       uint32 m_subscriptionHandle;
@@ -376,6 +402,7 @@ namespace LOFAR {
       uint16 m_integration;
       uint16 m_nseconds;
       string m_directory;
+      FILE** m_file; // array of file descriptors, one for each rcu
     private:
     };
 
@@ -394,7 +421,7 @@ namespace LOFAR {
       virtual GCFEvent::TResult ack(GCFEvent& e);
       void setType(uint8 type)
       {
-	m_type = type;
+        m_type = type;
       }
     private:
       uint8 m_type;
@@ -429,7 +456,7 @@ namespace LOFAR {
 
       void setClock(uint32 clock)
       {
-	m_clock = clock;
+        m_clock = clock;
       }
     private:
       uint32 m_clock;

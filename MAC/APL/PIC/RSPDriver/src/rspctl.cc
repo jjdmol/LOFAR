@@ -559,7 +559,8 @@ StatisticsBaseCommand::StatisticsBaseCommand(GCFPortInterface& port) : FECommand
   m_endTime(),
   m_integration(1),
   m_nseconds(0),
-  m_directory("")
+  m_directory(""),
+  m_file(0)
 {
 }
 
@@ -755,14 +756,14 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
       char timestring[256];
       time_t seconds = timestamp.sec();
       strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&seconds));
-      char filename[PATH_MAX];
+      char fileName[PATH_MAX];
       switch (m_type)
       {
         case Statistics::SUBBAND_POWER:
-          snprintf(filename, PATH_MAX, "%s%s_sst_rcu%03d.dat",m_directory.c_str(),timestring, rcuout);
+          snprintf(fileName, PATH_MAX, "%s%s_sst_rcu%03d.dat", m_directory.c_str(), timestring, rcuout);
           break;
         case Statistics::BEAMLET_POWER:
-          snprintf(filename, PATH_MAX, "%s%s_bst_rcu%03d.dat",m_directory.c_str(),timestring, rcuout);
+          snprintf(fileName, PATH_MAX, "%s%s_bst_rcu%03d.dat", m_directory.c_str(), timestring, rcuout);
           break;
       
         default:
@@ -770,20 +771,14 @@ void StatisticsCommand::dump_statistics(Array<double, 2>& stats, const Timestamp
           exit(EXIT_FAILURE);
           break;
       }
-      FILE* file = fopen(filename, "w+");
-      if (!file)
-      {
-        logMessage(cerr,formatString("Error: Failed to open file: %s",filename));
-        exit(EXIT_FAILURE);
-      }
+      FILE* file = getFile(rcuout,fileName);
       if (stats.extent(secondDim)
           != (int)fwrite(stats(result_rcu, Range::all()).data(), sizeof(double),
              stats.extent(secondDim), file))
       {
-        logMessage(cerr,formatString("Error: unable to write to file %s",filename));
+        logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
         exit(EXIT_FAILURE);
       }
-      fclose(file);
     }
     result_rcu++;
   }
@@ -971,7 +966,7 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
         GCFTask::stop();
       }
     }
-
+    
     m_stats = 0.0; //reset statistics
   }
 }
@@ -1048,23 +1043,17 @@ void XCStatisticsCommand::dump_xcstatistics(Array<complex<double>, 4>& stats, co
   char timestring[256];
   time_t seconds = timestamp.sec();
   strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&seconds));
-  char filename[PATH_MAX];
-  snprintf(filename, PATH_MAX, "%s%s_xst.dat",m_directory.c_str(),timestring);
+  char fileName[PATH_MAX];
+  snprintf(fileName, PATH_MAX, "%s%s_xst.dat", m_directory.c_str(), timestring);
+  FILE* file = getFile(0,fileName);
 
-  FILE* file = fopen(filename, "w+");
-  if (!file)
-  {
-    logMessage(cerr,formatString("Error: Failed to open file: %s",filename));
-    exit(EXIT_FAILURE);
-  }
   if (thestats.size()
       != (int)fwrite(thestats.data(), sizeof(complex<double>),
          thestats.size(), file))
   {
-    logMessage(cerr,formatString("Error: unable to write to file %s",filename));
+    logMessage(cerr,formatString("Error: unable to write to file %s",fileName));
     exit(EXIT_FAILURE);
   }
-  fclose(file);
 }
 
 GCFEvent::TResult XCStatisticsCommand::ack(GCFEvent& e)
