@@ -86,7 +86,6 @@ namespace LOFAR
 {
 
 using namespace APLCommon;
-using namespace RTC;
 
 namespace AVI
 {
