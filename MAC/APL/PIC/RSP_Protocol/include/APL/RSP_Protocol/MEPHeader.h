@@ -30,10 +30,10 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
-namespace EPA_Protocol
-{
-  class MEPHeader
-  {
+  namespace EPA_Protocol {
+
+    class MEPHeader
+    {
     public:
       /**
        * Constructors for a MEPHeader object.
@@ -243,19 +243,19 @@ namespace EPA_Protocol
        */
       typedef struct
       {
-	  uint8  type;      /* Message type */
-	  uint8  error;     /* Error indicator */
-	  uint16 seqnr;     /* Sequence number */
-	  typedef struct 
-	  {
-	      uint8 dstid;  /* Destination ID */
-	      uint8 pid;    /* Process ID */
-	      uint8 regid;  /* Register ID */
-	      uint8 ffi;    /* for future implementation */
-	  } AddrType;
-	  AddrType addr;    /* addr */
-	  uint16 offset;    /* Register offset */
-	  uint16 size;      /* Read/write size */
+	uint8  type;      /* Message type */
+	uint8  error;     /* Error indicator */
+	uint16 seqnr;     /* Sequence number */
+	typedef struct 
+	{
+	  uint8 dstid;  /* Destination ID */
+	  uint8 pid;    /* Process ID */
+	  uint8 regid;  /* Register ID */
+	  uint8 ffi;    /* for future implementation */
+	} AddrType;
+	AddrType addr;    /* addr */
+	uint16 offset;    /* Register offset */
+	uint16 size;      /* Read/write size */
       } FieldsType;
 
       FieldsType m_fields;
@@ -330,7 +330,8 @@ namespace EPA_Protocol
 
       static const FieldsType XST_STATS_HDR;
       /*@}*/
+    };
   };
 };
-};
+
 #endif /* MEPHEADER_H_ */
