@@ -37,6 +37,8 @@ namespace LOFAR {
     public:
       /**
        * Setting bitfield for an RCU.
+       * WARNING: Don't modify this typedef without also modifying its
+       * partner in Calibration/src/CAL_Protocol.prot.
        */
       typedef union RCURegisterType
       {
