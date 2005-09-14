@@ -150,6 +150,28 @@ bool StationReceptorGroup::checkQuality()
   return (rcusDefect <= maxRcusDefect);
 }
 
+uint8 StationReceptorGroup::getRcuControlValue(const string& bandselection)
+{
+  uint8 rcuControlValue(0xB9);
+  if(bandselection == string("LB_10_90"))
+  {
+    rcuControlValue=0xB9;
+  }
+  else if(bandselection == string("HB_110_190"))
+  {
+    rcuControlValue=0xC6;
+  }
+  else if(bandselection == string("HB_170_230"))
+  {
+    rcuControlValue=0xCE;
+  }
+  else if(bandselection == string("HB_210_250"))
+  {
+    rcuControlValue=0xD6;
+  }
+  return rcuControlValue;
+}
+
 void StationReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(answer)).c_str());
@@ -475,6 +497,7 @@ void StationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/)
     }
     calStartEvent.sampling_frequency = m_parameterSet.getDouble(string("frequency"));
     calStartEvent.nyquist_zone = m_parameterSet.getInt16(string("nyquistZone"));
+    calStartEvent.rcucontrol.value = getRcuControlValue(m_parameterSet.getString(string("bandSelection")));
     m_CALclient.send(calStartEvent);
   }
   catch(Exception &e)
@@ -555,6 +578,7 @@ void StationReceptorGroup::concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset
   copyParentValue(psSubset,string("frequencyTimes"));
   copyParentValue(psSubset,string("frequency"));
   copyParentValue(psSubset,string("nyquistZone"));
+  copyParentValue(psSubset,string("bandSelection"));
   copyParentValue(psSubset,string("maxRcusDefect"));
 }
 
