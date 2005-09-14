@@ -31,7 +31,7 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
     
-SubArray::SubArray() : AntennaArray(), m_spw("undefined", 0, 0, 0)
+SubArray::SubArray() : AntennaArray(), m_spw("undefined", 0, 0, 0, 0)
 {
   m_result[FRONT] = 0;
   m_result[BACK] = 0;
@@ -43,9 +43,10 @@ SubArray::SubArray(string                 name,
 		   const Array<bool, 2>&  select,
 		   double sampling_frequency,
 		   int nyquist_zone,
-		   int nsubbands) :
+		   int nsubbands,
+		   uint8 rcucontrol) :
   AntennaArray(name, geoloc, pos),
-  m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands)
+  m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands, rcucontrol)
 {
   // assert sizes
   ASSERT(select.extent(firstDim) == pos.extent(firstDim)

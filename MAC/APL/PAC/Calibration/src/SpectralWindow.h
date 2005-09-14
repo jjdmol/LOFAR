@@ -57,9 +57,9 @@ namespace LOFAR {
        * Constructor
        */
       SpectralWindow(std::string name, double sampling_freq,
-		     int nyquist_zone, int numsubbands) :
+		     int nyquist_zone, int numsubbands, uint8 rcucontrol) :
 	m_name(name), m_sampling_freq(sampling_freq),
-	m_nyquist_zone(nyquist_zone), m_numsubbands(numsubbands) {}
+	m_nyquist_zone(nyquist_zone), m_numsubbands(numsubbands), m_rcucontrol(rcucontrol) {}
       virtual ~SpectralWindow();
 
       /**
@@ -92,6 +92,17 @@ namespace LOFAR {
        */
       double getSubbandFreq(int subband) const;
 
+      /**
+       * Based on the subband, the spectral window and
+       * the rcucontrol. Determine whether a subband
+       * is suitable for calibration. A subband is not
+       * suitable for calibration when it is in the stop-band
+       * of the filter or antenna or if it is aliased
+       * by frequencies around the sampling frequency or
+       * one of its harmonics.
+       */
+      bool isSuitable(int subband) const;
+
     public:
       /*@{*/
       /**
@@ -108,6 +119,7 @@ namespace LOFAR {
       double      m_sampling_freq; // sampling frequency
       uint16      m_nyquist_zone;  // defines the window
       uint16      m_numsubbands;   // number of subbands
+      uint8       m_rcucontrol;    // RCU control setting
     };
 
   }; // namespace CAL
