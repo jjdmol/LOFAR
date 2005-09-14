@@ -131,6 +131,7 @@ namespace ASR
       int getRCUHardwareNr(const string& property);
       bool rcuPropsAvailable();
       bool checkQuality();
+      uint8 getRcuControlValue(const string& bandselection);
 
       typedef map<uint16,boost::shared_ptr<GCF::PAL::GCFExtPropertySet> > TRCUMap;
       typedef map<uint16,int> TRCUStatusMap;

@@ -84,6 +84,10 @@ int VirtualTelescope::_convertDirection(const string type) const
   {
     direction=1;
   }
+  if(type==string(DIRECTIONTYPE_AZEL))
+  {
+    direction=2;
+  }
   else if(type==string(DIRECTIONTYPE_LMN))
   {
     direction=3;
@@ -245,7 +249,6 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
         {
           m_beamID=ackEvent.handle;
           
-          int directionType=_convertDirection(m_parameterSet.getString(string("directionType")));
           double directionAngle1(0.0);
           double directionAngle2(0.0);
           vector<string> angleTimes;
@@ -265,7 +268,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
           // point the new beam
           BSBeampointtoEvent beamPointToEvent;
           beamPointToEvent.handle = m_beamID;
-          beamPointToEvent.type   = directionType;
+          beamPointToEvent.pointing.setType(static_cast<Pointing::Type>(_convertDirection(m_parameterSet.getString(string("directionType")))));
           
           if(angleTimes.size() == 0 || angleTimes.size() != angles1.size() || angleTimes.size() != angles2.size())
           {
@@ -273,9 +276,8 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
             directionAngle1=m_parameterSet.getDouble(string("angle1"));
             directionAngle2=m_parameterSet.getDouble(string("angle2"));
 
-            beamPointToEvent.timestamp   = RTC::Timestamp(); // asap
-            beamPointToEvent.angle[0] = directionAngle1;
-            beamPointToEvent.angle[1] = directionAngle2;
+            beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
+            beamPointToEvent.pointing.setDirection(directionAngle1,directionAngle2);
             m_beamServer.send(beamPointToEvent);
           }
           else
@@ -284,9 +286,8 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
             vector<double>::iterator angle2It = angles2.begin();
             for(vector<string>::iterator timesIt=angleTimes.begin();timesIt!=angleTimes.end();++timesIt)
             {
-              beamPointToEvent.timestamp = RTC::Timestamp(APLUtilities::decodeTimeString(*timesIt),0);
-              beamPointToEvent.angle[0] = *angle1It++;
-              beamPointToEvent.angle[1] = *angle2It++;
+              beamPointToEvent.pointing.setTime(RTC::Timestamp(APLUtilities::decodeTimeString(*timesIt),0));
+              beamPointToEvent.pointing.setDirection(*angle1It++,*angle2It++);
               m_beamServer.send(beamPointToEvent);
             }
           }
@@ -375,6 +376,7 @@ void VirtualTelescope::concretePrepare(GCFPortInterface& /*port*/)
     APLUtilities::string2Vector(m_parameterSet.getString(string("beamlets")),beamletsVector);
     
     BSBeamallocEvent beamAllocEvent;
+    beamAllocEvent.name = getName();
     beamAllocEvent.subarrayname = m_parameterSet.getString(string("subarrayName"));
     vector<int>::iterator beamletIt=beamletsVector.begin();
     vector<int>::iterator subbandIt=subbandsVector.begin();
