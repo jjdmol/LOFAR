@@ -1,5 +1,4 @@
 
-
 #
 # if USE_CAL_THREAD is defined in Calibration/src/Makefile.am it should be
 # defined here as well and vice versa
@@ -73,5 +72,4 @@ BeamServer_LDADD = \
 clean-local:
 	rm -f *.ph
 
-#include $(lofar_sharedir)/Makefile.common
-include ../Makefile.common
+include $(lofar_sharedir)/Makefile.common
