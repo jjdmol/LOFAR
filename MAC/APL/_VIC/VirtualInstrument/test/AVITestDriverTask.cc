@@ -61,7 +61,7 @@ AVITestDriverTask::AVITestDriverTask() :
 {
   m_answer.setTask(this);
 
-//  ParameterSet::instance()->adoptFile("VirtualInstrument.conf");
+//  ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("VirtualInstrument.conf"));
 }
 
 AVITestDriverTask::~AVITestDriverTask()
