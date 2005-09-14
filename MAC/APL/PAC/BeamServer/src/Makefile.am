@@ -61,7 +61,7 @@ libabs_la_SOURCES = \
 	gnuplot_i.cc \
 	$(top_builddir)/src/BS_Protocol.cc
 
-# bin_PROGRAMS = BeamServer
+bin_PROGRAMS = BeamServer
 
 BeamServer_SOURCES = \
 	BeamServer.h \
