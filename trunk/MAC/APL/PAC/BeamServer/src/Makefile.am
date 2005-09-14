@@ -43,6 +43,11 @@ include_HEADERS = \
 
 lib_LTLIBRARIES = libabs.la
 
+libabs_ladir = $(prefix)/include
+libabs_la_HEADERS = \
+	Beamlet2SubbandMap.h \
+	Pointing.h
+
 libabs_la_SOURCES = \
 	Beamlet2SubbandMap.h \
 	Beamlet2SubbandMap.cc \
@@ -56,7 +61,7 @@ libabs_la_SOURCES = \
 	gnuplot_i.cc \
 	$(top_builddir)/src/BS_Protocol.cc
 
-bin_PROGRAMS = BeamServer
+# bin_PROGRAMS = BeamServer
 
 BeamServer_SOURCES = \
 	BeamServer.h \
