@@ -105,7 +105,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
   
-  ParameterSet::instance()->adoptFile("RegisterAccess.conf");
+  ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
 
   char scopeString[300];
   int rack;

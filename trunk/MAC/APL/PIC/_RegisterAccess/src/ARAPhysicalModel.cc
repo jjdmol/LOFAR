@@ -51,7 +51,7 @@ ARAPhysicalModel::ARAPhysicalModel() :
 {
   int rack,subrack,board,ap,rcu;
 
-  ParameterSet::instance()->adoptFile("RegisterAccess.conf");
+  ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
 
   int n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
   int n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);

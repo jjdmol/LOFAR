@@ -76,7 +76,7 @@ StationReceptorGroup::StationReceptorGroup(const string& taskName,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
-  GCF::ParameterSet::instance()->adoptFile("RegisterAccess.conf");
+  GCF::ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
 
   m_n_racks               = GCF::ParameterSet::instance()->getInt(PARAM_N_RACKS);
   m_n_subracks_per_rack   = GCF::ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);

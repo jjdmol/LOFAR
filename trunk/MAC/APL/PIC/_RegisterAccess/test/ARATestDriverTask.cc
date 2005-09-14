@@ -84,7 +84,7 @@ ARATestDriverTask::ARATestDriverTask() :
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
-  ParameterSet::instance()->adoptFile("RegisterAccess.conf");
+  ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
 
   n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
   n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
