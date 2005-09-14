@@ -1782,6 +1782,7 @@ int BufferMatchesParameterList(
             else
             {
               /* A prooved mismatch :-( */
+              free(pcCurrentValue);
               return FALSE;
             }
           }

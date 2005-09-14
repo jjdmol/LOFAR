@@ -104,8 +104,8 @@ FILE     *tLogFile = NULL;
 int16     iLogFileBlocked;
 int16     iHcnt;
 
-int16     iCurrentState = BSEK_UNINITIALISED;
-int16     iCurrentState_Stepper = STEP_UNINITIALISED;
+static int16     iCurrentState = BSEK_UNINITIALISED;
+static int16     iCurrentState_Stepper = STEP_UNINITIALISED;
 
 int16     iHiddenStateMachine = 0;
 
@@ -264,6 +264,7 @@ void BSEK_Init(
     InitExecutor();
     BP_Init();
     BSED_Init();
+    StartDebugger();
 
     MallocText();
 
@@ -663,9 +664,11 @@ int16 BSEK_OpenLogFile(
 {
 
   char        *pString;
+  char        *pcLogFilename;
   int          iVersionNumber;
   struct stat  tNewStat;
   char         pcTimeStartedLog[25];
+  int16        iResult;
   /*---start------------------------------------------------------------ */
   FILE        *tScriptFile;
   char         c;
@@ -673,21 +676,22 @@ int16 BSEK_OpenLogFile(
 
   /*---finish------------------------------------------------------------*/
 
+  pcLogFilename = NULL;
   if (tLogFile != NULL)
   {
     CloseLogFile();
   }
 
-  pcFileName = bp_CreateLogFileName(pcFileName);
+  pcLogFilename = bp_CreateLogFileName(pcFileName);
   if (iReplay == 1)
   {
-    GetSeedValue(pcFileName);
+    GetSeedValue(pcLogFilename);
   }
-  tLogFile = fopen(pcFileName, "w");
+  tLogFile = fopen(pcLogFilename, "w");
 
   if (tLogFile == NULL)
   {
-    return BSEK_FILE_CANNOT_BE_OPENED;
+    iResult = BSEK_FILE_CANNOT_BE_OPENED;
   }
   else
   {
@@ -755,8 +759,13 @@ int16 BSEK_OpenLogFile(
       /*----finish-------------------------------------------------------- */
     }
 
-    return (BSEK_OK);
+    iResult = BSEK_OK;
   }
+  if (NULL != pcLogFilename)
+  {
+    free(pcLogFilename);
+  }
+  return(iResult);
 }
 
 int16 BSEK_ResetScript(
@@ -1071,7 +1080,8 @@ int16 BSEK_Shutdown(
       StopExecutor("BSE killed");
 
       /* give script executor thread time to die     */
-      sleep(50);
+      WaitForEndExecutor(); 
+      /*sleep(50); */
 
       delBoardList(&_ptBoardList);
       delStateMachineList(&_ptStateMachineList);
@@ -1146,6 +1156,7 @@ int16 BSEK_Shutdown(
     ShutDownParser();
     BSED_ShutDown();
     BP_Finalize();
+    StopDebugger();
   }
 
   return (iReturnCode);

@@ -261,22 +261,27 @@ boolean isAlpha(
 void ShutDownScanner(
   void)
 {
+  struct tDefineRecord *ptCurrentDefineList;
+  
   if (pcCurrentFileName != NULL)
   {
     free(pcCurrentFileName);
     pcCurrentFileName = NULL;
   }
 
-  if (ptDefineList != NULL)
+  while (NULL != ptDefineList)
   {
-    free(ptDefineList);
-    ptDefineList = NULL;
-  }
-
-  if (ptDefineList != NULL)
-  {
-    free(ptDefineList);
-    ptDefineList = NULL;
+    if (NULL != ptDefineList->pcIdentifier)
+    {
+      free(ptDefineList->pcIdentifier);
+    }
+    if (NULL != ptDefineList->pcReplacement)
+    {
+      free(ptDefineList->pcReplacement);
+    }
+    ptCurrentDefineList = ptDefineList;
+    ptDefineList = ptDefineList->ptNextDefine;
+    free(ptCurrentDefineList);
   }
 
   if (pcPutBackToken != NULL)

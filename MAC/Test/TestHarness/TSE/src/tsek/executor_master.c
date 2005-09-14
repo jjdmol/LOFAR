@@ -108,6 +108,7 @@ int StartExecutor(
   
   pthread_attr_init( &tThreadAttributes );
   pthread_attr_setstacksize( &tThreadAttributes, sizeof(char) * 1024);
+  pthread_attr_setdetachstate( &tThreadAttributes, PTHREAD_CREATE_JOINABLE);
   
   pthread_create( &tProcessHandle, 
                   &tThreadAttributes, 
@@ -121,8 +122,12 @@ int StartExecutor(
 int StopExecutor(
   char *pcReason)
 {
-  pcStopReason = my_strdup(pcReason);
-  iRunningMode = HALTED;
+  if (iRunningMode != HALTED)
+  {
+    pcStopReason = my_strdup(pcReason);
+    iRunningMode = HALTED;
+    
+  }
   return EX_OK;
 }
 
@@ -143,6 +148,11 @@ int ExecutorStopped(
   return( iResult );
 }
 
+/*****************************************************************************/
+void WaitForEndExecutor()
+{
+  pthread_join(tProcessHandle, NULL);
+}
 /*****************************************************************************/
 int PauseExecutor(
   void)

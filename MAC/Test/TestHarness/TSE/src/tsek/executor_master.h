@@ -81,6 +81,8 @@ extern int       StartExecutor(
   void);
 extern int       StopExecutor(
   char *pcReason);
+extern void WaitForEndExecutor(
+  void );
 extern int ExecutorStopped(
   void );  
 extern int       PauseExecutor(

@@ -27,9 +27,12 @@
 /* External references                                                       */
 /*                                                                           */
 /*****************************************************************************/
-extern char chDbgBuf[256];
+extern char chDbgBuf[8192];
 #ifndef WIN32
-extern void OutputDebugString(char *);
+extern void StartDebugger     ( void );
+extern void OutputDebugString (char *);
+extern void StopDebugger      ( void );
+
 #endif
 
 /*****************************************************************************/
