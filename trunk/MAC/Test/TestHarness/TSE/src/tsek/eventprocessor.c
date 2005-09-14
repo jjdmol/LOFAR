@@ -411,8 +411,6 @@ void ProcessPROT_ACL(
                          iPbFlag,
                          iBcFlag, uiIndicatedLength - 4, pcBuffer, iBoard);
   }
-
-
 }
 
 
@@ -452,8 +450,6 @@ void ProcessDecomposedAcl(
     free(pcErrorLine);
   }
 }
-
-
 
 void ProcessDecomposedAcl2(
   int16 iHandle,
@@ -1376,14 +1372,23 @@ void ProcessDecomposedPROTEvent2(
 /* a bug is found in the system under test.                                 */
 /****************************************************************************/
 {
-  int16     bProcessed = FALSE;
-  char     *pErrorLine;
+  int16                     bProcessed = FALSE;
+  int16                     iNumberOfSM;
+  char                     *pErrorLine;
+  struct TStateMachineList *ptStartSMList;
+  struct TTransition       *ptTransition;
 
+  iNumberOfSM   = 0;
+  pErrorLine    = NULL;
+  ptStartSMList = ptSMList; 
+  ptTransition  = NULL;      
+  
   while (ptSMList != NULL)
   {
     if ((ptSMList->ptThis != NULL)
         && (ptSMList->ptThis->iPending == RUNNING_SM))
     {
+      iNumberOfSM++;
       bProcessed = ProcessDecomposedPROTEvent3(ptEvent,
                                               ptVarList, ptSMList->ptThis);
       if (bProcessed == TRUE)
@@ -1397,14 +1402,30 @@ void ProcessDecomposedPROTEvent2(
     }
   }
 
-  if ((bProcessed == FALSE)
-      && ((_ptGlobals->iLogMode & BSEK_LOG_STRING) != BSEK_LOG_STRING))
+  if (bProcessed == FALSE)
   {
-    pErrorLine = malloc(250);
-    sprintf(pErrorLine, "Warning: Event %s not processed!", ptEvent->pcName);
-    LogLine(pErrorLine);
-    free(pErrorLine);
-
+    
+    if (iNumberOfSM == 1)
+    {
+      ptTransition                    = newTransition();
+      ptTransition->iInstantNextState = FALSE;
+      ptTransition->ptNextState       = FindState("UnhandledEvent",
+                                                  ptStartSMList->ptThis->ptStates);
+      
+      if (NULL != ptTransition->ptNextState)
+      {
+        TransferState(ptStartSMList->ptThis, ptTransition);
+      }
+      free(ptTransition);
+      
+    }
+    if((_ptGlobals->iLogMode & BSEK_LOG_STRING) != BSEK_LOG_STRING)
+    {
+      pErrorLine = malloc(250);
+      sprintf(pErrorLine, "Warning: Event %s not processed!", ptEvent->pcName);
+      LogLine(pErrorLine);
+      free(pErrorLine);
+    }
   }
 }
 

@@ -18,6 +18,7 @@
 #include <windows.h>
 #else
 #include <stdio.h>
+#include <pthread.h>
 #endif
 
 /*****************************************************************************/
@@ -25,6 +26,7 @@
 /* Type definitions                                                          */
 /*                                                                           */
 /*****************************************************************************/
+#define ATD_SOCKET_MUTEX          ( (char*) "TSE DEBUGGER Mutex")
 
 
 /*****************************************************************************/
@@ -46,8 +48,9 @@
 /* Variables                                                                 */
 /*                                                                           */
 /*****************************************************************************/
-char chDbgBuf[2048];
+char chDbgBuf[8192];
 static FILE *pFile = NULL;
+static pthread_mutex_t  tDebuggerMutex  = PTHREAD_MUTEX_INITIALIZER;
 
 /*****************************************************************************/
 /*                                                                           */
@@ -55,7 +58,10 @@ static FILE *pFile = NULL;
 /*                                                                           */
 /*****************************************************************************/
 
-
+void StartDebugger()
+{
+  pFile = fopen("debug.log","w");
+}
 /*****************************************************************************/
 /*                                                                           */
 /* Function    :                                                             */
@@ -75,11 +81,22 @@ static FILE *pFile = NULL;
 /*****************************************************************************/
 void OutputDebugString(char *pcString)
 {
+  pthread_mutex_lock( &tDebuggerMutex );
   if (pFile == NULL)
   {
     pFile = fopen("debug.log","w");
   } 
-  fprintf(pFile, pcString);
-  fprintf(pFile, "\n");
-  fflush(pFile);
+  if (pFile != NULL)
+  {
+    fprintf(pFile, pcString);
+    fprintf(pFile, "\n");
+    fflush(pFile);
+  }
+  pthread_mutex_unlock( &tDebuggerMutex );
+}
+
+void StopDebugger()
+{
+  fclose(pFile);
+  pthread_mutex_destroy( &tDebuggerMutex );
 }

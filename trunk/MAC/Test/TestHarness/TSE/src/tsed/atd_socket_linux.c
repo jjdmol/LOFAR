@@ -773,7 +773,9 @@ void *ServerWaitForConnectThread( void * lpvParam )
     }
  		DbgTrace2( "SocketConnectThread():CreateThread():ERROR %s\n", strerror(errno) );
 	}
+  pthread_mutex_lock( &tSocketDataMutex );
   ptSocketData->bConnectThreadRunning = FALSE;
+  pthread_mutex_unlock( &tSocketDataMutex );
   return( NULL );
 }
 
@@ -1006,7 +1008,9 @@ void *ClientWaitForConnectThread( void * lpvParam )
 	  DbgTrace2( "SocketConnectThread() Connected on port %s\n", 
                 ptSocketData->ppcSettings[2]);
   }
+  pthread_mutex_lock( &tSocketDataMutex );
   ptSocketData->bConnectThreadRunning = FALSE;
+  pthread_mutex_unlock( &tSocketDataMutex );
   return( NULL );
 }
 

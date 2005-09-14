@@ -84,28 +84,28 @@ extern    "C"
   int16 iDeviceNr /*HANDLE hPort */ )
   {
     struct TRBufferList *tBuffer;
-
-
-              tBuffer = ptListHead;
+    
+    tBuffer = ptListHead;
 
     /* Find the end or the correct buffer */
-    while     (
-            (tBuffer != NULL) && (tBuffer->tBuffer.iDeviceNr != iDeviceNr))
-                tBuffer = tBuffer->ptNext;
-    if        (
-  tBuffer == NULL)
+    while ((tBuffer != NULL) && (tBuffer->tBuffer.iDeviceNr != iDeviceNr))
+    {
+      tBuffer = tBuffer->ptNext;
+    }
+    if (tBuffer == NULL)
       return BUFFER_NOT_FOUND;
-    if        (
-  tBuffer->tBuffer.bBusy)       /* This buffer is used for */
-                return BUFFER_BUSY;     /* the moment, please wait */
+    if (tBuffer->tBuffer.bBusy)       /* This buffer is used for */
+    {
+      return BUFFER_BUSY;     /* the moment, please wait */
+    }
     else                        /* We are using the buffer right now */
-                tBuffer->tBuffer.bBusy = TRUE;
-
-              tBuffer->tBuffer.iBufferIndex = 0;
-
-              tBuffer->tBuffer.bBusy = FALSE;
-
-              return BUFFER_OK;
+    {
+      tBuffer->tBuffer.bBusy = TRUE;
+    }
+    
+    tBuffer->tBuffer.iBufferIndex = 0;
+    tBuffer->tBuffer.bBusy = FALSE;
+    return BUFFER_OK;
   }
 
 

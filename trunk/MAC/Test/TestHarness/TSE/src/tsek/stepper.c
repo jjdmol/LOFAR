@@ -125,6 +125,8 @@ int16     Intern_Wait(
   struct TVariableList *ptVarList);
 int16     Intern_Comp(
   struct TVariableList *ptVarList);
+int16     Intern_Print(
+  struct TVariableList *ptVarList);
 int16     Intern_PROT(
   int16 iIOChannel);
 int16     Intern_TCI(
@@ -407,7 +409,7 @@ int16 SingleStep(
             bDone |= Intern_Term(pcState);
             break;
           case PRINT_ACTION:
-            bDone |= TRUE;;
+            bDone |= Intern_Print(ptVarList);
             break;
           case COMPARE_ACTION:
             bDone |= Intern_Comp(ptVarList);
@@ -1837,6 +1839,39 @@ int16 Intern_Wait(
   return FALSE;
 }
 
+int16 Intern_Print(
+  struct TVariableList * ptVarList)
+/****************************************************************************/
+/* logs the value of all parameters.                                        */
+/****************************************************************************/
+{
+  struct TVariable *ptVar = NULL;
+  char *LastChar;
+
+  if (ptVarList != NULL)
+  {
+    ptVar = ptVarList->ptThis;
+  }
+
+  if (ptVar != NULL)
+  {
+    /* Don't print the first and the last character, because these are two "  */
+    /* characters.                                                            */
+
+    LastChar = ptVar->pcName;
+    while (*LastChar++);
+    LastChar--;
+    LastChar--;
+    *LastChar=0;
+
+    LogLine("-------------------------------");
+    LogLine(ptVar->pcName+1);
+    LogLine("-------------------------------");
+    *LastChar='"';
+  }
+  return TRUE;
+}
+
 int16 Intern_Comp(
   struct TVariableList * ptVarList)
 /****************************************************************************/
@@ -1975,7 +2010,7 @@ int16 Intern_Term(
 /****************************************************************************/
 {
   StopExecutor(pcReason);
-  return FALSE;
+  return TRUE;
 }
 
 int16 Intern_Rescue(

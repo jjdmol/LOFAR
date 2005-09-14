@@ -388,35 +388,47 @@ void BSEG_ScriptStopped(char* pcReason)
   int   iIndex;
   int   iLenghtReason;
   
+  pcLowerReason     = NULL;
+  
   if (TEST_SCRIPT == iTestMode)
   {
-
-    iLenghtReason = (int) strlen(pcReason);
+   iLenghtReason = (int) strlen(pcReason);
+   if (iLenghtReason > 0)
+   {
     
     pcLowerReason = (char*) malloc( (iLenghtReason+1) * sizeof(char));
-    for (iIndex = 0; iIndex < iLenghtReason; iIndex++)
+    if (NULL != pcLowerReason)
     {
-      pcLowerReason[iIndex] = (char) tolower(pcReason[iIndex]);
+      for (iIndex = 0; iIndex < iLenghtReason; iIndex++)
+      {
+        pcLowerReason[iIndex] = (char) tolower(pcReason[iIndex]);
+      }
+  
+      pcOKLocation      = NULL;
+      pcWarningLocation = NULL;
+      
+      pcOKLocation      = strstr( pcLowerReason, "ok");
+      pcWarningLocation = strstr( pcLowerReason, "warning");
+  
+      if( (NULL == pcOKLocation) &&
+          (NULL == pcWarningLocation) )
+      {
+        printf("Script stopped because:\n %s\n", pcReason);
+        BSEK_ErrorPosition(&pcErrorLocation);
+        printf("Script error: %s\n",pcErrorLocation);
+        free(pcErrorLocation);
+        pcErrorLocation = NULL;
+        iErrorOccured = TRUE;
+        iRunning = FALSE;
+      }
+      else
+      {
+        BSEG_Loop();
+      }
+      free(pcLowerReason);
+      pcLowerReason = NULL;
     }
-
-    pcOKLocation = strstr( pcLowerReason,"ok");
-    pcWarningLocation = strstr( pcLowerReason,"warning");
-
-    if( (NULL == pcOKLocation) &&
-        (NULL == pcWarningLocation) )
-    {
-      printf("Script stopped because:\n %s\n", pcReason);
-      BSEK_ErrorPosition(&pcErrorLocation);
-      printf("Script error: %s\n",pcErrorLocation);
-      free(pcErrorLocation);
-      pcReason = NULL;
-      iErrorOccured = TRUE;
-      iRunning = FALSE;
-    }
-    else
-    {
-      BSEG_Loop();
-    }
+   }
   }
   free(pcReason);
   pcReason = NULL;
@@ -519,11 +531,11 @@ int BSEG_UpdateProgressBar(int bReady)
 /* ------------------------------------------------------------------------ */
 int main( int argc, char* argv[])
 {
-  char *pcResultString;
+  char  pcResultString[100];
   char *pcIniDirectoryName;
   int   iResult;
   
-  pcResultString = getcwd(NULL,_MAX_PATH);
+  getcwd(pcResultString,_MAX_PATH);
   
   /* arguments check */
   if ((NR_ARGUMENTS_TESTSCRIPT != argc) &&
@@ -538,6 +550,7 @@ int main( int argc, char* argv[])
     strcat(pcIniDirectoryName,"tse.ini");
     if (TRUE == ParseIniFile( pcIniDirectoryName ))
     {
+      free(pcIniDirectoryName);
       /* Opening the log line file */
       if ((ParsedIniSettings.iLogToFile == 1) &&
           (ParsedIniSettings.iLogLine   == 1) )
@@ -588,6 +601,7 @@ int main( int argc, char* argv[])
     else
     {
       printf("Failed to open %s\n",pcIniDirectoryName);
+      free(pcIniDirectoryName);
     }
   }
   if (NULL != fpLogLine)
