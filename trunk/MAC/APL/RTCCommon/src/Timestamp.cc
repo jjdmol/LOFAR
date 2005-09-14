@@ -20,17 +20,15 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "Timestamp.h"
 
 #include <math.h>
 #include <time.h>
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
 using namespace LOFAR;
-
 using namespace RTC;
 using namespace std;
 
@@ -62,4 +60,18 @@ std::ostream& LOFAR::RTC::operator<< (std::ostream& os, const Timestamp& ts)
 
   strftime(timestring, 255, "%s - %a, %d %b %Y %H:%M:%S  %z", gmtime(&seconds));
   return os << timestring; // << "." << ts.usec();
+}
+
+void Timestamp::convertToMJD(double& mjd, double& fraction)
+{
+  double sec = this->sec();
+  sec /= double(24*3600);
+  mjd = floor(sec);
+  fraction = sec - mjd + this->usec() / double(1000000) / double(24*3600);
+  if (fraction > 1) {
+    mjd++;
+    fraction--;
+  }
+  // 40587 modified Julian day number = 00:00:00 January 1, 1970, GMT.
+  mjd += 40587;
 }

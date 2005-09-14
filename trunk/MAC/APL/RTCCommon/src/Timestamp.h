@@ -75,6 +75,16 @@ namespace RTC
 	   */
 	  void get(struct timeval* tv);
 
+	  /**
+	   * Convert to modified Julian Date for use in AMC::TimeCoord constructor.
+	   */
+	  void convertToMJD(double& mjd, double& fraction);
+
+	  /**
+	   * Get instance of timestamp with current time.
+	   */
+	  static Timestamp now(double delay = 0.0) { Timestamp t; t.setNow(delay); return t; }
+
 	  /*@{*/
 	  /**
 	   * Overloaded operators.

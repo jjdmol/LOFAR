@@ -32,5 +32,6 @@
 #define __psaccess__convert_d getDouble
 #define GET_CONFIG(var, type)  (GCF::ParameterSet::instance()->__psaccess__convert_##type(var))
 #define GET_CONFIG_STRING(var) (GCF::ParameterSet::instance()->getString(var).c_str())
+#define GET_CONFIG_PATH()      (GCF::ParameterSet::instance()->getSearchPath())
 
 #endif /* PSACCESS_H_ */
