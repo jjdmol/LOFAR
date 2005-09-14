@@ -55,9 +55,13 @@ namespace LOFAR {
       /**
        * Construct a subarray.
        * @param name   The name of the subarray.
-       * @param pos    The positions of the parent array
+       * @param geoloc The geographical location of the subarray.
+       * @param pos    The antenna positions of the parent array elements (nantennas x npolarizations x 3-coordinates).
        * @param select Select for each polarization dipole of each antenna whether it is included (true) in the subarray.
-       * @param spw    The spectral window of this subarray.
+       * @param sampling_frequency The sampling frequency this runs at.
+       * @param nyquist_zone The nyquist zone in which we wish to measure.
+       * @param nsubbands The number of subbands of the spectral window.
+       * @param rcucontrol The RCU control setting (LB, HBL, HBH, etc).
        */
       SubArray(std::string                    name,
 	       const blitz::Array<double, 1>& geoloc,
@@ -65,7 +69,8 @@ namespace LOFAR {
 	       const blitz::Array<bool, 2>&   select,
 	       double                         sampling_frequency,
 	       int                            nyquist_zone,
-	       int                            nsubbands);
+	       int                            nsubbands,
+	       uint8                          rcucontrol);
       virtual ~SubArray();
 
       /**

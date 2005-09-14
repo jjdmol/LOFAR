@@ -177,6 +177,11 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
 	port.close();
+      }
+      break;
+
+    case F_CLOSED:
+      {
 	port.setTimer(3.0);
       }
       break;
@@ -391,7 +396,8 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 					  select,
 					  start.sampling_frequency,
 					  start.nyquist_zone,
-					  GET_CONFIG("CalServer.N_SUBBANDS", i));
+					  GET_CONFIG("CalServer.N_SUBBANDS", i),
+					  start.rcucontrol.value);
 	
 	m_subarrays.schedule_add(subarray);
 

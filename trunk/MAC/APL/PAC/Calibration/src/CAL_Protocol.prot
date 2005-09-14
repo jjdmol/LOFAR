@@ -92,7 +92,7 @@ event = {
       // sampling_frequency and nyquist_zone determine the spectral window
 
       param = {
-	    // RCU ontrol byte controls the setting of all
+	    // RCU control byte controls the setting of all
 	    // RCU's for this subarray
 	    name = "rcucontrol";
 	    type = "RCUControl";

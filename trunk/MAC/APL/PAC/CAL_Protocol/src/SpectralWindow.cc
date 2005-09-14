@@ -31,6 +31,8 @@
 
 #include <Marshalling.h>
 
+#include <math.h>
+
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
@@ -40,7 +42,7 @@ using namespace CAL;
 #define SPW_NPARAMS 3 /* sampling_freq, nyquist_zone, numsubbands */
 
 SpectralWindow::SpectralWindow() :
-  m_name("undefined"), m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0)
+  m_name("undefined"), m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0), m_rcucontrol(0)
 {
 }
 
@@ -56,9 +58,118 @@ double SpectralWindow::getSubbandFreq(int subband) const
   return (subband % m_numsubbands) * getSubbandWidth();
 }
 
+bool SpectralWindow::isSuitable(int subband) const
+{
+  bool is160 = ::fabs(160e6 - m_sampling_freq) < 1e-4;
+  bool is200 = ::fabs(200e6 - m_sampling_freq) < 1e-4;
+
+  switch (m_rcucontrol) {
+  case 0xB9: // LB_10_90
+    {
+      if (1 == m_nyquist_zone) {
+	if (is160) {
+	  // filter stopband < 10 MHz
+	  if (getSubbandFreq(subband) < 10e6) return false;
+	  
+	  // aliasing > 70 Mhz (filter stopband > 90 MHz)
+	  if (getSubbandFreq(subband) > 70e6) return false;
+
+	} else if (is200) {
+	  // filter stopband < 10 Mhz
+	  if (getSubbandFreq(subband) < 10e6) return false;
+
+	  // filter stoppband > 90 MHz
+	  if (getSubbandFreq(subband) > 90e6) return false;
+	}
+      } else {
+	// not suitable at all
+	return false;
+      }
+    }
+    break;
+
+  case 0xC6: // HB_110_190
+    {
+      if (2 == m_nyquist_zone) {
+	if (is160) {
+	  // filter stopband < 110 MHz
+	  if (getSubbandFreq(subband) < 110e6) return false;
+
+	  // aliasing > 130 MHz
+	  if (getSubbandFreq(subband) > 130e6) return false;
+	} else if (is200) {
+	  // filter stopband < 110 MHz
+	  if (getSubbandFreq(subband) < 110e6) return false;
+
+	  // filter stopband > 190 MHz
+	  if (getSubbandFreq(subband) > 190e6) return false;
+	}
+      } else {
+	// not suitable at all
+	return false;
+      }
+    }
+    break;
+      
+  case 0xCE: // HB_170_230
+    {
+      if (3 == m_nyquist_zone) {
+	if (is160) {
+	  // filter stopband < 170 MHz
+	  if (getSubbandFreq(subband) < 170e6) return false;
+
+	  // filter stopband > 230 MHz
+	  if (getSubbandFreq(subband) > 230e6) return false;
+	} else if (is200) {
+	  // not suitable at all
+	  return false;
+	} 
+      } else {
+	// not suitable at all
+	return false;
+      }
+    }
+    break;
+
+  case 0xD6: // HB_210_250
+    {
+      if (3 == m_nyquist_zone) {
+	if (is160) {
+	  // filter stopband < 210 MHz
+	  if (getSubbandFreq(subband) < 210e6) return false;
+
+	  // filter stopband > 230 MHz
+	  if (getSubbandFreq(subband) > 230e6) return false;
+	} else if (is200) {
+	  // filter stopband < 210 MHz
+	  if (getSubbandFreq(subband) < 210e6) return false;
+
+	  // filter stopband > 250 MHz
+	  if (getSubbandFreq(subband) > 250e6) return false;
+	}
+      } else {
+	// not suitable at all
+	return false;
+      }
+    }
+    break;
+
+  default:
+    LOG_WARN(formatString("SpectralWindow::isSuitable: unsupported RCU control setting (0x%x).",
+			  m_rcucontrol));
+    break;
+  }
+
+  return false; // assume that the subband is not suitable
+}
+
 unsigned int SpectralWindow::getSize() const
 {
-  return MSH_STRING_SIZE(m_name) + sizeof(double) + sizeof(uint16) + sizeof(uint16);
+  return MSH_STRING_SIZE(m_name) +
+    sizeof(m_sampling_freq) +
+    sizeof(m_nyquist_zone) +
+    sizeof(m_numsubbands) +
+    sizeof(m_rcucontrol);
 }
 
 unsigned int SpectralWindow::pack(void* buffer) const
@@ -66,12 +177,14 @@ unsigned int SpectralWindow::pack(void* buffer) const
   unsigned int offset = 0;
 
   MSH_PACK_STRING(buffer, offset, m_name);
-  memcpy(((char*)buffer) + offset, &m_sampling_freq, sizeof(double));
-  offset += sizeof(double);
-  memcpy(((char*)buffer) + offset, &m_nyquist_zone, sizeof(uint16));
-  offset += sizeof(uint16);
-  memcpy(((char*)buffer) + offset, &m_numsubbands, sizeof(uint16));
-  offset += sizeof(uint16);
+  memcpy(((char*)buffer) + offset, &m_sampling_freq, sizeof(m_sampling_freq));
+  offset += sizeof(m_sampling_freq);
+  memcpy(((char*)buffer) + offset, &m_nyquist_zone, sizeof(m_nyquist_zone));
+  offset += sizeof(m_nyquist_zone);
+  memcpy(((char*)buffer) + offset, &m_numsubbands, sizeof(m_numsubbands));
+  offset += sizeof(m_numsubbands);
+  memcpy(((char*)buffer) + offset, &m_rcucontrol, sizeof(m_rcucontrol));
+  offset += sizeof(m_rcucontrol);
 
   return offset;
 }
@@ -81,12 +194,14 @@ unsigned int SpectralWindow::unpack(void* buffer)
   unsigned int offset = 0;
 
   MSH_UNPACK_STRING(buffer, offset, m_name);
-  memcpy(&m_sampling_freq, ((char*)buffer) + offset, sizeof(double));
-  offset += sizeof(double);
-  memcpy(&m_nyquist_zone, ((char*)buffer) + offset, sizeof(uint16));
-  offset += sizeof(uint16);
-  memcpy(&m_numsubbands, ((char*)buffer) + offset, sizeof(uint16));
-  offset += sizeof(uint16);
+  memcpy(&m_sampling_freq, ((char*)buffer) + offset, sizeof(m_sampling_freq));
+  offset += sizeof(m_sampling_freq);
+  memcpy(&m_nyquist_zone, ((char*)buffer) + offset, sizeof(m_nyquist_zone));
+  offset += sizeof(m_nyquist_zone);
+  memcpy(&m_numsubbands, ((char*)buffer) + offset, sizeof(m_numsubbands));
+  offset += sizeof(m_numsubbands);
+  memcpy(&m_rcucontrol, ((char*)buffer) + offset, sizeof(m_rcucontrol));
+  offset += sizeof(m_rcucontrol);
 
   return offset;
 }
