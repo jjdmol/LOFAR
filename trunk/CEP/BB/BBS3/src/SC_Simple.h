@@ -69,7 +69,7 @@ public:
   int          itsPrevWOID;
   ParameterSet itsArgs;
   int          itsNrIterations;
-  double       itsFitCriterium;
+  double       itsFitCriterion;
   int          itsCurIter;
   double       itsCurStartTime;
   bool         itsControlParmUpd;    // Does this Controller update the parameters?

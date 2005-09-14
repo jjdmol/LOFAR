@@ -50,13 +50,13 @@ SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn,
     itsSendDoNothingWO(false)
 {
   itsNrIterations = itsArgs.getInt32("maxNrIterations");
-  if (itsArgs.isDefined("fitCriterium"))
+  if (itsArgs.isDefined("fitCriterion"))
   {
-    itsFitCriterium = itsArgs.getDouble("fitCriterium");
+    itsFitCriterion = itsArgs.getDouble("fitCriterion");
   }
   else
   {
-    itsFitCriterium = -1;
+    itsFitCriterion = -1;
   }
   ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
   string dbType = msParams.getString("DBType");
@@ -141,9 +141,9 @@ bool SC_Simple::execute()
       nextInter = true;
       itsCurStartTime += itsArgs.getDouble ("timeInterval");
     }
-    else if (fit < itsFitCriterium)
+    else if (fit < itsFitCriterion)
     {
-      LOG_INFO_STR("Fit criterium met after " << itsCurIter << " iterations");
+      LOG_INFO_STR("Fit criterion met after " << itsCurIter << " iterations");
       itsSendDoNothingWO = true;
     }
   }
