@@ -143,7 +143,7 @@ void doIt (const string& in, const string& column)
   Vector<double> tim2(nt);
   Vector<double> interval2(nt);
   {
-    ROScalarColumn<double> intvCol(ms, "INTERVAL");
+    ROScalarColumn<double> intvCol(ms, "EXPOSURE");
     Vector<double> interval1 = intvCol.getColumn();
     for (uInt i=0; i<nt; i++) {
       tim2[i] = tim1[index[i]];
