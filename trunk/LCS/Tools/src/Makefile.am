@@ -17,6 +17,9 @@ DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 bin_PROGRAMS      = LimitExec
 LimitExec_SOURCES = LimitExec.cc
 
+scriptdir = $(bindir)
+dist_script_SCRIPTS = lofarcvsmv lofarcvsx
+
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
 
@@ -51,8 +54,5 @@ install-data-local:
 	  echo "$(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL"; \
 	  $(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL; \
 	done
-
-scriptdir = $(bindir)
-dist_script_SCRIPTS = 
 
 include $(lofar_sharedir)/Makefile.common
