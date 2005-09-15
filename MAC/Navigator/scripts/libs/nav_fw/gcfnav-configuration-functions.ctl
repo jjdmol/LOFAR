@@ -149,7 +149,7 @@ int navConfigGetNavigatorID()
 void navConfigSetNavigatorID(int newID)
 {
   bool createConfiguration = false;
-  if(newID != 0)
+  if(newID > 256)
   {
     g_navigatorID = newID;
     if(!dpAccessable(DPNAME_NAVIGATOR + g_navigatorID))
@@ -159,30 +159,18 @@ void navConfigSetNavigatorID(int newID)
   }
   else
   {
-    int id=1;
-    while(id<20 && !createConfiguration) // if no free config found, use config #20
+  	g_navigatorID = myManNum();
+    if(!dpAccessable(DPNAME_NAVIGATOR + g_navigatorID))
     {
-      if(!dpAccessable(DPNAME_NAVIGATOR + id))
-      {
-        g_navigatorID = id;
-        createConfiguration=true;
-      }
-      else
-      {
-        id++;
-      }
+      createConfiguration = true;
     }
   }
-  if(createConfiguration)
+  if (createConfiguration)
   {
     dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
   }
-  else if(!createConfiguration) // if no free config found, use config #20
-  {
-    g_navigatorID = 20;
-    dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
-  }
-  LOG_DEBUG("Using Navigator ID:",g_navigatorID);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, 0);
+  LOG_DEBUG("Using Navigator ID:", g_navigatorID);
 }
   
 ///////////////////////////////////////////////////////////////////////////
