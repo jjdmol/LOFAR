@@ -139,6 +139,8 @@ bool SC_Simple::execute()
     if (fmod(itsCurIter, itsNrIterations) == 0)
     {
       nextInter = true;
+      WOPD->setUpdateParms(false);  // New time interval, so do not reread parameters
+      WOPD->setSolutionID(-1);  // New time interval, so do not use solution from previous interval
       itsCurStartTime += itsArgs.getDouble ("timeInterval");
     }
     else if (fit < itsFitCriterion)
