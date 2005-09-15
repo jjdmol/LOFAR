@@ -238,7 +238,7 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 }
 
 /**
- * In this state a few SETSUBBANDS command are sent to the
+ * In this state a few SETSUBBANDS commands are sent to the
  * RSPDriver to select the right subband for cross correlation.
  */
 GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
