@@ -122,8 +122,8 @@ int ACC::getFromBinaryFile(string filename)
   }
 
   size_t nread = fread(m_acc.data(), sizeof(complex<double>), m_acc.size(), f);
-  if (nread != m_acc.size()*sizeof(complex<double>)) {
-    LOG_WARN_STR("Warning: read " << nread << " bytes but expected " << m_acc.size() * sizeof(complex<double>));
+  if (nread != (size_t)m_acc.size()) {
+    LOG_WARN_STR("Warning: read " << nread << " items but expected " << m_acc.size());
     fclose(f);
     return -1;
   }

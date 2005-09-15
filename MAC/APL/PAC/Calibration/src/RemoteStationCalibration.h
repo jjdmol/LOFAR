@@ -31,6 +31,9 @@
 #include "SubArray.h"
 #include <blitz/array.h>
 
+// for debugging
+#include <fstream>
+
 namespace LOFAR {
   namespace CAL {
 
@@ -47,13 +50,14 @@ namespace LOFAR {
       virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& result);
       
     private:
-      const std::vector<Source> make_local_sky_model(const Sources& sources, double obstime);
+      const std::vector<Source> make_local_sky_model(const Sources& sources, RTC::Timestamp& acmtime);
 
       blitz::Array<std::complex<double>, 2> make_ref_acm(const std::vector<Source>& LSM, blitz::Array<double, 3>& AntennaPos, const DipoleModel& dipolemodel, double freq);
       blitz::Array<bool, 2> set_restriction(blitz::Array<double, 3>& AntennaPos, double minbaseline);
       blitz::Array<std::complex<double>, 2> computeAlpha(const blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2>& restriction);
       blitz::Array<std::complex<double>, 1> computeGain(blitz::Array<std::complex<double>, 2>& alpha, const blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
-      bool issuitable(const ACC& acc, int sb);
+
+      blitz::Array<bool, 1> issuitable(const ACC& acc, int nsb);
 
       blitz::Array<double, 2> matmult(blitz::Array<double, 2> A, blitz::Array<double, 2> B);
       blitz::Array<std::complex<double>, 2> matmultc(blitz::Array<std::complex<double>, 2> A, blitz::Array<std::complex<double>, 2> B);
@@ -62,6 +66,7 @@ namespace LOFAR {
       double interp3d(blitz::Array<double, 1> xgrid, blitz::Array<double, 1> ygrid, blitz::Array<double, 1> zgrid, blitz::Array<double, 3> dataval, double xinterp, double yinterp, double zinterp);
 
       // member variables needed to store local state
+      ofstream logfile;
     };
 
   }; // namespace CAL
