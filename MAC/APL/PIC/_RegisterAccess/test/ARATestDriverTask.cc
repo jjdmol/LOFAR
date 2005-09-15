@@ -1143,6 +1143,15 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       break;
     }
     
+    case RSP_SETCLOCKS:
+    {
+      RSPSetclocksackEvent ack;
+      ack.timestamp.setNow(600.0);
+      ack.status = SUCCESS;
+      port.send(ack);
+      break;
+    }
+    
     case RSP_SETRCU:
     {
       LOG_INFO("RSP_SETRCU received");

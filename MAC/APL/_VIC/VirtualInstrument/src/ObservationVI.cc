@@ -152,9 +152,29 @@ GCFEvent::TResult ObservationVI::concrete_claiming_state(GCFEvent& event, GCFPor
   {
     case F_ENTRY:
     {
-      // enter claimed state
-      newState  = LOGICALDEVICE_STATE_CLAIMED;
-      errorCode = LD_RESULT_NO_ERROR;
+      break;
+    }
+    
+    case LOGICALDEVICE_CLAIMED:
+    {
+      LOG_TRACE_FLOW("CLAIMED received");
+      // check if all childs are not claiming anymore
+      if(_childsNotInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_CLAIMING))
+      {
+        LOG_TRACE_FLOW("No childs CLAIMING");
+        // ALL childs must be claimed
+        if(_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_CLAIMED))
+        {
+          // enter claimed state
+          newState  = LOGICALDEVICE_STATE_CLAIMED;
+          errorCode = LD_RESULT_NO_ERROR;
+        }
+        else
+        {
+          newState  = LOGICALDEVICE_STATE_IDLE;
+          errorCode = LD_RESULT_LOW_QUALITY;
+        }
+      }
       break;
     }
     
@@ -188,15 +208,29 @@ GCFEvent::TResult ObservationVI::concrete_preparing_state(GCFEvent& event, GCFPo
 
   switch (event.signal)
   {
-    case F_ENTRY:
+    case LOGICALDEVICE_PREPARED:
     {
-      // preparing is not necessary
-      // enter suspended state
-      newState=LOGICALDEVICE_STATE_SUSPENDED;
-      errorCode = LD_RESULT_NO_ERROR;
+      LOG_TRACE_FLOW("PREPARED received");
+      // check if all childs are not preparing anymore
+      if(_childsNotInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_PREPARING))
+      {
+        LOG_TRACE_FLOW("No childs PREPARING");
+        // ALL childs must be prepared
+        if(_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_SUSPENDED))
+        {
+          // enter suspended state
+          newState=LOGICALDEVICE_STATE_SUSPENDED;
+          errorCode = LD_RESULT_NO_ERROR;
+        }
+        else
+        {
+          newState  = LOGICALDEVICE_STATE_CLAIMED;
+          errorCode = LD_RESULT_LOW_QUALITY;
+        }
+      }
       break;
     }
-    
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
