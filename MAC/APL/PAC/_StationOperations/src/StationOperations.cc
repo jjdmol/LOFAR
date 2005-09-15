@@ -82,9 +82,12 @@ void StationOperations::sendSamplingFrequency(double samplingFrequency)
   {
     setClocksEvent.tdmask.set(td);
   }
-  setClocksEvent.clocks().resize(m_ntdboards);
-  setClocksEvent.clocks() = static_cast<uint32>(samplingFrequency);
-  m_RSPclient.send(setClocksEvent);
+  if(m_ntdboards > 0)
+  {
+    setClocksEvent.clocks().resize(m_ntdboards);
+    setClocksEvent.clocks() = static_cast<uint32>(samplingFrequency);
+    m_RSPclient.send(setClocksEvent);
+  }
 }
 
 void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
@@ -106,8 +109,12 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       if(strstr(pPropAnswer->pPropName, PROPERTY_SAMPLING_FREQUENCY) != 0)
       {
-        double samplingFrequency = (static_cast<const GCFPVDouble*>(pPropAnswer->pValue))->getValue();
-        sendSamplingFrequency(samplingFrequency);
+        TLogicalDeviceState curState = getLogicalDeviceState();
+        if(curState == LOGICALDEVICE_STATE_SUSPENDED || curState == LOGICALDEVICE_STATE_ACTIVE)
+        {
+          double samplingFrequency = (static_cast<const GCFPVDouble*>(pPropAnswer->pValue))->getValue();
+          sendSamplingFrequency(samplingFrequency);
+        }
       }
       break;
     }
@@ -128,9 +135,13 @@ void StationOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
       GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
       if(pPropAnswer->result == GCF_NO_ERROR)
       {
-        boost::shared_ptr<GCFPVDouble> pvSamplingFrequency(static_cast<GCFPVDouble*>(m_detailsPropertySet->getValue(PROPERTY_SAMPLING_FREQUENCY)));
-        double samplingFrequency = pvSamplingFrequency->getValue();
-        sendSamplingFrequency(samplingFrequency);
+        TLogicalDeviceState curState = getLogicalDeviceState();
+        if(curState == LOGICALDEVICE_STATE_SUSPENDED || curState == LOGICALDEVICE_STATE_ACTIVE)
+        {
+          boost::shared_ptr<GCFPVDouble> pvSamplingFrequency(static_cast<GCFPVDouble*>(m_detailsPropertySet->getValue(PROPERTY_SAMPLING_FREQUENCY)));
+          double samplingFrequency = pvSamplingFrequency->getValue();
+          sendSamplingFrequency(samplingFrequency);
+        }
       }
       break;
     }
@@ -187,7 +198,7 @@ GCFEvent::TResult StationOperations::concrete_idle_state(GCFEvent& event, GCFPor
 GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   newState=LOGICALDEVICE_STATE_NOSTATE;
 
   switch (event.signal)
@@ -234,8 +245,9 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
 
 
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
-  }
+  }  
   
   return status;
 }
@@ -243,7 +255,7 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
 GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*port*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   newState=LOGICALDEVICE_STATE_NOSTATE;
 
   switch (event.signal)
@@ -260,6 +272,7 @@ GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCF
     }
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
 
@@ -269,7 +282,7 @@ GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCF
 GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   newState=LOGICALDEVICE_STATE_NOSTATE;
 
   switch (event.signal)
@@ -301,6 +314,7 @@ GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, G
     }
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   
@@ -310,7 +324,7 @@ GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, G
 GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFPortInterface& port, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -337,6 +351,7 @@ GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFP
     }
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }  
   return status;
@@ -345,9 +360,15 @@ GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFP
 GCFEvent::TResult StationOperations::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   newState=LOGICALDEVICE_STATE_IDLE;
+
+  switch (event.signal)
+  {
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }  
   return status;
 }
 

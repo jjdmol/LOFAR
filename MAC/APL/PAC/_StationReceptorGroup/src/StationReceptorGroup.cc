@@ -297,7 +297,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_idle_state(GCFEvent& event, GCF
 GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event, GCFPortInterface& p, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -331,6 +331,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event,
     }
 
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   
@@ -340,7 +341,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event,
 GCFEvent::TResult StationReceptorGroup::concrete_claimed_state(GCFEvent& event, GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   newState=LOGICALDEVICE_STATE_NOSTATE;
 
   switch (event.signal)
@@ -358,6 +359,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_claimed_state(GCFEvent& event, 
     }
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
 
@@ -367,7 +369,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_claimed_state(GCFEvent& event, 
 GCFEvent::TResult StationReceptorGroup::concrete_preparing_state(GCFEvent& event, GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -395,6 +397,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_preparing_state(GCFEvent& event
     }
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   
@@ -404,7 +407,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_preparing_state(GCFEvent& event
 GCFEvent::TResult StationReceptorGroup::concrete_active_state(GCFEvent& event, GCFPortInterface& p, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -421,6 +424,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_active_state(GCFEvent& event, G
     }
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }  
   return status;
@@ -429,7 +433,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_active_state(GCFEvent& event, G
 GCFEvent::TResult StationReceptorGroup::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -444,6 +448,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_releasing_state(GCFEvent& event
     }
 
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   
