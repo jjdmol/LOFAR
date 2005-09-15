@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 908 687 N "_3DFace" 0
+PANEL,-4 76 908 687 N "_3DFace" 0
 EEE E E 1 -1 -1 0  20 740
 "" 0 1
 EE 2
@@ -28,7 +28,7 @@ E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/STS/nederland2.bmp" 13434828 E 20 10 
 7 8
 "Ellipse4"
 ""
-1 466 406 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 490 180 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -41,11 +41,11 @@ E "main()
 {
 navConfigTriggerNavigatorRefreshWithDP(\"CCU1:PIC_CEP\");
 }" 0
- 0 1 1 0 1 E U  1 E 466 406 10 10
+ 0 1 1 0 1 E U  1 E 490 180 10 10
 2 9
 "Text1"
 ""
-1 450 370 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
+1 460 140 E E E 1 E 1 E N "_WindowText" E N "STD_device_uncertain" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -54,8 +54,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 452 372 479 388
-0 2 0 "s" 0 0 0 192 0 0  452 372
+E E 0 1 1 0 1 E U  1 E 462 142 489 158
+0 2 0 "s" 0 0 0 192 0 0  462 142
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -65,7 +65,7 @@ LANG:1 3 CEP
 6 10
 "Border1"
 ""
-1 450 390 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 460 160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -74,7 +74,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 450 370 481 390
+E E 0 1 1 0 1 E U  0 E 460 140 491 160
 2 11
 "Text2"
 ""
@@ -155,7 +155,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-navConfigTriggerNavigatorRefreshWithDP(\"CCU1:PIC_Stations_STSLCU1\");
+navConfigTriggerNavigatorRefreshWithDP(\"CCU1:PIC_Stations_STS1\");
 }" 0
  0 1 1 0 1 E U  1 E 411 477 10 10
 7 16

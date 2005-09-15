@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,360 230 139 149 N "_3DFace" 4
+PANEL,2 108 139 149 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -96,7 +96,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board1_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Board0_AP\" + $APNr + \"_RCU\"+$RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
  0 1 1 0 1 E U  1 E 40 40 100 110
 2 5
