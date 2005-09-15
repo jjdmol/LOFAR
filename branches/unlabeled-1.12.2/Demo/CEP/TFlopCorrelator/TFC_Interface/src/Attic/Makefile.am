@@ -1,4 +1,5 @@
 INSTHDRS         	=\
+TFC_Config.h		\
 RSPTimeStamp.h          \
 DH_RSPSync.h            \
 DH_Delay.h		\
