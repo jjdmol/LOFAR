@@ -44,10 +44,10 @@ namespace LOFAR
   class WH_Correlator: public WorkHolder {
 
   public:
-    explicit WH_Correlator (const string& name, int nchannels);
+    explicit WH_Correlator (const string& name, int nfilters, int nchannels);
     virtual ~WH_Correlator();
     
-    virtual WorkHolder* construct(const string& name, int nchannels);
+    virtual WorkHolder* construct(const string& name, int nfilters, int nchannels);
     virtual WH_Correlator* make(const string& name);
 
     virtual void preprocess();
@@ -61,7 +61,7 @@ namespace LOFAR
     /// forbid assignment
     WH_Correlator& operator= (const WH_Correlator&);
     
-
+    int itsNfilters;
     int itsNsamples;
     int itsNelements;
     int itsNpolarisations;

@@ -81,65 +81,71 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Create output side interface stubs");
   itsOutStub = new Stub_Corr(false, itsParamSet);
 
-//   LOG_TRACE_FLOW_STR("Create the FIR filter  workholders");
+  LOG_TRACE_FLOW_STR("Create the Polyphase filter workholders");
   
   char WH_Name[40];
-//   int noProcBlock = itsParamSet.getInt32("NoProcessingBlocks");
-//   int noFiltsPerBlock = itsParamSet.getInt32("NoFiltersPerBlock");
-//   int subband = 0;
 
-  int noCorsPerFilt = itsParamSet.getInt32("Input.NSubbands");
+  int itsIn = 0;
+  int itsOut = 0;
 
-//   int InputBasePort = itsParamSet.getInt32("FIRConnection.RequestPort");
-//   string itsInServer = itsParamSet.getString("FIRConnection.ServerHost");
-// //   string itsInServer = itsParamSet.getString("InServer");
+  int itsNrComputeCells = itsParamSet.getInt32("BGLProc.NrComputeCells");
+  int itsNrFilters = itsParamSet.getInt32("BGLProc.NrFiltersPerComputeCell");
+  int itsNrFiltersPerComputeCell = itsParamSet.getInt32("BGLProc.NrFiltersPerComputeCell");
+  int itsNrCorrelatorsPerFilter = itsParamSet.getInt32("PPF.NrCorrelatorsPerFilter");
+  int itsNrChannels = itsParamSet.getInt32("PPF.NrSubChannels");
 
-//   int OutputBasePort = itsParamSet.getInt32("CorrConnection.RequestPort");
-//   string itsOutServer = itsParamSet.getString("CorrConnection.ServerHost");
+  vector<int> itsInputPorts      = itsParamSet.getInt32Vector("FIRConnection.RequestPort");
+  vector<string> itsInputServers = itsParamSet.getStringVector("FIRConnection.ServerHost");
 
-//   int itsBasePort = itsParamSet.getInt32("BasePort");
-//   string itsOutServer = itsParamSet.getString("OutServer");
+  vector<int> itsOutputPorts      = itsParamSet.getInt32Vector("CorrConnection.RequestPort");
+  vector<string> itsOutputServers = itsParamSet.getStringVector("CorrConnection.ServerHost");
 
-  // define a block of correlators
+  
+  for (int ComputeCells = 0; ComputeCells < itsNrComputeCells; ComputeCells++) {
+    vector<WH_PPF*> PPFNodes;
+    vector<WH_Correlator*> CorrNodes;
 
-  for (int cor = 0; cor < noCorsPerFilt; cor++) {
+    // The basic definition of a "compute cell"
+    // A compute cell is a connected set of processing blocks that implement 
+    // a complete poly-phase filter and correlator chain.
+    for (int Filters = 0; Filters < itsNrFiltersPerComputeCell; Filters++) {
+      snprintf(WH_Name, 40, "PPF_%d_of_%d", Filters, itsNrFilters);
+      PPFNodes.push_back(new WH_PPF(WH_Name, 0));
+      itsWHs.push_back(PPFNodes.back());
+      itsWHs.back()->runOnNode(lowestFreeNode++);
 
-    snprintf(WH_Name, 40, "Correlator_%d_of_%d", cor, noCorsPerFilt);
-    WH_Correlator* CorNode = new WH_Correlator(WH_Name, NR_CHANNELS_PER_CORRELATOR);
-    itsWHs.push_back(CorNode);
-    itsWHs.back()->runOnNode(lowestFreeNode++);
+      itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
 
-    itsInStub->connect(cor, itsWHs.back()->getDataManager(), 0);
-    // for the first test, don't connect the output
-    itsOutStub->connect(cor, itsWHs.back()->getDataManager(), 0);
+      for (int Correlators = 0; Correlators < itsNrCorrelatorsPerFilter; Correlators++) {
+	snprintf(WH_Name, 40, "CORR_%d_of_%d_in_filter_%d", Correlators, itsNrCorrelatorsPerFilter, Filters);
+	CorrNodes.push_back(new WH_Correlator(WH_Name, itsNrFiltersPerComputeCell, itsNrChannels));
+	itsWHs.push_back(CorrNodes.back());
+	itsWHs.back()->runOnNode(lowestFreeNode++);
 
-//     DataHolder* itsInDH = new DH_FIR("itsIn1", 0, itsParamSet);
-//     DataHolder* itsOutDH = new DH_Vis("itsOut1", 0, itsParamSet);
-        
-//     string itsInService(formatString("%d", itsBasePort+2*cor));
-//     string itsOutService(formatString("%d", itsBasePort+2*cor+1));
-
-//     TransportHolder* itsInTH = new TH_Mem();
-//     TransportHolder* itsInTH = new TH_Socket(itsInServer, itsInService);
-//     itsTHs.push_back(itsInTH);
+	itsOutStub->connect(itsOut++, itsWHs.back()->getDataManager(), 0);
+      } 
+    }
     
-//     Connection* itsInConnection = new Connection("itsInCon",
-// 						 0,
-// 						 itsWHs.back()->getDataManager().getInHolder(0),
-// 						 itsTHs.back(),
-// 						 true); // connection is blocking
-//     itsConnections.push_back(itsInConnection);
-
-//     TransportHolder* itsOutTH = new TH_Mem();
-//     TransportHolder* itsOutTH = new TH_Socket(itsOutServer, itsOutService);
-//     itsTHs.push_back(itsOutTH);
-    
-//     Connection* itsOutConnection = new Connection("itsOutCon",
-// 						  itsWHs.back()->getDataManager().getOutHolder(0),
-// 						  0,
-// 						  itsTHs.back(), 
-// 						  true); // connection is blocking
-//     itsConnections.push_back(itsOutConnection);
+    // Now connect the internal blocks together
+    int filter_nr = 0;
+    int corr_nr   = 0;
+    vector<WH_PPF*>::iterator fit = PPFNodes.begin();
+    vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
+    for (; fit != PPFNodes.end(); fit++) {
+      for (; cit != CorrNodes.end(); cit++) {
+	
+	snprintf(WH_Name, 40, "conn_filter_%d_corr_%d", filter_nr, corr_nr);
+	itsTHs.push_back(new TH_MPI((*fit)->getNode(), (*cit)->getNode()));
+	itsConnections.push_back(new Connection(WH_Name, 
+						(*fit)->getDataManager().getOutHolder(corr_nr),
+						(*cit)->getDataManager().getInHolder(filter_nr),
+						itsTHs.back(),
+						false));
+	
+	corr_nr++;
+      }
+      filter_nr++;
+    }
   }
 
 #ifdef HAVE_MPI

@@ -33,14 +33,16 @@ using namespace LOFAR;
 
 extern "C"
 {
-  void _correlator(const fcomplex *samples, dcomplex *out);
+  void _correlate_2x2(const fcomplex *S0, const fcomplex *S1, const fcomplex *S2, const fcomplex *S3, fcomplex *out, const float samples);
+//   void _correlate_2x3(const fcomplex *samples, dcomplex *out);
 }
 
-WH_Correlator::WH_Correlator(const string& name, int nchannels):
-  WorkHolder(1, nchannels, name, "WH_Correlator")
+WH_Correlator::WH_Correlator(const string& name, int nfilters, int nchannels):
+  WorkHolder(nfilters, nchannels, name, "WH_Correlator")
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
+  itsNfilters = myPS.getInt32("PPF.NrFilters");
   itsNsamples = myPS.getInt32("PPF.NrStationSamples");
   itsNelements = myPS.getInt32("PPF.NrStations");
   itsNpolarisations = myPS.getInt32("PPF.NrPolarizations");
@@ -50,9 +52,13 @@ WH_Correlator::WH_Correlator(const string& name, int nchannels):
   ASSERTSTR(itsNelements      == NR_STATIONS, "Configuration doesn't match paramters: NrStations");
   ASSERTSTR(itsNpolarisations == NR_POLARIZATIONS, "Configuration doesn't match paramters: NrPolarizations");
   ASSERTSTR(itsNchannels      == NR_CHANNELS_PER_CORRELATOR, "Configuration doesn't match paramters: NrChannels");
+  ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match paramters: NrSamples");
 
-
-  getDataManager().addInDataHolder(0, new DH_CorrCube("input", 0));
+  for (int i = 0; i < itsNfilters; i++) {
+    char str[50];
+    snprintf(str, 50, "input_%d_of_%d", i, itsNfilters);
+    getDataManager().addInDataHolder(0, new DH_CorrCube(str, 0));
+  }
   for (int i = 0; i < itsNchannels; i++) {
     char str[50];
     snprintf(str, 50, "output_%d_of_%d", i, itsNchannels);
@@ -63,12 +69,12 @@ WH_Correlator::WH_Correlator(const string& name, int nchannels):
 WH_Correlator::~WH_Correlator() {
 }
 
-WorkHolder* WH_Correlator::construct(const string& name, int nchannels) {
-  return new WH_Correlator(name, nchannels);
+WorkHolder* WH_Correlator::construct(const string& name, int nfilters, int nchannels) {
+  return new WH_Correlator(name, nfilters, nchannels);
 }
 
 WH_Correlator* WH_Correlator::make(const string& name) {
-  return new WH_Correlator(name, itsNchannels);
+  return new WH_Correlator(name, itsNfilters, itsNchannels);
 }
 
 void WH_Correlator::preprocess() { 
@@ -80,86 +86,46 @@ void WH_Correlator::process() {
   DH_Vis*      outHolderPtr = static_cast<DH_Vis*>(getDataManager().getOutHolder(0));
   DH_Vis::BufferType* outPtr = 0;
 
-  
-  
   static NSTimer timer("WH_Correlator::process()", true);
 
   timer.start();
 #if 0
-  dcomplex r0, r1, r2, r3, r4, r5, r6, r7, r8, r9;
-  dcomplex r10, r11, r12, r13, r14, r15, r16, r17, r18, r19;
-  dcomplex r20, r21, r22, r23, r24, r25, r26, r27, r28, r29;
-  dcomplex r30, r31;
+  // Generic C++ version.. Should be considered a reference implementation.
+  
 
-  __alignx(8, inHolderPtr->getBuffer());
-  __alignx(16, outHolderPtr->getBuffer());
+#else
+  // Blue Gene/L assembler version. 
+  // Divide the correlation matrix into blocks of 2x2. 
+  // Correlate the entire block (all time samples) before 
+  // going on to the next block.
+  DH_CorrCube::BufferType *inputs[itsNfilters];
 
-  for (int A = 0; A < itsNelements; A++) {
-    for (int B = 0; B <= A; B++) {
+  // define a type containing the input from a single station
+  typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
 
-      r0 = *inHolderPtr->getBufferElement(0, A, 0, 0);
-      r1 = *inHolderPtr->getBufferElement(0, A, 0, 1);
+  for (int i = 0; i < itsNfilters; i++) {
+    inputs[i] = static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBuffer();
+  }
+  
+  DH_Vis::BufferType *outputs[NR_CHANNELS_PER_CORRELATOR];
+  for (int i = 0; i < NR_CHANNELS_PER_CORRELATOR; i++) {
+    outputs[i] = (DH_Vis::BufferType*) static_cast<DH_Vis*>(getDataManager().getOutHolder(i))->getBuffer();
+  }
+  
+  for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch++) {
 
-      r2 = *inHolderPtr->getBufferElement(1, A, 0, 0);
-      r3 = *inHolderPtr->getBufferElement(1, A, 0, 1);
+    for (int x = 0; x < itsNelements; x += 2 ){
+      stationInputType *S0 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, x, 0, 0);
+      stationInputType *S1 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, x+1, 0, 0);
+      for (int y = 0; y <= x; y += 2) { 
+	stationInputType *S2 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, y, 0, 0);
+	stationInputType *S3 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, y+1, 0, 0);
 
-      r4 = *inHolderPtr->getBufferElement(2, A, 0, 0);
-      r5 = *inHolderPtr->getBufferElement(2, A, 0, 0);
-      
-      r10 = *inHolderPtr->getBufferElement(0, B, 0, 0);
-      r11 = *inHolderPtr->getBufferElement(0, B, 0, 1);
-      
-      r12 = *inHolderPtr->getBufferElement(1, B, 0, 0);
-      r13 = *inHolderPtr->getBufferElement(1, B, 0, 1);
-
-      r14 = *inHolderPtr->getBufferElement(2, B, 0, 0);
-      r15 = *inHolderPtr->getBufferElement(2, B, 0, 1);
-
-      for (int time = 1; time <= itsNsamples; time++) {
-
-	// now loop over all channels to determine cross products
-	// this is unrolled for clarity and speed
-
-	// channel 0
-	r20 = r0 * ~r10; // XX
-	r21 = r0 * ~r11; // XY
-	r22 = r1 * ~r10; // YX
-	r23 = r1 * ~r11; // YY
-
-	r0 = *inHolderPtr->getBufferElement(0, A, time, 0); // time may overflow?
-	r10 = *inHolderPtr->getBufferElement(0, B, time, 0);
-	r1 = *inHolderPtr->getBufferElement(0, A, time, 1);
-	r11 = *inHolderPtr->getBufferElement(0, B, time, 1);
-	
-	// channel 1
-	r24 = r2 * ~r12; // XX
-	r25 = r2 * ~r13; // XY
-	r26 = r3 * ~r12; // YX
-	r27 = r3 * ~r13; // YY
-
-	r2 = *inHolderPtr->getBufferElement(1, A, time, 0);
-	r12 = *inHolderPtr->getBufferElement(1, B, time, 0);
-	r3 = *inHolderPtr->getBufferElement(1, A, time, 1);
-	r13 = *inHolderPtr->getBufferElement(1, B, time, 1);
-
-	// channel 2
-	r28 = r4 * ~r14; // XX
-	r29 = r4 * ~r15; // XY
-	r30 = r5 * ~r14; // YX
-	r31 = r5 * ~r15; // YY
-
-	r4 = *inHolderPtr->getBufferElement(1, A, time, 0);
-	r14 = *inHolderPtr->getBufferElement(1, B, time, 0);
-	r5 = *inHolderPtr->getBufferElement(1, A, time, 1);
-	r15 = *inHolderPtr->getBufferElement(1, B, time, 1);
-
+	_correlate_2x2(&(*S0)[0][0], &(*S1)[0][0], &(*S2)[0][0], &(*S3)[0][0], outputs[ch], NR_SAMPLES_PER_INTEGRATION);
       }
-      // store accumulated results
-      
     }
   }
-#else
-//   _correlator(inHolderPtr->getBuffer(), outHolderPtr->getBuffer());
+
 #endif  
   timer.stop();
 }
