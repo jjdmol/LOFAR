@@ -108,7 +108,7 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
   while (timeStart < timeLast) {
     // Set a domain. Use middle 56 channels and 2 times per step.
     pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
-    
+
     // Get the ParmData from the Prediffer and send it to the solver.
     Solver solver;
     solver.initSolvableParmData (1);
