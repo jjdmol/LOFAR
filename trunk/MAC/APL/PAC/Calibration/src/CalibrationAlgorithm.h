@@ -27,6 +27,7 @@
 #include "CalibrationInterface.h"
 #include "Source.h"
 #include "DipoleModel.h"
+#include <AMCBase/Converter.h>
 
 namespace LOFAR {
   namespace CAL {
@@ -34,15 +35,17 @@ namespace LOFAR {
     class CalibrationAlgorithm : public CalibrationInterface
     {
     public:
-      CalibrationAlgorithm(const Sources& sources, DipoleModels& dipolemodels);
+      CalibrationAlgorithm(const Sources& sources, DipoleModels& dipolemodels, AMC::Converter& converter);
       virtual ~CalibrationAlgorithm();
       
       virtual const Sources&      getSources()      { return m_sources;      }
       virtual       DipoleModels& getDipoleModels() { return m_dipolemodels; }
+      virtual AMC::Converter&     getConverter()    { return m_converter;    }
       
     private:
-      const Sources&      m_sources;
-            DipoleModels& m_dipolemodels;
+      const Sources&        m_sources;
+            DipoleModels&   m_dipolemodels;
+            AMC::Converter& m_converter;
     };
 
   }; // namespace CAL

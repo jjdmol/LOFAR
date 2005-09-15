@@ -31,6 +31,10 @@
 #include <math.h>
 #include "cpplapack.h"
 
+#include <AMCBase/SkyCoord.h>
+#include <AMCBase/EarthCoord.h>
+#include <AMCBase/TimeCoord.h>
+
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
@@ -40,9 +44,10 @@ using namespace blitz;
 using namespace std;
 //using namespace LOFAR::RSP_Protocol;
 using namespace CPPL;
+using namespace AMC;
 
-RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels)
-  : CalibrationAlgorithm(sources, dipolemodels),
+RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels, AMC::Converter& converter)
+  : CalibrationAlgorithm(sources, dipolemodels, converter),
     logfile("CalLog.txt")
 {
 }
@@ -154,6 +159,10 @@ const vector<Source> RemoteStationCalibration::make_local_sky_model(const Source
 {
   double obstime = acmtime.sec() + acmtime.usec() / 1e6;
   const std::vector<Source> skymodel = sources.getSources();
+  AMC::Converter& converter    = getConverter(); // can be used for coordinate conversions
+
+  double mjd = 0.0, mjdfraction = 0.0;
+  acmtime.convertToMJD(mjd, mjdfraction);
 
   // obstime is in UTC seconds since Jan 1, 1970, 0h0m0s
   // This was Julian Day 2440587.5
@@ -188,6 +197,9 @@ const vector<Source> RemoteStationCalibration::make_local_sky_model(const Source
       delta = (skymodel.begin() + idx)->getDEC(),
       el = ::asin(::sin(delta) * ::sin(delta0) + ::cos(delta0) * ::cos(delta) * ::cos(alpha0 - alpha)),
       az = ::acos((::sin(delta) - ::sin(el) * ::sin(delta0)) / (::cos(el) * ::cos(delta0))) * ((::sin(alpha0 - alpha) < 0) ? -1 : 1);
+
+    SkyCoord result = converter.j2000ToAzel(SkyCoord((skymodel.begin() + idx)->getRA(), (skymodel.begin() + idx)->getDEC()),
+					    EarthCoord(geolon, geolat), TimeCoord(mjd, mjdfraction));
 
     if (el > 0)
       local_skymodel.push_back(Source((skymodel.begin() + idx)->getName(), -::cos(el) * ::sin(az), ::cos(el) * ::cos(az), const_cast<blitz::Array<double, 2>&>((skymodel.begin() + idx)->getFluxes())));

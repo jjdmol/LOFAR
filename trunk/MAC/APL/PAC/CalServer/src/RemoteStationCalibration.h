@@ -40,7 +40,7 @@ namespace LOFAR {
     class RemoteStationCalibration : public CalibrationAlgorithm
     {
     public:
-      RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels);
+      RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels, AMC::Converter& converter);
 
       /**
        * Destructor: delete any dynamically allocated member variables
