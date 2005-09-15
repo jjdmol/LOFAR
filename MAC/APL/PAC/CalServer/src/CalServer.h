@@ -32,6 +32,7 @@
 #include "SubArray.h"
 
 #include <GCF/TM/GCF_Control.h>
+#include <AMCBase/AMCClient/ConverterClient.h>
 
 namespace LOFAR {
   namespace CAL {
@@ -98,6 +99,8 @@ namespace LOFAR {
       ACCs&                       m_accs;         // front and back ACC buffers (received from ACMServer)
 
       CalibrationAlgorithm*       m_cal;          // pointer to the calibration algorithm to use
+
+      AMC::ConverterClient        m_converter;    // interface for coordinate conversion (Astronomical Measures Conversion)
 
       /**
        * Client/Server management member variables.

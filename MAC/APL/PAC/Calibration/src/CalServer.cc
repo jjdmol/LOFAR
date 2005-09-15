@@ -60,7 +60,7 @@ using namespace CAL_Protocol;
 
 CalServer::CalServer(string name, ACCs& accs)
   : GCFTask((State)&CalServer::initial, name),
-    m_accs(accs), m_cal(0)
+    m_accs(accs), m_cal(0), m_converter("localhost")
 #ifdef USE_CAL_THREAD
     , m_calthread(0)
 #endif
@@ -70,7 +70,7 @@ CalServer::CalServer(string name, ACCs& accs)
 #endif
 
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
-  m_acceptor.init(*this, "acceptor_v2", GCFPortInterface::MSPP, CAL_PROTOCOL);
+  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, CAL_PROTOCOL);
 }
 
 CalServer::~CalServer()
@@ -139,7 +139,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  // Setup calibration algorithm
 	  //
-	  m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels);
+	  m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, m_converter);
 
 #ifdef USE_CAL_THREAD
 	  //
@@ -599,14 +599,14 @@ int main(int argc, char** argv)
   // create CalServer and ACMProxy tasks
   // they communicate via the ACCs instance
   //
-  CalServer cal     ("CalServer", *accs);
-  ACMProxy  acmproxy("ACMProxy",  *accs);
-
-  cal.start();      // make initial transition
-  acmproxy.start(); // make initial transition
-
   try
   {
+    CalServer cal     ("CalServer", *accs);
+    ACMProxy  acmproxy("ACMProxy",  *accs);
+
+    cal.start();      // make initial transition
+    acmproxy.start(); // make initial transition
+
     GCFTask::run();
   }
   catch (Exception e)
