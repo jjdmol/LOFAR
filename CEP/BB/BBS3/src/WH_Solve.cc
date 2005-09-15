@@ -157,7 +157,7 @@ void WH_Solve::process()
     cout << "After: [ ";
     for (unsigned int i = 0; i < res.size(); i++)
     {
-      sprintf(strVal, "%1.10f ", res[i]);
+      sprintf(strVal, "%1.14f ", res[i]);
       cout << strVal << " ";
     }
     cout << " ]" << endl;

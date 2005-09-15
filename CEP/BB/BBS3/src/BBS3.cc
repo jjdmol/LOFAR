@@ -105,6 +105,11 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
       params["BBDBname"] = usernm;
     }
 
+    // Read MS description file
+    string msName = params.getString(stratName + "MSDBparams.MSName");   
+    double msStartTime, msEndTime, msInterval;
+    readMSTimes(msName, msStartTime, msEndTime, msInterval);
+
     // Get time parameters
     double intervalSize = params.getDouble(stratName + "timeInterval");
     double startTime = -1;
@@ -112,35 +117,33 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
     {
       startTime = params.getDouble(stratName + "startTime");
     }
+    if (startTime < 0)
+    {
+      // Correct start time
+      LOG_INFO_STR("Using " << msName << " start time " << msStartTime
+		   << " for strategy " << string(nrStr));
+      startTime = msStartTime;
+      params.replace(ACC::APS::KVpair(stratName+ "startTime", msStartTime));
+    }
+    
     double endTime = -1;
     if (params.isDefined(stratName + "endTime"))
     {
       endTime = params.getDouble(stratName + "endTime");
     }
-
-    // Read MS description file
-    string msName = params.getString(stratName + "MSDBparams.MSName");   
-    double msStartTime, msEndTime, msInterval;
-    readMSTimes(msName, msStartTime, msEndTime, msInterval);
-    // Correct start- and endtime and interval size if necessary
-    if (msStartTime > startTime)
+    if (endTime < 0)
     {
-      LOG_INFO_STR("Replacing start time with MS start time " << msStartTime
-		   << " for strategy " << string(nrStr));
-      startTime = msStartTime;
-      params.replace(ACC::APS::KVpair(stratName+ "startTime", msStartTime));
-    }
-    if (endTime==-1 || msEndTime < endTime)
-    {
-      LOG_INFO_STR("Replacing end time with MS end time " << msEndTime
+      // Correct end time
+      LOG_INFO_STR("Using " << msName << " end time " << msEndTime
 		   << " for strategy " << string(nrStr));
       endTime = msEndTime;
       params.replace(ACC::APS::KVpair(stratName+ "endTime", msEndTime));
     }
+
     if (msInterval > intervalSize)
     {
-      LOG_INFO_STR("Replacing time interval size with MS interval size " << msInterval
-		   << " for strategy " << string(nrStr));
+      LOG_INFO_STR("Replacing time interval size with " << msName << " interval size " 
+		   << msInterval << " for strategy " << string(nrStr));
       intervalSize = msInterval;
       params.replace(ACC::APS::KVpair(stratName+ "timeInterval", msInterval));
     }
@@ -153,7 +156,7 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
     }
     else
     {
-      nrIntervals = (int)floor((endTime-startTime)/intervalSize)+1;
+      nrIntervals = (int)ceil((endTime-startTime)/intervalSize);
     }
     int maxRuns = maxIter*nrIntervals;
     LOG_INFO_STR("Strategy " << string(nrStr) << " max number of runs " << maxRuns);
