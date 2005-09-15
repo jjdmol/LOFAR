@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,294 230 554 344 N "_3DFace" 0
+PANEL,28 141 554 344 N "_3DFace" 0
 EEE E E 1 -1 -1 0  10 10
 "" 0 1
 EE 2
@@ -133,18 +133,20 @@ LANG:1 12 query+create
    ////////////////////////////////////////
    //
    string datapoint;
+   string dpType;
    setValue(\"txt_total\", \"text\", dynlen(output));
    for(int i=1; i<=dynlen(output); i++)
    {
      datapoint = output[i];
-     if(\"__enabled\"!=substr(datapoint, strlen(datapoint)-9, strlen(datapoint)))
+     dpType = dpTypeName(datapoint);
+     if(dpType[0] == \"T\")
      {
        if(!dpExists(datapoint + \"__enabled\"))
        {
          dpCreate(datapoint + \"__enabled\", \"GCFPaPsEnabled\");
        }
-       dpSetWait(datapoint + \"__enabled.:_original.._value\", \"autoloaded|\" + dpTypeName(datapoint));
-       DebugN(\"## \" + datapoint + \"    |content: \" +  \"autoloaded|\"+ dpTypeName(datapoint));
+       dpSetWait(datapoint + \"__enabled.:_original.._value\", \"autoloaded|\" + dpType);
+       DebugN(\"## \" + datapoint + \"    |content: \" +  \"autoloaded|\"+ dpType);
        
      }
    setValue(\"txt_current\", \"text\", i);
@@ -171,7 +173,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 "main()
 {
-setValue(\"\", \"text\", getSystemName()+\"PAC*\");
+setValue(\"\", \"text\", getSystemName()+\"*\");
 }" 0
 
 E
