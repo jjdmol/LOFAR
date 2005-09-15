@@ -10,10 +10,12 @@ mac.ns.CCU1_PAC_StartDaemon.server.host=localhost
 mac.ns.CCU1_PAC_StartDaemon.server.port=27011
 
 mac.ns.SO.RSPDriver.type=TCP
-mac.ns.SO.RSPDriver.host=localhost
-mac.ns.SO.RSPDriver.port=27001
-mac.top.SO.RSPDriver.remoteservice=RSPDriver:acceptor
+#mac.ns.SO.RSPDriver.host=localhost
+#mac.ns.SO.RSPDriver.port=27001
+#mac.top.SO.RSPDriver.remoteservice=RSPDriver:acceptor
+mac.top.SO.RSPDriver.remoteservice=ARATestDriver:ARAtestRSPserver
 
 mac.ns.RSPDriver.acceptor.type=TCP
-mac.ns.RSPDriver.acceptor.host=localhost
-mac.ns.RSPDriver.acceptor.port=27001
+#mac.ns.RSPDriver.acceptor.host=localhost
+#mac.ns.RSPDriver.acceptor.port=27001
+mac.ns.ARATestDriver.ARAtestRSPserver.type=TCP

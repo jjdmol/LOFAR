@@ -1552,8 +1552,8 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       
       // send claim event to childs
       _setChildStates(LOGICALDEVICE_STATE_CLAIMING);
-      boost::shared_ptr<LOGICALDEVICEClaimEvent> claimEvent(new LOGICALDEVICEClaimEvent);
-      _sendToAllChilds(claimEvent);
+//      boost::shared_ptr<LOGICALDEVICEClaimEvent> claimEvent(new LOGICALDEVICEClaimEvent);
+//      _sendToAllChilds(claimEvent);
       
       concreteClaim(port);
       break;
@@ -1759,8 +1759,8 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
 
       // send prepare event to childs
       _setChildStates(LOGICALDEVICE_STATE_PREPARING);
-      boost::shared_ptr<LOGICALDEVICEPrepareEvent> prepareEvent(new LOGICALDEVICEPrepareEvent);
-      _sendToAllChilds(prepareEvent);
+//      boost::shared_ptr<LOGICALDEVICEPrepareEvent> prepareEvent(new LOGICALDEVICEPrepareEvent);
+//      _sendToAllChilds(prepareEvent);
 
       concretePrepare(port);
       break;
