@@ -63,7 +63,8 @@ lofar_EXTERNAL(suite,1,Suite/suite.h,,)
 lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
-lofar_EXTERNAL(cpplapack,1,cpplapack.h,"","/usr/local/lib/+pkg",,,,"-llapack -lblas -lg2c -lm")
+lofar_EXTERNAL(g2c,1,,"","/usr/lib",,,,"-lg2c")
+lofar_EXTERNAL(cpplapack,1,cpplapack.h,"","/usr/local/lib/+pkg",,,,"-llapack -lblas -lm")
 lofar_EXTERNAL(RTCCommon,1,Marshalling.h,,)
 
 dnl

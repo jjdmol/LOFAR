@@ -288,7 +288,7 @@ int main(int argc, char** argv)
 
   int rcucontrol;
   sscanf(argv[6], "%i", &rcucontrol);
-  s.addTest(new CalTest("CalTest", argv[1], argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), rcucontrol));
+  s.addTest(new CalTest("CalTest", argv[1], argv[2], int(atof(argv[3])), atoi(argv[4]), atoi(argv[5]), rcucontrol));
   s.run();
   long nFail = s.report();
   s.free();

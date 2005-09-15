@@ -42,7 +42,8 @@ using namespace std;
 using namespace CPPL;
 
 RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, DipoleModels& dipolemodels)
-  : CalibrationAlgorithm(sources, dipolemodels)
+  : CalibrationAlgorithm(sources, dipolemodels),
+    logfile("CalLog.txt")
 {
 }
 
@@ -54,7 +55,6 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   //
   // This warning can be removed when the code in this file has been adapted to that change.
   //
-
   const SpectralWindow& spw = subarray.getSPW();         // get spectral window
   DipoleModels&   dipolemodels = getDipoleModels(); // get dipole models
   const Sources&        sources      = getSources();      // get sky model
@@ -71,51 +71,50 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   LOG_INFO_STR("calibrate: subarray name=" << subarray.getName());
   LOG_INFO_STR("calibrate: num_antennas=" << subarray.getNumAntennas());
 
-  int nloops = 1;
-  for (int niter = 0; niter < nloops; niter++) {
-    cout << "calibrate: working on loop " << niter << " of " << nloops << endl;
-    for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
-      Timestamp acmtime;
-      const Array<complex<double>, 2> acm = acc.getACM(sb, 0, 0, acmtime); // get XX acm
-    
-      // since acmtime is currently returning 0, we set it to the current
-      // time for debug purposes, i.e. these lines need to be removed in the
-      // final version!
-      struct timeval tv;
-    
-      // check whether channel is RFI free
-      if (sb > 0 && sb < spw.getNumSubbands()-1 && issuitable(acc, sb)) {
+  // check for RFI free channels
+  Array<bool, 1> isclean(issuitable(acc, spw.getNumSubbands()));
 
+  int npolarizations = 1;
+  for (int pol = 0; pol < npolarizations; pol++) {
+    cout << "calibrate: working on polarization " << pol << " of "
+	 << npolarizations << endl;
+    for (int sb = 0; sb < spw.getNumSubbands(); sb++) {
+      logfile << "sb = " << sb << endl;
+
+      Timestamp acmtime;
+      const Array<complex<double>, 2> acm = acc.getACM(sb, pol, pol, acmtime);
+
+      // time of test observation since 1-1-1970
+      acmtime = Timestamp(1111584323, 160000);
+
+      if (isclean(sb)) {
 	// construct local sky model (LSM)
-	acmtime.get(&tv);
-	// the big number is de number of seconds passed between 1-1-1970, 0h0m0s
-	// and the time of the first measurement of the ITS deep integration
-	// campaign (24-9-2004, 12h21m49.65s
-	const vector<Source> LSM = make_local_sky_model(sources, 1096028509.65);
+	const vector<Source> LSM = make_local_sky_model(sources, acmtime);
     
 	Array<double, 3> AntennaPos = subarray.getAntennaPos();
       
 	cout << "calibrate: working on subband " << sb + 1 << " of "
 	     << spw.getNumSubbands() << endl;
 	double freq = sb * spw.getSubbandWidth() + spw.getSamplingFrequency() * (spw.getNyquistZone() - 1);
-	// for testing purposes we overrule the calculation above
-	freq = 3.0254e7;
-    
+
+	logfile << "freq = " << freq << endl;
+
 	Array<complex<double>, 2> R0(make_ref_acm(LSM, AntennaPos, *dipolemodel, freq));
 	// mark baselines of at least 40m
 	Array<bool, 2> mask(set_restriction(AntennaPos, 40));
     
 	// estimate alpha = g * (1 ./ g)
-	//Array<complex<double>, 2> acm1pol(acm(Range::all(), Range::all(), 0, 0));
 	Array<complex<double>, 2> alpha(computeAlpha(acm, R0, mask));
 	// extract g from alpha
 	Array<complex<double>, 1> gain(computeGain(alpha, acm, R0, mask));
 	ASSERT(gains.getGains().extent(firstDim) == gain.extent(firstDim));
 	gains.getGains()(Range::all(), 0/*X-pol*/, sb) = gain;
 
+	logfile << "gain = " << endl << gain << endl;
 	cout << "gains[" << sb << "]=" << gain << endl;
 	
       } else
+	logfile << "Subband contains RFI and is not calibrated" << endl;
 	cout << "calibrate: subband " << sb + 1 << " was not processed" << endl;
     }
   }
@@ -124,12 +123,11 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   gains.setDone(true); // when finished
 }
 
-bool RemoteStationCalibration::issuitable(const ACC& acc, int sb)
+Array<bool, 1> RemoteStationCalibration::issuitable(const ACC& acc, int nsb)
 {
   Timestamp acmtime;
-  Array<complex<double>, 1> test(3);
-
-  for (int idx = sb - 1; idx <= sb + 1; idx++) {
+  Array<complex<double>, 1> test(nsb);
+  for (int idx = 0; idx < nsb; idx++) {
     Array<complex<double>, 2> acm = acc.getACM(idx, 0, 0, acmtime).copy();
     Array<complex<double>, 1> ac(acm.extent(firstDim));
     ac = acm(tensor::i, tensor::i);
@@ -139,13 +137,22 @@ bool RemoteStationCalibration::issuitable(const ACC& acc, int sb)
     prod = matmultc(acm, acmH);
     Array<complex<double>, 1> diagprod(acm.extent(firstDim));
     diagprod = prod(tensor::i, tensor::i);
-    test(idx + 1 - sb) = sum(diagprod);
+    test(idx) = sum(diagprod);
   }
-  return (abs(test(0) - test(1)) < 0.05 && abs(test(1) - test(2)) < 0.05);
+
+  Array<bool, 1> isclean(nsb);
+  isclean(0) = false;
+  for (int idx = 1; idx < nsb - 1; idx++) {
+    isclean(idx) = (abs(test(idx-1) - test(idx)) < 0.05) ||
+                   (abs(test(idx) - test(idx+1)) < 0.05);
+  }
+  isclean(nsb-1) = false;
+  return isclean;
 }
 
-const vector<Source> RemoteStationCalibration::make_local_sky_model(const Sources& sources, double obstime)
+const vector<Source> RemoteStationCalibration::make_local_sky_model(const Sources& sources, Timestamp& acmtime)
 {
+  double obstime = acmtime.sec() + acmtime.usec() / 1e6;
   const std::vector<Source> skymodel = sources.getSources();
 
   // obstime is in UTC seconds since Jan 1, 1970, 0h0m0s
@@ -298,11 +305,11 @@ Array<complex<double>, 1> RemoteStationCalibration::computeGain(Array<complex<do
   // normalization
   Array<complex<double>, 2> Rtest(nelem, nelem);
 
-  Rtest = gain(tensor::i) * gain(tensor::j) * R0(tensor::i, tensor::j);
+  Rtest = gain(tensor::i) * conj(gain(tensor::j)) * R0(tensor::i, tensor::j);
   int Nnonzero = 0;
   double total = 0;
-  for (int idx1 = 1; idx1 < nelem; idx1++) {
-    for (int idx2 = 1; idx2 < nelem; idx2++) {
+  for (int idx1 = 0; idx1 < nelem; idx1++) {
+    for (int idx2 = 0; idx2 < nelem; idx2++) {
       if (restriction(idx1, idx2)) {
 	total += abs(Rtest(idx1, idx2) / acm(idx1, idx2));
 	Nnonzero++;
