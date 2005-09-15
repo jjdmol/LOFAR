@@ -185,7 +185,7 @@ GCFEvent::TResult VirtualTelescope::concrete_idle_state(GCFEvent& event, GCFPort
 GCFEvent::TResult VirtualTelescope::concrete_claiming_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -218,6 +218,7 @@ GCFEvent::TResult VirtualTelescope::concrete_claiming_state(GCFEvent& event, GCF
       break;
 
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   
@@ -227,7 +228,14 @@ GCFEvent::TResult VirtualTelescope::concrete_claiming_state(GCFEvent& event, GCF
 GCFEvent::TResult VirtualTelescope::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch(event.signal)
+  {
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
 
   return status;
 }
@@ -235,7 +243,7 @@ GCFEvent::TResult VirtualTelescope::concrete_claimed_state(GCFEvent& event, GCFP
 GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -303,6 +311,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
       break;
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   
@@ -312,7 +321,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
 GCFEvent::TResult VirtualTelescope::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -322,6 +331,7 @@ GCFEvent::TResult VirtualTelescope::concrete_active_state(GCFEvent& event, GCFPo
     }
           
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }  
   return status;
@@ -330,7 +340,7 @@ GCFEvent::TResult VirtualTelescope::concrete_active_state(GCFEvent& event, GCFPo
 GCFEvent::TResult VirtualTelescope::concrete_releasing_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -352,6 +362,7 @@ GCFEvent::TResult VirtualTelescope::concrete_releasing_state(GCFEvent& event, GC
       break;
     
     default:
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   

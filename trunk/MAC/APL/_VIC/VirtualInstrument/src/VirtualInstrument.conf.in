@@ -19,7 +19,7 @@ mac.ns.PAC_VBStartDaemon.server.port=27010
 #mac.ns.Observation1.VI1.server.type=TCP
 #mac.ns.Observation1.VI1.server.host=saturnus
 ## when using BSE VB stub, the following port must be fixed: 
-mac.ns.Observation1.VI1.server.port=27003
+##mac.ns.Observation1.VI1.server.port=27003
 mac.ns.MAINTENANCE1.server.port=27004
 ##
 
