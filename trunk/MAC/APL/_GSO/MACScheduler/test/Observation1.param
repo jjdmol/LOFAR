@@ -16,7 +16,7 @@ claimTime=+10
 prepareTime=+20
 startTime=+30
 stopTime=+90
-childs=[AO1]  #[AO1,ARG1,VI1]
+childs=[AO1,ARG1,VI1]
 
 ###########################
 # Array Operations
@@ -38,29 +38,29 @@ AO1.claimTime=+10
 AO1.prepareTime=+20
 AO1.startTime=+30
 AO1.stopTime=+90
-AO1.childs=[SO1]
+AO1.childs=[SO]
 AO1.samplingFrequency=160000000
 
 ###########################
 # Station Operations
 ###########################
-AO1.SO1.versionnr=1.0
-AO1.SO1.qualification=development
-AO1.SO1.logicalDeviceType=STATIONOPERATIONS
-AO1.SO1.parentHost=lofar27
-AO1.SO1.parentPort=0
-AO1.SO1.parentTask=AO1
-AO1.SO1.remoteSystem=CCU1
-AO1.SO1.startDaemonHost=lofar27
-AO1.SO1.startDaemonPort=27011
-AO1.SO1.startDaemonTask=PAC_StationStartDaemon
-AO1.SO1.propertysetBaseName=PAC_SO1
-AO1.SO1.propertysetDetailsType=TAplPacSO
-AO1.SO1.claimTime=+10
-AO1.SO1.prepareTime=+20
-AO1.SO1.startTime=+30
-AO1.SO1.stopTime=+90
-AO1.SO1.childs=[]
+AO1.SO.versionnr=1.0
+AO1.SO.qualification=development
+AO1.SO.logicalDeviceType=STATIONOPERATIONS
+AO1.SO.parentHost=lofar27
+AO1.SO.parentPort=0
+AO1.SO.parentTask=AO1
+AO1.SO.remoteSystem=CCU1
+AO1.SO.startDaemonHost=lofar27
+AO1.SO.startDaemonPort=27011
+AO1.SO.startDaemonTask=PAC_StationStartDaemon
+AO1.SO.propertysetBaseName=PAC_SO
+AO1.SO.propertysetDetailsType=TAplPacSO
+AO1.SO.claimTime=+10
+AO1.SO.prepareTime=+20
+AO1.SO.startTime=+30
+AO1.SO.stopTime=+90
+AO1.SO.childs=[]
 
 ###########################
 # Array Receptor Group
