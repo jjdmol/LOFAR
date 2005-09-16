@@ -39,6 +39,7 @@ namespace LOFAR
 {
   using namespace ACC;
   using namespace APLCommon;
+
   
 namespace AAO
 {
@@ -164,7 +165,7 @@ GCFEvent::TResult ArrayOperations::concrete_claiming_state(GCFEvent& event, GCFP
     {
       LOG_TRACE_FLOW("CLAIMED received");
       // check if all childs are claimed
-      if(_childsInState(100.0, LDTYPE_STATIONOPERATIONS, LOGICALDEVICE_STATE_CLAIMED))
+      if(_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_CLAIMED))
       {
         // enter claimed state
         newState  = LOGICALDEVICE_STATE_CLAIMED;
@@ -200,7 +201,7 @@ GCFEvent::TResult ArrayOperations::concrete_preparing_state(GCFEvent& event, GCF
     {
       LOG_TRACE_FLOW("PREPARED received");
       // check if all childs are prepared
-      if(_childsInState(100.0, LDTYPE_STATIONOPERATIONS, LOGICALDEVICE_STATE_SUSPENDED))
+      if(_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_SUSPENDED))
       {
         newState=LOGICALDEVICE_STATE_SUSPENDED;
       }

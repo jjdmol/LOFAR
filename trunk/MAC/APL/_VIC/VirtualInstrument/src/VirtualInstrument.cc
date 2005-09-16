@@ -166,12 +166,13 @@ GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GC
     {
       LOG_TRACE_FLOW("CLAIMED received");
       // check if all childs are not claiming anymore
-      // now only checking VB, because VT's are old style
-      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_CLAIMING))
+      if(_childsNotInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_CLAIMING))
       {
         LOG_TRACE_FLOW("No childs CLAIMING");
         // ALL virtual backend childs must be claimed
-        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
+	//        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
+	// Demo: no VB        
+        if(_childsInState(0.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
         {
           LOG_TRACE_FLOW("100% VB's CLAIMED");
           // 50% of the VT's must be claimed
@@ -230,15 +231,16 @@ GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, G
     {
       LOG_TRACE_FLOW("PREPARED received");
       // check if all childs are not preparing anymore
-      // now only checking VB, because VT's are old style
-      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_PREPARING))
+      if(_childsNotInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_PREPARING))
       {
         LOG_TRACE_FLOW("No childs PREPARING");
         // ALL virtual backend childs must be prepared
-        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
+        // if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
+        // Demo: no VB
+        if(_childsInState(0.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
         {
           LOG_TRACE_FLOW("All VB's SUSPENDED");
-          // 00% of the VT's must be prepared
+          // 50% of the VT's must be prepared
           if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_SUSPENDED))
           {
             LOG_TRACE_FLOW("50% VT's SUSPENDED");
@@ -367,10 +369,12 @@ bool VirtualInstrument::_checkQualityRequirements()
   bool requirementsMet = false;
   
   // ALL virtual backend childs must be active
-  if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_ACTIVE))
+  // if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_ACTIVE))
+  // Demo: No VB
+  if(_childsInState(0.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_ACTIVE))
   {
     LOG_TRACE_FLOW("All VB's RESUMED");
-    // 00% of the VT's must be active
+    // 50% of the VT's must be active
     if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_ACTIVE))
     {
       LOG_TRACE_FLOW("50% VT's RESUMED");
