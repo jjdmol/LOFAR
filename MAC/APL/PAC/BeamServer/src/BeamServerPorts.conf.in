@@ -9,7 +9,7 @@ mac.ns.BeamServer.acceptor.type=TCP
 mac.ns.BeamServer.rspdriver.type=TCP
 mac.top.BeamServer.rspdriver.remoteservice=RSPDriver:acceptor
 mac.ns.BeamServer.calserver.type=TCP
-mac.top.BeamServer.calserver.remoteservice=CalServer:acceptor_v2
+mac.top.BeamServer.calserver.remoteservice=CalServer:acceptor
 
 #
 # RSPDriver configuration

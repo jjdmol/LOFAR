@@ -836,12 +836,12 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  BeamServer beamserver("BeamServer");
-
-  beamserver.start(); // make initial transition
-
   try
   {
+    BeamServer beamserver("BeamServer");
+
+    beamserver.start(); // make initial transition
+
     GCFTask::run();
   }
   catch (Exception e)
