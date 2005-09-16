@@ -1184,7 +1184,8 @@ void LogicalDevice::_sendScheduleToClients()
         TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
         boost::shared_ptr<STARTDAEMONScheduleEvent> scheduleEvent(new STARTDAEMONScheduleEvent);
         scheduleEvent->logicalDeviceType = ldType;
-        scheduleEvent->taskName = getName() + string(".") + startDaemonKey;
+	//        scheduleEvent->taskName = getName() + string(".") + startDaemonKey;
+        scheduleEvent->taskName = startDaemonKey;
         scheduleEvent->fileName = parameterFileName;
 
         _sendEvent(scheduleEvent,*startDaemonPort);
