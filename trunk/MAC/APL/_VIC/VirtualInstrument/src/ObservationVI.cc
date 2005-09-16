@@ -311,6 +311,12 @@ void ObservationVI::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortI
 
 }
 
+void ObservationVI::concreteAddExtraKeys(ACC::APS::ParameterSet& /*psSubset*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  // do nothing
+}
+
 }; // namespace VIC
 }; // namespace LOFAR
 

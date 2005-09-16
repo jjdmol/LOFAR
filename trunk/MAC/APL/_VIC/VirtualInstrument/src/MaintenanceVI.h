@@ -132,6 +132,7 @@ namespace AVI
       */
       virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port);
       virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port);
+      virtual void concreteAddExtraKeys(ACC::APS::ParameterSet& /*psSubset*/);
 
     protected:    
 
