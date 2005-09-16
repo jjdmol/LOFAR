@@ -1,7 +1,6 @@
 ACC           # Application Configuration & Control
 AMC           # Astronomical Measures Conversions (successor of CRD)
 Common        # Common stuff
-CRD	      # Coordinate server stuff (deprecated)
 databases     # Database stuff
 Math	      # Math stuff
 Tools         # Useful tools
