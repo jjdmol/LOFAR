@@ -291,6 +291,14 @@ void ArrayOperations::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInt
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
+void ArrayOperations::concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  // copy samplingFrequency from AO section to child section
+  copyParentValue(psSubset,string("samplingFrequency"));
+}
+
 }; // namespace AAO
 }; // namespace LOFAR
 

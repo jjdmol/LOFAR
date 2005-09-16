@@ -298,6 +298,19 @@ void ArrayReceptorGroup::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPort
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
+void ArrayReceptorGroup::concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+  copyParentValue(psSubset,string("rcus"));
+  copyParentValue(psSubset,string("antennaArray"));
+  copyParentValue(psSubset,string("frequencyTimes"));
+  copyParentValue(psSubset,string("frequency"));
+  copyParentValue(psSubset,string("nyquistZone"));
+  copyParentValue(psSubset,string("bandSelection"));
+  copyParentValue(psSubset,string("maxRcusDefect"));
+}
+
 }; // namespace VIC
 }; // namespace LOFAR
 
