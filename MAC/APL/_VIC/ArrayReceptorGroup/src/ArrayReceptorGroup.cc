@@ -163,37 +163,12 @@ GCFEvent::TResult ArrayReceptorGroup::concrete_claiming_state(GCFEvent& event, G
     case LOGICALDEVICE_CLAIMED:
     {
       LOG_TRACE_FLOW("CLAIMED received");
-      // check if all childs are not claiming anymore
-      // now only checking VB, because VT's are old style
-      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_CLAIMING))
+      // check if all childs are claimed
+      if(_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_CLAIMED))
       {
-        LOG_TRACE_FLOW("No childs CLAIMING");
-        // ALL virtual backend childs must be claimed
-        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
-        {
-          LOG_TRACE_FLOW("100% VB's CLAIMED");
-          // 50% of the VT's must be claimed
-          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_CLAIMED))
-          {
-            LOG_TRACE_FLOW("00% VT's CLAIMED");
-            
-            LOG_TRACE_FLOW("need to check old style VT's");
-            
-            // enter claimed state
-            newState  = LOGICALDEVICE_STATE_CLAIMED;
-            errorCode = LD_RESULT_NO_ERROR;
-          }
-          else
-          {
-            newState  = LOGICALDEVICE_STATE_IDLE;
-            errorCode = LD_RESULT_LOW_QUALITY;
-          }
-        }
-        else
-        {
-          newState  = LOGICALDEVICE_STATE_IDLE;
-          errorCode = LD_RESULT_LOW_QUALITY;
-        }
+        // enter claimed state
+        newState  = LOGICALDEVICE_STATE_CLAIMED;
+        errorCode = LD_RESULT_NO_ERROR;
       }
       break;
     }
@@ -230,33 +205,12 @@ GCFEvent::TResult ArrayReceptorGroup::concrete_preparing_state(GCFEvent& event, 
     case LOGICALDEVICE_PREPARED:
     {
       LOG_TRACE_FLOW("PREPARED received");
-      // check if all childs are not preparing anymore
-      // now only checking VB, because VT's are old style
-      if(_childsNotInState(100.0, LDTYPE_VIRTUALBACKEND/*LDTYPE_NO_TYPE*/, LOGICALDEVICE_STATE_PREPARING))
+      // check if all childs are prepared
+      if(_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_SUSPENDED))
       {
-        LOG_TRACE_FLOW("No childs PREPARING");
-        // ALL virtual backend childs must be prepared
-        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
-        {
-          LOG_TRACE_FLOW("All VB's SUSPENDED");
-          // 00% of the VT's must be prepared
-          if(_childsInState(00.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_SUSPENDED))
-          {
-            LOG_TRACE_FLOW("00% VT's SUSPENDED");
-            // enter suspended state
-            newState=LOGICALDEVICE_STATE_SUSPENDED;
-          }
-          else
-          {
-            newState  = LOGICALDEVICE_STATE_CLAIMED;
-            errorCode = LD_RESULT_LOW_QUALITY;
-          }
-        }
-        else
-        {
-          newState  = LOGICALDEVICE_STATE_CLAIMED;
-          errorCode = LD_RESULT_LOW_QUALITY;
-        }
+        // enter prepared state
+        newState  = LOGICALDEVICE_STATE_SUSPENDED;
+        errorCode = LD_RESULT_NO_ERROR;
       }
       break;
     }
