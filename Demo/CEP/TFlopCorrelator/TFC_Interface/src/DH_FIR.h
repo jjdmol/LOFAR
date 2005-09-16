@@ -68,9 +68,9 @@ private:
   unsigned int itsBufSize;
   
   short itsFIR;
-  short itsNStations;      // #stations per buffer
-  short itsNTimes;         // #time samples per buffer
-  short itsNPol;           // #polarisations per sample
+  int itsNStations;      // #stations per buffer
+  int itsNTimes;         // #time samples per buffer
+  int itsNPol;           // #polarisations per sample
 
   RectMatrix<BufferType>* itsMatrix;
 
