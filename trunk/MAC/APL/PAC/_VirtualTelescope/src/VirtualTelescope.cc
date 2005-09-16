@@ -225,13 +225,30 @@ GCFEvent::TResult VirtualTelescope::concrete_claiming_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult VirtualTelescope::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult VirtualTelescope::concrete_claimed_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch(event.signal)
   {
+    case F_CONNECTED:
+      break;
+
+    case F_DISCONNECTED:
+      if(_isBeamServerPort(port))
+      {
+        m_beamServer.setTimer(2.0); // try again
+      }
+      break;
+
+    case F_TIMER:
+      if(_isBeamServerPort(port))
+      {
+        m_beamServer.open(); // try again
+      }
+      break;
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -310,6 +327,23 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
       }
       break;
     
+    case F_CONNECTED:
+      break;
+
+    case F_DISCONNECTED:
+      if(_isBeamServerPort(port))
+      {
+        m_beamServer.setTimer(2.0); // try again
+      }
+      break;
+
+    case F_TIMER:
+      if(_isBeamServerPort(port))
+      {
+        m_beamServer.open(); // try again
+      }
+      break;
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -318,7 +352,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
   return status;
 }
 
-GCFEvent::TResult VirtualTelescope::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult VirtualTelescope::concrete_active_state(GCFEvent& event, GCFPortInterface& port, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -326,10 +360,25 @@ GCFEvent::TResult VirtualTelescope::concrete_active_state(GCFEvent& event, GCFPo
   switch (event.signal)
   {
     case F_ENTRY:
-    {
       break;
-    }
           
+    case F_CONNECTED:
+      break;
+
+    case F_DISCONNECTED:
+      if(_isBeamServerPort(port))
+      {
+        m_beamServer.setTimer(2.0); // try again
+      }
+      break;
+
+    case F_TIMER:
+      if(_isBeamServerPort(port))
+      {
+        m_beamServer.open(); // try again
+      }
+      break;
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
