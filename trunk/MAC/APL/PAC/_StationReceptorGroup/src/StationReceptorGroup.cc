@@ -494,7 +494,7 @@ void StationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/)
     LOG_INFO(formatString("Sending CALSTART to CAL server"));
     CALStartEvent calStartEvent;
     calStartEvent.name = getName();
-    calStartEvent.parent = m_parameterSet.getString(string("parentArray"));
+    calStartEvent.parent = m_parameterSet.getString(string("antennaArray"));
     calStartEvent.subset.reset(); // reset every bit
     for(TRCUMap::iterator it=m_rcuMap.begin();it!=m_rcuMap.end();++it)
     {
