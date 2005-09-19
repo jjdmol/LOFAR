@@ -63,6 +63,7 @@ public:
 	ParameterSet& 	operator=(const ParameterSet& that);
 
   void      setSearchPath(const string& searchPath);
+  string    getSearchPath() const;
 	// Adds the Key-Values pair in the given file to the current ParameterSet.
 	void			adoptFile  (const string& theFilename);
 	void			adoptBuffer(const string& theBuffer);
@@ -98,6 +99,11 @@ private:
 inline void ParameterSet::setSearchPath(const string& searchPath)
 {
   _searchPath = searchPath;
+}
+
+inline string ParameterSet::getSearchPath() const
+{
+  return _searchPath;
 }
 
 inline bool ParameterSet::isDefined (const string& searchKey) const
