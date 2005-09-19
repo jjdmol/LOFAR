@@ -19,147 +19,183 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
+#include <Common/LofarLogger.h>
 #include <jni.h>
-#include "jOTDB_jOTDBconnection.h"
+#include <jOTDB/jOTDB_jOTDBconnection.h>
 #include <OTDB/OTDBconnection.h>
 #include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
+#include <iostream>
 
 using namespace boost::posix_time;
+using namespace LOFAR::OTDB;
 
-// very ugly global parameter
-OTDBconnection OTDBconn;
-
-/*
- * Class:     jOTDB_jOTDBconnection
- * Method:    initOTDBconnection
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_jOTDB_jOTDBconnection_initOTDBconnection
-  (JNIEnv *env, jobject obj, jstring username, jstring passwd, jstring database)
+namespace LOFAR 
 {
-  const char* user = env->GetStringUTFChars(username, 0);
-  const char* pass = env->GetStringUTFChars(passwd, 0);
-  const char* db = env->GetStringUTFChars(database, 0);
+   namespace jOTDB
+     {
+	// very ugly global parameter
+	OTDBconnection* OTDBconn;
+	
+	/*
+	 * Class:     jOTDB_jOTDBconnection
+	 * Method:    initOTDBconnection
+	 * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	 */
+	JNIEXPORT void JNICALL jOTDB::Java_jOTDB_jOTDBconnection_initOTDBconnection
+	  (JNIEnv *env, jobject, jstring username, jstring passwd, jstring database)
 
-  OTDBconn = new OTDBconnection(user, pass, db);
-  OTDBconn.connect();
+	  {
+	     const char* user = env->GetStringUTFChars(username, 0);
+	     const char* pass = env->GetStringUTFChars(passwd, 0);
+	     const char* db = env->GetStringUTFChars(database, 0);
+	     
+	     cout << user << ' ' << pass << ' ' << db << endl;
+	     
+	     //OTDBconn = new OTDBconnection((const string&)user, (const string&)pass, (const string&)db);
+	     OTDBconn = new OTDBconnection((const string&)"paulus", (const string&)"boskabouter", (const string&)"otdbtest");
+	     
+	     if (OTDBconn->connect() == false)
+	       {
+		  cout << "connection faiiileed" << endl;
+	       }
+	     
+	     env->ReleaseStringUTFChars(username, user);
+	     env->ReleaseStringUTFChars(passwd, pass);
+	     env->ReleaseStringUTFChars(database, db);
+	  }
+	
+	/*
+	 * Class:     jOTDB_jOTDBconnection
+	 * Method:    isConnected
+	 * Signature: ()Ljava/lang/Boolean;
+	 */
+	JNIEXPORT jboolean JNICALL jOTDB::Java_jOTDB_jOTDBconnection_isConnected
+	  (JNIEnv *, jobject)
+	  {
+	     jboolean connected;
+	     connected = OTDBconn->isConnected();
+	     return connected;
+	  }
+	
+	/*
+	 * Class:     jOTDB_jOTDBconnection
+	 * Method:    connect
+	 * Signature: ()Ljava/lang/Boolean;
+	 */
+	JNIEXPORT jboolean JNICALL jOTDB::Java_jOTDB_jOTDBconnection_connect
+	  (JNIEnv *, jobject)
+	  {
+	     jboolean connected;
+	     connected = (jboolean)OTDBconn->connect();
+	     return connected;
+	  }
+	
+	/*
+	 * Class:     jOTDB_jOTDBconnection
+	 * Method:    getTreeInfo
+	 * Signature: (Ljava/lang/String;)LjOTDB/jOTDBtree;
+	 */
+	JNIEXPORT jobject JNICALL jOTDB::Java_jOTDB_jOTDBconnection_getTreeInfo
+	  (JNIEnv *env, jobject, jint treeID)
+	  {
+	     OTDBtree aTree = OTDBconn->getTreeInfo((int)treeID);
+	     
+	     // Create a jOTDBtree object
+	     jobject myTree;
+	     jclass class_jOTDBtree = env->FindClass("jOTDB/jOTDBtree");
+	     jmethodID mid_jOTDBtree_cons = env->GetMethodID(class_jOTDBtree, "<init>", "()V");
+	     myTree = env->NewObject(class_jOTDBtree, mid_jOTDBtree_cons);
+	     
+	     // Get members
+	     jfieldID fid_jOTDBtree_classification = env->GetFieldID(class_jOTDBtree, "classification", "S");
+	     jfieldID fid_jOTDBtree_creator = env->GetFieldID(class_jOTDBtree, "creator", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_creationDate = env->GetFieldID(class_jOTDBtree, "creationDate", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_type = env->GetFieldID(class_jOTDBtree, "type", "S");
+	     jfieldID fid_jOTDBtree_state = env->GetFieldID(class_jOTDBtree, "state", "S");
+	     jfieldID fid_jOTDBtree_originalTree = env->GetFieldID(class_jOTDBtree, "originalTree", "I");
+	     jfieldID fid_jOTDBtree_campaign = env->GetFieldID(class_jOTDBtree, "campaign", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_starttime = env->GetFieldID(class_jOTDBtree, "starttime", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_stoptime = env->GetFieldID(class_jOTDBtree, "stoptime", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_itsTreeID = env->GetFieldID(class_jOTDBtree, "itsTreeID", "I");
+	     
 
-  env->ReleaseStringUTFChars(username, user);
-  env->ReleaseStringUTFChars(passwd, pass);
-  env->ReleaseStringUTFChars(database, db);
-}
+	     // Fill members
+	     env->SetShortField(myTree, fid_jOTDBtree_classification, (jint)aTree.classification);
+	     env->SetObjectField(myTree, fid_jOTDBtree_creator, env->NewStringUTF(aTree.creator.c_str()));
+	     env->SetObjectField(myTree, fid_jOTDBtree_creationDate, env->NewStringUTF(to_simple_string(aTree.creationDate).c_str()));
+	     env->SetShortField(myTree, fid_jOTDBtree_type, aTree.type);
+	     env->SetShortField(myTree, fid_jOTDBtree_state, aTree.state);
+	     env->SetIntField(myTree, fid_jOTDBtree_originalTree, aTree.originalTree);
+	     env->SetObjectField(myTree, fid_jOTDBtree_campaign, env->NewStringUTF(aTree.campaign.c_str()));
+	     env->SetObjectField(myTree, fid_jOTDBtree_starttime, env->NewStringUTF(to_simple_string(aTree.starttime).c_str()));
+	     env->SetObjectField(myTree, fid_jOTDBtree_stoptime, env->NewStringUTF(to_simple_string(aTree.stoptime).c_str()));
+	     env->SetIntField(myTree, fid_jOTDBtree_itsTreeID, aTree.treeID());
 
-/*
- * Class:     jOTDB_jOTDBconnection
- * Method:    isConnected
- * Signature: ()Ljava/lang/Boolean;
- */
-JNIEXPORT jboolean JNICALL Java_jOTDB_jOTDBconnection_isConnected
-  (JNIEnv *, jobject)
-{
-    jboolean connected;
-    connected = OTDBconn.isConnected();
-    return connected;
-}
+	     // jstring strLN = env->NewStringUTF( ln );	     
 
-/*
- * Class:     jOTDB_jOTDBconnection
- * Method:    connect
- * Signature: ()Ljava/lang/Boolean;
- */
-JNIEXPORT jboolean JNICALL Java_jOTDB_jOTDBconnection_connect
-  (JNIEnv *, jobject)
-{
-    jboolean connected;
-    connected = (jboolean)OTDBconn.connect();
-    return connected;
-}
+	     return myTree;
+	  }
 
-/*
- * Class:     jOTDB_jOTDBconnection
- * Method:    getTreeInfo
- * Signature: (Ljava/lang/String;)LjOTDB/jOTDBtree;
- */
-JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getTreeInfo
-  (JNIEnv *env, jobject _this, jint aTreeID)
-{
-  OTDBtree aTree;
-  aTree = OTDBconn.getTreeInfo((int)treeID);
-
-  // Create a jOTDBtree object
-  jobject myTree;
-  jclass class_jOTDBtree = env->FindClass("jOTDB/jOTDBtree");
-  jmethodID mid_jOTDBtree_cons = env->GetMethodID(class_jOTDBtree, "<init>", "()V");
-  myTree = env->NewObject(class_jOTDBtree, mid_jOTDBtree_cons);
-
-  // Get members
-  jfieldID fid_jOTDBtree_classification = env->GetFieldID(class_jOTDBtree, "classification", "I");
-  jfieldID fid_jOTDBtree_creator = env->GetFieldID(class_jOTDBtree, "creator", "Ljava/lang/String;");
-  jfieldID fid_jOTDBtree_creationDate = env->GetFieldID(class_jOTDBtree, "creationDate", "Ljava/lang/String;");
-  jfieldID fid_jOTDBtree_type = env->GetFieldID(class_jOTDBtree, "type", "I");
-  jfieldID fid_jOTDBtree_originalTree = env->GetFieldID(class_jOTDBtree, "originalTree", "I");
-  jfieldID fid_jOTDBtree_campaign = env->GetFieldID(class_jOTDBtree, "campaign", "Ljava/lang/string;");
-  jfieldID fid_jOTDBtree_starttime = env->GetFieldID(class_jOTDBtree, "starttime", "Ljava/lang/String;");
-  jfieldID fid_jOTDBtree_stoptime = env->GetFieldID(class_jOTDBtree, "stoptime", "Ljava/lang/String;");
-  jfieldID fid_jOTDBtree_itsTreeID = env->GetFieldID(class_jOTDBtree, "itsTreeID", "I");
-
-  // Fill members
-  env->SetIntField(myTree, fid_jOTDBtree_classification, aTree.classification);
-  env->SetObjectField(myTree, fid_jOTDBtree_creator, (jstring)aTree.creator);
-  env->SetObjectField(myTree, fid_jOTDBtree_creationDate, (jstring)to_simple_string(aTree.creationDate));
-  env->SetIntField(myTree, fid_jOTDBtree_type, aTree.type);
-  env->SetIntField(myTree, fid_jOTDBtree_state, aTree.state);
-  env->SetIntField(myTree, fid_jOTDBtree_originalTree, aTree.originalTree);
-  env->SetIntField(myTree, fid_jOTDBtree_starttime, (jstring)to_simple_string(aTree.starttime));
-  env->SetIntField(myTree, fid_jOTDBtree_stoptime, (jstring)to_simple_string(aTree.stoptime));
-  env->SetIntField(myTree, fid_jOTDBtree_itsTreeID, aTree.treeID());
-  
-  return aTree;
-}
-
-/*
- * Class:     jOTDB_jOTDBconnection
- * Method:    getTreeList
- * Signature: ()Ljava/util/Vector;
- */
-JNIEXPORT jintArray JNICALL Java_jOTDB_jOTDBconnection_getTreeList
-  (JNIEnv *env, jobject _this, jshort treeType, jshort classifiType)
-{
-  vector<OTDBtree> trees;
-  trees = OTDBconn.getTreeList(treeType, classifiType);
-  jintArray treeIDs; 
-  jint *treeID;
-
-  treeIDs = env->NewIntArray(trees->size());
-
-  env->SetIntArrayRegion((jintArray)treeIDs, (jsize)0, (jsize)trees->size(), trees-toArray());
-
-  return(treeIDs);
-}
-
-/*
- * Class:     jOTDB_jOTDBconnection
- * Method:    errorMsg
- * Signature: ()Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_jOTDB_jOTDBconnection_errorMsg
-  (JNIEnv *env, jobject _this)
-{
-  jstring jstr;
-  jstr = env->NewStringUTF(OTDBconn.errorMsg());
-  return jstr;
-}
-
-/*
- * Class:     jOTDB_jOTDBconnection
- * Method:    getAuthToken
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_jOTDB_jOTDBconnection_getAuthToken
-  (JNIEnv * env, jobject _this)
-{
-    jint token;
-    token = (jint)OTDBconn.getAuthToken();
-    return token;
-}
+	/*
+	 * Class:     jOTDB_jOTDBconnection
+	 * Method:    getTreeList
+	 * Signature: ()Ljava/util/Vector;
+	 */
+	JNIEXPORT jobject JNICALL jOTDB::Java_jOTDB_jOTDBconnection_getTreeList
+	  (JNIEnv *env, jobject, jshort treeType, jshort classifiType)
+	  {
+	     vector<OTDBtree> trees = OTDBconn->getTreeList(treeType, classifiType);     
+	     vector<OTDBtree>::iterator treesIterator;
+	     
+	     // Construct java Integer
+	     jobject treeID;
+	     jclass class_Integer = env->FindClass("java/lang/Integer");
+	     jmethodID mid_Integer_cons = env->GetMethodID(class_Integer, "<init>", "(I)V");
+	     
+	     // Construct java Vector
+	     jobject vecTreeIDs;
+	     jclass class_Vector = env->FindClass("java/util/Vector");
+	     jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+	     vecTreeIDs = env->NewObject(class_Vector, mid_Vector_cons);
+	     jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+	     	     
+	     for (treesIterator = trees.begin(); treesIterator != trees.end(); treesIterator++)
+	       {
+		  treeID = env->NewObject(class_Integer, mid_Integer_cons, (jint)treesIterator->treeID());
+		  env->CallObjectMethod(vecTreeIDs, mid_Vector_add, treeID);
+	       }
+	     
+	     return(vecTreeIDs);
+	  }
+	
+	/*
+	 * Class:     jOTDB_jOTDBconnection
+	 * Method:    errorMsg
+	 * Signature: ()Ljava/lang/String;
+	 */
+	JNIEXPORT jstring JNICALL jOTDB::Java_jOTDB_jOTDBconnection_errorMsg
+	  (JNIEnv *env, jobject)
+	  {
+	     jstring jstr = env->NewStringUTF(OTDBconn->errorMsg().c_str());
+	     return jstr;
+	  }
+	
+	/*
+	 * Class:     jOTDB_jOTDBconnection
+	 * Method:    getAuthToken
+	 * Signature: ()I
+	 */
+	JNIEXPORT jint JNICALL jOTDB::Java_jOTDB_jOTDBconnection_getAuthToken
+	  (JNIEnv *, jobject)
+	  {
+	     jint token = (jint)OTDBconn->getAuthToken();
+	     return token;
+	  }
+     } // namespace jOTDB
+} // namespace LOFAR

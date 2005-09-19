@@ -7,7 +7,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
+
+   namespace LOFAR 
+     {
+	
+	namespace jOTDB 
+	  {
+	     
+   /*
  * Class:     jOTDB_jOTDBconnection
  * Method:    initOTDBconnection
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
@@ -42,9 +49,9 @@ JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getTreeInfo
 /*
  * Class:     jOTDB_jOTDBconnection
  * Method:    getTreeList
- * Signature: (SS)[I
+ * Signature: (SS)Ljava/util/Vector;
  */
-JNIEXPORT jintArray JNICALL Java_jOTDB_jOTDBconnection_getTreeList
+JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getTreeList
   (JNIEnv *, jobject, jshort, jshort);
 
 /*
@@ -63,6 +70,10 @@ JNIEXPORT jstring JNICALL Java_jOTDB_jOTDBconnection_errorMsg
 JNIEXPORT jint JNICALL Java_jOTDB_jOTDBconnection_getAuthToken
   (JNIEnv *, jobject);
 
+	  }
+	
+     }
+   
 #ifdef __cplusplus
 }
 #endif
