@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# rspd		This shell script takes care of starting and stopping
+# rspdriver	This shell script takes care of starting and stopping
 #		the RSPDriver
 #
 # chkconfig: - 58 74
-# description: rspd is the script that starts or stops the RSPDriver. \
+# description: rspdriver is the script that starts or stops the RSPDriver. \
 # The RSPDriver controls one or more RSP boards
 
 # Source function library.
@@ -12,8 +12,8 @@
 
 PREFIX=`dirname $0`/..
 
-if [ -f $PREFIX/etc/sysconfig/rspd ];then
-        . $PREFIX/etc/sysconfig/rspd
+if [ -f $PREFIX/etc/sysconfig/rspdriver ];then
+        . $PREFIX/etc/sysconfig/rspdriver
 fi
 
 # Check preconditions

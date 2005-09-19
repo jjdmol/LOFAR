@@ -112,7 +112,6 @@ dnl
 AC_OUTPUT(
 	Makefile
 	src/Makefile
-	src/rspd.ul
-	src/rspd
+	src/rspdriver
 	test/Makefile
 )

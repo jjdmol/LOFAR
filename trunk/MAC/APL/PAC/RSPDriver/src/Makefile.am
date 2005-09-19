@@ -104,8 +104,7 @@ libepa_la_SOURCES = \
 	RawEvent.cc
 
 bin_SCRIPTS = \
-	rspd.ul \
-	rspd
+	rspdriver
 
 bin_PROGRAMS = \
 	RSPDriver \
@@ -203,16 +202,14 @@ Tuner_SOURCES = \
 	Tuner.cc
 
 Tuner_LDADD = \
-	$(top_builddir)/src/librsp.la \
-	-lsuite
+	$(top_builddir)/src/librsp.la
 
 SetWG_SOURCES = \
 	SetWG.h \
 	SetWG.cc
 
 SetWG_LDADD = \
-	$(top_builddir)/src/librsp.la \
-	-lsuite
+	$(top_builddir)/src/librsp.la
 
 rspctl_SOURCES = \
 	rspctl.h \
@@ -221,8 +218,8 @@ rspctl_SOURCES = \
 rspctl_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/librspfe.la \
-	$(RTCCOMMON_LDADD) \
-	-lsuite \
 	-lgnuplot_i
+
+#	$(RTCCOMMON_LDADD)
 
 include $(lofar_sharedir)/Makefile.common
