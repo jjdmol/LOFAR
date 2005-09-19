@@ -84,7 +84,7 @@ void StationOperations::sendSamplingFrequency(double samplingFrequency)
   }
   if(m_ntdboards > 0)
   {
-    setClocksEvent.clocks().resize(m_ntdboards);
+    setClocksEvent.clocks().resize(1);
     setClocksEvent.clocks() = static_cast<uint32>(samplingFrequency);
     m_RSPclient.send(setClocksEvent);
   }
