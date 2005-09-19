@@ -12,6 +12,7 @@ package gui;
  */
 public class SettingsDialog extends javax.swing.JDialog {
     
+    
     /**
      * Creates new form SettingsDialog 
      */

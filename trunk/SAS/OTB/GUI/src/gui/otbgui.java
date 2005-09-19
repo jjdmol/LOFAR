@@ -6,17 +6,12 @@
 
 package gui;
 
-import java.awt.List;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.rmi.Naming;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Iterator;
 import javax.swing.JFileChooser;
-import javax.swing.tree.*;
+import javax.swing.JOptionPane;
+import javax.swing.tree.DefaultMutableTreeNode;
+
+
 
 
 /**
@@ -35,14 +30,11 @@ public class otbgui extends javax.swing.JFrame {
     static String OTDBPassword    = "";
     static String OTDBDBName      = "";   
     
-
     DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-    DefaultMutableTreeNode aNode= new DefaultMutableTreeNode();
-    
-    static ArrayList<String []> people;
-    String [] data;
-    String [] treeLine;
     boolean isTreeFilled = false;
+    boolean isOTDB =false;
+    boolean isFile=true;
+    
     
     /** Creates new form otbgui */
     public otbgui() {
@@ -58,6 +50,8 @@ public class otbgui extends javax.swing.JFrame {
      */   
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
+        jMenuBar2 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
         jTabbedPane2 = new javax.swing.JTabbedPane();
         TreePanel = new javax.swing.JPanel();
         TreeTable = new javax.swing.JTable();
@@ -118,11 +112,16 @@ public class otbgui extends javax.swing.JFrame {
         SelectedLabel = new javax.swing.JLabel();
         selectedTreeTextField = new javax.swing.JTextField();
         jMenuBar1 = new javax.swing.JMenuBar();
-        jMenuFile = new javax.swing.JMenu();
-        jMenuFileExit = new javax.swing.JMenuItem();
-        MenuInput = new javax.swing.JMenu();
-        jMenuInputFile = new javax.swing.JMenuItem();
-        jMenuInputOTDB = new javax.swing.JMenuItem();
+        FileMenu = new javax.swing.JMenu();
+        FileMenuExit = new javax.swing.JMenuItem();
+        SourceMenu = new javax.swing.JMenu();
+        SourceMenuInputFile = new javax.swing.JRadioButtonMenuItem();
+        SourceMenuInputOTDB = new javax.swing.JRadioButtonMenuItem();
+        SettingsMenu = new javax.swing.JMenu();
+        SettingsMenuRMISettings = new javax.swing.JMenuItem();
+
+        jMenu1.setText("Menu");
+        jMenuBar2.add(jMenu1);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMaximizedBounds(new java.awt.Rectangle(0, 0, 1000, 400));
@@ -395,42 +394,57 @@ public class otbgui extends javax.swing.JFrame {
 
         getContentPane().add(infoPanel, java.awt.BorderLayout.SOUTH);
 
-        jMenuFile.setToolTipText("File Menu");
-        jMenuFile.setLabel("File");
-        jMenuFileExit.setLabel("Exit");
-        jMenuFileExit.addActionListener(new java.awt.event.ActionListener() {
+        FileMenu.setToolTipText("File Menu");
+        FileMenu.setLabel("File");
+        FileMenuExit.setLabel("Exit");
+        FileMenuExit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuFileExitActionPerformed(evt);
+                FileMenuExitActionPerformed(evt);
             }
         });
 
-        jMenuFile.add(jMenuFileExit);
+        FileMenu.add(FileMenuExit);
 
-        jMenuBar1.add(jMenuFile);
+        jMenuBar1.add(FileMenu);
 
-        MenuInput.setText("Source");
-        MenuInput.setToolTipText("Input selection Menu");
-        jMenuInputFile.setText("File");
-        jMenuInputFile.setToolTipText("Set input to file");
-        jMenuInputFile.addActionListener(new java.awt.event.ActionListener() {
+        SourceMenu.setText("Source");
+        SourceMenu.setToolTipText("Source selection Menu");
+        SourceMenuInputFile.setSelected(true);
+        SourceMenuInputFile.setText("Input from File");
+        SourceMenuInputFile.setToolTipText("Set input to file");
+        SourceMenuInputFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuInputFileActionPerformed(evt);
+                SourceMenuInputFileActionPerformed(evt);
             }
         });
 
-        MenuInput.add(jMenuInputFile);
+        SourceMenu.add(SourceMenuInputFile);
 
-        jMenuInputOTDB.setText("OTDB");
-        jMenuInputOTDB.setToolTipText("Set input to OTDB");
-        jMenuInputOTDB.addActionListener(new java.awt.event.ActionListener() {
+        SourceMenuInputOTDB.setText("Input from OTDB");
+        SourceMenuInputOTDB.setToolTipText("Set input to OTDB");
+        SourceMenuInputOTDB.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuInputOTDBActionPerformed(evt);
+                SourceMenuInputOTDBActionPerformed(evt);
             }
         });
 
-        MenuInput.add(jMenuInputOTDB);
+        SourceMenu.add(SourceMenuInputOTDB);
 
-        jMenuBar1.add(MenuInput);
+        jMenuBar1.add(SourceMenu);
+
+        SettingsMenu.setText("Settings");
+        SettingsMenu.setToolTipText("Settings Menu");
+        SettingsMenuRMISettings.setText("RMISettings");
+        SettingsMenuRMISettings.setToolTipText("set RMI server & database");
+        SettingsMenuRMISettings.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SettingsMenuRMISettingsActionPerformed(evt);
+            }
+        });
+
+        SettingsMenu.add(SettingsMenuRMISettings);
+
+        jMenuBar1.add(SettingsMenu);
 
         setJMenuBar(jMenuBar1);
 
@@ -438,22 +452,51 @@ public class otbgui extends javax.swing.JFrame {
     }
     // </editor-fold>//GEN-END:initComponents
 
-    private void jMenuInputOTDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuInputOTDBActionPerformed
+    private void SourceMenuInputOTDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SourceMenuInputOTDBActionPerformed
+      if (RMIServerName.length()==0 || RMIServerPort.length()==0 ||
+              RMIRegistryName.length()==0 || OTDBUserName.length() ==0 ||
+              OTDBPassword.length()==0 || OTDBDBName.length()==0) {
+            JOptionPane.showMessageDialog(null,"You didn't set the RMI settings",
+                    "Source selection warning",
+                    JOptionPane.WARNING_MESSAGE);
+          SourceMenuInputOTDB.setSelected(false);
+      }  else {
+          SourceMenuInputFile.setSelected(false);
+          isFile=false;
+          isOTDB=true;
+      }
+
+    }//GEN-LAST:event_SourceMenuInputOTDBActionPerformed
+
+    private void SourceMenuInputFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SourceMenuInputFileActionPerformed
+      JFileChooser fc = new JFileChooser();
+      int returnVal = fc.showOpenDialog(otbgui.this);
+      if (returnVal == JFileChooser.APPROVE_OPTION) {
+          File aFile = fc.getSelectedFile();
+          SourceMenuInputOTDB.setSelected(true);
+          isFile=true;
+          isOTDB=false;
+      } else {
+          JOptionPane.showMessageDialog(null,"You didn't select a file",
+                  "Source selection warning",
+                  JOptionPane.WARNING_MESSAGE);
+          SourceMenuInputFile.setSelected(false);
+      }
+    }//GEN-LAST:event_SourceMenuInputFileActionPerformed
+
+    private void SettingsMenuRMISettingsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SettingsMenuRMISettingsActionPerformed
         SettingsDialog aSW = new SettingsDialog();
         aSW.setSize(400, 300);
-        aSW.setVisible(true);
-    }//GEN-LAST:event_jMenuInputOTDBActionPerformed
-
-    private void jMenuInputFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuInputFileActionPerformed
-    }//GEN-LAST:event_jMenuInputFileActionPerformed
+        aSW.setVisible(true);     
+    }//GEN-LAST:event_SettingsMenuRMISettingsActionPerformed
 
    
     private void TreeSelectionListener(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_TreeSelectionListener
     }//GEN-LAST:event_TreeSelectionListener
 
-    private void jMenuFileExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuFileExitActionPerformed
+    private void FileMenuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_FileMenuExitActionPerformed
         System.exit(0);
-    }//GEN-LAST:event_jMenuFileExitActionPerformed
+    }//GEN-LAST:event_FileMenuExitActionPerformed
     
     /**
      * @param args the command line arguments
@@ -473,9 +516,10 @@ public class otbgui extends javax.swing.JFrame {
     private javax.swing.JButton CtrlCopyButton;
     private javax.swing.JButton CtrlDeleteButton;
     private javax.swing.JButton CtrlInstButton;
+    private javax.swing.JMenu FileMenu;
+    private javax.swing.JMenuItem FileMenuExit;
     private javax.swing.JLabel LogNameLabel;
     private javax.swing.JTextField LogParamnameText;
-    private javax.swing.JMenu MenuInput;
     private javax.swing.JButton NodeApplyButton;
     private javax.swing.JButton NodeCancelButton;
     private javax.swing.JLabel NodeDescriptionLabel;
@@ -512,6 +556,11 @@ public class otbgui extends javax.swing.JFrame {
     private javax.swing.JLabel ParamValMomentLabel;
     private javax.swing.JTextField ParamValMomentText;
     private javax.swing.JLabel SelectedLabel;
+    private javax.swing.JMenu SettingsMenu;
+    private javax.swing.JMenuItem SettingsMenuRMISettings;
+    private javax.swing.JMenu SourceMenu;
+    private javax.swing.JRadioButtonMenuItem SourceMenuInputFile;
+    private javax.swing.JRadioButtonMenuItem SourceMenuInputOTDB;
     private javax.swing.JButton TreeApplyButton;
     private javax.swing.JPanel TreePanel;
     private javax.swing.JTable TreeTable;
@@ -519,11 +568,9 @@ public class otbgui extends javax.swing.JFrame {
     private javax.swing.JTree departmentTree;
     private javax.swing.JPanel infoPanel;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenu jMenuFile;
-    private javax.swing.JMenuItem jMenuFileExit;
-    private javax.swing.JMenuItem jMenuInputFile;
-    private javax.swing.JMenuItem jMenuInputOTDB;
+    private javax.swing.JMenuBar jMenuBar2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -534,104 +581,14 @@ public class otbgui extends javax.swing.JFrame {
     private javax.swing.JTabbedPane treeTabbedPane;
     // End of variables declaration//GEN-END:variables
     
-    private boolean fillTree() {
-        boolean status = false;
-        boolean skip = false;
-        String lastName="";
-        
-        String aTreeLevelName="";
-        status = true;
-        /** 
-         *fill the treeview. In this case from the array, but later it can be a file or database
-         *
-         */
-       
-        for (Iterator<String[]> iter = people.iterator(); iter.hasNext();) {                      
-           // data contains every single new line from the inputfile
-           data=iter.next();
-           // treeLine contains the usenet Treelist
-           treeLine = data[0].split("[.]");
-           if (aTreeLevelName == "") {
-              root.setUserObject(new DefaultMutableTreeNode(treeLine[0]));
-              aTreeLevelName=treeLine[0];
-           }
-           
-           
-           aNode = root;
-           DefaultMutableTreeNode oldNode = aNode;              
-
-           if (! treeLine[treeLine.length-1].equals(lastName)) {
-              for (int i=1; i < treeLine.length;i++) {
-                 if (!findChild(aNode, treeLine[i])){
-                    aNode = new DefaultMutableTreeNode(treeLine[i]);
-                    oldNode.add(aNode);
-                 }
-                 oldNode=aNode;
-              }
-              lastName=treeLine[treeLine.length-1];
-           }
-        }
-        departmentTree.updateUI();
-        return status;
-    }
     
-    boolean findChild(DefaultMutableTreeNode aRoot, String aName){
-        Enumeration e = aRoot.children();
-        DefaultMutableTreeNode aNewNode;
-        while (e.hasMoreElements()){
-           aNewNode= (DefaultMutableTreeNode)e.nextElement();
-           if (aNewNode.getUserObject().toString().equals(aName)) {
-               aNode=aNewNode;
-               return true;
-           }
-        }
-        return false;
-    }
-    
-
-
-
-
- 
-   
-    private boolean readFile(File aFile){
-        people.clear();
-        boolean status=true;
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(aFile));
-            String aStr;
-            while ((aStr = in.readLine()) != null) {
-                status=processLine(aStr);
-            }
-            in.close();        
-        } catch (IOException e) {
-            System.out.println("Error reading from file: "+aFile.getName());
-            e.printStackTrace();
-            status=false;
-        }
-        return status;
-    }
-
-    private boolean processLine(String aStr){
-     boolean status = true;
-     // find the last aaa="bbb" combination
-     String [] aS1 = aStr.split("[=]");
-     String [] aS2 = aS1[0].split("[.]");
-     
-     String [] saveString= new String[2];
-     for (int i=0; i< aS2.length-1;i++) {
-         if (i>0) {
-             saveString[0]+="."+aS2[i];
-         } else {
-             saveString[0]=aS2[i];
-         }
-     }
-     saveString[1]=aS2[aS2.length-1]+"="+aS1[1];
-     saveString[0]=saveString[0].replace('_',' ');
-     saveString[1]=saveString[1].replace('_',' ');
-     people.add(saveString);
-     
-     
-     return status;
+     public static boolean openRMIConnection() {
+     try {
+//            RMIConnection aRMIConnection = (RMIConnection) Naming.lookup ("rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRegistryName);
+            return true;
+        } catch (Exception e) {
+            System.out.println ("RMIConnection exception: " + e);
+            return false;
+        }        
     }
 }

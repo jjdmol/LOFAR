@@ -2,46 +2,73 @@
 
 <Form version="1.2" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <NonVisualComponents>
+    <Menu class="javax.swing.JMenuBar" name="jMenuBar2">
+      <SubComponents>
+        <Menu class="javax.swing.JMenu" name="jMenu1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Menu"/>
+          </Properties>
+        </Menu>
+      </SubComponents>
+    </Menu>
     <Menu class="javax.swing.JMenuBar" name="jMenuBar1">
       <SubComponents>
-        <Menu class="javax.swing.JMenu" name="jMenuFile">
+        <Menu class="javax.swing.JMenu" name="FileMenu">
           <Properties>
             <Property name="toolTipText" type="java.lang.String" value="File Menu"/>
             <Property name="label" type="java.lang.String" value="File"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuFileExit">
+            <MenuItem class="javax.swing.JMenuItem" name="FileMenuExit">
               <Properties>
                 <Property name="label" type="java.lang.String" value="Exit"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuFileExitActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="FileMenuExitActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
         </Menu>
-        <Menu class="javax.swing.JMenu" name="MenuInput">
+        <Menu class="javax.swing.JMenu" name="SourceMenu">
           <Properties>
             <Property name="text" type="java.lang.String" value="Source"/>
-            <Property name="toolTipText" type="java.lang.String" value="Input selection Menu"/>
+            <Property name="toolTipText" type="java.lang.String" value="Source selection Menu"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuInputFile">
+            <MenuItem class="javax.swing.JRadioButtonMenuItem" name="SourceMenuInputFile">
               <Properties>
-                <Property name="text" type="java.lang.String" value="File"/>
+                <Property name="selected" type="boolean" value="true"/>
+                <Property name="text" type="java.lang.String" value="Input from File"/>
                 <Property name="toolTipText" type="java.lang.String" value="Set input to file"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuInputFileActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="SourceMenuInputFileActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuInputOTDB">
+            <MenuItem class="javax.swing.JRadioButtonMenuItem" name="SourceMenuInputOTDB">
               <Properties>
-                <Property name="text" type="java.lang.String" value="OTDB"/>
+                <Property name="text" type="java.lang.String" value="Input from OTDB"/>
                 <Property name="toolTipText" type="java.lang.String" value="Set input to OTDB"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuInputOTDBActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="SourceMenuInputOTDBActionPerformed"/>
+              </Events>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
+        <Menu class="javax.swing.JMenu" name="SettingsMenu">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Settings"/>
+            <Property name="toolTipText" type="java.lang.String" value="Settings Menu"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="SettingsMenuRMISettings">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="RMISettings"/>
+                <Property name="toolTipText" type="java.lang.String" value="set RMI server &amp; database"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="SettingsMenuRMISettingsActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
