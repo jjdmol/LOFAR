@@ -17,8 +17,7 @@ CalTest_SOURCES = \
 	CalTest.cc
 
 CalTest_LDADD = \
-	$(top_builddir)/src/libcal.la \
-	-lsuite
+	$(top_builddir)/src/libcal.la
 
 BUILT_SOURCES = \
 	CalTest.conf
