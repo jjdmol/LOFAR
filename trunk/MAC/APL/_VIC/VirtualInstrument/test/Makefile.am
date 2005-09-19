@@ -15,6 +15,8 @@ avitest_SOURCES 		= \
 	AVITestDriverTask.cc \
 	AVITestMain.cc
 	
+avitest_LDADD = -lsuite
+
 BUILT_SOURCES = 
 	
 EXTRA_DIST =
