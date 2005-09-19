@@ -29,21 +29,21 @@ BeamServerTest_SOURCES = \
 
  BeamServerTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite
+	$(top_builddir)/src/libabsdevel.la
 
 #CheckWeightsTest_SOURCES = \
 #	CheckWeightsTest.cc
 
 #CheckWeightsTest_LDADD = \
 #	$(top_builddir)/src/libabs.la \
-	-lsuite
+#	$(top_builddir)/src/libabsdevel.la
 
 # CheckWeightsTest2_SOURCES = \
 # 	CheckWeightsTest2.cc
 
 # CheckWeightsTest2_LDADD = \
 # 	$(top_builddir)/src/libabs.la \
-# 	-lsuite
+# 	$(top_builddir)/src/libabsdevel.la
 
 AVTStub_SOURCES = \
 	AVTStub.h \
@@ -51,7 +51,7 @@ AVTStub_SOURCES = \
 
 AVTStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite
+	$(top_builddir)/src/libabsdevel.la
 
 EPATest_SOURCES = \
 	EPATest.h \
@@ -59,7 +59,7 @@ EPATest_SOURCES = \
 
 EPATest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite
+	$(top_builddir)/src/libabsdevel.la
 
 SweepTest_SOURCES = \
 	SweepTest.h \
@@ -67,7 +67,7 @@ SweepTest_SOURCES = \
 
 SweepTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite
+	$(top_builddir)/src/libabsdevel.la
 
 BUILT_SOURCES = \
 	AVTStub.conf \
@@ -90,5 +90,5 @@ sysconf_DATA = \
 %.conf: %.conf.in
 	cp $< $@
 
-#include $(lofar_sharedir)/Makefile.common
-include ../Makefile.common
+include $(lofar_sharedir)/Makefile.common
+

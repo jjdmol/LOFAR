@@ -28,9 +28,6 @@ sysconf_DATA = \
 	BeamServer.conf \
 	BeamServer.log_prop
 
-include_HEADERS = \
-	$(top_builddir)/src/BS_Protocol.ph
-
 %.properties: %.properties.in
 	cp $< $@
 
@@ -40,24 +37,27 @@ include_HEADERS = \
 %.conf: %.conf.in
 	cp $< $@
 
-lib_LTLIBRARIES = libabs.la
+lib_LTLIBRARIES = libabsdevel.la libabs.la
+
+#include_HEADERS =
 
 libabs_ladir = $(prefix)/include
-libabs_la_HEADERS = \
-	Beamlet2SubbandMap.h \
-	Pointing.h
 
 libabs_la_SOURCES = \
-	Beamlet2SubbandMap.h \
-	Beamlet2SubbandMap.cc \
-	Pointing.h \
-	Pointing.cc \
 	Beam.h \
 	Beam.cc \
 	Beamlet.h \
-	Beamlet.cc \
-	gnuplot_i.h \
-	gnuplot_i.cc \
+	Beamlet.cc
+
+libabsdevel_ladir = $(prefix)/include
+libabsdevel_la_HEADERS = \
+	Pointing.h \
+	Beamlet2SubbandMap.h \
+	$(top_builddir)/src/BS_Protocol.ph
+
+libabsdevel_la_SOURCES = \
+	Pointing.cc \
+	Beamlet2SubbandMap.cc \
 	$(top_builddir)/src/BS_Protocol.cc
 
 bin_PROGRAMS = BeamServer
@@ -67,7 +67,14 @@ BeamServer_SOURCES = \
 	BeamServer.cc
 
 BeamServer_LDADD = \
-	$(top_builddir)/src/libabs.la -lcal -lcaldevel -lrsp
+	$(top_builddir)/src/libabs.la \
+	$(top_builddir)/src/libabsdevel.la 
+
+BeamServer_DEPEND = \
+	$(LOFAR_DEPEND)
+
+bin_SCRIPTS = \
+	beamserver
 
 clean-local:
 	rm -f *.ph
