@@ -216,6 +216,11 @@ int main (int32 argc, char*	argv[]) {
 	
 	INIT_LOGGER(argv[0]);
 
+#ifdef HAVE_BGL
+	LOG_WARN("These tests cannot be run unmodified on a Blue Gene/L");
+	return 3;
+#endif
+
 	LOG_INFO("Executing 8 tests with changing blockingmode, listenerside and uni-/bidirectional mode");
 	LOG_INFO_STR("Buffer exchanged is " << BUF_SZ << " bytes tall");
 
