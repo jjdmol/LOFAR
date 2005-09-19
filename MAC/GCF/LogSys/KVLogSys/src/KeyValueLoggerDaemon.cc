@@ -249,7 +249,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
     {
       LOG_INFO("New daemon client accepted!");
       GCFTCPPort* pNewDCPort = new GCFTCPPort();
-      assert(pNewDCPort);
+      ASSERT(pNewDCPort);
       pNewDCPort->init(*this, "kvld-client", GCFPortInterface::SPP, KVL_PROTOCOL);
       _kvlDaemonPortProvider.accept(*pNewDCPort);      
       break;
@@ -311,7 +311,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
         delete iter->second;
       }
       _seqList.erase(answer.seqNr);
-      assert(answer.seqNr == _oldestUnanswerdSeqNr);
+      ASSERT(answer.seqNr == _oldestUnanswerdSeqNr);
       _oldestUnanswerdSeqNr++;
       break;
     }

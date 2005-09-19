@@ -60,7 +60,7 @@ GSAPortService::~GSAPortService()
 
 void GSAPortService::start ()
 {
-  assert(!_isSubscribed);
+  ASSERT(!_isSubscribed);
   if (GCFPVSSInfo::propExists(_port.getPortAddr()))
   {
     if (dpeSubscribe(_port.getPortAddr()) != SA_NO_ERROR) 
@@ -89,14 +89,14 @@ void GSAPortService::stop ()
 
 ssize_t GSAPortService::send (void* buf, size_t count, const string& destDpName)
 {
-  assert(_isSubscribed);
+  ASSERT(_isSubscribed);
   GCFPVBlob bv((unsigned char*) buf, count);
   GCFPVBlob convBv;
   
   GCFPVBlob* pBlobMsg = &bv;
   if (destDpName.find("__gcfportUIM") < string::npos)
   {
-    assert(_pConverter);
+    ASSERT(_pConverter);
     if (_pConverter->gcfEventToUIMMsg(bv, convBv))
     {
       pBlobMsg = &convBv;
@@ -124,7 +124,7 @@ ssize_t GSAPortService::recv (void* buf, size_t count)
 
 void GSAPortService::dpCreated(const string& dpName)
 {
-  assert(dpName.find(_port.getPortAddr()) < dpName.length());
+  ASSERT(dpName.find(_port.getPortAddr()) < dpName.length());
   if (dpeSubscribe(_port.getPortAddr()) != SA_NO_ERROR) 
   { 
     _port.serviceStarted(false);
@@ -138,15 +138,15 @@ void GSAPortService::dpeSubscribed(const string& dpName)
   switch (nrOfSubscriptions)
   {
     case 1:
-      assert(dpName.find(_port.getPortAddr()) < dpName.length());
+      ASSERT(dpName.find(_port.getPortAddr()) < dpName.length());
       result = dpeSubscribe("__gcf_wd.sys");
       break;
     case 2:
-      assert(dpName.find("__gcf_wd.sys") < dpName.length());
+      ASSERT(dpName.find("__gcf_wd.sys") < dpName.length());
       result = dpeSubscribe("__gcf_wd.man");
       break;
     case 3:
-      assert(dpName.find("__gcf_wd.man") < dpName.length());
+      ASSERT(dpName.find("__gcf_wd.man") < dpName.length());
       _isSubscribed = true;
       nrOfSubscriptions = 0;
       _port.serviceStarted(true);
@@ -244,7 +244,7 @@ void GSAPortService::dpeValueChanged(const string& dpName, const GCFPValue& valu
       case 'u': // uim message
       {
         GCFPVBlob gcfEvent;
-        assert(_pConverter);
+        ASSERT(_pConverter);
         if (_pConverter->uimMsgToGCFEvent(_msgBuffer + 1, _bytesLeft - 1, gcfEvent))
         {
           dpeValueChanged(dpName, gcfEvent);
@@ -252,7 +252,7 @@ void GSAPortService::dpeValueChanged(const string& dpName, const GCFPValue& valu
         break;
       }
       default:
-        assert(_msgBuffer[0]);
+        ASSERT(_msgBuffer[0]);
         break;
     }
   }

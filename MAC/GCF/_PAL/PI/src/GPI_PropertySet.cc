@@ -46,7 +46,7 @@ GPIPropertySet::~GPIPropertySet()
 
 void GPIPropertySet::propSubscribed(const string& /*propName*/)
 {
-  assert(_state == S_LINKING || _state == S_DELAYED_DISABLING);
+  ASSERT(_state == S_LINKING || _state == S_DELAYED_DISABLING);
   
   _counter--;
   LOG_DEBUG(formatString("%d subscriptions left", _counter));
@@ -188,7 +188,7 @@ void GPIPropertySet::disable(const PIUnregisterScopeEvent& requestIn)
 
     case S_LINKING:
       LOG_DEBUG(formatString("%d subscriptions left", _counter));
-      assert(_counter > 0);
+      ASSERT(_counter > 0);
       // intentional fall through
     case S_UNLINKING:
     case S_LINKING_IN_CLIENT:
@@ -277,7 +277,7 @@ bool GPIPropertySet::propSetLinkedInClient(const PIPropSetLinkedEvent& responseI
   switch (_state)
   {
     case S_LINKING_IN_CLIENT:
-      assert(_counter == 0);
+      ASSERT(_counter == 0);
       _state = S_LINKING;
       if (responseIn.result != PI_PS_GONE)
       {
@@ -324,7 +324,7 @@ bool GPIPropertySet::trySubscribing()
           iter != _propsSubscribed.end(); ++iter)
       {
         string fullName;
-        assert(_scope.length() > 0);
+        ASSERT(_scope.length() > 0);
         fullName = _scope + GCF_PROP_NAME_SEP + *iter;
         if (GCFPVSSInfo::propExists(fullName))
         {   
@@ -401,7 +401,7 @@ void GPIPropertySet::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
         PIUnlinkPropSetEvent requestOut;
         requestOut.scope = requestIn.scope;
   
-        assert(_counter == 0);
+        ASSERT(_counter == 0);
   
         sendMsgToClient(requestOut);
       }

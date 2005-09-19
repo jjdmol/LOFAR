@@ -198,7 +198,7 @@ void GCFTask::deregisterHandler(GCFHandler& handler)
 void GCFTask::registerProtocol(unsigned short protocolID,
               const char* signal_names[])
 {
-  assert((protocolID << 8) <= F_EVT_PROTOCOL_MASK);
+  ASSERT((protocolID << 8) <= F_EVT_PROTOCOL_MASK);
   _protocols[protocolID] = signal_names;
 }
 

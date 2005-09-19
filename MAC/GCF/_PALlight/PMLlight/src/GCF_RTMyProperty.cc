@@ -46,7 +46,7 @@ GCFRTMyProperty::GCFRTMyProperty(const TPropertyInfo& propertyFields,
   _pAnswerObj(0)  
 {
   _pCurValue = Common::GCFPValue::createMACTypeObject((TMACValueType) propertyFields.type);
-  assert(_pCurValue);
+  ASSERT(_pCurValue);
   _pOldValue = _pCurValue->clone();
 }
 
@@ -85,7 +85,7 @@ TGCFResult GCFRTMyProperty::setValue(const string& value)
 
   if ((_accessMode & GCF_READABLE_PROP) && _isLinked && result == GCF_NO_ERROR)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);
   }
   
@@ -104,7 +104,7 @@ TGCFResult GCFRTMyProperty::setValue(const GCFPValue& value)
 
   if ((_accessMode & GCF_READABLE_PROP) && _isLinked && result == GCF_NO_ERROR)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);
   }
   
@@ -129,11 +129,11 @@ GCFPValue* GCFRTMyProperty::getOldValue() const
 
 void GCFRTMyProperty::link()
 {
-  assert(!_isLinked);  
+  ASSERT(!_isLinked);  
 
   if (_accessMode & GCF_READABLE_PROP)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);
   }
   _isLinked = true;
@@ -141,8 +141,8 @@ void GCFRTMyProperty::link()
 
 void GCFRTMyProperty::unlink()
 {
-  assert(_isLinked);
-  assert(!_isBusy);
+  ASSERT(_isLinked);
+  ASSERT(!_isBusy);
   _isLinked = false;
 }
 
@@ -159,7 +159,7 @@ void GCFRTMyProperty::setAccessMode(TAccessMode mode, bool on)
       (_accessMode & GCF_READABLE_PROP) &&
       _isLinked)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);    
   }  
 }
@@ -174,11 +174,11 @@ void GCFRTMyProperty::valueChanged (const GCFPValue& value)
   if (_accessMode & GCF_WRITABLE_PROP )
   {
     TGCFResult result;
-    assert(_pOldValue && _pCurValue);
+    ASSERT(_pOldValue && _pCurValue);
     result = _pOldValue->copy(*_pCurValue);
-    assert(result == GCF_NO_ERROR);
+    ASSERT(result == GCF_NO_ERROR);
     result = _pCurValue->copy(value);
-    assert(result == GCF_NO_ERROR);
+    ASSERT(result == GCF_NO_ERROR);
     
     GCFPropValueEvent e(F_VCHANGEMSG);
     e.pValue = &value;

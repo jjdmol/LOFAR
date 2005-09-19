@@ -70,12 +70,12 @@ CEPPropertySet::CEPPropertySet(const char* name,
     addProperty(pPropInfo->propName, *pProperty);
   }
   _pClient = PIClient::instance();  // get the singleton instance
-  assert(_pClient);
+  ASSERT(_pClient);
 }  
 
 CEPPropertySet::~CEPPropertySet ()
 {
-  assert(_pClient);
+  ASSERT(_pClient);
   // delete this set from the PIClient administration permanent
   if (_state != S_DISABLED && _state != S_DISABLING)
   {
@@ -105,7 +105,7 @@ bool CEPPropertySet::enable ()
   }
   else
   {
-    assert(_pClient);
+    ASSERT(_pClient);
     
     if (_pClient->registerScope(*this))
     {
@@ -138,7 +138,7 @@ bool CEPPropertySet::disable ()
     case S_LINKED:
     case S_ENABLED:
     case S_ENABLING:
-      assert(_pClient);
+      ASSERT(_pClient);
   
       _pClient->unregisterScope(*this, (_state == S_ENABLING));
       _state = S_DISABLING;      
@@ -157,7 +157,7 @@ void CEPPropertySet::scopeRegistered (bool succeed)
 {
   _stateMutex.lock();
  
-  assert(_state == S_ENABLING);
+  ASSERT(_state == S_ENABLING);
   LOG_INFO(formatString ( 
       "PA-RESP: Property set '%s' is enabled%s",
       getScope().c_str(), 
@@ -172,7 +172,7 @@ void CEPPropertySet::scopeUnregistered (bool succeed)
 {
   _stateMutex.lock();
 
-  assert(_state == S_DISABLING);
+  ASSERT(_state == S_DISABLING);
    
   LOG_INFO(formatString ( 
       "Property set '%s' is disabled%s",
@@ -186,7 +186,7 @@ void CEPPropertySet::scopeUnregistered (bool succeed)
 
 void CEPPropertySet::linkProperties()
 {
-  assert(_pClient);
+  ASSERT(_pClient);
 
   _stateMutex.lock();
   
@@ -212,7 +212,7 @@ void CEPPropertySet::linkProperties()
 
 void CEPPropertySet::unlinkProperties()
 {
-  assert(_pClient);
+  ASSERT(_pClient);
 
   _stateMutex.lock();
 
@@ -239,7 +239,7 @@ void CEPPropertySet::unlinkProperties()
 
 void CEPPropertySet::connectionLost()
 {
-  assert(_pClient);
+  ASSERT(_pClient);
   _stateMutex.lock();
   
   switch (_state)
@@ -344,7 +344,7 @@ bool CEPPropertySet::exists (const string& propName) const
 
 void CEPPropertySet::valueSet(const string& propName, const GCFPValue& value)
 {
-  assert(_pClient);
+  ASSERT(_pClient);
   // a user has changed the property value and monitoring is switched on
   // changed value will be forward to the PIClient
   _pClient->valueSet(*this, propName, value);  
@@ -390,7 +390,7 @@ void CEPPropertySet::clearAllProperties()
         iter != _properties.end(); ++iter) 
   {
     pProperty = iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     delete pProperty;
   }
 }

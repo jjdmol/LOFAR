@@ -75,7 +75,7 @@ PIClient* PIClient::instance(bool temporary)
   if (0 == _pInstance)
   {    
     _pInstance = new PIClient();
-    assert(_pInstance->mayDeleted());
+    ASSERT(_pInstance->mayDeleted());
   }
   if (!temporary) _pInstance->use();
   return _pInstance;
@@ -83,8 +83,8 @@ PIClient* PIClient::instance(bool temporary)
 
 void PIClient::release()
 {
-  assert(_pInstance);
-  assert(!_pInstance->mayDeleted());
+  ASSERT(_pInstance);
+  ASSERT(!_pInstance->mayDeleted());
   _pInstance->leave(); 
   if (_pInstance->mayDeleted())
   {
@@ -168,7 +168,7 @@ void PIClient::run()
               unlinkPropSet();
               break;
             default:
-              assert(0);
+              ASSERT(0);
               break;
           }
         }
@@ -316,7 +316,7 @@ void PIClient::unregisterScope(CEPPropertySet& propSet, bool stillEnabling)
             "Unregister of '%s' will be send delayed (after compl. seq. %d)!",
             propSet.getScope().c_str(),
             iter->first));
-        assert(iter->second->_state == CEPPropertySet::S_ENABLING);
+        ASSERT(iter->second->_state == CEPPropertySet::S_ENABLING);
         waitForSeqNr = iter->first;
         // response not needed to be forwarded to the prop. set.
         iter->second = 0; 
@@ -592,7 +592,7 @@ void PIClient::processOutstandingActions()
       case DH_PIProtocol::REGISTER_SCOPE:
       case DH_PIProtocol::UNREGISTER_SCOPE:
         pPropSet = iter->pPropSet;
-        assert(pPropSet);
+        ASSERT(pPropSet);
         _dhPIClient.setSeqNr(startSequence(*pPropSet));
         LOG_DEBUG(formatString(
             "Send request for '%s' to PI with seq. nr. %d.",
@@ -649,7 +649,7 @@ void PIClient::processOutstandingActions()
     }
     _dhPIClient.setEventID(iter->eventID);
     BlobOStream& blob = _dhPIClient.createExtraBlob();
-    assert(iter->eventID == DH_PIProtocol::VALUE_SET);
+    ASSERT(iter->eventID == DH_PIProtocol::VALUE_SET);
     blob.put(iter->extraData, iter->extraDataSize);
     action = *iter;
     _bufferMutex.unlock();

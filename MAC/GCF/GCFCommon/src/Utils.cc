@@ -89,7 +89,7 @@ void Utils::convStringToSet(set<string>& stringSet,
 bool Utils::isValidPropName(const char* propName)
 {
   bool valid(true);
-  assert(propName);
+  ASSERT(propName);
   char doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
   unsigned int length = strlen(propName);
   if (propName[0] == GCF_PROP_NAME_SEP || propName[length - 1] == GCF_PROP_NAME_SEP )
@@ -138,7 +138,7 @@ bool Utils::isValidPropName(const char* propName)
 bool Utils::isValidScope(const char* scopeName)
 {
   bool valid(true);
-  assert(scopeName);
+  ASSERT(scopeName);
   char doubleSep[] = {GCF_SCOPE_NAME_SEP, GCF_SCOPE_NAME_SEP, 0};
   unsigned int length = strlen(scopeName);
   char* sysNameSep = strchr(scopeName, ':');

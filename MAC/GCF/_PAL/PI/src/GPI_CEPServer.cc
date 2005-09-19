@@ -155,13 +155,13 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
             blob.get(_valueBuf, valueSize);
             if (indication.value.unpack(_valueBuf) != valueSize)
             {
-              assert(0);
+              ASSERT(0);
             }
             valueSet(indication);
             break;
           }
           default:
-            assert(0);
+            ASSERT(0);
             break;
         }
       }

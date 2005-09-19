@@ -49,7 +49,7 @@ GSASysConnGuard::~GSASysConnGuard()
 
 void GSASysConnGuard::start ()
 {
-  assert(!_isSubscribed);
+  ASSERT(!_isSubscribed);
   if (dpeSubscribe("__gcf_wd.sys") != SA_NO_ERROR) 
   {
     LOG_ERROR("Subscription is necessary for the System Connection Guard service."

@@ -190,7 +190,7 @@ bool GCFTCPPort::open()
       {
         _broker = GTMServiceBroker::instance();
       }
-      assert(_broker);
+      ASSERT(_broker);
       _broker->getServiceinfo(*this, remoteServiceName);
     }
   }
@@ -210,7 +210,7 @@ bool GCFTCPPort::open()
     else
     {
       _broker = GTMServiceBroker::instance();
-      assert(_broker);
+      ASSERT(_broker);
       _broker->registerService(*this);
     }
   }
@@ -219,7 +219,7 @@ bool GCFTCPPort::open()
 
 void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 {
-  assert(MSPP == getType() || SPP == getType());
+  ASSERT(MSPP == getType() || SPP == getType());
   if (result == SB_NO_ERROR)
   {
     LOG_DEBUG(formatString (
@@ -245,7 +245,7 @@ void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 
 void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const string& host)
 {
-  assert(SAP == getType());
+  ASSERT(SAP == getType());
   if (result == SB_UNKNOWN_SERVICE)
   {
     LOG_DEBUG(formatString (
@@ -298,7 +298,7 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 {
   ssize_t written = 0;
 
-  assert(_pSocket);
+  ASSERT(_pSocket);
 
   if (!isConnected()) 
   {
@@ -335,7 +335,7 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 
 ssize_t GCFTCPPort::recv(void* buf, size_t count)
 {
-  assert(_pSocket);
+  ASSERT(_pSocket);
   return _pSocket->recv(buf, count);
 }
 

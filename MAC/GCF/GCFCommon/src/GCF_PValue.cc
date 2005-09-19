@@ -111,7 +111,7 @@ GCFPValue* GCFPValue::unpackValue(const char* valBuf)
 
 unsigned int GCFPValue::unpack(const char* valBuf)
 {
-  assert(_type == (TMACValueType) *valBuf);
+  ASSERT(_type == (TMACValueType) *valBuf);
   _dataFormat = (LOFAR::DataFormat) valBuf[1];
   // the type was already set, because it was set on construction of this class
   // later maybe also a timestamp can be assigned to a value.

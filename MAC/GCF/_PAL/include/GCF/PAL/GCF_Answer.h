@@ -96,7 +96,7 @@ class GCFAnswer
     //       {
     //         // The event always sould be casted by the static_cast operator
     //         GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
-    //         assert(pResponse);
+    //         ASSERT(pResponse);
     //         if ((strcmp(pResponse->pScope, propertySetB1.scope) == 0) &&
     //             (pResponse->result == GCF_NO_ERROR))
     //         {

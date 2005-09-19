@@ -50,7 +50,7 @@ GCFProperty::GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pProper
 
 GCFProperty::~GCFProperty()
 {
-  assert (_isIndependedProp);
+  ASSERT (_isIndependedProp);
   if (exists()) // can already be deleted by the Property Agent
   {      
     unsubscribe();
@@ -76,7 +76,7 @@ const string GCFProperty::getFullName () const
   else
   {
     string scope = _pPropertySet->getFullScope();
-    assert(scope.length() > 0);
+    ASSERT(scope.length() > 0);
     fullName = scope + GCF_PROP_NAME_SEP + _propInfo.propName;      
   }
   return fullName;
@@ -84,20 +84,20 @@ const string GCFProperty::getFullName () const
 
 TGCFResult GCFProperty::requestValue ()
 { 
-  assert(_pPropService);
+  ASSERT(_pPropService);
   return _pPropService->requestPropValue(getFullName()); 
 }
 
 TGCFResult GCFProperty::setValueTimed(const GCFPValue& value, double timestamp, bool wantAnswer)
 { 
-  assert(_pPropService);
+  ASSERT(_pPropService);
   return _pPropService->setPropValue(getFullName(), value, timestamp, wantAnswer); 
 }
 
 TGCFResult GCFProperty::setValueTimed(const string& value, double timestamp, bool wantAnswer)
 { 
   TGCFResult result(GCF_NO_ERROR);
-  assert(_pPropService);
+  ASSERT(_pPropService);
   GCFPValue* pValue = GCFPValue::createMACTypeObject(_propInfo.type);
   if (pValue) 
   { 
@@ -115,19 +115,19 @@ TGCFResult GCFProperty::setValueTimed(const string& value, double timestamp, boo
 
 bool GCFProperty::exists () 
 { 
-  assert(_pPropService);
+  ASSERT(_pPropService);
   return GCFPVSSInfo::propExists(getFullName()); 
 }
             
 TGCFResult GCFProperty::subscribe ()
 { 
-  assert(_pPropService);
+  ASSERT(_pPropService);
   return _pPropService->subscribeProp(getFullName()); 
 }
  
 TGCFResult GCFProperty::unsubscribe ()
 { 
-  assert(_pPropService);
+  ASSERT(_pPropService);
   return _pPropService->unsubscribeProp(getFullName()); 
 }
             

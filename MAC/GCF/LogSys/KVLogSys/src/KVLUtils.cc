@@ -43,13 +43,13 @@ Value::~Value()
 
 unsigned int Value::pack(char* buffer)
 {
-  assert(_pValue);
+  ASSERT(_pValue);
   return _pValue->pack(buffer);
 }
 
 unsigned int Value::unpack(char* buffer)
 {
-  assert(!_pValue);
+  ASSERT(!_pValue);
   _unpacked = true;
   _pValue = GCFPValue::unpackValue(buffer);
   return _pValue->getSize();
@@ -57,14 +57,14 @@ unsigned int Value::unpack(char* buffer)
 
 unsigned int Value::getSize()
 {
-  assert(_pValue);
+  ASSERT(_pValue);
   return _pValue->getSize();
 }
 
 unsigned int EventCollection::unpack(char* buffer)
 {
   GCFPValue* pValue(GCFPValue::unpackValue(buffer));
-  assert(pValue);
+  ASSERT(pValue);
   buf.copy(*pValue);
   delete pValue;
   return buf.getSize();

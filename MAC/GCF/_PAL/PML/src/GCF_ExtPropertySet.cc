@@ -48,7 +48,7 @@ GCFExtPropertySet::~GCFExtPropertySet()
 {
   if (_isLoaded)
   {
-    assert(_pController);
+    ASSERT(_pController);
     _pController->unloadPropSet(*this);  
   }
 }
@@ -89,7 +89,7 @@ TGCFResult GCFExtPropertySet::load()
         "REQ: Load ext. property set %s",
         getScope().c_str()));
 
-    assert(_pController);
+    ASSERT(_pController);
     TPMResult pmResult = _pController->loadPropSet(*this);
     
     if (pmResult == PM_NO_ERROR)
@@ -106,8 +106,8 @@ TGCFResult GCFExtPropertySet::load()
 
 void GCFExtPropertySet::loaded(TGCFResult result)
 {
-  assert(_isBusy);
-  assert(!_isLoaded);
+  ASSERT(_isBusy);
+  ASSERT(!_isLoaded);
   _isBusy = false;
   LOG_INFO(formatString ( 
       "PA-RESP: Prop. set '%s' is loaded%s",
@@ -152,7 +152,7 @@ TGCFResult GCFExtPropertySet::unload()
         "REQ: Unload ext. property set %s",
         getScope().c_str()));
 
-    assert(_pController);
+    ASSERT(_pController);
     TPMResult pmResult = _pController->unloadPropSet(*this);
     
     if (pmResult == PM_NO_ERROR)
@@ -169,8 +169,8 @@ TGCFResult GCFExtPropertySet::unload()
 
 void GCFExtPropertySet::unloaded(TGCFResult result)
 {
-  assert(_isBusy);
-  assert(_isLoaded);
+  ASSERT(_isBusy);
+  ASSERT(_isLoaded);
   _isBusy = false;
   LOG_INFO(formatString ( 
       "PA-RESP: Prop. set '%s' is unloaded%s",
@@ -184,7 +184,7 @@ void GCFExtPropertySet::unloaded(TGCFResult result)
        iter != _properties.end(); ++iter)
   {
     pProperty = (GCFExtProperty*) iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     if (pProperty->isSubscribed())
     {
       pProperty->unsubscribe();
@@ -196,7 +196,7 @@ void GCFExtPropertySet::unloaded(TGCFResult result)
 
 void GCFExtPropertySet::serverIsGone()
 {
-  assert(_isLoaded);
+  ASSERT(_isLoaded);
 
   LOG_INFO(formatString ( 
       "PA-IND: Server for prop. set '%s' is gone",
@@ -208,7 +208,7 @@ void GCFExtPropertySet::serverIsGone()
        iter != _properties.end(); ++iter)
   {
     pProperty = (GCFExtProperty*) iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     if (pProperty->isSubscribed())
     {
       pProperty->unsubscribe();

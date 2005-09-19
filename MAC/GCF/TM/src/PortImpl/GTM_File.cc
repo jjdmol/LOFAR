@@ -45,7 +45,7 @@ GTMFile::GTMFile(GCFRawPort& port) :
   _port(port)
 {
   _pHandler = GTMFileHandler::instance();
-  assert(_pHandler);
+  ASSERT(_pHandler);
 }
 
 GTMFile::~GTMFile()
@@ -61,7 +61,7 @@ bool GTMFile::close()
   
   if (_fd > -1)
   { 
-    assert(_pHandler);
+    ASSERT(_pHandler);
     _pHandler->deregisterFile(*this);
     result = (::close(_fd) == 0);
     if (!result)
@@ -86,7 +86,7 @@ int GTMFile::setFD(int fd)
       close();
     }
     _fd = fd;
-    assert(_pHandler);
+    ASSERT(_pHandler);
     _pHandler->registerFile(*this);
   }
   return (fd);    
@@ -111,7 +111,7 @@ void GTMFile::workProc()
   }
   else
   {
-    assert(_port.getTask());
+    ASSERT(_port.getTask());
     LOG_FATAL(LOFAR::formatString (
         "%s(%s): Error in 'ioctl' on socket fd %d: %s",
         _port.getTask()->getName().c_str(), 

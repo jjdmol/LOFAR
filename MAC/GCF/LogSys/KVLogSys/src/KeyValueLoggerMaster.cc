@@ -154,7 +154,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
     {
       LOG_INFO("New master client accepted!");
       GCFTCPPort* pNewMCPort = new GCFTCPPort();
-      assert(pNewMCPort);
+      ASSERT(pNewMCPort);
       pNewMCPort->init(*this, "kvlm-client", GCFPortInterface::SPP, KVL_PROTOCOL);
       _kvlMasterPortProvider.accept(*pNewMCPort);      
       break;

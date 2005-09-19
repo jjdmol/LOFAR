@@ -208,7 +208,7 @@ GCFEvent::TResult GSBController::operational(GCFEvent& e, GCFPortInterface& p)
 void GSBController::acceptConnectRequest()
 {
   GTMSBTCPPort* pNewSBClientPort = new GTMSBTCPPort();
-  assert(pNewSBClientPort);
+  ASSERT(pNewSBClientPort);
   pNewSBClientPort->init(*this, "server", GCFPortInterface::SPP, SB_PROTOCOL);
   _brokerProvider.accept(*pNewSBClientPort);
   LOG_INFO("A new SB client tries to connect. Accept!!!");

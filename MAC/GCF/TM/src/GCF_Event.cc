@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <GCF/TM/GCF_Event.h>
+#include <GCF/GCF_Defines.h>
 
 using namespace std;
 
@@ -74,7 +75,7 @@ void* GCFEvent::unpackMember(char* data, uint32& offset, uint32& memberNOE, uint
 
 uint32 GCFEvent::packMember(uint32 offset, const void* member, uint32 memberNOE, uint32 sizeofMemberType)
 {
-  assert(_buffer);
+  ASSERT(_buffer);
   memcpy(_buffer + offset, &memberNOE, sizeof(memberNOE));
   offset += sizeof(memberNOE);
   if (memberNOE > 0)

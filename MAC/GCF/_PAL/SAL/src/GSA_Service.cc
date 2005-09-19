@@ -67,7 +67,7 @@ GSAService::GSAService() : _pWFA(0)
 {
   _pWFA  = new GSAWaitForAnswer(*this);
   _pSCADAHandler = GSASCADAHandler::instance();
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if (_pSCADAHandler->isOperational() == SA_SCADA_NOT_AVAILABLE)
   {
     LOG_ERROR(formatString (
@@ -80,7 +80,7 @@ GSAService::~GSAService()
 {
   if (_pWFA)
     delete _pWFA;
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   GSASCADAHandler::release();
   _pSCADAHandler = 0;
 }
@@ -264,11 +264,11 @@ void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& w
     // first item contains the query id received in the answer of the query
     // request
     DpVCItem* pItem = group.getFirstItem();
-    assert(pItem);
+    ASSERT(pItem);
     Variable* pVar = pItem->getValuePtr();
-    assert(pVar);
-    assert(pVar->isA() == UINTEGER_VAR);
-    assert(((UIntegerVar*)pVar)->getValue() == group.getIdentifier());
+    ASSERT(pVar);
+    ASSERT(pVar->isA() == UINTEGER_VAR);
+    ASSERT(((UIntegerVar*)pVar)->getValue() == group.getIdentifier());
     
     // second (and last) item contains the changed property and its new value
     // it is received in a dyndynanytype variable with the following construction:
@@ -291,10 +291,10 @@ void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& w
     //      ]
     // ]
     pItem = group.getNextItem();
-    assert(pItem);
+    ASSERT(pItem);
     pVar = pItem->getValuePtr();
-    assert(pVar);
-    assert(pVar->isDynDynVar());
+    ASSERT(pVar);
+    ASSERT(pVar->isDynDynVar());
 
     const Variable* pTempVar;
 
@@ -401,7 +401,7 @@ TSAResult GSAService::dpCreate(const string& dpName,
       "Create DP '%s'", 
       dpName.c_str()));
   
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) == SA_SCADA_NOT_AVAILABLE)
   {
     LOG_FATAL(formatString (
@@ -477,7 +477,7 @@ TSAResult GSAService::dpDelete(const string& dpName)
       "Delete DP '%s'", 
       dpName.c_str()));
   
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
@@ -544,7 +544,7 @@ TSAResult GSAService::dpeSubscribe(const string& propName)
       "Subscribe on property '%s'", 
       propName.c_str()));
   
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
@@ -608,7 +608,7 @@ TSAResult GSAService::dpeUnsubscribe(const string& propName)
       "Unsubscribe from property '%s'", 
       propName.c_str()));
   
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
@@ -675,7 +675,7 @@ TSAResult GSAService::dpeGet(const string& dpeName)
       "Request value of property '%s'", 
       dpeName.c_str()));
   
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
@@ -743,7 +743,7 @@ TSAResult GSAService::dpeSet(const string& dpeName,
       "Set value of property '%s'", 
       dpeName.c_str()));
   
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
@@ -849,7 +849,7 @@ TSAResult GSAService::dpQuerySubscribeSingle(const string& queryWhere, const str
       "Subscription on queried properties '%s'", 
       (const char*)query));
   
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
@@ -888,7 +888,7 @@ TSAResult GSAService::dpQueryUnsubscribe(uint32 queryId)
       "Unsubscription from queried properties '%d'", 
       queryId));
 
-  assert(_pSCADAHandler);
+  ASSERT(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (

@@ -207,7 +207,7 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       else
       {
         pPropSet = new GPAPropertySet(*this, p);
-        assert(pPropSet);
+        ASSERT(pPropSet);
         _propertySets[request.scope] = pPropSet;
         if (!pPropSet->enable(request))
         {
@@ -239,7 +239,7 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
     {
       PALinkPropSetEvent* pRequest = (PALinkPropSetEvent*) (&e);
       _pCurPropSet = findPropSet(pRequest->scope);
-      assert(_pCurPropSet);
+      ASSERT(_pCurPropSet);
       _pmlPortProvider.setTimer(0, 0, 0, 0, &p); // pass the server port
       p.send(e);
       TRAN(GPAController::linking);
@@ -249,7 +249,7 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
     {
       PALinkPropSetEvent* pRequest = (PALinkPropSetEvent*) (&e);
       _pCurPropSet = findPropSet(pRequest->scope);
-      assert(_pCurPropSet);
+      ASSERT(_pCurPropSet);
       _pmlPortProvider.setTimer(0, 0, 0, 0, &p); // pass the server port
       p.send(e);
       TRAN(GPAController::unlinking);
@@ -311,7 +311,7 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
         _requestManager.registerRequest(p, e);
         PAPropSetLinkedEvent response;
         response.result = PA_SERVER_GONE;
-        assert(_pCurPropSet);
+        ASSERT(_pCurPropSet);
         _pCurPropSet->linked(response);
         break;
       }
@@ -324,7 +324,7 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
     {
       QUEUE_REQUEST(p, e);
       // should always be queued because in this state the PA is always busy
-      assert(0); 
+      ASSERT(0); 
       break;
     }
     case PA_PROP_SET_LINKED:
@@ -332,7 +332,7 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
       PAPropSetLinkedEvent response(e);
       _pmlPortProvider.cancelAllTimers();
       TRAN(GPAController::operational);
-      assert(_pCurPropSet);
+      ASSERT(_pCurPropSet);
       _pCurPropSet->linked(response); 
       break;
     }
@@ -388,7 +388,7 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
         PAPropSetUnlinkedEvent response;
         response.result = PA_SERVER_GONE;
         _requestManager.registerRequest(p, e);
-        assert(_pCurPropSet);
+        ASSERT(_pCurPropSet);
         _pCurPropSet->unlinked(response);
         break;
       }
@@ -401,7 +401,7 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
     {
       QUEUE_REQUEST(p, e);
       // should always be queued because in this state the PA is always busy
-      assert(0); 
+      ASSERT(0); 
       break;
     }
     case PA_PROP_SET_UNLINKED:
@@ -409,7 +409,7 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
       PAPropSetUnlinkedEvent response(e);
       _pmlPortProvider.cancelAllTimers();
       TRAN(GPAController::operational);
-      assert(_pCurPropSet);
+      ASSERT(_pCurPropSet);
       _pCurPropSet->unlinked(response); 
       break;
     }
@@ -465,9 +465,9 @@ void GPAController::doNextRequest()
 void GPAController::sendAndNext(GCFEvent& e)
 {
   GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
-  assert(pPort);
+  ASSERT(pPort);
   GCFEvent* pEvent = _requestManager.getOldestRequest();
-  assert(pEvent);
+  ASSERT(pEvent);
   if (pEvent->signal == F_CLOSED)
   {
     // this is part of the close port sequence
@@ -487,7 +487,7 @@ void GPAController::sendAndNext(GCFEvent& e)
              iter != _propertySets.end(); ++iter)
         {
           pPropSet = iter->second;
-          assert(pPropSet);
+          ASSERT(pPropSet);
           if (pPropSet->mayDelete())
           {
             // add the scope of the prop. set to be deleted
@@ -511,12 +511,12 @@ void GPAController::sendAndNext(GCFEvent& e)
     {
       // responses of the second step of the close port sequence
       PAPropSetUnloadedEvent* pEvent = (PAPropSetUnloadedEvent*)(&e);
-      assert(pEvent->seqnr == 0);
+      ASSERT(pEvent->seqnr == 0);
       propSetClientGone(*pPort);      
     }
     else
     {
-      assert(0);
+      ASSERT(0);
     }    
   }
   else
@@ -551,7 +551,7 @@ void GPAController::acceptConnectRequest(GCFPortInterface& p)
   {
     LOG_INFO("New server MCA accepted!");
     GCFTCPPort* pNewPMLPort = new GCFTCPPort();
-    assert(pNewPMLPort);
+    ASSERT(pNewPMLPort);
     pNewPMLPort->init(*this, "tcp-pa-client", GCFPortInterface::SPP, PA_PROTOCOL);
     _pmlPortProvider.accept(*pNewPMLPort);
   }
@@ -559,7 +559,7 @@ void GPAController::acceptConnectRequest(GCFPortInterface& p)
   {
     LOG_INFO("New client MCA accepted!");
     GCFPVSSPort* pNewPVSSClientPort = new GCFPVSSPort();
-    assert(pNewPVSSClientPort);
+    ASSERT(pNewPVSSClientPort);
     pNewPVSSClientPort->init(*this, "pvss-pa-client", GCFPortInterface::SPP, PA_PROTOCOL);
     _distPmlPortProvider.accept(*pNewPVSSClientPort);
   }
@@ -593,7 +593,7 @@ void GPAController::clientPortGone(GCFPortInterface& p)
          iter != _propertySets.end(); ++iter)
     {
       pPropSet = iter->second;
-      assert(pPropSet);
+      ASSERT(pPropSet);
       if (pPropSet->isOwner(p))
       {
         // these property sets will be deleted after they are unregistered/disabled
@@ -651,7 +651,7 @@ void GPAController::propSetClientGone(GCFPortInterface& p)
        iter != _propertySets.end(); ++iter)
   {
     pPropSet = iter->second;
-    assert(pPropSet);            
+    ASSERT(pPropSet);            
     if (pPropSet->knowsClient(p))
     {
       nextPropSet = iter->first;

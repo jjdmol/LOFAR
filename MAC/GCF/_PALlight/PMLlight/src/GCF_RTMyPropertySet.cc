@@ -133,12 +133,12 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
     setAnswer(_pAnswerObj);
   }
   _pController = GPMRTController::instance();  
-  assert(_pController);
+  ASSERT(_pController);
 }  
 
 GCFRTMyPropertySet::~GCFRTMyPropertySet ()
 {
-  assert(_pController);
+  ASSERT(_pController);
   // delete this set from the controller permanent
   // this means no response will be send to this object
   // on response of the PA
@@ -164,7 +164,7 @@ TGCFResult GCFRTMyPropertySet::enable ()
   }
   else
   {
-    assert(_pController);
+    ASSERT(_pController);
     TPMResult pmResult = _pController->registerScope(*this);
     if (pmResult == PM_NO_ERROR)
     {
@@ -196,7 +196,7 @@ TGCFResult GCFRTMyPropertySet::disable ()
            iter != _properties.end(); ++iter)
       {
         pProperty = iter->second;
-        assert(pProperty);
+        ASSERT(pProperty);
         if (pProperty->isLinked())
         {
           pProperty->unlink();
@@ -205,10 +205,10 @@ TGCFResult GCFRTMyPropertySet::disable ()
       // intentional fall through
     case S_ENABLED:
     {
-      assert(_pController);
+      ASSERT(_pController);
   
       TPMResult pmResult = _pController->unregisterScope(*this);
-      assert(pmResult == PM_NO_ERROR);  
+      ASSERT(pmResult == PM_NO_ERROR);  
       _state = S_DISABLING;
       
       break;
@@ -223,7 +223,7 @@ TGCFResult GCFRTMyPropertySet::disable ()
 
 void GCFRTMyPropertySet::scopeRegistered (TGCFResult result)
 {
-  assert(_state == S_ENABLING);
+  ASSERT(_state == S_ENABLING);
   LOG_INFO(formatString ( 
       "PA-RESP: Property set '%s' is enabled%s",
       getScope().c_str(), 
@@ -242,7 +242,7 @@ void GCFRTMyPropertySet::scopeRegistered (TGCFResult result)
 
 void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
 {
-  assert(_state == S_DISABLING);
+  ASSERT(_state == S_DISABLING);
    
   LOG_INFO(formatString ( 
       "Property set '%s' is disabled%s",
@@ -255,7 +255,7 @@ void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
 
 void GCFRTMyPropertySet::linkProperties()
 {
-  assert(_pController);
+  ASSERT(_pController);
   list<string> propsToSubscribe;
   switch (_state)
   {
@@ -263,13 +263,13 @@ void GCFRTMyPropertySet::linkProperties()
     {
       GCFRTMyProperty* pProperty(0);
 
-      assert(_counter == 0);
+      ASSERT(_counter == 0);
       _missing = 0;
       for(TPropertyList::iterator iter = _properties.begin(); 
           iter != _properties.end(); ++iter)
       {
         pProperty = iter->second;
-        assert(pProperty);
+        ASSERT(pProperty);
         pProperty->link();
         if (pProperty->testAccessMode(GCF_WRITABLE_PROP))
         {
@@ -298,7 +298,7 @@ void GCFRTMyPropertySet::linkProperties()
 
 void GCFRTMyPropertySet::unlinkProperties()
 {
-  assert(_pController);
+  ASSERT(_pController);
   switch (_state)
   {
     case S_DISABLED:
@@ -414,7 +414,7 @@ void GCFRTMyPropertySet::setAnswer (GCFRTAnswer* pAnswerObj)
         iter != _properties.end(); ++iter) 
   {
     pProperty = iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     pProperty->setAnswer(pAnswerObj);
   }
   _pAnswerObj = pAnswerObj;
@@ -428,14 +428,14 @@ bool GCFRTMyPropertySet::exists (const string& propName) const
 
 void GCFRTMyPropertySet::valueSet(const string& propName, const GCFPValue& value) const
 {
-  assert(_pController);
+  ASSERT(_pController);
   _pController->valueSet(propName, value);  
 }
 
 void GCFRTMyPropertySet::valueChanged(string propName, const GCFPValue& value)
 {
   GCFRTMyProperty* pProperty = getProperty(propName);
-  assert(pProperty);
+  ASSERT(pProperty);
   pProperty->valueChanged(value);
 }
 
@@ -490,7 +490,7 @@ void GCFRTMyPropertySet::clearAllProperties()
         iter != _properties.end(); ++iter) 
   {
     pProperty = iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     delete pProperty;
   }
 }
@@ -502,7 +502,7 @@ void GCFRTMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
       iter != _properties.end(); ++iter)
   {
     pProperty = iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     pProperty->setAccessMode(mode, on);    
   }
 }

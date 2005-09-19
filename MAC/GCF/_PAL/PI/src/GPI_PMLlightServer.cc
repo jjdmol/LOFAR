@@ -275,7 +275,7 @@ void GPIPMLlightServer::propSetRegistered(const PAScopeRegisteredEvent& response
 {
   GPIPropertySet* pPropertySet = findPropertySet(responseIn.seqnr);
 
-  assert(pPropertySet);
+  ASSERT(pPropertySet);
 
   LOG_INFO(formatString ( 
       "PA-RESP: Scope %s is registered", 
@@ -293,7 +293,7 @@ void GPIPMLlightServer::unregisterPropSet(const PIUnregisterScopeEvent& requestI
       "PL-REQ: Unregister scope %s",
       requestIn.scope.c_str()));
 
-  assert(pPropertySet);
+  ASSERT(pPropertySet);
   
   _actionSeqList[requestIn.seqnr] = pPropertySet;
   
@@ -304,7 +304,7 @@ void GPIPMLlightServer::propSetUnregistered(const PAScopeUnregisteredEvent& resp
 {
   GPIPropertySet* pPropertySet = findPropertySet(responseIn.seqnr);
 
-  assert(pPropertySet);
+  ASSERT(pPropertySet);
 
   LOG_INFO(formatString ( 
       "PA-RESP: Scope %s is unregistered", 

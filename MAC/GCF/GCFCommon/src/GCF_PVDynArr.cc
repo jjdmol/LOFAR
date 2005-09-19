@@ -39,14 +39,14 @@ namespace LOFAR
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val) :
   GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
 {
-  assert(itemType != LPT_DYNARR);
+  ASSERT(itemType != LPT_DYNARR);
   setValue(val);
 }
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType) :
   GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
 {
-  assert(itemType != LPT_DYNARR);
+  ASSERT(itemType != LPT_DYNARR);
 }
 
 GCFPVDynArr::~GCFPVDynArr()

@@ -59,7 +59,7 @@ GCFPropertySet::GCFPropertySet (const char* name,
     _scope = "";
   }
   _pController = GPMController::instance();
-  assert(_pController);
+  ASSERT(_pController);
 }
 
 GCFPropertySet::~GCFPropertySet()
@@ -67,7 +67,7 @@ GCFPropertySet::~GCFPropertySet()
   clearAllProperties();
   _dummyProperty.resetPropSetRef();
 
-  assert(_pController);
+  ASSERT(_pController);
   
   _pController->deletePropSet(*this); 
   GPMController::release();  
@@ -163,7 +163,7 @@ void GCFPropertySet::setAnswer (GCFAnswer* pAnswerObj)
         iter != _properties.end(); ++iter) 
   {
     pProperty = iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     pProperty->setAnswer(pAnswerObj);
   }
   _pAnswerObj = pAnswerObj;
@@ -189,10 +189,10 @@ void GCFPropertySet::configure(const string& apcName)
       getScope().c_str(), 
       apcName.c_str()));
 
-  assert(_pController);
+  ASSERT(_pController);
 
   TPMResult pmResult = _pController->configurePropSet(*this, apcName);
-  assert(pmResult == PM_NO_ERROR);
+  ASSERT(pmResult == PM_NO_ERROR);
 }
 
 void GCFPropertySet::configured(TGCFResult result, const string& apcName)
@@ -215,7 +215,7 @@ void GCFPropertySet::configured(TGCFResult result, const string& apcName)
 
 void GCFPropertySet::addProperty(const string& propName, GCFProperty& prop)
 {
-  assert(propName.length() > 0);
+  ASSERT(propName.length() > 0);
   
   string shortPropName(propName);
   cutScope(shortPropName);
@@ -248,7 +248,7 @@ void GCFPropertySet::clearAllProperties()
         iter != _properties.end(); ++iter) 
   {
     pProperty = iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     pProperty->resetPropSetRef();
     delete pProperty;
   }

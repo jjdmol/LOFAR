@@ -92,8 +92,8 @@ TGCFResult GCFExtProperty::unsubscribe ()
 
 void GCFExtProperty::subscribed ()
 {
-  assert(!_isSubscribed);
-  assert(_isBusy);
+  ASSERT(!_isSubscribed);
+  ASSERT(_isBusy);
   
   _isSubscribed = true;
   _isBusy = false;
@@ -102,7 +102,7 @@ void GCFExtProperty::subscribed ()
 
 void GCFExtProperty::subscriptionLost () 
 {
-  assert(_isSubscribed);
+  ASSERT(_isSubscribed);
   _isSubscribed = false;
 }
 
