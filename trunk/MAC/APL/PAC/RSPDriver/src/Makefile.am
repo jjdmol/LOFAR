@@ -26,9 +26,6 @@ BUILT_SOURCES = \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
 	RSPDriver.conf \
-	ViewStats.conf \
-	CaptureStats.conf \
-	CaptureStats.log_prop \
 	Tuner.conf \
 	SetWG.conf \
 	rspctl.conf
@@ -46,9 +43,6 @@ sysconf_DATA = \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
 	RSPDriver.conf \
-	ViewStats.conf \
-	CaptureStats.conf \
-	CaptureStats.log_prop \
 	Tuner.conf \
 	SetWG.conf \
 	rspctl.conf
@@ -115,8 +109,6 @@ bin_SCRIPTS = \
 
 bin_PROGRAMS = \
 	RSPDriver \
-	ViewStats \
-	CaptureStats \
 	Tuner \
 	SetWG \
 	rspctl
@@ -205,23 +197,6 @@ RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \
 	$(RTCCOMMON_LDADD) \
 	$(CAPLIBS)
-
-ViewStats_SOURCES = \
-	ViewStats.h \
-	ViewStats.cc
-
-ViewStats_LDADD = \
-	$(top_builddir)/src/librsp.la \
-	-lgnuplot_i
-	-lsuite
-
-CaptureStats_SOURCES = \
-	CaptureStats.h \
-	CaptureStats.cc
-
-CaptureStats_LDADD = \
-	$(top_builddir)/src/librsp.la \
-	-lsuite
 
 Tuner_SOURCES = \
 	Tuner.h \

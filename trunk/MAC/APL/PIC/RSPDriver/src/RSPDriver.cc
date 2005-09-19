@@ -100,7 +100,7 @@ RSPDriver::RSPDriver(string name)
 
   m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
 
-  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
+  m_acceptor.init(*this, "acceptor_v2", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
   m_board = new GCFETHRawPort[GET_CONFIG("RS.N_RSPBOARDS", i)];
 

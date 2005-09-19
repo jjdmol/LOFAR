@@ -10,7 +10,7 @@ mac.ns.RSPDriver.host=localhost
 mac.ns.RSPDriver.server.type=TCP
 #mac.ns.RSPDriver.spid.port=0
 mac.ns.RSPDriver.spid.deviceName=/dev/spid0
-mac.ns.RSPDriver.acceptor.type=TCP
+mac.ns.RSPDriver.acceptor_v2.type=TCP
 
 # mac.ns.RSPDriver.board0.type=TCP
 # mac.ns.RSPDriver.board1.type=TCP
@@ -66,18 +66,18 @@ mac.ns.RSPDriver.acceptor.type=TCP
 #
 mac.ns.RSPTest.host=localhost
 mac.ns.RSPTest.server.type=TCP
-mac.top.RSPTest.server.remoteservice=RSPDriver:acceptor
+mac.top.RSPTest.server.remoteservice=RSPDriver:acceptor_v2
 
 #
 # ViewStats configuration
 #
 mac.ns.ViewStats.host=localhost
 mac.ns.ViewStats.server.type=TCP
-mac.top.ViewStats.remoteservice=RSPDriver:acceptor
+mac.top.ViewStats.remoteservice=RSPDriver:acceptor_v2
 
 #
 # SetWG configuration
 #
 mac.ns.SetWG.host=localhost
 mac.ns.SetWG.server.type=TCP
-mac.top.SetWG.server.remoteservice=RSPDriver:acceptor
+mac.top.SetWG.server.remoteservice=RSPDriver:acceptor_v2
