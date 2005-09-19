@@ -68,9 +68,9 @@ private:
   unsigned int itsBufSize;
   
   short itsFIR;
-  int itsNStations;      // #stations per buffer
-  int itsNTimes;         // #time samples per buffer
-  int itsNPol;           // #polarisations per sample
+  short itsNStations;      // #stations per buffer
+  int32 itsNTimes;         // #time samples per buffer
+  short itsNPol;           // #polarisations per sample
 
   RectMatrix<BufferType>* itsMatrix;
 
@@ -106,8 +106,7 @@ private:
    for (int k = 0; k < itsNStations; k++) {
      for (int l = 0; l < itsNPol; l++) {
        for (int m = 0; m < itsNTimes; m++) {
-	 value = k*itsNPol + l*1.i;
-
+	 value = makei16complex(k*itsNPol, l);
 	 itsMatrix->setValue(itsMatrix->getCursor(k*itsStationDim + l*itsPolDim + m*itsTimeDim), value);
        }
      }
