@@ -121,7 +121,7 @@ void WeightsCommand::send()
 
     // -1 < m_value <= 1
     double value = m_value;
-    value *= (1<<15)-1;
+    value *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
     setweights.weights() = complex<int16>((int16)value,0);
 
     m_rspport.send(setweights);
