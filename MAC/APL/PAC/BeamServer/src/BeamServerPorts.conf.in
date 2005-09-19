@@ -7,14 +7,14 @@
 #
 mac.ns.BeamServer.acceptor.type=TCP
 mac.ns.BeamServer.rspdriver.type=TCP
-mac.top.BeamServer.rspdriver.remoteservice=RSPDriver:acceptor
+mac.top.BeamServer.rspdriver.remoteservice=RSPDriver:acceptor_v2
 mac.ns.BeamServer.calserver.type=TCP
-mac.top.BeamServer.calserver.remoteservice=CalServer:acceptor
+mac.top.BeamServer.calserver.remoteservice=CalServer:acceptor_v2
 
 #
 # RSPDriver configuration
-#
-mac.ns.RSPDriver.acceptor.type=TCP
+# KJW 2005/09/19: I don't this this is needed anymore
+# mac.ns.RSPDriver.acceptor_v2.type=TCP
 
 #
 # EPATest configuration
