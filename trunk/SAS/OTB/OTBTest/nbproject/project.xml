@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.java.j2seproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/j2se-project/1">
-            <name>OTB</name>
+            <name>OTBTest</name>
             <minimum-ant-version>1.6</minimum-ant-version>
         </data>
     </configuration>
