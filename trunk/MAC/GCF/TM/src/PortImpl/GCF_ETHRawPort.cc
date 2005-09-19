@@ -46,7 +46,7 @@ GCFETHRawPort::GCFETHRawPort(GCFTask& task,
    GCFRawPort(task, name, type, 0, transportRawData), 
    _pSocket(0), _ethertype(0x0000)
 {
-  assert(MSPP != getType());
+  ASSERT(MSPP != getType());
 
   _pSocket = new GTMETHSocket(*this);
 }
@@ -55,7 +55,7 @@ GCFETHRawPort::GCFETHRawPort() :
   GCFRawPort(),       
   _pSocket(0), _ethertype(0x0000)
 {
-  assert(MSPP != getType());
+  ASSERT(MSPP != getType());
 }
 
 GCFETHRawPort::~GCFETHRawPort()
@@ -177,7 +177,7 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
 {
   size_t written = 0;
 
-  assert(_pSocket);
+  ASSERT(_pSocket);
 
   if (!isConnected()) 
   {
@@ -215,7 +215,7 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
 ssize_t GCFETHRawPort::recv(void* buf, size_t count)
 {
   if (!isConnected()) return 0;
-  assert(_pSocket);
+  ASSERT(_pSocket);
   return _pSocket->recv(buf, count);
 }
 

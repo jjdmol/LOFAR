@@ -42,7 +42,7 @@ GTMTimerHandler* GTMTimerHandler::instance()
   if (0 == _pInstance)
   {
     _pInstance = new GTMTimerHandler();
-    assert(!_pInstance->mayDeleted());
+    ASSERT(!_pInstance->mayDeleted());
   }
   _pInstance->use();
   return _pInstance;
@@ -50,13 +50,13 @@ GTMTimerHandler* GTMTimerHandler::instance()
 
 void GTMTimerHandler::release()
 {
-  assert(_pInstance);
-  assert(!_pInstance->mayDeleted());
+  ASSERT(_pInstance);
+  ASSERT(!_pInstance->mayDeleted());
   _pInstance->leave(); 
   if (_pInstance->mayDeleted())
   {
     delete _pInstance;
-    assert(!_pInstance);
+    ASSERT(!_pInstance);
   }
 }
 
@@ -72,7 +72,7 @@ GTMTimerHandler::~GTMTimerHandler()
        iter != _timers.end(); ++iter)
   {
     pCurTimer = iter->second;
-    assert(pCurTimer);
+    ASSERT(pCurTimer);
     delete pCurTimer;
   }
   _timers.clear();
@@ -95,7 +95,7 @@ void GTMTimerHandler::workProc()
        iter != tempTimers.end() && _running; ++iter)
   {
     pCurTimer = iter->second;
-    assert(pCurTimer);
+    ASSERT(pCurTimer);
     if (pCurTimer->isElapsed() || pCurTimer->isCanceled())
     {
       delete pCurTimer;
@@ -144,7 +144,7 @@ int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
     return result;
   pCurTimer = iter->second;
 
-  assert(pCurTimer);
+  ASSERT(pCurTimer);
   result = 1;
   if (arg) *arg = pCurTimer->getTimerArg();
   pCurTimer->cancel();
@@ -161,7 +161,7 @@ int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)
        iter != _timers.end(); ++iter)
   {
     pCurTimer = iter->second;
-    assert(pCurTimer);
+    ASSERT(pCurTimer);
     if (&(pCurTimer->getPort()) == &port)
     {  
       pCurTimer->cancel();

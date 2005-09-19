@@ -39,7 +39,7 @@ GTMFileHandler* GTMFileHandler::instance()
   if (0 == _pInstance)
   {
     _pInstance = new GTMFileHandler();
-    assert(!_pInstance->mayDeleted());
+    ASSERT(!_pInstance->mayDeleted());
   }
   _pInstance->use();
   return _pInstance;
@@ -47,13 +47,13 @@ GTMFileHandler* GTMFileHandler::instance()
 
 void GTMFileHandler::release()
 {
-  assert(_pInstance);
-  assert(!_pInstance->mayDeleted());
+  ASSERT(_pInstance);
+  ASSERT(!_pInstance->mayDeleted());
   _pInstance->leave(); 
   if (_pInstance->mayDeleted())
   {
     delete _pInstance;
-    assert(!_pInstance);
+    ASSERT(!_pInstance);
   }
 }
 

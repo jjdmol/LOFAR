@@ -153,7 +153,7 @@ ssize_t GCFPVSSPort::send(GCFEvent& e)
 {
   ssize_t written = 0;
 
-  assert(_pPortService);
+  ASSERT(_pPortService);
 
   if (MSPP == getType())  
     return -1; // no messages can be send by this type of port
@@ -189,14 +189,14 @@ ssize_t GCFPVSSPort::send(GCFEvent& e)
 
 ssize_t GCFPVSSPort::recv(void* buf, size_t count)
 {
-  assert(_pPortService);
+  ASSERT(_pPortService);
   return _pPortService->recv(buf, count);
 }
 
 bool GCFPVSSPort::close()
 {
   setState(S_CLOSING);  
-  assert(_pPortService);
+  ASSERT(_pPortService);
 
   if (_acceptedPort)
   {
@@ -223,7 +223,7 @@ bool GCFPVSSPort::accept(GCFPVSSPort& newPort)
 {
   if (MSPP == getType() && SPP == newPort.getType())
   {
-    assert(_pPortService);
+    ASSERT(_pPortService);
     newPort.setService(*_pPortService);
     _pPortService->registerPort(newPort);
     newPort.setState(S_CONNECTING);    

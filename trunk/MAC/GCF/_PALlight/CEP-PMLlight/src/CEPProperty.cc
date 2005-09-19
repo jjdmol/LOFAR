@@ -40,7 +40,7 @@ CEPProperty::CEPProperty(const TPropertyInfo& propertyFields,
   _pValue(0)  
 {
   _pValue = GCFPValue::createMACTypeObject((TMACValueType) propertyFields.type);
-  assert(_pValue);
+  ASSERT(_pValue);
 }
 
 CEPProperty::CEPProperty(CEPPropertySet& propertySet) :
@@ -61,7 +61,7 @@ CEPProperty::~CEPProperty()
 bool CEPProperty::setValue(const string& value)
 {
   TGCFResult result(GCF_NO_ERROR);
-  assert(_pValue);
+  ASSERT(_pValue);
 
   result = _pValue->setValue(value);
 
@@ -76,7 +76,7 @@ bool CEPProperty::setValue(const string& value)
 bool CEPProperty::setValue(const GCFPValue& value)
 {
   TGCFResult result(GCF_NO_ERROR);
-  assert(_pValue);
+  ASSERT(_pValue);
   
   result = _pValue->copy(value);
 

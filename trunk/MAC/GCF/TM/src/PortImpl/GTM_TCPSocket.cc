@@ -121,7 +121,7 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count)
 
 bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 {
-  assert(_fd == -1);
+  ASSERT(_fd == -1);
   _fd = ::socket(AF_INET, SOCK_STREAM, 0);
   if (_fd < 0)
   {
@@ -150,7 +150,7 @@ bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)
                == 0);
     if (result)
     {
-      assert(_pHandler);
+      ASSERT(_pHandler);
       _pHandler->registerFile(*this);
     }
     else

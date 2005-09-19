@@ -121,7 +121,7 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
     {
       LOG_INFO("New LofarLogger client accepted!");
       GCFTCPPort* pNewCLPPort = new GCFTCPPort();
-      assert(pNewCLPPort);
+      ASSERT(pNewCLPPort);
       pNewCLPPort->init(*this, "clp-client", GCFPortInterface::SPP, 0, true);
       _clpPortProvider.accept(*pNewCLPPort);
       break;

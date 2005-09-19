@@ -136,9 +136,9 @@ void GTMTCPServerSocket::workProc()
   {
     GCFTCPPort* pPort = (GCFTCPPort*)(&_port);
 
-    assert(_pDataSocket == 0);
+    ASSERT(_pDataSocket == 0);
     _pDataSocket = new GTMTCPSocket(*pPort);
-    assert (_pDataSocket->getFD() < 0);
+    ASSERT (_pDataSocket->getFD() < 0);
 
     struct sockaddr_in clientAddress;
     socklen_t clAddrLen = sizeof(clientAddress);

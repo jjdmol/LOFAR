@@ -66,7 +66,7 @@ GTMServiceBroker* GTMServiceBroker::instance(bool temporary)
   if (0 == GTMSBHandler::_pInstance)
   {    
     GTMSBHandler::_pInstance = new GTMSBHandler();
-    assert(!GTMSBHandler::_pInstance->mayDeleted());
+    ASSERT(!GTMSBHandler::_pInstance->mayDeleted());
     GTMSBHandler::_pInstance->_controller.start();
   }
   if (!temporary) GTMSBHandler::_pInstance->use();
@@ -75,13 +75,13 @@ GTMServiceBroker* GTMServiceBroker::instance(bool temporary)
 
 void GTMServiceBroker::release()
 {
-  assert(GTMSBHandler::_pInstance);
-  assert(!GTMSBHandler::_pInstance->mayDeleted());
+  ASSERT(GTMSBHandler::_pInstance);
+  ASSERT(!GTMSBHandler::_pInstance->mayDeleted());
   GTMSBHandler::_pInstance->leave(); 
   if (GTMSBHandler::_pInstance->mayDeleted())
   {
     delete GTMSBHandler::_pInstance;
-    assert(!GTMSBHandler::_pInstance);
+    ASSERT(!GTMSBHandler::_pInstance);
   }
 }
 
@@ -236,7 +236,7 @@ GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& e, GCFPortInterface& p
           case SB_REGISTER_SERVICE: registerService(*pAction->pPort); break;
           case SB_UNREGISTER_SERVICE: unregisterService(*pAction->pPort); break;
           case SB_GET_SERVICEINFO: getServiceinfo(*pAction->pPort, pAction->servicename); break;
-          default: assert(0);
+          default: ASSERT(0);
         }
       }
       

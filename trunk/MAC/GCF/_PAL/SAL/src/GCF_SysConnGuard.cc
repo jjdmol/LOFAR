@@ -70,13 +70,13 @@ GCFSysConnGuard* GCFSysConnGuard::instance ()
   {
     _instance = new GCFSysConnGuard();
   }
-  assert(_instance);
+  ASSERT(_instance);
   return _instance;
 }
 
 bool GCFSysConnGuard::isRunning() const
 {
-  assert(_pSysConnGuardService);
+  ASSERT(_pSysConnGuardService);
   return _pSysConnGuardService->isSubscribed();
 }
 
@@ -93,7 +93,7 @@ bool GCFSysConnGuard::registerTask(GCFTask& task)
   {
     if (_registeredTasks.empty())
     {
-      assert(_pSysConnGuardService);
+      ASSERT(_pSysConnGuardService);
       _pSysConnGuardService->start();
     }
     _registeredTasks.insert(&task);
@@ -115,7 +115,7 @@ bool GCFSysConnGuard::unregisterTask(GCFTask& task)
     _registeredTasks.erase(&task);
     if (_registeredTasks.empty())
     {
-      assert(_pSysConnGuardService);
+      ASSERT(_pSysConnGuardService);
       _pSysConnGuardService->stop();
     }
     return true;

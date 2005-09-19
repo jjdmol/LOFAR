@@ -52,7 +52,7 @@ GCFRawPort::GCFRawPort(GCFTask& task,
     _pMaster(0)
 {
   _pTimerHandler = GTMTimerHandler::instance(); 
-  assert(_pTimerHandler);
+  ASSERT(_pTimerHandler);
 }
 
 GCFRawPort::GCFRawPort() :
@@ -60,7 +60,7 @@ GCFRawPort::GCFRawPort() :
     _pMaster(0)
 {
   _pTimerHandler = GTMTimerHandler::instance(); 
-  assert(_pTimerHandler);
+  ASSERT(_pTimerHandler);
 }
 
 void GCFRawPort::init(GCFTask& task, 
@@ -76,7 +76,7 @@ void GCFRawPort::init(GCFTask& task,
 GCFRawPort::~GCFRawPort()
 {
   cancelAllTimers();
-  assert(_pTimerHandler);
+  ASSERT(_pTimerHandler);
   GTMTimerHandler::release();
   _pTimerHandler = 0;
 }
@@ -84,7 +84,7 @@ GCFRawPort::~GCFRawPort()
 GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  assert(_pTask);
+  ASSERT(_pTask);
   
   // Test whether the event is a framework event or not
   if ((F_DATAIN != event.signal) && 
@@ -182,7 +182,7 @@ long GCFRawPort::setTimer(long delay_sec, long delay_usec,
 			  long interval_sec, long interval_usec,
 			  void* arg)
 {
-  assert(_pTimerHandler);
+  ASSERT(_pTimerHandler);
   return _pTimerHandler->setTimer(*this, 
           (unsigned long) (delay_sec * 1000000 + delay_usec), 
           (unsigned long) (interval_sec * 1000000 + interval_usec),
@@ -193,7 +193,7 @@ long GCFRawPort::setTimer(double delay_seconds,
 			  double interval_seconds,
 			  void* arg)
 {
-  assert(_pTimerHandler);
+  ASSERT(_pTimerHandler);
   return _pTimerHandler->setTimer(*this, 
          (unsigned long) (delay_seconds * 1000000.0), 
          (unsigned long) (interval_seconds * 1000000.0),
@@ -202,13 +202,13 @@ long GCFRawPort::setTimer(double delay_seconds,
 
 int GCFRawPort::cancelTimer(long timerid, void **arg)
 {
-  assert(_pTimerHandler);
+  ASSERT(_pTimerHandler);
   return _pTimerHandler->cancelTimer(timerid, arg);
 }
 
 int GCFRawPort::cancelAllTimers()
 {
-  assert(_pTimerHandler);
+  ASSERT(_pTimerHandler);
   return _pTimerHandler->cancelAllTimers(*this);
 }
 
@@ -312,7 +312,7 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 
   if (status != GCFEvent::HANDLED)
   {
-    assert(getTask());
+    ASSERT(getTask());
     LOG_INFO(formatString (
       "'%s' for port '%s' in task '%s' not handled or an error occured",
       getTask()->evtstr(e),

@@ -156,7 +156,7 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
     return 0;
   }
   
-  assert(_pDevice);
+  ASSERT(_pDevice);
 
   unsigned int packsize;
   void* buf = e.pack(packsize);
@@ -185,7 +185,7 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
 ssize_t GCFDevicePort::recv(void* buf, size_t count)
 {
   if (!isConnected()) return 0;
-  assert(_pDevice);
+  ASSERT(_pDevice);
   return _pDevice->recv(buf, count);
 }
 

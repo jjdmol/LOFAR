@@ -48,10 +48,10 @@ GCFMyProperty::GCFMyProperty(const TPropertyInfo& propInfo,
     if(exists()) LOG_FATAL(formatString(
                       "%s is temporary but it already exists!", 
                       getFullName().c_str()));
-    assert(!exists());
+    ASSERT(!exists());
   }
   _pCurValue = GCFPValue::createMACTypeObject(propInfo.type);
-  assert(_pCurValue);
+  ASSERT(_pCurValue);
   _pOldValue = _pCurValue->clone();
 }
 
@@ -81,9 +81,9 @@ TGCFResult GCFMyProperty::setValueTimed(const string& value, double timestamp, b
       exists() && 
       result == GCF_NO_ERROR)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     result = GCFProperty::setValueTimed(*_pCurValue, timestamp, wantAnswer);    
-    assert(result == GCF_NO_ERROR);
+    ASSERT(result == GCF_NO_ERROR);
   }
   
   return result;
@@ -104,9 +104,9 @@ TGCFResult GCFMyProperty::setValueTimed(const GCFPValue& value, double timestamp
       exists() && 
       result == GCF_NO_ERROR)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     result = GCFProperty::setValueTimed(*_pCurValue, timestamp, wantAnswer);    
-    assert(result == GCF_NO_ERROR);
+    ASSERT(result == GCF_NO_ERROR);
   }
   
   return result;
@@ -131,14 +131,14 @@ GCFPValue* GCFMyProperty::getOldValue() const
 bool GCFMyProperty::link(bool setDefault, TGCFResult& result)
 {
   bool isAsync(false);
-  assert(!_isLinked);  
+  ASSERT(!_isLinked);  
 
   result = GCF_NO_ERROR;
-  assert(exists());
-  assert(!_isBusy);
+  ASSERT(exists());
+  ASSERT(!_isBusy);
   if (_accessMode & GCF_READABLE_PROP && setDefault)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     result = GCFProperty::setValue(*_pCurValue);    
   }
   if (_accessMode & GCF_WRITABLE_PROP && result == GCF_NO_ERROR)
@@ -162,7 +162,7 @@ bool GCFMyProperty::link(bool setDefault, TGCFResult& result)
 
 void GCFMyProperty::unlink()
 {  
-  assert(!_isBusy);
+  ASSERT(!_isBusy);
   if (_accessMode & GCF_WRITABLE_PROP )
   {
     if (exists()) // can already be deleted by the Property Agent
@@ -186,18 +186,18 @@ void GCFMyProperty::setAccessMode(TAccessMode mode, bool on)
       (~oldAccessMode & GCF_WRITABLE_PROP) &&
       _isLinked)
   {
-    assert(!_isBusy);
+    ASSERT(!_isBusy);
     _isBusy = true;
     _changingAccessMode = true;
     result = subscribe();
-    assert(result == GCF_NO_ERROR);    
+    ASSERT(result == GCF_NO_ERROR);    
   }
   else if ((oldAccessMode & GCF_WRITABLE_PROP) &&
       (~_accessMode & GCF_WRITABLE_PROP) && 
       _isLinked)
   {
     result = unsubscribe();
-    assert(result == GCF_NO_ERROR);    
+    ASSERT(result == GCF_NO_ERROR);    
   }
   
   if ((~_accessMode & GCF_WRITABLE_PROP) && 
@@ -205,9 +205,9 @@ void GCFMyProperty::setAccessMode(TAccessMode mode, bool on)
       (_accessMode & GCF_READABLE_PROP) &&
       _isLinked)
   {
-    assert(_pCurValue);
+    ASSERT(_pCurValue);
     result = GCFProperty::setValue(*_pCurValue);    
-    assert(result == GCF_NO_ERROR);
+    ASSERT(result == GCF_NO_ERROR);
   }  
 }
 
@@ -218,11 +218,11 @@ bool GCFMyProperty::testAccessMode(TAccessMode mode) const
 
 void GCFMyProperty::subscribed ()
 {
-  assert(_isBusy);
+  ASSERT(_isBusy);
   _isBusy = false;  
   if (!_changingAccessMode)
   {
-    assert(!_isLinked);
+    ASSERT(!_isLinked);
     _isLinked = true;
     _propertySet.linked(*this);
   }
@@ -236,11 +236,11 @@ void GCFMyProperty::subscriptionLost ()
 void GCFMyProperty::valueGet (const GCFPValue& value)
 {
   TGCFResult result;
-  assert(_pOldValue && _pCurValue);
+  ASSERT(_pOldValue && _pCurValue);
   result = _pOldValue->copy(*_pCurValue);
-  assert(result == GCF_NO_ERROR);
+  ASSERT(result == GCF_NO_ERROR);
   result = _pCurValue->copy(value);
-  assert(result == GCF_NO_ERROR);
+  ASSERT(result == GCF_NO_ERROR);
 }
                                
 void GCFMyProperty::valueChanged (const GCFPValue& value)
@@ -248,11 +248,11 @@ void GCFMyProperty::valueChanged (const GCFPValue& value)
   if (_accessMode & GCF_WRITABLE_PROP )
   {
     TGCFResult result;
-    assert(_pOldValue && _pCurValue);
+    ASSERT(_pOldValue && _pCurValue);
     result = _pOldValue->copy(*_pCurValue);
-    assert(result == GCF_NO_ERROR);
+    ASSERT(result == GCF_NO_ERROR);
     result = _pCurValue->copy(value);
-    assert(result == GCF_NO_ERROR);
+    ASSERT(result == GCF_NO_ERROR);
     
     GCFPropValueEvent e(F_VCHANGEMSG);
     e.pValue = &value;

@@ -124,26 +124,26 @@ class GCFProperty
   private:
     friend class GPMPropertyService;
     void propSubscribed (const string& propName)
-      { assert(propName == getFullName()); subscribed(); }
+      { ASSERT(propName == getFullName()); subscribed(); }
    
    void propSubscriptionLost (const string& propName)
-      { assert(propName == getFullName()); subscriptionLost(); }
+      { ASSERT(propName == getFullName()); subscriptionLost(); }
     
     // does nothing (but still in the GCF API)
     // because unsubscribe isn't asynchronous in the SCADA API
     void propUnsubscribed (const string& propName)
-      { assert(propName == getFullName()); }
+      { ASSERT(propName == getFullName()); }
       
     void propValueGet (const string& propName, 
                               const Common::GCFPValue& value)
-      { assert(propName == getFullName()); valueGet(value); }
+      { ASSERT(propName == getFullName()); valueGet(value); }
       
     void propValueChanged (const string& propName, 
                                   const Common::GCFPValue& value)
-      { assert(propName == getFullName()); valueChanged(value); }
+      { ASSERT(propName == getFullName()); valueChanged(value); }
   
     void propValueSet (const string& propName)
-      { assert(propName == getFullName()); valueSet(); }
+      { ASSERT(propName == getFullName()); valueSet(); }
 
   private:
     friend class GCFPropertySet;
@@ -159,7 +159,7 @@ class GCFProperty
     // just right before deleting them (in destructor of the GCFPropertySet). 
     // Then the destruction of a property could be made dependent on
     // the value of the _isIndependedProp. If true it may be deleted 
-    // otherwise we get an assert!!!
+    // otherwise we get an ASSERT!!!
     void resetPropSetRef () 
       { _isIndependedProp = true; }
     

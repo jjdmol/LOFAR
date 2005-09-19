@@ -101,7 +101,7 @@ GSASCADAHandler* GSASCADAHandler::instance()
     delete [] words;
         
     _pInstance = new GSASCADAHandler();
-    assert(!_pInstance->mayDeleted());
+    ASSERT(!_pInstance->mayDeleted());
   }
 
   _pInstance->use();
@@ -110,13 +110,13 @@ GSASCADAHandler* GSASCADAHandler::instance()
 
 void GSASCADAHandler::release()
 {
-  assert(_pInstance);
-  assert(!_pInstance->mayDeleted());
+  ASSERT(_pInstance);
+  ASSERT(!_pInstance->mayDeleted());
   _pInstance->leave(); 
   if (_pInstance->mayDeleted())
   {
     delete _pInstance;
-    assert(!_pInstance);
+    ASSERT(!_pInstance);
   }
 }
 

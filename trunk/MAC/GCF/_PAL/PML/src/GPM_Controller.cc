@@ -72,7 +72,7 @@ GPMController* GPMController::instance(bool temporary)
   if (0 == GPMHandler::_pInstance)
   {    
     GPMHandler::_pInstance = new GPMHandler();
-    assert(!GPMHandler::_pInstance->mayDeleted());
+    ASSERT(!GPMHandler::_pInstance->mayDeleted());
     GPMHandler::_pInstance->_controller.start();
   }
   if (!temporary) GPMHandler::_pInstance->use();
@@ -81,13 +81,13 @@ GPMController* GPMController::instance(bool temporary)
 
 void GPMController::release()
 {
-  assert(GPMHandler::_pInstance);
-  assert(!GPMHandler::_pInstance->mayDeleted());
+  ASSERT(GPMHandler::_pInstance);
+  ASSERT(!GPMHandler::_pInstance->mayDeleted());
   GPMHandler::_pInstance->leave(); 
   if (GPMHandler::_pInstance->mayDeleted())
   {
     delete GPMHandler::_pInstance;
-    assert(!GPMHandler::_pInstance);
+    ASSERT(!GPMHandler::_pInstance);
   }
 }
 
@@ -386,7 +386,7 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
           case PA_CONF_PROP_SET: configurePropSet(*pAction->pPropSet, pAction->apcName); break;
           case PA_LOAD_PROP_SET: loadPropSet(*(GCFExtPropertySet*)pAction->pPropSet); break;
           case PA_UNLOAD_PROP_SET: unloadPropSet(*(GCFExtPropertySet*)pAction->pPropSet); break;
-          default: assert(0);
+          default: ASSERT(0);
         }
       }
       break;
@@ -540,7 +540,7 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
            iter != _extPropertySets.end(); ++iter)
       {
         pPropertySet = *iter;
-        assert(pPropertySet);
+        ASSERT(pPropertySet);
         fullScope = pPropertySet->getScope();
         if (fullScope.find(':') >= fullScope.length())
         {

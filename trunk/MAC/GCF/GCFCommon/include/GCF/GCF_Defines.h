@@ -34,8 +34,6 @@ using std::list;
 using std::map;
 using std::vector;
 
-#include <assert.h>
-
 namespace LOFAR 
 {
  namespace GCF 

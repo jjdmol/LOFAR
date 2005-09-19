@@ -58,7 +58,7 @@ GPMRTController* GPMRTController::instance(bool temporary)
   if (0 == GPMRTHandler::_pInstance)
   {    
     GPMRTHandler::_pInstance = new GPMRTHandler();
-    assert(!GPMRTHandler::_pInstance->mayDeleted());
+    ASSERT(!GPMRTHandler::_pInstance->mayDeleted());
     GPMRTHandler::_pInstance->_controller.start();
   }
   if (!temporary) GPMRTHandler::_pInstance->use();
@@ -67,13 +67,13 @@ GPMRTController* GPMRTController::instance(bool temporary)
 
 void GPMRTController::release()
 {
-  assert(GPMRTHandler::_pInstance);
-  assert(!GPMRTHandler::_pInstance->mayDeleted());
+  ASSERT(GPMRTHandler::_pInstance);
+  ASSERT(!GPMRTHandler::_pInstance->mayDeleted());
   GPMRTHandler::_pInstance->leave(); 
   if (GPMRTHandler::_pInstance->mayDeleted())
   {
     delete GPMRTHandler::_pInstance;
-    assert(!GPMRTHandler::_pInstance);
+    ASSERT(!GPMRTHandler::_pInstance);
   }
 }
 
@@ -234,7 +234,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
            iter != _myPropertySets.end(); ++iter)
       {
         pPropertySet = iter->second;
-        assert(pPropertySet);
+        ASSERT(pPropertySet);
         regRequest.seqnr = registerAction(*pPropertySet);
         regRequest.scope = iter->first;
         regRequest.type = pPropertySet->getType();
@@ -331,7 +331,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       GCFRTMyPropertySet* pPropertySet = _myPropertySets[scope];
       if (pPropertySet)
       {
-        assert(indicationIn.value._pValue);
+        ASSERT(indicationIn.value._pValue);
         pPropertySet->valueChanged(indicationIn.name, *indicationIn.value._pValue);
       }
       else

@@ -86,7 +86,7 @@ bool GPAPropertySet::enable(PARegisterScopeEvent& request)
     case S_DISABLED:
     {
       _state = S_ENABLING;
-      assert(_psClients.size() == 0);
+      ASSERT(_psClients.size() == 0);
       _name = request.scope;
       _type = request.type;
       _category = request.category;
@@ -167,7 +167,7 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
            iter != _psClients.end(); ++iter)
       {
         pPSClientPort = iter->pPSClientPort;
-        assert(pPSClientPort);
+        ASSERT(pPSClientPort);
         
         if (pPSClientPort->isConnected())
         {          
@@ -252,7 +252,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
     case S_ENABLED:
     {            
       _state = S_LINKING;
-      assert(_usecount == 0);
+      ASSERT(_usecount == 0);
       if (_category == PS_CAT_TEMPORARY)
       {
         LOG_INFO("Prop. set must be created");
@@ -285,7 +285,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
         // is 0 the requestor can be deleted from the list. Then the requestor
         // not needed to be and also will not be informed about disabling the 
         // property set.
-        assert(_psClients.size() == 0);
+        ASSERT(_psClients.size() == 0);
         TPSClient psClient;
         psClient.pPSClientPort = &p;
         psClient.count = 1;
@@ -303,7 +303,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
     }
     case S_LINKED:
     {
-      assert(GCFPVSSInfo::propExists(_name));
+      ASSERT(GCFPVSSInfo::propExists(_name));
       TPSClient* pPSClient = findClient(p);
       if (pPSClient)
       {
@@ -333,7 +333,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
 
 void GPAPropertySet::link()
 {
-  assert(GCFPVSSInfo::propExists(_name));
+  ASSERT(GCFPVSSInfo::propExists(_name));
   if (_serverPort.isConnected())
   {
     LOG_INFO(formatString(
@@ -556,7 +556,7 @@ void GPAPropertySet::dpeSubscriptionLost(const string& /*dpName*/)
 
 void GPAPropertySet::clientGone(GCFPortInterface& p)
 {
-  assert (&p != &_serverPort);
+  ASSERT (&p != &_serverPort);
   // This means that all load requests of client 'p' have to be undone.
   // So pretend a unload request is received
   TPSClient* pPSClient = findClient(p);
@@ -581,7 +581,7 @@ void GPAPropertySet::dpCreated(const string& dpName)
   {
     case S_ENABLING:
     {
-      assert(dpName.find(_name + "__enabled") < dpName.length());
+      ASSERT(dpName.find(_name + "__enabled") < dpName.length());
       
       string enabledDPContent = PS_CAT_NAMES[_category];
       enabledDPContent += '|';
@@ -616,7 +616,7 @@ void GPAPropertySet::dpCreated(const string& dpName)
       break;
     }
     case S_LINKING:
-      assert(dpName.find(_name) < dpName.length());
+      ASSERT(dpName.find(_name) < dpName.length());
       link();
       break;
     default:

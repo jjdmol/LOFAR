@@ -75,7 +75,7 @@ GCFMyPropertySet::~GCFMyPropertySet ()
     // delete this set from the controller permanent
     // this means no response will be send to this object
     // on response of the PA
-    assert(_pController);
+    ASSERT(_pController);
     _pController->unregisterScope(*this); 
   }
 }
@@ -100,7 +100,7 @@ TGCFResult GCFMyPropertySet::enable ()
   }
   else
   {
-    assert(_pController);
+    ASSERT(_pController);
     TPMResult pmResult = _pController->registerScope(*this);
     
     if (pmResult == PM_NO_ERROR)
@@ -129,7 +129,7 @@ TGCFResult GCFMyPropertySet::disable ()
   switch (_state)
   {
     case S_LINKING:
-      assert(_counter > 0);
+      ASSERT(_counter > 0);
       _state = S_DELAYED_DISABLING;
       break;
     case S_LINKED:
@@ -138,7 +138,7 @@ TGCFResult GCFMyPropertySet::disable ()
            iter != _properties.end(); ++iter)
       {
         pProperty = (GCFMyProperty*)(iter->second);
-        assert(pProperty);
+        ASSERT(pProperty);
         if (pProperty->isMonitoringOn())
         {
           pProperty->unlink();
@@ -148,9 +148,9 @@ TGCFResult GCFMyPropertySet::disable ()
     case S_ENABLED:
     {
   
-      assert(_pController);
+      ASSERT(_pController);
       TPMResult pmResult = _pController->unregisterScope(*this);
-      assert(pmResult == PM_NO_ERROR);  
+      ASSERT(pmResult == PM_NO_ERROR);  
       
       _state = S_DISABLING;
       
@@ -193,7 +193,7 @@ GCFPValue* GCFMyPropertySet::getOldValue (const string propName)
 void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 {
   LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  assert(_state == S_ENABLING);
+  ASSERT(_state == S_ENABLING);
   LOG_INFO(LOFAR::formatString ( 
       "PA-RESP: Property set '%s' is enabled%s",
       getScope().c_str(), 
@@ -213,7 +213,7 @@ void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
 {
   LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  assert(_state == S_DISABLING);
+  ASSERT(_state == S_DISABLING);
    
   LOG_INFO(LOFAR::formatString ( 
       "Property set '%s' is disabled%s",
@@ -228,7 +228,7 @@ bool GCFMyPropertySet::linkProperties()
 {
   LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   bool successful(true);
-  assert(_pController);
+  ASSERT(_pController);
   switch (_state)
   {
     case S_DISABLED:
@@ -237,7 +237,7 @@ bool GCFMyPropertySet::linkProperties()
       break;
       
     case S_ENABLED:
-      assert(_counter == 0);
+      ASSERT(_counter == 0);
       _missing = 0;
       _state = S_LINKING;
       successful = tryLinking();
@@ -255,7 +255,7 @@ bool GCFMyPropertySet::tryLinking()
 {
   LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
   bool successful(true);
-  assert(_pController);
+  ASSERT(_pController);
   switch (_state)
   {
     case S_DELAYED_DISABLING:
@@ -277,7 +277,7 @@ bool GCFMyPropertySet::tryLinking()
           iter != _properties.end(); ++iter)
       {
         pProperty = (GCFMyProperty*) iter->second;
-        assert(pProperty);
+        ASSERT(pProperty);
         if (pProperty->exists())
         {
                  
@@ -335,7 +335,7 @@ void GCFMyPropertySet::linked (GCFMyProperty& prop)
   _counter--;
   if (_counter == 0)
   {
-    assert(_pController);
+    ASSERT(_pController);
     switch (_state)
     {
       case S_DELAYED_DISABLING:
@@ -379,7 +379,7 @@ void GCFMyPropertySet::linked (GCFMyProperty& prop)
 void GCFMyPropertySet::unlinkProperties()
 {
   LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  assert(_pController);
+  ASSERT(_pController);
   switch (_state)
   {
     case S_DISABLED:
@@ -415,7 +415,7 @@ void GCFMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
       iter != _properties.end(); ++iter)
   {
     pProperty = (GCFMyProperty*) iter->second;
-    assert(pProperty);
+    ASSERT(pProperty);
     pProperty->setAccessMode(mode, on);    
   }
 }
