@@ -70,7 +70,7 @@ CalServer::CalServer(string name, ACCs& accs)
 #endif
 
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
-  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, CAL_PROTOCOL);
+  m_acceptor.init(*this, "acceptor_v2", GCFPortInterface::MSPP, CAL_PROTOCOL);
 }
 
 CalServer::~CalServer()

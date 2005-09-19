@@ -5,7 +5,7 @@
 #
 # CalServer task configuration
 #
-mac.ns.CalServer.acceptor.type=TCP
+mac.ns.CalServer.acceptor_v2.type=TCP
 
 #
 # Define dimensions of the ACC array
@@ -45,4 +45,4 @@ CalServer.WriteACCToFile=1
 # ACMProxy task configuration
 #
 mac.ns.ACMProxy.rspdriver.type=TCP
-mac.top.ACMProxy.rspdriver.remoteservice=RSPDriver:noacceptor
+mac.top.ACMProxy.rspdriver.remoteservice=RSPDriver:acceptor_v2

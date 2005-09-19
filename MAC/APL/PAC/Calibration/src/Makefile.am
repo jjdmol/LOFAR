@@ -1,5 +1,4 @@
 
-
 AM_CPPFLAGS = -DUSE_CAL_THREAD
 
 #-fmessage-length=0 // needed for Eclipse
@@ -106,18 +105,23 @@ CalServer_SOURCES = \
 
 CalServer_LDADD = \
 	$(top_builddir)/src/libcal.la \
-	$(top_builddir)/src/libcaldevel.la \
-	-lrtccommon
+	$(top_builddir)/src/libcaldevel.la
+
+#	-lrtccommon
 
 juggle_acc_SOURCES = \
 	juggle_acc.cc
 
 CalServer_DEPEND = $(LOFAR_DEPEND)
+
 #	libcal.la \
 #	libcaldevel.la \
 #	librtccommon.la
 
 #	-lrsp
+
+bin_SCRIPTS = \
+	calserver
 
 clean-local:
 	rm -f *.ph
