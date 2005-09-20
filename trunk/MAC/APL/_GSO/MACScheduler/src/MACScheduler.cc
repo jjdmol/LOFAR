@@ -717,8 +717,9 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
   }
 }
 
-bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps)
+bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
 {
+  LOG_DEBUG(formatString("Allocating beamlets for VI:%s",VIrootID.c_str()));
   bool allocationOk(false);
   
   try
@@ -730,18 +731,20 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
     vector<int16> subbandsVector;
     map<string,string> station2vtKeyMap;
 
-    childKeys         = ps->getStringVector("childs");
-    subbandsVector    = ps->getInt16Vector("subbands");
-    time_t startTime  = ps->getInt32("claimTime");
-    time_t stopTime   = ps->getInt32("stopTime");
+    boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(prefix + string("."))));
+
+    childKeys         = psVI->getStringVector("childs");
+    subbandsVector    = psVI->getInt16Vector("subbands");
+    time_t startTime  = psVI->getInt32("claimTime");
+    time_t stopTime   = psVI->getInt32("stopTime");
     
     for(vector<string>::iterator childsIt=childKeys.begin();childsIt!=childKeys.end();++childsIt)
     {
-      string ldTypeString = ps->getString(*childsIt + ".logicalDeviceType");
+      string ldTypeString = psVI->getString(*childsIt + ".logicalDeviceType");
       TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
       if(ldType == LDTYPE_VIRTUALTELESCOPE)
       {
-        string station = ps->getString(*childsIt + ".remoteSystem");
+        string station = psVI->getString(*childsIt + ".remoteSystem");
         stations.push_back(station);
         station2vtKeyMap[station] = *childsIt;
       }
@@ -767,10 +770,11 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
         map<string,string>::iterator keyIt = station2vtKeyMap.find(allocIt->first);
         if(keyIt != station2vtKeyMap.end())
         {
+          LOG_DEBUG(formatString("writing beamlet allocation on station %s to %s",allocIt->first.c_str(),keyIt->second.c_str()));
           string beamlets;
           APLUtilities::vector2String(allocIt->second,beamlets,',');
           beamlets = string("[") + beamlets + string("]");
-          ps->replace(keyIt->second + string(".beamlets"),beamlets);
+          ps->replace(prefix + string(".") + keyIt->second + string(".beamlets"), beamlets);
         }
       }
     }
@@ -825,9 +829,9 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
       TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
       if(ldType == LDTYPE_VIRTUALINSTRUMENT)
       {
-        boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(*childsIt + string("."))));
+	//        boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(*childsIt + string("."))));
         // allocate beamlets for VI's
-        beamletsAllocated = _allocateBeamlets(VIrootID,psVI);
+        beamletsAllocated = _allocateBeamlets(VIrootID, ps, *childsIt);
         if(!beamletsAllocated)
         {
           SASResponseEvent sasResponseEvent;
