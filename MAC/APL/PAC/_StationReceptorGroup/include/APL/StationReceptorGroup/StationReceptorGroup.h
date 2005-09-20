@@ -127,6 +127,7 @@ namespace ASR
     protected:    
 
     private:
+      bool _isCALclientPort(GCF::TM::GCFPortInterface& port) const;
       void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);
       int getRCUHardwareNr(const string& property);
       bool rcuPropsAvailable();
