@@ -55,15 +55,8 @@ namespace LOFAR
 	     const char* pass = env->GetStringUTFChars(passwd, 0);
 	     const char* db = env->GetStringUTFChars(database, 0);
 	     
-	     cout << user << ' ' << pass << ' ' << db << endl;
-	     
 	     //OTDBconn = new OTDBconnection((const string&)user, (const string&)pass, (const string&)db);
 	     OTDBconn = new OTDBconnection((const string&)"paulus", (const string&)"boskabouter", (const string&)"otdbtest");
-	     
-	     if (OTDBconn->connect() == false)
-	       {
-		  cout << "connection faiiileed" << endl;
-	       }
 	     
 	     env->ReleaseStringUTFChars(username, user);
 	     env->ReleaseStringUTFChars(passwd, pass);
