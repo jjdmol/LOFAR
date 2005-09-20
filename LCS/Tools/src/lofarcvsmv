@@ -58,8 +58,8 @@
 #=============================================================================
 
   # The "cvs MOVE" command will be executed on the cvs server.
-  REMOTE_CMD="ssh -q cvs@dop50.astron.nl cvs" ###
-  #  REMOTE_CMD="ssh -q cvsmgr@cvs.astron.nl cvs"
+  ##REMOTE_CMD="ssh -q cvs@dop50.astron.nl cvs" ###
+  REMOTE_CMD="ssh -q cvs@cvs.astron.nl cvs"
 
   SOURCES=
   DESTINATION=
