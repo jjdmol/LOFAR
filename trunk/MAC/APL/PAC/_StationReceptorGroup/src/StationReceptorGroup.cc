@@ -76,6 +76,8 @@ StationReceptorGroup::StationReceptorGroup(const string& taskName,
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
+  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
+
   GCF::ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
 
   m_n_racks               = GCF::ParameterSet::instance()->getInt(PARAM_N_RACKS);
@@ -94,6 +96,11 @@ StationReceptorGroup::StationReceptorGroup(const string& taskName,
 StationReceptorGroup::~StationReceptorGroup()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+}
+
+bool StationReceptorGroup::_isCALclientPort(GCFPortInterface& port) const
+{
+  return (&port == &m_CALclient); // comparing two pointers. yuck?
 }
 
 void StationReceptorGroup::getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr)
@@ -314,19 +321,25 @@ GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event,
     
     case F_CONNECTED:
     {
-      LOG_DEBUG(formatString("port '%s' connected", p.getName().c_str()));
-      if (p.isConnected())
+      if(_isCALclientPort(p))
       {
-        m_rcusPropertiesAvailableTimer = p.setTimer((long)1); // wait a second before checking if all status properties are available
+        LOG_DEBUG(formatString("port '%s' connected", p.getName().c_str()));
+        if (p.isConnected())
+        {
+          m_rcusPropertiesAvailableTimer = p.setTimer((long)1); // wait a second before checking if all status properties are available
+        }
       }
       break;
     }
     
     case F_DISCONNECTED:
     {
-      m_connectTimer = m_CALclient.setTimer((long)3); // try again in 3 seconds
-      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", p.getName().c_str()));
-      m_CALclient.close();
+      if(_isCALclientPort(p))
+      {
+        m_connectTimer = m_CALclient.setTimer((long)3); // try again in 3 seconds
+        LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", p.getName().c_str()));
+        m_CALclient.close();
+      }
       break;
     }
 
@@ -353,8 +366,11 @@ GCFEvent::TResult StationReceptorGroup::concrete_claimed_state(GCFEvent& event, 
     
     case F_DISCONNECTED:
     {
-      LOG_ERROR(formatString("port '%s' disconnected", p.getName().c_str()));
-      newState=LOGICALDEVICE_STATE_CLAIMING;
+      if(_isCALclientPort(p))
+      {
+        LOG_ERROR(formatString("port '%s' disconnected", p.getName().c_str()));
+        newState=LOGICALDEVICE_STATE_CLAIMING;
+      }
       break;
     }
     
@@ -391,8 +407,11 @@ GCFEvent::TResult StationReceptorGroup::concrete_preparing_state(GCFEvent& event
 
     case F_DISCONNECTED:
     {
-      LOG_ERROR(formatString("port '%s' disconnected", p.getName().c_str()));
-      newState=LOGICALDEVICE_STATE_CLAIMING;
+      if(_isCALclientPort(p))
+      {
+        LOG_ERROR(formatString("port '%s' disconnected", p.getName().c_str()));
+        newState=LOGICALDEVICE_STATE_CLAIMING;
+      }
       break;
     }
     
@@ -418,8 +437,11 @@ GCFEvent::TResult StationReceptorGroup::concrete_active_state(GCFEvent& event, G
           
     case F_DISCONNECTED:
     {
-      LOG_ERROR(formatString("port '%s' disconnected", p.getName().c_str()));
-      _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+      if(_isCALclientPort(p))
+      {
+        LOG_ERROR(formatString("port '%s' disconnected", p.getName().c_str()));
+        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+      }
       break;
     }
     
@@ -444,6 +466,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_releasing_state(GCFEvent& event
       {
         LOG_FATAL(formatString("Unable to stop calibration for SRG %s: %d",ack.name.c_str(),ack.status));
       }
+      newState=LOGICALDEVICE_STATE_GOINGDOWN;
       break;
     }
 
@@ -452,7 +475,6 @@ GCFEvent::TResult StationReceptorGroup::concrete_releasing_state(GCFEvent& event
       break;
   }
   
-  newState=LOGICALDEVICE_STATE_GOINGDOWN;
   return status;
 }
 
