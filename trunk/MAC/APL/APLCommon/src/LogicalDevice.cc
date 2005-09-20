@@ -810,7 +810,7 @@ bool LogicalDevice::_childsInState(const double requiredPercentage, const TLogic
       TString2LDStateMap::iterator statesIt = m_childStates.find(typesIt->first);
       if(statesIt != m_childStates.end())
       {
-        LOG_DEBUG(formatString("%s is in state %d",typesIt->first.c_str(),statesIt->second));
+        LOG_DEBUG(formatString("%s is in state %s",typesIt->first.c_str(),_state2String(statesIt->second).c_str()));
         if(statesIt->second == state)
         {
           ldsInState += 1.0;
@@ -842,7 +842,7 @@ bool LogicalDevice::_childsNotInState(const double requiredPercentage, const TLo
       TString2LDStateMap::iterator statesIt = m_childStates.find(typesIt->first);
       if(statesIt != m_childStates.end())
       {
-        LOG_DEBUG(formatString("%s is in state %d",typesIt->first.c_str(),statesIt->second));
+        LOG_DEBUG(formatString("%s is in state %d",typesIt->first.c_str(),_state2String(statesIt->second).c_str()));
         if(statesIt->second != state)
         {
           ldsNotInState += 1.0;
@@ -942,6 +942,47 @@ void LogicalDevice::_doStateTransition(const TLogicalDeviceState& newState, cons
       // no transition
       break;
   }
+}
+
+string LogicalDevice::_state2String(const TLogicalDeviceState& state)
+{
+  string stateString("unknown");
+  switch(state)
+  {
+    case LOGICALDEVICE_STATE_DISABLED:
+      stateString = LD_STATE_STRING_DISABLED;
+      break;
+    case LOGICALDEVICE_STATE_INITIAL:
+      stateString = LD_STATE_STRING_INITIAL;
+      break;
+    case LOGICALDEVICE_STATE_IDLE:
+      stateString = LD_STATE_STRING_IDLE;
+      break;
+    case LOGICALDEVICE_STATE_CLAIMING:
+      stateString = LD_STATE_STRING_CLAIMING;
+      break;
+    case LOGICALDEVICE_STATE_CLAIMED:
+      stateString = LD_STATE_STRING_CLAIMED;
+      break;
+    case LOGICALDEVICE_STATE_PREPARING:
+      stateString = LD_STATE_STRING_PREPARING;
+      break;
+    case LOGICALDEVICE_STATE_SUSPENDED:
+      stateString = LD_STATE_STRING_SUSPENDED;
+      break;
+    case LOGICALDEVICE_STATE_ACTIVE:
+      stateString = LD_STATE_STRING_ACTIVE;
+      break;
+    case LOGICALDEVICE_STATE_RELEASING:
+      stateString = LD_STATE_STRING_RELEASING;
+      break;
+    case LOGICALDEVICE_STATE_GOINGDOWN:
+      stateString = LD_STATE_STRING_GOINGDOWN;
+      break;
+  default:
+      break;
+  }
+  return stateString;
 }
 
 void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
@@ -2192,6 +2233,7 @@ GCFEvent::TResult LogicalDevice::goingdown_state(GCFEvent& event, GCFPortInterfa
     }
   
     case F_DISCONNECTED:
+      port.close();
       break;
 
     case F_TIMER:

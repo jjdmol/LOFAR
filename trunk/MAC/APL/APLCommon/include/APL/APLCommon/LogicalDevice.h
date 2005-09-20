@@ -189,6 +189,7 @@ namespace APLCommon
       bool _isAPCLoaded() const;
       void _apcLoaded();
       void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      string _state2String(const TLogicalDeviceState& state);
       void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       void _handleServerConnected();
       vector<string> _getChildKeys();
