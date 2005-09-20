@@ -1,0 +1,268 @@
+###########################
+# Observation
+###########################
+versionnr=1.0
+qualification=development
+allocatedCCU=lofar26.astron.nl
+name=VIroot1
+parentHost=lofar26.astron.nl
+parentPort=27100
+parentTask=MACScheduler
+propertysetBaseName=VIC_VIroot1
+propertysetDetailsType=TAplVicVI
+claimTime=+20
+prepareTime=+40
+startTime=+115
+stopTime=+10915
+childs=[AO1,ARG1,VI1]
+
+###########################
+# Array Operations
+###########################
+AO1.versionnr=1.0
+AO1.qualification=development
+AO1.allocatedCCU=lofar26.astron.nl
+AO1.logicalDeviceType=ARRAYOPERATIONS
+AO1.parentHost=lofar26.astron.nl
+AO1.parentPort=0
+AO1.parentTask=VIroot1
+SO1.startDaemonHost=lofar26.astron.nl
+AO1.startDaemonPort=0
+AO1.startDaemonTask=VIC_VIStationStartDaemon
+AO1.propertysetBaseName=VIC_AO1
+AO1.propertysetDetailsType=TLcuVicAO
+AO1.claimTime=+20
+AO1.prepareTime=+40
+AO1.startTime=+115
+AO1.stopTime=+10915
+AO1.childs=SO1,SO2
+
+###########################
+# Station Operations
+###########################
+SO1.versionnr=1.0
+SO1.qualification=development
+SO1.logicalDeviceType=STATIONOPERATIONS
+SO1.parentHost=lofar26.astron.nl
+SO1.parentPort=0
+SO1.parentTask=AO1
+SO1.remoteSystem=STSLCU1
+SO1.startDaemonHost=lofar28.astron.nl
+SO1.startDaemonPort=0
+SO1.startDaemonTask=PAC_StationStartDaemon
+SO1.propertysetBaseName=PAC_SO1
+SO1.propertysetDetailsType=TLcuPacSO
+SO1.claimTime=+20
+SO1.prepareTime=+40
+SO1.startTime=+115
+SO1.stopTime=+10915
+SO1.childs=
+SO1.samplingFrequency=160.0
+
+###########################
+# Station Operations
+###########################
+SO2.versionnr=1.0
+SO2.qualification=development
+SO2.logicalDeviceType=STATIONOPERATIONS
+SO2.parentHost=lofar26.astron.nl
+SO2.parentPort=0
+SO2.parentTask=AO1
+SO2.remoteSystem=STSLCU2
+SO2.startDaemonHost=lofar29.astron.nl
+SO2.startDaemonPort=0
+SO2.startDaemonTask=PAC_StationStartDaemon
+SO2.propertysetBaseName=PAC_SO2
+SO2.propertysetDetailsType=TLcuPacSO
+SO2.claimTime=+20
+SO2.prepareTime=+40
+SO2.startTime=+115
+SO2.stopTime=+10915
+SO2.childs=
+SO2.samplingFrequency=160.0
+
+###########################
+# Array Receptor Group
+###########################
+ARG1.versionnr=1.0
+ARG1.qualification=development
+ARG1.allocatedCCU=lofar26.astron.nl
+ARG1.logicalDeviceType=ARRAYRECEPTORGROUP
+ARG1.parentHost=lofar26.astron.nl
+ARG1.parentPort=0
+ARG1.parentTask=VIroot1
+ARG1.startDaemonHost=lofar26.astron.nl
+ARG1.startDaemonPort=0
+ARG1.startDaemonTask=VIC_VIStationStartDaemon
+ARG1.propertysetBaseName=VIC_ARG1
+ARG1.propertysetDetailsType=TLcuVicARG
+ARG1.claimTime=+20
+ARG1.prepareTime=+40
+ARG1.startTime=+115
+ARG1.stopTime=+10915
+ARG1.childs=SRG1,SRG2
+
+###########################
+# Station Receptor Group
+###########################
+SRG1.versionnr=1.0
+SRG1.qualification=development
+SRG1.logicalDeviceType=STATIONRECEPTORGROUP
+SRG1.parentHost=lofar26.astron.nl
+SRG1.parentPort=0
+SRG1.parentTask=ARG1
+SRG1.remoteSystem=STSLCU1
+SRG1.startDaemonHost=lofar28.astron.nl
+SRG1.startDaemonPort=0
+SRG1.startDaemonTask=PAC_StationStartDaemon
+SRG1.propertysetBaseName=PAC_SRG1
+SRG1.propertysetDetailsType=TLcuPacSRG
+SRG1.claimTime=+20
+SRG1.prepareTime=+40
+SRG1.startTime=+115
+SRG1.stopTime=+10915
+SRG1.childs=
+SRG1.frequencyTimes=[+0,+90]
+SRG1.frequency=[110.0,130.0]
+
+###########################
+# Station Receptor Group
+###########################
+SRG2.versionnr=1.0
+SRG2.qualification=development
+SRG2.logicalDeviceType=STATIONRECEPTORGROUP
+SRG2.parentHost=lofar26.astron.nl
+SRG2.parentPort=0
+SRG2.parentTask=ARG1
+SRG2.remoteSystem=STSLCU1
+SRG2.startDaemonHost=lofar29.astron.nl
+SRG2.startDaemonPort=0
+SRG2.startDaemonTask=PAC_StationStartDaemon
+SRG2.propertysetBaseName=PAC_SRG2
+SRG2.propertysetDetailsType=TLcuPacSRG
+SRG2.claimTime=+20
+SRG2.prepareTime=+40
+SRG2.startTime=+115
+SRG2.stopTime=+10915
+SRG2.childs=
+SRG2.frequencyTimes=[+0,+90]
+SRG2.frequency=[110.0,130.0]
+
+###########################
+# Virtual Instrument      
+###########################
+VI1.versionnr=1.0
+VI1.qualification=development
+VI1.allocatedCCU=lofar26.astron.nl
+VI1.logicalDeviceType=VIRTUALINSTRUMENT
+VI1.parentHost=lofar26.astron.nl
+VI1.parentPort=0
+VI1.parentTask=VIroot1
+VI1.startDaemonHost=lofar26.astron.nl
+VI1.startDaemonPort=0
+VI1.startDaemonTask=VIC_VIStationStartDaemon
+VI1.propertysetBaseName=VIC_VI1
+VI1.propertysetDetailsType=TAplVicVI
+VI1.claimTime=+20
+VI1.prepareTime=+40
+VI1.startTime=+115
+VI1.stopTime=+10915
+VI1.subbandTimes=
+VI1.subbands=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+VI1.childs=[VT1,VT2,VB1]
+
+###########################
+# Virtual Telescope
+###########################
+VT1.versionnr=1.0
+VT1.qualification=development
+VT1.logicalDeviceType=VIRTUALTELESCOPE
+VT1.parentHost=lofar26.astron.nl
+VT1.parentPort=0
+VT1.parentTask=VI1
+VT1.remoteSystem=STSLCU1
+VT1.startDaemonHost=lofar28.astron.nl
+VT1.startDaemonPort=0
+VT1.startDaemonTask=PAC_StationStartDaemon
+VT1.propertysetBaseName=PAC_VT1
+VT1.propertysetDetailsType=TLcuPacVT
+VT1.claimTime=+20
+VT1.prepareTime=+40
+VT1.startTime=+115
+VT1.stopTime=+10915
+VT1.childs=
+VT1.directionType=AZEL
+VT1.angleTimes=[+0,+60,+120,+180]
+VT1.angle1=[0.0,0.45,0.20,0.30]
+VT1.angle2=[0.0,0.0,0.0,0.0]
+
+###########################
+# Virtual Telescope
+###########################
+VT2.versionnr=1.0
+VT2.qualification=development
+VT2.logicalDeviceType=VIRTUALTELESCOPE
+VT2.parentHost=lofar26.astron.nl
+VT2.parentPort=0
+VT2.parentTask=VI2
+VT2.remoteSystem=STSLCU2
+VT2.startDaemonHost=lofar29.astron.nl
+VT2.startDaemonPort=0
+VT2.startDaemonTask=PAC_StationStartDaemon
+VT2.propertysetBaseName=PAC_VT2
+VT2.propertysetDetailsType=TLcuPacVT
+VT2.claimTime=+20
+VT2.prepareTime=+40
+VT2.startTime=+115
+VT2.stopTime=+10915
+VT2.childs=
+VT2.directionType=AZEL
+VT2.angleTimes=[+0,+60,+120,+180]
+VT2.angle1=[0.0,0.45,0.20,0.30]
+VT2.angle2=[0.0,0.0,0.0,0.0]
+
+###########################
+# Virtual Backend
+###########################
+VB1.versionnr=1.0
+VB1.AC.versionnr=1.0
+VB1.qualification=development
+VB1.logicalDeviceType=VIRTUALBACKEND
+VB1.parentHost=lofar26.astron.nl
+VB1.parentPort=0
+VB1.parentTask=VI1
+VB1.remoteSystem=CEPLCU1
+VB1.startDaemonHost=lofar30.astron.nl
+VB1.startDaemonPort=27010
+VB1.startDaemonTask=PAC_VBStartDaemon
+VB1.propertysetBaseName=PAC_VB1
+VB1.propertysetDetailsType=TAplPacVB
+VB1.claimTime=+20
+VB1.prepareTime=+40
+VB1.startTime=+115
+VB1.stopTime=+10915
+VB1.childs=
+
+VB1.rescheduleTimeOut=20
+
+VB1.AC.process[0].count=1
+VB1.AC.process[1].ID = SCDproc(10)
+
+# metadata about a proces
+VB1.AC.SCDproc[0].startstoptype = mpirun
+VB1.AC.SCDproc[0].executable    = /data/zwart/SCDemo/StationCorrelator.emu
+VB1.AC.SCDproc[0].versionnr     = 0.0.1
+
+
+# Process related parameters
+VB1.AC.SCDproc[1].node               = lofar8
+VB1.AC.SCDproc[2].node               = lofar4
+VB1.AC.SCDproc[3].node               = lofar5
+VB1.AC.SCDproc[4].node               = lofar4
+VB1.AC.SCDproc[5].node               = lofar5
+VB1.AC.SCDproc[6].node               = lofar6
+VB1.AC.SCDproc[7].node               = lofar6
+VB1.AC.SCDproc[8].node               = lofar7
+VB1.AC.SCDproc[9].node               = lofar7
+VB1.AC.SCDproc[10].node              = lofar8
+VB1.AC.SCDproc[0].APsOwnParam   = /data/zwart/SCDemo/TestRange.emu

@@ -1,0 +1,686 @@
+V 10
+1
+LANG:1 19 Trace configuration
+PANEL,398 334 710 349 N "_3DFace" 4
+"$PlotNr"
+"$configDatapoint"
+"$datapoint"
+"$selectedDP"
+EEE E E 1 -1 -1 0  190 250
+"" 0 1
+E"//Include of ctl file
+#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcf-common.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 77
+"Border11"
+""
+1 20 265 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+58 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 250 689 274
+6 39
+"progressBar_border"
+""
+1 20 232 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+30 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 226 690 244
+6 40
+"progressBar"
+""
+1 23 238 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 23 229 686 239
+6 52
+"Border1"
+""
+1 110 47 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 110 37 470 47
+6 53
+"Border6"
+""
+1 110 37 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+42 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 110 17 146 37
+2 54
+"Text5"
+""
+1 117 17 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 119 19 137 35
+0 2 0 "s" 0 0 0 192 0 0  119 19
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 DP
+4 55
+"Line1"
+""
+1 111 37 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  146 37 111 37
+6 56
+"Border7"
+""
+1 480 47 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 480 37 690 47
+6 57
+"Border8"
+""
+1 480 37 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 480 17 523 37
+2 58
+"Text6"
+""
+1 487 17 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 489 19 516 35
+0 2 0 "s" 0 0 0 192 0 0  489 19
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 DPE
+4 59
+"Line3"
+""
+1 481 37 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  523 37 481 37
+6 71
+"Border9"
+""
+1 20 47 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 37 100 47
+6 72
+"Border10"
+""
+1 20 37 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+55 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 17 81 37
+2 73
+"Text7"
+""
+1 27 17 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 29 19 74 35
+0 2 0 "s" 0 0 0 192 0 0  29 19
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 System
+4 74
+"Line2"
+""
+1 21 37 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  81 37 21 37
+2 76
+"Text8"
+""
+1 30 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 254 163 270
+0 2 0 "s" 0 0 0 66 0 0  32 254
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 Configured datapoint:
+2 79
+"Text9"
+""
+1 169 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+59 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect(\"showDpName\", $configDatapoint + \".\" + $PlotNr + \".dpName\");
+
+}
+
+showDpName(string dp1, string selectedDP)
+{
+  setValue(\"\",\"text\", selectedDP);
+}" 0
+ E 0 1 1 0 1 E U  0 E 171 254 183 270
+0 2 0 "s" 0 0 0 192 0 0  171 254
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+6 32
+"Border5"
+""
+1 20 287 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 272 289 297
+6 86
+"Border3"
+""
+1 20 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+65 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 295 289 319
+2 87
+"Text10"
+""
+1 30 297 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+66 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 299 163 315
+0 2 0 "s" 0 0 0 66 0 0  32 299
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 19 Used data filename:
+2 88
+"txt_datFilename"
+""
+1 169 297 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+67 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\",\"text\", \"output\"+$PlotNr+\".dat\");
+}
+
+" 0
+ E 0 1 1 0 1 E U  0 E 171 299 183 315
+0 2 0 "s" 0 0 0 192 0 0  171 299
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 ...
+2 89
+"Text12"
+""
+1 30 275 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 277 163 293
+0 2 0 "s" 0 0 0 66 0 0  32 277
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Plot active:
+2 90
+"txt_legendName"
+""
+1 460 310 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 312 530 328
+0 2 0 "s" 0 0 0 192 0 0  462 312
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 dummyText
+6 91
+"Border2"
+""
+1 180 380 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 180 370 471 380
+6 92
+"Border4"
+""
+1 180 370 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+69 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 180 350 240 370
+2 93
+"Text3"
+""
+1 187 350 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+70 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 189 352 233 368
+0 2 0 "s" 0 0 0 192 0 0  189 352
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Ranges
+4 94
+"Line4"
+""
+1 181 370 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+71 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  240 370 181 370
+13 37
+"btn_ok"
+""
+1 559 316 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 29 Apply changes and close panel
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+557 314 621 341
+T 
+1
+LANG:1 2 OK
+"main()
+{
+  navViewPlotApplyTraceSettings($PlotNr);
+}
+
+
+navViewPlotApplyTraceSettings(int PlotNumber)
+{
+  string datapoint;
+  bool plotActive;
+  string currentConfigDpName; //current configuration in the PVSS database
+  string selectedConfigDpName; //
+
+ 
+  //Apply the Setting Active if changed
+  dpGet($configDatapoint + \".\" + PlotNumber + \".active\", plotActive);
+  if(plotActive!=btn_Active.state(0))
+  {
+    dpSet($configDatapoint + \".\" + PlotNumber + \".active\", btn_Active.state(0));
+  }
+  
+  //Apply the Setting dpName if changed
+/*  string currentScriptFilename;
+  string selectedScriptFilename = txt_script.text;
+  dpGet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", currentScriptFilename);
+  if(currentScriptFilename!=selectedScriptFilename)
+  {
+    dpSet($configDatapoint + \".\" + PlotNumber + \".scriptFilename\", selectedScriptFilename);
+  }
+*/
+
+
+/////////////////////////////////////////////////////////////////////////
+/*
+  if(list_system.selectedText==getSystemName())
+  {
+    if(list_dp.selectedText==CURRENT_DP_MESSAGE) //CURRENT_DP_MESSAGE is global string \"Current selection in tree\"
+    {
+      selectedConfigDpName = $datapoint + \".\" +list_dpe.selectedText;
+    }
+    else
+    {
+      selectedConfigDpName = $datapoint + \"_\" + list_dp.selectedText + \".\" +list_dpe.selectedText;
+    }
+    strreplace(selectedConfigDpName, $datapoint, \"\");
+  }
+  else
+  {
+    selectedConfigDpName = list_system.selectedText + list_dp.selectedText + \".\" +list_dpe.selectedText;
+  }
+*/
+////////////////////////////////////////////////////////////////////////
+  string selectedConfigDpName;
+  if(\"\"!=list_dpe.selectedText)
+  {
+    if(list_system.selectedText==getSystemName())
+    {
+      if(list_dp.selectedText==CURRENT_DP_MESSAGE) //CURRENT_DP_MESSAGE is global string \"Current selection in tree\"
+      {
+        selectedConfigDpName = $datapoint + \".\" +list_dpe.selectedText;
+      }
+      else
+      {
+        selectedConfigDpName = $datapoint + \"_\" + list_dp.selectedText + \".\" +list_dpe.selectedText;
+      }
+      strreplace(selectedConfigDpName, $datapoint, \"\");
+    }
+    else
+    {
+      selectedConfigDpName = list_system.selectedText + list_dp.selectedText + \".\" +list_dpe.selectedText;
+    }
+    //Check whether the current selected dpName is different from the stored dpName
+    //Apply the Setting dpName if changed
+    dpGet($configDatapoint + \".\" + PlotNumber + \".dpName\", currentConfigDpName);
+    if(currentConfigDpName!=selectedConfigDpName)
+    {
+      dpSet($configDatapoint + \".\" + PlotNumber + \".dpName\", selectedConfigDpName);
+    }
+    //dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", currentDpName);
+    //if(currentDpName!=selectedConfigDpName)
+    //{
+    // dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", selectedConfigDpName);
+    //}
+    PanelOff();
+  }
+  else
+  {
+    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+  }
+
+////////////////////////////////////////////////////////////////////////  
+
+}" 0
+ E E E
+13 43
+"Button4"
+""
+1 629 316 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+33 0 0 0 0 0
+EE E
+0
+1
+LANG:1 30 Cancel changes and close panel
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+627 314 691 341
+T 
+1
+LANG:1 6 Cancel
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+1 67 1 "" 0
+0
+1 68 1 "" 1
+0
+1 69 1 "" 2
+0
+20 70
+"btn_Active"
+""
+1 182 274 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+180 272 197 296
+1
+T 
+1
+LANG:1 0 
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+"main()
+{
+  bool plotActive;
+  dpGet($configDatapoint + \".\" + $PlotNr + \".active\", plotActive);
+  DebugN(\"plotActive:\"+plotActive);
+  btn_Active.state(0) = plotActive;
+  
+  
+  
+/*  if (dpExists($dp))
+  {
+    bool state;
+    dpGet($dp + \":_online.._value\", state);  
+    btn_Active.state(0)=state;
+  }
+  else
+  {
+    btn_Active.enabled = FALSE;
+  }
+  
+  // Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }*/
+}" 0
+E0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 ""
+"objects\\nav_fw\\nav_SysDpDpeSelection.pnl" 141 201 T 52 1 0 1  -121 -151  
+2
+"$datapoint""$datapoint"
+"$selectedDP""$selectedDP"
+0

@@ -1,0 +1,333 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,465 341 620 141 N "_3DFace" 0
+EEE E E 1 -1 -1 0  -1 -1
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border1"
+""
+1 10 57 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 30 581 57
+2 1
+"Text1"
+""
+1 22 33 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 24 35 48 51
+0 2 0 "s" 0 0 0 192 0 0  24 35
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Title
+6 2
+"Border3"
+""
+1 10 82 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 55 581 82
+6 3
+"Border2"
+""
+1 10 132 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 105 203 132
+2 4
+"Text4"
+""
+1 21 58 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 23 60 114 76
+0 2 0 "s" 0 0 0 192 0 0  23 60
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Selected script:
+2 5
+"Text6"
+""
+1 21 109 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 23 111 103 127
+0 2 0 "s" 0 0 0 192 0 0  23 111
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Color partition
+6 6
+"Border5"
+""
+1 10 107 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 80 581 107
+2 7
+"Text5"
+""
+1 21 83 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 23 85 106 101
+0 2 0 "s" 0 0 0 192 0 0  23 85
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Configured DP
+6 8
+"Border30"
+""
+1 202 132 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 202 105 395 132
+2 9
+"Text23"
+""
+1 203 109 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 205 111 320 127
+0 2 0 "s" 0 0 0 192 0 0  205 111
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Timestamp(number)
+14 10
+"TextField3"
+""
+1 131 31 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 29 572 56
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", \"Spectrogram - antenna 12\");
+}" 0
+
+E
+14 11
+"TextField2"
+""
+1 131 56 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 54 572 81
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 12
+"TextField1"
+""
+1 131 81 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 79 572 106
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 13
+"btn_test"
+""
+1 131 107 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 105 201 132
+T 
+1
+LANG:1 6 Change
+E E E E
+14 14
+"TextField13"
+""
+1 327 107 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+325 105 393 132
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", \"512\");
+}" 0
+
+E
+13 16
+"Button1"
+""
+1 582 57 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+580 55 612 83
+P 
+13434828
+"pictures/nav_fw/icon_fileselector.bmp"
+1
+LANG:1 0 
+E E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

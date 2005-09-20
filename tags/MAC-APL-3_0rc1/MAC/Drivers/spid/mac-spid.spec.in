@@ -1,0 +1,199 @@
+# -*- Mode:rpm-spec -*-
+# mac-spid.spec.in
+#
+
+##############################################################################
+#
+# Preamble
+#
+##############################################################################
+
+Summary: This is the simple parallel port driver for the LOFAR ITS control software.
+
+%define release @RPM_RELEASE@
+%define version @VERSION@
+%define pkgname @PACKAGE@
+%define pkgdir %{pkgname}-%{version}-%{release}
+%define prefix /usr/local/spid
+#define configure_args @RPM_CONFIGURE_ARGS@
+%define build_kernel_version @BUILD_KERNEL_VERSION@
+
+Name: %{pkgname}
+Version: %{version}
+Release: %{release}
+Copyright: LGPL
+Group: Application/System
+Source: %{pkgname}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{pkgdir}-root
+URL: http://www.astron.nl
+Prefix: %{prefix}
+BuildArchitectures: i386 # Target platforms, i.e., i586
+Packager: %{packager}
+Distribution: The LOFAR project
+Vendor: ASTRON
+
+AutoReqProv: no
+
+%description
+
+mac-spid is a simple parallel port driver used in the LOFAR Initial
+Test Station (ITS) control software to drive the distributed clock
+board. A trigger is sent through the parallel port to the clock board
+which distributes it to the connected Twin Input Module (TIM) boards. 
+
+##############################################################################
+#
+# prep
+#
+##############################################################################
+%prep
+
+# create the build directory, untar the source
+%setup
+
+##############################################################################
+#
+# build
+#
+##############################################################################
+%build
+./configure --prefix=%{prefix} && make
+
+##############################################################################
+#
+# install
+#
+##############################################################################
+%install
+# To make things work with BUILDROOT
+if [ "$RPM_BUILD_ROOT" != "%{_tmppath}/%{pkgdir}-root" ]
+then
+  echo
+  echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  echo @                                                                    @
+  echo @  RPM_BUILD_ROOT is not what I expected.  Please clean it yourself. @
+  echo @                                                                    @
+  echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  echo
+else
+  echo Cleaning RPM_BUILD_ROOT: "$RPM_BUILD_ROOT"
+  rm -rf "$RPM_BUILD_ROOT"
+fi
+make DESTDIR="$RPM_BUILD_ROOT" install
+
+#uninstall
+
+##############################################################################
+#
+# verify
+#
+##############################################################################
+#verify
+
+##############################################################################
+#
+# clean
+#
+##############################################################################
+%clean
+# Call me paranoid, but I do not want to be responsible for nuking
+# someone's harddrive!
+if [ "$RPM_BUILD_ROOT" != "%{_tmppath}/%{pkgdir}-root" ]
+then
+  echo
+  echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  echo @                                                                    @
+  echo @  RPM_BUILD_ROOT is not what I expected.  Please clean it yourself. @
+  echo @                                                                    @
+  echo @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  echo
+else
+  echo Cleaning RPM_BUILD_ROOT: "$RPM_BUILD_ROOT"
+  rm -rf "$RPM_BUILD_ROOT"
+fi
+
+##############################################################################
+#
+# files
+#
+##############################################################################
+
+%files
+%defattr(-, root, root)
+%prefix
+
+# Your application file list goes here
+# %{prefix}/lib/lib*.so*
+%doc COPYING ChangeLog README AUTHORS NEWS
+#doc doc/*
+
+# link the module to the correct path
+%post 
+if [ "%{build_kernel_version}" != "`uname -r`" ]; then
+   echo ""
+   echo "Warning: RPM was built for kernel version %{build_kernel_version}."
+   echo "         Current system is running different kernel version `uname -r`".
+   echo "         The module is installed but may not load or work properly."
+fi
+
+if [ ! -d /lib/modules/`uname -r`/kernel/drivers/char/ ]; then
+	mkdir -p /lib/modules/`uname -r`/kernel/drivers/char
+fi
+ln -s %{prefix}/lib/modules/"%{build_kernel_version}"/kernel/drivers/char/spid.o \
+    /lib/modules/`uname -r`/kernel/drivers/char/spid.o
+depmod -a 
+
+module=spid
+device=spid
+group=users
+mode="664"
+
+# invoke insmod 
+/sbin/rmmod  $module
+/sbin/modprobe $module
+
+# remove stale nodes
+rm -f /dev/${device}?
+
+# get the current major number of the module
+major=`cat /proc/devices | awk "\\$2==\"$module\" {print \\$1}"`
+
+# create the char device(s)
+mknod /dev/${device}0 c $major 0
+
+# give appropriate file permissions
+
+chgrp $group /dev/${device}?
+chmod $mode  /dev/${device}?
+
+%preun
+
+%postun
+# unload the driver
+rmmod spid
+# Remove the symbolic link
+rm /lib/modules/`uname -r`/kernel/drivers/char/spid.o
+depmod -a
+
+# Remove the /dev entries
+rm -f /dev/spid0
+
+##############################################################################
+#
+# package devel
+#
+##############################################################################
+
+#package devel
+#Summary: Development files for %{pkgname}
+#Group: Applications/System
+#description devel
+#Development files for %{pkgname}.
+
+#files devel
+
+# Your development files go here
+# Programmers documentation goes here
+#doc doc
+
+# end of file

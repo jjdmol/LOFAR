@@ -1,0 +1,20 @@
+#
+# $Id$
+#
+include ..\..\config.nmake
+
+############### no need to modify below this line #########
+
+CFLAGS=/DHAVE_CONFIG_H /I../.. /I../../wiretap \
+	/I$(GLIB_DIR) /I$(GTK_DIR) /I$(GLIB_DIR)/gmodule \
+	/I$(GTK_DIR)\gdk /I$(GTK_DIR)\gdk\win32 \
+	/I$(PCAP_DIR)\include $(LOCAL_CFLAGS)
+
+OBJECTS=packet-epa.obj 
+
+epa.dll epa.exp epa.lib : packet-epa.obj ..\plugin_api.obj
+	link -dll /out:epa.dll packet-epa.obj ..\plugin_api.obj \
+	$(GLIB_DIR)\glib-$(GLIB_VERSION).lib
+
+clean:
+	rm -f $(OBJECTS) epa.dll epa.exp epa.lib

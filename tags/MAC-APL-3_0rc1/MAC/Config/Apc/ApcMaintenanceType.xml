@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<MaintenanceType>
+  <status>
+    <MACType>MACUnsigned</MACType>
+  </status>
+  <fromTime>
+    <MACType>MACUnsigned</MACType>
+  </fromTime>
+  <toTime>
+    <MACType>MACUnsigned</MACType>
+  </toTime>
+</MaintenanceType>

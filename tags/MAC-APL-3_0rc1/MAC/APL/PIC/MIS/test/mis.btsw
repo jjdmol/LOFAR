@@ -1,0 +1,412 @@
+//
+//  mis.btsw: Testscript for MIS.
+//
+//  Copyright (C) 2005
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+// ------------------------------------------------------------------------------
+// Description:
+//
+//
+//
+// ------------------------------------------------------------------------------
+
+[statemachines]
+
+Statemachine_MISClient (ready, updateValue) =
+{
+  s000 : CONNECTION_ESTABLISHED ; s001.
+  s001 : TIMER(5) 							; s010.  
+
+// ------------------------------------------------------------------------------
+// GENERIC
+
+	s010 : F_MIS_GENERIC_PINGPONG(0x0000000000000001,  // seqnr 1
+															  0x0000000000000003,  // replynr not set
+															  0x0000000000006666,  // ts.sec
+															  0x00000457, 				 // ts.nsec
+															  0x00000000)					 // tti
+																										 ; s011.
+																										 
+	s011 : E_MIS_GENERIC_PINGPONG(0x0000000000000001,  // seqnr 1
+															  0x0000000000000001,  // replynr 1
+															  ,  // ts.sec
+															  ,  // ts.nsec
+															  )	// tti
+																										 ; s012.
+	s011 : E_MIS_GENERIC_PINGPONG(,  // seqnr 1
+															  ,  // replynr 1
+															  ,  // ts.sec
+															  ,  // ts.nsec
+															  )	// tti
+																										 ; error.
+	
+	s012 : F_MIS_GENERIC_IDENTIFY_REQUEST( 0x0000000000000002, // seqnr : uint64,
+																				 0x0000000000000000, // replynr not use
+															  				 0x0000000000000000,  // ts.sec
+															  				 0x00000000	// ts.nsec
+																				)	; s013.
+
+  s013 : E_MIS_GENERIC_IDENTIFY_RESPONSE(, 									 // msgLength : t_B4,
+																				 0x0000000000000002, // seqnr : uint64,
+																				 0x0000000000000002, //	replynr : uint64,
+																				 , //	timestamp_sec : int64,
+																				 , // timestamp_nsec : uint32,
+																				 , // responseNOC : t_StringLen, 
+																				 , // response : t_String[responseNOC],
+																			   , //	node_idNOC : t_StringLen, 
+																				 , // node_id : t_String[node_idNOC],
+																				 , // sw_versionNOC : t_StringLen, 
+																				   // sw_version : t_String[sw_versionNOC]
+																				) ; s020.
+  																				
+  s013 : E_MIS_GENERIC_IDENTIFY_RESPONSE(, // msgLength : t_B4,
+																				 , // seqnr : uint64,
+																				 , //	replynr : uint64,
+																				 , //	timestamp_sec : int64,
+																				 , // timestamp_nsec : uint32,
+																				 , // responseNOC : t_StringLen, 
+																				 , // response : t_String[responseNOC],
+																			   , //	node_idNOC : t_StringLen, 
+																				 , // node_id : t_String[node_idNOC],
+																				 , // sw_versionNOC : t_StringLen, 
+																				   // sw_version : t_String[sw_versionNOC]
+																				) ; error.
+
+// ------------------------------------------------------------------------------
+// DIAGNOSIS
+
+	s020 : F_MIS_DIAGNOSIS_NOTIFICATION(0x00000050,	  				// msgLength : t_B4,
+																			0x0000000000000003,		// seqnr : uint64,
+																			0x0000000000000000,		// replynr : uint64,
+																			0x0000000000000000,		// timestamp_sec : int64,
+																			0x00000000,						// timestamp_nsec : uint32,
+																			0x0000000000000000,		// payload_timestamp_sec : int64,
+																			0x00000000,						// payload_timestamp_nsec : uint32,
+																			0x000C,								// componentNOC : t_StringLen, 
+																			"PIC_CEP_mars",				// component : t_String[componentNOC],
+																			0x0011,								// diagnosisNOC : t_StringLen, 
+																			"FAULTY (is stuck)",	// diagnosis : t_String[diagnosisNOC],
+																			0x012C,   						// confidence : uint16, == 300
+																			0x0003,								// diagnosis_idNOC : t_StringLen, 
+																			"url" 								// diagnosis_id : t_String[diagnosis_idNOC]
+																		 ) ; s021.
+
+  s021 : E_MIS_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
+																	0x0000000000000003,	// seqnr : uint64,
+																	0x0000000000000003,	// replynr : uint64,
+																	,										// timestamp_sec : int64,
+																	,										// timestamp_nsec : uint32,
+																	,										// responseNOC : t_StringLen, 
+																	"NAK (ignored by policy)"	// response : t_String[responseNOC]
+																	) ; s022.
+																		 																				
+  s022 : E_MIS_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
+																	,	// seqnr : uint64,
+																	,	// replynr : uint64,
+																	,	// timestamp_sec : int64,
+																	,	// timestamp_nsec : uint32,
+																	,	// responseNOC : t_StringLen, 
+																		// response : t_String[responseNOC]
+																	) ; error.
+
+	s022 : F_MIS_DIAGNOSIS_NOTIFICATION(0x0000006A,	  				// msgLength : t_B4,
+																			0x0000000000000004,		// seqnr : uint64,
+																			0x0000000000000000,		// replynr : uint64,
+																			0x0000000000000000,		// timestamp_sec : int64,
+																			0x00000000,						// timestamp_nsec : uint32,
+																			0x0000000000000000,		// payload_timestamp_sec : int64,
+																			0x00000000,						// payload_timestamp_nsec : uint32,
+																			0x0026,								// componentNOC : t_StringLen, 
+																			"PIC_Rack0_SubRack0_Board0_AP0_RCU0_LFA",				// component : t_String[componentNOC],
+																			0x0011,								// diagnosisNOC : t_StringLen, 
+																			"FAULTY (is stuck)",	// diagnosis : t_String[diagnosisNOC],
+																			0x012C,   						// confidence : uint16, == 300
+																			0x0003,								// diagnosis_idNOC : t_StringLen, 
+																			"url" 								// diagnosis_id : t_String[diagnosis_idNOC]
+																		 ) ; s023.
+
+  s023 : E_MIS_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
+																	0x0000000000000004,	// seqnr : uint64,
+																	0x0000000000000004,	// replynr : uint64,
+																	,										// timestamp_sec : int64,
+																	,										// timestamp_nsec : uint32,
+																	,										// responseNOC : t_StringLen, 
+																	"ACK"	// response : t_String[responseNOC]
+																	) ; s024.
+																		 																				
+  s023 : E_MIS_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
+																	,	// seqnr : uint64,
+																	,	// replynr : uint64,
+																	,	// timestamp_sec : int64,
+																	,	// timestamp_nsec : uint32,
+																	,	// responseNOC : t_StringLen, 
+																		// response : t_String[responseNOC]
+																	) ; error.
+
+	s024 : F_MIS_DIAGNOSIS_NOTIFICATION(0x0000006A,	  				// msgLength : t_B4,
+																			0x0000000000000005,		// seqnr : uint64,
+																			0x0000000000000000,		// replynr : uint64,
+																			0x0000000000000000,		// timestamp_sec : int64,
+																			0x00000000,						// timestamp_nsec : uint32,
+																			0x0000000000000000,		// payload_timestamp_sec : int64,
+																			0x00000000,						// payload_timestamp_nsec : uint32,
+																			0x0026,								// componentNOC : t_StringLen, 
+																			"PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA",				// component : t_String[componentNOC],
+																			0x0011,								// diagnosisNOC : t_StringLen, 
+																			"FAULTY (is stuck)",	// diagnosis : t_String[diagnosisNOC],
+																			0x012C,   						// confidence : uint16, == 300
+																			0x0003,								// diagnosis_idNOC : t_StringLen, 
+																			"url" 								// diagnosis_id : t_String[diagnosis_idNOC]
+																		 ) ; s025.
+
+  s025 : E_MIS_DIAGNOSIS_RESPONSE(, 									// msgLength : t_B4,
+																	0x0000000000000005,	// seqnr : uint64,
+																	0x0000000000000005,	// replynr : uint64,
+																	,										// timestamp_sec : int64,
+																	,										// timestamp_nsec : uint32,
+																	,										// responseNOC : t_StringLen, 
+																	"ACK"	// response : t_String[responseNOC]
+																	) ; s030.
+																		 																				
+  s025 : E_MIS_DIAGNOSIS_RESPONSE(, // msgLength : t_B4,
+																	,	// seqnr : uint64,
+																	,	// replynr : uint64,
+																	,	// timestamp_sec : int64,
+																	,	// timestamp_nsec : uint32,
+																	,	// responseNOC : t_StringLen, 
+																		// response : t_String[responseNOC]
+																	) ; error.
+
+// ------------------------------------------------------------------------------
+// SUBSCRIPTION
+
+	s030 : F_MIS_PVSS_DP_SUBSCRIPTION_REQUEST(0x0000002F	  		, // msgLength : t_B4,
+																						0x0000000000000006, // seqnr : uint64,
+																						0x0000000000000000, // replynr : uint64,
+																						0x0000000000000000, // timestamp_sec : int64,
+																						0x00000000, 				// timestamp_nsec : uint32,
+																						0x0006, // dpnameNOC : t_StringLen, 
+																						"A_K.P1", // dpname : t_String[dpnameNOC],
+																						0x0009, // requestNOC : t_StringLen, 
+																						"SUBSCRIBE"  // request : t_String[requestNOC]
+																						) ; s031.
+
+	s031 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+																						 0x0000000000000006, // seqnr : uint64,
+																						 0x0000000000000006, // replynr : uint64,
+																					   , // timestamp_sec : int64,
+																						 , // timestamp_nsec : uint32,
+																						 , // responseNOC : t_StringLen, 
+																						 "ACK", // response : t_String[responseNOC],
+																						 , // dptypeNOC : t_StringLen, 
+																						 "integer"  // dptype : t_String[dptypeNOC]
+																						) ; s032.
+
+	s031 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+																						 , // seqnr : uint64,
+																						 , // replynr : uint64,
+																					   , // timestamp_sec : int64,
+																						 , // timestamp_nsec : uint32,
+																						 , // responseNOC : t_StringLen, 
+																						 , // response : t_String[responseNOC],
+																						 , // dptypeNOC : t_StringLen, 
+																						   // dptype : t_String[dptypeNOC]
+																						) ; error.
+	s032 : S_SIG(updateValue)	; s033.
+	s033 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+																												0x0000000000000007, // seqnr : uint64,
+																						 						0x0000000000000006, // replynr : uint64,
+																												, // timestamp_sec : int64,
+																												, // timestamp_nsec : uint32,
+																												, // payload_timestamp_sec : int64,
+																												, // payload_timestamp_nsec : uint32,
+																												, // valueNOC : t_StringLen, 
+																												"0"  // value : t_String[valueNOC]
+																											 ) ; s033.
+	
+
+	s033 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+																												0x0000000000000008, // seqnr : uint64,
+																						 						0x0000000000000006, // replynr : uint64,
+																												, // timestamp_sec : int64,
+																												, // timestamp_nsec : uint32,
+																												, // payload_timestamp_sec : int64,
+																												, // payload_timestamp_nsec : uint32,
+																												, // valueNOC : t_StringLen, 
+																												"5"  // value : t_String[valueNOC]
+																											 ) ; s033.
+
+	s033 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+																												0x0000000000000009, // seqnr : uint64,
+																						 						0x0000000000000006, // replynr : uint64,
+																												, // timestamp_sec : int64,
+																												, // timestamp_nsec : uint32,
+																												, // payload_timestamp_sec : int64,
+																												, // payload_timestamp_nsec : uint32,
+																												, // valueNOC : t_StringLen, 
+																												"0"  // value : t_String[valueNOC]
+																											 ) ; s034.
+
+	s034 : F_MIS_PVSS_DP_SUBSCRIPTION_REQUEST(0x00000031	  		, // msgLength : t_B4,
+																						0x0000000000000007, // seqnr : uint64,
+																						0x0000000000000000, // replynr : uint64,
+																						0x0000000000000000, // timestamp_sec : int64,
+																						0x00000000, 				// timestamp_nsec : uint32,
+																						0x0006, // dpnameNOC : t_StringLen, 
+																						"A_K.P1", // dpname : t_String[dpnameNOC],
+																						0x000B, // requestNOC : t_StringLen, 
+																						"UNSUBSCRIBE"  // request : t_String[requestNOC]
+																						) ; s035.
+
+	s035 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+																						 0x000000000000000A, // seqnr : uint64,
+																						 0x0000000000000007, // replynr : uint64,
+																					   , // timestamp_sec : int64,
+																						 , // timestamp_nsec : uint32,
+																						 , // responseNOC : t_StringLen, 
+																						 "ACK", // response : t_String[responseNOC],
+																						 , // dptypeNOC : t_StringLen, 
+																						 ""  // dptype : t_String[dptypeNOC]
+																						) ; s036.
+
+	s035 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+																						 , // seqnr : uint64,
+																						 , // replynr : uint64,
+																					   , // timestamp_sec : int64,
+																						 , // timestamp_nsec : uint32,
+																						 , // responseNOC : t_StringLen, 
+																						 , // response : t_String[responseNOC],
+																						 , // dptypeNOC : t_StringLen, 
+																						   // dptype : t_String[dptypeNOC]
+																						) ; error.
+
+	s036 : F_MIS_PVSS_DP_SUBSCRIPTION_REQUEST(0x00000031	  		, // msgLength : t_B4,
+																						0x0000000000000008, // seqnr : uint64,
+																						0x0000000000000000, // replynr : uint64,
+																						0x0000000000000000, // timestamp_sec : int64,
+																						0x00000000, 				// timestamp_nsec : uint32,
+																						0x0006, // dpnameNOC : t_StringLen, 
+																						"A_K.P1", // dpname : t_String[dpnameNOC],
+																						0x000B, // requestNOC : t_StringLen, 
+																						"SINGLE-SHOT"  // request : t_String[requestNOC]
+																						) ; s037.
+
+	s037 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+																						 0x000000000000000B, // seqnr : uint64,
+																						 0x0000000000000008, // replynr : uint64,
+																					   , // timestamp_sec : int64,
+																						 , // timestamp_nsec : uint32,
+																						 , // responseNOC : t_StringLen, 
+																						 "ACK", // response : t_String[responseNOC],
+																						 , // dptypeNOC : t_StringLen, 
+																						 "integer"  // dptype : t_String[dptypeNOC]
+																						) ; s038.
+
+	s037 : E_MIS_PVSS_DP_SUBSCRIPTION_RESPONSE(, // msgLength : t_B4,
+																						 , // seqnr : uint64,
+																						 , // replynr : uint64,
+																					   , // timestamp_sec : int64,
+																						 , // timestamp_nsec : uint32,
+																						 , // responseNOC : t_StringLen, 
+																						 , // response : t_String[responseNOC],
+																						 , // dptypeNOC : t_StringLen, 
+																						   // dptype : t_String[dptypeNOC]
+																						) ; error.
+
+  s038 : E_MIS_PVSS_DP_SUBSCRIPTION_VALUE_CHANGED_ASYNC(, // msgLength : t_B4,
+																												0x000000000000000C, // seqnr : uint64,
+																						 						0x0000000000000008, // replynr : uint64,
+																												, // timestamp_sec : int64,
+																												, // timestamp_nsec : uint32,
+																												, // payload_timestamp_sec : int64,
+																												, // payload_timestamp_nsec : uint32,
+																												, // valueNOC : t_StringLen, 
+																												"0"  // value : t_String[valueNOC]
+																											 ) ; s040.
+
+// ------------------------------------------------------------------------------
+// getStatistics
+
+	s040 : F_MIS_SUBBAND_STATISTICS_REQUEST(0x0000000000000009, //	seqnr : uint64,
+																					0x0000000000000000, // replynr : uint64,
+																					0x0000000000000000, // timestamp_sec : int64,
+																					0x00000000 				// timestamp_nsec : uint32
+																					) ; s041.
+
+	s041 : E_MIS_SUBBAND_STATISTICS_RESPONSE(, // msgLength : t_B4,
+    																			 0x000000000000000D, // seqnr : uint64,
+																					 0x0000000000000009, // replynr : uint64,
+																					 , //	timestamp_sec : int64,
+																					 , //	timestamp_nsec : uint32,
+																					 , //	responseNOC : t_StringLen, 
+																					 , //	response : t_String[responseNOC],
+																					 , // payload_timestamp_sec : int64,
+																					 , // payload_timestamp_nsec : uint32,
+																					 , // invalidNOE : t_B4,
+																					 , // invalid : t_uint8A[invalidNOE],
+																					 , // rcu_settingsNOE : t_B4,
+																					 , // rcu_settings : t_uint8A[rcu_settingsNOE],
+																					 , // dataNOE : t_B4,
+																					   // data : t_doubleA[dataNOE]
+																					 ) ; finish.
+																					
+	sleep  : TIMER(360) ; finish.
+  finish : S_SIG ( ready )  ; OK.
+  OK     : TIMER(60) ; OK.
+
+  timeout : TERMINATE ; timeout.
+  error   : TERMINATE ; error.
+}
+
+WaitUntilTestEnd (ready) =
+{
+  s010   :   R_SIG (ready) ; finish.
+  finish : TERMINATE ; finish.
+}
+
+Statemachine_THPVSSBridge  ( stop, ready, updateValue ) =
+{
+
+  s000 : CONNECTION_ESTABLISHED ; s001.
+  s001 : TIMER(1) ; s002.
+  s002 : R_SIG(updateValue) ; s010.
+
+  s010 : F_THPVSSBRIDGE_SET_VALUE (0x0000000C, 
+  															     0x0003, 
+  															     "A_K",
+  															     0x0002, 
+  															     "P1",
+  															     0x0001,
+  															     "5" ) ; s011.
+  															     
+  s011 : E_THPVSSBRIDGE_SET_VALUE_RESPONSE( ,,,,, ) ; s012.
+  
+  s012 : F_THPVSSBRIDGE_SET_VALUE (0x0000000C, 
+  															     0x0003, 
+  															     "A_K",
+  															     0x0002, 
+  															     "P1",
+  															     0x0001,
+  															     "0" ) ; s013.
+  															     
+  s013 : E_THPVSSBRIDGE_SET_VALUE_RESPONSE( ,,,,, ) ; s560.
+
+  s560 : R_SIG( stop ) ; s990.
+
+  s990 : S_SIG( ready ) ; finish.
+     
+  finish : TERMINATE ; finish.
+  error  : TERMINATE ; error.
+}
+
+
+
+[testscript]
+VAR     SM1_done, SM1_updateValue, SM5_stop.
+
+COM1 :  Statemachine_MISClient (SM1_done, SM1_updateValue)
+        WaitUntilTestEnd (SM5_stop).
+
+COM3 :  Statemachine_THPVSSBridge (SM1_done, SM5_stop, SM1_updateValue).

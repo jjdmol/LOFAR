@@ -1,0 +1,16 @@
+#!/bin/sh
+
+cur_loc=`pwd`
+lofar_home=`echo $cur_loc | sed -e "s%/LOFAR/.*%/LOFAR%"`
+MAC_CONFIG=$lofar_home/MAC/Config
+APC_HOME=.
+if [ -r $MAC_CONFIG/Apc/$2.apc ]; then
+	APC_HOME=$MAC_CONFIG/Apc
+else
+	exit 1
+fi
+
+echo "`sed -e "s/__default_[A-Za-z0-9_]*/$1/g" $APC_HOME/$2.apc`" > $2.apc.tmp
+PVSS00ascii -in $2.apc.tmp -currentproj
+rm $2.apc.tmp
+exit 0
