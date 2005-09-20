@@ -147,7 +147,7 @@ namespace GSO
       void _convertRelativeTimes(boost::shared_ptr<ACC::APS::ParameterSet> ps);
       void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
-      bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps);
+      bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
       
       void _schedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
       void _updateSchedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
