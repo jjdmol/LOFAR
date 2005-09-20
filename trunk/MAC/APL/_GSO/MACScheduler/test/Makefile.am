@@ -15,9 +15,13 @@ BeamletAllocatorTest_SOURCES 		= \
 	
 BeamletAllocatorTest_LDADD		= 
 	
-BUILT_SOURCES = BeamletAllocatorTest.log_prop
+BUILT_SOURCES = \
+	BeamletAllocatorTest.log_prop \
+	MACScheduleTest.log_prop
 
-EXTRA_DIST = BeamletAllocatorTest.log_prop
+EXTRA_DIST = \
+	BeamletAllocatorTest.log_prop \
+	MACScheduleTest.log_prop
 
 MACScheduleTest_CPPFLAGS= \
   -Wno-deprecated \
