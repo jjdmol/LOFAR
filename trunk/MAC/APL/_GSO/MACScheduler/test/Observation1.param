@@ -15,7 +15,7 @@ subbands=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 claimTime=+10
 prepareTime=+20
 startTime=+30
-stopTime=+90
+stopTime=+330
 childs=[AO1,ARG1,VI1]
 
 ###########################
@@ -37,7 +37,7 @@ AO1.propertysetDetailsType=TAplVicAO
 AO1.claimTime=+10
 AO1.prepareTime=+20
 AO1.startTime=+30
-AO1.stopTime=+90
+AO1.stopTime=+330
 AO1.childs=[SO]
 AO1.samplingFrequency=160000000
 
@@ -59,7 +59,7 @@ AO1.SO.propertysetDetailsType=TAplPacSO
 AO1.SO.claimTime=+10
 AO1.SO.prepareTime=+20
 AO1.SO.startTime=+30
-AO1.SO.stopTime=+90
+AO1.SO.stopTime=+330
 AO1.SO.childs=[]
 
 ###########################
@@ -81,13 +81,13 @@ ARG1.propertysetDetailsType=TAplVicARG
 ARG1.claimTime=+10
 ARG1.prepareTime=+20
 ARG1.startTime=+30
-ARG1.stopTime=+90
+ARG1.stopTime=+330
 ARG1.childs=[SRG1]
 ARG1.rcus=[0,1,2,3,4,5,6,7]
 ARG1.antennaArray=FTS-1-LBA-RSP0
 ARG1.frequency=78.0
-# ARG1.frequencyTimes=[+0,+90]
-# ARG1.frequency=[110.0,130.0]
+# ARG1.frequencyTimes=[+0,+60]
+# ARG1.frequency=[60.0,70.0]
 ARG1.nyquistZone=1
 ARG1.bandSelection=LB_10_90 # possible values: LB_10_90, HB_110_190, HB_170_230, HB_210_250
 ARG1.maxRcusDefect=2
@@ -110,7 +110,7 @@ ARG1.SRG1.propertysetDetailsType=TLcuPacSRG
 ARG1.SRG1.claimTime=+10
 ARG1.SRG1.prepareTime=+20
 ARG1.SRG1.startTime=+30
-ARG1.SRG1.stopTime=+90
+ARG1.SRG1.stopTime=+330
 ARG1.SRG1.childs=[]
 
 ###########################
@@ -132,14 +132,14 @@ VI1.propertysetDetailsType=TAplVicVI
 VI1.claimTime=+10
 VI1.prepareTime=+20
 VI1.startTime=+30
-VI1.stopTime=+90
+VI1.stopTime=+330
 VI1.subbandTimes=
 VI1.subbands=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 VI1.childs=[VT1]
 VI1.directionType=AZEL
 VI1.angleTimes=[+0,+60,+120,+180]
-VI1.angle1=[0.0,0.45,0.20,0.30]
-VI1.angle2=[0.0,0.0,0.0,0.0]
+VI1.angle1=[0.0,0.20,0.40,0.60]
+VI1.angle2=[0.0,-0.20,-0.60,0.0]
 
 ###########################
 # Virtual Telescope
@@ -159,7 +159,7 @@ VI1.VT1.propertysetDetailsType=TLcuPacVT
 VI1.VT1.claimTime=+10
 VI1.VT1.prepareTime=+20
 VI1.VT1.startTime=+30
-VI1.VT1.stopTime=+90
+VI1.VT1.stopTime=+330
 VI1.VT1.childs=[]
 VI1.VT1.subarrayName=SRG1
 
