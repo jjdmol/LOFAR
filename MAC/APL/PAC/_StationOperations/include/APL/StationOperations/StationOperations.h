@@ -128,6 +128,8 @@ namespace ASO // :-)
     protected:    
 
     private:
+      bool _isRSPclientPort(GCF::TM::GCFPortInterface& port) const;
+
       static string     m_RSPDriverName;
       GCF::TM::GCFPort  m_RSPclient;
       int16             m_ntdboards;

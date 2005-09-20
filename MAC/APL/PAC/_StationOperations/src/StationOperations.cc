@@ -63,6 +63,9 @@ StationOperations::StationOperations(const string& taskName,
   m_connectTimer(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+
   m_detailsPropertySet->initProperties(detailsPropertySetConf);
 }
 
@@ -70,6 +73,11 @@ StationOperations::StationOperations(const string& taskName,
 StationOperations::~StationOperations()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+}
+
+bool StationOperations::_isRSPclientPort(GCFPortInterface& port) const
+{
+  return (&port == &m_RSPclient); // comparing two pointers. yuck?
 }
 
 void StationOperations::sendSamplingFrequency(double samplingFrequency)
@@ -216,19 +224,25 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
 
     case F_CONNECTED:
     {
-      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      if(_isRSPclientPort(port))
+      {
+        LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
       
-      // get rsp config
-      RSPGetconfigEvent getconfig;
-      m_RSPclient.send(getconfig);
+        // get rsp config
+        RSPGetconfigEvent getconfig;
+        m_RSPclient.send(getconfig);
+      }
       break;
     }
       
     case F_DISCONNECTED:
     {
-      m_connectTimer = m_RSPclient.setTimer((long)3); // try again in 3 seconds
-      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-      m_RSPclient.close();
+      if(_isRSPclientPort(port))
+      {
+        m_connectTimer = m_RSPclient.setTimer((long)3); // try again in 3 seconds
+        LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+        m_RSPclient.close();
+      }
       break;
     }
 
@@ -252,7 +266,7 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& /*port*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -267,7 +281,10 @@ GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCF
     
     case F_DISCONNECTED:
     {
-      newState=LOGICALDEVICE_STATE_CLAIMING;
+      if(_isRSPclientPort(port))
+      {
+	newState=LOGICALDEVICE_STATE_CLAIMING;
+      }
       break;
     }
     
@@ -279,7 +296,7 @@ GCFEvent::TResult StationOperations::concrete_claimed_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -309,7 +326,10 @@ GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, G
 
     case F_DISCONNECTED:
     {
-      newState=LOGICALDEVICE_STATE_CLAIMING;
+      if(_isRSPclientPort(port))
+      {
+        newState=LOGICALDEVICE_STATE_CLAIMING;
+      }
       break;
     }
     
@@ -345,8 +365,11 @@ GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFP
 
     case F_DISCONNECTED:
     {
-      LOG_ERROR(formatString("port '%s' disconnected", port.getName().c_str()));
-      _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+      if(_isRSPclientPort(port))
+      {
+        LOG_ERROR(formatString("port '%s' disconnected", port.getName().c_str()));
+        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+      }
       break;
     }
     
