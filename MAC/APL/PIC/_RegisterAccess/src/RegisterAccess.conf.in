@@ -1,12 +1,12 @@
 mac.ns.ARATest.ARAtestRSPserver.type=TCP
 mac.ns.ARATestDriver.ARAtestRSPserver.type=TCP
-mac.ns.RSP.acceptor.type=TCP
-mac.ns.RSP.acceptor_v2.type=TCP
+mac.ns.RSPDriver.acceptor.type=TCP
+mac.ns.RSPDriver.acceptor_v2.type=TCP
 
 #mac.top.ARA.ARAtestRSPserver.remoteservice=ARATestDriver:ARAtestRSPserver
 #mac.top.ARA.ARAtestRSPserver.remoteservice=ARATest:ARAtestRSPserver
-#mac.top.ARA.ARAtestRSPserver.remoteservice=RSP:acceptor
-mac.top.ARA.ARAtestRSPserver.remoteservice=RSP:acceptor_v2
+#mac.top.ARA.ARAtestRSPserver.remoteservice=RSPDriver:acceptor
+mac.top.ARA.ARAtestRSPserver.remoteservice=RSPDriver:acceptor_v2
 
 mac.apl.ara.N_RACKS=1
 mac.apl.ara.N_SUBRACKS_PER_RACK=1
