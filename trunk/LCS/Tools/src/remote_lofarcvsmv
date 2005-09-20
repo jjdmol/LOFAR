@@ -33,7 +33,7 @@ use File::Path;
 $HOME = $ENV{'HOME'};
 $TMP = "$HOME/tmp/$$";
 $LOG = "$HOME/tmp/log";
-$CVS = "/home/cvs/cvsroot";###
+$CVS = "/cvs/cvsroot";###
 $cvs = "/usr/bin/cvs";###
 
 ##
@@ -67,7 +67,7 @@ sub wanted {
 ## We need group write permission on the
 ## directories we create.
 ##
-umask(002);
+###umask(002);
 
 ##
 ## did we get a command?
@@ -190,6 +190,7 @@ if ( $to_path ne $from_path ) {
 
 foreach $file ( @source_files ) {
     my $out = shift( @to_files );
+    my $mode = (stat $file)[2];
     open( IN, "< $file" );
     open( OUT, "> $CVS/$to_path/$out,v" );
 
@@ -218,7 +219,7 @@ foreach $file ( @source_files ) {
 
     close( IN );
     close( OUT );
-    chmod 444, "$CVS/$to_path/$out,v";###
+    chmod $mode, "$CVS/$to_path/$out,v";###
 }
 
 
