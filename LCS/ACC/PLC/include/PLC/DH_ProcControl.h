@@ -39,7 +39,7 @@
 namespace LOFAR {
   namespace ACC {
     namespace PLC {
-// \addtogroup ACC
+// \addtogroup PLC
 // @{
 
 // The PCCmd enumeration is a list of command(numbers) that are used to tell 

@@ -42,7 +42,7 @@
 namespace LOFAR {
   namespace ACC {
     namespace APS {
-// \addtogroup ACC
+// \addtogroup APS
 // @{
 
 const char PC_QUAL_STABLE[]   = { "stable"        };

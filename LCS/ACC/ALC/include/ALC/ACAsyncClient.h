@@ -38,7 +38,7 @@ namespace LOFAR {
   namespace ACC {
     namespace ALC {
 
-// \addtogroup ACC
+// \addtogroup ALC
 // @{
 
 // ACClientFunctions is a helper class needed in the constructor from the 

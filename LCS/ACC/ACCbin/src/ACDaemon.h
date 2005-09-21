@@ -40,7 +40,7 @@ using namespace LOFAR::ACC::APS;
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 

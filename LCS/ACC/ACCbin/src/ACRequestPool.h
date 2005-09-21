@@ -39,7 +39,7 @@ using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // The ACRequestPool is internally used by the ACDeamon to manage the

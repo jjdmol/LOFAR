@@ -38,7 +38,7 @@ using namespace LOFAR::ACC::PLC;
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // The APAdmin class uses a internal variable to register the state of the

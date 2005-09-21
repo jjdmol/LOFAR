@@ -52,7 +52,7 @@ using namespace LOFAR::ACC::PLC;
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // This is the main 'engine' of the Application Controller. It manages

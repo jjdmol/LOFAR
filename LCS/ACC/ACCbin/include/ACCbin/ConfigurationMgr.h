@@ -37,7 +37,7 @@ using LOFAR::ACC::APS::ParameterSet;
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 //# Description of class.
