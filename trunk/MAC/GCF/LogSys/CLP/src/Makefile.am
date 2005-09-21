@@ -12,7 +12,8 @@ libclp_la_SOURCES	= $(DOCHDRS) \
 	PropertyProxy.cc
 
 libclp_la_LIBADD		= 
-libclp_la_CPPFLAGS= -DLOFARLOGGER_SUBPACKAGE=\"CLP\"
+libclp_la_CPPFLAGS= -DLOFARLOGGER_SUBPACKAGE=\"CLP\" \
+	-I$(top_srcdir)/include
 
 
 bin_PROGRAMS   		= CodeLoggingProcessor
@@ -22,8 +23,7 @@ CodeLoggingProcessor_LDADD		    = libclp.la $(LOFAR_DEPEND) \
 	$(top_builddir)/KVLogSys/src/libgcfkvlc.la
 CodeLoggingProcessor_DEPENDENCIES	= libclp.la $(LOFAR_DEPEND) \
 	$(top_builddir)/KVLogSys/src/libgcfkvlc.la
-CodeLoggingProcessor_CPPFLAGS			= -DLOFARLOGGER_SUBPACKAGE=\"CLP\" \
-	-I$(top_srcdir)/include
+CodeLoggingProcessor_CPPFLAGS			= $(libclp_la_CPPFLAGS)
 
 BUILT_SOURCES =
 
