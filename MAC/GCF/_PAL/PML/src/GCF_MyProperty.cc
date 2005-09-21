@@ -139,7 +139,7 @@ bool GCFMyProperty::link(bool setDefault, TGCFResult& result)
   if (_accessMode & GCF_READABLE_PROP && setDefault)
   {
     ASSERT(_pCurValue);
-    result = GCFProperty::setValue(*_pCurValue);    
+    result = GCFProperty::setValueTimed(*_pCurValue, 0.0);    
   }
   if (_accessMode & GCF_WRITABLE_PROP && result == GCF_NO_ERROR)
   {
@@ -206,7 +206,7 @@ void GCFMyProperty::setAccessMode(TAccessMode mode, bool on)
       _isLinked)
   {
     ASSERT(_pCurValue);
-    result = GCFProperty::setValue(*_pCurValue);    
+    result = GCFProperty::setValueTimed(*_pCurValue, 0.0);    
     ASSERT(result == GCF_NO_ERROR);
   }  
 }
