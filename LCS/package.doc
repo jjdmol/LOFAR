@@ -1,5 +1,6 @@
 /**
 
+\ingroup LOFAR
 \defgroup LCS LOFAR Common Software (LCS)
 
 %LOFAR Common Software (LCS) contains the software packages that form the core
