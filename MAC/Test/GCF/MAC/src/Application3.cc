@@ -49,6 +49,7 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   {
     case F_INIT:
       system("killall CEPPing");
+      system("killall CEPEcho");
       sleep(2);
       _supTask.getPort().init(_supTask, "server", GCFPortInterface::SPP, 0); // dumy
       NEXT_TEST(7_3, "CEP-PMLlight (Fase 1)");
@@ -65,6 +66,7 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 GCFEvent::TResult Application::test7_3(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  static string curSystemName = GCFPVSSInfo::getLocalSystemName();
   
   switch (e.signal)
   {
@@ -83,7 +85,8 @@ GCFEvent::TResult Application::test7_3(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (pResponse->result != GCF_NO_ERROR)
       {
-        if (strcmp(pResponse->pScope, "LCU1:C") == 0)
+      	string scope = curSystemName + ":C";
+        if (scope == pResponse->pScope)
         {
           TESTC_ABORT_ON_FAIL(_ePropertySetC.load() == GCF_NO_ERROR);
         }
@@ -104,7 +107,8 @@ GCFEvent::TResult Application::test7_3(GCFEvent& e, GCFPortInterface& /*p*/)
       assert(pResponse);
       if (pResponse->internal) break;
       assert(pResponse->pValue->getType() == LPT_INTEGER);
-      if (strstr(pResponse->pPropName, "LCU1:C.sn") > 0)
+     	string propName = curSystemName + ":C.sn";
+      if (propName == pResponse->pPropName)
       {
         _seqNr = (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue();
         NEXT_TEST(7_4, "CEP-PMLlight (Fase 2)");
@@ -122,6 +126,7 @@ GCFEvent::TResult Application::test7_3(GCFEvent& e, GCFPortInterface& /*p*/)
 GCFEvent::TResult Application::test7_4(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  static string curSystemName = GCFPVSSInfo::getLocalSystemName();
   
   switch (e.signal)
   {
@@ -136,7 +141,8 @@ GCFEvent::TResult Application::test7_4(GCFEvent& e, GCFPortInterface& /*p*/)
       assert(pResponse);
       if (pResponse->internal) break;
       assert(pResponse->pValue->getType() == LPT_INTEGER);
-      if (strstr(pResponse->pPropName, "LCU1:C.sn") > 0)
+     	string propName = curSystemName + ":C.sn";
+      if (propName == pResponse->pPropName)
       {
         _seqNr = (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue();
         TESTC(_seqNr < 200);
@@ -148,7 +154,8 @@ GCFEvent::TResult Application::test7_4(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (pResponse->result != GCF_NO_ERROR)
       {
-        if (strcmp(pResponse->pScope, "LCU1:C") == 0)
+      	string scope = curSystemName + ":C";
+        if (scope == pResponse->pScope)
         {
           _ePropertySetC.load(); // retry          
         }
@@ -166,7 +173,8 @@ GCFEvent::TResult Application::test7_4(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       TESTC_ABORT_ON_FAIL(pResponse->result == GCF_NO_ERROR);
-      TESTC_ABORT_ON_FAIL(strcmp(pResponse->pScope, "LCU1:C") == 0);
+    	string scope = curSystemName + ":C";
+      TESTC_ABORT_ON_FAIL(scope == pResponse->pScope);
       _ePropertySetC.load(); // reload      
       break;
     }
@@ -174,8 +182,8 @@ GCFEvent::TResult Application::test7_4(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       TESTC_ABORT_ON_FAIL(pResponse->result == GCF_NO_ERROR);
-      TESTC(_seqNr > 190);
-      TESTC_ABORT_ON_FAIL(strcmp(pResponse->pScope, "LCU1:C") == 0);
+    	string scope = curSystemName + ":C";
+      TESTC_ABORT_ON_FAIL(scope == pResponse->pScope);
       _ePropertySetC.load(); // reload
       break;
     }
@@ -210,6 +218,7 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       system("killall CEPPing");
+      system("killall CEPEcho");
       GCFTask::stop();    
       break;
     }

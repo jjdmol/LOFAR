@@ -5,7 +5,7 @@ AC_INIT(src/DH_EchoPing.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Test/GCF/CEP, 5.0)
+AM_INIT_AUTOMAKE(Test/GCF/CEP, 6.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -55,7 +55,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
-lofar_INTERNAL(MAC/GCF/PALlight, gcfceppallight, MAC-GCF-5_2rc1, 1, GCF/PALlight/CEPProperty.h,,)
+lofar_INTERNAL(MAC/GCF/PALlight, gcfceppallight, MAC-GCF-6_0, 1, GCF/PALlight/CEPProperty.h,,)
                        
 dnl
 dnl Output Makefiles

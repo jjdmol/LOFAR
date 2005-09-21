@@ -5,7 +5,7 @@ AC_INIT(src/Application1.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Test/GCF/MAC, 5.0)
+AM_INIT_AUTOMAKE(Test/GCF/MAC, 6.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -56,9 +56,9 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_PVSS(1)
 lofar_LOG4CPLUS
-lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-5_2rc1, 1, GCF/PAL/GCF_Property.h,,)
-lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-5_2rc1, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
-lofar_INTERNAL(MAC/GCF/LogSys, GCFKvlc, MAC-GCF-5_2rc1, 1, GCF/LogSys/GCF_KeyValueLogger.h,,)
+lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-6_0, 1, GCF/PAL/GCF_Property.h,,)
+lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-6_0, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
+lofar_INTERNAL(MAC/GCF/LogSys, GCFKvlc, MAC-GCF-6_0, 1, GCF/LogSys/GCF_KeyValueLogger.h,,)
 lofar_PACKAGE(MAC/Test/Suite)
 lofar_PACKAGE(MAC/Test/GCF/RTC)
 
