@@ -38,7 +38,7 @@ public class jOTDBserver
 	System.loadLibrary("jotdb");
      }
    
-   public static void main (String[] argv) 
+   public static void main (String[] args) 
      {
 	try
 	  {
@@ -51,8 +51,13 @@ public class jOTDBserver
 	     System.out.println ("jOTDBserver creating a local RMI registry on the default port...");
 	     Registry localRegistry = LocateRegistry.createRegistry (Registry.REGISTRY_PORT);
 	     
-	     System.out.println ("jOTDBserver creating local object and remote adapter...");
-	     adaptee = new jOTDBconnection ();
+	     System.out.println ("jOTDBserver creating local object and remote adapter...");	     
+	     if (args.length != 3) 
+		 {
+		     System.out.println ("Usage: java -Djava.rmi.server.hostname=<hostname> jOTDB.jOTDBserver <username> <password> <database>");
+		     System.exit(0);
+		 }
+	     adaptee = new jOTDBconnection (args[0], args[1], args[2]);
 	     adapter = new jOTDBadapter (adaptee);
 	     
 	     System.out.println ("jOTDBserver publishing service " + jOTDBinterface.SERVICENAME + " in local registry...");

@@ -51,16 +51,18 @@ namespace LOFAR
 	  (JNIEnv *env, jobject, jstring username, jstring passwd, jstring database)
 
 	  {
-	     const char* user = env->GetStringUTFChars(username, 0);
-	     const char* pass = env->GetStringUTFChars(passwd, 0);
-	     const char* db = env->GetStringUTFChars(database, 0);
+ 	     const char* user = env->GetStringUTFChars(username, 0);
+ 	     const char* pass = env->GetStringUTFChars(passwd, 0);
+ 	     const char* db = env->GetStringUTFChars(database, 0);
+	     const string u (user);
+	     const string p (pass);
+	     const string d (db);
 	     
-	     //OTDBconn = new OTDBconnection((const string&)user, (const string&)pass, (const string&)db);
-	     OTDBconn = new OTDBconnection((const string&)"paulus", (const string&)"boskabouter", (const string&)"otdbtest");
+	     OTDBconn = new OTDBconnection(u, p, d);
 	     
-	     env->ReleaseStringUTFChars(username, user);
-	     env->ReleaseStringUTFChars(passwd, pass);
-	     env->ReleaseStringUTFChars(database, db);
+ 	     env->ReleaseStringUTFChars(username, user);
+ 	     env->ReleaseStringUTFChars(passwd, pass);
+ 	     env->ReleaseStringUTFChars(database, db);
 	  }
 	
 	/*
