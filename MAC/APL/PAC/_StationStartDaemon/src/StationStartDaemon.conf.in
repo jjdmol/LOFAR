@@ -24,6 +24,8 @@ mac.ns.ARATestDriver.ARAtestRSPserver.type=TCP
 
 mac.ns.VT1.BeamServer.type=TCP
 mac.top.VT1.BeamServer.remoteservice=BeamServer:acceptor
+mac.ns.VT2.BeamServer.type=TCP
+mac.top.VT2.BeamServer.remoteservice=BeamServer:acceptor
 
 mac.ns.SRG1.CALServer.type=TCP
 #mac.top.SRG1.CALServer.remoteservice=CalServer:acceptor

@@ -51,6 +51,10 @@ namespace APLCommon
       virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
                                                                    const string& parameterFile,
                                                                    GCF::TM::GCFTask* pStartDaemon)=0;
+      virtual bool sharingAllowed()
+      {
+        return false;
+      }
 
     protected:
       // protected copy constructor

@@ -100,36 +100,49 @@ TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, con
   TFactoryMap::iterator itFactories = m_factories.find(ldType);
   if(m_factories.end() != itFactories)
   {
-    try
+    TLogicalDeviceMap::iterator itDevices = m_logicalDevices.find(taskName);
+    if(itDevices == m_logicalDevices.end())
     {
-      boost::shared_ptr<LogicalDevice> ld = itFactories->second->createLogicalDevice(taskName,fileName,this);
-      
-      TLogicalDeviceMap::iterator itDevices = m_logicalDevices.find(taskName);
-      if(itDevices == m_logicalDevices.end())
+      try
       {
+	boost::shared_ptr<LogicalDevice> ld = itFactories->second->createLogicalDevice(taskName,fileName,this);
         m_logicalDevices[taskName] = ld;
         ld->start(); // make initial transition
       }
+      catch(APLCommon::ParameterFileNotFoundException& e)
+      {
+        LOG_FATAL(e.message());
+        result = SD_RESULT_FILENOTFOUND;
+      }
+      catch(APLCommon::ParameterNotFoundException& e)
+      {
+        LOG_FATAL(e.message());
+        result = SD_RESULT_PARAMETERNOTFOUND;
+      }
+      catch(APLCommon::WrongVersionException& e)
+      {
+        LOG_FATAL(e.message());
+        result = SD_RESULT_WRONG_VERSION;
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(e.message());
+        result = SD_RESULT_UNSPECIFIED_ERROR;
+      }
     }
-    catch(APLCommon::ParameterFileNotFoundException& e)
+    else
     {
-      LOG_FATAL(e.message());
-      result = SD_RESULT_FILENOTFOUND;
-    }
-    catch(APLCommon::ParameterNotFoundException& e)
-    {
-      LOG_FATAL(e.message());
-      result = SD_RESULT_PARAMETERNOTFOUND;
-    }
-    catch(APLCommon::WrongVersionException& e)
-    {
-      LOG_FATAL(e.message());
-      result = SD_RESULT_WRONG_VERSION;
-    }
-    catch(Exception& e)
-    {
-      LOG_FATAL(e.message());
-      result = SD_RESULT_UNSPECIFIED_ERROR;
+      if(itFactories->second->sharingAllowed())
+      {
+        LOG_INFO(formatString("LogicalDevice %s allows sharing. Updating parameters.",taskName.c_str()));
+	itFactories->second->createLogicalDevice(taskName,fileName,this);
+        // ignoring the returned pointer because the instance is already in the logicalDeviceMap
+      }
+      else
+      {
+        LOG_FATAL_STR("Requested Logical Device ("<<taskName<<") already exists and sharing is not allowed");
+        result = SD_RESULT_ALREADY_EXISTS;
+      }
     }
   }
   else
@@ -152,6 +165,7 @@ TSDResult StartDaemon::destroyLogicalDevice(const string& name)
   {
     if(it->second->getLogicalDeviceState() == LogicalDevice::LOGICALDEVICE_STATE_GOINGDOWN)
     {
+      LOG_DEBUG(formatString("Adding '%s' to the collection of garbage",name.c_str()));
       // add the LD to the collection of garbage.
       m_garbageCollection[it->first] = it->second;
       m_garbageCollectionTimerId = m_serverPort.setTimer(0L,1000L); // 1000 microseconds
@@ -276,10 +290,12 @@ GCFEvent::TResult StartDaemon::idle_state(GCFEvent& event, GCFPortInterface& por
       GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
       if(timerEvent.id == m_garbageCollectionTimerId)
       {
+        LOG_DEBUG("Cleaning up the LogicalDevice garbage...");
         // garbage collection
         TLogicalDeviceMap::iterator it = m_garbageCollection.begin();
         while(it != m_garbageCollection.end())
         {
+          LOG_DEBUG(formatString("Destroying '%s'",it->first.c_str()));
           m_garbageCollection.erase(it);
           it = m_garbageCollection.begin();
         }

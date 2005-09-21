@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/lofar_map.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 #include <APLCommon/LogicalDeviceFactory.h>
 
 //# local includes
@@ -50,23 +51,34 @@ namespace ASR
                                                                               const string& parameterFile,
                                                                               GCF::TM::GCFTask* pStartDaemon)
       {
-        map<string, boost::shared_ptr<APLCommon::LogicalDevice> >::iterator it = m_theSRGinstances.find(taskName);
-        if(it == m_theSRGinstances.end())
-        {
-          boost::shared_ptr<APLCommon::LogicalDevice> theInstance(new StationReceptorGroup(taskName, parameterFile, pStartDaemon));
-          m_theSRGinstances[taskName] = theInstance;
-          return theInstance;
+        boost::shared_ptr<APLCommon::LogicalDevice> theInstance;
+        map<string, boost::weak_ptr<APLCommon::LogicalDevice> >::iterator it = m_theSRGinstances.find(taskName);
+        if(it != m_theSRGinstances.end())
+	{
+          // create a shared_ptr from the weak_ptr, thereby increasing the usecount
+          if(theInstance = it->second.lock())
+	  {
+            // The LD exists already. Two options:
+            // 1. The one and only LD with this name is rescheduled
+            // 2. The LD can be shared with several parents (SO, SRG). The paramset
+            //    contains the details about the new parent.
+            theInstance->updateParameterFile(parameterFile);
+	  }
         }
-        else
+        if(theInstance == 0)
         {
-        // The LD exists already. Two options:
-        // 1. The one and only LD with this name is rescheduled
-        // 2. The LD can be shared with several parents (SO, SRG). The paramset
-        //    contains the details about the new parent.
-          it->second->updateParameterFile(parameterFile);
-          return it->second;
+          theInstance.reset(new StationReceptorGroup(taskName, parameterFile, pStartDaemon));
+	  boost::weak_ptr<APLCommon::LogicalDevice> weakInstance(theInstance);
+          m_theSRGinstances[taskName] = weakInstance;
         }
+        return theInstance;
       };
+
+      virtual bool sharingAllowed()
+      {
+        return true;
+      }
+
 
     protected:
       // protected copy constructor
@@ -75,7 +87,9 @@ namespace ASR
       StationReceptorGroupFactory& operator=(const StationReceptorGroupFactory&);
 
     private:
-      map<string, boost::shared_ptr<APLCommon::LogicalDevice> > m_theSRGinstances;
+      // Using weak pointers here because the LD itself is responsible for it's lifetime
+      // A weak pointer does not increase the use count of the object 
+      map<string, boost::weak_ptr<APLCommon::LogicalDevice> > m_theSRGinstances;
     
   };
 };//AVT

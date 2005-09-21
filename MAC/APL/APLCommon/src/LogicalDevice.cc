@@ -118,6 +118,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_childStates()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  LOG_INFO(formatString("Constructing %s",getName().c_str()));
   
 #ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
   LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
@@ -165,6 +166,8 @@ LogicalDevice::LogicalDevice(const string& taskName,
 LogicalDevice::~LogicalDevice()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  LOG_INFO(formatString("Destructing %s",getName().c_str()));
+
 //  m_detailsPropertySet->disable();
 //  m_basePropertySet->disable();
 
@@ -223,6 +226,16 @@ void LogicalDevice::updateParameterFile(const string& parameterFile)
   // timerId's can be zero if the LD has been released
   if((claimTime >= timeNow && claimTime < m_claimTime) || m_claimTimerId==0)
   {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_claimTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&claimTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing claim time from %s to %s",timeString1,timeString2));
+
     // earlier claim
     m_claimTime = claimTime;
     m_serverPort.cancelTimer(m_claimTimerId);
@@ -230,6 +243,16 @@ void LogicalDevice::updateParameterFile(const string& parameterFile)
   }
   if((prepareTime >= timeNow && prepareTime < m_prepareTime) || m_prepareTimerId==0)
   {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_prepareTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&prepareTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing prepare time from %s to %s",timeString1,timeString2));
+
     // earlier prepare
     m_prepareTime = prepareTime;
     m_serverPort.cancelTimer(m_prepareTimerId);
@@ -237,6 +260,16 @@ void LogicalDevice::updateParameterFile(const string& parameterFile)
   }
   if((startTime >= timeNow && startTime < m_startTime) || m_startTimerId==0)
   {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_startTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&startTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing start time from %s to %s",timeString1,timeString2));
+
     // earlier start
     m_startTime = startTime;
     m_serverPort.cancelTimer(m_startTimerId);
@@ -244,6 +277,16 @@ void LogicalDevice::updateParameterFile(const string& parameterFile)
   }
   if((stopTime >= timeNow && stopTime > m_stopTime) || m_stopTimerId==0)
   {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_stopTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&stopTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing stop time from %s to %s",timeString1,timeString2));
+
     // later stop
     m_stopTime = stopTime;
     m_serverPort.cancelTimer(m_stopTimerId);
@@ -598,6 +641,15 @@ void LogicalDevice::_schedule()
   m_startTimerId = m_serverPort.setTimer(m_startTime - timeNow);
   m_stopTimerId = m_serverPort.setTimer(m_stopTime - timeNow);
 
+  struct tm* tmTime=localtime(&m_claimTime);
+  LOG_INFO(formatString("Claim time: %s",asctime(tmTime)));
+  tmTime=localtime(&m_prepareTime);
+  LOG_INFO(formatString("Prepare time: %s",asctime(tmTime)));
+  tmTime=localtime(&m_startTime);
+  LOG_INFO(formatString("Start time: %s",asctime(tmTime)));
+  tmTime=localtime(&m_stopTime);
+  LOG_INFO(formatString("Stop time: %s",asctime(tmTime)));
+
   // set properties
   m_basePropertySet->setValue(LD_PROPNAME_CLAIMTIME,GCFPVInteger(m_claimTime));
   m_basePropertySet->setValue(LD_PROPNAME_PREPARETIME,GCFPVInteger(m_prepareTime));
@@ -842,7 +894,7 @@ bool LogicalDevice::_childsNotInState(const double requiredPercentage, const TLo
       TString2LDStateMap::iterator statesIt = m_childStates.find(typesIt->first);
       if(statesIt != m_childStates.end())
       {
-        LOG_DEBUG(formatString("%s is in state %d",typesIt->first.c_str(),_state2String(statesIt->second).c_str()));
+        LOG_DEBUG(formatString("%s is in state %s",typesIt->first.c_str(),_state2String(statesIt->second).c_str()));
         if(statesIt->second != state)
         {
           ldsNotInState += 1.0;

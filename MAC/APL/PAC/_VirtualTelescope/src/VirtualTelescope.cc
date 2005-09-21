@@ -323,6 +323,7 @@ GCFEvent::TResult VirtualTelescope::concrete_preparing_state(GCFEvent& event, GC
         {
           newState = LOGICALDEVICE_STATE_CLAIMED;
           errorCode = LD_RESULT_BEAMALLOC_ERROR;
+          LOG_FATAL(formatString("Beamlet allocation failed with errorcode: %d",ackEvent.status));
         }
       }
       break;
@@ -404,6 +405,7 @@ GCFEvent::TResult VirtualTelescope::concrete_releasing_state(GCFEvent& event, GC
         else
         {
           errorCode = LD_RESULT_BEAMFREE_ERROR;
+          LOG_FATAL(formatString("Beamlet de-allocation failed with errorcode: %d",ackEvent.status));
         }
         m_beamServer.close();
         newState=LOGICALDEVICE_STATE_GOINGDOWN;
