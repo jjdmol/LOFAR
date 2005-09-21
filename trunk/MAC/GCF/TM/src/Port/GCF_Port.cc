@@ -242,6 +242,15 @@ bool GCFPort::setRemoteAddr(const string& remotetask, const string& remoteport)
 
 ssize_t GCFPort::send(GCFEvent& e)
 {
+  if (!_pSlave || !isConnected()) 
+  {
+    LOG_ERROR(formatString (
+        "Port '%s' on task '%s' not connected! Event not sent!",
+        getName().c_str(),
+        getTask()->getName().c_str()));
+    return 0;
+  }
+
   if (SPP == _type)
   {
     if (!(F_EVT_INOUT(e) & F_OUT))
