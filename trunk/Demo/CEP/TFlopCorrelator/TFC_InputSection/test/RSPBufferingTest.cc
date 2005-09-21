@@ -94,7 +94,7 @@ void* write(void* argument)
     else if (actualstamp > expectedstamp) {
       // missed a packet so create a dummy
       args->bc->writeDummy((SubbandType*)dummyblock, expectedstamp, args->npacketsinframe);
-      cout << "** dummies created for timeblock " << expectedstamp << " to "<< expectedstamp+(args->npacketsinframe-1) << endl;
+      //cout << "** dummies created for timeblock " << expectedstamp << " to "<< expectedstamp+(args->npacketsinframe-1) << endl;
       readnew = false;
       expectedstamp += args->npacketsinframe;
     }

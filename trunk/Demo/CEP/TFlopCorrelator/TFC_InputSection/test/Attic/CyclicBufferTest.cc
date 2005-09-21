@@ -36,6 +36,7 @@ typedef struct
 {
   BufferController* bc;
   int nsubbands;
+  int nelements;
 } thread_args;
 
 
@@ -50,13 +51,11 @@ void* produce(void* argument)
   timestamp_t ts(0,0);
   SubbandType data[nsubbands];
   
-  //Fill the subbanddata
-  for (int i=0; i<nsubbands; i++) {
-    data[i].Xpol = makei16complex(1,1);
-    data[i].Ypol = makei16complex(0,0);
-  }
-
   while (1) {
+   for (int i=0; i<nsubbands; i++) {
+     data[i].Xpol = makei16complex(i,0);
+     data[i].Ypol = makei16complex(ts.getSeqId(),0);
+    }
     bc->writeElements(data,ts);
     ts++;   
   }
@@ -70,7 +69,7 @@ void* consume(void* argument)
   thread_args* arg = (thread_args*)argument;
   BufferController *bc = arg->bc;
   int nsubbands = arg->nsubbands;
-  int nelements = 10;
+  int nelements = arg->nelements;
   int invalidcount;
   timestamp_t ts(0,0);
 
@@ -84,6 +83,7 @@ void* consume(void* argument)
 
   while (1) {
     bc->getElements(databuffer, invalidcount, ts, nelements);
+    
     for (int i=0; i<nsubbands; i++) {
       for (int j=0; j<nelements; j++) {
         cout <<  databuffer[i][j].Xpol << "," << databuffer[i][j].Ypol << endl;
@@ -102,7 +102,9 @@ int main (int argc, const char** argv)
    // create Parameter Object
    ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
    
-   int nsubbands = 4;
+   int nsubbands = ps.getInt32("Input.NSubbands");
+   int nelements = ps.getInt32("Input.NSamplesToDH");
+
    // create BufferController Object
    BufferController BufControl(1000, nsubbands);
     
@@ -125,6 +127,7 @@ int main (int argc, const char** argv)
 
    consumerdata.bc = &BufControl;
    consumerdata.nsubbands = nsubbands;
+   consumerdata.nelements = nelements;
 
    if (pthread_create(&consumer, NULL, consume, &consumerdata) < 0)
    {
