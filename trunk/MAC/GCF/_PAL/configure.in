@@ -5,7 +5,7 @@ AC_INIT(include/GCF/PAL/GCF_Property.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(GCF/PAL, 4.2)
+AM_INIT_AUTOMAKE(GCF/PAL, 6.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -58,12 +58,12 @@ lofar_DOCXX
 lofar_MPI(0)
 lofar_PVSS(1)
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-2_0, 1, Transport/DataHolder.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-5_2rc1, 1, GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-5_2rc1, 1, GCF/TM/GCF_Task.h,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpirtcprot, MAC-GCF-5_2rc1, 1, GCF/Protocols/PI_Protocol.ph,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpicepprot, MAC-GCF-5_2rc1, 1, GCF/Protocols/DH_PIProtocol.h,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpaprot, MAC-GCF-5_2rc1, 1, GCF/Protocols/PA_Protocol.ph,,)
+lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-2_1, 1, Transport/DataHolder.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-6_0, 1, GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpirtcprot, MAC-GCF-6_0, 1, GCF/Protocols/PI_Protocol.ph,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpicepprot, MAC-GCF-6_0, 1, GCF/Protocols/DH_PIProtocol.h,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpaprot, MAC-GCF-6_0, 1, GCF/Protocols/PA_Protocol.ph,,)
 
 dnl
 dnl Output Makefiles

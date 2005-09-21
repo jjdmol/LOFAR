@@ -5,7 +5,7 @@ AC_INIT(include/GCF/LogSys/GCF_KeyValueLogger.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(GCF/LogSys, 1.0)
+AM_INIT_AUTOMAKE(GCF/LogSys, 6.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -44,9 +44,9 @@ lofar_LOG4CPLUS
 lofar_DOCXX
 lofar_PVSS
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-5_2rc1, 1, GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-5_2rc1, 1, GCF/TM/GCF_Task.h,,)
-lofar_INTERNAL(MAC/GCF/PAL, gcfpal, MAC-GCF-5_2rc1, 1, GCF/PAL/GCF_PVSSInfo.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-6_0, 1, GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(MAC/GCF/PAL, gcfpal, MAC-GCF-6_0, 1, GCF/PAL/GCF_PVSSInfo.h,,)
 
 dnl
 dnl Output Makefiles
