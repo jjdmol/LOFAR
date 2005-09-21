@@ -48,6 +48,7 @@ namespace LOFAR
   }
 
   AH_SBCollect::~AH_SBCollect() {
+    undefine();
   }
 
   void AH_SBCollect::define(const KeyValueMap& kvm) {
