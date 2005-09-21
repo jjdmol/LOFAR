@@ -40,10 +40,11 @@ namespace LOFAR {
 //# classes mentioned as parameter or returntype without virtual functions.
 //#class OTDBconnection;
 
-//# Converter class for tree states
+// Converts tree-state names into integers and vice versa.
 class TreeStateConv : public Converter {
 public:
 	// Redefine the constructor and destructor
+	// Converts tree-state names into integers and vice versa.
 	explicit TreeStateConv(OTDBconnection* aConn) :
 		Converter(aConn, "TreeState") {};
 	~TreeStateConv() {};

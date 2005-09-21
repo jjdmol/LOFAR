@@ -40,10 +40,11 @@ namespace LOFAR {
 //# classes mentioned as parameter or returntype without virtual functions.
 //#class OTDBconnection;
 
-//# Converter class for parameter types.
+// Converts unit names into integers and vice versa.
 class UnitConv : public Converter {
 public:
 	// Redefine the constructor and destructor
+	// Converts unit names into integers and vice versa.
 	explicit UnitConv(OTDBconnection* aConn) :
 		Converter(aConn, "Unit") {};
 	~UnitConv() {};

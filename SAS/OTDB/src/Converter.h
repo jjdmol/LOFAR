@@ -1,4 +1,4 @@
-//#  Converter.h: Base class for database base id-name conversions.
+//#  Converter.h: Base class for database based id-name conversions.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,7 +24,7 @@
 #define LOFAR_OTDB_CONVERTER_H
 
 // \file Converter.h
-// Base Class for database base id-name conversions.
+// Base Class for database based id-name conversions.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
@@ -41,7 +41,7 @@ namespace LOFAR {
 //# classes mentioned as parameter or returntype without virtual functions.
 class OTDBconnection;
 
-// Base class for database base id-name conversions.
+// Base class for database based id-name conversions.
 class Converter {
 public:
 	typedef map<string, int16>::iterator			iterator;
