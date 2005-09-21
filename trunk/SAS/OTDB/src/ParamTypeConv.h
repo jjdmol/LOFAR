@@ -40,10 +40,11 @@ namespace LOFAR {
 //# classes mentioned as parameter or returntype without virtual functions.
 //#class OTDBconnection;
 
-//# Converter class for parameter types.
+// Converts parameter-type names into integers and vice versa.
 class ParamTypeConv : public Converter {
 public:
 	//# Redefine the constructor and destructor
+	// Converts parameter-type names into integers and vice versa.
 	explicit ParamTypeConv(OTDBconnection* aConn) :
 		Converter(aConn, "Param_type") {};
 	~ParamTypeConv() {};

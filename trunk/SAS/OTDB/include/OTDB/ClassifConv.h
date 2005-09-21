@@ -41,10 +41,11 @@ namespace LOFAR {
 //# classes mentioned as parameter or returntype without virtual functions.
 //#class OTDBconnection;
 
-//# Converter class for parameter types.
+// Converts classification names into integers and vice versa.
 class ClassifConv : public Converter {
 public:
 	//# We only have to make the constructor and destructor public
+	// Converts classification names into integers and vice versa.
 	explicit ClassifConv(OTDBconnection* aConn) :
 		Converter(aConn, "Classification") {};
 	~ClassifConv() {};

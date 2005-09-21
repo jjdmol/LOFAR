@@ -44,6 +44,7 @@ namespace LOFAR {
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
 
+// Structure describing one parameter.
 class OTDBparam {
 public:
 	OTDBparam() : itsTreeID(0), itsParamID(0), itsNodeID(0) {};
