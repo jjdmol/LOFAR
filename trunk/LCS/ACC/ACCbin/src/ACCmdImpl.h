@@ -37,7 +37,7 @@ using namespace LOFAR::ACC::ALC;
 namespace LOFAR {
   namespace ACC {
 
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // This class implements the execution of the AC commands by the Application

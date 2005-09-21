@@ -38,7 +38,7 @@ using dtl::blob;
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // Structure how PC's are stored in the DB

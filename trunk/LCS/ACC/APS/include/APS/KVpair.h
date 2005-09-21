@@ -35,7 +35,7 @@
 namespace LOFAR {
   namespace ACC {
     namespace APS {
-// \addtogroup ACC
+// \addtogroup APS
 // @{
 
 // Implements a KV pair as a pair<string, string>.

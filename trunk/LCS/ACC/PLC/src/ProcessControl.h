@@ -35,7 +35,7 @@
 namespace LOFAR {
   namespace ACC {
     namespace PLC {
-// \addtogroup ACC
+// \addtogroup PLC
 // @{
 
 //# Description of class.

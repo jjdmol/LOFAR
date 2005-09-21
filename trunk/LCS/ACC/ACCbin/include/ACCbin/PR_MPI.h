@@ -36,7 +36,7 @@
 
 namespace LOFAR {
   namespace ACC {
-    // \addtogroup ACC
+    // \addtogroup ACCbin
     // @{
 
     // This PR is somewhat more difficult than PR_Shell

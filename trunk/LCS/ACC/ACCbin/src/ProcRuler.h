@@ -35,7 +35,7 @@
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 //# Forward Declarations

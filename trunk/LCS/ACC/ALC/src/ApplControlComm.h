@@ -37,7 +37,7 @@
 namespace LOFAR {
   namespace ACC {
     namespace ALC {
-// \addtogroup ACC
+// \addtogroup ALC
 // @{
 
 // The result field that is passed from the Application Controller to the 

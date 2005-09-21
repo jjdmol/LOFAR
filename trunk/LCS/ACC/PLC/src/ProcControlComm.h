@@ -36,7 +36,7 @@
 namespace LOFAR {
   namespace ACC {
     namespace PLC {
-// \addtogroup ACC
+// \addtogroup PLC
 // @{
 
 // The result field that is passed from an application process is a bitmask

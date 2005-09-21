@@ -34,7 +34,7 @@
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // The ProcRule class contains all information to (over)rule a process.

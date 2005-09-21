@@ -34,7 +34,7 @@
 namespace LOFAR {
   namespace ACC {
     namespace ALC {
-// \addtogroup ACC
+// \addtogroup ALC
 // @{
 
 #define	ACREQUESTNAMESIZE 80

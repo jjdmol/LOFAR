@@ -39,7 +39,7 @@ using namespace LOFAR::ACC::ALC;
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // Time-ordered stack of DH_ApplControl structure pointers.

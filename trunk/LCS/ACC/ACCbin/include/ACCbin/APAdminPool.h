@@ -37,7 +37,7 @@
 
 namespace LOFAR {
   namespace ACC {
-// \addtogroup ACC
+// \addtogroup ACCbin
 // @{
 
 // The APAdminPool object manages a pool of APAdmin objects. An APAdmin object
