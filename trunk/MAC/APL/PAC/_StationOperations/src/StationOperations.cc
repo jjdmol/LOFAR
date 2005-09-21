@@ -320,6 +320,7 @@ GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, G
       {
         newState=LOGICALDEVICE_STATE_CLAIMING;
         errorCode = LD_RESULT_SETCLOCKS_ERROR;
+        LOG_FATAL(formatString("Set clocks failed with errorcode: %d",ack.status));
       }
       break;
     }
@@ -359,6 +360,7 @@ GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFP
       if (SUCCESS != ack.status)
       {
         errorCode = LD_RESULT_SETCLOCKS_ERROR;
+        LOG_FATAL(formatString("Set clocks failed with errorcode: %d",ack.status));
       }
       break;
     }

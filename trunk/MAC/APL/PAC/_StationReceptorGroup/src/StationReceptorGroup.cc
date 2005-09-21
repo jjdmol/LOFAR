@@ -552,6 +552,13 @@ void StationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
   CALStopEvent calStopEvent;
   calStopEvent.name = getName();
   m_CALclient.send(calStopEvent);
+
+  // and unsubscribe from RCU status props
+  //  for(TRCUMap::iterator it=m_rcuMap.begin();it!=m_rcuMap.end();++it)
+  //  {
+  //    it->second->unsubscribeProp("status");
+  //    it->second->unload();
+  //  }
 }
 
 void StationReceptorGroup::concreteParentDisconnected(GCFPortInterface& /*port*/)

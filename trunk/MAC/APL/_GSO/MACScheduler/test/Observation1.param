@@ -13,9 +13,9 @@ propertysetBaseName=VIC_Observation1
 propertysetDetailsType=TAplVicVI
 subbands=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 claimTime=+10
-prepareTime=+20
-startTime=+30
-stopTime=+330
+prepareTime=+30
+startTime=+50
+stopTime=+350
 childs=[AO1,ARG1,VI1]
 
 ###########################
@@ -35,9 +35,9 @@ AO1.startDaemonTask=CCU1_VIC_VIStartDaemon
 AO1.propertysetBaseName=VIC_AO1
 AO1.propertysetDetailsType=TAplVicAO
 AO1.claimTime=+10
-AO1.prepareTime=+20
-AO1.startTime=+30
-AO1.stopTime=+330
+AO1.prepareTime=+30
+AO1.startTime=+50
+AO1.stopTime=+350
 AO1.childs=[SO]
 AO1.samplingFrequency=160000000
 
@@ -57,9 +57,9 @@ AO1.SO.startDaemonTask=PAC_StationStartDaemon
 AO1.SO.propertysetBaseName=PAC_SO
 AO1.SO.propertysetDetailsType=TAplPacSO
 AO1.SO.claimTime=+10
-AO1.SO.prepareTime=+20
-AO1.SO.startTime=+30
-AO1.SO.stopTime=+330
+AO1.SO.prepareTime=+30
+AO1.SO.startTime=+50
+AO1.SO.stopTime=+350
 AO1.SO.childs=[]
 
 ###########################
@@ -79,9 +79,9 @@ ARG1.startDaemonTask=CCU1_VIC_VIStartDaemon
 ARG1.propertysetBaseName=VIC_ARG1
 ARG1.propertysetDetailsType=TAplVicARG
 ARG1.claimTime=+10
-ARG1.prepareTime=+20
-ARG1.startTime=+30
-ARG1.stopTime=+330
+ARG1.prepareTime=+30
+ARG1.startTime=+50
+ARG1.stopTime=+350
 ARG1.childs=[SRG1]
 ARG1.rcus=[0,1,2,3,4,5,6,7]
 ARG1.antennaArray=FTS-1-LBA-RSP0
@@ -108,9 +108,9 @@ ARG1.SRG1.startDaemonTask=PAC_StationStartDaemon
 ARG1.SRG1.propertysetBaseName=PAC_SRG1
 ARG1.SRG1.propertysetDetailsType=TLcuPacSRG
 ARG1.SRG1.claimTime=+10
-ARG1.SRG1.prepareTime=+20
-ARG1.SRG1.startTime=+30
-ARG1.SRG1.stopTime=+330
+ARG1.SRG1.prepareTime=+30
+ARG1.SRG1.startTime=+50
+ARG1.SRG1.stopTime=+350
 ARG1.SRG1.childs=[]
 
 ###########################
@@ -130,16 +130,20 @@ VI1.startDaemonTask=CCU1_VIC_VIStartDaemon
 VI1.propertysetBaseName=VIC_VI1
 VI1.propertysetDetailsType=TAplVicVI
 VI1.claimTime=+10
-VI1.prepareTime=+20
-VI1.startTime=+30
-VI1.stopTime=+330
+VI1.prepareTime=+30
+VI1.startTime=+50
+VI1.stopTime=+350
 VI1.subbandTimes=
 VI1.subbands=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 VI1.childs=[VT1]
-VI1.directionType=AZEL
+VI1.directionType=J2000
 VI1.angleTimes=[+0,+60,+120,+180]
-VI1.angle1=[0.0,0.20,0.40,0.60]
-VI1.angle2=[0.0,-0.20,-0.60,0.0]
+VI1.angle1=[6.123662, 5.233748, 1.459568, 3.276114]
+VI1.angle2=[1.026719, 0.711018, 0.384089, 0.216275]
+# 3C461: Cassiopeia A - 6.123662, 1.026719
+# 3C405: Cygnus A     - 5.233748, 0.711018
+# 3C144: M1           - 1.459568, 0.384089
+# 3C274: Virgo A      - 3.276114, 0.216275
 
 ###########################
 # Virtual Telescope
@@ -157,9 +161,9 @@ VI1.VT1.startDaemonTask=PAC_StationStartDaemon
 VI1.VT1.propertysetBaseName=PAC_VT1
 VI1.VT1.propertysetDetailsType=TLcuPacVT
 VI1.VT1.claimTime=+10
-VI1.VT1.prepareTime=+20
-VI1.VT1.startTime=+30
-VI1.VT1.stopTime=+330
+VI1.VT1.prepareTime=+30
+VI1.VT1.startTime=+50
+VI1.VT1.stopTime=+350
 VI1.VT1.childs=[]
 VI1.VT1.subarrayName=SRG1
 
