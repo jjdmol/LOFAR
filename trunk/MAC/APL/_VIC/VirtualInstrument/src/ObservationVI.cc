@@ -58,6 +58,15 @@ ObservationVI::~ObservationVI()
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
+bool ObservationVI::_checkQuality()
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+  //todo: implement quality rule: how many VI's may be suspended before the Observation is suspended
+
+  return false;
+}
+
 void ObservationVI::concrete_handlePropertySetAnswer(GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(answer)).c_str());
@@ -246,6 +255,15 @@ GCFEvent::TResult ObservationVI::concrete_active_state(GCFEvent& event, GCFPortI
   
   switch(event.signal)
   {
+    case LOGICALDEVICE_SUSPENDED:
+    {
+      if(!_checkQuality())
+      {
+        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+      }
+      break;
+    }     
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;

@@ -126,8 +126,8 @@ namespace AAR
     protected:    
 
     private:
-    
-      
+      bool _checkQuality();
+          
       ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon
