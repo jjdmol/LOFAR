@@ -56,16 +56,15 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_COMPILETOOLS
 lofar_PVSS(1)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
-lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
-lofar_EXTERNAL(abs,1,ABS_Protocol.ph,,)
-lofar_EXTERNAL(epa,1,EPA_Protocol.ph,,)
-lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
-lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
-lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
-lofar_EXTERNAL(GCFPAL,1,GCF/PAL/GCF_Property.h,,)
-lofar_EXTERNAL(APLCommon,1,APLCommon/APL_Defines.h,,)
+lofar_LOG4CPLUS
+lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-5_2rc1, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-5_2rc1, 1, GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(MAC/GCF/PAL, gcfpal, MAC-GCF-5_2rc1, 1, GCF/PAL/GCF_PVSSInfo.h,,)
+lofar_INTERNAL(MAC/APL/APLCommon, aplcommon, MAC-APL-3_0rc1, 1, APLCommon/APL_Defines.h,,)
+lofar_INTERNAL(MAC/APL/PAC/RSPDriver, rsp, MAC-APL-3_0rc1, 1, RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PAC/RSPDriver, epa, MAC-APL-3_0rc1, 1, EPA_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PAC/BeamServer, absdevel, MAC-APL-3_0rc1, 1, BS_Protocol.ph,,)
 
 dnl
 dnl Output Makefiles
