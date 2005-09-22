@@ -77,10 +77,15 @@ CacheBuffer::CacheBuffer()
 
 
     //
-    // Set subbands selection in increasing value
+    // Set default subband selection starting at RSPDriver.FIRST_SUBBAND
     //
-    m_subbandselection()(Range::all(), Range::all()) = (tensor::j + GET_CONFIG("RSPDriver.FIRST_SUBBAND", i)
-							% (MEPHeader::N_SUBBANDS * MEPHeader::N_POL));
+    for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
+      for (int sb = 0; sb < m_subbandselection().extent(secondDim); sb++) {
+	m_subbandselection()(rcu, sb) = (rcu % MEPHeader::N_POL) +
+	  (sb * MEPHeader::N_POL) +
+	  (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
+      }
+    }
 
     LOG_WARN_STR("m_subbandselection()=" << m_subbandselection());
   }
