@@ -152,8 +152,10 @@ bool StationReceptorGroup::checkQuality()
     if(it->second < 0)
     {
       rcusDefect++;
+      LOG_DEBUG(formatString("RCU %d status: %d",it->first,it->second));
     }
   }
+  LOG_DEBUG(formatString("Total RCUs defect: %d",rcusDefect));
   return (rcusDefect <= maxRcusDefect);
 }
 
@@ -216,12 +218,14 @@ void StationReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
       // check if it is a status
       if(strstr(pPropAnswer->pPropName, "status") != 0)
       {
+        LOG_DEBUG("status property changed");
         // add the status to the internal cache
         int rcu = getRCUHardwareNr(pPropAnswer->pPropName);
         if(rcu >= 0)
         {
           int status = ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
           m_rcuStatusMap[static_cast<uint16>(rcu)] = status;
+          LOG_DEBUG(formatString("RCU %d status: %d",rcu,status));
         }
         if(getLogicalDeviceState() == LOGICALDEVICE_STATE_ACTIVE)
         {
