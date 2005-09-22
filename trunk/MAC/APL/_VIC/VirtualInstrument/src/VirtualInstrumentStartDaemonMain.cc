@@ -26,7 +26,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <APLCommon/StartDaemon.h>
-#include "VirtualInstrumentFactory.h"
+#include "VirtualInstrument.h"
 #include "MaintenanceVI.h"
 #include "ObservationVI.h"
 #include <ArrayReceptorGroup/ArrayReceptorGroup.h>
