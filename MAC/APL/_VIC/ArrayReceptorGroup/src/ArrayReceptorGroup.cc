@@ -61,6 +61,15 @@ ArrayReceptorGroup::~ArrayReceptorGroup()
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
+bool ArrayReceptorGroup::_checkQuality()
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+  //todo: implement quality rule: how many srg's may be suspended before the ARG is suspended
+
+  return false;
+}
+
 void ArrayReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(answer)).c_str());
@@ -234,7 +243,16 @@ GCFEvent::TResult ArrayReceptorGroup::concrete_active_state(GCFEvent& event, GCF
     {
       break;
     }
-          
+
+    case LOGICALDEVICE_SUSPENDED:
+    {
+      if(!_checkQuality())
+      {
+        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+      }
+      break;
+    }     
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;

@@ -125,6 +125,7 @@ namespace AVI
     protected:    
 
     private:
+      bool _checkQuality();
       
       ALLOC_TRACER_CONTEXT  
   };
