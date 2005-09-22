@@ -95,13 +95,13 @@ dnl wanted by: src/CaptureStats.cc:874
 AC_STRUCT_TM
 
 dnl lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
+lofar_INTERNAL(LCS/Common,common,,1,Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/Test/Suite,suite,,1,Suite/test.h,,)
+lofar_INTERNAL(MAC/GCF/TM,GCFTM,,1,GCF/TM/GCF_Control.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon,GCFCommon,,1,GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/APL/RTCCommon,RTCCommon,,1,Marshalling.h,,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
-lofar_EXTERNAL(suite,1,Suite/test.h,,)
-lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
-lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
-lofar_EXTERNAL(RTCCommon,1,Marshalling.h,,)
 
 dnl PPS_API needed by RSPDriver
 AC_CHECK_HEADER([sys/timepps.h])
