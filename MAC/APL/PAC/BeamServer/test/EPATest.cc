@@ -123,6 +123,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	// send beam allocation, select all subbands
 	BSBeamallocEvent alloc;
+	alloc.name = "Beam1";
 	alloc.subarrayname = m_subarrayname;
 	for (int i = 0; i < MEPHeader::N_BEAMLETS; i++)
 	{
