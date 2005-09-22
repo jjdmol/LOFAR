@@ -5,7 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(tinyCEP, 2.0, no-define)
+AM_INIT_AUTOMAKE(tinyCEP, 2.1, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -58,10 +58,10 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_LOG4CPLUS
 lofar_MPI
-lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
-lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
-lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ProcessControl.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_3,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_1,1,Transport/DataHolder.h,,)
+lofar_INTERNAL(LCS/ACC/APS,APS,LCS-ACC-2_0,1,APS/ParameterSet.h,,)
+lofar_INTERNAL(LCS/ACC/PLC,PLC,LCS-ACC-2_0,1,PLC/ProcessControl.h,,)
 
 dnl
 dnl Output Makefiles

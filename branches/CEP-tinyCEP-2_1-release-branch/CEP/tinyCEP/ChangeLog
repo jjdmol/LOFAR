@@ -1,3 +1,104 @@
+2005-08-17 09:41  meijeren
+
+	* src/TinyApplicationHolder.cc: BugID:192 Fixed typo.
+
+2005-08-16 17:31  zwart
+
+	* src/TinyDataManager.cc: BugID: 270
+
+	  DataManagers now loop over all TH's until they are all initted
+
+2005-08-16 17:31  zwart
+
+	* src/TinyApplicationHolder.cc: BugID: 270
+
+	  Added TH_MPI::finalise to baseQuit
+
+2005-08-11 13:27  meijeren
+
+	* src/TinyDataManager.cc: BugID:269 Initialize TransportHolders in
+	  preprocess phase.
+
+2005-08-10 10:05  romein
+
+	* src/TinyDataManager.cc: BugID: 225 Avoid segfault due to deleting
+	  uninitialized itsInDHs[i] and itsOutDHs[j]
+
+2005-08-04 13:28  meijeren
+
+	* src/: WorkHolder.cc, WorkHolder.h: BugID:241 Added DBGASSERT on
+	  preprocessed flag in baseProcess method.
+
+2005-07-29 13:35  zwart
+
+	* src/ApplicationHolderController.cc: BugID: 235
+
+	  ACC now gives "ACC" as first parameter and the parameterfile as
+	  second
+
+2005-07-26 12:37  meijeren
+
+	* src/WorkHolder.cc, src/WorkHolder.h, test/DH_Example.cc,
+	  test/DH_Example.h, test/WH_Example.cc, test/WH_Example.h:
+	  BugID:209 Made WorkHolder::dump method const. This to be
+	  consistent with all other dump methods in the CEP framework.
+
+2005-07-13 16:53  meijeren
+
+	* src/TinyDataManager.cc: %[ER: 231]% Fixed bug; added check on
+	  error in return status of Connection::read() and
+	  Connection::write().
+
+2005-07-06 14:47  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, configure.in,
+	  test/Makefile.am: %[ER: 0]%
+
+	  Merged relevant changes from the 2.0 release branch into the main
+	  development line.
+
+2005-07-06 10:15  overeem
+
+	* configure.in, src/ApplicationHolderController.cc,
+	  src/ApplicationHolderController.h, src/TinyApplicationHolder.cc,
+	  src/TinyApplicationHolder.h: %[ER:285]% Upgrade ACC 1.0 to 1.1
+	  ParameterSet is now in ACC/APS.  ProceControl is now in ACC/PLC.
+	  ParameterSet getInt changed to getInt32.
+
+2005-06-24 17:44  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-23 17:43  loose
+
+	* test/Makefile.am: %[ER: 0]%
+
+	  Prepare for release 2.0 Replaced "illegal" use of CFLAGS and
+	  CXXFLAGS with AM_CPPFLAGS.
+
+2005-06-23 17:39  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 17:26  loose
+
+	* NEWS, README, configure.in: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 16:47  meijeren
+
+	* NEWS, README: %[ER: 0]% Addition of NEWS and README file for
+	  release 2.0
+
 2005-06-14 16:42  meijeren
 
 	* src/: ApplicationHolderController.h, Profiler.h, Sel_Linked.h,

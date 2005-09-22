@@ -1,5 +1,23 @@
+CEP/tinyCEP: Version 2.1, date: 2005/09/22
+==========================================
+
+This is the first minor release for version 2 of the CEP/tinyCEP library.
+Most important changes include:
+
+- Change from ACC 1.1 to ACC 2.0 (ER 285)
+- Several modifications needed for the TFlopCorrelator.
+
+Here's the list of related BugIDs
+---------------------------------
+# 209 : dump() method definitions don't match between TinyApplicationHolder
+        and WorkHolder
+# 235 : integrate ACC and tinyCEP 
+# 241 : No WorkHolder initialization results in a seg fault. 
+
+
+
 CEP/tinyCEP: Version 2.0, date: 2005/06/17
-============================================
+==========================================
 
 This is the second major release of the CEP/tinyCEP library. It deals with the
 interface changes of the Transport library version 2.0. 
