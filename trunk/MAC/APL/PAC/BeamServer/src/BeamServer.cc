@@ -153,9 +153,14 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CLOSED:
       {
-	// try connecting again in 2 seconds
-	port.setTimer((long)2);
-	LOG_DEBUG(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
+	if (&port == &m_acceptor) {
+	    LOG_FATAL("Failed to open 'acceptor' port. Another instance of BeamServer may be running. Exiting...");
+	    exit(EXIT_FAILURE);
+	} else {
+	  // try connecting again in 2 seconds
+	  port.setTimer((long)2);
+	  LOG_DEBUG(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
+	}
       }
       break;
 
@@ -206,7 +211,13 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
 Beam* BeamServer::newBeam(BeamTransaction& bt, GCFPortInterface* port,
 			  std::string name, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation)
 {
-  ASSERT(port && 0 == bt.getPort() && 0 == bt.getBeam());
+  ASSERT(port);
+
+  // check for valid parameters
+  // returning 0 will result in a negative ACK
+  if (!(0 == bt.getBeam() && 0 == bt.getPort())) return 0; // previous alloc in progress
+  if (0 == name.length())                        return 0; // name must be set
+  if (0 == subarrayname.length())                return 0; // subarrayname must be set
 
   Beam* beam = m_beams.get(name, subarrayname, allocation);
 
