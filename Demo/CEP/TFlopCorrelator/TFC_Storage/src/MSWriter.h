@@ -77,14 +77,17 @@ public:
   // <br>It returns the id (0-relative seqnr) of the field.
   int addField (double azimuth, double elevation);
 
-  // Write a data array for the given band and field.
-  // The data array is a 4D complex array with axes polarization, channel,
-  // antenna2, antenna1 (polarization is the most rapidly varying axis).
-  // Only the part where antenna2>antenna1 is used.
+  // Write a data array for the given band, field and frequency channel.
+  // The data array is a (3D complex) array with axes polarization, 
+  // antenna1, antenna2 (polarization is the most rapidly varying axis).
+  // Also: antenna1>antenna2.
   // The flag array has the same shape as the data array. Flag==True
   // means that the corresponding data point is flagged as invalid.
   // The flag array is optional. If not given, all flags are False.
   // All data will be written with sigma=0 and weight=1.
+  // rowNr must be the first row of the current subband.
+  // If rowNr is -1, new subband rows will be added to the MS and the
+  // new first row number is returned.
   // <br>The number of data points (nrdata) given should match the
   // number of antennas, bands, and polarizations for this bandId.
   void write (int& rowNr, int bandId, int fieldId, int channelId, 

@@ -1,4 +1,4 @@
-// MSWriterImpl.h: implementation for filling a MeasurementSet
+/// MSWriterImpl.h: implementation for filling a MeasurementSet
 //
 //  Copyright (C) 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -81,11 +81,14 @@ public:
   // The angles have to be given in degrees.
   int addField (double azimuth, double elevation);
 
-  // Write a data array for the given band and field.
+  // Write a data array for the given band, field and frequency channel.
   // The flag array has the same shape as the data array. Flag==True
   // means the the corresponding data point is flagged as invalid.
   // The flag array is optional. If not given, all flags are False.
   // All data will be written with sigma=0 and weight=1.
+  // rowNr must be the first row of the current subband.
+  // If rowNr is -1, new subband rows will be added to the MS and the
+  // new first row number is returned.
   void write (int& rowNr, int bandId, int fieldId, int channelId, 
 	      int timeCounter, int nrdata,
 	      const fcomplex* data, const bool* flags);
