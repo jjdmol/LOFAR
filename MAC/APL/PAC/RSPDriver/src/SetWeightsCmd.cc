@@ -80,16 +80,8 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-      {
-	cache.getBeamletWeights()()(0, cache_rcu, Range::all())
-	  = m_event->weights()(0, input_rcu, Range::all());
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
-      }
+      cache.getBeamletWeights()()(0, cache_rcu, Range::all())
+	= m_event->weights()(0, input_rcu, Range::all());
 
       input_rcu++;
     }
