@@ -244,6 +244,7 @@ namespace APLCommon
       time_t                                m_stopTime;    // in UTC, seconds since 1-1-1970
 
     private:
+      void _connectParent();
       void _schedule();
       void _claim();
       void _prepare();

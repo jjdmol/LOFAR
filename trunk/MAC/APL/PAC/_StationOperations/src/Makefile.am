@@ -1,8 +1,7 @@
 lib_LTLIBRARIES 	= libstationoperations.la
 
 pkginclude_HEADERS = \
-	../include/StationOperations/StationOperations.h \
-	../include/StationOperations/StationOperationsFactory.h
+	../include/StationOperations/StationOperations.h
 
 libstationoperations_la_CPPFLAGS= \
 	-I$(top_srcdir)/include \

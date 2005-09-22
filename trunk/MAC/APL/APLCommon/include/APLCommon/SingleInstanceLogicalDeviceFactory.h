@@ -1,4 +1,4 @@
-//#  StationOperationsFactory.h: factory class for StationOperations.
+//#  SingleInstanceLogicalDeviceFactory.h: template factory class for single instance logical devices
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,15 +20,14 @@
 //#
 //#  $Id$
 
-#ifndef StationOperationsFactory_H
-#define StationOperationsFactory_H
+#ifndef SingleInstanceLogicalDeviceFactory_H
+#define SingleInstanceLogicalDeviceFactory_H
 
 //# Includes
-#include <boost/shared_ptr.hpp>
-#include <APLCommon/LogicalDeviceFactory.h>
+#include <APLCommon/LogicalDeviceFactoryBase.h>
 
 //# local includes
-#include "StationOperations.h"
+
 //# Common Includes
 
 // forward declaration
@@ -36,22 +35,23 @@
 namespace LOFAR
 {
   
-namespace ASO // :-)
+namespace APLCommon
 {
-  class StationOperationsFactory : public APLCommon::LogicalDeviceFactory
+  template <class T>
+  class SingleInstanceLogicalDeviceFactory : public LogicalDeviceFactoryBase
   {
     public:
 
-      StationOperationsFactory() : APLCommon::LogicalDeviceFactory(), m_theSOinstance() {}; 
-      virtual ~StationOperationsFactory() {};
+      SingleInstanceLogicalDeviceFactory() : LogicalDeviceFactoryBase(), m_instance() {}; 
+      virtual ~SingleInstanceLogicalDeviceFactory() {};
       
-      virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, 
+      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
                                                                               const string& parameterFile,
                                                                               GCF::TM::GCFTask* pStartDaemon)
       {
-        if(m_theSOinstance == 0)
+        if(m_instance == 0)
         {
-          m_theSOinstance.reset(new StationOperations(taskName, parameterFile, pStartDaemon));
+          m_instance.reset(new T(taskName, parameterFile, pStartDaemon));
         }
         else
         {
@@ -59,9 +59,9 @@ namespace ASO // :-)
           // 1. The one and only LD with this name is rescheduled
           // 2. The LD can be shared with several parents (SO, SRG). The paramset
           //    contains the details about the new parent.
-          m_theSOinstance->updateParameterFile(parameterFile);
+          m_instance->updateParameterFile(parameterFile);
         }
-        return m_theSOinstance;
+        return m_instance;
       };
 
       virtual bool sharingAllowed()
@@ -71,15 +71,13 @@ namespace ASO // :-)
 
     protected:
       // protected copy constructor
-      StationOperationsFactory(const StationOperationsFactory&);
+      SingleInstanceLogicalDeviceFactory(const SingleInstanceLogicalDeviceFactory&);
       // protected assignment operator
-      StationOperationsFactory& operator=(const StationOperationsFactory&);
+      SingleInstanceLogicalDeviceFactory& operator=(const SingleInstanceLogicalDeviceFactory&);
 
     private:
-    
-      boost::shared_ptr<APLCommon::LogicalDevice> m_theSOinstance;
-    
+      boost::shared_ptr<APLCommon::LogicalDevice> m_instance;
   };
-};//ASO
+};//APLCommon
 };//LOFAR
 #endif

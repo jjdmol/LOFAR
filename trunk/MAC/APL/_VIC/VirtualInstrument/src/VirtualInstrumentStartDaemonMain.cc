@@ -27,10 +27,12 @@
 #include <boost/shared_ptr.hpp>
 #include <APLCommon/StartDaemon.h>
 #include "VirtualInstrumentFactory.h"
-#include "MaintenanceVIFactory.h"
-#include "ObservationVIFactory.h"
-#include <ArrayReceptorGroup/ArrayReceptorGroupFactory.h>
-#include <ArrayOperations/ArrayOperationsFactory.h>
+#include "MaintenanceVI.h"
+#include "ObservationVI.h"
+#include <ArrayReceptorGroup/ArrayReceptorGroup.h>
+#include <ArrayOperations/ArrayOperations.h>
+#include <APLCommon/LogicalDeviceFactory.h>
+#include <APLCommon/SharedLogicalDeviceFactory.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;
@@ -45,11 +47,11 @@ int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
   
-  boost::shared_ptr<VirtualInstrumentFactory>   viFactory(new VirtualInstrumentFactory);
-  boost::shared_ptr<ArrayReceptorGroupFactory>  argFactory(new ArrayReceptorGroupFactory);
-  boost::shared_ptr<ArrayOperationsFactory>     aoFactory(new ArrayOperationsFactory);
-  boost::shared_ptr<MaintenanceVIFactory>       mviFactory(new MaintenanceVIFactory);
-  boost::shared_ptr<ObservationVIFactory>       oviFactory(new ObservationVIFactory);
+  boost::shared_ptr<LogicalDeviceFactory<VirtualInstrument> >        viFactory(new LogicalDeviceFactory<VirtualInstrument>);
+  boost::shared_ptr<SharedLogicalDeviceFactory<ArrayReceptorGroup> > argFactory(new SharedLogicalDeviceFactory<ArrayReceptorGroup>);
+  boost::shared_ptr<SharedLogicalDeviceFactory<ArrayOperations> >    aoFactory(new SharedLogicalDeviceFactory<ArrayOperations>);
+  boost::shared_ptr<LogicalDeviceFactory<MaintenanceVI> >            mviFactory(new LogicalDeviceFactory<MaintenanceVI>);
+  boost::shared_ptr<LogicalDeviceFactory<ObservationVI> >            oviFactory(new LogicalDeviceFactory<ObservationVI>);
   
   StartDaemon sd(string("VIC_VIStartDaemon"));
   sd.registerFactory(LDTYPE_VIRTUALINSTRUMENT,viFactory);

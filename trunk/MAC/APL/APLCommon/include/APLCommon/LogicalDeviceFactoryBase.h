@@ -1,4 +1,4 @@
-//#  ObservationVIFactory.h: factory class for Observation Virtual Instruments.
+//#  LogicalDeviceFactoryBase.h: Base class for logical device factories.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,46 +20,52 @@
 //#
 //#  $Id$
 
-#ifndef ObservationFactory_H
-#define ObservationFactory_H
+#ifndef LogicalDeviceFactoryBase_H
+#define LogicalDeviceFactoryBase_H
 
 //# Includes
-#include <APLCommon/LogicalDeviceFactory.h>
+#include <boost/shared_ptr.hpp>
 
 //# local includes
-#include "ObservationVI.h"
+#include "APLCommon/APLCommonExceptions.h"
+
 //# Common Includes
+#include <GCF/TM/GCF_Task.h>
 
 // forward declaration
 
 namespace LOFAR
 {
   
-namespace AVI // A)pplication layer V)irtual I)nstrument
+namespace APLCommon
 {
-  class ObservationVIFactory : public APLCommon::LogicalDeviceFactory
+  class LogicalDevice;
+
+  class LogicalDeviceFactoryBase
   {
     public:
 
-      ObservationVIFactory() {}; 
-      virtual ~ObservationVIFactory() {};
+      LogicalDeviceFactoryBase() {}; 
+      virtual ~LogicalDeviceFactoryBase() {};
       
-      virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, 
-                                                                              const string& parameterFile,
-                                                                              GCF::TM::GCFTask* pStartDaemon)
+      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
+                                                                   const string& parameterFile,
+                                                                   GCF::TM::GCFTask* pStartDaemon)=0;
+      virtual bool sharingAllowed()
       {
-        return boost::shared_ptr<APLCommon::LogicalDevice>(new ObservationVI(taskName, parameterFile, pStartDaemon));
-      };
+        return false;
+      }
 
     protected:
       // protected copy constructor
-      ObservationVIFactory(const ObservationVIFactory&);
+      LogicalDeviceFactoryBase(const LogicalDeviceFactoryBase&);
       // protected assignment operator
-      ObservationVIFactory& operator=(const ObservationVIFactory&);
+      LogicalDeviceFactoryBase& operator=(const LogicalDeviceFactoryBase&);
 
     private:
     
+      ALLOC_TRACER_CONTEXT  
   };
-};//AVI
+};//APLCommon
 };//LOFAR
 #endif

@@ -27,9 +27,12 @@
 #include <boost/shared_ptr.hpp>
 #include <GCF/ParameterSet.h>
 #include <APLCommon/StartDaemon.h>
-#include <VirtualTelescope/VirtualTelescopeFactory.h>
-#include <StationReceptorGroup/StationReceptorGroupFactory.h>
-#include <StationOperations/StationOperationsFactory.h>
+#include <VirtualTelescope/VirtualTelescope.h>
+#include <StationReceptorGroup/StationReceptorGroup.h>
+#include <StationOperations/StationOperations.h>
+#include <APLCommon/LogicalDeviceFactory.h>
+#include <APLCommon/SharedLogicalDeviceFactory.h>
+#include <APLCommon/SingleInstanceLogicalDeviceFactory.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;
@@ -82,9 +85,12 @@ int main(int argc, char* argv[])
   {
     GCFTask::init(argc, argv);
   
-    boost::shared_ptr<VirtualTelescopeFactory>      vtFactory(new VirtualTelescopeFactory);
-    boost::shared_ptr<StationReceptorGroupFactory>  srgFactory(new StationReceptorGroupFactory);
-    boost::shared_ptr<StationOperationsFactory>     soFactory(new StationOperationsFactory);
+    boost::shared_ptr<LogicalDeviceFactory<VirtualTelescope> > vtFactory(
+      new LogicalDeviceFactory<VirtualTelescope>);
+    boost::shared_ptr<SharedLogicalDeviceFactory<StationReceptorGroup> > srgFactory(
+      new SharedLogicalDeviceFactory<StationReceptorGroup>);
+    boost::shared_ptr<SingleInstanceLogicalDeviceFactory<StationOperations> > soFactory(
+      new SingleInstanceLogicalDeviceFactory<StationOperations>);
     
     StartDaemon sd(string("PAC_StartDaemon"));
     

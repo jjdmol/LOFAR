@@ -1,4 +1,4 @@
-//#  StationReceptorGroupFactory.h: factory class for StationReceptorGroups.
+//#  SharedLogicalDeviceFactory.h: template factory class for shared logical devices
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,17 +20,14 @@
 //#
 //#  $Id$
 
-#ifndef StationReceptorGroupFactory_H
-#define StationReceptorGroupFactory_H
+#ifndef SharedLogicalDeviceFactory_H
+#define SharedLogicalDeviceFactory_H
 
 //# Includes
-#include <Common/lofar_map.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <APLCommon/LogicalDeviceFactory.h>
+#include <APLCommon/LogicalDeviceFactoryBase.h>
 
 //# local includes
-#include "StationReceptorGroup.h"
+
 //# Common Includes
 
 // forward declaration
@@ -38,22 +35,23 @@
 namespace LOFAR
 {
   
-namespace ASR
+namespace APLCommon
 {
-  class StationReceptorGroupFactory : public APLCommon::LogicalDeviceFactory
+  template <class T>
+  class SharedLogicalDeviceFactory : public LogicalDeviceFactoryBase
   {
     public:
 
-      StationReceptorGroupFactory() : APLCommon::LogicalDeviceFactory(), m_theSRGinstances() {}; 
-      virtual ~StationReceptorGroupFactory() {};
+      SharedLogicalDeviceFactory() : LogicalDeviceFactoryBase(), m_instances() {}; 
+      virtual ~SharedLogicalDeviceFactory() {};
       
-      virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, 
+      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
                                                                               const string& parameterFile,
                                                                               GCF::TM::GCFTask* pStartDaemon)
       {
-        boost::shared_ptr<APLCommon::LogicalDevice> theInstance;
-        map<string, boost::weak_ptr<APLCommon::LogicalDevice> >::iterator it = m_theSRGinstances.find(taskName);
-        if(it != m_theSRGinstances.end())
+        boost::shared_ptr<LogicalDevice> theInstance;
+        map<string, boost::weak_ptr<LogicalDevice> >::iterator it = m_instances.find(taskName);
+        if(it != m_instances.end())
 	{
           // create a shared_ptr from the weak_ptr, thereby increasing the usecount
           if(theInstance = it->second.lock())
@@ -67,9 +65,9 @@ namespace ASR
         }
         if(theInstance == 0)
         {
-          theInstance.reset(new StationReceptorGroup(taskName, parameterFile, pStartDaemon));
-	  boost::weak_ptr<APLCommon::LogicalDevice> weakInstance(theInstance);
-          m_theSRGinstances[taskName] = weakInstance;
+          theInstance.reset(new T(taskName, parameterFile, pStartDaemon));
+	  boost::weak_ptr<LogicalDevice> weakInstance(theInstance);
+          m_instances[taskName] = weakInstance;
         }
         return theInstance;
       };
@@ -79,19 +77,17 @@ namespace ASR
         return true;
       }
 
-
     protected:
       // protected copy constructor
-      StationReceptorGroupFactory(const StationReceptorGroupFactory&);
+      SharedLogicalDeviceFactory(const SharedLogicalDeviceFactory&);
       // protected assignment operator
-      StationReceptorGroupFactory& operator=(const StationReceptorGroupFactory&);
+      SharedLogicalDeviceFactory& operator=(const SharedLogicalDeviceFactory&);
 
     private:
       // Using weak pointers here because the LD itself is responsible for it's lifetime
       // A weak pointer does not increase the use count of the object 
-      map<string, boost::weak_ptr<APLCommon::LogicalDevice> > m_theSRGinstances;
-    
+      map<string, boost::weak_ptr<LogicalDevice> > m_instances;
   };
-};//AVT
+};//APLCommon
 };//LOFAR
 #endif

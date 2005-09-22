@@ -1,8 +1,7 @@
 lib_LTLIBRARIES 	= libstationreceptorgroup.la
 
 pkginclude_HEADERS = \
-	../include/StationReceptorGroup/StationReceptorGroup.h \
-	../include/StationReceptorGroup/StationReceptorGroupFactory.h
+	../include/StationReceptorGroup/StationReceptorGroup.h
 
 libstationreceptorgroup_la_CPPFLAGS= \
 	-I$(top_srcdir)/include \

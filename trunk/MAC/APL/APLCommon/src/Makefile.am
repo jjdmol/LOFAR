@@ -11,7 +11,10 @@ pkginclude_HEADERS = \
 	../include/APLCommon/APLInterTaskPort.h \
 	../include/APLCommon/APLUtilities.h \
 	../include/APLCommon/LogicalDevice.h \
+	../include/APLCommon/LogicalDeviceFactoryBase.h \
 	../include/APLCommon/LogicalDeviceFactory.h \
+	../include/APLCommon/SharedLogicalDeviceFactory.h \
+	../include/APLCommon/SingleInstanceLogicalDeviceFactory.h \
 	../include/APLCommon/PropertySetAnswer.h \
 	../include/APLCommon/PropertySetAnswerHandlerInterface.h \
 	../include/APLCommon/StartDaemon.h \

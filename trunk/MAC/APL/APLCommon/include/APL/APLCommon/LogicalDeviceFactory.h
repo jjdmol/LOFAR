@@ -24,13 +24,11 @@
 #define LogicalDeviceFactory_H
 
 //# Includes
-#include <boost/shared_ptr.hpp>
+#include <APLCommon/LogicalDeviceFactoryBase.h>
 
 //# local includes
-#include "APLCommon/APLCommonExceptions.h"
 
 //# Common Includes
-#include <GCF/TM/GCF_Task.h>
 
 // forward declaration
 
@@ -39,18 +37,21 @@ namespace LOFAR
   
 namespace APLCommon
 {
-  class LogicalDevice;
-
-  class LogicalDeviceFactory
+  template <class T>
+    class LogicalDeviceFactory : public LogicalDeviceFactoryBase
   {
     public:
 
-      LogicalDeviceFactory() {}; 
+      LogicalDeviceFactory() : LogicalDeviceFactoryBase() {}; 
       virtual ~LogicalDeviceFactory() {};
       
       virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
                                                                    const string& parameterFile,
-                                                                   GCF::TM::GCFTask* pStartDaemon)=0;
+                                                                   GCF::TM::GCFTask* pStartDaemon)
+      {
+        return boost::shared_ptr<LogicalDevice>(new T(taskName, parameterFile, pStartDaemon));
+      };
+
       virtual bool sharingAllowed()
       {
         return false;
@@ -64,7 +65,6 @@ namespace APLCommon
 
     private:
     
-      ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon
 };//LOFAR
