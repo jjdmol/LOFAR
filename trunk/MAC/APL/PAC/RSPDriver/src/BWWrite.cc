@@ -93,7 +93,7 @@ void BWWrite::sendrequest()
       break;
   }
   
-  // copy weights from the cache to the message
+  // create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
   Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
 				   shape(N_COEF / MEPHeader::N_PHASEPOL, MEPHeader::N_POL),
 				   neverDeleteData);
@@ -123,6 +123,9 @@ void BWWrite::sendrequest()
       // weights for x-real part
       // no added conversions needed
 
+      // y weights should be 0
+      weights(Range::all(), 1) = 0;
+
       // overwrite first weights for cross correlation
       weights(getCurrentBLP(), 0) = complex<int16>(0x4000, 0);
     }
@@ -132,6 +135,9 @@ void BWWrite::sendrequest()
     {
       // weights for x-imaginary part
       weights *= complex<int16>(0,1);
+
+      // y weights should be 0
+      weights(Range::all(), 1) = 0;
 
       // overwrite first weights for cross correlation
       weights(getCurrentBLP(), 0) = complex<int16>(0, 0x4000);
@@ -143,6 +149,9 @@ void BWWrite::sendrequest()
       // weights for y-real part
       // no added conversions needed
 
+      // x weights should be 0
+      weights(Range::all(), 0) = 0;
+
       // overwrite first weights for cross correlation
       weights(getCurrentBLP(), 1) = complex<int16>(0x4000, 0);
     }
@@ -152,6 +161,9 @@ void BWWrite::sendrequest()
     {
       // weights for y-imaginary part
       weights *= complex<int16>(0,1);
+
+      // x weights should be 0
+      weights(Range::all(), 0) = 0;
 
       // overwrite first weights for cross correlation
       weights(getCurrentBLP(), 1) = complex<int16>(0, 0x4000);
