@@ -1,8 +1,7 @@
 lib_LTLIBRARIES 	= libvirtualtelescope.la
 
 pkginclude_HEADERS = \
-	../include/VirtualTelescope/VirtualTelescope.h \
-	../include/VirtualTelescope/VirtualTelescopeFactory.h
+	../include/VirtualTelescope/VirtualTelescope.h
 
 libvirtualtelescope_la_CPPFLAGS= \
 	-I $(top_srcdir)/include \

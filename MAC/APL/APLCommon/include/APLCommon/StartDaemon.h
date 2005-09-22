@@ -52,7 +52,7 @@ namespace LOFAR
 namespace APLCommon
 {
   class LogicalDevice;
-  class LogicalDeviceFactory;
+  class LogicalDeviceFactoryBase;
   
   class StartDaemon : public GCF::TM::GCFTask,
                              PropertySetAnswerHandlerInterface
@@ -69,7 +69,7 @@ namespace APLCommon
       StartDaemon(const string& name); 
       virtual ~StartDaemon();
       
-      void registerFactory(TLogicalDeviceTypes ldType, boost::shared_ptr<LogicalDeviceFactory> factory);
+      void registerFactory(TLogicalDeviceTypes ldType, boost::shared_ptr<LogicalDeviceFactoryBase> factory);
       TSDResult createLogicalDevice(const TLogicalDeviceTypes ldType, const string& taskName, const string& fileName);
       TSDResult destroyLogicalDevice(const string& name);
       
@@ -108,7 +108,7 @@ namespace APLCommon
 #else      
       typedef GCF::PAL::GCFPVSSPort TThePortTypeInUse;
 #endif
-      typedef map<TLogicalDeviceTypes,boost::shared_ptr<LogicalDeviceFactory> > TFactoryMap;
+      typedef map<TLogicalDeviceTypes,boost::shared_ptr<LogicalDeviceFactoryBase> > TFactoryMap;
       typedef map<string,boost::shared_ptr<LogicalDevice> > TLogicalDeviceMap;
       typedef vector<boost::shared_ptr<TThePortTypeInUse> > TPortVector;
 

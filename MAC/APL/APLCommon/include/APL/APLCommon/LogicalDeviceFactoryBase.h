@@ -1,4 +1,4 @@
-//#  VirtualTelescopeFactory.h: factory class for Virtual Telescopes.
+//#  LogicalDeviceFactoryBase.h: Base class for logical device factories.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,46 +20,52 @@
 //#
 //#  $Id$
 
-#ifndef VirtualTelescopeFactory_H
-#define VirtualTelescopeFactory_H
+#ifndef LogicalDeviceFactoryBase_H
+#define LogicalDeviceFactoryBase_H
 
 //# Includes
-#include <APLCommon/LogicalDeviceFactory.h>
+#include <boost/shared_ptr.hpp>
 
 //# local includes
-#include "VirtualTelescope.h"
+#include "APLCommon/APLCommonExceptions.h"
+
 //# Common Includes
+#include <GCF/TM/GCF_Task.h>
 
 // forward declaration
 
 namespace LOFAR
 {
   
-namespace AVT // A)pplication layer V)irtual T)elescope
+namespace APLCommon
 {
-  class VirtualTelescopeFactory : public APLCommon::LogicalDeviceFactory
+  class LogicalDevice;
+
+  class LogicalDeviceFactoryBase
   {
     public:
 
-      VirtualTelescopeFactory() {}; 
-      virtual ~VirtualTelescopeFactory() {};
+      LogicalDeviceFactoryBase() {}; 
+      virtual ~LogicalDeviceFactoryBase() {};
       
-      virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, 
-                                                                              const string& parameterFile,
-                                                                              GCF::TM::GCFTask* pStartDaemon)
+      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
+                                                                   const string& parameterFile,
+                                                                   GCF::TM::GCFTask* pStartDaemon)=0;
+      virtual bool sharingAllowed()
       {
-        return boost::shared_ptr<APLCommon::LogicalDevice>(new VirtualTelescope(taskName, parameterFile, pStartDaemon));
-      };
+        return false;
+      }
 
     protected:
       // protected copy constructor
-      VirtualTelescopeFactory(const VirtualTelescopeFactory&);
+      LogicalDeviceFactoryBase(const LogicalDeviceFactoryBase&);
       // protected assignment operator
-      VirtualTelescopeFactory& operator=(const VirtualTelescopeFactory&);
+      LogicalDeviceFactoryBase& operator=(const LogicalDeviceFactoryBase&);
 
     private:
     
+      ALLOC_TRACER_CONTEXT  
   };
-};//AVT
+};//APLCommon
 };//LOFAR
 #endif

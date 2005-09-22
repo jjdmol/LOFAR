@@ -29,7 +29,7 @@
 #include "APLCommon/APL_Defines.h"
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
-#include "APLCommon/LogicalDeviceFactory.h"
+#include "APLCommon/LogicalDeviceFactoryBase.h"
 
 #include "APLCommon/StartDaemon.h"
 
@@ -89,7 +89,7 @@ StartDaemon::~StartDaemon()
   m_properties.disable();
 }
 
-void StartDaemon::registerFactory(TLogicalDeviceTypes ldType,boost::shared_ptr<LogicalDeviceFactory> factory)
+void StartDaemon::registerFactory(TLogicalDeviceTypes ldType,boost::shared_ptr<LogicalDeviceFactoryBase> factory)
 {
   m_factories[ldType] = factory;
 }

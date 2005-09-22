@@ -1,8 +1,7 @@
 lib_LTLIBRARIES 	= libarrayoperations.la
 
 pkginclude_HEADERS = \
-	../include/ArrayOperations/ArrayOperations.h \
-	../include/ArrayOperations/ArrayOperationsFactory.h
+	../include/ArrayOperations/ArrayOperations.h
 
 libarrayoperations_la_CPPFLAGS= \
 	-I$(top_srcdir)/include \

@@ -214,121 +214,9 @@ void LogicalDevice::updateParameterFile(const string& parameterFile)
   // This method is called by LogicalDeviceFactories that support LD-sharing:
   // SRG, SO
   adoptParameterFile(parameterFile);
-  
- // adjust scheduling times
-  // specified times are in UTC, seconds since 1-1-1970
-  time_t timeNow = APLUtilities::getUTCtime();
-  time_t claimTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("claimTime"));
-  time_t prepareTime = APLUtilities::decodeTimeString(m_parameterSet.getString("prepareTime"));
-  time_t startTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("startTime"));
-  time_t stopTime    = APLUtilities::decodeTimeString(m_parameterSet.getString("stopTime"));
-  
-  // timerId's can be zero if the LD has been released
-  if((claimTime >= timeNow && claimTime < m_claimTime) || m_claimTimerId==0)
-  {
-    char timeString1[200];
-    char timeString2[200];
-    struct tm* tmTime=localtime(&m_claimTime);
-    strcpy(timeString1,asctime(tmTime));
-    timeString1[strlen(timeString1)-1]=0;
-    tmTime=localtime(&claimTime);
-    strcpy(timeString2,asctime(tmTime));
-    timeString2[strlen(timeString2)-1]=0;
-    LOG_INFO(formatString("Changing claim time from %s to %s",timeString1,timeString2));
 
-    // earlier claim
-    m_claimTime = claimTime;
-    m_serverPort.cancelTimer(m_claimTimerId);
-    m_claimTimerId = m_serverPort.setTimer(m_claimTime - timeNow);
-  }
-  if((prepareTime >= timeNow && prepareTime < m_prepareTime) || m_prepareTimerId==0)
-  {
-    char timeString1[200];
-    char timeString2[200];
-    struct tm* tmTime=localtime(&m_prepareTime);
-    strcpy(timeString1,asctime(tmTime));
-    timeString1[strlen(timeString1)-1]=0;
-    tmTime=localtime(&prepareTime);
-    strcpy(timeString2,asctime(tmTime));
-    timeString2[strlen(timeString2)-1]=0;
-    LOG_INFO(formatString("Changing prepare time from %s to %s",timeString1,timeString2));
-
-    // earlier prepare
-    m_prepareTime = prepareTime;
-    m_serverPort.cancelTimer(m_prepareTimerId);
-    m_prepareTimerId = m_serverPort.setTimer(m_prepareTime - timeNow);
-  }
-  if((startTime >= timeNow && startTime < m_startTime) || m_startTimerId==0)
-  {
-    char timeString1[200];
-    char timeString2[200];
-    struct tm* tmTime=localtime(&m_startTime);
-    strcpy(timeString1,asctime(tmTime));
-    timeString1[strlen(timeString1)-1]=0;
-    tmTime=localtime(&startTime);
-    strcpy(timeString2,asctime(tmTime));
-    timeString2[strlen(timeString2)-1]=0;
-    LOG_INFO(formatString("Changing start time from %s to %s",timeString1,timeString2));
-
-    // earlier start
-    m_startTime = startTime;
-    m_serverPort.cancelTimer(m_startTimerId);
-    m_startTimerId = m_serverPort.setTimer(m_startTime - timeNow);
-  }
-  if((stopTime >= timeNow && stopTime > m_stopTime) || m_stopTimerId==0)
-  {
-    char timeString1[200];
-    char timeString2[200];
-    struct tm* tmTime=localtime(&m_stopTime);
-    strcpy(timeString1,asctime(tmTime));
-    timeString1[strlen(timeString1)-1]=0;
-    tmTime=localtime(&stopTime);
-    strcpy(timeString2,asctime(tmTime));
-    timeString2[strlen(timeString2)-1]=0;
-    LOG_INFO(formatString("Changing stop time from %s to %s",timeString1,timeString2));
-
-    // later stop
-    m_stopTime = stopTime;
-    m_serverPort.cancelTimer(m_stopTimerId);
-    m_stopTimerId = m_serverPort.setTimer(m_stopTime - timeNow);
-  }
-
-  // set properties
-  m_basePropertySet->setValue(LD_PROPNAME_CLAIMTIME,GCFPVInteger(m_claimTime));
-  m_basePropertySet->setValue(LD_PROPNAME_PREPARETIME,GCFPVInteger(m_prepareTime));
-  m_basePropertySet->setValue(LD_PROPNAME_STARTTIME,GCFPVInteger(m_startTime));
-  m_basePropertySet->setValue(LD_PROPNAME_STOPTIME,GCFPVInteger(m_stopTime));
- 
-  // connect to the parent if it is a new parent
-  string parentTaskName = m_parameterSet.getString("parentTask");
-  
-  if(m_parentPorts.find(parentTaskName) == m_parentPorts.end())
-  {  
-    string parentHost     = m_parameterSet.getString("parentHost");//TiMu
-    uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
-    
-    // it is possible that parents do not yet exist while constructing this LD
-    // (e.g. SO starts when a station starts, even if there are no CCU's)
-    TPortSharedPtr parentPortPtr(new TRemotePort);
-    if(parentTaskName.length() > 0)
-    {
-      parentPortPtr->init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
-      parentPortPtr->setHostName(parentHost);//TiMu
-      parentPortPtr->setPortNumber(parentPort);//TiMu
-      parentPortPtr->open();
-      m_parentPorts[parentTaskName] = parentPortPtr;
-    }
-/*
-    if(parentTaskName.length() > 0)
-    {
-      // send initialized event to the parent
-      boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
-      scheduledEvent->result=LD_RESULT_NO_ERROR;//OK
-      _sendEvent(scheduledEvent,*(parentPortPtr.get()));
-    }
-*/
-  } 
-  _sendScheduleToClients();
+  _connectParent();
+  _schedule();
 }
 
 string& LogicalDevice::getServerPortName()
@@ -587,75 +475,122 @@ void LogicalDevice::_schedule()
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
   // (erase and) fill the childTypes and childStates maps
-  m_childTypes.clear();
-  m_childStates.clear();
+  TString2LDTypeMap  newChildTypes;
+  TString2LDStateMap newChildStates;
   // create the childs
   vector<string> childKeys = _getChildKeys();
   vector<string>::iterator chIt;
   for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
   {
-    try
+    // add new childs
+    if(m_childTypes.find(*chIt) != m_childTypes.end())
     {
-      string ldTypeString = m_parameterSet.getString((*chIt) + ".logicalDeviceType");
-      TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
-      m_childTypes[*chIt] = ldType;
-      m_childStates[*chIt] = LOGICALDEVICE_STATE_IDLE;
+      newChildTypes[*chIt]=m_childTypes[*chIt];
+      newChildStates[*chIt]=m_childStates[*chIt];
     }
-    catch(Exception& e)
+    else
     {
-      LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
+      try
+      {
+        string ldTypeString = m_parameterSet.getString((*chIt) + ".logicalDeviceType");
+        TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
+        newChildTypes[*chIt] = ldType;
+        newChildStates[*chIt] = LOGICALDEVICE_STATE_IDLE;
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
+      }
     }
   }
-  
-  if(m_claimTimerId != 0)
-  {
-    m_serverPort.cancelTimer(m_claimTimerId);
-    m_claimTimerId = 0;
-  }
-  if(m_prepareTimerId != 0)
-  {
-    m_serverPort.cancelTimer(m_prepareTimerId);
-    m_prepareTimerId = 0;
-  }
-  if(m_startTimerId != 0)
-  {
-    m_serverPort.cancelTimer(m_startTimerId);
-    m_startTimerId = 0;
-  }
-  if(m_stopTimerId != 0)
-  {
-    m_serverPort.cancelTimer(m_stopTimerId);
-    m_stopTimerId = 0;
-  }
-  //
-  // set timers
+  m_childTypes.clear();
+  m_childStates.clear();
+  m_childTypes = newChildTypes;
+  m_childStates = newChildStates;
+
+  // adjust scheduling times
   // specified times are in UTC, seconds since 1-1-1970
   time_t timeNow = APLUtilities::getUTCtime();
-  m_claimTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("claimTime"));
-  m_prepareTime = APLUtilities::decodeTimeString(m_parameterSet.getString("prepareTime"));
-  m_startTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("startTime"));
-  m_stopTime    = APLUtilities::decodeTimeString(m_parameterSet.getString("stopTime"));
+  time_t claimTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("claimTime"));
+  time_t prepareTime = APLUtilities::decodeTimeString(m_parameterSet.getString("prepareTime"));
+  time_t startTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("startTime"));
+  time_t stopTime    = APLUtilities::decodeTimeString(m_parameterSet.getString("stopTime"));
   
-  m_claimTimerId = m_serverPort.setTimer(m_claimTime - timeNow);
-  m_prepareTimerId = m_serverPort.setTimer(m_prepareTime - timeNow);
-  m_startTimerId = m_serverPort.setTimer(m_startTime - timeNow);
-  m_stopTimerId = m_serverPort.setTimer(m_stopTime - timeNow);
+  // timerId's can be zero if the LD has been released
+  if((claimTime >= timeNow && claimTime < m_claimTime) || m_claimTimerId==0)
+  {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_claimTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&claimTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing claim time from %s to %s",timeString1,timeString2));
 
-  struct tm* tmTime=localtime(&m_claimTime);
-  LOG_INFO(formatString("Claim time: %s",asctime(tmTime)));
-  tmTime=localtime(&m_prepareTime);
-  LOG_INFO(formatString("Prepare time: %s",asctime(tmTime)));
-  tmTime=localtime(&m_startTime);
-  LOG_INFO(formatString("Start time: %s",asctime(tmTime)));
-  tmTime=localtime(&m_stopTime);
-  LOG_INFO(formatString("Stop time: %s",asctime(tmTime)));
+    // earlier claim
+    m_claimTime = claimTime;
+    m_serverPort.cancelTimer(m_claimTimerId);
+    m_claimTimerId = m_serverPort.setTimer(m_claimTime - timeNow);
+  }
+  if((prepareTime >= timeNow && prepareTime < m_prepareTime) || m_prepareTimerId==0)
+  {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_prepareTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&prepareTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing prepare time from %s to %s",timeString1,timeString2));
+
+    // earlier prepare
+    m_prepareTime = prepareTime;
+    m_serverPort.cancelTimer(m_prepareTimerId);
+    m_prepareTimerId = m_serverPort.setTimer(m_prepareTime - timeNow);
+  }
+  if((startTime >= timeNow && startTime < m_startTime) || m_startTimerId==0)
+  {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_startTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&startTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing start time from %s to %s",timeString1,timeString2));
+
+    // earlier start
+    m_startTime = startTime;
+    m_serverPort.cancelTimer(m_startTimerId);
+    m_startTimerId = m_serverPort.setTimer(m_startTime - timeNow);
+  }
+  if((stopTime >= timeNow && stopTime > m_stopTime) || m_stopTimerId==0)
+  {
+    char timeString1[200];
+    char timeString2[200];
+    struct tm* tmTime=localtime(&m_stopTime);
+    strcpy(timeString1,asctime(tmTime));
+    timeString1[strlen(timeString1)-1]=0;
+    tmTime=localtime(&stopTime);
+    strcpy(timeString2,asctime(tmTime));
+    timeString2[strlen(timeString2)-1]=0;
+    LOG_INFO(formatString("Changing stop time from %s to %s",timeString1,timeString2));
+
+    // later stop
+    m_stopTime = stopTime;
+    m_serverPort.cancelTimer(m_stopTimerId);
+    m_stopTimerId = m_serverPort.setTimer(m_stopTime - timeNow);
+  }
 
   // set properties
   m_basePropertySet->setValue(LD_PROPNAME_CLAIMTIME,GCFPVInteger(m_claimTime));
   m_basePropertySet->setValue(LD_PROPNAME_PREPARETIME,GCFPVInteger(m_prepareTime));
   m_basePropertySet->setValue(LD_PROPNAME_STARTTIME,GCFPVInteger(m_startTime));
   m_basePropertySet->setValue(LD_PROPNAME_STOPTIME,GCFPVInteger(m_stopTime));
- 
 
   _sendScheduleToClients();
 }
@@ -1190,36 +1125,43 @@ void LogicalDevice::_handleServerConnected()
     }
   }
   
-  // connect to parent.
-  string parentTaskName = m_parameterSet.getString("parentTask");
-  string parentHost     = m_parameterSet.getString("parentHost");//TiMu
-  uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
-  
-  // it is possible that parents do not yet exist while constructing this LD
-  // (e.g. SO starts when a station starts, even if there are no CCU's)
-  TPortSharedPtr parentPortPtr(new TRemotePort);
-  if(parentTaskName.length() > 0)
-  {
-    parentPortPtr->init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
-    parentPortPtr->setHostName(parentHost);//TiMu
-    parentPortPtr->setPortNumber(parentPort);//TiMu
-    parentPortPtr->open();
-    m_parentPorts[parentTaskName] = parentPortPtr;
-  }
-  
+  _connectParent();
   _schedule();
-    
-/*
-  if(parentTaskName.length() > 0)
-  {
-    // send initialized event to the parent
-    boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
-    scheduledEvent->result=LD_RESULT_NO_ERROR;//OK
-    _sendEvent(scheduledEvent,*(parentPortPtr.get()));
-  }
-*/
 }
 
+void LogicalDevice::_connectParent()
+{
+  // connect to the parent if it is a new parent
+  string parentTaskName = m_parameterSet.getString("parentTask");
+  
+  if(m_parentPorts.find(parentTaskName) == m_parentPorts.end())
+  {  
+    string parentHost     = m_parameterSet.getString("parentHost");//TiMu
+    uint16 parentPort     = m_parameterSet.getUint16("parentPort");//TiMu
+    
+    // it is possible that parents do not yet exist while constructing this LD
+    // (e.g. SO starts when a station starts, even if there are no CCU's)
+    TPortSharedPtr parentPortPtr(new TRemotePort);
+    if(parentTaskName.length() > 0)
+    {
+      parentPortPtr->init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
+      parentPortPtr->setHostName(parentHost);//TiMu
+      parentPortPtr->setPortNumber(parentPort);//TiMu
+      parentPortPtr->open();
+      m_parentPorts[parentTaskName] = parentPortPtr;
+    }
+/*
+    if(parentTaskName.length() > 0)
+    {
+      // send initialized event to the parent
+      boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
+      scheduledEvent->result=LD_RESULT_NO_ERROR;//OK
+      _sendEvent(scheduledEvent,*(parentPortPtr.get()));
+    }
+*/
+  } 
+}
+ 
 vector<string> LogicalDevice::_getChildKeys()
 {
   string childs;

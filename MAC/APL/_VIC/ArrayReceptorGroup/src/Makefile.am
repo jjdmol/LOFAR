@@ -1,8 +1,7 @@
 lib_LTLIBRARIES 	= libarrayreceptorgroup.la
 
 pkginclude_HEADERS = \
-	../include/ArrayReceptorGroup/ArrayReceptorGroup.h \
-	../include/ArrayReceptorGroup/ArrayReceptorGroupFactory.h
+	../include/ArrayReceptorGroup/ArrayReceptorGroup.h
 
 libarrayreceptorgroup_la_CPPFLAGS= \
 	-I$(top_srcdir)/include \

@@ -1,4 +1,4 @@
-//#  LogicalDeviceFactory.h: Base class for logical device factories.
+//#  SingleInstanceLogicalDeviceFactory.h: template factory class for single instance logical devices
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LogicalDeviceFactory_H
-#define LogicalDeviceFactory_H
+#ifndef SingleInstanceLogicalDeviceFactory_H
+#define SingleInstanceLogicalDeviceFactory_H
 
 //# Includes
 #include <APLCommon/LogicalDeviceFactoryBase.h>
@@ -38,33 +38,45 @@ namespace LOFAR
 namespace APLCommon
 {
   template <class T>
-    class LogicalDeviceFactory : public LogicalDeviceFactoryBase
+  class SingleInstanceLogicalDeviceFactory : public LogicalDeviceFactoryBase
   {
     public:
 
-      LogicalDeviceFactory() : LogicalDeviceFactoryBase() {}; 
-      virtual ~LogicalDeviceFactory() {};
+      SingleInstanceLogicalDeviceFactory() : LogicalDeviceFactoryBase(), m_instance() {}; 
+      virtual ~SingleInstanceLogicalDeviceFactory() {};
       
       virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, 
-                                                                   const string& parameterFile,
-                                                                   GCF::TM::GCFTask* pStartDaemon)
+                                                                              const string& parameterFile,
+                                                                              GCF::TM::GCFTask* pStartDaemon)
       {
-        return boost::shared_ptr<LogicalDevice>(new T(taskName, parameterFile, pStartDaemon));
+        if(m_instance == 0)
+        {
+          m_instance.reset(new T(taskName, parameterFile, pStartDaemon));
+        }
+        else
+        {
+          // The LD exists already. Two options:
+          // 1. The one and only LD with this name is rescheduled
+          // 2. The LD can be shared with several parents (SO, SRG). The paramset
+          //    contains the details about the new parent.
+          m_instance->updateParameterFile(parameterFile);
+        }
+        return m_instance;
       };
 
       virtual bool sharingAllowed()
       {
-        return false;
+        return true;
       }
 
     protected:
       // protected copy constructor
-      LogicalDeviceFactory(const LogicalDeviceFactory&);
+      SingleInstanceLogicalDeviceFactory(const SingleInstanceLogicalDeviceFactory&);
       // protected assignment operator
-      LogicalDeviceFactory& operator=(const LogicalDeviceFactory&);
+      SingleInstanceLogicalDeviceFactory& operator=(const SingleInstanceLogicalDeviceFactory&);
 
     private:
-    
+      boost::shared_ptr<APLCommon::LogicalDevice> m_instance;
   };
 };//APLCommon
 };//LOFAR
