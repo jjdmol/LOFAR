@@ -67,25 +67,16 @@ void SetRCUCmd::apply(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-      {
-	//
-	// make sure vddvcc_en is always on if needed
-	// this prevents sync errors
-	//
-	if (GET_CONFIG("RSPDriver.FORCE_VDDVCC_EN", i)) {
-	  m_event->settings()(0).vddvcc_en = 1;
-	}
-
-	cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
+      //
+      // make sure vddvcc_en is always on if needed
+      // this prevents sync errors
+      //
+      if (GET_CONFIG("RSPDriver.FORCE_VDDVCC_EN", i)) {
+	m_event->settings()(0).vddvcc_en = 1;
       }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * 2));
-      }
+      
+      cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
     }
-    
   }
 }
 
