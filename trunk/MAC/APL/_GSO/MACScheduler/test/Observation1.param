@@ -90,7 +90,7 @@ ARG1.frequency=78.0
 # ARG1.frequency=[60.0,70.0]
 ARG1.nyquistZone=1
 ARG1.bandSelection=LB_10_90 # possible values: LB_10_90, HB_110_190, HB_170_230, HB_210_250
-ARG1.maxRcusDefect=2
+ARG1.maxRcusDefect=1
 
 ###########################
 # Station Receptor Group
