@@ -38,6 +38,8 @@
 
 #include <blitz/array.h>
 
+#include <fcntl.h>
+
 using namespace blitz;
 using namespace LOFAR;
 using namespace AMC;
@@ -152,38 +154,81 @@ const CAL::AntennaGains& Beam::getCalibration() const
   return m_gains;
 }
 
+static int setNonblocking(int fd)
+{
+  int flags;
+
+  /* If they have O_NONBLOCK, use the Posix way to do it */
+#if defined(O_NONBLOCK)
+  /* Fixme: O_NONBLOCK is defined but broken on SunOS 4.1.x and AIX 3.2.5. */
+  if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
+    flags = 0;
+  return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+#else
+  /* Otherwise, use the old way of doing it */
+  flags = 1;
+  return ioctl(fd, FIOBIO, &flags);
+#endif
+}     
+
 void Beam::logPointing(Pointing pointing)
 {
+  if (GET_CONFIG("BeamServer.DISABLE_INDI", i)) return;
+
   static FILE* pipe = 0;
   double hh, mm, ss, deg, degmm, degss;
+  static string pipename = GET_CONFIG_PATH() + "/indi_pipe";
+  int retry = 0;
 
-  if (!pipe) {
-    string pipename = GET_CONFIG_PATH() + "/indi_pipe";
-    pipe = fopen(pipename.c_str(), "w+");
+  /**
+   * Write RaDec coordinates to the named pipe.
+   * If there is no-one listening on the named pipe it
+   * will eventually block which we prevent by making the filedescriptor
+   * non-blocking.
+   * When a write (fprintf) to the named-pipe fails, assume that the pipe
+   * has been closed by the other end and re-open it and write the value again.
+   */
+
+  do {
+    /* open pipe if not already open */
     if (!pipe) {
-      LOG_WARN_STR("Could not open '" << GET_CONFIG_PATH() + "/indi_pipe");
-      return;
+      pipe = fopen(pipename.c_str(), "w+");
+      if (!pipe) {
+	LOG_WARN_STR("Could not open '" << GET_CONFIG_PATH() + "/indi_pipe");
+	return;
+      }
+      setNonblocking(fileno(pipe));
+    }
+
+    hh = (pointing.angle0() * 180.0 / M_PI) / 15.0;
+    mm = (hh - floor(hh)) * 60;
+    ss = (mm - floor(mm)) * 60;
+    hh = floor(hh);
+    mm = floor(mm);
+    
+    deg = pointing.angle1() * 180.0 / M_PI;
+    degmm = (deg - floor(deg)) * 60;
+    degss = (degmm - floor(degmm)) * 60;
+    deg = floor(deg);
+    degmm = floor(degmm);
+    if (deg > 90.0) deg = 360.0 - deg;
+
+    /*
+     * If failed to write, closed the pipe and retry by
+     * re-opening the pipe (at the beginning of the while loop.
+     */
+    if (fprintf(pipe, "%s %d %lf %lf\n",
+		getName().c_str(), 0, pointing.angle0(), pointing.angle1()) < 0) {
+      fclose(pipe);
+      pipe = 0;
     }
   }
+  while (retry++ < 5);
 
-  hh = (pointing.angle0() * 180.0 / M_PI) / 15.0;
-  mm = (hh - floor(hh)) * 60;
-  ss = (mm - floor(mm)) * 60;
-  hh = floor(hh);
-  mm = floor(mm);
   LOG_INFO_STR("RA=" << hh << "h " << mm << "m " << ss << "s");
-
-  deg = pointing.angle1() * 180.0 / M_PI;
-  degmm = (deg - floor(deg)) * 60;
-  degss = (degmm - floor(degmm)) * 60;
-  deg = floor(deg);
-  degmm = floor(degmm);
-  if (deg > 90.0) deg = 360.0 - deg;
   LOG_INFO_STR("DEC=" << deg << "deg " << degmm << "' " << degss << "''");
-
-  fprintf(pipe, "%s %d %lf %lf\n",
-	  getName().c_str(), 0, pointing.angle0(), pointing.angle1());
-  fflush(pipe);
+      
+  if (pipe) fflush(pipe);
 }
 
 int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::Converter* conv)
@@ -205,7 +250,7 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
 
     Pointing pointing = m_pointing_queue.top();
 
-    LOG_DEBUG_STR("Pointing time=" << pointing.time());
+    LOG_DEBUG_STR("Process pointing @ time " << pointing.time());
 
     if (pointing.time() < begintime) {
 
@@ -285,7 +330,8 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
     }
   }
 
-  LOG_INFO_STR("Pointing time=" << current_pointing.time());
+  LOG_INFO_STR("Current pointing (" << current_pointing.angle0() << ", " << current_pointing.angle1() <<
+	       ") @ time " << current_pointing.time());
   logPointing(current_pointing);
 
   return 0;
