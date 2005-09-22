@@ -56,7 +56,7 @@ class WH_Storage: public WorkHolder
     /// forbid assignment
     WH_Storage& operator= (const WH_Storage&);
 
-    const ACC::APS::ParameterSet& itsPS;
+    const ACC::APS::ParameterSet itsPS;
     int itsNstations;
     int itsNpolSquared;
 

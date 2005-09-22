@@ -1,4 +1,4 @@
-//#  WH_Storage.cc: 
+//#  WH_Storage.cc: Writes visibilities in an AIPS++ measurement set
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,7 +28,7 @@
 
 // Application specific includes
 #include <TFC_Storage/WH_Storage.h>
-#include <TFC_Interface/DH_Vis.h>
+#include <TFC_Interface/DH_VisArray.h>
 #include <TFC_Storage/MSWriter.h>
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
@@ -37,7 +37,7 @@ using namespace LOFAR;
 
 WH_Storage::WH_Storage(const string& name, 
 		       const ACC::APS::ParameterSet& pset) 
-  : WorkHolder (pset.getInt32("Input.NSubbands"),        // for now number of correlator outputs
+  : WorkHolder (pset.getInt32("Input.NSubbands"),   // for now number of correlator outputs
 		0,                                  // is equal to number of subbands
 		name,
 		"WH_Storage"),
@@ -47,7 +47,7 @@ WH_Storage::WH_Storage(const string& name,
     itsPropertySet(0)
 {
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
-  itsNstations = itsPS.getInt32("Input.NRSP");
+  itsNstations = itsPS.getInt32("Storage.nStations");
   int pols = itsPS.getInt32("Input.NPolarisations");
   itsNpolSquared = pols*pols;
 
@@ -57,7 +57,7 @@ WH_Storage::WH_Storage(const string& name,
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
     sprintf(str, "DH_in_%d", i);
-    getDataManager().addInDataHolder(i, new DH_Vis(str, refFreqs[i], pset));
+    getDataManager().addInDataHolder(i, new DH_VisArray(str, pset));
   }
  }
 
@@ -98,7 +98,7 @@ void WH_Storage::preprocess() {
   string msName = itsPS.getString("Storage.MSName");
   double startTime = itsPS.getDouble("Storage.startTime");
   double timeStep = itsPS.getDouble("Storage.timeStep");
-  uint nAntennas = itsPS.getUint32("Storage.nStations");
+  uint nAntennas = itsNstations;
   vector<double> antPos = itsPS.getDoubleVector("Storage.stationPositions");
   itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, nAntennas, antPos);
 
@@ -110,7 +110,7 @@ void WH_Storage::preprocess() {
   // Add the subbands
   for (iter=refFreqs.begin(); iter!=refFreqs.end(); iter++)
   {
-    int bandId = itsWriter->addBand (nPolarisations*nPolarisations,  nChannels,
+    int bandId = itsWriter->addBand (nPolarisations*nPolarisations, nChannels,
 				     *iter, chanWidth);
     itsBandIds.push_back(bandId);
   }
@@ -124,16 +124,29 @@ void WH_Storage::preprocess() {
 void WH_Storage::process() 
 {
   // loop over all inputs
-  DH_Vis* inputDH = 0;
-  for (int i=0; i<itsNinputs; i++)
+  // It is assumed each input DH_VisArray contains all frequency channels for 1 subband
+  // and the data is ordered in ascending frequency.
+  DH_VisArray* inputDH = 0;
+  for (int i=0; i<itsNinputs; i++)   // Loop over subbands
   {
-    inputDH = (DH_Vis*)getDataManager().getInHolder(i);
-    int rownr = -1;
-    // Write 1 frequency
-    itsWriter->write (rownr, itsBandIds[i], itsFieldId, 0, 
-		      itsCounter, inputDH->getBufSize(),
-		      inputDH->getBuffer());   // To do: add flags
+    inputDH = (DH_VisArray*)getDataManager().getInHolder(i);
+    int rownr = -1;           // Set rownr -1 when new rows need to be added
+                              // when writing a new subband
+    int dataSize = (inputDH->getBufSize())/(inputDH->getNumVis());
+    
+    for (uint ch=0; ch < inputDH->getNumVis(); ch++)  // Loop over frequency channels
+    {
+      // Check if channel frequency is ascending. 
+      if (ch > 0) {	
+	DBGASSERT(inputDH->getCenterFreq(ch) > inputDH->getCenterFreq(ch-1)); 
+      }
+      // Write 1 frequency
+      itsWriter->write (rownr, itsBandIds[i], itsFieldId, ch, 
+			itsCounter, dataSize,
+			inputDH->getBufferElement(ch, 0,0,0));   // To do: add flags
+    }
   }
+
   itsCounter++;
 
   if (itsWriteToMAC) {
@@ -147,13 +160,16 @@ void WH_Storage::process()
     
     // loop over values
     for (int i=0; i<itsNinputs; i++) {
-      inputDH = (DH_Vis*)getDataManager().getInHolder(i);
-      int rownr = -1;
-      // Write 1 frequency
-      for (int s1 = 0; s1 < itsNstations; s1++) {
-	for (int s2 = 0; s2 <= s1; s2++) {
-	  for (int p = 0; p < itsNpolSquared; p++) {
-	    itsVArray.push_back(new GCF::Common::GCFPVDouble((double)*inputDH->getBufferElement(s1, s2, p)));
+      inputDH = (DH_VisArray*)getDataManager().getInHolder(i);
+      // loop over channels
+      for (uint ch = 0; ch < inputDH->getNumVis(); ch++)
+      {
+	// loop over baselines
+	for (int s1 = 0; s1 < itsNstations; s1++) {
+	  for (int s2 = 0; s2 <= s1; s2++) {
+	    for (int p = 0; p < itsNpolSquared; p++) {
+	      itsVArray.push_back(new GCF::Common::GCFPVDouble((double)*inputDH->getBufferElement(ch, s1, s2, p)));
+	    }
 	  }
 	}
       }
