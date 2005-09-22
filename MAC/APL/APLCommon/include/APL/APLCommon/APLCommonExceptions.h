@@ -31,10 +31,14 @@ namespace LOFAR {
 namespace APLCommon {
 
   EXCEPTION_CLASS(APLException,Exception);
-  EXCEPTION_CLASS(APLCommonException,APLException);
-  EXCEPTION_CLASS(ParameterNotFoundException,APLCommonException);
-  EXCEPTION_CLASS(ParameterFileNotFoundException,APLCommonException);
-  EXCEPTION_CLASS(WrongVersionException,APLCommonException);
+
+    EXCEPTION_CLASS(APLCommonException,APLException);
+
+      EXCEPTION_CLASS(ParameterNotFoundException,APLCommonException);
+      EXCEPTION_CLASS(ParameterFileNotFoundException,APLCommonException);
+      EXCEPTION_CLASS(WrongVersionException,APLCommonException);
+
+    EXCEPTION_CLASS(OTDBException,APLException);
 
 }; // namespace APLCommon
 
