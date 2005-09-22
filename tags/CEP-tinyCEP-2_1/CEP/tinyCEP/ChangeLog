@@ -1,0 +1,709 @@
+2005-08-17 09:41  meijeren
+
+	* src/TinyApplicationHolder.cc: BugID:192 Fixed typo.
+
+2005-08-16 17:31  zwart
+
+	* src/TinyDataManager.cc: BugID: 270
+
+	  DataManagers now loop over all TH's until they are all initted
+
+2005-08-16 17:31  zwart
+
+	* src/TinyApplicationHolder.cc: BugID: 270
+
+	  Added TH_MPI::finalise to baseQuit
+
+2005-08-11 13:27  meijeren
+
+	* src/TinyDataManager.cc: BugID:269 Initialize TransportHolders in
+	  preprocess phase.
+
+2005-08-10 10:05  romein
+
+	* src/TinyDataManager.cc: BugID: 225 Avoid segfault due to deleting
+	  uninitialized itsInDHs[i] and itsOutDHs[j]
+
+2005-08-04 13:28  meijeren
+
+	* src/: WorkHolder.cc, WorkHolder.h: BugID:241 Added DBGASSERT on
+	  preprocessed flag in baseProcess method.
+
+2005-07-29 13:35  zwart
+
+	* src/ApplicationHolderController.cc: BugID: 235
+
+	  ACC now gives "ACC" as first parameter and the parameterfile as
+	  second
+
+2005-07-26 12:37  meijeren
+
+	* src/WorkHolder.cc, src/WorkHolder.h, test/DH_Example.cc,
+	  test/DH_Example.h, test/WH_Example.cc, test/WH_Example.h:
+	  BugID:209 Made WorkHolder::dump method const. This to be
+	  consistent with all other dump methods in the CEP framework.
+
+2005-07-13 16:53  meijeren
+
+	* src/TinyDataManager.cc: %[ER: 231]% Fixed bug; added check on
+	  error in return status of Connection::read() and
+	  Connection::write().
+
+2005-07-06 14:47  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, configure.in,
+	  test/Makefile.am: %[ER: 0]%
+
+	  Merged relevant changes from the 2.0 release branch into the main
+	  development line.
+
+2005-07-06 10:15  overeem
+
+	* configure.in, src/ApplicationHolderController.cc,
+	  src/ApplicationHolderController.h, src/TinyApplicationHolder.cc,
+	  src/TinyApplicationHolder.h: %[ER:285]% Upgrade ACC 1.0 to 1.1
+	  ParameterSet is now in ACC/APS.  ProceControl is now in ACC/PLC.
+	  ParameterSet getInt changed to getInt32.
+
+2005-06-24 17:44  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-23 17:43  loose
+
+	* test/Makefile.am: %[ER: 0]%
+
+	  Prepare for release 2.0 Replaced "illegal" use of CFLAGS and
+	  CXXFLAGS with AM_CPPFLAGS.
+
+2005-06-23 17:39  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 17:26  loose
+
+	* NEWS, README, configure.in: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 16:47  meijeren
+
+	* NEWS, README: %[ER: 0]% Addition of NEWS and README file for
+	  release 2.0
+
+2005-06-14 16:42  meijeren
+
+	* src/: ApplicationHolderController.h, Profiler.h, Sel_Linked.h,
+	  Sel_RoundRobin.h, Selector.h, SimulatorParseClass.h,
+	  TinyApplicationHolder.h, TinyDataManager.h, WorkHolder.h: %[ER:
+	  231]% Added doxygen tags.
+
+2005-06-13 13:54  zwart
+
+	* src/: ApplicationHolderController.cc, Profiler.cc: %[ER: 269]%
+
+	  Fixed a bug so it compiles with MPI
+
+2005-06-10 11:36  zwart
+
+	* configure.in, src/ApplicationHolderController.cc,
+	  src/ApplicationHolderController.h, src/Makefile.am,
+	  src/TinyApplicationHolder.cc, src/TinyApplicationHolder.h: %[ER:
+	  269]%
+
+	  Initial integration with ACC
+
+2005-06-08 14:35  meijeren
+
+	* src/: TinyDataManager.cc, TinyDataManager.h: %[ER: 231]% Fixed
+	  bug. getConnection method signatures must be equal to
+	  DataManager's.
+
+2005-06-06 12:12  meijeren
+
+	* src/Profiler.cc, src/Profiler.h, src/Sel_Linked.cc,
+	  src/Sel_RoundRobin.cc, src/Selector.cc,
+	  src/SimulatorParseClass.cc, src/TinyApplicationHolder.cc,
+	  src/TinyApplicationHolder.h, src/TinyDataManager.cc,
+	  src/TinyDataManager.h, src/WorkHolder.cc, src/WorkHolder.h,
+	  test/DH_Example.cc, test/DH_Example.h, test/Example.cc,
+	  test/Example2.cc, test/Example3_test.sh, test/MyExample.cc,
+	  test/MySecondExample.cc, test/MySecondExample.h,
+	  test/MySocketExample.cc, test/MySocketExample.h: %[ER: 231]%
+	  Merge with branch ER231_development.
+
+2005-06-01 14:29  diepen
+
+	* configure.in: %[ER: 70]% Added check for LONG_LONG and LOG4CPLUS
+
+2005-06-01 10:24  meijeren
+
+	* src/: Profiler.cc, Profiler.h, TinyDataManager.cc: %[ER: 231]%
+	  Added ProfilerState class needed by StationCorrelator.
+
+2005-05-27 17:06  coolen
+
+	* configure.in: %[ER: 273]%
+
+	  Changed lofar_PACKAGE into lofar_INTERNAL.
+
+2005-05-19 11:27  meijeren
+
+	* src/: TinyDataManager.cc, TinyDataManager.h: %[ER: 231]% Added
+	  copy of Connections to copy constructor.
+
+2005-05-19 10:58  meijeren
+
+	* src/Profiler.cc, src/Profiler.h, test/DH_Example.h,
+	  test/MyExample.h, test/MySecondExample.h, test/MySocketExample.h,
+	  test/WH_Example.h: %[ER: 231]% Removed includes of lofar_config.h
+	  from header files.
+
+2005-05-19 09:50  meijeren
+
+	* src/TinyDataManager.cc, src/TinyDataManager.h,
+	  test/MySecondExample.cc: %[ER: 231]% Added Connection
+	  administration in DataManager. This is necessary because a
+	  connection is no longer accessible through a DataHolder.
+
+2005-05-13 11:44  coolen
+
+	* configure.in, src/Makefile.am, src/Profiler.cc, src/Profiler.h,
+	  src/Sel_Linked.cc, src/Sel_Linked.h, src/Sel_RoundRobin.cc,
+	  src/Sel_RoundRobin.h, src/Selector.cc, src/Selector.h,
+	  src/SimulatorParse.yy, src/SimulatorParseClass.cc,
+	  src/SimulatorParseClass.h, src/SimulatorTokenize.ll,
+	  src/TinyApplicationHolder.cc, src/TinyApplicationHolder.h,
+	  src/TinyDataManager.cc, src/TinyDataManager.h, src/WorkHolder.cc,
+	  src/WorkHolder.h, test/DH_Example.cc, test/DH_Example.h,
+	  test/Example.cc, test/Example2.cc, test/Example3.cc,
+	  test/Example3_test.sh, test/MyExample.cc, test/MyExample.h,
+	  test/MySecondExample.cc, test/MySecondExample.h,
+	  test/MySocketExample.cc, test/MySocketExample.h,
+	  test/WH_Example.cc, test/WH_Example.h: all changes so far for the
+	  lofar_PACKAGE to lofar_INTERNAL step.  beware!!!  this branch
+	  also contains the ER231 changes , and those are NOT wanted in the
+	  main development tree....  Only take the configure.in stuff
+
+2005-04-28 11:48  loose
+
+	* src/Profiler.cc, src/Sel_Linked.cc, src/Sel_Linked.h,
+	  src/Sel_RoundRobin.cc, src/Sel_RoundRobin.h, src/Selector.cc,
+	  src/SimulatorParseClass.cc, src/TinyApplicationHolder.cc,
+	  src/TinyDataManager.cc, src/WorkHolder.cc, test/DH_Example.cc,
+	  test/Example.cc, test/Example2.cc, test/Example3.cc,
+	  test/MyExample.cc, test/MySecondExample.cc,
+	  test/MySocketExample.cc, test/WH_Example.cc: %[PR: 100]%
+
+	  Added line '#include <lofar_config.h>' to all .cc files.
+
+2005-04-27 14:08  lang
+
+	* src/WorkHolder.cc: %[ER:PR100]% lofar_config.h  instead of
+	  lofar_config.
+
+2005-04-27 13:54  zwart
+
+	* src/WorkHolder.cc: %[ER: PR100]%
+
+	  Added lofar_config.h
+
+2005-04-27 13:48  zwart
+
+	* src/TinyApplicationHolder.cc: %[ER: PR100]%
+
+	  Added include <lofar_config.h>
+
+2005-04-19 12:24  loose
+
+	* src/Profiler.h, src/Sel_Linked.h, src/Sel_RoundRobin.h,
+	  src/Selector.h, src/SimulatorParseClass.h,
+	  src/TinyApplicationHolder.h, src/TinyDataManager.h,
+	  src/WorkHolder.h, test/DH_Example.h, test/MyExample.h,
+	  test/MySecondExample.h, test/MySocketExample.h,
+	  test/WH_Example.h: %[PR: 100]%
+
+	  Removed all `#include <config.h>' and `#include <lofar_config.h>'
+	  from .h files. Added `#include <lofar_config.h>' to .cc files
+	  wherever necessary.
+
+2005-04-19 12:20  loose
+
+	* src/Profiler.h, src/Sel_Linked.h, src/Sel_RoundRobin.h,
+	  src/Selector.h, src/SimulatorParseClass.h,
+	  src/TinyApplicationHolder.h, src/TinyDataManager.h,
+	  src/WorkHolder.h, test/DH_Example.h, test/MyExample.h,
+	  test/MySecondExample.h, test/MySocketExample.h,
+	  test/WH_Example.h: %[PR: 100]%
+
+	  Removed all `#include <config.h>' and `#include <lofar_config.h>'
+	  from .h files. Added `#include <lofar_config.h>' to .cc files
+	  wherever necessary.
+
+2005-04-18 12:32  zwart
+
+	* src/: Profiler.cc, Profiler.h: %[ER: 242]%
+
+	  Added class ProfilingState for easier profiling
+
+2005-04-13 11:10  loose
+
+	* src/: Makefile.am, SimulatorParse.yy: %[ER: 0]%
+
+	  Merged 'bug fixes' from the release 1.0 branch to the trunk.
+
+2005-04-11 17:09  loose
+
+	* src/: SimulatorParse.yy, SimulatorTokenize.ll: %[ER: 0]%
+
+	  Prepared for release 1.0. Fixed namespace LOFAR 'bug'.
+
+2005-04-11 15:43  loose
+
+	* src/Makefile.am: %[ER: 0]%
+
+	  Added required variables for doing a 'make install'.
+
+2005-04-11 15:16  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepared for release 1.0
+
+2005-04-11 11:02  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Updated version number to 1.0
+
+2005-04-05 15:50  meijeren
+
+	* src/TinyApplicationHolder.cc, test/Example.cc, test/Example2.cc,
+	  test/MyExample.cc: %[ER: 231]% Now alsow working with gnu_mpich.
+
+2005-04-05 13:25  meijeren
+
+	* src/Profiler.h, src/Sel_Linked.cc, src/Sel_Linked.h,
+	  src/Sel_RoundRobin.cc, src/Selector.cc, src/Selector.h,
+	  src/SimulatorParseClass.cc, src/SimulatorParseClass.h,
+	  src/SimulatorTokenize.ll, src/TinyApplicationHolder.cc,
+	  src/TinyApplicationHolder.h, src/TinyDataManager.cc,
+	  src/TinyDataManager.h, src/WorkHolder.cc, src/WorkHolder.h,
+	  test/DH_Example.cc, test/DH_Example.h, test/Example3.cc,
+	  test/Example3_test.sh, test/MySecondExample.cc,
+	  test/MySecondExample.h, test/MySocketExample.cc,
+	  test/MySocketExample.h, test/WH_Example.cc: %[ER: 231]% Changes
+	  to work with new (ER231) Transport.
+
+2005-03-23 10:14  diepen
+
+	* src/SimulatorTokenize.ll, test/DH_Example.cc, test/DH_Example.h,
+	  test/Example3.cc, test/MySecondExample.cc,
+	  test/MySocketExample.cc, test/WH_Example.cc: %[ER: 247]% Changes
+	  for new complex
+
+2004-12-29 15:50  meijeren
+
+	* src/WorkHolder.cc: %[ER: 159]% Fixed compiler warning.
+
+2004-12-23 11:05  zwart
+
+	* src/: WorkHolder.cc, WorkHolder.h: %[ER: 219]%
+
+	  Added profiling to the WorkHolder
+
+2004-12-23 11:00  zwart
+
+	* src/: Makefile.am, Profiler.cc, Profiler.h: %[ER: 219]%
+
+	  Moved Profiler to tinyCEP
+
+2004-12-20 11:44  meijeren
+
+	* src/: TinyDataManager.cc, WorkHolder.h: %[ER: 159]% Use
+	  DataHolder::init instead of basePreprocess.
+
+2004-12-15 14:59  broekema
+
+	* test/: Example.cc, Example2.cc: %[ER: 133]% Use init() from
+	  TH_MPI instead of calling MPI_Init directly
+
+2004-11-10 09:01  diepen
+
+	* configure.in: %[ER: 70]% Changed CEP/Transport to LCS/Transport
+
+2004-11-09 12:39  schaaf
+
+	* test/: Example.cc, Example2.cc: %[ER: 180]% moved call to
+	  baseQuit to end of test....
+
+2004-11-02 17:04  zwart
+
+	* src/TinyDataManager.cc: %[ER: 179]%
+
+	  Added initialization of ReadyFlags to second constructor
+
+2004-10-28 13:41  zwart
+
+	* src/TinyApplicationHolder.cc: %[ER: 181]%
+
+	  Added quit() to baseQuit()
+
+2004-10-28 10:45  zwart
+
+	* configure.in: %[ER: 181]%
+
+	  Added lofar_MPI
+
+2004-10-26 17:58  schaaf
+
+	* test/: Example.cc, Example2.cc, Example3.cc: %[ER: 180]% removed
+	  old Debug::initLevels call; should be done by LofarLogger
+
+2004-10-26 16:57  schaaf
+
+	* src/: TinyDataManager.cc, TinyDataManager.h, WorkHolder.cc: %[ER:
+	  179]% corrected handling of first process call added check for
+	  multiple readyWith.... calls
+
+2004-10-21 16:49  broekema
+
+	* test/: Example.cc, Example2.cc, Example3.cc, MySecondExample.cc,
+	  MySocketExample.cc, WH_Example.cc: %[ER: 160]% Use LofarLogger
+	  instead of Debug.h. Also remove some deletes of the type
+	  WorkHolder*, which didn't do a thing. The IBM compiler disallows
+	  destructors of a pointer type.
+
+2004-10-21 14:49  loose
+
+	* test/: Example.cc, Example2.cc, Example3.cc: %[ER: 161]%
+
+	  Several small changes related to the use of namespace LOFAR.
+
+2004-10-20 15:29  overeem
+
+	* test/MySocketExample.cc: %[ER:30]% TH_Socket class was updated to
+	  the new Socket class.  Note: the 4th parameter of the constructor
+	  is changed.
+
+2004-10-14 18:37  broekema
+
+	* src/: Sel_Linked.cc, Sel_Linked.h, TinyDataManager.cc,
+	  TinyDataManager.h, WorkHolder.cc, WorkHolder.h: %[ER: 160]%
+	  Updated code still using Debug.h to the new LofarLogger.h; note
+	  that some TRACER messages in WorkHolder.cc have been removed
+	  rather than updated.
+
+2004-10-13 11:49  loose
+
+	* src/Makefile.am: %[ER: 161]%
+
+	  * Almost all code in the 'Common' package now resides in the
+	  namespace LOFAR.    Work is still in progress.  * The lofar_*.h
+	  files (like lofar_string.h) now make the using declarations of
+	  the standard types in the namespace LOFAR, instead of the global
+	  namespace.	For backward compatibility, the compiler
+	  MAKE_LOFAR_SYMBOLS_GLOBAL can be    used. It is recommended that
+	  you use these lofar_*.h header files instead of    the standard
+	  header files.  * The line 'AM_CPPFLAGS =
+	  MAKE_LOFAR_SYMBOLS_GLOBAL' has been added to most of	 the
+	  Makefile.am files. The packages that are currently being built in
+	    the weekly build are known to compile using the new 'Common'
+	  package when	 backward compatibility is enabled. Where
+	  necessary, source code or header   files were modified. This
+	  usually meant adding a line like e.g.    'using LOFAR::Thread'.
+
+2004-09-29 15:44  meijeren
+
+	* src/: TinyApplicationHolder.cc, WorkHolder.cc, WorkHolder.h:
+	  %[ER: 137]% runOnNode functionality added to tinyCEP
+
+2004-09-24 11:29  schaaf
+
+	* src/WorkHolder.cc: %[ER: 145]% only layout.
+
+2004-09-24 11:27  schaaf
+
+	* src/: TinyDataManager.cc, WorkHolder.cc: %[ER: 145]% Added
+	  condition tracing
+
+2004-08-17 15:37  meijeren
+
+	* src/: TinyDataManager.cc, TinyDataManager.h, WorkHolder.cc: %[ER:
+	  128]% Input/output rates can be set per input/output.
+
+2004-08-04 13:18  meijeren
+
+	* src/TinyDataManager.cc: %[ER: 126]% TinyDataManager calls
+	  DataHolder::basePreprocess instead of process(). Now
+	  Transporter::init() is called.
+
+2004-07-19 14:55  broekema
+
+	* test/Example3.cc: %[ER: 133]% Test procedure now actually tests
+	  the value at the output
+
+2004-07-19 14:47  broekema
+
+	* test/: Example3.cc, Example3_test.sh, Makefile.am,
+	  MySocketExample.cc: %[ER: 133]% Added test procedure for the
+	  socket test program
+
+2004-07-19 14:39  broekema
+
+	* test/Makefile.am: %[ER: 133]% Added the socket test program
+
+2004-07-19 14:39  broekema
+
+	* test/: Example3.cc, MySocketExample.cc, MySocketExample.h: %[ER:
+	  133]% Added a socket test program.
+
+2004-07-14 10:09  meijeren
+
+	* src/TinyDataManager.cc: %[ER: 126]% Correction of
+	  TinyDataManagers copy constructor.
+
+2004-07-13 17:57  meijeren
+
+	* src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/BaseDataManager.cc, src/BaseDataManager.h,
+	  src/DataManager.cc, src/DataManager.h, src/Makefile.am,
+	  src/MiniDataManager.cc, src/MiniDataManager.h, src/Sel_Linked.cc,
+	  src/Sel_Linked.h, src/Sel_RoundRobin.cc, src/Sel_RoundRobin.h,
+	  src/Selector.cc, src/Selector.h, src/SimulatorParseClass.cc,
+	  src/SimulatorParseClass.h, src/TinyApplicationHolder.cc,
+	  src/TinyApplicationHolder.h, src/TinyDataManager.cc,
+	  src/TinyDataManager.h, src/WorkHolder.cc, src/WorkHolder.h,
+	  test/DH_Example.cc, test/DH_Example.h, test/Example.cc,
+	  test/Example2.cc, test/Makefile.am, test/MyExample.cc,
+	  test/MyExample.h, test/MySecondExample.cc,
+	  test/MySecondExample.h, test/WH_Example.cc, test/WH_Example.h:
+	  %[ER: 126]% Merged branch ER_126_development with main branch.
+
+2004-07-06 11:10  broekema
+
+	* src/: MiniDataManager.cc, MiniDataManager.h: %[ER: 107]% Added
+	  support for AutoTriggering of DataHolders. This is now the
+	  default and removes the need for the user to do a
+	  "readyWithInHolder" after each read.
+
+2004-07-02 12:12  broekema
+
+	* src/: MiniDataManager.cc, MiniDataManager.h, WorkHolder.cc,
+	  WorkHolder.h: %[ER: 107]% Added (basic) support for process,
+	  input and output rates.
+
+2004-07-01 14:04  meijeren
+
+	* src/DH_Example.cc, src/DH_Example.h, src/Makefile.am,
+	  src/MyExample.cc, src/MyExample.h, src/WH_Example.cc,
+	  src/WH_Example.h, test/DH_Example.cc, test/DH_Example.h,
+	  test/Example.cc, test/Example2.cc, test/Example2_test.sh,
+	  test/Makefile.am, test/MyExample.cc, test/MyExample.h,
+	  test/MySecondExample.cc, test/MySecondExample.h,
+	  test/WH_Example.cc, test/WH_Example.h: %[ER: 126]% Second test
+	  succeeding.
+
+2004-07-01 11:24  broekema
+
+	* test/: Example.cc, Example2.cc, MyExample.cc, MyExample.h,
+	  MySecondExample.cc, MySecondExample.h, WH_Example.cc,
+	  WH_Example.h: %[ER: 107]% Fixed include paths
+
+2004-07-01 11:04  broekema
+
+	* test/: DH_Example.cc, DH_Example.h, Example2.cc,
+	  Example2_test.sh, Makefile.am, MyExample.cc, MyExample.h,
+	  MySecondExample.cc, MySecondExample.h, WH_Example.cc,
+	  WH_Example.h: %[ER: 107]% Moved example code to test/ from src/.
+	  Also added a second test program to demonstrate transport of date
+	  between WorkHolders.
+
+2004-07-01 11:02  broekema
+
+	* src/: DH_Example.cc, DH_Example.h, Makefile.am, MyExample.cc,
+	  MyExample.h, WH_Example.cc, WH_Example.h: %[ER: 107]% Removed
+	  example code, it belongs in the test directory.
+
+2004-07-01 09:58  meijeren
+
+	* src/MyExample.h, test/Example.cc: %[ER: 126]% tinyCEP test now
+	  succeeds
+
+2004-07-01 09:43  meijeren
+
+	* src/: TinyDataManager.cc, TinyDataManager.h: %[ER: 126]% All
+	  tests (except CyclicBufferTest) now succeeding.
+
+2004-06-30 17:00  broekema
+
+	* src/MyExample.h, test/Example.cc: %[ER: 128]% Made the example
+	  program do some real tests.
+
+2004-06-29 10:12  meijeren
+
+	* src/: TinyApplicationHolder.cc, TinyApplicationHolder.h,
+	  TinyDataManager.cc: %[ER: 126]% Minor updates
+
+2004-06-28 10:05  meijeren
+
+	* test/Example.cc: %[ER: 126]% Test now compiles
+
+2004-06-25 15:33  meijeren
+
+	* src/: Makefile.am, Sel_Linked.cc, Sel_Linked.h,
+	  Sel_RoundRobin.cc, Sel_RoundRobin.h, Selector.cc, Selector.h,
+	  TinyDataManager.cc, TinyDataManager.h: %[ER: 126]% Added selector
+	  to TinyDataManager.
+
+2004-06-23 17:22  meijeren
+
+	* src/: TinyApplicationHolder.cc, TinyApplicationHolder.h,
+	  TinyDataManager.h, WorkHolder.cc, WorkHolder.h: %[ER: 126]% Some
+	  minor adaptations.
+
+2004-06-21 11:40  meijeren
+
+	* src/: DH_Example.cc, WH_Example.cc, WorkHolder.cc, WorkHolder.h:
+	  %[ER: 126]% Various minor changes.
+
+2004-06-21 10:57  meijeren
+
+	* src/: ApplicationHolder.cc, ApplicationHolder.h,
+	  BaseDataManager.cc, BaseDataManager.h, DataManager.cc,
+	  DataManager.h, Makefile.am, MiniDataManager.cc,
+	  MiniDataManager.h, MyExample.cc, MyExample.h,
+	  SimulatorParseClass.cc, SimulatorParseClass.h,
+	  TinyApplicationHolder.cc, TinyApplicationHolder.h,
+	  TinyDataManager.cc, TinyDataManager.h, WH_Example.cc,
+	  WorkHolder.cc, WorkHolder.h: %[ER: 126]% Removed some base
+	  classes and renamed some files.
+
+2004-05-27 17:50  broekema
+
+	* src/MiniDataManager.cc: %[ER: 118]% Add missing read and write
+	  function calls to MiniDataManager
+
+2004-05-18 16:45  broekema
+
+	* src/ApplicationHolder.cc: %[ER: 118]% Update
+
+2004-05-18 11:41  broekema
+
+	* src/MiniDataManager.cc, src/MiniDataManager.h, test/Example.cc,
+	  test/Makefile.am: %[ER: 107]% Provide the DataHolder ID's
+
+2004-05-18 11:40  broekema
+
+	* src/Makefile.am: %[ER: 107]% Change the name of the resutling
+	  library
+
+2004-05-11 15:10  broekema
+
+	* src/ApplicationHolder.cc, src/ApplicationHolder.h,
+	  src/MiniDataManager.cc, src/MiniDataManager.h, src/MyExample.cc,
+	  src/MyExample.h, src/WH_Example.cc, src/WH_Example.h,
+	  src/WorkHolder.cc, src/WorkHolder.h, test/Example.cc: %[ER: 107]%
+	  First results from test program
+
+2004-04-28 13:27  broekema
+
+	* test/Example.cc: %[ER: 107]% Example runs, but doesn't do much.
+
+2004-04-28 13:25  broekema
+
+	* src/: ApplicationHolder.cc, ApplicationHolder.h, Makefile.am,
+	  MyExample.cc, SimulatorParse.yy, SimulatorParseClass.cc,
+	  SimulatorParseClass.h, SimulatorTokenize.ll: %[ER: 107]%
+	  Continued development. The testprogram now runs, though it
+	  doesn't do anything useful yet.
+
+2004-04-28 09:09  broekema
+
+	* src/: AppController.cc, AppController.h, AppControllerParse.yy,
+	  AppControllerParseClass.cc, AppControllerParseClass.h,
+	  AppControllerTokenize.ll, ApplicationHolder.cc,
+	  ApplicationHolder.h, BaseDataManager.h, DH_Example.cc,
+	  DH_Example.h, MiniDataManager.h, MyExample.cc, MyExample.h,
+	  WH_Example.cc, WH_Example.h: %[ER: 107]% Development continues
+
+2004-04-22 11:34  broekema
+
+	* src/: ApplicationHolder.cc, ApplicationHolder.h,
+	  BaseDataManager.cc, BaseDataManager.h, DataManager.cc,
+	  DataManager.h, Makefile.am, MiniDataManager.cc,
+	  MiniDataManager.h, MyExample.cc, MyExample.h, WH_Example.cc,
+	  WH_Example.h, WorkHolder.cc, WorkHolder.h: %[ER: 107]% More
+	  development.
+
+2004-04-16 16:23  broekema
+
+	* src/WH_Example.h: %[ER: 107]% Fixed some small and an include
+	  path.
+
+2004-04-16 16:01  broekema
+
+	* src/AppController.cc, src/ApplicationHolder.h,
+	  src/BaseDataManager.h, src/DH_Example.h, src/Makefile.am,
+	  src/MiniDataManager.h, src/WorkHolder.h, test/Example.cc: %[ER:
+	  107]% Fixed to use the new name Transport for libTransport.
+
+2004-04-16 13:45  broekema
+
+	* Makefile.am, configure.in, src/ApplicationHolder.cc,
+	  src/ApplicationHolder.h, src/DH_Example.cc, src/DH_Example.h,
+	  src/Makefile.am, src/WH_Example.cc, src/WH_Example.h,
+	  test/Example.cc, test/Example_test.sh, test/Makefile.am:
+	  Development continues. Add an example program and associated WH
+	  and DH.
+
+2004-04-15 11:45  broekema
+
+	* configure.in, src/WorkHolder.cc, src/WorkHolder.h: Development
+	  continues
+
+2004-04-15 09:59  broekema
+
+	* src/: BaseDataManager.h, DataManager.h, Makefile.am,
+	  MiniDataManager.cc, MiniDataManager.h: Renamed DataManager to
+	  BaseDataManager to more clearly define it's role.  Also changed
+	  interface to use DataHolders instead of Transporters.
+
+2004-04-14 16:40  broekema
+
+	* src/: Makefile.am, WorkBlock.cc, WorkBlock.h, WorkHolder.cc,
+	  WorkHolder.h: Renamed WorkBlock to WorkHolder to correspond to
+	  CEPFrame.
+
+2004-04-14 16:32  broekema
+
+	* src/: DataManager.h, Makefile.am, MiniDataManager.cc,
+	  MiniDataManager.h: First stab at DataManager base class and
+	  associated MiniDataManager.
+
+2004-04-14 13:04  broekema
+
+	* src/: AppController.cc, SimulatorParse.yy,
+	  SimulatorParseClass.cc, SimulatorParseClass.h,
+	  SimulatorTokenize.ll: Removed duplicate files.
+
+2004-04-07 15:33  broekema
+
+	* Makefile.am, bootstrap, configure.in, src/AppController.cc,
+	  src/AppController.h, src/AppControllerParse.yy,
+	  src/AppControllerParseClass.cc, src/AppControllerParseClass.h,
+	  src/AppControllerTokenize.ll, src/Makefile.am,
+	  src/SimulatorParse.yy, src/SimulatorParseClass.cc,
+	  src/SimulatorParseClass.h, src/SimulatorTokenize.ll,
+	  src/WorkBlock.cc, src/WorkBlock.h: Import initial version of new
+	  tinyCEP. All transport functionality is now imported from
+	  libTransport.
+
