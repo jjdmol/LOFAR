@@ -125,7 +125,7 @@ par  antennaArray            I    text   -      10    0    FTS-1-LBA-RSP0       
 par  frequency               I    flt    MHz    10    0    78.0                    -        'description'
 par  nyquistZone             I    int    -      10    0    1                       -        'description'
 par  bandSelection           I    text   -      10    0    LB_10_90                -        'description'
- # possible values: LB_10_90, HB_110_190, HB_170_230, HB_210_250
+# possible values: LB_10_90, HB_110_190, HB_170_230, HB_210_250
 par  maxRcusDefect           I    int    -      10    0    1                       -        'description'
 
 #########################################################################################################
@@ -163,29 +163,29 @@ node  "VI1"        1.0.0  test  'node constraint'  "Virtual Instrument"
 #------------------------------------------------------------------------------
 uses  'VT1'         1.0.0   test    0+
 
-#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  allocatedCCU            I    text   -      10    0    lofar27                 -        'description'
-par  logicalDeviceType       I    text   -      10    0    VIRTUALINSTRUMENT       -        'description'
-par  parentHost              I    text   -      10    0    lofar27                 -        'description'
-par  parentPort              I    int    -      10    0    0                       -        'description'
-par  parentTask              I    text   -      10    0    Observation1            -        'description'
-par  remoteSystem            I    text   -      10    0    CCU1                    -        'description'
-par  startDaemonHost         I    text   -      10    0    lofar27                 -        'description'
-par  startDaemonPort         I    text   -      10    0    27010                   -        'description'
-par  startDaemonTask         I    text   -      10    0    CCU1_VIC_VIStartDaemon  -        'description'
-par  propertysetBaseName     I    text   -      10    0    VIC_VI1                 -        'description'
-par  propertysetDetailsType  I    text   -      10    0    TAplVicVI               -        'description'
-par  claimTime               I    text   -      10    0    +10                     -        'description'
-par  prepareTime             I    text   -      10    0    +30                     -        'description'
-par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
-par  subbandTimes            I    text   -      10    0    ''                      -        'description'
-par  subbands                I    text   -      10    0    [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] -        'description'
-par  directionType           I    text   -      10    0    J2000                   -        'description'
-par  angleTimes              I    text   -      10    0    [+0,+60,+120,+180]      -        'description'
-par  angle1                  I    text   -      10    0    [6.123662, 5.233748, 1.459568, 3.276114] -        'description'
-par  angle2                  I    text   -      10    0    [1.026719, 0.711018, 0.384089, 0.216275] -        'description'
+par  allocatedCCU            I    text   -      10    0    'lofar27'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'VIRTUALINSTRUMENT'       -        'description'
+par  parentHost              I    text   -      10    0    'lofar27'                 -        'description'
+par  parentPort              I    int    -      10    0    0                         -        'description'
+par  parentTask              I    text   -      10    0    'Observation1'            -        'description'
+par  remoteSystem            I    text   -      10    0    'CCU1'                    -        'description'
+par  startDaemonHost         I    text   -      10    0    'lofar27'                 -        'description'
+par  startDaemonPort         I    text   -      10    0    '27010'                   -        'description'
+par  startDaemonTask         I    text   -      10    0    'CCU1_VIC_VIStartDaemon'  -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_VI1'                 -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '+10'                     -        'description'
+par  prepareTime             I    text   -      10    0    '+30'                     -        'description'
+par  startTime               I    text   -      10    0    '+50'                     -        'description'
+par  stopTime                I    text   -      10    0    '+350'                    -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]' - 'description'
+par  directionType           I    text   -      10    0    'J2000                    -        'description'
+par  angleTimes              I    text   -      10    0    '[+0,+60,+120,+180]'      -        'description'
+par  angle1                  I    text   -      10    0    '[6.123662, 5.233748, 1.459568, 3.276114]' - 'description'
+par  angle2                  I    text   -      10    0    '[1.026719, 0.711018, 0.384089, 0.216275]' - 'description'
 # 3C461: Cassiopeia A - 6.123662, 1.026719
 # 3C405: Cygnus A     - 5.233748, 0.711018
 # 3C144: M1           - 1.459568, 0.384089
@@ -203,20 +203,20 @@ uses  'AO1'         1.0.0   test    0+
 uses  'ARG1'        1.0.0   test    0+
 uses  'VI1'         1.0.0   test    0+
 
-#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  allocatedCCU            I    text   -      10    0    lofar27                 -        'description'
-par  logicalDeviceType       I    text   -      10    0    OBSERVATION             -        'description'
-par  name                    I    text   -      10    0    Observation1            -        'description'
-par  parentHost              I    text   -      10    0    lofar27                 -        'description'
-par  parentPort              I    int    -      10    0    27100                   -        'description'
-par  parentTask              I    text   -      10    0    MACScheduler            -        'description'
-par  propertysetBaseName     I    text   -      10    0    VIC_Observation1        -        'description'
-par  propertysetDetailsType  I    text   -      10    0    TAplVicVI               -        'description'
-par  claimTime               I    text   -      10    0    +10                     -        'description'
-par  prepareTime             I    text   -      10    0    +30                     -        'description'
-par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
-par  subbandTimes            I    text   -      10    0    ''                      -        'description'
-par  subbands                I    text   -      10    0    [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] -        'description'
+par  allocatedCCU            I    text   -      10    0    'lofar27'                 -        'description'
+par  logicalDeviceType       I    text   -      10    0    'OBSERVATION'             -        'description'
+par  name                    I    text   -      10    0    'Observation1'            -        'description'
+par  parentHost              I    text   -      10    0    'lofar27'                 -        'description'
+par  parentPort              I    int    -      10    0    27100                     -        'description'
+par  parentTask              I    text   -      10    0    'MACScheduler'            -        'description'
+par  propertysetBaseName     I    text   -      10    0    'VIC_Observation1'        -        'description'
+par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'               -        'description'
+par  claimTime               I    text   -      10    0    '+10'                     -        'description'
+par  prepareTime             I    text   -      10    0    '+30'                     -        'description'
+par  startTime               I    text   -      10    0    '+50'                     -        'description'
+par  stopTime                I    text   -      10    0    '+350'                    -        'description'
+par  subbandTimes            I    text   -      10    0    ''                        -        'description'
+par  subbands                I    text   -      10    0    '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] - 'description'
 
