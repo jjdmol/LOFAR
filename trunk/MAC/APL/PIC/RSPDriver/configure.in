@@ -100,6 +100,7 @@ lofar_INTERNAL(MAC/Test/Suite,suite,,1,Suite/test.h,,)
 lofar_INTERNAL(MAC/GCF/TM,GCFTM,,1,GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon,GCFCommon,,1,GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon,RTCCommon,,1,Marshalling.h,,)
+lofar_INTERNAL(MAC/APL/PAC/RSPDriver/src/rspctlfe,rspfe,,1,RSPFE_Protocol.ph,,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 
