@@ -727,7 +727,8 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
         case Statistics::BEAMLET_POWER:
           //snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
           //SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
-          snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ", rcuout);
+          snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
+		   (rcuout/2), (rcuout%2?'Y':'X'));
           break;
         default:
           logMessage(cerr,"Error: invalid m_type");
@@ -1534,14 +1535,15 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
         if (optarg)
         {
-          if (!strcmp(optarg, "subband"))
-          {
+          if (!strcmp(optarg, "subband")) {
             statscommand->setType(Statistics::SUBBAND_POWER);
-          }
-          else if (!strcmp(optarg, "beamlet"))
-          {
+          } else if (!strcmp(optarg, "beamlet")) {
+	    command->set_ndevices(m_nrspboards * MEPHeader::N_POL);
             statscommand->setType(Statistics::BEAMLET_POWER);
-          }
+          } else {
+	    LOG_FATAL_STR("invalid statistics type '" << optarg << "'");
+	    exit(EXIT_FAILURE);
+	  }
         }
       }
       break;
