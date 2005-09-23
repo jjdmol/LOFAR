@@ -50,6 +50,8 @@
 //# ACC Includes
 #ifndef OTDB_UNAVAILABLE
 #include <OTDB/OTDBconnection.h>
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/OTDBnode.h>
 #endif // OTDB_UNAVAILABLE
 #include <APS/ParameterSet.h>
 
@@ -149,6 +151,7 @@ namespace GSO
       
       bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
       boost::shared_ptr<ACC::APS::ParameterSet> _readParameterSet(const string& VIrootID);
+      void createChildsSections(OTDB::TreeMaintenance& tm, int32 treeID, OTDB::nodeIDType topItem, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
       void _schedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
       void _updateSchedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
