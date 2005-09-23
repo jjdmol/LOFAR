@@ -24,12 +24,16 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/OTDBnode.h>
+
 #include <boost/shared_array.hpp>
 #include <GCF/ParameterSet.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVInteger.h>
 
 #include "APLCommon/APLUtilities.h"
+#include "APLCommon/APLCommonExceptions.h"
 #include "MACScheduler.h"
 
 INIT_TRACER_CONTEXT(LOFAR::GSO::MACScheduler,LOFARLOGGER_PACKAGE);
@@ -37,6 +41,7 @@ INIT_TRACER_CONTEXT(LOFAR::GSO::MACScheduler,LOFARLOGGER_PACKAGE);
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::OTDB;
 
 namespace LOFAR
 {
@@ -73,9 +78,9 @@ MACScheduler::MACScheduler() :
   m_VIclientPorts(),
   m_connectedVIclientPorts(),
   m_VItoSASportMap(),
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-  m_configurationManager(),
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+#ifndef OTDB_UNAVAILABLE
+  m_OTDBconnection(),
+#endif // OTDB_UNAVAILABLE
   m_beamletAllocator(128)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
@@ -98,24 +103,33 @@ MACScheduler::MACScheduler() :
   GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
   try
   {
-    string hostname = pParamSet->getString(MS_CONFIG_PREFIX + string("OTDBhostname"));
+    string username = pParamSet->getString(MS_CONFIG_PREFIX + string("OTDBusername"));
     string databasename = pParamSet->getString(MS_CONFIG_PREFIX + string("OTDBdatabasename"));
     string password = pParamSet->getString(MS_CONFIG_PREFIX + string("OTDBpassword"));
     
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-    m_configurationManager = new ACC::ConfigurationMgr(hostname,databasename,password);
-#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
-    LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+#ifndef OTDB_UNAVAILABLE
+    m_OTDBconnection.reset(new OTDBconnection(username, databasename, password));
+    if(m_OTDBconnection)
+    {
+      if(!m_OTDBconnection->connect())
+      {
+        LOG_FATAL(formatString("Unable to connect to database %s using %s, %s",databasename.c_str(),username.c_str(),password.c_str()));
+        THROW(APLCommon::OTDBException,
+	      string("Unable to connect to database ") + databasename + string(" using ") + username + string(" ") + password);
+      }
+    }
+    else
+    {
+      LOG_FATAL("Memory allocation error");
+      THROW(APLCommon::APLException,string("Memory allocation error"));
+    }
+#else // OTDB_UNAVAILABLE
+    LOG_FATAL("TODO: Use OTDBConnection to access OTDB database");
+#endif // OTDB_UNAVAILABLE
   } 
   catch(Exception& e)
   {
-    LOG_WARN(formatString("OTDB configuration not found. Using parameterfile",e.message().c_str()));
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-    m_configurationManager = new ACC::ConfigurationMgr;
-#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
-    LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+    LOG_WARN(formatString("Exception: %s; OTDB configuration not found. Using parameterfile",e.message().c_str()));
   }
 }
 
@@ -787,21 +801,43 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
   return allocationOk;
 }
 
+boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const string& VIrootID)
+{
+  string shareLocation = _getShareLocation();
+  // read the parameterset from the database:
+#ifndef OTDB_UNAVAILABLE
+  int32 otdbVIrootID=atoi(VIrootID.c_str());
+  TreeMaintenance tm(m_OTDBconnection.get());
+  OTDBnode topNode = tm.getTopNode(otdbVIrootID);
+
+  string tempFileName = APLUtilities::getTempFileName();
+
+  LOG_INFO(formatString("Exporting tree %s to '%s'",VIrootID.c_str(),tempFileName.c_str()));
+  if(!tm.exportTree(otdbVIrootID, topNode.nodeID(), tempFileName))
+  {
+    THROW(APLCommon::OTDBException, string("Unable to export tree ") + VIrootID + string(" to ") + tempFileName);
+  }
+  boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(tempFileName));
+
+#else // OTDB_UNAVAILABLE
+
+  LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
+  // When the ACC::ConfigurationMgr can be used, then the following code is obsolete: // assume VIrootID is a file
+  boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + VIrootID));
+  // End of soon to be obsolete code
+
+#endif // OTDB_UNAVAILABLE
+
+  return ps;
+}
+
 void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
 {  
   string shareLocation = _getShareLocation();
   try
   {
-    // read the parameterset from the database:
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-    boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(VIrootID, "latest");
-#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
-    LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
-    // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-    boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + VIrootID)); // assume VIrootID is a file
-    // End of soon to be obsolete code
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
-
+    boost::shared_ptr<ACC::APS::ParameterSet> ps = _readParameterSet(VIrootID);
+    
     // replace the parent port (assigned by the ServiceBroker)
     unsigned int parentPort = m_VIparentPort.getPortNumber();
     ACC::APS::KVpair kvPair(string("parentPort"),(int)parentPort);
@@ -908,15 +944,7 @@ void MACScheduler::_updateSchedule(const string& VIrootID, GCFPortInterface* por
   // search the port of the VI
   try
   {
-    // read the parameterset from the database:
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-    boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(VIrootID, "latest");
-#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
-    LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
-    // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-    boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + VIrootID)); // assume VIrootID is a file
-    // End of soon to be obsolete code
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+    boost::shared_ptr<ACC::APS::ParameterSet> ps = _readParameterSet(VIrootID);
     
     // replace the parent port (assigned by the ServiceBroker)
     unsigned int parentPort = m_VIparentPort.getPortNumber();
@@ -979,15 +1007,7 @@ void MACScheduler::_cancelSchedule(const string& VIrootID, GCFPortInterface* por
   // search the port of the VI
   try
   {
-    // read the parameterset from the database:
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-    boost::shared_ptr<ACC::APS::ParameterSet> ps(m_configurationManager->getPS(VIrootID, "latest");
-#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
-    LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
-    // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-    boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + VIrootID)); // assume VIrootID is a file
-    // End of soon to be obsolete code
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+    boost::shared_ptr<ACC::APS::ParameterSet> ps = _readParameterSet(VIrootID);
     
     string viName = ps->getString("name");
     

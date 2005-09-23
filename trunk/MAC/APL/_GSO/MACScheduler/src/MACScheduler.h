@@ -48,9 +48,9 @@
 #include <Common/LofarLogger.h>
 
 //# ACC Includes
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-#include <ACC/ConfigurationMgr.h>
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+#ifndef OTDB_UNAVAILABLE
+#include <OTDB/OTDBconnection.h>
+#endif // OTDB_UNAVAILABLE
 #include <APS/ParameterSet.h>
 
 // forward declaration
@@ -148,6 +148,7 @@ namespace GSO
       void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
       bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
+      boost::shared_ptr<ACC::APS::ParameterSet> _readParameterSet(const string& VIrootID);
       
       void _schedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
       void _updateSchedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
@@ -172,9 +173,9 @@ namespace GSO
       
       TStringTCPportMap                     m_VItoSASportMap;
       
-#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
-      boost::shared_ptr<ACC::ConfigurationMgr> m_configurationManager;
-#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+#ifndef OTDB_UNAVAILABLE
+      boost::shared_ptr<OTDB::OTDBconnection> m_OTDBconnection;
+#endif // OTDB_UNAVAILABLE
       
       BeamletAllocator                      m_beamletAllocator;
 

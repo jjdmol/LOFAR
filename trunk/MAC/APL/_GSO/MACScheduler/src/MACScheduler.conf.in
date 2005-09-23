@@ -30,9 +30,9 @@ mac.ns.CCU6_VIC_VIStartDaemon.server.host=ccu6
 mac.ns.CCU6_VIC_VIStartDaemon.server.port=27010
 mac.top.MACScheduler.CCU6_VIC_VIStartDaemon.remoteservice=CCU6_VIC_VIStartDaemon:server
 
-#mac.apl.ams.OTDBhostname=
-#mac.apl.ams.OTDBdatabasename=
-#mac.apl.ams.OTDBpassword=
+mac.apl.ams.OTDBusername=paulus
+mac.apl.ams.OTDBdatabasename=boskabouter
+mac.apl.ams.OTDBpassword=otdbtest
 mac.apl.ams.shareLocation=/opt/lofar/MAC/parametersets/
 mac.apl.ams.numberOfVIStartDaemons=1
 
