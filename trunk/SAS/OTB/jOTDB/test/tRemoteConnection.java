@@ -41,6 +41,7 @@ class tRemoteConnection
 	     if (treeList.size() == 0) 
 	       {
 		  System.out.println("Error:" + remoteOTDB.errorMsg());
+		  System.exit (0);
 	       }
 	     else 
 	       {
