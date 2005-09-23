@@ -62,6 +62,7 @@ int main (int	argc, char*	argv[]) {
 
 	if (argc != 5) {
 		cout << "Usage: addVI <VI tree definition file> <user> <passwd> <database> " << endl;
+		cout << "     example: addVI.sh ObservationVIcomp.in paulus boskabouter otdbtest" << endl;
 		return (1);
 	}
 
@@ -115,6 +116,15 @@ int main (int	argc, char*	argv[]) {
 		OTDBtree	treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 
+		// Test creating a full tree of the template tree
+		LOG_INFO("Trying to instanciate the copied tree");
+		treeIDType	 VHtreeID = tm.instanciateTree(treeID);
+		LOG_INFO_STR("ID of new tree is " << VHtreeID);
+		if (!VHtreeID) {
+			LOG_ERROR(tm.errorMsg());
+		}
+		OTDBtree	VHtree = conn.getTreeInfo(VHtreeID);
+		LOG_INFO_STR(VHtree);
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

@@ -24,9 +24,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <OTDB/TreeMaintenance.h>
-#include <OTDB/OTDBnode.h>
-
 #include <boost/shared_array.hpp>
 #include <GCF/ParameterSet.h>
 #include <GCF/GCF_PVString.h>
@@ -42,6 +39,7 @@ using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
 using namespace LOFAR::OTDB;
+using namespace std;
 
 namespace LOFAR
 {
@@ -809,6 +807,7 @@ boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const 
   int32 otdbVIrootID=atoi(VIrootID.c_str());
   TreeMaintenance tm(m_OTDBconnection.get());
   OTDBnode topNode = tm.getTopNode(otdbVIrootID);
+  LOG_INFO_STR(topNode);
 
   string tempFileName = APLUtilities::getTempFileName();
 
@@ -818,6 +817,8 @@ boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const 
     THROW(APLCommon::OTDBException, string("Unable to export tree ") + VIrootID + string(" to ") + tempFileName);
   }
   boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(tempFileName));
+
+  createChildsSections(tm,otdbVIrootID,topNode.nodeID(),ps);
 
 #else // OTDB_UNAVAILABLE
 
@@ -829,6 +830,37 @@ boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const 
 #endif // OTDB_UNAVAILABLE
 
   return ps;
+}
+
+void MACScheduler::createChildsSections(TreeMaintenance& tm, int32 treeID, nodeIDType topItem, boost::shared_ptr<ACC::APS::ParameterSet> ps)
+{
+  vector<string> childs;
+  // now add the childs sections by querying the database
+  // getTreeList at depth 1
+  // if not leaf then it is a child
+  LOG_INFO("Trying to get a collection of items on depth=1");
+  vector<OTDBnode> nodeList =tm.getItemList(treeID,topItem,1);
+  for(uint32 nodeIt=0; nodeIt<nodeList.size();++nodeIt) 
+  {
+    if(!nodeList[nodeIt].leaf)
+    {
+      childs.push_back(nodeList[nodeIt].name);
+      // and recurse down the tree
+      nodeIDType childItem = nodeList[nodeIt].nodeID();
+      createChildsSections(tm, treeID, childItem, ps);
+    }
+  }
+  string childsString("[");
+  for(uint32 i=0;i<childs.size();++i)
+  {
+    stringstream parstream;
+    childsString += childs[i];
+    childsString += string(",");
+  }
+  childsString[childsString.length()-1]=']';
+  LOG_DEBUG(formatString("creating childs section: %s",childsString.c_str()));
+  ACC::APS::KVpair childsKV(string("childs"), childsString);
+  ps->replace(childsKV);
 }
 
 void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
@@ -925,6 +957,19 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
   catch(Exception& e)
   {
     LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+    SASResponseEvent sasResponseEvent;
+    sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+    sasResponseEvent.VIrootID = VIrootID;
+    
+    if(port != 0)
+    {
+      port->send(sasResponseEvent);
+    }
+    m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+  }
+  catch(exception& e)
+  {
+    LOG_FATAL(formatString("Error reading schedule parameters: %s",e.what()));
     SASResponseEvent sasResponseEvent;
     sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
     sasResponseEvent.VIrootID = VIrootID;
