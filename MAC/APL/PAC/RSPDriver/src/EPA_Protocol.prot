@@ -471,7 +471,7 @@ event = {
   };
   param = {
     name = "ch";
-    type = "uint16[MEPHeader::N_BEAMLETS * MEPHeader::N_POL]";
+    type = "uint16[MEPHeader::N_XBLETS * MEPHeader::N_POL]";
   };
 };
 

@@ -51,37 +51,33 @@ CacheBuffer::CacheBuffer()
 
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
 			    GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
-			    MEPHeader::N_BEAMLETS);
-  m_subbandselection().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
-			      MEPHeader::N_BEAMLETS);
+			    MEPHeader::N_XBLETS);
+  m_beamletweights() = complex<int16>(0,0);
 
-  if (!GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
-  {
-    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
-      complex<int16>(0, 0);
-    m_subbandselection() = 0;
-  }
-  else
+  m_subbandselection().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
+			      MEPHeader::N_XBLETS);
+  m_subbandselection() = 0;
+
+  if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
   {
     // these weights ensure that the beamlet statistics
     // exactly match the subband statistics
     m_beamletweights()(Range::all(), Range::all(), Range::all()) =
       complex<int16>(0x4000, 0);
 
-    // reset weights on first 8 beamlets for cross correlation
+    // reset weights on first N_XLETS beamlets for cross correlation
     // they will be set again in BWWrite::sendrequest()
-    m_beamletweights()(Range::all(), Range::all(), Range(0, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL - 1)) =
+    m_beamletweights()(Range::all(), Range::all(), Range(0, MEPHeader::N_XLETS - 1)) = 
       complex<int16>(0,0);
 
     LOG_INFO_STR("m_beamletweights=" << m_beamletweights()(0, Range::all(), Range::all()));
-
 
     //
     // Set default subband selection starting at RSPDriver.FIRST_SUBBAND
     //
     for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
-      for (int sb = 0; sb < m_subbandselection().extent(secondDim); sb++) {
-	m_subbandselection()(rcu, sb) = (rcu % MEPHeader::N_POL) +
+      for (int sb = 0; sb < MEPHeader::N_BEAMLETS; sb++) {
+	m_subbandselection()(rcu, sb + MEPHeader::N_XLETS) = (rcu % MEPHeader::N_POL) +
 	  (sb * MEPHeader::N_POL) +
 	  (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
       }
