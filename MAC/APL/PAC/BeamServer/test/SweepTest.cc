@@ -130,7 +130,8 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	// this creates the first beam of N_BEAMLETS beams
 	//
 	BSBeamallocEvent alloc;
-	alloc.subarrayname = "ITS-LBA";
+	alloc.name = "SweepTest";
+	alloc.subarrayname = "FTS-1-LBA-RSP0";
 	beam_count=0;
 	alloc.allocation()[beam_count] = 0;
 
@@ -157,7 +158,8 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	if (++beam_count < MEPHeader::N_BEAMLETS)
 	  {
 	    BSBeamallocEvent alloc;
-	    alloc.subarrayname = "ITS-LBA";
+	    alloc.name = "SweepTest";
+	    alloc.subarrayname = "FTS-1-LBA-RSP0";
 	    alloc.allocation()[beam_count] = 0;
 	  
 	    TESTC(beam_server.send(alloc));
