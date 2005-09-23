@@ -18,7 +18,9 @@
 
 #include <Common/Timer.h>
 
+#ifdef HAVE_BGL
 #include <hummer_builtin.h>
+#endif
 
 #include <fftw.h>
 #include <assert.h>

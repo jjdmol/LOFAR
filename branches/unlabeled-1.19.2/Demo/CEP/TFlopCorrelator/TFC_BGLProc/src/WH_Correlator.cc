@@ -27,7 +27,9 @@
 #include <APS/ParameterSet.h>
 #include <WH_Correlator.h>
 
+#ifdef HAVE_BGL
 #include <hummer_builtin.h>
+#endif
 
 using namespace LOFAR;
 
@@ -82,10 +84,6 @@ void WH_Correlator::preprocess() {
 
 void WH_Correlator::process() {
 
-  DH_CorrCube* inHolderPtr = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0));
-  DH_Vis*      outHolderPtr = static_cast<DH_Vis*>(getDataManager().getOutHolder(0));
-  DH_Vis::BufferType* outPtr = 0;
-
   static NSTimer timer("WH_Correlator::process()", true);
 
   timer.start();
@@ -111,17 +109,31 @@ void WH_Correlator::process() {
   for (int i = 0; i < NR_CHANNELS_PER_CORRELATOR; i++) {
     outputs[i] = (DH_Vis::BufferType*) static_cast<DH_Vis*>(getDataManager().getOutHolder(i))->getBuffer();
   }
+
+  int x;
   
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch++) {
-
-    for (int x = 0; x < itsNelements; x += 2 ){
-      stationInputType *S0 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, x, 0, 0);
-      stationInputType *S1 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, x+1, 0, 0);
+    for (x = 0; x < itsNelements-1; x += 2 ){
+      stationInputType *S0 = (stationInputType*) 
+	static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, x, 0, 0);
+      stationInputType *S1 = (stationInputType*) 
+	static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, x+1, 0, 0);
       for (int y = 0; y <= x; y += 2) { 
-	stationInputType *S2 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, y, 0, 0);
-	stationInputType *S3 = (stationInputType*) static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, y+1, 0, 0);
+	stationInputType *S2 = (stationInputType*) 
+	  static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, y, 0, 0);
+	stationInputType *S3 = (stationInputType*) 
+	  static_cast<DH_CorrCube*>(getDataManager().getInHolder( ch / ( NR_STATIONS/itsNfilters ) ))->getBufferElement(ch, y+1, 0, 0);
 
+	// now call the actual correlator.
 	_correlate_2x2(&(*S0)[0][0], &(*S1)[0][0], &(*S2)[0][0], &(*S3)[0][0], outputs[ch], NR_SAMPLES_PER_INTEGRATION);
+      }
+      if (x + itsNelements - 1) {
+	// now process the final diagonal
+	for (x = 0; x < itsNelements; x += 2) {
+	  int y = itsNelements - x - 1;
+	  
+
+	}
       }
     }
   }
