@@ -2,6 +2,8 @@
 Releases sorted by release date
 ===============================
 
+CEP/CEPFrame    :       version: 2.1;   date: 2005/09/23
+CEP/tinyCEP     :       version: 2.1;   date: 2005/09/22
 LCS/ACC         :       version: 2.0;   date: 2005/09/07
 LCS/Transport   :       version: 2.1;   date: 2005/09/05
 LCS/Common      :       version: 2.3;   date: 2005/09/02
@@ -273,11 +275,27 @@ LCS/Tranport
 CEP/tinyCEP
 -----------
 
+  Version: 2.1; date: 2005/09/22
+
+    required packages:
+      internal: autoconf_share (2.3)
+                LCS/Common (2.3)
+                LCS/Transport (2.1)
+                LCS/ACC (2.0)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: mpich (1.2.5.2)
+
+
   Version: 2.0; date: 2005/06/23
 
     required packages:
       internal: autoconf_share (2.2)
+                LCS/Common (2.2)
                 LCS/Transport (2.0)
+                LCS/ACC (1.1)
       external: <none>
 
     optional packages:
@@ -300,17 +318,32 @@ CEP/tinyCEP
 CEP/CEPFrame
 ------------
 
+  Version: 2.1; date: 2005/09/23
+
+    required packages:
+      internal: autoconf_share (2.3)
+                LCS/Common (2.3)
+                LCS/Transport (2.1)
+                CEP/tinyCEP (2.1)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: mpich (1.2.5.2)
+
+
   Version: 2.0; date: 2005/06/23
 
     required packages:
       internal: autoconf_share (2.2)
+                LCS/Common (2.2)
+                LCS/Transport (2.0)
                 CEP/tinyCEP (2.0)
       external: <none>
 
     optional packages:
       internal: <none>
       external: mpich (1.2.5.2)
-                postgresql (7.3.2)
 
 
   Version: 1.0; date: 2005/04/12
