@@ -15,13 +15,13 @@ package gui;
 
 
 import jOTDB.jOTDBinterface;
-import jOTDB.jOTDBtree;
 import java.io.File;
 import java.rmi.Naming;
 import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 
@@ -54,17 +54,15 @@ public class otbgui extends javax.swing.JFrame {
     static String OTDBDBName      = "otdbtest";   
     
     private static jOTDBinterface remoteOTDB;    
-    
+
     DefaultMutableTreeNode root = new DefaultMutableTreeNode();
     
-    String TreeTableTitles[] = {"TreeID", "Creator", "CreationDate", "Classification", 
-                                "Type", "State", "Campaign", "Start Time", "Stop Time"};
+
     
     boolean isTreeFilled = false;
     boolean isOTDB =false;
     boolean isFile=true;
        
-
     /** Creates new form otbgui */
     public otbgui() {
         initComponents();
@@ -87,6 +85,7 @@ public class otbgui extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
         jTabbedPane2 = new javax.swing.JTabbedPane();
         TreePanel = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
         TreeTable = new javax.swing.JTable();
         TreeApplyButton = new javax.swing.JButton();
         BrowsePanel = new javax.swing.JPanel();
@@ -161,20 +160,41 @@ public class otbgui extends javax.swing.JFrame {
         setName("mainFrame");
         jTabbedPane2.setMinimumSize(new java.awt.Dimension(100, 300));
         jTabbedPane2.setPreferredSize(new java.awt.Dimension(100, 300));
-        TreePanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        TreePanel.setLayout(new java.awt.BorderLayout());
 
         TreePanel.setToolTipText("Search on one or more of the given constraints");
         TreePanel.setMinimumSize(new java.awt.Dimension(500, 300));
         TreePanel.setPreferredSize(new java.awt.Dimension(500, 300));
+        jScrollPane3.setHorizontalScrollBar(null);
+        TreeTable.setBorder(new javax.swing.border.EtchedBorder());
         TreeTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-
+                {null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-
+                "TreeID", "Creator", "CreationDate", "Class", "Type", "State", "Campaign", "StartTime", "StopTime"
             }
-        ));
-        TreePanel.add(TreeTable, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 80, 740, 160));
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        TreeTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        TreeTable.setTableHeader(null);
+        jScrollPane3.setViewportView(TreeTable);
+
+        TreePanel.add(jScrollPane3, java.awt.BorderLayout.CENTER);
 
         TreeApplyButton.setText("Apply");
         TreeApplyButton.addActionListener(new java.awt.event.ActionListener() {
@@ -183,7 +203,7 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
 
-        TreePanel.add(TreeApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 260, -1, -1));
+        TreePanel.add(TreeApplyButton, java.awt.BorderLayout.SOUTH);
 
         jTabbedPane2.addTab("TreeList", null, TreePanel, "change tree search");
 
@@ -490,7 +510,11 @@ public class otbgui extends javax.swing.JFrame {
             String aS="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRegistryName;
 //            String aS="lofar17.astron.nl";
             if (openRemoteConnection(aS)) {
-               fillTreeTable();
+               if (fillTreeTable()) {
+                  System.out.println("Table should be filled now");
+               } else {
+                  System.out.println("Error in filling the table");
+               }
                SourceMenuInputFile.setSelected(false);
                isFile=false;
                isOTDB=true;
@@ -632,6 +656,7 @@ public class otbgui extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField selectedTreeTextField;
@@ -664,48 +689,34 @@ public class otbgui extends javax.swing.JFrame {
         return false;
     }   
     
-    private Vector fillTreeTable() {
+    private boolean fillTreeTable() {
         System.out.println("Trying to obtain the treeList");
         Vector treeList=new Vector();
-        Object tableData[][]= {};
-
-        try {
+        
+        try {            
           treeList=remoteOTDB.getTreeList((short)0, (short)0);
           if (treeList.size() == 0) {
             System.out.println("Error:" + remoteOTDB.errorMsg());
+            return false;
           } else {
             System.out.println("Collected tree list");
           }
-	  
-          for (int k=0; k< treeList.size();k++) {
-            System.out.println("getTreeInfo(treeList.elementAt("+k+"))");
-	    Integer i = new Integer((Integer)treeList.elementAt(k));
-	    jOTDBtree tInfo = remoteOTDB.getTreeInfo(i.intValue());
-	    if (tInfo.treeID()==0) {
-	      System.out.println("No such tree found!");
-            } else {
-              Object rowData[] = {tInfo.itsTreeID,	   
-	                          tInfo.creator,
-	                          tInfo.creationDate,	
-	                          tInfo.classification,
-	                          tInfo.type,
-	                          tInfo.state,
-	                          tInfo.campaign,	
-	                          tInfo.starttime,
-	                          tInfo.stoptime};
-              tableData[k]=rowData;
-	    }
-          }
-          TreeTable = new JTable(tableData,TreeTableTitles);
-          TreeTable.validate();
         } 
         catch (Exception e)
 	{
 	  System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	}
-        return treeList;
+	}        System.out.println("Trying to obtain the treeList");
+
+        treeModel tm = new treeModel(remoteOTDB,treeList);
+        
+        TreeTable.setModel(tm);
+        TreeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        return true;
     }
             
 }    
 
-    
+ 
+            
+            
+
