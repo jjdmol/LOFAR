@@ -175,7 +175,10 @@ namespace LOFAR
       itsRequest.writeBuf(cmd, skyCoord, earthCoord, timeCoord);
 
       // Write the request from the data holder's I/O buffer to the server.
-      itsSendConn.write();
+      if (itsSendConn.write() == Connection::Error) {
+        THROW (ClientError,
+               "Error sending data to server. Connection lost?");
+      }
 
       // Always make this call, even though it only has effect when doing
       // asynchronous communication.
@@ -186,7 +189,10 @@ namespace LOFAR
     void ConverterClient::recvResult(vector<SkyCoord>& skyCoord)
     {
       // Read the result from the server into the data holder's I/O buffer.
-      itsRecvConn.read();
+      if (itsRecvConn.read() == Connection::Error) {
+        THROW (ClientError, 
+               "Error receiving data from server. Connection lost?");
+      }
 
       // Always make this call, even though it only has effect when doing
       // asynchronous communication.
