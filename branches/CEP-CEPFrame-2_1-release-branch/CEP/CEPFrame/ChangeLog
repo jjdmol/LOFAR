@@ -1,3 +1,132 @@
+2005-08-29 11:57  meijeren
+
+	* src/: Block.h, BlockRep.h, CompositeRep.h, StepRep.h: BugID:268
+	  Updated comments.
+
+2005-08-16 17:31  zwart
+
+	* src/DataManager.cc: BugID: 270
+
+	  DataManagers now loop over all TH's until they are all initted
+
+2005-08-16 16:58  meijeren
+
+	* src/SynchronisityManager.cc: BugID:268 Perform check on
+	  OutManager before deletion of InManager (for the case they are
+	  shared).
+
+2005-08-12 12:22  meijeren
+
+	* src/: ApplicationHolder.cc, ApplicationHolder.h: BugID:268
+	  Updated comments and call top-level composite dump in dump
+	  method.
+
+2005-08-11 13:28  meijeren
+
+	* src/DataManager.cc: BugID:269 -Initialize TransportHolders in
+	  preprocess phase.  -Set connections in TinyDataManager as well.
+
+2005-07-26 12:37  meijeren
+
+	* src/WH_Empty.cc, src/WH_Empty.h, src/WH_Example.cc,
+	  src/WH_Example.h, src/WH_Tester.cc, src/WH_Tester.h,
+	  test/WH_TestAutoTrigger.cc, test/WH_TestAutoTrigger.h: BugID:209
+	  Made WorkHolder::dump method const. This to be consistent with
+	  all other dump methods in the CEP framework.
+
+2005-07-13 16:53  meijeren
+
+	* src/: DataManager.cc, SynchronisityManager.cc: %[ER: 231]% Fixed
+	  bug; added check on error in return status of Connection::read()
+	  and Connection::write().
+
+2005-07-06 14:52  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, configure.in,
+	  src/Makefile.am: %[ER: 0]%
+
+	  Merged relevant changes from the 2.0 release branch into the main
+	  development line.
+
+2005-06-27 13:52  loose
+
+	* test/Makefile.am: %[ER: 0]%
+
+	  Prepare for release 2.0.
+
+2005-06-24 17:44  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release.
+
+2005-06-24 17:35  loose
+
+	* src/CycBufferManager.h, test/CyclicBufferTest.run: %[PR: 173]%
+
+	  Re-added CyclicBufferTest to CEP/CEPFrame. Solved the dead-lock;
+	  it turns out it probably is a bug in the NPTL, not in our code.
+
+2005-06-24 17:19  loose
+
+	* src/: CyclicBuffer.h, Lock.h: %[PR: 173]%
+
+	  Re-added CyclicBufferTest to CEP/CEPFrame. Solved the dead-lock;
+	  it turns out it probably is a bug in the NPTL, not in our code.
+
+2005-06-24 17:14  loose
+
+	* src/CycBufferManager.h: %[PR: 173]%
+
+	  Re-added CyclicBufferTest to CEP/CEPFrame. Solved the dead-lock;
+	  it turns out it probably is a bug in the NPTL, not in our code.
+
+2005-06-24 17:09  loose
+
+	* test/Makefile.am: %[PR: 173]%
+
+	  Re-added CyclicBufferTest to CEP/CEPFrame. Solved the dead-lock;
+	  it turns out it probably is a bug in the NPTL, not in our code.
+
+2005-06-24 17:04  loose
+
+	* test/: CyclicBufferTest.cc, CyclicBufferTest.gnuplot,
+	  CyclicBufferTest.run, CyclicBufferTest.sh: %[PR: 173]%
+
+	  Re-added CyclicBufferTest to CEP/CEPFrame. Solved the dead-lock;
+	  it turns out it probably is a bug in the NPTL, not in our code.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-23 17:52  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-23 15:29  loose
+
+	* src/CyclicBuffer.h, src/Lock.h, src/Makefile.am,
+	  test/CyclicBufferTest.cc, test/CyclicBufferTest.gnuplot,
+	  test/CyclicBufferTest.run, test/CyclicBufferTest.sh,
+	  test/Makefile.am: %[ER: 0]%
+
+	  Prepare for release 2.0.  Moved CyclicBuffer from LCS/Transport
+	  to CEP/CEPFrame, because it uses threads.
+
+2005-06-17 17:27  loose
+
+	* NEWS, README, configure.in: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 16:48  meijeren
+
+	* NEWS, README: %[ER: 0]% Addition of NEWS and README file for
+	  release 2.0
+
 2005-06-14 16:08  meijeren
 
 	* src/: ApplicationHolder.h, BlockRep.h, CompositeRep.h,
