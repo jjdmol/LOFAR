@@ -1,6 +1,7 @@
-#RSPDriver
-#BeamServer
-#Calibration
+RSPDriver/src/rspctlfe
+RSPDriver
+Calibration
+BeamServer
 StationOperations
 StationReceptorGroup
 VirtualTelescope
