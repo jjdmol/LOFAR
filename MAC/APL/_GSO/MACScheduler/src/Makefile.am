@@ -10,18 +10,17 @@ MACScheduler_CPPFLAGS= \
   -Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once \
-	-DUSE_TCPPORT_INSTEADOF_PVSSPORT \
-	-DACC_CONFIGURATIONMGR_UNAVAILABLE
+	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
 MACScheduler_SOURCES 		= \
 	MACScheduler.cc \
 	BeamletAllocator.cc \
 	MACSchedulerMain.cc \
 	SAS_Protocol.cc
-	
-MACScheduler_LDADD		    = $(LOFAR_DEPEND)
+
+MACScheduler_LDADD		= -lpqxx $(LOFAR_DEPEND)
 MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
-	
+
 include_HEADERS = 
 
 BUILT_SOURCES = 	\
@@ -38,16 +37,16 @@ configfiles_DATA = \
 sysconf_DATA= \
 	MACScheduler.conf \
 	MACScheduler.log_prop
-	
+
 %.log_prop: %.log_prop.in
 	cp $< $@
-	
+
 %.conf: %.conf.in
 	cp $< $@
 
 %.ctl: %.ctl.in
 	cp $< $@
-	
+
 clean-local:
 	rm -f *.ph
 
