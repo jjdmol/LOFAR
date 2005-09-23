@@ -207,15 +207,22 @@ void SubbandsCommand::send()
 
     logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
 
-    setsubbands.subbands().resize(1, m_subbandlist.size());
+    // if only 1 subband selected, apply selection to all
+    if (1 == m_subbandlist.size()) {
+      setsubbands.subbands().resize(1, MEPHeader::N_XBLETS);
+      std::list<int>::iterator it = m_subbandlist.begin();
+      setsubbands.subbands() = (*it);
+    } else {
+      setsubbands.subbands().resize(1, m_subbandlist.size());
 
-    int i = 0;
-    std::list<int>::iterator it;
-    for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
-    {
-      if (i >= MEPHeader::N_SUBBANDS)
-        break;
-      setsubbands.subbands()(0, i) = (*it);
+      int i = 0;
+      std::list<int>::iterator it;
+      for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
+	{
+	  if (i >= MEPHeader::N_XBLETS)
+	    break;
+	  setsubbands.subbands()(0, i) = (*it);
+	}
     }
 
     m_rspport.send(setsubbands);
@@ -436,7 +443,7 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 WGCommand::WGCommand(GCFPortInterface& port) : Command(port),
     m_frequency(0.0),
     m_phase(0),
-    m_amplitude(64)
+    m_amplitude(16)
 {
 }
 
@@ -686,8 +693,6 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
     gnuplot_cmd(handle, "set grid x y");
   }
 
-  //gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
-  gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"");
   gnuplot_cmd(handle, "set ylabel \"dB\"");
   gnuplot_cmd(handle, "set yrange [0:140]");
 
@@ -721,12 +726,12 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
       switch (m_type)
       {
         case Statistics::SUBBAND_POWER:
+	  gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\"");
           snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"(RCU=%d)\" with steps ",
                    SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
           break;
         case Statistics::BEAMLET_POWER:
-          //snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (%.1f/%.1f*$1):(10*log10($2)) title \"Beamlet Power (RSP board=%d)\" with steps ",
-          //SAMPLE_FREQUENCY, n_freqbands*2.0, rcuout);
+	  gnuplot_cmd(handle, "set xlabel \"Beamlet index\"");
           snprintf(plotcmd + strlen(plotcmd), 128, "\"-\" using (1.0*$1):(10*log10($2)) title \"Beamlet Power (RSP board %d, %c)\" with steps ",
 		   (rcuout/2), (rcuout%2?'Y':'X'));
           break;
