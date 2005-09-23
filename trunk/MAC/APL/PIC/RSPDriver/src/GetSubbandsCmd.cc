@@ -56,7 +56,7 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_BEAMLETS);
+  ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_XBLETS);
   
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; cache_rcu++)

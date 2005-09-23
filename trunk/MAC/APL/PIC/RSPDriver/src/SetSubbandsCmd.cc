@@ -93,5 +93,6 @@ bool SetSubbandsCmd::validate() const
 {
   return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
 	  && (2 == m_event->subbands().dimensions())
-	  && (1 == m_event->subbands().extent(firstDim)));
+	  && (1 == m_event->subbands().extent(firstDim))
+	  && (m_event->subbands().extent(secondDim) <= MEPHeader::N_XBLETS)); // should be N_BEAMLETS once we have a separate SetXCSubbandCmd
 }

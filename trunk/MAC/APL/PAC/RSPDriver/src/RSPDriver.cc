@@ -553,7 +553,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	// read away most recent timestamp..
 	//
 	if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
-	    LOG_FATAL_STR("Error fetching initial PPS: " << strerror(errno));
+	    LOG_FATAL_STR("Error clearing startup PPS: " << strerror(errno));
 	    exit(EXIT_FAILURE);
 	}
 
@@ -561,7 +561,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	// and wait for next timestamp to get in sync immediately
 	//
 	if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
-	    LOG_FATAL_STR("Error fetching initial PPS: " << strerror(errno));
+	    LOG_FATAL_STR("Error fetching first PPS: " << strerror(errno));
 	    exit(EXIT_FAILURE);
 	}
 

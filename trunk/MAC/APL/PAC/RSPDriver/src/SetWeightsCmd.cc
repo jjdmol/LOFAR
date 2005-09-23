@@ -80,7 +80,9 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      cache.getBeamletWeights()()(0, cache_rcu, Range::all())
+      // copy to offset N_XLETS in the cache
+      Range dst_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+      cache.getBeamletWeights()()(0, cache_rcu, dst_range)
 	= m_event->weights()(0, input_rcu, Range::all());
 
       input_rcu++;

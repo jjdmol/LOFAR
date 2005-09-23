@@ -58,7 +58,7 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
 
   ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
 		       m_event->rcumask.count(),
-		       cache.getBeamletWeights()().extent(thirdDim));
+		       MEPHeader::N_BEAMLETS);
 
   int result_rcu = 0;
   for (int cache_rcu = 0;
@@ -67,16 +67,11 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-      {
-	ack.weights()(0, result_rcu, Range::all())
-	  = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
-      }
+      // copy from offset N_XLETS in the cache
+      Range src_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+      
+      ack.weights()(0, result_rcu, Range::all())
+	= cache.getBeamletWeights()()(0, cache_rcu, src_range);
       
       result_rcu++;
     }

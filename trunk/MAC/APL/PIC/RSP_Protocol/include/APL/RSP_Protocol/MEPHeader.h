@@ -171,10 +171,11 @@ namespace LOFAR {
       static const uint16 N_SUBBANDS     = 512;
       static const uint16 N_GLOBAL_XLETS = 54;  // Total number of crosslets over whole station (FTS-1.5 spec)
       static const uint16 N_XLETS        = 4;   // Number of crosslets per RSP board
-      static const uint16 N_BEAMLETS     = 54 + N_XLETS; // FTS-1.5 spec, final design will have > 200 BEAMLETS + N_XLETS
-      static const uint16 N_POL          = 2;                // number of polarizations
-      static const uint16 N_PHASE        = 2;                // number of phases in a complex number
-      static const uint16 N_PHASEPOL     = N_PHASE * N_POL;  // number of phase polarizations
+      static const uint16 N_BEAMLETS     = 54;  // FTS-1.5 spec, final design will have > 200 BEAMLETS + N_XLETS
+      static const uint16 N_XBLETS       = N_XLETS + N_BEAMLETS; // RSP registers combine XLETS and BEAMLETS
+      static const uint16 N_POL          = 2;                    // number of polarizations
+      static const uint16 N_PHASE        = 2;                    // number of phases in a complex number
+      static const uint16 N_PHASEPOL     = N_PHASE * N_POL;      // number of phase polarizations
  
       //
       // Registers too large to send in a single ethernet frame
@@ -203,14 +204,15 @@ namespace LOFAR {
       static const uint16 WG_XWAVE_SIZE      = 1024;
       static const uint16 WG_YWAVE_SIZE      = 1024;
       
-      static const uint16 SS_SELECT_SIZE     = N_BEAMLETS * N_POL * sizeof(uint16);
+      static const uint16 SS_SELECT_SIZE     = N_XBLETS * N_POL * sizeof(uint16);
 
-      static const uint16 BF_XROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_XIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_XROUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_XIOUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YROUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YIOUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
       
-      static const uint16 BST_POWER_SIZE     = N_BEAMLETS * N_POL * sizeof(uint32);
+      static const uint16 BST_POWER_SIZE     = N_BEAMLETS * N_POL * sizeof(uint32); // TODO: should this be N_XBLETS too?
+
 
       static const uint16 SST_POWER_SIZE     = N_SUBBANDS * N_POL * sizeof(uint32);
       

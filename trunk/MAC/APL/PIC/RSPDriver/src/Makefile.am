@@ -9,8 +9,8 @@ endif
 # Define ENABLE_RSPFE to enable the rspctl frontend
 #
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src
-#	-DENABLE_RSPFE
+	-I$(top_srcdir)/src \
+	-DENABLE_RSPFE
 
 AUTOGEN = autogen
 SUFFIXES = .ph
