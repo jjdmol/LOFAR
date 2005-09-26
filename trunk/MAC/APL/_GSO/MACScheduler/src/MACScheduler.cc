@@ -677,6 +677,7 @@ void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
 
 void MACScheduler::_convertRelativeTimes(boost::shared_ptr<ACC::APS::ParameterSet> ps)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   try
   {
     _convertRelativeTimesChild("",ps);
@@ -688,6 +689,7 @@ void MACScheduler::_convertRelativeTimes(boost::shared_ptr<ACC::APS::ParameterSe
 
 void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   string keyPrefix("");
   if(child.length() > 0)
   {
@@ -719,18 +721,21 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
   vector<string>::iterator chIt;
   for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
   {
+    string childKey=keyPrefix + (*chIt);
     try
     {
-      _convertRelativeTimesChild(*chIt,ps);
+      _convertRelativeTimesChild(childKey,ps);
     }
     catch(Exception& e)
     {
+      LOG_DEBUG(formatString("convertRelativeTimesChild for %s failed: %s",child.c_str(),e.message().c_str()));
     }
   }
 }
 
 bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   LOG_DEBUG(formatString("Allocating beamlets for VI:%s",VIrootID.c_str()));
   bool allocationOk(false);
   
@@ -801,6 +806,8 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
 
 boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const string& VIrootID)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
   string shareLocation = _getShareLocation();
   // read the parameterset from the database:
 #ifndef OTDB_UNAVAILABLE
@@ -818,7 +825,7 @@ boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const 
   }
   boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(tempFileName));
 
-  createChildsSections(tm,otdbVIrootID,topNode.nodeID(),ps);
+  createChildsSections(tm,otdbVIrootID,topNode.nodeID(),string(""),ps);
 
 #else // OTDB_UNAVAILABLE
 
@@ -832,34 +839,58 @@ boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const 
   return ps;
 }
 
-void MACScheduler::createChildsSections(TreeMaintenance& tm, int32 treeID, nodeIDType topItem, boost::shared_ptr<ACC::APS::ParameterSet> ps)
+void MACScheduler::createChildsSections(TreeMaintenance& tm, int32 treeID, nodeIDType topItem, const string& nodeName, boost::shared_ptr<ACC::APS::ParameterSet> ps)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+
+  LOG_DEBUG(formatString("createChildSections of tree %d, topItem %d",treeID,topItem));
+
   vector<string> childs;
   // now add the childs sections by querying the database
   // getTreeList at depth 1
   // if not leaf then it is a child
-  LOG_INFO("Trying to get a collection of items on depth=1");
   vector<OTDBnode> nodeList =tm.getItemList(treeID,topItem,1);
   for(uint32 nodeIt=0; nodeIt<nodeList.size();++nodeIt) 
   {
     if(!nodeList[nodeIt].leaf)
     {
-      childs.push_back(nodeList[nodeIt].name);
+      LOG_INFO_STR(nodeList[nodeIt]);
+
+      string childName = nodeList[nodeIt].name;
+      // strip all parents  from childpath
+      string::size_type dotPos = childName.rfind('.');
+      if(dotPos != string::npos)
+      {
+        childName = childName.substr(dotPos+1);
+      }
+      childs.push_back(childName);
+
       // and recurse down the tree
       nodeIDType childItem = nodeList[nodeIt].nodeID();
-      createChildsSections(tm, treeID, childItem, ps);
+      createChildsSections(tm, treeID, childItem, childName, ps);
     }
   }
   string childsString("[");
   for(uint32 i=0;i<childs.size();++i)
   {
-    stringstream parstream;
     childsString += childs[i];
     childsString += string(",");
   }
-  childsString[childsString.length()-1]=']';
-  LOG_DEBUG(formatString("creating childs section: %s",childsString.c_str()));
-  ACC::APS::KVpair childsKV(string("childs"), childsString);
+  if(childsString.length()>1)
+  {
+    childsString[childsString.length()-1]=']';
+  }
+  else
+  {
+    childsString="[]";
+  }
+  string childsKey("childs");
+  if(nodeName.length()>0)
+  {
+    childsKey = nodeName + string(".") + childsKey;
+  }
+  LOG_DEBUG(formatString("creating childs section: %s=%s",childsKey.c_str(),childsString.c_str()));
+  ACC::APS::KVpair childsKV(childsKey, childsString);
   ps->replace(childsKV);
 }
 
