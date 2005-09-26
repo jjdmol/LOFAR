@@ -151,7 +151,7 @@ namespace GSO
       
       bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
       boost::shared_ptr<ACC::APS::ParameterSet> _readParameterSet(const string& VIrootID);
-      void createChildsSections(OTDB::TreeMaintenance& tm, int32 treeID, OTDB::nodeIDType topItem, boost::shared_ptr<ACC::APS::ParameterSet> ps);
+      void createChildsSections(OTDB::TreeMaintenance& tm, int32 treeID, OTDB::nodeIDType topItem, const string& nodeName, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
       void _schedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
       void _updateSchedule(const string& VIrootID, GCF::TM::GCFPortInterface* port=0);
