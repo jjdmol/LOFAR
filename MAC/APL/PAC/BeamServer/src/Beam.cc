@@ -428,7 +428,6 @@ bool Beams::destroy(Beam* beam)
 
 void Beams::calculate_weights(Timestamp timestamp,
 			      int compute_interval,
-			      const blitz::Array<double, 3>&         pos,
 			      blitz::Array<std::complex<double>, 3>& weights,
 			      AMC::Converter* conv)
 {
@@ -441,7 +440,7 @@ void Beams::calculate_weights(Timestamp timestamp,
 			  bi->first->getPointing().angle1()));
   }
 
-  m_beamlets.calculate_weights(pos, weights);
+  m_beamlets.calculate_weights(weights);
 }
 
 Beamlet2SubbandMap Beams::getSubbandSelection()
