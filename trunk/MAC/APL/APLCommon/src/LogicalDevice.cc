@@ -190,6 +190,8 @@ void LogicalDevice::adoptParameterFile(const string& parameterFile)
   }
   
   // check version number
+  LOG_WARN("Version checking not implemented: need to get the version from the node in the OTDB database");
+#if 0
   try
   {
     string receivedVersion = m_parameterSet.getString(string("versionnr"));
@@ -202,6 +204,7 @@ void LogicalDevice::adoptParameterFile(const string& parameterFile)
   {
     THROW(APLCommon::ParameterNotFoundException,e.message());
   }
+#endif
 }
 
 
