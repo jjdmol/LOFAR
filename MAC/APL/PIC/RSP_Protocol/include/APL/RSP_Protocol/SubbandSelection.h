@@ -47,12 +47,19 @@ namespace LOFAR {
     class SubbandSelection
     {
     public:
+
+      enum {
+	UNDEFINED = 0,
+	BEAMLET   = 1,
+	XLET      = 2,
+      };
+
       /**
        * Constructors for a SubbandSelection object.
        * Currently the tv_usec part is always set to 0 irrespective
        * of the value passed in.
        */
-      SubbandSelection() {}
+      SubbandSelection() : m_type(UNDEFINED) {}
       
 	  
       /* Destructor for SubbandSelection. */
@@ -62,6 +69,18 @@ namespace LOFAR {
        * Return the subbands array.
        */
       blitz::Array<uint16, 2>& operator()();
+
+      /**
+       * Return type of selection.
+       */
+      int getType() const { return (int)m_type; }
+
+      /**
+       * Set the type of the subbands selection.
+       * @param type Type of the subband selection, valid values are SubbandSelection::BEAMLET (array should have 1 to N_BEAMLETS values) or
+       * SubbandSelection::XLET (array should have 1 value).
+       */
+      void setType(int type) { m_type = (uint16)type; }
 
     public:
       /*@{*/
@@ -77,9 +96,12 @@ namespace LOFAR {
       /**
        * Subband selection array.
        * dim 1 = n_rcus (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
-       * dim 2 = n_beamlets
+       * dim 2 = n_beamlets (if type == BEAMLET)
+       * dim 2 = 1          (if type == XLET)
        */
       blitz::Array<uint16, 2> m_subbands;
+
+      uint16 m_type; // type of subband selection (BEAMLET or XLET)
     };
   };
 }; // namespace LOFAR
