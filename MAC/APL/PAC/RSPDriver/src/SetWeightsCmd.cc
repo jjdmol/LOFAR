@@ -75,15 +75,20 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetWeightsCmd::apply(CacheBuffer& cache)
 {
+  // copy to offset N_XLETS in the cache
+  Range dst_range = Range(MEPHeader::N_XLETS,
+			  MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+
   int input_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; cache_rcu++)
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
+	 GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+       cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      // copy to offset N_XLETS in the cache
-      Range dst_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
-      cache.getBeamletWeights()()(0, cache_rcu, dst_range)
-	= m_event->weights()(0, input_rcu, Range::all());
+      cache.getBeamletWeights()()(0, cache_rcu, dst_range) =
+	m_event->weights()(0, input_rcu, Range::all());
 
       input_rcu++;
     }

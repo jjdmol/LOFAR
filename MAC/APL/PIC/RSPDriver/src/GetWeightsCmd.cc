@@ -60,18 +60,20 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
 		       m_event->rcumask.count(),
 		       MEPHeader::N_BEAMLETS);
 
+  // copy from offset N_XLETS in the cache
+  Range src_range = Range(MEPHeader::N_XLETS,
+			  MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+
   int result_rcu = 0;
   for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
+	 GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
        cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      // copy from offset N_XLETS in the cache
-      Range src_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
-      
-      ack.weights()(0, result_rcu, Range::all())
-	= cache.getBeamletWeights()()(0, cache_rcu, src_range);
+      ack.weights()(0, result_rcu, Range::all()) =
+	cache.getBeamletWeights()()(0, cache_rcu, src_range);
       
       result_rcu++;
     }
