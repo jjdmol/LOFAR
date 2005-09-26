@@ -1017,6 +1017,8 @@ void RSPDriver::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
     LOG_ERROR("GETSUBBANDS: invalid parameter");
     
     RSPGetsubbandsackEvent ack;
+    ack.subbands().resize(1,1);
+    ack.subbands() = 0;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
     port.send(ack);
