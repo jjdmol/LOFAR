@@ -160,7 +160,7 @@ bool TH_Socket::recvBlocking (void*	buf, int32	nrBytes, int32	/*tag*/,
 
 	if (btsRead == Socket::PEERCLOSED) {	// peer closed connection.
 		LOG_DEBUG("TH_Socket:shutdown datasocket after read-error");
-		if (itsIsServer) {			// server role?
+		if (itsIsOwner) {			// are we the owner?
 			shutdown(itsDataSocket);	// completely delete datasocket
 		}
 		else {							// client role
