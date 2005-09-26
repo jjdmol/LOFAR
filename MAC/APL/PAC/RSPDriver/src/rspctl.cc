@@ -45,6 +45,7 @@
 //#                          [--integration=<seconds>]
 //#                          [--directory=<directory>]
 //#                          [--feport=<hostname>:<port>]  # get cross correlation statistics
+//# rspctl --xcsubband                         # get the subband selection for cross correlation
 //# rspctl --xcsubband=<int>                   # set the subband to cross correlate
 //# rspctl --clocks          [--select=<set>]  # get or set the clock frequency of clocks
 //# rspctl --version         [--select=<set>]  # get version information
@@ -181,7 +182,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
   return status;
 }
 
-SubbandsCommand::SubbandsCommand(GCFPortInterface& port) : Command(port)
+SubbandsCommand::SubbandsCommand(GCFPortInterface& port) : Command(port), m_type(0)
 {
 }
 
@@ -195,6 +196,7 @@ void SubbandsCommand::send()
     getsubbands.timestamp = Timestamp(0,0);
     getsubbands.rcumask = getRCUMask();
     getsubbands.cache = true;
+    getsubbands.type = m_type;
 
     m_rspport.send(getsubbands);
   }
@@ -204,25 +206,45 @@ void SubbandsCommand::send()
     RSPSetsubbandsEvent setsubbands;
     setsubbands.timestamp = Timestamp(0,0);
     setsubbands.rcumask = getRCUMask();
+    setsubbands.subbands.setType(m_type);
 
     logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
 
     // if only 1 subband selected, apply selection to all
-    if (1 == m_subbandlist.size()) {
-      setsubbands.subbands().resize(1, MEPHeader::N_XBLETS);
-      std::list<int>::iterator it = m_subbandlist.begin();
-      setsubbands.subbands() = (*it);
-    } else {
-      setsubbands.subbands().resize(1, m_subbandlist.size());
+    switch (m_type) {
 
-      int i = 0;
-      std::list<int>::iterator it;
-      for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
-	{
-	  if (i >= MEPHeader::N_XBLETS)
-	    break;
-	  setsubbands.subbands()(0, i) = (*it);
+    case SubbandSelection::BEAMLET:
+      {
+	if (1 == m_subbandlist.size()) {
+	  setsubbands.subbands().resize(1, MEPHeader::N_BEAMLETS);
+	  std::list<int>::iterator it = m_subbandlist.begin();
+	  setsubbands.subbands() = (*it);
+	} else {
+	  setsubbands.subbands().resize(1, m_subbandlist.size());
+	  
+	  int i = 0;
+	  std::list<int>::iterator it;
+	  for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
+	    {
+	      if (i >= MEPHeader::N_BEAMLETS) break;
+	      setsubbands.subbands()(0, i) = (*it);
+	    }
 	}
+      }
+      break;
+
+    case SubbandSelection::XLET:
+      {
+	setsubbands.subbands().resize(1,1);
+	std::list<int>::iterator it = m_subbandlist.begin();
+	setsubbands.subbands() = (*it);
+      }
+      break;
+
+    default:
+      LOG_FATAL("invalid subbanselection type");
+      exit(EXIT_FAILURE);
+      break;
     }
 
     m_rspport.send(setsubbands);
@@ -254,7 +276,11 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
           {
             std::ostringstream logStream;
             logStream << ack.subbands()(rcuin++, Range::all());
-            logMessage(cout,formatString("RCU[%02d].subbands=%s", rcuout,logStream.str().c_str()));
+	    if (SubbandSelection::BEAMLET == m_type) {
+	      logMessage(cout,formatString("RCU[%02d].subbands=%s", rcuout,logStream.str().c_str()));
+	    } else {
+	      logMessage(cout,formatString("RCU[%02d].xcsubbands=%s", rcuout,logStream.str().c_str()));
+	    }
           }
         }
       }
@@ -1348,6 +1374,7 @@ static void usage()
 #ifdef ENABLE_RSPFE
   cout << "             [--feport=<hostname>:<port>] #" << endl;
 #endif
+  cout << "rspctl --xcsubband                        # get the subband selection for cross correlation" << endl;
   cout << "rspctl --xcsubband=<int>                  # set the subband to cross correlate" << endl;
   cout << "rspctl --clocks=<int>    [--select=<set>] # get or set the clock frequency of clocks in Hz" << endl;
   cout << "rspctl --version         [--select=<set>] # get version information" << endl;
@@ -1379,7 +1406,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         { "status",     no_argument,       0, 'q' },
         { "statistics", optional_argument, 0, 't' },
         { "xcstatistics", no_argument,     0, 'x' },
-        { "xcsubband",  required_argument, 0, 'z' },
+        { "xcsubband",  optional_argument, 0, 'z' },
         { "clocks",     optional_argument, 0, 'c' },
         { "version",    no_argument,       0, 'v' },
         { "help",       no_argument,       0, 'h' },
@@ -1395,7 +1422,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
     int option_index = 0;
     int c = getopt_long(argc, argv,
-                        "l:w::s::r::g::qt::xz:vc::hf:d:i:", long_options, &option_index);
+                        "l:w::s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
 
     if (c == -1)
       break;
@@ -1452,8 +1479,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         if (command)
           delete command;
         SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
-        command = subbandscommand;
+	subbandscommand->setType(SubbandSelection::BEAMLET);
 
+        command = subbandscommand;
         command->set_ndevices(m_nrcus);
 
         if (optarg)
@@ -1569,6 +1597,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         if (command)
           delete command;
         SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
+	subbandscommand->setType(SubbandSelection::XLET);
         command = subbandscommand;
 
         command->set_ndevices(m_nrcus);
