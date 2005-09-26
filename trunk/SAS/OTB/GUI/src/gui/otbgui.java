@@ -54,6 +54,8 @@ public class otbgui extends javax.swing.JFrame {
     static String OTDBDBName      = "otdbtest";   
     
     private static jOTDBinterface remoteOTDB;    
+    
+    static String aSelectedTree   = "None";
 
     DefaultMutableTreeNode root = new DefaultMutableTreeNode();
     
@@ -83,11 +85,13 @@ public class otbgui extends javax.swing.JFrame {
     private void initComponents() {
         jMenuBar2 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
+        jScrollPane3 = new javax.swing.JScrollPane();
         jTabbedPane2 = new javax.swing.JTabbedPane();
         TreePanel = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
+        TreeTableScrollPane = new javax.swing.JScrollPane();
         TreeTable = new javax.swing.JTable();
-        TreeApplyButton = new javax.swing.JButton();
+        TreeTableScrollPane.add(TreeTable);
+        TreeSelectButton = new javax.swing.JButton();
         BrowsePanel = new javax.swing.JPanel();
         treeScrollPane = new javax.swing.JScrollPane();
         departmentTree = new javax.swing.JTree(root);
@@ -160,19 +164,17 @@ public class otbgui extends javax.swing.JFrame {
         setName("mainFrame");
         jTabbedPane2.setMinimumSize(new java.awt.Dimension(100, 300));
         jTabbedPane2.setPreferredSize(new java.awt.Dimension(100, 300));
-        TreePanel.setLayout(new java.awt.BorderLayout());
+        TreePanel.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         TreePanel.setToolTipText("Search on one or more of the given constraints");
         TreePanel.setMinimumSize(new java.awt.Dimension(500, 300));
         TreePanel.setPreferredSize(new java.awt.Dimension(500, 300));
-        jScrollPane3.setHorizontalScrollBar(null);
-        TreeTable.setBorder(new javax.swing.border.EtchedBorder());
         TreeTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null}
+
             },
             new String [] {
-                "TreeID", "Creator", "CreationDate", "Class", "Type", "State", "Campaign", "StartTime", "StopTime"
+                "TreeID", "Creator", "Creation Date", "Class", "Type", "State", "Campaign", "Start Time", "Stop Time"
             }
         ) {
             Class[] types = new Class [] {
@@ -190,20 +192,18 @@ public class otbgui extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        TreeTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        TreeTable.setTableHeader(null);
-        jScrollPane3.setViewportView(TreeTable);
+        TreeTableScrollPane.setViewportView(TreeTable);
 
-        TreePanel.add(jScrollPane3, java.awt.BorderLayout.CENTER);
+        TreePanel.add(TreeTableScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 650, 310));
 
-        TreeApplyButton.setText("Apply");
-        TreeApplyButton.addActionListener(new java.awt.event.ActionListener() {
+        TreeSelectButton.setText("Select");
+        TreeSelectButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                TreeApplyButtonActionPerformed(evt);
+                TreeSelectButtonActionPerformed(evt);
             }
         });
 
-        TreePanel.add(TreeApplyButton, java.awt.BorderLayout.SOUTH);
+        TreePanel.add(TreeSelectButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 330, -1, -1));
 
         jTabbedPane2.addTab("TreeList", null, TreePanel, "change tree search");
 
@@ -487,17 +487,29 @@ public class otbgui extends javax.swing.JFrame {
     }
     // </editor-fold>//GEN-END:initComponents
 
-    private void TreeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TreeApplyButtonActionPerformed
-      try {
-        System.out.println("Still connected? : "+remoteOTDB.isConnected());
-      } catch (Exception e) {
-	System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-      }
-    }//GEN-LAST:event_TreeApplyButtonActionPerformed
+    private void TreeSelectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TreeSelectButtonActionPerformed
+        aSelectedTree = "None";
+        int aRow= TreeTable.getSelectedRow();
+        if ( aRow != -1) {
+            aSelectedTree=TreeTable.getValueAt(aRow, 0).toString()+"."+
+                    TreeTable.getValueAt(aRow, 3).toString()+"."+
+                    TreeTable.getValueAt(aRow, 4).toString()+"."+
+                    TreeTable.getValueAt(aRow, 5).toString();
+        }
+        selectedTreeTextField.setText(aSelectedTree);
+        
+        // Start filling the TreeView
+        if (aSelectedTree != "None") {
+            //getTreeList();
+        }
+        
+    }//GEN-LAST:event_TreeSelectButtonActionPerformed
 
 
     private void SourceMenuInputOTDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SourceMenuInputOTDBActionPerformed
-      if (RMIServerName.length()==0 || RMIServerPort.length()==0 ||
+        aSelectedTree = "None";
+        selectedTreeTextField.setText(aSelectedTree);
+        if (RMIServerName.length()==0 || RMIServerPort.length()==0 ||
               RMIRegistryName.length()==0 || OTDBUserName.length() ==0 ||
               OTDBPassword.length()==0 || OTDBDBName.length()==0) {
 
@@ -535,6 +547,8 @@ public class otbgui extends javax.swing.JFrame {
 
 
     private void SourceMenuInputFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SourceMenuInputFileActionPerformed
+      aSelectedTree = "None";
+      selectedTreeTextField.setText(aSelectedTree);
       JFileChooser fc = new JFileChooser();
       int returnVal = fc.showOpenDialog(otbgui.this);
       if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -643,9 +657,10 @@ public class otbgui extends javax.swing.JFrame {
     private javax.swing.JMenu SourceMenu;
     private javax.swing.JRadioButtonMenuItem SourceMenuInputFile;
     private javax.swing.JRadioButtonMenuItem SourceMenuInputOTDB;
-    private javax.swing.JButton TreeApplyButton;
     private javax.swing.JPanel TreePanel;
+    private javax.swing.JButton TreeSelectButton;
     private javax.swing.JTable TreeTable;
+    private javax.swing.JScrollPane TreeTableScrollPane;
     private javax.swing.JPanel ValuePanel;
     private javax.swing.JTree departmentTree;
     private javax.swing.JPanel infoPanel;
