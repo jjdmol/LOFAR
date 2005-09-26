@@ -51,45 +51,55 @@ namespace LOFAR
 
     void ConverterProcess::handleRequests()
     {
-      // While the client is connected, handle incoming requests.
-      while(itsRecvConn.isConnected()) {
+      try {
+          
+        // While the client is connected, handle incoming requests.
+        while(itsRecvConn.isConnected()) {
+          
+          ConverterCommand cmd;
+          vector<SkyCoord> skyCoord;
+          vector<EarthCoord> earthCoord;
+          vector<TimeCoord> timeCoord;
 
-        ConverterCommand cmd;
-        vector<SkyCoord> skyCoord;
-        vector<EarthCoord> earthCoord;
-        vector<TimeCoord> timeCoord;
+          // receive conversion request.
+          recvRequest(cmd, skyCoord, earthCoord, timeCoord);
 
-        // receive conversion request.
-        recvRequest(cmd, skyCoord, earthCoord, timeCoord);
+          // process the conversion request, invoking the right conversion
+          // method.
+          switch(cmd.get()) {
+          case ConverterCommand::J2000toAZEL:
+            skyCoord = 
+              itsConverter.j2000ToAzel(skyCoord, earthCoord, timeCoord);
+            break;
+          case ConverterCommand::AZELtoJ2000:
+            skyCoord = 
+              itsConverter.azelToJ2000(skyCoord, earthCoord, timeCoord);
+            break;
+          default:
+            THROW (ConverterError, 
+                   "Received invalid converter command (" << cmd << ")");
+          }
 
-        // process the conversion request, invoking the right conversion
-        // method.
-        switch(cmd.get()) {
-        case ConverterCommand::J2000toAZEL:
-          skyCoord = itsConverter.j2000ToAzel(skyCoord, earthCoord, timeCoord);
-          break;
-        case ConverterCommand::AZELtoJ2000:
-          skyCoord = itsConverter.azelToJ2000(skyCoord, earthCoord, timeCoord);
-          break;
-        default:
-          THROW (ConverterError, 
-                 "Received invalid converter command (" << cmd << ")");
+          // send the conversion result to the client.
+          sendResult(skyCoord);
         }
-        
-        // send the conversion result to the client.
-        sendResult(skyCoord);
+       
+      } catch (ServerError& e) {
+        LOG_DEBUG_STR(e);
       }
-
     }
-
+    
 
     void ConverterProcess::recvRequest(ConverterCommand& cmd,
-                                      vector<SkyCoord>& skyCoord,
-                                      vector<EarthCoord>& earthCoord,
-                                      vector<TimeCoord>& timeCoord)
+                                       vector<SkyCoord>& skyCoord,
+                                       vector<EarthCoord>& earthCoord,
+                                       vector<TimeCoord>& timeCoord)
     {
       // Read the result from the client into the data holder's I/O buffer.
-      itsRecvConn.read();
+      if (itsRecvConn.read() == Connection::Error) {
+        THROW (ServerError,
+               "Error receiving data from client. Connection lost?");
+      }
 
       // Always make this call, even though it only has effect when doing
       // asynchronous communication.
@@ -108,7 +118,10 @@ namespace LOFAR
       itsResult.writeBuf(skyCoord);
 
       // Write the result from the data holder's I/O buffer to the client.
-      itsSendConn.write();
+      if (itsSendConn.write() == Connection::Error) {
+        THROW (ServerError,
+               "Error sending data to client. Connection lost?");
+      }
 
       // Always make this call, even though it only has effect when doing
       // asynchronous communication.
