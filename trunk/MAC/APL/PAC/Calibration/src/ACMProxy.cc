@@ -264,7 +264,9 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 
 	m_request_subband = 0;
 	m_update_subband = 0;
-	ss.subbands().resize(1, 4*2);
+
+	ss.subbands.setType(SubbandSelection::XLET);
+	ss.subbands().resize(1, 1);
 	ss.subbands() = m_request_subband;
 
 	LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
@@ -290,7 +292,8 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	      ss.rcumask.set(i);
 	    }
 	    
-	    ss.subbands().resize(1, 4*2);
+	    ss.subbands.setType(SubbandSelection::XLET);
+	    ss.subbands().resize(1, 1);
 	    ss.subbands() = m_request_subband;
 
 	    LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
@@ -394,7 +397,8 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	    ss.rcumask.set(i);
 	  }
 	    
-	  ss.subbands().resize(1, 4*2);
+	  ss.subbands.setType(SubbandSelection::XLET);
+	  ss.subbands().resize(1, 1);
 	  ss.subbands() = m_request_subband;
 
 	  LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
