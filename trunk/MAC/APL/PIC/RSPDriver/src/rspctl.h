@@ -284,8 +284,13 @@ namespace LOFAR {
       {
         m_subbandlist = subbandlist;
       }
+      void setType(int type)
+      {
+	m_type = type;
+      }
     private:
       std::list<int> m_subbandlist;
+      int m_type;
     };
 
     class RCUCommand : public Command
