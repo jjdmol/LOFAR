@@ -56,23 +56,32 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_XBLETS);
+  Range src_range;
+  switch (m_event->type) {
+
+  case SubbandSelection::BEAMLET:
+    ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_BEAMLETS);
+    src_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+    break;
+
+  case SubbandSelection::XLET:
+    ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_XLETS);
+    src_range = Range(0, MEPHeader::N_XLETS - 1);
+    break;
+
+  default:
+    LOG_FATAL("invalid subbandselection type");
+    exit(EXIT_FAILURE);
+    break;
+  }
   
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-      {
-	ack.subbands()(result_rcu, Range::all())
-	  = cache.getSubbandSelection()()(cache_rcu, Range::all());
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
-      }
+      ack.subbands()(result_rcu, Range::all())
+	= cache.getSubbandSelection()()(cache_rcu, src_range);
       
       result_rcu++;
     }
@@ -103,7 +112,8 @@ void GetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetSubbandsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+	  && (m_event->type == SubbandSelection::BEAMLET || m_event->type == SubbandSelection::XLET));
 }
 
 bool GetSubbandsCmd::readFromCache() const
