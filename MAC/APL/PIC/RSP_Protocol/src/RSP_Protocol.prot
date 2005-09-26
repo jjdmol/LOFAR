@@ -169,6 +169,10 @@ event = {
     name = "cache";
     type = "uint8";
   };
+  param = {
+    name = "type";
+    type = "uint16";
+  };
 };
 
 event = {
