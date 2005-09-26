@@ -61,16 +61,53 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
+  Range dst_range;
+
+  switch (m_event->subbands.getType()) {
+
+  case SubbandSelection::BEAMLET:
     {
-      cache.getSubbandSelection()()(cache_rcu, Range::all()) = 0;
-      cache.getSubbandSelection()()(cache_rcu, Range(0, m_event->subbands().extent(secondDim) - 1))
-	= m_event->subbands()(0, Range(0, m_event->subbands().extent(secondDim) - 1)) * 2 + (cache_rcu % MEPHeader::N_POL);
-      
-      LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+      dst_range = Range(MEPHeader::N_XLETS, MEPHeader::N_XLETS + MEPHeader::N_BEAMLETS - 1);
+      for (int cache_rcu = 0;
+	   cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
+	     GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+	   cache_rcu++)
+	{
+	  if (m_event->rcumask[cache_rcu])
+	    {
+	      cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
+	      cache.getSubbandSelection()()(cache_rcu, dst_range)
+		= m_event->subbands()(0, Range::all()) * (int)MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+	
+	      LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+	    }
+	}
     }
+    break;
+
+  case SubbandSelection::XLET:
+    {
+      dst_range = Range(0, MEPHeader::N_XLETS - 1);
+      for (int cache_rcu = 0; cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) *
+	     GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+	   cache_rcu++)
+	{
+	  if (m_event->rcumask[cache_rcu])
+	    {
+	      cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
+	      cache.getSubbandSelection()()(cache_rcu, dst_range)
+		= m_event->subbands()(0, 0) * MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+	
+	      LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+	    }
+	}
+    }
+    break;
+
+  default:
+    LOG_FATAL("invalid subbandselection type");
+    exit(EXIT_FAILURE);
+    break;
   }
 }
 
@@ -91,8 +128,24 @@ void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetSubbandsCmd::validate() const
 {
+  bool valid = false;
+
+  switch (m_event->subbands.getType()) {
+
+  case SubbandSelection::BEAMLET:
+    if (m_event->subbands().extent(secondDim) <= MEPHeader::N_BEAMLETS) valid = true;
+    break;
+
+  case SubbandSelection::XLET:
+    if (1 == m_event->subbands().extent(secondDim)) valid = true;
+    break;
+
+  default:
+    LOG_WARN("invalid SubbandSelection type");
+    break;
+  }
+
   return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
 	  && (2 == m_event->subbands().dimensions())
-	  && (1 == m_event->subbands().extent(firstDim))
-	  && (m_event->subbands().extent(secondDim) <= MEPHeader::N_XBLETS)); // should be N_BEAMLETS once we have a separate SetXCSubbandCmd
+	  && (1 == m_event->subbands().extent(firstDim)) && valid);
 }
