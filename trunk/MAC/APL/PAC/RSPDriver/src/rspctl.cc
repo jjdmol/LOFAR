@@ -27,6 +27,7 @@
 //#
 //# rspctl --weights         [--select=<set>]  # get weights
 //# rspctl --weights=value.re[,value.im] [--select=<set>]  # set weights as complex value
+//# rspctl --aweights        [--select=<set> ] # get weights as power and angle
 //# rspctl --aweights=amplitude[,angle] [--select=<set> ]  # set weights as amplitude and angle
 //# rspctl --subbands        [--select=<set>]  # get subband selection
 //# rspctl --subbands=<list> [--select=<set>]  # set subband selection
@@ -93,7 +94,71 @@ static void usage();
 //
 #define SAMPLE_FREQUENCY 160.0e6
 
-WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port)
+/**
+ * Function to convert the complex semi-floating point representation used by the
+ * EPA firmware to a complex<double>.
+ */
+BZ_DECLARE_FUNCTION_RET(convert_to_powerangle, complex<double>)
+inline complex<double> convert_to_powerangle(complex<double> val)
+{
+  double angle = 0.0;
+  double power = real(val)*real(val) + imag(val)*imag(val);
+
+  if (power > 0.0)
+  {
+    power = 12 + 5*log10(power); // adjust scaling to allow comparison to subband statistics
+  }
+
+  if (0.0 == real(val))
+  {
+
+    if (imag(val) > 0)
+      angle = 90.0;
+    else if (imag(val) < 0)
+      angle = 270;
+
+  }
+  else
+  {
+
+    angle = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
+
+    if (real(val) > 0.0)
+    {
+      if (imag(val) < 0)
+        angle += 360.0;
+    }
+    else
+      angle += 180.0;
+
+  }
+
+  return complex<double>(power, angle);
+}
+
+BZ_DECLARE_FUNCTION_RET(convert_to_powerangle_from_int16, complex<double>)
+inline complex<double> convert_to_powerangle_from_int16(complex<int16> int16val)
+{
+  // scale and convert from int16 to double in range (-1,1]
+  complex<double> cdval = complex<double>((double)real(int16val)/(1<<14),
+					  (double)imag(int16val)/(1<<14));
+
+  //
+  // r   = amplitude
+  // phi = angle
+  // a   = real part of complex weight
+  // b   = imaginary part of complex weight
+  //
+  // a + ib = r * e^(i * phi)
+  // r   = sqrt(a^2 + b^2)
+  // phi = atan(b/a)
+  //
+
+  return complex<double>(::sqrt(real(cdval)*real(cdval) + imag(cdval)*imag(cdval)),
+			 (::atan(imag(cdval) / real(cdval))) * 180.0 / M_PI); 
+}
+
+WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port), m_type(WeightsCommand::COMPLEX)
 {
 }
 
@@ -141,23 +206,40 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
       RSPGetweightsackEvent ack(e);
       bitset<MAX_N_RCUS> mask = getRCUMask();
 
-      if (SUCCESS == ack.status)
-      {
-        int rcuin = 0;
-        for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
-        {
-
-          if (mask[rcuout])
-          {
-            std::ostringstream logStream;
-            logStream << ack.weights()(0, rcuin++, Range::all());
-            logMessage(cout,formatString("RCU[%02d].weights=%s", rcuout,logStream.str().c_str()));
-          }
-        }
+      if (SUCCESS != ack.status) {
+	logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
+	GCFTask::stop();
+	return status;
       }
-      else
-      {
-        logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
+
+      if (WeightsCommand::COMPLEX == m_type) {
+	int rcuin = 0;
+	for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+	{
+	  if (mask[rcuout])
+	  {
+	    std::ostringstream logStream;
+	    logStream << ack.weights()(0, rcuin++, Range::all());
+	    logMessage(cout,formatString("RCU[%02d].weights=%s", rcuout,logStream.str().c_str()));
+	  }
+	}
+      } else {
+	blitz::Array<complex<double>, 3> ackweights;
+	ackweights.resize(ack.weights().shape());
+
+	// convert to amplitude and angle
+	ackweights = convert_to_powerangle_from_int16(ack.weights());
+
+	int rcuin = 0;
+	for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
+	{
+	  if (mask[rcuout])
+	  {
+	    std::ostringstream logStream;
+	    logStream << ackweights(0, rcuin++, Range::all());
+	    logMessage(cout,formatString("RCU[%02d].weights=%s", rcuout,logStream.str().c_str()));
+	  }
+	}
       }
     }
     break;
@@ -896,48 +978,6 @@ void XCStatisticsCommand::stop()
   }
 }
 
-/**
- * Function to convert the complex semi-floating point representation used by the
- * EPA firmware to a complex<double>.
- */
-BZ_DECLARE_FUNCTION_RET(convert_to_powerangle, complex<double>)
-inline complex<double> convert_to_powerangle(complex<double> val)
-{
-  double angle = 0.0;
-  double power = real(val)*real(val) + imag(val)*imag(val);
-
-  if (power > 0.0)
-  {
-    power = 12 + 5*log10(power); // adjust scaling to allow comparison to subband statistics
-  }
-
-  if (0.0 == real(val))
-  {
-
-    if (imag(val) > 0)
-      angle = 90.0;
-    else if (imag(val) < 0)
-      angle = 270;
-
-  }
-  else
-  {
-
-    angle = 45.0 * atan(imag(val)/real(val)) / atan(1.0);
-
-    if (real(val) > 0.0)
-    {
-      if (imag(val) < 0)
-        angle += 360.0;
-    }
-    else
-      angle += 180.0;
-
-  }
-
-  return complex<double>(power, angle);
-}
-
 void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats, const Timestamp& timestamp)
 {
   if (0 == m_nseconds)
@@ -1006,20 +1046,8 @@ void XCStatisticsCommand::capture_xcstatistics(Array<complex<double>, 4>& stats,
   
 void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, const Timestamp& timestamp)
 {
-  //std::ostringstream logStream;
-  //logStream << "plot_xcstatistics (shape=" << xcstats.shape() << ") @ " << timestamp;
-  //logStream << endl << "XX()=" << xcstats(0,0,Range::all(),Range::all());
-  //logStream << endl << "XY()=" << xcstats(0,1,Range::all(),Range::all());
-  //logStream << endl << "YX()=" << xcstats(1,0,Range::all(),Range::all());
-  //logStream << endl << "YY()=" << xcstats(1,1,Range::all(),Range::all());
-  //logMessage(cout,logStream.str());
-
-  //xcstats(0,0,2,2) = 1.0;
-
   static gnuplot_ctrl* handle = 0;
   int n_ant = xcstats.extent(thirdDim);
-
-  //bitset<MAX_N_RCUS> mask = getRCUMask();
 
   // initialize the freq array
   firstIndex i;
@@ -1340,9 +1368,10 @@ static void usage()
 {
   cout << "rspctl usage:" << endl;
   cout << endl;
-  cout << "rspctl --weights        [--select=<set>]  # get weights" << endl;
+  cout << "rspctl --weights        [--select=<set>]  # get weights as complex values" << endl;
   cout << "  Example --select sets: --select=1,2,4:7 or --select=1:3,5:7" << endl;
   cout << "rspctl --weights=value.re[,value.im] [--select=<set>]  # set weights as complex value" << endl;
+  cout << "rspctl --aweights       [--select=<set>]  # get weights as power and angle (in degrees)" << endl;
   cout << "rspctl --aweights=amplitude[,angle] [--select=<set>]  # set weights as amplitude and angle (in degrees)" << endl;
   cout << "rspctl --subbands       [--select=<set>]  # get subband selection" << endl;
   cout << "rspctl --subbands=<set> [--select=<set>]  # set subband selection" << endl;
@@ -1402,7 +1431,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         { "select",     required_argument, 0, 'l' },
         { "weights",    optional_argument, 0, 'w' },
-        { "aweights",   required_argument, 0, 'a' },
+        { "aweights",   optional_argument, 0, 'a' },
         { "subbands",   optional_argument, 0, 's' },
         { "rcu",        optional_argument, 0, 'r' },
         { "wg",         optional_argument, 0, 'g' },
@@ -1425,7 +1454,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
     int option_index = 0;
     int c = getopt_long(argc, argv,
-                        "l:w::a:s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
+                        "l:w::a::s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
 
     if (c == -1)
       break;
@@ -1458,6 +1487,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         if (command)
           delete command;
         WeightsCommand* weightscommand = new WeightsCommand(m_server);
+	weightscommand->setType(WeightsCommand::COMPLEX);
         command = weightscommand;
 
         command->set_ndevices(m_nrcus);
@@ -1473,7 +1503,6 @@ Command* RSPCtl::parse_options(int argc, char** argv)
             exit(EXIT_FAILURE);
 	  }
           weightscommand->setValue(complex<double>(re,im));
-
         }
       }
       break;
@@ -1483,33 +1512,30 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         if (command)
           delete command;
         WeightsCommand* weightscommand = new WeightsCommand(m_server);
+	weightscommand->setType(WeightsCommand::ANGLE);
         command = weightscommand;
 
         command->set_ndevices(m_nrcus);
 
-	if (!optarg) {
-	  logMessage(cerr, "Error: missing parameter to --aweights argument.");
-	  exit(EXIT_FAILURE);
+	if (optarg)
+	{
+	  weightscommand->setMode(false);
+	  double amplitude = 0.0, angle = 0.0;
+	  int numitems = sscanf(optarg, "%lf,%lf", &amplitude, &angle);
+	  if (numitems == 0 || numitems == EOF) {
+	    logMessage(cerr,"Error: invalid aweights value. Should be of the format "
+		       "'--weights=amplitude[,angle]' where angle is in degrees.");
+	    exit(EXIT_FAILURE);
+	  }
+	  
+	  if (angle < -180.0 || angle > 180.0) {
+	    logMessage(cerr, "Error: invalid angle, should be between -180 < angle < 180.0.");
+	    exit(EXIT_FAILURE);
+	  }
+	  
+	  //weightscommand->setValue(complex<double>(amplitude * ::cos(angle), amplitude * ::sin(angle)));
+	  weightscommand->setValue(amplitude * exp(complex<double>(0,angle / 180.0 * M_PI)));
 	}
-
-	weightscommand->setMode(false);
-	double amplitude = 0.0, angle = 0.0;
-	int numitems = sscanf(optarg, "%lf,%lf", &amplitude, &angle);
-	if (numitems == 0 || numitems == EOF) {
-	  logMessage(cerr,"Error: invalid aweights value. Should be of the format "
-		     "'--weights=amplitude[,angle]' where angle is in degrees.");
-	  exit(EXIT_FAILURE);
-	}
-	cout << "amplitude=" << amplitude << ", angle=" << angle << endl;
-
-	if (angle < -180.0 || angle > 180.0) {
-	  logMessage(cerr, "Error: invalid angle, should be between -180 < angle < 180.0.");
-	  exit(EXIT_FAILURE);
-	}
-
-	angle = angle / 180.0 * M_PI;
-	weightscommand->setValue(complex<double>(amplitude * ::cos(angle), amplitude * ::sin(angle)));
-
       }
       break;
 
@@ -1910,7 +1936,7 @@ int main(int argc, char** argv)
   }
   catch (Exception e)
   {
-    cout << "Exception: " << e.text() << endl;
+    cerr << "Exception: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
 
