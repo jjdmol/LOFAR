@@ -259,6 +259,10 @@ namespace LOFAR {
     class WeightsCommand : public Command
     {
     public:
+      enum {
+	COMPLEX = 1,
+	ANGLE,
+      };
       WeightsCommand(GCFPortInterface& port);
       virtual ~WeightsCommand()
       {}
@@ -268,8 +272,10 @@ namespace LOFAR {
       {
         m_value = value;
       }
+      void setType(int type) { m_type = type; }
     private:
       std::complex<double> m_value;
+      int                  m_type;
     };
 
     class SubbandsCommand : public Command
