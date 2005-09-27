@@ -155,7 +155,7 @@ inline complex<double> convert_to_powerangle_from_int16(complex<int16> int16val)
   //
 
   return complex<double>(::sqrt(real(cdval)*real(cdval) + imag(cdval)*imag(cdval)),
-			 (::atan(imag(cdval) / real(cdval))) * 180.0 / M_PI); 
+			 ((::atan(imag(cdval) / real(cdval))) / M_PI) * 180.0); 
 }
 
 WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port), m_type(WeightsCommand::COMPLEX)
