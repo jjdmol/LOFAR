@@ -1,3 +1,25 @@
+2005-09-23 23:55  loose
+
+	* src/AMCClient/ConverterClient.cc: BugID: 382
+
+	  Now throws ClientError exception when call to Connection::read()
+	  or Connection::write() returns a Connection::Error.
+
+2005-07-05 16:29  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 214]%
+
+	  Merged relevant changes from the 1.0 release branch back into the
+	  main development line.
+
+2005-07-05 09:40  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+
+	  Prepare for release 1.0
+
 2005-07-04 11:56  loose
 
 	* src/Converter.h, src/EarthCoord.h, src/Exceptions.h,

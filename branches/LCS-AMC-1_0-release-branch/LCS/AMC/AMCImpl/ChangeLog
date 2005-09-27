@@ -1,3 +1,23 @@
+2005-09-26 09:56  loose
+  
+	* src/AMCServer/ConverterProcess.cc: BugID: 382
+  
+	  recvRequest() and sendResult() now throw a ServerError exception
+	  when read() or write() fails. This exception is caught in
+	  handleRequests() which then returns.
+  
+2005-07-05 09:40  loose
+  
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+  
+	  Prepare for release 1.0
+  
+	  test/tConverterImpl.out, test/AMCServer/Makefile.am,
+	  test/AMCServer/tProcess.cc, test/AMCServer/tProcess.out,
+	  test/AMCServer/tProcess.sh: %[ER: 231]%
+	* configure.in, src/Makefile.am: %[ER: 214]%
+	  test/Makefile.am, test/tConverterImpl.out,
 2005-07-04 11:56  loose
 
 	* src/ConverterImpl.cc, src/ConverterImpl.h, src/Exceptions.h,
