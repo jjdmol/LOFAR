@@ -22,10 +22,11 @@ import javax.swing.table.AbstractTableModel;
 public class treeModel extends AbstractTableModel {
     
        
-       String titles[] = {"TreeID", "Creator", "CreationDate", "Classification", 
+       String headers[] = {"TreeID", "Creator", "CreationDate", "Classification", 
             "Type", "State", "Campaign", "Start Time", "Stop Time"};
        Object data[][];
        
+             
        public treeModel(jOTDBinterface aRemoteOTDB, Vector aTreeList){
           setTreeList(aRemoteOTDB,aTreeList);
        }
@@ -34,8 +35,12 @@ public class treeModel extends AbstractTableModel {
            return data.length;
        }
             
+       public String getColumnName(int c) {
+           return headers[c];
+       }
+       
        public int getColumnCount() {
-           return titles.length;
+           return headers.length;
        }
             
  
@@ -44,7 +49,7 @@ public class treeModel extends AbstractTableModel {
        }
             
        public void setTreeList(jOTDBinterface aRemoteOTDB,Vector aTreeList) {
-           data = new Object[aTreeList.size()][titles.length];
+           data = new Object[aTreeList.size()][headers.length];
                 try {
                     if (aTreeList.size() == 0) {
                         System.out.println("Error:" + aRemoteOTDB.errorMsg());

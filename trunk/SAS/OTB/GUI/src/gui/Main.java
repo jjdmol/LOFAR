@@ -29,7 +29,7 @@ public class Main {
     public static void main(String[] args) {
          // TODO code application logic here
         otbgui aGui = new otbgui();
-        aGui.setSize(900, 500);
+        aGui.setSize(800,600);
         aGui.setVisible(true);
     }    
 }
