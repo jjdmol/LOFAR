@@ -26,7 +26,8 @@
 //# Usage:
 //#
 //# rspctl --weights         [--select=<set>]  # get weights
-//# rspctl --weights=(0|1)   [--select=<set>]  # set weights
+//# rspctl --weights=value.re[,value.im] [--select=<set>]  # set weights as complex value
+//# rspctl --aweights=amplitude[,angle] [--select=<set> ]  # set weights as amplitude and angle
 //# rspctl --subbands        [--select=<set>]  # get subband selection
 //# rspctl --subbands=<list> [--select=<set>]  # set subband selection
 //# rspctl --rcu             [--select=<set>]  # get RCU control
@@ -121,9 +122,9 @@ void WeightsCommand::send()
     setweights.weights().resize(1, setweights.rcumask.count(), MEPHeader::N_BEAMLETS);
 
     // -1 < m_value <= 1
-    double value = m_value;
+    complex<double> value = m_value;
     value *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
-    setweights.weights() = complex<int16>((int16)value,0);
+    setweights.weights() = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
 
     m_rspport.send(setweights);
   }
@@ -1341,7 +1342,8 @@ static void usage()
   cout << endl;
   cout << "rspctl --weights        [--select=<set>]  # get weights" << endl;
   cout << "  Example --select sets: --select=1,2,4:7 or --select=1:3,5:7" << endl;
-  cout << "rspctl --weights=(0|1)  [--select=<set>]  # set weights" << endl;
+  cout << "rspctl --weights=value.re[,value.im] [--select=<set>]  # set weights as complex value" << endl;
+  cout << "rspctl --aweights=amplitude[,angle] [--select=<set>]  # set weights as amplitude and angle (in degrees)" << endl;
   cout << "rspctl --subbands       [--select=<set>]  # get subband selection" << endl;
   cout << "rspctl --subbands=<set> [--select=<set>]  # set subband selection" << endl;
   cout << "  Example --subbands sets: --subbands=0:39 or --select=0:19,40:59" << endl;
@@ -1400,6 +1402,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       {
         { "select",     required_argument, 0, 'l' },
         { "weights",    optional_argument, 0, 'w' },
+        { "aweights",   required_argument, 0, 'a' },
         { "subbands",   optional_argument, 0, 's' },
         { "rcu",        optional_argument, 0, 'r' },
         { "wg",         optional_argument, 0, 'g' },
@@ -1422,7 +1425,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
     int option_index = 0;
     int c = getopt_long(argc, argv,
-                        "l:w::s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
+                        "l:w::a:s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
 
     if (c == -1)
       break;
@@ -1462,15 +1465,51 @@ Command* RSPCtl::parse_options(int argc, char** argv)
         if (optarg)
         {
           weightscommand->setMode(false);
-          double value = atof(optarg);
-          weightscommand->setValue(value);
-
-          if (value <= -1.0 || value > 1.0)
-          {
-            logMessage(cerr,"Error: invalid weights value, should be: -1 < value <= 1");
+	  double re = 0.0, im = 0.0;
+	  int numitems = sscanf(optarg, "%lf,%lf", &re, &im);
+	  if (numitems == 0 || numitems == EOF) {
+            logMessage(cerr,"Error: invalid weights value. Should be of the format "
+		       "'--weights=value.re[,value.im]' where value is a floating point value.");
             exit(EXIT_FAILURE);
-          }
+	  }
+          weightscommand->setValue(complex<double>(re,im));
+
         }
+      }
+      break;
+
+      case 'a':
+      {
+        if (command)
+          delete command;
+        WeightsCommand* weightscommand = new WeightsCommand(m_server);
+        command = weightscommand;
+
+        command->set_ndevices(m_nrcus);
+
+	if (!optarg) {
+	  logMessage(cerr, "Error: missing parameter to --aweights argument.");
+	  exit(EXIT_FAILURE);
+	}
+
+	weightscommand->setMode(false);
+	double amplitude = 0.0, angle = 0.0;
+	int numitems = sscanf(optarg, "%lf,%lf", &amplitude, &angle);
+	if (numitems == 0 || numitems == EOF) {
+	  logMessage(cerr,"Error: invalid aweights value. Should be of the format "
+		     "'--weights=amplitude[,angle]' where angle is in degrees.");
+	  exit(EXIT_FAILURE);
+	}
+	cout << "amplitude=" << amplitude << ", angle=" << angle << endl;
+
+	if (angle < -180.0 || angle > 180.0) {
+	  logMessage(cerr, "Error: invalid angle, should be between -180 < angle < 180.0.");
+	  exit(EXIT_FAILURE);
+	}
+
+	angle = angle / 180.0 * M_PI;
+	weightscommand->setValue(complex<double>(amplitude * ::cos(angle), amplitude * ::sin(angle)));
+
       }
       break;
 
