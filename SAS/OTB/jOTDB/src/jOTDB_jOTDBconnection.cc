@@ -31,6 +31,7 @@
 #include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
 #include <iostream>
+#include <jOTDB/jOTDB_jOTDBcommon.h>
 
 using namespace boost::posix_time;
 using namespace LOFAR::OTDB;
@@ -39,18 +40,14 @@ namespace LOFAR
 {
    namespace jOTDB
      {
-	// very ugly global parameter
-	OTDBconnection* OTDBconn;
-	
 	/*
 	 * Class:     jOTDB_jOTDBconnection
 	 * Method:    initOTDBconnection
 	 * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	 */
 	JNIEXPORT void JNICALL jOTDB::Java_jOTDB_jOTDBconnection_initOTDBconnection
-	  (JNIEnv *env, jobject, jstring username, jstring passwd, jstring database)
-
-	  {
+          (JNIEnv *env, jobject, jstring username, jstring passwd, jstring database)	  
+	{
  	     const char* user = env->GetStringUTFChars(username, 0);
  	     const char* pass = env->GetStringUTFChars(passwd, 0);
  	     const char* db = env->GetStringUTFChars(database, 0);

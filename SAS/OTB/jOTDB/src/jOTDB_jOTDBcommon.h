@@ -1,4 +1,4 @@
-//#  jOTDBnode.java: Structure containing a tree node.
+//#  jOTDB_jOTDBcommon.h: Holds a static OTDBconnection.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,50 +19,25 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 
-package jOTDB;
+#ifndef LOFAR_JOTDB_COMMON_H
+#define LOFAR_JOTDB_COMMON_H
 
-public class jOTDBnode implements java.io.Serializable
-{
-    public jOTDBnode ()
-    {
-	index = 0;
-	leaf = false;
-	instances = 0;
-	itsTreeID = 0;
-	itsNodeID = 0;
-	itsParentID = 0;
-	itsParamDefID = 0;
-    }
+// \file jOTDB_jOTDBcommon.h 
+// Hold a static OTDBconnection, to be
+// shared between the different JNI implementation
+
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+//# Includes
+#include <OTDB/OTDBconnection.h>
+
+using namespace LOFAR::OTDB;
+
+namespace LOFAR {
+  namespace jOTDB {
     
-    public int treeID()
-    { 
-	return (itsTreeID); 
-    }
-    
-    public int nodeID()
-    { 
-	return (itsNodeID); 
-    }
+    static OTDBconnection* OTDBconn;
 
-    public int parentID()
-    { 
-	return (itsParentID); 
-    }
+  } // end namespace LOFAR
+} // end namespace jOTDB
 
-    public int paramDefID()
-    {
-	return (itsParamDefID); 
-    }
-    
-    public String name;
-    public short index;
-    public boolean leaf;
-    public short instances;		//# only VICtemplate
-    public String limits;			//# only VICtemplate
-    public String description;	//# only VICtemplate
-
-    private int	itsTreeID;
-    private int	itsNodeID;
-    private int	itsParentID;
-    private int itsParamDefID;
-}
+#endif

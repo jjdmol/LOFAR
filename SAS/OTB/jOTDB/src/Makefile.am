@@ -2,7 +2,8 @@
 # SUBDIRS = shmem .
 # endif
 
-INSTHDRS   = jOTDB_jOTDBconnection.h
+INSTHDRS   = jOTDB_jOTDBconnection.h \
+	     jOTDB_jOTDBcommon.h
 
 NOINSTHDRS =
 
