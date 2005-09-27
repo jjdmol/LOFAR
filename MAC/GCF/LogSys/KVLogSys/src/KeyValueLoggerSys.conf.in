@@ -6,3 +6,6 @@ mac.ns.GCF-KVLD.server.type=TCP
 mac.ns.GCF-KVLD.server.port=25002
 mac.ns.GCF-KVLD.server.host=sun
 mac.top.GCF-KVLC.client.remoteservice=GCF-KVLD:server
+kvlm.otdb.dbname=tilman
+kvlm.otdb.dbusername=paulus
+kvlm.otdb.dbpassword=boskabouter

@@ -44,7 +44,9 @@ using namespace TM;
 
 KeyValueLoggerMaster::KeyValueLoggerMaster() :
   GCFTask((State)&KeyValueLoggerMaster::initial, KVL_MASTER_TASK_NAME),
-  _otdb("paulus", "boskabouter", "tilman"),
+  _otdb(ParameterSet::instance()->getString("kvlm.otdb.dbusername"), 
+        ParameterSet::instance()->getString("kvlm.otdb.dbpassword"), 
+        ParameterSet::instance()->getString("kvlm.otdb.dbname")),
   _pTV(0)
 {
   // register the protocol for debugging purposes
