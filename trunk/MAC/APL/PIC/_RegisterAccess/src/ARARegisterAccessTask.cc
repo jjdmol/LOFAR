@@ -66,6 +66,7 @@ namespace LOFAR
 
 namespace ARA
 {
+INIT_TRACER_CONTEXT(RegisterAccessTask,LOFARLOGGER_PACKAGE);
 
 string RegisterAccessTask::m_RSPserverName("ARAtestRSPserver");
 
@@ -103,6 +104,8 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_commandHandle(0),
       m_pendingCommands()
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
   
@@ -215,6 +218,8 @@ RegisterAccessTask::RegisterAccessTask(string name)
 
 RegisterAccessTask::~RegisterAccessTask()
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
 }
 
 void RegisterAccessTask::addMyPropertySet(const char* scope,
@@ -236,6 +241,8 @@ bool RegisterAccessTask::isConnected()
 
 GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch(e.signal)
@@ -291,6 +298,8 @@ GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*p
 
 GCFEvent::TResult RegisterAccessTask::myPropSetsLoaded(GCFEvent& e, GCFPortInterface& /*port*/)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch(e.signal)
@@ -337,6 +346,8 @@ GCFEvent::TResult RegisterAccessTask::myPropSetsLoaded(GCFEvent& e, GCFPortInter
 
 GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& port)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch(e.signal)
@@ -434,6 +445,8 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
 
 GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& port)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
@@ -561,6 +574,8 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
 
 GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, GCFPortInterface &port)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
@@ -625,6 +640,8 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, 
 
 GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, GCFPortInterface &port)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
@@ -689,6 +706,8 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, 
 
 GCFEvent::TResult RegisterAccessTask::subscribingXcStats(GCFEvent& e, GCFPortInterface &port)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
@@ -751,6 +770,8 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats(GCFEvent& e, GCFPortInt
 
 GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface& port)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
@@ -946,6 +967,8 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
 
 GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterface& /*port*/)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
   {
     RSPUpdstatusEvent updStatusEvent(e);
@@ -1136,6 +1159,8 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
 
 GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterface& /*port*/)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
   {
     RSPUpdstatsEvent updStatsEvent(e);
@@ -1153,6 +1178,8 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
 
 GCFEvent::TResult RegisterAccessTask::handleUpdXcStats(GCFEvent& e, GCFPortInterface& /*port*/)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
   {
     RSPUpdxcstatsEvent updXcStatsEvent(e);
@@ -1175,6 +1202,8 @@ void RegisterAccessTask::updateBoardProperties(string scope,
                                                uint8  ffi1,
                                                double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1208,6 +1237,8 @@ void RegisterAccessTask::updateETHproperties(string scope,
                                              uint8  ffi2,
                                              double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   // layout eth status: 
   // 31......24  23.....16  15........8  7........0       
   // #RX[15..8]  #RX[7..0]  #Err[15..8]  #Err[7..0]  
@@ -1246,6 +1277,8 @@ void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
                                                                 uint8  ffi0,
                                                                 double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1269,6 +1302,8 @@ void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 sample_c
                                                                  uint32 error_count,
                                                                  double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1289,6 +1324,8 @@ void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 sample_c
                                              
 void RegisterAccessTask::updateFPGAboardProperties(string scope, double /*timestamp*/)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1302,6 +1339,8 @@ void RegisterAccessTask::updateFPGAboardProperties(string scope, double /*timest
 void RegisterAccessTask::updateFPGAproperties(string scope, uint8 temp,
                                                             double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1318,6 +1357,8 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
                                                                uint8  ffi1,
                                                                double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1334,6 +1375,8 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
 
 void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   // layout rcu status (for both statusX and statusY): 
   // 7         6         5         4        3        2       1          0
   // VDDVCCEN VHENABLE VLENABLE FILSEL1 FILSEL0 BANDSEL HBAENABLE LBAENABLE
@@ -1405,6 +1448,8 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double t
 
 void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/, uint32 nof_overflow, double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1420,6 +1465,8 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/,
 
 void RegisterAccessTask::updateVersion(string scope, string version, double timestamp)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1434,6 +1481,8 @@ void RegisterAccessTask::updateVersion(string scope, string version, double time
 
 void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& value)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFPVBool pvBool;
   pvBool.copy(value);
   bool maintenanceFlag(pvBool.getValue());
@@ -1446,6 +1495,8 @@ void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& val
 
 void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(propName);
   if(propsetIt == m_myPropertySetMap.end())
   {
@@ -1811,6 +1862,8 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
 
 GCFEvent::TResult RegisterAccessTask::handleCommandResult(GCFEvent& /*e*/)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
 /*TODO
@@ -1850,6 +1903,8 @@ GCFEvent::TResult RegisterAccessTask::handleCommandResult(GCFEvent& /*e*/)
 
 void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, const GCFPValue& value)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   boost::shared_ptr<GCFPVBool> pvLBAEnable;
   boost::shared_ptr<GCFPVBool> pvHBAEnable;
   boost::shared_ptr<GCFPVBool> pvBandSel;
@@ -1947,6 +2002,8 @@ void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, con
 
 void RegisterAccessTask::getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   rackNr          = boardNr / (m_n_subracks_per_rack*m_n_boards_per_subrack);
   subRackNr       = (boardNr / m_n_boards_per_subrack) % m_n_subracks_per_rack;
   relativeBoardNr = boardNr % m_n_boards_per_subrack;
@@ -1954,6 +2011,8 @@ void RegisterAccessTask::getBoardRelativeNumbers(int boardNr,int& rackNr,int& su
 
 void RegisterAccessTask::getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   rackRelativeNr    = rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack*m_n_subracks_per_rack);
   subRackRelativeNr = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack) ) % m_n_subracks_per_rack;
   boardRelativeNr   = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board) ) % m_n_boards_per_subrack;
@@ -1963,6 +2022,8 @@ void RegisterAccessTask::getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int
 
 int RegisterAccessTask::getRCUHardwareNr(const string& property)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   int rcu=-1;
   // strip property and systemname, propertyset name remains
   int posBegin=property.find_first_of(":")+1;
@@ -1988,6 +2049,8 @@ int RegisterAccessTask::getRCUHardwareNr(const string& property)
 
 RegisterAccessTask::TMyPropertySetMap::iterator RegisterAccessTask::getPropertySetFromScope(const string& property)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   // strip property and systemname, propertyset name remains
   int posBegin=property.find_first_of(":")+1;
   int posEnd=property.find_last_of(".");
@@ -2013,6 +2076,8 @@ RegisterAccessTask::TMyPropertySetMap::iterator RegisterAccessTask::getPropertyS
 
 void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHandle)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   if(statsHandle == m_subStatsHandleSubbandPower)
   {
     if(m_integrationTime == 0)
@@ -2061,6 +2126,8 @@ void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHan
 
 void RegisterAccessTask::_integrateStatistics()
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   TStatistics statisticsSubband;
   TStatistics statisticsBeamlet;
   TXcStatistics xcstatistics;
@@ -2141,6 +2208,8 @@ void RegisterAccessTask::_integrateStatistics()
 
 void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsHandle)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   int maxRCUs     = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
   int maxSubbands = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
   LOG_DEBUG(formatString("maxRCUs:%d maxSubbands:%d",maxRCUs,maxSubbands));
@@ -2238,6 +2307,8 @@ void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsH
 
 void RegisterAccessTask::_addXcStatistics(TXcStatistics& statistics, uint32 statsHandle)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   if(statsHandle == m_subXcStatsHandle)
   {
     if(m_integrationTime == 0)
@@ -2265,6 +2336,8 @@ void RegisterAccessTask::_addXcStatistics(TXcStatistics& statistics, uint32 stat
 
 void RegisterAccessTask::_writeXcStatistics(TXcStatistics& statistics, uint32 statsHandle)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   int dim1 = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
   int dim2 = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
   int dim3 = statistics.ubound(blitz::thirdDim) - statistics.lbound(blitz::thirdDim) + 1;
@@ -2328,6 +2401,8 @@ void RegisterAccessTask::_writeXcStatistics(TXcStatistics& statistics, uint32 st
 
 void RegisterAccessTask::_refreshFunctionality()
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   int rack, subrack, board, ap, rcu;
   char scopeString[300];
   
@@ -2448,6 +2523,8 @@ void RegisterAccessTask::_refreshFunctionality()
 
 int RegisterAccessTask::_isDefect(char* scopeString)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
   int isDefect(1);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(string(scopeString));
   if(it == m_myPropertySetMap.end())
@@ -2478,6 +2555,8 @@ int RegisterAccessTask::_isDefect(char* scopeString)
 
 void RegisterAccessTask::_setFunctionality(char* scopeString, bool functional)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %s=%s",getName().c_str(),scopeString,(functional?"true":"false")).c_str());
+  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(string(scopeString));
   if(it == m_myPropertySetMap.end())
   {
@@ -2492,6 +2571,8 @@ void RegisterAccessTask::_setFunctionality(char* scopeString, bool functional)
 
 void RegisterAccessTask::_setFunctionalityRCU(int rack,int subrack,int board,int ap,int rcu, bool functional)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %d,%d,%d,%d,%d,%s",getName().c_str(),rack,subrack,board,ap,rcu,(functional?"true":"false")).c_str());
+  
   char scopeString[300];
 
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
@@ -2505,6 +2586,8 @@ void RegisterAccessTask::_setFunctionalityRCU(int rack,int subrack,int board,int
 
 void RegisterAccessTask::_setFunctionalityAP(int rack,int subrack,int board,int ap,bool functional)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %d,%d,%d,%d,%s",getName().c_str(),rack,subrack,board,ap,(functional?"true":"false")).c_str());
+  
   char scopeString[300];
 
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
@@ -2518,6 +2601,8 @@ void RegisterAccessTask::_setFunctionalityAP(int rack,int subrack,int board,int 
 
 void RegisterAccessTask::_setFunctionalityBoard(int rack,int subrack,int board,bool functional)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %d,%d,%d,%s",getName().c_str(),rack,subrack,board,(functional?"true":"false")).c_str());
+  
   char scopeString[300];
 
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
@@ -2535,6 +2620,8 @@ void RegisterAccessTask::_setFunctionalityBoard(int rack,int subrack,int board,b
 
 void RegisterAccessTask::_setFunctionalitySubRack(int rack,int subrack,bool functional)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %d,%d,%s",getName().c_str(),rack,subrack,(functional?"true":"false")).c_str());
+  
   char scopeString[300];
 
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
@@ -2548,6 +2635,8 @@ void RegisterAccessTask::_setFunctionalitySubRack(int rack,int subrack,bool func
 
 void RegisterAccessTask::_setFunctionalityRack(int rack,bool functional)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %d,%s",getName().c_str(),rack,(functional?"true":"false")).c_str());
+  
   char scopeString[300];
 
   sprintf(scopeString,SCOPE_PIC_RackN,rack);
@@ -2561,6 +2650,8 @@ void RegisterAccessTask::_setFunctionalityRack(int rack,bool functional)
 
 void RegisterAccessTask::_setFunctionalityStation(bool functional)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %s",getName().c_str(),(functional?"true":"false")).c_str());
+  
   char scopeString[300];
 
   sprintf(scopeString,SCOPE_PIC);

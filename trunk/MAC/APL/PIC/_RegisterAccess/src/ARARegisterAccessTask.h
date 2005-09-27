@@ -270,6 +270,8 @@ namespace ARA
       
       uint32            m_commandHandle;
       map<uint32,string> m_pendingCommands;
+  
+      ALLOC_TRACER_CONTEXT  
   };
 };
 
