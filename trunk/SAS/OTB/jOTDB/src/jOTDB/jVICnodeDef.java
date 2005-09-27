@@ -1,4 +1,4 @@
-//#  jOTDBconnection.java: Manages the connection with the OTDB database.
+//#  jOTDBVICnodeDef.java: Structure containing a VIC node definition
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,33 +21,22 @@
 
 package jOTDB;
 
-public class jOTDBtree implements java.io.Serializable
+public class jVICnodeDef implements java.io.Serializable
 {
-   public jOTDBtree()
-     {
-	itsTreeID = 0;
-     }
-   
-   public int treeID()
-     {
-	return (itsTreeID); 
-     }
-   
-   public short classification; // development / test / operational
-   public String creator;
-   public String creationDate;	
-   public short type;			// hardware / VItemplate / VHtree
-   public short state;			// idle / configure / ... / active / ...
-   // -- VIC only --
-   public int originalTree;
-   public String campaign;
-   public String starttime;
-   public String stoptime;
-   public int itsTreeID;
+    public jVICnodeDef()
+    {
+	itsNodeID = 0;
+    }
+    
+    public int nodeID()
+    {
+	return itsNodeID;
+    }
 
-   //# Prevent changing the database keys
-   private jOTDBtree (int aTreeID) 
-     {
-	 itsTreeID = aTreeID;
-     }   
+    public String name;
+    public int version;
+    public short classif;
+    public String constraints;
+    public String description;
+    public int itsNodeID;
 }
