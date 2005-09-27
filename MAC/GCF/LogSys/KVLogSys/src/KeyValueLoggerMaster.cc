@@ -27,9 +27,15 @@
 #include <KVLDefines.h>
 #include <sys/time.h>
 #include <time.h>
+#include <OTDB/TreeValue.h>
+#include <OTDB/TreeTypeConv.h>
+#include <OTDB/TreeStateConv.h>
+#include <OTDB/ClassifConv.h>
+#include <Common/lofar_datetime.h>
 
 namespace LOFAR 
 {
+using namespace OTDB;  
  namespace GCF 
  {
 using namespace TM;
@@ -37,13 +43,24 @@ using namespace TM;
   {
 
 KeyValueLoggerMaster::KeyValueLoggerMaster() :
-  GCFTask((State)&KeyValueLoggerMaster::initial, KVL_MASTER_TASK_NAME)
+  GCFTask((State)&KeyValueLoggerMaster::initial, KVL_MASTER_TASK_NAME),
+  _otdb("paulus", "boskabouter", "tilman"),
+  _pTV(0)
 {
   // register the protocol for debugging purposes
   registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
-
+  
   // initialize the port
   _kvlMasterPortProvider.init(*this, "server", GCFPortInterface::MSPP, KVL_PROTOCOL);
+}
+
+KeyValueLoggerMaster::~KeyValueLoggerMaster()
+{
+  if (_pTV)
+  {
+    delete _pTV;
+    _pTV = 0;
+  }
 }
 
 GCFEvent::TResult KeyValueLoggerMaster::initial(GCFEvent& e, GCFPortInterface& p)
@@ -52,8 +69,16 @@ GCFEvent::TResult KeyValueLoggerMaster::initial(GCFEvent& e, GCFPortInterface& p
   switch (e.signal)
   {
     case F_INIT:
+    {
+      _otdb.connect();
+      TreeTypeConv  TTconv(&_otdb);
+      TreeStateConv TSconv(&_otdb);
+      ClassifConv   CTconv(&_otdb);      
+      vector<OTDBtree>  treeList = _otdb.getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
+      treeIDType  treeID = treeList[treeList.size()-1].treeID();
+      _pTV = new TreeValue(&_otdb, treeID);
       break;
-
+    }
     case F_ENTRY:
     case F_TIMER:
       if (!_kvlMasterPortProvider.isConnected())
@@ -195,6 +220,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
         GCFEvent* fullEvent(0);
         char* eventBuf(0);
 
+        ptime otdbTime(not_a_date_time);
         for (uint16 i = 0; i < inEvent.nrOfEvents; i++)
         {  
           // expects and reads the length field
@@ -225,6 +251,12 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
                   updateEvent.key.c_str(),
                   i,
                   eventsDataLength));
+                            
+              otdbTime = from_time_t((time_t) updateEvent.timestamp.tv_sec) + microseconds(updateEvent.timestamp.tv_usec);
+              if (!_pTV->addKVT(updateEvent.key, updateEvent.value._pValue->getValueAsString(), otdbTime)) 
+              {
+                LOG_INFO("Could NOT add the key, key unknown?");
+              }                  
               break;
             }
             case KVL_ADD_ACTION:

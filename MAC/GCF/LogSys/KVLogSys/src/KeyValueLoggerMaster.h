@@ -28,9 +28,14 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <KVL_Protocol.ph>
 #include <KVLDefines.h>
+#include <OTDB/OTDBconnection.h>
 
 namespace LOFAR 
 {
+ namespace OTDB
+ {
+class TreeValue;
+ }
  namespace GCF 
  {  
   namespace LogSys 
@@ -43,7 +48,7 @@ class KeyValueLoggerMaster : public TM::GCFTask
 {
   public:
     KeyValueLoggerMaster ();
-    virtual ~KeyValueLoggerMaster () {}
+    virtual ~KeyValueLoggerMaster ();
     
   public: // member functions
   
@@ -68,6 +73,8 @@ class KeyValueLoggerMaster : public TM::GCFTask
   private: // admin members
     typedef list<TM::GCFPortInterface*> TClients;
     TClients        _clientsGarbage;
+    OTDB::OTDBconnection  _otdb;
+    OTDB::TreeValue*      _pTV;
 };
   } // namespace LogSys
  } // namespace GCF
