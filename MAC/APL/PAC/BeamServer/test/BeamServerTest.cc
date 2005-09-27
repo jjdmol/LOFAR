@@ -223,16 +223,15 @@ namespace LOFAR {
       Array<complex<double>, 3> weights(COMPUTE_INTERVAL, N_ELEMENTS * N_POLARIZATIONS, MEPHeader::N_BEAMLETS);
       Array<double, 1> loc(3);
 
+      pos = 1.0; // x,y coordiante = 1
+      pos(all, all, 2) = 0.0; // z-coordinate = 0
+
       loc = 0.0, 0.0, 0.0;
       select = true;
       SubArray subarray("subarray", loc, pos, select, 160000000.0, 1, MEPHeader::N_SUBBANDS, 0xB0 /* LBA */);
 
-      pos = 1.0; // x,y coordiante = 1
-      pos(all, all, 2) = 0.0; // z-coordinate = 0
-
       m_beamptr[0]->setSubarray(subarray);
-      m_beams.calculate_weights(now, COMPUTE_INTERVAL,
-				pos, weights, 0);
+      m_beams.calculate_weights(now, COMPUTE_INTERVAL, weights, 0);
 
       // stop timer
       gettimeofday(&delay, 0);
