@@ -217,6 +217,15 @@ namespace ARA
       void _writeStatistics(TStatistics& statistics, uint32 statsHandle);
       void _addXcStatistics(TXcStatistics& statistics, uint32 statsHandle);
       void _writeXcStatistics(TXcStatistics& statistics, uint32 statsHandle);
+      void _refreshFunctionality();
+      int  _isDefect(char* scopeString);
+      void _setFunctionality(char* scopeString, bool functional);
+      void _setFunctionalityRCU(int rack,int subrack,int board,int ap,int rcu, bool functional);
+      void _setFunctionalityAP(int rack,int subrack,int board,int ap,bool functional);
+      void _setFunctionalityBoard(int rack,int subrack,int board,bool functional);
+      void _setFunctionalitySubRack(int rack,int subrack,bool functional);
+      void _setFunctionalityRack(int rack,bool functional);
+      void _setFunctionalityStation(bool functional);
       
       // member variables
       ARAAnswer   m_answer;

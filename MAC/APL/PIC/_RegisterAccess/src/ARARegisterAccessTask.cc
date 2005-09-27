@@ -48,6 +48,7 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
+#include <APLCommon/APL_Defines.h>
 #include "ARAPropertyDefines.h"
 #include "ARAPhysicalModel.h"
 
@@ -384,17 +385,36 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
       break;
     }
 
-    case F_VCHANGEMSG:
+    case F_VGETRESP:
     {
-      // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&e);
-      assert(pPropAnswer);
-
-      if(strstr(pPropAnswer->pPropName,"Maintenance") != 0)
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
       {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
       break;
     }
     
@@ -1380,19 +1400,6 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double t
     {
       it->second->setValueTimed(string(PROPNAME_LBAENABLE),pvBoolLBAEnable, timestamp);
     }
-      
-    if(!pvBoolVddVccEn.getValue() ||
-       (!pvBoolVhEnable.getValue() && !pvBoolVlEnable.getValue()) ||
-       (!pvBoolHBAEnable.getValue() && !pvBoolLBAEnable.getValue()))
-    {
-      GCFPVInteger pvStatus(STATUS_ERROR);
-      it->second->setValueTimed(string(PROPNAME_STATUS),pvStatus, timestamp);
-    }       
-    else
-    {
-      GCFPVInteger pvStatus(STATUS_OK);
-      it->second->setValueTimed(string(PROPNAME_STATUS),pvStatus, timestamp);
-    }       
   }
 }
 
@@ -2316,6 +2323,252 @@ void RegisterAccessTask::_writeXcStatistics(TXcStatistics& statistics, uint32 st
     delete *it;
     valuePointerVector.erase(it);
     it=valuePointerVector.begin();
+  }
+}
+
+void RegisterAccessTask::_refreshFunctionality()
+{
+  int rack, subrack, board, ap, rcu;
+  char scopeString[300];
+  
+  int racksDefect(0);
+  for(rack=0;rack<m_n_racks;rack++)
+  {
+    int subracksDefect(0);
+    for(subrack=0;subrack<m_n_subracks_per_rack;subrack++)
+    {
+      int boardsDefect(0);
+      for(board=0;board<m_n_boards_per_subrack;board++)
+      {
+        int apsDefect(0);
+        int ethDefect(0);
+        int bpDefect(0);
+        for(ap=0;ap<m_n_aps_per_board;ap++)
+        {
+          int rcusDefect(0);
+          for(rcu=0;rcu<m_n_rcus_per_ap;rcu++)
+          {
+            int lfasDefect(0);
+            int hfasDefect(0);
+            
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
+            lfasDefect+=_isDefect(scopeString);
+            _setFunctionality(scopeString, (lfasDefect == 0));
+            
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
+            hfasDefect+=_isDefect(scopeString);
+            _setFunctionality(scopeString, (hfasDefect == 0));
+
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
+            int isDefect = _isDefect(scopeString);
+            
+            if(isDefect==1 || (lfasDefect>0&&hfasDefect>0))
+            {
+              rcusDefect++;
+              _setFunctionalityRCU(rack,subrack,board,ap,rcu, false);
+            }
+            else
+            {
+              _setFunctionality(scopeString, true);
+            }
+          }
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
+          int isDefect = _isDefect(scopeString);
+          
+          if(isDefect==1 || rcusDefect >= m_n_rcus_per_ap)
+          {
+            apsDefect++;
+            _setFunctionalityAP(rack,subrack,board,ap, false);
+          }
+          else
+          {
+            _setFunctionality(scopeString, true);
+          }
+        }
+
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
+        bpDefect+=_isDefect(scopeString);
+        _setFunctionality(scopeString, (bpDefect == 0));
+
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
+        ethDefect+=_isDefect(scopeString);
+        _setFunctionality(scopeString, (ethDefect == 0));
+
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
+        int isDefect = _isDefect(scopeString);
+        
+        if(isDefect==1 || bpDefect>0 || ethDefect>0 || apsDefect >= m_n_aps_per_board)
+        {
+          boardsDefect++;
+          _setFunctionalityBoard(rack,subrack,board,false);
+        }
+        else
+        {
+          _setFunctionality(scopeString, true);
+        }
+      }
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
+      int isDefect = _isDefect(scopeString);
+      
+      if(isDefect==1 || boardsDefect >= m_n_boards_per_subrack)
+      {
+        subracksDefect++;
+        _setFunctionalitySubRack(rack,subrack,false);
+      }
+      else
+      {
+        _setFunctionality(scopeString, true);
+      }
+    }  
+    sprintf(scopeString,SCOPE_PIC_RackN,rack);
+    int isDefect = _isDefect(scopeString);
+    
+    if(isDefect==1 || subracksDefect >= m_n_subracks_per_rack)
+    {
+      racksDefect++;
+      _setFunctionalityRack(rack,false);
+    }
+    else
+    {
+      _setFunctionality(scopeString, true);
+    }
+  }
+  sprintf(scopeString,SCOPE_PIC);
+  int isDefect = _isDefect(scopeString);
+  
+  if(isDefect==1 || racksDefect >= m_n_racks)
+  {
+    _setFunctionalityStation(false);
+  }
+  else
+  {
+    _setFunctionality(scopeString, true);
+  }
+}
+
+int RegisterAccessTask::_isDefect(char* scopeString)
+{
+  int isDefect(1);
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(string(scopeString));
+  if(it == m_myPropertySetMap.end())
+  {
+    LOG_FATAL(formatString("PropertySet not found: %s",scopeString));
+  }
+  else
+  {
+    boost::shared_ptr<GCFPVInteger> pvStatus(static_cast<GCFPVInteger*>(it->second->getValue(PROPNAME_STATUS)));
+    if(!pvStatus)
+    {
+      LOG_FATAL(formatString("PropertySet not found: %s",scopeString));
+    }
+    else
+    {
+      if(pvStatus->getValue()==RS_DEFECT)
+      {
+        isDefect=1;
+      }
+      else
+      {
+        isDefect=0;
+      }
+    }
+  }
+  return isDefect;
+}
+
+void RegisterAccessTask::_setFunctionality(char* scopeString, bool functional)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(string(scopeString));
+  if(it == m_myPropertySetMap.end())
+  {
+    LOG_FATAL(formatString("PropertySet not found: %s",scopeString));
+  }
+  else
+  {
+    GCFPVBool pvBool(functional);
+    it->second->setValue(PROPNAME_FUNCTIONALITY,pvBool);
+  }
+}
+
+void RegisterAccessTask::_setFunctionalityRCU(int rack,int subrack,int board,int ap,int rcu, bool functional)
+{
+  char scopeString[300];
+
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
+  _setFunctionality(scopeString, functional);
+  // also set functionality of underlying resources to false
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
+  _setFunctionality(scopeString, functional);
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
+  _setFunctionality(scopeString, functional);
+}
+
+void RegisterAccessTask::_setFunctionalityAP(int rack,int subrack,int board,int ap,bool functional)
+{
+  char scopeString[300];
+
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
+  _setFunctionality(scopeString, functional);
+  // also set functionality of underlying resources to false
+  for(int r=0;r<m_n_rcus_per_ap;r++)
+  {
+    _setFunctionalityRCU(rack,subrack,board,ap,r, false);
+  }
+}
+
+void RegisterAccessTask::_setFunctionalityBoard(int rack,int subrack,int board,bool functional)
+{
+  char scopeString[300];
+
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
+  _setFunctionality(scopeString, functional);
+  // also set functionality of underlying resources to false
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
+  _setFunctionality(scopeString, functional);
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
+  _setFunctionality(scopeString, functional);
+  for(int a=0;a<m_n_aps_per_board;a++)
+  {
+    _setFunctionalityAP(rack,subrack,board,a,false);
+  }
+}
+
+void RegisterAccessTask::_setFunctionalitySubRack(int rack,int subrack,bool functional)
+{
+  char scopeString[300];
+
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
+  _setFunctionality(scopeString, functional);
+  // also set functionality of underlying resources to false
+  for(int b=0;b<m_n_boards_per_subrack;b++)
+  {
+    _setFunctionalityBoard(rack,subrack,b,false);
+  }
+}
+
+void RegisterAccessTask::_setFunctionalityRack(int rack,bool functional)
+{
+  char scopeString[300];
+
+  sprintf(scopeString,SCOPE_PIC_RackN,rack);
+  _setFunctionality(scopeString, functional);
+  // also set functionality of underlying resources to false
+  for(int s=0;s<m_n_subracks_per_rack;s++)
+  {
+    _setFunctionalitySubRack(rack,s,false);
+  }
+}
+
+void RegisterAccessTask::_setFunctionalityStation(bool functional)
+{
+  char scopeString[300];
+
+  sprintf(scopeString,SCOPE_PIC);
+  _setFunctionality(scopeString, functional);
+  // also set functionality of underlying resources to false
+  for(int r=0;r<m_n_racks;r++)
+  {
+    _setFunctionalityRack(r,false);
   }
 }
 
