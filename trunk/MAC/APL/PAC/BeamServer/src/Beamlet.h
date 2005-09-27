@@ -142,8 +142,7 @@ namespace LOFAR {
        * Calculate weights for all beamlets 
        * for the specified number of time steps.
        */
-      void calculate_weights(const blitz::Array<double, 3>&         pos,
-			     blitz::Array<std::complex<double>, 3>& weights);
+      void calculate_weights(blitz::Array<std::complex<double>, 3>& weights);
 
     private:
       // default constructor not allowed
