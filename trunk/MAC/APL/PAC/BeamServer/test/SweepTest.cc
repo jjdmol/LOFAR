@@ -133,7 +133,7 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	alloc.name = "SweepTest";
 	alloc.subarrayname = "FTS-1-LBA-RSP0";
 	beam_count=0;
-	alloc.allocation()[beam_count] = 0;
+	alloc.allocation()[beam_count] = m_subband;
 
 	TESTC(beam_server.send(alloc));
       }
@@ -160,7 +160,7 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	    BSBeamallocEvent alloc;
 	    alloc.name = "SweepTest";
 	    alloc.subarrayname = "FTS-1-LBA-RSP0";
-	    alloc.allocation()[beam_count] = 0;
+	    alloc.allocation()[beam_count] = m_subband;
 	  
 	    TESTC(beam_server.send(alloc));
 	  }
@@ -175,8 +175,8 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	    for (int beam = 0; beam < MEPHeader::N_BEAMLETS; beam++)
 	      {
 		pointto.handle = beam_handles[beam];
-		pointto.pointing = Pointing(0.0,
-					    ::cos(((double)beam/MEPHeader::N_BEAMLETS)*M_PI),
+		pointto.pointing = Pointing(::cos(((double)beam/MEPHeader::N_BEAMLETS)*M_PI),
+					    0.0,
 					    RTC::Timestamp::now(20),
 					    Pointing::LOFAR_LMN);
 		
@@ -191,30 +191,10 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 
     case F_TIMER:
       {
-	TRAN(SweepTest::done);
-
-#if 0
-	// done => send BEAMFREE
-	BSBeamfreeEvent beamfree;
-	beamfree.handle = beam_handles[beam_count];
-
-	TESTC(beam_server.send(beamfree));
-#endif
-      }
-      break;
-
-#if 0
-    case BS_BEAMFREEACK:
-      {
-	BSBeamfreeackEvent ack(e);
-	TESTC(BS_Protocol::SUCCESS == ack.status);
-	TESTC(beam_handles[beam_count++] == ack.handle);
-
-	// test completed, next test
+	// stop task, beams will be freed automatically
 	TRAN(SweepTest::done);
       }
       break;
-#endif
 
     case F_DISCONNECTED:
       {
@@ -263,22 +243,13 @@ void SweepTest::run()
 
 int main(int argc, char** argv)
 {
-#if 0
-  char prop_path[PATH_MAX];
-  const char* mac_config = getenv("MAC_CONFIG");
-
-  snprintf(prop_path, PATH_MAX-1,
-	   "%s/%s", (mac_config?mac_config:"."),
-	   "log4cplus.properties");
-  INIT_LOGGER(prop_path);
-#endif
   LOG_INFO(formatString("Program %s has started", argv[0]));
   GCFTask::init(argc, argv);
 
   cout << "Subband index to plot: ";
   char buf[32];
   int subband = atoi(fgets(buf, 32, stdin));
-  if (subband < 0 || subband > MEPHeader::N_BEAMLETS)
+  if (subband < 0 || subband > MEPHeader::N_SUBBANDS)
   {
       LOG_FATAL(formatString("Invalid subband index, should >= 0 && < %d", MEPHeader::N_BEAMLETS));
       exit(EXIT_FAILURE);
