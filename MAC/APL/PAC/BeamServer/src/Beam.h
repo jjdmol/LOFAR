@@ -110,6 +110,12 @@ namespace LOFAR {
       void setSubarray(const CAL::SubArray& array);
 
       /**
+       * Return a reference to the subarray for this beam.
+       * @return reference to the subarray
+       */
+      const CAL::SubArray& getSubarray() const { return m_array; }
+      
+      /**
        * setCalibration weights for the receivers
        */
       void setCalibration(const CAL::AntennaGains& gains);
@@ -304,7 +310,6 @@ namespace LOFAR {
        */
       void calculate_weights(RTC::Timestamp timestamp,
 			     int compute_interval,
-			     const blitz::Array<double, 3>&         pos,
 			     blitz::Array<std::complex<double>, 3>& weights,
 			     AMC::Converter* conv);
 

@@ -125,13 +125,8 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 	RSPGetconfigackEvent ack(e);
       
 	m_nrcus = ack.n_rcus;
-	m_pos.resize(m_nrcus / MEPHeader::N_POL, MEPHeader::N_POL, N_DIM);
 	m_weights.resize(COMPUTE_INTERVAL, m_nrcus, MEPHeader::N_BEAMLETS);
 	m_weights16.resize(COMPUTE_INTERVAL, m_nrcus, MEPHeader::N_BEAMLETS);
-
-	m_pos = 0;
-
-	LOG_INFO_STR("RS.LBA_POSITIONS = " << m_pos);
 
 	// initialize weight matrix
 	m_weights   = complex<double>(0,0);
@@ -153,14 +148,9 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CLOSED:
       {
-	if (&port == &m_acceptor) {
-	    LOG_FATAL("Failed to open 'acceptor' port. Another instance of BeamServer may be running. Exiting...");
-	    exit(EXIT_FAILURE);
-	} else {
-	  // try connecting again in 2 seconds
-	  port.setTimer((long)2);
-	  LOG_DEBUG(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
-	}
+	// try connecting again in 2 seconds
+	port.setTimer((long)2);
+	LOG_DEBUG(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
       }
       break;
 
@@ -722,15 +712,11 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 void BeamServer::compute_weights(Timestamp time)
 {
   // calculate weights for all beamlets
-  m_beams.calculate_weights(time, COMPUTE_INTERVAL, m_pos, m_weights, &m_converter);
+  m_beams.calculate_weights(time, COMPUTE_INTERVAL, m_weights, &m_converter);
 
-  //
-  // need complex conjugate of the weights
-  // as 16bit signed integer to send to the board
-  //
-  m_weights16 = convert2complex_int16_t(conj(m_weights));
+  // convert the weights from double to int16
+  m_weights16 = convert2complex_int16_t(m_weights);
 
-  //LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
   LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
@@ -773,37 +759,31 @@ void BeamServer::send_sbselection()
     // beam 1, then beam 0 is deallocated, thus there is a hole
     // of 64 beamlets before the beamlets of beam 1.
     //
-    ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
+    ss.subbands.setType(SubbandSelection::BEAMLET);
+    ss.subbands().resize(1, MEPHeader::N_BEAMLETS);
     ss.subbands() = 0;
 
     Beamlet2SubbandMap sbsel = m_beams.getSubbandSelection();
-    int nrsubbands = sbsel().size() * 2;
-    LOG_DEBUG(formatString("nrsubbands=%d", nrsubbands));
+    LOG_DEBUG(formatString("nrsubbands=%d", sbsel().size()));
 
-    int i = 0;
     for (map<uint16,uint16>::iterator sel = sbsel().begin();
-	 sel != sbsel().end(); ++sel, ++i)
-      {
-	LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
-
-	if (sel->first >= MEPHeader::N_BEAMLETS)
-	  {
-	    LOG_ERROR(formatString("SBSELECTION: invalid src index", sel->first));
-	    continue;
-	  }
+	 sel != sbsel().end(); ++sel)
+    {
+      LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
       
-	if (sel->second >= MEPHeader::N_SUBBANDS)
-	  {
-	    LOG_ERROR(formatString("SBSELECTION: invalid tgt index", sel->second));
-	    continue;
-	  }
-
-	// same selection for x and y polarization
-	ss.subbands()(0, sel->first*2)   = sel->second * 2;
-	ss.subbands()(0, sel->first*2+1) = sel->second * 2 + 1;
+      if (sel->first >= MEPHeader::N_BEAMLETS) {
+	LOG_ERROR(formatString("SBSELECTION: invalid src index %d", sel->first));
+	continue;
       }
-
-    //cout << "ss.subbands() = " << ss.subbands() << endl;
+      
+      if (sel->second >= MEPHeader::N_SUBBANDS) {
+	LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", sel->second));
+	continue;
+      }
+      
+      // same selection for x and y polarization
+      ss.subbands()(0, (int)sel->first) = sel->second;
+    }
 
     m_rspdriver.send(ss);
   }

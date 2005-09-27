@@ -31,6 +31,9 @@
 
 #include <blitz/array.h>
 
+#undef NDIM
+#define NDIM 3
+
 using namespace blitz;
 using namespace LOFAR;
 using namespace BS;
@@ -98,21 +101,13 @@ Beamlet* Beamlets::get(int index) const
   return m_beamlets + index;
 }
 
-void Beamlets::calculate_weights(const Array<double, 3>&         pos,
-				      Array<complex<double>, 3>& weights)
+void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 {
-  const Array<double,2>* lmn = 0;
   int compute_interval = weights.extent(firstDim);
   int nrcus            = weights.extent(secondDim);
   Range all = Range::all();
 
-  if ((weights.extent(thirdDim) != m_nbeamlets)
-      || (pos.extent(firstDim) * pos.extent(secondDim) < nrcus)
-      || (nrcus % pos.extent(secondDim) != 0))
-    {
-      LOG_ERROR("\nmismatching pos and weight array shapes\n");
-      return;
-    }
+  ASSERT(weights.extent(thirdDim) == m_nbeamlets);
 
   for (int bi = 0; bi < m_nbeamlets; bi++)
     {
@@ -120,9 +115,12 @@ void Beamlets::calculate_weights(const Array<double, 3>&         pos,
       if (beamlet && beamlet->allocated())
 	{
 	  const Beam* beam = beamlet->getBeam();
+
+#if 0
 	  const CAL::AntennaGains& gains = beam->getCalibration();
 
 	  LOG_DEBUG_STR("gains[" << (gains.isDone()?"valid":"invalid") << "]=" << gains.getGains().shape());
+#endif
 
 	  // get coordinates from beam
 	  if (!beam)
@@ -130,26 +128,22 @@ void Beamlets::calculate_weights(const Array<double, 3>&         pos,
 	      LOG_ERROR(formatString("\nno beam for beamlet %d?\n", bi));
 	      continue;
 	    }
-	  lmn = &beam->getLMNCoordinates();
+	  const Array<double,2>& lmn = beam->getLMNCoordinates();
+	  const Array<double,3>& pos = beam->getSubarray().getAntennaPos();
 
-	  if (!lmn)
-	    {
-	      LOG_ERROR(formatString("\ninvalid (l,m,n) vector for beamlet %d\n", bi)); 
-	      continue;
-	    }
-
-	  if (0 == bi) LOG_DEBUG_STR("lmn[" << bi << "=" << (*lmn));
-
-	  if (compute_interval != lmn->extent(firstDim))
-	    {
-	      LOG_ERROR(formatString("\nlmn vector length (%d) != compute_interval (%d)\n",
-				     lmn->extent(firstDim), compute_interval));
-	      continue;
-	    }
+	  ASSERT(pos.extent(firstDim) == nrcus/MEPHeader::N_POL &&
+		 pos.extent(secondDim) == MEPHeader::N_POL &&
+		 pos.extent(thirdDim) == NDIM);
+	  ASSERT(compute_interval == lmn.extent(firstDim));
 
 	  double freq = 0.0;
 	  freq = beamlet->getSPW().getSubbandFreq(beamlet->subband());
-	  if (0 == bi) LOG_DEBUG_STR("freq = " << freq);
+	  if (0 == bi) {
+
+	    LOG_DEBUG_STR("freq = " << freq);
+	    LOG_DEBUG_STR("pos=" << pos);
+	    LOG_DEBUG_STR("lmn=" << lmn);
+	  }
 
 	  //
 	  // calculate (xm - yl + zn) for both polarizations
@@ -158,21 +152,22 @@ void Beamlets::calculate_weights(const Array<double, 3>&         pos,
 	  for (int rcu = 0; rcu < nrcus; rcu++)
 	    {
 	      weights(all, rcu, bi) =
-	        (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 0) * (*lmn)(all, 0))
-		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 1) * (*lmn)(all, 1))
-		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 2) * (*lmn)(all, 2));
+	        (  pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 0) * lmn(all, 0))
+		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 1) * lmn(all, 1))
+		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 2) * lmn(all, 2));
+
 	    }
 	  
 	  weights(all, all, bi) =
-	    (exp(2.0 * M_PI * freq * complex<double>(0.0,1.0))/SPEED_OF_LIGHT_MS) * weights(all, all, bi);
+	    exp((2.0 * M_PI * freq * complex<double>(0.0,1.0) / SPEED_OF_LIGHT_MS) * weights(all, all, bi));
+
+	  LOG_DEBUG_STR("weights(t=all,rcu=all,beamlet=" << bi << ") = " << weights(all, all, bi));
 	}
       else
 	{
-	  weights(all, all, bi) = complex<double>(0.0, 0.0);
+	  weights(all, all, bi) = complex<double>(1.0, 0.0);
 	}
     }
-
-  //cout << "weights(t=0) = " << weights(0,all,0) << endl;
 
   LOG_DEBUG(formatString("sizeof weights() = %d bytes", weights.size()*sizeof(complex<double>)));
   LOG_DEBUG(formatString("contiguous storage? %s", (weights.isStorageContiguous()?"yes":"no")));
