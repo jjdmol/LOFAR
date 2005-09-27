@@ -43,6 +43,7 @@ INSTHDRS = \
         KeyValueMap.h \
         lofar_algorithm.h \
         lofar_complex.h \
+        lofar_datetime.h \
         lofar_deque.h \
         lofar_fstream.h \
         lofar_global_symbol_warning.h \
