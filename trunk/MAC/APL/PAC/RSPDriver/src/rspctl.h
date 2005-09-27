@@ -264,12 +264,12 @@ namespace LOFAR {
       {}
       virtual void send();
       virtual GCFEvent::TResult ack(GCFEvent& e);
-      void setValue(double value)
+      void setValue(std::complex<double> value)
       {
         m_value = value;
       }
     private:
-      double m_value;
+      std::complex<double> m_value;
     };
 
     class SubbandsCommand : public Command
