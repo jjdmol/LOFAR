@@ -1,6 +1,6 @@
-//#  jOTDBconnection.java: Manages the connection with the OTDB database.
+//#  jOTDBparam.java:Structure describing one parameter.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,33 +21,41 @@
 
 package jOTDB;
 
-public class jOTDBtree implements java.io.Serializable
+public class jOTDBparam implements java.io.Serializable
 {
-   public jOTDBtree()
-     {
+    public jOTDBparam()
+    {
 	itsTreeID = 0;
-     }
-   
-   public int treeID()
-     {
+	itsParamID = 0;
+	itsNodeID = 0;
+    }
+    
+    public int treeID()
+    {
 	return (itsTreeID); 
-     }
-   
-   public short classification; // development / test / operational
-   public String creator;
-   public String creationDate;	
-   public short type;			// hardware / VItemplate / VHtree
-   public short state;			// idle / configure / ... / active / ...
-   // -- VIC only --
-   public int originalTree;
-   public String campaign;
-   public String starttime;
-   public String stoptime;
-   public int itsTreeID;
+    }
 
-   //# Prevent changing the database keys
-   private jOTDBtree (int aTreeID) 
-     {
-	 itsTreeID = aTreeID;
-     }   
+    public int paramID()
+    { 
+	return (itsParamID); 
+    }
+	
+    public int nodeID()
+    { 
+	return (itsNodeID); 
+    }
+
+    public String name;
+    public short index;
+    public short type;			// node / bool / int / long / float / etc.
+    public short unit;
+    public short pruning;
+    public short valMoment;
+    public boolean runtimeMod;
+    public String limits;
+    public String description;
+
+    private int	itsTreeID;
+    private int itsParamID;
+    private int itsNodeID;
 }

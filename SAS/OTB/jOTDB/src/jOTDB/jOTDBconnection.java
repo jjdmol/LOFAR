@@ -56,4 +56,4 @@ public class jOTDBconnection
     public native String errorMsg();
 
     public native int getAuthToken();
-};
+}
