@@ -40,11 +40,13 @@ start() {
 
     # Start RSPDriver
     echo -n $"Starting $prog: "
-    touch /var/run/$prog.pid
+    mkdir -p $PREFIX/var/run
+    touch $PREFIX/var/run/$prog.pid
     mkdir -p $PREFIX/var/log/
     nohup $PREFIX/bin/$prog $OPTIONS > $PREFIX/var/log/RSPDriver.log &
     RETVAL=$?
-    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog && success $"$prog startup"
+    mkdir -p $PREFIX/var/lock/subsys
+    [ $RETVAL -eq 0 ] && touch $PREFIX/var/lock/subsys/$prog && success $"$prog startup"
     echo
     return $RETVAL
 }
@@ -62,7 +64,7 @@ stop() {
     echo -n $"Shutting down $prog: "
     killproc $prog
     RETVAL=$?
-    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
+    [ $RETVAL -eq 0 ] && rm -f $PREFIX/var/lock/subsys/$prog
     echo
     return $RETVAL
 }
@@ -85,7 +87,7 @@ case "$1" in
 	RETVAL=$?
 	;;
   condrestart)
-	if [ -f /var/lock/subsys/$prog ]; then
+	if [ -f $PREFIX/var/lock/subsys/$prog ]; then
 	    stop
 	    start
 	    RETVAL=$?
