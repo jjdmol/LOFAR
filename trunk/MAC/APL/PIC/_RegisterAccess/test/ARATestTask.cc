@@ -112,7 +112,7 @@ ARATestTask::ARATestTask() :
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
-  m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
+  m_RSPserver.init(*this, "RSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
 }
 
 ARATestTask::~ARATestTask()
