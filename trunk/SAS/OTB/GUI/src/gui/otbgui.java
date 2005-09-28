@@ -53,22 +53,22 @@ public class otbgui extends javax.swing.JFrame {
     
     // Param Defaults
     private String aParamName        = "None";
-    private short aParamIndex        = -1;
-    private short aParamType         = -1;
-    private short aParamUnit         = -1;
-    private short aParamPruning      = -1;
-    private short aParamValMoment    = -1;
-    private boolean aParamRTMod      = false;
+    private String aParamIndex       = "-1";
+    private int aParamType           = 0;
+    private int aParamUnit           = 0;
+    private String aParamPruning     = "-1";
+    private String aParamValMoment   = "-1";
+    private int aParamRTMod          = 0;
     private String aParamLimits      = "None";
     private String aParamDescription = "None";
     
     // Node defaults
-    private String aNodeName        = "None";
-    private short aNodeIndex        = -1;
-    private boolean aNodeLeaf       = false;
-    private short aNodeInstances    = -1;
-    private String aNodeLimits      = "None";
-    private String aNodeDescription = "None";
+    private String aNodeName         = "None";
+    private String aNodeIndex        = "-1";
+    private int aNodeLeaf            = 0;
+    private String aNodeInstances    = "-1";
+    private String aNodeLimits       = "None";
+    private String aNodeDescription  = "None";
     
     
     private static jOTDBinterface remoteOTDB;    
@@ -264,9 +264,21 @@ public class otbgui extends javax.swing.JFrame {
         NodePanel.add(NodeLimitsText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 85, -1, -1));
 
         NodeOkButton.setText("Ok");
+        NodeOkButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                NodeOkButtonActionPerformed(evt);
+            }
+        });
+
         NodePanel.add(NodeOkButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 250, -1, -1));
 
         NodeCancelButton.setText("Cancel");
+        NodeCancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                NodeCancelButtonActionPerformed(evt);
+            }
+        });
+
         NodePanel.add(NodeCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 250, -1, -1));
 
         NodeApplyButton.setText("Apply");
@@ -346,9 +358,21 @@ public class otbgui extends javax.swing.JFrame {
         ParamPanel.add(ParamDescriptionText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 210, -1, -1));
 
         ParamOkButton.setText("Ok");
+        ParamOkButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ParamOkButtonActionPerformed(evt);
+            }
+        });
+
         ParamPanel.add(ParamOkButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 250, -1, -1));
 
         ParamCancelButton.setText("Cancel");
+        ParamCancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ParamCancelButtonActionPerformed(evt);
+            }
+        });
+
         ParamPanel.add(ParamCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 250, -1, -1));
 
         ParamApplyButton.setText("Apply");
@@ -513,28 +537,60 @@ public class otbgui extends javax.swing.JFrame {
     }
     // </editor-fold>//GEN-END:initComponents
 
-    private void ParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamApplyButtonActionPerformed
+    private void ParamCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamCancelButtonActionPerformed
+        // ParamNameText.setText(aParamName);
+        // ParamIndexText.setText(aParamIndex);
+        ParamTypeSelection.setSelectedIndex(aParamType);
+        ParamUnitSelection.setSelectedIndex(aParamUnit);
+        ParamPruningText.setText(aParamPruning);
+        ParamValMomentText.setText(aParamValMoment);
+        ParamRTModSelection.setSelectedIndex(aParamRTMod);
+        ParamLimitsText.setText(aParamLimits);
+        ParamDescriptionText.setText(aParamDescription);
+    }//GEN-LAST:event_ParamCancelButtonActionPerformed
+
+    private void setParamValues() {
         // aParamName=ParamNameText.getText();
-        // aParamIndex=Short.parseShort(ParamIndexText.getText().trim());
+        // aParamIndex=ParamIndexText.getText();
         aParamType=(short)ParamTypeSelection.getSelectedIndex();
         aParamUnit=(short)ParamUnitSelection.getSelectedIndex();
-        aParamPruning=Short.parseShort(ParamPruningText.getText().trim());
-        aParamValMoment=Short.parseShort(ParamValMomentText.getText().trim());
-        if (ParamRTModSelection.getSelectedIndex()== 0) {
-            aParamRTMod=false;
-        } else {
-            aParamRTMod=true;
-        }
+        aParamPruning=ParamPruningText.getText();
+        aParamValMoment=ParamValMomentText.getText();
+        aParamRTMod=ParamRTModSelection.getSelectedIndex();
         aParamLimits=ParamLimitsText.getText();
         aParamDescription=ParamDescriptionText.getText();
+    }
+    
+    private void ParamOkButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamOkButtonActionPerformed
+        setParamValues();
+    }//GEN-LAST:event_ParamOkButtonActionPerformed
+
+    private void setNodeValues() {
+        // aNodeName=NodeNameText.getText();
+        // aNodeIndex=NodeIndexText.getText();
+        aNodeInstances=NodeInstancesText.getText();
+        aNodeLimits=NodeLimitsText.getText();
+        aNodeDescription=NodeDescriptionText.getText();
+    }
+    
+    private void NodeCancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeCancelButtonActionPerformed
+        // NodeNameText.setText(aNodeName);
+        // NodeIndexText.setText(aNodeIndex);
+        NodeInstancesText.setText(aNodeInstances);
+        NodeLimitsText.setText(aNodeLimits);
+        NodeDescriptionText.setText(aNodeDescription);
+    }//GEN-LAST:event_NodeCancelButtonActionPerformed
+
+    private void NodeOkButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeOkButtonActionPerformed
+        setNodeValues();
+    }//GEN-LAST:event_NodeOkButtonActionPerformed
+
+    private void ParamApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ParamApplyButtonActionPerformed
+        setParamValues();
     }//GEN-LAST:event_ParamApplyButtonActionPerformed
 
     private void NodeApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NodeApplyButtonActionPerformed
-        // aNodeName=NodeNameText.getText();
-        // aNodeIndex=Short.parseShort(NodeIndexText.getText().trim());
-        aNodeInstances=Short.parseShort(NodeInstancesText.getText().trim());
-        aNodeLimits=NodeLimitsText.getText();
-        aNodeDescription=NodeDescriptionText.getText();
+        setNodeValues();
     }//GEN-LAST:event_NodeApplyButtonActionPerformed
 
     private void TreeSelectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TreeSelectButtonActionPerformed
