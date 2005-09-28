@@ -222,7 +222,7 @@ int32 TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/,
 		}
 		// It's a total mess, anything could have happend. Bail out.
 		LOG_DEBUG_STR("TH_Socket: serious read-error, result=" << bytesRead);
-		if (itsIsServer) {			// server role?
+		if (itsIsOwner) {			// are we the owner?
 			shutdown(itsDataSocket);	// completely delete datasocket
 		}
 		else {							// client role
