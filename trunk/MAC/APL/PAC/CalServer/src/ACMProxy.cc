@@ -258,7 +258,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 
 	ss.timestamp = m_starttime;
 	ss.rcumask.reset();
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < m_nrcus; i++) {
 	  ss.rcumask.set(i);
 	}
 
@@ -288,7 +288,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 	  
 	    ss.timestamp = m_starttime + (long)m_request_subband;
 	    ss.rcumask.reset();
-	    for (int i = 0; i < 8; i++) {
+	    for (int i = 0; i < m_nrcus; i++) {
 	      ss.rcumask.set(i);
 	    }
 	    
@@ -393,7 +393,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 	  
 	  ss.timestamp = m_starttime + (long)m_request_subband;
 	  ss.rcumask.reset();
-	  for (int i = 0; i < 8; i++) {
+	  for (int i = 0; i < m_nrcus; i++) {
 	    ss.rcumask.set(i);
 	  }
 	    
