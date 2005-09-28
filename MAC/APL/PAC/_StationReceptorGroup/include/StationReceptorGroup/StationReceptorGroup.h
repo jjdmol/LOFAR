@@ -135,12 +135,12 @@ namespace ASR
       uint8 getRcuControlValue(const string& bandselection);
 
       typedef map<uint16,boost::shared_ptr<GCF::PAL::GCFExtPropertySet> > TRCUMap;
-      typedef map<uint16,int> TRCUStatusMap;
+      typedef map<uint16,bool> TRCUFunctionalityMap;
     
       static string     m_CALserverName;
       GCF::TM::GCFPort  m_CALclient;
       TRCUMap           m_rcuMap;
-      TRCUStatusMap     m_rcuStatusMap;
+      TRCUFunctionalityMap m_rcuFunctionalityMap;
 
       uint16  m_n_racks;
       uint16  m_n_subracks_per_rack;

@@ -27,7 +27,7 @@
 #include <boost/shared_ptr.hpp>
 #include <Common/lofar_sstream.h>
 #include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVInteger.h>
+#include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDynArr.h>
 #include <APLCommon/APLUtilities.h>
 #include <StationReceptorGroup/StationReceptorGroup.h>
@@ -48,6 +48,7 @@ namespace ASR
 INIT_TRACER_CONTEXT(StationReceptorGroup,LOFARLOGGER_PACKAGE);
 
 const char TYPE_LCU_PIC_RCU[] = "TLcuPicRCU";
+const char PROPNAME_FUNCTIONALITY[] = "functionality";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN[] = "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d";
 const char PARAM_N_RACKS[]                     = "mac.apl.ara.N_RACKS";
 const char PARAM_N_SUBRACKS_PER_RACK[]         = "mac.apl.ara.N_SUBRACKS_PER_RACK";
@@ -65,6 +66,7 @@ StationReceptorGroup::StationReceptorGroup(const string& taskName,
   LogicalDevice(taskName,parameterFile,pStartDaemon,SRG_VERSION),
   m_CALclient(*this, m_CALserverName, GCFPortInterface::SAP, CAL_PROTOCOL),
   m_rcuMap(),
+  m_rcuFunctionalityMap(),
   m_n_racks(1),
   m_n_subracks_per_rack(1),
   m_n_boards_per_subrack(1),
@@ -139,7 +141,7 @@ int StationReceptorGroup::getRCUHardwareNr(const string& property)
 
 bool StationReceptorGroup::rcuPropsAvailable()
 {
-  return (m_rcuStatusMap.size() == m_n_rcus);
+  return (m_rcuFunctionalityMap.size() == m_n_rcus);
    
 }
 
@@ -147,12 +149,12 @@ bool StationReceptorGroup::checkQuality()
 {
   uint16 maxRcusDefect = m_parameterSet.getUint16(string("maxRcusDefect"));
   uint16 rcusDefect(0);
-  for(TRCUStatusMap::iterator it=m_rcuStatusMap.begin();it!=m_rcuStatusMap.end();++it)
+  for(TRCUFunctionalityMap::iterator it=m_rcuFunctionalityMap.begin();it!=m_rcuFunctionalityMap.end();++it)
   {
-    if(it->second < 0)
+    if(!it->second)
     {
       rcusDefect++;
-      LOG_DEBUG(formatString("RCU %d status: %d",it->first,it->second));
+      LOG_DEBUG(formatString("RCU %d non-functional",it->first));
     }
   }
   LOG_DEBUG(formatString("Total RCUs defect: %d",rcusDefect));
@@ -198,15 +200,15 @@ void StationReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
     {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       
-      // check if it is a status
-      if(strstr(pPropAnswer->pPropName, "status") != 0)
+      // check if it is a functionality
+      if(strstr(pPropAnswer->pPropName, PROPNAME_FUNCTIONALITY) != 0)
       {
-        // add the status to the internal cache
+        // add the functionality state to the internal cache
         int rcu = getRCUHardwareNr(pPropAnswer->pPropName);
         if(rcu >= 0)
         {
-          int status = ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
-          m_rcuStatusMap[static_cast<uint16>(rcu)] = status;
+          bool functional = ((GCFPVBool*)pPropAnswer->pValue)->getValue();
+          m_rcuFunctionalityMap[static_cast<uint16>(rcu)] = functional;
         }
       }
       break;
@@ -215,17 +217,17 @@ void StationReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
     {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       
-      // check if it is a status
-      if(strstr(pPropAnswer->pPropName, "status") != 0)
+      // check if it is a functionality
+      if(strstr(pPropAnswer->pPropName, PROPNAME_FUNCTIONALITY) != 0)
       {
-        LOG_DEBUG("status property changed");
-        // add the status to the internal cache
+        LOG_DEBUG("functionality property changed");
+        // add the functionality to the internal cache
         int rcu = getRCUHardwareNr(pPropAnswer->pPropName);
         if(rcu >= 0)
         {
-          int status = ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
-          m_rcuStatusMap[static_cast<uint16>(rcu)] = status;
-          LOG_DEBUG(formatString("RCU %d status: %d",rcu,status));
+          bool functional = ((GCFPVBool*)pPropAnswer->pValue)->getValue();
+          m_rcuFunctionalityMap[static_cast<uint16>(rcu)] = functional;
+          LOG_DEBUG(formatString("RCU %d functionality: %s",rcu,(functional?"true":"false")));
         }
         if(getLogicalDeviceState() == LOGICALDEVICE_STATE_ACTIVE)
         {
@@ -499,8 +501,8 @@ void StationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
 
       boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_RCU,&m_propertySetAnswer));
       propSetPtr->load();
-      propSetPtr->subscribeProp(string("status"));
-      propSetPtr->requestValue(string("status"));
+      propSetPtr->subscribeProp(string(PROPNAME_FUNCTIONALITY));
+      propSetPtr->requestValue(string(PROPNAME_FUNCTIONALITY));
       m_rcuMap[(*it)]=propSetPtr;
     }
   }
@@ -557,10 +559,10 @@ void StationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
   calStopEvent.name = getName();
   m_CALclient.send(calStopEvent);
 
-  // and unsubscribe from RCU status props
+  // and unsubscribe from RCU functionality props
   //  for(TRCUMap::iterator it=m_rcuMap.begin();it!=m_rcuMap.end();++it)
   //  {
-  //    it->second->unsubscribeProp("status");
+  //    it->second->unsubscribeProp(PROPNAME_FUNCTIONALITY);
   //    it->second->unload();
   //  }
 }
