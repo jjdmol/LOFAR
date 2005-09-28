@@ -111,7 +111,7 @@ ARATestDriverTask::ARATestDriverTask() :
   m_stats().resize(n_rcus,MEPHeader::N_BEAMLETS);
   m_xcstats().resize(n_pols,n_pols,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board);
   
-  m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
+  m_RSPserver.init(*this, "RSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
   
 }
 

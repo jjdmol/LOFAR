@@ -68,7 +68,7 @@ namespace ARA
 {
 INIT_TRACER_CONTEXT(RegisterAccessTask,LOFARLOGGER_PACKAGE);
 
-string RegisterAccessTask::m_RSPserverName("ARAtestRSPserver");
+string RegisterAccessTask::m_RSPserverName("RSPserver");
 
 RegisterAccessTask::RegisterAccessTask(string name)
     : GCFTask((State)&RegisterAccessTask::initial, name),
@@ -789,7 +789,10 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
         if(pvIntegrationTime != 0)
         {
           m_integrationTime = pvIntegrationTime->getValue();
-          m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
+          if(m_integrationTime > 0)
+	  {
+            m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
+	  }
         }
         boost::shared_ptr<GCFPVInteger> pvIntegrationMethod(static_cast<GCFPVInteger*>(propsetIt->second->getValue(PROPNAME_INTEGRATIONMETHOD)));
         if(pvIntegrationMethod != 0)
@@ -850,13 +853,17 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&e);
       assert(pPropAnswer);
 
-      if(strstr(pPropAnswer->pPropName,"Maintenance") != 0)
+      if(strstr(pPropAnswer->pPropName,"Maintenance."PROPNAME_STATUS) != 0)
       {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,"Command") != 0)
+      else if(strstr(pPropAnswer->pPropName,"Command."PROPNAME_COMMAND) != 0)
       {
         handleCommand(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, PROPNAME_STATUS) != 0)
+      {
+        _refreshFunctionality();
       }
       else if(strstr(pPropAnswer->pPropName,PROPNAME_LBAENABLE) != 0)
       {
@@ -2127,7 +2134,7 @@ void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHan
 void RegisterAccessTask::_integrateStatistics()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
+
   TStatistics statisticsSubband;
   TStatistics statisticsBeamlet;
   TXcStatistics xcstatistics;
