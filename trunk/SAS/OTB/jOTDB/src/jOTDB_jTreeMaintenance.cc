@@ -25,10 +25,12 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <jni.h>
-#include <jOTDB/jOTDB_jOTDBconnection.h>
+#include <jOTDB/jOTDB_jTreeMaintenance.h>
 #include <jOTDB/jOTDB_jOTDBcommon.h>
+#include <jOTDB/jOTDB_jOTDBconnection.h>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/VICnodeDef.h>
+#include <OTDB/OTDBnode.h>
 #include <string>
 #include <iostream>
 
@@ -40,10 +42,11 @@ namespace LOFAR
 {
    namespace jOTDB
      {
-       JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_initTreeMaintenance
+       JNIEXPORT void JNICALL Java_jOTDB_jTreeMaintenance_initTreeMaintenance
          (JNIEnv *, jobject)
        {
-	 treemain = new TreeMaintenance (OTDBconn);
+	  OTDBconn = getConnection ();
+	  treemain = new TreeMaintenance (OTDBconn);
        }
 
        JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNode__I
@@ -53,7 +56,7 @@ namespace LOFAR
 	 
 	 jobject jNodeDef;
 	 jclass class_jVICnodeDef = env->FindClass ("jOTDB/jVICnodeDef");
-	 jmethodOD mid_jVICnodeDef_cons = env->GetMethodID (class_jVICnodeDef, "<init>", "()V");
+	 jmethodID mid_jVICnodeDef_cons = env->GetMethodID (class_jVICnodeDef, "<init>", "()V");
 	 jNodeDef = env->NewObject (class_jVICnodeDef, mid_jVICnodeDef_cons);
 
 	 jfieldID fid_jVICnodeDef_name = env->GetFieldID (class_jVICnodeDef, "name", "Ljava/lang/String;");
@@ -88,10 +91,10 @@ namespace LOFAR
        }
 
        JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNode__II
-         (JNIEnv *, jobject, jint aTreeID, jint aNodeID)
+         (JNIEnv *env, jobject, jint aTreeID, jint aNodeID)
        {
 	 OTDBnode aNode = treemain->getNode (aTreeID, aNodeID);
-	 return convertOTDBnode (aNode);
+	 return convertOTDBnode (env, aNode);
        }
 
        JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getItemList__III
@@ -108,7 +111,7 @@ namespace LOFAR
 	 jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
 	 
 	 for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
-	   env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBnode (itemIterator);
+	   env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBnode (env, *itemIterator));
 	   
 	 return itemVector;
        }
@@ -116,7 +119,7 @@ namespace LOFAR
        JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getItemList__ILjava_lang_String_2
          (JNIEnv *env, jobject, jint aTreeID, jstring aNameFragment)
        {
-	 const char* nf = env->GetStringUTFChars (aNameFragment);
+	 const char* nf = env->GetStringUTFChars (aNameFragment, 0);
 	 const string nameFragment (nf);
 	 
 	 vector<OTDBnode> itemList = treemain->getItemList (aTreeID, nameFragment);
@@ -130,7 +133,7 @@ namespace LOFAR
 	 jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
 	 
 	 for (itemIterator = itemList.begin(); itemIterator != itemList.end(); itemIterator++)
-	   env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBnode (itemIterator));
+	   env->CallObjectMethod(itemVector, mid_Vector_add, convertOTDBnode (env, *itemIterator));
 			 
 	 env->ReleaseStringUTFChars (aNameFragment, nf);
 	
@@ -145,78 +148,142 @@ namespace LOFAR
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_saveNode
-         (JNIEnv *, jobject, jobject aNode)
-       {
-	 
-	 jboolean succes = treemain->saveNode (
+         (JNIEnv *env, jobject, jobject jNode)
+       {	 
+	  OTDBnode aNode = convertjOTDBnode (env, jNode);
+	  jboolean succes = treemain->saveNode (aNode);
+	  return succes;
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_saveNodeList
-         (JNIEnv *, jobject, jobject)
+         (JNIEnv *env, jobject, jobject aNodeList)
        {
+	  OTDBnode aNode;
+	 jboolean succes;
+	 // Construct java Vector
+	 jclass class_Vector = env->FindClass("java/util/Vector");
+	 jmethodID mid_Vector_elementAt = env->GetMethodID(class_Vector, "elementAt", "(I)Ljava/lang/Object;");
+	 jmethodID mid_Vector_size = env->GetMethodID(class_Vector, "size", "()I");	  
+	 
+	 for (int i = 0; i < env->CallIntMethod (aNodeList, mid_Vector_size); i++)
+	    {
+	       aNode = convertjOTDBnode (env, env->CallObjectMethod (aNodeList, mid_Vector_elementAt, i));
+	       succes = treemain->saveNode (aNode);
+	       if (!succes)
+		 return succes;
+	    }
+	   
+	 return succes;
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_deleteNode
-         (JNIEnv *, jobject, jobject)
+         (JNIEnv *env, jobject, jobject jNode)
        {
+	  jclass class_jOTDBnode = env->FindClass ("jOTDB/jOTDBnode");
+	  jfieldID fid_jOTDBnode_itsTreeID = env->GetFieldID (class_jOTDBnode, "itsTreeID", "I");
+	  jfieldID fid_jOTDBnode_itsNodeID = env->GetFieldID (class_jOTDBnode, "itsNodeID", "I");
+	  
+	   // Get original OTDB node
+	   OTDBnode aNode = treemain->getNode (env->GetIntField (jNode, fid_jOTDBnode_itsTreeID), env->GetIntField (jNode, fid_jOTDBnode_itsNodeID));
+
+	  jboolean succes = treemain->deleteNode (aNode);
+	  return succes;
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_deleteNodeList
-         (JNIEnv *, jobject, jobject)
+         (JNIEnv *env, jobject, jobject jNodeList)
        {
+	  jboolean succes;
+	  OTDBnode aNode;
+	  // Construct java Vector
+	  jobject jNode;
+	  jclass class_Vector = env->FindClass ("java/util/Vector");
+	  jmethodID mid_Vector_elementAt = env->GetMethodID (class_Vector, "elementAt", "(I)Ljava/lang/Object;");
+	  jmethodID mid_Vector_size = env->GetMethodID (class_Vector, "size", "()I");	  
+
+	  jclass class_jOTDBnode = env->FindClass ("jOTDB/jOTDBnode");
+	  jfieldID fid_jOTDBnode_itsTreeID = env->GetFieldID (class_jOTDBnode, "itsTreeID", "I");
+	  jfieldID fid_jOTDBnode_itsNodeID = env->GetFieldID (class_jOTDBnode, "itsNodeID", "I");
+
+	  for (int i = 0; i < env->CallIntMethod (jNodeList, mid_Vector_size); i++)
+	    {	  
+	       jNode = env->CallObjectMethod (jNodeList, mid_Vector_elementAt, i);
+	       // Get original OTDB node
+	       aNode = treemain->getNode (env->GetIntField (jNode, fid_jOTDBnode_itsTreeID), env->GetIntField (jNode, fid_jOTDBnode_itsNodeID));
+	       succes = treemain->deleteNode (aNode);
+	       if (!succes)
+		 return succes;
+	    }	   
+	 return succes;	  
        }
 
-       JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_checkTreeConstraints
-         (JNIEnv *, jobject, jint, jint)
+	JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_checkTreeConstraints
+	  (JNIEnv *, jobject, jint aTreeID, jint topNode)
        {
+	  jboolean succes;// = treemain->checkTreeConstraints (aTreeID, topNode);
+	  return succes;
        }
 
        JNIEXPORT jint JNICALL Java_jOTDB_jTreeMaintenance_instanciateTree
-         (JNIEnv *, jobject, jint)
+         (JNIEnv *, jobject, jint baseTree)
        {
+	  jboolean succes = treemain->instanciateTree (baseTree);
+	  return succes;
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_pruneTree
-         (JNIEnv *, jobject, jint, jshort)
+         (JNIEnv *, jobject, jint aTreeID, jshort pruningLevel)
        {
+	  jboolean succes = treemain->pruneTree (aTreeID, pruningLevel);
+	  return succes;
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_deleteTree
-         (JNIEnv *, jobject, jint)
+         (JNIEnv *, jobject, jint aTreeID)
        {
+	  jboolean succes = treemain->deleteTree (aTreeID);
+	  return succes;
        }
 
        JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getTopNode
-         (JNIEnv *, jobject, jint)
+         (JNIEnv *env, jobject, jint aTreeID)
        {
+	  OTDBnode aNode = treemain->getTopNode (aTreeID);
+	  return convertOTDBnode (env, aNode);
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setClassification
-         (JNIEnv *, jobject, jint, jshort)
+         (JNIEnv *, jobject, jint aTreeID, jshort aClassification)
        {
+	  jboolean succes = treemain->setClassification (aTreeID, aClassification);
+	  return succes;
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setTreeState
-         (JNIEnv *, jobject, jint, jshort)
+         (JNIEnv *, jobject, jint aTreeID, jshort aState)
        {
+	  jboolean succes = treemain->setTreeState (aTreeID, aState);
+	  return succes;
        }
 
        JNIEXPORT jstring JNICALL Java_jOTDB_jTreeMaintenance_errorMsg
-         (JNIEnv *, jobject)
+         (JNIEnv *env, jobject)
        {
+	  jstring jstr = env->NewStringUTF(OTDBconn->errorMsg().c_str());
+	  return jstr;
        }
 
-       jobject convertOTDBnode (OTDBnode aNode)
+       jobject convertOTDBnode (JNIEnv *env, OTDBnode aNode)
 	 {
 	   jobject jNode;
 	   jclass class_jOTDBnode = env->FindClass ("jOTDB/jOTDBnode");
-	   jmethodOD mid_jOTDB_cons = env->GetMethodID (class_jOTDBnode, "<init>", "()V");
+	   jmethodID mid_jOTDBnode_cons = env->GetMethodID (class_jOTDBnode, "<init>", "()V");
 	   jNode = env->NewObject (class_jOTDBnode, mid_jOTDBnode_cons);
 	   
 	   jfieldID fid_jOTDBnode_name = env->GetFieldID (class_jOTDBnode, "name", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_index = env->GetFieldID (class_jOTDBnode, "index", "S");
 	   jfieldID fid_jOTDBnode_leaf = env->GetFieldID (class_jOTDBnode, "leaf", "Z");
-	   jfieldID fid_jOTDBnode_instances = env->GetFieldID (class_jOTDBnode, "instances", "S;");
+	   jfieldID fid_jOTDBnode_instances = env->GetFieldID (class_jOTDBnode, "instances", "S");
 	   jfieldID fid_jOTDBnode_limits = env->GetFieldID (class_jOTDBnode, "limits", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_description = env->GetFieldID (class_jOTDBnode, "description", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_itsTreeID = env->GetFieldID (class_jOTDBnode, "itsTreeID", "I");
@@ -224,24 +291,22 @@ namespace LOFAR
 	   jfieldID fid_jOTDBnode_itsParentID = env->GetFieldID (class_jOTDBnode, "itsParentID", "I");
 	   jfieldID fid_jOTDBnode_itsParamDefID = env->GetFieldID (class_jOTDBnode, "itsParamDefID", "I");
 	   
-	   env->SetObjectField (jNode, fid_jOTDBnode_name, env->NewStringUTF (aNode.name.c_str()));
+	   env->SetObjectField (jNode, fid_jOTDBnode_name, env->NewStringUTF (aNode.name.c_str ()));
 	   env->SetShortField (jNode, fid_jOTDBnode_index, aNode.index);
 	   env->SetBooleanField (jNode, fid_jOTDBnode_leaf, aNode.leaf);
 	   env->SetShortField (jNode, fid_jOTDBnode_instances, aNode.instances);
-	   env->SetObjectField (jNode, fid_jOTDBnode_limits, env->NewStringUTF (aNode.limits.c_str()));
-	   env->SetObjectField (jNode, fid_jOTDBnode_description, env->NewStringUTF (aNode.description.c_str()));
-	   env->SetIntField (jNode, fid_jOTDBnode_itsTreeID, aNode.treeID());
-	   env->SetIntField (jNode, fid_jOTDBnode_itsNodeID, aNode.nodeID());
-	   env->SetIntField (jNode, fid_jOTDBnode_itsParentID, aNode.parentID());
-	   env->SetIntField (jNode, fid_jOTDBnode_itsParamDefID, aNode.paramDefID());
+	   env->SetObjectField (jNode, fid_jOTDBnode_limits, env->NewStringUTF (aNode.limits.c_str ()));
+	   env->SetObjectField (jNode, fid_jOTDBnode_description, env->NewStringUTF (aNode.description.c_str ()));
+	   env->SetIntField (jNode, fid_jOTDBnode_itsTreeID, aNode.treeID ());
+	   env->SetIntField (jNode, fid_jOTDBnode_itsNodeID, aNode.nodeID ());
+	   env->SetIntField (jNode, fid_jOTDBnode_itsParentID, aNode.parentID ());
+	   env->SetIntField (jNode, fid_jOTDBnode_itsParamDefID, aNode.paramDefID ());
 	   
 	   return jNode;	 
 	 }
        
-       OTDBnode convertjOTDBnode (jobject jNode)
+       OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode)
 	 {
-	   OTDBnode aNode();
-
 	   jclass class_jOTDBnode = env->FindClass ("jOTDB/jOTDBnode");
 	   jfieldID fid_jOTDBnode_name = env->GetFieldID (class_jOTDBnode, "name", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_index = env->GetFieldID (class_jOTDBnode, "index", "S");
@@ -251,26 +316,38 @@ namespace LOFAR
 	   jfieldID fid_jOTDBnode_description = env->GetFieldID (class_jOTDBnode, "description", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_itsTreeID = env->GetFieldID (class_jOTDBnode, "itsTreeID", "I");
 	   jfieldID fid_jOTDBnode_itsNodeID = env->GetFieldID (class_jOTDBnode, "itsNodeID", "I");
-	   jfieldID fid_jOTDBnode_itsParentID = env->GetFieldID (class_jOTDBnode, "itsParentID", "I");
-	   jfieldID fid_jOTDBnode_itsParamDefID = env->GetFieldID (class_jOTDBnode, "itsParamDefID", "I");
-	   
-	   const char* n = env->GetStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_name));
+
+	   // Get original OTDB node
+	   OTDBnode aNode = treemain->getNode (env->GetIntField (jNode, fid_jOTDBnode_itsTreeID), env->GetIntField (jNode, fid_jOTDBnode_itsNodeID));
+					       
+	   // name
+	   const char* n = env->GetStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_name), 0);
 	   const string name (n);
 	   aNode.name = name;
 	   env->ReleaseStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_name), n);
 
-	   env->GetShortField (jNode, fid_jOTDBnode_index, aNode.index);
-	   env->GetBooleanField (jNode, fid_jOTDBnode_leaf, aNode.leaf);
-	   env->GetShortField (jNode, fid_jOTDBnode_instances, aNode.instances);
-	   env->GetObjectField (jNode, fid_jOTDBnode_limits, env->NewStringUTF (aNode.limits.c_str()));
-	   env->GetObjectField (jNode, fid_jOTDBnode_description, env->NewStringUTF (aNode.description.c_str()));
-	   env->GetIntField (jNode, fid_jOTDBnode_itsTreeID, aNode.treeID());
-	   env->GetIntField (jNode, fid_jOTDBnode_itsNodeID, aNode.nodeID());
-	   env->GetIntField (jNode, fid_jOTDBnode_itsParentID, aNode.parentID());
-	   env->GetIntField (jNode, fid_jOTDBnode_itsParamDefID, aNode.paramDefID());
-	   
-	   return jNode;	 
+	   // index
+	   aNode.index = (short)env->GetShortField (jNode, fid_jOTDBnode_index);
 
+	   // leaf
+	   aNode.leaf = (bool)env->GetBooleanField (jNode, fid_jOTDBnode_leaf);
+
+	   // instances
+	   aNode.instances = (short)env->GetShortField (jNode, fid_jOTDBnode_instances);
+
+	   // limits
+	   const char* l = env->GetStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_limits), 0);
+	   const string limits (l);
+	   aNode.limits = limits;
+	   env->ReleaseStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_limits), l);
+
+	   // description
+	   const char* d = env->GetStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_description), 0);
+	   const string description (d);
+	   aNode.description = description;
+	   env->ReleaseStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_description), d);
+
+	   return aNode;
 	 }
 
      } // namespace jOTDB

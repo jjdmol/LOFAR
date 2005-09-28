@@ -29,6 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <OTDB/OTDBconnection.h>
+#include <OTDB/OTDBnode.h>
 
 using namespace LOFAR::OTDB;
 
@@ -36,6 +37,11 @@ namespace LOFAR {
   namespace jOTDB {
     
     static OTDBconnection* OTDBconn;
+
+     jobject convertOTDBnode (JNIEnv *env, OTDBnode aNode);
+     OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode);
+     
+     OTDBconnection* getConnection ();
 
   } // end namespace LOFAR
 } // end namespace jOTDB

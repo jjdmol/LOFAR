@@ -1,4 +1,4 @@
-//#  jOTDBtreeMaintenance.java: Maintenance on complete trees.
+//#  jTreeMaintenanceInterface.java: The RMI interface to the OTDB database.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,85 +18,83 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-
+  
 package jOTDB;
 
-import jOTDB.jVICnodeDef;
 import jOTDB.jOTDBnode;
+import jOTDB.jVICnodeDef;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.util.Vector;
 
-public class jTreeMaintenance
+public interface jTreeMaintenanceInterface extends Remote 
 {
-    public jTreeMaintenance ()
-    {
-	initTreeMaintenance ();
-    }
-
-    private native void initTreeMaintenance ();
+   // Constants
+   public static final String SERVICENAME = "jTreeMaintenance";
 
     // Get the node definition of a VC node
-    public native jVICnodeDef getNode (int aNodeID);
+    public jVICnodeDef getNode (int aNodeID) throws RemoteException;
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
     // tree only the structure of the tree is created, there is no replication
     // of nodes on the same level.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
-    public native int buildTemplateTree (int topNodeID, short aClassif);
+    public int buildTemplateTree (int topNodeID, short aClassif) throws RemoteException;
 
     // Make a copy of an existing template tree.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
-    public native int copyTemplateTree (int aTreeID);
+    public int copyTemplateTree (int aTreeID) throws RemoteException;
 
     // Get a single node from the VIC template tree
-    public native jOTDBnode getNode (int aTreeID, int aNodeID);
+    public jOTDBnode getNode (int aTreeID, int aNodeID) throws RemoteException;
 
     // Get a number of levels of children.
-    public native Vector getItemList (int aTreeID, int topNode, int depth);
+    public Vector getItemList (int aTreeID, int topNode, int depth) throws RemoteException;
 
     // Get a list of nodes based on a namefragment. Use '%' as wildchar.
-    public native Vector getItemList (int aTreeID, String aNameFragment);
+    public Vector getItemList (int aTreeID, String aNameFragment) throws RemoteException;
 
     // Duplicates the given node (and its parameters and children)
     // in the template database. The duplicate gets the new index.
-    public native int dupNode (int aTreeID, int orgNodeID, short newIndex);
+    public int dupNode (int aTreeID, int orgNodeID, short newIndex) throws RemoteException;
 
     // Updates the (vector of) OTDBnodes to the database.
-    public native boolean saveNode (jOTDBnode aNode);
-    public native boolean saveNodeList (Vector aNodeList);
+    public boolean saveNode (jOTDBnode aNode) throws RemoteException;
+    public boolean saveNodeList (Vector aNodeList) throws RemoteException;
 
     // Updates the (vector of) OTDBnodes to the database.
-    public native boolean deleteNode (jOTDBnode	aNode);
-    public native boolean deleteNodeList (Vector aNodeList);
+    public boolean deleteNode (jOTDBnode	aNode) throws RemoteException;
+    public boolean deleteNodeList (Vector aNodeList) throws RemoteException;
 
     // Evaluate the constraints from a (sub)tree.
-    public native boolean checkTreeConstraints (int aTreeID, int topNode);
+    public boolean checkTreeConstraints (int aTreeID, int topNode) throws RemoteException;
 
 
     //# --- VIC maintenance : Hierarchical trees ---
     // From a template tree a fully instanciated tree can be build.
     // Returns 0 on failure, otherwise the ID of the new tree is returned.
-    public native int instanciateTree (int baseTree);
+    public int instanciateTree (int baseTree) throws RemoteException;
 
     // Prune an instanciated tree to get loss of depricated values.
-    public native boolean pruneTree (int aTreeID, short pruningLevel);
+    public boolean pruneTree (int aTreeID, short pruningLevel) throws RemoteException;
 
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
-    public native boolean deleteTree (int aTreeID);
+    public boolean deleteTree (int aTreeID) throws RemoteException;
 
 	// Retrieve the topNode of any tree
-    public native jOTDBnode getTopNode (int aTreeID);
+    public jOTDBnode getTopNode (int aTreeID) throws RemoteException;
 
     // Set the classification of any tree.
-    public native boolean setClassification (int aTreeID, short aClassification);
+    public boolean setClassification (int aTreeID, short aClassification) throws RemoteException;
 
     // Set the state of any tree. When changing the state of a tree all
     // constraints/validations for the current type must be fulfilled.
     // When errors occur these can be retrieved with the errorMsg function.
-    public native boolean setTreeState (int aTreeID, short aState);
+    public boolean setTreeState (int aTreeID, short aState) throws RemoteException;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.
-    public native String errorMsg();
+    public String errorMsg() throws RemoteException;
 }

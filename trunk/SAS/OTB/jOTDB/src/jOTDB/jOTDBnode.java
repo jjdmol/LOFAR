@@ -60,9 +60,8 @@ public class jOTDBnode implements java.io.Serializable
     public short instances;		//# only VICtemplate
     public String limits;			//# only VICtemplate
     public String description;	//# only VICtemplate
-
-    public int	itsTreeID;
-    public int	itsNodeID;
-    public int	itsParentID;
+    public int itsTreeID;
+    public int itsNodeID;
+    public int itsParentID;
     public int itsParamDefID;
 }

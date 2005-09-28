@@ -3,6 +3,7 @@
 # endif
 
 INSTHDRS   = jOTDB_jOTDBconnection.h \
+	     jOTDB_jTreeMaintenance.h \
 	     jOTDB_jOTDBcommon.h
 
 NOINSTHDRS =
@@ -17,7 +18,9 @@ DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES         = libjotdb.la
 
-libjotdb_la_SOURCES   = jOTDB_jOTDBconnection.cc
+libjotdb_la_SOURCES   = $(DOCHDRS) \
+		        jOTDB_jOTDBconnection.cc \
+		        jOTDB_jTreeMaintenance.cc
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize

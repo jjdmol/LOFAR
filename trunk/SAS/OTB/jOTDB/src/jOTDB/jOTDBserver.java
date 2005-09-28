@@ -21,6 +21,9 @@
   
 package jOTDB;
 
+import jOTDB.jTreeMaintenance;
+import jOTDB.jTreeMaintenanceInterface;
+import jOTDB.jTreeMaintenanceAdapter;
 import jOTDB.jOTDBconnection;
 import jOTDB.jOTDBadapter;
 import jOTDB.jOTDBinterface;
@@ -30,8 +33,10 @@ import java.rmi.RMISecurityManager;
 
 public class jOTDBserver
 {
-   private static jOTDBconnection adaptee;
-   private static jOTDBadapter adapter;
+   private static jOTDBconnection jOTDBconnAdaptee;
+   private static jOTDBadapter jOTDBconnAdapter;
+   private static jTreeMaintenance jTreeMainAdaptee;
+   private static jTreeMaintenanceAdapter jTreeMainAdapter;
 
    static
      {
@@ -57,13 +62,24 @@ public class jOTDBserver
 		     System.out.println ("Usage: java -Djava.rmi.server.hostname=<hostname> jOTDB.jOTDBserver <username> <password> <database>");
 		     System.exit(0);
 		 }
-	     adaptee = new jOTDBconnection (args[0], args[1], args[2]);
-	     adapter = new jOTDBadapter (adaptee);
+	     
+	     // Export jOTDBconnection
+	     jOTDBconnAdaptee = new jOTDBconnection (args[0], args[1], args[2]);
+	     jOTDBconnAdapter = new jOTDBadapter (jOTDBconnAdaptee);
 	     
 	     System.out.println ("jOTDBserver publishing service " + jOTDBinterface.SERVICENAME + " in local registry...");
-	     localRegistry.rebind (jOTDBinterface.SERVICENAME, adapter);
+	     localRegistry.rebind (jOTDBinterface.SERVICENAME, jOTDBconnAdapter);
 	     
 	     System.out.println ("Published jOTDBinterface as service " + jOTDBinterface.SERVICENAME + ". Ready...");	     
+
+	     // Export jTreeMaintenance    	     
+	     jTreeMainAdaptee = new jTreeMaintenance ();
+	     jTreeMainAdapter = new jTreeMaintenanceAdapter (jTreeMainAdaptee);
+	     
+	     System.out.println ("jOTDBserver publishing service " + jTreeMaintenanceInterface.SERVICENAME + " in local registry...");
+	     localRegistry.rebind (jTreeMaintenanceInterface.SERVICENAME, jTreeMainAdapter);
+	     
+	     System.out.println ("Published jTreeMaintenaceInterface as service " + jTreeMaintenanceInterface.SERVICENAME + ". Ready...");	     
 	  }
 	
 	catch (Exception e)

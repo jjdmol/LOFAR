@@ -8,14 +8,18 @@
 extern "C" {
 #endif
 
-  namespace LOFAR { namespace jOTDB {
-
-/*
+   namespace LOFAR 
+     {
+	namespace jOTDB 
+	  {
+	     
+   
+   /*
  * Class:     jOTDB_jTreeMaintenance
  * Method:    initTreeMaintenance
- * Signature: (LjOTDB/jOTDBconnection;)Z
+ * Signature: ()V
  */
-JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_initTreeMaintenance
+JNIEXPORT void JNICALL Java_jOTDB_jTreeMaintenance_initTreeMaintenance
   (JNIEnv *, jobject);
 
 /*
@@ -169,9 +173,9 @@ JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setTreeState
  */
 JNIEXPORT jstring JNICALL Java_jOTDB_jTreeMaintenance_errorMsg
   (JNIEnv *, jobject);
-  
-}}
-
+	  }
+     }
+   
 #ifdef __cplusplus
 }
 #endif
