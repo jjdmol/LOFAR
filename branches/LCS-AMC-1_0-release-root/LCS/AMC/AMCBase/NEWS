@@ -1,0 +1,17 @@
+LCS/AMC/AMCBase: Version 1.0 patch 1, date: 2005/09/27
+======================================================
+
+The following BugIDs have been resolved:
+---------------------------------------
+
+# 382 : Connection loss to AMCserver can not be detected or acted upon in
+        client.
+
+        ConverterClient would throw an AssertError when the server had
+        died. This has now been fixed; a ClientError is thrown instead.
+
+LCS/AMC/AMCBase: Version 1.0, date: 2005/07/04
+==============================================
+
+This is the first official release of the AMCBase package. 
+
