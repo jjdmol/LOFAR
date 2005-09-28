@@ -83,25 +83,32 @@ WH_Signal* WH_Signal::make(const string& name)
 
 void WH_Signal::preprocess() 
 {
-  if (!theirTimerSet) {
-    theirTimerSet = true;
-    sighandler_t ret = signal(SIGALRM, *WH_Signal::timerSignal);
-    ASSERTSTR(ret != SIG_ERR, "WH_Signal couldn't set signal handler for timer");    
-    struct itimerval value;
-    memset (&value, 0, sizeof(itimerval));
+  if (itsFrequency == 0) {
+    // frequency was set to zero, which means output should go as fast as possible
+    // we do that by setting theirNoAlarms to the number of runs
+    theirNoAlarms += itsPS.getDouble("Generator.NoRuns");
+  } else {
+    if (!theirTimerSet) {
+      sighandler_t ret = signal(SIGALRM, *WH_Signal::timerSignal);
+      ASSERTSTR(ret != SIG_ERR, "WH_Signal couldn't set signal handler for timer");    
+      struct itimerval value;
+      memset (&value, 0, sizeof(itimerval));
 
-    double time = 1/itsFrequency;    
-    __time_t secs = floor(time);
-    __time_t usecs = 1e6 * (time - secs);
-    // this means 1MHz is the highest frequency
-    if (secs + usecs == 0) usecs = 1;
-    value.it_interval.tv_sec = secs;
-    value.it_interval.tv_usec = usecs;
-    value.it_value.tv_sec = secs;
-    value.it_value.tv_usec = usecs;
-    cout << "Setting timer interval to " << secs << "secs and " << usecs << "ms" << endl;
+      double time = 1/itsFrequency;    
+      __time_t secs = floor(time);
+      __time_t usecs = 1e6 * (time - secs);
+      // this means 1MHz is the highest frequency
+      if (secs + usecs == 0) usecs = 1;
+      value.it_interval.tv_sec = secs;
+      value.it_interval.tv_usec = usecs;
+      value.it_value.tv_sec = secs;
+      value.it_value.tv_usec = usecs;
+      cout << "Setting timer interval to " << secs << "secs and " << usecs << "ms" << endl;
 
-    setitimer(ITIMER_REAL, &value, 0);
+      setitimer(ITIMER_REAL, &value, 0);
+      
+      theirTimerSet = true;
+    }
   }
   theirNoRunningWHs++;
 }  
@@ -176,13 +183,15 @@ void WH_Signal::postprocess()
   if (theirNoRunningWHs == 0)
   {
     theirTimerSet = false;
-    // unset timer
-    struct itimerval value;
-    memset (&value, 0, sizeof(itimerval));
-    setitimer(ITIMER_REAL, &value, 0);
-    // remove sig handler
-    sighandler_t ret = signal(SIGALRM, SIG_DFL);
-    ASSERTSTR(ret != SIG_ERR, "WH_Signal couldn't unset signal handler for timer");    
+    if (itsFrequency != 0) {
+      // unset timer
+      struct itimerval value;
+      memset (&value, 0, sizeof(itimerval));
+      setitimer(ITIMER_REAL, &value, 0);
+      // remove sig handler
+      sighandler_t ret = signal(SIGALRM, SIG_DFL);
+      ASSERTSTR(ret != SIG_ERR, "WH_Signal couldn't unset signal handler for timer");    
+    }
   }
 }  
 
