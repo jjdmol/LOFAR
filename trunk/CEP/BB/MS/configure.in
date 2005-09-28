@@ -50,8 +50,10 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
-lofar_GENERAL
+lofar_DEBUG_OPTIMIZE
 lofar_AIPSPP(1,"-lms -lmeasures -ltables -lscimath -lscimath_f -lcasa")
+lofar_QATOOLS
+lofar_DOCXX
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 
 dnl
