@@ -47,9 +47,9 @@ namespace ASR
 {
 INIT_TRACER_CONTEXT(StationReceptorGroup,LOFARLOGGER_PACKAGE);
 
-const char TYPE_LCU_PIC_RCU[] = "TLcuPicRCU";
+const char TYPE_LCU_PIC_LFA[] = "TLcuPicLFA";
 const char PROPNAME_FUNCTIONALITY[] = "functionality";
-const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN[] = "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA[] = "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_LFA";
 const char PARAM_N_RACKS[]                     = "mac.apl.ara.N_RACKS";
 const char PARAM_N_SUBRACKS_PER_RACK[]         = "mac.apl.ara.N_SUBRACKS_PER_RACK";
 const char PARAM_N_BOARDS_PER_SUBRACK[]        = "mac.apl.ara.N_BOARDS_PER_SUBRACK";
@@ -497,9 +497,9 @@ void StationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
       char scopeString[300];
       int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
       getRCURelativeNumbers((*it),rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
 
-      boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_RCU,&m_propertySetAnswer));
+      boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_LFA,&m_propertySetAnswer));
       propSetPtr->load();
       propSetPtr->subscribeProp(string(PROPNAME_FUNCTIONALITY));
       propSetPtr->requestValue(string(PROPNAME_FUNCTIONALITY));
