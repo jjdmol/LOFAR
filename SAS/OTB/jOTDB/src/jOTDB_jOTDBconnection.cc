@@ -56,7 +56,7 @@ namespace LOFAR
 	     const string d (db);
 	     
 	     OTDBconn = new OTDBconnection(u, p, d);
-	     
+
  	     env->ReleaseStringUTFChars(username, user);
  	     env->ReleaseStringUTFChars(passwd, pass);
  	     env->ReleaseStringUTFChars(database, db);
@@ -188,6 +188,11 @@ namespace LOFAR
 	  {
 	     jint token = (jint)OTDBconn->getAuthToken();
 	     return token;
+	  }
+	
+	OTDBconnection* getConnection ()
+	  {
+	     return OTDBconn;
 	  }
      } // namespace jOTDB
 } // namespace LOFAR
