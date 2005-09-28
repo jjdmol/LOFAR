@@ -818,8 +818,8 @@ int main(int argc, char** argv)
 
   try 
   {
-    GCF::ParameterSet::instance()->adoptFile(BS_SYSCONF "/BeamServerPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile(BS_SYSCONF "/RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile("BeamServerPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
   }
   catch (Exception e)
   {
