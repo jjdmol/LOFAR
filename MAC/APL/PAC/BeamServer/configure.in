@@ -2,22 +2,13 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT(src/BeamServer.h)
-AC_CONFIG_AUX_DIR(config)
+dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(BeamServer, 1.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
-
-dnl Define the prefix to allow the use of this path in programs
-AC_DEFINE_UNQUOTED([BS_PREFIX],["${prefix}"],[Path to BeamServer install prefix directory.])
-BS_PREFIX="${prefix}"
-AC_SUBST([BS_PREFIX])
-
-AC_DEFINE_UNQUOTED([BS_SYSCONF],["${prefix}/etc"],[Path to BeamServer install prefix directory.])
-BS_SYSCONF="${prefix}/etc"
-AC_SUBST([BS_SYSCONF])
 
 dnl For the am_rpm_init.m4 macros
 RPM_RELEASE=1

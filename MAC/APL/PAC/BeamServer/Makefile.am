@@ -2,8 +2,7 @@ SUBDIRS = \
 	src \
 	test
 
-#include $(lofar_sharedir)/Makefile.common
-include Makefile.common
+include $(lofar_sharedir)/Makefile.common
 
 INSTALLDIR=/opt/lofar # $(HOME)/cvs/HEAD/LOFAR/installed/gnu_debug
 
