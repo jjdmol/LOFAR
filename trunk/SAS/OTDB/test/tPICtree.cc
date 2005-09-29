@@ -111,19 +111,19 @@ int main (int	argc, char*	argv[]) {
 
 		ClassifConv	CTconv(&conn);
 		LOG_INFO("Trying to classify the tree to operational");
-		bool	actionOK = tm.setClassification(treeID, CTconv.get("operational"));
-		if (actionOK) {
+		try { 
+			tm.setClassification(treeID, CTconv.get("operational"));
 			LOG_INFO("Setting classification was succesful");
 		}
-		else {
-			LOG_INFO("Setting classification was NOT succesful");
+		catch (std::exception&	ex) {
+			LOG_INFO_STR("Setting classification was NOT succesful because:" << ex.what());
 		}
 		treeInfo = conn.getTreeInfo(treeID);
 		LOG_INFO_STR(treeInfo);
 
 		LOG_INFO("Trying to change the state of the tree to 20");
 		try { // this is NOT allowed we should get an exception!
-			actionOK = tm.setTreeState(treeID, 20);
+			tm.setTreeState(treeID, 20);
 			LOG_FATAL("Changing the state to 20 should have failed!");
 			return (1);
 		}
@@ -133,7 +133,7 @@ int main (int	argc, char*	argv[]) {
 
 		TreeStateConv	TSconv(&conn);
 		LOG_INFO("Trying to change the state of the tree to schedule(200)");
-		actionOK = tm.setTreeState(treeID, TSconv.get("schedule"));
+		bool actionOK = tm.setTreeState(treeID, TSconv.get("schedule"));
 		ASSERTSTR(actionOK, 
 					"Changing the state to schedule should NOT have failed!");
 
