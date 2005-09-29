@@ -89,8 +89,10 @@ int main(int argc, char* argv[])
       new LogicalDeviceFactory<VirtualTelescope>);
     boost::shared_ptr<SharedLogicalDeviceFactory<StationReceptorGroup> > srgFactory(
       new SharedLogicalDeviceFactory<StationReceptorGroup>);
-    boost::shared_ptr<SingleInstanceLogicalDeviceFactory<StationOperations> > soFactory(
-      new SingleInstanceLogicalDeviceFactory<StationOperations>);
+    //    boost::shared_ptr<SingleInstanceLogicalDeviceFactory<StationOperations> > soFactory(
+    //      new SingleInstanceLogicalDeviceFactory<StationOperations>);
+    boost::shared_ptr<SharedLogicalDeviceFactory<StationOperations> > soFactory(
+      new SharedLogicalDeviceFactory<StationOperations>);
     
     StartDaemon sd(string("PAC_StartDaemon"));
     
