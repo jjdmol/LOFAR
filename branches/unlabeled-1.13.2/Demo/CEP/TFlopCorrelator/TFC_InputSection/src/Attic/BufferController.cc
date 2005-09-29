@@ -144,7 +144,7 @@ int BufferController::setReadOffset(timestamp_t startstamp)
 
   // check offset
   ASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
-  	       "BufferController: timestamp offset invalid");
+	    "BufferController: timestamp offset invalid (startstamp: " << startstamp << "   oldestStamp: " << oldestStamp <<"   newestStamp: " << getNewestStamp(sl) << "   count: " << getCount() << ")");
 
   // wait until enough data becomes available
   while (getCount() - offset < MIN_COUNT)
@@ -170,7 +170,7 @@ int BufferController::setRewriteOffset(timestamp_t startstamp)
   int offset = startstamp - oldestStamp;
 
   // check if there are enough elements in buffer
-  if (offset >= getCount()) {
+  if ((offset >= getCount()) || (offset < 0)) {
     return -1;
   } 
   // CONDITION: offset + nelements < Count
