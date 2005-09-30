@@ -19,6 +19,44 @@ class tTreeMaintenance
 	tTreeMaintenance ttreemain = new tTreeMaintenance ();
 	ttreemain.test ();
      }
+
+    public void showTreeList (Vector trees, jOTDBconnection conn)
+    {
+	System.out.println ("treeID|Classif|Creator   |Creationdate        |Type|Campaign|Starttime");
+	System.out.println ("------+-------+----------+--------------------+----+--------+------------------");
+
+	jOTDBtree aTree;
+	Integer treeID;
+
+	for (int i = 0; i < trees.size (); ++i) 
+	    {
+		treeID = (Integer)trees.elementAt (i);
+		aTree = (jOTDBtree)conn.getTreeInfo(treeID.intValue ());
+		System.out.printf ("%6d|%7d|%-10.10s|%-20.20s|%4d|%-8.8s|%s", aTree.treeID(), aTree.classification, 
+				   aTree.creator, aTree.creationDate, aTree.type, aTree.campaign, aTree.starttime); 
+		System.out.println ();
+	    }	
+	System.out.println (trees.size () + " records\n");
+    }
+    
+    public void showNodeList (Vector nodes) 
+    {
+	System.out.println ("treeID|nodeID|parent|name           |index|leaf|inst|description");
+	System.out.println ("------+------+------+---------------+-----+----+----+------------------");
+
+	jOTDBnode aNode;
+
+	for (int i = 0; i < nodes.size (); ++i) 
+	    {
+		aNode = (jOTDBnode)nodes.elementAt (i);
+		System.out.printf ("%6d|%6d|%6d|%-15.15s|%5d|%s|%4d|%s",
+				   aNode.treeID (), aNode.nodeID (), aNode.parentID (), aNode.name, aNode.index,
+				   aNode.leaf, aNode.instances, aNode.description);
+		System.out.println ();
+	    }	
+	System.out.println (nodes.size () + " records\n");
+    }
+
    
    public void test ()
      {
@@ -26,7 +64,7 @@ class tTreeMaintenance
 	System.out.println ("Starting... ");
 	
 	// create a jOTDBconnection
-	jOTDBconnection conn = new jOTDBconnection ("paulus","boskabouter","otdbtest");
+	jOTDBconnection conn = new jOTDBconnection ("paulus","boskabouter","gerdes");
 	
 	System.out.println ("Trying to connect to the database");
 	assert conn.connect () : "Connection failed";	
@@ -40,6 +78,7 @@ class tTreeMaintenance
 	System.out.println ("Searching for a Template tree");
 	Vector treeList;
 	treeList = conn.getTreeList ((short)20, (short)0);  // 20 = template, 0 = all
+	showTreeList (treeList, conn);
 	if (treeList.size () == 0) {
 	   System.out.println ("No template tree found!");
 	   System.exit (0);	   
@@ -59,34 +98,26 @@ class tTreeMaintenance
 
 	System.out.println("Trying to get a collection of items on depth=1");
 	Vector nodeList = tm.getItemList (VTtreeID.intValue (), topNode.nodeID(), 1);
-//	showNodeList(nodeList);
+	showNodeList (nodeList);
 
 	System.out.println("Trying to get a collection of items on depth=2");
 	nodeList = tm.getItemList (VTtreeID.intValue (), topNode.nodeID(), 2);
-//	showNodeList(nodeList);
+	showNodeList (nodeList);
 		
 	int elemNr = nodeList.size () - 1;
 	System.out.println ("Zooming in on last element");
-	jOTDBnode node = (jOTDBnode)nodeList.elementAt (elemNr);
-	jOTDBnode aNode = tm.getNode (VTtreeID.intValue (), node.nodeID ());
+	jOTDBnode aNode = tm.getNode (VTtreeID.intValue (),  elemNr);
 	System.out.println (aNode.name);
 
 	System.out.println ("Trying to classify the tree to operational");
-	boolean actionOK = tm.setClassification (VTtreeID.intValue (), (short)2);
-	if (actionOK) 
-	  {
-	     System.out.println("Setting classification was succesful");
-	  }
-	else 
-	  {
-	     System.out.println("Setting classification was NOT succesful");
-	  }
+	boolean actionOK = tm.setClassification (VTtreeID.intValue (), (short)2); // 2 - operational
+	assert actionOK : "Setting classification was NOT succesful";
 	treeInfo = conn.getTreeInfo (VTtreeID.intValue ());
 	System.out.println ("Classification of tree: " + treeInfo.classification);
 		
 	short aTreeState = 400;		
 	System.out.println ("Trying to change the state of the tree to active");
-	actionOK = tm.setTreeState (VTtreeID.intValue (), aTreeState);
+	actionOK = tm.setTreeState (VTtreeID.intValue (), aTreeState); // 400 = active
 	assert actionOK : "Changing the state to active should have NOT have failed!";
 	treeInfo = conn.getTreeInfo (VTtreeID.intValue ());
 	System.out.println ("State of tree: " + treeInfo.state);
@@ -95,14 +126,14 @@ class tTreeMaintenance
 	
 	System.out.println ("Searching for node 'Virt Telescope'");
 	Vector VtelCol = tm.getItemList (VTtreeID.intValue (), "%Telescope");
-	System.out.println ("Found " + VtelCol.size() + " nodes");
-	jOTDBnode VtelDef = (jOTDBnode) VtelCol.firstElement ();
+	System.out.println ("Found " + VtelCol.size () + " nodes");
+	jOTDBnode VtelDef = (jOTDBnode)VtelCol.firstElement ();
 	assert VtelDef.nodeID () != 0 : "Node 'Virt Telescope' not found";
 	System.out.println ("Found definition: " + VtelDef.name);
 	
 	// Test the manipulations on the VT
 	System.out.println ("Trying to duplicate the subtree");
-	int nodeID = tm.dupNode (VTtreeID.intValue (), VtelDef.nodeID( ), (short)1);
+	int nodeID = tm.dupNode (VTtreeID.intValue (), VtelDef.nodeID (), (short)1);
 	System.out.println ("New subtree starts at node: " + nodeID);
 	
 	System.out.println ("Trying to retrieve one node");
@@ -116,93 +147,92 @@ class tTreeMaintenance
 	System.out.println (aNode.instances);
 	System.out.println (aNode.limits);
 	
-/*	System.out.println("Trying to retrieve one node");
+	System.out.println ("Trying to retrieve one node");
 	aNode = tm.getNode (VTtreeID.intValue (), nodeID);
-	System.out.println_STR(aNode);
-	System.out.println("Removing the just created subtree");
-	System.out.println_STR("nodeID before removal:" << aNode.nodeID());
-	nodeIDType		orgNodeID = aNode.nodeID();
-	tm.deleteNode(aNode);
-	System.out.println_STR("nodeID after removal :" << aNode.nodeID());
+	System.out.println (aNode.name);
+	System.out.println ("Removing the just created subtree");
+	System.out.println ("nodeID before removal: " + aNode.nodeID ());
+	int orgNodeID = aNode.nodeID();
+	tm.deleteNode (aNode);
+	System.out.println ("nodeID after removal : " + aNode.nodeID ());
 	
-	System.out.println("Trying to retrieve the deleted node");
+	System.out.println ("Trying to retrieve the deleted node");
 	aNode = tm.getNode (VTtreeID.intValue (), orgNodeID);
-	System.out.println_STR(aNode);
+	System.out.println (aNode.nodeID ());
 
 	// Test the manipulations off the parameters
-	System.out.println("Duplicating node Beamformer for index=3");
-	vector<OTDBnode>	BformCol = tm.getItemList(VTtreeID.intValue (), "Beamformer");
-	OTDBnode	BformDef = BformCol[0];
-		System.out.println_STR("Beamformer has ID " << BformDef.nodeID());
-	nodeIDType	dupNodeID = tm.dupNode(VTtreeID.intValue (), BformDef.nodeID(), 3);
-	System.out.println_STR("New subtree starts at node: " << dupNodeID);
+	System.out.println ("Duplicating node Beamformer for index=3");
+	Vector BformCol = tm.getItemList (VTtreeID.intValue (), "Beamformer");
+	jOTDBnode BformDef = (jOTDBnode)BformCol.firstElement ();
+	System.out.println ("Beamformer has ID " + BformDef.nodeID());
+	System.out.println (VTtreeID.intValue () +" " + BformDef.nodeID ());
+	int dupNodeID = tm.dupNode (VTtreeID.intValue (), BformDef.nodeID (), (short)4);
+	System.out.println ("New subtree starts at node: " + dupNodeID);
 	
-	System.out.println_STR("Getting param info for " << dupNodeID+2 << " and " 
-			       << dupNodeID+3);
-	OTDBnode	param1 = tm.getNode (VTtreeID.intValue (), dupNodeID+2);
-	OTDBnode	param2 = tm.getNode (VTtreeID.intValue (), dupNodeID+3);
-	System.out.println_STR(param1);
-		System.out.println_STR(param2);
+	System.out.println ("Getting param info for " + dupNodeID+2 + " and " + dupNodeID+3);
+	jOTDBnode param1 = tm.getNode (VTtreeID.intValue (), dupNodeID+2);
+	jOTDBnode param2 = tm.getNode (VTtreeID.intValue (), dupNodeID+3);
+	System.out.println (param1.name);
+	System.out.println (param2.name);
 	param1.limits = "1.33333";
 	param2.limits = "---1---";
-	System.out.println_STR("Changing param " << param1.name << " to " << param1.limits);
-	System.out.println_STR("Changing param " << param2.name << " to " << param2.limits);
-	tm.saveNode(param1);
-		tm.saveNode(param2);
+	System.out.println ("Changing param " + param1.name + " to " + param1.limits);
+	System.out.println ("Changing param " + param2.name + " to " + param2.limits);
+	tm.saveNode (param1);
+	tm.saveNode (param2);
 
 	// Setting nr instances to some nice values
-	System.out.println("Setting up tree counts")
-	  vector<OTDBnode>	aNodeCol = tm.getItemList(VTtreeID.intValue (), "RFI dete%");
-	aNode = *(aNodeCol.begin());
+	System.out.println ("Setting up tree counts");
+	Vector aNodeCol = tm.getItemList (VTtreeID.intValue (), "RFI dete%");
+	aNode = (jOTDBnode)aNodeCol.firstElement ();
 	aNode.instances = 40;
-	tm.saveNode(aNode);
-	System.out.println("RFI detectors  : 40");
-	aNodeCol = tm.getItemList(VTtreeID.intValue (), "Correlator%");
-	aNode = *(aNodeCol.begin());
+	tm.saveNode (aNode);
+	System.out.println ("RFI detectors  : 40");
+	aNodeCol = tm.getItemList (VTtreeID.intValue (), "Correlator%");
+	aNode = (jOTDBnode)aNodeCol.firstElement ();
 	aNode.instances = 130;
-	tm.saveNode(aNode);
-	System.out.println("Correlators    : 130");
-	aNodeCol = tm.getItemList(VTtreeID.intValue (), "Storage");
-	aNode = *(aNodeCol.begin());
+	tm.saveNode (aNode);
+	System.out.println ("Correlators    : 130");
+	aNodeCol = tm.getItemList (VTtreeID.intValue (), "Storage");
+	aNode = (jOTDBnode)aNodeCol.firstElement ();
 	aNode.instances = 86;
-	tm.saveNode(aNode);
-	System.out.println("Storage        : 86");
-	aNodeCol = tm.getItemList(VTtreeID.intValue (), "Visua%");
-	aNode = *(aNodeCol.begin());
+	tm.saveNode (aNode);
+	System.out.println ("Storage        : 86");
+	aNodeCol = tm.getItemList (VTtreeID.intValue (), "Visua%");
+	aNode = (jOTDBnode)aNodeCol.firstElement ();
 	aNode.instances = 24;
-	tm.saveNode(aNode);
-	System.out.println("Visualisation  : 24");
-	aNodeCol = tm.getItemList(VTtreeID.intValue (), "Virt Tel%");
-	aNode = *(aNodeCol.begin());
+	tm.saveNode (aNode);
+	System.out.println ("Visualisation  : 24");
+	aNodeCol = tm.getItemList (VTtreeID.intValue (), "Virt Tel%");
+	aNode = (jOTDBnode)aNodeCol.firstElement ();
 	aNode.instances = 8;
-	tm.saveNode(aNode);
-	System.out.println("Virt.Telescopes: 8");
-	aNodeCol = tm.getItemList(VTtreeID.intValue (), "Beamfor%");
-	aNode = *(aNodeCol.begin());
+	tm.saveNode (aNode);
+	System.out.println ("Virt.Telescopes: 8");
+	aNodeCol = tm.getItemList (VTtreeID.intValue (), "Beamfor%");
+	aNode = (jOTDBnode)aNodeCol.firstElement ();
 	aNode.instances = 4;
-	tm.saveNode(aNode);
-	System.out.println("Beamformers    : 4");
+	tm.saveNode (aNode);
+	System.out.println ("Beamformers    : 4");
 
 	// Test copying a template
-	System.out.println("Trying to copy the template tree");
-	treeIDType	 secondVTtreeID.intValue () = tm.copyTemplateTree(VTtreeID.intValue ());
-	System.out.println_STR("ID of new tree is " << secondVTtreeID.intValue ());
-	if (!secondVTtreeID.intValue ()) {
-	   LOG_ERROR(tm.errorMsg());
+	System.out.println ("Trying to copy the template tree");
+	int secondVTtreeID = tm.copyTemplateTree (VTtreeID);
+	System.out.println ("ID of new tree is " + secondVTtreeID);
+	if (secondVTtreeID == 0) {
+	   System.out.println (tm.errorMsg());
 	}
-	OTDBtree	VTtree = conn.getTreeInfo(secondVTtreeID.intValue ());
-	System.out.println_STR(VTtree);
+	jOTDBtree VTtree = conn.getTreeInfo (secondVTtreeID);
+	System.out.println (VTtree.creator);
 	
 	// Test creating a full tree of the template tree
-	System.out.println("Trying to instanciate the copied tree");
-	treeIDType	 VHtreeID = tm.instanciateTree(secondVTtreeID.intValue ());
-	System.out.println_STR("ID of new tree is " << VHtreeID);
-	if (!VHtreeID) {
-	   LOG_ERROR(tm.errorMsg());
+	System.out.println ("Trying to instanciate the copied tree");
+	int VHtreeID = tm.instanciateTree (secondVTtreeID);
+	System.out.println ("ID of new tree is " + VHtreeID);
+	if (VHtreeID == 0) {
+	   System.out.println (tm.errorMsg());
 	}
-		OTDBtree	VHtree = conn.getTreeInfo(VHtreeID);
-	System.out.println_STR(VHtree);
-*/
+	jOTDBtree VHtree = conn.getTreeInfo (VHtreeID);
+	System.out.println (VHtree.creator);
      }
 }
 

@@ -23,11 +23,11 @@ package jOTDB;
 
 public class jOTDBparam implements java.io.Serializable
 {
-    public jOTDBparam()
+    public jOTDBparam (int treeID, int paramID, int NodeID)
     {
-	itsTreeID = 0;
-	itsParamID = 0;
-	itsNodeID = 0;
+	itsTreeID = treeID;
+	itsParamID = paramID;
+	itsNodeID = NodeID;
     }
     
     public int treeID()

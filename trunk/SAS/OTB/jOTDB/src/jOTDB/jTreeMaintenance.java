@@ -23,6 +23,7 @@ package jOTDB;
 
 import jOTDB.jVICnodeDef;
 import jOTDB.jOTDBnode;
+import jOTDB.jOTDBparam;
 import java.util.Vector;
 
 public class jTreeMaintenance
@@ -35,7 +36,7 @@ public class jTreeMaintenance
     private native void initTreeMaintenance ();
 
     // Get the node definition of a VC node
-    public native jVICnodeDef getNode (int aNodeID);
+    public native jVICnodeDef getNodeDef (int aNodeID);
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
@@ -99,4 +100,10 @@ public class jTreeMaintenance
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.
     public native String errorMsg();
+
+    // Get the parameter definition of a node
+    public native jOTDBparam getParam (int aTreeID, int aNodeID);
+
+    // Save the parameter definition
+    public native boolean saveParam (jOTDBparam aParam);
 }

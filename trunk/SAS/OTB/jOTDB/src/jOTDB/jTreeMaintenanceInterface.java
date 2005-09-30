@@ -22,6 +22,7 @@
 package jOTDB;
 
 import jOTDB.jOTDBnode;
+import jOTDB.jOTDBparam;
 import jOTDB.jVICnodeDef;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -33,7 +34,7 @@ public interface jTreeMaintenanceInterface extends Remote
    public static final String SERVICENAME = "jTreeMaintenance";
 
     // Get the node definition of a VC node
-    public jVICnodeDef getNode (int aNodeID) throws RemoteException;
+    public jVICnodeDef getNodeDef (int aNodeID) throws RemoteException;
 
     //# --- VIC maintenance : Templates ---
     // From a component tree a template tree can be constructed. In a template
@@ -97,4 +98,10 @@ public interface jTreeMaintenanceInterface extends Remote
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.
     public String errorMsg() throws RemoteException;
+   
+    // Get the parameter definition of a node
+    public jOTDBparam getParam (int aTreeID, int aNodeID) throws RemoteException;
+   
+    // Save the parameter definition
+    public boolean saveParam (jOTDBparam aParam) throws RemoteException;
 }

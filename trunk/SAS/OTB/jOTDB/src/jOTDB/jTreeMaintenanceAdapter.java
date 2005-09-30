@@ -22,6 +22,7 @@
 package jOTDB;
 
 import jOTDB.jOTDBnode;
+import jOTDB.jOTDBparam;
 import jOTDB.jVICnodeDef;
 import jOTDB.jTreeMaintenance;
 import jOTDB.jTreeMaintenanceInterface;
@@ -38,9 +39,9 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
      }
    
     // Get the node definition of a VC node
-    public jVICnodeDef getNode (int aNodeID) throws RemoteException
+    public jVICnodeDef getNodeDef (int aNodeID) throws RemoteException
      {
-	return adaptee.getNode (aNodeID);
+	return adaptee.getNodeDef (aNodeID);
      }
    
 
@@ -161,6 +162,18 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
      {
 	return adaptee.errorMsg();
      }
-      	
+
+    // Get the parameter definition of a node
+    public jOTDBparam getParam (int aTreeID, int aNodeID) throws RemoteException
+     {
+	return adaptee.getParam (aTreeID, aNodeID);
+     }
+      
+    // Save the parameter definition
+    public boolean saveParam (jOTDBparam aParam) throws RemoteException
+     {
+	return adaptee.saveParam (aParam);
+     }
+   
    protected jTreeMaintenance adaptee;   
 }
