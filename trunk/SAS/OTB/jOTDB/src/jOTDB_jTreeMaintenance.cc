@@ -149,30 +149,30 @@ namespace LOFAR
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_saveNode
          (JNIEnv *env, jobject, jobject jNode)
-       {	 
-	  OTDBnode aNode = convertjOTDBnode (env, jNode);
-	  jboolean succes = treemain->saveNode (aNode);
-	  return succes;
+       {
+	 OTDBnode aNode = convertjOTDBnode (env, jNode);
+	 jboolean succes = treemain->saveNode (aNode);
+	 return succes;
        }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_saveNodeList
          (JNIEnv *env, jobject, jobject aNodeList)
        {
-	  OTDBnode aNode;
 	 jboolean succes;
+	 OTDBnode aNode;
 	 // Construct java Vector
 	 jclass class_Vector = env->FindClass("java/util/Vector");
 	 jmethodID mid_Vector_elementAt = env->GetMethodID(class_Vector, "elementAt", "(I)Ljava/lang/Object;");
 	 jmethodID mid_Vector_size = env->GetMethodID(class_Vector, "size", "()I");	  
 	 
 	 for (int i = 0; i < env->CallIntMethod (aNodeList, mid_Vector_size); i++)
-	    {
-	       aNode = convertjOTDBnode (env, env->CallObjectMethod (aNodeList, mid_Vector_elementAt, i));
-	       succes = treemain->saveNode (aNode);
-	       if (!succes)
-		 return succes;
+	    {	       
+	      aNode = convertjOTDBnode (env, env->CallObjectMethod (aNodeList, mid_Vector_elementAt, i));
+	      succes = treemain->saveNode (aNode);
+	      if (!succes)
+		return succes;
 	    }
-	   
+	 
 	 return succes;
        }
 
@@ -307,24 +307,26 @@ namespace LOFAR
        
        OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode)
 	 {
-	   jclass class_jOTDBnode = env->FindClass ("jOTDB/jOTDBnode");
+	   jclass class_jOTDBnode = env->GetObjectClass (jNode);
 	   jfieldID fid_jOTDBnode_name = env->GetFieldID (class_jOTDBnode, "name", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_index = env->GetFieldID (class_jOTDBnode, "index", "S");
 	   jfieldID fid_jOTDBnode_leaf = env->GetFieldID (class_jOTDBnode, "leaf", "Z");
-	   jfieldID fid_jOTDBnode_instances = env->GetFieldID (class_jOTDBnode, "instances", "S;");
+	   jfieldID fid_jOTDBnode_instances = env->GetFieldID (class_jOTDBnode, "instances", "S");
 	   jfieldID fid_jOTDBnode_limits = env->GetFieldID (class_jOTDBnode, "limits", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_description = env->GetFieldID (class_jOTDBnode, "description", "Ljava/lang/String;");
 	   jfieldID fid_jOTDBnode_itsTreeID = env->GetFieldID (class_jOTDBnode, "itsTreeID", "I");
 	   jfieldID fid_jOTDBnode_itsNodeID = env->GetFieldID (class_jOTDBnode, "itsNodeID", "I");
 
 	   // Get original OTDB node
-	   OTDBnode aNode = treemain->getNode (env->GetIntField (jNode, fid_jOTDBnode_itsTreeID), env->GetIntField (jNode, fid_jOTDBnode_itsNodeID));
-					       
+	   OTDBnode aNode = treemain->getNode (env->GetIntField (jNode, fid_jOTDBnode_itsTreeID), env->GetIntField (jNode, fid_jOTDBnode_itsNodeID));		       
+		       
 	   // name
-	   const char* n = env->GetStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_name), 0);
+	   jstring str = (jstring)env->GetObjectField (jNode, fid_jOTDBnode_name);
+	   jboolean isCopy;
+	   const char* n = env->GetStringUTFChars (str, &isCopy);
 	   const string name (n);
 	   aNode.name = name;
-	   env->ReleaseStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_name), n);
+	   env->ReleaseStringUTFChars (str, n);
 
 	   // index
 	   aNode.index = (short)env->GetShortField (jNode, fid_jOTDBnode_index);
@@ -336,16 +338,18 @@ namespace LOFAR
 	   aNode.instances = (short)env->GetShortField (jNode, fid_jOTDBnode_instances);
 
 	   // limits
-	   const char* l = env->GetStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_limits), 0);
+	   str = (jstring)env->GetObjectField (jNode, fid_jOTDBnode_limits);
+	   const char* l = env->GetStringUTFChars (str, &isCopy);
 	   const string limits (l);
 	   aNode.limits = limits;
-	   env->ReleaseStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_limits), l);
+	   env->ReleaseStringUTFChars (str, l);
 
 	   // description
-	   const char* d = env->GetStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_description), 0);
+	   str = (jstring)env->GetObjectField (jNode, fid_jOTDBnode_description);
+	   const char* d = env->GetStringUTFChars (str, &isCopy);
 	   const string description (d);
 	   aNode.description = description;
-	   env->ReleaseStringUTFChars ((jstring)env->GetObjectField (jNode, fid_jOTDBnode_description), d);
+	   env->ReleaseStringUTFChars (str, d);
 
 	   return aNode;
 	 }
