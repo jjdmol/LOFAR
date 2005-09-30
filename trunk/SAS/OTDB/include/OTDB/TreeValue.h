@@ -64,7 +64,7 @@ public:
 	// Note: This form will probably be used by SAS and OTB when committing
 	// a list of modified node.
 	bool 	addKVTlist 	   (vector<OTDBvalue>		aValueList);
-	bool	addKVTparamSet (const ParameterSet&		aPS);
+	bool	addKVTparamSet (const ACC::APS::ParameterSet&		aPS);
 
 	//# SHM queries
 	// With searchInPeriod a list of all valuechanges in the OTDB tree can
