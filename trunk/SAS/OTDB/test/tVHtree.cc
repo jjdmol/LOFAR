@@ -29,6 +29,7 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBnode.h>
+#include <OTDB/OTDBparam.h>
 #include <OTDB/TreeTypeConv.h>
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
@@ -138,8 +139,12 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR("Zooming in on last element");
 		OTDBnode	aNode = tm.getNode(VHtreeID, nodeList[elemNr].nodeID());
 		LOG_INFO_STR(aNode);
-		// Save node ID far later (making a subtree export)
+		// Save node ID for later (making a subtree export)
 		nodeIDType	subTreeNodeID = nodeList[elemNr].nodeID();
+
+		LOG_INFO_STR("Zooming in on parameterDef of first element");
+		OTDBparam  aParam=tm.getParam(VHtreeID, nodeList[0].paramDefID());
+		LOG_INFO_STR(aParam);
 
 		treeState	aTreeState = TSconv.get("active");		
 		LOG_INFO_STR("Trying to change the state of the tree to "<< aTreeState);
