@@ -101,21 +101,19 @@ namespace LOFAR
 	     // Create a jOTDBtree object
 	     jobject myTree;
 	     jclass class_jOTDBtree = env->FindClass("jOTDB/jOTDBtree");
-	     jmethodID mid_jOTDBtree_cons = env->GetMethodID(class_jOTDBtree, "<init>", "()V");
-	     myTree = env->NewObject(class_jOTDBtree, mid_jOTDBtree_cons);
+	     jmethodID mid_jOTDBtree_cons = env->GetMethodID(class_jOTDBtree, "<init>", "(I)V");
+	     myTree = env->NewObject(class_jOTDBtree, mid_jOTDBtree_cons, treeID);
 	     
 	     // Get members
-	     jfieldID fid_jOTDBtree_classification = env->GetFieldID(class_jOTDBtree, "classification", "S");
-	     jfieldID fid_jOTDBtree_creator = env->GetFieldID(class_jOTDBtree, "creator", "Ljava/lang/String;");
-	     jfieldID fid_jOTDBtree_creationDate = env->GetFieldID(class_jOTDBtree, "creationDate", "Ljava/lang/String;");
-	     jfieldID fid_jOTDBtree_type = env->GetFieldID(class_jOTDBtree, "type", "S");
-	     jfieldID fid_jOTDBtree_state = env->GetFieldID(class_jOTDBtree, "state", "S");
-	     jfieldID fid_jOTDBtree_originalTree = env->GetFieldID(class_jOTDBtree, "originalTree", "I");
-	     jfieldID fid_jOTDBtree_campaign = env->GetFieldID(class_jOTDBtree, "campaign", "Ljava/lang/String;");
-	     jfieldID fid_jOTDBtree_starttime = env->GetFieldID(class_jOTDBtree, "starttime", "Ljava/lang/String;");
-	     jfieldID fid_jOTDBtree_stoptime = env->GetFieldID(class_jOTDBtree, "stoptime", "Ljava/lang/String;");
-	     jfieldID fid_jOTDBtree_itsTreeID = env->GetFieldID(class_jOTDBtree, "itsTreeID", "I");
-	     
+	     jfieldID fid_jOTDBtree_classification = env->GetFieldID (class_jOTDBtree, "classification", "S");
+	     jfieldID fid_jOTDBtree_creator = env->GetFieldID (class_jOTDBtree, "creator", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_creationDate = env->GetFieldID (class_jOTDBtree, "creationDate", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_type = env->GetFieldID (class_jOTDBtree, "type", "S");
+	     jfieldID fid_jOTDBtree_state = env->GetFieldID (class_jOTDBtree, "state", "S");
+	     jfieldID fid_jOTDBtree_originalTree = env->GetFieldID (class_jOTDBtree, "originalTree", "I");
+	     jfieldID fid_jOTDBtree_campaign = env->GetFieldID (class_jOTDBtree, "campaign", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_starttime = env->GetFieldID (class_jOTDBtree, "starttime", "Ljava/lang/String;");
+	     jfieldID fid_jOTDBtree_stoptime = env->GetFieldID (class_jOTDBtree, "stoptime", "Ljava/lang/String;");   
 
 	     // Fill members
 	     env->SetShortField(myTree, fid_jOTDBtree_classification, (jint)aTree.classification);
@@ -127,9 +125,6 @@ namespace LOFAR
 	     env->SetObjectField(myTree, fid_jOTDBtree_campaign, env->NewStringUTF(aTree.campaign.c_str()));
 	     env->SetObjectField(myTree, fid_jOTDBtree_starttime, env->NewStringUTF(to_simple_string(aTree.starttime).c_str()));
 	     env->SetObjectField(myTree, fid_jOTDBtree_stoptime, env->NewStringUTF(to_simple_string(aTree.stoptime).c_str()));
-	     env->SetIntField(myTree, fid_jOTDBtree_itsTreeID, aTree.treeID());
-
-	     // jstring strLN = env->NewStringUTF( ln );	     
 
 	     return myTree;
 	  }

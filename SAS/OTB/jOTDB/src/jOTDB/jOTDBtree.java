@@ -23,9 +23,9 @@ package jOTDB;
 
 public class jOTDBtree implements java.io.Serializable
 {
-   public jOTDBtree()
+   public jOTDBtree (int treeID)
      {
-	itsTreeID = 0;
+	itsTreeID = treeID;
      }
    
    public int treeID()
@@ -43,11 +43,5 @@ public class jOTDBtree implements java.io.Serializable
    public String campaign;
    public String starttime;
    public String stoptime;
-   public int itsTreeID;
-
-   //# Prevent changing the database keys
-   private jOTDBtree (int aTreeID) 
-     {
-	 itsTreeID = aTreeID;
-     }   
+   private int itsTreeID;
 }

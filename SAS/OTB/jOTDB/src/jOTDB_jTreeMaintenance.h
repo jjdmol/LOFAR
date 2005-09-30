@@ -7,13 +7,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-   namespace LOFAR 
+namespace LOFAR 
      {
-	namespace jOTDB 
+	namespace jOTDB
 	  {
 	     
-   
    /*
  * Class:     jOTDB_jTreeMaintenance
  * Method:    initTreeMaintenance
@@ -27,7 +25,7 @@ JNIEXPORT void JNICALL Java_jOTDB_jTreeMaintenance_initTreeMaintenance
  * Method:    getNode
  * Signature: (I)LjOTDB/jVICnodeDef;
  */
-JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNode__I
+JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNodeDef__I
   (JNIEnv *, jobject, jint);
 
 /*
@@ -173,6 +171,22 @@ JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setTreeState
  */
 JNIEXPORT jstring JNICALL Java_jOTDB_jTreeMaintenance_errorMsg
   (JNIEnv *, jobject);
+
+/*
+ * Class:     jOTDB_jTreeMaintenance
+ * Method:    getParam
+ * Signature: (II)LjOTDB/jOTDBparam;
+ */
+JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getParam
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     jOTDB_jTreeMaintenance
+ * Method:    saveParam
+ * Signature: (LjOTDB/jOTDBparam;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_saveParam
+  (JNIEnv *, jobject, jobject);
 	  }
      }
    

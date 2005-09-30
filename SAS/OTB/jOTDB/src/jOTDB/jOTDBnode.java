@@ -23,15 +23,15 @@ package jOTDB;
 
 public class jOTDBnode implements java.io.Serializable
 {
-    public jOTDBnode ()
+    public jOTDBnode (int treeID, int nodeID, int parentID, int paramDefID)
     {
 	index = 0;
 	leaf = false;
 	instances = 0;
-	itsTreeID = 0;
-	itsNodeID = 0;
-	itsParentID = 0;
-	itsParamDefID = 0;
+	itsTreeID = treeID;
+	itsNodeID = nodeID;
+	itsParentID = parentID;
+	itsParamDefID = paramDefID;
     }
     
     public int treeID()
@@ -60,8 +60,10 @@ public class jOTDBnode implements java.io.Serializable
     public short instances;		//# only VICtemplate
     public String limits;			//# only VICtemplate
     public String description;	//# only VICtemplate
-    public int itsTreeID;
-    public int itsNodeID;
-    public int itsParentID;
-    public int itsParamDefID;
+
+   // private members
+   private int itsTreeID;
+   private int itsNodeID;
+   private int itsParentID;
+   private int itsParamDefID;
 }
