@@ -38,7 +38,7 @@ par  propertysetDetailsType  I    text   -      10    0    TAplPacSO            
 par  claimTime               I    text   -      10    0    +12                     -        'description'
 par  prepareTime             I    text   -      10    0    +32                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 
 #########################################################################################################
 # -- Station Operations --
@@ -62,7 +62,7 @@ par  propertysetDetailsType  I    text   -      10    0    TAplPacSO            
 par  claimTime               I    text   -      10    0    +12                     -        'description'
 par  prepareTime             I    text   -      10    0    +32                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 
 #########################################################################################################
 # -- Array Operations --
@@ -91,7 +91,7 @@ par  propertysetDetailsType  I    text   -      10    0    TAplVicAO            
 par  claimTime               I    text   -      10    0    +11                     -        'description'
 par  prepareTime             I    text   -      10    0    +31                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 par  samplingFrequency       I    int    Hz     10    0    160000000               -        'description'
 
 #########################################################################################################
@@ -116,7 +116,7 @@ par  propertysetDetailsType  I    text   -      10    0    TLcuPacSRG           
 par  claimTime               I    text   -      10    0    +13                     -        'description'
 par  prepareTime             I    text   -      10    0    +33                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 
 #########################################################################################################
 # -- Station Receptor Group --
@@ -140,7 +140,7 @@ par  propertysetDetailsType  I    text   -      10    0    TLcuPacSRG           
 par  claimTime               I    text   -      10    0    +13                     -        'description'
 par  prepareTime             I    text   -      10    0    +33                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 
 #########################################################################################################
 # -- Array Receptor Group --
@@ -169,7 +169,7 @@ par  propertysetDetailsType  I    text   -      10    0    TAplVicARG           
 par  claimTime               I    text   -      10    0    +11                     -        'description'
 par  prepareTime             I    text   -      10    0    +31                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 par  rcus                    I    text   -      10    0    [0,1,2,3,4,5,6,7]       -        'description'
 par  antennaArray            I    text   -      10    0    FTS-1-LBA-RSP0          -        'description'
 par  frequency               I    flt    MHz    10    0    78.0                    -        'description'
@@ -200,7 +200,7 @@ par  propertysetDetailsType  I    text   -      10    0    TLcuPacVT            
 par  claimTime               I    text   -      10    0    +15                     -        'description'
 par  prepareTime             I    text   -      10    0    +35                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 par  subarrayName            I    text   -      10    0    SRG1                    -        'description'
 
 #########################################################################################################
@@ -225,7 +225,7 @@ par  propertysetDetailsType  I    text   -      10    0    TLcuPacVT            
 par  claimTime               I    text   -      10    0    +15                     -        'description'
 par  prepareTime             I    text   -      10    0    +35                     -        'description'
 par  startTime               I    text   -      10    0    +50                     -        'description'
-par  stopTime                I    text   -      10    0    +350                    -        'description'
+par  stopTime                I    text   -      10    0    +3050                    -        'description'
 par  subarrayName            I    text   -      10    0    SRG2                    -        'description'
 
 #########################################################################################################
@@ -255,7 +255,7 @@ par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'          
 par  claimTime               I    text   -      10    0    '+11'                     -        'description'
 par  prepareTime             I    text   -      10    0    '+31'                     -        'description'
 par  startTime               I    text   -      10    0    '+50'                     -        'description'
-par  stopTime                I    text   -      10    0    '+350'                    -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                    -        'description'
 par  subbandTimes            I    text   -      10    0    ''                        -        'description'
 par  subbands                I    text   -      10    0    '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]' - 'description'
 par  directionType           I    text   -      10    0    'J2000'                   -        'description'
@@ -292,7 +292,7 @@ par  propertysetDetailsType  I    text   -      10    0    'TAplVicVI'          
 par  claimTime               I    text   -      10    0    '+10'                     -        'description'
 par  prepareTime             I    text   -      10    0    '+30'                     -        'description'
 par  startTime               I    text   -      10    0    '+50'                     -        'description'
-par  stopTime                I    text   -      10    0    '+350'                    -        'description'
+par  stopTime                I    text   -      10    0    '+3050'                    -        'description'
 par  subbandTimes            I    text   -      10    0    ''                        -        'description'
 par  subbands                I    text   -      10    0    '[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]' - 'description'
 
