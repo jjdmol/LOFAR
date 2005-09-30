@@ -28,6 +28,7 @@
 #include <fstream>
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBnode.h>
+#include <OTDB/OTDBparam.h>
 
 namespace LOFAR {
   namespace OTDB {
@@ -233,6 +234,42 @@ OTDBnode TreeMaintenance::getNode (treeIDType	aTreeID,
 	}
 	return (empty);
 }
+
+//
+// getParam (treeID, nodeID) : OTDBparam
+//
+OTDBparam TreeMaintenance::getParam (treeIDType		aTreeID,
+									 nodeIDType		aNodeID)
+{
+	OTDBparam		empty;
+
+	// which function should we call?
+	string		functionName;
+	OTDBtree	theTree = itsConn->getTreeInfo(aTreeID);
+	if (theTree.type == TThardware) {
+		functionName = "getPICparamDef";
+	}
+	else {
+		functionName = "getVICparamDef";
+	}
+
+	work	xAction(*(itsConn->getConn()), "getOTDBparam");
+	try {
+		result res = xAction.exec("SELECT * from " + functionName + "(" +
+								  toString(aNodeID) + ")");
+		if (res.empty()) {
+			return (empty);
+		}
+
+		return (OTDBparam(aTreeID, res[0]));
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during getOTDBparam:") + ex.what();
+		LOG_FATAL(ex.what());
+	}
+	return (empty);
+}
+
 
 //
 // getItemList(treeID, topNode, depth): vector<OTDBnode>

@@ -37,11 +37,13 @@ OTDBparam::OTDBparam(treeIDType				aTreeID,
 				   const result::tuple&		row) 
 {
 	// Note: names refer to SQL type
-	row["treeid"].to(aTreeID);
+//	row["treeid"].to(aTreeID);
+	itsTreeID = aTreeID;
 	row["paramid"].to(itsParamID);
 	row["nodeid"].to(itsNodeID);
 	row["name"].to(name);
-	row["index"].to(index);
+//	row["index"].to(index);
+	index = 0;
 	row["par_type"].to(type);
 	row["unit"].to(unit);
 	row["pruning"].to(pruning);

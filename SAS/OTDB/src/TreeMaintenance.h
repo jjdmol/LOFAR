@@ -73,7 +73,7 @@ public:
 	vector<VICnodeDef> getTopComponentList (const string&	name = "%");
 
 	// Get the node definition of a VC node
-	VICnodeDef	getNode	(nodeIDType		aNodeID);
+	VICnodeDef	getNodeDef	(nodeIDType		aNodeID);
 
 	//# --- VIC maintenance : Templates ---
 	// From a component tree a template tree can be constructed. In a template
@@ -90,6 +90,13 @@ public:
 	// Get a single node from the VIC template tree
 	OTDBnode getNode (treeIDType	aTreeID,
 					  nodeIDType	aNodeID);
+
+	// Get the parameter definition of a node
+	OTDBparam	getParam	(treeIDType		aTreeID,
+							 nodeIDType		aNodeID);
+
+	// Save the parameter definition
+	bool		saveParam	(OTDBparam&		aParam);
 
 	// Get a number of levels of children.
 	vector<OTDBnode> getItemList (treeIDType	aTreeID,
@@ -114,6 +121,7 @@ public:
 	bool	deleteNodeList(vector<OTDBnode>&	aNodeList);
 
 	// Evaluate the constraints from a (sub)tree.
+	// NOT YET IMPLEMENTED
 	bool	checkTreeConstraints(treeIDType		aTreeID,
 								 nodeIDType		topNode = 0);
 
@@ -164,9 +172,8 @@ private:
 	TreeMaintenance& operator=(const TreeMaintenance& that);
 
 	// Helper routines for loading the component file
-	bool		saveNode	(VICnodeDef&	aNode);
-	bool		saveParam	(OTDBparam&		aParam);
-	VICnodeDef	getNode		(const string&	aNameFragment,
+	bool		saveNodeDef	(VICnodeDef&	aNode);
+	VICnodeDef	getNodeDef	(const string&	aNameFragment,
 							 uint32			aVersion = 0,
 							 classifType	aClassification = 0);
 	// Helper routines for getItemList

@@ -29,6 +29,7 @@
 #include <OTDB/TreeMaintenance.h>
 #include <OTDB/OTDBtypes.h>
 #include <OTDB/OTDBnode.h>
+#include <OTDB/OTDBparam.h>
 #include <OTDB/TreeStateConv.h>
 #include <OTDB/ClassifConv.h>
 
@@ -108,6 +109,11 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR("Zooming in on node " << nodeList[elemNr].nodeID());
 		OTDBnode	aNode = tm.getNode(treeID, nodeList[elemNr].nodeID());
 		LOG_INFO_STR(aNode);
+
+		LOG_INFO_STR("Zooming in on param part of node " 
+											<< nodeList[elemNr].nodeID());
+		OTDBparam	aParam = tm.getParam(treeID, nodeList[elemNr].paramDefID());
+		LOG_INFO_STR(aParam);
 
 		ClassifConv	CTconv(&conn);
 		LOG_INFO("Trying to classify the tree to operational");

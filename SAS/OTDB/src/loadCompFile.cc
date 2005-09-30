@@ -40,9 +40,9 @@ namespace LOFAR {
   namespace OTDB {
 
 //
-// saveNode (VICnodeDef) : bool
+// saveNodeDef (VICnodeDef) : bool
 //
-bool TreeMaintenance::saveNode	(VICnodeDef&	aNode)
+bool TreeMaintenance::saveNodeDef	(VICnodeDef&	aNode)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -133,9 +133,9 @@ bool TreeMaintenance::saveParam(OTDBparam&	aParam)
 }
 
 //
-// getNode (nodeID) : VICnodeDef
+// getNodeDef (nodeID) : VICnodeDef
 //
-VICnodeDef TreeMaintenance::getNode (nodeIDType		aNodeID)
+VICnodeDef TreeMaintenance::getNodeDef (nodeIDType		aNodeID)
 {
 	VICnodeDef		empty;
 
@@ -163,9 +163,9 @@ VICnodeDef TreeMaintenance::getNode (nodeIDType		aNodeID)
 }
 
 //
-// getNode (name, version, classif) : VICnodedef
+// getNodeDef (name, version, classif) : VICnodedef
 //
-VICnodeDef	TreeMaintenance::getNode (const string&	name,
+VICnodeDef	TreeMaintenance::getNodeDef (const string&	name,
 							   uint32		version,
 							   classifType	classif)
 {
@@ -295,7 +295,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			// construct object (name, version, classif, constr. descr.)
 		 	VICnodeDef	topNode(args[1], VersionNr(args[2]), 
 										CTconv.get(args[3]), args[4], args[5]);
-			saveNode (topNode);
+			saveNodeDef (topNode);
 			topNodeID = topNode.itsNodeID;
 		}
 		// -- USES --
@@ -311,7 +311,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			}
 
 			// Check that module that is referenced exists in the database.
-			VICnodeDef	ChildNode = getNode(args[1], 
+			VICnodeDef	ChildNode = getNodeDef(args[1], 
 											VersionNr(args[2]), 
 											CTconv.get(args[3]));
 			if (!ChildNode.nodeID()) {
