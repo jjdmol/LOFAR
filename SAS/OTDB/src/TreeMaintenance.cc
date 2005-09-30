@@ -76,6 +76,11 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 	}
 
 	work 	xAction(*(itsConn->getConn()), "loadMasterFile");
+
+	// define variables used in exception handling
+	string	parName;
+	int		counter;
+
 	try {
 		// First create a new tree entry.
 		result res = xAction.exec(
@@ -99,8 +104,7 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 
 		// Loop through file and add parameters to new tree.
 		paramType		parType;
-		string			parName;
-		int				counter = 0;
+		counter = 0;
 		while (inFile >> parType >> parName) {
 			res = xAction.exec("SELECT addPICparam(" + 
 								to_string(newTreeID) + "," +
@@ -117,8 +121,9 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 
 		return (newTreeID);
 	}
-	catch (Exception&	ex) {
-		itsError = string("Exception during loadMasterFile:") + ex.what();
+	catch (std::exception&	ex) {
+		itsError =string("Exception during loadMasterFile while reading line ")
+			+ to_string(counter) + ":" + parName + "\n" + "Reason:" + ex.what();
 		inFile.close();
 		LOG_FATAL(itsError);
 		return (0);
