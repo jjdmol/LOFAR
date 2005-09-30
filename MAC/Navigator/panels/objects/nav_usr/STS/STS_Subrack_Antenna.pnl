@@ -1,11 +1,15 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,287 170 107 164 N "_3DFace" 3
+PANEL,306 149 107 164 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
-EEE E E 1 -1 -1 0  28 79
+"main()
+{
+
+}" 0
+EE E E 1 -1 -1 0  28 79
 "" 0 1
 EE 2
 "CBRef""1"
@@ -50,7 +54,8 @@ dyn_errClass err;
 
   dpConnect(\"EP_setBackColorCB\", 
             $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\");
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.functionality:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -64,16 +69,27 @@ dyn_errClass err;
 
 
 EP_setBackColorCB(string dpSource1, unsigned LFA_main,
-									string dpSource2, unsigned LFA_stat)
+									string dpSource2, int LFA_stat,
+									string dpSource3, bool functionality)
 {
 	setValue(\"icon_maintenance_LFA\", \"visible\", (LFA_main == 1));
 	//Set background color of rectangle [RCU]
   if (LFA_main == 1)
   	setValue(\"Ellipse_LFA\", \"backCol\", \"Lofar_maintenance\");
-  else if (LFA_stat==1)
+  else if (LFA_stat<0)
       setValue(\"Ellipse_LFA\", \"backCol\", \"Red\");
   else
     setValue(\"Ellipse_LFA\", \"backCol\", \"Lofar_device_active\");
+  if(functionality)
+  {
+    setValue(\"Ellipse_LFA\", \"foreCol\", \"_WindowText\");
+  	setValue(\"Ellipse_LFA\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,1]\");
+  }
+  else
+  {
+    setValue(\"Ellipse_LFA\", \"foreCol\", \"Red\");
+  	setValue(\"Ellipse_LFA\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,3]\");
+  }
 }
 // SimpleCtrlScriptEnd {EP_setBackColor}
 " 0
@@ -112,7 +128,8 @@ dyn_errClass err;
 
   dpConnect(\"EP_setBackColorCB\", 
             $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\");
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.functionality:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -122,7 +139,8 @@ dyn_errClass err;
 
 
 EP_setBackColorCB(string dpSource1, unsigned HFA_main,
-									string dpSource2, unsigned HFA_stat)
+									string dpSource2, int HFA_stat,
+									string dpSource3, bool functionality)
 {
 	setValue(\"icon_maintenance_HFA\", \"visible\", (HFA_main == 1));
 	//Set background color of rectangle [RCU]
@@ -132,6 +150,16 @@ EP_setBackColorCB(string dpSource1, unsigned HFA_main,
       setValue(\"rect_HFA\", \"backCol\", \"Red\");
   else
     setValue(\"rect_HFA\", \"backCol\", \"Lofar_device_active\");
+  if(functionality)
+  {
+    setValue(\"rect_HFA\", \"foreCol\", \"_WindowText\");
+  	setValue(\"rect_HFA\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,1]\");
+  }
+  else
+  {
+    setValue(\"rect_HFA\", \"foreCol\", \"Red\");
+  	setValue(\"rect_HFA\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,3]\");
+  }
 }
 " 0
  E 0 1 1 0 1 E U  1 E 47 10 92 55

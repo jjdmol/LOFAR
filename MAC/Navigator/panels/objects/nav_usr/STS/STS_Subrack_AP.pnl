@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,360 230 184 193 N "_3DFace" 2
+PANEL,306 149 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
@@ -13,7 +13,8 @@ PANEL,360 230 184 193 N "_3DFace" 2
   {
     dpConnect(\"ControlGUIAP\", $datapoint + \"_Board0_AP\"+ $APNr +\".temperature:_online.._value\",
                               $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._value\",
-                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._invalid\");
+                              $datapoint + \"_Board0_AP\"+ $APNr +\".status:_online.._invalid\",
+                              $datapoint + \"_Board0_AP\"+ $APNr +\".functionality:_online.._value\");
     setValue(\"output_packetsReceived\", \"editable\", FALSE);
     dpConnect(\"showVersion\", $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._value\",
                              $datapoint + \"_Board0_AP\"+ $APNr +\".version:_online.._invalid\");
@@ -37,7 +38,8 @@ PANEL,360 230 184 193 N "_3DFace" 2
 /////////////////////////////////////////////////////////////////////
 ControlGUIAP(string dp1, float temperature,
              string dp2, int status,
-             string dp3, bool invalid)
+             string dp3, bool invalid,
+             string dp4, bool functionality)
 {
   if(!invalid)
   {
@@ -46,12 +48,12 @@ ControlGUIAP(string dp1, float temperature,
     setValue(\"txt_temperature\", \"visible\", TRUE);
   
     // 2. Calculate the Backcolor of the AP
-    if (status == 0)
+    if (status >= 0)
     {
       setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
       setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
     }
-    else if (status == 1)
+    else if (status < 0)
 	  {
       setValue(\"rect_AP\", \"backCol\", \"Red\");
       setValue(\"btn_details\", \"backCol\", \"Red\");
@@ -60,6 +62,16 @@ ControlGUIAP(string dp1, float temperature,
   	{
       setValue(\"rect_AP\", \"backCol\", \"Red\");
       setValue(\"btn_details\", \"backCol\", \"Red\");
+    }
+    if(functionality)
+    {
+      setValue(\"rect_AP\", \"foreCol\", \"_WindowText\");
+    	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,1]\");
+    }
+    else
+    {
+      setValue(\"rect_AP\", \"foreCol\", \"Red\");
+    	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,3]\");
     }
   }
   else

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,360 230 417 182 N "_3DFace" 1
+PANEL,306 149 417 182 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -11,9 +11,8 @@ PANEL,360 230 417 182 N "_3DFace" 1
   if(dpAccessable($datapoint + \"_Board0.version:_online.._value\") &&
      dpAccessable($datapoint + \"_Board0_Maintenance.status:_online.._value\"))
   {
-//    dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board0_Maintenance.status:_online.._value\",
-//					                             $datapoint + \"_Board0_BP.status:_online.._value\",
-//					                             $datapoint + \"_Board0_BP.status:_online.._invalid\");
+    dpConnect(\"setBackGroundBorderColor\", $datapoint + \"_Board0_BP.functionality:_online.._value\");
+    
     dpConnect(\"showVersion\", $datapoint + \"_Board0.version:_online.._value\",
                              $datapoint + \"_Board0.version:_online.._invalid\");
   }
