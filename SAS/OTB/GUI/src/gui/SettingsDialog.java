@@ -12,7 +12,6 @@ package gui;
  */
 public class SettingsDialog extends javax.swing.JDialog {
     
-    
     /**
      * Creates new form SettingsDialog 
      */
@@ -117,7 +116,7 @@ public class SettingsDialog extends javax.swing.JDialog {
     // </editor-fold>//GEN-END:initComponents
 
     private void SettingsDialogApplyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SettingsDialogApplyButtonActionPerformed
-        otbgui.RMIServerName  = RMIServerNameText.getText();
+        otbgui.RMIServerName  = RMIServerNameText.getText();      
         otbgui.RMIServerPort  = RMIServerPortText.getText();
         otbgui.RMIRegistryName= RMIRegistryNameText.getText();
         otbgui.OTDBUserName   = OTDBUserNameText.getText();

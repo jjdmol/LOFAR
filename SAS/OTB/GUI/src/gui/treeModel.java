@@ -21,11 +21,14 @@ import javax.swing.table.AbstractTableModel;
  */
 public class treeModel extends AbstractTableModel {
     
-       
+       boolean itsDebugFlag=false;
        String headers[] = {"TreeID", "Creator", "CreationDate", "Classification", 
             "Type", "State", "Campaign", "Start Time", "Stop Time"};
        Object data[][];
        
+       public void setDebugFlag(boolean aFlag) {
+           itsDebugFlag=aFlag;
+       }
              
        public treeModel(jOTDBinterface aRemoteOTDB, Vector aTreeList){
           setTreeList(aRemoteOTDB,aTreeList);
@@ -52,18 +55,18 @@ public class treeModel extends AbstractTableModel {
            data = new Object[aTreeList.size()][headers.length];
                 try {
                     if (aTreeList.size() == 0) {
-                        System.out.println("Error:" + aRemoteOTDB.errorMsg());
+                        if (itsDebugFlag) System.out.println("Error:" + aRemoteOTDB.errorMsg());
                     } else {
-                        System.out.println("Collected tree list");
+                        if (itsDebugFlag) System.out.println("Collected tree list");
                     }
                     for (int k=0; k< aTreeList.size();k++) {
-                        System.out.println("getTreeInfo(aTreeList.elementAt("+k+"))");
+                        if (itsDebugFlag) System.out.println("getTreeInfo(aTreeList.elementAt("+k+"))");
 	                Integer i = new Integer((Integer)aTreeList.elementAt(k));
 	                jOTDBtree tInfo = aRemoteOTDB.getTreeInfo(i.intValue());
 	                if (tInfo.treeID()==0) {
-                            System.out.println("No such tree found!");
+                            if (itsDebugFlag) System.out.println("No such tree found!");
                         } else {
-                            System.out.println("Gathered info for ID: "+tInfo.itsTreeID);
+                            if (itsDebugFlag) System.out.println("Gathered info for ID: "+tInfo.itsTreeID);
                         
                             data[k][0]=new Integer(tInfo.itsTreeID);	   
 	                    data[k][1]=new String(tInfo.creator);
