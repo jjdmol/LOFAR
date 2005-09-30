@@ -125,8 +125,9 @@ void stsSubRackHandleContextMenu()
 //        3. invalid flag
 ///////////////////////////////////////////////////////////////////////////////////
 setBackGroundColorAEM(string dp1, unsigned maintenance,
-                      string dp2, unsigned status,
-                      string dp3, bool invalid)
+                      string dp2, int status,
+                      string dp3, bool invalid,
+                      string dp4, bool functionality)
 {
   
   if(!invalid) // Datapoint has a valid state.
@@ -137,11 +138,11 @@ setBackGroundColorAEM(string dp1, unsigned maintenance,
     {
       setValue("backGround", "backCol", "Lofar_maintenance");
     }
-    else if (status==1)    //object is in error status
+    else if (status<0)    //object is in error status
     {
       setValue("backGround", "backCol", "Red");
     }
-    else if (status==0)  //object has a correct status
+    else if (status>=0)  //object has a correct status
     {
       setValue("backGround", "backCol", "Lofar_device_active");
     }
@@ -149,10 +150,42 @@ setBackGroundColorAEM(string dp1, unsigned maintenance,
     {
       setValue("backGround", "backCol", "Red");
     }
+    if(functionality)
+    {
+      setValue("backGround", "foreCol", "_WindowText");
+	  setValue("backGround", "border", "[solid,oneColor,JoinMiter,CapNotLast,1]");
+    }
+    else
+    {
+      setValue("backGround", "foreCol", "Red");
+      setValue("backGround", "border", "[solid,oneColor,JoinMiter,CapNotLast,3]");
+    }
   }
   else
   {
     setValue("backGround", "backCol", "_dpdoesnotexist");
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Function: setBackGroundBorderColor
+//           Sets the background border color 
+//           of the object
+//
+// Input: 1. functionality status
+///////////////////////////////////////////////////////////////////////////////////
+setBackGroundBorderColor(string dp1, bool functionality)
+{
+  
+  if(functionality)
+  {
+    setValue("backGround", "foreCol", "_WindowText");
+	setValue("backGround", "border", "[solid,oneColor,JoinMiter,CapNotLast,1]");
+   }
+  else
+  {
+    setValue("backGround", "foreCol", "Red");
+	setValue("backGround", "border", "[solid,oneColor,JoinMiter,CapNotLast,3]");
   }
 }
 
@@ -226,7 +259,7 @@ void RCUContextMenu()
   dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", status);
   dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", maintenance);
 
-  BuildContextMenu(status, maintenance, Answer);
+  BuildContextMenu(status, maintenance, true, true, Answer);
 
     // Compute the chosen option
     switch (Answer)
@@ -235,7 +268,7 @@ void RCUContextMenu()
         dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", 0);
         break;
     case 3:
-        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +".status:_original.._value", -3);
         break;
     case 10:    
         dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_Maintenance.status:_original.._value", 0);
@@ -261,13 +294,15 @@ void RCUContextMenu()
 //
 // Input : 1. object status
 //         2. maintenance status
+//		   3. show status options
+//         4. show maintenance options
 // Output: 1. contextment
 /////////////////////////////////////////////////////////////////////
-void BuildContextMenu(int status, int maintenance, int &Answer)
+void BuildContextMenu(int status, int maintenance, bool showStatus, bool showMaintenance, int &Answer)
 {
   string txt_status, txt_maintenance;
   //Define the content of the contextmenu
-  if (status==1)
+  if (status<0)
     txt_status = "PUSH_BUTTON, Set status to -> OK, 2, 1";
   else
     txt_status = "PUSH_BUTTON, Set status to -> Error, 3, 1";
@@ -278,15 +313,15 @@ void BuildContextMenu(int status, int maintenance, int &Answer)
     txt_maintenance = "PUSH_BUTTON, Turn on maintenance, 11, 1";
   
   // Display the contextmenu
-  if  ((status==-1) && (maintenance!=-1))
+  if  (!showStatus && showMaintenance)
   {
     popupMenu(makeDynString(txt_maintenance), Answer);
   }
-  else if  ((status!=-1) && (maintenance==-1))
+  else if  (showStatus && !showMaintenance)
   {
     popupMenu(makeDynString(txt_status), Answer);
   }
-  else // ((status!=-1) && (maintenance!=-1))
+  else // (showStatus && showMaintenance)
   {
     popupMenu(makeDynString(txt_maintenance, "SEPARATOR", txt_status), Answer);
   }
@@ -311,7 +346,7 @@ void AntennaContextMenu(string antenna)
   {
     dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
     dpGet($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
-    BuildContextMenu(status, maintenance, Answer);
+    BuildContextMenu(status, maintenance, true, true, Answer);
     // Compute the chosen option
     switch (Answer)
     {
@@ -319,7 +354,7 @@ void AntennaContextMenu(string antenna)
         dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
         break;
       case 3:
-        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", -3);
         break;
       case 10:
         dpSetWait($datapoint + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
@@ -357,7 +392,7 @@ void APContextMenu()
   if(dpAccessable($datapoint + "_Board0_AP"+ $APNr + ".status:_original.._value"))
   {
     dpGet($datapoint + "_Board0_AP"+ $APNr + ".status:_original.._value", status);
-    BuildContextMenu(status, -1, Answer);
+    BuildContextMenu(status, 0, true, false, Answer);
 
     // Compute the chosen option
     switch (Answer)
@@ -366,7 +401,7 @@ void APContextMenu()
         dpSetWait($datapoint + "_Board0_AP"+ $APNr +".status:_original.._value", 0);
         break;
     case 3:
-        dpSetWait($datapoint + "_Board0_AP"+ $APNr +".status:_original.._value", 1);
+        dpSetWait($datapoint + "_Board0_AP"+ $APNr +".status:_original.._value", -3);
         break;
     default:
       break;
@@ -396,7 +431,7 @@ void BPContextMenu()
   {
     dpGet($datapoint + "_Board0_BP.status:_original.._value", status);
     dpGet($datapoint + "_Board0_Maintenance.status:_original.._value", maintenance);
-    BuildContextMenu(status, maintenance, Answer);
+    BuildContextMenu(status, maintenance, true, true, Answer);
 
     // Compute the chosen option
     switch (Answer)
@@ -405,7 +440,7 @@ void BPContextMenu()
       dpSetWait($datapoint + "_Board0_BP.status:_original.._value", 0);
       break;
     case 3:
-      dpSetWait($datapoint + "_Board0_BP.status:_original.._value", 1);
+      dpSetWait($datapoint + "_Board0_BP.status:_original.._value", -3);
       break;
     case 10:    
       dpSetWait($datapoint + "_Board0_Maintenance.status:_original.._value", 0);
@@ -459,7 +494,7 @@ void AntennaContextMenuMain(string antenna)
   {
     dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
     dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board0_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
-    BuildContextMenu(status, maintenance, Answer);
+    BuildContextMenu(status, maintenance, true, true, Answer);
   
     // Compute the chosen option
     switch (Answer)

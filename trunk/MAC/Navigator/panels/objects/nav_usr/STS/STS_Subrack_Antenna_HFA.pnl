@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,360 230 95 138 N "_3DFace" 3
+PANEL,306 149 95 138 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -19,7 +19,8 @@ PANEL,360 230 95 138 N "_3DFace" 3
     dpConnect(\"setBackGroundColorAEM\", 
             $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_online.._value\",
             $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._invalid\");
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_online.._invalid\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.functionality:_online.._value\");
   }
   else
   {

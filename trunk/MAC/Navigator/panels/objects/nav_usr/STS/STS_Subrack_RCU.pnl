@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,2 108 139 149 N "_3DFace" 4
+PANEL,306 149 139 149 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -21,7 +21,8 @@ PANEL,2 108 139 149 N "_3DFace" 4
     dpConnect(\"setBackGroundColorAEM\", 
             $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\",
             $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\",
-            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._invalid\");
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._invalid\",
+            $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".functionality:_online.._value\");
   }
   else
   {
@@ -40,7 +41,11 @@ E E E 1 -1 -1 0  20 140
 "" 0 1
 EE 2
 "CBRef""1"
-"EClose"E
+"EClose""main()
+{
+  DebugN(\"By By\");
+}" 0
+
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
