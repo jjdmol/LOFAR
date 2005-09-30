@@ -1658,165 +1658,165 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 8 "Group15"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 100 250 T 20 1 0 1  32 329  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 100 250 T 20 1 0 1  32 329  
 3
 "$APNr""3"
 "$RCUNr""0"
 "$datapoint""\"STSLCU2:PIC_Rack0_SubRack0\""
 3 10 "Group17"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 30 320 T 22 1 0 1  9 390  
+"objects\\nav_usr\\STS\\STS_19inch_Subrack.pnl" 30 320 T 22 1 0 1  9 390  
 3
 "$RackNr""0"
 "$SubrackNr""0"
 "$datapoint""\"STSLCU2:PIC\""
 3 11 ""
-"objects\\PIC\\CEP_node.pnl" 388 191 T 78 1 0 1  272 349  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 388 191 T 78 1 0 1  272 349  
 2
 "$NodeNr""4"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 13 "Group11"
-"objects\\PIC\\CEP_node.pnl" 400 40 T 79 1 0 1  260 540  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 40 T 79 1 0 1  260 540  
 2
 "$NodeNr""5"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 14 "Group13"
-"objects\\PIC\\CEP_node.pnl" 400 80 T 80 1 0 1  260 540  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 80 T 80 1 0 1  260 540  
 2
 "$NodeNr""6"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 15 "Group15"
-"objects\\PIC\\CEP_node.pnl" 400 120 T 81 1 0 1  260 380  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 120 T 81 1 0 1  260 380  
 2
 "$NodeNr""7"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 16 "Group17"
-"objects\\PIC\\CEP_node.pnl" 400 160 T 82 1 0 1  440 340  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 160 T 82 1 0 1  440 340  
 2
 "$NodeNr""8"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 17 "Group23"
-"objects\\PIC\\CEP_node.pnl" 400 40 T 83 1 0 1  100 380  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 40 T 83 1 0 1  100 380  
 2
 "$NodeNr""11"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 18 "Group24"
-"objects\\PIC\\CEP_node.pnl" 400 80 T 84 1 0 1  100 500  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 80 T 84 1 0 1  100 500  
 2
 "$NodeNr""12"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 19 "Group25"
-"objects\\PIC\\CEP_node.pnl" 400 120 T 85 1 0 1  260 260  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 120 T 85 1 0 1  260 260  
 2
 "$NodeNr""13"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 20 "Group26"
-"objects\\PIC\\CEP_node.pnl" 400 160 T 86 1 0 1  260 260  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 160 T 86 1 0 1  260 260  
 2
 "$NodeNr""14"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 21 "Group27"
-"objects\\PIC\\CEP_node.pnl" 400 200 T 87 1 0 1  260 260  
+"objects\\nav_usr\\CEP\\CEP_node.pnl" 400 200 T 87 1 0 1  260 260  
 2
 "$NodeNr""15"
 "$datapoint""\"CEPLCU1:PIC_CEP_lofar\""
 3 22 "Group18"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 100 500 T 105 1 0 1  78 79  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 100 500 T 105 1 0 1  78 79  
 3
 "$APNr""3"
 "$RCUNr""1"
 "$datapoint""\"STSLCU2:PIC_Rack0_SubRack0\""
 3 23 "Group20"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 100 500 T 106 1 0 1  -62 79  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 100 500 T 106 1 0 1  -62 79  
 3
 "$APNr""2"
 "$RCUNr""0"
 "$datapoint""\"STSLCU2:PIC_Rack0_SubRack0\""
 3 24 "Group22"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 20 440 T 107 1 0 1  64 139  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 20 440 T 107 1 0 1  64 139  
 3
 "$APNr""2"
 "$RCUNr""1"
 "$datapoint""\"STSLCU2:PIC_Rack0_SubRack0\""
 3 29 "Group33"
-"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 87 490 T 114 1 0 1  149 -241  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_HFA.pnl" 87 490 T 114 1 0 1  149 -241  
 3
 "$APNr""0"
 "$RCUNr""0"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 30 "Group34"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 114 550 T 115 1 0 1  18 -301  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 114 550 T 115 1 0 1  18 -301  
 3
 "$APNr""3"
 "$RCUNr""0"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 31 "Group35"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 45 660 T 116 1 0 1  -6 -280  
+"objects\\nav_usr\\STS\\STS_19inch_Subrack.pnl" 45 660 T 116 1 0 1  -6 -280  
 3
 "$RackNr""0"
 "$SubrackNr""0"
 "$datapoint""\"STSLCU1:PIC\""
 3 32 "Group36"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 160 550 T 117 1 0 1  18 -301  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 160 550 T 117 1 0 1  18 -301  
 3
 "$APNr""3"
 "$RCUNr""1"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 33 "Group37"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 20 550 T 118 1 0 1  18 -301  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 20 550 T 118 1 0 1  18 -301  
 3
 "$APNr""2"
 "$RCUNr""0"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 34 "Group38"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 66 550 T 119 1 0 1  18 -301  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 66 550 T 119 1 0 1  18 -301  
 3
 "$APNr""2"
 "$RCUNr""1"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 35 "Group26"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 114 190 T 133 1 0 1  18 -21  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 114 190 T 133 1 0 1  18 -21  
 3
 "$APNr""1"
 "$RCUNr""0"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 36 "Group27"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 160 190 T 134 1 0 1  18 -21  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 160 190 T 134 1 0 1  18 -21  
 3
 "$APNr""1"
 "$RCUNr""1"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 37 "Group28"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 20 190 T 135 1 0 1  18 -21  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 20 190 T 135 1 0 1  18 -21  
 3
 "$APNr""0"
 "$RCUNr""0"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 38 "Group29"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 66 190 T 136 1 0 1  18 -21  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 66 190 T 136 1 0 1  18 -21  
 3
 "$APNr""0"
 "$RCUNr""1"
 "$datapoint""\"STSLCU1:PIC_Rack0_SubRack0\""
 3 39 "Group30"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 114 540 T 147 1 0 1  18 -41  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 114 540 T 147 1 0 1  18 -41  
 3
 "$APNr""1"
 "$RCUNr""0"
 "$datapoint""\"STSLCU2:PIC_Rack0_SubRack0\""
 3 40 "Group31"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 160 540 T 148 1 0 1  18 -41  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 160 540 T 148 1 0 1  18 -41  
 3
 "$APNr""1"
 "$RCUNr""1"
 "$datapoint""\"STSLCU2:PIC_Rack0_SubRack0\""
 3 41 "Group32"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 20 540 T 149 1 0 1  18 -41  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 20 540 T 149 1 0 1  18 -41  
 3
 "$APNr""0"
 "$RCUNr""0"
 "$datapoint""\"STSLCU2:PIC_Rack0_SubRack0\""
 3 42 "Group33"
-"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 66 540 T 150 1 0 1  18 -41  
+"objects\\nav_usr\\STS\\STS_Subrack_Antenna_LFA.pnl" 66 540 T 150 1 0 1  18 -41  
 3
 "$APNr""0"
 "$RCUNr""1"
