@@ -1,5 +1,5 @@
 mac.ns.APL-MISD.server.type=TCP
-mac.ns.APL-MISD.server.port=27010
+mac.ns.APL-MISD.server.port=27009
 mac.top.APL-MIS.client.remoteservice=APL-MISD:server
-#mac.top.APL-MISS.rspclient.remoteservice=RSPDriver:acceptor
-mac.top.APL-MISS.rspclient.remoteservice=ARATestDriver:ARAtestRSPserver
+mac.top.APL-MISS.rspclient.remoteservice=RSPDriver:acceptor_v2
+#mac.top.APL-MISS.rspclient.remoteservice=ARATestDriver:ARAtestRSPserver
