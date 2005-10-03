@@ -177,12 +177,12 @@ class tRemoteTreeMaintenance
 	     System.out.println (aNode.nodeID ());
 	     
 	     // Test the manipulations off the parameters
-	     System.out.println ("Duplicating node Beamformer for index=5");
+	     System.out.println ("Duplicating node Beamformer for index=6");
 	     Vector BformCol = tm.getItemList (VTtreeID.intValue (), "Beamformer");
 	     jOTDBnode BformDef = (jOTDBnode)BformCol.firstElement ();
 	     System.out.println ("Beamformer has ID " + BformDef.nodeID());
 	     System.out.println (VTtreeID.intValue () +" " + BformDef.nodeID ());
-	     int dupNodeID = tm.dupNode (VTtreeID.intValue (), BformDef.nodeID (), (short)5);
+	     int dupNodeID = tm.dupNode (VTtreeID.intValue (), BformDef.nodeID (), (short)6);
 	     System.out.println ("New subtree starts at node: " + dupNodeID);
 	     
 	     System.out.println ("Getting param info for " + dupNodeID+2 + " and " + dupNodeID+3);

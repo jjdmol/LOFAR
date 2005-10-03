@@ -1,4 +1,4 @@
-//#  jOTDB_jOTDBcommon.h: Holds a static OTDBconnection.
+//#  jTreeValue.java: Logging.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,33 +19,21 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 
-#ifndef LOFAR_JOTDB_COMMON_H
-#define LOFAR_JOTDB_COMMON_H
+package jOTDB;
 
-// \file jOTDB_jOTDBcommon.h 
-// Hold a static OTDBconnection, to be
-// shared between the different JNI implementation
+import jOTDB.jOTDBvalue;
+import java.util.Vector;
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-//# Includes
-#include <OTDB/OTDBconnection.h>
-#include <OTDB/OTDBnode.h>
-#include <OTDB/OTDBvalue.h>
+public class jTreeValue
+{
+    public jTreeValue ()
+    {
+	initTreeValue ();
+    }
 
-using namespace LOFAR::OTDB;
+    private native void initTreeValue ();
 
-namespace LOFAR {
-  namespace jOTDB {
-    
-    static OTDBconnection* OTDBconn;
-
-     jobject convertOTDBnode (JNIEnv *env, OTDBnode aNode);
-     OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode);
-     jobject convertOTDBvalue (JNIEnv *env, OTDBvalue aValue);
-     
-     OTDBconnection* getConnection ();
-
-  } // end namespace LOFAR
-} // end namespace jOTDB
-
-#endif
+    // Get the node definition of a VC node
+    public native Vector searchInPeriod (int aTreeID, int topNode, int depth, String beginDate, 
+					 String endDate, boolean mostRecentlyOnly);
+}
