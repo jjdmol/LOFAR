@@ -84,7 +84,7 @@ ARATestDriverTask::ARATestDriverTask() :
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
-  ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
+  ParameterSet::instance()->adoptFile("RegisterAccess.conf");
 
   n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
   n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
@@ -100,12 +100,12 @@ ARATestDriverTask::ARATestDriverTask() :
   m_systemStatus.board().resize(n_boards_per_subrack);
   m_systemStatus.rcu().resize(n_rcus);
 
-	EPA_Protocol::BoardStatus boardStatus;
-	memset(&boardStatus,0,sizeof(boardStatus));
+  EPA_Protocol::BoardStatus boardStatus;
+  memset(&boardStatus,0,sizeof(boardStatus));
   m_systemStatus.board()(blitz::Range::all()) = boardStatus;
 
-	EPA_Protocol::RCUStatus rcuStatus;
-	memset(&rcuStatus,0,sizeof(rcuStatus));
+  EPA_Protocol::RCUStatus rcuStatus;
+  memset(&rcuStatus,0,sizeof(rcuStatus));
   m_systemStatus.rcu()(blitz::Range::all()) = rcuStatus;
   
   m_stats().resize(n_rcus,MEPHeader::N_BEAMLETS);
@@ -137,8 +137,8 @@ void ARATestDriverTask::addPropertySet(string scope)
   {
     boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scope.c_str(),TYPE_LCU_PIC,&m_answer));
     propSetPtr->load();
-		unsigned int i=0;
-		while(PROPS_Station[i].propName!=0)    
+    unsigned int i=0;
+    while(PROPS_Station[i].propName!=0)    
     {
       propSetPtr->subscribeProp(PROPS_Station[i].propName);
       i++;
@@ -152,8 +152,8 @@ void ARATestDriverTask::addPropertySet(string scope)
       sprintf(scopeString,scope.c_str(),rack);
       boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Rack,&m_answer));
       propSetPtr->load();
-			unsigned int i=0;
-			while(PROPS_Rack[i].propName!=0)    
+      unsigned int i=0;
+      while(PROPS_Rack[i].propName!=0)    
       {
         propSetPtr->subscribeProp(PROPS_Rack[i].propName);
         i++;
@@ -170,8 +170,8 @@ void ARATestDriverTask::addPropertySet(string scope)
         sprintf(scopeString,scope.c_str(),rack,subrack);
         boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_SubRack,&m_answer));
         propSetPtr->load();
-				unsigned int i=0;
-				while(PROPS_SubRack[i].propName!=0)    
+        unsigned int i=0;
+        while(PROPS_SubRack[i].propName!=0)    
         {
           propSetPtr->subscribeProp(PROPS_SubRack[i].propName);
           i++;
@@ -191,8 +191,8 @@ void ARATestDriverTask::addPropertySet(string scope)
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Board,&m_answer));
           propSetPtr->load();
-					unsigned int i=0;
-					while(PROPS_Board[i].propName!=0)    
+          unsigned int i=0;
+          while(PROPS_Board[i].propName!=0)    
           {
             propSetPtr->subscribeProp(PROPS_Board[i].propName);
             i++;
@@ -213,8 +213,8 @@ void ARATestDriverTask::addPropertySet(string scope)
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Ethernet,&m_answer));
           propSetPtr->load();
-					unsigned int i=0;
-					while(PROPS_Ethernet[i].propName!=0)    
+          unsigned int i=0;
+          while(PROPS_Ethernet[i].propName!=0)    
           {
             propSetPtr->subscribeProp(PROPS_Ethernet[i].propName);
             i++;
@@ -235,8 +235,8 @@ void ARATestDriverTask::addPropertySet(string scope)
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_FPGA,&m_answer));
           propSetPtr->load();
-					unsigned int i=0;
-					while(PROPS_FPGA[i].propName!=0)    
+          unsigned int i=0;
+          while(PROPS_FPGA[i].propName!=0)    
           {
             propSetPtr->subscribeProp(PROPS_FPGA[i].propName);
             i++;
@@ -286,8 +286,8 @@ void ARATestDriverTask::addPropertySet(string scope)
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_RCU,&m_answer));
               propSetPtr->load();
-							unsigned int i=0;
-							while(PROPS_RCU[i].propName!=0)    
+              unsigned int i=0;
+              while(PROPS_RCU[i].propName!=0)    
               {
                 propSetPtr->subscribeProp(PROPS_RCU[i].propName);
                 i++;
@@ -314,8 +314,8 @@ void ARATestDriverTask::addPropertySet(string scope)
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_ADCStatistics,&m_answer));
               propSetPtr->load();
-							unsigned int i=0;
-							while(PROPS_ADCStatistics[i].propName!=0)    
+              unsigned int i=0;
+              while(PROPS_ADCStatistics[i].propName!=0)    
               {
                 propSetPtr->subscribeProp(PROPS_ADCStatistics[i].propName);
                 i++;
@@ -331,8 +331,8 @@ void ARATestDriverTask::addPropertySet(string scope)
   {
     boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scope.c_str(),TYPE_LCU_PIC_Maintenance,&m_answer));
     propSetPtr->load();
-		unsigned int i=0;
-		while(PROPS_Maintenance[i].propName!=0)    
+    unsigned int i=0;
+    while(PROPS_Maintenance[i].propName!=0)    
     {
       propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
       i++;
@@ -346,8 +346,8 @@ void ARATestDriverTask::addPropertySet(string scope)
       sprintf(scopeString,scope.c_str(),rack);
       boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
       propSetPtr->load();
-			unsigned int i=0;
-			while(PROPS_Maintenance[i].propName!=0)    
+      unsigned int i=0;
+      while(PROPS_Maintenance[i].propName!=0)    
       {
         propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
         i++;
@@ -364,8 +364,8 @@ void ARATestDriverTask::addPropertySet(string scope)
         sprintf(scopeString,scope.c_str(),rack,subrack);
         boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
         propSetPtr->load();
-				unsigned int i=0;
-				while(PROPS_Maintenance[i].propName!=0)    
+        unsigned int i=0;
+        while(PROPS_Maintenance[i].propName!=0)    
         {
           propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
           i++;
@@ -385,8 +385,8 @@ void ARATestDriverTask::addPropertySet(string scope)
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
           propSetPtr->load();
-					unsigned int i=0;
-					while(PROPS_Maintenance[i].propName!=0)    
+          unsigned int i=0;
+          while(PROPS_Maintenance[i].propName!=0)    
           {
             propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
             i++;
@@ -411,8 +411,8 @@ void ARATestDriverTask::addPropertySet(string scope)
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Maintenance,&m_answer));
               propSetPtr->load();
-							unsigned int i=0;
-							while(PROPS_Maintenance[i].propName!=0)    
+              unsigned int i=0;
+              while(PROPS_Maintenance[i].propName!=0)    
               {
                 propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
                 i++;
@@ -431,8 +431,8 @@ void ARATestDriverTask::addPropertySet(string scope)
       sprintf(scopeString,scope.c_str(),rack);
       boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Alert,&m_answer));
       propSetPtr->load();
-			unsigned int i=0;
-			while(PROPS_Alert[i].propName!=0)    
+      unsigned int i=0;
+      while(PROPS_Alert[i].propName!=0)    
       {
         propSetPtr->subscribeProp(PROPS_Alert[i].propName);
         i++;
@@ -449,8 +449,8 @@ void ARATestDriverTask::addPropertySet(string scope)
         sprintf(scopeString,scope.c_str(),rack,subrack);
         boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Alert,&m_answer));
         propSetPtr->load();
-				unsigned int i=0;
-				while(PROPS_Alert[i].propName!=0)    
+        unsigned int i=0;
+        while(PROPS_Alert[i].propName!=0)    
         {
           propSetPtr->subscribeProp(PROPS_Alert[i].propName);
           i++;
@@ -470,8 +470,8 @@ void ARATestDriverTask::addPropertySet(string scope)
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_LCU_PIC_Alert,&m_answer));
           propSetPtr->load();
-					unsigned int i=0;
-					while(PROPS_Alert[i].propName!=0)    
+          unsigned int i=0;
+          while(PROPS_Alert[i].propName!=0)    
           {
             propSetPtr->subscribeProp(PROPS_Alert[i].propName);
             i++;
@@ -493,9 +493,9 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
   vector<int> hardwareIndexes;
   getHardwareIndexes(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_ETH,hardwareIndexes);
   
-//  int rack		=	hardwareIndexes[0];
-//  int subrack	=	hardwareIndexes[1];
-  int board		= hardwareIndexes[2];
+//  int rack    = hardwareIndexes[0];
+//  int subrack = hardwareIndexes[1];
+  int board   = hardwareIndexes[2];
   
   EPA_Protocol::ETHStatus ethStatus = m_systemStatus.board()(board-1).eth;
 
@@ -565,9 +565,9 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
   vector<int> hardwareIndexes;
   getHardwareIndexes(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_APN,hardwareIndexes);
   
-  int rack		=	hardwareIndexes[0];
-  int subrack	=	hardwareIndexes[1];
-  int board		= hardwareIndexes[2];
+  int rack    = hardwareIndexes[0];
+  int subrack = hardwareIndexes[1];
+  int board   = hardwareIndexes[2];
   int ap      = hardwareIndexes[3];
   
   LOG_INFO(formatString("updateAPstatus hier?? %d (rack=%d,subrack=%d,board=%d,ap=%d)", ++testI,rack,subrack,board,ap));
@@ -610,9 +610,9 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
   vector<int> hardwareIndexes;
   getHardwareIndexes(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_BP,hardwareIndexes);
   
-//  int rack		=	hardwareIndexes[0];
-//  int subrack	=	hardwareIndexes[1];
-  int board		= hardwareIndexes[2];
+//  int rack    = hardwareIndexes[0];
+//  int subrack = hardwareIndexes[1];
+  int board   = hardwareIndexes[2];
 
   EPA_Protocol::FPGAStatus fpgaStatus = m_systemStatus.board()(board-1).fpga;
 
@@ -645,11 +645,11 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   vector<int> hardwareIndexes;
   getHardwareIndexes(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,hardwareIndexes);
   
-//  int rack		=	hardwareIndexes[0];
-//  int subrack	=	hardwareIndexes[1];
-  int board		= hardwareIndexes[2];
-  int ap			= hardwareIndexes[3];
-  int rcu			= hardwareIndexes[4];
+//  int rack    = hardwareIndexes[0];
+//  int subrack = hardwareIndexes[1];
+  int board   = hardwareIndexes[2];
+  int ap      = hardwareIndexes[3];
+  int rcu     = hardwareIndexes[4];
   int rcuNumber = rcu + n_rcus_per_ap*(ap-1) + n_rcus_per_ap*n_aps_per_board*(board-1);
   
   uint8 rcuStatus;
@@ -759,11 +759,11 @@ void ARATestDriverTask::updateStats()
   {
     for(subband=0;subband<MEPHeader::N_BEAMLETS;subband++)
     {
-		  double noise=(double)(rand()%1000)/500.0;
-		  if(subband==rcu*10)
-      	m_stats()(rcu,subband) = 4000+noise*500.0;
-			else		  
-      	m_stats()(rcu,subband) = noise;
+      double noise=(double)(rand()%1000)/500.0;
+      if(subband==rcu*10)
+        m_stats()(rcu,subband) = 4000+noise*500.0;
+      else      
+        m_stats()(rcu,subband) = noise;
     }
   }
   
@@ -865,7 +865,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
         addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN);
         addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics);
         addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance);
-      }      
+      }
       break;
 
     case F_ENTRY:
@@ -917,7 +917,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
       break;
     }
-    
+
     case F_TIMER:
     {
       LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
@@ -931,7 +931,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       m_RSPserver.cancelAllTimers();
       break;
     }
-      
+    
     default:
       LOG_DEBUG(formatString("ARATestDriverTask(%s)::initial, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -987,6 +987,51 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       break;
     }
     
+    case RSP_GETSTATUS:
+    {
+      RSPGetstatusackEvent ack;
+
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+    
+      ack.sysstatus.board().resize(1);
+      ack.sysstatus.rcu().resize(8);
+    
+      BoardStatus boardinit;
+      RCUStatus rcuinit;
+    
+      memset(&boardinit, 0, sizeof(BoardStatus));
+      memset(&rcuinit, 0, sizeof(RCUStatus));
+      
+      ack.sysstatus.board() = boardinit;
+      ack.sysstatus.rcu()   = rcuinit;
+    
+      port.send(ack);
+      break;      
+    }    
+    case RSP_GETRCU:
+    {
+      RSPGetrcuackEvent ack;
+
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+    
+      ack.settings().resize(8);
+        
+      port.send(ack);
+      break;
+    }
+    case RSP_GETSTATS:
+    {  
+      RSPGetstatsackEvent ack;
+
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+      ack.stats().resize(1, 8, 512);
+      
+      port.send(ack);
+      break;
+    }
     case RSP_SUBSTATUS:
     {
       LOG_INFO("RSP_SUBSTATUS received");
@@ -1263,16 +1308,16 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
 
 void ARATestDriverTask::getHardwareIndexes(const string& propName,const string& scope, vector<int>& hardwareIndexes)
 {
-	hardwareIndexes.clear();
-	const int numIndexes=10;
-	int indexes[numIndexes];
+  hardwareIndexes.clear();
+  const int numIndexes=10;
+  int indexes[numIndexes];
 
   string scanScope = GCFPVSSInfo::getLocalSystemName() + string(":")+scope;
   sscanf(propName.c_str(),scanScope.c_str(),&indexes[0],&indexes[1],&indexes[2],&indexes[3],&indexes[4],&indexes[5],&indexes[6],&indexes[7],&indexes[8],&indexes[9]);
-	for(int i=0;i<numIndexes;i++)
-	{
-		hardwareIndexes.push_back(indexes[i]);
-	}
+  for(int i=0;i<numIndexes;i++)
+  {
+    hardwareIndexes.push_back(indexes[i]);
+  }
 }
 
 } // namespace ARA
