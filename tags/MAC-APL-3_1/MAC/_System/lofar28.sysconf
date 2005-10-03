@@ -1,0 +1,12 @@
+RedHat 9
+linux 2.4.20-8
+linux 2.4.21-NANO-SMP (build on lofar26; default OS in lilo)
+e1000-5.2.39 (linux 2.4.20-8)
+e1000-5.2.39 (linux 2.4.21-NANO-SMP)
+log4cplus1.0.2
+boost_1_32_0
+PVSSII 3.0.1 SP 1
+compat-libstdc++-7.3-2.96.118
+compat-libstdc++-devel-7.3-2.96.118
+rsh-server-0.17-14
+

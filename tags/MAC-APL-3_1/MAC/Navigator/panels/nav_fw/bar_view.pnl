@@ -1,0 +1,935 @@
+V 10
+1
+LANG:1 7 barview
+PANEL,418 119 1001 600 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+  if ((dpGetElementName($datapoint)==\"\") && dpAccessable($configDatapoint)) {
+    dyn_string aS;
+    dynClear(aS);
+    dpSet($configDatapoint+\".dpNames\", aS);
+    
+    dpConnect(\"showClippings\",$configDatapoint+\".warnLevel\",$configDatapoint+\".alertLevel\");
+    dpConnect(\"makeQueryList\",$configDatapoint+\".queryDP\",
+                              $configDatapoint+\".queryDPE\");
+    dpConnect(\"prepareButtons\",$configDatapoint+\".dpNames\");
+  } else {
+    setValue(\"main_border\",\"visible\",\"false\");
+    setValue(\"main_txt\",\"visible\",\"false\");
+    setValue(\"warn_txt\",\"visible\",\"false\");
+    setValue(\"alert_txt\",\"visible\",\"false\");
+  }
+  
+}
+showClippings(string aDp,string warnLevel,string aDp2, string alertLevel) {
+   setValue(\"txt_warn_level\",\"text\",warnLevel+\" %\");
+   setValue(\"txt_alert_level\",\"text\",alertLevel+ \" %\");
+
+}
+makeQueryList(string aDP1,string queryDP,string aDP2, string queryDPE) {
+ 
+
+  if (queryDP == \"\" && queryDPE == \"\") {
+    ChildPanelOnCentralModal(\"objects/nav_fw/warning_no_query_filled.pnl\",
+		                         \"No query selected\",
+		                         makeDynString(\"\"));   
+	} else {
+    if (queryDP  == \"\") queryDP = \"*\";
+    if (queryDPE == \"\") queryDPE = \"*\";
+
+    dyn_string output;
+    string attribute = \"_online.._value\";
+    int first=0;
+
+    dyn_string outputTemp = queryDatabaseForDP(attribute, $datapoint + queryDP, FALSE);
+    // take present datapoint also in elements search
+    if (queryDP==\"*\")  dynInsertAt(outputTemp,$datapoint,1);
+
+    dyn_string elementsOutput;
+  
+    int maximumCount = dynlen(outputTemp);
+    string selectionQueryDPE;
+    for(int i=1; i<=dynlen(outputTemp);i++)
+    {
+      elementsOutput = queryDatabaseForDpElements(outputTemp[i]);
+      elementsOutput = dynPatternMatch(\".\"+queryDPE+\"*\", elementsOutput);
+      for(int j=1;j<=dynlen(elementsOutput);j++)
+      {
+        output[dynlen(output)+1]= outputTemp[i] + elementsOutput[j];
+      }
+    }
+    dynClear(dpNamesList);
+    //### adjust data and fill table
+    for(int i=1 ; i<=dynlen(output) ; i++)
+    {
+      string temp =output[i];
+      strreplace(temp, $datapoint, \"\");
+      dpNamesList[i] = $datapoint + temp + \":_online.._value\";
+    }
+    dpSet($configDatapoint+\".dpNames\",dpNamesList); 
+  }
+}
+
+dyn_string queryDatabaseForDpElements(string datapointPath)
+{
+  dyn_string output;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  int elementIndex;
+  int outputCounter=1;
+
+  int functionOk;
+    
+  dynClear(elementNames);  //clear the content
+  dynClear(elementTypes);
+  functionOk = dpTypeGet(getDpTypeFromEnabled(datapointPath+\"__enabled.\"),elementNames,elementTypes);
+  if(functionOk==-1)
+  {
+     DebugN(\"Error in __enabled entry: \" +datapointPath);
+     dpTypeGet(dpTypeName(datapointPath),elementNames,elementTypes);
+  }
+  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+  {
+    int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
+    string elementName = elementNames[elementIndex][elementLevel+1];
+    output[outputCounter] = \".\" + elementName;
+    outputCounter++;
+  }
+  return output;
+}
+
+prepareButtons(string aDp1,dyn_string aDpNamesList) {
+  dpNamesListLen=dynlen(aDpNamesList);
+  if (bottomLineNr + 15 > dpNamesListLen) {
+    setValue(\"cmdFastUp\",\"enabled\",false);
+  } else {
+    setValue(\"cmdFastUp\",\"enabled\",true);
+  }
+  
+  if (bottomLineNr + 1 > dpNamesListLen) {
+    setValue(\"cmdUp\",\"enabled\",false);
+  } else {
+    setValue(\"cmdUp\",\"enabled\",true);
+  }
+  
+      
+  if (topLineNr-1 <= 0) {
+    setValue(\"cmdDown\",\"enabled\",false);
+  } else {
+    setValue(\"cmdDown\",\"enabled\",true);
+  }
+    
+  if (topLineNr-15 <= 0) {
+    setValue(\"cmdFastDown\",\"enabled\",false);
+  } else {
+    setValue(\"cmdFastDown\",\"enabled\",true);
+  }
+
+  setValue(\"totalLineNr\",\"text\",dpNamesListLen);
+  setValue(\"topLineNr\",\"text\",topLineNr);
+  setValue(\"bottomLineNr\",\"text\",bottomLineNr);
+}" 0
+EE E E 1 -1 -1 0  70 40
+"" 0 1
+E"//Include a library where functions are stored, which you what to use
+#uses \"nav_fw/gcfnav_view.ctl\" 
+dyn_string dpNamesList;
+int topLineNr=1;
+int bottomLineNr=15;
+int dpNamesListLen=0;" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 33
+"main_border"
+""
+1 70 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 70 10 710 40
+2 34
+"main_txt"
+""
+1 76 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 78 17 177 33
+0 2 0 "s" 0 0 0 192 0 0  78 17
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Actual ClipLevels
+2 35
+"warn_txt"
+""
+1 256 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 258 17 310 33
+0 2 0 "s" 0 0 0 192 0 0  258 17
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 Warning:
+2 36
+"Text3"
+""
+1 468 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 470 22 466 38
+0 2 0 "s" 0 0 0 64 0 0  470 22
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Text3
+2 37
+"alert_txt"
+""
+1 431 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 433 17 464 33
+0 2 0 "s" 0 0 0 192 0 0  433 17
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Alert:
+2 39
+"txt_warn_level"
+""
+1 326 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 328 17 329 33
+0 2 0 "s" 0 0 0 192 0 0  328 17
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+2 40
+"txt_alert_level"
+""
+1 479 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 481 17 577 33
+0 2 0 "s" 0 0 0 64 0 0  481 17
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+2 253
+"topLineNr"
+""
+1 180 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+60 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 203 48 224 64
+0 2 0 "4d" 4 0 0 194 0 0  203 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 000
+2 255
+"bottomLineNr"
+""
+1 247 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+62 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 270 48 291 64
+0 2 0 "4d" 4 0 0 194 0 0  270 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 000
+6 277
+"Border3"
+""
+1 70 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+64 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 70 40 710 70
+2 278
+"Text1"
+""
+1 78 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+65 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 80 48 164 64
+0 2 0 "s" 0 0 0 192 0 0  80 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Displaying line
+2 279
+"Text2"
+""
+1 217 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+66 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 219 47 230 63
+0 2 0 "s" 0 0 0 192 0 0  219 47
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 to
+2 280
+"Text4"
+""
+1 285 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+67 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 287 47 370 63
+0 2 0 "s" 0 0 0 192 0 0  287 47
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 from a total of 
+2 281
+"totalLineNr"
+""
+1 376 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 413 48 448 64
+0 2 0 "5d" 5 0 0 194 0 0  413 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 00000
+2 282
+"Text6"
+""
+1 423 46 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+69 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 425 48 452 64
+0 2 0 "s" 0 0 0 192 0 0  425 48
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 lines
+1 283 0 "" 0
+0
+1 284 0 "" 1
+0
+1 285 0 "" 4
+0
+1 286 0 "" 9
+0
+1 287 0 "" 10
+0
+1 288 0 "" 11
+0
+1 289 0 "" 12
+0
+1 290 1 "" 0
+0
+1 291 1 "" 1
+0
+1 292 1 "" 4
+0
+1 293 1 "" 9
+0
+1 294 1 "" 10
+0
+1 295 1 "" 11
+0
+1 296 1 "" 12
+0
+1 297 2 "" 0
+0
+1 298 2 "" 1
+0
+1 299 2 "" 4
+0
+1 300 2 "" 9
+0
+1 301 2 "" 10
+0
+1 302 2 "" 11
+0
+1 303 2 "" 12
+0
+1 304 3 "" 0
+0
+1 305 3 "" 1
+0
+1 306 3 "" 4
+0
+1 307 3 "" 9
+0
+1 308 3 "" 10
+0
+1 309 3 "" 11
+0
+1 310 3 "" 12
+0
+1 311 4 "" 0
+0
+1 312 4 "" 1
+0
+1 313 4 "" 4
+0
+1 314 4 "" 9
+0
+1 315 4 "" 10
+0
+1 316 4 "" 11
+0
+1 317 4 "" 12
+0
+1 318 5 "" 0
+0
+1 319 5 "" 1
+0
+1 320 5 "" 4
+0
+1 321 5 "" 9
+0
+1 322 5 "" 10
+0
+1 323 5 "" 11
+0
+1 324 5 "" 12
+0
+1 325 6 "" 0
+0
+1 326 6 "" 1
+0
+1 327 6 "" 4
+0
+1 328 6 "" 9
+0
+1 329 6 "" 10
+0
+1 330 6 "" 11
+0
+1 331 6 "" 12
+0
+1 332 7 "" 0
+0
+1 333 7 "" 1
+0
+1 334 7 "" 4
+0
+1 335 7 "" 9
+0
+1 336 7 "" 10
+0
+1 337 7 "" 11
+0
+1 338 7 "" 12
+0
+1 339 8 "" 0
+0
+1 340 8 "" 1
+0
+1 341 8 "" 4
+0
+1 342 8 "" 9
+0
+1 343 8 "" 10
+0
+1 344 8 "" 11
+0
+1 345 8 "" 12
+0
+1 346 9 "" 0
+0
+1 347 9 "" 1
+0
+1 348 9 "" 4
+0
+1 349 9 "" 9
+0
+1 350 9 "" 10
+0
+1 351 9 "" 11
+0
+1 352 9 "" 12
+0
+1 360 11 "" 0
+0
+1 361 11 "" 1
+0
+1 362 11 "" 4
+0
+1 363 11 "" 9
+0
+1 364 11 "" 10
+0
+1 365 11 "" 11
+0
+1 366 11 "" 12
+0
+1 367 12 "" 0
+0
+1 368 12 "" 1
+0
+1 369 12 "" 4
+0
+1 370 12 "" 9
+0
+1 371 12 "" 10
+0
+1 372 12 "" 11
+0
+1 373 12 "" 12
+0
+1 374 13 "" 0
+0
+1 375 13 "" 1
+0
+1 376 13 "" 4
+0
+1 377 13 "" 9
+0
+1 378 13 "" 10
+0
+1 379 13 "" 11
+0
+1 380 13 "" 12
+0
+1 381 14 "" 0
+0
+1 382 14 "" 1
+0
+1 383 14 "" 4
+0
+1 384 14 "" 9
+0
+1 385 14 "" 10
+0
+1 386 14 "" 11
+0
+1 387 14 "" 12
+0
+1 388 15 "" 0
+0
+1 389 15 "" 1
+0
+1 390 15 "" 4
+0
+1 391 15 "" 9
+0
+1 392 15 "" 10
+0
+1 393 15 "" 11
+0
+1 394 15 "" 12
+0
+13 245
+"cmdDown"
+""
+1 20 341 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+52 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+0
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 339 62 383
+P 
+10040064
+"pictures/nav_fw/arrowdown.gif"
+1
+LANG:1 0 
+"main()
+{
+  bool action=false;
+  if (topLineNr-1 > 0) {
+    topLineNr--;
+    bottomLineNr--;
+    action=true;
+  }
+   
+  if (action) {   
+    string aDpName=dpNamesList[dynlen(dpNamesList)];
+    dynRemove(dpNamesList,dynlen(dpNamesList));
+    dynInsertAt(dpNamesList,aDpName,1);
+ 
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
+
+}" 0
+ E E E
+13 247
+"cmdFastDown"
+""
+1 20 301 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+0
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 299 62 343
+P 
+13434828
+"pictures/nav_fw/arrowfastdown.bmp"
+1
+LANG:1 0 
+"main()
+{
+  string aDpName;
+  bool action=false;
+  if (topLineNr-15 > 0) {
+    topLineNr-=15;
+    bottomLineNr-=15;
+    action=true;
+  }
+
+
+  if (action) {   
+    for (int i=0;i<=15;i++) {
+      aDpName=dpNamesList[dynlen(dpNamesList)];
+      dynRemove(dpNamesList,dynlen(dpNamesList));
+      dynInsertAt(dpNamesList,aDpName,1);
+    }
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
+}" 0
+ E E E
+13 249
+"cmdFastUp"
+""
+1 20 261 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+0
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 259 62 303
+P 
+13434828
+"pictures/nav_fw/arrowfastup.bmp"
+1
+LANG:1 0 
+"main()
+{
+  bool action=false;
+  string aDpName;
+
+  if (bottomLineNr+15 <= dpNamesListLen) {
+    topLineNr+=15;
+    bottomLineNr+=15;
+    action=true;
+  }
+
+   
+  if (action) {   
+    for (int i=0;i<=15;i++) {
+      aDpName=dpNamesList[1];
+      dynRemove(dpNamesList,1);
+      dynAppend(dpNamesList,aDpName);
+    }
+ 
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
+}" 0
+ E E E
+13 251
+"cmdUp"
+""
+1 20 221 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+58 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+0
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+18 219 62 263
+P 
+10040064
+"pictures/nav_fw/arrowup.gif"
+1
+LANG:1 0 
+"main()
+{
+  bool action=false;
+  if (bottomLineNr+1 <= dpNamesListLen) {
+    topLineNr++;
+    bottomLineNr++;
+    action=true;
+  }
+   
+  if (action) {   
+    string aDpName=dpNamesList[1];
+    dynRemove(dpNamesList,1);
+    dynAppend(dpNamesList,aDpName);
+ 
+    dpSet($configDatapoint+\".dpNames\",dpNamesList);
+  }
+}
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 ""
+"objects\\nav_fw\\bar_ref.pnl" 240 250 T 69 1 0 1  -150 -160  
+3
+"$barNr""1"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 1 ""
+"objects\\nav_fw\\bar_ref.pnl" 230 180 T 70 1 0 1  -140 -60  
+3
+"$barNr""2"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 2 ""
+"objects\\nav_fw\\bar_ref.pnl" 250 270 T 71 1 0 1  -160 -120  
+3
+"$barNr""3"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 3 ""
+"objects\\nav_fw\\bar_ref.pnl" 270 250 T 72 1 0 1  -180 -70  
+3
+"$barNr""4"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 4 ""
+"objects\\nav_fw\\bar_ref.pnl" 250 280 T 73 1 0 1  -160 -70  
+3
+"$barNr""5"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 5 ""
+"objects\\nav_fw\\bar_ref.pnl" 260 270 T 74 1 0 1  -170 -30  
+3
+"$barNr""6"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 6 ""
+"objects\\nav_fw\\bar_ref.pnl" 230 310 T 75 1 0 1  -140 -40  
+3
+"$barNr""7"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 7 ""
+"objects\\nav_fw\\bar_ref.pnl" 240 330 T 76 1 0 1  -150 -30  
+3
+"$barNr""8"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 8 ""
+"objects\\nav_fw\\bar_ref.pnl" 180 530 T 77 1 0 1  -90 -200  
+3
+"$barNr""9"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 9 ""
+"objects\\nav_fw\\bar_ref.pnl" 160 480 T 78 1 0 1  -70 -120  
+3
+"$barNr""10"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 11 ""
+"objects\\nav_fw\\bar_ref.pnl" 400 550 T 80 1 0 1  -310 -160  
+3
+"$barNr""11"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 12 ""
+"objects\\nav_fw\\bar_ref.pnl" 310 559 T 81 1 0 1  -220 -139  
+3
+"$barNr""12"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 13 ""
+"objects\\nav_fw\\bar_ref.pnl" 420 579 T 82 1 0 1  -330 -129  
+3
+"$barNr""13"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 14 ""
+"objects\\nav_fw\\bar_ref.pnl" 370 629 T 83 1 0 1  -280 -119  
+3
+"$barNr""15"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+3 15 ""
+"objects\\nav_fw\\bar_ref.pnl" 260 596 T 84 1 0 1  -170 -116  
+3
+"$barNr""14"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+0

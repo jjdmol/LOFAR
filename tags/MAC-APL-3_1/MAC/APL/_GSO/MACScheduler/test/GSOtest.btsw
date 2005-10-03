@@ -1,0 +1,68 @@
+//
+//  GSOtest.btsw: Testscript for local intantiation of an observation.
+//
+//  Copyright (C) 2005
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+// ------------------------------------------------------------------------------
+// Description:
+//
+//
+//
+// ------------------------------------------------------------------------------
+
+[statemachines]
+
+Statemachine_SAS (SM1_stop, SM2_ready) =
+{
+  s000 : CONNECTION_ESTABLISHED ; s001.
+  s001 : TIMER(10) ; s010.
+// ------------------------------------------------------------------------------
+  s010 : F_SAS_SCHEDULE(0x00000019,
+                        0x0017,"localObservation1.param") ; s020.
+  s020 : E_SAS_RESPONSE(,0x00000000,,) ; s030.
+  s020 : E_SAS_RESPONSE(,,,) ; error.
+  s030 : TIMER(60); timeout.
+  s030 : R_SIG(SM2_ready); finish.
+// ------------------------------------------------------------------------------
+
+  finish : S_SIG ( SM1_stop) ; OK.
+  OK     : TIMER(5) ; OK.
+
+  timeout : TERMINATE ; timeout.
+  error   : TERMINATE ; error.
+}
+
+WaitUntilTestEnd (SM1_ready) =
+{
+  s010   : R_SIG (SM1_ready) ; finish.
+  finish : TERMINATE ; finish.
+}
+
+Statemachine_THPVSSBridge  ( ready ) =
+{
+
+ s000 : CONNECTION_ESTABLISHED ; s001.
+// s001 : TIMER(1) ; s005.
+ s001 : TIMER(1) ; s900.
+
+  s900   : F_THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS
+           S_SIG( ready ) ; finish.
+
+  error  : F_THPVSSBRIDGE_FLUSH_SUBSCRIPTIONS
+  				 TERMINATE ; error.
+     
+  finish : TERMINATE ; finish.
+}
+
+
+
+[testscript]
+VAR     SM1_done, SM2_done.
+
+COM1 :  Statemachine_SAS (SM1_done, SM2_done)
+        WaitUntilTestEnd (SM1_done).
+
+//COM2 :  Statemachine_THPVSSBridge (SM2_done).
+
