@@ -21,6 +21,9 @@
   
 package jOTDB;
 
+import jOTDB.jTreeValue;
+import jOTDB.jTreeValueInterface;
+import jOTDB.jTreeValueAdapter;
 import jOTDB.jTreeMaintenance;
 import jOTDB.jTreeMaintenanceInterface;
 import jOTDB.jTreeMaintenanceAdapter;
@@ -37,6 +40,8 @@ public class jOTDBserver
    private static jOTDBadapter jOTDBconnAdapter;
    private static jTreeMaintenance jTreeMainAdaptee;
    private static jTreeMaintenanceAdapter jTreeMainAdapter;
+   private static jTreeValue jTreeValueAdaptee;
+   private static jTreeValueAdapter jTreeValueAdapter;
 
    static
      {
@@ -52,16 +57,23 @@ public class jOTDBserver
 //		  System.out.println ("No security mananger is running, will start one now...");
 //		  System.setSecurityManager (new RMISecurityManager ());
 //	       }
-	     
-	     System.out.println ("jOTDBserver creating a local RMI registry on the default port...");
-	     Registry localRegistry = LocateRegistry.createRegistry (Registry.REGISTRY_PORT);
-	     
-	     System.out.println ("jOTDBserver creating local object and remote adapter...");	     
-	     if (args.length != 3) 
+
+	     if (args.length < 3) 
 		 {
-		     System.out.println ("Usage: java -Djava.rmi.server.hostname=<hostname> jOTDB.jOTDBserver <username> <password> <database>");
+		     System.out.println ("Usage: java -Djava.rmi.server.hostname=<hostname> jOTDB.jOTDBserver <username> <password> <database> <portnumber-OPTIONAL>");
 		     System.exit(0);
 		 }
+	     
+	     System.out.println ("jOTDBserver creating a local RMI registry...");
+	     Registry localRegistry;
+	     if (args.length == 3) 
+		 localRegistry = LocateRegistry.createRegistry (Registry.REGISTRY_PORT);
+	     else {
+		 Integer i = new Integer (args[3]);
+		 localRegistry = LocateRegistry.createRegistry (i.intValue());
+	     }
+	     
+	     System.out.println ("jOTDBserver creating local object and remote adapter...");	     
 	     
 	     // Export jOTDBconnection
 	     jOTDBconnAdaptee = new jOTDBconnection (args[0], args[1], args[2]);
@@ -79,7 +91,14 @@ public class jOTDBserver
 	     System.out.println ("jOTDBserver publishing service " + jTreeMaintenanceInterface.SERVICENAME + " in local registry...");
 	     localRegistry.rebind (jTreeMaintenanceInterface.SERVICENAME, jTreeMainAdapter);
 	     
-	     System.out.println ("Published jTreeMaintenaceInterface as service " + jTreeMaintenanceInterface.SERVICENAME + ". Ready...");	     
+	     // Export jTreeValue
+	     jTreeValueAdaptee = new jTreeValue ();
+	     jTreeValueAdapter = new jTreeValueAdapter (jTreeValueAdaptee);
+	     
+	     System.out.println ("jOTDBserver publishing service " + jTreeValueInterface.SERVICENAME + " in local registry...");
+	     localRegistry.rebind (jTreeValueInterface.SERVICENAME, jTreeValueAdapter);
+
+	     System.out.println ("Published jTreeValueInterface as service " + jTreeValueInterface.SERVICENAME + ". Ready...");	     
 	  }
 	
 	catch (Exception e)

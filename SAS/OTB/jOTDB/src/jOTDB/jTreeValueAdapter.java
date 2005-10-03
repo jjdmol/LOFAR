@@ -1,4 +1,4 @@
-//#  jOTDB_jOTDBcommon.h: Holds a static OTDBconnection.
+//#  jTreeValueAdapter.java: 
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,34 +18,29 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+  
+package jOTDB;
 
-#ifndef LOFAR_JOTDB_COMMON_H
-#define LOFAR_JOTDB_COMMON_H
+import jOTDB.jOTDBvalue;
+import jOTDB.jTreeValue;
+import jOTDB.jTreeValueInterface;
+import java.util.Vector;
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
 
-// \file jOTDB_jOTDBcommon.h 
-// Hold a static OTDBconnection, to be
-// shared between the different JNI implementation
-
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-//# Includes
-#include <OTDB/OTDBconnection.h>
-#include <OTDB/OTDBnode.h>
-#include <OTDB/OTDBvalue.h>
-
-using namespace LOFAR::OTDB;
-
-namespace LOFAR {
-  namespace jOTDB {
-    
-    static OTDBconnection* OTDBconn;
-
-     jobject convertOTDBnode (JNIEnv *env, OTDBnode aNode);
-     OTDBnode convertjOTDBnode (JNIEnv *env, jobject jNode);
-     jobject convertOTDBvalue (JNIEnv *env, OTDBvalue aValue);
-     
-     OTDBconnection* getConnection ();
-
-  } // end namespace LOFAR
-} // end namespace jOTDB
-
-#endif
+public class jTreeValueAdapter extends UnicastRemoteObject implements jTreeValueInterface
+{
+   // Constructor
+   public jTreeValueAdapter (jTreeValue adaptee) throws RemoteException
+     {
+	this.adaptee = adaptee;
+     }
+   
+    public Vector searchInPeriod (int aTreeID, int topNode, int depth, String beginDate,
+				  String endDate, boolean mostRecentlyOnly) throws RemoteException
+    {
+	return adaptee.searchInPeriod (aTreeID, topNode, depth, beginDate, endDate, mostRecentlyOnly);
+    }
+   
+    protected jTreeValue adaptee;   
+}
