@@ -14,8 +14,10 @@ DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 
 #libtools_la_SOURCES =
 
-bin_PROGRAMS      = LimitExec
+bin_PROGRAMS      = LimitExec pkgdep
+
 LimitExec_SOURCES = LimitExec.cc
+pkgdep_SOURCES    = pkgdep.cc
 
 scriptdir = $(bindir)
 dist_script_SCRIPTS = lofarcvsmv lofarcvsx
