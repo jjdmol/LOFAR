@@ -326,7 +326,7 @@ GCFEvent::TResult MISSession::setDiagnosis_state(GCFEvent& e, GCFPortInterface& 
         _propertyProxy.setPropValue(resourceStatusPropName, resourceState);
         if (resourceStatusPropName.find(":") == string::npos)
         {
-          resourceStatusPropName = GCFPVSSInfo::getLocalSystemName() + resourceStatusPropName;
+          resourceStatusPropName = GCFPVSSInfo::getLocalSystemName() + string(":") + resourceStatusPropName;
         }
         timeval ts = {pIn->timestamp_sec, pIn->timestamp_nsec / 1000};
         string descr(formatString (

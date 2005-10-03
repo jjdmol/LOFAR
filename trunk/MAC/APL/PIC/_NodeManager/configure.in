@@ -38,7 +38,6 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
-#lofar_QT
 lofar_QATOOLS
 lofar_LOG4CPLUS
 lofar_DOCXX

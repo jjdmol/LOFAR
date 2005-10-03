@@ -38,7 +38,6 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
-#lofar_QT
 lofar_QATOOLS
 lofar_LOG4CPLUS
 lofar_DOCXX
@@ -49,7 +48,7 @@ lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-6_0, 1, GCF/TM/GCF_Task.h,,)
 lofar_INTERNAL(MAC/GCF/PAL, gcfpal, MAC-GCF-6_0, 1, GCF/PAL/GCF_PVSSInfo.h,,)
 lofar_INTERNAL(MAC/GCF/LogSys, gcfkvlc, MAC-GCF-6_0, 1, GCF/LogSys/GCF_KeyValueLogger.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, rtccommon, MAC-RTC-4_0, 1, Timestamp.h,,)
-lofar_INTERNAL(MAC/APL/PAC/RSP, rsp, HEAD, 1, RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PAC/RSPDriver, rsp, MAC-RTC-4_0, 1, RSP_Protocol.ph,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 
 dnl

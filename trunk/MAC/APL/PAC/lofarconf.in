@@ -5,5 +5,5 @@ BeamServer
 StationOperations
 StationReceptorGroup
 VirtualTelescope
-VirtualBackend
 StationStartDaemon
+VirtualBackend

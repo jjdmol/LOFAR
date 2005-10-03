@@ -64,15 +64,10 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_COMPILETOOLS
-#lofar_PVSS(1)
 
-dnl lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
+lofar_LOG4CPLUS
+lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
-dnl lofar_EXTERNAL(suite,1,Suite/test.h,,)
-dnl lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
-dnl lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 
 dnl
 dnl Output Makefiles
@@ -80,5 +75,4 @@ dnl
 AC_OUTPUT(
 	Makefile
 	src/Makefile
-dnl	test/Makefile
 )
