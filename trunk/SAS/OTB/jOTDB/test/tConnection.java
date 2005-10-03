@@ -58,7 +58,7 @@ class tConnection
 	   System.out.println(tInfo.campaign);	
 	   System.out.println(tInfo.starttime);
 	   System.out.println(tInfo.stoptime);
-	   System.out.println(tInfo.itsTreeID);	   
+	   System.out.println(tInfo.TreeID());	   
 	}	
      }
    
