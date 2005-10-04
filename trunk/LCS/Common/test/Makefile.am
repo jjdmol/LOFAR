@@ -11,21 +11,38 @@ CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
 			tLorrays tTimer tNumeric
 #ENDCHECKTOOLPROGS
 
-TESTS	= tDebug_test.sh \
-	  testLogger_test.sh \
-          tBlobString_test.sh \
-          tBlobStream_test.sh \
+TESTSCRIPTS = \
 	  tBlobArray_test.sh \
 	  tBlobField_test.sh \
+          tBlobStream_test.sh \
+          tBlobString_test.sh \
+	  tComplex.sh \
 	  tDataConvert_test.sh \
+	  tDebug_test.sh \
+	  testLogger_test.sh \
+	  tHexdump_test.sh    \
 	  tKeyValueMap_test.sh \
-	  tStringUtil_test.sh \
-	  tHexdump            \
 	  tLorrays_test.sh    \
+	  tNumeric.sh \
 	  tComplex.sh \
 	  tRunOnNode.sh \
-	  tTimer \
-	  tNumeric.sh
+	  tStringUtil_test.sh
+
+TESTS	= $(TESTSCRIPTS) \
+	  tTimer
+
+EXTRA_DIST = $(TESTSCRIPTS) \
+	  tBlobField.in_be tBlobField.in_le \
+          tBlobStream.in_be tBlobStream.in_le tBlobStream.stdout \
+	  tComplex.stdout \
+	  tDataConvert.stdout \
+	  tDebug.stdout \
+	  testLogger.log_prop testLogger.debug \
+	  tHexdump.log_prop \
+	  tKeyValueMap.in tKeyValueMap.stdout \
+	  tLorrays.stdout \
+	  tRunOnNode.log_prop tRunOnNode.stdout \
+	  tStringUtil.stdout 
 
 XFAIL_TESTS		= tLorrays_test.sh
 

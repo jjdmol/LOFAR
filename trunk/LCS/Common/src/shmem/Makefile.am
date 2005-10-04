@@ -14,18 +14,7 @@ AM_CPPFLAGS = \
 	-DMORECORE_CONTIGUOUS=0 \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC \
-	-DHAVE_USR_INCLUDE_MALLOC_H
-
-INSTHDRS	=	 			\
-	segbasemap.h				\
-	dlmalloc.h				\
-	shmem_alloc.h
-
-DOCHDRS	= $(INSTHDRS)
-
-nobase_shmem_HEADERS = $(INSTHDRS)
-
-shmemdir = $(pkgincludedir)/shmem
+	-DHAVE_USR_INCLUDE_MALLOC_H 
 
 libshmem_la_SOURCES = 				\
 	$(DOCHDRS)				\
