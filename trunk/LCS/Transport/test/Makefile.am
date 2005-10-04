@@ -44,10 +44,7 @@ tClient_SOURCES		  = tClient.cc DH_Socket.cc
 LDADD			  = ../src/libtransport.la 
 DEPENDENCIES		  = ../src/libtransport.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT	  = lofar_sharedir=$(lofar_sharedir) \
-					   MPIBIN=$(MPIBIN)
-
-TESTS	=				\
+TESTSCRIPTS = \
 	Example_test.sh			\
 	TestBidirectional_test.sh	\
 	ExampleMem_test.sh		\
@@ -58,5 +55,16 @@ TESTS	=				\
 	ExampleVarBuf_test.sh		\
 	ExampleSocket_test.sh
 
+TESTS = $(TESTSCRIPTS)
+
+TESTS_ENVIRONMENT	  = lofar_sharedir=$(lofar_sharedir) \
+					   MPIBIN=$(MPIBIN)
+
+EXTRA_DIST =				\
+	DH_Ethernet.h DH_Example.h DH_ExampleExtra.h \
+	DH_Socket.h DH_VarBuf.h StopWatch.h \
+	ExampleEthernet.run ExampleMPI.run \
+	ExampleShMem.run ExampleSocket.run \
+	$(TESTSCRIPTS)
 
 include $(top_srcdir)/Makefile.common
