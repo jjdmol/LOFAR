@@ -1,31 +1,3 @@
-
-INSTHDRS = \
-BaseSim.h \
-DataHolder.h \
-DataBlobExtra.h \
-Connection.h \
-ConnectionPool.h \
-CSConnection.h \
-TransportHolder.h \
-TH_File.h \
-TH_Mem.h \
-TH_MPI.h \
-TH_ShMem.h \
-TH_Socket.h \
-TH_Ethernet.h
-
-
-NOINSTHDRS =
-
-TCCHDRS = 
-
-pkginclude_HEADERS =
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
-
 lib_LTLIBRARIES 	= libtransport.la 
 
 libtransport_la_DEPENDENCIES	= $(LOFAR_DEPEND)

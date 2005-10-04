@@ -56,12 +56,14 @@ lofar_GENERAL
 lofar_MPI
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 
-
 dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/Transport/Makefile
 src/Makefile
 test/Makefile
 Makefile
+Transport.spec
 )
