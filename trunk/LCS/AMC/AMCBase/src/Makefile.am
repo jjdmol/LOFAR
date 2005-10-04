@@ -31,4 +31,4 @@ libamcbase_la_SOURCES 		= $(DOCHDRS) \
 				  AMCClient/DH_Request.cc \
 				  AMCClient/DH_Result.cc
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

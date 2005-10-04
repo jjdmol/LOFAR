@@ -28,4 +28,4 @@ sysconf_DATA = \
 	cp $< $@
 	
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

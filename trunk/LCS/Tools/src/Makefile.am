@@ -62,4 +62,4 @@ uninstall-local:
 	@$(RM) $(prefix)/lofarinit.sh $(prefix)/lofarinit.csh
 
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

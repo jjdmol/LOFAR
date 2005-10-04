@@ -55,4 +55,4 @@ bin_PROGRAMS = StationCorrelator
 StationCorrelator_LDADD         =
 StationCorrelator_DEPENDENCIES  = $(LOFAR_DEPEND)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

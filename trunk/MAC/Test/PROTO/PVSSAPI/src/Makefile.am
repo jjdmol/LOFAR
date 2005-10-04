@@ -7,5 +7,5 @@ libpvssapi_la_SOURCES 	= $(DOCHDRS) \
   addVerInfo.cxx \
   GCF_PVSSAPI.cxx
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

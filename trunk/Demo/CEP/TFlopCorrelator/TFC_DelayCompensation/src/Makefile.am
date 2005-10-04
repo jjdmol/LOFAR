@@ -25,4 +25,4 @@ configfiles_DATA		=	\
 TFC_DelayCompensation.machinefile		\
 TFC_DelayCompensation.log_prop		
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

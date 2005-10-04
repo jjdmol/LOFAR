@@ -12,7 +12,7 @@ filluvw_DEPENDENCIES	= $(LOFAR_DEPEND)
 #tuvw_SOURCES	 	= tuvw.cc 
 #tuvw_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 
 profile: tCAL
 	MPIBIN=$(MPIBIN) MPE_LOG_FORMAT=CLOG $(lofar_sharedir)/profiletool tCAL \

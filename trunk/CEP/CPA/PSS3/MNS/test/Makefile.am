@@ -23,4 +23,4 @@ tMeqPolc_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
 #tuvw_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
 
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

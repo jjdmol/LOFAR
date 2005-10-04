@@ -147,4 +147,4 @@ if HAVE_SHMEM
 libcommon_la_LIBADD	= shmem/libshmem.la
 endif
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

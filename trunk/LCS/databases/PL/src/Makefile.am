@@ -53,4 +53,4 @@ libpl_la_SOURCES = \
 	Query/SQLExprNode.cc \
 	Query/UnaryExprNode.cc
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

@@ -2,4 +2,4 @@ SUBDIRS=src
 
 DOC_SUBDIRS=src
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

@@ -44,5 +44,5 @@ TH_ShMem.cc \
 TH_Socket.cc \
 TH_Ethernet.cc
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

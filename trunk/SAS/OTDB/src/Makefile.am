@@ -52,4 +52,4 @@ libotdb_la_SOURCES 		= $(DOCHDRS) \
 #						    OTDBevent.cc	\
 #						    OTDBeventList.cc	
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

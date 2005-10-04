@@ -98,4 +98,4 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  LOFARROOT=$(LOFARROOT)
 
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

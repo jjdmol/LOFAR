@@ -27,4 +27,4 @@ meqcalibrater_SOURCES   = meqcalibrater.cc
 meqcalibrater_LDADD     = ./libcal.la
 meqcalibrater_DEPENDENCIES = ./libcal.la $(LOFAR_DEPEND)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

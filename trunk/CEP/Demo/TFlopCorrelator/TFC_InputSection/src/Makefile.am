@@ -31,4 +31,4 @@ configfiles_DATA		=	\
 TFC_InputSection.machinefile		\
 TFC_InputSection.log_prop		
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

@@ -12,5 +12,5 @@ dist_glish_SCRIPTS = mssplit.g statconv.g
 scriptdir = $(bindir)
 dist_script_SCRIPTS = mssplit
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

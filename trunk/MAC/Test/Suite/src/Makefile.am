@@ -11,5 +11,5 @@ libsuite_la_SOURCES= $(DOCHDRS) \
 	suite.cpp \
 	test.cpp
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

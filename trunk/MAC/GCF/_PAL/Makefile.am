@@ -1,3 +1,3 @@
 SUBDIRS=SAL PA PML PI
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

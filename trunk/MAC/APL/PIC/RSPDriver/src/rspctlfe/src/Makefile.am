@@ -57,4 +57,4 @@ rspctlfe_SOURCES = \
 rspctlfe_LDADD = \
 	$(top_builddir)/src/librspfe.la
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

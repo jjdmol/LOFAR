@@ -15,4 +15,4 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  LOFARROOT=$(LOFARROOT) \
 				  AIPSPP=$(AIPSPP)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

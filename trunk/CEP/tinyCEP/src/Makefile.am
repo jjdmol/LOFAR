@@ -62,4 +62,4 @@ AM_YFLAGS               = -d -p SimulatorParse
 AM_LFLAGS               = -PSimulatorTokenize
 LEX_OUTPUT_ROOT         = lex.SimulatorTokenize
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

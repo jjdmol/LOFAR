@@ -14,4 +14,4 @@ HPCorrelator_LDADD			= ../src/libGPU.a
 HPCorrelator_DEPENDENCIES	= ../src/libGPU.a $(LOFAR_DEPEND)
 HPCorrelator_LFLAGS 		= -lX11 -lXmu -lXt -lGL -lGLU -lCg -lCgGL -lpthread
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

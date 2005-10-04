@@ -23,5 +23,5 @@ PO_DH_PL.cc \
 TH_PL.cc
 
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 
