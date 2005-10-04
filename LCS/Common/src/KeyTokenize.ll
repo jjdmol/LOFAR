@@ -26,7 +26,7 @@
 #include <Common/KeyValue.h>
 #include <Common/KeyValueMap.h>
 #include <Common/KeyParser.h>
-#include <Common/KeyParse.h>           // output of bison
+#include "KeyParse.h"           // output of bison
 #include <Common/lofar_iostream.h>
 using namespace LOFAR;
 

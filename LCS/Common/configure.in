@@ -48,7 +48,7 @@ dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
 dnl
-dnl Check for LOFAR specific things
+dnl Check for LOFAR general things
 dnl
 lofar_GENERAL
 lofar_BLITZ
@@ -58,8 +58,12 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/Common/Makefile
+include/Common/shmem/Makefile
 src/Makefile
 src/shmem/Makefile
 test/Makefile
 Makefile
+Common.spec
 )

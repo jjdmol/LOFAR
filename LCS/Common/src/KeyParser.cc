@@ -25,7 +25,7 @@
 
 #include <Common/KeyValueMap.h>
 #include <Common/KeyParser.h>
-#include <Common/KeyParse.h>
+#include "KeyParse.h"
 #include <Common/lofar_iostream.h>
 #include <Common/Exception.h>
 #include <sstream>
