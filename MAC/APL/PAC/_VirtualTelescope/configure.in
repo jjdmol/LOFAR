@@ -50,13 +50,9 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
-lofar_DEBUG_OPTIMIZE
-lofar_CHECK_PRETTY_FUNCTION
-lofar_QATOOLS
-lofar_DOCXX
+lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_PVSS(1)
-lofar_LOG4CPLUS
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-6_0, 1, GCF/TM/GCF_Task.h,,)

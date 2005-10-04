@@ -58,9 +58,7 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
-lofar_DEBUG_OPTIMIZE
-lofar_QATOOLS
-lofar_DOCXX
+lofar_GENERAL
 lofar_COMPILETOOLS
 
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
@@ -70,7 +68,6 @@ lofar_INTERNAL(MAC/APL/PAC/Calibration, cal, MAC-RTC-4_0, 1, CAL_Protocol.ph,,)
 lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase, LCS-AMC-1_0, 1, AMCBase/EarthCoord.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_0, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
-lofar_LOG4CPLUS
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 
 dnl

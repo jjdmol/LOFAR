@@ -50,12 +50,7 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
-lofar_DEBUG_OPTIMIZE
-lofar_CHECK_PRETTY_FUNCTION
-lofar_CHECK_LONG_LONG
-lofar_QATOOLS
-lofar_DOCXX
-dnl lofar_LOG4CPLUS
+lofar_GENERAL
 dnl lofar_BLITZ
 dnl lofar_MPI
 dnl lofar_PACKAGE(LCS/Common)

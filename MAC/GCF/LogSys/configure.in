@@ -37,11 +37,8 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
-lofar_DEBUG_OPTIMIZE
+lofar_GENERAL
 #lofar_QT
-lofar_QATOOLS
-lofar_LOG4CPLUS
-lofar_DOCXX
 lofar_PVSS
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)

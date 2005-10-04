@@ -35,10 +35,7 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
-lofar_CHECK_PRETTY_FUNCTION
-lofar_DEBUG_OPTIMIZE
-lofar_QATOOLS
-lofar_DOCXX
+lofar_GENERAL
 lofar_MPI(0)
 lofar_PVSS(1)
 lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_1-release-branch, 1, Common/LofarTypes.h,,)

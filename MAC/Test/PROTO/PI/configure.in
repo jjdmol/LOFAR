@@ -50,11 +50,9 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
-lofar_DEBUG_OPTIMIZE
+lofar_GENERAL
 #lofar_QT
 lofar_PVSS(1)
-lofar_QATOOLS
-lofar_DOCXX
 lofar_MPI(0)
 lofar_PACKAGE(MAC/GCF/PROTO/TASK)
 lofar_PACKAGE(MAC/GCF/PROTO/GPI)
