@@ -42,5 +42,5 @@ sysconf_DATA= \
 %.param: %.param.in
 	cp $< $@
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

@@ -9,5 +9,5 @@ libgpi_la_SOURCES 	= $(DOCHDRS) \
   GCF_Port.cxx 
 
   
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

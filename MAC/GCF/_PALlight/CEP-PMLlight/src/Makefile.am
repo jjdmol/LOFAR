@@ -25,5 +25,5 @@ libgcfceppallight_la_DEPENDENCIES= libceppmllight.la $(LOFAR_DEPEND)
 
 AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"CEP\"
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

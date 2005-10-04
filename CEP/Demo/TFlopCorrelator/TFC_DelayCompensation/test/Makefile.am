@@ -12,4 +12,4 @@ TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
 				  common_top_builddir=$(common_top_builddir)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

@@ -37,5 +37,5 @@ libgcfcommon_la_SOURCES= $(DOCHDRS) \
 	
 libgcfcommon_la_CPPFLAGS=-I$(top_srcdir)/include
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

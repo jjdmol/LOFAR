@@ -29,4 +29,4 @@ configfiles_DATA	=	\
 TFC_BGLProcessing.machinefile	\
 TFC_BGLProcessing.log_prop	
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

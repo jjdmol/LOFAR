@@ -26,5 +26,5 @@ libalc_la_SOURCES 		  = DH_ApplControl.cc \
 							ACAsyncClient.cc \
 							ApplControlServer.cc 
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

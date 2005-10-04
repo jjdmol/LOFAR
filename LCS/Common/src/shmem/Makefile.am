@@ -33,4 +33,4 @@ libshmem_la_SOURCES = 				\
 	dlmalloc.c				\
 	shmem_alloc.cc
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

@@ -78,4 +78,4 @@ libgnuplot_i_la_SOURCES = \
 %.top: %.top.in
 	cp $< $@
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

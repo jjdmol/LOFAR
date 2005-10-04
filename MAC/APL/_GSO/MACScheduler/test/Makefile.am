@@ -54,4 +54,4 @@ EXTRA_DIST = \
 %.conf: %.conf.in
 	cp $< $@
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

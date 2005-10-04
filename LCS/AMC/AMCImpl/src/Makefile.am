@@ -28,4 +28,4 @@ amcserver_SOURCES		= AMCServer/amcserver.cc
 amcserver_LDADD			= libamcimpl.la
 amcserver_DEPENDENCIES		= libamcimpl.la $(LOFAR_DEPEND)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

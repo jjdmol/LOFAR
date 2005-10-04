@@ -23,4 +23,4 @@ libprop_la_SOURCES 	= $(DOCHDRS) \
   FPDoubleValue.cc 
 
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

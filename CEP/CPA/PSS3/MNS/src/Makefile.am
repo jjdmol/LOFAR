@@ -98,4 +98,4 @@ LEX_OUTPUT_ROOT         = lex.KeyTokenize
 #parmdb_LDADD		= ./libmns.la
 #parmdb_DEPENDENCIES	= ./libmns.la $(LOFAR_DEPEND)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

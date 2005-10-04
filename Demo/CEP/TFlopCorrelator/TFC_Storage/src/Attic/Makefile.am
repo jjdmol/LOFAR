@@ -30,4 +30,4 @@ TFC_Storage.log_prop			\
 typeStruct_TTeraFlopCorrelator.dpl	\
 PropertyInterface.conf
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

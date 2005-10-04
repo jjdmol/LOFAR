@@ -37,4 +37,4 @@ dist_python_SCRIPTS =
 scriptdir = $(bindir)
 dist_script_SCRIPTS = 
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

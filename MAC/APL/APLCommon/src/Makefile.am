@@ -53,5 +53,5 @@ EXTRA_DIST = \
 clean-local:
 	rm -f *.ph
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

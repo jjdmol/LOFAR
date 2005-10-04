@@ -21,4 +21,4 @@ libGPU_la_SOURCES = \
 	PixelBuffer.cc \
 	Stream.cc
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

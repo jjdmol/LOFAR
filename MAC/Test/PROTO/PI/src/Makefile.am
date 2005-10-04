@@ -23,5 +23,5 @@ PropertyInterface_LDADD	    =
 
 PropertyInterface_DEPENDENCIES =
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
 

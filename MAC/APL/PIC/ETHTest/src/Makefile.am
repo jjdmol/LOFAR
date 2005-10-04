@@ -73,4 +73,4 @@ ETH_test_SOURCES = \
 # 	Timer.h \
 # 	UDP_test.cc
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

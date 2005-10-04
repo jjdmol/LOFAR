@@ -22,4 +22,4 @@ BDBCommunicator.cc				\
 BDBConnector.cc					\
 BDBSite.cc
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

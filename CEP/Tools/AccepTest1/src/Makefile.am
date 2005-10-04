@@ -43,4 +43,4 @@ BasicBE.cc
 Correlator_LDADD = # /bgl/broekema/traceback/traceback.o
 Correlator_DEPENDENCIES = $(LOFAR_DEPEND)
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common

@@ -30,4 +30,4 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 
 TESTS = tMeqPolc.sh tPredSolv.sh tPredict.sh tPerturbed.sh tMSData.sh
 
-include $(lofar_sharedir)/Makefile.common
+include $(top_srcdir)/Makefile.common
