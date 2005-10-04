@@ -97,6 +97,13 @@ void OutputDebugString(char *pcString)
 
 void StopDebugger()
 {
-  fclose(pFile);
+  pthread_mutex_lock( &tDebuggerMutex );
+  if (pFile != NULL)
+  {
+    fflush(pFile);
+    fclose(pFile);
+    pFile = NULL;
+  }
+  pthread_mutex_unlock( &tDebuggerMutex );
   pthread_mutex_destroy( &tDebuggerMutex );
 }

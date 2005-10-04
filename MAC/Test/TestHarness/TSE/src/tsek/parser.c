@@ -1642,33 +1642,48 @@ int Parse_QFixedVar(
 
   ptList->ptThis->ptValue->pcValue = my_strdup(pcToken);
 
-  if ((ptList->ptThis->ptItsType != NULL) && (pcToken[1] == 'x'))
+  if (ptList->ptThis->ptItsType != NULL) 
   {
-    /* Only check the length when the script contains a hexadecimal constant */
-
-    iExpectedLength = ptList->ptThis->ptItsType->iSizeInBytes;
-    iScannedLength = (strlen(pcToken) - 2) / 2;
-    if (ptList->ptThis->ptItsType->iLessAllowed == 0)
+    if (pcToken[1] == 'x')
     {
-      if ((iScannedLength != iExpectedLength) && (iExpectedLength != 0))
+      /* Only check the length when the script contains a hexadecimal constant */
+  
+      iExpectedLength = ptList->ptThis->ptItsType->iSizeInBytes;
+      iScannedLength = (strlen(pcToken) - 2) / 2;
+      if (ptList->ptThis->ptItsType->iLessAllowed == 0)
       {
-        sprintf(pcErrorLine,
-                "Expected parameter-type %s must be %d bytes. %s is %d%s bytes",
-                ptList->ptThis->ptItsType->pcName,
-                ptList->ptThis->ptItsType->iSizeInBytes, pcToken, iScannedLength,
-                (strlen(pcToken) % 2 == 0) ? "" : ".5");
-        AddError1(pcErrorLine);
+        if ((iScannedLength != iExpectedLength) && (iExpectedLength != 0))
+        {
+          sprintf(pcErrorLine,
+                  "Expected parameter-type %s must be %d bytes. %s is %d%s bytes",
+                  ptList->ptThis->ptItsType->pcName,
+                  ptList->ptThis->ptItsType->iSizeInBytes, pcToken, iScannedLength,
+                  (strlen(pcToken) % 2 == 0) ? "" : ".5");
+          AddError1(pcErrorLine);
+        }
+      }
+      else
+      {
+        if ((iScannedLength > iExpectedLength) && (iExpectedLength != 0))
+        {
+          sprintf(pcErrorLine,
+                  "Expected parameter-type %s must be %d bytes. %s is %d%s bytes",
+                  ptList->ptThis->ptItsType->pcName,
+                  ptList->ptThis->ptItsType->iSizeInBytes, pcToken, iScannedLength,
+                  (strlen(pcToken) % 2 == 0) ? "" : ".5");
+          AddError1(pcErrorLine);
+        }
       }
     }
     else
     {
-      if ((iScannedLength > iExpectedLength) && (iExpectedLength != 0))
+      /* Only hexadecimal values are allowed in array */
+      /* Otherwise it is impossible to determine the size of each array element */
+      if (ptList->ptThis->ptItsType->iKind == ARRAYKIND)
       {
         sprintf(pcErrorLine,
-                "Expected parameter-type %s must be %d bytes. %s is %d%s bytes",
-                ptList->ptThis->ptItsType->pcName,
-                ptList->ptThis->ptItsType->iSizeInBytes, pcToken, iScannedLength,
-                (strlen(pcToken) % 2 == 0) ? "" : ".5");
+                "Array data (%s) must be hexadecimal",
+                pcToken);
         AddError1(pcErrorLine);
       }
     }

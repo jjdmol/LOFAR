@@ -221,15 +221,15 @@ static struct TTimer *SetTimer( int32 lTimerValue,
                                 struct TStateMachine * ptStateMachine);
            
 /* Converts a byte array according to the Endianess defined */
-static int ConvertByteArray(char         *pcBuffer,
-                            char         *pcValue,
-                            int16         iCodeLength,
-                            int16         iEndian);
-/* Converts the array in Value to the Endiness required */                                
-static int ConvertArray(char         *pcBuffer,
+static int ConvertValue(char         *pcBuffer,
                         char         *pcValue,
-                        int           iCodeLength,
-                        struct TType *ptType );
+                        int16         iCodeLength,
+                        struct TType *ptType);
+/* Converts the array in Value to the Endiness required */                                
+static void ConvertArray(char         *pcBuffer,
+                         char         *pcValue,
+                         int           iCodeLength,
+                         struct TType *ptType );
                                 
 
 
@@ -434,10 +434,12 @@ int16 SingleStep(
           case ARITHMETRIC_ACTION:
             bDone |= TRUE;
             pcResult = EvaluateExpression(ptActionWalker->ptThis->ptExpression);
+            free(pcResult);
             break;
           case IF_ACTION:
             pcResult = EvaluateExpression(ptActionWalker->ptThis->ptExpression);
             bDone |= (strcmp(pcResult, "TRUE") == 0);
+            free(pcResult);
             break;
           case END_ACTION:
             bDone |= Intern_End(ptStateMachine);
@@ -2289,15 +2291,6 @@ void SetProtocol(
   }
 }
 
-
-
-
-
-
-
-
-
-
 char     *FindBufferInGlobalDataList(
   char *pcBufferName)
 {
@@ -2319,35 +2312,194 @@ char     *FindBufferInGlobalDataList(
   return NULL;
 }
 
-/* Converts a byte array according to the Endianess defined */
-int ConvertByteArray(
+int ConvertHexValue(
   char         *pcBuffer,
   char         *pcValue,
   int16         iCodeLength,
-  int16         iEndian
+  struct TType *ptType
 )
 {
-  int16 i;
+  int16 iIndex;
+  int16 iEnd;
+  int16 iBufferIndex;
+  
+  iIndex        = 0;           /* skip the 0x prefix.                                  */
+  iEnd          = 0;
+  iBufferIndex  = 0;
 
-  if (iEndian == FALSE) 
-    i = (iCodeLength - 1);
-  else                  
-    i = 0;
-
-  while ((pcValue[0] != '\0') && (pcValue[1] != '\0'))
+  if (iCodeLength >= 2)
   {
-     pcBuffer[i] = (int8) TO_BYTE(pcValue[0], pcValue[1]);
-
-     if (iEndian == FALSE)  
-      i--;
-     else                   
-      i++;
-
-     pcValue += 2;
+    iEnd = iCodeLength;
+    while ((iIndex/2) < (iEnd/2))
+    {
+      if (ptType->iEndianess == TRUE)
+      { 
+        if( (iEnd % 2) == 0)
+        {
+          pcBuffer[((iEnd/2)-1)-iBufferIndex] = 
+            (int8) TO_BYTE(pcValue[(iEnd-1)-iIndex-1], pcValue[(iEnd-1)-iIndex]);
+        }
+        else
+        {
+          pcBuffer[(iEnd/2)-iBufferIndex] = 
+            (int8) TO_BYTE(pcValue[(iEnd-1)-iIndex-1], pcValue[(iEnd-1)-iIndex]);
+        }
+      }
+      else
+      {
+        pcBuffer[iBufferIndex] = 
+         (int8) TO_BYTE(pcValue[(iEnd-1)-iIndex-1], pcValue[(iEnd-1)-iIndex]);
+      }
+  
+      iBufferIndex++;
+      iIndex+=2;
+    }
+    if ((iCodeLength%2) != 0)
+    {
+       pcBuffer[iBufferIndex] = 
+        (int8) TO_BYTE('0', pcValue[0]);
+      iBufferIndex++;
+    }
   }
+  else
+  {
+    pcBuffer[iBufferIndex] = 
+      (int8) TO_BYTE('0', pcValue[iIndex]);
+    iBufferIndex++;
+    
+  }
+  return(iBufferIndex);
 }
 
-int ConvertArray(
+int ConvertDecimalValue(
+  char         *pcBuffer,
+  char         *pcValue,
+  int16         iCodeLength,
+  struct TType *ptType
+)
+{
+  char          cByte;
+  int16         iIndex;
+  int16         iEnd;
+  int16         iBufferIndex;
+  long          lNumber;
+  unsigned long ulNumber;
+  char          caNumberString[20];
+  
+  iIndex        = 0;
+  iEnd          = iCodeLength;
+  iBufferIndex  = 0;
+  
+  if ( pcValue[0] == '-')
+  {
+    sscanf( pcValue,"%ld", &lNumber);
+    while (lNumber !=0 )
+    { 
+      cByte = lNumber & 0xF;
+      lNumber >>= 4;
+      cByte |= ((lNumber & 0xF) << 4);
+      lNumber >>= 4;
+      caNumberString[iBufferIndex] = cByte;
+      iBufferIndex++;
+    }
+  }
+  else
+  {
+    sscanf( pcValue,"%lu", &ulNumber);
+    while (ulNumber !=0 )
+    { 
+      cByte = ulNumber & 0xF;
+      ulNumber >>= 4;
+      cByte |= ((ulNumber & 0xF) << 4);
+      ulNumber >>= 4;
+      caNumberString[iBufferIndex] = cByte;
+      iBufferIndex++;
+    }
+  }
+  for (iIndex = 0; iIndex < iBufferIndex; iIndex++)
+  {
+    if (ptType->iEndianess == TRUE)
+    {
+      pcBuffer[(ptType->iSizeInBytes-1) - iIndex] = caNumberString[iIndex];
+    }
+    else
+    {
+      pcBuffer[iIndex] = caNumberString[iIndex];
+    }
+  }
+  return(iBufferIndex);
+}
+
+/* Converts a byte array according to the Endianess defined */
+int ConvertValue(
+  char         *pcBuffer,
+  char         *pcValue,
+  int16         iCodeLength,
+  struct TType *ptType
+)
+{
+  int16 iIndex;
+  int16 iEnd;
+  int16 iBufferIndex;
+  
+  iIndex        = 0;
+  iEnd          = 0;
+  iBufferIndex  = 0;
+
+  if (iCodeLength != 0)
+  {
+    if (iCodeLength > 1)
+    {
+      if (pcValue[1]=='x') 
+      {
+        iBufferIndex = ConvertHexValue(pcBuffer,pcValue+2,iCodeLength,ptType);
+      }
+      else
+      {
+        iBufferIndex = ConvertDecimalValue(pcBuffer,pcValue,iCodeLength,ptType);
+      }
+    }
+    else
+    {
+      /* Only passed 1 charachter */
+      if (pcValue[1]=='x')
+      {
+        pcBuffer[iBufferIndex] = 
+          (int8) TO_BYTE('0', pcValue[iIndex+2]);
+        iBufferIndex++;
+      }
+      else
+      {
+        pcBuffer[iBufferIndex] = 
+          (int8) TO_BYTE('0', pcValue[iIndex]);
+        iBufferIndex++;
+      }
+    }
+    if (ptType->iKind != ARRAYKIND)
+    {
+      iEnd = ptType->iSizeInBytes;
+      /* Fill the remainder with zero's */
+      if ((iBufferIndex < iEnd) && (ptType->iLessAllowed == 0))
+      {
+        while (iBufferIndex < iEnd)
+        {
+          if (ptType->iEndianess == TRUE)
+          { 
+             pcBuffer[(iEnd-1)-iBufferIndex] = 0;
+          }
+          else
+          {
+             pcBuffer[iBufferIndex] = 0;
+          }
+          iBufferIndex++;
+        }
+      }
+    }
+  }
+  return(iBufferIndex);
+}
+
+void ConvertArray(
   char         *pcBuffer,
   char         *pcValue,
   int           iCodeLength,
@@ -2370,7 +2522,7 @@ int ConvertArray(
   }
   iIndexBuffer = 0;
   
-  for (; (iIndexValue/2) < iCodeLength; iIndexValue += (ptType->uiSizeOfElement*2))
+  for (; (iIndexValue/2) < (iCodeLength/2); iIndexValue += (ptType->uiSizeOfElement*2))
   {
     for (j=0; j < ptType->uiSizeOfElement; j++)
     {
@@ -2411,9 +2563,15 @@ int TransferValue(
   }
   else
   {
-    if (pcValue[1]=='x') pcValue += 2;           /* skip the 0x prefix.                                  */
-    iCodeLength  = strlen(pcValue) / 2;
-    iReturnValue = iCodeLength;
+    if (pcValue[1]=='x') 
+    {
+      iCodeLength  = strlen(pcValue+2);
+    }
+    else
+    {
+      iCodeLength  = strlen(pcValue);
+    }
+    iReturnValue = iCodeLength/2;
     
     if (ptType->iKind == ARRAYKIND)
     {
@@ -2423,12 +2581,12 @@ int TransferValue(
       }
       else
       {
-        ConvertByteArray(pcBuffer, pcValue, iCodeLength, ptType->iEndianess);
+        iReturnValue = ConvertValue(pcBuffer, pcValue, iCodeLength, ptType);
       }
     }
     else
     {
-      ConvertByteArray(pcBuffer, pcValue, iCodeLength, ptType->iEndianess);
+      iReturnValue = ConvertValue(pcBuffer, pcValue, iCodeLength, ptType);
     }
   }
   return iReturnValue;

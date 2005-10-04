@@ -396,9 +396,10 @@ void BSEG_ScriptStopped(char* pcReason)
    if (iLenghtReason > 0)
    {
     
-    pcLowerReason = (char*) malloc( (iLenghtReason+1) * sizeof(char));
+    pcLowerReason = (char*) calloc( (iLenghtReason+1), sizeof(char));
     if (NULL != pcLowerReason)
     {
+      pcLowerReason[0] = 0;
       for (iIndex = 0; iIndex < iLenghtReason; iIndex++)
       {
         pcLowerReason[iIndex] = (char) tolower(pcReason[iIndex]);
@@ -407,8 +408,14 @@ void BSEG_ScriptStopped(char* pcReason)
       pcOKLocation      = NULL;
       pcWarningLocation = NULL;
       
-      pcOKLocation      = strstr( pcLowerReason, "ok");
-      pcWarningLocation = strstr( pcLowerReason, "warning");
+      if (iLenghtReason >= strlen("ok"))
+      {
+        pcOKLocation = strstr( pcLowerReason, "ok");
+      }
+      if (iLenghtReason >= strlen("warning"))
+      {
+        pcWarningLocation = strstr( pcLowerReason, "warning");
+      }
   
       if( (NULL == pcOKLocation) &&
           (NULL == pcWarningLocation) )
