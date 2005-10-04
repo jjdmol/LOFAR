@@ -59,4 +59,5 @@ AC_OUTPUT(
 src/Makefile
 test/Makefile
 Makefile
+Tools.spec
 )
