@@ -206,6 +206,9 @@ static int ConvertArray(char         *pcBuffer,
                         char         *pcValue,
                         int           iCodeLength,
                         struct TType *ptType);
+static int16 ValueCmp(
+  struct TVariable * ptReceivedVar,
+  struct TVariable * ptVariable);
 
 
 /****************************************************************************/
@@ -1191,7 +1194,7 @@ int16 ParseReceivedVariable(
     }
     else
     {
-      LogLine("Paramter is an array not processing any further");
+      LogLine("Parameter is an array not processing any further");
       return 0;
     }
   }
@@ -1635,10 +1638,14 @@ int16 TestVariable(
                      ptReceivedVar->ptValue->pcValue));
   }
 
-  if (strcmp(ptVariable->ptValue->pcValue,
-             ptReceivedVar->ptValue->pcValue) == 0)
+  if (strcmp(ptReceivedVar->ptValue->pcValue,
+             ptVariable->ptValue->pcValue) == 0)
   {
     return TRUE;
+  }
+  else
+  {
+    return(ValueCmp(ptVariable, ptReceivedVar));
   }
 
   return FALSE;
@@ -1712,6 +1719,37 @@ void SubstituteReceivedVariable(
       strcpy(ptVar->ptValue->pcValue, ptReceivedVar->ptValue->pcValue);
     }
   }
+}
+int16 ValueCmp(
+  struct TVariable * ptReceivedVar,
+  struct TVariable * ptVariable)
+{
+  int16 iResult;
+  int32 ulReceivedValue;
+  int32 ulVariableValue;
+  iResult = FALSE;
+  
+  if ((ptReceivedVar->ptValue->pcValue[0] == '0') && (ptReceivedVar->ptValue->pcValue[1] == 'x'))
+  {
+    sscanf(ptReceivedVar->ptValue->pcValue,"%x", &ulReceivedValue);
+  }
+  else
+  {
+    sscanf(ptReceivedVar->ptValue->pcValue,"%ul", &ulReceivedValue);
+  }
+  if ((ptVariable->ptValue->pcValue[0] == '0') && (ptVariable->ptValue->pcValue[1] == 'x'))
+  {
+    sscanf(ptVariable->ptValue->pcValue,"%x", &ulVariableValue);
+  }
+  else
+  {
+    sscanf(ptVariable->ptValue->pcValue,"%ul", &ulVariableValue);
+  }
+  if (ulReceivedValue == ulVariableValue)
+  {
+    iResult = TRUE;
+  }
+  return(iResult);
 }
 
 /****************************************************************************/

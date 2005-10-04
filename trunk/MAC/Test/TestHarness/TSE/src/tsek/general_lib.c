@@ -661,9 +661,19 @@ char     *strpos(
 char     *my_strdup(
   const char *p)
 {
-  if (p == NULL)
-    return NULL;
-  return strdup(p);
+  size_t  tStringSize;
+  char   *pcResultString;
+  
+  tStringSize    = 0;
+  pcResultString = NULL;
+  
+  if (p != NULL)
+  {
+    tStringSize = strlen(p);
+    pcResultString = (char*) calloc(tStringSize+1, sizeof(char));
+    strcpy(pcResultString, p);
+  }
+  return(pcResultString);
 }
 
 

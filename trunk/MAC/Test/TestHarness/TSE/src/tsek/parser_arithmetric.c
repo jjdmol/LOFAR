@@ -717,8 +717,10 @@ char     *EvaluateExpression(
 
 
 void Equalize(
-  char **ppcA,
-  char **ppcB)
+  char *pcA,
+  char *pcB,
+  char **ppcResultA,
+  char **ppcResultB)
 /****************************************************************************/
 /* Makes a copy of both strings. The strings are expected to contain hexa-  */
 /* decimal numbers, e.g. 0x01 and 0x0004.  The new pointers will point to   */
@@ -729,13 +731,10 @@ void Equalize(
 /* zero. The NULL pointer is then replaced by a pointer to 0x00             */
 /****************************************************************************/
 {
-  char     *pcA;
-  char     *pcB;
-
   int16     iA, iB, iMax;
 
-  iA = strlen(*ppcA);
-  iB = strlen(*ppcB);
+  iA = strlen(pcA);
+  iB = strlen(pcB);
 
   iMax = iA;
   if (iMax < iB)
@@ -744,31 +743,42 @@ void Equalize(
   iA = iMax - iA;
   iB = iMax - iB;
 
-  pcA = (char *) malloc(iMax + 1);
-  pcB = (char *) malloc(iMax + 1);
+  *ppcResultA = (char *) malloc(iMax + 1);
+  *ppcResultB = (char *) malloc(iMax + 1);
 
-  strcpy(pcA, "0x");
-  strcpy(pcB, "0x");
+  strcpy(*ppcResultA, "0x");
   while (iA-- > 0)
-    strcat(pcA, "0");
+    strcat(*ppcResultA, "0");
+
+  strcpy(*ppcResultB, "0x");
   while (iB-- > 0)
-    strcat(pcB, "0");
+    strcat(*ppcResultB, "0");
 
-  strcat(pcA, (*ppcA) + 2);
-  strcat(pcB, (*ppcB) + 2);
+  strcat(*ppcResultA, (pcA) + 2);
+  strcat(*ppcResultB, (pcB) + 2);
 
-  *ppcA = pcA;
-  *ppcB = pcB;
 }
 
 char     *a_equal(
   char *pcL,
   char *pcR)
 {
-  if (strcmp(pcL, pcR) == 0)
+  char     *pcNewLeft, *pcNewRight;
+
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
+
+  if (strcmp(pcNewLeft, pcNewRight) == 0)
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("TRUE");
+  }
   else
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("FALSE");
+  }
 }
 
 
@@ -776,50 +786,110 @@ char     *a_nonequal(
   char *pcL,
   char *pcR)
 {
-  if (strcmp(pcL, pcR) != 0)
+  char     *pcNewLeft, *pcNewRight;
+
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
+
+  if (strcmp(pcNewLeft, pcNewRight) != 0)
+   {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("TRUE");
+  }
   else
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("FALSE");
+  }
 }
 
 char     *a_less(
   char *pcL,
   char *pcR)
 {
-  if (strcmp(pcL, pcR) < 0)
+  char     *pcNewLeft, *pcNewRight;
+
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
+
+  if (strcmp(pcNewLeft, pcNewRight) < 0)
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("TRUE");
+  }
   else
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("FALSE");
+  }
 }
 
 char     *a_lessequal(
   char *pcL,
   char *pcR)
 {
-  if (strcmp(pcL, pcR) <= 0)
+  char     *pcNewLeft, *pcNewRight;
+
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
+
+  if (strcmp(pcNewLeft, pcNewRight) <= 0)
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("TRUE");
+  }
   else
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("FALSE");
+  }
 }
 
 char     *a_more(
   char *pcL,
   char *pcR)
 {
-  if (strcmp(pcL, pcR) > 0)
+  char     *pcNewLeft, *pcNewRight;
+
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
+
+  if (strcmp(pcNewLeft, pcNewRight) > 0)
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("TRUE");
+  }
   else
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("FALSE");
+  }
 }
 
 char     *a_moreequal(
   char *pcL,
   char *pcR)
 {
-  if (strcmp(pcL, pcR) >= 0)
+  char     *pcNewLeft, *pcNewRight;
+
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
+
+  if (strcmp(pcNewLeft, pcNewRight) >= 0)
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("TRUE");
+  }
   else
+  {
+    free(pcNewLeft);
+    free(pcNewRight);
     return my_strdup("FALSE");
+  }
 }
 
 char     *a_assignment(
@@ -850,37 +920,83 @@ char     *a_plus(
   char *pcR)
 {
   char     *pcResult;
-  char      cL, cR;
+  char     *pcTempResult;
+  char     *pcNewLeft, *pcNewRight;
   int       iDigitSum;
-  int       i, iCarry;
+  int       iEnd, iCounter, iCarry;
 
-  Equalize(&pcL, &pcR);
-
-  pcResult = my_strdup(pcL);
-  i = strlen(pcL);              /* or pcR, both strings are expected have equal length   */
-
-  i--;
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
 
   iCarry = 0;
-
-  while ((i != 0) && (pcL[i] != 'x'))
+  
+  iEnd = strlen(pcNewLeft);              /* or pcR, both strings are expected have equal length   */
+  pcResult = (char*) calloc(iEnd+2, sizeof(char)); /*leave space for carrier */
+  pcTempResult = (char*) calloc(iEnd+2, sizeof(char)); /*leave space for carrier */
+  
+  if ((NULL != pcResult) && (NULL != pcTempResult))
   {
-    cL = pcL[i];
-    cR = pcR[i];
-
-    iDigitSum = TO_HEX(cL) + TO_HEX(cR) + iCarry;
-    iCarry = iDigitSum / 0x10;
-    iDigitSum = iDigitSum % 0x10;
-
-    pcResult[i] = TO_ASCII(iDigitSum);
-
-    i--;
+    pcResult[0] = 0;
+    if (pcNewLeft[1] == 'x') 
+    {
+      /* processing data from right to left */
+      iCounter = iEnd-1;
+      while (pcNewLeft[iCounter] != 'x')
+      {
+        iDigitSum = TO_HEX(pcNewLeft[iCounter]) + TO_HEX(pcNewRight[iCounter]) + iCarry;
+        iCarry = iDigitSum / 0x10;
+        iDigitSum = iDigitSum % 0x10;
+    
+        pcTempResult[iCounter] = TO_ASCII(iDigitSum);
+    
+        iCounter--;
+      }
+      if (iCarry != 0)
+      {
+        pcTempResult[0] = '0';
+        pcTempResult[iCounter] = TO_ASCII(iCarry);
+      }
+      else
+      {
+        /*Prevents valgrind from creating an error */
+        pcTempResult[0] = '0';
+        pcTempResult[1] = 'x';
+        iCounter++;
+      }
+      if (iCounter != (iEnd-1))
+      {
+        strcpy(pcResult, "0x");
+        strcat(pcResult, &pcTempResult[iCounter]);
+      }
+    }
+    else
+    {
+      iCounter = iEnd-1;
+      while (iCounter !=0)
+      {
+        iDigitSum = TO_HEX(pcNewLeft[iCounter]) + TO_HEX(pcNewRight[iCounter]) + iCarry;
+        iCarry = iDigitSum / 0x0A;
+        iDigitSum = iDigitSum % 0x0A;
+    
+        pcTempResult[iCounter] = TO_ASCII(iDigitSum);
+    
+        iCounter--;
+      }
+      if (iCarry != 0)
+      {
+        pcTempResult[iCounter] = TO_ASCII(iCarry);
+      }
+      else
+      {
+        iCounter++;
+      }
+      strcpy(pcResult, &pcTempResult[iCounter]);
+    }
+    free(pcTempResult);
   }
 
-  free(pcL);
-  free(pcR);
-
-  return pcResult;
+  free(pcNewLeft);
+  free(pcNewRight);
+  return(pcResult);
 }
 
 
@@ -889,14 +1005,14 @@ char     *a_minus(
   char *pcR)
 {
   char     *pcResult;
-  char      cL, cR;
+  char     *pcNewLeft, *pcNewRight;
   int       iDigitDiff;
   int       i, iCarry;
 
-  Equalize(&pcL, &pcR);
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
 
-  pcResult = my_strdup(pcL);
-  i = strlen(pcL);              /* or pcR, both strings are expected have equal length   */
+  pcResult = my_strdup(pcNewLeft);
+  i = strlen(pcNewLeft);              /* or pcR, both strings are expected have equal length   */
 
   i--;
 
@@ -904,10 +1020,8 @@ char     *a_minus(
 
   while ((i != 0) && (pcL[i] != 'x'))
   {
-    cL = pcL[i];
-    cR = pcR[i];
 
-    iDigitDiff = TO_HEX(cL) - TO_HEX(cR);       /* range [ -0x0F , 0x0F ]       */
+    iDigitDiff = TO_HEX(pcNewLeft[i]) - TO_HEX(pcNewRight[i]);       /* range [ -0x0F , 0x0F ]       */
     iDigitDiff = iDigitDiff + iCarry;   /* range [ -0x10 , 0x0F ]       */
 
     /* range shift is needed, because both / and % are undefined when one   */
@@ -924,8 +1038,8 @@ char     *a_minus(
     i--;
   }
 
-  free(pcL);
-  free(pcR);
+  free(pcNewLeft);
+  free(pcNewRight);
 
   return pcResult;
 }
@@ -1084,10 +1198,11 @@ char     *a_mul(
   char     *pcLine;
   char     *pcGrandTotal;
   char     *pcInterTotal;
+  char     *pcNewLeft, *pcNewRight;
   int16     iFactor;
   int16     iPwr;
 
-  Equalize(&pcL, &pcR);
+  Equalize(pcL, pcR, &pcNewLeft, &pcNewRight);
 
   pcGrandTotal = NULL;
 
@@ -1129,8 +1244,8 @@ char     *a_mul(
 
   for (i = 0; i < 16; i++)
     free(pcTafeltje[i]);
-  free(pcL);
-  free(pcR);
+  free(pcNewLeft);
+  free(pcNewRight);
 
   return pcGrandTotal;
 }

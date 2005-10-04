@@ -3290,18 +3290,42 @@ void WriteVar(
     }
     else if ((ptVar->ptValue != NULL)
              && (ptVar->ptValue->pcValue != NULL)
-             && (ptVar->ptValue->pcValue[0] != 0)
-             && ( (ptVar->ptItsType != NULL) && 
-                  (ptVar->ptItsType->iKind != FILEDATAKIND) ) )
-    {
-      strcat(pcBuffer, " ");
-
-      if ((ptVar->ptItsType != NULL) && (ptVar->ptItsType->iKind == ASCIIKIND))
+             && (ptVar->ptValue->pcValue[0] != 0) )
+    {         
+      if ((ptVar->ptItsType != NULL)  
+           &&(ptVar->ptItsType->iKind != FILEDATAKIND) )
       {
-        strncpy( b, ptVar->ptValue->pcValue, 240 );
-        asciicat(pcBuffer, b);
+        strcat(pcBuffer, " ");
+  
+        if ((ptVar->ptItsType != NULL) && (ptVar->ptItsType->iKind == ASCIIKIND))
+        {
+          strncpy( b, ptVar->ptValue->pcValue, 240 );
+          asciicat(pcBuffer, b);
+          if (strlen( ptVar->ptValue->pcValue) > 240)
+          {
+            strcat(pcBuffer,"...");
+          }
+        }
+        else
+        {
+          strncpy( b, ptVar->ptValue->pcValue, 240 );
+          strcat(pcBuffer, b);
+          if (strlen( ptVar->ptValue->pcValue) > 240)
+          {
+            strcat(pcBuffer,"...");
+          }
+        }
+  
+  
+        /* If DebugLevel is one or more, print also the address of the        */
+        /* value to be printed.                                               */
+        if (_ptGlobals->iDebugLevel > 0)
+        {
+          sprintf(b, " (0x%8p)", (void*)&(ptVar->ptValue->pcValue));
+          strcat(pcBuffer, b);
+        }
       }
-      else
+      else if (ptVar->ptItsType == NULL) 
       {
         strncpy( b, ptVar->ptValue->pcValue, 240 );
         strcat(pcBuffer, b);
@@ -3309,15 +3333,6 @@ void WriteVar(
         {
           strcat(pcBuffer,"...");
         }
-      }
-
-
-      /* If DebugLevel is one or more, print also the address of the        */
-      /* value to be printed.                                               */
-      if (_ptGlobals->iDebugLevel > 0)
-      {
-        sprintf(b, " (0x%8p)", (void*)&(ptVar->ptValue->pcValue));
-        strcat(pcBuffer, b);
       }
     }
   }
