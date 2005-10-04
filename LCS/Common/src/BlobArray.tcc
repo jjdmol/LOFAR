@@ -174,7 +174,7 @@ BlobIStream& operator>> (BlobIStream& bs, casa::Array<T>& arr)
   vector<uint32> shp(ndim);
   getBlobArrayShape (bs, &shp[0], ndim, !fortranOrder, nalign);
   casa::IPosition shape(ndim);
-  for (uint i=0; i<arr.ndim(); i++) {
+  for (uint i=0; i<ndim; i++) {
     shape[i] = shp[i];
   }
   arr.resize (shape);
