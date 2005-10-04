@@ -21,6 +21,14 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.2  2005/02/10 10:40:02  loose
+ * %[ER: 236]%
+ *
+ * Enhanced the documentation:
+ * - Defined a number of groups within the package group "Common".
+ * - Added (sub)grouping to several source files.
+ * - Updated comment style to C++ // style.
+ *
  * Revision 1.1  2003/08/21 11:20:33  diepen
  * Moved Common to LCS
  *
