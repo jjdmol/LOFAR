@@ -20,7 +20,7 @@ LimitExec_SOURCES = LimitExec.cc
 pkgdep_SOURCES    = pkgdep.cc
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = lofarcvsmv lofarcvsx
+dist_script_SCRIPTS = lofarcvsmv lofarcvsx makedoc
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
@@ -55,6 +55,11 @@ install-data-local:
 	  sed -e "s%\. #filled in by install%$(prefix)%" $(srcdir)/$$FIL > $$FIL.tmp; \
 	  echo "$(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL"; \
 	  $(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL; \
+	  $(RM) $$FIL.tmp; \
 	done
+
+uninstall-local:
+	@$(RM) $(prefix)/lofarinit.sh $(prefix)/lofarinit.csh
+
 
 include $(lofar_sharedir)/Makefile.common
