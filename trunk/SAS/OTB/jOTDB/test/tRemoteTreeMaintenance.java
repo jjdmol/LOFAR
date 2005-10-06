@@ -1,18 +1,21 @@
 import jOTDB.jOTDBtree;
 import jOTDB.jOTDBnode;
+import jOTDB.jOTDBvalue;
+import jOTDB.jOTDBparam;
 import jOTDB.jVICnodeDef;
 import java.util.Vector;
 import java.lang.Integer;
 import java.rmi.registry.*;
 import jOTDB.jOTDBinterface;
 import jOTDB.jTreeMaintenanceInterface;
+import jOTDB.jTreeValueInterface;
 import java.rmi.RMISecurityManager;
 
 class tRemoteTreeMaintenance
 {
-   private static jOTDBinterface conn;
-   private static jTreeMaintenanceInterface tm;
-   
+    private static jOTDBinterface conn;
+    private static jTreeMaintenanceInterface tm;
+    private static jTreeValueInterface tv;
 
     public static void showTreeList (Vector trees)
     {
@@ -64,6 +67,30 @@ class tRemoteTreeMaintenance
 		System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
 	    }
     }
+
+    public static void showValueList (Vector items) 
+    {
+	try 
+	    {
+		System.out.println ("name                                         |value |time");
+		System.out.println ("---------------------------------------------+------+--------------------");
+
+		jOTDBvalue aValue;
+
+		for (int i = 0; i < items.size(); ++i) 
+		    {
+			aValue = (jOTDBvalue)items.elementAt (i);
+			System.out.printf ("%-45.45s|%-7.7s|%s", aValue.name, aValue.value, aValue.time);
+			System.out.println ();
+		    }		
+		System.out.println (items.size() + " records\n");
+	    }
+	catch (Exception e)
+	    {
+		System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
+	    }
+    }
+
 
    public static void main (String[] args)
      {
@@ -185,17 +212,27 @@ class tRemoteTreeMaintenance
  	     int dupNodeID = BformDef.nodeID ();
  	     System.out.println ("New subtree starts at node: " + dupNodeID);
 	     
-	     System.out.println ("Getting param info for " + dupNodeID+2 + " and " + dupNodeID+3);
-	     jOTDBnode param1 = tm.getNode (VTtreeID.intValue (), dupNodeID+2);
-	     jOTDBnode param2 = tm.getNode (VTtreeID.intValue (), dupNodeID+3);
+	     jOTDBnode node1 = tm.getNode (VTtreeID.intValue (), dupNodeID+2);
+	     jOTDBnode node2 = tm.getNode (VTtreeID.intValue (), dupNodeID+3);
+	     System.out.println ("Getting attributes info for " + node1.nodeID () + " and " + node2.nodeID ());
+	     System.out.println (node1.name);
+	     System.out.println (node2.name);
+	     node1.limits = "1.33333";
+	     node2.limits = "---1---";
+	     System.out.println ("Changing node " + node1.name + " limits to " + node1.limits);
+	     System.out.println ("Changing node " + node2.name + " limits to " + node2.limits);
+	     tm.saveNode (node1);
+	     tm.saveNode (node2);
+
+	     // Get parameters for a node
+	     System.out.println ("Getting param info for " + node1.treeID () + ", " + node1.nodeID ());
+	     jOTDBparam param1 = tm.getParam (node1.treeID (), node1.paramDefID ());
 	     System.out.println (param1.name);
-	     System.out.println (param2.name);
-	     param1.limits = "1.33333";
-	     param2.limits = "---1---";
-	     System.out.println ("Changing param " + param1.name + " to " + param1.limits);
-	     System.out.println ("Changing param " + param2.name + " to " + param2.limits);
-	     tm.saveNode (param1);
-	     tm.saveNode (param2);
+	     System.out.println (param1.type);
+	     System.out.println (param1.pruning);
+	     System.out.println (param1.unit);
+	     param1.type = 104;
+	     tm.saveParam (param1);
 	     
 	     // Setting nr instances to some nice values
 	     System.out.println ("Setting up tree counts");
@@ -249,6 +286,18 @@ class tRemoteTreeMaintenance
 	     }
 	     jOTDBtree VHtree = conn.getTreeInfo (VHtreeID);
 	     System.out.println (VHtree.creator);
+
+	     // Test values
+	     tv = (jTreeValueInterface) remoteRegistry.lookup (jTreeValueInterface.SERVICENAME);	     	     
+	     Vector valueList = tv.searchInPeriod (54, 50276, 0, 
+						   "2005-01-01 23:59:59.000", "2005-12-31 23:59:59.000", false);
+	     if (valueList.size() == 0) {
+		 System.out.println ("No items found");
+	     }
+	     else {
+		 showValueList (valueList);
+	     }
+      
 	  }
 	catch (Exception e)
 	    {
