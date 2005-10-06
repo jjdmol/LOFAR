@@ -9,9 +9,8 @@
  */
 
 package gui;
-
-import jOTDB.jOTDBinterface;
-import jOTDB.jOTDBtree;
+import jOTDB.jOTDBvalue;
+import jOTDB.jTreeValueInterface;
 import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
 
@@ -24,10 +23,14 @@ public class LogTableModel extends AbstractTableModel {
        
        String headers[] = {"TimeStamp", "Value"};
        Object data[][];
+       boolean itsDebugFlag=false;
        
+       public void setDebugFlag(boolean aFlag) {
+           itsDebugFlag=aFlag;
+       }
              
-       public LogTableModel(){
-          setLogList();
+       public LogTableModel(jTreeValueInterface anInterface, Vector aLogList){
+          setLogList(anInterface, aLogList);
        }
             
        public int getRowCount() {
@@ -47,6 +50,18 @@ public class LogTableModel extends AbstractTableModel {
            return data[r][c];
        }
             
-       public void setLogList() {
-       }
+      public void setLogList(jTreeValueInterface aRemoteValue,Vector aLogList) {
+           data = new Object[aLogList.size()][headers.length];
+                try {
+                    for (int k=0; k< aLogList.size();k++) {
+                        data[k][0]=((jOTDBvalue)aLogList.elementAt(k)).time;
+                        data[k][1]=((jOTDBvalue)aLogList.elementAt(k)).value;
+                    }
+                    fireTableDataChanged();
+                  } 
+                  catch (Exception e)
+                  {
+	            System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
+	          }  
+            }
 }
