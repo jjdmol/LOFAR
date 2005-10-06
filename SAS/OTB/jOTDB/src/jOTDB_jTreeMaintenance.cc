@@ -275,9 +275,9 @@ namespace LOFAR
        }
 
        JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getParam
-       (JNIEnv *env, jobject, jint aTreeID, jint aNodeID)
+       (JNIEnv *env, jobject, jint aTreeID, jint aParamDefID)
        {
-	 OTDBparam aParam = treemain->getParam (aTreeID, aNodeID);
+	 OTDBparam aParam = treemain->getParam (aTreeID, aParamDefID);
 	 
 	 jobject jParam;
 	 jclass class_jOTDBparam = env->FindClass ("jOTDB/jOTDBparam");
@@ -322,12 +322,12 @@ namespace LOFAR
 	 jfieldID fid_jOTDBparam_limits = env->GetFieldID (class_jOTDBparam, "limits", "Ljava/lang/String;");
 	 jfieldID fid_jOTDBparam_description = env->GetFieldID (class_jOTDBparam, "description", "Ljava/lang/String;");
 	 jmethodID mid_jOTDBparam_treeID = env->GetMethodID (class_jOTDBparam, "treeID", "()I");
-	 jmethodID mid_jOTDBparam_nodeID = env->GetMethodID (class_jOTDBparam, "nodeID", "()I");
+	 jmethodID mid_jOTDBparam_paramID = env->GetMethodID (class_jOTDBparam, "paramID", "()I");
 
 	   // Get original OTDB param
 	 OTDBparam aParam = treemain->getParam (env->CallIntMethod (jParam, mid_jOTDBparam_treeID), 
-						env->CallIntMethod (jParam, mid_jOTDBparam_nodeID));
-		       
+						env->CallIntMethod (jParam, mid_jOTDBparam_paramID));
+	 
 	 // name
 	 jstring str = (jstring)env->GetObjectField (jParam, fid_jOTDBparam_name);
 	 jboolean isCopy;
@@ -337,7 +337,7 @@ namespace LOFAR
 	 env->ReleaseStringUTFChars (str, n);
 	 
 	 aParam.index = (short)env->GetShortField (jParam, fid_jOTDBparam_index);
-	 aParam.type = (bool)env->GetShortField (jParam, fid_jOTDBparam_type);
+	 aParam.type = (short)env->GetShortField (jParam, fid_jOTDBparam_type);
 	 aParam.unit = (short)env->GetShortField (jParam, fid_jOTDBparam_unit);
 	 aParam.pruning = (short)env->GetShortField (jParam, fid_jOTDBparam_pruning);
 	 aParam.valMoment = (short)env->GetShortField (jParam, fid_jOTDBparam_valMoment);
@@ -356,7 +356,9 @@ namespace LOFAR
 	 const string description (d);
 	 aParam.description = description;
 	 env->ReleaseStringUTFChars (str, d);
-	 
+
+	 cout << aParam << endl;
+
 	 succes = treemain->saveParam (aParam);
 	 return succes;
        }
