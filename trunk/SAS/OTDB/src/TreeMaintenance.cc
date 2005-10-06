@@ -244,7 +244,7 @@ OTDBnode TreeMaintenance::getNode (treeIDType	aTreeID,
 // getParam (treeID, nodeID) : OTDBparam
 //
 OTDBparam TreeMaintenance::getParam (treeIDType		aTreeID,
-									 nodeIDType		aNodeID)
+									 nodeIDType		aParamID)
 {
 	OTDBparam		empty;
 
@@ -261,7 +261,7 @@ OTDBparam TreeMaintenance::getParam (treeIDType		aTreeID,
 	work	xAction(*(itsConn->getConn()), "getOTDBparam");
 	try {
 		result res = xAction.exec("SELECT * from " + functionName + "(" +
-								  toString(aNodeID) + ")");
+								  toString(aParamID) + ")");
 		if (res.empty()) {
 			return (empty);
 		}
