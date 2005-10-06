@@ -357,8 +357,6 @@ namespace LOFAR
 	 aParam.description = description;
 	 env->ReleaseStringUTFChars (str, d);
 
-	 cout << aParam << endl;
-
 	 succes = treemain->saveParam (aParam);
 	 return succes;
        }

@@ -57,7 +57,7 @@ namespace LOFAR
 	  {
 	     // get treevalues
 	     treeval = new TreeValue (OTDBconn, aTreeID);
-
+	     
 	     const char* bd = env->GetStringUTFChars (beginDate, 0);
 	     const char* ed = env->GetStringUTFChars (endDate, 0);
 	     const string beginTime (bd);
@@ -65,9 +65,13 @@ namespace LOFAR
 
 	     const ptime ts (time_from_string (beginTime));
 	     const ptime te (time_from_string (endTime));
+	     
+	     cout << topNode << endl << depth << endl << mostRecentOnly << endl;
 
 	     vector<OTDBvalue> valueList = treeval->searchInPeriod (topNode, depth, ts, te, mostRecentOnly);
 	     vector<OTDBvalue>::iterator valueIterator;
+
+	     cout << valueList.size () << endl;
 	 
 	     // Construct java Vector
 	     jobject valueVector;
