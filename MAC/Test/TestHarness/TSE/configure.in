@@ -46,5 +46,6 @@ src/tsed/Makefile
 src/tsek/Makefile
 src/dbg/Makefile
 src/tseg/Makefile
+TSE.spec
 Makefile
 )
