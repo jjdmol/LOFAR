@@ -93,7 +93,7 @@ public:
 
 	// Get the parameter definition of a node
 	OTDBparam	getParam	(treeIDType		aTreeID,
-							 nodeIDType		aNodeID);
+							 nodeIDType		aParamID);
 
 	// Save the parameter definition
 	bool		saveParam	(OTDBparam&		aParam);
