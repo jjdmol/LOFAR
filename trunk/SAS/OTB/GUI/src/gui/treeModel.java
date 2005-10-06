@@ -66,9 +66,9 @@ public class treeModel extends AbstractTableModel {
 	                if (tInfo.treeID()==0) {
                             if (itsDebugFlag) System.out.println("No such tree found!");
                         } else {
-                            if (itsDebugFlag) System.out.println("Gathered info for ID: "+tInfo.itsTreeID);
+                            if (itsDebugFlag) System.out.println("Gathered info for ID: "+tInfo.treeID());
                         
-                            data[k][0]=new Integer(tInfo.itsTreeID);	   
+                            data[k][0]=new Integer(tInfo.treeID());	   
 	                    data[k][1]=new String(tInfo.creator);
 	                    data[k][2]=new String(tInfo.creationDate);	
 	                    data[k][3]=new Short(tInfo.classification);
