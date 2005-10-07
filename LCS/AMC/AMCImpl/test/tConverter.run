@@ -10,17 +10,19 @@ then
 fi
 
 # The type of test to run is specified in the file tConverter.in.
+# If type is "client" the third (optional) argument is the port number
 INFILE="`dirname $0`/tConverter.in"
 if [ -f $INFILE ]
 then
    TYPE=`head -1 $INFILE | cut -d' ' -f1 | tr '[A-Z]' '[a-z]'`
+   PORT=`head -1 $INFILE | cut -d' ' -f3`
 fi
 
 # Variable to keep track of the return status.
 STATUS=0
 
 # If we must run a client/server test, we must first start the server process.
-if [ $TYPE = "client" ]
+if [ "$TYPE" = "client" ]
 then
 
   # This is the AMC server executable
@@ -45,7 +47,7 @@ then
         exit $STATUS' 0 1 2 3 15
 
   # Start the server in the background.
-  $SERVER &
+  $SERVER $PORT &
 
   # Sleep for 2 seconds to make sure the server has started.
   sleep 2
