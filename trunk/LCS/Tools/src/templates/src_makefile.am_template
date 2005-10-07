@@ -2,18 +2,6 @@
 # SUBDIRS = shmem .
 # endif
 
-INSTHDRS =
-
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
-
 lib_LTLIBRARIES         = lib%PACKAGELOWER%.la
 
 lib%PACKAGELOWER%_la_SOURCES =
@@ -27,6 +15,11 @@ lib%PACKAGELOWER%_la_SOURCES =
 # endif
 
 bin_PROGRAMS =
+
+# Lines to build a program prg
+#prg_SOURCES		= prg.cc
+#prg_LDADD		= lib%PACKAGELOWER%.la
+#prg_DEPENDENCIES	= lib%PACKAGELOWER%.la $(LOFAR_DEPEND)
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 
