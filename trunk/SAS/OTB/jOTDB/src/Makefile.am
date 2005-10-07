@@ -5,7 +5,8 @@
 INSTHDRS   = jOTDB_jOTDBconnection.h \
 	     jOTDB_jTreeMaintenance.h \
 	     jOTDB_jOTDBcommon.h \
-	     jOTDB_jTreeValue.h	     			
+	     jOTDB_jTreeValue.h \
+	     jOTDB_jConverter.h
 
 NOINSTHDRS =
 
@@ -22,7 +23,8 @@ lib_LTLIBRARIES         = libjotdb.la
 libjotdb_la_SOURCES   = $(DOCHDRS) \
 		        jOTDB_jOTDBconnection.cc \
 		        jOTDB_jTreeMaintenance.cc \
-			jOTDB_jTreeValue.cc
+			jOTDB_jTreeValue.cc \
+			jOTDB_jConverter.cc
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize

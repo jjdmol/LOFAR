@@ -21,6 +21,9 @@
   
 package jOTDB;
 
+import jOTDB.jConverter;
+import jOTDB.jConverterInterface;
+import jOTDB.jConverterAdapter;
 import jOTDB.jTreeValue;
 import jOTDB.jTreeValueInterface;
 import jOTDB.jTreeValueAdapter;
@@ -42,6 +45,8 @@ public class jOTDBserver
    private static jTreeMaintenanceAdapter jTreeMainAdapter;
    private static jTreeValue jTreeValueAdaptee;
    private static jTreeValueAdapter jTreeValueAdapter;
+   private static jConverter jConverterAdaptee;
+   private static jConverterAdapter jConverterAdapter;
 
    static
      {
@@ -99,6 +104,15 @@ public class jOTDBserver
 	     localRegistry.rebind (jTreeValueInterface.SERVICENAME, jTreeValueAdapter);
 
 	     System.out.println ("Published jTreeValueInterface as service " + jTreeValueInterface.SERVICENAME + ". Ready...");	     
+
+	     // Export jConverter
+	     jConverterAdaptee = new jConverter ();
+	     jConverterAdapter = new jConverterAdapter (jConverterAdaptee);
+	     
+	     System.out.println ("jOTDBserver publishing service " + jConverterInterface.SERVICENAME + " in local registry...");
+	     localRegistry.rebind (jConverterInterface.SERVICENAME, jConverterAdapter);
+
+	     System.out.println ("Published jConverterInterface as service " + jConverterInterface.SERVICENAME + ". Ready...");
 	  }
 	
 	catch (Exception e)

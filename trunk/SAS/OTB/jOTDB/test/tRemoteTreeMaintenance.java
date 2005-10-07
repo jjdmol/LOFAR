@@ -289,8 +289,8 @@ class tRemoteTreeMaintenance
 
 	     // Test values
 	     tv = (jTreeValueInterface) remoteRegistry.lookup (jTreeValueInterface.SERVICENAME);	     	     
-	     Vector valueList = tv.searchInPeriod (54, 50276, 0, 
-						   "2005-01-01 23:59:59.000", "2005-12-31 23:59:59.000", false);
+	     Vector valueList = tv.searchInPeriod (4, 1868, 0, 
+						   "2001-12-31 00:00:00", "2005-12-31 23:59:59", false);
 	     if (valueList.size() == 0) {
 		 System.out.println ("No items found");
 	     }

@@ -63,6 +63,8 @@ namespace LOFAR
 	     const string beginTime (bd);
 	     const string endTime (ed);
 
+	     cout << beginTime << endl << endTime << endl;
+
 	     const ptime ts (time_from_string (beginTime));
 	     const ptime te (time_from_string (endTime));
 	     
