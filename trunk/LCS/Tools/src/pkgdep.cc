@@ -286,12 +286,17 @@ void writeXHTMLFooter (ostream& os)
 }
 
 // Write the dependency tree in XHTML format.
-void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
+bool writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
 		 const string& parent, const string& indent,
 		 int depth, int maxdepth, int seqnr, bool strip,
 		 const string& hreftxt, bool isLast,
 		 const std::vector<bool>& parentIsLast)
 {
+  // Check if endless recursion.
+  if (depth > 50) {
+    cerr << "Endless recursion for package=" << pkg << endl;
+    return false;
+  }
   // Form the name for this node.
   ostringstream oss;
   oss << parent << '_' << seqnr+1;
@@ -349,12 +354,16 @@ void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
 	 ++iter, ++newSeqnr) {
-      writeXHTML (os, *iter, dep, oss.str(), newIndent,
-		  depth+1, maxdepth, newSeqnr, strip, hreftxt,
-		  newSeqnr == uses.size(), newParentIsLast);
+      if (! writeXHTML (os, *iter, dep, oss.str(), newIndent,
+			depth+1, maxdepth, newSeqnr, strip, hreftxt,
+			newSeqnr == uses.size(), newParentIsLast)) {
+	cerr << "                              " << pkg << endl;
+	return false;
+      }
     }
     os << "</div>" << endl;
   }
+  return true;
 }
 
 void writeHeader (ostream& os, OutType outtype, const string& hdrtxt,
@@ -406,8 +415,10 @@ void writeBody (ostream& os, OutType outtype, const string& pkg, UsedMap& dep,
       break;
     case XHTML:
       std::vector<bool> parentIsLast;
-      writeXHTML (os, pkg, dep, "", "    ", 0, maxdepth, seqnr, strip,
-		  hreftxt, isLast, parentIsLast);
+      if (! writeXHTML (os, pkg, dep, "", "    ", 0, maxdepth, seqnr, strip,
+			hreftxt, isLast, parentIsLast)) {
+	return;
+      }
       break;
     }
   }
