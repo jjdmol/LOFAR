@@ -36,8 +36,11 @@ dist_template_DATA  = templates/header.cc_template \
 		      templates/main.cc_template \
 		      templates/package_bootstrap_template \
 		      templates/package_configure.in_template \
+		      templates/package_spec.in_template \
 		      templates/package_lofarconf.in_template \
 		      templates/package_makefile.am_template \
+		      templates/include_makefile.am_template \
+		      templates/include_pkg_makefile.am_template \
 		      templates/src_makefile.am_template \
 	              templates/templated_header.cc_template \
 		      templates/templated_header.h_template \

@@ -140,12 +140,42 @@ def createBootstrap(lofarDir,packageName,dirLevel):
   readFile.close()
   os.chmod(fileName, os.stat(fileName).st_mode | 0111)
 
-def createMakefiles(lofarDir,packageName,srcDir,testDir,dirLevel):
+def createSpecin(lofarDir,packageName,dirLevel):
+  #
+  # Create .spec.in in Package dir
+  #
+  readFile=openFile(lofarDir+"/templates/package_spec.in_template","r")
+  fileName=packageName+"/"+packageName+".spec.in"
+  writeFile=openFile(fileName,"w")
+  replacePackageName(readFile,writeFile,packageName,dirLevel)
+  writeFile.close()
+  readFile.close()
+
+def createMakefiles(lofarDir,packageName,incDir,incpkgDir,
+                    srcDir,testDir,dirLevel):
   #
   # Create Makefile.am in Package dir
   #
   readFile=openFile(lofarDir+"/templates/package_makefile.am_template","r")
   writeFile=openFile(packageName+"/Makefile.am","w")
+  replacePackageName(readFile,writeFile,packageName,dirLevel)
+  writeFile.close()
+  readFile.close()
+
+  #
+  # Create Makefile.am in incDir
+  #
+  readFile=openFile(lofarDir+"/templates/include_makefile.am_template","r")
+  writeFile=openFile(incDir+"/Makefile.am","w")
+  replacePackageName(readFile,writeFile,packageName,dirLevel)
+  writeFile.close()
+  readFile.close()
+
+  #
+  # Create Makefile.am in incpkgDir
+  #
+  readFile=openFile(lofarDir+"/templates/include_pkg_makefile.am_template","r")
+  writeFile=openFile(incpkgDir+"/Makefile.am","w")
   replacePackageName(readFile,writeFile,packageName,dirLevel)
   writeFile.close()
   readFile.close()
@@ -183,6 +213,12 @@ def main(argv):
   # find out the directory sublevel
   dirLevel=len(baseDir.split('/'))-len(lofarDir.split('/'))
 
+  # Get lofar data dir.
+  if "LOFARDATAROOT" in os.environ:
+    lofarDataDir = os.environ["LOFARDATAROOT"]
+  else:
+    lofarDir+="/LCS/Tools/src"
+    
   try:
     opts, args = getopt.getopt(argv, "hs",["help","super"])
   except getopt.GetoptError:
@@ -229,29 +265,31 @@ def main(argv):
     createDir(packageName)
     
     if super == 0:
+      incDir = packageName+"/include"
+      incpkgDir = packageName+"/include/"+packageName
       srcDir = packageName+"/src"
       testDir = packageName+"/test"
     
       #
       # create the src and test directories in package
       #
+      createDir(incDir)
+      createDir(incpkgDir)
       createDir(srcDir)
       createDir(testDir)
     
       #
-      # Create all initial files from templates
+      # Create all initial Makefile.am files from templates
       #
-      createMakefiles(lofarDir,packageName,srcDir,testDir,dirLevel)
+      createMakefiles(lofarDir,packageName,incDir,incpkgDir,
+                      srcDir,testDir,dirLevel)
       
       #
-      # Create all initial files from templates
+      # Create all other initial files from templates
       #
       createConfigureIn(lofarDir,packageName,dirLevel)
-      
-      #
-      # Create all initial files from templates
-      #
       createBootstrap(lofarDir,packageName,dirLevel)
+      createSpecin(lofarDir,packageName,dirLevel)
       
     else:
       #
