@@ -110,21 +110,46 @@ CREATE OR REPLACE FUNCTION getNode(INT4, INT4)
 		  END IF;
 
 		ELSE
-		  SELECT h.nodeID,
-				 h.parentID,
-				 h.paramRefID,
-				 h.name,
-				 h.index,
-				 h.leaf,
-				 1::int2,
-				 \'1\'::text,		--	limits,
-				 n.description
-		  INTO	 vNode
-		  FROM	 VIChierarchy h
-				 INNER JOIN VICnodedef n on n.nodeID = h.paramRefID
-		  WHERE	 h.treeID = $1
-		  AND	 h.nodeID = $2;
+		-- VIChierarchy
+		  SELECT leaf
+		  INTO	 vLeaf
+		  FROM   VIChierarchy
+		  WHERE	 treeID = $1
+		  AND	 nodeID = $2;
 
+
+	      IF vLeaf = FALSE THEN
+			SELECT h.nodeID,
+				   h.parentID,
+				   h.paramRefID,
+				   h.name,
+				   h.index,
+				   h.leaf,
+				   1::int2,
+				   \'1\'::text,		--	limits,
+				   n.description
+		    INTO   vNode
+		    FROM   VIChierarchy h
+				   INNER JOIN VICnodedef n on n.nodeID = h.paramRefID
+		    WHERE  h.treeID = $1
+		    AND	   h.nodeID = $2;
+		  ELSE
+			-- a param
+		    SELECT h.nodeID,
+				   h.parentID,
+				   h.paramRefID,
+				   h.name,
+				   h.index,
+			  	   h.leaf,
+				   1::int2,
+				   \'1\'::text,		--	limits,
+				   p.description
+		    INTO   vNode
+		    FROM   VIChierarchy h
+				   INNER JOIN VICparamdef p on p.paramID = h.paramRefID
+		    WHERE  h.treeID = $1
+		    AND	   h.nodeID = $2;
+		  END IF;
 		END IF;
 
 		-- be sure 0 rows are returned when nothing is found

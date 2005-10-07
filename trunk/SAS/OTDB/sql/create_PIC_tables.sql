@@ -57,7 +57,7 @@ CREATE TABLE PICparamref (
 	paramID		INT4			NOT NULL DEFAULT nextval('PICparamrefID'),
 	PVSSname	VARCHAR(120)	NOT NULL,
 	par_type	INT2			REFERENCES param_type(ID),
-	unit		INT2			REFERENCES unit(ID),
+	unit		INT2			DEFAULT 0 REFERENCES unit(ID),
 	pruning		INT2			DEFAULT 10,
 	description	TEXT,
 
