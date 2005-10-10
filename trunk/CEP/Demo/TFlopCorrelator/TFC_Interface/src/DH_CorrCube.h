@@ -11,6 +11,7 @@
 #define TFLOPCORRELATOR_DH_CORRCUBE_H
 
 
+#include <TFC_Interface/TFC_Config.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 
@@ -24,7 +25,8 @@ namespace LOFAR
 class DH_CorrCube: public DataHolder
 {
 public:
-  typedef fcomplex BufferType;
+  typedef fcomplex BufferType[NR_CHANNELS_PER_CORRELATOR][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
+  //typedef fcomplex BufferType[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_INTEGRATION][NR_CHANNELS_PER_CORRELATOR];
 
   explicit DH_CorrCube (const string& name, short subband); 
 
@@ -47,38 +49,31 @@ public:
 
   /// return pointer to array containing time/pol series for specified freqchannel and station 
   /// to be used in correlator inner loop
-  BufferType* getBufferTimePolSeries(int channel, int station);
+  //BufferType* getBufferTimePolSeries(int channel, int station);
 
   /// get/set completely specified element in the buffer
-  BufferType* getBufferElement(int channel, int station, int sample, int polarisation);
-  void setBufferElement(int channel, int station, int sample, int polarisation, BufferType* value); 
+  fcomplex* getBufferElement(int channel, int station, int sample, int polarization);
+  void setBufferElement(int channel, int station, int sample, int polarization, fcomplex* value); 
 
-  const unsigned int getBufSize() const;
+  unsigned int getBufSize() const;
 
   void setTestPattern();
+  void print();
 
 private:
+  //size_t offset(int channel, int station, int sample, int polarization);
+
   /// Forbid assignment.
   DH_CorrCube& operator= (const DH_CorrCube&);
 
-  BufferType*  itsBuffer;    // 
-  unsigned int itsBufSize;
+  BufferType*  itsBuffer;
   
   short itsSubBand;
-  short itsNFChannels;     // #frequency channels per buffer
-  short itsNStations;      // #stations per buffer
-  short itsNTimes;         // #time samples per buffer
-  short itsNPol;           // #polarisations per sample
 
   void fillDataPointers();
 };
 
 
-#define CCADDRESS_FREQ(freq) itsNPol*itsNTimes*itsNStations*itsNFChannels*(freq)
-#define CCADDRESS_STATION(freq, station) CCADDRESS_FREQ((freq)) +  itsNPol*itsNTimes*itsNStations*(station) 
-#define CCADDRESS_TIME(freq, station, time) CCADDRESS_STATION((freq),(station)) +  itsNPol*itsNTimes*(time) 
-#define CCADDRESS_POL(freq, station, time, pol) CCADDRESS_TIME((freq),(station),(time))  +  itsNPol*(pol)
- 
  inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
    { return itsBuffer; }
  
@@ -89,30 +84,29 @@ private:
    { itsBuffer = buffer; }
    
 
- inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int channel, 
+ inline fcomplex* DH_CorrCube::getBufferElement(int channel, 
 						  int station,
 						  int sample,
-						  int pol)     
-   { return itsBuffer + CCADDRESS_POL(channel, station, sample, pol); }
- 
-/*  inline BufferType* getBufferTimePolSeries(int channel, int station)  */
-/*    { return itsBuffer + CCADDRESS_STATION(channel, station); } */
+						  int polarization)     
+   { return &(*itsBuffer)[channel][station][sample][polarization]; }
+   //{ return &(*itsBuffer)[station][polarization][sample][channel]; }
  
  inline void DH_CorrCube::setBufferElement(int channel, 
 					   int sample, 
 					   int station, 
-					   int polarisation,
-					   BufferType* valueptr) {
-   *(itsBuffer + CCADDRESS_POL(channel, station, sample, polarisation)) = *valueptr;
+					   int polarization,
+					   fcomplex* valueptr) {
+   { (*itsBuffer)[channel][station][sample][polarization] = *valueptr; }
+   //{ (*itsBuffer)[station][polarization][sample][channel] = *valueptr; }
  }
  
- inline const unsigned int DH_CorrCube::getBufSize() const {
-   return itsBufSize;
+ inline unsigned int DH_CorrCube::getBufSize() const {
+   return sizeof *itsBuffer / sizeof(fcomplex);
  }
 
  inline void DH_CorrCube::setTestPattern() { 
-   for (unsigned int i = 0; i < itsBufSize; i++) {
-     *(itsBuffer + i) = 1.0 + 1.i;
+   for (unsigned int i = 0; i < getBufSize(); i++) {
+     ((fcomplex *) itsBuffer)[i] = makefcomplex(1.0f, 1.0f);
    }
  }
 
