@@ -24,6 +24,8 @@
 #include <tinyCEP/WorkHolder.h>
 #include <WH_Signal.h>
 #include <WH_FakeStation.h>
+#include <WH_Strip.h>
+#include <WH_Wrap.h>
 
 using namespace LOFAR;
 
@@ -112,12 +114,24 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
     ASSERTSTR(itsTHs.back()->init(), "Could not init TransportHolder");
     itsWHs.push_back(new WH_FakeStation(WH_DH_Name,
 					itsParamSet,
-					*itsTHs.back(),
 					stationIds[s],
 					delays[s]));
     itsSteps.push_back(new Step(itsWHs.back(), WH_DH_Name));
+    // share input and output DH, no cyclic buffer
+    itsSteps.back()->setInBufferingProperties(0, true, true, 10);
+
     comp.addBlock(itsSteps.back());
     itsSteps.back()->connect(0, itsSignalStep, s, 1,
+			     new TH_Mem(),
+			     false);
+
+    snprintf(WH_DH_Name, WH_DH_NameSize, "Strip_%d_of_%d", s, NRSP);
+    itsWHs.push_back(new WH_Strip(WH_DH_Name,
+				  *itsTHs.back(),
+				  itsParamSet));
+    itsSteps.push_back(new Step(itsWHs.back(), WH_DH_Name));
+    comp.addBlock(itsSteps.back());
+    itsSteps.back()->connect(0, itsSteps[itsSteps.size()-2], 0, 1,
 			     new TH_Mem(),
 			     false);
   };
@@ -127,10 +141,8 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
   //  ASSERTSTR (lastFreeNode == TH_MPI::getNumberOfNodes(), lastFreeNode << " nodes needed, "<<TH_MPI::getNumberOfNodes()<<" available");
 #endif
 
-  LOG_TRACE_FLOW_STR("Finished define()");
+  LOG_TRACE_FLOW_STR("Finished defineGenerator()");
 }
-
-
 
 void AH_FakeStation::prerun() {
   getComposite().preprocess();
