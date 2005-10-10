@@ -12,8 +12,11 @@ package gui;
 
 import jOTDB.jOTDBinterface;
 import jOTDB.jOTDBtree;
+import jOTDB.jConverterInterface;
 import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
+import java.rmi.Naming;
+
 
 /**
  *
@@ -53,7 +56,10 @@ public class treeModel extends AbstractTableModel {
             
        public void setTreeList(jOTDBinterface aRemoteOTDB,Vector aTreeList) {
            data = new Object[aTreeList.size()][headers.length];
+           
                 try {
+                    jConverterInterface types = (jConverterInterface) Naming.lookup (jConverterInterface.SERVICENAME); 
+                    
                     if (aTreeList.size() == 0) {
                         if (itsDebugFlag) System.out.println("Error:" + aRemoteOTDB.errorMsg());
                     } else {
@@ -71,9 +77,9 @@ public class treeModel extends AbstractTableModel {
                             data[k][0]=new Integer(tInfo.treeID());	   
 	                    data[k][1]=new String(tInfo.creator);
 	                    data[k][2]=new String(tInfo.creationDate);	
-	                    data[k][3]=new Short(tInfo.classification);
-	                    data[k][4]=new Short(tInfo.type);
-	                    data[k][5]=new Short(tInfo.state);
+	                    data[k][3]=new String(types.getClassif(tInfo.classification));
+	                    data[k][4]=new String(types.getTreeType(tInfo.type));
+	                    data[k][5]=new String(types.getTreeState(tInfo.state));
 	                    data[k][6]=new String(tInfo.campaign);	
 	                    data[k][7]=new String(tInfo.starttime);
 	                    data[k][8]=new String(tInfo.stoptime);
