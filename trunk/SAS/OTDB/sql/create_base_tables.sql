@@ -147,6 +147,7 @@ INSERT INTO unit values (6, 'RAM',		'Mb',	 '',			false);
 INSERT INTO unit values (7, 'GFLOP',	'GFLOP', '',			false);
 INSERT INTO unit values (8, 'MB/s',		'MB/s',	 '',			false);
 INSERT INTO unit values (9, 'MHz',		'MHz',	 '',			false);
+INSERT INTO unit values (10, 'Hz',		'Hz',	 '',			false);
 
 --
 -- Treetype table
