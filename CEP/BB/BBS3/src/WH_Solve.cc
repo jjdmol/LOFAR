@@ -33,6 +33,7 @@
 #include <BBS3/Solver.h>
 #include <BBS3/Prediffer.h>
 #include <BBS3/ParmData.h>
+#include <BBS3/BBSTestLogger.h>
 
 #include <iostream>
 #include <Common/VectorUtil.h>
@@ -93,6 +94,7 @@ void WH_Solve::preprocess()
 void WH_Solve::process()
 {
   LOG_TRACE_RTTI("WH_Solve process()");
+  BBSTest::ScopedTimer st("S:total_WH_Solve::process");
 
   // Query the database for a work order
   DH_WOSolve* wo =  dynamic_cast<DH_WOSolve*>(getDataManager().getInHolder(0));
@@ -119,7 +121,9 @@ void WH_Solve::process()
 
   // Update workorder status
   wo->setStatus(DH_WOSolve::Assigned);
+  BBSTest::ScopedTimer updateTimer("S:updateSolveWO");
   woPtr->updateDB(*connWO);
+  updateTimer.end();
 
   if (wo->getDoNothing() == false)
   {
@@ -150,7 +154,9 @@ void WH_Solve::process()
     }
     cout << " ]" << endl;
 
+    BBSTest::ScopedTimer solveTimer("S:solve");
     solver->solve(wo->getUseSVD(), resultQuality);
+    solveTimer.end();
 
     // Do the solve.
     res = solver->getSolvableValues();
@@ -226,6 +232,7 @@ Solver* WH_Solve::getSolver(int id)
 
 void WH_Solve::readInputs(Solver* solver, bool firstRead)
 {
+  BBSTest::ScopedTimer riTimer("S:ReadInputs");
   LOG_TRACE_FLOW("WH_Solve::readInputs");
   DH_Prediff* dh;
   for (int i=0; i<itsNPrediffers; i++)

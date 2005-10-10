@@ -32,6 +32,7 @@
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/Prediffer.h>
 #include <BBS3/MNS/MeqDomain.h>
+#include <BBS3/BBSTestLogger.h>
 
 namespace LOFAR
 {
@@ -154,6 +155,7 @@ void WH_Prediff::process()
     // Parameter update
     if (wo->getUpdateParms())
     {
+      BBSTest::ScopedTimer updatePTimer("P:update-parms");
       int solID = wo->getSolutionID();
       if (solID != -1)             // Read solution and update parameters
       {
@@ -169,6 +171,7 @@ void WH_Prediff::process()
 
     // Calculate, put in output dataholder buffer and send to solver
     {
+      BBSTest::ScopedTimer predifTimer("P:prediffer");
       dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
       casa::LSQFit fitter;
       pred->fillFitter (fitter);
@@ -196,6 +199,7 @@ void WH_Prediff::process()
   wo->setStatus(DH_WOPrediff::Executed);
   Connection* conn = getDataManager().getInConnection(0);
   ASSERTSTR(conn!=0, "No connection set!");
+  BBSTest::ScopedTimer st("P:prediffer_updating_db");
   wo->updateDB(*conn);
 
 

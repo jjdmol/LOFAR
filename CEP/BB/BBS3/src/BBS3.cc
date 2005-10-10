@@ -40,6 +40,8 @@
 
 #include <casa/Arrays/Matrix.h>
 
+#include <BBS3/BBSTestLogger.h>
+
 using namespace LOFAR;
 using namespace std;
 
@@ -174,6 +176,9 @@ int main (int argc, const char** argv)
     // To try out different (serial) experiments without the CEP
     // framework, use following two statements:
     INIT_LOGGER("BBS3Logger");
+    // init the BBSTestLogger
+    BBSTest::Logger::init();
+    BBSTest::ScopedTimer st("total-execute");
 
     // Set default values
     string name = "BBS3.inputDefault";

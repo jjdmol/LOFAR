@@ -31,12 +31,11 @@
 // This is a class that writes BBSTest loglines to the correct file
 
 #include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 #include <Transport/TH_MPI.h>
 #include <fstream>
-#include <MNS/MeqMatrix.h>
+#include <BBS3/ParmData.h>
 #include <Common/Timer.h>
-
-using namespace std;
 
 namespace LOFAR
 {
@@ -44,32 +43,53 @@ namespace LOFAR
 // \addtogroup BBS3
 // @{
 
-class BBSTestLogger
-{
-public:
-  BBSTestLogger();
-  ~BBSTestLogger();
+  namespace BBSTest 
+  {
 
-  static void log(const string& name, NSTimer& timer);
-  static void log(const string& name, const MeqMatrix& mat);
-  static void log(const string& text);
-
-private:
-  static void init();
-  
-  static int theirRank;
-  static void doLog(const string& text);
-};
-
-inline void BBSTestLogger::init(){
+    class Logger
+    {
+    public:
+      // init the logger
+      // there is no output until this function is called
+      static void init();
+      
+      // log a timer
+      static void log(NSTimer& timer);
+      // log a parm or a vector of parms
+      static void log(const string& name, const vector<ParmData>& parms);
+      static void log(const string& name, const ParmData& parm);
+      static void log(const ParmData& parm);
+      static void log(const string& text);
+      
+    private:
+      Logger();
+      ~Logger();
+      static bool theirIsInitted;
+      
+      static int theirRank;
+      static void doLog(const string& text);
+    };
+    
+    inline void Logger::init(){
+      theirIsInitted = true;
 #ifdef HAVE_MPI
-  if (theirRank == -1) {
-    theirRank = TH_MPI::getCurrentRank();
-  }
+      if (theirRank == -1) {
+	theirRank = TH_MPI::getCurrentRank();
+      }
 #endif
-}
+    }
 
-// @}
+    class ScopedTimer : private NSTimer
+    {
+    public:
+      ScopedTimer(const string& name): NSTimer(name.c_str(), false), itsIsPrinted(false) {start();};
+      ~ScopedTimer()                 { stop(); if (!itsIsPrinted) Logger::log(*this);};
+      void end()                     { stop(); Logger::log(*this); itsIsPrinted = true;};
+    private:
+      ScopedTimer();
+      bool itsIsPrinted;
+    };
+  }
 
 } // end namespace LOFAR
 

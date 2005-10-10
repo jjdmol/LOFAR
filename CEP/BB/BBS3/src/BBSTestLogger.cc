@@ -24,40 +24,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <BBSTestLogger.h>
+#include <BBS3/ParmData.h>
 #include <sstream>
 
 namespace LOFAR{
 
-int BBSTestLogger::theirRank = -1;
+  namespace BBSTest {
 
-  BBSTestLogger::BBSTestLogger() {
-    init();
-  }
+    bool Logger::theirIsInitted = false;
+    int Logger::theirRank = -1;
 
-  BBSTestLogger::~BBSTestLogger() {
-  }
+    Logger::Logger() {
+      init();
+    }
 
-  void BBSTestLogger::log(const string& name, NSTimer& timer)
-  { 
-    std::ostringstream ss;
-    ss << "timer "<<name;
-    timer.print(ss);
-    doLog(ss.str());
-  }
-  void BBSTestLogger::log(const string& name, const MeqMatrix& mat)
-  { 
-    std::ostringstream ss;
-    ss << "parm " << name << " " << mat;
-    doLog(ss.str());
-  }
-  void BBSTestLogger::log(const string& text)
-  { doLog(text);}
-  void BBSTestLogger::doLog(const string& text)
-  { 
-    init();
-    LOG_INFO_STR("BBSTest rank " << theirRank << ": " << text); 
-  }
+    Logger::~Logger() {
+    }
 
+    void Logger::log(NSTimer& timer)
+    { 
+      std::ostringstream ss;
+      ss << "Timer ";
+      timer.print(ss);
+      doLog(ss.str());
+    }
+    void Logger::log(const string& name, const vector<ParmData>& parms)
+    { 
+      vector<ParmData>::const_iterator it = parms.begin();
+      for (; it != parms.end(); it++) {
+	log(name, *it);
+      }
+    }
+    void Logger::log(const string& name, const ParmData& parm)
+    { 
+      std::ostringstream ss;
+      ss << "parm " << name << " " <<parm.getName() << " " << parm.getValues();
+      doLog(ss.str());
+    }
+    void Logger::log(const ParmData& parm)
+    { 
+      log("", parm);
+    }
+    void Logger::log(const string& text)
+    { doLog(text);}
+    void Logger::doLog(const string& text)
+    { 
+      if (theirIsInitted) {
+#if 0
+	LOG_INFO_STR("BBSTest rank " << theirRank << ": " << text); 
+#else
+	std::cout<<"BBSTest rank " << theirRank << ": " << text<< std::endl;
+#endif
+      }
+    }
+  }
 } // namespace LOFAR

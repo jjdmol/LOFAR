@@ -142,7 +142,9 @@ Prediffer::Prediffer(const string& msName,
   itsBlNext       (0),
   itsVisMapped    (True),
   itsDataMap      (0),
-  itsFlagsMap     (0)
+  itsFlagsMap     (0),
+  itsPredTimer    ("P:predict", false),
+  itsEqTimer      ("P:saveData", false)
 {
   LOG_INFO_STR( "Prediffer constructor ("
 		<< "'" << msName   << "', "
@@ -709,8 +711,8 @@ int Prediffer::setDomain (double fstart, double flength,
   }
 
   // Map the part of the file matching the given times.
-  NSTimer mapTimer;
-  mapTimer.start();
+  BBSTest::ScopedTimer mapTimer("P:file-mapping");
+  //  mapTimer.start();
   itsDataMap->unmapFile();
   itsFlagsMap->unmapFile();
   // Find the times matching the given time interval.
@@ -730,8 +732,7 @@ int Prediffer::setDomain (double fstart, double flength,
     return 0;
   }
   
-  BBSTestLogger BBSTest;
-  BBSTest.log("BeginOfInterval");
+  BBSTest::Logger::log("BeginOfInterval");
 
   // Find the end of the interval.
   int startIndex = itsTimeIndex;
@@ -759,19 +760,19 @@ int Prediffer::setDomain (double fstart, double flength,
   // Map the correct flags subset (this time interval)
   itsFlagsMap->mapFile(startOffset, nrValues); 
 
-  mapTimer.stop();
-  BBSTest.log("file-mapping", mapTimer);
+  mapTimer.end();
+  //  BBSTestLogger::log("file-mapping", mapTimer);
 
-  NSTimer parmTimer;
-  parmTimer.start();
+  BBSTest::ScopedTimer parmTimer("P:initparms");
+  //  parmTimer.start();
   itsDomain = MeqDomain(itsStartFreq + itsFirstChan*itsStepFreq,
 			itsStartFreq + (itsLastChan+1)*itsStepFreq,
 			startTime,
 			endTime);
 
   initParms (itsDomain);
-  parmTimer.stop();
-  BBSTest.log("initparms", parmTimer);
+  //  parmTimer.stop();
+  //  BBSTestLogger::log("initparms", parmTimer);
   // Return the (estimated) maximum buffer size needed to marshall the
   // fitter object.
   return (itsNrScid+1)*itsNrScid/2*8 + 1000;
@@ -968,8 +969,8 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
     fitter.merge(threadPrivateFitters[i]);
 #endif
 
-  BBSTestLogger::log("predict", itsPredTimer);
-  BBSTestLogger::log("formeqs", itsEqTimer);
+  BBSTest::Logger::log(itsPredTimer);
+  BBSTest::Logger::log(itsEqTimer);
 }
 
 
@@ -1361,8 +1362,8 @@ void Prediffer::saveResidualData (bool subtract, bool write)
       }
     }
   }
-  BBSTestLogger::log("predict", itsPredTimer);
-  BBSTestLogger::log("saveData", itsEqTimer);
+  BBSTest::Logger::log(itsPredTimer);
+  BBSTest::Logger::log(itsEqTimer);
   // Make sure data is written.
   if (write) {
     itsDataMap->flush();
@@ -1659,8 +1660,8 @@ void Prediffer::resetEqLoop()
 
 void Prediffer::writeParms()
 {
-  NSTimer saveTimer;
-  saveTimer.start();
+  BBSTest::ScopedTimer saveTimer("P:write-parm");
+  //  saveTimer.start();
   const vector<MeqParm*>& parmList = itsParmGroup.getParms();
 
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
@@ -1676,8 +1677,8 @@ void Prediffer::writeParms()
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
-  saveTimer.stop();
-  BBSTestLogger::log("write-parm", saveTimer);
+  //  saveTimer.stop();
+  //  BBSTest::Logger::log("write-parm", saveTimer);
   cout << "wrote timeIndex=" << itsTimeIndex
        << " nrTimes=" << itsNrTimes << endl;
 }
