@@ -1,3 +1,17 @@
+
+LCS/AMC/AMCImpl: Version 1.0 patch 2, date: 2005/10/10
+======================================================
+
+The following BugIDs have been resolved:
+---------------------------------------
+
+# 444 : amcserver leaks file descriptors/socket
+
+        In ConverterServer::handleConnections(), the data socket is now
+        deleted in the parent process; otherwise the server would sooner or
+        later run out of file descriptors.
+
+
 LCS/AMC/AMCImpl: Version 1.0 patch 1, date: 2005/09/27
 ======================================================
 

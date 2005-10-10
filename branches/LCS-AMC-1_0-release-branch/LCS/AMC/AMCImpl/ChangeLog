@@ -1,11 +1,30 @@
+2005-10-10 23:16  loose
+
+	* NEWS: BugID: 444
+
+	  Created patch release 1_0patch2.
+
+2005-10-10 23:01  loose
+
+	* src/AMCServer/ConverterServer.cc: BugID: 444
+
+	  The parent process should delete the dataSocket object; otherwise
+	  we will sooner or later run out of file descriptors.
+
+2005-09-27 16:37  loose
+
+	* ChangeLog, NEWS: BugID: 382
+
+	  Created patch release 1_0patch1.
+
 2005-09-26 09:56  loose
-  
+
 	* src/AMCServer/ConverterProcess.cc: BugID: 382
-  
+
 	  recvRequest() and sendResult() now throw a ServerError exception
 	  when read() or write() fails. This exception is caught in
 	  handleRequests() which then returns.
-  
+
 2005-07-05 09:40  loose
   
 	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
