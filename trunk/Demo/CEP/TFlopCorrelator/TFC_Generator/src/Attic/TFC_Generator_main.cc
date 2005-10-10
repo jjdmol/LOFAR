@@ -35,10 +35,10 @@ int main (int argc, const char** argv) {
       myAHController.main(argc, argv);
     } else {
       LOG_TRACE_FLOW("Main program not started by ACC");
-      // there are no commandline arguments, so we were not called by ACC
       AH_FakeStation myAH;
 
       ACC::APS::ParameterSet ps("TFlopCorrelator.cfg"); 
+
       int NoRuns = ps.getInt32("Generator.NoRuns");
       myAH.setParameters(ps);
       

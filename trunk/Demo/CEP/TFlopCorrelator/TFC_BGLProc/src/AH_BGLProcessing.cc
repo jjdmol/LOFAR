@@ -162,6 +162,7 @@ void AH_BGLProcessing::run(int steps) {
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
     vector<WorkHolder*>::iterator it = itsWHs.begin();
+    cout<<"run "<<i<<" of "<<steps<<endl;
     for (; it < itsWHs.end(); it++) {
       (*it)->baseProcess();
     }

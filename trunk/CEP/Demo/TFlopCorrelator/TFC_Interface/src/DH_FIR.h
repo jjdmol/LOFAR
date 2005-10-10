@@ -55,7 +55,7 @@ public:
   /// This accessor is designed specifically for the first version 
   /// TFlopCorrelator. To maintain compatibility with the DH_CorrCube
   /// interface, a channel parameter is also defined, but not used.
-  BufferType getBufferElement(short channel, short station, short time, short pol);
+  BufferType getBufferElement(short channel, short station, int32 time, short pol);
 
   /// Test pattern used in regression tests of the correlator
   void setCorrelatorTestPattern();

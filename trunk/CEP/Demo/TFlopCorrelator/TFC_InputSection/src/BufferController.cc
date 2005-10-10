@@ -58,50 +58,70 @@ BufferController::~BufferController()
   delete itsMetadataBuffer;
 }
  
-timestamp_t BufferController::getOldestStamp()
+timestamp_t BufferController::getOldestStamp(mutex::scoped_lock& sl)
 {
-  int bid;
-
-  mutex::scoped_lock sl(buffer_mutex);
-
   // wait until at least one element is available
   while (getCount() <= 0) 
   {
     data_available.wait(sl);
   }
   // CONDITION: Count > 0
-  bid = itsTail.getValue();
+  int bid = itsTail.getValue();
 
   return itsMetadataBuffer[bid].timestamp;
 }
 
-timestamp_t BufferController::getNewestStamp()
+timestamp_t BufferController::getNewestStamp(mutex::scoped_lock& sl)
 {
-  int bid;
-
-  mutex::scoped_lock sl(buffer_mutex);
-
   // wait until at least one element is available
   while (getCount() <= 0) 
   {
     data_available.wait(sl);
   }
   // CONDITION: Count > 0
-
-  // this method is called before the first read,
-  // so it is allowed to move the tails;
-  bid = itsOldHead.getValue() - 1;
+  int bid = itsOldHead.getValue() - 1;
 
   return itsMetadataBuffer[bid].timestamp;
 }
 
-void BufferController::setStartOffset(int offset)
+timestamp_t BufferController::setStartOffset()
 {
 
   mutex::scoped_lock sl(buffer_mutex);
+
+  // calculate offset
+  timestamp_t newestStamp = getNewestStamp(sl);
+  timestamp_t oldestStamp = getOldestStamp(sl);
+  int offset = newestStamp - oldestStamp;
 
   // wait until enough data becomes available
-  while (getCount() - offset < 1)
+  while (getCount() - offset <= 0)
+  {
+    data_available.wait(sl);
+  }
+  
+  // This method is called when there is no reader,
+  // so tail == oldTail
+  itsTail += offset;
+  itsOldTail = itsTail;
+  int bid = itsTail.getValue();
+
+  space_available.notify_all();
+  
+  return itsMetadataBuffer[bid].timestamp;
+}
+
+void BufferController::setStartOffset(timestamp_t startstamp)
+{
+
+  mutex::scoped_lock sl(buffer_mutex);
+
+  // calculate offset
+  timestamp_t oldestStamp = getOldestStamp(sl);
+  int offset = startstamp - oldestStamp;
+
+  // wait until enough data becomes available
+  while (getCount() - offset <= 0)
   {
     data_available.wait(sl);
   }
@@ -114,11 +134,17 @@ void BufferController::setStartOffset(int offset)
   space_available.notify_all();
 }
 
-int BufferController::setReadOffset(int offset)
+int BufferController::setReadOffset(timestamp_t startstamp)
 {
-  int bid;
-
   mutex::scoped_lock sl(buffer_mutex);
+  
+  // calculate offset
+  timestamp_t oldestStamp = getOldestStamp(sl);
+  int offset = startstamp - oldestStamp;
+
+  // check offset
+  ASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
+	    "BufferController: timestamp offset invalid (startstamp: " << startstamp << "   oldestStamp: " << oldestStamp <<"   newestStamp: " << getNewestStamp(sl) << "   count: " << getCount() << ")");
 
   // wait until enough data becomes available
   while (getCount() - offset < MIN_COUNT)
@@ -130,20 +156,24 @@ int BufferController::setReadOffset(int offset)
   // so tail == oldTail
   itsTail += offset;
   itsOldTail = itsTail;
-  bid = itsTail.getValue();
+  int bid = itsTail.getValue();
    
   return bid;
 }
 
-int BufferController::setRewriteOffset(int offset)
+int BufferController::setRewriteOffset(timestamp_t startstamp)
 {
   mutex::scoped_lock sl(buffer_mutex);
 
+  // calculate offset
+  timestamp_t oldestStamp = getOldestStamp(sl);
+  int offset = startstamp - oldestStamp;
+
   // check if there are enough elements in buffer
-  if (offset >= getCount()) {
+  if ((offset >= getCount()) || (offset < 0)) {
     return -1;
   } 
-  // CONDITION: offset + nelements > Count
+  // CONDITION: offset + nelements < Count
    
   itsOldHead = itsTail + offset;
 
@@ -236,42 +266,23 @@ timestamp_t BufferController::startBufferRead()
   // start reading so overwriting not allowed anymore 
   itsOverwritingAllowed = false;
 
-  timestamp_t newestStamp = getNewestStamp();
-  timestamp_t oldestStamp = getOldestStamp();
-  
-  // set offset
-  setStartOffset(newestStamp - oldestStamp);
-
-  return getOldestStamp();
+  // set offset and return
+  return setStartOffset();
 }
 
-void BufferController::startBufferRead(timestamp_t stamp)
+void BufferController::startBufferRead(timestamp_t startstamp)
 {
   // start reading so overwriting not allowed anymore 
   itsOverwritingAllowed = false;
   
-  // get oldest stamp
-  timestamp_t oldestStamp = getOldestStamp();
-
   // set offset
-  setStartOffset(stamp - oldestStamp);
+  setStartOffset(startstamp);
 }
 
 void BufferController::getElements(vector<SubbandType*> buf, int& invalidcount, timestamp_t startstamp, int nelements)
 {
-  // get oldest timestamp
-  timestamp_t oldestStamp = getOldestStamp();
-  
-  // calculate offset
-  int offset = startstamp - oldestStamp;
-
-  // check offset
-  ASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
-	       "BufferController: timestamp offset invalid");
-
   // set offset, get startindex
-  int sid = setReadOffset(offset);
-
+  int sid = setReadOffset(startstamp);
 
   // get metadata for requested block
   invalidcount = 0;
@@ -358,37 +369,11 @@ void BufferController::writeDummy(SubbandType* dum, timestamp_t startstamp, int 
 
 bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
 {
-  // get oldest timestamp
-  int bid;
-
-  { // this block is locked by the scoped_lock
-    mutex::scoped_lock sl(buffer_mutex);
-
-    if (getCount() <= 0) {
-      // no elements in the buffer
-      bid = -1;
-    } else {
-      bid = itsTail.getValue();
-      
-      // calculate offset
-      int offset = startstamp - itsMetadataBuffer[bid].timestamp;
-      
-      // check if there are enough elements in buffer
-      if (offset >= getCount()) {
-	// not enough elements in the buffer
-	bid = -1;
-
-      } else {   
-        itsOldHead = itsTail + offset;
-        bid = itsOldHead.getValue();
-      }
-    }
-
-  } // this block is locked by the scoped_lock
-
+  // set offset, get startindex
+  int bid = setRewriteOffset(startstamp);
 
   if (bid != -1) {
-
+    // element not available
     return false;
 
   } else {

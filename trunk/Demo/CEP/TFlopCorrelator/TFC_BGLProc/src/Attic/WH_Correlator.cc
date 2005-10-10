@@ -70,13 +70,13 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 }
 
 void WH_Correlator::preprocess() {
+  int dhSize = (static_cast<DH_FIR*>(getDataManager().getInHolder(0)))->getBufferSize();
+  int mySize = itsNelements*itsNpolarisations*itsNsamples;
 
-  ASSERTSTR(static_cast<DH_FIR*>(getDataManager().getInHolder(0))->getBufferSize() == 
-	    itsNelements*itsNpolarisations*itsNsamples, 
-	    "InHolder size not equal to workholder size");
-//   ASSERTSTR(static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize() == ELEMENTS*SAMPLES, "InHolder size not equal to defined size");
+  ASSERTSTR(dhSize == mySize, 
+	    "InHolder size not equal to workholder size ("<<dhSize<<" != "<<mySize<<")");
 
-  ASSERTSTR(static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBufSize() == 
+  ASSERTSTR((static_cast<DH_Vis*>(getDataManager().getOutHolder(0)))->getBufSize() == 
 	    itsNpolarisations*itsNpolarisations*itsNelements*(itsNelements+1)/2, 
 	    "OutHolder size not equal to workholder size");
 
@@ -209,6 +209,11 @@ void WH_Correlator::process() {
       reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
       reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
       reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);     
+
+      DBGASSERTSTR(reg_A0_X == reg_B0_X, "0_X not equal in loop " << A << " " << B << " " << time << " " << channel);
+      DBGASSERTSTR(reg_A0_Y == reg_B0_Y, "0_Y not equal in loop " << A << " " << B << " " << time << " " << channel);
+      DBGASSERTSTR(reg_A1_X == reg_B1_X, "1_X not equal in loop " << A << " " << B << " " << time << " " << channel);
+      DBGASSERTSTR(reg_A1_Y == reg_B1_Y, "1_Y not equal in loop " << A << " " << B << " " << time << " " << channel);
 #endif
       // calculate all correlations in the triangle; 
       // todo: prefetch new B dimesnsions on the way
@@ -229,7 +234,6 @@ void WH_Correlator::process() {
       *(outptr1++) += reg_A1_X * ~reg_B1_Y;
       *(outptr1++) += reg_A1_Y * ~reg_B1_X;
       *(outptr1++) += reg_A1_Y * ~reg_B1_Y;        
-      
     }
   }
 

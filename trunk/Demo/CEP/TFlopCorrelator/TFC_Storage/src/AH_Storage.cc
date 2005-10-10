@@ -80,6 +80,7 @@ void AH_Storage::run(int steps) {
   LOG_TRACE_FLOW_STR("Start AH_Storage::run() "  );
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
+    cout<<"run "<<i+1<<" of "<<steps<<endl;
     getComposite().process();
   }
   LOG_TRACE_FLOW_STR("Finished AH_Storage::run() "  );
