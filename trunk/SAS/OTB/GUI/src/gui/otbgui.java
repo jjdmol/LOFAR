@@ -2,7 +2,7 @@
 
  * otbgui.ja
 
- *
+*
 
  * Created on April 26, 2005, 2:09 PM
 
@@ -14,6 +14,7 @@ package gui;
 
 
 
+import jOTDB.jConverterInterface;
 import jOTDB.jOTDBinterface;
 import jOTDB.jOTDBnode;
 import jOTDB.jOTDBparam;
@@ -65,8 +66,8 @@ public class otbgui extends javax.swing.JFrame {
     
     // Log defaults
     private boolean setMostRecent=false;
-    private String  itsStartTime="2005-01-01";
-    private String  itsEndTime="2005-12-31";
+    private String  itsStartTime="2001-01-01 00:00:00";
+    private String  itsEndTime="2005-12-31 23:59:59";
     private String  itsParamName="None";
     
     // initial button states
@@ -78,8 +79,9 @@ public class otbgui extends javax.swing.JFrame {
     private static jOTDBinterface remoteOTDB;    
     private static jTreeMaintenanceInterface remoteMaintenance;
     private static jTreeValueInterface remoteValue;
-
-   private DefaultMutableTreeNode root  = new DefaultMutableTreeNode();
+    private static jConverterInterface remoteTypes;
+    
+    private DefaultMutableTreeNode root  = new DefaultMutableTreeNode();
     private DefaultMutableTreeNode aNode = new DefaultMutableTreeNode();
     
     private boolean isTreeFilled = false;
@@ -93,10 +95,11 @@ public class otbgui extends javax.swing.JFrame {
 
     // -------------- public vars ------------------
 
-    public boolean itsDebugFlag          = false;
-    public static String itsSelectedTree = "None";
-    public Integer SelectedTreeID        = -1;
-    public Integer SelectedNodeID        = -1;
+    public boolean itsDebugFlag              = false;
+    public static String itsSelectedTree     = "None";
+    public String itsSelectedTreeType        = "";
+    public Integer SelectedTreeID            = -1;
+    public Integer SelectedNodeID            = -1;
    
     // SettingsDialog Defaults
     public static String RMIServerName      = "lofar17.astron.nl";
@@ -104,6 +107,7 @@ public class otbgui extends javax.swing.JFrame {
     public static String RMIRegistryName    = jOTDBinterface.SERVICENAME;
     public static String RMIMaintenanceName = jTreeMaintenanceInterface.SERVICENAME;
     public static String RMIValName         = jTreeValueInterface.SERVICENAME;
+    public static String RMIConverterName   = jConverterInterface.SERVICENAME; 
     public static String OTDBUserName       = "paulus";
     public static String OTDBPassword       = "boskabouter";
     public static String OTDBDBName         = "coolen";   
@@ -196,7 +200,7 @@ public class otbgui extends javax.swing.JFrame {
         SettingsMenuDebugSetting = new javax.swing.JRadioButtonMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximizedBounds(new java.awt.Rectangle(0, 0, 1000, 400));
+        setMaximizedBounds(new java.awt.Rectangle(0, 0, 1024, 768));
         setName("mainFrame");
         MainPane.setMinimumSize(new java.awt.Dimension(750, 500));
         MainPane.setPreferredSize(new java.awt.Dimension(750, 500));
@@ -415,7 +419,7 @@ public class otbgui extends javax.swing.JFrame {
         ParamIndexText.setPreferredSize(new java.awt.Dimension(200, 19));
         ParamPanel.add(ParamIndexText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 35, 200, -1));
 
-        ParamTypeSelection.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "node", "boolean", "int", "long", "float", "double", "icpx", "lcpx", "fcpx", "dcpx", "text", "bin", "PVSS float", "PVSS uint", "PVSS int", "PVSS float", "PVSS boolean", "PVSS text" }));
+        ParamTypeSelection.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "node", "bool", "int", "long", "flt", "dbl", "icpx", "lcpx", "fcpx", "dcpx", "text", "bin", "uint" }));
         ParamTypeSelection.setToolTipText("Type of this Parameter");
         ParamTypeSelection.setEnabled(false);
         ParamTypeSelection.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -556,14 +560,14 @@ public class otbgui extends javax.swing.JFrame {
         LogTableScrollPane.add(LogTable);
         LogTableScrollPane.setViewportView(LogTable);
 
-        LogPanel.add(LogTableScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 796, 190));
+        LogPanel.add(LogTableScrollPane, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 796, 350));
 
         LogParamNameLabel.setText("ParamName");
-        LogPanel.add(LogParamNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 220, -1, -1));
+        LogPanel.add(LogParamNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 370, -1, -1));
 
         LogParamNameText.setText("None");
         LogParamNameText.setEnabled(false);
-        LogPanel.add(LogParamNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 220, 430, -1));
+        LogPanel.add(LogParamNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 370, 430, -1));
 
         LogParamRecentOnlyCheckbox.setText("Most Recent Only");
         LogParamRecentOnlyCheckbox.setToolTipText("Select to get only the most recent log val");
@@ -574,15 +578,15 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
 
-        LogPanel.add(LogParamRecentOnlyCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 270, -1, -1));
+        LogPanel.add(LogParamRecentOnlyCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 400, -1, -1));
 
         LogParamEndTimeLabel.setText("EndTime");
-        LogPanel.add(LogParamEndTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 240, -1, -1));
+        LogPanel.add(LogParamEndTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 410, -1, -1));
 
         LogParamStartTimeLabel.setText("StartTime");
-        LogPanel.add(LogParamStartTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 240, -1, -1));
+        LogPanel.add(LogParamStartTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 390, -1, -1));
 
-        LogParamStartTimeText.setText("2005-01-01");
+        LogParamStartTimeText.setText("2005-01-01 00:00:00.000");
         LogParamStartTimeText.setToolTipText("Give Start date/time for logging");
         LogParamStartTimeText.setEnabled(false);
         LogParamStartTimeText.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -591,9 +595,9 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
 
-        LogPanel.add(LogParamStartTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 240, 150, -1));
+        LogPanel.add(LogParamStartTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 390, 180, -1));
 
-        LogParamEndTimeText.setText("2005-12-31");
+        LogParamEndTimeText.setText("2005-12-31 59:59:59.000");
         LogParamEndTimeText.setToolTipText("Give end date/time for log search");
         LogParamEndTimeText.setEnabled(false);
         LogParamEndTimeText.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -602,7 +606,7 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
 
-        LogPanel.add(LogParamEndTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 240, 180, -1));
+        LogPanel.add(LogParamEndTimeText, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 410, 180, -1));
 
         logParamApplyButton.setText("Apply");
         logParamApplyButton.setToolTipText("Apply changes to logform");
@@ -613,7 +617,7 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
 
-        LogPanel.add(logParamApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 320, -1, -1));
+        LogPanel.add(logParamApplyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 440, -1, -1));
 
         logParamCancelButton.setText("Cancel");
         logParamCancelButton.setToolTipText("restore defaults");
@@ -624,7 +628,7 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
 
-        LogPanel.add(logParamCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 320, -1, -1));
+        LogPanel.add(logParamCancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 440, -1, -1));
 
         treeTabbedPane.addTab("Log", null, LogPanel, "Log Page");
 
@@ -862,7 +866,7 @@ public class otbgui extends javax.swing.JFrame {
 
 
     private void TreeSelectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TreeSelectButtonActionPerformed
-        itsSelectedTree = "None";
+        itsSelectedTree     = "None";
         int aRow= TreeTable.getSelectedRow();
         if ( aRow != -1) {
             SelectedTreeID=new Integer((Integer)TreeTable.getValueAt(aRow, 0));
@@ -878,7 +882,7 @@ public class otbgui extends javax.swing.JFrame {
             // Start filling the TreeView
             if (itsSelectedTree != "None") {
                 if (getTreeList()) {
-                    
+                    itsSelectedTreeType=TreeTable.getValueAt(aRow,4).toString();
                 } else {
                     if (itsDebugFlag) System.out.println("Error getting the Treelist from the server");
                 }
@@ -1094,7 +1098,7 @@ public class otbgui extends javax.swing.JFrame {
           }
         catch (Exception e)
 	  {
-	     System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
+	     System.out.println ("Open Remote Connection via RMI and JNI failed: " + e);
 	  }
         return false;
     }   
@@ -1114,7 +1118,7 @@ public class otbgui extends javax.swing.JFrame {
           }
         catch (Exception e)
 	  {
-	     System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
+	     System.out.println ("Getting Remote Maintenance via RMI and JNI failed: " + e);
 	  }
         return false;
     }  
@@ -1135,11 +1139,30 @@ public class otbgui extends javax.swing.JFrame {
           }
         catch (Exception e)
 	  {
-	     System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
+	     System.out.println ("Getting Remote Value via RMI and JNI failed: " + e);
 	  }
         return false;
     }
 
+    private boolean openRemoteConverter(String RMIConverterName) {
+        try {
+            if (itsDebugFlag) System.out.println("Starting... for "+RMIConverterName);
+        
+            // create a remote object\
+            remoteTypes = (jConverterInterface) Naming.lookup (RMIConverterName); 
+//	    Registry remoteTypes = LocateRegistry.getRegistry(RMIConverterName.toCharArray()[0]);
+//	    remoteValue = (jConverterInterface) remoteRegistry.lookup (RMIConverterName);
+            if (itsDebugFlag) System.out.println (remoteValue);
+					    
+     	    if (itsDebugFlag) System.out.println("Connection succesful!");   
+            return true;
+          }
+        catch (Exception e)
+	  {
+	     System.out.println ("Getting remote Converter via RMI and JNI failed: " + e);
+	  }
+        return false;
+    }
 
     
     
@@ -1218,11 +1241,7 @@ public class otbgui extends javax.swing.JFrame {
             itsPresentParam.limits=aParamLimits;
             hasChanged=true;
         }
-        if (!aParamDescription.equals(ParamDescriptionText.getText())) {
-            aParamDescription=ParamDescriptionText.getText();
-            itsPresentParam.description=aParamDescription;
-            hasChanged=true;
-        }
+
         setParamButtons(false);
         if (hasChanged) {
             if (saveParam(itsPresentParam) ) {
@@ -1251,12 +1270,7 @@ public class otbgui extends javax.swing.JFrame {
             if (itsDebugFlag) System.out.println("Node limits changed to "+itsPresentNode.limits);
             hasChanged=true;
         }
-        if (!aNodeDescription.equals(NodeDescriptionText.getText())) {
-            aNodeDescription=NodeDescriptionText.getText();
-            itsPresentNode.description=aNodeDescription;
-            if (itsDebugFlag) System.out.println("Node description changed to "+itsPresentNode.description);
-            hasChanged=true;
-        }
+
         setNodeButtons(false);
         if (hasChanged) {
             if (saveNode(itsPresentNode) ) {
@@ -1291,12 +1305,18 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setParamButtons(boolean flag) {
+        // To avoid that saving is available for type hardware and type VHtree trees we 
+        // set flag to false for now
+        if (itsSelectedTreeType != "VItemplate") flag=false;
         ParamApplyButton.setEnabled(flag);
         ParamCancelButton.setEnabled(flag);
         paramButtonsEnabled=flag;
     }
     
     private void setNodeButtons(boolean flag) {
+        // To avoid that saving is available for type hardware and type VHtree trees we 
+        // set flag to false for now
+        if (itsSelectedTreeType != "VItemplate") flag=false;
         NodeApplyButton.setEnabled(flag);
         NodeCancelButton.setEnabled(flag);
         nodeButtonsEnabled=flag;
@@ -1317,8 +1337,9 @@ public class otbgui extends javax.swing.JFrame {
         try {
             String aRMS="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIMaintenanceName;
             String aRMV="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIValName;
+            String aRMC="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIConverterName;
           
-            if (openRemoteMaintenance(aRMS) && openRemoteValue(aRMV)) {  
+            if (openRemoteMaintenance(aRMS) && openRemoteValue(aRMV) && openRemoteConverter(aRMC)) {  
                if (fillTreeList()) {
                   if (itsDebugFlag) System.out.println("Tree should be filled now");
                   aFlag=true;
@@ -1482,23 +1503,23 @@ public class otbgui extends javax.swing.JFrame {
     private void updateParamPanel(int aNodeID) {
         try {
             itsPresentNode=remoteMaintenance.getNode(SelectedTreeID, aNodeID);
-            System.out.println("Present Node: "+itsPresentNode.name);
+            if (itsDebugFlag) System.out.println("Present Node: "+itsPresentNode.name);
             // Check if valid parameter found
             jOTDBparam aP=remoteMaintenance.getParam(SelectedTreeID, itsPresentNode.paramDefID());
-            System.out.println("Input TreeID: "+SelectedTreeID);
-            System.out.println("Input NodeID: "+aNodeID);
-            System.out.println("pNode NodeID: "+itsPresentNode.nodeID());
-            System.out.println("pNode NodeParamDefID: "+itsPresentNode.paramDefID());
+            if (itsDebugFlag) System.out.println("Input TreeID: "+SelectedTreeID);
+            if (itsDebugFlag) System.out.println("Input NodeID: "+aNodeID);
+            if (itsDebugFlag) System.out.println("pNode NodeID: "+itsPresentNode.nodeID());
+            if (itsDebugFlag) System.out.println("pNode NodeParamDefID: "+itsPresentNode.paramDefID());
             
             printParam(aP);
             
-            if (itsPresentNode.leaf && aP.nodeID() > 0) {
+            if (itsPresentNode.leaf && aP.paramID() > 0) {
                 itsPresentParam=aP;
 
                 
                 ParamNameText.setText(itsPresentParam.name);
                 ParamIndexText.setText(Short.toString(itsPresentParam.index));
-//                ParamTypeSelection.setSelectedIndex(itsPresentParam.type);
+                ParamTypeSelection.setSelectedIndex(getTypeIndex(itsPresentParam.type));
                 ParamUnitSelection.setSelectedIndex(itsPresentParam.unit);
                 ParamPruningText.setText(Short.toString(itsPresentParam.pruning));
                 ParamValMomentText.setText(Short.toString(itsPresentParam.valMoment));
@@ -1529,6 +1550,21 @@ public class otbgui extends javax.swing.JFrame {
         }
     }
 
+    private int getTypeIndex(Short aType) {
+        try {
+            if (itsDebugFlag) System.out.println("Type in: " + aType);
+            
+            for (int i=0;i<ParamTypeSelection.getItemCount();i++) {
+                if (itsDebugFlag) System.out.println("List nr: " + i + " : "+ ParamTypeSelection.getItemAt(i));
+                if (itsDebugFlag) System.out.println("Remote Type found: "+remoteTypes.getParamType(aType));
+                if (remoteTypes.getParamType(aType).equals(ParamTypeSelection.getItemAt(i))) return i;
+            }
+        } catch (Exception e) {
+            System.out.println ("Remote Conversion via RMI and JNI failed: " + e); 
+        }            
+        return -1;
+    }
+    
     private void updateLogPanel(int aNodeID) {
         try {
     
@@ -1536,7 +1572,7 @@ public class otbgui extends javax.swing.JFrame {
             jOTDBparam aP=remoteMaintenance.getParam(SelectedTreeID, itsPresentNode.paramDefID());
             
             // Check if param is valid
-            if (itsPresentNode.leaf && aP.nodeID() > 0) {
+            if (itsPresentNode.leaf && aP.paramID() > 0) {
                 itsPresentParam=aP;
                 refreshLogPanel();
                 
@@ -1553,13 +1589,13 @@ public class otbgui extends javax.swing.JFrame {
     private boolean saveParam(jOTDBparam aP) {
         boolean aFlag=false;
         try {
-          System.out.println("Saving Param:");
+          if (itsDebugFlag) System.out.println("Saving Param:");
           printParam(aP);
             
           if (aP.nodeID() > 0) {
               aFlag=remoteMaintenance.saveParam(aP);
           } else {
-              System.out.println("Invalid parameter. NOT saved!");
+              if (itsDebugFlag) System.out.println("Invalid parameter. NOT saved!");
           }
           
             
@@ -1572,7 +1608,7 @@ public class otbgui extends javax.swing.JFrame {
     private boolean saveNode(jOTDBnode aN) {
         boolean aFlag=false;
         try {
-            System.out.println("Saving Node:");
+            if (itsDebugFlag) System.out.println("Saving Node:");
             printNode(aN);
             
             if(aN.nodeID() > 0)  {
@@ -1623,8 +1659,8 @@ public class otbgui extends javax.swing.JFrame {
     
     private void clearLogPanel() {
         itsParamName="None";
-        itsStartTime="2005-01-01";
-        itsEndTime="2005-12-31";
+        itsStartTime="2001-01-01 00:00:00";
+        itsEndTime="2005-12-31 23:59:59";
         setMostRecent=false;
         LogParamNameText.setText(itsParamName);
         LogParamStartTimeText.setText(itsStartTime);
@@ -1640,7 +1676,6 @@ public class otbgui extends javax.swing.JFrame {
     private void enableNodePanel(boolean aFlag) {
         NodeInstancesText.setEnabled(aFlag);
         NodeLimitsText.setEnabled(aFlag);
-        NodeDescriptionText.setEnabled(aFlag);
     }
     
     private void enableLogPanel(boolean aFlag) {
@@ -1655,8 +1690,7 @@ public class otbgui extends javax.swing.JFrame {
         ParamPruningText.setEnabled(aFlag);
         ParamValMomentText.setEnabled(aFlag);
         ParamRTModSelection.setEnabled(aFlag);
-        ParamLimitsText.setEnabled(aFlag);
-        ParamDescriptionText.setEnabled(aFlag);        
+        ParamLimitsText.setEnabled(aFlag);      
     }
 
     private void printParam(jOTDBparam aP) {
@@ -1674,7 +1708,7 @@ public class otbgui extends javax.swing.JFrame {
             System.out.println("ValMoment: "+aP.valMoment);
             System.out.println("runtimeMod: "+aP.runtimeMod);
             System.out.println("Limits: "+aP.limits);
-            System.out.println("Dscription: "+aP.description);
+            System.out.println("Description: "+aP.description);
         }
     }
 
@@ -1697,7 +1731,13 @@ public class otbgui extends javax.swing.JFrame {
     
     private void refreshLogPanel() {
         try {
-            Vector aLogList=remoteValue.searchInPeriod(SelectedTreeID.intValue(), itsPresentNode.nodeID(),1,itsStartTime,itsEndTime,setMostRecent);
+            System.out.println("Trying to call searchInPeriod with: ");
+            System.out.println("TreeID: "+SelectedTreeID.intValue());
+            System.out.println("NodeID: "+itsPresentNode.nodeID());
+            System.out.println("Start: "+itsStartTime);
+            System.out.println("End: "+itsEndTime);
+            LogParamNameText.setText(itsPresentNode.name);
+            Vector aLogList=remoteValue.searchInPeriod(SelectedTreeID.intValue(), itsPresentNode.nodeID(),0,itsStartTime,itsEndTime,setMostRecent);
             // Give our own model to the LogTable Object
             LogTableModel tm = new LogTableModel(remoteValue,aLogList);
             tm.setDebugFlag(itsDebugFlag);
