@@ -11,17 +11,18 @@
 
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
+#include <TFC_Interface/TFC_Config.h>
 
 namespace LOFAR
 {
 class DH_Vis: public DataHolder
 {
 public:
-  typedef fcomplex BufferType;
+  typedef fcomplex BufferType[NR_BASELINES][NR_CHANNELS_PER_CORRELATOR][NR_POLARIZATIONS][NR_POLARIZATIONS];
 
   // Constructor with centerFreq being the center frequency of the subband
-  explicit DH_Vis (const string& name, double centerFreq, 
-		   const LOFAR::ACC::APS::ParameterSet pSet);
+  explicit DH_Vis(const string& name, double centerFreq, 
+		  const LOFAR::ACC::APS::ParameterSet pSet);
 
   DH_Vis(const DH_Vis&);
 
@@ -32,19 +33,33 @@ public:
   /// Allocate the buffers.
   virtual void init();
 
+  static int baseline(int station1, int station2)
+  {
+    DBGASSERTSTR(station1 >= station2, "only lower part of correlation matrix is accessible");
+    return station1 * (station1 + 1) / 2 + station2;
+  }
+
   /// Get write access to the Buffer.
-  BufferType* getBuffer();
-  BufferType* getBufferElement(short station1,
-			       short station2,
-			       short pol); //todo: also frequency
-  int getBufferOffset (short station1,
-		       short station2,
-		       short pol); //todo: also frequency
+  BufferType* getBuffer()
+  {
+    return itsBuffer;
+  }
+
+  fcomplex (*getChannels(int station1, int station2)) [NR_CHANNELS_PER_CORRELATOR][NR_POLARIZATIONS][NR_POLARIZATIONS]
+  {
+    return &(*itsBuffer)[baseline(station1, station2)];
+  }
 
   /// Get read access to the Buffer.
-  const BufferType* getBuffer() const;
+  const BufferType* getBuffer() const
+  {
+    return itsBuffer;
+  }
 
-  const unsigned int getBufSize() const;
+  const size_t getBufSize() const
+  {
+    return sizeof(BufferType) / sizeof(fcomplex);
+  }
 
   /// Test pattern methods used for regression tests
   void setStorageTestPattern();
@@ -52,33 +67,21 @@ public:
   /// Test pattern methods used for regression tests of the correlator
   bool checkCorrelatorTestPattern();
 
+  double getCenterFreq();
+
 private:
   /// Forbid assignment.
   DH_Vis& operator= (const DH_Vis&);
 
-  ACC::APS::ParameterSet itsPS;
   BufferType*  itsBuffer;    // data array 
-  unsigned int itsBufSize;
 
-  double itsCenterFreq; // Subband center frequency
-  short itsNStations; // #stations in the buffer
-  short itsNBaselines;
-  short itsNPols;     // #polarisations 
-  short itsNFChannels;
-  
-  // this value is not strictly necessary, but we can 
-  // check the testpattern with it.
-  short itsNsamples;
-
-  short itsNCorrs;  // #polarisations*#polarisations
+  const double itsCenterFreq; // Subband center frequency
   
   void fillDataPointers();
 };
 
 
-inline DH_Vis::BufferType* DH_Vis::getBuffer()
-  { return itsBuffer; }
-
+#if 0
  inline int DH_Vis::getBufferOffset(short stationA, // row
 				    short stationB, // column
 				    short pol)
@@ -98,38 +101,24 @@ inline DH_Vis::BufferType* DH_Vis::getBuffer()
     return (2*(stationA*stationA+stationA)+4*stationB)+pol; 
   }
 
- inline DH_Vis::BufferType* DH_Vis::getBufferElement(short stationA, // row
+ inline BufferType* DH_Vis::getBufferElement(short stationA, // row
 	 					     short stationB, // column
 						     short pol) {
    DBGASSERTSTR(stationB <= stationA, "DH_Vis::getBufferElement: only lower part of correlation matrix is accessible");
    return &itsBuffer[getBufferOffset(stationA, stationB, pol)];
-}
+  }
+#endif
 
-
-inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
-  { return itsBuffer; }
-
-inline const unsigned int DH_Vis::getBufSize() const 
-  { return itsBufSize; }  
 
 inline bool DH_Vis::checkCorrelatorTestPattern() {
   bool result = true;
-  
-  for (int p=0; p< itsNPols; p++) {
-    for (int i = 0; i < itsNStations; i++) {
-      for (int j = 0; j <= i; j++) {
-	// this would be the correct answer for a test pattern consisting 
-	// of only (1 + 1I) values
-	result = result && (*getBufferElement(i,j,p) == 1+0.i );
-      }
-    }
-  }
   return result;
+}
+
+inline double DH_Vis::getCenterFreq() {
+  return itsCenterFreq;
 }
  
 }
 
 #endif 
-
-
-
