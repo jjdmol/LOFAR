@@ -54,11 +54,11 @@ lofar_GENERAL
 lofar_MPI
 lofar_FFTW2(1)
 
-lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_3,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(LCS/Transport,Transport,LCS-Transport-2_1,1,Transport/DataHolder.h,,)
-lofar_INTERNAL(LCS/ACC/APS,APS,LCS-ACC-2_0,1,APS/ParameterSet.h,,)
-lofar_INTERNAL(CEP/tinyCEP,tinyCEP,CEP-tinyCEP-2_1,1,tinyCEP/TinyDataManager.h,,)
-lofar_INTERNAL(CEP/Demo/TFlopCorrelator/TFC_Interface,TFC_Interface,CEP-TFlopCorrelator-1_0-release-branch,1,TFC_Interface/DH_RSP.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
+lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
+lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
+lofar_INTERNAL(CEP/Demo/TFlopCorrelator/TFC_Interface,,1,TFC_Interface/DH_RSP.h,,)
 
 dnl
 dnl Output Makefiles

@@ -105,16 +105,25 @@ void AH_Recorder::define(const LOFAR::KeyValueMap&) {
     comp.addBlock(itsStep);
     itsStep->runOnNode(lastFreeNode++);
     
+#ifdef HAVE_MPI
+    // this needs to be done with MPI, so if we don't have MPI do nothing
     itsSteps.back()->connect(0, itsSteps[itsSteps.size()-2], 0, 1,
 			     new TH_MPI(itsSteps[itsSteps.size()-2].getNode(),
 					itsSteps.back().getNode()),
 			     true);
+#else
+    ASSERTSTR(false, "This application is supposed to be run with MPI");
+#endif
   }
 
   // This program was written to run with MPI. All workholders run in their own process.
   // The machinefile should contain every node name twice, so WH_Wrap and WH_Strip run on 
   // the same physical host.
+#ifdef HAVE_MPI
   ASSERTSTR (lastFreeNode == TH_MPI::getNumberOfNodes(), lastFreeNode << " nodes needed, "<<TH_MPI::getNumberOfNodes()<<" available");
+#else
+  ASSERTSTR(false, "This application is supposed to be run with MPI");
+#endif
 
   LOG_TRACE_FLOW_STR("Finished defineRecorder()");
 }
