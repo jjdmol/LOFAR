@@ -37,6 +37,7 @@ namespace LOFAR
 DH_FIR::DH_FIR(const DH_FIR& that)
   : DataHolder(that),
     itsBuffer(0),
+    itsBufSize(0),
     itsMatrix(0)
 {
     itsFIR        = that.itsFIR;
@@ -62,7 +63,7 @@ void DH_FIR::init()
 {
   // Determine the number of elements needed for DataPacket and buffer.
   itsBufSize = itsNStations * itsNTimes * itsNPol;
-  
+
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
   addField ("Flag", BlobField<int>(1));
   
@@ -100,7 +101,7 @@ DH_FIR::BufferType DH_FIR::getNextTime()
   return value;
 }
 
-DH_FIR::BufferType DH_FIR::getBufferElement(short /*channel*/, short station, short time, short pol) {
+DH_FIR::BufferType DH_FIR::getBufferElement(short /*channel*/, short station, int32 time, short pol) {
   //  this->InitTimeCursor(station, pol);
   //  itsMatrix->moveCursorN(&itsTimeCursor, itsTimeDim, time);
   return itsMatrix->getValue(itsMatrix->getCursor(station*itsStationDim+pol*itsPolDim+time*itsTimeDim));

@@ -40,18 +40,17 @@ namespace LOFAR
 
     explicit WH_FakeStation(const string& name, 
 			    const ParameterSet ps,
-			    TransportHolder& th,
 			    const int StationID,
 			    const int delay);
     virtual ~WH_FakeStation();
     
     static WorkHolder* construct(const string& name, 
                                  const ParameterSet ps,
-				 TransportHolder& th,
 				 const int StationID,
 				 const int delay);
     virtual WH_FakeStation* make(const string& name);
 
+    virtual void preprocess();
     virtual void process();
 
   private:
@@ -61,7 +60,6 @@ namespace LOFAR
     WH_FakeStation& operator= (const WH_FakeStation&);
 
     ParameterSet itsPS;
-    TransportHolder& itsTH;
     int itsStationId;
     TimeStamp itsStamp;
     int itsDelay;

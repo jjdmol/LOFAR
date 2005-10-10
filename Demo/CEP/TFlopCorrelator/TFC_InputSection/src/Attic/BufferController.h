@@ -88,21 +88,22 @@ class BufferController
    // permission to overwrite previous written elements
    bool itsOverwritingAllowed;
    
-   mutex buffer_mutex;    // lock/unlock shared data
+   mutex buffer_mutex;        // lock/unlock shared data
    condition data_available;  // 'buffer not empty' trigger
    condition space_available; // 'buffer not full' trigger
 
    int getCount();
    int getWritePtr();
    int getReadPtr();
-   int setReadOffset(int offset);
-   int setRewriteOffset(int offset);
-   void setStartOffset(int offset);  
+   int setReadOffset(timestamp_t startstamp);
+   int setRewriteOffset(timestamp_t startstamp);
+   void setStartOffset(timestamp_t startstamp);
+   timestamp_t setStartOffset();     
    void releaseWriteBlock();
    void releaseReadBlock();
    void releaseRewriteBlock();
-   timestamp_t getOldestStamp();
-   timestamp_t getNewestStamp();
+   timestamp_t getOldestStamp(mutex::scoped_lock& sl);
+   timestamp_t getNewestStamp(mutex::scoped_lock& sl);
 
 };
 

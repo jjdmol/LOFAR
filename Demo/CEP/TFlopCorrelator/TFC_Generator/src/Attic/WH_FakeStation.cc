@@ -30,22 +30,25 @@
 #include <DH_RSP.h>
 #include <WH_FakeStation.h>
 
+// This WH can be used with CEPFrame or tinyCEP, but to be able
+// to test if we are in CEPFrame, we need to include DataManager.h
+#include <CEPFrame/DataManager.h>
+
 using namespace LOFAR;
 
 WH_FakeStation::WH_FakeStation(const string& name, 
 			       const ParameterSet ps,
-			       TransportHolder& th,
 			       const int stationID,
 			       const int delay)
-  : WorkHolder (1, 0,
+  : WorkHolder (1, 1,
 		name, 
 		"WH_FakeStation"),
     itsPS(ps),
-    itsTH(th),
     itsDelay(delay)
 {
   itsStationId = stationID;
   getDataManager().addInDataHolder(0, new DH_RSP("incoming_DH_RSP", itsPS));
+  getDataManager().addOutDataHolder(0, new DH_RSP("outgoing_DH_RSP", itsPS));
 }
 
 WH_FakeStation::~WH_FakeStation() {
@@ -53,16 +56,20 @@ WH_FakeStation::~WH_FakeStation() {
 
 WorkHolder* WH_FakeStation::construct(const string& name,
 				      const ParameterSet ps,
-				      TransportHolder& th,
 				      const int stationID,
 				      const int delay)
 {
-  return new WH_FakeStation(name, ps, th, stationID, delay);
+  return new WH_FakeStation(name, ps, stationID, delay);
 }
 
 WH_FakeStation* WH_FakeStation::make(const string& name)
 {
-  return new WH_FakeStation(name, itsPS, itsTH, itsStationId, itsDelay);
+  return new WH_FakeStation(name, itsPS, itsStationId, itsDelay);
+}
+
+void WH_FakeStation::preprocess() {
+  DataManager* dm = dynamic_cast<DataManager*> (&getDataManager());
+  ASSERTSTR(dm, "WH_FakeStation only works in CEPFrame, not tinyCEP. This is because we need shared input and output DHs.");
 }
 
 void WH_FakeStation::process() 
@@ -84,6 +91,4 @@ void WH_FakeStation::process()
     header.setSeqId(myStamp.getSeqId());
     header.setBlockId(myStamp.getBlockId());
   }
-  bool ret = itsTH.sendBlocking(myEthFrame.getPayloadp(), myEthFrame.getPayloadSize(), 0);
-  ASSERTSTR(ret, "TH couldn't send data");
 }
