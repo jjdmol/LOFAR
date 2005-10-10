@@ -81,8 +81,8 @@ void Solver::solve (bool useSVD,
 {
   LOG_INFO_STR( "solve using file ");
 
-  NSTimer timer;
-  timer.start();
+  BBSTest::ScopedTimer timer("S:solver");
+  //  timer.start();
   ASSERT ((unsigned) itsSolvableValues.size() > 0);
 
   // Initialize the solver (needed after a setSolvable).
@@ -102,8 +102,10 @@ void Solver::solve (bool useSVD,
   LOG_INFO_STR( "Nr of flagged data points: " << itsNFlag);
   LOG_INFO_STR( "Solution before: " << itsSolvableValues);
   rank = 0;
+  BBSTest::Logger::log("Before: ", itsSolvableParms);
   bool solFlag = itsSolver.solveLoop (fit, rank, &(itsSolvableValues[0]),
 				      useSVD);
+  BBSTest::Logger::log("After: ", itsSolvableParms);
   LOG_INFO_STR( "Solution after:  " << itsSolvableValues);
 
   resultQuality.init();
@@ -124,8 +126,8 @@ void Solver::solve (bool useSVD,
     }
   }
 
-  timer.stop();
-  BBSTestLogger::log("solver", timer);
+  //  timer.stop();
+  //  BBSTest::Logger::log("solver", timer);
   itsNUsed = 0;
   itsNFlag = 0;
   return;

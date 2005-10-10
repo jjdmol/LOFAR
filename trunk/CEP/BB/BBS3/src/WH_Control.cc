@@ -34,6 +34,7 @@
 #include <BBS3/DH_WOSolve.h>
 #include <BBS3/SC_Simple.h>
 #include <BBS3/StrategyController.h>
+#include <BBS3/BBSTestLogger.h>
 
 namespace LOFAR
 {
@@ -109,6 +110,7 @@ WH_Control* WH_Control::make (const string& name)
 
 void WH_Control::process()
 {
+  BBSTest::ScopedTimer st("C:total_WH_Control::process");
   if (itsFirstCall)
   {
     itsFirstCall = false;

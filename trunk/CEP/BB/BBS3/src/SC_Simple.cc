@@ -28,6 +28,7 @@
 #include <BBS3/DH_Solution.h>
 #include <BBS3/DH_WOPrediff.h>
 #include <BBS3/DH_WOSolve.h>
+#include <BBS3/BBSTestLogger.h>
 
 namespace LOFAR
 {
@@ -78,12 +79,17 @@ SC_Simple::~SC_Simple()
 
 bool SC_Simple::execute()
 {
+  BBSTest::ScopedTimer si_exec("C:strategycontroller_execute");
+  BBSTest::ScopedTimer getWOTimer("C:getWorkOrders");
   DH_WOPrediff* WOPD = getPrediffWorkOrder();
   DH_WOSolve* WOSolve = getSolveWorkOrder();
+  getWOTimer.end();
+
   itsCurIter++;
   bool nextInter = false;
   if (itsFirstCall)
   {
+    BBSTest::Logger::log("Start of testrun");
     itsFirstCall = false;
     nextInter = true;
     WOPD->setNewBaselines(true);
@@ -105,7 +111,9 @@ bool SC_Simple::execute()
     if (itsSendDoNothingWO==false)  /// if previous sent WorkOrder was a "do nothing", do not read solution
     {
       // Read solution of previously issued workorders
+      BBSTest::ScopedTimer readSolTimer("C:read solutions");
       readSolution();
+      readSolTimer.end();
 
       if (itsControlParmUpd)   // If Controller handles parameter writing
       {
@@ -116,6 +124,7 @@ bool SC_Simple::execute()
 	double fEnd = getSolution()->getEndFreq();
 	double tStart = getSolution()->getStartTime();
 	double tEnd = getSolution()->getEndTime();
+	BBSTest::ScopedTimer st("C:parmwriter");
 	getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
       }
       else
@@ -142,6 +151,7 @@ bool SC_Simple::execute()
       WOPD->setUpdateParms(false);  // New time interval, so do not reread parameters
       WOPD->setSolutionID(-1);  // New time interval, so do not use solution from previous interval
       itsCurStartTime += itsArgs.getDouble ("timeInterval");
+      BBSTest::Logger::log("NextInterval");
     }
     else if (fit < itsFitCriterion)
     {
@@ -207,6 +217,7 @@ bool SC_Simple::execute()
   cout << "!!!!!!! " << endl;
 
   // Insert WorkOrders into database
+  BBSTest::ScopedTimer st("C:putWOinDB");
   WOPD->insertDB(*itsOutWOPDConn);
 
   // Send workorders the same workorders to other prediffers (if there are more than 1)
@@ -240,9 +251,11 @@ void SC_Simple::postprocess()
       double fEnd = getSolution()->getEndFreq();
       double tStart = getSolution()->getStartTime();
       double tEnd = getSolution()->getEndTime();
+      BBSTest::ScopedTimer st("C:parmwriter");
       getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
     }
   }
+  BBSTest::Logger::log("End of TestRun");
 }
 
 void SC_Simple::readSolution()
