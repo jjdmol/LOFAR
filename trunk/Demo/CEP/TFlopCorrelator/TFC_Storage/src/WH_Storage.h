@@ -26,8 +26,10 @@
 
 #include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
+#ifdef USE_MAC_PI
 #include <GCF/PALlight/CEPPropertySet.h>
 #include <GCF/GCF_PVDynArr.h>
+#endif
 
 namespace LOFAR
 {
@@ -66,9 +68,11 @@ class WH_Storage: public WorkHolder
     int itsFieldId;
     int itsCounter;
 
+#ifdef USE_MAC_PI
     bool itsWriteToMAC;
     GCF::CEPPMLlight::CEPPropertySet* itsPropertySet;
     GCF::Common::GCFPValueArray itsVArray; 
+#endif
   };
 } // namespace LOFAR
 

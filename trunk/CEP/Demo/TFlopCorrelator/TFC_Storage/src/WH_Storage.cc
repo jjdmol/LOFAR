@@ -30,8 +30,10 @@
 #include <TFC_Storage/WH_Storage.h>
 #include <TFC_Interface/DH_VisArray.h>
 #include <TFC_Storage/MSWriter.h>
+#ifdef USE_MAC_PI
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
+#endif
 
 using namespace LOFAR;
 
@@ -43,10 +45,14 @@ WH_Storage::WH_Storage(const string& name,
 		"WH_Storage"),
     itsPS      (pset),
     itsWriter  (0),
-    itsCounter (0),
-    itsPropertySet(0)
+    itsCounter (0)
+#ifdef USE_MAC_PI
+    ,itsPropertySet(0)
+#endif
 {
+#ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
+#endif
   itsNstations = itsPS.getInt32("Storage.nStations");
   int pols = itsPS.getInt32("Input.NPolarisations");
   itsNpolSquared = pols*pols;
@@ -64,6 +70,7 @@ WH_Storage::WH_Storage(const string& name,
 WH_Storage::~WH_Storage() 
 {
   delete itsWriter;
+#ifdef USE_MAC_PI
   delete itsPropertySet;
 
   GCF::Common::GCFPValueArray::iterator it;
@@ -71,6 +78,7 @@ WH_Storage::~WH_Storage()
     delete *it;
   }
   itsVArray.clear();
+#endif
 }
 
 WorkHolder* WH_Storage::construct(const string& name,
@@ -86,6 +94,7 @@ WH_Storage* WH_Storage::make(const string& name)
 
 void WH_Storage::preprocess() {
   LOG_TRACE_FLOW("WH_Storage enabling PropertySet");
+#ifdef USE_MAC_PI
   if (itsWriteToMAC) {
     itsPropertySet = new GCF::CEPPMLlight::CEPPropertySet("CEP_TFCD", "TTeraFlopCorrelator", GCF::Common::PS_CAT_PERMANENT);
     itsPropertySet->enable();
@@ -93,6 +102,7 @@ void WH_Storage::preprocess() {
   } else {
     LOG_TRACE_FLOW("WH_Storage PropertySet not enabled");
   };
+#endif
 
   // create MSWriter object
   string msName = itsPS.getString("Storage.MSName");
@@ -149,6 +159,7 @@ void WH_Storage::process()
 
   itsCounter++;
 
+#ifdef USE_MAC_PI
   if (itsWriteToMAC) {
     DBGASSERTSTR(itsPropertySet != 0, "no propertySet constructed yet");
     LOG_TRACE_FLOW("WH_Storage setting properties");
@@ -179,4 +190,5 @@ void WH_Storage::process()
     (*itsPropertySet)["subband"].setValue(GCF::Common::GCFPVString("1"));
     LOG_TRACE_FLOW("WH_Storage properties set");
   };
+#endif
 }
