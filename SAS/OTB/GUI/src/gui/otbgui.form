@@ -87,7 +87,7 @@
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
     <Property name="maximizedBounds" type="java.awt.Rectangle" editor="org.netbeans.beaninfo.editors.RectangleEditor">
-      <Rectangle value="[0, 0, 1000, 400]"/>
+      <Rectangle value="[0, 0, 1024, 768]"/>
     </Property>
     <Property name="name" type="java.lang.String" value="mainFrame"/>
   </Properties>
@@ -628,25 +628,20 @@
                     <Component class="javax.swing.JComboBox" name="ParamTypeSelection">
                       <Properties>
                         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                          <StringArray count="18">
+                          <StringArray count="13">
                             <StringItem index="0" value="node"/>
-                            <StringItem index="1" value="boolean"/>
+                            <StringItem index="1" value="bool"/>
                             <StringItem index="2" value="int"/>
                             <StringItem index="3" value="long"/>
-                            <StringItem index="4" value="float"/>
-                            <StringItem index="5" value="double"/>
+                            <StringItem index="4" value="flt"/>
+                            <StringItem index="5" value="dbl"/>
                             <StringItem index="6" value="icpx"/>
                             <StringItem index="7" value="lcpx"/>
                             <StringItem index="8" value="fcpx"/>
                             <StringItem index="9" value="dcpx"/>
                             <StringItem index="10" value="text"/>
                             <StringItem index="11" value="bin"/>
-                            <StringItem index="12" value="PVSS float"/>
-                            <StringItem index="13" value="PVSS uint"/>
-                            <StringItem index="14" value="PVSS int"/>
-                            <StringItem index="15" value="PVSS float"/>
-                            <StringItem index="16" value="PVSS boolean"/>
-                            <StringItem index="17" value="PVSS text"/>
+                            <StringItem index="12" value="uint"/>
                           </StringArray>
                         </Property>
                         <Property name="toolTipText" type="java.lang.String" value="Type of this Parameter"/>
@@ -857,7 +852,7 @@
                       </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="0" y="0" width="796" height="190"/>
+                          <AbsoluteConstraints x="0" y="0" width="796" height="350"/>
                         </Constraint>
                       </Constraints>
 
@@ -885,7 +880,7 @@
                       </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="30" y="220" width="-1" height="-1"/>
+                          <AbsoluteConstraints x="20" y="370" width="-1" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
@@ -896,7 +891,7 @@
                       </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="120" y="220" width="430" height="-1"/>
+                          <AbsoluteConstraints x="100" y="370" width="430" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
@@ -911,7 +906,7 @@
                       </Events>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="120" y="270" width="-1" height="-1"/>
+                          <AbsoluteConstraints x="330" y="400" width="-1" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
@@ -921,7 +916,7 @@
                       </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="300" y="240" width="-1" height="-1"/>
+                          <AbsoluteConstraints x="20" y="410" width="-1" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
@@ -931,13 +926,13 @@
                       </Properties>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="40" y="240" width="-1" height="-1"/>
+                          <AbsoluteConstraints x="20" y="390" width="-1" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
                     <Component class="javax.swing.JTextField" name="LogParamStartTimeText">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="2005-01-01"/>
+                        <Property name="text" type="java.lang.String" value="2005-01-01 00:00:00.000"/>
                         <Property name="toolTipText" type="java.lang.String" value="Give Start date/time for logging"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -946,13 +941,13 @@
                       </Events>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="120" y="240" width="150" height="-1"/>
+                          <AbsoluteConstraints x="100" y="390" width="180" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
                     <Component class="javax.swing.JTextField" name="LogParamEndTimeText">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="2005-12-31"/>
+                        <Property name="text" type="java.lang.String" value="2005-12-31 59:59:59.000"/>
                         <Property name="toolTipText" type="java.lang.String" value="Give end date/time for log search"/>
                         <Property name="enabled" type="boolean" value="false"/>
                       </Properties>
@@ -961,7 +956,7 @@
                       </Events>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="370" y="240" width="180" height="-1"/>
+                          <AbsoluteConstraints x="100" y="410" width="180" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
@@ -976,7 +971,7 @@
                       </Events>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="100" y="320" width="-1" height="-1"/>
+                          <AbsoluteConstraints x="90" y="440" width="-1" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
@@ -991,7 +986,7 @@
                       </Events>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="30" y="320" width="-1" height="-1"/>
+                          <AbsoluteConstraints x="20" y="440" width="-1" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
