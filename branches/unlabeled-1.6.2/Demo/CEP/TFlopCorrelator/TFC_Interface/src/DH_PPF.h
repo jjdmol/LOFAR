@@ -52,7 +52,7 @@ public:
     return sizeof(BufferType) / sizeof(i16complex);
   }
   
-  void DH_PPF::setTestPattern()
+  void setTestPattern()
   {
     (std::cerr << "DH_PPF::setTestPattern() ... ").flush();
     for (size_t i = 0; i < getBufferSize(); i++) {

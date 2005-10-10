@@ -1,19 +1,18 @@
 INSTHDRS         	=\
-TFC_Config.h		\
 RSPTimeStamp.h          \
 DH_RSPSync.h            \
 DH_Delay.h		\
 DH_RSP.h                \
-DH_FIR.h		\
 DH_PPF.h		\
 DH_CorrCube.h		\
 DH_Vis.h		\
 DH_VisArray.h		\
 RectMatrix.h		\
-Stub_FIR.h              \
 Stub_Corr.h		\
 Stub_RSP.h		\
-Stub_Delay.h		
+Stub_Delay.h		\
+Stub_FIR.h		\
+TFC_Config.h
 
 NOINSTHDRS 		=
 
@@ -32,15 +31,14 @@ RSPTimeStamp.cc          	\
 DH_RSPSync.cc                   \
 DH_Delay.cc			\
 DH_RSP.cc                	\
-DH_FIR.cc			\
 DH_PPF.cc			\
 DH_CorrCube.cc			\
 DH_Vis.cc			\
 DH_VisArray.cc			\
-Stub_FIR.cc               	\
 Stub_RSP.cc			\
 Stub_Corr.cc			\
-Stub_Delay.cc			
+Stub_Delay.cc			\
+Stub_FIR.cc			
 
 configfilesdir=$(bindir)
 configfiles_DATA=../../TFlopCorrelator.cfg
