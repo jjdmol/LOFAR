@@ -36,6 +36,7 @@ import jOTDB.jOTDBinterface;
 import java.rmi.Naming;
 import java.rmi.registry.*; 
 import java.rmi.RMISecurityManager;
+import java.net.InetAddress;
 
 public class jOTDBserver
 {
@@ -50,6 +51,17 @@ public class jOTDBserver
 
    static
      {
+	try 
+	  {
+	     System.out.println (InetAddress.getLocalHost().getHostName());
+	     System.setProperty ("java.rmi.server.hostname", InetAddress.getLocalHost().getHostName());
+	  }
+	catch (Exception e)
+	  {
+	     System.out.println ("Could not set the hostname!");
+	     System.exit (0);
+	  }
+		     
 	System.loadLibrary("jotdb");
      }
    
@@ -65,7 +77,7 @@ public class jOTDBserver
 
 	     if (args.length < 3) 
 		 {
-		     System.out.println ("Usage: java -Djava.rmi.server.hostname=<hostname> jOTDB.jOTDBserver <username> <password> <database> <portnumber-OPTIONAL>");
+		     System.out.println ("Usage: java -jar jOTDBserver.jar <username> <password> <database> <portnumber-OPTIONAL>");
 		     System.exit(0);
 		 }
 	     
