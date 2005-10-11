@@ -20,6 +20,7 @@ import jOTDB.jOTDBnode;
 import jOTDB.jOTDBparam;
 import jOTDB.jTreeMaintenanceInterface;
 import jOTDB.jTreeValueInterface;
+import java.awt.Cursor;
 import java.io.File;
 import java.rmi.Naming;
 import java.util.Date;
@@ -235,6 +236,12 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
         TreeTableScrollPane.add(TreeTable);
+        TreeTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TreeTableMouseClicked(evt);
+            }
+        });
+
         TreeTableScrollPane.setViewportView(TreeTable);
 
         TreePanel.add(TreeTableScrollPane, java.awt.BorderLayout.CENTER);
@@ -397,7 +404,7 @@ public class otbgui extends javax.swing.JFrame {
         ParamRTmodLabel.setText("RTmod");
         ParamPanel.add(ParamRTmodLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 160, -1, -1));
 
-        ParamLimitsLabel.setText("Limits");
+        ParamLimitsLabel.setText("(Default) Value");
         ParamPanel.add(ParamLimitsLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 185, -1, -1));
 
         ParamDescriptionLabel.setText("Description");
@@ -640,17 +647,27 @@ public class otbgui extends javax.swing.JFrame {
 
         ControlPanel.setMinimumSize(new java.awt.Dimension(750, 475));
         ControlPanel.setPreferredSize(new java.awt.Dimension(700, 475));
-        CtrlInstButton.setText("Inst");
+        CtrlInstButton.setText("Instantiate Tree");
+        CtrlInstButton.setToolTipText("Make an instantiated tree from a template");
+        CtrlInstButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CtrlInstButtonActionPerformed(evt);
+            }
+        });
+
         ControlPanel.add(CtrlInstButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 50, -1, -1));
 
         CtrlDeleteButton.setText("Delete");
+        CtrlDeleteButton.setEnabled(false);
         ControlPanel.add(CtrlDeleteButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 90, -1, -1));
 
         CtrlCopyButton.setText("Copy");
+        CtrlCopyButton.setEnabled(false);
         ControlPanel.add(CtrlCopyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 130, -1, -1));
 
         CtrlChangeTreeStateButton.setText("Change Tree State");
-        ControlPanel.add(CtrlChangeTreeStateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 50, -1, -1));
+        CtrlChangeTreeStateButton.setEnabled(false);
+        ControlPanel.add(CtrlChangeTreeStateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 50, -1, -1));
 
         MainPane.addTab("Control", null, ControlPanel, "ControlPanel");
 
@@ -746,6 +763,24 @@ public class otbgui extends javax.swing.JFrame {
         setBounds((screenSize.width-800)/2, (screenSize.height-627)/2, 800, 627);
     }
     // </editor-fold>//GEN-END:initComponents
+
+    private void CtrlInstButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CtrlInstButtonActionPerformed
+        try {
+            if (itsSelectedTreeType.equals("VItemplate")) {
+                int aNewTreeID=remoteMaintenance.instanciateTree(SelectedTreeID);
+                if (itsDebugFlag) System.out.println("New tree instantiated with ID: "+aNewTreeID);
+                createTreeList(aNewTreeID);
+            }
+        } catch (Exception e){
+             System.out.println ("maintenance.instantiateTree via RMI and JNI failed: " + e);
+        }
+    }//GEN-LAST:event_CtrlInstButtonActionPerformed
+
+    private void TreeTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TreeTableMouseClicked
+        if (evt.getClickCount() == 2) {
+            selectWorkTree();
+        }
+    }//GEN-LAST:event_TreeTableMouseClicked
 
     private void ParamRTModSelectionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ParamRTModSelectionMouseClicked
          if (!paramButtonsEnabled) setParamButtons(true);
@@ -866,73 +901,12 @@ public class otbgui extends javax.swing.JFrame {
 
 
     private void TreeSelectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TreeSelectButtonActionPerformed
-        itsSelectedTree     = "None";
-        int aRow= TreeTable.getSelectedRow();
-        if ( aRow != -1) {
-            SelectedTreeID=new Integer((Integer)TreeTable.getValueAt(aRow, 0));
-            itsSelectedTree=TreeTable.getValueAt(aRow, 0).toString()+"."+
-                    TreeTable.getValueAt(aRow, 3).toString()+"."+
-                    TreeTable.getValueAt(aRow, 4).toString()+"."+
-                    TreeTable.getValueAt(aRow, 5).toString();
-        }
-        if (!itsSelectedTree.equals(selectedTreeTextField)){
-            selectedTreeTextField.setText(itsSelectedTree);
-            Date aD1 = new Date();
-            System.out.println("Treeload Started: "+aD1.toString());
-            // Start filling the TreeView
-            if (itsSelectedTree != "None") {
-                if (getTreeList()) {
-                    itsSelectedTreeType=TreeTable.getValueAt(aRow,4).toString();
-                } else {
-                    if (itsDebugFlag) System.out.println("Error getting the Treelist from the server");
-                }
-            }
-            Date aD2 = new Date();
-            System.out.println("Treeload Finished: "+aD2.toString());
-            MainPane.setSelectedIndex(1);
-        }
+        selectWorkTree();
     }//GEN-LAST:event_TreeSelectButtonActionPerformed
 
 
     private void SourceMenuInputOTDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SourceMenuInputOTDBActionPerformed
-        itsSelectedTree = "None";
-
-        SelectedInputLabel.setText("Input from: OTDB via RMI");
-        selectedTreeTextField.setText(itsSelectedTree);
-        TreeSelectButton.setEnabled(false);
-
-        // set default failed values
-        SourceMenuInputFile.setSelected(false);
-        SourceMenuInputFile.setSelected(false);
-        isFile=false;
-        isOTDB=false;
-        MainPane.setSelectedIndex(0);
-        clearAll();
-
-        if (RMIServerName.length()==0 || RMIServerPort.length()==0 ||
-              RMIRegistryName.length()==0 || OTDBUserName.length() ==0 ||
-              OTDBPassword.length()==0 || OTDBDBName.length()==0) {
-
-            JOptionPane.showMessageDialog(null,"You didn't set the RMI settings",
-                    "Source selection warning",
-                    JOptionPane.WARNING_MESSAGE);
-        }  else {
-          try {
-            String aS="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRegistryName;
-            if (openRemoteConnection(aS)) {
-               if (fillTreeTable()) {
-                  if (itsDebugFlag) System.out.println("Table should be filled now");
-                  SourceMenuInputOTDB.setSelected(true);
-                  isOTDB=true;
-               } else {
-                   if (itsDebugFlag) System.out.println("Error in filling the table");
-               }
-             }   
-          } catch (Exception e){
-             System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
-          }
-      }
-
+        createTreeList(-1);
     }//GEN-LAST:event_SourceMenuInputOTDBActionPerformed
 
 
@@ -1166,7 +1140,7 @@ public class otbgui extends javax.swing.JFrame {
 
     
     
-    private boolean fillTreeTable() {
+    private boolean fillTreeTable(int aSelectedTreeID) {
         if (itsDebugFlag) System.out.println("Trying to obtain the treeList");
 
         BrowsePanel.setEnabled(false);
@@ -1187,7 +1161,7 @@ public class otbgui extends javax.swing.JFrame {
         } 
         catch (Exception e)
 	{
-	  System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
+	  System.out.println ("getTreeList via RMI and JNI failed: " + e);
 	}        
         
         BrowsePanel.setEnabled(true);
@@ -1195,8 +1169,13 @@ public class otbgui extends javax.swing.JFrame {
         // Give our own model to the TreeTable
         treeModel tm = new treeModel(remoteOTDB,treeList);
         tm.setDebugFlag(itsDebugFlag);
-        TreeTable.setModel(tm);
+        TreeTable.setModel(tm);       
         TreeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        for (int i=0; i < tm.getRowCount();i++ ) {
+            if (((Integer)tm.getValueAt(i, 0)).intValue() == aSelectedTreeID) {
+                TreeTable.setRowSelectionInterval(i,i);
+            }
+        }
         TreeSelectButton.setEnabled(true);
        return true;
     }
@@ -1307,7 +1286,7 @@ public class otbgui extends javax.swing.JFrame {
     private void setParamButtons(boolean flag) {
         // To avoid that saving is available for type hardware and type VHtree trees we 
         // set flag to false for now
-        if (itsSelectedTreeType != "VItemplate") flag=false;
+        if (!itsSelectedTreeType.equals("VItemplate")) flag=false;
         ParamApplyButton.setEnabled(flag);
         ParamCancelButton.setEnabled(flag);
         paramButtonsEnabled=flag;
@@ -1316,7 +1295,7 @@ public class otbgui extends javax.swing.JFrame {
     private void setNodeButtons(boolean flag) {
         // To avoid that saving is available for type hardware and type VHtree trees we 
         // set flag to false for now
-        if (itsSelectedTreeType != "VItemplate") flag=false;
+        if (!itsSelectedTreeType.equals("VItemplate")) flag=false;
         NodeApplyButton.setEnabled(flag);
         NodeCancelButton.setEnabled(flag);
         nodeButtonsEnabled=flag;
@@ -1334,7 +1313,6 @@ public class otbgui extends javax.swing.JFrame {
            clearTree();
         }
         
-        try {
             String aRMS="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIMaintenanceName;
             String aRMV="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIValName;
             String aRMC="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIConverterName;
@@ -1345,12 +1323,9 @@ public class otbgui extends javax.swing.JFrame {
                   aFlag=true;
                } else {
                    if (itsDebugFlag) System.out.println("Error in filling the treeList");
+                  aFlag=false;
                }
              }   
-          } catch (Exception e){
-             System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
-             aFlag=false;
-          }
         
         isTreeFilled=true;
         return aFlag;
@@ -1384,7 +1359,7 @@ public class otbgui extends javax.swing.JFrame {
             VICTree.updateUI();          
 	    //	showNodeList(nodeList);           
         } catch (Exception e){
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
+            System.out.println ("getTopNode via RMI and JNI failed: " + e); 
             aFlag=false;
         }
         return aFlag;
@@ -1406,7 +1381,7 @@ public class otbgui extends javax.swing.JFrame {
                 addChildren(aNode, aNewNode);
             }
         } catch (Exception e){
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
+            System.out.println ("Maintenance.getItemList via RMI and JNI failed: " + e); 
         }        
     }
     
@@ -1460,12 +1435,15 @@ public class otbgui extends javax.swing.JFrame {
         while (e.hasMoreElements()) {
             aFoundNode=(DefaultMutableTreeNode)e.nextElement();
             if (aFoundNode.getUserObject().toString().equals(aNodeName)) {
-                if (itsTreeTabbedPaneFocus=="NodePanel") {
-                   updateNodePanel(aNodeID);
-                } else if (itsTreeTabbedPaneFocus=="ParamPanel") {
-                   updateParamPanel(aNodeID);
-                } else if (itsTreeTabbedPaneFocus=="LogPanel") {
-                   updateLogPanel(aNodeID);
+                setPresentNode(aNodeID);      
+                if (itsPresentNode.leaf) {
+                    treeTabbedPane.setSelectedIndex(1);
+                    itsTreeTabbedPaneFocus="ParamPanel";
+                    updateParamPanel(aNodeID);
+                } else {
+                    treeTabbedPane.setSelectedIndex(0);
+                    itsTreeTabbedPaneFocus="NodePanel";
+                    updateNodePanel(aNodeID);
                 }
                 found = true;
                 TreePath aTreePath = new TreePath(aFoundNode.getPath());
@@ -1476,33 +1454,38 @@ public class otbgui extends javax.swing.JFrame {
         }
     }
     
-    private void updateNodePanel(int aNodeID) {
+    private void setPresentNode(int aNodeID) {
         try {
             itsPresentNode=remoteMaintenance.getNode(SelectedTreeID, aNodeID);
-            NodeNameText.setText(itsPresentNode.name);
-            NodeIndexText.setText(Short.toString(itsPresentNode.index));
-            NodeInstancesText.setText(Short.toString(itsPresentNode.instances));
-            NodeLimitsText.setText(itsPresentNode.limits);
-            NodeDescriptionText.setText(itsPresentNode.description);
-            if (!itsPresentNode.leaf) {
-                aNodeName=NodeNameText.getText();
-                aNodeIndex=NodeIndexText.getText();
-                aNodeLeaf=itsPresentNode.leaf;
-                aNodeInstances=NodeInstancesText.getText();
-                aNodeLimits=NodeLimitsText.getText();
-                aNodeDescription=NodeDescriptionText.getText();
-                enableNodePanel(true);
-            } else {
-                enableNodePanel(false);
-            }
         } catch (Exception e) {
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
+            System.out.println ("Maintenance.getNode via RMI and JNI failed: " + e); 
+        }
+    }
+    
+
+    private void updateNodePanel(int aNodeID) {
+        setPresentNode(aNodeID);
+        NodeNameText.setText(itsPresentNode.name);
+        NodeIndexText.setText(Short.toString(itsPresentNode.index));
+        NodeInstancesText.setText(Short.toString(itsPresentNode.instances));
+        NodeLimitsText.setText(itsPresentNode.limits);
+        NodeDescriptionText.setText(itsPresentNode.description);
+        if (!itsPresentNode.leaf) {
+            aNodeName=NodeNameText.getText();
+            aNodeIndex=NodeIndexText.getText();
+            aNodeLeaf=itsPresentNode.leaf;
+            aNodeInstances=NodeInstancesText.getText();
+            aNodeLimits=NodeLimitsText.getText();
+            aNodeDescription=NodeDescriptionText.getText();
+            enableNodePanel(true);
+        } else {
+            enableNodePanel(false);
         }
     }
 
     private void updateParamPanel(int aNodeID) {
         try {
-            itsPresentNode=remoteMaintenance.getNode(SelectedTreeID, aNodeID);
+            setPresentNode(aNodeID);
             if (itsDebugFlag) System.out.println("Present Node: "+itsPresentNode.name);
             // Check if valid parameter found
             jOTDBparam aP=remoteMaintenance.getParam(SelectedTreeID, itsPresentNode.paramDefID());
@@ -1546,7 +1529,7 @@ public class otbgui extends javax.swing.JFrame {
                 enableParamPanel(false);
             }
         } catch (Exception e) {
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
+            System.out.println ("maintenance.getParam via RMI and JNI failed: " + e); 
         }
     }
 
@@ -1568,7 +1551,7 @@ public class otbgui extends javax.swing.JFrame {
     private void updateLogPanel(int aNodeID) {
         try {
     
-            itsPresentNode=remoteMaintenance.getNode(SelectedTreeID, aNodeID);
+            setPresentNode(aNodeID);
             jOTDBparam aP=remoteMaintenance.getParam(SelectedTreeID, itsPresentNode.paramDefID());
             
             // Check if param is valid
@@ -1582,7 +1565,7 @@ public class otbgui extends javax.swing.JFrame {
             }
                 
         } catch (Exception e) {
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
+            System.out.println ("Maintenance.getParam OTDB via RMI and JNI failed: " + e); 
         }
     }
     
@@ -1590,7 +1573,7 @@ public class otbgui extends javax.swing.JFrame {
         boolean aFlag=false;
         try {
           if (itsDebugFlag) System.out.println("Saving Param:");
-          printParam(aP);
+          if (itsDebugFlag) printParam(aP);
             
           if (aP.nodeID() > 0) {
               aFlag=remoteMaintenance.saveParam(aP);
@@ -1600,7 +1583,7 @@ public class otbgui extends javax.swing.JFrame {
           
             
         } catch (Exception e) {
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
+            System.out.println ("Maintenance.saveParam via RMI and JNI failed: " + e); 
         }
         return aFlag;
     }
@@ -1609,7 +1592,7 @@ public class otbgui extends javax.swing.JFrame {
         boolean aFlag=false;
         try {
             if (itsDebugFlag) System.out.println("Saving Node:");
-            printNode(aN);
+            if (itsDebugFlag) printNode(aN);
             
             if(aN.nodeID() > 0)  {
                 aFlag=remoteMaintenance.saveNode(aN);
@@ -1618,7 +1601,7 @@ public class otbgui extends javax.swing.JFrame {
             }
             
         } catch (Exception e) {
-            System.out.println ("Remote OTDB via RMI and JNI failed: " + e); 
+            System.out.println ("Maintenance.saveNode via RMI and JNI failed: " + e); 
         }
         return aFlag;
     }
@@ -1731,11 +1714,11 @@ public class otbgui extends javax.swing.JFrame {
     
     private void refreshLogPanel() {
         try {
-            System.out.println("Trying to call searchInPeriod with: ");
-            System.out.println("TreeID: "+SelectedTreeID.intValue());
-            System.out.println("NodeID: "+itsPresentNode.nodeID());
-            System.out.println("Start: "+itsStartTime);
-            System.out.println("End: "+itsEndTime);
+            if (itsDebugFlag) System.out.println("Trying to call searchInPeriod with: ");
+            if (itsDebugFlag) System.out.println("TreeID: "+SelectedTreeID.intValue());
+            if (itsDebugFlag) System.out.println("NodeID: "+itsPresentNode.nodeID());
+            if (itsDebugFlag) System.out.println("Start: "+itsStartTime);
+            if (itsDebugFlag) System.out.println("End: "+itsEndTime);
             LogParamNameText.setText(itsPresentNode.name);
             Vector aLogList=remoteValue.searchInPeriod(SelectedTreeID.intValue(), itsPresentNode.nodeID(),0,itsStartTime,itsEndTime,setMostRecent);
             // Give our own model to the LogTable Object
@@ -1744,9 +1727,78 @@ public class otbgui extends javax.swing.JFrame {
             LogTable.setModel(tm);
             LogTable.setEnabled(false);
         } catch (Exception e) {
-            System.out.println ("Remote searchInPeriod via RMI and JNI failed: " + e); 
+            System.out.println ("Value.searchInPeriod via RMI and JNI failed: " + e); 
         }
     }
+    
+    private void selectWorkTree() {
+        itsSelectedTree     = "None";
+        int aRow= TreeTable.getSelectedRow();
+        if ( aRow != -1) {
+            SelectedTreeID=new Integer((Integer)TreeTable.getValueAt(aRow, 0));
+            itsSelectedTree=TreeTable.getValueAt(aRow, 0).toString()+"."+
+                    TreeTable.getValueAt(aRow, 3).toString()+"."+
+                    TreeTable.getValueAt(aRow, 4).toString()+"."+
+                    TreeTable.getValueAt(aRow, 5).toString();
+        }
+        if (!itsSelectedTree.equals(selectedTreeTextField)){
+            selectedTreeTextField.setText(itsSelectedTree);
+            Date aD1 = new Date();
+            System.out.println("Treeload Started: "+aD1.toString());
+            Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
+            setCursor(hourglassCursor);
+            
+            // Start filling the TreeView
+            if (itsSelectedTree != "None") {
+                if (getTreeList()) {
+                    itsSelectedTreeType=TreeTable.getValueAt(aRow,4).toString();
+                } else {
+                    if (itsDebugFlag) System.out.println("Error getting the Treelist from the server");
+                }
+            }
+            Date aD2 = new Date();
+            System.out.println("Treeload Finished: "+aD2.toString());
+            Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
+            setCursor(normalCursor);
+            MainPane.setSelectedIndex(1);
+        }        
+    }
+    
+    private void createTreeList(int aSelectedTreeID) {
+        itsSelectedTree = "None";
+
+        SelectedInputLabel.setText("Input from: OTDB via RMI");
+        selectedTreeTextField.setText(itsSelectedTree);
+        TreeSelectButton.setEnabled(false);
+
+        // set default failed values
+        SourceMenuInputFile.setSelected(false);
+        SourceMenuInputFile.setSelected(false);
+        isFile=false;
+        isOTDB=false;
+        MainPane.setSelectedIndex(0);
+        clearAll();
+
+        if (RMIServerName.length()==0 || RMIServerPort.length()==0 ||
+              RMIRegistryName.length()==0 || OTDBUserName.length() ==0 ||
+              OTDBPassword.length()==0 || OTDBDBName.length()==0) {
+
+            JOptionPane.showMessageDialog(null,"You didn't set the RMI settings",
+                    "Source selection warning",
+                    JOptionPane.WARNING_MESSAGE);
+        }  else {
+            String aS="rmi://"+RMIServerName+":"+RMIServerPort+"/"+RMIRegistryName;
+            if (openRemoteConnection(aS)) {
+               if (fillTreeTable(aSelectedTreeID)) {
+                  if (itsDebugFlag) System.out.println("Table should be filled now");
+                  SourceMenuInputOTDB.setSelected(true);
+                  isOTDB=true;
+               } else {
+                   if (itsDebugFlag) System.out.println("Error in filling the table");
+               }
+             }   
+      }        
+   }
 }
 
  
