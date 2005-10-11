@@ -21,7 +21,7 @@ import javax.swing.table.AbstractTableModel;
 public class LogTableModel extends AbstractTableModel {
     
        
-       String headers[] = {"TimeStamp", "Value"};
+       String headers[] = {"Name","Value","TimeStamp"};
        Object data[][];
        boolean itsDebugFlag=false;
        
@@ -52,16 +52,13 @@ public class LogTableModel extends AbstractTableModel {
             
       public void setLogList(jTreeValueInterface aRemoteValue,Vector aLogList) {
            data = new Object[aLogList.size()][headers.length];
-                try {
-                    for (int k=0; k< aLogList.size();k++) {
-                        data[k][0]=((jOTDBvalue)aLogList.elementAt(k)).time;
-                        data[k][1]=((jOTDBvalue)aLogList.elementAt(k)).value;
-                    }
-                    fireTableDataChanged();
-                  } 
-                  catch (Exception e)
-                  {
-	            System.out.println ("Remote OTDB via RMI and JNI failed: " + e);
-	          }  
-            }
+           for (int k=0; k< aLogList.size();k++) {
+               String [] aS=((jOTDBvalue)aLogList.elementAt(k)).name.split("[.]");
+               String aName=aS[aS.length-1];
+               data[k][0]=aName;
+               data[k][1]=((jOTDBvalue)aLogList.elementAt(k)).value;
+               data[k][2]=((jOTDBvalue)aLogList.elementAt(k)).time;
+           }
+           fireTableDataChanged();
+      } 
 }
