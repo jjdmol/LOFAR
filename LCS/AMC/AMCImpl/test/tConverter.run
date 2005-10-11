@@ -15,7 +15,7 @@ INFILE="`dirname $0`/tConverter.in"
 if [ -f $INFILE ]
 then
    TYPE=`head -1 $INFILE | cut -d' ' -f1 | tr '[A-Z]' '[a-z]'`
-   PORT=`head -1 $INFILE | cut -d' ' -f3`
+   PORT=`head -1 $INFILE | cut -d' ' -f3 -s`
 fi
 
 # Variable to keep track of the return status.
