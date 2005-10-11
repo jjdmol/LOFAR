@@ -203,7 +203,7 @@ public class otbgui extends javax.swing.JFrame {
         SettingsMenuDebugSetting = new javax.swing.JRadioButtonMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximizedBounds(new java.awt.Rectangle(0, 0, 1024, 768));
+        setMaximizedBounds(new java.awt.Rectangle(0, 0, 1280, 1024));
         setName("mainFrame");
         MainPane.setMinimumSize(new java.awt.Dimension(750, 500));
         MainPane.setPreferredSize(new java.awt.Dimension(750, 500));
@@ -571,7 +571,7 @@ public class otbgui extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        LogTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        LogTable.setAutoscrolls(false);
         LogTable.setEnabled(false);
         LogTableScrollPane.add(LogTable);
         LogTableScrollPane.setViewportView(LogTable);
