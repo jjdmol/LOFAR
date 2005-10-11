@@ -29,7 +29,7 @@ public:
 
   explicit DH_FIR (const string& name,
 		   const short   subband,
-		   const LOFAR::ACC::APS::ParameterSet pSet); 
+		   const LOFAR::ACC::APS::ParameterSet& pSet); 
 
 
   DH_FIR(const DH_FIR&);

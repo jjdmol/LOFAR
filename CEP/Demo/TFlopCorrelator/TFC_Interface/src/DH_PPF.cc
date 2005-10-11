@@ -23,20 +23,24 @@ DH_PPF::DH_PPF(const string &name,
 	       const short subBandId,
 	       const ACC::APS::ParameterSet pSet)
 : DataHolder(name, "DH_PPF"),
+  itsPS(pSet),
+  itsMatrix(0),
   itsBuffer(0)
 {
-  //int NrStations      = itsPS.getInt32("PPF.NrStations");
-  //int NrPolarizations = itsPS.getInt32("PPF.NrPolarizations");
 }
 
 DH_PPF::DH_PPF(const DH_PPF &that)
 : DataHolder(that),
+  itsPS(that.itsPS),
+  itsMatrix(0),
   itsBuffer(that.itsBuffer)
 {
 }
 
 DH_PPF::~DH_PPF()
 {
+  delete itsMatrix;
+  itsBuffer = 0;
 }
 
 DataHolder *DH_PPF::clone() const
@@ -46,9 +50,19 @@ DataHolder *DH_PPF::clone() const
 
 void DH_PPF::init()
 {
-  addField("Buffer", BlobField<i16complex>(1, getBufferSize()));
+  addField("Buffer", BlobField<BufferElementType>(1, getBufferSize()));
   createDataBlock();
   itsBuffer = getData<BufferType>("Buffer");
+
+  memset(itsBuffer, 0, sizeof(BufferType)); 
+
+  vector<DimDef> vdd;
+  vdd.push_back(DimDef("Station", NR_STATIONS));
+  vdd.push_back(DimDef("Time", NR_STATION_SAMPLES));
+  vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
+  
+  itsMatrix = new RectMatrix<BufferElementType> (vdd);
+  itsMatrix->setBuffer((BufferElementType*)itsBuffer, getBufferSize());
 }
 
 void DH_PPF::fillDataPointers()
