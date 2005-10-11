@@ -47,7 +47,7 @@ WH_Distribute::WH_Distribute(const string& name,
   /// add DataHolders. Note that we may need to create a private Pset
   /// for the outDH if we need to duplicate data
   for (int i = 0; i < itsNinputs; i++) {
-    getDataManager().addInDataHolder(i, new DH_FIR("in", 1, itsPS));
+    getDataManager().addInDataHolder(i, new DH_PPF("in", 1, itsPS));
   }
 
   ACC::APS::ParameterSet myOutPS;
@@ -61,9 +61,10 @@ WH_Distribute::WH_Distribute(const string& name,
   myOutPS.add("Input.NPolarisations",value);
 
   for (int i = 0; i < itsNoutputs; i++) {
-    getDataManager().addOutDataHolder(i, new DH_FIR("out", 1, myOutPS));
+    getDataManager().addOutDataHolder(i, new DH_PPF("out", 1, myOutPS));
   }
-  DBGASSERTSTR(itsNinputs == itsNoutputs, "WH_Distribute: itsNinputs must be equal to itsNoutputs");
+  DBGASSERTSTR(itsNinputs <= itsNoutputs, "WH_Distribute: itsNinputs must be <= to itsNoutputs");
+  DBGASSERTSTR(itsNoutputs % itsNinputs == 0, "itsNoutputs needs to be an exact multiple of itsNinputs");
   DBGASSERTSTR(itsNinputElements <= itsNoutputElements, "WH_Distribute: itsNinputElements must be <= itsNoutputElements");
 
 }
@@ -92,15 +93,20 @@ void WH_Distribute::process() {
     /// do a straight memcpy
     for (int i = 0; i < itsNinputs; i++) {
       
-      memcpy(static_cast<DH_FIR*>(getDataManager().getOutHolder(i))->getBuffer(),
-	     static_cast<DH_FIR*>(getDataManager().getInHolder(i))->getBuffer(),
-	     static_cast<DH_FIR*>(getDataManager().getOutHolder(i))->getBufferSize() * sizeof(DH_FIR::BufferType));
-
+      // we could still have more outputs than inputs
+      for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
+	memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer(),
+	       static_cast<DH_PPF*>(getDataManager().getInHolder(i))->getBuffer(),
+	       static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferSize() * sizeof(DH_PPF::BufferType));
+      }
     }
   } else /* (itsNinputElements < itsNoutputElements) */ {
     // The output DH contains more data (more elements) than the input DH. 
     // duplicate data by copying data from the inDH into the outDH until it's
     // buffer is full
+
+    // we also take into account that the number of outputs may be more than
+    // the number of inputs.
 
     for (int i = 0; i < itsNinputs; i++) {
     
@@ -108,19 +114,20 @@ void WH_Distribute::process() {
       int myCounter = 0;
       int myCopiedBytes = 0;
       int myNextBlock = 0;
-
-      const int inBufSize = static_cast<DH_FIR*>(getDataManager().getInHolder(i))->getBufferSize();
-      const int outBufSize = static_cast<DH_FIR*>(getDataManager().getOutHolder(i))->getBufferSize();
-
+      
+      const int inBufSize = static_cast<DH_PPF*>(getDataManager().getInHolder(i))->getBufferSize();
+      const int outBufSize = static_cast<DH_PPF*>(getDataManager().getOutHolder(i))->getBufferSize();
+	
       while (myCopiedBytes < outBufSize) {
-
-        (outBufSize-myCopiedBytes) > inBufSize ? myNextBlock = inBufSize : myNextBlock = (outBufSize - myCopiedBytes);
-
-	memcpy(static_cast<DH_FIR*>(getDataManager().getOutHolder(i))->getBuffer() + myCopiedBytes,
-	       static_cast<DH_FIR*>(getDataManager().getInHolder(i))->getBuffer(),
-	       myNextBlock);
+	  
+	(outBufSize-myCopiedBytes) > inBufSize ? myNextBlock = inBufSize : myNextBlock = (outBufSize - myCopiedBytes);
+	
+	for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
+	  memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer() + myCopiedBytes,
+		 static_cast<DH_PPF*>(getDataManager().getInHolder(i))->getBuffer(),
+		 myNextBlock);
+	}
 	myCopiedBytes += myNextBlock;
-	cout << myCounter++ << " " << myCopiedBytes << endl;
       }
     }
   }

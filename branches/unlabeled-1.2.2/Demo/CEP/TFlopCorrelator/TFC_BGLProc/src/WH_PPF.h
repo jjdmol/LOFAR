@@ -35,6 +35,7 @@ namespace LOFAR
 
   //private:
     fcomplex itsDelayLine[NR_TAPS] __attribute__ ((aligned(16)));
+    static const float weights[NR_SUB_CHANNELS][NR_TAPS];
   };
 
 
@@ -60,10 +61,9 @@ namespace LOFAR
     WH_PPF& operator= (const WH_PPF&);
 
     /// FIR Filter variables
-    short	itsSubBandID;
-    fftw_plan	itsFFTWPlan;
-    FIR		itsFIRs[NR_STATIONS][NR_SUB_CHANNELS][NR_POLARIZATIONS];
-    float	itsWeights[NR_SUB_CHANNELS][NR_TAPS] __attribute__ ((aligned(16)));
+    short	 itsSubBandID;
+    fftw_plan	 itsFFTWPlan;
+    FIR		 itsFIRs[NR_STATIONS][NR_SUB_CHANNELS][NR_POLARIZATIONS];
   };
 
 } // namespace LOFAR

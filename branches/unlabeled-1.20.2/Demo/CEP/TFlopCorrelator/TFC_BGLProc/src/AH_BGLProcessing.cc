@@ -17,6 +17,7 @@
 #include <AH_BGLProcessing.h>
 #include <TFC_Interface/Stub_FIR.h>
 #include <TFC_Interface/Stub_Corr.h>
+#include <TFC_Interface/TFC_Config.h>
 // tinyCEP
 
 // Transporters
@@ -25,11 +26,12 @@
 #include <Transport/TH_Socket.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
-#include <WH_PPF.h>
+// #include <WH_BGL_Processing.h>
+#include <WH_Distribute.h>
 #include <WH_Correlator.h>
+#include <WH_PPF.h>
 // DataHolders
 #include <TFC_Interface/DH_PPF.h>
-#include <TFC_Interface/DH_CorrCube.h>
 #include <TFC_Interface/DH_Vis.h>
 
 using namespace LOFAR;
@@ -102,36 +104,51 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
   
   for (int ComputeCells = 0; ComputeCells < itsNrComputeCells; ComputeCells++) {
+    WH_Distribute*  DistNode;
     vector<WH_PPF*> PPFNodes;
     vector<WH_Correlator*> CorrNodes;
+    
 
     // The basic definition of a "compute cell"
     // A compute cell is a connected set of processing blocks that implement 
-    // a complete poly-phase filter and correlator chain.
+    // a complete poly-phase filter and correlator chain. Each compute cell 
+    // contains a single WH_Distribute that spreads the input to a number of
+    // processing chains.
+    DistNode = new WH_Distribute("distribute", itsParamSet, 1, itsNrFiltersPerComputeCell);
+    itsWHs.push_back(DistNode);
+    itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
+    
     for (int Filters = 0; Filters < itsNrFiltersPerComputeCell; Filters++) {
       snprintf(WH_Name, 40, "PPF_%d_of_%d", Filters, itsNrFilters);
       PPFNodes.push_back(new WH_PPF(WH_Name, 0));
       itsWHs.push_back(PPFNodes.back());
       itsWHs.back()->runOnNode(lowestFreeNode++);
-
-      itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
-
+      
+      //      itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
+      
       for (int Correlators = 0; Correlators < itsNrCorrelatorsPerFilter; Correlators++) {
 	snprintf(WH_Name, 40, "CORR_%d_of_%d_in_filter_%d", Correlators, itsNrCorrelatorsPerFilter, Filters);
-	CorrNodes.push_back(new WH_Correlator(WH_Name, itsNrFiltersPerComputeCell, itsNrChannels));
+	CorrNodes.push_back(new WH_Correlator(WH_Name));
 	itsWHs.push_back(CorrNodes.back());
 	itsWHs.back()->runOnNode(lowestFreeNode++);
-
+	
 	itsOutStub->connect(itsOut++, itsWHs.back()->getDataManager(), 0);
       } 
     }
-    
     // Now connect the internal blocks together
     int filter_nr = 0;
     int corr_nr   = 0;
     vector<WH_PPF*>::iterator fit = PPFNodes.begin();
     vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
     for (; fit != PPFNodes.end(); fit++) {
+
+      // connect the distribute node to it's filters
+      itsTHs.push_back(new TH_MPI( DistNode->getNode(), (*fit)->getNode()));
+      itsConnections.push_back(new Connection("dist_conn",
+					      DistNode->getDataManager().getOutHolder(filter_nr),
+					      (*fit)->getDataManager().getInHolder(0),
+					      itsTHs.back(),
+					      false)); 
       for (; cit != CorrNodes.end(); cit++) {
 	
 	snprintf(WH_Name, 40, "conn_filter_%d_corr_%d", filter_nr, corr_nr);

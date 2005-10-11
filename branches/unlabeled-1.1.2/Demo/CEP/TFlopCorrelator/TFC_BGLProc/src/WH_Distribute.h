@@ -26,7 +26,7 @@
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
 
-#include <TFC_Interface/DH_FIR.h>
+#include <TFC_Interface/DH_PPF.h>
 
 namespace LOFAR {
 
@@ -61,8 +61,8 @@ class WH_Distribute: public WorkHolder
   
   ACC::APS::ParameterSet itsPS;
 
-  DH_FIR::BufferType* in_ptr;
-  DH_FIR::BufferType* out_ptr;
+  DH_PPF::BufferType* in_ptr;
+  DH_PPF::BufferType* out_ptr;
 };
 
 }// namespace LOFAR
