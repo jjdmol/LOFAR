@@ -29,7 +29,7 @@
 // Application specific includes
 #include <TFC_InputSection/WH_SBCollect.h>
 #include <TFC_Interface/DH_RSP.h>
-#include <TFC_Interface/DH_FIR.h>
+#include <TFC_Interface/DH_PPF.h>
 
 #include <Common/hexdump.h>
 
@@ -51,7 +51,7 @@ WH_SBCollect::WH_SBCollect(const string& name, int sbID,
     getDataManager().addInDataHolder(i, new DH_RSP(str, itsPS));
   }
 
-  getDataManager().addOutDataHolder(0, new DH_FIR(str, itsSubBandID, itsPS));
+  getDataManager().addOutDataHolder(0, new DH_PPF(str, itsSubBandID, itsPS));
 
 }
 
@@ -72,12 +72,12 @@ WH_SBCollect* WH_SBCollect::make(const string& name)
 void WH_SBCollect::process() 
 { 
   RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-  RectMatrix<DH_FIR::BufferType>& outMatrix = ((DH_FIR*)getDataManager().getOutHolder(0))->getDataMatrix();
+  RectMatrix<DH_PPF::BufferElementType>& outMatrix = ((DH_PPF*)getDataManager().getOutHolder(0))->getDataMatrix();
 
   dimType outStationDim = outMatrix.getDim("Station");
   dimType inStationDim = inMatrix->getDim("Stations");
 
-  RectMatrix<DH_FIR::BufferType>::cursorType outCursor = outMatrix.getCursor( 0 * outStationDim);
+  RectMatrix<DH_PPF::BufferElementType>::cursorType outCursor = outMatrix.getCursor( 0 * outStationDim);
   RectMatrix<DH_RSP::BufferType>::cursorType inCursor = inMatrix->getCursor( 0 * inStationDim);
 
   // Loop over all inputs (stations)
@@ -103,7 +103,7 @@ void WH_SBCollect::process()
 			     outStationDim, 
 			     itsNinputs,
 			     matrixSize),
-	  matrixSize * sizeof(DH_FIR::BufferType));
+	  matrixSize * sizeof(DH_PPF::BufferElementType));
   cout << "WH_SBCollect output done " << endl;
 #endif
 
