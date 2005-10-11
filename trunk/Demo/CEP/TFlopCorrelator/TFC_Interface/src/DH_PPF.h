@@ -10,6 +10,7 @@
 #define TFLOPCORRELATOR_DH_PPF_H
 
 #include <TFC_Interface/TFC_Config.h>
+#include <TFC_Interface/RectMatrix.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <APS/ParameterSet.h>
@@ -22,7 +23,8 @@ namespace LOFAR
 class DH_PPF: public DataHolder
 {
 public:
-  typedef i16complex BufferType[NR_STATIONS][NR_STATION_SAMPLES][NR_POLARIZATIONS];
+  typedef i16complex BufferElementType;
+  typedef BufferElementType BufferType[NR_STATIONS][NR_STATION_SAMPLES][NR_POLARIZATIONS];
 
   explicit DH_PPF(const string& name,
 		  const short   subband,
@@ -37,6 +39,11 @@ public:
 
   virtual void init();
 
+  RectMatrix<BufferElementType>& getDataMatrix() const
+  {
+    return *itsMatrix; 
+  }
+
   BufferType *getBuffer()
   {
     return itsBuffer;
@@ -49,14 +56,14 @@ public:
 
   const size_t getBufferSize() const
   {
-    return sizeof(BufferType) / sizeof(i16complex);
+    return sizeof(BufferType) / sizeof(BufferElementType);
   }
   
   void setTestPattern()
   {
     (std::cerr << "DH_PPF::setTestPattern() ... ").flush();
     for (size_t i = 0; i < getBufferSize(); i++) {
-      ((i16complex *) itsBuffer)[i] = makei16complex(rand() << 20 >> 20, rand() << 20 >> 20);
+      ((BufferElementType *) itsBuffer)[i] = makei16complex(rand() << 20 >> 20, rand() << 20 >> 20);
     }
     std::cerr << "done.\n";
   }
@@ -65,9 +72,9 @@ private:
   /// Forbid assignment.
   DH_PPF &operator = (const DH_PPF&);
 
-  BufferType *itsBuffer;
-
   ACC::APS::ParameterSet itsPS;
+  RectMatrix<BufferElementType>* itsMatrix;
+  BufferType *itsBuffer;
 
   void fillDataPointers();
 };

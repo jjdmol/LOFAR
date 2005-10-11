@@ -21,7 +21,7 @@ namespace LOFAR
 
   DH_FIR::DH_FIR (const string& name, 
 		  const short   subband,
-		  const ACC::APS::ParameterSet pSet)
+		  const ACC::APS::ParameterSet& pSet)
     : DataHolder     (name, "DH_FIR"),
       itsBuffer      (0),
       itsFIR         (subband),
