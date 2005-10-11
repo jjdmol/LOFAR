@@ -791,16 +791,12 @@ bool	TreeMaintenance::deleteTree(treeIDType		aTreeID)
 
 	work	xAction(*(itsConn->getConn()), "deleteTree");
 	try {
-		result	res = xAction.exec("SELECT * from deleteTree(" +
+		result	res = xAction.exec("SELECT deleteTree(" +
 								    toString(itsConn->getAuthToken()) + "," +
 									toString(aTreeID) + ")");
-		// Get result
-		bool		succes;
-		res[0]["deletetree"].to(succes);
-		if (!succes) {
-			itsError = "Unable to delete tree";
-			return (false);
-		}
+
+		// when something goes wrong an exception is thrown
+		return (true);
 	}
 	catch (Exception&	ex) {
 		itsError = string("Exception during deleteTree:") + ex.what();

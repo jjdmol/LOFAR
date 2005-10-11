@@ -270,6 +270,27 @@ int main (int	argc, char*	argv[]) {
 		OTDBtree	VHtree = conn.getTreeInfo(VHtreeID);
 		LOG_INFO_STR(VHtree);
 
+		// Test deleting an active tree
+		LOG_INFO("Trying to delete the original template tree");
+		try {
+			tm.deleteTree(VTtreeID);
+			ASSERTSTR(false, "DELETING AN ACTIVE TREE IS NOT ALLOWED!");
+		}
+		catch (std::exception&	ex) {
+			LOG_INFO_STR("EXPECTED exception: " << ex.what());
+		}
+
+		aTreeState = TSconv.get("obsolete");		
+		LOG_INFO_STR("Trying to change the state of the tree to "<< aTreeState);
+		actionOK = tm.setTreeState(VTtreeID, aTreeState);
+		ASSERTSTR(actionOK, "Changing the state to " << aTreeState << 
+							"should have NOT have failed!");
+
+		// Test deleting a tree
+		LOG_INFO("Retrying to delete the original template tree");
+		ASSERTSTR (tm.deleteTree(VTtreeID), 
+					"Deletion of original tree went wrong:" << tm.errorMsg());
+		LOG_INFO ("Deletion of original tree was sucesful");
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());
