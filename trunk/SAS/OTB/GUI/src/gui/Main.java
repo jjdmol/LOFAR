@@ -28,7 +28,7 @@ public class Main {
      */
     public static void main(String[] args) {
        otbgui aGui = new otbgui();
-       aGui.setSize(1024,768);
+       aGui.setSize(1280,1024);
        aGui.setVisible(true);
     }    
 }

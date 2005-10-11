@@ -87,7 +87,7 @@
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
     <Property name="maximizedBounds" type="java.awt.Rectangle" editor="org.netbeans.beaninfo.editors.RectangleEditor">
-      <Rectangle value="[0, 0, 1024, 768]"/>
+      <Rectangle value="[0, 0, 1280, 1024]"/>
     </Property>
     <Property name="name" type="java.lang.String" value="mainFrame"/>
   </Properties>
@@ -873,7 +873,7 @@
                                 <Column editable="false" title="TimeStamp" type="java.lang.String"/>
                               </Table>
                             </Property>
-                            <Property name="autoResizeMode" type="int" value="4"/>
+                            <Property name="autoscrolls" type="boolean" value="false"/>
                             <Property name="enabled" type="boolean" value="false"/>
                           </Properties>
                           <AuxValues>
