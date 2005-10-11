@@ -58,7 +58,10 @@ public class treeModel extends AbstractTableModel {
            data = new Object[aTreeList.size()][headers.length];
            
                 try {
-                    jConverterInterface types = (jConverterInterface) Naming.lookup (jConverterInterface.SERVICENAME); 
+                    
+                    String aRMC="rmi://"+otbgui.RMIServerName+":"+otbgui.RMIServerPort+"/"+otbgui.RMIConverterName;
+
+                    jConverterInterface types = (jConverterInterface) Naming.lookup (aRMC); 
                     
                     if (aTreeList.size() == 0) {
                         if (itsDebugFlag) System.out.println("Error:" + aRemoteOTDB.errorMsg());
