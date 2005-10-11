@@ -68,6 +68,7 @@ public class SettingsDialog extends javax.swing.JDialog {
         getContentPane().add(OTDBUserNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 95, -1, -1));
 
         OTDBUserNameText.setToolTipText("UserName for OTDB Database");
+        OTDBUserNameText.setEnabled(false);
         getContentPane().add(OTDBUserNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 95, 190, -1));
 
         OTDBPasswordLabel.setText("OTDB Password");
@@ -75,12 +76,14 @@ public class SettingsDialog extends javax.swing.JDialog {
 
         OTDBPasswordText.setFont(new java.awt.Font("Tahoma", 0, 11));
         OTDBPasswordText.setToolTipText("OTDB Database Password");
+        OTDBPasswordText.setEnabled(false);
         getContentPane().add(OTDBPasswordText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 120, 190, -1));
 
         OTDBDBNameLabel.setText("OTDB DBName");
         getContentPane().add(OTDBDBNameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 145, -1, -1));
 
         OTDBDBNameText.setToolTipText("OTDB Database Name");
+        OTDBDBNameText.setEnabled(false);
         getContentPane().add(OTDBDBNameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 145, 190, -1));
 
         SettingsDialogOkButton.setText("Ok");

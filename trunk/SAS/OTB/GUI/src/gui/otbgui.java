@@ -100,6 +100,7 @@ public class otbgui extends javax.swing.JFrame {
     public static String itsSelectedTree     = "None";
     public String itsSelectedTreeType        = "";
     public Integer SelectedTreeID            = -1;
+    public String  SelectedTreeState         = "";
     public Integer SelectedNodeID            = -1;
    
     // SettingsDialog Defaults
@@ -111,7 +112,7 @@ public class otbgui extends javax.swing.JFrame {
     public static String RMIConverterName   = jConverterInterface.SERVICENAME; 
     public static String OTDBUserName       = "paulus";
     public static String OTDBPassword       = "boskabouter";
-    public static String OTDBDBName         = "coolen";   
+    public static String OTDBDBName         = "CDR";   
     
     
     /** Creates new form otbgui */
@@ -185,7 +186,8 @@ public class otbgui extends javax.swing.JFrame {
         CtrlInstButton = new javax.swing.JButton();
         CtrlDeleteButton = new javax.swing.JButton();
         CtrlCopyButton = new javax.swing.JButton();
-        CtrlChangeTreeStateButton = new javax.swing.JButton();
+        jComboBox1 = new javax.swing.JComboBox();
+        CtrlChangeTreeStateLabel = new javax.swing.JLabel();
         infoPanel = new javax.swing.JPanel();
         SelectedInputLabel = new javax.swing.JLabel();
         SelectedTreeLabel = new javax.swing.JLabel();
@@ -205,6 +207,12 @@ public class otbgui extends javax.swing.JFrame {
         setName("mainFrame");
         MainPane.setMinimumSize(new java.awt.Dimension(750, 500));
         MainPane.setPreferredSize(new java.awt.Dimension(750, 500));
+        MainPane.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                MainPaneStateChanged(evt);
+            }
+        });
+
         TreePanel.setLayout(new java.awt.BorderLayout());
 
         TreePanel.setToolTipText("Search on one or more of the given constraints");
@@ -545,14 +553,14 @@ public class otbgui extends javax.swing.JFrame {
 
             },
             new String [] {
-                "TimeStamp", "Value"
+                "ParamName", "Value", "TimeStamp"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false
+                false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -563,6 +571,7 @@ public class otbgui extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        LogTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
         LogTable.setEnabled(false);
         LogTableScrollPane.add(LogTable);
         LogTableScrollPane.setViewportView(LogTable);
@@ -585,7 +594,7 @@ public class otbgui extends javax.swing.JFrame {
             }
         });
 
-        LogPanel.add(LogParamRecentOnlyCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(330, 400, -1, -1));
+        LogPanel.add(LogParamRecentOnlyCheckbox, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 400, -1, -1));
 
         LogParamEndTimeLabel.setText("EndTime");
         LogPanel.add(LogParamEndTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 410, -1, -1));
@@ -647,7 +656,7 @@ public class otbgui extends javax.swing.JFrame {
 
         ControlPanel.setMinimumSize(new java.awt.Dimension(750, 475));
         ControlPanel.setPreferredSize(new java.awt.Dimension(700, 475));
-        CtrlInstButton.setText("Instantiate Tree");
+        CtrlInstButton.setText("Instanciate Tree");
         CtrlInstButton.setToolTipText("Make an instantiated tree from a template");
         CtrlInstButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -659,15 +668,30 @@ public class otbgui extends javax.swing.JFrame {
 
         CtrlDeleteButton.setText("Delete");
         CtrlDeleteButton.setEnabled(false);
+        CtrlDeleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CtrlDeleteButtonActionPerformed(evt);
+            }
+        });
+
         ControlPanel.add(CtrlDeleteButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 90, -1, -1));
 
         CtrlCopyButton.setText("Copy");
         CtrlCopyButton.setEnabled(false);
         ControlPanel.add(CtrlCopyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 130, -1, -1));
 
-        CtrlChangeTreeStateButton.setText("Change Tree State");
-        CtrlChangeTreeStateButton.setEnabled(false);
-        ControlPanel.add(CtrlChangeTreeStateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 50, -1, -1));
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "idle", "configure", "schedule", "queued", "active", "finished", "obsolete" }));
+        jComboBox1.setEnabled(false);
+        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox1ActionPerformed(evt);
+            }
+        });
+
+        ControlPanel.add(jComboBox1, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 50, 160, -1));
+
+        CtrlChangeTreeStateLabel.setText("changeTreeState");
+        ControlPanel.add(CtrlChangeTreeStateLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 30, 130, 20));
 
         MainPane.addTab("Control", null, ControlPanel, "ControlPanel");
 
@@ -764,17 +788,27 @@ public class otbgui extends javax.swing.JFrame {
     }
     // </editor-fold>//GEN-END:initComponents
 
+    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+// TODO add your handling code here:
+    }//GEN-LAST:event_jComboBox1ActionPerformed
+
     private void CtrlInstButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CtrlInstButtonActionPerformed
-        try {
-            if (itsSelectedTreeType.equals("VItemplate")) {
-                int aNewTreeID=remoteMaintenance.instanciateTree(SelectedTreeID);
-                if (itsDebugFlag) System.out.println("New tree instantiated with ID: "+aNewTreeID);
-                createTreeList(aNewTreeID);
-            }
-        } catch (Exception e){
-             System.out.println ("maintenance.instantiateTree via RMI and JNI failed: " + e);
-        }
+        instanciateTree(SelectedTreeID);
     }//GEN-LAST:event_CtrlInstButtonActionPerformed
+
+    private void CtrlDeleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CtrlDeleteButtonActionPerformed
+        deleteTree(SelectedTreeID);
+    }//GEN-LAST:event_CtrlDeleteButtonActionPerformed
+
+    private void MainPaneStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_MainPaneStateChanged
+        if (MainPane.getSelectedIndex() == 2) {
+            if (SelectedTreeState=="obsolete") {
+                CtrlDeleteButton.setEnabled(true);
+            } else {
+                CtrlDeleteButton.setEnabled(false);                
+            }
+        }
+    }//GEN-LAST:event_MainPaneStateChanged
 
     private void TreeTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TreeTableMouseClicked
         if (evt.getClickCount() == 2) {
@@ -979,7 +1013,7 @@ public class otbgui extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel BrowsePanel;
     private javax.swing.JPanel ControlPanel;
-    private javax.swing.JButton CtrlChangeTreeStateButton;
+    private javax.swing.JLabel CtrlChangeTreeStateLabel;
     private javax.swing.JButton CtrlCopyButton;
     private javax.swing.JButton CtrlDeleteButton;
     private javax.swing.JButton CtrlInstButton;
@@ -1044,6 +1078,7 @@ public class otbgui extends javax.swing.JFrame {
     private javax.swing.JScrollPane TreeTableScrollPane;
     private javax.swing.JTree VICTree;
     private javax.swing.JPanel infoPanel;
+    private javax.swing.JComboBox jComboBox1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JButton logParamApplyButton;
     private javax.swing.JButton logParamCancelButton;
@@ -1054,7 +1089,7 @@ public class otbgui extends javax.swing.JFrame {
 
     private boolean openRemoteConnection(String RMIRegHostName) {
         try {
-            if (itsDebugFlag) System.out.println("Starting... for "+RMIRegHostName);
+            if (itsDebugFlag) System.out.println("openRemoteConnection for "+RMIRegHostName);
         
             // create a remote object
             remoteOTDB = (jOTDBinterface) Naming.lookup (RMIRegHostName);     
@@ -1079,7 +1114,7 @@ public class otbgui extends javax.swing.JFrame {
     
     private boolean openRemoteMaintenance(String RMIMaintName) {
         try {
-            if (itsDebugFlag) System.out.println("Starting... for "+RMIMaintName);
+            if (itsDebugFlag) System.out.println("openRemoteMaintenance for "+RMIMaintName);
         
             // create a remote object
             remoteMaintenance = (jTreeMaintenanceInterface) Naming.lookup (RMIMaintName);     
@@ -1100,7 +1135,7 @@ public class otbgui extends javax.swing.JFrame {
         
     private boolean openRemoteValue(String RMIValName) {
         try {
-            if (itsDebugFlag) System.out.println("Starting... for "+RMIValName);
+            if (itsDebugFlag) System.out.println("OpenRemoteValue for "+RMIValName);
         
             // create a remote object
             remoteValue = (jTreeValueInterface) Naming.lookup (RMIValName);     
@@ -1120,7 +1155,7 @@ public class otbgui extends javax.swing.JFrame {
 
     private boolean openRemoteConverter(String RMIConverterName) {
         try {
-            if (itsDebugFlag) System.out.println("Starting... for "+RMIConverterName);
+            if (itsDebugFlag) System.out.println("openRemoteConverter for "+RMIConverterName);
         
             // create a remote object\
             remoteTypes = (jConverterInterface) Naming.lookup (RMIConverterName); 
@@ -1141,7 +1176,7 @@ public class otbgui extends javax.swing.JFrame {
     
     
     private boolean fillTreeTable(int aSelectedTreeID) {
-        if (itsDebugFlag) System.out.println("Trying to obtain the treeList");
+        if (itsDebugFlag) System.out.println("fillTreeTable for "+aSelectedTreeID);
 
         BrowsePanel.setEnabled(false);
         LogPanel.setEnabled(false);
@@ -1171,9 +1206,11 @@ public class otbgui extends javax.swing.JFrame {
         tm.setDebugFlag(itsDebugFlag);
         TreeTable.setModel(tm);       
         TreeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        for (int i=0; i < tm.getRowCount();i++ ) {
-            if (((Integer)tm.getValueAt(i, 0)).intValue() == aSelectedTreeID) {
-                TreeTable.setRowSelectionInterval(i,i);
+        if (aSelectedTreeID >= 0 ) {
+            for (int i=0; i < tm.getRowCount();i++ ) {
+                if (((Integer)tm.getValueAt(i, 0)).intValue() == aSelectedTreeID) {
+                    TreeTable.setRowSelectionInterval(i,i);
+                }
             }
         }
         TreeSelectButton.setEnabled(true);
@@ -1181,6 +1218,8 @@ public class otbgui extends javax.swing.JFrame {
     }
 
     private void setParamValues() {
+        if (itsDebugFlag) System.out.println("setParamValues");
+
         // aParamName=ParamNameText.getText();
         // aParamIndex=ParamIndexText.getText();
         boolean hasChanged=false;
@@ -1232,6 +1271,7 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setNodeValues() {
+        if (itsDebugFlag) System.out.println("setNodeValues");
         
         boolean hasChanged=false;
         // aNodeName=NodeNameText.getText();
@@ -1261,6 +1301,7 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setLogValues() {
+        if (itsDebugFlag) System.out.println("setLogValues");
         boolean hasChanged=false;
         
         if (!itsStartTime.equals(LogParamStartTimeText.getText())) {
@@ -1284,6 +1325,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setParamButtons(boolean flag) {
+        if (itsDebugFlag) System.out.println("setParamButtons "+flag);
+
         // To avoid that saving is available for type hardware and type VHtree trees we 
         // set flag to false for now
         if (!itsSelectedTreeType.equals("VItemplate")) flag=false;
@@ -1293,6 +1336,7 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setNodeButtons(boolean flag) {
+        if (itsDebugFlag) System.out.println("setNodeButtons "+flag);
         // To avoid that saving is available for type hardware and type VHtree trees we 
         // set flag to false for now
         if (!itsSelectedTreeType.equals("VItemplate")) flag=false;
@@ -1302,12 +1346,14 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setLogButtons(boolean flag) {
+        if (itsDebugFlag) System.out.println("setLogButtons "+flag);
         logParamApplyButton.setEnabled(flag);
         logParamCancelButton.setEnabled(flag);
         logButtonsEnabled=flag;
     }
 
     private boolean getTreeList() {
+        if (itsDebugFlag) System.out.println("getTreeList");
         boolean aFlag=false;
         if (isTreeFilled){
            clearTree();
@@ -1332,9 +1378,11 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private boolean fillTreeList() {        
+        if (itsDebugFlag) System.out.println("fillTreeList");
+
         boolean aFlag=false;
         try {
-            if (itsDebugFlag) System.out.println("Trying to get the topnode of the tree");
+            if (itsDebugFlag) System.out.println("Trying to get the topnode of the tree:"+ SelectedTreeID);
             jOTDBnode topNode = remoteMaintenance.getTopNode (SelectedTreeID.intValue ());
             aFlag=true;
             
@@ -1366,6 +1414,8 @@ public class otbgui extends javax.swing.JFrame {
     }
 
     private void addChildren(DefaultMutableTreeNode root,jOTDBnode aTopNode){
+        if (itsDebugFlag) System.out.println("addChildren");
+
         if (itsDebugFlag) System.out.println("Trying to get a node list with depth=1");
         try {
             
@@ -1386,11 +1436,13 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void clearAll() {
+        if (itsDebugFlag) System.out.println("clearAll");
+        
         itsPresentNode=null;
         itsPresentParam=null;
         SelectedNodeID=-1;
         SelectedTreeID=-1;
-        selectedTreeTextField.setText("None");
+        SelectedTreeState="";
         enableParamPanel(false);
         enableNodePanel(false);
         enableLogPanel(false);
@@ -1401,18 +1453,25 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void clearTree() {
+        if (itsDebugFlag) System.out.println("clearTree");
         root.removeAllChildren();
         root.setUserObject(new DefaultMutableTreeNode());
         isTreeFilled=false;
+        itsSelectedTree="None";
+        itsSelectedTreeType="";
+        selectedTreeTextField.setText("None");       
         VICTree.updateUI();
     }
     
     private void changeTreeSelection(Object aO) {
+        if (itsDebugFlag) System.out.println("changeTreeSelection");
+
         String aS = aO.toString();
         changeSelection(aS);
     }
     
     private void changeSelection(String aNodeName){
+        if (itsDebugFlag) System.out.println("changeSelection for"+aNodeName);
         boolean found = false;
         
         // No reason to do this when Tree is not filled yet anyway
@@ -1440,10 +1499,12 @@ public class otbgui extends javax.swing.JFrame {
                     treeTabbedPane.setSelectedIndex(1);
                     itsTreeTabbedPaneFocus="ParamPanel";
                     updateParamPanel(aNodeID);
+                    clearNodePanel();
                 } else {
                     treeTabbedPane.setSelectedIndex(0);
                     itsTreeTabbedPaneFocus="NodePanel";
                     updateNodePanel(aNodeID);
+                    clearParamPanel();
                 }
                 found = true;
                 TreePath aTreePath = new TreePath(aFoundNode.getPath());
@@ -1455,6 +1516,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setPresentNode(int aNodeID) {
+        if (itsDebugFlag) System.out.println("setPresentNode to "+aNodeID);
+        
         try {
             itsPresentNode=remoteMaintenance.getNode(SelectedTreeID, aNodeID);
         } catch (Exception e) {
@@ -1464,6 +1527,8 @@ public class otbgui extends javax.swing.JFrame {
     
 
     private void updateNodePanel(int aNodeID) {
+        if (itsDebugFlag) System.out.println("updateNodePanel"+aNodeID);
+        
         setPresentNode(aNodeID);
         NodeNameText.setText(itsPresentNode.name);
         NodeIndexText.setText(Short.toString(itsPresentNode.index));
@@ -1484,6 +1549,7 @@ public class otbgui extends javax.swing.JFrame {
     }
 
     private void updateParamPanel(int aNodeID) {
+        if (itsDebugFlag) System.out.println("updateParamPanel. nodeiD: "+aNodeID);
         try {
             setPresentNode(aNodeID);
             if (itsDebugFlag) System.out.println("Present Node: "+itsPresentNode.name);
@@ -1494,7 +1560,7 @@ public class otbgui extends javax.swing.JFrame {
             if (itsDebugFlag) System.out.println("pNode NodeID: "+itsPresentNode.nodeID());
             if (itsDebugFlag) System.out.println("pNode NodeParamDefID: "+itsPresentNode.paramDefID());
             
-            printParam(aP);
+            if (itsDebugFlag) printParam(aP);
             
             if (itsPresentNode.leaf && aP.paramID() > 0) {
                 itsPresentParam=aP;
@@ -1534,6 +1600,8 @@ public class otbgui extends javax.swing.JFrame {
     }
 
     private int getTypeIndex(Short aType) {
+        if (itsDebugFlag) System.out.println("getTypeIndex for: "+aType);
+        
         try {
             if (itsDebugFlag) System.out.println("Type in: " + aType);
             
@@ -1549,15 +1617,17 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void updateLogPanel(int aNodeID) {
+        if (itsDebugFlag) System.out.println("updateLogPanel NodeID: "+aNodeID);
+
         try {
     
             setPresentNode(aNodeID);
             jOTDBparam aP=remoteMaintenance.getParam(SelectedTreeID, itsPresentNode.paramDefID());
             
+            refreshLogPanel();
             // Check if param is valid
             if (itsPresentNode.leaf && aP.paramID() > 0) {
                 itsPresentParam=aP;
-                refreshLogPanel();
                 
                 enableLogPanel(true);
             } else {
@@ -1570,6 +1640,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private boolean saveParam(jOTDBparam aP) {
+        if (itsDebugFlag) System.out.println("saveParam");
+        
         boolean aFlag=false;
         try {
           if (itsDebugFlag) System.out.println("Saving Param:");
@@ -1589,6 +1661,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private boolean saveNode(jOTDBnode aN) {
+        if (itsDebugFlag) System.out.println("saveNode");
+        
         boolean aFlag=false;
         try {
             if (itsDebugFlag) System.out.println("Saving Node:");
@@ -1607,6 +1681,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void clearParamPanel() {
+        if (itsDebugFlag) System.out.println("clearParamPanel");
+        
         aParamName        = "None";
         aParamIndex       = "-1";
         aParamType           = 0;
@@ -1628,6 +1704,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void clearNodePanel() {
+        if (itsDebugFlag) System.out.println("clearNodePanel");
+        
         aNodeName         = "None";
         aNodeIndex        = "-1";
         aNodeInstances    = "-1";
@@ -1641,6 +1719,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void clearLogPanel() {
+        if (itsDebugFlag) System.out.println("clearLogPanel");
+        
         itsParamName="None";
         itsStartTime="2001-01-01 00:00:00";
         itsEndTime="2005-12-31 23:59:59";
@@ -1653,21 +1733,29 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void emptyLogList() {
+        if (itsDebugFlag) System.out.println("emptyLogList");
+        
         LogTable.removeAll();
     }
     
     private void enableNodePanel(boolean aFlag) {
+        if (itsDebugFlag) System.out.println("enableNodePanel "+aFlag);
+
         NodeInstancesText.setEnabled(aFlag);
         NodeLimitsText.setEnabled(aFlag);
     }
     
     private void enableLogPanel(boolean aFlag) {
+        if (itsDebugFlag) System.out.println("enableLogPanel "+aFlag);
+        
         LogParamStartTimeText.setEnabled(aFlag);
         LogParamEndTimeText.setEnabled(aFlag);
         LogParamRecentOnlyCheckbox.setEnabled(aFlag);
     }
 
     private void enableParamPanel(boolean aFlag) {
+        if (itsDebugFlag) System.out.println("enableParamPanel "+aFlag);
+        
         ParamTypeSelection.setEnabled(aFlag);
         ParamUnitSelection.setEnabled(aFlag);
         ParamPruningText.setEnabled(aFlag);
@@ -1677,6 +1765,8 @@ public class otbgui extends javax.swing.JFrame {
     }
 
     private void printParam(jOTDBparam aP) {
+        if (itsDebugFlag) System.out.println("printParam");
+        
         System.out.println("TreeID: "+aP.treeID());
         System.out.println("NodeID: "+aP.nodeID());
         System.out.println("ParamID: "+aP.paramID());
@@ -1696,6 +1786,8 @@ public class otbgui extends javax.swing.JFrame {
     }
 
     private void printNode(jOTDBnode aN) {
+        if (itsDebugFlag) System.out.println("printNode");
+        
         System.out.println("TreeID: "+aN.treeID());
         System.out.println("NodeID: "+aN.nodeID());
         System.out.println("ParentID: "+aN.parentID());
@@ -1713,6 +1805,8 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void refreshLogPanel() {
+        if (itsDebugFlag) System.out.println("refreshLogPanel");
+        
         try {
             if (itsDebugFlag) System.out.println("Trying to call searchInPeriod with: ");
             if (itsDebugFlag) System.out.println("TreeID: "+SelectedTreeID.intValue());
@@ -1720,7 +1814,7 @@ public class otbgui extends javax.swing.JFrame {
             if (itsDebugFlag) System.out.println("Start: "+itsStartTime);
             if (itsDebugFlag) System.out.println("End: "+itsEndTime);
             LogParamNameText.setText(itsPresentNode.name);
-            Vector aLogList=remoteValue.searchInPeriod(SelectedTreeID.intValue(), itsPresentNode.nodeID(),0,itsStartTime,itsEndTime,setMostRecent);
+            Vector aLogList=remoteValue.searchInPeriod(SelectedTreeID.intValue(), itsPresentNode.nodeID(),1,itsStartTime,itsEndTime,setMostRecent);
             // Give our own model to the LogTable Object
             LogTableModel tm = new LogTableModel(remoteValue,aLogList);
             tm.setDebugFlag(itsDebugFlag);
@@ -1732,39 +1826,42 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void selectWorkTree() {
+        if (itsDebugFlag) System.out.println("selectWorkTree");
+        
         itsSelectedTree     = "None";
         int aRow= TreeTable.getSelectedRow();
         if ( aRow != -1) {
             SelectedTreeID=new Integer((Integer)TreeTable.getValueAt(aRow, 0));
+            SelectedTreeState=new String((String)TreeTable.getValueAt(aRow, 5));
             itsSelectedTree=TreeTable.getValueAt(aRow, 0).toString()+"."+
                     TreeTable.getValueAt(aRow, 3).toString()+"."+
                     TreeTable.getValueAt(aRow, 4).toString()+"."+
                     TreeTable.getValueAt(aRow, 5).toString();
         }
-        if (!itsSelectedTree.equals(selectedTreeTextField)){
-            selectedTreeTextField.setText(itsSelectedTree);
-            Date aD1 = new Date();
-            System.out.println("Treeload Started: "+aD1.toString());
-            Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
-            setCursor(hourglassCursor);
+        selectedTreeTextField.setText(itsSelectedTree);
+        Date aD1 = new Date();
+        System.out.println("Treeload Started: "+aD1.toString());
+        Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
+        setCursor(hourglassCursor);
             
-            // Start filling the TreeView
-            if (itsSelectedTree != "None") {
-                if (getTreeList()) {
-                    itsSelectedTreeType=TreeTable.getValueAt(aRow,4).toString();
-                } else {
-                    if (itsDebugFlag) System.out.println("Error getting the Treelist from the server");
-                }
+        // Start filling the TreeView
+        if (itsSelectedTree != "None") {
+            if (getTreeList()) {
+                itsSelectedTreeType=TreeTable.getValueAt(aRow,4).toString();
+            } else {
+                if (itsDebugFlag) System.out.println("Error getting the Treelist from the server");
             }
-            Date aD2 = new Date();
-            System.out.println("Treeload Finished: "+aD2.toString());
-            Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
-            setCursor(normalCursor);
-            MainPane.setSelectedIndex(1);
-        }        
+        }
+        Date aD2 = new Date();
+        System.out.println("Treeload Finished: "+aD2.toString());
+        Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
+        setCursor(normalCursor);
+        MainPane.setSelectedIndex(1);
     }
     
     private void createTreeList(int aSelectedTreeID) {
+        if (itsDebugFlag) System.out.println("createTreeList for TreeID: "+aSelectedTreeID);
+        
         itsSelectedTree = "None";
 
         SelectedInputLabel.setText("Input from: OTDB via RMI");
@@ -1799,6 +1896,72 @@ public class otbgui extends javax.swing.JFrame {
              }   
       }        
    }
+    
+    private void deleteTree(int aTreeID) {
+        if (itsDebugFlag) System.out.println("deleteTree: "+aTreeID);
+        
+        try {
+            if (aTreeID >= 0) {
+                int ans=JOptionPane.showConfirmDialog(null,"Are you sure to delete "+aTreeID+" ?", "Delete Tree", JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);
+                switch(ans) {
+                    case JOptionPane.YES_OPTION:
+                        if (remoteMaintenance.deleteTree(aTreeID) ) {
+                            if (itsDebugFlag) System.out.println("Tree "+ aTreeID+" deleted");
+                                clearTree();
+                                createTreeList(-1);
+                            } else {
+                                if (itsDebugFlag) System.out.println("ERROR: Tree "+aTreeID+" NOT deleted");                
+                            }
+                    }
+            }
+        } catch (Exception e){
+             System.out.println ("maintenance.deleteTree via RMI and JNI failed: " + e);
+        }
+    }
+    
+    private void instanciateTree(int aTreeID) {
+        if (itsDebugFlag) System.out.println("instanciateTree: "+aTreeID);
+        
+        try {
+            if (aTreeID >= 0 && itsSelectedTreeType.equals("VItemplate")) {
+                int ans=JOptionPane.showConfirmDialog(null,"Are you sure to instanciate tree: "+aTreeID+" ?", "Instanciate Tree", JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);
+                switch(ans) {
+                    case JOptionPane.YES_OPTION:
+                        int aNewTreeID=remoteMaintenance.instanciateTree(aTreeID);
+                        if (aNewTreeID >= 0) {
+                            if (itsDebugFlag) System.out.println("Created a new Tree with ID: "+aNewTreeID);
+                                clearTree();
+                                createTreeList(aNewTreeID);
+                            } else {
+                                if (itsDebugFlag) System.out.println("ERROR: Tree "+aTreeID+" NOT instanciate");                
+                            }
+                    }
+            }
+        } catch (Exception e){
+             System.out.println ("maintenance.instanciateTree via RMI and JNI failed: " + e);
+        }
+    }
+    private void changeTreeState(int aTreeID,String aStatus) {
+        if (itsDebugFlag) System.out.println("changeTreeState: "+aTreeID);
+        
+        try {
+            if (aTreeID >= 0) {
+                int ans=JOptionPane.showConfirmDialog(null,"Are you sure to change tree: "+aTreeID+" to state "+aStatus+"?", "Delete Tree", JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);
+                switch(ans) {
+                    case JOptionPane.YES_OPTION:
+                        if (remoteMaintenance.setTreeState(aTreeID,remoteTypes.getTreeState(aStatus))) {
+                            if (itsDebugFlag) System.out.println("Tree "+ aTreeID+" state changed to: "+aStatus);
+                                clearTree();
+                                createTreeList(-1);
+                            } else {
+                                if (itsDebugFlag) System.out.println("ERROR: Tree "+aTreeID+" state NOT changed");                
+                            }
+                    }
+            }
+        } catch (Exception e){
+             System.out.println ("maintenance.changeTreeState via RMI and JNI failed: " + e);
+        }
+    }
 }
 
  

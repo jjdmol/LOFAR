@@ -120,6 +120,9 @@
       <AccessibilityProperties>
         <Property name="AccessibleContext.accessibleName" type="java.lang.String" value=""/>
       </AccessibilityProperties>
+      <Events>
+        <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="MainPaneStateChanged"/>
+      </Events>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
           <BorderConstraints direction="Center"/>
@@ -864,11 +867,13 @@
                         <Component class="javax.swing.JTable" name="LogTable">
                           <Properties>
                             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                              <Table columnCount="2" rowCount="0">
-                                <Column editable="false" title="TimeStamp" type="java.lang.String"/>
+                              <Table columnCount="3" rowCount="0">
+                                <Column editable="false" title="ParamName" type="java.lang.String"/>
                                 <Column editable="false" title="Value" type="java.lang.String"/>
+                                <Column editable="false" title="TimeStamp" type="java.lang.String"/>
                               </Table>
                             </Property>
+                            <Property name="autoResizeMode" type="int" value="4"/>
                             <Property name="enabled" type="boolean" value="false"/>
                           </Properties>
                           <AuxValues>
@@ -909,7 +914,7 @@
                       </Events>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                          <AbsoluteConstraints x="330" y="400" width="-1" height="-1"/>
+                          <AbsoluteConstraints x="550" y="400" width="-1" height="-1"/>
                         </Constraint>
                       </Constraints>
                     </Component>
@@ -1023,7 +1028,7 @@
           <SubComponents>
             <Component class="javax.swing.JButton" name="CtrlInstButton">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Instantiate Tree"/>
+                <Property name="text" type="java.lang.String" value="Instanciate Tree"/>
                 <Property name="toolTipText" type="java.lang.String" value="Make an instantiated tree from a template"/>
               </Properties>
               <Events>
@@ -1040,6 +1045,9 @@
                 <Property name="text" type="java.lang.String" value="Delete"/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="CtrlDeleteButtonActionPerformed"/>
+              </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
                   <AbsoluteConstraints x="60" y="90" width="-1" height="-1"/>
@@ -1057,17 +1065,37 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JButton" name="CtrlChangeTreeStateButton">
+            <Component class="javax.swing.JComboBox" name="jComboBox1">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Change Tree State"/>
+                <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                  <StringArray count="7">
+                    <StringItem index="0" value="idle"/>
+                    <StringItem index="1" value="configure"/>
+                    <StringItem index="2" value="schedule"/>
+                    <StringItem index="3" value="queued"/>
+                    <StringItem index="4" value="active"/>
+                    <StringItem index="5" value="finished"/>
+                    <StringItem index="6" value="obsolete"/>
+                  </StringArray>
+                </Property>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
-              <AuxValues>
-                <AuxValue name="generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
-              </AuxValues>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jComboBox1ActionPerformed"/>
+              </Events>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                  <AbsoluteConstraints x="410" y="50" width="-1" height="-1"/>
+                  <AbsoluteConstraints x="350" y="50" width="160" height="-1"/>
+                </Constraint>
+              </Constraints>
+            </Component>
+            <Component class="javax.swing.JLabel" name="CtrlChangeTreeStateLabel">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="changeTreeState"/>
+              </Properties>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="350" y="30" width="130" height="20"/>
                 </Constraint>
               </Constraints>
             </Component>
