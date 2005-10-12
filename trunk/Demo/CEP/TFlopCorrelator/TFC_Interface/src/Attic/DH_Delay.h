@@ -39,8 +39,8 @@ public:
   virtual void init();
 
   // accessor functions to the blob data
-  const int getDelay(int index) const;
-  void setDelay(int index, int value);
+  const int getDelayChange(int index) const;
+  void setDelayChange(int index, int value);
  
  private:
   /// Forbid assignment.

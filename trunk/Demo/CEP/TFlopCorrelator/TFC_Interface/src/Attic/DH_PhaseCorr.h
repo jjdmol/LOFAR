@@ -1,5 +1,5 @@
-//# DH_Delay.h: dataholder to hold the delay information to perform
-//#            station synchronizaion       
+//# DH_PhaseCorr.h: dataholder to hold the phase correction information
+//#                 to perform station synchronization       
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -10,8 +10,8 @@
 //#
 /////////////////////////////////////////////////////////////////
 
-#ifndef TFLOPCORRELATOR_DH_DELAY_H
-#define TFLOPCORRELATOR_DH_DELAY_H
+#ifndef TFLOPCORRELATOR_DH_PHASECORR_H
+#define TFLOPCORRELATOR_DH_PHASECORR_H
 
 
 #include <lofar_config.h>
@@ -22,16 +22,16 @@ using std::complex;
 namespace LOFAR
 {
 
-class DH_Delay: public DataHolder
+class DH_PhaseCorr: public DataHolder
 {
 public:
   typedef char BufferType;
 
-  explicit DH_Delay (const string& name, int nrRSPs);
+  explicit DH_PhaseCorr (const string& name, int nrChannels);
 
-  DH_Delay(const DH_Delay&);
+  DH_PhaseCorr(const DH_PhaseCorr&);
 
-  virtual ~DH_Delay();
+  virtual ~DH_PhaseCorr();
 
   DataHolder* clone() const;
 
@@ -39,20 +39,20 @@ public:
   virtual void init();
 
   // accessor functions to the blob data
-  const int getDelayChange(int index) const;
-  void setDelayChange(int index, int value);
+  const fcomplex getPhaseCorr(int index) const;
+  void setPhaseCorr(int index, fcomplex value);
  
  private:
   /// Forbid assignment.
-  DH_Delay& operator= (const DH_Delay&);
+  DH_PhaseCorr& operator= (const DH_PhaseCorr&);
 
   // Fill the pointers (itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
   /// pointers to data in the blob
-  int* itsDelayPtr;
+  fcomplex* itsCorrPtr;
 
-  int itsNrRSPs;
+  int itsNrChannels;
 };
 
 

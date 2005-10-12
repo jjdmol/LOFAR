@@ -14,46 +14,71 @@
 //# Includes
 #include <WH_DelayControl.h>
 #include <TFC_Interface/DH_Delay.h>
+#include <TFC_Interface/DH_PhaseCorr.h>
 
 namespace LOFAR{
 
 WH_DelayControl::WH_DelayControl(const string& name,
-				 const int    nRSPInputs)
-  : WorkHolder(1, nRSPInputs, name, "WH_DelayControl")
+				 const int     nRSPInputs,
+				 const int     nrChannels,
+				 const int     delay)
+  : WorkHolder    (0, nRSPInputs+1, name, "WH_DelayControl"),
+    itsNrRSPInputs(nRSPInputs),
+    itsNrChannels (nrChannels),
+    itsAbsDelay   (delay),
+    itsDelayDiff  (delay)
+
 {
   char str[128];
-    for (int i = 0; i < itsNinputs; i++) {
-      getDataManager().addInDataHolder(i, new DH_Delay(str, nRSPInputs)); 
+  for (int i = 0; i < itsNrRSPInputs; i++) {
+    snprintf(str, 128, "output_%d_of _%d", i, itsNrRSPInputs);
+    getDataManager().addOutDataHolder(i, new DH_Delay(str, itsNrRSPInputs));
   }
-  for (int i = 0; i < itsNoutputs; i++) {
-    snprintf(str, 128, "output_%d_of _%d", i, itsNoutputs);
-    getDataManager().addOutDataHolder(i, new DH_Delay(str, nRSPInputs));
-  }
+  getDataManager().addOutDataHolder(itsNrRSPInputs, new DH_PhaseCorr("PhaseCorrOutput", itsNrChannels));
 }
 
 WH_DelayControl::~WH_DelayControl() {
 }
 
 WorkHolder* WH_DelayControl::construct(const string& name, 
-				       const int nRSPInputs)
+				       const int nRSPInputs,
+				       const int nrChannels,
+				       const int delay)
 {
-  return new WH_DelayControl(name, nRSPInputs);
+  return new WH_DelayControl(name, nRSPInputs, nrChannels, delay);
 }
 
 WH_DelayControl* WH_DelayControl::make(const string& name) {
-  return new WH_DelayControl(name, itsNoutputs);
+  return new WH_DelayControl(name, itsNrRSPInputs, itsNrChannels, itsAbsDelay);
 }
 
 void WH_DelayControl::process() {
-  //  DH_Delay* inp = (DH_Delay*)getDataManager().getInHolder(0);
   DH_Delay* outp = 0;
-  for (int i = 0; i < itsNoutputs; i++)
-  {
-    outp = (DH_Delay*)getDataManager().getOutHolder(i);
-    for (int j = 0; j < itsNoutputs; j++) 
-    {    
-      outp->setDelay(j, j-3);
+  // Set delay output
+  for (int j = 0; j < itsNrRSPInputs; j++) 
+  {    
+    outp = (DH_Delay*)getDataManager().getOutHolder(j);
+    for (int i=0; i < itsNrRSPInputs; i++)
+    {
+      outp->setDelayChange(i, i*itsDelayDiff+8);
     }
   }
+  itsDelayDiff = 0;  // Next time keep the same delay
+
+  // Set phase correction output
+  DH_PhaseCorr* corrOutp;
+  corrOutp = (DH_PhaseCorr*)getDataManager().getOutHolder(itsNrRSPInputs);
+  for (int ch=0; ch<itsNrChannels; ch++)
+  {
+    corrOutp->setPhaseCorr(ch, makefcomplex(1,-1));
+  }
+
 }
+
+void WH_DelayControl::setDelay(const int delay)
+{
+  itsDelayDiff += delay - itsAbsDelay;
+  itsAbsDelay = delay;
+}
+
 }

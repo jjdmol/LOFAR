@@ -16,6 +16,7 @@
 namespace LOFAR {
 
 class Stub_Delay;
+ class Stub_PhaseCorr;
 
 // This is the ApplicationHolder for the storage section of the TFLopCorrelator demo
 // This applicationholder uses the CEPFrame library and is supposed to
@@ -36,7 +37,8 @@ class AH_DelayCompensation: public LOFAR::ApplicationHolder
   virtual void quit    ();
  private:
 
-  Stub_Delay* itsDelayStub;
+  Stub_Delay*     itsDelayStub;
+  Stub_PhaseCorr* itsPhaseCorrStub;
 };
 }
 #endif

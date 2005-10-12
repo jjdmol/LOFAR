@@ -57,32 +57,33 @@ void Stub_Delay ::connect (int RSP_nr,
  	       "RSP_nr argument out of boundaries; " << RSP_nr << " / " << itsNRSP);
 
   string service = itsPS.getStringVector("DelayConnection.RequestPorts")[RSP_nr];
-  
-  if (itsIsInput) // on the input side, start server socket
+
+  if (itsIsInput) // on the input side, start client socket
   {
     DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
+		 " has already been connected.");
+    // Create a client socket
+    string server = itsPS.getString("DelayCompensation.ServerHost");
+    itsTHs[RSP_nr] = new TH_Socket(server,
+				   service,
+				   true,
+				   Socket::TCP,
+				   false);
+
+    itsConnections[RSP_nr] = new Connection("toBG", 0, 
+					    dm.getGeneralInHolder(dhNr),
+					    itsTHs[RSP_nr], true);
+    dm.setInConnection(dhNr, itsConnections[RSP_nr]);
+  } 
+  else    // on the delay compensation side, start a server socket
+  {
+    DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub output " << RSP_nr << 
 		 " has already been connected.");
     // Create a server socket
     itsTHs[RSP_nr] = new TH_Socket(service,
 				   true,
 				   Socket::TCP,
 				   5,
-				   false);
-    itsConnections[RSP_nr] = new Connection("toBG", 0, 
-					    dm.getGeneralInHolder(dhNr),
-					    itsTHs[RSP_nr], true);
-    dm.setInConnection(dhNr, itsConnections[RSP_nr]);
-  } 
-  else    // on the delay compensation side, start a client socket
-  {
-    DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub output " << RSP_nr << 
-		 " has already been connected.");
-    // Create a client socket
-    vector<string> servers = itsPS.getStringVector("DelayConnection.ServerHosts");
-    itsTHs[RSP_nr] = new TH_Socket(servers[RSP_nr],
-				   service,
-				   true,
-				   Socket::TCP,
 				   false);
     itsConnections[RSP_nr] = new Connection("fromInpSection", 
 					    dm.getGeneralOutHolder(dhNr), 

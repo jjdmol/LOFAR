@@ -191,7 +191,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
  
   // create incoming dataholder holding the delay information 
   getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay",itsNRSPOutputs));
-  getDataManager().setAutoTriggerIn(0, false);
+  //  getDataManager().setAutoTriggerIn(0, false);
  
   // create the buffer controller.
   itsBufControl = new BufferController(itsCyclicBufferSize, itsNSubbands);
@@ -333,9 +333,9 @@ void WH_RSPInput::process()
 
   // delay control
   delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
-  // TODO: get delay from the delay controller
-  //delayedstamp = itsSyncedStamp + delayDHp->getDelay(itsStationID);    
-  delayedstamp = itsSyncedStamp;
+  // Get delay from the delay controller
+  delayedstamp = itsSyncedStamp + delayDHp->getDelayChange(itsStationID);    
+  //delayedstamp = itsSyncedStamp;
 
 
   /* startstamp is the synced and delay-controlled timestamp to 
