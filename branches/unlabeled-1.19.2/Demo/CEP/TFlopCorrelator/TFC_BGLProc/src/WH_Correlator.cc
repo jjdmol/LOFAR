@@ -68,20 +68,25 @@ WH_Correlator::WH_Correlator(const string &name)
   ASSERTSTR(itsNchannels      == NR_CHANNELS_PER_CORRELATOR, "Configuration doesn't match parameter: NrChannels");
   ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match parameter: NrSamples");
 
+  int totalInputSize = 0;
   for (int i = 0; i < itsNfilters; i++) {
     char str[50];
     snprintf(str, 50, "input_%d_of_%d", i, itsNfilters);
     getDataManager().addInDataHolder(0, new DH_CorrCube(str, 0));
+    totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
   }
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
     char str[50];
     snprintf(str, 50, "output_%d_of_%d", ch, NR_CHANNELS_PER_CORRELATOR);
     getDataManager().addOutDataHolder(ch, new DH_Vis(str, 0, myPS));
   }
+
+  itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize);
 }
 
 WH_Correlator::~WH_Correlator()
 {
+  free(itsInputBuffer);
 }
 
 WorkHolder* WH_Correlator::construct(const string& name)
@@ -105,6 +110,13 @@ void WH_Correlator::process()
   DH_CorrCube::BufferType *input  = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
   DH_Vis::BufferType	  *output = static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBuffer();
 
+  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
+  /// (could this be done more efficiently?)
+  int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
+  for (int in = 0; in < itsNfilters; in++) { 
+    memcpy(itsInputBuffer+(in*bufSize), static_cast<DH_CorrCube*>(getDataManager().getInHolder(in))->getBuffer(), bufSize);
+  }
+
   timer.start();
 #if 0
   // C++ reference implementation
@@ -117,7 +129,7 @@ void WH_Correlator::process()
 	    fcomplex sum = makefcomplex(0, 0);
 
 	    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
-	      sum += (*input)[ch][stat1][time][pol1] * ~(*input)[ch][stat2][time][pol2];
+	      sum += (*itsInputBuffer)[ch][stat1][time][pol1] * ~(*itsInputBuffer)[ch][stat2][time][pol2];
 	    }
 
 	    (*output)[DH_Vis::baseline(stat1,stat2)][ch][pol1][pol2] = sum;
@@ -138,8 +150,8 @@ void WH_Correlator::process()
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
     for (int stat1 = 1; stat1 < NR_STATIONS; stat1 += 2) {
       for (int stat2 = 0; stat2 < stat1; stat2 += 2) { 
-	_correlate_2x2(&(*input)[ch][stat1], &(*input)[ch][stat1 + 1],
-		       &(*input)[ch][stat2], &(*input)[ch][stat2 + 1],
+	_correlate_2x2(&(*itsInputBuffer)[ch][stat1], &(*itsInputBuffer)[ch][stat1 + 1],
+		       &(*itsInputBuffer)[ch][stat2], &(*itsInputBuffer)[ch][stat2 + 1],
 		       &(*output)[DH_Vis::baseline(stat1    , stat2    )][ch],
 		       &(*output)[DH_Vis::baseline(stat1    , stat2 + 1)][ch],
 		       &(*output)[DH_Vis::baseline(stat1 + 1, stat2    )][ch],
@@ -147,7 +159,7 @@ void WH_Correlator::process()
       }
     }
     for (int stat = 0; stat < NR_STATIONS; stat += 2) {
-      _auto_correlate_1x1(&(*input)[ch][stat],
+      _auto_correlate_1x1(&(*itsInputBuffer)[ch][stat],
 			  &(*output)[DH_Vis::baseline(stat,stat)][ch]);
     }
   }

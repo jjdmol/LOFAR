@@ -67,6 +67,8 @@ namespace LOFAR
     int itsNpolarisations;
     int itsNchannels;
 
+    DH_CorrCube::BufferType* itsInputBuffer;
+
   };
 
 } // namespace LOFAR
