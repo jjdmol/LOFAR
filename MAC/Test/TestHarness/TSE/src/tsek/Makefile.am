@@ -1,11 +1,13 @@
 
 DOCHDRS = arithmetric.h \
 	atkernel_intern.h \
+	atkernel.h \
 	basic_parser.h \
 	bp.h \
 	bp_admin.h \
 	bp_file.h \
 	bp_log.h \
+	codingstandard.h \
 	driver_configuration.h \
 	eventprocessor.h \
 	eventreceiver.h \
@@ -20,8 +22,7 @@ DOCHDRS = arithmetric.h \
 	stores.h \
 	test_kernel.h \
 	test_parser.h \
-	test_scanner.h \
-	test_stuff.h
+	teststuff.h
 
 noinst_LTLIBRARIES 	= libtsek.la
 

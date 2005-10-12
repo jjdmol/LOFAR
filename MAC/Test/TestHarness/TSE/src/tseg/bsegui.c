@@ -675,7 +675,16 @@ static char *GetIniDirectoryName(char *pcFilename)
     }
     else
     {
-      strcpy( pcResultString, "etc/");
+      /* if the first character is a period then the command is like ./tse */
+      if (pcFilename[0] == '.')
+      {
+        /* Then we have to go up one directory */
+        strcpy( pcResultString, "../etc/");
+      }
+      else
+      {
+        strcpy( pcResultString, "etc/");
+      }
     }
   }
   return(pcResultString);
