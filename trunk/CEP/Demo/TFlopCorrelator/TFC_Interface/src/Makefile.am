@@ -3,6 +3,7 @@ RSPTimeStamp.h          \
 DH_RSPSync.h            \
 DH_Delay.h		\
 DH_RSP.h                \
+DH_Subband.h            \
 DH_PPF.h		\
 DH_CorrCube.h		\
 DH_Vis.h		\
@@ -31,6 +32,7 @@ RSPTimeStamp.cc          	\
 DH_RSPSync.cc                   \
 DH_Delay.cc			\
 DH_RSP.cc                	\
+DH_Subband.cc                   \
 DH_PPF.cc			\
 DH_CorrCube.cc			\
 DH_Vis.cc			\
