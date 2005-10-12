@@ -16,11 +16,13 @@
 #include <APS/ParameterSet.h>
 #include <CEPFrame/Step.h>
 #include <TFC_Interface/Stub_Delay.h>
+#include <TFC_Interface/Stub_PhaseCorr.h>
 
 using namespace LOFAR;
 
 AH_DelayCompensation::AH_DelayCompensation() 
-  : itsDelayStub(0)
+  : itsDelayStub    (0),
+    itsPhaseCorrStub(0)
 {
 }
 
@@ -30,6 +32,7 @@ AH_DelayCompensation::~AH_DelayCompensation() {
 
 void AH_DelayCompensation::undefine() {
   delete itsDelayStub;
+  delete itsPhaseCorrStub;
 }  
 
 void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
@@ -42,16 +45,22 @@ void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
   setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
   int nRSP = itsParamSet.getInt32("Input.NRSP");
-  WH_DelayControl delayWH("DelayContr", nRSP);
+  int nChannels = itsParamSet.getInt32("Storage.nChannels");
+  int delay = itsParamSet.getInt32("DelayCompensation.Delay");
+  WH_DelayControl delayWH("DelayContr", nRSP, nChannels, delay);
   Step delayStep(delayWH, "DelayContr");
   comp.addBlock(delayStep);
 
-  // Connect to stub
+  // Connect to stub for input section
   itsDelayStub = new Stub_Delay(false, itsParamSet);
   for (int i=0; i<nRSP; i++)
   {
     itsDelayStub->connect(i, delayStep.getOutDataManager(i), i);
   }
+
+//   // Connect to stub for BGL proc
+//   itsPhaseCorrStub = new Stub_PhaseCorr(false, itsParamSet);
+//   itsPhaseCorrStub->connect(delayStep.getOutDataManager(nRSP), nRSP);
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }

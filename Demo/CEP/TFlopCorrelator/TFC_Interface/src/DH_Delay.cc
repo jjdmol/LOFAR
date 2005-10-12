@@ -59,13 +59,13 @@ void DH_Delay::fillDataPointers()
   itsDelayPtr = getData<int> ("Delay");
 }
 
-const int DH_Delay::getDelay(int index) const
+const int DH_Delay::getDelayChange(int index) const
 { 
   ASSERTSTR((index < itsNrRSPs) && (index >= 0), "index is not within range");
   return itsDelayPtr[index]; 
 }
 
-void DH_Delay::setDelay(int index, int value)
+void DH_Delay::setDelayChange(int index, int value)
 { 
   ASSERTSTR((index < itsNrRSPs) && (index >= 0), "index is not within range");
   itsDelayPtr[index] = value;

@@ -139,8 +139,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
     RSPSteps[r]->runOnNode(lowestFreeNode++);   
     comp.addBlock(RSPSteps[r]);
     
-//     // Connect the Delay Controller
-//     itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
+    // Connect the Delay Controller
+    itsInputStub->connect(r, (RSPSteps.back())->getInDataManager(0), 0);
     if (r!=0) {
       int sourceStep = itsSteps.size() - r - 1;
 #ifdef HAVE_MPI

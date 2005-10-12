@@ -29,20 +29,33 @@ namespace LOFAR
   public:
 
     explicit WH_DelayControl(const string& name,
-			    const int nRSPInputs);
+			     const int nRSPInputs,
+			     const int nrChannels,
+			     const int delay);
     virtual ~WH_DelayControl();
-    static WorkHolder* construct(const string& name, const int nRSPInputs);
+    static WorkHolder* construct(const string& name, const int nRSPInputs,
+				 const int nrChannels, const int delay);
     virtual WH_DelayControl* make(const string& name);
 
     virtual void process();
+
+    void setDelay(const int delay);
+    int getDelay();
+    
   private:
     /// forbid copy constructor
     WH_DelayControl (const WH_DelayControl&);
     /// forbid assignment
     WH_DelayControl& operator= (const WH_DelayControl&);
    
-
+    int  itsNrRSPInputs;
+    int  itsNrChannels;
+    int  itsAbsDelay;    // Absolute delay value
+    int  itsDelayDiff;   // Change in the delay for a station
   };
+
+inline int WH_DelayControl::getDelay()
+  {  return itsAbsDelay; }
 
   // @}
 } // namespace LOFAR
