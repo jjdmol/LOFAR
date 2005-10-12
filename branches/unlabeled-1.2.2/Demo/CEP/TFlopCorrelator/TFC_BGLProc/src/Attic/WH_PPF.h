@@ -42,10 +42,10 @@ namespace LOFAR
   class WH_PPF: public WorkHolder {
     
   public:
-    explicit WH_PPF (const string& name, const short subBandID);
+    explicit WH_PPF (const string& name, const short subBandID, const short max_element);
     virtual ~WH_PPF();
 
-    static WorkHolder* construct (const string& name, const short subBandID); 
+    static WorkHolder* construct (const string& name, const short subBandID, const short max_element); 
     virtual WH_PPF* make (const string& name);
 
     virtual void preprocess();
@@ -62,6 +62,7 @@ namespace LOFAR
 
     /// FIR Filter variables
     short	 itsSubBandID;
+    short        itsMaxElement;
     fftw_plan	 itsFFTWPlan;
     FIR		 itsFIRs[NR_STATIONS][NR_SUB_CHANNELS][NR_POLARIZATIONS];
   };

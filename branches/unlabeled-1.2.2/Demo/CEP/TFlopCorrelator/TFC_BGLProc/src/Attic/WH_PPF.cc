@@ -562,13 +562,14 @@ extern "C"
 }
 
 
-WH_PPF::WH_PPF(const string& name, const short subBandID):
+WH_PPF::WH_PPF(const string& name, const short subBandID, const short max_element):
   WorkHolder(1, NR_CORRELATORS_PER_FILTER, name, "WH_Correlator"),
-  itsSubBandID(subBandID)
+  itsSubBandID(subBandID),
+  itsMaxElement(max_element)
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
-#if 0
+#if 1
   int NrTaps		     = myPS.getInt32("PPF.NrTaps");
   int NrStations	     = myPS.getInt32("PPF.NrStations");
   int NrStationSamples	     = myPS.getInt32("PPF.NrStationSamples");
@@ -582,6 +583,7 @@ WH_PPF::WH_PPF(const string& name, const short subBandID):
   assert(NrPolarizations	== NR_POLARIZATIONS);
   assert(NrSubChannels		== NR_SUB_CHANNELS);
   assert(NrCorrelatorsPerFilter == NR_CORRELATORS_PER_FILTER);
+  assert(itsMaxElement          <= MAX_STATIONS_PER_PPF);
 #endif
 
   assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
@@ -603,15 +605,15 @@ WH_PPF::~WH_PPF()
 }
 
 
-WorkHolder* WH_PPF::construct(const string& name, const short subBandID)
+WorkHolder* WH_PPF::construct(const string& name, const short subBandID, const short max_element)
 {
-  return new WH_PPF(name, subBandID);
+  return new WH_PPF(name, subBandID, max_element);
 }
 
 
 WH_PPF* WH_PPF::make(const string& name)
 {
-  return new WH_PPF(name, itsSubBandID);
+  return new WH_PPF(name, itsSubBandID, itsMaxElement);
 }
 
 
@@ -668,7 +670,7 @@ void WH_PPF::process()
 
   timer.start();
 
-  typedef i16complex inputType[NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS][NR_POLARIZATIONS];
+  typedef i16complex inputType[MAX_STATIONS_PER_PPF][NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS][NR_POLARIZATIONS];
 
   inputType *input = (inputType *) static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
   DH_CorrCube::BufferType *outputs[NR_CORRELATORS_PER_FILTER];
@@ -681,7 +683,9 @@ void WH_PPF::process()
     assert((ptrdiff_t) outputs[corr] % 32 == 0);
   }
 
-  for (int stat = 0; stat < NR_STATIONS; stat ++) {
+//   for (int stat = 0; stat < NR_STATIONS; stat ++) {
+  for (int stat = 0; stat < itsMaxElement; stat ++) {
+
     inTimer.start();
 
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
