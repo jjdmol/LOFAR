@@ -61,13 +61,16 @@ public:
     return sizeof(BufferType) / sizeof(fcomplex);
   }
 
+  double getCenterFreq() const
+  {
+    return itsCenterFreq;
+  }
+
   /// Test pattern methods used for regression tests
   void setStorageTestPattern();
 
   /// Test pattern methods used for regression tests of the correlator
   bool checkCorrelatorTestPattern();
-
-  double getCenterFreq();
 
 private:
   /// Forbid assignment.
@@ -108,17 +111,9 @@ private:
    return &itsBuffer[getBufferOffset(stationA, stationB, pol)];
   }
 #endif
-
-
-inline bool DH_Vis::checkCorrelatorTestPattern() {
-  bool result = true;
-  return result;
-}
-
-inline double DH_Vis::getCenterFreq() {
-  return itsCenterFreq;
-}
- 
 }
 
 #endif 
+
+
+
