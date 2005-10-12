@@ -22,7 +22,7 @@ namespace LOFAR
 class DH_PPF: public DataHolder
 {
 public:
-  typedef i16complex BufferType[NR_STATIONS][NR_STATION_SAMPLES][NR_POLARIZATIONS];
+  typedef i16complex BufferType[MAX_STATIONS_PER_PPF][NR_STATION_SAMPLES][NR_POLARIZATIONS];
 
   explicit DH_PPF(const string& name,
 		  const short   subband,
