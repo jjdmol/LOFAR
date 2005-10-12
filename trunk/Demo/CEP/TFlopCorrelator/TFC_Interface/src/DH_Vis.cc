@@ -73,6 +73,25 @@ void DH_Vis::fillDataPointers()
   itsBuffer = getData<BufferType> ("Buffer");
 }
 
+bool DH_Vis::checkCorrelatorTestPattern()
+{
+  for (int stat1 = 0; stat1 < 3; stat1 ++) {
+    for (int stat2 = stat1; stat2 < 3; stat2 ++) {
+      std::cerr << "S(" << stat1 << ") * ~S(" << stat2 << ") :\n";
+      for (int pol1 = 0; pol1 < 2; pol1 ++) {
+	for (int pol2 = 0; pol2 < 2; pol2 ++) {
+	  std::cerr << "  " << (char) ('x' + pol1) << (char) ('x' + pol2) << " =";
+	  for (int ch = 0; ch < 3; ch ++)
+	    std::cerr << ' ' << (*itsBuffer)[baseline(stat1, stat2)][ch][pol1][pol2];
+	  std::cerr << '\n';
+	}
+      }
+    }
+  }
+
+  return true;
+}
+
 void DH_Vis::setStorageTestPattern()
 {
 #if 0

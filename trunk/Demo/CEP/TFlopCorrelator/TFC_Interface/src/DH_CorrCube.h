@@ -106,7 +106,7 @@ private:
 
  inline void DH_CorrCube::setTestPattern() { 
    for (unsigned int i = 0; i < getBufSize(); i++) {
-     ((fcomplex *) itsBuffer)[i] = makefcomplex(1.0f, 1.0f);
+     ((fcomplex *) itsBuffer)[i] = makefcomplex(rand() << 20 >> 20, rand() << 20 >> 20);
    }
  }
 
