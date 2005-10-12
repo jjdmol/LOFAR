@@ -6,6 +6,10 @@
 #	fxcpmadd 1,16,21,1	# f1r += f21r*f16r, f1i += f21i*f16r
 #	fxcxnsma 1,16,21,1	# f1r += f21i*f16i, f1i -= f21r*f16i
 
+zero:	.long	0,0
+one:	.long	0x3f800000,0x3f800000
+
+
 
 .global _correlate_2x2
 _correlate_2x2:
@@ -70,6 +74,10 @@ _correlate_2x2:
 	stfpdux	 30,1,11
 	stfpdux	 31,1,11
 
+	lis	 12,zero@ha
+	addi	 12,12,zero@l
+	lfpsx	 0,0,12
+
 	li	 11,8		# prefetch station samples
 	lfpsx	 16,0,3	
 	lfpsux	 17,3,11
@@ -80,22 +88,37 @@ _correlate_2x2:
 	lfpsx	 22,0,6	
 	lfpsux	 23,6,11
 
-	fpsub	 0,0,0		# does this work if f0 is NaN?
-	fpsub	 1,1,1
-	fpsub	 2,2,2
-	fpsub	 3,3,3
-	fpsub	 4,4,4
-	fpsub	 5,5,5
-	fpsub	 6,6,6
-	fpsub	 7,7,7
-	fpsub	 8,8,8
-	fpsub	 9,9,9
-	fpsub	 10,10,10
-	fpsub	 11,11,11
-	fpsub	 12,12,12
-	fpsub	 13,13,13
-	fpsub	 14,14,14
-	fpsub	 15,15,15
+	fpmr	 1,0
+	fpmr	 2,0
+	fpmr	 3,0
+	fpmr	 4,0
+	fpmr	 5,0
+	fpmr	 6,0
+	fpmr	 7,0
+	fpmr	 8,0
+	fpmr	 9,0
+	fpmr	 10,0
+	fpmr	 11,0
+	fpmr	 12,0
+	fpmr	 13,0
+	fpmr	 14,0
+	fpmr	 15,0
+	#fpsub	 0,0,0		# does this work if f0 is NaN?
+	#fpsub	 1,1,1
+	#fpsub	 2,2,2
+	#fpsub	 3,3,3
+	#fpsub	 4,4,4
+	#fpsub	 5,5,5
+	#fpsub	 6,6,6
+	#fpsub	 7,7,7
+	#fpsub	 8,8,8
+	#fpsub	 9,9,9
+	#fpsub	 10,10,10
+	#fpsub	 11,11,11
+	#fpsub	 12,12,12
+	#fpsub	 13,13,13
+	#fpsub	 14,14,14
+	#fpsub	 15,15,15
 
 loop1:	# loop over time
 
@@ -248,9 +271,6 @@ loop1:	# loop over time
 	blr			# return
 
 
-one:	.long	0x3f800000,0x3f800000
-
-
 #if NR_STATIONS % 2 == 0
 .global _auto_correlate_1_and_2
 _auto_correlate_1_and_2:
@@ -282,6 +302,10 @@ _auto_correlate_1_and_2:
 	li	 11,NR_SAMPLES_PER_INTEGRATION/2
 	mtctr	 11
 
+	lis	 12,zero@ha
+	addi	 12,12,zero@l
+	lfpsx	 0,0,12
+
 	li	 11,-16		# push call-saved registers
 	stfpdux	 14,1,11
 	stfpdux	 15,1,11
@@ -296,18 +320,29 @@ _auto_correlate_1_and_2:
 	lfpsx	 14,0,4	
 	lfpsux	 15,4,11
 
-	fpsub	 0,0,0		# does this work if f0 is NaN?
-	fpsub	 1,1,1
-	fpsub	 2,2,2
-	fpsub	 3,3,3
-	fpsub	 4,4,4
-	fpsub	 5,5,5
-	fpsub	 6,6,6
-	fpsub	 7,7,7
-	fpsub	 8,8,8
-	fpsub	 9,9,9
-	fpsub	 10,10,10
-	fpsub	 11,11,11
+	fpmr	 1,0
+	fpmr	 2,0
+	fpmr	 3,0
+	fpmr	 4,0
+	fpmr	 5,0
+	fpmr	 6,0
+	fpmr	 7,0
+	fpmr	 8,0
+	fpmr	 9,0
+	fpmr	 10,0
+	fpmr	 11,0
+	#fpsub	 0,0,0		# does this work if f0 is NaN?
+	#fpsub	 1,1,1
+	#fpsub	 2,2,2
+	#fpsub	 3,3,3
+	#fpsub	 4,4,4
+	#fpsub	 5,5,5
+	#fpsub	 6,6,6
+	#fpsub	 7,7,7
+	#fpsub	 8,8,8
+	#fpsub	 9,9,9
+	#fpsub	 10,10,10
+	#fpsub	 11,11,11
 
 loop1:	# loop over time
 
@@ -367,9 +402,10 @@ loop1:	# loop over time
 
 	bdnz	 loop1
 
-	lis	 9,one@ha
-	addi	 9,9,one@l
-	lfpsx	 12,0,9
+	#lis	 9,one@ha
+	#addi	 9,9,one@l
+	#lfpsx	 12,0,9
+	lfpsx	 12,12,11
 
 	fxcsnsma 0,0,12,0	# f0r += 1*f0i, f0i += -1*f0i = 0
 	fxcsnsma 3,3,12,3
@@ -417,27 +453,56 @@ _auto_correlate_1x1:
 #	r3 :	pointer to S0 data
 #	r4 :	pointer to 4 results
 
-	li	 5,NR_SAMPLES_PER_INTEGRATION/2
+	li	 5,NR_SAMPLES_PER_INTEGRATION/4
 	mtctr	 5
+
+	lis	 12,zero@ha
+	addi	 12,12,zero@l
+	lfpsx	 0,0,12
 
 	li	 8,8
 
-	lfpsx	 8,0,3		# f8:f9 = S0
+	lfpsx	 4,0,3		# f8:f9 = S0
+	lfpsux	 5,3,8
+	lfpsux	 6,3,8		# f6:f7 = S0
+	lfpsux	 7,3,8
+	lfpsux	 8,3,8		# f8:f9 = S0
 	lfpsux	 9,3,8
 
-	fpsub	 0,0,0
-	fpsub	 1,1,1
-	fpsub	 2,2,2
-	fpsub	 3,3,3
+	#fpsub	 0,0,0
+	#fpsub	 1,1,1
+	#fpsub	 2,2,2
+	#fpsub	 3,3,3
 
-	lis	 9,one@ha
-	addi	 9,9,one@l
-	lfpsx	 12,0,9
+	#lis	 9,one@ha
+	#addi	 9,9,one@l
+	#lfpsx	 12,0,9
+	lfpsx	 12,12,8
+
+	fpmr	 1,0
+	fpmr	 2,0
+	fpmr	 3,0
 
 loop3:	# loop over time
 
-	lfpsux	 10,3,8		# f10:f11 = S0
+	lfpsux	 10,3,8		# f6:f7 = S0
 	lfpsux	 11,3,8
+
+	fpmadd	 0,4,4,0	# S0 * ~S0, phase 1
+	fxcpmadd 1,4,5,1	# f1r += f5r*f4r, f1i += f5i*f4r
+	fxcxnsma 2,4,5,2	# f2r += f5i*f4i, f2i -= f5r*f4i
+	fpmadd	 3,5,5,3
+
+	lfpsux	 4,3,8		# f4:f5 = S0
+	lfpsux	 5,3,8
+
+	fpmadd	 0,6,6,0	# S0 * ~S0, phase 1
+	fxcpmadd 1,6,7,1	# f1r += f7r*f6r, f1i += f7i*f6r
+	fxcxnsma 2,6,7,2	# f2r += f7i*f6i, f2i -= f7r*f6i
+	fpmadd	 3,7,7,3
+
+	lfpsux	 6,3,8		# f6:f7 = S0
+	lfpsux	 7,3,8
 
 	fpmadd	 0,8,8,0	# S0 * ~S0, phase 1
 	fxcpmadd 1,8,9,1	# f1r += f9r*f8r, f1i += f9i*f8r

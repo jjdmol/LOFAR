@@ -46,7 +46,7 @@ extern "C"
 		      const stationInputType *S2, const stationInputType *S3,
 		      stationOutputType *S0_S2, stationOutputType *S0_S3,
 		      stationOutputType *S1_S2, stationOutputType *S1_S3);
-  void _auto_correlate_1x1(const stationInputType *S0, stationInputType *S0_S0);
+  void _auto_correlate_1x1(const stationInputType *S0, stationOutputType *S0_S0);
 //   void _correlate_2x3(const fcomplex *samples, dcomplex *out);
 }
 
@@ -106,7 +106,7 @@ void WH_Correlator::process()
   DH_Vis::BufferType	  *output = static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBuffer();
 
   timer.start();
-#if 1
+#if 0
   // C++ reference implementation
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
@@ -140,10 +140,10 @@ void WH_Correlator::process()
       for (int stat2 = 0; stat2 < stat1; stat2 += 2) { 
 	_correlate_2x2(&(*input)[ch][stat1], &(*input)[ch][stat1 + 1],
 		       &(*input)[ch][stat2], &(*input)[ch][stat2 + 1],
-		       &(*output)[DH_Vis::baseline(stat1, stat1)][ch],
-		       &(*output)[DH_Vis::baseline(stat1, stat2)][ch],
-		       &(*output)[DH_Vis::baseline(stat2, stat1)][ch],
-		       &(*output)[DH_Vis::baseline(stat2, stat2)][ch]);
+		       &(*output)[DH_Vis::baseline(stat1    , stat2    )][ch],
+		       &(*output)[DH_Vis::baseline(stat1    , stat2 + 1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1 + 1, stat2    )][ch],
+		       &(*output)[DH_Vis::baseline(stat1 + 1, stat2 + 1)][ch]);
       }
     }
     for (int stat = 0; stat < NR_STATIONS; stat += 2) {
