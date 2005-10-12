@@ -10,14 +10,14 @@ lofar_INIT
 
 dnl Checks for programs.
 AC_PROG_AWK
-AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_CXX
-AM_PROG_LEX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
+AC_PROG_YACC
+AM_PROG_LEX
 
 dnl Checks for libraries.
 
@@ -46,6 +46,6 @@ src/tsed/Makefile
 src/tsek/Makefile
 src/dbg/Makefile
 src/tseg/Makefile
-TSE.spec
 Makefile
+TSE.spec
 )

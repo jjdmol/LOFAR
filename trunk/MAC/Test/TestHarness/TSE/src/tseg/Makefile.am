@@ -21,11 +21,14 @@ tse_CFLAGS = \
 
 #in case of make install these files will be copied to the bindir beside the test apps
 #configfilesdir=$(bindir)
+
+EXTRA_DIST = \
+	tse.ini.in
+
 sysconf_DATA = \
 	tse.ini
 
-%.ini: %.ini.in
+%.ini: %.ini.in 
 	cp $< $@
-	
 
 include $(top_srcdir)/Makefile.common
