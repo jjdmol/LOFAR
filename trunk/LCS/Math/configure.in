@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/LCSMath.h)
+AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
@@ -61,7 +61,10 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/Math/Makefile
 src/Makefile
 test/Makefile
 Makefile
+Math.spec
 )
