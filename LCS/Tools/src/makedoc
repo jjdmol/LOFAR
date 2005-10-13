@@ -3,56 +3,80 @@
 # makedoc builds the doxygen documentation in the subdirectory doc of the
 # current directory. It builds the documentation for all header files, etc.
 # at the current package and below.
-# E.g. if in directory LOFAR, all LOFAR documentation is built in LOFAR/doc.
+# E.g. if in directory LOFAR, all documentation is built in LOFAR/docxxhtml.
 #      If in LOFAR/LCS/Common/build/gnu_debug, all LCS/Common documentation
-#        is built in LOFAR/LCS/Common/build/gnu_debug/doc.
+#        is built in LOFAR/LCS/Common/build/gnu_debug/docxxhtml.
 #
 # doxygen must be found in your PATH.
 # If the dot program is found in your path, doxygen is told to generate
 # graphical class info as well.
+#
+  lfr_host=`uname -n | sed -e "s%\..*%%"`
 
-  srcdir=`pwd | sed -e "s%/build/.*%%" -e "s%/build$%%"`;
-  lfrdir=`echo $srcdir | sed -e "s%/LOFAR/.*%/LOFAR%"` ;
-  projnm=`echo $srcdir | sed -e "s%.*/LOFAR/%%" -e "s%.*/LOFAR$%LOFAR%"` ;
-  if [ ! -d $lfrdir/autoconf_share ]; then
+  if [ "$1" = "-h"  -o  "$1" = "--help" ]; then
+    echo "makedoc runs doxygen to build the class documentation from all header"
+    echo "files in the current directory and below."
+    echo ""
+    echo "Usage:   makedoc [targetdir]"
+    echo "  The default target directory is LOFAR/installed/doc/html"
+    echo "  If the target directory already exists, it will be renamed"
+    echo "  with a .bak extension."
+    echo "  If target directory . is given, ./doc/html will be used instead."
+    echo ""
+    echo "doxygen is taken from --with-doxygen in the variants[.$lfr_host] file."
+    echo "If not available, it is taken from the PATH."
+    exit 0
+  fi
+
+  # Find the package and LOFAR directory.
+  pkgdir=`pwd | sed -e "s%/build/.*%%" -e "s%/build$%%"`;
+  lfrdir=`echo $pkgdir | sed -e "s%/LOFAR/.*%/LOFAR%"` ;
+  confdir=$lfrdir/autoconf_share
+  projnm=`echo $pkgdir | sed -e "s%.*/LOFAR/%%" -e "s%.*/LOFAR$%LOFAR%"` ;
+  if [ ! -d $confdir ]; then
     echo "Error: the autoconf_share directory could not be found."
     echo "Check your working directory is somewhere in the LOFAR tree."
     exit 1
   fi
+  targetdir="$1"
+  if [ "$targetdir" = "" ]; then
+    targetdir=$lfrdir/installed/doc/html
+  fi
+  if [ "$targetdir" = "." ]; then
+    targetdir=doc/html
+  fi
 
-  \rm -rf doc
-  mkdir doc
-  cd doc
-  touch doxygen.cfg
+  # Try to find out which doxygen to use from the variants file.
+  doxline=
+  if [ -f $confdir/variants.$lfr_host ]; then
+    doxline=`grep with-doxygen $confdir/variants.$lfr_host`
+  fi
+  if [ "$doxline" = ""  -a  -f $confdir/variants ]; then
+    doxline=`grep with-doxygen $confdir/variants`
+  fi
+  doxdir=`echo $doxline | sed 's/.*--with-doxygen=\([^ ]\+\).*/\1/'`
+  if [ "$doxdir" != ""  -a  -f $doxdir/doxygen ]; then
+    doxcmd=$doxdir/doxygen
+  else
+    doxcmd=`which doxygen`
+    if [ ! -f "$doxcmd" ]; then
+      echo "error: doxygen cannot be found"
+      exit 1
+    fi
+  fi
 
-  echo "OUTPUT_DIRECTORY        = ." >> doxygen.cfg
-  echo "EXTRACT_ALL             = YES" >> doxygen.cfg
-  echo "EXTRACT_PRIVATE         = YES" >> doxygen.cfg
-  echo "EXTRACT_STATIC          = YES" >> doxygen.cfg
-  echo "ALWAYS_DETAILED_SEC     = YES" >> doxygen.cfg
-  echo "CASE_SENSE_NAMES        = YES" >> doxygen.cfg
-  echo "JAVADOC_AUTOBRIEF       = YES" >> doxygen.cfg
-  echo "DETAILS_AT_TOP          = YES" >> doxygen.cfg
-  echo "DISTRIBUTE_GROUP_DOC    = YES" >> doxygen.cfg
-  echo "ALIASES                 = \"template=\par Template requirements:\n\"" >> doxygen.cfg
-  echo "MAX_INITIALIZER_LINES   = 0" >> doxygen.cfg
-  echo "WARNINGS                = YES" >> doxygen.cfg
-  echo "WARN_IF_UNDOCUMENTED    = NO" >> doxygen.cfg
-  echo "FILE_PATTERNS           = *.h *.idl *.doc" >> doxygen.cfg
-  echo "FILTER_SOURCE_FILES     = YES" >> doxygen.cfg
-  echo "INPUT_FILTER            = $lfrdir/autoconf_share/slash2spanning.pl" >> doxygen.cfg
-  echo "SOURCE_BROWSER          = YES" >> doxygen.cfg
-  echo "REFERENCED_BY_RELATION  = YES" >> doxygen.cfg
-  echo "REFERENCES_RELATION     = YES" >> doxygen.cfg
-  echo "ALPHABETICAL_INDEX      = YES" >> doxygen.cfg
-  echo "COLS_IN_ALPHA_INDEX     = 3" >> doxygen.cfg
-  echo "ENUM_VALUES_PER_LINE    = 1" >> doxygen.cfg
-  echo "GENERATE_TREEVIEW       = YES" >> doxygen.cfg
-  echo "GENERATE_LATEX          = NO" >> doxygen.cfg
-  echo "ALLEXTERNALS            = YES" >> doxygen.cfg
-  echo "" >> doxygen.cfg
-  echo "SEARCHENGINE            = NO" >> doxygen.cfg
-    
+  # Rename target if already existing.
+  if [ -e $targetdir ]; then
+    \rm -rf $targetdir.bak
+    mv $targetdir $targetdir.bak
+    echo "Old $targetdir renamed to $targetdir.bak"
+  fi
+  mkdir -p $targetdir  ||  exit 1
+  cd $targetdir > /dev/null  ||  exit 1
+
+  # Copy the standard doxygen.cfg and use own autoconf_share (for e.g. filter).
+  sed -e "s%/home/lofar/weekly/LOFAR/autoconf_share%$confdir%" $confdir/doxygen.cfg > doxygen.cfg
+
   DOXYGENDOT=`which dot 2>&1`
   if [ -f "$DOXYGENDOT" ]; then
     DOXYGENDOT=`dirname $DOXYGENDOT`
@@ -65,12 +89,15 @@
   fi
 
   echo "PROJECT_NAME = $projnm" >> doxygen.cfg ;
-  echo "INPUT = $srcdir" >> doxygen.cfg ;
+  echo "INPUT = $pkgdir" >> doxygen.cfg ;
   echo "RECURSIVE = YES" >> doxygen.cfg ;
   echo "HTML_OUTPUT = ." >> doxygen.cfg ;
-  echo "EXCLUDE = $srcdir/build $srcdir/test $srcdir/demo $srcdir/installed" >> doxygen.cfg;
-  echo "GENERATE_TAGFILE = `basename -$projnm`.tag" >> doxygen.cfg ;
-  doxygen doxygen.cfg ;
+  echo "GENERATE_TAGFILE = `basename $projnm`.tag" >> doxygen.cfg ;
+  \rm -rf doxygen.log
+  touch doxygen.log
+  # Get stderr on screen and both stout and stderr in log file.
+  echo "Running $doxcmd $targetdir/doxygen.cfg ..."
+  $doxcmd doxygen.cfg 2>&1 >> doxygen.log | tee -a doxygen.log
 
-  echo ""
-  echo "Doxygen output generated in ./doc"
+  echo " Doxygen output generated in $targetdir"
+  echo " Log file in $targetdir/doxygen.log"
