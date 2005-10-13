@@ -45,7 +45,7 @@ void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
   setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
   int nRSP = itsParamSet.getInt32("Input.NRSP");
-  int nChannels = itsParamSet.getInt32("Storage.nChannels");
+  int nChannels = itsParamSet.getInt32("PPF.NrSubChannels");
   int delay = itsParamSet.getInt32("DelayCompensation.Delay");
   WH_DelayControl delayWH("DelayContr", nRSP, nChannels, delay);
   Step delayStep(delayWH, "DelayContr");
