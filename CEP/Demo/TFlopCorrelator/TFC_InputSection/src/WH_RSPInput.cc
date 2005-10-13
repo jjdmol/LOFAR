@@ -95,7 +95,15 @@ void* WriteToBufferThread(void* arguments)
     // firstloop
     if (firstloop) {
       expectedstamp.setStamp(seqid, blockid); // init expectedstamp
-      *args->StationIDptr =((int*)&recvframe[4])[0]; // get stationid
+      
+      //get stationid
+      //*args->StationIDptr =((int*)&recvframe[4])[0];
+      if (args->IsMaster) {  // temporary hardcoded statioID's master->0, slave->1 
+        *args->StationIDptr = 0;  
+      }
+      else {
+        *args->StationIDptr = 1;  
+      } //end (temporary hardcoded statioID's)
       firstloop = false;
     }
 
@@ -360,7 +368,7 @@ void WH_RSPInput::process()
     rspDHp->setStationID(itsStationID);
     rspDHp->setInvalidCount(invalidcount);
     rspDHp->setTimeStamp(delayedstamp);   
-    //rspDHp->setDelay(delayDHp->getDelay(itsStationID));
+    rspDHp->setDelay(delayDHp->getDelayChange(itsStationID));
 
 #if 0
     // dump the output (for debugging)
