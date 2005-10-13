@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <Math/IComplex.h>
 #include <Common/LofarLogger.h>
 
@@ -53,7 +55,7 @@ void doIt()
 int main(int argc, const char* argv[])
 {
   try {
-    INIT_LOGGER("tIComplex.log_prop");
+    INIT_LOGGER("tIComplex");
     doIt<IComplex8, IComplex8>();
     //    doIt<IComplex8, IComplex16>();
     //    doIt<IComplex8, IComplex32>();

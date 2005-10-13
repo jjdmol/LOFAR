@@ -22,6 +22,8 @@
 
 
 //# Includes
+#include <lofar_config.h>
+
 #include <Math/ComplexFunc.h>
 #include <Common/LofarLogger.h>
 #include <Common/Stopwatch.h>
@@ -221,7 +223,7 @@ void doIt (int nr1, int nr2)
 int main(int argc, const char* argv[])
 {
   try {
-    INIT_LOGGER("tComplexFunc.log_prop");
+    INIT_LOGGER("tComplexFunc");
     ASSERT (sizeof(std::complex<float>) == 2*sizeof(float));
     ASSERT (sizeof(std::complex<double>) == 2*sizeof(double));
     int nr1=100;

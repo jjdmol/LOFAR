@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <Math/IComplex.h>
 #include <Common/lofar_iostream.h>
 

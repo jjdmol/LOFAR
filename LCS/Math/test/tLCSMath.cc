@@ -20,6 +20,8 @@
 //
 //  $Id$
 
+#include <lofar_config.h>
+
 #include <Math/LCSMath.h>
 #include <Common/Lorrays-Blitz.h>
 #include <Common/LofarLogger.h>
@@ -30,7 +32,7 @@ using namespace LOFAR;
 int main()
 {
   try {
-    INIT_LOGGER("tLCSMath.log_prop");
+    INIT_LOGGER("tLCSMath");
     {
       const int n = 10000;
       LoVec_double vec(n);

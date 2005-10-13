@@ -1,8 +1,12 @@
-check_PROGRAMS			= tLCSMath tIComplex tComplexFunc
+check_PROGRAMS	= tLCSMath tIComplex tComplexFunc
 
-TESTS	= tLCSMath_test.sh \
-	  tIComplex_test.sh \
-	  tComplexFunc_test.sh
+TESTSCRIPTS	= tLCSMath_test.sh \
+	  	  tIComplex_test.sh \
+	  	  tComplexFunc_test.sh
+
+TESTS = $(TESTSCRIPTS)
+
+EXTRA_DIST = $(TESTSCRIPTS)
 
 tLCSMath_SOURCES		= tLCSMath.cc
 tLCSMath_LDADD			= ../src/libmath.la
