@@ -39,8 +39,8 @@ DH_VisArray::DH_VisArray(const string& name,
     itsCenterFreqs  (0)
 {
   itsNVis = itsPS.getInt32("Storage.NVisPerInput");
-  itsNStations = itsPS.getInt32("Input.NRSP");
-  itsNPols = itsPS.getInt32("Input.NPolarisations");
+  itsNStations = itsPS.getInt32("PPF.NrStations");
+  itsNPols = itsPS.getInt32("PPF.NPolarizations");
 }
 
 DH_VisArray::DH_VisArray(const DH_VisArray& that)
@@ -64,7 +64,7 @@ void DH_VisArray::init()
 {
   // determine the size of the buffer
   // buffersize is itsNVis * DH_Vis::itsBufSize
-  itsBufSize = itsNVis * itsNPols*itsNPols * itsNStations*(itsNStations+1)/2;
+  itsBufSize = itsNVis * sizeof(DH_Vis::BufferType) / sizeof(fcomplex);
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   addField("CenterFreqs", BlobField<double>(1, itsNVis));
   createDataBlock();

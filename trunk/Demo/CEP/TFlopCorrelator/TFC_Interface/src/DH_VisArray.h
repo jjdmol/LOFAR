@@ -25,6 +25,7 @@
 
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
+#include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR
 {
