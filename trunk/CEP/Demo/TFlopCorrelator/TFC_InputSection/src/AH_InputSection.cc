@@ -105,6 +105,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
   vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
   vector<string> inFiles = itsParamSet.getStringVector("Input.InputFiles");
+  
+  int NSBCollectOutputs = itsParamSet.getInt32("Input.NSBCollectOutputs"); 
     
   for (int r=0; r<NRSP; r++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, NRSP);
@@ -194,10 +196,12 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
       collectSteps[nf]->connect(st, RSPSteps[st], nf, 1, new TH_Mem(), false);
 #endif
     }
-    // connect output to FIR stub
-    itsOutputStub->connect (nf,                           // Corr filter number
-			    (collectSteps.back())->getOutDataManager(0), 
-			    0);  
+    // connect outputs to FIR stub
+    for (int no=0; no < NSBCollectOutputs; no++) {
+      itsOutputStub->connect ((nf*NSBCollectOutputs) + no,   // Corr filter number
+	  		     (collectSteps.back())->getOutDataManager(no), 
+			      no);  
+    }
   }
   LOG_TRACE_FLOW_STR("Finished define()");
 
@@ -205,7 +209,6 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "TFC_InputSection needs "<< lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
 #endif
 }
-
 
 
 void AH_InputSection::prerun() {

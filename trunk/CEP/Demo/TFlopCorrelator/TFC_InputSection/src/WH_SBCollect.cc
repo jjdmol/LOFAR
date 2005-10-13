@@ -29,7 +29,7 @@
 // Application specific includes
 #include <TFC_InputSection/WH_SBCollect.h>
 #include <TFC_Interface/DH_RSP.h>
-#include <TFC_Interface/DH_PPF.h>
+#include <TFC_Interface/DH_Subband.h>
 
 #include <Common/hexdump.h>
 
@@ -38,7 +38,7 @@ using namespace LOFAR;
 WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
 			   const ACC::APS::ParameterSet pset) 
   : WorkHolder   (pset.getInt32("Input.NRSP"), 
-		  1,
+		  pset.getInt32("Input.NSBCollectOutputs"),
 		  name,
 		  "WH_SBCollect"),
     itsPS        (pset),
@@ -50,9 +50,11 @@ WH_SBCollect::WH_SBCollect(const string& name, int sbID,
     sprintf(str, "DH_in_%d", i);
     getDataManager().addInDataHolder(i, new DH_RSP(str, itsPS));
   }
-
-  getDataManager().addOutDataHolder(0, new DH_PPF(str, itsSubBandID, itsPS));
-
+  for(int i=0;i<itsNoutputs; i++)
+  {
+    sprintf(str, "DH_out_%d", i);
+    getDataManager().addOutDataHolder(i, new DH_Subband(str, itsSubBandID, itsPS));
+  }
 }
 
 WH_SBCollect::~WH_SBCollect() {
@@ -72,26 +74,32 @@ WH_SBCollect* WH_SBCollect::make(const string& name)
 void WH_SBCollect::process() 
 { 
   RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-  RectMatrix<DH_PPF::BufferElementType>& outMatrix = ((DH_PPF*)getDataManager().getOutHolder(0))->getDataMatrix();
-
+  RectMatrix<DH_Subband::BufferElementType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(0))->getDataMatrix();
   dimType outStationDim = outMatrix.getDim("Station");
   dimType inStationDim = inMatrix->getDim("Stations");
 
-  RectMatrix<DH_PPF::BufferElementType>::cursorType outCursor = outMatrix.getCursor( 0 * outStationDim);
-  RectMatrix<DH_RSP::BufferType>::cursorType inCursor = inMatrix->getCursor( 0 * inStationDim);
+  RectMatrix<DH_Subband::BufferElementType>::cursorType outCursor;
+  RectMatrix<DH_RSP::BufferType>::cursorType inCursor;
 
-  // Loop over all inputs (stations)
-  for (int nr=0; nr<itsNinputs; nr++)
+  for (int sb=0; sb<itsNoutputs; sb++) 
   {
-    inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
-    inCursor = inMatrix->getCursor(0*inStationDim);
-    // copy all freq, time and pol from an input to output
-    inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
-    outMatrix.moveCursor(&outCursor, outStationDim);
+    outMatrix = ((DH_Subband*)getDataManager().getOutHolder(sb))->getDataMatrix();
+    outCursor = outMatrix.getCursor( 0 * outStationDim);
+
+    // Loop over all inputs (stations)
+    for (int nr=0; nr<itsNinputs; nr++)
+    {
+      inMatrix = &((DH_RSP*)getDataManager().getInHolder(nr))->getDataMatrix();
+      inCursor = inMatrix->getCursor(0*inStationDim);
+      // copy all freq, time and pol from an input to output
+      inMatrix->cpy2Matrix(inCursor, inStationDim, outMatrix, outCursor, outStationDim, 1);
+      outMatrix.moveCursor(&outCursor, outStationDim);
+    }
   }
 
+
 #if 0
-  // dump the contents of the DHs to stdout
+  // dump the contents of outDH to stdout
   cout << "WH_SBCollect output : " << endl;
   dimType outTimeDim = outMatrix.getDim("Time");
   dimType outPolDim = outMatrix.getDim("Polarisation");
@@ -103,7 +111,7 @@ void WH_SBCollect::process()
 			     outStationDim, 
 			     itsNinputs,
 			     matrixSize),
-	  matrixSize * sizeof(DH_PPF::BufferElementType));
+	  matrixSize * sizeof(DH_Subband::BufferElementType));
   cout << "WH_SBCollect output done " << endl;
 #endif
 
