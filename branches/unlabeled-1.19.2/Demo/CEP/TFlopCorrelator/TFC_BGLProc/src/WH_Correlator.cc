@@ -52,7 +52,7 @@ extern "C"
 
 WH_Correlator::WH_Correlator(const string &name)
 :
-  WorkHolder(1, NR_CHANNELS_PER_CORRELATOR, name, "WH_Correlator")
+  WorkHolder(2, NR_CHANNELS_PER_CORRELATOR, name, "WH_Correlator")
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 

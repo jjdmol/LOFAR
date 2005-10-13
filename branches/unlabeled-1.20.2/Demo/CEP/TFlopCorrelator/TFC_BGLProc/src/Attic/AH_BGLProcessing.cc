@@ -101,11 +101,11 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   int itsNrStoredSubbands = itsParamSet.getInt32("BGLProc.NrStoredSubbands");
   int itsNSBCollectOutputs = itsParamSet.getInt32("Input.NSBCollectOutputs");
   
-  vector<int> itsInputPorts      = itsParamSet.getInt32Vector("FIRConnection.RequestPort");
-  vector<string> itsInputServers = itsParamSet.getStringVector("FIRConnection.ServerHost");
+  vector<int> itsInputPorts      = itsParamSet.getInt32Vector("FIRConnection.RequestPorts");
+  vector<string> itsInputServers = itsParamSet.getStringVector("FIRConnection.ServerHosts");
 
-  vector<int> itsOutputPorts      = itsParamSet.getInt32Vector("CorrConnection.RequestPort");
-  vector<string> itsOutputServers = itsParamSet.getStringVector("CorrConnection.ServerHost");
+  vector<int> itsOutputPorts      = itsParamSet.getInt32Vector("CorrConnection.RequestPorts");
+  vector<string> itsOutputServers = itsParamSet.getStringVector("CorrConnection.ServerHosts");
 
   
   for (int ComputeCells = 0; ComputeCells < itsNrComputeCells; ComputeCells++) {

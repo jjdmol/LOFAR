@@ -39,7 +39,7 @@ WH_Distribute::WH_Distribute(const string& name,
   itsPS       (myPset)
 {
   itsNinputElements  = itsPS.getInt32("Input.NRSP");
-  itsNoutputElements = itsPS.getInt32("BGLProc.Nelements");
+  itsNoutputElements = itsPS.getInt32("PPF.NrStations");
 
   itsNsamples       = itsPS.getInt32("Input.NSamplesToDH"); 
   itsNpolarisations = itsPS.getInt32("Input.NPolarisations");
@@ -50,18 +50,18 @@ WH_Distribute::WH_Distribute(const string& name,
     getDataManager().addInDataHolder(i, new DH_Subband("in", 1, itsPS));
   }
 
-  ACC::APS::ParameterSet myOutPS;
-  string value;
+//   ACC::APS::ParameterSet myOutPS;
+//   string value;
 
-  value = itsPS.getString("BGLProc.Nelements");
-  myOutPS.add("Input.NRSP", value);
-  value = itsPS.getString("Input.NSamplesToDH");
-  myOutPS.add("Input.NSamplesToDH",value);
-  value = itsPS.getString("Input.NPolarisations");
-  myOutPS.add("Input.NPolarisations",value);
+//   value = itsPS.getString("PPF.NrStations");
+//   myOutPS.add("Input.NRSP", value);
+//   value = itsPS.getString("PPF.NrStationSamples");
+//   myOutPS.add("Input.NSamplesToDH",value);
+//   value = itsPS.getString("Input.NPolarisations");
+//   myOutPS.add("Input.NPolarisations",value);
 
   for (int i = 0; i < itsNoutputs; i++) {
-    getDataManager().addOutDataHolder(i, new DH_PPF("out", 1, myOutPS));
+    getDataManager().addOutDataHolder(i, new DH_PPF("out", 1, itsPS));
   }
   DBGASSERTSTR(itsNinputs <= itsNoutputs, "WH_Distribute: itsNinputs must be <= to itsNoutputs");
   DBGASSERTSTR(itsNoutputs % itsNinputs == 0, "itsNoutputs needs to be an exact multiple of itsNinputs");
