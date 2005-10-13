@@ -144,6 +144,38 @@
     fi
   fi
 
+  # Possibly add the ssh-key in case passphrases are used.
+  # Otherwise the user needs to type the passphrase too often.
+  # See if ssh-agent is already running.
+  agpid="$SSH_AGENT_PID"
+  if [ "$agpid" != "" ]; then
+    # The pid is defined, but is it really running?
+    if ! ps | grep "$agpid" | grep ssh-agent > /dev/null 2>&1; then
+      agpid=
+    fi
+  fi
+  if [ "$agpid" != "" ]; then
+    # ssh-agent is already running.
+    # Add the key (for any of the possible id files) if not added yet.
+    for TYP in id_dsa id_rsa identity
+    do
+      if [ -f $HOME/.ssh/$TYP.pub ]; then
+        SSHID=`cat $HOME/.ssh/$TYP.pub | sed 's/ [^ ]\+@[^ ]\+$//'`
+        if ! ssh-add -L | grep "$SSHID" > /dev/null 2>&1; then
+	  echo "Adding the SSH key to ssh-agent ..."
+          ssh-add
+        fi
+        break
+      fi
+    done
+  else
+    # No agent, so start it and add key.
+    echo "Starting ssh-agent and adding the SSH key ..."
+    eval `ssh-agent -s` > /dev/null
+    trap 'ssh-agent -k > /dev/null 2>&1' 0 1 2 3 15
+    ssh-add
+  fi
+
   # Move/rename a single source file.
   if [ $SRC = YES ]; then
     $REMOTE_CMD MOVE FIL $SOURCE $DESTINATION
