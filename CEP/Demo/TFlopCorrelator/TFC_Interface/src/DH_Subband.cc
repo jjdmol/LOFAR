@@ -52,7 +52,6 @@ void DH_Subband::init()
 {
   addField("Buffer", BlobField<BufferElementType>(1, getBufferSize()));
   createDataBlock();
-  itsBuffer = getData<BufferType>("Buffer");
 
   memset(itsBuffer, 0, sizeof(BufferType)); 
 
@@ -67,7 +66,7 @@ void DH_Subband::init()
 
 void DH_Subband::fillDataPointers()
 {
-  itsBuffer = getData<BufferType>("Buffer");
+  itsBuffer = (BufferType*) getData<BufferElementType>("Buffer");
 }
 
 }
