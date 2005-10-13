@@ -8,7 +8,6 @@ pkgincludedir = $(includedir)/APLCommon
 pkginclude_HEADERS = \
 	../include/APLCommon/APL_Defines.h \
 	../include/APLCommon/APLCommonExceptions.h \
-	../include/APLCommon/APLInterTaskPort.h \
 	../include/APLCommon/APLUtilities.h \
 	../include/APLCommon/LogicalDevice.h \
 	../include/APLCommon/LogicalDeviceFactoryBase.h \
@@ -34,7 +33,6 @@ libaplcommon_la_CPPFLAGS= \
 	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
 libaplcommon_la_SOURCES= $(DOCHDRS) \
-	APLInterTaskPort.cc \
 	APLUtilities.cc \
 	LogicalDevice.cc \
 	StartDaemon.cc \
