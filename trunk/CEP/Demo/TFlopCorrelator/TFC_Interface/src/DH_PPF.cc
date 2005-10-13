@@ -57,7 +57,7 @@ void DH_PPF::init()
   memset(itsBuffer, 0, sizeof(BufferType)); 
 
   vector<DimDef> vdd;
-  vdd.push_back(DimDef("Station", NR_STATIONS));
+  vdd.push_back(DimDef("Station", MAX_STATIONS_PER_PPF));
   vdd.push_back(DimDef("Time", NR_STATION_SAMPLES));
   vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
   
