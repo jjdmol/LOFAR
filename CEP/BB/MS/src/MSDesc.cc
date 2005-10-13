@@ -176,6 +176,7 @@ void doIt (const string& in, const string& column)
     BlobOBufStream bbs(ostr);
     BlobOStream bos(bbs);
     bos.putStart("ms.des", 1);
+    bos << 1;
     bos << ra << dec << npol << nfreq << startFreq << endFreq << stepFreq;
     bos << a1 << a2;
     bos << tim2;

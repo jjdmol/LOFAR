@@ -62,10 +62,11 @@ EOFXXXXX
 glish /tmp/$USER_mssplit_tmp.g
 
 # Create the description file.
-shell(paste('MSDesc',msout,'DATA'));
+#shell(paste('MSDesc',msout,'DATA'));
 
 # Set the protections such that the world can read the MS created.
-chmod -R +r $2
+#chmod -R +r $2
 
 if [ "$machfile" != "" ]; then
   scp -ar msout $USER@$MACH 
+fi
