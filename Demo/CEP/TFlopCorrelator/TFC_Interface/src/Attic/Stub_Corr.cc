@@ -24,7 +24,7 @@ namespace LOFAR {
       itsConnections  (0),
       itsPS           (pSet)
   {
-    itsNChan = itsPS.getInt32("Input.NSubbands");
+    itsNChan = itsPS.getInt32("BGLProc.NrStoredSubbands");
     LOG_TRACE_FLOW_STR("Total number of channels in the Stub_Corr is " << itsNChan);
     ASSERTSTR(itsNChan >= 0, "Number of channels in the Stub_Corr must be greater than 0");
 

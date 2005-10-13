@@ -39,8 +39,8 @@ using namespace LOFAR;
 
 WH_Storage::WH_Storage(const string& name, 
 		       const ACC::APS::ParameterSet& pset) 
-  : WorkHolder (pset.getInt32("Input.NSubbands"),   // for now number of correlator outputs
-		0,                                  // is equal to number of subbands
+  : WorkHolder (pset.getInt32("BGLProc.NrStoredSubbands"),   // number of correlator outputs
+		0,
 		name,
 		"WH_Storage"),
     itsPS      (pset),
@@ -53,12 +53,12 @@ WH_Storage::WH_Storage(const string& name,
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-  itsNstations = itsPS.getInt32("Storage.nStations");
+  itsNstations = itsPS.getInt32("PPF.NrStations");
   int pols = itsPS.getInt32("Input.NPolarisations");
   itsNpolSquared = pols*pols;
 
   vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
-  ASSERTSTR(refFreqs.size() == itsPS.getInt32("Input.NSubbands"), 
+  ASSERTSTR(refFreqs.size() == itsPS.getInt32("BGLProc.NrStoredSubbands"), 
 	    "Wrong number of refFreqs specified!");
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
@@ -113,7 +113,7 @@ void WH_Storage::preprocess() {
   itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, nAntennas, antPos);
 
   int nPolarisations = itsPS.getInt32("Input.NPolarisations");
-  int nChannels = itsPS.getInt32("Storage.nChannels");
+  int nChannels = itsPS.getInt32("PPF.NrSubChannels");
   double chanWidth = itsPS.getDouble("Storage.chanWidth");
   vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
   vector<double>::iterator iter;

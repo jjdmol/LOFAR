@@ -40,7 +40,7 @@ DH_VisArray::DH_VisArray(const string& name,
 {
   itsNVis = itsPS.getInt32("Storage.NVisPerInput");
   itsNStations = itsPS.getInt32("PPF.NrStations");
-  itsNPols = itsPS.getInt32("PPF.NPolarizations");
+  itsNPols = itsPS.getInt32("PPF.NrPolarizations");
 }
 
 DH_VisArray::DH_VisArray(const DH_VisArray& that)

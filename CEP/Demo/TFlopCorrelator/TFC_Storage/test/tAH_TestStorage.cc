@@ -52,13 +52,13 @@ namespace LOFAR
   void AH_TestStorage::define(const KeyValueMap& kvm) {
     ACC::APS::ParameterSet myPset;
     myPset.add("Input.NPolarisations", "2");
-    myPset.add("Input.NSubbands", "2");
-    myPset.add("Input.NRSP", "2");
-    myPset.add("Storage.nStations", "2");
+    myPset.add("PPF.NPolarizations", "2");
+    myPset.add("BGLProc.NrStoredSubbands", "2");
+    myPset.add("PPF.NrStations", "2");
     myPset.add("Storage.WriteToMAC", "F");
     myPset.add("Storage.MSName", "TestPattern.MS");
     myPset.add("Storage.refFreqs", "[1.0e8, 2.0e8]");
-    myPset.add("Storage.nChannels", "6");
+    myPset.add("PPF.NrSubChannels", "6");
     itsNChannels = 6;
     myPset.add("Storage.NVisPerInput", "6");
     myPset.add("Storage.chanWidth", "1.0e8");
