@@ -28,9 +28,11 @@
 #include <tinyCEP/WorkHolder.h>
 // #include <WH_BGL_Processing.h>
 #include <WH_Distribute.h>
-#include <WH_Correlator.h>
 #include <WH_PPF.h>
+#include <WH_Correlator.h>
+#include <WH_Concentrator.h>
 // DataHolders
+#include <TFC_Interface/DH_Subband.h>
 #include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_Vis.h>
 
@@ -95,7 +97,10 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   int itsNrFiltersPerComputeCell = itsParamSet.getInt32("BGLProc.NrFiltersPerComputeCell");
   int itsNrCorrelatorsPerFilter = itsParamSet.getInt32("PPF.NrCorrelatorsPerFilter");
   int itsNrChannels = itsParamSet.getInt32("PPF.NrSubChannels");
-
+  int itsNrVisPerInput = itsParamSet.getInt32("Storage.NVisPerInput");
+  int itsNrStoredSubbands = itsParamSet.getInt32("BGLProc.NrStoredSubbands");
+  int itsNSBCollectOutputs = itsParamSet.getInt32("Input.NSBCollectOutputs");
+  
   vector<int> itsInputPorts      = itsParamSet.getInt32Vector("FIRConnection.RequestPort");
   vector<string> itsInputServers = itsParamSet.getStringVector("FIRConnection.ServerHost");
 
@@ -107,64 +112,91 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     WH_Distribute*  DistNode;
     vector<WH_PPF*> PPFNodes;
     vector<WH_Correlator*> CorrNodes;
-    
+    WH_Concentrator* ConcNode;
 
     // The basic definition of a "compute cell"
     // A compute cell is a connected set of processing blocks that implement 
     // a complete poly-phase filter and correlator chain. Each compute cell 
     // contains a single WH_Distribute that spreads the input to a number of
     // processing chains.
-    DistNode = new WH_Distribute("distribute", itsParamSet, 1, itsNrFiltersPerComputeCell);
+    DistNode = new WH_Distribute("distribute", itsParamSet, 1, 2*itsNrFiltersPerComputeCell);
     itsWHs.push_back(DistNode);
     itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
     
-    for (int Filters = 0; Filters < itsNrFiltersPerComputeCell; Filters++) {
-      snprintf(WH_Name, 40, "PPF_%d_of_%d", Filters, itsNrFilters);
-      PPFNodes.push_back(new WH_PPF(WH_Name, 0));
-      itsWHs.push_back(PPFNodes.back());
-      itsWHs.back()->runOnNode(lowestFreeNode++);
-      
-      //      itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
-      
-      for (int Correlators = 0; Correlators < itsNrCorrelatorsPerFilter; Correlators++) {
-	snprintf(WH_Name, 40, "CORR_%d_of_%d_in_filter_%d", Correlators, itsNrCorrelatorsPerFilter, Filters);
-	CorrNodes.push_back(new WH_Correlator(WH_Name));
-	itsWHs.push_back(CorrNodes.back());
-	itsWHs.back()->runOnNode(lowestFreeNode++);
-	
-	itsOutStub->connect(itsOut++, itsWHs.back()->getDataManager(), 0);
-      } 
-    }
-    // Now connect the internal blocks together
-    int filter_nr = 0;
-    int corr_nr   = 0;
-    vector<WH_PPF*>::iterator fit = PPFNodes.begin();
-    vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
-    for (; fit != PPFNodes.end(); fit++) {
+    /* While only a single compute block of 2 filters and 4 correlators would suffice  */
+    /* within a compute cell, this would leave more than 50% of the cell unused. To    */
+    /* reach the desired 1 TFlop of computational load, we duplicate the compute block */
+    /* even though this calculates exactly the same.                                   */
 
-      // connect the distribute node to it's filters
-      itsTHs.push_back(new TH_MPI( DistNode->getNode(), (*fit)->getNode()));
-      itsConnections.push_back(new Connection("dist_conn",
-					      DistNode->getDataManager().getOutHolder(filter_nr),
-					      (*fit)->getDataManager().getInHolder(0),
-					      itsTHs.back(),
-					      false)); 
-      for (; cit != CorrNodes.end(); cit++) {
+    for (int i = 0; i < 2; i++) {
+
+      for (int Filters = 0; Filters < itsNrFiltersPerComputeCell; Filters++) {
+	snprintf(WH_Name, 40, "PPF_%d_of_%d", Filters, itsNrFilters);
+	PPFNodes.push_back(new WH_PPF(WH_Name, 0, 19));
+	itsWHs.push_back(PPFNodes.back());
+	itsWHs.back()->runOnNode(lowestFreeNode++);
+      
+	for (int Correlators = 0; Correlators < itsNrCorrelatorsPerFilter; Correlators++) {
+	  snprintf(WH_Name, 40, "CORR_%d_of_%d_in_filter_%d", Correlators, itsNrCorrelatorsPerFilter, Filters);
+	  CorrNodes.push_back(new WH_Correlator(WH_Name));
+	  itsWHs.push_back(CorrNodes.back());
+	  itsWHs.back()->runOnNode(lowestFreeNode++);
 	
-	snprintf(WH_Name, 40, "conn_filter_%d_corr_%d", filter_nr, corr_nr);
-	itsTHs.push_back( new TH_MPI( (*fit)->getNode(), (*cit)->getNode() ) );
-	itsConnections.push_back(new Connection(WH_Name, 
-						(*fit)->getDataManager().getOutHolder(corr_nr),
-						(*cit)->getDataManager().getInHolder(filter_nr),
-						itsTHs.back(),
-						false));
-	
-	corr_nr++;
+	  itsOutStub->connect(itsOut++, itsWHs.back()->getDataManager(), 0);
+	} 
       }
-      filter_nr++;
+      // Now connect the internal blocks together
+      int filter_nr = 0;
+      int corr_nr   = 0;
+      vector<WH_PPF*>::iterator fit = PPFNodes.begin();
+      vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
+      for (; fit != PPFNodes.end(); fit++) {
+
+	// connect the distribute node to it's filters
+	itsTHs.push_back(new TH_MPI( DistNode->getNode(), (*fit)->getNode()));
+	itsConnections.push_back(new Connection("dist_conn",
+						DistNode->getDataManager().getOutHolder(filter_nr),
+						(*fit)->getDataManager().getInHolder(0),
+						itsTHs.back(),
+						false)); 
+	for (; cit != CorrNodes.end(); cit++) {
+	
+	  snprintf(WH_Name, 40, "conn_filter_%d_corr_%d", filter_nr, corr_nr);
+	  itsTHs.push_back( new TH_MPI( (*fit)->getNode(), (*cit)->getNode() ) );
+	  itsConnections.push_back(new Connection(WH_Name, 
+						  (*fit)->getDataManager().getOutHolder(corr_nr),
+						  (*cit)->getDataManager().getInHolder(filter_nr),
+						  itsTHs.back(),
+						  false));
+	
+	  corr_nr++;
+	}
+	filter_nr++;
+      }
+    }
+
+
+    ConcNode = new WH_Concentrator("concentrator", itsParamSet, itsNrVisPerInput);
+    itsWHs.push_back(ConcNode);
+    itsWHs.back()->runOnNode(lowestFreeNode++);
+
+    vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
+    int corr_nr = 0;
+    for (; cit != CorrNodes.end(); cit++) {
+      itsTHs.push_back( new TH_MPI( (*cit)->getNode(), ConcNode->getNode() ) );
+      itsConnections.push_back(new Connection(WH_Name, 
+					      (*cit)->getDataManager().getOutHolder(0),
+					      ConcNode->getDataManager().getInHolder(corr_nr++),
+					      itsTHs.back(),
+					      false));
+    }
+   
+    // We only connect every 16th computecell to the outside world.
+    // The reason for this is that we expect every 16th subband to be unique.
+    if (ComputeCells % itsNSBCollectOutputs == 0) {
+      itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
     }
   }
-
 #ifdef HAVE_MPI
   ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "TFC_BGLProc needs " << lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
 #endif

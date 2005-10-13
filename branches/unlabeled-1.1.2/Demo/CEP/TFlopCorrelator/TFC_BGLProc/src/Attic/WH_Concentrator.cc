@@ -40,8 +40,8 @@ WH_Concentrator::WH_Concentrator(const string& name, ACC::APS::ParameterSet myPs
   char str[40];
 
   itsNVis      = itsPS.getInt32("Storage.NVisPerInput");
-  itsNStations = itsPS.getInt32("Input.NRSP");
-  itsNPols     = itsPS.getInt32("Input.NPolarisations");
+  itsNStations = itsPS.getInt32("PPF.NrStations");
+  itsNPols     = itsPS.getInt32("PPF.NrPolarizations");
 
   for (int in = 0; in < itsNVis; in++) { 
     sprintf(str, "in_%d", in);

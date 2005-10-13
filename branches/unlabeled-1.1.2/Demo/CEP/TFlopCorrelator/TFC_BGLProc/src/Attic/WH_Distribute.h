@@ -26,6 +26,7 @@
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
 
+#include <TFC_Interface/DH_Subband.h>
 #include <TFC_Interface/DH_PPF.h>
 
 namespace LOFAR {

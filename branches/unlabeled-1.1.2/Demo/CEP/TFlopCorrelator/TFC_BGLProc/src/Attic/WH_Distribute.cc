@@ -47,7 +47,7 @@ WH_Distribute::WH_Distribute(const string& name,
   /// add DataHolders. Note that we may need to create a private Pset
   /// for the outDH if we need to duplicate data
   for (int i = 0; i < itsNinputs; i++) {
-    getDataManager().addInDataHolder(i, new DH_PPF("in", 1, itsPS));
+    getDataManager().addInDataHolder(i, new DH_Subband("in", 1, itsPS));
   }
 
   ACC::APS::ParameterSet myOutPS;
@@ -122,6 +122,7 @@ void WH_Distribute::process() {
 	  
 	(outBufSize-myCopiedBytes) > inBufSize ? myNextBlock = inBufSize : myNextBlock = (outBufSize - myCopiedBytes);
 	
+	// duplicate data 
 	for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
 	  memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer() + myCopiedBytes,
 		 static_cast<DH_PPF*>(getDataManager().getInHolder(i))->getBuffer(),

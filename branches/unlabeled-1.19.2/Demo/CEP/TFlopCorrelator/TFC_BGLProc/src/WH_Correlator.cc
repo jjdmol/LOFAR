@@ -69,17 +69,20 @@ WH_Correlator::WH_Correlator(const string &name)
   ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match parameter: NrSamples");
 
   int totalInputSize = 0;
+
   for (int i = 0; i < itsNfilters; i++) {
     char str[50];
     snprintf(str, 50, "input_%d_of_%d", i, itsNfilters);
     getDataManager().addInDataHolder(0, new DH_CorrCube(str, 0));
     totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
   }
-  for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
-    char str[50];
-    snprintf(str, 50, "output_%d_of_%d", ch, NR_CHANNELS_PER_CORRELATOR);
-    getDataManager().addOutDataHolder(ch, new DH_Vis(str, 0, myPS));
-  }
+
+//   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
+//     char str[50];
+//     snprintf(str, 50, "output_%d_of_%d", ch, NR_CHANNELS_PER_CORRELATOR);
+//     getDataManager().addOutDataHolder(ch, new DH_Vis(str, 0, myPS));
+//   }
+  getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, myPS));
 
   itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize);
 }
