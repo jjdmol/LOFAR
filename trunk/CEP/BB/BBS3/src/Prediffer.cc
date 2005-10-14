@@ -250,6 +250,8 @@ void Prediffer::readDescriptiveData(const string& fileName)
   BlobIStream bis(bbs);
   bis.getStart("ms.des");
   double ra, dec;
+  int nparts;
+  bis >> nparts;
   bis >> ra;
   bis >> dec;
   bis >> itsNCorr;

@@ -59,6 +59,8 @@ void readMSTimes(const string& fileName, double& startTime, double& endTime,
   BlobIStream bis(bbs);
   bis.getStart("ms.des");
   double ra, dec;
+  int nparts;
+  bis >> nparts;
   bis >> ra;
   bis >> dec;
   int itsNCorr, itsNrChan;
