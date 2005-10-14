@@ -21,6 +21,7 @@
 #include <Transport/TH_File.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_Ethernet.h>
+#include <Transport/TH_Socket.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <TFC_InputSection/WH_RSPInput.h>
@@ -100,26 +101,35 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   char WH_DH_Name[WH_DH_NameSize];
   int rspStartNode;
   
-  bool useEth = itsParamSet.getBool("Input.UseEth");
+  string TransportType = itsParamSet.getString("Input.TransportType");
   vector<string> interfaces = itsParamSet.getStringVector("Input.Interfaces");
   vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
   vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
   vector<string> inFiles = itsParamSet.getStringVector("Input.InputFiles");
-  
+  vector<string> services = itsParamSet.getStringVector("Input.RequestPorts");
+
   int NSBCollectOutputs = itsParamSet.getInt32("Input.NSBCollectOutputs"); 
     
   for (int r=0; r<NRSP; r++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, NRSP);
-    
-    if (useEth) {
+   
+    if (TransportType=="ETHERNET") {
       itsTHs.push_back(new TH_Ethernet(interfaces[r], 
-				       srcMacs[r],
-				       dstMacs[r], 
-				       0x000));
-    } else {
+ 				       srcMacs[r],
+ 				       dstMacs[r], 
+ 				       0x000));
+    } else if (TransportType=="FILE") {
       itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));
+    } else if (TransportType=="SOCKET") {
+      itsTHs.push_back(new TH_Socket(services[r], 
+				     true, 
+				     Socket::TCP, 
+				     5, 
+				     false));
+    } else {
+      ASSERTSTR(false, "Input.TransportType unknown. It should be one of {ETHERNET, FILE, SOCKET}");
     }
-
+    
     if (r==0)
     {
       RSPNodes.push_back(new WH_RSPInput(WH_DH_Name,  // create sync master
