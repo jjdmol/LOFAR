@@ -36,7 +36,8 @@ namespace LOFAR
 #define MAX_EVENTS_BUFF_SIZE 1400
 #define MAX_NR_OF_EVENTS 250
 #define MAX_NR_OF_RETRY_MSG 10
-#define CONNECTION_TIMEOUT 3600.0 // == 1 hour
+#define TO_DISCONNECTED 3600.0 // == 1 hour
+#define TO_TRY_RECONNECT 5.0
 
 const string KVL_CLIENT_TASK_NAME("GCF-KVLC");
 const string KVL_DAEMON_TASK_NAME("GCF-KVLD");

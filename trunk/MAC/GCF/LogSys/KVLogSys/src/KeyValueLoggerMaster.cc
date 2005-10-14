@@ -94,7 +94,7 @@ GCFEvent::TResult KeyValueLoggerMaster::initial(GCFEvent& e, GCFPortInterface& p
       break;
 
     case F_DISCONNECTED:
-      p.setTimer(1.0); // try again after 1 second
+      p.setTimer(TO_TRY_RECONNECT); // try again after 1 second
       break;
 
     default:
@@ -162,7 +162,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
         if (iter->second.pPort == &p)
         {
           iter->second.pPort = 0;
-          iter->second.hourTimerID = _kvlMasterPortProvider.setTimer(CONNECTION_TIMEOUT);
+          iter->second.hourTimerID = _kvlMasterPortProvider.setTimer(TO_DISCONNECTED);
           LOG_DEBUG(formatString(
               "Hour timer %d for disconnected daemon %d is started.",
               iter->second.hourTimerID,
@@ -298,7 +298,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
       {
         TClient client;
         client.pPort = &p;
-        client.curSeqNr = 0;
+        client.curSeqNr = request.firstSeqNr;
         uint8 newClientID = 0;
         do
         {
@@ -312,7 +312,7 @@ GCFEvent::TResult KeyValueLoggerMaster::operational(GCFEvent& e, GCFPortInterfac
             newClientID));
         _clients[newClientID] = client;
         response.ID = newClientID;
-        response.curSeqNr = 0;
+        response.curSeqNr = client.curSeqNr;
       }  
       else
       {

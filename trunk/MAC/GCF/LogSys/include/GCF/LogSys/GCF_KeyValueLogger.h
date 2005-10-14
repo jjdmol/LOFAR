@@ -71,6 +71,7 @@ class GCFKeyValueLogger : public TM::GCFTask
 
   private: // data members        
     TM::GCFPort _kvlClientPort;
+    int _manIdToSkip;
     static GCFKeyValueLogger* _pInstance;
 
   private: // admin members

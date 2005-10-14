@@ -49,7 +49,8 @@ KeyValueLoggerDaemon::KeyValueLoggerDaemon() :
   _registerID(0),
   _curSeqNr(0),
   _oldestUnanswerdSeqNr(1),
-  _propertyLogger(*this)
+  _propertyLogger(*this),
+  _waitForAnswer(false)
 {
   // register the protocol for debugging purposes
   registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
@@ -87,7 +88,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::initial(GCFEvent& e, GCFPortInterface& p
       break;
 
     case F_DISCONNECTED:
-      p.setTimer(1.0); // try again after 1 second
+      p.setTimer(TO_TRY_RECONNECT); // try again after 1 second
       break;
 
     default:
@@ -106,125 +107,14 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
   
   switch (e.signal)
   {
-    case F_DISCONNECTED:
-      DBGFAILWHEN(&_kvlDaemonPortProvider == &p && "Daemon port provider may not be disconnected."); 
-      if (&_kvlMasterClientPort == &p)
+    case F_ENTRY:
+      _kvlDaemonPortProvider.setTimer(1.0, 5.0); // garbage timer
+      if (!_kvlMasterClientPort.isConnected())
       {
-        LOG_WARN("Connection lost to KeyValue Logger master. Tries a reconnect!!!");
-        _kvlMasterClientPort.cancelAllTimers();
-        hourTimerID = _kvlMasterClientPort.setTimer(CONNECTION_TIMEOUT);
-      }            
-      else
-      {
-        LOG_INFO("Connection lost to KeyValue Logger daemon client.");
-      }
-      p.close();
-      break;
-      
-    case F_TIMER:
-      if (&_kvlDaemonPortProvider == &p)
-      {        
-        GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);      
-        if (hourTimerID == (long) pTimer->id)
-        {
-          // about 1 hour no connection:
-          // reset register ID, master also will release this number
-          // all buffered updates will lost
-          _registerID = 0;
-          _curSeqNr = 0;
-          hourTimerID = -2; // still no connection
-        }
-        else
-        {
-          // cleanup the garbage with closed ports to daemon clients
-          GCFPortInterface* pPort;
-          for (TClients::iterator iter = _clientsGarbage.begin();
-               iter != _clientsGarbage.end(); ++iter)
-          {
-            pPort = *iter;
-            delete pPort;
-          }
-          _clientsGarbage.clear();
-        }
-      }
-      else if (&_kvlMasterClientPort == &p)
-      {
-        if (!p.isConnected())
-        {
-          // reconnect to master
-          p.open(); 
-        }
-        else
-        {           
-          if (_seqList.empty())
-          {
-            if (_nrOfBufferedEvents > 0)
-            {
-              // send current collected updates
-              sendEventsBuffer();
-            }
-          }
-          else if (_kvlMasterClientPort.isConnected())
-          {
-            // resend max. 10 not answered messages
-            uint8 i = 0;
-            KVLEventCollectionEvent* pUpdateEvents;
-            TSequenceList::iterator iter;
-            // find the first not yet sent events buffer
-            for (iter = _seqList.find(_oldestUnanswerdSeqNr);
-                 i < MAX_NR_OF_RETRY_MSG; ++iter)
-            {
-              if (iter == _seqList.end())
-              {
-                _oldestUnanswerdSeqNr++;
-              }
-              else
-              {
-                // found
-                break;
-              }
-              i++;
-            }
-            for (i = 0; i < MAX_NR_OF_RETRY_MSG; i++)
-            {
-              if (iter == _seqList.end())
-              {
-                // because the map is sorted, we have to force jump from end to begin;
-                iter = _seqList.begin();
-              }
-              if (iter != _seqList.end())
-              {               
-                pUpdateEvents = iter->second;
-                if (pUpdateEvents->daemonID == 0)
-                {
-                  pUpdateEvents->daemonID = _registerID;
-                }
-                _kvlMasterClientPort.send(*pUpdateEvents);
-              }
-              else
-              {
-                break;
-              }
-              ++iter;
-            }
-          }
-        }
+        _kvlMasterClientPort.open();
       }
       break;
-      
-    case F_CLOSED:
-      DBGFAILWHEN(&_kvlDaemonPortProvider == &p); 
-      if (&_kvlMasterClientPort == &p)
-      {
-        _kvlMasterClientPort.setTimer(1.0); // try to reconnect again after 1 second;
-      }            
-      else
-      {
-        _clientsGarbage.push_back(&p);
-        _propertyLogger.clientGone(p);        
-      }
-      break;
-      
+
     case F_CONNECTED:
       DBGFAILWHEN(&_kvlDaemonPortProvider == &p); 
       if (&_kvlMasterClientPort == &p)
@@ -254,20 +144,111 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
       _kvlDaemonPortProvider.accept(*pNewDCPort);      
       break;
     }
-    case F_ENTRY:
-      _kvlDaemonPortProvider.setTimer(1.0, 5.0); // garbage timer
-      if (!_kvlMasterClientPort.isConnected())
+    case F_DISCONNECTED:
+      DBGFAILWHEN(&_kvlDaemonPortProvider == &p && "Daemon port provider may not be disconnected."); 
+      if (&_kvlMasterClientPort == &p)
       {
-        _kvlMasterClientPort.open();
+        LOG_WARN("Connection lost to KeyValueLogger master. Tries a reconnect!!!");
+        _kvlMasterClientPort.cancelAllTimers();
+        hourTimerID = _kvlMasterClientPort.setTimer(TO_DISCONNECTED);
+        _waitForAnswer = false;
+      }            
+      else
+      {
+        LOG_INFO("Connection lost to a KeyValueLogger client of the deamon.");
+      }
+      p.close();
+      break;
+      
+    case F_CLOSED:
+      DBGFAILWHEN(&_kvlDaemonPortProvider == &p); 
+      if (&_kvlMasterClientPort == &p)
+      {
+        _kvlMasterClientPort.setTimer(TO_TRY_RECONNECT);
+      }            
+      else
+      {
+        _clientsGarbage.push_back(&p);
+        _propertyLogger.clientGone(p);        
+      }
+      break;
+      
+    case F_TIMER:
+      if (&_kvlDaemonPortProvider == &p)
+      {        
+        GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);      
+        if (hourTimerID == (long) pTimer->id)
+        {
+          // about 1 hour no connection:
+          // reset register ID, master also will release this number and the client administration
+          _registerID = 0;
+          hourTimerID = -2; // still no connection
+        }
+        else
+        {
+          // cleanup the garbage with closed ports to daemon clients
+          GCFPortInterface* pPort;
+          for (TClients::iterator iter = _clientsGarbage.begin();
+               iter != _clientsGarbage.end(); ++iter)
+          {
+            pPort = *iter;
+            delete pPort;
+          }
+          _clientsGarbage.clear();
+        }
+      }
+      else if (&_kvlMasterClientPort == &p)
+      {
+        if (!p.isConnected())
+        {
+          // reconnect to master
+          p.open(); 
+        }
+        else
+        {           
+          if (_nrOfBufferedEvents > 0)
+          {
+            // send current collected updates
+            sendEventsBuffer();
+          }
+        }
       }
       break;
 
+    case KVL_REGISTERED:
+    {
+      KVLRegisteredEvent response(e);
+      if (_registerID != response.ID)
+      {
+        LOG_DEBUG(formatString(
+            "Registered on master with nr. %d",
+            response.ID));        
+      }
+      _registerID = response.ID;
+      _kvlMasterClientPort.setTimer(1.0, 1.0); // start the send heartbeat
+      if (response.curSeqNr != (_oldestUnanswerdSeqNr - 1))
+      {
+        // collection with this seqNr was received successful,
+        // but no answer was received before the connection was broken
+        // so the collection can be removed and the following message in 
+        // the queue can be send
+        TSequenceList::iterator iter = _seqList.find(response.curSeqNr);
+        if (iter != _seqList.end())
+        {
+          delete iter->second;
+        }
+        _seqList.erase(response.curSeqNr);
+        _oldestUnanswerdSeqNr++;
+      }        
+      sendOldestCollection();      
+      break;
+    }    
     case KVL_UPDATE:
     case KVL_ADD_ACTION:
     {
       if (hourTimerID == -2) 
       {
-        LOG_DEBUG("More than 1 hour no connection with the master, so dump all key value updates.");
+        LOG_DEBUG("More than 1 hour no connection with the master, so dump all receiving key value updates.");
         break;
       }
       
@@ -298,50 +279,19 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
       }      
       break;
     }
-    case KVL_ANSWER:
-    {
-      KVLAnswerEvent answer(e);
-      TSequenceList::iterator iter = _seqList.find(answer.seqNr);
-      LOG_DEBUG(formatString(
-          "Message with nr. %d was successfully received by the master.",
-          answer.seqNr));        
-
-      if (iter != _seqList.end())
-      {
-        delete iter->second;
-      }
-      _seqList.erase(answer.seqNr);
-      ASSERT(answer.seqNr == _oldestUnanswerdSeqNr);
-      _oldestUnanswerdSeqNr++;
-      break;
-    }
-    
-    case KVL_REGISTERED:
-    {
-      KVLRegisteredEvent response(e);
-      if (_registerID != response.ID)
-      {
-        LOG_DEBUG(formatString(
-            "Registered on master with nr. %d",
-            response.ID));        
-      }
-      _registerID = response.ID;
-
-      for (uint64 i = 0; i < MAX_NR_OF_RETRY_MSG; i++)
-      {
-        _seqList.erase(response.curSeqNr - i);
-      }
-      _kvlMasterClientPort.setTimer(1.0, 1.0); // start the (re)send heartbeat
-      break;
-    }    
-    case KVL_SKIP_UPDATES_FROM:
-    {
-      KVLSkipUpdatesFromEvent request(e);
-      _propertyLogger.skipUpdatesFrom(request.man_id, p);
-      break;
-    }
     case F_VCHANGEMSG:
     {
+      if (hourTimerID == -2) 
+      {
+        LOG_DEBUG("More than 1 hour no connection with the master, so dump all receiving key value updates.");
+        break;
+      }
+      
+      if (_seqList.size() == 0xFFFF)
+      {
+        LOG_DEBUG("Cannot buffer more events. Dump as long as the buffer not decreases.");        
+        break;
+      }
       GCFPropValueEvent& pve = (GCFPropValueEvent&) e;
       KVLUpdateEvent ue;
       ue.key = pve.pPropName;
@@ -369,6 +319,31 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& e, GCFPortInterfac
       }      
       break;
     }
+    case KVL_ANSWER:
+    {
+      KVLAnswerEvent answer(e);
+      LOG_DEBUG(formatString(
+          "Message with nr. %d was successfully received by the master.",
+          answer.seqNr));        
+
+      TSequenceList::iterator iter = _seqList.find(answer.seqNr);
+      if (iter != _seqList.end())
+      {
+        delete iter->second;
+      }
+      _seqList.erase(answer.seqNr);
+      ASSERT(answer.seqNr == _oldestUnanswerdSeqNr);
+      _waitForAnswer = false;
+      _oldestUnanswerdSeqNr++;
+      sendOldestCollection();
+      break;
+    }
+    case KVL_SKIP_UPDATES_FROM:
+    {
+      KVLSkipUpdatesFromEvent request(e);
+      _propertyLogger.skipUpdatesFrom(request.man_id, p);
+      break;
+    }
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -391,15 +366,31 @@ void KeyValueLoggerDaemon::sendEventsBuffer()
   pCollectionEvent->nrOfEvents = _nrOfBufferedEvents;
   pCollectionEvent->events.buf.setValue(_eventsBuf, _curEventsBufSize, true);
 
-  if (_kvlMasterClientPort.isConnected())
-  {
-    _kvlMasterClientPort.send(*pCollectionEvent);
-  }
   _seqList[_curSeqNr] = pCollectionEvent;
+  sendOldestCollection();
+
   _curEventsBufSize = 0;
   _nrOfBufferedEvents = 0;        
 }
 
+void KeyValueLoggerDaemon::sendOldestCollection()
+{
+  if (!_seqList.empty() && !_waitForAnswer && _kvlMasterClientPort.isConnected())
+  {
+    TSequenceList::iterator iter = _seqList.find(_oldestUnanswerdSeqNr);
+    ASSERT(iter != _seqList.end());
+
+    KVLEventCollectionEvent* pUpdateEvents = iter->second;
+    if (pUpdateEvents->daemonID == 0)
+    {
+      pUpdateEvents->daemonID = _registerID;
+    }
+    
+    _waitForAnswer = true;
+    _kvlMasterClientPort.send(*pUpdateEvents);
+  }
+}
+  
   } // namespace LogSys
  } // namespace GCF
 } // namespace LOFAR

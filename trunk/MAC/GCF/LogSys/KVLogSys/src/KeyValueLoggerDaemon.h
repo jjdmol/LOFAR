@@ -54,6 +54,7 @@ class KeyValueLoggerDaemon : public TM::GCFTask
         
   private: // helper methods
     void sendEventsBuffer();
+    void sendOldestCollection();
     
   private: // data members        
     TM::GCFTCPPort  _kvlDaemonPortProvider;
@@ -71,6 +72,7 @@ class KeyValueLoggerDaemon : public TM::GCFTask
     uint64          _curSeqNr;
     uint64          _oldestUnanswerdSeqNr;
     PropertyLogger  _propertyLogger;
+    bool            _waitForAnswer;
     
 };
   } // namespace LogSys
