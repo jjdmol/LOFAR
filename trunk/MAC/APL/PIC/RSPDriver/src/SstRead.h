@@ -25,9 +25,9 @@
 #ifndef SSTREAD_H_
 #define SSTREAD_H_
 
-#include "SyncAction.h"
-#include "MEPHeader.h"
 #include <Common/LofarTypes.h>
+#include <RSP_Protocol/MEPHeader.h>
+#include "SyncAction.h"
 
 namespace LOFAR {
   namespace RSP {

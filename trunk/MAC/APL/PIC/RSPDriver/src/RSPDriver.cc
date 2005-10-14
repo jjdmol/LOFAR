@@ -24,8 +24,18 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "RSP_Protocol.ph"
-#include "EPA_Protocol.ph"
+#include <RSP_Protocol/RSP_Protocol.ph>
+#include <RSP_Protocol/EPA_Protocol.ph>
+#include <RSP_Protocol/MEPHeader.h>
+
+#include <PSAccess.h>
+#include <GCF/ParameterSet.h>
+
+#include <blitz/array.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "RSPDriver.h"
 #include "Command.h"
@@ -65,18 +75,8 @@
 
 #include "Cache.h"
 #include "RawEvent.h"
-#include "MEPHeader.h"
 
 #include "netraw.h"
-
-#include <PSAccess.h>
-#include <GCF/ParameterSet.h>
-
-#include <blitz/array.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 #define ETHERTYPE_EPA 0x10FA
 

@@ -22,13 +22,13 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-#include "RCUWrite.h"
-#include "EPA_Protocol.ph"
-#include "Cache.h"
+#include <RSP_Protocol/EPA_Protocol.ph>
 
 #include <PSAccess.h>
 #include <string.h>
+
+#include "RCUWrite.h"
+#include "Cache.h"
 
 using namespace LOFAR;
 using namespace RSP;

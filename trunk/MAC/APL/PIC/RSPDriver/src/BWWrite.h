@@ -25,9 +25,10 @@
 #ifndef BWWRITE_H_
 #define BWWRITE_H_
 
-#include "SyncAction.h"
-#include "MEPHeader.h"
 #include <Common/LofarTypes.h>
+#include <RSP_Protocol/MEPHeader.h>
+
+#include "SyncAction.h"
 
 namespace LOFAR {
   namespace RSP {

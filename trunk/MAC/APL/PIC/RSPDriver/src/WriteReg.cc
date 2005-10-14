@@ -22,17 +22,17 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-#include "WriteReg.h"
-#include "EPA_Protocol.ph"
-#include "RSP_Protocol.ph"
-#include "Cache.h"
+#include <RSP_Protocol/EPA_Protocol.ph>
+#include <RSP_Protocol/RSP_Protocol.ph>
 
 #include <PSAccess.h>
 
 #include <unistd.h>
 #include <string.h>
 #include <blitz/array.h>
+
+#include "WriteReg.h"
+#include "Cache.h"
 
 #define N_RETRIES 3
 

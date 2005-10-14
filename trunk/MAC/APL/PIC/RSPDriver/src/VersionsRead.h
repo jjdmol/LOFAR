@@ -25,8 +25,9 @@
 #ifndef VERSIONSREAD_H_
 #define VERSIONSREAD_H_
 
+#include <RSP_Protocol/MEPHeader.h>
+
 #include "SyncAction.h"
-#include "MEPHeader.h"
 
 namespace LOFAR {
   namespace RSP {

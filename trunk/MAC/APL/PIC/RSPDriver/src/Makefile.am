@@ -21,9 +21,6 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
-	RSP_Protocol.ph \
-	rspctlfe/src/RSPFE_Protocol.ph \
-	EPA_Protocol.ph \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
 	RSPDriver.conf \
@@ -35,9 +32,6 @@ clean-local:
 	rm -f *.ph
 
 EXTRA_DIST = \
-	RSP_Protocol.ph \
-	RSPFE_Protocol.ph \
-	EPA_Protocol.ph \
 	$(BUILT_SOURCES)
 
 sysconf_DATA = \
@@ -63,44 +57,11 @@ sysconf_DATA = \
 %.top: %.top.in
 	cp $< $@
 
-lib_LTLIBRARIES = librsp.la libepa.la librspfe.la 
+lib_LTLIBRARIES = libepa.la
 
-include_HEADERS = \
-	RSP_Protocol.ph \
-	RSPFE_Protocol.ph \
-	BeamletWeights.h \
-	SubbandSelection.h \
-	RCUSettings.h \
-	WGSettings.h \
-	SystemStatus.h \
-	Statistics.h \
-	XCStatistics.h \
-	Versions.h \
-	Clocks.h \
-	\
-	EPA_Protocol.ph \
-	MEPHeader.h \
-	MEPData.h
-
-librsp_la_SOURCES = \
-	BeamletWeights.cc \
-	SubbandSelection.cc \
-	RCUSettings.cc \
-	WGSettings.cc \
-	SystemStatus.cc \
-	Statistics.cc \
-	XCStatistics.cc \
-	Versions.cc \
-	Clocks.cc \
-	RSP_Protocol.cc
-
-librspfe_la_SOURCES = \
-	RSPFE_Protocol.cc
+include_HEADERS =
 
 libepa_la_SOURCES = \
-	MEPHeader.cc \
-	MEPData.cc \
-	EPA_Protocol.cc \
 	RawEvent.h \
 	RawEvent.cc
 
@@ -193,7 +154,6 @@ RSPDriver_SOURCES = \
 	WGRead.cc
 
 RSPDriver_LDADD = \
-	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
 	$(RTCCOMMON_LDADD) \
 	$(CAPLIBS)
@@ -202,24 +162,15 @@ Tuner_SOURCES = \
 	Tuner.h \
 	Tuner.cc
 
-Tuner_LDADD = \
-	$(top_builddir)/src/librsp.la
-
 SetWG_SOURCES = \
 	SetWG.h \
 	SetWG.cc
-
-SetWG_LDADD = \
-	$(top_builddir)/src/librsp.la
 
 rspctl_SOURCES = \
 	rspctl.h \
 	rspctl.cc
 
-rspctl_LDADD = \
-	$(top_builddir)/src/librsp.la \
-	$(top_builddir)/src/librspfe.la \
-	-lgnuplot_i
+rspctl_LDADD = -lgnuplot_i
 
 #	$(RTCCOMMON_LDADD)
 
