@@ -1,0 +1,11 @@
+Using: Application<1|2|3>
+
+Precondition:
+- The ServiceBroker, PropertAgent and PropertyInterface of GCF are running (see README in GCF)
+- be sure mac.log_prop, Application1.conf, Application2.conf, 
+	Application3.conf, RTPing.conf, RTEcho.conf are in the ../etc path (near the 
+	test applications)
+- be sure CEPEcho, CEPPing, RTPing and RTEcho	are in the same path as the 
+	test applications
+- Load DPType's and DP's before starting the test apps by: 
+	PVSS00api -in src/gcftesttypes.dpl -proj <proj>
