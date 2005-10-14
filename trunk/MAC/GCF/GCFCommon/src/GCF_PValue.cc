@@ -96,7 +96,7 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 
 GCFPValue* GCFPValue::unpackValue(const char* valBuf)
 {
-  GCFPValue* pValue = createMACTypeObject((TMACValueType) *valBuf);
+  GCFPValue* pValue = createMACTypeObject((TMACValueType) (uchar) *valBuf);
   if (pValue)
   {
     unsigned int readLength = pValue->unpack(valBuf);
@@ -111,7 +111,7 @@ GCFPValue* GCFPValue::unpackValue(const char* valBuf)
 
 unsigned int GCFPValue::unpack(const char* valBuf)
 {
-  ASSERT(_type == (TMACValueType) *valBuf);
+  ASSERT(_type == (TMACValueType) (uchar) *valBuf);
   _dataFormat = (LOFAR::DataFormat) valBuf[1];
   // the type was already set, because it was set on construction of this class
   // later maybe also a timestamp can be assigned to a value.
