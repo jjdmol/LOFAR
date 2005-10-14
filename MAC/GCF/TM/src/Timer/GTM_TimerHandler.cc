@@ -109,8 +109,8 @@ void GTMTimerHandler::workProc()
 }
 
 unsigned long GTMTimerHandler::setTimer(GCFRawPort& port, 
-					unsigned long delaySeconds, 
-					unsigned long intervalSeconds,
+					uint64 delaySeconds, 
+					uint64 intervalSeconds,
 					void*  arg)
 {
   unsigned long timerid(1);

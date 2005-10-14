@@ -184,8 +184,8 @@ long GCFRawPort::setTimer(long delay_sec, long delay_usec,
 {
   ASSERT(_pTimerHandler);
   return _pTimerHandler->setTimer(*this, 
-          (unsigned long) (delay_sec * 1000000 + delay_usec), 
-          (unsigned long) (interval_sec * 1000000 + interval_usec),
+          (uint64) (delay_sec * 1000000 + delay_usec), 
+          (uint64) (interval_sec * 1000000 + interval_usec),
           arg);  
 }
 
@@ -195,8 +195,8 @@ long GCFRawPort::setTimer(double delay_seconds,
 {
   ASSERT(_pTimerHandler);
   return _pTimerHandler->setTimer(*this, 
-         (unsigned long) (delay_seconds * 1000000.0), 
-         (unsigned long) (interval_seconds * 1000000.0),
+         (uint64) (delay_seconds * 1000000.0), 
+         (uint64) (interval_seconds * 1000000.0),
          arg);
 }
 
