@@ -69,7 +69,7 @@ unsigned int GCFPVDynArr::unpackConcrete(const char* valBuf)
 
   for (unsigned int i = 0; i < arraySize; i++)
   {
-    pNewValue = GCFPValue::createMACTypeObject((TMACValueType) (getType() | LPT_DYNARR));
+    pNewValue = GCFPValue::createMACTypeObject((TMACValueType) (getType() & ~LPT_DYNARR));
     
     pNewValue->setDataFormat(_dataFormat);
     
