@@ -51,7 +51,8 @@ GCFKeyValueLogger* GCFKeyValueLogger::instance()
 }
 
 GCFKeyValueLogger::GCFKeyValueLogger() :
-  GCFTask((State)&GCFKeyValueLogger::initial, KVL_CLIENT_TASK_NAME)
+  GCFTask((State)&GCFKeyValueLogger::initial, KVL_CLIENT_TASK_NAME),
+  _manIdToSkip(-1)
 {
   // register the protocol for debugging purposes
   registerProtocol(KVL_PROTOCOL, KVL_PROTOCOL_signalnames);
@@ -79,7 +80,7 @@ GCFEvent::TResult GCFKeyValueLogger::initial(GCFEvent& e, GCFPortInterface& /*p*
       break;
 
     case F_DISCONNECTED:
-      _kvlClientPort.setTimer(1.0); // try again after 1 second
+      _kvlClientPort.setTimer(TO_TRY_RECONNECT); // try again after 1 second
       break;
 
     default:
@@ -100,9 +101,11 @@ GCFEvent::TResult GCFKeyValueLogger::operational(GCFEvent& e, GCFPortInterface& 
       LOG_FATAL("Connection lost to KeyValue Logger deamon");
       p.close();
       break;
+      
     case F_CLOSED:
       TRAN(GCFKeyValueLogger::initial);
       break;
+      
     case F_ENTRY:
     {    
       KVLUpdateEvent* pUpdateEvent;
@@ -120,6 +123,10 @@ GCFEvent::TResult GCFKeyValueLogger::operational(GCFEvent& e, GCFPortInterface& 
         delete pEvent;
       }
       _msgQueue.clear();
+      if (_manIdToSkip > -1)
+      {
+        skipUpdatesFrom(_manIdToSkip);
+      }
       break;
     }  
     default:
@@ -194,17 +201,12 @@ void GCFKeyValueLogger::addAction(const string& key, uint8 action,
 
 void GCFKeyValueLogger::skipUpdatesFrom(uint8 manId)
 {
-  KVLSkipUpdatesFromEvent* pIndication = new KVLSkipUpdatesFromEvent;
-  pIndication->man_id = manId;
-
+  KVLSkipUpdatesFromEvent indication;
+  indication.man_id = manId;
+  _manIdToSkip = manId;
   if (_kvlClientPort.isConnected())
   {
-    _kvlClientPort.send(*pIndication);
-    delete pIndication;
-  }
-  else
-  {
-    _msgQueue.push_back(pIndication);    
+    _kvlClientPort.send(indication);
   }
 }
   } // namespace LogSys
