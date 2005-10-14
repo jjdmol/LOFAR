@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "BeamletWeights.h"
+#include <RSP_Protocol/BeamletWeights.h>
 #include "Marshalling.h"
 
 using namespace std;

@@ -23,11 +23,12 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "SystemStatus.h"
-#include "EPA_Protocol.ph"
-#include "MEPHeader.h"
-#include "Marshalling.h"
+#include <RSP_Protocol/SystemStatus.h>
+#include <RSP_Protocol/MEPHeader.h>
 #include <blitz/array.h>
+
+#include "EPA_Protocol.ph"
+#include "Marshalling.h"
 
 using namespace std;
 using namespace blitz;
