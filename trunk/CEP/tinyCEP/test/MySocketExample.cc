@@ -27,16 +27,17 @@ namespace LOFAR
 {
 
   MySocketExample::MySocketExample(int ninput, int noutput, bool sender)
-    : itsNinput  (ninput),
-      itsNoutput (noutput),
-      itsIsSender(sender),
-      itsConn    (0),
-      itsTH      (0)
+    :  itsWH      (0),
+       itsNinput  (ninput),
+       itsNoutput (noutput),
+       itsIsSender(sender),
+       itsConn    (0),
+       itsTH      (0)
   {
   }
       
   MySocketExample::~MySocketExample() {
-    delete itsWHs[0];
+    delete itsWH;
     delete itsConn;
     delete itsTH;
   }
@@ -47,33 +48,36 @@ namespace LOFAR
     // create the work holders
     if (itsIsSender) {
 
-      itsWHs[0] = new WH_Example("WH_ExampleR", 1, 1, 10);
-      itsWHs[1] = new WH_Example("DUMMY", 1, 1, 10);
+      itsWH = new WH_Example("WH_ExampleS", 1, 1, 10);
 
       // Create a server socket
       itsTH = new TH_Socket(service, false); 
-      itsConn = new Connection("SendConn", itsWHs[0]->getDataManager().getOutHolder(0),
-			       itsWHs[1]->getDataManager().getInHolder(0), itsTH,
-			       false);
+      itsConn = new Connection("SendConn", itsWH->getDataManager().getOutHolder(0),
+			       0, itsTH, false);
+
+      itsWH->getDataManager().setOutConnection(0, itsConn);
+
 
     } else {
 
-      itsWHs[0] = new WH_Example("WH_ExampleS", 1, 1, 10);
-      itsWHs[1] = new WH_Example("DUMMY", 1, 1, 10);
+      itsWH = new WH_Example("WH_ExampleS", 1, 1, 10);
 
       // Create a client socket
       itsTH = new TH_Socket("127.0.0.1", service, false);
-      itsConn = new Connection("RecvConn", itsWHs[1]->getDataManager().getOutHolder(0),
-			       itsWHs[0]->getDataManager().getInHolder(0), itsTH,
+      itsConn = new Connection("RecvConn", 0,
+			       itsWH->getDataManager().getInHolder(0), itsTH,
 			       false);
+
+      itsWH->getDataManager().setInConnection(0, itsConn);
+
     }
   }
 
   void MySocketExample::init() {
-    itsWHs[0]->basePreprocess();
+    itsWH->basePreprocess();
 
     if (itsIsSender) {
-      ((DH_Example*)itsWHs[0]->getDataManager().getInHolder(0))->getBuffer()[0] = makefcomplex(4,3);
+      ((DH_Example*)itsWH->getDataManager().getInHolder(0))->getBuffer()[0] = makefcomplex(4,3);
     }
   }
 
@@ -81,20 +85,20 @@ namespace LOFAR
 
     for (int i = 0; i < nsteps; i++) {
       
-      itsWHs[0]->baseProcess();
+      itsWH->baseProcess();
       
     }
   }
 
   void MySocketExample::run_once() {
     
-    itsWHs[0]->baseProcess();
+    itsWH->baseProcess();
     
   }
 
   void MySocketExample::quit() {
     
-    itsWHs[0]->basePostprocess();
+    itsWH->basePostprocess();
     
   }
 
@@ -108,7 +112,7 @@ namespace LOFAR
     {
       cout << "Receiver dump:" << endl;
     }
-    itsWHs[0]->dump();
+    itsWH->dump();
 
   }
 

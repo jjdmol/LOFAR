@@ -51,7 +51,7 @@ namespace LOFAR
     void quit();
     void dump() const;
 
-    WorkHolder* itsWHs[5];
+    WorkHolder* itsWH;
 
     private :
       int  itsNinput;

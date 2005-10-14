@@ -40,7 +40,7 @@ int main (int argv, const char** argc) {
   
   if (argv < 2) {
     cout << "Usage " << argc[0] << " -s|-r"<< endl;
-    return 0;
+    return 1;
   }
 
   if (!strcmp(argc[1], "-r")) {
@@ -52,7 +52,7 @@ int main (int argv, const char** argc) {
 
   } else {
     cout << "Usage " << argc[0] << " -s|-r"<< endl;
-    return 0;
+    return 1;
   }
 
   EX1->baseDefine();
@@ -60,17 +60,6 @@ int main (int argv, const char** argc) {
   EX1->baseDump();
   EX1->baseRun(10);
   EX1->baseDump();
-  if (!strcmp(argc[1], "-r")) {
-
-    if ( ((DH_Example*)EX1->itsWHs[0]->getDataManager().getOutHolder(0))->getBuffer()[0] ==
-	  makefcomplex(4, 3) ) {
-      return 0;
-    } else { 
-      return 1;
-    }
-  } 
-
   EX1->baseQuit();
-  return 0;
 
 }
