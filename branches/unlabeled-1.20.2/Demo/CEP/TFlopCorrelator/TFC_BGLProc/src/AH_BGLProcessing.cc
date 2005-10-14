@@ -195,7 +195,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     // We only connect every 16th computecell to the outside world.
     // The reason for this is that we expect every 16th subband to be unique.
     if (ComputeCells % itsNSBCollectOutputs == 0) {
-      itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
+      itsOutStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
     }
   }
 #ifdef HAVE_MPI
