@@ -51,8 +51,8 @@ class GTMTimerHandler : GCFHandler
     void stop ();
 
     unsigned long setTimer (GCFRawPort& port, 
-                            unsigned long delaySeconds, 
-                            unsigned long intervalSeconds = 0,
+                            uint64 delaySeconds, 
+                            uint64 intervalSeconds = 0,
                             void*  arg        = 0);
     int cancelTimer (unsigned long timerid, void** arg = 0);
     int cancelAllTimers (GCFRawPort& port);

@@ -39,8 +39,8 @@ namespace LOFAR
 
 GTMTimer::GTMTimer(GCFRawPort& port, 
             		   unsigned long id,
-                   unsigned long timeVal, 
-                   unsigned long intervalTime, 
+                   uint64 timeVal, 
+                   uint64 intervalTime, 
                    void* arg) :
   _port(port), _id(id), _time(timeVal),
   _timeLeft(timeVal), 
@@ -52,9 +52,9 @@ GTMTimer::GTMTimer(GCFRawPort& port,
  
 void GTMTimer::decreaseTime()
 {
-  long uSec = getElapsedTime();
+  int64 uSec = getElapsedTime();
   
-  if ((long)_timeLeft > uSec)
+  if (uSec < 0 || _timeLeft > (uint64) uSec)
   {
     _timeLeft -= uSec;
   }
@@ -72,12 +72,12 @@ void GTMTimer::decreaseTime()
     _port.dispatch(te);
     if (_intervalTime > 0)
     {
-      unsigned long timeoverflow = uSec - _timeLeft;
+      uint64 timeoverflow = uSec - _timeLeft;
       
       if (_intervalTime < timeoverflow)
       {
         LOG_ERROR(formatString(
-            "Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %ld, tleft: %lu).",
+            "Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %lld, tleft: %llu).",
             ((double) _intervalTime) / 1000000.0,
             _id,
             uSec,
@@ -102,17 +102,17 @@ void GTMTimer::saveTime()
   gettimeofday(&_savedTime, &timeZone);
 }
 
-long GTMTimer::getElapsedTime()
+int64 GTMTimer::getElapsedTime()
 {
   timeval oldTime(_savedTime);
-  long uSecDiff(0);
+  int64 uSecDiff(0);
   
   saveTime();
 
-  uSecDiff = ((unsigned long long) (_savedTime.tv_usec) + 
-              (unsigned long long) (_savedTime.tv_sec) * 1000000) - 
-             ((unsigned long long) (oldTime.tv_usec) +
-              (unsigned long long) (oldTime.tv_sec) * 1000000);
+  uSecDiff = ((uint64) (_savedTime.tv_usec) + 
+              (uint64) (_savedTime.tv_sec) * 1000000) - 
+             ((uint64) (oldTime.tv_usec) +
+              (uint64) (oldTime.tv_sec) * 1000000);
 
   return uSecDiff;
 }

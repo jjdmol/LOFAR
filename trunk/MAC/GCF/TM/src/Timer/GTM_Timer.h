@@ -25,6 +25,7 @@
 
 #include <sys/time.h>
 #include <time.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR 
 {
@@ -46,8 +47,8 @@ class GTMTimer
   public:
     GTMTimer (GCFRawPort& port,
   	          unsigned long id,
-              unsigned long timeVal, 
-              unsigned long intervalTime = 0, 
+              uint64 timeVal, 
+              uint64 intervalTime = 0, 
               void* arg = 0);
     virtual ~GTMTimer () {};
     
@@ -67,19 +68,20 @@ class GTMTimer
 
   private: // helper methods
     void saveTime ();
-    long getElapsedTime();
+    int64 getElapsedTime();
 
   private: // attributes
     GCFRawPort&     _port;
     unsigned long   _id;
-    unsigned long   _time;
-    unsigned long   _timeLeft;
-    unsigned long   _intervalTime;
-    void*     _arg; // this pointer should NEVER be modified by the GTMTimer class!!
-    bool  _elapsed;
-    bool  _canceled;
+    uint64          _time;
+    uint64          _timeLeft;
+    uint64          _intervalTime;
+    void*           _arg; // this pointer should NEVER be modified by the GTMTimer class!!
 
-    timeval     _savedTime;
+  private: // helper attribs.
+    bool            _elapsed;
+    bool            _canceled;
+    timeval         _savedTime;
 };
   } // namespace TM
  } // namespace GCF
