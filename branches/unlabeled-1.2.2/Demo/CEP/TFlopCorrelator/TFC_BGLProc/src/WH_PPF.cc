@@ -690,10 +690,10 @@ void WH_PPF::process()
 
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
-#if 0
+#if 1
 	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
 	  fcomplex sample = to_fcomplex((*input)[stat][time][chan][pol]);
-	  fftInData[time][pol][chan] = itsFIRs[stat][chan][pol].processNextSample(sample,FIR::weights[chan]);
+	  fftInData[time][pol][chan] = itsFIRs[stat][chan][pol].processNextSample(sample,(float*)FIR::weights[chan]);
 	}
 #else
 	_filter(itsFIRs[stat][chan][pol].itsDelayLine, FIR::weights[chan], &(*input)[stat][0][chan][pol], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
@@ -721,7 +721,7 @@ void WH_PPF::process()
       fftTimer.stop();
 
       for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-#if 0
+#if 1
 	for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
 	  for (int t = 0; t < 2; t ++) {
 	    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {

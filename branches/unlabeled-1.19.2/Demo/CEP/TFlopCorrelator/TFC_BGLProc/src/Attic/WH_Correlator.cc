@@ -122,7 +122,7 @@ void WH_Correlator::process()
   }
 
   timer.start();
-#if 0
+#if 1
   // C++ reference implementation
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
