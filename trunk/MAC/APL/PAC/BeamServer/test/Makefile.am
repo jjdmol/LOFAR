@@ -1,8 +1,13 @@
 
+#
+# if USE_CAL_THREAD is defined in Calibration/src/Makefile.am it should be
+# defined here as well and vice versa
+#
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src \
-	-I$(top_srcdir)/test
+	-I$(top_srcdir)/test \
+	-DUSE_CAL_THREAD
 
 #	CheckWeightsTest 
 #	CheckWeightsTest2 
@@ -72,7 +77,8 @@ SweepTest_LDADD = \
 BUILT_SOURCES = \
 	AVTStub.conf \
 	EPATest.conf \
-	SweepTest.conf
+	SweepTest.conf \
+	BeamServerTest.conf
 
 EXTRA_DIST = \
 	$(BUILT_SOURCES) \
@@ -82,7 +88,8 @@ EXTRA_DIST = \
 sysconf_DATA = \
 	AVTStub.conf \
 	EPATest.conf \
-	SweepTest.conf
+	SweepTest.conf \
+	BeamServerTest.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
