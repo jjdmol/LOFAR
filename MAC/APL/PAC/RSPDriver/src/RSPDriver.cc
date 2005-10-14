@@ -169,15 +169,15 @@ bool RSPDriver::isEnabled()
 /**
  * Add all synchronization actions per board.
  * Order is:
- * - BF:     write beamformer weights          // BWWrite
- * - SS:     write subband selection settings  // SSWrite
- * - RCU:    write RCU control settings        // RCUWrite
  * - STATUS (RSP Status): read RSP status info // StatusRead
- * - SST:    read subband statistics           // SstRead
- * - BST:    read beamlet statistics           // BstRead
- * - XST:    read crosslet statistics          // XstRead
- * - WG:     write waveform generator settings // WGWrite
- * - STATUS (Version): read version info       // VersionsSync
+ * - BF:      write beamformer weights          // BWWrite
+ * - SS:      write subband selection settings  // SSWrite
+ * - RCU:     write RCU control settings        // RCUWrite
+ * - SST:     read subband statistics           // SstRead
+ * - BST:     read beamlet statistics           // BstRead
+ * - XST:     read crosslet statistics          // XstRead
+ * - WG:      write waveform generator settings // WGWrite
+ * - VERSION: read version info                 // VersionsRead
  *
  * For testing purposes, read back register that have just been written
  * - BF:  read beamformer weights          // BWRead
