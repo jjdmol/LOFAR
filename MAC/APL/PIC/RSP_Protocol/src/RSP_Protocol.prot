@@ -818,12 +818,12 @@ event = {
     userdefined;
   };
   param = {
-    name = "cache";
-    type = "uint8";
-  };
-  param = {
     name = "tdmask";
     type = "std::bitset<MAX_N_TDS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
   };
 };
 
