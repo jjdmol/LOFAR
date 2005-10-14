@@ -95,7 +95,7 @@ int main (int	argc, char*	argv[]) {
 		}
 		ASSERTSTR (found, "topNode returned by loadComponentFile not in List");
 		LOG_INFO("topNode found in list of topComponents");
-		VICnodeDef	aNode = tm.getNode(topNodeID);
+		VICnodeDef	aNode = tm.getNodeDef(topNodeID);
 		LOG_INFO_STR(aNode);
 	
 #if 0
