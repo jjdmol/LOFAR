@@ -25,9 +25,10 @@
 #ifndef BSTREAD_H_
 #define BSTREAD_H_
 
-#include "SyncAction.h"
-#include "MEPHeader.h"
+#include <RSP_Protocol/MEPHeader.h>
 #include <Common/LofarTypes.h>
+
+#include "SyncAction.h"
 
 namespace LOFAR {
   namespace RSP {

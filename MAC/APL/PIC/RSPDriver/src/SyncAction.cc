@@ -22,9 +22,9 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <RSP_Protocol/EPA_Protocol.ph>
 
 #include "SyncAction.h"
-#include "EPA_Protocol.ph"
 
 using namespace LOFAR;
 using namespace RSP;

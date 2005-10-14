@@ -23,11 +23,12 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "RSP_Protocol.ph"
-#include "GetClocksCmd.h"
+#include <RSP_Protocol/RSP_Protocol.ph>
 
 #include <PSAccess.h>
 #include <blitz/array.h>
+
+#include "GetClocksCmd.h"
 
 using namespace blitz;
 using namespace LOFAR;

@@ -24,11 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "RSP_Protocol.ph"
-#include "EPA_Protocol.ph"
-
-#include "SetWG.h"
-
+#include <RSP_Protocol/RSP_Protocol.ph>
+#include <RSP_Protocol/EPA_Protocol.ph>
 #include <PSAccess.h>
 #include <GCF/ParameterSet.h>
 
@@ -38,6 +35,8 @@
 #include <string.h>
 #include <blitz/array.h>
 #include <gnuplot_i.h>
+
+#include "SetWG.h"
 
 using namespace std;
 using namespace blitz;

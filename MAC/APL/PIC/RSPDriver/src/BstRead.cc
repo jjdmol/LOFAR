@@ -23,12 +23,13 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "BstRead.h"
-#include "Statistics.h"
-#include "EPA_Protocol.ph"
-#include "Cache.h"
+#include <RSP_Protocol/Statistics.h>
+#include <RSP_Protocol/EPA_Protocol.ph>
 
 #include <PSAccess.h>
+
+#include "BstRead.h"
+#include "Cache.h"
 
 using namespace blitz;
 using namespace LOFAR;

@@ -25,7 +25,8 @@
 #ifndef RCUWRITE_H_
 #define RCUWRITE_H_
 
-#include "MEPHeader.h"
+#include <RSP_Protocol/MEPHeader.h>
+
 #include "SyncAction.h"
 
 namespace LOFAR {

@@ -23,11 +23,12 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-#include "EPA_Protocol.ph"
-#include "RawEvent.h"
-#include "MEPHeader.h"
 #include <GCF/TM/GCF_ETHRawPort.h>
+
+#include <RSP_Protocol/EPA_Protocol.ph>
+#include <RSP_Protocol/MEPHeader.h>
+
+#include "RawEvent.h"
 
 using namespace LOFAR;
 using namespace EPA_Protocol;

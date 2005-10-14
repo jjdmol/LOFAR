@@ -24,18 +24,13 @@ RSPTest_SOURCES = \
 	RSPTest.h \
 	RSPTest.cc
 
-RSPTest_LDADD = \
-	$(top_builddir)/src/librsp.la \
-	-lsuite
-
 EPAStub_SOURCES = \
 	EPAStub.h \
 	EPAStub.cc
 
 EPAStub_LDADD = \
 	$(top_builddir)/src/libepa.la \
-	$(CAPLIBS) \
-	-lsuite
+	$(CAPLIBS)
 
 BUILT_SOURCES = \
 	RSPTest.conf \

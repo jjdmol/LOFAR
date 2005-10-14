@@ -56,9 +56,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "rspctl.h"
-#include "RSP_Protocol.ph"
-#include "EPA_Protocol.ph"
+#include <RSP_Protocol/RSP_Protocol.ph>
+#include <RSP_Protocol/EPA_Protocol.ph>
 
 #include <PSAccess.h>
 
@@ -77,6 +76,8 @@
 #include <set>
 
 #include <gnuplot_i.h>
+
+#include "rspctl.h"
 
 using namespace std;
 using namespace blitz;

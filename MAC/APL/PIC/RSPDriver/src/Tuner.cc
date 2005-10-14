@@ -24,12 +24,10 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "RSP_Protocol.ph"
-#include "EPA_Protocol.ph"
+#include <RSP_Protocol/RSP_Protocol.ph>
+#include <RSP_Protocol/EPA_Protocol.ph>
 
-#include "Tuner.h"
-
-#include "PSAccess.h"
+#include <PSAccess.h>
 
 #include <Suite/suite.h>
 #include <iostream>
@@ -38,6 +36,8 @@
 #include <blitz/array.h>
 #include <getopt.h>
 #include <math.h>
+
+#include "Tuner.h"
 
 using namespace std;
 using namespace blitz;
