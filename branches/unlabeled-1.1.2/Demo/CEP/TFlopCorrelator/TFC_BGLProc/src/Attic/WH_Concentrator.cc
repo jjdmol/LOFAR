@@ -35,6 +35,7 @@ using namespace LOFAR;
 
 WH_Concentrator::WH_Concentrator(const string& name, ACC::APS::ParameterSet myPset, int inputs) :
   WorkHolder(inputs, 1, name, "WH_Concentrator"),
+  itsNinputs(inputs),
   itsPS     (myPset)
 {
   char str[40];
@@ -43,7 +44,9 @@ WH_Concentrator::WH_Concentrator(const string& name, ACC::APS::ParameterSet myPs
   itsNStations = itsPS.getInt32("PPF.NrStations");
   itsNPols     = itsPS.getInt32("PPF.NrPolarizations");
 
-  for (int in = 0; in < itsNVis; in++) { 
+  ASSERTSTR(itsNVis == itsNinputs, "Configuration mismatch: itsNinputs");
+
+  for (int in = 0; in < inputs; in++) { 
     sprintf(str, "in_%d", in);
     
     getDataManager().addInDataHolder(in, new DH_Vis(str, 1, itsPS));

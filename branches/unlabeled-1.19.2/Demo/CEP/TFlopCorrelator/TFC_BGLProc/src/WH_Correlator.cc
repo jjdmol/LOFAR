@@ -52,7 +52,7 @@ extern "C"
 
 WH_Correlator::WH_Correlator(const string &name)
 :
-  WorkHolder(2, NR_CHANNELS_PER_CORRELATOR, name, "WH_Correlator")
+  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator")
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
@@ -67,12 +67,13 @@ WH_Correlator::WH_Correlator(const string &name)
   ASSERTSTR(itsNpolarisations == NR_POLARIZATIONS, "Configuration doesn't match parameter: NrPolarizations");
   ASSERTSTR(itsNchannels      == NR_CHANNELS_PER_CORRELATOR, "Configuration doesn't match parameter: NrChannels");
   ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match parameter: NrSamples");
+  ASSERTSTR(itsNfilters       == NR_PPF_PER_COMPUTE_CELL, "Configuration doesn't match parameter: NrFilters");
 
   int totalInputSize = 0;
 
-  for (int i = 0; i < itsNfilters; i++) {
+  for (int i = 0; i < NR_PPF_PER_COMPUTE_CELL; i++) {
     char str[50];
-    snprintf(str, 50, "input_%d_of_%d", i, itsNfilters);
+    snprintf(str, 50, "input_%d_of_%d", i, NR_PPF_PER_COMPUTE_CELL);
     getDataManager().addInDataHolder(0, new DH_CorrCube(str, 0));
     totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
   }

@@ -52,6 +52,7 @@ class WH_Concentrator: public WorkHolder
   /// forbid assignment
   WH_Concentrator& operator= (const WH_Concentrator&);
 
+  int itsNinputs;
   ACC::APS::ParameterSet itsPS;
 
   short itsNVis;

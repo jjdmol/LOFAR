@@ -165,7 +165,6 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
  	for (; cit != CorrNodes.end(); cit++) {
  	  snprintf(WH_Name, 40, "conn_filter_%d_corr_%d", filter_nr, corr_nr);
-	  cout << WH_Name << " CORR_NR: " << corr_nr << endl;
  	  itsTHs.push_back( new TH_MPI( (*fit)->getNode(), (*cit)->getNode() ) );
 	  itsConnections.push_back(new Connection(WH_Name, 
 						  (*fit)->getDataManager().getOutHolder(corr_nr % itsNrCorrelatorsPerFilter),
