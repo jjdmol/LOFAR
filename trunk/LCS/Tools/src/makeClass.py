@@ -66,7 +66,6 @@ def replacePackageAndClassName(readFile,writeFile,packageName,
     if aLine.find("%YEAR%") > -1:
       aLine = str.replace(aLine,"%YEAR%",year)
 
-
     # replace SUB with Subdir when needed
     if aLine.find("%SUB%") > -1:
       if subDirName != "":
@@ -245,14 +244,17 @@ def addTemplates(type,readFile,writeFile,className,packageName,templateList,auto
       writeFile.write(aLine)
     aLine=readFile.readline()
 
-def makeDefaultClass(lofarDir,className,packageName,srcDir,subDirName):
+def makeDefaultClass(lofarDir,className,packageName,srcDir,incDir,subDirName):
   # default.h file
   readFile=openFile(lofarDir+"/LCS/Tools/src/templates/header.h_template","r")
-  writeFile=openFile(className+".h","w")
+  incHDir=incDir
+  if subDirName != "":
+    incHDir = incDir+"/"+subDirName
+  writeFile=openFile(incHDir+"/"+className+".h","w")
   replacePackageAndClassName(readFile,writeFile,packageName,className,subDirName)
   writeFile.close()
   readFile.close()
-  addToMakefile("h",className,srcDir,subDirName)
+  addToMakefile("h",className,incDir,subDirName)
   #default.cc file
   readFile=openFile(lofarDir+"/LCS/Tools/src/templates/header.cc_template","r")
   writeFile=openFile(className+".cc","w")
@@ -261,25 +263,27 @@ def makeDefaultClass(lofarDir,className,packageName,srcDir,subDirName):
   readFile.close()
   addToMakefile("cc",className,srcDir,subDirName)
 
-def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,srcDir,subDirName):
+def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,srcDir,incDir,subDirName):
   #default h file
   readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.h_template","r")
-  writeFile=openFile(className+".h","w")
+  incHDir=incDir
+  if subDirName != "":
+    incHDir = incDir+"/"+subDirName
+  writeFile=openFile(incHDir+"/"+className+".h","w")
   addTemplates("h",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
   writeFile.close()
   readFile.close()
-  addToMakefile("h",className,srcDir,subDirName)
+  addToMakefile("h",className,incDir,subDirName)
 
+  #default tcc template file
+  readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.tcc_template","r")
+  writeFile=openFile(incHDir+"/"+className+".tcc","w")
+  addTemplates("tcc",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
+  writeFile.close()
+  readFile.close()
+  addToMakefile("tcc",className,incDir,subDirName)
 
   if autoTemplate==0:
-    #default diy-tcc template file
-    readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.tcc_template","r")
-    writeFile=openFile(className+".tcc","w")
-    addTemplates("tcc",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
-    writeFile.close()
-    readFile.close()
-    addToMakefile("tcc",className,srcDir,subDirName)
-
     #default diy-cc template file
     readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.cc_template","r")
     writeFile=openFile(className+".cc","w")
@@ -287,14 +291,6 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
     writeFile.close()
     readFile.close()
     addToMakefile("diy",className,srcDir,subDirName)
-  else:
-    #default tcc file
-    readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.tcc_template","r")
-    writeFile=openFile(className+".tcc","w")
-    addTemplates("tcc",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
-    writeFile.close()
-    readFile.close()
-    addToMakefile("tcc",className,srcDir,subDirName)
 
 def makeMainClass(lofarDir,className,packageName,srcDir,subDirName):
   readFile=openFile(lofarDir+"/LCS/Tools/src/templates/main.cc_template","r")
@@ -392,7 +388,7 @@ def addToMakefile(type,className,srcDir,subDirName):
         elif end.find('\\') > -1:
           writeFile.write(front+" = "+extendedClassName+".tcc \\\n")
         else :
-          writeFile.write(front+" = "+extendenClassName+".tcc\n")
+          writeFile.write(front+" = "+extendedClassName+".tcc\n")
           
       else:
         writeFile.write(aLine)
@@ -407,8 +403,6 @@ def addToMakefile(type,className,srcDir,subDirName):
   os.unlink(srcDir+"/Makefile.am.old")
   
   
-  
-
 def usage():
   print "usage: "+sys.argv[0]+" [-h] [-m | -t list [-d]] className [className...]"
   print "args:  -h,--help               - print usage"
@@ -421,6 +415,7 @@ def usage():
   print "                                 instanciation) Only together with -t"
   print "       className [className...]- name of the class(es) to be created."
   sys.exit(2)
+
 
 def main(argv):
   noMain=1
@@ -482,12 +477,25 @@ def main(argv):
   if autoTemplate==0 and noTemplated==1:
     print "Diy only makes sense in templated class."
     print "I will forget you gave this option, and continue.."
-    
+
+  # See if an include/PACKAGE directory exists.
+  # If so, use that for the .h and .tcc files.
+  # Create possible subdirectory if needed.
+  incDir=srcDir
+  incDir = os.path.dirname(srcDir)+"/include/"+packageName
+  if not os.path.exists(incDir):
+    incDir=srcDir
+  else:
+    if not os.path.exists(incDir+"/"+subDirName):
+      os.makedirs(incDir+"/"+subDirName)
+      print "Created subdirectory "+incDir+"/"+subDirName
 
   #
-  # Make a backup from the Original Makefile
+  # Make a backup from the Original Makefiles
   #
   os.system("cp "+srcDir+"/Makefile.am "+srcDir+"/Makefile.am.save")
+  if incDir != srcDir:
+    os.system("cp "+incDir+"/Makefile.am "+incDir+"/Makefile.am.save")
 
 
   for className in args:
@@ -534,9 +542,9 @@ def main(argv):
     # Create all initial files from templates
     #
     if noMain and noTemplated:
-      makeDefaultClass(lofarDir,className,packageName,srcDir,subDirName)
+      makeDefaultClass(lofarDir,className,packageName,srcDir,incDir,subDirName)
     if noMain and noTemplated==0:
-      makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,srcDir,subDirName)
+      makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,srcDir,incDir,subDirName)
     if noMain==0:
       makeMainClass(lofarDir,className,packageName,srcDir,subDirName)
 
