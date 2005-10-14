@@ -64,7 +64,7 @@ Pointing Pointing::convertToLMN(Converter* conv, EarthCoord* pos)
 
   case AZEL:
     /* convert AZEL to LMN */
-    LOG_INFO_STR("azel=(" << result.angle0() << ", " << result.angle1() << ")");
+    LOG_DEBUG_STR("azel=(" << result.angle0() << ", " << result.angle1() << ")");
 
     l = -::cos(result.angle1()) * ::sin(result.angle0());
     m = ::cos(result.angle1()) * ::cos(result.angle0());

@@ -841,7 +841,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  LOG_INFO("Normal termination of program");
+  LOG_INFO(formatString("Normal termination of program %s", argv[0]));
 
   return 0;
 }

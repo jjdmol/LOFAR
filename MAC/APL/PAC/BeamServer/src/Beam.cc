@@ -55,6 +55,8 @@ Beam::Beam(string name, string subarrayname, int nsubbands, EarthCoord pos) :
 Beam::~Beam()
 {
   deallocate();
+
+  // TODO: free beamlets
 }
 
 bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubbands)
@@ -225,8 +227,8 @@ void Beam::logPointing(Pointing pointing)
   }
   while (retry++ < 5);
 
-  LOG_INFO_STR("RA=" << hh << "h " << mm << "m " << ss << "s");
-  LOG_INFO_STR("DEC=" << deg << "deg " << degmm << "' " << degss << "''");
+  LOG_DEBUG_STR("RA=" << hh << "h " << mm << "m " << ss << "s");
+  LOG_DEBUG_STR("DEC=" << deg << "deg " << degmm << "' " << degss << "''");
       
   if (pipe) fflush(pipe);
 }
@@ -330,8 +332,8 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
     }
   }
 
-  LOG_INFO_STR("Current pointing (" << current_pointing.angle0() << ", " << current_pointing.angle1() <<
-	       ") @ time " << current_pointing.time());
+  LOG_DEBUG_STR("Current pointing (" << current_pointing.angle0() << ", " << current_pointing.angle1() <<
+		") @ time " << current_pointing.time());
   logPointing(current_pointing);
 
   return 0;
@@ -435,9 +437,9 @@ void Beams::calculate_weights(Timestamp timestamp,
   for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
   {
     bi->first->convertPointings(timestamp, compute_interval, conv);
-    LOG_INFO(formatString("current_pointing=(%f,%f)",
-			  bi->first->getPointing().angle0(),
-			  bi->first->getPointing().angle1()));
+    LOG_DEBUG(formatString("current_pointing=(%f,%f)",
+			   bi->first->getPointing().angle0(),
+			   bi->first->getPointing().angle1()));
   }
 
   m_beamlets.calculate_weights(weights);
