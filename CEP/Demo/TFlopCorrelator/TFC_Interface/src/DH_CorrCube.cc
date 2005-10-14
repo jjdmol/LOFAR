@@ -69,7 +69,7 @@ void DH_CorrCube::init()
 }
 
 void DH_CorrCube::fillDataPointers() {
-  itsBuffer = getData<BufferType> ("Buffer");
+  itsBuffer = (BufferType*)getData<fcomplex> ("Buffer");
 }
 
 void DH_CorrCube::print()

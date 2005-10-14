@@ -70,7 +70,7 @@ void DH_Vis::init()
 
 void DH_Vis::fillDataPointers() 
 {
-  itsBuffer = getData<BufferType> ("Buffer");
+  itsBuffer = (BufferType*)getData<fcomplex> ("Buffer");
 }
 
 bool DH_Vis::checkCorrelatorTestPattern()
