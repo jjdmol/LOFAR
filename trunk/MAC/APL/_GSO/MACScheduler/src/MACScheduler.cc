@@ -809,33 +809,39 @@ boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const 
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
   string shareLocation = _getShareLocation();
-  // read the parameterset from the database:
+  boost::shared_ptr<ACC::APS::ParameterSet> ps;
+  
 #ifndef OTDB_UNAVAILABLE
-  int32 otdbVIrootID=atoi(VIrootID.c_str());
-  TreeMaintenance tm(m_OTDBconnection.get());
-  OTDBnode topNode = tm.getTopNode(otdbVIrootID);
-  LOG_INFO_STR(topNode);
-
-  string tempFileName = APLUtilities::getTempFileName();
-
-  LOG_INFO(formatString("Exporting tree %s to '%s'",VIrootID.c_str(),tempFileName.c_str()));
-  if(!tm.exportTree(otdbVIrootID, topNode.nodeID(), tempFileName))
+  // read the parameterset from the database:
+  if(m_OTDBconnection)
   {
-    THROW(APLCommon::OTDBException, string("Unable to export tree ") + VIrootID + string(" to ") + tempFileName);
+    int32 otdbVIrootID=atoi(VIrootID.c_str());
+    TreeMaintenance tm(m_OTDBconnection.get());
+    OTDBnode topNode = tm.getTopNode(otdbVIrootID);
+    LOG_INFO_STR(topNode);
+  
+    string tempFileName = APLUtilities::getTempFileName();
+  
+    LOG_INFO(formatString("Exporting tree %s to '%s'",VIrootID.c_str(),tempFileName.c_str()));
+    if(!tm.exportTree(otdbVIrootID, topNode.nodeID(), tempFileName))
+    {
+      THROW(APLCommon::OTDBException, string("Unable to export tree ") + VIrootID + string(" to ") + tempFileName);
+    }
+    ps.reset(new ACC::APS::ParameterSet(tempFileName));
+  
+    createChildsSections(tm,otdbVIrootID,topNode.nodeID(),string(""),ps);
   }
-  boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(tempFileName));
-
-  createChildsSections(tm,otdbVIrootID,topNode.nodeID(),string(""),ps);
-
-#else // OTDB_UNAVAILABLE
-
-  LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
-  // When the ACC::ConfigurationMgr can be used, then the following code is obsolete: // assume VIrootID is a file
-  boost::shared_ptr<ACC::APS::ParameterSet> ps(new ACC::APS::ParameterSet(shareLocation + string("source/") + VIrootID));
-  // End of soon to be obsolete code
+  else
 
 #endif // OTDB_UNAVAILABLE
 
+  {
+    LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
+    // When the ACC::ConfigurationMgr can be used, then the following code is obsolete: // assume VIrootID is a file
+    ps.reset(new ACC::APS::ParameterSet(shareLocation + string("source/") + VIrootID));
+    // End of soon to be obsolete code
+  }
+  
   return ps;
 }
 
