@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "SubbandSelection.h"
+#include <RSP_Protocol/SubbandSelection.h>
 #include "Marshalling.h"
 
 #include <blitz/array.h>

@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "Versions.h"
+#include <RSP_Protocol/Versions.h>
 #include "Marshalling.h"
 
 using namespace std;

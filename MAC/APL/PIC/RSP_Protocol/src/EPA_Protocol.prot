@@ -13,8 +13,8 @@ include = '<sys/time.h>';
 include = '<linux/types.h>';
 include = '<net/ethernet.h>';
 include = '<Common/LofarTypes.h>';
-include = '"MEPHeader.h"';
-include = '"MEPData.h"';
+include = '<RSP_Protocol/MEPHeader.h>';
+include = '<RSP_Protocol/MEPData.h>';
 
 prelude = << PRELUDE_END
 

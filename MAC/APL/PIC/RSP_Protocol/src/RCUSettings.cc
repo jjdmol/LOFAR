@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "RCUSettings.h"
+#include <RSP_Protocol/RCUSettings.h>
 #include "Marshalling.h"
 
 using namespace std;
