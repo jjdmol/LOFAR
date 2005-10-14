@@ -67,6 +67,7 @@ PRELUDE_END;
 // A "param" has a "name" and a "type".
 //
 event = {
+  // TODO: rename to SUBARRAYALLOC
       signal = START; // start calibration of a subarray
       dir = IN;
       param = { // name of the subarray (used as nodeid in key-value logger)
@@ -100,6 +101,7 @@ event = {
 };
 
 event = {
+  // TODO: rename to SUBARRAYALLOCACK
       signal = STARTACK;
       dir = OUT;
       param = {
@@ -113,6 +115,7 @@ event = {
 };
 
 event = {
+  // TODO: rename to SUBARRAYFREE
       signal = STOP; // stop calibration of a subarray
       dir = IN;
       param = {
@@ -122,6 +125,7 @@ event = {
 };
 
 event = {
+  // TODO: rename to SUBARRAYFREEACK
       signal = STOPACK;
       dir = OUT;
       param = {
@@ -150,6 +154,11 @@ event = {
 event = {
       signal = SUBSCRIBEACK;
       dir = OUT;
+      // TODO: return name too
+      //      param = { // name of the subarray
+      //	    name = "name";
+      //            type = "string";
+      //      };
       param = {
 	    name = "status";
 	    type = "int16";
@@ -166,6 +175,7 @@ event = {
 };
 
 event = {
+  // TODO: rename to UPDATEGAINS
       signal = UPDATE; // antenna gains update
       dir = OUT;
       param = { // time of the gains
@@ -173,7 +183,10 @@ event = {
 	    type = "RTC::Timestamp";
 	    userdefined;
       };
-      param = { // status
+
+     // status == FAILURE indicates that the subarray was stoppe d
+     // This is not yet implemented.
+     param = { // status
 	    name = "status";
 	    type = "int16";
       };
@@ -181,6 +194,8 @@ event = {
 	    name = "handle";
 	    type = "uint32";
       };
+      // TODO: AntennaGains is not good name, since the gains are
+      // computed for the complete signal path for a receiver.
       param = { // gains
 	    name = "gains";
 	    type = "CAL::AntennaGains";
@@ -205,12 +220,12 @@ event = {
       signal = UNSUBSCRIBEACK;
       dir = OUT;
       param = {
-	    name = "status";
-	    type = "int16";
-      };
-      param = {
 	    name = "name";
 	    type = "string";
+      };
+      param = {
+	    name = "status";
+	    type = "int16";
       };
       param = {
 	    name = "handle";
