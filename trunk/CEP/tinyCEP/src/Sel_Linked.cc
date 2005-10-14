@@ -55,7 +55,8 @@ Sel_Linked::~Sel_Linked()
 
 unsigned int Sel_Linked::getNext()
 {
-  return itsLink->getCurrentSelection();
+  itsCurrentSelection = itsLink->getCurrentSelection();
+  return itsCurrentSelection;
 }
 
 }
