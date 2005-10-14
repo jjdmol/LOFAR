@@ -28,16 +28,16 @@ EXTRA_DIST = \
 	BeamServer.spec \
 	autoconf_share/compiletool
 
-if MAKE_RPMS
-rpm: dist @RPM_TARGET@
-.PHONY: rpm
+# if MAKE_RPMS
+# rpm: dist @RPM_TARGET@
+# .PHONY: rpm
 
-$(RPM_TARGET): $(DISTFILES)
-	${MAKE} dist
-	-mkdir -p $(RPM_DIR)/SRPMS
-	-mkdir -p `dirname $(RPM_TARGET)`
-	$(RPM_PROG) $(RPM_ARGS) $(RPM_TARBALL)
-	@echo Congratulations, $(RPM_TARGET) "(and friends)" should now exist.
+# $(RPM_TARGET): $(DISTFILES)
+# 	${MAKE} dist
+# 	-mkdir -p $(RPM_DIR)/SRPMS
+# 	-mkdir -p `dirname $(RPM_TARGET)`
+# 	$(RPM_PROG) $(RPM_ARGS) $(RPM_TARBALL)
+# 	@echo Congratulations, $(RPM_TARGET) "(and friends)" should now exist.
 
-else
-endif
+# else
+# endif
