@@ -62,6 +62,7 @@ int main (int argc, const char** argv) {
     exit(1);
   } catch (...) {
     LOG_FATAL_STR("Caught unknown exception, exitting");
+    perror("hopefully this helps:");
     exit (1);
   }  
   TH_MPI::finalize();

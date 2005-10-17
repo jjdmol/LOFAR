@@ -177,19 +177,22 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
       }
     }
 
-    ConcNode = new WH_Concentrator("concentrator", itsParamSet, itsNrVisPerInput);
+    ConcNode = new WH_Concentrator("concentrator", itsParamSet, itsNrCorrelatorsPerFilter);
     itsWHs.push_back(ConcNode);
     itsWHs.back()->runOnNode(lowestFreeNode++);
 
     vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
     int corr_nr = 0;
     for (; cit != CorrNodes.end(); cit++) {
-      itsTHs.push_back( new TH_MPI( (*cit)->getNode(), ConcNode->getNode() ) );
-      itsConnections.push_back(new Connection(WH_Name, 
-					      (*cit)->getDataManager().getOutHolder(0),
-					      ConcNode->getDataManager().getInHolder(corr_nr++),
-					      itsTHs.back(),
-					      false));
+      // only connect the real correlator outputs to the concentrator
+      if (corr_nr < itsNrCorrelatorsPerFilter) {
+	itsTHs.push_back( new TH_MPI( (*cit)->getNode(), ConcNode->getNode() ) );
+	itsConnections.push_back(new Connection(WH_Name, 
+						(*cit)->getDataManager().getOutHolder(0),
+						ConcNode->getDataManager().getInHolder(corr_nr++),
+						itsTHs.back(),
+						false));
+      }
     }
    
     // We only connect every 16th computecell to the outside world.

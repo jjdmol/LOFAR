@@ -85,7 +85,7 @@ WH_Correlator::WH_Correlator(const string &name)
 //   }
   getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, myPS));
 
-  itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize);
+  itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize*sizeof(fcomplex));
 }
 
 WH_Correlator::~WH_Correlator()
@@ -119,7 +119,7 @@ void WH_Correlator::process()
   /// Currently we hardcore 2 inputs.
   int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
   memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize);
-  memcpy(itsInputBuffer+(bufSize/sizeof(fcomplex)), static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), bufSize-sizeof(fcomplex));
+  memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (bufSize-1) * sizeof(fcomplex));
 
   timer.start();
 #if 1

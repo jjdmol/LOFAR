@@ -96,7 +96,7 @@ void WH_Distribute::process() {
       // we could still have more outputs than inputs
       for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
 	memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer(),
-	       static_cast<DH_PPF*>(getDataManager().getInHolder(i))->getBuffer(),
+	       static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
 	       static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferSize() * sizeof(DH_PPF::BufferType));
       }
     }
@@ -115,7 +115,7 @@ void WH_Distribute::process() {
       int myCopiedBytes = 0;
       int myNextBlock = 0;
       
-      const int inBufSize = static_cast<DH_PPF*>(getDataManager().getInHolder(i))->getBufferSize();
+      const int inBufSize = static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBufferSize();
       const int outBufSize = static_cast<DH_PPF*>(getDataManager().getOutHolder(i))->getBufferSize();
 	
       while (myCopiedBytes < outBufSize) {
@@ -125,7 +125,7 @@ void WH_Distribute::process() {
 	// duplicate data 
 	for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
 	  memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer() + myCopiedBytes,
-		 static_cast<DH_PPF*>(getDataManager().getInHolder(i))->getBuffer(),
+		 static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
 		 myNextBlock);
 	}
 	myCopiedBytes += myNextBlock;
