@@ -50,23 +50,23 @@ DataHolder *DH_Subband::clone() const
 
 void DH_Subband::init()
 {
-  addField("Buffer", BlobField<BufferElementType>(1, getBufferSize()));
+  addField("Buffer", BlobField<BufferType>(1, getBufferSize()));
   createDataBlock();
 
-  memset(itsBuffer, 0, sizeof(BufferType)); 
+  memset(itsBuffer, 0, sizeof(BufferType) * getBufferSize()); 
 
   vector<DimDef> vdd;
-  vdd.push_back(DimDef("Station", NR_STATIONS));
-  vdd.push_back(DimDef("Time", NR_STATION_SAMPLES));
-  vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
+  vdd.push_back(DimDef("Station", pset.getInt32("Input.NRSP")));
+  vdd.push_back(DimDef("Time", pset.getInt32("Input.NSamplesToDH")));
+  vdd.push_back(DimDef("Polarisation", pset.getInt32("Input.NPolarisations")));
   
-  itsMatrix = new RectMatrix<BufferElementType> (vdd);
-  itsMatrix->setBuffer((BufferElementType*)itsBuffer, getBufferSize());
+  itsMatrix = new RectMatrix<BufferType> (vdd);
+  itsMatrix->setBuffer((BufferType*)itsBuffer, getBufferSize());
 }
 
 void DH_Subband::fillDataPointers()
 {
-  itsBuffer = (BufferType*) getData<BufferElementType>("Buffer");
+  itsBuffer = getData<BufferType>("Buffer");
 }
 
 }

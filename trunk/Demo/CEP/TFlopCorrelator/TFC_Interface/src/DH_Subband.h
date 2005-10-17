@@ -23,8 +23,7 @@ namespace LOFAR
 class DH_Subband: public DataHolder
 {
 public:
-  typedef i16complex BufferElementType;
-  typedef BufferElementType BufferType[NR_STATIONS][NR_STATION_SAMPLES][NR_POLARIZATIONS];
+  typedef i16complex BufferType;
 
   explicit DH_Subband(const string& name,
 		  const short   subband,
@@ -39,7 +38,7 @@ public:
 
   virtual void init();
 
-  RectMatrix<BufferElementType>& getDataMatrix() const
+  RectMatrix<BufferType>& getDataMatrix() const
   {
     return *itsMatrix; 
   }
@@ -56,24 +55,18 @@ public:
 
   const size_t getBufferSize() const
   {
-    return sizeof(BufferType) / sizeof(BufferElementType);
+    int norsp = pset.getInt32("Input.NRSP");
+    int ntimes = pset.getInt32("Input.NSamplesToDH");
+    int nopols = pset.getInt32("Input.NPolarisations");
+    return norsp*ntime*nopols;
   }
   
-  void setTestPattern()
-  {
-    (std::cerr << "DH_Subband::setTestPattern() ... ").flush();
-    for (size_t i = 0; i < getBufferSize(); i++) {
-      ((BufferElementType *) itsBuffer)[i] = makei16complex(rand() << 20 >> 20, rand() << 20 >> 20);
-    }
-    std::cerr << "done.\n";
-  }
-
 private:
   /// Forbid assignment.
   DH_Subband &operator = (const DH_Subband&);
 
   ACC::APS::ParameterSet itsPS;
-  RectMatrix<BufferElementType>* itsMatrix;
+  RectMatrix<BufferType>* itsMatrix;
   BufferType *itsBuffer;
 
   void fillDataPointers();
