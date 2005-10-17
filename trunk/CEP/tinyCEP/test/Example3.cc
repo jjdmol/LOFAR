@@ -32,29 +32,30 @@
 
 using namespace LOFAR;
 
-int main (int argv, const char** argc) {
+int main (int argc, const char** argv) {
 
   MySocketExample* EX1;
 
   //  ::Debug::initLevels(argv, argc);
-  
-  if (argv < 2) {
-    cout << "Usage " << argc[0] << " -s|-r"<< endl;
+
+  if (argc < 2) {
+    cout << "Usage " << argv[0] << " -s|-r"<< endl;
     return 1;
   }
 
-  if (!strcmp(argc[1], "-r")) {
+  if (!strcmp(argv[1], "-r")) {
     EX1 = new MySocketExample (1, 0, false);
 
-  } else if (!strcmp(argc[1], "-s")) {
+  } else if (!strcmp(argv[1], "-s")) {
     EX1 = new MySocketExample (0, 1, true);
     
 
   } else {
-    cout << "Usage " << argc[0] << " -s|-r"<< endl;
+    cout << "Usage " << argv[0] << " -s|-r"<< endl;
     return 1;
   }
 
+  EX1->setarg(argc, argv);
   EX1->baseDefine();
   EX1->basePrerun();
   EX1->baseDump();
