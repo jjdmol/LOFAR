@@ -90,7 +90,7 @@ private:
 inline DH_VisArray::BufferType* DH_VisArray::getBuffer()
   { return itsBuffer; }
 
-inline int DH_VisArray::getBufferOffset(short vis,
+inline int DH_VisArray::getBufferOffset(short ch,
 					short station1,
 					short station2,
 					short pol)
@@ -112,21 +112,21 @@ inline int DH_VisArray::getBufferOffset(short vis,
   // This is the start address for the (stationA,stationB) data
   // add pol word to get to the requested polarisation.
   {
-    DBGASSERTSTR(vis < itsNVis, "DH_VisArray::getBufferOffset: trying to access vis with higher index than available");
     DBGASSERTSTR(station1 <= station2,"DH_VisArray::getBufferOffset: only lower part of the correlation matrix is accessible");
 
     // DH_Vis::itsBufSize = itsNPols*itsNPols * itsNStations*(itsNStations+1)/2
-    return vis*(itsNPols*itsNPols * itsNStations*(itsNStations+1)/2) +
+
+    return ch*(itsNPols*itsNPols * itsNStations*(itsNStations+1)/2) +
       (2*(station1*station1+station1)+4*station2)+pol;
     
   }
 
-inline DH_VisArray::BufferType* DH_VisArray::getBufferElement(short vis, 
+inline DH_VisArray::BufferType* DH_VisArray::getBufferElement(short ch, 
 								   short station1,
 								   short station2,
 								   short pol)
   {
-    return &itsBuffer[getBufferOffset(vis, station1, station2, pol)];
+    return &itsBuffer[getBufferOffset(ch, station1, station2, pol)];
   }
 
 inline const DH_VisArray::BufferType* DH_VisArray::getBuffer() const 
