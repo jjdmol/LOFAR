@@ -54,6 +54,7 @@ WH_Storage::WH_Storage(const string& name,
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
   itsNstations = itsPS.getInt32("PPF.NrStations");
+  itsNChannels = itsPS.getInt32("PPF.NrSubChannels");
   int pols = itsPS.getInt32("Input.NPolarisations");
   itsNpolSquared = pols*pols;
 
@@ -108,19 +109,19 @@ void WH_Storage::preprocess() {
   string msName = itsPS.getString("Storage.MSName");
   double startTime = itsPS.getDouble("Storage.startTime");
   double timeStep = itsPS.getDouble("Storage.timeStep");
+  int nPolarisations = itsPS.getInt32("Input.NPolarisations");
   uint nAntennas = itsNstations;
   vector<double> antPos = itsPS.getDoubleVector("Storage.stationPositions");
-  itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, nAntennas, antPos);
+  itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, itsNChannels, 
+			   nPolarisations*nPolarisations, nAntennas, antPos);
 
-  int nPolarisations = itsPS.getInt32("Input.NPolarisations");
-  int nChannels = itsPS.getInt32("PPF.NrSubChannels");
   double chanWidth = itsPS.getDouble("Storage.chanWidth");
   vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
   vector<double>::iterator iter;
   // Add the subbands
   for (iter=refFreqs.begin(); iter!=refFreqs.end(); iter++)
   {
-    int bandId = itsWriter->addBand (nPolarisations*nPolarisations, nChannels,
+    int bandId = itsWriter->addBand (nPolarisations*nPolarisations, itsNChannels,
 				     *iter, chanWidth);
     itsBandIds.push_back(bandId);
   }
@@ -137,58 +138,58 @@ void WH_Storage::process()
   // It is assumed each input DH_VisArray contains all frequency channels for 1 subband
   // and the data is ordered in ascending frequency.
   DH_VisArray* inputDH = 0;
-  for (int i=0; i<itsNinputs; i++)   // Loop over subbands
+  for (int i=0; i<itsNinputs; i++)   // Loop over subbands/inputs
   {
     inputDH = (DH_VisArray*)getDataManager().getInHolder(i);
     int rownr = -1;           // Set rownr -1 when new rows need to be added
                               // when writing a new subband
-    int dataSize = (inputDH->getBufSize())/(inputDH->getNumVis());
+    int dataSize = (inputDH->getBufSize())/itsNChannels;
     
-    for (uint ch=0; ch < inputDH->getNumVis(); ch++)  // Loop over frequency channels
+    for (uint ch=0; ch < itsNChannels; ch++)  // Loop over frequency channels
     {
-      // Check if channel frequency is ascending. 
-      if (ch > 0) {	
-	DBGASSERT(inputDH->getCenterFreq(ch) > inputDH->getCenterFreq(ch-1)); 
-      }
-      // Write 1 frequency
-      itsWriter->write (rownr, itsBandIds[i], itsFieldId, ch, 
-			itsCounter, dataSize,
-			inputDH->getBufferElement(ch, 0,0,0));   // To do: add flags
+	// Check if channel frequency is ascending. 
+	if (ch > 0) {	
+	  DBGASSERT(inputDH->getCenterFreq(ch) > inputDH->getCenterFreq(ch-1)); 
+	}
+	// Write 1 frequency
+	itsWriter->write (rownr, itsBandIds[i], itsFieldId, ch, 
+			  itsCounter, dataSize,
+			  inputDH->getBufferElement(ch, 0,0,0));   // To do: add flags
     }
   }
 
   itsCounter++;
 
 #ifdef USE_MAC_PI
-  if (itsWriteToMAC) {
-    DBGASSERTSTR(itsPropertySet != 0, "no propertySet constructed yet");
-    LOG_TRACE_FLOW("WH_Storage setting properties");
-    GCF::Common::GCFPValueArray::iterator it;
-    for (it = itsVArray.begin(); it != itsVArray.end(); it++){
-      delete *it;
-    }
-    itsVArray.clear();
+//   if (itsWriteToMAC) {
+//     DBGASSERTSTR(itsPropertySet != 0, "no propertySet constructed yet");
+//     LOG_TRACE_FLOW("WH_Storage setting properties");
+//     GCF::Common::GCFPValueArray::iterator it;
+//     for (it = itsVArray.begin(); it != itsVArray.end(); it++){
+//       delete *it;
+//     }
+//     itsVArray.clear();
     
-    // loop over values
-    for (int i=0; i<itsNinputs; i++) {
-      inputDH = (DH_VisArray*)getDataManager().getInHolder(i);
-      // loop over channels
-      for (uint ch = 0; ch < inputDH->getNumVis(); ch++)
-      {
-	// loop over baselines
-	for (int s1 = 0; s1 < itsNstations; s1++) {
-	  for (int s2 = 0; s2 <= s1; s2++) {
-	    for (int p = 0; p < itsNpolSquared; p++) {
-	      itsVArray.push_back(new GCF::Common::GCFPVDouble((double)*inputDH->getBufferElement(ch, s1, s2, p)));
-	    }
-	  }
-	}
-      }
-    }
+//     // loop over values
+//     for (int i=0; i<itsNinputs; i++) {
+//       inputDH = (DH_VisArray*)getDataManager().getInHolder(i);
+//       // loop over channels
+//       for (uint ch = 0; ch < inputDH->getNumVis(); ch++)
+//       {
+// 	// loop over baselines
+// 	for (int s1 = 0; s1 < itsNstations; s1++) {
+// 	  for (int s2 = 0; s2 <= s1; s2++) {
+// 	    for (int p = 0; p < itsNpolSquared; p++) {
+// 	      itsVArray.push_back(new GCF::Common::GCFPVDouble((double)*inputDH->getBufferElement(ch, s1, s2, p)));
+// 	    }
+// 	  }
+// 	}
+//       }
+//     }
 
-    (*itsPropertySet)["data"].setValue(GCF::Common::GCFPVDynArr(GCF::Common::LPT_DOUBLE, itsVArray));
-    (*itsPropertySet)["subband"].setValue(GCF::Common::GCFPVString("1"));
-    LOG_TRACE_FLOW("WH_Storage properties set");
-  };
+//     (*itsPropertySet)["data"].setValue(GCF::Common::GCFPVDynArr(GCF::Common::LPT_DOUBLE, itsVArray));
+//     (*itsPropertySet)["subband"].setValue(GCF::Common::GCFPVString("1"));
+//     LOG_TRACE_FLOW("WH_Storage properties set");
+//   };
 #endif
 }

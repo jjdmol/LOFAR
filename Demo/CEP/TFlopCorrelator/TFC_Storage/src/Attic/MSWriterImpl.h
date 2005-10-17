@@ -60,6 +60,7 @@ public:
   // relative to the center (which is set to Westerbork). So antPos
   // must have shape [3,nantennas].
   MSWriterImpl (const char* msName, double startTime, double timeStep,
+		int nfreq, int ncorr,
 		int nantennas, const vector<double>& antPos);
 
   // Destructor
@@ -148,6 +149,8 @@ private:
   int itsNrBand;                     //# nr of bands
   int itsNrField;                    //# nr of fields (beams)
   int itsNrAnt;                      //# nr of antennas (stations)
+  int itsNrFreq;                     //# Fixed nr of frequencies (channels)
+  int itsNrCorr;                     //# Fixed nr of correlations (polar.)
   int itsNrTimes;                    //# nr of exposures
   double itsTimeStep;                //# duration of each exposure (sec)
   double itsStartTime;               //# start time of observation (sec)
