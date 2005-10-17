@@ -635,36 +635,6 @@ inline __complex__ float to_fcomplex(i16complex z)
 
 void WH_PPF::process()
 {
-#if 0
-  static const fcomplex in[16] =
-  {
-    makefcomplex(1, 2),
-    makefcomplex(3, 4),
-    makefcomplex(5, 6),
-    makefcomplex(7, 8),
-    makefcomplex(9, 10),
-    makefcomplex(11, 12),
-    makefcomplex(13, 14),
-    makefcomplex(15, 16),
-    makefcomplex(17, 18),
-    makefcomplex(19, 20),
-    makefcomplex(21, 22),
-    makefcomplex(23, 24),
-    makefcomplex(25, 26),
-    makefcomplex(27, 28),
-    makefcomplex(29, 30),
-    makefcomplex(31, 32),
-  };
-  fcomplex out[16];
-
-  _fft_16(in, 8, out, 8);
-
-  for (int i = 0; i < 16; i ++)
-    std::cerr << out[i] << '\n';
-
-  exit(0);
-#endif
-
   static NSTimer timer("WH_PPF::process()", true), fftTimer("FFT", true);
   static NSTimer inTimer("inTimer", true), prefetchTimer("prefetch", true);
 

@@ -68,7 +68,7 @@ WH_Correlator::WH_Correlator(const string &name)
   ASSERTSTR(itsNchannels      == NR_CHANNELS_PER_CORRELATOR, "Configuration doesn't match parameter: NrChannels");
   ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match parameter: NrSamples");
   ASSERTSTR(itsNfilters       == NR_PPF_PER_COMPUTE_CELL, "Configuration doesn't match parameter: NrFilters");
-
+  ASSERTSTR(NR_PPF_PER_COMPUTE_CELL == 2, "Only 2 inputs implemented in the correlator");
   int totalInputSize = 0;
 
   for (int i = 0; i < NR_PPF_PER_COMPUTE_CELL; i++) {
@@ -116,10 +116,10 @@ void WH_Correlator::process()
 
   /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
   /// (could this be done more efficiently?)
+  /// Currently we hardcore 2 inputs.
   int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
-  for (int in = 0; in < itsNfilters; in++) { 
-    memcpy(itsInputBuffer+(in*bufSize), static_cast<DH_CorrCube*>(getDataManager().getInHolder(in))->getBuffer(), bufSize);
-  }
+  memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize);
+  memcpy(itsInputBuffer+bufSize), static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), bufSize-sizeof(fcomplex));
 
   timer.start();
 #if 1
