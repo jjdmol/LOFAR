@@ -52,7 +52,7 @@ namespace LOFAR
   void AH_TestStorage::define(const KeyValueMap& kvm) {
     ACC::APS::ParameterSet myPset;
     myPset.add("Input.NPolarisations", "2");
-    myPset.add("PPF.NPolarizations", "2");
+    myPset.add("PPF.NrPolarizations", "2");
     myPset.add("BGLProc.NrStoredSubbands", "2");
     myPset.add("PPF.NrStations", "2");
     myPset.add("Storage.WriteToMAC", "F");
@@ -137,6 +137,7 @@ namespace LOFAR
   }
 
   void AH_TestStorage::run(int nsteps) {
+
     for (int i = 0; i < nsteps; i++) {
       itsInCon1->write();
       itsInCon2->write();      

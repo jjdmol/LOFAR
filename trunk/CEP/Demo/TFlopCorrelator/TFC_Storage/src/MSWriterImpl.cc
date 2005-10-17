@@ -25,33 +25,35 @@
 #include <lofar_config.h>
 
 #include <TFC_Storage/MSWriterImpl.h>
-# include <ms/MeasurementSets.h>
-# include <tables/Tables/IncrementalStMan.h>
-# include <tables/Tables/StandardStMan.h>
-# include <tables/Tables/TiledShapeStMan.h>
-# include <tables/Tables/SetupNewTab.h>
-# include <tables/Tables/TableDesc.h>
-# include <tables/Tables/TableRecord.h>
-# include <casa/Arrays/Vector.h>
-# include <casa/Arrays/Cube.h>
-# include <casa/Arrays/Matrix.h>
-# include <casa/Arrays/ArrayMath.h>
-# include <casa/Containers/Block.h>
-# include <measures/Measures/MPosition.h>
-# include <measures/Measures/MBaseline.h>
-# include <measures/Measures/Muvw.h>
-# include <measures/Measures/MeasTable.h>
-# include <measures/Measures/Stokes.h>
-# include <measures/Measures/MeasConvert.h>
-# include <casa/Quanta/MVEpoch.h>
-# include <casa/Quanta/MVDirection.h>
-# include <casa/Quanta/MVPosition.h>
-# include <casa/Quanta/MVBaseline.h>
-# include <casa/OS/Time.h>
-# include <casa/OS/Time.h>
-# include <casa/BasicSL/Constants.h>
-# include <casa/Utilities/Assert.h>
-# include <casa/Exceptions/Error.h>
+#include <ms/MeasurementSets.h>
+#include <tables/Tables/IncrementalStMan.h>
+#include <tables/Tables/StandardStMan.h>
+#include <tables/Tables/TiledColumnStMan.h>
+//# include <tables/Tables/TiledShapeStMan.h>
+#include <tables/Tables/SetupNewTab.h>
+#include <tables/Tables/TableDesc.h>
+#include <tables/Tables/TableRecord.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/Cube.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/ArrayMath.h>
+#include <casa/Containers/Block.h>
+#include <casa/Containers/Record.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MBaseline.h>
+#include <measures/Measures/Muvw.h>
+#include <measures/Measures/MeasTable.h>
+#include <measures/Measures/Stokes.h>
+#include <measures/Measures/MeasConvert.h>
+#include <casa/Quanta/MVEpoch.h>
+#include <casa/Quanta/MVDirection.h>
+#include <casa/Quanta/MVPosition.h>
+#include <casa/Quanta/MVBaseline.h>
+#include <casa/OS/Time.h>
+#include <casa/OS/SymLink.h>
+#include <casa/BasicSL/Constants.h>
+#include <casa/Utilities/Assert.h>
+#include <casa/Exceptions/Error.h>
 #include <casa/Arrays/Slicer.h>
 #include <Common/LofarLogger.h>
 
@@ -59,10 +61,13 @@ using namespace LOFAR;
 using namespace casa;
 
 MSWriterImpl::MSWriterImpl (const char* msName, double startTime, double timeStep,
+			    int nfreq, int ncorr,
 			    int nantennas, const vector<double>& antPos)
 : itsNrBand   (0),
   itsNrField  (0),
   itsNrAnt    (nantennas),
+  itsNrFreq   (nfreq),
+  itsNrCorr   (ncorr),
   itsNrTimes  (0),
   itsTimeStep (timeStep),
   itsStartTime(MVEpoch(startTime).getTime().getValue("s")),
@@ -147,23 +152,56 @@ void MSWriterImpl::createMS (const char* msName,
   MS::addColumnToDesc(td, MS::DATA, 2);
   td.rwColumnDesc(MS::columnName(MS::DATA)).rwKeywordSet().
                                                       define("UNIT","Jy");
-  // Store the data and flags using the TiledStMan.
-  Vector<String> tsmNames(2);
-  tsmNames(0) = MS::columnName(MS::DATA);
-  tsmNames(1) = MS::columnName(MS::FLAG);
+
+//   // Store the data and flags using the TiledStMan.
+//   Vector<String> tsmNames(2);
+//   tsmNames(0) = MS::columnName(MS::DATA);
+//   tsmNames(1) = MS::columnName(MS::FLAG);
+//   td.defineHypercolumn("TiledData", 3, tsmNames);
+
+  // Store the data and flags in two separate files using TiledColumnStMan.
+  // Also store UVW with TiledColumnStMan.
+  Vector<String> tsmNames(1);
+  tsmNames[0] = MS::columnName(MS::DATA);
+  td.rwColumnDesc(tsmNames[0]).setShape (IPosition(2,itsNrCorr,itsNrFreq));
   td.defineHypercolumn("TiledData", 3, tsmNames);
+  tsmNames[0] = MS::columnName(MS::FLAG);
+  td.rwColumnDesc(tsmNames[0]).setShape (IPosition(2,itsNrCorr,itsNrFreq));
+  td.defineHypercolumn("TiledFlag", 3, tsmNames);
+  tsmNames[0] = MS::columnName(MS::UVW);
+  td.defineHypercolumn("TiledUVW", 2, tsmNames);
+
+
   // Setup the new table.
   // Most columns use the IncrStMan; some use others.
   SetupNewTable newTab(msName, td, Table::New);
   IncrementalStMan incrStMan("ISMData");
   StandardStMan    stanStMan;
-  TiledShapeStMan  tiledStMan("TiledData", IPosition(3,4,16,512));
+
+
+//   TiledShapeStMan  tiledStMan("TiledData", IPosition(3,4,16,512));
+//   newTab.bindAll (incrStMan);
+//   newTab.bindColumn(MS::columnName(MS::ANTENNA1),stanStMan);
+//   newTab.bindColumn(MS::columnName(MS::ANTENNA2),stanStMan);
+//   newTab.bindColumn(MS::columnName(MS::DATA),tiledStMan);
+//   newTab.bindColumn(MS::columnName(MS::FLAG),tiledStMan);
+//   newTab.bindColumn(MS::columnName(MS::UVW),stanStMan);
+
+  // Use a TiledColumnStMan for the data, flags and UVW.
+  // Store all pol and freq in a single tile.
+  // In this way the data appear in separate files that can be mmapped.
+  // Flags are stored as bits, so take care each tile has multiple of 8 flags.
+  TiledColumnStMan tiledData("TiledData", IPosition(3,itsNrCorr,itsNrFreq,1));
+  TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,itsNrCorr,itsNrFreq,8));
+  TiledColumnStMan tiledUVW("TiledUVW", IPosition(3,128));
   newTab.bindAll (incrStMan);
   newTab.bindColumn(MS::columnName(MS::ANTENNA1),stanStMan);
   newTab.bindColumn(MS::columnName(MS::ANTENNA2),stanStMan);
-  newTab.bindColumn(MS::columnName(MS::DATA),tiledStMan);
-  newTab.bindColumn(MS::columnName(MS::FLAG),tiledStMan);
-  newTab.bindColumn(MS::columnName(MS::UVW),stanStMan);
+  newTab.bindColumn(MS::columnName(MS::DATA),tiledData);
+  newTab.bindColumn(MS::columnName(MS::FLAG),tiledFlag);
+  newTab.bindColumn(MS::columnName(MS::UVW),tiledUVW);
+
+
   // Create the MS and its subtables.
   // Get access to its columns.
   itsMS = new MeasurementSet(newTab);
@@ -178,6 +216,28 @@ void MSWriterImpl::createMS (const char* msName,
   fillProcessor();
   fillObservation();
   fillState();
+
+  // Find out which datamanagers contain DATA, FLAG and UVW.
+  // Create symlinks for them.
+  Record dminfo = itsMS->dataManagerInfo();
+  for (uint i=0; i<dminfo.nfields(); ++i) {
+    const Record& dm = dminfo.subRecord(i);
+    String slname;
+    if (dm.asString("NAME") == "TiledData") {
+      slname = "/vis.dat";
+    } else if (dm.asString("NAME") == "TiledFlag") {
+      slname = "/vis.flg";
+    } else if (dm.asString("NAME") == "TiledUVW") {
+      slname = "/vis.uvw";
+    }
+    if (! slname.empty()) {
+      ostringstream ostr;
+      ostr << "table.f" << i << "_TSM0";
+      SymLink sl(msName+slname);
+      sl.create (ostr.str());
+    }
+  }
+
 }
 
 int MSWriterImpl::addBand (int npolarizations, int nchannels,

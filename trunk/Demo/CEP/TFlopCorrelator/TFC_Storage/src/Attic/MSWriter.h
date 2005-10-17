@@ -46,7 +46,8 @@ public:
   // The antenna positions have to be given as xpos,ypos (in meters).
   // The WSRT is taken as the center of the array.
   // Thus antPos must have shape [2,nantennas].
-  MSWriter (const char* msName, double startTime, double timeStep, uint nantennas,
+  MSWriter (const char* msName, double startTime, double timeStep, 
+	    int nChan, int nPol, uint nantennas,
 	    const vector<double>& antPos);
 
   // Destructor

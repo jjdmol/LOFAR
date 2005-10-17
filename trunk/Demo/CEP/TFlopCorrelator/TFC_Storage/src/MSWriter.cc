@@ -33,14 +33,16 @@
 using namespace LOFAR;
 using namespace casa;
 
-MSWriter::MSWriter (const char* msName, double startTime, double timeStep, 
+MSWriter::MSWriter (const char* msName, double startTime, double timeStep,
+		    int nChan, int nPol,
 		    uint nantennas, const vector<double>& antPos)
 : itsWriter (0)
 {
   ASSERTSTR(antPos.size() == 3*nantennas, 
 	    "Antenna position vector does not have the right size!");
   try {
-    itsWriter = new MSWriterImpl (msName, startTime, timeStep, nantennas, 
+    itsWriter = new MSWriterImpl (msName, startTime, timeStep, nChan, nPol, 
+				  nantennas, 
 				  antPos);
   } catch (AipsError x) {
     cerr << "MSWriter exception: " << x.getMesg() << endl;
