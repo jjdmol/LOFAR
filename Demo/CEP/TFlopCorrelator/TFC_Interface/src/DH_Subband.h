@@ -55,10 +55,7 @@ public:
 
   const size_t getBufferSize() const
   {
-    int norsp = pset.getInt32("Input.NRSP");
-    int ntimes = pset.getInt32("Input.NSamplesToDH");
-    int nopols = pset.getInt32("Input.NPolarisations");
-    return norsp*ntime*nopols;
+    return itsBufferSize;
   }
   
 private:
@@ -68,6 +65,7 @@ private:
   ACC::APS::ParameterSet itsPS;
   RectMatrix<BufferType>* itsMatrix;
   BufferType *itsBuffer;
+  int itsBufferSize;
 
   void fillDataPointers();
 };
