@@ -52,7 +52,8 @@ extern "C"
 
 WH_Correlator::WH_Correlator(const string &name)
 :
-  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator")
+  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator"),
+  itsInputBuffer(0)
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
@@ -69,7 +70,7 @@ WH_Correlator::WH_Correlator(const string &name)
   ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match parameter: NrSamples");
   ASSERTSTR(itsNfilters       == NR_PPF_PER_COMPUTE_CELL, "Configuration doesn't match parameter: NrFilters");
   ASSERTSTR(NR_PPF_PER_COMPUTE_CELL == 2, "Only 2 inputs implemented in the correlator");
-  int totalInputSize = 0;
+  totalInputSize = 0;
 
   for (int i = 0; i < NR_PPF_PER_COMPUTE_CELL; i++) {
     char str[50];
@@ -85,7 +86,6 @@ WH_Correlator::WH_Correlator(const string &name)
 //   }
   getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, myPS));
 
-  itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize*sizeof(fcomplex));
 }
 
 WH_Correlator::~WH_Correlator()
@@ -105,6 +105,7 @@ WH_Correlator* WH_Correlator::make(const string& name)
 
 void WH_Correlator::preprocess()
 { 
+  itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize*sizeof(fcomplex));
 }
 
 void WH_Correlator::process()
