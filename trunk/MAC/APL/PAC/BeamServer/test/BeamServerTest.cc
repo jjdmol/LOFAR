@@ -33,7 +33,7 @@
 #include <GCF/TM/GCF_Control.h>
 #include <PSAccess.h>
 
-//#define CLIENT
+#define CLIENT
 #ifdef CLIENT
 #include <AMCBase/AMCClient/ConverterClient.h>
 #else
