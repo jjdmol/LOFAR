@@ -77,6 +77,7 @@ namespace LOFAR {
 		" has already been connected.");
       // Create a client socket
       string server = itsPS.getStringVector("FIRConnection.ServerHosts")[FIRF_nr];
+
       itsTHs[FIRF_nr] = new TH_Socket(server,
 				      service,
 				      true,
@@ -86,7 +87,6 @@ namespace LOFAR {
 					       dm.getGeneralInHolder(dhNr), 
 					      itsTHs[FIRF_nr], true);
       dm.setInConnection(dhNr, itsConnections[FIRF_nr]);
-      
     }
 
   };
