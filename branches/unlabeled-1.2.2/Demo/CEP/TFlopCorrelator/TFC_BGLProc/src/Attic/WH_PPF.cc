@@ -650,7 +650,7 @@ void WH_PPF::process()
 
   for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
     outputs[corr] = (DH_CorrCube::BufferType *) (static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer());
-    assert((ptrdiff_t) outputs[corr] % 32 == 0);
+//     assert((ptrdiff_t) outputs[corr] % 32 == 0);
   }
 
 //   for (int stat = 0; stat < NR_STATIONS; stat ++) {
