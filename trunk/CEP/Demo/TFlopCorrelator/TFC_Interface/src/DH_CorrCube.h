@@ -25,7 +25,7 @@ namespace LOFAR
 class DH_CorrCube: public DataHolder
 {
 public:
-  typedef fcomplex BufferType[NR_CHANNELS_PER_CORRELATOR][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
+  typedef fcomplex BufferType[NR_CHANNELS_PER_CORRELATOR][MAX_STATIONS_PER_PPF][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
   //typedef fcomplex BufferType[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_INTEGRATION][NR_CHANNELS_PER_CORRELATOR];
 
   explicit DH_CorrCube (const string& name, short subband); 
