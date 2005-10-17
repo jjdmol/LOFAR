@@ -25,7 +25,8 @@ DH_Subband::DH_Subband(const string &name,
 : DataHolder(name, "DH_Subband"),
   itsPS(pSet),
   itsMatrix(0),
-  itsBuffer(0)
+  itsBuffer(0),
+  itsBufferSize(0)
 {
 }
 
@@ -33,7 +34,8 @@ DH_Subband::DH_Subband(const DH_Subband &that)
 : DataHolder(that),
   itsPS(that.itsPS),
   itsMatrix(0),
-  itsBuffer(that.itsBuffer)
+  itsBuffer(that.itsBuffer),
+  itsBufferSize(that.itsBufferSize)
 {
 }
 
@@ -50,15 +52,20 @@ DataHolder *DH_Subband::clone() const
 
 void DH_Subband::init()
 {
+  int norsp = itsPS.getInt32("Input.NRSP");
+  int ntimes = itsPS.getInt32("Input.NSamplesToDH");
+  int nopols = itsPS.getInt32("Input.NPolarisations");
+  itsBufferSize = norsp*ntimes*nopols;
+
   addField("Buffer", BlobField<BufferType>(1, getBufferSize()));
   createDataBlock();
 
   memset(itsBuffer, 0, sizeof(BufferType) * getBufferSize()); 
 
   vector<DimDef> vdd;
-  vdd.push_back(DimDef("Station", pset.getInt32("Input.NRSP")));
-  vdd.push_back(DimDef("Time", pset.getInt32("Input.NSamplesToDH")));
-  vdd.push_back(DimDef("Polarisation", pset.getInt32("Input.NPolarisations")));
+  vdd.push_back(DimDef("Station", norsp));
+  vdd.push_back(DimDef("Time", ntimes));
+  vdd.push_back(DimDef("Polarisation", nopols));
   
   itsMatrix = new RectMatrix<BufferType> (vdd);
   itsMatrix->setBuffer((BufferType*)itsBuffer, getBufferSize());
