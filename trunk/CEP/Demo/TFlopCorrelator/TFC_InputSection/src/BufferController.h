@@ -35,9 +35,9 @@ namespace LOFAR
 using namespace boost;
 using ACC::APS::ParameterSet;
 
-#define MAX_OFFSET  5
-#define MIN_COUNT  10 
-#define MAX_COUNT  (itsBufferSize-10)
+#define MAX_OFFSET  90
+#define MIN_COUNT  100
+#define MAX_COUNT  (itsBufferSize-100)
     
 typedef struct 
 {

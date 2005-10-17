@@ -74,11 +74,11 @@ WH_SBCollect* WH_SBCollect::make(const string& name)
 void WH_SBCollect::process() 
 { 
   RectMatrix<DH_RSP::BufferType>* inMatrix = &((DH_RSP*)getDataManager().getInHolder(0))->getDataMatrix();
-  RectMatrix<DH_Subband::BufferElementType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(0))->getDataMatrix();
+  RectMatrix<DH_Subband::BufferType>& outMatrix = ((DH_Subband*)getDataManager().getOutHolder(0))->getDataMatrix();
   dimType outStationDim = outMatrix.getDim("Station");
   dimType inStationDim = inMatrix->getDim("Stations");
 
-  RectMatrix<DH_Subband::BufferElementType>::cursorType outCursor;
+  RectMatrix<DH_Subband::BufferType>::cursorType outCursor;
   RectMatrix<DH_RSP::BufferType>::cursorType inCursor;
 
   for (int sb=0; sb<itsNoutputs; sb++) 
@@ -111,7 +111,7 @@ void WH_SBCollect::process()
 			     outStationDim, 
 			     itsNinputs,
 			     matrixSize),
-	  matrixSize * sizeof(DH_Subband::BufferElementType));
+	  matrixSize * sizeof(DH_Subband::BufferType));
   cout << "WH_SBCollect output done " << endl;
 #endif
 
