@@ -74,7 +74,7 @@ WH_Correlator::WH_Correlator(const string &name)
   for (int i = 0; i < NR_PPF_PER_COMPUTE_CELL; i++) {
     char str[50];
     snprintf(str, 50, "input_%d_of_%d", i, NR_PPF_PER_COMPUTE_CELL);
-    getDataManager().addInDataHolder(0, new DH_CorrCube(str, 0));
+    getDataManager().addInDataHolder(i, new DH_CorrCube(str, 0));
     totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
   }
 
