@@ -50,12 +50,14 @@ namespace LOFAR
    
     int  itsNrRSPInputs;
     int  itsNrChannels;
-    int  itsAbsDelay;    // Absolute delay value
-    int  itsDelayDiff;   // Change in the delay for a station
+    int  itsDelay;
   };
 
 inline int WH_DelayControl::getDelay()
-  {  return itsAbsDelay; }
+  {  return itsDelay; }
+
+inline void WH_DelayControl::setDelay(const int delay)
+  {  itsDelay = delay; }
 
   // @}
 } // namespace LOFAR
