@@ -25,9 +25,7 @@ WH_DelayControl::WH_DelayControl(const string& name,
   : WorkHolder    (0, nRSPInputs+1, name, "WH_DelayControl"),
     itsNrRSPInputs(nRSPInputs),
     itsNrChannels (nrChannels),
-    itsAbsDelay   (delay),
-    itsDelayDiff  (delay)
-
+    itsDelay   (delay)
 {
   char str[128];
   for (int i = 0; i < itsNrRSPInputs; i++) {
@@ -49,7 +47,7 @@ WorkHolder* WH_DelayControl::construct(const string& name,
 }
 
 WH_DelayControl* WH_DelayControl::make(const string& name) {
-  return new WH_DelayControl(name, itsNrRSPInputs, itsNrChannels, itsAbsDelay);
+  return new WH_DelayControl(name, itsNrRSPInputs, itsNrChannels, itsDelay);
 }
 
 void WH_DelayControl::process() {
@@ -60,10 +58,9 @@ void WH_DelayControl::process() {
     outp = (DH_Delay*)getDataManager().getOutHolder(j);
     for (int i=0; i < itsNrRSPInputs; i++)
     {
-      outp->setDelayChange(i, i*itsDelayDiff+8);
+      outp->setDelay(i, i*itsDelay);
     }
   }
-  itsDelayDiff = 0;  // Next time keep the same delay
 
   // Set phase correction output
   DH_PhaseCorr* corrOutp;
@@ -73,12 +70,6 @@ void WH_DelayControl::process() {
     corrOutp->setPhaseCorr(ch, makefcomplex(1,-1));
   }
 
-}
-
-void WH_DelayControl::setDelay(const int delay)
-{
-  itsDelayDiff += delay - itsAbsDelay;
-  itsAbsDelay = delay;
 }
 
 }
