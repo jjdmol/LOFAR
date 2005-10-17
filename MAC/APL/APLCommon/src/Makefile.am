@@ -5,7 +5,7 @@ SUFFIXES = .ph
 
 pkgincludedir = $(includedir)/APLCommon
 
-pkginclude_HEADERS = \
+NOINSTHDRS = \
 	../include/APLCommon/APL_Defines.h \
 	../include/APLCommon/APLCommonExceptions.h \
 	../include/APLCommon/APLUtilities.h \
@@ -16,9 +16,13 @@ pkginclude_HEADERS = \
 	../include/APLCommon/SingleInstanceLogicalDeviceFactory.h \
 	../include/APLCommon/PropertySetAnswer.h \
 	../include/APLCommon/PropertySetAnswerHandlerInterface.h \
-	../include/APLCommon/StartDaemon.h \
+	../include/APLCommon/StartDaemon.h
+
+INSTHDRS = \
 	LogicalDevice_Protocol.ph \
 	StartDaemon_Protocol.ph
+
+pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 
 DOCHDRS	=	$(pkginclude_HEADERS)
       
