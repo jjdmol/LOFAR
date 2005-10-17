@@ -119,7 +119,7 @@ void WH_Correlator::process()
   /// Currently we hardcore 2 inputs.
   int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
   memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize);
-  memcpy(itsInputBuffer+bufSize), static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), bufSize-sizeof(fcomplex));
+  memcpy(itsInputBuffer+bufSize, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), bufSize-sizeof(fcomplex));
 
   timer.start();
 #if 1
