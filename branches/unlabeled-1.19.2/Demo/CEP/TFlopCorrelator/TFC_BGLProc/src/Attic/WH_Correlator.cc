@@ -115,18 +115,15 @@ void WH_Correlator::process()
 
   DH_CorrCube::BufferType *input  = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
   DH_Vis::BufferType	  *output = static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBuffer();
-
-  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
-  /// (could this be done more efficiently?)
-  /// Currently we hardcore 2 inputs.
   int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
-//   memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize);
-//   memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (bufSize-1) * sizeof(fcomplex));
-  _fast_memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
-  _fast_memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
 
   timer.start();
 #if 0
+  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
+  /// (could this be done more efficiently?)
+  /// Currently we hardcore 2 inputs.
+  memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
+  memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
   // C++ reference implementation
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
@@ -151,6 +148,12 @@ void WH_Correlator::process()
   // Divide the correlation matrix into blocks of 2x2. 
   // Correlate the entire block (all time samples) before 
   // going on to the next block.
+
+  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
+  /// (could this be done more efficiently?)
+  /// Currently we hardcore 2 inputs.
+  _fast_memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
+  _fast_memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
 
 #if NR_STATIONS % 2 == 0
 #error even number of stations not yet implemented
