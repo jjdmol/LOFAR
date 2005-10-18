@@ -246,7 +246,7 @@ system( "rm -rf to" );
 ##
 system( "cvs -d $CVS co -l -d from $from" );
 die "could not change to 'from'" unless chdir "from";
-die "could not remove '$from_file'" unless unlink @from_files;
+die "could not remove '@from_files'" unless unlink @from_files;
 system( "$cvs delete " . join( ' ', @from_files ) );
 system( "$cvs commit -m '%lofarcvsmv%: Moved to $message_to' .");
 die "could not change to $TMP" unless chdir "$TMP";
