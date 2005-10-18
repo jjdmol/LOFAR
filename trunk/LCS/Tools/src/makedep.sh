@@ -32,7 +32,7 @@ a_root=`echo $a_dir | sed -e 's%/LOFAR/.*%/LOFAR%'`
 if [ -f $a_dir/pkgdep ]; then
   a_pkgdep=$a_dir/pkgdep
 else
-  a_pkgdep=$a_root/LCS/Common/build/gnu_debug/src/pkgdep
+  a_pkgdep=$a_root/LCS/Tools/build/gnu_debug/src/pkgdep
 fi
 if ! [ -x $a_pkgdep ]; then
   echo "Fatal error: could not locate program \`pkgdep'"
