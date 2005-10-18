@@ -54,6 +54,11 @@ public:
     return itsBuffer;
   }
 
+  const BufferElementType *getBufferElement() const 
+  {
+    return itsBuffer[0][0][0];
+  }
+
   const size_t getBufferSize() const
   {
     return sizeof(BufferType) / sizeof(BufferElementType);
