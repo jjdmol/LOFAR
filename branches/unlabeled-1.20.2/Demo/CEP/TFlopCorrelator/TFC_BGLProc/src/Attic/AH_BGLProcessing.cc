@@ -159,6 +159,12 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 						itsTHs.back(),
 						true)); 
 
+	DistNode->getDataManager().setOutConnection(DistNode->getDataManager().getOutHolder(filter_nr), 
+						    itsConnections.back());
+
+	(*fit)->getDataManager().setInConnection((*fit)->getDataManager().getInHolder(0),
+						 itsConnections.back());
+
 
 	int corr_nr   = 0;
 	vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
@@ -171,6 +177,12 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 						  (*cit)->getDataManager().getInHolder(filter_nr % itsNrFiltersPerComputeCell),
 						  itsTHs.back(),
 						  true));
+
+	  (*fit)->getDataManager.setOutConnection((*fit)->getDataManager().getOutHolder(corr_nr % itsNrCorrelatorsPerFilter),
+						  itsConnections.back());
+	  (*cit)->getDataManager.setInConnection((*cit)->getDataManager().getInHolder(filter_nr % itsNrFiltersPerComputeCell),
+						 itsConnections.back());
+
 	  corr_nr++;
 	}
 	filter_nr++;
@@ -189,9 +201,15 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 	itsTHs.push_back( new TH_MPI( (*cit)->getNode(), ConcNode->getNode() ) );
 	itsConnections.push_back(new Connection(WH_Name, 
 						(*cit)->getDataManager().getOutHolder(0),
-						ConcNode->getDataManager().getInHolder(corr_nr++),
+						ConcNode->getDataManager().getInHolder(corr_nr),
 						itsTHs.back(),
 						true));
+
+	(*cit)->getDataManager().setOutConnection((*cit)->getDataManager().getOutHolder(0),
+						  itsConnections.back());
+	ConcNode->getDataManager().setInConnection(ConcNode->getDataManager().getInHolder(corr_nr),
+						   itsConnections.back());
+	corr_nr++;
       }
     }
    
