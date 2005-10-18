@@ -159,11 +159,8 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 						itsTHs.back(),
 						true)); 
 
-	DistNode->getDataManager().setOutConnection(DistNode->getDataManager().getOutHolder(filter_nr), 
-						    itsConnections.back());
-
-	(*fit)->getDataManager().setInConnection((*fit)->getDataManager().getInHolder(0),
-						 itsConnections.back());
+	DistNode->getDataManager().setOutConnection(filter_nr, itsConnections.back());
+	(*fit)->getDataManager().setInConnection(0, itsConnections.back());
 
 
 	int corr_nr   = 0;
@@ -178,10 +175,8 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 						  itsTHs.back(),
 						  true));
 
-	  (*fit)->getDataManager.setOutConnection((*fit)->getDataManager().getOutHolder(corr_nr % itsNrCorrelatorsPerFilter),
-						  itsConnections.back());
-	  (*cit)->getDataManager.setInConnection((*cit)->getDataManager().getInHolder(filter_nr % itsNrFiltersPerComputeCell),
-						 itsConnections.back());
+	  (*fit)->getDataManager().setOutConnection(corr_nr % itsNrCorrelatorsPerFilter, itsConnections.back());
+	  (*cit)->getDataManager().setInConnection(filter_nr % itsNrFiltersPerComputeCell, itsConnections.back());
 
 	  corr_nr++;
 	}
@@ -205,10 +200,8 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 						itsTHs.back(),
 						true));
 
-	(*cit)->getDataManager().setOutConnection((*cit)->getDataManager().getOutHolder(0),
-						  itsConnections.back());
-	ConcNode->getDataManager().setInConnection(ConcNode->getDataManager().getInHolder(corr_nr),
-						   itsConnections.back());
+	(*cit)->getDataManager().setOutConnection(0, itsConnections.back());
+	ConcNode->getDataManager().setInConnection(corr_nr, itsConnections.back());
 	corr_nr++;
       }
     }
