@@ -1,29 +1,31 @@
-lib_LTLIBRARIES 	= libstationoperations.la
+pkgincludedir = $(includedir)/StationOperations
 
-pkginclude_HEADERS = \
-	../include/StationOperations/StationOperations.h
+NOINSTHDRS =
+
+INSTHDRS =
+
+pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
+
+DOCHDRS =       $(pkginclude_HEADERS)
+
+lib_LTLIBRARIES 	= libstationoperations.la
 
 libstationoperations_la_CPPFLAGS= \
 	-I$(top_srcdir)/include \
 	-DBOOST_DISABLE_THREADS \
-  -Wno-deprecated \
+	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once \
 	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
-libstationoperations_la_SOURCES 		= \
+libstationoperations_la_SOURCES	= \
 	StationOperations.cc
-	
-include_HEADERS = 
 
-BUILT_SOURCES = 	
+BUILT_SOURCES = 
 
-EXTRA_DIST =   
+EXTRA_DIST = 
 
-%.log_prop: %.log_prop.in
-	cp $< $@
-	
-%.conf: %.conf.in
-	cp $< $@
+clean-local:
+	rm -f *.ph
 
 include $(top_srcdir)/Makefile.common
