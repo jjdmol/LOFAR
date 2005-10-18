@@ -1,52 +1,61 @@
-noinst_PROGRAMS 		= \
+noinst_PROGRAMS = \
 	BeamletAllocatorTest \
 	addVI
 
-bin_PROGRAMS 		= \
+bin_PROGRAMS = \
 	MACScheduleTest
 
-BeamletAllocatorTest_CPPFLAGS= \
+BeamletAllocatorTest_CPPFLAGS = \
 	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
-BeamletAllocatorTest_SOURCES 		= \
+BeamletAllocatorTest_SOURCES = \
 	BeamletAllocatorTest.cc \
 	$(top_srcdir)/src/BeamletAllocator.cc
 
-BeamletAllocatorTest_LDADD		= 
+BeamletAllocatorTest_LDADD = 
 
-addVI_CPPFLAGS= \
+addVI_CPPFLAGS = \
 	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
-addVI_SOURCES 		= addVI.cc
+addVI_SOURCES = addVI.cc
 
-addVI_LDADD		= 
+addVI_LDADD = 
 
-MACScheduleTest_CPPFLAGS= \
-  -Wno-deprecated \
+MACScheduleTest_CPPFLAGS = \
+	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
-MACScheduleTest_SOURCES 		= \
+MACScheduleTest_SOURCES = \
 	MACScheduleMain.cc \
 	MACScheduleAnswer.cc \
 	MACScheduleTask.cc 
 
-MACScheduleTest_LDADD		= 
-
-sysconf_DATA= \
-	MACScheduleTest.conf
-
 BUILT_SOURCES = \
+	MACScheduleTest.conf \
 	BeamletAllocatorTest.log_prop \
 	MACScheduleTest.log_prop
 
-EXTRA_DIST = \
+NOINSTHDRS = \
+	MACScheduleTask.h \
+        MACScheduleAnswer.h
+
+INSTHDRS =
+
+pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
+
+MACScheduleTest_LDADD = 
+
+sysconf_DATA = \
+	MACScheduleTest.conf \
 	BeamletAllocatorTest.log_prop \
 	MACScheduleTest.log_prop
+
+EXTRA_DIST = $(BUILT_SOURCES) $(sysconf_data)
 
 %.log_prop: %.log_prop.in
 	cp $< $@
