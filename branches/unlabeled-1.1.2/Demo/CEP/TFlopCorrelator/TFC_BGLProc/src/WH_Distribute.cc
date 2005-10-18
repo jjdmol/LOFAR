@@ -110,25 +110,30 @@ void WH_Distribute::process() {
 
     for (int i = 0; i < itsNinputs; i++) {
     
-      /// duplicate data to fill all OutHolders, keep copying from inDH until outDH buffer is filled
-      int myCounter = 0;
-      int myCopiedBytes = 0;
-      int myNextBlock = 0;
-      
-      const int inBufSize = static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBufferSize();
-      const int outBufSize = static_cast<DH_PPF*>(getDataManager().getOutHolder(i))->getBufferSize();
+      for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
+
+	/// duplicate data to fill all OutHolders, keep copying from inDH until outDH buffer is filled
+	int myCounter = 0;
+	int myCopiedBytes = 0;
+	int myNextBlock = 0;
 	
-      while (myCopiedBytes < outBufSize) {
+	// buffer size in elements, not in bytes, so we multiply by the size of the buffertype (i16complex)
+	const int inBufSize = static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBufferSize() * sizeof(DH_Subband::BufferType);
+	const int outBufSize = static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferSize() * sizeof(DH_PPF::BufferElementType);
+	
+	while (myCopiedBytes < outBufSize) {
 	  
-	(outBufSize-myCopiedBytes) > inBufSize ? myNextBlock = inBufSize : myNextBlock = (outBufSize - myCopiedBytes);
-	
-	// duplicate data 
-	for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
-	  memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer() + myCopiedBytes,
+	  
+	  (outBufSize-myCopiedBytes) > inBufSize ? myNextBlock = inBufSize : myNextBlock = (outBufSize - myCopiedBytes);
+	  
+// 	  cout << "DEBUG: " << myCopiedBytes << " + " << myNextBlock <<" = " << myCopiedBytes+myNextBlock << 
+// 	    " should be <= " << outBufSize << " " << (myCopiedBytes+myNextBlock <= outBufSize) << endl;
+	  // duplicate data 
+	  memcpy((void*)(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferElement() + (myCopiedBytes/sizeof(DH_PPF::BufferElementType))),
 		 static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
 		 myNextBlock);
+	  myCopiedBytes += myNextBlock;
 	}
-	myCopiedBytes += myNextBlock;
       }
     }
   }

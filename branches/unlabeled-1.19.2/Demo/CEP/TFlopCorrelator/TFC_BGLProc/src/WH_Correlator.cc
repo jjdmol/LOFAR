@@ -123,7 +123,7 @@ void WH_Correlator::process()
   memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (bufSize-1) * sizeof(fcomplex));
 
   timer.start();
-#if 1
+#if 0
   // C++ reference implementation
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {

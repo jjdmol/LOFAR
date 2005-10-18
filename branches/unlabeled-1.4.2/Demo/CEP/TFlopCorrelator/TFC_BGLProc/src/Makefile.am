@@ -22,6 +22,8 @@ CCAS			= gcc
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
 
 TFC_BGLProcessing_SOURCES	= $(DOCHDRS) \
+Correlator.S			\
+FIR.S				\
 TFC_BGLProcessing_main.cc 	\
 AH_BGLProcessing.cc		\
 WH_PPF.cc			\
