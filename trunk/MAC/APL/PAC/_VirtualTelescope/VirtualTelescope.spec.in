@@ -1,5 +1,5 @@
 # -*- Mode:rpm-spec -*-
-# StationOperations.spec.in
+# VirtualTelescope.spec.in
 #
 
 ##############################################################################
@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-Summary: StationOperations contains the StationOperations logical device
+Summary: VirtualTelescope contains the VirtualTelescope logical device
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
@@ -34,8 +34,7 @@ Requires: GCFCommon = 6.0
 Requires: GCFPAL = 6.0
 Requires: APLCommon = 3.1
 Requires: RTCCommon = 4.0
-Requires: RSP = 4.0
-Requires: EPA = 4.0
+Requires: BeamServer = 4.0
 Packager: %{packager}
 Distribution: The LOFAR project
 Vendor: ASTRON
@@ -44,7 +43,7 @@ AutoReqProv: no
 
 %description
 
-StationOperations is the package containing the StationOperations logical device
+VirtualTelescope is the package containing the VirtualTelescope logical device
  for the PAC layer of MAC.
 
 ##############################################################################
