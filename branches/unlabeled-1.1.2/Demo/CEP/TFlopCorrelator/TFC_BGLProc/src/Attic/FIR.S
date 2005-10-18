@@ -4,45 +4,73 @@
 #define FCOMPLEX_SIZE	 8
 #define DCOMPLEX_SIZE	16
 
-#define CACHE_LINE_SIZE	32
 
-.global _zero_area
-_zero_area:
+.align	5
+.global _transpose_8x4
+_transpose_8x4:
 
-	srawi	4,4,2
-	mtctr	4
-	li	5,CACHE_LINE_SIZE
-	li	6,2*CACHE_LINE_SIZE
-	li	7,3*CACHE_LINE_SIZE
+	li	0,NR_SUB_CHANNELS*NR_POLARIZATIONS
+	mtctr	0
 
-L6:	dcbz	0,3
-	dcbz	3,5
-	dcbz	3,6
-	dcbz	3,7
-	addi	3,3,4*CACHE_LINE_SIZE
+	subi	4,4,I16COMPLEX_SIZE
 
-	bdnz	L6
+loop1:	
+	lwzu	5,I16COMPLEX_SIZE(4)
+	lwz	6,1*I16COMPLEX_SIZE*NR_SUB_CHANNELS*NR_POLARIZATIONS(4)
+	lwz	7,2*I16COMPLEX_SIZE*NR_SUB_CHANNELS*NR_POLARIZATIONS(4)
+	lwz	8,3*I16COMPLEX_SIZE*NR_SUB_CHANNELS*NR_POLARIZATIONS(4)
+	lwz	9,4*I16COMPLEX_SIZE*NR_SUB_CHANNELS*NR_POLARIZATIONS(4)
+	lwz	10,5*I16COMPLEX_SIZE*NR_SUB_CHANNELS*NR_POLARIZATIONS(4)
+	lwz	11,6*I16COMPLEX_SIZE*NR_SUB_CHANNELS*NR_POLARIZATIONS(4)
+	lwz	12,7*I16COMPLEX_SIZE*NR_SUB_CHANNELS*NR_POLARIZATIONS(4)
+
+	dcbz	0,3
+	stw	5,0(3)
+	stw	6,4(3)
+	stw	7,8(3)
+	stw	8,12(3)
+	stw	9,16(3)
+	stw	10,20(3)
+	stw	11,24(3)
+	stw	12,28(3)
+	addi	3,3,I16COMPLEX_SIZE*NR_SAMPLES_PER_INTEGRATION
+
+	bdnz	loop1
 
 	blr
 
 
-#.global _prefetch
-#_prefetch:
-#	li	8,32
-#	li	9,64
-#	li	10,96
-#
-#	mtctr	4
-#L1:	dcbt	0,3
-#	dcbt	3,8
-#	dcbt	3,9
-#	dcbt	3,10
-#	addi	3,3,2048
-#	bdnz	L1
-#
-#	blr
+.align	5
+.global	_transpose_4x8
+_transpose_4x8:
+
+	mulli	8,6,3
+	mtctr	5
+	subi	7,7,3*FCOMPLEX_SIZE
+	li	9,8
+	subfic	8,8,FCOMPLEX_SIZE
+
+	sub	3,3,7
+	sub	4,4,8
+
+L4:	
+	lfpsux	0,4,8
+	lfpsux	1,4,6
+	lfpsux	2,4,6
+	lfpsux	3,4,6
+
+	dcbz	3,7
+	stfpsux	0,3,7
+	stfpsux	1,3,9
+	stfpsux	2,3,9
+	stfpsux	3,3,9
+
+	bdnz	L4
+
+	blr
 
 
+.align	5
 sub_value:
 	.long	 0x43300000,0x00008000,0x43300000,0x00008000
 
@@ -78,26 +106,26 @@ _filter:
 
 	stwu	1,-368(1)	# adjust stack pointer
 
-#	la	8,0(1)		# save call-saved registers
-#	li	9,DCOMPLEX_SIZE
-#	stfpdux 14,8,9
-#	stfpdux 15,8,9
-#	stfpdux 16,8,9
-#	stfpdux 17,8,9
-#	stfpdux 18,8,9
-#	stfpdux 19,8,9
-#	stfpdux 20,8,9
-#	stfpdux 21,8,9
-#	stfpdux 22,8,9
-#	stfpdux 23,8,9
-#	stfpdux 24,8,9
-#	stfpdux 25,8,9
-#	stfpdux 26,8,9
-#	stfpdux 27,8,9
-#	stfpdux 28,8,9
-#	stfpdux 29,8,9
+	la	8,0(1)		# save call-saved registers
+	li	9,DCOMPLEX_SIZE
+	stfpdux 14,8,9
+	stfpdux 15,8,9
+	stfpdux 16,8,9
+	stfpdux 17,8,9
+	stfpdux 18,8,9
+	stfpdux 19,8,9
+	stfpdux 20,8,9
+	stfpdux 21,8,9
+	stfpdux 22,8,9
+	stfpdux 23,8,9
+	stfpdux 24,8,9
+	stfpdux 25,8,9
+	stfpdux 26,8,9
+	stfpdux 27,8,9
+	stfpdux 28,8,9
+	stfpdux 29,8,9
 #	stfpdux 30,8,9		# f30 not used at the moment
-#	stfpdux 31,8,9
+	stfpdux 31,8,9
 	stmw	16,304(1)	# save r16 ... r31
 
 	lis	8,sub_value@ha	# load sub_values
@@ -105,7 +133,8 @@ _filter:
 	lfpdx	31,0,8
 
 	li	9,FCOMPLEX_SIZE
-	li	10,I16COMPLEX_SIZE*(NR_SUB_CHANNELS*NR_POLARIZATIONS)
+	#li	10,I16COMPLEX_SIZE*(NR_SUB_CHANNELS*NR_POLARIZATIONS)
+	li	10,I16COMPLEX_SIZE
 	li	11,FCOMPLEX_SIZE
 	lis	12,0x8000
 	ori	12,12,0x8000
@@ -590,90 +619,149 @@ loop:
 	stfpsux	14,3,9
 	stfpsux	15,3,9
 
-#	la	8,-16(1)	# restore call-saved registers
-#	li	9,DCOMPLEX_SIZE
+	la	8,-16(1)	# restore call-saved registers
+	li	9,DCOMPLEX_SIZE
 
-#	lfpdux	14,8,9
-#	lfpdux	15,8,9
-#	lfpdux	16,8,9
-#	lfpdux	17,8,9
-#	lfpdux	18,8,9
-#	lfpdux	19,8,9
-#	lfpdux	20,8,9
-#	lfpdux	21,8,9
-#	lfpdux	22,8,9
-#	lfpdux	23,8,9
-#	lfpdux	24,8,9
-#	lfpdux	25,8,9
-#	lfpdux	26,8,9
-#	lfpdux	27,8,9
-#	lfpdux	28,8,9
-#	lfpdux	29,8,9
+	lfpdux	14,8,9
+	lfpdux	15,8,9
+	lfpdux	16,8,9
+	lfpdux	17,8,9
+	lfpdux	18,8,9
+	lfpdux	19,8,9
+	lfpdux	20,8,9
+	lfpdux	21,8,9
+	lfpdux	22,8,9
+	lfpdux	23,8,9
+	lfpdux	24,8,9
+	lfpdux	25,8,9
+	lfpdux	26,8,9
+	lfpdux	27,8,9
+	lfpdux	28,8,9
+	lfpdux	29,8,9
 #	lfpdux	30,8,9
-#	lfpdux	31,8,9
+	lfpdux	31,8,9
 	lmw	16,304(1)	# restore r16 ... r31
 
 	addi	1,1,368		# restore stack pointer
 	blr			# return
 
 
-.global	_transpose_2
-_transpose_2:
-	
-	li	5,NR_SAMPLES_PER_INTEGRATION
-	mtctr	5
-	li	5,FCOMPLEX_SIZE*NR_SAMPLES_PER_INTEGRATION
-	li	6,FCOMPLEX_SIZE
-	li	7,FCOMPLEX_SIZE*(NR_POLARIZATIONS*NR_SUB_CHANNELS-3)
-	li	8,FCOMPLEX_SIZE*(-3*NR_SAMPLES_PER_INTEGRATION+1)
 
-	sub	3,3,7
+.align	5
+.global	_fast_memcpy
+_fast_memcpy:
+
+	li	8,-16
+	stfpdux 14,1,8
+	stfpdux 15,1,8
+	stfpdux 16,1,8
+	stfpdux 17,1,8
+	stfpdux 18,1,8
+	stfpdux 19,1,8
+	stfpdux 20,1,8
+	stfpdux 21,1,8
+	stfpdux 22,1,8
+	stfpdux 23,1,8
+	stfpdux 24,1,8
+	stfpdux 25,1,8
+	stfpdux 26,1,8
+	stfpdux 27,1,8
+	stfpdux 28,1,8
+	stfpdux 29,1,8
+	stfpdux 30,1,8
+	stfpdux 31,1,8
+
+	srwi	5,5,9
+	mtctr	5
+	li	8,16
+
+	sub	3,3,8
 	sub	4,4,8
 
-L2:	
-	lfpsux	0,4,8
-	lfpsux	1,4,5
-	lfpsux	2,4,5
-	lfpsux	3,4,5
+L0:
+	lfpdux	0,4,8
+	lfpdux	1,4,8
+	lfpdux	2,4,8
+	lfpdux	3,4,8
+	lfpdux	4,4,8
+	lfpdux	5,4,8
+	lfpdux	6,4,8
+	lfpdux	7,4,8
+	lfpdux	8,4,8
+	lfpdux	9,4,8
+	lfpdux	10,4,8
+	lfpdux	11,4,8
+	lfpdux	12,4,8
+	lfpdux	13,4,8
+	lfpdux	14,4,8
+	lfpdux	15,4,8
+	lfpdux	16,4,8
+	lfpdux	17,4,8
+	lfpdux	18,4,8
+	lfpdux	19,4,8
+	lfpdux	20,4,8
+	lfpdux	21,4,8
+	lfpdux	22,4,8
+	lfpdux	23,4,8
+	lfpdux	24,4,8
+	lfpdux	25,4,8
+	lfpdux	26,4,8
+	lfpdux	27,4,8
+	lfpdux	28,4,8
+	lfpdux	29,4,8
+	lfpdux	30,4,8
+	lfpdux	31,4,8
+	stfpdux	0,3,8
+	stfpdux	1,3,8
+	stfpdux	2,3,8
+	stfpdux	3,3,8
+	stfpdux	4,3,8
+	stfpdux	5,3,8
+	stfpdux	6,3,8
+	stfpdux	7,3,8
+	stfpdux	8,3,8
+	stfpdux	9,3,8
+	stfpdux	10,3,8
+	stfpdux	11,3,8
+	stfpdux	12,3,8
+	stfpdux	13,3,8
+	stfpdux	14,3,8
+	stfpdux	15,3,8
+	stfpdux	16,3,8
+	stfpdux	17,3,8
+	stfpdux	18,3,8
+	stfpdux	19,3,8
+	stfpdux	20,3,8
+	stfpdux	21,3,8
+	stfpdux	22,3,8
+	stfpdux	23,3,8
+	stfpdux	24,3,8
+	stfpdux	25,3,8
+	stfpdux	26,3,8
+	stfpdux	27,3,8
+	stfpdux	28,3,8
+	stfpdux	29,3,8
+	stfpdux	30,3,8
+	stfpdux	31,3,8
+	bdnz	L0
 
-	dcbz	3,7
-	stfpsux	0,3,7
-	stfpsux	1,3,6
-	stfpsux	2,3,6
-	stfpsux	3,3,6
-
-	bdnz	L2
-
-	blr
-
-
-.global	_transpose_3
-_transpose_3:
-
-	li	5,NR_CHANNELS_PER_CORRELATOR
-	mtctr	5
-
-	li	6,8
-	lis	7,FCOMPLEX_SIZE*(NR_POLARIZATIONS*NR_SAMPLES_PER_INTEGRATION*NR_STATIONS-3)@ha
-	addi	7,7,FCOMPLEX_SIZE*(NR_POLARIZATIONS*NR_SAMPLES_PER_INTEGRATION*NR_STATIONS-3)@l
-	li	5,FCOMPLEX_SIZE*NR_SUB_CHANNELS
-	li	8,FCOMPLEX_SIZE*(-3*NR_SUB_CHANNELS+1)
-
-	sub	3,3,7
-	sub	4,4,8
-
-L3:	
-	lfpsux	0,4,8
-	lfpsux	1,4,5
-	lfpsux	2,4,5
-	lfpsux	3,4,5
-
-	dcbz	3,7
-	stfpsux	0,3,7
-	stfpsux	1,3,6
-	stfpsux	2,3,6
-	stfpsux	3,3,6
-
-	bdnz	L3
-
+	lfpdx	31,0,1
+	lfpdux	30,1,8
+	lfpdux	29,1,8
+	lfpdux	28,1,8
+	lfpdux	27,1,8
+	lfpdux	26,1,8
+	lfpdux	25,1,8
+	lfpdux	24,1,8
+	lfpdux	23,1,8
+	lfpdux	22,1,8
+	lfpdux	21,1,8
+	lfpdux	20,1,8
+	lfpdux	19,1,8
+	lfpdux	18,1,8
+	lfpdux	17,1,8
+	lfpdux	16,1,8
+	lfpdux	15,1,8
+	lfpdux	14,1,8
+	addi	1,1,16
 	blr

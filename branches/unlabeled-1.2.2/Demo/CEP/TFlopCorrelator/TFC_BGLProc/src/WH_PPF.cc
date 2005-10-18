@@ -554,11 +554,9 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
 extern "C"
 {
   void _fft_16(const fcomplex *in, int in_stride, fcomplex *out, int out_stride);
-  void _prefetch(const i16complex *, int nr_samples);
-  void _transpose_2(fcomplex *out, const fcomplex *in);
-  void _transpose_3(fcomplex *out, const fcomplex *in, int nr_samples);
-  void _filter(fcomplex delayLine[NR_TAPS], const float weights[NR_TAPS], const i16complex samples[], fcomplex *out, int nr_samples_div_16);
-  void _zero_area(fcomplex *ptr, int nr_cache_lines);
+  void _transpose_8x4(i16complex *out, const i16complex *in);
+  void _transpose_4x8(fcomplex *out, const fcomplex *in, int length, int input_stride, int output_stride);
+  void _filter(fcomplex delayLine[NR_TAPS], const float weights[NR_TAPS], const i16complex samples[], fcomplex out[], int nr_samples_div_16);
 }
 
 
@@ -635,8 +633,9 @@ inline __complex__ float to_fcomplex(i16complex z)
 
 void WH_PPF::process()
 {
-  static NSTimer timer("WH_PPF::process()", true), fftTimer("FFT", true);
-  static NSTimer inTimer("inTimer", true), prefetchTimer("prefetch", true);
+  static NSTimer timer("WH_PPF::process()", true);
+  static NSTimer FIRtimer("FIRtimer", true), fftTimer("FFT", true);
+  static NSTimer trans1timer("trans1timer", true);
 
   timer.start();
 
@@ -647,6 +646,7 @@ void WH_PPF::process()
   static fcomplex fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
   static fcomplex fftOutData[2][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
   static fcomplex tmp[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
+  static i16complex tmp2[NR_SUB_CHANNELS][NR_POLARIZATIONS][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
 
   for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
     outputs[corr] = (DH_CorrCube::BufferType *) (static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer());
@@ -656,32 +656,39 @@ void WH_PPF::process()
 //   for (int stat = 0; stat < NR_STATIONS; stat ++) {
   for (int stat = 0; stat < itsMaxElement; stat ++) {
 
-    inTimer.start();
 
+#if 0
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
-#if 0
 	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
 	  fcomplex sample = to_fcomplex((*input)[stat][time][chan][pol]);
 	  fftInData[time][pol][chan] = itsFIRs[stat][chan][pol].processNextSample(sample,(float*)FIR::weights[chan]);
 	}
-#else
-	_filter(itsFIRs[stat][chan][pol].itsDelayLine, FIR::weights[chan], &(*input)[stat][0][chan][pol], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
-
-	if ((chan & 3) == 3) {
-	  _transpose_2(&fftInData[0][pol][chan - 3], &tmp[0][0]);
-	}
-#endif
       }
     }
+#else
+    trans1timer.start();
+    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 8) {
+      _transpose_8x4(&tmp2[0][0][time], &(*input)[stat][time][0][0]);
+    }
+    trans1timer.stop();
+    FIRtimer.start();
+    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+      for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
+	_filter(itsFIRs[stat][chan][pol].itsDelayLine, FIR::weights[chan], &tmp2[chan][pol][0], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
 
-    inTimer.stop();
+	if ((chan & 3) == 3) {
+	  _transpose_4x8(&fftInData[0][pol][chan - 3], &tmp[0][0], NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_POLARIZATIONS * NR_SUB_CHANNELS);
+	}
+      }
+    }
+    FIRtimer.stop();
+  
+#endif
 
+  
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
       fftTimer.start();
-
-      //_zero_area(fftOutData[0][0], sizeof fftOutData / 32);
-
       for (int t = 0; t < 2; t ++) {
 	for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	  fftw_one(itsFFTWPlan, (fftw_complex *) fftInData[time + t][pol], (fftw_complex *) fftOutData[t][pol]);
@@ -700,7 +707,13 @@ void WH_PPF::process()
 	  }
 	}
 #else
-	_transpose_3(&(*outputs[corr])[0][stat][time][0], &fftOutData[0][0][corr * NR_CHANNELS_PER_CORRELATOR], NR_CHANNELS_PER_CORRELATOR);
+
+	_transpose_4x8(&(*outputs[corr])[0][stat][time][0],
+		       &fftOutData[0][0][corr * NR_CHANNELS_PER_CORRELATOR],
+		       NR_CHANNELS_PER_CORRELATOR,
+		       sizeof(fcomplex) * NR_SUB_CHANNELS,
+		       sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * MAX_STATIONS_PER_PPF);
+
 #endif
       }
     }

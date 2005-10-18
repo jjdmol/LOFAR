@@ -47,6 +47,7 @@ extern "C"
 		      stationOutputType *S0_S2, stationOutputType *S0_S3,
 		      stationOutputType *S1_S2, stationOutputType *S1_S3);
   void _auto_correlate_1x1(const stationInputType *S0, stationOutputType *S0_S0);
+  void _fast_memcpy(void *dst, const void *src, size_t size);
 //   void _correlate_2x3(const fcomplex *samples, dcomplex *out);
 }
 
@@ -119,8 +120,10 @@ void WH_Correlator::process()
   /// (could this be done more efficiently?)
   /// Currently we hardcore 2 inputs.
   int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
-  memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize);
-  memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (bufSize-1) * sizeof(fcomplex));
+//   memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize);
+//   memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (bufSize-1) * sizeof(fcomplex));
+  _fast_memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
+  _fast_memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
 
   timer.start();
 #if 0
