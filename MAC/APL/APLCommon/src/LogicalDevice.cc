@@ -33,8 +33,8 @@
 #include "APLCommon/APL_Defines.h"
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
-#include "LogicalDevice_Protocol.ph"
-#include "StartDaemon_Protocol.ph"
+#include "APLCommon/LogicalDevice_Protocol.ph"
+#include "APLCommon/StartDaemon_Protocol.ph"
 
 using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF::Common;

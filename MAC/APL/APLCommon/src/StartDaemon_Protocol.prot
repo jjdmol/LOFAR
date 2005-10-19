@@ -27,7 +27,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+2)";
 
 // specify extra include files
 // e.g.
-include = '<sys/time.h>';
+// include = '<sys/time.h>';
 include = '<APLCommon/APL_Defines.h>';
 
 prelude = << PRELUDE_END
@@ -42,20 +42,20 @@ PRELUDE_END;
 // A "param" has a "name" and a "type".
 //
 event = {
-	signal = SCHEDULE;
-	dir = IN;
-	param = {
-		name = "logicalDeviceType";
-		type = "TLogicalDeviceTypes";
-	};
-	param = {
-	  name = "taskName";
+  signal = SCHEDULE;
+  dir = IN;
+  param = {
+    name = "logicalDeviceType";
+    type = "APLCommon::TLogicalDeviceTypes";
+  };
+  param = {
+    name = "taskName";
     type = "string";
-	};
-	param = {
-		name = "fileName";
+  };
+  param = {
+    name = "fileName";
     type = "string";
-	};
+  };
 };
 
 event = {
@@ -63,12 +63,12 @@ event = {
   dir = OUT;
   param = {
     name = "result";
-    type = "TSDResult";
+    type = "APLCommon::TSDResult";
   };
-	param = {
-	  name = "VIrootID";
-	  type = "string";
-	};
+  param = {
+    name = "VIrootID";
+    type = "string";
+  };
 };
 
 event = {
