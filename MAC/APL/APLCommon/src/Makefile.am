@@ -4,32 +4,13 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 pkgincludedir = $(includedir)/APLCommon
-
-NOINSTHDRS = \
-	../include/APLCommon/APL_Defines.h \
-	../include/APLCommon/APLCommonExceptions.h \
-	../include/APLCommon/APLUtilities.h \
-	../include/APLCommon/LogicalDevice.h \
-	../include/APLCommon/LogicalDeviceFactoryBase.h \
-	../include/APLCommon/LogicalDeviceFactory.h \
-	../include/APLCommon/SharedLogicalDeviceFactory.h \
-	../include/APLCommon/SingleInstanceLogicalDeviceFactory.h \
-	../include/APLCommon/PropertySetAnswer.h \
-	../include/APLCommon/PropertySetAnswerHandlerInterface.h \
-	../include/APLCommon/StartDaemon.h
-
-INSTHDRS = \
-	LogicalDevice_Protocol.ph \
-	StartDaemon_Protocol.ph
-
-pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
+pkginclude_HEADERS = $(BUILT_SOURCES)
 
 DOCHDRS	=	$(pkginclude_HEADERS)
       
 lib_LTLIBRARIES 	= libaplcommon.la
 
 libaplcommon_la_CPPFLAGS= \
-  -I$(top_srcdir)/include \
 	-DBOOST_DISABLE_THREADS \
   -Wno-deprecated \
 	-fmessage-length=0 \
@@ -48,9 +29,7 @@ BUILT_SOURCES = \
 	LogicalDevice_Protocol.ph \
 	StartDaemon_Protocol.ph
 
-EXTRA_DIST = \
-	LogicalDevice_Protocol.ph \
-	StartDaemon_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
 
 clean-local:
 	rm -f *.ph

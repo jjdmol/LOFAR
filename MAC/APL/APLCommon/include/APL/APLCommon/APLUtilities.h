@@ -32,7 +32,7 @@
 //# GCF Includes
 
 //# local includes
-#include "APLCommon/StartDaemon_Protocol.ph"
+#include "APLCommon/APL_Defines.h"
 
 // forward declaration
 

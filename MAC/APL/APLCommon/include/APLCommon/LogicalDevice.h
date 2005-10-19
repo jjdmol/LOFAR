@@ -38,8 +38,7 @@
 #include "APLCommon/PropertySetAnswerHandlerInterface.h"
 #include "APLCommon/PropertySetAnswer.h"
 #include "APLCommon/APLCommonExceptions.h"
-#include "APLCommon/LogicalDevice_Protocol.ph"
-#include "APLCommon/StartDaemon_Protocol.ph"
+#include "APLCommon/APL_Defines.h"
 
 //# Common Includes
 #include <Common/lofar_string.h>

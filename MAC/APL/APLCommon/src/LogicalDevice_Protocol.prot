@@ -31,27 +31,10 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+1)";
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
+include = '<APLCommon/APL_Defines.h>';
 
 prelude = << PRELUDE_END
 // define namespace and enumerations here
-
-enum TLDResult
-{
-  LD_RESULT_NO_ERROR = 0, 
-  LD_RESULT_UNSPECIFIED,
-  LD_RESULT_FILENOTFOUND,
-  LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
-  LD_RESULT_UNKNOWN_COMMAND,
-  LD_RESULT_DISABLED,
-  LD_RESULT_LOW_QUALITY,
-  LD_RESULT_TIMING_FAILURE,
-  LD_RESULT_RANGE_ERROR,     // range error in message parameters
-  LD_RESULT_BEAMALLOC_ERROR, // could not allocate beam
-  LD_RESULT_BEAMFREE_ERROR,  // could not free beam
-  LD_RESULT_SETCLOCKS_ERROR, // error setting td clocks
-  LD_RESULT_STARTCAL_ERROR,  // error starting calibration
-  
-};
 
 PRELUDE_END;
 
