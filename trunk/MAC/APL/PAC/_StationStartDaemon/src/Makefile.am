@@ -33,9 +33,7 @@ EXTRA_DIST = $(BUILT_SOURCES) $(configfiles_DATA) $(sysconf_DATA)
 configfilesdir=$(bindir)
 configfiles_DATA =
 
-sysconf_DATA= \
-	StationStartDaemon.conf \
-	StationStartDaemon.log_prop
+sysconf_DATA= $(BUILT_SOURCES)
 
 %.log_prop: %.log_prop.in
 	cp $< $@
