@@ -9,7 +9,7 @@ StationStartDaemon_CPPFLAGS= \
 
 StationStartDaemon_SOURCES = \
 	StationStartDaemonMain.cc
-	
+
 StationStartDaemon_LDADD = $(LOFAR_DEPEND)
 StationStartDaemon_DEPENDENCIES	= $(LOFAR_DEPEND)
 
@@ -36,10 +36,10 @@ configfiles_DATA =
 sysconf_DATA= \
 	StationStartDaemon.conf \
 	StationStartDaemon.log_prop
-	
+
 %.log_prop: %.log_prop.in
 	cp $< $@
-	
+
 %.conf: %.conf.in
 	cp $< $@
 

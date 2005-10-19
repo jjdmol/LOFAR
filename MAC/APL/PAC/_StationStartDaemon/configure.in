@@ -72,4 +72,5 @@ dnl
 AC_OUTPUT(
 src/Makefile
 Makefile
+StationStartDaemon.spec
 )

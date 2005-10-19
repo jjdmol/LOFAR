@@ -1,17 +1,6 @@
-pkgincludedir = $(includedir)/StationReceptorGroup
-
-NOINSTHDRS =
-
-INSTHDRS =
-
-pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
-
-DOCHDRS =       $(pkginclude_HEADERS)
-
 lib_LTLIBRARIES 	= libstationreceptorgroup.la
 
 libstationreceptorgroup_la_CPPFLAGS= \
-	-I$(top_srcdir)/include \
 	-DBOOST_DISABLE_THREADS \
 	-Wno-deprecated \
 	-fmessage-length=0 \
