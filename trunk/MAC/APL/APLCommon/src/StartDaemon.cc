@@ -32,7 +32,7 @@
 #include "APLCommon/LogicalDeviceFactoryBase.h"
 
 #include "APLCommon/StartDaemon.h"
-#include "StartDaemon_Protocol.ph"
+#include "APLCommon/StartDaemon_Protocol.ph"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;

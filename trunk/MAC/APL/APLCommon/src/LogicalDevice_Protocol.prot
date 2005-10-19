@@ -30,7 +30,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+1)";
 
 // specify extra include files
 // e.g.
-include = '<sys/time.h>';
+// include = '<sys/time.h>';
 include = '<APLCommon/APL_Defines.h>';
 
 prelude = << PRELUDE_END
@@ -65,7 +65,7 @@ event = {
   dir = OUT; // from parent to child
   param = {
     name = "result";
-    type = "TLDResult";
+    type = "APLCommon::TLDResult";
   };
 };
 
@@ -90,7 +90,7 @@ event = {
 	dir = IN; // from child to parent
 	param = {
 	  name = "result";
-	  type = "TLDResult";
+	  type = "APLCommon::TLDResult";
 	};
 };
 
@@ -110,7 +110,7 @@ event = {
 	dir = IN; // from child to parent
 	param = {
 	  name = "result";
-	  type = "TLDResult";
+	  type = "APLCommon::TLDResult";
 	};
 };
 
@@ -130,7 +130,7 @@ event = {
 	dir = IN; // from child to parent
   param = {
     name = "result";
-    type = "TLDResult";
+    type = "APLCommon::TLDResult";
   };
 };
 
@@ -150,7 +150,7 @@ event = {
 	dir = IN; // from child to parent
   param = {
     name = "result";
-    type = "TLDResult";
+    type = "APLCommon::TLDResult";
   };
 };
 
@@ -170,7 +170,7 @@ event = {
 	dir = IN; // from child to parent
   param = {
     name = "result";
-    type = "TLDResult";
+    type = "APLCommon::TLDResult";
   };
 };
 
@@ -190,7 +190,7 @@ event = {
 	dir = IN; // from child to parent
   param = {
     name = "result";
-    type = "TLDResult";
+    type = "APLCommon::TLDResult";
   };
 };
 
@@ -210,6 +210,6 @@ event = {
 	dir = IN; // from child to parent
   param = {
     name = "result";
-    type = "TLDResult";
+    type = "APLCommon::TLDResult";
   };
 };

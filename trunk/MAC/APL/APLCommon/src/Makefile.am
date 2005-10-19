@@ -3,21 +3,16 @@ SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
-pkgincludedir = $(includedir)/APLCommon
-pkginclude_HEADERS = $(BUILT_SOURCES)
+lib_LTLIBRARIES = libaplcommon.la
 
-DOCHDRS	=	$(pkginclude_HEADERS)
-      
-lib_LTLIBRARIES 	= libaplcommon.la
-
-libaplcommon_la_CPPFLAGS= \
+libaplcommon_la_CPPFLAGS = \
 	-DBOOST_DISABLE_THREADS \
-  -Wno-deprecated \
+	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once \
 	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
-libaplcommon_la_SOURCES= $(DOCHDRS) \
+libaplcommon_la_SOURCES = \
 	APLUtilities.cc \
 	LogicalDevice.cc \
 	StartDaemon.cc \
