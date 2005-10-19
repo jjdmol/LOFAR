@@ -25,6 +25,7 @@
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
+#include <Common/Timer.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
@@ -44,12 +45,118 @@ bool compare (const MeqMatrix& m1, const MeqMatrix& m2)
   return (LOFAR::real(resc) < 1.e-7  &&  LOFAR::imag(resc) < 1.e-7);
 }
 
+void eval3 (int ncy, int ndx, int ndy, double stepx, double stepy,
+	    const double* coeffData, double pert, MeqResult& res,
+	    bool makediff=true)
+{
+  res = MeqResult(3*ncy);
+  double* value = res.setDoubleFormat (ndx, ndy);
+  if (makediff) {
+    for (int i=0; i<3*ncy; ++i) {
+      res.setPerturbedDouble (i, ndx, ndy);
+    }
+  }
+  NSTimer timer1("new");
+  timer1.start();
+      double valy = 0;
+      for (int j=0; j<ndy; j++) {
+	const double* mvalue = value;
+	// Calculate the y-factors.
+	double lastval = coeffData[0];
+	double fact1   = coeffData[1];
+	double fact2   = coeffData[2];
+	double y = valy;
+	for (int iy=1; iy<ncy; ++iy) {
+	  lastval += y*coeffData[3*iy];
+	  fact1   += y*coeffData[3*iy+1];
+	  fact2   += y*coeffData[3*iy+2];
+	  y *= valy;
+	}
+	*value++ = lastval;
+	fact1 *= stepx;
+	fact2 *= stepx*stepx;
+	fact1 += fact2;
+	fact2 *= 2;
+	for (int ix=1; ix<ndx; ++ix) {
+	  lastval += fact1;
+	  fact1 += fact2;
+	  *value++ = lastval;
+	}
+	if (makediff) {
+	  // Calculate the perturbed value for the coefficients without
+	  // a factor of x (thus c00, c10*y, c20*y^2, etc.).
+	  // Do the same for c01*x, c11*x*y, etc. using step.
+	  // Do the same for c02*x^2, c12*x^2*y, etc. using step1,step2.
+	  double perty=pert;
+	  for (int iy=0; iy<ncy; ++iy) {
+	    double* valuep0 = res.getPerturbedValueRW(iy*3).doubleStorage()
+	                      + j*ndx;
+	    for (int i=0; i<ndx; ++i) {
+	      valuep0[i] = mvalue[i] + perty;
+	    }
+	    perty *= valy;
+	  }
+	  perty=pert;
+	  for (int iy=0; iy<ncy; ++iy) {
+	    double* valuep1 = res.getPerturbedValueRW(iy*3+1).doubleStorage()
+	                      + j*ndx;
+	    double step1 = perty * stepx;
+	    double val1 = 0;
+	    for (int i=0; i<ndx; ++i) {
+	      valuep1[i] = mvalue[i] + val1;
+	      val1 += step1;
+	    }
+	    perty *= valy;
+	  }
+	  perty=pert;
+	  for (int iy=0; iy<ncy; ++iy) {
+	    double* valuep2 = res.getPerturbedValueRW(iy*3+2).doubleStorage()
+	                      + j*ndx;
+	    double step2a = perty * stepx * stepx;
+	    double step2b = 2*step2a;
+	    double val2 = 0;
+	    for (int i=0; i<ndx; ++i) {
+	      valuep2[i] = mvalue[i] + val2;
+	      val2 += step2a;
+	      step2a += step2b;
+	    }
+	    perty *= valy;
+	  }
+// 	  double perty=pert;
+// 	  for (int iy=0; iy<ncy; ++iy) {
+// 	    double* valuep0 = res.getPerturbedValueRW(iy*3).doubleStorage();
+// 	    double* valuep1 = res.getPerturbedValueRW(iy*3+1).doubleStorage();
+// 	    double step1 = perty * stepx;
+// 	    double val1 = 0;
+// 	    double* valuep2 = res.getPerturbedValueRW(iy*3+2).doubleStorage();
+// 	    double step2a = step1 * stepx;
+// 	    double step2b = 2*step2a;
+// 	    double val2 = 0;
+// 	    for (int i=0; i<ndx; ++i) {
+// 	      valuep0[i+j*ndx] = mvalue[i] + perty;
+// 	      valuep1[i+j*ndx] = mvalue[i] + val1;
+// 	      val1 += step1;
+// 	      valuep2[i+j*ndx] = mvalue[i] + val2;
+// 	      val2 += step2a;
+// 	      step2a += step2b;
+// 	    }
+// 	    perty *= valy;
+// 	  }
+	}
+	valy += stepy;
+      }
+  timer1.stop();
+  cout << ">>>" << endl;
+  timer1.print(cout);
+  cout << "<<<" << endl;
+	
+}
+
 void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
 {
   MeqRequest req(domain, nx, ny);
   MeqResult res = polc.getResult (req);
   cout << "domain: " << domain << ' ' << nx << ' ' << ny << endl;
-  //  cout.precision(4);
   cout << "result: " << res.getValue() << endl;
   // Calculate the result for all perturbed values.
   int nspid = polc.makeSolvable (0);
@@ -66,6 +173,38 @@ void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
     MeqResult resp = polcp.getResult (req);
     ASSERT (compare (resp.getValue(), resm.getPerturbedValue (i)));
   }
+
+  const MeqMatrix& coeff = polc.getCoeff();
+  if (coeff.nx() < 0) {
+////  if (coeff.nx() == 3) {
+    cout << "Evaluate with ncx=3" << endl;
+    MeqResult rese;
+    eval3 (coeff.ny(), nx, ny, 1./nx, 1./ny, coeff.doubleStorage(),
+	   polc.getPerturbation(), rese, false);
+    NSTimer tim1("ntot");
+    tim1.start();
+    eval3 (coeff.ny(), nx, ny, 1./nx, 1./ny, coeff.doubleStorage(),
+	   polc.getPerturbation(), rese);
+    tim1.stop();
+    cout << ">>>" << endl;
+    tim1.print(cout);
+    cout << "<<<" << endl;
+    ASSERT (compare (rese.getValue(), resm.getValue()));
+    for (int i=0; i<nspid; ++i) {
+      ASSERT (compare (rese.getPerturbedValue(i), resm.getPerturbedValue(i)));
+    }
+    NSTimer tim2("otot");
+    tim2.start();
+    rese = polc.getResult (reqm);
+    tim2.stop();
+    cout << ">>>" << endl;
+    tim2.print(cout);
+    cout << "<<<" << endl;
+    ASSERT (compare (rese.getValue(), resm.getValue()));
+    for (int i=0; i<nspid; ++i) {
+      ASSERT (compare (rese.getPerturbedValue(i), resm.getPerturbedValue(i)));
+    }
+  }
 }
 
 void doIt (MeqPolc& polc)
@@ -76,6 +215,9 @@ void doIt (MeqPolc& polc)
   doEval (polc, domain, 1, 1);
   doEval (polc, domain, 2, 2);
   doEval (polc, domain, 8, 1);
+  ///  doEval (polc, domain, 64, 1);
+    ///  doEval (polc, domain, 64, 8);
+    ///  doEval (polc, domain, 256, 1);
 }
 
 int main()
