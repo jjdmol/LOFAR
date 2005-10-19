@@ -39,10 +39,10 @@ configfiles_DATA =
 sysconf_DATA= \
 	RegisterAccess.conf \
 	RegisterAccess.log_prop
-	
+
 %.log_prop: %.log_prop.in
 	cp $< $@
-	
+
 %.conf: %.conf.in
 	cp $< $@
 
