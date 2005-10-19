@@ -2,22 +2,22 @@
 
 BASEDIR=/data/PSS3/diepen/BBS2
 
-./tPerturbed $USER $BASEDIR/demo3_p1.MS $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP LOFAR.RI 'RA.*' 'DEC.*' 'StokesI.*'
+./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP LOFAR.RI 'RA.*' 'DEC.*' 'StokesI.*'
 status=$?
 
-./tPerturbed $USER $BASEDIR/demo3_p1.MS $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP LOFAR.AP 'RA.*' 'DEC.*' 'StokesI.*'
+./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP LOFAR.AP 'RA.*' 'DEC.*' 'StokesI.*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
 fi
 
-./tPerturbed $USER $BASEDIR/demo3_p1.MS $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP LOFAR.AP 'EJ*'
+./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3_gsm.MEP LOFAR.AP 'EJ*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
 fi
 
-./tPerturbed $USER $BASEDIR/demo3_p1.MS $BASEDIR/demo3.MEP $BASEDIR/demo3p_gsm.MEP LOFAR.AP 'RA.*' 'DEC.*' 'StokesI.*'
+./tPerturbed $USER $BASEDIR/demo3.MS_p1 $BASEDIR/demo3.MEP $BASEDIR/demo3p_gsm.MEP LOFAR.AP 'RA.*' 'DEC.*' 'StokesI.*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
