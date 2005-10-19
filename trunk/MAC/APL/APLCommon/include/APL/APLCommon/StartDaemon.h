@@ -42,7 +42,7 @@
 #include "APLCommon/PropertySetAnswerHandlerInterface.h"
 #include "APLCommon/PropertySetAnswer.h"
 
-#include "APLCommon/StartDaemon_Protocol.ph"
+#include "APLCommon/APL_Defines.h"
 
 // forward declaration
 
