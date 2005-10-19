@@ -5,22 +5,7 @@ SUFFIXES = .ph
 %.ph: ServiceBroker/%.prot
 	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
-pkgincludedir = $(includedir)/GCF/TM
-pkginclude_HEADERS = \
-	../include/GCF/TM/GCF_ETHRawPort.h \
-	../include/GCF/TM/GCF_TCPPort.h \
-	../include/GCF/TM/GCF_RawPort.h \
-	../include/GCF/TM/GCF_Port.h \
-	../include/GCF/TM/GCF_PortInterface.h \
-	../include/GCF/TM/GCF_Event.h \
-	../include/GCF/TM/GCF_Protocols.h \
-	../include/GCF/TM/GCF_Task.h \
-	../include/GCF/TM/GCF_Handler.h \
-	../include/GCF/TM/GCF_Fsm.h \
-	../include/GCF/TM/GCF_Control.h \
-	../include/GCF/TM/GCF_DevicePort.h
- 
-DOCHDRS = $(pkginclude_HEADERS) \
+DOCHDRS = \
   GTM_Defines.h \
   Timer/GTM_Timer.h \
   Timer/GTM_TimerHandler.h \
@@ -57,15 +42,14 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   ServiceBroker/GTM_ServiceBroker.cc \
 	SB_Protocol.cc
 
-libgcftm_la_CPPFLAGS=-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/ServiceBroker
+libgcftm_la_CPPFLAGS=-I$(top_srcdir)/src/ServiceBroker
 
 libgcftm_la_CXXFLAGS=-fmessage-length=0
 
 BUILT_SOURCES =  \
 	SB_Protocol.ph
 
-EXTRA_DIST = $(BUILT_SOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) mac.log_prop.in
 	
 sysconf_DATA = \
 	mac.log_prop

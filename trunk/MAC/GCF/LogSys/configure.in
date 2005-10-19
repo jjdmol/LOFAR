@@ -2,10 +2,8 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT(include/GCF/LogSys/GCF_KeyValueLogger.h)
-dnl AC_CONFIG_AUX_DIR(config)
-dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(GCF/LogSys, 6.0)
+AM_INIT_AUTOMAKE(GCFLogSys, 6.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -38,7 +36,6 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-#lofar_QT
 lofar_PVSS
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
@@ -56,5 +53,8 @@ KVLogSys/src/Makefile
 KVLogSys/Makefile
 CLP/src/Makefile
 CLP/Makefile
+include/Makefile
+include/GCF/LogSys/Makefile
 Makefile
+GCFLogSys.spec
 )

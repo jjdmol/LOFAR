@@ -1,15 +1,4 @@
-pkgincludedir = $(includedir)/GCF/PAL
-pkginclude_HEADERS = \
-	../../include/GCF/PAL/GCF_ExtProperty.h \
-	../../include/GCF/PAL/GCF_Property.h \
-	../../include/GCF/PAL/GCF_MyProperty.h \
-	../../include/GCF/PAL/GCF_ExtPropertySet.h \
-	../../include/GCF/PAL/GCF_PropertySet.h \
-	../../include/GCF/PAL/GCF_MyPropertySet.h \
-	../../include/GCF/PAL/GCF_Answer.h \
-	../../include/GCF/PAL/GCF_PropertyProxy.h
-	
-DOCHDRS	=	$(pkginclude_HEADERS) \
+DOCHDRS	=	\
 	GPM_Controller.h \
 	GPM_PropertyService.h \
 	GPM_PropertyProxy.h \
@@ -38,14 +27,13 @@ libpml_la_SOURCES= $(DOCHDRS) \
 	GPM_PropertyService.cc \
 	GCF_PropertyProxy.cc
 
-libpml_la_CPPFLAGS= -I$(top_srcdir)/include \
-	-I$(top_srcdir)/SAL/src
+libpml_la_CPPFLAGS= -I$(top_srcdir)/SAL/src
 
 AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PML\"
 	
 BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) gcf-pml.conf.in
 
 sysconf_DATA= \
 	gcf-pml.conf

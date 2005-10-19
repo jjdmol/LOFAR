@@ -19,8 +19,6 @@ libpi_la_SOURCES= $(DOCHDRS) \
   GPI_PropertySet.cc \
   GPI_TH_Port.cc
 
-libpi_la_CPPFLAGS= -I$(top_srcdir)/include
-	
 bin_PROGRAMS   		= PropertyInterface
   
 PropertyInterface_SOURCES		= GPI_Main.cc
@@ -38,7 +36,7 @@ AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PI\"
 
 BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) gcf-pi.conf.in
 
 sysconf_DATA= \
 	PropertyInterface.conf

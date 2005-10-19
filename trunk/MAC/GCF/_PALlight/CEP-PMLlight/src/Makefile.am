@@ -1,9 +1,4 @@
-pkgincludedir = $(includedir)/GCF/PALlight
-pkginclude_HEADERS = \
-	../../include/GCF/PALlight/CEPProperty.h \
-	../../include/GCF/PALlight/CEPPropertySet.h
-	
-DOCHDRS	=	$(pkginclude_HEADERS) \
+DOCHDRS	=	\
   PIClient.h \
   PICEPDefines.h
         
@@ -14,8 +9,6 @@ libceppmllight_la_SOURCES= $(DOCHDRS) \
   CEPPropertySet.cc \
   PIClient.cc
   
-libceppmllight_la_CPPFLAGS= -I$(top_srcdir)/include
-
 lib_LTLIBRARIES 	= libgcfceppallight.la
 
 libgcfceppallight_la_SOURCES=

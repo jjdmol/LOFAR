@@ -1,7 +1,4 @@
-pkgincludedir = $(includedir)/GCF/LogSys
-pkginclude_HEADERS =
-	
-DOCHDRS	=	$(pkginclude_HEADERS) \
+DOCHDRS	=	\
 	CodeLoggingProcessor.h \
 	PropertyProxy.h
    
@@ -12,9 +9,7 @@ libclp_la_SOURCES	= $(DOCHDRS) \
 	PropertyProxy.cc
 
 libclp_la_LIBADD		= 
-libclp_la_CPPFLAGS= -DLOFARLOGGER_SUBPACKAGE=\"CLP\" \
-	-I$(top_srcdir)/include
-
+AM_CPPFLAGS= -DLOFARLOGGER_SUBPACKAGE=\"CLP\"
 
 bin_PROGRAMS   		= CodeLoggingProcessor
   
@@ -23,11 +18,12 @@ CodeLoggingProcessor_LDADD		    = libclp.la $(LOFAR_DEPEND) \
 	$(top_builddir)/KVLogSys/src/libgcfkvlc.la
 CodeLoggingProcessor_DEPENDENCIES	= libclp.la $(LOFAR_DEPEND) \
 	$(top_builddir)/KVLogSys/src/libgcfkvlc.la
-CodeLoggingProcessor_CPPFLAGS			= $(libclp_la_CPPFLAGS)
 
 BUILT_SOURCES =
 
-EXTRA_DIST = $(BUILT_SOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) \
+	CodeLoggingProcessor.conf.in \
+	CodeLoggingProcessor.log_prop.in
 
 sysconf_DATA= \
 	CodeLoggingProcessor.conf \

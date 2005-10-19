@@ -1,5 +1,4 @@
-cppflags = -I$(top_srcdir)/SAL/src \
-	-I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/SAL/src
 
 check_PROGRAMS 		= salEcho salPing
 
@@ -8,12 +7,10 @@ TESTS			= #salEcho salPing
 salEcho_SOURCES 			= Echo.cc Service.cc Echo_Protocol.cc
 salEcho_LDADD					= ../src/libsal.la $(LOFAR_DEPEND)
 salEcho_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND)
-salEcho_CPPFLAGS			= $(cppflags)
 
 salPing_SOURCES 					= Ping.cc  Echo_Protocol.cc
 salPing_LDADD						=  ../src/libsal.la $(LOFAR_DEPEND)
 salPing_DEPENDENCIES			= ../src/libsal.la $(LOFAR_DEPEND)
-salPing_CPPFLAGS= $(cppflags)
 
 AUTOGEN = autogen
 SUFFIXES = .ph
@@ -23,7 +20,7 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	Echo_Protocol.ph
 
-EXTRA_DIST = $(BUILT_SOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) sal-test.conf.in
 
 sysconf_DATA= \
 	salEcho.conf \
