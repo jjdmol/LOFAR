@@ -31,6 +31,8 @@
 #include <APLCommon/APLUtilities.h>
 #include "VirtualInstrument.h"
 
+#include <APLCommon/LogicalDevice_Protocol.ph>
+
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;

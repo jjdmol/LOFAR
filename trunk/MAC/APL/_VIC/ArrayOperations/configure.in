@@ -1,25 +1,25 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/ArrayOperations.cc)
+AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(ArrayOperations, 1.0)
+AM_INIT_AUTOMAKE(ArrayOperations, 3.1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
 dnl Checks for programs.
 AC_PROG_AWK
-AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_CXX
-AM_PROG_LEX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
+AC_PROG_YACC
+AM_PROG_LEX
 
 dnl Checks for libraries.
 
@@ -53,7 +53,6 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_PVSS(1)
-
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_0, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
@@ -65,6 +64,9 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/ArrayOperations/Makefile
 src/Makefile
 Makefile
+ArrayOperations.spec
 )

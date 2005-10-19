@@ -1,29 +1,20 @@
-lib_LTLIBRARIES 	= libarrayoperations.la
+lib_LTLIBRARIES	= libarrayoperations.la
 
-pkginclude_HEADERS = \
-	../include/ArrayOperations/ArrayOperations.h
-
-libarrayoperations_la_CPPFLAGS= \
-	-I$(top_srcdir)/include \
+libarrayoperations_la_CPPFLAGS = \
 	-DBOOST_DISABLE_THREADS \
-  -Wno-deprecated \
+	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once \
 	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
-libarrayoperations_la_SOURCES 		= \
+libarrayoperations_la_SOURCES = \
 	ArrayOperations.cc
-	
-include_HEADERS = 
 
 BUILT_SOURCES = 	
 
 EXTRA_DIST =   
 
-%.log_prop: %.log_prop.in
-	cp $< $@
-	
-%.conf: %.conf.in
-	cp $< $@
+clean-local:
+	rm -f *.ph
 
 include $(top_srcdir)/Makefile.common
