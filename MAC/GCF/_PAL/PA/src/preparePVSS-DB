@@ -2,7 +2,7 @@
 
 PROJ_PATH=`grep '^proj_path' ${PVSS_II} | sed 's/^.*proj_path *= * "//' | sed 's/".*//'| sed -n '$p' | tail -n 1`
 echo PropertyAgent: Current running PVSS project has been found in $PROJ_PATH
-cp -Rf pvss/* $PROJ_PATH >> /dev/null
+cp -Rf ../share/pvss/* $PROJ_PATH >> /dev/null
 echo PropertyAgent: Prepare DB
 PVSS00ctrl -script libs/gcfpa-prep.ctl -currentproj
 echo PropertyAgent: Start watch-dog in the background

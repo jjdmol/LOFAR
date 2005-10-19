@@ -13,8 +13,7 @@ libpa_la_SOURCES= $(DOCHDRS) \
 	GPA_RequestManager.cc \
 	GPA_Converter.cc
 	
-libpa_la_CPPFLAGS= -I$(top_srcdir)/include \
-	-I$(top_srcdir)/SAL/src
+#libpa_la_CPPFLAGS= -I$(top_srcdir)/SAL/src
 
 bin_PROGRAMS   		= PropertyAgent
   
@@ -25,10 +24,9 @@ PropertyAgent_LDADD		     			= libpa.la $(LOFAR_DEPEND) \
 PropertyAgent_DEPENDENCIES	= libpa.la $(LOFAR_DEPEND) \
 	$(top_builddir)/SAL/src/libsal.la
 	
-PropertyAgent_CPPFLAGS= -I$(top_srcdir)/include \
-	-I$(top_srcdir)/SAL/src
+#PropertyAgent_CPPFLAGS= -I$(top_srcdir)/SAL/src
 
-AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PA\"
+AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PA\" -I$(top_srcdir)/SAL/src
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
@@ -38,17 +36,11 @@ configfiles_DATA= \
 
 BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) $(configfiles_DATA) gcf-pa.conf.in 
 
 sysconf_DATA= \
 	PropertyAgent.conf
 
-install-data-local:
-	mkdir -p $(bindir)/pvss/scripts
-	mkdir -p $(bindir)/pvss/panels
-	cp -Rf $(top_srcdir)/PA/pvss/scripts $(bindir)/pvss/
-	cp -Rf $(top_srcdir)/PA/pvss/panels $(bindir)/pvss/
-	
 %.conf: gcf-pa.conf.in
 	cp $< $@
 

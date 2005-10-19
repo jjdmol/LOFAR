@@ -1,3 +1,3 @@
-SUBDIRS=src pvss
+SUBDIRS	= GCF
 
 include $(top_srcdir)/Makefile.common

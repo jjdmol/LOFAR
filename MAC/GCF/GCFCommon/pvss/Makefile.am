@@ -1,3 +1,3 @@
-SUBDIRS=src pvss
+SUBDIRS=scripts/libs
 
 include $(top_srcdir)/Makefile.common

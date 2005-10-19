@@ -1,24 +1,8 @@
-pkgincludedir = $(includedir)/GCF
-pkginclude_HEADERS = \
-	../include/GCF/GCF_PValue.h \
-	../include/GCF/GCF_PVChar.h \
-	../include/GCF/GCF_PVBool.h \
-	../include/GCF/GCF_PVDouble.h \
-	../include/GCF/GCF_PVString.h \
-	../include/GCF/GCF_PVInteger.h \
-	../include/GCF/GCF_PVUnsigned.h \
-	../include/GCF/GCF_PVDynArr.h \
-	../include/GCF/GCF_PVBlob.h \
-	../include/GCF/CmdLine.h \
-	../include/GCF/Utils.h \
-	../include/GCF/GCF_Defines.h \
-	../include/GCF/ParameterSet.h \
-	../include/GCF/Thread.h \
-	../include/GCF/Mutex.h
-
-DOCHDRS	=	$(pkginclude_HEADERS)
+DOCHDRS	=	GCO_Defines.h
       
 lib_LTLIBRARIES 	= libgcfcommon.la
+
+libgcfcommon_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 libgcfcommon_la_SOURCES= $(DOCHDRS) \
 	CmdLine.cc \
@@ -35,7 +19,5 @@ libgcfcommon_la_SOURCES= $(DOCHDRS) \
 	ParameterSet.cc \
 	Thread.cc
 	
-libgcfcommon_la_CPPFLAGS=-I$(top_srcdir)/include
-
 include $(top_srcdir)/Makefile.common
 

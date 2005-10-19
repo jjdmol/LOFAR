@@ -1,9 +1,4 @@
-pkginclude_HEADERS = \
-	../../include/GCF/PAL/GCF_PVSSPort.h \
-	../../include/GCF/PAL/GCF_PVSSInfo.h \
-	../../include/GCF/PAL/GCF_SysConnGuard.h
-
-DOCHDRS	=	$(pkginclude_HEADERS) \
+DOCHDRS	=	\
 	GSA_SCADAHandler.h \
 	GSA_PvssApi.h \
 	GSA_Resources.h \
@@ -26,8 +21,6 @@ libsal_la_SOURCES= $(DOCHDRS) \
 	GCF_PVSSInfo.cc \
 	GCF_SysConnGuard.cc \
 	GSA_SysConnGuard.cc
-
-libsal_la_CPPFLAGS= -I$(top_srcdir)/include
 
 AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"SAL\"
 		

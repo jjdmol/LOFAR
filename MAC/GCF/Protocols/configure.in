@@ -2,10 +2,8 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT(src/DH_PIProtocol.h)
-dnl AC_CONFIG_AUX_DIR(config)
-dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(GCF/Protocols, 6.0)
+AM_INIT_AUTOMAKE(GCFProtocols, 6.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -23,18 +21,6 @@ AC_PROG_LIBTOOL
 
 dnl Checks for libraries.
 
-dnl dnl Replace `main' with a function in -lfl:
-dnl AC_CHECK_LIB(fl, main)
-dnl dnl Replace `main' with a function in -lcosev_r:
-dnl AC_CHECK_LIB(cosev_r, main)
-dnl dnl Replace `main' with a function in -lcosnm_r:
-dnl AC_CHECK_LIB(cosnm_r, main)
-dnl dnl Replace `main' with a function in -lorb_r:
-dnl AC_CHECK_LIB(orb_r, main)
-dnl dnl Replace `main' with a function in -lpthread:
-dnl AC_CHECK_LIB(pthread, main)
-dnl dnl Replace `main' with a function in -lvport_r:
-dnl AC_CHECK_LIB(vport_r, main)
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -51,7 +37,6 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-#lofar_QT
 lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_3, 1,Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-2_1, 1, Transport/DataHolder.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_0, 1,GCF/GCF_Defines.h,,)
@@ -63,4 +48,5 @@ dnl
 AC_OUTPUT(
 src/Makefile
 Makefile
+GCFProtocols.spec
 )
