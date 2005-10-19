@@ -31,6 +31,8 @@
 #include <APLCommon/APLUtilities.h>
 #include <ArrayReceptorGroup/ArrayReceptorGroup.h>
 
+#include <APLCommon/LogicalDevice_Protocol.ph>
+
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
@@ -86,12 +88,12 @@ void ArrayReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
     case F_VGETRESP:
     case F_VCHANGEMSG:
     {
-      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+      //      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       break;
     }
     case F_EXTPS_LOADED:
     {
-      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+      //      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
       break;
     }
     case F_EXTPS_UNLOADED:
@@ -313,7 +315,7 @@ void ArrayReceptorGroup::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayReceptorGroup::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
+void ArrayReceptorGroup::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }

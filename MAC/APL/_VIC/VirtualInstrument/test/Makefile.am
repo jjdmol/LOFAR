@@ -1,11 +1,11 @@
-bin_PROGRAMS 		= avitest
+bin_PROGRAMS = avitest
 
-TESTS			= #avitest
+TESTS = #avitest
 
 avitest_CPPFLAGS= \
 	-I$(top_srcdir)/../GCF/GCFCommon/src \
 	-I$(top_srcdir)/VIC/VirtualInstrument/src \
-  -Wno-deprecated \
+	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
@@ -14,20 +14,34 @@ avitest_SOURCES 		= \
 	AVITestTask.cc \
 	AVITestDriverTask.cc \
 	AVITestMain.cc
-	
+
 avitest_LDADD = -lsuite
 
-BUILT_SOURCES = 
-	
-EXTRA_DIST =
-	
-sysconf_DATA= \
+NOINSTHDRS =
+
+INSTHDRS =
+
+pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
+
+DOCHDRS =       $(pkginclude_HEADERS)
+
+include_HEADERS =
+
+BUILT_SOURCES =         \
 	avitest.conf \
 	avitest.log_prop
-		
+
+EXTRA_DIST = $(BUILT_SOURCES) $(configfiles_DATA) $(sysconf_DATA)
+
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA =
+
+sysconf_DATA= $(BUILT_SOURCES)
+
 %.log_prop: %.log_prop.in
 	cp $< $@
-	
+
 %.conf: %.conf.in
 	cp $< $@
 

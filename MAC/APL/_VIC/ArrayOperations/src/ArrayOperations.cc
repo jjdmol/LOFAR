@@ -31,6 +31,8 @@
 #include <APLCommon/APLUtilities.h>
 #include <ArrayOperations/ArrayOperations.h>
 
+#include <APLCommon/LogicalDevice_Protocol.ph>
+
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
@@ -78,12 +80,12 @@ void ArrayOperations::concrete_handlePropertySetAnswer(GCFEvent& answer)
     case F_VGETRESP:
     case F_VCHANGEMSG:
     {
-      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+      //      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       break;
     }
     case F_EXTPS_LOADED:
     {
-      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+      //      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
       break;
     }
     case F_EXTPS_UNLOADED:
@@ -190,7 +192,7 @@ GCFEvent::TResult ArrayOperations::concrete_claimed_state(GCFEvent& event, GCFPo
   return status;
 }
 
-GCFEvent::TResult ArrayOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& errorCode)
+GCFEvent::TResult ArrayOperations::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -286,7 +288,7 @@ void ArrayOperations::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayOperations::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
+void ArrayOperations::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
