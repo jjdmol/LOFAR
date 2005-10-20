@@ -25,8 +25,8 @@
 #ifndef RSPDRIVERTASK_H_
 #define RSPDRIVERTASK_H_
 
-#include "RSP_Protocol.ph"
-#include "EPA_Protocol.ph"
+#include <RSP_Protocol/RSP_Protocol.ph>
+#include <RSP_Protocol/EPA_Protocol.ph>
 
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>

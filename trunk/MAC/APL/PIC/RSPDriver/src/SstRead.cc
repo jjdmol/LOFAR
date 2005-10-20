@@ -26,8 +26,9 @@
 
 #include <PSAccess.h>
 
+#include <RSP_Protocol/Statistics.h>
+
 #include "SstRead.h"
-#include "Statistics.h"
 #include "Cache.h"
 
 using namespace blitz;

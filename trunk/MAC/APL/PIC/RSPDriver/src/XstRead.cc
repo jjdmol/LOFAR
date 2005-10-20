@@ -25,9 +25,9 @@
 #include <RSP_Protocol/EPA_Protocol.ph>
 
 #include <PSAccess.h>
+#include <RSP_Protocol/Statistics.h>
 
 #include "XstRead.h"
-#include "Statistics.h"
 #include "Cache.h"
 
 using namespace blitz;
