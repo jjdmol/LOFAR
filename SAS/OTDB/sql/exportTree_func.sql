@@ -24,7 +24,7 @@
 
 --
 -- recursive helper function
--- exportSubTree (treeID, topNodeID, prefixlength)
+-- exportVICSubTree (treeID, topNodeID, prefixlength)
 --
 -- Makes a key-value list of a (sub)tree in usenet format.
 --
@@ -34,7 +34,7 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION exportSubTree(INT4, INT4, INT4)
+CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
   RETURNS TEXT AS '
 	DECLARE
 	  vResult		TEXT := \'\';
@@ -61,7 +61,54 @@ CREATE OR REPLACE FUNCTION exportSubTree(INT4, INT4, INT4)
 	    AND	 	parentID = $2
 		AND		leaf = false
 	  LOOP
-		vResult := vResult || exportSubTree($1, vRow.nodeID, $3);
+		vResult := vResult || exportVICSubTree($1, vRow.nodeID, $3);
+	  END LOOP;
+
+	  RETURN vResult;
+	END;
+' LANGUAGE plpgsql;
+
+--
+-- recursive helper function
+-- exportPICSubTree (treeID, topNodeID, prefixlength)
+--
+-- Makes a key-value list of a (sub)tree in usenet format.
+--
+-- Authorisation: no
+--
+-- Tables:	PIChierarchy	read
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION exportPICSubTree(INT4, INT4, INT4)
+  RETURNS TEXT AS '
+	DECLARE
+	  vResult		TEXT := \'\';
+	  vRow			RECORD;
+
+	BEGIN
+	  -- first dump own parameters
+	  FOR vRow IN
+	    SELECT	name     --, value
+	    FROM	PIChierarchy
+	    WHERE	treeID = $1
+	    AND	 	parentID = $2
+		AND		leaf = true
+	  LOOP
+		vResult := vResult || substr(vRow.name,$3) || chr(10); 
+--		vResult := vResult || substr(vRow.name,$3) || \'=\' 
+--													|| vRow.value || chr(10);
+	  END LOOP;
+
+	  -- call myself for all the children
+	  FOR vRow IN
+	    SELECT	nodeID, name
+	    FROM	PIChierarchy
+	    WHERE	treeID = $1
+	    AND	 	parentID = $2
+		AND		leaf = false
+	  LOOP
+		vResult := vResult || exportPICSubTree($1, vRow.nodeID, $3);
 	  END LOOP;
 
 	  RETURN vResult;
@@ -87,6 +134,7 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 		vResult			TEXT;
 		vName			VIChierarchy.name%TYPE;
 		vPrefixLen		INTEGER;
+		vIsPicTree		BOOLEAN;
 		vAuthToken		ALIAS FOR $1;
 
 	BEGIN
@@ -99,20 +147,33 @@ CREATE OR REPLACE FUNCTION exportTree(INT4, INT4, INT4)
 		END IF;
 
 		-- get name of topNode
+		vIsPicTree := FALSE;
 		SELECT name
 		INTO   vName
 		FROM   VIChierarchy
 		WHERE  treeID = $2
 		AND	   nodeID = $3;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node % does not exist in tree %\', $3, $2;
+		  vIsPicTree := TRUE;
+		  SELECT name
+		  INTO   vName
+		  FROM   PIChierarchy
+		  WHERE  treeID = $2
+		  AND	 nodeID = $3;
+		  IF NOT FOUND THEN
+		    RAISE EXCEPTION \'Node % does not exist in tree %\', $3, $2;
+	      END IF;
 		END IF;
 
 		vPrefixLen = length(vName);
 		vResult := \'prefix=\' || vName || \'.\' || chr(10);
 
 		-- construct entries for all nodes from here on.
-		vResult := vResult || exportSubTree($2, $3, vPrefixLen+2);
+		IF vIsPicTree THEN
+		  vResult := vResult || exportPICSubTree($2, $3, vPrefixLen+2);
+		ELSE
+		  vResult := vResult || exportVICSubTree($2, $3, vPrefixLen+2);
+		END IF;
 		RETURN vResult;
 	END;
 ' LANGUAGE plpgsql;

@@ -51,6 +51,10 @@ CREATE OR REPLACE FUNCTION searchPICinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMEST
 	  FROM	 PIChierarchy
 	  WHERE	 nodeID = $2;
 
+	  -- TEMP SQUIRM FOR CDR 2005-10-12
+	  vFullname := ltrim (vFullname, \'.\');
+	  -- END OF SQUIRM
+
 	  IF vLeaf = TRUE AND $3 = 0 THEN
 		vQuery := \'=\' || chr(39) || vFullname || chr(39);
 	  ELSE
