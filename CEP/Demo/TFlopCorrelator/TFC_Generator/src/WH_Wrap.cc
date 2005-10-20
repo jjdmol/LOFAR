@@ -61,6 +61,10 @@ WH_Wrap* WH_Wrap::make(const string& name)
   return new WH_Wrap(name, itsTH, itsPS);
 }
 
+void WH_Wrap::preprocess(){
+  ASSERTSTR(itsTH.init(), "WH_Wrap could not init " << itsTH.getType());
+}
+
 void WH_Wrap::process() 
 {
   EthernetFrame& myEthFrame = ((DH_RSP*)getDataManager().getOutHolder(0))->getEthernetFrame();
