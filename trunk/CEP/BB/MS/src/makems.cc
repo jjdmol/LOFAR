@@ -153,7 +153,7 @@ void doMaster (bool send)
   double dec = qn.getValue ("rad");
   int nfreq = params.getInt32 ("NFrequencies");
   int ntime = params.getInt32 ("NTimes");
-  int nnode = params.getInt32 ("NSlaves");
+  int nnode = params.getInt32 ("NParts");
   ASSERT (nnode > 0);
   ASSERT (nfreq >= nnode);
   ASSERT (nfreq%nnode == 0);
