@@ -27,8 +27,8 @@
 #include <boost/shared_ptr.hpp>
 #include <Common/lofar_sstream.h>
 #include <GCF/GCF_PVDouble.h>
-#include <APLCommon/APLUtilities.h>
-#include <StationOperations/StationOperations.h>
+#include <APL/APLCommon/APLUtilities.h>
+#include <APL/StationOperations/StationOperations.h>
 
 #include "RSP_Protocol.ph"
 

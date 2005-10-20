@@ -1,3 +1,3 @@
-SUBDIRS	= APL
+SUBDIRS	= StationOperations
 
 include $(top_srcdir)/Makefile.common

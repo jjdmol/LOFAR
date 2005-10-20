@@ -1,4 +1,7 @@
-INSTHDRS = \
+INSTHDRS =
+
+pkgincludedir = $(includedir)/APL/APLCommon
+pkginclude_HEADERS = \
 	APLCommonExceptions.h \
 	APL_Defines.h \
 	APLUtilities.h \
@@ -22,4 +25,3 @@ noinst_HEADERS = $(NOINSTHDRS)
 DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 include $(top_srcdir)/Makefile.common
-

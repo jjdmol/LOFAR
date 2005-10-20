@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include <Common/lofar_strstream.h>
-#include "APLCommon/APLUtilities.h"
+#include "APL/APLCommon/APLUtilities.h"
 
 using namespace LOFAR;
 using namespace APLCommon;

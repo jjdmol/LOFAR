@@ -28,10 +28,10 @@
 #include <Common/lofar_sstream.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
-#include <APLCommon/APLUtilities.h>
+#include <APL/APLCommon/APLUtilities.h>
 #include "VirtualInstrument.h"
 
-#include <APLCommon/LogicalDevice_Protocol.ph>
+#include <APL/APLCommon/LogicalDevice_Protocol.ph>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;

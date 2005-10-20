@@ -30,9 +30,9 @@
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVDynArr.h>
 #include <GCF/ParameterSet.h>
-#include "APLCommon/APL_Defines.h"
-#include "APLCommon/APLUtilities.h"
-#include "APLCommon/LogicalDevice.h"
+#include "APL/APLCommon/APL_Defines.h"
+#include "APL/APLCommon/APLUtilities.h"
+#include "APL/APLCommon/LogicalDevice.h"
 #include "LogicalDevice_Protocol.ph"
 #include "StartDaemon_Protocol.ph"
 

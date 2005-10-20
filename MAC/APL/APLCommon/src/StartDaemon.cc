@@ -26,12 +26,12 @@
 
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
-#include "APLCommon/APL_Defines.h"
-#include "APLCommon/APLUtilities.h"
-#include "APLCommon/LogicalDevice.h"
-#include "APLCommon/LogicalDeviceFactoryBase.h"
+#include "APL/APLCommon/APL_Defines.h"
+#include "APL/APLCommon/APLUtilities.h"
+#include "APL/APLCommon/LogicalDevice.h"
+#include "APL/APLCommon/LogicalDeviceFactoryBase.h"
 
-#include "APLCommon/StartDaemon.h"
+#include "APL/APLCommon/StartDaemon.h"
 #include "StartDaemon_Protocol.ph"
 
 using namespace LOFAR::GCF::Common;

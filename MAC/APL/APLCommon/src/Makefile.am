@@ -26,7 +26,7 @@ BUILT_SOURCES = \
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
-phdir=$(includedir)/APLCommon
+phdir=$(includedir)/APL/APLCommon
 ph_HEADERS = \
 	$(EXTRA_DIST)
 

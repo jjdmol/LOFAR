@@ -24,9 +24,9 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <APLCommon/APL_Defines.h>
-#include "APLCommon/PropertySetAnswer.h"
-#include "APLCommon/PropertySetAnswerHandlerInterface.h"
+#include <APL/APLCommon/APL_Defines.h>
+#include "APL/APLCommon/PropertySetAnswer.h"
+#include "APL/APLCommon/PropertySetAnswerHandlerInterface.h"
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::TM;

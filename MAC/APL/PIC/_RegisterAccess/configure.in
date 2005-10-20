@@ -61,7 +61,7 @@ lofar_INTERNAL(MAC/Test/Suite, suite, MAC-GCF-6_0, 1, Suite/test.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_0, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-6_0, 1, GCF/PAL/GCF_Property.h,,)
-lofar_INTERNAL(MAC/APL/APLCommon, APLCommon, MAC-APL-3_1, 1, APLCommon/APL_Defines.h,,)
+lofar_INTERNAL(MAC/APL/APLCommon, APLCommon, MAC-APL-3_1, 1, APL/APLCommon/APL_Defines.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 

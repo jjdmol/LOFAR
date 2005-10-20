@@ -1,3 +1,3 @@
-SUBDIRS	= APL
+SUBDIRS	= APLCommon
 
 include $(top_srcdir)/Makefile.common

@@ -29,7 +29,7 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVDynArr.h>
-#include <APLCommon/APLUtilities.h>
+#include <APL/APLCommon/APLUtilities.h>
 #include "MaintenanceVI.h"
 
 using namespace LOFAR::GCF::Common;

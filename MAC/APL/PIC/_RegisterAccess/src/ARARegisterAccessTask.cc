@@ -48,7 +48,7 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
-#include <APLCommon/APL_Defines.h>
+#include <APL/APLCommon/APL_Defines.h>
 #include "ARAPropertyDefines.h"
 #include "ARAPhysicalModel.h"
 

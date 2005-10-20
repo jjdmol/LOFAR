@@ -25,10 +25,10 @@
 #include <Common/LofarLogger.h>
 
 #include <boost/shared_ptr.hpp>
-#include <APLCommon/APLUtilities.h>
+#include <APL/APLCommon/APLUtilities.h>
 #include "ObservationVI.h"
 
-#include <APLCommon/LogicalDevice_Protocol.ph>
+#include <APL/APLCommon/LogicalDevice_Protocol.ph>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;

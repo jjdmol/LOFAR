@@ -1,3 +1,3 @@
-SUBDIRS	= StationReceptorGroup
+SUBDIRS	= APL
 
 include $(top_srcdir)/Makefile.common

@@ -29,8 +29,8 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDynArr.h>
-#include <APLCommon/APLUtilities.h>
-#include <StationReceptorGroup/StationReceptorGroup.h>
+#include <APL/APLCommon/APLUtilities.h>
+#include <APL/StationReceptorGroup/StationReceptorGroup.h>
 #include <GCF/ParameterSet.h>
 #include "CAL_Protocol.ph"
 

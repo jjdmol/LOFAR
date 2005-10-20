@@ -67,7 +67,8 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 include/Makefile
-include/APLCommon/Makefile
+include/APL/Makefile
+include/APL/APLCommon/Makefile
 src/Makefile
 Makefile
 APLCommon.spec
