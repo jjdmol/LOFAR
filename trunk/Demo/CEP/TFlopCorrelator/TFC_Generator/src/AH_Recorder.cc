@@ -65,8 +65,13 @@ void AH_Recorder::define(const LOFAR::KeyValueMap&) {
   Composite comp(0, 0, "topComposite");
   setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
-
   int lastFreeNode = 0;
+#ifdef HAVE_MPICH
+  // mpich tries to run the first process on the local node
+  // this is necessary if you want to use totalview
+  // scampi run the first process on the first node in the machinefile
+  lastFreeNode = 1;
+#endif
 
   int NRSP = itsParamSet.getInt32("Input.NRSP");
   int WH_DH_NameSize = 40;
@@ -81,36 +86,37 @@ void AH_Recorder::define(const LOFAR::KeyValueMap&) {
 
   for (int s=0; s<NRSP; s++) {
     //itsTHs.push_back(new TH_File("Generator1.in", TH_File::Read));
-    itsTHs.push_back(new TH_Ethernet(interfaces[s], 
- 				     srcMacs[s],
- 				     dstMacs[s]));
-    ASSERTSTR(itsTHs.back()->init(), "Could not init TransportHolder");
+    cout<<"Creating TH_Ethernet: "<<srcMacs[s]<<" -> "<<dstMacs[s]<<endl;
+    itsTHs.push_back(new TH_Ethernet(interfaces[s],
+				     srcMacs[s],
+				     dstMacs[s]));
     itsWHs.push_back(new WH_Wrap(WH_DH_Name,
 				 *itsTHs.back(),
 				 itsParamSet));
-    Step* itsStep = new Step(itsWHs.back(), WH_DH_Name);
-    itsStep->setOutBufferingProperties(0, false, false, bufferSize); // todo add bufferSize
-    itsSteps.push_back(itsStep);
-    comp.addBlock(itsStep);
-    itsStep->runOnNode(lastFreeNode++);
+    Step* inStep = new Step(itsWHs.back(), WH_DH_Name);
+    inStep->setOutBufferingProperties(0, false, false);
+    // TODO: CEPFrame needs a way to set the buffersize
+    // inStep->setOutBufferingProperties(0, false, false, bufferSize);
+    itsSteps.push_back(inStep);
+    comp.addBlock(inStep);
+    inStep->runOnNode(lastFreeNode++);
 
     itsTHs.push_back(new TH_File(outFileNames[s], TH_File::Write));
-    ASSERTSTR(itsTHs.back()->init(), "Could not init TransportHolder");
 
     itsWHs.push_back(new WH_Strip(WH_DH_Name,
 				  *itsTHs.back(),
 				  itsParamSet));
-    itsStep = new Step(itsWHs.back(), WH_DH_Name);
-    itsSteps.push_back(itsStep);
-    comp.addBlock(itsStep);
-    itsStep->runOnNode(lastFreeNode++);
+    Step* outStep = new Step(itsWHs.back(), WH_DH_Name);
+    itsSteps.push_back(outStep);
+    comp.addBlock(outStep);
+    outStep->runOnNode(lastFreeNode++);
     
 #ifdef HAVE_MPI
     // this needs to be done with MPI, so if we don't have MPI do nothing
-    itsSteps.back()->connect(0, itsSteps[itsSteps.size()-2], 0, 1,
-			     new TH_MPI(itsSteps[itsSteps.size()-2].getNode(),
-					itsSteps.back().getNode()),
-			     true);
+    outStep->connect(0, inStep, 0, 1,
+		      new TH_MPI(inStep->getNode(),
+				 outStep->getNode()),
+		      true);
 #else
     ASSERTSTR(false, "This application is supposed to be run with MPI");
 #endif

@@ -18,7 +18,7 @@ noinst_HEADERS 		= $(NOINSTHDRS)
 
 DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
-bin_PROGRAMS 		= TFC_Generator TFC_Recorder
+bin_PROGRAMS 		= TFC_Generator TFC_Recorder TFC_SimpleRecorder
 
 TFC_Generator_SOURCES	= $(DOCHDRS) \
 TFC_Generator_main.cc	\
@@ -38,8 +38,12 @@ WH_Wrap.cc		\
 DH_RSP.cc		\
 AH_Recorder.cc			
 
+TFC_SimpleRecorder_SOURCES	= $(DOCHDRS) \
+TFC_SimpleRecorder_main.cc 
+
 configfilesdir=$(bindir)
 configfiles_DATA	=	\
+TFC_Recorder.machinefile	\
 TFC_Generator.machinefile	\
 TFC_Generator.log_prop		
 

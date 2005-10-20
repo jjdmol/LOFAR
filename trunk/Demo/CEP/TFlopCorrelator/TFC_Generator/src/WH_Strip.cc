@@ -72,10 +72,13 @@ WH_Strip* WH_Strip::make(const string& name)
 
 void WH_Strip::preprocess() 
 {
+  ASSERTSTR(itsTH.init(), "WH_Strip could not init " << itsTH.getType());
+
   if (itsFrequency == 0) {
     // frequency was set to zero, which means output should go as fast as possible
     // we do that by setting theirNoAlarms to the number of runs
-    theirNoAlarms += itsPS.getDouble("Generator.NoRuns");
+    theirNoAlarms += itsPS.getInt32("Generator.NoRuns");
+    if (theirNoAlarms == 0) theirNoAlarms = -1;
   } else {
     if (!theirTimerSet) {
       sighandler_t ret = signal(SIGALRM, *WH_Strip::timerSignal);
@@ -104,6 +107,7 @@ void WH_Strip::preprocess()
 
 void WH_Strip::process() 
 {
+  cout<<"WH_Strip process"<<endl;
   EthernetFrame& myEthFrame = ((DH_RSP*)getDataManager().getInHolder(0))->getEthernetFrame();
 
   int timerCount = 0;

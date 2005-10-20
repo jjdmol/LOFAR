@@ -46,6 +46,7 @@ namespace LOFAR
                                  const ParameterSet ps);
     virtual WH_Wrap* make(const string& name);
 
+    virtual void preprocess();
     virtual void process();
 
   private:

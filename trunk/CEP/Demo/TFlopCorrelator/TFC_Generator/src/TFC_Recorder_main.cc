@@ -23,7 +23,7 @@
 using namespace LOFAR;
 
 int main (int argc, const char** argv) {
-  INIT_LOGGER("TFC_Generator");
+  INIT_LOGGER("TFC_Recorder");
 
   // Check invocation syntax
   try {
