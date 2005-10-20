@@ -1,22 +1,11 @@
-SUBDIRS = \
-	src 
-	
-include $(top_srcdir)/Makefile.common
-
-INSTALLDIR=$(HOME)/cvs/HEAD/LOFAR/installed/gnu_debug
+SUBDIRS=src
 
 DISTCHECK_CONFIGURE_FLAGS=\
-	--with-common=$(INSTALLDIR)\
-	--with-gcftm=$(INSTALLDIR)\
-	--with-gcfpal=$(INSTALLDIR)\
-	--with-gcfcommon=$(INSTALLDIR)
+      --with-common=$(prefix)
 
-DISTCLEANFILES=\
-	pkgext\
-	pkgextcppflags\
-	pkgextcxxflags\
-	pkgextobjs\
-	lofar_config.old-h\
-	lofar_config.h-pkg\
-	lofar_config.h\
-	.doxygenrc
+EXTRA_DIST = \
+      Makefile.common \
+      RSPCtlFE.spec \
+      autoconf_share/compiletool
+
+include $(top_srcdir)/Makefile.common

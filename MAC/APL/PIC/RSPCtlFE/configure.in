@@ -1,35 +1,23 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/rspctlfe.h)
+AC_INIT
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(rspctlfe, 1.0)
+AM_INIT_AUTOMAKE(rspctlfe, 1.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-dnl Define the prefix to allow the use of this path in programs
-AC_DEFINE_UNQUOTED([RSPCTLFE_PREFIX],["${prefix}"],[Path to RSPCTLFE install prefix directory.])
-RSPCTLFE_PREFIX="${prefix}"
-AC_SUBST([RSPCTLFE_PREFIX])
-
-AC_DEFINE_UNQUOTED([RSPCTLFE_SYSCONF],["${prefix}/etc"],[Path to RSPCTLFE install prefix directory.])
-RSPCTLFE_SYSCONF="${prefix}/etc"
-AC_SUBST([RSPCTLFE_SYSCONF])
-
-PREFIX="${prefix}"
-AC_SUBST([PREFIX])
-
 dnl Checks for programs.
 AC_PROG_AWK
-AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_CXX
-AM_PROG_LEX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
+AC_PROG_YACC
+AM_PROG_LEX
 
 dnl Checks for libraries.
 
@@ -66,12 +54,12 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_PVSS(1)
-
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_0, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-6_0, 1, GCF/PAL/GCF_Answer.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, MAC-RTC-4_0, 1, Marshalling.h,,)
+lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, HEAD,1, RSP_Protocol/RSP_Protocol.ph,,)
 
 dnl
 dnl Output Makefiles
@@ -79,4 +67,5 @@ dnl
 AC_OUTPUT(
 	Makefile
 	src/Makefile
+	RSPCtlFE.spec
 )
