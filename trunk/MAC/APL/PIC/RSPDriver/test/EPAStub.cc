@@ -28,7 +28,7 @@
 #include "RawEvent.h"
 
 #include "EPAStub.h"
-#include "RSPTestSuite.h"
+//#include "RSPTestSuite.h"
 
 #include "BeamletWeights.h"
 
@@ -235,7 +235,6 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
   {
     case F_ENTRY:
     {
-      START_TEST("connected", "The connected state of the EPAStub");
     }
     break;
 
@@ -357,7 +356,6 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 
     case F_EXIT:
     {
-      STOP_TEST();
     }
     break;
 
@@ -493,13 +491,17 @@ int main(int argc, char** argv)
 #endif
 
 
-  Suite s("EPA Firmware Stub", &cerr);
-  s.addTest(new EPAStub("EPAStub"));
-  s.run();
-  long nFail = s.report();
-  s.free();
+//   Suite s("EPA Firmware Stub", &cerr);
+//   s.addTest(new EPAStub("EPAStub"));
+//   s.run();
+//   long nFail = s.report();
+//   s.free();
+
+  EPAStub stub("EPAStub");
+  stub.run();
 
   LOG_INFO("Normal termination of program");
 
-  return nFail;
+  return 0;
+//  return nFail;
 }
