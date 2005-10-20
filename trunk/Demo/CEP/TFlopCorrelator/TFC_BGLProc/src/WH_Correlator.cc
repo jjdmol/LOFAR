@@ -1,281 +1,189 @@
-//#  filename.cc: generic correlator class
+//#  WH_Correlator.cc:
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
-#include <stdio.h>
 
-// General includes
+//# includes
 #include <APS/ParameterSet.h>
-#include <Common/LofarLogger.h>
-
-#ifdef HAVE_MPI
-#include <Transport/TH_MPI.h>
-#endif
-
-// Application specific includes
+#include <TFC_Interface/TFC_Config.h>
+#include <TFC_Interface/DH_Vis.h>
 #include <WH_Correlator.h>
 
 #ifdef HAVE_BGL
 #include <hummer_builtin.h>
-#endif 
-
-#define DO_TIMING
-#define USE_BUILTIN
-
-#define UNROLL_FACTOR 4
+#endif
 
 using namespace LOFAR;
 
-WH_Correlator::WH_Correlator(const string& name) : 
-  WorkHolder( 1, 1, name, "WH_Correlator")
+// define a type containing the input from a single station
+typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
+typedef fcomplex stationOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
+
+
+extern "C"
 {
-  ACC::APS::ParameterSet  myPS("TFlopCorrelator.cfg");
-  itsNelements      = myPS.getInt32("Input.NRSP");
-  itsNsamples       = myPS.getInt32("Input.NSamplesToDH");
-  itsNpolarisations = myPS.getInt32("Input.NPolarisations");
-
-  itsNinputs = itsNpolarisations*itsNelements;
-
-//   itsNchannels = myPS.getInt32("WH_Corr.channels"); 
-//   itsNtargets = 0; // not used?
-
-  getDataManager().addInDataHolder(0, new DH_FIR("in", 1, myPS));
-  //  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 1));
-  getDataManager().addOutDataHolder(0, new DH_Vis("out", 1, myPS));
-
-  t_start.tv_sec = 0;
-  t_start.tv_usec = 0;
-
-  bandwidth=0.0;
-  agg_bandwidth=0.0;
-
-  corr_perf=0.0;
+  void _correlate_2x2(const stationInputType *S0, const stationInputType *S1,
+		      const stationInputType *S2, const stationInputType *S3,
+		      stationOutputType *S0_S2, stationOutputType *S0_S3,
+		      stationOutputType *S1_S2, stationOutputType *S1_S3);
+  void _auto_correlate_1x1(const stationInputType *S0, stationOutputType *S0_S0);
+  void _fast_memcpy(void *dst, const void *src, size_t size);
+//   void _correlate_2x3(const fcomplex *samples, dcomplex *out);
 }
 
-WH_Correlator::~WH_Correlator() {
-}
-
-WorkHolder* WH_Correlator::construct (const string& name)
+WH_Correlator::WH_Correlator(const string &name)
+:
+  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator"),
+  itsInputBuffer(0)
 {
-  return new WH_Correlator(name);
-}
+  ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
-WH_Correlator* WH_Correlator::make (const string& name) {
-  return new WH_Correlator(name);
-}
-
-void WH_Correlator::preprocess() {
-  int dhSize = (static_cast<DH_FIR*>(getDataManager().getInHolder(0)))->getBufferSize();
-  int mySize = itsNelements*itsNpolarisations*itsNsamples;
-
-  ASSERTSTR(dhSize == mySize, 
-	    "InHolder size not equal to workholder size ("<<dhSize<<" != "<<mySize<<")");
-
-  ASSERTSTR((static_cast<DH_Vis*>(getDataManager().getOutHolder(0)))->getBufSize() == 
-	    itsNpolarisations*itsNpolarisations*itsNelements*(itsNelements+1)/2, 
-	    "OutHolder size not equal to workholder size");
-
-  // prevent stupid mistakes in the future by assuming we can easily change the unroll factor
-  ASSERTSTR(UNROLL_FACTOR == 4, "Code is normally only unrolled by a factor of 4, make sure this is really what you want!");
-}
-
-void WH_Correlator::process() {
-  double starttime, stoptime /*, cmults*/;
-  // const short ar_block = itsNinputs / UNROLL_FACTOR;
-  // dummy channel parameter; not used in the first correlator version
-  const int channel = 0;
-
-  DH_FIR *inDH  = (DH_FIR*)(getDataManager().getInHolder(0));
-//   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
-  DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
-
-  // reset integrator.
-  memset(outDH->getBuffer(), 0, outDH->getBufSize()*sizeof(DH_Vis::BufferType));
-
-
-#ifdef DO_TIMING
-  starttime = timer();
-#endif
-  
-  __complex__ double reg_A0_X, reg_A0_Y, reg_A1_X, reg_A1_Y;
-  __complex__ double reg_B0_X, reg_B0_Y, reg_B1_X, reg_B1_Y;
+  itsNfilters = myPS.getInt32("PPF.NrFilters");
+  itsNsamples = myPS.getInt32("PPF.NrStationSamples");
+  itsNelements = myPS.getInt32("PPF.NrStations");
+  itsNpolarisations = myPS.getInt32("PPF.NrPolarizations");
+  itsNchannels = myPS.getInt32("PPF.NrSubChannels") / myPS.getInt32("PPF.NrCorrelatorsPerFilter");
     
-  
-//   __complex__ double outData[ELEMENTS*ELEMENTS*4];  // large enough; can be made smaller; 4 pol 
-  __complex__ double outData[itsNelements*itsNelements*itsNpolarisations*itsNpolarisations];  // large enough; 
-  __complex__ double *outptr0, *outptr1;
 
-  /// initialize output buffer
-  memset(&outData[0], 
-	 0,
-	 itsNelements*itsNelements*itsNpolarisations*itsNpolarisations*sizeof(__complex__ double));
-  
+  ASSERTSTR(itsNelements      == NR_STATIONS, "Configuration doesn't match parameter: NrStations");
+  ASSERTSTR(itsNpolarisations == NR_POLARIZATIONS, "Configuration doesn't match parameter: NrPolarizations");
+  ASSERTSTR(itsNchannels      == NR_CHANNELS_PER_CORRELATOR, "Configuration doesn't match parameter: NrChannels");
+  ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match parameter: NrSamples");
+  ASSERTSTR(itsNfilters       == NR_PPF_PER_COMPUTE_CELL, "Configuration doesn't match parameter: NrFilters");
+  ASSERTSTR(NR_PPF_PER_COMPUTE_CELL == 2, "Only 2 inputs implemented in the correlator");
+  totalInputSize = 0;
 
-#ifdef HAVE_BGL
-  __alignx(16, outptr0);
-  __alignx(16, outptr1);
-  //  __alignx(8 , in_buffer);
-#endif
+  for (int i = 0; i < NR_PPF_PER_COMPUTE_CELL; i++) {
+    char str[50];
+    snprintf(str, 50, "input_%d_of_%d", i, NR_PPF_PER_COMPUTE_CELL);
+    getDataManager().addInDataHolder(i, new DH_CorrCube(str, 0));
+    totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
+  }
 
-  int B = 0;
+//   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
+//     char str[50];
+//     snprintf(str, 50, "output_%d_of_%d", ch, NR_CHANNELS_PER_CORRELATOR);
+//     getDataManager().addOutDataHolder(ch, new DH_Vis(str, 0, myPS));
+//   }
+  getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, myPS));
 
-  for (int time=0; time< itsNsamples; time++) {
-    // refer to addressing in DH_Vis.h::getBufferElement() 
-    // loop over the vertical(rows) dimension in the correlation matrix
-    for (int A=0; A < itsNelements; A+=2) {
-      // addressing:   getBufferElement(    channel, station, time, pol)
-#ifdef HAVE_BGL
-      reg_A0_X = ficast(inDH->getBufferElement(channel, A,       time, 0));     
-      reg_A0_Y = ficast(inDH->getBufferElement(channel, A,       time, 1));     
-      reg_A1_X = ficast(inDH->getBufferElement(channel, A+1,     time, 0));     
-      reg_A1_Y = ficast(inDH->getBufferElement(channel, A+1,     time, 1));     
-#else
-      reg_A0_X = inDH->getBufferElement(channel, A,       time, 0);     
-      reg_A0_Y = inDH->getBufferElement(channel, A,       time, 1);     
-      reg_A1_X = inDH->getBufferElement(channel, A+1,     time, 0);     
-      reg_A1_Y = inDH->getBufferElement(channel, A+1,     time, 1);     
-#endif
-      //
-      // get pointers to the two rows we calculate in the next loop
-      
-      outptr0 = &outData[outDH->getBufferOffset(A  , 0, 0)]; // first row
-      outptr1 = &outData[outDH->getBufferOffset(A+1, 0, 0)]; // second row
-      // now loop over the B dimension
-      for (B=0; B<A; B+=2) {
-	// these are the full squares
-	// now correlate stations B,B+1,A,A+1 in both polarisations
-// 	cout << B   << " - " << A   << endl;
-// 	cout << B   << " - " << A+1 << endl;
-// 	cout << B+1 << " - " << A   << endl;
-// 	cout << B+1 << " - " << A+1 << endl;
+}
 
- 	// load B inputs into registers
-#ifdef HAVE_BGL
-	reg_B0_X = ficast(inDH->getBufferElement(channel, B  , time, 0));
-	reg_B0_Y = ficast(inDH->getBufferElement(channel, B  , time, 1));     
-	reg_B1_X = ficast(inDH->getBufferElement(channel, B+1, time, 0));     
-	reg_B1_Y = ficast(inDH->getBufferElement(channel, B+1, time, 1));      
-#else
-	reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);
-	reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
-	reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
-	reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);      
-#endif
-	// calculate all correlations; 
-	// todo: prefetch new B dimesnsions on the way
-	DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B,0)]);
-	*(outptr0++) += reg_A0_X * ~reg_B0_X;
-	*(outptr0++) += reg_A0_X * ~reg_B0_Y;
-	*(outptr0++) += reg_A0_Y * ~reg_B0_X;
-	*(outptr0++) += reg_A0_Y * ~reg_B0_Y;
-	
-	DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B+1,0)]);
-	*(outptr0++) += reg_A0_X * ~reg_B1_X;
-	*(outptr0++) += reg_A0_X * ~reg_B1_Y;
-	*(outptr0++) += reg_A0_Y * ~reg_B1_X;
-	*(outptr0++) += reg_A0_Y * ~reg_B1_Y;
-	
-	DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B,0)]);
-	*(outptr1++) += reg_A1_X * ~reg_B0_X;
-	*(outptr1++) += reg_A1_X * ~reg_B0_Y;
-	*(outptr1++) += reg_A1_Y * ~reg_B0_X;
-	*(outptr1++) += reg_A1_Y * ~reg_B0_Y;
-	
-	DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B+1,0)]);
-	*(outptr1++) += reg_A1_X * ~reg_B1_X;
-	*(outptr1++) += reg_A1_X * ~reg_B1_Y;
-	*(outptr1++) += reg_A1_Y * ~reg_B1_X;
-	*(outptr1++) += reg_A1_Y * ~reg_B1_Y;
+WH_Correlator::~WH_Correlator()
+{
+  free(itsInputBuffer);
+}
+
+WorkHolder* WH_Correlator::construct(const string& name)
+{
+  return new WH_Correlator(name);
+}
+
+WH_Correlator* WH_Correlator::make(const string& name)
+{
+  return new WH_Correlator(name);
+}
+
+void WH_Correlator::preprocess()
+{ 
+  itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize*sizeof(fcomplex));
+}
+
+void WH_Correlator::process()
+{
+  static NSTimer timer("WH_Correlator::process()", true);
+
+  DH_CorrCube::BufferType *input  = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
+  DH_Vis::BufferType	  *output = static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBuffer();
+  int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
+
+  timer.start();
+#if 0
+  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
+  /// (could this be done more efficiently?)
+  /// Currently we hardcore 2 inputs.
+  memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
+  memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
+  // C++ reference implementation
+
+  for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
+    for (int stat1 = 0; stat1 < NR_STATIONS; stat1 ++) {
+      for (int stat2 = 0; stat2 <= stat1; stat2 ++) { 
+	for (int pol1 = 0; pol1 < 2; pol1 ++) {
+	  for (int pol2 = 0; pol2 < 2; pol2 ++) {
+	    fcomplex sum = makefcomplex(0, 0);
+
+	    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
+	      sum += (*itsInputBuffer)[ch][stat1][time][pol1] * ~(*itsInputBuffer)[ch][stat2][time][pol2];
+	    }
+
+	    (*output)[DH_Vis::baseline(stat1,stat2)][ch][pol1][pol2] = sum;
+	  }
+	}
       }
-    
-      // done all sqaures
-      // now correlate the last triangle;
-//       cout << B   << " - " << A   << endl;
-//       cout << B   << " - " << A+1 << endl;
-//       cout << B+1 << " - " << A+1 << endl;
-
-#ifdef HAVE_BGL
-      reg_B0_X = ficast(inDH->getBufferElement(channel, B  , time, 0));     
-      reg_B0_Y = ficast(inDH->getBufferElement(channel, B  , time, 1));     
-      reg_B1_X = ficast(inDH->getBufferElement(channel, B+1, time, 0));     
-      reg_B1_Y = ficast(inDH->getBufferElement(channel, B+1, time, 1));     
-#else
-      reg_B0_X = inDH->getBufferElement(channel, B  , time, 0);     
-      reg_B0_Y = inDH->getBufferElement(channel, B  , time, 1);     
-      reg_B1_X = inDH->getBufferElement(channel, B+1, time, 0);     
-      reg_B1_Y = inDH->getBufferElement(channel, B+1, time, 1);     
-
-      DBGASSERTSTR(reg_A0_X == reg_B0_X, "0_X not equal in loop " << A << " " << B << " " << time << " " << channel);
-      DBGASSERTSTR(reg_A0_Y == reg_B0_Y, "0_Y not equal in loop " << A << " " << B << " " << time << " " << channel);
-      DBGASSERTSTR(reg_A1_X == reg_B1_X, "1_X not equal in loop " << A << " " << B << " " << time << " " << channel);
-      DBGASSERTSTR(reg_A1_Y == reg_B1_Y, "1_Y not equal in loop " << A << " " << B << " " << time << " " << channel);
-#endif
-      // calculate all correlations in the triangle; 
-      // todo: prefetch new B dimesnsions on the way
-      DBGASSERT(outptr0 == &outData[outDH->getBufferOffset(A,B,0)]);
-      *(outptr0++) += reg_A0_X * ~reg_B0_X;
-      *(outptr0++) += reg_A0_X * ~reg_B0_Y;
-      *(outptr0++) += reg_A0_Y * ~reg_B0_X;
-      *(outptr0++) += reg_A0_Y * ~reg_B0_Y;
-      
-      DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B,0)]);
-      *(outptr1++) += reg_A1_X * ~reg_B0_X;
-      *(outptr1++) += reg_A1_X * ~reg_B0_Y;  
-      *(outptr1++) += reg_A1_Y * ~reg_B0_X;
-      *(outptr1++) += reg_A1_Y * ~reg_B0_Y;
-
-      DBGASSERT(outptr1 == &outData[outDH->getBufferOffset(A+1,B+1,0)]);
-      *(outptr1++) += reg_A1_X * ~reg_B1_X;
-      *(outptr1++) += reg_A1_X * ~reg_B1_Y;
-      *(outptr1++) += reg_A1_Y * ~reg_B1_X;
-      *(outptr1++) += reg_A1_Y * ~reg_B1_Y;        
     }
   }
+#else
+  // Blue Gene/L assembler version. 
+  // Divide the correlation matrix into blocks of 2x2. 
+  // Correlate the entire block (all time samples) before 
+  // going on to the next block.
 
-  // todo: write the Outptr data into DH_Vis.
-  // since the addressing in outptr is exactly the same as in DH_Vis, we can now 
-  // copy and convert to float element for element
+  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
+  /// (could this be done more efficiently?)
+  /// Currently we hardcore 2 inputs.
+  _fast_memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
+  _fast_memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
 
-  DH_Vis::BufferType *dhptr = outDH->getBufferElement(0,0,0);
-  outptr0 = &outData[0];
-  int loopsize = outDH->getBufferOffset(itsNelements-1, itsNelements-1, 4) - outDH->getBufferOffset(0,0,0);
-
-  for (int i=0; i < loopsize; i++) {
-    dhptr[i] = outptr0[i]; 
-  }
-
-#ifdef DO_TIMING
-  stoptime = timer();
-#endif
- 
-}
-
-void WH_Correlator::dump() const{
-  DH_Vis *outDH = static_cast<DH_Vis*>(getDataManager().getOutHolder(0));
-
-  for (short pol = 0; pol < itsNpolarisations*itsNpolarisations; pol++) { 
-    cout << "POL : " << pol << endl;
-    for (short x = 0; x < itsNelements; x++) {
-      for (short y = 0; y <= x; y++) {
-      
-
-	// show transposed correlation matrix, this looks more natural.
-	cout << *outDH->getBufferElement(x, y, pol) << " ";
+#if NR_STATIONS % 2 == 0
+#error even number of stations not yet implemented
+#else
+  for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
+    for (int stat1 = 1; stat1 < NR_STATIONS; stat1 += 2) {
+      for (int stat2 = 0; stat2 < stat1; stat2 += 2) { 
+	_correlate_2x2(&(*itsInputBuffer)[ch][stat1], &(*itsInputBuffer)[ch][stat1 + 1],
+		       &(*itsInputBuffer)[ch][stat2], &(*itsInputBuffer)[ch][stat2 + 1],
+		       &(*output)[DH_Vis::baseline(stat1    , stat2    )][ch],
+		       &(*output)[DH_Vis::baseline(stat1    , stat2 + 1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1 + 1, stat2    )][ch],
+		       &(*output)[DH_Vis::baseline(stat1 + 1, stat2 + 1)][ch]);
       }
-      cout << endl;
-    } 
-    cout << endl;
-  } 
+    }
+    for (int stat = 0; stat < NR_STATIONS; stat += 2) {
+      _auto_correlate_1x1(&(*itsInputBuffer)[ch][stat],
+			  &(*output)[DH_Vis::baseline(stat,stat)][ch]);
+    }
+  }
+#endif
+
+#endif  
+  timer.stop();
 }
 
-double timer() {
-  struct timeval curtime;
-  gettimeofday(&curtime, NULL);
+void WH_Correlator::postprocess()
+{
+}
 
-  return (curtime.tv_sec + 1.0e-6*curtime.tv_usec);
+void WH_Correlator::dump() const
+{
 }

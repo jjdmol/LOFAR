@@ -1,8 +1,10 @@
 INSTHDRS         	=\
-WH_FIR.h		\
-WH_FFT.h		\
+AH_BGLProcessing.h	\
+WH_PPF.h		\
 WH_Correlator.h		\
-AH_BGLProcessing.h	
+WH_Distribute.h		\
+WH_Concentrator.h
+# WH_BGL_Processing.h	
 
 NOINSTHDRS 		=
 
@@ -16,13 +18,16 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
 bin_PROGRAMS 		= TFC_BGLProcessing
 
+CCAS			= gcc
+CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
+
 TFC_BGLProcessing_SOURCES	= $(DOCHDRS) \
+Correlator.S			\
+FIR.S				\
 TFC_BGLProcessing_main.cc 	\
-WH_FIR.cc			\
-WH_FFT.cc			\
-WH_Correlator.cc		\
-AH_BGLProcessing.cc		
-#WH_Collect.cc
+AH_BGLProcessing.cc		\
+WH_PPF.cc			\
+WH_Correlator.cc		
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\

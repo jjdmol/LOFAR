@@ -1,31 +1,27 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_FFT tWH_FIR tWH_Correlator tPPFilter
+check_PROGRAMS = tWH_PPF tWH_Correlator
 
 
 AM_CXXFLAGS = \
 	-I../../../src
 
-tWH_FFT_SOURCES =				\
-tWH_FFT.cc				        \
-../src/WH_FFT.cc
-
-tWH_FIR_SOURCES = 				\
-tWH_FIR.cc					\
-../src/WH_FIR.cc
-
 tWH_Correlator_SOURCES = 			\
 tWH_Correlator.cc				\
-../src/WH_Correlator.cc
+../src/WH_Correlator.cc				\
+../src/Correlator.S
 
-tPPFilter_SOURCES = 				\
-tPPFilter.cc					\
-../src/WH_FIR.cc				\
-../src/WH_FFT.cc
+tWH_PPF_SOURCES =	 			\
+tWH_PPF.cc					\
+../src/WH_PPF.cc				\
+../src/FFT.S					\
+../src/FIR.S
+
+CCAS = gcc
+CCASFLAGS = $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
 
 TESTS   = 					\
-tWH_FFT.sh					\
-tWH_FIR.sh					\
+tWH_PPF.sh					\
 tWH_Correlator.sh
 
 
