@@ -124,11 +124,11 @@ void createMSSeq (const string& msName, int seqnr, const Array<double>& antPos,
 {
   // Write a part of the entire frequency range.
   ostringstream ostr;
-  ostr << '_' << seqnr;
+  ostr << "_p" << seqnr;
   string msNameF = msName + ostr.str();
   createMS (msNameF, antPos, info);
   // Write the description file.
-  writeDesc (msName + "/vis.des", 0, antPos, info);
+  writeDesc (msNameF + "/vis.des", 0, antPos, info);
 }
 
 void doMaster (bool send)
@@ -235,7 +235,7 @@ int main (int argc, const char** argv)
     }
     TH_MPI::finalize();
 #else
-    // No MPI, so handle eveything in one process.
+    // No MPI, so handle everything in one process.
     doMaster (false);
 #endif
   } catch (std::exception& x) {
