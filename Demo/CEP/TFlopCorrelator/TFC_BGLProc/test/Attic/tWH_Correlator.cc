@@ -55,7 +55,7 @@ namespace LOFAR
     itsInDH1 = new DH_CorrCube("itsIn1",0);
     itsOutDH1 = new DH_Vis("itsOutDH1", 0, myPset);
 
-    itsWH = new WH_Correlator("WH_Correlator", NR_CHANNELS_PER_CORRELATOR);
+    itsWH = new WH_Correlator("WH_Correlator");
     itsTH = new TH_Mem();
 
     itsInCon1 = new Connection("in1", 

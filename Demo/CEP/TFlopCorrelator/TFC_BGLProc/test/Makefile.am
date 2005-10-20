@@ -9,7 +9,8 @@ AM_CXXFLAGS = \
 tWH_Correlator_SOURCES = 			\
 tWH_Correlator.cc				\
 ../src/WH_Correlator.cc				\
-../src/Correlator.S
+../src/Correlator.S				\
+../src/FIR.S
 
 tWH_PPF_SOURCES =	 			\
 tWH_PPF.cc					\
@@ -23,8 +24,6 @@ CCASFLAGS = $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/pow
 TESTS   = 					\
 tWH_PPF.sh					\
 tWH_Correlator.sh
-
-
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
