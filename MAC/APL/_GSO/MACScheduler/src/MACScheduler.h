@@ -143,8 +143,8 @@ namespace GSO
       string _getVInameFromPort(const GCF::TM::GCFPortInterface& port) const;
       string _getShareLocation() const;
       void _handleSASprotocol(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
-      TSASResult _LDtoSASresult(const TLDResult& ldResult);
-      TSASResult _SDtoSASresult(const TSDResult& sdResult);
+      TSASResult _LDtoSASresult(const APLCommon::TLDResult& ldResult);
+      TSASResult _SDtoSASresult(const APLCommon::TSDResult& sdResult);
 
       void _convertRelativeTimes(boost::shared_ptr<ACC::APS::ParameterSet> ps);
       void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps);
