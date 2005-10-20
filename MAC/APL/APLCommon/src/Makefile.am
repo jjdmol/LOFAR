@@ -26,6 +26,10 @@ BUILT_SOURCES = \
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
+phdir=$(includedir)/APLCommon
+ph_HEADERS = \
+	$(EXTRA_DIST)
+
 clean-local:
 	rm -f *.ph
 
