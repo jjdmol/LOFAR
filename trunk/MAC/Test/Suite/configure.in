@@ -1,25 +1,25 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/suite.h)
+AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(test/suite, 6.0)
+AM_INIT_AUTOMAKE(Suite, 6.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
 dnl Checks for programs.
 AC_PROG_AWK
-AC_PROG_YACC
 AC_PROG_CC
 AC_PROG_CXX
-AM_PROG_LEX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
+AC_PROG_YACC
+AM_PROG_LEX
 
 dnl Checks for libraries.
 
@@ -51,14 +51,16 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-#lofar_QT
-lofar_MPI(0)
-lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_3, 1,Common/LofarTypes.h,,)
+lofar_COMPILETOOLS
+lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 
 dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/Suite/Makefile
 src/Makefile
 Makefile
+Suite.spec
 )
