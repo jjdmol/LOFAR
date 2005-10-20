@@ -30,7 +30,7 @@
 #include <Transport/TH_Mem.h>
 #include <TFC_InputSection/WH_SBCollect.h>
 #include <TFC_Interface/DH_RSP.h>
-#include <TFC_Interface/DH_FIR.h>
+#include <TFC_Interface/DH_Subband.h>
 #include <TFC_Interface/RectMatrix.h>
 
 namespace LOFAR
@@ -56,12 +56,12 @@ namespace LOFAR
     myPset.add("Input.NRSP", "2");
     myPset.add("Input.NSamplesToDH", "10");
     myPset.add("Input.NPolarisations", "2");
-
+    myPset.add("Input.NSBCollectOutputs", "1");
     cout<<myPset<<endl;
 
     itsInDH1 = new DH_RSP("DH_RSP1", myPset);
     itsInDH2 = new DH_RSP("DH_RSP2", myPset);
-    itsOutDH1 = new DH_FIR("DH_FIR", 0, myPset);
+    itsOutDH1 = new DH_Subband("DH_Subband", 0, myPset);
     itsWH = new WH_SBCollect("WH_SBCollect", 1, myPset);
     itsTHs.push_back(new TH_Mem());
     itsTHs.push_back(new TH_Mem());
@@ -128,11 +128,11 @@ namespace LOFAR
 
     // check output dhs
     int expValue = 0;
-    RectMatrix<DH_FIR::BufferType>* outMatrix = &((DH_FIR*)itsOutDH1)->getDataMatrix();
+    RectMatrix<DH_Subband::BufferType>* outMatrix = &((DH_Subband*)itsOutDH1)->getDataMatrix();
     dimType timeDim = outMatrix->getDim("Time");
-    RectMatrix<DH_FIR::BufferType>::cursorType tCursor = outMatrix->getCursor();
+    RectMatrix<DH_Subband::BufferType>::cursorType tCursor = outMatrix->getCursor();
     MATRIX_FOR_LOOP(*outMatrix, timeDim, tCursor) {
-      DH_FIR::BufferType value = outMatrix->getValue(tCursor);
+      DH_Subband::BufferType value = outMatrix->getValue(tCursor);
       cout<<" e,r = " << expValue++ << "," << imag(value) << endl;
       //      ASSERTSTR(imag(value) == expValue++, "value was wrong: received "<<imag(value)<<" expected "<<expValue);
     }
