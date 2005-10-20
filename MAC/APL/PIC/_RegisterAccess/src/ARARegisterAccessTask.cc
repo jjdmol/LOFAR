@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 
 // this include needs to be first!
-#include "RSP_Protocol.ph"
+#include <RSP_Protocol/RSP_Protocol.ph>
 
 #include "ARARegisterAccessTask.h"
 #include "ARAConstants.h"

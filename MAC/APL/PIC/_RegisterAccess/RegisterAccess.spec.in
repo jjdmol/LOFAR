@@ -33,9 +33,8 @@ Requires: GCFTM = 6.0
 Requires: GCFCommon = 6.0
 Requires: GCFPAL = 6.0
 Requires: Suite = 6.0
-Requires: RTCCommon = 4.0
-Requires: RSP = 4.0
-Requires: EPA = 4.0
+Requires: RTCCommon = 1.0
+Requires: RSP_Protocol = 1.0
 Requires: APLCommon = 3.1
 Packager: %{packager}
 Distribution: The LOFAR project
