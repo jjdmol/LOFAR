@@ -1,4 +1,7 @@
-INSTHDRS = \
+INSTHDRS =
+
+pkgincludedir = $(includedir)/APL/ArrayOperations
+pkginclude_HEADERS = \
 	ArrayOperations.h
 
 NOINSTHDRS =

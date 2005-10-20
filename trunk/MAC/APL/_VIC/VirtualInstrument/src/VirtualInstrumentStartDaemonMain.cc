@@ -25,14 +25,14 @@
 #include <Common/LofarLogger.h>
 
 #include <boost/shared_ptr.hpp>
-#include <APLCommon/StartDaemon.h>
+#include <APL/APLCommon/StartDaemon.h>
 #include "VirtualInstrument.h"
 #include "MaintenanceVI.h"
 #include "ObservationVI.h"
-#include <ArrayReceptorGroup/ArrayReceptorGroup.h>
-#include <ArrayOperations/ArrayOperations.h>
-#include <APLCommon/LogicalDeviceFactory.h>
-#include <APLCommon/SharedLogicalDeviceFactory.h>
+#include <APL/ArrayReceptorGroup/ArrayReceptorGroup.h>
+#include <APL/ArrayOperations/ArrayOperations.h>
+#include <APL/APLCommon/LogicalDeviceFactory.h>
+#include <APL/APLCommon/SharedLogicalDeviceFactory.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;

@@ -1,4 +1,7 @@
-INSTHDRS = \
+INSTHDRS =
+
+pkgincludedir = $(includedir)/APL/VirtualTelescope
+pkginclude_HEADERS = \
 	VirtualTelescope.h
 
 NOINSTHDRS =

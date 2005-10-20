@@ -1,4 +1,7 @@
-INSTHDRS = \
+INSTHDRS =
+
+pkgincludedir = $(includedir)/APL/StationReceptorGroup
+pkginclude_HEADERS = \
 	StationReceptorGroup.h
 
 NOINSTHDRS =

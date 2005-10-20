@@ -29,8 +29,8 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
 #include <GCF/ParameterSet.h>
-#include <APLCommon/APLUtilities.h>
-#include <VirtualTelescope/VirtualTelescope.h>
+#include <APL/APLCommon/APLUtilities.h>
+#include <APL/VirtualTelescope/VirtualTelescope.h>
 #include "BS_Protocol.ph"
 
 using namespace LOFAR::GCF::Common;

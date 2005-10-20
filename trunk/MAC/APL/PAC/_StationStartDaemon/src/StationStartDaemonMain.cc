@@ -26,13 +26,13 @@
 
 #include <boost/shared_ptr.hpp>
 #include <GCF/ParameterSet.h>
-#include <APLCommon/StartDaemon.h>
-#include <VirtualTelescope/VirtualTelescope.h>
-#include <StationReceptorGroup/StationReceptorGroup.h>
-#include <StationOperations/StationOperations.h>
-#include <APLCommon/LogicalDeviceFactory.h>
-#include <APLCommon/SharedLogicalDeviceFactory.h>
-#include <APLCommon/SingleInstanceLogicalDeviceFactory.h>
+#include <APL/APLCommon/StartDaemon.h>
+#include <APL/VirtualTelescope/VirtualTelescope.h>
+#include <APL/StationReceptorGroup/StationReceptorGroup.h>
+#include <APL/StationOperations/StationOperations.h>
+#include <APL/APLCommon/LogicalDeviceFactory.h>
+#include <APL/APLCommon/SharedLogicalDeviceFactory.h>
+#include <APL/APLCommon/SingleInstanceLogicalDeviceFactory.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;
