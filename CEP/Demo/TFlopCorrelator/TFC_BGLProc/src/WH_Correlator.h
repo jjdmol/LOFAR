@@ -71,11 +71,6 @@ namespace LOFAR
     int totalInputSize;
   };
 
-#ifdef HAVE_BGL
- inline fcomplex WH_Correlator::ficast(i16complex in) 
-   { return makefcomplex(in.real(), in.imag()); }
-#endif
-
 } // namespace LOFAR
 
 #endif

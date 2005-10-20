@@ -26,8 +26,10 @@ Correlator.S			\
 FIR.S				\
 TFC_BGLProcessing_main.cc 	\
 AH_BGLProcessing.cc		\
+WH_Distribute.cc		\
 WH_PPF.cc			\
-WH_Correlator.cc		
+WH_Correlator.cc		\
+WH_Concentrator.cc
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\
