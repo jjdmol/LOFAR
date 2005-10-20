@@ -90,9 +90,8 @@
 /****************************************************************************/
 
 char     *pcVersionString = "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\
-Script Engine\n\
+Test Script Engine\n\
 Copyright (c) 2005\n\
-Ericsson Technology Licensing\n\
 Ordina Technical Automation b.v.\n\
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=";
 
