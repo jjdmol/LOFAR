@@ -25,7 +25,7 @@
 #ifndef CACHE_H_
 #define CACHE_H_
 
-#include "RSP_Protocol.ph"
+#include <RSP_Protocol/RSP_Protocol.ph>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 

@@ -24,15 +24,12 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "EPA_Protocol.ph"
+#include <RSP_Protocol/EPA_Protocol.ph>
 #include "RawEvent.h"
 
 #include "EPAStub.h"
-//#include "RSPTestSuite.h"
 
-#include "BeamletWeights.h"
-
-#include "netraw.h"
+#include <RSP_Protocol/BeamletWeights.h>
 
 #include <PSAccess.h>
 #include <GCF/ParameterSet.h>
@@ -452,23 +449,6 @@ int main(int argc, char** argv)
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-#ifdef HAVE_SYS_CAPABILITY_H
-  //
-  // Need to run as (setuid) root (geteuid()==0), but will limit
-  // capabilities to cap_net_raw (and cap_net_admin only)
-  // and setuid immediately.
-  // Don't do this if there is an --root argument.
-  //
-  if (! ((argc >= 2) && (!strcmp(argv[1], "--root"))) )
-  {
-    if (!enable_cap_net_raw())
-    {
-      LOG_ERROR(formatString("%s: error: failed to enable CAP_NET_RAW capability.\n",argv[0]));
-      exit(EXIT_FAILURE);
-    }
-  }
-#endif
-
   try
   {
     GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
@@ -480,28 +460,10 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-#if 0
-  for (int arg = 0; arg < argc; arg++)
-  {
-    if (!strcmp(argv[arg], "-boardnr"))
-    {
-      if (arg++ < argc) boardnr = atoi(argv[arg]);
-    }
-  }
-#endif
-
-
-//   Suite s("EPA Firmware Stub", &cerr);
-//   s.addTest(new EPAStub("EPAStub"));
-//   s.run();
-//   long nFail = s.report();
-//   s.free();
-
   EPAStub stub("EPAStub");
   stub.run();
 
   LOG_INFO("Normal termination of program");
 
   return 0;
-//  return nFail;
 }
