@@ -33,7 +33,7 @@
 #include "ARATestTask.h"
 #include "../src/ARAPropertyDefines.h"
 
-#include "RSP_Protocol.ph"
+#include <RSP_Protocol/RSP_Protocol.ph>
 
 #include <stdio.h>
 
