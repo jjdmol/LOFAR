@@ -17,12 +17,15 @@
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
 
+#include <Transport/TH_MPI.h>
 #include <TFC_BGLProc/AH_BGLProcessing.h>
 
 using namespace LOFAR;
 
 int main (int argc, const char** argv) {
   INIT_LOGGER("TFC_BGLProcessing");
+
+  TH_MPI::initMPI(argc, argv);
 
   // Check invocation syntax
   try {
@@ -59,8 +62,10 @@ int main (int argc, const char** argv) {
     exit(1);
   } catch (...) {
     LOG_FATAL_STR("Caught unknown exception, exitting");
+    perror("hopefully this helps:");
     exit (1);
   }  
+  TH_MPI::finalize();
   LOG_INFO_STR(argv[0] << " terminated normally");
   return (0);
 }

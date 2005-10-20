@@ -18,99 +18,92 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
-#include <tWH_Correlator.h>
+#include <tWH_PPF.h>
 
 #include <Transport/TH_Mem.h>
-#include <TFC_BGLProc/WH_Correlator.h>
-// #include <TFC_Interface/DH_PPF.h>
+#include <TFC_BGLProc/WH_PPF.h>
+#include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_CorrCube.h>
-#include <TFC_Interface/DH_Vis.h>
 
 namespace LOFAR
 {
 
-  AH_Correlator::AH_Correlator() :
-    itsWH(0),
-    itsInDH1(0), itsOutDH1(0), itsInCon1(0), itsOutCon1(0), itsTH(0)
-  {}
+  AH_PPF::AH_PPF() :
+    itsWH(0), itsTH(0), itsInDH(0), itsInConn(0)
+  {
+    memset(itsOutDHs, 0, sizeof itsOutDHs);
+    memset(itsOutConns, 0, sizeof itsOutConns);
+  }
 
-  AH_Correlator::~AH_Correlator() {
-    
-    this->undefine();
-
+  AH_PPF::~AH_PPF()
+  {
+    undefine();
   }
   
-  void AH_Correlator::define(const KeyValueMap& /*kvm*/) {
-
+  void AH_PPF::define(const KeyValueMap& /*kvm*/)
+  {
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
-//     itsInDH1 = new DH_PPF("itsIn1",0, myPset);
-    itsInDH1 = new DH_CorrCube("itsIn1",0);
-    itsOutDH1 = new DH_Vis("itsOutDH1", 0, myPset);
+    itsWH     = new WH_PPF("WH_PPF", 0);
+    itsTH     = new TH_Mem();
+    itsInDH   = new DH_PPF("itsIn", 0, myPset);
+    itsInConn = new Connection("in", itsInDH, itsWH->getDataManager().getInHolder(0), itsTH, false);
 
-    itsWH = new WH_Correlator("WH_Correlator", NR_CHANNELS_PER_CORRELATOR);
-    itsTH = new TH_Mem();
-
-    itsInCon1 = new Connection("in1", 
-			       itsInDH1, 
-			       itsWH->getDataManager().getInHolder(0), 
-			       itsTH, 
-			       false);
-
-    itsOutCon1 = new Connection("out1", 
-				itsWH->getDataManager().getOutHolder(0), 
-				itsOutDH1, 
-				itsTH, 
-				false);
-
-    
+    for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; ++ corr) {
+      itsOutDHs[corr]   = new DH_CorrCube("itsOutDH", corr);
+      itsOutConns[corr] = new Connection("out", itsWH->getDataManager().getOutHolder(corr), itsOutDHs[corr], itsTH, false);
+    }
   }
 
-  void AH_Correlator::init() {
+  void AH_PPF::init()
+  {
     itsWH->basePreprocess();
 
     // Fill inDHs here
-//     static_cast<DH_PPF*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
-    static_cast<DH_CorrCube*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
+    static_cast<DH_PPF*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
   }
 
-  void AH_Correlator::run(int steps) {
-    for (int i = 0; i<steps; i++) {
+  void AH_PPF::run(int steps)
+  {
+    for (int i = 0; i < steps; i ++) {
       itsWH->baseProcess();
     }
   }
 
-  void AH_Correlator::dump() const {
+  void AH_PPF::dump() const
+  {
     itsWH->dump();
   }
 
-  void AH_Correlator::postrun() {
+  void AH_PPF::postrun()
+  {
     // check result here
-    cout << "Result = " << 
-      (bool) static_cast<DH_Vis*>(itsWH->getDataManager().getOutHolder(0))->checkCorrelatorTestPattern()
-    << endl;
+    for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
+      std::cerr << "Correlator " << corr << ":\n";
+      static_cast<DH_CorrCube*>(itsWH->getDataManager().getOutHolder(corr))->print();
+    }
   }
 
-  void AH_Correlator::undefine() {
+  void AH_PPF::undefine()
+  {
     delete itsWH;
-
-    delete itsInDH1; 
-    delete itsOutDH1;
-    
-    delete itsInCon1;
-    delete itsOutCon1;
-
+    delete itsInDH; 
+    delete itsInConn;
     delete itsTH;
+
+    for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
+      delete itsOutDHs[corr];
+      delete itsOutConns[corr];
+    }
   }
 
-  void AH_Correlator::quit() {
+  void AH_PPF::quit() {
   }
 
 } // namespace LOFAR
@@ -118,9 +111,10 @@ namespace LOFAR
 
 using namespace LOFAR;
 
-int main (int argc, const char** argv) {
+int main (int argc, const char** argv)
+{
   try {
-    AH_Correlator test;
+    AH_PPF test;
     test.setarg(argc, argv);
     test.baseDefine();
     test.basePrerun();
@@ -136,5 +130,6 @@ int main (int argc, const char** argv) {
     cerr << "Caught exception " << endl;
     exit(1);
   }
+
   return 0;
 }
