@@ -118,7 +118,7 @@ void AH_FakeStation::define(const LOFAR::KeyValueMap&) {
 					delays[s]));
     itsSteps.push_back(new Step(itsWHs.back(), WH_DH_Name));
     // share input and output DH, no cyclic buffer
-    itsSteps.back()->setInBufferingProperties(0, true, true, 10);
+    itsSteps.back()->setInBufferingProperties(0, true, true);
 
     comp.addBlock(itsSteps.back());
     itsSteps.back()->connect(0, itsSignalStep, s, 1,
