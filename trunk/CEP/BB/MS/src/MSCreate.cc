@@ -68,7 +68,7 @@ MSCreate::MSCreate (const std::string& msName,
   itsNrCorr   (ncorr),
   itsNrTimes  (0),
   itsTimeStep (timeStep),
-  itsStartTime(MVEpoch(startTime).getTime().getValue("s")),
+  itsStartTime(startTime),
   itsNrPol    (0),
   itsNrChan   (0),
   itsPolnr    (0),
@@ -533,7 +533,7 @@ void MSCreate::writeTimeStep()
   sigma = 0;
   Array<Float> weight(IPosition(1, shape(0)));
   weight = 1;
-  Double time = itsStartTime + itsNrTimes*itsTimeStep;
+  Double time = itsStartTime + itsNrTimes*itsTimeStep + itsTimeStep/2;
   itsNrTimes++;
   // Calculate the UVW for all stations.
   // First store time in frame.
@@ -558,8 +558,8 @@ void MSCreate::writeTimeStep()
       itsMSCol->flag().put(rowNumber, defFlags);
       itsMSCol->flagRow().put (rowNumber, False);
       itsMSCol->time().put (rowNumber, time);
-      itsMSCol->antenna1().put (rowNumber, i);
-      itsMSCol->antenna2().put (rowNumber, j);
+      itsMSCol->antenna1().put (rowNumber, j);
+      itsMSCol->antenna2().put (rowNumber, i);
       itsMSCol->feed1().put (rowNumber, 0);
       itsMSCol->feed2().put (rowNumber, 0);
       itsMSCol->dataDescId().put (rowNumber, bandId);
