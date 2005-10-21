@@ -21,7 +21,10 @@ NOINSTHDRS =
 
 TCCHDRS =
 
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+#nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+apldir = $(includedir)/APL/RSP_Protocol
+apl_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 
