@@ -76,8 +76,6 @@
 #include "Cache.h"
 #include "RawEvent.h"
 
-#include "netraw.h"
-
 #define ETHERTYPE_EPA 0x10FA
 
 using namespace blitz;
@@ -1524,23 +1522,6 @@ int main(int argc, char** argv)
   GCFTask::init(argc, argv);
   
   LOG_INFO(formatString("Program %s has started", argv[0]));
-
-#ifdef HAVE_SYS_CAPABILITY_H
-  //
-  // Need to run as (setuid) root (geteuid()==0), but will limit
-  // capabilities to cap_net_raw (and cap_net_admin only)
-  // and setuid immediately.
-  // Don't do this if there is an --root argument.
-  //
-  if (! ((argc >= 2) && (!strcmp(argv[1], "--root"))) )
-  {
-    if (!enable_cap_net_raw())
-    {
-      LOG_ERROR(formatString("%s: error: failed to enable CAP_NET_RAW capability.\n",argv[0]));
-      exit(EXIT_FAILURE);
-    }
-  }
-#endif
   
   try
   {

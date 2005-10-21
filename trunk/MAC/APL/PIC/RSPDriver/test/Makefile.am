@@ -1,10 +1,4 @@
 
-if HAVE_SYS_CAPABILITY_H
-CAPLIBS=-lnetraw -lcap
-else
-CAPLIBS=
-endif
-
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src
@@ -29,8 +23,7 @@ EPAStub_SOURCES = \
 	EPAStub.cc
 
 EPAStub_LDADD = \
-	$(top_builddir)/src/libepa.la \
-	$(CAPLIBS)
+	$(top_builddir)/src/libepa.la
 
 BUILT_SOURCES = \
 	RSPTest.conf \
