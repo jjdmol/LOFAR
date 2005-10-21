@@ -1,10 +1,4 @@
 
-if HAVE_SYS_CAPABILITY_H
-CAPLIBS=-lnetraw -lcap
-else
-CAPLIBS=
-endif
-
 #
 # Define ENABLE_RSPFE to enable the rspctl frontend
 #
@@ -155,8 +149,7 @@ RSPDriver_SOURCES = \
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \
-	$(RTCCOMMON_LDADD) \
-	$(CAPLIBS)
+	$(RTCCOMMON_LDADD)
 
 Tuner_SOURCES = \
 	Tuner.h \
