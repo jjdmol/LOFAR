@@ -14,18 +14,18 @@ include = '<linux/types.h>';
 include = '<bitset>';
 include = '<Common/LofarTypes.h>';
 
-include = '"EPA_Protocol.ph"';
 include = '"Timestamp.h"';
-include = '"BeamletWeights.h"';
-include = '"SubbandSelection.h"';
-include = '"RCUSettings.h"';
-include = '"WGSettings.h"';
-include = '"SystemStatus.h"';
-include = '"Statistics.h"';
-include = '"XCStatistics.h"';
-include = '"Versions.h"';
-include = '"Clocks.h"';
-include = '"MEPHeader.h"';
+include = '<APL/RSP_Protocol/EPA_Protocol.ph>';
+include = '<APL/RSP_Protocol/BeamletWeights.h>';
+include = '<APL/RSP_Protocol/SubbandSelection.h>';
+include = '<APL/RSP_Protocol/RCUSettings.h>';
+include = '<APL/RSP_Protocol/WGSettings.h>';
+include = '<APL/RSP_Protocol/SystemStatus.h>';
+include = '<APL/RSP_Protocol/Statistics.h>';
+include = '<APL/RSP_Protocol/XCStatistics.h>';
+include = '<APL/RSP_Protocol/Versions.h>';
+include = '<APL/RSP_Protocol/Clocks.h>';
+include = '<APL/RSP_Protocol/MEPHeader.h>';
 
 prelude = << PRELUDE_END
 

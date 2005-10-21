@@ -54,6 +54,7 @@ lofar_GENERAL
 dnl lofar_BLITZ
 dnl lofar_MPI
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_0, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, MAC-RTC-4_0, 1, Marshalling.h,,)
 
 dnl
@@ -61,7 +62,8 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 include/Makefile
-include/RSP_Protocol/Makefile
+include/APL/Makefile
+include/APL/RSP_Protocol/Makefile
 src/Makefile
 test/Makefile
 Makefile

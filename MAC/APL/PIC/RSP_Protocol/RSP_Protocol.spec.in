@@ -8,13 +8,13 @@
 #
 ##############################################################################
 
-Summary: RSP_Protocol is ... brief description ...
+Summary: RSP_Protocol contains the library and headers necessary to communicate with the RSPDriver
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
 %define pkgname @PACKAGE@
 %define pkgdir %{pkgname}-%{version}-%{release}
-%define prefix /opt/lofar
+%define prefix /tmp/wierenga/opt/lofar
 %define configure_args @RPM_CONFIGURE_ARGS@
 ##define build_kernel_version @BUILD_KERNEL_VERSION@
 
@@ -37,7 +37,9 @@ AutoReqProv: no
 
 %description
 
-RSP_Protocol ... more detailed description ...
+RSP_Protocol is a package containing the library and headers needed to communicate
+with the RSPDriver. All events and any classes in the events are contained in the
+library and header files.
 
 ##############################################################################
 #

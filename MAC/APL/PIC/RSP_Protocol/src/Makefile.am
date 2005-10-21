@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	RSP_Protocol.ph \
 	RSPFE_Protocol.ph
 
-phdir=$(includedir)/RSP_Protocol
+phdir=$(includedir)/APL/RSP_Protocol
 ph_HEADERS = \
 	$(EXTRA_DIST)
 
