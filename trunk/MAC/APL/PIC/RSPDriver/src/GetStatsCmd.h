@@ -26,7 +26,7 @@
 #define GETSTATSCMD_H_
 
 #include "Command.h"
-#include <RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>

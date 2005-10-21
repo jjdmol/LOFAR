@@ -26,7 +26,7 @@
 #define WRITEREG_H_
 
 #include <Common/LofarTypes.h>
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
 

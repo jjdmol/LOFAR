@@ -25,8 +25,8 @@
 #include <Common/LofarLogger.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-#include <RSP_Protocol/EPA_Protocol.ph>
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/EPA_Protocol.ph>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "RawEvent.h"
 

@@ -25,7 +25,7 @@
 #ifndef WGREAD_H_
 #define WGREAD_H_
 
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
 
