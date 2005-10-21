@@ -22,7 +22,7 @@
 //#
 //#  $Id$
 
-#include "Subject.h"
+#include <APL/RTCCommon/Subject.h>
 
 #include <algorithm>
 

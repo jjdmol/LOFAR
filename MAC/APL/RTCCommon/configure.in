@@ -1,21 +1,12 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/Marshalling.h)
+AC_INIT(src/Timestamp.cc)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(RTCCommon, 1.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
-
-dnl Define the prefix to allow the use of this path in programs
-AC_DEFINE_UNQUOTED([RTC_PREFIX],["${prefix}"],[Path to RTCCommon install prefix directory.])
-RTC_PREFIX="${prefix}"
-AC_SUBST([RTC_PREFIX])
-
-AC_DEFINE_UNQUOTED([RTC_SYSCONF],["${prefix}/etc"],[Path to RTCCommon install prefix directory.])
-RTC_SYSCONF="${prefix}/etc"
-AC_SUBST([RTC_SYSCONF])
 
 dnl Checks for programs.
 AC_PROG_AWK
@@ -46,9 +37,6 @@ dnl AC_CHECK_LIB(vport_r, main)
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h)
-AC_CHECK_HEADERS(sys/capability.h)
-dnl This is trick to be able to use "if HAVE_SYS_CAPABILITY_H" in Makefile.am
-AM_CONDITIONAL(HAVE_SYS_CAPABILITY_H, test `eval echo '${'$as_ac_Header'}'` = yes)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -70,6 +58,10 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+	RTCCommon.spec
 	Makefile
 	src/Makefile
+	include/Makefile
+	include/APL/Makefile
+	include/APL/RTCCommon/Makefile
 )

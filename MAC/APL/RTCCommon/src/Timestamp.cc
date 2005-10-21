@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "Timestamp.h"
+#include <APL/RTCCommon/Timestamp.h>
 
 #include <math.h>
 #include <time.h>

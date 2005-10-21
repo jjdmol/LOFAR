@@ -1,18 +1,4 @@
 
-if HAVE_SYS_CAPABILITY_H
-CAPLIBS=$(top_builddir)/src/libnetraw.la -lcap
-else
-CAPLIBS=
-endif
-
-#
-# Define ENABLE_CAP_NET_RAW to let RSPDriver run as setuid root
-# with only cap_net_raw capability enabled.
-#
-AM_CPPFLAGS =
-
-INSTALL=install -C
-
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
@@ -26,7 +12,8 @@ clean-local:
 	rm -f *.ph
 
 EXTRA_DIST = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	rc.status
 
 etcdir=$(prefix)/etc
 etc_SCRIPTS = \
@@ -34,33 +21,13 @@ etc_SCRIPTS = \
 
 sysconf_DATA =
 
-lib_LTLIBRARIES = librtccommon.la libnetraw.la libgnuplot_i.la
-
-include_HEADERS = \
-	Marshalling.h \
-	TestSuite.h \
-	Timestamp.h \
-	Observer.h \
-	Subject.h \
-	netraw.h \
-	gnuplot_i.h \
-	PSAccess.h
+lib_LTLIBRARIES = librtccommon.la libgnuplot_i.la
 
 librtccommon_la_SOURCES = \
-	Marshalling.h \
-	TestSuite.h \
-	Timestamp.h \
 	Timestamp.cc \
-	Observer.h \
-	Subject.h \
 	Subject.cc
 
-libnetraw_la_SOURCES = \
-	netraw.h \
-	netraw.cc
-
 libgnuplot_i_la_SOURCES = \
-	gnuplot_i.h \
 	gnuplot_i.cc
 
 %.properties: $(MAC_CONFIG)/%.properties
