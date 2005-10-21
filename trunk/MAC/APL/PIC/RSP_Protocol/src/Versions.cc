@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <RSP_Protocol/Versions.h>
-#include "Marshalling.h"
+#include <APL/RSP_Protocol/Versions.h>
+#include <APL/RTCCommon/Marshalling.h>
 
 using namespace std;
 using namespace blitz;

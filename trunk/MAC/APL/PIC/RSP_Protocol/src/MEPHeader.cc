@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include <string.h>
 

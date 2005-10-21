@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <RSP_Protocol/WGSettings.h>
-#include "Marshalling.h"
+#include <APL/RSP_Protocol/WGSettings.h>
+#include <APL/RTCCommon/Marshalling.h>
 #include "EPA_Protocol.ph"
 
 #include <math.h>
