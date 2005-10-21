@@ -14,7 +14,7 @@ include = '<linux/types.h>';
 include = '<bitset>';
 include = '<Common/LofarTypes.h>';
 
-include = '"Timestamp.h"';
+include = '<APL/RTCCommon/Timestamp.h>';
 include = '<APL/RSP_Protocol/EPA_Protocol.ph>';
 include = '<APL/RSP_Protocol/BeamletWeights.h>';
 include = '<APL/RSP_Protocol/SubbandSelection.h>';

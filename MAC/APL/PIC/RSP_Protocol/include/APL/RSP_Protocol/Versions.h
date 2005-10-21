@@ -25,7 +25,7 @@
 #ifndef VERSIONS_H_
 #define VERSIONS_H_
 
-#include "Marshalling.h"
+#include <APL/RTCCommon/Marshalling.h>
 
 #include <complex>
 #include <string>
