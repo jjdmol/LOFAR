@@ -26,7 +26,7 @@
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 #include <GCF/ParameterSet.h>
 
 #include <Suite/suite.h>
@@ -34,7 +34,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <blitz/array.h>
-#include <gnuplot_i.h>
+#include <APL/RTCCommon/gnuplot_i.h>
 
 #include "SetWG.h"
 

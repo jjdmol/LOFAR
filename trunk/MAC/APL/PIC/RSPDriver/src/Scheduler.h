@@ -29,7 +29,7 @@
 #include <GCF/TM/GCF_Control.h>
 #include "Command.h"
 #include "SyncAction.h"
-#include "Timestamp.h"
+#include <APL/RTCCommon/Timestamp.h>
 
 namespace LOFAR {
   namespace RSP {

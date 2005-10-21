@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 #include "Scheduler.h"
 #include "SyncAction.h"
 

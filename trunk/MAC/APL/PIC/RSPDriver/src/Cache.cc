@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "Cache.h"
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include <blitz/array.h>
 

@@ -31,7 +31,7 @@
 
 #include <APL/RSP_Protocol/BeamletWeights.h>
 
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 #include <GCF/ParameterSet.h>
 
 #include <iostream>

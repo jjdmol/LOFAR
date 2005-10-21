@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
 #include "RCURead.h"

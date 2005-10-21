@@ -27,7 +27,7 @@
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
-#include "TestSuite.h"
+#include <APL/RTCCommon/TestSuite.h>
 #include "RSPTest.h"
 
 #include <iostream>
