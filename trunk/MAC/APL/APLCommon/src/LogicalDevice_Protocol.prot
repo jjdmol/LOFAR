@@ -31,7 +31,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+1)";
 // specify extra include files
 // e.g.
 // include = '<sys/time.h>';
-include = '<APLCommon/APL_Defines.h>';
+include = '<APL/APLCommon/APL_Defines.h>';
 
 prelude = << PRELUDE_END
 // define namespace and enumerations here

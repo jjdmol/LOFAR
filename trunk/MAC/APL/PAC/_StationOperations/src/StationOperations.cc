@@ -30,7 +30,7 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/StationOperations/StationOperations.h>
 
-#include "RSP_Protocol.ph"
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;

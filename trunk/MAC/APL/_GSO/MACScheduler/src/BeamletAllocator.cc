@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include <Common/lofar_sstream.h>
-#include <APLCommon/APLUtilities.h>
+#include <APL/APLCommon/APLUtilities.h>
 
 #include "BeamletAllocator.h"
 

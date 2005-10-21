@@ -32,8 +32,8 @@
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDouble.h>
-#include "APLCommon/APL_Defines.h"
-#include "APLCommon/StartDaemon.h"
+#include "APL/APLCommon/APL_Defines.h"
+#include "APL/APLCommon/StartDaemon.h"
 #include "AVITestTask.h"
 
 const char SCOPE_VIC_VIStartDaemon[] = "CCU1_VIC_VIStartDaemon";

@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include <sys/time.h>
-#include <APLCommon/APLUtilities.h>
+#include <APL/APLCommon/APLUtilities.h>
 #include "../src/BeamletAllocator.h"
 
 using namespace LOFAR;

@@ -35,10 +35,10 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include "APLCommon/PropertySetAnswerHandlerInterface.h"
-#include "APLCommon/PropertySetAnswer.h"
-#include "APLCommon/APLCommonExceptions.h"
-#include "APLCommon/APL_Defines.h"
+#include "APL/APLCommon/PropertySetAnswerHandlerInterface.h"
+#include "APL/APLCommon/PropertySetAnswer.h"
+#include "APL/APLCommon/APLCommonExceptions.h"
+#include "APL/APLCommon/APL_Defines.h"
 
 //# Common Includes
 #include <Common/lofar_string.h>

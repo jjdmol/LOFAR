@@ -18,7 +18,10 @@ VirtualInstrument_DEPENDENCIES = $(LOFAR_DEPEND)
 
 NOINSTHDRS =
 
-INSTHDRS =
+INSTHDRS = \
+	VirtualInstrument.h \
+	MaintenanceVI.h \
+	ObservationVI.h
 
 pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 

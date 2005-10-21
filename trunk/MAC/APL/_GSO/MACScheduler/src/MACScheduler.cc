@@ -29,8 +29,8 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVInteger.h>
 
-#include "APLCommon/APLUtilities.h"
-#include "APLCommon/APLCommonExceptions.h"
+#include "APL/APLCommon/APLUtilities.h"
+#include "APL/APLCommon/APLCommonExceptions.h"
 #include "MACScheduler.h"
 
 INIT_TRACER_CONTEXT(LOFAR::GSO::MACScheduler,LOFARLOGGER_PACKAGE);
