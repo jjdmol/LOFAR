@@ -109,7 +109,7 @@ private:
   // server port
   GCF::TM::GCFTCPPort         m_server;
   // rspctl output  
-  long                        m_rspctlOutputTimer;
+  unsigned long               m_rspctlOutputTimer;
   long                        m_rspctlOutputPosition;
   string                      m_rspctlOutputFilename;
 
