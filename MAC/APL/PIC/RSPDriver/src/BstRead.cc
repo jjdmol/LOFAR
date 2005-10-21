@@ -26,7 +26,7 @@
 #include <APL/RSP_Protocol/Statistics.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include "BstRead.h"
 #include "Cache.h"

@@ -25,7 +25,7 @@
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
-#include "Timestamp.h"
+#include <APL/RTCCommon/Timestamp.h>
 #include "Cache.h"
 #include "RefCount.h"
 

@@ -28,7 +28,7 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 #include <APL/RSP_Protocol/MEPHeader.h>
 
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 #include <GCF/ParameterSet.h>
 
 #include <blitz/array.h>

@@ -34,7 +34,7 @@
 #include <bitset>
 #include <list>
 
-#include <Timestamp.h>
+#include <APL/RTCCommon/Timestamp.h>
 
 #include <blitz/array.h>
 

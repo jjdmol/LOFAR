@@ -25,7 +25,7 @@
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 #include <blitz/array.h>
 
 #include "SSWrite.h"
