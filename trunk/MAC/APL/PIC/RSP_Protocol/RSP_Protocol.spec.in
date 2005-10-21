@@ -14,7 +14,7 @@ Summary: RSP_Protocol contains the library and headers necessary to communicate 
 %define version @VERSION@
 %define pkgname @PACKAGE@
 %define pkgdir %{pkgname}-%{version}-%{release}
-%define prefix /tmp/wierenga/opt/lofar
+%define prefix /opt/lofar
 %define configure_args @RPM_CONFIGURE_ARGS@
 ##define build_kernel_version @BUILD_KERNEL_VERSION@
 
