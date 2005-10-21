@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <RSP_Protocol/RSP_Protocol.ph>
-#include <RSP_Protocol/EPA_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <PSAccess.h>
 

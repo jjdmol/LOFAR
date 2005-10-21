@@ -25,7 +25,7 @@
 #ifndef RSPCTL_H_
 #define RSPCTL_H_
 
-#include <RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 #ifdef ENABLE_RSPFE
 #include "RSPFE_Protocol.ph"
 #endif

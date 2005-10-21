@@ -25,7 +25,7 @@
 #ifndef BSTREAD_H_
 #define BSTREAD_H_
 
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 #include <Common/LofarTypes.h>
 
 #include "SyncAction.h"

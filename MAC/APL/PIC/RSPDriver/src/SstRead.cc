@@ -22,11 +22,11 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <RSP_Protocol/EPA_Protocol.ph>
+#include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <PSAccess.h>
 
-#include <RSP_Protocol/Statistics.h>
+#include <APL/RSP_Protocol/Statistics.h>
 
 #include "SstRead.h"
 #include "Cache.h"

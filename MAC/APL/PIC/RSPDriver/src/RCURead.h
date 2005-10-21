@@ -25,7 +25,7 @@
 #ifndef RCUREAD_H_
 #define RCUREAD_H_
 
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
 

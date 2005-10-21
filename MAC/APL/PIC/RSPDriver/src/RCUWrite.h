@@ -25,7 +25,7 @@
 #ifndef RCUWRITE_H_
 #define RCUWRITE_H_
 
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
 

@@ -25,7 +25,7 @@
 #ifndef STATUSREAD_H_
 #define STATUSREAD_H_
 
-#include <RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
 
