@@ -29,11 +29,11 @@
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDouble.h>
-#include "APLCommon/APL_Defines.h"
+#include "APL/APLCommon/APL_Defines.h"
 #include "ARATestTask.h"
 #include "../src/ARAPropertyDefines.h"
 
-#include <RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 #include <stdio.h>
 

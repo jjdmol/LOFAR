@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 
 // this include needs to be first!
-#include <RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 #include "ARARegisterAccessTask.h"
 #include "ARAConstants.h"
@@ -2547,7 +2547,7 @@ int RegisterAccessTask::_isDefect(char* scopeString)
     }
     else
     {
-      if(pvStatus->getValue()==RS_DEFECT)
+      if(pvStatus->getValue()==APLCommon::RS_DEFECT)
       {
         isDefect=1;
       }

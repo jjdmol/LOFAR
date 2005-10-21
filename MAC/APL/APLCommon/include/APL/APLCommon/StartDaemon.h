@@ -39,10 +39,10 @@
 #include <Common/lofar_string.h>
 
 //# local includes
-#include "APLCommon/PropertySetAnswerHandlerInterface.h"
-#include "APLCommon/PropertySetAnswer.h"
+#include "APL/APLCommon/PropertySetAnswerHandlerInterface.h"
+#include "APL/APLCommon/PropertySetAnswer.h"
 
-#include "APLCommon/APL_Defines.h"
+#include "APL/APLCommon/APL_Defines.h"
 
 // forward declaration
 

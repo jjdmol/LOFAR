@@ -24,7 +24,7 @@
 #define LogicalDeviceFactory_H
 
 //# Includes
-#include <APLCommon/LogicalDeviceFactoryBase.h>
+#include <APL/APLCommon/LogicalDeviceFactoryBase.h>
 
 //# local includes
 

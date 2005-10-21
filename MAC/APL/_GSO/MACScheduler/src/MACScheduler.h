@@ -34,12 +34,12 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include "APLCommon/PropertySetAnswerHandlerInterface.h"
-#include "APLCommon/PropertySetAnswer.h"
-#include "APLCommon/APLCommonExceptions.h"
+#include "APL/APLCommon/PropertySetAnswerHandlerInterface.h"
+#include "APL/APLCommon/PropertySetAnswer.h"
+#include "APL/APLCommon/APLCommonExceptions.h"
 #include "SAS_Protocol.ph"
-#include "APLCommon/LogicalDevice_Protocol.ph"
-#include "APLCommon/StartDaemon_Protocol.ph"
+#include "APL/APLCommon/LogicalDevice_Protocol.ph"
+#include "APL/APLCommon/StartDaemon_Protocol.ph"
 #include "BeamletAllocator.h"
 
 //# Common Includes

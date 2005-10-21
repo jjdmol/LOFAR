@@ -27,7 +27,7 @@
 #include <boost/shared_ptr.hpp>
 
 //# local includes
-#include "APLCommon/APLCommonExceptions.h"
+#include "APL/APLCommon/APLCommonExceptions.h"
 
 //# Common Includes
 #include <GCF/TM/GCF_Task.h>

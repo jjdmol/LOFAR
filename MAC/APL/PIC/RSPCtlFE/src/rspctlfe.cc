@@ -39,7 +39,7 @@
 #include <GCF/GCF_PVString.h>
 
 #include "rspctlfe.h"
-#include <RSP_Protocol/RSPFE_Protocol.ph>
+#include <APL/RSP_Protocol/RSPFE_Protocol.ph>
 
 using namespace std;
 using namespace LOFAR;

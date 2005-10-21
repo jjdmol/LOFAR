@@ -30,7 +30,7 @@
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 
 //# local includes
-#include <APLCommon/LogicalDevice.h>
+#include <APL/APLCommon/LogicalDevice.h>
 
 //# Common Includes
 

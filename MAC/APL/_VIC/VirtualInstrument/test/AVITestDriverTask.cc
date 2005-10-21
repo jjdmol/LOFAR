@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "APLCommon/APL_Defines.h"
-#include "APLCommon/StartDaemon.h"
+#include "APL/APLCommon/APL_Defines.h"
+#include "APL/APLCommon/StartDaemon.h"
 #include "AVITestDriverTask.h"
 
 #include <stdio.h>

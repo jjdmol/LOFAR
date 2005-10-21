@@ -2,14 +2,14 @@ bin_PROGRAMS = avitest
 
 TESTS = #avitest
 
-avitest_CPPFLAGS= \
+avitest_CPPFLAGS = \
 	-I$(top_srcdir)/../GCF/GCFCommon/src \
 	-I$(top_srcdir)/VIC/VirtualInstrument/src \
 	-Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
-avitest_SOURCES 		= \
+avitest_SOURCES	= \
 	AVITestAnswer.cc \
 	AVITestTask.cc \
 	AVITestDriverTask.cc \
@@ -19,7 +19,10 @@ avitest_LDADD = -lsuite
 
 NOINSTHDRS =
 
-INSTHDRS =
+INSTHDRS = \
+	AVITestAnswer.h \
+	AVITestTask.h \
+	AVITestDriverTask.h
 
 pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 

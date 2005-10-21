@@ -24,11 +24,11 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 #include "../src/ARAConstants.h"
 #include "../src/ARAPropertyDefines.h"
-#include "APLCommon/APL_Defines.h"
+#include "APL/APLCommon/APL_Defines.h"
 #include "ARATestDriverTask.h"
 
 #include <stdio.h>

@@ -34,7 +34,7 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDouble.h>
-#include <RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <boost/shared_ptr.hpp>
 #include <map>
 
