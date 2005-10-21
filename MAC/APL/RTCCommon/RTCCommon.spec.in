@@ -14,7 +14,7 @@ Summary: RTCCommon contains a library of widely used classes in the LOFAR RTC so
 %define version @VERSION@
 %define pkgname @PACKAGE@
 %define pkgdir %{pkgname}-%{version}-%{release}
-%define prefix /tmp/wierenga/opt/lofar
+%define prefix /opt/lofar
 %define configure_args @RPM_CONFIGURE_ARGS@
 ##define build_kernel_version @BUILD_KERNEL_VERSION@
 
