@@ -95,6 +95,10 @@ public:
   // All flags are set to False.
   void writeTimeStep();
 
+  // Do the same, but write channel by channel.
+  // This is only meant as a test to simulate the correlator behaviour.
+  void writeTimeStep2();
+
   // Get the number of antennas.
   int nrAntennas() const
     { return itsNrAnt; }
