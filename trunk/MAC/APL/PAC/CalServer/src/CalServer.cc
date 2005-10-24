@@ -26,10 +26,9 @@
 
 #include "CAL_Protocol.ph"
 
-#include "CalConstants.h"
 #include "CalServer.h"
 #include "SpectralWindow.h"
-#include "SubArray.h"
+#include <APL/CAL_Protocol/SubArray.h>
 #include "SubArraySubscription.h"
 #include "RemoteStationCalibration.h"
 #include "CalibrationAlgorithm.h"
@@ -57,6 +56,8 @@ using namespace CAL;
 using namespace RTC;
 
 using namespace CAL_Protocol;
+
+#define NPOL 2
 
 CalServer::CalServer(string name, ACCs& accs)
   : GCFTask((State)&CalServer::initial, name),

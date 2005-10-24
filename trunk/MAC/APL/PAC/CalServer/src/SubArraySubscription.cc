@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#include "SubArray.h"
+#include <APL/CAL_Protocol/SubArray.h>
 #include "SubArraySubscription.h"
 #include "CAL_Protocol.ph"
 #include <Common/LofarLogger.h>

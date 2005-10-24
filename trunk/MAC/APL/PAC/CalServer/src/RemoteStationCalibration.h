@@ -27,8 +27,8 @@
 #include "Source.h"
 #include "DipoleModel.h"
 #include "CalibrationAlgorithm.h"
-#include "AntennaGains.h"
-#include "SubArray.h"
+#include <APL/CAL_Protocol/AntennaGains.h>
+#include <APL/CAL_Protocol/SubArray.h>
 #include <blitz/array.h>
 
 // for debugging

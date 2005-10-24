@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 
 #include <pthread.h>
-#include "SubArray.h"
+#include <APL/CAL_Protocol/SubArray.h>
 #include "CalibrationThread.h"
 
 using namespace LOFAR;
