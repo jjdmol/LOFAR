@@ -28,11 +28,13 @@ a_dir=`dirname $0`
 a_dir=`cd $a_dir > /dev/null 2>&1; pwd`
 a_root=`echo $a_dir | sed -e 's%/LOFAR/.*%/LOFAR%'`
 
-# Find out where pkgdep is located.
+# Find out where finddep and pkgdep are located.
 if [ -f $a_dir/pkgdep ]; then
   a_pkgdep=$a_dir/pkgdep
+  a_finddep=$a_dir/finddep
 else
   a_pkgdep=$a_root/LCS/Tools/build/gnu_debug/src/pkgdep
+  a_finddep=$a_root/LCS/Tools/src/finddep
 fi
 if [ "$a_pkgdep" = ""  -o  ! -x "$a_pkgdep" ]; then
   a_pkgdep=`which pkgdep`
@@ -40,14 +42,19 @@ if [ "$a_pkgdep" = ""  -o  ! -x "$a_pkgdep" ]; then
     echo "Fatal error: could not locate program \`pkgdep'"
     exit 1
   fi
+  a_finddep=`which finddep`
+  if [ "$a_finddep" = ""  -o  ! -x "$a_finddep" ]; then
+    echo "Fatal error: could not locate program \`finddep'"
+    exit 1
+  fi
 fi
 
 # Execute finddep.
-echo "Executing finddep ..."
-$a_root/autoconf_share/finddep
+echo "Executing $a_finddep ..."
+$a_finddep
 
 # Execute pkgdep
-echo "Executing pkgdep ..."
+echo "Executing $a_pkgdep ..."
 $a_pkgdep finddep.pkg top strip xhtml hdrtxt="%pkg% Package Directory Tree" href='<a href="../scripts/makepage.php?name=%pkg%" target="description">' > finddep-pkg.html
 $a_pkgdep finddep.used xhtml > finddep-used.html
 $a_pkgdep finddep.uses xhtml > finddep-uses.html
