@@ -23,7 +23,7 @@
 #ifndef BEAMSERVER_H_
 #define BEAMSERVER_H_
 
-#include "SpectralWindow.h"
+#include <APL/CAL_Protocol/SpectralWindow.h>
 #include "BS_Protocol.ph"
 #include "Beam.h"
 #include "Beamlet.h"
