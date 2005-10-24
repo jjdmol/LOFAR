@@ -24,9 +24,9 @@
 #ifndef CALIBRATIONINTERFACE_H_
 #define CALIBRATIONINTERFACE_H_
 
-#include "SubArray.h"
+#include <APL/CAL_Protocol/SubArray.h>
 #include "ACC.h"
-#include "AntennaGains.h"
+#include <APL/CAL_Protocol/AntennaGains.h>
 
 namespace LOFAR {
   namespace CAL {

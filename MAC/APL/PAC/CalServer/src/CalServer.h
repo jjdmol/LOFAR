@@ -25,11 +25,11 @@
 #define CALSERVER_H_
 
 #include "SpectralWindow.h"
-#include "AntennaArray.h"
+#include <APL/CAL_Protocol/AntennaArray.h>
 #include "Source.h"
 #include "DipoleModel.h"
 #include "ACC.h"
-#include "SubArray.h"
+#include <APL/CAL_Protocol/SubArray.h>
 
 #include <GCF/TM/GCF_Control.h>
 #include <AMCBase/AMCClient/ConverterClient.h>

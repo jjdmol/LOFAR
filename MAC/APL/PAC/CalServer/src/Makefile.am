@@ -43,24 +43,7 @@ sysconf_DATA = \
 	cp $< $@
 
 # protocol library, use this to use the CAL protocol
-lib_LTLIBRARIES = libcal.la libcaldevel.la
-
-libcal_ladir = $(prefix)/include
-libcal_la_HEADERS = \
-	AntennaGains.h \
-	AntennaArray.h \
-	AntennaArrayData.h \
-	SpectralWindow.h \
-	SubArray.h \
-	SharedResource.h
-
-libcal_la_SOURCES = \
-	$(top_builddir)/src/CAL_Protocol.cc \
-	AntennaGains.cc \
-	AntennaArray.cc \
-	AntennaArrayData.cc \
-	SpectralWindow.cc \
-	SubArray.cc
+lib_LTLIBRARIES = libcaldevel.la
 
 # convenience library
 # lib_LTLIBRARIES = libcaldevel.la
@@ -97,14 +80,12 @@ bin_PROGRAMS = \
 	juggle_acc
 
 CalServer_SOURCES = \
-	CalConstants.h \
 	CalServer.h \
 	CalServer.cc \
 	ACMProxy.h \
 	ACMProxy.cc
 
 CalServer_LDADD = \
-	$(top_builddir)/src/libcal.la \
 	$(top_builddir)/src/libcaldevel.la
 
 #	-lrtccommon
@@ -113,12 +94,6 @@ juggle_acc_SOURCES = \
 	juggle_acc.cc
 
 CalServer_DEPEND = $(LOFAR_DEPEND)
-
-#	libcal.la \
-#	libcaldevel.la \
-#	librtccommon.la
-
-#	-lrsp
 
 bin_SCRIPTS = \
 	calserver
