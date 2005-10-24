@@ -82,36 +82,7 @@ private:
   
   void fillDataPointers();
 };
-
-
-#if 0
- inline int DH_Vis::getBufferOffset(short stationA, // row
-				    short stationB, // column
-				    short pol)
-  {
-    // Addressing: 
-    // First determine the start position of the (stationA,stationB) data:
-    // start at "upper left" corner with stationA=stationB=0 and
-    // call this column 0, row 0. 
-    // now address each row sequentially and
-    // start with with column0 for the next stationA
-    // Finally multiply by 4 to account for all polarisations
-    //  (sA,sB) -> (sA*sA+sA)/2+sB
-    //
-    // This is the start address for the (stationA,stationB) data
-    // add pol word to get to the requested polarisation.
-    DBGASSERTSTR(stationB <= stationA,"DH_Vis::getBufferOffset: only lower part of correlation matrix is accessible");
-    return (2*(stationA*stationA+stationA)+4*stationB)+pol; 
-  }
-
- inline BufferType* DH_Vis::getBufferElement(short stationA, // row
-	 					     short stationB, // column
-						     short pol) {
-   DBGASSERTSTR(stationB <= stationA, "DH_Vis::getBufferElement: only lower part of correlation matrix is accessible");
-   return &itsBuffer[getBufferOffset(stationA, stationB, pol)];
-  }
-#endif
-}
+} // Namespace LOFAR
 
 #endif 
 
