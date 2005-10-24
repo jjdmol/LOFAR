@@ -65,7 +65,7 @@ def createPackageDoc(packageName,dirLevel):
   if os.path.isfile(packageName):
     return
   else:
-    writeFile=openFile(packageName+"/package.doc","w")
+    writeFile=openFile(packageName+"/package.dox","w")
     if dirLevel>0:
       baseGroup=os.path.basename(os.environ["PWD"])
       writeFile.write("// \ingroup "+baseGroup+"\n")
