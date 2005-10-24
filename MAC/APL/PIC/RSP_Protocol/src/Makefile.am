@@ -1,6 +1,3 @@
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
 
 AUTOGEN = autogen
 SUFFIXES = .ph
