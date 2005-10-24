@@ -26,7 +26,7 @@
 
 #include "SpectralWindow.h"
 #include "Beam.h"
-#include "Pointing.h"
+#include <APL/BS_Protocol/Pointing.h>
 
 #include <Suite/suite.h>
 

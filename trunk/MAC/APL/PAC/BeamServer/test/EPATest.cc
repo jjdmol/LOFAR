@@ -28,7 +28,7 @@
 
 #include <Suite/suite.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
-#include "BS_Protocol.ph"
+#include <APL/BS_Protocol/BS_Protocol.ph>
 
 #include "EPATest.h"
 

@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "BS_Protocol.ph"
+#include <APL/BS_Protocol/BS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 

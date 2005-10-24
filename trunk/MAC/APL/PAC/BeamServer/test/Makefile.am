@@ -33,7 +33,6 @@ BeamServerTest_SOURCES = \
 	BeamServerTest.cc
 
  BeamServerTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/src/libabsdevel.la
 
 #CheckWeightsTest_SOURCES = \
@@ -55,7 +54,6 @@ AVTStub_SOURCES = \
 	AVTStub.cc
 
 AVTStub_LDADD = \
-	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/src/libabsdevel.la
 
 EPATest_SOURCES = \
@@ -63,7 +61,6 @@ EPATest_SOURCES = \
 	EPATest.cc
 
 EPATest_LDADD = \
-	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/src/libabsdevel.la
 
 SweepTest_SOURCES = \
@@ -71,7 +68,6 @@ SweepTest_SOURCES = \
 	SweepTest.cc
 
 SweepTest_LDADD = \
-	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/src/libabsdevel.la
 
 BUILT_SOURCES = \

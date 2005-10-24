@@ -24,7 +24,7 @@
 #define BEAMSERVER_H_
 
 #include <APL/CAL_Protocol/SpectralWindow.h>
-#include "BS_Protocol.ph"
+#include <APL/BS_Protocol/BS_Protocol.ph>
 #include "Beam.h"
 #include "Beamlet.h"
 #include <APL/RTCCommon/Timestamp.h>
