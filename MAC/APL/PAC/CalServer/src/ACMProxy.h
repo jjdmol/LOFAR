@@ -25,8 +25,8 @@
 #define ACMPROXY_H_
 
 #include "ACC.h"
-#include "XCStatistics.h"
-#include "Timestamp.h"
+#include <APL/RSP_Protocol/XCStatistics.h>
+#include <APL/RTCCommon/Timestamp.h>
 
 #include <GCF/TM/GCF_Control.h>
 

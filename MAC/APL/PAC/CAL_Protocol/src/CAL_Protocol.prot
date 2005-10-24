@@ -14,7 +14,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+13)";
 include = '"AntennaGains.h"';
 include = '"SubArray.h"';
 include = '"SpectralWindow.h"';
-include = '"Timestamp.h"';
+include = '<APL/RTCCommon/Timestamp.h>';
 
 include = '<bitset>';
 include = '<set>';
