@@ -23,7 +23,7 @@
 #ifndef SWEEPTEST_H_
 #define SWEEPTEST_H_
 
-#include "BS_Protocol.ph"
+#include <APL/BS_Protocol/BS_Protocol.ph>
 #include <Suite/test.h>
 
 #include <GCF/TM/GCF_Control.h>

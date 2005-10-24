@@ -16,7 +16,6 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
-	BS_Protocol.ph \
 	BeamServerPorts.conf \
 	BeamServer.conf \
 	BeamServer.log_prop
@@ -37,28 +36,17 @@ sysconf_DATA = \
 %.conf: %.conf.in
 	cp $< $@
 
-lib_LTLIBRARIES = libabsdevel.la libabs.la
+lib_LTLIBRARIES = libabsdevel.la
 
-#include_HEADERS =
+# include_HEADERS =
 
-libabs_ladir = $(prefix)/include
+# libabsdevel_ladir = $(prefix)/include
 
-libabs_la_SOURCES = \
+libabsdevel_la_SOURCES = \
 	Beam.h \
 	Beam.cc \
 	Beamlet.h \
 	Beamlet.cc
-
-libabsdevel_ladir = $(prefix)/include
-libabsdevel_la_HEADERS = \
-	Pointing.h \
-	Beamlet2SubbandMap.h \
-	$(top_builddir)/src/BS_Protocol.ph
-
-libabsdevel_la_SOURCES = \
-	Pointing.cc \
-	Beamlet2SubbandMap.cc \
-	$(top_builddir)/src/BS_Protocol.cc
 
 bin_PROGRAMS = BeamServer
 
@@ -67,8 +55,7 @@ BeamServer_SOURCES = \
 	BeamServer.cc
 
 BeamServer_LDADD = \
-	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/src/libabsdevel.la 
+	$(top_builddir)/src/libabsdevel.la
 
 BeamServer_DEPEND = \
 	$(LOFAR_DEPEND)

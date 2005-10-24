@@ -23,9 +23,8 @@
 #ifndef BEAM_H_
 #define BEAM_H_
 
-#include "Pointing.h"
-#include "Beamlet.h"
-#include "Beamlet2SubbandMap.h"
+#include <APL/BS_Protocol/Pointing.h>
+#include <APL/BS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/SubArray.h>
@@ -41,6 +40,8 @@
 #include <bitset>
 
 #include <blitz/array.h>
+
+#include "Beamlet.h"
 
 namespace LOFAR {
   namespace BS {
