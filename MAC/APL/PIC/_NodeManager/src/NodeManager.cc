@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <APL/NodeManager.h>
+#include <APL/NodeManager/NodeManager.h>
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <GCF/GCF_PVChar.h>
 #include <GCF/Utils.h>

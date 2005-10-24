@@ -22,14 +22,14 @@
 
 #include <lofar_config.h>
 
-#include "NodeManagerClient.h"
-#include "NodeManagerDaemon.h"
+#include <NodeManagerClient.h>
+#include <NodeManagerDaemon.h>
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/PAL/GCF_Answer.h>
 #include <GCF/Utils.h>
 #include <NM_Protocol.ph>
-#include <APL/NMUtilities.h>
+#include <APL/NodeManager/NMUtilities.h>
 #include <NMDefines.h>
 
 #define FULL_RS_DP(rsname) formatString("%s%s.state", NM_NODE_SCOPE.c_str(), (rsname).c_str())

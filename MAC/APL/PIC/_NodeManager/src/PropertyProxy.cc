@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include "PropertyProxy.h"
-#include "NodeManagerClient.h"
+#include <PropertyProxy.h>
+#include <NodeManagerClient.h>
 #include <GCF/PAL/GCF_Answer.h>
 
 namespace LOFAR
