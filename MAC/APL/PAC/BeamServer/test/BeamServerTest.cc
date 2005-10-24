@@ -28,7 +28,7 @@
 #include "BSTest.h"
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <APL/RTCCommon/Timestamp.h>
-#include "SubArray.h"
+#include <APL/CAL_Protocol/SubArray.h>
 
 #include <GCF/TM/GCF_Control.h>
 #include <APL/RTCCommon/PSAccess.h>

@@ -1,8 +1,6 @@
 
 SUBDIRS = src test
 
-include $(top_srcdir)/Makefile.common
-
 DISTCHECK_CONFIGURE_FLAGS=\
 	--with-common=$(prefix)\
 	--with-suite=$(prefix)\
@@ -15,3 +13,4 @@ EXTRA_DIST = \
 	BeamServer.spec \
 	autoconf_share/compiletool
 
+include $(top_srcdir)/Makefile.common

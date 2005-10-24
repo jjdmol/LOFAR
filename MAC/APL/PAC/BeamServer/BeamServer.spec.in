@@ -14,7 +14,7 @@ Summary: The BeamServer is a real-time control process that computes beamformer 
 %define version @VERSION@
 %define pkgname @PACKAGE@
 %define pkgdir %{pkgname}-%{version}-%{release}
-%define prefix /opt/lofar
+%define prefix /tmp/wierenga/opt/lofar
 %define configure_args @RPM_CONFIGURE_ARGS@
 ##define build_kernel_version @BUILD_KERNEL_VERSION@
 
@@ -46,6 +46,7 @@ sends the weights to the RSP hardware.
 #
 ##############################################################################
 %prep
+echo $prefix
 
 # create the build directory, untar the source
 %setup
@@ -56,7 +57,7 @@ sends the weights to the RSP hardware.
 #
 ##############################################################################
 %build
-./configure %{configure_args} && make
+./configure %{configure_args} --prefix=%{prefix} && make
 
 ##############################################################################
 #
@@ -78,6 +79,7 @@ else
   echo Cleaning RPM_BUILD_ROOT: "$RPM_BUILD_ROOT"
   rm -rf "$RPM_BUILD_ROOT"
 fi
+mkdir -p $RPM_BUILD_ROOT%{prefix}
 make DESTDIR="$RPM_BUILD_ROOT" install
 
 #uninstall

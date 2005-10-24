@@ -27,9 +27,9 @@
 #include "Beamlet.h"
 #include "Beamlet2SubbandMap.h"
 #include <APL/RTCCommon/Timestamp.h>
-#include <SpectralWindow.h>
-#include <SubArray.h>
-#include <AntennaGains.h>
+#include <APL/CAL_Protocol/SpectralWindow.h>
+#include <APL/CAL_Protocol/SubArray.h>
+#include <APL/CAL_Protocol/AntennaGains.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <time.h>
 #include <AMCBase/Converter.h>

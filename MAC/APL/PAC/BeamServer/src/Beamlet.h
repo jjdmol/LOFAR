@@ -23,7 +23,7 @@
 #ifndef BEAMLET_H_
 #define BEAMLET_H_
 
-#include <SpectralWindow.h>
+#include <APL/CAL_Protocol/SpectralWindow.h>
 #include <blitz/array.h>
 
 namespace LOFAR {

@@ -26,7 +26,7 @@
 
 #include "BS_Protocol.ph"
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
-#include "CAL_Protocol.ph"
+#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include "BeamServer.h"
 
