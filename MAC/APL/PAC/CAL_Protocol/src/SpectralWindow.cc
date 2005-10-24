@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "SpectralWindow.h"
+#include <APL/CAL_Protocol/SpectralWindow.h>
 
 #include <blitz/array.h>
 #include <sstream>

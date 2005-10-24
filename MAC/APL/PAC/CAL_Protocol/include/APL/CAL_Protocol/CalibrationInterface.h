@@ -25,7 +25,7 @@
 #define CALIBRATIONINTERFACE_H_
 
 #include <APL/CAL_Protocol/SubArray.h>
-#include "ACC.h"
+#include <APL/CAL_Protocol/ACC.h>
 #include <APL/CAL_Protocol/AntennaGains.h>
 
 namespace LOFAR {

@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "ACC.h"
+#include <APL/CAL_Protocol/ACC.h>
 #include <blitz/array.h>
 #include <fstream>
 #include <stdio.h>

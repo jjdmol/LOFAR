@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "AntennaGains.h"
+#include <APL/CAL_Protocol/AntennaGains.h>
 #include <APL/RTCCommon/Marshalling.h>
 #include <Common/LofarTypes.h>
 
@@ -36,9 +36,7 @@ using namespace CAL;
 AntennaGains::AntennaGains() : m_mutex(new pthread_mutex_t)
 {
   ASSERT(m_mutex);
-#ifdef USE_CAL_THREAD
   pthread_mutex_init((pthread_mutex_t*)m_mutex, 0);
-#endif
   lock();
 
   m_done = false;
@@ -55,9 +53,7 @@ AntennaGains::AntennaGains() : m_mutex(new pthread_mutex_t)
 AntennaGains::AntennaGains(int nantennas, int npol, int nsubbands) : m_mutex(new pthread_mutex_t)
 {
   ASSERT(m_mutex);
-#ifdef USE_CAL_THREAD
   pthread_mutex_init((pthread_mutex_t*)m_mutex, 0);
-#endif
   lock(); m_done = false; unlock();
 
   if (nantennas < 0 || npol < 0 || nsubbands < 0)

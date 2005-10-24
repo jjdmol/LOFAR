@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#include "AntennaArrayData.h"
+#include <APL/CAL_Protocol/AntennaArrayData.h>
 #include <string>
 #include <fstream>
 
