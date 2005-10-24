@@ -23,7 +23,7 @@
 
 #include <APL/CAL_Protocol/SubArray.h>
 #include "SubArraySubscription.h"
-#include "CAL_Protocol.ph"
+#include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;

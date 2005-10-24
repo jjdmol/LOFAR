@@ -22,7 +22,7 @@
 //#  $Id$
 
 // this include needs to be first!
-#include "CAL_Protocol.ph"
+#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include <APL/RTCCommon/TestSuite.h>
 #include "CalTest.h"

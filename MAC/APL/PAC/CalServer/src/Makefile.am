@@ -11,7 +11,6 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
 BUILT_SOURCES = \
-	CAL_Protocol.ph \
 	CalServer.conf \
 	DipoleModel.conf \
 	SourceCatalog.conf \
@@ -20,10 +19,7 @@ BUILT_SOURCES = \
 	AntennaArrays.conf \
 	CalServer.log_prop
 
-#	ACC.conf
-
-EXTRA_DIST = \
-	CAL_Protocol.ph
+EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
 	CalServer.conf \
@@ -33,8 +29,6 @@ sysconf_DATA = \
 	HBAntennas.conf \
 	AntennaArrays.conf \
 	CalServer.log_prop
-
-#	ACC.conf 
 
 %.log_prop: %.log_prop.in
 	cp $< $@
@@ -52,8 +46,6 @@ libcaldevel_ladir = $(prefix)/include
 
 libcaldevel_la_SOURCES = \
 	Documentation.h \
-	ACC.h \
-	ACC.cc \
 	Source.h \
 	Source.cc \
 	SourceData.h \
@@ -64,16 +56,12 @@ libcaldevel_la_SOURCES = \
 	DipoleModelData.cc \
 	SubArraySubscription.h \
 	SubArraySubscription.cc \
-	CalibrationInterface.h \
 	CalibrationAlgorithm.h \
 	CalibrationAlgorithm.cc \
 	RemoteStationCalibration.h \
 	RemoteStationCalibration.cc \
 	CalibrationThread.h \
 	CalibrationThread.cc
-
-include_HEADERS = \
-	$(top_builddir)/src/CAL_Protocol.ph
 
 bin_PROGRAMS = \
 	CalServer \
