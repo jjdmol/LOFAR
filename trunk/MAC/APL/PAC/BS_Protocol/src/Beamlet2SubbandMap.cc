@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include "Beamlet2SubbandMap.h"
-#include "Marshalling.h"
+#include <APL/RTCCommon/Marshalling.h>
 
 using namespace LOFAR;
 using namespace BS_Protocol;

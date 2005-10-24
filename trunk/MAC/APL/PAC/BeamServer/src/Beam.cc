@@ -28,7 +28,7 @@
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
 
-#include "PSAccess.h"
+#include <APL/RTCCommon/PSAccess.h>
 #include "Beam.h"
 
 #include <math.h>

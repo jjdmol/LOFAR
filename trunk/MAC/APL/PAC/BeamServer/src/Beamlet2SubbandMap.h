@@ -25,8 +25,8 @@
 #ifndef BEAMLET2SUBBANDMAP_H_
 #define BEAMLET2SUBBANDMAP_H_
 
-#include "Marshalling.h"
-#include <EPA_Protocol.ph>
+#include <APL/RTCCommon/Marshalling.h>
+#include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <complex>
 #include <string>

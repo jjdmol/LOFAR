@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include "BS_Protocol.ph"
-#include "RSP_Protocol.ph"
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include "CAL_Protocol.ph"
 
 #include "BeamServer.h"
@@ -40,7 +40,7 @@
 
 #include <netinet/in.h>
 
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include <blitz/array.h>
 

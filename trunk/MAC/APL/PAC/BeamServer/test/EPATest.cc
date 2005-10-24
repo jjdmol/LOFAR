@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 
 #include <Suite/suite.h>
-#include <MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 #include "BS_Protocol.ph"
 
 #include "EPATest.h"

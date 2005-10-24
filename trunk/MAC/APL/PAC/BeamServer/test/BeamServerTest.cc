@@ -26,12 +26,12 @@
 
 #include "Beam.h"
 #include "BSTest.h"
-#include "MEPHeader.h"
-#include "Timestamp.h"
+#include <APL/RSP_Protocol/MEPHeader.h>
+#include <APL/RTCCommon/Timestamp.h>
 #include "SubArray.h"
 
 #include <GCF/TM/GCF_Control.h>
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #define CLIENT
 #ifdef CLIENT
