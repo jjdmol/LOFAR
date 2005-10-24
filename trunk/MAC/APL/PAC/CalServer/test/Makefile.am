@@ -14,10 +14,8 @@ check_PROGRAMS = \
 	CalTest
 
 CalTest_SOURCES = \
+	CalTest.h \
 	CalTest.cc
-
-CalTest_LDADD = \
-	$(top_builddir)/src/libcal.la
 
 BUILT_SOURCES = \
 	CalTest.conf

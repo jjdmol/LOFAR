@@ -24,7 +24,7 @@
 #ifndef CALIBRATIONALGORITHM_H_
 #define CALIBRATIONALGORITHM_H_
 
-#include "CalibrationInterface.h"
+#include <APL/CAL_Protocol/CalibrationInterface.h>
 #include "Source.h"
 #include "DipoleModel.h"
 #include <AMCBase/Converter.h>

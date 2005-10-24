@@ -24,11 +24,11 @@
 #ifndef CALSERVER_H_
 #define CALSERVER_H_
 
-#include "SpectralWindow.h"
+#include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/AntennaArray.h>
 #include "Source.h"
 #include "DipoleModel.h"
-#include "ACC.h"
+#include <APL/CAL_Protocol/ACC.h>
 #include <APL/CAL_Protocol/SubArray.h>
 
 #include <GCF/TM/GCF_Control.h>

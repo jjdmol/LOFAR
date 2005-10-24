@@ -26,7 +26,7 @@
 
 #ifdef USE_CAL_THREAD
 #include <pthread.h>
-#include "ACC.h"
+#include <APL/CAL_Protocol/ACC.h>
 
 namespace LOFAR {
   namespace CAL {

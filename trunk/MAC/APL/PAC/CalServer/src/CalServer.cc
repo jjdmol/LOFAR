@@ -24,10 +24,10 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "CAL_Protocol.ph"
+#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include "CalServer.h"
-#include "SpectralWindow.h"
+#include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/SubArray.h>
 #include "SubArraySubscription.h"
 #include "RemoteStationCalibration.h"
