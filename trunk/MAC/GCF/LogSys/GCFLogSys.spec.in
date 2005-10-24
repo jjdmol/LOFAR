@@ -8,8 +8,7 @@
 #
 ##############################################################################
 
-Summary: GCFLogSys contains the components, which provides the possibility to all kind of MAC applications to (let)
-log its value changes or save code logging in the OTDB.
+Summary: GCFLogSys contains the components, which provides the possibility to all kind of MAC applications to (let) log its value changes or save code logging in the OTDB.
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
