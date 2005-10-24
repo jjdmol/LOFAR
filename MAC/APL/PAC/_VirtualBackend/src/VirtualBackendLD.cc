@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include "VirtualBackendLD.h"
-#include <APLCommon/LogicalDevice_Protocol.ph>
+#include <APL/APLCommon/LogicalDevice_Protocol.ph>
 #include <APS/KVpair.h>
 #include <GCF/GCF_PVChar.h>
 #include <GCF/GCF_PVString.h>
@@ -32,6 +32,7 @@
 namespace LOFAR
 {
 using namespace ACC::APS;
+using namespace ACC::ALC;
 using namespace APLCommon;
 using namespace GCF::Common;
 using namespace GCF::TM;
@@ -230,7 +231,7 @@ void VirtualBackendLD::concreteClaim(GCFPortInterface& /*port*/)
   _cepAppParams.replace("AC.resultfile", formatString("./ACC-%s_result.param", getName().c_str()));
   
   string processScope("AC.process");
-  uint32 nrProcs = m_parameterSet.getInt(formatString("%s[0].count", processScope.c_str()));
+  uint32 nrProcs = m_parameterSet.getUint32(formatString("%s[0].count", processScope.c_str()));
 
   _cepAppParams.replace(KVpair("AC.process[0].count", (int32) nrProcs));
   

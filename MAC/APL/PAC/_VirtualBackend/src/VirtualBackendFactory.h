@@ -24,7 +24,7 @@
 #define VIRTUALBACKENDFACTORY_H
 
 //# Includes
-#include <APLCommon/LogicalDeviceFactory.h>
+#include <APL/APLCommon/LogicalDeviceFactory.h>
 
 //# local includes
 #include "VirtualBackendLD.h"

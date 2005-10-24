@@ -1,6 +1,5 @@
 DOCHDRS	=	 \
 	CEPApplicationManager.h \
-	VirtualBackendFactory.h \
 	VirtualBackendLD.h \
 	VBQualityGuard.h \
 	VBFuncStateProperty.h
@@ -13,7 +12,7 @@ libvb_la_SOURCES	= $(DOCHDRS) \
 	VBQualityGuard.cc \
 	VBFuncStateProperty.cc
 	
-libvb_la_CPPFLAGS			= \
+AM_CPPFLAGS			= \
 	-DBOOST_DISABLE_THREADS \
   -Wno-deprecated \
 	-fmessage-length=0 \
@@ -25,12 +24,9 @@ bin_PROGRAMS   		= VirtualBackend
 VirtualBackend_SOURCES		  = VBMain.cc
 VirtualBackend_LDADD		    = libvb.la $(LOFAR_DEPEND)
 VirtualBackend_DEPENDENCIES	= libvb.la $(LOFAR_DEPEND)
-VirtualBackend_CPPFLAGS			= \
-	-DBOOST_DISABLE_THREADS \
-  -Wno-deprecated \
-	-fmessage-length=0 \
-	-fdiagnostics-show-location=once \
-	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
+
+EXTRA_DIST = 	VirtualBackend.conf.in \
+	CEPAppDefault.param.in
 
 sysconf_DATA= \
 	VirtualBackend.conf \

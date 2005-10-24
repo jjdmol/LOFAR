@@ -29,14 +29,14 @@
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 
 //# local includes
-#include <APLCommon/LogicalDevice.h>
+#include <APL/APLCommon/LogicalDevice.h>
 #include <CEPApplicationManager.h>
 #include <VBQualityGuard.h>
 
 //# Common Includes
 
 //# ACC Includes
-#include <ACC/ParameterCollection.h>
+#include <APS/ParameterSet.h>
 
 // forward declaration
 
@@ -69,31 +69,31 @@ class VirtualBackendLD : public APLCommon::LogicalDevice,
     /**
     * Initial state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
+    virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, APLCommon::TLDResult& errorCode);
     /**
     * Idle state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
+    virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, APLCommon::TLDResult& errorCode);
     /**
     * Claiming state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
+    virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, APLCommon::TLDResult& errorCode);
     /**
     * Claimed state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
+    virtual GCF::TM::GCFEvent::TResult concrete_claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, APLCommon::TLDResult& errorCode);
     /**
     * Preparing state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
+    virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, APLCommon::TLDResult& errorCode);
     /**
     * active state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLDResult& errorCode);
+    virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, APLCommon::TLDResult& errorCode);
     /**
     * Releasing state additional behaviour must be implemented in the derived classes. 
     */
-    virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode);
+    virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, APLCommon::TLDResult& errorCode);
 
     /**
     * Implementation of the Claim method is done in the derived classes. 
@@ -149,8 +149,8 @@ class VirtualBackendLD : public APLCommon::LogicalDevice,
   private:
     CEPApplicationManager     _cepApplication;
     VBQualityGuard            _qualityGuard;
-    ACC::ParameterCollection  _cepAppParams;
-    ACC::ParameterCollection  _resultParams;
+    ACC::APS::ParameterSet    _cepAppParams;
+    ACC::APS::ParameterSet    _resultParams;
     ANM::TNodeList            _neededNodes;
     unsigned long             _rstoID;
   
