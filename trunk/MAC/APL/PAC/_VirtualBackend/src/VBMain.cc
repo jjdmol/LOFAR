@@ -22,8 +22,9 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <APLCommon/StartDaemon.h>
-#include "VirtualBackendFactory.h"
+#include <APL/APLCommon/StartDaemon.h>
+#include <VirtualBackendLD.h>
+#include <APL/APLCommon/LogicalDeviceFactory.h>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::Common;
@@ -38,7 +39,8 @@ int main(int argc, char* argv[])
   
   LOG_INFO("MACProcessScope: APL.PAC.VB");  
   
-  boost::shared_ptr<VirtualBackendFactory> vbFactory(new VirtualBackendFactory);
+  boost::shared_ptr<LogicalDeviceFactory<VirtualBackendLD> > vbFactory(
+      new LogicalDeviceFactory<VirtualBackendLD>);
   
   StartDaemon sd(string("PAC_VBStartDaemon"));
   sd.registerFactory(LDTYPE_VIRTUALBACKEND, vbFactory);

@@ -24,7 +24,7 @@
 #define CEPAPPLICATIONMANAGER_H
 
 //# Includes
-#include <ACC/ACAsyncClient.h>
+#include <ALC/ACAsyncClient.h>
 #include <GCF/TM/GCF_Handler.h>
 
 //# local includes
@@ -66,7 +66,7 @@ class CEPApplicationManagerInterface
     CEPApplicationManagerInterface& operator=(const CEPApplicationManagerInterface&);
 };
 
-class CEPApplicationManager : public ACC::ACClientFunctions,
+class CEPApplicationManager : public ACC::ALC::ACClientFunctions,
                                      GCF::TM::GCFHandler
 {
   public:
@@ -96,7 +96,7 @@ class CEPApplicationManager : public ACC::ACClientFunctions,
                     const string&   configID)      const;
     string  askInfo (const string&  keylist)       const;    
     bool  cancelCmdQueue ()                        const;    
-    ACC::ACCmd getLastOkCmd()                      const;
+    ACC::ALC::ACCmd getLastOkCmd()                 const;
      
   private: // implemenation of abstract GCFHandler methods
     friend class GCF::TM::GCFHandler;
@@ -104,8 +104,8 @@ class CEPApplicationManager : public ACC::ACClientFunctions,
     void stop();
   
   private: // implemenation of abstract ACClientFunctions methods
-    friend class ACC::ACClientFunctions;
-    void  handleAckMsg      (ACC::ACCmd    cmd, 
+    friend class ACC::ALC::ACClientFunctions;
+    void  handleAckMsg      (ACC::ALC::ACCmd    cmd, 
                              uint16        result,
                              const string& info);
   
@@ -121,9 +121,9 @@ class CEPApplicationManager : public ACC::ACClientFunctions,
 
   private:
     CEPApplicationManagerInterface& _interface;
-    ACC::ACAsyncClient              _acClient;
+    ACC::ALC::ACAsyncClient         _acClient;
     bool                            _continuePoll;
-    ACC::ACCmd                      _lastOkCmd;
+    ACC::ALC::ACCmd                 _lastOkCmd;
     
     ALLOC_TRACER_CONTEXT  
 };
@@ -134,7 +134,7 @@ inline CEPApplicationManager::CEPApplicationManager(
       _interface(interface),
       _acClient(this, appName, 10, 100, 1, 0),
       _continuePoll(false),
-      _lastOkCmd(ACC::ACCmdNone)
+      _lastOkCmd(ACC::ALC::ACCmdNone)
       
 { 
   use(); // to avoid that this object will be deleted in GCFTask::stop;
@@ -215,7 +215,7 @@ inline bool  CEPApplicationManager::cancelCmdQueue ()                       cons
   return _acClient.cancelCmdQueue();
 }
  
-inline ACC::ACCmd CEPApplicationManager::getLastOkCmd() const 
+inline ACC::ALC::ACCmd CEPApplicationManager::getLastOkCmd() const 
 {
   return _lastOkCmd;
 }

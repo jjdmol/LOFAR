@@ -26,7 +26,7 @@
 namespace LOFAR
 {
 
-using namespace ACC;
+using namespace ACC::ALC;
   
   namespace AVB
   {

@@ -25,7 +25,7 @@
 
 //# Includes
 #include <GCF/PAL/GCF_ExtPropertySet.h>
-#include <APL/NodeManager.h>
+#include <APL/NodeManager/NodeManager.h>
 #include <GCF/PAL/GCF_Answer.h>
 
 //# local includes

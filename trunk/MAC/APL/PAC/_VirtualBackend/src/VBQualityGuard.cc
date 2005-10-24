@@ -25,7 +25,7 @@
 #include "VBQualityGuard.h"
 #include "VirtualBackendLD.h"
 #include "VBFuncStateProperty.h"
-#include <APL/NMUtilities.h>
+#include <APL/NodeManager/NMUtilities.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVChar.h>
 
