@@ -27,7 +27,7 @@
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <PropertyProxy.h>
-#include <APL/NodeManager.h> // for the type TNodeList 
+#include <APL/NodeManager/NodeManager.h> // for the type TNodeList 
 
 namespace LOFAR 
 {
