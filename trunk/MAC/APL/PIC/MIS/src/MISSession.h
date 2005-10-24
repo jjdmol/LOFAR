@@ -30,7 +30,7 @@
 #include <MISSubscription.h>
 
 #include <MIS_Protocol.ph>
-#include <RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 namespace blitz
 {

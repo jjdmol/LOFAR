@@ -4,13 +4,13 @@ SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
-DOCHDRS	=	 \
+DOCHDRS	=	 $(BUILT_SOURCES) \
 	MISDaemon.h \
 	MISDefines.h \
 	MISSession.h \
 	MISSubscription.h \
 	PropertyProxy.h \
-	MIS_Protocol.ph
+	MISPolicyHandler.h
    
 noinst_LTLIBRARIES 	= libmis.la
 
@@ -32,7 +32,7 @@ MACInformationServer_CPPFLAGS			=
 BUILT_SOURCES = \
 	MIS_Protocol.ph
 
-EXTRA_DIST = $(BUILT_SOURCES) 
+EXTRA_DIST = $(BUILT_SOURCES) MACInformationServer.conf.in
 	
 sysconf_DATA= \
 	MACInformationServer.conf

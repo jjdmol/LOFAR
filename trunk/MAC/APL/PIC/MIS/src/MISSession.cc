@@ -28,9 +28,9 @@
 #include "MISSubscription.h"
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/PAL/GCF_Answer.h>
-#include <APLCommon/APL_Defines.h>
+#include <APL/APLCommon/APL_Defines.h>
 #include <GCF/GCF_PVInteger.h>
-#include <PSAccess.h>
+#include <APL/RTCCommon/PSAccess.h>
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
 
 using namespace blitz;
@@ -41,6 +41,7 @@ using namespace GCF::Common;
 using namespace GCF::TM;
 using namespace GCF::PAL;
 using namespace RTC;
+using namespace APLCommon;
  namespace AMI
  {
 
