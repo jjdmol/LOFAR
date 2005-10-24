@@ -25,7 +25,13 @@ BUILT_SOURCES = \
 	PI_Protocol.ph \
 	PA_Protocol.ph
 
-EXTRA_DIST = $(BUILT_SOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) gcf-pi.conf.in
+
+sysconf_DATA= \
+	PropertyInterface.conf
+		
+%.conf: gcf-pi.conf.in
+	cp $< $@
 
 clean-local:
 	rm -f *.ph

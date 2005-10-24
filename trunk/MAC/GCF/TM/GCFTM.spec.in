@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-Summary: GCFTM is the common GCF software package providing a set of GCF wide type definitions.
+Summary: GCFTM is the common GCF software package providing event and state driven programming. 
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
@@ -28,7 +28,8 @@ BuildRoot: %{_tmppath}/%{pkgdir}-root
 URL: http://www.astron.nl
 Prefix: %{prefix}
 BuildArchitectures: i386 # Target platforms, i.e., i586
-Requires: Common, GCFCommon 
+Requires: Common >= 2.2
+Requires: GCFCommon >= 6.0
 Packager: %{packager}
 Distribution: The LOFAR project
 Vendor: ASTRON
@@ -37,7 +38,10 @@ AutoReqProv: no
 
 %description
 
-GCFTM is the package handling the data transport in LOFAR.
+GCFTM is the common GCF software package providing event and state driven 
+programming. For this purpose a number of communication protocols can be used in a
+transparent way. This package is special designed for MAC applications and replaces
+therefore the Transport package of LCS.
 
 ##############################################################################
 #
