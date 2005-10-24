@@ -60,10 +60,15 @@
 #include <casa/Quanta/MVPosition.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/Timer.h>
+#include <casa/OS/RegularFile.h>
+#include <casa/OS/SymLink.h>
 #include <casa/Containers/Record.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/IO/MemoryIO.h>
 #include <casa/Exceptions/Error.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/ArrColDesc.h>
+#include <tables/Tables/TiledColumnStMan.h>
 
 #include <stdexcept>
 #include <iostream>
@@ -140,7 +145,7 @@ Prediffer::Prediffer(const string& msName,
   itsNrTimes      (0),
   itsNrTimesDone  (0),
   itsBlNext       (0),
-  itsVisMapped    (True),
+  itsVisMapped    (true),
   itsDataMap      (0),
   itsFlagsMap     (0),
   itsPredTimer    ("P:predict", false),
@@ -1289,6 +1294,77 @@ void Prediffer::getData (Array<Complex>& dataArr, Array<Bool>& flagArr)
   }
 }
 
+void Prediffer::subtractPeelSources (bool flush)
+{
+  if (itsVisMapped) {
+    mapResidualData (true);
+  }
+  saveResidualData (true, flush);
+}
+
+// Write the predicted data into the .res or .dat file.
+void Prediffer::writePredictedData (Bool inDataColumn)
+{
+  if (!inDataColumn) {
+    mapResidualData (false);
+  }
+  saveResidualData (false, true);
+}
+
+void Prediffer::mapResidualData (Bool copyData)
+{
+  if (!itsVisMapped) {
+    return;
+  }
+  File fil(itsMSName + "/vis.res");
+  Table tab(itsMSName, Table::Update);
+  if (tab.isColumnWritable ("CORRECTED_DATA")) {
+    ASSERT (fil.isSymLink());
+  } else {
+    ASSERT (!fil.exists());
+    ArrayColumnDesc<Float> resCol("CORRECTED_DATA",
+				  IPosition(2,itsNCorr, itsNrChan));
+    TiledColumnStMan tiledRes("TiledRes", IPosition(3,4,1000000,1));
+    tab.addColumn (resCol, tiledRes);
+    // Find out which datamanager is TiledRes
+    // Create symlink for it.
+    Record dminfo = tab.dataManagerInfo();
+    ostringstream filNam;
+    for (uint i=0; i<dminfo.nfields(); ++i) {
+      const Record& dm = dminfo.subRecord(i);
+      if (dm.asString("NAME") == "TiledRes") {
+	ostringstream ostr;
+	filNam << "table.f" << i << "_TSM0";
+	SymLink sl(fil);
+	sl.create (filNam.str());
+	break;
+      }
+    }
+    if (copyData) {
+      // Copy all data from the DATA column to CORRECTED_DATA.
+      // Do this by simply copying the file.
+      // First close the table.
+      tab = Table();
+      RegularFile resFil(itsMSName+"vis.dat");
+      resFil.copy (filNam);
+    }
+  }
+  // Map the vis.res file to the same place as the data file.
+  size_t size = 0;
+  int64  offs = 0;
+  if (itsDataMap) {
+    size = itsDataMap->getSize();
+    offs = itsDataMap->getOffset();
+    delete itsDataMap;
+    itsDataMap = 0;
+  }
+  itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::ReWr);
+  if (size > 0) {
+    itsDataMap->mapFile (offs, size);
+  }
+  itsVisMapped = false;
+}
+
 //----------------------------------------------------------------------
 //
 // ~ssaveResidualData
@@ -1301,20 +1377,6 @@ void Prediffer::saveResidualData (bool subtract, bool write)
   cout << "saveResidualData to '" << itsDataMap->getFileName() << "'" << endl;
 
   // Map .res file if not mapped yet.
-  if (itsVisMapped) {
-    size_t size = 0;
-    int64  offs = 0;
-    if (itsDataMap) {
-      size = itsDataMap->getSize();
-      offs = itsDataMap->getOffset();
-      delete itsDataMap;
-      itsDataMap = 0;
-    }
-    itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::ReWr);
-    if (size > 0) {
-      itsDataMap->mapFile (offs, size);
-    }
-  }
 
   cout << "Using peel sources " << itsPeelSourceNrs << endl;;
   itsSources.setSelected (itsPeelSourceNrs);
