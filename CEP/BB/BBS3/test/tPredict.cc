@@ -47,7 +47,7 @@ void doPredict (Prediffer& pre1)
   cout << ">>>" << endl;
   pre1.showSettings();
   cout << "<<<" << endl;
-  pre1.writePredictedData();
+  pre1.writePredictedData (false);
 }
 
 
