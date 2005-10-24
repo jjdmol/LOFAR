@@ -665,7 +665,7 @@ int32 Socket::shutdown (bool receive, bool send)
 	ASSERTSTR (receive || send, "neither receive nor send specified");
 
 	itsErrno = SK_OK;					// assume no failure
-
+#ifndef HAVE_BGL
 	if (itsSocketID < 0) { 
 		return (itsErrno = NOINIT); 
 	}
@@ -684,7 +684,7 @@ int32 Socket::shutdown (bool receive, bool send)
  	if (send && receive) {				// update administration
 		itsIsConnected = false;
  	}
-
+#endif
 	return (itsErrno);
 }
 
