@@ -48,15 +48,7 @@ public:
 
   /// Get write access to the buffer
   BufferType* getBuffer();
-  BufferType* getBufferElement(short vis,
-			       short station1, 
-			       short station2,
-			       short pol);
-
-  int getBufferOffset(short vis, 
-		      short station1,
-		      short station2,  
-		      short pol);
+  BufferType* getBufferElement(short vis);
 
   /// Get read access to the buffer
   const BufferType* getBuffer() const;
@@ -90,43 +82,10 @@ private:
 inline DH_VisArray::BufferType* DH_VisArray::getBuffer()
   { return itsBuffer; }
 
-inline int DH_VisArray::getBufferOffset(short ch,
-					short station1,
-					short station2,
-					short pol)
-  // Addressing:
-  //
-  // The buffer basically concatenates the databuffers from serveral 
-  // DH_Vis dataholders. So the basic addressing is similar to the 
-  // DH_Vis addressing, with an added factor to account for the other 
-  // buffers. Within a DH_Vis buffer the addressing is as below:
-  // 
-  // First determine the start position of the (stationA,stationB) data:
-  // start at "upper left" corner with stationA=stationB=0 and
-  // call this column 0, row 0. 
-  // now address each row sequentially and
-  // start with with column0 for the next stationA
-  // Finally multiply by 4 to account for all polarisations
-  //  (sA,sB) -> (sA*sA+sA)/2+sB
-  //
-  // This is the start address for the (stationA,stationB) data
-  // add pol word to get to the requested polarisation.
+inline DH_VisArray::BufferType* DH_VisArray::getBufferElement(short vis)
   {
-    DBGASSERTSTR(station1 <= station2,"DH_VisArray::getBufferOffset: only lower part of the correlation matrix is accessible");
-
-    // DH_Vis::itsBufSize = itsNPols*itsNPols * itsNStations*(itsNStations+1)/2
-
-    return ch*(itsNPols*itsNPols * itsNStations*(itsNStations+1)/2) +
-      (2*(station1*station1+station1)+4*station2)+pol;
-    
-  }
-
-inline DH_VisArray::BufferType* DH_VisArray::getBufferElement(short ch, 
-								   short station1,
-								   short station2,
-								   short pol)
-  {
-    return &itsBuffer[getBufferOffset(ch, station1, station2, pol)];
+    DBGASSERTSTR(vis < itsNVis, "DH_VisArray::getBufferElement: trying to get vis with index >= itsNVis");
+    return (itsBuffer + vis * sizeof(DH_Vis::BufferType));
   }
 
 inline const DH_VisArray::BufferType* DH_VisArray::getBuffer() const 
