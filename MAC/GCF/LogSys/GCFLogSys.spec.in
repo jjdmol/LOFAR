@@ -8,7 +8,8 @@
 #
 ##############################################################################
 
-Summary: GCFLogSys is the common GCF software package providing a set of GCF wide type definitions.
+Summary: GCFLogSys contains the components, which provides the possibility to all kind of MAC applications to (let)
+log its value changes or save code logging in the OTDB.
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
@@ -28,7 +29,12 @@ BuildRoot: %{_tmppath}/%{pkgdir}-root
 URL: http://www.astron.nl
 Prefix: %{prefix}
 BuildArchitectures: i386 # Target platforms, i.e., i586
-Requires: Common, GCFCommon, GCFTM, GCFProtocols, GCFPAL
+Requires: Common >= 2.2
+Requires: GCFCommon >= 6.0
+Requires: GCFTM >= 6.0
+Requires: GCFProtocols >= 6.0
+Requires: GCFPAL >= 6.0
+#Requires: OTDB
 Packager: %{packager}
 Distribution: The LOFAR project
 Vendor: ASTRON
@@ -37,7 +43,8 @@ AutoReqProv: no
 
 %description
 
-GCFLogSys is the package handling the data transport in LOFAR.
+GCFLogSys contains the components, which provides the possibility to all kind of MAC applications to (let)
+log its value changes or save code logging in the OTDB.
 
 ##############################################################################
 #

@@ -8,7 +8,7 @@
 #
 ##############################################################################
 
-Summary: GCFPAL is the common GCF software package providing a set of GCF wide type definitions.
+Summary: GCFPAL is the Property Access Layer of MAC/GCF. It provides the executables: PropertyAgent and PropertyInterface, a number of GCFPAL API headerfiles and a GCFPAL API lib.
 
 %define release @RPM_RELEASE@
 %define version @VERSION@
@@ -28,7 +28,11 @@ BuildRoot: %{_tmppath}/%{pkgdir}-root
 URL: http://www.astron.nl
 Prefix: %{prefix}
 BuildArchitectures: i386 # Target platforms, i.e., i586
-Requires: Common, GCFCommon, GCFTM, GCFProtocols
+Requires: Common >= 2.2
+Requires: GCFCommon >= 6.0
+Requires: GCFTM >= 6.0
+Requires: GCFProtocols >= 6.0
+Requires: Transport >= 2.0
 Packager: %{packager}
 Distribution: The LOFAR project
 Vendor: ASTRON
@@ -37,7 +41,8 @@ AutoReqProv: no
 
 %description
 
-GCFPAL is the package handling the data transport in LOFAR.
+GCFPAL is the Property Access Layer of MAC/GCF. It provides the executables: PropertyAgent and PropertyInterface, 
+a number of GCFPAL API headerfiles and a GCFPAL API lib.
 
 ##############################################################################
 #

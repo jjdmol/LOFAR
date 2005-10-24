@@ -36,13 +36,7 @@ AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PI\"
 
 BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES) gcf-pi.conf.in
-
-sysconf_DATA= \
-	PropertyInterface.conf
-		
-%.conf: gcf-pi.conf.in
-	cp $< $@
+EXTRA_DIST = $(BUILT_SOURCES)
 
 include $(top_srcdir)/Makefile.common
 
