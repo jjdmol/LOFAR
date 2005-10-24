@@ -24,9 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "CalConstants.h"
-#include "AntennaArray.h"
-#include "AntennaArrayData.h"
+#include <APL/CAL_Protocol/AntennaArray.h>
+#include <APL/CAL_Protocol/AntennaArrayData.h>
 
 #include <blitz/array.h>
 #include <fstream>

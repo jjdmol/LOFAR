@@ -30,11 +30,11 @@
 
 #include <APL/RTCCommon/Subject.h>
 
-#include "SpectralWindow.h"
-#include "AntennaArray.h"
+#include <APL/CAL_Protocol/SpectralWindow.h>
+#include <APL/CAL_Protocol/AntennaArray.h>
 /*#include "ACC.h"*/
 #include "SharedResource.h"
-#include "AntennaGains.h"
+#include <APL/CAL_Protocol/AntennaGains.h>
 
 namespace LOFAR {
   namespace CAL {

@@ -27,9 +27,7 @@
 
 #include <math.h>
 #include <blitz/array.h>
-#ifdef USE_CAL_THREAD
 #include <pthread.h>
-#endif
 
 namespace LOFAR {
   namespace CAL {
@@ -91,13 +89,8 @@ namespace LOFAR {
       /**
        * lock/unlock
        */
-#ifdef USE_CAL_THREAD
       inline int lock()   const { return pthread_mutex_lock((pthread_mutex_t*)m_mutex);   }
       inline int unlock() const { return pthread_mutex_unlock((pthread_mutex_t*)m_mutex); }
-#else
-      inline int lock()   const { return 0; }
-      inline int unlock() const { return 0; }
-#endif
 
     public:
       /*@{*/
@@ -120,9 +113,7 @@ namespace LOFAR {
       blitz::Array<double, 3>               m_quality;
       bool                                  m_done; // has the calibration finished
 
-#ifdef USE_CAL_THREAD
       const pthread_mutex_t* m_mutex; // control access to the m_done flag
-#endif
     };
 
   }; // namespace CAL

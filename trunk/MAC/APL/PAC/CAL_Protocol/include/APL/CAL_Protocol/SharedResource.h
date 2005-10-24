@@ -33,9 +33,7 @@
 #include <Common/LofarLogger.h>
 #endif
 
-#ifdef USE_CAL_THREAD
 #include <pthread.h>
-#endif
 
 namespace LOFAR {
   namespace CAL {
@@ -48,20 +46,12 @@ namespace LOFAR {
 	m_maxreaders(maxreaders),
 	m_maxwriters(maxwriters)
       {
-#ifdef USE_CAL_THREAD
 	(void)pthread_mutex_init(&m_mutex, 0);
-#endif
       }
       virtual ~SharedResource() {}
 
-#ifdef USE_CAL_THREAD
       inline int mutex_lock()   { return pthread_mutex_lock(&m_mutex);   }
       inline int mutex_unlock() { return pthread_mutex_unlock(&m_mutex); }
-#else
-      inline int mutex_lock()   { return 0; }
-      inline int mutex_unlock() { return 0; }
-#endif
-	
     
       /*@{*/
       /**
@@ -155,9 +145,7 @@ namespace LOFAR {
       int m_semaphore;
       int m_maxreaders;
       int m_maxwriters;
-#ifdef USE_CAL_THREAD
       pthread_mutex_t m_mutex;
-#endif
     };
 
   }; // namespace CAL

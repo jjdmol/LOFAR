@@ -21,8 +21,8 @@
 //#
 //#  $Id$
 
-#include "SubArray.h"
-#include "CalibrationInterface.h"
+#include <APL/CAL_Protocol/SubArray.h>
+#include <APL/CAL_Protocol/CalibrationInterface.h>
 #include <Common/LofarLogger.h>
 #include <APL/RTCCommon/Marshalling.h>
 
@@ -30,6 +30,9 @@ using namespace std;
 using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
+
+// forward declaration
+class CalibrationInterface;
     
 SubArray::SubArray() : AntennaArray(), m_spw("undefined", 0, 0, 0, 0)
 {
