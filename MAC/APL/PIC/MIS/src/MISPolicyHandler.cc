@@ -27,7 +27,7 @@
 #include <MIS_Protocol.ph>
 #include <MISDefines.h>
 #include <Common/lofar_fstream.h>
-#include <APLCommon/APL_Defines.h>
+#include <APL/APLCommon/APL_Defines.h>
 #include <GCF/GCF_PVInteger.h>
 #include <fnmatch.h>
 
@@ -38,6 +38,7 @@ using std::ifstream;
 namespace LOFAR 
 {
 using namespace GCF::Common;
+using namespace APLCommon;
 
  namespace AMI
  {

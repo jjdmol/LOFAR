@@ -29,7 +29,7 @@
 #include <MISDefines.h>
 #include <GCF/ParameterSet.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
-#include <RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 namespace LOFAR 
 {
