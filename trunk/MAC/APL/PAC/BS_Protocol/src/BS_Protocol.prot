@@ -10,8 +10,8 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+10)";
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
-include = '"Beamlet2SubbandMap.h"';
-include = '"Pointing.h"';
+include = '<APL/BS_Protocol/Beamlet2SubbandMap.h>';
+include = '<APL/BS_Protocol/Pointing.h>';
 include = '<APL/RTCCommon/Timestamp.h>';
 
 prelude = << PRELUDE_END

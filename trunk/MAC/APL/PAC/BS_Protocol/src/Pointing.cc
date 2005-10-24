@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "Pointing.h"
+#include <APL/BS_Protocol/Pointing.h>
 
 using namespace LOFAR;
 using namespace BS_Protocol;

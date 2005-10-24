@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "Beamlet2SubbandMap.h"
+#include <APL/BS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/RTCCommon/Marshalling.h>
 
 using namespace LOFAR;
