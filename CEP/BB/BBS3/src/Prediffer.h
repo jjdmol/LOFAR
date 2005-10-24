@@ -73,7 +73,6 @@ public:
   // for the specified data descriptor (i.e. spectral window) and antennas.
   // The database type (aips or postgres) has to be given.
   // For postgres the database name has to be given as well.
-  // Currently model types LOFAR.RI and LOFAR.AP are recognized.
   // The UVW coordinates can be recalculated or taken from the MS.
   Prediffer (const string& msName,
 	     const string& meqModelName,
@@ -134,12 +133,10 @@ public:
 
   // Subtract the peel source(s) from the data in the .res file.
   // Optionally the mapped data are flushed to the file.
-  void subtractPeelSources (bool flush=false)
-    { saveResidualData (true, flush); }
+  void subtractPeelSources (bool flush=false);
 
-  // Write the predicted data into the .res file.
-  void writePredictedData()
-    { saveResidualData (false, true); }
+  // Write the predicted data into the .res or .dat file.
+  void writePredictedData (bool inDataColumn);
 
   // There are three ways to update the solvable parms after the solver
   // found a new solution.
@@ -237,6 +234,12 @@ private:
   void saveData (bool subtract, fcomplex* data, const MeqRequest& request,
 		 int blindex, int ant1, int ant2);
 
+  // Map the residual data column.
+  // If needed, add the residual data column CORRECTED_DATA to the MS
+  // and create the symlink vis.res for it. Optionally the data from column
+  // DATA are copied to the new column.
+  void mapResidualData (bool copyData);
+  
   // Reset the loop variables for the getEquations loop.
   void resetEqLoop();
 
