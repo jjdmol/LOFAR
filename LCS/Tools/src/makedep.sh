@@ -25,7 +25,7 @@
 
 # Get LOFAR root directory from this script's name.
 a_dir=`dirname $0`
-a_dir=`cd $a_dir; pwd`
+a_dir=`cd $a_dir > /dev/null 2>&1; pwd`
 a_root=`echo $a_dir | sed -e 's%/LOFAR/.*%/LOFAR%'`
 
 # Find out where pkgdep is located.
@@ -34,9 +34,12 @@ if [ -f $a_dir/pkgdep ]; then
 else
   a_pkgdep=$a_root/LCS/Tools/build/gnu_debug/src/pkgdep
 fi
-if ! [ -x $a_pkgdep ]; then
-  echo "Fatal error: could not locate program \`pkgdep'"
-  exit 1
+if [ "$a_pkgdep" = ""  -o  ! -x "$a_pkgdep" ]; then
+  a_pkgdep=`which pkgdep`
+  if [ "$a_pkgdep" = ""  -o  ! -x "$a_pkgdep" ]; then
+    echo "Fatal error: could not locate program \`pkgdep'"
+    exit 1
+  fi
 fi
 
 # Execute finddep.
