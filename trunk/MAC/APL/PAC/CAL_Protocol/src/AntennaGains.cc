@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include "AntennaGains.h"
-#include "Marshalling.h"
+#include <APL/RTCCommon/Marshalling.h>
 #include <Common/LofarTypes.h>
 
 using namespace std;

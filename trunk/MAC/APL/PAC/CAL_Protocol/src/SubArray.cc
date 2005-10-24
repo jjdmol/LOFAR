@@ -24,7 +24,7 @@
 #include "SubArray.h"
 #include "CalibrationInterface.h"
 #include <Common/LofarLogger.h>
-#include <Marshalling.h>
+#include <APL/RTCCommon/Marshalling.h>
 
 using namespace std;
 using namespace blitz;

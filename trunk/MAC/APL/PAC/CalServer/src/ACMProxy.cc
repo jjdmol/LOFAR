@@ -24,13 +24,13 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "RSP_Protocol.ph"
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 
 #include "ACMProxy.h"
 
 // from RTCCommon
-#include "Timestamp.h"
-#include "PSAccess.h"
+#include <APL/RTCCommon/Timestamp.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include <GCF/ParameterSet.h>
 

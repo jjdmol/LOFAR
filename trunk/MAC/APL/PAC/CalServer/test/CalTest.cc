@@ -24,7 +24,7 @@
 // this include needs to be first!
 #include "CAL_Protocol.ph"
 
-#include "TestSuite.h"
+#include <APL/RTCCommon/TestSuite.h>
 #include "CalTest.h"
 
 #include <iostream>

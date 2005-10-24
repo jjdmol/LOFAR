@@ -28,7 +28,7 @@
 #include <list>
 #include <string>
 
-#include "Subject.h"
+#include <APL/RTCCommon/Subject.h>
 
 #include "SpectralWindow.h"
 #include "AntennaArray.h"

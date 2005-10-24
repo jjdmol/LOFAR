@@ -27,7 +27,7 @@
 #include <blitz/array.h>
 #include <complex>
 #include "SharedResource.h"
-#include "Timestamp.h"
+#include <APL/RTCCommon/Timestamp.h>
 
 namespace LOFAR {
   namespace CAL {

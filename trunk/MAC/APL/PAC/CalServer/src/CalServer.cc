@@ -41,8 +41,8 @@
 #include "ACMProxy.h"
 
 // from RTCCommon
-#include "Timestamp.h"
-#include "PSAccess.h"
+#include <APL/RTCCommon/Timestamp.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include <GCF/ParameterSet.h>
 #include <fstream>
