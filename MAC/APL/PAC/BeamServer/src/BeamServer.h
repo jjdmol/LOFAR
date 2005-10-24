@@ -27,7 +27,7 @@
 #include "BS_Protocol.ph"
 #include "Beam.h"
 #include "Beamlet.h"
-#include <Timestamp.h>
+#include <APL/RTCCommon/Timestamp.h>
 
 #include <AMCBase/AMCClient/ConverterClient.h>
 

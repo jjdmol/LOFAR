@@ -12,7 +12,7 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+10)";
 include = '<sys/time.h>';
 include = '"Beamlet2SubbandMap.h"';
 include = '"Pointing.h"';
-include = '"Timestamp.h"';
+include = '<APL/RTCCommon/Timestamp.h>';
 
 prelude = << PRELUDE_END
 

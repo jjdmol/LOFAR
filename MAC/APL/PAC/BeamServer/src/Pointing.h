@@ -23,7 +23,7 @@
 #ifndef POINTING_H_
 #define POINTING_H_
 
-#include "Timestamp.h"
+#include <APL/RTCCommon/Timestamp.h>
 
 #include <AMCBase/Converter.h>
 #include <AMCBase/SkyCoord.h>

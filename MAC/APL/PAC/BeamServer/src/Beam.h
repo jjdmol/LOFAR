@@ -26,11 +26,11 @@
 #include "Pointing.h"
 #include "Beamlet.h"
 #include "Beamlet2SubbandMap.h"
-#include <Timestamp.h>
+#include <APL/RTCCommon/Timestamp.h>
 #include <SpectralWindow.h>
 #include <SubArray.h>
 #include <AntennaGains.h>
-#include <MEPHeader.h>
+#include <APL/RSP_Protocol/MEPHeader.h>
 #include <time.h>
 #include <AMCBase/Converter.h>
 #include <AMCBase/EarthCoord.h>
