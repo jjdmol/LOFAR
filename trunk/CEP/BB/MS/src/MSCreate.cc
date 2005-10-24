@@ -29,6 +29,7 @@
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/TiledColumnStMan.h>
+#include <tables/Tables/TiledStManAccessor.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRecord.h>
@@ -54,6 +55,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/Slicer.h>
+#include <casa/Arrays/Slice.h>
 
 using namespace LOFAR;
 using namespace casa;
@@ -577,6 +579,101 @@ void MSCreate::writeTimeStep()
       itsMSCol->sigma().put (rowNumber, sigma);
       rowNumber++;
     }
+  }
+}
+
+void MSCreate::writeTimeStep2()
+{
+  int nrbasel = itsNrAnt*(itsNrAnt-1)/2;
+  int rowNumber = itsMS->nrow();
+  // Only one band and field can be used.
+  ASSERT(itsNrBand==1);
+  ASSERT(itsNrField==1);
+  const int bandId=0;
+  const int fieldId=0;
+  // Find the shape of the data array in each table row.
+  IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);
+  // Add the number of rows needed.
+  itsMS->addRow (nrbasel);
+
+  // Write everything but the data and the flags.
+  Array<Float> sigma(IPosition(1, shape(0)));
+  sigma = 0;
+  Array<Float> weight(IPosition(1, shape(0)));
+  weight = 1;
+  Double time = itsStartTime + itsNrTimes*itsTimeStep + itsTimeStep/2;
+  itsNrTimes++;
+  // Calculate the UVW for all stations.
+  // First store time in frame.
+  Quantity qtime(time, "s");
+  itsFrame->set (MEpoch(qtime, MEpoch::UTC));
+  itsFrame->set (*itsPhaseDir);
+  vector<Vector<Double> > antuvw(itsNrAnt);
+  for (int j=0; j<itsNrAnt; ++j) {
+    MBaseline& mbl = (*itsAntBL)[j];
+    mbl.getRefPtr()->set(*itsFrame);      // attach frame
+    MBaseline::Convert mcvt(mbl, MBaseline::J2000);
+    MVBaseline bas = mcvt().getValue();
+    MVuvw jvguvw(bas, itsPhaseDir->getValue());
+    antuvw[j] = Muvw(jvguvw, Muvw::J2000).getValue().getVector();
+  }
+    
+  Vector<double> myuvw(3);
+  for (int j=0; j<itsNrAnt; ++j) {
+    for (int i=j+1; i<itsNrAnt; ++i) {
+      myuvw = antuvw[i] - antuvw[j];
+      itsMSCol->flagRow().put (rowNumber, False);
+      itsMSCol->time().put (rowNumber, time);
+      itsMSCol->antenna1().put (rowNumber, j);
+      itsMSCol->antenna2().put (rowNumber, i);
+      itsMSCol->feed1().put (rowNumber, 0);
+      itsMSCol->feed2().put (rowNumber, 0);
+      itsMSCol->dataDescId().put (rowNumber, bandId);
+      itsMSCol->processorId().put (rowNumber, 0);
+      itsMSCol->fieldId().put (rowNumber, fieldId);
+      itsMSCol->interval().put (rowNumber, itsTimeStep);
+      itsMSCol->exposure().put (rowNumber, itsTimeStep);
+      itsMSCol->timeCentroid().put (rowNumber, time);
+      itsMSCol->scanNumber().put (rowNumber, 0);
+      itsMSCol->arrayId().put (rowNumber, 0);
+      itsMSCol->observationId().put (rowNumber, 0);
+      itsMSCol->stateId().put (rowNumber, 0);
+      itsMSCol->uvw().put (rowNumber, myuvw);
+      itsMSCol->weight().put (rowNumber, weight);
+      itsMSCol->sigma().put (rowNumber, sigma);
+      rowNumber++;
+    }
+  }
+
+  // Set the row number to the first row of this time slot.
+  rowNumber -= nrbasel;
+  // If first time, set the cache size for the tiled data and flags.
+  if (rowNumber == 0) {
+    ROTiledStManAccessor accData(*itsMS, "TiledData");
+    accData.setCacheSize (0, itsNrAnt*(itsNrAnt-1)/2);
+    ////    accData.setCacheSize (0, 1);
+    ROTiledStManAccessor accFlag(*itsMS, "TiledFlag");
+    accFlag.setCacheSize (0, itsNrAnt*(itsNrAnt-1)/2);
+    ////    accFlag.setCacheSize (0, 1);
+  }
+  const int chanPerGroup = 1;
+  // Write the data in groups of chanPerGroup channels.
+  // Find the shape of the data array in each channel.
+  IPosition shape2(3, (*itsNrPol)[bandId], chanPerGroup, nrbasel);
+  Array<Bool> defFlags(shape2);
+  defFlags = False;
+  Array<Complex> defData(shape2);
+  defData = Complex();
+  // Write the data for all channels.
+  for (int i=0; i<shape[1]/chanPerGroup; ++i) {
+    itsMSCol->data().putColumnRange(Slicer(Slice(rowNumber,nrbasel)),
+				    Slicer(IPosition(2,0,i*chanPerGroup),
+					   IPosition(2,shape[0],chanPerGroup)),
+				    defData);
+    itsMSCol->flag().putColumnRange(Slicer(Slice(rowNumber,nrbasel)),
+				    Slicer(IPosition(2,0,i*chanPerGroup),
+					   IPosition(2,shape[0],chanPerGroup)),
+				    defFlags);
   }
 }
 

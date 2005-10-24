@@ -109,9 +109,9 @@ namespace LOFAR {
       conns[i] = new Connection("connect"+str.str(), &sender, &receiver,
 				ths[i], true);
     }
+#endif
     sender.init();
     receiver.init();
-#endif
   }
 
   MSMakeConn::~MSMakeConn()
