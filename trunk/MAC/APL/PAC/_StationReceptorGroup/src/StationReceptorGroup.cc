@@ -32,7 +32,7 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/StationReceptorGroup/StationReceptorGroup.h>
 #include <GCF/ParameterSet.h>
-#include "CAL_Protocol.ph"
+#include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
