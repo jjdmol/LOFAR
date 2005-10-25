@@ -71,6 +71,105 @@ L4:
 
 
 .align	5
+.global	_phase_shift_and_transpose
+_phase_shift_and_transpose:
+
+	li	8,-16
+	stfpdux 14,1,8
+	stfpdux 15,1,8
+	stfpdux 16,1,8
+	stfpdux 17,1,8
+
+	lfpsx	8,0,5
+	li	9,8
+	lfpsux	9,5,9
+	lfpsux	10,5,9
+	lfpsux	11,5,9
+
+	li	0,NR_SUB_CHANNELS/2
+	li	6,FCOMPLEX_SIZE*NR_SUB_CHANNELS
+	lis	7,FCOMPLEX_SIZE*(NR_POLARIZATIONS*NR_SAMPLES_PER_INTEGRATION*NR_STATIONS-3)@ha
+	addi	7,7,FCOMPLEX_SIZE*(NR_POLARIZATIONS*NR_SAMPLES_PER_INTEGRATION*NR_STATIONS-3)@l
+	li	8,FCOMPLEX_SIZE*(1-3*NR_SUB_CHANNELS)
+	mtctr	0
+
+	sub	3,3,7
+	li	8,FCOMPLEX_SIZE*(1-3*NR_SUB_CHANNELS)
+	sub	4,4,8
+
+	lfpsux	0,4,8
+	lfpsux	1,4,6
+	lfpsux	2,4,6
+	lfpsux	3,4,6
+
+L5:	
+	lfpsux	4,4,8
+	lfpsux	5,4,6
+	lfpsux	6,4,6
+	lfpsux	7,4,6
+
+	fxpmul	12,0,8
+	fxpmul	13,1,8
+	fxpmul	14,2,9
+	fxpmul	15,3,9
+
+	fxpmul  16,8,10
+	fxpmul  17,9,11
+
+	fxcxnpma 0,0,8,12
+	fxcxnpma 1,1,8,13
+	fxcxnpma 2,2,9,14
+	fxcxnpma 3,3,9,15
+
+	fxcxnpma 8,8,10,16
+	fxcxnpma 9,9,11,17
+ 
+	dcbz	3,7
+	stfpsux	0,3,7
+	stfpsux	1,3,9
+	stfpsux	2,3,9
+	stfpsux	3,3,9
+
+	lfpsux	0,4,8
+	lfpsux	1,4,6
+	lfpsux	2,4,6
+	lfpsux	3,4,6
+
+	fxpmul	12,4,8
+	fxpmul	13,5,8
+	fxpmul	14,6,9
+	fxpmul	15,7,9
+
+	fxpmul  16,8,10
+	fxpmul  17,9,11
+
+	fxcxnpma 4,4,8,12
+	fxcxnpma 5,5,8,13
+	fxcxnpma 6,6,9,14
+	fxcxnpma 7,7,9,15
+
+	fxcxnpma 8,8,10,16
+	fxcxnpma 9,9,11,17
+ 
+	dcbz	3,7
+	stfpsux	4,3,7
+	stfpsux	5,3,9
+	stfpsux	6,3,9
+	stfpsux	7,3,9
+
+	bdnz	L5
+
+	li	8,16
+	lfpdx	17,0,1
+	lfpdux	16,1,8
+	lfpdux	15,1,8
+	lfpdux	14,1,8
+	addi	1,1,16
+
+	blr
+
+
+.align	5
 sub_value:
 	.long	 0x43300000,0x00008000,0x43300000,0x00008000
 

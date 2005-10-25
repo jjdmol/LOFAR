@@ -68,7 +68,7 @@ namespace LOFAR
     int itsNchannels;
 
     DH_CorrCube::BufferType* itsInputBuffer;
-    int totalInputSize;
+    //int totalInputSize;
   };
 
 } // namespace LOFAR

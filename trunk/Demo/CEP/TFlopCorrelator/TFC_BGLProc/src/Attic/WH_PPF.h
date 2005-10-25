@@ -64,7 +64,7 @@ namespace LOFAR
     short	 itsSubBandID;
     short        itsMaxElement;
     fftw_plan	 itsFFTWPlan;
-    FIR		 **itsFIRs;
+    FIR		 (*itsFIRs)[NR_STATIONS][NR_SUB_CHANNELS][NR_POLARIZATIONS];
   };
 
 } // namespace LOFAR

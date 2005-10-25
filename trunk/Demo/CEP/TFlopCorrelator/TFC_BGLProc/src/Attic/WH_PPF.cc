@@ -614,16 +614,10 @@ WH_PPF* WH_PPF::make(const string& name)
 
 void WH_PPF::preprocess()
 {
-//   itsFIRs = (FIR*) malloc(NR_STATIONS*NR_SUB_CHANNELS*NR_POLARIZATIONS*sizeof(FIR));
-  itsFIRs = new FIR* [NR_STATIONS*NR_SUB_CHANNELS*NR_POLARIZATIONS];
-  for (int k = 0; k < NR_STATIONS*NR_SUB_CHANNELS*NR_POLARIZATIONS; k++){ 
-    itsFIRs[k] = new FIR();
-  }
-  
+  itsFIRs = new FIR[1][NR_STATIONS][NR_SUB_CHANNELS][NR_POLARIZATIONS];
 
-
-  fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 -1 0 1 1 1 352 0) (128 529 -1 0 1 1 0 2817 0) (64 529 -1 0 1 1 0 1409 0) (32 529 -1 0 1 1 0 705 0) (16 529 -1 0 1 1 0 353 0) (8 529 -1 0 1 1 0 177 0) (4 529 -1 0 1 1 0 89 0) (2 529 -1 0 1 1 0 45 0))");
-  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_FORWARD, FFTW_USE_WISDOM);
+  fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 1 0 1 1 1 715 0) (128 529 1 0 1 1 0 2828 0) (64 529 1 0 1 1 0 1420 0) (32 529 1 0 1 1 0 716 0) (16 529 1 0 1 1 0 364 0) (8 529 1 0 1 1 0 188 0) (4 529 1 0 1 1 0 100 0) (2 529 1 0 1 1 0 56 0))");
+  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_USE_WISDOM);
 }
 
 
@@ -669,7 +663,7 @@ void WH_PPF::process()
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
 	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
 	  fcomplex sample = to_fcomplex((*input)[stat][time][chan][pol]);
-	  fftInData[time][pol][chan] = itsFIRs[stat * NR_SUB_CHANNELS * NR_POLARIZATIONS + chan * NR_POLARIZATIONS + pol]->processNextSample(sample,(float*)FIR::weights[chan]);
+	  fftInData[time][pol][chan] = (*itsFIRs)[stat][chan][pol].processNextSample(sample, &FIR::weights[chan]);
 	}
       }
     }
@@ -682,7 +676,7 @@ void WH_PPF::process()
     FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
- 	_filter( itsFIRs[stat * NR_SUB_CHANNELS * NR_POLARIZATIONS + chan * NR_POLARIZATIONS + pol]->itsDelayLine, FIR::weights[chan], &tmp2[chan][pol][0], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
+ 	_filter((*itsFIRs)[stat][chan][pol].itsDelayLine, FIR::weights[chan], &tmp2[chan][pol][0], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
 
 	if ((chan & 3) == 3) {
 	  _transpose_4x8(&fftInData[0][pol][chan - 3], &tmp[0][0], NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_POLARIZATIONS * NR_SUB_CHANNELS);
@@ -733,10 +727,6 @@ void WH_PPF::process()
 void WH_PPF::postprocess()
 {
   fftw_destroy_plan(itsFFTWPlan);
-
-  for (int k = 0; k < NR_STATIONS * NR_SUB_CHANNELS * NR_POLARIZATIONS; k++){ 
-    delete itsFIRs[k];
-  }
   delete [] itsFIRs;
 }
 

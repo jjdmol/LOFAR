@@ -42,13 +42,40 @@ typedef fcomplex stationOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
 
 extern "C"
 {
-  void _correlate_2x2(const stationInputType *S0, const stationInputType *S1,
-		      const stationInputType *S2, const stationInputType *S3,
-		      stationOutputType *S0_S2, stationOutputType *S0_S3,
-		      stationOutputType *S1_S2, stationOutputType *S1_S3);
-  void _auto_correlate_1x1(const stationInputType *S0, stationOutputType *S0_S0);
+  void _correlate_3x2(const stationInputType *S0,
+		      const stationInputType *S1,
+		      const stationInputType *S2,
+		      const stationInputType *S3,
+		      const stationInputType *S4,
+		      stationOutputType *S0_S2,
+		      stationOutputType *S1_S2,
+		      stationOutputType *S0_S3,
+		      stationOutputType *S1_S3,
+		      stationOutputType *S0_S4,
+		      stationOutputType *S1_S4
+		     );
+
+  void _correlate_2x2(const stationInputType *S0,
+		      const stationInputType *S1,
+		      const stationInputType *S2,
+		      const stationInputType *S3,
+		      stationOutputType *S0_S2,
+		      stationOutputType *S1_S2,
+		      stationOutputType *S0_S3,
+		      stationOutputType *S1_S3);
+
+#if NR_STATIONS % 2 == 0
+  void _auto_correlate_1_and_2(const stationInputType *S0,
+			       const stationInputType *S1,
+			       stationOutputType *S0_S0,
+			       stationOutputType *S0_S1,
+			       stationOutputType *S1_S1);
+#else
+  void _auto_correlate_1x1(const stationInputType *S0,
+			   stationOutputType *S0_S0);
+#endif
+
   void _fast_memcpy(void *dst, const void *src, size_t size);
-//   void _correlate_2x3(const fcomplex *samples, dcomplex *out);
 }
 
 WH_Correlator::WH_Correlator(const string &name)
@@ -70,14 +97,14 @@ WH_Correlator::WH_Correlator(const string &name)
   ASSERTSTR(itsNchannels      == NR_CHANNELS_PER_CORRELATOR, "Configuration doesn't match parameter: NrChannels");
   ASSERTSTR(itsNsamples       == NR_STATION_SAMPLES, "Configuration doesn't match parameter: NrSamples");
   ASSERTSTR(itsNfilters       == NR_PPF_PER_COMPUTE_CELL, "Configuration doesn't match parameter: NrFilters");
-  ASSERTSTR(NR_PPF_PER_COMPUTE_CELL == 2, "Only 2 inputs implemented in the correlator");
-  totalInputSize = 0;
+  ASSERTSTR(NR_PPF_PER_COMPUTE_CELL == 1 || NR_PPF_PER_COMPUTE_CELL == 2, "Only 1 or 2 inputs implemented in the correlator");
+  //totalInputSize = 0;
 
   for (int i = 0; i < NR_PPF_PER_COMPUTE_CELL; i++) {
     char str[50];
     snprintf(str, 50, "input_%d_of_%d", i, NR_PPF_PER_COMPUTE_CELL);
     getDataManager().addInDataHolder(i, new DH_CorrCube(str, 0));
-    totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
+    //totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
   }
 
 //   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
@@ -91,7 +118,9 @@ WH_Correlator::WH_Correlator(const string &name)
 
 WH_Correlator::~WH_Correlator()
 {
-  free(itsInputBuffer);
+#if NR_PPF_PER_COMPUTE_CELL == 2
+  delete itsInputBuffer;
+#endif
 }
 
 WorkHolder* WH_Correlator::construct(const string& name)
@@ -106,7 +135,9 @@ WH_Correlator* WH_Correlator::make(const string& name)
 
 void WH_Correlator::preprocess()
 { 
-  itsInputBuffer = (DH_CorrCube::BufferType*)malloc(totalInputSize*sizeof(fcomplex));
+#if NR_PPF_PER_COMPUTE_CELL == 2
+  itsInputBuffer = new DH_CorrCube::BufferType[1];
+#endif
 }
 
 void WH_Correlator::process()
@@ -119,12 +150,17 @@ void WH_Correlator::process()
 
   timer.start();
 #if 0
+  // C++ reference implementation
+
+#if NR_PPF_PER_COMPUTE_CELL == 1
+  itsInputBuffer = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
+#elif NR_PPF_PER_COMPUTE_CELL == 2
   /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
   /// (could this be done more efficiently?)
   /// Currently we hardcore 2 inputs.
   memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
   memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
-  // C++ reference implementation
+#endif
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
     for (int stat1 = 0; stat1 < NR_STATIONS; stat1 ++) {
@@ -149,33 +185,61 @@ void WH_Correlator::process()
   // Correlate the entire block (all time samples) before 
   // going on to the next block.
 
+#if NR_PPF_PER_COMPUTE_CELL == 1
+  itsInputBuffer = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
+#elif NR_PPF_PER_COMPUTE_CELL == 2
   /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
   /// (could this be done more efficiently?)
   /// Currently we hardcore 2 inputs.
   _fast_memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
   _fast_memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
-
-#if NR_STATIONS % 2 == 0
-#error even number of stations not yet implemented
-#else
-  for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
-    for (int stat1 = 1; stat1 < NR_STATIONS; stat1 += 2) {
-      for (int stat2 = 0; stat2 < stat1; stat2 += 2) { 
-	_correlate_2x2(&(*itsInputBuffer)[ch][stat1], &(*itsInputBuffer)[ch][stat1 + 1],
-		       &(*itsInputBuffer)[ch][stat2], &(*itsInputBuffer)[ch][stat2 + 1],
-		       &(*output)[DH_Vis::baseline(stat1    , stat2    )][ch],
-		       &(*output)[DH_Vis::baseline(stat1    , stat2 + 1)][ch],
-		       &(*output)[DH_Vis::baseline(stat1 + 1, stat2    )][ch],
-		       &(*output)[DH_Vis::baseline(stat1 + 1, stat2 + 1)][ch]);
-      }
-    }
-    for (int stat = 0; stat < NR_STATIONS; stat += 2) {
-      _auto_correlate_1x1(&(*itsInputBuffer)[ch][stat],
-			  &(*output)[DH_Vis::baseline(stat,stat)][ch]);
-    }
-  }
 #endif
 
+  for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
+    for (int stat1 = NR_STATIONS % 2 ? 1 : 2; stat1 < NR_STATIONS; stat1 += 2) {
+      int stat2 = 0;
+      // do as many 3x2 blocks as possible
+      for (; stat2 < stat1 - 4 || (stat2 & 1) != 0; stat2 += 3) {
+	_correlate_3x2(&(*itsInputBuffer)[ch][stat1  ],
+		       &(*itsInputBuffer)[ch][stat1+1],
+		       &(*itsInputBuffer)[ch][stat2  ],
+		       &(*itsInputBuffer)[ch][stat2+1],
+		       &(*itsInputBuffer)[ch][stat2+2],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2+2)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2+2)][ch]);
+      }
+      // see if some 2x2 blocks are necessary
+      for (; stat2 < stat1; stat2 += 2) {
+	_correlate_2x2(&(*itsInputBuffer)[ch][stat1  ],
+		       &(*itsInputBuffer)[ch][stat1+1],
+		       &(*itsInputBuffer)[ch][stat2  ],
+		       &(*itsInputBuffer)[ch][stat2+1],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch]);
+      }
+    }
+
+    // do the remaining autocorrelations
+    for (int stat = 0; stat < NR_STATIONS; stat += 2) {
+#if NR_STATIONS % 2 == 0
+#warning this has not been tested yet
+      _auto_correlate_1_and_2(&(*itsInputBuffer)[ch][stat],
+			      &(*itsInputBuffer)[ch][stat+1],
+			      &(*output)[DH_Vis::baseline(stat  , stat  )][ch],
+			      &(*output)[DH_Vis::baseline(stat  , stat+1)][ch],
+			      &(*output)[DH_Vis::baseline(stat+1, stat+1)][ch]);
+#else
+      _auto_correlate_1x1(&(*itsInputBuffer)[ch][stat],
+			  &(*output)[DH_Vis::baseline(stat,stat)][ch]);
+#endif
+    }
+  }
 #endif  
   timer.stop();
 }

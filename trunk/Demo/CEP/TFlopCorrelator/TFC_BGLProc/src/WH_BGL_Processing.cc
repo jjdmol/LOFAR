@@ -1,4 +1,4 @@
-//#  WH_PPH.cc: 256 kHz polyphase filter
+//#  WH_BGL_Processing.cc: Blue Gene processing for 1 second of sampled data
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -10,21 +10,19 @@
 
 //# Includes
 #include <APS/ParameterSet.h>
-#include <WH_PPF.h>
+#include <WH_BGL_Processing.h>
 
 #include <TFC_Interface/DH_PPF.h>
-#include <TFC_Interface/DH_CorrCube.h>
+#include <TFC_Interface/DH_Vis.h>
 #include <TFC_Interface/TFC_Config.h>
 
 #include <Common/Timer.h>
 
-#ifdef HAVE_BGL
-#include <hummer_builtin.h>
-#endif
-
 #include <fftw.h>
 #include <assert.h>
 #include <complex.h>
+
+#undef C_IMPLEMENTATION
 
 using namespace LOFAR;
 
@@ -33,6 +31,9 @@ FIR::FIR()
 {
   memset(itsDelayLine, 0, sizeof itsDelayLine);
 }
+
+
+fcomplex WH_BGL_Processing::itsCorrCube[NR_SUB_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
 
 
 const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) = {
@@ -551,76 +552,122 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
 };
 
 
+// define a type containing the input from a single station
+typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
+typedef fcomplex stationOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
+
+
 extern "C"
 {
   void _fft_16(const fcomplex *in, int in_stride, fcomplex *out, int out_stride);
   void _transpose_8x4(i16complex *out, const i16complex *in);
-  void _transpose_4x8(fcomplex *out, const fcomplex *in, int length, int input_stride, int output_stride);
-  void _filter(fcomplex delayLine[NR_TAPS], const float weights[NR_TAPS], const i16complex samples[], fcomplex out[], int nr_samples_div_16);
+
+  void _transpose_4x8(fcomplex *out,
+		      const fcomplex *in,
+		      int length,
+		      int input_stride,
+		      int output_stride);
+
+  void _phase_shift_and_transpose(fcomplex *out,
+				  const fcomplex *in,
+				  const fcomplex phases[4]);
+
+  void _filter(fcomplex delayLine[NR_TAPS],
+	       const float weights[NR_TAPS],
+	       const i16complex samples[],
+	       fcomplex out[],
+	       int nr_samples_div_16);
+
+  void _correlate_2x2(const stationInputType *S0,
+		      const stationInputType *S1,
+		      const stationInputType *S2,
+		      const stationInputType *S3,
+		      stationOutputType *S0_S2,
+		      stationOutputType *S1_S2,
+		      stationOutputType *S0_S3,
+		      stationOutputType *S1_S3);
+
+  void _correlate_3x2(const stationInputType *S0,
+  		      const stationInputType *S1,
+		      const stationInputType *S2,
+		      const stationInputType *S3,
+		      const stationInputType *S4,
+		      stationOutputType *S0_S2,
+		      stationOutputType *S1_S2,
+		      stationOutputType *S0_S3,
+		      stationOutputType *S1_S3,
+		      stationOutputType *S0_S4,
+		      stationOutputType *S1_S4
+		     );
+#if NR_STATIONS % 2 == 0
+  void _auto_correlate_1_and_2(const stationInputType *S0,
+			       const stationInputType *S1,
+			       stationOutputType *S0_S0,
+			       stationOutputType *S0_S1,
+			       stationOutputType *S1_S1);
+#else
+  void _auto_correlate_1x1(const stationInputType *S0,
+			   stationOutputType *S0_S0);
+#endif
+  void _fast_memcpy(void *dst, const void *src, size_t bytes);
 }
 
 
-WH_PPF::WH_PPF(const string& name, const short subBandID, const short max_element):
-  WorkHolder(1, NR_CORRELATORS_PER_FILTER, name, "WH_Correlator"),
-  itsSubBandID(subBandID),
-  itsMaxElement(max_element)
+WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID):
+  WorkHolder(1, 1, name, "WH_Correlator"),
+  itsSubBandID(subBandID)
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
-#if 1
+#if 0
   int NrTaps		     = myPS.getInt32("PPF.NrTaps");
   int NrStations	     = myPS.getInt32("PPF.NrStations");
   int NrStationSamples	     = myPS.getInt32("PPF.NrStationSamples");
   int NrPolarizations	     = myPS.getInt32("PPF.NrPolarizations");
   int NrSubChannels	     = myPS.getInt32("PPF.NrSubChannels");
-  int NrCorrelatorsPerFilter = myPS.getInt32("PPF.NrCorrelatorsPerFilter");
   
   assert(NrTaps			== NR_TAPS);
   assert(NrStations		== NR_STATIONS);
   assert(NrStationSamples	== NR_STATION_SAMPLES);
   assert(NrPolarizations	== NR_POLARIZATIONS);
   assert(NrSubChannels		== NR_SUB_CHANNELS);
-  assert(NrCorrelatorsPerFilter == NR_CORRELATORS_PER_FILTER);
-  assert(itsMaxElement          <= MAX_STATIONS_PER_PPF);
 #endif
 
   assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
 
   getDataManager().addInDataHolder(0, new DH_PPF("input", itsSubBandID, myPS));
-  
-  for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-    getDataManager().addOutDataHolder(corr, new DH_CorrCube("output", itsSubBandID)); 
-  }
+  getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, myPS));
 
 }
 
 
-WH_PPF::~WH_PPF()
+WH_BGL_Processing::~WH_BGL_Processing()
 {
 }
 
 
-WorkHolder* WH_PPF::construct(const string& name, const short subBandID, const short max_element)
+WorkHolder* WH_BGL_Processing::construct(const string& name, const short subBandID)
 {
-  return new WH_PPF(name, subBandID, max_element);
+  return new WH_BGL_Processing(name, subBandID);
 }
 
 
-WH_PPF* WH_PPF::make(const string& name)
+WH_BGL_Processing* WH_BGL_Processing::make(const string& name)
 {
-  return new WH_PPF(name, itsSubBandID, itsMaxElement);
+  return new WH_BGL_Processing(name, itsSubBandID);
 }
 
 
-void WH_PPF::preprocess()
+void WH_BGL_Processing::preprocess()
 {
-  itsFIRs = new FIR[1][NR_STATIONS][NR_SUB_CHANNELS][NR_POLARIZATIONS];
+  itsFIRs = new FIR[1][NR_STATIONS][NR_POLARIZATIONS][NR_SUB_CHANNELS];
 
   fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 1 0 1 1 1 715 0) (128 529 1 0 1 1 0 2828 0) (64 529 1 0 1 1 0 1420 0) (32 529 1 0 1 1 0 716 0) (16 529 1 0 1 1 0 364 0) (8 529 1 0 1 1 0 188 0) (4 529 1 0 1 1 0 100 0) (2 529 1 0 1 1 0 56 0))");
   itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_USE_WISDOM);
 }
 
 
+#if defined C_IMPLEMENTATION
 #if defined __xlC__
 inline __complex__ float to_fcomplex(i16complex z)
 {
@@ -629,94 +676,110 @@ inline __complex__ float to_fcomplex(i16complex z)
 #else
 #define to_fcomplex(Z) (static_cast<fcomplex>(Z))
 #endif
+#endif
 
 
 
-void WH_PPF::process()
+void WH_BGL_Processing::doPPF()
 {
-  static NSTimer timer("WH_PPF::process()", true);
+  static NSTimer timer("doPPF()", true);
   static NSTimer FIRtimer("FIRtimer", true), fftTimer("FFT", true);
   static NSTimer trans1timer("trans1timer", true);
 
   timer.start();
 
-  typedef i16complex inputType[MAX_STATIONS_PER_PPF][NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS][NR_POLARIZATIONS];
+  typedef i16complex inputType[NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_SUB_CHANNELS][NR_POLARIZATIONS];
 
   inputType *input = (inputType *) static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
-  DH_CorrCube::BufferType *outputs[NR_CORRELATORS_PER_FILTER];
   static fcomplex fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
   static fcomplex fftOutData[2][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
-  static fcomplex tmp[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
+  static fcomplex phases[4] = {
+    makefcomplex(1,0), makefcomplex(1,0),
+    makefcomplex(1,0), makefcomplex(1,0),
+  };
+
+#if !defined C_IMPLEMENTATION
+  static fcomplex   tmp1[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
   static i16complex tmp2[NR_SUB_CHANNELS][NR_POLARIZATIONS][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
+#endif
 
-  for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-    outputs[corr] = (DH_CorrCube::BufferType *) (static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer());
-    assert((ptrdiff_t) outputs[corr] % 32 == 0);
-  }
-
-//   for (int stat = 0; stat < NR_STATIONS; stat ++) {
-  for (int stat = 0; stat < itsMaxElement; stat ++) {
-
-
-#if 0
+  for (int stat = 0; stat < NR_STATIONS; stat ++) {
+#if defined C_IMPLEMENTATION
+    FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
 	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
 	  fcomplex sample = to_fcomplex((*input)[stat][time][chan][pol]);
-	  fftInData[time][pol][chan] = (*itsFIRs)[stat][chan][pol].processNextSample(sample, &FIR::weights[chan]);
+	  fftInData[time][pol][chan] = (*itsFIRs)[stat][pol][chan].processNextSample(sample,FIR::weights[chan]);
 	}
       }
     }
+    FIRtimer.stop();
 #else
     trans1timer.start();
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 8) {
       _transpose_8x4(&tmp2[0][0][time], &(*input)[stat][time][0][0]);
     }
     trans1timer.stop();
+
     FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
- 	_filter((*itsFIRs)[stat][chan][pol].itsDelayLine, FIR::weights[chan], &tmp2[chan][pol][0], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
+	_filter((*itsFIRs)[stat][pol][chan].itsDelayLine,
+		FIR::weights[chan],
+		&tmp2[chan][pol][0],
+		tmp1[chan & 3],
+		NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
 
 	if ((chan & 3) == 3) {
-	  _transpose_4x8(&fftInData[0][pol][chan - 3], &tmp[0][0], NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_POLARIZATIONS * NR_SUB_CHANNELS);
+	  _transpose_4x8(&fftInData[0][pol][chan - 3],
+			 &tmp1[0][0],
+			 NR_SAMPLES_PER_INTEGRATION,
+			 sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION,
+			 sizeof(fcomplex) * NR_POLARIZATIONS * NR_SUB_CHANNELS);
 	}
       }
     }
     FIRtimer.stop();
-  
 #endif
 
-  
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
       fftTimer.start();
+
       for (int t = 0; t < 2; t ++) {
 	for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	  fftw_one(itsFFTWPlan, (fftw_complex *) fftInData[time + t][pol], (fftw_complex *) fftOutData[t][pol]);
+	  fftw_one(itsFFTWPlan,
+		   (fftw_complex *) fftInData[time + t][pol],
+		   (fftw_complex *) fftOutData[t][pol]);
 	}
       }
 
       fftTimer.stop();
 
-      for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-#if 0
-	for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
-	  for (int t = 0; t < 2; t ++) {
-	    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	      (*outputs[corr])[chan][stat][time + t][pol] = fftOutData[t][pol][corr * NR_CHANNELS_PER_CORRELATOR + chan];
-	    }
+#if defined C_IMPLEMENTATION
+      for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
+	for (int t = 0; t < 2; t ++) {
+	  for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	    itsCorrCube[chan][stat][time + t][pol] = fftOutData[t][pol][chan];
 	  }
 	}
-#else
-
-	_transpose_4x8(&(*outputs[corr])[0][stat][time][0],
-		       &fftOutData[0][0][corr * NR_CHANNELS_PER_CORRELATOR],
-		       NR_CHANNELS_PER_CORRELATOR,
-		       sizeof(fcomplex) * NR_SUB_CHANNELS,
-		       sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * MAX_STATIONS_PER_PPF);
-
-#endif
       }
+#elif 0
+      //sincosf(0.0f, (float *) &phases[0], ((float *) &phases[0]) + 1);
+      //sincosf(0.0f, (float *) &phases[1], ((float *) &phases[1]) + 1);
+      //sincosf(1000f, (float *) &phases[2], ((float *) &phases[2]) + 1);
+      //sincosf(1000f, (float *) &phases[3], ((float *) &phases[3]) + 1);
+
+      _phase_shift_and_transpose(&itsCorrCube[0][stat][time][0],
+				 &fftOutData[0][0][0],
+				 phases);
+#else
+      _transpose_4x8(&itsCorrCube[0][stat][time][0],
+		     &fftOutData[0][0][0],
+		     NR_SUB_CHANNELS,
+		     sizeof(fcomplex) * NR_SUB_CHANNELS,
+		     sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
+#endif
     }
   }
 
@@ -724,13 +787,106 @@ void WH_PPF::process()
 }
 
 
-void WH_PPF::postprocess()
+void WH_BGL_Processing::doCorrelate()
 {
-  fftw_destroy_plan(itsFFTWPlan);
-  delete [] itsFIRs;
+  static NSTimer timer("doCorrelate()", true);
+  timer.start();
+
+  DH_Vis::BufferType *output = static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBuffer();
+
+#if defined C_IMPLEMENTATION
+  for (int ch = 0; ch < NR_SUB_CHANNELS; ch ++) {
+    for (int stat1 = 0; stat1 < NR_STATIONS; stat1 ++) {
+      for (int stat2 = 0; stat2 <= stat1; stat2 ++) { 
+	for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	  for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	    fcomplex sum = makefcomplex(0, 0);
+
+	    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
+	      sum += itsCorrCube[ch][stat1][time][pol1] * ~itsCorrCube[ch][stat2][time][pol2];
+	    }
+
+	    (*output)[DH_Vis::baseline(stat1,stat2)][ch][pol1][pol2] = sum;
+	  }
+	}
+      }
+    }
+  }
+#else
+  // Blue Gene/L assembler version. 
+  // Divide the correlation matrix into blocks of 3x2, 2x2, and 1x1. 
+  // Correlate the entire block (all time samples) before 
+  // going on to the next block.
+
+  for (int ch = 0; ch < NR_SUB_CHANNELS; ch ++) {
+    for (int stat1 = NR_STATIONS % 2 ? 1 : 2; stat1 < NR_STATIONS; stat1 += 2) {
+      int stat2 = 0;
+      // do as many 3x2 blocks as possible
+      for (; stat2 < stat1 - 4 || (stat2 & 1) != 0; stat2 += 3) { 
+	_correlate_3x2(&itsCorrCube[ch][stat1],
+		       &itsCorrCube[ch][stat1+1],
+		       &itsCorrCube[ch][stat2],
+		       &itsCorrCube[ch][stat2+1],
+		       &itsCorrCube[ch][stat2+2],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2+2)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2+2)][ch]);
+      }
+      // see if some 2x2 blocks are necessary
+      for (; stat2 < stat1; stat2 += 2) { 
+	_correlate_2x2(&itsCorrCube[ch][stat1],
+		       &itsCorrCube[ch][stat1+1],
+		       &itsCorrCube[ch][stat2],
+		       &itsCorrCube[ch][stat2+1],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch]);
+      }
+    }
+
+    for (int stat = 0; stat < NR_STATIONS; stat += 2) {
+#if NR_STATIONS % 2 == 0
+#warning this has not been tested yet
+      _auto_correlate_1_and_2(&itsCorrCube[ch][stat],
+			      &itsCorrCube[ch][stat+1],
+			      &(*output)[DH_Vis::baseline(stat  , stat  )][ch],
+			      &(*output)[DH_Vis::baseline(stat  , stat+1)][ch],
+			      &(*output)[DH_Vis::baseline(stat+1, stat+1)][ch]);
+#else
+      // do the remaining autocorrelations
+      _auto_correlate_1x1(&itsCorrCube[ch][stat],
+			  &(*output)[DH_Vis::baseline(stat, stat)][ch]);
+#endif
+    }
+  }
+#endif  
+
+  timer.stop();
 }
 
 
-void WH_PPF::dump() const
+void WH_BGL_Processing::process()
+{
+  static NSTimer timer("total", true);
+
+  timer.start();
+  doPPF();
+  doCorrelate();
+  timer.stop();
+}
+
+
+void WH_BGL_Processing::postprocess()
+{
+  delete [] itsFIRs;
+  fftw_destroy_plan(itsFFTWPlan);
+}
+
+
+void WH_BGL_Processing::dump() const
 {
 }
