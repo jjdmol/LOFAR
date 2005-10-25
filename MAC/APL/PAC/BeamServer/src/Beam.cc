@@ -48,8 +48,8 @@ using namespace BS_Protocol;
 using namespace std;
 using namespace RTC;
 
-Beam::Beam(string name, string subarrayname, int nsubbands, EarthCoord pos) :
-  m_name(name), m_subarrayname(subarrayname), m_nsubbands(nsubbands), m_pos(pos)
+Beam::Beam(string name, string subarrayname, int nsubbands) :
+  m_name(name), m_subarrayname(subarrayname), m_nsubbands(nsubbands)
 {}
 
 Beam::~Beam()
@@ -310,7 +310,9 @@ int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::
 
     /* set time and convert to LMN */
     track[t].setTime(begintime + (long)t);
-    Pointing lmn = track[t].convertToLMN(conv, &m_pos);
+    blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
+    AMC::EarthCoord location(loc(0), loc(1), loc(2));
+    Pointing lmn = track[t].convertToLMN(conv, &location);
 
     /* store in m_lmns and calculate normalized n-coordinate */
     m_lmns(t,0) = lmn.angle0();
@@ -349,13 +351,13 @@ const CAL::SpectralWindow& Beam::getSPW() const
   return m_array.getSPW();
 }
 
-Beams::Beams(int nbeamlets, int nsubbands, EarthCoord pos) : m_beamlets(nbeamlets), m_nsubbands(nsubbands), m_pos(pos)
+Beams::Beams(int nbeamlets, int nsubbands) : m_beamlets(nbeamlets), m_nsubbands(nsubbands)
 {
 }
 
 Beam* Beams::get(string nodeid, string subarrayname, Beamlet2SubbandMap allocation)
 {
-  Beam* beam = new Beam(nodeid, subarrayname, m_nsubbands, m_pos);
+  Beam* beam = new Beam(nodeid, subarrayname, m_nsubbands);
 
   if (beam) {
 

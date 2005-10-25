@@ -66,6 +66,7 @@ namespace LOFAR {
 
       /**
        * Get geographical location.
+       * @return geographical location as 1-dimensional blitz array with three elements.
        */
       const blitz::Array<double, 1>& getGeoLoc() const { return m_geoloc; }
 
