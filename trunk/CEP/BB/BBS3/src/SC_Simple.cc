@@ -59,14 +59,6 @@ SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn,
   {
     itsFitCriterion = -1;
   }
-  ParameterSet msParams = itsArgs.makeSubset("MSDBparams.");
-  string dbType = msParams.getString("DBType");
-  string meqTableName = msParams.getString("meqTableName");
-  string skyTableName = msParams.getString("skyTableName");
-  string dbName = msParams.getString("DBName");
-  string dbPwd = msParams.getString("DBPwd");
-  string dbHost = msParams.getString("DBHost");
-
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
   itsStartTime = itsArgs.getDouble ("startTime");
   itsTimeLength = itsArgs.getDouble ("timeInterval");
