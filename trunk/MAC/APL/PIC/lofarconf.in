@@ -1,6 +1,6 @@
-RegisterAccess
-NodeManager
-MIS
 RSP_Protocol	# package to use when you want to communicate with the RSPDriver
 RSPDriver	# the RSPDriver implementation
 RSPCtlFE	# a frontend for the rspctl program to interface with PVSS
+RegisterAccess
+NodeManager
+MIS
