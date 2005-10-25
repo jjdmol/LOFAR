@@ -1,0 +1,8 @@
+Observation.Virt Telescope[4].Rec Group.GFLOPS=2.0
+Observation.Virt Telescope[4].Rec Group.GFLOPS{31536000}=2.5
+Observation.Virt Telescope[4].Beamformer[4].Angle{1003456789}=0
+Observation.Virt Telescope[4].Beamformer[4].Angle{1033456789}=1
+Observation.Virt Telescope[4].Beamformer[4].Angle{1063456789}=3
+Observation.Virt Telescope[4].Beamformer[4].Angle{1093456789}=5
+Observation.Virt Telescope[4].Beamformer[4].Angle{1123456789}=7
+

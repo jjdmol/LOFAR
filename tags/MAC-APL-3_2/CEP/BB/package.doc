@@ -1,0 +1,5 @@
+// \ingroup CEP
+
+// \defgroup BB BB
+// BB contains the LOFAR CEntral Processing BlackBoard packages
+

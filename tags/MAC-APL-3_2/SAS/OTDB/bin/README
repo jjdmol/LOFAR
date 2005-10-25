@@ -1,0 +1,7 @@
+This directory is reserved for the user management sources.
+
+An Application will be developed here that manages the autorisation of users
+and group within the OTDB database.
+
+While this application is not available every one is allow the use the OTDB
+as user 'paulus' with password 'boskabouter'. This user has no restrictions.

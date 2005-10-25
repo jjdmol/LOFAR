@@ -1,0 +1,113 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,333 189 423 215 N "_3DFace" 0
+EEE E E 1 -1 -1 0  20 80
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 30
+"border_info"
+""
+1 40 150 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  3 0 8 3E 40 50 360 150
+6 32
+"icon_info"
+""
+1 50 107 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_fw/icon_warning.bmp" 13434828 E 50 70 90 107
+2 33
+"txt_info"
+""
+1 100 80 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 102 82 341 99
+0 2 0 "s" 0 0 0 64 0 0  102 82
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 31 You have not yet filled a query
+13 38
+"Button1"
+""
+1 140 110 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+138 108 262 135
+T 
+1
+LANG:1 2 OK
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

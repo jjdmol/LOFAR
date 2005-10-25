@@ -1,0 +1,868 @@
+V 10
+1
+LANG:1 22 PanelSubbandStatistics
+PANEL,75 57 1082 956 N "_3DFace" 5
+"$BFNAME"
+"$SUBBANDCURRENT"
+"$SUBBANDEND"
+"$SUBBANDSTART"
+"$VTNAME"
+"main()
+{
+  int subband = $SUBBANDCURRENT;
+  SpinButtonSubbandStatistics.sbMinimum=$SUBBANDSTART;
+  SpinButtonSubbandStatistics.sbMaximum=$SUBBANDEND;
+  
+  SpinButtonSubbandStatistics.text = subband;
+  
+  addGlobal(\"gCurrentSubband\", INT_VAR); // creation of the variable
+  gCurrentSubband=subband;
+
+  TREND1.connectDirectly(\"A1\", \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle1.:_original.._value\");
+  TREND1.connectDirectly(\"A2\", \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle2.:_original.._value\");
+  
+}
+
+" 0
+ E E E E 1 -1 -1 0  10 10
+""0  1
+E E 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 0
+"Text12"
+""
+1 -228 66 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 65 141 80
+0 2 0 "s" 0 0 0 192 0 0  22 65 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 22 Statistics for subband
+21 1
+"SpinButtonSubbandStatistics"
+""
+1 159 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  159 60 220 87
+0
+
+"main()
+{
+dyn_errClass err;
+
+  string scope;
+  string dpPowerX;
+  string dpPowerY;
+  time t;
+
+  addGlobal(\"gDisconnectInitialHandlers\",BOOL_VAR);
+  gDisconnectInitialHandlers=false;
+  addGlobal(\"gCurrentSubband\", INT_VAR);
+
+  sprintf(scope,\"power%03d\",gCurrentSubband);
+  dpPowerX=\"System1:PAC_BeamServer_\"+scope+\"_x.:_original.._value\";
+  dpPowerY=\"System1:PAC_BeamServer_\"+scope+\"_y.:_original.._value\";
+
+  dpConnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+  dpConnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+  dpConnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:PAC_BeamServer_seqnr.:_original.._value\");
+
+  t=getCurrentTime();
+  TREND1.curveRemoveData(\"powerX\", t);
+  TREND1.curveRemoveData(\"powerY\", t);
+  TREND1.connectDirectly(\"powerX\", dpPowerX);
+  TREND1.connectDirectly(\"powerY\", dpPowerY);
+  
+  dpConnect(\"EP_DisplaySubbandsPowerX\", 
+        \"System1:PAC_BeamServer_power000_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power001_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power002_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power003_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power004_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power005_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power006_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power007_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power008_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power009_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power010_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power011_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power012_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power013_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power014_x.:_online.._value\",
+        \"System1:PAC_BeamServer_power015_x.:_online.._value\");
+  dpConnect(\"EP_DisplaySubbandsPowerY\", 
+        \"System1:PAC_BeamServer_power000_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power001_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power002_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power003_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power004_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power005_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power006_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power007_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power008_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power009_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power010_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power011_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power012_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power013_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power014_y.:_online.._value\",
+        \"System1:PAC_BeamServer_power015_y.:_online.._value\");
+}
+
+EP_SubbandStatisticsPowerXChanged(string dp, string sNewValue)
+{
+  if(gDisconnectInitialHandlers)
+  {
+    string scope;
+    string dpPowerX;
+    // disconnect the current handlers
+    sprintf(scope,\"power%03d\",currentSubband);
+    dpPowerX=\"System1:PAC_BeamServer_\"+scope+\"_x.:_original.._value\";
+    dpDisconnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+  }
+  else
+  {
+    setValue(\"TextFieldSubbandStatisticsPowerX\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  }
+}
+
+EP_SubbandStatisticsPowerYChanged(string dp, string sNewValue)
+{
+  if(gDisconnectInitialHandlers)
+  {
+    string scope;
+    string dpPowerY;
+    // disconnect the current handlers
+    sprintf(scope,\"power%03d\",currentSubband);
+    dpPowerY=\"System1:PAC_BeamServer_\"+scope+\"_y.:_original.._value\";
+    dpDisconnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+  }
+  else
+  {
+    setValue(\"TextFieldSubbandStatisticsPowerY\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  }
+}
+
+EP_SubbandStatisticsLastBlockChanged(string dp, string sNewValue)
+{
+  if(gDisconnectInitialHandlers)
+  {
+    // disconnect the current handlers
+    dpDisconnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:PAC_BeamServer_seqnr.:_original.._value\");
+  }
+  else
+  {
+    setValue(\"TextFieldSubbandStatisticsLastBlock\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  }
+}
+
+EP_DisplaySubbandsPowerX(
+  string dpx0, float powerx0,
+  string dpx1, float powerx1,
+  string dpx2, float powerx2,
+  string dpx3, float powerx3,
+  string dpx4, float powerx4,
+  string dpx5, float powerx5,
+  string dpx6, float powerx6,
+  string dpx7, float powerx7,
+  string dpx8, float powerx8,
+  string dpx9, float powerx9,
+  string dpx10, float powerx10,
+  string dpx11, float powerx11,
+  string dpx12, float powerx12,
+  string dpx13, float powerx13,
+  string dpx14, float powerx14,
+  string dpx15, float powerx15  )
+{
+  dyn_float df;
+
+  df=makeDynFloat(
+    powerx0,
+    powerx1,
+    powerx2,
+    powerx3,
+    powerx4,
+    powerx5,
+    powerx6,
+    powerx7,
+    powerx8,
+    powerx9,
+    powerx10,
+    powerx11,
+    powerx12,
+    powerx13,
+    powerx14,
+    powerx15);
+
+  setValue( \"BarTrendPowerX\", \"yRange\", dynMax(df));  
+  setValue( \"BarTrendPowerX\", \"yStep\", dynMax(df)/10);  
+  setValue( \"BarTrendPowerX\", \"data\", df);
+  setValue( \"BarTrendPowerX\", \"flush\" );
+}
+
+EP_DisplaySubbandsPowerY(
+  string dpy0, float powery0,
+  string dpy1, float powery1,
+  string dpy2, float powery2,
+  string dpy3, float powery3,
+  string dpy4, float powery4,
+  string dpy5, float powery5,
+  string dpy6, float powery6,
+  string dpy7, float powery7,
+  string dpy8, float powery8,
+  string dpy9, float powery9,
+  string dpy10, float powery10,
+  string dpy11, float powery11,
+  string dpy12, float powery12,
+  string dpy13, float powery13,
+  string dpy14, float powery14,
+  string dpy15, float powery15  )
+{
+  dyn_float df;
+  
+  df=makeDynFloat(
+    powery0,
+    powery1,
+    powery2,
+    powery3,
+    powery4,
+    powery5,
+    powery6,
+    powery7,
+    powery8,
+    powery9,
+    powery10,
+    powery11,
+    powery12,
+    powery13,
+    powery14,
+    powery15);
+
+  setValue( \"BarTrendPowerY\", \"yRange\", dynMax(df));
+  setValue( \"BarTrendPowerY\", \"yStep\", dynMax(df)/10);
+  setValue( \"BarTrendPowerY\", \"data\", df);
+  setValue( \"BarTrendPowerY\", \"flush\" );
+}
+
+" 0
+
+"main()
+{
+  string scope;
+  string dpPowerX;
+  string dpPowerY;
+  time t;
+
+  // disconnect the current handlers 
+  gDisconnectInitialHandlers=true;
+
+  sprintf(scope,\"power%03d\",currentSubband);
+  dpPowerX=\"System1:PAC_BeamServer_\"+scope+\"_x.:_original.._value\";
+  dpPowerY=\"System1:PAC_BeamServer_\"+scope+\"_y.:_original.._value\";
+
+  dpDisconnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+  dpDisconnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+  dpDisconnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:PAC_BeamServer_seqnr.:_original.._value\");
+  
+  getValue(\"\",\"text\",currentSubband);
+  sprintf(scope,\"power%03d\",currentSubband);
+  dpPowerX=\"System1:PAC_BeamServer_\"+scope+\"_x.:_original.._value\";
+  dpPowerY=\"System1:PAC_BeamServer_\"+scope+\"_y.:_original.._value\";
+  dpConnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+  dpConnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+  dpConnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:PAC_BeamServer_seqnr.:_original.._value\");
+
+  t=getCurrentTime();
+  TREND1.curveRemoveData(\"powerX\", t);
+  TREND1.curveRemoveData(\"powerY\", t);
+  TREND1.connectDirectly(\"powerX\", dpPowerX);
+  TREND1.connectDirectly(\"powerY\", dpPowerY);
+}
+
+EP_SubbandStatisticsPowerXChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSubbandStatisticsPowerX\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_SubbandStatisticsPowerYChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSubbandStatisticsPowerY\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_SubbandStatisticsLastBlockChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSubbandStatisticsLastBlock\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+
+E
+
+N 0 127 1 0 1 1
+2 2
+"Text9"
+""
+1 -451 -14 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 242 96 361 111
+0 2 0 "s" 0 0 0 192 0 0  242 96 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Power X
+14 3
+"TextFieldSubbandStatisticsPowerX"
+""
+1 307.304347826087 92 E E E 1 E 1 E N {255,255,255} E N {0,0,255} E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  306 90 411 117
+2 "s" 0 0 0 0 0 -1  E E E
+2 4
+"Text10"
+""
+1 -451 16 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 242 126 361 141
+0 2 0 "s" 0 0 0 192 0 0  242 126 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Power Y
+14 5
+"TextFieldSubbandStatisticsPowerY"
+""
+1 307.304347826087 122 E E E 1 E 1 E N {255,255,255} E N {255,0,0} E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  306 120 411 147
+2 "s" 0 0 0 0 0 -1  E E E
+2 6
+"Text11"
+""
+1 -461 66 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 242 66 305 81
+0 2 0 "s" 0 0 0 192 0 0  242 66 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 10 Last block
+14 7
+"TextFieldSubbandStatisticsLastBlock"
+""
+1 307.304347826087 62 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  306 60 411 87
+2 "s" 0 0 0 0 0 -1  E E E
+23 8
+"TREND1"
+""
+1 10 160 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+99 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  10 160 1070 770
+5 E E E 1 534 N {0,0,0} 0 0 1 0 1 0 4 0 "powerX" "System1:PAC_BeamServer_power000_x." 2 2 0 0 1 "3 2 0.000000" "%x" 1 1 2 1 E
+E
+1 0 0 3 2
+1
+LANG:1 1 X
+1
+LANG:1 1 ?
+1 "" ""  1 0 3 1 0 1 N {0,0,255}
+1 0 0 0 0 0 0 0
+0 "A1" "System1:PAC_VT1_BF1_directionAngle1." 0 2 0 0 1 "3 2 0.000000" "%x" 1 1 3 0 E
+E
+1 0 0 3 2
+1
+LANG:1 7 Angle 1
+1
+LANG:1 1 ?
+0 "" ""  0 -1 1 0 0 1 0 1 N {0,204,0}
+0 0 0 0 0 0 0 0
+0 "A2" "System1:PAC_VT1_BF1_directionAngle2." 0 2 0 0 0 E
+E
+1 0 0 3 2
+1
+LANG:1 7 Angle 2
+1
+LANG:1 1 ?
+0 "" ""  0 -1 1 0 0 1 0 1 N {255,204,0}
+0 0 0 0 0 0 0 0
+0 "powerY" "" 2 2 0 0 1 "3 2 0.000000" "%x" 1 1 2 0 E
+E
+1 0 0 3 2
+1
+LANG:1 1 Y
+1
+LANG:1 1 ?
+1 "" ""  1 0 3 1 0 1 N {255,0,0}
+0 0 0 0 0 0 0 0
+1 1 "%H:%M:%S" "%x" 1 1 0 0 
+E 1 0 1 0 10 1 20 300
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  84 
+N {0,0,0} 0 0 1 0 1 150 1 5 5 1 2
+0
+2 9
+"Text18"
+""
+1 20 9.684210526315789 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22.31578947368421 12 457.6842105263158 42.10526315789474
+0 2 0 "s" 0 0 0 64 0 0  22.31578947368421 12 1
+1
+LANG:1 58 -adobe-helvetica-bold-o-normal-*-*-240-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 18 Subband Statistics
+4 10
+"Line4"
+""
+1 20 49.68421052631579 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  1060 49.68421052631579 20 49.68421052631579
+2 11
+"Text15"
+""
+1 469 -86 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 602 65 756 80
+0 2 0 "s" 0 0 0 192 0 0  602 65 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 4 Type
+2 12
+"Text16"
+""
+1 469 -56 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 602 95 777 110
+0 2 0 "s" 0 0 0 192 0 0  602 95 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Angle 1
+2 13
+"Text17"
+""
+1 469 -26 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+37 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 602 125 777 140
+0 2 0 "s" 0 0 0 192 0 0  602 125 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Angle 2
+14 14
+"TextFieldCurrentDirectionType"
+""
+1 656.1801242236025 62 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 22 1=J2000, 2=AZEL, 3=LMN
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  655 60 750 87
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionType.:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\", \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionType.:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, float fNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, fNewValue, TRUE) );
+}
+" 0
+ E
+14 15
+"TextFieldCurrentDirectionAngle1"
+""
+1 656.1801242236025 92 E E E 1 E 1 E N "_WindowText" E N {0,204,0} E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  655 90 750 117
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle1.:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\", \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle1.:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, float fNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, fNewValue, TRUE) );
+}
+" 0
+ E
+14 16
+"TextFieldCurrentDirectionAngle2"
+""
+1 656.1801242236025 122 E E E 1 E 1 E N "_WindowText" E N {255,204,0} E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  655 120 750 147
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr( \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle2.:_online.._value\", DPSUB_DP_EL ) == \"\" )
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\", \"System1:PAC_\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle2.:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, float fNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, fNewValue, TRUE) );
+}
+" 0
+ E
+2 17
+"Text15"
+""
+1 399 129 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 480 65 634 80
+0 2 0 "s" 0 0 0 192 0 0  480 65 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 17 Current direction
+27 18
+"BarTrendPowerX"
+""
+1 10 780 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+91 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  10 780 340 910
+2 -0.5 16 1 0 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+0 0 16000 1000 2 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+1 0 0 20 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  3 0 1 0 1 N {0,0,0}
+0 0 1 0 1 N {0,0,0} 2 5 1 0 20 20 N {0,0,255} N {0,0,255} N {0,0,255} 1 -0.5 1
+E
+27 19
+"BarTrendPowerY"
+""
+1 360 780 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+93 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  360 780 690 910
+2 -0.5 16 1 0 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+0 0 16000 1000 2 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+1 0 0 20 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  3 0 1 0 1 N {0,0,0}
+0 0 1 0 1 N {0,0,0} 2 5 1 0 20 0 N {0,0,255} N {0,0,255} N {0,0,255} 1 -0.5 1
+E
+2 20
+"Text8"
+""
+1 21 766 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+62 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 922 120 937
+0 2 0 "s" 0 0 0 192 0 0  22 922 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 36 Power per subband in the X-direction
+2 21
+"Text8"
+""
+1 359 324 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+64 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 372 932 470 947
+0 2 0 "s" 0 0 0 192 0 0  372 932 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 36 Power per subband in the Y-direction
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

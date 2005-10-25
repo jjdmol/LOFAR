@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE basesim SYSTEM "basesim.dtd">
+<basesim>
+  <simul name="mySimul">
+
+    <!-- WorkHolder definition; only one WH per Simul -->
+    <workholder name="wh1">
+      <dataholder name = "dh1" type="in"/>
+      <dataholder name = "dh2" type="out"/>
+    </workholder>
+
+  </simul>
+</basesim>

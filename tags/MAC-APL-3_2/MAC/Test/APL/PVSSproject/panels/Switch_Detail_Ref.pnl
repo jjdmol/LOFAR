@@ -1,0 +1,1310 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,191 138 994 514 N "_3DFace" 0
+"main()
+{
+  startThread( \"Simulation\" );
+}
+
+float GetRandomValue(
+  float fOffset,
+  float fSwing
+)
+{
+  float fRandom;
+  float fValue;
+  
+  fRandom = rand();
+  
+//  DebugN( \"fRand1=\" + fRandom );
+  fRandom = fRandom / 32767.0;
+//  DebugN( \"fRand2=\" + fRandom );
+  fRandom *= fSwing;
+//  DebugN( \"fRand3=\" + fRandom );
+  fRandom -= (fSwing / 2.0);
+//  DebugN( \"fRand4=\" + fRandom );
+      
+  fValue = fOffset + fRandom;
+//  DebugN( \"fValue=\" + fValue);
+
+  return fValue;
+}
+void Simulation()
+{
+  float fRandom;
+  
+  srand();
+  
+  while(1 ){
+    delay( 2, 0 );
+  
+  
+    dpSet(  \"System1:SW01_P01.RX_Bytes_Average\", GetRandomValue( 60, 10 )*100 );
+
+
+    dpSet(  \"System1:SW01_P02.RX_Bytes_Average\", GetRandomValue( 30, 2 )*100 );
+    dpSet(  \"System1:SW01_P04.RX_Bytes_Average\", GetRandomValue( 50, 8 )*100 );
+	  dpSet(  \"System1:SW01_P05.RX_Bytes_Average\", GetRandomValue( 40, 3 )*100 );
+    dpSet(  \"System1:SW01_P06.RX_Bytes_Average\", GetRandomValue( 20, 15 )*100 );
+    
+    dpSet(  \"System1:SW01_P07.RX_Bytes_Average\", GetRandomValue( 50, 9 )*100 );
+    dpSet(  \"System1:SW01_P08.RX_Bytes_Average\", GetRandomValue( 40, 15 )*100 );
+    dpSet(  \"System1:SW01_P09.RX_Bytes_Average\", GetRandomValue( 30, 12 )*100 );
+    dpSet(  \"System1:SW01_P10.RX_Bytes_Average\", GetRandomValue( 50, 15 )*100 );
+    dpSet(  \"System1:SW01_P11.RX_Bytes_Average\", GetRandomValue( 50, 10 )*100 );
+    
+    dpSet(  \"System1:SW01_P12.RX_Bytes_Average\", GetRandomValue( 80, 6 )*100);
+    dpSet(  \"System1:SW01_P13.RX_Bytes_Average\", GetRandomValue( 30, 8 )*100);
+    dpSet(  \"System1:SW01_P14.RX_Bytes_Average\", GetRandomValue( 24.5, 10 )*100);
+    dpSet(  \"System1:SW01_P15.RX_Bytes_Average\", GetRandomValue( 60, 10 )*100);
+    dpSet(  \"System1:SW01_P16.RX_Bytes_Average\", GetRandomValue( 70, 10 )*100);
+    
+    dpSet(  \"System1:SW01_P17.RX_Bytes_Average\", GetRandomValue( 35, 10 )*100);
+    dpSet(  \"System1:SW01_P18.RX_Bytes_Average\", GetRandomValue( 45, 10 )*100);
+
+    dpSet(  \"System1:SW01_P19.RX_Bytes_Average\", GetRandomValue( 60, 10 )*100);
+    dpSet(  \"System1:SW01_P21.RX_Bytes_Average\", GetRandomValue( 90, 8 )*100);
+    dpSet(  \"System1:SW01_P23.RX_Bytes_Average\", GetRandomValue( 20, 6 )*100);
+
+    
+  }
+}" 0
+ E E E E 1 -1 -1 0  40 130
+""0  1
+E E 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+30 210
+"Frame1"
+""
+1 410 487 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+71 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 410 227 970 487
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-130-100-100-*-*-iso8859-1|-15,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 34  Average port daterate [bytes/sec]
+2 26
+"Text12"
+""
+1 20 19 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 21 247 45
+0 2 0 "s" 0 0 0 192 0 0  22 21 1
+1
+LANG:1 97 -adobe-helvetica-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-21,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 20 Network Switch: SW01
+1 86 5 "" 14
+0
+1 87 5 "" 15
+0
+1 88 5 "" 19
+0
+1 89 5 "" 21
+0
+1 90 5 "" 22
+0
+1 101 7 "" 0
+0
+1 102 7 "" 1
+0
+1 103 7 "" 2
+0
+1 104 7 "" 4
+0
+1 105 8 "" 0
+0
+1 106 8 "" 1
+0
+1 107 8 "" 2
+0
+1 108 8 "" 4
+0
+1 109 9 "" 0
+0
+1 110 9 "" 1
+0
+1 111 9 "" 2
+0
+1 112 9 "" 4
+0
+1 113 10 "" 0
+0
+1 114 10 "" 1
+0
+1 115 10 "" 2
+0
+1 116 10 "" 4
+0
+1 117 11 "" 0
+0
+1 118 11 "" 1
+0
+1 119 11 "" 2
+0
+1 120 11 "" 4
+0
+1 121 12 "" 0
+0
+1 122 12 "" 1
+0
+1 123 12 "" 2
+0
+1 124 12 "" 4
+0
+1 125 13 "" 0
+0
+1 126 13 "" 1
+0
+1 127 13 "" 2
+0
+1 128 13 "" 4
+0
+1 129 14 "" 0
+0
+1 130 14 "" 1
+0
+1 131 14 "" 2
+0
+1 132 14 "" 4
+0
+1 133 15 "" 0
+0
+1 134 15 "" 1
+0
+1 135 15 "" 2
+0
+1 136 15 "" 4
+0
+1 137 16 "" 0
+0
+1 138 16 "" 1
+0
+1 139 16 "" 2
+0
+1 140 16 "" 4
+0
+1 141 17 "" 0
+0
+1 142 17 "" 1
+0
+1 143 17 "" 2
+0
+1 144 17 "" 4
+0
+1 145 18 "" 0
+0
+1 146 18 "" 1
+0
+1 147 18 "" 2
+0
+1 148 18 "" 4
+0
+1 149 19 "" 0
+0
+1 150 19 "" 1
+0
+1 151 19 "" 2
+0
+1 152 19 "" 4
+0
+1 153 20 "" 0
+0
+1 154 20 "" 1
+0
+1 155 20 "" 2
+0
+1 156 20 "" 4
+0
+1 157 21 "" 0
+0
+1 158 21 "" 1
+0
+1 159 21 "" 2
+0
+1 160 21 "" 4
+0
+1 161 22 "" 0
+0
+1 162 22 "" 1
+0
+1 163 22 "" 2
+0
+1 164 22 "" 4
+0
+1 165 23 "" 0
+0
+1 166 23 "" 1
+0
+1 167 23 "" 2
+0
+1 168 23 "" 4
+0
+1 169 24 "" 0
+0
+1 170 24 "" 1
+0
+1 171 24 "" 2
+0
+1 172 24 "" 4
+0
+1 173 25 "" 0
+0
+1 174 25 "" 1
+0
+1 175 25 "" 2
+0
+1 176 25 "" 4
+0
+1 177 26 "" 0
+0
+1 178 26 "" 1
+0
+1 179 26 "" 2
+0
+1 180 26 "" 4
+0
+1 181 27 "" 0
+0
+1 182 27 "" 1
+0
+1 183 27 "" 2
+0
+1 184 27 "" 4
+0
+1 185 28 "" 0
+0
+1 186 28 "" 1
+0
+1 187 28 "" 2
+0
+1 188 28 "" 4
+0
+1 189 29 "" 0
+0
+1 190 29 "" 1
+0
+1 191 29 "" 2
+0
+1 192 29 "" 4
+0
+1 193 30 "" 0
+0
+1 194 30 "" 1
+0
+1 195 30 "" 2
+0
+1 196 30 "" 4
+0
+6 201
+"Border1"
+""
+1 410 161 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+62 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 410 71 950 161
+4 202
+"Line1"
+""
+1 910 81 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+63 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 81 910 81
+4 203
+"Line2"
+""
+1 910 91 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+64 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 91 910 91
+4 204
+"Line3"
+""
+1 910 101 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+65 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 101 910 101
+4 205
+"Line4"
+""
+1 910 111 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+66 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 111 910 111
+4 206
+"Line5"
+""
+1 910 121 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+67 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 121 910 121
+4 207
+"Line6"
+""
+1 910 131 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+68 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 131 910 131
+4 208
+"Line7"
+""
+1 910 141 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+69 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 141 910 141
+4 209
+"Line8"
+""
+1 910 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+70 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  950 151 910 151
+30 220
+"Frame2"
+""
+1 20 487 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+73 0 0 0 0 0
+E E E
+1
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 20 227 390 487
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-130-100-100-*-*-iso8859-1|-15,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 35 Average daterate port 1 [bytes/sec]
+2 221
+"Text1"
+""
+1 430 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+74 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 432 94 438 108
+0 2 0 "s" 0 0 0 192 0 0  432 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 1
+2 222
+"Text2"
+""
+1 466 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+75 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 468 94 474 108
+0 2 0 "s" 0 0 0 192 0 0  468 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 2
+2 223
+"Text3"
+""
+1 503 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+76 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 505 94 511 108
+0 2 0 "s" 0 0 0 192 0 0  505 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 3
+2 224
+"Text4"
+""
+1 539 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+77 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 541 94 547 108
+0 2 0 "s" 0 0 0 192 0 0  541 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 4
+2 225
+"Text5"
+""
+1 575 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+78 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 577 94 583 108
+0 2 0 "s" 0 0 0 192 0 0  577 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 5
+2 226
+"Text6"
+""
+1 611 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+79 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 613 94 619 108
+0 2 0 "s" 0 0 0 192 0 0  613 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 6
+2 227
+"Text7"
+""
+1 427 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+80 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 429 134 441 148
+0 2 0 "s" 0 0 0 192 0 0  429 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 13
+2 228
+"Text8"
+""
+1 463 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+81 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 465 134 477 148
+0 2 0 "s" 0 0 0 192 0 0  465 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 14
+2 229
+"Text9"
+""
+1 500 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+82 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 502 134 514 148
+0 2 0 "s" 0 0 0 192 0 0  502 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 15
+2 230
+"Text11"
+""
+1 536 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+83 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 538 134 550 148
+0 2 0 "s" 0 0 0 192 0 0  538 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 16
+2 231
+"Text13"
+""
+1 572 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 574 134 586 148
+0 2 0 "s" 0 0 0 192 0 0  574 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 17
+2 232
+"Text14"
+""
+1 608 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+85 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 610 134 622 148
+0 2 0 "s" 0 0 0 192 0 0  610 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 18
+2 233
+"Text15"
+""
+1 667 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+86 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 669 94 675 108
+0 2 0 "s" 0 0 0 192 0 0  669 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 7
+2 234
+"Text16"
+""
+1 703 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+87 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 705 94 711 108
+0 2 0 "s" 0 0 0 192 0 0  705 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 8
+2 235
+"Text17"
+""
+1 740 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+88 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 742 94 748 108
+0 2 0 "s" 0 0 0 192 0 0  742 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 1 9
+2 236
+"Text18"
+""
+1 772 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+89 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 774 94 786 108
+0 2 0 "s" 0 0 0 192 0 0  774 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 10
+2 237
+"Text19"
+""
+1 808 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+90 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 810 94 822 108
+0 2 0 "s" 0 0 0 192 0 0  810 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 11
+2 238
+"Text20"
+""
+1 844 92 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 846 94 858 108
+0 2 0 "s" 0 0 0 192 0 0  846 94 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 12
+2 239
+"Text21"
+""
+1 664 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+92 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 666 134 678 148
+0 2 0 "s" 0 0 0 192 0 0  666 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 19
+2 240
+"Text22"
+""
+1 700 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+93 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 702 134 714 148
+0 2 0 "s" 0 0 0 192 0 0  702 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 20
+2 241
+"Text23"
+""
+1 737 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+94 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 739 134 751 148
+0 2 0 "s" 0 0 0 192 0 0  739 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 21
+2 242
+"Text24"
+""
+1 773 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+95 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 775 134 787 148
+0 2 0 "s" 0 0 0 192 0 0  775 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 22
+2 243
+"Text25"
+""
+1 809 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+96 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 811 134 823 148
+0 2 0 "s" 0 0 0 192 0 0  811 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 23
+2 244
+"Text26"
+""
+1 845 132 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+97 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 847 134 859 148
+0 2 0 "s" 0 0 0 192 0 0  847 134 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 2 24
+2 245
+"Text10"
+""
+1 310 25 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+98 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 312 27 470 44
+0 2 0 "s" 0 0 0 192 0 0  312 27 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-130-100-100-*-*-iso8859-1|-15,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+"" 1
+LANG:1 23 [ SNMP monitored data ]
+1 93 5 "" 16
+0
+1 94 5 "" 20
+0
+1 95 5 "" 23
+0
+1 96 5 "" 24
+0
+23 197
+"Trend1"
+""
+1 36 247 E E E 1 E 1 E N "_Window" E N "Lofar_background_light" E E
+ E E
+58 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+""  34 245 378 479
+5 E E E 1 200 N {0,0,0} 0 0 1 0 1 0 1 0 "#1_1" "System1:SW01_P01.RX_Bytes_Average" 0 2 0 0 1 "3 2 0.000000" "%x" 1 1 2 0 E
+E
+1 0 0 3 2
+1
+LANG:1 25 SW01_P01.RX_Bytes_Average
+1
+LANG:1 0 
+1 "" ""  -1 0 0 1 0 1 N "STD_off"
+0 0 0 0 0 0 0 0
+1 1 "%X" "%x" 1 1 0 0 
+E 1 0 0 0 90 0 10 300
+1
+LANG:1 97 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0
+""  1
+LANG:1 97 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0
+""  1
+LANG:1 97 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0
+""  30 
+N {0,0,0} 0 0 1 0 1 150 0 5 5 1 3
+0
+27 200
+"BarTrendPowerX"
+""
+1 -319 -146 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+61 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  419 245 963 479
+2 0.5 24 1 0 "%H:%M" 0 1
+LANG:1 97 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0
+""  0 3 1 1 0 1 N {0,0,0}
+0 0 15000 1000 2 "%H:%M" 0 1
+LANG:1 97 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0
+""  0 3 1 1 0 1 N {0,0,0}
+1 0 0 20 1
+LANG:1 97 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0
+""  3 1 1 0 1 N {0,0,0}
+0 1 1 0 1 N {0,0,0} 2 5 1 0 10000000 0 N {0,0,0} N {0,0,0} N "AESbgUnacknowledged" 1 0.5 1
+"main()
+{
+
+dpConnect( \"EP_DisplaySubbandsPowerX\",
+										\"System1:SW01_P01.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P02.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P03.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P04.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P05.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P06.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P07.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P08.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P09.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P10.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P11.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P12.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P13.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P14.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P15.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P16.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P17.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P18.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P19.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P20.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P21.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P22.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P23.RX_Bytes_Average:_online.._value\",
+										\"System1:SW01_P24.RX_Bytes_Average:_online.._value\");
+}										
+
+EP_DisplaySubbandsPowerX(
+  string dpx1, float powerx1,
+  string dpx2, float powerx2,
+  string dpx3, float powerx3,
+  string dpx4, float powerx4,
+  string dpx5, float powerx5,
+  string dpx6, float powerx6,
+  string dpx7, float powerx7,
+  string dpx8, float powerx8,
+  string dpx9, float powerx9,
+  string dpx10, float powerx10,
+  string dpx11, float powerx11,
+	string dpx12, float powerx12,
+	string dpx13, float powerx13,
+  string dpx14, float powerx14,
+  string dpx15, float powerx15,
+  string dpx16, float powerx16,
+  string dpx17, float powerx17,
+  string dpx18, float powerx18,
+  string dpx19, float powerx19,
+  string dpx20, float powerx20,
+  string dpx21, float powerx21,
+  string dpx22, float powerx22,
+  string dpx23, float powerx23,
+  string dpx24, float powerx24 )
+
+{
+//DebugN(\"0\",dpx0,powerx0);
+ dyn_float df;
+  
+  df=makeDynFloat(
+    powerx1,
+    powerx2,
+    powerx3,
+    powerx4,
+    powerx5,
+    powerx6,
+    powerx7,
+    powerx8,
+    powerx9,
+    powerx10,
+    powerx11,
+    powerx12,
+    powerx13,
+    powerx14,
+    powerx15,
+    powerx16,
+    powerx17,
+    powerx18,
+    powerx19,
+    powerx20,
+    powerx21,
+    powerx22,
+		powerx23,
+	  powerx24);
+
+//  setValue( \"BarTrendPowerX\", \"yRange\", dynMax(df));  
+//  setValue( \"BarTrendPowerX\", \"yStep\", dynMax(df)/10);  
+  setValue( \"BarTrendPowerX\", \"data\", df);
+  setValue( \"BarTrendPowerX\", \"flush\" );    
+}" 0
+
+13 246
+"Button3"
+""
+1 942 22 E E E 1 E 1 E N "_3DText" E N "STD_device_uncertain" E E
+ E E
+99 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+""  940 20 984 44
+
+T 
+1
+LANG:1 2 UP
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_childPanelOn();
+}
+
+EP_childPanelOn()
+{
+  RootPanelOn(\"Station.pnl\",
+      \"Station\",
+      makeDynString(\"\"));
+}
+
+// SimpleCtrlScript {EP_childPanelOn}
+// Function {RootPanelOn}
+// File {Station.pnl}
+// Panel {Station}
+// Parent {}
+// Module {}
+// OffsetX {0}
+// OffsetY {0}
+// SimpleCtrlScriptEnd {EP_childPanelOn}
+" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 5 ""
+"objects\\Network\\Switch_Main_Ref.pnl" 207 216 T 33 1 0 1 -167 -103
+1
+"$SwitchNr""SW01"
+3 7 ""
+"objects\\Network\\Port_ref.pnl" 240 114 T 35 1 0 1 216 -23
+1
+"$SW_Port""SW01_P02"
+3 8 ""
+"objects\\Network\\Port_ref.pnl" 250 145 T 36 1 0 1 170 -54
+1
+"$SW_Port""SW01_P01"
+3 9 ""
+"objects\\Network\\Port_ref.pnl" 218 358 T 37 1 0 1 274 -267
+1
+"$SW_Port""SW01_P03"
+3 10 "Group11"
+"objects\\Network\\Port_ref.pnl" 480 220 T 38 1 0 1 84 -129
+1
+"$SW_Port""SW01_P05"
+3 11 "Group12"
+"objects\\Network\\Port_ref.pnl" 440 220 T 39 1 0 1 88 -129
+1
+"$SW_Port""SW01_P04"
+3 12 "Group13"
+"objects\\Network\\Port_ref.pnl" 520 220 T 40 1 0 1 80 -129
+1
+"$SW_Port""SW01_P06"
+3 13 "Group20"
+"objects\\Network\\Port_ref.pnl" 480 220 T 41 1 0 1 -24 -89
+1
+"$SW_Port""SW01_P14"
+3 14 "Group21"
+"objects\\Network\\Port_ref.pnl" 440 220 T 42 1 0 1 -20 -89
+1
+"$SW_Port""SW01_P13"
+3 15 "Group22"
+"objects\\Network\\Port_ref.pnl" 520 220 T 43 1 0 1 -28 -89
+1
+"$SW_Port""SW01_P15"
+3 16 "Group23"
+"objects\\Network\\Port_ref.pnl" 600 220 T 44 1 0 1 -36 -89
+1
+"$SW_Port""SW01_P17"
+3 17 "Group24"
+"objects\\Network\\Port_ref.pnl" 560 220 T 45 1 0 1 -32 -89
+1
+"$SW_Port""SW01_P16"
+3 18 "Group25"
+"objects\\Network\\Port_ref.pnl" 640 220 T 46 1 0 1 -40 -89
+1
+"$SW_Port""SW01_P18"
+3 19 "Group38"
+"objects\\Network\\Port_ref.pnl" 280 330 T 47 1 0 1 412 -239
+1
+"$SW_Port""SW01_P08"
+3 20 "Group39"
+"objects\\Network\\Port_ref.pnl" 240 330 T 48 1 0 1 416 -239
+1
+"$SW_Port""SW01_P07"
+3 21 "Group40"
+"objects\\Network\\Port_ref.pnl" 320 330 T 49 1 0 1 408 -239
+1
+"$SW_Port""SW01_P09"
+3 22 "Group41"
+"objects\\Network\\Port_ref.pnl" 400 330 T 50 1 0 1 400 -239
+1
+"$SW_Port""SW01_P11"
+3 23 "Group42"
+"objects\\Network\\Port_ref.pnl" 360 330 T 51 1 0 1 404 -239
+1
+"$SW_Port""SW01_P10"
+3 24 "Group43"
+"objects\\Network\\Port_ref.pnl" 440 330 T 52 1 0 1 396 -239
+1
+"$SW_Port""SW01_P12"
+3 25 "Group44"
+"objects\\Network\\Port_ref.pnl" 280 370 T 53 1 0 1 412 -239
+1
+"$SW_Port""SW01_P20"
+3 26 "Group45"
+"objects\\Network\\Port_ref.pnl" 240 370 T 54 1 0 1 416 -239
+1
+"$SW_Port""SW01_P19"
+3 27 "Group46"
+"objects\\Network\\Port_ref.pnl" 320 370 T 55 1 0 1 408 -239
+1
+"$SW_Port""SW01_P21"
+3 28 "Group47"
+"objects\\Network\\Port_ref.pnl" 400 370 T 56 1 0 1 400 -239
+1
+"$SW_Port""SW01_P23"
+3 29 "Group48"
+"objects\\Network\\Port_ref.pnl" 360 370 T 57 1 0 1 404 -239
+1
+"$SW_Port""SW01_P22"
+3 30 "Group49"
+"objects\\Network\\Port_ref.pnl" 440 370 T 58 1 0 1 396 -239
+1
+"$SW_Port""SW01_P24"
+0

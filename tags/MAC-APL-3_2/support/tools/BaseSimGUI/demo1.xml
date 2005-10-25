@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE basesim SYSTEM "basesim.dtd">
+<basesim>
+  <simul name="mySimul">
+
+    <!-- WorkHolder definition; only one WH per Simul -->
+    <workholder name="wh1">
+      <dataholder name = "dh1" type="in"/>
+      <dataholder name = "dh2" type="out"/>
+    </workholder>
+
+    <step name="myStep1">
+        <workholder name="myWorkHolder" class="WH_Antenna">
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh2" type="out"/>
+	</workholder>
+    </step>
+
+    <step name="myStep2">
+        <workholder name="myWorkHolder" class="WH_Antenna">
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh2" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh2" type="out"/>
+	</workholder>
+    </step>
+
+    <step name="myStep3">
+        <workholder name="myWorkHolder" class="WH_Antenna">
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh2" type="out"/>
+	</workholder>
+    </step>
+
+    <step name="myStep4">
+        <workholder name="myWorkHolder" class="WH_Antenna">
+		<dataholder name="dh1" type="in"/>
+		<dataholder name="dh2" type="out"/>
+	</workholder>
+    </step>
+
+    <step name="myStep5">
+        <workholder name="myWorkHolder" class="WH_Antenna">
+		<dataholder name="dh2" type="in"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+		<dataholder name="dh1" type="out"/>
+	</workholder>
+    </step>
+    
+    <connect src="myStep5" dest="myStep2"/>
+    <connect src="myStep2" dest="myStep3"/>
+    <connect src="myStep3" dest="myStep4"/>
+    <connect src="myStep5" dest="myStep1"/>
+    <connect src="myStep1" dest="myStep3"/>
+
+    <connect src=".dh1" dest="myStep5.dh2"/>
+    <connect src="myStep4.dh2" dest=".dh2"/>
+    
+
+  </simul>
+</basesim>

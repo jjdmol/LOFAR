@@ -1,0 +1,25 @@
+
+# $Id$
+
+BUILDDATE := $(shell date +'%b %d %Y')
+VERSION = 0.06 (Build on $(BUILDDATE))
+VERSION_LONG = $(VERSION), GPL 2 (see COPYRIGHTS)
+FLAGS =  -D_REENTRANT -g -Wall -O2 -DVERSION='"$(VERSION)"'
+LIBS  =  -lpthread
+GCC   =  cc
+GPP   =  c++
+STRIP =  strip
+MAKE  =  make
+FIND  =  find
+RM    =  rm
+CP    =  cp
+GREP  =  grep
+CUT   =  cut
+SED   =  sed
+SORT  =  sort
+ECHO  =  echo
+INSTALL = install
+DESTDIR = /usr/local
+
+BIN   =  $(DESTDIR)/bin
+MAN   =  $(DESTDIR)/man/man1

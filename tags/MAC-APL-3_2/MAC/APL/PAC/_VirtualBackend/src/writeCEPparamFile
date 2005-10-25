@@ -1,0 +1,3 @@
+#!/bin/sh
+
+scp ACC-$1.param lofar17:/data/zwart/SCDemo

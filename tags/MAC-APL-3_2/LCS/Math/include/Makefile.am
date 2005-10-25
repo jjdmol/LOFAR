@@ -1,0 +1,3 @@
+SUBDIRS	= Math
+
+include $(top_srcdir)/Makefile.common

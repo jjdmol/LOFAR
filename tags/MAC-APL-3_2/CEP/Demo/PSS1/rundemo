@@ -1,0 +1,26 @@
+#!/bin/sh
+RUNDEMOPATH=`echo $0 | sed 's/\/rundemo$//'`
+cd $RUNDEMOPATH
+
+# The string %AIPSROOT% will be replaced by the actual path
+AIPSROOT=%AIPSROOT%
+
+# If \%AIPSROOT\% was not replaced, then use the default path.
+# Using a bit of a hack here since we can't compare to \%AIPSROOT\%
+# since that would be replaced.
+AIPSTEST=`echo $AIPSROOT | cut -c2-`     # strip first %
+if test "$AIPSROOT" = "%$AIPSTEST"; then # compare without first %
+	AIPSROOT=/aips++/weekly
+fi
+MEQ_PATH=../../CPA/CAL/build/gnu_opt/src
+PATH=$PATH:$MEQ_PATH:.
+echo -n Using:
+which meqcalibrater
+if test ! $?; then
+	echo "Please compile LOFAR/CEP/CPA/CAL to produce LOFAR/CEP/CPA/CAL/build/gnu_opt/src/meqcalibrater"
+	exit
+fi
+tar zxvf pss1.demo.tgz && \
+ln -sf ../../CPA/CAL/src/*.g . && \
+. $AIPSROOT/aipsinit.sh && \
+glish -l rundemo.glish

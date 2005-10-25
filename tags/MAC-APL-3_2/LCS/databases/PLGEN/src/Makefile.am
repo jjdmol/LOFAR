@@ -1,0 +1,15 @@
+INSTHDRS =
+
+NOINSTHDRS =
+
+TCCHDRS =
+
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
+
+include $(top_srcdir)/Makefile.common
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL
