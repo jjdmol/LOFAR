@@ -31,7 +31,7 @@
 #include <GCF/ParameterSet.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/VirtualTelescope/VirtualTelescope.h>
-#include "BS_Protocol.ph"
+#include <APL/BS_Protocol/BS_Protocol.ph>
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
