@@ -24,44 +24,41 @@
 
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
-#include <tWH_PPF.h>
+#include <tWH_BGL_Processing.h>
 
 #include <Transport/TH_Mem.h>
-#include <TFC_BGLProc/WH_PPF.h>
+#include <TFC_BGLProc/WH_BGL_Processing.h>
 #include <TFC_Interface/DH_PPF.h>
-#include <TFC_Interface/DH_CorrCube.h>
+#include <TFC_Interface/DH_Vis.h>
+#include <exception>
 
 namespace LOFAR
 {
 
-  AH_PPF::AH_PPF() :
-    itsWH(0), itsTH(0), itsInDH(0), itsInConn(0)
+  AH_BGL_Processing::AH_BGL_Processing() :
+    itsWH(0), itsTH(0), itsInDH(0), itsInConn(0), itsOutDH(0), itsOutConn(0)
   {
-    memset(itsOutDHs, 0, sizeof itsOutDHs);
-    memset(itsOutConns, 0, sizeof itsOutConns);
   }
 
-  AH_PPF::~AH_PPF()
+  AH_BGL_Processing::~AH_BGL_Processing()
   {
     undefine();
   }
   
-  void AH_PPF::define(const KeyValueMap& /*kvm*/)
+  void AH_BGL_Processing::define(const KeyValueMap& /*kvm*/)
   {
     ACC::APS::ParameterSet myPset("TFlopCorrelator.cfg");
 
-    itsWH     = new WH_PPF("WH_PPF", 0, /*18*/ MAX_STATIONS_PER_PPF);
+    itsWH     = new WH_BGL_Processing("WH_BGL_Processing", 0);
     itsTH     = new TH_Mem();
     itsInDH   = new DH_PPF("itsIn", 0, myPset);
     itsInConn = new Connection("in", itsInDH, itsWH->getDataManager().getInHolder(0), itsTH, false);
 
-    for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; ++ corr) {
-      itsOutDHs[corr]   = new DH_CorrCube("itsOutDH", corr);
-      itsOutConns[corr] = new Connection("out", itsWH->getDataManager().getOutHolder(corr), itsOutDHs[corr], itsTH, false);
-    }
+    itsOutDH   = new DH_Vis("itsOutDH", 0, myPset);
+    itsOutConn = new Connection("out", itsWH->getDataManager().getOutHolder(0), itsOutDH, itsTH, false);
   }
 
-  void AH_PPF::init()
+  void AH_BGL_Processing::init()
   {
     itsWH->basePreprocess();
 
@@ -69,41 +66,35 @@ namespace LOFAR
     static_cast<DH_PPF*>(itsWH->getDataManager().getInHolder(0))->setTestPattern();
   }
 
-  void AH_PPF::run(int steps)
+  void AH_BGL_Processing::run(int steps)
   {
     for (int i = 0; i < steps; i ++) {
       itsWH->baseProcess();
     }
   }
 
-  void AH_PPF::dump() const
+  void AH_BGL_Processing::dump() const
   {
     itsWH->dump();
   }
 
-  void AH_PPF::postrun()
+  void AH_BGL_Processing::postrun()
   {
     // check result here
-    for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-      std::cerr << "Correlator " << corr << ":\n";
-      static_cast<DH_CorrCube*>(itsWH->getDataManager().getOutHolder(corr))->print();
-    }
+    static_cast<DH_Vis*>(itsWH->getDataManager().getOutHolder(0))->checkCorrelatorTestPattern();
   }
 
-  void AH_PPF::undefine()
+  void AH_BGL_Processing::undefine()
   {
     delete itsWH;
     delete itsInDH; 
     delete itsInConn;
     delete itsTH;
-
-    for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-      delete itsOutDHs[corr];
-      delete itsOutConns[corr];
-    }
+    delete itsOutDH;
+    delete itsOutConn;
   }
 
-  void AH_PPF::quit() {
+  void AH_BGL_Processing::quit() {
   }
 
 } // namespace LOFAR
@@ -114,7 +105,7 @@ using namespace LOFAR;
 int main (int argc, const char** argv)
 {
   try {
-    AH_PPF test;
+    AH_BGL_Processing test;
     test.setarg(argc, argv);
     test.baseDefine();
     test.basePrerun();
@@ -124,6 +115,9 @@ int main (int argc, const char** argv)
     test.baseQuit();
 
   } catch (LOFAR::Exception e) {
+    cerr << "Caught exception: " << e.what() << endl;
+    exit(1);
+  } catch (std::exception e) {
     cerr << "Caught exception: " << e.what() << endl;
     exit(1);
   } catch (...) {
