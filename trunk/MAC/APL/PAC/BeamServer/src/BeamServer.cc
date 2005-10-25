@@ -67,7 +67,7 @@ BeamServer::BeamServer(string name)
       m_beams_modified(false),
       m_sampling_frequency(160000000),
       m_nyquist_zone(1),
-      m_beams(MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS, AMC::EarthCoord(1.0,1.0,0.0)),
+      m_beams(MEPHeader::N_BEAMLETS, MEPHeader::N_SUBBANDS),
       m_converter("localhost")
 {
   registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_signalnames);

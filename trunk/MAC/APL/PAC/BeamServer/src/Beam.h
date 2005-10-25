@@ -59,9 +59,8 @@ namespace LOFAR {
        * key-value logger as nodeid.
        * @param subarrayname The name of the subarray on which this beam is defined.
        * @param nsubbands The number of subbands of this beam.
-       * @param pos The position of this beam on earth (the LOFAR station position).
        */
-      Beam(std::string name, std::string subarrayname, int nsubbands, AMC::EarthCoord pos);
+      Beam(std::string name, std::string subarrayname, int nsubbands);
 	
       /**
        * Default destructor.
@@ -239,11 +238,6 @@ namespace LOFAR {
        */
       CAL::AntennaGains m_gains;
 
-      /**
-       * Position of this beam on Earth.
-       */
-      AMC::EarthCoord m_pos;
-
     private:
       /**
        * Don't allow copying this object.
@@ -272,7 +266,7 @@ namespace LOFAR {
        * subbands are 0 <= subbands < nsubbands.
        * @param pos The position of the beams on earth (LOFAR station position).
        */
-      explicit Beams(int nbeamlets, int nsubbands, AMC::EarthCoord pos = AMC::EarthCoord(1.0,1.0,0.0));
+      explicit Beams(int nbeamlets, int nsubbands);
 
       /**
        * Create a new beam.
@@ -341,11 +335,6 @@ namespace LOFAR {
        * The maximum number of subbands.
        */
       int m_nsubbands;
-
-      /**
-       * Position of all beams on earth.
-       */
-      AMC::EarthCoord m_pos;
     };
 
   };

@@ -79,8 +79,7 @@ namespace LOFAR {
     BeamServerTest() :
       Test("BeamServerTest"),
       m_beams(TEST_N_BEAMLETS,
-	      MEPHeader::N_SUBBANDS,
-	      AMC::EarthCoord(1.0,1.0,0.0))
+	      MEPHeader::N_SUBBANDS)
     {
     }
 
