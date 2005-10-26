@@ -1,0 +1,20 @@
+#!/bin/sh
+# This script writes predicted data. 
+
+if [ "$#" != "1" ]; then
+ echo "run as:   run.WritePredData usernm "
+ exit 1
+fi
+
+usernm=$1
+
+\rm -rf /tmp/$USER.demo*
+cp -r /data/PSS3/diepen/BBS2/demo3.MS_p1 /tmp/$USER.demo
+cp -r /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
+cp -r /data/PSS3/diepen/BBS2/demo3_gsm.MEP_tPredict /tmp/$USER.demo_gsm.MEP
+
+./clearBB
+
+src/BBS3 ../../test/tWritePredData.input $usernm
+
+# /usr/local/mpich-1.2.5.2/bin/mpirun -machinefile myMachines -np 4  src/BBS3 ../../test/tWritePredData.input $usernm

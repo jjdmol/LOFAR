@@ -106,94 +106,105 @@ void WH_Prediff::process()
     Prediffer* pred = getPrediffer(contrID, args, ant, isNew);
     
     // Execute workorder
-    if (wo->getNewBaselines())
+    if (wo->getWritePredData())
     {
-      pred->select(ant, ant, wo->getUseAutoCorrelations(), corrs);
-      
-      vector<int> emptyS(0);
-      if (peelSrcs.size() > 0)
+      pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+		      wo->getStartTime(), wo->getTimeLength());
+      pred->writePredictedData(wo->getWriteInDataCol());
+    }
+    else
+    {
+      if (wo->getNewBaselines())
       {
-	pred->setPeelGroups(peelSrcs, emptyS);
-      }
-      pred->clearSolvableParms();
-      pred->setSolvableParms(pNames, exPNames, true);
-
-      int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-				 wo->getStartTime(), wo->getTimeLength());
-   
-      dhRes->setBufferSize(size);              // Set data field of output DH_Prediff to correct size
+	pred->select(ant, ant, wo->getUseAutoCorrelations(), corrs);
       
-      dhRes->setParmData(pred->getSolvableParmData());   
-    }
-    else if (wo->getNewDomain())
-    {
-      vector<int> emptyS(0);
-      if (peelSrcs.size() > 0)
-      {
-	pred->setPeelGroups(peelSrcs, emptyS);
+	vector<int> emptyS(0);
+	if (peelSrcs.size() > 0)
+	{
+	  pred->setPeelGroups(peelSrcs, emptyS);
+	}
+	pred->clearSolvableParms();
+	pred->setSolvableParms(pNames, exPNames, true);
+	
+	int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+				   wo->getStartTime(), wo->getTimeLength());
+	
+	dhRes->setBufferSize(size);              // Set data field of output DH_Prediff to correct size
+	
+	dhRes->setParmData(pred->getSolvableParmData());   
       }
-      pred->clearSolvableParms();
-      pred->setSolvableParms(pNames, exPNames, true);
+      else if (wo->getNewDomain())
+      {
+	vector<int> emptyS(0);
+	if (peelSrcs.size() > 0)
+	{
+	  pred->setPeelGroups(peelSrcs, emptyS);
+	}
+	pred->clearSolvableParms();
+	pred->setSolvableParms(pNames, exPNames, true);
       
-      int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-				 wo->getStartTime(), wo->getTimeLength());
-      dhRes->setBufferSize(size);      // Set data field of output DH_Prediff to correct size
+	int size = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+				   wo->getStartTime(), wo->getTimeLength());
+	dhRes->setBufferSize(size);      // Set data field of output DH_Prediff to correct size
       
-      dhRes->setParmData(pred->getSolvableParmData());
-    }
-    else if (wo->getNewPeelSources())
-    {
-      vector<int> emptyS(0);
-      if (peelSrcs.size() > 0)
+	dhRes->setParmData(pred->getSolvableParmData());
+      }
+      else if (wo->getNewPeelSources())
       {
-	pred->setPeelGroups(peelSrcs, emptyS);
+	vector<int> emptyS(0);
+	if (peelSrcs.size() > 0)
+	{
+	  pred->setPeelGroups(peelSrcs, emptyS);
+	}
+	pred->clearSolvableParms();
+	pred->setSolvableParms(pNames, exPNames, true);
       }
-      pred->clearSolvableParms();
-      pred->setSolvableParms(pNames, exPNames, true);
-    }
 
-    // Parameter update
-    if (wo->getUpdateParms())
-    {
-      BBSTest::ScopedTimer updatePTimer("P:update-parms");
-      int solID = wo->getSolutionID();
-      if (solID != -1)             // Read solution and update parameters
+      // Parameter update
+      if (wo->getUpdateParms())
       {
-	vector<ParmData> solVec;
-	readSolution(solID, solVec);
-	pred->updateSolvableParms(solVec);
+	BBSTest::ScopedTimer updatePTimer("P:update-parms");
+	int solID = wo->getSolutionID();
+	if (solID != -1)             // Read solution and update parameters
+	{
+	  vector<ParmData> solVec;
+	  readSolution(solID, solVec);
+	  pred->updateSolvableParms(solVec);
+	}
+	else
+	{                            // Reread parameter values from table
+	  pred->updateSolvableParms();
+	}
       }
-      else
-      {                            // Reread parameter values from table
-	pred->updateSolvableParms();
+
+      // Calculate, put in output dataholder buffer and send to solver
+      {
+	BBSTest::ScopedTimer predifTimer("P:prediffer");
+	dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
+	casa::LSQFit fitter;
+	pred->fillFitter (fitter);
+	Prediffer::marshall (fitter, dhRes->getDataBuffer(),
+			     dhRes->getBufferSize());
+	MeqDomain domain = pred->getDomain();
+	dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), 
+			 domain.endY());
+	// send result to solver
+	getDataManager().readyWithOutHolder(2);
       }
-    }
 
-    // Calculate, put in output dataholder buffer and send to solver
-    {
-      BBSTest::ScopedTimer predifTimer("P:prediffer");
-      dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
-      casa::LSQFit fitter;
-      pred->fillFitter (fitter);
-      Prediffer::marshall (fitter, dhRes->getDataBuffer(),
-			   dhRes->getBufferSize());
-      MeqDomain domain = pred->getDomain();
-      dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), 
-		       domain.endY());
-      // send result to solver
-      getDataManager().readyWithOutHolder(2);
-    }
+      if (wo->getSubtractSources())
+      {
+	pred->subtractPeelSources(true);   // >>>For now: always write in new file 
+      }
+      
+      if (wo->getCleanUp())   // If Prediffer (cache) is no longer needed: clean up  
+      {
+	itsPrediffs.erase(contrID);
+      }
 
-    if (wo->getSubtractSources())
-    {
-      pred->subtractPeelSources(true);   // >>>For now: always write in new file 
-    }
+    } // end else
 
-    if (wo->getCleanUp())   // If Prediffer (cache) is no longer needed: clean up  
-    {
-      itsPrediffs.erase(contrID);
-    }
-  }
+  } // end if (wo->getDoNothing==false)
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);

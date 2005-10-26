@@ -51,6 +51,8 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsNewDomain       (0),
     itsNewPeelSources  (0),
     itsSubtractSources (0),
+    itsWritePredData   (0),
+    itsWriteInDataCol  (0),
     itsStartFreq       (0),
     itsFreqLength      (0),
     itsStartTime       (0),
@@ -78,6 +80,8 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsNewDomain       (0),
     itsNewPeelSources  (0),
     itsSubtractSources (0),
+    itsWritePredData   (0),
+    itsWriteInDataCol  (0),
     itsStartFreq       (0),
     itsFreqLength      (0),
     itsStartTime       (0),
@@ -129,6 +133,8 @@ void DH_WOPrediff::init()
   addField ("NewDomain", BlobField<unsigned int>(1));
   addField ("NewPeelSources", BlobField<unsigned int>(1));
   addField ("SubtractSources", BlobField<unsigned int>(1));
+  addField ("WritePredData", BlobField<unsigned int>(1));
+  addField ("WriteInDataCol", BlobField<unsigned int>(1));
   addField ("StartFreq", BlobField<double>(1));
   addField ("FreqLength", BlobField<double>(1));
   addField ("StartTime", BlobField<double>(1));
@@ -161,6 +167,8 @@ void DH_WOPrediff::init()
   *itsNewDomain = 0;
   *itsNewPeelSources = 0;
   *itsSubtractSources = 0;
+  *itsWritePredData = 0;
+  *itsWriteInDataCol = 0;
   *itsStartFreq = 0;
   *itsFreqLength = 0;
   *itsStartTime = 0;
@@ -184,6 +192,8 @@ void DH_WOPrediff::fillDataPointers()
   itsNewDomain = getData<unsigned int> ("NewDomain");
   itsNewPeelSources = getData<unsigned int> ("NewPeelSources");
   itsSubtractSources = getData<unsigned int> ("SubtractSources");
+  itsWritePredData = getData<unsigned int> ("WritePredData");
+  itsWriteInDataCol = getData<unsigned int> ("WriteInDataCol");
   itsStartFreq = getData<double> ("StartFreq");
   itsFreqLength = getData<double> ("FreqLength");
   itsStartTime = getData<double> ("StartTime");
@@ -381,6 +391,8 @@ void DH_WOPrediff::dump()
   cout << "New domain? = " << getNewDomain() << endl;
   cout << "New peel sources? = " << getNewPeelSources() << endl;
   cout << "Subtract peel sources? = " << getSubtractSources() << endl;
+  cout << "Write predicted data? = " << getWritePredData() << endl;
+  cout << "Write in DATA column? = " << getWriteInDataCol() << endl;
   cout << "Start frequency = " << getStartFreq() << endl;
   cout << "Frequency length = " << getFreqLength() << endl;
   cout << "Start time = " << getStartTime() << endl;
@@ -463,7 +475,9 @@ void DH_WOPrediff::clearData()
   setNewBaselines(true);
   setNewDomain(true);
   setNewPeelSources(true);
-  setSubtractSources(true);
+  setSubtractSources(false);
+  setWritePredData(false);
+  setWriteInDataCol(false);
   setStartFreq(0);
   setFreqLength(0);
   setStartTime(0);
@@ -490,6 +504,8 @@ void DBRep<DH_WOPrediff>::bindCols (dtl::BoundIOs& cols)
   cols["NEWDOMAIN"] == itsNewDomain;
   cols["NEWSOURCES"] == itsNewPeelSources;
   cols["SUBTRACTSOURCES"] == itsSubtractSources;
+  cols["WRITEPREDDATA"] == itsWritePredData;
+  cols["WRITEINDATACOL"] == itsWriteInDataCol;
   cols["STARTFREQ"] == itsStartFreq;
   cols["FREQLENGTH"] == itsFreqLength;
   cols["STARTTIME"] == itsStartTime;
@@ -511,6 +527,8 @@ void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
   itsNewDomain = obj.getNewDomain();
   itsNewPeelSources = obj.getNewPeelSources();
   itsSubtractSources = obj.getSubtractSources();
+  itsWritePredData = obj.getWritePredData();
+  itsWriteInDataCol = obj.getWriteInDataCol();
   itsStartFreq = obj.getStartFreq();
   itsFreqLength = obj.getFreqLength();
   itsStartTime = obj.getStartTime();

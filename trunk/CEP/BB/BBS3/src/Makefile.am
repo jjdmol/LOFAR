@@ -10,6 +10,7 @@ WH_Solve.h					\
 BlackBoardDemo.h                                \
 Quality.h                                       \
 SC_Simple.h					\
+SC_WritePredData.h				\
 MMap.h						\
 FlagsMap.h					\
 Prediffer.h					\
@@ -85,6 +86,7 @@ WH_Solve.cc						\
 BlackBoardDemo.cc                                       \
 Quality.cc                                              \
 SC_Simple.cc						\
+SC_WritePredData.cc					\
 MMap.cc							\
 FlagsMap.cc						\
 Prediffer.cc						\
