@@ -29,6 +29,7 @@
 #include <tables/Tables/IncrementalStMan.h>
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/TiledColumnStMan.h>
+#include <tables/Tables/TiledStManAccessor.h> 
 //# include <tables/Tables/TiledShapeStMan.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableDesc.h>
@@ -556,8 +557,8 @@ void MSWriterImpl::updateTimes()
 }
 
 void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId, 
-			  int timeCounter, int nrdata, const fcomplex* data, 
-			  const bool* flags)
+			  int nrChannels, int timeCounter, int nrdata, 
+			  const fcomplex* data, const bool* flags)
 {
   ASSERT(bandId >= 0  &&  bandId < itsNrBand);
   ASSERT(fieldId >= 0  &&  fieldId < itsNrField);
@@ -568,9 +569,9 @@ void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId,
   // Find the shape of the data array in each table row.
   IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);
   Int nrel = shape[0];       // == number of polarisations/correlations
-  ASSERTSTR (nrdata == nrel*itsNrAnt*(itsNrAnt+1)/2, 
+  ASSERTSTR (nrdata == nrel*nrChannels*itsNrAnt*(itsNrAnt+1)/2, 
 	     "incorrect nr of data points for this band; should be " +  
-	     String::toString(nrel*itsNrAnt*(itsNrAnt+1)/2));
+	     String::toString(nrel*nrChannels*itsNrAnt*(itsNrAnt+1)/2));
   Array<Bool> defFlags(shape);
 
   int nrbasel = itsNrAnt*(itsNrAnt+1)/2;
@@ -579,6 +580,15 @@ void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId,
     // Add the number of rows needed.
     rowNr = itsMS->nrow();
     itsMS->addRow (nrbasel);
+
+    // If first time, set the cache size for the tiled data and flags.
+    ROTiledStManAccessor accData(*itsMS, "TiledData");
+    accData.setCacheSize (0, itsNrAnt*(itsNrAnt+1)/2);
+    ////    accData.setCacheSize (0, 1);
+    ROTiledStManAccessor accFlag(*itsMS, "TiledFlag");
+    accFlag.setCacheSize (0, itsNrAnt*(itsNrAnt+1)/2);
+    ////    accFlag.setCacheSize (0, 1);
+
     defFlags = False;
     Array<Float> sigma(IPosition(1, shape(0)));
     sigma = 0;
@@ -634,18 +644,18 @@ void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId,
     }
   } // End if (rowNr < 0)
 
-  IPosition dShape(2, shape[0], 1);   // Shape of data field
+  IPosition dShape(2, shape[0], nrChannels);   // Shape of data field
   int rowNumber = rowNr;
   for (int i=0; i<itsNrAnt; i++) {
     for (int j=0; j<=i; j++) {
       try
       {
-	// Write all polarisations of this channel for each baseline.
-	// The input data array has shape nrpol,nrant,nrant.
+	// Write all polarisations and nrChannels for each baseline.
+	// The input data array has shape nrant,nrant,nchan(subs),npol.
 	// So we can form an AIPS++ array for each baseline.
 	Array<Complex> array(dShape, (Complex*)data, SHARE);
 	IPosition start(2, 0, channelId);
-	IPosition leng(2, shape[0], 1);
+	IPosition leng(2, shape[0], nrChannels);
 	itsMSCol->data().putSlice(rowNumber, Slicer(start, leng), array);
       }
       catch (AipsError& e)
@@ -656,12 +666,12 @@ void MSWriterImpl::write (int& rowNr, int bandId, int fieldId, int channelId,
 	itsMSCol->flag().put(rowNumber, defFlags);
       } else {
 	Array<Bool> flagArray(dShape, const_cast<Bool*>(flags), SHARE);
-	IPosition start(2, 0, channelId);
-	IPosition leng(2, shape[0], 1);
+	IPosition start(2, 0, channelId);   // Start position
+	IPosition leng(2, shape[0], nrChannels);     // Length: ncorr, nchan
 	itsMSCol->flag().putSlice(rowNumber, Slicer(start, leng), flagArray);
       }
       rowNumber++;
-      data += nrel;  // Go to next baseline data
+      data += nrel*nrChannels;  // Go to next baseline data
       if (flags != 0) {
 	flags += nrel;
       }

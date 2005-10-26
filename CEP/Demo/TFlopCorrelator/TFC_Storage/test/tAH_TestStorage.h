@@ -53,6 +53,7 @@ namespace LOFAR
     Connection* itsInCon2;
     int itsNStations;
     int itsNChannels;
+    int itsNVis;
   };
 } // namespace LOFAR
 

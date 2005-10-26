@@ -91,7 +91,7 @@ public:
   // If rowNr is -1, new subband rows will be added to the MS and the
   // new first row number is returned.
   void write (int& rowNr, int bandId, int fieldId, int channelId, 
-	      int timeCounter, int nrdata,
+	      int nrChannels, int timeCounter, int nrdata,
 	      const fcomplex* data, const bool* flags);
 
   // Get the number of antennas.
