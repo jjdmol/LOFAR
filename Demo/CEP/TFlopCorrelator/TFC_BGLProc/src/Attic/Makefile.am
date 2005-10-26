@@ -16,7 +16,7 @@ noinst_HEADERS 		= $(NOINSTHDRS)
 
 DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
-bin_PROGRAMS 		= 
+bin_PROGRAMS 		= TFC_BGLProcessing 
 
 CCAS			= gcc
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) -B/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/
@@ -29,8 +29,7 @@ AH_BGLProcessing.cc		\
 WH_Distribute.cc		\
 WH_PPF.cc			\
 WH_Correlator.cc		\
-WH_Concentrator.cc		\
-WH_BGL_Processing.cc
+WH_Concentrator.cc		
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\
