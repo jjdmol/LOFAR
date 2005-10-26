@@ -106,7 +106,7 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
     // Create the Workholders and Steps
     pdID = i2string(pdNo);
 
-    WH_Prediff predWH("Prediff"+pdID, pdNo);
+    WH_Prediff predWH("Prediff"+pdID, pdID);
 
     int index = pdNo - 1;
     itsPDSteps[index] = new Step(predWH, "prediffer"+pdID);

@@ -52,9 +52,9 @@ void readMSTimes(const string& fileName, double& startTime, double& endTime,
 		 double& interval)
 {
   // Get meta data from description file.
-  string name(fileName+"/vis.des");
+  string name(fileName+".des");
   std::ifstream istr(name.c_str());
-  ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
+  ASSERTSTR (istr, "File " << fileName << ".des could not be opened");
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
   bis.getStart("ms.des");

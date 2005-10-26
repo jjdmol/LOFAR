@@ -37,7 +37,7 @@
 namespace LOFAR
 {
 
-WH_Prediff::WH_Prediff(const string& name, int id)
+WH_Prediff::WH_Prediff(const string& name, const string& id)
   : WorkHolder   (2, 3, name, "WH_Prediff"),
     itsID        (id),
     itsFirstCall (true)
@@ -241,7 +241,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
 
     string modelType = args.getString("modelType");
     bool calcUVW = args.getBool("calcUVW");
-    string msName = args.getString("MSName");
+    string msName = args.getString("MSName")+ "_p" + itsID;
 
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
