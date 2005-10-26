@@ -100,6 +100,12 @@ public:
   bool getSubtractSources() const;
   void setSubtractSources(bool subtract);
 
+  bool getWritePredData() const;
+  void setWritePredData(bool write);
+
+  bool getWriteInDataCol() const;
+  void setWriteInDataCol(bool write);
+
   double getStartFreq() const;
   void setStartFreq(double fr);
 
@@ -165,6 +171,8 @@ private:
   unsigned int* itsNewDomain;               // New domain selection?
   unsigned int* itsNewPeelSources;          // New peel sources selection?
   unsigned int* itsSubtractSources;         // Subtract peel sources?
+  unsigned int* itsWritePredData;           // Write predicted data?
+  unsigned int* itsWriteInDataCol;          // Write predicted data in DATA column?
   double*       itsStartFreq;               // Start frequency
   double*       itsFreqLength;              // Frequency interval size
   double*       itsStartTime;               // Start time of time interval
@@ -234,6 +242,18 @@ inline bool DH_WOPrediff::getSubtractSources() const
 
 inline void DH_WOPrediff::setSubtractSources(bool subtract)
 { *itsSubtractSources = subtract; }
+
+inline bool DH_WOPrediff::getWritePredData() const
+{ return ((*itsWritePredData==0)?(false):(true)); }
+
+inline void DH_WOPrediff::setWritePredData(bool write)
+{ *itsWritePredData = write; }
+
+inline bool DH_WOPrediff::getWriteInDataCol() const
+{ return ((*itsWriteInDataCol==0)?(false):(true)); }
+
+inline void DH_WOPrediff::setWriteInDataCol(bool write)
+{ *itsWriteInDataCol = write; }
 
 inline double DH_WOPrediff::getStartFreq() const
 { return *itsStartFreq; }
@@ -308,6 +328,8 @@ namespace PL {
       unsigned int itsNewDomain;
       unsigned int itsNewPeelSources;
       unsigned int itsSubtractSources;
+      unsigned int itsWritePredData;
+      unsigned int itsWriteInDataCol;
       double       itsStartFreq;
       double       itsFreqLength;
       double       itsStartTime;

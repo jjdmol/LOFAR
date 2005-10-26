@@ -33,6 +33,7 @@
 #include <BBS3/DH_WOPrediff.h>
 #include <BBS3/DH_WOSolve.h>
 #include <BBS3/SC_Simple.h>
+#include <BBS3/SC_WritePredData.h>
 #include <BBS3/StrategyController.h>
 #include <BBS3/BBSTestLogger.h>
 
@@ -166,6 +167,11 @@ void WH_Control::createStrategyControllers()
     {
       SC_Simple* sc = new SC_Simple(i, inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
       itsControllers.push_back(sc);                           // must get an unique ID
+    }
+    else if (stratType == "WritePredData")
+    {
+      SC_WritePredData* sc = new SC_WritePredData(i, inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
+      itsControllers.push_back(sc);                           // must get an unique ID      
     }
     else
     {
