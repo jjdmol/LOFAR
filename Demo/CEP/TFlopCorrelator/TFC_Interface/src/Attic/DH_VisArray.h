@@ -85,7 +85,7 @@ inline DH_VisArray::BufferType* DH_VisArray::getBuffer()
 inline DH_VisArray::BufferType* DH_VisArray::getBufferElement(short vis)
   {
     DBGASSERTSTR(vis < itsNVis, "DH_VisArray::getBufferElement: trying to get vis with index >= itsNVis");
-    return (itsBuffer + vis * sizeof(DH_Vis::BufferType));
+    return (itsBuffer + vis * sizeof(DH_Vis::BufferType)/sizeof(fcomplex));
   }
 
 inline const DH_VisArray::BufferType* DH_VisArray::getBuffer() const 
