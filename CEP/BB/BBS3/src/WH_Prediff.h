@@ -49,7 +49,7 @@ class WH_Prediff : public LOFAR::WorkHolder
 {
  public:
   // Construct the workholder and give it a name
-  explicit WH_Prediff(const string& name, int id);
+  explicit WH_Prediff(const string& name, const string& id);
   
   // Destructor
   virtual ~WH_Prediff();
@@ -89,7 +89,7 @@ class WH_Prediff : public LOFAR::WorkHolder
   // Read a parameter solution
   void readSolution(int id, vector<ParmData>& solVec);
 
-  int          itsID;         // Identification number
+  string       itsID;         // Identification number
   ParameterSet itsArgs;       // Arguments
   PrediffMap   itsPrediffs;   // Map of Prediffer objects, each associated
   // with a strategy (controller)
