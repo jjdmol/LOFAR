@@ -92,7 +92,7 @@ public:
   // <br>The number of data points (nrdata) given should match the
   // number of antennas, bands, and polarizations for this bandId.
   void write (int& rowNr, int bandId, int fieldId, int channelId, 
-	      int timeCounter, int nrdata,
+	      int nrChannels, int timeCounter, int nrdata,
 	      const fcomplex* data, const bool* flags = 0);
 
   // Get the number of antennas.

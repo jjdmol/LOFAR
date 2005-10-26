@@ -55,6 +55,8 @@ WH_Storage::WH_Storage(const string& name,
 #endif
   itsNstations = itsPS.getInt32("PPF.NrStations");
   itsNChannels = itsPS.getInt32("PPF.NrSubChannels");
+  itsNCorrPerFilt = itsPS.getInt32("PPF.NrCorrelatorsPerFilter");
+  itsNChanPerVis = itsNChannels/itsNCorrPerFilt;
   int pols = itsPS.getInt32("Input.NPolarisations");
   itsNpolSquared = pols*pols;
 
@@ -141,20 +143,21 @@ void WH_Storage::process()
   for (int i=0; i<itsNinputs; i++)   // Loop over subbands/inputs
   {
     inputDH = (DH_VisArray*)getDataManager().getInHolder(i);
+
     int rownr = -1;           // Set rownr -1 when new rows need to be added
                               // when writing a new subband
-    int dataSize = (inputDH->getBufSize())/itsNChannels;
+    int dataSize = (inputDH->getBufSize())/(inputDH->getNumVis());
     
-    for (uint ch=0; ch < itsNChannels; ch++)  // Loop over frequency channels
+    for (uint v=0; v < inputDH->getNumVis(); v++)  // Loop over "DH_Vis"s
     {
 	// Check if channel frequency is ascending. 
-	if (ch > 0) {	
-	  DBGASSERT(inputDH->getCenterFreq(ch) > inputDH->getCenterFreq(ch-1)); 
+	if (v > 0) {	
+	  //	  DBGASSERT(inputDH->getCenterFreq(v) > inputDH->getCenterFreq(v-1)); 
 	}
-	// Write 1 frequency
-	itsWriter->write (rownr, itsBandIds[i], itsFieldId, ch, 
+	// Write 1 DH_Vis size fcomplex[nbaselines][nChannelsPerVis][npol][npol]
+	itsWriter->write (rownr, itsBandIds[i], itsFieldId, v*itsNChanPerVis, itsNChanPerVis,
 			  itsCounter, dataSize,
-			  inputDH->getBufferElement(ch, 0,0,0));   // To do: add flags
+			  inputDH->getBufferElement(v));   // To do: add flags
     }
   }
 

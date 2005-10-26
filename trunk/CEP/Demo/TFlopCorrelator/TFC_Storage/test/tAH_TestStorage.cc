@@ -41,7 +41,8 @@ namespace LOFAR
     itsInCon1(0),
     itsInCon2(0),
     itsNStations(0),
-    itsNChannels(0)
+    itsNChannels(0),
+    itsNVis     (0)
   {
   }
 
@@ -58,9 +59,11 @@ namespace LOFAR
     myPset.add("Storage.WriteToMAC", "F");
     myPset.add("Storage.MSName", "TestPattern.MS");
     myPset.add("Storage.refFreqs", "[1.0e8, 2.0e8]");
-    myPset.add("PPF.NrSubChannels", "6");
-    itsNChannels = 6;
-    myPset.add("Storage.NVisPerInput", "6");
+    myPset.add("PPF.NrSubChannels", "16");
+    myPset.add("PPF.NrCorrelatorsPerFilter", "4");
+    itsNChannels = 16;
+    itsNVis = 4;
+    myPset.add("Storage.NVisPerInput", "4");
     myPset.add("Storage.chanWidth", "1.0e8");
     myPset.add("Storage.startTime", "123");
     myPset.add("Storage.timeStep", "1");
@@ -81,13 +84,13 @@ namespace LOFAR
 			       itsWH->getDataManager().getInHolder(0), 
 			       new TH_Mem(), 
 			       false);
-    itsWH->getDataManager().setInConnection(0, itsInCon1);
+   itsWH->getDataManager().setInConnection(0, itsInCon1);
     itsInCon2 = new Connection("in2", 
 			       itsInDH2, 
 			       itsWH->getDataManager().getInHolder(1), 
 			       new TH_Mem(), 
 			       false);
-    itsWH->getDataManager().setInConnection(1, itsInCon2);
+   itsWH->getDataManager().setInConnection(1, itsInCon2);
 
   }
 
@@ -99,40 +102,49 @@ namespace LOFAR
 
     // Fill DH1
     DH_VisArray* dh1Ptr = (DH_VisArray*)itsInDH1;
-    for (int ch=0; ch<itsNChannels; ch++)
+
+    int nChanPerVis = itsNChannels/itsNVis;
+
+    for (int v=0; v<itsNVis; v++)
     {
-      fcomplex* dataPtr = dh1Ptr->getBufferElement(ch, 0,0,0);
+      fcomplex* dataPtr = dh1Ptr->getBufferElement(v);
       for (int st1=0; st1<itsNStations; st1++)
       {
 	for (int st2=0; st2<=st1; st2++)
 	{
-	  dataPtr[0] = makefcomplex(st1, ch+100);
-	  dataPtr[1] = makefcomplex(st1+10, ch+100);
-	  dataPtr[2] = makefcomplex(st2, ch+100);
-	  dataPtr[3] = makefcomplex(st2+10, ch+100);
-	  dataPtr += 4;
+	  for (int ch=0; ch<nChanPerVis; ch++)
+	  {
+	    dataPtr[0] = makefcomplex(st1, v*nChanPerVis+ch+100);
+	    dataPtr[1] = makefcomplex(st1+10, v*nChanPerVis+ch+100);
+	    dataPtr[2] = makefcomplex(st2, v*nChanPerVis+ch+100);
+	    dataPtr[3] = makefcomplex(st2+10, v*nChanPerVis+ch+100);
+	    dataPtr += 4;
+	  }
 	}
       }
-      dh1Ptr->setCenterFreq(ch*1.0e07+1.0e08, ch);
+      dh1Ptr->setCenterFreq(v*1.0e07+1.0e08, v);
     }
     
     // Fill DH2
     DH_VisArray* dh2Ptr = (DH_VisArray*)itsInDH2;
-    for (int ch=0; ch<itsNChannels; ch++)
+    for (int v=0; v<itsNVis; v++)
     {
-      fcomplex* dataPtr = dh2Ptr->getBufferElement(ch, 0,0,0);
+      fcomplex* dataPtr = dh2Ptr->getBufferElement(v);
       for (int st1=0; st1<itsNStations; st1++)
       {
 	for (int st2=0; st2<=st1; st2++)
 	{
-	  dataPtr[0] = makefcomplex(st1, ch+200);
-	  dataPtr[1] = makefcomplex(st1+10, ch+200);
-	  dataPtr[2] = makefcomplex(st2, ch+200);
-	  dataPtr[3] = makefcomplex(st2+10, ch+200);
-	  dataPtr += 4;
+	  for (int ch=0; ch<nChanPerVis; ch++)
+	  {
+	    dataPtr[0] = makefcomplex(st1, v*nChanPerVis+ch+200);
+	    dataPtr[1] = makefcomplex(st1+10, v*nChanPerVis+ch+200);
+	    dataPtr[2] = makefcomplex(st2, v*nChanPerVis+ch+200);
+	    dataPtr[3] = makefcomplex(st2+10, v*nChanPerVis+ch+200);
+	    dataPtr += 4;
+	  }
 	}
       }
-      dh2Ptr->setCenterFreq(ch*1.0e07+2.0e08, ch);
+      dh2Ptr->setCenterFreq(v*1.0e07+2.0e08, v);
     }
   }
 
@@ -140,7 +152,8 @@ namespace LOFAR
 
     for (int i = 0; i < nsteps; i++) {
       itsInCon1->write();
-      itsInCon2->write();      
+      itsInCon2->write(); 
+      
       itsWH->baseProcess();
     }    
   }
