@@ -29,7 +29,7 @@
 a_root=. #filled in by install
 
 # First strip the current LOFARROOT from PATH and LD_LIBRARY_PATH
-# Take care that a possible . is preceeded by a backslash.
+# Take care that a possible . is preceeded by a backslash (for the later sed).
 if [ "$LOFARROOT" != "" ]; then
     a_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
     a_bin="$a_path/bin"
@@ -40,14 +40,16 @@ if [ "$LOFARROOT" != "" ]; then
     export LD_LIBRARY_PATH
 fi
 
-# Now define the new LOFARROOT
-if [ ! -d $a_root ]; then
-    echo "LOFAR root directory $a_root does not exist"
+# Now define the new LOFARROOT (if possible)
+# Do it only if the bin directory exists.
+a_nroot=`cd $a_root > /dev/null; pwd`      # make path absolute
+if [ "$a_nroot" = ""  -o  ! -d $a_nroot/bin ]; then
+    echo "LOFAR root directory $a_nroot/bin does not exist; keeping old LOFARROOT $LOFARROOT"
 else
-    LOFARROOT=`cd $a_root > /dev/null; pwd`      # make path absolute
+    LOFARROOT=$a_nroot
     export LOFARROOT
 
-    # Also strip root from the current paths (in case it is contained in it).
+    # Also strip root from the current paths (in case it is contained).
     a_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
     a_bin="$a_path/bin"
     PATH=`echo $PATH | sed -e "s%:$a_bin:%:%g" -e "s%^$a_bin:%%"  -e "s%:$a_bin$%%" -e "s%^$a_bin$%%"`
@@ -55,7 +57,12 @@ else
     a_lib="$a_path/lib"
     LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$a_lib:%:%g" -e "s%^$a_lib:%%"  -e "s%:$a_lib$%%" -e "s%^$a_lib$%%"`
     export LD_LIBRARY_PATH
+fi
 
+# Add to the paths if the bin directory exsists.
+if [ "$LOFARROOT" = ""  -o  ! -d $LOFARROOT/bin ]; then
+    echo "No LOFARROOT defined"
+else
     # Add the path to the standard paths.
     if [ "$PATH" = "" ]; then
         PATH=$LOFARROOT/bin
@@ -69,12 +76,19 @@ else
         LD_LIBRARY_PATH=$LOFARROOT/lib:$LD_LIBRARY_PATH
     fi
     export LD_LIBRARY_PATH
+fi
 
-    # Now define the new LOFARDATAROOT
-    data_path=`echo $LOFARROOT | sed -e 's/\/installed.*$//'`
+# Now define the new LOFARDATAROOT (if possible).
+# First try as data directory of the LOFAR install directory.
+data_path=`echo $LOFARROOT | sed -e 's%/installed.*%%'`
+if [ "$data_path" != ""  -a  -d $data_path/data ]; then
     LOFARDATAROOT=$data_path/data
-    if [ ! -d $LOFARDATAROOT ]; then
-       mkdir -p $LOFARDATAROOT
-    fi
     export LOFARDATAROOT
+else
+    # Try it as the LOFARDATA directory (part of the source tree).
+    data_path=`echo $LOFARROOT | sed -e 's%/LOFAR/.*%/LOFAR%'`
+    if [ "$data_path" != ""  -a  -d ${data_path}DATA ]; then
+        LOFARDATAROOT=${data_path}DATA
+        export LOFARDATAROOT
+    fi
 fi
