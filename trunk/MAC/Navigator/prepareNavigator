@@ -14,6 +14,8 @@ echo -n "Importing CaptureStats specific DPT's..."
 PVSS00ascii -in dplist/nav_usr/STS/PIC_CaptureStats.dpl -currentproj; echo "(done)"
 echo -n "Importing STSLCU specific DP's..."
 PVSS00ascii -in dplist/nav_usr/STS/STSLCU_PIC_database.dpl -currentproj; echo "(done)"
+echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
+PVSS00ascii -in dplist/nav_usr/STS/STS_Default_panelview.dpl -currentproj; echo "(done)"
 PVSS00pmon -currentproj -stopWait
 
 echo "PVSS00NG         |   once |      30 |        3 |        1 |" >> config/progs
