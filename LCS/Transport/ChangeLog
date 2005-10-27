@@ -1,3 +1,133 @@
+2005-08-16 12:40  zwart
+
+	* src/: TH_Socket.cc, TH_Socket.h: BugID: 272
+
+	  Added argument to constructor that determines if the socket is
+	  made in the constructor.  MPI-CEPFrame applications can use this
+	  argument to postpone the creation of the socket until
+	  TH_Socket::init() is called.
+
+2005-08-01 11:48  zwart
+
+	* test/ExampleEthernet.cc: BugID: 238
+
+	  Included an empty main. Now ExampleEthernet compiles for fakebgl
+
+2005-08-01 11:46  zwart
+
+	* test/ExampleEthernet.cc: BugID: 238
+
+	  Disabled raw ethernet test on BGL
+
+2005-07-28 11:27  diepen
+
+	* src/: DataHolder.cc, DataHolder.h: BugID: 147 Removed implicit
+	  call to createDataBlock; use DBGASSERT where applicable
+
+2005-07-25 15:04  zwart
+
+	* test/: DH_Ethernet.cc, DH_Ethernet.h, ExampleEthernet.cc,
+	  Makefile.am: BugID: 195
+
+	  Ported ExampleEthernet to the new libTransport
+
+2005-07-25 14:00  diepen
+
+	* src/DataHolder.cc: BugID: 147 Also test of itsData in
+	  resizeBuffer
+
+2005-07-22 11:42  diepen
+
+	* src/: DataHolder.cc, DataHolder.h: BugID: 147 Improved by calling
+	  createDataBlock if not done yet
+
+2005-07-22 11:30  diepen
+
+	* src/DataHolder.cc: BugID: 147 Assert that itsData is set
+
+2005-07-05 15:37  loose
+
+	* src/TH_Socket.cc: %[PR: 174]%
+
+	  Added assertion for OK status of data socket in the TH_Socket
+	  constructor.	Otherwise, we might erroneously assume that socket
+	  creation was successful.
+
+2005-07-05 15:32  loose
+
+	* test/ExampleSocket.run: %[PR: 174]%
+
+	  Run script now correctly returns a non-zero return status.
+
+2005-06-27 15:50  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Merged changes on LCS-Transport-2_0-release-branch with main
+	  development line.
+
+2005-06-27 15:45  loose
+
+	* src/Makefile.am: %[PR: 173]%
+
+	  Moved CyclicBuffer stuff to CEP/CEPFrame, because it uses
+	  threads.
+
+2005-06-24 17:21  loose
+
+	* src/: CyclicBuffer.h, Lock.h: %[PR: 173]%
+
+	  Re-added CyclicBufferTest to CEP/CEPFrame. Solved the dead-lock;
+	  it turns out it probably is a bug in the NPTL, not in our code.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
+2005-06-24 11:57  loose
+
+	* configure.in: %[ER: 0]%
+
+	  Prepare for release 2.0 Fixed incorrect usage of lofar_INTERNAL
+	  macro.
+
+2005-06-23 16:01  loose
+
+	* INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-23 15:11  loose
+
+	* src/: CyclicBuffer.cc, CyclicBuffer.h, Lock.h, Makefile.am: %[ER:
+	  0]%
+
+	  Preparation for release 2.0.	Moved CyclicBuffer stuff to
+	  CEP/CEPFrame, because it uses threads.
+
+2005-06-17 17:24  loose
+
+	* AUTHORS, COPYING, ChangeLog, NEWS, README: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 16:46  meijeren
+
+	* NEWS, README: %[ER: 0]% Added some more info.
+
+2005-06-17 14:33  loose
+
+	* AUTHORS, INSTALL: %[ER: 0]%
+
+	  Prepare for release 2.0
+
+2005-06-17 12:23  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+
+	  Prepare for release 2.0
+
 2005-06-15 13:57  overeem
 
 	* test/ExampleSocket.cc: %[ER:231]% Deleting Listener Socket after
