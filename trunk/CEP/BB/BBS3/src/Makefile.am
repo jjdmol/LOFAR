@@ -3,6 +3,7 @@ DH_Solution.h                                   \
 DH_WOSolve.h					\
 DH_WOPrediff.h					\
 DH_Prediff.h					\
+DH_ParmSol.h					\
 StrategyController.h				\
 WH_Control.h                                    \
 WH_Prediff.h					\
@@ -79,6 +80,7 @@ DH_Solution.cc                                          \
 DH_WOSolve.cc						\
 DH_WOPrediff.cc						\
 DH_Prediff.cc						\
+DH_ParmSol.cc						\
 StrategyController.cc					\
 WH_Control.cc                                           \
 WH_Prediff.cc						\

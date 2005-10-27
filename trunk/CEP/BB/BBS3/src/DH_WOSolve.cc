@@ -43,6 +43,7 @@ DH_WOSolve::DH_WOSolve (const string& name)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
+    itsIteration       (0),
     itsDoNothing       (0),
     itsNewDomain       (0),
     itsUseSVD          (0),
@@ -59,6 +60,7 @@ DH_WOSolve::DH_WOSolve(const DH_WOSolve& that)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
+    itsIteration       (0),
     itsDoNothing       (0),
     itsNewDomain       (0),
     itsUseSVD          (0),
@@ -99,6 +101,7 @@ void DH_WOSolve::init()
   addField ("SCID", BlobField<int>(1));
   addField ("Status", BlobField<unsigned int>(1));
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
+  addField ("Iteration", BlobField<int>(1));
   addField ("DoNothing", BlobField<unsigned int>(1));
   addField ("NewDomain", BlobField<unsigned int>(1));
   addField ("UseSVD", BlobField<unsigned int>(1));
@@ -115,6 +118,7 @@ void DH_WOSolve::init()
   *itsWOID = 0;
   *itsSCID = -1;
   *itsStatus = DH_WOSolve::New;
+  *itsIteration = -1;
   *itsDoNothing = 0;
   *itsNewDomain = 0;
   *itsUseSVD = 0;
@@ -128,6 +132,7 @@ void DH_WOSolve::fillDataPointers()
   itsSCID = getData<int> ("SCID");
   itsStatus = getData<unsigned int> ("Status");
   itsKSType = getData<char> ("KSType");
+  itsIteration = getData<int> ("Iteration");
   itsDoNothing = getData<unsigned int> ("DoNothing");  
   itsNewDomain = getData<unsigned int> ("NewDomain");
   itsUseSVD = getData<unsigned int> ("UseSVD");
@@ -149,6 +154,7 @@ void DH_WOSolve::dump()
   cout << "Controller ID = " << getStrategyControllerID() << endl;
   cout << "Status = " << getStatus() << endl;
   cout << "KS Type = " << getKSType() << endl;
+  cout << "Iteration number = " << getIteration() << endl;
   cout << "Do nothing? = " << getDoNothing() << endl;
   cout << "NewDomain? = " << getNewDomain() << endl;
   cout << "UseSVD? = " << getUseSVD() << endl;
@@ -162,6 +168,7 @@ void DH_WOSolve::clearData()
   setStrategyControllerID(-1);
   setStatus(DH_WOSolve::New);
   setKSType("");
+  setIteration(-1);
   setDoNothing(false);
   setNewDomain(true);
   setUseSVD(false);
@@ -177,6 +184,7 @@ void DBRep<DH_WOSolve>::bindCols (dtl::BoundIOs& cols)
   cols["SCID"] == itsSCID;
   cols["STATUS"] == itsStatus;
   cols["KSTYPE"] == itsKSType;
+  cols["ITERATION"] == itsIteration;
   cols["DONOTHING"] == itsDoNothing;
   cols["NEWDOMAIN"] == itsNewDomain;
   cols["USESVD"] == itsUseSVD;
@@ -190,6 +198,7 @@ void DBRep<DH_WOSolve>::toDBRep (const DH_WOSolve& obj)
   itsSCID = obj.getStrategyControllerID();
   itsStatus = obj.getStatus();
   itsKSType = obj.getKSType();
+  itsIteration = obj.getIteration();
   itsDoNothing = obj.getDoNothing();
   itsNewDomain = obj.getNewDomain();
   itsUseSVD = obj.getUseSVD();

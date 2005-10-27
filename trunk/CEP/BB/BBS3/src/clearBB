@@ -51,6 +51,7 @@ echo " " > sql_create
 echo " DROP TABLE bbs3solutions;" >> sql_create
 echo " DROP TABLE bbs3woprediffer;" >> sql_create
 echo " DROP TABLE bbs3wosolver;" >> sql_create
+echo " DROP TABLE bbs3parmsolutions;" >> sql_create
 echo " CREATE TABLE bbs3woprediffer (
        ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
        Owner BIGINT NOT NULL, 
@@ -89,6 +90,7 @@ echo " CREATE TABLE bbs3wosolver (
        SCID INTEGER, 
        STATUS INTEGER, 
        KSTYPE TEXT,
+       ITERATION INTEGER,
        DONOTHING INTEGER,
        NEWDOMAIN INTEGER, 
        USESVD INTEGER,
@@ -102,6 +104,7 @@ echo "create table bbs3solutions (
       SEQNR BIGINT, 
       DATA TEXT, 
       WOID INTEGER, 
+      ITERATION INTEGER,
       FIT DOUBLE PRECISION, 
       MU DOUBLE PRECISION, 
       STDDEV DOUBLE PRECISION, 
@@ -110,4 +113,25 @@ echo "create table bbs3solutions (
       ENDFREQ DOUBLE PRECISION,
       STARTTIME DOUBLE PRECISION,
       ENDTIME DOUBLE PRECISION);" >> sql_create
+echo "create table bbs3parmsolutions (
+      ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
+      Owner BIGINT NOT NULL, 
+      VersionNr INTEGER NOT NULL, 
+      ID INTEGER, 
+      TAG INTEGER, 
+      SEQNR BIGINT, 
+      DATA TEXT, 
+      WOID INTEGER, 
+      PARMNAME TEXT, 
+      ITERATION INTEGER,
+      FIT DOUBLE PRECISION, 
+      RANK DOUBLE PRECISION,
+      STARTFREQ DOUBLE PRECISION,
+      ENDFREQ DOUBLE PRECISION,
+      STARTTIME DOUBLE PRECISION,
+      ENDTIME DOUBLE PRECISION,
+      COEFF0 DOUBLE PRECISION,
+      COEFF1 DOUBLE PRECISION,
+      COEFF2 DOUBLE PRECISION,
+      COEFF3 DOUBLE PRECISION);" >> sql_create
 $SQLCLIENT < sql_create

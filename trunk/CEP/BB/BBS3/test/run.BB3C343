@@ -104,24 +104,26 @@ beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'
 makeGsm2
 applyfile
 
-ln -s /data/PSS3/diepen/BBS2/3C343/10008336_p1.MS
+ln -s /data/PSS3/diepen/BBS2/3C343/10008336_p1.MS 10008336.MS_p1
+ln -s 10008336.MS_p1/vis.des 10008336.MS.des
 
-./clearBB
+./clearBB -user $usernm
 
 # Solve for StokesI as function of freq.
 time ./BBS3 ../../test/BB3C343.input1 $usernm
+
 
 # Create a new gsm table.
 beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'"
 makeGsm
 applyfile
 
-./clearBB
+./clearBB -user $usernm
 
 # Solve for StokesI (and save that).
 time ./BBS3 ../../test/BB3C343.input1 $usernm 
 
-./clearBB
+./clearBB -user $usernm
 
 # Solve for phase
 time ./BBS3 ../../test/BB3C343.input2 $usernm

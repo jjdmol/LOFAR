@@ -88,7 +88,12 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
   ACC::APS::ParameterSet ctrlParams = itsParamSet.makeSubset("CTRLparams.");
 
   int itsNumberPD = itsParamSet.getInt32("nrPrediffers");
-  string bbDBName = itsParamSet.getString("BBDBname"); 
+  string bbDBName = itsParamSet.getString("BBDBname");
+  bool writeIndivParms = false;
+  if (itsParamSet.isDefined("writeIndividualParms"))
+  {
+    writeIndivParms = itsParamSet.getBool("writeIndividualParms");
+  }
 
   TH_PL::useDatabase(bbDBName); 
 
@@ -115,7 +120,7 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
   }
   
   // Create the Solver
-  WH_Solve solveWH("Solver", itsNumberPD);
+  WH_Solve solveWH("Solver", itsNumberPD, writeIndivParms);
   Step solverStep(solveWH, "solverStep");
   solverStep.runOnNode(itsNumberPD+1,0);
   topComposite.addBlock(solverStep);
@@ -134,6 +139,10 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
   // Same for Solver
   solverStep.connect(0, &solverStep, 0, 1, new TH_PL("BBS3WOSolver"));
   solverStep.connect(1, &solverStep, 1, 1, new TH_PL("BBS3Solutions"));
+  if (writeIndivParms)
+  {                         // Write individual parameter solutions to separate table
+    solverStep.connect(2, &solverStep, 2, 1, new TH_PL("BBS3ParmSolutions"));
+  }
 
   for (int index = 0; index < itsNumberPD; index++)
   {
@@ -142,9 +151,9 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
     itsPDSteps[index]->connect(1, itsPDSteps[index], 1, 1, new TH_PL("BBS3Solutions"));
     // Create the connection to the Solver
 #ifdef HAVE_MPI
-    solverStep.connect(index+2, itsPDSteps[index], 2, 1, new TH_MPI(index+1,itsNumberPD+1)); 
+    solverStep.connect(index+3, itsPDSteps[index], 2, 1, new TH_MPI(index+1,itsNumberPD+1)); 
 #else
-    solverStep.connect(index+2, itsPDSteps[index], 2, 1, new TH_Mem(), false);   
+    solverStep.connect(index+3, itsPDSteps[index], 2, 1, new TH_Mem(), false);   
 #endif
   }
 

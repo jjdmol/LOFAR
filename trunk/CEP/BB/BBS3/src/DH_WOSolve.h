@@ -83,6 +83,9 @@ public:
   string getKSType() const;
   void setKSType(const string& ksType);
 
+  int getIteration() const;
+  void setIteration(int iter);
+
   bool getDoNothing() const;
   void setDoNothing(bool doNothing);
 
@@ -112,6 +115,7 @@ private:
   int*          itsSCID;                    // ID of sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
+  int*          itsIteration;               // Iteration number
   unsigned int* itsDoNothing;               // Do nothing?
   unsigned int* itsNewDomain;               // Solve on a new domain?
   unsigned int* itsUseSVD;                  // UseSVD in solver?
@@ -144,6 +148,12 @@ inline void DH_WOSolve::setStatus(unsigned int status)
 
 inline string DH_WOSolve::getKSType() const
 {  return string(itsKSType); }
+
+inline int DH_WOSolve::getIteration() const
+{ return *itsIteration; }
+
+inline void DH_WOSolve::setIteration(int iter)
+{ *itsIteration = iter; }
 
 inline bool DH_WOSolve::getDoNothing() const
 { return ((*itsDoNothing==0)?(false):(true)); }
@@ -184,6 +194,7 @@ namespace PL {
       int          itsSCID;         // in order to facilitate debugging
       unsigned int itsStatus;
       string       itsKSType;
+      int          itsIteration;
       unsigned int itsDoNothing;
       unsigned int itsNewDomain;
       unsigned int itsUseSVD;

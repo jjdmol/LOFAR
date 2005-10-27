@@ -44,7 +44,7 @@ class WH_Solve : public LOFAR::WorkHolder
 {
  public:
   // Construct the workholder and give it a name
-  explicit WH_Solve(const string& name, int nPrediffInputs);
+  explicit WH_Solve(const string& name, int nPrediffInputs, bool writeIndivParms);
   
   // Destructor
   virtual ~WH_Solve();
@@ -79,9 +79,10 @@ class WH_Solve : public LOFAR::WorkHolder
   // Read all Prediffer inputs and set solvable parameter data.
   void setParmData(Solver* solver);
 
-  int         itsNPrediffers;// Number of Prediffer inputs
-  SolverMap   itsSolvers;    // Map of Solver objects, each associated
-                             // with a strategy (controller).
+  int         itsNPrediffers;     // Number of Prediffer inputs
+  bool        itsWriteIndivParms; // Write individual parameter solutions in a separate table?
+  SolverMap   itsSolvers;         // Map of Solver objects, each associated
+                                  // with a strategy (controller).
 };
 
 // @}
