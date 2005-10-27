@@ -92,20 +92,6 @@ void convertOriginal2ReferenceDP(string datapointOriginal, string &datapointPath
   }
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// FunctionName: RefreshWithDP
-//
-// TEST DOORNAVIGEREN
-///////////////////////////////////////////////////////////////////////////////////
-void RefreshWithDP(string newDatapoint)
-{
-  string datapointPath;
-  DebugN("Trigger with dpName!!");
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE,0);
-}
-
-
 ///////////////////////////////////////////////////////////////////////////
 // changeSelectedPostion
 // 
@@ -127,23 +113,6 @@ void changeSelectedPosition(string newDatapoint)
   dyn_string dcurrent = splitDatapointPath(g_datapoint);
   dyn_string dnew     = splitDatapointPath(newDatapoint);
   int Index;
-/*  for(int i=1; i<=dynlen(dcurrent); i++)  //get the identical datapointPath
-  {
-    if(dcurrent==dnew);
-      Index++;
-  }
-  
-  for(int p=1 ; p<Index; p++) //build the identical datapointPath
-  {
-    if(1==p)
-      temp = datapointPath[p]; //build datapoint
-    else
-      temp = temp + "_" + datapointPath[p]; //build datapoint
-    
-    DebugN("temp"+p+":"+temp);
-  }
-*/
-  //for (i=Index ; i<=dynlen(datapointPath); i++) //navigate from this point on
   for (i=1 ; i<=dynlen(datapointPath); i++)
   {
     if (i==1)
@@ -160,15 +129,9 @@ void changeSelectedPosition(string newDatapoint)
     }
 
     nodeID = getNodeFromDatapoint(temp);
-    ////////////////////////////////////////
-//    DebugN("[----------------------]");
-//    DebugN("temp  :"+temp);
-//    DebugN("nodeID:"+nodeID);
     if(nodeID==0) //temp not found
     {
       nodeID = getNodeFromDatapoint(temp + " ->"); //maybe a local reference
-//      DebugN("temp  :"+temp);
-//      DebugN("nodeID:"+nodeID);
       if(nodeID!=0)
       {
         temp = temp + " ->";
@@ -225,8 +188,6 @@ bool ActiveXSupported()
 void setActiveXSupported() 
 {
   idispatch activeXctrl = 0;
-//  if(isFunctionDefined("createComObject"))
-//    activeXctrl = createComObject(ACTIVEX_TREE_CTRL);
   if(activeXctrl==0)
   {
     LOG_TRACE("I cannot create a COM object!? What the ....?? You must be running Linux or something.","");

@@ -92,7 +92,6 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
        ModuleOff(module);
        while ( isModuleOpen(module) ) // ... von Milos 
          delay(0,100);
-//       delay(0,500);
   }
 
   if (!isModuleOpen(module))
@@ -106,16 +105,13 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
          myModuleName() != "naviModule" &&
          myModuleName() != "infoModule" &&
          myModuleName() != module)
-    /*
-    if ( myModuleName() != "mainModule" &&
-         myModuleName() != "naviModule" &&
-         myModuleName() != "infoModule" &&
-         myModuleName() != module)
-    */
+    {
       ModuleOff(myModuleName());
+    }
     else
-      if (myModuleName() != module )
-        PanelOff();
+    {
+      if (myModuleName() != module ) PanelOff();
+    }
       
     if (isModuleOpen("naviModule"))  //redraw navi panel
     {
@@ -145,7 +141,7 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
 //**************************
 changeLang(string newLocale)
 {
-    int    err = switchLang(getLangIdx(newLocale));
+  int err = switchLang(getLangIdx(newLocale));
 }
 
 //**************************

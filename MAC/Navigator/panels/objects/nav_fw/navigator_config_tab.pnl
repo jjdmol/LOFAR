@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,394 346 946 43 N "_3DFace" 4
+PANEL,450 76 946 43 N "_3DFace" 4
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
@@ -163,60 +163,63 @@ LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
 T 
 1
 LANG:1 14 Set to default
-"main()
+"#uses \"nav_fw/gcfnav-configuration-functions.ctl\"
+main()
 {
   dyn_int nrOfSubViews;
   dyn_string subViews,configs;
   int DefaultSubview;
   
-  string viewConfigDpName = \"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\" + $selectedElementDpType + \"_viewconfig\";
+  string viewConfigDpName = \"__nav\" + navConfigGetEnvironment(\"\", \"\") + 
+                            \"_\" + $selectedElementDpType + \"_viewconfig\";
 
   dpGet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews,
         viewConfigDpName + \".subViews\",subViews,
         viewConfigDpName + \".configs\",configs);
 
-  string currentSubView = substr($configDatapoint ,strlen(getSystemName()+\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
-  for(int i=1;i<=mappinglen(g_subViews);i++)
+  string currentSubView = substr($configDatapoint, 
+  															 strlen(getSystemName() + \"__nav\" + 
+  															 				navConfigGetEnvironment(\"\", \"\") + \"_\" + 
+  															 				$selectedElementDpType + \"_config_\" + 
+  															 				$viewName + \"_\"), 
+  															 strlen($configDatapoint));
+  for (int i = 1; i <= mappinglen(g_subViews); i++)
   {
-     if (currentSubView == cleanText(mappingGetKey(g_subViews,i)))
+     if (currentSubView == cleanText(mappingGetKey(g_subViews, i)))
      {
       DefaultSubview = i;
-      DebugN(\"DefaultSubview\"+DefaultSubview);
+      DebugN(\"DefaultSubview\" + DefaultSubview);
      }
   }
 
   int insertIndex = 0;
-  for(int i=1;i<=$selectedView;i++)
+  for (int i = 1; i <= $selectedView; i++)
   {
    insertIndex += nrOfSubViews[i];
   }
   
   int PreviousSubViews = (insertIndex - nrOfSubViews[$selectedView]);
   
-  string rememberSubView = subViews[PreviousSubViews+1]; //Temperary storage
-  string rememberConfig  =  configs[PreviousSubViews+1];
+  string rememberSubView = subViews[PreviousSubViews + 1]; //Temperary storage
+  string rememberConfig  =  configs[PreviousSubViews + 1];
 
-  subViews[PreviousSubViews+1] = subViews[PreviousSubViews+DefaultSubview];
-   configs[PreviousSubViews+1] = configs[PreviousSubViews+DefaultSubview];
+  subViews[PreviousSubViews + 1] = subViews[PreviousSubViews + DefaultSubview];
+   configs[PreviousSubViews + 1] =  configs[PreviousSubViews + DefaultSubview];
    
-  subViews[PreviousSubViews+DefaultSubview] = rememberSubView;
-   configs[PreviousSubViews+DefaultSubview] = rememberConfig;
+  subViews[PreviousSubViews + DefaultSubview] = rememberSubView;
+   configs[PreviousSubViews + DefaultSubview] = rememberConfig;
 
   dpSet(viewConfigDpName + \".subViews\", subViews,  //store the changes into the PVSS database
-        viewConfigDpName + \".configs\",configs);
+        viewConfigDpName + \".configs\", configs);
 
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_TRIGGERUPDATE,0); //trigger the navigator to redraw
+  navConfigTriggerNavigatorRefresh(); //trigger the navigator to redraw
 }
-
-
-
-
 
 string cleanText(string text)
 { 
   string textCleaned;
   
-  for(int i=0;i<strlen(text);i++)
+  for (int i = 0;i < strlen(text); i++)
   {
     if(! ( (text[i] >= 'a' && text[i] <= 'z') || 
            (text[i] >= 'A' && text[i] <= 'Z') || 
