@@ -165,7 +165,7 @@ void doMaster (bool send)
   // Get the station info from the given antenna table.
   string msName = params.getString ("MSName");
   string tabName = params.getString ("AntennaTableName");
-  Table tab(tabName);
+  Table tab(tabName, TableLock(TableLock::AutoNoReadLocking));
   ROArrayColumn<double> posCol(tab, "POSITION");
   Array<double> antPos = posCol.getColumn();
 
