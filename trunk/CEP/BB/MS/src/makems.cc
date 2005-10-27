@@ -36,6 +36,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Matrix.h>
+#include <casa/OS/Path.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
 
@@ -164,6 +165,7 @@ void doMaster (bool send)
 
   // Get the station info from the given antenna table.
   string msName = params.getString ("MSName");
+  string msDesPath = params.getString ("MSDesPath");
   string tabName = params.getString ("AntennaTableName");
   Table tab(tabName, TableLock(TableLock::AutoNoReadLocking));
   ROArrayColumn<double> posCol(tab, "POSITION");
@@ -187,8 +189,11 @@ void doMaster (bool send)
     }
   }
   // Write the overall description files.
-  writeDesc (msName + ".des", nnode, antPos, conn.sender);
-  string fileName = msName+".dess";
+  // Do this on the local node.
+  Path path(msName);
+  string msDesName = msDesPath + "/" + string(path.baseName());
+  writeDesc (msDesName + ".des", nnode, antPos, conn.sender);
+  string fileName = msDesName+".dess";
   std::ofstream ostr(fileName.c_str());
   int nstat = antPos.shape()[1];
   ostr << "npol=4  nstat=" << nstat << "  nbl=" << nstat*(nstat-1)/2 << endl;
