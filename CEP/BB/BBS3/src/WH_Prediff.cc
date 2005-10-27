@@ -241,7 +241,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
 
     string modelType = args.getString("modelType");
     bool calcUVW = args.getBool("calcUVW");
-    string msName = args.getString("MSName")+ "_p" + itsID;
+    string msName = args.getString("subsetMSPath") + args.getString("MSName")+ "_p" + itsID;
 
     vector<vector<int> > srcgrp;
     getSrcGrp (args, srcgrp);
