@@ -110,7 +110,7 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
     }
 
     // Read MS description file
-    string msName = params.getString(stratName + "MSDBparams.MSName");   
+    string msName = params.getString(stratName + "MSDBparams.generalMSPath") + params.getString(stratName + "MSDBparams.MSName");   
     double msStartTime, msEndTime, msInterval;
     readMSTimes(msName, msStartTime, msEndTime, msInterval);
 

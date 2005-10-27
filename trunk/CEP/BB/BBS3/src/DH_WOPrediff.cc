@@ -414,6 +414,10 @@ void DH_WOPrediff::dump()
   { 
     cout << "MS name = " << sArguments.getString ("MSName")
 	 << endl;
+    cout << "General MS path = " << sArguments.getString ("generalMSPath")
+	 << endl;
+    cout << "Subset MS path = " << sArguments.getString ("subsetMSPath")
+	 << endl;
     cout << "Database host = " << sArguments.getString ("DBHost")
 	 << endl;
     cout << "Database type = " << sArguments.getString ("DBType")
