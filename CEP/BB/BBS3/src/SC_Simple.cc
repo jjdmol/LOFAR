@@ -137,9 +137,10 @@ bool SC_Simple::execute()
     // If max number of iterations reached, go to next interval.
     // If solution for this interval is good enough, send "do nothing" workorders until 
     // max number of iterations reached.
-    if (fmod(itsCurIter, itsNrIterations) == 0)
+    if (itsCurIter == itsNrIterations)
     {
       nextInter = true;
+      itsCurIter = 0;
       WOPD->setUpdateParms(false);  // New time interval, so do not reread parameters
       WOPD->setSolutionID(-1);  // New time interval, so do not use solution from previous interval
       itsCurStartTime += itsArgs.getDouble ("timeInterval");
@@ -195,6 +196,7 @@ bool SC_Simple::execute()
   WOSolve->setStatus(DH_WOSolve::New);
   WOSolve->setKSType("Solver");
   WOSolve->setUseSVD (itsArgs.getBool ("useSVD"));
+  WOSolve->setIteration(itsCurIter);
 
   WOSolve->setNewWorkOrderID();
   itsPrevWOID = WOSolve->getWorkOrderID();  // Remember the issued workorder id

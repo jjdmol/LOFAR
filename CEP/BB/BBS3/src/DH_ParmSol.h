@@ -1,4 +1,4 @@
-//  DH_Solution.h: DataHolder for BlackBoard solutions
+//  DH_ParmSol.h: DataHolder which holds a solution for one parameter.
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,11 +23,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef LOFAR_BBS3_DH_SOLUTION_H
-#define LOFAR_BBS3_DH_SOLUTION_H
+#ifndef LOFAR_BBS3_DH_PARMSOL_H
+#define LOFAR_BBS3_DH_PARMSOL_H
 
-// \file DH_Solution.h
-// DataHolder for BlackBoard solutions
+// \file DH_ParmSol.h
+// DataHolder which holds a solution for one parameter.
 
 #include <Common/lofar_vector.h>
 #include <TransportPL/DH_PL.h>
@@ -42,18 +42,17 @@ namespace LOFAR
 // @{
 
 /**
-   This class is a DataHolder which holds the parameters solved by
-   a PSS3 knowledge source.
+   This class is a DataHolder which holds a solution for one parameter
 */
 
-class DH_Solution: public LOFAR::DH_PL
+class DH_ParmSol: public LOFAR::DH_PL
 {
 public:
-  typedef PL::TPersistentObject<DH_Solution> PO_DH_SOL;
+  typedef PL::TPersistentObject<DH_ParmSol> PO_DH_SOL;
 
-  explicit DH_Solution (const string& name="dh_solution");
+  explicit DH_ParmSol (const string& name="dh_solution");
 
-  virtual ~DH_Solution();
+  virtual ~DH_ParmSol();
 
   DataHolder* clone() const;
 
@@ -71,22 +70,26 @@ public:
   void setWorkOrderID(const int id);
 
   int getIteration() const;
-  void setIteration(int iter);
+  void setIteration(const int iter);
 
-  void setSolutionID(const int id);  // Set id of solution to retrieve from database
-  int getSolutionID() const;
+  string getParmName() const;
+  void setParmName(const string& parmName);
 
-  Quality getQuality() const;
+  double getFit() const;
+  double getRank() const;
   void setQuality(const Quality& quality);
-
-  bool getSolution(vector<ParmData>& pData);
-  void setSolution(const vector<ParmData>& pData);
 
   double getStartFreq() const;
   double getEndFreq() const;
   double getStartTime() const;
   double getEndTime() const;
   void setDomain(double fStart, double fEnd, double tStart, double tEnd);
+
+  double getCoeff0() const;
+  double getCoeff1() const;
+  double getCoeff2() const;
+  double getCoeff3() const;
+  void setCoefficients(double c0, double c1=0, double c2=0, double c3=0);
 
   // Resets (clears) the contents of its DataPacket 
   void clearData();
@@ -95,75 +98,98 @@ public:
 
 private:
   /// Forbid assignment.
-  DH_Solution& operator= (const DH_Solution&);
-  DH_Solution(const DH_Solution&);
+  DH_ParmSol& operator= (const DH_ParmSol&);
+  DH_ParmSol(const DH_ParmSol&);
 
   // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
-  int*          itsWOID;
-  int*          itsIteration;
-  double*       itsFit;
-  double*       itsMu;
-  double*       itsStdDev;
-  double*       itsChi;
-  
   PO_DH_SOL*    itsPODHSOL; 
-
-  int itsCurDataSize;
+  int*          itsWOID;             // Workorder identifier
+  char*         itsParmName;         // Parameter name
+  int*          itsIter;             // Iteration number
+  double*       itsFit;              // LSQ fit value
+  double*       itsRank;
   double*       itsStartFreq;        // Start frequency of the domain
   double*       itsEndFreq;          // End frequency of the domain
   double*       itsStartTime;        // Start time of the domain
   double*       itsEndTime;          // End time of the domain
+  double*       itsCoeff0;           // Polynomial coefficients
+  double*       itsCoeff1;
+  double*       itsCoeff2;
+  double*       itsCoeff3;
 
 };
 
-inline int DH_Solution::getWorkOrderID() const
+inline int DH_ParmSol::getWorkOrderID() const
 { return *itsWOID; }
 
-inline void DH_Solution::setWorkOrderID(const int id)
+inline void DH_ParmSol::setWorkOrderID(const int id)
 { *itsWOID = id; }
 
-inline int DH_Solution::getIteration() const
-{ return *itsIteration; }
+inline int DH_ParmSol::getIteration() const
+{ return *itsIter; }
 
-inline void DH_Solution::setIteration(int iter)
-{ *itsIteration = iter; }
+inline void DH_ParmSol::setIteration(const int iter)
+{ *itsIter = iter; }
 
-inline double DH_Solution::getStartFreq() const
+inline string DH_ParmSol::getParmName() const
+{ return string(itsParmName); }
+
+inline double DH_ParmSol::getFit() const
+{ return *itsFit; }
+
+inline double DH_ParmSol::getRank() const
+{ return *itsRank; }
+
+inline double DH_ParmSol::getStartFreq() const
 { return *itsStartFreq; }
 
-inline double DH_Solution::getEndFreq() const
+inline double DH_ParmSol::getEndFreq() const
 { return *itsEndFreq; }
 
-inline double DH_Solution::getStartTime() const
+inline double DH_ParmSol::getStartTime() const
 { return *itsStartTime; }
 
-inline double DH_Solution::getEndTime() const
+inline double DH_ParmSol::getEndTime() const
 { return *itsEndTime; }
 
+inline double DH_ParmSol::getCoeff0() const
+{ return *itsCoeff0; }
+
+inline double DH_ParmSol::getCoeff1() const
+{ return *itsCoeff1; }
+
+inline double DH_ParmSol::getCoeff2() const
+{ return *itsCoeff2; }
+
+inline double DH_ParmSol::getCoeff3() const
+{ return *itsCoeff3; }
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
 namespace PL {  
   template<>                                               
-  class DBRep<DH_Solution> : public DBRep<DH_PL>               
+  class DBRep<DH_ParmSol> : public DBRep<DH_PL>               
   {                                                             
     public:                                                     
       void bindCols (dtl::BoundIOs& cols);                      
-      void toDBRep (const DH_Solution&);                        
+      void toDBRep (const DH_ParmSol&);                        
     private: 
-                                   // Temporarily stored in separate fields
-      int    itsWOID;              // in order to facilitate debugging
-      int    itsIteration;
+                           
+      int    itsWOID;
+      string itsParmName;
+      int    itsIter;
       double itsFit;
-      double itsMu;
-      double itsStdDev;
-      double itsChi;
+      double itsRank;
       double itsStartFreq;
       double itsEndFreq;
       double itsStartTime;
       double itsEndTime;
+      double itsCoeff0;
+      double itsCoeff1;
+      double itsCoeff2;
+      double itsCoeff3;
     };   
                                                       
 } // end namespace PL   

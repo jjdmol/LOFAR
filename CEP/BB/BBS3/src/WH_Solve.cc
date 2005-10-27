@@ -30,6 +30,7 @@
 #include <BBS3/DH_WOSolve.h>
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/DH_Solution.h>
+#include <BBS3/DH_ParmSol.h>
 #include <BBS3/Solver.h>
 #include <BBS3/Prediffer.h>
 #include <BBS3/ParmData.h>
@@ -43,9 +44,10 @@ using namespace std;
 namespace LOFAR
 {
 
-WH_Solve::WH_Solve(const string& name, int nPrediffInputs)
-  : WorkHolder    (nPrediffInputs+2, 2, name, "WH_Solve"),
-    itsNPrediffers(nPrediffInputs)
+WH_Solve::WH_Solve(const string& name, int nPrediffInputs, bool writeIndivParms)
+  : WorkHolder        (nPrediffInputs+3, 3, name, "WH_Solve"),
+    itsNPrediffers    (nPrediffInputs),
+    itsWriteIndivParms(writeIndivParms)
 {
   LOG_TRACE_FLOW("WH_Solve constructor");
   // Add workorder input
@@ -54,17 +56,22 @@ WH_Solve::WH_Solve(const string& name, int nPrediffInputs)
   // Add solution output
   getDataManager().addInDataHolder(1, new DH_Solution(name+"_in1"));  // dummy
   getDataManager().addOutDataHolder(1, new DH_Solution(name+"_out1"));
+  // Add parmsolution output
+  getDataManager().addInDataHolder(2, new DH_ParmSol(name+"_in2"));  // dummy
+  getDataManager().addOutDataHolder(2, new DH_ParmSol(name+"_out2"));
   // Switch input channel trigger off
   getDataManager().setAutoTriggerIn(0, false);
   getDataManager().setAutoTriggerOut(0, false);
   getDataManager().setAutoTriggerIn(1, false);
   getDataManager().setAutoTriggerOut(1, false);
+  getDataManager().setAutoTriggerIn(2, false);
+  getDataManager().setAutoTriggerOut(2, false);
 
   // Add prediffer inputs
   for (int i=0; i<itsNPrediffers; i++)
   {
-    getDataManager().addInDataHolder(i+2, new DH_Prediff(name+"_in"));
-    getDataManager().setAutoTriggerIn(i+2, false);
+    getDataManager().addInDataHolder(i+3, new DH_Prediff(name+"_in"));
+    getDataManager().setAutoTriggerIn(i+3, false);
   }
 
 }
@@ -83,7 +90,7 @@ WH_Solve::~WH_Solve()
 
 WH_Solve* WH_Solve::make (const string& name)
 {
-  return new WH_Solve (name, itsNPrediffers);
+  return new WH_Solve (name, itsNPrediffers, itsWriteIndivParms);
 }
 
 void WH_Solve::preprocess()
@@ -185,16 +192,39 @@ void WH_Solve::process()
     sol->setSolution(solver->getSolvableParmData());
     sol->setQuality(resultQuality);
     sol->setWorkOrderID(wo->getWorkOrderID());
+    sol->setIteration(wo->getIteration());
 
     //>>>> For now: Assume all prediffer domains are equal!!
     DH_Prediff* predInp1 = 
-      dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(2));
+      dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(3));
     sol->setDomain(predInp1->getStartFreq(), predInp1->getEndFreq(),
 		   predInp1->getStartTime(), predInp1->getEndTime());
 
     // Add solution to database
     solPtr->insertDB(*connSol);
   
+    if (itsWriteIndivParms) // Write individual parameter solutions to separate table 
+    {                       // for easy "querying"
+      DH_ParmSol* parmSol = dynamic_cast<DH_ParmSol*>(getDataManager().getOutHolder(2)); 
+      parmSol->setWorkOrderID(wo->getWorkOrderID());
+      parmSol->setIteration(wo->getIteration());
+      parmSol->setQuality(resultQuality);
+      parmSol->setDomain(predInp1->getStartFreq(), predInp1->getEndFreq(),
+			 predInp1->getStartTime(), predInp1->getEndTime());
+      Connection* connParmSol = getDataManager().getOutConnection(2);
+      // loop over all solvable parms
+      vector<ParmData> pSols = solver->getSolvableParmData();
+      vector<ParmData>::iterator iter;
+      for (iter = pSols.begin(); iter != pSols.end(); iter++)
+      {
+	parmSol->setParmName(iter->getName());
+	parmSol->setCoefficients(iter->getValue(0), iter->getValue(1),
+				 iter->getValue(2), iter->getValue(3));
+	parmSol->insertDB(*connParmSol);
+      }
+    
+    }
+
     if (wo->getCleanUp())   // If Solver (cache) is no longer needed: clean up  
     {
       itsSolvers.erase(contrID);
@@ -239,10 +269,10 @@ void WH_Solve::readInputs(Solver* solver, bool firstRead)
   {
     if (firstRead)
     {
-      dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
-      getDataManager().readyWithInHolder(i+2);  // Cause input to be read
+      dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+3));
+      getDataManager().readyWithInHolder(i+3);  // Cause input to be read
     }
-    dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
+    dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+3));
     casa::LSQFit fitter;
     Prediffer::demarshall (fitter, dh->getDataBuffer(), dh->getBufferSize());
     solver->mergeFitter (fitter, i);
@@ -257,9 +287,9 @@ void WH_Solve::setParmData(Solver* solver)
   DH_Prediff* dh;
   for (int i=0; i<itsNPrediffers; i++)
   {
-    getDataManager().getInHolder(i+2);
-    getDataManager().readyWithInHolder(i+2);  // Causes data to be read
-    dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
+    getDataManager().getInHolder(i+3);
+    getDataManager().readyWithInHolder(i+3);  // Causes data to be read
+    dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+3));
     vector<ParmData> pData;
     dh->getParmData(pData);
     solver->setSolvableParmData(pData, i);           // id = i or from prediffer?

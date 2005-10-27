@@ -68,6 +68,7 @@ public:
     { return itsValues; }
   MeqMatrix& getRWValues()
     { return itsValues; }
+  double getValue(unsigned int index);
   // </group>
 
   // Set the first spid.

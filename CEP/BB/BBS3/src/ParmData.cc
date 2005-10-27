@@ -52,6 +52,19 @@ namespace LOFAR {
     }
   }
 
+  double ParmData::getValue(unsigned int index)
+  {
+    if (index >= itsValues.nelements())
+    {
+      return 0;
+    }
+    else
+    {
+      double* val = itsValues.doubleStorage();
+      return val[index];
+    }
+  }
+
   bool ParmData::operator== (const ParmData& other)
   {
     if (itsName   != other.itsName)   return false;

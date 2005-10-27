@@ -7,7 +7,8 @@
 #   time domain is all times
 #   solve for entire time domain
 
-nrPrediffers=1   # Number of Prediffers
+nrPrediffers=1          # Number of Prediffers
+writeIndividualParms=T  # Write individual parameter solutions in a separate table
 
 CTRLparams.nrStrategies=1                  # Number of Strategy Controllers
 CTRLparams.SC1params.writeParms=T          # Does the Controller write the final solution in parmeter table?
@@ -28,7 +29,7 @@ CTRLparams.SC1params.calcUVW=F             # Calculate UVW coordinates?
 CTRLparams.SC1params.useAutoCorr=F         # Use auto correlations
 CTRLparams.SC1params.correlations=[0,3]    # Only use XX and YY correlations
 CTRLparams.SC1params.useSVD=F              # Use Singular Value Decomposition in solve?
-CTRLparams.SC1params.MSDBparams.MSName="10008336_p1.MS"     # Name of the Measurement Set
+CTRLparams.SC1params.MSDBparams.MSName="10008336.MS"     # Name of the Measurement Set
 CTRLparams.SC1params.MSDBparams.DBHost="localhost"          # Parameter database host name
 CTRLparams.SC1params.MSDBparams.DBType="aips"               # Parameter database type
 CTRLparams.SC1params.MSDBparams.DBPwd=""                    # Parameter database password
