@@ -841,7 +841,7 @@ void navConfigSubscribeUpdateTrigger(string callback)
 ///////////////////////////////////////////////////////////////////////////
 void navConfigTriggerNavigatorRefresh()
 {
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE,0);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE, 0);
 }
 
 
@@ -857,10 +857,8 @@ void navConfigTriggerNavigatorRefresh()
 ///////////////////////////////////////////////////////////////////////////
 void navConfigTriggerNavigatorRefreshWithDP(string newDatapoint)
 {
-//  string datapointPath;
-//  convertOriginal2ReferenceDP(buildPathFromNode(g_curSelNode) + addingPart, datapointPath);
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE,0);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE, 0);
 }
 
 
@@ -1028,115 +1026,115 @@ navConfigAddRemoveSubView()
   string viewConfigDpName = "__nav"+navConfigGetEnvironment("","")+"_" + $selectedElementDpType + "_viewconfig";
   if($addView)
   {
-  //########################################################
-  if(!dpAccessable(subViewDpName)&& !dpAccessable(configDpName))
-  {
-    if(comboCaption.visible == false) // adding new subview
-    {
-      // create new GCFNavSubView instance
-      dpCreate(subViewDpName,"GCFNavSubView"); //__nav_subview_Alert_Red-Alert-125
-      err = getLastError();
-      if(dynlen(err) > 0)
-      {
-        errorDialog(err);
-        // open dialog box with errors
-        throwError(err); // write errors to stderr
-      }
-      else
-      {
-        dpSet(subViewDpName+".caption",textFieldCaption.text,
-              subViewDpName+".filename", viewsPath + textFieldFileName.text);
-      }
-    }      
-    err = getLastError();
-    if(dynlen(err) > 0)
-    {
-      errorDialog(err);
-      // open dialog box with errors
-      throwError(err); // write errors to stderr
-    }
-    else
-    {
-      // create new config datapoint
-      LOG_DEBUG("creating DP:",configDpName,configDpTypeName);
-      dpCreate(configDpName,configDpTypeName); //__nav_TLcuPic_config_Alert_Red-Alert-125
-      err = getLastError();
-      if(dynlen(err) > 0)
-      {
-        errorDialog(err);
-        // open dialog box with errors
-        throwError(err); // write errors to stderr
-      }
-      else
-      {
-        dyn_int nrOfSubViews;
-        dyn_string subViews,configs;
-        if(!dpAccessable(viewConfigDpName))
-        {
-          // create a new datapoint, based on the default config
-          int err;
-          dpCopy("__nav_default_viewconfig",viewConfigDpName,err);
-  
-          // copy the contents of the default config
-          int i;
-          dyn_string allC;
-          dyn_anytype para;
-          allC = dpNames("__nav_default_viewconfig"+".**:_original.._value", "GCFNavViewConfiguration");
-          dpGet(allC, para);
-          for (i=1; i<=dynlen(allC); i++)
-          {
-            strreplace(allC[i], "__nav_default_viewconfig", viewConfigDpName);
-          }
-          dpSet(allC, para);
-        }
-        dpGet(viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
-              viewConfigDpName + ".subViews",subViews,
-              viewConfigDpName + ".configs",configs);
-
-        err = getLastError();
-        if(dynlen(err) > 0)
-        {
-          errorDialog(err);
-          // open dialog box with errors
-          throwError(err); // write errors to stderr
-        }
-        else
-        {
-          int insertIndex = 1;
-          for(int i=1;i<=$selectedView;i++)
-            insertIndex += nrOfSubViews[i];
-          dfReturn[2] = nrOfSubViews[$selectedView];
-          nrOfSubViews[$selectedView] = nrOfSubViews[$selectedView]+1;
-          dynInsertAt(subViews,subViewDpName,insertIndex);
-          dynInsertAt(configs,configDpName,insertIndex);
-          dpSet(viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
-                viewConfigDpName + ".subViews",subViews,
-                viewConfigDpName + ".configs",configs);
-
-          err = getLastError();
-          if(dynlen(err) > 0)
-          {
-            errorDialog(err);
-            // open dialog box with errors
-            throwError(err); // write errors to stderr
-          }
-          else
-          {
-            dfReturn[1] = 1; // 0 = failure, 1 = success
-            dfReturn[2] = nrOfSubViews[$selectedView];
-          }
-        }
-      }
-    }
-  }
-  else
-  {
-    //If the current subview name already exists, show message on screen
-    string message = "Entered caption already exists. \nPlease enter a new one.";
-    ChildPanelOnCentralModal(viewsPath + "MessageWarning.pnl", "Warning", makeDynString("$1:"+message));
-    return;
-  }
-  //########################################################
+	  //########################################################
+	  if(!dpAccessable(subViewDpName)&& !dpAccessable(configDpName))
+	  {
+	    if(comboCaption.visible == false) // adding new subview
+	    {
+	      // create new GCFNavSubView instance
+	      dpCreate(subViewDpName,"GCFNavSubView"); //__nav_subview_Alert_Red-Alert-125
+	      err = getLastError();
+	      if(dynlen(err) > 0)
+	      {
+	        errorDialog(err);
+	        // open dialog box with errors
+	        throwError(err); // write errors to stderr
+	      }
+	      else
+	      {
+	        dpSet(subViewDpName+".caption",textFieldCaption.text,
+	              subViewDpName+".filename", viewsPath + textFieldFileName.text);
+	      }
+	    }      
+	    err = getLastError();
+	    if(dynlen(err) > 0)
+	    {
+	      errorDialog(err);
+	      // open dialog box with errors
+	      throwError(err); // write errors to stderr
+	    }
+	    else
+	    {
+	      // create new config datapoint
+	      LOG_DEBUG("creating DP:",configDpName,configDpTypeName);
+	      dpCreate(configDpName,configDpTypeName); //__nav_TLcuPic_config_Alert_Red-Alert-125
+	      err = getLastError();
+	      if(dynlen(err) > 0)
+	      {
+	        errorDialog(err);
+	        // open dialog box with errors
+	        throwError(err); // write errors to stderr
+	      }
+	      else
+	      {
+	        dyn_int nrOfSubViews;
+	        dyn_string subViews,configs;
+	        if(!dpAccessable(viewConfigDpName))
+	        {
+	          // create a new datapoint, based on the default config
+	          int err;
+	          dpCopy("__nav_default_viewconfig",viewConfigDpName,err);
+	  
+	          // copy the contents of the default config
+	          int i;
+	          dyn_string allC;
+	          dyn_anytype para;
+	          allC = dpNames("__nav_default_viewconfig"+".**:_original.._value", "GCFNavViewConfiguration");
+	          dpGet(allC, para);
+	          for (i=1; i<=dynlen(allC); i++)
+	          {
+	            strreplace(allC[i], "__nav_default_viewconfig", viewConfigDpName);
+	          }
+	          dpSet(allC, para);
+	        }
+	        dpGet(viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
+	              viewConfigDpName + ".subViews",subViews,
+	              viewConfigDpName + ".configs",configs);
+	
+	        err = getLastError();
+	        if(dynlen(err) > 0)
+	        {
+	          errorDialog(err);
+	          // open dialog box with errors
+	          throwError(err); // write errors to stderr
+	        }
+	        else
+	        {
+	          int insertIndex = 1;
+	          for(int i=1;i<=$selectedView;i++)
+	            insertIndex += nrOfSubViews[i];
+	          dfReturn[2] = nrOfSubViews[$selectedView];
+	          nrOfSubViews[$selectedView] = nrOfSubViews[$selectedView]+1;
+	          dynInsertAt(subViews,subViewDpName,insertIndex);
+	          dynInsertAt(configs,configDpName,insertIndex);
+	          dpSet(viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
+	                viewConfigDpName + ".subViews",subViews,
+	                viewConfigDpName + ".configs",configs);
+	
+	          err = getLastError();
+	          if(dynlen(err) > 0)
+	          {
+	            errorDialog(err);
+	            // open dialog box with errors
+	            throwError(err); // write errors to stderr
+	          }
+	          else
+	          {
+	            dfReturn[1] = 1; // 0 = failure, 1 = success
+	            dfReturn[2] = nrOfSubViews[$selectedView];
+	          }
+	        }
+	      }
+	    }
+	  }
+	  else
+	  {
+	    //If the current subview name already exists, show message on screen
+	    string message = "Entered caption already exists. \nPlease enter a new one.";
+	    ChildPanelOnCentralModal(viewsPath + "MessageWarning.pnl", "Warning", makeDynString("$1:"+message));
+	    return;
+	  }
+	  //########################################################
   }
   else
   {
@@ -1189,15 +1187,6 @@ navConfigAddRemoveSubView()
       }
     }
     
-   // User must confirm delete subview
-   // dyn_float resultFloat;
-   // dyn_string resultString;
-   // string text1="$1:Are you sure you want to delete the\nsubview: " +subViewName;
-   // ChildPanelOnCentralModalReturn("vision/MessageWarning2",
-   //                                "Confirm delete subview\n",makeDynString(text1,"Yes","No"), resultFloat, resultString);
-   // while(resultFloat[1]!=1 && resultFloat[1]!=0)
-   // if(resultFloat[1]==1)
-   // {*/
    dpDelete(subViewDpName);
    dpDelete(configDpName); 
   }
@@ -1208,5 +1197,3 @@ navConfigAddRemoveSubView()
 
   PanelOff();
 }
-
-
