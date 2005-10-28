@@ -16,39 +16,57 @@ if [ -f $PREFIX/etc/sysconfig/beamserver ];then
         . $PREFIX/etc/sysconfig/beamserver
 fi
 
-# Check preconditions
-# These files must exist
-[ -x $PREFIX/bin/BeamServer ] || exit 0
-[ -e $PREFIX/etc/BeamServer.conf ] || exit 0
-
+# intialize variables
 RETVAL=0
 prog="BeamServer"
 
+# Check preconditions
+# These files must exist
+[ -x $PREFIX/bin/$prog ] || exit 0
+[ -e $PREFIX/etc/$prog.conf ] || exit 0
+
 start() {
+    #
+    # Check if running as root
+    #
+    if [ "$USER" != "root" ]; then
+        echo Must run as root.
+	return 1
+    fi
+    
+    # check if it is already running
+    if [ -f /var/lock/subsys/$prog ]; then
+	status $prog
+	return 1
+    fi
 
     # set OPTIONS
-    OPTIONS=
+    OPTIONS="-d"
 
     # Start BeamServer
     echo -n $"Starting $prog: "
-    mkdir -p $PREFIX/var/run/
-    touch $PREFIX/var/run/$prog.pid
-    mkdir -p $PREFIX/var/log/
-    nohup $PREFIX/bin/$prog $OPTIONS > $PREFIX/var/log/BeamServer.log &
+
+    daemon $PREFIX/bin/$prog $OPTIONS
     RETVAL=$?
-    mkdir -p $PREFIX/var/lock/subsys
-    [ $RETVAL -eq 0 ] && touch $PREFIX/var/lock/subsys/$prog && success $"$prog startup"
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
     echo
     return $RETVAL
 }
 
 stop() {
+    #
+    # Check if running as root
+    #
+    if [ "$USER" != "root" ]; then
+        echo Must run as root.
+	return 1
+    fi
 
     # Stop BeamServer
     echo -n $"Shutting down $prog: "
     killproc $prog
     RETVAL=$?
-    [ $RETVAL -eq 0 ] && rm -f $PREFIX/var/lock/subsys/$prog
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
     echo
     return $RETVAL
 }
@@ -57,9 +75,11 @@ stop() {
 case "$1" in
   start)
 	start
+	RETVAL=$?
         ;;
   stop)
 	stop
+	RETVAL=$?
         ;;
   status)
 	status $prog
@@ -71,7 +91,7 @@ case "$1" in
 	RETVAL=$?
 	;;
   condrestart)
-	if [ -f $PREFIX/var/lock/subsys/$prog ]; then
+	if [ -f /var/lock/subsys/$prog ]; then
 	    stop
 	    start
 	    RETVAL=$?

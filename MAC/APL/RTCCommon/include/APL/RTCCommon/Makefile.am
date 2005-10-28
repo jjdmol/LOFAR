@@ -9,7 +9,8 @@ INSTHDRS = \
 	PSAccess.h \
 	Subject.h \
 	TestSuite.h \
-	Timestamp.h
+	Timestamp.h \
+	daemonize.h
 
 NOINSTHDRS =
 
