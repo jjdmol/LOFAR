@@ -27,6 +27,7 @@
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 
 #include "CalServer.h"
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/SubArray.h>
 #include "SubArraySubscription.h"
@@ -54,14 +55,16 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
 using namespace RTC;
-
+using namespace RSP_Protocol;
 using namespace CAL_Protocol;
 
 #define NPOL 2
 
 CalServer::CalServer(string name, ACCs& accs)
   : GCFTask((State)&CalServer::initial, name),
-    m_accs(accs), m_cal(0), m_converter("localhost")
+    m_accs(accs), m_cal(0), m_converter("localhost"),
+    m_sampling_frequency(0.0),
+    m_n_tdboards(0)
 #ifdef USE_CAL_THREAD
     , m_calthread(0)
 #endif
@@ -72,6 +75,9 @@ CalServer::CalServer(string name, ACCs& accs)
 
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
   m_acceptor.init(*this, "acceptor_v2", GCFPortInterface::MSPP, CAL_PROTOCOL);
+
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+  m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 CalServer::~CalServer()
@@ -165,12 +171,81 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
     case F_ENTRY:
       {
 	if (!m_acceptor.isConnected()) m_acceptor.open();
+
+	LOG_DEBUG("opening port: m_rspdriver");
+	m_rspdriver.open();
       }
       break;
 
     case F_CONNECTED:
       {
-	if (m_acceptor.isConnected()) TRAN(CalServer::enabled);
+	if (   m_acceptor.isConnected()
+	    && m_rspdriver.isConnected()) {
+	  RSPGetconfigEvent getconfig;
+	  m_rspdriver.send(getconfig);
+	}
+      }
+      break;
+
+    case RSP_GETCONFIGACK:
+      {
+	RSPGetconfigackEvent ack(e);
+	m_n_tdboards = ack.n_tdboards;
+	if (ack.n_rcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol())
+	{
+	  LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
+	  exit(EXIT_FAILURE);
+	}
+
+	// get initial clock setting
+	RSPGetclocksEvent getclocks;
+	getclocks.timestamp = Timestamp(0,0);
+	getclocks.cache = true;
+	for (int i = 0; i < m_n_tdboards; ++i) {
+	  getclocks.tdmask.set(i);
+	}
+
+	m_rspdriver.send(getclocks);
+      }
+      break;
+
+    case RSP_GETCLOCKSACK:
+      {
+	RSPGetclocksackEvent getclocksack(e);
+
+	if (RSP_Protocol::SUCCESS != getclocksack.status) {
+	  LOG_FATAL("Failed to get sampling frequency setting");
+	  exit(EXIT_FAILURE);
+	}
+
+	// all clock values should be the same
+	// simply take first value as value
+	m_sampling_frequency = getclocksack.clocks()(0);
+
+	LOG_DEBUG_STR("Initial sampling frequency: " << m_sampling_frequency);
+
+	// subscribe to clock change updates
+	RSPSubclocksEvent subclocks;
+	subclocks.timestamp = Timestamp(0,0);
+	for (int i = 0; i < m_n_tdboards; ++i) {
+	  subclocks.tdmask.set(i);
+	}
+	subclocks.period = 1;
+
+	m_rspdriver.send(subclocks);
+      }
+      break;
+
+    case RSP_SUBCLOCKSACK:
+      {
+	RSPSubclocksackEvent ack(e);
+
+	if (RSP_Protocol::SUCCESS != ack.status) {
+	  LOG_FATAL("Failed to subscribe to clock status updates.");
+	  exit(EXIT_FAILURE);
+	}
+
+	TRAN(CalServer::enabled);
       }
       break;
 
@@ -228,6 +303,29 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       break;
       
+    case RSP_UPDCLOCKS:
+      {
+	RSPUpdclocksEvent updclocks(e);
+
+	// all clock values should be the same
+	// simply take first value as value
+	m_sampling_frequency = updclocks.clocks()(0);
+
+	LOG_DEBUG_STR("New sampling frequency: " << m_sampling_frequency);
+      }
+      break;
+
+    case RSP_SETRCUACK:
+      {
+	RSPSetrcuackEvent ack(e);
+
+	if (RSP_Protocol::SUCCESS != ack.status) {
+	  LOG_FATAL("Failed to set RCU control register");
+	  exit(EXIT_FAILURE);
+	}
+      }
+      break;
+
     case F_CONNECTED:
       {
 	LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
@@ -337,7 +435,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
   CALStartEvent start(e);
   CALStartackEvent ack;
 
-  ack.status = SUCCESS; // assume succes, until otherwise
+  ack.status = CAL_Protocol::SUCCESS; // assume succes, until otherwise
   ack.name = start.name;
 
   // find parent AntennaArray
@@ -357,7 +455,8 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     ack.status = ERR_NO_PARENT;
 
   } else {
-
+    
+    // register because this is a cal_start
     m_clients[&port] = string(start.name); // register subarray with port
 
     const Array<double, 3>& positions = parent->getAntennaPos();
@@ -395,7 +494,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 					  parent->getGeoLoc(),
 					  positions,
 					  select,
-					  start.sampling_frequency,
+					  m_sampling_frequency,
 					  start.nyquist_zone,
 					  GET_CONFIG("CalServer.N_SUBBANDS", i),
 					  start.rcucontrol.value);
@@ -403,6 +502,17 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	m_subarrays.schedule_add(subarray);
 
 	// calibration will start within one second
+
+	//
+	// set the control register of the RCU's 
+	//
+	RSPSetrcuEvent setrcu;
+	setrcu.timestamp = Timestamp(0,0); // immediate
+	setrcu.rcumask = start.subset;
+	setrcu.settings().resize(1);
+	setrcu.settings()(0).value = start.rcucontrol.value;
+
+	m_rspdriver.send(setrcu);
       }
   }
 
@@ -418,7 +528,7 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
   CALStopEvent stop(e);
   CALStopackEvent ack;
   ack.name = stop.name;
-  ack.status = SUCCESS;
+  ack.status = CAL_Protocol::SUCCESS;
   
   // destroy subarray, what do we do with the observers?
   if (m_subarrays.schedule_remove(stop.name)) {
@@ -438,7 +548,7 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 
   CALSubscribeEvent subscribe(e);
   CALSubscribeackEvent ack;
-  ack.status = SUCCESS;
+  ack.status = CAL_Protocol::SUCCESS;
 
   // get subarray by name
   SubArray* subarray = m_subarrays.getByName(subscribe.name);
@@ -458,14 +568,8 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
     // return subarray positions
     ack.subarray = *subarray;
 
-    //m_clients[&port] = string(subscribe.name); // register subarray with port
-
-#if 0
-    // return sampling_frequency and nyquist_zone
-    const SpectralWindow& spw = subarray->getSPW();
-    ack.sampling_frequency = spw.getSamplingFrequency();
-    ack.nyquist_zone = spw.getNyquistZone();
-#endif
+    // don't register subarray in cal_subscribe
+    // it has already been registerd in cal_start
 
   } else {
 
@@ -490,7 +594,7 @@ GCFEvent::TResult CalServer::handle_cal_unsubscribe(GCFEvent& e, GCFPortInterfac
   CALUnsubscribeackEvent ack;
   ack.name = unsubscribe.name;
   ack.handle = unsubscribe.handle;
-  ack.status = SUCCESS;
+  ack.status = CAL_Protocol::SUCCESS;
 
   // find associated subarray
   SubArray* subarray = m_subarrays.getByName(unsubscribe.name);
@@ -520,7 +624,7 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 
   // create ack
   CALGetsubarrayackEvent ack;
-  ack.status = SUCCESS;
+  ack.status = CAL_Protocol::SUCCESS;
 
   // find associated subarray
   SubArray* subarray = m_subarrays.getByName(getsubarray.name);
