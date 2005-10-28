@@ -103,9 +103,22 @@ namespace LOFAR {
       AMC::ConverterClient        m_converter;    // interface for coordinate conversion (Astronomical Measures Conversion)
 
       /**
+       * Current sampling frequency of the system.
+       */
+      double m_sampling_frequency;
+
+      /** remember number of TD (Time Distribution) boards */
+      int m_n_tdboards;
+
+      /**
+       * Ports
+       */
+      GCFTCPPort m_acceptor;  // connect point for clients
+      GCFPort    m_rspdriver; // connect to RSPDriver for RSP_CONFIG and RSP_SETRCU events
+
+      /**
        * Client/Server management member variables.
        */
-      GCFTCPPort                               m_acceptor;     // connect point for clients
       std::map<GCFPortInterface*, std::string> m_clients;      // list of clients with related subarray name
       std::list<GCFPortInterface*>             m_dead_clients; // list of disconnected clients
 

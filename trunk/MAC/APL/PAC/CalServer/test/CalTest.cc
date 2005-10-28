@@ -138,7 +138,6 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	for (int i = 0; i < 2 * m_nantennas; i++) {
 	  start.subset.set(i);
 	}
-	start.sampling_frequency = m_clock;
 	start.nyquist_zone       = m_nyquistzone;
 	start.rcucontrol.value   = m_rcucontrol;
 
