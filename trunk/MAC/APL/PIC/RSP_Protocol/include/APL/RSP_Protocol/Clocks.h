@@ -41,13 +41,20 @@ namespace LOFAR {
       /**
        * Constructors for a Clocks object.
        */
-      Clocks() { }
+      Clocks() : m_modified(false) { }
 	  
       /* Destructor for Clocks. */
       virtual ~Clocks() {}
 
       /* get references to the version arrays */
       blitz::Array<uint32, 1>& operator()();
+
+      /**
+       * Access methods.
+       */
+      void setModified()       { m_modified = true; }
+      void clearModified()     { m_modified = false; }
+      bool getModified() const { return m_modified; }
 
     public:
       /*@{*/
@@ -67,6 +74,11 @@ namespace LOFAR {
        *  - m_clocks  [N_TDBOARDS]
        */
       blitz::Array<uint32, 1> m_clocks;
+
+      /**
+       * Keep track of when clocks setting is modified.
+       */
+      bool m_modified;
     };
 
     inline blitz::Array<uint32, 1>& Clocks::operator()() { return m_clocks; }

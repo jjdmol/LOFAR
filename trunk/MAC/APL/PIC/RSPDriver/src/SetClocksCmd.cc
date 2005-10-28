@@ -66,6 +66,7 @@ void SetClocksCmd::apply(CacheBuffer& cache)
     if (m_event->tdmask[cache_td])
     {
       cache.getClocks()()(cache_td) = m_event->clocks()(0);
+      cache.getClocks().setModified();
     }
   }
 }

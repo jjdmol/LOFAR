@@ -80,9 +80,9 @@ namespace LOFAR {
       /**
        * Access methods.
        */
-      void setModified()   { m_modified = true; }
-      void clearModified() { m_modified = false; }
-      bool getModified()   { return m_modified; }
+      void setModified()       { m_modified = true; }
+      void clearModified()     { m_modified = false; }
+      bool getModified() const { return m_modified; }
 
     public:
       /*@{*/

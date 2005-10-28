@@ -154,7 +154,8 @@ CacheBuffer::CacheBuffer()
   m_versions.ap() = 0;
 
   m_clocks().resize(GET_CONFIG("RS.N_TDBOARDS", i));
-  m_clocks() = 0;
+  m_clocks() = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
+  m_clocks.setModified();
 
   // print sizes of the cache
   LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
@@ -283,6 +284,7 @@ void Cache::swapBuffers()
 {
   // clear modified flags on back buffer
   m_back->getWGSettings().clearModified();
+  m_back->getClocks().clearModified();
 
   CacheBuffer *tmp = m_front;
   m_front = m_back;
