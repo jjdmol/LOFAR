@@ -23,7 +23,7 @@ add2file () {
 }
 applyfile () {
   add2file  "quit" 
-  ./parmdb < fill.parmdb
+  src/parmdb < fill.parmdb
 }
 makeMeq () {
   diff="1e-6" 
