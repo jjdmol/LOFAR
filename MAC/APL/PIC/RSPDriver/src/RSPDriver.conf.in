@@ -147,3 +147,10 @@ RSPDriver.FORCE_VDDVCC_EN=1
 # Specify which RSP board is first for cross correlation (indexing from 0)
 #
 RSPDriver.XST_FIRST_RSP_BOARD=0
+
+#
+# Specify the default sampling frequency that should be programmed
+# into the hardware when the driver starts.
+# Currently allowed values are: 160000000 and 200000000
+#
+RSPDriver.DEFAULT_SAMPLING_FREQUENCY=160000000

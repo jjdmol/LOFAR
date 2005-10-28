@@ -80,7 +80,8 @@ void UpdClocksCmd::complete(CacheBuffer& cache)
     }
   }
 
-  getPort()->send(ack);
+  // only send ack if clock setting has been modified
+  if (cache.getClocks().getModified()) getPort()->send(ack);
 }
 
 const Timestamp& UpdClocksCmd::getTimestamp() const
