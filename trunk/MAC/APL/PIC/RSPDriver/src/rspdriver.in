@@ -16,15 +16,18 @@ if [ -f $PREFIX/etc/sysconfig/rspdriver ];then
         . $PREFIX/etc/sysconfig/rspdriver
 fi
 
-# Check preconditions
-# These files must exist
-[ -x $PREFIX/bin/RSPDriver ] || exit 0
-[ -e $PREFIX/etc/RSPDriver.conf ] || exit 0
-[ -e $PREFIX/etc/RSPDriverPorts.conf ] || exit 0
-[ -e $PREFIX/etc/RemoteStation.conf ] || exit 0
-
+#
+# initialize variables, set program name
+#
 RETVAL=0
 prog="RSPDriver"
+
+# Check preconditions
+# These files must exist
+[ -x $PREFIX/bin/$prog ] || exit 0
+[ -e $PREFIX/etc/$prog.conf ] || exit 0
+[ -e $PREFIX/etc/$prog""Ports.conf ] || exit 0
+[ -e $PREFIX/etc/RemoteStation.conf ] || exit 0
 
 start() {
     #
@@ -32,21 +35,24 @@ start() {
     #
     if [ "$USER" != "root" ]; then
         echo Must run as root.
-	exit 0
+	return 1
     fi
 
-    # set OPTIONS
-    OPTIONS=--root
+    # check if it is already running
+    if [ -f /var/lock/subsys/$prog ]; then
+	status $prog
+	return 1
+    fi
+
+    # -d means start in the background as daemon
+    OPTIONS="-d"
 
     # Start RSPDriver
     echo -n $"Starting $prog: "
-    mkdir -p $PREFIX/var/run
-    touch $PREFIX/var/run/$prog.pid
-    mkdir -p $PREFIX/var/log/
-    nohup $PREFIX/bin/$prog $OPTIONS > $PREFIX/var/log/RSPDriver.log &
+
+    daemon $PREFIX/bin/$prog $OPTIONS
     RETVAL=$?
-    mkdir -p $PREFIX/var/lock/subsys
-    [ $RETVAL -eq 0 ] && touch $PREFIX/var/lock/subsys/$prog && success $"$prog startup"
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
     echo
     return $RETVAL
 }
@@ -57,14 +63,14 @@ stop() {
     #
     if [ "$USER" != "root" ]; then
 	echo Must run as root.
-	exit 0
+	return 1
     fi
 
     # Stop RSPDriver
     echo -n $"Shutting down $prog: "
     killproc $prog
     RETVAL=$?
-    [ $RETVAL -eq 0 ] && rm -f $PREFIX/var/lock/subsys/$prog
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
     echo
     return $RETVAL
 }
@@ -73,9 +79,11 @@ stop() {
 case "$1" in
   start)
 	start
+	RETVAL=$?
         ;;
   stop)
 	stop
+	RETVAL=$?
         ;;
   status)
 	status $prog
@@ -87,7 +95,7 @@ case "$1" in
 	RETVAL=$?
 	;;
   condrestart)
-	if [ -f $PREFIX/var/lock/subsys/$prog ]; then
+	if [ -f /var/lock/subsys/$prog ]; then
 	    stop
 	    start
 	    RETVAL=$?

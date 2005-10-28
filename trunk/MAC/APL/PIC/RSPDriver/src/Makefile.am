@@ -20,7 +20,8 @@ BUILT_SOURCES = \
 	RSPDriver.conf \
 	Tuner.conf \
 	SetWG.conf \
-	rspctl.conf
+	rspctl.conf \
+	RSPDriver.log_prop
 
 clean-local:
 	rm -f *.ph
@@ -34,7 +35,8 @@ sysconf_DATA = \
 	RSPDriver.conf \
 	Tuner.conf \
 	SetWG.conf \
-	rspctl.conf
+	rspctl.conf \
+	RSPDriver.log_prop
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

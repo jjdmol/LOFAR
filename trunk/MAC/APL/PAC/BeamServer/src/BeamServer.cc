@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <APL/RTCCommon/daemonize.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
@@ -812,6 +813,16 @@ GCFEvent::TResult BeamServer::recall(GCFPortInterface& p)
 
 int main(int argc, char** argv)
 {
+  /* daemonize if required */
+  if (argc >= 2) {
+    if (!strcmp(argv[1], "-d")) {
+      if (0 != daemonize(false)) {
+	cerr << "Failed to background this process: " << strerror(errno) << endl;
+	exit(EXIT_FAILURE);
+      }
+    }
+  }
+
   GCFTask::init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));

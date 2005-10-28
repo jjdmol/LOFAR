@@ -25,7 +25,8 @@ lib_LTLIBRARIES = librtccommon.la libgnuplot_i.la
 
 librtccommon_la_SOURCES = \
 	Timestamp.cc \
-	Subject.cc
+	Subject.cc \
+	daemonize.c
 
 libgnuplot_i_la_SOURCES = \
 	gnuplot_i.cc

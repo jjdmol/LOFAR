@@ -24,18 +24,20 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <APL/RTCCommon/PSAccess.h>
+#include <APL/RTCCommon/daemonize.h>
+#include <GCF/ParameterSet.h>
+
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 #include <APL/RSP_Protocol/MEPHeader.h>
-
-#include <APL/RTCCommon/PSAccess.h>
-#include <GCF/ParameterSet.h>
 
 #include <blitz/array.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "RSPDriver.h"
 #include "Command.h"
@@ -1519,10 +1521,20 @@ void RSPDriver::rsp_unsubclocks(GCFEvent& event, GCFPortInterface& port)
 
 int main(int argc, char** argv)
 {
+  /* daemonize if required */
+  if (argc >= 2) {
+    if (!strcmp(argv[1], "-d")) {
+      if (0 != daemonize(false)) {
+	cerr << "Failed to background this process: " << strerror(errno) << endl;
+	exit(EXIT_FAILURE);
+      }
+    }
+  }
+
   GCFTask::init(argc, argv);
   
   LOG_INFO(formatString("Program %s has started", argv[0]));
-  
+
   try
   {
     GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
