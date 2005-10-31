@@ -72,6 +72,10 @@ public:
   // Get name of mapped file.
   const string& getFileName() const;
 
+  // Is the file writable?
+  bool isWritable() const;
+  
+
 private:
 
   // Forbid copy constructor and assignment
@@ -100,6 +104,9 @@ inline void* MMap::getStart()
 
 inline const string& MMap::getFileName() const
   { return itsFileName; }
+
+inline bool MMap::isWritable() const
+  { return itsProtection != MMap::Read; }
 
 // @}
 
