@@ -50,22 +50,22 @@ global dyn_string  g_referenceList = "";
 global string MESSAGE_DPACCESS = "Resource is not accessable.";
 global string MESSAGE_ACCESSDENIED = "ACCESS DENIED\n\nYou have no rights to access this resource.";
 //Enumaration for the use of userrights.
-global int	UR_TREEACCESS1            = 6;
-global int	UR_TREEACCESS2            = 7;
-global int	UR_TREEACCESS3            = 8;
-global int	UR_TREEACCESS4            = 9;
-global int	UR_TREEACCESS5            = 10;
-global int	UR_TREEACCESS6            = 11;
-global int	UR_TREEACCESS7            = 12;
-global int	UR_TREEACCESS8            = 13;
-global int	UR_TREEACCESS9            = 14;
-global int	UR_TREEACCESS10            = 15;
-global int	UR_CONFIGSYSTEMSUBVIEW     = 19;
-global int	UR_ADDREMOVESYSTEMSUBVIEW  = 20; 
-global int	UR_COMMANDSOPERATOR        = 21;
-global int	UR_COMMANDSMAINTENANCE     = 22;
-global int	UR_COMMANDSASTRONOMY       = 23;
-global int	UR_SYSTEMMANAGEMENT        = 24;
+global int  UR_TREEACCESS1            = 6;
+global int  UR_TREEACCESS2            = 7;
+global int  UR_TREEACCESS3            = 8;
+global int  UR_TREEACCESS4            = 9;
+global int  UR_TREEACCESS5            = 10;
+global int  UR_TREEACCESS6            = 11;
+global int  UR_TREEACCESS7            = 12;
+global int  UR_TREEACCESS8            = 13;
+global int  UR_TREEACCESS9            = 14;
+global int  UR_TREEACCESS10            = 15;
+global int  UR_CONFIGSYSTEMSUBVIEW     = 19;
+global int  UR_ADDREMOVESYSTEMSUBVIEW  = 20; 
+global int  UR_COMMANDSOPERATOR        = 21;
+global int  UR_COMMANDSMAINTENANCE     = 22;
+global int  UR_COMMANDSASTRONOMY       = 23;
+global int  UR_SYSTEMMANAGEMENT        = 24;
 /////////////////////////////////////////////
 //globals voor pathNames
 global string g_path_temp     = ""; 
@@ -82,7 +82,7 @@ global int g_path_pictureconverter_index  = 3;
 ///////////////////////////////////////////////////////////////////////////////////
 void convertOriginal2ReferenceDP(string datapointOriginal, string &datapointPathRef)
 {
-  if(mappingHasKey(g_datapoint2itemID,datapointOriginal))
+  if (mappingHasKey(g_datapoint2itemID, datapointOriginal))
   {
     datapointPathRef = datapointOriginal;
   }
@@ -102,8 +102,8 @@ void changeSelectedPosition(string newDatapoint)
   int i;
   long nodeID;
   dyn_string datapointPath = splitDatapointPath(newDatapoint);
-  string systemName = substr(getSystemName(getSystemId()), 0, (strlen(getSystemName(getSystemId()))-1));
-  if(g_datapoint==systemName)
+  string systemName = substr(getSystemName(getSystemId()), 0, (strlen(getSystemName(getSystemId())) - 1));
+  if (g_datapoint == systemName)
   {
     TreeView_OnExpand(1);
   }
@@ -113,52 +113,52 @@ void changeSelectedPosition(string newDatapoint)
   dyn_string dcurrent = splitDatapointPath(g_datapoint);
   dyn_string dnew     = splitDatapointPath(newDatapoint);
   int Index;
-  for (i=1 ; i<=dynlen(datapointPath); i++)
+  for (i = 1; i <= dynlen(datapointPath); i++)
   {
-    if (i==1)
+    if (i == 1)
     {
       temp = datapointPath[i];
     }
     else
     {
-	  if (i==dynlen(datapointPath)) //last element in datapointPath could be an datapoint element
-	  {
-	   temp_dpe = temp + "." + datapointPath[i];
-	  }
+    if (i == dynlen(datapointPath)) //last element in datapointPath could be an datapoint element
+    {
+     temp_dpe = temp + "." + datapointPath[i];
+    }
       temp = temp + "_" + datapointPath[i]; //build datapoint
     }
 
     nodeID = getNodeFromDatapoint(temp);
-    if(nodeID==0) //temp not found
+    if (nodeID == 0) //temp not found
     {
       nodeID = getNodeFromDatapoint(temp + " ->"); //maybe a local reference
-      if(nodeID!=0)
+      if (nodeID != 0)
       {
         temp = temp + " ->";
       }
       else
       {
         nodeID = getNodeFromDatapoint(temp + " ->>"); //temp maybe a remote reference
-        if(nodeID!=0)
+        if (nodeID != 0)
         {
           temp = temp + " ->>";
         }
       }
     }
-    if (i!=dynlen(datapointPath)) // do not expand last node, costs to much time/performance!!!!
+    if (i != dynlen(datapointPath)) // do not expand last node, costs to much time/performance!!!!
     {
-      if (nodeID !=0)
+      if (nodeID != 0)
       {
         TreeView_OnExpand((nodeID));
       }
       else
       {
         nodeID = getNodeFromDatapoint(temp_dpe); //nodeID not found, try the datapoint element
-        if (nodeID !=0)
-  	  {
-	    TreeView_OnExpand(nodeID);
+        if (nodeID != 0)
+      {
+      TreeView_OnExpand(nodeID);
       
-   	}
+     }
     }
     }
   }
@@ -188,14 +188,14 @@ bool ActiveXSupported()
 void setActiveXSupported() 
 {
   idispatch activeXctrl = 0;
-  if(activeXctrl==0)
+  if (activeXctrl == 0)
   {
-    LOG_TRACE("I cannot create a COM object!? What the ....?? You must be running Linux or something.","");
+    LOG_TRACE("I cannot create a COM object!? What the ....?? You must be running Linux or something.", "");
     ACTIVEX_SUPPORTED = false;
   }
   else
   {
-    LOG_TRACE("I can create a COM object! ",activeXctrl);
+    LOG_TRACE("I can create a COM object! ", activeXctrl);
     releaseComObject(activeXctrl);
     ACTIVEX_SUPPORTED = true;
   }
@@ -209,7 +209,7 @@ void setActiveXSupported()
 ///////////////////////////////////////////////////////////////////////////
 string getTreeCtrlName()
 {
-  if(ActiveXSupported())
+  if (ActiveXSupported())
   {
     return ACTIVEX_TREE_CTRL_NAME;
   }
@@ -259,9 +259,9 @@ shape getTabCtrl()
 ///////////////////////////////////////////////////////////////////////////
 long getSelectedNode()
 {
-	long selectedNode = 0;
+  long selectedNode = 0;
   shape treeCtrl = getTreeCtrl(); 
-  if(ActiveXSupported())
+  if (ActiveXSupported())
   {
     selectedNode = treeCtrl.Selected; 
   }
@@ -269,17 +269,17 @@ long getSelectedNode()
   {
     int selectedPos;
     fwTreeView_getSelectedPosition(selectedPos);
-    LOG_TRACE("selected pos:",selectedPos);
-    if(selectedPos >= 1)
+    LOG_TRACE("selected pos:", selectedPos);
+    if (selectedPos >= 1)
     {
-    	selectedNode = fwTreeView_view2TreeIndex(selectedPos);
+      selectedNode = fwTreeView_view2TreeIndex(selectedPos);
     }
     else
     {
-    	selectedNode = selectedPos;
+      selectedNode = selectedPos;
     }
   }
-  LOG_TRACE("selected node:",selectedNode);
+  LOG_TRACE("selected node:", selectedNode);
   return selectedNode;
 }
 
@@ -290,10 +290,10 @@ long getSelectedNode()
 ///////////////////////////////////////////////////////////////////////////
 void refreshNavigator()
 {
-  if(!g_initializing)
+  if (!g_initializing)
   {
-    LOG_TRACE("refreshNavigator  ",g_curSelNode);
-    if(g_curSelNode != 0)
+    LOG_TRACE("refreshNavigator  ", g_curSelNode);
+    if (g_curSelNode != 0)
     {
       string datapointPath = buildPathFromNode(g_curSelNode);
 
@@ -304,7 +304,7 @@ void refreshNavigator()
       checkForReference(datapointPath, reference, dpIsReference);
       string dpViewConfig = navConfigGetViewConfig(datapointPath);
 
-      showView(dpViewConfig,datapointPath);
+      showView(dpViewConfig, datapointPath);
     }
   }
   else
@@ -320,11 +320,11 @@ void refreshNavigator()
 ///////////////////////////////////////////////////////////////////////////
 void showActiveView(string dpViewConfig, string datapointPath)
 {
-  LOG_DEBUG("showActiveView",dpViewConfig,datapointPath);
+  LOG_DEBUG("showActiveView", dpViewConfig, datapointPath);
   shape tabCtrl = getTabCtrl();
   string viewsPath = navConfigGetViewsPath();
-  int selectedViewTabId=tabCtrl.activeRegister+1;
-  LOG_DEBUG("showActiveView, active view = ",selectedViewTabId);
+  int selectedViewTabId = tabCtrl.activeRegister + 1;
+  LOG_DEBUG("showActiveView, active view = ", selectedViewTabId);
 
   navConfigSetSelectedElement(datapointPath);
   dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
@@ -332,23 +332,23 @@ void showActiveView(string dpViewConfig, string datapointPath)
   // get tab properties
   dyn_string views = navConfigGetViews(dpViewConfig);
   
-  for(int tabId=1;tabId<=dynlen(views);tabId++)
+  for (int tabId = 1; tabId <= dynlen(views); tabId++)
   {
-    if(tabId != selectedViewTabId)
+    if (tabId != selectedViewTabId)
     {
       // load empty panel in non-visible tabs to enhance performance
-      tabCtrl.registerPanel(tabId-1, viewsPath + "nopanel.pnl",makeDynString(""));
+      tabCtrl.registerPanel(tabId - 1, viewsPath + "nopanel.pnl", makeDynString(""));
     }
     else
     {
-      if(dpAccessable(views[selectedViewTabId]))
+      if (dpAccessable(views[selectedViewTabId]))
       {
-        tabCtrl.registerPanel(selectedViewTabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+        tabCtrl.registerPanel(selectedViewTabId - 1, NAVIGATOR_TAB_FILENAME, panelParameters);
       }
       else
       {
-        LOG_TRACE("showActiveView","tab reference not found; making tab invisible: ",selectedViewTabId);
-        tabCtrl.registerVisible(selectedViewTabId-1)=FALSE;
+        LOG_TRACE("showActiveView", "tab reference not found; making tab invisible: ", selectedViewTabId);
+        tabCtrl.registerVisible(selectedViewTabId - 1) = FALSE;
       }
     }
   }
@@ -361,93 +361,93 @@ void showActiveView(string dpViewConfig, string datapointPath)
 ///////////////////////////////////////////////////////////////////////////
 void showView(string dpViewConfig, string datapointPath)
 {
-  LOG_DEBUG("showView",dpViewConfig,datapointPath);
+  LOG_DEBUG("showView", dpViewConfig, datapointPath);
   shape tabCtrl = getTabCtrl();
   string viewsPath = navConfigGetViewsPath();
-  int selectedViewTabId=1;
+  int selectedViewTabId = 1;
   int tabId;
 
   navConfigSetSelectedElement(datapointPath);
   dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
   // get the selected tab
   string selectedViewCaption = navConfigGetSelectedView();
-  LOG_DEBUG("showView","selected View:",selectedViewCaption);
+  LOG_DEBUG("showView", "selected View:", selectedViewCaption);
 
   // get tab properties
   dyn_string views = navConfigGetViews(dpViewConfig);
 
   // At first find the selected tabview, and replace the current registerPanel
   // by an empty panel. So the panel doesn't blink any more.
-  for(tabId=1;tabId<=dynlen(views);tabId++)
+  for (tabId = 1; tabId <= dynlen(views); tabId++)
   {
-    if(dpAccessable(views[tabId]))
+    if (dpAccessable(views[tabId]))
     {
       string caption = navConfigGetViewCaption(views[tabId]);
-      if(strlen(caption)>0)
+      if (strlen(caption) > 0)
       {
-        if(caption==selectedViewCaption)
+        if (caption == selectedViewCaption)
         {
-          tabCtrl.registerPanel(tabId-1, viewsPath + "nopanel.pnl",makeDynString(""));
+          tabCtrl.registerPanel(tabId - 1, viewsPath + "nopanel.pnl", makeDynString(""));
         }
       }
     }
   }
   
   //Now arrange the other tabs
-  for(tabId=1;tabId<=dynlen(views);tabId++)
+  for (tabId = 1; tabId <= dynlen(views); tabId++)
   {
-    if(dpAccessable(views[tabId]))
+    if (dpAccessable(views[tabId]))
     {
       string caption = navConfigGetViewCaption(views[tabId]);
-      if(strlen(caption)>0)
+      if (strlen(caption) > 0)
       {
-        LOG_DEBUG("showView","making tab visible: ",tabId,caption);
-        tabCtrl.namedColumnHeader("tab"+tabId) = caption;
-        tabCtrl.registerVisible(tabId-1)=TRUE;
+        LOG_DEBUG("showView", "making tab visible: ", tabId, caption);
+        tabCtrl.namedColumnHeader("tab" + tabId) = caption;
+        tabCtrl.registerVisible(tabId - 1) = TRUE;
         
         // check if this tab is currently selected
-        if(caption == selectedViewCaption)
+        if (caption == selectedViewCaption)
         {
-          LOG_DEBUG("showView","caption=selectedViewCaption");
+          LOG_DEBUG("showView", "caption=selectedViewCaption");
           
           selectedViewTabId = tabId;
           //bring this option outside this loop next line is new
-          //tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+          //tabCtrl.registerPanel(tabId - 1, NAVIGATOR_TAB_FILENAME, panelParameters);
         }
       }
       else
       {
-        LOG_TRACE("showView","empty caption or filename; making tab invisible: ",tabId);
-        tabCtrl.registerVisible(tabId-1)=FALSE;
+        LOG_TRACE("showView", "empty caption or filename; making tab invisible: ", tabId);
+        tabCtrl.registerVisible(tabId - 1) = FALSE;
       }
     }
     else
     {
-      LOG_TRACE("showView","tab reference not found; making tab invisible: ",tabId);
-      tabCtrl.registerVisible(tabId-1)=FALSE;
+      LOG_TRACE("showView", "tab reference not found; making tab invisible: ", tabId);
+      tabCtrl.registerVisible(tabId - 1) = FALSE;
     }
-    //delay(1,0);
+    //delay(1, 0);
   }
 
   //NOW display the selected tabview, after the tabs are filled and ready
-  tabCtrl.registerPanel(selectedViewTabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+  tabCtrl.registerPanel(selectedViewTabId - 1, NAVIGATOR_TAB_FILENAME, panelParameters);
 
   // check if this tab is currently selected
-  if(selectedViewCaption == "")
+  if (selectedViewCaption == "")
   {
-    LOG_DEBUG("showView","selectedViewCaption=\"\"");
+    LOG_DEBUG("showView", "selectedViewCaption=\"\"");
     selectedViewTabId = 1;
-    tabCtrl.registerPanel(0,NAVIGATOR_TAB_FILENAME,panelParameters);
+    tabCtrl.registerPanel(0, NAVIGATOR_TAB_FILENAME, panelParameters);
   }
-  tabCtrl.activeRegister = selectedViewTabId-1;
+  tabCtrl.activeRegister = selectedViewTabId - 1;
   
   // make the rest of the views invisible
   int i;
   
-  for(i=tabId;i<=NR_OF_VIEWS;i++)
+  for (i = tabId; i <= NR_OF_VIEWS; i++)
   {
-    LOG_TRACE("showView","tab undefined; making tab invisible: ",i);
-    tabCtrl.registerVisible(i-1)=FALSE;
+    LOG_TRACE("showView", "tab undefined; making tab invisible: ", i);
+    tabCtrl.registerVisible(i - 1) = FALSE;
   }
 
 }
@@ -461,19 +461,18 @@ void showView(string dpViewConfig, string datapointPath)
 // - The level parameter is used to indent the node in the tree list control
 //
 ///////////////////////////////////////////////////////////////////////////
-long treeAddNode(long parentId,int level,string text) 
+long treeAddNode(long parentId, int level, string text) 
 { 
-  long nodeId=0;
-  shape treeCtrl = getTreeCtrl();
+  long nodeId = 0;
 
-  if(parentId==-1)
+  if (parentId == -1)
   {
-    nodeId = fwTreeView_appendToParentNode(0,text,"",0,level);
+    nodeId = fwTreeView_appendToParentNode(0, text, "", 0, level);
   }
   else
   {
-    nodeId = fwTreeView_appendToParentNode(parentId,text,"",0,level);
-	  treeAddCount++;
+    nodeId = fwTreeView_appendToParentNode(parentId, text, "", 0, level);
+    treeAddCount++;
   }
   return nodeId;
 }
@@ -492,181 +491,181 @@ void treeAddDatapoints(dyn_string names)
   dyn_dyn_int elementTypes;
   dyn_string addedDatapoints;
   string systemName;
-  long addedNode=0;
+  long addedNode = 0;
   dynSortAsc(names); //Sort the dyn_string names to avoid problems with references
   g_parentIndex = 0;           // variable used in function fwTreeView_appendToParentNode
   g_nodeID  = 0;  // to increase performance
-  if(dynlen(names)>0)
+  if (dynlen(names) > 0)
   {
-    systemName = strrtrim(dpSubStr(names[1],DPSUB_SYS),":");
+    systemName = strrtrim(dpSubStr(names[1], DPSUB_SYS), ":");
 
-	  // Check if the item already exists
-	  if(mappingHasKey(g_datapoint2itemID,systemName))
-	  {
-	    addedNode = g_datapoint2itemID[systemName];
-	  }
-	  else
-	  {
-		  addedNode = treeAddNode(-1,0,systemName);
-      LOG_TRACE("Added root node: ",addedNode,systemName);
-      insertDatapointNodeMapping(addedNode,systemName);
+    // Check if the item already exists
+    if (mappingHasKey(g_datapoint2itemID, systemName))
+    {
+      addedNode = g_datapoint2itemID[systemName];
+    }
+    else
+    {
+      addedNode = treeAddNode(-1, 0, systemName);
+      LOG_TRACE("Added root node: ", addedNode, systemName);
+      insertDatapointNodeMapping(addedNode, systemName);
     }  
-	  
-	  // go through the list of datapoint names
-	  for(namesIndex=1;namesIndex<=dynlen(names);namesIndex++)
-	  {
+    
+    // go through the list of datapoint names
+    for (namesIndex = 1; namesIndex <= dynlen(names); namesIndex++)
+    {
       dyn_int internalNodeMapping;
       dyn_string internalFullDPName;
 
-	    int pathIndex;
-	    dyn_string dpPathElements;
-	    string datapointName;
-	    int parentId;
-	    // remove the System part from the datapoint name
-	    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
-      if(datapointName == "")
+      int pathIndex;
+      dyn_string dpPathElements;
+      string datapointName;
+      int parentId;
+      // remove the System part from the datapoint name
+      datapointName = dpSubStr(names[namesIndex], DPSUB_DP);
+      if (datapointName == "")
       {
         datapointName = names[namesIndex];
         // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
-        int sepPos = strpos(datapointName,":");
-        if(sepPos >= 0)
+        int sepPos = strpos(datapointName, ":");
+        if (sepPos >= 0)
         {
-          datapointName = substr(datapointName,sepPos+1);
+          datapointName = substr(datapointName, sepPos + 1);
         }
       }
 
-	    // only add ENABLED datapoints
-	    dyn_string reference;
-	    string dpName=names[namesIndex];
-	    bool dpIsReference=false;
+      // only add ENABLED datapoints
+      dyn_string reference;
+      string dpName = names[namesIndex];
+      bool dpIsReference = false;
       checkForReference(dpName, reference, dpIsReference);
-	    if(dpIsReference) //If the dpName is a reference, use the original datapoint
-	    {
-	      LOG_DEBUG("DP is reference",dpName, reference[2]);
-	    }
-	    else
-	    {
-	      dpName=names[namesIndex];
-	    }
-	      
-	    // split the datapoint path in elements
-	    dpPathElements = strsplit(datapointName,"_");
-	    string addingDPpart = systemName;
-	    for(pathIndex=0;pathIndex<=dynlen(dpPathElements);pathIndex++)
-	    {
-	      // Check if the item already exists
-	      if(mappingHasKey(g_datapoint2itemID,addingDPpart))
-	      {
-	        addedNode = g_datapoint2itemID[addingDPpart];
-	      }
-	      else
-	      {
-	        // item does not exist
-	        dynAppend(addedDatapoints,addingDPpart);
-	        if(addingDPpart != systemName)
-	        {
-	          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
-			      if (addedNode!=0)
-		        {
-		          internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
-		          internalFullDPName[dynlen(internalFullDPName)+1] = addingDPpart;
-		        }
-            LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
-	        }
-        }
-	      parentId = addedNode;
-        if(pathIndex<dynlen(dpPathElements))
+      if (dpIsReference) //If the dpName is a reference, use the original datapoint
+      {
+        LOG_DEBUG("DP is reference", dpName, reference[2]);
+      }
+      else
+      {
+        dpName = names[namesIndex];
+      }
+        
+      // split the datapoint path in elements
+      dpPathElements = strsplit(datapointName, "_");
+      string addingDPpart = systemName;
+      for (pathIndex = 0; pathIndex <= dynlen(dpPathElements); pathIndex++)
+      {
+        // Check if the item already exists
+        if (mappingHasKey(g_datapoint2itemID, addingDPpart))
         {
-		      if(pathIndex==0)
-		      {
-		        addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex+1];
-		      }
-		      else if(pathIndex<dynlen(dpPathElements))
-		      {
-		       addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex+1];
-		      }
+          addedNode = g_datapoint2itemID[addingDPpart];
         }
-	    }
+        else
+        {
+          // item does not exist
+          dynAppend(addedDatapoints, addingDPpart);
+          if (addingDPpart != systemName)
+          {
+            addedNode = treeAddNode(parentId, pathIndex, dpPathElements[pathIndex]); 
+            if (addedNode != 0)
+            {
+              internalNodeMapping[dynlen(internalNodeMapping) + 1] = addedNode;
+              internalFullDPName[dynlen(internalFullDPName) + 1] = addingDPpart;
+            }
+            LOG_TRACE("Added node: ", addedNode, parentId, pathIndex, dpPathElements[pathIndex]);
+          }
+        }
+        parentId = addedNode;
+        if (pathIndex < dynlen(dpPathElements))
+        {
+          if (pathIndex == 0)
+          {
+            addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex + 1];
+          }
+          else if (pathIndex < dynlen(dpPathElements))
+          {
+           addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex + 1];
+          }
+        }
+      }
 
-      if(navConfigCheckEnabled(dpName))
+      if (navConfigCheckEnabled(dpName))
       {
         // get the datapoint structure
         dynClear(elementNames);
         dynClear(elementTypes);
-        dpIsReference=false;
+        dpIsReference = false;
         checkForReference(names[namesIndex], reference, dpIsReference);
-        LOG_TRACE("dpTypeGet for: ",names[namesIndex]);
-        int TypeGetError = dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."),elementNames,elementTypes);
-        if(TypeGetError==-1) // the enabled doesn't exist, the the dpTypeName on names[Index]
+        LOG_TRACE("dpTypeGet for: ", names[namesIndex]);
+        int TypeGetError = dpTypeGet(getDpTypeFromEnabled(names[namesIndex] + "__enabled."), elementNames, elementTypes);
+        if (TypeGetError == -1) // the enabled doesn't exist, then the dpTypeName on names[Index]
         {
-          dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
+          dpTypeGet(dpTypeName(names[namesIndex]), elementNames, elementTypes);
         }
   
         // add elements of this datapoint, if any, skip system stuff
-        if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
+        if ((addedNode != 0) && (addingDPpart != systemName) && (dynlen(elementNames) > 1))
         {
           int         elementIndex;
           dyn_int     parentIds;
           dyn_string  parentNodes;
           parentIds[1]   = addedNode;
           parentNodes[1] = "";
-          // skip the first element in the array because it contains the datapoint type name
           
-          //for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
-          int max;
-          if (namesIndex == 1)  max = dynlen(elementNames);
-          else max = 2;
           string fullDPname;
-          //for(elementIndex=2;elementIndex<=max;elementIndex++)
-          for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++)
+          // skip the first element in the array because it contains the datapoint type name
+          for (elementIndex = 2; elementIndex <= dynlen(elementNames); elementIndex++)
           {
             // every last item of each array contains an element name (see help on dpTypeGet())
             // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
-            int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
-            string elementName = elementNames[elementIndex][elementLevel+1];
-            if("__"==substr(elementName, 0,2)) //Check if the elementName contains reference info
+            int elementLevel = dynlen(elementNames[elementIndex]) - 1; // how deep is the element?
+            string elementName = elementNames[elementIndex][elementLevel + 1];
+            if ("__" == substr(elementName, 0, 2)) //Check if the elementName contains reference info
             {
-              dyn_string referenceContent;
-              dpGet(addingDPpart + "."+elementName, referenceContent);
-              for(int k=1; k<=dynlen(referenceContent); k++)
+              if (strpos(addingDPpart, " ->") < 0)
               {
-                dyn_string referenceSplit = strsplit(referenceContent[k], "=");
-                g_referenceList[dynlen(g_referenceList)+1]= addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2])+"=" + referenceSplit[2];
-                names[dynlen(names)+1]= addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
-                LOG_TRACE("Add reference: ",names[dynlen(names)]);
-                // Because this is a reference, the DP's of the branche must be retrieved and
-                // add to the dyn_string names, for correct build-up of the tree.
-                dyn_string refResources = navConfigGetResources(addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]),2);
-                dynAppend(names,refResources);
-              }
+	              dyn_string referenceContent;
+	              
+	              dpGet(addingDPpart + "." + elementName, referenceContent);
+	              for (int k = 1; k <= dynlen(referenceContent); k++)
+	              {
+	                dyn_string referenceSplit = strsplit(referenceContent[k], "=");
+	                string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
+	                g_referenceList[dynlen(g_referenceList) + 1] = referenceText + "=" + referenceSplit[2];
+	                names[dynlen(names) + 1] = referenceText;
+	                LOG_TRACE("Add reference: ", names[dynlen(names)]);
+	                // Because this is a reference, the DP's of the branche must be retrieved and
+	                // add to the dyn_string names, for correct build-up of the tree.
+	                dyn_string refResources = navConfigGetResources(referenceText, 2);
+	                dynAppend(names, refResources);
+	              }
+	            }
             }
-            else if(g_showDPE) //show elements?
+            else if (g_showDPE) //show elements?
             {            
               //a reference element must never appear in the treebrowser
-              fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
-              if(mappingHasKey(g_datapoint2itemID,fullDPname))
+              fullDPname = addingDPpart + parentNodes[elementLevel] + "." + elementName;
+              if (mappingHasKey(g_datapoint2itemID, fullDPname))
               {
                 addedNode = g_datapoint2itemID[fullDPname];
               }
               else
               {
-                addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
-                LOG_TRACE("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
-  		          if (addedNode!=0)
+                addedNode = treeAddNode(parentIds[elementLevel], pathIndex - 1 + elementLevel, elementName); 
+                LOG_TRACE("Added element node: ", addedNode, parentIds[elementLevel], pathIndex - 1 + elementLevel, fullDPname);
+                if (addedNode != 0)
                 {
-    			        internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
-        			    internalFullDPName[dynlen(internalFullDPName)+1] = fullDPname;
-  		          }
+                  internalNodeMapping[dynlen(internalNodeMapping) + 1] = addedNode;
+                  internalFullDPName[dynlen(internalFullDPName) + 1] = fullDPname;
+                }
               }
-              parentIds[elementLevel+1] = addedNode; // remember this node as parent at its level in case there are elements below this one
-              parentNodes[elementLevel+1] = parentNodes[elementLevel]+"."+elementName;
+              parentIds[elementLevel + 1] = addedNode; // remember this node as parent at its level in case there are elements below this one
+              parentNodes[elementLevel + 1] = parentNodes[elementLevel] + "." + elementName;
             }
           }
         }
       }
-  	  if(dynlen(internalNodeMapping)!=0)
-  	  { 
-  	    insertInternalNodeMapping(internalNodeMapping, internalFullDPName);
+      if (dynlen(internalNodeMapping) != 0)
+      { 
+        insertInternalNodeMapping(internalNodeMapping, internalFullDPName);
       }
     }
   }
@@ -683,7 +682,7 @@ void treeAddDatapoints(dyn_string names)
 string referenceSign(string reference)
 {
  string refSign;
- if(dpIsDistributed(reference))
+ if (dpIsDistributed(reference))
  {
    refSign = " ->>";
  }
@@ -704,35 +703,35 @@ string referenceSign(string reference)
 ///////////////////////////////////////////////////////////////////////////
 insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
 {
-  int length=mappinglen(g_datapoint2itemID);
-  int teller=0;
+  int length = mappinglen(g_datapoint2itemID);
+  int teller = 0;
   int fullDPNameLength = dynlen(internalNodeMapping);
 
   //# If the first node number is equal or smaller than the last node number id
   //# the global list, this function must be called;
-  if (internalNodeMapping[1]<=mappinglen(g_datapoint2itemID)) 
+  if (internalNodeMapping[1] <= mappinglen(g_datapoint2itemID)) 
   {
-    for(int i= (length+ dynlen(internalNodeMapping)); i>=internalNodeMapping[1]; i--)
+    for (int i= (length + dynlen(internalNodeMapping)); i >= internalNodeMapping[1]; i--)
     {
-	    if (i > internalNodeMapping[dynlen(internalNodeMapping)])
-	    {
-	      g_itemID2datapoint[i] = g_itemID2datapoint[(i-dynlen(internalNodeMapping))];
-        g_datapoint2itemID[g_itemID2datapoint[(i-dynlen(internalNodeMapping))]] = i;
-	    }
-	    else if (i>=internalNodeMapping[1] && i<=internalNodeMapping[dynlen(internalNodeMapping)])
-	    {
-	      g_itemID2datapoint[i] = fullDPname[dynlen(fullDPname) + teller];
-		    g_datapoint2itemID[fullDPname[dynlen(fullDPname) + teller]] = i;
-		    teller--;
-	    }
+      if (i > internalNodeMapping[dynlen(internalNodeMapping)])
+      {
+        g_itemID2datapoint[i] = g_itemID2datapoint[(i - dynlen(internalNodeMapping))];
+        g_datapoint2itemID[g_itemID2datapoint[(i - dynlen(internalNodeMapping))]] = i;
+      }
+      else if (i >= internalNodeMapping[1] && i <= internalNodeMapping[dynlen(internalNodeMapping)])
+      {
+        g_itemID2datapoint[i] = fullDPname[dynlen(fullDPname) + teller];
+        g_datapoint2itemID[fullDPname[dynlen(fullDPname) + teller]] = i;
+        teller--;
+      }
     }
   }
   else
   {
-    for(int j=1; j<=dynlen(internalNodeMapping); j++)
+    for (int j = 1; j <= dynlen(internalNodeMapping); j++)
     {
       g_itemID2datapoint[internalNodeMapping[j]] = fullDPname[j];
-	    g_datapoint2itemID[fullDPname[j]] = internalNodeMapping[j];
+      g_datapoint2itemID[fullDPname[j]] = internalNodeMapping[j];
     }
   }
 }
@@ -744,12 +743,12 @@ insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
 ///////////////////////////////////////////////////////////////////////////
 string buildPathFromNode(long Node)
 {
-	string datapointPath = "";
-	if(Node >= 1)
-	{
-  	datapointPath = g_itemID2datapoint[Node];
+  string datapointPath = "";
+  if (Node >= 1)
+  {
+    datapointPath = g_itemID2datapoint[Node];
   }
-  LOG_TRACE("buildPathFromNode(",Node,") returns ",datapointPath);
+  LOG_TRACE("buildPathFromNode(",Node,") returns ", datapointPath);
   return datapointPath;
 }
 
@@ -760,16 +759,16 @@ string buildPathFromNode(long Node)
 ///////////////////////////////////////////////////////////////////////////
 long getNodeFromDatapoint(string dpe)
 {
-  long nodeId=0;
+  long nodeId = 0;
   
-  //string datapointName = dpSubStr(dpe,DPSUB_SYS_DP_EL); Origiganel 
+  //string datapointName = dpSubStr(dpe, DPSUB_SYS_DP_EL); Origiganel 
   string datapointName = getSystemName(getSystemId()) + dpe;  //New AdB 18-3-2005
-  LOG_TRACE("getNodeFromDatapoint: searching for: ",dpe,datapointName);
-  if(mappingHasKey(g_datapoint2itemID,datapointName))
+  LOG_TRACE("getNodeFromDatapoint: searching for: ", dpe, datapointName);
+  if (mappingHasKey(g_datapoint2itemID, datapointName))
   {
     nodeId = g_datapoint2itemID[datapointName];
   }
-  LOG_TRACE("found??? nodeId= ",nodeId);
+  LOG_TRACE("found??? nodeId= ", nodeId);
   return nodeId;
 }
 
@@ -781,18 +780,18 @@ long getNodeFromDatapoint(string dpe)
 ///////////////////////////////////////////////////////////////////////////
 void insertDatapointNodeMapping(int node, string dp)
 {
-  for(int i=dynlen(g_itemID2datapoint); i>=node && i>=1; i--)
+  for (int i = dynlen(g_itemID2datapoint); i >= node && i >= 1; i--)
   {
-    g_itemID2datapoint[i+1] = g_itemID2datapoint[i];
+    g_itemID2datapoint[i + 1] = g_itemID2datapoint[i];
   }
   g_itemID2datapoint[node] = dp;
   
-  for(int i=1;i<=mappinglen(g_datapoint2itemID);i++)
+  for (int i = 1; i <= mappinglen(g_datapoint2itemID); i++)
   {
-    int value = mappingGetValue(g_datapoint2itemID,i);
-    if(value >= node)
+    int value = mappingGetValue(g_datapoint2itemID, i);
+    if (value >= node)
     {
-      g_datapoint2itemID[mappingGetKey(g_datapoint2itemID,i)] = value+1;
+      g_datapoint2itemID[mappingGetKey(g_datapoint2itemID, i)] = value + 1;
     }
   }
   g_datapoint2itemID[dp] = node;
@@ -805,27 +804,27 @@ void insertDatapointNodeMapping(int node, string dp)
 ///////////////////////////////////////////////////////////////////////////
 void AlertStatusHandler(string dpe, long status)
 {
-  if(!g_initializing)
+  if (!g_initializing)
   {
-    LOG_TRACE("AlertStatusHandler()",dpe,status);
+    LOG_TRACE("AlertStatusHandler()", dpe, status);
     // search dpe in tree
     long nodeId = getNodeFromDatapoint(dpe);
-    if(nodeId>=0)
+    if (nodeId >= 0)
     {
       shape treeCtrl = getTreeCtrl(); 
-      if(ActiveXSupported())
+      if (ActiveXSupported())
       {
         idispatch node;
         node = treeCtrl.ExtractNode(nodeId);
         node.Text = stripColorTags(node.Cells(1));
-        if(status == 0)
+        if (status == 0)
         {
           node.Data = "";
         }
         else
         {
           node.Data = "A";
-          string nodeText = addColorTags(node.Cells(1),"0x0000ff");
+          string nodeText = addColorTags(node.Cells(1), "0x0000ff");
           LOG_TRACE(nodeText);
           node.Text = nodeText;
           LOG_TRACE(node.Text);
@@ -837,7 +836,7 @@ void AlertStatusHandler(string dpe, long status)
   // TODO
       }
     }
-    LOG_TRACE("~AlertStatusHandler()",dpe,status);
+    LOG_TRACE("~AlertStatusHandler()", dpe, status);
   }
 }
 
@@ -846,17 +845,17 @@ void AlertStatusHandler(string dpe, long status)
 //
 // adds HTML color tags to the specified string
 ///////////////////////////////////////////////////////////////////////////
-string addColorTags(string text, string fgcolor="" ,string bgcolor = "")
+string addColorTags(string text, string fgcolor = "", string bgcolor = "")
 {
   LOG_TRACE("COLOR TAGS DISABLED");
   string taggedText = text;
 
 /*
-  if(strlen(fgcolor)>0)
+  if (strlen(fgcolor) > 0)
   {
     taggedText = "<color=" + fgcolor + ">" + taggedText + "</color>";
   }
-  if(strlen(bgcolor)>0)
+  if (strlen(bgcolor) > 0)
   {
     taggedText = "<bgcolor=" + bgcolor + ">" + taggedText + "</bgcolor>";
   }
@@ -875,24 +874,24 @@ string stripColorTags(string text)
   LOG_TRACE("COLOR TAGS DISABLED");
   string untaggedText = text;
 /*
-  dyn_string tags=makeDynString("<color=","</color","<bgcolor=","</bgcolor");
+  dyn_string tags = makeDynString("<color=", "</color", "<bgcolor=", "</bgcolor");
   int tagBegin, tagEnd, i;
-  for(i=1;i<=dynlen(tags);i++)
+  for (i = 1; i <= dynlen(tags); i++)
   {
-    tagBegin = strpos(untaggedText,tags[i]);
-    if(tagBegin>=0)
+    tagBegin = strpos(untaggedText, tags[i]);
+    if (tagBegin >= 0)
     {
-      int tagEnd = strpos(untaggedText,">");
-      if(tagEnd>tagBegin)
+      int tagEnd = strpos(untaggedText, ">");
+      if (tagEnd > tagBegin)
       {
-        string beginPart,endPart;
-        beginPart="";
-        endPart="";
-        if(tagBegin>0)
+        string beginPart, endPart;
+        beginPart = "";
+        endPart = "";
+        if (tagBegin > 0)
         {
-          beginPart = substr(untaggedText,0,tagBegin);
+          beginPart = substr(untaggedText, 0, tagBegin);
         }
-        endPart = substr(untaggedText,tagEnd+1);
+        endPart = substr(untaggedText, tagEnd + 1);
         untaggedText = beginPart + endPart;
       }
     }
@@ -917,7 +916,7 @@ string stripColorTags(string text)
 ///////////////////////////////////////////////////////////////////////////
 void Navigator_HandleEventInitialize()
 {
-  LOG_TRACE("Navigator_HandleEventInitialize()","");
+  LOG_TRACE("Navigator_HandleEventInitialize()", "");
   
   // before the first thing, we check the sanity of the configuration
   string sanityMessage;
@@ -925,31 +924,31 @@ void Navigator_HandleEventInitialize()
   // Set the global variable: NAVIGATOR_TAB_FILENAME
   NAVIGATOR_TAB_FILENAME = navConfigGetViewsPath() + "navigator_tab.pnl";
   
-  if(!navConfigSanityCheck(sanityMessage))
+  if (!navConfigSanityCheck(sanityMessage))
   {
-    gcfUtilMessageWarning("Sanity check failed",sanityMessage);
+    gcfUtilMessageWarning("Sanity check failed", sanityMessage);
   }
   
   // first thing to do: get a new navigator ID
   // check the commandline parameter:
-  int navID=0;
-  if(isDollarDefined("$ID"))
-    navID=$ID;
+  int navID = 0;
+  if (isDollarDefined("$ID"))
+    navID = $ID;
   navConfigSetNavigatorID(navID);
   navConfigIncreaseUseCount();
   navConfigSubscribeUpdateTrigger("Navigator_HandleUpdateTrigger");
   
   navPMLinitialize();
   
-  g_initializing=true;
+  g_initializing = true;
   
   setActiveXSupported();
-  LOG_TRACE("ActiveXSupported global variable set to ",ActiveXSupported());
+  LOG_TRACE("ActiveXSupported global variable set to ", ActiveXSupported());
   
   // show the ActiveX tree control if it can be created
   shape treeActiveX = getShape(ACTIVEX_TREE_CTRL_NAME);
   shape treeList    = getShape(LIST_TREE_CTRL_NAME);
-  if(ActiveXSupported())
+  if (ActiveXSupported())
   {
     treeActiveX.visible = TRUE;
     treeList.visible    = FALSE;
@@ -970,13 +969,13 @@ void Navigator_HandleEventInitialize()
   
   // configure the tabs
   long selectedNode = getSelectedNode();
-  if(selectedNode != 0)
+  if (selectedNode != 0)
   {
     string datapointPath = buildPathFromNode(selectedNode);
     string dpViewConfig = navConfigGetViewConfig(datapointPath);
-    if(selectedNode!=0 && dpAccessable(dpViewConfig))
+    if (selectedNode != 0 && dpAccessable(dpViewConfig))
     {
-      showView(dpViewConfig,datapointPath);
+      showView(dpViewConfig, datapointPath);
     }
   }    
 
@@ -1015,12 +1014,12 @@ void Navigator_HandleEventClose()
 //
 // refreshes the navigator
 ///////////////////////////////////////////////////////////////////////////
-void Navigator_HandleUpdateTrigger(string dpe,int trigger)
+void Navigator_HandleUpdateTrigger(string dpe, int trigger)
 {
   string newDatapoint;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
-  //if ((newDatapoint !="") && dpAccessable(newDatapoint)) Orginal
-  if (newDatapoint !="")
+  //if ((newDatapoint != "") && dpAccessable(newDatapoint)) Orginal
+  if (newDatapoint != "")
   {
     changeSelectedPosition(newDatapoint);
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, "");
@@ -1054,16 +1053,16 @@ void InitializeTabViews()
   LOG_DEBUG("InitializeTabViews()");
   shape tabCtrl = getTabCtrl();
   // hide all tabs
-  int i=0;
+  int i = 0;
   dyn_errClass err;
   int setValueResult;
   do
   {
-    setValueResult = setValue(getTabCtrlName(),"registerVisible",i,FALSE);
+    setValueResult = setValue(getTabCtrlName(), "registerVisible", i, FALSE);
     err = getLastError();
-    LOG_TRACE("registerVisible",i,setValueResult,err);
+    LOG_TRACE("registerVisible", i, setValueResult, err);
     i++;
-  } while(dynlen(err)==0 && i<NR_OF_VIEWS && setValueResult==0);
+  } while(dynlen(err) == 0 && i < NR_OF_VIEWS && setValueResult == 0);
   LOG_DEBUG("~InitializeTabViews()");
 }
 
@@ -1074,24 +1073,24 @@ void InitializeTabViews()
 ///////////////////////////////////////////////////////////////////////////
 void TabViews_HandleEventSelectionChanged()
 {
-  if(!g_initializing)
+  if (!g_initializing)
   {
     LOG_DEBUG("TabViews_HandleEventSelectionChanged");
 
     shape tabCtrl = getTabCtrl();
     long selectedNode = getSelectedNode();
-    if(selectedNode != 0)
+    if (selectedNode != 0)
     {
       string datapointPath = buildPathFromNode(selectedNode);
       dyn_string reference;
       bool dpIsReference;
       checkForReference(datapointPath, reference, dpIsReference);
-      navConfigSetSelectedView(datapointPath,tabCtrl.activeRegister+1);
+      navConfigSetSelectedView(datapointPath, tabCtrl.activeRegister + 1);
     
       string dpViewConfig = navConfigGetViewConfig(datapointPath);
-      if(selectedNode!=0 && dpAccessable(dpViewConfig))
+      if (selectedNode != 0 && dpAccessable(dpViewConfig))
       {
-        showActiveView(dpViewConfig,datapointPath);
+        showActiveView(dpViewConfig, datapointPath);
       }
     }
   }
@@ -1125,11 +1124,11 @@ void InitializeTree()
   g_datapoint2itemID = empty;
   dynClear(g_itemID2datapoint);
   dynClear(g_referenceList);
-  LOG_TRACE("global stuff lengths:",dynlen(g_itemID2datapoint),mappinglen(g_datapoint2itemID));
+  LOG_TRACE("global stuff lengths:", dynlen(g_itemID2datapoint), mappinglen(g_datapoint2itemID));
   
   shape treeCtrl = getTreeCtrl();
   idispatch items;
-  if(ActiveXSupported())
+  if (ActiveXSupported())
   {
     items = treeCtrl.Items;
     items.BeginUpdate();
@@ -1142,21 +1141,17 @@ void InitializeTree()
   }
   
   // get top level resources. "" means no parent, 1 means: 1 level deep
-  dyn_string resources = navConfigGetResources("",2);
-  LOG_DEBUG("adding resources: ",LOG_DYN(resources));
+  dyn_string resources = navConfigGetResources("", 2);
+  LOG_DEBUG("adding resources: ", LOG_DYN(resources));
   treeAddDatapoints(resources);
-  if(ActiveXSupported())
+  if (ActiveXSupported())
   {
     items.EndUpdate();
   }
-  else
-  {
-  }
-  //treeCtrl.selectedPos = 1;
   LOG_DEBUG("~InitializeTree()");
-  delay(2,0);
-    shape treeList    = getShape(LIST_TREE_CTRL_NAME);
-  LOG_TRACE("Init,  set selected node[1]",g_curSelNode);
+  delay(2, 0);
+  shape treeList    = getShape(LIST_TREE_CTRL_NAME);
+  LOG_TRACE("Init,  set selected node[1]", g_curSelNode);
   g_curSelNode = 1;
   treeList.selectedPos = 1;
 }
@@ -1169,7 +1164,7 @@ void InitializeTree()
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventOnSelChange(long Node)
 {
-  if(g_curSelNode != Node)
+  if (g_curSelNode != Node)
   {
     g_curSelNode = Node;
     refreshNavigator();   
@@ -1183,20 +1178,20 @@ void TreeCtrl_HandleEventOnSelChange(long Node)
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventOnExpand(long Node)
 {
-  if(!g_initializing)
+  if (!g_initializing)
   {
-    LOG_DEBUG("TreeCtrl_HandleEventOnExpand ",Node);
-    if(Node != 0)
+    LOG_DEBUG("TreeCtrl_HandleEventOnExpand ", Node);
+    if (Node != 0)
     {
       string datapointPath = buildPathFromNode(Node);
-      if(Node==1)
+      if (Node == 1)
       {
-        datapointPath="";
+        datapointPath = "";
       }
-        // get top level resources. "" means no parent, 1 means: 1 level deep
-        dyn_string resources = navConfigGetResources(datapointPath,2);
-        LOG_DEBUG("adding resources: ",LOG_DYN(resources));
-        treeAddDatapoints(resources);
+      // get top level resources. "" means no parent, 1 means: 1 level deep
+      dyn_string resources = navConfigGetResources(datapointPath, 2);
+      LOG_DEBUG("adding resources: ", LOG_DYN(resources));
+      treeAddDatapoints(resources);
     }
   }
   else
@@ -1212,7 +1207,7 @@ void TreeCtrl_HandleEventOnExpand(long Node)
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnCollapse(unsigned pos)
 {
-  LOG_DEBUG("TreeView_OnCollapse",pos);
+  LOG_DEBUG("TreeView_OnCollapse", pos);
   TreeCtrl_HandleEventOnCollapse(pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
@@ -1227,37 +1222,37 @@ TreeView_OnCollapse(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventOnCollapse(unsigned Node)
 {
-  int collapsedNodes=1;
-  dyn_string datapoint ;
-  int k=1;
+  int collapsedNodes = 1;
+  dyn_string datapoint;
+  int k = 1;
   string temp;
 
   fwTreeView_pruneChildren(Node, collapsedNodes, ""); //get all nodes which will be collapsed and
                                                       //clear these nodes from the tree
   //retrieve all dpnames for these nodes
-  for(int j=Node+1; j<=(Node+collapsedNodes);j++)
+  for (int j = Node + 1; j <= (Node + collapsedNodes); j++)
   {
     datapoint[k]= g_itemID2datapoint[j];
     k++;
   }
 
   //delete the collapse nodes from g_itemID2datapoint and g_datapoint2itemID
-  for(int i=1; i<=dynlen(datapoint); i++)
+  for (int i = 1; i <= dynlen(datapoint); i++)
   {
-    long nodeID=getNodeFromDatapoint(datapoint[i]);
-    dynRemove(g_itemID2datapoint,dynContains(g_itemID2datapoint,datapoint[i]));      
-    mappingRemove(g_datapoint2itemID,datapoint[i]);
+    long nodeID = getNodeFromDatapoint(datapoint[i]);
+    dynRemove(g_itemID2datapoint, dynContains(g_itemID2datapoint, datapoint[i]));      
+    mappingRemove(g_datapoint2itemID, datapoint[i]);
   }
 
   //renumber the mapping of the dp's
-  if(mappinglen(g_datapoint2itemID)>1)
+  if (mappinglen(g_datapoint2itemID) > 1)
   {
-    for(int i=1 ; i<=mappinglen(g_datapoint2itemID); i++)
+    for (int i = 1; i <= mappinglen(g_datapoint2itemID); i++)
     {
       temp = g_itemID2datapoint[i];
-      if(temp!="" && temp !=0)
+      if (temp != "" && temp != 0)
       {
-        g_datapoint2itemID[temp]=i;
+        g_datapoint2itemID[temp] = i;
       }
     }
   }
@@ -1285,10 +1280,10 @@ void checkForReferenceRemoveFromList(string datapointPath)
 {
   dyn_string refOut;
   
-  for(int i=dynlen(g_referenceList); i>=1; i--)
+  for (int i = dynlen(g_referenceList); i >= 1; i--)
   {
-    refOut = strsplit(g_referenceList[i],"=");
-    if (patternMatch(datapointPath+ "*",refOut[1]) && !(datapointPath==refOut[1]))
+    refOut = strsplit(g_referenceList[i], "=");
+    if (patternMatch(datapointPath + "*", refOut[1]) && !(datapointPath == refOut[1]))
     {
       dynRemove(g_referenceList, i);
     }
@@ -1302,24 +1297,24 @@ void checkForReferenceRemoveFromList(string datapointPath)
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventOnDrawCell(long Col, long Row, float Left, float Top, float Right, float Bottom)
 {
-  if(!g_initializing)
+  if (!g_initializing)
   {
-    if(ActiveXSupported())
+    if (ActiveXSupported())
     {
       shape treeCtrl = getTreeCtrl();
-      if(Row >= treeCtrl.FixedRows)
+      if (Row >= treeCtrl.FixedRows)
       {
-        if(Col==0)
+        if (Col == 0)
         {
           idispatch aNode;
-          aNode = treeCtrl.GetNodeAt(Left,Top);
-          if(aNode != 0)
+          aNode = treeCtrl.GetNodeAt(Left, Top);
+          if (aNode != 0)
           {
-            if(aNode.Data != 0)
+            if (aNode.Data != 0)
             {
-              if(aNode.Data == "A" && (treeCtrl.ImagesWidth < (Right - Left)))
+              if (aNode.Data == "A" && (treeCtrl.ImagesWidth < (Right - Left)))
               {
-                LOG_TRACE("data is A and image fits",aNode.Data,treeCtrl.ImagesWidth,Right,Left);
+                LOG_TRACE("data is A and image fits", aNode.Data, treeCtrl.ImagesWidth, Right, Left);
                 int aLeft, aRight;
                 aLeft = Left + (Right - Left - treeCtrl.ImagesWidth) / 2;
                 aRight = aLeft + treeCtrl.ImagesWidth;
@@ -1344,12 +1339,12 @@ void ButtonMaximize_HandleEventClick()
   dyn_errClass err;
   shape tabCtrl = getTabCtrl();
   long Node = getSelectedNode();
-  if(Node != 0)
+  if (Node != 0)
   {
     string datapointPath = buildPathFromNode(Node);
     string dpViewConfig = navConfigGetViewConfig(datapointPath);
-    LOG_TRACE("ButtonMaximize_HandleEventClick",Node,dpViewConfig);
-    if(Node!=0 && dpAccessable(dpViewConfig))
+    LOG_TRACE("ButtonMaximize_HandleEventClick", Node, dpViewConfig);
+    if (Node != 0 && dpAccessable(dpViewConfig))
     {
       int selectedView;
       int selectedSubView;
@@ -1358,7 +1353,7 @@ void ButtonMaximize_HandleEventClick()
       dyn_string subViews;
       dyn_string configs;
       
-      if(navConfigGetViewConfigElements(dpViewConfig,
+      if (navConfigGetViewConfigElements(dpViewConfig,
             selectedView,
             selectedSubView,
             views,
@@ -1366,39 +1361,39 @@ void ButtonMaximize_HandleEventClick()
             subViews,
             configs))
       {
-        LOG_TRACE("viewConfig:",selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
+        LOG_TRACE("viewConfig:", selectedView, selectedSubView, views, nrOfSubViews, subViews, configs);
     
-        if(selectedView > 0 && selectedSubView > 0)
+        if (selectedView > 0 && selectedSubView > 0)
         {
           // create the mapping
-          int beginSubViews=1;
-          for(int i=1;i<selectedView;i++)
+          int beginSubViews = 1;
+          for (int i = 1; i < selectedView; i++)
           {
             beginSubViews += nrOfSubViews[i];
           }
           // get subviews config
           string subViewCaption;
           string subViewFileName;
-          if(navConfigGetSubViewConfigElements(subViews[beginSubViews+selectedSubView-1],subViewCaption,subViewFileName))
+          if (navConfigGetSubViewConfigElements(subViews[beginSubViews + selectedSubView - 1], subViewCaption, subViewFileName))
           {
             string viewsPath = navConfigGetViewsPath();
-            LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
+            LOG_DEBUG("subviewcaption, subviewfilename:", subViewCaption, viewsPath + subViewFileName);
   
-            string dpNameTemp=datapointPath;
+            string dpNameTemp = datapointPath;
             bool isReference;
             dyn_string reference;
-            string referenceDatapoint="";
+            string referenceDatapoint = "";
             checkForReference(dpNameTemp, reference, isReference);
             
-            if(isReference)
+            if (isReference)
             {
-              referenceDatapoint=datapointPath;
+              referenceDatapoint = datapointPath;
             }
             dyn_string panelParameters = makeDynString(
               "$datapoint:" + dpNameTemp,
-              "$configDatapoint:" + configs[beginSubViews+selectedSubView-1],
-              "$referenceDatapoint:" +referenceDatapoint);
-            ModuleOnWithPanel(dpNameTemp,-1,-1,0,0,1,1,"",viewsPath+subViewFileName, subViewCaption, panelParameters);
+              "$configDatapoint:" + configs[beginSubViews + selectedSubView - 1],
+              "$referenceDatapoint:" + referenceDatapoint);
+            ModuleOnWithPanel(dpNameTemp, -1, -1, 0, 0, 1, 1, "", viewsPath + subViewFileName, subViewCaption, panelParameters);
           }
         }
       }
@@ -1428,24 +1423,24 @@ TreeView_OnInit()
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnSelect(unsigned pos)
 {
-  LOG_DEBUG("TreeView_OnSelect",pos);
+  LOG_DEBUG("TreeView_OnSelect", pos);
   string datapointPath = buildPathFromNode(pos);
   dyn_string reference;
   bool parentDatapointIsReference;
   checkForReference(datapointPath, reference, parentDatapointIsReference);
   
-  LOG_TRACE("check for expand",parentDatapointIsReference, datapointPath, dpAccessable(datapointPath));
+  LOG_TRACE("check for expand", parentDatapointIsReference, datapointPath, dpAccessable(datapointPath));
   //Check or the access is permitted to this point in the tree
-  if(checkDpPermit(datapointPath) || pos==1)
+  if (checkDpPermit(datapointPath) || pos == 1)
   {
     //check or the selected item in the tree is an dpe. If yes, use the dp name to check the existance
-    if(strpos(datapointPath, ".")>0)
+    if (strpos(datapointPath, ".") > 0)
     {
      dyn_string datapointPathSplit = strsplit(datapointPath, ".");
      datapointPath = datapointPathSplit[1];
-     //DebugN("datapointPath after split:"+datapointPath);
+     //DebugN("datapointPath after split:" + datapointPath);
     }
-    if(!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled")))
+    if (!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled")))
     {
       TreeCtrl_HandleEventOnSelChange(pos);
     }
@@ -1471,18 +1466,18 @@ TreeView_OnSelect(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnExpand(unsigned pos)
 {
-  LOG_DEBUG("TreeView_OnExpand",pos);
+  LOG_DEBUG("TreeView_OnExpand", pos);
   string datapointPath = buildPathFromNode(pos);
-  if(pos==1)
+  if (pos == 1)
   {
-    datapointPath="";
+    datapointPath = "";
   }      
-  if(checkDpPermit(datapointPath) || pos==1)
+  if (checkDpPermit(datapointPath) || pos == 1)
   {
     dyn_string reference;
     bool parentDatapointIsReference;
     checkForReference(datapointPath, reference, parentDatapointIsReference);
-    if(!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath)))
+    if (!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath)))
     {
       TreeCtrl_HandleEventOnExpand(pos);
       // also call the default OnExpand implementation to expand the node
@@ -1517,19 +1512,19 @@ dyn_string splitDatapointPath(string newDatapoint)
   dyn_string datapointPath= strsplit(newDatapoint, "_");
   string datapointName = datapointPath[1];
   // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
-  int sepPos = strpos(datapointName,":");
-  if(sepPos >= 0)
+  int sepPos = strpos(datapointName, ":");
+  if (sepPos >= 0)
   {
-    datapointName = substr(datapointName,sepPos+1);
+    datapointName = substr(datapointName, sepPos + 1);
   }
   datapointPath[1] = datapointName;
   
   // if datapointElement present, split last entry of datapointPath
   datapointElement = strsplit(datapointPath[dynlen(datapointPath)], ".");
-  if (dynlen(datapointElement)>1)
+  if (dynlen(datapointElement) > 1)
   {
     datapointPath[dynlen(datapointPath)  ] = datapointElement[1];
-    datapointPath[dynlen(datapointPath)+1] = datapointElement[2];
+    datapointPath[dynlen(datapointPath) + 1] = datapointElement[2];
   }
   return datapointPath;
 }
@@ -1541,7 +1536,7 @@ dyn_string splitDatapointPath(string newDatapoint)
 //           horizontal and is going from the left to the right.
 //           [0                                  100%]
 // 
-//Input: 1. maximum value (range)== 100%
+//Input: 1. maximum value (range) == 100%
 //       2. current value to show in the progress bar.
 ///////////////////////////////////////////////////////////////////////////////////
 void progressBar(float Maximum, float value)
@@ -1549,17 +1544,17 @@ void progressBar(float Maximum, float value)
   float Minimum = 0;
   int waarde;
   float positie;
-	if (value>Minimum)
-	{
+  if (value > Minimum)
+  {
     setValue("progressBar", "visible", TRUE);
     setValue("progressBar_border", "visible", TRUE);
   }
-	
+  
   setValue("progressBar", "scale", value/Maximum, 1.0);
   
-  if (Maximum>=value)
+  if (Maximum >= value)
   {
-    delay(0,200);
+    delay(0, 200);
     setValue("progressBar", "visible", FALSE);
     setValue("progressBar_border", "visible", FALSE);
   }
@@ -1575,8 +1570,8 @@ void progressBar(float Maximum, float value)
 ///////////////////////////////////////////////////////////////////////////
 bool dpIsDistributed(string dpName)
 {
-  string dpSystemName = strrtrim(dpSubStr(dpName,DPSUB_SYS),":");
-  if(getSystemName()==(dpSystemName+":"))
+  string dpSystemName = strrtrim(dpSubStr(dpName, DPSUB_SYS), ":");
+  if (getSystemName() == (dpSystemName + ":"))
     return FALSE;
   else
     return TRUE;
@@ -1593,29 +1588,29 @@ bool checkDpPermit(string datapointPath)
 {
   dyn_string treeAccess;
   dyn_string treeAccessPermit;
-  bool permit=FALSE, dpIsReference;
-  int permitLength=0;
+  bool permit = FALSE, dpIsReference;
+  int permitLength = 0;
   dpGet(getSystemName() + "__navigator.treeAccess", treeAccess);
   dyn_string reference;
   checkForReference(datapointPath, reference, dpIsReference);
 
-  for(int i=6;i<=15;i++)
+  for (int i = 6; i <= 15; i++)
   {
-    if(treeAccess[i]!="")
+    if (treeAccess[i] != "")
     {
-      if(patternMatch(treeAccess[i]+"*", datapointPath))
+      if (patternMatch(treeAccess[i] + "*", datapointPath))
       {
-        if(getUserPermission(i))
+        if (getUserPermission(i))
         {
-          if(permitLength<=strlen(treeAccess[i]))
+          if (permitLength <= strlen(treeAccess[i]))
           {
-            permit=TRUE;
-            permitLength=strlen(treeAccess[i]);
+            permit = TRUE;
+            permitLength = strlen(treeAccess[i]);
           }
         }
         else
         {
-          if(strlen(datapointPath)>=strlen(treeAccess[i]))
+          if (strlen(datapointPath) >= strlen(treeAccess[i]))
           {
             return FALSE;
           }
@@ -1641,7 +1636,7 @@ bool checkDpPermit(string datapointPath)
 dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool useProgressBar)
 {
   string tempDP;
-  int j=1;
+  int j = 1;
   dyn_string output;
   dyn_dyn_anytype tab;
   string temp;
@@ -1649,53 +1644,53 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
   dyn_dyn_int elementTypes;
   string datapointPathOriginal = datapointPath;
   int elementIndex;
-  bool dpIsReference=false;
+  bool dpIsReference = false;
   dyn_string reference;
-  string REMOTESYSTEM="";
+  string REMOTESYSTEM = "";
   string firstXResults = "";
 
   checkForReference(datapointPath, reference, dpIsReference);
-  if(dpIsReference && !dpIsDistributed(datapointPath))
+  if (dpIsReference && !dpIsDistributed(datapointPath))
   {
     strreplace(datapointPath, datapointPathOriginal, reference[2]);
   }  
-  else if(dpIsReference && dpIsDistributed(datapointPath))
+  else if (dpIsReference && dpIsDistributed(datapointPath))
   {
     strreplace(datapointPath, datapointPathOriginal, reference[2]);
-    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2],DPSUB_SYS),":") + "'";
+    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2], DPSUB_SYS), ":") + "'";
   }
-  else if(!dpIsReference && dpIsDistributed(datapointPath))
+  else if (!dpIsReference && dpIsDistributed(datapointPath))
   {
-    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(datapointPath,DPSUB_SYS),":") + "'";
+    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(datapointPath, DPSUB_SYS), ":") + "'";
   }
-  //DebugN("REMOTESYSTEM:"+REMOTESYSTEM);
-  //DebugN("SELECT '"+attribute+"' FROM '"+datapointPath + "*__enabled' "+REMOTESYSTEM);
-  dpQuery("SELECT '"+attribute+"' FROM '"+datapointPath + "*__enabled' "+REMOTESYSTEM, tab);
+  //DebugN("REMOTESYSTEM:" + REMOTESYSTEM);
+  //DebugN("SELECT '" + attribute + "' FROM '" + datapointPath + "*__enabled' " + REMOTESYSTEM);
+  dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath + "*__enabled' " + REMOTESYSTEM, tab);
   int maximumCount = dynlen(tab);
-  for(int i=2 ; i<=dynlen(tab) ; i++)
+  for (int i = 2; i <= dynlen(tab); i++)
   {
     tempDP = tab[i][1];
-    if(tempDP!="")
+    if (tempDP != "")
     {
       strreplace(tempDP, "__enabled.", "");
-      if(checkDpPermit(tempDP))
+      if (checkDpPermit(tempDP))
       {
         strreplace(tempDP, datapointPath, "");
-        if(strpos(tempDP, "_")==0)
+        if (strpos(tempDP, "_") == 0)
         {
           tempDP = strltrim(tempDP, "_");
         }
-        if(tempDP!="")
+        if (tempDP != "")
         {
-          output[j]=tempDP;
+          output[j] = tempDP;
           j++;
         }
       }
     }
-    if(useProgressBar)
+    if (useProgressBar)
       progressBar(maximumCount, j);
   }
-  if(useProgressBar)
+  if (useProgressBar)
     progressBar(maximumCount, maximumCount);
   dynSortAsc(output); //sort the dyn_string output (alphanumeric)
   return output;
@@ -1723,74 +1718,74 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
 {
   dyn_string output;
   dyn_dyn_anytype tab;
-  string temp, asterisk="*";
-  int currentDepth = dynlen(strsplit(datapointPath,"_"));
+  string temp, asterisk = "*";
+  int currentDepth = dynlen(strsplit(datapointPath, "_"));
   dyn_dyn_string elementNames;
   dyn_dyn_int elementTypes;
   string datapointPathOriginal = datapointPath;
   int elementIndex;
-  int outputCounter=1;
-  bool dpIsReference=false;
+  int outputCounter = 1;
+  bool dpIsReference = false;
   dyn_string reference;
-  string REMOTESYSTEM="";
+  string REMOTESYSTEM = "";
   string firstXResults = "";
   checkForReference(datapointPath, reference, dpIsReference);
-  if(dpIsReference && !dpIsDistributed(datapointPath))
+  if (dpIsReference && !dpIsDistributed(datapointPath))
   {
     strreplace(datapointPath, datapointPathOriginal, reference[2]);
   }  
-  else if(dpIsReference && dpIsDistributed(datapointPath))
+  else if (dpIsReference && dpIsDistributed(datapointPath))
   {
     strreplace(datapointPath, datapointPathOriginal, reference[2]);
-    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2],DPSUB_SYS),":") + "'";
+    REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(reference[2], DPSUB_SYS), ":") + "'";
   }
   //How many items must be retrieved (this __enabled and this is a DP-Type)
-  if(first>0)
+  if (first > 0)
   {
     firstXResults = " FIRST " + first;
   }
-  if(singleSearch)
+  if (singleSearch)
   {
-    asterisk="";
+    asterisk = "";
   }
-  dpQuery("SELECT '"+attribute+"' FROM '"+datapointPath + "__enabled' "+REMOTESYSTEM + firstXResults, tab);
+  dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath + "__enabled' " + REMOTESYSTEM + firstXResults, tab);
   int maximumCount = dynlen(tab);
   int maximumCounter = 0;
-  int i=2;
+  int i = 2;
   string systemName;
-  if(dynlen(tab)>=2)
+  if (dynlen(tab) >= 2)
   {
-    systemName = strrtrim(dpSubStr(tab[i][1], DPSUB_SYS),":");
-  for(i=2 ; i<=dynlen(tab) ; i++)
+    systemName = strrtrim(dpSubStr(tab[i][1], DPSUB_SYS), ":");
+  for (i = 2; i <= dynlen(tab); i++)
   {
     int functionOk;
     
-    temp = systemName+":"+substr(dpSubStr(tab[i][1], DPSUB_DP), 0, (strlen(dpSubStr(tab[i][1], DPSUB_DP))-strlen("__enabled")));
-    if((dynlen(strsplit(temp, "_"))<= (currentDepth+searchDepth)) || (searchDepth==0))
+    temp = systemName + ":" + substr(dpSubStr(tab[i][1], DPSUB_DP), 0, (strlen(dpSubStr(tab[i][1], DPSUB_DP)) - strlen("__enabled")));
+    if ((dynlen(strsplit(temp, "_")) <= (currentDepth + searchDepth)) || (searchDepth == 0))
     {
       dynClear(elementNames);  //clear the content
       dynClear(elementTypes);
-      functionOk = dpTypeGet(getDpTypeFromEnabled(tab[i][1]),elementNames,elementTypes);
-      if(functionOk==-1)
-         DebugN("Error in __enabled entry["+i+"]: " +tab[i][1]);
-      for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+      functionOk = dpTypeGet(getDpTypeFromEnabled(tab[i][1]), elementNames, elementTypes);
+      if (functionOk == -1)
+         DebugN("Error in __enabled entry[" + i + "]: " + tab[i][1]);
+      for (elementIndex = 2; elementIndex <= dynlen(elementNames); elementIndex++) 
       {
-        int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
-        string elementName = elementNames[elementIndex][elementLevel+1];
+        int elementLevel = dynlen(elementNames[elementIndex]) - 1; // how deep is the element?
+        string elementName = elementNames[elementIndex][elementLevel + 1];
         output[outputCounter] = temp + "." + elementName;
         outputCounter++;
       }
     }
     maximumCounter++;
     //if the progressBar must be used
-    if(useProgressBar)
+    if (useProgressBar)
     {
       progressBar(maximumCount, maximumCounter);
     }
   }//end of for loop
   }//end of if
   //Hide the progress bar
-  if(useProgressBar)
+  if (useProgressBar)
   {
     progressBar(maximumCount, maximumCount);
   }
@@ -1811,7 +1806,7 @@ string getLoadTypeFromEnabled(string datapointPath)
 {
   string content;
   dyn_string contentSplit;
-  dpGet(datapointPath,content);
+  dpGet(datapointPath, content);
   contentSplit = strsplit(content, "|");
   return contentSplit[1];
 }
@@ -1829,14 +1824,14 @@ string getDpTypeFromEnabled(string datapointPath)
 {
   string content;
   dyn_string contentSplit;
-  dpGet(datapointPath,content);
+  dpGet(datapointPath, content);
   contentSplit = strsplit(content, "|");
-  if(dynlen(contentSplit)<2)
+  if (dynlen(contentSplit) < 2)
   {
     DebugN(contentSplit);
   }
     
-  if(dynlen(contentSplit)>1)
+  if (dynlen(contentSplit) > 1)
   {
     return contentSplit[2];
   }
@@ -1844,7 +1839,7 @@ string getDpTypeFromEnabled(string datapointPath)
   {
     return "-1";
   }
-//  DebugN("contentSplit[2]:"+contentSplit[2]);
+//  DebugN("contentSplit[2]:" + contentSplit[2]);
 
 }
 
@@ -1856,7 +1851,7 @@ string getDpTypeFromEnabled(string datapointPath)
 ///////////////////////////////////////////////////////////////////////////////////
 void navConfigMessageWarning(string message)
 {
-  ChildPanelOnCentralModal(navConfigGetViewsPath() + "MessageWarning.pnl", "Warning", makeDynString("$1:"+message));
+  ChildPanelOnCentralModal(navConfigGetViewsPath() + "MessageWarning.pnl", "Warning", makeDynString("$1:" + message));
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1867,25 +1862,25 @@ void navConfigMessageWarning(string message)
 
 void navConfigCheckResourceRoots()
 {
-	dyn_string roots;
-	dpGet("__navigator.resourceRoots",roots);
-	string aSystemName=getSystemName();
-    strreplace(aSystemName,':',"");
-	bool replaced=false;
-	
-	for(int i=1; i<=dynlen(roots);i++)
+  dyn_string roots;
+  dpGet("__navigator.resourceRoots", roots);
+  string aSystemName = getSystemName();
+  strreplace(aSystemName, ':', "");
+  bool replaced = false;
+  
+  for (int i = 1; i <= dynlen(roots); i++)
+  {
+    dyn_string aS = strsplit(roots[i], ':');
+    if (aS[1] != aSystemName) 
     {
-    	dyn_string aS=strsplit(roots[i],':');
-    	if (aS[1] != aSystemName) 
-    	{
-    		strreplace(roots[i],aS[1],aSystemName);
-    		replaced=true;
-    	}
+      strreplace(roots[i], aS[1], aSystemName);
+      replaced = true;
     }
+  }
     
-    if (replaced)
-    {
-    	dpSet("__navigator.resourceRoots",roots);
-    }
+  if (replaced)
+  {
+    dpSet("__navigator.resourceRoots", roots);
+  }
 }
 
