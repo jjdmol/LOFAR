@@ -67,6 +67,7 @@
 #include <casa/IO/MemoryIO.h>
 #include <casa/Exceptions/Error.h>
 #include <tables/Tables/Table.h>
+#include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TiledColumnStMan.h>
 
@@ -175,6 +176,7 @@ Prediffer::Prediffer(const string& msName,
   bool asAP = true;
   bool useStatParm = false;
   bool useEJ = false;
+  ///  bool useBandpass = false;
   vector<string> types = StringUtil::split(modelType, '.');
   for (uint i=0; i<types.size(); ++i) {
     if (types[i] == "RI") {
@@ -184,6 +186,8 @@ Prediffer::Prediffer(const string& msName,
       useEJ = true;
     } else if (types[i] == "USESP") {
       useStatParm = true;
+      ///    } else if (types[i] == "USEBP") {
+      ///      useBandpass = true;
     }
   }
   makeLOFARExpr(useEJ, asAP, useStatParm);
@@ -1307,6 +1311,18 @@ void Prediffer::writePredictedData (Bool inDataColumn)
 {
   if (!inDataColumn) {
     mapResidualData (false);
+  } else {
+    // Make sure the DATA column is writable.
+    if (! itsDataMap->isWritable()) {
+      size_t size = itsDataMap->getSize();
+      int64  offs = itsDataMap->getOffset();
+      delete itsDataMap;
+      itsDataMap = 0;
+      itsDataMap = new MMap(itsMSName + "/vis.dat", MMap::ReWr);
+      if (size > 0) {
+	itsDataMap->mapFile (offs, size);
+      }
+    }
   }
   saveResidualData (false, true);
 }
@@ -1318,13 +1334,14 @@ void Prediffer::mapResidualData (Bool copyData)
   }
   File fil(itsMSName + "/vis.res");
   Table tab(itsMSName, Table::Update);
-  if (tab.isColumnWritable ("CORRECTED_DATA")) {
+  if (tab.tableDesc().isColumn("CORRECTED_DATA")) {
     ASSERT (fil.isSymLink());
   } else {
     ASSERT (!fil.exists());
-    ArrayColumnDesc<Float> resCol("CORRECTED_DATA",
-				  IPosition(2,itsNCorr, itsNrChan));
-    TiledColumnStMan tiledRes("TiledRes", IPosition(3,4,1000000,1));
+    ArrayColumnDesc<Complex> resCol("CORRECTED_DATA",
+				    IPosition(2,itsNCorr, itsNrChan),
+				    ColumnDesc::FixedShape);
+    TiledColumnStMan tiledRes("TiledRes", IPosition(3,itsNCorr,itsNrChan,1));
     tab.addColumn (resCol, tiledRes);
     // Find out which datamanager is TiledRes
     // Create symlink for it.
@@ -1358,7 +1375,7 @@ void Prediffer::mapResidualData (Bool copyData)
     delete itsDataMap;
     itsDataMap = 0;
   }
-  itsDataMap  = new MMap(itsMSName + "/vis.res", MMap::ReWr);
+  itsDataMap = new MMap(itsMSName + "/vis.res", MMap::ReWr);
   if (size > 0) {
     itsDataMap->mapFile (offs, size);
   }
