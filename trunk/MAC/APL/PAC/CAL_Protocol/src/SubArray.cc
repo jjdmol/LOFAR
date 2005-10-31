@@ -34,7 +34,7 @@ using namespace CAL;
 // forward declaration
 class CalibrationInterface;
     
-SubArray::SubArray() : AntennaArray(), m_spw("undefined", 0, 0, 0, 0)
+SubArray::SubArray() : AntennaArray(), m_antenna_selection(), m_spw("undefined", 0, 0, 0, 0)
 {
   m_result[FRONT] = 0;
   m_result[BACK] = 0;
@@ -49,33 +49,42 @@ SubArray::SubArray(string                 name,
 		   int nsubbands,
 		   uint8 rcucontrol) :
   AntennaArray(name, geoloc, pos),
+  m_antenna_selection(select),
   m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands, rcucontrol)
 {
   // assert sizes
-  ASSERT(select.extent(firstDim) == pos.extent(firstDim)
-	 && select.extent(secondDim) == pos.extent(secondDim)
-	 && pos.extent(thirdDim) == 3);
+  ASSERT(m_antenna_selection.extent(firstDim) == m_pos.extent(firstDim)
+	 && m_antenna_selection.extent(secondDim) == m_pos.extent(secondDim)
+	 && m_pos.extent(thirdDim) == 3);
+
+  LOG_INFO_STR("select=" << select);
 
   // make array at least big enough
-  m_rcuindex.resize(pos.extent(firstDim), pos.extent(secondDim));
+  m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
 
-  for (int i = 0; i < pos.extent(firstDim); i++)
-    {
-      for (int pol = 0; pol < pos.extent(secondDim); pol++)
-	{
-	  if (select(i,pol)) {
-	    m_rcuindex(i,pol) = (i * pos.extent(secondDim)) + pol;
-	  } else {
-	    m_rcuindex(i,pol) = -1;
-	  }
-	}
+  // TODO: compact arrays by removing antennas of which both polarizations have not been selected
+  int k = 0;
+  for (int i = 0; i < m_pos.extent(firstDim); i++) {
+    if (sum(m_antenna_selection(i, Range::all())) > 0) {
+      m_pos(k, Range::all(), Range::all()) = m_pos(i, Range::all(), Range::all());
+      m_rcuindex(k, 0) = (i * m_pos.extent(secondDim));
+      m_rcuindex(k, 1) = (i * m_pos.extent(secondDim)) + 1;
+      k++;
     }
+  }
+  m_antenna_count = k;
+  LOG_INFO_STR("m_antenna_count=" << m_antenna_count);
+  ASSERT(m_antenna_count > 0);
 
-  // TODO: compact array by removing antennas of which both polarizations have not been selected
+  // resize the arrays
+  m_pos.resizeAndPreserve(m_antenna_count, m_pos.extent(secondDim), m_pos.extent(thirdDim));
+  m_rcuindex.resizeAndPreserve(m_antenna_count, m_rcuindex.extent(secondDim));
+
+  LOG_INFO_STR("m_rcuindex(after)=" << m_rcuindex);
 
   // create calibration result objects
-  m_result[FRONT] = new AntennaGains(pos.extent(firstDim), pos.extent(secondDim), m_spw.getNumSubbands());
-  m_result[BACK]  = new AntennaGains(pos.extent(firstDim), pos.extent(secondDim), m_spw.getNumSubbands());
+  m_result[FRONT] = new AntennaGains(m_pos.extent(firstDim), m_pos.extent(secondDim), m_spw.getNumSubbands());
+  m_result[BACK]  = new AntennaGains(m_pos.extent(firstDim), m_pos.extent(secondDim), m_spw.getNumSubbands());
   ASSERT(m_result[FRONT] && m_result[BACK]);
 }
 
@@ -85,10 +94,11 @@ SubArray::~SubArray()
   if (m_result[BACK])  delete m_result[BACK];
 }
 
-void SubArray::calibrate(CalibrationInterface* cal, const ACC& acc)
+void SubArray::calibrate(CalibrationInterface* cal, ACC& acc)
 {
   ASSERT(m_result[FRONT]);
 
+  acc.setSelection(m_antenna_selection);
   if (cal) cal->calibrate(*this, acc, *m_result[FRONT]);
 
   m_result[FRONT]->setDone();

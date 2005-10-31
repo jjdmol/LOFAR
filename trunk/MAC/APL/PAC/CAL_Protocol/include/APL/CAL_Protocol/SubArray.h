@@ -79,7 +79,7 @@ namespace LOFAR {
        * @param cal The calibration algorithm to use.
        * @param acc The Array Correlation Cube on which to calibrate.
        */
-      void calibrate(CalibrationInterface* cal, const ACC& acc);
+      void calibrate(CalibrationInterface* cal, ACC& acc);
 
       /**
        * Get calibration result (if available).
@@ -134,6 +134,9 @@ namespace LOFAR {
 
       /* prevent copy */
       SubArray(const SubArray& other); // no implementation
+
+      int                   m_antenna_count;     // number of seleted antennas
+      blitz::Array<bool, 2> m_antenna_selection; // antenna selection dimensions: (nantennas x npol)
 
       SpectralWindow m_spw;              // the spectral window for this subarray
       AntennaGains*  m_result[BACK + 1]; // two calibration result records

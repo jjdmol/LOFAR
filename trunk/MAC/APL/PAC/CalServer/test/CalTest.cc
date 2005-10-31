@@ -136,8 +136,9 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	// select antennas
 	for (int i = 0; i < 2 * m_nantennas; i++) {
-	  start.subset.set(i);
+	  if (0 == (i/2) % 2) start.subset.set(i);
 	}
+	start.subset.set(5);
 	start.nyquist_zone       = m_nyquistzone;
 	start.rcucontrol.value   = m_rcucontrol;
 

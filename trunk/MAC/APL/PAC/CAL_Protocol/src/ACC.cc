@@ -38,7 +38,7 @@ using namespace RTC;
 ACC::ACC(int nsubbands, int nantennas, int npol) :
   SharedResource(1,1), // at most one reader or one writer
   m_acc(nsubbands, npol, npol, nantennas, nantennas),
-  m_time(nsubbands), m_valid(false)
+  m_time(nsubbands), m_valid(false), m_antenna_count(0)
 {
 }
 
@@ -46,7 +46,19 @@ ACC::~ACC()
 {
 }
 
-const Array<complex<double>, 2> ACC::getACM(int subband, int pol1, int pol2, Timestamp& timestamp) const
+void ACC::setSelection(const blitz::Array<bool, 2>& antenna_selection)
+{
+  ASSERT(antenna_selection.extent(firstDim)  == m_acc.extent(fourthDim));
+  ASSERT(antenna_selection.extent(secondDim) == m_acc.extent(secondDim));
+  m_antenna_selection = antenna_selection;
+
+  m_antenna_count = 0;
+  for (int i = 0; i < m_antenna_selection.extent(firstDim); ++i) {
+    if (sum(m_antenna_selection(i, Range::all())) > 0) m_antenna_count++;
+  }
+}
+
+const Array<complex<double>, 2> ACC::getACM(int subband, int pol1, int pol2, Timestamp& timestamp)
 {
   Range all = Range::all();
   timestamp = Timestamp(0,0);
@@ -58,7 +70,31 @@ const Array<complex<double>, 2> ACC::getACM(int subband, int pol1, int pol2, Tim
 
   timestamp = m_time(subband);
 
-  return m_acc(subband, pol1, pol2, all, all);
+  if (m_antenna_count == m_acc.extent(fourthDim)) {
+
+    // return slice of the full ACC
+    return m_acc(subband, pol1, pol2, all, all);
+
+  } else {
+
+    // make selection
+    m_current_acm.resize(m_antenna_count, m_antenna_count);
+    int k = 0;
+    for (int i = 0; i < m_acc.extent(fourthDim); ++i) {
+      if (sum(m_antenna_selection(i, Range::all())) > 0) {
+	int l = 0;
+	for (int j = 0; j < m_acc.extent(fifthDim); ++j) {
+	  if (sum(m_antenna_selection(j, Range::all())) > 0) {
+	    m_current_acm(k, l) = m_acc(subband, pol1, pol2, i, j);
+	  }
+	  l++;
+	}
+	k++;
+      }
+    }
+
+    return m_current_acm;
+  }
 }
 
 void ACC::updateACM(int subband, Timestamp timestamp, Array<complex<double>, 4>& newacm)
@@ -82,6 +118,11 @@ void ACC::setACC(blitz::Array<std::complex<double>, 5>& acc)
   m_acc.reference(acc);
   m_time.resize(acc.extent(firstDim));
   m_time = Timestamp(0,0);
+
+  // select all antennas
+  m_antenna_count = m_acc.extent(fourthDim);
+  m_antenna_selection.resize(m_acc.extent(fourthDim), m_acc.extent(secondDim));
+  m_antenna_selection = true;
 }
 
 int ACC::getFromFile(string filename)
