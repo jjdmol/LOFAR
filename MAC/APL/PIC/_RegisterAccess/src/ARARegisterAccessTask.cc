@@ -71,7 +71,7 @@ INIT_TRACER_CONTEXT(RegisterAccessTask,LOFARLOGGER_PACKAGE);
 string RegisterAccessTask::m_RSPserverName("RSPserver");
 
 RegisterAccessTask::RegisterAccessTask(string name)
-    : GCFTask((State)&RegisterAccessTask::initial, name),
+    : GCFTask((State)&RegisterAccessTask::initial_state, name),
       m_answer(),
       m_myPropertySetMap(),
       m_myPropsLoaded(false),
@@ -110,110 +110,9 @@ RegisterAccessTask::RegisterAccessTask(string name)
   m_answer.setTask(this);
   
   ParameterSet::instance()->adoptFile(GCF::ParameterSet::instance()->getSearchPath() + string("RegisterAccess.conf"));
-
-  char scopeString[300];
-  int rack;
-  int subrack;
-  int board;
-  int ap;
-  int rcu;
-  int globalRcuNr(0);
-  
-  m_n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
-  m_n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
-  m_n_boards_per_subrack  = ParameterSet::instance()->getInt(PARAM_N_BOARDS_PER_SUBRACK);
-  m_n_aps_per_board       = ParameterSet::instance()->getInt(PARAM_N_APS_PER_BOARD);
-  m_n_rcus_per_ap         = ParameterSet::instance()->getInt(PARAM_N_RCUS_PER_AP);
-  m_n_rcus                = m_n_rcus_per_ap*
-                              m_n_aps_per_board*
-                              m_n_boards_per_subrack*
-                              m_n_subracks_per_rack*
-                              m_n_racks;
   m_status_update_interval = ParameterSet::instance()->getInt(PARAM_STATUS_UPDATE_INTERVAL);
   m_stats_update_interval  = ParameterSet::instance()->getInt(PARAM_STATISTICS_UPDATE_INTERVAL);
   m_centralized_stats      = (0!=ParameterSet::instance()->getInt(PARAM_STATISTICS_CENTRALIZED));
-  
-  // fill MyPropertySets map
-  addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station, GCFMyPropertySet::USE_DB_DEFAULTS);
-  addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-  addMyPropertySet(SCOPE_PIC_Command, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
-  for(rack=0;rack<m_n_racks;rack++)
-  {
-    sprintf(scopeString,SCOPE_PIC_RackN,rack);
-    addMyPropertySet(scopeString,TYPE_LCU_PIC_Rack, PSCAT_LCU_PIC_Rack, PROPS_Rack);
-    sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
-    addMyPropertySet(scopeString,TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-    sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
-    addMyPropertySet(scopeString,TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
-
-    for(subrack=0;subrack<m_n_subracks_per_rack;subrack++)
-    {
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_LCU_PIC_SubRack, PSCAT_LCU_PIC_SubRack, PROPS_SubRack);
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Command,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
-      
-      for(board=0;board<m_n_boards_per_subrack;board++)
-      {
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Command,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
-        
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Ethernet, PSCAT_LCU_PIC_Ethernet, PROPS_Ethernet);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
-    
-        for(ap=0;ap<m_n_aps_per_board;ap++)
-        {
-          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
-          addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
-          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rack,subrack,board,ap);
-          addMyPropertySet(scopeString, TYPE_LCU_PIC_SYNCStatus, PSCAT_LCU_PIC_SYNCStatus, PROPS_SYNCStatus);
-          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rack,subrack,board,ap);
-          addMyPropertySet(scopeString, TYPE_LCU_PIC_BoardRCUStatus, PSCAT_LCU_PIC_BoardRCUStatus, PROPS_BoardRCUStatus);
-          for(rcu=0;rcu<m_n_rcus_per_ap;rcu++)
-          {
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_RCU, PSCAT_LCU_PIC_RCU, PROPS_RCU);
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Command,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
-
-            m_propertySet2RCUMap[string(scopeString)] = globalRcuNr++;
-
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_ADCStatistics, PSCAT_LCU_PIC_ADCStatistics, PROPS_ADCStatistics);
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_LFA, PSCAT_LCU_PIC_LFA, PROPS_LFA);
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_HFA, PSCAT_LCU_PIC_HFA, PROPS_HFA);
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
-            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Command,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
-          }
-        }
-      }
-    }  
-  }
-  
-  // subscribe to maintenanace properties and alert properties
-  
 }
 
 RegisterAccessTask::~RegisterAccessTask()
@@ -239,7 +138,233 @@ bool RegisterAccessTask::isConnected()
   return m_RSPclient.isConnected();
 }
 
-GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult RegisterAccessTask::initial_state(GCFEvent& e, GCFPortInterface& port)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch(e.signal)
+  {
+    case F_INIT:
+    {
+      break;
+    }
+
+    case F_ENTRY:
+    {
+      if (!m_RSPclient.isConnected()) 
+      {
+        bool res=m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
+        LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
+        if(!res)
+        {
+          m_RSPclient.setTimer((long)3);
+        }  
+      } 
+      break;
+    }
+
+    case F_CONNECTED:
+    {
+      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      if (isConnected())
+      {
+        TRAN(RegisterAccessTask::connected_state);
+      }
+      break;
+    }
+
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)3); // try again in 3 seconds
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      port.close();
+      break;
+    }
+
+    case F_TIMER:
+    {
+      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
+      port.open();
+      break;
+    }
+
+    case F_EXIT:
+    {
+      // cancel timers
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterface& port)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
+      // get config
+      RSPGetconfigEvent getconfig;
+      m_RSPclient.send(getconfig);
+      
+      break;
+    }
+
+    case F_TIMER:
+    {
+      break;
+    }
+    
+    case RSP_GETCONFIGACK:
+    {
+      LOG_INFO("RSP_GETCONFIGACK received");
+      RSPGetconfigackEvent ack(e);
+      LOG_INFO(formatString("n_rcus     =%d",ack.n_rcus));
+      LOG_INFO(formatString("n_rspboards=%d",ack.n_rspboards));
+      LOG_INFO(formatString("n_tdboards =%d",ack.n_tdboards));
+
+      char scopeString[300];
+      int rack;
+      int subrack;
+      int board;
+      int ap;
+      int rcu;
+      int globalRcuNr(0);
+      
+      m_n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
+      m_n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
+      m_n_boards_per_subrack  = (m_n_racks * m_n_subracks_per_rack) / ack.n_rspboards;
+      m_n_aps_per_board       = ParameterSet::instance()->getInt(PARAM_N_APS_PER_BOARD);
+      m_n_rcus_per_ap         = ParameterSet::instance()->getInt(PARAM_N_RCUS_PER_AP);
+      m_n_rcus                = ack.n_rcus;
+      if(m_n_rcus != m_n_rcus_per_ap*
+                     m_n_aps_per_board*
+                     m_n_boards_per_subrack*
+                     m_n_subracks_per_rack*
+                     m_n_racks)
+      {
+        LOG_ERROR(formatString("Number of rcus (%d) differs from calculated number",m_n_rcus));
+      }
+      // fill MyPropertySets map
+      addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station, GCFMyPropertySet::USE_DB_DEFAULTS);
+      addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+      addMyPropertySet(SCOPE_PIC_Command, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
+      for(rack=0;rack<m_n_racks;rack++)
+      {
+        sprintf(scopeString,SCOPE_PIC_RackN,rack);
+        addMyPropertySet(scopeString,TYPE_LCU_PIC_Rack, PSCAT_LCU_PIC_Rack, PROPS_Rack);
+        sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
+        addMyPropertySet(scopeString,TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+        sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
+        addMyPropertySet(scopeString,TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
+    
+        for(subrack=0;subrack<m_n_subracks_per_rack;subrack++)
+        {
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_SubRack, PSCAT_LCU_PIC_SubRack, PROPS_SubRack);
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Command,rack,subrack);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
+          
+          for(board=0;board<m_n_boards_per_subrack;board++)
+          {
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Command,rack,subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
+            
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Ethernet, PSCAT_LCU_PIC_Ethernet, PROPS_Ethernet);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
+        
+            for(ap=0;ap<m_n_aps_per_board;ap++)
+            {
+              sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
+              addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
+              sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rack,subrack,board,ap);
+              addMyPropertySet(scopeString, TYPE_LCU_PIC_SYNCStatus, PSCAT_LCU_PIC_SYNCStatus, PROPS_SYNCStatus);
+              sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rack,subrack,board,ap);
+              addMyPropertySet(scopeString, TYPE_LCU_PIC_BoardRCUStatus, PSCAT_LCU_PIC_BoardRCUStatus, PROPS_BoardRCUStatus);
+              for(rcu=0;rcu<m_n_rcus_per_ap;rcu++)
+              {
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_RCU, PSCAT_LCU_PIC_RCU, PROPS_RCU);
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Command,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
+    
+                m_propertySet2RCUMap[string(scopeString)] = globalRcuNr++;
+    
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_ADCStatistics, PSCAT_LCU_PIC_ADCStatistics, PROPS_ADCStatistics);
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_LFA, PSCAT_LCU_PIC_LFA, PROPS_LFA);
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_HFA, PSCAT_LCU_PIC_HFA, PROPS_HFA);
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
+                sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Command,rack,subrack,board,ap,rcu);
+                addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
+              }
+            }
+          }
+        }  
+      
+        TRAN(RegisterAccessTask::enablingMyPropsets_state);
+      }      
+      break;
+    }
+
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::initial_state);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -277,125 +402,11 @@ GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*p
       if(m_myPropsLoadCounter == m_myPropertySetMap.size())
       {
         m_myPropsLoaded=true;
-        TRAN(RegisterAccessTask::myPropSetsLoaded);
+        TRAN(RegisterAccessTask::getVersion_state);
       }
       break;
     }
     
-    case F_EXIT:
-    {
-      // cancel timers
-      break;
-    }
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult RegisterAccessTask::myPropSetsLoaded(GCFEvent& e, GCFPortInterface& /*port*/)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  switch(e.signal)
-  {
-    case F_INIT:
-    {
-      break;
-    }
-
-    case F_ENTRY:
-    {
-      LOG_INFO("NOT configuring propsets using APCs...");
-      TRAN(RegisterAccessTask::APCsLoaded);
-      break;
-    }
-
-    case F_PS_CONFIGURED:
-    {
-/*
-      m_APCsLoadCounter++;
-      LOG_INFO(formatString("Propset %d configured", m_APCsLoadCounter));
-      if(m_APCsLoadCounter == m_APCMap.size())
-      {
-        m_APCsLoaded=true;
-        TRAN(RegisterAccessTask::APCsLoaded);
-      }
-*/
-      break;
-    }
-    
-    case F_EXIT:
-    {
-    	// cancel timers
-      break;
-    }
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& port)
-{
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  switch(e.signal)
-  {
-    case F_INIT:
-    {
-      break;
-    }
-
-    case F_ENTRY:
-    {
-      if (!m_RSPclient.isConnected()) 
-      {
-        bool res=m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
-        LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
-        if(!res)
-        {
-          m_RSPclient.setTimer((long)3);
-        }  
-      } 
-      break;
-    }
-
-    case F_CONNECTED:
-    {
-      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-      if (isConnected())
-      {
-        TRAN(RegisterAccessTask::connected);
-      }
-      break;
-    }
-
-    case F_DISCONNECTED:
-    {
-      port.setTimer((long)3); // try again in 3 seconds
-      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-      port.close();
-      break;
-    }
-
-    case F_TIMER:
-    {
-      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
-      port.open();
-      break;
-    }
-
     case F_VGETRESP:
     {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
@@ -428,10 +439,18 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
       }
       break;
     }
-    
+
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::initial_state);
+      break;
+    }
+
     case F_EXIT:
     {
-      // cancel timers
       break;
     }
 
@@ -439,11 +458,11 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
       status = GCFEvent::NOT_HANDLED;
       break;
   }
-
   return status;
 }
 
-GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& port)
+
+GCFEvent::TResult RegisterAccessTask::getVersion_state(GCFEvent& e, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -462,7 +481,6 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       getversion.timestamp.setNow();
       getversion.cache = true;
       m_RSPclient.send(getversion);
-      
       break;
     }
 
@@ -470,7 +488,7 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
     {
       break;
     }
-
+    
     case RSP_GETVERSIONACK:
     {
       LOG_INFO("RSP_GETVERSIONACK received");
@@ -511,6 +529,78 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
         }
       }
       
+      TRAN(RegisterAccessTask::subscribingStatus_state);
+      break;
+    }      
+    
+    case F_VGETRESP:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::initial_state);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPortInterface &port)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
       // subscribe to status updates
       RSPSubstatusEvent substatus;
       substatus.timestamp.setNow();
@@ -535,27 +625,60 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
         m_subStatusHandle = ack.handle;
       }
       
-      TRAN(RegisterAccessTask::subscribingStatsSubbandPower);
+      TRAN(RegisterAccessTask::subscribingStatsSubbandPower_state);
       
       break;
     }
     
     case RSP_UPDSTATUS:
     {
-    	// handle updstatus events even though we are not subscribed to them yet
-    	// this is done to relax the requirements for the ARAtest application
-    	// (or you might call it lazyness)
+      // handle updstatus events even though we are not subscribed to them yet
+      // this is done to relax the requirements for the ARAtest application
+      // (or you might call it lazyness)
       LOG_INFO("RSP_UPDSTATUS received");
       status = handleUpdStatus(e,port);
       break;
     }
-    
+
+    case F_VGETRESP:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+
     case F_DISCONNECTED:
     {
-    	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-    	port.close();
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
 
-    	TRAN(RegisterAccessTask::APCsLoaded);
+      TRAN(RegisterAccessTask::initial_state);
       break;
     }
 
@@ -571,8 +694,9 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
 
   return status;
 }
+    
 
-GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, GCFPortInterface &port)
+GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEvent& e, GCFPortInterface &port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -612,16 +736,49 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, 
         m_subStatsHandleSubbandPower = ack.handle;
       }
       
-      TRAN(RegisterAccessTask::subscribingStatsBeamletPower);
+      TRAN(RegisterAccessTask::subscribingStatsBeamletPower_state);
       break;
     }
     
+    case F_VGETRESP:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+
     case F_DISCONNECTED:
     {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
-      TRAN(RegisterAccessTask::APCsLoaded);
+      TRAN(RegisterAccessTask::initial_state);
       break;
     }
 
@@ -638,7 +795,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, 
   return status;
 }
 
-GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, GCFPortInterface &port)
+GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEvent& e, GCFPortInterface &port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -678,16 +835,49 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, 
         m_subStatsHandleBeamletPower = ack.handle;
       }
       
-      TRAN(RegisterAccessTask::subscribingXcStats);
+      TRAN(RegisterAccessTask::subscribingXcStats_state);
       break;
     }
     
+    case F_VGETRESP:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+
     case F_DISCONNECTED:
     {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
-      TRAN(RegisterAccessTask::APCsLoaded);
+      TRAN(RegisterAccessTask::initial_state);
       break;
     }
 
@@ -704,7 +894,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, 
   return status;
 }
 
-GCFEvent::TResult RegisterAccessTask::subscribingXcStats(GCFEvent& e, GCFPortInterface &port)
+GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFPortInterface &port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -742,16 +932,49 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats(GCFEvent& e, GCFPortInt
         m_subXcStatsHandle = ack.handle;
       }
       
-      TRAN(RegisterAccessTask::operational);
+      TRAN(RegisterAccessTask::operational_state);
       break;
     }
     
+    case F_VGETRESP:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+      
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
+      else if(strstr(pPropAnswer->pPropName, "status") != 0)
+      {
+        LOG_DEBUG("status property changed");
+        
+        _refreshFunctionality();
+      }
+      break;
+    }
+
     case F_DISCONNECTED:
     {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
-      TRAN(RegisterAccessTask::APCsLoaded);
+      TRAN(RegisterAccessTask::initial_state);
       break;
     }
 
@@ -768,7 +991,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats(GCFEvent& e, GCFPortInt
   return status;
 }
 
-GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -790,9 +1013,9 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
         {
           m_integrationTime = pvIntegrationTime->getValue();
           if(m_integrationTime > 0)
-	  {
+          {
             m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
-	  }
+          }
         }
         boost::shared_ptr<GCFPVInteger> pvIntegrationMethod(static_cast<GCFPVInteger*>(propsetIt->second->getValue(PROPNAME_INTEGRATIONMETHOD)));
         if(pvIntegrationMethod != 0)
@@ -843,7 +1066,7 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
-      TRAN(RegisterAccessTask::APCsLoaded);
+      TRAN(RegisterAccessTask::initial_state);
       break;
     }
 

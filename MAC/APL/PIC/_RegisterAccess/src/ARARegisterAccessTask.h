@@ -61,40 +61,35 @@ namespace ARA
       bool isConnected();
       
       /**
-       * The initial state. This state is used to connect the client
-       * and board ports. When they are both connected a transition
-       * to the enabled state is made.
+       * The initial state. This state is used to connect to the RSPdriver
+       * When they are connected a transition to the connnected state is made.
        */
-      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
-      
+      GCF::TM::GCFEvent::TResult initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
-       * The myPropSetsLoaded state. In this state the propertysets are loaded and the task 
-       * waits for a client to connect
+       * The connected state. In this state the version and configuration of the 
+       * RSPdriver is requested and the propertysets are created.
        */
-      GCF::TM::GCFEvent::TResult myPropSetsLoaded(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
-
+      GCF::TM::GCFEvent::TResult connected_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
-       * The myAPCsLoaded state. In this state the propertysets are loaded and the task 
-       * waits for a client to connect
+       * The enablingPropsets state. In this state the propertysets are enabled 
        */
-      GCF::TM::GCFEvent::TResult APCsLoaded(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
-
+      GCF::TM::GCFEvent::TResult enablingMyPropsets_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
-       * The connected state. In this state the task can receive
-       * commands.
+       * The getVersion state. In this state the version info is requested from the RSPdriver
        */
-      GCF::TM::GCFEvent::TResult connected(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult getVersion_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
        * The subscribing states. In each state a SubStats message is sent
        */
-      GCF::TM::GCFEvent::TResult subscribingStatsSubbandPower(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
-      GCF::TM::GCFEvent::TResult subscribingStatsBeamletPower(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
-      GCF::TM::GCFEvent::TResult subscribingXcStats(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult subscribingStatus_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult subscribingStatsSubbandPower_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult subscribingStatsBeamletPower_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult subscribingXcStats_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
        * The operational state. In this state the task can receives
        * status and statistics updates from the rsp driver
        */
-      GCF::TM::GCFEvent::TResult operational(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult operational_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
     
     private:
       // action methods

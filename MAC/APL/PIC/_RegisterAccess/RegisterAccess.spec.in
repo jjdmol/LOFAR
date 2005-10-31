@@ -14,7 +14,7 @@ Summary: RegisterAccess is the executable that provides a low level interface to
 %define version @VERSION@
 %define pkgname @PACKAGE@
 %define pkgdir %{pkgname}-%{version}-%{release}
-%define prefix /opt/lofar
+%define prefix /tmp/blaakmeer/opt/lofar
 %define configure_args @RPM_CONFIGURE_ARGS@
 ##define build_kernel_version @BUILD_KERNEL_VERSION@
 
