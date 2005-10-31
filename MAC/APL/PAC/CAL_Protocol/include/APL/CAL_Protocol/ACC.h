@@ -35,9 +35,16 @@ namespace LOFAR {
     class ACC : public SharedResource
     {
     public:
-      ACC() : m_valid(false) {}
+      ACC() : m_valid(false), m_antenna_count(0) { }
       ACC(int nsubbands, int nantennas, int npol);
       virtual ~ACC();
+
+      /**
+       * Set the antenna selection mask to use in getACM. Dimensions (nantennas (all) x 2 (pol))
+       * @param selection 2-dimensional blitz array with selection to apply
+       * @note precondition: antenna_selection.extent(firstDim) == m_acc.extent(fourthDim)
+       */
+      void setSelection(const blitz::Array<bool, 2>& antenna_selection);
 
       /**
        * Get a subband and single polarized slice of the ACC cube.
@@ -48,7 +55,7 @@ namespace LOFAR {
        * If an invalid subband is specified Timestamp(0,0) is returned.
        * @return The ACM for the specified subband and polarizations is returned.
        */
-      const blitz::Array<std::complex<double>, 2> getACM(int subband, int pol1, int pol2, RTC::Timestamp& timestamp) const;
+      const blitz::Array<std::complex<double>, 2> getACM(int subband, int pol1, int pol2, RTC::Timestamp& timestamp);
     
       /**
        * Update an ACM.
@@ -63,16 +70,19 @@ namespace LOFAR {
 
       /**
        * Get number of subbands.
+       * @return the number of subbands in this ACC
        */
       int getNSubbands() const { return m_acc.extent(blitz::firstDim); }
 
       /**
        * Get number of antennas
+       * @return the number of antennas in this ACC
        */
       int getNAntennas() const { return m_acc.extent(blitz::secondDim); }
 
       /**
        * Get number of polarizations
+       * @return the number of polarizations in this ACC
        */
       int getNPol() const { return m_acc.extent(blitz::fourthDim); }
 
@@ -84,6 +94,7 @@ namespace LOFAR {
     
       /**
        * Initialize the ACC array.
+       * @note After this call the selection will select all antennas.
        */
       void setACC(blitz::Array<std::complex<double>, 5>& acc);
 
@@ -147,6 +158,10 @@ namespace LOFAR {
       blitz::Array<RTC::Timestamp, 1> m_time;
 
       bool m_valid; // does the array contain valid data?
+
+      blitz::Array<bool, 2>                 m_antenna_selection; // selection of antennas to be used by ::getACM
+      int                                   m_antenna_count;     // number of selected antennas
+      blitz::Array<std::complex<double>, 2> m_current_acm;       // the ACM last returned by ::getACM
     };
   
     /**

@@ -52,7 +52,7 @@ RemoteStationCalibration::RemoteStationCalibration(const Sources& sources, Dipol
 {
 }
 
-void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& gains)
+void RemoteStationCalibration::calibrate(const SubArray& subarray, ACC& acc, AntennaGains& gains)
 {
   //
   // BIG WARNING: The order of the axes in the acc array have changed.
@@ -128,7 +128,7 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& ac
   gains.setDone(true); // when finished
 }
 
-Array<bool, 1> RemoteStationCalibration::issuitable(const ACC& acc, int nsb)
+Array<bool, 1> RemoteStationCalibration::issuitable(ACC& acc, int nsb)
 {
   Timestamp acmtime;
   Array<complex<double>, 1> test(nsb);

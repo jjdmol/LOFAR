@@ -455,6 +455,12 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     LOG_ERROR_STR("Parent array '" << start.parent << "' not found.");
     ack.status = ERR_NO_PARENT;
 
+  } else if (start.subset.count() == 0) {
+
+    // empty selection
+    LOG_ERROR("Empty antenna selection not allowed.");
+    ack.status = ERR_RANGE;
+
   } else {
     
     // register because this is a cal_start
@@ -464,6 +470,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
     Array<bool, 2> select;
     select.resize(positions.extent(firstDim),
 		  positions.extent(secondDim));
+    select = false;
 
     for (int i = 0;
 	 i < positions.extent(firstDim)*positions.extent(secondDim);

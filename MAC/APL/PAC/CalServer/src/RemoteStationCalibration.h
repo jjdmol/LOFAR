@@ -47,7 +47,7 @@ namespace LOFAR {
        */
       virtual ~RemoteStationCalibration() {}
 
-      virtual void calibrate(const SubArray& subarray, const ACC& acc, AntennaGains& result);
+      virtual void calibrate(const SubArray& subarray, ACC& acc, AntennaGains& result);
       
     private:
       const std::vector<Source> make_local_sky_model(const Sources& sources, RTC::Timestamp& acmtime);
@@ -57,7 +57,7 @@ namespace LOFAR {
       blitz::Array<std::complex<double>, 2> computeAlpha(const blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2>& restriction);
       blitz::Array<std::complex<double>, 1> computeGain(blitz::Array<std::complex<double>, 2>& alpha, const blitz::Array<std::complex<double>, 2>& acm, blitz::Array<std::complex<double>, 2>& R0, blitz::Array<bool, 2> restriction);
 
-      blitz::Array<bool, 1> issuitable(const ACC& acc, int nsb);
+      blitz::Array<bool, 1> issuitable(ACC& acc, int nsb);
 
       blitz::Array<double, 2> matmult(blitz::Array<double, 2> A, blitz::Array<double, 2> B);
       blitz::Array<std::complex<double>, 2> matmultc(blitz::Array<std::complex<double>, 2> A, blitz::Array<std::complex<double>, 2> B);
