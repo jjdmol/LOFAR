@@ -48,6 +48,7 @@ global string   ELNAME_SUBVIEWS                 = "subViews";
 global string   ELNAME_CONFIGS                  = "configs";
 global string   ELNAME_TRIGGERUPDATE            = "triggerUpdate";
 global string   ELNAME_NEWDATAPOINT             = "newDatapoint";
+global string   ELNAME_MESSAGE		              = "message";
 global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "GCFNavigatorInstance";
 global int      g_navigatorID = 0;
 
@@ -65,10 +66,10 @@ global int      g_navigatorID = 0;
 void navConfigInitPathNames()
 {
   dyn_string pathNames;
-  if(_WIN32)
+  if (_WIN32)
   {
     dpGet("__navigator.pathNamesWindows", pathNames);
-    if(""!=pathNames[g_path_temp_index])
+    if ("" != pathNames[g_path_temp_index])
       g_path_temp    = pathNames[g_path_temp_index];
     else
       g_path_temp    = "c:/temp";
@@ -79,7 +80,7 @@ void navConfigInitPathNames()
   else
   {
     dpGet("__navigator.pathNamesLinux", pathNames);
-    if(""!=pathNames[g_path_temp_index])
+    if ("" != pathNames[g_path_temp_index])
       g_path_temp    = pathNames[g_path_temp_index];
     else
       g_path_temp    = "/tmp";
@@ -101,7 +102,7 @@ void navConfigInitPathNames()
 string navConfigGetPathName(string pathName)
 {
   string output;
-  if(_WIN32) //windows
+  if (_WIN32) //windows
   {
     strreplace(pathName, "/", "\\");
     output = pathName;
@@ -116,7 +117,7 @@ string navConfigGetPathName(string pathName)
 string navConfigGetSlashes()
 {
   string output;
-  if(_WIN32) //windows
+  if (_WIN32) //windows
   {
     output = "\\";
   }
@@ -149,18 +150,18 @@ int navConfigGetNavigatorID()
 void navConfigSetNavigatorID(int newID)
 {
   bool createConfiguration = false;
-  if(newID > 256)
+  if (newID > 256)
   {
     g_navigatorID = newID;
-    if(!dpAccessable(DPNAME_NAVIGATOR + g_navigatorID))
+    if (!dpAccessable(DPNAME_NAVIGATOR + g_navigatorID))
     {
       createConfiguration = true;
     }
   }
   else
   {
-  	g_navigatorID = myManNum();
-    if(!dpAccessable(DPNAME_NAVIGATOR + g_navigatorID))
+    g_navigatorID = myManNum();
+    if (!dpAccessable(DPNAME_NAVIGATOR + g_navigatorID))
     {
       createConfiguration = true;
     }
@@ -182,7 +183,7 @@ void navConfigSetNavigatorID(int newID)
 void navConfigIncreaseUseCount()
 {
   // increase usecount
-  int usecount=0;
+  int usecount = 0;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
   usecount++;
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
@@ -197,10 +198,10 @@ void navConfigIncreaseUseCount()
 void navConfigDecreaseUseCount()
 {
   // lower usecount of this navigator
-  int usecount=0;
+  int usecount = 0;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
   usecount--;
-  if(usecount > 0)
+  if (usecount > 0)
   {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
   }
@@ -221,29 +222,29 @@ void navConfigDecreaseUseCount()
 bool navConfigCheckEnabled(string datapointName)
 {
   bool enabled = false;
-  if(dpAccessable(datapointName + "__enabled"))
+  if (dpAccessable(datapointName + "__enabled"))
   {
     enabled = true;
-    LOG_TRACE("dpName__enabled Exists",datapointName, enabled);
+    LOG_TRACE("dpName__enabled Exists", datapointName, enabled);
   }
   else
   {
-    LOG_TRACE("dpName__enabled NOT Exists",datapointName, enabled);
+    LOG_TRACE("dpName__enabled NOT Exists", datapointName, enabled);
     // check the ignoreEnabledRoots field
     dyn_string ignoreEnabledDPs;
     dyn_errClass err;
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS,ignoreEnabledDPs);
+    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
     // If the datapointName is a reference, use the refernce to check for enabled
     err = getLastError();
-    if(dynlen(err) == 0)
+    if (dynlen(err) == 0)
     {
-      for(int i=1;i<=dynlen(ignoreEnabledDPs) && !enabled;i++)
+      for (int i = 1; i <= dynlen(ignoreEnabledDPs) && !enabled; i++)
       {
-        int pos = strpos(datapointName,ignoreEnabledDPs[i]);
-        LOG_TRACE("checkEnabled",pos,datapointName,ignoreEnabledDPs[i]);
-        if(pos >= 0)
+        int pos = strpos(datapointName, ignoreEnabledDPs[i]);
+        LOG_TRACE("checkEnabled", pos, datapointName, ignoreEnabledDPs[i]);
+        if (pos >= 0)
         {
-          enabled=true;
+          enabled = true;
         }
       }
     }
@@ -261,9 +262,9 @@ void navConfigSetSelectedElement(string datapointPath)
 {
   string dpSelectedElementContainer = DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDELEMENT;
   string dpSelectedElement = datapointPath;
-  if(dpAccessable(dpSelectedElementContainer))
+  if (dpAccessable(dpSelectedElementContainer))
   {
-    dpSet(dpSelectedElementContainer,dpSelectedElement);
+    dpSet(dpSelectedElementContainer, dpSelectedElement);
   }
 }
 
@@ -275,7 +276,7 @@ void navConfigSetSelectedElement(string datapointPath)
 string navConfigGetViewsPath()
 {
   string viewsPath = "nav_fw/";
-  dpGet(DPNAME_NAVIGATOR+ "." + ELNAME_VIEWSPATH,viewsPath);
+  dpGet(DPNAME_NAVIGATOR+ "." + ELNAME_VIEWSPATH, viewsPath);
   return viewsPath;
 }
 
@@ -300,12 +301,12 @@ void navConfigSetSelectedView(string datapoint, int viewid)
 {
   string dpViewConfig = navConfigGetViewConfig(datapoint);
   dyn_string views = navConfigGetViews(dpViewConfig);
-  if(viewid <= dynlen(views))
+  if (viewid <= dynlen(views))
   {
     string caption = navConfigGetViewCaption(views[viewid]);
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDVIEWCAPTION, caption);
   }
-  dpSet(dpViewConfig + "." + ELNAME_SELECTEDVIEW,viewid);
+  dpSet(dpViewConfig + "." + ELNAME_SELECTEDVIEW, viewid);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -359,14 +360,13 @@ string navConfigGetViewConfigPanel(string dpView)
 bool checkForReference(string &parentDatapoint, dyn_string &reference, bool &parentDatapointIsReference)
 {
   dyn_string refOut;
-  bool stopCheck=FALSE;
-  //parentDatapointIsReference=FALSE;
-  for(int i=1; (i<=dynlen(g_referenceList) && !stopCheck); i++)
+  bool stopCheck = FALSE;
+  for (int i = 1; (i <= dynlen(g_referenceList) && !stopCheck); i++)
   {
-    refOut = strsplit(g_referenceList[i],"=");
-    if(dynlen(refOut)>=1)
+    refOut = strsplit(g_referenceList[i], "=");
+    if (dynlen(refOut) >= 1)
     {
-      if (refOut[1] == parentDatapoint || patternMatch(refOut[1]+ "*",parentDatapoint))
+      if (strpos(parentDatapoint, refOut[1]) == 0)
       {
         stopCheck = TRUE;
         parentDatapointIsReference = TRUE;
@@ -388,7 +388,7 @@ bool checkForReference(string &parentDatapoint, dyn_string &reference, bool &par
 ///////////////////////////////////////////////////////////////////////////
 void checkForReferenceReplaceOriginal(dyn_string &resources, dyn_string reference)
 {
-  for(int i=1; i<=dynlen(resources); i++)
+  for (int i = 1; i <= dynlen(resources); i++)
   {
     strreplace(resources[i], reference[2], reference[1]);
   }
@@ -413,52 +413,51 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   int maxDepth;
   bool parentDatapointIsReference;
   checkForReference(parentDatapoint, reference, parentDatapointIsReference);
-  if(parentDatapoint == "")
+  if (parentDatapoint == "")
   {
     maxDepth = depth;
     // read the roots from the configuration
-    dpGet(DPNAME_NAVIGATOR+"." + ELNAME_RESOURCEROOTS,resourceRoots);
+    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_RESOURCEROOTS, resourceRoots);
     err = getLastError();
-    if(dynlen(err)>0)
+    if (dynlen(err) > 0)
     {
       // if nothing specified, take the local PIC and PAC trees
-      resourceRoots = makeDynString("PIC","PAC");
+      resourceRoots = makeDynString("PIC", "PAC");
     }  
   }
   else
   {
-    dyn_string dpPathElements = strsplit(parentDatapoint,"_");
+    dyn_string dpPathElements = strsplit(parentDatapoint, "_");
     maxDepth = depth + dynlen(dpPathElements);
     resourceRoots = makeDynString(parentDatapoint);
   }
-  for(int i=1;i<=dynlen(resourceRoots);i++)
+  for (int i = 1; i <= dynlen(resourceRoots); i++)
   {
     // query the database for all resources under the given root
-    dynAppend(allResources,dpNames(resourceRoots[i]+"*"));
+    dynAppend(allResources, dpNames(resourceRoots[i] + "*"));
   }
   
-
   /////////////////////////////////////////////////////////////
-  LOG_DEBUG("All resources: ",dynlen(allResources));
+  LOG_DEBUG("All resources: ", dynlen(allResources));
   dyn_string newCollection;
   dyn_string checkCollection = allResources;
   dyn_string enabledCollection = dynPatternMatch("*__enabled", allResources);
   int enabledCollectionLength = dynlen(enabledCollection);
   int position;
-  for(int j=1; j<=enabledCollectionLength; j++)
+  for (int j = 1; j<= enabledCollectionLength; j++)
   {
     string enabledCollectionItem = enabledCollection[j];
     strreplace(enabledCollectionItem, "__enabled", "");
     position = dynContains(checkCollection, enabledCollectionItem);
-    if(position>0)
+    if (position > 0)
     {
-      LOG_DEBUG("Adding: ",checkCollection[position]);
+      LOG_DEBUG("Adding: ", checkCollection[position]);
       dynAppend(newCollection, checkCollection[position]);
       dynRemove(checkCollection, position);
     }
-    else if(0==position)
+    else if (0 == position)
     {
-      if(navPMLisTemporary(enabledCollectionItem + "__enabled"))
+      if (navPMLisTemporary(enabledCollectionItem + "__enabled"))
       {
         LOG_DEBUG("Adding temp: ", enabledCollectionItem);
         dynAppend(newCollection, enabledCollectionItem);
@@ -467,23 +466,23 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   }
   ///////////////////////////////////////////////////////////////
 
-  if(dynlen(checkCollection)>0)
+  if (dynlen(checkCollection) > 0)
   {
-    bool enabled=FALSE;
+    bool enabled = FALSE;
     dyn_string ignoreEnabledDPs;
     dyn_errClass err;
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS,ignoreEnabledDPs);
+    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
     
-    for(int j=1; j<=dynlen(checkCollection);j++)
+    for (int j = 1; j <= dynlen(checkCollection); j++)
     {
       // check the ignoreEnabledRoots field
       err = getLastError();
-      if(dynlen(err) == 0)
+      if (dynlen(err) == 0)
       {
-        for(int n=1;n<=dynlen(ignoreEnabledDPs) && !enabled;n++)
+        for (int n = 1; n <= dynlen(ignoreEnabledDPs) && !enabled; n++)
         {
-          int pos = strpos(checkCollection[j],ignoreEnabledDPs[n]);
-          if(pos >= 0)
+          int pos = strpos(checkCollection[j], ignoreEnabledDPs[n]);
+          if (pos >= 0)
           {
             dynAppend(newCollection, checkCollection[j]);
             enabled = TRUE;
@@ -494,43 +493,40 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   }
   ////////////////////////////////////////////////////////////////
   allResources = newCollection;
-  //DebugTN("###2. All resources: ",allResources);
   /////////////////////////////////////////////////////////////
   // now remove all DP's with double '_' (e.g. __enabled)
   // strip everything below the requested level
   // remove duplicates  
-  int i=1;
+  int i = 1;
   
-  while(i<=dynlen(allResources))
+  while(i <= dynlen(allResources))
   {
-    //if((strpos(allResources[i],"__") < 0) || navPMLisTemporary(allResources[i]))
-    if(strpos(allResources[i],"__") < 0)
+    if (strpos(allResources[i], "__") < 0)
     {
       strreplace(allResources[i], "__enabled", "");
-      dyn_string dpPathElements = strsplit(allResources[i],"_");
+      dyn_string dpPathElements = strsplit(allResources[i], "_");
       string addResource;
-      int d=1;
-      while(d<=maxDepth && d<=dynlen(dpPathElements))
+      int d = 1;
+      while(d <= maxDepth && d <= dynlen(dpPathElements))
       {
-        if(d>1)
+        if (d > 1)
           addResource += "_";
         addResource += dpPathElements[d];
         d++;
       }
-      if(!dynContains(resources,addResource))
+      if (!dynContains(resources, addResource))
       {
-        LOG_DEBUG("Adding: ",addResource);
-        dynAppend(resources,addResource);
+        LOG_DEBUG("Adding: ", addResource);
+        dynAppend(resources, addResource);
       }
     }
     i++;
   }
-  if(parentDatapointIsReference)
+  if (parentDatapointIsReference)
   {
     checkForReferenceReplaceOriginal(resources, reference);
   }
   return resources;
-  DebugTN("### Get all resources ready");
 }
 
 
@@ -554,7 +550,7 @@ string navConfigGetEnvironment(string environmentName, string userName)
   dyn_string environmentNames;
   dpGet(DPNAME_NAVIGATOR + "." + ELNAME_ENVIRONMENTNAMES, environmentNames);
   
-  if(environmentName=="") // work with the current selected environment
+  if (environmentName == "") // work with the current selected environment
   {
     string navInstanceEnvironmentName;
     dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, navInstanceEnvironmentName);
@@ -565,10 +561,10 @@ string navConfigGetEnvironment(string environmentName, string userName)
     environment = environmentName;
   }
     
-  if(environment=="Personal")
+  if (environment == "Personal")
   {
     environmentType = "U";
-    if(userName!="") // is userName is given, use it.
+    if (userName != "") // is userName is given, use it.
     {
       environmentNumber = getUserId(userName);
     }
@@ -580,9 +576,9 @@ string navConfigGetEnvironment(string environmentName, string userName)
   else
   {
     environmentType = "E" ;
-    environmentNumber = dynContains(environmentNames,environment);
+    environmentNumber = dynContains(environmentNames, environment);
   }
-  environmentOutput = environmentType + strexpand("\\fill{0}", 4-strlen(environmentNumber))+environmentNumber;
+  environmentOutput = environmentType + strexpand("\\fill{0}", 4-strlen(environmentNumber)) + environmentNumber;
   
   return environmentOutput;
 }
@@ -594,26 +590,26 @@ string navConfigGetEnvironment(string environmentName, string userName)
 ///////////////////////////////////////////////////////////////////////////
 void navConfigfillEnvironmentList(string dp1, dyn_string environmentNames)
 {
-  setValue("","deleteAllItems");
+  setValue("", "deleteAllItems");
   string selectedEnvironment;
-  int itemCount=0;
+  int itemCount = 0;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
   
   
-  for(int i=1; i<= dynlen(environmentNames); i++)
+  for (int i = 1; i<= dynlen(environmentNames); i++)
   {
-    if(environmentNames[i]!="")
-      setValue("","appendItem",environmentNames[i]);
-    if(environmentNames[i]==selectedEnvironment)
+    if (environmentNames[i] != "")
+      setValue("", "appendItem", environmentNames[i]);
+    if (environmentNames[i] == selectedEnvironment)
     {
-      getValue("","itemCount", itemCount);
-      setValue("","selectedPos", itemCount);
+      getValue("", "itemCount", itemCount);
+      setValue("", "selectedPos", itemCount);
     }
     
   }
-  if(itemCount==0)
+  if (itemCount == 0)
   {
-    setValue("","selectedPos",1);
+    setValue("", "selectedPos", 1);
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, "Personal");
   }
 }
@@ -627,31 +623,31 @@ string navConfigGetViewConfig(string datapointPath)
 {
   string datapointType;
   string dpViewConfig = "";
-  string dpNameTemp=datapointPath;
+  string dpNameTemp = datapointPath;
   bool isReference;
   dyn_string reference;
   
   checkForReference(dpNameTemp, reference, isReference);
-  if(dpAccessable(dpNameTemp+"__enabled"))
+  if (dpAccessable(dpNameTemp + "__enabled"))
   {
-    datapointType = getDpTypeFromEnabled(dpNameTemp+"__enabled.");
+    datapointType = getDpTypeFromEnabled(dpNameTemp + "__enabled.");
     // find __nav_<datapointType>_viewconfig datapoint
-    dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointType+"_viewconfig";
+    dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
   }
-  else if(dpExists(dpNameTemp)) // Explicit use op dpExist!!!
+  else if (dpExists(dpNameTemp)) // Explicit use op dpExist!!!
   {
     datapointType = dpTypeName(datapointPath);
-    dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointType+"_viewconfig";
+    dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
   }
   else
   {
     // a system root node is selected
     // find __nav<environment>_<systemname>_viewconfig datapoint
-    dpViewConfig = "__nav"+navConfigGetEnvironment("","")+"_"+datapointPath+"_viewconfig";
+    dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointPath + "_viewconfig";
   }
-  if(!dpAccessable(dpViewConfig))
+  if (!dpAccessable(dpViewConfig))
   {
-    LOG_TRACE("navConfigGetViewConfig","DP does not exist, using default configuration",dpViewConfig);
+    LOG_TRACE("navConfigGetViewConfig", "DP does not exist, using default configuration", dpViewConfig);
     dpViewConfig = "__nav_default_viewconfig";
   }
   LOG_TRACE(dpViewConfig);
@@ -675,15 +671,15 @@ bool navConfigGetViewConfigElements(
   bool success = true;
   dyn_errClass err;
 
-  dpGet(dpViewConfig + "." + ELNAME_SELECTEDVIEW,selectedView,
-        dpViewConfig + "." + ELNAME_SELECTEDSUBVIEW,selectedSubView,
-        dpViewConfig + "." + ELNAME_VIEWS,views,
-        dpViewConfig + "." + ELNAME_NROFSUBVIEWS,nrOfSubViews,
-        dpViewConfig + "." + ELNAME_SUBVIEWS,subViews,
-        dpViewConfig + "." + ELNAME_CONFIGS,configs);
+  dpGet(dpViewConfig + "." + ELNAME_SELECTEDVIEW, selectedView,
+        dpViewConfig + "." + ELNAME_SELECTEDSUBVIEW, selectedSubView,
+        dpViewConfig + "." + ELNAME_VIEWS, views,
+        dpViewConfig + "." + ELNAME_NROFSUBVIEWS, nrOfSubViews,
+        dpViewConfig + "." + ELNAME_SUBVIEWS, subViews,
+        dpViewConfig + "." + ELNAME_CONFIGS, configs);
   
   err = getLastError(); //test whether no errors
-  if(dynlen(err) > 0)
+  if (dynlen(err) > 0)
   {
     throwError(err); // write errors to stderr
     success = false;
@@ -701,7 +697,7 @@ void navConfigSetSelectedSubView(
   int         selectedSubView)
 {
   string dpViewConfig = navConfigGetViewConfig(datapoint);
-  dpSet(dpViewConfig + "." + ELNAME_SELECTEDSUBVIEW,selectedSubView);
+  dpSet(dpViewConfig + "." + ELNAME_SELECTEDSUBVIEW, selectedSubView);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -717,11 +713,11 @@ bool navConfigGetSubViewConfigElements(
   bool success = true;
   dyn_errClass err;
 
-  dpGet(dpSubViewConfig + "." + ELNAME_CAPTION,subViewCaption,
-        dpSubViewConfig + "." + ELNAME_FILENAME,subViewFileName);
+  dpGet(dpSubViewConfig + "." + ELNAME_CAPTION, subViewCaption,
+        dpSubViewConfig + "." + ELNAME_FILENAME, subViewFileName);
   
   err = getLastError(); //test whether no errors
-  if(dynlen(err) > 0)
+  if (dynlen(err) > 0)
   {
     throwError(err); // write errors to stderr
     success = false;
@@ -740,7 +736,7 @@ bool navConfigSanityCheck(string &message)
   bool sane = true;
   dyn_dyn_anytype tab;
   int i;
-  dpQuery("SELECT '_original.._value' FROM '__nav_*' WHERE _DPT=\"GCFNavViewConfiguration\" ",tab);
+  dpQuery("SELECT '_original.._value' FROM '__nav_*' WHERE _DPT=\"GCFNavViewConfiguration\" ", tab);
   
   int viewsIndex    = 4;
   
@@ -753,63 +749,63 @@ bool navConfigSanityCheck(string &message)
     // check number of items in subviews, configs and nrOfSubViews
     int nrOfViews = dynlen(tab[viewsIndex][2]);
     sane = (nrOfViews == dynlen(tab[nrOfSubviewsIndex][2]));
-    //DebugTN("check nrOfViews:",sane,nrOfViews,dynlen(tab[nrOfSubviewsIndex][2]));
-    if(!sane)
+    //DebugTN("check nrOfViews:", sane, nrOfViews, dynlen(tab[nrOfSubviewsIndex][2]));
+    if (!sane)
     {
       message = "Invalid view configuration\n#views and nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";
       DebugTN(message);
     }
     
-    if(sane)
+    if (sane)
     {
       int nrOfSubViews = 0;
-      for(i=1;i<=dynlen(tab[nrOfSubviewsIndex][2]);i++)
+      for (i = 1; i <= dynlen(tab[nrOfSubviewsIndex][2]); i++)
         nrOfSubViews += tab[nrOfSubviewsIndex][2][i];
       sane = (nrOfSubViews == dynlen(tab[subViewsIndex][2]) && nrOfSubViews == dynlen(tab[configsIndex][2]));
-      //DebugTN("check nrOfSubViews:",sane,nrOfSubViews,dynlen(tab[subViewsIndex][2]),dynlen(tab[configsIndex][2]));
-      if(!sane)
+      //DebugTN("check nrOfSubViews:", sane, nrOfSubViews, dynlen(tab[subViewsIndex][2]), dynlen(tab[configsIndex][2]));
+      if (!sane)
       {
         message = "Invalid view configuration\n#subviews, #configs and total nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";
         DebugTN(message);
       }
     }
     
-    if(sane)
+    if (sane)
     {
-      for(i=1;i<=dynlen(tab[viewsIndex][2]) && sane;i++)
+      for (i = 1; i <= dynlen(tab[viewsIndex][2]) && sane; i++)
       {
         sane = dpAccessable(tab[viewsIndex][2][i]);
-        LOG_TRACE("check view existance:",sane,tab[viewsIndex][2][i]);
+        LOG_TRACE("check view existance:", sane, tab[viewsIndex][2][i]);
       }
-      if(!sane)
+      if (!sane)
       {
         message = "Invalid view configuration\nview item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
         DebugTN(message);
       }
     }
     
-    if(sane)
+    if (sane)
     {
-      for(i=1;i<=dynlen(tab[subViewsIndex][2]) && sane;i++)
+      for (i = 1; i <= dynlen(tab[subViewsIndex][2]) && sane; i++)
       {
         sane = dpAccessable(tab[subViewsIndex][2][i]);
-        DebugTN("check subview existance:",sane,tab[subViewsIndex][2][i]);
+        DebugTN("check subview existance:", sane, tab[subViewsIndex][2][i]);
       }
-      if(!sane)
+      if (!sane)
       {
         message = "Invalid view configuration\nsubview item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
         DebugTN(message);
       }
     }
     
-    if(sane)
+    if (sane)
     {
-      for(i=1;i<=dynlen(tab[configsIndex][2]) && sane;i++)
+      for (i = 1; i <= dynlen(tab[configsIndex][2]) && sane; i++)
       {
         sane = dpAccessable(tab[configsIndex][2][i]);
-        DebugTN("check configs existance:",sane,tab[configsIndex][2][i]);
+        DebugTN("check configs existance:", sane, tab[configsIndex][2][i]);
       }
-      if(!sane)
+      if (!sane)
       {
         message = "Invalid view configuration\nconfig item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
         DebugTN(message);
@@ -825,11 +821,11 @@ bool navConfigSanityCheck(string &message)
 ///////////////////////////////////////////////////////////////////////////
 //Function navConfigSubscribeUpdateTrigger
 // 
-// subscribes to the update trigger datapoint
+// subscribes to the update trigger datapointelement of the current naviagtor instance
 ///////////////////////////////////////////////////////////////////////////
 void navConfigSubscribeUpdateTrigger(string callback)
 {
-  dpConnect(callback,false,DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE);
+  dpConnect(callback, false, DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -869,11 +865,11 @@ void navConfigTriggerNavigatorRefreshWithDP(string newDatapoint)
 ///////////////////////////////////////////////////////////////////////////
 dyn_string environmentsAvailableToUser()
 {
-  dyn_string environmentGroups, environmentNames,currentUserGroupNames;
+  dyn_string environmentGroups, environmentNames, currentUserGroupNames;
   dyn_string Users_UserName, Users_GroupIds, Groups_UserName, Groups_UserId;
   dyn_string environmentListAvailableToUser;
   string currentGroupIds, currentUser = getUserName();
-  environmentListAvailableToUser[1]="Personal";
+  environmentListAvailableToUser[1] = "Personal";
   dpGet("_Users.UserName",  Users_UserName);
   dpGet("_Users.GroupIds",  Users_GroupIds);
   dpGet("_Groups.UserName", Groups_UserName);
@@ -881,7 +877,7 @@ dyn_string environmentsAvailableToUser()
   
   currentGroupIds = Users_GroupIds[dynContains(Users_UserName, currentUser)];
   dyn_string GroupIdsSplit= strsplit(currentGroupIds, ";");
-  for(int i=1;i<=dynlen(GroupIdsSplit);i++)
+  for (int i = 1; i <= dynlen(GroupIdsSplit); i++)
   {
    currentUserGroupNames[i] = Groups_UserName[dynContains(Groups_UserId, GroupIdsSplit[i])];
   }
@@ -889,19 +885,19 @@ dyn_string environmentsAvailableToUser()
   dpGet(DPNAME_NAVIGATOR + ".environmentGroups", environmentGroups);
   dpGet(DPNAME_NAVIGATOR + ".environmentNames", environmentNames);
  
-  for(int i=1;i<=dynlen(environmentGroups);i++) //UG assignment to Environment
+  for (int i = 1; i <= dynlen(environmentGroups); i++) //UG assignment to Environment
   {
     dyn_string environmentGroupSplit= strsplit(environmentGroups[i], "|"); //which UG do we have
-    for(int j=1;j<=dynlen(environmentGroupSplit);j++) // UG group root,para,quest for env. X
+    for (int j = 1; j <= dynlen(environmentGroupSplit); j++) // UG group root,para,quest for env. X
     {
-      for(int k=1;k<=dynlen(currentUserGroupNames);k++) //user membership in UG guest etc.
+      for (int k = 1; k <= dynlen(currentUserGroupNames); k++) //user membership in UG guest etc.
       {
         dyn_string currentUserGroupNamesSplit= strsplit(currentUserGroupNames[k], "|"); 
-        for(int m=1;m<=dynlen(currentUserGroupNamesSplit);m++)
+        for (int m = 1; m <= dynlen(currentUserGroupNamesSplit); m++)
         {
-          if(currentUserGroupNamesSplit[m]==environmentGroupSplit[j])
+          if (currentUserGroupNamesSplit[m] == environmentGroupSplit[j])
           {
-            environmentListAvailableToUser[dynlen(environmentListAvailableToUser)+1] = environmentNames[i];
+            environmentListAvailableToUser[dynlen(environmentListAvailableToUser) + 1] = environmentNames[i];
           }
         }
       }
@@ -924,9 +920,9 @@ bool navConfigConfigSubviewPermitted()
   string selectedEnvironment;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDENVIRONMENT, selectedEnvironment);
   
-  if(dpAccessable($configDatapoint) &&
-     dpGetElementName($datapoint)=="" && 
-     ((selectedEnvironment=="Personal") || (selectedEnvironment!="Personal" && getUserPermission(UR_CONFIGSYSTEMSUBVIEW))))
+  if (dpAccessable($configDatapoint) &&
+     dpGetElementName($datapoint) == "" && 
+     ((selectedEnvironment == "Personal") || (selectedEnvironment != "Personal" && getUserPermission(UR_CONFIGSYSTEMSUBVIEW))))
   {
     return TRUE;
   }
@@ -949,12 +945,12 @@ dyn_string navConfigGetElementsFromDp(string datapoint)
   dyn_string output;
   int elementIndex;
 
-  dpTypeGet(getDpTypeFromEnabled(datapoint + "__enabled."),elementNames,elementTypes);
-  for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+  dpTypeGet(getDpTypeFromEnabled(datapoint + "__enabled."), elementNames, elementTypes);
+  for (elementIndex = 2; elementIndex <= dynlen(elementNames); elementIndex++) 
   {
     int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
-    string elementName = elementNames[elementIndex][elementLevel+1];
-    output[dynlen(output)+1] = elementName;
+    string elementName = elementNames[elementIndex][elementLevel + 1];
+    output[dynlen(output) + 1] = elementName;
   }
   dynSortAsc(output);
   return output;
@@ -978,16 +974,16 @@ void arrangeUserGroupMembership()
   string GroupsForEnvironment = environmentGroups[dynContains(environmentNames, ComboBox_environmentMembership.selectedText)];
   dyn_string GroupsForEnvironmentsplit = strsplit(GroupsForEnvironment, "|");
   
-  for(int i=1; i<=dynlen(GroupsForEnvironmentsplit);i++)
+  for (int i = 1; i <= dynlen(GroupsForEnvironmentsplit); i++)
   {
     int position = dynContains(UserGroups, GroupsForEnvironmentsplit[i]);
-    if(position>0)
+    if (position>0)
     {
       UG_selected.appendItem = GroupsForEnvironmentsplit[i];
       dynRemove(UserGroups, position);
     }
   }
-  UG_available.items=UserGroups;
+  UG_available.items = UserGroups;
 }
 
 navConfigAddRemoveSubView()
@@ -999,15 +995,15 @@ navConfigAddRemoveSubView()
   dfReturn[2] = 0; // new nr of subviews
   string viewsPath = navConfigGetViewsPath();
   string subViewName;
-  if(comboCaption.visible == true) // adding existing subview
+  if (comboCaption.visible == true) // adding existing subview
     subViewName = comboCaption.selectedText;
   else
     subViewName = textFieldCaption.text;
   
   string cleanedText;  
-  for(int i=0;i<strlen(subViewName);i++)
+  for (int i = 0; i<strlen(subViewName); i++)
   {
-    if(! ( (subViewName[i] >= 'a' && subViewName[i] <= 'z') || 
+    if (! ( (subViewName[i] >= 'a' && subViewName[i] <= 'z') || 
            (subViewName[i] >= 'A' && subViewName[i] <= 'Z') || 
            (subViewName[i] >= '0' && subViewName[i] <= '9') ) )
     {
@@ -1020,121 +1016,121 @@ navConfigAddRemoveSubView()
   }
   subViewName = $viewName + "_" + cleanedText;
 
-  string subViewDpName = "__nav"+navConfigGetEnvironment("","")+"_subview_" + subViewName;
+  string subViewDpName = "__nav" + navConfigGetEnvironment("", "") + "_subview_" + subViewName;
   string configDpTypeName = "GCFNavSubViewConfig" + $viewName;
-  string configDpName     = "__nav"+navConfigGetEnvironment("","")+"_" + $selectedElementDpType + "_config_" + subViewName;
-  string viewConfigDpName = "__nav"+navConfigGetEnvironment("","")+"_" + $selectedElementDpType + "_viewconfig";
-  if($addView)
+  string configDpName     = "__nav" + navConfigGetEnvironment("", "") + "_" + $selectedElementDpType + "_config_" + subViewName;
+  string viewConfigDpName = "__nav" + navConfigGetEnvironment("", "") + "_" + $selectedElementDpType + "_viewconfig";
+  if ($addView)
   {
-	  //########################################################
-	  if(!dpAccessable(subViewDpName)&& !dpAccessable(configDpName))
-	  {
-	    if(comboCaption.visible == false) // adding new subview
-	    {
-	      // create new GCFNavSubView instance
-	      dpCreate(subViewDpName,"GCFNavSubView"); //__nav_subview_Alert_Red-Alert-125
-	      err = getLastError();
-	      if(dynlen(err) > 0)
-	      {
-	        errorDialog(err);
-	        // open dialog box with errors
-	        throwError(err); // write errors to stderr
-	      }
-	      else
-	      {
-	        dpSet(subViewDpName+".caption",textFieldCaption.text,
-	              subViewDpName+".filename", viewsPath + textFieldFileName.text);
-	      }
-	    }      
-	    err = getLastError();
-	    if(dynlen(err) > 0)
-	    {
-	      errorDialog(err);
-	      // open dialog box with errors
-	      throwError(err); // write errors to stderr
-	    }
-	    else
-	    {
-	      // create new config datapoint
-	      LOG_DEBUG("creating DP:",configDpName,configDpTypeName);
-	      dpCreate(configDpName,configDpTypeName); //__nav_TLcuPic_config_Alert_Red-Alert-125
-	      err = getLastError();
-	      if(dynlen(err) > 0)
-	      {
-	        errorDialog(err);
-	        // open dialog box with errors
-	        throwError(err); // write errors to stderr
-	      }
-	      else
-	      {
-	        dyn_int nrOfSubViews;
-	        dyn_string subViews,configs;
-	        if(!dpAccessable(viewConfigDpName))
-	        {
-	          // create a new datapoint, based on the default config
-	          int err;
-	          dpCopy("__nav_default_viewconfig",viewConfigDpName,err);
-	  
-	          // copy the contents of the default config
-	          int i;
-	          dyn_string allC;
-	          dyn_anytype para;
-	          allC = dpNames("__nav_default_viewconfig"+".**:_original.._value", "GCFNavViewConfiguration");
-	          dpGet(allC, para);
-	          for (i=1; i<=dynlen(allC); i++)
-	          {
-	            strreplace(allC[i], "__nav_default_viewconfig", viewConfigDpName);
-	          }
-	          dpSet(allC, para);
-	        }
-	        dpGet(viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
-	              viewConfigDpName + ".subViews",subViews,
-	              viewConfigDpName + ".configs",configs);
-	
-	        err = getLastError();
-	        if(dynlen(err) > 0)
-	        {
-	          errorDialog(err);
-	          // open dialog box with errors
-	          throwError(err); // write errors to stderr
-	        }
-	        else
-	        {
-	          int insertIndex = 1;
-	          for(int i=1;i<=$selectedView;i++)
-	            insertIndex += nrOfSubViews[i];
-	          dfReturn[2] = nrOfSubViews[$selectedView];
-	          nrOfSubViews[$selectedView] = nrOfSubViews[$selectedView]+1;
-	          dynInsertAt(subViews,subViewDpName,insertIndex);
-	          dynInsertAt(configs,configDpName,insertIndex);
-	          dpSet(viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
-	                viewConfigDpName + ".subViews",subViews,
-	                viewConfigDpName + ".configs",configs);
-	
-	          err = getLastError();
-	          if(dynlen(err) > 0)
-	          {
-	            errorDialog(err);
-	            // open dialog box with errors
-	            throwError(err); // write errors to stderr
-	          }
-	          else
-	          {
-	            dfReturn[1] = 1; // 0 = failure, 1 = success
-	            dfReturn[2] = nrOfSubViews[$selectedView];
-	          }
-	        }
-	      }
-	    }
-	  }
-	  else
-	  {
-	    //If the current subview name already exists, show message on screen
-	    string message = "Entered caption already exists. \nPlease enter a new one.";
-	    ChildPanelOnCentralModal(viewsPath + "MessageWarning.pnl", "Warning", makeDynString("$1:"+message));
-	    return;
-	  }
-	  //########################################################
+    //########################################################
+    if (!dpAccessable(subViewDpName)&& !dpAccessable(configDpName))
+    {
+      if (comboCaption.visible == false) // adding new subview
+      {
+        // create new GCFNavSubView instance
+        dpCreate(subViewDpName, "GCFNavSubView"); //__nav_subview_Alert_Red-Alert-125
+        err = getLastError();
+        if (dynlen(err) > 0)
+        {
+          errorDialog(err);
+          // open dialog box with errors
+          throwError(err); // write errors to stderr
+        }
+        else
+        {
+          dpSet(subViewDpName + ".caption", textFieldCaption.text,
+                subViewDpName + ".filename", viewsPath + textFieldFileName.text);
+        }
+      }      
+      err = getLastError();
+      if (dynlen(err) > 0)
+      {
+        errorDialog(err);
+        // open dialog box with errors
+        throwError(err); // write errors to stderr
+      }
+      else
+      {
+        // create new config datapoint
+        LOG_DEBUG("creating DP:", configDpName, configDpTypeName);
+        dpCreate(configDpName, configDpTypeName); //__nav_TLcuPic_config_Alert_Red-Alert-125
+        err = getLastError();
+        if (dynlen(err) > 0)
+        {
+          errorDialog(err);
+          // open dialog box with errors
+          throwError(err); // write errors to stderr
+        }
+        else
+        {
+          dyn_int nrOfSubViews;
+          dyn_string subViews, configs;
+          if (!dpAccessable(viewConfigDpName))
+          {
+            // create a new datapoint, based on the default config
+            int err;
+            dpCopy("__nav_default_viewconfig", viewConfigDpName, err);
+    
+            // copy the contents of the default config
+            int i;
+            dyn_string allC;
+            dyn_anytype para;
+            allC = dpNames("__nav_default_viewconfig" + ".**:_original.._value", "GCFNavViewConfiguration");
+            dpGet(allC, para);
+            for (i = 1; i <= dynlen(allC); i++)
+            {
+              strreplace(allC[i], "__nav_default_viewconfig", viewConfigDpName);
+            }
+            dpSet(allC, para);
+          }
+          dpGet(viewConfigDpName + ".nrOfSubViews", nrOfSubViews,
+                viewConfigDpName + ".subViews", subViews,
+                viewConfigDpName + ".configs", configs);
+  
+          err = getLastError();
+          if (dynlen(err) > 0)
+          {
+            errorDialog(err);
+            // open dialog box with errors
+            throwError(err); // write errors to stderr
+          }
+          else
+          {
+            int insertIndex = 1;
+            for (int i = 1; i <= $selectedView; i++)
+              insertIndex += nrOfSubViews[i];
+            dfReturn[2] = nrOfSubViews[$selectedView];
+            nrOfSubViews[$selectedView] = nrOfSubViews[$selectedView] + 1;
+            dynInsertAt(subViews, subViewDpName, insertIndex);
+            dynInsertAt(configs, configDpName, insertIndex);
+            dpSet(viewConfigDpName + ".nrOfSubViews", nrOfSubViews,
+                  viewConfigDpName + ".subViews", subViews,
+                  viewConfigDpName + ".configs", configs);
+  
+            err = getLastError();
+            if (dynlen(err) > 0)
+            {
+              errorDialog(err);
+              // open dialog box with errors
+              throwError(err); // write errors to stderr
+            }
+            else
+            {
+              dfReturn[1] = 1; // 0 = failure, 1 = success
+              dfReturn[2] = nrOfSubViews[$selectedView];
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+      //If the current subview name already exists, show message on screen
+      string message = "Entered caption already exists. \nPlease enter a new one.";
+      ChildPanelOnCentralModal(viewsPath + "MessageWarning.pnl", "Warning", makeDynString("$1:" + message));
+      return;
+    }
+    //########################################################
   }
   else
   {
@@ -1142,15 +1138,15 @@ navConfigAddRemoveSubView()
 
     int selectedSubView;
     dyn_int nrOfSubViews;
-    dyn_string subViews,configs;
-    if(dpAccessable(viewConfigDpName))
+    dyn_string subViews, configs;
+    if (dpAccessable(viewConfigDpName))
     {
-      dpGet(viewConfigDpName + ".selectedSubView",selectedSubView,
-            viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
-            viewConfigDpName + ".subViews",subViews,
-            viewConfigDpName + ".configs",configs);
+      dpGet(viewConfigDpName + ".selectedSubView", selectedSubView,
+            viewConfigDpName + ".nrOfSubViews", nrOfSubViews,
+            viewConfigDpName + ".subViews", subViews,
+            viewConfigDpName + ".configs", configs);
       err = getLastError();
-      if(dynlen(err) > 0)
+      if (dynlen(err) > 0)
       {
         errorDialog(err);
         // open dialog box with errors
@@ -1159,21 +1155,21 @@ navConfigAddRemoveSubView()
       else
       {
         int removeIndex = 0;
-        for(int i=1;i<$selectedView;i++)
+        for (int i = 1; i<$selectedView; i++)
           removeIndex += nrOfSubViews[i];
         removeIndex += selectedSubView;
 
         dfReturn[2] = nrOfSubViews[$selectedView];
         nrOfSubViews[$selectedView] = nrOfSubViews[$selectedView]-1;
-        dynRemove(subViews,removeIndex);
-        dynRemove(configs,removeIndex);
+        dynRemove(subViews, removeIndex);
+        dynRemove(configs, removeIndex);
 
-        dpSet(viewConfigDpName + ".nrOfSubViews",nrOfSubViews,
-              viewConfigDpName + ".subViews",subViews,
-              viewConfigDpName + ".configs",configs);
+        dpSet(viewConfigDpName + ".nrOfSubViews", nrOfSubViews,
+              viewConfigDpName + ".subViews", subViews,
+              viewConfigDpName + ".configs", configs);
 
         err = getLastError();
-        if(dynlen(err) > 0)
+        if (dynlen(err) > 0)
         {
           errorDialog(err);
           // open dialog box with errors
@@ -1192,8 +1188,8 @@ navConfigAddRemoveSubView()
   }
 
   // write return parameters to the database
-  dpSet("_Ui_" + myManNum() + ".ReturnValue.Float:_original.._value",dfReturn);
-  dpSet("_Ui_" + myManNum() + ".ReturnValue.Text:_original.._value",dsReturn);
+  dpSet("_Ui_" + myManNum() + ".ReturnValue.Float:_original.._value", dfReturn);
+  dpSet("_Ui_" + myManNum() + ".ReturnValue.Text:_original.._value", dsReturn);
 
   PanelOff();
 }
