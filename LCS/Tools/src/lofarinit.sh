@@ -26,36 +26,36 @@
 # Define root here.
 # This is a placeholder, so do NOT change the line.
 # The actual value is filled in by make install (see Makefile.am).
-a_root=. #filled in by install
+lfr_root=. #filled in by install
 
 # First strip the current LOFARROOT from PATH and LD_LIBRARY_PATH
 # Take care that a possible . is preceeded by a backslash (for the later sed).
 if [ "$LOFARROOT" != "" ]; then
-    a_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
-    a_bin="$a_path/bin"
-    PATH=`echo $PATH | sed -e "s%:$a_bin:%:%g" -e "s%^$a_bin:%%"  -e "s%:$a_bin$%%" -e "s%^$a_bin$%%"`
+    lfr_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
+    lfr_bin="$lfr_path/bin"
+    PATH=`echo $PATH | sed -e "s%:$lfr_bin:%:%g" -e "s%^$lfr_bin:%%"  -e "s%:$lfr_bin$%%" -e "s%^$lfr_bin$%%"`
     export PATH
-    a_lib="$a_path/lib"
-    LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$a_lib:%:%g" -e "s%^$a_lib:%%"  -e "s%:$a_lib$%%" -e "s%^$a_lib$%%"`
+    lfr_lib="$lfr_path/lib"
+    LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
 fi
 
 # Now define the new LOFARROOT (if possible)
 # Do it only if the bin directory exists.
-a_nroot=`cd $a_root > /dev/null; pwd`      # make path absolute
-if [ "$a_nroot" = ""  -o  ! -d $a_nroot/bin ]; then
-    echo "LOFAR root directory $a_nroot/bin does not exist; keeping old LOFARROOT $LOFARROOT"
+lfr_nroot=`cd $lfr_root > /dev/null; pwd`      # make path absolute
+if [ "$lfr_nroot" = ""  -o  ! -d $lfr_nroot/bin ]; then
+    echo "LOFAR root directory $lfr_nroot/bin does not exist; keeping old LOFARROOT $LOFARROOT"
 else
-    LOFARROOT=$a_nroot
+    LOFARROOT=$lfr_nroot
     export LOFARROOT
 
     # Also strip root from the current paths (in case it is contained).
-    a_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
-    a_bin="$a_path/bin"
-    PATH=`echo $PATH | sed -e "s%:$a_bin:%:%g" -e "s%^$a_bin:%%"  -e "s%:$a_bin$%%" -e "s%^$a_bin$%%"`
+    lfr_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
+    lfr_bin="$lfr_path/bin"
+    PATH=`echo $PATH | sed -e "s%:$lfr_bin:%:%g" -e "s%^$lfr_bin:%%"  -e "s%:$lfr_bin$%%" -e "s%^$lfr_bin$%%"`
     export PATH
-    a_lib="$a_path/lib"
-    LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$a_lib:%:%g" -e "s%^$a_lib:%%"  -e "s%:$a_lib$%%" -e "s%^$a_lib$%%"`
+    lfr_lib="$lfr_path/lib"
+    LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
 fi
 
@@ -92,3 +92,6 @@ else
         export LOFARDATAROOT
     fi
 fi
+
+# Clean up
+unset lfr_root lfr_nroot lfr_bin lfr_lib lfr_path
