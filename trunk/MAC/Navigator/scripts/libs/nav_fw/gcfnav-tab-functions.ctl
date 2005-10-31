@@ -237,14 +237,6 @@ void ComboBoxViewsSelectionChanged()
   }            
  
   string datapointTypeName = "";
-  //DebugTN("g_datapoint",g_datapoint);
-  //getDpTypeFromEnabled( + "__enabled.")
-  //This was the original one AdB 25-5-2005
-  // if(dpAccessable(g_datapoint))
-  //    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled.");
-  //else
-  //    datapointTypeName = getDpTypeFromEnabled(g_datapoint + "__enabled."); //original was only <= g_datapoint>
-  //////////////////////////////////////////////////////////////
   if(dpAccessable(g_datapoint+"__enabled"))
   {
     datapointTypeName = getDpTypeFromEnabled(g_datapoint+"__enabled.");
@@ -258,7 +250,6 @@ void ComboBoxViewsSelectionChanged()
     datapointTypeName = g_datapoint;
   }
 
-  //  if(g_subViewConfigs[selectedSubView]==0)
   // Load the config panel in the viewTabsCtrl
   dyn_string configPanelParameters = makeDynString(
     "$selectedView:" + g_selectedView,
@@ -268,14 +259,6 @@ void ComboBoxViewsSelectionChanged()
     "$configDatapoint:"+insertSubViewConfigs,
     "$referenceDatapoint:" +referenceDatapoint);
   
-  //////////////////////////////////////////////////////////////  
-//  This is the original one
-/*  dyn_string configPanelParameters = makeDynString(
-    "$selectedView:" + g_selectedView,
-    "$viewName:" + g_selectedViewName,
-    "$selectedElementDpType:" + datapointTypeName,
-    "$datapoint:" + g_datapoint,
-    "$configDatapoint:"+g_subViewConfigs[selectedSubView]); */
   LOG_TRACE("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);
   
   // check if the file exists:

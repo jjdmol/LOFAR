@@ -1,4 +1,5 @@
 #uses "nav_fw/gcfpa-com.ctl"
+#uses "nav_fw/gcf-util.ctl"
 
 global dyn_dyn_string gCallBackList; // 1 == callBackFuncName; 2 == ID; 3 == myManNum
 global dyn_dyn_string gSeqList;	// 1 == seqNr ; 2 == ID; 3 == scope
@@ -17,14 +18,14 @@ unsigned gcfInit(string callBackFuncName)
 		ID++;
 	} while (dynContains(IDlist, ID) > 0);
 	
-	//DebugTN("GCF: ID " + ID + " is claimed for unique communication with PA of GCF.");
+	LOG_INFO("GCF: ID " + ID + " is claimed for unique communication with PA of GCF.");
 	dyn_string newItem;
 	string callBackDP = "__gcfportUIM" + myManNum() +"_" + ID + "_DPAclient";
 	if (!dpExists(callBackDP))
 	{
 		dpCreate(callBackDP, "GCFDistPort");
 	}
-	//DebugTN("GCF: " + callBackDP + " will be used for communication with PA.");
+	LOG_DEBUG("GCF: " + callBackDP + " will be used for communication with PA.");
 	dpConnect("gcfMainCallBack", FALSE, callBackDP + ".");			
 	newItem = makeDynString(callBackFuncName, ID, myManNum());
 	gCallBackList[dynlen(gCallBackList) + 1] = newItem;
@@ -32,17 +33,17 @@ unsigned gcfInit(string callBackFuncName)
 	return ID;
 }
 
-void gcfLeave(unsigned ID)
+void gcfLeave(unsigned ID, bool inTerminate = false)
 {
-	//DebugTN("GCF: ID " + ID + " will be freed.");
+	LOG_INFO("GCF: ID " + ID + " will be freed.");
 	
 	for (int i = 1; i <= dynlen(gCallBackList); i++)
 	{
 		if (gCallBackList[i][2] == ID)
 		{
 			string callBackDP = buildCallBackDP(ID) + ".";
-			//DebugTN("GCF: " + callBackDP + " will not be used anymore.");
-			dpDisconnect("gcfMainCallBack", callBackDP);
+			LOG_DEBUG("GCF: " + callBackDP + " will not be used anymore.");
+			if (!inTerminate) dpDisconnect("gcfMainCallBack", callBackDP);
 			dynRemove(gCallBackList, i);
 			break;
 		}
@@ -77,7 +78,7 @@ void gcfLeave(unsigned ID)
 void gcfLoadPS(unsigned ID, string psScope)
 {
 	correctScope(psScope);
-	//DebugTN("GCF: Request to load property set " + psScope);
+	LOG_TRACE("GCF: Request to load property set " + psScope);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
 	{
 		string portID = buildPortId(ID);
@@ -91,7 +92,7 @@ void gcfLoadPS(unsigned ID, string psScope)
 void gcfUnloadPS(unsigned ID, string psScope)
 {
 	correctScope(psScope);
-	//DebugTN("GCF: Request to unload property set " + psScope);
+	LOG_TRACE("GCF: Request to unload property set " + psScope);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
 	{
 		string portID = buildPortId(ID);
@@ -106,7 +107,7 @@ void gcfUnloadPS(unsigned ID, string psScope)
 void gcfConfigurePS(unsigned ID, string psScope, string psApcName)
 {
 	correctScope(psScope);
-	//DebugTN("GCF: Request to configure property set " + psScope + " with APC " + psApcName);
+	LOG_TRACE("GCF: Request to configure property set " + psScope + " with APC " + psApcName);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
 	{
 		string portID = buildPortId(ID);
@@ -130,7 +131,7 @@ void gcfMainCallBack(string callBackDP, blob value)
 	dyn_string msg;
 	string msgValue;
 	blobGetValue(value, 0, msgValue, bloblen(value));
-	//DebugTN("GCF: Incomming message: " + msgValue);
+	LOG_TRACE("GCF: Incomming message: " + msgValue);
 	msg = strsplit(msgValue, "|");
 	dyn_string response;
 	if (msg[1] == "m")
@@ -256,7 +257,7 @@ void callUserDefinedFunction(string& callBackFunc, dyn_string& response)
 	}
 	else
 	{
-		DebugTN("GCF ERROR: CallBackFunc '" + callBackFunc + "' not defined by user!"); 
+		LOG_TRACE("GCF ERROR: CallBackFunc '" + callBackFunc + "' not defined by user!"); 
 	}	
 }
 
@@ -309,7 +310,7 @@ bool isPAOnline(string sysName)
 {
 	bool paOnline = dpExists(sysName + "__gcfportAPI_DPAserver");
 	
-	if (!paOnline) DebugTN("GCF ERROR: PA on system " + sysName + " not reachable!");
+	if (!paOnline) LOG_ERROR("GCF ERROR: PA on system " + sysName + " not reachable!");
 	return paOnline;
 }
 
@@ -322,7 +323,7 @@ void gcfWatchDog(string dp, string wdMsg)
 		string callBackFunc;
 		dyn_string indication;
 		
-		DebugTN("GCF: System " + getSystemName(sysNr) + " is gone.");
+		LOG_TRACE("GCF: System " + getSystemName(sysNr) + " is gone.");
 		for (int i = 1; i <= dynlen(gPSList); i++)
 		{
 			sysNrOfLoadedPS = getSystemId(dpSubStr(gPSList[i][1], DPSUB_SYS)); // 1 == loaded property set scope
@@ -350,6 +351,6 @@ void gcfWatchDog(string dp, string wdMsg)
 	}
 	else
 	{
-		DebugTN("GCF: System " + getSystemName(sysNr) + " came.");
+		LOG_TRACE("GCF: System " + getSystemName(sysNr) + " came.");
 	}
 }

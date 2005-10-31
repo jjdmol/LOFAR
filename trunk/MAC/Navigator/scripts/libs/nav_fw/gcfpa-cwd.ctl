@@ -1,4 +1,6 @@
 #uses "nav_fw/gcfpa-com.ctl"
+#uses "nav_fw/gcf-util.ctl"
+
 const string GCF_WD_DP = "__gcf_wd";
 main()
 {
@@ -12,7 +14,7 @@ main()
 
 void gcfConnectionWatchDog()
 {
-	//DebugTN("GCF: Starting GCF connection watch-dog");
+	LOG_INFO("GCF: Starting GCF connection watch-dog");
 	retrieveManNums(getSystemId());
  	dpGet("_DistManager.State.SystemNums", gDistSysList);
  	for (int i = 1; i <= dynlen(gDistSysList); i++)
@@ -20,12 +22,12 @@ void gcfConnectionWatchDog()
  		retrieveManNums(gDistSysList[i]);	 		
  	}
  	dpConnect("distSystemChanged", FALSE, "_DistManager.State.SystemNums");
-	//DebugTN("GCF: Watch-dog started");
+	LOG_TRACE("GCF: Watch-dog started");
 }
 
 void retrieveManNums(unsigned sysNr)
 {
-	//DebugTN("GCF: Add managers for (new) system " + getSystemName(sysNr) + ".");
+	LOG_TRACE("GCF: Add managers for (new) system " + getSystemName(sysNr) + ".");
 	string sysName = getSystemName(sysNr);
 	dyn_anytype manNums;
  	dpGet(sysName + "_Connections.Ui.ManNums", manNums);
@@ -44,7 +46,7 @@ void addManagers(unsigned sysNr, dyn_anytype manNums, string manType)
 	for (int i = 1; i <= dynlen(manNums); i++)
 	{
 		manItem = makeDynString(sysNr, manType, manNums[i]);	
-		//DebugTN("GCF: Add mananger: " + getSystemName(sysNr) + manType + ":" + manNums[i]);
+		LOG_TRACE("GCF: Add mananger: " + getSystemName(sysNr) + manType + ":" + manNums[i]);
 		gConnManList[dynlen(gConnManList) + 1] = manItem;
 	}
 }
@@ -71,23 +73,9 @@ void distSystemChanged(string dp, dyn_uint newDistSysList)
 
 void remoteSystemGone(unsigned sysNr)
 {
-	//DebugTN("GCF: System " + getSystemName(sysNr) + " gone.");	
+	LOG_TRACE("GCF: System " + getSystemName(sysNr) + " gone.");	
 	string msg = "d" + sysNr + ":";
-	//sendEventToPA(msg, getSystemName());
 	dpSet(GCF_WD_DP + ".sys", msg);
-	//dyn_anytype manNums;
-	//dpGet("_Connections.Api.ManNums", manNums);
-	//dyn_string apiDPNames;
-	//msg = "u|" + getSystemId() + ":Ctrl:" + myManNum() + ":|" + 
-	//			getSystemName() + "__gcf_DPA_server|gone|" + getSystemName() + "|";	
-	//for (int i = 1; i <= dynlen(manNums); i++)
-	//{
-	//	apiDPNames = dpNames("__gcf_DPA_client_API" + i + "_*", "GCFDistPort");		
-	//	for (int j = 1; j <= dynlen(apiDPNames); j++)
-	//	{
-	//		sendEvent(apiDPNames[j] + ".", msg);
-	//	}
-	//}	
 	for (int i = 1; i <= dynlen(gConnManList); i++)
 	{
 		if (gConnManList[i][1] == sysNr)
@@ -95,7 +83,6 @@ void remoteSystemGone(unsigned sysNr)
 			dynRemove(gConnManList, i);
 		}
 	}
-	//dpSet("__gcf_WDGoneSys.", sysNr);
 }
 
 void uiConnectionsChanged(string dp, dyn_uint value)
@@ -131,7 +118,7 @@ void connectionsChanged(string dp, dyn_uint value, string manType)
 		if (!manNumFound)
 		{
 			newItem = makeDynString(sysNr, manType, value[i]);
-			//DebugTN("GCF: Add mananger: " + getSystemName(sysNr) + manType + ":" + value[i]);
+			LOG_TRACE("GCF: Add mananger: " + getSystemName(sysNr) + manType + ":" + value[i]);
 			gConnManList[dynlen(gConnManList) + 1] = newItem;
 		}
 		else
@@ -147,9 +134,8 @@ void connectionsChanged(string dp, dyn_uint value, string manType)
 		{
 			// a (remote) manager is disconnected from PVSS so inform the local property agent
 			msg = "d" + sysNr + ":" + manType + ":" + gConnManList[i][3] + ":";
-			//DebugTN("GCF: Remove mananger: " + msg);
+			LOG_TRACE("GCF: Remove mananger: " + msg);
 			dpSet(GCF_WD_DP + ".man", msg);
-			//sendEventToPA(msg, getSystemName());
 
 			dynRemove(gConnManList, i);
 		}
