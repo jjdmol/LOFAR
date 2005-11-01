@@ -141,7 +141,12 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
   solverStep.connect(1, &solverStep, 1, 1, new TH_PL("BBS3Solutions"));
   if (writeIndivParms)
   {                         // Write individual parameter solutions to separate table
-    solverStep.connect(2, &solverStep, 2, 1, new TH_PL("BBS3ParmSolutions"));
+    string parmTableName("bbs3ParmSolutions");
+    if (itsParamSet.isDefined("parmSolutionTable"))
+    {
+      parmTableName = itsParamSet.getString("parmSolutionTable");
+    }
+    solverStep.connect(2, &solverStep, 2, 1, new TH_PL(parmTableName));
   }
 
   for (int index = 0; index < itsNumberPD; index++)

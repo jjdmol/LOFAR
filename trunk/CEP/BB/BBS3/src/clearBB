@@ -28,6 +28,7 @@
 
 BBHOST="dop50.astron.nl"
 BBUSER=`whoami`
+PTABLENAME='bbs3parmsolutions'
 
 while [ 1 = 1 ]
 do
@@ -38,6 +39,10 @@ do
   elif [ "$1" = "-user" ]; then
     shift
     BBUSER="$1"
+    shift
+  elif [ "$1" = "-tablename" ]; then
+    shift
+    PTABLENAME="$1"
     shift
   else
     break;
@@ -51,7 +56,7 @@ echo " " > sql_create
 echo " DROP TABLE bbs3solutions;" >> sql_create
 echo " DROP TABLE bbs3woprediffer;" >> sql_create
 echo " DROP TABLE bbs3wosolver;" >> sql_create
-echo " DROP TABLE bbs3parmsolutions;" >> sql_create
+echo " DROP TABLE $PTABLENAME;" >> sql_create
 echo " CREATE TABLE bbs3woprediffer (
        ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
        Owner BIGINT NOT NULL, 
@@ -113,7 +118,7 @@ echo "create table bbs3solutions (
       ENDFREQ DOUBLE PRECISION,
       STARTTIME DOUBLE PRECISION,
       ENDTIME DOUBLE PRECISION);" >> sql_create
-echo "create table bbs3parmsolutions (
+echo "create table $PTABLENAME (
       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
       Owner BIGINT NOT NULL, 
       VersionNr INTEGER NOT NULL, 
