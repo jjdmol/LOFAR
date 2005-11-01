@@ -138,14 +138,12 @@ void doMaster (bool send)
   APS::ParameterSet params ("makems.cfg");
   // Get the various parameters.
   double startFreq = params.getDouble ("StartFreq");
-  double endFreq   = params.getDouble ("EndFreq");
+  double stepFreq  = params.getDouble ("StepFreq");
   string startTimeStr = params.getString ("StartTime");
-  string endTimeStr   = params.getString ("EndTime");
+  double stepTime     = params.getDouble ("StepTime");
   Quantity qn;
   ASSERT (MVTime::read (qn, startTimeStr, true));
   double startTime = qn.getValue ("s");
-  ASSERT (MVTime::read (qn, endTimeStr, true));
-  double endTime = qn.getValue ("s");
   string raStr  = params.getString ("RightAscension");
   string decStr = params.getString ("Declination");
   ASSERT (MVAngle::read (qn, raStr, true));
@@ -158,10 +156,11 @@ void doMaster (bool send)
   ASSERT (nnode > 0);
   ASSERT (nfreq >= nnode);
   ASSERT (nfreq%nnode == 0);
-  ASSERT (startFreq < endFreq);
-  ASSERT (startTime < endTime);
+  ASSERT (stepFreq > 0);
+  ASSERT (stepTime > 0);
   int nfpn = nfreq/nnode;
-  double stepFreq = (endFreq-startFreq) / nnode;
+  double endFreq = startFreq + nfreq*stepFreq;
+  double endTime = startTime + ntime*stepTime;
 
   // Get the station info from the given antenna table.
   string msName = params.getString ("MSName");
@@ -202,7 +201,10 @@ void doMaster (bool send)
        << " Khz" << endl;
   ostr << "      nchan=" << nfreq << "  npart=" << nnode
        << " (" << nfpn << " chan per part)" << endl;
-  ostr << "time: start=" << startTimeStr << "  end=" << endTimeStr
+  ostr << "time: start="
+       << MVTime::Format(MVTime::DMY) << MVTime(Quantity(startTime,"s"))
+       << "  end="
+       << MVTime::Format(MVTime::DMY) << MVTime(Quantity(endTime,"s"))
        << "  step=" << (endTime-startTime)/ntime << " sec" << endl;
   ostr << "      ntime=" << ntime << endl;
 }
