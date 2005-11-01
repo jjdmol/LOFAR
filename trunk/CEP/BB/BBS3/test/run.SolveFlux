@@ -106,9 +106,9 @@ beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'
 makeGsm
 applyfile
 
-../../src/clearBB -user $usernm
+../../src/clearBB -user $usernm -tablename bbs3SolveFlux
 
 # Solve for StokesI (and save that).
-time src/BBS3 ../../test/BB3C343.input1 $usernm 
+time src/BBS3 ../../test/SolveFlux.input $usernm 
 
 
