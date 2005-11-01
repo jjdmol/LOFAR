@@ -8,14 +8,8 @@ fi
 
 usernm=$1
 
-\rm -rf /tmp/$USER.demo*
-cp -r /data/PSS3/diepen/BBS2/demo3.MS_p1 /tmp/$USER.demo_p1
-cp -r /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
-cp -r /data/PSS3/diepen/BBS2/demo3_gsm.MEP_tPredict /tmp/$USER.demo_gsm.MEP
-
-ln -s /tmp/$USER.demo_p1/vis.des /tmp/$USER.demo.des
-
-./clearBB
+export PATH=../../src:$PATH
+clearBB
 
 src/BBS3 ../../test/tWritePredData.input $usernm
 
