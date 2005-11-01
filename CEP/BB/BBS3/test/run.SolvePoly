@@ -104,8 +104,8 @@ applyfile
 ln -s /data/PSS3/diepen/BBS2/3C343/10008336_p1.MS 10008336.MS_p1
 ln -s 10008336.MS_p1/vis.des 10008336.MS.des
 
-../../src/clearBB -user $usernm
+../../src/clearBB -user $usernm -tablename bbs3SolvePoly
 
 # Solve for StokesI as function of freq.
-time src/BBS3 ../../test/BB3C343.input1 $usernm
+time src/BBS3 ../../test/SolvePoly.input $usernm
 

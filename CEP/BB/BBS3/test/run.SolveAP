@@ -106,7 +106,7 @@ beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'
 makeGsm
 applyfile
 
-../../src/clearBB -user $usernm
+../../src/clearBB -user $usernm -tablename bbs3SolveAP
 
 # Solve for phase
-time src/BBS3 ../../test/BB3C343.input2 $usernm
+time src/BBS3 ../../test/SolveAP.input $usernm
