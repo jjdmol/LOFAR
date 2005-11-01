@@ -24,7 +24,7 @@
 #define LOFAR_BBS3_SC_WRITEPREDDATA_H
 
 // \file SC_WritePredData
-// A strategy to make prediffers write predicted dat
+// A strategy to make prediffers write predicted data
 
 //# Includes
 #include <BBS3/StrategyController.h>
