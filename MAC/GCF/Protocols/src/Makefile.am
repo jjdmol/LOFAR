@@ -1,7 +1,6 @@
 pkgincludedir = $(includedir)/GCF/Protocols
 pkginclude_HEADERS = \
-	PI_Protocol.ph \
-	PA_Protocol.ph \
+	$(BUILT_SOURCES) \
 	DH_PIProtocol.h 
 
 AUTOGEN = autogen
@@ -22,9 +21,11 @@ libgcfpirtcprot_la_SOURCES= $(DOCHDRS) \
 libgcfpaprot_la_SOURCES= $(DOCHDRS) \
   PA_Protocol.cc
 
-BUILT_SOURCES = 
+BUILT_SOURCES = \
+	PI_Protocol.ph \
+	PA_Protocol.ph
 
-EXTRA_DIST = PI_Protocol.prot PA_Protocol.prot $(sysconf_DATA)
+EXTRA_DIST = $(sysconf_DATA)
 
 sysconf_DATA= \
 	PropertyInterface.conf

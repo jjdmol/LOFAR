@@ -22,7 +22,7 @@ ServiceBroker_CXXFLAGS=-fmessage-length=0
 
 BUILT_SOURCES = 
 
-EXTRA_DIST = SB_Protocol.prot $(sysconf_DATA)
+EXTRA_DIST = $(sysconf_DATA)
 
 sysconf_DATA= \
 	ServiceBroker.conf
