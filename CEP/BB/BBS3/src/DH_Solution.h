@@ -104,6 +104,7 @@ private:
   int*          itsWOID;
   int*          itsIteration;
   double*       itsFit;
+  double*       itsRank;
   double*       itsMu;
   double*       itsStdDev;
   double*       itsChi;
@@ -157,6 +158,7 @@ namespace PL {
       int    itsWOID;              // in order to facilitate debugging
       int    itsIteration;
       double itsFit;
+      double itsRank;
       double itsMu;
       double itsStdDev;
       double itsChi;
