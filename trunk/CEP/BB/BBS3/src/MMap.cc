@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <Common/LofarLogger.h>
 #include <errno.h>
+#include <string.h>
 
 namespace LOFAR
 {
@@ -57,8 +58,9 @@ MMap::MMap (const string& fileName, protection prot)
     pr = O_RDONLY;
     LOG_WARN("Invalid protection argument in MMap construction. Using Read protection instead...");
   }
-  itsFd = ::open( fileName.c_str(), pr);
-  ASSERTSTR (itsFd >= 0, "Opening of file " << fileName << " failed." );
+  itsFd = ::open64( fileName.c_str(), pr);
+  ASSERTSTR (itsFd >= 0, "Opening of file " << fileName << " failed ("
+	     << strerror(errno) << ")" );
 }
 
 MMap::~MMap()
