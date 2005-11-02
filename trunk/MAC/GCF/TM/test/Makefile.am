@@ -1,24 +1,21 @@
 bin_PROGRAMS 		= tmEcho tmPing
 
-tmEcho_SOURCES 		= Echo.cc Echo_Protocol.cc Echo.h
+tmEcho_SOURCES 		= Echo_Protocol.ph Echo_Protocol.cc Echo.cc Echo.h 
 tmEcho_LDADD		= ../src/libgcftm.la
 tmEcho_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
-tmEcho_CPPFLAGS=-I$(top_srcdir)/include
 
-tmPing_SOURCES 		= Ping.cc Echo_Protocol.cc Ping.h
+tmPing_SOURCES 		= Echo_Protocol.ph Echo_Protocol.cc Ping.cc Ping.h
 tmPing_LDADD		= ../src/libgcftm.la
 tmPing_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
-tmPing_CPPFLAGS=-I$(top_srcdir)/include
 
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
-BUILT_SOURCES = \
-	Echo_Protocol.ph
+BUILT_SOURCES =
 
-EXTRA_DIST = $(BUILT_SOURCES) tm-test.conf.in
+EXTRA_DIST = Echo_Protocol.prot $(sysconf_DATA)
 
 sysconf_DATA=\
 	tmEcho.conf \

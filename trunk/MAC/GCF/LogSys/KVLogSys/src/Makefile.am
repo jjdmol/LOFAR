@@ -51,12 +51,9 @@ KeyValueLoggerMaster_LDADD		    = libkvlm.la $(LOFAR_DEPEND)
 KeyValueLoggerMaster_DEPENDENCIES	= libkvlm.la $(LOFAR_DEPEND)
 KeyValueLoggerMaster_CPPFLAGS			= $(libkvlm_la_CPPFLAGS)
 
-BUILT_SOURCES = \
-	KVL_Protocol.ph
+BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES) \
-	KeyValueLoggerSys.conf.in \
-	KeyValueLoggerSys.log_prop.in
+EXTRA_DIST = KVL_Protocol.prot $(sysconf_DATA)
 	
 sysconf_DATA= \
 	KeyValueLoggerDaemon.conf \
@@ -71,8 +68,5 @@ sysconf_DATA= \
 %.log_prop: KeyValueLoggerSys.log_prop.in
 	cp $< $@
 	
-clean-local:
-	rm -f *.ph
-
 include $(top_srcdir)/Makefile.common
 

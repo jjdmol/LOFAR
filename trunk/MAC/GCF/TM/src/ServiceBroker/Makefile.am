@@ -22,14 +22,17 @@ ServiceBroker_CXXFLAGS=-fmessage-length=0
 
 BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES) gcf-sb.conf.in
+EXTRA_DIST = SB_Protocol.prot $(sysconf_DATA)
 
 sysconf_DATA= \
 	ServiceBroker.conf
 
 install-data-local:
-	echo "mac.gcf.sb.host=`hostname -s`" >> $(DESTDIR)$(sysconfdir)/ServiceBroker.conf
-	echo "mac.gcf.sb.range1.host=`hostname`" >> $(DESTDIR)$(sysconfdir)/ServiceBroker.conf
+	f=$(DESTDIR)$(sysconfdir)/ServiceBroker.conf; \
+	hs=`hostname -s`; \
+	h=`hostname`; \
+	n=`sed -e  "/mac.gcf.sb.host=/ s/\(.*\)=\(.*\)/\1=$$hs/" -e "/mac.gcf.sb.range1.host=/ s/\(.*\)=\(.*\)/\1=$$h/" $$f`; \
+	echo "$$n" > $$f;
 	
 %.conf: gcf-sb.conf.in
 	cp $< $@

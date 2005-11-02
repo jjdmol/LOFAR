@@ -33,7 +33,7 @@ AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PML\"
 	
 BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES) gcf-pml.conf.in
+EXTRA_DIST = $(sysconf_DATA)
 
 sysconf_DATA= \
 	gcf-pml.conf
