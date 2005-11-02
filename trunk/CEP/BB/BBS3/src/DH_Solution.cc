@@ -50,6 +50,7 @@ DH_Solution::DH_Solution (const string& name)
     itsWOID         (0),
     itsIteration    (0),
     itsFit          (0),
+    itsRank         (0),
     itsMu           (0),
     itsStdDev       (0),
     itsChi          (0),
@@ -67,6 +68,7 @@ DH_Solution::DH_Solution(const DH_Solution& that)
     itsWOID         (0),
     itsIteration    (0),
     itsFit          (0),
+    itsRank         (0),
     itsMu           (0),
     itsStdDev       (0),
     itsChi          (0),
@@ -106,6 +108,7 @@ void DH_Solution::init()
   addField ("WOID", BlobField<int>(1));
   addField ("Iteration", BlobField<int>(1));
   addField ("Fit", BlobField<double>(1));
+  addField ("Rank", BlobField<double>(1));
   addField ("Mu", BlobField<double>(1));
   addField ("StdDev", BlobField<double>(1));
   addField ("Chi", BlobField<double>(1));
@@ -120,6 +123,7 @@ void DH_Solution::init()
   *itsWOID = -1;
   *itsIteration = -1;
   *itsFit = 0;
+  *itsRank = 0;
   *itsMu = 0;
   *itsStdDev =0;
   *itsChi = 0;
@@ -136,6 +140,7 @@ void DH_Solution::fillDataPointers()
   itsWOID = getData<int> ("WOID");
   itsIteration = getData<int> ("Iteration");
   itsFit = getData<double> ("Fit");
+  itsRank = getData<double> ("Rank");
   itsMu = getData<double> ("Mu");
   itsStdDev = getData<double> ("StdDev");
   itsChi = getData<double> ("Chi");
@@ -149,6 +154,7 @@ Quality DH_Solution::getQuality() const
 {
   Quality qual;
   qual.itsFit = *itsFit;
+  qual.itsRank = *itsRank;
   qual.itsMu = *itsMu;
   qual.itsStddev = *itsStdDev;
   qual.itsChi = *itsChi;
@@ -158,6 +164,7 @@ Quality DH_Solution::getQuality() const
 void DH_Solution::setQuality(const Quality& quality)
 {
   *itsFit = quality.itsFit;
+  *itsRank = quality.itsRank;
   *itsMu = quality.itsMu;
   *itsStdDev = quality.itsStddev;
   *itsChi = quality.itsChi;
@@ -250,6 +257,7 @@ void DBRep<DH_Solution>::bindCols (dtl::BoundIOs& cols)
   cols["WOID"] == itsWOID;
   cols["ITERATION"] == itsIteration;
   cols["FIT"] == itsFit;
+  cols["RANK"] == itsRank;
   cols["MU"] == itsMu;
   cols["STDDEV"] == itsStdDev;
   cols["CHI"] == itsChi;
@@ -265,6 +273,7 @@ void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
   itsWOID = obj.getWorkOrderID();
   itsIteration = obj.getIteration();
   itsFit = obj.getQuality().itsFit;
+  itsRank = obj.getQuality().itsRank;
   itsMu = obj.getQuality().itsMu;
   itsStdDev = obj.getQuality().itsStddev;
   itsChi = obj.getQuality().itsChi;
