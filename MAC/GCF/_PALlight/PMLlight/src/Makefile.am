@@ -19,7 +19,7 @@ libgcfpallight_la_DEPENDENCIES= libpmllight.la $(LOFAR_DEPEND)
 
 AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"RTC\"
 
-EXTRA_DIST= $(configfiles_DATA) gcf-pmllight.conf.in
+EXTRA_DIST= $(configfiles_DATA) $(sysconf_DATA)
 
 sysconf_DATA= \
 	gcf-pmllight.conf

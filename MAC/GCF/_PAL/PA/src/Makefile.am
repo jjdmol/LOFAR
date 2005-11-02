@@ -13,7 +13,6 @@ libpa_la_SOURCES= $(DOCHDRS) \
 	GPA_RequestManager.cc \
 	GPA_Converter.cc
 	
-#libpa_la_CPPFLAGS= -I$(top_srcdir)/SAL/src
 
 bin_PROGRAMS   		= PropertyAgent
   
@@ -24,8 +23,6 @@ PropertyAgent_LDADD		     			= libpa.la $(LOFAR_DEPEND) \
 PropertyAgent_DEPENDENCIES	= libpa.la $(LOFAR_DEPEND) \
 	$(top_builddir)/SAL/src/libsal.la
 	
-#PropertyAgent_CPPFLAGS= -I$(top_srcdir)/SAL/src
-
 AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PA\" -I$(top_srcdir)/SAL/src
 
 #in case of make install these files will be copied to the bindir beside the test apps
@@ -36,7 +33,7 @@ configfiles_DATA= \
 
 BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES) $(configfiles_DATA) gcf-pa.conf.in 
+EXTRA_DIST = $(configfiles_DATA) $(sysconf_DATA) 
 
 sysconf_DATA= \
 	PropertyAgent.conf

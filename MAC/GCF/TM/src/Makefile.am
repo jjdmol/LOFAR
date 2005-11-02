@@ -16,7 +16,8 @@ DOCHDRS = \
   PortImpl/GTM_ETHSocket.h \
   PortImpl/GTM_Device.h \
   ServiceBroker/GTM_SBTCPPort.h \
-  ServiceBroker/GTM_ServiceBroker.h
+  ServiceBroker/GTM_ServiceBroker.h \
+  SB_Protocol.ph
     
 lib_LTLIBRARIES 	= libgcftm.la
 
@@ -46,10 +47,9 @@ libgcftm_la_CPPFLAGS=-I$(top_srcdir)/src/ServiceBroker
 
 libgcftm_la_CXXFLAGS=-fmessage-length=0
 
-BUILT_SOURCES =  \
-	SB_Protocol.ph
+BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES) mac.log_prop.in
+EXTRA_DIST = $(sysconf_DATA)
 	
 sysconf_DATA = \
 	mac.log_prop
@@ -57,8 +57,5 @@ sysconf_DATA = \
 %.log_prop: %.log_prop.in
 	cp $< $@
 
-clean-local:
-	rm -f *.ph
-	
 include $(top_srcdir)/Makefile.common
 

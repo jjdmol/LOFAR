@@ -21,9 +21,7 @@ CodeLoggingProcessor_DEPENDENCIES	= libclp.la $(LOFAR_DEPEND) \
 
 BUILT_SOURCES =
 
-EXTRA_DIST = $(BUILT_SOURCES) \
-	CodeLoggingProcessor.conf.in \
-	CodeLoggingProcessor.log_prop.in
+EXTRA_DIST = $(sysconf_DATA)
 
 sysconf_DATA= \
 	CodeLoggingProcessor.conf \
