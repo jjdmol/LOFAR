@@ -4,11 +4,11 @@ check_PROGRAMS 		= salEcho salPing
 
 TESTS			= #salEcho salPing
 
-salEcho_SOURCES 			= Echo_Protocol.ph Echo.cc Service.cc Echo_Protocol.cc
+salEcho_SOURCES 			= $(BUILT_SOURCES) Echo.cc Service.cc Echo_Protocol.cc
 salEcho_LDADD					= ../src/libsal.la $(LOFAR_DEPEND)
 salEcho_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND)
 
-salPing_SOURCES 					= Echo_Protocol.ph Ping.cc  Echo_Protocol.cc
+salPing_SOURCES 					= $(BUILT_SOURCES) Ping.cc  Echo_Protocol.cc
 salPing_LDADD						=  ../src/libsal.la $(LOFAR_DEPEND)
 salPing_DEPENDENCIES			= ../src/libsal.la $(LOFAR_DEPEND)
 
@@ -17,9 +17,9 @@ SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
-BUILT_SOURCES = 
+BUILT_SOURCES = Echo_Protocol.ph
 
-EXTRA_DIST = Echo_Protocol.prot $(sysconf_DATA)
+EXTRA_DIST = $(sysconf_DATA)
 
 sysconf_DATA= \
 	salEcho.conf \

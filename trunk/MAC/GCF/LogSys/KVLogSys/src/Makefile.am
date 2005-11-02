@@ -10,7 +10,7 @@ DOCHDRS	=	\
 	KeyValueLoggerMaster.h \
 	KVLUtils.h \
 	PropertyLogger.h \
-	KVL_Protocol.ph
+	$(BUILT_SOURCES)
    
 lib_LTLIBRARIES 	= libgcfkvlc.la
 
@@ -51,9 +51,9 @@ KeyValueLoggerMaster_LDADD		    = libkvlm.la $(LOFAR_DEPEND)
 KeyValueLoggerMaster_DEPENDENCIES	= libkvlm.la $(LOFAR_DEPEND)
 KeyValueLoggerMaster_CPPFLAGS			= $(libkvlm_la_CPPFLAGS)
 
-BUILT_SOURCES = 
+BUILT_SOURCES = KVL_Protocol.ph
 
-EXTRA_DIST = KVL_Protocol.prot $(sysconf_DATA)
+EXTRA_DIST = $(sysconf_DATA)
 	
 sysconf_DATA= \
 	KeyValueLoggerDaemon.conf \

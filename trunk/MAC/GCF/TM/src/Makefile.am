@@ -17,7 +17,7 @@ DOCHDRS = \
   PortImpl/GTM_Device.h \
   ServiceBroker/GTM_SBTCPPort.h \
   ServiceBroker/GTM_ServiceBroker.h \
-  SB_Protocol.ph
+  $(BUILT_SOURCES)
     
 lib_LTLIBRARIES 	= libgcftm.la
 
@@ -47,7 +47,7 @@ libgcftm_la_CPPFLAGS=-I$(top_srcdir)/src/ServiceBroker
 
 libgcftm_la_CXXFLAGS=-fmessage-length=0
 
-BUILT_SOURCES = 
+BUILT_SOURCES = SB_Protocol.ph
 
 EXTRA_DIST = $(sysconf_DATA)
 	
