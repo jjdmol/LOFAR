@@ -451,6 +451,15 @@ void Prediffer::getSources()
     lmn->setPhaseRef (&itsPhaseRef);
     itsLMN.push_back (lmn);
   }
+  // Set the peel source nrs initially to the sources.
+  vector<int> peelNrs;
+  for (uint i=0; i<itsSrcGrp.size(); ++i) {
+    const vector<int>& grp = itsSrcGrp[i];
+    for (uint j=0; j<grp.size(); ++j) {
+      peelNrs.push_back (grp[j] - 1);
+    }
+  }
+  itsPeelSourceNrs = peelNrs;
 }
 
 //----------------------------------------------------------------------
@@ -1254,6 +1263,7 @@ void Prediffer::saveData (bool subtract, fcomplex* data,
       }
     }
   }
+  itsEqTimer.stop();
 }
 
 //----------------------------------------------------------------------
@@ -1309,6 +1319,7 @@ void Prediffer::subtractPeelSources (bool flush)
 // Write the predicted data into the .res or .dat file.
 void Prediffer::writePredictedData (Bool inDataColumn)
 {
+  BBSTest::ScopedTimer timer("writePredictedData");
   if (!inDataColumn) {
     mapResidualData (false);
   } else {
@@ -1343,6 +1354,7 @@ void Prediffer::mapResidualData (Bool copyData)
 				    ColumnDesc::FixedShape);
     TiledColumnStMan tiledRes("TiledRes", IPosition(3,itsNCorr,itsNrChan,1));
     tab.addColumn (resCol, tiledRes);
+    tab.flush();
     // Find out which datamanager is TiledRes
     // Create symlink for it.
     Record dminfo = tab.dataManagerInfo();
@@ -1420,6 +1432,7 @@ void Prediffer::saveResidualData (bool subtract, bool write)
     // Loop through expressions to be precalculated.
     // We can parallellize them at each level.
     // Level 0 is formed by itsExpr which are not calculated here.
+    itsPredTimer.start();
     for (int level=itsPrecalcNodes.size()-1; level>0; --level) {
       vector<MeqExprRep*> exprs = itsPrecalcNodes[level];
       // parallel
@@ -1428,6 +1441,7 @@ void Prediffer::saveResidualData (bool subtract, bool write)
       }
       // end parallel
     }
+    itsPredTimer.stop();
     // Loop through all baselines and subtract the predict from the data.
     for (uint bl=0; bl<itsNrBl; ++bl) {
       uint ant1 = itsAnt1[bl];
@@ -1643,7 +1657,7 @@ bool Prediffer::setPeelGroups (const vector<int>& peelGroups,
   vector<int> peelNrs;
   for (uint i=0; i<peelGroups.size(); ++i) {
     ASSERT (peelGroups[i] >= 0  &&  peelGroups[i] < int(itsSrcGrp.size()));
-    const vector<int>& grp = itsSrcGrp[i];
+    const vector<int>& grp = itsSrcGrp[peelGroups[i]];
     for (uint j=0; j<grp.size(); ++j) {
       peelNrs.push_back (grp[j] - 1);
       allNrs.push_back (grp[j] - 1);
