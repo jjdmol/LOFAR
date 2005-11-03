@@ -731,7 +731,7 @@ int Prediffer::setDomain (double fstart, double flength,
   }
 
   // Map the part of the file matching the given times.
-  BBSTest::ScopedTimer mapTimer("P:file-mapping");
+  //  BBSTest::ScopedTimer mapTimer("P:file-mapping");
   //  mapTimer.start();
   itsDataMap->unmapFile();
   itsFlagsMap->unmapFile();
@@ -780,7 +780,7 @@ int Prediffer::setDomain (double fstart, double flength,
   // Map the correct flags subset (this time interval)
   itsFlagsMap->mapFile(startOffset, nrValues); 
 
-  mapTimer.end();
+  //  mapTimer.end();
   //  BBSTestLogger::log("file-mapping", mapTimer);
 
   BBSTest::ScopedTimer parmTimer("P:initparms");
@@ -921,6 +921,10 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 
   // Loop through all baselines/times and create a request.
   for (uint tStep=0; tStep<itsNrTimes; ++tStep) {
+    //static NSTimer timer("Prediffer::fillFitter", true);
+    //::doCount = true;
+    //timer.start();
+
     unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
@@ -928,21 +932,6 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
     MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
     MeqRequest request(domain, nrchan, 1, itsNrScid);
 
-    // Loop through expressions to be precalculated.
-    // We can parallellize them at each level.
-    // Level 0 is formed by itsExpr which are not calculated here.
-    for (int level=itsPrecalcNodes.size()-1; level>0; --level) {
-      vector<MeqExprRep*> exprs = itsPrecalcNodes[level];
-      // parallel
-      for (uint i=0; i<exprs.size(); ++i) {
-	exprs[i]->precalculate (request);
-      }
-      // end parallel
-    }
-
-    // Loop through all baselines and fill its equations if selected.
-    //static NSTimer timer("Prediffer::fillFitter", true);
-    //timer.start();
 #pragma omp parallel
     {
       // Allocate a buffer to convert flags from bits to bools.
@@ -950,8 +939,10 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
       Block<bool> flags(nrchan*itsNCorr);
       bool* flagsPtr = &(flags[0]);
 
-      vector<double> result(nrchan*itsNSelCorr*(itsNrScid+1)*2);
-      vector<char> flagResult(nrchan*itsNSelCorr*2);
+      vector<double>   resultVec(2*nrchan*itsNrScid);
+      vector<char>     flagVec(nrchan);
+      vector<double>   diffVec(2*nrchan);
+      vector<unsigned> indicesVec(itsNrScid);
 
       LSQFit *myFitter = &fitter;
 #if defined _OPENMP
@@ -961,7 +952,22 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 	myFitter = &threadPrivateFitters[threadNr - 1];
 #endif
 
-#pragma omp for
+      // Loop through expressions to be precalculated.
+      // We can parallellize them at each level.
+      // Level 0 is formed by itsExpr which are not calculated here.
+      for (int level = itsPrecalcNodes.size(); -- level > 0;) {
+	vector<MeqExprRep*> &exprs = itsPrecalcNodes[level];
+	int nrExprs = exprs.size();
+	if (nrExprs > 0) {
+#pragma omp for schedule(dynamic)
+	  for (int i = 0; i < nrExprs; ++ i) {
+	    exprs[i]->precalculate (request);
+	  }
+	}
+      }
+
+      // Loop through all baselines and fill its equations if selected.
+#pragma omp for schedule(dynamic)
       for (int bl=0; bl< (int) itsNrBl; ++bl) {
 	uint ant1 = itsAnt1[bl];
 	uint ant2 = itsAnt2[bl];
@@ -975,13 +981,14 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 		     timeOffset + blOffset + freqOffset + flagStartBit);
 	  // Get an equation for this baseline.
 	  int blindex = itsBLIndex(ant1,ant2);
-	  fillEquation (*myFitter, itsNSelCorr, nrchan*2,
-			&(result[0]), &(flagResult[0]), data, flagsPtr,
-			request, blindex, ant1, ant2);
+	  fillEquation (*myFitter, itsNSelCorr, &diffVec[0], &indicesVec[0],
+			&resultVec[0], &flagVec[0], data, flagsPtr,
+			request, blindex);
 	}
       }
     } // end omp parallel
     //timer.stop();
+    //::doCount = false;
   }
 
 #if defined _OPENMP
@@ -1003,58 +1010,15 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 // Fill the fitter with the equations for the given baseline.
 //
 //----------------------------------------------------------------------
-void Prediffer::fillEquation (casa::LSQFit& fitter, int nresult, int nrval,
-			      double* result, char* flagResult,
-			      const fcomplex* data, const bool* flags,
-			      const MeqRequest& request,
-			      int blindex, int ant1, int ant2)
+void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
+			      double *diff, unsigned *indices,
+			      double *result, char *flagResult,
+			      const fcomplex *data, const bool *flags,
+			      const MeqRequest& request, int blindex)
 {
+  //static NSTimer fillEquationTimer("fillEquation", true);
   // Get all equations.
-  getEquation (result, flagResult, data, flags, request, blindex, ant1, ant2);
-  // Add all equations to the fitter.
-  itsEqTimer.start();
-  // Use a consecutive vector to assemble all derivatives.
-  int nrspid = itsNrScid;
-  vector<double> derivVec(nrspid);
-  double* derivs = &(derivVec[0]);
-  // Each result is a 2d array of [nrval,nrspid+1] (nrval varies most rapidly).
-  // The first value is the difference; the others the derivatives. 
-  for (int i=0; i<nresult; ++i) {
-    for (int j=0; j<nrval; ++j) {
-      // Each value result,freq gives an equation (unless flagged).
-      if (*flagResult++ == 0) {
-	double diff = result[0];
-	const double* derivdata = result + nrval;
-	for (int k=0; k<nrspid; ++k) {
-	  derivs[k] = derivdata[k*nrval];
-	}
-	fitter.makeNorm (&(derivVec[0]), 1., diff);
-	//itsNUsed++;
-      } else {
-	//itsNFlag++;
-      }
-      // Go to next time,freq value.
-      result++;
-    }
-    // Go to next result (note that data has already been incremented nrval
-    // times, so here we use nrspid instead of nrspid+1.
-    result += nrspid*nrval;
-  }
-  itsEqTimer.stop();
-}
-
-//----------------------------------------------------------------------
-//
-// ~getEquation
-//
-// Get the equation for the given baseline.
-//
-//----------------------------------------------------------------------
-void Prediffer::getEquation (double* result, char* flagResult,
-			     const fcomplex* data, const bool* flags,
-			     const MeqRequest& request,
-			     int blindex, int ant1, int ant2)
-{
+  //getEquation (result, flagResult, data, flags, request, blindex, ant1, ant2);
   itsPredTimer.start();
   MeqJonesExpr& expr = itsExpr[blindex];
   // Do the actual predict.
@@ -1063,8 +1027,6 @@ void Prediffer::getEquation (double* result, char* flagResult,
 
   itsEqTimer.start();
   int nrchan = request.nx();
-  bool showd = false;
-  /// showd = (ant1==4 && ant2==8);
   // Put the results in a single array for easier handling.
   const MeqResult* predResults[4];
   predResults[0] = &(jresult.getResult11());
@@ -1076,63 +1038,64 @@ void Prediffer::getEquation (double* result, char* flagResult,
     predResults[3] = &(jresult.getResult22());
   }
 
+  // Use a consecutive vector to assemble all derivatives.
+  int nrParamsFound;
+
   // Loop through the correlations.
-  for (int corr=0; corr<itsNCorr; ++corr) {
+  for (int corr=0; corr<itsNCorr; corr ++, data ++, flags ++) {
     if (itsCorr[corr]) {
       // Get the difference (measured - predicted) for all channels.
       const MeqMatrix& val = predResults[corr]->getValue();
       const double *realVals, *imagVals;
       val.dcomplexStorage(realVals, imagVals);
-      if (itsReverseChan) {
-	int dch = nrchan;
-	for (int ch=0; ch<nrchan; ++ch) {
-	  --dch;
-	  *result++ = real(data[corr+dch*itsNCorr]) - realVals[ch];
-	  *result++ = imag(data[corr+dch*itsNCorr]) - imagVals[ch];
-	  // Use same flag for real and imaginary part.
-	  flagResult[0] = (flags[corr+dch*itsNCorr] ? 1:0);
-	  flagResult[1] = flagResult[0];
-	  flagResult += 2;
-	}
-      } else {
-	for (int ch=0; ch<nrchan; ++ch) {
-	  *result++ = real(data[corr+ch*itsNCorr]) - realVals[ch];
-	  *result++ = imag(data[corr+ch*itsNCorr]) - imagVals[ch];
-	  // Use same flag for real and imaginary part.
-	  flagResult[0] = (flags[corr+ch*itsNCorr] ? 1:0);
-	  flagResult[1] = flagResult[0];
-	  flagResult += 2;
-	}
+
+      int dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
+      int inc = itsReverseChan ? -itsNCorr : itsNCorr;
+      for (int ch = 0; ch < nrchan; ch ++, dch += inc) {
+	diff[2*ch  ] = real(data[dch]) - realVals[ch];
+	diff[2*ch+1] = imag(data[dch]) - imagVals[ch];
+	// Use same flag for real and imaginary part.
+	flagResult[ch] = (char) flags[dch];
       }
-      if (showd) {
-	cout << "corr=" << corr << ' ' << val << endl;
-	for (int ch=0; ch<nrchan; ++ch) {
-	  cout << real(data[corr+ch*itsNCorr]) - realVals[ch] << ' '
-	       << imag(data[corr+ch*itsNCorr]) - imagVals[ch] << ' ';
-	}
-	cout << endl;
-      }
+
       // Get the derivative for all solvable parameters.
+      nrParamsFound = 0;
       for (int scinx=0; scinx<itsNrScid; ++scinx) {
-	if (! predResults[corr]->isDefined(scinx)) {
-	  // Undefined, so set derivatives to 0.
-	  for (int ch=0; ch<2*nrchan; ++ch) {
-	    *result++ = 0;
-	  }
-	} else {
+	if (predResults[corr]->isDefined(scinx)) {
 	  // Calculate the derivative for each channel (real and imaginary part).
 	  double invPert = 1.0 / predResults[corr]->getPerturbation(scinx);
 	  const MeqMatrix& pertVal = predResults[corr]->getPerturbedValue(scinx);
 	  const double *pertRealVals, *pertImagVals;
 	  pertVal.dcomplexStorage(pertRealVals, pertImagVals);
+	  double *resultp = result + nrParamsFound;
 	  for (int ch=0; ch<nrchan; ++ch) {
-	    *result++ = (pertRealVals[ch] - realVals[ch]) * invPert;
-	    *result++ = (pertImagVals[ch] - imagVals[ch]) * invPert;
-	    if (showd) cout << result[-2] << ' ' << result[-1] << ' ';
+	    *resultp = (pertRealVals[ch] - realVals[ch]) * invPert;
+	    resultp += itsNrScid;
+	    *resultp = (pertImagVals[ch] - imagVals[ch]) * invPert;
+	    resultp += itsNrScid;
 	  }
-	  if (showd) cout << endl;
+	  indices[nrParamsFound ++] = scinx;
 	}
       }
+
+      //fillEquationTimer.start();
+      double *resultp = result;
+      if (nrParamsFound != itsNrScid) {
+	casa::LSQFit miniFitter(nrParamsFound);
+	for (int ch = 0; ch < 2 * nrchan; ++ ch, resultp += itsNrScid) {
+	  if (!flagResult[ch / 2]) {
+	    miniFitter.makeNorm(resultp, 1., diff[ch]);
+	  }
+	}
+	fitter.merge(miniFitter, nrParamsFound, indices);
+      } else {
+	for (int ch = 0; ch < 2 * nrchan; ++ ch, resultp += itsNrScid) {
+	  if (!flagResult[ch / 2]) {
+	    fitter.makeNorm(resultp, 1., diff[ch]);
+	  }
+	}
+      }
+      //fillEquationTimer.stop();
     }
   }
   itsEqTimer.stop();
@@ -1163,13 +1126,15 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
     // Loop through expressions to be precalculated.
     // We can parallellize them at each level.
     // Level 0 is formed by itsExpr which are not calculated here.
-    for (int level=itsPrecalcNodes.size()-1; level>0; --level) {
+    for (int level = itsPrecalcNodes.size(); -- level > 0;) {
       vector<MeqExprRep*> exprs = itsPrecalcNodes[level];
-      // parallel
-      for (uint i=0; i<exprs.size(); ++i) {
-	exprs[i]->precalculate (request);
+      int nrExprs = exprs.size();
+      if (nrExprs > 0) {
+#pragma omp parallel for schedule(dynamic)
+	for (int i = 0; i < nrExprs; i ++) {
+	  exprs[i]->precalculate (request);
+	}
       }
-      // end parallel
     }
 
     for (unsigned int bl=0; bl<itsNrBl; bl++)
@@ -1330,7 +1295,6 @@ void Prediffer::writePredictedData (Bool inDataColumn)
       size_t size = itsDataMap->getSize();
       int64  offs = itsDataMap->getOffset();
       delete itsDataMap;
-      itsDataMap = 0;
       itsDataMap = new MMap(itsMSName + "/vis.dat", MMap::ReWr);
       if (size > 0) {
 	itsDataMap->mapFile (offs, size);

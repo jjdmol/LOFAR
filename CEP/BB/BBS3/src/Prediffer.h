@@ -214,17 +214,11 @@ private:
   void makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm);
 
   // Fill the fitter with the equations for the given baseline.
-  void fillEquation (casa::LSQFit& fitter, int nresult, int nrval,
+  void fillEquation (casa::LSQFit& fitter, int nresult,
+		     double *diff, unsigned *indices,
 		     double* result, char* flagResult,
 		     const fcomplex* data, const bool* flags,
-		     const MeqRequest& request,
-		     int blindex, int ant1, int ant2);
-
-  // Get equations for a single time and baseline.
-  void getEquation (double* result, char* flagResult,
-		    const fcomplex* data, const bool* flags,
-		    const MeqRequest& request,
-		    int blindex, int ant1, int ant2);
+		     const MeqRequest& request, int blindex);
 
   // Subtract the peel source(s) from the data.
   // Optionally the mapped data are flushed to the file.
