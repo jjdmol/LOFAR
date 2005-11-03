@@ -60,6 +60,7 @@ SC_Simple::SC_Simple(int id, Connection* inSolConn, Connection* outWOPDConn,
     itsFitCriterion = -1;
   }
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate");
+  itsWriteParms = itsArgs.getBool("writeParms");
   itsStartTime = itsArgs.getDouble ("startTime");
   itsTimeLength = itsArgs.getDouble ("timeInterval");
   itsStartFreq = itsArgs.getDouble ("startFreq");
@@ -144,6 +145,17 @@ bool SC_Simple::execute()
       WOPD->setUpdateParms(false);  // New time interval, so do not reread parameters
       WOPD->setSolutionID(-1);  // New time interval, so do not use solution from previous interval
       itsCurStartTime += itsArgs.getDouble ("timeInterval");
+      if (itsWriteParms && (!itsControlParmUpd))  // If controller should write params at end of
+      {                                           // each interval and has not already done so.
+	vector<ParmData> pData;
+	getSolution()->getSolution(pData);
+	double fStart = getSolution()->getStartFreq();
+	double fEnd = getSolution()->getEndFreq();
+	double tStart = getSolution()->getStartTime();
+	double tEnd = getSolution()->getEndTime();
+	BBSTest::ScopedTimer st("C:parmwriter");
+	getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+      }
       BBSTest::Logger::log("NextInterval");
     }
     else if (fit < itsFitCriterion)
@@ -234,8 +246,7 @@ void SC_Simple::postprocess()
 {
   if (itsSendDoNothingWO == false) // Only read solution if previous workorder was not a "do nothing"
   {
-    bool writeParms = itsArgs.getBool("writeParms");
-    if (writeParms)
+    if (itsWriteParms || itsControlParmUpd)           // write solution in parmtable
     {
       readSolution();
       // Controller writes found parameter values in the tables

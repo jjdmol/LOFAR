@@ -73,6 +73,7 @@ public:
   int          itsCurIter;
   double       itsCurStartTime;
   bool         itsControlParmUpd;    // Does this Controller update the parameters?
+  bool         itsWriteParms;        // Write the parameters in the parmtable at the end of each interval?
   double       itsStartTime;
   double       itsTimeLength;
   double       itsStartFreq;
