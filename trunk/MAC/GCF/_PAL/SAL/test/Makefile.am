@@ -28,6 +28,9 @@ sysconf_DATA= \
 %.conf: sal-test.conf.in
 	ln -sf $< $@
 
+clean-local:
+	rm -f *.ph
+	
 include $(top_srcdir)/Makefile.common
 
 

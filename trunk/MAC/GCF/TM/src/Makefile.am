@@ -57,5 +57,8 @@ sysconf_DATA = \
 %.log_prop: %.log_prop.in
 	cp $< $@
 
+clean-local:
+	rm -f *.ph
+	
 include $(top_srcdir)/Makefile.common
 
