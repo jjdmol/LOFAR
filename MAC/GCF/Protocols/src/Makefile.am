@@ -33,5 +33,8 @@ sysconf_DATA= \
 %.conf: gcf-pi.conf.in
 	cp $< $@
 
+clean-local:
+	rm -f *.ph
+	
 include $(top_srcdir)/Makefile.common
 
