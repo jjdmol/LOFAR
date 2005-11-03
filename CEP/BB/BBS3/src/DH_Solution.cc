@@ -108,7 +108,7 @@ void DH_Solution::init()
   addField ("WOID", BlobField<int>(1));
   addField ("Iteration", BlobField<int>(1));
   addField ("Fit", BlobField<double>(1));
-  addField ("Rank", BlobField<double>(1));
+  addField ("Rank", BlobField<int>(1));
   addField ("Mu", BlobField<double>(1));
   addField ("StdDev", BlobField<double>(1));
   addField ("Chi", BlobField<double>(1));
@@ -140,7 +140,7 @@ void DH_Solution::fillDataPointers()
   itsWOID = getData<int> ("WOID");
   itsIteration = getData<int> ("Iteration");
   itsFit = getData<double> ("Fit");
-  itsRank = getData<double> ("Rank");
+  itsRank = getData<int> ("Rank");
   itsMu = getData<double> ("Mu");
   itsStdDev = getData<double> ("StdDev");
   itsChi = getData<double> ("Chi");

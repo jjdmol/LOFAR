@@ -76,7 +76,7 @@ public:
   void setParmName(const string& parmName);
 
   double getFit() const;
-  double getRank() const;
+  int getRank() const;
   void setQuality(const Quality& quality);
 
   double getStartFreq() const;
@@ -109,7 +109,7 @@ private:
   char*         itsParmName;         // Parameter name
   int*          itsIter;             // Iteration number
   double*       itsFit;              // LSQ fit value
-  double*       itsRank;
+  int*          itsRank;
   double*       itsStartFreq;        // Start frequency of the domain
   double*       itsEndFreq;          // End frequency of the domain
   double*       itsStartTime;        // Start time of the domain
@@ -139,7 +139,7 @@ inline string DH_ParmSol::getParmName() const
 inline double DH_ParmSol::getFit() const
 { return *itsFit; }
 
-inline double DH_ParmSol::getRank() const
+inline int DH_ParmSol::getRank() const
 { return *itsRank; }
 
 inline double DH_ParmSol::getStartFreq() const
@@ -181,7 +181,7 @@ namespace PL {
       string itsParmName;
       int    itsIter;
       double itsFit;
-      double itsRank;
+      int    itsRank;
       double itsStartFreq;
       double itsEndFreq;
       double itsStartTime;

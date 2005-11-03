@@ -101,7 +101,7 @@ void DH_ParmSol::init()
   addField ("ParmName", BlobField<char>(1, MaxParmNameLength));
   addField ("Iteration", BlobField<int>(1));
   addField ("Fit", BlobField<double>(1));
-  addField ("Rank", BlobField<double>(1));
+  addField ("Rank", BlobField<int>(1));
   addField ("StartFreq", BlobField<double>(1));
   addField ("EndFreq", BlobField<double>(1));
   addField ("StartTime", BlobField<double>(1));
@@ -140,7 +140,7 @@ void DH_ParmSol::fillDataPointers()
   itsParmName = getData<char>("ParmName");
   itsIter = getData<int>("Iteration");
   itsFit = getData<double> ("Fit");
-  itsRank = getData<double> ("Rank");
+  itsRank = getData<int> ("Rank");
   itsStartFreq = getData<double> ("StartFreq");
   itsEndFreq = getData<double> ("EndFreq");
   itsStartTime = getData<double> ("StartTime");
