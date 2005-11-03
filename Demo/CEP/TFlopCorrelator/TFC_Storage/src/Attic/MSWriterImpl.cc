@@ -459,6 +459,7 @@ void MSWriterImpl::fillFeed()
     msfeedCol.polResponse().put (i, feedResponse);
     msfeedCol.position().put (i, feedPos);
     msfeedCol.receptorAngle().put (i, feedAngle);
+    msfeedCol.numReceptors().put (i, 2);
   }
   msfeed.flush();
 }
