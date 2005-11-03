@@ -991,6 +991,8 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 
   BBSTest::Logger::log(itsPredTimer);
   BBSTest::Logger::log(itsEqTimer);
+  itsPredTimer.reset();
+  itsEqTimer.reset();
 }
 
 
@@ -1405,7 +1407,7 @@ void Prediffer::saveResidualData (bool subtract, bool write)
 {
   cout << "saveResidualData to '" << itsDataMap->getFileName() << "'" << endl;
 
-  // Map .res file if not mapped yet.
+  Timer totTimer;
 
   cout << "Using peel sources " << itsPeelSourceNrs << endl;;
   itsSources.setSelected (itsPeelSourceNrs);
@@ -1458,11 +1460,12 @@ void Prediffer::saveResidualData (bool subtract, bool write)
     }
   }
   BBSTest::Logger::log(itsPredTimer);
-  BBSTest::Logger::log(itsEqTimer);
+  itsPredTimer.reset();
   // Make sure data is written.
   if (write) {
     itsDataMap->flush();
   }
+  totTimer.show ("T:saveResidualData");
 }
 
 
