@@ -128,64 +128,6 @@ namespace LOFAR {
       int ret = itsSyncDB->put(NULL, &key, &value, DB_AUTO_COMMIT);
       ASSERTSTR(ret == 0, "Could not insert syncrequest "<<sr<<endl<<"Error: "<<itsEnv->strerror(ret));
       LOG_TRACE_FLOW_STR("Sync request "<<sr<<" inserted into sync database");
-#if 1
-      thekey = "lastSyncRequestString";
-      key.set_data(thekey);
-      key.set_size(strlen(thekey));
-      value.set_data(thekey);
-      value.set_size(strlen(thekey));
-       
-      ret = itsSyncDB->put(NULL, &key, &value, DB_AUTO_COMMIT);
-      ASSERTSTR(ret == 0, "Could not insert syncrequeststring "<<sr<<endl<<"Error: "<<itsEnv->strerror(ret));
-      LOG_TRACE_FLOW_STR("Sync request "<<sr<<" inserted into sync database");
-#endif
-#if 1
-      {
-	DB_HASH_STAT* stats=0;
-	DbTxn* t = 0;
-	itsEnv->txn_begin(NULL, &t, 0);
-	cout<<"return value of stat: " << itsEnv->strerror(itsSyncDB->stat(t, &stats, DB_FAST_STAT))<<endl;
-	cout<<"number of pairs in SyncDB: "<<stats->hash_ndata<<endl;
-	t->commit(0);
-      }
-      // dump contents of database
-      //
-      DbTxn* transaction = 0;
-      itsEnv->txn_begin(NULL, &transaction, 0);
-      Dbc* cursorp;
-      itsSyncDB->cursor(transaction, &cursorp, 0);
-
-      int k = 0;
-      key.set_data(&k);
-      key.set_size(sizeof(int));
-      int flags = DB_FIRST;
-      cout<<"CONTENTS OF SYNC_DB"<<endl;
-      while (ret = cursorp->get(&key, &value, flags) == 0) {
-	flags = DB_NEXT;
-	cout << "KEY: ";
-	for (int i=0; i<key.get_size(); i++) {
-	  cout<<((char*)key.get_data())[i];
-	}
-	cout << endl;
-	cout << "VALUE: ";
-	for (int i=0; i<value.get_size(); i++) {
-	  cout<<((char*)value.get_data())[i];
-	}
-	cout << endl;
-      }
-      cout<<"loop ended because of: " << itsEnv->strerror(ret)<<endl;
-      cout<<"END OF CONTENTS OF SYNC_DB"<<endl;
-      ret = cursorp->close();
-      cout<<"cursor close: " << itsEnv->strerror(ret)<<endl;
-      if (ret == 0) {
-	transaction->commit(0);
-	cout<<"transaction commit: " << itsEnv->strerror(ret)<<endl;
-      } else {
-	transaction->abort();
-	cout<<"transaction abort: " << itsEnv->strerror(ret)<<endl;
-      }
-#endif
-
     }
 
     void BDBSyncMaster::removeSyncRequest(SyncReqType sr)
@@ -207,7 +149,6 @@ namespace LOFAR {
       while ((ret = cursorp->get(&key, &value, flags)) == 0) {
 	flags = DB_NEXT_DUP;
 	SyncReqType srInDB = *(static_cast<SyncReqType*>(value.get_data()));
-	cout<<"SyncReq found :"<<srInDB<<endl;
 	if (srInDB == sr) {
 	  ASSERTSTR(cursorp->del(0) == 0, "Could not remove SyncRequest");
 	  LOG_TRACE_FLOW("SyncRequest removed from sync database");
@@ -216,7 +157,7 @@ namespace LOFAR {
 	  LOG_TRACE_FLOW("SyncRequest was no longer in the database");
 	}
       }
-      cout<<"Stopped looking because: "<<itsEnv->strerror(ret)<<endl;
+      LOG_TRACE_FLOW_STR("Stopped looking for SyncReq because: "<<itsEnv->strerror(ret));
       cursorp->close();
       transaction->commit(0);
     }
@@ -282,47 +223,11 @@ namespace LOFAR {
       Dbt key, value;
       Dbc* cursorp;
       int ret = 0;
-      {
-	DB_HASH_STAT* stats=0;
-	DbTxn* t = 0;
-	itsEnv->txn_begin(NULL, &t, 0);
-	cout<<"return value of stat: " << itsEnv->strerror(itsSyncDB->stat(t, &stats, DB_FAST_STAT))<<endl;
-	cout<<"number of pairs in SyncDB: "<<stats->hash_ndata<<endl;
-	t->commit(0);
-      }
-#if 1
-      // dump contents of database
-      //
-      cout<<"Starting cursor: "<<itsEnv->strerror(itsSyncDB->cursor(NULL, &cursorp, 0)) << endl;
-
-      int k = 0;
-      key.set_data(&k);
-      key.set_size(sizeof(int));
-      int flags = DB_FIRST;
-      cout<<"CONTENTS OF SYNC_DB"<<endl;
-      while (ret = cursorp->get(&key, &value, flags) == 0) {
-	flags = DB_NEXT;
-	cout << "KEY: ";
-	for (int i=0; i<key.get_size(); i++) {
-	  cout<<((char*)key.get_data())[i];
-	}
-	cout << endl;
-	cout << "VALUE: ";
-	for (int i=0; i<value.get_size(); i++) {
-	  cout<<((char*)value.get_data())[i];
-	}
-	cout << endl;
-      }
-      cout<<"loop ended because of: " << itsEnv->strerror(ret)<<endl;
-      cout<<"END OF CONTENTS OF SYNC_DB"<<endl;
-      ret = cursorp->close();
-      cout<<"cursor close: " << itsEnv->strerror(ret)<<endl;
-#endif
       char *thekey = "lastSyncRequest";
       key.set_data(thekey);
       key.set_size(strlen(thekey));
        
-      cout<<"Starting cursor: "<<itsEnv->strerror(itsSyncDB->cursor(NULL, &cursorp, 0)) << endl;
+      itsSyncDB->cursor(NULL, &cursorp, 0);
 
       ret = cursorp->get(&key, &value, DB_SET);
       SyncReqType sr;
@@ -335,7 +240,6 @@ namespace LOFAR {
 	sr = -1;
       }
       ret = cursorp->close();
-      cout<<"cursor close: " << itsEnv->strerror(ret)<<endl;
       return sr;      
     }
 
