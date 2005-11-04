@@ -199,16 +199,14 @@ main (int argc, char *argv[])
 
   BDBReplicator* BDBR;
   if (amMaster){
-    BDBR = new BDBReplicator(home,"localhost", myPort, "localhost", myPort, true);
+    BDBR = new BDBReplicator(home,"localhost", myPort, "localhost", myPort, 1);
   } else {
-    BDBR = new BDBReplicator(home,"localhost", myPort, "localhost", masterPort, false);
+    BDBR = new BDBReplicator(home,"localhost", myPort, "localhost", masterPort, 0);
   };
 
 
   BDBR->startReplication();
   DbEnv* myDbEnv = BDBR->getDbEnv();
-
-  sleep(1);
 
   if (amMaster)
     {

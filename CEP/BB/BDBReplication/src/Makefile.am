@@ -1,4 +1,5 @@
-INSTHDRS          = BDBMessage.h \
+INSTHDRS           = BDBSyncer.h \
+	 BDBMessage.h \
 BDBSite.h					\
 BDBReplicator.h					\
 BDBCommunicator.h					\
@@ -16,7 +17,8 @@ DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES	= libbdbreplication.la
 
-libbdbreplication_la_SOURCES  	 = BDBMessage.cc \
+libbdbreplication_la_SOURCES  	  = BDBSyncer.cc \
+		 BDBMessage.cc \
 BDBReplicator.cc				\
 BDBCommunicator.cc				\
 BDBConnector.cc					\

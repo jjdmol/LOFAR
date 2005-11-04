@@ -41,6 +41,7 @@ namespace LOFAR
     // @{
 
 #define BDBTAG 85
+    typedef int SyncReqType;
 
     // Description of class.
     class BDBMessage
@@ -53,10 +54,13 @@ namespace LOFAR
 	NO_MESSAGE,
 	CONNECT,
 	LIBBDB,
-	SYNC_REQUEST,
-	SYNC_REPLY};
+	STARTUP_DONE,
+	SYNC_REPLY,
+        TO_BE_RECEIVED};
 
       int getType() { return itsType; };
+      int getEnvId() { return itsEnvId; };
+      void setEnvId(int envId) { itsEnvId = envId; };
 
       bool receive(TransportHolder* th, bool blocking = false);
       bool send(TransportHolder* th);
@@ -64,15 +68,19 @@ namespace LOFAR
       // TODO: set and get functions
       // for LIBBDB
       Dbt& getRec();
-      void setRec(Dbt& rec);
+      void setRec(const Dbt& rec);
       Dbt& getControl();
-      void setControl(Dbt& control);
+      void setControl(const Dbt& control);
 
       // for CONNECT
       int getPort();
       void setPort(int port);
       string getHostName();
       void setHostName(string hostName);
+
+      // for SYNC_REPLY
+      SyncReqType getSyncRequestNumber() { return itsSyncRequestNumber; };
+      void setSyncRequestNumber(SyncReqType sr) { itsSyncRequestNumber = sr; };
 
     private:
       // Copying is not allowed
@@ -81,6 +89,7 @@ namespace LOFAR
 
       //# Datamembers
       int itsType;
+      int itsEnvId;
       
       // for LIBBDB
       Dbt itsRec;
@@ -91,6 +100,10 @@ namespace LOFAR
       // for CONNECT
       int itsPort;
       string itsHostName;
+
+      // for SYNC_REPLY
+      SyncReqType itsSyncRequestNumber;
+      //      ALLOC_TRACER_ALIAS(BDBSite);
     };
 
     // @}

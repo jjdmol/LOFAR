@@ -44,7 +44,7 @@ class BDBReplicator {
 		const int port,
 		const string& masterHostname,
 		const int masterPort,
-		const bool isMaster);
+		const int noSlaves = 0);
 
   void startReplication();
 
@@ -65,13 +65,15 @@ class BDBReplicator {
   int itsMasterPort;
   bool itsIsMaster;
 
+  DbEnv* itsDbEnv;
+  BDBSyncer* itsSyncer;
   BDBConnector itsConnector;
   boost::thread* itsConnectorThread;
-  BDBCommunicator itsCommunicator;
+  BDBCommunicator* itsCommunicator;
   boost::thread* itsCommunicatorThread;
-  DbEnv* itsDbEnv;
 
   BDBSiteMap itsSiteMap;
+  int itsNoSlaves;
 
   ALLOC_TRACER_ALIAS(BDBSite);
 };

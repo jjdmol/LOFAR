@@ -30,22 +30,23 @@
  
 #include <BDBReplication/BDBSite.h>
 #include <BDBReplication/BDBConnector.h>
+#include <BDBReplication/BDBSyncer.h>
 
 namespace LOFAR {
 namespace BDBReplication {
 
-struct IncomingMessage {
-  Dbt rec;
-  Dbt control;
-  int envid;
-  char* cBuffer;
-  char* rBuffer;
-};
+/* struct IncomingMessage { */
+/*   Dbt rec; */
+/*   Dbt control; */
+/*   int envid; */
+/*   char* cBuffer; */
+/*   char* rBuffer; */
+/* }; */
 
 class BDBCommunicatorRep {
  public:
   // called from outside the thread
-  BDBCommunicatorRep(const BDBConnector& connector, BDBSiteMap& map);
+  BDBCommunicatorRep(const BDBConnector& connector, BDBSiteMap& map, BDBSyncer& syncer);
 
   ~BDBCommunicatorRep();
 
@@ -60,11 +61,12 @@ class BDBCommunicatorRep {
   //  and so we would like to be called again (soon)
   bool listenOnce();
 
+  void sendStartupDone();
   bool isStartupDone();
 
   int itsReferences;
  private:
-  void handleMessage(Dbt& rec, Dbt& control, int envId);
+  void handleMessage(BDBMessage& message);
 
   // used from outside and within so protected by a mutex
   bool itsShouldStop;
@@ -72,6 +74,7 @@ class BDBCommunicatorRep {
   bool itsStartupDone;
 
   const BDBConnector& itsConnector;
+  BDBSyncer& itsSyncer;
 
   BDBSiteMap& itsSiteMap;
   DbEnv* itsDbEnv;
@@ -83,7 +86,7 @@ class BDBCommunicatorRep {
 class BDBCommunicator {
  public:
   // called from outside the thread
-  BDBCommunicator(const BDBConnector& connector, BDBSiteMap& siteMap);
+  BDBCommunicator(const BDBConnector& connector, BDBSiteMap& siteMap, BDBSyncer& syncer);
 
   BDBCommunicator(const BDBCommunicator& other);
 
@@ -96,9 +99,6 @@ class BDBCommunicator {
 		  const DbLsn *lsnp,
 		  int envid, 
 		  u_int32_t flags);
-  static void sendOne(const Dbt *control, 
-		      const Dbt *rec, 
-		      BDBSite& mySite);
 
   void setEnv(DbEnv* DbEnv);
 
@@ -109,6 +109,7 @@ class BDBCommunicator {
   void operator()();
   bool listenOnce();
 
+  void sendStartupDone();
   bool isStartupDone();
 
   void setSiteMap(BDBSiteMap& map);

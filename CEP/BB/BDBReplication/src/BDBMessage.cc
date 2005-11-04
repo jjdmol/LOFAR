@@ -70,24 +70,28 @@ namespace LOFAR {
 	  hostName = 0;
 	  break;
 	case LIBBDB:
+	  LOG_TRACE_FLOW_STR("Receiving LIBDB message");
 	  delete [] itsCBuffer;
 	  delete [] itsRBuffer;
 	  th->recvBlocking(&size, 4, BDBTAG);
 	  itsCBuffer = new char[size];
-	  th->recvBlocking(&itsCBuffer, size, BDBTAG);
+	  th->recvBlocking(itsCBuffer, size, BDBTAG);
 	  itsControl.set_data(itsCBuffer);
 	  itsControl.set_size(size);
 	  th->recvBlocking(&size, 4, BDBTAG);
 	  itsRBuffer = new char[size];
-	  th->recvBlocking(&itsRBuffer, size, BDBTAG);
+	  if (size>0) {
+	    th->recvBlocking(itsRBuffer, size, BDBTAG);
+	  };
 	  itsRec.set_data(itsRBuffer);
 	  itsRec.set_size(size);
 	  break;
-	case SYNC_REQUEST:
-	  ASSERTSTR(false,"TODO");
+	case STARTUP_DONE:
+	  LOG_TRACE_FLOW("Message STARTUP_DONE received.");
 	  break;
 	case SYNC_REPLY:
-	  ASSERTSTR(false,"TODO");
+	  LOG_TRACE_FLOW("Message SYNC_REPLY received.");
+	  th->recvBlocking(&itsSyncRequestNumber, sizeof(SyncReqType), BDBTAG);
 	  break;
 	default:
 	  ASSERTSTR(false,"Received illegal message");
@@ -108,24 +112,29 @@ namespace LOFAR {
       case NO_MESSAGE:
 	ASSERTSTR(false,"Sending illegal message");
       case CONNECT:
+	LOG_TRACE_FLOW("Sending connect message");
 	succesFull &= th->sendBlocking(&itsPort, 4, BDBTAG);
 	size = itsHostName.size();
 	succesFull &= th->sendBlocking(&size, 4, BDBTAG);
 	succesFull &= th->sendBlocking((void*)itsHostName.c_str(), size, BDBTAG);
 	break;
       case LIBBDB:
+	LOG_TRACE_FLOW("Sending LIBDB message");
 	size = itsControl.get_size();
 	succesFull &= th->sendBlocking(&size, 4, BDBTAG);
-	succesFull &= th->sendBlocking(&itsCBuffer, size, BDBTAG);
+	succesFull &= th->sendBlocking(itsCBuffer, size, BDBTAG);
 	size = itsRec.get_size();
 	succesFull &= th->sendBlocking(&size, 4, BDBTAG);
-	succesFull &= th->sendBlocking(&itsRBuffer, size, BDBTAG);
+	if (size>0) {
+	  succesFull &= th->sendBlocking(itsRBuffer, size, BDBTAG);
+	};
 	break;
-      case SYNC_REQUEST:
-	ASSERTSTR(false,"TODO");
+      case STARTUP_DONE:
+	LOG_TRACE_FLOW("Message STARTUP_DONE sent.");
 	break;
       case SYNC_REPLY:
-	ASSERTSTR(false,"TODO");
+	LOG_TRACE_FLOW("Message SYNC_REPLY sent.");
+	th->sendBlocking(&itsSyncRequestNumber, sizeof(SyncReqType), BDBTAG);
 	break;
       default:
 	ASSERTSTR(false,"Sending illegal message");
@@ -137,7 +146,7 @@ namespace LOFAR {
     // for LIBBDB
     Dbt& BDBMessage::getRec() {
       return itsRec;};
-    void BDBMessage::setRec(Dbt& rec){
+    void BDBMessage::setRec(const Dbt& rec){
       delete []itsRBuffer;
       itsRBuffer = new char[rec.get_size()];
       memcpy(itsRBuffer, rec.get_data(), rec.get_size());
@@ -146,7 +155,7 @@ namespace LOFAR {
     }
     Dbt& BDBMessage::getControl(){
       return itsControl; };
-    void BDBMessage::setControl(Dbt& control) {
+    void BDBMessage::setControl(const Dbt& control) {
       delete []itsCBuffer;
       itsCBuffer = new char[control.get_size()];
       memcpy(itsCBuffer, control.get_data(), control.get_size());

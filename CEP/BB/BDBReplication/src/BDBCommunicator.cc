@@ -33,11 +33,12 @@ namespace LOFAR{
   namespace BDBReplication{
 using namespace std;
 
-BDBCommunicatorRep::BDBCommunicatorRep(const BDBConnector& connector, BDBSiteMap& siteMap)
+BDBCommunicatorRep::BDBCommunicatorRep(const BDBConnector& connector, BDBSiteMap& siteMap, BDBSyncer& syncer)
   : itsReferences(0),
     itsShouldStop(false),
     itsStartupDone(false),
     itsConnector(connector),
+    itsSyncer(syncer),
     itsSiteMap(siteMap),
     itsDbEnv(0)
 {
@@ -69,7 +70,7 @@ void BDBCommunicatorRep::operator()()
 };
 
 bool BDBCommunicatorRep::listenOnce() {
-  vector<IncomingMessage> messages;
+  vector<BDBMessage*> messages;
   bool isMessagePresent = false;
   { 
     boost::mutex::scoped_lock sml(itsSiteMap.itsMutex);
@@ -79,53 +80,55 @@ bool BDBCommunicatorRep::listenOnce() {
       LOG_TRACE_FLOW_STR("trying to read from:" <<mySite);
       {
 	boost::mutex::scoped_lock sml(mySite.itsMutex);
-	// check if there is data available
-	int messageSize = 0;
-	int availBytes = mySite.recv(&messageSize, 4);
-	if (availBytes == 4) {
-	  //LOG_TRACE_FLOW("Received message from env "<<it->first);
-	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
-	  LOG_TRACE_FLOW("BDBConHandlThread data present on socket");
-	  IncomingMessage message;
-	  // read control Dbt
-	  message.cBuffer = new char[messageSize];
-	  if (messageSize > 0) {
-	    mySite.recvBlocking(message.cBuffer, messageSize);
-	  }
-	  message.control.set_data(message.cBuffer);
-	  message.control.set_size(messageSize);
-	  
-	  // read rec Dbt
-	  mySite.recvBlocking(&messageSize, 4);
-	  //	  LOG_TRACE_FLOW_STR("read size:" <<messageSize);
-	  message.rBuffer = new char[messageSize];
-	  if (messageSize > 0) {
-	    mySite.recvBlocking(message.rBuffer, messageSize);
-	  }
-	  message.rec.set_data(message.rBuffer);
-	  message.rec.set_size(messageSize);
-	  message.envid = it->first;
+	BDBMessage* message = new BDBMessage(BDBMessage::TO_BE_RECEIVED);
+	if (mySite.recv(*message)) {
+	  message->setEnvId(it->first);
 	  messages.push_back(message);
-	} else {
-	  // if there are not 4 Bytes there should be no data at all.
-	  ASSERTSTR( availBytes == 0, "Strange number of Bytes("<<availBytes<<") present, quitting");
 	}
       }
     }
   }
-  vector<IncomingMessage>::iterator mit;
+  vector<BDBMessage*>::iterator mit;
   for(mit = messages.begin(); mit != messages.end(); mit++) {
-    handleMessage(mit->rec, mit->control, mit->envid);
-    delete [] mit->cBuffer;
-    delete [] mit->rBuffer;
+    switch ((*mit)->getType()) {
+    case BDBMessage::LIBBDB:
+      handleMessage(**mit);
+      break;
+    case BDBMessage::STARTUP_DONE:
+      itsStartupDone = true;
+      LOG_TRACE_FLOW("Startup done received on slave");
+      break;
+    case BDBMessage::SYNC_REPLY:
+      itsSyncer.handleReply(**mit);
+      break;
+    default:
+      break;
+    }
+    delete *mit;
   };
-  
-  itsStartupDone = true;
+  SyncReqType sr = itsSyncer.handleRequest();
+  if (sr > 0) {
+    BDBMessage syncreply(BDBMessage::SYNC_REPLY);
+    syncreply.setSyncRequestNumber(sr);
+    
+    boost::mutex::scoped_lock sml(itsSiteMap.itsMutex);
+    BDBSiteMap::iterator it;
+    for (it=itsSiteMap.begin(); it!=itsSiteMap.end(); it++)
+    {
+      LOG_TRACE_FLOW_STR("Sending syncreply to site " << it->first);
+      it->second->lock();
+      it->second->send(syncreply);
+      it->second->unlock();
+    }
+  }  
   return messages.size()>0;
 }
 
-void BDBCommunicatorRep::handleMessage(Dbt& rec, Dbt& control, int envId)
+void BDBCommunicatorRep::handleMessage(BDBMessage& message)
 {
+  Dbt& rec = message.getRec();
+  Dbt& control = message.getControl();
+  int envId = message.getEnvId();
   LOG_TRACE_FLOW("BDBConHandlThread handling message");
 
   DbLsn retLSN;
@@ -138,7 +141,7 @@ void BDBCommunicatorRep::handleMessage(Dbt& rec, Dbt& control, int envId)
   switch (ret) {
   case DB_REP_STARTUPDONE:
     LOG_TRACE_FLOW("BDBConHandlThread startup done");
-    itsStartupDone = true;
+    //itsStartupDone = true;
     break;
 
   case DB_REP_NEWSITE:
@@ -184,13 +187,32 @@ void BDBCommunicatorRep::setEnv(DbEnv* dbenv)
   itsDbEnv = dbenv;
 };
 
+void BDBCommunicatorRep::sendStartupDone() {
+  itsStartupDone = true;
+
+  BDBEnv& myEnv = (BDBEnv&) *itsDbEnv;
+  myEnv.AssertCorrectInstance();
+  BDBSiteMap& mySiteMap = myEnv.itsSiteMap;
+
+  boost::mutex::scoped_lock sml(mySiteMap.itsMutex);
+  BDBSiteMap::iterator it;
+  BDBMessage suMes(BDBMessage::STARTUP_DONE);
+  for (it=mySiteMap.begin(); it!=mySiteMap.end(); it++)
+  {
+    LOG_TRACE_FLOW_STR("Sending startup done to site " << it->first);
+    it->second->lock();
+    it->second->send(suMes);
+    it->second->unlock();
+  }
+}
+
 bool BDBCommunicatorRep::isStartupDone()
 { return itsStartupDone;};
 
 
-BDBCommunicator::BDBCommunicator(const BDBConnector& connector, BDBSiteMap& siteMap)
+BDBCommunicator::BDBCommunicator(const BDBConnector& connector, BDBSiteMap& siteMap, BDBSyncer& syncer)
 {
-  itsRep = new BDBCommunicatorRep(connector, siteMap);
+  itsRep = new BDBCommunicatorRep(connector, siteMap, syncer);
   itsRep->itsReferences++;
 }
 BDBCommunicator::BDBCommunicator(const BDBCommunicator& other)
@@ -221,6 +243,10 @@ bool BDBCommunicator::listenOnce() {
   itsRep->listenOnce();
 }
 
+void BDBCommunicator::sendStartupDone() {
+  itsRep->sendStartupDone();
+}
+
 bool BDBCommunicator::isStartupDone()
 {
   return itsRep->isStartupDone();
@@ -240,6 +266,11 @@ int BDBCommunicator::send(DbEnv *dbenv,
   myEnv.AssertCorrectInstance();
   BDBSiteMap& mySiteMap = myEnv.itsSiteMap;
 
+  BDBMessage myMessage(BDBMessage::LIBBDB);
+  myMessage.setRec(*rec);
+  myMessage.setControl(*control);
+  myMessage.setEnvId(envid);
+
   if (envid == DB_EID_BROADCAST) {
     boost::mutex::scoped_lock sml(mySiteMap.itsMutex);
     //    mySiteMap.lock();
@@ -248,7 +279,7 @@ int BDBCommunicator::send(DbEnv *dbenv,
     {
       LOG_TRACE_FLOW_STR("Sending(bc) to site " << it->first);
       it->second->lock();
-      sendOne(control, rec, *(it->second));
+      it->second->send(myMessage);
       it->second->unlock();
     }
     //    mySiteMap.unlock();
@@ -258,32 +289,12 @@ int BDBCommunicator::send(DbEnv *dbenv,
     BDBSite& dstSite = mySiteMap.find(envid);
     boost::mutex::scoped_lock sl(dstSite.itsMutex);
     //    dstSite.lock();
-    sendOne(control, rec, dstSite);
+    dstSite.send(myMessage);
     //    dstSite.unlock();
     //    mySiteMap.unlock();
   }
   //  LOG_TRACE_FLOW("BDBConHandlThread send finished");
   return 0;
 }
-
-void BDBCommunicator::sendOne(const Dbt *control, 
-			      const Dbt *rec, 
-			      BDBSite& mySite)
-{
-  //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
-  int size = control->get_size();
-  //  LOG_TRACE_FLOW_STR("writing size:" <<size);
-  mySite.send(&size, 4);
-  if (control->get_size() > 0)
-    mySite.send(control->get_data(), control->get_size());
-  size = rec->get_size();
-  //  LOG_TRACE_FLOW_STR("writing size:" <<size);
-  mySite.send(&size, 4);
-  if (rec->get_size() > 0)
-    mySite.send(rec->get_data(), rec->get_size());
-  //  LOG_TRACE_FLOW("BDBConHandlThread sending one");
-}
-
-
 }
 }
