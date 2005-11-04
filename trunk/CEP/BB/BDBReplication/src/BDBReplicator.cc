@@ -38,21 +38,23 @@ BDBReplicator::BDBReplicator(const string& DbEnvName,
 			     const int port,
 			     const string& masterHostName,
 			     const int masterPort,
-			     const bool master)
+			     const int noSlaves)
   : itsReplicationStarted(false),
     itsDbEnvName(DbEnvName),
     itsHostName(hostName),
     itsPort(port),
     itsMasterHostName(masterHostName),
     itsMasterPort(masterPort),
-    itsIsMaster(master),
+    itsIsMaster(noSlaves > 0),
+    itsDbEnv(0),
+    itsSyncer(0),  
     itsConnector(hostName, port, itsSiteMap),
     itsConnectorThread(0),
-    itsCommunicator(itsConnector, itsSiteMap),
+    itsCommunicator(0),
     itsCommunicatorThread(0),
-    itsDbEnv(0)
+    itsNoSlaves(noSlaves)
 {
-  if (master){
+  if (itsIsMaster){
     LOG_TRACE_FLOW_STR("master "<<DbEnvName<<" "<<hostName<<" "<<port<<" "<<masterHostName<<" "<<masterPort);
   } else {
     LOG_TRACE_FLOW_STR("slave "<<DbEnvName<<" "<<hostName<<" "<<port<<" "<<masterHostName<<" "<<masterPort);
@@ -117,20 +119,37 @@ void BDBReplicator::startReplication()
     //  LOG_TRACE_FLOW("BDBReplicator executing rep_start");
     ASSERTSTR(itsDbEnv->rep_start(&connectionData, flags) == 0, "could not execute rep start in BDBReplicator");
     
-    itsCommunicator.setEnv(itsDbEnv);
-    
-    //  LOG_TRACE_FLOW("BDBReplicator starting threads");
+    if (itsIsMaster) {
+      itsSyncer = new BDBSyncMaster(itsDbEnv, itsNoSlaves);
+    } else {
+      itsSyncer = new BDBSyncSlave(itsDbEnv);
+    }
+    itsCommunicator = new BDBCommunicator(itsConnector, itsSiteMap, *itsSyncer);
+    itsCommunicator->setEnv(itsDbEnv);
+
+   //  LOG_TRACE_FLOW("BDBReplicator starting threads");
 #ifdef BDBREPL_USE_THREADS
-    itsCommunicatorThread = new boost::thread(itsCommunicator);
+    itsCommunicatorThread = new boost::thread(*itsCommunicator);
 #else
     handleMessages();
 #endif
     LOG_TRACE_FLOW("BDBReplicator replication started");  
 
-//     while (!itsIsMaster && !itsCommunicator.isStartupDone()) {
-//       LOG_ERROR_STR("BDBReplicator waiting until startup is done");
-//       sleep(1);
-//     }
+    if (itsIsMaster) {
+      BDBSyncMaster* mySyncer = dynamic_cast<BDBSyncMaster*>(itsSyncer);
+      SyncReqType startupSync = mySyncer->requestSync();
+      while (!mySyncer->isSyncDone(startupSync)) {
+	LOG_TRACE_FLOW("Waiting until startup is done on master");
+	sleep(1);
+      }
+      itsCommunicator->sendStartupDone();
+    } else {
+      while (!itsCommunicator->isStartupDone()){
+	itsSyncer->openSyncDB();
+	LOG_TRACE_FLOW("Waiting until startup is done on slave");
+	sleep(1);
+      }
+    }      
   }
   itsReplicationStarted = true;
 }
@@ -140,7 +159,7 @@ BDBReplicator::~BDBReplicator()
   LOG_TRACE_FLOW("BDBReplicator destructor");
 #ifdef BDBREPL_USE_THREADS
   itsConnector.stop();
-  itsCommunicator.stop();
+  itsCommunicator->stop();
 
   
   itsConnectorThread->join();
@@ -152,6 +171,7 @@ BDBReplicator::~BDBReplicator()
   handleMessages();
 #endif
 
+  delete itsSyncer;
   if (itsDbEnv !=0) {
     itsDbEnv->close(0);
     delete itsDbEnv;

@@ -9,8 +9,6 @@ mkdir masterDir
 MASTERPID=$!
 echo "master has pid $MASTERPID" >&2
 
-sleep 10
-
 rm slave1Dir -rf
 mkdir slave1Dir
 ./tBDBReplication -h slave1Dir -m 8020 -o 8021 &> slave1.log &
