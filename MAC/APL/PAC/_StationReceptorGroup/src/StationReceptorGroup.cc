@@ -234,7 +234,7 @@ void StationReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
           // check functionality state of RCU's
           if(!checkQuality())
           {
-            _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+            suspend(LD_RESULT_LOW_QUALITY);
           }
         }
       }
@@ -446,7 +446,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_active_state(GCFEvent& event, G
       if(_isCALclientPort(p))
       {
         LOG_ERROR(formatString("port '%s' disconnected", p.getName().c_str()));
-        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+        suspend(LD_RESULT_LOW_QUALITY);
       }
       break;
     }
@@ -528,7 +528,8 @@ void StationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/)
     {
       calStartEvent.subset.set(it->first);
     }
-    calStartEvent.sampling_frequency = m_parameterSet.getDouble(string("frequency"));
+    LOG_ERROR("CAL_Protocol.CALStartEvent.sampling_frequency is disappeared");
+//    calStartEvent.sampling_frequency = m_parameterSet.getDouble(string("frequency"));
     calStartEvent.nyquist_zone = m_parameterSet.getInt16(string("nyquistZone"));
     calStartEvent.rcucontrol.value = getRcuControlValue(m_parameterSet.getString(string("bandSelection")));
     m_CALclient.send(calStartEvent);
@@ -594,11 +595,11 @@ void StationReceptorGroup::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPo
       if(checkQuality())
       {
         // enter claimed state
-        _doStateTransition(LOGICALDEVICE_STATE_CLAIMED);
+        claimed();
       }
       else
       {
-        _doStateTransition(LOGICALDEVICE_STATE_IDLE,LD_RESULT_LOW_QUALITY);
+        suspend(LD_RESULT_LOW_QUALITY);
       }
     }
   }

@@ -370,7 +370,7 @@ GCFEvent::TResult StationOperations::concrete_active_state(GCFEvent& event, GCFP
       if(_isRSPclientPort(port))
       {
         LOG_ERROR(formatString("port '%s' disconnected", port.getName().c_str()));
-        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
+        suspend(LD_RESULT_LOW_QUALITY);
       }
       break;
     }

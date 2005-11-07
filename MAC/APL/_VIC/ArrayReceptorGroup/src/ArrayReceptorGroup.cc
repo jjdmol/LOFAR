@@ -52,7 +52,8 @@ const string ArrayReceptorGroup::SRG_VERSION = string("1.0");
 ArrayReceptorGroup::ArrayReceptorGroup(const string& taskName, 
                                      const string& parameterFile, 
                                      GCFTask* pStartDaemon) :
-  LogicalDevice(taskName,parameterFile,pStartDaemon,SRG_VERSION)
+  LogicalDevice(taskName,parameterFile,pStartDaemon,SRG_VERSION),
+  m_delayedQualityCheckTimer(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
@@ -68,8 +69,7 @@ bool ArrayReceptorGroup::_checkQuality()
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
   //todo: implement quality rule: how many srg's may be suspended before the ARG is suspended
-
-  return false;
+  return (_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_ACTIVE));
 }
 
 void ArrayReceptorGroup::concrete_handlePropertySetAnswer(GCFEvent& answer)
@@ -234,7 +234,7 @@ GCFEvent::TResult ArrayReceptorGroup::concrete_preparing_state(GCFEvent& event, 
   return status;
 }
 
-GCFEvent::TResult ArrayReceptorGroup::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult ArrayReceptorGroup::concrete_active_state(GCFEvent& event, GCFPortInterface& p, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -248,10 +248,7 @@ GCFEvent::TResult ArrayReceptorGroup::concrete_active_state(GCFEvent& event, GCF
 
     case LOGICALDEVICE_SUSPENDED:
     {
-      if(!_checkQuality())
-      {
-        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
-      }
+      m_delayedQualityCheckTimer = p.setTimer(1L);
       break;
     }     
 
@@ -315,9 +312,17 @@ void ArrayReceptorGroup::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ArrayReceptorGroup::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
+void ArrayReceptorGroup::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  if(timerEvent.id == m_delayedQualityCheckTimer)
+  {
+    if(!_checkQuality())
+    {
+      suspend(LD_RESULT_LOW_QUALITY);
+    }
+  }
 }
 
 void ArrayReceptorGroup::concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset)
