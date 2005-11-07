@@ -42,8 +42,8 @@ using namespace BS;
 using namespace std;
 using namespace EPA_Protocol;
 
-EPATest::EPATest(string name, char* subarrayname)
-  : GCFTask((State)&EPATest::initial, name), Test("EPATest"), m_subarrayname(subarrayname)
+EPATest::EPATest(string name, char* subarrayname, int startbeamlet, int nbeamlets)
+  : GCFTask((State)&EPATest::initial, name), Test("EPATest"), m_subarrayname(subarrayname), m_startbeamlet(startbeamlet), m_nbeamlets(nbeamlets)
 {
   registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
@@ -125,7 +125,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	BSBeamallocEvent alloc;
 	alloc.name = "Beam1";
 	alloc.subarrayname = m_subarrayname;
-	for (int i = 0; i < MEPHeader::N_BEAMLETS; i++)
+	for (int i = m_startbeamlet; i < m_startbeamlet + m_nbeamlets; i++)
 	{
 	    alloc.allocation()[i] = i;
 	}
@@ -137,7 +137,11 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
       case BS_BEAMALLOCACK:
       {
 	BSBeamallocackEvent ack(e);
-	TESTC(BS_Protocol::SUCCESS == ack.status);
+
+	if (BS_Protocol::SUCCESS != ack.status) {
+	  FAIL("failed to allocate beam");
+	  TRAN(EPATest::done);
+	}
 
 	beam_handle = ack.handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
@@ -250,16 +254,16 @@ int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-  if (argc != 2) {
-    cerr << "usage: EPATest subarrayname" << endl;
-    cerr << "e.g. EPATest FTS-1-LBA" << endl;
+  if (argc != 4) {
+    cerr << "usage: EPATest subarrayname startbeamlet nbeamlets" << endl;
+    cerr << "e.g. EPATest FTS-1-LBA 512" << endl;
     exit(EXIT_FAILURE);
   }
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("Beam Server Process Test Suite", &cerr);
-  s.addTest(new EPATest("EPATest", argv[1]));
+  s.addTest(new EPATest("EPATest", argv[1], atoi(argv[2]), atoi(argv[3])));
   s.run();
   long nFail = s.report();
   s.free();

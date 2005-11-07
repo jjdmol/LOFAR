@@ -43,7 +43,7 @@ namespace LOFAR {
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      EPATest(string name, char* subarrayname);
+      EPATest(string name, char* subarrayname, int startbeamlet, int nbeamlets);
       virtual ~EPATest();
 
       // state methods
@@ -75,7 +75,8 @@ namespace LOFAR {
       GCFPort     beam_server;
 
       std::string m_subarrayname;
-
+      int         m_startbeamlet;
+      int         m_nbeamlets;
     };
 
   };
