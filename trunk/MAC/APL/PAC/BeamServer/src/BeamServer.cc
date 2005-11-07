@@ -486,7 +486,9 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
 	CALSubscribeackEvent ack(e);
 	BSBeamallocackEvent beamallocack;
 
-	if (CAL_Protocol::SUCCESS == ack.status) {
+	if (CAL_Protocol::SUCCESS == ack.status
+	    && (ack.subarray.getSPW().getNumSubbands() >=
+		(int)m_bt.getBeam()->getAllocation()().size()) ) {
 
 	  LOG_WARN_STR("ack.subarray.positions=" << ack.subarray.getAntennaPos());
 
