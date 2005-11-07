@@ -50,12 +50,12 @@ EPAStub::EPAStub(string name)
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   char addrstr[64];
-  snprintf(addrstr, 64, "RSPDriver.MAC_ADDR_LCU");
+  snprintf(addrstr, 64, "EPAStub.MAC_ADDR_RSPDRIVER");
 
   LOG_INFO("EPAStub constructor");
   
   m_client.init(*this, "client", GCFPortInterface::SAP, EPA_PROTOCOL, true /*raw*/);
-  m_client.setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"),
+  m_client.setAddr(GET_CONFIG_STRING("EPAStub.IF_NAME"),
 		   GET_CONFIG_STRING(addrstr));
   m_client.setEtherType(ETHERTYPE_EPA);
 
@@ -68,37 +68,37 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::RSR][MEPHeader::RSR_VERSION].size   = MEPHeader::RSR_VERSION_SIZE;
   m_reg[MEPHeader::TST][MEPHeader::TST_SELFTEST].addr  = new char[MEPHeader::TST_SELFTEST_SIZE];
   m_reg[MEPHeader::TST][MEPHeader::TST_SELFTEST].size  = MEPHeader::TST_SELFTEST_SIZE;
-  m_reg[MEPHeader::WG] [MEPHeader::WG_XSETTINGS].addr  = new char[MEPHeader::WG_XSETTINGS_SIZE  * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_XSETTINGS].addr  = new char[MEPHeader::WG_XSETTINGS_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::WG] [MEPHeader::WG_XSETTINGS].size  = MEPHeader::WG_XSETTINGS_SIZE;
-  m_reg[MEPHeader::WG] [MEPHeader::WG_YSETTINGS].addr  = new char[MEPHeader::WG_YSETTINGS_SIZE  * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_YSETTINGS].addr  = new char[MEPHeader::WG_YSETTINGS_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::WG] [MEPHeader::WG_YSETTINGS].size  = MEPHeader::WG_YSETTINGS_SIZE;
-  m_reg[MEPHeader::WG] [MEPHeader::WG_XWAVE].addr      = new char[MEPHeader::WG_XWAVE_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_XWAVE].addr      = new char[MEPHeader::WG_XWAVE_SIZE      * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::WG] [MEPHeader::WG_XWAVE].size      = MEPHeader::WG_XWAVE_SIZE;
-  m_reg[MEPHeader::WG] [MEPHeader::WG_YWAVE].addr      = new char[MEPHeader::WG_YWAVE_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_YWAVE].addr      = new char[MEPHeader::WG_YWAVE_SIZE      * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::WG] [MEPHeader::WG_YWAVE].size      = MEPHeader::WG_YWAVE_SIZE;
-  m_reg[MEPHeader::SS] [MEPHeader::SS_SELECT].addr     = new char[MEPHeader::SS_SELECT_SIZE     * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::SS] [MEPHeader::SS_SELECT].addr     = new char[MEPHeader::SS_SELECT_SIZE     * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::SS] [MEPHeader::SS_SELECT].size     = MEPHeader::SS_SELECT_SIZE;
-  m_reg[MEPHeader::BF] [MEPHeader::BF_XROUT].addr      = new char[MEPHeader::BF_XROUT_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_XROUT].addr      = new char[MEPHeader::BF_XROUT_SIZE      * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::BF] [MEPHeader::BF_XROUT].size      = MEPHeader::BF_XROUT_SIZE;
-  m_reg[MEPHeader::BF] [MEPHeader::BF_XIOUT].addr      = new char[MEPHeader::BF_XIOUT_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_XIOUT].addr      = new char[MEPHeader::BF_XIOUT_SIZE      * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::BF] [MEPHeader::BF_XIOUT].size      = MEPHeader::BF_XIOUT_SIZE;
-  m_reg[MEPHeader::BF] [MEPHeader::BF_YROUT].addr      = new char[MEPHeader::BF_YROUT_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_YROUT].addr      = new char[MEPHeader::BF_YROUT_SIZE      * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::BF] [MEPHeader::BF_YROUT].size      = MEPHeader::BF_YROUT_SIZE;
-  m_reg[MEPHeader::BF] [MEPHeader::BF_YIOUT].addr      = new char[MEPHeader::BF_YIOUT_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_YIOUT].addr      = new char[MEPHeader::BF_YIOUT_SIZE      * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::BF] [MEPHeader::BF_YIOUT].size      = MEPHeader::BF_YIOUT_SIZE;
   m_reg[MEPHeader::BST][MEPHeader::BST_POWER].addr     = new char[MEPHeader::BST_POWER_SIZE];
   m_reg[MEPHeader::BST][MEPHeader::BST_POWER].size     = MEPHeader::BST_POWER_SIZE;
-  m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr     = new char[MEPHeader::SST_POWER_SIZE     * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr     = new char[MEPHeader::SST_POWER_SIZE     * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].size     = MEPHeader::SST_POWER_SIZE;
-  m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].addr  = new char[MEPHeader::RCU_SETTINGS_SIZE  * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].addr  = new char[MEPHeader::RCU_SETTINGS_SIZE  * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].size  = MEPHeader::RCU_SETTINGS_SIZE;
   m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTRESET].addr = new char[MEPHeader::CRR_SOFTRESET_SIZE];
   m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTRESET].size = MEPHeader::CRR_SOFTRESET_SIZE;
   m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTPPS].addr   = new char[MEPHeader::CRR_SOFTPPS_SIZE];
   m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTPPS].size   = MEPHeader::CRR_SOFTPPS_SIZE;
-  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTRESET].addr = new char[MEPHeader::CRB_SOFTRESET_SIZE * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTRESET].addr = new char[MEPHeader::CRB_SOFTRESET_SIZE * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTRESET].size = MEPHeader::CRB_SOFTRESET_SIZE;
-  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTPPS].addr   = new char[MEPHeader::CRB_SOFTPPS_SIZE   * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTPPS].addr   = new char[MEPHeader::CRB_SOFTPPS_SIZE   * GET_CONFIG("EPAStub.N_BLPS", i)];
   m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTPPS].size   = MEPHeader::CRB_SOFTPPS_SIZE;
   m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].addr  = new char[MEPHeader::CDO_SETTINGS_SIZE];
   m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].size  = MEPHeader::CDO_SETTINGS_SIZE;
@@ -121,14 +121,14 @@ EPAStub::EPAStub(string name)
 	  case MEPHeader::BF:
 	  case MEPHeader::RCU:
 	  case MEPHeader::CRB:
-	    size *= GET_CONFIG("RS.N_BLPS", i);
+	    size *= GET_CONFIG("EPAStub.N_BLPS", i);
 	    break;
 	    
 	  case MEPHeader::SST:
 	    if (MEPHeader::SST_POWER == regid)
 	    {
 	      uint32* pu_32 = (uint32*)m_reg[pid][regid].addr;
-	      for (int blp = 0; blp < GET_CONFIG("RS.N_BLPS", i); blp++)
+	      for (int blp = 0; blp < GET_CONFIG("EPAStub.N_BLPS", i); blp++)
 	      {
 		{
 		  for (uint32 i = 0; i < size / sizeof(uint32); i++)
@@ -267,7 +267,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       else
       {
 	offset += read.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
-	ASSERT(offset + size <= m_reg[pid][regid].size * (uint16)GET_CONFIG("RS.N_BLPS", i));
+	ASSERT(offset + size <= m_reg[pid][regid].size * (uint16)GET_CONFIG("EPAStub.N_BLPS", i));
       }
       
       ack.payload.setBuffer(m_reg[pid][regid].addr + offset, size);
@@ -322,7 +322,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       {
 	// copy to BLP register memory
 	offset += write.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
-	ASSERT(offset + size <= m_reg[pid][regid].size * (int16)GET_CONFIG("RS.N_BLPS", i));
+	ASSERT(offset + size <= m_reg[pid][regid].size * (int16)GET_CONFIG("EPAStub.N_BLPS", i));
       }
 
       write.payload.setBuffer(m_reg[pid][regid].addr + offset, size); 
@@ -448,17 +448,6 @@ int main(int argc, char** argv)
   GCFTask::init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
-
-  try
-  {
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
-    GCF::ParameterSet::instance()->adoptFile("RSPDriver.conf");
-  }
-  catch (Exception e)
-  {
-    cerr << "Failed to load configuration files: " << e.text() << endl;
-    exit(EXIT_FAILURE);
-  }
 
   EPAStub stub("EPAStub");
   stub.run();
