@@ -1,6 +1,6 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tRectMatrix tDH_FIR tRectMatrixSpeed
+check_PROGRAMS = tRectMatrix tDH_FIR
 
 
 AM_CXXFLAGS = \
