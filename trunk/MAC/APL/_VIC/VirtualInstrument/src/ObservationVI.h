@@ -127,6 +127,8 @@ namespace AVI
     private:
       bool _checkQuality();
       
+      unsigned long m_delayedQualityCheckTimer;
+      
       ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon

@@ -56,6 +56,7 @@ ARATestDriverTask::ARATestDriverTask() :
   GCFTask((State)&ARATestDriverTask::initial, m_taskName),
   m_answer(),
   m_RSPserver(),
+  m_childPorts(),
   m_propMap(),
   m_systemStatus(),
   m_stats(),
@@ -111,7 +112,7 @@ ARATestDriverTask::ARATestDriverTask() :
   m_stats().resize(n_rcus,MEPHeader::N_BEAMLETS);
   m_xcstats().resize(n_pols,n_pols,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board,n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board);
   
-  m_RSPserver.init(*this, "RSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
+  m_RSPserver.init(*this, "RSPserver", GCFPortInterface::MSPP, RSP_PROTOCOL);
   
 }
 
@@ -733,6 +734,16 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   }
 }
 
+void ARATestDriverTask::sendToAll(GCFEvent& event)
+{
+  vector<boost::shared_ptr<GCF::TM::GCFTCPPort> >::iterator it=m_childPorts.begin();
+  while(it!=m_childPorts.end())
+  {
+    (*it)->send(event);
+    ++it;
+  }
+}
+
 void ARATestDriverTask::updateSystemStatus()
 {
   // send new status to RA application
@@ -743,7 +754,7 @@ void ARATestDriverTask::updateSystemStatus()
   updStatusEvent.sysstatus.board().reference(m_systemStatus.board().copy());
   updStatusEvent.sysstatus.rcu().reference(m_systemStatus.rcu().copy());
 
-  m_RSPserver.send(updStatusEvent);
+  sendToAll(updStatusEvent);
 }
 
 void ARATestDriverTask::updateStats()
@@ -772,22 +783,22 @@ void ARATestDriverTask::updateStats()
   if(m_updStatsHandleSP != 0)
   {
     updStatsEvent.handle=m_updStatsHandleSP; 
-    m_RSPserver.send(updStatsEvent);
+    sendToAll(updStatsEvent);
   }
   if(m_updStatsHandleSM != 0)
   {
     updStatsEvent.handle=m_updStatsHandleSM; 
-    m_RSPserver.send(updStatsEvent);
+    sendToAll(updStatsEvent);
   }
   if(m_updStatsHandleBP != 0)
   {
     updStatsEvent.handle=m_updStatsHandleBP; 
-    m_RSPserver.send(updStatsEvent);
+    sendToAll(updStatsEvent);
   }
   if(m_updStatsHandleBM != 0)
   {
     updStatsEvent.handle=m_updStatsHandleBM;
-    m_RSPserver.send(updStatsEvent);
+    sendToAll(updStatsEvent);
   }
 }
 
@@ -826,7 +837,7 @@ void ARATestDriverTask::updatexcStats()
   if(m_updxcStatsHandle != 0)
   {
     updxcStatsEvent.handle=m_updxcStatsHandle; 
-    m_RSPserver.send(updxcStatsEvent);
+    sendToAll(updxcStatsEvent);
   }
 }
 
@@ -871,10 +882,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
     case F_ENTRY:
       if(m_schedule=="")
       {
-        if (!m_RSPserver.isConnected()) 
-        {
-          m_RSPserver.open();
-        }
+        m_RSPserver.open();
       }
       break;
     
@@ -893,35 +901,30 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       }
       break;
     
+    case F_ACCEPT_REQ:
+    {
+      boost::shared_ptr<GCFTCPPort> server(new GCFTCPPort);
+      server->init(*this, "RSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
+      m_RSPserver.accept(*(server.get()));
+      m_childPorts.push_back(server);
+      break;
+    }
+
     case F_CONNECTED:
     {
       LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-      if (isEnabled())
-      {
-        TRAN(ARATestDriverTask::enabled);
-      }
       break;
     }
   
     case F_DISCONNECTED:
     {
-      port.setTimer((long)3); // try again in 3 seconds
-      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
       port.close();
       break;
     }
 
     case F_CLOSED:
     {
-      port.setTimer((long)3); // try again in 3 seconds
       LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-      break;
-    }
-
-    case F_TIMER:
-    {
-      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
-      port.open();
       break;
     }
 
@@ -932,33 +935,6 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
       break;
     }
     
-    default:
-      LOG_DEBUG(formatString("ARATestDriverTask(%s)::initial, default",getName().c_str()));
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-/* 
- * Test case 1: Monitor FPGA registers. Goal: load secondary properties
- */
-GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& port)
-{
-  LOG_DEBUG(formatString("ARATestDriverTask(%s)::enabled (%s)",getName().c_str(),evtstr(event)));
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (event.signal)
-  {
-    case F_INIT:
-      break;
-
-    case F_ENTRY:
-    {
-      break;
-    }
-
     case F_TIMER:
     {
       GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
@@ -1283,12 +1259,27 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       break;
     }
      
-    case F_DISCONNECTED:
-    {
-     LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-     port.close();
+    default:
+      LOG_DEBUG(formatString("ARATestDriverTask(%s)::initial, default",getName().c_str()));
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
 
-     TRAN(ARATestDriverTask::initial);
+  return status;
+}
+
+GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& port)
+{
+  LOG_DEBUG(formatString("ARATestDriverTask(%s)::enabled (%s)",getName().c_str(),evtstr(event)));
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_INIT:
+      break;
+
+    case F_ENTRY:
+    {
       break;
     }
 

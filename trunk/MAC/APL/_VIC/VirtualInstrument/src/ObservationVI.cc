@@ -49,7 +49,8 @@ const string ObservationVI::VI_VERSION = string("1.0");
 ObservationVI::ObservationVI(const string& taskName, 
                                      const string& parameterFile, 
                                      GCFTask* pStartDaemon) :
-  LogicalDevice(taskName,parameterFile,pStartDaemon,VI_VERSION)
+  LogicalDevice(taskName,parameterFile,pStartDaemon,VI_VERSION),
+  m_delayedQualityCheckTimer(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
@@ -64,9 +65,7 @@ bool ObservationVI::_checkQuality()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
-  //todo: implement quality rule: how many VI's may be suspended before the Observation is suspended
-
-  return false;
+  return (_childsInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_ACTIVE));
 }
 
 void ObservationVI::concrete_handlePropertySetAnswer(GCFEvent& answer)
@@ -250,7 +249,7 @@ GCFEvent::TResult ObservationVI::concrete_preparing_state(GCFEvent& event, GCFPo
   return status;
 }
 
-GCFEvent::TResult ObservationVI::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult ObservationVI::concrete_active_state(GCFEvent& event, GCFPortInterface& p, TLDResult& /*errorCode*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -259,10 +258,7 @@ GCFEvent::TResult ObservationVI::concrete_active_state(GCFEvent& event, GCFPortI
   {
     case LOGICALDEVICE_SUSPENDED:
     {
-      if(!_checkQuality())
-      {
-        _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
-      }
+      m_delayedQualityCheckTimer = p.setTimer(1L);
       break;
     }     
 
@@ -325,10 +321,17 @@ void ObservationVI::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void ObservationVI::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
+void ObservationVI::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-
+  
+  if(timerEvent.id == m_delayedQualityCheckTimer)
+  {
+    if(!_checkQuality())
+    {
+      suspend(LD_RESULT_LOW_QUALITY);
+    }
+  }
 }
 
 void ObservationVI::concreteAddExtraKeys(ACC::APS::ParameterSet& /*psSubset*/)

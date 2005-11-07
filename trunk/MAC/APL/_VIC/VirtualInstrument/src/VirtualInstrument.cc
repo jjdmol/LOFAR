@@ -356,8 +356,7 @@ void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortI
       LOG_FATAL(formatString("VI(%s): quality too low",getName().c_str()));
       m_serverPort.cancelTimer(m_qualityCheckTimerId);
       m_qualityCheckTimerId=0;
-      _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,LD_RESULT_LOW_QUALITY);
-      //      _cancelSchedule(LD_RESULT_LOW_QUALITY);
+      suspend(LD_RESULT_LOW_QUALITY);
     }
     else
     {

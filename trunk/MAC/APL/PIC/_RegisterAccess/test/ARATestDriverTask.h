@@ -28,6 +28,7 @@
 
 //# GCF Includes
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVUnsigned.h>
@@ -77,13 +78,15 @@ namespace ARA
       GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       GCF::TM::GCFEvent::TResult enabled(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       void getHardwareIndexes(const string& propName,const string& scope, vector<int>& hardwareIndexes);
+      void sendToAll(GCF::TM::GCFEvent& event);
       
       
       static string m_taskName;
       static string m_RATestServerName;
       
       ARATestAnswer   m_answer;
-      GCF::TM::GCFPort         m_RSPserver;
+      GCF::TM::GCFTCPPort m_RSPserver;
+      vector<boost::shared_ptr<GCF::TM::GCFTCPPort> > m_childPorts;
       TPropertyMap    m_propMap;
       
       RSP_Protocol::SystemStatus m_systemStatus;
