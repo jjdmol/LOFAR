@@ -1,7 +1,9 @@
 SUBDIRS=src test include
 
 DISTCHECK_CONFIGURE_FLAGS=\
-      --with-common=$(prefix) \
+	--with-common=$(prefix) \
+	--with-gcfcommon=$(prefix) \
+	--with-gcftm=$(prefix) \
 	--with-rtccommon=$(prefix)
 
 EXTRA_DIST = \
