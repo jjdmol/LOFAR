@@ -35,9 +35,11 @@ start() {
     fi
     
     # check if it is already running
+    # then try to stop it first
     if [ -f /var/lock/subsys/$prog ]; then
+	echo forcing restart...
 	status $prog
-	return 1
+	stop
     fi
 
     # set OPTIONS
