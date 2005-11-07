@@ -40,8 +40,9 @@ start() {
 
     # check if it is already running
     if [ -f /var/lock/subsys/$prog ]; then
+	echo forcing restart...
 	status $prog
-	return 1
+	stop
     fi
 
     # -d means start in the background as daemon
