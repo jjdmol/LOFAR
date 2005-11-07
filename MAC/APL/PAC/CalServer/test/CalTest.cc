@@ -44,9 +44,9 @@ using namespace CAL;
 using namespace RTC;
 using namespace CAL_Protocol;
 
-CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint8 rcucontrol)
+CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint8 rcucontrol, int subarrayid)
   : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
-    m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone), m_rcucontrol(rcucontrol)
+    m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone), m_rcucontrol(rcucontrol), m_subarrayid(subarrayid)
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
@@ -135,10 +135,28 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	start.subset.reset();
 
 	// select antennas
-	for (int i = 0; i < 2 * m_nantennas; i++) {
-	  if (0 == (i/2) % 2) start.subset.set(i);
+	for (int i = 0; i < m_nantennas; i++) {
+	  switch (m_subarrayid) {
+	  case 0:
+	    start.subset.set(i*2);
+	    start.subset.set(i*2+1);
+	    break;
+	  case 1:
+	    // select odd antennas
+	    if (1 == (i % 2)) {
+	      start.subset.set(i*2);
+	      start.subset.set(i*2+1);
+	    }
+	    break;
+	  case 2:
+	    // select even antennas
+	    if (0 == (i % 2)) {
+	      start.subset.set(i*2);
+	      start.subset.set(i*2+1);
+	    }
+	    break;
+	  }
 	}
-	start.subset.set(5);
 	start.nyquist_zone       = m_nyquistzone;
 	start.rcucontrol.value   = m_rcucontrol;
 
@@ -275,9 +293,9 @@ int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-  if (argc != 7) {
-    cerr << "usage: CalTest arrayname parentname nantennas samplingfrequency nyquistzone rcucontrol" << endl;
-    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1           0xB9" << endl;
+  if (argc != 8) {
+    cerr << "usage: CalTest arrayname parentname nantennas samplingfrequency nyquistzone rcucontrol subarray=[0|1|2]" << endl;
+    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1           0xB9 0" << endl;
     cerr << "(see AntennaArrays.conf for other configurations)" << endl;
     exit(EXIT_FAILURE);
   }
@@ -288,7 +306,7 @@ int main(int argc, char** argv)
 
   int rcucontrol;
   sscanf(argv[6], "%i", &rcucontrol);
-  s.addTest(new CalTest("CalTest", argv[1], argv[2], int(atof(argv[3])), atoi(argv[4]), atoi(argv[5]), rcucontrol));
+  s.addTest(new CalTest("CalTest", argv[1], argv[2], int(atof(argv[3])), atoi(argv[4]), atoi(argv[5]), rcucontrol, atoi(argv[7])));
   s.run();
   long nFail = s.report();
   s.free();
