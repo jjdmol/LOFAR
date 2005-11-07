@@ -51,6 +51,20 @@ namespace LOFAR{
       timer.print(ss);
       doLog(ss.str());
     }
+    void Logger::log(ScopedTimer& timer)
+    { 
+      std::ostringstream ss;
+      ss << "Timer ";
+      timer.print(ss);
+      doLog(ss.str());
+    }
+    void Logger::log(ScopedUSRTimer& timer)
+    { 
+      std::ostringstream ss;
+      ss << "Timer "<<timer.getName();
+      timer.show(ss);
+      doLog(ss.str());
+    }
     void Logger::log(const string& name, const vector<ParmData>& parms)
     { 
       vector<ParmData>::const_iterator it = parms.begin();
