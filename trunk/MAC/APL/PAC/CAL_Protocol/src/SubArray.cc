@@ -321,8 +321,6 @@ void SubArrays::calibrate(CalibrationInterface* cal, ACC& acc)
 {
   bool done = false;
 
-  ASSERT(0 != cal);
-
   mutex_lock();
   if (acc.isValid()) {
     for (map<string, SubArray*>::const_iterator it = m_arrays.begin();
