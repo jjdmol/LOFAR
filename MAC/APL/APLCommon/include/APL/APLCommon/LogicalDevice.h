@@ -35,10 +35,10 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include "APL/APLCommon/PropertySetAnswerHandlerInterface.h"
-#include "APL/APLCommon/PropertySetAnswer.h"
-#include "APL/APLCommon/APLCommonExceptions.h"
-#include "APL/APLCommon/APL_Defines.h"
+#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
+#include <APL/APLCommon/PropertySetAnswer.h>
+#include <APL/APLCommon/APLCommonExceptions.h>
+#include <APL/APLCommon/APL_Defines.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -183,14 +183,13 @@ namespace APLCommon
       void _sendToAllChilds(GCFEventSharedPtr eventPtr);
       bool _childsInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
       bool _childsNotInState(const double requiredPercentage, const TLogicalDeviceTypes& type, const TLogicalDeviceState& state);
+      void _connectedHandler(GCF::TM::GCFPortInterface& port);
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
       void _acceptChildConnection();
       bool _isAPCLoaded() const;
       void _apcLoaded();
-      void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode=LD_RESULT_NO_ERROR);
       string _state2String(const TLogicalDeviceState& state);
       void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
-      void _handleServerConnected();
       vector<string> _getChildKeys();
       void _sendEvent(GCFEventSharedPtr eventPtr, GCF::TM::GCFPortInterface& port);
       void _addChildPort(TPortSharedPtr childPort);
@@ -202,6 +201,12 @@ namespace APLCommon
       time_t getStartTime() const;
       time_t getStopTime() const;
       void   copyParentValue(ACC::APS::ParameterSet& psSubset, const string& key);
+      void claim(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      void claimed(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      void prepare(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      void resume(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      void suspend(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      void release(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
 
       virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
@@ -245,15 +250,13 @@ namespace APLCommon
     private:
       void _connectParent();
       void _schedule();
-      void _claim();
-      void _prepare();
-      void _resume();
-      void _suspend();
-      void _release();
       TPortVector::iterator _getChildPort(GCF::TM::GCFPortInterface& port);
       void _setChildStates(TLogicalDeviceState ldState);
       void _setConnectedChildState(GCF::TM::GCFPortInterface& port, TLogicalDeviceState ldState);
       string _getConnectedChildName(GCF::TM::GCFPortInterface& port);
+      void _handleLogicalDeviceConnectEvent(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
+      GCF::TM::GCFEvent::TResult _handleChildTransition(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
+      void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode=LD_RESULT_NO_ERROR);
 
       TPortMap                              m_parentPorts; // connection with parents
       unsigned long                         m_parentReconnectTimerId;
@@ -270,6 +273,7 @@ namespace APLCommon
       TPortMap                              m_childStartDaemonPorts; // child startDaemons
       bool                                  m_apcLoaded;
       TLogicalDeviceState                   m_logicalDeviceState;
+      TLogicalDeviceState                   m_lastLogicalDeviceState;
       
       unsigned long                         m_claimTimerId;
       unsigned long                         m_prepareTimerId;

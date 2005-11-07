@@ -108,6 +108,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_childStartDaemonPorts(),
   m_apcLoaded(false),
   m_logicalDeviceState(LOGICALDEVICE_STATE_DISABLED),
+  m_lastLogicalDeviceState(LOGICALDEVICE_STATE_DISABLED),
   m_claimTimerId(0),
   m_prepareTimerId(0),
   m_startTimerId(0),
@@ -361,7 +362,7 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
           {
             if(parameters.size()==0)
             {
-              _claim();
+              claim();
             }
             else
             {
@@ -374,7 +375,7 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
           {
             if(parameters.size()==0)
             {
-              _prepare();
+              prepare();
             }
             else
             {
@@ -387,7 +388,10 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
           {
             if(parameters.size()==0)
             {
-              _resume();
+              TRAN(LogicalDevice::active_state);
+              // also send it to all my childs
+              boost::shared_ptr<LOGICALDEVICEResumeEvent> resumeEvent(new LOGICALDEVICEResumeEvent);
+              _sendToAllChilds(resumeEvent);
             }
             else
             {
@@ -400,7 +404,10 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
           {
             if(parameters.size()==0)
             {
-              _suspend();
+              TRAN(LogicalDevice::suspended_state);
+              // also send it to all my childs
+              boost::shared_ptr<LOGICALDEVICESuspendEvent> suspendEvent(new LOGICALDEVICESuspendEvent);
+              _sendToAllChilds(suspendEvent);
             }
             else
             {
@@ -413,7 +420,7 @@ void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
           {
             if(parameters.size()==0)
             {
-              _release();
+              release();
             }
             else
             {
@@ -521,8 +528,12 @@ void LogicalDevice::_schedule()
   time_t startTime   = APLUtilities::decodeTimeString(m_parameterSet.getString("startTime"));
   time_t stopTime    = APLUtilities::decodeTimeString(m_parameterSet.getString("stopTime"));
   
-  // timerId's can be zero if the LD has been released
-  if((claimTime >= timeNow && claimTime < m_claimTime) || m_claimTimerId==0)
+  if(claimTime <= timeNow) // claim ASAP
+  {
+    LOG_INFO("Claiming will be done ASAP");
+    m_claimTime = 0;
+  }
+  else if((claimTime >= timeNow && claimTime < m_claimTime) || m_claimTimerId==0) // timerId's can be zero if the LD has been released
   {
     char timeString1[200];
     char timeString2[200];
@@ -539,7 +550,13 @@ void LogicalDevice::_schedule()
     m_serverPort.cancelTimer(m_claimTimerId);
     m_claimTimerId = m_serverPort.setTimer(m_claimTime - timeNow);
   }
-  if((prepareTime >= timeNow && prepareTime < m_prepareTime) || m_prepareTimerId==0)
+    
+  if(prepareTime <= timeNow) // prepare ASAP after claiming
+  {
+    LOG_INFO("Preparing will be done ASAP after claiming");
+    m_prepareTime = 0;
+  }
+  else if((prepareTime >= timeNow && prepareTime < m_prepareTime) || m_prepareTimerId==0)
   {
     char timeString1[200];
     char timeString2[200];
@@ -556,7 +573,12 @@ void LogicalDevice::_schedule()
     m_serverPort.cancelTimer(m_prepareTimerId);
     m_prepareTimerId = m_serverPort.setTimer(m_prepareTime - timeNow);
   }
-  if((startTime >= timeNow && startTime < m_startTime) || m_startTimerId==0)
+  if(startTime <= timeNow) // start ASAP after preparing
+  {
+    LOG_INFO("Starting will be done ASAP after preparing");
+    m_startTime = 0;
+  }
+  else if((startTime >= timeNow && startTime < m_startTime) || m_startTimerId==0)
   {
     char timeString1[200];
     char timeString2[200];
@@ -617,35 +639,45 @@ void LogicalDevice::_cancelSchedule(const TLDResult& errorCode)
   boost::shared_ptr<LOGICALDEVICECancelscheduleEvent> cancelEvent(new LOGICALDEVICECancelscheduleEvent);
   _sendToAllChilds(cancelEvent);
   
-  _release();
+  release();
 }
 
-void LogicalDevice::_claim()
+void LogicalDevice::claim(const TLDResult& errorCode /*=LD_RESULT_NO_ERROR*/)
 {
+  m_globalError = errorCode;
   LOGICALDEVICEClaimEvent claimEvent;
   dispatch(claimEvent,m_serverPort);
 }
 
-void LogicalDevice::_prepare()
+void LogicalDevice::claimed(const TLDResult& errorCode /*=LD_RESULT_NO_ERROR*/)
 {
+  _doStateTransition(LOGICALDEVICE_STATE_CLAIMED,errorCode);
+}
+
+void LogicalDevice::prepare(const TLDResult& errorCode /*=LD_RESULT_NO_ERROR*/)
+{
+  m_globalError = errorCode;
   LOGICALDEVICEPrepareEvent prepareEvent;
   dispatch(prepareEvent,m_serverPort);
 }
 
-void LogicalDevice::_resume()
+void LogicalDevice::resume(const TLDResult& errorCode /*=LD_RESULT_NO_ERROR*/)
 {
+  m_globalError = errorCode;
   LOGICALDEVICEResumeEvent resumeEvent;
   dispatch(resumeEvent,m_serverPort);
 }
 
-void LogicalDevice::_suspend()
+void LogicalDevice::suspend(const TLDResult& errorCode /*=LD_RESULT_NO_ERROR*/)
 {
+  m_globalError = errorCode;
   LOGICALDEVICESuspendEvent suspendEvent;
   dispatch(suspendEvent,m_serverPort);
 }
 
-void LogicalDevice::_release()
+void LogicalDevice::release(const TLDResult& errorCode /*=LD_RESULT_NO_ERROR*/)
 {
+  m_globalError = errorCode;
   LOGICALDEVICEReleaseEvent releaseEvent;
   dispatch(releaseEvent,m_serverPort);
 }
@@ -852,6 +884,66 @@ bool LogicalDevice::_childsNotInState(const double requiredPercentage, const TLo
   return (resultingPercentage >= requiredPercentage);
 }
 
+void LogicalDevice::_connectedHandler(GCFPortInterface& port)
+{
+  if(_findParentPort(port)!=m_parentPorts.end())
+  {
+    boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
+    connectEvent->nodeId = getName();
+    _sendEvent(connectEvent,port);
+  }
+  else if(_isServerPort(port))
+  {
+    // replace my server port (assigned by the ServiceBroker) in all child sections    
+    uint16 serverPort = m_serverPort.getPortNumber();
+  
+    // create the childs
+    vector<string> childKeys = _getChildKeys();
+    vector<string>::iterator chIt;
+    for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
+    {
+      // connect to child startdaemon.
+      try
+      {
+        string key = (*chIt) + string(".parentPort");
+        KVpair kvPair(key,serverPort);
+        m_parameterSet.replace(kvPair);
+      
+        string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
+        string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
+        uint16 startDaemonPortNr   = m_parameterSet.getUint16((*chIt) + string(".startDaemonPort"));
+        string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
+        string childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
+      
+        TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
+        startDaemonPort->setHostName(startDaemonHostName);
+        startDaemonPort->setPortNumber(startDaemonPortNr);
+        startDaemonPort->open();
+        m_childStartDaemonPorts[(*chIt)] = startDaemonPort;
+      
+        // add reference in propertyset
+        boost::shared_ptr<GCFPVDynArr> childRefs(static_cast<GCFPVDynArr*>(m_basePropertySet->getValue(LD_PROPNAME_CHILDREFS)));
+        if(childRefs != 0)
+        {
+          GCFPValueArray refsVector(childRefs->getValue()); // create a copy 
+          GCFPVString newRef((*chIt) + string("=") + childPsName);
+          refsVector.push_back(&newRef);
+          GCFPVDynArr newChildRefs(LPT_STRING,refsVector);
+          m_basePropertySet->setValue(LD_PROPNAME_CHILDREFS,newChildRefs);
+          LOG_DEBUG(formatString("Added child reference %s to %s",newRef.getValue().c_str(),m_basePropertySetName.c_str()));
+        }
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
+      }
+    }
+  
+    _connectParent();
+    _schedule();
+  }
+}
+
 void LogicalDevice::_disconnectedHandler(GCFPortInterface& port)
 {
   LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
@@ -996,7 +1088,7 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       port.cancelTimer(timerEvent.id);
       LOG_DEBUG(formatString("(%s) ClaimTimer %d triggered and cancelled",__func__,timerEvent.id));
       // this is a claim timer for the schedule of a logical device. claim the device
-      _claim();
+      claim();
     }
     else if(timerEvent.id == m_prepareTimerId)
     {
@@ -1004,7 +1096,7 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       port.cancelTimer(timerEvent.id);
       LOG_DEBUG(formatString("(%s) PrepareTimer %d triggered and cancelled",__func__,timerEvent.id));
       // this is a prepare timer for the schedule of a logical device. prepare the device
-      _prepare();
+      prepare();
     }
     else if(timerEvent.id == m_startTimerId)
     {
@@ -1012,7 +1104,7 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       port.cancelTimer(timerEvent.id);
       LOG_DEBUG(formatString("(%s) StartTimer %d triggered and cancelled",__func__,timerEvent.id));
       // this is a start timer for the schedule of a logical device. resume the device
-      _resume();
+      TRAN(LogicalDevice::active_state);
     }
     else if(timerEvent.id == m_stopTimerId)
     {
@@ -1020,7 +1112,7 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       port.cancelTimer(timerEvent.id);
       LOG_DEBUG(formatString("(%s) StopTimer %d triggered and cancelled",__func__,timerEvent.id));
       // this is a stop timer for the schedule of a logical device. release the device
-      _release();
+      release();
     }
     else if(timerEvent.id == m_retrySendTimerId)
     {
@@ -1081,57 +1173,6 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
       }
     }
   }
-}
-
-void LogicalDevice::_handleServerConnected()
-{
-  // replace my server port (assigned by the ServiceBroker) in all child sections    
-  uint16 serverPort = m_serverPort.getPortNumber();
-  
-  // create the childs
-  vector<string> childKeys = _getChildKeys();
-  vector<string>::iterator chIt;
-  for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
-  {
-    // connect to child startdaemon.
-    try
-    {
-      string key = (*chIt) + string(".parentPort");
-      KVpair kvPair(key,serverPort);
-      m_parameterSet.replace(kvPair);
-      
-      string remoteSystemName    = m_parameterSet.getString((*chIt) + string(".remoteSystem"));
-      string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
-      uint16 startDaemonPortNr   = m_parameterSet.getUint16((*chIt) + string(".startDaemonPort"));
-      string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
-      string childPsName         = remoteSystemName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetBaseName"));
-      
-      TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
-      startDaemonPort->setHostName(startDaemonHostName);
-      startDaemonPort->setPortNumber(startDaemonPortNr);
-      startDaemonPort->open();
-      m_childStartDaemonPorts[(*chIt)] = startDaemonPort;
-      
-      // add reference in propertyset
-      boost::shared_ptr<GCFPVDynArr> childRefs(static_cast<GCFPVDynArr*>(m_basePropertySet->getValue(LD_PROPNAME_CHILDREFS)));
-      if(childRefs != 0)
-      {
-        GCFPValueArray refsVector(childRefs->getValue()); // create a copy 
-        GCFPVString newRef((*chIt) + string("=") + childPsName);
-        refsVector.push_back(&newRef);
-        GCFPVDynArr newChildRefs(LPT_STRING,refsVector);
-        m_basePropertySet->setValue(LD_PROPNAME_CHILDREFS,newChildRefs);
-        LOG_DEBUG(formatString("Added child reference %s to %s",newRef.getValue().c_str(),m_basePropertySetName.c_str()));
-      }
-    }
-    catch(Exception& e)
-    {
-      LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
-    }
-  }
-  
-  _connectParent();
-  _schedule();
 }
 
 void LogicalDevice::_connectParent()
@@ -1299,6 +1340,92 @@ string LogicalDevice::_getShareLocation() const
   }
   return shareLocation;
 }
+ 
+void LogicalDevice::_handleLogicalDeviceConnectEvent(GCFEvent& event, GCFPortInterface& port)
+{
+  // received from one of the clients
+  TPortVector::iterator it = _getChildPort(port);
+  if(it != m_childPorts.end())
+  {
+    LOGICALDEVICEConnectEvent connectEvent(event);
+    m_connectedChildPorts[connectEvent.nodeId] = TPortWeakPtr(*it);
+
+    boost::shared_ptr<LOGICALDEVICEConnectedEvent> connectedEvent(new LOGICALDEVICEConnectedEvent);
+    if(m_logicalDeviceState == LOGICALDEVICE_STATE_DISABLED)
+    {
+      connectedEvent->result = LD_RESULT_DISABLED;
+    }
+    else
+    {
+      connectedEvent->result = LD_RESULT_NO_ERROR;
+    }
+    _sendEvent(connectedEvent,port);
+  }
+}
+
+GCFEvent::TResult LogicalDevice::_handleChildTransition(GCFEvent& event, GCFPortInterface& port)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case LOGICALDEVICE_CLAIMED:
+    {
+      LOGICALDEVICEClaimedEvent claimedEvent(event);
+      if(claimedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_CLAIMED);
+      }
+      break;
+    }
+
+    case LOGICALDEVICE_PREPARED:
+    {
+      LOGICALDEVICEPreparedEvent preparedEvent(event);
+      if(preparedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
+      }
+      break;
+    }
+    
+    case LOGICALDEVICE_RESUMED:
+    {
+      LOGICALDEVICEResumedEvent resumedEvent(event);
+      if(resumedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_ACTIVE);
+      }
+      break;
+    }
+    
+    case LOGICALDEVICE_SUSPENDED:
+    {
+      LOGICALDEVICESuspendedEvent suspendedEvent(event);
+      if(suspendedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
+      }
+      break;
+    }
+    
+    case LOGICALDEVICE_RELEASED:
+    {
+      LOGICALDEVICEReleasedEvent releasedEvent(event);
+      if(releasedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _setConnectedChildState(port,LOGICALDEVICE_STATE_IDLE);
+      }
+      break;
+    }
+    
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+  return status;
+}
 
 GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
@@ -1310,10 +1437,13 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
     case F_INIT:
       break;
     case F_EXIT:
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_INITIAL;
       break;
 
     case F_ENTRY:
     {
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
       GCFPVString pvVersion(m_version);
       m_basePropertySet->setValue(LD_PROPNAME_VERSION,pvVersion);
       
@@ -1330,25 +1460,9 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
         
         // open the server port to allow childs to connect
         m_serverPort.open();
-      }
-      break;
-    }
-    
-    case F_CONNECTED:
-    {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
-      else if(_isServerPort(port))
-      {
-        _handleServerConnected();
-        
+
         // poll retry buffer every 10 seconds
         int32 retryPeriod = 10; // retry sending buffered events every 10 seconds
-        m_retrySendTimerId = 0;
         GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
         try
         {
@@ -1362,27 +1476,33 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       }
       break;
     }
+    
+    case F_ACCEPT_REQ:
+      _acceptChildConnection();
+      break;
+
+    case F_CONNECTED:
+    {
+      _connectedHandler(port);
+      break;
+    }
   
+    case F_DISCONNECTED:
+    {
+      port.close();
+      if(_findParentPort(port)!=m_parentPorts.end())
+      {
+        m_parentReconnectTimerId = port.setTimer(3L);
+      }
+      break;
+    }
+    case F_TIMER:
+      _handleTimers(event,port);
+      break;
+    
     case LOGICALDEVICE_CONNECT:
     {
-      // received from one of the clients
-      TPortVector::iterator it = _getChildPort(port);
-      if(it != m_childPorts.end())
-      {
-        LOGICALDEVICEConnectEvent connectEvent(event);
-        m_connectedChildPorts[connectEvent.nodeId] = TPortWeakPtr(*it);
-        
-        boost::shared_ptr<LOGICALDEVICEConnectedEvent> connectedEvent(new LOGICALDEVICEConnectedEvent);
-        if(m_logicalDeviceState == LOGICALDEVICE_STATE_DISABLED)
-        {
-          connectedEvent->result = LD_RESULT_DISABLED;
-        }
-        else
-        {
-          connectedEvent->result = LD_RESULT_NO_ERROR;
-        }
-        _sendEvent(connectedEvent,port);
-      }
+      _handleLogicalDeviceConnectEvent(event,port);
       break;
     }
       
@@ -1427,28 +1547,22 @@ GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface
       break;
     }
       
-    case F_ACCEPT_REQ:
-      _acceptChildConnection();
-      break;
-
-    case F_DISCONNECTED:
+    case LOGICALDEVICE_RELEASE:  // release in idle state? at the moment necessary for old style VT
     {
-      port.close();
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        m_parentReconnectTimerId = port.setTimer(3L);
-      }
+      _doStateTransition(LOGICALDEVICE_STATE_RELEASING,m_globalError);
       break;
     }
-    case F_TIMER:
-      _handleTimers(event,port);
-      break;
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::initial_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }    
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
+
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
   TLDResult errorCode = m_globalError;
   GCFEvent::TResult concreteStatus;
@@ -1470,6 +1584,8 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
     case F_INIT:
       break;
     case F_EXIT:
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_IDLE;
       break;
       
     case F_ENTRY:
@@ -1477,6 +1593,16 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
       m_logicalDeviceState = LOGICALDEVICE_STATE_IDLE;
       GCFPVString state(LD_STATE_STRING_IDLE);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+
+      if(m_lastLogicalDeviceState == LOGICALDEVICE_STATE_INITIAL)
+      {
+        // if the claimTime = 0 then claiming is done ASAP
+        if(m_claimTime == 0)
+        {
+          m_claimTimerId = m_serverPort.setTimer(0L);
+        }
+      }
       break;
     }
   
@@ -1486,16 +1612,7 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
 
     case F_CONNECTED:
     {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
-      else if(_isServerPort(port))
-      {
-        _handleServerConnected();
-      }
+      _connectedHandler(port);
       break;
     }
     
@@ -1509,16 +1626,7 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
 
     case LOGICALDEVICE_CONNECT:
     {
-      TPortVector::iterator it = _getChildPort(port);
-      if(it != m_childPorts.end())
-      {
-        LOGICALDEVICEConnectEvent connectEvent(event);
-        m_connectedChildPorts[connectEvent.nodeId] = TPortWeakPtr(*it);
-        
-        boost::shared_ptr<LOGICALDEVICEConnectedEvent> connectedEvent(new LOGICALDEVICEConnectedEvent);
-        connectedEvent->result = LD_RESULT_NO_ERROR;
-        _sendEvent(connectedEvent,port);
-      }
+      _handleLogicalDeviceConnectEvent(event,port);
       break;
     }
       
@@ -1528,6 +1636,11 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
 
       m_parameterSet.adoptFile(_getShareLocation() + scheduleEvent.fileName);
       _schedule();
+      // if the claimTime = 0 then claiming is done ASAP
+      if(m_claimTime == 0)
+      {
+        m_claimTimerId = m_serverPort.setTimer(0L);
+      }
       
       boost::shared_ptr<LOGICALDEVICEScheduledEvent> scheduledEvent(new LOGICALDEVICEScheduledEvent);
       scheduledEvent->result = LD_RESULT_NO_ERROR;
@@ -1562,6 +1675,11 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
       status = GCFEvent::NOT_HANDLED;
       break;
   }    
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
+  
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
   TLDResult errorCode = m_globalError;
   GCFEvent::TResult concreteStatus;
@@ -1583,6 +1701,8 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
     case F_INIT:
       break;
     case F_EXIT:
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_CLAIMING;
       break;
       
     case F_ENTRY:
@@ -1590,24 +1710,21 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMING;
       GCFPVString state(LD_STATE_STRING_CLAIMING);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
       
-      // send claim event to childs
       _setChildStates(LOGICALDEVICE_STATE_CLAIMING);
-//      boost::shared_ptr<LOGICALDEVICEClaimEvent> claimEvent(new LOGICALDEVICEClaimEvent);
-//      _sendToAllChilds(claimEvent);
       
       concreteClaim(port);
       break;
     }
   
+    case F_ACCEPT_REQ:
+      _acceptChildConnection();
+      break;
+
     case F_CONNECTED:
     {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
+      _connectedHandler(port);
       break;
     }
     
@@ -1619,6 +1736,12 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       _handleTimers(event,port);
       break;
 
+    case LOGICALDEVICE_CONNECT:
+    {
+      _handleLogicalDeviceConnectEvent(event,port);
+      break;
+    }
+      
     case LOGICALDEVICE_CANCELSCHEDULE:
     {
       _cancelSchedule();
@@ -1635,20 +1758,6 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       break;
     }
     
-    case LOGICALDEVICE_CLAIMED:
-    {
-      LOGICALDEVICEClaimedEvent claimedEvent(event);
-      if(claimedEvent.result == LD_RESULT_NO_ERROR)
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_CLAIMED);
-      }
-      else
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_IDLE);
-      }
-      break;
-    }
-    
     // the LOGICALDEVICE_CLAIMED event cannot result in a transition to 
     // the claimed state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_CLAIMED message. 
@@ -1661,6 +1770,11 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       status = GCFEvent::NOT_HANDLED;
       break;
   }
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
+
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
   TLDResult errorCode = m_globalError;
   GCFEvent::TResult concreteStatus;
@@ -1682,6 +1796,8 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
     case F_INIT:
       break;
     case F_EXIT:
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_CLAIMED;
       break;
       
     case F_ENTRY:
@@ -1689,6 +1805,7 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMED;
       GCFPVString state(LD_STATE_STRING_CLAIMED);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
 
       // send claimed message to all parents.
       boost::shared_ptr<LOGICALDEVICEClaimedEvent> claimedEvent(new LOGICALDEVICEClaimedEvent);
@@ -1697,17 +1814,22 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
       {
         _sendEvent(claimedEvent,*(it->second.get()));
       }
+      
+      // if the prepareTime = 0 then preparing is done ASAP
+      if(m_prepareTime == 0)
+      {
+        m_prepareTimerId = m_serverPort.setTimer(0L);
+      }
       break;
     }
     
+    case F_ACCEPT_REQ:
+      _acceptChildConnection();
+      break;
+
     case F_CONNECTED:
     {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
+      _connectedHandler(port);
       break;
     }
     
@@ -1719,6 +1841,12 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
       _handleTimers(event,port);
       break;
    
+    case LOGICALDEVICE_CONNECT:
+    {
+      _handleLogicalDeviceConnectEvent(event,port);
+      break;
+    }
+      
     case LOGICALDEVICE_SCHEDULE:
     {
       LOGICALDEVICEScheduleEvent scheduleEvent(event);
@@ -1759,6 +1887,10 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
       status = GCFEvent::NOT_HANDLED;
       break;
   }
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
 
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
   TLDResult errorCode = m_globalError;
@@ -1782,6 +1914,9 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       break;
     case F_EXIT:
     {
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_PREPARING;
+      
       // send prepared message to the parent.
       boost::shared_ptr<LOGICALDEVICEPreparedEvent> preparedEvent(new LOGICALDEVICEPreparedEvent);
       preparedEvent->result = m_globalError;
@@ -1797,24 +1932,21 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       m_logicalDeviceState = LOGICALDEVICE_STATE_PREPARING;
       GCFPVString state(LD_STATE_STRING_PREPARING);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
 
-      // send prepare event to childs
       _setChildStates(LOGICALDEVICE_STATE_PREPARING);
-//      boost::shared_ptr<LOGICALDEVICEPrepareEvent> prepareEvent(new LOGICALDEVICEPrepareEvent);
-//      _sendToAllChilds(prepareEvent);
 
       concretePrepare(port);
       break;
     }
     
+    case F_ACCEPT_REQ:
+      _acceptChildConnection();
+      break;
+
     case F_CONNECTED:
     {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
+      _connectedHandler(port);
       break;
     }
     
@@ -1826,6 +1958,12 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       _handleTimers(event,port);
       break;
 
+    case LOGICALDEVICE_CONNECT:
+    {
+      _handleLogicalDeviceConnectEvent(event,port);
+      break;
+    }
+      
     case LOGICALDEVICE_CANCELSCHEDULE:
     {
       _cancelSchedule();
@@ -1842,20 +1980,6 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       break;
     }
     
-    case LOGICALDEVICE_PREPARED:
-    {
-      LOGICALDEVICEPreparedEvent preparedEvent(event);
-      if(preparedEvent.result == LD_RESULT_NO_ERROR)
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
-      }
-      else
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_CLAIMED);
-      }
-      break;
-    }
-    
     // the LOGICALDEVICE_PREPARED event cannot result in a transition to 
     // the suspended state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_PREPARED message. 
@@ -1868,6 +1992,11 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       status = GCFEvent::NOT_HANDLED;
       break;
   }
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
+
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
   TLDResult errorCode = m_globalError;
   GCFEvent::TResult concreteStatus;
@@ -1889,6 +2018,8 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
     case F_INIT:
       break;
     case F_EXIT:
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_SUSPENDED;
       break;
       
     case F_ENTRY:
@@ -1896,10 +2027,7 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       m_logicalDeviceState = LOGICALDEVICE_STATE_SUSPENDED;
       GCFPVString state(LD_STATE_STRING_SUSPENDED);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
-
-      // send suspend event to childs
-      boost::shared_ptr<LOGICALDEVICESuspendEvent> suspendEvent(new LOGICALDEVICESuspendEvent);
-      _sendToAllChilds(suspendEvent);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
 
       concreteSuspend(port);
 
@@ -1910,17 +2038,25 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       {
         _sendEvent(suspendedEvent,*(it->second.get()));
       }
+      
+      if(m_lastLogicalDeviceState == LOGICALDEVICE_STATE_PREPARING)
+      {
+        // if the startTime = 0 then starting is done ASAP
+        if(m_startTime == 0)
+        {
+          m_startTimerId = m_serverPort.setTimer(0L);
+        }
+      }      
       break;
     }
   
+    case F_ACCEPT_REQ:
+      _acceptChildConnection();
+      break;
+
     case F_CONNECTED:
     {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
+      _connectedHandler(port);
       break;
     }
     
@@ -1932,6 +2068,12 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       _handleTimers(event,port);
       break;
     
+    case LOGICALDEVICE_CONNECT:
+    {
+      _handleLogicalDeviceConnectEvent(event,port);
+      break;
+    }
+      
     case LOGICALDEVICE_CANCELSCHEDULE:
     {
       _cancelSchedule();
@@ -1955,6 +2097,10 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
     case LOGICALDEVICE_RESUME:
     {
       _doStateTransition(LOGICALDEVICE_STATE_ACTIVE,m_globalError);
+
+      // send resume event to childs
+      boost::shared_ptr<LOGICALDEVICEResumeEvent> resumeEvent(new LOGICALDEVICEResumeEvent);
+      _sendToAllChilds(resumeEvent);
       break;
     }
     
@@ -1964,36 +2110,16 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       break;
     }
     
-    case LOGICALDEVICE_SUSPENDED:
-    {
-      LOGICALDEVICESuspendedEvent suspendedEvent(event);
-      if(suspendedEvent.result == LD_RESULT_NO_ERROR)
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
-      }
-      break;
-    }
-    
-    // this happens if a child resumes itself just before the parent
-    case LOGICALDEVICE_RESUMED:
-    {
-      LOGICALDEVICEResumedEvent resumedEvent(event);
-      if(resumedEvent.result == LD_RESULT_NO_ERROR)
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_ACTIVE);
-      }
-      else
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
-      }
-      break;
-    }
-    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::suspended_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
+
   return status;
 }
 
@@ -2007,6 +2133,8 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
     case F_INIT:
       break;      
     case F_EXIT:
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_ACTIVE;
       break;
       
     case F_ENTRY:
@@ -2014,11 +2142,8 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       m_logicalDeviceState = LOGICALDEVICE_STATE_ACTIVE;
       GCFPVString state(LD_STATE_STRING_ACTIVE);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
 
-      // send resume event to childs
-      boost::shared_ptr<LOGICALDEVICEResumeEvent> resumeEvent(new LOGICALDEVICEResumeEvent);
-      _sendToAllChilds(resumeEvent);
-      
       concreteResume(port);
 
       // send resumed message to parent.
@@ -2031,14 +2156,13 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       break;
     }
   
+    case F_ACCEPT_REQ:
+      _acceptChildConnection();
+      break;
+
     case F_CONNECTED:
     {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
+      _connectedHandler(port);
       break;
     }
     
@@ -2050,6 +2174,12 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       _handleTimers(event,port);
       break;
     
+    case LOGICALDEVICE_CONNECT:
+    {
+      _handleLogicalDeviceConnectEvent(event,port);
+      break;
+    }
+      
     case LOGICALDEVICE_CANCELSCHEDULE:
     {
       _cancelSchedule();
@@ -2068,6 +2198,10 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
     case LOGICALDEVICE_SUSPEND:
     {
       _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED,m_globalError);
+      
+      // also send it to all my childs
+      boost::shared_ptr<LOGICALDEVICESuspendEvent> suspendEvent(new LOGICALDEVICESuspendEvent);
+      _sendToAllChilds(suspendEvent);
       break;
     }
     
@@ -2077,31 +2211,16 @@ GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface&
       break;
     }
     
-    case LOGICALDEVICE_RESUMED:
-    {
-      LOGICALDEVICEResumedEvent resumedEvent(event);
-      if(resumedEvent.result == LD_RESULT_NO_ERROR)
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_ACTIVE);
-      }
-      else
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
-      }
-      break;
-    }
-    
-    case LOGICALDEVICE_RELEASED:
-    {
-      _setConnectedChildState(port,LOGICALDEVICE_STATE_IDLE);
-      break;
-    }
-    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::active_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
+
   GCFEvent::TResult concreteStatus;
   TLDResult errorCode = m_globalError;
   concreteStatus = concrete_active_state(event, port, errorCode);
@@ -2119,6 +2238,8 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       break;
     case F_EXIT:
     {
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_RELEASING;
       // send released message to the parent.
       boost::shared_ptr<LOGICALDEVICEReleasedEvent> releasedEvent(new LOGICALDEVICEReleasedEvent);
       releasedEvent->result = m_globalError;
@@ -2144,24 +2265,19 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       m_logicalDeviceState = LOGICALDEVICE_STATE_RELEASING;
       GCFPVString state(LD_STATE_STRING_RELEASING);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
-
-      // send release event to childs
-      _setChildStates(LOGICALDEVICE_STATE_RELEASING);
-      boost::shared_ptr<LOGICALDEVICEReleaseEvent> releaseEvent(new LOGICALDEVICEReleaseEvent);
-      _sendToAllChilds(releaseEvent);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
 
       concreteRelease(port);
       break;
     }
   
+    case F_ACCEPT_REQ:
+      _acceptChildConnection();
+      break;
+
     case F_CONNECTED:
     {
-      if(_findParentPort(port)!=m_parentPorts.end())
-      {
-        boost::shared_ptr<LOGICALDEVICEConnectEvent> connectEvent(new LOGICALDEVICEConnectEvent);
-        connectEvent->nodeId = getName();
-        _sendEvent(connectEvent,port);
-      }
+      _connectedHandler(port);
       break;
     }
     
@@ -2173,16 +2289,12 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       _handleTimers(event,port);
       break;
 
-    case LOGICALDEVICE_RELEASED:
+    case LOGICALDEVICE_CONNECT:
     {
-      LOGICALDEVICEReleasedEvent releasedEvent(event);
-      if(releasedEvent.result == LD_RESULT_NO_ERROR)
-      {
-        _setConnectedChildState(port,LOGICALDEVICE_STATE_IDLE);
-      }
+      _handleLogicalDeviceConnectEvent(event,port);
       break;
     }
-    
+      
     // the LOGICALDEVICE_RELEASED event cannot result in a transition to 
     // the idle state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_RELEASED message. 
@@ -2195,6 +2307,11 @@ GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterfa
       status = GCFEvent::NOT_HANDLED;
       break;
   }
+  if(status == GCFEvent::NOT_HANDLED)
+  {
+    status = _handleChildTransition(event,port);
+  }
+
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
   TLDResult errorCode = m_globalError;
   GCFEvent::TResult concreteStatus;
@@ -2216,6 +2333,8 @@ GCFEvent::TResult LogicalDevice::goingdown_state(GCFEvent& event, GCFPortInterfa
     case F_INIT:
       break;
     case F_EXIT:
+      LOG_INFO(formatString("%s - exit  state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
+      m_lastLogicalDeviceState = LOGICALDEVICE_STATE_GOINGDOWN;
       break;
       
     case F_ENTRY:
@@ -2223,6 +2342,7 @@ GCFEvent::TResult LogicalDevice::goingdown_state(GCFEvent& event, GCFPortInterfa
       m_logicalDeviceState = LOGICALDEVICE_STATE_GOINGDOWN;
       GCFPVString state(LD_STATE_STRING_GOINGDOWN);
       m_basePropertySet->setValue(LD_PROPNAME_STATE,state);
+      LOG_INFO(formatString("%s - enter state %s",getName().c_str(),_state2String(getLogicalDeviceState()).c_str()));
 
       // the startdaemon has created us, so the startdaemon should destroy us.
       STARTDAEMONDestroyLogicaldeviceEvent destroyEvent;
