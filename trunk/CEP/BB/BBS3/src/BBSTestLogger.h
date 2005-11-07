@@ -36,6 +36,7 @@
 #include <fstream>
 #include <BBS3/ParmData.h>
 #include <Common/Timer.h>
+#include <casa/OS/Timer.h>
 
 namespace LOFAR
 {
@@ -46,6 +47,9 @@ namespace LOFAR
   namespace BBSTest 
   {
 
+    class ScopedUSRTimer;
+    class ScopedTimer;
+
     class Logger
     {
     public:
@@ -54,7 +58,9 @@ namespace LOFAR
       static void init();
       
       // log a timer
+      static void log(ScopedTimer& timer);
       static void log(NSTimer& timer);
+      static void log(ScopedUSRTimer& timer);
       // log a parm or a vector of parms
       static void log(const string& name, const vector<ParmData>& parms);
       static void log(const string& name, const ParmData& parm);
@@ -86,7 +92,21 @@ namespace LOFAR
       ~ScopedTimer()                 { stop(); if (!itsIsPrinted) Logger::log(*this);};
       void end()                     { stop(); Logger::log(*this); itsIsPrinted = true;};
     private:
+      friend class Logger;
       ScopedTimer();
+      bool itsIsPrinted;
+    };
+    class ScopedUSRTimer : private casa::Timer
+    {
+    public:
+      ScopedUSRTimer(const string& name): itsName(name), Timer(), itsIsPrinted(false) {};
+      ~ScopedUSRTimer()                 { if (!itsIsPrinted) Logger::log(*this);};
+      void end()                        { Logger::log(*this); itsIsPrinted = true;};
+      const string& getName()           { return itsName;};
+    private:
+      friend class Logger;
+      string itsName;
+      ScopedUSRTimer();
       bool itsIsPrinted;
     };
   }
