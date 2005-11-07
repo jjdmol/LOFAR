@@ -25,6 +25,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include <pthread.h>
 #include <APL/CAL_Protocol/SubArray.h>
@@ -68,7 +69,11 @@ void* CalibrationThread::thread_main(void* thisthread)
   thread->m_acc->readLock();
 
   if (thread->m_acc) {
-    thread->m_subarrays->calibrate(thread->m_cal, *thread->m_acc);
+    if (GET_CONFIG("CalServer.DisableCalibration", i)) {
+      thread->m_subarrays->calibrate(0, *thread->m_acc);
+    } else {
+      thread->m_subarrays->calibrate(thread->m_cal, *thread->m_acc);
+    }
   }
 
   thread->m_acc->readUnlock();
