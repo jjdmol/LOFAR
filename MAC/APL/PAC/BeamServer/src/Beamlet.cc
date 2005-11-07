@@ -104,10 +104,11 @@ Beamlet* Beamlets::get(int index) const
 void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 {
   int compute_interval = weights.extent(firstDim);
-  int nrcus            = weights.extent(secondDim);
   Range all = Range::all();
 
   ASSERT(weights.extent(thirdDim) == m_nbeamlets);
+
+  weights = complex<double>(0.0, 0.0); // initialize to zero weights
 
   for (int bi = 0; bi < m_nbeamlets; bi++)
     {
@@ -116,11 +117,9 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 	{
 	  const Beam* beam = beamlet->getBeam();
 
-#if 0
 	  const CAL::AntennaGains& gains = beam->getCalibration();
 
 	  LOG_DEBUG_STR("gains[" << (gains.isDone()?"valid":"invalid") << "]=" << gains.getGains().shape());
-#endif
 
 	  // get coordinates from beam
 	  if (!beam)
@@ -131,41 +130,47 @@ void Beamlets::calculate_weights(Array<complex<double>, 3>& weights)
 	  const Array<double,2>& lmn = beam->getLMNCoordinates();
 	  const Array<double,3>& pos = beam->getSubarray().getAntennaPos();
 
-	  ASSERT(pos.extent(firstDim) == nrcus/MEPHeader::N_POL &&
+	  //
+	  // The check that is commented out below is too strict because
+	  // pos array can be a subset of the full array because of subarraying
+	  // 
+	  // pos.extent(firstDim) == nrcus/MEPHeader::N_POL
+	  //
+	  ASSERT(pos.extent(firstDim) <= weights.extent(secondDim) &&
 		 pos.extent(secondDim) == MEPHeader::N_POL &&
 		 pos.extent(thirdDim) == NDIM);
 	  ASSERT(compute_interval == lmn.extent(firstDim));
 
 	  double freq = 0.0;
 	  freq = beamlet->getSPW().getSubbandFreq(beamlet->subband());
-	  if (0 == bi) {
 
-	    LOG_DEBUG_STR("freq = " << freq);
-	    LOG_DEBUG_STR("pos=" << pos);
-	    LOG_DEBUG_STR("lmn=" << lmn);
+	  if (0 == bi) {
+	    LOG_DEBUG_STR("freq= " << freq);
+	    LOG_DEBUG_STR("pos="   << pos);
+	    LOG_DEBUG_STR("lmn="   << lmn);
 	  }
+
+	  complex<double> scaling = 2.0 * M_PI * freq * complex<double>(0.0,1.0) / SPEED_OF_LIGHT_MS;
 
 	  //
 	  // calculate (xm - yl + zn) for both polarizations
-	  // of all elements
+	  // of all elements of the subarray
 	  //
-	  for (int rcu = 0; rcu < nrcus; rcu++)
-	    {
-	      weights(all, rcu, bi) =
-	        (  pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 0) * lmn(all, 0))
-		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 1) * lmn(all, 1))
-		+ (pos(rcu / pos.extent(secondDim), rcu % pos.extent(secondDim), 2) * lmn(all, 2));
+	  for (int antenna = 0; antenna < pos.extent(firstDim); antenna++) {
+	    for (int pol = 0; pol < pos.extent(secondDim); pol++) {
 
+	      int srcrcu = (antenna * MEPHeader::N_POL) + pol;
+	      int destrcu = beam->getSubarray().getRCUIndex(antenna, pol);
+
+	      weights(all, destrcu, bi) =
+	        exp(scaling *
+		    ((  pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 0) * lmn(all, 0))
+		     + (pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 1) * lmn(all, 1))
+		     + (pos(srcrcu / pos.extent(secondDim), srcrcu % pos.extent(secondDim), 2) * lmn(all, 2))));
 	    }
-	  
-	  weights(all, all, bi) =
-	    exp((2.0 * M_PI * freq * complex<double>(0.0,1.0) / SPEED_OF_LIGHT_MS) * weights(all, all, bi));
+	  }
 
 	  LOG_DEBUG_STR("weights(t=all,rcu=all,beamlet=" << bi << ") = " << weights(all, all, bi));
-	}
-      else
-	{
-	  weights(all, all, bi) = complex<double>(1.0, 0.0);
 	}
     }
 
