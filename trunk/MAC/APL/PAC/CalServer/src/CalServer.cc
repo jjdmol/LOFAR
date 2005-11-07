@@ -372,7 +372,11 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	  m_calthread->setACC(&m_accs.getFront());
 	  m_calthread->run();
 #else
-	  m_subarrays.calibrate(m_cal, m_accs.getFront());
+	  if (GET_CONFIG("CalServer.DisableCalibration", i)) {
+	    m_subarrays.calibrate(0, m_accs.getFront());
+	  } else {
+	    m_subarrays.calibrate(m_cal, m_accs.getFront());
+	  }
 	  m_subarrays.updateAll();
 #endif
 	}
@@ -442,13 +446,22 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
   // find parent AntennaArray
   const AntennaArray* parent = m_arrays.getByName(start.parent);
 
-  if ("" != m_clients[&port]) {
+  if (m_subarrays.getByName(start.name)) {
+
+    LOG_ERROR_STR("A subarray with name='" << start.name << "' has already been registered.");
+    ack.status = ERR_RANGE;
+
+  } else if ("" != m_clients[&port]) {
+
     LOG_ERROR_STR("A subarray has already been registered: name=" << m_clients[&port]);
     LOG_ERROR("Only one active subarray per client supported.");
     ack.status = ERR_RANGE;
+
   } else if ("" == string(start.name)) {
+
     LOG_ERROR("Empty subarray name.");
     ack.status = ERR_RANGE;
+
   } else if (!parent) {
 
     // parent not found, set error status
