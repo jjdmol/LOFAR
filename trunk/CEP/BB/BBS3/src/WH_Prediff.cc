@@ -236,9 +236,11 @@ Prediffer* WH_Prediff::getPrediffer(int id, const ParameterSet& args,
     // Create a Prediffer object
     ParameterSet myargs = args;
     myargs["DBIsMaster"] = "F";
+    BBSTest::ScopedUSRTimer dbStartupTimer("C:DBStartup");
     ParmTableData meqPtd("meqTableName", myargs);
     ParmTableData skyPtd("skyTableName", myargs);
-
+    dbStartupTimer.end();
+  
     string modelType = args.getString("modelType");
     bool calcUVW = args.getBool("calcUVW");
     string msName = args.getString("subsetMSPath") + args.getString("MSName")+ "_p" + itsID;
@@ -274,7 +276,7 @@ void WH_Prediff::readWorkOrder()
   }
 
   cout << "!!!!!! Prediffer read workorder: " << endl;
-  wo->dump();
+  //wo->dump();
   cout << "!!!!!!" << endl;
 
   // Update workorder status

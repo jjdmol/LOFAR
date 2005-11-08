@@ -98,6 +98,19 @@ void WH_Control::preprocess()
       // the table name does not matter
       dbkvm["dummyTableName"] = "dummyTableName";
       dbkvm["DBIsMaster"] = "T";
+      ostringstream os;
+#ifdef HAVE_MPI
+      // if there are multiple processes, the number of slaves is equal to the number of prediffers
+      os<<itsNrPrediffers;
+#else
+      // if we don't use mpi, there are two possibilities
+      // - multiple processes but started in another way (not mpirun)
+      //     the number of slaves should be set, but at the moment it is not known
+      // - one process -> the prediffers and controller all use the same bdbreplicator, so there are no slaves
+      os<<0;
+#endif
+      dbkvm["DBNoSlaves"] = os.str();
+      BBSTest::ScopedUSRTimer dbstartupTimer("C:DBStartup");
       ParmTableData ptd("dummyTableName", dbkvm);
       itsParmTable = new ParmTable(ptd);
     }

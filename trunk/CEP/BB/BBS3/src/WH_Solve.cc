@@ -122,7 +122,7 @@ void WH_Solve::process()
   }
 
   cout << "!!!!!! Solver read workorder: " << endl;
-  wo->dump();
+  //wo->dump();
   cout << "!!!!!! " << endl;
 
 

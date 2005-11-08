@@ -86,6 +86,9 @@ public:
   // Unlock the underlying table.
   virtual void unlock() = 0;
 
+  // Sync the table
+  virtual void sync() {};
+
   // Connect to the database or table
   virtual void connect() = 0;
 
@@ -150,6 +153,9 @@ public:
   // Unlock the underlying table.
   void unlock()
     { itsRep->unlock(); }
+
+  // Sync the table
+  void sync() {itsRep->sync();};
 
   // Get the name and type.
   // <group>

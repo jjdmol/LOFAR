@@ -59,9 +59,12 @@ namespace LOFAR {
     ParmTableBDBRepl (const string& tableName,
 		      const string& masterHostName,
 		      const int masterPort,
-		      const bool isMaster);
+		      const int noSlaves);
 
     virtual ~ParmTableBDBRepl();
+
+    // Sync the table
+    void sync() {theirReplicator->waitForSync();};
 
     // Connect to the database
     virtual void connect();
@@ -72,6 +75,7 @@ namespace LOFAR {
     static BDBReplication::BDBReplicator* theirReplicator;
     static int theirReplicatorRefCount;
     bool itsIsMaster;
+    int itsNoSlaves;
   };
 
   // @}

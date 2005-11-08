@@ -78,6 +78,7 @@ namespace LOFAR
       string itsDBPwd;
       // this one is used for sql and BDBReplication
       string itsHostName;
+      int itsNoSlaves;
       // these are used for BDBReplication
       int itsMasterPort;
       bool itsIsMaster;
