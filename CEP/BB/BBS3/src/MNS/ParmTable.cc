@@ -43,7 +43,11 @@ ParmTable::ParmTable (const ParmTableData& ptd)
   } else if (ptd.itsType == "bdb") {
     itsRep = new ParmTableBDB (ptd.itsTableName);
   } else if (ptd.itsType == "bdbrepl") {
-    itsRep = new ParmTableBDBRepl (ptd.itsTableName, ptd.itsHostName, ptd.itsMasterPort, ptd.itsIsMaster);
+    if (ptd.itsIsMaster) {
+      itsRep = new ParmTableBDBRepl (ptd.itsTableName, ptd.itsHostName, ptd.itsMasterPort, ptd.itsNoSlaves);
+    } else {
+      itsRep = new ParmTableBDBRepl (ptd.itsTableName, ptd.itsHostName, ptd.itsMasterPort, -1);
+    }
   } else {
     ASSERTSTR(false, "unknown parmTableType: "<<ptd.itsType);
   }

@@ -103,6 +103,7 @@ namespace LOFAR {
     vector<MeqPolc> result;
     for (unsigned int i=0; i<MPH.size(); i++) {
       result.push_back(MPH[i].getPolc());
+      result.back().setID(0); // The polc is present in the database
     }
     LOG_TRACE_STAT_STR("finished retreiving polc: "<<result.size()<<" polcs found.");
     return result;
@@ -154,41 +155,49 @@ namespace LOFAR {
   void ParmTableBDB::putCoeff (const string& parmName,
 			       MeqPolc& polc)
   {
-    const MeqDomain& domain = polc.domain();
 
-    // right now: search on name only and add MPH with correct domain
-    MPHKey key(parmName);
-    MPHValue value;
-    MeqDomain pdomain;
-    DbTxn* transaction = 0;
-    itsDbEnv->txn_begin(NULL, &transaction, 0);
-    Dbc* cursorp;
-    itsDb->cursor(transaction, &cursorp, 0);
-
-    int flags = DB_SET;
-    bool found = false;
-    bool foundOne = false;
-    while (cursorp->get(&key, &value, flags) == 0) {
-      foundOne = true;
-      flags = DB_NEXT_DUP; // this means it will only walk through the MPHs with the same key (=name)
-      pdomain = value.getMPH().getPolc().domain();
-      if (near(domain.startX(), pdomain.startX())  &&
-	  near(domain.endX(),   pdomain.endX())  &&
-	  near(domain.startY(), pdomain.startY())  &&
-	  near(domain.endY(),   pdomain.endY())) 
-	{
-	  // delete the MPH that has the same name and domain (because the combination should be unique) and then just add the right value
-	  int ret = cursorp->del(0);
-	  ASSERTSTR(ret == 0, "Could not replace polc value: " << itsDbEnv->strerror(ret));
-	  found = true;
-	  break;
-	}
+    if (polc.getID() == -2) {
+      // we are sure the polc is new
+      putNewCoeff (parmName, polc);
+    } else {
+      // we are not sure the polc is new
+      // so search for an existing polc
+      const MeqDomain& domain = polc.domain();
+      // right now: search on name only and add MPH with correct domain
+      MPHKey key(parmName);
+      MPHValue value;
+      MeqDomain pdomain;
+      DbTxn* transaction = 0;
+      itsDbEnv->txn_begin(NULL, &transaction, 0);
+      Dbc* cursorp;
+      itsDb->cursor(transaction, &cursorp, 0);
+      
+      int flags = DB_SET;
+      bool found = false;
+      bool foundOne = false;
+      while (cursorp->get(&key, &value, flags) == 0) {
+	foundOne = true;
+	flags = DB_NEXT_DUP; // this means it will only walk through the MPHs with the same key (=name)
+	pdomain = value.getMPH().getPolc().domain();
+	if (near(domain.startX(), pdomain.startX())  &&
+	    near(domain.endX(),   pdomain.endX())  &&
+	    near(domain.startY(), pdomain.startY())  &&
+	    near(domain.endY(),   pdomain.endY())) 
+	  {
+	    // delete the MPH that has the same name and domain (because the combination should be unique) and then just add the right value
+	    int ret = cursorp->del(0);
+	    ASSERTSTR(ret == 0, "Could not replace polc value: " << itsDbEnv->strerror(ret));
+	    found = true;
+	    break;
+	  }
+      }
+      ASSERTSTR(foundOne, "Could not update polc with name: " << parmName << ": no matching polc found");
+      ASSERTSTR(found, "Could not update polc with name: " << parmName << ": no matching domains found");
+      cursorp->close();
+      transaction->commit(0);
+      // we deleted the dupe from the db, so we are sure the polc is new now
+      putNewCoeff (parmName, polc);
     }
-    ASSERTSTR(foundOne, "Could not update polc with name: " << parmName << ": no matching polc found")
-    ASSERTSTR(found, "Could not update polc with name: " << parmName << ": no matching domains found")
-    cursorp->close();
-    transaction->commit(0);
-    putNewCoeff (parmName, polc);
   }
 
   void ParmTableBDB::putDefCoeff (const string& parmName,
@@ -202,6 +211,7 @@ namespace LOFAR {
   void ParmTableBDB::putNewCoeff (const string& parmName,
 				  MeqPolc& polc)
   {
+    polc.setID(0); //polc is not new anymore
     MPHKey key(parmName, polc.domain());
     MeqParmHolder mph(parmName, polc);
     MPHValue value(mph);

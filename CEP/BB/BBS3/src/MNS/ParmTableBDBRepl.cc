@@ -50,12 +50,13 @@ namespace LOFAR {
   ParmTableBDBRepl::ParmTableBDBRepl (const string& tableName,
 				      const string& masterHostName,
 				      const int masterPort,
-				      const bool isMaster) 
+				      const int noSlaves) 
     : ParmTableBDB(tableName),
-      itsIsMaster(isMaster)
+      itsIsMaster(noSlaves > -1),
+      itsNoSlaves(noSlaves)
   {
     LOG_TRACE_FLOW("creating replicating bdb");
-    if (isMaster){
+    if (itsIsMaster){
       LOG_TRACE_FLOW(" master");
     } else {
       LOG_TRACE_FLOW(" client");
@@ -73,7 +74,7 @@ namespace LOFAR {
       LOG_TRACE_FLOW_STR("BDBRepl rank " << TH_MPI::getCurrentRank() << " -> " << rank);
     }
 #endif    
-    if (isMaster) {
+    if (itsIsMaster) {
       rank = "master";
     }
     if (theirReplicator==0) {
@@ -84,12 +85,21 @@ namespace LOFAR {
       string myHostName = hostnameBuffer;
 
       mkdir(itsBDBHomeName.c_str(), S_IRWXU|S_IRGRP|S_IXGRP);
-      theirReplicator = new BDBReplicator(itsBDBHomeName, 
-					  myHostName,
-					  masterPort, //start looking for open ports at <masterPort>
-					  masterHostName,
-					  masterPort,
-					  isMaster);
+      if (itsIsMaster) {
+	theirReplicator = new BDBReplicator(itsBDBHomeName, 
+					    myHostName,
+					    masterPort, //start looking for open ports at <masterPort>
+					    masterHostName,
+					    masterPort,
+					    itsNoSlaves);
+      } else {
+	theirReplicator = new BDBReplicator(itsBDBHomeName, 
+					    myHostName,
+					    masterPort, //start looking for open ports at <masterPort>
+					    masterHostName,
+					    masterPort,
+					    0);
+      }
     }
     theirReplicatorRefCount ++;
 
@@ -170,7 +180,7 @@ namespace LOFAR {
     ParmTableBDBRepl PT(tableName,
 			"localhost",
 			13157,
-			true);
+			0);
     PT.connect();
   }
 }

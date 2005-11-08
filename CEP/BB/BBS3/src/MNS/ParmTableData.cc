@@ -34,13 +34,15 @@ namespace LOFAR {
 
     ParmTableData::ParmTableData()
       : itsMasterPort(0),
-	itsIsMaster(false)
+	itsIsMaster(false),
+	itsNoSlaves(-1)
     {}
 
     ParmTableData::ParmTableData(const string& nameKey, const ACC::APS::ParameterSet& ps)
       : //itsName(name),
 	itsMasterPort(0),
-	itsIsMaster(false)
+	itsIsMaster(false),
+	itsNoSlaves(-1)
     {
       ASSERTSTR(ps.isDefined("DBType"), "DBType is not defined in the ParameterSet");
       itsType = ps.getString("DBType");
@@ -60,7 +62,10 @@ namespace LOFAR {
 	itsMasterPort = ps.getInt32("DBMasterPort");
 	ASSERTSTR(ps.isDefined("DBIsMaster"), "For bdbrepl DBIsMaster should be defined in the ParameterSet");
 	itsIsMaster = ps.getBool("DBIsMaster");
-
+	if (itsIsMaster) {
+	  ASSERTSTR(ps.isDefined("DBNoSlaves"), "For bdbrepl DBNoSlaves should be defined in the ParameterSet");
+	  itsNoSlaves = ps.getInt32("DBNoSlaves");
+	}
       } else {
 	// extract all information for other types
 	ASSERTSTR(ps.isDefined("DBName"), "DBName is not defined in the ParameterSet");
@@ -92,6 +97,7 @@ namespace LOFAR {
       itsHostName = that.itsHostName;
       itsMasterPort = that.itsMasterPort;
       itsIsMaster = that.itsIsMaster;
+      itsNoSlaves = that.itsNoSlaves;
     }
 
     BlobOStream& operator<< (BlobOStream& bos, const ParmTableData& ptd)
@@ -100,7 +106,8 @@ namespace LOFAR {
 	  << ptd.itsType << ptd.itsTableName
 	  << ptd.itsDBName << ptd.itsUserName
 	  << ptd.itsDBPwd << ptd.itsHostName
-	  << ptd.itsMasterPort << ptd.itsIsMaster;
+	  << ptd.itsMasterPort << ptd.itsIsMaster
+	  << ptd.itsNoSlaves;
       return bos;
     }
     
@@ -111,7 +118,8 @@ namespace LOFAR {
 	  >> ptd.itsType >> ptd.itsTableName
 	  >> ptd.itsDBName >> ptd.itsUserName
 	  >> ptd.itsDBPwd >> ptd.itsHostName
-	  >> ptd.itsMasterPort >> ptd.itsIsMaster;
+	  >> ptd.itsMasterPort >> ptd.itsIsMaster
+	  >> ptd.itsNoSlaves;
       return bis;
     }   
 

@@ -311,6 +311,7 @@ void ShowAllDefSources()
 
 void doIt()
 {
+  int lastBDBPort = 13157;
   PTR=0;
   int buffersize=1024;
   char cstra[buffersize];
@@ -344,7 +345,7 @@ void doIt()
 	} else if (dbType=="bdb") {
 	  PTR = new ParmTableBDB (tableName);
 	} else if (dbType=="bdbrepl") {
-	  PTR = new ParmTableBDBRepl (tableName, "localhost", 13157, true);
+	  PTR = new ParmTableBDBRepl (tableName, "localhost", lastBDBPort++, 0);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
