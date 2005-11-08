@@ -44,12 +44,14 @@ class BDBReplicator {
 		const int port,
 		const string& masterHostname,
 		const int masterPort,
-		const int noSlaves = 0);
+		const int noSlaves = -1); // -1 means i am a slave
 
   void startReplication();
 
   DbEnv* getDbEnv();
 
+  void waitForSync();
+  
   ~BDBReplicator();
 
   // handle outstanding messages
