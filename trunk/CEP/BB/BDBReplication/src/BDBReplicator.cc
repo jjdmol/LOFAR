@@ -45,7 +45,7 @@ BDBReplicator::BDBReplicator(const string& DbEnvName,
     itsPort(port),
     itsMasterHostName(masterHostName),
     itsMasterPort(masterPort),
-    itsIsMaster(noSlaves > 0),
+    itsIsMaster(noSlaves > -1),
     itsDbEnv(0),
     itsSyncer(0),  
     itsConnector(hostName, port, itsSiteMap),
@@ -100,9 +100,9 @@ void BDBReplicator::startReplication()
     
     // set connection data
     itsPort = itsConnector.getPort();
-    if (itsIsMaster) {
+    if (itsIsMaster && (itsNoSlaves > 0)) {
       // the master should be able to get the right port or else the slaves won't be able to connect
-      ASSERTSTR(itsPort == itsMasterPort, "Master could not get correct port");
+      ASSERTSTR(itsPort == itsMasterPort, "Master could not get correct port ("<<itsPort<<" instead of "<<itsMasterPort<<")");
     }
 
     char *buffer = new char[sizeof(int)+itsHostName.size() + 2];
@@ -152,6 +152,17 @@ void BDBReplicator::startReplication()
     }      
   }
   itsReplicationStarted = true;
+}
+
+void BDBReplicator::waitForSync() {
+  if (itsIsMaster) {
+    BDBSyncMaster* mySyncer = dynamic_cast<BDBSyncMaster*>(itsSyncer);
+    SyncReqType startupSync = mySyncer->requestSync();
+    while (!mySyncer->isSyncDone(startupSync)) {
+      LOG_TRACE_FLOW("Waiting for sync on master");
+      sleep(1);
+    }
+  }      
 }
 
 BDBReplicator::~BDBReplicator()
