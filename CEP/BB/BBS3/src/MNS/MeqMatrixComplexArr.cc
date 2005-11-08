@@ -432,13 +432,12 @@ MeqMatrixRep* MeqMatrixComplexArr::subRep(MeqMatrixRealSca& left, bool rightTmp)
 
   MeqMatrixComplexArr* v = this;
 
-  if (!rightTmp) {
+  if (!rightTmp)
     v = MeqMatrixComplexArr::allocate(nx(), ny());
-    memcpy(v->itsImag, itsImag, nelements() * sizeof(double));
-  }
 
   for (int i = 0; i < nelements(); i ++) {
     v->itsReal[i] = left.itsValue - itsReal[i];
+    v->itsImag[i] = - itsImag[i];
   }
 
 #if defined TIMER
