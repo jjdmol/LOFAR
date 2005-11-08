@@ -22,6 +22,10 @@ rm -f ./*~
 rm -f demo{3,3p,10}-1.MS.{dat,des,uvw}
 
 ln -s $MSDIR/demo3.MS_p1 demo3.MS_p1
+ln -s $MSDIR/demo3.MS_p1/vis.des demo3.MS.des
 ln -s $MSDIR/demo3p.MS_p1 demo3p.MS_p1
+ln -s $MSDIR/demo3p.MS_p1/vis.des demo3p.MS.des
 ln -s $MSDIR/demo3n.MS_p1 demo3n.MS_p1
+ln -s $MSDIR/demo3n.MS_p1/vis.des demo3n.MS.des
 ln -s $MSDIR/demo10.MS_p1 demo10.MS_p1
+ln -s $MSDIR/demo10.MS_p1/vis.des demo10.MS.des
