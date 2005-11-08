@@ -81,6 +81,6 @@ RUNCOMMAND="time "
 # pwd | grep -e "_mpich/test" && RUNCOMMAND=" mpirun_mpich -np 3 -machinefile tBBS3_tmp.machinefile "
 echo "$RUNCOMMAND ./tBBS3 tBBS3.${TESTNAME} $USERNAME >& ${TESTNAME}.out"
 `$RUNCOMMAND ./tBBS3 tBBS3.${TESTNAME} $USERNAME >& ${TESTNAME}.out`
-# time ./tBBS3 tBBS3.${TESTNAME} $USERNAME >& ${TESTNAME}.out
+time ./tBBS3 tBBS3.${TESTNAME} $USERNAME >& ${TESTNAME}.out
 # mpirun_mpich -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 $PSET $USERNAME  &> ${TESTNAME}.out
 doPSCommands postCommand
