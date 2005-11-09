@@ -75,6 +75,7 @@
 #include <iostream>
 #include <fstream>
 #include <malloc.h>
+#include <unistd.h>
 
 #include <BBS3/BBSTestLogger.h>
 
@@ -651,10 +652,10 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
       }
     }
   }
-  cerr << "#levels=" << nrLev << endl;
+
+  LOG_TRACE_FLOW_STR("#levels=" << nrLev);
   for (int i=0; i<nrLev; ++i) {
-    cerr << "#expr on level " << i << " is "
-	 << itsPrecalcNodes[i].size() << endl;
+    LOG_TRACE_FLOW_STR("#expr on level " << i << " is " << itsPrecalcNodes[i].size());
   }
 }
 
@@ -731,7 +732,7 @@ int Prediffer::setDomain (double fstart, double flength,
   }
 
   // Map the part of the file matching the given times.
-  //  BBSTest::ScopedTimer mapTimer("P:file-mapping");
+  BBSTest::ScopedTimer mapTimer("P:file-mapping");
   //  mapTimer.start();
   itsDataMap->unmapFile();
   itsFlagsMap->unmapFile();
@@ -780,7 +781,7 @@ int Prediffer::setDomain (double fstart, double flength,
   // Map the correct flags subset (this time interval)
   itsFlagsMap->mapFile(startOffset, nrValues); 
 
-  //  mapTimer.end();
+  mapTimer.end();
   //  BBSTestLogger::log("file-mapping", mapTimer);
 
   BBSTest::ScopedTimer parmTimer("P:initparms");
@@ -1423,6 +1424,7 @@ void Prediffer::saveResidualData (bool subtract, bool write)
       }
     }
   }
+  itsEqTimer.stop();
   BBSTest::Logger::log(itsPredTimer);
   itsPredTimer.reset();
   // Make sure data is written.
