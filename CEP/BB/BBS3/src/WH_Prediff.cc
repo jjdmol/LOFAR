@@ -37,10 +37,12 @@
 namespace LOFAR
 {
 
-WH_Prediff::WH_Prediff(const string& name, const string& id)
+WH_Prediff::WH_Prediff(const string& name, const string& id, const ParameterSet& pset)
   : WorkHolder   (2, 3, name, "WH_Prediff"),
     itsID        (id),
-    itsFirstCall (true)
+    itsArgs      (pset),
+    itsFirstCall (true),
+    itsParmTable (0)
 {
   LOG_TRACE_FLOW("WH_Prediff constructor");
   getDataManager().addInDataHolder(0, new DH_WOPrediff(name+"_in0"));
@@ -68,16 +70,36 @@ WH_Prediff::~WH_Prediff()
   }
   itsPrediffs.clear();
 
+  delete itsParmTable;
 }
 
 WH_Prediff* WH_Prediff::make (const string& name)
 {
-  return new WH_Prediff (name, itsID);
+  return new WH_Prediff (name, itsID, itsArgs);
 }
 
 void WH_Prediff::preprocess()
 {
   LOG_TRACE_RTTI("WH_Prediff preprocess()");
+  if (itsParmTable == 0) {
+    ParameterSet sckvm = itsArgs.makeSubset("SC1params.");
+    ParameterSet dbkvm = sckvm.makeSubset("MSDBparams.");
+
+    string dbtype = dbkvm.getString("DBType");
+    if (dbtype == "bdbrepl") {
+      // Create master for bdb replication
+      // this object is made so that a master exists on the control node
+      // the table name does not matter
+      dbkvm["dummyTableName"] = "dummyTableName";
+      dbkvm["DBIsMaster"] = "F";
+      ostringstream noSlavesString;
+      noSlavesString<<-1;
+      dbkvm["DBNoSlaves"] = noSlavesString.str();
+      BBSTest::ScopedUSRTimer dbstartupTimer("P:DBStartup");
+      ParmTableData ptd("dummyTableName", dbkvm);
+      itsParmTable = new ParmTable(ptd);
+    }
+  }
 }
 
 void WH_Prediff::process()
