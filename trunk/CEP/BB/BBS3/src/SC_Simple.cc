@@ -218,8 +218,8 @@ bool SC_Simple::execute()
 
   // Temporarily show on cout
   cout << "!!!!!!! Sent workorders: " << endl;
-  WOPD->dump();
-  WOSolve->dump();
+  //WOPD->dump();
+  //WOSolve->dump();
 
   cout << "!!!!!!! " << endl;
 
@@ -301,7 +301,7 @@ void SC_Simple::readSolution()
     }
   }
 
-  getSolution()->dump();
+  //getSolution()->dump();
 
 }
 

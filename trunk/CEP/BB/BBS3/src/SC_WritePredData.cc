@@ -118,8 +118,8 @@ bool SC_WritePredData::execute()
 
   // Temporarily show on cout
   cout << "!!!!!!! Sent workorders: " << endl;
-  WOPD->dump();
-  WOSolve->dump();
+  //WOPD->dump();
+  //WOSolve->dump();
 
   cout << "!!!!!!! " << endl;
 
