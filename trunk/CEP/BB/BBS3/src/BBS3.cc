@@ -169,102 +169,110 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
 
   // Set total number of CEPFrame runs
   params.replace(ACC::APS::KVpair("nrCEPFrameRuns", totalNrRuns));
+#ifdef HAVE_MPI
+  if (TH_MPI::getCurrentRank() == 0) {
+    cout << params << endl;
+  };
+#else
   cout << params << endl;
+#endif
 }
 
 int main (int argc, const char** argv)
 {
+  BBSTest::ScopedUSRTimer totTimer("total-execute-with-MPI");
   try {
     // To try out different (serial) experiments without the CEP
     // framework, use following two statements:
     INIT_LOGGER("BBS3Logger");
     // init the BBSTestLogger
-    BBSTest::Logger::init();
-    BBSTest::ScopedTimer st("total-execute");
-
-    // Set default values
-    string name = "BBS3.inputDefault";
-    const char *userName = getenv("USER");
-    if (userName == 0) {
-      cerr << "$USER not in environment\n";
-      exit(1);
-    } 
-    string usernm(userName);
-
 #ifdef HAVE_MPI
     TH_MPI::initMPI(argc, argv);
 #endif
 
-#ifdef HAVE_MPICH
-    if (argc > 3)
+    BBSTest::Logger::init();
+    BlackBoardDemo simulator;
     {
-      // Broadcast input arguments to all processes
-      int myRank = TH_MPI::getCurrentRank();
-      if (myRank == 0)
-      {
-	// Get input file name.
-	name = argv[1];
-	// Get user name
-	usernm = argv[2];
-	BlobOBufChar bufo;
-	// Fill the buffer
-	BlobOStream bos(bufo);
-	bos.putStart ("InputArgs", 1);
-	bos << name;
-	bos << usernm;
-	bos.putEnd();
-	uint64 bufSize = bufo.size();
-	// Broadcast buffer size
-	MPI_Bcast(&bufSize, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
-	// Broadcast buffer
-	MPI_Bcast((void*)(bufo.getBuffer()), bufSize, MPI_BYTE, 0, MPI_COMM_WORLD);
-      }
-      else
-      {
-	uint64 bufSize=0;
-	// Receive buffer size
-	MPI_Bcast(&bufSize, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
-	char buffer[bufSize];
-	MPI_Bcast(buffer, bufSize, MPI_BYTE, 0, MPI_COMM_WORLD);
+      BBSTest::ScopedUSRTimer st("total-execute-without-MPI");
 
-	BlobIBufChar bufi(buffer, bufSize);
-	BlobIStream bis(bufi);
-	bis.getStart ("InputArgs");
-	bis >> name;
-	bis >> usernm;
-	bis.getEnd();
-      }
-    }
+      // Set default values
+      string name = "BBS3.inputDefault";
+      const char *userName = getenv("USER");
+      if (userName == 0) {
+	cerr << "$USER not in environment\n";
+	exit(1);
+      } 
+      string usernm(userName);
+
+#ifdef HAVE_MPICH
+      if (argc > 3)
+	{
+	  // Broadcast input arguments to all processes
+	  int myRank = TH_MPI::getCurrentRank();
+	  if (myRank == 0)
+	    {
+	      // Get input file name.
+	      name = argv[1];
+	      // Get user name
+	      usernm = argv[2];
+	      BlobOBufChar bufo;
+	      // Fill the buffer
+	      BlobOStream bos(bufo);
+	      bos.putStart ("InputArgs", 1);
+	      bos << name;
+	      bos << usernm;
+	      bos.putEnd();
+	      uint64 bufSize = bufo.size();
+	      // Broadcast buffer size
+	      MPI_Bcast(&bufSize, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+	      // Broadcast buffer
+	      MPI_Bcast((void*)(bufo.getBuffer()), bufSize, MPI_BYTE, 0, MPI_COMM_WORLD);
+	    }
+	  else
+	    {
+	      uint64 bufSize=0;
+	      // Receive buffer size
+	      MPI_Bcast(&bufSize, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+	      char buffer[bufSize];
+	      MPI_Bcast(buffer, bufSize, MPI_BYTE, 0, MPI_COMM_WORLD);
+
+	      BlobIBufChar bufi(buffer, bufSize);
+	      BlobIStream bis(bufi);
+	      bis.getStart ("InputArgs");
+	      bis >> name;
+	      bis >> usernm;
+	      bis.getEnd();
+	    }
+	}
 
 #else 
 
-    // Get input file name.
-    if (argc > 1) {
-      name = argv[1];
-    }
-    // Get user name
-    if (argc > 2) {
-      usernm = argv[2];
-    }
+      // Get input file name.
+      if (argc > 1) {
+	name = argv[1];
+      }
+      // Get user name
+      if (argc > 2) {
+	usernm = argv[2];
+      }
       
 #endif
 
-    BlackBoardDemo simulator;
-
-    cout << "Input arguments: " << "Input file name = " << name 
-	 << ", User name = " << usernm << endl;
+      cout << "Input arguments: " << "Input file name = " << name 
+	   << ", User name = " << usernm << endl;
     
-    simulator.setarg (argc, argv);
+      simulator.setarg (argc, argv);
 
-    ACC::APS::ParameterSet params (name.c_str());
+      ACC::APS::ParameterSet params (name.c_str());
 
-    checkParameters(params, usernm);
+      checkParameters(params, usernm);
 
-    int nrCEPFrameRuns = params.getInt32("nrCEPFrameRuns");
+      int nrCEPFrameRuns = params.getInt32("nrCEPFrameRuns");
 
-    simulator.setParameters(params);
-    simulator.baseDefine();
-    simulator.baseRun(nrCEPFrameRuns);
+      simulator.setParameters(params);
+      simulator.baseDefine();
+      simulator.baseRun(nrCEPFrameRuns);
+    } // scopedTimerBlock
     simulator.baseQuit();
 
   }
@@ -279,6 +287,5 @@ int main (int argc, const char** argv)
   catch (...) {
     cout << "Unexpected exception in BBS3" << endl;
   }
-
 }
 
