@@ -30,6 +30,7 @@
 //# Includes
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
+#include <MNS/ParmTable.h>
 
 namespace LOFAR
 {
@@ -49,7 +50,7 @@ class WH_Prediff : public LOFAR::WorkHolder
 {
  public:
   // Construct the workholder and give it a name
-  explicit WH_Prediff(const string& name, const string& id);
+  explicit WH_Prediff(const string& name, const string& id, const ParameterSet& pset);
   
   // Destructor
   virtual ~WH_Prediff();
@@ -95,6 +96,8 @@ class WH_Prediff : public LOFAR::WorkHolder
   // with a strategy (controller)
 
   bool        itsFirstCall;  // Temporary!!! Needs to be done correctly for multiple strategies
+
+  ParmTable* itsParmTable;
 };
 
 // @}
