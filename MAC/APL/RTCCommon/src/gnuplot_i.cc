@@ -28,6 +28,9 @@
 #include <APL/RTCCommon/gnuplot_i.h>
 #include <unistd.h>
 
+// to find Array type in blitz namespace
+using namespace blitz;
+
 /*---------------------------------------------------------------------------
                                 Defines
  ---------------------------------------------------------------------------*/
