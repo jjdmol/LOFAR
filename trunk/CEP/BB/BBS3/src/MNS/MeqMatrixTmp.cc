@@ -30,7 +30,7 @@ namespace LOFAR {
 
 MeqMatrixTmp::MeqMatrixTmp (double value, int nx, int ny, bool init)
 {
-    MeqMatrixRealArr* v = new MeqMatrixRealArr (nx, ny);
+    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(nx, ny);
     if (init) {
       v->set (value);
     }

@@ -70,8 +70,12 @@ public:
 
   virtual void show (ostream& os) const;
 
-  static MeqMatrixComplexArr* allocate(int nx, int ny);
+  void *operator new(size_t, int nx, int ny);
   void operator delete(void *);
+
+  inline static MeqMatrixComplexArr* allocate(int nx, int ny) {
+    return new (nx, ny) MeqMatrixComplexArr(nx, ny);
+  }
 
   static void poolActivate(int nelements);
   static void poolDeactivate();
@@ -86,6 +90,8 @@ public:
   virtual dcomplex getDComplex (int x, int y) const;
 
 private:
+  static size_t memSize(int nelements);
+
   virtual MeqMatrixRep* addRep (MeqMatrixRealSca& left, bool rightTmp);
   virtual MeqMatrixRep* addRep (MeqMatrixComplexSca& left, bool rightTmp);
   virtual MeqMatrixRep* addRep (MeqMatrixRealArr& left, bool rightTmp);

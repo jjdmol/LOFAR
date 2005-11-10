@@ -165,7 +165,7 @@ MeqMatrixRep* MeqMatrixRealSca::posdiffRep (MeqMatrixRealSca& left)
 }
 MeqMatrixRep* MeqMatrixRealSca::posdiffRep (MeqMatrixRealArr& left)
 {
-  MeqMatrixRealArr* v = new MeqMatrixRealArr (left.nx(), left.ny());
+  MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(left.nx(), left.ny());
   double* value = v->itsValue;
   double  rvalue = itsValue;
   double* lvalue = left.itsValue;

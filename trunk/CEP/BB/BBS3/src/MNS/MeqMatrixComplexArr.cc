@@ -29,6 +29,7 @@
 #include <BBS3/MNS/MeqMatrixRealArr.h>
 #include <BBS3/MNS/MeqMatrixComplexSca.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
+#include <BBS3/MNS/Pool.h>
 #include <Common/LofarLogger.h>
 #include <iomanip>
 
@@ -45,7 +46,7 @@ namespace LOFAR {
 
 // Allocation will be done from the pool containing matrices of poolNElements
 // or less elements.
-static stack<MeqMatrixComplexArr *> pool;
+static Pool<MeqMatrixComplexArr>    pool;
 #pragma omp threadprivate(pool)
 static size_t			    poolArraySize;
 static int			    poolNElements = 0;
@@ -137,44 +138,34 @@ void MeqMatrixComplexArr::show (ostream& os) const
   os << ']';
 }
 
+size_t MeqMatrixComplexArr::memSize(int nelements)
+{
+  return ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 8 +
+	 2 * sizeof(double [(nelements + 1) & ~1]);
+}
 
-MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
+void *MeqMatrixComplexArr::operator new(size_t size, int nx, int ny)
 {
 #if defined TIMER
-  static NSTimer timer("allocate", true);
+  static NSTimer timer("new CA", true);
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* newArr;
+  void *ptr;
 
   if (nx * ny <= poolNElements) {
-    if (pool.empty()) {
-      // Allocate memory for the header and the maximum amount of data
-      // (poolNElements). Only nx * ny elements will be used, but the
-      // array can be reused for an array of size up to poolNElements.
-      newArr = (MeqMatrixComplexArr*) new char[poolArraySize];
-    } else {
-      // Get an array from the pool.
-      newArr = pool.top();
-      pool.pop();
-    }
+    ptr = pool.allocate(poolArraySize);
   } else {
-    // Array is larger than arrays in pool.
-    // So allocate it separately.
+    // Array is larger than arrays in pool, so allocate it separately.
     // Still use new to get enough memory for alignment.
-    newArr = (MeqMatrixComplexArr*) new char[
-			    ((sizeof(MeqMatrixComplexArr)+7) & ~7) + 8 +
-			    2 * ((nx * ny + 1) & ~1) * sizeof(double)];
+    ptr = malloc(memSize(nx * ny));
   }
-
-  // placement new to call constructor
-  newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
 
 #if defined TIMER
   timer.stop();
 #endif
 
-  return newArr;
+  return ptr;
 }
 
 
@@ -186,9 +177,9 @@ void MeqMatrixComplexArr::operator delete(void *ptr)
 #endif
 
   if (((MeqMatrixComplexArr *) ptr)->nelements() <= poolNElements) {
-    pool.push((MeqMatrixComplexArr *) ptr);
+    pool.deallocate((MeqMatrixComplexArr *) ptr);
   } else {
-    delete [] (char *) ptr;
+    free(ptr);
   }
 
 #if defined TIMER
@@ -202,8 +193,7 @@ void MeqMatrixComplexArr::poolActivate(int nelements)
   if (nelements != poolNElements) {
     poolDeactivate();
     poolNElements = nelements;
-    poolArraySize = ((sizeof(MeqMatrixComplexArr) + 7) & ~7) + 8 +
-			 2 * ((poolNElements + 1) & ~1) * sizeof(double);
+    poolArraySize = memSize(nelements);
   }
 }
 
@@ -211,10 +201,7 @@ void MeqMatrixComplexArr::poolDeactivate()
 {
   // Free all objects remaining in the pool and clear the pool.
 #pragma omp parallel
-  while (!pool.empty()) {
-    delete [] (char *) pool.top();
-    pool.pop();
-  }
+  pool.clear();
   // Setting poolNElements to zero will result in no pool usage;
   // allocate will simply 'new' memory, deallocate will 'delete' it.
   poolNElements = 0;
@@ -259,61 +246,6 @@ dcomplex MeqMatrixComplexArr::getDComplex (int x, int y) const
   return makedcomplex(itsReal[off], itsImag[off]);
 }
 
-#if 0
-#define MNSMATRIXCOMPLEXARR_OP(NAME, OP, OP2) \
-MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixRealSca& left, \
-					 bool rightTmp) \
-{ \
-  MeqMatrixComplexArr* v = this; \
-  if (!rightTmp) { \
-    v = (MeqMatrixComplexArr*)clone(); \
-  } \
-  for (int i=0; i<nelements(); i++) { \
-    v->itsValue[i] = left.itsValue OP2 v->itsValue[i]; \
-  } \
-  return v; \
-} \
-MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixComplexSca& left, \
-					 bool rightTmp) \
-{ \
-  MeqMatrixComplexArr* v = this; \
-  if (!rightTmp) { \
-    v = (MeqMatrixComplexArr*)clone(); \
-  } \
-  for (int i=0; i<nelements(); i++) { \
-    v->itsValue[i] = left.itsValue OP2 v->itsValue[i]; \
-  } \
-  return v; \
-} \
-MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixRealArr& left,  \
-					 bool rightTmp) \
-{ \
-  ASSERT (nelements() == left.nelements()); \
-  MeqMatrixComplexArr* v = this; \
-  if (!rightTmp) { \
-    v = (MeqMatrixComplexArr*)clone(); \
-  } \
-  for (int i=0; i<nelements(); i++) { \
-    v->itsValue[i] = left.itsValue[i] OP2 v->itsValue[i]; \
-  } \
-  return v; \
-} \
-MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixComplexArr& left, \
-					 bool) \
-{ \
-  ASSERT (nelements() == left.nelements()); \
-  for (int i=0; i<left.nelements(); i++) { \
-    left.itsValue[i] OP itsValue[i]; \
-  } \
-  return &left; \
-}
-
-MNSMATRIXCOMPLEXARR_OP(addRep,+=,+);
-MNSMATRIXCOMPLEXARR_OP(subRep,-=,-);
-MNSMATRIXCOMPLEXARR_OP(mulRep,*=,*);
-MNSMATRIXCOMPLEXARR_OP(divRep,/=,/);
-#endif
-
 
 MeqMatrixRep* MeqMatrixComplexArr::addRep(MeqMatrixRealSca& left, bool rightTmp)
 {
@@ -347,11 +279,7 @@ MeqMatrixRep* MeqMatrixComplexArr::addRep(MeqMatrixComplexSca& left, bool rightT
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
-
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
   double left_r = real(left.itsValue), left_i = imag(left.itsValue);
 
   for (int i = 0; i < nelements(); i ++) {
@@ -430,10 +358,7 @@ MeqMatrixRep* MeqMatrixComplexArr::subRep(MeqMatrixRealSca& left, bool rightTmp)
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
 
   for (int i = 0; i < nelements(); i ++) {
     v->itsReal[i] = left.itsValue - itsReal[i];
@@ -454,10 +379,7 @@ MeqMatrixRep* MeqMatrixComplexArr::subRep(MeqMatrixComplexSca& left, bool rightT
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
 
   double left_r = real(left.itsValue), left_i = imag(left.itsValue);
 
@@ -480,10 +402,7 @@ MeqMatrixRep* MeqMatrixComplexArr::subRep(MeqMatrixRealArr& left, bool rightTmp)
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
 
   for (int i = 0; i < nelements(); i ++) {
     v->itsReal[i] = left.itsValue[i] - itsReal[i];
@@ -525,10 +444,7 @@ MeqMatrixRep* MeqMatrixComplexArr::mulRep(MeqMatrixRealSca& left, bool rightTmp)
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
 
   for (int i = 0; i < nelements(); i ++) {
     v->itsReal[i] = itsReal[i] * left.itsValue;
@@ -549,10 +465,7 @@ MeqMatrixRep* MeqMatrixComplexArr::mulRep(MeqMatrixComplexSca& left, bool rightT
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
 
 #if defined __SSE2__
   __m128d left_r = _mm_set1_pd(real(left.itsValue));
@@ -590,15 +503,25 @@ MeqMatrixRep* MeqMatrixComplexArr::mulRep(MeqMatrixRealArr& left, bool rightTmp)
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
 
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
+#if defined __SSE2__
+  __m128d *left_r = (__m128d *) left.itsValue;
+  __m128d *dst_r = (__m128d *) v->itsReal, *dst_i = (__m128d *) v->itsImag;
+  __m128d *src_r = (__m128d *) itsReal, *src_i = (__m128d *) itsImag;
+  int n = (nelements() + 1) / 2;
 
+  for (int i = 0; i < n; i ++) {
+    __m128d left_v = left_r[i];
+    dst_r[i] = _mm_mul_pd(src_r[i], left_v);
+    dst_i[i] = _mm_mul_pd(src_i[i], left_v);
+  }
+#else
   for (int i = 0; i < nelements(); i ++) {
     v->itsReal[i] = itsReal[i] * left.itsValue[i];
     v->itsImag[i] = itsImag[i] * left.itsValue[i];
   }
+#endif
 
 #if defined TIMER
   timer.stop();
@@ -652,11 +575,7 @@ MeqMatrixRep* MeqMatrixComplexArr::divRep(MeqMatrixRealSca& left, bool rightTmp)
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
-
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
   double x_r = left.itsValue;
 
   for (int i = 0; i < nelements(); i ++) {
@@ -681,11 +600,7 @@ MeqMatrixRep* MeqMatrixComplexArr::divRep(MeqMatrixComplexSca& left, bool rightT
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
-
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
   double x_r = real(left.itsValue), x_i = imag(left.itsValue);
 
   for (int i = 0; i < nelements(); i ++) {
@@ -710,10 +625,7 @@ MeqMatrixRep* MeqMatrixComplexArr::divRep(MeqMatrixRealArr& left, bool rightTmp)
   timer.start();
 #endif
 
-  MeqMatrixComplexArr* v = this;
-
-  if (!rightTmp)
-    v = MeqMatrixComplexArr::allocate(nx(), ny());
+  MeqMatrixComplexArr* v = rightTmp ? this : allocate(nx(), ny());
 
   for (int i = 0; i < nelements(); i ++) {
     double y_r = itsReal[i], y_i = itsImag[i];

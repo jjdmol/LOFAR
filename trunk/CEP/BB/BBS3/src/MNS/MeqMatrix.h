@@ -54,7 +54,7 @@ public:
   MeqMatrix()
     : itsRep(0) {}
 
-  // Create a scalar MeqMatrixTmp.
+  // Create a scalar MeqMatrix.
   // <group>
   explicit MeqMatrix (double value);
   explicit MeqMatrix (dcomplex value);
