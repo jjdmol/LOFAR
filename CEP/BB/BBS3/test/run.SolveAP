@@ -3,11 +3,15 @@
 # This script solves for amplitude phase.
 # It uses the input parameters set: BB3C343.input2
 
+#aips should be initialised
+source /lofarbuild/aips++/prod/aipsinit.sh
 
 if [ "$#" != "1" ]; then
  echo "run as:   run.3C343 usernm"
  exit 1
 fi
+
+rm -f SolvePoly.ready
 
 usernm=$1
 dbtype=aips
@@ -110,3 +114,5 @@ applyfile
 
 # Solve for phase
 time src/BBS3 ../../test/SolveAP.input $usernm
+
+touch SolveAP.ready
