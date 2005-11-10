@@ -40,9 +40,6 @@
 #include <stdarg.h>
 #include <fstream>
 #include <blitz/array.h>
-#ifdef BZ_NAMESPACES
-using namespace blitz;
-#endif
 
 /** Maximal number of simultaneous temporary files */
 #define GP_MAX_TMP_FILES    64
@@ -400,7 +397,7 @@ void gnuplot_plot_equation(gnuplot_ctrl * h, char * equation, char * title) ;
  * @brief Write matrix data to gnuplot
  */
 void gnuplot_write_matrix(gnuplot_ctrl* h,
-			  Array<double, 2> matrix, bool matrixstyle=false);
+			  blitz::Array<double, 2> matrix, bool matrixstyle=false);
     
 #if 1
 /*-------------------------------------------------------------------------*/
@@ -429,9 +426,9 @@ void gnuplot_write_matrix(gnuplot_ctrl* h,
   @endcode
  */
 /*--------------------------------------------------------------------------*/
-void gnuplot_splot(gnuplot_ctrl * h, Array<double, 2> matrix, char * title) ;
+void gnuplot_splot(gnuplot_ctrl * h, blitz::Array<double, 2> matrix, char * title) ;
 
-void gnuplot_contour_plot(gnuplot_ctrl * h, Array<double, 2> matrix, char * title) ;
+void gnuplot_contour_plot(gnuplot_ctrl * h, blitz::Array<double, 2> matrix, char * title) ;
 #endif
 
 // #ifdef __cplusplus
