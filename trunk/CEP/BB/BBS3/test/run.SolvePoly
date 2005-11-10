@@ -3,13 +3,22 @@
 # This script solves for a polynomial phase.
 # It uses the input parameters set: BB3C343.input1 
 
+#aips should be initialised
+source /lofarbuild/aips++/prod/aipsinit.sh
+
+
+
 if [ "$#" != "1" ]; then
  echo "run as:   run.3C343 usernm"
  exit 1
 fi
 
+rm -f SolvePoly.ready
+
 usernm=$1
 dbtype=aips
+
+echo "Running in " `pwd`
 
 # Define functions to create the parm tables.
 beginParmdbInputFile () {
@@ -109,3 +118,4 @@ ln -s 10008336.MS_p1/vis.des 10008336.MS.des
 # Solve for StokesI as function of freq.
 time src/BBS3 ../../test/SolvePoly.input $usernm
 
+touch SolvePoly.ready
