@@ -23,8 +23,23 @@
 #include <lofar_config.h>
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
+#include <BBS3/MNS/Pool.h>
 
 namespace LOFAR {
+
+Pool<MeqResultRep> MeqResultRep::theirPool;
+#pragma omp threadprivate(MeqResultRep::theirPool)
+
+void *MeqResultRep::operator new(size_t size)
+{
+  return theirPool.allocate();
+}
+
+void MeqResultRep::operator delete(void *rep)
+{
+  theirPool.deallocate((MeqResultRep *) rep);
+}
+
 
 MeqResultRep::MeqResultRep (int nspid)
 : itsCount           (0),

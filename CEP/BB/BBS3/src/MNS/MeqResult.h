@@ -30,6 +30,7 @@
 #include <BBS3/MNS/MeqMatrix.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_iostream.h>
+#include <BBS3/MNS/Pool.h>
 
 // This class represents a result of a domain for which an expression
 // has been evaluated.
@@ -39,6 +40,7 @@ namespace LOFAR {
 // \ingroup BBS3
 // \addtogroup MNS
 // @{
+
 
 class MeqResultRep
 {
@@ -53,6 +55,9 @@ public:
 
   static void unlink (MeqResultRep* rep)
     { if (rep != 0 && --rep->itsCount == 0) delete rep; }
+
+  static void *operator new(size_t size);
+  static void operator delete(void *rep);
 
   // Get the value.
   const MeqMatrix& getValue() const
@@ -98,10 +103,6 @@ public:
   // It won't change if the current value type and shape match.
   double* setDoubleFormat (int nx, int ny)
     { return itsValue.setDoubleFormat (nx, ny); }
-#if 0
-  dcomplex* setDComplexFormat (int nx, int ny)
-    { return itsValue.setDComplexFormat (nx, ny); }
-#endif
 
   // Remove all perturbed values.
   void clear();
@@ -119,14 +120,6 @@ public:
       if (itsPerturbedValues == 0) itsPerturbedValues = new map<int, MeqMatrix>;
       return (*itsPerturbedValues)[i].setDoubleFormat (nx, ny);
     } 
-#if 0
-  dcomplex* setPerturbedDComplex (int i, int nx, int ny)
-    { if (!isDefined(i)) {
-        itsPerturbedValues[i] = new MeqMatrix();
-      }
-      return itsPerturbedValues[i]->setDComplexFormat (nx, ny);
-    } 
-#endif
   
   // Set the i-th perturbed parameter.
   void setPerturbation (int i, double value)
@@ -142,12 +135,13 @@ private:
   MeqResultRep (const MeqResultRep&);
   MeqResultRep& operator= (const MeqResultRep&);
 
-  int       itsCount;
-  MeqMatrix itsValue;
-  double    itsDefPert;
-  int	    itsNspid;
-  map<int, MeqMatrix> *itsPerturbedValues;
-  map<int, double>    *itsPerturbation;
+  int			    itsCount;
+  int			    itsNspid;
+  double		    itsDefPert;
+  MeqMatrix		    itsValue;
+  map<int, MeqMatrix>	    *itsPerturbedValues;
+  map<int, double>	    *itsPerturbation;
+  static Pool<MeqResultRep> theirPool;
 };
 
 

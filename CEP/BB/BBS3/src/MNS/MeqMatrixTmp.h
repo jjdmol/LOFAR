@@ -65,7 +65,7 @@ public:
   // Copy constructor (reference semantics).
   MeqMatrixTmp (const MeqMatrixTmp& that)
     : itsRep (that.itsRep->link()) {}
-    
+
   ~MeqMatrixTmp()
     { MeqMatrixRep::unlink (itsRep); }
 

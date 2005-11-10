@@ -41,10 +41,21 @@ friend class MeqMatrixRealSca;
 friend class MeqMatrixComplexSca;
 friend class MeqMatrixComplexArr;
 
-public:
-  MeqMatrixRealArr (int nx, int ny);
+private:
+  MeqMatrixRealArr (int nx, int ny);	// use allocate(nx, ny) instead
 
+public:
   virtual ~MeqMatrixRealArr();
+
+  void *operator new(size_t size, int nx, int ny);
+  void operator delete(void *ptr);
+
+  inline static MeqMatrixRealArr *allocate(int nx, int ny) {
+    return new (nx, ny) MeqMatrixRealArr(nx, ny);
+  }
+
+  static void poolActivate(int nelements);
+  static void poolDeactivate();
 
   virtual MeqMatrixRep* clone() const;
 
@@ -71,6 +82,8 @@ public:
 
 
 private:
+  static size_t memSize(int nelements);
+
   virtual MeqMatrixRep* addRep (MeqMatrixRealSca& left, bool rightTmp);
   virtual MeqMatrixRep* addRep (MeqMatrixComplexSca& left, bool rightTmp);
   virtual MeqMatrixRep* addRep (MeqMatrixRealArr& left, bool rightTmp);

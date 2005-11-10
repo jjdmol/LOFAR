@@ -51,7 +51,7 @@ MeqMatrix::MeqMatrix (dcomplex value)
 
 MeqMatrix::MeqMatrix (double value, int nx, int ny, bool init)
 {
-    MeqMatrixRealArr* v = new MeqMatrixRealArr (nx, ny);
+    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(nx, ny);
     if (init) {
       v->set (value);
     }
@@ -69,7 +69,7 @@ MeqMatrix::MeqMatrix (dcomplex value, int nx, int ny, bool init)
 
 MeqMatrix::MeqMatrix (const double* values, int nx, int ny)
 {
-    MeqMatrixRealArr* v = new MeqMatrixRealArr (nx, ny);
+    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(nx, ny);
     v->set (values);
     itsRep = v->link();
 }
@@ -85,8 +85,8 @@ MeqMatrix::MeqMatrix (const Matrix<double>& array)
 {
     bool deleteIt;
     const double* values = array.getStorage (deleteIt);
-    MeqMatrixRealArr* v = new MeqMatrixRealArr (array.shape()(0),
-						array.shape()(1));
+    MeqMatrixRealArr* v = MeqMatrixRealArr::allocate(array.shape()(0),
+						     array.shape()(1));
     v->set (values);
     itsRep = v->link();
     array.freeStorage (values, deleteIt);
@@ -138,7 +138,7 @@ void MeqMatrix::setDMat (int nx, int ny)
     if (nx == 1 && ny == 1) {
         itsRep = new MeqMatrixRealSca (0.);
     } else {
-        itsRep = new MeqMatrixRealArr (nx, ny);
+        itsRep = MeqMatrixRealArr::allocate(nx, ny);
     }
     itsRep->link();
 }
@@ -214,6 +214,7 @@ void MeqMatrix::operator/= (const MeqMatrixTmp& right)
 MeqMatrixTmp MeqMatrix::operator+ (const MeqMatrix& right) const
 {
     return MeqMatrixTmp(*this) + right;
+    //return MeqMatrixTmp(rep()->add(*right.rep(), false));
 }   
 MeqMatrixTmp MeqMatrix::operator+ (const MeqMatrixTmp& right) const
 {

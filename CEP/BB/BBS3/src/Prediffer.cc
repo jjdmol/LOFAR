@@ -33,6 +33,7 @@
 #include <BBS3/MNS/MeqJonesSum.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
+#include <BBS3/MNS/MeqMatrixRealArr.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <BBS3/MNS/MeqParmSingle.h>
 #include <BBS3/MNS/MeqPointSource.h>
@@ -207,6 +208,7 @@ Prediffer::Prediffer(const string& msName,
   // itsNrChan is the number of frequency channels
   // 1 is the number of time steps. This code is limited to one timestep only
   MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
+  MeqMatrixRealArr::poolActivate(itsNrChan * 1);
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
@@ -923,7 +925,6 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
   // Loop through all baselines/times and create a request.
   for (uint tStep=0; tStep<itsNrTimes; ++tStep) {
     //static NSTimer timer("Prediffer::fillFitter", true);
-    //::doCount = true;
     //timer.start();
 
     unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
@@ -937,9 +938,7 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
     {
       // Allocate a buffer to convert flags from bits to bools.
       // Use Block instead of vector, because vector uses bits.
-      Block<bool> flags(nrchan*itsNCorr);
-      bool* flagsPtr = &(flags[0]);
-
+      Block<bool>      flags(nrchan*itsNCorr);
       vector<double>   resultVec(2*nrchan*itsNrScid);
       vector<char>     flagVec(nrchan);
       vector<double>   diffVec(2*nrchan);
@@ -978,18 +977,17 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 	  unsigned int blOffset = bl*itsNrChan*itsNCorr;
 	  fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
 	  // Convert the flag bits to bools.
-	  bitToBool (flagsPtr, flagStart, nrchan*itsNCorr,
+	  bitToBool (&flags[0], flagStart, nrchan*itsNCorr,
 		     timeOffset + blOffset + freqOffset + flagStartBit);
 	  // Get an equation for this baseline.
 	  int blindex = itsBLIndex(ant1,ant2);
 	  fillEquation (*myFitter, itsNSelCorr, &diffVec[0], &indicesVec[0],
-			&resultVec[0], &flagVec[0], data, flagsPtr,
+			&resultVec[0], &flagVec[0], data, &flags[0],
 			request, blindex);
 	}
       }
     } // end omp parallel
     //timer.stop();
-    //::doCount = false;
   }
 
 #if defined _OPENMP
@@ -1018,8 +1016,8 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
 			      const MeqRequest& request, int blindex)
 {
   //static NSTimer fillEquationTimer("fillEquation", true);
+  //fillEquationTimer.start();
   // Get all equations.
-  //getEquation (result, flagResult, data, flags, request, blindex, ant1, ant2);
   itsPredTimer.start();
   MeqJonesExpr& expr = itsExpr[blindex];
   // Do the actual predict.
@@ -1040,8 +1038,6 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
   }
 
   // Use a consecutive vector to assemble all derivatives.
-  int nrParamsFound;
-
   // Loop through the correlations.
   for (int corr=0; corr<itsNCorr; corr ++, data ++, flags ++) {
     if (itsCorr[corr]) {
@@ -1060,7 +1056,7 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
       }
 
       // Get the derivative for all solvable parameters.
-      nrParamsFound = 0;
+      int nrParamsFound = 0;
       for (int scinx=0; scinx<itsNrScid; ++scinx) {
 	if (predResults[corr]->isDefined(scinx)) {
 	  // Calculate the derivative for each channel (real and imaginary part).
@@ -1079,7 +1075,6 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
 	}
       }
 
-      //fillEquationTimer.start();
       double *resultp = result;
       if (nrParamsFound != itsNrScid) {
 	casa::LSQFit miniFitter(nrParamsFound);
@@ -1096,9 +1091,9 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
 	  }
 	}
       }
-      //fillEquationTimer.stop();
     }
   }
+  //fillEquationTimer.stop();
   itsEqTimer.stop();
 }
 
