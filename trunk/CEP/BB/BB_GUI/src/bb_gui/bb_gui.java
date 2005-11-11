@@ -29,9 +29,9 @@ import ptolemy.plot.Plot;
 public class bb_gui extends javax.swing.JFrame {
  
     private String itsSelectedFile = "None";
-    private String itsPrograms[]   = {"../../test/run.SolvePoly CDR",
-                                      "../../test/run.SolveFlux CDR",
-                                      "../../test/run.SolveAP CDR"};
+    private String itsPrograms[]   = {"/../../test/run.SolvePoly CDR",
+                                      "/../../test/run.SolveFlux CDR",
+                                      "/../../test/run.SolveAP CDR"};
     private String itsTableName[]  = {"BBS3SolvePoly","BBS3SolveFlux","BBS3SolveAP"};
     private int itsSelectedPlotType= 0;
     private String itsSelectedDemo ="";
@@ -42,8 +42,8 @@ public class bb_gui extends javax.swing.JFrame {
     private boolean dryRun         = false;
     private Viewer aV              = null;
     
-    private volatile WaitForFileThread itsWaitThread;
-    private volatile RunProgram itsProgramThread;
+    private WaitForFileThread itsWaitThread;
+    private RunProgram itsProgramThread;
     
     private Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
     private Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
@@ -90,6 +90,7 @@ public class bb_gui extends javax.swing.JFrame {
             return stopped;
         }
 
+       
         public void run() {
 
         String anOutputStr;
@@ -103,9 +104,9 @@ public class bb_gui extends javax.swing.JFrame {
             itsSystemCall=thisSystem.exec(aCmd);
             DataInputStream anInputStream = new DataInputStream(itsSystemCall.getInputStream());
 	    try {
-		while ((anOutputStr = anInputStream.readLine()) != null && running) {
-		    OutputPaneTextArea.append(anOutputStr+"\n");
-		}
+                while (running &&(anOutputStr = anInputStream.readLine()) != null) {
+                        OutputPaneTextArea.append(anOutputStr+"\n");
+                }
                 stopped=true;
             } catch (IOException e) {
             }           
@@ -584,6 +585,8 @@ public class bb_gui extends javax.swing.JFrame {
                     }
                  }
              }
+         } else {
+             ActiveProgramLabel.setText("Running program "+ DemoSelection.getSelectedItem().toString());          
          }
          
          if (startNew) {
@@ -593,6 +596,8 @@ public class bb_gui extends javax.swing.JFrame {
              if (itsWaitThread!=null) itsWaitThread=null;
              
              if (!dryRun) {
+                 removeReadyFile(itsSelectedDemo+".ready");
+                 setCursor(hourglassCursor);           
                  itsWaitThread=new WaitForFileThread();
                  itsWaitThread.setJobTerminationName(itsSelectedDemo);
                  itsWaitThread.start();        
@@ -608,15 +613,21 @@ public class bb_gui extends javax.swing.JFrame {
                     itsProgramThread.stopThread();
                  }
                  ActiveProgramLabel.setText("Busy trying to stop: "+itsSelectedDemo);
-                 ActiveProgramLabel.updateUI();
-                 setCursor(hourglassCursor);           
-                 while (!itsProgramThread.isStopped());
-                 setCursor(normalCursor);
-                 removeReadyFile(itsSelectedDemo+".ready");
                  itsProgramThread.interrupt();
                  itsProgramThread=null;
+                 if (itsWaitThread != null) {
+                     try {
+                        // touch new file to let waitreadyfiles thread stop
+                        new File(workDir,itsSelectedDemo+".ready").createNewFile();
+                     } catch (IOException ex) {                        
+                     }
+                 }
+                 setCursor(normalCursor);
              }
          }
+         StartButton.setEnabled(true);
+         DemoSelection.setEnabled(true);
+         StopButton.setEnabled(false);
          ActiveProgramLabel.setText(itsSelectedDemo + " Stopped");         
      }
      
@@ -855,10 +866,15 @@ public class bb_gui extends javax.swing.JFrame {
             if (file1.exists()) {
                 ActiveProgramLabel.setText(aJobName+" finished");
                 isReady=true;
+                setCursor(normalCursor);
+                StartButton.setEnabled(true);
+                DemoSelection.setEnabled(true);
+                StopButton.setEnabled(false);
             }
             try {
                 aThread.sleep(100);
             } catch (InterruptedException ex) {
+                isReady=true;
             }
         }
     }   
