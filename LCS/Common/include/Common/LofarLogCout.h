@@ -100,8 +100,9 @@ public:	\
   LFDebug::Context scope::DebugContext(contextname)
 
 #define ALLOC_TRACER_ALIAS(other)  \
-  static inline LFDebug::Context & getLFDebugContext() \
-  { return other::getLFDebugContext(); }
+public: \
+	static inline LFDebug::Context & getLFDebugContext() \
+		{ return other::getLFDebugContext(); }
 
 #define LOG_TRACE_LOOP(message)		cTrace(TRACE_LEVEL_LOOP, message)
 #define LOG_TRACE_VAR(message)		cTrace(TRACE_LEVEL_VAR, message)
