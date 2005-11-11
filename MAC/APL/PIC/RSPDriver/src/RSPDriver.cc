@@ -90,10 +90,14 @@ static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
 
 RSPDriver::RSPDriver(string name)
   : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler(),
-    m_update_counter(0), m_n_updates(0), m_elapsed(0),
-    m_ppsfd(-1), m_ppshandle(0)
+    m_update_counter(0), m_n_updates(0), m_elapsed(0)
+#ifdef HAVE_SYS_TIMEPPS_H
+  , m_ppsfd(-1), m_ppshandle(0)
+#endif
 {
+#ifdef HAVE_SYS_TIMEPPS_H
   memset(&m_ppsinfo, 0, sizeof(pps_info_t));
+#endif
 
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
@@ -391,6 +395,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
     case F_INIT:
     {
       if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i)) {
+#ifdef HAVE_SYS_TIMEPPS_H
 	pps_params_t parm;
 
 	// standard time format and trigger on rising edge, API version 1
@@ -429,6 +434,10 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 	}
 
 	// now we're setup to use time_pps_fetch...
+#else
+	LOG_FATAL("HAVE_SYS_TIMEPPS_H not defined. Platform doesn't support PPSkit interface.");
+	exit(EXIT_FAILURE);
+#endif
       }
     }
     break;
@@ -549,6 +558,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       }
       else if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
       {
+#ifdef HAVE_SYS_TIMEPPS_H
 	//
 	// read away most recent timestamp..
 	//
@@ -568,6 +578,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	// start a single shot timer that is slightly shorter that 1 second
 	// when the timer expires, wait for the true PPS using time_pps_fetch
 	m_board[0].setTimer(0.99); // 1st event after 1 second
+#else
+	LOG_WARN("HAVE_SYS_TIMEPPS_H not defined. Platform doesn't support PPSkit interface. Using software timer.");
+	m_board[0].setTimer((long)1); // next event in one (software) second
+#endif
       }
     }
     break;
@@ -709,8 +723,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	}
 	else if (3 == GET_CONFIG("RSPDriver.SYNC_MODE", i))
 	{
-	  const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
 	  GCFTimerEvent timer;
+
+#ifdef HAVE_SYS_TIMEPPS_H
+	  const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
 	  pps_info_t prevppsinfo = m_ppsinfo;
 
 	  if ( time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL) < 0) {
@@ -751,8 +767,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	      LOG_WARN_STR("Missed " << m_ppsinfo.assert_sequence - prevppsinfo.assert_sequence - 1 << " PPS events.");
 	    }	      
 	  }
-
 	  m_board[0].setTimer(0.95); // next event in just under 1 second
+#else
+	  m_board[0].setTimer((long)1); // next event in one (software) second
+#endif
 
 	  /* run the scheduler with the timer event */
 	  status = m_scheduler.run(timer, port);
