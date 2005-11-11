@@ -25,6 +25,10 @@
 #ifndef RSPDRIVERTASK_H_
 #define RSPDRIVERTASK_H_
 
+#include <lofar_config.h>
+
+#undef HAVE_SYS_TIMEPPS_H
+
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
@@ -35,7 +39,10 @@
 #include "Scheduler.h"
 
 #include <list>
+
+#ifdef HAVE_SYS_TIMEPPS_H
 #include <sys/timepps.h>
+#endif
 
 namespace LOFAR {
   namespace RSP {
@@ -146,9 +153,11 @@ namespace LOFAR {
       int m_n_updates;      // number of completed updates
       int m_elapsed;        // elapsed number of seconds
 
+#ifdef HAVE_SYS_TIMEPPS_H
       int          m_ppsfd;     // file descriptor for PPS device
       pps_handle_t m_ppshandle; // handle to PPS API interface
       pps_info_t   m_ppsinfo;   // most recent ppsinfo
+#endif
     };
 
   };
