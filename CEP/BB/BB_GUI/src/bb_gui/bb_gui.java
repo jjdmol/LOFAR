@@ -141,14 +141,13 @@ public class bb_gui extends javax.swing.JFrame {
     public bb_gui() {
         try {
             workDir=new File(".").getCanonicalPath();
-            workDir ="/home/coolen/LOFAR/CEP/BB/BBS3/build/gnu_opt/";
             // take system this Demo runs on
             thisSystem = Runtime.getRuntime();
             initComponents();
             Class.forName("org.postgresql.Driver");
+            connectDBServer();
             // remove DBView from Tab container, will be replaced after there is something to plot
             bb_guiTabbedPane.remove(DBViewPanel);
-            connectDBServer();
             ConfigPaneTextArea.setEditable(false);
             OutputPaneTextArea.setEditable(false);
         } catch(Exception e) {
@@ -326,6 +325,8 @@ public class bb_gui extends javax.swing.JFrame {
         } else {
             itsDBName="CDR";
         }
+        disconnectDBServer();
+        connectDBServer();
     }//GEN-LAST:event_DryRunCheckBoxActionPerformed
 
     private void ViewButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ViewButtonActionPerformed
@@ -626,6 +627,20 @@ public class bb_gui extends javax.swing.JFrame {
             System.out.println("Error opening database: "+ ex);
             System.exit(1);
          } 
+     }
+     
+     private void disconnectDBServer() {
+         if (itsDatabase != null) {
+           try {
+                if (! itsDatabase.isClosed()) {
+                     itsDatabase.close();
+                }
+                itsDatabase=null;
+           } catch (SQLException ex) {
+                System.out.println("Error closing database: "+ ex);
+                System.exit(1);
+           }
+        }
      }
      
      private boolean doQuery(String aQuery) {
