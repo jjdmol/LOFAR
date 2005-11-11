@@ -1,0 +1,1480 @@
+V 10
+1
+LANG:1 23 WAN Switch Configurator
+PANEL,258 161 728 613 N "_3DFace" 0
+"main()
+{
+  g_basicSwitchEl = makeDynAnytype(
+  // 						  dpeEl			 |textFieldNameSuffix
+	  makeDynString(\"location\", \"Location\"), 
+		makeDynString(\"name\",     \"Name\"), 
+		makeDynString(\"uptime\",   \"Uptime\"), 
+		makeDynString(\"contact\",  \"Contact\")
+  );
+	g_portEl = makeDynAnytype(
+		// 						 dpeEl     |textFieldNameSuffix|SNMPTransType
+		makeDynAnytype(\"link\", 	  \"Link\", 					  661), // 661 == SNMPTransInt32Type
+		makeDynAnytype(\"speed\",   \"Speed\",            662), // 662 == SNMPTransUInt32Type
+		makeDynAnytype(\"Tx\",      \"TX\",               662), 
+		makeDynAnytype(\"Rx\",      \"RX\",               662), 
+		makeDynAnytype(\"errors\",  \"Error\",            662)
+  );
+  
+	refreshAgentList();
+	refreshPortTypeList();
+
+	dyn_string switchTypes = dpTypes(SWITCH_TYPE_PREFIX + \"*\");
+  dyn_string switches;
+  string dpName;
+  for (int i = 1; i <= dynlen(switchTypes); i++)
+  {
+    switches = dpNames(\"*\", switchTypes[i]);
+		for (int j = 1; j <= dynlen(switches); j++)
+		{
+		  dpName = dpSubStr(switches[j], DPSUB_DP);
+		  if (substr(dpName, 0, 4) != \"_mp_\")
+		  {
+		    slSwitches.appendItem(substr(dpName, 8) );
+		  }
+		}
+	}
+	slSwitches.selectedPos = 1;
+	
+	showSwitch(slSwitches.selectedText);
+
+}" 0
+EE E E 1 -1 -1 0  30 24
+"" 0 1
+E"global dyn_dyn_string g_basicSwitchEl;
+global dyn_dyn_string g_portEl;
+global int MAX_NR_OF_SWITCH_PORTS = 48;
+global string NOT_SET_TEXT = \"Not set!!!\"; 
+global string SWITCH_TYPE_PREFIX = \"TWanSwitchPT\";
+
+showSwitch(string switchName)
+{
+  session(true);
+	
+	slLogging.appendItem(\"Show settings of switch '\" + switchName + \"'\");
+	if (switchName == \"\") 
+	{
+		session(false);
+	  return;
+	}
+  string fullSwitchName = \"PIC_WAN_\" + switchName;
+  
+  // switch name
+  tfSwitchName.text = switchName;
+
+	dyn_string agents = cbAgent.items;
+	string agent = determineSNMPAgent(fullSwitchName);
+	for (int i = 1; i <= dynlen(agents); i++)
+	{
+	  if (agent == agents[i])
+	  {
+	 	  cbAgent.selectedPos = i;
+	 	  break;
+	 	}
+	}
+ 	
+ 	// determine #port
+ 	string dpType = dpTypeName(fullSwitchName);
+	if (dpType == \"\")
+	{
+		slLogging.appendItem(\"Error!!! Cannot determine #port\");
+	}		
+	else
+	{
+		dyn_string ports = cbNrOfPorts.items;
+		string foundPorts = substr(dpType, strlen(SWITCH_TYPE_PREFIX));
+		for (int i = 1; i <= dynlen(ports); i++)
+		{
+		  if (foundPorts == ports[i])
+		  {
+		 	  cbNrOfPorts.selectedPos = i;
+		 	  break;
+		 	}
+		}
+ 	}
+  
+  // determine the SNMP agent and the addresses of the basic switch elements
+  string refVal;
+  string refConf;
+  dyn_string splittedSwitchEl;
+  string accessableAddrDPE;
+	dyn_string splittedRef;
+	string refWithoutPortID;
+  for (int i = 1; i <= dynlen(g_basicSwitchEl); i++)
+  {
+  	splittedSwitchEl = g_basicSwitchEl[i];
+  	refConf = fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._reference\";
+  	refWithoutPortID = NOT_SET_TEXT;
+	  if (dpExists(refConf))
+	  {
+	 		dpGet(refConf, refVal);
+  		splittedRef = strsplit(refVal, \"_\");
+  		if (dynlen(splittedRef) == 2 && dynlen(getLastError()) == 0)
+		  {
+		 		refWithoutPortID = splittedRef[2];
+		 	}
+		}
+ 		setValue(\"tfAddr\" + splittedSwitchEl[2], \"text\", refWithoutPortID);
+ }  
+	// port element addresses
+	string curPortDP;
+	dyn_string splittedPortEl;
+	string portIDPart;	
+	unsigned nrOfSetFields;
+	int nrOfPorts = determinePortType(fullSwitchName);
+  for (int i = 1; i <= nrOfPorts && nrOfSetFields < dynlen(g_portEl); i++)
+	{
+	  curPortDP = fullSwitchName + \".port\" + i + \".\";
+	  if (!dpExists(curPortDP + \"link\")) break;
+	  nrOfSetFields = 0;
+  	for (int j = 1; j <= dynlen(g_portEl); j++)
+  	{
+  	  splittedPortEl = g_portEl[j];
+  	  refConf = curPortDP + splittedPortEl[1] + \":_address.._reference\";
+  	  refWithoutPortID = NOT_SET_TEXT;
+		  if (dpExists(refConf))
+		  {
+		 		dpGet(refConf, refVal);
+	  		splittedRef = strsplit(refVal, \"_\");
+	  		if (dynlen(splittedRef) == 2 && dynlen(getLastError()) == 0)
+	  		{
+				  portIDPart = \".\" + i;
+				  refWithoutPortID = substr(splittedRef[2], 0, strlen(splittedRef[2]) - strlen(portIDPart));
+			 		nrOfSetFields++;
+				}
+	    }
+	 		setValue(\"tfAddr\" + splittedPortEl[2], \"text\", refWithoutPortID);
+	  }
+	}
+
+  session(false);
+}
+
+string determineSNMPAgent(string fullSwitchName)
+{
+  int driverID;
+  string refVal;
+  dyn_string splittedSwitchEl;
+  string accessableAddrDPE;
+	dyn_string splittedRef;
+	string refConf;
+  for (int i = 1; i <= dynlen(g_basicSwitchEl) && dynlen(splittedRef) == 0; i++)
+  {
+  	splittedSwitchEl = g_basicSwitchEl[i];
+  	refConf = fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._reference\";
+  	if (dpExists(refConf))
+  	{
+		  dpGet(refConf, refVal);
+		  if (dynlen(getLastError()) == 0)
+		  {
+			  splittedRef = strsplit(refVal, \"_\");
+			  accessableAddrDPE = fullSwitchName + \".\" + splittedSwitchEl[1];
+			}
+		}
+  }  
+	// port element addresses
+	string curPortDP;
+	dyn_string splittedPortEl;
+	int nrOfPorts = determinePortType(fullSwitchName);
+	for (int i = 1; i <= nrOfPorts && dynlen(splittedRef) == 0; i++)
+	{
+	  curPortDP = fullSwitchName + \".port\" + i + \".\";
+  	for (int j = 1; j <= dynlen(g_portEl); j++)
+  	{
+  	  splittedPortEl = g_portEl[j];
+  	  accessableAddrDPE = curPortDP + splittedPortEl[1];
+  	  refConf = accessableAddrDPE + \":_address.._reference\"; 
+		  if (dpExists(refConf))
+		  {
+		 		dpGet(refConf, refVal);
+			  if (dynlen(getLastError()) == 0)
+			  {
+		 			splittedRef = strsplit(refVal, \"_\");
+		 		}
+	  	}
+    }
+	}
+
+  dyn_string foundAgentDPs;
+  if (dynlen(splittedRef) == 0)
+  {
+		slLogging.appendItem(\"Error!!! Cannot determine SNMP agent(s) configuration (1)\");
+		return \"\";
+  }
+  else
+  {
+  	string drvConf = accessableAddrDPE + \":_distrib.._driver\";
+  	if (dpExists(drvConf))
+  	{
+			dpGet(accessableAddrDPE + \":_distrib.._driver\", driverID);
+		  foundAgentDPs = dpNames(\"_\" + driverID + \"_*_\" + splittedRef[1], \"_SNMPAgent\");
+		}
+		else
+		{
+			slLogging.appendItem(\"Error!!! Cannot determine SNMP agent(s) configuration (2)\");
+			return \"\";
+		}
+	}
+
+	if (dynlen(foundAgentDPs) != 1)
+	{
+		slLogging.appendItem(\"Error!!! Cannot determine SNMP agent(s) configuration (3) (\" + \"_\" + driverID + \"_*_\" + splittedRef[1] + \" => \" + foundAgentDPs + \")\");
+		return \"\";
+	}		
+	else
+	{
+		string agentDescr = dpGetDescription(dpSubStr(foundAgentDPs[1], DPSUB_DP) + \".\");
+		string agent = agentDescr + \" (\" + dpSubStr(foundAgentDPs[1], DPSUB_DP) + \")\";
+		return agent;
+ 	}
+}
+
+applyToAll(string textFieldNameSuffix)
+{
+  session(true);
+	
+	dyn_string allSwitches = slSwitches.items;
+	string fullSwitchName;
+	
+	for (int i = 1; i <= dynlen(allSwitches); i++)
+	{
+	  fullSwitchName = \"PIC_WAN_\" + allSwitches[i]; 
+		
+		if (!dpExists(fullSwitchName)) continue;
+		
+		string agent = determineSNMPAgent(fullSwitchName);
+		if (agent == \"\")
+		{
+		  agent = cbAgent.selectedText;		  
+		}
+		applyTo(fullSwitchName, agent, textFieldNameSuffix);
+	}
+  session(false); 	
+}
+
+void applyTo(string fullSwitchName, string agent, string textFieldNameSuffix = \"\")
+{
+	int driverID;
+	string agentID;
+	dyn_string splittedAgent;
+  dyn_string splittedSwitchEl;
+	dyn_string splittedPortEl;
+  dyn_anytype dpc;
+	string oid;
+	string portDPE;
+
+	slLogging.appendItem(\"Apply changes to '\" + fullSwitchName + \"' ...\");
+	splittedAgent = strsplit(agent, \"_)\");
+	agentID = splittedAgent[4];
+	driverID = splittedAgent[2];
+	
+  dpc[3] = driverID;  
+  dpc[2] = 666; // default type: SNMPTransDisplayStringType
+  for (int j = 1; j <= dynlen(g_basicSwitchEl); j++)
+  {
+  	splittedSwitchEl = g_basicSwitchEl[j];
+  	if (textFieldNameSuffix == \"\" || splittedSwitchEl[2] == textFieldNameSuffix)
+  	{
+	    getValue(\"tfAddr\" + splittedSwitchEl[2], \"text\", oid);
+	    if (oid == NOT_SET_TEXT) continue;
+			dpc[1] = agentID + \"_\" + oid;
+	    setAddressValues(fullSwitchName + \".\" + splittedSwitchEl[1], dpc);        	  
+	  }
+  }  
+	int nrOfPorts = determinePortType(fullSwitchName);
+  for (int k = 1; k <= nrOfPorts; k++)
+  {
+    portDPE = fullSwitchName + \".port\" + k + \".\";
+    if (!dpExists(portDPE + \"link\")) break;
+	  for (int l = 1; l <= dynlen(g_portEl); l++)
+	  {
+	  	splittedPortEl = g_portEl[l];
+	  	if (textFieldNameSuffix == \"\" || splittedPortEl[2] == textFieldNameSuffix)
+	  	{	    
+		    getValue(\"tfAddr\" + splittedPortEl[2], \"text\", oid);
+		    if (oid == NOT_SET_TEXT) continue;
+				dpc[1] = agentID + \"_\" + oid + \".\" + k;
+				dpc[2] = (int) splittedPortEl[3];
+		    setAddressValues(portDPE + splittedPortEl[1], dpc);        	  
+		  }
+	  }  
+	}
+}
+
+void setAddressValues(string dpe, dyn_anytype dpc)
+{
+  int addrType, tempDriver;
+  bool bAddrLckd, bDistrLckd;
+	slLogging.appendItem(\"Set address info for switch element '\" + dpe + \"' ... \");
+	dpGet(dpe + \":_lock._address._locked\", bAddrLckd,
+		  	dpe + \":_lock._distrib._locked\", bDistrLckd);
+  if (bAddrLckd || bDistrLckd)  
+  {
+		slLogging.appendItem(\"Error: Switch element '\" + dpe + \"' is locked by other user! Not set!\");
+  	return;
+  }
+  else
+  {
+    dpSetWait(dpe + \":_lock._address._locked\", true,
+				      dpe + \":_lock._distrib._locked\", true);  
+  }	
+	dpGet(dpe + \":_distrib.._driver\", tempDriver);
+	if (tempDriver != dpc[3])
+	{
+	  int iError;
+	  dpCopyBufferClear();
+	  dpCopyConfig(dpe, 
+	  						 dpSubStr(dpe, DPSUB_DP_EL), 
+	  						 makeDynString(\"_distrib\", \"_address\", \"_smooth\", \"_cmd_conv\", \"_msg_conv\"), 
+	  						 iError, 
+	  						 dpc[3]);
+	}
+	
+ 	dpGet(dpe + \":_address.._type\", addrType);
+ 	if (addrType != DPCONFIG_PERIPH_ADDR_MAIN)
+		dpSetWait(dpe + \":_distrib.._type\", DPCONFIG_DISTRIBUTION_INFO);
+
+  dpSetWait(dpe + \":_distrib.._driver\", dpc[3]);
+  
+  dpSetWait(dpe + \":_address.._type\", DPCONFIG_PERIPH_ADDR_MAIN,
+  					dpe + \":_address.._reference\", dpc[1],  
+            dpe + \":_address.._subindex\", 0,  
+            dpe + \":_address.._mode\", DPATTR_ADDR_MODE_INPUT_POLL,  
+            dpe + \":_address.._start\", makeTime(1970, 1, 2, 1, 0, 0, 0),  
+            dpe + \":_address.._interval\", 0,  
+	          dpe + \":_address.._reply\",  0,  
+	          dpe + \":_address.._datatype\", dpc[2],  
+	          dpe + \":_address.._poll_group\", \"_2sec\",
+	          dpe + \":_address.._drv_ident\", \"SNMP\",
+	          dpe + \":_address.._active\", FALSE);
+	          
+  dpSetWait(dpe + \":_address.._active\", TRUE);	
+  dpSetWait(dpe + \":_lock._address._locked\", false,
+				    dpe + \":_lock._distrib._locked\", false);  
+}
+
+void session(bool start)
+{
+	if (start) slLogging.deleteAllItems;
+	else slLogging.appendItem(\"Done!\");
+	bool enabling = !start;
+	slSwitches.enabled = enabling;
+	btnApplyToCurrent.enabled = enabling;
+	cbAgent.enabled = enabling;
+	cbNrOfPorts.enabled = enabling;
+	tfSwitchName.enabled = enabling;
+	btnClose.enabled = enabling;
+	btnAdd.enabled = enabling;
+	btnDelete.enabled	= enabling;
+	btnPortNrChange.enabled = enabling;
+	btnSNMPChange.enabled	= enabling;
+  for (int j = 1; j <= dynlen(g_basicSwitchEl); j++)
+  {
+    setValue(\"tfAddr\" + g_basicSwitchEl[j][2], \"enabled\", enabling);
+    setValue(\"btnApplyToAll\" + g_basicSwitchEl[j][2], \"enabled\", enabling);
+  }  
+  for (int l = 1; l <= dynlen(g_portEl); l++)
+  {
+    setValue(\"tfAddr\" + g_portEl[l][2], \"enabled\", enabling);
+    setValue(\"btnApplyToAll\" + g_portEl[l][2], \"enabled\", enabling);
+  }  
+}
+
+void refreshAgentList()
+{
+	cbAgent.deleteAllItems;
+	dyn_string agents = dpNames(\"*\", \"_SNMPAgent\");
+  if (dynlen(agents) > 0)
+  {
+    string dpName;
+    string dpDescr;
+    for (int i = 1; i <= dynlen(agents); i++)
+		{
+		  dpName = dpSubStr(agents[i], DPSUB_DP);
+		  if (dpName != \"_SNMPAgent\")
+		  {
+		  	dpDescr = dpGetDescription(dpName + \".\");
+				cbAgent.appendItem(dpDescr + \" (\" + dpName + \")\");
+			}
+		}
+		cbAgent.selectedPos = 1;
+	}
+}
+
+void refreshPortTypeList()
+{
+	dyn_string switchTypes = dpTypes(SWITCH_TYPE_PREFIX + \"*\");
+  string portsType;
+  for (int i = 1; i <= dynlen(switchTypes); i++)
+  {
+		portsType = substr(switchTypes[i], strlen(SWITCH_TYPE_PREFIX));
+		cbNrOfPorts.appendItem(portsType);
+	}
+	dyn_int types = cbNrOfPorts.items;
+	dynSortAsc(types);
+	cbNrOfPorts.items = types;
+}
+
+int determinePortType(string dpName)
+{
+	string dpType = dpTypeName(dpName);
+	int nrOfPorts = MAX_NR_OF_SWITCH_PORTS;
+	if (dpType != \"\")
+	{
+		nrOfPorts = (int) substr(dpType, strlen(SWITCH_TYPE_PREFIX));
+	}
+	return nrOfPorts;
+}" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 3
+"Text1"
+""
+1 30 24 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 32 26 89 42
+0 2 0 "s" 0 0 0 192 0 0  32 26
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Switches:
+2 4
+"Text2"
+""
+1 304 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 47 386 63
+0 2 0 "s" 0 0 0 192 0 0  306 47
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 SNMP Agent:
+2 7
+"Text3"
+""
+1 304 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 72 352 88
+0 2 0 "s" 0 0 0 64 0 0  306 72
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 # ports:
+2 9
+"Text4"
+""
+1 304 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 22 344 38
+0 2 0 "s" 0 0 0 192 0 0  306 22
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Name:
+2 11
+"Text5"
+""
+1 304 97 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 99 379 115
+0 2 0 "s" 0 0 0 192 0 0  306 99
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Addr. Name:
+2 12
+"Text6"
+""
+1 304 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 122 384 138
+0 2 0 "s" 0 0 0 192 0 0  306 122
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Addr. uptime:
+2 13
+"Text7"
+""
+1 304 143 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 145 402 161
+0 2 0 "s" 0 0 0 64 0 0  306 145
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Addr. location:
+2 14
+"Text8"
+""
+1 304 166 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 168 388 184
+0 2 0 "s" 0 0 0 192 0 0  306 168
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Addr. contact:
+2 15
+"Text9"
+""
+1 304 306 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 308 393 324
+0 2 0 "s" 0 0 0 192 0 0  306 308
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Addr. porterror:
+2 16
+"Text10"
+""
+1 304 206 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 208 387 224
+0 2 0 "s" 0 0 0 192 0 0  306 208
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Addr. portlink:
+2 17
+"Text11"
+""
+1 304 231 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 233 402 249
+0 2 0 "s" 0 0 0 192 0 0  306 233
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Addr. portspeed:
+2 18
+"Text12"
+""
+1 304 256 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 258 385 274
+0 2 0 "s" 0 0 0 192 0 0  306 258
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Addr. port TX:
+2 19
+"Text13"
+""
+1 304 281 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 306 283 387 299
+0 2 0 "s" 0 0 0 192 0 0  306 283
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Addr. port RX:
+2 41
+"Text14"
+""
+1 32 377 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+42 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 34 379 83 395
+0 2 0 "s" 0 0 0 192 0 0  34 379
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 Logging:
+17 0
+"slSwitches"
+""
+1 30 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 48 292 322
+0
+E
+"main()
+{
+	showSwitch(slSwitches.selectedText);
+}" 0
+
+E
+
+3 1
+13 1
+"btnAdd"
+""
+1 30 340 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 338 102 365
+T 
+1
+LANG:1 8 Add/Copy
+"main()
+{
+  session(true);
+		
+  string fullSwitchName = \"PIC_WAN_\" + tfSwitchName.text; 
+  string selFullSwitchName = \"PIC_WAN_\" + slSwitches.selectedText;
+	if (fullSwitchName != selFullSwitchName)
+	{
+		slLogging.appendItem(\"Add switch '\" + tfSwitchName.text + \"' (#ports: \" + cbNrOfPorts.selectedText + \") ...\");
+		if (dpExists(fullSwitchName))
+		{
+			slLogging.appendItem(\"Error: Switch with this name (\" + fullSwitchName + \") already exist! Choose another name!\");
+		  session(false);
+		  return;
+		}
+	  dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+		if (!dpExists(fullSwitchName)) 
+		{
+		  slLogging.appendItem(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
+		  session(false);
+			return;
+		}
+		slSwitches.appendItem(tfSwitchName.text);
+	  slSwitches.selectedPos = slSwitches.itemCount;	
+		slLogging.appendItem(\"Copy values from switch '\" + slSwitches.selectedText + \"'...\");
+		applyTo(fullSwitchName, cbAgent.selectedText);	
+	}
+	else
+	{
+		int i = 0;
+		do
+		{
+		  i++;
+			fullSwitchName = \"PIC_WAN_New_Switch_\" + i;
+		} while (dpExists(fullSwitchName));
+		slLogging.appendItem(\"Add switch 'New_Switch_\" + i + \"' (#ports: \" + cbNrOfPorts.selectedText + \") ...\");
+		
+		dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+		if (!dpExists(fullSwitchName)) 
+		{
+		  slLogging.appendItem(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
+		  session(false);
+			return;
+		}
+		tfSwitchName.text = \"New_Switch_\" + i;
+		slSwitches.appendItem(tfSwitchName.text);
+	  slSwitches.selectedPos = slSwitches.itemCount;	
+	  for (int j = 1; j <= dynlen(g_basicSwitchEl); j++)
+	  {
+	    setValue(\"tfAddr\" + g_basicSwitchEl[j][2], \"text\", NOT_SET_TEXT);
+	  }  
+	  for (int l = 1; l <= dynlen(g_portEl); l++)
+	  {
+	    setValue(\"tfAddr\" + g_portEl[l][2], \"text\", NOT_SET_TEXT);
+	  }  
+	}
+  session(false);
+}" 0
+ E E E
+13 2
+"btnDelete"
+""
+1 120 340 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+118 338 192 365
+T 
+1
+LANG:1 6 Delete
+"main()
+{
+	session(true);
+	slLogging.appendItem(\"Delete switch '\" + slSwitches.selectedText + \"'...\");
+	dpDelete(\"PIC_WAN_\" + slSwitches.selectedText);
+	int selPos = slSwitches.selectedPos;
+  slSwitches.deletePos = slSwitches.selectedPos;
+  slSwitches.selectedPos = (selPos > slSwitches.itemCount ? slSwitches.itemCount : selPos);
+	session(false);
+	showSwitch(slSwitches.selectedText);
+}" 0
+ E E E
+22 6
+"cbAgent"
+""
+1 406 46 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 44 622 71
+0
+E
+E
+E
+ 0 0
+22 8
+"cbNrOfPorts"
+""
+1 406 71 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 69 458 96
+0
+E
+E
+E
+ 0 0
+14 10
+"tfSwitchName"
+""
+1 406 21 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 19 622 46
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 20
+"tfAddrName"
+""
+1 406 100 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 98 622 125
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 21
+"tfAddrUptime"
+""
+1 406 122 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 120 622 147
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 22
+"tfAddrLocation"
+""
+1 406 144 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 142 622 169
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 23
+"tfAddrContact"
+""
+1 406 166 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 164 622 191
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 24
+"tfAddrLink"
+""
+1 406 209 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+25 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 207 622 234
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 25
+"tfAddrSpeed"
+""
+1 406 232 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 230 622 257
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 26
+"tfAddrTX"
+""
+1 406 255 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+27 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 253 622 280
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 27
+"tfAddrRX"
+""
+1 406 278 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 276 622 303
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 28
+"tfAddrError"
+""
+1 406 301 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+404 299 622 326
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 29
+"btnApplyToAllName"
+""
+1 637 99 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 97 719 124
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+	applyToAll(\"Name\");
+}" 0
+ E E E
+13 30
+"btnApplyToAllLocation"
+""
+1 637 146 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 144 719 171
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"Location\");
+}" 0
+ E E E
+13 31
+"btnApplyToAllContact"
+""
+1 637 169 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+32 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 167 719 194
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"Contact\");
+}" 0
+ E E E
+13 32
+"btnApplyToAllLink"
+""
+1 637 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+33 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 208 719 235
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"Link\");
+}" 0
+ E E E
+13 33
+"btnApplyToAllSpeed"
+""
+1 637 233 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 231 719 258
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"Speed\");
+}" 0
+ E E E
+13 34
+"btnApplyToAllTX"
+""
+1 637 256 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 254 719 281
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"TX\");
+}" 0
+ E E E
+13 35
+"btnApplyToAllRX"
+""
+1 637 279 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+36 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 277 719 304
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"RX\");
+}" 0
+ E E E
+13 36
+"btnApplyToAllError"
+""
+1 637 302 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+37 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 300 719 327
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"Error\");
+}" 0
+ E E E
+13 37
+"btnApplyToAllUptime"
+""
+1 637 122 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+38 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 120 719 147
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"Uptime\");
+}" 0
+ E E E
+13 38
+"btnApplyToCurrent"
+""
+1 405 338 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+39 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+403 336 527 363
+T 
+1
+LANG:1 16 Apply to Current
+"main()
+{
+  session(true);
+		
+  string fullSwitchName = \"PIC_WAN_\" + tfSwitchName.text; 
+  string oldFullSwitchName = \"PIC_WAN_\" + slSwitches.selectedText;
+  string dpTypeOldName = dpTypeName(oldFullSwitchName);
+	if ((tfSwitchName.text != slSwitches.selectedText) ||
+		  (dpTypeOldName != (SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText)))
+	{
+		slLogging.appendItem(\"Delete '\" + oldFullSwitchName + \"' ...\");
+	  dpDelete(oldFullSwitchName);
+	  dyn_string allSwitches = slSwitches.items;
+	  allSwitches[slSwitches.selectedPos] = tfSwitchName.text;
+	  slSwitches.items = allSwitches;
+		slLogging.appendItem(\"Add '\" + fullSwitchName + \"' (of type '\" + cbNrOfPorts.selectedText + \"') ...\");
+	  dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+	}
+	
+	if (!dpExists(fullSwitchName)) 
+	{
+	  slLogging.appendItem(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
+	}
+	else
+	{
+		applyTo(fullSwitchName, cbAgent.selectedText);
+	}
+
+  session(false);
+}
+" 0
+ E E E
+13 39
+"btnClose"
+""
+1 670 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+40 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+668 8 719 42
+T 
+1
+LANG:1 5 Close
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_panelOff();
+}
+
+EP_panelOff()
+{
+  PanelOff();
+}
+
+// SimpleCtrlScript {EP_panelOff}
+// Function {PanelOff}
+// Panel {}
+// Module {}
+// SimpleCtrlScriptEnd {EP_panelOff}
+" 0
+ E E E
+17 40
+"slLogging"
+""
+1 30 400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+41 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+28 398 722 602
+0
+E
+E
+E
+
+3 1
+13 42
+"btnSNMPChange"
+""
+1 637 47 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+43 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 45 719 72
+T 
+1
+LANG:1 10 Change ...
+"main()
+{
+	dyn_float resultFloat;
+	dyn_string resultText;
+	ChildPanelOnCentralModalReturn(\"para/snmp_general.pnl\", \"SNMP\", makeDynString(\"\"), resultFloat, resultText);
+	//ModuleOnWithPanel(\"PVSS\", 100, 100, 0, 0, 1, 1, \"None\",\"para/snmp_general.pnl\", \"SNMP\", makeDynString(\"\"));
+	refreshAgentList();
+	showSwitch(slSwitches.selectedText);
+}" 0
+ E E E
+13 43
+"btnPortNrChange"
+""
+1 637 70 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+635 68 719 95
+T 
+1
+LANG:1 10 Change ...
+"main()
+{
+	dyn_float resultFloat;
+	dyn_string resultText;
+	ChildPanelOnCentralModalReturn(\"nav_usr/WAN/SPTconf.pnl\", \"Switch Type Configurator\", makeDynString(\"\"), resultFloat, resultText);
+	refreshPortTypeList();
+	showSwitch(slSwitches.selectedText);
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
