@@ -23,7 +23,7 @@ import java.awt.event.*;
 import javax.swing.JFrame;
 
 
-public class Viewer extends JFrame {
+public class Viewer extends Frame {
         private Image image;
         private static boolean mainRun=false;
 
