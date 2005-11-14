@@ -23,7 +23,6 @@
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
-#include <Common/StringUtil.h>
 
 
 namespace LOFAR {
