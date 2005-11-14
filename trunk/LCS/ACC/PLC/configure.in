@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/ProcessControl.h)
+AC_INIT
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(PLC, 2.0, no-define)
 
@@ -58,6 +58,9 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/PLC/Makefile
 Makefile
 src/Makefile
+PLC.spec
 )
