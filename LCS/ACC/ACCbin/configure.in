@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/ApplController.h)
+AC_INIT
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(ACC, 2.0, no-define)
 
@@ -61,7 +61,10 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/ACCbin/Makefile
 Makefile
 src/Makefile
 test/Makefile
+ACCbin.spec
 )
