@@ -1,8 +1,7 @@
-/**
+// 
+// \ingroup ACC
+// \defgroup APS Application ParameterSet (APS)
+// 
+// Class for managing (startup) parameters.
+// 
 
-\ingroup ACC
-\defgroup APS Application ParameterSet (APS)
-
-APS contains the functionality of the ParametersSet. 
-
-*/
