@@ -1,20 +1,21 @@
 check_PROGRAMS				= tACServer tACClient
 
-TESTS						= 
-
-### tACserver ###
 tACServer_SOURCES			= tACServer.cc 
-tACServer_DEPENDENCIES		= $(LOFAR_DEPEND) ../src/libalc.la
-tACServer_LDADD				= ../src/libalc.la
-
-### tACClient ###
 tACClient_SOURCES			= tACClient.cc 
-tACClient_DEPENDENCIES		= $(LOFAR_DEPEND) \
-							  myACClientFunctions.h ../src/libalc.la
-tACClient_LDADD				= ../src/libalc.la
+
+LDADD						= ../src/libalc.la
+DEPENDENCIES				= ../src/libalc.la $(LOFAR_DEPEND)
+
+TESTSCRIPTS					=
+
+TESTS						= $(TESTSCRIPTS)
+
 
 TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir) \
 							  LOFARROOT=$(LOFARROOT)
+
+EXTRA_DIST					= \
+							  $(TESTSCRIPTS)
 
 include $(top_srcdir)/Makefile.common
 
