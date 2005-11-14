@@ -1,15 +1,25 @@
 
-check_PROGRAMS				= tParameterSet 
+check_PROGRAMS			= tParameterSet 
 
-TESTS						= tParameterSet_test.sh
+tParameterSet_SOURCES	= tParameterSet.cc
 
-### tParameterSet ###
-tParameterSet_SOURCES		= tParameterSet.cc
-tParameterSet_DEPENDENCIES	= $(LOFAR_DEPEND) ../src/libaps.la
-tParameterSet_LDADD			= ../src/libaps.la
+LDADD					= ../src/libaps.la
+DEPENDENCIES			= ../src/libaps.la $(LOFAR_DEPEND) 
 
-TESTS_ENVIRONMENT			= lofar_sharedir=$(lofar_sharedir) \
-							  LOFARROOT=$(LOFARROOT)
+TESTSCRIPTS 			= \
+						  tParameterSet.sh
+
+TESTS					= $(TESTSCRIPTS)
+
+TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+						  LOFARROOT=$(LOFARROOT)
+
+EXTRA_DIST				= \
+						  tParameterSet.in_merge \
+						  tParameterSet.in_param \
+						  tParameterSet.log_prop \
+						  tParameterSet.stdout \
+						  $(TESTSCRIPTS)
 
 include $(top_srcdir)/Makefile.common
 
