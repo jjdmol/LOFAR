@@ -7,7 +7,7 @@ LDADD					= ../src/libaps.la
 DEPENDENCIES			= ../src/libaps.la $(LOFAR_DEPEND) 
 
 TESTSCRIPTS 			= \
-						  tParameterSet.sh
+						  tParameterSet_test.sh
 
 TESTS					= $(TESTSCRIPTS)
 
