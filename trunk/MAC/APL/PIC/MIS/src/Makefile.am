@@ -25,14 +25,13 @@ libmis_la_SOURCES	= $(DOCHDRS) \
 bin_PROGRAMS   		= MACInformationServer
   
 MACInformationServer_SOURCES		  = MISMain.cc
-MACInformationServer_LDADD		    = libmis.la $(LOFAR_DEPEND)	-lboost_regex-gcc-1_32
+MACInformationServer_LDADD		    = libmis.la $(LOFAR_DEPEND)
 MACInformationServer_DEPENDENCIES	= libmis.la $(LOFAR_DEPEND)
-MACInformationServer_CPPFLAGS			=
 
 BUILT_SOURCES = \
 	MIS_Protocol.ph
 
-EXTRA_DIST = $(BUILT_SOURCES) MACInformationServer.conf.in
+EXTRA_DIST = $(sysconf_DATA)
 	
 sysconf_DATA= \
 	MACInformationServer.conf
@@ -42,6 +41,6 @@ sysconf_DATA= \
 
 clean-local:
 	rm -f *.ph
-
+	
 include $(top_srcdir)/Makefile.common
 
