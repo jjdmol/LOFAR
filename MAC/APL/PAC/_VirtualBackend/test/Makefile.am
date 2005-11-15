@@ -5,5 +5,7 @@ configfiles_DATA= \
 %.param: %.param.in
 	cp $< $@
 
+EXTRA_DIST = $(configfiles_DATA)
+
 include $(top_srcdir)/Makefile.common
 
