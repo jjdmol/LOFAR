@@ -37,7 +37,7 @@ NodeManager_DEPENDENCIES	= libnmd.la libsnm.la $(LOFAR_DEPEND)
 BUILT_SOURCES = \
 	NM_Protocol.ph
 
-EXTRA_DIST = $(BUILT_SOURCES) NodeManager.conf.in
+EXTRA_DIST = $(sysconf_DATA)
 	
 sysconf_DATA= \
 	NodeManager.conf
@@ -47,6 +47,6 @@ sysconf_DATA= \
 
 clean-local:
 	rm -f *.ph
-	
+
 include $(top_srcdir)/Makefile.common
 
