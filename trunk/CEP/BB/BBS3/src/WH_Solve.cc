@@ -214,12 +214,16 @@ void WH_Solve::process()
       Connection* connParmSol = getDataManager().getOutConnection(2);
       // loop over all solvable parms
       vector<ParmData> pSols = solver->getSolvableParmData();
-      vector<ParmData>::iterator iter;
-      for (iter = pSols.begin(); iter != pSols.end(); iter++)
+      int maxParms = pSols.size();
+      if (maxParms > 2)
+      { 
+	maxParms = 2;
+      }
+      for (int i=0; i<maxParms; i++)
       {
-	parmSol->setParmName(iter->getName());
-	parmSol->setCoefficients(iter->getValue(0), iter->getValue(1),
-				 iter->getValue(2), iter->getValue(3));
+	parmSol->setParmName(pSols[i].getName());
+	parmSol->setCoefficients(pSols[i].getValue(0), pSols[i].getValue(1),
+				 pSols[i].getValue(2), pSols[i].getValue(3));
 	parmSol->insertDB(*connParmSol);
       }
     
