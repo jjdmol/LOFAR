@@ -25,8 +25,7 @@ VirtualBackend_SOURCES		  = VBMain.cc
 VirtualBackend_LDADD		    = libvb.la $(LOFAR_DEPEND)
 VirtualBackend_DEPENDENCIES	= libvb.la $(LOFAR_DEPEND)
 
-EXTRA_DIST = 	VirtualBackend.conf.in \
-	CEPAppDefault.param.in
+EXTRA_DIST = 	$(sysconf_DATA)
 
 sysconf_DATA= \
 	VirtualBackend.conf \
