@@ -1,0 +1,41 @@
+DOCHDRS	=	 \
+	CEPApplicationManager.h \
+	VirtualBackendLD.h \
+	VBQualityGuard.h \
+	VBFuncStateProperty.h
+   
+noinst_LTLIBRARIES 	= libvb.la
+
+libvb_la_SOURCES	= $(DOCHDRS) \
+	CEPApplicationManager.cc \
+	VirtualBackendLD.cc \
+	VBQualityGuard.cc \
+	VBFuncStateProperty.cc
+	
+AM_CPPFLAGS			= \
+	-DBOOST_DISABLE_THREADS \
+  -Wno-deprecated \
+	-fmessage-length=0 \
+	-fdiagnostics-show-location=once \
+	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
+
+bin_PROGRAMS   		= VirtualBackend
+  
+VirtualBackend_SOURCES		  = VBMain.cc
+VirtualBackend_LDADD		    = libvb.la $(LOFAR_DEPEND)
+VirtualBackend_DEPENDENCIES	= libvb.la $(LOFAR_DEPEND)
+
+EXTRA_DIST = 	$(sysconf_DATA)
+
+sysconf_DATA= \
+	VirtualBackend.conf \
+	CEPAppDefault.param
+	
+%.conf: %.conf.in
+	cp $< $@
+
+%.param: %.param.in
+	cp $< $@
+
+include $(top_srcdir)/Makefile.common
+
