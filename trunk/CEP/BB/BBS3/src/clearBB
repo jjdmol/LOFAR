@@ -111,7 +111,6 @@ echo "create table bbs3solutions (
       WOID INTEGER, 
       ITERATION INTEGER,
       FIT DOUBLE PRECISION, 
-      RANK INTEGER,
       MU DOUBLE PRECISION, 
       STDDEV DOUBLE PRECISION, 
       CHI DOUBLE PRECISION,
