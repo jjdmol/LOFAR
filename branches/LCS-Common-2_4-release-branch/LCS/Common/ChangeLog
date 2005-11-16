@@ -1,6 +1,256 @@
+2005-11-11 11:49  overeem
+
+	* include/Common/LofarLogCout.h: BugID: 488 Added 'public'
+	  statement for ALLOC_TRACER_ALIAS.
+
+2005-10-27 12:24  loose
+
+	* ChangeLog, NEWS, configure.in: BugID: 326
+
+	  Merged relevant changes from the 2.3 release branch into the main
+	  develoment line.
+
+2005-10-24 16:36  broekema
+
+	* src/Net/Socket.cc: BugID: 472 Patch committed
+
+2005-10-24 14:15  lofar
+
+	* package.doc, package.dox: BugID: 271 moved al doxygen related
+	  .doc file to .dox
+
+2005-10-04 14:09  diepen
+
+	* src/Makefile.am: BugID: 396 Removed pkgdep accidently left in
+
+2005-10-04 14:03  cvs
+
+	* src/: BlobField.cc, BlobArray.tcc, TypeNames.tcc: %lofarcvsmv%:
+	  Moved to LOFAR/LCS/Common/include/Common
+
+2005-10-04 14:03  cvs
+
+	* include/Common/: BlobField.cc, BlobArray.tcc, TypeNames.tcc:
+	  %lofarcvsmv%: Moved from LOFAR/LCS/Common/src, creating new
+	  revision
+
+2005-10-04 13:59  diepen
+
+	* include/: Makefile.am, Common/Makefile.am,
+	  Common/shmem/Makefile.am: BugID: 396 New Makefile.am for new
+	  directory
+
+2005-10-04 13:53  cvs
+
+	* test/: tBlobStream.out, tComplex.out, tDataConvert.out,
+	  tDebug.out, tKeyValueMap.out, tLorrays.out, tRunOnNode.out,
+	  tStringUtil.out: %lofarcvsmv%: Moved to LOFAR/LCS/Common/test
+
+2005-10-04 13:53  cvs
+
+	* test/: tBlobStream.stdout, tComplex.stdout, tDataConvert.stdout,
+	  tDebug.stdout, tKeyValueMap.stdout, tLorrays.stdout,
+	  tRunOnNode.stdout, tStringUtil.stdout: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Common/test, creating new revision
+
+2005-10-04 13:52  diepen
+
+	* Common.spec.in, Makefile.am, configure.in, src/Debug.cc,
+	  src/KeyParser.cc, src/KeyTokenize.ll, src/Makefile.am,
+	  src/shmem/Makefile.am, test/Makefile.am: BugID: 396 Make
+	  everything build correctly for distcheck and rpm
+
+2005-10-04 13:23  cvs
+
+	* src/Profiling/PerfProfile.h: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/Common/include/Common/Profiling
+
+2005-10-04 13:23  cvs
+
+	* include/Common/Profiling/PerfProfile.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Common/src/Profiling, creating new revision
+
+2005-10-04 13:22  cvs
+
+	* src/shmem/: dlmalloc.h, segbasemap.h, shmem_alloc.h:
+	  %lofarcvsmv%: Moved to LOFAR/LCS/Common/include/Common/shmem
+
+2005-10-04 13:22  cvs
+
+	* include/Common/shmem/: dlmalloc.h, segbasemap.h, shmem_alloc.h:
+	  %lofarcvsmv%: Moved from LOFAR/LCS/Common/src/shmem, creating new
+	  revision
+
+2005-10-04 13:22  cvs
+
+	* src/Thread/: Condition.h, deprecated_warning.h, Key.h, Mutex.h,
+	  SmartLock.h, Thread.h: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/Common/include/Common/Thread
+
+2005-10-04 13:22  cvs
+
+	* include/Common/Thread/: Condition.h, deprecated_warning.h, Key.h,
+	  Mutex.h, SmartLock.h, Thread.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Common/src/Thread, creating new revision
+
+2005-10-04 13:22  cvs
+
+	* src/Net/backward/Socket.h: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/Common/include/Common/Net/backward
+
+2005-10-04 13:22  cvs
+
+	* include/Common/Net/backward/Socket.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Common/src/Net/backward, creating new revision
+
+2005-10-04 13:21  cvs
+
+	* src/Net/: FdSet.h, Socket.h: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/Common/include/Common/Net
+
+2005-10-04 13:21  cvs
+
+	* include/Common/Net/: FdSet.h, Socket.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Common/src/Net, creating new revision
+
+2005-10-04 13:21  cvs
+
+	* include/Common/HEADER.h: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/Common/src
+
+2005-10-04 13:21  cvs
+
+	* src/HEADER.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Common/include/Common, creating new revision
+
+2005-10-04 13:13  cvs
+
+	* src/: LofarTypes.h, lofar_vector.h, Lonumerics.h,
+	  Lorrays-Blitz.h, Lorrays.h, Numeric.h, RunOnNode.h, Stopwatch.h,
+	  StringUtil.h, Thread.h, Timer.h, TypeNames.h, VectorUtil.h:
+	  %lofarcvsmv%: Moved to LOFAR/LCS/Common/include/Common
+
+2005-10-04 13:13  cvs
+
+	* include/Common/: LofarTypes.h, lofar_vector.h, Lonumerics.h,
+	  Lorrays-Blitz.h, Lorrays.h, Numeric.h, RunOnNode.h, Stopwatch.h,
+	  StringUtil.h, Thread.h, Timer.h, TypeNames.h, VectorUtil.h:
+	  %lofarcvsmv%: Moved from LOFAR/LCS/Common/src, creating new
+	  revision
+
+2005-10-04 13:10  cvs
+
+	* src/: Allocator.h, BlitzToAips.h, BlobArray.h, BlobArrayHeader.h,
+	  BlobException.h, BlobField.h, BlobFieldSet.h, BlobHeader.h,
+	  BlobIBufChar.h, BlobIBuffer.h, BlobIBufStream.h,
+	  BlobIBufString.h, BlobIBufVector.h, BlobIStream.h,
+	  BlobOBufChar.h, BlobOBuffer.h, BlobOBufNull.h, BlobOBufStream.h,
+	  BlobOBufString.h, BlobOBufVector.h, BlobOStream.h, BlobString.h,
+	  BlobStringTraits.h, BlobStringType.h, CheckConfig.h,
+	  ComplexBuiltinFP.h, ComplexBuiltinInt.h, ComplexC99.h,
+	  ComplexStdFP.h, ComplexStdInt.h, DataConvert.h, DataFormat.h,
+	  Debug.h, Exception.h, hexdump.h, KeyParser.h, KeyValue.h,
+	  KeyValueMap.h, lofar_algorithm.h, lofar_complex.h,
+	  lofar_datetime.h, lofar_deque.h, lofar_fstream.h,
+	  lofar_global_symbol_warning.h, lofar_iomanip.h, lofar_iosfwd.h,
+	  lofar_iostream.h, lofar_list.h, LofarLog4Cplus.h, LofarLogCout.h,
+	  LofarLogger.h, lofar_map.h, lofar_set.h, lofar_sstream.h,
+	  lofar_stack.h, lofar_string.h, lofar_strstream.h, lofar_thread.h,
+	  LofarTypedefs.h: %lofarcvsmv%: Moved to
+	  LOFAR/LCS/Common/include/Common
+
+2005-10-04 13:10  cvs
+
+	* include/Common/Allocator.h, include/Common/BlitzToAips.h,
+	  include/Common/BlobArray.h, include/Common/BlobArrayHeader.h,
+	  include/Common/BlobException.h, include/Common/BlobField.h,
+	  include/Common/BlobFieldSet.h, include/Common/BlobHeader.h,
+	  include/Common/BlobIBufChar.h, include/Common/BlobIBuffer.h,
+	  include/Common/BlobIBufStream.h, include/Common/BlobIBufString.h,
+	  include/Common/BlobIBufVector.h, include/Common/BlobIStream.h,
+	  include/Common/BlobOBufChar.h, include/Common/BlobOBuffer.h,
+	  include/Common/BlobOBufNull.h, include/Common/BlobOBufStream.h,
+	  include/Common/BlobOBufString.h, include/Common/BlobOBufVector.h,
+	  include/Common/BlobOStream.h, include/Common/BlobString.h,
+	  include/Common/BlobStringTraits.h,
+	  include/Common/BlobStringType.h, include/Common/CheckConfig.h,
+	  include/Common/ComplexBuiltinFP.h,
+	  include/Common/ComplexBuiltinInt.h, include/Common/ComplexC99.h,
+	  include/Common/ComplexStdFP.h, include/Common/ComplexStdInt.h,
+	  include/Common/DataConvert.h, include/Common/DataFormat.h,
+	  include/Common/Debug.h, include/Common/Exception.h,
+	  include/Common/HEADER.h, src/HEADER.h, include/Common/hexdump.h,
+	  include/Common/KeyParser.h, include/Common/KeyValue.h,
+	  include/Common/KeyValueMap.h, include/Common/lofar_algorithm.h,
+	  include/Common/lofar_complex.h, include/Common/lofar_datetime.h,
+	  include/Common/lofar_deque.h, include/Common/lofar_fstream.h,
+	  include/Common/lofar_global_symbol_warning.h,
+	  include/Common/lofar_iomanip.h, include/Common/lofar_iosfwd.h,
+	  include/Common/lofar_iostream.h, include/Common/lofar_list.h,
+	  include/Common/LofarLog4Cplus.h, include/Common/LofarLogCout.h,
+	  include/Common/LofarLogger.h, include/Common/lofar_map.h,
+	  include/Common/lofar_set.h, include/Common/lofar_sstream.h,
+	  include/Common/lofar_stack.h, include/Common/lofar_string.h,
+	  include/Common/lofar_strstream.h, include/Common/lofar_thread.h,
+	  include/Common/LofarTypedefs.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Common/src, creating new revision
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, src/shmem/Makefile.am,
+	  test/Makefile.am: BugId: 396 Use $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-10-04 09:04  diepen
+
+	* include/Common/BlobArray.tcc, src/BlobArray.tcc: BugID: 422
+	  arr.ndim() instead of ndim was used.
+
+2005-10-03 13:33  loose
+
+	* src/Makefile.am: BugID: 420
+
+	  Moved pkgdep.cc from LCS/Common to LCS/Tools.
+
+2005-10-03 12:40  cvs
+
+	* src/pkgdep.cc: %lofarcvsmv%: Moved to LOFAR/LCS/Tools/src
+
+2005-09-27 10:53  diepen
+
+	* src/Makefile.am: BugID: 407 Added lofar_datetime.h
+
+2005-09-21 17:01  loose
+
+	* package.doc: BugID: 394
+
+	  Fixed "bug" that caused description not to appear on doc page.
+
+2005-09-05 15:27  overeem
+
+	* include/Common/lofar_thread.h, src/Makefile.am,
+	  src/lofar_thread.h: BugID: 331 Lofar_threads makes use of boost
+	  threads easier.
+
+2005-09-02 17:18  loose
+
+	* configure.in: BugID: 326
+
+	  Prepare for release 2.3
+
+2005-09-02 16:01  loose
+
+	* ChangeLog, NEWS: BugID: 326
+
+	  Prepare for release 2.3
+
 2005-09-02 15:25  loose
 
-	* src/Thread/deprecated_warning.h: BugID: 173
+	* include/Common/Thread/deprecated_warning.h,
+	  src/Thread/deprecated_warning.h: BugID: 173
 
 	  Marked Thread.h and related header files deprecated. The user is
 	  encouraged to use Boost.Threads instead.
