@@ -190,7 +190,7 @@ int main (int argc, const char** argv)
     TH_MPI::initMPI(argc, argv);
 #endif
 
-    BBSTest::Logger::init();
+    //    BBSTest::Logger::init();
     BlackBoardDemo simulator;
     {
       BBSTest::ScopedUSRTimer st("total-execute-without-MPI");
