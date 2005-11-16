@@ -1,6 +1,57 @@
-LCS/Tools 1.0, 15-06-2005
+LCS/Tools: Version 1.2, date: 2005/11/16
+========================================
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 350 : Add ability to move files in CVS 
+        Make it possible to move files in the CVS repository, while keeping
+        the CVS history.
+        `lofarcvsmv' and `lofarcvsx' have been implemented and deployed.
+
+# 420 : Move programs/scripts to derive package dependencies to LCS/Tools
+        Moved the script makedep.sh and the C++ code pkgdep.cc to the
+        LCS/Tools directory; updated Makefile.am.
+
+# 423 : Create a makedoc script for doxygen
+        A makedoc script would be very handy to build the doxygen
+        documentation.  It avoids the need to configure, build, and install
+        all software.
+        New script `makedoc' has been added.
+
+# 424 : make distcheck does not work 
+        Remove the .tmp files during the install and added a uninstall-local
+        target.
+
+# 429 : Endless recusion in finddep 
+        The result of finddep enters an endless loop which is only stopped
+        because the output file gets too large.
+
+# 445 : makedoc removes non-empty ./doc directory 
+        Use directory doc/html and rename if existing. Added option to specify
+        target directory. Try to find doxygen path in variants file. Use
+        standard doxygen.cfg from autoconf_share. Made the script more
+        flexible and robust.
+
+# 455 : makedep does not work
+        makedep.sh cannot find pkgdep anymore.  Furthermore it has to be run
+        from the src directory.
+
+
+
+LCS/Tools 1.1, 2005/09/02
 =========================
 
+The following BugIDs have been resolved
+---------------------------------------
+
+# 193:  LOFARDATAROOT should be an environment variable that can be accessed
+        by other LOFAR programs and or builds
+
+
+
+LCS/Tools 1.0, 15-06-2005
+=========================
 
 Associated Enhancement Requests and Problem Reports
 ---------------------------------------------------
