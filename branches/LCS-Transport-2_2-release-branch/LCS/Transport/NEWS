@@ -1,3 +1,25 @@
+LCS/Transport: Version 2.2, date: 2005/11/16
+============================================
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 349 : ExampleSocket should be XFAIL for gnu_fakebgl
+        BG/L does not support hostname lookup, which is why ExampleSocket
+        fails for the build variant gnu_fakebgl.
+
+# 405 : Cannot re-init a TH_Socket after shutdown
+        When a client tries to reconnect after a server failure, it receives
+        an "Transport endpoint is already connected" error. This problem
+        arises because TH_Socket only calls shutdown() on the Socket object;
+        it does not destroy it. So, when you try to re-connect, the kernel
+        will pull the breaks, because you're trying to use a file descriptor
+        that's already in use.
+        Solution: after peer closed connection, let TH_Socket *always* destroy
+        the data socket when it "owns" the socket.
+
+
+
 LCS/Transport: Version 2.1, date: 2005/09/05
 ============================================
 
