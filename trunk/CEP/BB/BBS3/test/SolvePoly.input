@@ -12,9 +12,9 @@ writeIndividualParms=T  # Write individual parameter solutions in a separate tab
 parmSolutionTable="bbs3SolvePoly"  # Table name of individual parameter solutions (temporary for GUI)
 
 CTRLparams.nrStrategies=1                  # Number of Strategy Controllers
-CTRLparams.SC1params.writeParms=T          # Does the Controller write the final solution in parmeter table?
+CTRLparams.SC1params.writeParms=F          # Does the Controller write the final solution in parmeter table?
 CTRLparams.SC1params.strategy="Simple"     # Strategy type
-CTRLparams.SC1params.maxNrIterations=10     # Maximum number of iterations per time interval
+CTRLparams.SC1params.maxNrIterations=3     # Maximum number of iterations per time interval
 CTRLparams.SC1params.fitCriterion=-1       # Iterate until this absolute value is obtained for the fit (-1 means no fit criterion, iterate 'maxNrIterations' times)
 CTRLparams.SC1params.controlParmUpdate=F   # Does the controller update the parameters?
 CTRLparams.SC1params.solvableParams=["StokesI.*"]
