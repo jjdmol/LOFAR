@@ -63,7 +63,7 @@ lofar_COMPILETOOLS
 
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/Test/Suite, suite, MAC-GCF-6_0, 1, Suite/suite.h,,)
-lofar_INTERNAL(MAC/APL/PAC/RSP_Protocol, rsp_protocol, MAC-RTC-4_0, 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, rsp_protocol, MAC-RTC-4_0, 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
 lofar_INTERNAL(MAC/APL/PAC/CAL_Protocol, CAL_Protocol, MAC-RTC-4_0, 1, APL/CAL_Protocol/CAL_Protocol.ph,,)
 lofar_INTERNAL(MAC/APL/PAC/BS_Protocol, BS_Protocol, MAC-RTC-4_0, 1, APL/BS_Protocol/BS_Protocol.ph,,)
 lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase, LCS-AMC-1_0, 1, AMCBase/EarthCoord.h,,)
