@@ -57,7 +57,7 @@ lofar_INTERNAL(LCS/AMC/AMCBase, AMCBase, LCS-AMC-1_0, 1, AMCBase/EarthCoord.h,,)
 
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/Test/Suite, suite, MAC-GCF-6_0, 1, Suite/suite.h,,)
-lofar_INTERNAL(MAC/APL/PAC/RSP_Protocol, RSP_Protocol, MAC-RTC-4_0, 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, MAC-RTC-4_0, 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_0, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_0, 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, MAC-RTC-4_0, 1, APL/RTCCommon/Marshalling.h,,)
