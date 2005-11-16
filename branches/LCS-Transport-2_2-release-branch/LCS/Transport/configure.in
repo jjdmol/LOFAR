@@ -54,7 +54,7 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_MPI
-lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Common,Common,LCS-Common-2_4,1,Common/LofarTypedefs.h,,)
 
 dnl
 dnl Output Makefiles
