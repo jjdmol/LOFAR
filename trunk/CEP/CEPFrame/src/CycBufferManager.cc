@@ -34,10 +34,11 @@ namespace LOFAR
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-CycBufferManager:: CycBufferManager()
+CycBufferManager:: CycBufferManager(int bufferSize)
   : DHPoolManager(),
-    size(20)
+    size(bufferSize)
 {
+  ASSERTSTR(bufferSize > 0, "Cannot create a cylicbuffer smaller than 1.");
 }
 
 CycBufferManager:: ~CycBufferManager()

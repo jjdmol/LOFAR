@@ -219,7 +219,7 @@ void* SynchronisityManager::startWriterThread(void* thread_arg)
   }
 }
 
-void SynchronisityManager::setOutSynchronous(int channel, bool synchronous)
+void SynchronisityManager::setOutSynchronous(int channel, bool synchronous, int bufferSize)
 {
   if (synchronous != itsOutSynchronisities[channel])
   {
@@ -238,13 +238,13 @@ void SynchronisityManager::setOutSynchronous(int channel, bool synchronous)
     }
     else
     {
-      itsOutManagers[channel] = new CycBufferManager();
+      itsOutManagers[channel] = new CycBufferManager(bufferSize);
       // Initialization???
     }
   }
 }
 
-void SynchronisityManager::setInSynchronous(int channel, bool synchronous)
+void SynchronisityManager::setInSynchronous(int channel, bool synchronous, int bufferSize)
 {
   if (synchronous != itsInSynchronisities[channel])
   {
@@ -263,7 +263,7 @@ void SynchronisityManager::setInSynchronous(int channel, bool synchronous)
     }
     else
     {
-      itsInManagers[channel] = new CycBufferManager();
+      itsInManagers[channel] = new CycBufferManager(bufferSize);
       // Initialization???
     }
   }
