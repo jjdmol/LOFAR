@@ -94,9 +94,7 @@ void AH_Recorder::define(const LOFAR::KeyValueMap&) {
 				 *itsTHs.back(),
 				 itsParamSet));
     Step* inStep = new Step(itsWHs.back(), WH_DH_Name);
-    inStep->setOutBufferingProperties(0, false, false);
-    // TODO: CEPFrame needs a way to set the buffersize
-    // inStep->setOutBufferingProperties(0, false, false, bufferSize);
+    inStep->setOutBuffer(0, false, 100);
     itsSteps.push_back(inStep);
     comp.addBlock(inStep);
     inStep->runOnNode(lastFreeNode++);
