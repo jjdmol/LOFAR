@@ -119,7 +119,7 @@ void AsyncTest::define(const KeyValueMap& params)
       // Set the buffering properties
       for (int nrOutp=0; nrOutp<itsDestSteps; nrOutp++)
       {
-	Ssteps[iStep]->setOutBufferingProperties(nrOutp, itsSyncRW, false);
+	Ssteps[iStep]->setOutBuffer(nrOutp, itsSyncRW, 20);
       }
       // Determine the node and process to run in
       //      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
@@ -143,7 +143,7 @@ void AsyncTest::define(const KeyValueMap& params)
     // Set the buffering properties
     for (int nrInp=0; nrInp<itsSourceSteps; nrInp++)
     {
-      Dsteps[iStep]->setInBufferingProperties(nrInp, itsSyncRW, false);
+      Dsteps[iStep]->setInBuffer(nrInp, itsSyncRW, 20);
     }
 
     // Determine the node and process to run in
