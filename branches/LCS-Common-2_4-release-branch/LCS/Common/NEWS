@@ -1,6 +1,14 @@
 LCS/Common: Version 2.4, date: 2005/11/16
 =========================================
 
+In preparation of making package distributable as rpm package, all header
+files that must be installed have been moved from the `src' directory to the
+`inclucde/<package>' directory (ref. BugID #396).
+
+Furthermore, some changes to the build environment require the use of
+autoconf_share 2.4 (or later). 
+
+
 The following BugIDs have been resolved
 ---------------------------------------
 
