@@ -115,7 +115,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     }
     itsRSPinputSteps[i] = new Step(*whRSPinput, H_name, false);
     // use cyclic buffer on output
-    itsRSPinputSteps[i]->setOutBufferingProperties(0, false);
+    itsRSPinputSteps[i]->setOutBuffer(0, false, 100);
     comp.addBlock(itsRSPinputSteps[i]); 
 
     itsRSPinputSteps[i]->runOnNode(lastFreeNode++);
