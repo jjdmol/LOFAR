@@ -1,6 +1,11 @@
 autoconf_share: Version 2.4, date: 2005/11/16
 =============================================
 
+In preparation of making packages distributable as rpm package, changes were
+made to the build environment which are not backward compatible. In short,
+this means that new package releases will require at least version 2.4 of this
+package.
+
 
 The following BugIDs have been resolved
 ---------------------------------------
