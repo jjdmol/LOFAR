@@ -47,7 +47,7 @@ class CycBufferManager : public DHPoolManager
 public:
   /** The constructor.
   */
-  CycBufferManager();
+  CycBufferManager(int bufferSize);
 
   virtual ~CycBufferManager();
 

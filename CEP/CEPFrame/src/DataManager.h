@@ -93,10 +93,19 @@ public:
 
   // Set properties of a communication channel: synchronisity and sharing of DataHolders
   // by input and output
+  // The following methods are deprecated, they do not allow setting the buffersize ande
+  // they combine two different concepts (sharing and buffering)
   void setInBufferingProperties(int channel, bool synchronous, 
 				bool shareDHs=false) const;
   void setOutBufferingProperties(int channel, bool synchronous, 
 				 bool shareDHs=false) const;
+
+  // Set buffer sizes on a channel. 
+  // A buffer size of 1 is not the same as no buffer at all
+  // therefore there are two arguments: bool synchonous and if synchronous = false then
+  // also give the buffersize
+  void setInBuffer(int channel, bool synchronous, int bufferSize = 0) const;
+  void setOutBuffer(int channel, bool synchronous, int bufferSize = 0) const;
 
   // Is data transport of input channel synchronous?
   bool isInSynchronous(int channel);

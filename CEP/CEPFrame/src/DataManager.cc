@@ -376,12 +376,9 @@ void DataManager::initializeInputs()
 void DataManager::setInBufferingProperties(int channel, bool synchronous,
 					   bool shareDHs) const
 {
-  ASSERTSTR(getInConnection(channel) == 0, 
-	    "Input " << channel << 
-	    " is already connected. Buffering properties must be set before connecting."); 
-  DataHolder* dhPtr = getGeneralInHolder(channel);
-  itsSynMan->setInSynchronous(channel, synchronous);
-  itsSynMan->getInPoolManagerPtr(channel)->setDataHolder(dhPtr);
+  // the old default buffer size was 20, but this method should be replaced
+  // by a dedicated sharing method
+  setInBuffer(channel, synchronous, 20); 
 
   if (shareDHs == true)
   {
@@ -391,16 +388,23 @@ void DataManager::setInBufferingProperties(int channel, bool synchronous,
   }
 
 }
+void DataManager::setInBuffer(int channel, bool synchronous, int bufferSize) const
+{
+  ASSERTSTR(getInConnection(channel) == 0, 
+	    "Input " << channel << 
+	    " is already connected. Buffering properties must be set before connecting."); 
+  DataHolder* dhPtr = getGeneralInHolder(channel);
+  itsSynMan->setInSynchronous(channel, synchronous, bufferSize);
+  itsSynMan->getInPoolManagerPtr(channel)->setDataHolder(dhPtr);
+}
 
 void DataManager::setOutBufferingProperties(int channel, bool synchronous,
 					    bool shareDHs) const
 {
-  ASSERTSTR(getOutConnection(channel)==0, 
-	    "Output " << channel << 
-	    " is already connected. Buffering properties must be set before connecting."); 
-  DataHolder* dhPtr = getGeneralOutHolder(channel);
-  itsSynMan->setOutSynchronous(channel, synchronous);
-  itsSynMan->getOutPoolManagerPtr(channel)->setDataHolder(dhPtr);
+  // the old default buffer size was 20, but this method should be replaced
+  // by a dedicated sharing method
+
+  setOutBuffer(channel, synchronous, 20);
 
   if (shareDHs == true)
   {
@@ -412,6 +416,16 @@ void DataManager::setOutBufferingProperties(int channel, bool synchronous,
     itsSynMan->sharePoolManager(channel);
   }
 }
+void DataManager::setOutBuffer(int channel, bool synchronous, int bufferSize) const
+{
+  ASSERTSTR(getOutConnection(channel)==0, 
+	    "Output " << channel << 
+	    " is already connected. Buffering properties must be set before connecting."); 
+  DataHolder* dhPtr = getGeneralOutHolder(channel);
+  itsSynMan->setOutSynchronous(channel, synchronous, bufferSize);
+  itsSynMan->getOutPoolManagerPtr(channel)->setDataHolder(dhPtr);
+}
+
 
 bool DataManager::isInSynchronous(int channel)
 {

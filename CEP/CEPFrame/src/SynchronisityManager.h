@@ -80,9 +80,9 @@ public:
   void writeAsynchronous(int channel);
 
   bool isOutSynchronous(int channel);
-  void setOutSynchronous(int channel, bool synchronous);
+  void setOutSynchronous(int channel, bool synchronous, int bufferSize);
   bool isInSynchronous(int channel);
-  void setInSynchronous(int channel, bool synchronous);
+  void setInSynchronous(int channel, bool synchronous, int bufferSize);
 
   void preprocess();
   void postprocess();
