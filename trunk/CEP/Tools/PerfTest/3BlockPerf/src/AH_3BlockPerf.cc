@@ -103,10 +103,10 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
 
   // set synchronisity of steps
 #if 0
-  itsSrcStep->setOutBufferingProperties(0, false, false);
-  itsHeatStep->setOutBufferingProperties(0, false, false);
-  itsHeatStep->setInBufferingProperties(0, false, false);
-  itsDstStep->setInBufferingProperties(0, false, false);
+  itsSrcStep->setOutBuffer(0, false, 20);
+  itsHeatStep->setOutBuffer(0, false, 20);
+  itsHeatStep->setInBuffer(0, false, 20);
+  itsDstStep->setInBuffer(0, false, 20);
 #endif
 
 #ifdef HAVE_MPI
