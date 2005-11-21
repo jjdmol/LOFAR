@@ -160,8 +160,8 @@ void WH_Correlator::process()
 #endif
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
-    for (int stat1 = 0; stat1 < NR_STATIONS; stat1 ++) {
-      for (int stat2 = 0; stat2 <= stat1; stat2 ++) { 
+    for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
+      for (int stat1 = 0; stat1 <= stat2; stat1 ++) { 
 	for (int pol1 = 0; pol1 < 2; pol1 ++) {
 	  for (int pol2 = 0; pol2 < 2; pol2 ++) {
 	    fcomplex sum = makefcomplex(0, 0);
@@ -193,31 +193,31 @@ void WH_Correlator::process()
 #endif
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
-    for (int stat1 = NR_STATIONS % 2 ? 1 : 2; stat1 < NR_STATIONS; stat1 += 2) {
-      int stat2 = 0;
+    for (int stat2 = NR_STATIONS % 2 ? 1 : 2; stat2 < NR_STATIONS; stat2 += 2) {
+      int stat1 = 0;
       // do as many 3x2 blocks as possible
-      for (; stat2 < stat1 - 4 || (stat2 & 1) != 0; stat2 += 3) {
-	_correlate_3x2(&(*itsInputBuffer)[ch][stat1  ],
-		       &(*itsInputBuffer)[ch][stat1+1],
-		       &(*itsInputBuffer)[ch][stat2  ],
+      for (; stat1 < stat2 - 4 || (stat1 & 1) != 0; stat1 += 3) {
+	_correlate_3x2(&(*itsInputBuffer)[ch][stat2  ],
 		       &(*itsInputBuffer)[ch][stat2+1],
-		       &(*itsInputBuffer)[ch][stat2+2],
+		       &(*itsInputBuffer)[ch][stat1  ],
+		       &(*itsInputBuffer)[ch][stat1+1],
+		       &(*itsInputBuffer)[ch][stat1+2],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
-		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch],
-		       &(*output)[DH_Vis::baseline(stat1  , stat2+2)][ch],
-		       &(*output)[DH_Vis::baseline(stat1+1, stat2+2)][ch]);
+		       &(*output)[DH_Vis::baseline(stat1+2, stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1+2, stat2+1)][ch]);
       }
       // see if some 2x2 blocks are necessary
-      for (; stat2 < stat1; stat2 += 2) {
-	_correlate_2x2(&(*itsInputBuffer)[ch][stat1  ],
-		       &(*itsInputBuffer)[ch][stat1+1],
-		       &(*itsInputBuffer)[ch][stat2  ],
+      for (; stat1 < stat2; stat1 += 2) {
+	_correlate_2x2(&(*itsInputBuffer)[ch][stat2  ],
 		       &(*itsInputBuffer)[ch][stat2+1],
+		       &(*itsInputBuffer)[ch][stat1  ],
+		       &(*itsInputBuffer)[ch][stat1+1],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
-		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch]);
       }
     }
