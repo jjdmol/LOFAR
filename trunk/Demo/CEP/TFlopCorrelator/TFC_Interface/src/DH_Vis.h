@@ -35,8 +35,8 @@ public:
 
   static int baseline(int station1, int station2)
   {
-    DBGASSERTSTR(station1 >= station2, "only lower part of correlation matrix is accessible");
-    return station1 * (station1 + 1) / 2 + station2;
+    DBGASSERTSTR(station2 >= station1, "only lower part of correlation matrix is accessible");
+    return station2 * (station2 + 1) / 2 + station1;
   }
 
   /// Get write access to the Buffer.
