@@ -1,3 +1,5 @@
+#if defined HAVE_BGL
+
 _constants:
 	# X, X
 	.long	0, 0, 0, 0
@@ -275,3 +277,4 @@ _fft_16:
 
 
 	blr
+#endif
