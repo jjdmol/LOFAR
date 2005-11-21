@@ -5,7 +5,7 @@ AC_INIT(src/WH_Correlator.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(BGLCorrelator, 0.1)
+AM_INIT_AUTOMAKE(StationCorrelator, 0.1, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -59,9 +59,9 @@ lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
 lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ProcessControl.h,,)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
-lofar_INTERNAL(MAC/GCF/PALlight, PALlight, ,1, , GCF/PALlight/CEPPropertySet.h, gcfceppallight)
-lofar_INTERNAL(MAC/GCF, GCFCommon, ,1, , GCF/GCF_PVString.h, gcfcommon)
-lofar_INTERNAL(MAC/GCF/Protocols, Protocols, ,1, , GCF/Protocols/DH_PIProtocol.h, gcfpicepprot)
+lofar_INTERNAL(MAC/GCF/PALlight,PALlight,,1,GCF/PALlight/CEPPropertySet.h,gcfceppallight)
+lofar_INTERNAL(MAC/GCF,GCFCommon,,1,GCF/GCF_PVString.h,gcfcommon)
+lofar_INTERNAL(MAC/GCF/Protocols,Protocols,,1,GCF/Protocols/DH_PIProtocol.h,gcfpicepprot)
 
 dnl
 dnl Output Makefiles
