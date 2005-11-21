@@ -1,3 +1,4 @@
+#if defined HAVE_BGL
 #include <TFC_Interface/TFC_Config.h>
 
 # C[s1][s2][p1][p2][ch] = sum over t of A[ch][s1][p1][t] * ~ A[ch][s2][p2][t]
@@ -779,4 +780,5 @@ loop3:	# loop over time
 
 	blr			# return
 
+#endif
 #endif
