@@ -29,9 +29,6 @@
 #include <TFC_Interface/DH_Vis.h>
 #include <WH_Correlator.h>
 
-#ifdef HAVE_BGL
-#include <hummer_builtin.h>
-#endif
 
 using namespace LOFAR;
 
