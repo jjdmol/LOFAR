@@ -198,6 +198,8 @@ public:
                                 bool shareDHs=false);
   void setOutBufferingProperties(int channel, bool synchronous, 
                                  bool shareDHs=false);
+  void setInBuffer(int channel, bool synchronous, int bufferSize);
+  void setOutBuffer(int channel, bool synchronous, int bufferSize);
 
   /** SetRate methods:
       These methods set the rate at which input/output dataholders are
@@ -309,6 +311,12 @@ inline void BlockRep::setInBufferingProperties(int channel, bool synchronous,
 inline void BlockRep::setOutBufferingProperties(int channel, bool synchronous, 
 					bool shareDHs)
   { getOutDataManager(channel).setOutBufferingProperties(channel, synchronous, shareDHs);}
+
+inline void BlockRep::setInBuffer(int channel, bool synchronous, int bufferSize)
+  { getInDataManager(channel).setInBuffer(channel, synchronous, bufferSize);}
+
+inline void BlockRep::setOutBuffer(int channel, bool synchronous, int bufferSize)
+  { getOutDataManager(channel).setOutBuffer(channel, synchronous, bufferSize);}
 
 inline void BlockRep::setID()
   { itsID = theirNextID++; }

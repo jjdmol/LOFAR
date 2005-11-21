@@ -226,6 +226,11 @@ public:
                                  bool shareDHs=false)
     { return itsRep->setOutBufferingProperties(channel, synchronous, shareDHs);}
 
+  virtual void setInBuffer(int channel, bool synchronous, int bufferSize = 0)
+    { return itsRep->setInBuffer(channel, synchronous, bufferSize);}
+  virtual void setOutBuffer(int channel, bool synchronous, int bufferSize = 0)
+    { return itsRep->setOutBuffer(channel, synchronous, bufferSize);}
+
   /** SetRate methods:
       These methods set the rate at which data is processed and input/output 
       dataholders are read/written.
