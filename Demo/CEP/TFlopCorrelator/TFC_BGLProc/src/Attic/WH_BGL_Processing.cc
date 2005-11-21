@@ -556,6 +556,14 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
 typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
 typedef fcomplex stationOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
 
+struct phase_shift {
+  union {
+    dcomplex c;
+    struct {
+      double real, imag;
+    } d;
+  } v0, dv;
+};
 
 extern "C"
 {
@@ -570,7 +578,7 @@ extern "C"
 
   void _phase_shift_and_transpose(fcomplex *out,
 				  const fcomplex *in,
-				  const fcomplex phases[4]);
+				  const struct phase_shift[2]);
 
   void _filter(fcomplex delayLine[NR_TAPS],
 	       const float weights[NR_TAPS],
@@ -597,8 +605,7 @@ extern "C"
 		      stationOutputType *S0_S3,
 		      stationOutputType *S1_S3,
 		      stationOutputType *S0_S4,
-		      stationOutputType *S1_S4
-		     );
+		      stationOutputType *S1_S4);
 #if NR_STATIONS % 2 == 0
   void _auto_correlate_1_and_2(const stationInputType *S0,
 			       const stationInputType *S1,
@@ -662,8 +669,12 @@ void WH_BGL_Processing::preprocess()
 {
   itsFIRs = new FIR[1][NR_STATIONS][NR_POLARIZATIONS][NR_SUB_CHANNELS];
 
+#if defined HAVE_BGL
   fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 1 0 1 1 1 715 0) (128 529 1 0 1 1 0 2828 0) (64 529 1 0 1 1 0 1420 0) (32 529 1 0 1 1 0 716 0) (16 529 1 0 1 1 0 364 0) (8 529 1 0 1 1 0 188 0) (4 529 1 0 1 1 0 100 0) (2 529 1 0 1 1 0 56 0))");
   itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_USE_WISDOM);
+#else
+  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_MEASURE);
+#endif
 }
 
 
@@ -680,8 +691,19 @@ inline __complex__ float to_fcomplex(i16complex z)
 
 
 
+double phi = 0.0;
+static const double factor = 1.0 /
+    (sqrt((double) NR_SAMPLES_PER_INTEGRATION) // correct for integration
+  * 32768.0 // correction for i16complex input
+  * 32768.0 // correction for polyphase filter
+  * pow((double) NR_SUB_CHANNELS, 0.25)); // correction for FFT
+
 void WH_BGL_Processing::doPPF()
 {
+#if defined DELAY_COMPENSATION
+  struct phase_shift phases[2] __attribute__((aligned(16)));
+#endif
+
   static NSTimer timer("doPPF()", true);
   static NSTimer FIRtimer("FIRtimer", true), fftTimer("FFT", true);
   static NSTimer trans1timer("trans1timer", true);
@@ -693,10 +715,6 @@ void WH_BGL_Processing::doPPF()
   inputType *input = (inputType *) static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
   static fcomplex fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
   static fcomplex fftOutData[2][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
-  static fcomplex phases[4] = {
-    makefcomplex(1,0), makefcomplex(1,0),
-    makefcomplex(1,0), makefcomplex(1,0),
-  };
 
 #if !defined C_IMPLEMENTATION
   static fcomplex   tmp1[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
@@ -756,29 +774,49 @@ void WH_BGL_Processing::doPPF()
 
       fftTimer.stop();
 
+#if 0
+      for (int t = 0; t < 2; t ++) {
+	sincos(0.0, &phases[t].v0.d.imag, &phases[t].v0.d.real);
+	phases[t].v0.c *= factor;
+	//phases[t].v0.d.real = factor * cos(phi);
+	//phases[t].v0.d.imag = factor * sin(phi);
+	sincos(0.0, &phases[t].dv.d.imag, &phases[t].dv.d.real);
+      }
+#endif
+
+#if defined DELAY_COMPENSATION
 #if defined C_IMPLEMENTATION
-      for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
-	for (int t = 0; t < 2; t ++) {
+      for (int t = 0; t < 2; t ++) {
+	dcomplex v = phases[t].v0.c;
+
+	for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
 	  for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	    itsCorrCube[chan][stat][time + t][pol] = fftOutData[t][pol][chan];
+	    itsCorrCube[chan][stat][time+t][pol] = fftOutData[t][pol][chan] * v;
 	  }
+	  v *= phases[t].dv.c;
 	}
       }
-#elif 0
-      //sincosf(0.0f, (float *) &phases[0], ((float *) &phases[0]) + 1);
-      //sincosf(0.0f, (float *) &phases[1], ((float *) &phases[1]) + 1);
-      //sincosf(1000f, (float *) &phases[2], ((float *) &phases[2]) + 1);
-      //sincosf(1000f, (float *) &phases[3], ((float *) &phases[3]) + 1);
-
+#else
       _phase_shift_and_transpose(&itsCorrCube[0][stat][time][0],
 				 &fftOutData[0][0][0],
 				 phases);
+#endif
+#else
+#if defined C_IMPLEMENTATION
+      for (int t = 0; t < 2; t ++) {
+	for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
+	  for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	    itsCorrCube[chan][stat][time+t][pol] = fftOutData[t][pol][chan];
+	  }
+	}
+      }
 #else
       _transpose_4x8(&itsCorrCube[0][stat][time][0],
 		     &fftOutData[0][0][0],
 		     NR_SUB_CHANNELS,
 		     sizeof(fcomplex) * NR_SUB_CHANNELS,
 		     sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * NR_STATIONS);
+#endif
 #endif
     }
   }
@@ -796,8 +834,8 @@ void WH_BGL_Processing::doCorrelate()
 
 #if defined C_IMPLEMENTATION
   for (int ch = 0; ch < NR_SUB_CHANNELS; ch ++) {
-    for (int stat1 = 0; stat1 < NR_STATIONS; stat1 ++) {
-      for (int stat2 = 0; stat2 <= stat1; stat2 ++) { 
+    for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
+      for (int stat1 = 0; stat1 <= stat2; stat1 ++) { 
 	for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	  for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	    fcomplex sum = makefcomplex(0, 0);
@@ -819,31 +857,31 @@ void WH_BGL_Processing::doCorrelate()
   // going on to the next block.
 
   for (int ch = 0; ch < NR_SUB_CHANNELS; ch ++) {
-    for (int stat1 = NR_STATIONS % 2 ? 1 : 2; stat1 < NR_STATIONS; stat1 += 2) {
-      int stat2 = 0;
+    for (int stat2 = NR_STATIONS % 2 ? 1 : 2; stat2 < NR_STATIONS; stat2 += 2) {
+      int stat1 = 0;
       // do as many 3x2 blocks as possible
-      for (; stat2 < stat1 - 4 || (stat2 & 1) != 0; stat2 += 3) { 
-	_correlate_3x2(&itsCorrCube[ch][stat1],
-		       &itsCorrCube[ch][stat1+1],
-		       &itsCorrCube[ch][stat2],
+      for (; stat1 < stat2 - 4 || (stat1 & 1) != 0; stat1 += 3) { 
+	_correlate_3x2(&itsCorrCube[ch][stat2],
 		       &itsCorrCube[ch][stat2+1],
-		       &itsCorrCube[ch][stat2+2],
+		       &itsCorrCube[ch][stat1],
+		       &itsCorrCube[ch][stat1+1],
+		       &itsCorrCube[ch][stat1+2],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
-		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch],
-		       &(*output)[DH_Vis::baseline(stat1  , stat2+2)][ch],
-		       &(*output)[DH_Vis::baseline(stat1+1, stat2+2)][ch]);
+		       &(*output)[DH_Vis::baseline(stat1+2, stat2  )][ch],
+		       &(*output)[DH_Vis::baseline(stat1+2, stat2+1)][ch]);
       }
       // see if some 2x2 blocks are necessary
-      for (; stat2 < stat1; stat2 += 2) { 
-	_correlate_2x2(&itsCorrCube[ch][stat1],
-		       &itsCorrCube[ch][stat1+1],
-		       &itsCorrCube[ch][stat2],
+      for (; stat1 < stat2; stat1 += 2) { 
+	_correlate_2x2(&itsCorrCube[ch][stat2],
 		       &itsCorrCube[ch][stat2+1],
+		       &itsCorrCube[ch][stat1],
+		       &itsCorrCube[ch][stat1+1],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
-		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
+		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2+1)][ch]);
       }
     }
