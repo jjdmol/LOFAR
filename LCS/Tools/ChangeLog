@@ -1,3 +1,174 @@
+2005-10-31 09:18  diepen
+
+	* src/lofarinit.sh: BugID: 396 Clean up temporary variables
+
+2005-10-26 15:19  diepen
+
+	* src/lofarinit.sh: BugID: 396 Check if new LOFARROOT is valid
+
+2005-10-24 16:18  diepen
+
+	* src/: Makefile.am, makedep.sh: BugID: 455 Moved finddep from
+	  autoconf_share to LCS/Tools
+
+2005-10-24 16:14  cvs
+
+	* src/finddep: %lofarcvsmv%: Moved from LOFAR/autoconf_share,
+	  creating new revision
+
+2005-10-24 14:54  diepen
+
+	* src/makedep.sh: BugID: 455 Improved searching pkgdep
+
+2005-10-24 14:21  lofar
+
+	* src/makePackage.py: BugID: 271 package.doc files renamed to
+	  package.dox
+
+2005-10-18 13:22  diepen
+
+	* src/: Makefile.am, makedep.sh, remote_lofarcvsmv: BugID: 455
+	  Install makedep.sh Run pkgdep from Tools instead of Common if it
+	  cannot be found
+
+2005-10-14 10:03  diepen
+
+	* src/makeClass.py: BugID: 396 Create .h and .tcc files in include
+	  directory if present
+
+2005-10-13 15:21  diepen
+
+	* src/lofarcvsmv: BugID: 396 First do ssh-add if needed
+
+2005-10-13 11:46  diepen
+
+	* src/makedoc: BugID: 445 Use directory doc/html and rename if
+	  existing Added option to specify target directory Try to find
+	  doxygen path in variants file Use standard doxygen.cfg from
+	  autoconf_share
+
+2005-10-07 13:55  diepen
+
+	* src/finddep: BugID: 396 Ignore lofar_GENERAL lines
+
+2005-10-07 13:52  diepen
+
+	* src/pkgdep.cc: BugID: 429 Check if depth>50
+
+2005-10-07 08:51  diepen
+
+	* src/: Makefile.am, makePackage.py,
+	  templates/include_makefile.am_template,
+	  templates/include_pkg_makefile.am_template,
+	  templates/package_spec.in_template,
+	  templates/src_makefile.am_template,
+	  templates/test_makefile.am_template: BugID: 396 Changed all
+	  templates for new structure Added templates for
+	  include/Makefile.am, include/PKG/Makefile.am, PKG.spec.in
+
+2005-10-04 15:31  diepen
+
+	* src/templates/: package_configure.in_template,
+	  package_makefile.am_template, src_makefile.am_template,
+	  test_makefile.am_template: BugID: 396 Changed templates for the
+	  new build structure
+
+2005-10-04 11:57  diepen
+
+	* Tools.spec.in: BugID: 396 New file for rpm build
+
+2005-10-04 11:56  diepen
+
+	* Makefile.am, configure.in: BugID: 396 Added EXTRA_DIST for
+	  distcheck
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, test/Makefile.am: BugId: 396 Use
+	  $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-10-04 09:46  diepen
+
+	* src/Makefile.am: BugID: 424 Remove the .tmp files during the
+	  install and added a uninstall-local target.
+
+2005-10-04 09:08  diepen
+
+	* src/makedoc: BugID: 423 Create class documentation using doxygen
+
+2005-10-03 16:06  cvs
+
+	* src/makedep.sh: %lofarcvsmv%: Moved from LOFAR/autoconf_share,
+	  creating new revision
+
+2005-10-03 13:33  loose
+
+	* src/Makefile.am: BugID: 420
+
+	  Moved pkgdep.cc from LCS/Common to LCS/Tools.
+
+2005-10-03 12:40  cvs
+
+	* src/pkgdep.cc: %lofarcvsmv%: Moved from LOFAR/LCS/Common/src,
+	  creating new revision
+
+2005-09-20 11:41  diepen
+
+	* src/remote_lofarcvsmv: BugID: 350 Keep protections of moved files
+
+2005-09-20 10:48  diepen
+
+	* src/: lofarcvsmv, lofarcvsx: BugID: 350 Make it operational by
+	  sending command to cvs.astron.nl
+
+2005-09-14 12:01  diepen
+
+	* src/Makefile.am: BugID: 350 Added lofarcvsmv and lofarcvsx
+
+2005-09-13 12:17  diepen
+
+	* src/lofarcvsx: BugID: 350 Possibility to set or clear x-bit of a
+	  file
+
+2005-09-13 12:05  diepen
+
+	* src/remote_lofarcvsmv: BugID: 350 Added setx and clearx commands
+
+2005-09-13 11:09  diepen
+
+	* src/: lofarcvsmv, remote_lofarcvsmv: BugID: 350 Made it more
+	  robust.
+
+2005-09-12 14:40  diepen
+
+	* src/lofarcvsmv: BugID: 350 Added omitted quote
+
+2005-09-12 14:33  diepen
+
+	* src/: lofarcvsmv, remote_lofarcvsmv: BugID: 350 First version.
+
+2005-07-20 12:52  coolen
+
+	* src/: lofarinit.csh, lofarinit.sh: BugID:193
+
+	  Solved
+
+2005-07-06 14:43  loose
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS, README, configure.in:
+	  %[ER: 0]%
+
+	  Merged relevant changes from the 1.0 release branch into the main
+	  development line.
+
+2005-06-24 15:42  lofar
+
+	* configure.in: changed lofar_INTERNAL entry
+
 2005-06-13 16:29  loose
 
 	* src/: LimitExec.c, LimitExec.cc, Makefile.am: %[ER: 252]%
@@ -32,14 +203,6 @@
 
 	  Changed lofar_PACKAGE into lofar_INTERNAL.
 
-2005-05-13 11:44  coolen
-
-	* configure.in, src/templates/package_configure.in_template: all
-	  changes so far for the lofar_PACKAGE to lofar_INTERNAL step.
-	  beware!!!  this branch also contains the ER231 changes , and
-	  those are NOT wanted in the main development tree....  Only take
-	  the configure.in stuff
-
 2005-05-04 18:02  loose
 
 	* src/makeClass.py: %[ER: 241]%
@@ -58,6 +221,14 @@
 	* src/makePackage.py: %[ER: 241]%
 
 	  Set the executable bits of the generated bootstrap file.
+
+2005-04-13 16:33  loose
+
+	* src/pkgdep.cc: %[PR: 100]%
+
+	  Removed #include <config.h> and #include <lofar_config.h> from
+	  header files (*.h and *.tcc). Added #include <lofar_config.h> to
+	  source files (*.cc).
 
 2005-04-08 13:31  lofar
 
@@ -112,6 +283,15 @@
 
 	* src/Makefile.am: New Makefile to handle the tools in LOFAR/LCS
 
+2005-02-25 12:04  lofar
+
+	* src/pkgdep.cc: %[ER: 71]% placed all needed images in their own
+	  image directory, so had to change the references to them.
+
+2005-02-22 09:34  diepen
+
+	* src/finddep: %[ER: 70]% Use -e before file name in sed command
+
 2005-02-21 16:30  coolen
 
 	* src/: makeClass.py, makePackage.py, makeTest.py,
@@ -128,4 +308,89 @@
 	  templates/test.out_template, templates/test.sh_template,
 	  templates/test_makefile.am_template: %[ER: 241]% created Tools
 	  directory and added make* python scripts + templates
+
+2005-02-18 16:50  lofar
+
+	* src/pkgdep.cc: %[ER: 71]% changed place where images can be found
+
+2005-02-18 16:28  lofar
+
+	* src/makedep.sh: %[ER: 71]% added scriptsdirectory for php scripts
+
+2005-01-27 09:21  loose
+
+	* src/makedep.sh: %[ER: 30]%
+
+	  * Added standard header and, more importantly, #!/bin/sh line.  *
+	  Added check for existence of pkgdep program.
+
+2005-01-21 15:38  lofar
+
+	* src/makedep.sh: %[ER:71]% Script to make all package tree files
+	  and html pages that show LOFAR dependencies
+
+2005-01-21 13:24  diepen
+
+	* src/pkgdep.cc: %[ER: 207]% Fixed problem in display of flat tree
+
+2005-01-21 13:03  diepen
+
+	* src/pkgdep.cc: %[ER: 207]% Skip single parents if wanted Fixed a
+	  few little problems
+
+2005-01-20 09:36  diepen
+
+	* src/pkgdep.cc: %[ER: 207]% Improved the XHTML output
+
+2005-01-18 15:27  diepen
+
+	* src/finddep: %[ER: 221]% Add LOFAR to package tree
+
+2005-01-18 15:26  diepen
+
+	* src/pkgdep.cc: %[ER: 221]% Improved generated html pages
+
+2005-01-17 14:56  diepen
+
+	* src/pkgdep.cc: %[ER: 221]% Added header and footer for XHTML
+
+2005-01-03 09:56  diepen
+
+	* src/finddep: %[ER: 70]% Added -all files
+
+2004-12-27 16:00  diepen
+
+	* src/finddep: %[ER: 70]% Added creation of finddep.pkg (for
+	  package tree)
+
+2004-12-27 15:59  diepen
+
+	* src/pkgdep.cc: %[ER: 70]% Added a few options
+
+2004-12-24 16:02  diepen
+
+	* src/pkgdep.cc: %[ER: 70]% Added ability to write JavaScript
+	  output
+
+2004-12-24 13:26  lofar
+
+	* src/pkgdep.cc: %[ER:71 ]% removed root packages check by request
+	  of Ger van Diepen
+
+2004-11-30 11:29  diepen
+
+	* src/finddep: %[ER: 207]% Removed debug echo statement
+
+2004-11-30 10:32  diepen
+
+	* src/finddep: %[ER: 207]% Added argument to specify root directory
+
+2004-11-30 10:08  diepen
+
+	* src/finddep: %[ER: 207]% Find the packages used by other packages
+
+2004-11-30 10:06  diepen
+
+	* src/pkgdep.cc: %[ER: 207]% Program to show the package dependency
+	  tree
 
