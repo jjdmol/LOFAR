@@ -1,3 +1,72 @@
+2005-10-27 12:29  loose
+
+	* ChangeLog, NEWS, configure.in: BugID: 327
+
+	  Merged relevant changes of the 2.1 release branch into the main
+	  development line.
+
+2005-10-24 14:15  lofar
+
+	* package.doc, package.dox: BugID: 271 moved al doxygen related
+	  .doc file to .dox
+
+2005-10-07 09:30  diepen
+
+	* Transport.spec.in: BugID: 396 Transport does not depend on a
+	  specific Common version
+
+2005-10-04 14:19  diepen
+
+	* Makefile.am, Transport.spec.in, configure.in,
+	  include/Makefile.am, include/Transport/Makefile.am,
+	  src/Makefile.am, test/Makefile.am: BugID: 396 Changed files for
+	  makedistcheck and rpm
+
+2005-10-04 14:15  cvs
+
+	* src/: BaseSim.h, Connection.h, ConnectionPool.h, CSConnection.h,
+	  DataBlobExtra.h, DataHolder.h, TH_Ethernet.h, TH_File.h,
+	  TH_Mem.h, TH_MPI.h, TH_ShMem.h, TH_Socket.h, TransportHolder.h:
+	  %lofarcvsmv%: Moved to LOFAR/LCS/Transport/include/Transport
+
+2005-10-04 14:15  cvs
+
+	* include/Transport/: BaseSim.h, Connection.h, ConnectionPool.h,
+	  CSConnection.h, DataBlobExtra.h, DataHolder.h, TH_Ethernet.h,
+	  TH_File.h, TH_Mem.h, TH_MPI.h, TH_ShMem.h, TH_Socket.h,
+	  TransportHolder.h: %lofarcvsmv%: Moved from
+	  LOFAR/LCS/Transport/src, creating new revision
+
+2005-10-04 11:42  diepen
+
+	* Makefile.am, src/Makefile.am, test/Makefile.am: BugId: 396 Use
+	  $(top_srcdir)/Makefile.common
+
+2005-10-04 11:40  diepen
+
+	* configure.in: BugId: 396 Use lofar_GENERAL
+
+2005-09-28 17:03  loose
+
+	* src/TH_Socket.cc: BugID: 405
+
+	  Socket is now always destroyed when it is "owned", after peer has
+	  closed the connection.
+
+2005-09-26 17:16  loose
+
+	* src/TH_Socket.cc: BugID: 405
+
+	  Socket is now always destroyed when it is "owned", after peer has
+	  closed the connection.
+
+2005-09-19 13:34  loose
+
+	* test/ExampleSocket.cc: BugID: 349
+
+	  When HAVE_BGL is defined, the test program exits with code 3
+	  (meaning: test skipped).
+
 2005-08-16 12:40  zwart
 
 	* src/: TH_Socket.cc, TH_Socket.h: BugID: 272
