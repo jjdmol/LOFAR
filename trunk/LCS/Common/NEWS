@@ -1,3 +1,46 @@
+LCS/Common: Version 2.4, date: 2005/11/16
+=========================================
+
+In preparation of making package distributable as rpm package, all header
+files that must be installed have been moved from the `src' directory to the
+`inclucde/<package>' directory (ref. BugID #396).
+
+Furthermore, some changes to the build environment require the use of
+autoconf_share 2.4 (or later). 
+
+
+The following BugIDs have been resolved
+---------------------------------------
+
+# 331 : make includefiles for boost.
+        Added lofar_*.h files for Boost.Date_Time and Boost.Threads.
+
+# 394 : Update documentation
+        General updates to the Doxygen documentation, e.g., add missing
+        Doxygen tags like \ingroup, \defgroup, and \addtogroup.
+
+# 407 : lofar_datetime.h is not installed after "make install"
+        Added lofar_datetime.h to Makefile.am
+
+# 422 : Reading back AIPS++ array fails
+        Reading back an AIPS++ array from a blob gives an invalid IPosition
+        exception.
+
+# 472 : ::shutdown() not implemented in BG/L
+        The shutdown socket syscall is not implemented on Blue Gene/L. This is
+        not critical, since a shutdown() is often followed by a close(), but
+        it currently fills stderr with non-fatal failure messages. I propose
+        having Socket::shutdown() always succeed on Blue Gene/L (I'll attach a
+        patch shortly).
+
+# 488 : ALLOC_TRACER_ALIAS does not work correctly without log4cplus
+        There is a difference in the implementation of ALLOC_TRACER_ALIAS
+        between LofarLogCout and LofarLog4Cplus. The method getLogger is
+        public for Log4Cplus. For LogCout it is not defined if it is public,
+        private or protected.
+
+
+
 LCS/Common: Version 2.3, date: 2005/09/02
 =========================================
 
