@@ -47,6 +47,6 @@ Stub_Delay.cc			\
 Stub_PhaseCorr.cc
 
 configfilesdir=$(bindir)
-configfiles_DATA=../../TFlopCorrelator.cfg
+#configfiles_DATA=../../TFlopCorrelator.cfg
 
 include $(top_srcdir)/Makefile.common
