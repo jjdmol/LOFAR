@@ -603,7 +603,7 @@ _auto_correlate_1_and_2:
 	fpmr	 10,0
 	fpmr	 11,0
 
-loop1:	# loop over time
+loop3:	# loop over time
 
 	lfpsux	 16,3,11	# read station samples
 	lfpsux	 17,3,11
@@ -659,7 +659,7 @@ loop1:	# loop over time
 
 	fxcxma   9,18,19,9	# S1 * ~S1, phase 2
 
-	bdnz	 loop1
+	bdnz	 loop3
 
 	lfpsx	 12,12,11	# f12r = 1, f12i = 1
 
@@ -689,7 +689,7 @@ loop1:	# loop over time
 	stfpsux	 11,7,11
 
 	li	  11,16		# restore call-saved registers
-	lfpdux	  19,1,11
+	lfpdx	  19,0,1
 	lfpdux	  18,1,11
 	lfpdux	  17,1,11
 	lfpdux	  16,1,11
