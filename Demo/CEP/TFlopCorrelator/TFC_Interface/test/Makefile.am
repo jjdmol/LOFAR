@@ -9,10 +9,8 @@ AM_CXXFLAGS = \
 tRectMatrix_SOURCES =				\
 tRectMatrix.cc					
 
-tRectMatrixSpeed_SOURCES =			\
-tRectMatrixSpeed.cc					
-
 tDH_FIR_SOURCES =				\
+../src/DH_FIR.cc				\
 tDH_FIR.cc					
 
 TESTS   = 					\
