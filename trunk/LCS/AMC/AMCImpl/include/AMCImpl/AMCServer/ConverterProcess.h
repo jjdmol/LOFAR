@@ -67,13 +67,13 @@ namespace LOFAR
 
     private:
       // Receive the conversion request from the client.
-      void recvRequest(ConverterCommand&,
+      bool recvRequest(ConverterCommand&,
                        vector<SkyCoord>&,
                        vector<EarthCoord>&,
                        vector<TimeCoord>&);
 
       // Send the conversion result to the client.
-      void sendResult(const vector<SkyCoord>&);
+      bool sendResult(const vector<SkyCoord>&);
 
         
       // Data holder holding the request data to be sent to the server.

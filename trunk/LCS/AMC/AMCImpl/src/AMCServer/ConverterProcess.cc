@@ -41,30 +41,37 @@ namespace LOFAR
       itsSendConn("send", &itsResult, 0, &itsTH),
       itsRecvConn("recv", 0, &itsRequest, &itsTH)
     {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
 
     ConverterProcess::~ConverterProcess()
     {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
 
     void ConverterProcess::handleRequests()
     {
-      try {
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+      // While the client is connected, handle incoming requests.
+      while(itsRecvConn.isConnected()) {
           
-        // While the client is connected, handle incoming requests.
-        while(itsRecvConn.isConnected()) {
+        // ConverterImpl may throw a ConverterError; we don't want to let this
+        // exception escape.
+        try {
           
           ConverterCommand cmd;
           vector<SkyCoord> skyCoord;
           vector<EarthCoord> earthCoord;
           vector<TimeCoord> timeCoord;
-
-          // receive conversion request.
-          recvRequest(cmd, skyCoord, earthCoord, timeCoord);
-
-          // process the conversion request, invoking the right conversion
+          
+          // Receive conversion request. If the receive fails, the client
+          // probably hung up.
+          if (!recvRequest(cmd, skyCoord, earthCoord, timeCoord)) break;
+          
+          // Process the conversion request, invoking the right conversion
           // method.
           switch(cmd.get()) {
           case ConverterCommand::J2000toAZEL:
@@ -76,29 +83,34 @@ namespace LOFAR
               itsConverter.azelToJ2000(skyCoord, earthCoord, timeCoord);
             break;
           default:
-            THROW (ConverterError, 
-                   "Received invalid converter command (" << cmd << ")");
+            LOG_DEBUG_STR("ConverterProcess::handleRequests() - "
+                          << "Received invalid converter command (" 
+                          << cmd << ")");
           }
+          
+          // Send the conversion result to the client. If the send fails, the
+          // client probably hung up.
+          if (!sendResult(skyCoord)) break;
 
-          // send the conversion result to the client.
-          sendResult(skyCoord);
-        }
-       
-      } catch (ServerError& e) {
-        LOG_DEBUG_STR(e);
+        } 
+        catch (ConverterError& e) {
+          LOG_DEBUG_STR(e);
+        }   
       }
     }
     
 
-    void ConverterProcess::recvRequest(ConverterCommand& cmd,
+    bool ConverterProcess::recvRequest(ConverterCommand& cmd,
                                        vector<SkyCoord>& skyCoord,
                                        vector<EarthCoord>& earthCoord,
                                        vector<TimeCoord>& timeCoord)
     {
       // Read the result from the client into the data holder's I/O buffer.
+      // If the read fails, the client probably hung up.
       if (itsRecvConn.read() == Connection::Error) {
-        THROW (ServerError,
-               "Error receiving data from client. Connection lost?");
+        LOG_DEBUG("ConverterProcess::recvRequest() - "
+                  "Connection error. Client probably hung up.");
+        return false;
       }
 
       // Always make this call, even though it only has effect when doing
@@ -109,24 +121,29 @@ namespace LOFAR
       // skyCoord, \a earthCoord, and \a timeCoord.
       itsRequest.readBuf(cmd, skyCoord, earthCoord, timeCoord);
 
+      // Everything went well.
+      return true;
     }
 
 
-    void ConverterProcess::sendResult(const vector<SkyCoord>& skyCoord)
+    bool ConverterProcess::sendResult(const vector<SkyCoord>& skyCoord)
     {
       // Write the conversion result into the data holder's I/O buffer.
       itsResult.writeBuf(skyCoord);
 
       // Write the result from the data holder's I/O buffer to the client.
       if (itsSendConn.write() == Connection::Error) {
-        THROW (ServerError,
-               "Error sending data to client. Connection lost?");
+        LOG_DEBUG("ConverterProcess::sendResult() - "
+                  "Connection error. Client probably hung up.");
+        return false;
       }
 
       // Always make this call, even though it only has effect when doing
       // asynchronous communication.
       itsSendConn.waitForWrite();
 
+      // Everything went well.
+      return true;
     }
 
 
