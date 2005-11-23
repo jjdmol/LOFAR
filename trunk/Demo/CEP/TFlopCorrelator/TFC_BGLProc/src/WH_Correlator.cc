@@ -28,50 +28,17 @@
 #include <TFC_Interface/TFC_Config.h>
 #include <TFC_Interface/DH_Vis.h>
 #include <WH_Correlator.h>
+#include <Correlator.h>
 
+#if !defined HAVE_BGL
+#define C_IMPLEMENTATION
+#endif
 
 using namespace LOFAR;
-
-// define a type containing the input from a single station
-typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
-typedef fcomplex stationOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
 
 
 extern "C"
 {
-  void _correlate_3x2(const stationInputType *S0,
-		      const stationInputType *S1,
-		      const stationInputType *S2,
-		      const stationInputType *S3,
-		      const stationInputType *S4,
-		      stationOutputType *S0_S2,
-		      stationOutputType *S1_S2,
-		      stationOutputType *S0_S3,
-		      stationOutputType *S1_S3,
-		      stationOutputType *S0_S4,
-		      stationOutputType *S1_S4
-		     );
-
-  void _correlate_2x2(const stationInputType *S0,
-		      const stationInputType *S1,
-		      const stationInputType *S2,
-		      const stationInputType *S3,
-		      stationOutputType *S0_S2,
-		      stationOutputType *S1_S2,
-		      stationOutputType *S0_S3,
-		      stationOutputType *S1_S3);
-
-#if NR_STATIONS % 2 == 0
-  void _auto_correlate_1_and_2(const stationInputType *S0,
-			       const stationInputType *S1,
-			       stationOutputType *S0_S0,
-			       stationOutputType *S0_S1,
-			       stationOutputType *S1_S1);
-#else
-  void _auto_correlate_1x1(const stationInputType *S0,
-			   stationOutputType *S0_S0);
-#endif
-
   void _fast_memcpy(void *dst, const void *src, size_t size);
 }
 
@@ -225,7 +192,6 @@ void WH_Correlator::process()
     // do the remaining autocorrelations
     for (int stat = 0; stat < NR_STATIONS; stat += 2) {
 #if NR_STATIONS % 2 == 0
-#warning this has not been tested yet
       _auto_correlate_1_and_2(&(*itsInputBuffer)[ch][stat],
 			      &(*itsInputBuffer)[ch][stat+1],
 			      &(*output)[DH_Vis::baseline(stat  , stat  )][ch],

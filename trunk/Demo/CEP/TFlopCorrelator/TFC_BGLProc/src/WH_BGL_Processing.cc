@@ -11,6 +11,8 @@
 //# Includes
 #include <APS/ParameterSet.h>
 #include <WH_BGL_Processing.h>
+#include <Correlator.h>
+#include <FIR.h>
 
 #include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_Vis.h>
@@ -22,21 +24,18 @@
 #include <assert.h>
 #include <complex.h>
 
-#undef C_IMPLEMENTATION
+#if !defined HAVE_BGL
+#define C_IMPLEMENTATION
+#endif
 
 using namespace LOFAR;
-
-
-FIR::FIR()
-{
-  memset(itsDelayLine, 0, sizeof itsDelayLine);
-}
 
 
 fcomplex WH_BGL_Processing::itsCorrCube[NR_SUB_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
 
 
 const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) = {
+#if NR_SUB_CHANNELS == 256 && NR_TAPS == 16
   {    22,   399,  -384,   179,    19,  -191,   320,  -380,
     32767,  -503,   377,  -226,    40,   166,  -377,   397 },
   {    22,   401,  -391,   193,    -3,  -157,   262,  -255,
@@ -549,75 +548,11 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
      -255,   262,  -157,    -3,   193,  -391,   401,    22 },
   {   397,  -377,   166,    40,  -226,   377,  -503, 32767,
      -380,   320,  -191,    19,   179,  -384,   399,    22 },
-};
-
-
-// define a type containing the input from a single station
-typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
-typedef fcomplex stationOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
-
-struct phase_shift {
-  union {
-    dcomplex c;
-    struct {
-      double real, imag;
-    } d;
-  } v0, dv;
-};
-
-extern "C"
-{
-  void _fft_16(const fcomplex *in, int in_stride, fcomplex *out, int out_stride);
-  void _transpose_8x4(i16complex *out, const i16complex *in);
-
-  void _transpose_4x8(fcomplex *out,
-		      const fcomplex *in,
-		      int length,
-		      int input_stride,
-		      int output_stride);
-
-  void _phase_shift_and_transpose(fcomplex *out,
-				  const fcomplex *in,
-				  const struct phase_shift[2]);
-
-  void _filter(fcomplex delayLine[NR_TAPS],
-	       const float weights[NR_TAPS],
-	       const i16complex samples[],
-	       fcomplex out[],
-	       int nr_samples_div_16);
-
-  void _correlate_2x2(const stationInputType *S0,
-		      const stationInputType *S1,
-		      const stationInputType *S2,
-		      const stationInputType *S3,
-		      stationOutputType *S0_S2,
-		      stationOutputType *S1_S2,
-		      stationOutputType *S0_S3,
-		      stationOutputType *S1_S3);
-
-  void _correlate_3x2(const stationInputType *S0,
-  		      const stationInputType *S1,
-		      const stationInputType *S2,
-		      const stationInputType *S3,
-		      const stationInputType *S4,
-		      stationOutputType *S0_S2,
-		      stationOutputType *S1_S2,
-		      stationOutputType *S0_S3,
-		      stationOutputType *S1_S3,
-		      stationOutputType *S0_S4,
-		      stationOutputType *S1_S4);
-#if NR_STATIONS % 2 == 0
-  void _auto_correlate_1_and_2(const stationInputType *S0,
-			       const stationInputType *S1,
-			       stationOutputType *S0_S0,
-			       stationOutputType *S0_S1,
-			       stationOutputType *S1_S1);
 #else
-  void _auto_correlate_1x1(const stationInputType *S0,
-			   stationOutputType *S0_S0);
+  0
 #endif
-  void _fast_memcpy(void *dst, const void *src, size_t bytes);
-}
+};
+
 
 
 WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID):
@@ -678,7 +613,6 @@ void WH_BGL_Processing::preprocess()
 }
 
 
-#if defined C_IMPLEMENTATION
 #if defined __xlC__
 inline __complex__ float to_fcomplex(i16complex z)
 {
@@ -687,16 +621,18 @@ inline __complex__ float to_fcomplex(i16complex z)
 #else
 #define to_fcomplex(Z) (static_cast<fcomplex>(Z))
 #endif
-#endif
 
 
 
+#if 0
 double phi = 0.0;
 static const double factor = 1.0 /
     (sqrt((double) NR_SAMPLES_PER_INTEGRATION) // correct for integration
   * 32768.0 // correction for i16complex input
   * 32768.0 // correction for polyphase filter
   * pow((double) NR_SUB_CHANNELS, 0.25)); // correction for FFT
+#endif
+
 
 void WH_BGL_Processing::doPPF()
 {
@@ -774,6 +710,7 @@ void WH_BGL_Processing::doPPF()
 
       fftTimer.stop();
 
+#if defined DELAY_COMPENSATION
 #if 0
       for (int t = 0; t < 2; t ++) {
 	sincos(0.0, &phases[t].v0.d.imag, &phases[t].v0.d.real);
@@ -784,7 +721,6 @@ void WH_BGL_Processing::doPPF()
       }
 #endif
 
-#if defined DELAY_COMPENSATION
 #if defined C_IMPLEMENTATION
       for (int t = 0; t < 2; t ++) {
 	dcomplex v = phases[t].v0.c;
@@ -822,6 +758,20 @@ void WH_BGL_Processing::doPPF()
   }
 
   timer.stop();
+}
+
+
+void WH_BGL_Processing::bypassPPF()
+{
+  DH_PPF::BufferType *input = static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
+
+  for (int stat = 0; stat < NR_STATIONS; stat ++) {
+    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
+      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	itsCorrCube[0][stat][time][pol] = to_fcomplex((*input)[stat][time][pol]);
+      }
+    }
+  }
 }
 
 
@@ -910,9 +860,14 @@ void WH_BGL_Processing::doCorrelate()
 void WH_BGL_Processing::process()
 {
   static NSTimer timer("total", true);
-
   timer.start();
+
+#if NR_SUB_CHANNELS > 1
   doPPF();
+#else
+  bypassPPF();
+#endif
+
   doCorrelate();
   timer.stop();
 }

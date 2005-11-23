@@ -60,6 +60,8 @@ namespace LOFAR
     /// forbid assignment
     WH_PPF& operator= (const WH_PPF&);
 
+    void doPPF(), bypassPPF();
+
     /// FIR Filter variables
     short	 itsSubBandID;
     short        itsMaxElement;
