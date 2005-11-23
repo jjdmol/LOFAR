@@ -74,6 +74,16 @@ double NSTimer::get_CPU_speed_in_MHz()
 }
 
 
+double NSTimer::getElapsed() const
+{
+  double time = total_time / 1e6;
+  if (CPU_speed_in_MHz > 0) {
+    time /= CPU_speed_in_MHz;
+  }
+  return time;
+}
+
+
 void NSTimer::print_time(ostream &str, const char *which, double time) const
 {
     static const char *units[] = { " ns", " us", " ms", "  s", " ks", 0 };
@@ -90,7 +100,7 @@ void NSTimer::print_time(ostream &str, const char *which, double time) const
 }
 
 
-ostream &NSTimer::print(ostream &str)
+ostream &NSTimer::print(ostream &str) const
 {
     if (name == 0) {
       str << "timer: ";
@@ -111,12 +121,6 @@ ostream &NSTimer::print(ostream &str)
 	str << "not used\n";
 
     return str;
-}
-
-
-ostream &operator << (ostream &str, class NSTimer &timer)
-{
-    return timer.print(str);
 }
 
 

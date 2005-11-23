@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_TIMER_H
 
 // \file Timer.h
-// Accurate timer
+// Very accurate timer for elapsed times.
 
 #include <cstdlib>
 #include <cstring>
@@ -45,51 +45,71 @@ namespace LOFAR {
   // A timer can be started and stopped multiple times; both the average and
   // total time, as well as the number of iterations are printed.
   // The measured time is real time (as opposed to user or system time).
-  // The timer can be used to measure 10 nanosecond to a century time intervals.
+  // The timer can be used to measure from 10 nanosecond to a century interval.
 
   class NSTimer {
-    public:
-			   NSTimer(const char *name = 0, bool print_on_destruction = false);
-			   ~NSTimer();
+  public:
+    // Construct.
+    // The given name will be used when the timer is printed.
+    NSTimer (const char *name = 0, bool print_on_destruction = false);
 
-	void		   start();
-	void		   stop();
-	void		   reset();
-	std::ostream   	   &print(std::ostream &);
+    // Destruct.
+    // The time is printed on stderr if print_on_destruction is true.
+    ~NSTimer();
 
-    private:
-	void		   print_time(std::ostream &, const char *which, double time) const;
+    // Start the timer.
+    void start();
+    // Stop the timer
+    void stop();
 
-	union {
-	  long long	   total_time;
-	  struct {
+    // Reset the timer to zero.
+    void reset();
+
+    // Print the timer.
+    // <group>
+    std::ostream& print (std::ostream &) const;
+    friend std::ostream& operator<< (std::ostream&, const NSTimer&);
+    // </group>
+
+    // Get the elapsed time (in seconds).
+    double getElapsed() const;
+
+    // Get the total number of times start/stop is done.
+    unsigned long long getCount() const;
+
+  private:
+    void print_time(std::ostream &, const char *which, double time) const;
+
+    union {
+      long long	   total_time;
+      struct {
 #if defined __PPC__
-	      int	   total_time_high, total_time_low;
+	int	   total_time_high, total_time_low;
 #else
-	      int	   total_time_low, total_time_high;
+	int	   total_time_low, total_time_high;
 #endif
-	  };
-	};
+      };
+    };
 
 #if defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
-	union {
-	  unsigned long long count;
-	  struct {
-	    int		     count_low, count_high;
-	  };
-	};
+    union {
+      unsigned long long count;
+      struct {
+	int count_low, count_high;
+      };
+    };
 #else
-	unsigned long long count;
+    unsigned long long count;
 #endif
 
-	char		   *const name;
-	const bool	   print_on_destruction;
+    char *const name;
+    const bool print_on_destruction;
 
-	static double	   CPU_speed_in_MHz, get_CPU_speed_in_MHz();
+    static double CPU_speed_in_MHz;
+
+    static double get_CPU_speed_in_MHz();
   };
 
-
-  std::ostream &operator << (std::ostream &, class NSTimer &);
 
 
   inline void NSTimer::reset()
@@ -98,6 +118,10 @@ namespace LOFAR {
     count      = 0;
   }
 
+  inline unsigned long long NSTimer::getCount() const
+  {
+    return count;
+  }
 
   inline NSTimer::NSTimer(const char *name, bool print_on_destruction)
     :
@@ -107,15 +131,21 @@ namespace LOFAR {
     reset();
   }
 
-
   inline NSTimer::~NSTimer()
   {
-    if (print_on_destruction)
+    if (print_on_destruction) {
       print(std::cerr);
-
-    if (name != 0)
+    }
+    if (name != 0) {
       free(name);
+    }
   }
+
+  inline std::ostream& operator<< (std::ostream& str, const NSTimer& timer)
+  {
+    return timer.print(str);
+  }
+
 
   inline void NSTimer::start()
   {
@@ -300,6 +330,7 @@ namespace LOFAR {
     ++ count;
 #endif
   }
+
 }  // end namespace LOFAR
 
 
