@@ -66,8 +66,8 @@ MeqJonesResult MeqJonesInvert::getJResult (const MeqRequest& request)
   const MeqMatrix& mr22 = r22.getValue();
   MeqMatrix t(1. / (mr11*mr22 - mr12*mr21));
   result11.setValue (mr22 * t);
-  result12.setValue (-mr12 * t);
-  result21.setValue (-mr21 * t);
+  result12.setValue (mr12 * -t);
+  result21.setValue (mr21 * -t);
   result22.setValue (mr11 * t);
 
   // Determine which values are perturbed and determine the perturbation.
@@ -92,8 +92,8 @@ MeqJonesResult MeqJonesInvert::getJResult (const MeqRequest& request)
       const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
       MeqMatrix t(1. / (mr11*mr22 - mr12*mr21));
       result11.setPerturbedValue (spinx, mr11 * t);
-      result12.setPerturbedValue (spinx, -mr12 * t);
-      result21.setPerturbedValue (spinx, -mr21 * t);
+      result12.setPerturbedValue (spinx, mr12 * -t);
+      result21.setPerturbedValue (spinx, mr21 * -t);
       result22.setPerturbedValue (spinx, mr22 * t);
     }
   }
