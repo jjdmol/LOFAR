@@ -59,9 +59,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord, 
                                   const TimeCoord& timeCoord)
     {
-      return j2000ToAzel(vector<SkyCoord>  (1, skyCoord),
-                         vector<EarthCoord>(1, earthCoord),
-                         vector<TimeCoord> (1, timeCoord)) [0];
+      return doConvert(ConverterCommand::J2000toAZEL,
+                       vector<SkyCoord>  (1, skyCoord),
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord)) [0];
     }
 
 
@@ -70,9 +71,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord,
                                   const TimeCoord& timeCoord)
     {
-      return j2000ToAzel(skyCoord, 
-                         vector<EarthCoord>(1, earthCoord),
-                         vector<TimeCoord> (1, timeCoord));
+      return doConvert(ConverterCommand::J2000toAZEL,
+                       skyCoord, 
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord));
     }
 
 
@@ -81,9 +83,10 @@ namespace LOFAR
                                   const vector<EarthCoord>& earthCoord,
                                   const TimeCoord& timeCoord)
     {
-      return j2000ToAzel(vector<SkyCoord> (1, skyCoord),
-                         earthCoord, 
-                         vector<TimeCoord>(1, timeCoord));
+      return doConvert(ConverterCommand::J2000toAZEL,
+                       vector<SkyCoord> (1, skyCoord),
+                       earthCoord, 
+                       vector<TimeCoord>(1, timeCoord));
     }
 
 
@@ -92,9 +95,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord,
                                   const vector<TimeCoord>& timeCoord)
     {
-      return j2000ToAzel(vector<SkyCoord>  (1, skyCoord),
-                         vector<EarthCoord>(1, earthCoord),
-                         timeCoord);
+      return doConvert(ConverterCommand::J2000toAZEL,
+                       vector<SkyCoord>  (1, skyCoord),
+                       vector<EarthCoord>(1, earthCoord),
+                       timeCoord);
     }
 
 
@@ -103,21 +107,10 @@ namespace LOFAR
                                   const vector<EarthCoord>& earthCoord,
                                   const vector<TimeCoord>& timeCoord)
     {
-      // Set the value of ConverterCommand equal to J2000->AZEL
-      ConverterCommand cmd(ConverterCommand::J2000toAZEL);
-                                
-      // Send the request to the server
-      sendRequest(cmd, skyCoord, earthCoord, timeCoord);
-
-      // Vectors to hold the conversion result.
-      vector<SkyCoord> sc;
-
-      // Receive the result from the server.
-      // \note This method is blocking.
-      recvResult(sc);
-
-      // Return the result of the conversion.
-      return sc;
+      return doConvert(ConverterCommand::J2000toAZEL,
+                       skyCoord,
+                       earthCoord,
+                       timeCoord);
     }
 
 
@@ -126,9 +119,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord,
                                   const TimeCoord& timeCoord)
     {
-      return azelToJ2000(vector<SkyCoord>  (1, skyCoord),
-                         vector<EarthCoord>(1, earthCoord),
-                         vector<TimeCoord> (1, timeCoord)) [0];
+      return doConvert(ConverterCommand::AZELtoJ2000,
+                       vector<SkyCoord>  (1, skyCoord),
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord)) [0];
     }
 
 
@@ -137,9 +131,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord,
                                   const TimeCoord& timeCoord)
     {
-      return azelToJ2000(skyCoord, 
-                         vector<EarthCoord>(1, earthCoord),
-                         vector<TimeCoord> (1, timeCoord));
+      return doConvert(ConverterCommand::AZELtoJ2000,
+                       skyCoord, 
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord));
     }
 
 
@@ -148,21 +143,10 @@ namespace LOFAR
                                   const vector<EarthCoord>& earthCoord,
                                   const vector<TimeCoord>& timeCoord)
     {
-      // Set the value of ConverterCommand equal to AZEL->J2000
-      ConverterCommand cmd(ConverterCommand::AZELtoJ2000);
-                                
-      // Send the request to the server
-      sendRequest(cmd, skyCoord, earthCoord, timeCoord);
-
-      // Vectors to hold the conversion result.
-      vector<SkyCoord> sc;
-
-      // Receive the result from the server.
-      // \note This method is blocking.
-      recvResult(sc);
-
-      // Return the result of the conversion.
-      return sc;
+      return doConvert(ConverterCommand::AZELtoJ2000,
+                       skyCoord,
+                       earthCoord,
+                       timeCoord);
     }
 
 
@@ -171,9 +155,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord, 
                                   const TimeCoord& timeCoord)
     {
-      return j2000ToItrf(vector<SkyCoord>  (1, skyCoord),
-                         vector<EarthCoord>(1, earthCoord),
-                         vector<TimeCoord> (1, timeCoord)) [0];
+      return doConvert(ConverterCommand::J2000toITRF,
+                       vector<SkyCoord>  (1, skyCoord),
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord)) [0];
     }
 
 
@@ -182,9 +167,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord,
                                   const TimeCoord& timeCoord)
     {
-      return j2000ToItrf(skyCoord, 
-                         vector<EarthCoord>(1, earthCoord),
-                         vector<TimeCoord> (1, timeCoord));
+      return doConvert(ConverterCommand::J2000toITRF,
+                       skyCoord, 
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord));
     }
 
 
@@ -193,9 +179,10 @@ namespace LOFAR
                                   const vector<EarthCoord>& earthCoord,
                                   const TimeCoord& timeCoord)
     {
-      return j2000ToItrf(vector<SkyCoord> (1, skyCoord),
-                         earthCoord, 
-                         vector<TimeCoord>(1, timeCoord));
+      return doConvert(ConverterCommand::J2000toITRF,
+                       vector<SkyCoord> (1, skyCoord),
+                       earthCoord, 
+                       vector<TimeCoord>(1, timeCoord));
     }
 
 
@@ -204,9 +191,10 @@ namespace LOFAR
                                   const EarthCoord& earthCoord,
                                   const vector<TimeCoord>& timeCoord)
     {
-      return j2000ToItrf(vector<SkyCoord>  (1, skyCoord),
-                         vector<EarthCoord>(1, earthCoord),
-                         timeCoord);
+      return doConvert(ConverterCommand::J2000toITRF,
+                       vector<SkyCoord>  (1, skyCoord),
+                       vector<EarthCoord>(1, earthCoord),
+                       timeCoord);
     }
 
 
@@ -215,25 +203,41 @@ namespace LOFAR
                                   const vector<EarthCoord>& earthCoord,
                                   const vector<TimeCoord>& timeCoord)
     {
-      // Set the value of ConverterCommand equal to J2000->ITRF
-      ConverterCommand cmd(ConverterCommand::J2000toITRF);
-                                
-      // Send the request to the server
-      sendRequest(cmd, skyCoord, earthCoord, timeCoord);
+      return doConvert(ConverterCommand::J2000toITRF,
+                       skyCoord, 
+                       earthCoord, 
+                       timeCoord);
+    }
 
-      // Vectors to hold the conversion result.
+
+    //####################  Private methods  ####################//
+
+    vector<SkyCoord> 
+    ConverterClient::doConvert(const ConverterCommand& cmd,
+                               const vector<SkyCoord>& skyCoord,
+                               const vector<EarthCoord>& earthCoord,
+                               const vector<TimeCoord>& timeCoord)
+    {
+      // Vector to hold the conversion result.
       vector<SkyCoord> sc;
 
-      // Receive the result from the server.
-      // \note This method is blocking.
-      recvResult(sc);
+      // Send the request to the server, receive the result from the server,
+      // and return the result.
+      if (sendRequest(cmd, skyCoord, earthCoord, timeCoord) && recvResult(sc)) 
+        return sc;
 
-      // Return the result of the conversion.
-      return sc;
+      // If the server has died, we will usually notice this only after the
+      // receive fails. So, we will give it another try.
+      LOG_DEBUG("ConverterClient::doConvert() - retrying ...");
+      if (sendRequest(cmd, skyCoord, earthCoord, timeCoord) && recvResult(sc)) 
+        return sc;
+
+      // When we get here, both tries failed. Trouble!
+      THROW (ClientError, "Server communication failure. Bailing out!");
     }
 
 
-    void ConverterClient::sendRequest(const ConverterCommand& cmd,
+    bool ConverterClient::sendRequest(const ConverterCommand& cmd,
                                       const vector<SkyCoord>& skyCoord,
                                       const vector<EarthCoord>& earthCoord,
                                       const vector<TimeCoord>& timeCoord)
@@ -242,23 +246,38 @@ namespace LOFAR
       itsRequest.writeBuf(cmd, skyCoord, earthCoord, timeCoord);
 
       // Write the request from the data holder's I/O buffer to the server.
+      // If the write fails, we may have lost the connection to the server.
       if (itsSendConn.write() == Connection::Error) {
-        THROW (ClientError,
-               "Error sending data to server. Connection lost?");
+        LOG_INFO("ConverterClient::sendRequest() - "
+                 "Connection error. Trying to reconnect ...");
+        // Try to reconnect.
+        if (!itsTH.init()) {
+          THROW (ClientError, "Failed to reconnect to server");
+        }
+        return false;
       }
 
       // Always make this call, even though it only has effect when doing
       // asynchronous communication.
       itsSendConn.waitForWrite();
 
+      // When we get here, everything went well.
+      return true;
     }
 
-    void ConverterClient::recvResult(vector<SkyCoord>& skyCoord)
+
+    bool ConverterClient::recvResult(vector<SkyCoord>& skyCoord)
     {
       // Read the result from the server into the data holder's I/O buffer.
+      // If the read fails, we may have lost the connection to the server.
       if (itsRecvConn.read() == Connection::Error) {
-        THROW (ClientError, 
-               "Error receiving data from server. Connection lost?");
+        LOG_INFO("ConverterClient::recvResult() - "
+                 "Connection error. Trying to reconnect ...");
+        // Try to reconnect.
+        if (!itsTH.init()) {
+          THROW (ClientError, "Failed to reconnect to server");
+        }
+        return false;
       }
 
       // Always make this call, even though it only has effect when doing
@@ -267,6 +286,9 @@ namespace LOFAR
 
       // Read the conversion result from the I/O buffer into skyCoord
       itsResult.readBuf(skyCoord);
+
+      // When we get here, everything went well.
+      return true;
     }
 
 

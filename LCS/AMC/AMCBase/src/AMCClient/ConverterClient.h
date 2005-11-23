@@ -109,16 +109,6 @@ namespace LOFAR
                                             const vector<TimeCoord>& time);
  
 
-      // Send a conversion command to the server. The input data are stored in
-      // three vectors.
-      void sendRequest(const ConverterCommand&,
-                       const vector<SkyCoord>&,
-                       const vector<EarthCoord>&,
-                       const vector<TimeCoord>&);
-      
-      // Receive the converted data from the server.
-      void recvResult(vector<SkyCoord>&);
-        
     private:
       //@{
       // Make this class non-copyable.
@@ -126,6 +116,26 @@ namespace LOFAR
       ConverterClient& operator=(const ConverterClient&);
       //@}
 
+      // Perform actual conversion by first sending a conversion request to
+      // the server and then receiving the conversion result.
+      vector<SkyCoord> doConvert(const ConverterCommand&,
+                                 const vector<SkyCoord>&,
+                                 const vector<EarthCoord>&,
+                                 const vector<TimeCoord>&);
+      
+      // Send a conversion command to the server. The input data are stored in
+      // three vectors.
+      // \return \c true if send was successful; otherwise \c false.
+      bool sendRequest(const ConverterCommand&,
+                       const vector<SkyCoord>&,
+                       const vector<EarthCoord>&,
+                       const vector<TimeCoord>&);
+      
+      // Receive the converted data from the server.
+      // \return \c true if receive was successful; otherwise \c false.
+      // \note This method is blocking.
+      bool recvResult(vector<SkyCoord>&);
+        
       // Data holder holding the request data to be sent to the server.
       DH_Request itsRequest;
 
