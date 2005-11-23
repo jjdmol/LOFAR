@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 23 WAN Switch Configurator
-PANEL,258 161 728 613 N "_3DFace" 0
+PANEL,396 276 728 613 N "_3DFace" 0
 "main()
 {
   g_basicSwitchEl = makeDynAnytype(
@@ -50,18 +50,19 @@ global dyn_dyn_string g_portEl;
 global int MAX_NR_OF_SWITCH_PORTS = 48;
 global string NOT_SET_TEXT = \"Not set!!!\"; 
 global string SWITCH_TYPE_PREFIX = \"TWanSwitchPT\";
+global string SWITCH_NAME_PREFIX = \"PIC_WAN_\";
 
 showSwitch(string switchName)
 {
   session(true);
 	
-	slLogging.appendItem(\"Show settings of switch '\" + switchName + \"'\");
+	LOG_INFO(\"Show settings of switch '\" + switchName + \"'\");
 	if (switchName == \"\") 
 	{
 		session(false);
 	  return;
 	}
-  string fullSwitchName = \"PIC_WAN_\" + switchName;
+  string fullSwitchName = SWITCH_NAME_PREFIX + switchName;
   
   // switch name
   tfSwitchName.text = switchName;
@@ -81,7 +82,7 @@ showSwitch(string switchName)
  	string dpType = dpTypeName(fullSwitchName);
 	if (dpType == \"\")
 	{
-		slLogging.appendItem(\"Error!!! Cannot determine #port\");
+		LOG_INFO(\"Error!!! Cannot determine #port\");
 	}		
 	else
 	{
@@ -104,22 +105,27 @@ showSwitch(string switchName)
   string accessableAddrDPE;
 	dyn_string splittedRef;
 	string refWithoutPortID;
+	bool isActive;
   for (int i = 1; i <= dynlen(g_basicSwitchEl); i++)
   {
   	splittedSwitchEl = g_basicSwitchEl[i];
-  	refConf = fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._reference\";
   	refWithoutPortID = NOT_SET_TEXT;
-	  if (dpExists(refConf))
-	  {
-	 		dpGet(refConf, refVal);
-  		splittedRef = strsplit(refVal, \"_\");
-  		if (dynlen(splittedRef) == 2 && dynlen(getLastError()) == 0)
+  	dpGet(fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._active\", isActive);
+  	if (isActive)
+  	{
+	  	refConf = fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._reference\";	  	
+		  if (dpExists(refConf))
 		  {
-		 		refWithoutPortID = splittedRef[2];
-		 	}
+		 		dpGet(refConf, refVal);
+	  		splittedRef = strsplit(refVal, \"_\");
+	  		if (dynlen(splittedRef) == 2 && dynlen(getLastError()) == 0)
+			  {
+			 		refWithoutPortID = splittedRef[2];
+			 	}
+			}
 		}
  		setValue(\"tfAddr\" + splittedSwitchEl[2], \"text\", refWithoutPortID);
- }  
+  }  
 	// port element addresses
 	string curPortDP;
 	dyn_string splittedPortEl;
@@ -134,19 +140,27 @@ showSwitch(string switchName)
   	for (int j = 1; j <= dynlen(g_portEl); j++)
   	{
   	  splittedPortEl = g_portEl[j];
-  	  refConf = curPortDP + splittedPortEl[1] + \":_address.._reference\";
   	  refWithoutPortID = NOT_SET_TEXT;
-		  if (dpExists(refConf))
+			dpGet(curPortDP + splittedPortEl[1] + \":_address.._active\", isActive);
+	  	if (isActive)
+	  	{  	  
+	  		refConf = curPortDP + splittedPortEl[1] + \":_address.._reference\";
+			  if (dpExists(refConf))
+			  {
+			 		dpGet(refConf, refVal);
+		  		splittedRef = strsplit(refVal, \"_\");
+		  		if (dynlen(splittedRef) == 2 && dynlen(getLastError()) == 0)
+		  		{
+					  portIDPart = \".\" + i;
+					  refWithoutPortID = substr(splittedRef[2], 0, strlen(splittedRef[2]) - strlen(portIDPart));
+				 		nrOfSetFields++;
+					}
+		    }
+		  } 
+		  else
 		  {
-		 		dpGet(refConf, refVal);
-	  		splittedRef = strsplit(refVal, \"_\");
-	  		if (dynlen(splittedRef) == 2 && dynlen(getLastError()) == 0)
-	  		{
-				  portIDPart = \".\" + i;
-				  refWithoutPortID = substr(splittedRef[2], 0, strlen(splittedRef[2]) - strlen(portIDPart));
-			 		nrOfSetFields++;
-				}
-	    }
+		    nrOfSetFields++;
+		  }
 	 		setValue(\"tfAddr\" + splittedPortEl[2], \"text\", refWithoutPortID);
 	  }
 	}
@@ -162,17 +176,22 @@ string determineSNMPAgent(string fullSwitchName)
   string accessableAddrDPE;
 	dyn_string splittedRef;
 	string refConf;
+	bool isActive;
   for (int i = 1; i <= dynlen(g_basicSwitchEl) && dynlen(splittedRef) == 0; i++)
   {
   	splittedSwitchEl = g_basicSwitchEl[i];
-  	refConf = fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._reference\";
-  	if (dpExists(refConf))
+  	dpGet(fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._active\", isActive);
+  	if (isActive)
   	{
-		  dpGet(refConf, refVal);
-		  if (dynlen(getLastError()) == 0)
-		  {
-			  splittedRef = strsplit(refVal, \"_\");
-			  accessableAddrDPE = fullSwitchName + \".\" + splittedSwitchEl[1];
+	  	refConf = fullSwitchName + \".\" + splittedSwitchEl[1] + \":_address.._reference\";
+	  	if (dpExists(refConf))
+	  	{
+			  dpGet(refConf, refVal);
+			  if (dynlen(getLastError()) == 0)
+			  {
+				  splittedRef = strsplit(refVal, \"_\");
+				  accessableAddrDPE = fullSwitchName + \".\" + splittedSwitchEl[1];
+				}
 			}
 		}
   }  
@@ -187,22 +206,26 @@ string determineSNMPAgent(string fullSwitchName)
   	{
   	  splittedPortEl = g_portEl[j];
   	  accessableAddrDPE = curPortDP + splittedPortEl[1];
-  	  refConf = accessableAddrDPE + \":_address.._reference\"; 
-		  if (dpExists(refConf))
-		  {
-		 		dpGet(refConf, refVal);
-			  if (dynlen(getLastError()) == 0)
+	  	dpGet(accessableAddrDPE + \":_address.._active\", isActive);
+	  	if (isActive)
+	  	{
+	  	  refConf = accessableAddrDPE + \":_address.._reference\"; 
+			  if (dpExists(refConf))
 			  {
-		 			splittedRef = strsplit(refVal, \"_\");
-		 		}
-	  	}
+			 		dpGet(refConf, refVal);
+				  if (dynlen(getLastError()) == 0)
+				  {
+			 			splittedRef = strsplit(refVal, \"_\");
+			 		}
+		  	}
+		  }
     }
 	}
 
   dyn_string foundAgentDPs;
   if (dynlen(splittedRef) == 0)
   {
-		slLogging.appendItem(\"Error!!! Cannot determine SNMP agent(s) configuration (1)\");
+		LOG_INFO(\"Error!!! Cannot determine SNMP agent(s) configuration (1)\");
 		return \"\";
   }
   else
@@ -215,14 +238,14 @@ string determineSNMPAgent(string fullSwitchName)
 		}
 		else
 		{
-			slLogging.appendItem(\"Error!!! Cannot determine SNMP agent(s) configuration (2)\");
+			LOG_INFO(\"Error!!! Cannot determine SNMP agent(s) configuration (2)\");
 			return \"\";
 		}
 	}
 
 	if (dynlen(foundAgentDPs) != 1)
 	{
-		slLogging.appendItem(\"Error!!! Cannot determine SNMP agent(s) configuration (3) (\" + \"_\" + driverID + \"_*_\" + splittedRef[1] + \" => \" + foundAgentDPs + \")\");
+		LOG_INFO(\"Error!!! Cannot determine SNMP agent(s) configuration (3) (\" + \"_\" + driverID + \"_*_\" + splittedRef[1] + \" => \" + foundAgentDPs + \")\");
 		return \"\";
 	}		
 	else
@@ -242,7 +265,7 @@ applyToAll(string textFieldNameSuffix)
 	
 	for (int i = 1; i <= dynlen(allSwitches); i++)
 	{
-	  fullSwitchName = \"PIC_WAN_\" + allSwitches[i]; 
+	  fullSwitchName = SWITCH_NAME_PREFIX + allSwitches[i]; 
 		
 		if (!dpExists(fullSwitchName)) continue;
 		
@@ -267,7 +290,7 @@ void applyTo(string fullSwitchName, string agent, string textFieldNameSuffix = \
 	string oid;
 	string portDPE;
 
-	slLogging.appendItem(\"Apply changes to '\" + fullSwitchName + \"' ...\");
+	LOG_INFO(\"Apply changes to '\" + fullSwitchName + \"' ...\");
 	splittedAgent = strsplit(agent, \"_)\");
 	agentID = splittedAgent[4];
 	driverID = splittedAgent[2];
@@ -309,12 +332,12 @@ void setAddressValues(string dpe, dyn_anytype dpc)
 {
   int addrType, tempDriver;
   bool bAddrLckd, bDistrLckd;
-	slLogging.appendItem(\"Set address info for switch element '\" + dpe + \"' ... \");
+	LOG_INFO(\"Set address info for switch element '\" + dpe + \"' ... \");
 	dpGet(dpe + \":_lock._address._locked\", bAddrLckd,
 		  	dpe + \":_lock._distrib._locked\", bDistrLckd);
   if (bAddrLckd || bDistrLckd)  
   {
-		slLogging.appendItem(\"Error: Switch element '\" + dpe + \"' is locked by other user! Not set!\");
+		LOG_INFO(\"Error: Switch element '\" + dpe + \"' is locked by other user! Not set!\");
   	return;
   }
   else
@@ -360,7 +383,7 @@ void setAddressValues(string dpe, dyn_anytype dpc)
 void session(bool start)
 {
 	if (start) slLogging.deleteAllItems;
-	else slLogging.appendItem(\"Done!\");
+	else LOG_INFO(\"Done!\");
 	bool enabling = !start;
 	slSwitches.enabled = enabling;
 	btnApplyToCurrent.enabled = enabling;
@@ -428,6 +451,12 @@ int determinePortType(string dpName)
 		nrOfPorts = (int) substr(dpType, strlen(SWITCH_TYPE_PREFIX));
 	}
 	return nrOfPorts;
+}
+
+void LOG_INFO(string logString)
+{
+	slLogging.appendItem(logString);
+	slLogging.selectedPos = slLogging.itemCount;
 }" 0
  2
 "CBRef""1"
@@ -764,27 +793,27 @@ LANG:1 8 Add/Copy
 {
   session(true);
 		
-  string fullSwitchName = \"PIC_WAN_\" + tfSwitchName.text; 
-  string selFullSwitchName = \"PIC_WAN_\" + slSwitches.selectedText;
+  string fullSwitchName = SWITCH_NAME_PREFIX + tfSwitchName.text; 
+  string selFullSwitchName = SWITCH_NAME_PREFIX + slSwitches.selectedText;
 	if (fullSwitchName != selFullSwitchName)
 	{
-		slLogging.appendItem(\"Add switch '\" + tfSwitchName.text + \"' (#ports: \" + cbNrOfPorts.selectedText + \") ...\");
+		LOG_INFO(\"Add switch '\" + tfSwitchName.text + \"' (#ports: \" + cbNrOfPorts.selectedText + \") ...\");
 		if (dpExists(fullSwitchName))
 		{
-			slLogging.appendItem(\"Error: Switch with this name (\" + fullSwitchName + \") already exist! Choose another name!\");
+			LOG_INFO(\"Error: Switch with this name (\" + fullSwitchName + \") already exist! Choose another name!\");
 		  session(false);
 		  return;
 		}
 	  dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
 		if (!dpExists(fullSwitchName)) 
 		{
-		  slLogging.appendItem(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
+		  LOG_INFO(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
 		  session(false);
 			return;
 		}
 		slSwitches.appendItem(tfSwitchName.text);
 	  slSwitches.selectedPos = slSwitches.itemCount;	
-		slLogging.appendItem(\"Copy values from switch '\" + slSwitches.selectedText + \"'...\");
+		LOG_INFO(\"Copy values from switch '\" + slSwitches.selectedText + \"'...\");
 		applyTo(fullSwitchName, cbAgent.selectedText);	
 	}
 	else
@@ -793,14 +822,14 @@ LANG:1 8 Add/Copy
 		do
 		{
 		  i++;
-			fullSwitchName = \"PIC_WAN_New_Switch_\" + i;
+			fullSwitchName = SWITCH_NAME_PREFIX + \"New_Switch_\" + i;
 		} while (dpExists(fullSwitchName));
-		slLogging.appendItem(\"Add switch 'New_Switch_\" + i + \"' (#ports: \" + cbNrOfPorts.selectedText + \") ...\");
+		LOG_INFO(\"Add switch 'New_Switch_\" + i + \"' (#ports: \" + cbNrOfPorts.selectedText + \") ...\");
 		
 		dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
 		if (!dpExists(fullSwitchName)) 
 		{
-		  slLogging.appendItem(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
+		  LOG_INFO(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
 		  session(false);
 			return;
 		}
@@ -840,8 +869,8 @@ LANG:1 6 Delete
 "main()
 {
 	session(true);
-	slLogging.appendItem(\"Delete switch '\" + slSwitches.selectedText + \"'...\");
-	dpDelete(\"PIC_WAN_\" + slSwitches.selectedText);
+	LOG_INFO(\"Delete switch '\" + slSwitches.selectedText + \"'...\");
+	dpDelete(SWITCH_NAME_PREFIX + slSwitches.selectedText);
 	int selPos = slSwitches.selectedPos;
   slSwitches.deletePos = slSwitches.selectedPos;
   slSwitches.selectedPos = (selPos > slSwitches.itemCount ? slSwitches.itemCount : selPos);
@@ -1308,24 +1337,24 @@ LANG:1 16 Apply to Current
 {
   session(true);
 		
-  string fullSwitchName = \"PIC_WAN_\" + tfSwitchName.text; 
-  string oldFullSwitchName = \"PIC_WAN_\" + slSwitches.selectedText;
+  string fullSwitchName = SWITCH_NAME_PREFIX + tfSwitchName.text; 
+  string oldFullSwitchName = SWITCH_NAME_PREFIX + slSwitches.selectedText;
   string dpTypeOldName = dpTypeName(oldFullSwitchName);
 	if ((tfSwitchName.text != slSwitches.selectedText) ||
 		  (dpTypeOldName != (SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText)))
 	{
-		slLogging.appendItem(\"Delete '\" + oldFullSwitchName + \"' ...\");
+		LOG_INFO(\"Delete '\" + oldFullSwitchName + \"' ...\");
 	  dpDelete(oldFullSwitchName);
 	  dyn_string allSwitches = slSwitches.items;
 	  allSwitches[slSwitches.selectedPos] = tfSwitchName.text;
 	  slSwitches.items = allSwitches;
-		slLogging.appendItem(\"Add '\" + fullSwitchName + \"' (of type '\" + cbNrOfPorts.selectedText + \"') ...\");
+		LOG_INFO(\"Add '\" + fullSwitchName + \"' (of type '\" + cbNrOfPorts.selectedText + \"') ...\");
 	  dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
 	}
 	
 	if (!dpExists(fullSwitchName)) 
 	{
-	  slLogging.appendItem(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
+	  LOG_INFO(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
 	}
 	else
 	{

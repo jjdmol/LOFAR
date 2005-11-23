@@ -2,12 +2,32 @@
 
 # DpType
 TypeName
+TWanCable.TWanCable	1#1
+	status	21#2
+TWanContainer.TWanContainer	1#1
+	status	21#2
+TWanLogicalSegment.TWanLogicalSegment	1#1
+	ActualTraffic	22#2
+	ActualBW	22#3
+	Capacity	22#4
 TWanSwitchPort.TWanSwitchPort	1#1
 	link	21#2
 	speed	20#3
 	Tx	20#4
 	Rx	20#5
 	errors	20#6
+TWanSwitchPT6.TWanSwitchPT6	1#1
+	location	25#2
+	uptime	25#3
+	name	25#4
+	contact	25#5
+	port1	41#6:TWanSwitchPort
+	port2	41#7:TWanSwitchPort
+	port3	41#8:TWanSwitchPort
+	port4	41#9:TWanSwitchPort
+	port5	41#10:TWanSwitchPort
+	port6	41#11:TWanSwitchPort
+	status	21#48
 TWanSwitchPT12.TWanSwitchPT12	1#1
 	location	25#2
 	uptime	25#3
@@ -25,6 +45,7 @@ TWanSwitchPT12.TWanSwitchPT12	1#1
 	port10	41#15:TWanSwitchPort
 	port11	41#16:TWanSwitchPort
 	port12	41#17:TWanSwitchPort
+	status	21#90
 TWanSwitchPT48.TWanSwitchPT48	1#1
 	location	25#2
 	uptime	25#3
@@ -78,6 +99,7 @@ TWanSwitchPT48.TWanSwitchPT48	1#1
 	port46	41#51:TWanSwitchPort
 	port47	41#52:TWanSwitchPort
 	port48	41#53:TWanSwitchPort
+	status	21#342
 TWanSwitchPT24.TWanSwitchPT24	1#1
 	location	25#2
 	uptime	25#3
@@ -107,10 +129,13 @@ TWanSwitchPT24.TWanSwitchPT24	1#1
 	port22	41#27:TWanSwitchPort
 	port23	41#28:TWanSwitchPort
 	port24	41#29:TWanSwitchPort
+	status	21#174
 
 # Datapoint/DpId
 DpName	TypeName	ID
 _2sec	_PollGroup	62517
+PIC_WAN	TWanContainer	62550
+PIC_WAN_Segments	TWanContainer	62556
 
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status	_original.._stime
