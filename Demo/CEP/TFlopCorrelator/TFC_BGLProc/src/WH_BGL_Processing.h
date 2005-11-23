@@ -18,7 +18,7 @@ namespace LOFAR
 {
   class FIR {
   public:
-    FIR();
+    FIR() { memset(itsDelayLine, 0, sizeof itsDelayLine); }
 
     inline fcomplex processNextSample(fcomplex sample, const float weights[NR_TAPS])
     {
@@ -60,17 +60,16 @@ namespace LOFAR
     /// forbid assignment
     WH_BGL_Processing& operator= (const WH_BGL_Processing&);
 
-    /// the two phases: first PPF, then correlation
-    void doPPF();
+    void doPPF(), bypassPPF();
     void doCorrelate();
 
-    /// FIR Filter variables
-    short	 itsSubBandID;
-    fftw_plan	 itsFFTWPlan;
-    FIR		 (*itsFIRs)[NR_STATIONS][NR_POLARIZATIONS][NR_SUB_CHANNELS];
-
     /// CorrCube
-    static fcomplex	 itsCorrCube[NR_SUB_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
+    static fcomplex itsCorrCube[NR_SUB_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS] __attribute__ ((aligned(32)));
+
+    /// FIR Filter variables
+    fftw_plan itsFFTWPlan;
+    FIR	      (*itsFIRs)[NR_STATIONS][NR_POLARIZATIONS][NR_SUB_CHANNELS];
+    short itsSubBandID;
   };
 
 } // namespace LOFAR

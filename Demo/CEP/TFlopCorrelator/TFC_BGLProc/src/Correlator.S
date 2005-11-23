@@ -52,7 +52,14 @@ _correlate_2x2:
 #	f22,f30:S3_X
 #	f23,f31:S3_Y
 
+#if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
+	lis	 11,NR_SAMPLES_PER_INTEGRATION/2 / 65536
+#if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
+	ori	 11,11,NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
+#endif
+#else
 	li	 11,NR_SAMPLES_PER_INTEGRATION/2
+#endif
 	mtctr	 11
 
 	li	 11,-16		# push call-saved registers
@@ -265,7 +272,14 @@ _correlate_3x2:
 	addi	 11,11,zero@l
 	lfpsx	 0,0,11
 
+#if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
+	lis	 0,NR_SAMPLES_PER_INTEGRATION/2 / 65536
+#if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
+	ori	 0,0,NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
+#endif
+#else
 	li	 0,NR_SAMPLES_PER_INTEGRATION/2
+#endif
 	mtctr	 0
 
 	li	 11,-16		# push call-saved registers
@@ -542,7 +556,6 @@ loop2:
 
 
 
-#if NR_STATIONS % 2 == 0
 .global _auto_correlate_1_and_2
 _auto_correlate_1_and_2:
 
@@ -570,7 +583,14 @@ _auto_correlate_1_and_2:
 #	f14,f18:S1_X
 #	f15,f19:S1_Y
 
+#if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
+	lis	 11,NR_SAMPLES_PER_INTEGRATION/2@ha
+#if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
+	ori	 11,11,NR_SAMPLES_PER_INTEGRATION/2@l
+#endif
+#else
 	li	 11,NR_SAMPLES_PER_INTEGRATION/2
+#endif
 	mtctr	 11
 
 	lis	 12,zero@ha
@@ -700,7 +720,6 @@ loop3:	# loop over time
 
 	blr			# return
 
-#else
 
 .global _auto_correlate_1x1
 _auto_correlate_1x1:
@@ -709,7 +728,14 @@ _auto_correlate_1x1:
 #	r3 :	pointer to S0 data
 #	r4 :	pointer to 4 results
 
+#if NR_SAMPLES_PER_INTEGRATION/4 >= 32768
+	lis	 5,NR_SAMPLES_PER_INTEGRATION/4 / 65536
+#if NR_SAMPLES_PER_INTEGRATION/4 & 0xFFFF
+	ori	 5,5,NR_SAMPLES_PER_INTEGRATION/4 & 0xFFFF
+#endif
+#else
 	li	 5,NR_SAMPLES_PER_INTEGRATION/4
+#endif
 	mtctr	 5
 
 	lis	 12,zero@ha
@@ -731,7 +757,7 @@ _auto_correlate_1x1:
 	fpmr	 2,0
 	fpmr	 3,0
 
-loop3:	# loop over time
+loop4:	# loop over time
 
 	lfpsux	 10,3,8		# f6:f7 = S0
 	lfpsux	 11,3,8
@@ -765,7 +791,7 @@ loop3:	# loop over time
 	fxcxma   2,10,11,2	# f2r += f11i*f10i, f2i += f11r*f10i
 	fpmadd	 3,11,11,3
 
-	bdnz	 loop3
+	bdnz	 loop4
 
 	fxcsnsma 0,0,12,0	# f0r += 1*f0i, f0i += -1*f0i = 0
 	fxcsnsma 3,3,12,3
@@ -778,7 +804,7 @@ loop3:	# loop over time
 	stfpsux	 1,4,8
 	stfpsux	 3,4,8
 
+  mr 3,5
 	blr			# return
 
-#endif
 #endif

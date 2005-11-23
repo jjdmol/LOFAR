@@ -11,6 +11,7 @@
 //# Includes
 #include <APS/ParameterSet.h>
 #include <WH_PPF.h>
+#include <FIR.h>
 
 #include <TFC_Interface/DH_PPF.h>
 #include <TFC_Interface/DH_CorrCube.h>
@@ -32,6 +33,7 @@ FIR::FIR()
 
 
 const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) = {
+#if NR_SUB_CHANNELS == 256 && NR_TAPS == 16
   {    22,   399,  -384,   179,    19,  -191,   320,  -380,
     32767,  -503,   377,  -226,    40,   166,  -377,   397 },
   {    22,   401,  -391,   193,    -3,  -157,   262,  -255,
@@ -544,16 +546,11 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
      -255,   262,  -157,    -3,   193,  -391,   401,    22 },
   {   397,  -377,   166,    40,  -226,   377,  -503, 32767,
      -380,   320,  -191,    19,   179,  -384,   399,    22 },
+#else
+  0
+#endif
 };
 
-
-extern "C"
-{
-  void _fft_16(const fcomplex *in, int in_stride, fcomplex *out, int out_stride);
-  void _transpose_8x4(i16complex *out, const i16complex *in);
-  void _transpose_4x8(fcomplex *out, const fcomplex *in, int length, int input_stride, int output_stride);
-  void _filter(fcomplex delayLine[NR_TAPS], const float weights[NR_TAPS], const i16complex samples[], fcomplex out[], int nr_samples_div_16);
-}
 
 
 WH_PPF::WH_PPF(const string& name, const short subBandID, const short max_element):
@@ -612,8 +609,12 @@ void WH_PPF::preprocess()
 {
   itsFIRs = new FIR[1][NR_STATIONS][NR_SUB_CHANNELS][NR_POLARIZATIONS];
 
+#if defined HAVE_BGL
   fftw_import_wisdom_from_string("(FFTW-2.1.5 (256 529 1 0 1 1 1 715 0) (128 529 1 0 1 1 0 2828 0) (64 529 1 0 1 1 0 1420 0) (32 529 1 0 1 1 0 716 0) (16 529 1 0 1 1 0 364 0) (8 529 1 0 1 1 0 188 0) (4 529 1 0 1 1 0 100 0) (2 529 1 0 1 1 0 56 0))");
   itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_USE_WISDOM);
+#else
+  itsFFTWPlan = fftw_create_plan(NR_SUB_CHANNELS, FFTW_BACKWARD, FFTW_MEASURE);
+#endif
 }
 
 
@@ -628,7 +629,7 @@ inline __complex__ float to_fcomplex(i16complex z)
 
 
 
-void WH_PPF::process()
+void WH_PPF::doPPF()
 {
   static NSTimer timer("WH_PPF::process()", true);
   static NSTimer FIRtimer("FIRtimer", true), fftTimer("FFT", true);
@@ -652,9 +653,7 @@ void WH_PPF::process()
 
 //   for (int stat = 0; stat < NR_STATIONS; stat ++) {
   for (int stat = 0; stat < itsMaxElement; stat ++) {
-
-
-#if 0
+#if defined C_IMPLEMENTATION
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
 	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
@@ -669,6 +668,7 @@ void WH_PPF::process()
       _transpose_8x4(&tmp2[0][0][time], &(*input)[stat][time][0][0]);
     }
     trans1timer.stop();
+
     FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
@@ -680,9 +680,7 @@ void WH_PPF::process()
       }
     }
     FIRtimer.stop();
-  
 #endif
-
   
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
       fftTimer.start();
@@ -695,7 +693,7 @@ void WH_PPF::process()
       fftTimer.stop();
 
       for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-#if 0
+#if defined C_IMPLEMENTATION
 	for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
 	  for (int t = 0; t < 2; t ++) {
 	    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
@@ -704,19 +702,44 @@ void WH_PPF::process()
 	  }
 	}
 #else
-
 	_transpose_4x8(&(*outputs[corr])[0][stat][time][0],
 		       &fftOutData[0][0][corr * NR_CHANNELS_PER_CORRELATOR],
 		       NR_CHANNELS_PER_CORRELATOR,
 		       sizeof(fcomplex) * NR_SUB_CHANNELS,
 		       sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * MAX_STATIONS_PER_PPF);
-
 #endif
       }
     }
   }
 
   timer.stop();
+}
+
+
+void WH_PPF::bypassPPF()
+{
+  DH_PPF::BufferType *input = static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
+  DH_CorrCube::BufferType *output = (static_cast<DH_CorrCube*>(getDataManager().getOutHolder(0))->getBuffer());
+
+  assert(NR_CORRELATORS_PER_FILTER == 1);
+
+  for (int stat = 0; stat < NR_STATIONS; stat ++) {
+    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
+      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	(*output)[0][stat][time][pol] = to_fcomplex((*input)[stat][time][pol]);
+      }
+    }
+  }
+}
+
+
+void WH_PPF::process()
+{
+#if NR_SUB_CHANNELS == 1
+  bypassPPF();
+#else
+  doPPF();
+#endif
 }
 
 

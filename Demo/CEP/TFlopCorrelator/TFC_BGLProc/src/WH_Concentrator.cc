@@ -79,7 +79,7 @@ void WH_Concentrator::process() {
 
   for (int i = 0; i < itsNVis; i++) {
     inDH = static_cast<DH_Vis*>(getDataManager().getInHolder(i));
-    memcpy(outDH->getBufferElement(i, 0, 0, 0),
+    memcpy(outDH->getBufferElement(i /*, 0, 0, 0*/),
 	   inDH->getBuffer(), 
 	   inDH->getBufSize()*sizeof(fcomplex));
     outDH->setCenterFreq(inDH->getCenterFreq(), i);
