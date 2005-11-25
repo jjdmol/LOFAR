@@ -1,6 +1,9 @@
 #!/bin/sh
 
-PVSStoolSyncTypes -system 1 CTU1 -project $1
+curPath=`pwd`
+sysName="CTU1"
+export PVSS_II=$curPath/$1/config/config
+PVSStoolSyncTypes -system 1 $sysName -project $1
 cp config/progs config/progs.orig
 cp config/progs.nav config/progs
 PVSS00pmon -proj $1 &
@@ -15,7 +18,10 @@ PVSS00ascii -in dplist/nav_usr/STS/PIC_CaptureStats.dpl -currentproj; echo "(don
 echo -n "Importing STSLCU specific DP's..."
 PVSS00ascii -in dplist/nav_usr/STS/STSLCU_PIC_database.dpl -currentproj; echo "(done)"
 echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
-PVSS00ascii -in dplist/nav_usr/STS/STS_Default_panelview.dpl -currentproj; echo "(done)"
+convertedDefaultFile=`sed -e "s/CCU1/$sysName/" dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
+echo "$convertedDefaultFile" > MAC_Default_panelviews.dpl
+PVSS00ascii -in MAC_Default_panelviews.dpl -currentproj; echo "(done)"
+rm -f MAC_Default_panelviews.dpl
 PVSS00pmon -currentproj -stopWait
 
 echo "PVSS00NG         |   once |      30 |        3 |        1 |" >> config/progs
