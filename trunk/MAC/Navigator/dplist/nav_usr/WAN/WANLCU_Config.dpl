@@ -139,4 +139,5 @@ PIC_WAN_Segments	TWanContainer	62556
 
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status	_original.._stime
-_2sec.PollInterval	_PollGroup	100	0x101	07.11.2005 14:28:50.171
+_2sec.PollInterval	_PollGroup	2000	0x101	07.11.2005 14:28:50.171
+_2sec.Active	_PollGroup	1	0x101	07.11.2005 14:28:50.171
