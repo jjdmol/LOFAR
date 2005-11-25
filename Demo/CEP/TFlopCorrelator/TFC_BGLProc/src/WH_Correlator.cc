@@ -164,11 +164,11 @@ void WH_Correlator::process()
       int stat1 = 0;
       // do as many 3x2 blocks as possible
       for (; stat1 < stat2 - 4 || (stat1 & 1) != 0; stat1 += 3) {
-	_correlate_3x2(&(*itsInputBuffer)[ch][stat2  ],
-		       &(*itsInputBuffer)[ch][stat2+1],
-		       &(*itsInputBuffer)[ch][stat1  ],
+	_correlate_3x2(&(*itsInputBuffer)[ch][stat1  ],
 		       &(*itsInputBuffer)[ch][stat1+1],
 		       &(*itsInputBuffer)[ch][stat1+2],
+		       &(*itsInputBuffer)[ch][stat2  ],
+		       &(*itsInputBuffer)[ch][stat2+1],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],

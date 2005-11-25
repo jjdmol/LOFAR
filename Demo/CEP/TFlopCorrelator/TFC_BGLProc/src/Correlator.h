@@ -14,8 +14,8 @@ extern "C" {
 		      const stationInputType *S2,
 		      const stationInputType *S3,
 		      CorrelatedOutputType *S0_S2,
-		      CorrelatedOutputType *S1_S2,
 		      CorrelatedOutputType *S0_S3,
+		      CorrelatedOutputType *S1_S2,
 		      CorrelatedOutputType *S1_S3);
   
   void _correlate_3x2(const stationInputType *S0,
@@ -23,12 +23,12 @@ extern "C" {
 		      const stationInputType *S2,
 		      const stationInputType *S3,
 		      const stationInputType *S4,
-		      CorrelatedOutputType *S0_S2,
-		      CorrelatedOutputType *S1_S2,
 		      CorrelatedOutputType *S0_S3,
-		      CorrelatedOutputType *S1_S3,
 		      CorrelatedOutputType *S0_S4,
-		      CorrelatedOutputType *S1_S4);
+		      CorrelatedOutputType *S1_S3,
+		      CorrelatedOutputType *S1_S4,
+		      CorrelatedOutputType *S2_S3,
+		      CorrelatedOutputType *S2_S4);
 
   void _auto_correlate_1_and_2(const stationInputType *S0,
 			       const stationInputType *S1,
