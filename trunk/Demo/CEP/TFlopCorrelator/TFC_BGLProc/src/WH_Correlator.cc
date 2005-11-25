@@ -113,7 +113,7 @@ void WH_Correlator::process()
   int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
 
   timer.start();
-#if 0
+#if defined C_IMPLEMENTATION
   // C++ reference implementation
 
 #if NR_PPF_PER_COMPUTE_CELL == 1

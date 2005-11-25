@@ -23,6 +23,10 @@
 #include <assert.h>
 #include <complex.h>
 
+#if !defined HAVE_BGL
+#define C_IMPLEMENTATION
+#endif
+
 using namespace LOFAR;
 
 
@@ -658,7 +662,7 @@ void WH_PPF::doPPF()
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
 	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
 	  fcomplex sample = to_fcomplex((*input)[stat][time][chan][pol]);
-	  fftInData[time][pol][chan] = (*itsFIRs)[stat][chan][pol].processNextSample(sample, &FIR::weights[chan]);
+	  fftInData[time][pol][chan] = (*itsFIRs)[stat][chan][pol].processNextSample(sample, FIR::weights[chan]);
 	}
       }
     }
