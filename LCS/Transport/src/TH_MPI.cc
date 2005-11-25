@@ -138,7 +138,7 @@ void TH_MPI::readTotalMsgLengthBlocking(int tag, int& nrBytes)
 
   LOG_TRACE_STAT("MPI::probe ....");
   result = MPI_Probe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
-  nrBytes = status.count;
+  MPI_Get_count(&status, MPI_INT, &nrBytes);
 }
 
 bool TH_MPI::readTotalMsgLengthNonBlocking(int tag, int& nrBytes)
