@@ -20,7 +20,7 @@ namespace LOFAR
   public:
     FIR();
 
-    inline fcomplex processNextSample(fcomplex sample, float weights[NR_TAPS])
+    inline fcomplex processNextSample(fcomplex sample, const float weights[NR_TAPS])
     {
       fcomplex sum = sample * weights[0];
       itsDelayLine[0] = sample;
