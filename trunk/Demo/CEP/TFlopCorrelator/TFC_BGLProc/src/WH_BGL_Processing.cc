@@ -788,7 +788,7 @@ void WH_BGL_Processing::doCorrelate()
       for (int stat1 = 0; stat1 <= stat2; stat1 ++) { 
 	for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	  for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	    fcomplex sum = makefcomplex(0, 0);
+	    dcomplex sum = makedcomplex(0, 0);
 
 	    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
 	      sum += itsCorrCube[ch][stat1][time][pol1] * ~itsCorrCube[ch][stat2][time][pol2];
