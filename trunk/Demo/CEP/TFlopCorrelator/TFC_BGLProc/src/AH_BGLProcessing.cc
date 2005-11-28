@@ -28,8 +28,13 @@
 #include <tinyCEP/WorkHolder.h>
 // #include <WH_BGL_Processing.h>
 #include <WH_Distribute.h>
+#define USE_WH_PPF_AND_CORR
+#ifdef USE_WH_PPF_AND_CORR
 #include <WH_PPF.h>
 #include <WH_Correlator.h>
+#else
+#include <WH_BGL_Processing.h>
+#endif
 #include <WH_Concentrator.h>
 // DataHolders
 #include <TFC_Interface/DH_Subband.h>
@@ -112,6 +117,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     WH_Distribute*  DistNode;
     WH_Concentrator* ConcNode;
 
+#ifdef USE_WH_PPF_AND_CORR
     vector<WH_PPF*> PPFNodes;
     vector<WH_Correlator*> CorrNodes;
 
@@ -210,6 +216,27 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     if (ComputeCells % itsNSBCollectOutputs == 0) {
       itsOutStub->connect(itsOut++, itsWHs.back()->getDataManager(), 0);
     }
+#else
+    // This alternative uses WH_BGL_Processing instead of WH_PPF and WH_Correlator
+    // Right now there should be only 1 WH_BGL_P for every Distrib/Concentrator pair
+    WH_BGL_Processing* CorrNode;
+
+    DistNode = new WH_Distribute("distribute", itsParamSet, 1, 1);
+    CorrNode = new WH_BGL_Processing("BGL_Proc", 0);
+    ConcNode = new WH_Concentrator("concentrator", itsParamSet, 1);
+    itsWHs.push_back(DistNode);
+    itsWHs.back()->runOnNode(lowestFreeNode);
+    itsWHs.push_back(CorrNode);
+    itsWHs.back()->runOnNode(lowestFreeNode);
+    itsWHs.push_back(ConcNode);
+    itsWHs.back()->runOnNode(lowestFreeNode);
+
+    itsInStub->connect(itsIn++, DistNode->getDataManager(), 0);
+    connectWHs(DistNode, 0, CorrNode, 0);
+    connectWHs(CorrNode, 0, ConcNode, 0);
+    itsOutStub->connect(itsOut++, ConcNode->getDataManager(), 0);
+    lowestFreeNode++;
+#endif
   }
 #ifdef HAVE_MPI
   ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "TFC_BGLProc needs " << lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
@@ -265,11 +292,20 @@ void AH_BGLProcessing::quit() {
 
 void AH_BGLProcessing::connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH) {
 #ifdef HAVE_MPI
-  itsTHs.push_back(new TH_MPI(srcWH->getNode(), dstWH->getNode()) );
-  itsConnections.push_back( new Connection("conn", 
-					   srcWH->getDataManager().getOutHolder(srcDH),
-					   dstWH->getDataManager().getInHolder(dstDH),
-					   itsTHs.back(), true) );
+  if (srcWH->getNode() != dstWH->getNode()) {
+    itsTHs.push_back(new TH_MPI(srcWH->getNode(), dstWH->getNode()) );
+    itsConnections.push_back( new Connection("conn", 
+					     srcWH->getDataManager().getOutHolder(srcDH),
+					     dstWH->getDataManager().getInHolder(dstDH),
+					     itsTHs.back(), true) );
+  } else {
+    // use TH_Mem if both WH's are in the same process
+    itsTHs.push_back( new TH_Mem ); 
+    itsConnections.push_back( new Connection("conn", 
+					     srcWH->getDataManager().getOutHolder(srcDH),
+					     dstWH->getDataManager().getInHolder(dstDH),
+					     itsTHs.back(), false) );
+  }
 #else
   itsTHs.push_back( new TH_Mem ); 
   itsConnections.push_back( new Connection("conn", 
