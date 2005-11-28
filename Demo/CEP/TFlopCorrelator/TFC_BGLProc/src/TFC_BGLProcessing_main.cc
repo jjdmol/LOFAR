@@ -25,7 +25,9 @@ using namespace LOFAR;
 int main (int argc, const char** argv) {
   INIT_LOGGER("TFC_BGLProcessing");
 
+#ifdef HAVE_MPI
   TH_MPI::initMPI(argc, argv);
+#endif
 
   // Check invocation syntax
   try {
@@ -65,7 +67,6 @@ int main (int argc, const char** argv) {
     perror("hopefully this helps:");
     exit (1);
   }  
-  TH_MPI::finalize();
   LOG_INFO_STR(argv[0] << " terminated normally");
   return (0);
 }
