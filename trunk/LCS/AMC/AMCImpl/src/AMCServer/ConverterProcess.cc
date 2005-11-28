@@ -78,6 +78,10 @@ namespace LOFAR
             skyCoord = 
               itsConverter.j2000ToAzel(skyCoord, earthCoord, timeCoord);
             break;
+          case ConverterCommand::J2000toITRF:
+            skyCoord = 
+              itsConverter.j2000ToItrf(skyCoord, earthCoord, timeCoord);
+            break;
           case ConverterCommand::AZELtoJ2000:
             skyCoord = 
               itsConverter.azelToJ2000(skyCoord, earthCoord, timeCoord);
