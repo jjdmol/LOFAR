@@ -22,6 +22,7 @@
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_Ethernet.h>
 #include <Transport/TH_Socket.h>
+#include <Transport/TH_Null.h>
 // Workholders
 #include <tinyCEP/WorkHolder.h>
 #include <TFC_InputSection/WH_RSPInput.h>
@@ -120,6 +121,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
  				       0x000));
     } else if (TransportType=="FILE") {
       itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));
+    } else if (TransportType=="NULL") {
+      itsTHs.push_back(new TH_Null());
     } else if (TransportType=="SOCKET") {
       itsTHs.push_back(new TH_Socket(services[r], 
 				     true, 

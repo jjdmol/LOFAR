@@ -24,6 +24,7 @@
 #define TFLOPCORRELATOR_WH_RSPINPUT_H
 
 #include <pthread.h>
+#include <Common/Timer.h>
 #include <tinyCEP/TinyDataManager.h>
 #include <tinyCEP/WorkHolder.h>
 #include <APS/ParameterSet.h>
@@ -120,6 +121,12 @@ namespace LOFAR
       int itsEPAPacketSize;
      
       BufferController* itsBufControl;
+
+      vector<NSTimer*> itsTimers;
+      NSTimer* itsPrePostTimer;
+      NSTimer* itsProcessTimer;
+      NSTimer* itsDelayTimer;
+      NSTimer* itsGetElemTimer;
   };
 
 } // namespace LOFAR

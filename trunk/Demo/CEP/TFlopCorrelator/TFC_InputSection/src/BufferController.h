@@ -24,6 +24,7 @@
 #ifndef TFLOPCORRELATOR_BUFFERCONTROLLER_H
 #define TFLOPCORRELATOR_BUFFERCONTROLLER_H
 
+#include <Common/Timer.h>
 #include <TFC_Interface/RSPTimeStamp.h>
 #include <TFC_InputSection/CyclicCounter.h>
 #include <APS/ParameterSet.h>
@@ -59,6 +60,7 @@ class BufferController
    ~BufferController();
    void getElements(vector<SubbandType*> buf, int& invalidcount, timestamp_t startstamp, int nelements);
    void writeElements(SubbandType* buf, timestamp_t rspstamp);
+   void writeElements(SubbandType* buf, timestamp_t rspstamp, int nelements, int stride);
    void writeDummy(SubbandType* dum, timestamp_t startstamp, int nelements);
    bool rewriteElements(SubbandType* buf, timestamp_t startstamp);
    
@@ -67,6 +69,8 @@ class BufferController
    timestamp_t startBufferRead();
    // disable overwrite at the given stamp (to be used on the client)
    void startBufferRead(timestamp_t stamp);
+
+   void clear();
    
    void setAllowOverwrite(bool allow);
 
@@ -93,8 +97,8 @@ class BufferController
    condition space_available; // 'buffer not full' trigger
 
    int getCount();
-   int getWritePtr();
-   int getReadPtr();
+   int writeLockRange(int nelements);
+   int readLockRange(int nelements);
    int setReadOffset(timestamp_t startstamp);
    int setRewriteOffset(timestamp_t startstamp);
    void setStartOffset(timestamp_t startstamp);
@@ -105,6 +109,14 @@ class BufferController
    timestamp_t getOldestStamp(mutex::scoped_lock& sl);
    timestamp_t getNewestStamp(mutex::scoped_lock& sl);
 
+   NSTimer itsWriteLockTimer;
+   NSTimer itsWriteTimer;
+   NSTimer itsWriteUnlockTimer;
+   NSTimer itsReadLockTimer;
+   NSTimer itsReadTimer;
+   NSTimer itsReadUnlockTimer;
+   NSTimer itsWaitingForDataTimer;
+   NSTimer itsWaitingForSpaceTimer;
 };
 
 inline int BufferController::getCount()

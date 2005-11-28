@@ -41,6 +41,7 @@ namespace LOFAR
     void operator+= (CyclicCounter& other);
     void operator-= (CyclicCounter& other); 
 
+    int operator= (int newValue);
     int operator+ (int increment);
     int operator- (int decrement);
     int operator+ (CyclicCounter& other);  
@@ -67,6 +68,12 @@ namespace LOFAR
     void checkValue();
     int checkValue(int value);
   };
+
+  inline int CyclicCounter::operator= (int newValue)
+    {
+      itsValue = newValue;
+      checkValue();
+    }
 
   inline int CyclicCounter::getValue() const
     { 

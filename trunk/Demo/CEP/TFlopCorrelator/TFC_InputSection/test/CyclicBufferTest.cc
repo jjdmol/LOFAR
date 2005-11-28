@@ -54,7 +54,7 @@ void* produce(void* argument)
   while (1) {
    for (int i=0; i<nsubbands; i++) {
      data[i].Xpol = makei16complex(i,0);
-     data[i].Ypol = makei16complex(ts.getSeqId(),0);
+     data[i].Ypol = makei16complex(ts.getSeqId(),ts.getBlockId());
     }
     bc->writeElements(data,ts);
     ts++;   
@@ -106,7 +106,7 @@ int main (int argc, const char** argv)
    int nelements = ps.getInt32("Input.NSamplesToDH");
 
    // create BufferController Object
-   BufferController BufControl(1000, nsubbands);
+   BufferController BufControl(1562500, nsubbands);
     
    // start producing data thread
    pthread_t  producer;
@@ -114,6 +114,7 @@ int main (int argc, const char** argv)
     
    producerdata.bc = &BufControl;
    producerdata.nsubbands = nsubbands;
+   producerdata.nelements = nelements;
 
    if (pthread_create(&producer, NULL, produce, &producerdata) < 0)
    {
