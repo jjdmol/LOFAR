@@ -36,7 +36,16 @@ BufferController::BufferController(int buffersize, int nsubbands)
     itsTail(buffersize),
     itsOldHead(buffersize),
     itsOldTail(buffersize),
-    itsOverwritingAllowed(true)
+    itsOverwritingAllowed(true),
+    itsWriteLockTimer("writeLock"),
+    itsWriteTimer("write"),
+    itsWriteUnlockTimer("writeUnlock"),
+    itsReadLockTimer("readLock"),
+    itsReadTimer("read"),
+    itsReadUnlockTimer("readUnlock"),
+    itsWaitingForDataTimer("waitingForData"),
+    itsWaitingForSpaceTimer("waitingForSpace")
+
 {
   // create metadata buffer
   itsMetadataBuffer = new MetadataType[itsBufferSize];
@@ -49,6 +58,16 @@ BufferController::BufferController(int buffersize, int nsubbands)
 
 BufferController::~BufferController()
 {
+  cout<<"\nBufferTimers:"<<endl;
+  itsWriteLockTimer.print(cout);
+  itsWriteTimer.print(cout);
+  itsWriteUnlockTimer.print(cout);
+  itsReadLockTimer.print(cout);
+  itsReadTimer.print(cout);
+  itsReadUnlockTimer.print(cout);
+  itsWaitingForDataTimer.print(cout);
+  itsWaitingForSpaceTimer.print(cout);
+
   vector<SubbandType*>::iterator sit = itsSubbandBuffer.begin();
   for (; sit!=itsSubbandBuffer.end(); sit++) {
     delete *sit;
@@ -61,9 +80,17 @@ BufferController::~BufferController()
 timestamp_t BufferController::getOldestStamp(mutex::scoped_lock& sl)
 {
   // wait until at least one element is available
+  bool amWaiting = false;
   while (getCount() <= 0) 
   {
+    if (!amWaiting) {
+      itsWaitingForDataTimer.start();
+      amWaiting = true;
+    }
     data_available.wait(sl);
+  }
+  if (amWaiting) {
+    itsWaitingForDataTimer.stop();
   }
   // CONDITION: Count > 0
   int bid = itsTail.getValue();
@@ -74,9 +101,17 @@ timestamp_t BufferController::getOldestStamp(mutex::scoped_lock& sl)
 timestamp_t BufferController::getNewestStamp(mutex::scoped_lock& sl)
 {
   // wait until at least one element is available
+  bool amWaiting = false;
   while (getCount() <= 0) 
   {
+    if (!amWaiting) {
+      itsWaitingForDataTimer.start();
+      amWaiting = true;
+    }
     data_available.wait(sl);
+  }
+  if (amWaiting) {
+    itsWaitingForDataTimer.stop();
   }
   // CONDITION: Count > 0
   int bid = itsOldHead.getValue() - 1;
@@ -90,16 +125,26 @@ timestamp_t BufferController::setStartOffset()
   mutex::scoped_lock sl(buffer_mutex);
 
   // calculate offset
-  timestamp_t newestStamp = getNewestStamp(sl);
+  timestamp_t newestStamp;
+  newestStamp.setStamp(getNewestStamp(sl).getSeqId() + 1, 0);
+  
   timestamp_t oldestStamp = getOldestStamp(sl);
   int offset = newestStamp - oldestStamp;
 
   // wait until enough data becomes available
+  bool amWaiting = false;
   while (getCount() - offset <= 0)
   {
+    if (!amWaiting) {
+      itsWaitingForDataTimer.start();
+      amWaiting = true;
+    }
     data_available.wait(sl);
   }
-  
+  if (amWaiting) {
+    itsWaitingForDataTimer.stop();
+  }
+
   // This method is called when there is no reader,
   // so tail == oldTail
   itsTail += offset;
@@ -121,9 +166,17 @@ void BufferController::setStartOffset(timestamp_t startstamp)
   int offset = startstamp - oldestStamp;
 
   // wait until enough data becomes available
+  bool amWaiting = false;
   while (getCount() - offset <= 0)
   {
+    if (!amWaiting) {
+      itsWaitingForDataTimer.start();
+      amWaiting = true;
+    }
     data_available.wait(sl);
+  }
+  if (amWaiting) {
+    itsWaitingForDataTimer.stop();
   }
   
   // This method is called when there is no reader,
@@ -147,9 +200,17 @@ int BufferController::setReadOffset(timestamp_t startstamp)
 	    "BufferController: timestamp offset invalid (startstamp: " << startstamp << "   oldestStamp: " << oldestStamp <<"   newestStamp: " << getNewestStamp(sl) << "   count: " << getCount() << ")");
 
   // wait until enough data becomes available
+  bool amWaiting = false;
   while (getCount() - offset < MIN_COUNT)
   {
+    if (!amWaiting) {
+      itsWaitingForDataTimer.start();
+      amWaiting = true;
+    }
     data_available.wait(sl);
+  }
+  if (amWaiting) {
+    itsWaitingForDataTimer.stop();
   }
   
   // This method is called when there is no reader,
@@ -180,33 +241,41 @@ int BufferController::setRewriteOffset(timestamp_t startstamp)
   return itsOldHead.getValue();
 }
 
-int BufferController::getWritePtr()
+int BufferController::writeLockRange(int nelements)
 {
   int bid;
 
   mutex::scoped_lock sl(buffer_mutex);
   
   // wait until space becomes available
-  while ((itsHead - itsOldTail >= MAX_COUNT) && !itsOverwritingAllowed)
+  int amWaiting = false;
+  while ((itsHead - itsOldTail + nelements >= MAX_COUNT) && !itsOverwritingAllowed)
   {
+    if (!amWaiting) {
+      itsWaitingForSpaceTimer.start();
+      amWaiting = true;
+    }
     space_available.wait(sl);
+  }
+  if (amWaiting) {
+    itsWaitingForSpaceTimer.stop();
   }
   
   // CONDITION: Count < MAX_COUNT 
   bid = itsHead.getValue();
-  itsHead++;
+  itsHead+=nelements;
 
   // if allowed, overwrite previous written elements
-  if (itsHead == itsTail && itsOverwritingAllowed) {
+  if (((itsHead - itsTail) < nelements) && itsOverwritingAllowed) {
     // push tail forwards
-    itsTail++;
-    itsOldTail++;
+    itsTail+= itsHead-itsTail;
+    itsOldTail+= itsHead-itsTail;
   }
 
   return bid;
 }
 
-int BufferController::getReadPtr()
+int BufferController::readLockRange(int nelements)
 {
   int bid;
 
@@ -216,14 +285,22 @@ int BufferController::getReadPtr()
   itsOverwritingAllowed = false;
   
   // wait until enough elements are available
-  while (getCount() < MIN_COUNT) 
+  bool amWaiting = false;
+  while (getCount() - nelements < MIN_COUNT) 
   {
+    if (!amWaiting) {
+      itsWaitingForDataTimer.start();
+      amWaiting = true;
+    }
     data_available.wait(sl);
   }
-  
+  if (amWaiting) {
+    itsWaitingForDataTimer.stop();
+  }
+ 
   // CONDITION: Count >= MIN_COUNT 
   bid = itsTail.getValue();
-  itsTail++;
+  itsTail+=nelements;
   
   return bid;
 }
@@ -287,9 +364,15 @@ void BufferController::getElements(vector<SubbandType*> buf, int& invalidcount, 
   // get metadata for requested block
   invalidcount = 0;
   int bid;
-  for (int m=0; m<nelements; m++) {
-    bid = getReadPtr(); 
-    if (itsMetadataBuffer[bid].invalid != 0) {
+  itsReadLockTimer.start();
+  bid = readLockRange(nelements);
+  itsReadLockTimer.stop();
+
+  itsReadTimer.start();
+  CyclicCounter id(itsBufferSize);
+  id = bid;
+  for (int m=bid; m<nelements; m++, id++) {
+    if (itsMetadataBuffer[id.getValue()].invalid != 0) {
       invalidcount++;
     }
   }
@@ -310,57 +393,95 @@ void BufferController::getElements(vector<SubbandType*> buf, int& invalidcount, 
       memmove(buf[s], &(itsSubbandBuffer[s][sid]), nelements*sizeof(SubbandType));
     }   
   }
+  itsReadTimer.stop();
  
   // reading is done, free block
+  itsReadUnlockTimer.start();
   releaseReadBlock();
+  itsReadUnlockTimer.stop();
 }
 
 void BufferController::writeElements(SubbandType* buf, timestamp_t rspstamp)
 {
+  itsWriteLockTimer.start();
   // write the metadata
   int bid;
-  bid = getWritePtr();
+  bid = writeLockRange(1);
+  itsWriteLockTimer.stop();
   itsMetadataBuffer[bid].invalid = 0;
   itsMetadataBuffer[bid].timestamp = rspstamp;
   
   
+  itsWriteTimer.start();
   // write the subbanddata
   for (int s=0; s<itsNSubbands; s++) {
     itsSubbandBuffer[s][bid] = buf[s];
   }
+  itsWriteTimer.stop();
  
   // writing is done, free block
+  itsWriteUnlockTimer.start();
   releaseWriteBlock();
+  itsWriteUnlockTimer.stop();
+}
+void BufferController::writeElements(SubbandType* buf, timestamp_t startstamp, int nelements, int stride)
+{
+  int bid, sid;
+  itsWriteLockTimer.start();
+  // write the metadata for this dummy block
+  bid = writeLockRange(nelements);
+  itsWriteLockTimer.stop();
+  CyclicCounter id(itsBufferSize);
+  id = bid;
+  for (int i=0; i<nelements; i++, id++) {
+    itsMetadataBuffer[id.getValue()].invalid = 0;
+    itsMetadataBuffer[id.getValue()].timestamp = startstamp;
+    startstamp++;
+  }
+
+  itsWriteTimer.start();
+  // write the subbanddata
+  for (int e=0; e<nelements; e++) {
+    for (int s=0; s<itsNSubbands; s++) {
+      itsSubbandBuffer[s][bid+e] = buf[s+e*stride];
+    }
+  }
+  itsWriteTimer.stop();
+ 
+  // writing is done, free block
+  itsWriteUnlockTimer.start();
+  releaseWriteBlock();
+  itsWriteUnlockTimer.stop();
 }
 
 void BufferController::writeDummy(SubbandType* dum, timestamp_t startstamp, int nelements)
 {
   int bid, sid;
 
+  bid = writeLockRange(nelements);
+
+  CyclicCounter id(itsBufferSize);
+  id = bid;
   // write the metadata for this dummy block
-  for (int i=0; i<nelements; i++) {
-    bid = getWritePtr();
-    itsMetadataBuffer[bid].invalid = 1;
-    itsMetadataBuffer[bid].timestamp = startstamp;
-    if (i==0) {
-      sid = bid;
-    }
+  for (int i=0; i<nelements; i++, id++) {
+    itsMetadataBuffer[id.getValue()].invalid = 1;
+    itsMetadataBuffer[id.getValue()].timestamp = startstamp;
     startstamp++;
   }
 
   // write the subbanddata
   for (int s=0; s<itsNSubbands; s++) {
-    if (sid + nelements  > itsBufferSize) {
+    if (bid + nelements  > itsBufferSize) {
       // do copy in 2 blocks because end of subband data array will be crossed 
-      int n1 = itsBufferSize - sid;
-      memmove(&(itsSubbandBuffer[s][sid]), dum, n1*sizeof(SubbandType));
+      int n1 = itsBufferSize - bid;
+      memmove(&(itsSubbandBuffer[s][bid]), dum, n1*sizeof(SubbandType));
 
       int n2 = nelements - n1;
       memmove(&(itsSubbandBuffer[s][0]), &dum[n1], n2*sizeof(SubbandType));
     }
     else {
       // copy can be executed in one block
-      memmove(&(itsSubbandBuffer[s][sid]), dum, nelements*sizeof(SubbandType));
+      memmove(&(itsSubbandBuffer[s][bid]), dum, nelements*sizeof(SubbandType));
     }
   }
 
@@ -391,6 +512,14 @@ bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
     
     return true;
   } 
+}
+
+void BufferController::clear()
+{
+  mutex::scoped_lock sl(buffer_mutex);
+  itsTail = itsOldHead;
+  itsOldTail = itsTail;
+  space_available.notify_all();
 }
 
 
