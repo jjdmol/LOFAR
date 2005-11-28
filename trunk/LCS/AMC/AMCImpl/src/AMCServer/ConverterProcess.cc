@@ -86,6 +86,10 @@ namespace LOFAR
             skyCoord = 
               itsConverter.azelToJ2000(skyCoord, earthCoord, timeCoord);
             break;
+          case ConverterCommand::ITRFtoJ2000:
+            skyCoord = 
+              itsConverter.itrfToJ2000(skyCoord, earthCoord, timeCoord);
+            break;
           default:
             LOG_DEBUG_STR("ConverterProcess::handleRequests() - "
                           << "Received invalid converter command (" 

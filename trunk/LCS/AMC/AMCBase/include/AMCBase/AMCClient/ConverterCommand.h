@@ -63,7 +63,8 @@ namespace LOFAR
         INVALID = -1,  ///< Invalid. Used in default constructor.
         J2000toAZEL,   ///< From J2000 to AZEL
         J2000toITRF,   ///< From J2000 to ITRF
-        AZELtoJ2000    ///< From AZEL to J2000
+        AZELtoJ2000,   ///< From AZEL to J2000
+        ITRFtoJ2000    ///< From ITRF to J2000
       };
 
       // Default constructor. Initialize itsCmd to \c INVALID.
@@ -120,6 +121,7 @@ namespace LOFAR
       ConverterCommand::theirCmdSet.insert(J2000toAZEL);
       ConverterCommand::theirCmdSet.insert(J2000toITRF);
       ConverterCommand::theirCmdSet.insert(AZELtoJ2000);
+      ConverterCommand::theirCmdSet.insert(ITRFtoJ2000);
     }
 
     inline ConverterCommand::Init::~Init()
