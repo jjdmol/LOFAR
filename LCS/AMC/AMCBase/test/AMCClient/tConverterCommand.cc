@@ -57,6 +57,11 @@ int main(int /*argc*/, const char* const argv[])
       ASSERT(c.get() == ConverterCommand::AZELtoJ2000);
     }
     {
+      ConverterCommand c(ConverterCommand::ITRFtoJ2000);
+      ASSERT(c.isValid());
+      ASSERT(c.get() == ConverterCommand::ITRFtoJ2000);
+    }
+    {
       ConverterCommand c(18649); // must be an unused enumerated value
       ASSERT(!c.isValid());
       ASSERT(c.get() == ConverterCommand::INVALID);

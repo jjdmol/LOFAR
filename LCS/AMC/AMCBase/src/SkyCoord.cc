@@ -39,6 +39,7 @@ namespace LOFAR
       else itsType = INVALID;
     }
     
+
     const string& SkyCoord::showType() const
     {
       //# Caution: Always keep this array of strings in sync with the enum

@@ -150,6 +150,7 @@ int main(int /*argc*/, const char* const argv[])
     test(ConverterCommand(ConverterCommand::J2000toAZEL));
     test(ConverterCommand(ConverterCommand::J2000toITRF));
     test(ConverterCommand(ConverterCommand::AZELtoJ2000));
+    test(ConverterCommand(ConverterCommand::ITRFtoJ2000));
     try {
       test(ConverterCommand(1000));
     } catch (AssertError& e) {}

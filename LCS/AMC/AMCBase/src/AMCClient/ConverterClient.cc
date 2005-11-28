@@ -210,6 +210,42 @@ namespace LOFAR
     }
 
 
+    SkyCoord 
+    ConverterClient::itrfToJ2000 (const SkyCoord& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const TimeCoord& timeCoord)
+    {
+      return doConvert(ConverterCommand::ITRFtoJ2000,
+                       vector<SkyCoord>  (1, skyCoord),
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord)) [0];
+    }
+
+
+    vector<SkyCoord>
+    ConverterClient::itrfToJ2000 (const vector<SkyCoord>& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const TimeCoord& timeCoord)
+    {
+      return doConvert(ConverterCommand::ITRFtoJ2000,
+                       skyCoord, 
+                       vector<EarthCoord>(1, earthCoord),
+                       vector<TimeCoord> (1, timeCoord));
+    }
+
+
+    vector<SkyCoord>
+    ConverterClient::itrfToJ2000 (const vector<SkyCoord>& skyCoord,
+                                  const vector<EarthCoord>& earthCoord,
+                                  const vector<TimeCoord>& timeCoord)
+    {
+      return doConvert(ConverterCommand::ITRFtoJ2000,
+                       skyCoord,
+                       earthCoord,
+                       timeCoord);
+    }
+
+
     //####################  Private methods  ####################//
 
     vector<SkyCoord> 

@@ -40,7 +40,7 @@ namespace LOFAR
   {
 
     // Initialize the verion number of this class.
-    const int DH_Result::theirVersionNr = 1;
+    const int DH_Result::theirVersionNr = 2;
 
     DH_Result::DH_Result() : 
       DataHolder("aDH_Result", "DH_Result", theirVersionNr)
