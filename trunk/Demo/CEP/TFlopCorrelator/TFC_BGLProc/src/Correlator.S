@@ -567,8 +567,8 @@ loop2:
 
 
 
-.global _auto_correlate_1_and_2
-_auto_correlate_1_and_2:
+.global _correlate_1_and_2
+_correlate_1_and_2:
 
 #	computes correlations of S0*~S0,S0*~S1,S1*~S1
 #	r3 :	pointer to S0 data

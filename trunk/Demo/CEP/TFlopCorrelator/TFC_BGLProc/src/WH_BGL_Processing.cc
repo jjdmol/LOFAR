@@ -824,16 +824,15 @@ void WH_BGL_Processing::doCorrelate()
       }
     }
 
+    // do the remaining autocorrelations
     for (int stat = 0; stat < NR_STATIONS; stat += 2) {
 #if NR_STATIONS % 2 == 0
-#warning this has not been tested yet
-      _auto_correlate_1_and_2(&itsCorrCube[ch][stat],
-			      &itsCorrCube[ch][stat+1],
-			      &(*output)[DH_Vis::baseline(stat  , stat  )][ch],
-			      &(*output)[DH_Vis::baseline(stat  , stat+1)][ch],
-			      &(*output)[DH_Vis::baseline(stat+1, stat+1)][ch]);
+      _correlate_1_and_2(&itsCorrCube[ch][stat],
+			 &itsCorrCube[ch][stat+1],
+			 &(*output)[DH_Vis::baseline(stat  , stat  )][ch],
+			 &(*output)[DH_Vis::baseline(stat  , stat+1)][ch],
+			 &(*output)[DH_Vis::baseline(stat+1, stat+1)][ch]);
 #else
-      // do the remaining autocorrelations
       _auto_correlate_1x1(&itsCorrCube[ch][stat],
 			  &(*output)[DH_Vis::baseline(stat, stat)][ch]);
 #endif
