@@ -637,7 +637,6 @@ void WH_PPF::doPPF()
 {
   static NSTimer timer("WH_PPF::process()", true);
   static NSTimer FIRtimer("FIRtimer", true), fftTimer("FFT", true);
-  static NSTimer trans1timer("trans1timer", true);
 
   timer.start();
 
@@ -646,9 +645,6 @@ void WH_PPF::doPPF()
   inputType *input = (inputType *) static_cast<DH_PPF*>(getDataManager().getInHolder(0))->getBuffer();
   DH_CorrCube::BufferType *outputs[NR_CORRELATORS_PER_FILTER];
   static fcomplex fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
-  static fcomplex fftOutData[2][NR_POLARIZATIONS][NR_SUB_CHANNELS] __attribute__((aligned(32)));
-  static fcomplex tmp[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
-  static i16complex tmp2[NR_SUB_CHANNELS][NR_POLARIZATIONS][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
 
   for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
     outputs[corr] = (DH_CorrCube::BufferType *) (static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer());
@@ -658,6 +654,9 @@ void WH_PPF::doPPF()
 //   for (int stat = 0; stat < NR_STATIONS; stat ++) {
   for (int stat = 0; stat < itsMaxElement; stat ++) {
 #if defined C_IMPLEMENTATION
+    fcomplex fftOutData[NR_CORRELATORS_PER_FILTER][NR_CHANNELS_PER_CORRELATOR];
+
+    FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
 	for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
@@ -666,7 +665,33 @@ void WH_PPF::doPPF()
 	}
       }
     }
+    FIRtimer.stop();
+
+    fftTimer.start();
+    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
+      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	fftw_one(itsFFTWPlan,
+		 (fftw_complex *) fftInData[time][pol],
+		 (fftw_complex *) fftOutData);
+
+	for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
+	  for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
+#if defined DELAY_COMPENSATION
+	    fftOutData[corr][chan] *= cexpf(makefcomplex(0.0, 0.0 + chan * 0.0));
+#endif
+	    (*outputs[corr])[chan][stat][time][pol] = fftOutData[corr][chan];
+	  }
+	}
+      }
+    }
+    fftTimer.stop();
 #else
+    static fcomplex tmp1[4][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
+    static i16complex tmp2[NR_SUB_CHANNELS][NR_POLARIZATIONS][NR_SAMPLES_PER_INTEGRATION] __attribute__((aligned(32)));
+    static fcomplex fftOutData[2][NR_POLARIZATIONS][NR_CORRELATORS_PER_FILTER][NR_CHANNELS_PER_CORRELATOR] __attribute__((aligned(32)));
+
+    static NSTimer trans1timer("trans1timer", true);
+
     trans1timer.start();
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 8) {
       _transpose_8x4(&tmp2[0][0][time], &(*input)[stat][time][0][0]);
@@ -676,44 +701,54 @@ void WH_PPF::doPPF()
     FIRtimer.start();
     for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (int chan = 0; chan < NR_SUB_CHANNELS; chan ++) {
- 	_filter((*itsFIRs)[stat][chan][pol].itsDelayLine, FIR::weights[chan], &tmp2[chan][pol][0], tmp[chan & 3], NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
+ 	_filter((*itsFIRs)[stat][chan][pol].itsDelayLine,
+		FIR::weights[chan],
+		&tmp2[chan][pol][0],
+		tmp1[chan & 3],
+		NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
 
 	if ((chan & 3) == 3) {
-	  _transpose_4x8(&fftInData[0][pol][chan - 3], &tmp[0][0], NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION, sizeof(fcomplex) * NR_POLARIZATIONS * NR_SUB_CHANNELS);
+	  _transpose_4x8(&fftInData[0][pol][chan - 3],
+			 &tmp1[0][0],
+			 NR_SAMPLES_PER_INTEGRATION,
+			 sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION,
+			 sizeof(fcomplex) * NR_POLARIZATIONS * NR_SUB_CHANNELS);
 	}
       }
     }
     FIRtimer.stop();
-#endif
   
     for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
       fftTimer.start();
       for (int t = 0; t < 2; t ++) {
 	for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	  fftw_one(itsFFTWPlan, (fftw_complex *) fftInData[time + t][pol], (fftw_complex *) fftOutData[t][pol]);
+	  fftw_one(itsFFTWPlan,
+		   (fftw_complex *) fftInData[time + t][pol],
+		   (fftw_complex *) fftOutData[t][pol]);
 	}
       }
 
       fftTimer.stop();
 
-      for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-#if defined C_IMPLEMENTATION
-	for (int chan = 0; chan < NR_CHANNELS_PER_CORRELATOR; chan ++) {
-	  for (int t = 0; t < 2; t ++) {
-	    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	      (*outputs[corr])[chan][stat][time + t][pol] = fftOutData[t][pol][corr * NR_CHANNELS_PER_CORRELATOR + chan];
-	    }
-	  }
-	}
+#if defined DELAY_COMPENSATION
+      struct phase_shift phases[2];
+
+      for (int t = 0; t < 2; t ++) {
+	sincos(0.0, &phases[t].v0.d.imag, &phases[t].v0.d.real);
+	sincos(0.0, &phases[t].dv.d.imag, &phases[t].dv.d.real);
+      }
+#error NOT IMPLEMENTED
 #else
+      for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
 	_transpose_4x8(&(*outputs[corr])[0][stat][time][0],
-		       &fftOutData[0][0][corr * NR_CHANNELS_PER_CORRELATOR],
+		       &fftOutData[0][0][corr][0],
 		       NR_CHANNELS_PER_CORRELATOR,
 		       sizeof(fcomplex) * NR_SUB_CHANNELS,
 		       sizeof(fcomplex) * NR_POLARIZATIONS * NR_SAMPLES_PER_INTEGRATION * MAX_STATIONS_PER_PPF);
-#endif
       }
+#endif
     }
+#endif
   }
 
   timer.stop();

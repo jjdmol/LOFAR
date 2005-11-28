@@ -30,11 +30,11 @@ extern "C" {
 		      CorrelatedOutputType *S2_S3,
 		      CorrelatedOutputType *S2_S4);
 
-  void _auto_correlate_1_and_2(const stationInputType *S0,
-			       const stationInputType *S1,
-			       CorrelatedOutputType *S0_S0,
-			       CorrelatedOutputType *S0_S1,
-			       CorrelatedOutputType *S1_S1);
+  void _correlate_1_and_2(const stationInputType *S0,
+			  const stationInputType *S1,
+			  CorrelatedOutputType *S0_S0,
+			  CorrelatedOutputType *S0_S1,
+			  CorrelatedOutputType *S1_S1);
 
   int _auto_correlate_1x1(const stationInputType *S0,
 			  CorrelatedOutputType *S0_S0);

@@ -31,12 +31,6 @@
 #include <TFC_Interface/DH_CorrCube.h>
 #include <TFC_Interface/DH_Vis.h>
 
-/* #define NR_STATIONS			 37 */
-/* #define NR_POLARIZATIONS		  2 */
-/* #define NR_SUB_CHANNELS			256 */
-/* #define NR_CORRELATORS_PER_FILTER	  5 */
-
-/* #define NR_CHANNELS_PER_CORRELATOR ((NR_SUB_CHANNELS - 1) / NR_CORRELATORS_PER_FILTER) */
 
 namespace LOFAR
 {
@@ -68,7 +62,6 @@ namespace LOFAR
     int itsNchannels;
 
     DH_CorrCube::BufferType* itsInputBuffer;
-    //int totalInputSize;
   };
 
 } // namespace LOFAR
