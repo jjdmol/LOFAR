@@ -97,7 +97,7 @@ void WH_Distribute::process() {
       for (int o = 0; o < itsNoutputs/itsNinputs; o++) {
 	memcpy(static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBuffer(),
 	       static_cast<DH_Subband*>(getDataManager().getInHolder(i))->getBuffer(),
-	       static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferSize() * sizeof(DH_PPF::BufferType));
+	       static_cast<DH_PPF*>(getDataManager().getOutHolder(i+o))->getBufferSize() * sizeof(DH_PPF::BufferElementType));
       }
     }
   } else /* (itsNinputElements < itsNoutputElements) */ {
