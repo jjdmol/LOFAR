@@ -16,126 +16,132 @@ TWanSwitchPort.TWanSwitchPort	1#1
 	Tx	20#4
 	Rx	20#5
 	errors	20#6
+	hspeed 20#7
 TWanSwitchPT6.TWanSwitchPT6	1#1
 	location	25#2
 	uptime	25#3
 	name	25#4
 	contact	25#5
-	port1	41#6:TWanSwitchPort
-	port2	41#7:TWanSwitchPort
-	port3	41#8:TWanSwitchPort
-	port4	41#9:TWanSwitchPort
-	port5	41#10:TWanSwitchPort
-	port6	41#11:TWanSwitchPort
-	status	21#48
+	description	25#6
+	status	21#7
+	port1	41#8:TWanSwitchPort
+	port2	41#9:TWanSwitchPort
+	port3	41#10:TWanSwitchPort
+	port4	41#11:TWanSwitchPort
+	port5	41#12:TWanSwitchPort
+	port6	41#13:TWanSwitchPort
 TWanSwitchPT12.TWanSwitchPT12	1#1
 	location	25#2
 	uptime	25#3
 	name	25#4
 	contact	25#5
-	port1	41#6:TWanSwitchPort
-	port2	41#7:TWanSwitchPort
-	port3	41#8:TWanSwitchPort
-	port4	41#9:TWanSwitchPort
-	port5	41#10:TWanSwitchPort
-	port6	41#11:TWanSwitchPort
-	port7	41#12:TWanSwitchPort
-	port8	41#13:TWanSwitchPort
-	port9	41#14:TWanSwitchPort
-	port10	41#15:TWanSwitchPort
-	port11	41#16:TWanSwitchPort
-	port12	41#17:TWanSwitchPort
-	status	21#90
+	description	25#6
+	status	21#7
+	port1	41#8:TWanSwitchPort
+	port2	41#9:TWanSwitchPort
+	port3	41#10:TWanSwitchPort
+	port4	41#11:TWanSwitchPort
+	port5	41#12:TWanSwitchPort
+	port6	41#13:TWanSwitchPort
+	port7	41#14:TWanSwitchPort
+	port8	41#15:TWanSwitchPort
+	port9	41#16:TWanSwitchPort
+	port10	41#17:TWanSwitchPort
+	port11	41#18:TWanSwitchPort
+	port12	41#19:TWanSwitchPort
 TWanSwitchPT48.TWanSwitchPT48	1#1
 	location	25#2
 	uptime	25#3
 	name	25#4
 	contact	25#5
-	port1	41#6:TWanSwitchPort
-	port2	41#7:TWanSwitchPort
-	port3	41#8:TWanSwitchPort
-	port4	41#9:TWanSwitchPort
-	port5	41#10:TWanSwitchPort
-	port6	41#11:TWanSwitchPort
-	port7	41#12:TWanSwitchPort
-	port8	41#13:TWanSwitchPort
-	port9	41#14:TWanSwitchPort
-	port10	41#15:TWanSwitchPort
-	port11	41#16:TWanSwitchPort
-	port12	41#17:TWanSwitchPort
-	port13	41#18:TWanSwitchPort
-	port14	41#19:TWanSwitchPort
-	port15	41#20:TWanSwitchPort
-	port16	41#21:TWanSwitchPort
-	port17	41#22:TWanSwitchPort
-	port18	41#23:TWanSwitchPort
-	port19	41#24:TWanSwitchPort
-	port20	41#25:TWanSwitchPort
-	port21	41#26:TWanSwitchPort
-	port22	41#27:TWanSwitchPort
-	port23	41#28:TWanSwitchPort
-	port24	41#29:TWanSwitchPort
-	port25	41#30:TWanSwitchPort
-	port26	41#31:TWanSwitchPort
-	port27	41#32:TWanSwitchPort
-	port28	41#33:TWanSwitchPort
-	port29	41#34:TWanSwitchPort
-	port30	41#35:TWanSwitchPort
-	port31	41#36:TWanSwitchPort
-	port32	41#37:TWanSwitchPort
-	port33	41#38:TWanSwitchPort
-	port34	41#39:TWanSwitchPort
-	port35	41#40:TWanSwitchPort
-	port36	41#41:TWanSwitchPort
-	port37	41#42:TWanSwitchPort
-	port38	41#43:TWanSwitchPort
-	port39	41#44:TWanSwitchPort
-	port40	41#45:TWanSwitchPort
-	port41	41#46:TWanSwitchPort
-	port42	41#47:TWanSwitchPort
-	port43	41#48:TWanSwitchPort
-	port44	41#49:TWanSwitchPort
-	port45	41#50:TWanSwitchPort
-	port46	41#51:TWanSwitchPort
-	port47	41#52:TWanSwitchPort
-	port48	41#53:TWanSwitchPort
-	status	21#342
+	description	25#6
+	status	21#7
+	port1	41#8:TWanSwitchPort
+	port2	41#9:TWanSwitchPort
+	port3	41#10:TWanSwitchPort
+	port4	41#11:TWanSwitchPort
+	port5	41#12:TWanSwitchPort
+	port6	41#13:TWanSwitchPort
+	port7	41#14:TWanSwitchPort
+	port8	41#15:TWanSwitchPort
+	port9	41#16:TWanSwitchPort
+	port10	41#17:TWanSwitchPort
+	port11	41#18:TWanSwitchPort
+	port12	41#19:TWanSwitchPort
+	port13	41#20:TWanSwitchPort
+	port14	41#21:TWanSwitchPort
+	port15	41#22:TWanSwitchPort
+	port16	41#23:TWanSwitchPort
+	port17	41#24:TWanSwitchPort
+	port18	41#25:TWanSwitchPort
+	port19	41#26:TWanSwitchPort
+	port20	41#27:TWanSwitchPort
+	port21	41#28:TWanSwitchPort
+	port22	41#29:TWanSwitchPort
+	port23	41#30:TWanSwitchPort
+	port24	41#31:TWanSwitchPort
+	port25	41#32:TWanSwitchPort
+	port26	41#33:TWanSwitchPort
+	port27	41#34:TWanSwitchPort
+	port28	41#35:TWanSwitchPort
+	port29	41#36:TWanSwitchPort
+	port30	41#37:TWanSwitchPort
+	port31	41#38:TWanSwitchPort
+	port32	41#39:TWanSwitchPort
+	port33	41#40:TWanSwitchPort
+	port34	41#41:TWanSwitchPort
+	port35	41#42:TWanSwitchPort
+	port36	41#43:TWanSwitchPort
+	port37	41#44:TWanSwitchPort
+	port38	41#45:TWanSwitchPort
+	port39	41#46:TWanSwitchPort
+	port40	41#47:TWanSwitchPort
+	port41	41#48:TWanSwitchPort
+	port42	41#49:TWanSwitchPort
+	port43	41#50:TWanSwitchPort
+	port44	41#51:TWanSwitchPort
+	port45	41#52:TWanSwitchPort
+	port46	41#53:TWanSwitchPort
+	port47	41#54:TWanSwitchPort
+	port48	41#55:TWanSwitchPort
 TWanSwitchPT24.TWanSwitchPT24	1#1
 	location	25#2
 	uptime	25#3
 	name	25#4
 	contact	25#5
-	port1	41#6:TWanSwitchPort
-	port2	41#7:TWanSwitchPort
-	port3	41#8:TWanSwitchPort
-	port4	41#9:TWanSwitchPort
-	port5	41#10:TWanSwitchPort
-	port6	41#11:TWanSwitchPort
-	port7	41#12:TWanSwitchPort
-	port8	41#13:TWanSwitchPort
-	port9	41#14:TWanSwitchPort
-	port10	41#15:TWanSwitchPort
-	port11	41#16:TWanSwitchPort
-	port12	41#17:TWanSwitchPort
-	port13	41#18:TWanSwitchPort
-	port14	41#19:TWanSwitchPort
-	port15	41#20:TWanSwitchPort
-	port16	41#21:TWanSwitchPort
-	port17	41#22:TWanSwitchPort
-	port18	41#23:TWanSwitchPort
-	port19	41#24:TWanSwitchPort
-	port20	41#25:TWanSwitchPort
-	port21	41#26:TWanSwitchPort
-	port22	41#27:TWanSwitchPort
-	port23	41#28:TWanSwitchPort
-	port24	41#29:TWanSwitchPort
-	status	21#174
+	description	25#6
+	status	21#7
+	port1	41#8:TWanSwitchPort
+	port2	41#9:TWanSwitchPort
+	port3	41#10:TWanSwitchPort
+	port4	41#11:TWanSwitchPort
+	port5	41#12:TWanSwitchPort
+	port6	41#13:TWanSwitchPort
+	port7	41#14:TWanSwitchPort
+	port8	41#15:TWanSwitchPort
+	port9	41#16:TWanSwitchPort
+	port10	41#17:TWanSwitchPort
+	port11	41#18:TWanSwitchPort
+	port12	41#19:TWanSwitchPort
+	port13	41#20:TWanSwitchPort
+	port14	41#21:TWanSwitchPort
+	port15	41#22:TWanSwitchPort
+	port16	41#23:TWanSwitchPort
+	port17	41#24:TWanSwitchPort
+	port18	41#25:TWanSwitchPort
+	port19	41#26:TWanSwitchPort
+	port20	41#27:TWanSwitchPort
+	port21	41#28:TWanSwitchPort
+	port22	41#29:TWanSwitchPort
+	port23	41#30:TWanSwitchPort
+	port24	41#31:TWanSwitchPort
 
 # Datapoint/DpId
 DpName	TypeName	ID
 _2sec	_PollGroup	62517
 PIC_WAN	TWanContainer	62550
-PIC_WAN_Segments	TWanContainer	62556
+PAC_WAN	TWanContainer	62550
+PAC_WAN_Segments	TWanContainer	62556
 
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status	_original.._stime
