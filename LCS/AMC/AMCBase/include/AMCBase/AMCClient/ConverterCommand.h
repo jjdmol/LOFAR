@@ -32,6 +32,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_set.h>
 #include <Common/lofar_iosfwd.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -42,8 +43,8 @@ namespace LOFAR
     // @{
 
     // Class representing the commands that can be sent to the converter. The
-    // actual commands are defined in the enumerate type Cmd. This \c enum was
-    // defined within a class for a number of reasons:
+    // actual commands are defined in the enumerate type Command. This \c enum
+    // was defined within a class for a number of reasons:
     // - to be able to define an operator<<(BlobOStream&) and
     //   operator>>(BlobIStream&); this is especially important when we need 
     //   to ensure that the \c enum is streamed with a fixed size;
@@ -53,57 +54,36 @@ namespace LOFAR
     class ConverterCommand
     {
     public:
-      // All possible commands.
-      //
-      //# ATTENTION: Make sure that you update the implementation of
-      //#            Init::Init() when you add or remove values here!
-      //# WARNING:   Do NOT add INVALID to theirCmdSet. It is used to catch
-      //#            uninitialized enums.
-      enum Cmd {
-        INVALID = -1,  ///< Invalid. Used in default constructor.
+      // All commands that can be sent to the converter.
+      enum Commands {
+        INVALID = -1,  ///< Used when specified value is out of range.
         J2000toAZEL,   ///< From J2000 to AZEL
         J2000toITRF,   ///< From J2000 to ITRF
         AZELtoJ2000,   ///< From AZEL to J2000
-        ITRFtoJ2000    ///< From ITRF to J2000
+        ITRFtoJ2000,   ///< From ITRF to J2000
+        //# Insert new types HERE !!
+        N_Commands     ///< Number of converter commands.
       };
 
-      // Default constructor. Initialize itsCmd to \c INVALID.
-      ConverterCommand() : itsCmd(INVALID) {}
-
-      // If \a iCmd matches with one of the enumeration values in theirCmdSet,
-      // then itsCmd is set to \a iCmd, else itsCmd is set to \c INVALID.
-      ConverterCommand(int32 iCmd);
+      // If \a cmd matches with one of the enumeration values in \c Commands,
+      // then itsCommand is set to \a cmd, else itsCommand is set to \c
+      // INVALID.
+      ConverterCommand(Commands cmd = INVALID);
 
       // Get the current converter command.
-      Cmd get() const { return itsCmd; }
+      Commands get() const
+      { return itsCommand; }
+
+      // Return the current converter command as a string.
+      const string& showCommand() const;
 
       // Check if the current converter command is valid.
-      bool isValid() const { return itsCmd != INVALID; }
+      bool isValid() const
+      { return itsCommand != INVALID; }
 
     private:
-      // The type of set containing all valid commands.
-      typedef set<Cmd> cmdset_t;
-
-      // The actual set containing all valid commands.
-      static cmdset_t theirCmdSet;
-      
-      // This struct is used to initialize the static data member theirCmdSet, 
-      // before it is being used. 
-      struct Init
-      {
-        // Initialize the static data member theirCmdSet. 
-        Init();
-        // Clear the set static data member theirCmdSet.
-        ~Init();
-      };
-
-      // We need one, and only one, instance of the initializer in order to
-      // trigger the initialization of the static data member theirCmdSet. It
-      // will be defined in the <tt>.cc</tt> file.
-      static Init theirInit;
-
       // The current convertor command.
-      Cmd itsCmd;
+      Commands itsCommand;
 
     };
 
@@ -111,24 +91,6 @@ namespace LOFAR
     ostream& operator<<(ostream& os, const ConverterCommand& cc);
 
     // @}
-
-
-    //# We implement the constructor and destructor here, because they are
-    //# tightly coupled with the definition of the \c enum Enum::Cmd. Hence,
-    //# this improves maintainability.
-    inline ConverterCommand::Init::Init()
-    {
-      ConverterCommand::theirCmdSet.insert(J2000toAZEL);
-      ConverterCommand::theirCmdSet.insert(J2000toITRF);
-      ConverterCommand::theirCmdSet.insert(AZELtoJ2000);
-      ConverterCommand::theirCmdSet.insert(ITRFtoJ2000);
-    }
-
-    inline ConverterCommand::Init::~Init()
-    {
-      ConverterCommand::theirCmdSet.clear();
-    }
-
 
   } // namespace AMC
 

@@ -101,7 +101,7 @@ namespace LOFAR
     {
       int32 cmd;
       bis >> cmd;
-      cc = ConverterCommand(cmd);
+      cc = ConverterCommand(static_cast<ConverterCommand::Commands>(cmd));
       ASSERT(cc.isValid());
       return bis;
     }
