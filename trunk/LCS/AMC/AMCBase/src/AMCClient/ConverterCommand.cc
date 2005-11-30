@@ -31,30 +31,33 @@ namespace LOFAR
 {
   namespace AMC
   {
-    //# Definition of static data members.
-    ConverterCommand::cmdset_t  ConverterCommand::theirCmdSet;
-    ConverterCommand::Init      ConverterCommand::theirInit;
 
-
-    //# Implementation of non-inline member functions.
-    ConverterCommand::ConverterCommand(int32 iCmd) : 
-      itsCmd(ConverterCommand::INVALID)
+    ConverterCommand::ConverterCommand(Commands cmd)
     {
-      cmdset_t::const_iterator it = theirCmdSet.find(static_cast<Cmd>(iCmd));
-      if (it != theirCmdSet.end()) {
-        itsCmd = *it;
-      }
+      if (INVALID < cmd && cmd < N_Commands) itsCommand = cmd;
+      else itsCommand = INVALID;
     }
 
-    //# Implementation of non-inline non-member functions.
-//     bool operator==(const ConverterCommand& lhs, const ConverterCommand& rhs)
-//     {
-//       return lhs.get() == rhs.get();
-//     }
+
+    const string& ConverterCommand::showCommand() const
+    {
+      //# Caution: Always keep this array of strings in sync with the enum
+      //#          Commands that is defined in the header file!
+      static const string commands[N_Commands+1] = {
+        "J2000 --> AZEL",
+        "J2000 --> ITRF",
+        "AZEL --> J2000",
+        "ITRF --> J2000",
+        "<INVALID>"
+      };
+      if (isValid()) return commands[itsCommand];
+      else return commands[N_Commands];
+    }
+
 
     ostream& operator<<(ostream& os, const ConverterCommand& cc)
     {
-      return os << cc.get();
+      return os << cc.showCommand();
     }
 
  } // namespace AMC

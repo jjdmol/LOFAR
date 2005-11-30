@@ -62,7 +62,8 @@ int main(int /*argc*/, const char* const argv[])
       ASSERT(c.get() == ConverterCommand::ITRFtoJ2000);
     }
     {
-      ConverterCommand c(18649); // must be an unused enumerated value
+      // Force the use of an undefined enumerated value.
+      ConverterCommand c(static_cast<ConverterCommand::Commands>(18649));
       ASSERT(!c.isValid());
       ASSERT(c.get() == ConverterCommand::INVALID);
     }
