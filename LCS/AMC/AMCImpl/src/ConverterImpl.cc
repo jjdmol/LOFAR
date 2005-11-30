@@ -97,8 +97,8 @@ namespace LOFAR
                                 const vector<EarthCoord>& earthCoord,
                                 const vector<TimeCoord>& timeCoord)
     {
-      // Check precondition.
-      for (uint i=0; i<skyCoord.size(); ++i) {
+      // Check preconditions.
+      for (uint i = 0; i < skyCoord.size(); ++i) {
         ASSERT(skyCoord[i].type() == SkyCoord::J2000);
       }
 
@@ -113,15 +113,15 @@ namespace LOFAR
         // Create a container for the Measure frame.
         MeasFrame frame;
 
-        // Create a dummy(?) astronomical direction. We (only) need it as
-        // argument for the MDirection::Convert constructor.
-        MDirection dir;
+        // Set-up the conversion engine, using reference direction AZEL.
+        MDirection::Convert conv (MDirection::J2000, 
+                                  MDirection::Ref (MDirection::AZEL, frame));
 
         // For each given moment in time ...
         for (uint i = 0; i < timeCoord.size(); i++) {
 
           // Set the instant in time in the frame.
-          frame.set (MEpoch(MVEpoch(timeCoord[i].getDay(), 
+          frame.set (MEpoch(MVEpoch(timeCoord[i].getDay(),
                                     timeCoord[i].getFraction())));
 
           // For each given position on earth ...
@@ -144,30 +144,23 @@ namespace LOFAR
                     << earthCoord[j].type());
             }
             frame.set (MPosition(pos, ref));
-
-            // Set-up the conversion engine, using reference direction AZEL.
-            // \note Since we're only using \a dir as a dummy argument, we
-            // might as well use a temporary MDirection object.
-            MDirection::Convert 
-              conv (dir, MDirection::Ref (MDirection::AZEL, frame));
-//            conv (MDirection(), MDirection::Ref (MDirection::AZEL, frame));
             
             // For each given direction in the sky ...
             for (uint k = 0; k < skyCoord.size(); k++) {
 
               // Define the astronomical direction as a J2000 direction.
               MDirection sky((MVDirection(skyCoord[k].angle0(), 
-                                          skyCoord[k].angle1())), 
+                                          skyCoord[k].angle1())),
                              MDirection::J2000);
 
               // Convert this direction, using the conversion engine.
-              MDirection res = conv(sky);
+              MDirection dir = conv(sky);
 
               // Retrieve the direction angles of the converted direction.
-              Vector<Double> angles = res.getAngle().getBaseValue();
+              Vector<Double> angles = dir.getAngle().getBaseValue();
 
               // Convert to local sky coordinates and add to the return vector.
-              result.push_back(SkyCoord(angles(0), angles(1)));
+              result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::AZEL));
 
             }
           }
@@ -221,22 +214,29 @@ namespace LOFAR
       //    their sizes must be equal to the size of \a skyCoord. Note that
       //    we only need to do one check, the other is implied by the first
       //    pre-condition.
+      // -# skyCoord type must be AZEL
       ASSERT (earthCoord.size() == timeCoord.size());
       if (earthCoord.size() != 1) {
         ASSERT (earthCoord.size() == skyCoord.size());
       }
+      for (uint i = 0; i < skyCoord.size(); ++i) {
+        ASSERT (skyCoord[i].type() == SkyCoord::AZEL);
+      }
 
       // This vector will hold the result of the conversion operation.
       vector<SkyCoord> result;
+
+      // Reserve space for the result to avoid resizing of the vector.
+      result.reserve(skyCoord.size());
 
       try {
 
         // Create a container for the Measure frame.
         MeasFrame frame;
 
-        // Create a dummy(?) astronomical direction. We (only) need it as
-        // argument for the MDirection::Convert constructor.
-        MDirection dir;
+        // Set-up the conversion engine, using reference direction J2000..
+        MDirection::Convert conv(MDirection::AZEL,
+                                 MDirection::Ref(MDirection::J2000, frame));
 
         // If there's only one earthCoord and one timeCoord, we can preset
         // these data in the Measure frame; we only need to loop over all 
@@ -251,31 +251,36 @@ namespace LOFAR
           MVPosition pos((Quantity(earthCoord[0].height(), "m")),
                          (Quantity(earthCoord[0].longitude(), "rad")),
                          (Quantity(earthCoord[0].latitude(), "rad")));
-          frame.set (MPosition(pos));
+          MPosition::Types ref;
+          switch(earthCoord[0].type()) {
+          case EarthCoord::ITRF:  
+            ref = MPosition::ITRF;  
+            break;
+          case EarthCoord::WGS84: 
+            ref = MPosition::WGS84; 
+            break;
+          default: 
+            THROW(ConverterError, "Invalid EarthCoord type: " 
+                  << earthCoord[0].type());
+          }
+          frame.set (MPosition(pos, ref));
 
-          // Set-up the reference frame, using reference direction AZEL.
-          MDirection::Ref ref(MDirection::AZEL, frame);
-
-          // Set-up the conversion engine, using reference direction J2000..
-          MDirection::Convert conv (dir, MDirection::J2000);
-//          conv (MDirection(), MDirection::Ref (MDirection::J2000, frame));
-            
           // For each given direction in the sky ...
           for (uint i = 0; i < skyCoord.size(); i++) {
             
             // Define the astronomical direction w.r.t. the reference frame.
             MDirection sky((MVDirection(skyCoord[i].angle0(), 
                                         skyCoord[i].angle1())), 
-                           ref);
+                           MDirection::AZEL);
             
             // Convert this direction, using the conversion engine.
-            MDirection res = conv(sky);
+            MDirection dir = conv(sky);
 
             // Retrieve the direction angles of the converted direction.
-            Vector<Double> angles = res.getAngle().getBaseValue();
+            Vector<Double> angles = dir.getAngle().getBaseValue();
 
             // Convert to local sky coordinates and add to the return vector.
-            result.push_back(SkyCoord(angles(0), angles(1)));
+            result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
             
           }
 
@@ -295,28 +300,33 @@ namespace LOFAR
             MVPosition pos((Quantity(earthCoord[i].height(), "m")),
                            (Quantity(earthCoord[i].longitude(), "rad")),
                            (Quantity(earthCoord[i].latitude(), "rad")));
-            frame.set (MPosition(pos));
+            MPosition::Types ref;
+            switch(earthCoord[i].type()) {
+            case EarthCoord::ITRF:  
+              ref = MPosition::ITRF;  
+              break;
+            case EarthCoord::WGS84: 
+              ref = MPosition::WGS84; 
+              break;
+            default: 
+              THROW(ConverterError, "Invalid EarthCoord type: " 
+                    << earthCoord[i].type());
+            }
+            frame.set (MPosition(pos, ref));
 
-            // Set-up the reference frame, using reference direction AZEL.
-            MDirection::Ref ref(MDirection::AZEL, frame);
-            
-            // Set-up the conversion engine, using reference direction J2000..
-            MDirection::Convert conv (dir, MDirection::J2000);
-//          conv (MDirection(), MDirection::Ref (MDirection::J2000, frame));
-           
             // Define the astronomical direction w.r.t. the reference frame.
             MDirection sky((MVDirection(skyCoord[i].angle0(), 
                                         skyCoord[i].angle1())),
-                           ref);
+                           MDirection::AZEL);
             
             // Convert this direction, using the conversion engine.
-            MDirection res = conv(sky);
+            MDirection dir = conv(sky);
 
             // Retrieve the direction angles of the converted direction.
-            Vector<Double> angles = res.getAngle().getBaseValue();
+            Vector<Double> angles = dir.getAngle().getBaseValue();
 
             // Convert to local sky coordinates and add to the return vector.
-            result.push_back(SkyCoord(angles(0), angles(1)));
+            result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
             
           }
 
@@ -384,6 +394,251 @@ namespace LOFAR
                                 const vector<EarthCoord>& earthCoord,
                                 const vector<TimeCoord>& timeCoord)
     {
+      // Check precondition.
+      for (uint i=0; i<skyCoord.size(); ++i) {
+        ASSERT(skyCoord[i].type() == SkyCoord::J2000);
+      }
+
+      // This vector will hold the result of the conversion operation.
+      vector<SkyCoord> result;
+
+      // Reserve space for the result to avoid resizing of the vector.
+      result.reserve(skyCoord.size() * earthCoord.size() * timeCoord.size());
+
+      try {
+
+        // Create a container for the Measure frame.
+        MeasFrame frame;
+
+        // Set-up the conversion engine, using reference direction ITRF.
+        MDirection::Convert conv (MDirection::J2000, 
+                                  MDirection::Ref (MDirection::ITRF, frame));
+
+        // For each given moment in time ...
+        for (uint i = 0; i < timeCoord.size(); i++) {
+
+          // Set the instant in time in the frame.
+          frame.set (MEpoch(MVEpoch(timeCoord[i].getDay(), 
+                                    timeCoord[i].getFraction())));
+
+          // For each given position on earth ...
+          for (uint j = 0; j < earthCoord.size(); j++) {
+
+            // Set the position on earth in the frame.
+            MVPosition pos((Quantity(earthCoord[j].height(), "m")),
+                           (Quantity(earthCoord[j].longitude(), "rad")),
+                           (Quantity(earthCoord[j].latitude(), "rad")));
+            MPosition::Types ref;
+            switch(earthCoord[j].type()) {
+            case EarthCoord::ITRF:  
+              ref = MPosition::ITRF;  
+              break;
+            case EarthCoord::WGS84: 
+              ref = MPosition::WGS84; 
+              break;
+            default: 
+              THROW(ConverterError, "Invalid EarthCoord type: " 
+                    << earthCoord[j].type());
+            }
+            frame.set (MPosition(pos, ref));
+
+            // For each given direction in the sky ...
+            for (uint k = 0; k < skyCoord.size(); k++) {
+
+              // Define the astronomical direction as a J2000 direction.
+              MDirection sky((MVDirection(skyCoord[k].angle0(), 
+                                          skyCoord[k].angle1())), 
+                             MDirection::J2000);
+
+              // Convert this direction, using the conversion engine.
+              MDirection dir = conv(sky);
+
+              // Retrieve the direction angles of the converted direction.
+              Vector<Double> angles = dir.getAngle().getBaseValue();
+
+              // Convert to local sky coordinates and add to the return vector.
+              result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::ITRF));
+
+            }
+          }
+        }
+      }
+
+      catch (AipsError& e) {
+        THROW (ConverterError, "AipsError: " << e.what());
+      }
+
+      // Check on post-condition that the return vector contains 
+      // <tt>skyCoord.size() * earthCoord.size() * timeCoord.size()</tt>
+      // elements.
+      ASSERT (result.size() == 
+              skyCoord.size() * earthCoord.size() * timeCoord.size());
+
+      return result;
+    }
+
+
+    SkyCoord 
+    ConverterImpl::itrfToJ2000 (const SkyCoord& skyCoord,
+                                const EarthCoord& earthCoord,
+                                const TimeCoord& timeCoord)
+    {
+      return itrfToJ2000(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord)) [0];
+    }
+
+
+    vector<SkyCoord> 
+    ConverterImpl::itrfToJ2000 (const vector<SkyCoord>& skyCoord,
+                                const EarthCoord& earthCoord,
+                                const TimeCoord& timeCoord)
+    {
+      return itrfToJ2000(skyCoord,
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord));
+    }
+
+
+    vector<SkyCoord> 
+    ConverterImpl::itrfToJ2000 (const vector<SkyCoord>& skyCoord,
+                                const vector<EarthCoord>& earthCoord,
+                                const vector<TimeCoord>& timeCoord)
+    {
+      // Check pre-conditions.
+      // -# \a earthCoord and \a timeCoord must have equal sizes;
+      // -# if \a earthCoord and \a timeCoord have sizes unequal to one, then
+      //    their sizes must be equal to the size of \a skyCoord. Note that
+      //    we only need to do one check, the other is implied by the first
+      //    pre-condition.
+      // -# skyCoord type must be ITRF
+      ASSERT (earthCoord.size() == timeCoord.size());
+      if (earthCoord.size() != 1) {
+        ASSERT (earthCoord.size() == skyCoord.size());
+      }
+      for (uint i = 0; i < skyCoord.size(); ++i) {
+        ASSERT (skyCoord[i].type() == SkyCoord::ITRF);
+      }
+
+      // This vector will hold the result of the conversion operation.
+      vector<SkyCoord> result;
+
+      // Reserve space for the result to avoid resizing of the vector.
+      result.reserve(skyCoord.size());
+
+      try {
+
+        // Create a container for the Measure frame.
+        MeasFrame frame;
+
+        // Set-up the conversion engine, using reference direction J2000..
+        MDirection::Convert conv(MDirection::ITRF,
+                                 MDirection::Ref(MDirection::J2000, frame));
+
+        // If there's only one earthCoord and one timeCoord, we can preset
+        // these data in the Measure frame; we only need to loop over all 
+        // \a skyCoord values.
+        if (timeCoord.size() == 1) {
+
+          // Set the instant in time in the frame.
+          frame.set (MEpoch(MVEpoch(timeCoord[0].getDay(), 
+                                    timeCoord[0].getFraction())));
+
+          // Set the position on earth in the frame.
+          MVPosition pos((Quantity(earthCoord[0].height(), "m")),
+                         (Quantity(earthCoord[0].longitude(), "rad")),
+                         (Quantity(earthCoord[0].latitude(), "rad")));
+          MPosition::Types ref;
+          switch(earthCoord[0].type()) {
+          case EarthCoord::ITRF:  
+            ref = MPosition::ITRF;  
+            break;
+          case EarthCoord::WGS84: 
+            ref = MPosition::WGS84; 
+            break;
+          default: 
+            THROW(ConverterError, "Invalid EarthCoord type: " 
+                  << earthCoord[0].type());
+          }
+          frame.set (MPosition(pos, ref));
+
+          // For each given direction in the sky ...
+          for (uint i = 0; i < skyCoord.size(); i++) {
+            
+            // Define the astronomical direction w.r.t. the reference frame.
+            MDirection sky((MVDirection(skyCoord[i].angle0(), 
+                                        skyCoord[i].angle1())), 
+                           MDirection::ITRF);
+            
+            // Convert this direction, using the conversion engine.
+            MDirection dir = conv(sky);
+
+            // Retrieve the direction angles of the converted direction.
+            Vector<Double> angles = dir.getAngle().getBaseValue();
+
+            // Convert to local sky coordinates and add to the return vector.
+            result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
+            
+          }
+
+        }
+        // We need to calculate the converted sky coordinate for each triplet
+        // of \a skyCoord, \a earthCoord, and \a timeCoord.
+        else {
+
+          // For each triplet ...
+          for (uint i = 0; i < skyCoord.size(); i++) {
+
+            // Set the instant in time in the frame.
+            frame.set (MEpoch(MVEpoch(timeCoord[i].getDay(), 
+                                      timeCoord[i].getFraction())));
+            
+            // Set the position on earth in the frame.
+            MVPosition pos((Quantity(earthCoord[i].height(), "m")),
+                           (Quantity(earthCoord[i].longitude(), "rad")),
+                           (Quantity(earthCoord[i].latitude(), "rad")));
+            MPosition::Types ref;
+            switch(earthCoord[i].type()) {
+            case EarthCoord::ITRF:  
+              ref = MPosition::ITRF;  
+              break;
+            case EarthCoord::WGS84: 
+              ref = MPosition::WGS84; 
+              break;
+            default: 
+              THROW(ConverterError, "Invalid EarthCoord type: " 
+                    << earthCoord[i].type());
+            }
+            frame.set (MPosition(pos, ref));
+
+            // Define the astronomical direction w.r.t. the reference frame.
+            MDirection sky((MVDirection(skyCoord[i].angle0(), 
+                                        skyCoord[i].angle1())),
+                           MDirection::ITRF);
+            
+            // Convert this direction, using the conversion engine.
+            MDirection dir = conv(sky);
+
+            // Retrieve the direction angles of the converted direction.
+            Vector<Double> angles = dir.getAngle().getBaseValue();
+
+            // Convert to local sky coordinates and add to the return vector.
+            result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
+            
+          }
+
+        }
+
+      }
+      catch (AipsError& e) {
+        THROW (ConverterError, "AipsError: " << e.what());
+      }
+
+      // Check post-condition.
+      ASSERT(result.size() == skyCoord.size());
+
+      // Return the result vector.
+      return result;
     }
 
 
