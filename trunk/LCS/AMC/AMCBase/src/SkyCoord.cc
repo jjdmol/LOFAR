@@ -44,21 +44,24 @@ namespace LOFAR
     {
       //# Caution: Always keep this array of strings in sync with the enum
       //#          Types that is defined in the header file!
-      static const string types[SkyCoord::N_Types] = {
+      static const string types[N_Types+1] = {
         "J2000",
         "AZEL",
-        "ITRF"
+        "ITRF",
+        "<INVALID>"
       };
-      return types[itsType];
+      if (isValid()) return types[itsType];
+      else return types[N_Types];
     }
 
 
     ostream& operator<<(ostream& os, const SkyCoord& sky)
     {
-      if (!sky.isValid()) os << "<INVALID>";
-      else os << "[" << sky.angle0() << ", " << sky.angle1()
-              << "] (" << sky.showType() << ")";
-      return os;
+      if (!sky.isValid()) 
+        return os << sky.showType();
+      else
+        return os << "[" << sky.angle0() << ", " << sky.angle1()
+                  << "] (" << sky.showType() << ")";
     }
 
 

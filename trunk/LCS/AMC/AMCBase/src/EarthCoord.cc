@@ -45,20 +45,23 @@ namespace LOFAR
     {
       //# Caution: Always keep this array of strings in sync with the enum
       //#          Types that is defined in the header file!
-      static const string types[EarthCoord::N_Types] = {
+      static const string types[N_Types+1] = {
         "ITRF",
         "WGS84",
+        "<INVALID>"
       };
-      return types[itsType];
+      if (isValid()) return types[itsType];
+      else return types[N_Types];
     }
 
 
     ostream& operator<<(ostream& os, const EarthCoord& pos)
     {
-      if (!pos.isValid()) os << "<INVALID>";
-      else os << "[" << pos.longitude() << ", " << pos.latitude()
-              << ", " << pos.height() << "] (" << pos.showType() << ")";
-      return os;
+      if (!pos.isValid()) 
+        return os << pos.showType();
+      else 
+        return os << "["  << pos.longitude() << ", " << pos.latitude() 
+                  << ", " << pos.height() << "] (" << pos.showType() << ")";
     }
 
 

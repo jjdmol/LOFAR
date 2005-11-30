@@ -40,32 +40,38 @@ int main(int /*argc*/, const char* const argv[])
       ConverterCommand c;
       ASSERT(!c.isValid());
       ASSERT(c.get() == ConverterCommand::INVALID);
+      cout << c << endl;
     }
     {
       ConverterCommand c(ConverterCommand::J2000toAZEL);
       ASSERT(c.isValid());
       ASSERT(c.get() == ConverterCommand::J2000toAZEL);
+      cout << c << endl;
     }
     {
       ConverterCommand c(ConverterCommand::J2000toITRF);
       ASSERT(c.isValid());
       ASSERT(c.get() == ConverterCommand::J2000toITRF);
+      cout << c << endl;
     }
     {
       ConverterCommand c(ConverterCommand::AZELtoJ2000);
       ASSERT(c.isValid());
       ASSERT(c.get() == ConverterCommand::AZELtoJ2000);
+      cout << c << endl;
     }
     {
       ConverterCommand c(ConverterCommand::ITRFtoJ2000);
       ASSERT(c.isValid());
       ASSERT(c.get() == ConverterCommand::ITRFtoJ2000);
+      cout << c << endl;
     }
     {
       // Force the use of an undefined enumerated value.
       ConverterCommand c(static_cast<ConverterCommand::Commands>(18649));
       ASSERT(!c.isValid());
       ASSERT(c.get() == ConverterCommand::INVALID);
+      cout << c << endl;
     }
   } catch (Exception& e) {
     cerr << e << endl;
