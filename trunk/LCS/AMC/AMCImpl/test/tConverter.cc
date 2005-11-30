@@ -158,8 +158,7 @@ int main(int /*argc*/, const char* const argv[])
       cout << "\n**** Convert from J2000 to ITRF and vice versa ****\n";
       cout << "result = " << result << endl;
       for (uint i = 0; i < skies.size() * poss.size() * times.size(); i++) {
-        ASSERTSTR (result[i].type() == SkyCoord::ITRF, 
-                   "result[" << i << "].type() == " << result[i].showType());
+        ASSERT (result[i].type() == SkyCoord::ITRF);
       }
       int inx=0;
       for (uint i = 0; i < times.size(); i++) {
