@@ -40,7 +40,9 @@
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 #include <linux/filter.h>
-#include <linux/irda.h>
+#ifdef __linux__
+#include <sys/sysctl.h>
+#endif
 
 #include <stdio.h>
 
@@ -51,11 +53,15 @@ namespace LOFAR
 TH_Ethernet::TH_Ethernet(const string &ifname, 
                          const string &rMac, 
                          const string &oMac, 
-                         const uint16 etype) 
+                         const uint16 etype,
+			 const int receiveBufferSize,
+			 const int sendBufferSize) 
      : itsIfname(ifname), 
        itsRemoteMac(rMac),
        itsOwnMac(oMac), 
-       itsEthertype(etype) 
+       itsEthertype(etype),
+       itsRecvBufferSize(receiveBufferSize),
+       itsSendBufferSize(sendBufferSize)
 {
   LOG_TRACE_FLOW("TH_Ethernet constructor");
   
@@ -257,18 +263,48 @@ void TH_Ethernet::Init()
     itsSendPacket   = (char*)calloc(itsMaxframesize, sizeof(char));
   }  
 
-  // Make large send and receive buffers
-  // ((frames/sec)/2) * ((32*1024)+100)
-  int32 val = 262144;
-  if (setsockopt(itsSocketFD, SOL_SOCKET, SO_RCVBUF, &val, sizeof(val)) < 0)
-  {
-    LOG_WARN("TH_Ethernet: send buffer size not increased, default size will be used.");
-  }
-  if (setsockopt(itsSocketFD, SOL_SOCKET, SO_SNDBUF, &val, sizeof(val)) < 0)
-  {
-    LOG_WARN("TH_Ethernet: receive buffer size not increased, default size will be used.");
-  }
-  
+  // set the size of the kernel level socket buffer
+  // use -1 in the constructor to leave it untouched
+  if (itsRecvBufferSize != -1) {
+#ifdef __linux__
+    int name[] = { CTL_NET, NET_CORE, NET_CORE_RMEM_MAX };
+    int value;
+    size_t valueSize = sizeof(value);
+    // check the max buffer size of the kernel
+    sysctl(name, sizeof(name)/sizeof(int), &value, &valueSize, 0, 0);
+    if (itsRecvBufferSize > value) {
+      // if the max size is not large enough increase it
+      if (sysctl(name, sizeof(name)/sizeof(int), 0, 0, &itsRecvBufferSize, sizeof(itsRecvBufferSize)) < 0){
+	LOG_WARN("TH_Ethernet: could not increase max socket receive buffer");
+      };
+    }
+#endif
+    // now set the buffer for our socket
+    if (setsockopt(itsSocketFD, SOL_SOCKET, SO_RCVBUF, &itsRecvBufferSize, sizeof(itsRecvBufferSize)) < 0)
+    {
+      LOG_WARN("TH_Ethernet: receive buffer size could not be set, default size will be used.");
+    }
+  }    
+  if (itsSendBufferSize != -1) {
+#ifdef __linux__
+    int name[] = { CTL_NET, NET_CORE, NET_CORE_WMEM_MAX };
+    int value;
+    size_t valueSize = sizeof(value);
+    // check the max buffer size of the kernel
+    sysctl(name, sizeof(name)/sizeof(int), &value, &valueSize, 0, 0);
+    if (itsSendBufferSize > value) {
+      // if the max size is not large enough increase it
+      if (sysctl(name, sizeof(name)/sizeof(int), 0, 0, &itsSendBufferSize, sizeof(itsSendBufferSize)) < 0){ 
+	LOG_WARN("TH_Ethernet: could not increase max socket send buffer");
+      };
+    }
+#endif
+    if (setsockopt(itsSocketFD, SOL_SOCKET, SO_RCVBUF, &itsSendBufferSize, sizeof(itsSendBufferSize)) < 0)
+    {
+      LOG_WARN("TH_Ethernet: send buffer size could not be set, default size will be used.");
+    }
+  }    
+ 
   char ownMac[ETH_ALEN];
   //if (strcmp(itsOwnMac,"" )== 0) {
   if (itsOwnMac == "") {

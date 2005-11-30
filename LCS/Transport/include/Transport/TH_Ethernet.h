@@ -54,14 +54,15 @@ public:
   TH_Ethernet(const string &ifname, 
               const string &rMac, 
               const string &oMac, 
-              const uint16 etype  = 0x0000); 
+              const uint16 etype  = 0x0000,
+	      const int receiveBufferSize = -1,
+	      const int sendBufferSize = -1); 
   
   virtual ~TH_Ethernet();
 
   // Returns if socket initialization was successful 
   bool init();
 
-  
   /// Read the data.
   virtual bool recvBlocking(void* buf, int nbytes, int tag, int offset=0, 
 			    DataHolder* dh=0);
@@ -69,8 +70,8 @@ public:
 			       DataHolder* dh=0);
   /// Wait for the data to be received
   virtual void waitForReceived(void* buf, int nbytes, int tag);
-
   /// Write the data.
+
   virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
   virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
   /// Wait for the data to be sent
@@ -114,9 +115,9 @@ public:
   struct sockaddr_ll itsSockaddr;
 
   void Init();
- 
- public:
 
+  int itsRecvBufferSize;
+  int itsSendBufferSize;
 };
 
 inline bool TH_Ethernet::isClonable() const
