@@ -1,4 +1,4 @@
-INSTHDRS = \
+INSTHDRS  = TH_Null.h \
 BaseSim.h \
 Connection.h \
 ConnectionPool.h \
