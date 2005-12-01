@@ -38,6 +38,12 @@
 
 using namespace LOFAR;
 
+struct RewriteStruct {
+  timestamp_t oldStamp;
+  timestamp_t expectedStamp;
+  int succeeded;
+};
+
 void printTimers(vector<NSTimer*>& timers)
 {
   vector<NSTimer*>::iterator it = timers.begin();
@@ -60,6 +66,10 @@ void* WriteToBufferThread(void* arguments)
   cout<<"Framesize: "<<args->FrameSize<<endl;
   int seqid, blockid;
   timestamp_t actualstamp, expectedstamp;
+  vector<timestamp_t> missedStamps;
+  vector<RewriteStruct> oldStamps;
+  missedStamps.reserve(500);
+  oldStamps.reserve(500);
   bool readnew = true;
   bool firstloop = true;
 
@@ -144,13 +154,17 @@ void* WriteToBufferThread(void* arguments)
     
     // check and process the incoming data
     if (actualstamp < expectedstamp) {
+      RewriteStruct rewritten;
+      rewritten.oldStamp = actualstamp;
+      rewritten.expectedStamp = expectedstamp;
       rewriteTimer.start();
       /* old packet received 
 	 Packet can be saved when its dummy is available in cyclic buffer. 
          Otherwise this packet will be lost */
 
       int idx;
-      for (int p=0; p<args->nrPacketsInFrame; p++) {
+      int p=0;
+      for (; p<args->nrPacketsInFrame; p++) {
         idx = (p*args->EPAPacketSize) + args->EPAHeaderSize;
         cnt_rewritten++;
         if (!args->BufControl->rewriteElements((SubbandType*)&recvframe[idx], actualstamp)) {
@@ -159,6 +173,8 @@ void* WriteToBufferThread(void* arguments)
 	}
         actualstamp++;   
       }
+      rewritten.succeeded = p;
+      oldStamps.push_back(rewritten);
       //cout << cnt_rewritten << " delayed packets recovered." << endl;  // debugging
 
       // read new frame in next loop
@@ -167,6 +183,7 @@ void* WriteToBufferThread(void* arguments)
       rewriteTimer.stop();
     } else if (actualstamp > expectedstamp) {
       writeDummyTimer.start();
+      missedStamps.push_back(expectedstamp);
       // missed a packet so create dummy for that missing packet
       args->BufControl->writeDummy((SubbandType*)dummyblock, expectedstamp, args->nrPacketsInFrame);
       cnt_missed += args->nrPacketsInFrame;
@@ -217,6 +234,17 @@ void* WriteToBufferThread(void* arguments)
   }
   //pthread_cleanup_pop(1);
   printTimers(itsTimers);
+  cout<<"Timestamps of missed packets:"<<endl;
+  vector<timestamp_t>::iterator it = missedStamps.begin();
+  for (; it != missedStamps.end(); it++) {
+    cout<<(*it)<<endl;
+  }
+  cout<<"Rewritten packets:"<<endl;
+  vector<RewriteStruct>::iterator rit = oldStamps.begin();
+  for (; rit != oldStamps.end(); rit++) {
+    cout<<rit->oldStamp<<" "<< rit->expectedStamp<<" "<<rit->succeeded<<endl;
+  }
+  
   pthread_exit(NULL);
 }
 
@@ -338,7 +366,7 @@ void WH_RSPInput::startThread()
 void WH_RSPInput::preprocess()
 {
   // create the buffer controller.
-  itsBufControl = new BufferController(itsCyclicBufferSize, itsNSubbands);
+  itsBufControl = new BufferController(itsCyclicBufferSize, itsNSubbands, itsCyclicBufferSize/6, 5*itsCyclicBufferSize/6);
   startThread();
   itsPrePostTimer = new NSTimer("pre/post");
   itsProcessTimer = new NSTimer("process");
