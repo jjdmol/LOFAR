@@ -118,7 +118,8 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
       itsTHs.push_back(new TH_Ethernet(interfaces[r], 
  				       srcMacs[r],
  				       dstMacs[r], 
- 				       0x000));
+ 				       0x000,
+				       2097152));
     } else if (TransportType=="FILE") {
       itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));
     } else if (TransportType=="NULL") {

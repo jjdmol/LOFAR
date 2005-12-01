@@ -36,10 +36,6 @@ namespace LOFAR
 using namespace boost;
 using ACC::APS::ParameterSet;
 
-#define MAX_OFFSET  90
-#define MIN_COUNT  100
-#define MAX_COUNT  (itsBufferSize-100)
-    
 typedef struct 
 {
   i16complex Xpol;
@@ -56,7 +52,7 @@ class BufferController
 {
  public:
  
-   BufferController(int buffersize, int nsubbands);
+   BufferController(int buffersize, int nsubbands, int historySize, int maxCount);
    ~BufferController();
    void getElements(vector<SubbandType*> buf, int& invalidcount, timestamp_t startstamp, int nelements);
    void writeElements(SubbandType* buf, timestamp_t rspstamp);
@@ -117,6 +113,9 @@ class BufferController
    NSTimer itsReadUnlockTimer;
    NSTimer itsWaitingForDataTimer;
    NSTimer itsWaitingForSpaceTimer;
+
+   int itsMinCount;
+   int itsMaxCount;
 };
 
 inline int BufferController::getCount()

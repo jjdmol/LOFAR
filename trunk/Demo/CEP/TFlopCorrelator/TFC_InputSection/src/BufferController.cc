@@ -29,7 +29,7 @@
 
 namespace LOFAR {
 
-BufferController::BufferController(int buffersize, int nsubbands)
+BufferController::BufferController(int buffersize, int nsubbands, int historySize, int maxCount)
   : itsBufferSize(buffersize),
     itsNSubbands(nsubbands),
     itsHead(buffersize),
@@ -44,8 +44,9 @@ BufferController::BufferController(int buffersize, int nsubbands)
     itsReadTimer("read"),
     itsReadUnlockTimer("readUnlock"),
     itsWaitingForDataTimer("waitingForData"),
-    itsWaitingForSpaceTimer("waitingForSpace")
-
+    itsWaitingForSpaceTimer("waitingForSpace"),
+    itsMinCount(historySize),
+    itsMaxCount(maxCount)
 {
   // create metadata buffer
   itsMetadataBuffer = new MetadataType[itsBufferSize];
@@ -196,12 +197,12 @@ int BufferController::setReadOffset(timestamp_t startstamp)
   int offset = startstamp - oldestStamp;
 
   // check offset
-  ASSERTSTR(std::abs(offset) <= MAX_OFFSET , 
+  ASSERTSTR(std::abs(offset) < itsBufferSize , 
 	    "BufferController: timestamp offset invalid (startstamp: " << startstamp << "   oldestStamp: " << oldestStamp <<"   newestStamp: " << getNewestStamp(sl) << "   count: " << getCount() << ")");
 
   // wait until enough data becomes available
   bool amWaiting = false;
-  while (getCount() - offset < MIN_COUNT)
+  while (getCount() - offset < itsMinCount)
   {
     if (!amWaiting) {
       itsWaitingForDataTimer.start();
@@ -249,7 +250,7 @@ int BufferController::writeLockRange(int nelements)
   
   // wait until space becomes available
   int amWaiting = false;
-  while ((itsHead - itsOldTail + nelements >= MAX_COUNT) && !itsOverwritingAllowed)
+  while ((itsHead - itsOldTail + nelements >= itsMaxCount) && !itsOverwritingAllowed)
   {
     if (!amWaiting) {
       itsWaitingForSpaceTimer.start();
@@ -261,7 +262,7 @@ int BufferController::writeLockRange(int nelements)
     itsWaitingForSpaceTimer.stop();
   }
   
-  // CONDITION: Count < MAX_COUNT 
+  // CONDITION: Count < itsMaxCount 
   bid = itsHead.getValue();
   itsHead+=nelements;
 
@@ -286,7 +287,7 @@ int BufferController::readLockRange(int nelements)
   
   // wait until enough elements are available
   bool amWaiting = false;
-  while (getCount() - nelements < MIN_COUNT) 
+  while (getCount() - nelements < itsMinCount) 
   {
     if (!amWaiting) {
       itsWaitingForDataTimer.start();
@@ -298,7 +299,7 @@ int BufferController::readLockRange(int nelements)
     itsWaitingForDataTimer.stop();
   }
  
-  // CONDITION: Count >= MIN_COUNT 
+  // CONDITION: Count >= itsMinCount 
   bid = itsTail.getValue();
   itsTail+=nelements;
   
@@ -493,7 +494,7 @@ bool BufferController::rewriteElements(SubbandType* buf, timestamp_t startstamp)
   // set offset, get startindex
   int bid = setRewriteOffset(startstamp);
 
-  if (bid != -1) {
+  if (bid == -1) {
     // element not available
     return false;
 
