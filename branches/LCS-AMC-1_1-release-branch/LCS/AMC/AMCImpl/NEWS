@@ -1,3 +1,22 @@
+LCS/AMC/AMCImpl: Version 1.0 patch 1, date: 2005/09/27
+======================================================
+
+The following BugIDs have been resolved:
+---------------------------------------
+
+# 196 : Add support for conversion to ITRF
+
+        Conversion from J200 to ITRF and vice versa has been implemented. Test
+        programs have been updated and their output has been verified using
+        the AIPS++ Glish script measures.g.
+
+# 382 : Connection loss to AMCserver can not be detected or acted upon in
+        client.
+
+        ConverterServer does not throw an exception anymore when a client has
+        disconnected, as this is not considered exceptional.
+
+
 
 LCS/AMC/AMCImpl: Version 1.0 patch 2, date: 2005/10/10
 ======================================================
@@ -12,6 +31,7 @@ The following BugIDs have been resolved:
         later run out of file descriptors.
 
 
+
 LCS/AMC/AMCImpl: Version 1.0 patch 1, date: 2005/09/27
 ======================================================
 
@@ -24,6 +44,7 @@ The following BugIDs have been resolved:
         ConverterServer would throw an AssertError when the client had
         died. This has now been fixed; a ServerError is thrown instead, which
         is caught in the main event loop.
+
 
 
 LCS/AMC/AMCImpl: Version 1.0, date: 2005/07/04
