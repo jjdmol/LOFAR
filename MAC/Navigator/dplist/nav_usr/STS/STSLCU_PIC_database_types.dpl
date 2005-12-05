@@ -3,7 +3,7 @@
 # DpType
 TypeName
 TLcuPic.TLcuPic	1#1
-	status	20#2
+	status	21#2
 	statisticsSubbandMean	6#3
 	statisticsSubbandPower	6#4
 	statisticsBeamletMean	6#5
@@ -13,17 +13,17 @@ TLcuPic.TLcuPic	1#1
 	statisticsCrosslet	6#11
 	functionality	23#12
 TLcuPicMaintenance.TLcuPicMaintenance	1#1
-	status	20#2
+	status	21#2
 	fromTime	20#3
 	toTime	20#4
 TLcuPicRack.TLcuPicRack	1#1
-	status	20#2
+	status	21#2
 	functionality	23#12
 TLcuPicSubRack.TLcuPicSubRack	1#1
-	status	20#2
+	status	21#2
 	functionality	23#12
 TLcuPicBoard.TLcuPicBoard	1#1
-	status	20#2
+	status	21#2
 	voltage15	22#3
 	voltage33	22#4
 	ffi0	20#5
@@ -31,7 +31,7 @@ TLcuPicBoard.TLcuPicBoard	1#1
 	ffi1	20#7
 	functionality	23#12
 TLcuPicEthernet.TLcuPicEthernet	1#1
-	status	20#2
+	status	21#2
 	packetsReceived	20#3
 	packetsError	20#4
 	lastError	20#5
@@ -40,12 +40,12 @@ TLcuPicEthernet.TLcuPicEthernet	1#1
 	ffi2	20#8
 	functionality	23#12
 TLcuPicFPGA.TLcuPicFPGA	1#1
-	status	20#2
+	status	21#2
 	temperature	22#4
 	version	25#5
 	functionality	23#12
 TLcuPicRCU.TLcuPicRCU	1#1
-	status	20#2
+	status	21#2
 	VddVccEn	23#3
 	VhEnable	23#4
 	VlEnable	23#5
@@ -59,10 +59,10 @@ TLcuPicRCU.TLcuPicRCU	1#1
 	statisticsBeamletPower	25#15
 	functionality	23#18
 TLcuPicLFA.TLcuPicLFA	1#1
-	status	20#2
+	status	21#2
 	functionality	23#12
 TLcuPicHFA.TLcuPicHFA	1#1
-	status	20#2
+	status	21#2
 	functionality	23#12
 TLcuPicADCStatistics.TLcuPicADCStatistics	1#1
 	overflow	23#2
@@ -75,7 +75,7 @@ TLcuPicSYNCStatus.TLcuPicSYNCStatus	1#1
 	syncCount	20#3
 	errorCount	20#4
 TLcuPicAlert.TLcuPicAlert	1#1
-	status	20#2
+	status	21#2
 TLcuPicBoardRCUStatus.TLcuPicBoardRCUStatus	1#1
 	ffi0	20#4
 	ffi1	20#5
