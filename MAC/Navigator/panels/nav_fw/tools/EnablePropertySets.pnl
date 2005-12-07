@@ -145,8 +145,8 @@ LANG:1 12 query+create
        {
          dpCreate(datapoint + \"__enabled\", \"GCFPaPsEnabled\");
        }
-       dpSetWait(datapoint + \"__enabled.:_original.._value\", \"autoloaded|\" + dpType);
-       DebugN(\"## \" + datapoint + \"    |content: \" +  \"autoloaded|\"+ dpType);
+       dpSetWait(datapoint + \"__enabled.:_original.._value\", \"perm-autoloaded|\" + dpType);
+       DebugN(\"## \" + datapoint + \"    |content: \" +  \"perm-autoloaded|\"+ dpType);
        
      }
    setValue(\"txt_current\", \"text\", i);
