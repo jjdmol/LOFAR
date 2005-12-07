@@ -70,6 +70,7 @@ include/Makefile
 include/APL/Makefile
 include/APL/APLCommon/Makefile
 src/Makefile
+test/Makefile
 Makefile
 APLCommon.spec
 )
