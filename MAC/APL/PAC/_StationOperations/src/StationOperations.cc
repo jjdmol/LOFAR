@@ -203,7 +203,7 @@ GCFEvent::TResult StationOperations::concrete_idle_state(GCFEvent& event, GCFPor
   return status;
 }
 
-GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GCFPortInterface& port, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -253,7 +253,19 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
       LOG_INFO(formatString("n_rcus     =%d",ack.n_rcus));
       LOG_INFO(formatString("n_rspboards=%d",ack.n_rspboards));
       LOG_INFO(formatString("n_tdboards =%d",m_ntdboards));
-      newState=LOGICALDEVICE_STATE_CLAIMED;
+      
+      // claim the resources:
+      double samplingFrequency = m_parameterSet.getDouble(PROPERTY_SAMPLING_FREQUENCY);
+      if(_getResourceAllocator()->claimSO(ResourceAllocator::LogicalDevicePtr(this),_getPriority(),samplingFrequency))
+      {
+        newState = LOGICALDEVICE_STATE_CLAIMED;
+      }
+      else
+      {
+        newState = LOGICALDEVICE_STATE_IDLE;
+        errorCode = LD_RESULT_LOW_PRIORITY;
+      }
+      _getResourceAllocator()->logSOallocation();
       break;
     }
 
@@ -401,7 +413,7 @@ GCFEvent::TResult StationOperations::concrete_releasing_state(GCFEvent& event, G
 void StationOperations::concreteClaim(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
+
 }
 
 void StationOperations::concretePrepare(GCFPortInterface& /*port*/)
@@ -426,7 +438,9 @@ void StationOperations::concreteSuspend(GCFPortInterface& /*port*/)
 void StationOperations::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
+
+  _getResourceAllocator()->releaseSO(ResourceAllocator::LogicalDevicePtr(this));
+  _getResourceAllocator()->logSOallocation();
   m_RSPclient.close();
 }
 

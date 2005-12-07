@@ -24,7 +24,7 @@
 #define BeamletAllocator_H
 
 //# Includes
-#include <boost/shared_ptr.hpp>
+//#include <boost/shared_ptr.hpp>
 
 //# GCF Includes
 
@@ -33,9 +33,10 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_set.h>
 #include <Common/lofar_map.h>
 #include <Common/LofarLogger.h>
-
+#include <utility> // for the pair declaration
 // forward declaration
 
 namespace LOFAR
@@ -53,13 +54,19 @@ namespace GSO
       virtual ~BeamletAllocator();
       
       bool allocateBeamlets(const string&               vi,
+                            const uint16                priority,
                             const vector<string>        stations, 
                             const time_t                startTime, 
                             const time_t                stopTime, 
                             const vector<int16>         subbands, 
-                            TStationBeamletAllocation&  allocation);
-      void deallocateBeamlets(const string& vi);
+                            TStationBeamletAllocation&  allocation,
+                            map<string, TStationBeamletAllocation>& resumeVIs,
+                            set<string>&                suspendVIs);
+      void deallocateBeamlets(const string& vi, 
+                              map<string, TStationBeamletAllocation>& resumeIVs,
+                              set<string>& suspendVIs);
       void logAllocation(bool groupByVI=false);
+      void logSuspendedAllocation(bool groupByVI=false);
 
     protected:
       // protected copy constructor
@@ -68,30 +75,78 @@ namespace GSO
       BeamletAllocator& operator=(const BeamletAllocator&);
 
     private:
-      typedef struct
+      struct TAllocationInfo
       {
+        TAllocationInfo() :
+          subband(0),vi(""),priority(0),startTime(0),stopTime(0) 
+        {};
+        
+        TAllocationInfo(const TAllocationInfo& rhs) :
+          subband(rhs.subband),vi(rhs.vi),priority(rhs.priority),startTime(rhs.startTime),stopTime(rhs.stopTime) 
+        {};
+        
+        virtual ~TAllocationInfo() {};
+        
+        TAllocationInfo& operator=(const TAllocationInfo& rhs)
+        {
+          if(this != &rhs)
+          {
+            subband = rhs.subband;
+            vi = rhs.vi;
+            priority = rhs.priority;
+            startTime = rhs.startTime;
+            stopTime = rhs.stopTime;
+          }
+          return *this;
+        };
+
         int16   subband;
         string  vi;
+        uint16  priority;
         time_t  startTime;
         time_t  stopTime;
-      } TAllocationInfo;
-      typedef vector<TAllocationInfo> TAllocationInfoVector;
-      typedef map<int16,  TAllocationInfoVector>  TBeamlet2AllocationMap;
-      typedef map<string, TBeamlet2AllocationMap> TStation2AllocationMap;
-      typedef boost::shared_ptr<TStation2AllocationMap> TStation2AllocationMapPtr;
+      };
+
+      struct earlierStart
+      {
+        bool operator()(const TAllocationInfo& k1, const TAllocationInfo& k2) const
+        {
+          // returns true if k1 starts earlier than k2.
+	  // if they have the same starttime, then it returns true if k1 has a higher priority.
+          return ((k1.startTime==k2.startTime?k1.priority<k2.priority:k1.startTime<k2.startTime));
+        }
+      };
       
-      TStation2AllocationMap::iterator _addStationAllocation(const string& station);
+      typedef set<TAllocationInfo, earlierStart> TAllocationInfoSet;
+      typedef map<int16,  TAllocationInfoSet>  TBeamlet2AllocationMap;
+      typedef map<string, TBeamlet2AllocationMap> TStation2AllocationMap;
+//      typedef boost::shared_ptr<TStation2AllocationMap> TStation2AllocationMapPtr;
+      
+      TStation2AllocationMap::iterator _addStationAllocation(TStation2AllocationMap& allocation, const string& station);
       bool _testAllocateBeamlets(const string&              vi,
+                                 const uint16               priority, 
                                  const vector<string>       stations, 
                                  const time_t               startTime, 
                                  const time_t               stopTime, 
                                  const vector<int16>        subbands, 
-                                 TStation2AllocationMapPtr& newAllocationDetailsPtr, 
-                                 TStationBeamletAllocation& newAllocationBeamlets);
-      bool _mergeAllocation(TStation2AllocationMapPtr newAllocationDetailsPtr);
-      void _extractAllocation(const string& vi, TStation2AllocationMapPtr& allocationDetailsPtr);
+                                 TStation2AllocationMap& newAllocationDetails, 
+                                 TStationBeamletAllocation& newAllocationBeamlets,
+                                 set<string>&               suspendVIs);
+      bool _mergeAllocation(TStation2AllocationMap& allocation, TStation2AllocationMap& newAllocationDetails);
+      void _extractAllocation(const string&                 vi, 
+                              TStation2AllocationMap&       source, 
+                              TStation2AllocationMap&    allocationDetails);
+      void _deallocateBeamlets(const string& vi, 
+                               TStation2AllocationMap& deallocatedInfo,
+                               map<string, TStationBeamletAllocation>& resumeIVs,
+                               set<string>& suspendVIs);
+      void _logAllocation(TStation2AllocationMap& allocation, const string& title, bool groupByVI);
       
       TStation2AllocationMap  m_allocation;
+      TStation2AllocationMap  m_suspendedAllocation;
+
+      set<string>             m_resumedVIs;
+      set<string>             m_suspendedVIs;
       const int16             m_maxBeamlets;
 
       ALLOC_TRACER_CONTEXT  

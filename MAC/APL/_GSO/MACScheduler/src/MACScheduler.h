@@ -41,6 +41,7 @@
 #include "APL/APLCommon/LogicalDevice_Protocol.ph"
 #include "APL/APLCommon/StartDaemon_Protocol.ph"
 #include "BeamletAllocator.h"
+#include "LogicalSegmentAllocator.h"
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -67,22 +68,6 @@ namespace GSO
                               APLCommon::PropertySetAnswerHandlerInterface
   {
     public:
-      static const string MS_CONFIG_PREFIX;
-      static const string MS_TASKNAME;
-
-      static const string MS_STATE_STRING_INITIAL;
-      static const string MS_STATE_STRING_IDLE;
-      
-      // property defines
-      static const string MS_PROPSET_NAME;
-      static const string MS_PROPSET_TYPE;
-      static const string MS_PROPNAME_COMMAND;
-      static const string MS_PROPNAME_STATUS;
-      
-      // command defines
-      static const string MS_COMMAND_SCHEDULE;
-      static const string MS_COMMAND_UPDATESCHEDULE;
-      static const string MS_COMMAND_CANCELSCHEDULE;
 
                MACScheduler();
       virtual ~MACScheduler();
@@ -117,12 +102,13 @@ namespace GSO
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
 
     protected:    
-      APLCommon::PropertySetAnswer          m_propertySetAnswer;
-      boost::shared_ptr<GCF::PAL::GCFMyPropertySet>   m_propertySet;
+      typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
+      APLCommon::PropertySetAnswer  m_propertySetAnswer;
+      GCFMyPropertySetPtr           m_propertySet;
 
     private:
 
-#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+#ifndef USE_PVSSPORT
       typedef GCF::TM::GCFTCPPort  TRemotePort;
 #else      
       typedef GCF::PAL::GCFGCFPVSSPort TRemotePort;
@@ -150,6 +136,9 @@ namespace GSO
       void _convertRelativeTimesChild(string child, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
       bool _allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
+      void _deallocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
+      bool _allocateLogicalSegments(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
+      void _deallocateLogicalSegments(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix);
       boost::shared_ptr<ACC::APS::ParameterSet> _readParameterSet(const string& VIrootID);
       void createChildsSections(OTDB::TreeMaintenance& tm, int32 treeID, OTDB::nodeIDType topItem, const string& nodeName, boost::shared_ptr<ACC::APS::ParameterSet> ps);
       
@@ -181,6 +170,8 @@ namespace GSO
 #endif // OTDB_UNAVAILABLE
       
       BeamletAllocator                      m_beamletAllocator;
+      LogicalSegmentAllocator               m_logicalSegmentAllocator;
+      map<string,GCFMyPropertySetPtr>       m_lsPropSets;
 
       ALLOC_TRACER_CONTEXT  
    };

@@ -6,31 +6,30 @@ RegisterAccess_CPPFLAGS= \
 	-fdiagnostics-show-location=once
 
 RegisterAccess_SOURCES 		= \
+  $(DOCHDRS) \
 	ARAMain.cc \
 	ARAAnswer.cc \
 	ARAPhysicalModel.cc \
 	ARARegisterAccessTask.cc
 
 NOINSTHDRS = \
-        ARAAnswer.h \
+	ARAAnswer.h \
 	ARAConstants.h \
-        ARAPhysicalModel.h \
+  ARAPhysicalModel.h \
 	ARAPropertyDefines.h \
-        ARARegisterAccessTask.h
+  ARARegisterAccessTask.h
 
 INSTHDRS =
 
 pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 
-DOCHDRS =       $(pkginclude_HEADERS)
+DOCHDRS = $(pkginclude_HEADERS) $(BUILT_SOURCES)
 
 include_HEADERS =
 
-BUILT_SOURCES =         \
-	RegisterAccess.conf \
-	RegisterAccess.log_prop
+BUILT_SOURCES = 
 
-EXTRA_DIST = $(BUILT_SOURCES) $(configfiles_DATA) $(sysconf_DATA)
+EXTRA_DIST = $(configfiles_DATA) $(sysconf_DATA)
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)

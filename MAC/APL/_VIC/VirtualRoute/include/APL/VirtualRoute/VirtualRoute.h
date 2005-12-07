@@ -1,4 +1,4 @@
-//#  VirtualInstrument.h: handles all events for a task.
+//#  VirtualRoute.h: handles all events for a task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef VirtualInstrument_H
-#define VirtualInstrument_H
+#ifndef VirtualRoute_H
+#define VirtualRoute_H
 
 //# Includes
 
@@ -32,6 +32,10 @@
 #include <APL/APLCommon/LogicalDevice.h>
 
 //# Common Includes
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
+#include <boost/shared_ptr.hpp>
 
 //# ACC Includes
 
@@ -40,29 +44,35 @@
 namespace LOFAR
 {
   
-namespace AVI
+namespace AVR
 {
 
-  class VirtualInstrument : public APLCommon::LogicalDevice
+#define VR_LOGICALSEGMENT_PROPSET_BASENAME        "PAC_WAN_Segments_"
+#define VR_LOGICALSEGMENT_PROPSET_TYPE            "TWanLogicalSegment"
+#define VR_LOGICALSEGMENT_PROPNAME_CAPACITY       "Capacity"
+#define VR_LOGICALSEGMENT_PROPNAME_ALLOCATED      "AllocatedBW"
+#define VR_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED      "changeAllocatedBW"
+#define VR_LOGICALSEGMENT_PROPNAME_ACTUALTRAFFIC  "ActualTraffic"
+
+  class VirtualRoute : public APLCommon::LogicalDevice
   {
     public:
       // Logical Device version
-      static const string VI_VERSION;
+      static const string VR_VERSION;
 
       // property defines
-      static const string VI_PROPNAME_CONNECTEDSTATIONS;
-      static const string VI_PROPNAME_DISCONNECTEDSTATIONS;
 
-      explicit VirtualInstrument(const string& taskName, const string& parameterFile, GCF::TM::GCFTask* pStartDaemon);
-      virtual ~VirtualInstrument();
+
+      explicit VirtualRoute(const string& taskName, const string& parameterFile, GCF::TM::GCFTask* pStartDaemon);
+      virtual ~VirtualRoute();
 
     protected:
       // protected default constructor
-      VirtualInstrument();
+      VirtualRoute();
       // protected copy constructor
-      VirtualInstrument(const VirtualInstrument&);
+      VirtualRoute(const VirtualRoute&);
       // protected assignment operator
-      VirtualInstrument& operator=(const VirtualInstrument&);
+      VirtualRoute& operator=(const VirtualRoute&);
 
       virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
       /**
@@ -128,12 +138,15 @@ namespace AVI
     protected:    
 
     private:
-      bool _checkQualityRequirements(const TLogicalDeviceState& requiredState);
-    
-      unsigned long       m_qualityCheckTimerId;
+      typedef boost::shared_ptr<GCF::PAL::GCFExtPropertySet> GCFExtPropertySetPtr;
       
+      double                            m_requiredBandwidth;
+      vector<string>                    m_logicalSegments;
+      map<string,GCFExtPropertySetPtr>  m_lsPropSets;
+      map<string,double>                m_capacities;
+
       ALLOC_TRACER_CONTEXT  
   };
-};//APLCommon
+};//AVR
 };//LOFAR
 #endif

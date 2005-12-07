@@ -118,12 +118,14 @@ LogicalDevice::LogicalDevice(const string& taskName,
   m_globalError(LD_RESULT_NO_ERROR),
   m_version(version),
   m_childTypes(),
-  m_childStates()
+  m_childStates(),
+  m_resourceAllocator(ResourceAllocator::instance()),
+  m_priority(100)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   LOG_INFO(formatString("Constructing %s",getName().c_str()));
   
-#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+#ifndef USE_PVSSPORT
   LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
 #endif
 
@@ -139,6 +141,7 @@ LogicalDevice::LogicalDevice(const string& taskName,
   
   try
   {
+    m_priority = m_parameterSet.getUint16("priority");
     m_basePropertySetName = m_parameterSet.getString("propertysetBaseName");
     psDetailsType = m_parameterSet.getString("propertysetDetailsType");
   }
@@ -243,6 +246,11 @@ bool LogicalDevice::isPrepared(vector<string>& /*parameters*/)
 LogicalDevice::TLogicalDeviceState LogicalDevice::getLogicalDeviceState() const
 {
   return m_logicalDeviceState;
+}
+
+LogicalDevice::TLogicalDeviceState LogicalDevice::getLastLogicalDeviceState() const
+{
+  return m_lastLogicalDeviceState;
 }
 
 void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
@@ -788,12 +796,14 @@ void LogicalDevice::_setConnectedChildState(GCFPortInterface& port, TLogicalDevi
   while(!found && it != m_connectedChildPorts.end())
   {
     string childKey = it->first;
+    LOG_DEBUG(formatString("_setConnectedChildState: check child %s",childKey.c_str()));
     if(TPortSharedPtr pChildPort = it->second.lock())
     {
       if(&port == pChildPort.get())
       {
         found=true;
         m_childStates[childKey] = ldState;
+        LOG_DEBUG(formatString("_setConnectedChildState: set child %s state %s",childKey.c_str(),_state2String(ldState).c_str()));
       }
     }
     ++it;
@@ -1175,6 +1185,16 @@ void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+ResourceAllocator::ResourceAllocatorPtr LogicalDevice::_getResourceAllocator()
+{
+  return m_resourceAllocator;
+}
+
+uint16 LogicalDevice::_getPriority()
+{
+  return m_priority;
+}
+
 void LogicalDevice::_connectParent()
 {
   // connect to the parent if it is a new parent
@@ -1403,7 +1423,7 @@ GCFEvent::TResult LogicalDevice::_handleChildTransition(GCFEvent& event, GCFPort
     case LOGICALDEVICE_SUSPENDED:
     {
       LOGICALDEVICESuspendedEvent suspendedEvent(event);
-      if(suspendedEvent.result == LD_RESULT_NO_ERROR)
+      if(suspendedEvent.result == LD_RESULT_NO_ERROR || suspendedEvent.result == LD_RESULT_LOW_QUALITY)
       {
         _setConnectedChildState(port,LOGICALDEVICE_STATE_SUSPENDED);
       }
@@ -1597,9 +1617,14 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
 
       if(m_lastLogicalDeviceState == LOGICALDEVICE_STATE_INITIAL)
       {
-        // if the claimTime = 0 then claiming is done ASAP
-        if(m_claimTime == 0)
+        // if the claimTime <= now then claim ASAP
+        time_t timeNow = APLUtilities::getUTCtime();
+        if(m_claimTime <= timeNow)
         {
+          if(m_claimTimerId!=0)
+          {
+            m_serverPort.cancelTimer(m_claimTimerId);
+          }
           m_claimTimerId = m_serverPort.setTimer(0L);
         }
       }
@@ -1659,6 +1684,18 @@ GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& p
     }
       
     case LOGICALDEVICE_CLAIM:
+    {
+      _doStateTransition(LOGICALDEVICE_STATE_CLAIMING,m_globalError);
+      break;
+    }
+     
+    case LOGICALDEVICE_SUSPEND:
+    {
+      // ignore
+      break;
+    }
+     
+    case LOGICALDEVICE_RESUME:
     {
       _doStateTransition(LOGICALDEVICE_STATE_CLAIMING,m_globalError);
       break;
@@ -1752,6 +1789,12 @@ GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterfac
       break;
     }
       
+    case LOGICALDEVICE_SUSPEND:
+    {
+      _doStateTransition(LOGICALDEVICE_STATE_IDLE,m_globalError);
+      break;
+    }
+     
     case LOGICALDEVICE_RELEASE:
     {
       _doStateTransition(LOGICALDEVICE_STATE_RELEASING,m_globalError);
@@ -1815,9 +1858,14 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
         _sendEvent(claimedEvent,*(it->second.get()));
       }
       
-      // if the prepareTime = 0 then preparing is done ASAP
-      if(m_prepareTime == 0)
+      // if the prepareTime <= now then prepare ASAP
+      time_t timeNow = APLUtilities::getUTCtime();
+      if(m_prepareTime <= timeNow)
       {
+        if(m_prepareTimerId!=0)
+        {
+          m_serverPort.cancelTimer(m_prepareTimerId);
+        }
         m_prepareTimerId = m_serverPort.setTimer(0L);
       }
       break;
@@ -1876,6 +1924,12 @@ GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface
       break;
     }
     
+    case LOGICALDEVICE_SUSPEND:
+    {
+      _doStateTransition(LOGICALDEVICE_STATE_IDLE,m_globalError);
+      break;
+    }
+     
     case LOGICALDEVICE_RELEASE:
     {
       _doStateTransition(LOGICALDEVICE_STATE_RELEASING, m_globalError);
@@ -1974,6 +2028,12 @@ GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterfa
       break;
     }
       
+    case LOGICALDEVICE_SUSPEND:
+    {
+      _doStateTransition(LOGICALDEVICE_STATE_IDLE,m_globalError);
+      break;
+    }
+     
     case LOGICALDEVICE_RELEASE:
     {
       _doStateTransition(LOGICALDEVICE_STATE_RELEASING,m_globalError);
@@ -2041,9 +2101,14 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       
       if(m_lastLogicalDeviceState == LOGICALDEVICE_STATE_PREPARING)
       {
-        // if the startTime = 0 then starting is done ASAP
-        if(m_startTime == 0)
+        // if the startTime <= now then start ASAP
+        time_t timeNow = APLUtilities::getUTCtime();
+        if(m_startTime <= timeNow)
         {
+          if(m_startTimerId!=0)
+          {
+            m_serverPort.cancelTimer(m_startTimerId);
+          }
           m_startTimerId = m_serverPort.setTimer(0L);
         }
       }      
@@ -2094,6 +2159,12 @@ GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterfa
       break;
     }
     
+    case LOGICALDEVICE_SUSPEND:
+    {
+      // ignore
+      break;
+    }
+     
     case LOGICALDEVICE_RESUME:
     {
       _doStateTransition(LOGICALDEVICE_STATE_ACTIVE,m_globalError);

@@ -27,10 +27,13 @@
 #include <boost/shared_array.hpp>
 #include <GCF/ParameterSet.h>
 #include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVInteger.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 #include "APL/APLCommon/APLUtilities.h"
 #include "APL/APLCommon/APLCommonExceptions.h"
+#include "MACScheduler_Defines.h"
 #include "MACScheduler.h"
 
 INIT_TRACER_CONTEXT(LOFAR::GSO::MACScheduler,LOFARLOGGER_PACKAGE);
@@ -47,23 +50,8 @@ using namespace APLCommon;
 
 namespace GSO
 {
-const string MACScheduler::MS_CONFIG_PREFIX            = string("mac.apl.ams.");
-const string MACScheduler::MS_TASKNAME                 = string("MACScheduler");
-
-const string MACScheduler::MS_STATE_STRING_INITIAL     = string("Initial");
-const string MACScheduler::MS_STATE_STRING_IDLE        = string("Idle");
-
-const string MACScheduler::MS_PROPSET_NAME             = string("GSO_MACScheduler");
-const string MACScheduler::MS_PROPSET_TYPE             = string("TAplMacScheduler");
-const string MACScheduler::MS_PROPNAME_COMMAND         = string("command");
-const string MACScheduler::MS_PROPNAME_STATUS          = string("status");
-
-const string MACScheduler::MS_COMMAND_SCHEDULE         = string("SCHEDULE");
-const string MACScheduler::MS_COMMAND_UPDATESCHEDULE   = string("UPDATESCHEDULE");
-const string MACScheduler::MS_COMMAND_CANCELSCHEDULE   = string("CANCELSCHEDULE");
-
 MACScheduler::MACScheduler() :
-  GCFTask((State)&MACScheduler::initial_state,MS_TASKNAME),
+  GCFTask((State)&MACScheduler::initial_state,string(MS_TASKNAME)),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_propertySet(),
@@ -79,11 +67,13 @@ MACScheduler::MACScheduler() :
 #ifndef OTDB_UNAVAILABLE
   m_OTDBconnection(),
 #endif // OTDB_UNAVAILABLE
-  m_beamletAllocator(128)
+  m_beamletAllocator(128),
+  m_logicalSegmentAllocator(),
+  m_lsPropSets()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+#ifndef USE_PVSSPORT
   LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
 #endif
 
@@ -91,9 +81,9 @@ MACScheduler::MACScheduler() :
   registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_signalnames);
   registerProtocol(SAS_PROTOCOL, SAS_PROTOCOL_signalnames);
 
-  m_propertySet = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(
-      MS_PROPSET_NAME.c_str(),
-      MS_PROPSET_TYPE.c_str(),
+  m_propertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(
+      MS_PROPSET_NAME,
+      MS_PROPSET_TYPE,
       PS_CAT_TEMPORARY,
       &m_propertySetAnswer));
   m_propertySet->enable();
@@ -101,9 +91,9 @@ MACScheduler::MACScheduler() :
   GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
   try
   {
-    string username = pParamSet->getString(MS_CONFIG_PREFIX + string("OTDBusername"));
-    string databasename = pParamSet->getString(MS_CONFIG_PREFIX + string("OTDBdatabasename"));
-    string password = pParamSet->getString(MS_CONFIG_PREFIX + string("OTDBpassword"));
+    string username = pParamSet->getString(string(MS_CONFIG_PREFIX) + string("OTDBusername"));
+    string databasename = pParamSet->getString(string(MS_CONFIG_PREFIX) + string("OTDBdatabasename"));
+    string password = pParamSet->getString(string(MS_CONFIG_PREFIX) + string("OTDBpassword"));
     
 #ifndef OTDB_UNAVAILABLE
     m_OTDBconnection.reset(new OTDBconnection(username, databasename, password));
@@ -148,7 +138,20 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
       GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
       if(pPropAnswer->result == GCF_NO_ERROR)
       {
-        // property set loaded, now load apc?
+        // initialize AllocatedBW and changeAllocatedBW to 0.0
+        // strip systemname
+        string propSetName(pPropAnswer->pScope);
+        if(propSetName.find(':') != string::npos)
+        {
+          propSetName = propSetName.substr(propSetName.find(':')+1);
+        
+          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(propSetName);
+          if(propIt != m_lsPropSets.end())
+          {
+            propIt->second->setValue(string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED),GCFPVDouble(0.0));
+            propIt->second->setValue(string(MS_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED),GCFPVDouble(0.0));
+          }
+        }        
       }
       else
       {
@@ -177,7 +180,8 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
       // check which property changed
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       if ((pPropAnswer->pValue->getType() == LPT_STRING) &&
-          (strstr(pPropAnswer->pPropName, MS_PROPNAME_COMMAND.c_str()) != 0))
+          (strstr(pPropAnswer->pPropName, MS_PROPSET_NAME) != 0) && 
+          (strstr(pPropAnswer->pPropName, MS_PROPNAME_COMMAND) != 0))
       {
         // command received
         string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
@@ -195,7 +199,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
           else
           {
             TSASResult result = SAS_RESULT_ERROR_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(result));
           }
         }
         // UPDATESCHEDULE <nodeId>
@@ -208,7 +212,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
           else
           {
             TSASResult result = SAS_RESULT_ERROR_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(result));
           }
         }
         // CANCELSCHEDULE <nodeId>
@@ -221,15 +225,54 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
           else
           {
             TSASResult result = SAS_RESULT_ERROR_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(result));
           }
         }
         else
         {
           TSASResult result = SAS_RESULT_ERROR_UNKNOWN_COMMAND;
-          m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(result));
+          m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(result));
         }
       }
+      else if ((strstr(pPropAnswer->pPropName, MS_LOGICALSEGMENT_PROPSET_BASENAME) != 0) && 
+               (strstr(pPropAnswer->pPropName, MS_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED) != 0))
+      {
+        // logical segment allocation change received
+        // - because a VR claims its logical segments
+        // - or because a VR releases its logical segments
+        // The update of the actual AllocatedBW property must be done centrally because multiple VR's can 
+        // share a LogicalSegment and updates can only be done asynchronously.
+        double allocationChange(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
+
+        // strip systemname and property name
+        string tempName(pPropAnswer->pPropName);
+        if(tempName.find(':') != string::npos)
+        {
+          tempName = tempName.substr(tempName.find(':')+1);
+          string propSetName(tempName.substr(0,tempName.rfind('.')));
+        
+          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(propSetName);
+          if(propIt != m_lsPropSets.end())
+          {
+            boost::shared_ptr<GCFPVDouble> gcfPvAllocated(static_cast<GCFPVDouble*>(propIt->second->getValue(string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED))));
+            if(gcfPvAllocated)
+            {
+              double currentAllocated(gcfPvAllocated->getValue());
+              LOG_DEBUG(formatString("LogicalSegment %s allocated: %f",propSetName.c_str(),currentAllocated));
+
+              currentAllocated += allocationChange;
+
+              LOG_DEBUG(formatString("LogicalSegment %s new allocation: %f",propSetName.c_str(),currentAllocated));
+              propIt->second->setValue(string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED),GCFPVDouble(currentAllocated));
+            }
+          }
+          else
+          {
+            LOG_DEBUG(formatString("propset %s not found",propSetName.c_str()));
+          }
+        }
+      }
+
       break;
     }  
 
@@ -346,7 +389,7 @@ string MACScheduler::_getShareLocation() const
   GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
   try
   {
-    string tempShareLocation = pParamSet->getString(MS_CONFIG_PREFIX + string("shareLocation"));
+    string tempShareLocation = pParamSet->getString(string(MS_CONFIG_PREFIX) + string("shareLocation"));
     if(tempShareLocation.length()>0)
     {
       if(tempShareLocation[tempShareLocation.length()-1] != '/')
@@ -460,21 +503,21 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 
     case F_ENTRY:
     {
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(SAS_RESULT_NO_ERROR));
+      m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(SAS_RESULT_NO_ERROR));
       
       // connect to startdaemon clients
       GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
       try
       {
-        int sds = pParamSet->getInt(MS_CONFIG_PREFIX + string("numberOfVIStartDaemons"));
+        int sds = pParamSet->getInt(string(MS_CONFIG_PREFIX) + string("numberOfVIStartDaemons"));
         for(int i=0;i<sds;i++)
         {
           char ccuName[20];
           sprintf(ccuName,"CCU%d",i+1);
           
-          string startDaemonHostName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonHost"));
-          string startDaemonPortName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonPort"));
-          string startDaemonTaskName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonTask"));
+          string startDaemonHostName = pParamSet->getString(string(MS_CONFIG_PREFIX) + string(ccuName) + string(".startDaemonHost"));
+          string startDaemonPortName = pParamSet->getString(string(MS_CONFIG_PREFIX) + string(ccuName) + string(".startDaemonPort"));
+          string startDaemonTaskName = pParamSet->getString(string(MS_CONFIG_PREFIX) + string(ccuName) + string(".startDaemonTask"));
 
           TRemotePortPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,STARTDAEMON_PROTOCOL));
           TPeerAddr peerAddr;
@@ -488,6 +531,30 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
       catch(Exception& e)
       {
         LOG_FATAL("Unable to read parameter");
+      }
+      
+      // load all TWanLogicalSegment datapoints
+      vector<string> foundSegments;
+      GCFPVSSInfo::getAllProperties(string("TWanLogicalSegment"),string("*"),foundSegments);
+      for(vector<string>::iterator fsIt=foundSegments.begin();fsIt!=foundSegments.end();++fsIt)
+      {
+        // strip systemname and property name
+        string tempName(fsIt->substr(fsIt->find(':')+1));
+        string propSetName(tempName.substr(0,tempName.rfind('.')));
+        
+        map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(propSetName);
+        if(propIt == m_lsPropSets.end())
+        {
+          // logical segment propertyset not found. Create it
+          GCFMyPropertySetPtr pps(new GCFMyPropertySet(
+              propSetName.c_str(),
+              MS_LOGICALSEGMENT_PROPSET_TYPE,
+              PS_CAT_PERM_AUTOLOAD,
+              &m_propertySetAnswer,
+              GCFMyPropertySet::USE_DB_DEFAULTS));
+          pps->enable();
+          m_lsPropSets.insert(map<string,GCFMyPropertySetPtr>::value_type(propSetName,pps));
+        }
       }
                   
       TRAN(MACScheduler::idle_state);
@@ -589,10 +656,42 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
         it->second->send(sasResponseEvent);
       }
       
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+      m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
       break;
     }
       
+    case LOGICALDEVICE_RELEASED:
+    {
+      // observation released. deallocate beamlets and logicalsegments
+      string viName = _getVInameFromPort(port);
+      
+      try
+      {
+        boost::shared_ptr<ACC::APS::ParameterSet> ps = _readParameterSet(viName);
+    
+        if(ps)
+        {
+          // find the VI sections
+          vector<string> childKeys = ps->getStringVector("childs");
+          for(vector<string>::iterator childsIt=childKeys.begin();childsIt!=childKeys.end();++childsIt)
+          {
+            string ldTypeString = ps->getString(*childsIt + ".logicalDeviceType");
+            TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
+            if(ldType == LDTYPE_VIRTUALINSTRUMENT)
+            {
+              _deallocateBeamlets(viName, ps, *childsIt);
+              _deallocateLogicalSegments(viName, ps, *childsIt);
+            }
+	  }
+        }
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+      }
+      break;
+    }
+
     case STARTDAEMON_SCHEDULED:
     {
       STARTDAEMONScheduledEvent scheduledEvent(event);
@@ -608,7 +707,7 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
         it->second->send(sasResponseEvent);
       }
       
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+      m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
       break;
     }
       
@@ -627,7 +726,7 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
         it->second->send(sasResponseEvent);
       }
       
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+      m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
       
       break;
     }
@@ -728,15 +827,18 @@ void MACScheduler::_convertRelativeTimesChild(string child, boost::shared_ptr<AC
     }
     catch(Exception& e)
     {
-      LOG_DEBUG(formatString("convertRelativeTimesChild for %s failed: %s",child.c_str(),e.message().c_str()));
+      LOG_DEBUG(formatString("convertRelativeTimesChild for %s failed: %s",childKey.c_str(),e.message().c_str()));
     }
   }
 }
 
+// input: VIrootID : ID of the Observation
+//        ps       : complete parameterset of the observation
+//        prefix   : prefix of the VI to extract the parameterset of the VI
 bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  LOG_DEBUG(formatString("Allocating beamlets for VI:%s",VIrootID.c_str()));
+  LOG_DEBUG(formatString("Allocating beamlets for VI:%s",prefix.c_str()));
   bool allocationOk(false);
   
   try
@@ -754,6 +856,12 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
     subbandsVector    = psVI->getInt16Vector("subbands");
     time_t startTime  = psVI->getInt32("claimTime");
     time_t stopTime   = psVI->getInt32("stopTime");
+    uint16 priority   = psVI->getUint16("priority");
+    
+    if(startTime == 0)
+    {
+      startTime = APLUtilities::getUTCtime();
+    }
     
     for(vector<string>::iterator childsIt=childKeys.begin();childsIt!=childKeys.end();++childsIt)
     {
@@ -768,14 +876,19 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
     }
     
     BeamletAllocator::TStationBeamletAllocation allocation;
+    map<string, BeamletAllocator::TStationBeamletAllocation> resumeVIs;
+    set<string> suspendVIs;
     allocationOk = m_beamletAllocator.allocateBeamlets(
       VIrootID,
+      priority,
       stations,
       startTime,
       stopTime,
       subbandsVector,
-      allocation);
-      
+      allocation,
+      resumeVIs,
+      suspendVIs);
+
     // do something with it
     if(allocationOk)
     {
@@ -794,6 +907,31 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
           ps->replace(prefix + string(".") + keyIt->second + string(".beamlets"), beamlets);
         }
       }
+      // suspend the suspendVIs and resume the resumeVIs
+      for(set<string>::iterator it=suspendVIs.begin();it!=suspendVIs.end();++it)
+      {
+        if( (*it) != VIrootID)
+        {
+          TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(*it);
+          if(itVI != m_connectedVIclientPorts.end())
+          {
+            LOGICALDEVICESuspendEvent suspendEvent;
+            itVI->second->send(suspendEvent);
+          }
+        }
+      }
+      for(map<string, BeamletAllocator::TStationBeamletAllocation>::iterator it=resumeVIs.begin();it!=resumeVIs.end();++it)
+      {
+        if( it->first != VIrootID)
+        {
+          TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(it->first);
+          if(itVI != m_connectedVIclientPorts.end())
+          {
+            LOGICALDEVICEResumeEvent resumeEvent;
+            itVI->second->send(resumeEvent);
+          }
+        }
+      }
     }
   }
   catch(Exception& e)
@@ -802,6 +940,270 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
   }
 
   return allocationOk;
+}
+
+// input: VIrootID : ID of the Observation
+//        ps       : complete parameterset of the observation
+//        prefix   : prefix of the VI to extract the parameterset of the VI
+void MACScheduler::_deallocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  LOG_DEBUG(formatString("Deallocating beamlets for VI:%s",prefix.c_str()));
+  
+  try
+  {
+    m_beamletAllocator.logAllocation();
+  
+    // deallocate beamlets for VI's
+    map<string, BeamletAllocator::TStationBeamletAllocation> resumeVIs;
+    set<string> suspendVIs;
+    m_beamletAllocator.deallocateBeamlets(VIrootID, resumeVIs, suspendVIs);
+
+    // suspend the suspendVIs and resume the resumeVIs
+    for(set<string>::iterator it=suspendVIs.begin();it!=suspendVIs.end();++it)
+    {
+      if( (*it) != VIrootID)
+      {
+        TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(*it);
+        if(itVI != m_connectedVIclientPorts.end())
+        {
+          LOGICALDEVICESuspendEvent suspendEvent;
+          itVI->second->send(suspendEvent);
+        }
+      }
+    }
+    for(map<string, BeamletAllocator::TStationBeamletAllocation>::iterator it=resumeVIs.begin();it!=resumeVIs.end();++it)
+    {
+      if( it->first != VIrootID)
+      {
+        TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(it->first);
+        if(itVI != m_connectedVIclientPorts.end())
+        {
+          LOGICALDEVICEResumeEvent resumeEvent;
+          itVI->second->send(resumeEvent);
+        }
+      }
+    }
+
+    m_beamletAllocator.logAllocation();
+  }
+  catch(Exception& e)
+  {
+    LOG_FATAL(formatString("Error deallocating beamlets: %s",e.message().c_str()));
+  }
+}
+
+// input: VIrootID : ID of the Observation
+//        ps       : complete parameterset of the observation
+//        prefix   : prefix of the VI to extract the parameterset of the VI
+bool MACScheduler::_allocateLogicalSegments(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  LOG_DEBUG(formatString("Allocating logical segments for VI:%s",prefix.c_str()));
+  bool allocationOk(false);
+  
+  try
+  {
+    m_logicalSegmentAllocator.logAllocation();
+
+    boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(prefix + string("."))));
+
+    // VirtualRoutes are childs of the VI
+    vector<string> childKeys = psVI->getStringVector("childs");
+    for(vector<string>::iterator childsIt=childKeys.begin();childsIt!=childKeys.end();++childsIt)
+    {
+      string ldTypeString = psVI->getString(*childsIt + ".logicalDeviceType");
+      TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
+      if(ldType == LDTYPE_VIRTUALROUTE)
+      {
+        LogicalSegmentAllocator::TLogicalSegmentBandwidth lsCapacities;
+        vector<string> logicalSegments;
+        uint16 priority;
+        time_t startTime;
+        time_t stopTime;
+        double requiredBandwidth;
+        set<string> resumeVRs;
+        set<string> suspendVRs;
+  
+        boost::shared_ptr<ACC::APS::ParameterSet> psVR(new ACC::APS::ParameterSet(psVI->makeSubset((*childsIt)+string("."))));
+
+        logicalSegments = psVR->getStringVector("logicalSegments");
+        priority        = psVR->getUint16("priority");
+        startTime       = psVR->getInt32("claimTime");
+        stopTime        = psVR->getInt32("stopTime");
+        requiredBandwidth = psVR->getDouble("requiredBandwidth");
+    
+        for(vector<string>::iterator it=logicalSegments.begin();it!=logicalSegments.end();++it)
+        {
+          string psName(string(MS_LOGICALSEGMENT_PROPSET_BASENAME) + (*it));
+          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(psName);
+          if(propIt == m_lsPropSets.end())
+          {
+            // logical segment propertyset not found. Create it
+            GCFMyPropertySetPtr pps(new GCFMyPropertySet(
+                psName.c_str(),
+                MS_LOGICALSEGMENT_PROPSET_TYPE,
+                PS_CAT_PERM_AUTOLOAD,
+                &m_propertySetAnswer,
+                GCFMyPropertySet::USE_DB_DEFAULTS));
+            pps->enable();
+            pair<map<string,GCFMyPropertySetPtr>::iterator,bool> res=m_lsPropSets.insert(map<string,GCFMyPropertySetPtr>::value_type(psName,pps));
+            if(res.second)
+            {
+              propIt = res.first;
+            }
+          }
+          if(propIt != m_lsPropSets.end())
+          {
+            boost::shared_ptr<GCFPVDouble> gcfPvCapacity(static_cast<GCFPVDouble*>(propIt->second->getValue(string(MS_LOGICALSEGMENT_PROPNAME_CAPACITY))));
+            if(gcfPvCapacity)
+            {
+              lsCapacities[*it]=gcfPvCapacity->getValue();
+              LOG_DEBUG(formatString("LogicalSegment %s capacity: %f",it->c_str(),gcfPvCapacity->getValue()));
+            }
+          }
+        }
+        if(startTime == 0)
+        {
+          startTime = APLUtilities::getUTCtime();
+        }
+        allocationOk = m_logicalSegmentAllocator.allocateVirtualRoute(
+          *childsIt,
+          lsCapacities,
+          logicalSegments,
+          priority,
+          startTime,
+          stopTime,
+          requiredBandwidth,
+          resumeVRs,
+          suspendVRs);
+        if(allocationOk)
+        {
+          // suspend the suspendVIs and resume the resumeVIs
+          for(set<string>::iterator it=suspendVRs.begin();it!=suspendVRs.end();++it)
+          {    
+            if( (*it) != (*childsIt))
+            {
+              TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(*it);
+              if(itVI != m_connectedVIclientPorts.end())
+              {
+                LOGICALDEVICESuspendEvent suspendEvent;
+                itVI->second->send(suspendEvent);
+              }
+            }
+          }
+          for(set<string>::iterator it=resumeVRs.begin();it!=resumeVRs.end();++it)
+          {
+            if( (*it) != (*childsIt))
+            {
+              TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(*it);
+              if(itVI != m_connectedVIclientPorts.end())
+              {
+                LOGICALDEVICEResumeEvent resumeEvent;
+                itVI->second->send(resumeEvent);
+              }
+            }
+          }
+
+          m_logicalSegmentAllocator.logAllocation();
+      	}
+      }
+    }
+  }
+  catch(Exception& e)
+  {
+    LOG_FATAL(formatString("Error allocating logical segments: %s",e.message().c_str()));
+  }
+
+  return allocationOk;
+}
+
+// input: VIrootID : ID of the Observation
+//        ps       : complete parameterset of the observation
+//        prefix   : prefix of the VI to extract the parameterset of the VI
+void MACScheduler::_deallocateLogicalSegments(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  LOG_DEBUG(formatString("Deallocating logical segments for VR:%s",VIrootID.c_str()));
+  
+  try
+  {
+    m_logicalSegmentAllocator.logAllocation();
+
+    boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(prefix + string("."))));
+
+    // VirtualRoutes are childs of the VI
+    vector<string> childKeys = psVI->getStringVector("childs");
+    for(vector<string>::iterator childsIt=childKeys.begin();childsIt!=childKeys.end();++childsIt)
+    {
+      string ldTypeString = psVI->getString(*childsIt + ".logicalDeviceType");
+      TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
+      if(ldType == LDTYPE_VIRTUALROUTE)
+      {
+        LogicalSegmentAllocator::TLogicalSegmentBandwidth lsCapacities;
+        vector<string> logicalSegments;
+        double requiredBandwidth;
+        set<string> resumeVRs;
+        set<string> suspendVRs;
+        boost::shared_ptr<ACC::APS::ParameterSet> psVR(new ACC::APS::ParameterSet(psVI->makeSubset((*childsIt)+string("."))));
+        logicalSegments = psVR->getStringVector("logicalSegments");
+        requiredBandwidth = psVR->getDouble("requiredBandwidth");
+    
+        for(vector<string>::iterator it=logicalSegments.begin();it!=logicalSegments.end();++it)
+        {
+          string psName(string(MS_LOGICALSEGMENT_PROPSET_BASENAME) + (*it));
+          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(psName);
+          if(propIt != m_lsPropSets.end())
+          {
+            boost::shared_ptr<GCFPVDouble> gcfPvCapacity(static_cast<GCFPVDouble*>(propIt->second->getValue(string(MS_LOGICALSEGMENT_PROPNAME_CAPACITY))));
+            if(gcfPvCapacity)
+            {
+              lsCapacities[*it]=gcfPvCapacity->getValue();
+            }
+          }
+        }
+        m_logicalSegmentAllocator.deallocateVirtualRoute(
+          *childsIt,
+          lsCapacities,
+          resumeVRs,
+          suspendVRs);
+    
+        m_logicalSegmentAllocator.logAllocation();
+
+        // suspend the suspendVIs and resume the resumeVIs
+        for(set<string>::iterator it=suspendVRs.begin();it!=suspendVRs.end();++it)
+        {
+          if( (*it) != VIrootID)
+          {
+            TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(*it);
+            if(itVI != m_connectedVIclientPorts.end())
+            {
+              LOGICALDEVICESuspendEvent suspendEvent;
+              itVI->second->send(suspendEvent);
+            }
+          }
+        }
+        for(set<string>::iterator it=resumeVRs.begin();it!=resumeVRs.end();++it)
+        {
+          if( (*it) != VIrootID)
+          {
+            TStringRemotePortMap::iterator itVI = m_connectedVIclientPorts.find(*it);
+            if(itVI != m_connectedVIclientPorts.end())
+            {
+              LOGICALDEVICEResumeEvent resumeEvent;
+              itVI->second->send(resumeEvent);
+	    }
+	  }
+        }
+
+        m_logicalSegmentAllocator.logAllocation();
+      }
+    }
+  }
+  catch(Exception& e)
+  {
+    LOG_FATAL(formatString("Error deallocating logical segments: %s",e.message().c_str()));
+  }
 }
 
 boost::shared_ptr<ACC::APS::ParameterSet> MACScheduler::_readParameterSet(const string& VIrootID)
@@ -923,35 +1325,47 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
     string ldTypeString = ps->getString("logicalDeviceType");
     TLogicalDeviceTypes ldTypeRoot = APLUtilities::convertLogicalDeviceType(ldTypeString);
     
-    bool beamletsAllocated = true;
+    bool allocationOk = true;
+    TSASResult sasResult(SAS_RESULT_NO_ERROR);
     
     // find the subbands allocations in VI sections
-    vector<string> childKeys;
-    childKeys         = ps->getStringVector("childs");
-    for(vector<string>::iterator childsIt=childKeys.begin();beamletsAllocated && childsIt!=childKeys.end();++childsIt)
+    vector<string> childKeys = ps->getStringVector("childs");
+    for(vector<string>::iterator childsIt=childKeys.begin();
+        allocationOk && childsIt!=childKeys.end();++childsIt)
     {
       string ldTypeString = ps->getString(*childsIt + ".logicalDeviceType");
       TLogicalDeviceTypes ldType = APLUtilities::convertLogicalDeviceType(ldTypeString);
       if(ldType == LDTYPE_VIRTUALINSTRUMENT)
       {
-	//        boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(*childsIt + string("."))));
         // allocate beamlets for VI's
-        beamletsAllocated = _allocateBeamlets(VIrootID, ps, *childsIt);
-        if(!beamletsAllocated)
+        allocationOk = _allocateBeamlets(VIrootID, ps, *childsIt);
+        if(!allocationOk)
         {
-          SASResponseEvent sasResponseEvent;
-          sasResponseEvent.result = SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED;
-          sasResponseEvent.VIrootID = VIrootID;
-  
-          if(port != 0)
+          sasResult = SAS_RESULT_ERROR_BEAMLET_ALLOCATION_FAILED;
+        }
+        else
+        {
+          allocationOk = _allocateLogicalSegments(VIrootID, ps, *childsIt);
+          if(!allocationOk)
           {
-            port->send(sasResponseEvent);      
+            sasResult = SAS_RESULT_ERROR_LOGICALSEGMENT_ALLOCATION_FAILED;
           }
-          m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
         }
       }
     }
-    if(beamletsAllocated)
+    if(!allocationOk)
+    {
+      SASResponseEvent sasResponseEvent;
+      sasResponseEvent.result = sasResult;
+      sasResponseEvent.VIrootID = VIrootID;
+
+      if(port != 0)
+      {
+        port->send(sasResponseEvent);      
+      }
+      m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
+    }
+    else
     {
       string tempFileName = APLUtilities::getTempFileName();
       ps->writeFile(tempFileName);
@@ -987,7 +1401,7 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
         {
           port->send(sasResponseEvent);      
         }
-        m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+        m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
       }
     }        
   }
@@ -1002,7 +1416,7 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
     {
       port->send(sasResponseEvent);
     }
-    m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+    m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
   }
   catch(exception& e)
   {
@@ -1015,7 +1429,7 @@ void MACScheduler::_schedule(const string& VIrootID, GCFPortInterface* port)
     {
       port->send(sasResponseEvent);
     }
-    m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+    m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
   }
 }
 
@@ -1064,7 +1478,7 @@ void MACScheduler::_updateSchedule(const string& VIrootID, GCFPortInterface* por
       {
         port->send(sasResponseEvent);
       }
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+      m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
     }        
   }
   catch(Exception& e)
@@ -1078,7 +1492,7 @@ void MACScheduler::_updateSchedule(const string& VIrootID, GCFPortInterface* por
     {
       port->send(sasResponseEvent);      
     }
-    m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+    m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
   }
 }
 
@@ -1110,10 +1524,9 @@ void MACScheduler::_cancelSchedule(const string& VIrootID, GCFPortInterface* por
       {
         port->send(sasResponseEvent);      
       }
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+      m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
     }
     
-    m_beamletAllocator.deallocateBeamlets(VIrootID);
   }
   catch(Exception& e)
   {
@@ -1126,7 +1539,7 @@ void MACScheduler::_cancelSchedule(const string& VIrootID, GCFPortInterface* por
     {
       port->send(sasResponseEvent);
     }
-    m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(sasResponseEvent.result));
+    m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(sasResponseEvent.result));
   }
 }
 

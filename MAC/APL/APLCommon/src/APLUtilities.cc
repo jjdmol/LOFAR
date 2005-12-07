@@ -257,6 +257,10 @@ TLogicalDeviceTypes APLUtilities::convertLogicalDeviceType(const string& ldTypeS
   {
     ldType = LDTYPE_VIRTUALBACKEND;
   }
+  else if(ldTypeString == "VIRTUALROUTE")
+  {
+    ldType = LDTYPE_VIRTUALROUTE;
+  }
   else if(ldTypeString == "MAINTENANCEVI")
   {
     ldType = LDTYPE_MAINTENANCEVI;

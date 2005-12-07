@@ -9,26 +9,36 @@ libaplcommon_la_CPPFLAGS = \
 	-DBOOST_DISABLE_THREADS \
 	-Wno-deprecated \
 	-fmessage-length=0 \
-	-fdiagnostics-show-location=once \
-	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
+	-fdiagnostics-show-location=once
+#  -DUSE_PVSSPORT
 
 libaplcommon_la_SOURCES = \
+	$(DOCHDRS) \
 	APLUtilities.cc \
 	LogicalDevice.cc \
 	StartDaemon.cc \
 	PropertySetAnswer.cc \
+	ResourceAllocator.cc \
 	LogicalDevice_Protocol.cc \
 	StartDaemon_Protocol.cc
 
-BUILT_SOURCES = \
-	LogicalDevice_Protocol.ph \
-	StartDaemon_Protocol.ph
+NOINSTHDRS =
 
-EXTRA_DIST = $(BUILT_SOURCES)
+INSTHDRS = 
+
+pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
+
+DOCHDRS = $(pkginclude_HEADERS) $(BUILT_SOURCES)
+
+BUILT_SOURCES = \
+	$(ph_HEADERS)
+
+EXTRA_DIST = 
 
 phdir=$(includedir)/APL/APLCommon
 ph_HEADERS = \
-	$(EXTRA_DIST)
+	LogicalDevice_Protocol.ph \
+	StartDaemon_Protocol.ph
 
 clean-local:
 	rm -f *.ph
