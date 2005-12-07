@@ -12,6 +12,7 @@ pkginclude_HEADERS = \
 	PropertySetAnswerHandlerInterface.h \
 	SharedLogicalDeviceFactory.h \
 	SingleInstanceLogicalDeviceFactory.h \
+	ResourceAllocator.h \
 	StartDaemon.h
 
 NOINSTHDRS =

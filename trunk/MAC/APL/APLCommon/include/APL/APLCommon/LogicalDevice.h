@@ -39,6 +39,7 @@
 #include <APL/APLCommon/PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/ResourceAllocator.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -125,6 +126,10 @@ namespace APLCommon
       string& getServerPortName();
       virtual bool isPrepared(vector<string>& parameters);
       TLogicalDeviceState getLogicalDeviceState() const;
+      TLogicalDeviceState getLastLogicalDeviceState() const;
+
+      void suspend(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      void resume(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
       
       void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
       GCF::TM::GCFEvent::TResult initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
@@ -145,7 +150,7 @@ namespace APLCommon
       // protected assignment operator
       LogicalDevice& operator=(const LogicalDevice&);
 
-#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+#ifndef USE_PVSSPORT
       typedef GCF::TM::GCFTCPPort  TRemotePort;
 #else      
       typedef GCF::PAL::GCFPVSSPort TRemotePort;
@@ -190,6 +195,8 @@ namespace APLCommon
       void _apcLoaded();
       string _state2String(const TLogicalDeviceState& state);
       void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
+      ResourceAllocator::ResourceAllocatorPtr _getResourceAllocator();
+      uint16 _getPriority();
       vector<string> _getChildKeys();
       void _sendEvent(GCFEventSharedPtr eventPtr, GCF::TM::GCFPortInterface& port);
       void _addChildPort(TPortSharedPtr childPort);
@@ -204,9 +211,8 @@ namespace APLCommon
       void claim(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
       void claimed(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
       void prepare(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
-      void resume(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
-      void suspend(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
       void release(const TLDResult& errorCode=LD_RESULT_NO_ERROR);
+      void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode=LD_RESULT_NO_ERROR);
 
       virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)=0;
@@ -225,6 +231,7 @@ namespace APLCommon
       virtual void concreteParentDisconnected(GCF::TM::GCFPortInterface& port)=0;
       virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port)=0;
       virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port)=0;
+      // entry point for copying values from parent section to child sections
       virtual void concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset);
       
       
@@ -256,7 +263,6 @@ namespace APLCommon
       string _getConnectedChildName(GCF::TM::GCFPortInterface& port);
       void _handleLogicalDeviceConnectEvent(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       GCF::TM::GCFEvent::TResult _handleChildTransition(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
-      void _doStateTransition(const TLogicalDeviceState& newState, const TLDResult& errorCode=LD_RESULT_NO_ERROR);
 
       TPortMap                              m_parentPorts; // connection with parents
       unsigned long                         m_parentReconnectTimerId;
@@ -288,6 +294,9 @@ namespace APLCommon
 
       TString2LDTypeMap                     m_childTypes;
       TString2LDStateMap                    m_childStates;
+      
+      ResourceAllocator::ResourceAllocatorPtr m_resourceAllocator;
+      uint16                                m_priority;
 
       ALLOC_TRACER_CONTEXT  
   };
