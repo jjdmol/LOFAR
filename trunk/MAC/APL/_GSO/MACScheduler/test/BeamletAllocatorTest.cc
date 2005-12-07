@@ -24,6 +24,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <Common/lofar_sstream.h>
+
 #include <sys/time.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include "../src/BeamletAllocator.h"
@@ -32,12 +34,36 @@ using namespace LOFAR;
 using namespace LOFAR::GSO;
 using namespace LOFAR::APLCommon;
 
+void printResumeSuspendVIs(
+  map<string, BeamletAllocator::TStationBeamletAllocation> resumeVIs,
+  set<string> suspendVIs)
+{
+  map<string, BeamletAllocator::TStationBeamletAllocation>::iterator itR;
+  set<string>::iterator itS;
+  stringstream logStream;
+  logStream << "ResumeVIs: ";
+  for(itR=resumeVIs.begin();itR!=resumeVIs.end();++itR)
+  {
+    logStream << itR->first.c_str() << ", ";
+  }
+  logStream << endl;
+  LOG_INFO(formatString("%s",logStream.str().c_str()));
+  
+  logStream.str(string(""));
+  logStream << "suspendVIs: ";
+  for(itS=suspendVIs.begin();itS!=suspendVIs.end();++itS)
+  {
+    logStream << itS->c_str() << ", ";
+  }
+  logStream << endl;
+  LOG_INFO(formatString("%s",logStream.str().c_str()));
+}
 int main(int /*argc*/, char** /*argv*/)
 {
   int retval=0;
   
   INIT_LOGGER("./BeamletAllocatorTest.log_prop");   
-  
+
   vector<string> stations1;
   stations1.push_back(string("STS1"));
   
@@ -65,6 +91,17 @@ int main(int /*argc*/, char** /*argv*/)
   vis.push_back(string("VI6"));
   vis.push_back(string("VI7"));
   
+  vector<uint16> priorities;
+  priorities.push_back(100);
+  priorities.push_back(100);
+  priorities.push_back(100);
+  priorities.push_back(100);
+  priorities.push_back(100);
+  priorities.push_back(100);
+  priorities.push_back(100);
+  priorities.push_back(10);
+  priorities.push_back(5);
+  
   vector<time_t> startTimes;
   vector<time_t> stopTimes;
   startTimes.push_back(APLUtilities::getUTCtime() +100);
@@ -86,139 +123,283 @@ int main(int /*argc*/, char** /*argv*/)
   for(int i=0;i<10;i++)
     subbands.push_back(i);
   
-  BeamletAllocator::TStationBeamletAllocation beamlets;
-  
   {  
     BeamletAllocator beamletAllocator(25);
     beamletAllocator.logAllocation();
-  
-    LOG_INFO("Allocating 10 subbands for 1 station");
-    if(!beamletAllocator.allocateBeamlets(vis[0],stations1,startTimes[0],stopTimes[0],subbands,beamlets))
+
+    BeamletAllocator::TStationBeamletAllocation beamlets;
+    map<string, BeamletAllocator::TStationBeamletAllocation> resumeVIs;
+    set<string> suspendVIs;
+    string currentVI;
+
+    currentVI=vis[0];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[0],stations1,startTimes[0],stopTimes[0],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
-  
-    LOG_INFO("Deallocating 1 VI");
-    beamletAllocator.deallocateBeamlets(vis[0]);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+
+    currentVI=vis[0];
+    LOG_INFO(formatString("Deallocating VI %s",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
   
-    LOG_INFO("Deallocating 1 VI");
-    beamletAllocator.deallocateBeamlets(vis[0]);
+    currentVI=vis[0];
+    LOG_INFO(formatString("Deallocating VI %s",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
   
-    LOG_INFO("Allocating 10 subbands for 2 stations");
-    if(!beamletAllocator.allocateBeamlets(vis[0],stations2,startTimes[0],stopTimes[0],subbands,beamlets))
+    currentVI=vis[0];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[0],stations2,startTimes[0],stopTimes[0],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
   
-    LOG_INFO("Reallocating 10 subbands for 2 stations");
-    if(!beamletAllocator.allocateBeamlets(vis[0],stations2,startTimes[1],stopTimes[1],subbands,beamlets))
+    currentVI=vis[0];
+    LOG_INFO(formatString("Reallocating VI %s: 10 subbands for 2 stations",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[0],stations2,startTimes[1],stopTimes[1],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
   
-    LOG_INFO("Allocating 10 subbands for 1 station using overlapping times");
-    if(!beamletAllocator.allocateBeamlets(vis[1],stations1,startTimes[1],stopTimes[1],subbands,beamlets))
+    currentVI=vis[1];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station using overlapping times",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[1],stations1,startTimes[1],stopTimes[1],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
     
-    LOG_INFO("Allocating 10 subbands for 1 station at non-overlapping times");
-    if(!beamletAllocator.allocateBeamlets(vis[2],stations1,startTimes[0],stopTimes[0],subbands,beamlets))
+    currentVI=vis[2];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station at non-overlapping times",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[2],stations1,startTimes[0],stopTimes[0],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
     
-    LOG_INFO("Reallocating 10 subbands for 1 station at overlapping times. This must fail because not enough beamlets are available");
-    if(beamletAllocator.allocateBeamlets(vis[2],stations1,startTimes[1],stopTimes[1],subbands,beamlets))
+    currentVI=vis[2];
+    LOG_INFO(formatString("Reallocating VI %s: 10 subbands for 1 station at overlapping times. This must fail because not enough beamlets are available",currentVI.c_str()));
+    if(beamletAllocator.allocateBeamlets(currentVI,priorities[2],stations1,startTimes[1],stopTimes[1],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
     
-    LOG_INFO("Allocating 10 subbands for 1 station using overlapping times. This must fail because not enough beamlets are available");
-    if(beamletAllocator.allocateBeamlets(vis[3],stations1,startTimes[1],stopTimes[1],subbands,beamlets))
+    currentVI=vis[3];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station using overlapping times. This must fail because not enough beamlets are available",currentVI.c_str()));
+    if(beamletAllocator.allocateBeamlets(currentVI,priorities[3],stations1,startTimes[1],stopTimes[1],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
     
-    LOG_INFO("Deallocating 1 VI");
-    beamletAllocator.deallocateBeamlets(vis[0]);
+    currentVI=vis[0];
+    LOG_INFO(formatString("Deallocating VI %s",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
     beamletAllocator.logAllocation();
-    LOG_INFO("Deallocating 1 VI");
-    beamletAllocator.deallocateBeamlets(vis[1]);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[1];
+    LOG_INFO(formatString("Deallocating VI %s",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
     beamletAllocator.logAllocation();
-    LOG_INFO("Deallocating 1 VI");
-    beamletAllocator.deallocateBeamlets(vis[2]);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[2];
+    LOG_INFO(formatString("Deallocating VI %s",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
     beamletAllocator.logAllocation();
-    LOG_INFO("Deallocating 1 VI");
-    beamletAllocator.deallocateBeamlets(vis[3]);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[3];
+    LOG_INFO(formatString("Deallocating VI %s",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
     beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
   
-    LOG_INFO("Allocating 10 subbands for 1 station");
-    if(!beamletAllocator.allocateBeamlets(vis[0],stations1,startTimes[0],stopTimes[0],subbands,beamlets))
+    currentVI=vis[0];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[0],stations1,startTimes[0],stopTimes[0],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
-    LOG_INFO("Allocating 10 subbands for 1 station at non-overlapping times");
-    if(!beamletAllocator.allocateBeamlets(vis[1],stations1,startTimes[1],stopTimes[1],subbands,beamlets))
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[1];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station at non-overlapping times",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[1],stations1,startTimes[1],stopTimes[1],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
-    LOG_INFO("Allocating 10 subbands for 1 station at non-overlapping times");
-    if(!beamletAllocator.allocateBeamlets(vis[2],stations1,startTimes[2],stopTimes[2],subbands,beamlets))
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[2];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station at non-overlapping times",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[2],stations1,startTimes[2],stopTimes[2],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
-    LOG_INFO("Allocating 10 subbands for 1 station at overlapping times");
-    if(!beamletAllocator.allocateBeamlets(vis[3],stations1,startTimes[3],stopTimes[3],subbands,beamlets))
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[3];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 1 station at overlapping times",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[3],stations1,startTimes[3],stopTimes[3],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
-    LOG_INFO("Allocating 10 subbands for 2 stations at overlapping times");
-    if(!beamletAllocator.allocateBeamlets(vis[4],stations2,startTimes[4],stopTimes[4],subbands,beamlets))
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[4];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[4],stations2,startTimes[4],stopTimes[4],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
-    LOG_INFO("Allocating 10 subbands for 2 stations at overlapping times. This should fail because station1 has not enough beamlets available");
-    if(beamletAllocator.allocateBeamlets(vis[5],stations2,startTimes[5],stopTimes[5],subbands,beamlets))
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[5];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times. This should fail because station1 has not enough beamlets available",currentVI.c_str()));
+    if(beamletAllocator.allocateBeamlets(currentVI,priorities[5],stations2,startTimes[5],stopTimes[5],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
-    LOG_INFO("Allocating 10 subbands for 2 stations at overlapping times. This should fail because station1 has not enough beamlets available");
-    if(beamletAllocator.allocateBeamlets(vis[6],stations2,startTimes[6],stopTimes[6],subbands,beamlets))
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    currentVI=vis[6];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times. This should fail because station1 has not enough beamlets available",currentVI.c_str()));
+    if(beamletAllocator.allocateBeamlets(currentVI,priorities[6],stations2,startTimes[6],stopTimes[6],subbands,beamlets,resumeVIs,suspendVIs))
     {
       LOG_FATAL("test failed");
       return -1;
     }
     beamletAllocator.logAllocation();
+    LOG_INFO("The same allocation, grouped by VI:");
     beamletAllocator.logAllocation(true);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+
+    currentVI=vis[6];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times with HIGH priority. Let's see what gets suspended...",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[7],stations2,startTimes[4],stopTimes[4],subbands,beamlets,resumeVIs,suspendVIs))
+    {
+      LOG_FATAL("test failed");
+      return -1;
+    }
+    beamletAllocator.logAllocation();
+    LOG_INFO("The same allocation, grouped by VI:");
+    beamletAllocator.logAllocation(true);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[6];
+    LOG_INFO(formatString("Deallocating the HIGH priority VI %s. Let's see what gets resumed...",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
+    beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[5];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times with HIGH priority. Let's see what gets suspended...",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[7],stations2,startTimes[4],stopTimes[4],subbands,beamlets,resumeVIs,suspendVIs))
+    {
+      LOG_FATAL("test failed");
+      return -1;
+    }
+    beamletAllocator.logAllocation();
+    LOG_INFO("The same allocation, grouped by VI:");
+    beamletAllocator.logAllocation(true);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[6];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times with HIGH priority. Let's see what gets suspended...",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[8],stations2,startTimes[4],stopTimes[4],subbands,beamlets,resumeVIs,suspendVIs))
+    {
+      LOG_FATAL("test failed");
+      return -1;
+    }
+    beamletAllocator.logAllocation();
+    LOG_INFO("The same allocation, grouped by VI:");
+    beamletAllocator.logAllocation(true);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[5];
+    LOG_INFO(formatString("Deallocating the HIGH priority VI %s. Let's see what gets resumed...",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
+    beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[6];
+    LOG_INFO(formatString("Deallocating the HIGH priority VI %s. Let's see what gets resumed...",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
+    beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[5];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times with HIGH priority. Let's see what gets suspended...",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[7],stations2,startTimes[4],stopTimes[4],subbands,beamlets,resumeVIs,suspendVIs))
+    {
+      LOG_FATAL("test failed");
+      return -1;
+    }
+    beamletAllocator.logAllocation();
+    LOG_INFO("The same allocation, grouped by VI:");
+    beamletAllocator.logAllocation(true);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[6];
+    LOG_INFO(formatString("Allocating VI %s: 10 subbands for 2 stations at overlapping times with HIGH priority. Let's see what gets suspended...",currentVI.c_str()));
+    if(!beamletAllocator.allocateBeamlets(currentVI,priorities[8],stations2,startTimes[4],stopTimes[4],subbands,beamlets,resumeVIs,suspendVIs))
+    {
+      LOG_FATAL("test failed");
+      return -1;
+    }
+    beamletAllocator.logAllocation();
+    LOG_INFO("The same allocation, grouped by VI:");
+    beamletAllocator.logAllocation(true);
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[6];
+    LOG_INFO(formatString("Deallocating the HIGH priority VI %s. Let's see what gets resumed...",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
+    beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
+
+    currentVI=vis[5];
+    LOG_INFO(formatString("Deallocating the HIGH priority VI %s. Let's see what gets resumed...",currentVI.c_str()));
+    beamletAllocator.deallocateBeamlets(currentVI,resumeVIs,suspendVIs);
+    beamletAllocator.logAllocation();
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
+    beamletAllocator.logSuspendedAllocation();
   }
 
   {
@@ -227,6 +408,7 @@ int main(int /*argc*/, char** /*argv*/)
       allsubbands.push_back(i);
     
     vector<string> allvis;
+    vector<uint16> allpriorities;
     vector<string> allstations;
     vector<time_t> allstartTimes;
     vector<time_t> allstopTimes;
@@ -239,6 +421,8 @@ int main(int /*argc*/, char** /*argv*/)
       sprintf(tempStr,"VI%03d",i);
       allvis.push_back(string(tempStr));
 
+      allpriorities.push_back(i);
+
       allstartTimes.push_back(APLUtilities::getUTCtime() + 1000 + i*10);
       allstopTimes.push_back (APLUtilities::getUTCtime() + 1000 + i*10+5);
     }
@@ -246,6 +430,13 @@ int main(int /*argc*/, char** /*argv*/)
     
     BeamletAllocator beamletAllocator(200);
     beamletAllocator.logAllocation();
+
+    BeamletAllocator::TStationBeamletAllocation beamlets;
+    map<string, BeamletAllocator::TStationBeamletAllocation> resumeVIs;
+    set<string> suspendVIs;
+    string currentVI;
+
+    printResumeSuspendVIs(resumeVIs,suspendVIs);
     
     LOG_INFO("and now something big");
     
@@ -253,11 +444,11 @@ int main(int /*argc*/, char** /*argv*/)
     struct timeval endTv;
     double t1,t2,timediff;
     bool success;
-    
+
     for(int t=0;t<5;t++)
     {
       gettimeofday(&beginTv,0);
-      success=beamletAllocator.allocateBeamlets(allvis[t],allstations,allstartTimes[t],allstopTimes[t],allsubbands,beamlets);
+      success=beamletAllocator.allocateBeamlets(allvis[t],allpriorities[t],allstations,allstartTimes[t],allstopTimes[t],allsubbands,beamlets,resumeVIs,suspendVIs);
       gettimeofday(&endTv,0);
       t1 = beginTv.tv_sec + ((double)beginTv.tv_usec/1000000);
       t2 = endTv.tv_sec + ((double)endTv.tv_usec/1000000);
@@ -271,7 +462,7 @@ int main(int /*argc*/, char** /*argv*/)
     }
     
     gettimeofday(&beginTv,0);
-    success=beamletAllocator.allocateBeamlets(allvis[100],allstations,allstartTimes[0],allstopTimes[0],allsubbands,beamlets);
+    success=beamletAllocator.allocateBeamlets(allvis[100],allpriorities[0],allstations,allstartTimes[0],allstopTimes[0],allsubbands,beamlets,resumeVIs,suspendVIs);
     gettimeofday(&endTv,0);
     t1 = beginTv.tv_sec + ((double)beginTv.tv_usec/1000000);
     t2 = endTv.tv_sec + ((double)endTv.tv_usec/1000000);
@@ -286,15 +477,14 @@ int main(int /*argc*/, char** /*argv*/)
     for(int t=0;t<5;t++)
     {
       gettimeofday(&beginTv,0);
-      beamletAllocator.deallocateBeamlets(allvis[t]);
+      beamletAllocator.deallocateBeamlets(allvis[t],resumeVIs,suspendVIs);
       gettimeofday(&endTv,0);
       t1 = beginTv.tv_sec + ((double)beginTv.tv_usec/1000000);
       t2 = endTv.tv_sec + ((double)endTv.tv_usec/1000000);
       timediff = t2-t1;
       LOG_INFO(formatString("It took me (%f - %f = ) %f to deallocate one VI",t2,t1,timediff));
     }    
-    
-    //beamletAllocator.logAllocation();
+
   }
   return retval;
 }

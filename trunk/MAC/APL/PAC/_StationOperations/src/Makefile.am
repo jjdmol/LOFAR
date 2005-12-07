@@ -4,8 +4,8 @@ libstationoperations_la_CPPFLAGS= \
 	-DBOOST_DISABLE_THREADS \
 	-Wno-deprecated \
 	-fmessage-length=0 \
-	-fdiagnostics-show-location=once \
-	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
+	-fdiagnostics-show-location=once
+#  -DUSE_PVSSPORT
 
 libstationoperations_la_SOURCES	= \
 	StationOperations.cc

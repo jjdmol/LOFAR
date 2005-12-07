@@ -31,6 +31,7 @@
 #include "ObservationVI.h"
 #include <APL/ArrayReceptorGroup/ArrayReceptorGroup.h>
 #include <APL/ArrayOperations/ArrayOperations.h>
+#include <APL/VirtualRoute/VirtualRoute.h>
 #include <APL/APLCommon/LogicalDeviceFactory.h>
 #include <APL/APLCommon/SharedLogicalDeviceFactory.h>
 
@@ -42,6 +43,7 @@ using namespace LOFAR::APLCommon;
 using namespace LOFAR::AVI;  // A)pplication layer V)irtual I)nstrument
 using namespace LOFAR::AAO;  // A)pplication layer A)rray O)perations
 using namespace LOFAR::AAR;  // A)pplication layer A)rray R)eceptor group
+using namespace LOFAR::AVR;  // A)pplication layer V)irtual R)oute
 
 int main(int argc, char* argv[])
 {
@@ -50,6 +52,7 @@ int main(int argc, char* argv[])
   boost::shared_ptr<LogicalDeviceFactory<VirtualInstrument> >        viFactory(new LogicalDeviceFactory<VirtualInstrument>);
   boost::shared_ptr<SharedLogicalDeviceFactory<ArrayReceptorGroup> > argFactory(new SharedLogicalDeviceFactory<ArrayReceptorGroup>);
   boost::shared_ptr<SharedLogicalDeviceFactory<ArrayOperations> >    aoFactory(new SharedLogicalDeviceFactory<ArrayOperations>);
+  boost::shared_ptr<LogicalDeviceFactory<VirtualRoute> >             vrFactory(new LogicalDeviceFactory<VirtualRoute>);
   boost::shared_ptr<LogicalDeviceFactory<MaintenanceVI> >            mviFactory(new LogicalDeviceFactory<MaintenanceVI>);
   boost::shared_ptr<LogicalDeviceFactory<ObservationVI> >            oviFactory(new LogicalDeviceFactory<ObservationVI>);
   
@@ -57,6 +60,7 @@ int main(int argc, char* argv[])
   sd.registerFactory(LDTYPE_VIRTUALINSTRUMENT,viFactory);
   sd.registerFactory(LDTYPE_ARRAYRECEPTORGROUP,argFactory);
   sd.registerFactory(LDTYPE_ARRAYOPERATIONS,aoFactory);
+  sd.registerFactory(LDTYPE_VIRTUALROUTE,vrFactory);
   sd.registerFactory(LDTYPE_MAINTENANCEVI,mviFactory);
   sd.registerFactory(LDTYPE_OBSERVATION,oviFactory);
   sd.start(); // make initial transition

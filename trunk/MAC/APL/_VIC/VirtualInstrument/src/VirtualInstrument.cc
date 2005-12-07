@@ -171,25 +171,12 @@ GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GC
       if(_childsNotInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_CLAIMING))
       {
         LOG_TRACE_FLOW("No childs CLAIMING");
-        // ALL virtual backend childs must be claimed
-	//        if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
-	// Demo: no VB        
-        if(_childsInState(0.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_CLAIMED))
+        
+        if(_checkQualityRequirements(LOGICALDEVICE_STATE_CLAIMED))
         {
-          LOG_TRACE_FLOW("100% VB's CLAIMED");
-          // 50% of the VT's must be claimed
-          if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_CLAIMED))
-          {
-            LOG_TRACE_FLOW("50% VT's CLAIMED");
-            // enter claimed state
-            newState  = LOGICALDEVICE_STATE_CLAIMED;
-            errorCode = LD_RESULT_NO_ERROR;
-          }
-          else
-          {
-            newState  = LOGICALDEVICE_STATE_IDLE;
-            errorCode = LD_RESULT_LOW_QUALITY;
-          }
+          // enter claimed state
+          newState  = LOGICALDEVICE_STATE_CLAIMED;
+          errorCode = LD_RESULT_NO_ERROR;
         }
         else
         {
@@ -236,24 +223,12 @@ GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, G
       if(_childsNotInState(100.0, LDTYPE_NO_TYPE, LOGICALDEVICE_STATE_PREPARING))
       {
         LOG_TRACE_FLOW("No childs PREPARING");
-        // ALL virtual backend childs must be prepared
-        // if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
-        // Demo: no VB
-        if(_childsInState(0.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_SUSPENDED))
+        
+        if(_checkQualityRequirements(LOGICALDEVICE_STATE_SUSPENDED))
         {
-          LOG_TRACE_FLOW("All VB's SUSPENDED");
-          // 50% of the VT's must be prepared
-          if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_SUSPENDED))
-          {
-            LOG_TRACE_FLOW("50% VT's SUSPENDED");
-            // enter suspended state
-            newState=LOGICALDEVICE_STATE_SUSPENDED;
-          }
-          else
-          {
-            newState  = LOGICALDEVICE_STATE_CLAIMED;
-            errorCode = LD_RESULT_LOW_QUALITY;
-          }
+          // enter suspended state
+          newState=LOGICALDEVICE_STATE_SUSPENDED;
+          errorCode = LD_RESULT_NO_ERROR;
         }
         else
         {
@@ -351,7 +326,7 @@ void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortI
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   if(timerEvent.id == m_qualityCheckTimerId)
   {
-    if(!_checkQualityRequirements())
+    if(!_checkQualityRequirements(LOGICALDEVICE_STATE_ACTIVE))
     {
       LOG_FATAL(formatString("VI(%s): quality too low",getName().c_str()));
       m_serverPort.cancelTimer(m_qualityCheckTimerId);
@@ -366,23 +341,52 @@ void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortI
   }
 }
 
-bool VirtualInstrument::_checkQualityRequirements()
+bool VirtualInstrument::_checkQualityRequirements(const TLogicalDeviceState& requiredState)
 {
   bool requirementsMet = false;
   
-  // ALL virtual backend childs must be active
-  // if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_ACTIVE))
-  // Demo: No VB
-  if(_childsInState(0.0, LDTYPE_VIRTUALBACKEND, LOGICALDEVICE_STATE_ACTIVE))
+  try
   {
-    LOG_TRACE_FLOW("All VB's RESUMED");
-    // 50% of the VT's must be active
-    if(_childsInState(50.0, LDTYPE_VIRTUALTELESCOPE, LOGICALDEVICE_STATE_ACTIVE))
+    // ALL virtual backend childs must be active
+    // if(_childsInState(100.0, LDTYPE_VIRTUALBACKEND, requiredState))
+    // Demo: No VB
+    
+    bool vbQualityOk(false);
+    bool vtQualityOk(false);
+    bool vrQualityOk(false);
+    double requiredVBavailability = m_parameterSet.getDouble(string("requiredVBavailability"));
+    double requiredVRavailability = m_parameterSet.getDouble(string("requiredVRavailability"));
+    double requiredVTavailability = m_parameterSet.getDouble(string("requiredVTavailability"));
+    
+    // ALL virtual backend childs must be claimed
+    vbQualityOk = _childsInState(requiredVBavailability, LDTYPE_VIRTUALBACKEND, requiredState);
+  
+    // amount of the VT's that must be claimed
+    vtQualityOk = _childsInState(requiredVTavailability, LDTYPE_VIRTUALTELESCOPE, requiredState);
+    
+    // amount of the VR's that must be claimed
+    vrQualityOk = _childsInState(requiredVRavailability, LDTYPE_VIRTUALROUTE, requiredState);
+  
+    if(!vtQualityOk)
     {
-      LOG_TRACE_FLOW("50% VT's RESUMED");
-      requirementsMet=true;
+      LOG_TRACE_FLOW("VT quality too low");
     }
+    if(!vbQualityOk)
+    {
+      LOG_TRACE_FLOW("VB quality too low");
+    }
+    if(!vrQualityOk)
+    {
+      LOG_TRACE_FLOW("VR quality too low");
+    }
+    
+    requirementsMet = (vbQualityOk && vtQualityOk && vrQualityOk);
   }
+  catch(Exception &e)
+  {
+    LOG_DEBUG(formatString("parameter not found: %s",e.message().c_str())); 
+  }
+
   LOG_DEBUG(formatString("checkQualityRequirements returns %s",(requirementsMet?"true":"false"))); 
   return requirementsMet;
 }

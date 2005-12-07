@@ -66,7 +66,7 @@ StartDaemon::StartDaemon(const string& name) :
   m_garbageCollection(),
   m_garbageCollectionTimerId(0)
 {
-#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+#ifndef USE_PVSSPORT
   LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
 #endif
 

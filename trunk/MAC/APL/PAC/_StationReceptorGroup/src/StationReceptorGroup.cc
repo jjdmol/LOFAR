@@ -307,7 +307,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_idle_state(GCFEvent& event, GCF
   return status;
 }
 
-GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event, GCFPortInterface& p, TLogicalDeviceState& /*newState*/, TLDResult& /*errorCode*/)
+GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event, GCFPortInterface& p, TLogicalDeviceState& newState, TLDResult& errorCode)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -316,12 +316,30 @@ GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event,
   {
     case F_ENTRY:
     {
-      bool res=m_CALclient.open(); // need this otherwise GTM_Sockethandler is not called
-      LOG_DEBUG(formatString("m_CALclient.open() returned %s",(res?"true":"false")));
-      if(!res)
+      // claim the resources:
+      ResourceAllocator::TRcuSubset rcuSubset;
+      for(TRCUMap::iterator it=m_rcuMap.begin();it!=m_rcuMap.end();++it)
       {
-        m_connectTimer = m_CALclient.setTimer((long)3);
-      }  
+        rcuSubset.set(it->first);
+      }
+      int16 nyquistZone = m_parameterSet.getInt16(string("nyquistZone"));
+      uint8 rcuControl = getRcuControlValue(m_parameterSet.getString(string("bandSelection")));
+      
+      if(_getResourceAllocator()->claimSRG(ResourceAllocator::LogicalDevicePtr(this),_getPriority(),rcuSubset,nyquistZone,rcuControl))
+      {
+        bool res=m_CALclient.open(); // need this otherwise GTM_Sockethandler is not called
+        LOG_DEBUG(formatString("m_CALclient.open() returned %s",(res?"true":"false")));
+        if(!res)
+        {
+          m_connectTimer = m_CALclient.setTimer((long)3);
+        }  
+      }
+      else
+      {
+        newState = LOGICALDEVICE_STATE_IDLE;
+        errorCode = LD_RESULT_LOW_PRIORITY;
+      }
+      _getResourceAllocator()->logSRGallocation();
       break;
     }
     
@@ -528,8 +546,6 @@ void StationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/)
     {
       calStartEvent.subset.set(it->first);
     }
-    LOG_ERROR("CAL_Protocol.CALStartEvent.sampling_frequency is disappeared");
-//    calStartEvent.sampling_frequency = m_parameterSet.getDouble(string("frequency"));
     calStartEvent.nyquist_zone = m_parameterSet.getInt16(string("nyquistZone"));
     calStartEvent.rcucontrol.value = getRcuControlValue(m_parameterSet.getString(string("bandSelection")));
     m_CALclient.send(calStartEvent);
@@ -559,6 +575,9 @@ void StationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
   CALStopEvent calStopEvent;
   calStopEvent.name = getName();
   m_CALclient.send(calStopEvent);
+  
+  _getResourceAllocator()->releaseSRG(ResourceAllocator::LogicalDevicePtr(this));
+  _getResourceAllocator()->logSRGallocation();
 
   // and unsubscribe from RCU functionality props
   //  for(TRCUMap::iterator it=m_rcuMap.begin();it!=m_rcuMap.end();++it)
@@ -582,7 +601,7 @@ void StationReceptorGroup::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPo
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  if(timerEvent.id == m_rcusPropertiesAvailableTimer)
+  if(static_cast<long>(timerEvent.id) == m_rcusPropertiesAvailableTimer)
   {
     if(!rcuPropsAvailable())
     {
@@ -603,13 +622,13 @@ void StationReceptorGroup::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPo
       }
     }
   }
-  else if(timerEvent.id == m_connectTimer)
+  else if(static_cast<long>(timerEvent.id) == m_connectTimer)
   {
     m_CALclient.open();
   }
 }
 
-void StationReceptorGroup::concreteAddExtraKeys(ACC::APS::ParameterSet& psSubset)
+void StationReceptorGroup::concreteAddExtraKeys(ACC::APS::ParameterSet& /*psSubset*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   

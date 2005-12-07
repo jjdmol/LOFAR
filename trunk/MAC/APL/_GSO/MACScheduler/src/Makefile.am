@@ -9,38 +9,39 @@ MACScheduler_CPPFLAGS= \
 	-DBOOST_DISABLE_THREADS \
 	-Wno-deprecated \
 	-fmessage-length=0 \
-	-fdiagnostics-show-location=once \
-	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
+	-fdiagnostics-show-location=once
+#  -DUSE_PVSSPORT
+
+MACScheduler_LDADD		= -lpqxx $(LOFAR_DEPEND)
+MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 MACScheduler_SOURCES 		= \
+  $(DOCHDRS) \
 	MACScheduler.cc \
 	BeamletAllocator.cc \
+	LogicalSegmentAllocator.cc \
 	MACSchedulerMain.cc \
 	SAS_Protocol.cc
 
 NOINSTHDRS = \
 	MACScheduler.h \
 	BeamletAllocator.h \
-	SAS_Protocol.ph
+	LogicalSegmentAllocator.h 
 
 INSTHDRS = 
 
 pkginclude_HEADERS = $(NOINSTHDRS) $(INSTHDRS)
 
-DOCHDRS	=	$(pkginclude_HEADERS)
+DOCHDRS	=	$(pkginclude_HEADERS) $(BUILT_SOURCES)
 
-MACScheduler_LDADD		= -lpqxx $(LOFAR_DEPEND)
-MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
+BUILT_SOURCES = \
+	$(ph_HEADERS)
 
-include_HEADERS = 
+phdir=$(includedir)/APL/APLCommon
+ph_HEADERS = \
+	SAS_Protocol.ph
 
-BUILT_SOURCES = 	\
-	SAS_Protocol.ph \
-	MACScheduler.conf \
-	MACScheduler.log_prop \
-	customPrepPVSSDB.ctl
-
-EXTRA_DIST = $(BUILT_SOURCES) $(configfiles_DATA) $(sysconf_DATA)
+EXTRA_DIST = $(configfiles_DATA) $(sysconf_DATA)
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
