@@ -34,6 +34,8 @@ global string    NAVPML_DPNAME_ENABLED   = "__enabled";
 global string    NAVPML_ENABLED_PERM     =  "permanent";
 global string    NAVPML_ENABLED_TEMP     =  "temporary";
 global string    NAVPML_ENABLED_AUTOLOAD =  "autoloaded";
+global string    NAVPML_ENABLED_PERM_AUTOLOADED =  "perm-autoloaded";
+global string    NAVPML_ENABLED_TEMP_AUTOLOADED =  "temp-autoloaded";
 
 ///////////////////////////////////////////////////////////////////////////
 //Function navPMLinitialize
@@ -196,7 +198,7 @@ bool navPMLisAutoLoaded(string datapoint)
     {
       string enabled = "";
       dpGet(datapoint + NAVPML_DPNAME_ENABLED + ".", enabled);
-      if (strpos(enabled, NAVPML_ENABLED_AUTOLOAD) == 0)
+      if (strpos(enabled, NAVPML_ENABLED_AUTOLOAD) >= 0)
       {
         autoLoaded = true;
       }
@@ -227,7 +229,7 @@ bool navPMLisTemporary(string datapoint)
       string enabled = "";
       dpGet(datapoint + ".", enabled);
       LOG_TRACE("navPMLisTemporary[content enabled]", enabled);
-      if (strpos(enabled, NAVPML_ENABLED_TEMP) == 0)
+      if (strpos(enabled, NAVPML_ENABLED_TEMP) == 0 || strpos(enabled, NAVPML_ENABLED_TEMP_AUTOLOADED) == 0)
       {
         temporary = true;
       }
