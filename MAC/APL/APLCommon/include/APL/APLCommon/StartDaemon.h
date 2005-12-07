@@ -103,7 +103,7 @@ namespace APLCommon
       bool _isChildPort(GCF::TM::GCFPortInterface& port);
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
 
-#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+#ifndef USE_PVSSPORT
       typedef GCF::TM::GCFTCPPort  TThePortTypeInUse;
 #else      
       typedef GCF::PAL::GCFPVSSPort TThePortTypeInUse;

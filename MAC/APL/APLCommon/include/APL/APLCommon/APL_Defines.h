@@ -44,6 +44,7 @@ namespace APLCommon
     LD_RESULT_BEAMFREE_ERROR,  // could not free beam
     LD_RESULT_SETCLOCKS_ERROR, // error setting td clocks
     LD_RESULT_STARTCAL_ERROR,  // error starting calibration
+    LD_RESULT_LOW_PRIORITY,    // a higher priority LD caused a suspend of this LD
 
   };
 
@@ -68,7 +69,8 @@ namespace APLCommon
     LDTYPE_STATIONOPERATIONS, 
     LDTYPE_VIRTUALBACKEND, 
     LDTYPE_MAINTENANCEVI,
-    LDTYPE_OBSERVATION
+    LDTYPE_OBSERVATION,
+    LDTYPE_VIRTUALROUTE
   };
 
   enum TSDResult
