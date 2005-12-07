@@ -1,0 +1,16 @@
+mac.ns.ARATestDriver.RSPserver.type=TCP
+mac.ns.RSPDriver.acceptor.type=TCP
+mac.ns.RSPDriver.acceptor_v2.type=TCP
+
+mac.top.ARA.RSPserver.remoteservice=ARATestDriver:RSPserver
+#mac.top.ARA.RSPserver.remoteservice=RSPDriver:acceptor
+#mac.top.ARA.RSPserver.remoteservice=RSPDriver:acceptor_v2
+
+mac.apl.ara.N_RACKS=1
+mac.apl.ara.N_SUBRACKS_PER_RACK=1
+mac.apl.ara.N_BOARDS_PER_SUBRACK=1
+mac.apl.ara.N_APS_PER_BOARD=4
+mac.apl.ara.N_RCUS_PER_AP=2
+mac.apl.ara.STATUS_UPDATE_INTERVAL=10000
+mac.apl.ara.STATISTICS_UPDATE_INTERVAL=10000
+mac.apl.ara.STATISTICS_CENTRALIZED=0

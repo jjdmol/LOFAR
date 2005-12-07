@@ -1,0 +1,2409 @@
+V 10
+1
+LANG:1 13 LiteNavigator
+PANEL,40 103 732 456 N "_3DFace" 0
+"main()
+{
+  addGlobal(\"g_connectedDatapoints\",DYN_STRING_VAR);
+  dynClear(g_connectedDatapoints);
+  
+  addGlobal(\"g_buttonDatapoints\",DYN_STRING_VAR);
+  dynClear(g_buttonDatapoints);
+}" 0
+ E E E E 1 -1 -1 0  10 10
+""0  1
+E "int countLeadingSpaces(string text)
+{
+  int spaces=0;
+  while(spaces<strlen(text)&&text[spaces]==' ')
+  {
+    spaces++;
+  }
+  return spaces;
+}
+
+string buildPath()
+{
+  string path;
+  string tempString;
+  int leadingSpaces=0;
+  int i;
+  int tempSpaces;
+  int tempSpacesPrev;
+  string selectedResource = SelectionList1.selectedText;
+  int selectedItem = SelectionList1.selectedPos;
+  dyn_string items = SelectionList1.items;
+	
+  path = strltrim(selectedResource);
+	
+  // count the number of spaces
+  leadingSpaces = countLeadingSpaces(selectedResource);
+	
+  // work up the hierarchy until there are no leading spaces
+  tempSpaces=0;
+  tempSpacesPrev = leadingSpaces;
+  for(i=selectedItem;i>0;i--)
+  {
+    tempSpaces = countLeadingSpaces(items[i]);
+    if(tempSpaces < tempSpacesPrev)
+    {
+      path = strltrim(items[i]) + \"_\" + path;
+      tempSpacesPrev = tempSpaces;
+    }
+  }
+  return path;
+}
+
+void enableFields(dyn_string labelTexts, dyn_string dpNames)
+{
+dyn_errClass err;
+
+  string dpOnlineString;
+  string dpOriginalString;
+  string dataPointBase = buildPath();
+  string shapeString;
+  int i,j;
+  string selection=strltrim(SelectionList1.selectedText);
+  shape caption=getShape(\"TextSelectedResource\");
+  caption.visible=(dynlen(labelTexts)>0);
+  caption.text=dataPointBase;	
+
+  // disconnect existing dpConnections
+  for(i=0;i<dynlen(g_connectedDatapoints);i++)
+  {
+    if(dpExists( g_connectedDatapoints[i+1] ))
+    {
+      shapeString = \"updateTextField\"+(i+1);
+      if(!dpDisconnect(shapeString,g_connectedDatapoints[i+1]))
+      {
+        err = getLastError();
+        if (dynlen(err) > 0)
+        {
+DebugN(\"Error disconnecting from datapoint : \", g_connectedDatapoints[i+1],err);
+        }
+      }
+    }
+  }	
+  dynClear(g_connectedDatapoints);
+  dynClear(g_buttonDatapoints);
+
+  for(i=0;i<dynlen(labelTexts)&&i<dynlen(dpNames);i++)
+  {
+    shape l=getShape(\"Text\" + (i+1));
+    shape f=getShape(\"TextField\" + (i+1));
+    shape b=getShape(\"Button\" + (i+1));
+    l.visible = true;
+    l.text = labelTexts[i+1];
+    f.visible = true;
+    b.visible = true;
+
+    dpOnlineString = \"System1:\" + dataPointBase+dpNames[i+1] + \":_online.._value\";		
+    dpOriginalString = \"System1:\" + dataPointBase+dpNames[i+1] + \":_original.._value\";
+    
+    if( !dpExists( dpOnlineString ))
+    {
+      f.visible = false; 
+DebugN(\"Datapoint does not exist : \", dpOnlineString);
+    }
+    else
+    {
+      shapeString = \"updateTextField\"+(i+1);
+      dpConnect(shapeString,dpOnlineString);
+      err = getLastError();
+      if (dynlen(err) > 0)
+      {
+        f.visible = false; 
+DebugN(\"Error connecting to datapoint : \", dpOnlineString,err);
+      }
+      else
+      {
+        dynAppend(g_connectedDatapoints,dpOnlineString);
+        dynAppend(g_buttonDatapoints,dpOriginalString);
+      }
+    }
+  }
+  for(j=i;j<12;j++)
+  {
+    shape l=getShape(\"Text\" + (j+1));
+    shape f=getShape(\"TextField\" + (j+1));
+    shape b=getShape(\"Button\" + (j+1));
+    l.visible=false;
+    f.visible=false;
+    b.visible = false;
+  }
+}
+
+void enableSelectedFields()
+{
+  string selection=strltrim(SelectionList1.selectedText);
+  if(selection == \"PIC\")
+  {
+    enableFields(
+      makeDynString(\"Status\",\"Maintenance status\",\"Maintenance from\",\"Maintenance to\"),
+      makeDynString(\".status\", \"_Maintenance.status\", \"_Maintenance.fromTime\", \"_Maintenance.toTime\"));
+  }  
+  else if(substr(selection,0,4) == \"Rack\")
+  {
+    enableFields(
+      makeDynString(\"Status\",\"Maintenance status\",\"Maintenance from\",\"Maintenance to\",\"Alert status\"),
+      makeDynString(\".status\", \"_Maintenance.status\", \"_Maintenance.fromTime\", \"_Maintenance.toTime\", \"_Alert.status\") ); 
+  }
+  else if(substr(selection,0,7) == \"SubRack\")
+  {
+        enableFields(
+          makeDynString(\"Status\",\"Maintenance status\",\"Maintenance from\",\"Maintenance to\",\"Alert status\"),
+          makeDynString(\".status\", \"_Maintenance.status\", \"_Maintenance.fromTime\", \"_Maintenance.toTime\", \"_Alert.status\") ); 
+  }
+  else if(substr(selection,0,5) == \"Board\")
+  {
+    enableFields(
+      makeDynString(\"Status\",\"Maintenance status\",\"Maintenance from\",\"Maintenance to\",\"Alert status\"),
+      makeDynString(\".status\", \"_Maintenance.status\", \"_Maintenance.fromTime\", \"_Maintenance.toTime\", \"_Alert.status\") ); 
+  }
+  else if(substr(selection,0,3) == \"ETH\")
+  {
+    enableFields(
+      makeDynString(\"Packets received\",\"Packets erroneous\"),
+      makeDynString(\".packetsReceived\",\".packetsError\")); 
+  }
+  else if(substr(selection,0,2) == \"BP\")
+  {
+    enableFields(
+      makeDynString(\"Alive\",\"Temperature\"),
+      makeDynString(\".alive\",\".temperature\")); 
+  }
+  else if(substr(selection,0,2) == \"AP\")
+  {
+    enableFields(
+      makeDynString(\"Alive\",\"Temperature\"),
+      makeDynString(\".alive\",\".temperature\")); 
+  }
+  else if(substr(selection,0,3) == \"RCU\")
+  {
+    enableFields(
+      makeDynString(\"Statistics ready\",\"RCU V error\",\"RCU H error\",\"RING error\",\"Maintenance status\",\"Maintenance from\",\"Maintenance to\"),
+      makeDynString(\".statsReady\",\".RCUVerr\",\".RCUHerr\",\".ringErr\",\"_Maintenance.status\",\"_Maintenance.fromTime\",\"_Maintenance.toTime\") );
+  }
+  else if(substr(selection,0,2) == \"WaveFormGenerator\")
+  {
+    enableFields(
+      makeDynString(\"Mode\",\"Amplitude\",\"Frequency\"),
+      makeDynString(\".mode\",\".amplitude\",\".frequency\"));
+  }
+  else if(substr(selection,0,7) == \"Subband\")
+  {  
+    enableFields(
+      makeDynString(\"Status\"),
+      makeDynString(\".status\")); 
+  }
+  else
+  {
+    dyn_string empty;
+    dynClear(empty);
+    enableFields(empty);
+  }
+}
+
+updateTextField1(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField1\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField2(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField2\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField3(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField3\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField4(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField4\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField5(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField5\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField6(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField6\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField7(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField7\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField8(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField8\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField9(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField9\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField10(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField10\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField11(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField11\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField12(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField12\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+updateTextField13(string dp, unsigned uNewValue)
+{
+  setValue(\"TextField13\", \"text\", dpValToString(dp, uNewValue, TRUE) );
+}
+
+
+void SelectionList1EventChange()
+{	
+  enableSelectedFields();
+}
+
+void SelectionList1EventInitialize()
+{	
+  enableSelectedFields();
+}
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 3
+"Text1"
+""
+1 180 50 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 52 217 67
+0 2 0 "s" 0 0 0 192 0 0  182 52 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text1
+2 4
+"Text2"
+""
+1 180 80 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 82 217 97
+0 2 0 "s" 0 0 0 192 0 0  182 82 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text2
+2 6
+"Text3"
+""
+1 180 110 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 112 217 127
+0 2 0 "s" 0 0 0 192 0 0  182 112 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text3
+2 8
+"Text4"
+""
+1 180 140 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 142 217 157
+0 2 0 "s" 0 0 0 192 0 0  182 142 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text4
+2 10
+"Text5"
+""
+1 180 170 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 172 217 187
+0 2 0 "s" 0 0 0 192 0 0  182 172 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text5
+2 12
+"Text6"
+""
+1 180 200 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 202 217 217
+0 2 0 "s" 0 0 0 192 0 0  182 202 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text6
+2 14
+"Text7"
+""
+1 180 230 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 232 217 247
+0 2 0 "s" 0 0 0 192 0 0  182 232 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text7
+2 16
+"Text8"
+""
+1 180 260 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 262 217 277
+0 2 0 "s" 0 0 0 192 0 0  182 262 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text8
+2 18
+"Text9"
+""
+1 180 290 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 292 217 307
+0 2 0 "s" 0 0 0 192 0 0  182 292 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 5 Text9
+2 20
+"Text10"
+""
+1 180 320 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 322 224 337
+0 2 0 "s" 0 0 0 192 0 0  182 322 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 6 Text10
+2 22
+"Text11"
+""
+1 180 350 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 352 224 367
+0 2 0 "s" 0 0 0 192 0 0  182 352 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 6 Text11
+2 24
+"Text12"
+""
+1 180 380 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 382 224 397
+0 2 0 "s" 0 0 0 192 0 0  182 382 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 6 Text12
+2 26
+"Text13"
+""
+1 180 410 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 412 224 427
+0 2 0 "s" 0 0 0 192 0 0  182 412 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 6 Text13
+2 29
+"TextSelectedResource"
+""
+1 180 20 E E E 1 E 0 E N {0,0,0} E N "_Transparent" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 182 22 382 40
+0 2 0 "s" 0 0 0 192 0 0  182 22 1
+1
+LANG:1 54 -alias-fixed-bold-r-normal-*-*-160-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 20 TextSelectedResource
+17 1
+"SelectionList1"
+""
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  8 8 162 442
+274
+1
+LANG:1 3 PIC
+
+1
+1
+LANG:1 6  Rack1
+
+0
+1
+LANG:1 10   SubRack1
+
+0
+1
+LANG:1 9    Board1
+
+0
+1
+LANG:1 7     ETH
+
+0
+1
+LANG:1 6     BP
+
+0
+1
+LANG:1 7     AP1
+
+0
+1
+LANG:1 9      RCU1
+
+0
+1
+LANG:1 9      RCU2
+
+0
+1
+LANG:1 7     AP2
+
+0
+1
+LANG:1 9      RCU1
+
+0
+1
+LANG:1 9      RCU2
+
+0
+1
+LANG:1 7     AP3
+
+0
+1
+LANG:1 9      RCU1
+
+0
+1
+LANG:1 9      RCU2
+
+0
+1
+LANG:1 7     AP4
+
+0
+1
+LANG:1 9      RCU1
+
+0
+1
+LANG:1 9      RCU2
+
+0
+1
+LANG:1 11  Subband001
+
+0
+1
+LANG:1 11  Subband002
+
+0
+1
+LANG:1 11  Subband003
+
+0
+1
+LANG:1 11  Subband004
+
+0
+1
+LANG:1 11  Subband005
+
+0
+1
+LANG:1 11  Subband006
+
+0
+1
+LANG:1 11  Subband007
+
+0
+1
+LANG:1 11  Subband008
+
+0
+1
+LANG:1 11  Subband009
+
+0
+1
+LANG:1 11  Subband010
+
+0
+1
+LANG:1 11  Subband011
+
+0
+1
+LANG:1 11  Subband012
+
+0
+1
+LANG:1 11  Subband013
+
+0
+1
+LANG:1 11  Subband014
+
+0
+1
+LANG:1 11  Subband015
+
+0
+1
+LANG:1 11  Subband016
+
+0
+1
+LANG:1 11  Subband017
+
+0
+1
+LANG:1 11  Subband018
+
+0
+1
+LANG:1 11  Subband019
+
+0
+1
+LANG:1 11  Subband020
+
+0
+1
+LANG:1 11  Subband021
+
+0
+1
+LANG:1 11  Subband022
+
+0
+1
+LANG:1 11  Subband023
+
+0
+1
+LANG:1 11  Subband024
+
+0
+1
+LANG:1 11  Subband025
+
+0
+1
+LANG:1 11  Subband026
+
+0
+1
+LANG:1 11  Subband027
+
+0
+1
+LANG:1 11  Subband028
+
+0
+1
+LANG:1 11  Subband029
+
+0
+1
+LANG:1 11  Subband030
+
+0
+1
+LANG:1 11  Subband031
+
+0
+1
+LANG:1 11  Subband032
+
+0
+1
+LANG:1 11  Subband033
+
+0
+1
+LANG:1 11  Subband034
+
+0
+1
+LANG:1 11  Subband035
+
+0
+1
+LANG:1 11  Subband036
+
+0
+1
+LANG:1 11  Subband037
+
+0
+1
+LANG:1 11  Subband038
+
+0
+1
+LANG:1 11  Subband039
+
+0
+1
+LANG:1 11  Subband040
+
+0
+1
+LANG:1 11  Subband041
+
+0
+1
+LANG:1 11  Subband042
+
+0
+1
+LANG:1 11  Subband043
+
+0
+1
+LANG:1 11  Subband044
+
+0
+1
+LANG:1 11  Subband045
+
+0
+1
+LANG:1 11  Subband046
+
+0
+1
+LANG:1 11  Subband047
+
+0
+1
+LANG:1 11  Subband048
+
+0
+1
+LANG:1 11  Subband049
+
+0
+1
+LANG:1 11  Subband050
+
+0
+1
+LANG:1 11  Subband051
+
+0
+1
+LANG:1 11  Subband052
+
+0
+1
+LANG:1 11  Subband053
+
+0
+1
+LANG:1 11  Subband054
+
+0
+1
+LANG:1 11  Subband055
+
+0
+1
+LANG:1 11  Subband056
+
+0
+1
+LANG:1 11  Subband057
+
+0
+1
+LANG:1 11  Subband058
+
+0
+1
+LANG:1 11  Subband059
+
+0
+1
+LANG:1 11  Subband060
+
+0
+1
+LANG:1 11  Subband061
+
+0
+1
+LANG:1 11  Subband062
+
+0
+1
+LANG:1 11  Subband063
+
+0
+1
+LANG:1 11  Subband064
+
+0
+1
+LANG:1 11  Subband065
+
+0
+1
+LANG:1 11  Subband066
+
+0
+1
+LANG:1 11  Subband067
+
+0
+1
+LANG:1 11  Subband068
+
+0
+1
+LANG:1 11  Subband069
+
+0
+1
+LANG:1 11  Subband070
+
+0
+1
+LANG:1 11  Subband071
+
+0
+1
+LANG:1 11  Subband072
+
+0
+1
+LANG:1 11  Subband073
+
+0
+1
+LANG:1 11  Subband074
+
+0
+1
+LANG:1 11  Subband075
+
+0
+1
+LANG:1 11  Subband076
+
+0
+1
+LANG:1 11  Subband077
+
+0
+1
+LANG:1 11  Subband078
+
+0
+1
+LANG:1 11  Subband079
+
+0
+1
+LANG:1 11  Subband080
+
+0
+1
+LANG:1 11  Subband081
+
+0
+1
+LANG:1 11  Subband082
+
+0
+1
+LANG:1 11  Subband083
+
+0
+1
+LANG:1 11  Subband084
+
+0
+1
+LANG:1 11  Subband085
+
+0
+1
+LANG:1 11  Subband086
+
+0
+1
+LANG:1 11  Subband087
+
+0
+1
+LANG:1 11  Subband088
+
+0
+1
+LANG:1 11  Subband089
+
+0
+1
+LANG:1 11  Subband090
+
+0
+1
+LANG:1 11  Subband091
+
+0
+1
+LANG:1 11  Subband092
+
+0
+1
+LANG:1 11  Subband093
+
+0
+1
+LANG:1 11  Subband094
+
+0
+1
+LANG:1 11  Subband095
+
+0
+1
+LANG:1 11  Subband096
+
+0
+1
+LANG:1 11  Subband097
+
+0
+1
+LANG:1 11  Subband098
+
+0
+1
+LANG:1 11  Subband099
+
+0
+1
+LANG:1 11  Subband100
+
+0
+1
+LANG:1 11  Subband101
+
+0
+1
+LANG:1 11  Subband102
+
+0
+1
+LANG:1 11  Subband103
+
+0
+1
+LANG:1 11  Subband104
+
+0
+1
+LANG:1 11  Subband105
+
+0
+1
+LANG:1 11  Subband106
+
+0
+1
+LANG:1 11  Subband107
+
+0
+1
+LANG:1 11  Subband108
+
+0
+1
+LANG:1 11  Subband109
+
+0
+1
+LANG:1 11  Subband110
+
+0
+1
+LANG:1 11  Subband111
+
+0
+1
+LANG:1 11  Subband112
+
+0
+1
+LANG:1 11  Subband113
+
+0
+1
+LANG:1 11  Subband114
+
+0
+1
+LANG:1 11  Subband115
+
+0
+1
+LANG:1 11  Subband116
+
+0
+1
+LANG:1 11  Subband117
+
+0
+1
+LANG:1 11  Subband118
+
+0
+1
+LANG:1 11  Subband119
+
+0
+1
+LANG:1 11  Subband120
+
+0
+1
+LANG:1 11  Subband121
+
+0
+1
+LANG:1 11  Subband122
+
+0
+1
+LANG:1 11  Subband123
+
+0
+1
+LANG:1 11  Subband124
+
+0
+1
+LANG:1 11  Subband125
+
+0
+1
+LANG:1 11  Subband126
+
+0
+1
+LANG:1 11  Subband127
+
+0
+1
+LANG:1 11  Subband128
+
+0
+1
+LANG:1 11  Subband129
+
+0
+1
+LANG:1 11  Subband130
+
+0
+1
+LANG:1 11  Subband131
+
+0
+1
+LANG:1 11  Subband132
+
+0
+1
+LANG:1 11  Subband133
+
+0
+1
+LANG:1 11  Subband134
+
+0
+1
+LANG:1 11  Subband135
+
+0
+1
+LANG:1 11  Subband136
+
+0
+1
+LANG:1 11  Subband137
+
+0
+1
+LANG:1 11  Subband138
+
+0
+1
+LANG:1 11  Subband139
+
+0
+1
+LANG:1 11  Subband140
+
+0
+1
+LANG:1 11  Subband141
+
+0
+1
+LANG:1 11  Subband142
+
+0
+1
+LANG:1 11  Subband143
+
+0
+1
+LANG:1 11  Subband144
+
+0
+1
+LANG:1 11  Subband145
+
+0
+1
+LANG:1 11  Subband146
+
+0
+1
+LANG:1 11  Subband147
+
+0
+1
+LANG:1 11  Subband148
+
+0
+1
+LANG:1 11  Subband149
+
+0
+1
+LANG:1 11  Subband150
+
+0
+1
+LANG:1 11  Subband151
+
+0
+1
+LANG:1 11  Subband152
+
+0
+1
+LANG:1 11  Subband153
+
+0
+1
+LANG:1 11  Subband154
+
+0
+1
+LANG:1 11  Subband155
+
+0
+1
+LANG:1 11  Subband156
+
+0
+1
+LANG:1 11  Subband157
+
+0
+1
+LANG:1 11  Subband158
+
+0
+1
+LANG:1 11  Subband159
+
+0
+1
+LANG:1 11  Subband160
+
+0
+1
+LANG:1 11  Subband161
+
+0
+1
+LANG:1 11  Subband162
+
+0
+1
+LANG:1 11  Subband163
+
+0
+1
+LANG:1 11  Subband164
+
+0
+1
+LANG:1 11  Subband165
+
+0
+1
+LANG:1 11  Subband166
+
+0
+1
+LANG:1 11  Subband167
+
+0
+1
+LANG:1 11  Subband168
+
+0
+1
+LANG:1 11  Subband169
+
+0
+1
+LANG:1 11  Subband170
+
+0
+1
+LANG:1 11  Subband171
+
+0
+1
+LANG:1 11  Subband172
+
+0
+1
+LANG:1 11  Subband173
+
+0
+1
+LANG:1 11  Subband174
+
+0
+1
+LANG:1 11  Subband175
+
+0
+1
+LANG:1 11  Subband176
+
+0
+1
+LANG:1 11  Subband177
+
+0
+1
+LANG:1 11  Subband178
+
+0
+1
+LANG:1 11  Subband179
+
+0
+1
+LANG:1 11  Subband180
+
+0
+1
+LANG:1 11  Subband181
+
+0
+1
+LANG:1 11  Subband182
+
+0
+1
+LANG:1 11  Subband183
+
+0
+1
+LANG:1 11  Subband184
+
+0
+1
+LANG:1 11  Subband185
+
+0
+1
+LANG:1 11  Subband186
+
+0
+1
+LANG:1 11  Subband187
+
+0
+1
+LANG:1 11  Subband188
+
+0
+1
+LANG:1 11  Subband189
+
+0
+1
+LANG:1 11  Subband190
+
+0
+1
+LANG:1 11  Subband191
+
+0
+1
+LANG:1 11  Subband192
+
+0
+1
+LANG:1 11  Subband193
+
+0
+1
+LANG:1 11  Subband194
+
+0
+1
+LANG:1 11  Subband195
+
+0
+1
+LANG:1 11  Subband196
+
+0
+1
+LANG:1 11  Subband197
+
+0
+1
+LANG:1 11  Subband198
+
+0
+1
+LANG:1 11  Subband199
+
+0
+1
+LANG:1 11  Subband200
+
+0
+1
+LANG:1 11  Subband201
+
+0
+1
+LANG:1 11  Subband202
+
+0
+1
+LANG:1 11  Subband203
+
+0
+1
+LANG:1 11  Subband204
+
+0
+1
+LANG:1 11  Subband205
+
+0
+1
+LANG:1 11  Subband206
+
+0
+1
+LANG:1 11  Subband207
+
+0
+1
+LANG:1 11  Subband208
+
+0
+1
+LANG:1 11  Subband209
+
+0
+1
+LANG:1 11  Subband210
+
+0
+1
+LANG:1 11  Subband211
+
+0
+1
+LANG:1 11  Subband212
+
+0
+1
+LANG:1 11  Subband213
+
+0
+1
+LANG:1 11  Subband214
+
+0
+1
+LANG:1 11  Subband215
+
+0
+1
+LANG:1 11  Subband216
+
+0
+1
+LANG:1 11  Subband217
+
+0
+1
+LANG:1 11  Subband218
+
+0
+1
+LANG:1 11  Subband219
+
+0
+1
+LANG:1 11  Subband220
+
+0
+1
+LANG:1 11  Subband221
+
+0
+1
+LANG:1 11  Subband222
+
+0
+1
+LANG:1 11  Subband223
+
+0
+1
+LANG:1 11  Subband224
+
+0
+1
+LANG:1 11  Subband225
+
+0
+1
+LANG:1 11  Subband226
+
+0
+1
+LANG:1 11  Subband227
+
+0
+1
+LANG:1 11  Subband228
+
+0
+1
+LANG:1 11  Subband229
+
+0
+1
+LANG:1 11  Subband230
+
+0
+1
+LANG:1 11  Subband231
+
+0
+1
+LANG:1 11  Subband232
+
+0
+1
+LANG:1 11  Subband233
+
+0
+1
+LANG:1 11  Subband234
+
+0
+1
+LANG:1 11  Subband235
+
+0
+1
+LANG:1 11  Subband236
+
+0
+1
+LANG:1 11  Subband237
+
+0
+1
+LANG:1 11  Subband238
+
+0
+1
+LANG:1 11  Subband239
+
+0
+1
+LANG:1 11  Subband240
+
+0
+1
+LANG:1 11  Subband241
+
+0
+1
+LANG:1 11  Subband242
+
+0
+1
+LANG:1 11  Subband243
+
+0
+1
+LANG:1 11  Subband244
+
+0
+1
+LANG:1 11  Subband245
+
+0
+1
+LANG:1 11  Subband246
+
+0
+1
+LANG:1 11  Subband247
+
+0
+1
+LANG:1 11  Subband248
+
+0
+1
+LANG:1 11  Subband249
+
+0
+1
+LANG:1 11  Subband250
+
+0
+1
+LANG:1 11  Subband251
+
+0
+1
+LANG:1 11  Subband252
+
+0
+1
+LANG:1 11  Subband253
+
+0
+1
+LANG:1 11  Subband254
+
+0
+1
+LANG:1 11  Subband255
+
+0
+1
+LANG:1 11  Subband256
+
+0
+
+"main()
+{
+	SelectionList1.selectedPos=1;
+	SelectionList1EventInitialize();
+}
+
+" 0
+
+"
+main()
+{
+	SelectionList1EventChange();
+}
+" 0
+
+E
+
+3 1
+14 2
+"TextField1"
+""
+1 403.3888888888889 52 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 50 644 76
+3 "s" 0 0 0 0 0 -1  E E E
+14 5
+"TextField2"
+""
+1 403.3888888888889 82 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 80 644 106
+3 "s" 0 0 0 0 0 -1  E E E
+14 7
+"TextField3"
+""
+1 403.3888888888889 112 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 110 644 136
+3 "s" 0 0 0 0 0 -1  E E E
+14 9
+"TextField4"
+""
+1 403.3888888888889 142 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 140 644 166
+3 "s" 0 0 0 0 0 -1  E E E
+14 11
+"TextField5"
+""
+1 403.3888888888889 172 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 170 644 196
+3 "s" 0 0 0 0 0 -1  E E E
+14 13
+"TextField6"
+""
+1 403.3888888888889 202 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 200 644 226
+3 "s" 0 0 0 0 0 -1  E E E
+14 15
+"TextField7"
+""
+1 403.3888888888889 232 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 230 644 256
+3 "s" 0 0 0 0 0 -1  E E E
+14 17
+"TextField8"
+""
+1 403.3888888888889 262 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 260 644 286
+3 "s" 0 0 0 0 0 -1  E E E
+14 19
+"TextField9"
+""
+1 403.3888888888889 292 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 290 644 316
+3 "s" 0 0 0 0 0 -1  E E E
+14 21
+"TextField10"
+""
+1 403.3888888888889 322 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 320 644 346
+3 "s" 0 0 0 0 0 -1  E E E
+14 23
+"TextField11"
+""
+1 403.3888888888889 352 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 350 644 376
+3 "s" 0 0 0 0 0 -1  E E E
+14 25
+"TextField12"
+""
+1 403.3888888888889 382 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 380 644 406
+3 "s" 0 0 0 0 0 -1  E E E
+14 27
+"TextField13"
+""
+1 403.3888888888889 412 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  400 410 644 436
+3 "s" 0 0 0 0 0 -1  E E E
+13 30
+"Button1"
+""
+1 652 52 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 50 724 76
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[1], TextField1.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 44
+"Button2"
+""
+1 652 82 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 80 724 106
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[2], TextField2.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}
+" 0
+ E E E
+13 45
+"Button5"
+""
+1 652 172 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 170 724 196
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[5], TextField5.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 46
+"Button4"
+""
+1 652 142 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 140 724 166
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[4], TextField4.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 47
+"Button3"
+""
+1 652 112 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 110 724 136
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[3], TextField3.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 48
+"Button6"
+""
+1 652 202 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+49 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 200 724 226
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[6], TextField6.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 49
+"Button7"
+""
+1 652 232 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 230 724 256
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[7], TextField7.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 50
+"Button8"
+""
+1 652 262 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+51 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 260 724 286
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[8], TextField8.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 51
+"Button9"
+""
+1 652 292 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 290 724 316
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[9], TextField9.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 52
+"Button10"
+""
+1 652 322 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+53 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 320 724 346
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[10], TextField10.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 53
+"Button11"
+""
+1 652 352 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+54 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 350 724 376
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[11], TextField11.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 54
+"Button12"
+""
+1 652 382 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+55 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 380 724 406
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[12], TextField12.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+13 55
+"Button13"
+""
+1 652 412 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+56 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  650 410 724 436
+
+T 
+1
+LANG:1 3 Set
+"main()
+{
+  setField(g_buttonDatapoints[13], TextField13.text);
+}
+
+void setField(string datapoint, string text)
+{
+dyn_errClass err;
+
+  dpSetWait(datapoint, text);
+  err = getLastError();
+  if (dynlen(err) > 0)
+    errorDialog(err);
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
