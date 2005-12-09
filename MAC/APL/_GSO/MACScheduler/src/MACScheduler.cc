@@ -103,7 +103,7 @@ MACScheduler::MACScheduler() :
       {
         LOG_FATAL(formatString("Unable to connect to database %s using %s, %s",databasename.c_str(),username.c_str(),password.c_str()));
         THROW(APLCommon::OTDBException,
-	      string("Unable to connect to database ") + databasename + string(" using ") + username + string(" ") + password);
+        string("Unable to connect to database ") + databasename + string(" using ") + username + string(" ") + password);
       }
     }
     else
@@ -682,7 +682,7 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
               _deallocateBeamlets(viName, ps, *childsIt);
               _deallocateLogicalSegments(viName, ps, *childsIt);
             }
-	  }
+          }
         }
       }
       catch(Exception& e)
@@ -849,6 +849,7 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
     vector<string> stations;
     vector<int16> subbandsVector;
     map<string,string> station2vtKeyMap;
+    vector<string> virtualBackends;
 
     boost::shared_ptr<ACC::APS::ParameterSet> psVI(new ACC::APS::ParameterSet(ps->makeSubset(prefix + string("."))));
 
@@ -863,6 +864,7 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
       startTime = APLUtilities::getUTCtime();
     }
     
+    // find all Virtual Telescopes and Virtual Backends
     for(vector<string>::iterator childsIt=childKeys.begin();childsIt!=childKeys.end();++childsIt)
     {
       string ldTypeString = psVI->getString(*childsIt + ".logicalDeviceType");
@@ -872,6 +874,10 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
         string station = psVI->getString(*childsIt + ".remoteSystem");
         stations.push_back(station);
         station2vtKeyMap[station] = *childsIt;
+      }
+      else if(ldType == LDTYPE_VIRTUALBACKEND)
+      {
+        virtualBackends.push_back(*childsIt);
       }
     }
     
@@ -897,14 +903,27 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
       BeamletAllocator::TStationBeamletAllocation::iterator allocIt;
       for(allocIt = allocation.begin(); allocIt != allocation.end(); ++allocIt)
       {
+        // writing the beamlet allocation to the VT sections
         map<string,string>::iterator keyIt = station2vtKeyMap.find(allocIt->first);
         if(keyIt != station2vtKeyMap.end())
         {
-          LOG_DEBUG(formatString("writing beamlet allocation on station %s to %s",allocIt->first.c_str(),keyIt->second.c_str()));
           string beamlets;
           APLUtilities::vector2String(allocIt->second,beamlets,',');
           beamlets = string("[") + beamlets + string("]");
-          ps->replace(prefix + string(".") + keyIt->second + string(".beamlets"), beamlets);
+          string paramKey(prefix + string(".") + keyIt->second + string(".beamlets"));
+          LOG_DEBUG(formatString("writing beamlet allocation %s to VT key %s",beamlets.c_str(),paramKey.c_str()));
+          ps->replace(paramKey, beamlets);
+        }
+        
+        // writing the beamlet allocation to the VB sections
+        for(vector<string>::iterator vbIt = virtualBackends.begin();vbIt != virtualBackends.end();++vbIt)
+        {
+          string beamlets;
+          APLUtilities::vector2String(allocIt->second,beamlets,',');
+          beamlets = string("[") + beamlets + string("]");
+          string paramKey(prefix + string(".") + (*vbIt) + string(".") + allocIt->first + string(".beamlets"));
+          LOG_DEBUG(formatString("writing beamlet allocation %s to VB key %s",beamlets.c_str(),paramKey.c_str()));
+          ps->replace(paramKey, beamlets);
         }
       }
       // suspend the suspendVIs and resume the resumeVIs
@@ -945,7 +964,7 @@ bool MACScheduler::_allocateBeamlets(const string& VIrootID, boost::shared_ptr<A
 // input: VIrootID : ID of the Observation
 //        ps       : complete parameterset of the observation
 //        prefix   : prefix of the VI to extract the parameterset of the VI
-void MACScheduler::_deallocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
+void MACScheduler::_deallocateBeamlets(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> /*ps*/, const string& prefix)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   LOG_DEBUG(formatString("Deallocating beamlets for VI:%s",prefix.c_str()));
@@ -996,7 +1015,7 @@ void MACScheduler::_deallocateBeamlets(const string& VIrootID, boost::shared_ptr
 // input: VIrootID : ID of the Observation
 //        ps       : complete parameterset of the observation
 //        prefix   : prefix of the VI to extract the parameterset of the VI
-bool MACScheduler::_allocateLogicalSegments(const string& VIrootID, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
+bool MACScheduler::_allocateLogicalSegments(const string& /*VIrootID*/, boost::shared_ptr<ACC::APS::ParameterSet> ps, const string& prefix)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   LOG_DEBUG(formatString("Allocating logical segments for VI:%s",prefix.c_str()));
@@ -1106,7 +1125,7 @@ bool MACScheduler::_allocateLogicalSegments(const string& VIrootID, boost::share
           }
 
           m_logicalSegmentAllocator.logAllocation();
-      	}
+        }
       }
     }
   }
@@ -1192,10 +1211,9 @@ void MACScheduler::_deallocateLogicalSegments(const string& VIrootID, boost::sha
             {
               LOGICALDEVICEResumeEvent resumeEvent;
               itVI->second->send(resumeEvent);
-	    }
-	  }
+            }
+          }
         }
-
         m_logicalSegmentAllocator.logAllocation();
       }
     }
