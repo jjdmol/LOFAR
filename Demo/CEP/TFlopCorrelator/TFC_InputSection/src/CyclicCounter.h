@@ -73,6 +73,7 @@ namespace LOFAR
     {
       itsValue = newValue;
       checkValue();
+      return itsValue;
     }
 
   inline int CyclicCounter::getValue() const

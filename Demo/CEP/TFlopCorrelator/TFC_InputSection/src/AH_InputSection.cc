@@ -118,7 +118,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
       itsTHs.push_back(new TH_Ethernet(interfaces[r], 
  				       srcMacs[r],
  				       dstMacs[r], 
- 				       0x000,
+ 				       0xfa10,
 				       2097152));
     } else if (TransportType=="FILE") {
       itsTHs.push_back(new TH_File(inFiles[r], TH_File::Read));
@@ -131,7 +131,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 				     5, 
 				     false));
     } else {
-      ASSERTSTR(false, "Input.TransportType unknown. It should be one of {ETHERNET, FILE, SOCKET}");
+      ASSERTSTR(false, "Input.TransportType unknown. It should be one of {ETHERNET, FILE, SOCKET, NULL}");
     }
     
     if (r==0)
