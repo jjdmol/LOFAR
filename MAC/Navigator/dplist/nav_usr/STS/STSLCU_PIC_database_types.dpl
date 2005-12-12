@@ -12,6 +12,7 @@ TLcuPic.TLcuPic	1#1
 	integrationMethod	21#8
 	statisticsCrosslet	6#11
 	functionality	23#12
+	stable  23#14
 TLcuPicMaintenance.TLcuPicMaintenance	1#1
 	status	21#2
 	fromTime	20#3
