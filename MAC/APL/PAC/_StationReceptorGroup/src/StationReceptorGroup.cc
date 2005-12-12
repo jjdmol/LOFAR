@@ -47,6 +47,9 @@ namespace ASR
 {
 INIT_TRACER_CONTEXT(StationReceptorGroup,LOFARLOGGER_PACKAGE);
 
+const char TYPE_LCU_PIC[] = "TLcuPic";
+const char SCOPE_PIC[] = "PIC";
+const char PROPERTY_STABLE[] = "stable";
 const char TYPE_LCU_PIC_LFA[] = "TLcuPicLFA";
 const char PROPNAME_FUNCTIONALITY[] = "functionality";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA[] = "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_LFA";
@@ -67,6 +70,7 @@ StationReceptorGroup::StationReceptorGroup(const string& taskName,
   m_CALclient(*this, m_CALserverName, GCFPortInterface::SAP, CAL_PROTOCOL),
   m_rcuMap(),
   m_rcuFunctionalityMap(),
+  m_lcuPIC(SCOPE_PIC,TYPE_LCU_PIC,&m_propertySetAnswer),
   m_n_racks(1),
   m_n_subracks_per_rack(1),
   m_n_boards_per_subrack(1),
@@ -92,6 +96,8 @@ StationReceptorGroup::StationReceptorGroup(const string& taskName,
              m_n_boards_per_subrack*
              m_n_aps_per_board*
              m_n_rcus_per_ap;
+             
+  m_lcuPIC.load();
 }
 
 
@@ -325,7 +331,7 @@ GCFEvent::TResult StationReceptorGroup::concrete_claiming_state(GCFEvent& event,
       int16 nyquistZone = m_parameterSet.getInt16(string("nyquistZone"));
       uint8 rcuControl = getRcuControlValue(m_parameterSet.getString(string("bandSelection")));
       
-      if(_getResourceAllocator()->claimSRG(ResourceAllocator::LogicalDevicePtr(this),_getPriority(),rcuSubset,nyquistZone,rcuControl))
+      if(_getResourceAllocator()->claimSRG(shared_from_this(),_getPriority(),rcuSubset,nyquistZone,rcuControl))
       {
         bool res=m_CALclient.open(); // need this otherwise GTM_Sockethandler is not called
         LOG_DEBUG(formatString("m_CALclient.open() returned %s",(res?"true":"false")));
@@ -413,6 +419,18 @@ GCFEvent::TResult StationReceptorGroup::concrete_preparing_state(GCFEvent& event
 
   switch (event.signal)
   {
+    case F_ENTRY:
+    {
+      m_lcuPIC.setValue(PROPERTY_STABLE,GCFPVBool(false));
+      break;
+    }
+    
+    case F_EXIT:
+    {
+      m_lcuPIC.setValue(PROPERTY_STABLE,GCFPVBool(true));
+      break;
+    }
+    
     case CAL_STARTACK:
     {
       CALStartackEvent ack(event);
@@ -576,7 +594,7 @@ void StationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
   calStopEvent.name = getName();
   m_CALclient.send(calStopEvent);
   
-  _getResourceAllocator()->releaseSRG(ResourceAllocator::LogicalDevicePtr(this));
+  _getResourceAllocator()->releaseSRG(shared_from_this());
   _getResourceAllocator()->logSRGallocation();
 
   // and unsubscribe from RCU functionality props

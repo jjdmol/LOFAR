@@ -26,6 +26,7 @@
 //# Includes
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
@@ -60,7 +61,8 @@ namespace APLCommon
 {
 
   class LogicalDevice : public GCF::TM::GCFTask,
-                               PropertySetAnswerHandlerInterface
+                               PropertySetAnswerHandlerInterface,
+                        public boost::enable_shared_from_this<LogicalDevice>
   {
     public:
 
