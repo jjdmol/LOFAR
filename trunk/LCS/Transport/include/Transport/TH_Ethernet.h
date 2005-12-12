@@ -44,16 +44,14 @@ namespace LOFAR
 // \addtogroup Transport
 // @{
 
-#define MIN_FRAME_LEN 200
-
 // This class defines the transport mechanism for RAW Ethernet 
 
 class TH_Ethernet: public TransportHolder
 {
 public:
   TH_Ethernet(const string &ifname, 
-              const string &rMac, 
-              const string &oMac, 
+              const string &srcMac, 
+              const string &dstMac, 
               const uint16 etype  = 0x0000,
 	      const int receiveBufferSize = -1,
 	      const int sendBufferSize = -1); 
@@ -94,7 +92,7 @@ public:
 
   void reset();
 
- private:  
+ protected:  
   int32 itsSocketFD;
   int32 itsMaxdatasize;
   int32 itsMaxframesize;
@@ -103,8 +101,8 @@ public:
   bool itsInitDone;
   
   string itsIfname;
-  string itsRemoteMac;
-  string itsOwnMac;
+  string itsSrcMac;
+  string itsDstMac;
   
   char* itsRecvPacket; 
   char* itsSendPacket; 
@@ -114,10 +112,16 @@ public:
   
   struct sockaddr_ll itsSockaddr;
 
-  void Init();
+  void initSocket();
+  void initBuffers();
+  void initIncomingFilter();
+  void initSendHeader();
+  void bindToIF();
 
   int itsRecvBufferSize;
   int itsSendBufferSize;
+
+  bool itsUsePromiscuousReceive;
 };
 
 inline bool TH_Ethernet::isClonable() const
