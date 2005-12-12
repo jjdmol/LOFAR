@@ -37,6 +37,7 @@
 #include <net/if_arp.h>
 #include <netinet/in.h>
 #include <asm/types.h>
+#include <stdio.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 #include <linux/filter.h>
@@ -51,17 +52,18 @@ namespace LOFAR
 {
 
 TH_Ethernet::TH_Ethernet(const string &ifname, 
-                         const string &rMac, 
-                         const string &oMac, 
+                         const string &srcMac, 
+                         const string &dstMac, 
                          const uint16 etype,
 			 const int receiveBufferSize,
 			 const int sendBufferSize) 
      : itsIfname(ifname), 
-       itsRemoteMac(rMac),
-       itsOwnMac(oMac), 
+       itsSrcMac(srcMac),
+       itsDstMac(dstMac), 
        itsEthertype(etype),
        itsRecvBufferSize(receiveBufferSize),
-       itsSendBufferSize(sendBufferSize)
+       itsSendBufferSize(sendBufferSize),
+       itsUsePromiscuousReceive(false)
 {
   LOG_TRACE_FLOW("TH_Ethernet constructor");
   
@@ -83,12 +85,20 @@ TH_Ethernet::~TH_Ethernet()
 
 TH_Ethernet* TH_Ethernet::clone() const
 {
-  return new TH_Ethernet(itsIfname, itsRemoteMac, itsOwnMac, itsEthertype);
+  return new TH_Ethernet(itsIfname, itsSrcMac, itsDstMac, itsEthertype, itsRecvBufferSize, itsSendBufferSize);
 }
 
 bool TH_Ethernet::init()
 {
-  Init();
+  initSocket();
+  initBuffers();
+  initIncomingFilter();
+  initSendHeader();
+  bindToIF();
+
+  // Raw ethernet socket successfully initialized
+  itsInitDone = true; 
+
   return itsInitDone;
 }
 
@@ -107,9 +117,6 @@ bool TH_Ethernet::recvBlocking(void* buf, int nbytes, int tag, int, DataHolder*)
   char* endptr;
   char* payloadptr;
   
-  struct sockaddr_ll recvSockaddr;
-  socklen_t recvSockaddrLen = sizeof(struct sockaddr_ll);
- 
   // Pointer to end of buffer
   endptr = (char*)buf + nbytes;
 
@@ -120,17 +127,17 @@ bool TH_Ethernet::recvBlocking(void* buf, int nbytes, int tag, int, DataHolder*)
   while ((char*)buf < endptr) {
     
     // Catch ethernet frame from Socket
-    framesize = recvfrom(itsSocketFD, itsRecvPacket, itsMaxframesize , 0,
-                          (struct sockaddr*)&recvSockaddr, &recvSockaddrLen);
+    framesize = recv(itsSocketFD, itsRecvPacket, itsMaxframesize , 0);
     
-    // Calculate size of payload
-    payloadsize = framesize - sizeof(struct ethhdr);
-
-    // Ignore Packets containing less than MIN_FRAME_LEN bytes
+#define MIN_FRAME_LEN 200
+     // Ignore Packets containing less than MIN_FRAME_LEN bytes
     if (framesize <= MIN_FRAME_LEN) {
       continue;
     } 
-    
+
+    // Calculate size of payload
+    payloadsize = framesize - sizeof(struct ethhdr);
+
     // Copy payload, filter header
     // Note that 'buf' cannot contain more than 'nbytes'
     if ((char*)buf + payloadsize <= endptr) {
@@ -219,26 +226,7 @@ void TH_Ethernet::waitForSent(void*, int32, int32)
   LOG_WARN( "TH_Ethernet::waitForSent() is not implemented." );
 }
 
-void TH_Ethernet::Init()
-{ 
-  // Initialize a kernel-level packet filter
-  struct sock_fprog filter;
-  struct sock_filter mac_filter_insn[]=
-    {
-      { 0x20, 0, 0, 0x00000002 }, 
-      { 0x15, 0, 7, 0x00000000 }, //dstMac [2,3,4,5]
-      { 0x28, 0, 0, 0x00000000 }, 
-      { 0x15, 0, 5, 0x00000000 }, //dstMac [0,1]
-      { 0x20, 0, 0, 0x00000008 },
-      { 0x15, 0, 3, 0x00000000 }, //srcMac [2,3,4,5]
-      { 0x28, 0, 0, 0x00000006 },
-      { 0x15, 0, 1, 0x00000000 }, //srcMac [0,1]
-      { 0x6, 0, 0, 0x0000ffff },  //snapshot length
-      { 0x6, 0, 0, 0x00000000 }, 
-    };
-    memset(&filter,0,sizeof(struct sock_fprog));
-    filter.len = sizeof(mac_filter_insn) / sizeof(struct sock_filter);
-  
+void TH_Ethernet::initSocket() {
   // Open the raw socket
   itsSocketFD = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
   if (itsSocketFD < 0)
@@ -259,10 +247,35 @@ void TH_Ethernet::Init()
   else {
     itsMaxdatasize  = ifr.ifr_ifru.ifru_mtu;
     itsMaxframesize = itsMaxdatasize + ETH_HLEN;
-    itsRecvPacket   = (char*)calloc(itsMaxframesize, sizeof(char));
-    itsSendPacket   = (char*)calloc(itsMaxframesize, sizeof(char));
+    itsRecvPacket   = new char[itsMaxframesize];
+    itsSendPacket   = new char[itsMaxframesize];
   }  
 
+  // Find dstMAC address for specified interface
+  // Mac address will be stored dstMac
+  strncpy(ifr.ifr_name,itsIfname.c_str(), IFNAMSIZ);
+  if (ioctl(itsSocketFD, SIOCGIFHWADDR, &ifr) < 0)
+  {
+    LOG_ERROR_STR("TH_Ethernet: MAC address of ethernet device not found.");
+    close(itsSocketFD);
+    return;
+  }  
+  char dstMac[18];
+  unsigned char* sd = (unsigned char*) ifr.ifr_hwaddr.sa_data;
+  snprintf(dstMac, sizeof(dstMac), "%02x:%02x:%02x:%02x:%02x:%02x", sd[0], sd[1], sd[2], sd[3], sd[4], sd[5]);
+  if (itsDstMac == "") {
+    itsDstMac = dstMac;
+  }
+  if (strcasecmp(itsDstMac.c_str(), dstMac) == 0) {
+    itsUsePromiscuousReceive = false;
+    LOG_INFO_STR("TH_Ethernet: not using promiscuous mode");
+  } else {
+    itsUsePromiscuousReceive = true;
+    LOG_INFO_STR("TH_Ethernet: using promiscuous mode: reading from "<<itsDstMac<<" while mac of "<<itsIfname<<" is "<<dstMac);
+  }
+}
+
+void TH_Ethernet::initBuffers() {
   // set the size of the kernel level socket buffer
   // use -1 in the constructor to leave it untouched
   if (itsRecvBufferSize != -1) {
@@ -304,47 +317,44 @@ void TH_Ethernet::Init()
       LOG_WARN("TH_Ethernet: send buffer size could not be set, default size will be used.");
     }
   }    
- 
-  char ownMac[ETH_ALEN];
-  //if (strcmp(itsOwnMac,"" )== 0) {
-  if (itsOwnMac == "") {
-    // Find ownMAC address for specified interface
-    // Mac address will be stored ownMac
-    strncpy(ifr.ifr_name,itsIfname.c_str(), IFNAMSIZ);
-    if (ioctl(itsSocketFD, SIOCGIFHWADDR, &ifr) < 0)
+}
+
+void TH_Ethernet::initIncomingFilter() {
+  // Convert itsDstMac HWADDR string to sll_addr
+  unsigned int dstMac[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
+  sscanf(itsDstMac.c_str(), "%x:%x:%x:%x:%x:%x", 
+	 &dstMac[0],&dstMac[1],&dstMac[2],&dstMac[3],&dstMac[4],&dstMac[5]);
+  uint32 dstMacHigh = htonl(((dstMac[5]*256 + dstMac[4])*256+dstMac[3])*256+dstMac[2]);
+  uint16 dstMacLow = htons(dstMac[1]*256 + dstMac[0]);
+
+  // Convert _srcMac HWADDR string to sll_addr
+  unsigned int srcMac[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
+  sscanf(itsSrcMac.c_str(), "%x:%x:%x:%x:%x:%x", 
+	 &srcMac[0],&srcMac[1],&srcMac[2],&srcMac[3],&srcMac[4],&srcMac[5]);
+  uint32 srcMacHigh = htonl(((srcMac[5]*256 + srcMac[4])*256+srcMac[3])*256+srcMac[2]);
+  uint16 srcMacLow = htons(srcMac[1]*256 + srcMac[0]);
+
+  uint16 ethType = htons(itsEthertype);
+
+  // Initialize a kernel-level packet filter
+  struct sock_filter mac_filter_insn[]=
     {
-      LOG_ERROR_STR("TH_Ethernet: MAC address of ethernet device not found.");
-      close(itsSocketFD);
-      return;
-    }  
-    for (int32 i=0;i<ETH_ALEN;i++) ownMac[i] = ifr.ifr_hwaddr.sa_data[i];
-  }
-  else {
-    // Convert _ownMac HWADDR string to sll_addr
-    unsigned int ohx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    sscanf(itsOwnMac.c_str(), "%x:%x:%x:%x:%x:%x", 
-     &ohx[0],&ohx[1],&ohx[2],&ohx[3],&ohx[4],&ohx[5]);
-    for (int32 i=0;i<ETH_ALEN;i++) ownMac[i]=(char)ohx[i];
-  }
-  
-  // Convert _remoteMac HWADDR string to sll_addr
-  char remoteMac[ETH_ALEN];
-  uint32 rhx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  sscanf(itsRemoteMac.c_str(), "%x:%x:%x:%x:%x:%x", 
-     &rhx[0],&rhx[1],&rhx[2],&rhx[3],&rhx[4],&rhx[5]);
-  for (int32 i=0;i<ETH_ALEN;i++) remoteMac[i]=(char)rhx[i];
-  
-  // Store the MAC addresses in the incoming packet filter, so
-  // only packets from remoteMAC (source) to ownMAC (destination) 
-  // will be catched
-  memcpy(&mac_filter_insn[1].k, ownMac + 2, sizeof(__u32));
-  mac_filter_insn[1].k = htonl(mac_filter_insn[1].k);
-  memcpy((char*)(&mac_filter_insn[3].k) + 2, ownMac , sizeof(__u16));
-  mac_filter_insn[3].k = htonl(mac_filter_insn[3].k);
-  memcpy(&mac_filter_insn[5].k, remoteMac + 2, sizeof(__u32));
-  mac_filter_insn[5].k = htonl(mac_filter_insn[5].k);
-  memcpy((char*)(&mac_filter_insn[7].k) + 2, remoteMac, sizeof(__u16));
-  mac_filter_insn[7].k = htonl(mac_filter_insn[7].k);
+      BPF_STMT(BPF_LD + BPF_H + BPF_ABS , 12),               // load half word from byte 2
+      BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, ethType, 0 ,9),    // compare to ethtype, if not equal jump to the last line (return 0)
+      BPF_STMT(BPF_LD + BPF_W + BPF_ABS , 2),                // load whole word from byte 2
+      BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, dstMacHigh, 0, 7), // compare to dstMac[2-], if not equal jump to the last line (return 0)
+      BPF_STMT(BPF_LD + BPF_H + BPF_ABS , 0),                // load half word from byte 0
+      BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, dstMacLow, 0, 5),  // compare to dstMac[0-1], if not equal jump to the last line (return 0)
+      BPF_STMT(BPF_LD + BPF_W + BPF_ABS , 8),                // load whole word from byte 8
+      BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, srcMacHigh, 0, 3), // compare to srcMac[2-], if not equal jump to the last line (return 0)
+      BPF_STMT(BPF_LD + BPF_H + BPF_ABS , 6),                // load half word from byte 6
+      BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, srcMacLow, 0, 1),  // compare to srcMac[0-1], if not equal jump to the last line (return 0)
+      BPF_STMT(BPF_RET + BPF_K          , 65535),            // right packet so return everythin
+      BPF_STMT(BPF_RET + BPF_K          , 0),                // wrong packet so return zero
+    };
+  struct sock_fprog filter;
+  memset(&filter,0,sizeof(struct sock_fprog));
+  filter.len = sizeof(mac_filter_insn) / sizeof(struct sock_filter);
   filter.filter = mac_filter_insn;
   
   // Set the filter
@@ -354,15 +364,31 @@ void TH_Ethernet::Init()
     close(itsSocketFD);
     return;
   }
+}
+
+void TH_Ethernet::initSendHeader() {
 
   // Fill in packet header for sending messages
-  // Now remoteMAC is destMAC and ownMAC is srcMAC
   struct ethhdr* hdr = (struct ethhdr*)itsSendPacket;
-  memcpy(&hdr->h_dest[0], &remoteMac[0], ETH_ALEN);
-  memcpy(&hdr->h_source[0], &ownMac[0], ETH_ALEN);
+
+  unsigned char* dstMac = hdr->h_dest;//[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
+  sscanf(itsDstMac.c_str(), "%x:%x:%x:%x:%x:%x", 
+	 &dstMac[0],&dstMac[1],&dstMac[2],&dstMac[3],&dstMac[4],&dstMac[5]);
+
+  unsigned char* srcMac = hdr->h_source;
+  sscanf(itsSrcMac.c_str(), "%x:%x:%x:%x:%x:%x", 
+	 &srcMac[0],&srcMac[1],&srcMac[2],&srcMac[3],&srcMac[4],&srcMac[5]);
+
   hdr->h_proto = htons(itsEthertype);
 
+  // Set pointer to user data to be send
+  itsSendPacketData = itsSendPacket + sizeof(struct ethhdr);
+}
+
+void TH_Ethernet::bindToIF(){
+
   // Get index number for specified interface
+  struct ifreq ifr;
   strncpy(ifr.ifr_name, itsIfname.c_str(), IFNAMSIZ);
   if (ioctl(itsSocketFD, SIOCGIFINDEX, &ifr) <0)
   {
@@ -386,36 +412,32 @@ void TH_Ethernet::Init()
     close(itsSocketFD);
     return;
   }
-
-  // Enable PROMISCUOUS mode so we catch all packets
-  struct packet_mreq so;
-  so.mr_ifindex = ifindex;
-  so.mr_type = PACKET_MR_PROMISC;
-  so.mr_alen = 0;
-  memset(&so.mr_address, 0, sizeof(so.mr_address));
-  if (setsockopt(itsSocketFD, SOL_PACKET, PACKET_ADD_MEMBERSHIP, 
-      (void*)&so, sizeof(struct packet_mreq)) <0)
-  {
-    LOG_ERROR_STR("TH_Ethernet: PROMISCUOUS mode failed.");
-    close(itsSocketFD);
-   return;
-  }
-
   // fill in _sockaddr to be used in sendto calls
   // Only the sll_family, sll_addr, sll_halen and
   // sll_ifindex need to be set. The rest should be
   // zero (this is done using memset)
   memset(&itsSockaddr, 0, sizeof(struct sockaddr_ll));
   itsSockaddr.sll_family = PF_PACKET; //raw communication
-  memcpy(&itsSockaddr.sll_addr[0], &hdr->h_source[0], ETH_ALEN);
+  struct ethhdr* hdr = (struct ethhdr*)itsSendPacket;
+  memcpy(&itsSockaddr.sll_addr[0], &hdr->h_dest[0], ETH_ALEN);
   itsSockaddr.sll_halen = ETH_ALEN;
   itsSockaddr.sll_ifindex = ifindex;
 
-  // Set pointer to user data to be send
-  itsSendPacketData = itsSendPacket + sizeof(struct ethhdr);
-
-  // Raw ethernet socket successfully initialized
-  itsInitDone = true; 
+  if (itsUsePromiscuousReceive){
+    // Enable PROMISCUOUS mode so we catch all packets
+    struct packet_mreq so;
+    so.mr_ifindex = ifindex;
+    so.mr_type = PACKET_MR_PROMISC;
+    so.mr_alen = 0;
+    memset(&so.mr_address, 0, sizeof(so.mr_address));
+    if (setsockopt(itsSocketFD, SOL_PACKET, PACKET_ADD_MEMBERSHIP, 
+		   (void*)&so, sizeof(struct packet_mreq)) <0)
+    {
+      LOG_ERROR_STR("TH_Ethernet: PROMISCUOUS mode failed.");
+      close(itsSocketFD);
+      return;
+    }
+  }
 }
 
 }
