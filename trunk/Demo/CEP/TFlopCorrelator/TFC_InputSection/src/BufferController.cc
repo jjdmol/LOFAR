@@ -290,6 +290,7 @@ int BufferController::readLockRange(int nelements)
   while (getCount() - nelements < itsMinCount) 
   {
     if (!amWaiting) {
+      itsReadLockTimer.stop();
       itsWaitingForDataTimer.start();
       amWaiting = true;
     }
@@ -297,6 +298,7 @@ int BufferController::readLockRange(int nelements)
   }
   if (amWaiting) {
     itsWaitingForDataTimer.stop();
+    itsReadLockTimer.start();
   }
  
   // CONDITION: Count >= itsMinCount 

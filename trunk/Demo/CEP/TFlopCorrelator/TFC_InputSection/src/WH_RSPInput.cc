@@ -29,10 +29,10 @@
 #include <Transport/TH_File.h>
 
 // Application specific includes
-#include <TFC_InputSection/WH_RSPInput.h>
-#include <TFC_Interface/DH_Delay.h>
 #include <TFC_Interface/DH_RSP.h>
+#include <TFC_Interface/DH_Delay.h>
 #include <TFC_Interface/DH_RSPSync.h>
+#include <TFC_InputSection/WH_RSPInput.h>
 
 #include <Common/hexdump.h>
 
@@ -237,12 +237,12 @@ void* WriteToBufferThread(void* arguments)
   cout<<"Timestamps of missed packets:"<<endl;
   vector<timestamp_t>::iterator it = missedStamps.begin();
   for (; it != missedStamps.end(); it++) {
-    cout<<(*it)<<endl;
+    cout<<"MIS " << (*it)<<endl;
   }
   cout<<"Rewritten packets:"<<endl;
   vector<RewriteStruct>::iterator rit = oldStamps.begin();
   for (; rit != oldStamps.end(); rit++) {
-    cout<<rit->oldStamp<<" "<< rit->expectedStamp<<" "<<rit->succeeded<<endl;
+    cout<<"REW " << rit->oldStamp<<" "<< rit->expectedStamp<<" "<<rit->succeeded<<endl;
   }
   
   pthread_exit(NULL);
@@ -506,8 +506,8 @@ void WH_RSPInput::postprocess()
   //writerinfo.Connection         = 0;
   // stop writer thread
   writerinfo.Stopthread         = true;
-  pthread_join(writerthread, NULL);
   itsBufControl->clear();
+  pthread_join(writerthread, NULL);
   //  pthread_cancel(writerthread);
   sleep(2);
 }
@@ -515,5 +515,3 @@ void WH_RSPInput::postprocess()
 void WH_RSPInput::dump() const 
 {
 }
-
-

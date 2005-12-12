@@ -127,8 +127,6 @@ inline void BufferController::setAllowOverwrite(bool allow)
 {
   itsOverwritingAllowed = allow;
 }
-
-
 }
 #endif
 
