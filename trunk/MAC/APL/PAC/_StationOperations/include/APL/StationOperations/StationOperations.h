@@ -132,6 +132,7 @@ namespace ASO // :-)
 
       static string     m_RSPDriverName;
       GCF::TM::GCFPort  m_RSPclient;
+      GCF::PAL::GCFExtPropertySet m_lcuPIC;
       int16             m_ntdboards;
       long              m_connectTimer;
 

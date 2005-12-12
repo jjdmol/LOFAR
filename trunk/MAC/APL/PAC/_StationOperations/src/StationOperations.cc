@@ -27,6 +27,7 @@
 #include <boost/shared_ptr.hpp>
 #include <Common/lofar_sstream.h>
 #include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVBool.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/StationOperations/StationOperations.h>
 
@@ -51,6 +52,10 @@ PROPERTYCONFIGLIST_END
 
 string StationOperations::m_RSPDriverName("RSPDriver");
 
+const char TYPE_LCU_PIC[] = "TLcuPic";
+const char SCOPE_PIC[] = "PIC";
+const char PROPERTY_STABLE[] = "stable";
+
 // Logical Device version
 const string StationOperations::SO_VERSION = string("1.0");
 
@@ -59,6 +64,7 @@ StationOperations::StationOperations(const string& taskName,
                                      GCFTask* pStartDaemon) :
   LogicalDevice(taskName,parameterFile,pStartDaemon,SO_VERSION),
   m_RSPclient(*this, m_RSPDriverName, GCFPortInterface::SAP, RSP_PROTOCOL),
+  m_lcuPIC(SCOPE_PIC,TYPE_LCU_PIC,&m_propertySetAnswer),
   m_ntdboards(0),
   m_connectTimer(0)
 {
@@ -67,6 +73,8 @@ StationOperations::StationOperations(const string& taskName,
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
   m_detailsPropertySet->initProperties(detailsPropertySetConf);
+
+  m_lcuPIC.load();
 }
 
 
@@ -256,7 +264,9 @@ GCFEvent::TResult StationOperations::concrete_claiming_state(GCFEvent& event, GC
       
       // claim the resources:
       double samplingFrequency = m_parameterSet.getDouble(PROPERTY_SAMPLING_FREQUENCY);
-      if(_getResourceAllocator()->claimSO(ResourceAllocator::LogicalDevicePtr(this),_getPriority(),samplingFrequency))
+      // shared_from_this() is defined in boost/enable_shared_from_this.hpp
+      // and allows for creating a shared ptr to the current object. 
+      if(_getResourceAllocator()->claimSO(shared_from_this(),_getPriority(),samplingFrequency))
       {
         newState = LOGICALDEVICE_STATE_CLAIMED;
       }
@@ -318,9 +328,16 @@ GCFEvent::TResult StationOperations::concrete_preparing_state(GCFEvent& event, G
   {
     case F_ENTRY:
     {
+      m_lcuPIC.setValue(PROPERTY_STABLE,GCFPVBool(false));
       break;
     }
-          
+    
+    case F_EXIT:
+    {
+      m_lcuPIC.setValue(PROPERTY_STABLE,GCFPVBool(true));
+      break;
+    }
+    
     case RSP_SETCLOCKSACK:
     {
       RSPSetclocksackEvent ack(event);
@@ -439,7 +456,7 @@ void StationOperations::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
-  _getResourceAllocator()->releaseSO(ResourceAllocator::LogicalDevicePtr(this));
+  _getResourceAllocator()->releaseSO(shared_from_this());
   _getResourceAllocator()->logSOallocation();
   m_RSPclient.close();
 }

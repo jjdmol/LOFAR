@@ -140,7 +140,8 @@ namespace ASR
       static string     m_CALserverName;
       GCF::TM::GCFPort  m_CALclient;
       TRCUMap           m_rcuMap;
-      TRCUFunctionalityMap m_rcuFunctionalityMap;
+      TRCUFunctionalityMap        m_rcuFunctionalityMap;
+      GCF::PAL::GCFExtPropertySet m_lcuPIC;
 
       uint16  m_n_racks;
       uint16  m_n_subracks_per_rack;
