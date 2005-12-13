@@ -137,112 +137,39 @@ def addTemplates(type,readFile,writeFile,className,packageName,templateList,auto
     # replace CLASSUPPER with uppercase classname
     if aLine.find("%CLASSUPPER%") > -1:
       aLine = str.replace(aLine,"%CLASSUPPER%",className.upper())
-      
-    # Check if !diy, template and .h file, if so include tcc in header file
-    if aLine.find("Include tcc file here when needed") > -1 and \
-           type =="h" and autoTemplate == 1:
-      if subDirName != "":
-        writeFile.write("\n#include <"+packageName+"/"+subDirName+"/"+className+".tcc>\n")
-      else:
-        writeFile.write("\n#include <"+packageName+"/"+className+".tcc>\n")
-      aLine=""
-    elif aLine.find("Include tcc file here when needed") > -1:
-      aLine =""
-    # find place to inserttemplates depending on filetype
-    if type=="h" and aLine.find("insert templates here") > -1:
-      writeFile.write("\n    template< ")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write("typename "+templateList[i])
-        i+=1
-      writeFile.write(" >")
-      writeFile.write("\n    class "+className)
-      writeFile.write("\n    {")
-      writeFile.write("\n    public:")
-      writeFile.write("\n\n      "+className+"();")
-      writeFile.write("\n      ~"+className+"();")
-      writeFile.write("\n    private:")
-      writeFile.write("\n      // Copying is not allowed")
-      writeFile.write("\n      "+className+"(const "+className+"< ")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write(templateList[i])
-        i+=1
-      writeFile.write(" >& that);")
-      writeFile.write("\n      "+className+"< ")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write(templateList[i])
-        i+=1
-      writeFile.write(" >& operator=(const "+className+"< ")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write(templateList[i])
-        i+=1
-      writeFile.write(" >& that);")
-      writeFile.write("\n    };")
-    elif (type=="tcc" ) and aLine.find("insert templates here") > -1:
-      writeFile.write("\n    template< ")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write("typename "+templateList[i])
-        i+=1
-      writeFile.write(" >")
-      writeFile.write("\n    "+className+"< ")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write(templateList[i])
-        i+=1
-      writeFile.write(">::"+className+"()")
-      writeFile.write("\n    {")
-      writeFile.write("\n  work to do")
-      writeFile.write("\n    }")
-      writeFile.write("\n")
 
-      writeFile.write("\n    template<")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write("typename "+templateList[i])
-        i+=1
-      writeFile.write(" >")
-      writeFile.write("\n    "+className+"<")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write(templateList[i])
-        i+=1
-      writeFile.write(">::~"+className+"()")
-      writeFile.write("\n    {")
-      writeFile.write("\n  work to do")
-      writeFile.write("\n    }")
-      writeFile.write("\n")
-    elif (type=="diy" ) and aLine.find("insert templates here") > -1:
-      writeFile.write("\n  //template class "+className+"< ")
-      i=0
-      while i < len(templateList):
-        if i > 0:
-          writeFile.write(", ")
-        writeFile.write(templateList[i])
-        i+=1
-      writeFile.write(" >;\n")
-    else:
-      writeFile.write(aLine)
+    tmpltype = "<"
+    tmplparm = "<"
+    i=0
+    while i < len(templateList):
+      if i > 0:
+        tmpltype += ", "
+        tmplparm += ","
+      tmpltype += "typename " + templateList[i]
+      tmplparm += templateList[i]
+      i+=1
+    tmpltype += ">"
+    tmplparm += ">"
+
+    # replace TEMPLATETYPE and TEMPLATEPARAM
+    if aLine.find("%TEMPLATETYPE%") > -1:
+      aLine = str.replace(aLine,"%TEMPLATETYPE%",tmpltype)
+    if aLine.find("%TEMPLATEPARAM%") > -1:
+      aLine = str.replace(aLine,"%TEMPLATEPARAM%",tmplparm)
+
+    # Check if !diy, template and .h file, if so include tcc in header file
+    if aLine.find("%INCLUDETCC%") > -1:
+      incstr = ""
+      if autoTemplate == 1:
+        if subDirName != "":
+          incstr = "#include <"+packageName+"/"+subDirName+"/"+className+".tcc>"
+        else:
+          incstr = "#include <"+packageName+"/"+className+".tcc>"
+      aLine = str.replace(aLine,"%INCLUDETCC%",incstr)
+      
+    writeFile.write(aLine)
     aLine=readFile.readline()
+
 
 def makeDefaultClass(lofarDir,className,packageName,srcDir,incDir,subDirName):
   # default.h file
@@ -425,8 +352,8 @@ def main(argv):
   #
   # get Lofar base dir
   #
-  file= os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
-  lofarDir=str.replace(file.readline(),"\n","")
+  file = os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
+  lofarDir = str.replace(file.readline(),"\n","")
   file.close()
   baseDir = os.environ["PWD"]
   subDirName = ""  
@@ -481,14 +408,20 @@ def main(argv):
   # See if an include/PACKAGE directory exists.
   # If so, use that for the .h and .tcc files.
   # Create possible subdirectory if needed.
-  incDir=srcDir
   incDir = os.path.dirname(srcDir)+"/include/"+packageName
+  hdrDir = incDir
   if not os.path.exists(incDir):
-    incDir=srcDir
+    incDir = srcDir
+    hdrDir = srcDir
+    if subDirName != "":
+      hdrDir = incDir+"/"+subDirName
   else:
-    if not os.path.exists(incDir+"/"+subDirName):
-      os.makedirs(incDir+"/"+subDirName)
-      print "Created subdirectory "+incDir+"/"+subDirName
+    if subDirName != "":
+      hdrDir = incDir+"/"+subDirName
+      if not os.path.exists(hdrDir):
+        os.makedirs(hdrDir)
+        print "Created subdirectory "+hdrDir
+        
 
   #
   # Make a backup from the Original Makefiles
@@ -516,25 +449,16 @@ def main(argv):
     # Check of given class name allready exists in the working directory as
     # directory or as file
     #
-  
-    if noMain and noTemplated: 
-      if os.path.isfile(className+".h") or os.path.isfile(className+".cc"):
-        print "Sorry, that class allready exists. Please take another name"
+    if noMain: 
+      if os.path.isfile(hdrDir+"/"+className+".h"):
+        print "Sorry, that class already exists. Please take another name"
         sys.exit(1)
-    if noMain and noTemplated==0:
-      if autoTemplate==0:
-        ext=".cc"
-      else:
-        ext=".tcc"
-      if os.path.isfile(className+ext):
-        print "Sorry, that name allready exists. Please take another one"
-        sys.exit(1)
-    if noMain==0:
+    else:
       if os.path.isfile(className+"Main.cc"):
-        print "Sorry, that name allready exists. Please take another one"
+        print "Sorry, that name already exists. Please take another one"
         sys.exit(1)
-      if os.path.isfile(className+".h") == 0 or os.path.isfile(className+".cc") == 0:
-        print "WARNING: the base classes for whom you are creating a Mainprogram"
+      if os.path.isfile(hdrDir+"/"+className+".h") == 0:
+        print "WARNING: the base classes for which you are creating a Mainprogram"
         print "         are not available yet."
         print "         please remember that you have to create them.\n"
 

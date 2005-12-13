@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_%PACKAGEUPPER%_%SUBUPPER%%CLASSUPPER%_CC
-#define LOFAR_%PACKAGEUPPER%_%SUBUPPER%%CLASSUPPER%_CC
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 //# Includes
 #include <Common/LofarLogger.h>
@@ -30,9 +30,10 @@
 namespace LOFAR {
   namespace %PACKAGE% {
 
-  //# Force the instantiation of the templates.  
-  // insert templates here
+    //# Force the instantiation of templates.
+    // instantiate templates hereafter by replacing %TEMPLATEPARAM% by
+    // the actual template parameter type(s)
+    //template class %CLASS%%TEMPLATEPARAM%;
 
   } // namespace %PACKAGE%
 } // namespace LOFAR
-
