@@ -181,7 +181,7 @@ namespace LOFAR
               MDirection dir = conv(sky);
 
               // Retrieve the direction angles of the converted direction.
-              Vector<Double> angles = dir.getAngle().getBaseValue();
+              Vector<Double> angles = dir.getValue().get();
 
               // Convert to local sky coordinates and add to the return vector.
               result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::AZEL));
@@ -309,7 +309,7 @@ namespace LOFAR
             MDirection dir = conv(sky);
 
             // Retrieve the direction angles of the converted direction.
-            Vector<Double> angles = dir.getAngle().getBaseValue();
+            Vector<Double> angles = dir.getValue().get();
 
             // Convert to local sky coordinates and add to the return vector.
             result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
@@ -337,7 +337,7 @@ namespace LOFAR
             MDirection dir = conv(sky);
 
             // Retrieve the direction angles of the converted direction.
-            Vector<Double> angles = dir.getAngle().getBaseValue();
+            Vector<Double> angles = dir.getValue().get();
 
             // Convert to local sky coordinates and add to the return vector.
             result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
@@ -491,7 +491,7 @@ namespace LOFAR
               MDirection dir = conv(sky);
 
               // Retrieve the direction angles of the converted direction.
-              Vector<Double> angles = dir.getAngle().getBaseValue();
+              Vector<Double> angles = dir.getValue().get();
 
               // Convert to local sky coordinates and add to the return vector.
               result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::ITRF));
@@ -619,7 +619,7 @@ namespace LOFAR
             MDirection dir = conv(sky);
 
             // Retrieve the direction angles of the converted direction.
-            Vector<Double> angles = dir.getAngle().getBaseValue();
+            Vector<Double> angles = dir.getValue().get();
 
             // Convert to local sky coordinates and add to the return vector.
             result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
@@ -647,7 +647,7 @@ namespace LOFAR
             MDirection dir = conv(sky);
 
             // Retrieve the direction angles of the converted direction.
-            Vector<Double> angles = dir.getAngle().getBaseValue();
+            Vector<Double> angles = dir.getValue().get();
 
             // Convert to local sky coordinates and add to the return vector.
             result.push_back(SkyCoord(angles(0), angles(1), SkyCoord::J2000));
