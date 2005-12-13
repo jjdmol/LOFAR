@@ -36,8 +36,16 @@ namespace LOFAR {
     %CLASS%::~%CLASS%()
     {}
 
-
-
+    // Remove lines or remove comments for copy constructor and assignment.
+    ////%CLASS%::%CLASS% (const %CLASS%& that)
+    ////{}
+    ////%CLASS%& %CLASS%::operator= (const %CLASS%& that)
+    ////{
+    ////  if (this != &that) {
+    ////    ... copy members ...
+    ////  }
+    ////  return *this;
+    ////}
 
   } // namespace %PACKAGE%
 } // namespace LOFAR

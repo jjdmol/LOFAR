@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_%PACKAGEUPPER%%SUBUPPER%%CLASSUPPER%_H
-#define LOFAR_%PACKAGEUPPER%%SUBUPPER%%CLASSUPPER%_H
+#ifndef LOFAR_%PACKAGEUPPER%_%SUBUPPER%%CLASSUPPER%_H
+#define LOFAR_%PACKAGEUPPER%_%SUBUPPER%%CLASSUPPER%_H
 
 // \file %SUB%%CLASS%.h
 // one line description.
@@ -52,8 +52,8 @@ namespace LOFAR
 
     private:
       // Copying is not allowed
-      %CLASS%(const %CLASS%& that);
-      %CLASS%& operator=(const %CLASS%& that);
+      %CLASS% (const %CLASS%& that);
+      %CLASS%& operator= (const %CLASS%& that);
 
       //# Datamembers
 

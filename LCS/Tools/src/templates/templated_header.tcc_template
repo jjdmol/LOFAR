@@ -30,8 +30,26 @@
 namespace LOFAR {
   namespace %PACKAGE% {
 
-    // insert templates here
+    template %TEMPLATETYPE%
+    %CLASS%%TEMPLATEPARAM%::%CLASS%()
+    {}
+
+    template %TEMPLATETYPE%
+    %CLASS%%TEMPLATEPARAM%::~%CLASS%()
+    {}
+
+    // Remove lines or remove comments for copy constructor and assignment.
+    ////%CLASS%%TEMPLATEPARAM%::%CLASS% (const %CLASS%%TEMPLATEPARAM%& that)
+    ////{}
+    ////%CLASS%%TEMPLATEPARAM%& %CLASS%%TEMPLATEPARAM%::operator= (const %CLASS%%TEMPLATEPARAM%& that)
+    ////{
+    ////  if (this != &that) {
+    ////    ... copy members ...
+    ////  }
+    ////  return *this;
+    ////}
 
   } // namespace %PACKAGE%
 } // namespace LOFAR
 
+#endif

@@ -42,11 +42,27 @@ namespace LOFAR {
 
 
     // Description of class.
-    // insert templates here
+
+    template %TEMPLATETYPE%
+    class %CLASS%
+    {
+    public:
+      %CLASS%();
+      ~%CLASS%();
+
+    private:
+      // Copying is not allowed
+      %CLASS% (const %CLASS%%TEMPLATEPARAM%& that);
+      %CLASS%%TEMPLATEPARAM%& operator= (const %CLASS%%TEMPLATEPARAM%& that);
+
+      //# Datamembers
+
+    };
 
     // @}
   } // namespace %PACKAGE%
 } // namespace LOFAR
 
-// Include tcc file here when needed.
+%INCLUDETCC%
+
 #endif
