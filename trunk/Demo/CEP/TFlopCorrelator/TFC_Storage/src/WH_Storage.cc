@@ -129,9 +129,8 @@ void WH_Storage::preprocess() {
   }
   double azimuth = itsPS.getDouble("Storage.beamAzimuth");
   double elevation = itsPS.getDouble("Storage.beamElevation");
-  double pi = itsPS.getDouble("Storage.pi");
   // For nr of beams
-  itsFieldId = itsWriter->addField (azimuth*pi/180., elevation*pi/180.);
+  itsFieldId = itsWriter->addField (azimuth*M_PI/180., elevation*M_PI/180.);
 }
 
 void WH_Storage::process() 
@@ -147,7 +146,7 @@ void WH_Storage::process()
     int rownr = -1;           // Set rownr -1 when new rows need to be added
                               // when writing a new subband
     int dataSize = (inputDH->getBufSize())/(inputDH->getNumVis());
-    
+
     for (uint v=0; v < inputDH->getNumVis(); v++)  // Loop over "DH_Vis"s
     {
 	// Check if channel frequency is ascending. 
