@@ -59,6 +59,9 @@ const char PARAM_N_BOARDS_PER_SUBRACK[]        = "mac.apl.ara.N_BOARDS_PER_SUBRA
 const char PARAM_N_APS_PER_BOARD[]             = "mac.apl.ara.N_APS_PER_BOARD";
 const char PARAM_N_RCUS_PER_AP[]               = "mac.apl.ara.N_RCUS_PER_AP";
 
+const string StationReceptorGroup::PARAM_CALSERVER_REMOTETASK = string("mac.apl.sd.remoteservice.task.CALServer");
+const string StationReceptorGroup::PARAM_CALSERVER_REMOTEPORT = string("mac.apl.sd.remoteservice.port.CALServer");
+
 // Logical Device version
 const string StationReceptorGroup::SRG_VERSION = string("1.0");
 string StationReceptorGroup::m_CALserverName("CALServer");
@@ -67,7 +70,7 @@ StationReceptorGroup::StationReceptorGroup(const string& taskName,
                                      const string& parameterFile, 
                                      GCFTask* pStartDaemon) :
   LogicalDevice(taskName,parameterFile,pStartDaemon,SRG_VERSION),
-  m_CALclient(*this, m_CALserverName, GCFPortInterface::SAP, CAL_PROTOCOL),
+  m_CALclient(),
   m_rcuMap(),
   m_rcuFunctionalityMap(),
   m_lcuPIC(SCOPE_PIC,TYPE_LCU_PIC,&m_propertySetAnswer),
@@ -284,6 +287,13 @@ GCFEvent::TResult StationReceptorGroup::concrete_initial_state(GCFEvent& event, 
   {
     case F_ENTRY:
     {
+      string calRemoteTask = GCF::ParameterSet::instance()->getString(PARAM_CALSERVER_REMOTETASK);
+      string calRemotePort = GCF::ParameterSet::instance()->getString(PARAM_CALSERVER_REMOTEPORT);
+      m_CALclient.init(*this, m_CALserverName, GCFPortInterface::SAP, CAL_PROTOCOL);
+      TPeerAddr peerAddr;
+      peerAddr.taskname = calRemoteTask;
+      peerAddr.portname = calRemotePort;
+      m_CALclient.setAddr(peerAddr);
       break;
     }
     

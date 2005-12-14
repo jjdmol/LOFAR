@@ -49,6 +49,8 @@ namespace ASR
     public:
       // Logical Device version
       static const string SRG_VERSION;
+      static const string PARAM_CALSERVER_REMOTETASK;
+      static const string PARAM_CALSERVER_REMOTEPORT;
 
       // property defines
 
@@ -138,7 +140,7 @@ namespace ASR
       typedef map<uint16,bool> TRCUFunctionalityMap;
     
       static string     m_CALserverName;
-      GCF::TM::GCFPort  m_CALclient;
+      GCF::TM::GCFTCPPort  m_CALclient;
       TRCUMap           m_rcuMap;
       TRCUFunctionalityMap        m_rcuFunctionalityMap;
       GCF::PAL::GCFExtPropertySet m_lcuPIC;
