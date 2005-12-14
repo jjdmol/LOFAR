@@ -254,7 +254,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
                          TransportHolder& th,
                          const bool isSyncMaster)
   : WorkHolder ((isSyncMaster ? 1 : 2), 
-                ps.getInt32("Input.NSubbands") + (isSyncMaster ? ps.getInt32("Input.NRSP")-1 : 0) , 
+                ps.getInt32("Data.NSubbands") + (isSyncMaster ? ps.getInt32("Data.NStations")-1 : 0) , 
                 name, 
                 "WH_RSPInput"),
     itsTH(th),
@@ -268,12 +268,12 @@ WH_RSPInput::WH_RSPInput(const string& name,
   char str[32];
 
   // get parameters
-  itsCyclicBufferSize = ps.getInt32("Input.CyclicBufferSize");
-  itsNRSPOutputs = ps.getInt32("Input.NRSP");
+  itsCyclicBufferSize = ps.getInt32("Input.NSamplesToBuffer");
+  itsNRSPOutputs = ps.getInt32("Data.NStations");
   itsNPackets = ps.getInt32("Input.NPacketsInFrame");
-  itsNSubbands = ps.getInt32("Input.NSubbands");
-  itsNPolarisations = ps.getInt32("Input.NPolarisations");
-  itsNSamplesToCopy = ps.getInt32("Input.NSamplesToDH");
+  itsNSubbands = ps.getInt32("Data.NSubbands");
+  itsNPolarisations = ps.getInt32("Data.NPolarisations");
+  itsNSamplesToCopy = ps.getInt32("Data.NSamplesToIntegrate");
   itsEPAHeaderSize =  ps.getInt32("Input.SzEPAheader");
   itsEPAPacketSize = ps.getInt32("Input.SzEPApayload") + itsEPAHeaderSize;
  
@@ -507,7 +507,7 @@ void WH_RSPInput::postprocess()
   // stop writer thread
   writerinfo.Stopthread         = true;
   itsBufControl->clear();
-  pthread_join(writerthread, NULL);
+  ASSERTSTR(pthread_join(writerthread, NULL) == 0, "thread could not be joined");
   //  pthread_cancel(writerthread);
   sleep(2);
 }

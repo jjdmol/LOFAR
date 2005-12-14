@@ -52,9 +52,9 @@ DataHolder *DH_Subband::clone() const
 
 void DH_Subband::init()
 {
-  int norsp = itsPS.getInt32("Input.NRSP");
-  int ntimes = itsPS.getInt32("Input.NSamplesToDH");
-  int nopols = itsPS.getInt32("Input.NPolarisations");
+  int norsp = itsPS.getInt32("Data.NStations");
+  int ntimes = itsPS.getInt32("Data.NSamplesToIntegrate");
+  int nopols = itsPS.getInt32("Data.NPolarisations");
   itsBufferSize = norsp*ntimes*nopols;
 
   addField("Buffer", BlobField<BufferType>(1, getBufferSize()));

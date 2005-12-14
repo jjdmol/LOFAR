@@ -49,11 +49,11 @@ WH_Correlator::WH_Correlator(const string &name)
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
-  itsNfilters = myPS.getInt32("PPF.NrFilters");
-  itsNsamples = myPS.getInt32("PPF.NrStationSamples");
-  itsNelements = myPS.getInt32("PPF.NrStations");
-  itsNpolarisations = myPS.getInt32("PPF.NrPolarizations");
-  itsNchannels = myPS.getInt32("PPF.NrSubChannels") / myPS.getInt32("PPF.NrCorrelatorsPerFilter");
+  itsNfilters = myPS.getInt32("BGLProc.NFiltersPerComputeCell");
+  itsNsamples = myPS.getInt32("Data.NSamplesToIntegrate");
+  itsNelements = myPS.getInt32("FakeData.NStations");
+  itsNpolarisations = myPS.getInt32("Data.NPolarisations");
+  itsNchannels = myPS.getInt32("Data.NChannels") / myPS.getInt32("BGLProc.NCorrelatorsPerComputeCell");
     
 
   ASSERTSTR(itsNelements      == NR_STATIONS, "Configuration doesn't match parameter: NrStations");

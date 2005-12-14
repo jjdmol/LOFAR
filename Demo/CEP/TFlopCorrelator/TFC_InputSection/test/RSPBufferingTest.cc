@@ -172,7 +172,7 @@ int main (int argc, const char** argv)
 
    // create BufferController Object
    BufferController BufControl(ps.getInt32("Input.CyclicBufferSize"), 
-                               ps.getInt32("Input.NSubbands"));
+                               ps.getInt32("Data.NSubbands"));
     
    // start bufferwriter thread
    pthread_t  writer;
@@ -197,8 +197,8 @@ int main (int argc, const char** argv)
    consumer_args readerdata;
 
    readerdata.bc = &BufControl;
-   readerdata.nsubbands = ps.getInt32("Input.NSubbands");
-   readerdata.nsamples = ps.getInt32("Input.NSamplesToDH");
+   readerdata.nsubbands = ps.getInt32("Data.NSubbands");
+   readerdata.nsamples = ps.getInt32("Data.NSamplesToIntegrate");
    
    if (pthread_create(&reader, NULL, read, &readerdata) < 0)
    {

@@ -27,9 +27,9 @@ DH_Vis::DH_Vis (const string& name, double centerFreq,
 {
 #if 0
   //todo: support for multiple freq channels
-   itsNPols = itsPS.getInt32("Input.NPolarisations");
+   itsNPols = itsPS.getInt32("Data.NPolarisations");
    itsNCorrs = itsNPols*itsNPols;
-   itsNStations  = itsPS.getInt32("Input.NRSP");
+   itsNStations  = itsPS.getInt32("FakeData.NStations");
    itsNBaselines = itsNStations * (itsNStations + 1)/2;
 #endif
 }   

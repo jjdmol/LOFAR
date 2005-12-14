@@ -61,7 +61,6 @@ class WH_Storage: public WorkHolder
     const ACC::APS::ParameterSet itsPS;
     int itsNstations;
     int itsNChannels;
-    int itsNCorrPerFilt;
     int itsNChanPerVis;
     int itsNpolSquared;
 

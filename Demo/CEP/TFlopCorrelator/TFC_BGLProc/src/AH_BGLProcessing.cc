@@ -97,126 +97,92 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   int itsIn = 0;
   int itsOut = 0;
 
-  int itsNrComputeCells = itsParamSet.getInt32("BGLProc.NrComputeCells");
-  int itsNrFilters = itsParamSet.getInt32("BGLProc.NrFiltersPerComputeCell");
-  int itsNrFiltersPerComputeCell = itsParamSet.getInt32("BGLProc.NrFiltersPerComputeCell");
-  int itsNrCorrelatorsPerFilter = itsParamSet.getInt32("PPF.NrCorrelatorsPerFilter");
-  int itsNrChannels = itsParamSet.getInt32("PPF.NrSubChannels");
-  int itsNrVisPerInput = itsParamSet.getInt32("Storage.NVisPerInput");
-  int itsNrStoredSubbands = itsParamSet.getInt32("BGLProc.NrStoredSubbands");
-  int itsNSBCollectOutputs = itsParamSet.getInt32("Input.NSBCollectOutputs");
+  int itsNrDistribs = itsParamSet.getInt32("FakeData.NSubbands");
+  int itsNrFiltersPerComputeCell = itsParamSet.getInt32("BGLProc.NFiltersPerComputeCell");
+  int itsNrCorrelatorsPerComputeCell = itsParamSet.getInt32("BGLProc.NCorrelatorsPerComputeCell");
+  int itsNrChannels = itsParamSet.getInt32("Data.NChannels");
+  int itsNSBCollectOutputs = itsParamSet.getInt32("FakeData.NSubbands") / itsParamSet.getInt32("Data.NSubbands");
+  int itsNComputeCellsPerDist = itsParamSet.getInt32("FakeData.NComputeCellsPerWH_Dist");
   
-  vector<int> itsInputPorts      = itsParamSet.getInt32Vector("FIRConnection.RequestPorts");
-  vector<string> itsInputServers = itsParamSet.getStringVector("FIRConnection.ServerHosts");
-
-  vector<int> itsOutputPorts      = itsParamSet.getInt32Vector("CorrConnection.RequestPorts");
-  vector<string> itsOutputServers = itsParamSet.getStringVector("CorrConnection.ServerHosts");
-
-  
-  for (int ComputeCells = 0; ComputeCells < itsNrComputeCells; ComputeCells++) {
-    WH_Distribute*  DistNode;
-    WH_Concentrator* ConcNode;
-
 #ifdef USE_WH_PPF_AND_CORR
-    vector<WH_PPF*> PPFNodes;
-    vector<WH_Correlator*> CorrNodes;
-
+  for (int distrib = 0; distrib < itsNrDistribs; distrib++) {
     // The basic definition of a "compute cell"
     // A compute cell is a connected set of processing blocks that implement 
     // a complete poly-phase filter and correlator chain. Each compute cell 
     // contains a single WH_Distribute that spreads the input to a number of
     // processing chains.
-    DistNode = new WH_Distribute("distribute", itsParamSet, 1, 2*itsNrFiltersPerComputeCell);
+    WH_Distribute*  DistNode;
+    DistNode = new WH_Distribute("distribute", itsParamSet, 1, itsNComputeCellsPerDist * itsNrFiltersPerComputeCell);
     itsWHs.push_back(DistNode);
     itsWHs.back()->runOnNode(lowestFreeNode++);
-
     itsInStub->connect(itsIn++, itsWHs.back()->getDataManager(), 0);
-    
+
     /* While only a single compute block of 2 filters and 4 correlators would suffice  */
     /* within a compute cell, this would leave more than 50% of the cell unused. To    */
     /* reach the desired 1 TFlop of computational load, we duplicate the compute block */
     /* even though this calculates exactly the same.                                   */
+    for (int cellOfDist = 0; cellOfDist < itsNComputeCellsPerDist; cellOfDist++) {
+      int computeCell = distrib * itsNComputeCellsPerDist + cellOfDist;
+      WH_Concentrator* ConcNode;
 
+      vector<WH_PPF*> PPFNodes;
+      vector<WH_Correlator*> CorrNodes;
 
-    for (int Filters = 0; Filters < 2*itsNrFiltersPerComputeCell; Filters++) {
-      snprintf(WH_Name, 40, "PPF_%d_of_%d", Filters, itsNrFilters);
-      PPFNodes.push_back(new WH_PPF(WH_Name, 0, 19));
-      itsWHs.push_back(PPFNodes.back());
-      itsWHs.back()->runOnNode(lowestFreeNode++);
-    }
-
-    for (int Correlators = 0; Correlators < 2*itsNrCorrelatorsPerFilter; Correlators++) {
-      snprintf(WH_Name, 40, "CORR_%d_of_%d", Correlators, itsNrCorrelatorsPerFilter);
-      CorrNodes.push_back(new WH_Correlator(WH_Name));
-      itsWHs.push_back(CorrNodes.back());
-      itsWHs.back()->runOnNode(lowestFreeNode++);
-    }
-
-    // Now connect the internal blocks together
-    int filter_nr = 0;
-    vector<WH_PPF*>::iterator fit = PPFNodes.begin();
-    for (; fit != PPFNodes.end(); fit++) {
-      // connect the distribute node to it's filters
-      itsTHs.push_back(new TH_MPI( DistNode->getNode(), (*fit)->getNode() ));
-      itsConnections.push_back(new Connection("dist_conn",
-					      DistNode->getDataManager().getOutHolder(filter_nr),
-					      (*fit)->getDataManager().getInHolder(0),
-					      itsTHs.back(),
-					      true)); 
-      
-      DistNode->getDataManager().setOutConnection(filter_nr, itsConnections.back());
-      (*fit)->getDataManager().setInConnection(0, itsConnections.back());
-      
-      int corr_nr   = 0;
-      vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
-      
-      for (; cit != CorrNodes.end(); cit++) {
-	if ((filter_nr < 2 && corr_nr < 4) || (filter_nr >= 2 && corr_nr >= 4)) {
-	
-	  snprintf(WH_Name, 40, "conn_filter_%d_corr_%d", filter_nr, corr_nr);
-	  itsTHs.push_back( new TH_MPI( (*fit)->getNode(), (*cit)->getNode() ) );
-	  itsConnections.push_back(new Connection(WH_Name, 
-						  (*fit)->getDataManager().getOutHolder(corr_nr % itsNrCorrelatorsPerFilter),
-						  (*cit)->getDataManager().getInHolder(filter_nr % itsNrFiltersPerComputeCell),
-						  itsTHs.back(),
-						  true));
-	  
-	  (*fit)->getDataManager().setOutConnection(corr_nr % itsNrCorrelatorsPerFilter, itsConnections.back());
-	  (*cit)->getDataManager().setInConnection(filter_nr % itsNrFiltersPerComputeCell, itsConnections.back());
-	}
-	corr_nr++;
+      for (int Filters = 0; Filters < itsNrFiltersPerComputeCell; Filters++) {
+	snprintf(WH_Name, 40, "PPF_%d_of_%d_of_cell_%d", Filters, itsNrFiltersPerComputeCell, computeCell);
+	PPFNodes.push_back(new WH_PPF(WH_Name, 0, 19));
+	itsWHs.push_back(PPFNodes.back());
+	itsWHs.back()->runOnNode(lowestFreeNode++);
       }
-      filter_nr++;
-    }
 
-    ConcNode = new WH_Concentrator("concentrator", itsParamSet, itsNrCorrelatorsPerFilter);
-    itsWHs.push_back(ConcNode);
-    itsWHs.back()->runOnNode(lowestFreeNode++);
+      for (int Correlators = 0; Correlators < itsNrCorrelatorsPerComputeCell; Correlators++) {
+	snprintf(WH_Name, 40, "CORR_%d_of_%d", Correlators, itsNrCorrelatorsPerComputeCell);
+	CorrNodes.push_back(new WH_Correlator(WH_Name));
+	itsWHs.push_back(CorrNodes.back());
+	itsWHs.back()->runOnNode(lowestFreeNode++);
+      }
 
-    vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
-    int corr_nr = 0;
-    for (; cit != CorrNodes.end(); cit++) {
-      // only connect the real correlator outputs to the concentrator
-      if (corr_nr < itsNrCorrelatorsPerFilter) {
-	itsTHs.push_back( new TH_MPI( (*cit)->getNode(), ConcNode->getNode() ) );
-	itsConnections.push_back(new Connection(WH_Name, 
-						(*cit)->getDataManager().getOutHolder(0),
-						ConcNode->getDataManager().getInHolder(corr_nr),
-						itsTHs.back(),
-						true));
+      // Now connect the internal blocks together
+      vector<WH_PPF*>::iterator fit = PPFNodes.begin();
+      int filter_nr = 0;
+      for (; fit != PPFNodes.end(); fit++) {
+	// connect the distribute node to it's filters
+	connectWHs(DistNode, filter_nr + itsNrFiltersPerComputeCell * cellOfDist, *fit, 0);
+      
+	int corr_nr   = 0;
+	vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
+      
+	for (; cit != CorrNodes.end(); cit++) {
+	  snprintf(WH_Name, 40, "conn_filter_%d_corr_%d", filter_nr, corr_nr);
+	  connectWHs(*fit, corr_nr, *cit, filter_nr);
+	  corr_nr++;
+	}
+	filter_nr++;
+      }
 
-	(*cit)->getDataManager().setOutConnection(0, itsConnections.back());
-	ConcNode->getDataManager().setInConnection(corr_nr, itsConnections.back());
+      ConcNode = new WH_Concentrator("concentrator", itsParamSet, itsNrCorrelatorsPerComputeCell);
+      itsWHs.push_back(ConcNode);
+      itsWHs.back()->runOnNode(lowestFreeNode++);
+
+      vector<WH_Correlator*>::iterator cit = CorrNodes.begin();
+      int corr_nr = 0;
+      for (; cit != CorrNodes.end(); cit++) {
+	connectWHs(*cit, 0, ConcNode, corr_nr);
 	corr_nr++;
       }
     }
    
     // We only connect every 16th computecell to the outside world.
     // The reason for this is that we expect every 16th subband to be unique.
-    if (ComputeCells % itsNSBCollectOutputs == 0) {
+    if (distrib % itsNSBCollectOutputs == 0) {
       itsOutStub->connect(itsOut++, itsWHs.back()->getDataManager(), 0);
     }
+  }
 #else
+  for (int computeCell = 0; computeCell < itsNrDistribs; computeCell++) {
+    WH_Distribute*  DistNode;
+    WH_Concentrator* ConcNode;
+
     // This alternative uses WH_BGL_Processing instead of WH_PPF and WH_Correlator
     // Right now there should be only 1 WH_BGL_P for every Distrib/Concentrator pair
     WH_BGL_Processing* CorrNode;
@@ -236,8 +202,8 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
     connectWHs(CorrNode, 0, ConcNode, 0);
     itsOutStub->connect(itsOut++, ConcNode->getDataManager(), 0);
     lowestFreeNode++;
-#endif
   }
+#endif
 #ifdef HAVE_MPI
   ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "TFC_BGLProc needs " << lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
 #endif
@@ -311,7 +277,7 @@ void AH_BGLProcessing::connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstW
   itsConnections.push_back( new Connection("conn", 
 					   srcWH->getDataManager().getOutHolder(srcDH),
 					   dstWH->getDataManager().getInHolder(dstDH),
-					   itsTHs.back(), true) );
+					   itsTHs.back(), false) );
 #endif
   
   srcWH->getDataManager().setOutConnection(srcDH, itsConnections.back());

@@ -35,7 +35,7 @@ Stub_PhaseCorr::~Stub_PhaseCorr()
   
 void Stub_PhaseCorr ::connect (TinyDataManager& dm, int dhNr)
 {
-  string service = itsPS.getString("PhaseCorrection.RequestPort");
+  string service = itsPS.getString("Connections.Delay_BGLProc.Ports");
   
   if (!itsInBGLProc) // on the input side, start server socket
   {
@@ -55,7 +55,7 @@ void Stub_PhaseCorr ::connect (TinyDataManager& dm, int dhNr)
   {
     DBGASSERTSTR(itsTH == 0, "Stub output has already been connected.");
     // Create a client socket
-    string server = itsPS.getString("DelayCompensation.ServerHost");
+    string server = itsPS.getString("Connections.Delay_BGLProc.ServerHost");
     itsTH = new TH_Socket(server,
 			  service,
 			  true,

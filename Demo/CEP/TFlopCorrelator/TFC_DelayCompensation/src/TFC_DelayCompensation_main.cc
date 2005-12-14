@@ -47,7 +47,7 @@ int main (int argc, const char** argv) {
       myAH.basePrerun();
       cout << "init done" << endl;
       Profiler::activate();
-      int nrRuns = pSet.getInt32("Input.NRuns");     // The same number of runs as
+      int nrRuns = pSet.getInt32("General.NRuns");     // The same number of runs as
       cout << "run " << nrRuns << " times" << endl;  // the input section
       myAH.baseRun(nrRuns);
       cout << "run complete" << endl;

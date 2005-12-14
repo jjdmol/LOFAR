@@ -73,7 +73,7 @@ void AH_Recorder::define(const LOFAR::KeyValueMap&) {
   lastFreeNode = 1;
 #endif
 
-  int NRSP = itsParamSet.getInt32("Input.NRSP");
+  int NRSP = itsParamSet.getInt32("Data.NStations");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   vector<string> outFileNames = itsParamSet.getStringVector("Generator.OutputFiles");

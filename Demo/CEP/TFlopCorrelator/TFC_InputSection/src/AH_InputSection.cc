@@ -59,7 +59,7 @@ void AH_InputSection::undefine() {
   
   vector<TransportHolder*>::iterator tit = itsTHs.begin();
   for (; tit!=itsTHs.end(); tit++) {
-    delete *tit;
+    //delete *tit;
   }
   itsTHs.clear();
 
@@ -75,7 +75,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   undefine();
 
   int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt32("Input.NSubbands");  // number of SubBand filters in the application
+  itsNSBF  = itsParamSet.getInt32("Data.NSubbands");  // number of SubBand filters in the application
     
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
@@ -97,7 +97,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   
   vector<Step*>        RSPSteps;
   vector<WH_RSPInput*> RSPNodes;
-  int NRSP = itsParamSet.getInt32("Input.NRSP");
+  int NRSP = itsParamSet.getInt32("Data.NStations");
   int WH_DH_NameSize = 40;
   char WH_DH_Name[WH_DH_NameSize];
   int rspStartNode;
@@ -107,9 +107,9 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   vector<string> srcMacs = itsParamSet.getStringVector("Input.SourceMacs");
   vector<string> dstMacs = itsParamSet.getStringVector("Input.DestinationMacs");
   vector<string> inFiles = itsParamSet.getStringVector("Input.InputFiles");
-  vector<string> services = itsParamSet.getStringVector("Input.RequestPorts");
+  vector<string> services = itsParamSet.getStringVector("Input.Ports");
 
-  int NSBCollectOutputs = itsParamSet.getInt32("Input.NSBCollectOutputs"); 
+  int NSBCollectOutputs = itsParamSet.getInt32("FakeData.NSubbands") / itsParamSet.getInt32("Data.NSubbands"); 
     
   for (int r=0; r<NRSP; r++) {
     snprintf(WH_DH_Name, WH_DH_NameSize, "RSP_Input_node_%d_of_%d", r, NRSP);

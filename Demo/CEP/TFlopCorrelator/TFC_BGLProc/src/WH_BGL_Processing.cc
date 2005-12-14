@@ -563,11 +563,11 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID):
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
 #if 0
-  int NrTaps		     = myPS.getInt32("PPF.NrTaps");
-  int NrStations	     = myPS.getInt32("PPF.NrStations");
-  int NrStationSamples	     = myPS.getInt32("PPF.NrStationSamples");
-  int NrPolarizations	     = myPS.getInt32("PPF.NrPolarizations");
-  int NrSubChannels	     = myPS.getInt32("PPF.NrSubChannels");
+  int NrTaps		     = myPS.getInt32("BGLProc.NPPFTaps");
+  int NrStations	     = myPS.getInt32("FakeData.NStations");
+  int NrStationSamples	     = myPS.getInt32("Data.NSamplesToIntegrate");
+  int NrPolarizations	     = myPS.getInt32("Data.NPolarisations");
+  int NrSubChannels	     = myPS.getInt32("Data.NChannels");
   
   assert(NrTaps			== NR_TAPS);
   assert(NrStations		== NR_STATIONS);

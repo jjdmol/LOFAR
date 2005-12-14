@@ -102,8 +102,8 @@ int main (int argc, const char** argv)
    // create Parameter Object
    ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
    
-   int nsubbands = ps.getInt32("Input.NSubbands");
-   int nelements = ps.getInt32("Input.NSamplesToDH");
+   int nsubbands = ps.getInt32("Data.NSubbands");
+   int nelements = ps.getInt32("Data.NSamplesToIntegrate");
 
    // create BufferController Object
    BufferController BufControl(1562500, nsubbands);

@@ -24,7 +24,7 @@ namespace LOFAR {
       itsConnections  (0),
       itsPS           (pSet)
   {
-    itsNChan = itsPS.getInt32("BGLProc.NrStoredSubbands");
+    itsNChan = itsPS.getInt32("Data.NSubbands");
     LOG_TRACE_FLOW_STR("Total number of channels in the Stub_Corr is " << itsNChan);
     ASSERTSTR(itsNChan >= 0, "Number of channels in the Stub_Corr must be greater than 0");
 
@@ -56,7 +56,7 @@ namespace LOFAR {
     DBGASSERTSTR(((C_nr >= 0) && (C_nr < itsNChan)),
 		  "C_nr argument out of boundaries; " << C_nr << " / " << itsNChan);
 
-    string service = itsPS.getStringVector("CorrConnection.RequestPorts")[C_nr];
+    string service = itsPS.getStringVector("Connections.BGLProc_Storage.Ports")[C_nr];
 
     if (itsStubOnServer) // on the cluster side, so start server socket
     {
@@ -78,7 +78,7 @@ namespace LOFAR {
       DBGASSERTSTR(itsTHs[C_nr] == 0, "Stub input " << C_nr << 
 		" has already been connected.");
       // Create a client socket
-      string server = itsPS.getStringVector("CorrConnection.ServerHosts")[C_nr];
+      string server = itsPS.getStringVector("Connections.BGLProc_Storage.ServerHosts")[C_nr];
       itsTHs[C_nr] = new TH_Socket(server,
 				   service,
 				   true,
