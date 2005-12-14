@@ -24,7 +24,7 @@ Stub_Delay::Stub_Delay (bool isInput, const ACC::APS::ParameterSet pSet)
     itsTHs          (0),
     itsConnections  (0)
 {
-  itsNRSP = itsPS.getInt32("Input.NRSP");
+  itsNRSP = itsPS.getInt32("Data.NStations");
   LOG_TRACE_FLOW_STR("Total number of RSPinputs in the Stub_Delay is " << itsNRSP);
   ASSERTSTR(itsNRSP >= 0, "Number of RSPinputs in the Stub_Delay must be greater than 0");
 
@@ -56,14 +56,14 @@ void Stub_Delay ::connect (int RSP_nr,
   DBGASSERTSTR(((RSP_nr >= 0) && (RSP_nr < itsNRSP)),
  	       "RSP_nr argument out of boundaries; " << RSP_nr << " / " << itsNRSP);
 
-  string service = itsPS.getStringVector("DelayConnection.RequestPorts")[RSP_nr];
+  string service = itsPS.getStringVector("Connections.Input_Delay.Ports")[RSP_nr];
 
   if (itsIsInput) // on the input side, start client socket
   {
     DBGASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
 		 " has already been connected.");
     // Create a client socket
-    string server = itsPS.getString("DelayCompensation.ServerHost");
+    string server = itsPS.getString("Connections.Input_Delay.ServerHost");
     itsTHs[RSP_nr] = new TH_Socket(server,
 				   service,
 				   true,

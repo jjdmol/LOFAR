@@ -39,7 +39,7 @@ using namespace LOFAR;
 
 WH_Storage::WH_Storage(const string& name, 
 		       const ACC::APS::ParameterSet& pset) 
-  : WorkHolder (pset.getInt32("BGLProc.NrStoredSubbands"),   // number of correlator outputs
+  : WorkHolder (pset.getInt32("Data.NSubbands"),   // number of correlator outputs
 		0,
 		name,
 		"WH_Storage"),
@@ -53,15 +53,14 @@ WH_Storage::WH_Storage(const string& name,
 #ifdef USE_MAC_PI
   itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-  itsNstations = itsPS.getInt32("PPF.NrStations");
-  itsNChannels = itsPS.getInt32("PPF.NrSubChannels");
-  itsNCorrPerFilt = itsPS.getInt32("PPF.NrCorrelatorsPerFilter");
-  itsNChanPerVis = itsNChannels/itsNCorrPerFilt;
-  int pols = itsPS.getInt32("Input.NPolarisations");
+  itsNstations = itsPS.getInt32("FakeData.NStations");
+  itsNChannels = itsPS.getInt32("Data.NChannels");
+  itsNChanPerVis = itsNChannels/itsPS.getInt32("BGLProc.NCorrelatorsPerComputeCell");
+  int pols = itsPS.getInt32("Data.NPolarisations");
   itsNpolSquared = pols*pols;
 
-  vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
-  ASSERTSTR(refFreqs.size() == itsPS.getInt32("BGLProc.NrStoredSubbands"), 
+  vector<double> refFreqs= itsPS.getDoubleVector("Data.RefFreqs");
+  ASSERTSTR(refFreqs.size() >= itsPS.getInt32("Data.NSubbands"), 
 	    "Wrong number of refFreqs specified!");
   char str[32];
   for (int i=0; i<itsNinputs; i++) {
@@ -109,16 +108,16 @@ void WH_Storage::preprocess() {
 
   // create MSWriter object
   string msName = itsPS.getString("Storage.MSName");
-  double startTime = itsPS.getDouble("Storage.startTime");
-  double timeStep = itsPS.getDouble("Storage.timeStep");
-  int nPolarisations = itsPS.getInt32("Input.NPolarisations");
+  double startTime = itsPS.getDouble("Data.StartTime");
+  double timeStep = itsPS.getDouble("Data.TimeStep");
+  int nPolarisations = itsPS.getInt32("Data.NPolarisations");
   uint nAntennas = itsNstations;
-  vector<double> antPos = itsPS.getDoubleVector("Storage.stationPositions");
+  vector<double> antPos = itsPS.getDoubleVector("Data.StationPositions");
   itsWriter = new MSWriter(msName.c_str(), startTime, timeStep, itsNChannels, 
 			   nPolarisations*nPolarisations, nAntennas, antPos);
 
-  double chanWidth = itsPS.getDouble("Storage.chanWidth");
-  vector<double> refFreqs= itsPS.getDoubleVector("Storage.refFreqs");
+  double chanWidth = itsPS.getDouble("Data.ChanWidth");
+  vector<double> refFreqs= itsPS.getDoubleVector("Data.RefFreqs");
   vector<double>::iterator iter;
   // Add the subbands
   for (iter=refFreqs.begin(); iter!=refFreqs.end(); iter++)
@@ -127,8 +126,8 @@ void WH_Storage::preprocess() {
 				     *iter, chanWidth);
     itsBandIds.push_back(bandId);
   }
-  double azimuth = itsPS.getDouble("Storage.beamAzimuth");
-  double elevation = itsPS.getDouble("Storage.beamElevation");
+  double azimuth = itsPS.getDouble("Data.BeamAzimuth");
+  double elevation = itsPS.getDouble("Data.BeamElevation");
   // For nr of beams
   itsFieldId = itsWriter->addField (azimuth*M_PI/180., elevation*M_PI/180.);
 }

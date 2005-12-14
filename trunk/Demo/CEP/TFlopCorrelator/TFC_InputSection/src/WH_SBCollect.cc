@@ -37,8 +37,8 @@ using namespace LOFAR;
 
 WH_SBCollect::WH_SBCollect(const string& name, int sbID, 
 			   const ACC::APS::ParameterSet pset) 
-  : WorkHolder   (pset.getInt32("Input.NRSP"), 
-		  pset.getInt32("Input.NSBCollectOutputs"),
+  : WorkHolder   (pset.getInt32("Data.NStations"), 
+		  pset.getInt32("FakeData.NSubbands")/pset.getInt32("Data.NSubbands"),
 		  name,
 		  "WH_SBCollect"),
     itsPS        (pset),

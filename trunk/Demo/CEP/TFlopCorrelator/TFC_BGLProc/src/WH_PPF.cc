@@ -565,12 +565,12 @@ WH_PPF::WH_PPF(const string& name, const short subBandID, const short max_elemen
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
 #if 1
-  int NrTaps		     = myPS.getInt32("PPF.NrTaps");
-  int NrStations	     = myPS.getInt32("PPF.NrStations");
-  int NrStationSamples	     = myPS.getInt32("PPF.NrStationSamples");
-  int NrPolarizations	     = myPS.getInt32("PPF.NrPolarizations");
-  int NrSubChannels	     = myPS.getInt32("PPF.NrSubChannels");
-  int NrCorrelatorsPerFilter = myPS.getInt32("PPF.NrCorrelatorsPerFilter");
+  int NrTaps		     = myPS.getInt32("BGLProc.NPPFTaps");
+  int NrStations	     = myPS.getInt32("FakeData.NStations");
+  int NrStationSamples	     = myPS.getInt32("Data.NSamplesToIntegrate");
+  int NrPolarizations	     = myPS.getInt32("Data.NPolarisations");
+  int NrSubChannels	     = myPS.getInt32("Data.NChannels");
+  int NrCorrelatorsPerFilter = myPS.getInt32("BGLProc.NCorrelatorsPerComputeCell");
   
   assert(NrTaps			== NR_TAPS);
   assert(NrStations		== NR_STATIONS);
@@ -648,7 +648,9 @@ void WH_PPF::doPPF()
 
   for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
     outputs[corr] = (DH_CorrCube::BufferType *) (static_cast<DH_CorrCube*>(getDataManager().getOutHolder(corr))->getBuffer());
+#ifndef C_IMPLEMENTATION
     assert((ptrdiff_t) outputs[corr] % 32 == 0);
+#endif
   }
 
 //   for (int stat = 0; stat < NR_STATIONS; stat ++) {

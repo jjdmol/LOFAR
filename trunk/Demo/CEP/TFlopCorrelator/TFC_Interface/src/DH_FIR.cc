@@ -29,9 +29,9 @@ namespace LOFAR
       itsMatrix      (0),
       itsPS          (pSet)
   {
-    itsNStations  = itsPS.getInt32("Input.NRSP");
-    itsNTimes     = itsPS.getInt32("Input.NSamplesToDH");
-    itsNPol       = itsPS.getInt32("Input.NPolarisations");
+    itsNStations  = itsPS.getInt32("Data.NStations");
+    itsNTimes     = itsPS.getInt32("Data.NSamplesToIntegrate");
+    itsNPol       = itsPS.getInt32("Data.NPolarisations");
   }
   
 DH_FIR::DH_FIR(const DH_FIR& that)

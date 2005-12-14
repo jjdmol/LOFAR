@@ -38,27 +38,17 @@ WH_Distribute::WH_Distribute(const string& name,
   itsNoutputs (outputs),
   itsPS       (myPset)
 {
-  itsNinputElements  = itsPS.getInt32("Input.NRSP");
-  itsNoutputElements = itsPS.getInt32("PPF.NrStations");
+  itsNinputElements  = itsPS.getInt32("Data.NStations");
+  itsNoutputElements = itsPS.getInt32("FakeData.NStations");
 
-  itsNsamples       = itsPS.getInt32("Input.NSamplesToDH"); 
-  itsNpolarisations = itsPS.getInt32("Input.NPolarisations");
+  itsNsamples       = itsPS.getInt32("Data.NSamplesToIntegrate"); 
+  itsNpolarisations = itsPS.getInt32("Data.NPolarisations");
 
   /// add DataHolders. Note that we may need to create a private Pset
   /// for the outDH if we need to duplicate data
   for (int i = 0; i < itsNinputs; i++) {
     getDataManager().addInDataHolder(i, new DH_Subband("in", 1, itsPS));
   }
-
-//   ACC::APS::ParameterSet myOutPS;
-//   string value;
-
-//   value = itsPS.getString("PPF.NrStations");
-//   myOutPS.add("Input.NRSP", value);
-//   value = itsPS.getString("PPF.NrStationSamples");
-//   myOutPS.add("Input.NSamplesToDH",value);
-//   value = itsPS.getString("Input.NPolarisations");
-//   myOutPS.add("Input.NPolarisations",value);
 
   for (int i = 0; i < itsNoutputs; i++) {
     getDataManager().addOutDataHolder(i, new DH_PPF("out", 1, itsPS));

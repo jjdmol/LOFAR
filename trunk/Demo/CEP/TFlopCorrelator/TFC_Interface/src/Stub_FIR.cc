@@ -22,7 +22,7 @@ namespace LOFAR {
       itsTHs          (0),
       itsConnections  (0)
   {
-    itsNFIRF     = itsPS.getInt32("BGLProc.NrComputeCells");  // number of compute cells in the application
+    itsNFIRF     = itsPS.getInt32("FakeData.NSubbands");  // number of compute cells in the application
     ASSERTSTR(itsNFIRF >= 0, "Number of subband filters must be greater than 0");
     itsTHs = new TH_Socket*[itsNFIRF];
     itsConnections = new Connection*[itsNFIRF];
@@ -53,7 +53,9 @@ namespace LOFAR {
 		 "FIRF_nr argument out of boundaries; " << FIRF_nr 
 		 << " / " << itsNFIRF);
 
-    string service = itsPS.getStringVector("FIRConnection.RequestPorts")[FIRF_nr];
+    vector<string> ports = itsPS.getStringVector("Connections.Input_BGLProc.Ports");
+    ASSERTSTR(ports.size() >= FIRF_nr, "Not enought ports declared for Input_BGLProc");
+    string service = ports[FIRF_nr];
 
     if (itsStubOnServer)    // On the cluster side, so start a server socket
     {
@@ -76,7 +78,7 @@ namespace LOFAR {
       DBGASSERTSTR(itsTHs[FIRF_nr] == 0, "Stub output " << FIRF_nr << 
 		" has already been connected.");
       // Create a client socket
-      string server = itsPS.getStringVector("FIRConnection.ServerHosts")[FIRF_nr];
+      string server = itsPS.getStringVector("Connections.Input_BGLProc.ServerHosts")[FIRF_nr];
 
       itsTHs[FIRF_nr] = new TH_Socket(server,
 				      service,

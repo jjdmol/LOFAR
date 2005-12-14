@@ -59,7 +59,7 @@ int main (int argc, const char** argv) {
 #endif
       Profiler::activate();
       cout << "run" << endl;
-      myAH.baseRun(ps.getInt32("Input.NRuns"));
+      myAH.baseRun(ps.getInt32("General.NRuns"));
       cout << "run complete" << endl;
 #ifdef HAVE_MPI
       TH_MPI::synchroniseAllProcesses();

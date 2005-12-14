@@ -25,8 +25,8 @@ DH_RSP::DH_RSP (const string& name,
   itsBuffer  (0),
   itsPSet    (pset)
 {
-  itsNTimes          = pset.getInt32("Input.NSamplesToDH");
-  itsNoPolarisations = pset.getInt32("Input.NPolarisations");
+  itsNTimes          = pset.getInt32("Data.NSamplesToIntegrate");
+  itsNoPolarisations = pset.getInt32("Data.NPolarisations");
   itsBufSize         = itsNTimes * itsNoPolarisations;
 }
 

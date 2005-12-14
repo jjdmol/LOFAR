@@ -44,23 +44,23 @@ void AH_DelayCompensation::define(const LOFAR::KeyValueMap&) {
   Composite comp(0, 0, "topComposite");
   setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
 
-  int nRSP = itsParamSet.getInt32("Input.NRSP");
-  int nChannels = itsParamSet.getInt32("PPF.NrSubChannels");
-  int delay = itsParamSet.getInt32("DelayCompensation.Delay");
-  WH_DelayControl delayWH("DelayContr", nRSP, nChannels, delay);
+  int nStations = itsParamSet.getInt32("Data.NStations");
+  int nChannels = itsParamSet.getInt32("Data.NChannels");
+  int delay = itsParamSet.getInt32("Data.Delays.Station0_Station1");
+  WH_DelayControl delayWH("DelayContr", nStations, nChannels, delay);
   Step delayStep(delayWH, "DelayContr");
   comp.addBlock(delayStep);
 
   // Connect to stub for input section
   itsDelayStub = new Stub_Delay(false, itsParamSet);
-  for (int i=0; i<nRSP; i++)
+  for (int i=0; i<nStations; i++)
   {
     itsDelayStub->connect(i, delayStep.getOutDataManager(i), i);
   }
 
 //   // Connect to stub for BGL proc
 //   itsPhaseCorrStub = new Stub_PhaseCorr(false, itsParamSet);
-//   itsPhaseCorrStub->connect(delayStep.getOutDataManager(nRSP), nRSP);
+//   itsPhaseCorrStub->connect(delayStep.getOutDataManager(nStations), nStations);
 
   LOG_TRACE_FLOW_STR("Finished define()");
 }

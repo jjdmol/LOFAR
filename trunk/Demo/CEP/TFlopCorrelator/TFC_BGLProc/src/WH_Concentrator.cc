@@ -40,9 +40,9 @@ WH_Concentrator::WH_Concentrator(const string& name, ACC::APS::ParameterSet myPs
 {
   char str[40];
 
-  itsNVis      = itsPS.getInt32("Storage.NVisPerInput");
-  itsNStations = itsPS.getInt32("PPF.NrStations");
-  itsNPols     = itsPS.getInt32("PPF.NrPolarizations");
+  itsNVis      = itsPS.getInt32("BGLProc.NCorrelatorsPerComputeCell");
+  itsNStations = itsPS.getInt32("FakeData.NStations");
+  itsNPols     = itsPS.getInt32("Data.NPolarisations");
 
   ASSERTSTR(itsNVis == itsNinputs, "Configuration mismatch: itsNinputs");
 
