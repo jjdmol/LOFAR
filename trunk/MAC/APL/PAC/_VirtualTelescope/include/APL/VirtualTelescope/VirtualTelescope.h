@@ -49,6 +49,8 @@ namespace AVT
       // Logical Device version
       static const string VT_VERSION;
       static const string PARAM_BEAMSERVERPORT;
+      static const string PARAM_BEAMSERVER_REMOTETASK;
+      static const string PARAM_BEAMSERVER_REMOTEPORT;
       static const string DIRECTIONTYPE_J2000;
       static const string DIRECTIONTYPE_AZEL;
       static const string DIRECTIONTYPE_LMN;
@@ -135,7 +137,7 @@ namespace AVT
       int   _convertDirection(const string type) const;
       
       // The BeamServer SAP
-      GCF::TM::GCFPort    m_beamServer;
+      GCF::TM::GCFTCPPort    m_beamServer;
       int                 m_beamID;
       
       ALLOC_TRACER_CONTEXT  

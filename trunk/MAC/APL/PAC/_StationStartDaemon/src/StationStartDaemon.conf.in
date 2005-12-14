@@ -3,6 +3,10 @@ mac.apl.ld.retryPeriod=10
 mac.apl.ld.shareLocation=/opt/lofar/MAC/parametersets/
 mac.apl.sd.SO.taskName=SO
 mac.apl.sd.SO.parameterFile=stationOperationsDefaults.param
+mac.apl.sd.remoteservice.task.BeamServer=BeamServer
+mac.apl.sd.remoteservice.port.BeamServer=acceptor
+mac.apl.sd.remoteservice.task.CALServer=CalServer
+mac.apl.sd.remoteservice.port.CALServer=acceptor_v2
 mac.apl.avt.BEAMSERVERPORT=BeamServer
 
 mac.ns.CCU1_PAC_StartDaemon.server.type=TCP
@@ -21,12 +25,3 @@ mac.ns.RSPDriver.acceptor_v2.type=TCP
 #mac.ns.RSPDriver.acceptor.host=localhost
 #mac.ns.RSPDriver.acceptor.port=27001
 mac.ns.ARATestDriver.RSPserver.type=TCP
-
-mac.ns.VT1.BeamServer.type=TCP
-mac.top.VT1.BeamServer.remoteservice=BeamServer:acceptor
-mac.ns.VT2.BeamServer.type=TCP
-mac.top.VT2.BeamServer.remoteservice=BeamServer:acceptor
-
-mac.ns.SRG1.CALServer.type=TCP
-#mac.top.SRG1.CALServer.remoteservice=CalServer:acceptor
-mac.top.SRG1.CALServer.remoteservice=CalServer:acceptor_v2

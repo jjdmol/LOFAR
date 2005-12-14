@@ -49,6 +49,8 @@ INIT_TRACER_CONTEXT(VirtualTelescope,LOFARLOGGER_PACKAGE);
 // Logical Device version
 const string VirtualTelescope::VT_VERSION = string("1.0");
 const string VirtualTelescope::PARAM_BEAMSERVERPORT = string("mac.apl.avt.BEAMSERVERPORT");
+const string VirtualTelescope::PARAM_BEAMSERVER_REMOTETASK = string("mac.apl.sd.remoteservice.task.BeamServer");
+const string VirtualTelescope::PARAM_BEAMSERVER_REMOTEPORT = string("mac.apl.sd.remoteservice.port.BeamServer");
 const string VirtualTelescope::DIRECTIONTYPE_J2000 = string("J2000");
 const string VirtualTelescope::DIRECTIONTYPE_AZEL = string("AZEL");
 const string VirtualTelescope::DIRECTIONTYPE_LMN = string("LMN");
@@ -152,7 +154,13 @@ GCFEvent::TResult VirtualTelescope::concrete_initial_state(GCFEvent& event, GCFP
     case F_ENTRY:
     {
       string bsName = GCF::ParameterSet::instance()->getString(PARAM_BEAMSERVERPORT);
+      string bsRemoteTask = GCF::ParameterSet::instance()->getString(PARAM_BEAMSERVER_REMOTETASK);
+      string bsRemotePort = GCF::ParameterSet::instance()->getString(PARAM_BEAMSERVER_REMOTEPORT);
       m_beamServer.init(*this, bsName, GCFPortInterface::SAP, BS_PROTOCOL);
+      TPeerAddr peerAddr;
+      peerAddr.taskname = bsRemoteTask;
+      peerAddr.portname = bsRemotePort;
+      m_beamServer.setAddr(peerAddr);
       break;
     }
     
