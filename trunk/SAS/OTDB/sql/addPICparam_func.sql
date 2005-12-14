@@ -51,8 +51,10 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(120), INT2)
 
 	BEGIN
 	  -- be sure NODE exists in reference table.
-	  -- PVSSname has format like xxx:aaa_bbb_ccc.ddd
-	  vNodename := split_part($2, \'.\', 1);			-- xxx:aaa_bbb_ccc
+	  -- PVSSname has format like xxx:aaa_bbb_ccc.ddd 
+	  -- or xxx:aaa_bbb_ccc.ddd.eee
+	  vNodename := rtrim($2, \'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_\');			-- xxx:aaa_bbb_ccc.
+	  vNodename := rtrim(vNodename, \'.\');				-- xxx:aaa_bbb_ccc
 	  vNodename := translate(vNodename, \'_\', \'.\');	-- xxx:aaa.bbb.ccc
 	  vFullname := translate($2, \'_\', \'.\');			-- xxx:aaa.bbb.ccc.ddd
 	  IF length(vNodename) > 0 THEN
