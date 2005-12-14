@@ -1,0 +1,10 @@
+/**
+
+\ingroup Demo
+\defgroup CEPDemo CEP Demo packages
+
+CEP Demo packages contain a couple of prototype-like packages. The first
+prototype, not yet maintained anymore, is the Station Correlator Demo. The
+second prototype is the Teraflop Correlator Demo.
+
+*/
