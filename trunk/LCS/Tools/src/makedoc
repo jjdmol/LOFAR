@@ -80,20 +80,18 @@
   DOXYGENDOT=`which dot 2>&1`
   if [ -f "$DOXYGENDOT" ]; then
     DOXYGENDOT=`dirname $DOXYGENDOT`
-    echo 'HAVE_DOT = YES' >> doxygen.cfg
-    echo 'CLASS_GRAPH = YES' >> doxygen.cfg
-    echo 'COLLABORATION_GRAPH = YES' >> doxygen.cfg
-    echo "DOT_PATH = $DOXYGENDOT" >> doxygen.cfg
-    echo 'DOT_CLEANUP = YES' >> doxygen.cfg
-    echo '' >> doxygen.cfg
+    echo "HAVE_DOT                = YES" >> doxygen.cfg
+    echo "DOT_PATH                = $DOXYGENDOT" >> doxygen.cfg
   fi
 
-  echo "PROJECT_NAME = $projnm" >> doxygen.cfg ;
-  echo "INPUT = $pkgdir" >> doxygen.cfg ;
-  echo "RECURSIVE = YES" >> doxygen.cfg ;
-  echo "HTML_OUTPUT = ." >> doxygen.cfg ;
-  echo "GENERATE_TAGFILE = `basename $projnm`.tag" >> doxygen.cfg ;
-  \rm -rf doxygen.log
+  echo "PROJECT_NAME            = $projnm" >> doxygen.cfg
+  echo "STRIP_FROM_PATH         = $lfrdir" >> doxygen.cfg
+  echo "INPUT                   = $pkgdir" >> doxygen.cfg
+  echo "IMAGE_PATH              = $pkgdir" >> doxygen.cfg
+  echo "INPUT_FILTER            = $confdir/slash2spanning.pl" >> doxygen.cfg
+  echo "GENERATE_TAGFILE        = `basename $projnm`.tag" >> doxygen.cfg
+
+  \rm -f doxygen.log
   touch doxygen.log
   # Get stderr on screen and both stout and stderr in log file.
   echo "Running $doxcmd $targetdir/doxygen.cfg ..."
