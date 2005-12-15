@@ -33,6 +33,8 @@
 
 #include <APL/APLCommon/LogicalDevice_Protocol.ph>
 
+#include "WanLSPropertyProxy.h"
+
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
@@ -56,27 +58,22 @@ VirtualRoute::VirtualRoute(const string& taskName,
   LogicalDevice(taskName,parameterFile,pStartDaemon,VR_VERSION),
   m_requiredBandwidth(0.0),
   m_logicalSegments(),
-  m_lsPropSets(),
-  m_capacities()
+  m_lsProps(),
+  m_qualityCheckTimerId(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
  
   m_requiredBandwidth = m_parameterSet.getDouble("requiredBandwidth");
   m_logicalSegments = m_parameterSet.getStringVector("logicalSegments");
+  string wanLcu = m_parameterSet.getString("WANLcu");
   
   for(vector<string>::iterator it=m_logicalSegments.begin();it!=m_logicalSegments.end();++it)
   {
     // create logical segment propertyset
-    string psName(VR_LOGICALSEGMENT_PROPSET_BASENAME + (*it));
-    GCFExtPropertySetPtr pps(new GCFExtPropertySet(
-        psName.c_str(),
-        VR_LOGICALSEGMENT_PROPSET_TYPE,
-        &m_propertySetAnswer));
-    pps->load();
-    pps->subscribeProp(VR_LOGICALSEGMENT_PROPNAME_CAPACITY);
-    pps->requestValue(VR_LOGICALSEGMENT_PROPNAME_CAPACITY);
+    string psName(wanLcu + string(":") + VR_LOGICALSEGMENT_PROPSET_BASENAME + (*it));
+    WanLSPropertyProxyPtr pps(new WanLSPropertyProxy(psName));
 
-    m_lsPropSets.insert(map<string,GCFExtPropertySetPtr>::value_type(*it,pps));
+    m_lsProps.insert(map<string,WanLSPropertyProxyPtr>::value_type(*it,pps));
   }
 }
 
@@ -102,26 +99,6 @@ void VirtualRoute::concrete_handlePropertySetAnswer(GCFEvent& answer)
     case F_VGETRESP:
     case F_VCHANGEMSG:
     {
-      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-      if ((pPropAnswer->pValue->getType() == LPT_DOUBLE) &&
-          (strstr(pPropAnswer->pPropName, VR_LOGICALSEGMENT_PROPSET_BASENAME) != 0) && 
-          (strstr(pPropAnswer->pPropName, VR_LOGICALSEGMENT_PROPNAME_CAPACITY) != 0))
-      {
-        string tempLsName(pPropAnswer->pPropName);
-        tempLsName = tempLsName.substr(tempLsName.find(VR_LOGICALSEGMENT_PROPSET_BASENAME)+strlen(VR_LOGICALSEGMENT_PROPSET_BASENAME));
-        tempLsName = tempLsName.substr(0,tempLsName.rfind('.'));
-        
-        // capacity change received
-        double capacity(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
-        LOG_DEBUG(formatString("New capacity for LogicalSegment %s:%.4f",tempLsName.c_str(),capacity));
-        m_capacities[tempLsName]=capacity;
-        
-        if(capacity < m_requiredBandwidth)
-        {
-          LOG_FATAL(formatString("Capacity of Virtual Route %s dropped below required bandwidth (%.4f < %.4f)",getName().c_str(),capacity,m_requiredBandwidth));
-          suspend(LD_RESULT_LOW_QUALITY);
-        }
-      }
       break;
     }
     case F_EXTPS_LOADED:
@@ -256,19 +233,24 @@ GCFEvent::TResult VirtualRoute::concrete_active_state(GCFEvent& event, GCFPortIn
     case F_ENTRY:
     {
       // set allocated value changes
-      for(map<string,GCFExtPropertySetPtr>::iterator it=m_lsPropSets.begin();it!=m_lsPropSets.end();++it)
+      for(map<string,WanLSPropertyProxyPtr>::iterator it=m_lsProps.begin();it!=m_lsProps.end();++it)
       {
-        it->second->setValue(string(VR_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED),GCFPVDouble(m_requiredBandwidth));
+        it->second->changeAllocated(m_requiredBandwidth);
       }
+      m_qualityCheckTimerId = m_serverPort.setTimer(10L);
+      LOG_DEBUG(formatString("qualityCheckTimerId=%d",m_qualityCheckTimerId));
       break;
     }
     
     case F_EXIT:
     {
+      m_serverPort.cancelTimer(m_qualityCheckTimerId);
+      m_qualityCheckTimerId=0;
+
       // reset allocated value changes
-      for(map<string,GCFExtPropertySetPtr>::iterator it=m_lsPropSets.begin();it!=m_lsPropSets.end();++it)
+      for(map<string,WanLSPropertyProxyPtr>::iterator it=m_lsProps.begin();it!=m_lsProps.end();++it)
       {
-        it->second->setValue(string(VR_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED),GCFPVDouble(-1.0 * m_requiredBandwidth));
+        it->second->changeAllocated(-1.0 * m_requiredBandwidth);
       }
       break;
     }
@@ -332,9 +314,40 @@ void VirtualRoute::concreteChildDisconnected(GCFPortInterface& /*port*/)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualRoute::concreteHandleTimers(GCFTimerEvent& /*timerEvent*/, GCFPortInterface& /*port*/)
+void VirtualRoute::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  if(timerEvent.id == m_qualityCheckTimerId)
+  {
+    if(!_checkQualityRequirements())
+    {
+      LOG_FATAL(formatString("VR(%s): quality too low",getName().c_str()));
+      m_serverPort.cancelTimer(m_qualityCheckTimerId);
+      m_qualityCheckTimerId=0;
+      suspend(LD_RESULT_LOW_QUALITY);
+    }
+    else
+    {
+      // keep on polling
+      m_qualityCheckTimerId = m_serverPort.setTimer(5L);
+    }
+  }
+}
+
+bool VirtualRoute::_checkQualityRequirements()
+{
+  bool qualityOk=true;
+  map<string,WanLSPropertyProxyPtr>::iterator it = m_lsProps.begin();
+  while(qualityOk && it != m_lsProps.end())
+  {
+    if(it->second->getCapacity() < m_requiredBandwidth)
+    {
+      LOG_FATAL(formatString("Capacity of Virtual Route %s dropped below required bandwidth (%.4f < %.4f)",getName().c_str(),it->second->getCapacity(),m_requiredBandwidth));
+      qualityOk=false;
+    }
+    ++it;
+  }
+  return qualityOk;
 }
 
 void VirtualRoute::concreteAddExtraKeys(ACC::APS::ParameterSet& /*psSubset*/)
