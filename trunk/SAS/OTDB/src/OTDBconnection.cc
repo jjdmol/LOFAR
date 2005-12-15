@@ -114,7 +114,8 @@ bool OTDBconnection::connect()
 //
 // Get info of one specific tree
 //
-OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID)
+OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID,
+										 bool			isMomID)
 {
 	OTDBtree 	empty;
 
@@ -125,8 +126,9 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID)
 	try {
 		// construct a query that calls a stored procedure.
 		work	xAction(*itsConnection, "getTreeInfo");
+		string	momFlag = isMomID ? "true" : "false";
 		string	query("SELECT * from getTreeInfo('" +
-						toString(aTreeID) + "')");
+						toString(aTreeID) + "','" + momFlag + "')");
 
 		// execute query
 		result	res = xAction.exec(query);
@@ -189,6 +191,56 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 	}
 
 	vector<OTDBtree> 	empty;
+	return (empty);
+}
+
+//
+// getStateList(treeIDType, beginDate): vector<TreeState>
+//
+// To get a list of the trees-state available in the database.
+//
+vector<TreeState> OTDBconnection::getStateList(
+								treeIDType 		aTreeID,
+								bool			isMomID,
+								const ptime&	beginDate)
+{
+	vector<TreeState>		resultVec;
+
+	if (!itsIsConnected && !connect()) {
+		vector<TreeState> 	empty;
+		return (empty); 
+	}
+
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "getStateList");
+		string	momFlag = isMomID ? "true" : "false";
+		string	query("SELECT * from getStateList('" +
+						toString(aTreeID) + "','" +
+						momFlag + "','" +
+						to_simple_string(beginDate) + "')");
+		// execute query
+		result	res = xAction.exec(query);
+
+		// show how many records found
+		result::size_type	nrRecords = res.size();
+		LOG_DEBUG_STR (nrRecords << " records in stateList(" 
+						<< aTreeID << ", " << beginDate << ")");
+	
+		// copy information to output vector
+		vector<TreeState>	resultVec;
+		for (result::size_type i = 0; i < nrRecords; ++i) {
+			resultVec.push_back(TreeState(res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of TreeStateList:")
+					 + ex.what();
+	}
+
+	vector<TreeState> 	empty;
 	return (empty);
 }
 

@@ -27,6 +27,7 @@
 --
 
 DROP TYPE	treeInfo		CASCADE;
+DROP TYPE	stateInfo		CASCADE;
 DROP TYPE	OTDBnode		CASCADE;
 DROP TYPE	OTDBparamDef	CASCADE;
 DROP TYPE	OTDBvalue		CASCADE;
@@ -34,6 +35,7 @@ DROP TYPE	OTDBnodeDef		CASCADE;
 
 CREATE TYPE treeInfo AS (
 	treeID			INT4,			-- OTDBtree.treeID%TYPE,
+	momID			INT4,
 	classification	INT2,			-- classification.ID%TYPE,
 	creator			VARCHAR(20),	-- OTDBuser.username%TYPE,
 	creationDate	timestamp(0),
@@ -43,6 +45,14 @@ CREATE TYPE treeInfo AS (
 	campaign		VARCHAR(30),	-- campaign.name%TYPE,
 	starttime		timestamp(0),
 	stoptime		timestamp(0)
+);
+
+CREATE TYPE stateInfo AS (
+	treeID			INT4,			-- OTDBtree.treeID%TYPE,
+	momID			INT4,			-- OTDBtree.momID%TYPE,
+	state			INT2,			-- treestate.ID%TYPE,
+	username		VARCHAR(20),	-- OTDBuser.username%TYPE,
+	modtime			timestamp(0)
 );
 
 CREATE TYPE OTDBnode AS (

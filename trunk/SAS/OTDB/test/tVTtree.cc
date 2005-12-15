@@ -271,7 +271,7 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO_STR(VHtree);
 
 		// Test deleting an active tree
-		LOG_INFO("Trying to delete the original template tree");
+		LOG_INFO_STR("Trying to delete original template tree " << VTtreeID);
 		try {
 			tm.deleteTree(VTtreeID);
 			ASSERTSTR(false, "DELETING AN ACTIVE TREE IS NOT ALLOWED!");
@@ -287,10 +287,10 @@ int main (int	argc, char*	argv[]) {
 							"should have NOT have failed!");
 
 		// Test deleting a tree
-		LOG_INFO("Retrying to delete the original template tree");
+		LOG_INFO_STR("Retrying to delete original template tree " << VTtreeID);
 		ASSERTSTR (tm.deleteTree(VTtreeID), 
 					"Deletion of original tree went wrong:" << tm.errorMsg());
-		LOG_INFO ("Deletion of original tree was sucesful");
+		LOG_INFO ("Deletion of original tree was succesful");
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

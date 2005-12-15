@@ -10,9 +10,12 @@
 
 \i security_func.sql
 \i classify_func.sql
-\i setTreeState_func.sql
-
 \i misc_func.sql
+
+-- State history
+\i setTreeState_func.sql
+\i addTreeState_func.sql
+\i getStateList_func.sql
 
 -- OTDBConnection
 \i getTreeList_func.sql
@@ -60,4 +63,5 @@
 \i copyTree_func.sql
 \i deleteTree_func.sql
 \i addKVT_func.sql
+
 

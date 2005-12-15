@@ -73,31 +73,20 @@ CREATE OR REPLACE FUNCTION copyTree(INT4, INT4)
 		END IF;
 
 		-- make new tree entry
-		vNewTreeID := nextval(\'OTDBtreeID\');
-		INSERT INTO OTDBtree (treeID,
-							  originid,
-							  classif,
-							  treetype,
-							  state,
-							  creator,
-							  campaign,
-							  starttime,
-							  stoptime,
-							  owner)
-	    VALUES (vNewTreeID,
-				$2,				-- orgTree
-				vOldTree.classif,
-				vOldTree.treetype,
-				vOldTree.state,
-				vCreatorID,
-				vOldTree.campaign,
-				vOldTree.starttime,
-				vOldTree.stoptime,
-				vCreatorID);
-
-		IF NOT FOUND THEN
+		vNewTreeID := 0;
+		SELECT  newTree(vAuthToken, $2, vOldTree.momID, vOldTree.classif,
+					    vOldTree.treetype, vOldTree.state,
+					    vOldTree.campaign)
+		INTO    vNewTreeID;
+		IF vNewTreeID = 0 THEN
 		  RAISE EXCEPTION \'Creating of new treeEntry failed\'\;
 		END IF;
+
+		-- also copy the timestamps
+		UPDATE	OTDBTree
+		SET		starttime = vOldTree.starttime,
+				stoptime  = vOldTree.stoptime
+		WHERE	treeID	  = vNewTreeID;
 
 		-- copy tree
 		IF vOldTree.treetype = TTtemplate THEN

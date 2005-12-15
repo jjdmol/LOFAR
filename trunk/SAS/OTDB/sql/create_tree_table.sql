@@ -34,6 +34,8 @@
 --
 DROP TABLE OTDBtree CASCADE;
 DROP SEQUENCE	OTDBtreeID;
+DROP TABLE StateHistory CASCADE;
+
 
 
 CREATE SEQUENCE	OTDBtreeID;
@@ -41,21 +43,30 @@ CREATE SEQUENCE	OTDBtreeID;
 CREATE TABLE OTDBtree (
 	-- required info
 	treeID		INT4			NOT NULL DEFAULT nextval('OTDBtreeID'),
+	momID 		INT4			NOT NULL DEFAULT 0,
 	originID	INT4			NOT NULL,
 	classif		INT2			NOT NULL REFERENCES classification(ID),
 	treetype	INT2			NOT NULL REFERENCES treetype(ID),
 	state		INT2			NOT NULL REFERENCES treestate(ID),
-	creator		INT2			NOT NULL REFERENCES operator(ID),
+	creator		INT4			NOT NULL REFERENCES operator(ID),
 	d_creation	TIMESTAMP(0)	DEFAULT 'now',
 
 	-- optional info
 	campaign	INT4			REFERENCES campaign(ID),
 	starttime	TIMESTAMP(0),
 	stoptime	TIMESTAMP(0),
-	owner		INT2			REFERENCES operator(ID),
+	owner		INT4			REFERENCES operator(ID),
 
 	-- contraints
 	CONSTRAINT	tree_uniq		UNIQUE (treeID)
 ) WITHOUT OIDS;
 
+
+CREATE TABLE StateHistory (
+	treeID		INT4			NOT NULL,
+	momID		INT4			NOT NULL,
+	state		INT2			NOT NULL,
+	userID		INT4			NOT NULL REFERENCES operator(ID),
+	timestamp	TIMESTAMP(0)	DEFAULT 'now'
+) WITHOUT OIDS;
 

@@ -23,7 +23,7 @@
 --
 
 --
--- getTreeInfo (treeID)
+-- getTreeInfo (treeID, isMomID)
 -- 
 -- Get info of one tree
 --
@@ -35,13 +35,38 @@
 --
 -- Types:	treeInfo
 --
-CREATE OR REPLACE FUNCTION getTreeInfo(INT4)
+CREATE OR REPLACE FUNCTION getTreeInfo(INT4, BOOLEAN)
   RETURNS treeInfo AS '
 	DECLARE
 		vRecord		RECORD;
 
+	-- note EXECUTE only works in loops, so we have to put the whole
+	-- query in the IF statement.
 	BEGIN
+	  IF $2 = TRUE THEN
 		SELECT	t.treeID, 
+				t.momID,
+				t.classif, 
+				u.username, 
+				t.d_creation, 
+				t.treetype, 
+				t.state, 
+				t.originID, 
+				c.name, 
+				t.starttime, 
+				t.stoptime
+		INTO	vRecord
+		FROM	OTDBtree t 
+				INNER JOIN OTDBuser u ON t.creator = u.userid
+				INNER JOIN campaign c ON c.ID = t.campaign
+		WHERE	t.momID = $1;
+
+	    IF NOT FOUND THEN
+		  RAISE EXCEPTION \'Tree with MomID % does not exist\', $1;
+	    END IF;
+	  ELSE
+		SELECT	t.treeID, 
+				t.momID,
 				t.classif, 
 				u.username, 
 				t.d_creation, 
@@ -56,12 +81,13 @@ CREATE OR REPLACE FUNCTION getTreeInfo(INT4)
 				INNER JOIN OTDBuser u ON t.creator = u.userid
 				INNER JOIN campaign c ON c.ID = t.campaign
 		WHERE	t.treeID = $1;
-		
-		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Tree % does not exist\', $1;
-		END IF;
 
-	  	RETURN vRecord;
+	    IF NOT FOUND THEN
+		  RAISE EXCEPTION \'Tree with ID % does not exist\', $1;
+	    END IF;
+	  END IF;
+	
+	  RETURN vRecord;
 	END
 ' LANGUAGE plpgsql;
 
