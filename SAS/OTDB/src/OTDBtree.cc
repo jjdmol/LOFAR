@@ -38,6 +38,7 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 	// construct OTDBtree class with right ID
 	// Note: names refer to SQL OTDBtree type
 	row["treeid"].to(itsTreeID);
+	row["momid"].to(momID);
 
 	// fill in rest of the fields
 	row["classification"].to(classification);
@@ -70,6 +71,7 @@ OTDBtree::OTDBtree(const result::tuple&		row)
 ostream& OTDBtree::print (ostream& os) const
 {
 	os << "treeID        : " << itsTreeID << endl;
+	os << "MomID         : " << momID << endl;
 	os << "classification: " << classification << endl;
 	os << "creator       : " << creator << endl;
 	os << "creationdate  : " << creationDate << endl;

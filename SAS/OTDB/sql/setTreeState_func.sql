@@ -39,10 +39,12 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		vFunction				INT2 := 1;
 		vTreeState				OTDBtree.state%TYPE;
 		vTreeID					OTDBtree.treeID%TYPE;
+		vMomID					OTDBtree.momID%TYPE;
 		vTreeType				OTDBtree.treeType%TYPE;
 		vClassif				OTDBtree.classif%TYPE;
 		vIsAuth					BOOLEAN;
 		vAuthToken				ALIAS FOR $1;
+		vUserID					INT4;
 		TThardware CONSTANT		INT2 := 10;
 		TSactive   CONSTANT		INT2 := 400;
 
@@ -68,8 +70,8 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 
 		-- get current treetype. 
 		-- Note: tree existance is checked during auth.check
-		SELECT 	treetype, classif
-		INTO   	vTreeType, vClassif
+		SELECT 	momID, treetype, classif
+		INTO   	vMomID, vTreeType, vClassif
 		FROM	OTDBtree
 		WHERE	treeID = $2;
 
@@ -93,6 +95,10 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		UPDATE	OTDBtree
 		SET		state = $3
 		WHERE	treeid = $2;
+
+		SELECT  whoIs($1)
+		INTO 	vUserID;
+		PERFORM addTreeState ($2, vMomID, $3, vUserID, \'\');
 
 		RETURN TRUE;
 	END;

@@ -1,5 +1,5 @@
 --
---  getTreeList.sql: function for getting treeinfo from the OTDB
+--  getStateList.sql: function for getting treeinfo from the OTDB
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,60 +23,50 @@
 --
 
 --
--- getTreeList (treeType, classification)
+-- getStateList (treeID, isMomID, begindate)
 -- 
--- Get a list of trees.
+-- Get a list of statechanges.
 --
 -- Authorisation: none
 --
 -- Tables: 	otdbtree	read
 --			otdbuser	read
---			campaign	read
 --
--- Types:	treeInfo
+-- Types:	treeState
 --
-CREATE OR REPLACE FUNCTION getTreeList(INT2, INT2)
-  RETURNS SETOF treeInfo AS '
+CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP)
+  RETURNS SETOF stateInfo AS '
 	DECLARE
 		vRecord		RECORD;
 		vQuery		TEXT;
+		vKeyField	TEXT;
 
 	BEGIN
 	  -- Construct where clause
-	  IF $1 = 0 AND $2 = 0 THEN
-		-- parameters are both zero, select all records
-	    vQuery := \'WHERE t.treeID != 0\';
+	  IF $2 = TRUE THEN
+		vKeyField := \'s.momID\';
 	  ELSE
-	    vQuery := \'WHERE \';
-	    IF $1 > 0 THEN
-		  -- add selection on treeType
-	      vQuery := vQuery || \'t.treetype = \' || chr(39) || $1 || chr(39);
-	      IF $2 > 0 THEN
-		    vQuery := vQuery || \' AND \';
-	      END IF;
-	    END IF;
-	    IF $2 > 0 THEN
-		  -- add selection on classification
-	      vQuery := vQuery || \'t.classif = \' || chr(39) || $2 || chr(39);
+		vKeyField := \'s.treeID\';
+	  END IF;
+	
+	  vQuery := \'\';
+	  IF $1 > 0 THEN
+	    -- add selection on treeID
+	    vQuery := \'WHERE \' || vKeyField || \' =\' || chr(39) || $1 || chr(39);
+	    IF $3 IS NOT NULL THEN
+		    vQuery := vQuery || \' AND s.timestamp >=\' || chr(39) || $3 || chr(39);
 	    END IF;
 	  END IF;
 
 	  -- do selection
 	  FOR vRecord IN  EXECUTE \'
-		SELECT t.treeID, 
-			   t.momID,
-			   t.classif, 
+		SELECT s.treeID, 
+			   s.momID,
+			   s.state, 
 			   u.username, 
-			   t.d_creation, 
-			   t.treetype, 
-			   t.state, 
-			   t.originID, 
-			   c.name, 
-			   t.starttime, 
-			   t.stoptime
-		FROM   OTDBtree t 
-			   INNER JOIN OTDBuser u ON t.creator = u.userid
-			   INNER JOIN campaign c ON c.ID = t.campaign
+			   s.timestamp 
+		FROM   StateHistory s 
+			   INNER JOIN OTDBuser u ON s.userid = u.userid
 		\' || vQuery 
 	  LOOP
 		RETURN NEXT vRecord;

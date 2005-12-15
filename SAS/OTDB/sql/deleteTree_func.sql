@@ -69,6 +69,10 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		DELETE FROM OTDBtree
 		WHERE  treeID = $2;
 
+		-- delete state history
+		DELETE FROM StateHistory
+		WHERE  treeID = $2;
+
 		-- delete tree		
 		IF vOldTree.treetype = TThardware THEN
 		  DELETE FROM PIChierarchy

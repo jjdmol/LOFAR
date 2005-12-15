@@ -84,9 +84,10 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 	try {
 		// First create a new tree entry.
 		result res = xAction.exec(
-					formatString("SELECT newTree(%d,%d,%d::int2,%d::int2,%d::int2,%d)",
+					formatString("SELECT newTree(%d,%d,%d,%d::int2,%d::int2,%d::int2,%d)",
 							itsConn->getAuthToken(),
 							0, 						// original tree
+							0, 						// MomID tree
 							TCexperimental,			// classification
 							TThardware,
 							TSidle,
@@ -796,6 +797,7 @@ bool	TreeMaintenance::deleteTree(treeIDType		aTreeID)
 									toString(aTreeID) + ")");
 
 		// when something goes wrong an exception is thrown
+		xAction.commit();
 		return (true);
 	}
 	catch (Exception&	ex) {

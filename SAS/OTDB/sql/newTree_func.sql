@@ -23,7 +23,7 @@
 --
 
 --
--- newTree (authToken, orgTree, classif, treetype, state, campaign)
+-- newTree (authToken, orgTree, momID, classif, treetype, state, campaign)
 --
 -- Creates a new tree record and returns the treeID of this new tree.
 --
@@ -33,7 +33,7 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT2, INT4)
+CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT4, INT2, INT2, INT2, INT4)
   RETURNS INT4 AS '
 	DECLARE
 		vFunction		INT2 := 1;
@@ -45,7 +45,7 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT2, INT4)
 	BEGIN
 		-- check authorisation(authToken, treeID, func, treetype)
 		vIsAuth := FALSE;
-		SELECT isAuthorized(vAuthToken, $2, vFunction, $4::int4) 
+		SELECT isAuthorized(vAuthToken, $2, vFunction, $5::int4) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
 			RETURN 0;
@@ -59,6 +59,7 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT2, INT4)
 		vNewTreeID := nextval(\'OTDBtreeID\');
 		INSERT INTO OTDBtree (treeID,
 							  originid,
+							  momID,
 							  classif,
 							  treetype,
 							  state,
@@ -67,16 +68,18 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT2, INT2, INT2, INT4)
 							  owner)
 	    VALUES (vNewTreeID,
 				$2,				-- orgTree
-				$3,				-- classif
-				$4,				-- treeType
-				$5,				-- state
+				$3,				-- momID
+				$4,				-- classif
+				$5,				-- treeType
+				$6,				-- state
 				vCreatorID,
-				$6,				-- campaign
+				$7,				-- campaign
 				vCreatorID);
 
 		IF NOT FOUND THEN
 		  RETURN 0;
 		ELSE
+		  PERFORM addTreeState(vNewTreeID, $3, $6, vCreatorID, \'\');
 		  RETURN vNewTreeID;
 		END IF;
 	END;

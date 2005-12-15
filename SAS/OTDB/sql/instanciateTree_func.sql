@@ -211,6 +211,7 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 		vIsAuth					BOOLEAN;
 	  	vClassif				OTDBtree.classif%TYPE;
 		vCampaign				OTDBtree.campaign%TYPE;
+		vMomID					OTDBtree.momID%TYPE;
 		vVTnode					RECORD;
 	  	vOrgNodeID				VICtemplate.nodeID%TYPE;
 	  	vNewNodeID				VICtemplate.nodeID%TYPE;
@@ -227,14 +228,14 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  END IF;
 
 	  -- get some info about the original tree
-	  SELECT classif, campaign
-	  INTO	 vClassif, vCampaign
+	  SELECT momId, classif, campaign
+	  INTO	 vMomID, vClassif, vCampaign
 	  FROM	 OTDBtree
 	  WHERE	 treeID = $2;
 	  -- note: tree exists, checked in authorisation check
 
 	  -- create a new tree
-	  SELECT newTree($1, $2, vClassif, TTVHtree, TSidle, vCampaign)
+	  SELECT newTree($1, $2, vMomID, vClassif, TTVHtree, TSidle, vCampaign)
 	  INTO	 vNewTreeID;
 	  IF vNewTreeID = 0 THEN
 		RAISE EXCEPTION \'Tree can not be created\';

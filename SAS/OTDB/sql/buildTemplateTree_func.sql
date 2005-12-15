@@ -182,7 +182,7 @@ CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
 	  END IF;
 
 	  -- create a new tree(auth, ..., classif, treetype, campaign)
-	  SELECT newTree($1, 0, $3, TTtemplate, TSidle, 0)
+	  SELECT newTree($1, 0, 0, $3, TTtemplate, TSidle, 0)
 	  INTO	 vNewTreeID;
 	  IF vNewTreeID = 0 THEN
 		RAISE EXCEPTION \'Tree can not be created\';

@@ -14,6 +14,7 @@ INSTHDRS			= OTDBconnection.h	\
 					  OTDBparam.h	\
 					  VICnodeDef.h \
 					  TreeMaintenance.h \
+					  TreeState.h \
 					  TreeValue.h 
 
 #					  OTDBaction.h	\
@@ -44,6 +45,7 @@ libotdb_la_SOURCES 		= $(DOCHDRS) \
 							Converter.cc \
 							wSpaceSplit.cc \
 							TreeMaintenance.cc \
+							TreeState.cc \
 							TreeValue.cc \
 							loadCompFile.cc
 

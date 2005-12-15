@@ -27,12 +27,14 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 #include <OTDB/OTDBconnection.h>
+#include <OTDB/TreeState.h>
+#include <OTDB/TreeStateConv.h>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
 
 //
-// show the result
+// show tree result
 //
 void showTreeList(const vector<OTDBtree>&	trees) {
 
@@ -54,6 +56,29 @@ void showTreeList(const vector<OTDBtree>&	trees) {
 	cout << trees.size() << " records" << endl << endl;
 }
 
+//
+// show state result
+//
+void showStateList(const 	vector<TreeState>&	states) {
+
+	cout << "treeID|momID |State |User      |Modification time" << endl;
+	cout << "------+------+------+----------+-------------------------" << endl;
+	for (uint32	i = 0; i < states.size(); ++i) {
+		string row(formatString("%6d|%6d|%6d|%-10.10s|%s",
+			states[i].treeID,
+			states[i].momID,
+			states[i].newState,
+			states[i].username.c_str(),
+			to_simple_string(states[i].timestamp).c_str()));
+		cout << row << endl;
+	}
+
+	cout << states.size() << " records" << endl << endl;
+}
+
+//
+// MAIN
+//
 int main (int	argc, char*	argv[]) {
 
 	INIT_LOGGER(basename(argv[0]));
@@ -84,7 +109,7 @@ int main (int	argc, char*	argv[]) {
 			showTreeList(treeList);
 		}
 		LOG_INFO("getTreeList(0,3)");
-		treeList = conn.getTreeList(0, 1);
+		treeList = conn.getTreeList(0, 3);
 		if (treeList.size() == 0) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());
 		}
@@ -101,7 +126,7 @@ int main (int	argc, char*	argv[]) {
 		}
 
 		LOG_INFO("getTreeList(20,3)");
-		treeList = conn.getTreeList(20, 1);
+		treeList = conn.getTreeList(20, 3);
 		if (treeList.size() == 0) {
 			LOG_INFO_STR("Error:" << conn.errorMsg());
 		}
@@ -117,6 +142,37 @@ int main (int	argc, char*	argv[]) {
 		else {
 			cout << tInfo;
 		}
+
+		LOG_INFO("=== Testing state-list ===");
+	 	LOG_INFO("getStateList(0)");
+		vector<TreeState> 	stateList = conn.getStateList(0);
+		if (stateList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showStateList(stateList);
+		}
+
+	 	LOG_INFO_STR("getStateList(" << stateList[0].treeID << ")");
+		stateList = conn.getStateList(stateList[0].treeID);
+		if (stateList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showStateList(stateList);
+		}
+
+	 	LOG_INFO_STR("getStateList(" << stateList[1].treeID << 
+						 	     ", false, " << stateList[1].timestamp << ")");
+		stateList = conn.getStateList(stateList[1].treeID, false, 
+									  stateList[1].timestamp);
+		if (stateList.size() == 0) {
+			LOG_INFO_STR("Error:" << conn.errorMsg());
+		}
+		else {
+			showStateList(stateList);
+		}
+
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

@@ -207,7 +207,7 @@ INSERT INTO campaign VALUES (2, 'your campaign');
 -- Names and ID of the operater allowed to manage the trees.
 --
 CREATE TABLE operator (
-	ID			INT2			NOT NULL,
+	ID			INT4			NOT NULL,
 	name		VARCHAR(30)		NOT NULL,
 	telephone	VARCHAR(10)		NOT NULL,
 	

@@ -1,4 +1,4 @@
-//#  OTDBtree.h: Structure containing the metadata of a tree.
+//#  TreeState.h: State (history) of OTDB trees
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,17 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_OTDB_OTDBTREE_H
-#define LOFAR_OTDB_OTDBTREE_H
+#ifndef OTDB_TREESTATE_H
+#define OTDB_TREESTATE_H
 
-// \file OTDBtree.h
-// Structure containing the metadata of a tree.
+// \file TreeState.h
+// State (history) of OTDB trees
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <OTDB/OTDBconstants.h>
 #include <OTDB/OTDBtypes.h>
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <Common/lofar_datetime.h>
 #include <pqxx/pqxx>
 
 using namespace boost::posix_time;
@@ -46,47 +45,41 @@ namespace LOFAR {
 class OTDBconnection;
 
 
-// A OTDBtree structure contains the major info of a tree in the database.
-// The the last few fields will be empty for PIC trees.
-class OTDBtree {
+// State (history) of OTDB trees
+// ...
+class TreeState
+{
 public:
-	OTDBtree() : momID(0), itsTreeID(0) {};
-	~OTDBtree() {};
+	~TreeState() {};
 
-	treeIDType		treeID() const 		{ return (itsTreeID); }
-	treeIDType		momID;
-	classifType		classification; // development / test / operational
-	string			creator;
-	ptime			creationDate;	
-	treeType		type;			// hardware / VItemplate / VHtree
-	treeState		state;			// idle / configure / ... / active / ...
-	// -- VIC only --
-	treeIDType		originalTree;
-	string			campaign;
-	ptime			starttime;
-	ptime			stoptime;
-
-	// Show treeinfo
+	// Show state change info
 	ostream& print (ostream& os) const;
 
 	// Friends may change the data references keys.
 	friend	class OTDBconnection;
 
 private:
-//# Prevent changing the database keys
-	OTDBtree(treeIDType		aTreeID) : momID(0), itsTreeID(aTreeID) {};
-	OTDBtree(const pqxx::result::tuple&	row);
+	TreeState();
+	TreeState(const	pqxx::result::tuple&	row);
 
-	treeIDType		itsTreeID;
+public:
+	//# --- Datamembers ---
+	treeIDType		treeID;
+	treeIDType		momID;
+	treeState		newState;
+	string			username;
+	ptime			timestamp;
 };
 
+//# --- Inline functions ---
+
+// ... example
 //#
 //# operator<<
 //#
-inline ostream& operator<< (ostream&			os,
-							const OTDBtree		aOTDBtree)
-{
-	return (aOTDBtree.print(os));
+inline ostream& operator<< (ostream& os, const TreeState& aTreeState)
+{	
+	return (aTreeState.print(os));
 }
 
 

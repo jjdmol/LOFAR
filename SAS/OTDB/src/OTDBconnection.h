@@ -29,6 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <OTDB/OTDBtree.h>
+#include <OTDB/TreeState.h>
 
 using namespace pqxx;
 
@@ -62,11 +63,19 @@ public:
 	bool connect();
 
 	// get OTDBtree of one specific tree
-	OTDBtree	getTreeInfo (treeIDType		atreeID);
+	OTDBtree	getTreeInfo (treeIDType		atreeID,
+							 const bool		isMomID = false);
 
 	// To get a list of all OTDB trees available in the database.
 	vector<OTDBtree> getTreeList(treeType	  aTreeType,
 								 classifType aClassification=TCoperational);
+
+	// Get a list of all state changes after a certain time.
+	// When aTreeID is 0 all state changes of all trees are returned.
+	// The beginDate is only used when a treeID != 0 is specified.
+	vector<TreeState> getStateList(treeIDType   atreeID,
+								   const bool   isMomID = false,
+							       const ptime& beginDate=ptime(min_date_time));
 
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;

@@ -50,10 +50,11 @@ class OTDBconnection;
 // The the last few fields will be empty for PIC trees.
 class OTDBtree {
 public:
-	OTDBtree() : itsTreeID(0) {};
+	OTDBtree() : momID(0), itsTreeID(0) {};
 	~OTDBtree() {};
 
 	treeIDType		treeID() const 		{ return (itsTreeID); }
+	treeIDType		momID;
 	classifType		classification; // development / test / operational
 	string			creator;
 	ptime			creationDate;	
@@ -73,8 +74,9 @@ public:
 
 private:
 //# Prevent changing the database keys
-	OTDBtree(treeIDType		aTreeID) : itsTreeID(aTreeID) {};
+	OTDBtree(treeIDType		aTreeID) : momID(0), itsTreeID(aTreeID) {};
 	OTDBtree(const pqxx::result::tuple&	row);
+
 	treeIDType		itsTreeID;
 };
 
