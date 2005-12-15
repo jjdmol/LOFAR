@@ -26,7 +26,6 @@
 //# Includes
 
 //# GCF Includes
-#include <GCF/PAL/GCF_ExtPropertySet.h>
 
 //# local includes
 #include <APL/APLCommon/LogicalDevice.h>
@@ -53,6 +52,8 @@ namespace AVR
 #define VR_LOGICALSEGMENT_PROPNAME_ALLOCATED      "AllocatedBW"
 #define VR_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED      "changeAllocatedBW"
 #define VR_LOGICALSEGMENT_PROPNAME_ACTUALTRAFFIC  "ActualTraffic"
+
+  class WanLSPropertyProxy;
 
   class VirtualRoute : public APLCommon::LogicalDevice
   {
@@ -137,13 +138,15 @@ namespace AVR
 
     protected:    
 
-    private:
-      typedef boost::shared_ptr<GCF::PAL::GCFExtPropertySet> GCFExtPropertySetPtr;
-      
+    private:      
+      typedef boost::shared_ptr<WanLSPropertyProxy> WanLSPropertyProxyPtr;
+
+      bool _checkQualityRequirements();
+
       double                            m_requiredBandwidth;
       vector<string>                    m_logicalSegments;
-      map<string,GCFExtPropertySetPtr>  m_lsPropSets;
-      map<string,double>                m_capacities;
+      map<string,WanLSPropertyProxyPtr> m_lsProps;
+      unsigned long                     m_qualityCheckTimerId;
 
       ALLOC_TRACER_CONTEXT  
   };

@@ -9,9 +9,10 @@ libvirtualroute_la_CPPFLAGS = \
 
 libvirtualroute_la_SOURCES = \
 	$(DOCHDRS) \
-	VirtualRoute.cc
+	VirtualRoute.cc \
+	WanLSPropertyProxy.cc
 
-NOINSTHDRS = 
+NOINSTHDRS = WanLSPropertyProxy.h
 
 INSTHDRS = 
 
