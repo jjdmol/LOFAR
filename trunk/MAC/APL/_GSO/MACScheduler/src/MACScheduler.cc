@@ -69,7 +69,7 @@ MACScheduler::MACScheduler() :
 #endif // OTDB_UNAVAILABLE
   m_beamletAllocator(128),
   m_logicalSegmentAllocator(),
-  m_lsPropSets()
+  m_lsPropProxies()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -136,24 +136,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
     case F_MYPS_ENABLED:
     {
       GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-      if(pPropAnswer->result == GCF_NO_ERROR)
-      {
-        // initialize AllocatedBW and changeAllocatedBW to 0.0
-        // strip systemname
-        string propSetName(pPropAnswer->pScope);
-        if(propSetName.find(':') != string::npos)
-        {
-          propSetName = propSetName.substr(propSetName.find(':')+1);
-        
-          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(propSetName);
-          if(propIt != m_lsPropSets.end())
-          {
-            propIt->second->setValue(string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED),GCFPVDouble(0.0));
-            propIt->second->setValue(string(MS_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED),GCFPVDouble(0.0));
-          }
-        }        
-      }
-      else
+      if(pPropAnswer->result != GCF_NO_ERROR)
       {
         LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),pPropAnswer->pScope));
       }
@@ -175,6 +158,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
       break;
     }
     
+    case F_VGETRESP:
     case F_VCHANGEMSG:
     {
       // check which property changed
@@ -232,44 +216,6 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
         {
           TSASResult result = SAS_RESULT_ERROR_UNKNOWN_COMMAND;
           m_propertySet->setValue(string(MS_PROPNAME_STATUS),GCFPVInteger(result));
-        }
-      }
-      else if ((strstr(pPropAnswer->pPropName, MS_LOGICALSEGMENT_PROPSET_BASENAME) != 0) && 
-               (strstr(pPropAnswer->pPropName, MS_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED) != 0))
-      {
-        // logical segment allocation change received
-        // - because a VR claims its logical segments
-        // - or because a VR releases its logical segments
-        // The update of the actual AllocatedBW property must be done centrally because multiple VR's can 
-        // share a LogicalSegment and updates can only be done asynchronously.
-        double allocationChange(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
-
-        // strip systemname and property name
-        string tempName(pPropAnswer->pPropName);
-        if(tempName.find(':') != string::npos)
-        {
-          tempName = tempName.substr(tempName.find(':')+1);
-          string propSetName(tempName.substr(0,tempName.rfind('.')));
-        
-          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(propSetName);
-          if(propIt != m_lsPropSets.end())
-          {
-            boost::shared_ptr<GCFPVDouble> gcfPvAllocated(static_cast<GCFPVDouble*>(propIt->second->getValue(string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED))));
-            if(gcfPvAllocated)
-            {
-              double currentAllocated(gcfPvAllocated->getValue());
-              LOG_DEBUG(formatString("LogicalSegment %s allocated: %f",propSetName.c_str(),currentAllocated));
-
-              currentAllocated += allocationChange;
-
-              LOG_DEBUG(formatString("LogicalSegment %s new allocation: %f",propSetName.c_str(),currentAllocated));
-              propIt->second->setValue(string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED),GCFPVDouble(currentAllocated));
-            }
-          }
-          else
-          {
-            LOG_DEBUG(formatString("propset %s not found",propSetName.c_str()));
-          }
         }
       }
 
@@ -534,26 +480,34 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
       }
       
       // load all TWanLogicalSegment datapoints
+      string wanLcu("WANLCU1");
+      try
+      {
+        wanLcu = pParamSet->getString(string(MS_CONFIG_PREFIX) + string("WANLcu"));
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL("Unable to read parameter");
+      }
       vector<string> foundSegments;
+
+//TODO: get the TWanLogicalSegment datapoints from the WANLCU
       GCFPVSSInfo::getAllProperties(string("TWanLogicalSegment"),string("*"),foundSegments);
+// end TODO
+      LOG_DEBUG(formatString("number of TWanLogicalSegments: %d",foundSegments.size()));
       for(vector<string>::iterator fsIt=foundSegments.begin();fsIt!=foundSegments.end();++fsIt)
       {
-        // strip systemname and property name
-        string tempName(fsIt->substr(fsIt->find(':')+1));
-        string propSetName(tempName.substr(0,tempName.rfind('.')));
+        // strip property name
+        string fsWithoutProperty(fsIt->substr(0,fsIt->rfind('.')));
+        string fsWithoutSystem(fsWithoutProperty.substr(fsWithoutProperty.find(':')+1));
+        string fsWithWanLcuSystem(wanLcu + string(":") + fsWithoutSystem);
         
-        map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(propSetName);
-        if(propIt == m_lsPropSets.end())
+        map<string,WanLSPropertyProxyPtr>::iterator propIt=m_lsPropProxies.find(fsWithWanLcuSystem);
+        if(propIt == m_lsPropProxies.end())
         {
           // logical segment propertyset not found. Create it
-          GCFMyPropertySetPtr pps(new GCFMyPropertySet(
-              propSetName.c_str(),
-              MS_LOGICALSEGMENT_PROPSET_TYPE,
-              PS_CAT_PERM_AUTOLOAD,
-              &m_propertySetAnswer,
-              GCFMyPropertySet::USE_DB_DEFAULTS));
-          pps->enable();
-          m_lsPropSets.insert(map<string,GCFMyPropertySetPtr>::value_type(propSetName,pps));
+          WanLSPropertyProxyPtr pProxy(new WanLSPropertyProxy(fsWithWanLcuSystem));
+          m_lsPropProxies.insert(map<string,WanLSPropertyProxyPtr>::value_type(fsWithWanLcuSystem,pProxy));
         }
       }
                   
@@ -1041,6 +995,7 @@ bool MACScheduler::_allocateLogicalSegments(const string& /*VIrootID*/, boost::s
         time_t startTime;
         time_t stopTime;
         double requiredBandwidth;
+        string wanLcu;
         set<string> resumeVRs;
         set<string> suspendVRs;
   
@@ -1051,36 +1006,22 @@ bool MACScheduler::_allocateLogicalSegments(const string& /*VIrootID*/, boost::s
         startTime       = psVR->getInt32("claimTime");
         stopTime        = psVR->getInt32("stopTime");
         requiredBandwidth = psVR->getDouble("requiredBandwidth");
+        wanLcu          = psVR->getString("WANLcu");
     
         for(vector<string>::iterator it=logicalSegments.begin();it!=logicalSegments.end();++it)
         {
-          string psName(string(MS_LOGICALSEGMENT_PROPSET_BASENAME) + (*it));
-          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(psName);
-          if(propIt == m_lsPropSets.end())
+          string psName(wanLcu + string(":") + string(MS_LOGICALSEGMENT_PROPSET_BASENAME) + (*it));
+          map<string,WanLSPropertyProxyPtr>::iterator propIt=m_lsPropProxies.find(psName);
+          if(propIt != m_lsPropProxies.end())
           {
-            // logical segment propertyset not found. Create it
-            GCFMyPropertySetPtr pps(new GCFMyPropertySet(
-                psName.c_str(),
-                MS_LOGICALSEGMENT_PROPSET_TYPE,
-                PS_CAT_PERM_AUTOLOAD,
-                &m_propertySetAnswer,
-                GCFMyPropertySet::USE_DB_DEFAULTS));
-            pps->enable();
-            pair<map<string,GCFMyPropertySetPtr>::iterator,bool> res=m_lsPropSets.insert(map<string,GCFMyPropertySetPtr>::value_type(psName,pps));
-            if(res.second)
-            {
-              propIt = res.first;
-            }
+            lsCapacities[*it]=propIt->second->getCapacity();
+            LOG_DEBUG(formatString("LogicalSegment %s capacity: %f",it->c_str(),propIt->second->getCapacity()));
           }
-          if(propIt != m_lsPropSets.end())
-          {
-            boost::shared_ptr<GCFPVDouble> gcfPvCapacity(static_cast<GCFPVDouble*>(propIt->second->getValue(string(MS_LOGICALSEGMENT_PROPNAME_CAPACITY))));
-            if(gcfPvCapacity)
-            {
-              lsCapacities[*it]=gcfPvCapacity->getValue();
-              LOG_DEBUG(formatString("LogicalSegment %s capacity: %f",it->c_str(),gcfPvCapacity->getValue()));
-            }
-          }
+	  else
+	  {
+            lsCapacities[*it]=0.0;
+            LOG_FATAL(formatString("LogicalSegment %s not found.",it->c_str()));
+	  }
         }
         if(startTime == 0)
         {
@@ -1162,24 +1103,28 @@ void MACScheduler::_deallocateLogicalSegments(const string& VIrootID, boost::sha
         LogicalSegmentAllocator::TLogicalSegmentBandwidth lsCapacities;
         vector<string> logicalSegments;
         double requiredBandwidth;
+        string wanLcu;
         set<string> resumeVRs;
         set<string> suspendVRs;
         boost::shared_ptr<ACC::APS::ParameterSet> psVR(new ACC::APS::ParameterSet(psVI->makeSubset((*childsIt)+string("."))));
         logicalSegments = psVR->getStringVector("logicalSegments");
         requiredBandwidth = psVR->getDouble("requiredBandwidth");
+        wanLcu = psVR->getString("WANLcu");
     
         for(vector<string>::iterator it=logicalSegments.begin();it!=logicalSegments.end();++it)
         {
-          string psName(string(MS_LOGICALSEGMENT_PROPSET_BASENAME) + (*it));
-          map<string,GCFMyPropertySetPtr>::iterator propIt=m_lsPropSets.find(psName);
-          if(propIt != m_lsPropSets.end())
+          string psName(wanLcu + string(":") + string(MS_LOGICALSEGMENT_PROPSET_BASENAME) + (*it));
+          map<string,WanLSPropertyProxyPtr>::iterator propIt=m_lsPropProxies.find(psName);
+          if(propIt != m_lsPropProxies.end())
           {
-            boost::shared_ptr<GCFPVDouble> gcfPvCapacity(static_cast<GCFPVDouble*>(propIt->second->getValue(string(MS_LOGICALSEGMENT_PROPNAME_CAPACITY))));
-            if(gcfPvCapacity)
-            {
-              lsCapacities[*it]=gcfPvCapacity->getValue();
-            }
+            lsCapacities[*it]=propIt->second->getCapacity();
+            LOG_DEBUG(formatString("LogicalSegment %s capacity: %f",it->c_str(),propIt->second->getCapacity()));
           }
+	  else
+	  {
+            lsCapacities[*it]=0.0;
+            LOG_FATAL(formatString("LogicalSegment %s not found.",it->c_str()));
+	  }
         }
         m_logicalSegmentAllocator.deallocateVirtualRoute(
           *childsIt,
