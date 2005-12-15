@@ -97,7 +97,7 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
   int itsIn = 0;
   int itsOut = 0;
 
-  int itsNrDistribs = itsParamSet.getInt32("FakeData.NSubbands");
+  int itsNrDistribs = itsParamSet.getInt32("Data.NSubbands");
   int itsNrFiltersPerComputeCell = itsParamSet.getInt32("BGLProc.NFiltersPerComputeCell");
   int itsNrCorrelatorsPerComputeCell = itsParamSet.getInt32("BGLProc.NCorrelatorsPerComputeCell");
   int itsNrChannels = itsParamSet.getInt32("Data.NChannels");

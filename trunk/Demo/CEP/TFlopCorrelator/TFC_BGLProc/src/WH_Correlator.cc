@@ -27,10 +27,11 @@
 #include <APS/ParameterSet.h>
 #include <TFC_Interface/TFC_Config.h>
 #include <TFC_Interface/DH_Vis.h>
+#include <TFC_Interface/DH_CorrCube.h>
 #include <WH_Correlator.h>
 #include <Correlator.h>
 
-#if !defined HAVE_BGL
+#if 0 || !defined HAVE_BGL
 #define C_IMPLEMENTATION
 #endif
 
@@ -44,8 +45,7 @@ extern "C"
 
 WH_Correlator::WH_Correlator(const string &name)
 :
-  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator"),
-  itsInputBuffer(0)
+  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator")
 {
   ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
 
@@ -82,9 +82,6 @@ WH_Correlator::WH_Correlator(const string &name)
 
 WH_Correlator::~WH_Correlator()
 {
-#if NR_PPF_PER_COMPUTE_CELL == 2
-  delete itsInputBuffer;
-#endif
 }
 
 WorkHolder* WH_Correlator::construct(const string& name)
@@ -99,32 +96,24 @@ WH_Correlator* WH_Correlator::make(const string& name)
 
 void WH_Correlator::preprocess()
 { 
-#if NR_PPF_PER_COMPUTE_CELL == 2
-  itsInputBuffer = new DH_CorrCube::BufferType[1];
-#endif
 }
 
 void WH_Correlator::process()
 {
   static NSTimer timer("WH_Correlator::process()", true);
 
-  DH_CorrCube::BufferType *input  = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
+  int			  remap[NR_STATIONS];
+  DH_CorrCube::BufferType *input[NR_STATIONS];
   DH_Vis::BufferType	  *output = static_cast<DH_Vis*>(getDataManager().getOutHolder(0))->getBuffer();
-  int bufSize = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBufSize();
+
+  for (int stat = 0; stat < NR_STATIONS; stat ++) {
+    input[stat] = static_cast<DH_CorrCube*>(getDataManager().getInHolder(stat / MAX_STATIONS_PER_PPF))->getBuffer();
+    remap[stat] = stat % MAX_STATIONS_PER_PPF;
+  }
 
   timer.start();
 #if defined C_IMPLEMENTATION
   // C++ reference implementation
-
-#if NR_PPF_PER_COMPUTE_CELL == 1
-  itsInputBuffer = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
-#elif NR_PPF_PER_COMPUTE_CELL == 2
-  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
-  /// (could this be done more efficiently?)
-  /// Currently we hardcore 2 inputs.
-  memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
-  memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
-#endif
 
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
     for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
@@ -134,7 +123,7 @@ void WH_Correlator::process()
 	    dcomplex sum = makedcomplex(0, 0);
 
 	    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
-	      sum += (*itsInputBuffer)[ch][stat1][time][pol1] * ~(*itsInputBuffer)[ch][stat2][time][pol2];
+	      sum += (*input[stat1])[ch][remap[stat1]][time][pol1] * ~(*input[stat2])[ch][remap[stat2]][time][pol2];
 	    }
 
 	    (*output)[DH_Vis::baseline(stat1,stat2)][ch][pol1][pol2] = sum;
@@ -149,26 +138,16 @@ void WH_Correlator::process()
   // Correlate the entire block (all time samples) before 
   // going on to the next block.
 
-#if NR_PPF_PER_COMPUTE_CELL == 1
-  itsInputBuffer = static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer();
-#elif NR_PPF_PER_COMPUTE_CELL == 2
-  /// Unfortunately we need to reassamble the input matrix, which requires a 20Mb memcpy
-  /// (could this be done more efficiently?)
-  /// Currently we hardcore 2 inputs.
-  _fast_memcpy(itsInputBuffer, static_cast<DH_CorrCube*>(getDataManager().getInHolder(0))->getBuffer(), bufSize*sizeof(fcomplex));
-  _fast_memcpy(itsInputBuffer+1, static_cast<DH_CorrCube*>(getDataManager().getInHolder(1))->getBuffer(), (17*bufSize/18) * sizeof(fcomplex));
-#endif
-
   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
     for (int stat2 = NR_STATIONS % 2 ? 1 : 2; stat2 < NR_STATIONS; stat2 += 2) {
       int stat1 = 0;
       // do as many 3x2 blocks as possible
       for (; stat1 < stat2 - 4 || (stat1 & 1) != 0; stat1 += 3) {
-	_correlate_3x2(&(*itsInputBuffer)[ch][stat1  ],
-		       &(*itsInputBuffer)[ch][stat1+1],
-		       &(*itsInputBuffer)[ch][stat1+2],
-		       &(*itsInputBuffer)[ch][stat2  ],
-		       &(*itsInputBuffer)[ch][stat2+1],
+	_correlate_3x2(&(*input[stat1  ])[ch][remap[stat1  ]],
+		       &(*input[stat1+1])[ch][remap[stat1+1]],
+		       &(*input[stat1+2])[ch][remap[stat1+2]],
+		       &(*input[stat2  ])[ch][remap[stat2  ]],
+		       &(*input[stat2+1])[ch][remap[stat2+1]],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
@@ -178,10 +157,10 @@ void WH_Correlator::process()
       }
       // see if some 2x2 blocks are necessary
       for (; stat1 < stat2; stat1 += 2) {
-	_correlate_2x2(&(*itsInputBuffer)[ch][stat2  ],
-		       &(*itsInputBuffer)[ch][stat2+1],
-		       &(*itsInputBuffer)[ch][stat1  ],
-		       &(*itsInputBuffer)[ch][stat1+1],
+	_correlate_2x2(&(*input[stat2  ])[ch][remap[stat2  ]],
+		       &(*input[stat2+1])[ch][remap[stat2+1]],
+		       &(*input[stat1  ])[ch][remap[stat1  ]],
+		       &(*input[stat1+1])[ch][remap[stat1+1]],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
@@ -192,13 +171,13 @@ void WH_Correlator::process()
     // do the remaining autocorrelations
     for (int stat = 0; stat < NR_STATIONS; stat += 2) {
 #if NR_STATIONS % 2 == 0
-      _correlate_1_and_2(&(*itsInputBuffer)[ch][stat],
-			 &(*itsInputBuffer)[ch][stat+1],
+      _correlate_1_and_2(&(*input[stat  ])[ch][remap[stat]],
+			 &(*input[stat+1])[ch][remap[stat+1]],
 			 &(*output)[DH_Vis::baseline(stat  , stat  )][ch],
 			 &(*output)[DH_Vis::baseline(stat  , stat+1)][ch],
 			 &(*output)[DH_Vis::baseline(stat+1, stat+1)][ch]);
 #else
-      _auto_correlate_1x1(&(*itsInputBuffer)[ch][stat],
+      _auto_correlate_1x1(&(*input[stat])[ch][remap[stat]],
 			  &(*output)[DH_Vis::baseline(stat,stat)][ch]);
 #endif
     }

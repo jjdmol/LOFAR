@@ -28,9 +28,6 @@
 #include <APS/ParameterSet.h>
 #include <tinyCEP/WorkHolder.h>
 
-#include <TFC_Interface/DH_CorrCube.h>
-#include <TFC_Interface/DH_Vis.h>
-
 
 namespace LOFAR
 {
@@ -60,8 +57,6 @@ namespace LOFAR
     int itsNelements;
     int itsNpolarisations;
     int itsNchannels;
-
-    DH_CorrCube::BufferType* itsInputBuffer;
   };
 
 } // namespace LOFAR

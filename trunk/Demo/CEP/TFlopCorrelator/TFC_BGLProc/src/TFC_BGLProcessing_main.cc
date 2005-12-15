@@ -42,18 +42,26 @@ int main (int argc, const char** argv) {
       // there are no commandline arguments, so we were not called by ACC
       AH_BGLProcessing myAH;
       myAH.setarg(argc, argv);
+      cout << "Reading ParameterSet" << endl;
+      cout.flush();
       ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
       myAH.setParameters(ps);
+      cout << "Starting baseDefine" << endl;
+      cout.flush();
 
       myAH.baseDefine();
       cout << "defined" << endl;
+      cout.flush();
       Profiler::init();
       myAH.basePrerun();
       cout << "init done" << endl;
+      cout.flush();
       Profiler::activate();
       cout << "run" << endl;
+      cout.flush();
       myAH.baseRun(ps.getInt32("General.NRuns"));
       cout << "run complete" << endl;
+      cout.flush();
       myAH.baseDump();
       myAH.baseQuit();
       Profiler::deActivate();
