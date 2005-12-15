@@ -20,13 +20,15 @@ MACScheduler_SOURCES 		= \
 	MACScheduler.cc \
 	BeamletAllocator.cc \
 	LogicalSegmentAllocator.cc \
+        WanLSPropertyProxy.cc \
 	MACSchedulerMain.cc \
 	SAS_Protocol.cc
 
 NOINSTHDRS = \
 	MACScheduler.h \
 	BeamletAllocator.h \
-	LogicalSegmentAllocator.h 
+	LogicalSegmentAllocator.h \
+        WanLSPropertyProxy.h
 
 INSTHDRS = 
 

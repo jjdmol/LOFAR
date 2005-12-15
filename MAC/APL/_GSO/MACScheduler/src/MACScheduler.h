@@ -42,6 +42,7 @@
 #include "APL/APLCommon/StartDaemon_Protocol.ph"
 #include "BeamletAllocator.h"
 #include "LogicalSegmentAllocator.h"
+#include "WanLSPropertyProxy.h"
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -103,6 +104,8 @@ namespace GSO
 
     protected:    
       typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
+      typedef boost::shared_ptr<WanLSPropertyProxy>         WanLSPropertyProxyPtr;
+
       APLCommon::PropertySetAnswer  m_propertySetAnswer;
       GCFMyPropertySetPtr           m_propertySet;
 
@@ -171,7 +174,7 @@ namespace GSO
       
       BeamletAllocator                      m_beamletAllocator;
       LogicalSegmentAllocator               m_logicalSegmentAllocator;
-      map<string,GCFMyPropertySetPtr>       m_lsPropSets;
+      map<string,WanLSPropertyProxyPtr>     m_lsPropProxies;
 
       ALLOC_TRACER_CONTEXT  
    };

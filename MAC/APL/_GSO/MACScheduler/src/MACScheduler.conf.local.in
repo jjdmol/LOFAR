@@ -38,6 +38,7 @@ mac.top.MACScheduler.CCU6_VIC_VIStartDaemon.remoteservice=CCU6_VIC_VIStartDaemon
 #mac.apl.ams.OTDBpassword=otdbtest
 mac.apl.ams.shareLocation=/opt/lofar/MAC/parametersets/
 mac.apl.ams.numberOfVIStartDaemons=1
+mac.apl.ams.WANLcu=WANLCU1
 
 #mac.apl.ams.CCU1.startDaemonHost=lofar27
 mac.apl.ams.CCU1.startDaemonHost=saturnus
