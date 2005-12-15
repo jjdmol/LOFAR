@@ -29,6 +29,9 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
+#undef MIN
+#define MIN(a,b) ((a)<(b)?(a):(b))
+
 namespace LOFAR {
   namespace EPA_Protocol {
 
@@ -176,6 +179,7 @@ namespace LOFAR {
       static const uint16 N_POL          = 2;                    // number of polarizations
       static const uint16 N_PHASE        = 2;                    // number of phases in a complex number
       static const uint16 N_PHASEPOL     = N_PHASE * N_POL;      // number of phase polarizations
+      static const uint16 XLET_SIZE      = N_POL * sizeof(std::complex<uint32>);
  
       //
       // Registers too large to send in a single ethernet frame
@@ -187,7 +191,8 @@ namespace LOFAR {
       // XST register will be too large to get in one message when N_GLOBAL_XLETS = 96
       // When 96 crosslets are supported, the XST_FRAGMENT_SIZE should be divided by 2.
       //
-      static const uint16 XST_FRAGMENT_SIZE = N_GLOBAL_XLETS * N_POL * sizeof(std::complex<uint32>);
+      static const uint16 MAX_XLETS_PER_FRAGMENT = FRAGMENT_SIZE / XLET_SIZE;
+      static const uint16 XST_FRAGMENT_SIZE = MIN(N_GLOBAL_XLETS, MAX_XLETS_PER_FRAGMENT) * XLET_SIZE;
       
       /**
        * Read/write sizes in octets (= bytes)
@@ -226,7 +231,7 @@ namespace LOFAR {
       
       static const uint16 CDO_SETTINGS_SIZE  = 10;
 
-      static const uint16 XST_STATS_SIZE     = N_GLOBAL_XLETS * N_POL * sizeof(std::complex<uint32>);
+      static const uint16 XST_STATS_SIZE     = (N_GLOBAL_XLETS + N_XLETS) * XLET_SIZE;
       /*@}*/
 
     public:

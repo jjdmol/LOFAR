@@ -39,7 +39,7 @@ prelude = << PRELUDE_END
   static const int SST_N_FRAGMENTS = MEPHeader::SST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
   static const int N_SST_STATS     = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
   static const int N_BST_STATS     = MIN(MEPHeader::FRAGMENT_SIZE, MEPHeader::BST_POWER_SIZE) / sizeof(uint32);
-  static const int XST_N_FRAGMENTS = MEPHeader::XST_STATS_SIZE / MEPHeader::XST_FRAGMENT_SIZE;
+  static const int XST_N_FRAGMENTS = (MEPHeader::N_GLOBAL_XLETS > MEPHeader::MAX_XLETS_PER_FRAGMENT ? 2 : 1);
   static const int N_XST_STATS     = MEPHeader::XST_FRAGMENT_SIZE / sizeof(uint32);
 
   /*@}*/
