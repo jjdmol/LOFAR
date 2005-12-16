@@ -51,19 +51,9 @@ public class jOTDBserver
 
    static
      {
-	try 
-	  {
-	     System.out.println (InetAddress.getLocalHost().getHostName());
-	     System.setProperty ("java.rmi.server.hostname", InetAddress.getLocalHost().getHostName());
-	  }
-	catch (Exception e)
-	  {
-	     System.out.println ("Could not set the hostname!");
-	     System.exit (0);
-	  }
-		     
 	System.loadLibrary("jotdb");
      }
+
    
    public static void main (String[] args) 
      {
@@ -75,18 +65,24 @@ public class jOTDBserver
 //		  System.setSecurityManager (new RMISecurityManager ());
 //	       }
 
-	     if (args.length < 3) 
+	     if (args.length < 4) 
 		 {
-		     System.out.println ("Usage: java -jar jOTDBserver.jar <username> <password> <database> <portnumber-OPTIONAL>");
+		     System.out.println ("Usage: java -jar jOTDBserver.jar <username> <password> <database> <hostname> <portnumber-OPTIONAL>");
 		     System.exit(0);
 		 }
 	     
+
+	     String aHostName = new String(args[3]);
+	     
+	     System.out.println ("Running on: "+aHostName);
+	     System.setProperty ("java.rmi.server.hostname", aHostName);
+
 	     System.out.println ("jOTDBserver creating a local RMI registry...");
 	     Registry localRegistry;
-	     if (args.length == 3) 
+	     if (args.length == 4) 
 		 localRegistry = LocateRegistry.createRegistry (Registry.REGISTRY_PORT);
 	     else {
-		 Integer i = new Integer (args[3]);
+		 Integer i = new Integer (args[4]);
 		 localRegistry = LocateRegistry.createRegistry (i.intValue());
 	     }
 	     

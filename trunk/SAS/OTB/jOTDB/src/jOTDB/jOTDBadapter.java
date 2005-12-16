@@ -49,11 +49,19 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface
      }
    
    // get OTDBtree of one specific tree
-   public jOTDBtree getTreeInfo (int atreeID) throws RemoteException
+   public jOTDBtree getTreeInfo (int atreeID,boolean isMomID) throws RemoteException
      {
-	return adaptee.getTreeInfo (atreeID);
+	return adaptee.getTreeInfo (atreeID,isMomID);
      }
+
+     
    
+   // To get a list of all StateChanges
+   public Vector getStateList (int treeID, boolean isMomID, String beginDate) throws RemoteException
+     {
+	return adaptee.getStateList (treeID, isMomID, beginDate);
+     }
+      
    // To get a list of all OTDB trees available in the database.
    public Vector getTreeList (short treeType, short classifiType) throws RemoteException
      {
