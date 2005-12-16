@@ -23,25 +23,26 @@ package jOTDB;
 
 public class jOTDBtree implements java.io.Serializable
 {
-   public jOTDBtree (int treeID)
-     {
+    public jOTDBtree (int treeID)
+    {
 	itsTreeID = treeID;
-     }
+    }
    
-   public int treeID()
-     {
+    public int treeID()
+    {
 	return (itsTreeID); 
-     }
+    }
    
-   public short classification; // development / test / operational
-   public String creator;
-   public String creationDate;	
-   public short type;			// hardware / VItemplate / VHtree
-   public short state;			// idle / configure / ... / active / ...
-   // -- VIC only --
-   public int originalTree;
-   public String campaign;
-   public String starttime;
-   public String stoptime;
-   private int itsTreeID;
+    public int momID;
+    public short classification; // development / test / operational
+    public String creator;
+    public String creationDate;	
+    public short type;			// hardware / VItemplate / VHtree
+    public short state;			// idle / configure / ... / active / ...
+    // -- VIC only --
+    public int originalTree;
+    public String campaign;
+    public String starttime;
+    public String stoptime;
+    private int itsTreeID;
 }

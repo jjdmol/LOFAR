@@ -22,7 +22,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-//# Includes
+//#
 #include <Common/LofarLogger.h>
 #include <jni.h>
 #include <jOTDB/jOTDB_jOTDBconnection.h>
@@ -32,6 +32,7 @@
 #include <string>
 #include <iostream>
 #include <jOTDB/jOTDB_jOTDBcommon.h>
+
 
 using namespace boost::posix_time;
 using namespace LOFAR::OTDB;
@@ -161,6 +162,57 @@ namespace LOFAR
 	     return(vecTreeIDs);
 	  }
 	
+       jobject convertTreeState (JNIEnv *env, TreeState aTreeState)
+         {
+           jobject jTreeState;
+           jclass class_jTreeState = env->FindClass ("jOTDB/jTreeState");
+
+
+	  jfieldID fid_jTreeState_treeID = env->GetFieldID (class_jTreeState, "treeID", "I"); 
+	  jfieldID fid_jTreeState_momID = env->GetFieldID (class_jTreeState, "momID", "I"); 
+	  jfieldID fid_jTreeState_newState = env->GetFieldID (class_jTreeState, "newState", "S"); 
+	  jfieldID fid_jTreeState_username = env->GetFieldID (class_jTreeState, "username", "Ljava/lang/String;"); 
+	  jfieldID fid_jTreeState_timestamp = env->GetFieldID (class_jTreeState, "timestamp", "Ljava/lang/String;"); 
+
+	  env->SetIntField (jTreeState, fid_jTreeState_treeID, aTreeState.treeID);
+	  env->SetIntField (jTreeState, fid_jTreeState_momID, aTreeState.momID);
+	  env->SetShortField (jTreeState, fid_jTreeState_newState, aTreeState.newState);
+	  env->SetObjectField (jTreeState, fid_jTreeState_username, env->NewStringUTF(aTreeState.username.c_str()));
+	  env->SetObjectField (jTreeState, fid_jTreeState_timestamp, env->NewStringUTF(to_simple_string(aTreeState.timestamp).c_str()));
+
+	  return jTreeState;
+	 }
+
+       /*
+	* Class:     jOTDB_jOTDBconnection
+	* Method:    getStateList
+	* Signature: (IZLjava/lang/String;)Ljava/util/Vector;
+	*/
+       JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getStateList
+       (JNIEnv *env, jobject, jint treeID, jboolean isMomID, jstring beginDate)
+
+	  {
+	     const char* bd = env->GetStringUTFChars (beginDate, 0);
+             
+	     vector<TreeState> states = OTDBconn->getStateList(treeID, isMomID,time_from_string(bd));     
+	     vector<TreeState>::iterator statesIterator;
+	     
+	     // Construct java Vector
+	     jobject statesVector;
+	     jclass class_Vector = env->FindClass("java/util/Vector");
+	     jmethodID mid_Vector_cons = env->GetMethodID(class_Vector, "<init>", "()V");
+	     statesVector = env->NewObject(class_Vector, mid_Vector_cons);
+	     jmethodID mid_Vector_add = env->GetMethodID(class_Vector, "add", "(Ljava/lang/Object;)Z");
+	     	     
+	     for (statesIterator = states.begin(); statesIterator != states.end(); statesIterator++)
+	       {
+		  env->CallObjectMethod(statesVector, mid_Vector_add,convertTreeState(env, *statesIterator ));
+	       }
+	     
+	     return(statesVector);
+	  }
+	
+
 	/*
 	 * Class:     jOTDB_jOTDBconnection
 	 * Method:    errorMsg
@@ -189,5 +241,9 @@ namespace LOFAR
 	  {
 	     return OTDBconn;
 	  }
+
+
+
+
      } // namespace jOTDB
 } // namespace LOFAR

@@ -69,9 +69,9 @@ public class treeModel extends AbstractTableModel {
                         if (itsDebugFlag) System.out.println("Collected tree list");
                     }
                     for (int k=0; k< aTreeList.size();k++) {
-                        if (itsDebugFlag) System.out.println("getTreeInfo(aTreeList.elementAt("+k+"))");
+                        if (itsDebugFlag) System.out.println("getTreeInfo(aTreeList.elementAt("+k+"),false)");
 	                Integer i = new Integer((Integer)aTreeList.elementAt(k));
-	                jOTDBtree tInfo = aRemoteOTDB.getTreeInfo(i.intValue());
+	                jOTDBtree tInfo = aRemoteOTDB.getTreeInfo(i.intValue(), false);
 	                if (tInfo.treeID()==0) {
                             if (itsDebugFlag) System.out.println("No such tree found!");
                         } else {

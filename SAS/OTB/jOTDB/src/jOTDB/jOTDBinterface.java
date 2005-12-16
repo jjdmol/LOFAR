@@ -38,10 +38,13 @@ public interface jOTDBinterface extends Remote
    public boolean connect () throws RemoteException;
    
    // get OTDBtree of one specific tree
-   public jOTDBtree getTreeInfo (int atreeID) throws RemoteException;
+   public jOTDBtree getTreeInfo (int atreeID,boolean isMomID) throws RemoteException;
    
    // To get a list of all OTDB trees available in the database.
    public Vector getTreeList (short treeType, short classifiType) throws RemoteException;
+
+   // To get a list of all OTDB trees available in the database.
+   public Vector getStateList (int treeID, boolean isMomID, String beginDate) throws RemoteException;
    
    public String errorMsg () throws RemoteException;
    

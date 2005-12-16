@@ -48,8 +48,11 @@ public class jOTDBconnection
     public native boolean connect();
     
     // get OTDBtree of one specific tree
-    public native jOTDBtree getTreeInfo (int atreeID);
+    public native jOTDBtree getTreeInfo (int atreeID, boolean isMomID);
     
+    public native Vector getStateList(int atreeID, boolean isMomID ,String beginDate);
+
+
     // To get a list of all OTDB trees available in the database.
     public native Vector getTreeList(short treeType, short classifiType);
     
