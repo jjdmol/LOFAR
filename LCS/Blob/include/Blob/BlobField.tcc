@@ -38,42 +38,56 @@ namespace LOFAR {
   template<typename T>
   BlobField<T>::BlobField (uint version)
     : BlobFieldBase (version)
-  {}
+  {
+    setAlignment (sizeof(T));
+  }
 
   template<typename T>
   BlobField<T>::BlobField (uint version, uint32 size0)
     : BlobFieldBase (version, size0)
-  {}
+  {
+    setAlignment (sizeof(T));
+  }
 
   template<typename T>
   BlobField<T>::BlobField (uint version, uint32 size0, uint32 size1,
 			   bool fortranOrder)
     : BlobFieldBase (version, size0, size1, fortranOrder)
-  {}
+  {
+    setAlignment (sizeof(T));
+  }
 
   template<typename T>
   BlobField<T>::BlobField (uint version, uint32 size0, uint32 size1,
 			   uint32 size2, bool fortranOrder)
     : BlobFieldBase (version, size0, size1, size2, fortranOrder)
-  {}
+  {
+    setAlignment (sizeof(T));
+  }
 
   template<typename T>
   BlobField<T>::BlobField (uint version, uint32 size0, uint32 size1,
 			   uint32 size2, uint32 size3, bool fortranOrder)
     : BlobFieldBase (version, size0, size1, size2, size3, fortranOrder)
-  {}
+  {
+    setAlignment (sizeof(T));
+  }
 
   template<typename T>
   BlobField<T>::BlobField (uint version, const std::vector<uint32>& shape,
 			   bool fortranOrder)
     : BlobFieldBase (version, shape, fortranOrder)
-  {}
+  {
+    setAlignment (sizeof(T));
+  }
 
   template<typename T>
   BlobField<T>::BlobField (uint version, const uint32* shape, uint16 ndim,
 			   bool fortranOrder)
     : BlobFieldBase (version, shape, ndim, fortranOrder)
-  {}
+  {
+    setAlignment (sizeof(T));
+  }
 
   template<typename T>
   BlobField<T>::~BlobField()
@@ -89,12 +103,13 @@ namespace LOFAR {
   void BlobField<T>::setOSpace (BlobOStream& bs)
   {
     if (isScalar()) {
-      bs.align (std::min(sizeof(T),(size_t) 8));
+      bs.align (getAlignment());
       setOffset (bs.setSpace (sizeof(T)), 0);
     } else {
       int64 off = bs.tellPos();                        // array offset
       setOffset (setSpaceBlobArray<T> (bs, useBlobHeader(),
-				       getShape(), isFortranOrder()),
+				       getShape(), isFortranOrder(),
+				       getAlignment()),
 		 off);
     }
   }
@@ -104,13 +119,13 @@ namespace LOFAR {
   void BlobField<T>::getISpace (BlobIStream& bs)
   {
     if (isScalar()) {
-      bs.align (std::min(sizeof(T),(size_t) 8));
+      bs.align (getAlignment());
       setOffset (bs.getSpace (sizeof(T)), 0);
     } else {
       int64 off = bs.tellPos();     // array offset
       std::vector<uint32> shp;
       setOffset (getSpaceBlobArray<T> (bs, useBlobHeader(),
-				       shp, fortranOrder()),
+				       shp, rwFortranOrder()),
 		 off);
       setShape (shp);
     }

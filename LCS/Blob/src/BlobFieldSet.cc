@@ -41,6 +41,7 @@ namespace LOFAR {
   BlobFieldSet::BlobFieldSet (const std::string& name)
     : itsName          (name),
       itsVersion       (0),
+      itsAlignment     (1),
       itsHasFixedShape (true),
       itsNormalSize    (0)
   {
@@ -57,6 +58,7 @@ namespace LOFAR {
     if (this != &that) {
       itsName          = that.itsName;
       itsVersion       = that.itsVersion;
+      itsAlignment     = that.itsAlignment;
       itsHasFixedShape = that.itsHasFixedShape;
       itsNormalSize    = that.itsNormalSize;
       for (uint i=0; i<itsFields.size(); i++) {
@@ -79,26 +81,34 @@ namespace LOFAR {
     }
   }
 
-  int BlobFieldSet::add (const std::string& name, const BlobFieldBase& field)
+  int BlobFieldSet::add (const std::string& name, const BlobFieldBase& field,
+			 uint alignment)
   {
     NameMap::iterator iter = itsNameMap.find (name);
     if (iter != itsNameMap.end()) {
       THROW (BlobException,
 	     "BlobFieldBase::add - field" + name + " already exists");
     }
-    int inx = add (field);
+    int inx = add (field, alignment);
     itsNameMap[name] = inx;
     return inx;
   }
 
-  int BlobFieldSet::add (const BlobFieldBase& field)
+  int BlobFieldSet::add (const BlobFieldBase& field, uint alignment)
   {
-    if (field.getVersion() > itsVersion) {
-      itsVersion = field.getVersion();
-    }
     itsHasFixedShape &= field.hasFixedShape();
     int inx = itsFields.size();
-    itsFields.push_back (field.clone());
+    BlobFieldBase* fld = field.clone();
+    if (alignment != 0) {
+      fld->setAlignment (alignment);
+    }
+    if (fld->getAlignment() > itsAlignment) {
+      itsAlignment = fld->getAlignment();
+    }
+    if (fld->getVersion() > itsVersion) {
+      itsVersion = fld->getVersion();
+    }
+    itsFields.push_back (fld);
     return inx;
   }
 

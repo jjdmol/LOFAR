@@ -29,25 +29,39 @@
 namespace LOFAR {
 
 BlobString::BlobString (bool useString, size_t capacity,
-			bool canIncreaseCapacity)
+			bool canIncreaseCapacity, uint alignment)
 : itsAllocator (BlobStringType(useString, LOFAR::HeapAllocator())),
   itsCapacity  (0),
   itsSize      (0),
   itsCanIncr   (true),
+  itsAlignMask (alignment),
+  itsBuffer    (0),
   itsChars     (0)
 {
+  // Make sure alignment is power of 2.
+  if (alignment > 1) {
+    ASSERT ((alignment & (alignment-1)) == 0);
+    itsAlignMask -= 1;
+  }
   reserve (capacity);
   itsCanIncr = canIncreaseCapacity;
 }
 
 BlobString::BlobString (const BlobStringType& allocator, size_t capacity,
-			bool canIncreaseCapacity)
+			bool canIncreaseCapacity, uint alignment)
 : itsAllocator (allocator),
   itsCapacity  (0),
   itsSize      (0),
   itsCanIncr   (true),
+  itsAlignMask (alignment),
+  itsBuffer    (0),
   itsChars     (0)
 {
+  // Make sure alignment is power of 2.
+  if (alignment > 1) {
+    ASSERT ((alignment & (alignment-1)) == 0);
+    itsAlignMask -= 1;
+  }
   reserve (capacity);
   itsCanIncr = canIncreaseCapacity;
 }
@@ -65,15 +79,25 @@ void BlobString::reserve (size_t newSize)
     ASSERTSTR (itsCanIncr, "This BlobString cannot increase its capacity");
     if (itsAllocator.useString()) {
       itsString.reserve (newSize);
-      itsChars = const_cast<uchar*>(itsString.data());
+      itsBuffer = const_cast<uchar*>(itsString.data());
       itsCapacity = itsString.capacity();
     } else {
-      void* data = itsAllocator.allocator().allocate (newSize);
-      ASSERTSTR (data, "BlobString could not allocate " << newSize
-		       << " bytes");
-      memcpy (data, itsChars, itsSize);
+      // Allocate some extra bytes for alignment if needed.
+      // Usually allocation is always done on a multiple of 8 bytes, but
+      // with valgrind that is not the case. So be prepared for everything.
+      size_t nsize = newSize + itsAlignMask;
+      void* data = itsAllocator.allocator().allocate (nsize);
+      ASSERTSTR (data, "BlobString could not allocate " << nsize
+		 << " bytes");
+      void* newbuf = data;
+      if (itsAlignMask > 0) {
+	ptrdiff_t ptr = (ptrdiff_t(data) + itsAlignMask) & ~itsAlignMask;
+	newbuf = (void*)ptr;
+      }
+      memcpy (newbuf, itsBuffer, itsSize);
       itsAllocator.allocator().deallocate (itsChars);
-      itsChars = data;
+      itsChars  = data;
+      itsBuffer = newbuf;
       itsCapacity = newSize;
     }
   }
@@ -87,7 +111,7 @@ void BlobString::resize (size_t newSize)
     }
     if (itsAllocator.useString()) {
       itsString.resize (newSize);
-      itsChars = const_cast<uchar*>(itsString.data());
+      itsBuffer = const_cast<uchar*>(itsString.data());
     }
     itsSize = newSize;
   }

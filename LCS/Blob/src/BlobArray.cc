@@ -34,18 +34,18 @@ namespace LOFAR
 uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
 			   const string& headerName,
 			   const uint32* shape, uint16 ndim,
-			   bool fortranOrder, uint align)
+			   bool fortranOrder, uint alignment)
 {
   if (useBlobHeader) {
     bs.putStart (headerName, 1);                // version 1
   }
   uchar nalign = 0;
-  if (align > 1) {
+  if (alignment > 1) {
     int64 pos = bs.tellPos();
     if (pos > 0) {
-      nalign = (pos + 4 + ndim*sizeof(uint32)) % std::min(8u, align);
+      nalign = (pos + 4 + ndim*sizeof(uint32)) % alignment;
       if (nalign > 0) {
-	nalign = 8 - nalign;
+	nalign = alignment - nalign;
       }
     }
   }    
@@ -80,10 +80,11 @@ uint getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
   for (uint i=0; i<ndim; i++) {
     n *= shape[i];
   }
-  if (nalign > 0) {
-    ASSERT (nalign <= 8);
-    char buf[8];
-    bs.get (buf, nalign);
+  char buf[32];
+  while (nalign > 0) {
+    int nb = std::min(32u, nalign);
+    bs.get (buf, nb);
+    nalign -= nb;
   }
   return n;
 }

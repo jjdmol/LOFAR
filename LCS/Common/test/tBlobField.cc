@@ -208,11 +208,65 @@ void readFile (BlobFieldSet& fset, BlobFieldSet& fset2,
   doIn (fset2, bbuf);  // this should ignore the double field
 }
 
+// Function to create and fill a blob.
+void testAlign()
+{
+  // Define the set.
+  BlobFieldSet fset("test1");
+  fset.add (BlobField<fcomplex>(1, 4, 5), 16);
+  fset.add (BlobField<int>(1), 8);
+  fset.add (BlobField<char>(1, 2), 32);
+  ASSERT (fset.getAlignment() == 32);
+  // Define buffer.
+  BlobString buf(false, 0, true, fset.getAlignment());
+  {
+    BlobOBufString bb(buf);
+    // Create the blob for the given field set.
+    fset.createBlob (bb);
+    ASSERT (ptrdiff_t(buf.data()) % 32 == 0);
+    // Get pointers to the data in the buffer.
+    fcomplex* pfcomplex = fset[0].getData<fcomplex> (bb);
+    int* pint = fset[1].getData<int> (bb);
+    char* pchar = fset[2].getData<char> (bb);
+    ASSERT (((char*)pfcomplex - (char*)(buf.data())) % 16 == 0);
+    ASSERT ((char*)pint - (char*)pfcomplex ==
+	    int(fset[0].getNelem() * sizeof(fcomplex)));
+    ASSERT (((char*)pchar - (char*)(buf.data())) % 32 == 0);
+    // Put data in the buffer.
+    for (uint i=0; i<fset[1].getNelem(); i++) {
+      pfcomplex[i] = makefcomplex(i+1.,i+2.);
+    }
+    *pint = 3;
+    pchar[0] = 3;
+    pchar[1] = -6;
+  }
+  {
+    // Read back the data.
+    BlobString buf2(false, buf.size(), false, fset.getAlignment());
+    buf2.resize (buf.size());
+    memcpy (buf2.data(), buf.data(), buf.size());
+    BlobIBufString bib(buf2);
+    // Get pointers to the data in the buffer.
+    fset.openBlob (bib);
+    const fcomplex* pfcomplex = fset[0].getData<fcomplex> (bib);
+    const int* pint = fset[1].getData<int> (bib);
+    const char* pchar = fset[2].getData<char> (bib);
+    for (uint i=0; i<fset[1].getNelem(); i++) {
+      ASSERT (pfcomplex[i] == makefcomplex(i+1.,i+2.));
+    }
+    ASSERT (*pint == 3);
+    ASSERT (pchar[0] == 3);
+    ASSERT (pchar[1] == -6);
+  }
+}
+
 int main()
 {
   try {
     INIT_LOGGER("tBlobField");
     {
+      testAlign();
+      cout << "testalign done" << endl;
       // Create a version 1 field set.
       BlobFieldSet fset("test1");
       fset.add (BlobField<int> (1));              // scalar
@@ -246,6 +300,8 @@ int main()
       readFile (fset, fset2, "tBlobField_tmp.dat");
       readFile (fset, fset2, "tBlobField.in_le");
       readFile (fset, fset2, "tBlobField.in_be");
+      // Test the alignment functionality.
+      testAlign();
     }
   } catch (std::exception& x) {
     std::cout << "Unexpected exception: " << x.what() << std::endl;

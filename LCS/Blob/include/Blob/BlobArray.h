@@ -85,32 +85,33 @@ BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint32 size);
 // It is only possible if the underlying buffer is seekable.
 // It is meant for use with the BlobOBufString buffer. The function
 // getPointer in that class can be used to turn the position into a pointer.
-// The data will be aligned on sizeof(T) bytes with a maximum of 8.
+// The data will be aligned on the given alignment which defaults to
+// sizeof(T) bytes with a maximum of 8.
 // <group>
 template<typename T>
 uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
-			 uint32 size0);
+			 uint32 size0, uint alignment=0);
 template<typename T>
 uint setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
 			 uint32 size0, uint32 size1,
-			 bool fortranOrder);
+			 bool fortranOrder, uint alignment=0);
 template<typename T>
 uint setSpaceBlobArray3 (BlobOStream& bs, bool useBlobHeader,
 			 uint32 size0, uint32 size1, uint32 size2,
-			 bool fortranOrder);
+			 bool fortranOrder, uint alignment=0);
 template<typename T>
 uint setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
 			 uint32 size0, uint32 size1,
 			 uint32 size2, uint32 size3,
-			 bool fortranOrder);
+			 bool fortranOrder, uint alignment=0);
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
 			const std::vector<uint32>& shape,
-			bool fortranOrder);
+			bool fortranOrder, uint alignment=0);
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
 			const uint32* shape, uint16 ndim,
-			bool fortranOrder);
+			bool fortranOrder, uint alignment=0);
 // </group>
 
 
@@ -177,7 +178,8 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 // It is only possible if the underlying buffer is seekable.
 // It is meant for use with the BlobIBufString buffer. The function
 // getPointer in that class can be used to turn the position into a pointer.
-// The data are assumed to be aligned on sizeof(T) bytes with a maximum of 8.
+// The data are assumed to be aligned on the given alignment which
+// defaults to sizeof(T) bytes with a maximum of 8.
 template<typename T>
 uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
 			std::vector<uint32>& shape,
@@ -189,9 +191,9 @@ uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
 //# Reserve space for a 1-dim array of the given size.
 template<typename T>
 inline uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
-				uint32 size0)
+				uint32 size0, uint alignment)
 {
-  return setSpaceBlobArray<T> (bs, useBlobHeader, &size0, 1, true);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, &size0, 1, true, alignment);
 }
 
 //# Put a vector object as an array.
@@ -212,13 +214,12 @@ inline BlobOStream& putBlobVector (BlobOStream& bs, const T* vec, uint32 size)
 
 // Put a blob array header. It returns the number of elements.
 // This is a helper function for the functions writing an array.
-// After writing the shape it aligns the stream on the given alignment
-// with a maximum of 8.
+// After writing the shape it aligns the stream on the given alignment.
 // It returns the number of elements in the array.
 uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
 			   const std::string& headerName,
 			   const uint32* shape, uint16 ndim,
-			   bool fortranOrder, uint nalign);
+			   bool fortranOrder, uint alignment);
 
 // Get the ordering and dimensionality.
 // This is a helper function for the functions reading an array.

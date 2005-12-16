@@ -62,15 +62,23 @@ namespace LOFAR {
     public:
       // Create a buffer as a char* or string<uchar> (string is default).
       // By default the initial capacity can be extended.
+      // The alignment argument tells if a char* buffer needs to be
+      // aligned specifically. It is not used for a string<uchar> buffer.
+      // The alignment has to be a power of 2.
       explicit BlobString (bool useString=true, size_t capacity=0,
-			   bool canIncreaseCapacity=true);
+			   bool canIncreaseCapacity=true,
+			   uint alignment=0);
       
       // Create a data buffer with the given capacity.
       // The buffer is a char* or a string<uchar> depending on the allocator
       // object.
       // By default the initial capacity can be extended.
+      // The alignment argument tells if a char* buffer needs to be
+      // aligned specifically. It is not used for a string<uchar> buffer.
+      // The alignment has to be a power of 2.
       explicit BlobString (const BlobStringType&, size_t capacity=0,
-			   bool canIncreaseCapacity=true);
+			   bool canIncreaseCapacity=true,
+			   uint alignment=0);
       
       ~BlobString();
       
@@ -98,9 +106,9 @@ namespace LOFAR {
       // Get a pointer to the data.
       // <group>
       const char* data() const
-	{ return (const char*)itsChars; }
+	{ return (const char*)itsBuffer; }
       char* data()
-	{ return (char*)itsChars; }
+	{ return (char*)itsBuffer; }
       // </group>
       
       // Get the data as a string of uchar.
@@ -122,7 +130,9 @@ namespace LOFAR {
       size_t                   itsCapacity;
       size_t                   itsSize;
       bool                     itsCanIncr;
-      void*                    itsChars;
+      uint                     itsAlignMask;
+      void*                    itsBuffer;     // pointer to aligned buffer
+      void*                    itsChars;      // pointer to allocated memory
       std::basic_string<uchar> itsString;
     };
   
