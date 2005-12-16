@@ -49,7 +49,6 @@ WanLSPropertyProxy::WanLSPropertyProxy(const string& propset) :
   setPropValue(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED),GCFPVDouble(0.0));
   setPropValue(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED),GCFPVDouble(0.0));
 
-  subscribeProp(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_CAPACITY));
   subscribeProp(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED));
   subscribeProp(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED));
 
@@ -60,7 +59,6 @@ WanLSPropertyProxy::~WanLSPropertyProxy()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,m_propSetName.c_str());
 
-  unsubscribeProp(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_CAPACITY));
   unsubscribeProp(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_ALLOCATED));
   unsubscribeProp(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_CHANGEALLOCATED));
 }
@@ -68,6 +66,11 @@ WanLSPropertyProxy::~WanLSPropertyProxy()
 double WanLSPropertyProxy::getCapacity() const
 {
   return m_capacity;
+}
+
+void WanLSPropertyProxy::updateCapacity()
+{
+  requestPropValue(m_propSetName + string(".") + string(MS_LOGICALSEGMENT_PROPNAME_CAPACITY));
 }
 
 void WanLSPropertyProxy::propSubscribed(const string& propName)

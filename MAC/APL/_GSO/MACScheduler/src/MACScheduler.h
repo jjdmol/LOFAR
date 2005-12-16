@@ -175,6 +175,7 @@ namespace GSO
       BeamletAllocator                      m_beamletAllocator;
       LogicalSegmentAllocator               m_logicalSegmentAllocator;
       map<string,WanLSPropertyProxyPtr>     m_lsPropProxies;
+      unsigned long                         m_lsCapacityCheckTimer;
 
       ALLOC_TRACER_CONTEXT  
    };

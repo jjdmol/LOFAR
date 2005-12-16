@@ -40,6 +40,7 @@ class WanLSPropertyProxy : public GCF::PAL::GCFPropertyProxy
     virtual ~WanLSPropertyProxy();
 
     double getCapacity() const;
+    void updateCapacity();
     void changeAllocated(const double allocated);
 
   protected:    

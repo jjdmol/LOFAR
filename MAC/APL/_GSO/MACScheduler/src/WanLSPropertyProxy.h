@@ -40,6 +40,7 @@ class WanLSPropertyProxy : public GCF::PAL::GCFPropertyProxy
     virtual ~WanLSPropertyProxy();
 
     double getCapacity() const;
+    void   updateCapacity();
 
   protected:    
     virtual void propSubscribed(const string& propName);

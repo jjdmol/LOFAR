@@ -147,6 +147,7 @@ namespace AVR
       vector<string>                    m_logicalSegments;
       map<string,WanLSPropertyProxyPtr> m_lsProps;
       unsigned long                     m_qualityCheckTimerId;
+      unsigned long                     m_lsCapacityCheckTimer;
 
       ALLOC_TRACER_CONTEXT  
   };

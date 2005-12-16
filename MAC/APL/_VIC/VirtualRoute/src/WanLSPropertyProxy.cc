@@ -45,20 +45,22 @@ WanLSPropertyProxy::WanLSPropertyProxy(const string& propset) :
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,m_propSetName.c_str());
 
-  subscribeProp(m_propSetName + string(".") + string(VR_LOGICALSEGMENT_PROPNAME_CAPACITY));
   requestPropValue(m_propSetName + string(".") + string(VR_LOGICALSEGMENT_PROPNAME_CAPACITY));
 }
 
 WanLSPropertyProxy::~WanLSPropertyProxy()
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,m_propSetName.c_str());
-
-  unsubscribeProp(m_propSetName + string(".") + string(VR_LOGICALSEGMENT_PROPNAME_CAPACITY));
 }
 
 double WanLSPropertyProxy::getCapacity() const
 {
   return m_capacity;
+}
+
+void WanLSPropertyProxy::updateCapacity()
+{
+  requestPropValue(m_propSetName + string(".") + string(VR_LOGICALSEGMENT_PROPNAME_CAPACITY));
 }
 
 void WanLSPropertyProxy::changeAllocated(const double allocated)
