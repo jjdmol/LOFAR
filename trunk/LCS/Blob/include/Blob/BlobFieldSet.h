@@ -66,6 +66,9 @@ namespace LOFAR {
   // Fields to a set are added using the add function and they can be found
   // using its index in operator []. Some or all fields can be given a unique
   // name making it possible to find the field by name.
+  // A field will be aligned on the implicitly or explicitly given
+  // alignment. It is important that a set is constructed in the same way
+  // on the reader and the writer side.
   //
   // The blob has to created (in memory) using the createBlob function.
   // Thereafter pointers to the various data in the BlobOBufChar buffer object
@@ -106,16 +109,25 @@ namespace LOFAR {
 	{ return itsHasFixedShape; }
       
       // Add an unnamed field to the definition and return its index.
-      int add (const BlobFieldBase& field);
+      // It is possible to specify the alignment; 0 means use default
+      // alignment which is the length of a field element.
+      int add (const BlobFieldBase& field, uint alignment=0);
       
       // Add a named field to the definition and return its index.
       // The name has to be unique.
-      int add (const std::string& name, const BlobFieldBase& field);
+      // It is possible to specify the alignment; 0 means use default
+      // alignment which is the length of a field element.
+      int add (const std::string& name, const BlobFieldBase& field,
+	       uint alignment=0);
   
       // Get the version of the set.
       uint version() const
 	{ return itsVersion; }
-      
+
+      // Get the alignment of the set.
+      uint getAlignment() const
+        { return itsAlignment; }
+
       // Find the length of the blob to be created.
       uint findBlobSize();
       
@@ -183,6 +195,7 @@ namespace LOFAR {
       
       std::string                 itsName;
       uint                        itsVersion;
+      uint                        itsAlignment;
       bool                        itsHasFixedShape;
       uint                        itsNormalSize;
       std::vector<BlobFieldBase*> itsFields;

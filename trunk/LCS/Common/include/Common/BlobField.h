@@ -147,7 +147,16 @@ namespace LOFAR {
 	  return static_cast<const T*> (getIData (buf));
 #endif
 	}
-      
+ 
+      // Set the required field alignment (on a multiple of nbytes bytes).
+      // Usually this function is only used by BlobFieldSet::add.
+      void setAlignment (uint nbytes)
+        { itsAlignment = nbytes; }
+
+      // Get the alignment.
+      uint getAlignment() const
+        { return itsAlignment; }
+
       // Helper functions for BlobFieldSet.
       // <group>
       // Reserve space for this field in an output blob and set its offset.
@@ -173,7 +182,7 @@ namespace LOFAR {
 	{ return itsOffset; }
       int64 getArrayOffset() const
 	{ return itsArrayOffset; }
-      bool& fortranOrder()
+      bool& rwFortranOrder()
 	{ return itsFortranOrder; }
       // </group>
       
@@ -202,6 +211,7 @@ namespace LOFAR {
       bool                itsIsScalar;
       bool                itsUseHeader;
       bool                itsHasFixedShape;
+      uint                itsAlignment;
     };
   
   
@@ -216,6 +226,8 @@ namespace LOFAR {
   //
   // A field can be a scalar or an array of any dimensionality.
   // Care is taken that the field is aligned properly when the blob is created.
+  // By default a field is aligned on a multiple of its element size
+  // (e.g. 8 bytes for a double), but it is possible to specify the alignment.
   //
   // Because a blob can be used to exchange data between different systems,
   // it must be possible to convert data as needed (for instance from big to

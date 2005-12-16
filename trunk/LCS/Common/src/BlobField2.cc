@@ -38,7 +38,8 @@ namespace LOFAR {
       itsFortranOrder  (true),
       itsIsScalar      (true),
       itsUseHeader     (false),
-      itsHasFixedShape (true)
+      itsHasFixedShape (true),
+      itsAlignment     (1)
   {}
 
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0)
@@ -116,6 +117,7 @@ namespace LOFAR {
     itsShape       = itsShapeDef;
     fillNelem();
     itsHasFixedShape = (itsShapeDef.size() > 0  &&  itsNelem != 0);
+    itsAlignment     = 1;
   }
 
   void BlobFieldBase::setShape (const std::vector<uint32>& shape)

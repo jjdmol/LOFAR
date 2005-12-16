@@ -53,54 +53,61 @@ BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
 template<typename T>
 uint setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
 			 uint32 size0, uint32 size1,
-			 bool fortranOrder)
+			 bool fortranOrder, uint alignment)
 {
   uint32 shp[2];
   shp[0] = size0;
   shp[1] = size1;
-  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 2, fortranOrder);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 2, fortranOrder,
+			       alignment);
 }
 template<typename T>
 uint setSpaceBlobArray3 (BlobOStream& bs,  bool useBlobHeader,
 			 uint32 size0, uint32 size1, uint32 size2,
-			 bool fortranOrder)
+			 bool fortranOrder, uint alignment)
 {
   uint32 shp[3];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
-  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 3, fortranOrder);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 3, fortranOrder,
+			       alignment);
 }
 template<typename T>
 uint setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
 			 uint32 size0, uint32 size1,
 			 uint32 size2, uint32 size3,
-			 bool fortranOrder)
+			 bool fortranOrder, uint alignment)
 {
   uint32 shp[4];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
   shp[3] = size3;
-  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 4, fortranOrder);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 4, fortranOrder,
+			       alignment);
 }
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
 			const std::vector<uint32>& shape,
-			bool fortranOrder)
+			bool fortranOrder, uint alignment)
 {
   return setSpaceBlobArray<T> (bs, useBlobHeader, &shape[0], shape.size(),
-			       fortranOrder);
+			       fortranOrder, alignment);
 }
 
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
 			const uint32* shape, uint16 ndim,
-			bool fortranOrder)
+			bool fortranOrder, uint alignment)
 {
+  // Default alignment is the size of an array element with a maximum of 8.
+  if (alignment == 0) {
+    alignment = std::min(8u, sizeof(T));
+  }
   uint32 n = putBlobArrayHeader (bs, useBlobHeader,
 				 LOFAR::typeName((const T**)0),
-				 shape, ndim, fortranOrder, sizeof(T));
+				 shape, ndim, fortranOrder, alignment);
   uint pos = bs.setSpace (n*sizeof(T));
   if (useBlobHeader) {
     bs.putEnd();
