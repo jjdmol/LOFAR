@@ -59,7 +59,8 @@ VirtualRoute::VirtualRoute(const string& taskName,
   m_requiredBandwidth(0.0),
   m_logicalSegments(),
   m_lsProps(),
-  m_qualityCheckTimerId(0)
+  m_qualityCheckTimerId(0),
+  m_lsCapacityCheckTimer(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
  
@@ -209,7 +210,8 @@ GCFEvent::TResult VirtualRoute::concrete_preparing_state(GCFEvent& event, GCFPor
   {
     case F_ENTRY:
     {
-      // skip it
+      // start capacity updates
+      m_lsCapacityCheckTimer = m_serverPort.setTimer(10L);
       newState=LOGICALDEVICE_STATE_SUSPENDED;
       errorCode = LD_RESULT_NO_ERROR;
       break;
@@ -245,7 +247,9 @@ GCFEvent::TResult VirtualRoute::concrete_active_state(GCFEvent& event, GCFPortIn
     case F_EXIT:
     {
       m_serverPort.cancelTimer(m_qualityCheckTimerId);
+      m_serverPort.cancelTimer(m_lsCapacityCheckTimer);
       m_qualityCheckTimerId=0;
+      m_lsCapacityCheckTimer=0;
 
       // reset allocated value changes
       for(map<string,WanLSPropertyProxyPtr>::iterator it=m_lsProps.begin();it!=m_lsProps.end();++it)
@@ -329,8 +333,17 @@ void VirtualRoute::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterf
     else
     {
       // keep on polling
-      m_qualityCheckTimerId = m_serverPort.setTimer(5L);
+      m_qualityCheckTimerId = m_serverPort.setTimer(10L);
     }
+  }
+  else if(timerEvent.id == m_lsCapacityCheckTimer)
+  {
+    map<string,WanLSPropertyProxyPtr>::iterator propIt;
+    for(propIt=m_lsProps.begin();propIt!=m_lsProps.end();++propIt)
+    {
+      propIt->second->updateCapacity();
+    }
+    m_lsCapacityCheckTimer = m_serverPort.setTimer(10L);
   }
 }
 

@@ -69,7 +69,8 @@ MACScheduler::MACScheduler() :
 #endif // OTDB_UNAVAILABLE
   m_beamletAllocator(128),
   m_logicalSegmentAllocator(),
-  m_lsPropProxies()
+  m_lsPropProxies(),
+  m_lsCapacityCheckTimer(0)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -539,6 +540,8 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
       // open server ports
       m_SASserverPort.open();
       m_VIparentPort.open();
+      
+      m_lsCapacityCheckTimer = m_VIparentPort.setTimer(10L);
       break;
     }
   
@@ -571,9 +574,21 @@ GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& po
     case F_TIMER:
     {
       GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-      // no need to check for timerID because only one timer is used
-      port.cancelTimer(timerEvent.id);
-      port.open();
+      // check for timerID
+      if(timerEvent.id == m_lsCapacityCheckTimer)
+      {
+        map<string,WanLSPropertyProxyPtr>::iterator propIt;
+        for(propIt=m_lsPropProxies.begin();propIt!=m_lsPropProxies.end();++propIt)
+        {
+          propIt->second->updateCapacity();
+        }
+        m_lsCapacityCheckTimer = port.setTimer(10L);
+      }
+      else
+      {
+        port.cancelTimer(timerEvent.id);
+        port.open();
+      }
       break;
     }
 
