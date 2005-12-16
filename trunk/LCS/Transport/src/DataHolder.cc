@@ -172,15 +172,15 @@ void DataHolder::initDataFields()
   itsDataFields = fset;
 }
 
-uint DataHolder::addField (const BlobFieldBase& field)
+uint DataHolder::addField (const BlobFieldBase& field, uint alignment)
 {
-  return itsDataFields.add (field);
+  return itsDataFields.add (field, alignment);
 }
 
 uint DataHolder::addField (const std::string& fieldName,
-			   const BlobFieldBase& field)
+			   const BlobFieldBase& field, uint alignment)
 {
-  return itsDataFields.add (fieldName, field);
+  return itsDataFields.add (fieldName, field, alignment);
 }
 
 BlobStringType DataHolder::getBlobStringType()
@@ -205,7 +205,8 @@ void DataHolder::createDataBlock()
     if (itsMaxDataSize == 0  ||  !itsDataCanGrow) {
       initsz += itsDataFields.findBlobSize();
     }
-    itsData = new BlobString (getBlobStringType(), initsz, itsDataCanGrow);
+    itsData = new BlobString (getBlobStringType(), initsz, itsDataCanGrow,
+			      itsDataFields.getAlignment());
     itsDataBlob = new BlobOBufString (*itsData);
   }
   itsDataFields.createBlob (*itsDataBlob);

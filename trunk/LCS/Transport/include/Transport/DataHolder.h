@@ -52,6 +52,14 @@ class DataBlobExtra;
   to the data and common functionality to derived classes.
   The data (defined in derived classes) is stored in a blob.
 
+  The blob is constructed from the fields added using the addField function.
+  It is possible to specify the alignment of a field. By default a field is
+  aligned on its element size with a maximum of 8 (e.g. a single precision
+  complex is aligned on 8 bytes). The alignment must be a power of 2.
+  The blob buffer containing all fields is aligned on the maximum of the
+  alignment of its fields, so it is ensured that the data of a fields are
+  aligned properly in memory.
+
   Prove \code list<table> \endcode or \<table\>.
   \code
     main()
@@ -160,10 +168,13 @@ protected:
 
   // \name Add a field to the data block definition.
   // Optionally a (unique) name can be given to the field.
+  // It is possible to specify the alignment; 0 means use default
+  // alignment which is the length of a field element.
   // It returns the index of the field.
   // <group>
-  uint addField (const BlobFieldBase&);
-  uint addField (const std::string& fieldName, const BlobFieldBase&);
+  uint addField (const BlobFieldBase&, uint alignment=0);
+  uint addField (const std::string& fieldName, const BlobFieldBase&,
+		 uint alignment=0);
   // </group>
 
   // \name Setup the data block.
