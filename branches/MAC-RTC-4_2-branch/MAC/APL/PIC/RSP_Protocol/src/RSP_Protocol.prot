@@ -193,6 +193,100 @@ event = {
   };
 };
 
+//REO-B
+event = {
+  signal = SUBSUBBANDS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+  param = {
+    name = "type";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBSUBBANDSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UPDSUBBANDS;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+  param = {
+    name = "subbands";
+    type = "SubbandSelection";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBSUBBANDS;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBSUBBANDSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+
+//REO-E
+
 //
 // RCU Control
 //

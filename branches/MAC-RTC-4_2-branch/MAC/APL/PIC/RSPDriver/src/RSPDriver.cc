@@ -45,6 +45,7 @@
 #include "GetWeightsCmd.h"
 #include "SetSubbandsCmd.h"
 #include "GetSubbandsCmd.h"
+#include "UpdSubbandsCmd.h"
 #include "GetStatusCmd.h"
 #include "UpdStatusCmd.h"
 #include "SetRCUCmd.h"
@@ -88,6 +89,9 @@ using namespace RTC;
 
 static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
 
+//
+// RSPDriver(name)
+//
 RSPDriver::RSPDriver(string name)
   : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler(),
     m_update_counter(0), m_n_updates(0), m_elapsed(0)
@@ -143,12 +147,17 @@ RSPDriver::RSPDriver(string name)
   addAllSyncActions();
 }
 
-
+//
+// ~RSPDriver()
+//
 RSPDriver::~RSPDriver()
 {
   delete [] m_board;
 }
 
+//
+// isEnabled()
+//
 bool RSPDriver::isEnabled()
 {
   bool enabled = true;
@@ -378,6 +387,9 @@ void RSPDriver::addAllSyncActions()
   } // for (boardid...)
 }
 
+//
+// openBoards()
+//
 void RSPDriver::openBoards()
 {
   for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
@@ -386,6 +398,9 @@ void RSPDriver::openBoards()
   }
 }
 
+//
+// initial(event, port)
+//
 GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -512,6 +527,9 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
   return status;
 }
 
+//
+// undertaker()
+//
 void RSPDriver::undertaker()
 {
   for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
@@ -523,6 +541,9 @@ void RSPDriver::undertaker()
   m_dead_clients.clear();
 }
 
+//
+// enabled(event, port)
+//
 GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -630,6 +651,14 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
     case RSP_GETSUBBANDS:
       rsp_getsubbands(event, port);
+      break;
+
+    case RSP_SUBSUBBANDS:
+      rsp_subsubbands(event, port);
+      break;
+      
+    case RSP_UNSUBSUBBANDS:
+      rsp_unsubsubbands(event, port);
       break;
 
     case RSP_SETRCU:
@@ -850,6 +879,9 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
   return status;
 }
 
+//
+// isBoardPort(port)
+//
 bool RSPDriver::isBoardPort(GCFPortInterface& port)
 {
   /**
@@ -865,6 +897,9 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
   return false;
 }
 
+//
+// clock_tick(port)
+//
 GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -906,6 +941,9 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
   return status;
 }
 
+//
+// rsp_setweights(event,port)
+//
 void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 {
   /**
@@ -968,6 +1006,9 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   delete sw_event;
 }
 
+//
+// rsp_getweights(event,port)
+//
 void RSPDriver::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetWeightsCmd> command = new GetWeightsCmd(event, port, Command::READ);
@@ -997,6 +1038,9 @@ void RSPDriver::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
 }
 
 
+//
+// rsp_setsubbands(event,port)
+//
 void RSPDriver::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetSubbandsCmd> command = new SetSubbandsCmd(event, port, Command::WRITE);
@@ -1026,6 +1070,9 @@ void RSPDriver::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
   command->ack(Cache::getInstance().getFront());
 }
 
+//
+// rsp_getsubbands(event,port)
+//
 void RSPDriver::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetSubbandsCmd> command = new GetSubbandsCmd(event, port, Command::READ);
@@ -1056,6 +1103,65 @@ void RSPDriver::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_subsubbands(event,port)
+//
+void RSPDriver::rsp_subsubbands(GCFEvent& event, GCFPortInterface& port)
+{
+  // subscription is done by entering a UpdSubbandsCmd in the periodic queue
+  Ptr<UpdSubbandsCmd> command = new UpdSubbandsCmd(event, port, Command::READ);
+  RSPSubsubbandsackEvent ack;
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SUBSUBBANDS: invalid parameter");
+    
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = FAILURE;
+    ack.handle = 0;
+
+    port.send(ack);
+    return;
+  }
+  else
+  {
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)&(*command);
+    port.send(ack);
+  }
+
+  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+			  Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubsubbands(event,port)
+//
+void RSPDriver::rsp_unsubsubbands(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPUnsubsubbandsEvent unsub(event);
+
+  RSPUnsubsubbandsackEvent ack;
+  ack.timestamp = m_scheduler.getCurrentTime();
+  ack.status = FAILURE;
+  ack.handle = unsub.handle;
+
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
+  {
+    ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBSUBBANDS: failed to remove subscription");
+  }
+
+  port.send(ack);
+}
+
+//
+// rsp_setrcu(event,port)
+//
 void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetRCUCmd> command = new SetRCUCmd(event, port, Command::WRITE);
@@ -1085,6 +1191,9 @@ void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
   command->ack(Cache::getInstance().getFront());
 }
 
+//
+// rsp_getrcu(event,port)
+//
 void RSPDriver::rsp_getrcu(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetRCUCmd> command = new GetRCUCmd(event, port, Command::READ);
@@ -1114,6 +1223,9 @@ void RSPDriver::rsp_getrcu(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_setwg(event, port)
+//
 void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetWGCmd> command = new SetWGCmd(event, port, Command::WRITE);
@@ -1143,6 +1255,9 @@ void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
   command->ack(Cache::getInstance().getFront());
 }
 
+//
+// rsp_getwg(event, port)
+//
 void RSPDriver::rsp_getwg(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetWGCmd> command = new GetWGCmd(event, port, Command::READ);
@@ -1171,6 +1286,9 @@ void RSPDriver::rsp_getwg(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_substatus(event,port)
+//
 void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
 {
   // subscription is done by entering a UpdStatusCmd in the periodic queue
@@ -1200,6 +1318,9 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
 			  Scheduler::PERIODIC);
 }
 
+//
+// rsp_unsubstatus(event,port)
+//
 void RSPDriver::rsp_unsubstatus(GCFEvent& event, GCFPortInterface& port)
 {
   RSPUnsubstatusEvent unsub(event);
@@ -1221,6 +1342,9 @@ void RSPDriver::rsp_unsubstatus(GCFEvent& event, GCFPortInterface& port)
   port.send(ack);
 }
 
+//
+// rsp_getstatus (event, port)
+//
 void RSPDriver::rsp_getstatus(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetStatusCmd> command = new GetStatusCmd(event, port, Command::READ);
@@ -1244,6 +1368,9 @@ void RSPDriver::rsp_getstatus(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_substats (event, port)
+//
 void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
 {
   // subscription is done by entering a UpdStatsCmd in the periodic queue
@@ -1273,6 +1400,9 @@ void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
 			  Scheduler::PERIODIC);
 }
 
+//
+// rsp_unsubstats (event, port)
+//
 void RSPDriver::rsp_unsubstats(GCFEvent& event, GCFPortInterface& port)
 {
   RSPUnsubstatsEvent unsub(event);
@@ -1294,6 +1424,9 @@ void RSPDriver::rsp_unsubstats(GCFEvent& event, GCFPortInterface& port)
   port.send(ack);
 }
 
+//
+// rsp_getstats (event, port)
+//
 void RSPDriver::rsp_getstats(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetStatsCmd> command = new GetStatsCmd(event, port, Command::READ);
@@ -1317,6 +1450,9 @@ void RSPDriver::rsp_getstats(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_subxcstats (event, port)
+//
 void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
 {
   // subscription is done by entering a UpdXCStatsCmd in the periodic queue
@@ -1346,6 +1482,9 @@ void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
 			  Scheduler::PERIODIC);
 }
 
+//
+// rsp_unsubxcstats (event, port)
+//
 void RSPDriver::rsp_unsubxcstats(GCFEvent& event, GCFPortInterface& port)
 {
   RSPUnsubxcstatsEvent unsub(event);
@@ -1367,6 +1506,9 @@ void RSPDriver::rsp_unsubxcstats(GCFEvent& event, GCFPortInterface& port)
   port.send(ack);
 }
 
+//
+// rsp_getxcstats (event, port)
+//
 void RSPDriver::rsp_getxcstats(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetXCStatsCmd> command = new GetXCStatsCmd(event, port, Command::READ);
@@ -1390,6 +1532,9 @@ void RSPDriver::rsp_getxcstats(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_getversions (event, port)
+//
 void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetVersionsCmd> command = new GetVersionsCmd(event, port, Command::READ);
@@ -1418,6 +1563,9 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_getconfig (event, port)
+//
 void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 {
   RSPGetconfigEvent get(event);
@@ -1430,6 +1578,9 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
   port.send(ack);
 }
 
+//
+// rsp_setclocks (event, port)
+//
 void RSPDriver::rsp_setclocks(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<SetClocksCmd> command = new SetClocksCmd(event, port, Command::WRITE);
@@ -1459,6 +1610,9 @@ void RSPDriver::rsp_setclocks(GCFEvent& event, GCFPortInterface& port)
   command->ack(Cache::getInstance().getFront());
 }
 
+//
+// rsp_getclocks (event, port)
+//
 void RSPDriver::rsp_getclocks(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<GetClocksCmd> command = new GetClocksCmd(event, port, Command::READ);
@@ -1487,6 +1641,9 @@ void RSPDriver::rsp_getclocks(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
+//
+// rsp_subclocks (event, port)
+//
 void RSPDriver::rsp_subclocks(GCFEvent& event, GCFPortInterface& port)
 {
   Ptr<UpdClocksCmd> command = new UpdClocksCmd(event, port, Command::READ);
@@ -1516,6 +1673,9 @@ void RSPDriver::rsp_subclocks(GCFEvent& event, GCFPortInterface& port)
 			  Scheduler::PERIODIC);
 }
 
+//
+// rsp_unsubclocks (event, port)
+//
 void RSPDriver::rsp_unsubclocks(GCFEvent& event, GCFPortInterface& port)
 {
   RSPUnsubclocksEvent unsub(event);
@@ -1537,6 +1697,9 @@ void RSPDriver::rsp_unsubclocks(GCFEvent& event, GCFPortInterface& port)
   port.send(ack);
 }
 
+//
+// main (argc, argv)
+//
 int main(int argc, char** argv)
 {
   /* daemonize if required */

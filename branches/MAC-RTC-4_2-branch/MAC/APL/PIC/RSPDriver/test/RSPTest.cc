@@ -357,6 +357,8 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       ss.rcumask.set(1);
       ss.rcumask.set(2);
       ss.rcumask.set(3);
+
+	  ss.subbands.setType(SubbandSelection::BEAMLET);
       
       ss.subbands().resize(1, 10); // 10 subbands selected
 
@@ -477,6 +479,7 @@ GCFEvent::TResult RSPTest::test007(GCFEvent& e, GCFPortInterface& port)
       ss.rcumask.reset(0);
       ss.rcumask.set(0);
       ss.cache = false;
+	  ss.type  = SubbandSelection::BEAMLET;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
     }
@@ -963,7 +966,95 @@ GCFEvent::TResult RSPTest::test012(GCFEvent& e, GCFPortInterface& port)
 
       LOG_INFO_STR("ack.handle=" << ack.handle);
 
+      TRAN(RSPTest::test013);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
       port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test013(GCFEvent& e, GCFPortInterface& port)
+{
+  static int updcount = 0;
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test013", "test UPDSUBBANDS");
+
+      // subscribe to SUBBANDS updates
+      RSPSubsubbandsEvent subsubbands;
+
+      subsubbands.timestamp.setNow();
+      subsubbands.rcumask.reset();
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+		subsubbands.rcumask.set(i);
+      }
+      subsubbands.period = 4;
+	  subsubbands.type   = SubbandSelection::BEAMLET;
+      
+      TESTC_ABORT(m_server.send(subsubbands) > 0, RSPTest::final);
+    }
+    break;
+
+    case RSP_SUBSUBBANDSACK:
+    {
+      RSPSubsubbandsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+    }
+    break;
+
+    case RSP_UPDSUBBANDS:
+    {
+      RSPUpdsubbandsEvent upd(e);
+
+      TESTC_ABORT(upd.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("upd.time=" << upd.timestamp);
+      LOG_INFO_STR("upd.handle=" << upd.handle);
+      LOG_INFO_STR("upd.subbands=" << upd.subbands());
+
+      if (updcount++ > 4) // four seconds
+      {
+		RSPUnsubsubbandsEvent unsub;
+		unsub.handle = upd.handle; // remove subscription with this handle
+
+		TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+      }
+    }
+    break;
+    
+    case RSP_UNSUBSUBBANDSACK:
+    {
+      RSPUnsubsubbandsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+      LOG_INFO_STR("ack.handle=" << ack.handle);
+
       TRAN(RSPTest::final);
     }
     break;
