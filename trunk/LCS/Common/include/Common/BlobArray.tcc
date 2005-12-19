@@ -103,7 +103,7 @@ uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
 {
   // Default alignment is the size of an array element with a maximum of 8.
   if (alignment == 0) {
-    alignment = std::min(8u, sizeof(T));
+    alignment = std::min((size_t) 8, sizeof(T));
   }
   uint32 n = putBlobArrayHeader (bs, useBlobHeader,
 				 LOFAR::typeName((const T**)0),
