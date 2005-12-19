@@ -20,3 +20,5 @@ inline T sqr(T x)
 {
   return x*x;
 }
+
+// @}
