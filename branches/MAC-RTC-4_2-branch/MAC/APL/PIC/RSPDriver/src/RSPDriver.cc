@@ -75,6 +75,7 @@
 #include "WGRead.h"
 #include "VersionsRead.h"
 #include "WriteReg.h"
+#include "CDOWrite.h"
 
 #include "Cache.h"
 #include "RawEvent.h"
@@ -206,6 +207,23 @@ void RSPDriver::addAllSyncActions()
    */
   for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
   {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_CDO", i))
+    {
+      char dstip[64];
+      char srcip[64];
+      char dstmac[64];
+      snprintf(srcip,  64, "RSPDriver.SRC_IP_ADDR_%d", boardid);
+      snprintf(dstip,  64, "RSPDriver.DST_IP_ADDR_%d", boardid);
+      snprintf(dstmac, 64, "RSPDriver.DST_MAC_ADDR_%d", boardid);
+
+      CDOWrite* cdowrite = new CDOWrite(m_board[boardid], boardid,
+					GET_CONFIG_STRING(srcip),
+					GET_CONFIG_STRING(dstip),
+					GET_CONFIG_STRING(dstmac));
+
+      m_scheduler.addSyncAction(cdowrite);
+    }
+
     if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
     {
       StatusRead* statusread = new StatusRead(m_board[boardid], boardid);

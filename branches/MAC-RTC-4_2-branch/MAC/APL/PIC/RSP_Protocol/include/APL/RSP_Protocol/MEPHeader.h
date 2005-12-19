@@ -139,6 +139,7 @@ namespace LOFAR {
       static const uint8 CRB_SOFTPPS   = 0x01;
 
       static const uint8 CDO_SETTINGS  = 0x00;
+      static const uint8 CDO_HEADER    = 0x01;
 
       static const uint8 XST_STATS     = 0x00;
       static const uint8 XST_0_X       = XST_STATS + 0; // 8 registers, two for each AP
@@ -229,7 +230,8 @@ namespace LOFAR {
       static const uint16 CRB_SOFTRESET_SIZE = 1;
       static const uint16 CRB_SOFTPPS_SIZE   = 1;
       
-      static const uint16 CDO_SETTINGS_SIZE  = 10;
+      static const uint16 CDO_SETTINGS_SIZE  = 16;
+      static const uint16 CDO_HEADER_SIZE    = 32;
 
       static const uint16 XST_STATS_SIZE     = (N_GLOBAL_XLETS + N_XLETS) * XLET_SIZE;
       /*@}*/
@@ -334,6 +336,7 @@ namespace LOFAR {
       static const FieldsType CRB_SOFTPPS_HDR;
 
       static const FieldsType CDO_SETTINGS_HDR;
+      static const FieldsType CDO_HEADER_HDR;
 
       static const FieldsType XST_STATS_HDR;
       /*@}*/

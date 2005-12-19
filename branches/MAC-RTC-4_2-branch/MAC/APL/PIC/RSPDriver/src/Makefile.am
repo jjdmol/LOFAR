@@ -149,7 +149,9 @@ RSPDriver_SOURCES = \
 	WGWrite.h \
 	WGWrite.cc \
 	WGRead.h \
-	WGRead.cc
+	WGRead.cc \
+	CDOWrite.h \
+	CDOWrite.cc
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \

@@ -639,6 +639,25 @@ event = {
     name = "antenna_id";
     type = "uint16";
   };
+  param = {
+    name = "destination_mac";
+    type = "uint8[ETH_ALEN]";
+  };
+};
+
+event = {
+  noheader;
+  signal = CDO_HEADER;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "header";
+    type = "uint8[MEPHeader::CDO_HEADER_SIZE]";
+  };
 };
 
 event = {
