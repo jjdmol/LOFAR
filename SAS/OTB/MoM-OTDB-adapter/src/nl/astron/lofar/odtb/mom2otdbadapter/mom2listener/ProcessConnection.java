@@ -22,11 +22,14 @@ import org.xml.sax.InputSource;
 public class ProcessConnection extends Thread {
 	private Log log = LogFactory.getLog(this.getClass());
 	private Socket client;
+	private OTDBRepository repository;
+	
+
 
 	// Constructor
-	ProcessConnection(Socket client) {
+	public ProcessConnection(OTDBRepository repository, Socket client) {
 		this.client = client;
-
+		this.repository =repository;
 	}
 
 	public void run() {
@@ -59,7 +62,6 @@ public class ProcessConnection extends Thread {
 			Document document = convertStringToDocument(input);
 			XMLParser xmlParser = new XMLParser();
 			LofarObservation lofarObservation = xmlParser.getLofarObservation(document);
-			OTDBRepository repository = new OTDBRepository();
 			repository.story(lofarObservation);
 			return "succeed";
 		}catch (Exception e){

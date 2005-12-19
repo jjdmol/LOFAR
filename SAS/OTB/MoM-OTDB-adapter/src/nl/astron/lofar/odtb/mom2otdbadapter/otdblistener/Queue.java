@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import nl.astron.wsrt.util.WsrtConverter;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -19,6 +21,7 @@ public class Queue {
 	private Log log = LogFactory.getLog(this.getClass());
 	private List tasks = new ArrayList();
 	private String taskDir = "./tasks";
+	private static final String DATE_TIME_FORMAT = "yyyy_MM_dd'T'HH_mm_ss";
 	public Queue() throws IOException{
 		File dir = new File(taskDir);
 		if (!dir.exists()){
@@ -27,7 +30,7 @@ public class Queue {
 			String[] files = dir.list();
 			for (int i = 0; i < files.length;i++){
 				Task task = new Task();
-				String xml = getFile(files[i]);
+				String xml = getFile(dir.getAbsolutePath() + File.separator + files[i]);
 				task.setXml(xml);
 				tasks.add(task);
 			}
@@ -71,7 +74,7 @@ public class Queue {
 	}
 	protected void storeTask(Task task) throws FileNotFoundException, IOException{
 		Date date  = new Date();
-		String fileName = taskDir + File.separator + task.getMom2Id() + "_" + date.getTime()+ ".xml";
+		String fileName = taskDir + File.separator + "mom2id_" + task.getMom2Id() + "_time_" + WsrtConverter.toDateString(date,DATE_TIME_FORMAT)+ ".xml";
 		File file = new File(fileName);
 		file.createNewFile();
 		FileOutputStream fileOutputStream = new FileOutputStream(file);

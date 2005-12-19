@@ -20,7 +20,11 @@ public class XMLGenerator {
 
 	protected static final String MOM2_NAMESPACE = "http://www.astron.nl/MoM2";
 
-	protected static final String OTDB_DATETIME_FORMAT = "dd-MM-yyyy HH:mm";
+	protected static final String OTDB_DATETIME_FORMAT = "dd-MM-yyyy HH:mm:ss";
+
+	protected static final String FAILED = "failed";
+
+	protected static final String FINISHED = "finished";
 
 	private XMLBuilder xmlBuilder = null;
 
@@ -37,17 +41,20 @@ public class XMLGenerator {
 		return xmlBuilder.getDocument();
 
 	}
-	public String getObservationXml(LofarObservation observation) throws IOException, ParserConfigurationException{
+
+	public String getObservationXml(LofarObservation observation)
+			throws IOException, ParserConfigurationException {
 		Document document = getObservationDocument(observation);
-        OutputFormat    format  = new OutputFormat( document );   //Serialize DOM
-        StringWriter  stringOut = new StringWriter();        //Writer will be a String
-        XMLSerializer    serial = new XMLSerializer( stringOut, format );
-        serial.asDOMSerializer();                            // As a DOM Serializer
+		OutputFormat format = new OutputFormat(document); // Serialize DOM
+		StringWriter stringOut = new StringWriter(); // Writer will be a
+		// String
+		XMLSerializer serial = new XMLSerializer(stringOut, format);
+		serial.asDOMSerializer(); // As a DOM Serializer
 
-        serial.serialize( document.getDocumentElement() );
+		serial.serialize(document.getDocumentElement());
 
-        return stringOut.toString(); //Spit out DOM as a String
-	
+		return stringOut.toString(); // Spit out DOM as a String
+
 	}
 
 	protected void addObservation(Element observationElement,
@@ -66,45 +73,78 @@ public class XMLGenerator {
 		Element childrenElement = xmlBuilder.addElement(parent, "children");
 		String[] ids = getArray(observation.getMeasurementMom2Ids());
 		String[] angleTimes = getArray(observation.getAngleTimes());
+		String status = observation.getStatus();
 		Date startTime = WsrtConverter.toDate(observation.getStartTime(),
 				OTDB_DATETIME_FORMAT);
 		Date endTime = WsrtConverter.toDate(observation.getEndTime(),
 				OTDB_DATETIME_FORMAT);
-		long startTimeLong = startTime.getTime();
-		for (int i = 0; i < ids.length; i++){
+
+		for (int i = 0; i < ids.length; i++) {
 			String mom2Id = ids[i];
-			String status = observation.getStatus();
-			long startOffset = new Long(angleTimes[i].substring(1)).longValue() * 1000;
-			Date startDate  = new Date();
-			startDate.setTime(startTimeLong + startOffset);
-			Date endDate = new Date();
-			if (i < ids.length-1){
-				long endOffset = new Long(angleTimes[i+1].substring(1)).longValue();
+			if (angleTimes == null) {
+				addMeasurement(childrenElement, mom2Id, status, null, null);
+			} else {
+				long startTimeLong = startTime.getTime();
+				long startOffset = new Long(angleTimes[i].substring(1))
+						.longValue();
+				if (i > 0) {
+					/*
+					 * add 1 second, because a measurement can not be start and
+					 * end on the same second
+					 */
+					startOffset = (startOffset + 1) * 1000;
+				}
+				Date startDate = new Date();
+				startDate.setTime(startTimeLong + startOffset);
+				Date endDate = new Date();
+				if (i < ids.length - 1) {
+					long endOffset = new Long(angleTimes[i + 1].substring(1))
+							.longValue() * 1000;
+
+					endDate.setTime(startTimeLong + endOffset);
+				} else {
+					endDate = endTime;
+				}
 				/*
-				 * add 1 second, because a measurement can not be start and end on the same second
+				 * start and endtime is before the calculated times, according
+				 * angleTimes. Measurements must be failed
 				 */
-				endOffset =  (endOffset+1)* 1000;
-				endDate.setTime(endOffset);
-			}else {
-				endDate = endTime;
+				if (endTime.before(endDate)) {
+					addMeasurement(childrenElement, mom2Id, FAILED, startDate,
+							endTime);
+				} else if (endTime.before(startDate)) {
+					addMeasurement(childrenElement, mom2Id, FAILED, null, null);
+				} else {
+					addMeasurement(childrenElement, mom2Id, FINISHED,
+							startDate, endDate);
+				}
 			}
-			addMeasurement(childrenElement,mom2Id,status,startDate,endDate);
 		}
-		
 
 	}
 
 	protected void addMeasurement(Element childrenElement, String mom2Id,
 			String status, Date startTime, Date endTime) {
-		Element observationElement = xmlBuilder.addIndexedElement(
+		Element measurementElement = xmlBuilder.addIndexedElement(
 				childrenElement, MOM2_LOFAR_NAMESPACE, "measurement");
-		xmlBuilder.addAttributeToElement(observationElement, "mom2Id", mom2Id);
+		xmlBuilder.addAttributeToElement(measurementElement, "mom2Id", mom2Id);
 
 		Element currentStatusElement = xmlBuilder.addElement(
-				observationElement, "currentStatus");
+				measurementElement, "currentStatus");
 		addXmlStatusElement(currentStatusElement, status);
-		xmlBuilder.addTextElement(observationElement, "startTime", startTime);
-		xmlBuilder.addTextElement(observationElement, "endTime",endTime);
+		if (startTime != null && endTime != null) {
+			Element measurementAttributes = xmlBuilder.addElement(
+					measurementElement, MOM2_LOFAR_NAMESPACE,
+					"measurementAttributes");
+			if (startTime != null) {
+				xmlBuilder.addTextElement(measurementAttributes, "startTime",
+						WsrtConverter.toXmlDateTimeString(startTime));
+			}
+			if (endTime != null) {
+				xmlBuilder.addTextElement(measurementAttributes, "endTime",
+						WsrtConverter.toXmlDateTimeString(endTime));
+			}
+		}
 	}
 
 	protected void addXmlStatusElement(Element parent, String status) {
@@ -115,6 +155,7 @@ public class XMLGenerator {
 	}
 
 	protected String getStatusStringFromCode(String code) {
+		code = convertToMomStatus(code);
 		String[] splitted = code.split(" ");
 		String result = splitted[0];
 		if (splitted.length > 1) {
@@ -128,13 +169,36 @@ public class XMLGenerator {
 		return result + "Status";
 	}
 
+	protected String convertToMomStatus(String code) {
+		if (code.equals("specified")) {
+			return "prepared";
+		}
+		if (code.equals("active")) {
+			return "running";
+		}
+		if (code.equals("finished")) {
+			return "finished";
+		}
+		if (code.equals("aborted")) {
+			return "aborted";
+		}
+		if (code.equals("failed")) {
+			return "failed";
+		}
+		return null;
+	}
+
 	protected String[] getArray(String string) {
-		String temp = string;
-		/*
-		 * remove '[' ']'
-		 */
-		temp = temp.replaceAll("\\[", "");
-		temp = temp.replaceAll("\\]", "");
-		return temp.split(",");
+		if (string != null) {
+			String temp = string;
+			/*
+			 * remove '[' ']'
+			 */
+			temp = temp.replaceAll("\\[", "");
+			temp = temp.replaceAll("\\]", "");
+			return temp.split(",");
+		} else {
+			return null;
+		}
 	}
 }
