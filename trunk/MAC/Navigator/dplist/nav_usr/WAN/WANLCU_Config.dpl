@@ -8,15 +8,20 @@ TWanContainer.TWanContainer	1#1
 	status	21#2
 TWanLogicalSegment.TWanLogicalSegment	1#1
 	ActualTraffic	22#2
-	ActualBW	22#3
+	AllocatedBW	22#3
 	Capacity	22#4
+	changeAllocatedBW 22#5
 TWanSwitchPort.TWanSwitchPort	1#1
 	link	21#2
 	speed	20#3
 	Tx	20#4
 	Rx	20#5
 	errors	20#6
-	hspeed 20#7
+	hspeed	20#7
+	TxT	22#8
+	RxT	22#9
+	TxOld	21#10
+	RxOld	21#11
 TWanSwitchPT6.TWanSwitchPT6	1#1
 	location	25#2
 	uptime	25#3
