@@ -1,7 +1,7 @@
 V 10
 1
-LANG:1 11 Enable Tool
-PANEL,482 325 460 120 N "_3DFace" 0
+LANG:1 20 Enable property sets
+PANEL,284 187 460 120 N "_3DFace" 0
 EEE E E 1 -1 -1 0  10 10
 "" 0 1
 EE 2
@@ -24,14 +24,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 12 112 28
+E E 0 1 1 0 1 E U  0 E 12 12 228 28
 0 2 0 "s" 0 0 0 64 0 0  12 12
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 14 __enabled Tool
+LANG:1 29 Tool to "enable" PropertySets
 2 8
 "Text2"
 ""
@@ -91,7 +91,7 @@ E E 0 1 1 0 1 E U  0 E 22 44 149 58
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 19 Add enabled DP for:
+LANG:1 21 Add enabled DP's for:
 13 1
 "Button2"
 ""
@@ -119,13 +119,13 @@ LANG:1 12 query+create
     getValue(\"txt\", \"text\", datapoint);
     dpQuery(\"SELECT '_online.._value' FROM '\" + datapoint + \"'\", tab);
     string temp;
-    int k=1;
-    for(int i=2 ; i<=dynlen(tab) ; i++)
+    int k = 1;
+    for (int i = 2; i <= dynlen(tab) ; i++)
     {
       temp = dpSubStr(tab[i][1], DPSUB_DP);
-      if(dynContains(output,temp)==0)
+      if (dynContains(output, temp) == 0)
       {
-        output[k]= temp;
+        output[k] = temp;
         k++;
       }
     }
@@ -135,13 +135,13 @@ LANG:1 12 query+create
    string datapoint;
    string dpType;
    setValue(\"txt_total\", \"text\", dynlen(output));
-   for(int i=1; i<=dynlen(output); i++)
+   for (int i = 1; i <= dynlen(output); i++)
    {
      datapoint = output[i];
      dpType = dpTypeName(datapoint);
-     if(dpType[0] == \"T\")
+     if (dpType[0] == \"T\")
      {
-       if(!dpExists(datapoint + \"__enabled\"))
+       if (!dpExists(datapoint + \"__enabled\"))
        {
          dpCreate(datapoint + \"__enabled\", \"GCFPaPsEnabled\");
        }
@@ -149,7 +149,7 @@ LANG:1 12 query+create
        DebugN(\"## \" + datapoint + \"    |content: \" +  \"perm-autoloaded|\"+ dpType);
        
      }
-   setValue(\"txt_current\", \"text\", i);
+     setValue(\"txt_current\", \"text\", i);
    }
    DebugN(\"## Done\");
 }" 0
@@ -157,7 +157,7 @@ LANG:1 12 query+create
 14 3
 "txt"
 ""
-1 151 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 150 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -168,12 +168,12 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-149 38 443 65
+148 38 443 65
 3 "s" 0 0 0 0 0 0 
 E
 "main()
 {
-setValue(\"\", \"text\", getSystemName()+\"*\");
+  setValue(\"\", \"text\", getSystemName()+\"*\");
 }" 0
 
 E
