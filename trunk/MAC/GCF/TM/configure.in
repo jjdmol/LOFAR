@@ -37,7 +37,7 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_1, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_1rc2, 1, GCF/GCF_Defines.h,,)
 
 dnl
 dnl Output Makefiles
