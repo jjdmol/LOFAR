@@ -48,9 +48,10 @@ CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(40))
 			   t.leaf,
 			   t.instances,
 			   t.limits,
-			   n.description
+			   \'\'::text
+--			   n.description	-- TODO: join depends on t.leaf
 		FROM   VICtemplate t
-			   INNER JOIN VICnodedef n on n.nodeID = t.originID
+--			   INNER JOIN VICnodedef n on n.nodeID = t.originID
 		WHERE  t.treeID = $1
 		AND	   t.name LIKE $2
 	  LOOP
