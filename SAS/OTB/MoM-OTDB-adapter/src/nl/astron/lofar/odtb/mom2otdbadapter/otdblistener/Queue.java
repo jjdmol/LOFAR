@@ -52,7 +52,16 @@ public class Queue {
 		notifyAll();
 		return task;
 	}
+	public synchronized void remove(Task task) {
+		File file = new File(task.getFileName());
+		if (!file.delete()){
+			log.error("Can not delete file:" + task.getFileName());
+		}
+		log.info("Remove task(" + task.getMom2Id() + ") Number of tasks:"
+				+ tasks.size());
 
+		notifyAll();
+	}
 	public synchronized void add(Task task) throws IOException{
 		tasks.add(task);
 		log.info("Task added. Number of tasks:" + tasks.size());
@@ -75,6 +84,7 @@ public class Queue {
 	protected void storeTask(Task task) throws FileNotFoundException, IOException{
 		Date date  = new Date();
 		String fileName = taskDir + File.separator + "mom2id_" + task.getMom2Id() + "_time_" + WsrtConverter.toDateString(date,DATE_TIME_FORMAT)+ ".xml";
+		task.setFileName(fileName);
 		File file = new File(fileName);
 		file.createNewFile();
 		FileOutputStream fileOutputStream = new FileOutputStream(file);

@@ -104,6 +104,10 @@ public class XMLParser {
 				lofarObservation.setAngleTimes(lofarObservation.getAngleTimes()
 						+ "]");
 			}
+			if (lofarObservation.getMeasurementMom2Ids() != null) {
+				lofarObservation.setMeasurementMom2Ids(lofarObservation.getMeasurementMom2Ids()
+						+ "]");
+			}
 		}
 		return lofarObservation;
 	}
@@ -214,9 +218,9 @@ public class XMLParser {
 					.getClass())) {
 
 				if (equalIgnorePrefix(nodeChild, DESCRIBED_STATUS)) {
-					lofarObservation.setStatus(formatStatus(DESCRIBED_STATUS));
+					lofarObservation.setStatus(Mom2OtdbConverter.getOTDBStatus(formatStatus(DESCRIBED_STATUS)));
 				} else if (equalIgnorePrefix(nodeChild, SPECIFIED_STATUS)) {
-					lofarObservation.setStatus(formatStatus(SPECIFIED_STATUS));
+					lofarObservation.setStatus(Mom2OtdbConverter.getOTDBStatus(formatStatus(SPECIFIED_STATUS)));
 				}
 			}
 		}
@@ -239,6 +243,7 @@ public class XMLParser {
 	}
 
 	protected void parseItem(Node node, LofarObservation lofarObservation) {
+
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
 			Node nodeChild = node.getChildNodes().item(i);
 			/*
@@ -248,6 +253,7 @@ public class XMLParser {
 					.getClass())) {
 
 				if (equalIgnorePrefix(nodeChild, MEASUREMENT)) {
+
 					parseMeasurement(nodeChild, lofarObservation);
 				}
 			}
@@ -255,6 +261,15 @@ public class XMLParser {
 	}
 
 	protected void parseMeasurement(Node node, LofarObservation lofarObservation) {
+		String measurementMom2Ids = lofarObservation.getMeasurementMom2Ids();
+		String mom2Id = getAttribute(node.getAttributes(),
+				MOM2_ID);
+		if (measurementMom2Ids == null) {
+			measurementMom2Ids = "[" + mom2Id;
+		} else {
+			measurementMom2Ids = measurementMom2Ids + "," + mom2Id;
+		}
+		lofarObservation.setMeasurementMom2Ids(measurementMom2Ids);
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
 			Node nodeChild = node.getChildNodes().item(i);
 			/*

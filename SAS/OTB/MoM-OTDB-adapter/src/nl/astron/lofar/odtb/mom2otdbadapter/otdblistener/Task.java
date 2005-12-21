@@ -4,6 +4,7 @@ public class Task {
 	protected String xml = null;
 	protected String mom2Id = null;
 	protected String time = null;
+	protected String fileName = null;
 	public String getXml() {
 		return xml;
 	}
@@ -26,5 +27,13 @@ public class Task {
 
 	public void setTime(String time) {
 		this.time = time;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 }
