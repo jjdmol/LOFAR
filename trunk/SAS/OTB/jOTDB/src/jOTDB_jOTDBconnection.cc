@@ -36,18 +36,19 @@
 
 using namespace boost::posix_time;
 using namespace LOFAR::OTDB;
+using namespace std;
 
-namespace LOFAR 
+namespace LOFAR
 {
    namespace jOTDB
      {
-	/*
-	 * Class:     jOTDB_jOTDBconnection
-	 * Method:    initOTDBconnection
-	 * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	 */
-	JNIEXPORT void JNICALL jOTDB::Java_jOTDB_jOTDBconnection_initOTDBconnection
-          (JNIEnv *env, jobject, jstring username, jstring passwd, jstring database)	  
+       /*
+	* Class:     jOTDB_jOTDBconnection
+	* Method:    initOTDBconnection
+	* Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	*/
+       JNIEXPORT void JNICALL Java_jOTDB_jOTDBconnection_initOTDBconnection
+       (JNIEnv *env, jobject, jstring username, jstring passwd, jstring database)
 	{
  	     const char* user = env->GetStringUTFChars(username, 0);
  	     const char* pass = env->GetStringUTFChars(passwd, 0);
@@ -68,7 +69,7 @@ namespace LOFAR
 	 * Method:    isConnected
 	 * Signature: ()Ljava/lang/Boolean;
 	 */
-	JNIEXPORT jboolean JNICALL jOTDB::Java_jOTDB_jOTDBconnection_isConnected
+	JNIEXPORT jboolean JNICALL Java_jOTDB_jOTDBconnection_isConnected
 	  (JNIEnv *, jobject)
 	  {
 	     jboolean connected;
@@ -81,7 +82,7 @@ namespace LOFAR
 	 * Method:    connect
 	 * Signature: ()Ljava/lang/Boolean;
 	 */
-	JNIEXPORT jboolean JNICALL jOTDB::Java_jOTDB_jOTDBconnection_connect
+	JNIEXPORT jboolean JNICALL Java_jOTDB_jOTDBconnection_connect
 	  (JNIEnv *, jobject)
 	  {
 	     jboolean connected;
@@ -94,10 +95,10 @@ namespace LOFAR
 	 * Method:    getTreeInfo
 	 * Signature: (Ljava/lang/String;)LjOTDB/jOTDBtree;
 	 */
-	JNIEXPORT jobject JNICALL jOTDB::Java_jOTDB_jOTDBconnection_getTreeInfo
-	  (JNIEnv *env, jobject, jint treeID)
+	JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getTreeInfo
+	  (JNIEnv *env, jobject, jint treeID, jboolean isMomID)
 	  {
-	     OTDBtree aTree = OTDBconn->getTreeInfo((int)treeID);
+	     OTDBtree aTree = OTDBconn->getTreeInfo((int)treeID, isMomID);
 	     
 	     // Create a jOTDBtree object
 	     jobject myTree;
@@ -106,6 +107,7 @@ namespace LOFAR
 	     myTree = env->NewObject(class_jOTDBtree, mid_jOTDBtree_cons, treeID);
 	     
 	     // Get members
+	     jfieldID fid_jOTDBtree_momID = env->GetFieldID (class_jOTDBtree, "momID", "I");
 	     jfieldID fid_jOTDBtree_classification = env->GetFieldID (class_jOTDBtree, "classification", "S");
 	     jfieldID fid_jOTDBtree_creator = env->GetFieldID (class_jOTDBtree, "creator", "Ljava/lang/String;");
 	     jfieldID fid_jOTDBtree_creationDate = env->GetFieldID (class_jOTDBtree, "creationDate", "Ljava/lang/String;");
@@ -117,6 +119,7 @@ namespace LOFAR
 	     jfieldID fid_jOTDBtree_stoptime = env->GetFieldID (class_jOTDBtree, "stoptime", "Ljava/lang/String;");   
 
 	     // Fill members
+	     env->SetIntField(myTree, fid_jOTDBtree_momID, (jint)aTree.momID);
 	     env->SetShortField(myTree, fid_jOTDBtree_classification, (jint)aTree.classification);
 	     env->SetObjectField(myTree, fid_jOTDBtree_creator, env->NewStringUTF(aTree.creator.c_str()));
 	     env->SetObjectField(myTree, fid_jOTDBtree_creationDate, env->NewStringUTF(to_simple_string(aTree.creationDate).c_str()));
@@ -135,7 +138,7 @@ namespace LOFAR
 	 * Method:    getTreeList
 	 * Signature: ()Ljava/util/Vector;
 	 */
-	JNIEXPORT jobject JNICALL jOTDB::Java_jOTDB_jOTDBconnection_getTreeList
+	JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getTreeList
 	  (JNIEnv *env, jobject, jshort treeType, jshort classifiType)
 	  {
 	     vector<OTDBtree> trees = OTDBconn->getTreeList(treeType, classifiType);     
@@ -218,7 +221,7 @@ namespace LOFAR
 	 * Method:    errorMsg
 	 * Signature: ()Ljava/lang/String;
 	 */
-	JNIEXPORT jstring JNICALL jOTDB::Java_jOTDB_jOTDBconnection_errorMsg
+	JNIEXPORT jstring JNICALL Java_jOTDB_jOTDBconnection_errorMsg
 	  (JNIEnv *env, jobject)
 	  {
 	     jstring jstr = env->NewStringUTF(OTDBconn->errorMsg().c_str());
@@ -230,7 +233,7 @@ namespace LOFAR
 	 * Method:    getAuthToken
 	 * Signature: ()I
 	 */
-	JNIEXPORT jint JNICALL jOTDB::Java_jOTDB_jOTDBconnection_getAuthToken
+	JNIEXPORT jint JNICALL Java_jOTDB_jOTDBconnection_getAuthToken
 	  (JNIEnv *, jobject)
 	  {
 	     jint token = (jint)OTDBconn->getAuthToken();

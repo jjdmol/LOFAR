@@ -7,6 +7,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+   namespace LOFAR
+     {
+
+        namespace jOTDB
+          {
+
 /*
  * Class:     jOTDB_jOTDBconnection
  * Method:    initOTDBconnection
@@ -70,6 +77,9 @@ JNIEXPORT jstring JNICALL Java_jOTDB_jOTDBconnection_errorMsg
  */
 JNIEXPORT jint JNICALL Java_jOTDB_jOTDBconnection_getAuthToken
   (JNIEnv *, jobject);
+
+	  }
+     }
 
 #ifdef __cplusplus
 }
