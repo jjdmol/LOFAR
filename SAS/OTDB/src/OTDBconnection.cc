@@ -149,58 +149,6 @@ OTDBtree	OTDBconnection::getTreeInfo (treeIDType		aTreeID,
 }
 
 //
-// setTreeInfo (OTDBtree&)
-//
-// Save a modified OTDBtree information structure
-//
-bool	OTDBconnection::setMomInfo (treeIDType		aTreeID,
-									treeIDType		aMomID,
-									string			aCampaign)
-{
-	// node should exist
-	if (!aTreeID) {
-		itsError = "Tree 0 unknown in the database";
-		return (false);
-	}
-
-	// Check connection
-	if (!itsIsConnected && !connect()) {
-		return (false);
-	}
-
-	work	xAction(*itsConnection, "setMomInfo");
-	try {
-		// construct a query that calls a stored procedure.
-		result	res = xAction.exec(
-			formatString("SELECT setMomInfo(%d,%d,%d,'%s'::text)",
-				itsAuthToken,
-				aTreeID,
-				aMomID,
-				aCampaign.c_str()));
-
-		// Analyse result
-		bool		updateOK;
-		res[0]["setmominfo"].to(updateOK);
-		if (!updateOK) {
-			itsError = "Unable to save to Mom information";
-			return (false); 
-		}
-
-		xAction.commit();
-		return (true);
-	}
-	catch (std::exception&	ex) {
-		itsError = string("Exception during saving mom Information")
-					 + ex.what();
-		LOG_FATAL(itsError);
-		return (false);
-	}
-
-	return (false); 
-}
-
-
-//
 // getTreeList(treeType, classification): vector<OTDBtree>
 //
 // To get a list of the OTDB trees available in the database.

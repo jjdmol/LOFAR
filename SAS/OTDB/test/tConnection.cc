@@ -145,7 +145,8 @@ int main (int	argc, char*	argv[]) {
 
 		LOG_INFO("=== Testing MOM part ===");
 	 	LOG_INFO("setMomID(15,other campaign)");
-		ASSERTSTR (conn.setMomInfo(tInfo.treeID(), 15, "other campaign"), 
+		TreeMaintenance		TM(conn);
+		ASSERTSTR (tm.setMomInfo(tInfo.treeID(), 15, "other campaign"), 
 					"setMomInfo failed");
 
 		LOG_INFO("=== Testing state-list ===");

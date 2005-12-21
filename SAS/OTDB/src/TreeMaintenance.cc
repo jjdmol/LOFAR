@@ -835,6 +835,58 @@ OTDBnode TreeMaintenance::getTopNode (treeIDType		aTreeID)
 	return (empty);
 }
 
+//
+// setMomInfo (OTDBtree&)
+//
+// Save a modified Mom information 
+//
+bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
+									treeIDType		aMomID,
+									string			aCampaign)
+{
+	// node should exist
+	if (!aTreeID) {
+		itsError = "Tree 0 unknown in the database";
+		return (false);
+	}
+
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	work	xAction(*(itsConn->getConn()), "setMomInfo");
+	try {
+		// construct a query that calls a stored procedure.
+		result	res = xAction.exec(
+			formatString("SELECT setMomInfo(%d,%d,%d,'%s'::text)",
+				itsConn->getAuthToken(),
+				aTreeID,
+				aMomID,
+				aCampaign.c_str()));
+
+		// Analyse result
+		bool		updateOK;
+		res[0]["setmominfo"].to(updateOK);
+		if (!updateOK) {
+			itsError = "Unable to save to Mom information";
+			return (false); 
+		}
+
+		xAction.commit();
+		return (true);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during saving mom Information")
+					 + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+
+	return (false); 
+}
+
 
 //
 // setClassification(treeID, classification): bool
