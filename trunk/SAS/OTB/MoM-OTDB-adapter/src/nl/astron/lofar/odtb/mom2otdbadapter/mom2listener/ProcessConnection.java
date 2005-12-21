@@ -2,6 +2,7 @@ package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -38,31 +39,32 @@ public class ProcessConnection extends Thread {
 		BufferedReader in = null;
 		PrintWriter out = null;
 		try {
-			in = new BufferedReader(new InputStreamReader(client
-					.getInputStream()));
+/*			in = new BufferedReader(new InputStreamReader(client
+					.getInputStream()));*/
 			out = new PrintWriter(client.getOutputStream(), true);
-			StringBuffer stringBuffer = new StringBuffer();
+/*			StringBuffer stringBuffer = new StringBuffer();
 			while ((line = in.readLine()) != null) {
 
-				log.info(line);
+				//log.info(line);
 				stringBuffer.append(line);
 				
 				
-			}
-			out.write(processInput(stringBuffer.toString()));
-			in.close();
+			}*/
+			out.write(processInput(client.getInputStream()));
 			out.close();
 			client.close();
 		} catch (IOException e) {
 			log.error("Read failed");
 		}
 	}
-	protected String processInput(String input){
+	protected String processInput(InputStream input){
 		try {
-			Document document = convertStringToDocument(input);
+			log.info(input);
+			Document document = convertFileToDocument(input);
+
 			XMLParser xmlParser = new XMLParser();
 			LofarObservation lofarObservation = xmlParser.getLofarObservation(document);
-			repository.story(lofarObservation);
+			repository.store(lofarObservation);
 			return "succeed";
 		}catch (Exception e){
 			log.error("Exception throwed: " + e.getMessage(), e);
@@ -78,6 +80,19 @@ public class ProcessConnection extends Thread {
 		StringReader reader = new StringReader(myXML);
 		InputSource source = new InputSource(reader);
 		itsParser.parse(source);
+				
+		// get document
+		document = itsParser.getDocument();
+		return document;
+	}
+	public Document convertFileToDocument(InputStream inputStream) throws Exception {
+		// read an xml string into a domtree
+		Document document;
+		DOMParser itsParser = new DOMParser();
+		InputSource inputSource = new InputSource();
+		inputSource.setByteStream(inputStream);
+		
+		itsParser.parse(inputSource);
 				
 		// get document
 		document = itsParser.getDocument();

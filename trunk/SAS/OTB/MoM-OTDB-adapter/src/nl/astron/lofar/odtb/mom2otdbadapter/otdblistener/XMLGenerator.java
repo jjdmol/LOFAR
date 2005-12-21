@@ -46,6 +46,7 @@ public class XMLGenerator {
 			throws IOException, ParserConfigurationException {
 		Document document = getObservationDocument(observation);
 		OutputFormat format = new OutputFormat(document); // Serialize DOM
+		format.setIndenting(true);
 		StringWriter stringOut = new StringWriter(); // Writer will be a
 		// String
 		XMLSerializer serial = new XMLSerializer(stringOut, format);
@@ -65,6 +66,9 @@ public class XMLGenerator {
 		Element currentStatusElement = xmlBuilder.addElement(
 				observationElement, "currentStatus");
 		addXmlStatusElement(currentStatusElement, observation.getStatus());
+		xmlBuilder.addElement(
+				observationElement, MOM2_LOFAR_NAMESPACE,
+				"observationAttributes");		
 		addChildren(observationElement, observation);
 
 	}
@@ -132,10 +136,10 @@ public class XMLGenerator {
 		Element currentStatusElement = xmlBuilder.addElement(
 				measurementElement, "currentStatus");
 		addXmlStatusElement(currentStatusElement, status);
+		Element measurementAttributes = xmlBuilder.addElement(
+				measurementElement, MOM2_LOFAR_NAMESPACE,
+				"measurementAttributes");
 		if (startTime != null && endTime != null) {
-			Element measurementAttributes = xmlBuilder.addElement(
-					measurementElement, MOM2_LOFAR_NAMESPACE,
-					"measurementAttributes");
 			if (startTime != null) {
 				xmlBuilder.addTextElement(measurementAttributes, "startTime",
 						WsrtConverter.toXmlDateTimeString(startTime));
