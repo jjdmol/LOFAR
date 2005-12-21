@@ -29,6 +29,7 @@
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/TreeState.h>
 #include <OTDB/TreeStateConv.h>
+#include <OTDB/TreeMaintenance.h>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
@@ -145,7 +146,7 @@ int main (int	argc, char*	argv[]) {
 
 		LOG_INFO("=== Testing MOM part ===");
 	 	LOG_INFO("setMomID(15,other campaign)");
-		TreeMaintenance		TM(conn);
+		TreeMaintenance		tm(&conn);
 		ASSERTSTR (tm.setMomInfo(tInfo.treeID(), 15, "other campaign"), 
 					"setMomInfo failed");
 
