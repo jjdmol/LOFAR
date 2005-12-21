@@ -138,9 +138,9 @@ int main (int	argc, char*	argv[]) {
 		}
 
 		TreeStateConv	TSconv(&conn);
-		LOG_INFO("Trying to change the state of the tree to schedule(200)");	
+		LOG_INFO("Trying to change the state of the tree to schedule(400)");	
 		sleep(2);		// for test in tConnection
-		bool actionOK = tm.setTreeState(treeID, TSconv.get("schedule"));
+		bool actionOK = tm.setTreeState(treeID, TSconv.get("scheduled"));
 		ASSERTSTR(actionOK, 
 					"Changing the state to schedule should NOT have failed!");
 
