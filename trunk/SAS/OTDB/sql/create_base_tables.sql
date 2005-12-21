@@ -177,12 +177,15 @@ CREATE TABLE treestate (
 	CONSTRAINT statename_uniq	UNIQUE(name)
 )WITHOUT OIDS;
 INSERT INTO treestate VALUES (  0, 'idle');
-INSERT INTO treestate VALUES (100, 'configure');
-INSERT INTO treestate VALUES (200, 'schedule');
-INSERT INTO treestate VALUES (300, 'queued');
-INSERT INTO treestate VALUES (400, 'active');
-INSERT INTO treestate VALUES (500, 'finished');
-INSERT INTO treestate VALUES (600, 'obsolete');
+INSERT INTO treestate VALUES (100, 'being specified');
+INSERT INTO treestate VALUES (200, 'specified');
+INSERT INTO treestate VALUES (300, 'approved');
+INSERT INTO treestate VALUES (400, 'scheduled');
+INSERT INTO treestate VALUES (500, 'queued');
+INSERT INTO treestate VALUES (600, 'active');
+INSERT INTO treestate VALUES (1000, 'finished');
+INSERT INTO treestate VALUES (1100, 'aborted');
+INSERT INTO treestate VALUES (1200, 'obsolete');
 
 --
 -- Campaign table
