@@ -150,6 +150,11 @@ public:
 	// Retrieve the topNode of any tree
 	OTDBnode getTopNode (treeIDType		aTreeID);
 
+	// save modified OTDBtree information
+	bool	setMomInfo (treeIDType		aTreeID,
+						treeIDType		aMomID,
+						string			aCampaign);
+
 	// Set the classification of any tree.
 	bool	setClassification(treeIDType	aTreeID,
 							  classifType	aClassification);
