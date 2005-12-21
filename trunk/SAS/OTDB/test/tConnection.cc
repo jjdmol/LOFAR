@@ -143,6 +143,11 @@ int main (int	argc, char*	argv[]) {
 			cout << tInfo;
 		}
 
+		LOG_INFO("=== Testing MOM part ===");
+	 	LOG_INFO("setMomID(15,other campaign)");
+		ASSERTSTR (conn.setMomInfo(tInfo.treeID(), 15, "other campaign"), 
+					"setMomInfo failed");
+
 		LOG_INFO("=== Testing state-list ===");
 	 	LOG_INFO("getStateList(0)");
 		vector<TreeState> 	stateList = conn.getStateList(0);

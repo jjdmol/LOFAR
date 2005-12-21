@@ -29,6 +29,7 @@ DROP TABLE unit		 	  CASCADE;
 DROP TABLE treetype 	  CASCADE;
 DROP TABLE treestate 	  CASCADE;
 
+DROP SEQUENCE			  campaignID;
 DROP TABLE campaign 	  CASCADE;
 DROP TABLE operator 	  CASCADE;
 
@@ -171,7 +172,7 @@ INSERT INTO treetype VALUES (30, 'VHtree');
 -- lifecycle the tree is in.
 CREATE TABLE treestate (
 	ID			INT2			NOT NULL,
-	name		VARCHAR(10)		NOT NULL,
+	name		VARCHAR(20)		NOT NULL,
 
 	CONSTRAINT stateid_uniq		UNIQUE(ID),
 	CONSTRAINT statename_uniq	UNIQUE(name)
@@ -194,15 +195,16 @@ INSERT INTO treestate VALUES (1200, 'obsolete');
 --
 -- TODO: Remove records with ID's other than 0.
 --
+CREATE SEQUENCE	campaignID;
 CREATE TABLE campaign (
-	ID			INT2			NOT NULL,
+	ID			INT2			NOT NULL DEFAULT nextval('campaignID'),
 	name		VARCHAR(30)		NOT NULL,
 	
 	CONSTRAINT	campaign_id_uniq	UNIQUE(ID)
 ) WITHOUT OIDS;
-INSERT INTO campaign VALUES (0, 'no campaign');
-INSERT INTO campaign VALUES (1, 'my campaign');
-INSERT INTO campaign VALUES (2, 'your campaign');
+INSERT INTO campaign(id, name) VALUES (0, 'no campaign');
+INSERT INTO campaign(name) 	   VALUES ('my campaign');
+INSERT INTO campaign(name) 	   VALUES ('your campaign');
 
 --
 -- Operator table

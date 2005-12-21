@@ -66,6 +66,11 @@ public:
 	OTDBtree	getTreeInfo (treeIDType		atreeID,
 							 const bool		isMomID = false);
 
+	// save modifued OTDBtree information
+	bool	OTDBconnection::setMomInfo (treeIDType		aTreeID,
+										treeIDType		aMomID,
+										string			aCampaign);
+
 	// To get a list of all OTDB trees available in the database.
 	vector<OTDBtree> getTreeList(treeType	  aTreeType,
 								 classifType aClassification=TCoperational);

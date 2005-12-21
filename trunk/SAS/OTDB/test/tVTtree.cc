@@ -109,6 +109,16 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO("Trying to construct a TreeMaintenance object");
 		TreeMaintenance	tm(&conn);
 
+		LOG_INFO("Trying to load the componentfile: tVTtree.in");
+		nodeIDType	topNodeID = tm.loadComponentFile ("tVTtree.in");
+		ASSERTSTR(topNodeID, "Loading of componentfile failed");
+
+		ClassifConv		CTconv (&conn);
+		LOG_INFO("Building a template tree");
+		treeIDType	treeID = tm.buildTemplateTree(topNodeID,CTconv.get("test"));
+		ASSERTSTR (treeID, "Creation of template tree failed");
+		LOG_INFO_STR("TreeID = " << treeID);
+
 		LOG_INFO("Searching for a Template tree");
 		vector<OTDBtree>	treeList = 
 				conn.getTreeList(TTconv.get("VItemplate"), CTconv.get("test"));

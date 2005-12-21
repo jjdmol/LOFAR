@@ -52,7 +52,7 @@ CREATE TABLE OTDBtree (
 	d_creation	TIMESTAMP(0)	DEFAULT 'now',
 
 	-- optional info
-	campaign	INT4			REFERENCES campaign(ID),
+	campaign	INT2			REFERENCES campaign(ID),
 	starttime	TIMESTAMP(0),
 	stoptime	TIMESTAMP(0),
 	owner		INT4			REFERENCES operator(ID),

@@ -46,7 +46,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		vAuthToken				ALIAS FOR $1;
 		vUserID					INT4;
 		TThardware CONSTANT		INT2 := 10;
-		TSactive   CONSTANT		INT2 := 400;
+		TSactive   CONSTANT		INT2 := 600;
 
 	BEGIN
 		-- check authorisation(authToken, treeID, func, treeState)

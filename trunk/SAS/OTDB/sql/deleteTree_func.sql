@@ -42,7 +42,7 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		vFunction		INT2 := 1;
 		TThardware 		CONSTANT INT2 := 10;
 		TTtemplate 		CONSTANT INT2 := 20;
-		TSactive		CONSTANT INT2 := 400;
+		TSactive		CONSTANT INT2 := 600;
 		vOldTree		RECORD;
 		vIsAuth			BOOLEAN;
 		vAuthToken		ALIAS FOR $1;

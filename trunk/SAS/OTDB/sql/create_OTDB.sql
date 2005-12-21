@@ -21,6 +21,7 @@
 \i getTreeList_func.sql
 \i getTreeInfo_func.sql
 \i newTree_func.sql
+\i setMomInfo_func.sql
 
 -- PICtree
 \i create_PIC_tables.sql
