@@ -52,6 +52,8 @@ public class jTreeMaintenance
     // Get a single node from the VIC template tree
     public native jOTDBnode getNode (int aTreeID, int aNodeID);
 
+    public native boolean setMomInfo(int aTreeID, int momID, String campaign);
+
     // Get a number of levels of children.
     public native Vector getItemList (int aTreeID, int topNode, int depth);
 
