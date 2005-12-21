@@ -79,7 +79,7 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 
 	// define variables used in exception handling
 	string	parName;
-	int		counter;
+	int		counter= -1;
 
 	try {
 		// First create a new tree entry.

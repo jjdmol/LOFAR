@@ -1,5 +1,5 @@
 --
---  classify.sql: function for classifying a tree.
+--  SetMomInfo.sql: function for changing the Mom information of a tree
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,9 +23,7 @@
 --
 
 --
--- classify (authToken, treeID, classification)
---
--- Checks is the classification is legal before assigning it.
+-- setMomInfo (authToken, treeID, MomID, campaign)
 --
 -- Authorisation: yes
 --
@@ -33,64 +31,49 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION classify(INT4, INT4, INT2)
+CREATE OR REPLACE FUNCTION setMomInfo(INT4, INT4, INT4, TEXT)
   RETURNS BOOLEAN AS '
 	DECLARE
 		vFunction				INT2 := 1;
-		vTreeID					OTDBtree.treeID%TYPE;
-		vClassif				OTDBtree.classif%TYPE;
-		vTreeType				OTDBtree.treetype%TYPE;
 		vIsAuth					BOOLEAN;
 		vAuthToken				ALIAS FOR $1;
-		TThardware CONSTANT		INT2 := 10;
-		TSactive   CONSTANT		INT2 := 600;
+		vCampaignID				campaign.id%TYPE;
 
 	BEGIN
-		-- check authorisation(authToken, treeID, func, classification)
+		-- check authorisation(authToken, treeID, func, none)
 		vIsAuth := FALSE;
-		SELECT isAuthorized(vAuthToken, $2, vFunction, $3::int4) 
+		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
 			RAISE EXCEPTION \'Not authorized.\';
 			RETURN FALSE;
 		END IF;
 
-		-- check classification
-		SELECT	id
-		INTO	vClassif
-		FROM	classification
-		WHERE	id = $3;
+		-- Translate campaign information
+		SELECT id
+		FROM   campaign
+		INTO   vCampaignID
+		WHERE  name = $4;
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Classification % does not exist\', $3;
+		  INSERT INTO campaign(name)
+		  VALUES	  ($4);
+		  
+		  SELECT id
+		  FROM   campaign
+		  INTO 	 vCampaignID
+		  WHERE	 name = $4;
+
+		  IF NOT FOUND THEN
+			RAISE EXCEPTION \' Cannot add campaign information\';
 			RETURN FALSE;
-		END IF;
-
-		-- get current treetype. 
-		-- Note: tree existance is checked during auth.check
-		SELECT 	treetype
-		INTO   	vTreeType
-		FROM	OTDBtree
-		WHERE	treeID = $2;
-
-		-- changing PIC tree to operational?
-		-- restriction: only 1 PIC may be active of each classification
-		IF vTreeType = TThardware THEN
-			SELECT	treeid
-			INTO	vTreeID		-- dummy
-			FROM	OTDBtree
-			WHERE	treetype = TThardware
-			AND		classif  = $3
-			AND		state    = TSactive;
-			IF FOUND THEN
-				RAISE EXCEPTION \'Already an active hardware tree with same classification.\';
-				RETURN FALSE;
-			END IF;
+		  END IF;
 		END IF;
 
 		-- Finally update tree
 		UPDATE	OTDBtree
-		SET		classif = $3
-		WHERE	treeid = $2;
+		SET		momID = $3,
+				campaign = vCampaignID
+		WHERE	treeID = $2;
 
 		RETURN TRUE;
 	END;
