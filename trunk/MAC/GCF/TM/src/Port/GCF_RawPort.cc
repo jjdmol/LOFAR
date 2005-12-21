@@ -183,9 +183,15 @@ long GCFRawPort::setTimer(long delay_sec, long delay_usec,
 			  void* arg)
 {
   ASSERT(_pTimerHandler);
+  uint64 delay(delay_sec);
+  uint64 interval(interval_sec);
+  delay *= 1000000;
+  interval *= 1000000;
+  delay += (uint64) delay_usec;
+  interval += (uint64) interval_usec;
   return _pTimerHandler->setTimer(*this, 
-          (uint64) (delay_sec * 1000000 + delay_usec), 
-          (uint64) (interval_sec * 1000000 + interval_usec),
+          delay, 
+          interval,
           arg);  
 }
 
