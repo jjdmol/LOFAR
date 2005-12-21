@@ -50,6 +50,9 @@ public interface jTreeMaintenanceInterface extends Remote
     // Get a single node from the VIC template tree
     public jOTDBnode getNode (int aTreeID, int aNodeID) throws RemoteException;
 
+    //Add momId to the tree metadata
+    public boolean setMomInfo(int aTreeID, int momID, String campaign) throws RemoteException;
+
     // Get a number of levels of children.
     public Vector getItemList (int aTreeID, int topNode, int depth) throws RemoteException;
 

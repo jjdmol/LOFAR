@@ -253,6 +253,17 @@ namespace LOFAR
 	  return convertOTDBnode (env, aNode);
        }
 
+	   JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setMomInfo
+	  	(JNIEnv *env, jobject, jint aTreeID, jint aMomID, jstring aCampaign)
+	    {
+		jboolean isCopy;
+		const char* name = env->GetStringUTFChars (aCampaign, &isCopy);
+	  	jboolean succes = treemain->setMomInfo (aTreeID, aMomID, name);
+		env->ReleaseStringUTFChars (aCampaign, name);
+
+	  	return succes;
+       }
+
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setClassification
          (JNIEnv *, jobject, jint aTreeID, jshort aClassification)
        {

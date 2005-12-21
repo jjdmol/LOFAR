@@ -67,7 +67,12 @@ public class jTreeMaintenanceAdapter extends UnicastRemoteObject implements jTre
      {
 	return adaptee.getNode (aTreeID, aNodeID);
      }
-   
+
+    public boolean setMomInfo(int aTreeID, int momID, String campaign) throws RemoteException
+    {
+        return adaptee.setMomInfo(aTreeID, momID, campaign);
+    }  
+ 
     // Get a number of levels of children.
     public Vector getItemList (int aTreeID, int topNode, int depth) throws RemoteException
      {

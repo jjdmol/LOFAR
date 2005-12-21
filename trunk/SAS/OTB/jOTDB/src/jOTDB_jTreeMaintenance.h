@@ -7,12 +7,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-namespace LOFAR 
-     {
-	namespace jOTDB
-	  {
-	     
-   /*
+
+namespace LOFAR {
+	namespace jOTDB {
+
+/*
  * Class:     jOTDB_jTreeMaintenance
  * Method:    initTreeMaintenance
  * Signature: ()V
@@ -22,10 +21,10 @@ JNIEXPORT void JNICALL Java_jOTDB_jTreeMaintenance_initTreeMaintenance
 
 /*
  * Class:     jOTDB_jTreeMaintenance
- * Method:    getNode
+ * Method:    getNodeDef
  * Signature: (I)LjOTDB/jVICnodeDef;
  */
-JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNodeDef__I
+JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNodeDef
   (JNIEnv *, jobject, jint);
 
 /*
@@ -49,8 +48,16 @@ JNIEXPORT jint JNICALL Java_jOTDB_jTreeMaintenance_copyTemplateTree
  * Method:    getNode
  * Signature: (II)LjOTDB/jOTDBnode;
  */
-JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNode__II
+JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNode
   (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     jOTDB_jTreeMaintenance
+ * Method:    setMomInfo
+ * Signature: (IILjava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setMomInfo
+  (JNIEnv *, jobject, jint, jint, jstring);
 
 /*
  * Class:     jOTDB_jTreeMaintenance
@@ -187,9 +194,10 @@ JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getParam
  */
 JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_saveParam
   (JNIEnv *, jobject, jobject);
-	  }
-     }
-   
+
+	}
+}
+
 #ifdef __cplusplus
 }
 #endif
