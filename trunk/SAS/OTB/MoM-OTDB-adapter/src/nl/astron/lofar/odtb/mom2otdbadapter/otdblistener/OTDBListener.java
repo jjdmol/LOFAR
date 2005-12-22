@@ -32,7 +32,8 @@ public class OTDBListener extends Thread {
 			try {
 
 				log.debug("Add new tasks");
-				List lofarObservations = repository.getLatestChanges("test");
+				TimePeriod timePeriod = queue.getTimePeriod();
+				List lofarObservations = repository.getLatestChanges(timePeriod.getStartTime(), timePeriod.getEndTime());
 				for (int i = 0; i < lofarObservations.size(); i++) {
 					LofarObservation observation = (LofarObservation) lofarObservations
 							.get(i);
@@ -41,7 +42,7 @@ public class OTDBListener extends Thread {
 						queue.add(task);
 					}
 				}
-
+				queue.saveTimePeriod();
 				log.debug("Going to sleep");
 				Thread.sleep(seconds);
 			} catch (InterruptedException e) {

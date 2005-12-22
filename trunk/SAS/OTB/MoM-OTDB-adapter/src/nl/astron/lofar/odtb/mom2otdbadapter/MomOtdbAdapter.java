@@ -35,9 +35,9 @@ public class MomOtdbAdapter {
 /*		OTDBQueueProcessor otdbQueueProcessor = new OTDBQueueProcessor(queue,
 				username, password, authUrl, momUrl);
 		otdbQueueProcessor.start();
-
+*/
 		OTDBListener otdbListener = new OTDBListener(queue, 5000, repository);
-		otdbListener.start();*/
+		otdbListener.start();
 
 		Server server = new Server(repository);
 		server.start();

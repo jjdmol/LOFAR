@@ -1,19 +1,21 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.data;
 
 
+import jOTDB.jConverterInterface;
 import jOTDB.jOTDBinterface;
 import jOTDB.jOTDBnode;
-import jOTDB.jOTDBtree;
 import jOTDB.jTreeMaintenanceInterface;
-import jOTDB.jConverterInterface;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+
+import nl.astron.wsrt.util.WsrtConverter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +30,8 @@ public class OTDBRepository {
 	private jConverterInterface converter = null;
 
 	private static final int TEMPLATE_ID = 2;
+	
+	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
 	public OTDBRepository(String rmiServerName, int port)
 			throws RemoteException, NotBoundException {
@@ -126,7 +130,10 @@ public class OTDBRepository {
 		return node;
 	}
 
-	public List getLatestChanges(String date) throws RemoteException {
+	public List getLatestChanges(Date startDate, Date endDate) throws RemoteException {
+		String startTime = WsrtConverter.toDateString(startDate,DATE_TIME_FORMAT);
+		String endTime = WsrtConverter.toDateString(endDate,DATE_TIME_FORMAT);
+		log.info("Query latest changes between:" + startTime + " and " + endTime);
 /*	     System.out.println("Trying to connect to the database");
 	     remoteOTDB.connect();	
 	     remoteOTDB.isConnected();
