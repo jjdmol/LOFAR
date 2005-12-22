@@ -202,7 +202,8 @@ vector<OTDBtree> OTDBconnection::getTreeList(
 vector<TreeState> OTDBconnection::getStateList(
 								treeIDType 		aTreeID,
 								bool			isMomID,
-								const ptime&	beginDate)
+								const ptime&	beginDate,
+								const ptime&	endDate)
 {
 	vector<TreeState>		resultVec;
 
@@ -218,7 +219,8 @@ vector<TreeState> OTDBconnection::getStateList(
 		string	query("SELECT * from getStateList('" +
 						toString(aTreeID) + "','" +
 						momFlag + "','" +
-						to_simple_string(beginDate) + "')");
+						to_simple_string(beginDate) + "','" +
+						to_simple_string(endDate) + "')");
 		// execute query
 		result	res = xAction.exec(query);
 

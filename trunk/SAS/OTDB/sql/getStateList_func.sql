@@ -1,5 +1,5 @@
 --
---  getStateList.sql: function for getting treeinfo from the OTDB
+--  getStateList.sql: function for getting state history from (a) tree(s)
 --
 --  Copyright (C) 2005
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 --
 
 --
--- getStateList (treeID, isMomID, begindate)
+-- getStateList (treeID, isMomID, begindate, enddate)
 -- 
 -- Get a list of statechanges.
 --
@@ -34,7 +34,7 @@
 --
 -- Types:	treeState
 --
-CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP)
+CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP, TIMESTAMP)
   RETURNS SETOF stateInfo AS '
 	DECLARE
 		vRecord		RECORD;
@@ -49,13 +49,27 @@ CREATE OR REPLACE FUNCTION getStateList(INT4, BOOLEAN, TIMESTAMP)
 		vKeyField := \'s.treeID\';
 	  END IF;
 	
+	  -- create query for treeID (when filled)
 	  vQuery := \'\';
 	  IF $1 > 0 THEN
 	    -- add selection on treeID
 	    vQuery := \'WHERE \' || vKeyField || \' =\' || chr(39) || $1 || chr(39);
 	    IF $3 IS NOT NULL THEN
-		    vQuery := vQuery || \' AND s.timestamp >=\' || chr(39) || $3 || chr(39);
+		    vQuery := vQuery || \' AND \';
 	    END IF;
+	  END IF;
+
+	  -- append query with timestamp restriction(s)
+	  IF $3 IS NOT NULL THEN
+		IF vQuery = \'\' THEN
+		  vQuery := \'WHERE \';
+		END IF;
+	    IF $4 IS NULL THEN
+		  vQuery := vQuery || \'s.timestamp >=\' || chr(39) || $3 || chr(39);
+		ELSE
+		  vQuery := vQuery || \'s.timestamp >=\' || chr(39) || $3 || chr(39)
+					   || \' AND s.timestamp <\' || chr(39) || $4 || chr(39);
+		END IF;
 	  END IF;
 
 	  -- do selection

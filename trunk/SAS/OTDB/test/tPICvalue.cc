@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_fstream.h>
 #include <Common/lofar_datetime.h>
 #include <APS/ParameterSet.h>
 #include <OTDB/TreeMaintenance.h>
@@ -119,7 +120,26 @@ int main (int	argc, char*	argv[]) {
 		return (1);
 	}
 
-	OTDBconnection conn("paulus", "boskabouter", "otdbtest");
+	// try to resolve the database name
+	string 		dbName;
+	char		line[64];
+	int32		sleeptime = 0;
+	ifstream	inFile;
+	inFile.open("DATABASENAME");
+	if (!inFile || !inFile.getline(line, 20)) {
+		dbName = "otdbtest";
+		sleeptime = 4;
+	}
+	else {
+		dbName = line;
+	}
+	inFile.close();
+	LOG_INFO_STR("### Using database " << dbName << " ###");
+	sleep (sleeptime);
+
+	// Open the database connection
+	OTDBconnection conn("paulus", "boskabouter", dbName);
+
 	TreeMaintenance		tm(&conn);
 
 	// Use converters in this testprogram
