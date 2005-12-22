@@ -168,7 +168,7 @@ public class Mom2OtdbConverter {
 	}
 	public static String getOTDBStatus(String status){
 		if (status.equals("described")){
-			return "being spec";
+			return "being specified";
 		}else if (status.equals("specified")){
 			return "approved";
 		}

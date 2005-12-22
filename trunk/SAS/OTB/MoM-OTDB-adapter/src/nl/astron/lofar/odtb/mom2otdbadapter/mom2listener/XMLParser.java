@@ -74,8 +74,9 @@ public class XMLParser {
 		 */
 		Node element = document.getDocumentElement();
 		if (equal(element, withPrefix(OBSERVATION))) {
-			lofarObservation.setMom2Id(getAttribute(element.getAttributes(),
-					MOM2_ID));
+			String mom2Id = getAttribute(element.getAttributes(),
+					MOM2_ID);
+			lofarObservation.setMom2Id(WsrtConverter.toInt(WsrtConverter.toInteger(mom2Id)));
 			for (int i = 0; i < element.getChildNodes().getLength(); i++) {
 				Node nodeChild = element.getChildNodes().item(i);
 				/*

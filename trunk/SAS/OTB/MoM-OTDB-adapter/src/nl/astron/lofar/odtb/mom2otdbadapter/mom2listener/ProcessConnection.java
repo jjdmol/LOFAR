@@ -1,13 +1,10 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.Socket;
-
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
@@ -35,8 +32,7 @@ public class ProcessConnection extends Thread {
 
 	public void run() {
 		log.info("Process client connection");
-		String line = null;
-		BufferedReader in = null;
+
 		PrintWriter out = null;
 		try {
 /*			in = new BufferedReader(new InputStreamReader(client
@@ -59,7 +55,6 @@ public class ProcessConnection extends Thread {
 	}
 	protected String processInput(InputStream input){
 		try {
-			log.info(input);
 			Document document = convertFileToDocument(input);
 
 			XMLParser xmlParser = new XMLParser();

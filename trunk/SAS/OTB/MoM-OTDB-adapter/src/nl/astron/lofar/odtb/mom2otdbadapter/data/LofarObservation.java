@@ -7,7 +7,7 @@ public class LofarObservation implements Serializable{
 	/*
 	 * for both input and output
 	 */
-	protected String mom2Id = null;
+	protected int mom2Id = -1;
 	protected String status = null;
 	protected String measurementMom2Ids = null;
 	protected String angleTimes = null;
@@ -34,10 +34,10 @@ public class LofarObservation implements Serializable{
 	protected String endTime = null;
 	
 	
-	public String getMom2Id() {
+	public int getMom2Id() {
 		return mom2Id;
 	}
-	public void setMom2Id(String mom2Id) {
+	public void setMom2Id(int mom2Id) {
 		this.mom2Id = mom2Id;
 	}
 	public String getStatus() {

@@ -27,7 +27,7 @@ public class OTDBRepository {
 	
 	private jConverterInterface converter = null;
 
-	private static final int TEMPLATE_ID = 5;
+	private static final int TEMPLATE_ID = 2;
 
 	public OTDBRepository(String rmiServerName, int port)
 			throws RemoteException, NotBoundException {
@@ -86,11 +86,8 @@ public class OTDBRepository {
 		storeParam(viNode, "angleTimes", lofarObservation.getAngleTimes());
 		storeParam(viNode, "directionType", lofarObservation.getDirectionType());
 		short statusId = converter.getTreeState(lofarObservation.getStatus());
-		log.info("statusId: " + statusId);
 		tm.setTreeState(treeId, statusId);
-		remoteOTDB.connect();
-		jOTDBtree tInfo = remoteOTDB.getTreeInfo(treeId, false);
-		tInfo.momID=2;
+		tm.setMomInfo(treeId,lofarObservation.getMom2Id(),"no campaign");
 	}
 
 	protected void storeParam(jOTDBnode parentNode, String paramName,
@@ -185,8 +182,8 @@ public class OTDBRepository {
 		 * log.info("MomID: " + tInfo.treeID()+""); }
 		 */
 		List result = new ArrayList();
-		LofarObservation observation = new LofarObservation();
-		observation.setMom2Id("15");
+/*		LofarObservation observation = new LofarObservation();
+		observation.setMom2Id(15);
 		observation.setAngleTimes("[+0,+30,+60]");
 		observation.setStatus("aborted");
 		observation.setMeasurementMom2Ids("[16,17,18]");
@@ -194,22 +191,37 @@ public class OTDBRepository {
 		observation.setEndTime("16-12-2005 12:01:14");
 		result.add(observation);
 		observation = new LofarObservation();
-		observation.setMom2Id("20");
+		observation.setMom2Id(20);
 		observation.setStatus("specified");
 		observation.setMeasurementMom2Ids("[21,22,23]");
 		result.add(observation);
 		observation = new LofarObservation();
-		observation.setMom2Id("30");
+		observation.setMom2Id(30);
 		observation.setStatus("active");
 		observation.setMeasurementMom2Ids("[31,32,33]");
 		result.add(observation);
 		observation = new LofarObservation();
-		observation.setMom2Id("40");
+		observation.setMom2Id(40);
 		observation.setAngleTimes("[+0,+30,+60]");
 		observation.setStatus("finished");
 		observation.setMeasurementMom2Ids("[41,42,43]");
 		observation.setStartTime("16-12-2005 12:00:15");
 		observation.setEndTime("16-12-2005 12:02:14");
+		result.add(observation);*/
+/*		LofarObservation observation = new LofarObservation();
+		observation = new LofarObservation();
+		observation.setMom2Id(65);
+		observation.setAngleTimes("[+00]");
+		observation.setStatus("finished");
+		observation.setMeasurementMom2Ids("[66]");
+		observation.setStartTime("16-12-2005 12:00:15");
+		observation.setEndTime("16-12-2005 12:02:14");
+		result.add(observation);*/
+		LofarObservation observation = new LofarObservation();
+		observation = new LofarObservation();
+		observation.setMom2Id(65);
+		observation.setStatus("specified");
+		observation.setMeasurementMom2Ids("[66]");
 		result.add(observation);
 		return result;
 	}

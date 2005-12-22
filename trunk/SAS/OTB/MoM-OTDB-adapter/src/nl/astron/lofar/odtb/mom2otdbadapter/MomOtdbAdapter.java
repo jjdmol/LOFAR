@@ -2,6 +2,7 @@ package nl.astron.lofar.odtb.mom2otdbadapter;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
+import java.util.TimeZone;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
 import nl.astron.lofar.odtb.mom2otdbadapter.mom2listener.Server;
@@ -27,6 +28,7 @@ public class MomOtdbAdapter {
 	}
 
 	protected void startServices() throws IOException, NotBoundException {
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC")); 
 		Queue queue = new Queue();
 		OTDBRepository repository = new OTDBRepository(rmiHost, rmiPort
 				.intValue());
@@ -35,8 +37,8 @@ public class MomOtdbAdapter {
 		otdbQueueProcessor.start();
 
 		OTDBListener otdbListener = new OTDBListener(queue, 5000, repository);
-		otdbListener.start();
-*/
+		otdbListener.start();*/
+
 		Server server = new Server(repository);
 		server.start();
 	}
