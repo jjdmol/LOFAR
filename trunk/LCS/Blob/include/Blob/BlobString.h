@@ -130,7 +130,7 @@ namespace LOFAR {
       size_t                   itsCapacity;
       size_t                   itsSize;
       bool                     itsCanIncr;
-      uint                     itsAlignMask;
+      ptrdiff_t                itsAlignMask;
       void*                    itsBuffer;     // pointer to aligned buffer
       void*                    itsChars;      // pointer to allocated memory
       std::basic_string<uchar> itsString;
