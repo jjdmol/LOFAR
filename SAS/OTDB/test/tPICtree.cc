@@ -134,7 +134,11 @@ int main (int	argc, char*	argv[]) {
 		OTDBparam	aParam = tm.getParam(treeID, nodeList[elemNr].paramDefID());
 		LOG_INFO_STR(aParam);
 
+	 	LOG_INFO("setMomID(15,other campaign)");
+		ASSERTSTR (tm.setMomInfo(treeID, 15, "other campaign"), "setMomInfo failed");
+
 		ClassifConv	CTconv(&conn);
+
 		LOG_INFO("Trying to classify the tree to operational");
 		try { 
 			tm.setClassification(treeID, CTconv.get("operational"));
