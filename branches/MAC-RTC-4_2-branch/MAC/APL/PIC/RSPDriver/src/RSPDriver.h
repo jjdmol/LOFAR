@@ -115,8 +115,10 @@ namespace LOFAR {
       void rsp_subsubbands  (GCFEvent& event, GCFPortInterface &port);
       void rsp_unsubsubbands(GCFEvent& event, GCFPortInterface &port);
 
-      void rsp_setrcu(GCFEvent& event, GCFPortInterface &port);
-      void rsp_getrcu(GCFEvent& event, GCFPortInterface &port);
+      void rsp_setrcu  (GCFEvent& event, GCFPortInterface &port);
+      void rsp_getrcu  (GCFEvent& event, GCFPortInterface &port);
+      void rsp_subrcu  (GCFEvent& event, GCFPortInterface &port);
+      void rsp_unsubrcu(GCFEvent& event, GCFPortInterface &port);
 
       void rsp_setwg(GCFEvent& event, GCFPortInterface &port);
       void rsp_getwg(GCFEvent& event, GCFPortInterface &port);

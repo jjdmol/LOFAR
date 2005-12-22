@@ -1037,7 +1037,7 @@ GCFEvent::TResult RSPTest::test013(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("upd.handle=" << upd.handle);
       LOG_INFO_STR("upd.subbands=" << upd.subbands());
 
-      if (updcount++ > 4) // four seconds
+      if (updcount++ > 2) // two seconds
       {
 		RSPUnsubsubbandsEvent unsub;
 		unsub.handle = upd.handle; // remove subscription with this handle
@@ -1050,6 +1050,95 @@ GCFEvent::TResult RSPTest::test013(GCFEvent& e, GCFPortInterface& port)
     case RSP_UNSUBSUBBANDSACK:
     {
       RSPUnsubsubbandsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+      LOG_INFO_STR("ack.handle=" << ack.handle);
+
+      TRAN(RSPTest::test014);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test014(GCFEvent& e, GCFPortInterface& port)
+{
+  static int updcount = 0;
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test014", "test UPDRCU");
+
+      // subscribe to RCU updates
+      RSPSubrcuEvent subrcu;
+
+      subrcu.timestamp.setNow();
+      subrcu.rcumask.reset();
+      for (int i = 0; i < N_TEST_RCUS; i++) {
+		subrcu.rcumask.set(i);
+      }
+      subrcu.period = 4;
+      
+      TESTC_ABORT(m_server.send(subrcu) > 0, RSPTest::final);
+    }
+    break;
+
+    case RSP_SUBRCUACK:
+    {
+      RSPSubrcuackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+    }
+    break;
+
+    case RSP_UPDRCU:
+    {
+      RSPUpdrcuEvent upd(e);
+
+      TESTC_ABORT(upd.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("upd.time=" << upd.timestamp);
+      LOG_INFO_STR("upd.handle=" << upd.handle);
+	  RCUSettings::RCURegisterType& x = upd.settings()(1); // REO
+      LOG_INFO(formatString("upd.registers=0x%X", x.value));
+
+      if (updcount++ > 4) // four seconds
+      {
+		RSPUnsubrcuEvent unsub;
+		unsub.handle = upd.handle; // remove subscription with this handle
+
+		TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+      }
+    }
+    break;
+    
+    case RSP_UNSUBRCUACK:
+    {
+      RSPUnsubrcuackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
       LOG_INFO_STR("ack.time=" << ack.timestamp);

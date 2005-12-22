@@ -193,7 +193,6 @@ event = {
   };
 };
 
-//REO-B
 event = {
   signal = SUBSUBBANDS;
   dir = IN;
@@ -284,9 +283,6 @@ event = {
   };
 };
 
-
-//REO-E
-
 //
 // RCU Control
 //
@@ -357,6 +353,92 @@ event = {
     name = "settings";
     type = "RCUSettings";
     userdefined;
+  };
+};
+
+event = {
+  signal = SUBRCU;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "period";
+    type = "uint16";
+  };
+};
+
+event = {
+  signal = SUBRCUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UPDRCU;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+  param = {
+    name = "settings";
+    type = "RCUSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = UNSUBRCU;
+  dir = IN;
+  param = {
+    name = "handle";
+    type = "uint32";
+  };
+};
+
+event = {
+  signal = UNSUBRCUACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "handle";
+    type = "uint32";
   };
 };
 

@@ -50,6 +50,7 @@
 #include "UpdStatusCmd.h"
 #include "SetRCUCmd.h"
 #include "GetRCUCmd.h"
+#include "UpdRCUCmd.h"
 #include "SetWGCmd.h"
 #include "GetWGCmd.h"
 #include "GetVersionsCmd.h"
@@ -699,6 +700,14 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_getrcu(event, port);
       break;
       
+    case RSP_SUBRCU:
+      rsp_subrcu(event, port);
+      break;
+      
+    case RSP_UNSUBRCU:
+      rsp_unsubrcu(event, port);
+      break;
+      
     case RSP_SETWG:
       rsp_setwg(event, port);
       break;
@@ -1251,6 +1260,62 @@ void RSPDriver::rsp_getrcu(GCFEvent& event, GCFPortInterface& port)
   {
     (void)m_scheduler.enter(Ptr<Command>(&(*command)));
   }
+}
+
+//
+// rsp_subrcu(event,port)
+//
+void RSPDriver::rsp_subrcu(GCFEvent& event, GCFPortInterface& port)
+{
+  // subscription is done by entering a UpdRCUCmd in the periodic queue
+  Ptr<UpdRCUCmd> command = new UpdRCUCmd(event, port, Command::READ);
+  RSPSubrcuackEvent ack;
+
+  if (!command->validate())
+  {
+    LOG_ERROR("SUBRCU: invalid parameter");
+    
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = FAILURE;
+    ack.handle = 0;
+
+    port.send(ack);
+    return;
+  }
+  else
+  {
+    ack.timestamp = m_scheduler.getCurrentTime();
+    ack.status = SUCCESS;
+    ack.handle = (uint32)&(*command);
+    port.send(ack);
+  }
+
+  (void)m_scheduler.enter(Ptr<Command>(&(*command)),
+			  Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubrcu(event,port)
+//
+void RSPDriver::rsp_unsubrcu(GCFEvent& event, GCFPortInterface& port)
+{
+  RSPUnsubrcuEvent unsub(event);
+
+  RSPUnsubrcuackEvent ack;
+  ack.timestamp = m_scheduler.getCurrentTime();
+  ack.status = FAILURE;
+  ack.handle = unsub.handle;
+
+  if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
+  {
+    ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBRCU: failed to remove subscription");
+  }
+
+  port.send(ack);
 }
 
 //
