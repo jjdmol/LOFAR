@@ -80,6 +80,18 @@
 #include "Cache.h"
 #include "RawEvent.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#ifdef _POSIX_PRIORTY_SCHEDULING
+#include <sched.h>
+#endif
+#endif
+#ifdef HAVE_SYS_MMAN_H
+#ifdef _POSIX_MEMLOCK
+#include <sys/mman.h>
+#endif
+#endif
+
 #define ETHERTYPE_EPA 0x10FA
 
 using namespace blitz;
@@ -1729,6 +1741,39 @@ int main(int argc, char** argv)
       }
     }
   }
+
+  /* change to real-time priority */
+#ifdef _POSIX_PRIORITY_SCHEDULING
+  int min_priority = sched_get_priority_min(SCHED_FIFO);
+  int max_priority = sched_get_priority_max(SCHED_FIFO);
+
+  if (min_priority < 0 || max_priority < 0) {
+    LOG_FATAL(formatString("Failed to get real-time priority range: %s", strerror(errno)));
+    exit(EXIT_FAILURE);
+  }
+
+  /* set SCHED_FIFO priority at 50% */
+  struct sched_param priority;
+  memset(&priority, 0, sizeof(struct sched_param));
+  priority.sched_priority = ((max_priority - min_priority) / 2) + min_priority;
+  if (sched_setscheduler(0 /*this process*/, SCHED_FIFO, &priority) < 0) {
+    LOG_FATAL(formatString("Failed to set scheduling policy SCHED_FIFO with priority %d: %s",
+			   priority.sched_priority, strerror(errno)));
+    exit(EXIT_FAILURE);
+  }
+#else
+  LOG_WARN("System does not support real-time scheduling (SCHED_FIFO).");
+#endif
+
+  /* lock all current and future memory pages in memory */
+#ifdef _POSIX_MEMLOCK
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0) {
+    LOG_FATAL(formatString("Failed to lock pages in memory: %s", strerror(errno)));
+    exit(EXIT_FAILURE);
+  }
+#else
+  LOG_WARN("System does not support locking pages in memory.");
+#endif
 
   GCFTask::init(argc, argv);
   
