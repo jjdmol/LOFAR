@@ -75,7 +75,8 @@ public:
 	// The beginDate is only used when a treeID != 0 is specified.
 	vector<TreeState> getStateList(treeIDType   atreeID,
 								   const bool   isMomID = false,
-							       const ptime& beginDate=ptime(min_date_time));
+							       const ptime& beginDate=ptime(min_date_time),
+							       const ptime& endDate=ptime(max_date_time));
 
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;
