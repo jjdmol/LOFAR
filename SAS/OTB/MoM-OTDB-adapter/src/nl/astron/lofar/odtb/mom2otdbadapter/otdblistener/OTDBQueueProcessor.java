@@ -43,6 +43,7 @@ public class OTDBQueueProcessor extends Thread {
 			Task task = queue.get();
 			log.debug("Process task: " + task.getXml());
 			processTask(task);
+			queue.remove(task);
 
 		}
 
