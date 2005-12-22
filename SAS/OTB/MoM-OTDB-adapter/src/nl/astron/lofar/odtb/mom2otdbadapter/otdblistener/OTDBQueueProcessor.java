@@ -21,7 +21,6 @@ public class OTDBQueueProcessor extends Thread {
 
 	private String password = null;
 
-
 	private String authUrl = null;
 
 	private String momUrl = null;
@@ -30,26 +29,20 @@ public class OTDBQueueProcessor extends Thread {
 	 * seconds to wait
 	 */
 	public OTDBQueueProcessor(Queue queue, String username, String password,
-			String authUrl,String momUrl) {
+			String authUrl, String momUrl) {
 		this.username = username;
 		this.password = password;
 		this.authUrl = authUrl;
 		this.momUrl = momUrl;
 		this.queue = queue;
+		httpClient = new AstronHttpClient(authUrl);
 	}
 
 	public void run() {
-		try {
-			httpClient = new AstronHttpClient(authUrl);
-			httpClient.login(username, password);
-			while (true) {
-				Task task = queue.get();
-				log.debug("Process task: " + task.getXml());
-				processTask(task);
-
-			}
-		} catch (AstronHttpException ahe) {
-			log.error("AstronHttpException:" + ahe.getMessage(), ahe);
+		while (true) {
+			Task task = queue.get();
+			log.debug("Process task: " + task.getXml());
+			processTask(task);
 
 		}
 
@@ -59,14 +52,13 @@ public class OTDBQueueProcessor extends Thread {
 		boolean succeed = false;
 		while (!succeed) {
 			try {
-
-				String result = httpClient.getResponseAsString(momUrl + "/interface/importXML.do?command=IMPORTXML&xmlcontent="
+				httpClient.login(username, password);
+				String result = httpClient
+						.getResponseAsString(momUrl
+								+ "/interface/importXML2.do?command=importxml2&xmlcontent="
 								+ task.getXml());
-				// ByteArrayInputStream byteArrayInputStream = new
-				// ByteArrayInputStream(result);
-				// String string = new String(result);
 				log.info(result);
-
+				httpClient.logout();
 				succeed = true;
 			} catch (AstronHttpException ahe) {
 				log.error("AstronHttpException:" + ahe.getMessage(), ahe);

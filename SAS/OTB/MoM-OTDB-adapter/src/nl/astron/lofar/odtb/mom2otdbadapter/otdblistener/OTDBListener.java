@@ -57,10 +57,10 @@ public class OTDBListener extends Thread {
 			XMLGenerator xmlGenerator = new XMLGenerator();
 			String xml = xmlGenerator.getObservationXml(lofarObservation);
 			task.setXml(xml);
-			task.setMom2Id(lofarObservation.getMom2Id());
+			task.setMom2Id(lofarObservation.getMom2Id() + "");
 			return task;
 		} catch (Exception e) {
-			log.error(e);
+			log.error(e.getMessage(),e);
 		}
 		return null;
 	}

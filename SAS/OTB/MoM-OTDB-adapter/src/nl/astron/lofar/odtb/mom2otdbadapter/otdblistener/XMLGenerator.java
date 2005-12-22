@@ -60,15 +60,15 @@ public class XMLGenerator {
 
 	protected void addObservation(Element observationElement,
 			LofarObservation observation) {
-
-		xmlBuilder.addAttributeToElement(observationElement, "mom2Id",
-				observation.getMom2Id());
+		if (observation.getMom2Id() > 0) {
+			xmlBuilder.addAttributeToElement(observationElement, "mom2Id",
+					observation.getMom2Id() + "");
+		}
 		Element currentStatusElement = xmlBuilder.addElement(
 				observationElement, "currentStatus");
 		addXmlStatusElement(currentStatusElement, observation.getStatus());
-		xmlBuilder.addElement(
-				observationElement, MOM2_LOFAR_NAMESPACE,
-				"observationAttributes");		
+		xmlBuilder.addElement(observationElement, MOM2_LOFAR_NAMESPACE,
+				"observationAttributes");
 		addChildren(observationElement, observation);
 
 	}
