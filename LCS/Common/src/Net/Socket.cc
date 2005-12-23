@@ -561,21 +561,26 @@ Socket* Socket::accept(int32	waitMs)
 
 	itsErrno = SK_OK;
 	errno 	 = 0;
-	int32 	newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
-	if (newSocketID > 0) {
+	int32 newSocketID;
+
+	do {
+	  newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
+	  if (newSocketID > 0) {
 	    LOG_DEBUG(formatString("Socket(%d):accept() successful",itsSocketID));
-		setBlocking(blockingMode);
-		Socket*		newSocket = (itsType == UNIX) ?
-								new Socket(newSocketID, itsUnixAddr) :
-							  	new Socket(newSocketID, itsTCPAddr);
-		newSocket->setBlocking(blockingMode);
-		return (newSocket);
-	}
+	    setBlocking(blockingMode);
+	    Socket* newSocket = (itsType == UNIX) ?
+	      new Socket(newSocketID, itsUnixAddr) :
+	      new Socket(newSocketID, itsTCPAddr);
+	    newSocket->setBlocking(blockingMode);
+	    return (newSocket);
+	  }
 
+	} while ((errno == EWOULDBLOCK) || (errno == EAGAIN) || (errno == EINTR));
+	
 	LOG_DEBUG(formatString("Socket(%d):accept() failed: errno=%d(%s)", 
-										itsSocketID, errno, strerror(errno)));
+			       itsSocketID, errno, strerror(errno)));
 
-	if ((errno != EWOULDBLOCK) && (errno != EALREADY) && (errno != EINTR)) {
+	if (errno != EALREADY) {
 		// real error
 		setBlocking(blockingMode);
 		setErrno(ACCEPT);
