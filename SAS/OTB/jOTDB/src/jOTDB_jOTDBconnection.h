@@ -52,7 +52,7 @@ JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getTreeInfo
  * Signature: (IZLjava/lang/String;)Ljava/util/Vector;
  */
 JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getStateList
-  (JNIEnv *, jobject, jint, jboolean, jstring);
+  (JNIEnv *, jobject, jint, jboolean, jstring, jstring);
 
 /*
  * Class:     jOTDB_jOTDBconnection

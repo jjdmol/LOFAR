@@ -57,9 +57,13 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface
      
    
    // To get a list of all StateChanges
-   public Vector getStateList (int treeID, boolean isMomID, String beginDate) throws RemoteException
+   public Vector getStateList (int treeID, boolean isMomID, String beginDate, String endDate) throws RemoteException
      {
-	return adaptee.getStateList (treeID, isMomID, beginDate);
+	try {
+		return adaptee.getStateList (treeID, isMomID, beginDate, endDate);
+	}catch (Exception e){
+		throw new RemoteException();
+	}
      }
       
    // To get a list of all OTDB trees available in the database.
