@@ -38,11 +38,6 @@
 using namespace LOFAR;
 
 
-extern "C"
-{
-  void _fast_memcpy(void *dst, const void *src, size_t size);
-}
-
 WH_Correlator::WH_Correlator(const string &name)
 :
   WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator")
@@ -157,10 +152,10 @@ void WH_Correlator::process()
       }
       // see if some 2x2 blocks are necessary
       for (; stat1 < stat2; stat1 += 2) {
-	_correlate_2x2(&(*input[stat2  ])[ch][remap[stat2  ]],
-		       &(*input[stat2+1])[ch][remap[stat2+1]],
-		       &(*input[stat1  ])[ch][remap[stat1  ]],
+	_correlate_2x2(&(*input[stat1  ])[ch][remap[stat1  ]],
 		       &(*input[stat1+1])[ch][remap[stat1+1]],
+		       &(*input[stat2  ])[ch][remap[stat2  ]],
+		       &(*input[stat2+1])[ch][remap[stat2+1]],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2  )][ch],
 		       &(*output)[DH_Vis::baseline(stat1  , stat2+1)][ch],
 		       &(*output)[DH_Vis::baseline(stat1+1, stat2  )][ch],
