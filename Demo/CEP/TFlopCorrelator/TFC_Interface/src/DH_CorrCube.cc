@@ -59,7 +59,7 @@ void DH_CorrCube::init()
   // Determine the number of bytes needed for DataPacket and buffer.
   //itsBufSize = itsNStations * itsNFChannels * itsNTimes * itsNPol;
   
-  addField ("Buffer", BlobField<fcomplex>(1, getBufSize()));
+  addField ("Buffer", BlobField<fcomplex>(1, getBufSize()), 32);
   addField ("Flag", BlobField<int>(1, 1));
   
   createDataBlock();  // calls fillDataPointers

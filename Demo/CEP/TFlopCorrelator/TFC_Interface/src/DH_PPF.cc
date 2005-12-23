@@ -50,7 +50,7 @@ DataHolder *DH_PPF::clone() const
 
 void DH_PPF::init()
 {
-  addField("Buffer", BlobField<BufferElementType>(1, getBufferSize()));
+  addField("Buffer", BlobField<BufferElementType>(1, getBufferSize()), 32);
   createDataBlock();
 
   //memset(itsBuffer, 0, sizeof(BufferType)); 
