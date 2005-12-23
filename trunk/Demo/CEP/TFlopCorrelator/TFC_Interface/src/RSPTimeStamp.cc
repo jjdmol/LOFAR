@@ -23,6 +23,8 @@
 #include <RSPTimeStamp.h>
 
 namespace LOFAR {
+  int TimeStamp::theirMaxBlockId = 156250;
+
   TimeStamp::TimeStamp(const int seqId, const int blockId) 
     :itsSeqId(seqId),
      itsBlockId(blockId)
@@ -31,13 +33,16 @@ namespace LOFAR {
   }
 
   void TimeStamp::checkOverflow() {
-    if (itsBlockId >= MAX_BLOCK_ID) {
-      int newBlockId = itsBlockId % MAX_BLOCK_ID;
-      itsSeqId += itsBlockId / MAX_BLOCK_ID; 
+    if (itsBlockId >= theirMaxBlockId) {
+      int newBlockId = itsBlockId % theirMaxBlockId;
+      itsSeqId += itsBlockId / theirMaxBlockId; 
+      itsBlockId = newBlockId;
+    } else if (itsBlockId < 0) {
+      int newBlockId = (itsBlockId % theirMaxBlockId) + theirMaxBlockId;
+      itsSeqId += -1 + itsBlockId / theirMaxBlockId; 
       itsBlockId = newBlockId;
     };
-  }
-  
+  }  
 
   ostream& operator<<(ostream& os, const TimeStamp& ss){
     os<<ss.itsSeqId<<" s: "<<ss.itsBlockId;
