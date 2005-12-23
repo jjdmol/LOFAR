@@ -26,7 +26,7 @@ public class treeModel extends AbstractTableModel {
     
        boolean itsDebugFlag=false;
        String headers[] = {"TreeID", "Creator", "CreationDate", "Classification", 
-            "Type", "State", "Campaign", "Start Time", "Stop Time"};
+            "Type", "State", "MomID","Campaign", "Start Time", "Stop Time"};
        Object data[][];
        
        public void setDebugFlag(boolean aFlag) {
@@ -83,9 +83,10 @@ public class treeModel extends AbstractTableModel {
 	                    data[k][3]=new String(types.getClassif(tInfo.classification));
 	                    data[k][4]=new String(types.getTreeType(tInfo.type));
 	                    data[k][5]=new String(types.getTreeState(tInfo.state));
-	                    data[k][6]=new String(tInfo.campaign);	
-	                    data[k][7]=new String(tInfo.starttime);
-	                    data[k][8]=new String(tInfo.stoptime);
+                            data[k][6]=new Integer(tInfo.momID);
+	                    data[k][7]=new String(tInfo.campaign);	
+	                    data[k][8]=new String(tInfo.starttime);
+	                    data[k][9]=new String(tInfo.stoptime);
 	                }
                     }
                     fireTableDataChanged();

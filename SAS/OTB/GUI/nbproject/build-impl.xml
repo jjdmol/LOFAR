@@ -80,6 +80,7 @@ is divided into following sections:
         <!-- You can override this target in the ../build.xml file. -->
     </target>
     <target name="-init-check" depends="-pre-init,-init-private,-init-user,-init-project,-do-init">
+        <fail unless="src.classes.dir">Must set src.classes.dir</fail>
         <fail unless="src.src.dir">Must set src.src.dir</fail>
         <fail unless="src.dir">Must set src.dir</fail>
         <fail unless="build.dir">Must set build.dir</fail>
@@ -102,7 +103,7 @@ is divided into following sections:
     </target>
     <target name="-init-macrodef-javac">
         <macrodef name="javac" uri="http://www.netbeans.org/ns/j2se-project/2">
-            <attribute name="srcdir" default="${src.src.dir}:${src.dir}"/>
+            <attribute name="srcdir" default="${src.classes.dir}:${src.src.dir}:${src.dir}"/>
             <attribute name="destdir" default="${build.classes.dir}"/>
             <attribute name="classpath" default="${javac.classpath}"/>
             <attribute name="debug" default="${javac.debug}"/>
@@ -225,6 +226,7 @@ is divided into following sections:
     <target name="-do-compile" depends="init,deps-jar,-pre-pre-compile,-pre-compile">
         <j2seproject2:javac/>
         <copy todir="${build.classes.dir}">
+            <fileset dir="${src.classes.dir}" excludes="${build.classes.excludes}"/>
             <fileset dir="${src.src.dir}" excludes="${build.classes.excludes}"/>
             <fileset dir="${src.dir}" excludes="${build.classes.excludes}"/>
         </copy>
@@ -343,9 +345,11 @@ is divided into following sections:
                 <path path="${javac.classpath}"/>
             </classpath>
             <sourcepath>
+                <pathelement location="${src.classes.dir}"/>
                 <pathelement location="${src.src.dir}"/>
                 <pathelement location="${src.dir}"/>
             </sourcepath>
+            <fileset dir="${src.classes.dir}"/>
             <fileset dir="${src.src.dir}"/>
             <fileset dir="${src.dir}"/>
         </javadoc>
