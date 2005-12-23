@@ -167,8 +167,10 @@ namespace LOFAR
 	
        jobject convertTreeState (JNIEnv *env, TreeState aTreeState)
          {
-           jobject jTreeState;
-           jclass class_jTreeState = env->FindClass ("jOTDB/jTreeState");
+        jobject jTreeState;
+        jclass class_jTreeState = env->FindClass ("jOTDB/jTreeState");
+	    jmethodID mid_jTreeState_cons = env->GetMethodID (class_jTreeState, "<init>", "()V");
+		jTreeState = env->NewObject (class_jTreeState, mid_jTreeState_cons);
 
 
 	  jfieldID fid_jTreeState_treeID = env->GetFieldID (class_jTreeState, "treeID", "I"); 
@@ -192,12 +194,15 @@ namespace LOFAR
 	* Signature: (IZLjava/lang/String;)Ljava/util/Vector;
 	*/
        JNIEXPORT jobject JNICALL Java_jOTDB_jOTDBconnection_getStateList
-       (JNIEnv *env, jobject, jint treeID, jboolean isMomID, jstring beginDate)
+       (JNIEnv *env, jobject, jint treeID, jboolean isMomID, 
+					jstring beginDate, jstring endDate)
 
 	  {
 	     const char* bd = env->GetStringUTFChars (beginDate, 0);
-             
-	     vector<TreeState> states = OTDBconn->getStateList(treeID, isMomID,time_from_string(bd));     
+	     const char* ed = env->GetStringUTFChars (endDate, 0);
+
+	     vector<TreeState> states = OTDBconn->getStateList(treeID, isMomID,
+				time_from_string(bd), time_from_string(ed));     
 	     vector<TreeState>::iterator statesIterator;
 	     
 	     // Construct java Vector

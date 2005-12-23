@@ -50,7 +50,7 @@ namespace LOFAR
 	  treemain = new TreeMaintenance (OTDBconn);
        }
 
-       JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNodeDef__I
+       JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNodeDef
          (JNIEnv *env, jobject, jint aNodeID)
        {
 	 VICnodeDef aNodeDef = treemain->getNodeDef (aNodeID);
@@ -91,11 +91,22 @@ namespace LOFAR
 	 return treeID;
        }
 
-       JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNode__II
+       JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getNode
          (JNIEnv *env, jobject, jint aTreeID, jint aNodeID)
        {
 	 OTDBnode aNode = treemain->getNode (aTreeID, aNodeID);
 	 return convertOTDBnode (env, aNode);
+       }
+
+       JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setMomInfo
+       (JNIEnv *env, jobject, jint aTreeID, jint aMomID, jstring aCampaign)
+       {
+	 jboolean isCopy;
+	 const char* name = env->GetStringUTFChars (aCampaign, &isCopy);
+	 jboolean succes = treemain->setMomInfo (aTreeID, aMomID, name);
+	 env->ReleaseStringUTFChars (aCampaign, name);
+	 
+	 return succes;
        }
 
        JNIEXPORT jobject JNICALL Java_jOTDB_jTreeMaintenance_getItemList__III
@@ -253,16 +264,6 @@ namespace LOFAR
 	  return convertOTDBnode (env, aNode);
        }
 
-	   JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setMomInfo
-	  	(JNIEnv *env, jobject, jint aTreeID, jint aMomID, jstring aCampaign)
-	    {
-		jboolean isCopy;
-		const char* name = env->GetStringUTFChars (aCampaign, &isCopy);
-	  	jboolean succes = treemain->setMomInfo (aTreeID, aMomID, name);
-		env->ReleaseStringUTFChars (aCampaign, name);
-
-	  	return succes;
-       }
 
        JNIEXPORT jboolean JNICALL Java_jOTDB_jTreeMaintenance_setClassification
          (JNIEnv *, jobject, jint aTreeID, jshort aClassification)
