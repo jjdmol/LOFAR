@@ -30,6 +30,7 @@
 #include <GCF/PALlight/CEPPropertySet.h>
 #include <GCF/GCF_PVDynArr.h>
 #endif
+#include <Common/Timer.h>
 
 namespace LOFAR
 {
@@ -52,6 +53,7 @@ class WH_Storage: public WorkHolder
 
     virtual void process();
 
+    void postprocess();
   private:
     /// forbid copy constructor
     WH_Storage (const WH_Storage&);
@@ -69,6 +71,8 @@ class WH_Storage: public WorkHolder
     vector<int> itsBandIds;       // MS ID s of frequency bands
     int itsFieldId;
     int itsCounter;
+
+    NSTimer itsWriteTimer;
 
 #ifdef USE_MAC_PI
     bool itsWriteToMAC;
