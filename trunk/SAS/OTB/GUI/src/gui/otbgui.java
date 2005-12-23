@@ -112,7 +112,7 @@ public class otbgui extends javax.swing.JFrame {
     public static String RMIConverterName   = jConverterInterface.SERVICENAME; 
     public static String OTDBUserName       = "paulus";
     public static String OTDBPassword       = "boskabouter";
-    public static String OTDBDBName         = "CDR";   
+    public static String OTDBDBName         = "verhoef";   
     
     
     /** Creates new form otbgui */
@@ -225,14 +225,14 @@ public class otbgui extends javax.swing.JFrame {
 
             },
             new String [] {
-                "TreeID", "Creator", "Creation Date", "Class", "Type", "State", "Campaign", "Start Time", "Stop Time"
+                "TreeID", "Creator", "Creation Date", "Class", "Type", "State", "MomID", "Campaign", "Start Time", "Stop Time"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -680,7 +680,7 @@ public class otbgui extends javax.swing.JFrame {
         CtrlCopyButton.setEnabled(false);
         ControlPanel.add(CtrlCopyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 130, -1, -1));
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "idle", "configure", "schedule", "queued", "active", "finished", "obsolete" }));
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "idle", "being specified", "specified", "scheduled", "queued", "active", "finished", "aborted", "obsolete" }));
         jComboBox1.setEnabled(false);
         jComboBox1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1186,6 +1186,7 @@ public class otbgui extends javax.swing.JFrame {
        
         try {            
           treeList=remoteOTDB.getTreeList((short)0, (short)0);
+          if (itsDebugFlag) System.out.println("returned treeList has size: "+treeList.size());
           if (treeList.size() <= 0) {
             if (itsDebugFlag) System.out.println("Error:" + remoteOTDB.errorMsg());
             return false;
@@ -1516,7 +1517,7 @@ public class otbgui extends javax.swing.JFrame {
     }
     
     private void setPresentNode(int aNodeID) {
-        if (itsDebugFlag) System.out.println("setPresentNode to "+aNodeID);
+        if (itsDebugFlag) System.out.println("setPresentNode to "+aNodeID + " for TreeID: "+ SelectedTreeID);
         
         try {
             itsPresentNode=remoteMaintenance.getNode(SelectedTreeID, aNodeID);
