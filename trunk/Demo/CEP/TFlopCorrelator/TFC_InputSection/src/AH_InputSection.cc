@@ -33,7 +33,7 @@
 using namespace LOFAR;
 
 AH_InputSection::AH_InputSection() 
-  : itsNSBF       (0),
+  : itsNSubbands       (0),
     itsInputStub  (0),
     itsOutputStub (0)
 {
@@ -74,8 +74,12 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
   undefine();
 
+#ifdef HAVE_MPICH
+  int lowestFreeNode = 1;
+#else
   int lowestFreeNode = 0;
-  itsNSBF  = itsParamSet.getInt32("Data.NSubbands");  // number of SubBand filters in the application
+#endif
+  itsNSubbands  = itsParamSet.getInt32("Data.NSubbands");  // number of SubBand filters in the application
     
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
@@ -85,15 +89,6 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   itsInputStub = new Stub_Delay(true, itsParamSet);
 
   LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
-  /* first determine the number of Transpose Steps that will be 
-     constructed later on; we need this number to define the output
-     DataHolders in the RSPInput Steps.
-     Note that the number of SubBandFilters per Transpose Step
-     is hard coded as 2 */
-//   DBGASSERTSTR(itsNSBF%2 == 0, "NSBF should be an even number");
-//   const int NrTransposeNodes = itsNSBF/2;
-
-  // Right now there is 1 Transpose node per subbandFilter
   
   vector<Step*>        RSPSteps;
   vector<WH_RSPInput*> RSPNodes;
@@ -162,14 +157,14 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
 #ifdef HAVE_MPI
       itsSteps.back()->connect(1,  // input number 0 is the delay, 1 is the sync
 			       itsSteps[sourceStep],
-			       itsNSBF + r - 1,   // there are NSubbands outputs
+			       itsNSubbands + r - 1,   // there are NSubbands outputs
 			       1, // connect 1 DH
 			       new TH_MPI(itsSteps[sourceStep]->getNode(), (itsSteps.back())->getNode()),
 			       true);
 #else
       itsSteps.back()->connect(1,  // input number 0 is the delay
 			       itsSteps[sourceStep],
-			       itsNSBF + r - 1,
+			       itsNSubbands + r - 1,
 			       1,
 			       new TH_Mem(),
 			       false);
@@ -184,7 +179,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&) {
   vector<WH_SBCollect*> collectNodes;
   vector<Step*>         collectSteps;
   int collectStartNode;
-  for (int nf=0; nf < itsNSBF; nf++) {
+  for (int nf=0; nf < itsNSubbands; nf++) {
     sprintf(WH_DH_Name, "Collect_node_%d_of_%d", nf, NRSP);
     collectNodes.push_back(new WH_SBCollect(WH_DH_Name,      // name
 					    nf,              // Subband ID

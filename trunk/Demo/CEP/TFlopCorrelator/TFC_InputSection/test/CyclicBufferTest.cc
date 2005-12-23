@@ -1,4 +1,4 @@
-//#  CyclicBufferTest.cc: a test program for the BufferController class
+//#  CyclicBufferTest.cc: a test program for the BeamletBuffer class
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include "../src/BufferController.h"
+#include "../src/BeamletBuffer.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -34,7 +34,7 @@ using namespace LOFAR;
 
 typedef struct
 {
-  BufferController* bc;
+  BeamletBuffer* bc;
   int nsubbands;
   int nelements;
 } thread_args;
@@ -45,7 +45,7 @@ void* produce(void* argument)
   cout << "producer thread started" << endl;
 
   thread_args* arg = (thread_args*)argument;
-  BufferController* bc = arg->bc;
+  BeamletBuffer* bc = arg->bc;
   int nsubbands = arg->nsubbands;
   
   timestamp_t ts(0,0);
@@ -56,7 +56,7 @@ void* produce(void* argument)
      data[i].Xpol = makei16complex(i,0);
      data[i].Ypol = makei16complex(ts.getSeqId(),ts.getBlockId());
     }
-    bc->writeElements(data,ts);
+    bc->writeElements(data,ts, 1, nsubbands);
     ts++;   
   }
 }
@@ -67,7 +67,7 @@ void* consume(void* argument)
   sleep(1); 
   
   thread_args* arg = (thread_args*)argument;
-  BufferController *bc = arg->bc;
+  BeamletBuffer *bc = arg->bc;
   int nsubbands = arg->nsubbands;
   int nelements = arg->nelements;
   int invalidcount;
@@ -100,13 +100,13 @@ int main (int argc, const char** argv)
   try {
 
    // create Parameter Object
-   ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
+   //ACC::APS::ParameterSet ps("TFlopCorrelator.cfg");
    
-   int nsubbands = ps.getInt32("Data.NSubbands");
-   int nelements = ps.getInt32("Data.NSamplesToIntegrate");
+   int nsubbands = 2;
+   int nelements = 50;
 
-   // create BufferController Object
-   BufferController BufControl(1562500, nsubbands);
+   // create BeamletBuffer Object
+   BeamletBuffer BufControl(156500, nsubbands, 50, 50);
     
    // start producing data thread
    pthread_t  producer;

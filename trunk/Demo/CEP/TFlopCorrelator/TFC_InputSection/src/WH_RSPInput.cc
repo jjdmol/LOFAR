@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Transport/TransportHolder.h>
 #include <Transport/TH_File.h>
+#include <Transport/TH_Null.h>
 
 // Application specific includes
 #include <TFC_Interface/DH_RSP.h>
@@ -135,7 +136,9 @@ void* WriteToBufferThread(void* arguments)
       seqid   = ((int*)&recvframe[8])[0];
       blockid = ((int*)&recvframe[12])[0];
       actualstamp.setStamp(seqid ,blockid);
-    }
+    } else {
+      actualstamp += args->nrPacketsInFrame; 
+    }      
   
     // firstloop
     if (firstloop) {
@@ -167,7 +170,7 @@ void* WriteToBufferThread(void* arguments)
       for (; p<args->nrPacketsInFrame; p++) {
         idx = (p*args->EPAPacketSize) + args->EPAHeaderSize;
         cnt_rewritten++;
-        if (!args->BufControl->rewriteElements((SubbandType*)&recvframe[idx], actualstamp)) {
+        if (!args->BBuffer->writeElements((SubbandType*)&recvframe[idx], actualstamp, 1, 1, true)) {
           cnt_rewritten--;
           break;  
 	}
@@ -185,7 +188,7 @@ void* WriteToBufferThread(void* arguments)
       writeDummyTimer.start();
       missedStamps.push_back(expectedstamp);
       // missed a packet so create dummy for that missing packet
-      args->BufControl->writeDummy((SubbandType*)dummyblock, expectedstamp, args->nrPacketsInFrame);
+      args->BBuffer->writeElements((SubbandType*)dummyblock, expectedstamp, args->nrPacketsInFrame, 0, false);
       cnt_missed += args->nrPacketsInFrame;
       //cout << "Dummy created for " << cnt_missed << " missed packets." << endl; // debugging
       // read same frame again in next loop
@@ -198,12 +201,12 @@ void* WriteToBufferThread(void* arguments)
       // expected packet received so write data into corresponding buffer
       int idx;
 #if 1
-      args->BufControl->writeElements((SubbandType*)&recvframe[args->EPAHeaderSize], actualstamp, args->nrPacketsInFrame, strideSize);
+      args->BBuffer->writeElements((SubbandType*)&recvframe[args->EPAHeaderSize], actualstamp, args->nrPacketsInFrame, strideSize, true);
       actualstamp += args->nrPacketsInFrame;
 #else
       for (int p=0; p<args->nrPacketsInFrame; p++) {
 	idx = (p*args->EPAPacketSize) + args->EPAHeaderSize;
-	args->BufControl->writeElements((SubbandType*)&recvframe[idx], actualstamp);
+	args->BBuffer->writeElements((SubbandType*)&recvframe[idx], actualstamp);
       	actualstamp++;
       }
 #endif
@@ -261,7 +264,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
     itsPS (ps),
     itsSyncMaster(isSyncMaster),
     itsFirstProcessLoop(true),
-    itsBufControl(0)
+    itsBBuffer(0)
 {
   LOG_TRACE_FLOW_STR("WH_RSPInput constructor");    
 
@@ -309,7 +312,7 @@ WH_RSPInput::WH_RSPInput(const string& name,
 
 WH_RSPInput::~WH_RSPInput() 
 {
-  delete itsBufControl;
+  delete itsBBuffer;
   // itsTH is deleted by the AH because it is created there
   // delete &itsTH;
 }
@@ -337,7 +340,7 @@ void WH_RSPInput::startThread()
      into cyclic buffers */
   LOG_TRACE_FLOW_STR("WH_RSPInput starting thread");   
   
-  writerinfo.BufControl         = itsBufControl;
+  writerinfo.BBuffer         = itsBBuffer;
   writerinfo.Connection         = &itsTH;
   writerinfo.FrameSize          = itsSzRSPframe;
   writerinfo.nrPacketsInFrame   = itsNPackets;
@@ -350,10 +353,10 @@ void WH_RSPInput::startThread()
   writerinfo.EPAPacketSize      = itsEPAPacketSize;
   writerinfo.IsMaster           = itsSyncMaster;
   
-  if ((dynamic_cast<TH_File*> (&itsTH)) != 0) {
+  if ((itsTH.getType() == "TH_File") || ((dynamic_cast<TH_Null*>(&itsTH)) != 0)) {
     // if we are reading from file, overwriting the buffer should not be allowed
     // this way we can work with smaller files
-    itsBufControl->setAllowOverwrite(false);
+    //itsBBuffer->setAllowOverwrite(false);
   }
 
   if (pthread_create(&writerthread, NULL, WriteToBufferThread, &writerinfo) < 0)
@@ -366,7 +369,7 @@ void WH_RSPInput::startThread()
 void WH_RSPInput::preprocess()
 {
   // create the buffer controller.
-  itsBufControl = new BufferController(itsCyclicBufferSize, itsNSubbands, itsCyclicBufferSize/6, 5*itsCyclicBufferSize/6);
+  itsBBuffer = new BeamletBuffer(itsCyclicBufferSize, itsNSubbands, itsCyclicBufferSize/6, itsCyclicBufferSize/6);
   startThread();
   itsPrePostTimer = new NSTimer("pre/post");
   itsProcessTimer = new NSTimer("process");
@@ -377,10 +380,12 @@ void WH_RSPInput::preprocess()
   itsTimers.push_back(itsDelayTimer);
   itsTimers.push_back(itsGetElemTimer);
   itsPrePostTimer->start();
+  cout<<"end of WH_RSPInput::preprocess"<<endl;cout.flush();
 }
 
 void WH_RSPInput::process() 
 { 
+  cout<<"begin of WH_RSPInput::process"<<endl;cout.flush();
   itsProcessTimer->start();
   DH_RSP* rspDHp;
   DH_Delay* delayDHp;
@@ -394,8 +399,9 @@ void WH_RSPInput::process()
       sleep(1);
 
       // start the buffer and get the stamp at which we need to start reading
-      itsSyncedStamp = itsBufControl->startBufferRead();
-      cout<<"SyncedStamp on master: "<<itsSyncedStamp<<endl;
+      cout<<"master asking buffer for good place to start"<<endl;cout.flush();
+      itsSyncedStamp = itsBBuffer->startBufferRead();
+      cout<<"SyncedStamp on master: "<<itsSyncedStamp<<endl; cout.flush();
       
       // we are the master, so send the syncstamp to the slaves
       // send the syncstamp to the slaves
@@ -418,15 +424,16 @@ void WH_RSPInput::process()
     if (itsFirstProcessLoop) {
       // we are a slave so read the syncstamp
       itsDelayTimer->start();
+      cout<<"slave reading from master"<<endl;cout.flush();
       DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
       getDataManager().readyWithInHolder(1);
       dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
       itsSyncedStamp = dhp->getSyncStamp(); 
       itsDelayTimer->stop();
-      cout<<"SyncedStamp on slave: "<<itsSyncedStamp<<endl;
+      cout<<"SyncedStamp on slave: "<<itsSyncedStamp<<endl; cout.flush();
       
       // start the buffer and set the stamp at which we need to start reading
-      itsBufControl->startBufferRead(itsSyncedStamp);
+      itsBBuffer->startBufferRead(itsSyncedStamp);
       itsFirstProcessLoop = false; 
 
     } else {  //not the first loop
@@ -452,7 +459,7 @@ void WH_RSPInput::process()
   }
   // get the data from the cyclic buffer
   itsGetElemTimer->start();
-  itsBufControl->getElements(subbandbuffer,
+  itsBBuffer->getElements(subbandbuffer,
                              invalidcount, 
                              delayedstamp, 
                              itsNSamplesToCopy);
@@ -506,7 +513,8 @@ void WH_RSPInput::postprocess()
   //writerinfo.Connection         = 0;
   // stop writer thread
   writerinfo.Stopthread         = true;
-  itsBufControl->clear();
+  itsBBuffer->clear();
+  cout<<"buffer cleared"<<endl;
   ASSERTSTR(pthread_join(writerthread, NULL) == 0, "thread could not be joined");
   //  pthread_cancel(writerthread);
   sleep(2);

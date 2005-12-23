@@ -1,4 +1,7 @@
-INSTHDRS         	=\
+INSTHDRS		= \
+LockedRange.h 		\
+LockedRange.tcc		\
+BeamletBuffer.h 	\
 WH_RSPInput.h           \
 WH_SBCollect.h		\
 AH_InputSection.h	\
@@ -24,6 +27,7 @@ WH_RSPInput.cc           	\
 WH_SBCollect.cc			\
 AH_InputSection.cc		\
 BufferController.cc	        \
+BeamletBuffer.cc		\
 CyclicCounter.cc
 
 configfilesdir=$(bindir)

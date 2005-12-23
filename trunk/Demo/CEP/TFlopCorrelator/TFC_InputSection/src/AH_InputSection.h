@@ -45,7 +45,7 @@ class AH_InputSection: public LOFAR::ApplicationHolder
   vector<WorkHolder*> itsWHs;
   vector<TransportHolder*> itsTHs;
   vector<Step*> itsSteps;
-  int itsNSBF;
+  int itsNSubbands;
   Stub_Delay* itsInputStub;
   Stub_FIR* itsOutputStub;
 

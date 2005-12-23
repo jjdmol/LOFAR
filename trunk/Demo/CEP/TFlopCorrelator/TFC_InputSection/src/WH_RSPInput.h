@@ -30,7 +30,7 @@
 #include <APS/ParameterSet.h>
 #include <Transport/TransportHolder.h>
 #include <TFC_Interface/RSPTimeStamp.h>
-#include <TFC_InputSection/BufferController.h>
+#include <TFC_InputSection/BeamletBuffer.h>
 
 
 namespace LOFAR
@@ -40,7 +40,7 @@ namespace LOFAR
   
   typedef struct 
   {
-    BufferController* BufControl;
+    BeamletBuffer* BBuffer;
     TransportHolder* Connection; 
     int FrameSize;
     int SubbandSize;
@@ -120,7 +120,7 @@ namespace LOFAR
       int itsEPAHeaderSize;
       int itsEPAPacketSize;
      
-      BufferController* itsBufControl;
+      BeamletBuffer* itsBBuffer;
 
       vector<NSTimer*> itsTimers;
       NSTimer* itsPrePostTimer;
