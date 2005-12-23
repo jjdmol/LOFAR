@@ -20,7 +20,7 @@ public class XMLGenerator {
 
 	protected static final String MOM2_NAMESPACE = "http://www.astron.nl/MoM2";
 
-	protected static final String OTDB_DATETIME_FORMAT = "dd-MM-yyyy HH:mm:ss";
+	protected static final String OTDB_DATETIME_FORMAT = "yyyy-MMM-dd HH:mm:ss";
 
 	protected static final String FAILED = "failed";
 
@@ -46,7 +46,6 @@ public class XMLGenerator {
 			throws IOException, ParserConfigurationException {
 		Document document = getObservationDocument(observation);
 		OutputFormat format = new OutputFormat(document); // Serialize DOM
-		format.setIndenting(true);
 		StringWriter stringOut = new StringWriter(); // Writer will be a
 		// String
 		XMLSerializer serial = new XMLSerializer(stringOut, format);

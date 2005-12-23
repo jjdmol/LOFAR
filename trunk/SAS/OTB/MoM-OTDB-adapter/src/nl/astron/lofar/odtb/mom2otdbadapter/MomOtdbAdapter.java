@@ -28,14 +28,14 @@ public class MomOtdbAdapter {
 	}
 
 	protected void startServices() throws IOException, NotBoundException {
-		TimeZone.setDefault(TimeZone.getTimeZone("UTC")); 
+		//TimeZone.setDefault(TimeZone.getTimeZone("UTC")); 
 		Queue queue = new Queue();
 		OTDBRepository repository = new OTDBRepository(rmiHost, rmiPort
 				.intValue());
-/*		OTDBQueueProcessor otdbQueueProcessor = new OTDBQueueProcessor(queue,
+		OTDBQueueProcessor otdbQueueProcessor = new OTDBQueueProcessor(queue,
 				username, password, authUrl, momUrl);
 		otdbQueueProcessor.start();
-*/
+
 		OTDBListener otdbListener = new OTDBListener(queue, 5000, repository);
 		otdbListener.start();
 

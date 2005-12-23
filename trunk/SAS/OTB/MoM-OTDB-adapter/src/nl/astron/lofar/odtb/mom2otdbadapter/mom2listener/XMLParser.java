@@ -217,11 +217,9 @@ public class XMLParser {
 			 */
 			if (WsrtValidator.implementsInterface(Element.class, nodeChild
 					.getClass())) {
-
-				if (equalIgnorePrefix(nodeChild, DESCRIBED_STATUS)) {
-					lofarObservation.setStatus(Mom2OtdbConverter.getOTDBStatus(formatStatus(DESCRIBED_STATUS)));
-				} else if (equalIgnorePrefix(nodeChild, SPECIFIED_STATUS)) {
-					lofarObservation.setStatus(Mom2OtdbConverter.getOTDBStatus(formatStatus(SPECIFIED_STATUS)));
+				String nodeName = removePrefix(nodeChild);
+				if (nodeName.endsWith("Status")){
+					lofarObservation.setStatus(Mom2OtdbConverter.getOTDBStatus(formatStatus(nodeName)));
 				}
 			}
 		}
@@ -383,11 +381,14 @@ public class XMLParser {
 	}
 
 	protected boolean equalIgnorePrefix(Node node, String nodeName) {
-		String[] nodeSplit = node.getNodeName().split(":");
-		String withoutPrefix = nodeSplit[nodeSplit.length - 1];
+		String withoutPrefix = removePrefix(node);
 		return withoutPrefix.equals(nodeName);
 	}
-
+	protected String removePrefix(Node node){
+		String[] nodeSplit = node.getNodeName().split(":");
+		String withoutPrefix = nodeSplit[nodeSplit.length - 1];
+		return withoutPrefix;
+	}
 	protected String formatStatus(String status) {
 		return status.replaceAll("Status", "");
 	}
