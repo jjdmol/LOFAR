@@ -45,7 +45,8 @@ WH_Storage::WH_Storage(const string& name,
 		"WH_Storage"),
     itsPS      (pset),
     itsWriter  (0),
-    itsCounter (0)
+    itsCounter (0),
+    itsWriteTimer("writing-MS")
 #ifdef USE_MAC_PI
     ,itsPropertySet(0)
 #endif
@@ -153,9 +154,11 @@ void WH_Storage::process()
 	  //	  DBGASSERT(inputDH->getCenterFreq(v) > inputDH->getCenterFreq(v-1)); 
 	}
 	// Write 1 DH_Vis size fcomplex[nbaselines][nChannelsPerVis][npol][npol]
+	itsWriteTimer.start();
 	itsWriter->write (rownr, itsBandIds[i], itsFieldId, v*itsNChanPerVis, itsNChanPerVis,
 			  itsCounter, dataSize,
 			  inputDH->getBufferElement(v));   // To do: add flags
+	itsWriteTimer.stop();
     }
   }
 
@@ -193,4 +196,8 @@ void WH_Storage::process()
 //     LOG_TRACE_FLOW("WH_Storage properties set");
 //   };
 #endif
+}
+
+void WH_Storage::postprocess() {
+  cout<<itsWriteTimer<<endl;
 }
