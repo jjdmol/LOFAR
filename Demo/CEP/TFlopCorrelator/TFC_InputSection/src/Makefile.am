@@ -6,7 +6,8 @@ WH_RSPInput.h           \
 WH_SBCollect.h		\
 AH_InputSection.h	\
 BufferController.h      \
-CyclicCounter.h
+CyclicCounter.h		\
+ReaderThread.h
 
 
 NOINSTHDRS 		=
@@ -28,7 +29,8 @@ WH_SBCollect.cc			\
 AH_InputSection.cc		\
 BufferController.cc	        \
 BeamletBuffer.cc		\
-CyclicCounter.cc
+CyclicCounter.cc		\
+ReaderThread.cc
 
 configfilesdir=$(bindir)
 configfiles_DATA		=	\

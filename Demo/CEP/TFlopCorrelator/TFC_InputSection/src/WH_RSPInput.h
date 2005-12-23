@@ -31,28 +31,12 @@
 #include <Transport/TransportHolder.h>
 #include <TFC_Interface/RSPTimeStamp.h>
 #include <TFC_InputSection/BeamletBuffer.h>
-
+#include <TFC_InputSection/ReaderThread.h>
 
 namespace LOFAR
 {
 
   using ACC::APS::ParameterSet;
-  
-  typedef struct 
-  {
-    BeamletBuffer* BBuffer;
-    TransportHolder* Connection; 
-    int FrameSize;
-    int SubbandSize;
-    int EPAHeaderSize;
-    int EPAPacketSize;
-    int nrPacketsInFrame;
-    int nrSubbandsInPacket;
-    int nrRSPoutputs;
-    int* StationIDptr;
-    bool Stopthread;
-    bool IsMaster;
-  }  thread_args;
   
   class WH_RSPInput: public WorkHolder
   {
@@ -92,7 +76,7 @@ namespace LOFAR
 
       // writer thread
       pthread_t writerthread;
-      thread_args writerinfo;
+      ThreadArgs writerinfo;
 
       // raw ethernet interface 
       TransportHolder& itsTH;
