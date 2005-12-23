@@ -737,7 +737,7 @@ loop:
 	stfpsux	14,3,9
 	stfpsux	15,3,9
 
-	la	8,-16(1)	# restore call-saved registers
+	la	8,0(1)	# restore call-saved registers
 	li	9,DCOMPLEX_SIZE
 
 	lfpdux	14,8,9
@@ -763,6 +763,25 @@ loop:
 	addi	1,1,368		# restore stack pointer
 	blr			# return
 
+
+.align 5
+.global _memzero
+_memzero:
+	srwi	4,4,7
+	mtctr	4
+	li	4,32
+	li	5,64
+	li	6,96
+	li	7,128
+
+L1:	
+	dcbz	0,3
+	dcbz	3,4
+	dcbz	3,5
+	dcbz	3,6
+	add	3,3,7
+	bdnz	L1
+	blr
 
 
 .align	5
