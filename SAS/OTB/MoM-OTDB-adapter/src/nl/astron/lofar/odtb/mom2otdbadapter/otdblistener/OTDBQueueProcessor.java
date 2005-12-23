@@ -54,10 +54,12 @@ public class OTDBQueueProcessor extends Thread {
 		while (!succeed) {
 			try {
 				httpClient.login(username, password);
+				String[] paramNames = new String[]{"command", "xmlcontent" } ;
+				String[] paramValues = new String[] {"importxml2", task.getXml()};
+
 				String result = httpClient
 						.getResponseAsString(momUrl
-								+ "/interface/importXML2.do?command=importxml2&xmlcontent="
-								+ task.getXml());
+								+ "/interface/importMom2XML.do", paramNames,paramValues);
 				log.info(result);
 				httpClient.logout();
 				succeed = true;

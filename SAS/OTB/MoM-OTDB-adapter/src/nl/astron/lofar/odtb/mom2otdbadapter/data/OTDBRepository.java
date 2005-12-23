@@ -5,6 +5,8 @@ import jOTDB.jConverterInterface;
 import jOTDB.jOTDBinterface;
 import jOTDB.jOTDBnode;
 import jOTDB.jTreeMaintenanceInterface;
+import jOTDB.jTreeState;
+import jOTDB.jOTDBtree;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -33,6 +35,8 @@ public class OTDBRepository {
 	
 	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
+
+	
 	public OTDBRepository(String rmiServerName, int port)
 			throws RemoteException, NotBoundException {
 
@@ -134,6 +138,36 @@ public class OTDBRepository {
 		String startTime = WsrtConverter.toDateString(startDate,DATE_TIME_FORMAT);
 		String endTime = WsrtConverter.toDateString(endDate,DATE_TIME_FORMAT);
 		log.info("Query latest changes between:" + startTime + " and " + endTime);
+		remoteOTDB.connect();
+		List result = new ArrayList();
+		Vector stateList = remoteOTDB.getStateList(0,false,startTime, endTime);
+		for (int i = 0; i < stateList.size();i++){
+			jTreeState state = (jTreeState) stateList.get(i);
+			
+			String status = converter.getTreeState(state.newState);
+			log.info("momId: "+ state.momID + " status:" + status + " statusId:" + state.newState);
+			if (state.momID >0 && isStatusThatMustBeExported(status)){
+				LofarObservation observation = new LofarObservation();
+				observation.setMom2Id(state.momID);
+				observation.setStatus(status);
+				jOTDBnode observationNode = tm.getTopNode(state.treeID);
+				jOTDBnode measurementsNode = getNode(observationNode, "measurementMom2Ids");
+				observation.setMeasurementMom2Ids(measurementsNode.limits);
+				if (status.equals("finished")){
+					jOTDBnode viNode = getNode(observationNode, "VI1");
+					jOTDBnode angle1 = getNode(viNode, "angle1");
+					jOTDBnode angle2 = getNode(viNode, "angle2");
+					jOTDBnode angleTimes = getNode(viNode, "angleTimes");
+					observation.setAngle1(angle1.limits);
+					observation.setAngle2(angle2.limits);
+					observation.setAngleTimes(angleTimes.limits);
+					jOTDBtree treeInfo = remoteOTDB.getTreeInfo(state.treeID,false);
+					observation.setStartTime(treeInfo.starttime);
+					observation.setEndTime(treeInfo.stoptime);
+				}
+				result.add(observation);
+			}
+		}
 /*	     System.out.println("Trying to connect to the database");
 	     remoteOTDB.connect();	
 	     remoteOTDB.isConnected();
@@ -188,7 +222,7 @@ public class OTDBRepository {
 		 * log.info(tInfo.stoptime); log.info(tInfo.treeID()+"");
 		 * log.info("MomID: " + tInfo.treeID()+""); }
 		 */
-		List result = new ArrayList();
+
 /*		LofarObservation observation = new LofarObservation();
 		observation.setMom2Id(15);
 		observation.setAngleTimes("[+0,+30,+60]");
@@ -224,13 +258,31 @@ public class OTDBRepository {
 		observation.setStartTime("16-12-2005 12:00:15");
 		observation.setEndTime("16-12-2005 12:02:14");
 		result.add(observation);*/
-		LofarObservation observation = new LofarObservation();
+/*		LofarObservation observation = new LofarObservation();
 		observation = new LofarObservation();
 		observation.setMom2Id(65);
 		observation.setStatus("specified");
 		observation.setMeasurementMom2Ids("[66]");
-		result.add(observation);
+		result.add(observation);*/
 		return result;
+	}
+	protected boolean isStatusThatMustBeExported(String code) {
+		if (code.equals("specified")) {
+			return true;
+		}
+		if (code.equals("active")) {
+			return true;
+		}
+		if (code.equals("finished")) {
+			return true;
+		}
+		if (code.equals("aborted")) {
+			return true;
+		}
+		if (code.equals("failed")) {
+			return true;
+		}
+		return false;
 	}
 
 }

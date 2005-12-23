@@ -51,7 +51,7 @@ public class Queue {
 	}
 
 	public synchronized Task get() {
-		while (tasks.size() == 0 && isTaskLocked) {
+		while (tasks.size() == 0 || isTaskLocked) {
 			log.info("Waiting for tasks....");
 			try {
 				wait();
@@ -100,6 +100,7 @@ public class Queue {
 
 		}
 		endTime = new Date();
+		endTime.setHours(endTime.getHours()+1);
 		TimePeriod time = new TimePeriod();
 		time.setStartTime(startTime);
 		time.setEndTime(endTime);
@@ -110,7 +111,15 @@ public class Queue {
 	public synchronized void saveTimePeriod() throws IOException {
 		String fileName = taskDir + File.separator + "last_time_period.txt";
 		String content = WsrtConverter.toDateString(startTime,DATE_TIME_FORMAT) + "," + WsrtConverter.toDateString(endTime,DATE_TIME_FORMAT);
-		storeString(fileName, content);
+		File file = new File(fileName);
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+		FileOutputStream fileOutputStream = new FileOutputStream(file);
+		PrintWriter out = new PrintWriter(fileOutputStream, true);
+		out.write(content);
+		out.close();
+		fileOutputStream.close();
 		isTimeLocked = false;
 		notifyAll();
 	}
@@ -148,19 +157,16 @@ public class Queue {
 				+ task.getMom2Id() + "_time_"
 				+ WsrtConverter.toDateString(date, FILE_DATE_TIME_FORMAT) + ".xml";
 		task.setFileName(fileName);
-		storeString(fileName, task.getXml());
-	}
-
-	protected void storeString(String fileName, String content)
-			throws FileNotFoundException, IOException {
 		File file = new File(fileName);
 		if (!file.exists()) {
 			file.createNewFile();
 		}
 		FileOutputStream fileOutputStream = new FileOutputStream(file);
 		PrintWriter out = new PrintWriter(fileOutputStream, true);
-		out.write(content);
+		out.write(task.getXml());
 		out.close();
 		fileOutputStream.close();
 	}
+
+
 }

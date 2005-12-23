@@ -1,6 +1,7 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 
 import java.io.IOException;
+import java.rmi.UnmarshalException;
 import java.util.List;
 
 import nl.astron.lofar.odtb.mom2otdbadapter.data.LofarObservation;
@@ -46,7 +47,9 @@ public class OTDBListener extends Thread {
 				log.debug("Going to sleep");
 				Thread.sleep(seconds);
 			} catch (InterruptedException e) {
-			} catch (IOException e) {
+			} catch (UnmarshalException e) {
+				log.error("UnmarshalException: " + e.getMessage(), e);
+			}catch (IOException e) {
 				log.error("IOException: " + e.getMessage(), e);
 			}
 		}
@@ -62,6 +65,7 @@ public class OTDBListener extends Thread {
 			return task;
 		} catch (Exception e) {
 			log.error(e.getMessage(),e);
+
 		}
 		return null;
 	}
