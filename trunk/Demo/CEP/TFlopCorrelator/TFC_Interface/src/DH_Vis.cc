@@ -61,7 +61,7 @@ void DH_Vis::init()
   // Determine the size of the buffer.
   //todo: support for multiple freq channels
   //itsBufSize = itsNCorrs * itsNBaselines;
-  addField("Buffer", BlobField<fcomplex>(1, getBufSize()));
+  addField("Buffer", BlobField<fcomplex>(1, getBufSize()), 32);
   addField("Flag", BlobField<int>(1));
   createDataBlock();  // calls fillDataPointers
 

@@ -43,7 +43,7 @@ DataHolder* DH_PhaseCorr::clone() const
 void DH_PhaseCorr::init()
 {
   // add the fields to the data definition
-  addField ("PhaseCorrs", BlobField<fcomplex>(1, itsNrChannels));
+  addField ("PhaseCorrs", BlobField<fcomplex>(1, itsNrChannels), 32);
   
   // create the data blob
   createDataBlock();
