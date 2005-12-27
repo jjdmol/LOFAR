@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACC_ACREQUEST_H
 #define LOFAR_ACC_ACREQUEST_H
 
-// \file ACRequest.h
+// \file
 // Small structure used for communication with the ACDaemon
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

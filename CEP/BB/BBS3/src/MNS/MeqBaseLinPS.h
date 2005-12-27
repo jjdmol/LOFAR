@@ -23,7 +23,7 @@
 #ifndef MNS_MEQBASELINPS_H
 #define MNS_MEQBASELINPS_H
 
-// \file MNS/MeqBaseLinPS.h
+// \file
 // Baseline prediction of a point source with linear polarisation.
 
 //# Includes

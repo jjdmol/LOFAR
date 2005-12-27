@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_PROCRULE_H
 #define LOFAR_ACCBIN_PROCRULE_H
 
-// \file ProcRule.h
+// \file
 // Information how to rule a process.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

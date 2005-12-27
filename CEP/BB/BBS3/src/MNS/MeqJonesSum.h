@@ -23,7 +23,7 @@
 #ifndef MNS_MEQJONESSUM_H
 #define MNS_MEQJONESSUM_H
 
-// \file MNS/MeqJonesSum.h
+// \file
 // A sum of MeqJonesExpr
 
 //# Includes

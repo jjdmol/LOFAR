@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_PERSISTENCEBROKER_H
 #define LOFAR_PL_PERSISTENCEBROKER_H
 
-// \file PersistenceBroker.h
+// \file
 // Handle save/retrieve of persistent objects.
 
 //# Includes

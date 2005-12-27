@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBACTION_H
 #define LOFAR_OTDB_OTDBACTION_H
 
-// \file OTDBaction.h
+// \file
 // Action an operator takes on an OTDBevent.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

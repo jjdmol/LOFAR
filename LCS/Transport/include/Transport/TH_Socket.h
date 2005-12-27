@@ -24,7 +24,7 @@
 #ifndef LOFAR_TRANSPORT_TH_SOCKET_H
 #define LOFAR_TRANSPORT_TH_SOCKET_H
 
-// \file TH_Socket.h
+// \file
 // Socket based TransportHolder. Based on the Socket wrapper class from
 // Common.
 

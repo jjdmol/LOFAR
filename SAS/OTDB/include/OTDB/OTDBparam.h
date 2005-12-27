@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_PARAMDEF_H
 #define LOFAR_OTDB_PARAMDEF_H
 
-// \file OTDBparam.h
+// \file
 // Structure describing one parameter.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

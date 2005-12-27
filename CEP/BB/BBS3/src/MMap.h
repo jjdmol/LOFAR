@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS3_MMAP_H
 #define LOFAR_BBS3_MMAP_H
 
-// \file MMap.h
+// \file
 // implements an mmap operation
 
 //# Includes

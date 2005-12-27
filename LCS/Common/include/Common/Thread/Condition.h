@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_CONDITION_H
 #define LOFAR_COMMON_THREAD_CONDITION_H
 
-// \file Thread/Condition.h
+// \file
 // Thread condition class.
 
 //# Includes

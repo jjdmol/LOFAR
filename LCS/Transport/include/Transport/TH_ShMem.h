@@ -23,7 +23,7 @@
 #ifndef LIBTRANSPORT_TH_SHMEM_H
 #define LIBTRANSPORT_TH_SHMEM_H
 
-// \file TH_ShMem.h
+// \file
 // In-memory transport mechanism between different processes
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

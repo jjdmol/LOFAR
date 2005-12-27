@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQMATRIXREALSCA_H)
 #define MNS_MEQMATRIXREALSCA_H
 
-// \file MNS/MeqMatrixRealSca.h
+// \file
 // Temporary matrix for Mns
 
 //# Includes

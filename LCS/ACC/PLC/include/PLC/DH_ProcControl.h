@@ -25,7 +25,7 @@
 #ifndef LOFAR_PLC_DH_PROCCONTROL_H
 #define LOFAR_PLC_DH_PROCCONTROL_H
 
-// \file DH_ProcControl.h
+// \file
 // DataHolder for Process Control commands.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

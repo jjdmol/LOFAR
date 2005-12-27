@@ -25,7 +25,7 @@
 #ifndef LOFAR_ALC_APPLCONTROLSERVER_H
 #define LOFAR_ALC_APPLCONTROLSERVER_H
 
-// \file ApplControlServer.h: 
+// \file
 // Server stub of the interface to the Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_STRINGUTIL_H
 #define LOFAR_COMMON_STRINGUTIL_H
 
-// \file StringUtil.h
+// \file
 // Useful string manipulation methods
 
 //# Includes

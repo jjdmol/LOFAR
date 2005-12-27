@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_DBREPHOLDER_H
 #define LOFAR_PL_DBREPHOLDER_H
 
-// \file DBRepHolder.h
+// \file
 // Class combining metadata and user-defined class data.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

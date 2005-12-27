@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_APADMINPOOL_H
 #define LOFAR_ACCBIN_APADMINPOOL_H
 
-// \file APAdminPool.h
+// \file
 // Collection of APAdmin classes used by the Application Controller for
 // managing the Application Processes.
 

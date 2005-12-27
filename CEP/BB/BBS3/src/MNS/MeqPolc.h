@@ -23,7 +23,7 @@
 #ifndef MNS_MEQPOLC_H
 #define MNS_MEQPOLC_H
 
-// \file MNS/MeqPolc.h
+// \file
 // Ordinary polynomial with coefficients valid for a given domain
 
 //# Includes

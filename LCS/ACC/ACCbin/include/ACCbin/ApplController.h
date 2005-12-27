@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_APPLCONTROLLER_H
 #define LOFAR_ACCBIN_APPLCONTROLLER_H
 
-// \file ApplController.h
+// \file
 // This is the main 'engine' of the Application Controller. It manages
 // the communication with the ACuser, the Application Processes and the
 // ACDaemon. It guards the execution time of the commands and collects

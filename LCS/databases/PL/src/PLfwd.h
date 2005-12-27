@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_PLFWD_H
 #define LOFAR_PL_PLFWD_H
 
-// \file PLfwd.h
+// \file
 // Forward declarations of classes in the PL package.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_CMDSTACK_H
 #define LOFAR_ACCBIN_CMDSTACK_H
 
-// \file CmdStack.h
+// \file
 // Time-ordered stack of DH_ApplControl structures used by the Application
 // Controller to hold future commands for a while.
 

@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBCONSTANTS_H
 #define LOFAR_OTDB_OTDBCONSTANTS_H
 
-// \file OTDBconstants.h
+// \file
 // Collection of constants also available in the DB.
 
 namespace LOFAR {

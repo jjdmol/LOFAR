@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file Numeric.h
+// \file
 // Compare floating point numbers.
 
 //# Includes

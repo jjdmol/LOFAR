@@ -27,7 +27,7 @@
 #ifndef LOFAR_BBS3_BLACKBOARDDEMO_H
 #define LOFAR_BBS3_BLACKBOARDDEMO_H
 
-// \file BlackBoardDemo.h
+// \file
 // This is an ApplicationHolder class which demonstrates the use of a blackboard control
 // architecture in combination with calibration software.
 

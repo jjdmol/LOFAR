@@ -23,7 +23,7 @@
 #if !defined(MNS_PARMTABLEAIPS_H)
 #define MNS_PARMTABLEAIPS_H
 
-// \file MNS/ParmTableAIPS.h
+// \file
 // Object to hold parameters in an AIPS++ table.
 
 //# Includes

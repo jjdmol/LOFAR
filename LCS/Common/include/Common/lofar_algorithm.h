@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_ALGORITHM_H
 #define LOFAR_COMMON_ALGORITHM_H
 
-// \file lofar_algorithm.h
+// \file
 
 #include <algorithm>
 

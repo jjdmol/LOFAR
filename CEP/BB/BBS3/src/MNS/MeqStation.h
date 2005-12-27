@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQSTATION_H)
 #define MNS_MEQSTATION_H
 
-// \file MNS/MeqStation.h
+// \file
 // Class holding the ITRF position expressions of a station
 
 //# Includes

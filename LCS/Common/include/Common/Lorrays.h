@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LORRAYS_H
 #define LOFAR_COMMON_LORRAYS_H
 
-// \file Lorrays.h
+// \file
 // Define %Array type to use (Blitz or AIPS++)
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_SOCKET_H
 #define LOFAR_COMMON_SOCKET_H
 
-// \file Net/backward/Socket.h
+// \file
 // Class for socket conections
 
 #include <Common/Debug.h>

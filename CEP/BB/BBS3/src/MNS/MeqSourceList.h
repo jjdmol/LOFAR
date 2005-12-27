@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQSOURCELIST_H)
 #define MNS_MEQSOURCELIST_H
 
-// \file MNS/MeqSourceList.h
+// \file
 // List of sources
 
 //# Includes

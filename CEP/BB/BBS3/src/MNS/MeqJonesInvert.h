@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQJONESINVERT_H)
 #define MNS_MEQJONESINVERT_H
 
-// \file MNS/MeqJonesInvert.h
+// \file
 // The inverse of a Jones matrix expression.
 
 //# Includes

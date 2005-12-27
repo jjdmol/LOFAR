@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_ATTRIB_H
 #define LOFAR_PL_ATTRIB_H
 
-// \file Attrib.h
+// \file
 // Global methods for converting attributes to table columns.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

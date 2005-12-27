@@ -23,7 +23,7 @@
 #ifndef TRANSPORT_DATAHOLDER_H
 #define TRANSPORT_DATAHOLDER_H
 
-// \file DataHolder.h
+// \file
 // Abstract base class for the data holders
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

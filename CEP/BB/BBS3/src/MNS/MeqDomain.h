@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQDOMAIN_H)
 #define MNS_MEQDOMAIN_H
 
-// \file MNS/MeqDomain.h
+// \file
 // The domain for an expression
 
 #include <iosfwd>

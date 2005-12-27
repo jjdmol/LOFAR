@@ -25,7 +25,7 @@
 #ifndef LOFAR_ALC_APPLCONTROL_H
 #define LOFAR_ALC_APPLCONTROL_H
 
-// \file ApplControl.h
+// \file
 // Defines the I/F of the Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

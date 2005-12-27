@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_CONVERTERCOMMAND_H
 #define LOFAR_AMCBASE_AMCCLIENT_CONVERTERCOMMAND_H
 
-// \file ConverterCommand.h
+// \file
 // Commands to be sent to the AMC Converter server
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

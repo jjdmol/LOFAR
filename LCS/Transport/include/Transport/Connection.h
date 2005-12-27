@@ -23,7 +23,7 @@
 #ifndef LOFAR_TRANSPORT_CONNECTION_H
 #define LOFAR_TRANSPORT_CONNECTION_H
 
-// \file Connection.h
+// \file
 // Connects DataHolder(s) with a TransportHolder. 
 
 //# Includes

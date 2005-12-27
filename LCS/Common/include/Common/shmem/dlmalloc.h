@@ -1,5 +1,5 @@
 /**
-  \file dlmalloc.h
+  \file
   This is an adaptation of Doug Lea's malloc to be used for shared memory.
 
   Default header file for malloc-2.7.0, written by Doug Lea

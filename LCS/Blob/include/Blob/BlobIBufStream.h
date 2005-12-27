@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBIBUFSTREAM_H
 #define LOFAR_COMMON_BLOBIBUFSTREAM_H
 
-// \file BlobIBufStream.h
+// \file
 // Input buffer for a blob using an istream
 
 #include <Common/BlobIBuffer.h>

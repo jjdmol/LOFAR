@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DATACONVERT_H
 #define LOFAR_COMMON_DATACONVERT_H
 
-// \file DataConvert.h
+// \file
 // Global functions to convert data values
 
 // Global functions to convert data values

@@ -23,7 +23,7 @@
 #ifndef LOFAR_TRANSPORT_CSCONNECTION_H
 #define LOFAR_TRANSPORT_CSCONNECTION_H
 
-// \file CSConnection.h
+// \file
 // A CSConnection connects a DataHolder with a TransportHolder. It is used
 // as accesspoint for read- and write actions.
 

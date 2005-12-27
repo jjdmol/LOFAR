@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBARRAYHEADER_H
 #define LOFAR_COMMON_BLOBARRAYHEADER_H
 
-// \file BlobArrayHeader.h
+// \file
 // Standard array header for a blob
 
 #include <Common/BlobHeader.h>

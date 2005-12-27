@@ -26,7 +26,7 @@
 #ifndef LOFAR_BBS3_WH_CONTROL_H
 #define LOFAR_BBS3_WH_CONTROL_H
 
-// \file WH_Control.h
+// \file
 // This class implements the controller of the blackboard.
 
 #include <Common/lofar_vector.h>

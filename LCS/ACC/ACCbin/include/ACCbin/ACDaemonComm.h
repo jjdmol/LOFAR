@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_ACDAEMONCOMM_H
 #define LOFAR_ACCBIN_ACDAEMONCOMM_H
 
-// \file ACDaemonComm.h
+// \file
 // Small class that implements the communication to the ACDaemon (from the
 // Application Controller).
 

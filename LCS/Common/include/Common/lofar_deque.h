@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DEQUE_H
 #define LOFAR_COMMON_DEQUE_H
 
-// \file lofar_deque.h
+// \file
 
 #include <deque>
 

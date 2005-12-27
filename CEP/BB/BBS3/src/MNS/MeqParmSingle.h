@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQPARMSINGLE_H)
 #define MNS_MEQPARMSINGLE_H
 
-// \file MNS/MeqParmSingle.h
+// \file
 // The class for a single parameter
 
 //# Includes

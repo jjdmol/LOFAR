@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_COMPLEXC99
 #define LOFAR_COMMON_COMPLEXC99
 
-// \file ComplexC99.h
+// \file
 
 // An include of complex.h includes backward/complex.h and
 // not /usr/include/complex.h. This is very unfortunate.

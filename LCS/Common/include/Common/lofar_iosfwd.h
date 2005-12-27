@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_IOSFWD_H
 #define LOFAR_COMMON_IOSFWD_H
 
-// \file lofar_iosfwd.h
+// \file
 
 #include <iosfwd>
 

@@ -23,7 +23,7 @@
 #ifndef OTDB_TREEVALUE_H
 #define OTDB_TREEVALUE_H
 
-// \file TreeValue.h
+// \file
 // Interface for access to the tree (KVT) values
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef MNS_MEQLMN_H
 #define MNS_MEQLMN_H
 
-// \file MNS/MeqLMN.h
+// \file
 // Class holding the LMN values of a point source
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERY_BINARYEXPRNODE_H
 #define LOFAR_PL_QUERY_BINARYEXPRNODE_H
 
-// \file BinaryExprNode.h
+// \file
 // Binary expression node.
 
 //# Includes

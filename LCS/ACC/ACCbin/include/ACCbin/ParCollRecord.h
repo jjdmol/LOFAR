@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_PARCOLLRECORD_H
 #define LOFAR_ACCBIN_PARCOLLRECORD_H
 
-// \file ParCollRecord.h
+// \file
 // Structure how PC's are stored in the DB
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

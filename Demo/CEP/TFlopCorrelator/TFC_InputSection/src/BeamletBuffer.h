@@ -23,7 +23,7 @@
 #ifndef LOFAR_TFC_INPUTSECTION_BEAMLETBUFFER_H
 #define LOFAR_TFC_INPUTSECTION_BEAMLETBUFFER_H
 
-// \file BeamletBuffer.h
+// \file
 // one line description.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

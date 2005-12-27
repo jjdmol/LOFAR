@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQPOINTDFT_H)
 #define MNS_MEQPOINTDFT_H
 
-// \file MNS/MeqPointDFT.h
+// \file
 // The DFT for a point source.
 
 //# Includes

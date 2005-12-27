@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBOBUFFER_H
 #define LOFAR_COMMON_BLOBOBUFFER_H
 
-// \file  BlobOBuffer.h
+// \file
 // Abstract base class for output buffer for a blob
 
 #include <Common/LofarTypes.h>

@@ -26,7 +26,7 @@
 #ifndef LOFAR_TRANSPORT_TH_ETHERNET_H
 #define LOFAR_TRANSPORT_TH_ETHERNET_H
 
-// \file TH_Ethernet.h
+// \file
 // Transport mechanism for Ethernet 
 
 #include <Transport/TransportHolder.h>

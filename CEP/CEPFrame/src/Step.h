@@ -24,7 +24,7 @@
 #define LOFAR_CEPFRAME_STEP_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-// \file Step.h
+// \file
 // Class representing a basic simulation block
 
 //# Includes

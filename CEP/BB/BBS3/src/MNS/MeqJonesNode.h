@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQJONESNODE_H)
 #define MNS_MEQJONESNODE_H
 
-// \file MNS/MeqJonesNode.h
+// \file
 // A node in a Jones matrix expression.
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_EXCEPTION_H
 #define LOFAR_PL_EXCEPTION_H
 
-// \file Exception.h
+// \file
 // The base exception class for the Persistence Layer.
 
 //# Includes

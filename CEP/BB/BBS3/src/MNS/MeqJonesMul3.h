@@ -23,7 +23,7 @@
 #ifndef MNS_MEQJONESMUL3_H
 #define MNS_MEQJONESMUL3_H
 
-// \file MNS/MeqJonesMul3.h
+// \file
 // Calculate left*mid*right
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_MUTEX_H
 #define LOFAR_COMMON_THREAD_MUTEX_H
 
-// \file Thread/Mutex.h
+// \file
 // Thread mutex class.
 
 //# Includes

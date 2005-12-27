@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCIMPL_CONVERTERIMPL_H
 #define LOFAR_AMCIMPL_CONVERTERIMPL_H
 
-// \file ConverterImpl.h
+// \file
 // Implementation of the AMC Converter interface
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

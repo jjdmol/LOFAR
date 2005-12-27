@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file DH_Empty
+// \file
 // This is an empty DataHolder that does not do anything
 
 #include <Transport/DataHolder.h>

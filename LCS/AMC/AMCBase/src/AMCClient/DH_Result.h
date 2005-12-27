@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_DH_RESULT_H
 #define LOFAR_AMCBASE_AMCCLIENT_DH_RESULT_H
 
-// \file DH_Result.h
+// \file
 // DataHolder for a conversion result
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LONUMERICS_H
 #define LOFAR_COMMON_LONUMERICS_H
 
-// \file Lonumerics.h
+// \file
 // Define numeric types
 
 #include <Common/LofarTypes.h>

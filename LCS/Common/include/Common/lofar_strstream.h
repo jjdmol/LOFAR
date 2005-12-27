@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_STRSTREAM_H
 #define LOFAR_COMMON_STRSTREAM_H
 
-// \file lofar_strstream.h
+// \file
 // \deprecated Use lofar_sstream.h instead.
 // The strstream classes are considered deprecated. They are not supported
 // anymore in GCC 3.3 and higher.

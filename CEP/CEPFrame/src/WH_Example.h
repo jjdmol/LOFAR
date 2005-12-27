@@ -24,7 +24,7 @@
 #define CEPFRAME_WH_EXAMPLE_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-// \file WH_Example.h
+// \file
 // This is an example of a WorkHolder class.
 
 #include <tinyCEP/WorkHolder.h>

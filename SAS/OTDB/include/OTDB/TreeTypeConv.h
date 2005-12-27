@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_TREETYPECONV_H
 #define LOFAR_OTDB_TREETYPECONV_H
 
-// \file TreeTypeConv.h
+// \file
 // Structure for conversion of tree types
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

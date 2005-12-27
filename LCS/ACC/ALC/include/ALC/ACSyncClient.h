@@ -25,7 +25,7 @@
 #ifndef LOFAR_ALC_ACSYNCCLIENT_H
 #define LOFAR_ALC_ACSYNCCLIENT_H
 
-// \file ACSyncClient.h 
+// \file
 // Synchrone version of a Application Control client
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

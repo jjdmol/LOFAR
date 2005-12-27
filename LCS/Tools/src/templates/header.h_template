@@ -23,7 +23,7 @@
 #ifndef LOFAR_%PACKAGEUPPER%_%SUBUPPER%%CLASSUPPER%_H
 #define LOFAR_%PACKAGEUPPER%_%SUBUPPER%%CLASSUPPER%_H
 
-// \file %SUB%%CLASS%.h
+// \file
 // one line description.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

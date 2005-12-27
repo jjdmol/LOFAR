@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS3MNS_PARMTABLEDATA_H
 #define LOFAR_BBS3MNS_PARMTABLEDATA_H
 
-// \file MNS/ParmTableData.h
+// \file
 // one line description.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

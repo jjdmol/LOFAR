@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_VECTOR_H
 #define LOFAR_COMMON_VECTOR_H
 
-// \file lofar_vector.h
+// \file
 
 #include <vector>
 

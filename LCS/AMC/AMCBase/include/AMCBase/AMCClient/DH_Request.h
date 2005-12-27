@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_DH_REQUEST_H
 #define LOFAR_AMCBASE_AMCCLIENT_DH_REQUEST_H
 
-// \file DH_Request.h
+// \file
 // DataHolder for a conversion request
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

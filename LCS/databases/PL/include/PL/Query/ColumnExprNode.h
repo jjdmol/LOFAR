@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERY_COLUMNEXPRNODE_H
 #define LOFAR_PL_QUERY_COLUMNEXPRNODE_H
 
-// \file ColumnExprNode.h
+// \file
 // Column expression node.
 
 //# Includes

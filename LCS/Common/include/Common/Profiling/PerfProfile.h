@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_PERFPROFILE_H
 #define LOFAR_COMMON_PERFPROFILE_H
 
-// \file Profiling/PerfProfile.h
+// \file
 // Profile class based on MPICH MPE library
 
 #ifdef __DEPRECATED

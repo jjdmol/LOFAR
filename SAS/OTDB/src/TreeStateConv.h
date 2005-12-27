@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_TREESTATECONV_H
 #define LOFAR_OTDB_TREESTATECONV_H
 
-// \file TreeStateConv.h
+// \file
 // Structure for conversion of parameter types.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

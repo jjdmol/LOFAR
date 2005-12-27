@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBSTRINGTRAITS_H
 #define LOFAR_COMMON_BLOBSTRINGTRAITS_H
 
-// \file BlobStringTraits.h
+// \file
 //
 // char_traits<uchar> implementation for GCC.
 // This file implements the char_traits<unsigned char> specialisation.

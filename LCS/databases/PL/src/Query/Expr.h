@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERY_EXPR_H
 #define LOFAR_PL_QUERY_EXPR_H
 
-// \file Expr.h
+// \file
 // Represents the WHERE clause of a query.
 
 //# Includes

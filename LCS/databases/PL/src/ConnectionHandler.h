@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_CONNECTIONHANDLER_H
 #define LOFAR_PL_CONNECTIONHANDLER_H
 
-// \file ConnectionHandler.h
+// \file
 // Handles connection to the database.
 
 //# Includes

@@ -25,7 +25,7 @@
 #ifndef LOFAR_PLC_PROCCONTROLSERVER_H
 #define LOFAR_PLC_PROCCONTROLSERVER_H
 
-// \file ProcControlServer.h
+// \file
 // Server stub of the I/F to the Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCIMPL_AMCSERVER_CONVERTERSERVER_H
 #define LOFAR_AMCIMPL_AMCSERVER_CONVERTERSERVER_H
 
-// \file ConverterServer.h
+// \file
 // Server side of the AMC client/server implementation
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

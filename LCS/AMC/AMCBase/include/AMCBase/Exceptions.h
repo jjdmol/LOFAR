@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file AMCBase/src/Exceptions.h
+// \file
 // Definition of the AMCBase specific exception classes
 
 //# Includes

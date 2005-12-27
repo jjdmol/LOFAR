@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCBASE_SKYCOORD_H
 #define LOFAR_AMCBASE_SKYCOORD_H
 
-// \file SkyCoord.h
+// \file
 // Class to hold a sky coordinate as 2 angles
 
 //# Forward Declarations.

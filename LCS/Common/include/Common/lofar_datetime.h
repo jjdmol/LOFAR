@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DATETIME_H
 #define LOFAR_COMMON_DATETIME_H
 
-// \file lofar_datetime.h
+// \file
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 

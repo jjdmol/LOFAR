@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOFARLOGGER_H
 #define LOFAR_COMMON_LOFARLOGGER_H
 
-// \file LofarLogger.h
+// \file
 // Macro interface to the lofar logging package.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

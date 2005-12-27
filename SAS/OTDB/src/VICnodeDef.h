@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_VICNODEDEF_H
 #define LOFAR_OTDB_VICNODEDEF_H
 
-// \file VICnodeDef.h
+// \file
 // Structure containing a tree node.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

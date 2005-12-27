@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_TPERSISTENTOBJECT_H
 #define LOFAR_PL_TPERSISTENTOBJECT_H
 
-// \file TPersistentObject.h
+// \file
 // Container class for making objects persistent.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

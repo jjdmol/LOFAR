@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_KEY_H
 #define LOFAR_COMMON_THREAD_KEY_H
 
-// \file Thread/Key.h
+// \file
 // Thread key class.
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_DBREP_H
 #define LOFAR_PL_DBREP_H
 
-// \file DBRep.h
+// \file
 // Adapter class transforming data to/from internal representation.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

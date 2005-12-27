@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQMATRIX_H)
 #define MNS_MEQMATRIX_H
 
-// \file MNS/MeqMatrix.h
+// \file
 // Matrix for Mns
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_H
 #define LOFAR_COMMON_THREAD_H
    
-// \file src/Thread.h
+// \file
 // Basic header for the Thread package
 
 #include <Common/Thread/deprecated_warning.h>

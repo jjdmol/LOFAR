@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file deprecated_warning.h
+// \file
 // Issue a "deprecated" warning.
 
 #ifdef __DEPRECATED

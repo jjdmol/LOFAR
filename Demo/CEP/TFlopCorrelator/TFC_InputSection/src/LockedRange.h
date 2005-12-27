@@ -23,7 +23,7 @@
 #ifndef LOFAR_TFC_INPUTSECTION_LOCKEDRANGE_H
 #define LOFAR_TFC_INPUTSECTION_LOCKEDRANGE_H
 
-// \file LockedRange.h
+// \file
 // a lock on a range of any type
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

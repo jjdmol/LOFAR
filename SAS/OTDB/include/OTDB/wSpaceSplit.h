@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_WSPACESPLIT_H
 #define LOFAR_OTDB_WSPACESPLIT_H
 
-// \file wSpaceSplit.h
+// \file
 // Splits a string in substrings with whitespace as seperator.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

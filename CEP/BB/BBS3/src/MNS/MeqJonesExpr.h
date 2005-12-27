@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQJONESEXPR_H)
 #define MNS_MEQJONESEXPR_H
 
-// \file MNS/MeqJonesExpr.h
+// \file
 // The base class of a Jones matrix expression.
 
 //# Includes

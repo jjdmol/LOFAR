@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_PROCRULER_H
 #define LOFAR_ACCBIN_PROCRULER_H
 
-// \file ProcRuler.h
+// \file
 // Controller to start/stop processes.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

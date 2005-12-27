@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_SOCKET_H
 #define LOFAR_COMMON_SOCKET_H
 
-// \file Net/Socket.h
+// \file
 // Class for connections over TCP/IP or UDP
 
 #include <Common/lofar_string.h>

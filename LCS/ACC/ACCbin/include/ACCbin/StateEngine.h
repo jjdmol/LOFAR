@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_STATEENGINE_H
 #define LOFAR_ACCBIN_STATEENGINE_H
 
-// \file StateEngine.h
+// \file
 // (internal) sequence definitions of the command states.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

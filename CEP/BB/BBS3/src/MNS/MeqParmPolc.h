@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQPARMPOLC_H)
 #define MNS_MEQPARMPOLC_H
 
-// \file MNS/MeqParmPolc.h
+// \file
 // Parameter with polynomial coefficients
 
 //# Includes

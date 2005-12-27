@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file DataManager
+// \file
 // Offers an interface to the data and takes care of buffering. 
 
 #include <tinyCEP/TinyDataManager.h>

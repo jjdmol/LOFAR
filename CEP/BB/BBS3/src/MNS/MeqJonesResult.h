@@ -23,7 +23,7 @@
 #ifndef MNS_MEQJONESRESULT_H
 #define MNS_MEQJONESRESULT_H
 
-// \file MNS/MeqJonesResult.h
+// \file
 // The result of the 4 expressions in a Jones matrix for a domain.
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef CEPFRAME_SIMULATORPARSE_H
 #define CEPFRAME_SIMULATORPARSE_H
 
-// \file SimulatorParseClass.h
+// \file
 // Class for parsing application commands
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

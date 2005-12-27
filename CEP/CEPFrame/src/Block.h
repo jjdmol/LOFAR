@@ -23,7 +23,7 @@
 #ifndef LOFAR_CEPFRAME_BLOCK_H
 #define LOFAR_CEPFRAME_BLOCK_H
 
-// \file Block.h
+// \file
 // Base class of application blocks
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERY_SQLEXPRNODE_H
 #define LOFAR_PL_QUERY_SQLEXPRNODE_H
 
-// \file SQLExprNode.h
+// \file
 // Expression nodes for SQL-like operators
 
 //# Includes

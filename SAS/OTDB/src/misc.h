@@ -23,7 +23,7 @@
 #ifndef OTDB_MISC_H
 #define OTDB_MISC_H
 
-// \file misc.h
+// \file
 // Collection of global functions.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -24,7 +24,7 @@
 #define CEPFRAME_WH_EMPTY_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-// \file WH_Empty
+// \file
 // An empty WorkHolder (doing nothing).
 
 #include <tinyCEP/WorkHolder.h>

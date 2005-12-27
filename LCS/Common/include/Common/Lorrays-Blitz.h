@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LORRAYS_BLITZ_H
 #define LOFAR_COMMON_LORRAYS_BLITZ_H
 
-// \file Lorrays-Blitz.h
+// \file
 // Define Blitz array types
 
 // Other code can use this symbol to check for blitz arrays

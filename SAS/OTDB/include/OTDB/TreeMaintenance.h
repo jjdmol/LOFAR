@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_TREEMAINTENANCE_H
 #define LOFAR_OTDB_TREEMAINTENANCE_H
 
-// \file TreeMaintenance.h
+// \file
 // Maintenance on complete trees.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

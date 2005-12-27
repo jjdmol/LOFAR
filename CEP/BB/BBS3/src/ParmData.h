@@ -23,7 +23,7 @@
 #ifndef LOFAR_BB_BBS3_PARMDATA_H
 #define LOFAR_BB_BBS3_PARMDATA_H
 
-// \file ParmData.h
+// \file
 // The properties for solvable parameters
 
 //# Includes

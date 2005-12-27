@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_PR_MPI_H
 #define LOFAR_ACCBIN_PR_MPI_H
 
-// \file PR_MPI.h
+// \file
 // ProcessRule based on mpirun
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

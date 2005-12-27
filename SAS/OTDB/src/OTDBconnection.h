@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBCONNECTION_H
 #define LOFAR_OTDB_OTDBCONNECTION_H
 
-// \file OTDBconnection.h
+// \file
 // Manages the connection with the OTDB database.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_ITEMLIST_H
 #define LOFAR_ACCBIN_ITEMLIST_H
 
-// \file ItemList.h
+// \file
 // Class that can substract and array of items from a parameter collection.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

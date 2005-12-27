@@ -24,7 +24,7 @@
 #ifndef LOFAR_BBS3_WH_PREDIFF_H
 #define LOFAR_BBS3_WH_PREDIFF_H
 
-// \file WH_Prediff.h
+// \file
 // Predicts visibilities and determines difference to measured data.
 
 //# Includes

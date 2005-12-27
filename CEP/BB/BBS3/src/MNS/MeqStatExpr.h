@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQSTATEXPR_H)
 #define MNS_MEQSTATEXPR_H
 
-// \file MNS/MeqStatExpr.h
+// \file
 // The Jones expression for a station
 
 //# Includes

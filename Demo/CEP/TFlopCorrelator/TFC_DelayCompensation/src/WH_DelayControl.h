@@ -15,7 +15,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file WH_DelayControl.h
+// \file
 // WorkHolder to distribute delays to all RSPInputs
 
 //# Includes

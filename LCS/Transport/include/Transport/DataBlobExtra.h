@@ -23,7 +23,7 @@
 #ifndef TRANSPORT_DATABLOBEXTRA_H
 #define TRANSPORT_DATABLOBEXTRA_H
 
-// \file DataBlobExtra.h
+// \file
 // Extra fields for the blob in the DataHolder
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
