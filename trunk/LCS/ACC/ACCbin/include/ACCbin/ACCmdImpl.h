@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_ACCMDIMPL_H
 #define LOFAR_ACCBIN_ACCMDIMPL_H
 
-// \file ACCmdImpl.h
+// \file
 // The implementation of the AC commands from the Application Controller
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

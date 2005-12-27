@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERY_UNARYEXPRNODE_H
 #define LOFAR_PL_QUERY_UNARYEXPRNODE_H
 
-// \file UnaryExprNode.h
+// \file
 // Unary expression node.
 
 //# Includes

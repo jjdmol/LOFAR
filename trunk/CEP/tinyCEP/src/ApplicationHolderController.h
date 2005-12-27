@@ -23,7 +23,7 @@
 #ifndef TINYAPPLICATIONHOLDERCONTROLLER_H
 #define TINYAPPLICATIONHOLDERCONTROLLER_H
 
-// \file ApplicationHolderController.h
+// \file
 // Interprets commands from ACC and executes them on the TinyApplicationHolder object
 
 #include <Common/LofarLogger.h>

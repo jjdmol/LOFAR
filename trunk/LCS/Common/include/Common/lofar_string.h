@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_STRING_H
 #define LOFAR_COMMON_STRING_H
 
-// \file lofar_string.h
+// \file
 
 #include <string>
 

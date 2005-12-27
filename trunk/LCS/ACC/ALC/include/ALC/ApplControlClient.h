@@ -25,7 +25,7 @@
 #ifndef LOFAR_ALC_APPLCONTROLCLIENT_H
 #define LOFAR_ALC_APPLCONTROLCLIENT_H
 
-// \file ApplControlClient.h
+// \file
 // Client stub of the interface to the Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

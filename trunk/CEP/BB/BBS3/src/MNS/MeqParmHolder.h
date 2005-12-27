@@ -23,7 +23,7 @@
 #ifndef MNS_MEQPARMHOLDER_H
 #define MNS_MEQPARMHOLDER_H
 
-// \file MNS/MeqParmHolder.h
+// \file
 // Holder containing a shared pointer to a MeqStoredParmPolc
 
 //# Includes

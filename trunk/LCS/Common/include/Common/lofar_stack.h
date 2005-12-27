@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_STACK_H
 #define LOFAR_COMMON_STACK_H
 
-// \file lofar_stack.h
+// \file
 
 #include <Common/lofar_deque.h>
 #include <stack>

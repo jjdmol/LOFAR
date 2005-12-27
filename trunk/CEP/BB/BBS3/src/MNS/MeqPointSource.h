@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQPOINTSOURCE_H)
 #define MNS_MEQPOINTSOURCE_H
 
-// \file MNS/MeqPointSource.h
+// \file
 // Class holding a point source
 
 //# Includes

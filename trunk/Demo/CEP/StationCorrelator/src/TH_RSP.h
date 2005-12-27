@@ -23,7 +23,7 @@
 #ifndef TRANSPORT_TH_RSP_H
 #define TRANSPORT_TH_RSP_H
 
-// \file TH_RSP.h
+// \file
 // Transport mechanism for Ethernet 
 
 #include <lofar_config.h>

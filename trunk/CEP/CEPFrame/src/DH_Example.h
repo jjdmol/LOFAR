@@ -26,7 +26,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file DH_Example.h
+// \file
 // This is an example DataHolder
 
 #include <Transport/DataHolder.h>

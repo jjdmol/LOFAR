@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_FDSET_H
 #define LOFAR_COMMON_FDSET_H
 
-// \file FdSet.h
+// \file
 // C++ version of fd_set, does some boring bookkeeping.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

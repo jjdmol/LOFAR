@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_UNITTYPE_H
 #define LOFAR_OTDB_UNITTYPE_H
 
-// \file UnitConv.h
+// \file
 // Structure for conversion of parameter types.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

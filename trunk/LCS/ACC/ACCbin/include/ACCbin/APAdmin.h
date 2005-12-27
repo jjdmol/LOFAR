@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_APADMIN_H
 #define LOFAR_ACCBIN_APADMIN_H
 
-// \file APAdmin.h
+// \file
 // Internal information of an Application Process used by the
 // Application Controller.
 

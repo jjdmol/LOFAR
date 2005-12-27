@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_SSTREAM_H
 #define LOFAR_COMMON_SSTREAM_H
 
-// \file lofar_sstream.h
+// \file
 
 #include <Common/lofar_iosfwd.h>
 #include <sstream>

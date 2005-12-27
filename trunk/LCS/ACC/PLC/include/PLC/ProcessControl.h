@@ -25,7 +25,7 @@
 #ifndef LOFAR_PLC_PROCESSCONTROL_H
 #define LOFAR_PLC_PROCESSCONTROL_H
 
-// \file ProcessControl.h
+// \file
 // Defines the interface of Process Control commands.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

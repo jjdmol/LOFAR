@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_COMPLEXSTDFP_H
 #define LOFAR_COMMON_COMPLEXSTDFP_H
 
-// \file ComplexStdFP.h
+// \file
 
 #include <complex>
 

@@ -23,7 +23,7 @@
 #ifndef LOFAR_BB_BBS3_PREDIFFER_H
 #define LOFAR_BB_BBS3_PREDIFFER_H
 
-// \file Prediffer.h
+// \file
 // Read and predict read visibilities
 
 #include <casa/BasicSL/Complex.h>

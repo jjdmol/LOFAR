@@ -26,7 +26,7 @@
 #ifndef LOFAR_BBS3_DH_SOLUTION_H
 #define LOFAR_BBS3_DH_SOLUTION_H
 
-// \file DH_Solution.h
+// \file
 // DataHolder for BlackBoard solutions
 
 #include <Common/lofar_vector.h>

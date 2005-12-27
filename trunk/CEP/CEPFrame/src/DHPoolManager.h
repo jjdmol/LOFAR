@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file DHPoolManager.h
+// \file
 // Offers a common interface for access to DataHolders.
 
 #include <Transport/DataHolder.h>

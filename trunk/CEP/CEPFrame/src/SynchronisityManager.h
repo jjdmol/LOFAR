@@ -23,7 +23,7 @@
 #ifndef CEPFRAME_SYNCHRONISITYMANAGER_H
 #define CEPFRAME_SYNCHRONISITYMANAGER_H
 
-// \file SynchronisityManager.h
+// \file
 // Controls asynchronous read/write acrions and sharing of data.
 
 #include <Transport/DataHolder.h>

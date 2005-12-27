@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBTYPES_H
 #define LOFAR_OTDB_OTDBTYPES_H
 
-// \file OTDBtypes.h
+// \file
 // Size definitions of database identifier-fields.
 
 namespace LOFAR {

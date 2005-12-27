@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_KEYVALUEMAP_H
 #define LOFAR_COMMON_KEYVALUEMAP_H
 
-// \file KeyValueMap.h
+// \file
 // Class to hold a collection of key name/value pairs.
 
 #include <Common/KeyValue.h>

@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBTREE_H
 #define LOFAR_OTDB_OTDBTREE_H
 
-// \file OTDBtree.h
+// \file
 // Structure containing the metadata of a tree.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

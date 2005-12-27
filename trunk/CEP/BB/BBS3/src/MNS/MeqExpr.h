@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQEXPR_H)
 #define MNS_MEQEXPR_H
 
-// \file MNS/MeqExpr.h
+// \file
 // The base class of an expression
 
 //# Includes

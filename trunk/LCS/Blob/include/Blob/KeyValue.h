@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_KEYVALUE_H
 #define LOFAR_COMMON_KEYVALUE_H
 
-// \file KeyValue.h
+// \file
 // Class to hold a general value.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

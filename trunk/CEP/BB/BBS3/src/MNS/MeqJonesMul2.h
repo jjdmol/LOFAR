@@ -22,7 +22,7 @@
 #ifndef MNS_MEQJONESMUL2_H
 #define MNS_MEQJONESMUL2_H
 
-// \file MNS/MeqJonesMul2.h
+// \file
 // Calculate left*right
 
 //# Includes

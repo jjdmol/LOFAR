@@ -27,7 +27,7 @@
 #ifndef LOFAR_BBS3_BBSTESTLOGGER_H
 #define LOFAR_BBS3_BBSTESTLOGGER_H
 
-// \file BBSTestLogger.h
+// \file
 // This is a class that writes BBSTest loglines to the correct file
 
 #include <Common/lofar_string.h>

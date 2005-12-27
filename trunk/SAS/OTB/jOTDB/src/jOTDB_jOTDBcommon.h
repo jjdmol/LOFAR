@@ -22,7 +22,7 @@
 #ifndef LOFAR_JOTDB_COMMON_H
 #define LOFAR_JOTDB_COMMON_H
 
-// \file jOTDB_jOTDBcommon.h 
+// \file
 // Hold a static OTDBconnection, to be
 // shared between the different JNI implementation
 

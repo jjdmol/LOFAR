@@ -23,7 +23,7 @@
 #ifndef TRANSPORT_TH_MPI_H
 #define TRANSPORT_TH_MPI_H
 
-// \file TH_MPI.h
+// \file
 // Transport mechanism for MPI
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef CEPFRAME_APPLICATIONHOLDER_H
 #define CEPFRAME_APPLICATIONHOLDER_H
 
-// \file ApplicationHolder.h
+// \file
 // Abstract base class for CEPFrame applications
 
 

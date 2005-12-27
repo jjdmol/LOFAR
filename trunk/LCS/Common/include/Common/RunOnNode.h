@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_RUNONNODE_H
 #define LOFAR_COMMON_RUNONNODE_H
 
-// \file RunOnNode.h
+// \file
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 

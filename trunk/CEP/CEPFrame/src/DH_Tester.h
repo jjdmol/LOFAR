@@ -24,7 +24,7 @@
 #define CEPFRAME_DH_TESTER_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-// \file DH_Tester.h
+// \file
 // Simple DataHolder test class for the program Tester.
 
 #include <Common/lofar_complex.h>

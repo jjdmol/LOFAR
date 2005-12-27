@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCIMPL_AMCSERVER_PROCESS_H
 #define LOFAR_AMCIMPL_AMCSERVER_PROCESS_H
 
-// \file Process.h
+// \file
 // Class wrapping the OS fork method.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

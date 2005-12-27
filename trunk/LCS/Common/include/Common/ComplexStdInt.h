@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_COMPLEXSTDINT_H
 #define LOFAR_COMMON_COMPLEXSTDINT_H
 
-// \file ComplexStdInt.h
+// \file
 
 #include <complex>
 #include <Common/LofarTypedefs.h>

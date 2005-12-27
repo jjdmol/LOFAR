@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_COLLECTION_H
 #define LOFAR_PL_COLLECTION_H
 
-// \file Collection.h
+// \file
 // A bag-like container class.
 
 //# Includes

@@ -23,7 +23,7 @@
 #ifndef LOFAR_BB_BBS3_SOLVER_H
 #define LOFAR_BB_BBS3_SOLVER_H
 
-// \file Solver.h
+// \file
 // Calculates parameter values using a least squares fitter
 
 #include <scimath/Fitting/LSQaips.h>

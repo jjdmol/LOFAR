@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS3_STRATEGYCONTROLLER_H
 #define LOFAR_BBS3_STRATEGYCONTROLLER_H
 
-// \file StrategyController.h
+// \file
 // A base class for all calibration strategies
 
 //# Includes

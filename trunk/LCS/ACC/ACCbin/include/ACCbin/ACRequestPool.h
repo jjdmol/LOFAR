@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_ACREQUESTPOOL_H
 #define LOFAR_ACCBIN_ACREQUESTPOOL_H
 
-// \file ACRequestPool.h
+// \file
 // Administrative pool of ACrequests used by the ACDaemon for managing the
 // Application Controllers.
 

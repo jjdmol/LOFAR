@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBEVENTLIST_H
 #define LOFAR_OTDB_OTDBEVENTLIST_H
 
-// \file OTDBeventList.h
+// \file
 // Collection of OTDBevents.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

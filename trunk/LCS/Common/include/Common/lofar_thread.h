@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_H
 #define LOFAR_COMMON_THREAD_H
 
-// \file lofar_thread.h
+// \file
 
 #include <boost/thread.hpp>
 #include <Common/CheckConfig.h>

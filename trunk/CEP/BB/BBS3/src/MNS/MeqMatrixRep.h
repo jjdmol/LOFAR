@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQMATRIXREP_H)
 #define MNS_MEQMATRIXREP_H
 
-// \file MNS/MeqMatrixRep.h
+// \file
 // Temporary matrix for Mns
 
 //# Includes

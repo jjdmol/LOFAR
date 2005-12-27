@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBCONTROL_H
 #define LOFAR_OTDB_OTDBCONTROL_H
 
-// \file OTDBcontrol.h
+// \file
 // Special connectiontype for events and actions.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

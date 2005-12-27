@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS3_SC_SIMPLE_H
 #define LOFAR_BBS3_SC_SIMPLE_H
 
-// \file SC_Simple
+// \file
 // A simple calibration strategy
 
 //# Includes

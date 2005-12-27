@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS3_QUALITY_H
 #define LOFAR_BBS3_QUALITY_H
 
-// \file Quality.h
+// \file
 // Contains metrics defining the quality of a solution
 
 //# Includes

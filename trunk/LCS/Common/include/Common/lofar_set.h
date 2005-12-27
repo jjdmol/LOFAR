@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_SET_H
 #define LOFAR_COMMON_SET_H
 
-// \file lofar_set.h
+// \file
 
 #include <set>
 

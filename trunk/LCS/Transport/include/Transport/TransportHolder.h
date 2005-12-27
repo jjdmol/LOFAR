@@ -23,7 +23,7 @@
 #ifndef TRANSPORT_TRANSPORTHOLDER_H
 #define TRANSPORT_TRANSPORTHOLDER_H
 
-// \file TransportHolder.h
+// \file
 // Abstract base class for all TransportHolders
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBNODE_H
 #define LOFAR_OTDB_OTDBNODE_H
 
-// \file OTDBnode.h
+// \file
 // Structure containing a tree node.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

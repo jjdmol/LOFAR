@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQPHASEREF_H)
 #define MNS_MEQPHASEREF_H
 
-// \file MNS/MeqPhaseRef.h
+// \file
 // Phase reference position and derived values
 
 //# Includes

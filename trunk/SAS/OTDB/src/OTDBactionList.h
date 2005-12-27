@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBACTIONLIST_H
 #define LOFAR_OTDB_OTDBACTIONLIST_H
 
-// \file OTDBactionList.h
+// \file
 // Collection of OTDBactions.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

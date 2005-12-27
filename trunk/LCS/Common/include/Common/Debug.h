@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DEBUG_H
 #define LOFAR_COMMON_DEBUG_H
 
-// \file Debug.h
+// \file
 // \deprecated Debug.h is deprecated, please use LofarLogger.h instead.
 
 #ifdef __DEPRECATED

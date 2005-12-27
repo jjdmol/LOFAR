@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQREQUEST_H)
 #define MNS_MEQREQUEST_H
 
-// \file MNS/MeqRequest.h
+// \file
 // The request for an evaluation of an expression
 
 //# Includes

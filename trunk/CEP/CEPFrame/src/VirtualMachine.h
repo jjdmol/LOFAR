@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file VirtualMachine.h
+// \file
 // Virtual machine
 
 #include <Common/lofar_string.h>

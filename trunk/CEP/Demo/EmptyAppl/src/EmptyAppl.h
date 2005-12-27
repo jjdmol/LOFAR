@@ -27,7 +27,7 @@
 #ifndef LOFAR_EMPTYAPPL_EMPTYAPPL_H
 #define LOFAR_EMPTYAPPL_EMPTYAPPL_H
 
-// \file EmptyAppl.h
+// \file
 // Empty ApplicationHolder class
 
 #include <CEPFrame/ApplicationHolder.h>

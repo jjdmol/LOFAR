@@ -23,7 +23,7 @@
 #if !defined(MNS_PARMTABLE_H)
 #define MNS_PARMTABLE_H
 
-// \file MNS/ParmTable.h
+// \file
 // Object to hold parameters in a table.
 
 //# Includes

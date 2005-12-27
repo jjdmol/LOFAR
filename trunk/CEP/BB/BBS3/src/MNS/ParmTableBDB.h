@@ -23,7 +23,7 @@
 #if !defined(MNS_PARMTABLEBDB_H)
 #define MNS_PARMTABLEBDB_H
 
-// \file MNS/ParmTableBDB.h
+// \file
 // Object to hold parameters in a database table.
 
 //# Includes

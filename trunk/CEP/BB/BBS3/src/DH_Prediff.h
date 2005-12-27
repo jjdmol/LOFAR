@@ -26,7 +26,7 @@
 #ifndef LOFAR_BBS3_DH_PREDIFF_H
 #define LOFAR_BBS3_DH_PREDIFF_H
 
-// \file DH_Prediff.h
+// \file
 // DataHolder for 'prediffed' data.
 
 #include <Transport/DataHolder.h>

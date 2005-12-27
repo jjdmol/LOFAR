@@ -21,6 +21,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  2005/10/04 11:22:50  cvs
+ * %lofarcvsmv%: Moved from LOFAR/LCS/Common/src/shmem, creating new revision
+ *
  * Revision 1.2  2005/02/10 10:40:02  loose
  * %[ER: 236]%
  *
@@ -51,7 +54,7 @@
 #ifndef _SEGBASEMAP_H
 #define _SEGBASEMAP_H
 
-/** \file segbasemap.h
+/** \file
  */
 
 #ifdef __cplusplus

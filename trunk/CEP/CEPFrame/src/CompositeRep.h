@@ -24,7 +24,7 @@
 #define LOFAR_CEPFRAME_COMPOSITEREP_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-// \file CompositeRep.h
+// \file
 // Class to hold a collection of Block objects
 
 #include <stdlib.h>

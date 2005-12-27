@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_PERSISTENTOBJECT_H
 #define LOFAR_PL_PERSISTENTOBJECT_H
 
-// \file PersistentObject.h
+// \file
 // Interface class for persistent objects.
 
 //# Includes

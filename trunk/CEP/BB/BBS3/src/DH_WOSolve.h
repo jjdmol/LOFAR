@@ -26,7 +26,7 @@
 #ifndef LOFAR_BBS3_DH_WOSOLVE_H
 #define LOFAR_BBS3_DH_WOSOLVE_H
 
-// \file DH_WOSolve.h
+// \file
 // DataHolder containing workorder for the solver
 
 #include <Common/lofar_vector.h>

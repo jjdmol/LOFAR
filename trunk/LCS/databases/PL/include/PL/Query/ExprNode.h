@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERY_EXPRNODE_H
 #define LOFAR_PL_QUERY_EXPRNODE_H
 
-// \file ExprNode.h
+// \file
 // The node of a query expression.
 
 //# Includes

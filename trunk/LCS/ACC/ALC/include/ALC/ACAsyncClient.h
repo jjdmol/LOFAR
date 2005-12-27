@@ -25,7 +25,7 @@
 #ifndef LOFAR_ALC_ACASYNCCLIENT_H
 #define LOFAR_ALC_ACASYNCCLIENT_H
 
-// \file ACAsyncClient.h
+// \file
 // This class implements the client API for using an Application 
 // Controller in synchrone mode. 
 

@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCBASE_EARTHCOORD_H
 #define LOFAR_AMCBASE_EARTHCOORD_H
 
-// \file EarthCoord.h
+// \file
 // Class to hold an earth coordinate as lon,lat,height
 
 //# Forward Declarations.

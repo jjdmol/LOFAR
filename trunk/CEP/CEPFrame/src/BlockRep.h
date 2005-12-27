@@ -23,7 +23,7 @@
 #ifndef LOFAR_CEPFRAME_BLOCKREP_H
 #define LOFAR_CEPFRAME_BLOCKREP_H
 
-// \file BlockRep.h
+// \file
 // Base class of application building block, actual implementation
 
 //#include <Transport/TransportHolder.h>

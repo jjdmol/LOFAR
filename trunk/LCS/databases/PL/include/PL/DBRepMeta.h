@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_DBREPMETA_H
 #define LOFAR_PL_DBREPMETA_H
 
-// \file DBRepMeta.h
+// \file
 // Database representation of the PersistentObject::MetaData.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

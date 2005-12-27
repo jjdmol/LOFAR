@@ -23,7 +23,7 @@
 #ifndef MNS_MEQFUNKLET_H
 #define MNS_MEQFUNKLET_H
 
-// \file MNS/MeqFunklet.h
+// \file
 // Parameter function with coeffients valid for a given domain
 
 //# Includes

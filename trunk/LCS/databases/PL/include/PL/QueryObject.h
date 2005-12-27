@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERYOBJECT_H
 #define LOFAR_PL_QUERYOBJECT_H
 
-// \file QueryObject.h
+// \file
 // A user-friendly interface for composing queries.
 
 //# Includes

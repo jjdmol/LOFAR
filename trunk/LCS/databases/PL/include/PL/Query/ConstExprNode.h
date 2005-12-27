@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_QUERY_CONSTEXPRNODE_H
 #define LOFAR_PL_QUERY_CONSTEXPRNODE_H
 
-// \file ConstExprNode.h
+// \file
 // Constant expression nodes.
 
 //# Includes

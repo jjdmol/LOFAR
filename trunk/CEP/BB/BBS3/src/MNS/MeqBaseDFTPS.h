@@ -23,7 +23,7 @@
 #ifndef MNS_MEQBASEDFTPS_H
 #define MNS_MEQBASEDFTPS_H
 
-// \file MNS/MeqBaseDFTPS.h
+// \file
 // Baseline DFT of a point source.
 
 //# Includes

@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file TinyApplicationHolder.h
+// \file
 // Base class for a user application in tinyCEP
 
 //# Includes

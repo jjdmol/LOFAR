@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS3_SC_WRITEPREDDATA_H
 #define LOFAR_BBS3_SC_WRITEPREDDATA_H
 
-// \file SC_WritePredData
+// \file
 // A strategy to make prediffers write predicted data
 
 //# Includes

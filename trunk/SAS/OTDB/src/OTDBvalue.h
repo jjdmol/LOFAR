@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBVALUE_H
 #define LOFAR_OTDB_OTDBVALUE_H
 
-// \file OTDBvalue.h
+// \file
 // C structure for holding a KVT triple.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

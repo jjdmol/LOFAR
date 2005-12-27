@@ -23,7 +23,7 @@
 #ifndef LOFAR_BDBREPLICATIONBDBSYNCER_H
 #define LOFAR_BDBREPLICATIONBDBSYNCER_H
 
-// \file BDBSyncer.h
+// \file
 // synchronizes master and slaves
 
 //# Includes

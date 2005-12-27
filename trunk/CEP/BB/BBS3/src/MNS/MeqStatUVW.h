@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQSTATUVW_H)
 #define MNS_MEQSTATUVW_H
 
-// \file MNS/MeqStatUVW.h
+// \file
 // The station UVW coordinates for a time domain
 
 //# Includes

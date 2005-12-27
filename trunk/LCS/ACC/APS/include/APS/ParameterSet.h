@@ -25,7 +25,7 @@
 #ifndef LOFAR_APS_PARAMETERSET_H
 #define LOFAR_APS_PARAMETERSET_H
 
-// \file ParameterSet.h
+// \file
 // Implements a map of Key-Value pairs.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -25,7 +25,7 @@
 #ifndef LOFAR_ALC_DH_APPLCONTROL_H
 #define LOFAR_ALC_DH_APPLCONTROL_H
 
-// \file DH_ApplControl.h
+// \file
 // DataHolder for Application Control commands.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

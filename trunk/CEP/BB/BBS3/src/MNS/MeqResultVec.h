@@ -23,7 +23,7 @@
 #ifndef MNS_MEQRESULTVEC_H
 #define MNS_MEQRESULTVEC_H
 
-// \file MNS/MeqResultVec.h
+// \file
 // A result vector containing multiple results.
 
 //# Includes

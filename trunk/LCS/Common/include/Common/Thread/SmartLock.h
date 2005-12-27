@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_SMARTLOCK_H
 #define LOFAR_COMMON_THREAD_SMARTLOCK_H
 
-// \file Thread/SmartLock.h
+// \file
 // Threads SmartLock class.
 
 //# Includes

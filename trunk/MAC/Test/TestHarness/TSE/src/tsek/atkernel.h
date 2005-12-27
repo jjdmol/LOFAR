@@ -158,7 +158,7 @@ extern    "C"
 /* cr/lf characters.                                                        */
 /* An example of such a string can be:                                      */
 /*                                                                          */
-/*      Error reading file D:\scripts\file3.ats, line 417                   */
+/*      Error reading file D:\scripts\file
 /*      Included by file D:\scripts\test_1.ats, line 112                    */
 /*      Included by file D:\scripts\big_test.ats, line 15                   */
 /*                                                                          */

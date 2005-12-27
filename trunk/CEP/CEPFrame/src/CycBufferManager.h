@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file CycBufferManager.h
+// \file
 // Manages DataHolders in a cyclic buffer.
 
 #include <Transport/DataHolder.h>

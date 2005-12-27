@@ -23,7 +23,7 @@
 #ifndef OTDB_TREESTATE_H
 #define OTDB_TREESTATE_H
 
-// \file TreeState.h
+// \file
 // State (history) of OTDB trees
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

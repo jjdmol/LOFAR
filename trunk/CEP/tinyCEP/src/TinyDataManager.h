@@ -23,7 +23,7 @@
 #ifndef TINYDEP_TINYDATAMANAGER_H
 #define TINYDEP_TINYDATAMANAGER_H
 
-// \file TinyDataManager.h
+// \file
 // A DataHolder manager for tinyCEP
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

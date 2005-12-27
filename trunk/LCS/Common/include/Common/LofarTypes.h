@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOFARTYPES_H
 #define LOFAR_COMMON_LOFARTYPES_H
 
-// \file LofarTypes.h
+// \file
 //
 
 #include <Common/LofarTypedefs.h>

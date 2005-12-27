@@ -24,7 +24,7 @@
 #ifndef TRANSPORT_TH_FILE_H
 #define TRANSPORT_TH_FILE_H
 
-// \file TH_File.h
+// \file
 // To/from file transport mechanism
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 

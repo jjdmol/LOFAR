@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLITZTOAIPS_H
 #define LOFAR_COMMON_BLITZTOAIPS_H
 
-// \file BlitzToAips.h
+// \file
 // Conversion methods for Blitz++ and AIPS++ data structures.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef LOFAR_BBS3_WH_SOLVE_H
 #define LOFAR_BBS3_WH_SOLVE_H
 
-// \file WH_Solve.h
+// \file
 // Calculates new parameter values
 
 //# Includes

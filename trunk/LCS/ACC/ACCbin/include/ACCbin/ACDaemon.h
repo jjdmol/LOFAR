@@ -25,7 +25,7 @@
 #ifndef LOFAR_ACCBIN_ACDAEMON_H
 #define LOFAR_ACCBIN_ACDAEMON_H
 
-// \file ACDaemon.h
+// \file
 // Daemon for launching Application Controllers
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

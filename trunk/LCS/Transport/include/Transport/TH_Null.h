@@ -23,7 +23,7 @@
 #ifndef LOFAR_TRANSPORTTH_NULL_H
 #define LOFAR_TRANSPORTTH_NULL_H
 
-// \file TH_Null.h
+// \file
 // TransportHolder that does nothing
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

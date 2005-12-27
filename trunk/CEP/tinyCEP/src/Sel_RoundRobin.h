@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file Sel_RoundRobin.h
+// \file
 // Implements a Round Robin selection mechanism.
 
 #include "tinyCEP/Selector.h"

@@ -26,7 +26,7 @@
 #ifndef LOFAR_BBS3_DH_WOPREDIFF_H
 #define LOFAR_BBS3_DH_WOPREDIFF_H
 
-// \file DH_WOPrediff.h
+// \file
 // DataHolder containing Prediffer workorders
 
 #include <Common/lofar_vector.h>

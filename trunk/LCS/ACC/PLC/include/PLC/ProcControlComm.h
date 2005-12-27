@@ -25,7 +25,7 @@
 #ifndef LOFAR_PLC_PROCCONTROLCOMM_H
 #define LOFAR_PLC_PROCCONTROLCOMM_H
 
-// \file ProcControlComm.h
+// \file
 // Implements the communication of Application processes.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

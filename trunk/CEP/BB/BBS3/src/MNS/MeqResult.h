@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQRESULT_H)
 #define MNS_MEQRESULT_H
 
-// \file MNS/MeqResult.h
+// \file
 // The result of an expression for a domain.
 
 //# Includes

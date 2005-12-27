@@ -26,7 +26,7 @@
 #ifndef LOFAR_BBS3_DH_PARMSOL_H
 #define LOFAR_BBS3_DH_PARMSOL_H
 
-// \file DH_ParmSol.h
+// \file
 // DataHolder which holds a solution for one parameter.
 
 #include <Common/lofar_vector.h>

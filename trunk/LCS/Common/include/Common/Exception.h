@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_EXCEPTION_H
 #define LOFAR_COMMON_EXCEPTION_H
 
-// \file Exception.h
+// \file
 // LCS Exception base class.
 
 //# Includes

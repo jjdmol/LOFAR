@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCBASE_TIMECOORD_H
 #define LOFAR_AMCBASE_TIMECOORD_H
 
-// \file TimeCoord.h
+// \file
 // Class to hold a time coordinate as 2 values
 
 //# Forward Declarations.

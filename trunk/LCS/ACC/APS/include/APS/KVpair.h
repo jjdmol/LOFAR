@@ -25,7 +25,7 @@
 #ifndef LOFAR_APS_KVPAIR_H
 #define LOFAR_APS_KVPAIR_H
 
-// \file KVpair.h
+// \file
 // Implements a KV pair as a pair<string, string>.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

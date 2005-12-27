@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file WorkHolder.h
+// \file
 // Abstract base class for the work holders.
 
 #include <tinyCEP/TinyDataManager.h>

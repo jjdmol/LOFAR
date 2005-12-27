@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_OBJECTID_H
 #define LOFAR_PL_OBJECTID_H
 
-// \file ObjectId.h
+// \file
 // ObjectId is used to uniquely identify a persistent object.
 
 #include <Common/LofarTypes.h>

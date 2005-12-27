@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQPARM_H)
 #define MNS_MEQPARM_H
 
-// \file MNS/MeqParm.h
+// \file
 // The base class for a parameter
 
 //# Includes

@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQREQUESTID_H)
 #define MNS_MEQREQUESTID_H
 
-// \file MNS/MeqRequestId.h
+// \file
 // Class holding an interferometer
 
 namespace LOFAR {

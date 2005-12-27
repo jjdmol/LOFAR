@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBOSTREAM_H
 #define LOFAR_COMMON_BLOBOSTREAM_H
 
-// \file BlobOStream.h
+// \file
 // Output stream for a blob
 
 #include <Common/LofarTypes.h>

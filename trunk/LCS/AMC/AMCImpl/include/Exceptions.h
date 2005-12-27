@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCIMPL_EXCEPTIONS_H
 #define LOFAR_AMCIMPL_EXCEPTIONS_H
 
-// \file AMCImpl/src/Exceptions.h
+// \file
 // Definition of the AMCImpl specific exception classes
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DATAFORMAT_H
 #define LOFAR_COMMON_DATAFORMAT_H
 
-// \file DataFormat.h
+// \file
 // Get the data format (endian type).
   // This file defines an enum for the possible machine data formats.
   // Currently only little and big endian is possible with floating point

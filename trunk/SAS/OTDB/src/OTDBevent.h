@@ -23,7 +23,7 @@
 #ifndef LOFAR_OTDB_OTDBEVENT_H
 #define LOFAR_OTDB_OTDBEVENT_H
 
-// \file OTDBevent.h
+// \file
 // Event an operator should pay attention to.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

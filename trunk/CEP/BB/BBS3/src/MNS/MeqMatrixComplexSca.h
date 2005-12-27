@@ -23,7 +23,7 @@
 #if !defined(MNS_MEQMATRIXCOMPLEXSCA_H)
 #define MNS_MEQMATRIXCOMPLEXSCA_H
 
-// \file MNS/MeqMatrixComplexSca.h
+// \file
 // Temporary matrix for Mns
 
 //# Includes

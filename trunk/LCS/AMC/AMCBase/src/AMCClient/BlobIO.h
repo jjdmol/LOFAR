@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCBASE_AMCCLIENT_BLOBIO_H
 #define LOFAR_AMCBASE_AMCCLIENT_BLOBIO_H
 
-// \file BlobIO.h
+// \file
 // Blob (de)serialization methods for AMCBase classes.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

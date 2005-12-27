@@ -25,7 +25,7 @@
 #ifndef LOFAR_ALC_APPLCONTROLCOMM_H
 #define LOFAR_ALC_APPLCONTROLCOMM_H
 
-// \file ApplControlComm.h
+// \file
 // Implements the communication of Application Control commands, used by the
 // ApplControlClient and ApplControlServer.
 

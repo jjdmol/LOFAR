@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_COMPLEX_H
 #define LOFAR_COMMON_COMPLEX_H
 
-// \file lofar_complex.h
+// \file
 
 //# ICC supports builtin complex for floating point types only.
 //# GCC supports it for both floating point and integer types.

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBOBUFVECTOR_H
 #define LOFAR_COMMON_BLOBOBUFVECTOR_H
 
-// \file BlobOBufVector.h
+// \file
 // Input buffer for a blob using a vector
 
 #include <Common/BlobOBufChar.h>

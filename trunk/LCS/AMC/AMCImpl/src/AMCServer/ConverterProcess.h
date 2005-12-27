@@ -23,7 +23,7 @@
 #ifndef LOFAR_AMCIMPL_AMCSERVER_CONVERTERPROCESS_H
 #define LOFAR_AMCIMPL_AMCSERVER_CONVERTERPROCESS_H
 
-// \file ConverterProcess.h
+// \file
 // Process client conversion requests
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

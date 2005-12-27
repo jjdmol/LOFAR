@@ -24,7 +24,7 @@
 #ifndef TINYCEP_PROFILER_H
 #define TINYCEP_PROFILER_H
 
-// \file Profiler.h
+// \file
 // This class is used to profile a program during execution. 
 
 namespace LOFAR

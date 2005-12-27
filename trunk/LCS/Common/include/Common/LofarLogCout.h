@@ -23,7 +23,7 @@
 //# No include guard is used, because it should only be included indirectly
 //# by LofarLogger.h (and by LofarLogCout.cc).
 
-// \file LofarLogCout.h
+// \file
 // Macro interface to the cout/cerr logging implementation.
 
 #include <Common/lofar_iostream.h>

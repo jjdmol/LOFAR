@@ -23,7 +23,7 @@
 #if !defined(MNS_PARMTABLEBDBREPL_H)
 #define MNS_PARMTABLEBDBREPL_H
 
-// \file MNS/ParmTableBDBRepl.h
+// \file
 // Replicated Berkeley database
 
 //# Includes

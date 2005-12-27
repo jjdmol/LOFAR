@@ -23,7 +23,7 @@
 #ifndef LOFAR_BDBREPLICATIONBDBMESSAGE_H
 #define LOFAR_BDBREPLICATIONBDBMESSAGE_H
 
-// \file BDBMessage.h
+// \file
 // A message that can be send from one replicated site to another
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!

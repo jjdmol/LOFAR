@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBEXCEPTION_H
 #define LOFAR_COMMON_BLOBEXCEPTION_H
 
-// \fileBlobException.h
+// \file
 // Blob Exception class. 
 
 //# Includes
