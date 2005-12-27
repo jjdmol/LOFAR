@@ -51,7 +51,8 @@ start() {
     # Start RSPDriver
     echo -n $"Starting $prog: "
 
-    daemon $PREFIX/bin/$prog $OPTIONS
+    # start in the background with nicelevel -20 (highest priority)
+    daemon -20 $PREFIX/bin/$prog $OPTIONS
     RETVAL=$?
     [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
     echo

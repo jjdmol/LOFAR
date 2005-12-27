@@ -102,6 +102,24 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTPPS].size   = MEPHeader::CRB_SOFTPPS_SIZE;
   m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].addr  = new char[MEPHeader::CDO_SETTINGS_SIZE];
   m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].size  = MEPHeader::CDO_SETTINGS_SIZE;
+  m_reg[MEPHeader::CDO][MEPHeader::CDO_HEADER].addr    = new char[MEPHeader::CDO_HEADER_SIZE];
+  m_reg[MEPHeader::CDO][MEPHeader::CDO_HEADER].size    = MEPHeader::CDO_HEADER_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0_X].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_0_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_0_Y].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1_X].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_1_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_1_Y].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2_X].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_2_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_2_Y].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3_X].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3_X].size       = MEPHeader::XST_STATS_SIZE;
+  m_reg[MEPHeader::XST][MEPHeader::XST_3_Y].addr       = new char[MEPHeader::XST_STATS_SIZE];
+  m_reg[MEPHeader::XST][MEPHeader::XST_3_Y].size       = MEPHeader::XST_STATS_SIZE;
 
   //
   // initialize registers to some sensible test pattern
@@ -298,6 +316,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_CRB_SOFTRESET:
     case EPA_CRB_SOFTPPS:
     case EPA_CDO_SETTINGS:
+    case EPA_CDO_HEADER:
     {
       EPAWriteEvent write(event);
 

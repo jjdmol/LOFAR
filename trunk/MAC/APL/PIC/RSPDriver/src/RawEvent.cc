@@ -261,6 +261,14 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_CDO_SETTINGS, /* READACK  */
       EPA_WRITEACK,     /* WRITEACK */
     },
+
+    /* reg = 0x01 (Header) */
+    { 0,
+      EPA_READ,         /* READ     */
+      EPA_CDO_HEADER, /* WRITE    */
+      EPA_CDO_HEADER, /* READACK  */
+      EPA_WRITEACK,     /* WRITEACK */
+    },
   },
 
   /* pid = 0x0C (XST) */
