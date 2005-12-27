@@ -89,6 +89,8 @@ RSPDriver_SOURCES = \
 	SetSubbandsCmd.cc \
 	GetSubbandsCmd.h \
 	GetSubbandsCmd.cc \
+	UpdSubbandsCmd.h \
+	UpdSubbandsCmd.cc \
 	GetStatusCmd.h \
 	GetStatusCmd.cc \
 	UpdStatusCmd.h \
@@ -97,6 +99,8 @@ RSPDriver_SOURCES = \
 	SetRCUCmd.cc \
 	GetRCUCmd.h \
 	GetRCUCmd.cc \
+	UpdRCUCmd.h \
+	UpdRCUCmd.cc \
 	SetWGCmd.h \
 	SetWGCmd.cc \
 	GetWGCmd.h \
@@ -147,7 +151,9 @@ RSPDriver_SOURCES = \
 	WGWrite.h \
 	WGWrite.cc \
 	WGRead.h \
-	WGRead.cc
+	WGRead.cc \
+	CDOWrite.h \
+	CDOWrite.cc
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \
