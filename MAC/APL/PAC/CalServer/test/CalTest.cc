@@ -157,8 +157,8 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	    break;
 	  }
 	}
-	start.nyquist_zone       = m_nyquistzone;
-	start.rcucontrol.value   = m_rcucontrol;
+	start.nyquist_zone = m_nyquistzone;
+	start.rcucontrol.setRaw(m_rcucontrol);
 
 	TESTC_ABORT(m_server.send(start), CalTest::final);
       }
@@ -295,7 +295,7 @@ int main(int argc, char** argv)
 
   if (argc != 8) {
     cerr << "usage: CalTest arrayname parentname nantennas samplingfrequency nyquistzone rcucontrol subarray=[0|1|2]" << endl;
-    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1           0xB9 0" << endl;
+    cerr << "e.g.   CalTest FTS-1-LBA FTS-1-LBA      8         160000000        1        0x0000037A     0" << endl;
     cerr << "(see AntennaArrays.conf for other configurations)" << endl;
     exit(EXIT_FAILURE);
   }

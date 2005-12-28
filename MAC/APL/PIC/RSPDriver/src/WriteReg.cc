@@ -43,9 +43,9 @@ using namespace EPA_Protocol;
 using namespace RTC;
 
 WriteReg::WriteReg(GCFPortInterface& board_port, int board_id,
-		   uint8 dstid, uint8 pid, uint8 regid, uint16 size,
-		   uint16 offset, uint8 n_blps)
-  : SyncAction(board_port, board_id, n_blps),
+		   uint16 dstid, uint8 pid, uint8 regid, uint16 size,
+		   uint16 offset)
+  : SyncAction(board_port, board_id, 1),
     m_dstid(dstid), m_pid(pid), m_regid(regid), m_size(size), m_offset(offset),
     m_source_address(0)
 {
@@ -63,40 +63,18 @@ void WriteReg::setSrcAddress(void* address)
 
 void WriteReg::sendrequest()
 {
-  if (MEPHeader::DST_RSP == getCurrentBLP())
-  {
-    LOG_INFO(formatString(">>>> WriteReg(%s) RSP, pid=%d, regid=%d, size=%d, offset=%d",
-			  getBoardPort().getName().c_str(),
-			  m_pid,
-			  m_regid,
-			  m_size,
-			  m_offset));
-  }
-  else
-  {
-    uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
-
-    LOG_INFO(formatString(">>>> WriteReg(%s) BLP=%d, pid=%d, regid=%d, size=%d, offset=%d",
-			  getBoardPort().getName().c_str(),
-			  global_blp,
-			  m_pid,
-			  m_regid,
-			  m_size,
-			  m_offset));
-  }
-  
   EPAWriteEvent write;
   
   write.hdr.set(MEPHeader::WRITE,
-		m_dstid + getCurrentBLP(),
+		m_dstid,
 		m_pid,
 		m_regid,
 		m_size,
 		m_offset);
 
   write.payload.setBuffer(m_source_address, m_size);
-
   m_hdr = write.hdr;
+
   getBoardPort().send(write);
 }
 
@@ -120,6 +98,11 @@ GCFEvent::TResult WriteReg::handleack(GCFEvent& event, GCFPortInterface& /*port*
     LOG_ERROR("WriteReg::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
+
+  //
+  // Sleep 73msec after receiving SYNC WRITE_ACK
+  //
+  usleep(73000);
  
   return GCFEvent::HANDLED;
 }

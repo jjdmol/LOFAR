@@ -32,7 +32,7 @@
 //# rspctl --subbands        [--select=<set>]  # get subband selection
 //# rspctl --subbands=<list> [--select=<set>]  # set subband selection
 //# rspctl --rcu             [--select=<set>]  # get RCU control
-//# rspctl --rcu=0xce        [--select=<set>]  # set RCU control
+//# rspctl --rcu=0x00000000  [--select=<set>]  # set RCU control
 //# rspctl --wg              [--select=<set>]  # get waveform generator settings
 //# rspctl --wg=freq         [--select=<set>]  # set wg freq is in Hz (float)
 //# rspctl --status          [--select=<set>]  # get status
@@ -425,7 +425,11 @@ void RCUCommand::send()
     setrcu.rcumask = getRCUMask();
 
     setrcu.settings().resize(1);
-    setrcu.settings()(0).value = m_control;
+    setrcu.settings()(0) = m_control;
+
+    for (int i = 0; i < setrcu.settings().extent(firstDim); i++) {
+      printf("control(%d)=0x%08x\n", i, setrcu.settings()(i).getRaw());
+    }
 
     m_rspport.send(setrcu);
   }
@@ -448,7 +452,7 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
           if (mask[rcuout])
           {
-            logMessage(cout,formatString("RCU[%02d].status=0x%02x",rcuout, ack.settings()(rcuin++).value));
+            logMessage(cout,formatString("RCU[%02d].control=0x%08x",rcuout, ack.settings()(rcuin++).getRaw()));
           }
         }
       }
@@ -553,7 +557,7 @@ GCFEvent::TResult ClocksCommand::ack(GCFEvent& e)
 WGCommand::WGCommand(GCFPortInterface& port) : Command(port),
     m_frequency(0.0),
     m_phase(0),
-    m_amplitude(16)
+    m_amplitude(1<<31)
 {
 }
 
@@ -576,7 +580,7 @@ void WGCommand::send()
     wgset.timestamp = Timestamp(0,0);
     wgset.rcumask = getRCUMask();
     wgset.settings().resize(1);
-    wgset.settings()(0).freq = (uint16)(((m_frequency * (1<<16)) / SAMPLE_FREQUENCY) + 0.5);
+    wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / SAMPLE_FREQUENCY) + 0.5);
     wgset.settings()(0).phase = m_phase;
     wgset.settings()(0).ampl = m_amplitude;
     wgset.settings()(0).nof_samples = N_WAVE_SAMPLES;
@@ -1172,11 +1176,12 @@ GCFEvent::TResult VersionCommand::ack(GCFEvent& e)
   {
     for (int rsp=0; rsp < get_ndevices(); rsp++)
     {
-      logMessage(cout,formatString("RSP[%02d].version=rsp:0x%02x bp:0x%02x ap:0x%02x",
+      logMessage(cout,formatString("RSP[%02d] BP version = %d.%d, AP version = %d.%d",
                                    rsp,
-                                   ack.versions.rsp()(rsp),
-                                   ack.versions.bp()(rsp),
-                                   ack.versions.ap()(rsp)));
+                                   ack.versions.bp()(rsp).fpga_maj,
+				   ack.versions.bp()(rsp).fpga_min,
+                                   ack.versions.ap()(rsp).fpga_maj,
+				   ack.versions.ap()(rsp).fpga_min));
     }
   }
   else
@@ -1377,17 +1382,67 @@ static void usage()
   cout << "rspctl --subbands       [--select=<set>]  # get subband selection" << endl;
   cout << "rspctl --subbands=<set> [--select=<set>]  # set subband selection" << endl;
   cout << "  Example --subbands sets: --subbands=0:39 or --select=0:19,40:59" << endl;
-  cout << "rspctl --rcu            [--select=<set>]  # get RCU control" << endl;
-  cout << "rspctl --rcu=0x??       [--select=<set>]  # set RCU control" << endl;
-  cout << "             0x80 = VDDVCC_ENABLE" << endl;
-  cout << "             0x40 = VH_ENABLE" << endl;
-  cout << "             0x20 = VL_ENABLE" << endl;
-  cout << "             0x10 = FILSEL_1" << endl;
-  cout << "             0x08 = FILSEL_0" << endl;
-  cout << "             0x04 = BANDSEL" << endl;
-  cout << "             0x02 = HBA_ENABLE" << endl;
-  cout << "             0x01 = LBA_ENABLE" << endl;
-  cout << "  Common values: LB_10_90=0xB9, HB_110_190=0xC6, HB_170_230=0xCE, HB_210_250=0xD6" << endl;
+  cout << "rspctl --rcu            [--select=<set>]  # show current rcu control setting" << endl;
+  cout << "rspctl --rcu=0x00000000 [--select=<set>]  # set the rcu control registers" << endl;
+  cout << "     mask      value    " << endl;
+  cout << "  0x0000007F INPUT_DELAY Sample delay for the data from the RCU." << endl;
+  cout << "  0x00000080 SPEC_INV    Enable spectral inversion (1) if needed." << endl;
+  cout << endl;
+  cout << "  0x00000100 LBL-EN      supply LBL antenna on (1) or off (0)" << endl;
+  cout << "  0x00000200 LBH-EN      sypply LBH antenna on (1) or off (0)" << endl;
+  cout << "  0x00000400 HB-EN       supply HB on (1) or off (0)" << endl;
+  cout << "  0x00000800 BANDSEL     low band (1) or high band (0)" << endl;
+  cout << "  0x00001000 HB-SEL-0    HBA filter selection" << endl;
+  cout << "  0x00002000 HB-SEL-1    HBA filter selection" << endl;
+  cout << "               Options : HBA-SEL-0 HBA-SEL-1 Function" << endl;
+  cout << "                             0          0      210-270 MHz" << endl;
+  cout << "                             0          1      170-230 MHz" << endl;
+  cout << "                             1          0      110-190 MHz" << endl;
+  cout << "                             1          1      all off" << endl;
+  cout << "  0x00004000 VL-EN       low band supply on (1) or off (0)" << endl;
+  cout << "  0x00008000 VH-EN       high band supply on (1) or off (0)" << endl;
+  cout << endl;
+  cout << "  0x00010000 VDIG-EN     ADC supply on (1) or off (0)" << endl;
+  cout << "  0x00020000 LB-SEL-0    LBA input selection" << endl;
+  cout << "  0x00040000 LB-SEL-1    HP filter selection" << endl;
+  cout << "               Options : LB-SEL-0 LB-SEL-1 Function" << endl;
+  cout << "                             0        0    10-90 MHz + 10 MHz HPF" << endl;
+  cout << "                             0        1    30-80 MHz + 10 MHz HPF" << endl;
+  cout << "                             1        0    10-90 MHz + 30 MHz HPF" << endl;
+  cout << "                             1        1    30-80 MHz + 30 MHz HPF" << endl;
+  cout << "  0x00080000 ATT-CNT-4   on (1) is  1dB attenuation" << endl;
+  cout << "  0x00100000 ATT-CNT-3   on (1) is  2dB attenuation" << endl;
+  cout << "  0x00200000 ATT-CNT-2   on (1) is  4dB attenuation" << endl;
+  cout << "  0x00300000 ATT-CNT-1   on (1) is  8dB attenuation" << endl;
+  cout << "  0x00800000 ATT-CNT-0   on (1) is 16dB attenuation" << endl;
+  cout << endl;
+  cout << "  0x01000000 PRSG        pseudo random sequence generator on (1), off (0)" << endl;
+  cout << "  0x02000000 RESET       on (1) hold board in reset" << endl;
+  cout << "  0xFC000000 TBD         reserved" << endl;
+  cout << endl;
+  cout << "rspctl [ --rcumode        |" << endl;
+  cout << "         --rcuprsg        |" << endl;
+  cout << "         --rcureset       |" << endl;
+  cout << "         --rcuattenuation |" << endl;
+  cout << "         --rcuspecinv     |" << endl;
+  cout << "         --rcudelay" << endl;
+  cout << "       ]+ [--select=<set>] # control RCU by combining any of these commands with selection" << endl;
+  cout << endl;
+  cout << "       --rcumode=[0..7] # set the RCU in a specific mode" << endl;
+  cout << "         Possible values: 0 = OFF" << endl;
+  cout << "                          1 = LBL 10MHz HPF 0x00017900" << endl;
+  cout << "                          2 = LBL 30MHz HPF 0x00057900" << endl;
+  cout << "                          3 = LBH 10MHz HPF 0x00037A00" << endl;
+  cout << "                          4 = LBH 30MHz HPF 0x00077A00" << endl;
+  cout << "                          5 = HB 110-190MHz 0x0007A400" << endl;
+  cout << "                          6 = HB 170-230MHz 0x00079400" << endl;
+  cout << "                          7 = HB 210-270MHz 0x00078400" << endl;
+  cout << "       --rcuprsg                 # turn psrg on" << endl;
+  cout << "       --rcureset                # hold rcu in reset" << endl;
+  cout << "       --rcuattenuation=[0..127] # set the RCU attenuation" << endl;
+  cout << "       --rcuspecinv              # enable spectral inversion" << endl;
+  cout << "       --rcudelay=[0..31]        # set the delay for rcu's" << endl;
+  cout << endl;
   cout << "rspctl --wg             [--select=<set>]  # get waveform generator settings" << endl;
   cout << "rspctl --wg=freq        [--select=<set>]  # set waveform generator settings" << endl;
   cout << "rspctl --status         [--select=<set>]  # get status" << endl;
@@ -1414,431 +1469,513 @@ static void usage()
 
 Command* RSPCtl::parse_options(int argc, char** argv)
 {
-  Command *command = 0;
+  Command*    command        = 0;
+  RCUCommand* rcumodecommand = 0;
   list<int> select;
 
   // select all by default
   select.clear();
   for (int i = 0; i < MAX_N_RCUS; ++i)
-  {
-    select.push_back(i);
-  }
+    {
+      select.push_back(i);
+    }
 
   optind = 0; // reset option parsing
   //opterr = 0; // no error reporting to stderr
   while (1)
-  {
-    static struct option long_options[] =
-      {
-        { "select",     required_argument, 0, 'l' },
-        { "weights",    optional_argument, 0, 'w' },
-        { "aweights",   optional_argument, 0, 'a' },
-        { "subbands",   optional_argument, 0, 's' },
-        { "rcu",        optional_argument, 0, 'r' },
-        { "wg",         optional_argument, 0, 'g' },
-        { "status",     no_argument,       0, 'q' },
-        { "statistics", optional_argument, 0, 't' },
-        { "xcstatistics", no_argument,     0, 'x' },
-        { "xcsubband",  optional_argument, 0, 'z' },
-        { "clocks",     optional_argument, 0, 'c' },
-        { "version",    no_argument,       0, 'v' },
-        { "help",       no_argument,       0, 'h' },
-#ifdef ENABLE_RSPFE
-        { "feport",     required_argument, 0, 'f' },
-#endif
-        { "duration",   required_argument, 0, 'd' },
-        { "integration",required_argument, 0, 'i' },
-        { "directory"  ,required_argument, 0, 'D' },
-
-        { 0, 0, 0, 0 },
-      };
-
-    int option_index = 0;
-    int c = getopt_long(argc, argv,
-                        "l:w::a::s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
-
-    if (c == -1)
-      break;
-
-    switch (c)
     {
-      case 'l':
-        if (optarg)
-        {
-          if (!command || 0 == command->get_ndevices())
-          {
-            logMessage(cerr,"Error: 'command' argument should come before --select argument");
-            exit(EXIT_FAILURE);
-          }
-          select = strtolist(optarg, command->get_ndevices());
-          if (select.empty())
-          {
-            logMessage(cerr,"Error: invalid or missing '--select' option");
-            exit(EXIT_FAILURE);
-          }
-        }
-        else
-        {
-          logMessage(cerr,"Error: option '--select' requires an argument");
-        }
-        break;
-
-      case 'w':
-      {
-        if (command)
-          delete command;
-        WeightsCommand* weightscommand = new WeightsCommand(m_server);
-	weightscommand->setType(WeightsCommand::COMPLEX);
-        command = weightscommand;
-
-        command->set_ndevices(m_nrcus);
-
-        if (optarg)
-        {
-          weightscommand->setMode(false);
-	  double re = 0.0, im = 0.0;
-	  int numitems = sscanf(optarg, "%lf,%lf", &re, &im);
-	  if (numitems == 0 || numitems == EOF) {
-            logMessage(cerr,"Error: invalid weights value. Should be of the format "
-		       "'--weights=value.re[,value.im]' where value is a floating point value.");
-            exit(EXIT_FAILURE);
-	  }
-          weightscommand->setValue(complex<double>(re,im));
-        }
-      }
-      break;
-
-      case 'a':
-      {
-        if (command)
-          delete command;
-        WeightsCommand* weightscommand = new WeightsCommand(m_server);
-	weightscommand->setType(WeightsCommand::ANGLE);
-        command = weightscommand;
-
-        command->set_ndevices(m_nrcus);
-
-	if (optarg)
+      static struct option long_options[] =
 	{
-	  weightscommand->setMode(false);
-	  double amplitude = 0.0, angle = 0.0;
-	  int numitems = sscanf(optarg, "%lf,%lf", &amplitude, &angle);
-	  if (numitems == 0 || numitems == EOF) {
-	    logMessage(cerr,"Error: invalid aweights value. Should be of the format "
-		       "'--weights=amplitude[,angle]' where angle is in degrees.");
-	    exit(EXIT_FAILURE);
+	  { "select",         required_argument, 0, 'l' },
+	  { "weights",        optional_argument, 0, 'w' },
+	  { "aweights",       optional_argument, 0, 'a' },
+	  { "subbands",       optional_argument, 0, 's' },
+	  { "rcu",            optional_argument, 0, 'r' },
+	  { "rcumode",        required_argument, 0, 'm' },
+	  { "rcuprsg",        no_argument,       0, 'p' },
+	  { "rcureset",       no_argument,       0, 'e' },
+	  { "rcuattenuation", required_argument, 0, 'n' },
+	  { "rcuspecinv",     no_argument,       0, 'u' },
+	  { "rcudelay",       required_argument, 0, 'y' },
+	  { "wg",             optional_argument, 0, 'g' },
+	  { "status",         no_argument,       0, 'q' },
+	  { "statistics",     optional_argument, 0, 't' },
+	  { "xcstatistics",   no_argument,     0, 'x' },
+	  { "xcsubband",      optional_argument, 0, 'z' },
+	  { "clocks",         optional_argument, 0, 'c' },
+	  { "version",        no_argument,       0, 'v' },
+	  { "help",           no_argument,       0, 'h' },
+#ifdef ENABLE_RSPFE
+	  { "feport",         required_argument, 0, 'f' },
+#endif
+	  { "duration",       required_argument, 0, 'd' },
+	  { "integration",    required_argument, 0, 'i' },
+	  { "directory"  ,    required_argument, 0, 'D' },
+
+	  { 0, 0, 0, 0 },
+	};
+
+      int option_index = 0;
+      int c = getopt_long(argc, argv,
+			  "l:w::a::s::r::g::qt::xz::vc::hf:d:i:", long_options, &option_index);
+
+      if (c == -1)
+	break;
+
+      switch (c)
+	{
+	case 'l':
+	  if (optarg)
+	    {
+	      if (!command || 0 == command->get_ndevices())
+		{
+		  logMessage(cerr,"Error: 'command' argument should come before --select argument");
+		  exit(EXIT_FAILURE);
+		}
+	      select = strtolist(optarg, command->get_ndevices());
+	      if (select.empty())
+		{
+		  logMessage(cerr,"Error: invalid or missing '--select' option");
+		  exit(EXIT_FAILURE);
+		}
+	    }
+	  else
+	    {
+	      logMessage(cerr,"Error: option '--select' requires an argument");
+	    }
+	  break;
+
+	case 'w':
+	  {
+	    if (command)
+	      delete command;
+	    WeightsCommand* weightscommand = new WeightsCommand(m_server);
+	    weightscommand->setType(WeightsCommand::COMPLEX);
+	    command = weightscommand;
+
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg)
+	      {
+		weightscommand->setMode(false);
+		double re = 0.0, im = 0.0;
+		int numitems = sscanf(optarg, "%lf,%lf", &re, &im);
+		if (numitems == 0 || numitems == EOF) {
+		  logMessage(cerr,"Error: invalid weights value. Should be of the format "
+			     "'--weights=value.re[,value.im]' where value is a floating point value in the range (-1,1].");
+		  exit(EXIT_FAILURE);
+		}
+		weightscommand->setValue(complex<double>(re,im));
+	      }
 	  }
+	  break;
+
+	case 'a':
+	  {
+	    if (command)
+	      delete command;
+	    WeightsCommand* weightscommand = new WeightsCommand(m_server);
+	    weightscommand->setType(WeightsCommand::ANGLE);
+	    command = weightscommand;
+
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg)
+	      {
+		weightscommand->setMode(false);
+		double amplitude = 0.0, angle = 0.0;
+		int numitems = sscanf(optarg, "%lf,%lf", &amplitude, &angle);
+		if (numitems == 0 || numitems == EOF) {
+		  logMessage(cerr,"Error: invalid aweights value. Should be of the format "
+			     "'--weights=amplitude[,angle]' where angle is in degrees.");
+		  exit(EXIT_FAILURE);
+		}
 	  
-	  if (angle < -180.0 || angle > 180.0) {
-	    logMessage(cerr, "Error: invalid angle, should be between -180 < angle < 180.0.");
-	    exit(EXIT_FAILURE);
-	  }
+		if (angle < -180.0 || angle > 180.0) {
+		  logMessage(cerr, "Error: invalid angle, should be between -180 < angle < 180.0.");
+		  exit(EXIT_FAILURE);
+		}
 	  
-	  //weightscommand->setValue(complex<double>(amplitude * ::cos(angle), amplitude * ::sin(angle)));
-	  weightscommand->setValue(amplitude * exp(complex<double>(0,angle / 180.0 * M_PI)));
-	}
-      }
-      break;
-
-      case 's':
-      {
-        if (command)
-          delete command;
-        SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
-	subbandscommand->setType(SubbandSelection::BEAMLET);
-
-        command = subbandscommand;
-        command->set_ndevices(m_nrcus);
-
-        if (optarg)
-        {
-          subbandscommand->setMode(false);
-          list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
-          if (subbandlist.empty())
-          {
-            logMessage(cerr,"Error: invalid or empty '--subbands' option");
-            exit(EXIT_FAILURE);
-          }
-          subbandscommand->setSubbandList(subbandlist);
-        }
-      }
-      break;
-
-      case 'r':
-      {
-        if (command)
-          delete command;
-        RCUCommand* rcucommand = new RCUCommand(m_server);
-        command = rcucommand;
-
-        command->set_ndevices(m_nrcus);
-
-        if (optarg)
-        {
-          rcucommand->setMode(false);
-          unsigned long controlopt = strtoul(optarg, 0, 0);
-          if ( controlopt > 0xFF )
-          {
-            logMessage(cerr,"Error: option '--rcu' parameter must be < 0xFF");
-            delete command;
-            return 0;
-          }
-          rcucommand->setControl(controlopt);
-        }
-      }
-      break;
-
-      case 'g':
-      {
-        if (command)
-          delete command;
-        WGCommand* wgcommand = new WGCommand(m_server);
-        command = wgcommand;
-
-        command->set_ndevices(m_nrcus);
-
-        if (optarg)
-        {
-          wgcommand->setMode(false);
-          double frequency = atof(optarg);
-          if ( frequency < 0 )
-          {
-            logMessage(cerr,"Error: option '--wg' parameter must be > 0");
-            delete command;
-            return 0;
-          }
-          wgcommand->setFrequency(frequency);
-        }
-      }
-      break;
-
-      case 'q':
-      {
-        if (command)
-          delete command;
-        StatusCommand* statuscommand = new StatusCommand(m_server);
-        command = statuscommand;
-
-        command->set_ndevices(m_nrcus);
-      }
-      break;
-
-      case 't':
-      {
-        if (command)
-          delete command;
-        StatisticsCommand* statscommand = new StatisticsCommand(m_server);
-        command = statscommand;
-
-        command->set_ndevices(m_nrcus);
-
-        if (optarg)
-        {
-          if (!strcmp(optarg, "subband")) {
-            statscommand->setType(Statistics::SUBBAND_POWER);
-          } else if (!strcmp(optarg, "beamlet")) {
-	    command->set_ndevices(m_nrspboards * MEPHeader::N_POL);
-            statscommand->setType(Statistics::BEAMLET_POWER);
-          } else {
-	    LOG_FATAL_STR("invalid statistics type '" << optarg << "'");
-	    exit(EXIT_FAILURE);
+		//weightscommand->setValue(complex<double>(amplitude * ::cos(angle), amplitude * ::sin(angle)));
+		weightscommand->setValue(amplitude * exp(complex<double>(0,angle / 180.0 * M_PI)));
+	      }
 	  }
-        }
-      }
-      break;
+	  break;
 
-      case 'x':
-      {
-        if (command)
-          delete command;
-        XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(m_server);
-        command = xcstatscommand;
-        command->set_ndevices(m_nrcus);
-        command->setSelectable(false); // no selection allowed
-      }
-      break;
+	case 's':
+	  {
+	    if (command)
+	      delete command;
+	    SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
+	    subbandscommand->setType(SubbandSelection::BEAMLET);
 
-      case 'z':
-      {
-        if (command)
-          delete command;
-        SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
-	subbandscommand->setType(SubbandSelection::XLET);
-        command = subbandscommand;
+	    command = subbandscommand;
+	    command->set_ndevices(m_nrcus);
 
-        command->set_ndevices(m_nrcus);
+	    if (optarg)
+	      {
+		subbandscommand->setMode(false);
+		list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
+		if (subbandlist.empty())
+		  {
+		    logMessage(cerr,"Error: invalid or empty '--subbands' option");
+		    exit(EXIT_FAILURE);
+		  }
+		subbandscommand->setSubbandList(subbandlist);
+	      }
+	  }
+	  break;
 
-        if (optarg)
-        {
-          subbandscommand->setMode(false);
+	case 'r': // --rcu
+	  {
+	    if (command)
+	      delete command;
+	    RCUCommand* rcucommand = new RCUCommand(m_server);
+	    command = rcucommand;
 
-          int subband = atoi(optarg);
+	    command->set_ndevices(m_nrcus);
 
-          if (subband < 0 || subband >= MEPHeader::N_SUBBANDS)
-          {
-            logMessage(cerr,formatString("Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MEPHeader::N_SUBBANDS));
-            exit(EXIT_FAILURE);
-          }
+	    if (optarg)
+	      {
+		rcucommand->setMode(false);
+		unsigned long controlopt = strtoul(optarg, 0, 0);
+		if ( controlopt > 0xFFFFFFFF )
+		  {
+		    logMessage(cerr,"Error: option '--rcu' parameter must be < 0xFFFFFFFF");
+		    delete command;
+		    return 0;
+		  }
 
-          list<int> subbandlist;
-          for (int rcu = 0; rcu < m_nrcus / MEPHeader::N_POL; rcu++)
-          {
-            subbandlist.push_back(subband);
-          }
-          subbandscommand->setSubbandList(subbandlist);
-        }
-      }
-      break;
+		rcucommand->control().setRaw((uint32)controlopt);
+	      }
+	  }
+	  break;
 
-      case 'c':
-      {
-        if (command)
-          delete command;
-        ClocksCommand* clockcommand = new ClocksCommand(m_server);
-        command = clockcommand;
+	case 'm': // --rcumode
+	case 'p': // --rcuprsg
+	case 'e': // --rcureset
+	case 'n': // --rcuattenuation
+	case 'u': // --rcuspecinv
+	case 'y': // --recudelay
+	  {
+	    // instantiate once, then reuse to add control bits
+	    if (!rcumodecommand) {
+	      if (command) delete command;
+	      rcumodecommand = new RCUCommand(m_server);
+	    }
 
-        command->set_ndevices(m_ntdboards);
+	    command = rcumodecommand;
+	    command->set_ndevices(m_nrcus);
 
-        if (optarg)
-        {
-          clockcommand->setMode(false);
-          double clock = atof(optarg);
-          if ( 160000000 != (uint32)clock && 200000000 != (uint32)clock)
-          {
-            logMessage(cerr,"Error: option '--clocks' parameter must be 160000000 or 200000000");
-            delete command;
-            return 0;
-          }
-          clockcommand->setClock((uint32)clock);
+	    if ('m' == c || 'n' == c || 'y' == c) {
+	      if (!optarg) {
+		logMessage(cerr,"Error: option requires an argument");
+		delete command;
+		return 0;
+	      }
+	    }
 
-        }
-      }
-      break;
+	    rcumodecommand->setMode(false);
+	    unsigned long controlopt = 0;
 
-      case 'v':
-      {
-        if (command)
-          delete command;
-        VersionCommand* versioncommand = new VersionCommand(m_server);
-        command = versioncommand;
-        command->set_ndevices(m_nrspboards);
-      }
-      break;
+	    switch (c) {
 
-      case 'h':
-        usage();
-        break;
+	    case 'm': // --rcumode
+	      controlopt = strtoul(optarg, 0, 0);
+	      if (controlopt >= 8) {
+		logMessage(cerr,"Error: --rcumode value should be < 8");
+		delete command;
+		return 0;
+	      }
+	      rcumodecommand->control().setMode((RCUSettings::Control::RCUMode)controlopt);
+	      break;
+
+	    case 'p': // --rcuprsg
+	      rcumodecommand->control().setPRSG(true);
+	      break;
+
+	    case 'e': // --rcureset
+	      rcumodecommand->control().setReset(true);
+	      break;
+
+	    case 'n': // --rcuattenuation
+	      controlopt = strtoul(optarg, 0, 0);
+	      if (controlopt >= 32) {
+		logMessage(cerr,"Error: --rcuattenuation value should be < 32");
+		delete command;
+		return 0;
+	      }
+	      rcumodecommand->control().setAttenuation((uint8)controlopt);
+	      break;
+
+	    case 'u': // --rcuspecinv
+	      rcumodecommand->control().setSpecinv(true);
+	      break;
+
+	    case 'y': // --recudelay
+	      controlopt = strtoul(optarg, 0, 0);
+	      if (controlopt >= 128) {
+		logMessage(cerr,"Error: --rcudelay value should be < 128");
+		delete command;
+		return 0;
+	      }
+	      rcumodecommand->control().setDelay((uint8)controlopt);
+	      break;
+	    }
+	  }
+	  break;
+
+	case 'g':
+	  {
+	    if (command)
+	      delete command;
+	    WGCommand* wgcommand = new WGCommand(m_server);
+	    command = wgcommand;
+
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg)
+	      {
+		wgcommand->setMode(false);
+		double frequency = atof(optarg);
+		if ( frequency < 0 )
+		  {
+		    logMessage(cerr,"Error: option '--wg' parameter must be > 0");
+		    delete command;
+		    return 0;
+		  }
+		wgcommand->setFrequency(frequency);
+	      }
+	  }
+	  break;
+
+	case 'q':
+	  {
+	    if (command)
+	      delete command;
+	    StatusCommand* statuscommand = new StatusCommand(m_server);
+	    command = statuscommand;
+
+	    command->set_ndevices(m_nrcus);
+	  }
+	  break;
+
+	case 't':
+	  {
+	    if (command)
+	      delete command;
+	    StatisticsCommand* statscommand = new StatisticsCommand(m_server);
+	    command = statscommand;
+
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg)
+	      {
+		if (!strcmp(optarg, "subband")) {
+		  statscommand->setType(Statistics::SUBBAND_POWER);
+		} else if (!strcmp(optarg, "beamlet")) {
+		  command->set_ndevices(m_nrspboards * MEPHeader::N_POL);
+		  statscommand->setType(Statistics::BEAMLET_POWER);
+		} else {
+		  LOG_FATAL_STR("invalid statistics type '" << optarg << "'");
+		  exit(EXIT_FAILURE);
+		}
+	      }
+	  }
+	  break;
+
+	case 'x':
+	  {
+	    if (command)
+	      delete command;
+	    XCStatisticsCommand* xcstatscommand = new XCStatisticsCommand(m_server);
+	    command = xcstatscommand;
+	    command->set_ndevices(m_nrcus);
+	    command->setSelectable(false); // no selection allowed
+	  }
+	  break;
+
+	case 'z':
+	  {
+	    if (command)
+	      delete command;
+	    SubbandsCommand* subbandscommand = new SubbandsCommand(m_server);
+	    subbandscommand->setType(SubbandSelection::XLET);
+	    command = subbandscommand;
+
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg)
+	      {
+		subbandscommand->setMode(false);
+
+		int subband = atoi(optarg);
+
+		if (subband < 0 || subband >= MEPHeader::N_SUBBANDS)
+		  {
+		    logMessage(cerr,formatString("Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MEPHeader::N_SUBBANDS));
+		    exit(EXIT_FAILURE);
+		  }
+
+		list<int> subbandlist;
+		for (int rcu = 0; rcu < m_nrcus / MEPHeader::N_POL; rcu++)
+		  {
+		    subbandlist.push_back(subband);
+		  }
+		subbandscommand->setSubbandList(subbandlist);
+	      }
+	  }
+	  break;
+
+	case 'c':
+	  {
+	    if (command)
+	      delete command;
+	    ClocksCommand* clockcommand = new ClocksCommand(m_server);
+	    command = clockcommand;
+
+	    command->set_ndevices(m_ntdboards);
+
+	    if (optarg)
+	      {
+		clockcommand->setMode(false);
+		double clock = atof(optarg);
+		if ( 160000000 != (uint32)clock && 200000000 != (uint32)clock)
+		  {
+		    logMessage(cerr,"Error: option '--clocks' parameter must be 160000000 or 200000000");
+		    delete command;
+		    return 0;
+		  }
+		clockcommand->setClock((uint32)clock);
+
+	      }
+	  }
+	  break;
+
+	case 'v':
+	  {
+	    if (command)
+	      delete command;
+	    VersionCommand* versioncommand = new VersionCommand(m_server);
+	    command = versioncommand;
+	    command->set_ndevices(m_nrspboards);
+	  }
+	  break;
+
+	case 'h':
+	  usage();
+	  break;
 
 #ifdef ENABLE_RSPFE
-      case 'f':
-        if (optarg)
-        {
-          if (!command || 0 == command->get_ndevices())
-          {
-            logMessage(cerr,"Error: 'command' argument should come before --feport argument");
-            exit(EXIT_FAILURE);
-          }
-          FECommand* feCommand = dynamic_cast<FECommand*>(command);
-          if (feCommand == 0)
-          {
-            logMessage(cerr,"Error: 'feport' argument can not be used in conjunction with the specified command");
-            exit(EXIT_FAILURE);
-          }
-          feCommand->setFrontEnd(optarg);
-        }
-        else
-        {
-          logMessage(cerr,"Error: option '--feport' requires an argument");
-        }
-        break;
+	case 'f':
+	  if (optarg)
+	    {
+	      if (!command || 0 == command->get_ndevices())
+		{
+		  logMessage(cerr,"Error: 'command' argument should come before --feport argument");
+		  exit(EXIT_FAILURE);
+		}
+	      FECommand* feCommand = dynamic_cast<FECommand*>(command);
+	      if (feCommand == 0)
+		{
+		  logMessage(cerr,"Error: 'feport' argument can not be used in conjunction with the specified command");
+		  exit(EXIT_FAILURE);
+		}
+	      feCommand->setFrontEnd(optarg);
+	    }
+	  else
+	    {
+	      logMessage(cerr,"Error: option '--feport' requires an argument");
+	    }
+	  break;
 #endif
 
-      case 'd':
-        if (optarg)
-        {
-          if (!command || 0 == command->get_ndevices())
-          {
-            logMessage(cerr,"Error: 'command' argument should come before --duration argument");
-            exit(EXIT_FAILURE);
-          }
-          StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
-          if (statisticsBaseCommand == 0)
-          {
-            logMessage(cerr,"Error: 'duration' argument can not be used in conjunction with the specified command");
-            exit(EXIT_FAILURE);
-          }
-          statisticsBaseCommand->setDuration(atoi(optarg));
-        }
-        else
-        {
-          logMessage(cerr,"Error: option '--duration' requires an argument");
-        }
-        break;
+	case 'd':
+	  if (optarg)
+	    {
+	      if (!command || 0 == command->get_ndevices())
+		{
+		  logMessage(cerr,"Error: 'command' argument should come before --duration argument");
+		  exit(EXIT_FAILURE);
+		}
+	      StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
+	      if (statisticsBaseCommand == 0)
+		{
+		  logMessage(cerr,"Error: 'duration' argument can not be used in conjunction with the specified command");
+		  exit(EXIT_FAILURE);
+		}
+	      statisticsBaseCommand->setDuration(atoi(optarg));
+	    }
+	  else
+	    {
+	      logMessage(cerr,"Error: option '--duration' requires an argument");
+	    }
+	  break;
 
-      case 'i':
-        if (optarg)
-        {
-          if (!command || 0 == command->get_ndevices())
-          {
-            logMessage(cerr,"Error: 'command' argument should come before --integration argument");
-            exit(EXIT_FAILURE);
-          }
-          StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
-          if (statisticsBaseCommand == 0)
-          {
-            logMessage(cerr,"Error: 'integration' argument can not be used in conjunction with the specified command");
-            exit(EXIT_FAILURE);
-          }
-          statisticsBaseCommand->setIntegration(atoi(optarg));
-        }
-        else
-        {
-          logMessage(cerr,"Error: option '--integration' requires an argument");
-        }
-        break;
+	case 'i':
+	  if (optarg)
+	    {
+	      if (!command || 0 == command->get_ndevices())
+		{
+		  logMessage(cerr,"Error: 'command' argument should come before --integration argument");
+		  exit(EXIT_FAILURE);
+		}
+	      StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
+	      if (statisticsBaseCommand == 0)
+		{
+		  logMessage(cerr,"Error: 'integration' argument can not be used in conjunction with the specified command");
+		  exit(EXIT_FAILURE);
+		}
+	      statisticsBaseCommand->setIntegration(atoi(optarg));
+	    }
+	  else
+	    {
+	      logMessage(cerr,"Error: option '--integration' requires an argument");
+	    }
+	  break;
 
-      case 'D':
-        if (optarg)
-        {
-          if (!command || 0 == command->get_ndevices())
-          {
-            logMessage(cerr,"Error: 'command' argument should come before --directory argument");
-            exit(EXIT_FAILURE);
-          }
-          StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
-          if (statisticsBaseCommand == 0)
-          {
-            logMessage(cerr,"Error: 'directory' argument can not be used in conjunction with the specified command");
-            exit(EXIT_FAILURE);
-          }
-          statisticsBaseCommand->setDirectory(optarg);
-        }
-        else
-        {
-          logMessage(cerr,"Error: option '--directory' requires an argument");
-        }
-        break;
+	case 'D':
+	  if (optarg)
+	    {
+	      if (!command || 0 == command->get_ndevices())
+		{
+		  logMessage(cerr,"Error: 'command' argument should come before --directory argument");
+		  exit(EXIT_FAILURE);
+		}
+	      StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
+	      if (statisticsBaseCommand == 0)
+		{
+		  logMessage(cerr,"Error: 'directory' argument can not be used in conjunction with the specified command");
+		  exit(EXIT_FAILURE);
+		}
+	      statisticsBaseCommand->setDirectory(optarg);
+	    }
+	  else
+	    {
+	      logMessage(cerr,"Error: option '--directory' requires an argument");
+	    }
+	  break;
 
-      case '?':
-      default:
-        exit(EXIT_FAILURE);
-        break;
+	case '?':
+	default:
+	  exit(EXIT_FAILURE);
+	  break;
+	}
     }
-  }
 
   if (command)
-  {
-    if (!command->getSelectable())
     {
-      // select all
-      select.clear();
-      for (int i = 0; i < MAX_N_RCUS; ++i)
-      {
-        select.push_back(i);
-      }
+      if (!command->getSelectable())
+	{
+	  // select all
+	  select.clear();
+	  for (int i = 0; i < MAX_N_RCUS; ++i)
+	    {
+	      select.push_back(i);
+	    }
+	}
+      command->setSelect(select);
     }
-    command->setSelect(select);
-  }
 
   return command;
 }

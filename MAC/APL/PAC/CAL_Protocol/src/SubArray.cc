@@ -45,9 +45,9 @@ SubArray::SubArray(string                 name,
 		   const Array<double,3>& pos,
 		   const Array<bool, 2>&  select,
 		   double sampling_frequency,
-		   int nyquist_zone,
-		   int nsubbands,
-		   uint8 rcucontrol) :
+		   int    nyquist_zone,
+		   int    nsubbands,
+		   uint32 rcucontrol) :
   AntennaArray(name, geoloc, pos),
   m_antenna_selection(select),
   m_spw(name + "_spw", sampling_frequency, nyquist_zone, nsubbands, rcucontrol)

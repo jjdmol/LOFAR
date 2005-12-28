@@ -51,7 +51,7 @@ void BstRead::sendrequest()
 {
   EPAReadEvent bstread;
 
-  uint16 byteoffset = (getCurrentBLP() % BST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
+  uint16 byteoffset = (getCurrentIndex() % BST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
 
   bstread.hdr.set(MEPHeader::BST_POWER_HDR, MEPHeader::DST_RSP,
 		  MEPHeader::READ, N_BST_STATS * sizeof(uint32), byteoffset);

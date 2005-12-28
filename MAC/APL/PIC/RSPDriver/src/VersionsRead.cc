@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include "VersionsRead.h"
 #include "Cache.h"
@@ -32,7 +33,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, 1)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) + 1 /* BP */)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -46,7 +47,8 @@ void VersionsRead::sendrequest()
 {
   // send version read request
   EPAReadEvent versionread;
-  versionread.hdr.set(MEPHeader::RSR_VERSION_HDR);
+  versionread.hdr.set(MEPHeader::RSR_VERSION_HDR,
+		      (0 == getCurrentIndex() ? MEPHeader::DST_RSP : 1 << (getCurrentIndex() - 1)));
 
   m_hdr = versionread.hdr;
   getBoardPort().send(versionread);
@@ -73,15 +75,48 @@ GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& por
     return GCFEvent::NOT_HANDLED;
   }
 
-  LOG_DEBUG(formatString("Firmware versions on board '%s' are [rsp:%d.%d, bp:%d.%d, ap:%d.%d",
-			 port.getName().c_str(),
-			 ack.rsp_version   >> 4, ack.rsp_version   & 0xF,
-			 ack.bp_version    >> 4, ack.bp_version    & 0xF,
-			 ack.ap_version    >> 4, ack.ap_version    & 0xF));
+  if (MEPHeader::DST_RSP == ack.hdr.m_fields.addr.dstid) {
+
+    LOG_DEBUG(formatString("Version information for '%s' is [rsp_version:%d, fpga_version:%d.%d, fpga_id:%d]",
+			   port.getName().c_str(),
+			   ack.version.rsp,
+			   ack.version.fpga_maj, ack.version.fpga_min,
+			   ack.version.fpga_id));
   
-  Cache::getInstance().getBack().getVersions().rsp()(getBoardId()) = ack.rsp_version;
-  Cache::getInstance().getBack().getVersions().bp()(getBoardId())  = ack.bp_version;  
-  Cache::getInstance().getBack().getVersions().ap()(getBoardId())  = ack.ap_version;  
+    Cache::getInstance().getBack().getVersions().bp()(getBoardId()) = ack.version;
+
+  } else {
+
+    LOG_DEBUG(formatString("Version information for '%s' is [fpga_version:%d.%d, fpga_id:%d, board_pos:%d]",
+			   port.getName().c_str(),
+			   ack.version.fpga_maj, ack.version.fpga_min,
+			   ack.version.fpga_id,
+			   ack.version.board_pos));
+    
+    int ap_index = -1;
+    switch (ack.hdr.m_fields.addr.dstid) {
+    case MEPHeader::DST_BLP0:
+      ap_index = 0;
+      break;
+    case MEPHeader::DST_BLP1:
+      ap_index = 1;
+      break;
+    case MEPHeader::DST_BLP2:
+      ap_index = 2;
+      break;
+    case MEPHeader::DST_BLP3:
+      ap_index = 3;
+      break;
+    default:
+      LOG_WARN("Invalid BLP in EPARsrVersionEvent");
+      break;
+    }
+
+    if (ap_index >= 0) {
+      Cache::getInstance().getBack().getVersions().ap()((getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + ap_index)
+	= ack.version;  
+    }
+  }
 
   return GCFEvent::HANDLED;
 }

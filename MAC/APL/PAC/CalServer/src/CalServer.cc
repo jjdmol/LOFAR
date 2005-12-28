@@ -75,7 +75,7 @@ CalServer::CalServer(string name, ACCs& accs)
 #endif
 
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
-  m_acceptor.init(*this, "acceptor_v2", GCFPortInterface::MSPP, CAL_PROTOCOL);
+  m_acceptor.init(*this, "acceptor_v3", GCFPortInterface::MSPP, CAL_PROTOCOL);
 
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
@@ -518,7 +518,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 					  m_sampling_frequency,
 					  start.nyquist_zone,
 					  GET_CONFIG("CalServer.N_SUBBANDS", i),
-					  start.rcucontrol.value);
+					  start.rcucontrol.getRaw());
 	
 	m_subarrays.schedule_add(subarray);
 
@@ -531,7 +531,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 	setrcu.timestamp = Timestamp(0,0); // immediate
 	setrcu.rcumask = start.subset;
 	setrcu.settings().resize(1);
-	setrcu.settings()(0).value = start.rcucontrol.value;
+	setrcu.settings()(0).setRaw(start.rcucontrol.getRaw());
 
 	m_rspdriver.send(setrcu);
       }

@@ -51,7 +51,7 @@ SSRead::~SSRead()
 void SSRead::sendrequest()
 {
   EPAReadEvent ssread;
-  ssread.hdr.set(MEPHeader::SS_SELECT_HDR, getCurrentBLP(),
+  ssread.hdr.set(MEPHeader::SS_SELECT_HDR, 1 << getCurrentIndex(),
 		 MEPHeader::READ);
 
   m_hdr = ssread.hdr;
@@ -80,7 +80,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
 
   LOG_DEBUG("handleack");
 
@@ -88,7 +88,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 			 getBoardPort().getName().c_str(), global_blp));
   
   // create array point to data in the response event
-  Array<uint16, 2> subbands((uint16*)&ss.ch,
+  Array<uint16, 2> subbands((uint16*)&ss.subbands,
 			    shape(MEPHeader::N_XBLETS, MEPHeader::N_POL),
 			    neverDeleteData);
 

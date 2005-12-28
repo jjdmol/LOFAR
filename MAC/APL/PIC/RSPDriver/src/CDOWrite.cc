@@ -135,7 +135,7 @@ uint16 CDOWrite::compute_ip_checksum(void* addr, int count)
 
 void CDOWrite::sendrequest()
 {
-  switch (getCurrentBLP()) {
+  switch (getCurrentIndex()) {
 
   case 0:
     {

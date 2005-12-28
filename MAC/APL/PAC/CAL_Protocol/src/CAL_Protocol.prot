@@ -15,6 +15,7 @@ include = '<APL/CAL_Protocol/AntennaGains.h>';
 include = '<APL/CAL_Protocol/SubArray.h>';
 include = '<APL/CAL_Protocol/SpectralWindow.h>';
 include = '<APL/RTCCommon/Timestamp.h>';
+include = '<APL/RSP_Protocol/RCUSettings.h>';
 
 include = '<bitset>';
 include = '<set>';
@@ -27,32 +28,6 @@ enum {
   ERR_RANGE,       // range error in message parameters
   ERR_NO_PARENT,   // no parent antenna array by that name found
   ERR_NO_SUBARRAY, // no subarray by that name found
-};
-
-//
-// WARNING: Don't modify this struct without modifying
-// it's partner in RSP_Protocol/include/APL/RSP_Protocol/RCUSettings.h
-// Example control values:
-// 
-// LB  10- 90MHz = 0xB9
-// HB 110-190MHz = 0xC6
-// HB 170-230MHz = 0xCE
-// HB 210-250MHx = 0xD6
-//
-typedef union RCUControl
-{
-  struct
-  {
-    uint8 lba_enable:1; // bit 0
-    uint8 hba_enable:1; // bit 1
-    uint8 bandsel:1;    // bit 2
-    uint8 filsel_a:1;   // bit 3
-    uint8 filsel_b:1;   // bit 4
-    uint8 vl_enable:1;  // bit 5
-    uint8 vh_enable:1;  // bit 6
-    uint8 vddvcc_en:1;  // bit 7
-  };
-  uint8 value;
 };
 
 static const int MAX_N_RCUS=256;
@@ -92,7 +67,7 @@ event = {
 	    // RCU control byte controls the setting of all
 	    // RCU's for this subarray
 	    name = "rcucontrol";
-	    type = "RCUControl";
+	    type = "RSP_Protocol::RCUSettings::Control";
       };
 };
 

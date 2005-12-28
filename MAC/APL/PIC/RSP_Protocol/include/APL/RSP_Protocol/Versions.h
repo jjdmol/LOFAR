@@ -26,6 +26,7 @@
 #define VERSIONS_H_
 
 #include <APL/RTCCommon/Marshalling.h>
+#include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <complex>
 #include <string>
@@ -49,9 +50,8 @@ namespace LOFAR {
       virtual ~Versions() {}
 
       /* get references to the version arrays */
-      blitz::Array<uint8, 1>& rsp();
-      blitz::Array<uint8, 1>& bp();
-      blitz::Array<uint8, 1>& ap();
+      blitz::Array<EPA_Protocol::RSRVersion, 1>& bp();
+      blitz::Array<EPA_Protocol::RSRVersion, 1>& ap();
 
     public:
       /*@{*/
@@ -68,18 +68,15 @@ namespace LOFAR {
        * Versions
        *
        * Dimensions of the arrays are:
-       *  - m_rsp_versions  [N_RSPBOARDS]
        *  - m_bp_versions   [N_RSPBOARDS]
-       *  - m_ap_versions   [N_RSPBOARDS]
+       *  - m_ap_versions   [N_RSPBOARDS * N_BLPS]
        */
-      blitz::Array<uint8, 1> m_rsp_versions;
-      blitz::Array<uint8, 1> m_bp_versions;
-      blitz::Array<uint8, 1> m_ap_versions;
+      blitz::Array<EPA_Protocol::RSRVersion, 1> m_bp_versions;
+      blitz::Array<EPA_Protocol::RSRVersion, 1> m_ap_versions;
     };
 
-    inline blitz::Array<uint8, 1>& Versions::rsp() { return m_rsp_versions; }
-    inline blitz::Array<uint8, 1>& Versions::bp()  { return m_bp_versions; }
-    inline blitz::Array<uint8, 1>& Versions::ap()  { return m_ap_versions; }
+    inline blitz::Array<EPA_Protocol::RSRVersion, 1>& Versions::bp()  { return m_bp_versions; }
+    inline blitz::Array<EPA_Protocol::RSRVersion, 1>& Versions::ap()  { return m_ap_versions; }
   };
 }; // namespace LOFAR
 

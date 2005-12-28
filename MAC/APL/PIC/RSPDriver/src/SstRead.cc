@@ -52,9 +52,9 @@ void SstRead::sendrequest()
 {
   EPAReadEvent sstread;
 
-  uint16 byteoffset = (getCurrentBLP() % SST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
+  uint16 byteoffset = (getCurrentIndex() % SST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
 
-  sstread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP() / SST_N_FRAGMENTS,
+  sstread.hdr.set(MEPHeader::SST_POWER_HDR, 1 << (getCurrentIndex() / SST_N_FRAGMENTS),
 		  MEPHeader::READ, N_SST_STATS * sizeof(uint32), byteoffset);
 
   m_hdr = sstread.hdr;
@@ -105,7 +105,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / SST_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentIndex() / SST_N_FRAGMENTS);
 
   uint16 offset = ack.hdr.m_fields.offset / sizeof(uint32);
   

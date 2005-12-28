@@ -38,7 +38,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL /** 2*/)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL * 2) // times 2 for writing waveforms
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -50,58 +50,55 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
-  if (getCurrentBLP() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  if (!Cache::getInstance().getBack().getWGSettings().getModified())
   {
-    if (!Cache::getInstance().getBack().getWGSettings().getModified())
-    {
-      setCompleted(true);
-      return;
-    }
-  
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+    setContinue(true);
+    return;
+  }
 
-    EPAWgSettingsEvent wgsettings;
+  if (getCurrentIndex() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  {
+    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + getCurrentIndex();
+
+    EPADiagWgEvent wgsettings;
 
     if (0 == global_rcu % MEPHeader::N_POL)
     {
-      wgsettings.hdr.set(MEPHeader::WG_XSETTINGS_HDR, getCurrentBLP() / 2);
+      wgsettings.hdr.set(MEPHeader::DIAG_WGX_HDR, 1 << (getCurrentIndex() / MEPHeader::N_POL));
     }
     else
     {
-      wgsettings.hdr.set(MEPHeader::WG_YSETTINGS_HDR, getCurrentBLP() / 2);
+      wgsettings.hdr.set(MEPHeader::DIAG_WGY_HDR, 1 << (getCurrentIndex() / MEPHeader::N_POL));
     }
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
-    wgsettings.freq        = w()(global_rcu).freq;
-    wgsettings.phase       = w()(global_rcu).phase;
-    wgsettings.ampl        = w()(global_rcu).ampl;
-    wgsettings.nof_samples = w()(global_rcu).nof_samples;
     wgsettings.mode        = w()(global_rcu).mode;
+    wgsettings.phase       = w()(global_rcu).phase;
+    wgsettings.nof_samples = w()(global_rcu).nof_samples;
+    wgsettings.freq        = w()(global_rcu).freq;
+    wgsettings.ampl        = w()(global_rcu).ampl;
+
+    // wgsettings.preset field is not set because it is not sent to the hardware
+    // (see struct definition in RSP_Protocol/include/APL/RSP_Protocol/WGSettings.h)
   
     m_hdr = wgsettings.hdr;
     getBoardPort().send(wgsettings);
   }
   else
   {
-    if (!Cache::getInstance().getBack().getWGSettings().getModified())
-    {
-      setCompleted(true);
-      return;
-    }
- 
-    int current_blp = getCurrentBLP() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + current_blp;
+    int currentIndex = getCurrentIndex() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL) + currentIndex;
 
-    EPAWgWaveEvent wgwave;
+    EPADiagWgwaveEvent wgwave;
 
     if (0 == global_rcu % MEPHeader::N_POL)
     {
-      wgwave.hdr.set(MEPHeader::WG_XWAVE_HDR, current_blp / 2);
+      wgwave.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR, 1 << (currentIndex / MEPHeader::N_POL));
     }
     else
     {
-      wgwave.hdr.set(MEPHeader::WG_YWAVE_HDR, current_blp / 2);
+      wgwave.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR, 1 << (currentIndex / MEPHeader::N_POL));
     }
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();

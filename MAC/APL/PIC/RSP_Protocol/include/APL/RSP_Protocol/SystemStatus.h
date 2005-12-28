@@ -25,12 +25,12 @@
 #ifndef SYSTEMSTATUS_H_
 #define SYSTEMSTATUS_H_
 
-#include "EPA_Protocol.ph"
-
 #include <iostream>
 #include <complex>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
+
+#include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 namespace LOFAR {
   namespace RSP_Protocol {
@@ -38,6 +38,14 @@ namespace LOFAR {
     class SystemStatus
     {
     public:
+      /**
+       * RCUStatus as used in the CacheBuffer
+       */
+      typedef struct RCUStatus {
+	uint8  pll;
+	uint32 nof_overflow;
+      };
+
       /**
        * Constructors for a SystemStatus object.
        * Currently the tv_usec part is always set to 0 irrespective
@@ -53,7 +61,7 @@ namespace LOFAR {
        * Member accessor functions.
        */
       blitz::Array<EPA_Protocol::BoardStatus, 1>& board();
-      blitz::Array<EPA_Protocol::RCUStatus,   1>& rcu();
+      blitz::Array<RCUStatus, 1>&                 rcu();
       /*@}*/
 
     public:
@@ -76,7 +84,7 @@ namespace LOFAR {
        *  - m_rcu_status    [N_RCUS]
        */
       blitz::Array<EPA_Protocol::BoardStatus, 1> m_board_status;
-      blitz::Array<EPA_Protocol::RCUStatus,   1> m_rcu_status;
+      blitz::Array<RCUStatus, 1>                 m_rcu_status;
       /*@}*/
     };
 
@@ -85,7 +93,7 @@ namespace LOFAR {
       return m_board_status;
     }
 
-    inline blitz::Array<EPA_Protocol::RCUStatus,  1>& SystemStatus::rcu()
+    inline blitz::Array<SystemStatus::RCUStatus, 1>& SystemStatus::rcu()
     {
       return m_rcu_status;
     }

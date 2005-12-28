@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  WriteReg.h: Write a register on a RSP board. Read status to verify correct writing.
+//#  RSUWrite.h: Write a register on a RSP board. Read status to verify correct writing.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef WRITEREG_H_
-#define WRITEREG_H_
+#ifndef RSUWRITE_H_
+#define RSUWRITE_H_
 
 #include <Common/LofarTypes.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
@@ -33,25 +33,17 @@
 namespace LOFAR {
   namespace RSP {
 
-    class WriteReg : public SyncAction
+    class RSUWrite : public SyncAction
     {
     public:
       /**
-       * Constructors for a WriteReg object.
+       * Constructors for a RSUWrite object.
        */
-      WriteReg(GCFPortInterface& board_port, int board_id,
-	       uint16 dstid, uint8 pid, uint8 regid, uint16 size,
-	       uint16 offset = 0);
+      RSUWrite(GCFPortInterface& board_port, int board_id);
 	  
-      /* Destructor for WriteReg. */
-      virtual ~WriteReg();
+      /* Destructor for RSUWrite. */
+      virtual ~RSUWrite();
 
-      /**
-       * Set the source address of the data that is
-       * to be written to the RSP board.
-       */
-      void setSrcAddress(void* address);
-      
       /**
        * Send the write message.
        */
@@ -68,16 +60,9 @@ namespace LOFAR {
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      uint16 m_dstid;
-      uint8  m_pid;
-      uint8  m_regid;
-      uint16 m_size;
-      uint16 m_offset;
-      void*  m_source_address;
-
       EPA_Protocol::MEPHeader m_hdr;
     };
   };
 };
      
-#endif /* WRITEREG_H_ */
+#endif /* RSUWRITE_H_ */

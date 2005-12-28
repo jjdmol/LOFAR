@@ -79,14 +79,14 @@ namespace LOFAR
 	  LOFAR::uint32 m_handle; // subscription handle
 	  int m_counter1; // general purpose test counter, semantics assigned per test
 
-	  string m_name;        // name of the current array
-	  string m_arrayname;   // name of the new subarray
-	  string m_parentname;  // name of the parent array of the subarray
-	  int    m_nantennas;   // number of antennas in the array
-	  int    m_clock;       // frequency of the sampling clock
-	  int    m_nyquistzone; // nyquistzone of interest
-	  uint8  m_rcucontrol;  // value for RCU control register for RCU's of this subarray
-	  int    m_subarrayid;  // array 0 is full array, 1 is odd antennas (e.g. 1,3,5,etc), 2 is even antennas (e.g. 0,2,5,etc)
+	  string  m_name;        // name of the current array
+	  string  m_arrayname;   // name of the new subarray
+	  string  m_parentname;  // name of the parent array of the subarray
+	  int     m_nantennas;   // number of antennas in the array
+	  int     m_clock;       // frequency of the sampling clock
+	  int     m_nyquistzone; // nyquistzone of interest
+	  uint32  m_rcucontrol;  // value for RCU control register for RCU's of this subarray
+	  int     m_subarrayid;  // array 0 is full array, 1 is odd antennas (e.g. 1,3,5,etc), 2 is even antennas (e.g. 0,2,5,etc)
 	};
 
     };

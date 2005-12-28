@@ -32,12 +32,15 @@ namespace LOFAR {
 
     class SyncAction : public GCFFsm
     {
+      // declare Scheduler a friend so it can access doContinue()
+      friend class Scheduler;
+
     public:
       /**
        * Constructors for a SyncAction object.
        * Default direction is read.
        */
-      SyncAction(GCFPortInterface& board_port, int board_id, int n_blps);
+      SyncAction(GCFPortInterface& board_port, int board_id, int n_indices);
 	  
       /* Destructor for SyncAction. */
       virtual ~SyncAction();
@@ -74,29 +77,40 @@ namespace LOFAR {
       /**
        * Has the state machine reached its final state?
        */
-      void setCompleted(bool final);
+      void setCompleted(bool completed);
       bool hasCompleted() const;
       /*@}*/
 
       /**
-       * Get index of current local BLP.
+       * Get index of current local index
        */
-      int getCurrentBLP() const;
+      int getCurrentIndex() const;
 
       /**
        * Reset the statemachine to the initial state.
        */
       void reset();
 
-    private:
-      SyncAction();
+    protected:
+      /*@{*/
+      /**
+       * setContinue(true) is called when no event
+       * has been sent and we need to continue to the next index.
+       */
+      void setContinue(bool cont);
+      bool doContinue() const;
+      /*@}*/
 
+   private:
+      SyncAction();
+ 
     private:
       GCFPortInterface& m_board_port;
       int               m_board_id;
       bool              m_completed; /** indicates whether the state machine has reached its final state */
-      int               m_n_blps;
-      int               m_current_blp;
+      bool              m_continue; /** no event sent, continue to index */
+      int               m_n_indices;
+      int               m_current_index;
       int               m_retries;
     };
   };

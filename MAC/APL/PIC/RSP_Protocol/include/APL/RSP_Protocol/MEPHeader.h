@@ -49,7 +49,7 @@ namespace LOFAR {
       /**
        * Size of MEP header in bytes.
        */
-      static const unsigned int SIZE = 12;
+      static const unsigned int SIZE = 16;
 
       /*@{*/
       /**
@@ -68,92 +68,134 @@ namespace LOFAR {
       /**
        * Address constants
        *
-       * Destination ID
-       * RSP Board: bit7 set, all other bits 0 (= 0x80)
-       * BLP:       bit7 unset, other bits indicate which BLP is addressed.
-       * Two broadcasts are supported:
-       * To all BLP's: 0x7F
-       * To all BLP's and the RSP board: 0xFF
+       * Definition of the addr.dstid values.
+       * Any of DST_BLP* and DST_RSP may be or-ed together
+       * to multicast to those destinations.
        */
-      static const uint8 DST_BLP            = 0x00; /* BLP's are addressed starting from 0x00 */
-      static const uint8 DST_RSP            = 0x80; /* Destination id of the RSP board */
-      static const uint8 DST_BROADCAST_BLPS = 0x7F; /* Broadcast to all BLP's but not the RSP */
-      static const uint8 DST_BROADCAST      = 0xFF; /* Broadcast to RSP and all BLP's */
+      static const uint16 DST_BLP0     = 0x0001; /* BLP 0, byte 0, bit 0  */
+      static const uint16 DST_BLP1     = 0x0002; /* BLP 1, byte 0, bit 1  */
+      static const uint16 DST_BLP2     = 0x0004; /* BLP 2, byte 0, bit 2  */
+      static const uint16 DST_BLP3     = 0x0008; /* BLP 3, byte 0, bit 3  */
+      static const uint16 DST_RSP      = 0x0100; /* RSP,   byte 1, bit 0 */
+
+      /* multicast constants */
+      static const uint16 DST_ALL_BLPS = DST_BLP0 | DST_BLP1 | DST_BLP2 | DST_BLP3; /* All BLP, but not the RSP */
+      static const uint16 DST_ALL      = DST_ALL_BLPS | DST_RSP;                    /* All FPGA's (including RSP) */
       /*@}*/
 
       /*@{*/
       /**
        * Process IDs
+       *
+       * Constants extracted from MEP VHDL
+       *
+       * CONSTANT c_mep_pid_rsr     : NATURAL :=  1;
+       * CONSTANT c_mep_pid_rsu     : NATURAL :=  2;
+       * CONSTANT c_mep_pid_diag    : NATURAL :=  3;
+       * CONSTANT c_mep_pid_ss      : NATURAL :=  4;
+       * CONSTANT c_mep_pid_bf      : NATURAL :=  5;
+       * CONSTANT c_mep_pid_bst     : NATURAL :=  6;
+       * CONSTANT c_mep_pid_sst     : NATURAL :=  7;
+       * CONSTANT c_mep_pid_rcuh    : NATURAL :=  8;
+       * CONSTANT c_mep_pid_cr      : NATURAL :=  9;
+       * CONSTANT c_mep_pid_xst     : NATURAL := 10;
+       * CONSTANT c_mep_pid_cdo     : NATURAL := 11;
+       * CONSTANT c_mep_pid_bs      : NATURAL := 12;
+       * CONSTANT c_mep_pid_serdes  : NATURAL := 13;
+       * CONSTANT c_mep_pid_tdsh    : NATURAL := 14;
+       * CONSTANT c_mep_pid_tbb     : NATURAL := 15;
+       * 
        */
-      static const uint8 RSR     = 0x00; /* Status overview */
-      static const uint8 TST     = 0x01; /* Selftest functionality */
-      static const uint8 CFG     = 0x02; /* FPGA configuration and reset */
-      static const uint8 WG      = 0x03; /* Waveform generator */
-      static const uint8 SS      = 0x04; /* Subband select */
-      static const uint8 BF      = 0x05; /* Beamformer */
-      static const uint8 BST     = 0x06; /* Beamformer statistics */
-      static const uint8 SST     = 0x07; /* Subband statistics */
-      static const uint8 RCU     = 0x08; /* RCU control */
-      static const uint8 CRR     = 0x09; /* RSP clock and reset */
-      static const uint8 CRB     = 0x0A; /* BLP clock and reset */
-      static const uint8 CDO     = 0x0B; /* CEP Data Output */
-      static const uint8 XST     = 0x0C; /* Crosslet statistics */
+      static const uint8 RSR       = 0x01; /* Status overview            [RSP/BLP] */
+      static const uint8 RSU       = 0x02; /* FPGA remote system update. [RSP    ] */
+      static const uint8 DIAG      = 0x03; /* Diagnostics                [RSP/BLP] */
+      static const uint8 SS        = 0x04; /* Subband select             [    BLP] */
+      static const uint8 BF        = 0x05; /* Beamformer                 [    BLP] */
+      static const uint8 BST       = 0x06; /* Beamformer statistics      [RSP    ] */
+      static const uint8 SST       = 0x07; /* Subband statistics         [    BLP] */
+      static const uint8 RCU       = 0x08; /* RCU control                [    BLP] */
+      static const uint8 CR        = 0x09; /* Clock and reset            [RSP/BLP] */
+      static const uint8 XST       = 0x0A; /* Clock and reset            [RSP/BLP] */
+      static const uint8 CDO       = 0x0B; /* CEP Data Output            [RSP    ] */
+      static const uint8 BS        = 0x0C; /* Block Synchronization      [    BLP] */
+      static const uint8 SERDES    = 0x0D; /* Reserved1                            */
+      static const uint8 TDS       = 0x0E; /* Time distribution board    [RSP    ] */
+      static const uint8 TBB       = 0x0F; /* Transient Buffer Board     [    BLP] */ /* Is this correct? Should it not be RSP? */
 
-      static const int MAX_PID = XST; /* counting from 0 */
+      static const int MIN_PID = RSR; /* loops over PID should be from */ 
+      static const int MAX_PID = TBB; /* pid = MIN_PID; pid <= MAX_PID */
       /*@}*/
 
       /*@{*/
       /**
        * Register IDs
        */
-      static const uint8 RSR_STATUS    = 0x00;
-      static const uint8 RSR_VERSION   = 0x01;
+      static const uint8 RSR_STATUS       = 0x00;
+      static const uint8 RSR_VERSION      = 0x01;
 
-      static const uint8 TST_SELFTEST  = 0x00;
+      static const uint8 RSU_FLASHRW      = 0x01;
+      static const uint8 RSU_FLASHERASE   = 0x02;
+      static const uint8 RSU_RECONFIGURE  = 0x03;
+      static const uint8 RSU_RESET        = 0x04;
 
-      static const uint8 CFG_RESET     = 0x00;
-      static const uint8 CFG_REPROGRAM = 0x01;
-
-      static const uint8 WG_XSETTINGS  = 0x00;
-      static const uint8 WG_YSETTINGS  = 0x01;
-      static const uint8 WG_XWAVE      = 0x02;
-      static const uint8 WG_YWAVE      = 0x03;
+      static const uint8 DIAG_WGX         = 0x00;
+      static const uint8 DIAG_WGY         = 0x01;
+      static const uint8 DIAG_WGXWAVE     = 0x02;
+      static const uint8 DIAG_WGYWAVE     = 0x03;
+      static const uint8 DIAG_BYPASS      = 0x04;
+      static const uint8 DIAG_RESULTS     = 0x05;
+      static const uint8 DIAG_SELFTEST    = 0x06;
       
-      static const uint8 SS_SELECT     = 0x00;
+      static const uint8 SS_SELECT        = 0x00;
 
-      static const uint8 BF_XROUT      = 0x00;
-      static const uint8 BF_XIOUT      = 0x01;
-      static const uint8 BF_YROUT      = 0x02;
-      static const uint8 BF_YIOUT      = 0x03;
+      static const uint8 BF_XROUT         = 0x00;
+      static const uint8 BF_XIOUT         = 0x01;
+      static const uint8 BF_YROUT         = 0x02;
+      static const uint8 BF_YIOUT         = 0x03;
 
-      static const uint8 BST_POWER     = 0x00; // used as index in statistics array
+      static const uint8 BST_POWER        = 0x00;
 
-      static const uint8 SST_POWER     = 0x00; // used as index in statistics array
+      static const uint8 SST_POWER        = 0x00;
 
-      static const uint8 RCU_SETTINGS  = 0x00;
+      static const uint8 RCU_SETTINGS     = 0x00;
+      static const uint8 RCU_PROTOCOLX    = 0x01;
+      static const uint8 RCU_RESULTSX     = 0x02;
+      static const uint8 RCU_PROTOCOLY    = 0x03;
+      static const uint8 RCU_RESULTSY     = 0x04;
 
-      static const uint8 CRR_SOFTRESET = 0x00;
-      static const uint8 CRR_SOFTPPS   = 0x01;
+      static const uint8 CR_CONTROL       = 0x00;
 
-      static const uint8 CRB_SOFTRESET = 0x00;
-      static const uint8 CRB_SOFTPPS   = 0x01;
+      static const uint8 XST_STATS        = 0x00;
+      static const uint8 XST_0_X          = XST_STATS + 0; // 8 registers, two for each AP
+      static const uint8 XST_0_Y          = XST_STATS + 1;
+      static const uint8 XST_1_X          = XST_STATS + 2;
+      static const uint8 XST_1_Y          = XST_STATS + 3;
+      static const uint8 XST_2_X          = XST_STATS + 4;
+      static const uint8 XST_2_Y          = XST_STATS + 5;
+      static const uint8 XST_3_X          = XST_STATS + 6;
+      static const uint8 XST_3_Y          = XST_STATS + 7;
+      static const uint8 XST_NR_STATS     = XST_3_Y + 1;
 
+      /**
+       * The CDO register will be extended to 
+       * allow setting the UDP/IP header and some
+       * settings to set interleaving of beamlets.
+       */
       static const uint8 CDO_SETTINGS  = 0x00;
       static const uint8 CDO_HEADER    = 0x01;
 
-      static const uint8 XST_STATS     = 0x00;
-      static const uint8 XST_0_X       = XST_STATS + 0; // 8 registers, two for each AP
-      static const uint8 XST_0_Y       = XST_STATS + 1;
-      static const uint8 XST_1_X       = XST_STATS + 2;
-      static const uint8 XST_1_Y       = XST_STATS + 3;
-      static const uint8 XST_2_X       = XST_STATS + 4;
-      static const uint8 XST_2_Y       = XST_STATS + 5;
-      static const uint8 XST_3_X       = XST_STATS + 6;
-      static const uint8 XST_3_Y       = XST_STATS + 7;
-      static const uint8 XST_MAX_STATS = XST_STATS + 8;
+      static const uint8 BS_NOF_SAMPLES_PER_SYNC = 0x00;
 
-      static const int MAX_REGID = 0x07; // XST_3_Y
-      
+      static const uint8 TDS_PROTOCOL            = 0x00;
+      static const uint8 TDS_RESULTS             = 0x01;
+
+      /**
+       * Placeholder register for future TBB control via the RSP board.
+       */
+      static const uint8 TBB_CONTROL      = 0x00;
+
+      static const int MAX_REGID          = XST_3_Y; // XST_3_Y
+
       /*@}*/
 
       /*@{*/
@@ -194,46 +236,68 @@ namespace LOFAR {
       //
       static const uint16 MAX_XLETS_PER_FRAGMENT = FRAGMENT_SIZE / XLET_SIZE;
       static const uint16 XST_FRAGMENT_SIZE = MIN(N_GLOBAL_XLETS, MAX_XLETS_PER_FRAGMENT) * XLET_SIZE;
+      /*@}*/
+
       
+      /*@{*/
       /**
-       * Read/write sizes in octets (= bytes)
+       * Define size of each register.
        */
-      static const uint16 RSR_STATUS_SIZE    = 128;
-      static const uint16 RSR_VERSION_SIZE   = 3;
+      static const uint16 RSR_STATUS_SIZE       = 164;
+      static const uint16 RSR_VERSION_SIZE      = 3;
       
-      static const uint16 TST_SELFTEST_SIZE  = 1;
-      
-      static const uint16 CFG_REPROGRAM_SIZE = 1;
-      
-      static const uint16 WG_XSETTINGS_SIZE  = 7;
-      static const uint16 WG_YSETTINGS_SIZE  = 7;
-      static const uint16 WG_XWAVE_SIZE      = 1024;
-      static const uint16 WG_YWAVE_SIZE      = 1024;
-      
-      static const uint16 SS_SELECT_SIZE     = N_XBLETS * N_POL * sizeof(uint16);
+      static const uint16 RSU_FLASHRW_SIZE      = 1024;
+      static const uint16 RSU_FLASHERASE_SIZE   = 1;
+      static const uint16 RSU_RECONFIGURE_SIZE  = 1;
+      static const uint16 RSU_RESET_SIZE        = 1;
 
-      static const uint16 BF_XROUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_XIOUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YROUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
-      static const uint16 BF_YIOUT_SIZE      = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 DIAG_WGX_SIZE         = 12;
+      static const uint16 DIAG_WGY_SIZE         = 12;
+      static const uint16 DIAG_WGXWAVE_SIZE     = 1024;
+      static const uint16 DIAG_WGYWAVE_SIZE     = 1024;
+      static const uint16 DIAG_BYPASS_SIZE      = 1;
+      static const uint16 DIAG_RESULTS_SIZE     = 4096;
+      static const uint16 DIAG_SELFTEST_SIZE    = 4;
       
-      static const uint16 BST_POWER_SIZE     = N_BEAMLETS * N_POL * sizeof(uint32); // TODO: should this be N_XBLETS too?
+      static const uint16 SS_SELECT_SIZE        = N_XBLETS * N_POL * sizeof(uint16);
 
+      static const uint16 BF_XROUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_XIOUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YROUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YIOUT_SIZE         = N_XBLETS * N_PHASEPOL * sizeof(int16);
 
-      static const uint16 SST_POWER_SIZE     = N_SUBBANDS * N_POL * sizeof(uint32);
-      
-      static const uint16 RCU_SETTINGS_SIZE  = 2;
-      
-      static const uint16 CRR_SOFTRESET_SIZE = 1;
-      static const uint16 CRR_SOFTPPS_SIZE   = 1;
-      
-      static const uint16 CRB_SOFTRESET_SIZE = 1;
-      static const uint16 CRB_SOFTPPS_SIZE   = 1;
-      
+      static const uint16 BST_POWER_SIZE        = N_BEAMLETS * N_POL * sizeof(uint32); // TODO: should this be N_XBLETS too?
+
+      static const uint16 SST_POWER_SIZE        = N_SUBBANDS * N_POL * sizeof(uint32);
+
+      static const uint16 RCU_SETTINGS_SIZE     = 3;
+      static const uint16 RCU_PROTOCOLX_SIZE    = 128;
+      static const uint16 RCU_RESULTSX_SIZE     = 128;
+      static const uint16 RCU_PROTOCOLY_SIZE    = 128;
+      static const uint16 RCU_RESULTSY_SIZE     = 128;
+
+      static const uint16 CR_CONTROL_SIZE       = 1;
+
+      static const uint16 XST_STATS_SIZE     = (N_GLOBAL_XLETS + N_XLETS) * XLET_SIZE;
+
+      /**
+       * The CDO register will be extended to 
+       * allow setting the UDP/IP header and some
+       * settings to set interleaving of beamlets.
+       */
       static const uint16 CDO_SETTINGS_SIZE  = 16;
       static const uint16 CDO_HEADER_SIZE    = 32;
 
-      static const uint16 XST_STATS_SIZE     = (N_GLOBAL_XLETS + N_XLETS) * XLET_SIZE;
+      static const uint16 BS_NOF_SAMPLES_PER_SYNC_SIZE     = 4;
+
+      static const uint16 TDS_PROTOCOL_SIZE     = 128;
+      static const uint16 TDS_RESULTS_SIZE      = 128;
+
+      /**
+       * Placeholder register for future TBB control via the RSP board.
+       */
+      static const uint16 TBB_CONTROL_SIZE      = 0;
+
       /*@}*/
 
     public:
@@ -248,23 +312,24 @@ namespace LOFAR {
 
     public:
       /**
-       * MEP header fields
+       * MEP 4.x header fields
        */
       typedef struct
       {
-	uint8  type;      /* Message type */
-	uint8  error;     /* Error indicator */
-	uint16 seqnr;     /* Sequence number */
+	uint8  type;           /* Message type */
+	uint8  status;         /* Error indicator */
+	uint16 frame_length;   /* Frame length */
 	typedef struct 
 	{
-	  uint8 dstid;  /* Destination ID */
-	  uint8 pid;    /* Process ID */
-	  uint8 regid;  /* Register ID */
-	  uint8 ffi;    /* for future implementation */
+	  uint16 dstid;        /* Beamlet processor and RSP ID */
+	  uint8  pid;          /* Process ID */
+	  uint8  regid;        /* Register ID */
 	} AddrType;
-	AddrType addr;    /* addr */
-	uint16 offset;    /* Register offset */
-	uint16 size;      /* Read/write size */
+	AddrType addr;         /* addr */
+	uint16 offset;         /* Offset address */
+	uint16 payload_length; /* Payload length (size) */
+	uint16 seqnr;          /* Sequence number */
+	uint16 _reserved;      /* Do not use; future use */
       } FieldsType;
 
       FieldsType m_fields;
@@ -276,17 +341,17 @@ namespace LOFAR {
        * Methods to set header fields.
        */
       void set(uint8  type,
-	       uint8  dstid,
+	       uint16 dstid,
 	       uint8  pid,
 	       uint8  regid,
-	       uint16 size,
+	       uint16 payload_length,
 	       uint16 offset = 0);
 
       void set(MEPHeader::FieldsType hdrtemplate,
-	       uint8  dstid  = DST_RSP,
-	       uint8  type   = MEPHeader::TYPE_UNSET,
-	       uint16 size   = 0,
-	       uint16 offset = 0);
+	       uint16 dstid          = DST_RSP,
+	       uint8  type           = MEPHeader::TYPE_UNSET,
+	       uint16 payload_length = 0,
+	       uint16 offset         = 0);
       /*@}*/
 
       /**
@@ -304,15 +369,19 @@ namespace LOFAR {
       //
       static const FieldsType RSR_STATUS_HDR;
       static const FieldsType RSR_VERSION_HDR;
+      
+      static const FieldsType RSU_FLASHRW_HDR;
+      static const FieldsType RSU_FLASHERASE_HDR;
+      static const FieldsType RSU_RECONFIGURE_HDR;
+      static const FieldsType RSU_RESET_HDR;
 
-      static const FieldsType TST_SELFTEST_HDR;
-
-      static const FieldsType CFG_REPROGRAM_HDR;
-
-      static const FieldsType WG_XSETTINGS_HDR;
-      static const FieldsType WG_YSETTINGS_HDR;
-      static const FieldsType WG_XWAVE_HDR;
-      static const FieldsType WG_YWAVE_HDR;
+      static const FieldsType DIAG_WGX_HDR;
+      static const FieldsType DIAG_WGY_HDR;
+      static const FieldsType DIAG_WGXWAVE_HDR;
+      static const FieldsType DIAG_WGYWAVE_HDR;
+      static const FieldsType DIAG_BYPASS_HDR;
+      static const FieldsType DIAG_RESULTS_HDR;
+      static const FieldsType DIAG_SELFTEST_HDR;
       
       static const FieldsType SS_SELECT_HDR;
 
@@ -321,24 +390,29 @@ namespace LOFAR {
       static const FieldsType BF_YROUT_HDR;
       static const FieldsType BF_YIOUT_HDR;
 
-      static const FieldsType BST_MEAN_HDR;
       static const FieldsType BST_POWER_HDR;
 
-      static const FieldsType SST_MEAN_HDR;
       static const FieldsType SST_POWER_HDR;
 
       static const FieldsType RCU_SETTINGS_HDR;
+      static const FieldsType RCU_PROTOCOLX_HDR;
+      static const FieldsType RCU_RESULTSX_HDR;
+      static const FieldsType RCU_PROTOCOLY_HDR;
+      static const FieldsType RCU_RESULTSY_HDR;
 
-      static const FieldsType CRR_SOFTRESET_HDR;
-      static const FieldsType CRR_SOFTPPS_HDR;
+      static const FieldsType CR_CONTROL_HDR;
 
-      static const FieldsType CRB_SOFTRESET_HDR;
-      static const FieldsType CRB_SOFTPPS_HDR;
+      static const FieldsType XST_STATS_HDR;
 
       static const FieldsType CDO_SETTINGS_HDR;
       static const FieldsType CDO_HEADER_HDR;
 
-      static const FieldsType XST_STATS_HDR;
+      static const FieldsType BS_NOF_SAMPLES_PER_SYNC_HDR;
+
+      static const FieldsType TDS_PROTOCOL_HDR;
+      static const FieldsType TDS_RESULTS_HDR;
+
+      static const FieldsType TBB_CONTROL_HDR;
       /*@}*/
     };
   };

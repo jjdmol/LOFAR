@@ -1,6 +1,25 @@
-
 #
 # Configuration for EPAStub
 #
 
-# None for the moment
+#
+# MAC address of lofar27, eth2, 00:0A:5E:46:5D:ED
+# This sets the destination MAC address of the EPA response events
+#
+EPAStub.MAC_ADDR_RSPDRIVER=00:50:04:32:B8:5C
+
+#
+# Interface on which to listen for RSPDriver events
+#
+EPAStub.IF_NAME=eth2
+
+#
+# Number of BLP's per RSP board
+# Needed to dimension registers appropriately.
+#
+EPAStub.N_BLPS=4
+
+#
+# Number of TD boards
+#
+EPAStub.N_TDBOARDS=6

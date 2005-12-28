@@ -1,6 +1,3 @@
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
 
 INSTHDRS = \
 	MEPHeader.h \
@@ -21,10 +18,8 @@ NOINSTHDRS =
 
 TCCHDRS =
 
-#nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-apldir = $(includedir)/APL/RSP_Protocol
-apl_HEADERS = $(INSTHDRS) $(TCCHDRS)
+pkgincludedir = $(includedir)/APL/RSP_Protocol
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 

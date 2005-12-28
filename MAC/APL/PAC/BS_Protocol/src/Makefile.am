@@ -3,6 +3,7 @@ AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	cp $@ $(top_builddir)/include/APL/BS_Protocol
 
 BUILT_SOURCES = \
 	BS_Protocol.ph
@@ -13,7 +14,8 @@ pkgincludedir=$(includedir)/APL/BS_Protocol
 pkginclude_HEADERS = \
 	$(BUILT_SOURCES)
 
-lib_LTLIBRARIES         = libbs_protocol.la
+lib_LTLIBRARIES = \
+	libbs_protocol.la
 
 libbs_protocol_la_SOURCES = \
 	$(BUILT_SOURCES) \
