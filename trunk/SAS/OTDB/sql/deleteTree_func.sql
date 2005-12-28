@@ -65,10 +65,6 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		  RAISE EXCEPTION \'Active trees may not be deleted\';
 		END IF;
 
-		-- delete tree entry
-		DELETE FROM OTDBtree
-		WHERE  treeID = $2;
-
 		-- delete state history
 		DELETE FROM StateHistory
 		WHERE  treeID = $2;
@@ -76,15 +72,19 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		-- delete tree		
 		IF vOldTree.treetype = TThardware THEN
 		  DELETE FROM PIChierarchy
-		  WHERE	 treeID = vOldTree.treeID;
+		  WHERE	 treeID = $2;
 		ELSIF vOldTree.treetype = TTtemplate THEN
 		  DELETE FROM VICtemplate
-		  WHERE	 treeID = vOldTree.treeID;
+		  WHERE	 treeID = $2;
 		ELSE
 		  -- TODO: DELETE KVTs ALSO
 		  DELETE FROM VIChierarchy
-		  WHERE	 treeID = vOldTree.treeID;
+		  WHERE	 treeID = $2;
 		END IF;
+
+		-- Finally delete tree entry
+		DELETE FROM OTDBtree
+		WHERE  treeID = $2;
 
 		RETURN;
 	END;
