@@ -87,23 +87,13 @@ CacheBuffer::CacheBuffer()
   }
 
   m_rcusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
-  m_rcusettings() = RCUSettings::RCURegisterType();
+  RCUSettings::Control rcumode;
+  rcumode.setMode(RCUSettings::Control::MODE_OFF);
+  m_rcusettings() = rcumode;
 
-  if (GET_CONFIG("RSPDriver.SWAP_RCU_BITS", i))
-  {
-    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
-    {
-      m_rcusettings()(i).value = 82;
-    }
-  }
-  else
-  {
-    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
-    {
-      m_rcusettings()(i).value = 0xB9; // low band, no filter
-    }
-  }
-  
+  // allocate modified flags for all receivers
+  m_rcusettings.getModifiedFlags().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
+
   m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   
   WGSettings::WGRegisterType init;
@@ -137,25 +127,22 @@ CacheBuffer::CacheBuffer()
   m_systemstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_systemstatus.rcu().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
 
-  BoardStatus boardinit;
-  RCUStatus   rcuinit;
+  BoardStatus             boardinit;
+  SystemStatus::RCUStatus rcuinit = { 0, 0 };
 
   memset(&boardinit, 0, sizeof(BoardStatus));
-  memset(&rcuinit,   0, sizeof(RCUStatus));
   
   m_systemstatus.board() = boardinit;
   m_systemstatus.rcu()   = rcuinit;
 
-  m_versions.rsp().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
-  m_versions.rsp() = 0;
+  EPA_Protocol::RSRVersion versioninit = { 0, 0, 0, 0, 0 };
   m_versions.bp().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
-  m_versions.bp() = 0;
-  m_versions.ap().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
-  m_versions.ap() = 0;
+  m_versions.bp() = versioninit;
+  m_versions.ap().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i));
+  m_versions.ap() = versioninit;
 
   m_clocks().resize(GET_CONFIG("RS.N_TDBOARDS", i));
   m_clocks() = GET_CONFIG("RSPDriver.DEFAULT_SAMPLING_FREQUENCY", i);
-  m_clocks.setModified();
 
   // print sizes of the cache
   LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
@@ -166,10 +153,9 @@ CacheBuffer::CacheBuffer()
   LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
   LOG_DEBUG_STR("m_xcstats().size()            =" << m_xcstats().size()            * sizeof(complex<double>));
   LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
-  LOG_DEBUG_STR("m_systemstatus.rcu().size()   =" << m_systemstatus.rcu().size()   * sizeof(EPA_Protocol::RCUStatus));
-  LOG_DEBUG_STR("m_versions.rsp().size()       =" << m_versions.rsp().size()       * sizeof(uint8));
-  LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(uint8));
-  LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_systemstatus.rcu().size()   =" << m_systemstatus.rcu().size()   * sizeof(SystemStatus::RCUStatus));
+  LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(EPA_Protocol::RSRVersion));
+  LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -184,7 +170,6 @@ CacheBuffer::~CacheBuffer()
   m_xcstats().free();
   m_systemstatus.board().free();
   m_systemstatus.rcu().free();
-  m_versions.rsp().free();
   m_versions.bp().free();
   m_versions.ap().free();
 }
@@ -270,8 +255,15 @@ Cache::Cache() : m_front(0), m_back(0)
   //
   WGSettings::initWaveformPresets();
 
-  m_front = new CacheBuffer();
-  m_back = new CacheBuffer();
+  m_front = new CacheBuffer(); ASSERT(m_front);
+  m_back = new CacheBuffer();  ASSERT(m_back);
+
+  //
+  // Make sure initial settings are sent
+  //
+  m_back->getWGSettings().setModified();
+  m_back->getClocks().setModified();
+  m_back->getRCUSettings().getModifiedFlags() = true;
 }
 
 Cache::~Cache()
@@ -285,6 +277,7 @@ void Cache::swapBuffers()
   // clear modified flags on back buffer
   m_back->getWGSettings().clearModified();
   m_back->getClocks().clearModified();
+  m_back->getRCUSettings().clearModified();
 
   CacheBuffer *tmp = m_front;
   m_front = m_back;

@@ -28,7 +28,7 @@ dnl AC_CHECK_LIB(cosev_r, main)
 dnl dnl Replace `main' with a function in -lcosnm_r:
 dnl AC_CHECK_LIB(cosnm_r, main)
 dnl dnl Replace `main' with a function in -lorb_r:
-dnl AC_CHECK_LIB(orb_r, main)
+
 dnl dnl Replace `main' with a function in -lpthread:
 dnl AC_CHECK_LIB(pthread, main)
 dnl dnl Replace `main' with a function in -lvport_r:
@@ -58,8 +58,8 @@ lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-6_1rc2, 1, GCF/PAL/GCF_Answer.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-6_1rc2, 1, GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, MAC-RTC-4_2-branch, 1, APL/RTCCommon/Marshalling.h,,)
-lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol,MAC-RTC-4_2-branch,1, APL/RSP_Protocol/RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, HEAD, 1, APL/RTCCommon/Marshalling.h,,)
+lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol,HEAD,1, APL/RSP_Protocol/RSP_Protocol.ph,,)
 
 dnl
 dnl Output Makefiles

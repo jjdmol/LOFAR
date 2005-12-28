@@ -27,13 +27,18 @@ EPAStub_LDADD = \
 
 BUILT_SOURCES = \
 	RSPTest.conf \
-	EPAStub.conf
+	EPAStub.conf \
+	EPAStub.log_prop
 
 EXTRA_DIST = $(BUILT_SOURCES)
 
 sysconf_DATA = \
 	EPAStub.conf \
-	RSPTest.conf
+	RSPTest.conf \
+	EPAStub.log_prop
+
+%.log_prop: %.log_prop.in
+	cp $< $@
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

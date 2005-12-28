@@ -31,16 +31,44 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
+const uint32 RCUSettings::Control::m_mode[] = {
+  0x00000000, // MODE_OFF
+  0x00017900, // MODE_LBL_HPF10MHZ
+  0x00057900, // MODE_LBL_HPF30MHZ
+  0x00037A00, // MODE_LBH_HPF10MHZ
+  0x00077A00, // MODE_LBH_HPF30MHZ 
+  0x0007A400, // MODE_HB_110_190MHZ
+  0x00079400, // MODE_HB_170_230MHZ
+  0x00078400, // MODE_HB_210_290MHZ
+};
+
+void RCUSettings::setModified(int rcu, bool modified)
+{
+  ASSERT(rcu >= 0 && rcu < m_modified.extent(firstDim));
+  m_modified(rcu) = modified;
+}
+
+bool RCUSettings::getModified(int rcu) const
+{
+  ASSERT(rcu >= 0 && rcu < m_modified.extent(firstDim));
+  return m_modified(rcu);
+}
+
+void RCUSettings::clearModified()
+{
+  m_modified = false;
+}
+
 unsigned int RCUSettings::getSize()
 {
-  return MSH_ARRAY_SIZE(m_registers, RCURegisterType);
+  return MSH_ARRAY_SIZE(m_registers, RCUSettings::Control);
 }
 
 unsigned int RCUSettings::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_registers, RCURegisterType);
+  MSH_PACK_ARRAY(buffer, offset, m_registers, RCUSettings::Control);
 
   return offset;
 }
@@ -49,7 +77,7 @@ unsigned int RCUSettings::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_registers, RCURegisterType, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_registers, RCUSettings::Control, 1);
 
   return offset;
 }

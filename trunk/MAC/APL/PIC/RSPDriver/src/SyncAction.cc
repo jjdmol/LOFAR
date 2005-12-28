@@ -32,13 +32,14 @@ using namespace EPA_Protocol;
 
 #define N_RETRIES 10
 
-SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_blps)
+SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_indices)
   : GCFFsm((State)&SyncAction::idle_state),
     m_board_port(board_port),
     m_board_id(board_id),
     m_completed(false),
-    m_n_blps(n_blps),
-    m_current_blp(0),
+    m_continue(false),
+    m_n_indices(n_indices),
+    m_current_index(0),
     m_retries(0)
 {
 }
@@ -61,7 +62,7 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
     case F_ENTRY:
     {
       // reset extended state variables on initialization
-      m_current_blp = 0;
+      m_current_index = 0;
       m_retries     = 0;
     }
     break;
@@ -89,17 +90,31 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
   {
     case F_ENTRY:
     {
-      // send next set of coefficients
-      sendrequest();
+      for (;;) {
+	// send initial request
+	setContinue(false); // initialize on each entry
+	sendrequest();
 
-      // is sendrequest indicates completion, simply transition to idle_state
-      if (hasCompleted())
-      {
-	TRAN(SyncAction::idle_state);
-      }
-      else
-      {
-	TRAN(SyncAction::waitack_state);
+	// if sendrequest calls setContinue(true), then no event
+	// has been sent, move on to next index
+	if (doContinue())
+	{
+	  // OK, move on to the next index
+	  m_current_index++;
+	  m_retries = 0;
+
+	  if (m_current_index >= m_n_indices) {
+	    // done
+	    setCompleted(true);
+	    TRAN(SyncAction::idle_state);
+	    break; // break the loop
+	  }
+	}
+	else
+	{
+	  TRAN(SyncAction::waitack_state);
+	  break; // break the loop
+	}
       }
     }
     break;
@@ -156,11 +171,11 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
       // check status of previous write
       if (GCFEvent::HANDLED == status)
       {
-	// OK, move on to the next BLP
-	m_current_blp++;
+	// OK, move on to the next index
+	m_current_index++;
 	m_retries = 0;
 
-	if (m_current_blp < m_n_blps)
+	if (m_current_index < m_n_indices)
 	{
 	  // send next bit of data
 	  TRAN(SyncAction::sendrequest_state);
@@ -203,6 +218,16 @@ GCFPortInterface& SyncAction::getBoardPort()
   return m_board_port;
 }
 
+void SyncAction::setContinue(bool cont)
+{
+  m_continue = cont;
+}
+
+bool SyncAction::doContinue() const
+{
+  return m_continue;
+}
+
 void SyncAction::setCompleted(bool completed)
 {
   m_completed = completed;
@@ -213,9 +238,9 @@ bool SyncAction::hasCompleted() const
   return m_completed;
 }
 
-int SyncAction::getCurrentBLP() const
+int SyncAction::getCurrentIndex() const
 {
-  return m_current_blp;
+  return m_current_index;
 }
 
 /**
@@ -224,7 +249,8 @@ int SyncAction::getCurrentBLP() const
  */
 void SyncAction::reset()
 {
-  setCompleted(true);
+  setCompleted(false);
+  setContinue(false);
   TRAN(SyncAction::idle_state);
 }
 

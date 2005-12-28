@@ -40,12 +40,15 @@ namespace LOFAR {
        */
       typedef struct WGRegisterType
       {
-	uint16 freq;
-	uint8  phase;
-	uint8  ampl;
-	uint16 nof_samples;
-	uint8  mode;
-	uint8  preset; // one of PRESET_SINE, PRESET_SQUARE, PRESET_TRIANGLE or PRESET_RAMP
+	// MODE_OFF, MODE_CALC, MODE_SINGLE, MODE_REPEAT
+	uint8  mode;         // byte  0
+	uint8  phase;        // byte  1
+	uint16 nof_samples;  // bytes 2,3
+	uint32 freq;         // bytes 4,5,6,7
+	uint32 ampl;         // bytes 8,9,10,11
+
+	// preset field is not sent to hardware because DIAG_WG[XY]_SIZE = 8 bytes
+	uint8  preset;
       };
 
       static const int MODE_OFF    = 0x0;

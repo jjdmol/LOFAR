@@ -62,11 +62,14 @@
 #include "GetClocksCmd.h"
 #include "UpdClocksCmd.h"
 
+#include "RSUWrite.h"
+#include "BSWrite.h"
 #include "BWWrite.h"
 #include "BWRead.h"
 #include "SSWrite.h"
 #include "SSRead.h"
 #include "RCUWrite.h"
+#include "RCUProtocolWrite.h"
 #include "RCURead.h"
 #include "StatusRead.h"
 #include "SstRead.h"
@@ -101,7 +104,10 @@ using namespace LOFAR;
 using namespace RSP;
 using namespace RTC;
 
-static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
+static const EPA_Protocol::CRControl g_CR_CONTROL_SYNC_DIS = { 0, 0, 1, 0 }; // SYNC_DIS flag
+static const EPA_Protocol::RSUReset  g_RSU_RESET_SYNC      = { 1, 0, 0, 0 }; // Soft SYNC
+static const EPA_Protocol::RSUReset  g_RSU_RESET_CLEAR     = { 0, 1, 0, 0 }; // Soft SYNC
+static const EPA_Protocol::RSUReset  g_RSU_RESET_RESET     = { 0, 0, 1, 0 }; // Soft SYNC
 
 //
 // RSPDriver(name)
@@ -122,9 +128,10 @@ RSPDriver::RSPDriver(string name)
 
   m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
 
-  m_acceptor.init(*this, "acceptor_v2", GCFPortInterface::MSPP, RSP_PROTOCOL);
+  m_acceptor.init(*this, "acceptor_v3", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
   m_board = new GCFETHRawPort[GET_CONFIG("RS.N_RSPBOARDS", i)];
+  ASSERT(m_board);
 
   //
   // Attempt access of RSPDriver.MAC_BASE, if it fails use the RSPDriver.ADDR0
@@ -196,10 +203,11 @@ bool RSPDriver::isEnabled()
 /**
  * Add all synchronization actions per board.
  * Order is:
- * - STATUS (RSP Status): read RSP status info // StatusRead
+ * - BS:      write syncrhonization settings    // BSWrite
+ * - STATUS (RSP Status): read RSP status info  // StatusRead
  * - BF:      write beamformer weights          // BWWrite
  * - SS:      write subband selection settings  // SSWrite
- * - RCU:     write RCU control settings        // RCUWrite
+ * - RCU:     write RCU control settings        // RCUWrite/RCUProtocolWrite
  * - SST:     read subband statistics           // SstRead
  * - BST:     read beamlet statistics           // BstRead
  * - XST:     read crosslet statistics          // XstRead
@@ -220,6 +228,61 @@ void RSPDriver::addAllSyncActions()
    */
   for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
   {
+    /*
+     * First clear the board
+     */
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
+    {
+      RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid);
+      ASSERT(rsuwrite);
+      m_scheduler.addSyncAction(rsuwrite);
+    }
+
+    /*
+     * First set correct number of samples per interval
+     */
+    if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i))
+    {
+      BSWrite* bswrite = new BSWrite(m_board[boardid], boardid);
+      ASSERT(bswrite);
+      m_scheduler.addSyncAction(bswrite);
+    }
+
+    /*
+     * Schedule register writes for soft PPS if configured.
+     *
+     * - This means disabling the external sync on all FPGA's
+     *   by broadcasting a CR_CONTROL write.
+     * - Requesting a soft PPS by writing a 1 in the SYNC bit
+     *   of the RSU_RESET register.
+     */  
+    if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
+    {
+      WriteReg* writereg = 0;
+#if 0
+      // Disable External Sync for all FPGA's
+      writereg = new WriteReg(m_board[boardid], boardid,
+			      MEPHeader::DST_ALL,
+			      MEPHeader::CR,
+			      MEPHeader::CR_CONTROL,
+			      MEPHeader::CR_CONTROL_SIZE);
+      ASSERT(writereg);
+      writereg->setSrcAddress((void*)&g_CR_CONTROL_SYNC_DIS);      
+      m_scheduler.addSyncAction(writereg);
+#endif
+
+      // Send PPS to BP which sends signal to configuration device
+      // which in turn sends a PPS to the AP's
+      writereg = new WriteReg(m_board[boardid], boardid,
+			      MEPHeader::DST_RSP,
+			      MEPHeader::RSU,
+			      MEPHeader::RSU_RESET,
+			      MEPHeader::RSU_RESET_SIZE);
+      ASSERT(writereg);
+      writereg->setSrcAddress((void*)&g_RSU_RESET_SYNC);
+      m_scheduler.addSyncAction(writereg);
+    }
+
     if (1 == GET_CONFIG("RSPDriver.WRITE_CDO", i))
     {
       char dstip[64];
@@ -240,6 +303,7 @@ void RSPDriver::addAllSyncActions()
     if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
     {
       StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
+      ASSERT(statusread);
       m_scheduler.addSyncAction(statusread);
     }
 
@@ -270,12 +334,16 @@ void RSPDriver::addAllSyncActions()
 	  BWWrite* bwsync = 0;
 
 	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XROUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YROUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	}
       }
@@ -286,12 +354,16 @@ void RSPDriver::addAllSyncActions()
 	  BWRead* bwsync = 0;
 
 	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XROUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YROUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
+	  ASSERT(bwsync);
 	  m_scheduler.addSyncAction(bwsync);
 	}
       }
@@ -304,6 +376,7 @@ void RSPDriver::addAllSyncActions()
 	if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
 	{
 	  SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
+	  ASSERT(sswrite);
 	  m_scheduler.addSyncAction(sswrite);
 	}
       }
@@ -312,11 +385,12 @@ void RSPDriver::addAllSyncActions()
 	if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
 	{
 	  SSRead* ssread = new SSRead(m_board[boardid], boardid);
+	  ASSERT(ssread);
 	  m_scheduler.addSyncAction(ssread);
 	}
       }
     }
-    
+
     for (int action = 0; action < 2; action++)
     {
       if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
@@ -324,6 +398,7 @@ void RSPDriver::addAllSyncActions()
 	if (1 == GET_CONFIG("RSPDriver.WRITE_RCU", i))
 	{
 	  RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
+	  ASSERT(rcuwrite);
 	  m_scheduler.addSyncAction(rcuwrite);
 	}
       }
@@ -332,9 +407,17 @@ void RSPDriver::addAllSyncActions()
 	if (1 == GET_CONFIG("RSPDriver.READ_RCU", i))
 	{
 	  RCURead* rcuread = new RCURead(m_board[boardid], boardid);
+	  ASSERT(rcuread);
 	  m_scheduler.addSyncAction(rcuread);
 	}
       }
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RCU_PROTOCOL", i))
+    {
+      RCUProtocolWrite* rcuprotocolwrite = new RCUProtocolWrite(m_board[boardid], boardid);
+      ASSERT(rcuprotocolwrite);
+      m_scheduler.addSyncAction(rcuprotocolwrite);
     }
 
     if (1 == GET_CONFIG("RSPDriver.READ_SST", i))
@@ -342,6 +425,7 @@ void RSPDriver::addAllSyncActions()
       SstRead* sstread = 0;
 
       sstread = new SstRead(m_board[boardid], boardid);
+      ASSERT(sstread);
       m_scheduler.addSyncAction(sstread);
 
     }
@@ -351,6 +435,7 @@ void RSPDriver::addAllSyncActions()
       BstRead* bstread = 0;
 
       bstread = new BstRead(m_board[boardid], boardid);
+      ASSERT(bstread);
       m_scheduler.addSyncAction(bstread);
     }
 
@@ -361,6 +446,7 @@ void RSPDriver::addAllSyncActions()
 	if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
 	{
 	  WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
+	  ASSERT(wgwrite);
 	  m_scheduler.addSyncAction(wgwrite);
 	}
       }
@@ -369,6 +455,7 @@ void RSPDriver::addAllSyncActions()
 	if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
 	{
 	  WGRead* wgread = new WGRead(m_board[boardid], boardid);
+	  ASSERT(wgread);
 	  m_scheduler.addSyncAction(wgread);
 	}
       }
@@ -377,40 +464,18 @@ void RSPDriver::addAllSyncActions()
     if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
     {
       VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
+      ASSERT(versionread);
       m_scheduler.addSyncAction(versionread);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
-    {
-      // add softpps for AP FPGA's
-      for (int i = GET_CONFIG("RS.N_BLPS", i) - 1; i >= 0; i--)
-      {
-	WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
-					  MEPHeader::DST_BLP + i,
-					  MEPHeader::CRB,
-					  MEPHeader::CRB_SOFTPPS,
-					  MEPHeader::CRB_SOFTPPS_SIZE);
-	writereg->setSrcAddress((void*)&g_SOFTPPS_COMMAND);      
-	m_scheduler.addSyncAction(writereg);
-      }
-
-      // add softpps for BP FPGA
-      WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
-					MEPHeader::DST_RSP,
-					MEPHeader::CRR,
-					MEPHeader::CRR_SOFTPPS,
-					MEPHeader::CRR_SOFTPPS_SIZE);
-      writereg->setSrcAddress((void*)&g_SOFTPPS_COMMAND);
-      m_scheduler.addSyncAction(writereg);
-    }
-  
     if (1 == GET_CONFIG("RSPDriver.READ_XST", i))
     {
       XstRead* xstread = 0;
 
-      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_MAX_STATS; i++)
+      for (int i = MEPHeader::XST_STATS; i < MEPHeader::XST_NR_STATS; i++)
       {
 	xstread = new XstRead(m_board[boardid], boardid, i);
+	ASSERT(xstread);
 	m_scheduler.addSyncAction(xstread);
       }
     }

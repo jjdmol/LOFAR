@@ -26,6 +26,7 @@
 #define RSPCTL_H_
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/RCUSettings.h>
 #ifdef ENABLE_RSPFE
 #include "RSPFE_Protocol.ph"
 #endif
@@ -303,17 +304,19 @@ namespace LOFAR {
     {
     public:
       RCUCommand(GCFPortInterface& port);
-      virtual ~RCUCommand()
-      {}
+      virtual ~RCUCommand() {}
       virtual void send();
       virtual GCFEvent::TResult ack(GCFEvent& e);
 
-      void setControl(uint8 control)
-      {
-        m_control = control;
+      RCUSettings::Control& control() {
+	// return reference so we can modify it
+	// using the methods of RCUSettings::Control
+	return m_control;
       }
+
     private:
-      uint8 m_control;
+
+      RCUSettings::Control m_control;
     };
 
     class WGCommand : public Command
@@ -339,7 +342,7 @@ namespace LOFAR {
     private:
       double m_frequency;
       uint8  m_phase;
-      uint8  m_amplitude;
+      uint32 m_amplitude;
     };
 
     class StatusCommand : public Command
@@ -365,12 +368,12 @@ namespace LOFAR {
           m_file=0;
         }
       }
-      void setDuration(uint16 duration)
+      void setDuration(uint32 duration)
       {
         m_duration=duration;
         m_endTime.setNow((double)m_duration);
       }
-      void setIntegration(uint16 integration)
+      void setIntegration(uint32 integration)
       {
         if(integration > 0)
           m_integration=integration;
@@ -408,10 +411,10 @@ namespace LOFAR {
       }
     protected:
       uint32 m_subscriptionHandle;
-      uint16 m_duration;
+      uint32 m_duration;
       RTC::Timestamp m_endTime;
-      uint16 m_integration;
-      uint16 m_nseconds;
+      uint32 m_integration;
+      uint32 m_nseconds;
       string m_directory;
       FILE** m_file; // array of file descriptors, one for each rcu
     private:

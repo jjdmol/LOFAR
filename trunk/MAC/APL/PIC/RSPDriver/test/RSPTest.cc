@@ -546,6 +546,7 @@ GCFEvent::TResult RSPTest::test008(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
       LOG_INFO_STR("ack.time=" << ack.timestamp);
 
+#if 0
       for (int i = 0; i < ack.versions.rsp().extent(firstDim); i++)
 	{
 	LOG_INFO_STR(formatString("versions[board=%d] = rsp=%d.%d, bp=%d.%d, ap=%d.%d",
@@ -557,7 +558,8 @@ GCFEvent::TResult RSPTest::test008(GCFEvent& e, GCFPortInterface& port)
 				  ack.versions.ap()(i)  >> 4,
 				  ack.versions.ap()(i)  & 0xF));
       }
-      
+#endif
+ 
       TRAN(RSPTest::test009);
     }
     break;
@@ -603,11 +605,12 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
 	wgset.rcumask.set(i);
       }
       wgset.settings().resize(1);
-      wgset.settings()(0).freq            = 0xaabb;
-      wgset.settings()(0).phase           = 0;
-      wgset.settings()(0).ampl            = 0xccdd;
-      wgset.settings()(0).nof_samples     = 0x1122;
       wgset.settings()(0).mode            = 0;
+      wgset.settings()(0).phase           = 0;
+      wgset.settings()(0).nof_samples     = 1024;
+      wgset.settings()(0).freq            = 0xaabbccdd;
+      wgset.settings()(0).ampl            = 0x11223344;
+
       wgset.settings()(0).preset          = WGSettings::PRESET_SINE;
       
       TESTC_ABORT(m_server.send(wgset), RSPTest::final);
@@ -1088,84 +1091,84 @@ GCFEvent::TResult RSPTest::test014(GCFEvent& e, GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (e.signal)
-  {
-    case F_ENTRY:
     {
-      START_TEST("test014", "test UPDRCU");
+    case F_ENTRY:
+      {
+	START_TEST("test014", "test UPDRCU");
 
-      // subscribe to RCU updates
-      RSPSubrcuEvent subrcu;
+	// subscribe to RCU updates
+	RSPSubrcuEvent subrcu;
 
-      subrcu.timestamp.setNow();
-      subrcu.rcumask.reset();
-      for (int i = 0; i < N_TEST_RCUS; i++) {
-		subrcu.rcumask.set(i);
-      }
-      subrcu.period = 4;
+	subrcu.timestamp.setNow();
+	subrcu.rcumask.reset();
+	for (int i = 0; i < N_TEST_RCUS; i++) {
+	  subrcu.rcumask.set(i);
+	}
+	subrcu.period = 4;
       
-      TESTC_ABORT(m_server.send(subrcu) > 0, RSPTest::final);
-    }
-    break;
+	TESTC_ABORT(m_server.send(subrcu) > 0, RSPTest::final);
+      }
+      break;
 
     case RSP_SUBRCUACK:
-    {
-      RSPSubrcuackEvent ack(e);
+      {
+	RSPSubrcuackEvent ack(e);
 
-      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      LOG_INFO_STR("ack.time=" << ack.timestamp);
-    }
-    break;
+	TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+	LOG_INFO_STR("ack.time=" << ack.timestamp);
+      }
+      break;
 
     case RSP_UPDRCU:
-    {
-      RSPUpdrcuEvent upd(e);
-
-      TESTC_ABORT(upd.status == SUCCESS, RSPTest::final);
-      LOG_INFO_STR("upd.time=" << upd.timestamp);
-      LOG_INFO_STR("upd.handle=" << upd.handle);
-	  RCUSettings::RCURegisterType& x = upd.settings()(1); // REO
-      LOG_INFO(formatString("upd.registers=0x%X", x.value));
-
-      if (updcount++ > 4) // four seconds
       {
-		RSPUnsubrcuEvent unsub;
-		unsub.handle = upd.handle; // remove subscription with this handle
+	RSPUpdrcuEvent upd(e);
 
-		TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+	TESTC_ABORT(upd.status == SUCCESS, RSPTest::final);
+	LOG_INFO_STR("upd.time=" << upd.timestamp);
+	LOG_INFO_STR("upd.handle=" << upd.handle);
+	RCUSettings::Control& x = upd.settings()(1); // REO
+	LOG_INFO(formatString("upd.registers=0x%X", x.getRaw()));
+
+	if (updcount++ > 4) // four seconds
+	  {
+	    RSPUnsubrcuEvent unsub;
+	    unsub.handle = upd.handle; // remove subscription with this handle
+
+	    TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+	  }
       }
-    }
-    break;
+      break;
     
     case RSP_UNSUBRCUACK:
-    {
-      RSPUnsubrcuackEvent ack(e);
+      {
+	RSPUnsubrcuackEvent ack(e);
 
-      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      LOG_INFO_STR("ack.time=" << ack.timestamp);
-      LOG_INFO_STR("ack.handle=" << ack.handle);
+	TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+	LOG_INFO_STR("ack.time=" << ack.timestamp);
+	LOG_INFO_STR("ack.handle=" << ack.handle);
 
-      TRAN(RSPTest::final);
-    }
-    break;
+	TRAN(RSPTest::final);
+      }
+      break;
 
     case F_DISCONNECTED:
-    {
-      port.close();
+      {
+	port.close();
 
-      FAIL_ABORT("unexpected disconnect", RSPTest::final);
-    }
-    break;
+	FAIL_ABORT("unexpected disconnect", RSPTest::final);
+      }
+      break;
 
     case F_EXIT:
-    {
-      STOP_TEST();
-    }
-    break;
+      {
+	STOP_TEST();
+      }
+      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-  }
+    }
 
   return status;
 }

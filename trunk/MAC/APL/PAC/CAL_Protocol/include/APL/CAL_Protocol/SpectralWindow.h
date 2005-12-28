@@ -57,7 +57,7 @@ namespace LOFAR {
        * Constructor
        */
       SpectralWindow(std::string name, double sampling_freq,
-		     int nyquist_zone, int numsubbands, uint8 rcucontrol) :
+		     int nyquist_zone, int numsubbands, uint32 rcucontrol) :
 	m_name(name), m_sampling_freq(sampling_freq),
 	m_nyquist_zone(nyquist_zone), m_numsubbands(numsubbands), m_rcucontrol(rcucontrol) {}
       virtual ~SpectralWindow();
@@ -119,7 +119,7 @@ namespace LOFAR {
       double      m_sampling_freq; // sampling frequency
       uint16      m_nyquist_zone;  // defines the window
       uint16      m_numsubbands;   // number of subbands
-      uint8       m_rcucontrol;    // RCU control setting
+      uint32      m_rcucontrol;    // RCU control setting
     };
 
   }; // namespace CAL

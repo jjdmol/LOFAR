@@ -56,9 +56,6 @@ void GetVersionsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.versions.rsp().resize(cache.getVersions().rsp().extent(firstDim));
-  ack.versions.rsp() = cache.getVersions().rsp();
-  
   ack.versions.bp().resize(cache.getVersions().bp().extent(firstDim));
   ack.versions.bp() = cache.getVersions().bp();
 

@@ -48,7 +48,7 @@ void RCURead::sendrequest()
 {
   EPAReadEvent rcusettingsread;
   rcusettingsread.hdr.set(MEPHeader::RCU_SETTINGS_HDR,
-			  getCurrentBLP(),
+			  1 << getCurrentIndex(),
 			  MEPHeader::READ);
 
   m_hdr = rcusettingsread.hdr;
@@ -76,26 +76,26 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
   
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
 
-
-  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
-  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
+  // This needs to be replaced by I2C sequences
+  RCUSettings::Control& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
+  RCUSettings::Control& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
 
   if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
   {
-    if (x.value != rcusettings.x
-	|| y.value != rcusettings.y)
+    EPA_Protocol::RCUHandler cachedvalue = { x.getSpecinv(), y.getSpecinv(), 0, x.getDelay(), 0, y.getDelay(), 0 };
+    if (memcmp(&cachedvalue, &rcusettings.ap, sizeof(EPA_Protocol::RCUHandler)))
     {
-      LOG_WARN(formatString("LOOPBACK CHECK FAILED: RCURead mismatch "
-			    "(blp=%d, cache.x:%d != board.:%d || cache.y:%d != board.y:%d)",
-			    global_blp, x.value, rcusettings.x, y.value, rcusettings.y));
+      LOG_WARN("LOOPBACK CHECK FAILED: RCURead mismatch ");
     }
   }
   else
   {
-    x.value = rcusettings.x;
-    y.value = rcusettings.y;
+    x.setSpecinv(rcusettings.ap.spec_inv_x);
+    y.setSpecinv(rcusettings.ap.spec_inv_y);
+    x.setDelay(rcusettings.ap.input_delay_x);
+    y.setDelay(rcusettings.ap.input_delay_y);
   }
 
   return GCFEvent::HANDLED;

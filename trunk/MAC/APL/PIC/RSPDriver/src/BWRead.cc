@@ -55,9 +55,9 @@ BWRead::~BWRead()
 
 void BWRead::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentIndex() / BF_N_FRAGMENTS);
 
-  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
+  uint16 offset = ((getCurrentIndex() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -73,22 +73,23 @@ void BWRead::sendrequest()
   // send next BF configure message
   EPAReadEvent bfcoefs;
       
+  uint16 blp = 1 << (getCurrentIndex() / BF_N_FRAGMENTS);
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, blp,
 		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, blp,
 		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, blp,
 		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, blp,
 		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
   }
@@ -118,10 +119,10 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
     return GCFEvent::NOT_HANDLED;
   }
   
-  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
+  uint16 offset = ((getCurrentIndex() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
   ASSERT(offset == bfcoefs.hdr.m_fields.offset / sizeof(int16));
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentIndex() / BF_N_FRAGMENTS);
 
   // copy weights from the message to the cache
   Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,

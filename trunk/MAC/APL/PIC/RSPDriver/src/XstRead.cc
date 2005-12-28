@@ -51,7 +51,7 @@ XstRead::~XstRead()
 void XstRead::sendrequest()
 {
   // offset in bytes
-  uint16 offset = (getCurrentBLP() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE;
+  uint16 offset = (getCurrentIndex() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE;
 
   // firmware now indexes from 1 instead of 0
   offset += (GET_CONFIG("RSPDriver.XST_FIRST_RSP_BOARD", i) + 1) * MEPHeader::N_XLETS * MEPHeader::N_POL * sizeof(complex<uint32>);
@@ -125,13 +125,13 @@ GCFEvent::TResult XstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  if (ack.hdr.m_fields.addr.regid >= MEPHeader::XST_MAX_STATS)
+  if (ack.hdr.m_fields.addr.regid >= MEPHeader::XST_NR_STATS)
   {
     LOG_ERROR("invalid xst ack");
     return GCFEvent::HANDLED;
   }
 
-  uint16 offset = ((getCurrentBLP() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE) / sizeof(uint32);
+  uint16 offset = ((getCurrentIndex() % XST_N_FRAGMENTS) * MEPHeader::XST_FRAGMENT_SIZE) / sizeof(uint32);
 
   int global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (m_regid/2);
   

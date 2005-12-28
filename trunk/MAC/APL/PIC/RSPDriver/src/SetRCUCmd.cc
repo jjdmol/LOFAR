@@ -39,6 +39,8 @@ SetRCUCmd::SetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
   m_event = new RSPSetrcuEvent(event);
 
+  LOG_INFO(formatString("control=0x%08x", m_event->settings()(0).getRaw()));
+
   setOperation(oper);
   setPeriod(0);
   setPort(port);
@@ -67,15 +69,8 @@ void SetRCUCmd::apply(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      //
-      // make sure vddvcc_en is always on if needed
-      // this prevents sync errors
-      //
-      if (GET_CONFIG("RSPDriver.FORCE_VDDVCC_EN", i)) {
-	m_event->settings()(0).vddvcc_en = 1;
-      }
-      
       cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
+      cache.getRCUSettings().setModified(cache_rcu);
     }
   }
 }

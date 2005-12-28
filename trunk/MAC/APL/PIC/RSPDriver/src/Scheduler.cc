@@ -424,7 +424,10 @@ void Scheduler::initiateSync(GCFEvent& event)
     // dispatch F_TIMER event to first syncactions for each board
     if (!(*port).second.empty())
     {
-      (*port).second[0]->dispatch(event, (*port).second[0]->getBoardPort());
+      for (unsigned int i = 0; i < (*port).second.size(); i++) {
+	(*port).second[i]->dispatch(event, (*port).second[i]->getBoardPort());
+	if (!(*port).second[i]->doContinue()) break;
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-//#  RCUWrite.cc: implementation of the RCUWrite class
+//#  BSWrite.cc: implementation of the BSWrite class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,65 +27,56 @@
 #include <APL/RTCCommon/PSAccess.h>
 #include <string.h>
 
-#include "RCUWrite.h"
+#include "BSWrite.h"
 #include "Cache.h"
 
 using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
 
-RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
+BSWrite::BSWrite(GCFPortInterface& board_port, int board_id)
+  : SyncAction(board_port, board_id, 1)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
-RCUWrite::~RCUWrite()
+BSWrite::~BSWrite()
 {
   /* TODO: delete event? */
 }
 
-void RCUWrite::sendrequest()
+void BSWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
-
   // skip update if the neither of the RCU's settings have been modified
-  if (!Cache::getInstance().getBack().getRCUSettings().getModified(global_blp * 2)
-      && !Cache::getInstance().getBack().getRCUSettings().getModified(global_blp * 2 + 1))
+  if (!Cache::getInstance().getBack().getClocks().getModified())
   {
     setContinue(true);
     return;
   }
 
-  // This needs to be replaced by I2C sequences
-  RCUSettings::Control& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
-  RCUSettings::Control& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
+  EPABsNofsamplespersyncEvent bs;
 
-  LOG_INFO(formatString("%d.X control=0x%08x", global_blp, x.getRaw()));
-  LOG_INFO(formatString("%d.Y control=0x%08x", global_blp, y.getRaw()));
+  bs.hdr.set(MEPHeader::BS_NOF_SAMPLES_PER_SYNC_HDR, MEPHeader::DST_ALL_BLPS);
+  bs.nof_samples_per_sync_interval = Cache::getInstance().getBack().getClocks()()(0);
 
-  EPARcuSettingsEvent rcusettings;
-  rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, 1 << getCurrentIndex()); // also sets payload_length
-  rcusettings.ap = EPA_Protocol::RCUHandler();
-  rcusettings.ap.spec_inv_x    = x.getSpecinv();
-  rcusettings.ap.spec_inv_y    = y.getSpecinv();
-  rcusettings.ap.input_delay_x = x.getDelay();
-  rcusettings.ap.input_delay_y = y.getDelay();
+  LOG_INFO(formatString("setting BS.NOF_SAMPLES_PER_SYNC_INTERVAL to %d on all BLPs", bs.nof_samples_per_sync_interval));
 
-  m_hdr = rcusettings.hdr;
-  getBoardPort().send(rcusettings);
+  m_hdr = bs.hdr;
+  getBoardPort().send(bs);
 }
 
-void RCUWrite::sendrequest_status()
+void BSWrite::sendrequest_status()
 {
   // intentionally left empty
 }
 
-GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult BSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  LOG_INFO("Received BS.NOF_SAMPLES_PER_SYNC_INTERVAL ack");
+
   if (EPA_WRITEACK != event.signal)
   {
-    LOG_WARN("RCUWrite::handleack:: unexpected ack");
+    LOG_WARN("BSWrite::handleack:: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
   
@@ -93,7 +84,7 @@ GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
-    LOG_ERROR("RCUWrite::handleack: invalid ack");
+    LOG_ERROR("BSWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
 

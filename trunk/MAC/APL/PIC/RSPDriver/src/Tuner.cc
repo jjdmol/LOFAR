@@ -148,7 +148,7 @@ GCFEvent::TResult Tuner::initialize(GCFEvent& e, GCFPortInterface& port)
 	setrcu.rcumask = m_device_set;
       
 	setrcu.settings().resize(1);
-	setrcu.settings()(0).value = m_rcucontrol;
+	setrcu.settings()(0).setMode(RCUSettings::Control::MODE_LBL_HPF10MHZ);
 
 	if (!m_server.send(setrcu))
 	  {

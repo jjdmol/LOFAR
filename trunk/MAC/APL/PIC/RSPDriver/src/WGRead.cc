@@ -50,20 +50,20 @@ WGRead::~WGRead()
 
 void WGRead::sendrequest()
 {
-  if (getCurrentBLP() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  if (getCurrentIndex() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
   {
     EPAReadEvent wgsettingsread;
 
-    if (0 == getCurrentBLP() % MEPHeader::N_POL)
+    if (0 == getCurrentIndex() % MEPHeader::N_POL)
     {
-      wgsettingsread.hdr.set(MEPHeader::WG_XSETTINGS_HDR,
-			     getCurrentBLP() / 2,
+      wgsettingsread.hdr.set(MEPHeader::DIAG_WGX_HDR,
+			     1 << (getCurrentIndex() / MEPHeader::N_POL),
 			     MEPHeader::READ);
     }
     else
     {
-      wgsettingsread.hdr.set(MEPHeader::WG_YSETTINGS_HDR,
-			     getCurrentBLP() / 2,
+      wgsettingsread.hdr.set(MEPHeader::DIAG_WGY_HDR,
+			     1 << (getCurrentIndex() / MEPHeader::N_POL),
 			     MEPHeader::READ);
     }
 
@@ -72,20 +72,20 @@ void WGRead::sendrequest()
   }
   else
   {
-    int current_blp = getCurrentBLP() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+    int current_blp = getCurrentIndex() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 
     EPAReadEvent wgwaveread;
 
     if (0 == current_blp % MEPHeader::N_POL)
     {
-      wgwaveread.hdr.set(MEPHeader::WG_XWAVE_HDR,
-			 current_blp / 2,
+      wgwaveread.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR,
+			 1 << (current_blp / MEPHeader::N_POL),
 			 MEPHeader::READ);
     }
     else
     {
-      wgwaveread.hdr.set(MEPHeader::WG_YWAVE_HDR,
-			 current_blp / 2,
+      wgwaveread.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR,
+			 1 << (current_blp / MEPHeader::N_POL),
 			 MEPHeader::READ);
     }
 
@@ -101,15 +101,15 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (getCurrentBLP() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  if (getCurrentIndex() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
   {
-    if (EPA_WG_SETTINGS != event.signal)
+    if (EPA_DIAG_WG != event.signal)
     {
       LOG_WARN("WGRead::handleack: unexpected ack");
       return GCFEvent::NOT_HANDLED;
     }
   
-    EPAWgSettingsEvent wgsettings(event);
+    EPADiagWgEvent wgsettings(event);
 
     if (!wgsettings.hdr.isValidAck(m_hdr))
     {
@@ -117,7 +117,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
       return GCFEvent::NOT_HANDLED;
     }
 
-    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentIndex();
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
@@ -143,15 +143,15 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   }
   else
   {
-    int current_blp = getCurrentBLP() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+    int current_blp = getCurrentIndex() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
     
-    if (EPA_WG_WAVE != event.signal)
+    if (EPA_DIAG_WGWAVE != event.signal)
     {
       LOG_WARN("WGRead::handleack: unexpected ack");
       return GCFEvent::NOT_HANDLED;
     }
   
-    EPAWgWaveEvent wgwave(event);
+    EPADiagWgwaveEvent wgwave(event);
 
     if (!wgwave.hdr.isValidAck(m_hdr))
     {

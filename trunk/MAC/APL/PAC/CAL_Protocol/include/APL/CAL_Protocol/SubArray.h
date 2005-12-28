@@ -70,7 +70,7 @@ namespace LOFAR {
 	       double                         sampling_frequency,
 	       int                            nyquist_zone,
 	       int                            nsubbands,
-	       uint8                          rcucontrol);
+	       uint32                         rcucontrol);
       virtual ~SubArray();
 
       /**

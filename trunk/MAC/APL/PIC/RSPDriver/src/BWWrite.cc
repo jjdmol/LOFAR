@@ -55,10 +55,10 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentIndex() / BF_N_FRAGMENTS);
 
   // coef int16 offset - divide by N_PHASE to get offset in complex<int16>
-  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
+  uint16 offset = ((getCurrentIndex() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -74,22 +74,23 @@ void BWWrite::sendrequest()
   // send next BF configure message
   EPABfCoefsEvent bfcoefs;
 
+  uint16 blp = 1 << (getCurrentIndex() / BF_N_FRAGMENTS);
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, blp,
 		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, blp,
 		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, blp,
 		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, blp,
 		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
   }
@@ -100,7 +101,7 @@ void BWWrite::sendrequest()
 				   neverDeleteData);
 
 #if 0
-  LOG_DEBUG_STR("offset=" << offset << "; global_blp=" << (int)global_blp << "; blp=" << getCurrentBLP() / BF_N_FRAGMENTS);
+  LOG_DEBUG_STR("offset=" << offset << "; global_blp=" << (int)global_blp << "; blp=" << blp);
   LOG_DEBUG_STR("weights shape=" << weights.shape());
   LOG_DEBUG_STR("weights range=" << Range(offset / MEPHeader::N_PHASEPOL,
 					  (offset /MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
@@ -128,7 +129,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 1) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentBLP(), 0) = complex<int16>(0x4000, 0);
+      weights(getCurrentIndex(), 0) = complex<int16>(0x4000, 0);
     }
     break;
 
@@ -141,7 +142,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 1) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentBLP(), 0) = complex<int16>(0, 0x4000);
+      weights(getCurrentIndex(), 0) = complex<int16>(0, 0x4000);
     }
     break;
     
@@ -154,7 +155,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 0) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentBLP(), 1) = complex<int16>(0x4000, 0);
+      weights(getCurrentIndex(), 1) = complex<int16>(0x4000, 0);
     }
     break;
     
@@ -167,7 +168,7 @@ void BWWrite::sendrequest()
       weights(Range::all(), 0) = 0;
 
       // overwrite first weights for cross correlation
-      weights(getCurrentBLP(), 1) = complex<int16>(0, 0x4000);
+      weights(getCurrentIndex(), 1) = complex<int16>(0, 0x4000);
     }
     break;
   }

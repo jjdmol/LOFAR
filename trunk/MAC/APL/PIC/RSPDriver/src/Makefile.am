@@ -21,7 +21,8 @@ BUILT_SOURCES = \
 	Tuner.conf \
 	SetWG.conf \
 	rspctl.conf \
-	RSPDriver.log_prop
+	RSPDriver.log_prop \
+	rspctl.log_prop
 
 clean-local:
 	rm -f *.ph
@@ -36,7 +37,8 @@ sysconf_DATA = \
 	Tuner.conf \
 	SetWG.conf \
 	rspctl.conf \
-	RSPDriver.log_prop
+	RSPDriver.log_prop \
+	rspctl.log_prop
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
@@ -136,6 +138,8 @@ RSPDriver_SOURCES = \
 	SSRead.cc \
 	RCUWrite.h \
 	RCUWrite.cc \
+	RCUProtocolWrite.h \
+	RCUProtocolWrite.cc \
 	RCURead.h \
 	RCURead.cc \
 	StatusRead.h \
@@ -153,7 +157,11 @@ RSPDriver_SOURCES = \
 	WGRead.h \
 	WGRead.cc \
 	CDOWrite.h \
-	CDOWrite.cc
+	CDOWrite.cc \
+	BSWrite.h \
+	BSWrite.cc \
+	RSUWrite.h \
+	RSUWrite.cc
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/libepa.la \
