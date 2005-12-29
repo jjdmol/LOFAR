@@ -77,10 +77,10 @@ public:
   bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
 
-  double getStartFreq();
-  double getEndFreq();
-  double getStartTime();
-  double getEndTime();
+  double getStartFreq() const;
+  double getEndFreq() const;
+  double getStartTime() const;
+  double getEndTime() const;
   void setDomain(double fStart, double fEnd, double tStart, double tEnd);
 
   void dump();
@@ -111,16 +111,16 @@ inline unsigned int DH_Prediff::getDataSize() const
 inline double* DH_Prediff::getDataBuffer()
 { return itsDataBuffer; }
 
-inline double DH_Prediff::getStartFreq()
+inline double DH_Prediff::getStartFreq() const
 { return *itsStartFreq; }
 
-inline double DH_Prediff::getEndFreq()
+inline double DH_Prediff::getEndFreq() const
 { return *itsEndFreq; }
 
-inline double DH_Prediff::getStartTime()
+inline double DH_Prediff::getStartTime() const
 { return *itsStartTime; }
 
-inline double DH_Prediff::getEndTime()
+inline double DH_Prediff::getEndTime() const
 { return *itsEndTime; }
 
 // @}

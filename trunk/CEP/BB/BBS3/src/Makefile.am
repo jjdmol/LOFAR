@@ -3,7 +3,6 @@ DH_Solution.h                                   \
 DH_WOSolve.h					\
 DH_WOPrediff.h					\
 DH_Prediff.h					\
-DH_ParmSol.h					\
 StrategyController.h				\
 WH_Control.h                                    \
 WH_Prediff.h					\
@@ -12,6 +11,7 @@ BlackBoardDemo.h                                \
 Quality.h                                       \
 SC_Simple.h					\
 SC_WritePredData.h				\
+SC_CompoundIter.h				\
 MMap.h						\
 FlagsMap.h					\
 Prediffer.h					\
@@ -81,7 +81,6 @@ DH_Solution.cc                                          \
 DH_WOSolve.cc						\
 DH_WOPrediff.cc						\
 DH_Prediff.cc						\
-DH_ParmSol.cc						\
 StrategyController.cc					\
 WH_Control.cc                                           \
 WH_Prediff.cc						\
@@ -90,6 +89,7 @@ BlackBoardDemo.cc                                       \
 Quality.cc                                              \
 SC_Simple.cc						\
 SC_WritePredData.cc					\
+SC_CompoundIter.cc					\
 MMap.cc							\
 FlagsMap.cc						\
 Prediffer.cc						\

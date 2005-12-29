@@ -30,8 +30,7 @@
 // DataHolder for BlackBoard solutions
 
 #include <Common/lofar_vector.h>
-#include <TransportPL/DH_PL.h>
-#include <TransportPL/PO_DH_PL.h>
+#include <TransportPostgres/DH_DB.h>
 #include <BBS3/Quality.h>
 #include <BBS3/ParmData.h>
 
@@ -43,25 +42,18 @@ namespace LOFAR
 
 /**
    This class is a DataHolder which holds the parameters solved by
-   a PSS3 knowledge source.
+   a BBS3 Solver knowledge source.
 */
 
-class DH_Solution: public LOFAR::DH_PL
+class DH_Solution: public LOFAR::DH_DB
 {
 public:
-  typedef PL::TPersistentObject<DH_Solution> PO_DH_SOL;
-
-  explicit DH_Solution (const string& name="dh_solution");
+  explicit DH_Solution (const string& name="dh_solution", bool writeIndivParms=false,
+			const string& parmTableName="bbs3parmsolutions");
 
   virtual ~DH_Solution();
 
   DataHolder* clone() const;
-
-  // Get a reference to the PersistentObject.
-  virtual PL::PersistentObject& getPO() const;
-
-  // Create a TPO object and set the table name in it.
-  virtual void initPO (const string& tableName);
 
   /// Allocate the buffers.
   virtual void init();
@@ -88,10 +80,16 @@ public:
   double getEndTime() const;
   void setDomain(double fStart, double fEnd, double tStart, double tEnd);
 
+  bool hasConverged() const;
+  void setConverged(bool converged);
+  
   // Resets (clears) the contents of its DataPacket 
   void clearData();
   
   void dump();
+
+ protected:
+  virtual string createInsertStatement(TH_DB* th);
 
 private:
   /// Forbid assignment.
@@ -109,14 +107,15 @@ private:
   double*       itsStdDev;
   double*       itsChi;
   
-  PO_DH_SOL*    itsPODHSOL; 
-
-  int itsCurDataSize;
   double*       itsStartFreq;        // Start frequency of the domain
   double*       itsEndFreq;          // End frequency of the domain
   double*       itsStartTime;        // Start time of the domain
   double*       itsEndTime;          // End time of the domain
 
+  unsigned int* itsHasConverged;     // Does the solution comply with the convergence criterion?
+  
+  bool          itsWriteIndivParms;  // Write parameters individually in a subtable? 
+  string        itsParmTableName;    // Table name of individual parameter storage
 };
 
 inline int DH_Solution::getWorkOrderID() const
@@ -143,32 +142,11 @@ inline double DH_Solution::getStartTime() const
 inline double DH_Solution::getEndTime() const
 { return *itsEndTime; }
 
+inline bool DH_Solution::hasConverged() const
+{ return ((*itsHasConverged==0)?(false):(true)); }
 
-// Define the class needed to tell PL that there should be
-// extra fields stored in the database table.
-namespace PL {  
-  template<>                                               
-  class DBRep<DH_Solution> : public DBRep<DH_PL>               
-  {                                                             
-    public:                                                     
-      void bindCols (dtl::BoundIOs& cols);                      
-      void toDBRep (const DH_Solution&);                        
-    private: 
-                                   // Temporarily stored in separate fields
-      int    itsWOID;              // in order to facilitate debugging
-      int    itsIteration;
-      double itsFit;
-      //      int    itsRank;
-      double itsMu;
-      double itsStdDev;
-      double itsChi;
-      double itsStartFreq;
-      double itsEndFreq;
-      double itsStartTime;
-      double itsEndTime;
-    };   
-                                                      
-} // end namespace PL   
+inline void DH_Solution::setConverged(bool converged)
+{ *itsHasConverged = converged; }
 
 // @}
 

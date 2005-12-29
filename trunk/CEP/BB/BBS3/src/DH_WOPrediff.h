@@ -31,8 +31,7 @@
 
 #include <Common/lofar_vector.h>
 #include <APS/ParameterSet.h>
-#include <TransportPL/DH_PL.h>
-#include <TransportPL/PO_DH_PL.h>
+#include <TransportPostgres/DH_DB.h>
 #include <BBS3/Quality.h>
 
 namespace LOFAR
@@ -47,13 +46,11 @@ using ACC::APS::ParameterSet;
    This class is a DataHolder which contains the work orders.
 */
 
-class DH_WOPrediff: public DH_PL
+class DH_WOPrediff: public DH_DB
 {
 public:
 
   enum woStatus{New,Assigned,Executed};
-
-  typedef PL::TPersistentObject<DH_WOPrediff> PO_DH_WOPrediff;
 
   explicit DH_WOPrediff (const string& name = "dh_woprediff");
 
@@ -63,18 +60,12 @@ public:
 
   DataHolder* clone() const;
 
-  // Get a reference to the PersistentObject.
-  virtual PL::PersistentObject& getPO() const;
-
-  // Create a TPO object and set the table name in it.
-  virtual void initPO (const string& tableName);
-
   /// Allocate the buffers.
   virtual void init();
 
   /// Data access methods.
   int getWorkOrderID() const;
-  void setNewWorkOrderID();
+  void setWorkOrderID(int id);
 
   int getStrategyControllerID() const;
   void setStrategyControllerID(int id);
@@ -105,6 +96,9 @@ public:
 
   bool getWriteInDataCol() const;
   void setWriteInDataCol(bool write);
+
+  int getMaxIterations() const;
+  void setMaxIterations(int nr);
 
   double getStartFreq() const;
   void setStartFreq(double fr);
@@ -153,14 +147,22 @@ public:
 
   void clearData();
 
+  // Get maximum scid present in prediffer workorder table. Returns 0 if empty.
+  int getMaxSCID(TH_DB* th);
+  // Get maximum woid present in prediffer workorder table. Returns 0 if empty. 
+  int getMaxWOID(TH_DB* th);
+
+protected:
+  // Methods to obtain the specific queries to insert/update this DataHolder
+  string createInsertStatement(TH_DB* th);
+  string createUpdateStatement(TH_DB* th); // NB.This implementation assumes only the
+                                           // status has changed and needs to be updated
 private:
   /// Forbid assignment.
   DH_WOPrediff& operator= (const DH_WOPrediff&);
 
   // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
-
-  void setWorkOrderID(int id);
 
   int*          itsWOID;                    // Unique workorder id
   int*          itsSCID;                    // ID of the sending StrategyController (SC)
@@ -173,6 +175,7 @@ private:
   unsigned int* itsSubtractSources;         // Subtract peel sources?
   unsigned int* itsWritePredData;           // Write predicted data?
   unsigned int* itsWriteInDataCol;          // Write predicted data in DATA column?
+  int*          itsMaxIterations;           // Maximum number of iterations to do
   double*       itsStartFreq;               // Start frequency
   double*       itsFreqLength;              // Frequency interval size
   double*       itsStartTime;               // Start time of time interval
@@ -184,16 +187,10 @@ private:
   unsigned int* itsUpdateParms;             // Update solvable parameters?
   int*          itsSolutionID;              // (wo)ID of solution in solution table
   
-  PO_DH_WOPrediff* itsPODHWO; 
-  
-
 };
 
 inline int DH_WOPrediff::getWorkOrderID() const
 { return *itsWOID; }
-
-inline void DH_WOPrediff::setNewWorkOrderID()
-{ *itsWOID = *itsWOID + 1; }
 
 inline void DH_WOPrediff::setWorkOrderID(int id)
 { *itsWOID = id; }
@@ -255,6 +252,12 @@ inline bool DH_WOPrediff::getWriteInDataCol() const
 inline void DH_WOPrediff::setWriteInDataCol(bool write)
 { *itsWriteInDataCol = write; }
 
+inline int DH_WOPrediff::getMaxIterations() const
+{ return *itsMaxIterations; }
+
+inline void DH_WOPrediff::setMaxIterations(int nr)
+{ *itsMaxIterations = nr; }
+
 inline double DH_WOPrediff::getStartFreq() const
 { return *itsStartFreq; }
 
@@ -308,38 +311,6 @@ inline int DH_WOPrediff::getSolutionID() const
  
 inline void DH_WOPrediff::setSolutionID(int id)
 { *itsSolutionID = id; }
-
-// Define the class needed to tell PL that there should be
-// extra fields stored in the database table.
-namespace PL {  
-  template<>                                                 
-  class DBRep<DH_WOPrediff> : public DBRep<DH_PL>               
-  {                                                             
-    public:                                                     
-      void bindCols (dtl::BoundIOs& cols);                      
-      void toDBRep (const DH_WOPrediff&);                        
-    private:                                                    
-      int          itsWOID;                    // Temporarily stored in separate fields
-      int          itsSCID;                    // in order to facilitate debugging
-      unsigned int itsStatus;
-      string       itsKSType;
-      unsigned int itsDoNothing;
-      unsigned int itsNewBaselines;
-      unsigned int itsNewDomain;
-      unsigned int itsNewPeelSources;
-      unsigned int itsSubtractSources;
-      unsigned int itsWritePredData;
-      unsigned int itsWriteInDataCol;
-      double       itsStartFreq;
-      double       itsFreqLength;
-      double       itsStartTime;
-      double       itsTimeLength;
-      unsigned int itsCleanUp;
-      unsigned int itsUpdateParms;
-      int          itsSolutionID;
-    };   
-                                                      
-} // end namespace PL   
 
 // @}
 } // namespace LOFAR

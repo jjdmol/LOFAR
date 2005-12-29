@@ -1,4 +1,4 @@
-//#  SC_Simple.h: A simple calibration strategy
+//#  SC_CompoundIter.h: A calibration strategy which sends compound workorders.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS3_SC_SIMPLE_H
-#define LOFAR_BBS3_SC_SIMPLE_H
+#ifndef LOFAR_BBS3_SC_COMPOUNDITER_H
+#define LOFAR_BBS3_SC_COMPOUNDITER_H
 
-// \file
-// A simple calibration strategy
+// \file SC_CompoundIter
+// A calibration strategy which sends compound workorders (multiple iterations).
 
 //# Includes
 #include <BBS3/StrategyController.h>
@@ -41,14 +41,14 @@ namespace LOFAR
 
 using ACC::APS::ParameterSet;
 
-class SC_Simple : public StrategyController
+class SC_CompoundIter : public StrategyController
 {
 public:
-  SC_Simple(Connection* inSolConn, Connection* outWOPDConn, 
+  SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn, 
 	    Connection* outWOSolveConn, int nrPrediffers,
 	    const ParameterSet& args);
 
-  virtual ~SC_Simple();
+  virtual ~SC_CompoundIter();
 
   /// Execute the strategy
   virtual bool execute();
@@ -60,15 +60,15 @@ public:
   virtual string getType() const;
 
  private:
-  SC_Simple(const SC_Simple&);
-  SC_Simple& operator=(const SC_Simple&);
+  SC_CompoundIter(const SC_CompoundIter&);
+  SC_CompoundIter& operator=(const SC_CompoundIter&);
 
   void readSolution();
 
   bool         itsFirstCall;
   int          itsPrevWOID;
   ParameterSet itsArgs;
-  int          itsNrIterations;
+  int          itsMaxIterations;
   double       itsFitCriterion;
   int          itsCurIter;
   double       itsCurStartTime;
@@ -78,11 +78,10 @@ public:
   double       itsTimeLength;
   double       itsStartFreq;
   double       itsFreqLength;
-  bool         itsSendDoNothingWO;  // Flag to indicate whether the previous sent workorder was a "do nothing"
 };
 
-inline string SC_Simple::getType() const
-{ return "Simple"; }
+inline string SC_CompoundIter::getType() const
+{ return "CompoundIter"; }
 
 // @}
 

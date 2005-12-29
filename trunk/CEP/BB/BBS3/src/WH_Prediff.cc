@@ -108,7 +108,6 @@ void WH_Prediff::process()
 
   // Read next workorder
   readWorkOrder();
-
   DH_WOPrediff* wo =  dynamic_cast<DH_WOPrediff*>(getDataManager().getInHolder(0));
 
   if (wo->getDoNothing() == false)
@@ -182,44 +181,66 @@ void WH_Prediff::process()
 	pred->setSolvableParms(pNames, exPNames, true);
       }
 
-      // Parameter update
-      if (wo->getUpdateParms())
+      // Loop over iterations
+      for (int curIter=0; curIter < wo->getMaxIterations(); curIter++)
       {
-	BBSTest::ScopedTimer updatePTimer("P:update-parms");
-	int solID = wo->getSolutionID();
-	if (solID != -1)             // Read solution and update parameters
+	bool converged = false;
+	// Parameter update
+	if (curIter != 0) // If next iteration within the workorder, read solution
 	{
+	  BBSTest::ScopedTimer updatePTimer("P:update-parms");
 	  vector<ParmData> solVec;
-	  readSolution(solID, solVec);
-	  pred->updateSolvableParms(solVec);
+	  converged = readSolution(wo->getSolutionID(), curIter-1, solVec);
+	  if (!converged)
+	  {
+	    pred->updateSolvableParms(solVec);
+	  }
 	}
-	else
-	{                            // Reread parameter values from table
-	  pred->updateSolvableParms();
+	else if (wo->getUpdateParms())  // Read solution
+	{
+	  BBSTest::ScopedTimer updatePTimer("P:update-parms");
+	  int solID = wo->getSolutionID();
+	  if ((solID != -1))             // Read solution and update parameters
+	  {
+	    vector<ParmData> solVec;
+	    readSolution(solID, solVec);
+	    pred->updateSolvableParms(solVec);
+	  }
+	  else
+	  {                            // Reread parameter values from table
+	    pred->updateSolvableParms();
+	  }
 	}
-      }
 
-      // Calculate, put in output dataholder buffer and send to solver
-      {
-	BBSTest::ScopedTimer predifTimer("P:prediffer");
-	dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
-	casa::LSQFit fitter;
-	pred->fillFitter (fitter);
-	Prediffer::marshall (fitter, dhRes->getDataBuffer(),
-			     dhRes->getBufferSize());
-	MeqDomain domain = pred->getDomain();
-	dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), 
-			 domain.endY());
-	// send result to solver
-	getDataManager().readyWithOutHolder(2);
-      }
+	if (converged)  // Skip prediffing and end iterating
+	{ 
+	  break;
+	}
+
+	// Calculate, put in output dataholder buffer and send to solver
+	{
+	  BBSTest::ScopedTimer predifTimer("P:prediffer");
+	  dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
+	  casa::LSQFit fitter;
+	  pred->fillFitter (fitter);
+	  Prediffer::marshall (fitter, dhRes->getDataBuffer(),
+			       dhRes->getBufferSize());
+	  MeqDomain domain = pred->getDomain();
+	  dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), 
+			   domain.endY());
+	  // send result to solver
+	  getDataManager().readyWithOutHolder(2);
+	}
+
+      } // End of loop over iterations
+
 
       if (wo->getSubtractSources())
       {
 	pred->subtractPeelSources(true);   // >>>For now: always write in new file 
       }
       
-      if (wo->getCleanUp())   // If Prediffer (cache) is no longer needed: clean up  
+      if (wo->getCleanUp())   // If Prediffer object is no longer needed: clean up  
       {
 	itsPrediffs.erase(contrID);
       }
@@ -288,7 +309,11 @@ void WH_Prediff::readWorkOrder()
  
   // Wait for workorder
   bool firstTime = true;
-  while ((wo->queryDB("status=0 and (kstype='" + getName() + "') order by woid asc", *conn)) <= 0)
+  ostringstream q;
+  q << "SELECT * FROM bbs3woprediffer WHERE STATUS=0 AND(KSTYPE='" 
+    << getName() << "') order by WOID ASC";
+
+  while ((wo->queryDB(q.str(), *conn)) <= 0)
   {
     if (firstTime)
     {
@@ -297,9 +322,9 @@ void WH_Prediff::readWorkOrder()
     }
   }
 
-  cout << "!!!!!! Prediffer read workorder: " << endl;
+  //  cout << "!!!!!! Prediffer read workorder: " << endl;
   //wo->dump();
-  cout << "!!!!!!" << endl;
+  //  cout << "!!!!!!" << endl;
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Assigned);
@@ -324,7 +349,7 @@ void WH_Prediff::getSrcGrp (const ParameterSet& args,
   }
 }
 
-void WH_Prediff::readSolution(int id, vector<ParmData>& solVec)
+void WH_Prediff::readSolution(int woid, vector<ParmData>& solVec)
 {
   LOG_TRACE_FLOW("WH_Prediff reading solution");
 
@@ -333,14 +358,50 @@ void WH_Prediff::readSolution(int id, vector<ParmData>& solVec)
   ASSERTSTR(conn!=0, "No connection set!");
 
   // Wait for solution
-  char str[32];
-  sprintf(str, "WOID=%i", id);
+  char str[64];
+  sprintf(str, "SELECT * FROM bbs3solutions WHERE WOID=%i ORDER BY iteration DESC", woid);
   string query(str);
 
-  ASSERTSTR(sol->queryDB(query, *conn) > 0, "No solution with WOID = "  
-	    << id << " found by WH_Prediff");
+  bool firstTime = true;
+  while ((sol->queryDB(query, *conn)) <= 0)
+  {
+    if (firstTime)
+    {
+      cout << "No solution with WOID = " << woid << " found by WH_Prediff. Waiting for solution..." << endl;
+      firstTime = false;
+    }
+  }
   
   sol->getSolution(solVec);
+}
+
+bool WH_Prediff::readSolution(int woid, int iteration, vector<ParmData>& solVec)
+{
+  LOG_TRACE_FLOW("WH_Prediff reading solution");
+
+  DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
+  Connection* conn = getDataManager().getInConnection(1);
+  ASSERTSTR(conn!=0, "No connection set!");
+
+  // Wait for solution
+  char str[64];
+  sprintf(str, "SELECT * FROM bbs3solutions WHERE WOID=%i AND iteration=%i", woid, iteration);
+  string query(str);
+
+  bool firstTime = true;
+  while ((sol->queryDB(query, *conn)) <= 0)
+  {
+    if (firstTime)
+    {
+      cout << "No solution with WOID = " << woid << " and ITERATION= " 
+	   << iteration << " found by WH_Prediff. Waiting for solution..." << endl;
+      firstTime = false;
+    }
+  }
+  
+  sol->getSolution(solVec);
+
+  return (sol->hasConverged());
 }
 
 } // namespace LOFAR

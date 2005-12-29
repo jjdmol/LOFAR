@@ -114,16 +114,16 @@ time ./BBS3 ../../test/BB3C343.input1 $usernm
 
 
 # Create a new gsm table.
-beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'"
-makeGsm
-applyfile
+#beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'"
+#makeGsm
+#applyfile
 
-./clearBB -user $usernm
+#./clearBB -user $usernm
 
 # Solve for StokesI (and save that).
-time ./BBS3 ../../test/BB3C343.input1 $usernm 
+#time ./BBS3 ../../test/BB3C343.input1 $usernm 
 
-./clearBB -user $usernm
+#./clearBB -user $usernm
 
 # Solve for phase
-time ./BBS3 ../../test/BB3C343.input2 $usernm
+#time ./BBS3 ../../test/BB3C343.input2 $usernm

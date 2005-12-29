@@ -44,7 +44,7 @@ using ACC::APS::ParameterSet;
 class SC_WritePredData : public StrategyController
 {
 public:
-  SC_WritePredData(int id, Connection* inSolConn, Connection* outWOPDConn, 
+  SC_WritePredData(Connection* inSolConn, Connection* outWOPDConn, 
 	    Connection* outWOSolveConn, int nrPrediffers,
 	    const ParameterSet& args);
 

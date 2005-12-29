@@ -34,6 +34,7 @@
 #include <BBS3/DH_WOSolve.h>
 #include <BBS3/SC_Simple.h>
 #include <BBS3/SC_WritePredData.h>
+#include <BBS3/SC_CompoundIter.h>
 #include <BBS3/StrategyController.h>
 #include <BBS3/BBSTestLogger.h>
 
@@ -178,13 +179,18 @@ void WH_Control::createStrategyControllers()
     // Create StrategyController and add to list
     if (stratType == "Simple")
     {
-      SC_Simple* sc = new SC_Simple(i, inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
+      SC_Simple* sc = new SC_Simple(inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
       itsControllers.push_back(sc);                           // must get an unique ID
     }
     else if (stratType == "WritePredData")
     {
-      SC_WritePredData* sc = new SC_WritePredData(i, inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
+      SC_WritePredData* sc = new SC_WritePredData(inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
       itsControllers.push_back(sc);                           // must get an unique ID      
+    }
+    else if (stratType == "CompoundIter")
+    {
+      SC_CompoundIter* sc = new SC_CompoundIter(inSolConn, outPDConn, outSVConn, itsNrPrediffers, params);  // Each StrategyController
+      itsControllers.push_back(sc);                           // must get an unique ID
     }
     else
     {

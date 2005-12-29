@@ -26,11 +26,10 @@
 #include <lofar_config.h>
 
 #include <BBS3/DH_WOPrediff.h>
-#include <PL/TPersistentObject.h>
 #include <APS/ParameterSet.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
-#include <Common/LofarLogger.h>
+#include <TransportPostgres/TH_DB.h>
 #include <sstream>
 #include <unistd.h> 
 
@@ -41,7 +40,7 @@ const unsigned int MaxKSTypeLength = 16;
 const unsigned int MaxModelTypeLength = 16;
 
 DH_WOPrediff::DH_WOPrediff (const string& name)
-  : DH_PL(name, "DH_WOPrediff", 1),
+  : DH_DB(name, "DH_WOPrediff", 1),
     itsWOID            (0),
     itsSCID            (0),
     itsStatus          (0),
@@ -53,6 +52,7 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsSubtractSources (0),
     itsWritePredData   (0),
     itsWriteInDataCol  (0),
+    itsMaxIterations    (0),
     itsStartFreq       (0),
     itsFreqLength      (0),
     itsStartTime       (0),
@@ -62,15 +62,14 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsUseAutoCorr     (0),
     itsCleanUp         (0),
     itsUpdateParms     (0),
-    itsSolutionID      (0),
-    itsPODHWO          (0)
+    itsSolutionID      (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff constructor");
   setExtraBlob("Extra", 1);
 }
 
 DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
-  : DH_PL(that),
+  : DH_DB(that),
     itsWOID            (0),
     itsSCID            (0),
     itsStatus          (0),
@@ -82,6 +81,7 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsSubtractSources (0),
     itsWritePredData   (0),
     itsWriteInDataCol  (0),
+    itsMaxIterations    (0),
     itsStartFreq       (0),
     itsFreqLength      (0),
     itsStartTime       (0),
@@ -91,8 +91,7 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsUseAutoCorr     (0),
     itsCleanUp         (0),
     itsUpdateParms     (0),
-    itsSolutionID      (0),
-    itsPODHWO          (0)
+    itsSolutionID      (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff copy constructor");
   setExtraBlob("Extra", 1);
@@ -101,25 +100,12 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
 DH_WOPrediff::~DH_WOPrediff()
 {
   LOG_TRACE_FLOW("DH_WOPrediff destructor");
-  delete itsPODHWO;
 }
 
 DataHolder* DH_WOPrediff::clone() const
 {
   return new DH_WOPrediff(*this);
 }
-
-void DH_WOPrediff::initPO (const string& tableName)
-{                         
-  itsPODHWO = new PO_DH_WOPrediff(*this);
-  itsPODHWO->tableName (tableName);
-  setPOInitialized();
-}
-
-PL::PersistentObject& DH_WOPrediff::getPO() const
-{
-  return *itsPODHWO;
-} 
 
 void DH_WOPrediff::init()
 {
@@ -135,6 +121,7 @@ void DH_WOPrediff::init()
   addField ("SubtractSources", BlobField<unsigned int>(1));
   addField ("WritePredData", BlobField<unsigned int>(1));
   addField ("WriteInDataCol", BlobField<unsigned int>(1));
+  addField ("MaxIterations", BlobField<int>(1));
   addField ("StartFreq", BlobField<double>(1));
   addField ("FreqLength", BlobField<double>(1));
   addField ("StartTime", BlobField<double>(1));
@@ -169,6 +156,7 @@ void DH_WOPrediff::init()
   *itsSubtractSources = 0;
   *itsWritePredData = 0;
   *itsWriteInDataCol = 0;
+  *itsMaxIterations = 1;
   *itsStartFreq = 0;
   *itsFreqLength = 0;
   *itsStartTime = 0;
@@ -194,6 +182,7 @@ void DH_WOPrediff::fillDataPointers()
   itsSubtractSources = getData<unsigned int> ("SubtractSources");
   itsWritePredData = getData<unsigned int> ("WritePredData");
   itsWriteInDataCol = getData<unsigned int> ("WriteInDataCol");
+  itsMaxIterations = getData<int> ("MaxIterations");
   itsStartFreq = getData<double> ("StartFreq");
   itsFreqLength = getData<double> ("FreqLength");
   itsStartTime = getData<double> ("StartTime");
@@ -393,6 +382,7 @@ void DH_WOPrediff::dump()
   cout << "Subtract peel sources? = " << getSubtractSources() << endl;
   cout << "Write predicted data? = " << getWritePredData() << endl;
   cout << "Write in DATA column? = " << getWriteInDataCol() << endl;
+  cout << "Number of iterations = " << getMaxIterations() << endl;
   cout << "Start frequency = " << getStartFreq() << endl;
   cout << "Frequency length = " << getFreqLength() << endl;
   cout << "Start time = " << getStartTime() << endl;
@@ -482,6 +472,7 @@ void DH_WOPrediff::clearData()
   setSubtractSources(false);
   setWritePredData(false);
   setWriteInDataCol(false);
+  setMaxIterations(1);
   setStartFreq(0);
   setFreqLength(0);
   setStartTime(0);
@@ -494,57 +485,72 @@ void DH_WOPrediff::clearData()
   setSolutionID(0);
 }
 
-namespace PL {
-
-void DBRep<DH_WOPrediff>::bindCols (dtl::BoundIOs& cols)
+string DH_WOPrediff::createInsertStatement(TH_DB* th)
 {
-  DBRep<DH_PL>::bindCols (cols);
-  cols["WOID"] == itsWOID;
-  cols["SCID"] == itsSCID;
-  cols["STATUS"] == itsStatus;
-  cols["KSTYPE"] == itsKSType;
-  cols["DONOTHING"] == itsDoNothing;
-  cols["NEWBASELINES"] == itsNewBaselines;
-  cols["NEWDOMAIN"] == itsNewDomain;
-  cols["NEWSOURCES"] == itsNewPeelSources;
-  cols["SUBTRACTSOURCES"] == itsSubtractSources;
-  cols["WRITEPREDDATA"] == itsWritePredData;
-  cols["WRITEINDATACOL"] == itsWriteInDataCol;
-  cols["STARTFREQ"] == itsStartFreq;
-  cols["FREQLENGTH"] == itsFreqLength;
-  cols["STARTTIME"] == itsStartTime;
-  cols["TIMELENGTH"] == itsTimeLength;
-  cols["CLEANUP"] == itsCleanUp;
-  cols["UPDATEPARMS"] == itsUpdateParms;
-  cols["SOLUTIONID"] == itsSolutionID;
+   ostringstream q;
+   q << "INSERT INTO bbs3woprediffer (data, woid, scid, status, kstype, donothing, newbaselines, newdomain, newsources, subtractsources, writepreddata, writeindatacol, maxiterations, startfreq, freqlength, starttime, timelength, cleanup, updateparms, solutionid) VALUES ('";
+   th->addDBBlob(this, q);
+   q << "', "
+     << getWorkOrderID() << ", "
+     << getStrategyControllerID() << ", "
+     << getStatus() << ", '"
+     << getKSType() << "', "
+     << getDoNothing() << ", "
+     << getNewBaselines() << ", "
+     << getNewDomain() << ", "
+     << getNewPeelSources() << ", "
+     << getSubtractSources() << ", "
+     << getWritePredData() << ", "
+     << getWriteInDataCol() << ", "
+     << getMaxIterations() << ", "
+     << getStartFreq() << ", "
+     << getFreqLength() << ", "
+     << getStartTime() << ", "
+     << getTimeLength() << ", "
+     << getCleanUp() << ", "
+     << getUpdateParms() << ", "
+     << getSolutionID() << ");";
+   return q.str();
 }
 
-void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
+string DH_WOPrediff::createUpdateStatement(TH_DB* th)
 {
-  DBRep<DH_PL>::toDBRep (obj);
-  itsWOID = obj.getWorkOrderID();
-  itsSCID = obj.getStrategyControllerID();
-  itsStatus = obj.getStatus();
-  itsKSType = obj.getKSType();
-  itsDoNothing = obj.getDoNothing();
-  itsNewBaselines = obj.getNewBaselines();
-  itsNewDomain = obj.getNewDomain();
-  itsNewPeelSources = obj.getNewPeelSources();
-  itsSubtractSources = obj.getSubtractSources();
-  itsWritePredData = obj.getWritePredData();
-  itsWriteInDataCol = obj.getWriteInDataCol();
-  itsStartFreq = obj.getStartFreq();
-  itsFreqLength = obj.getFreqLength();
-  itsStartTime = obj.getStartTime();
-  itsTimeLength = obj.getTimeLength();
-  itsCleanUp = obj.getCleanUp();
-  itsUpdateParms = obj.getUpdateParms();
-  itsSolutionID = obj.getSolutionID();
+  // This implementation assumes only the status has changed. So only the blob and
+  // the status field are updated!
+  ostringstream q;
+  q << "UPDATE bbs3woprediffer SET data='";
+  th->addDBBlob(this, q);
+  q << "', status=" << getStatus() 
+    <<" WHERE woid=" << getWorkOrderID();
+  return q.str();
 }
 
-//# Force the instantiation of the templates.
-template class TPersistentObject<DH_WOPrediff>;
+int DH_WOPrediff::getMaxSCID(TH_DB* th)
+{
+  string query("SELECT MAX(SCID) FROM bbs3woprediffer");
+  char res[10];
+  if (th->queryDB(query, res, 10) <= 0)
+  {
+    return 0;
+  }
+  else
+  {
+    return atoi(res);
+  }
+}
 
-}  // end namespace PL
+int DH_WOPrediff::getMaxWOID(TH_DB* th)
+{
+  string query("SELECT MAX(WOID) FROM bbs3woprediffer");
+  char res[10];
+  if (th->queryDB(query, res, 10) <= 0)
+  {
+    return 0;
+  }
+  else
+  {
+    return atoi(res);
+  }
+}
 
 } // namespace LOFAR

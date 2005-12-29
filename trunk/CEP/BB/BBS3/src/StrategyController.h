@@ -51,7 +51,7 @@ class StrategyController
 {
 public:
   // Creation of a StrategyController with its DataHolders to read and write.
-  StrategyController(int id, Connection* inSolConn, 
+  StrategyController(Connection* inSolConn, 
 		     Connection* outWOPDConn, 
 		     Connection* outWOSolveConn,
 		     int nrPrediffers,
@@ -78,11 +78,13 @@ public:
 
   int getID() const;
 
+  int getNewWorkOrderID();
+
   int getNumberOfPrediffers() const;
 
   ParmWriter& getParmWriter();
 
- protected:
+protected:
   Connection*   itsInSolConn;
   Connection*   itsOutWOPDConn;
   Connection*   itsOutWOSolveConn;
@@ -91,6 +93,9 @@ public:
 private:
   int           itsID;
   ParmWriter    itsParmWriter;
+
+  static int    theirNextSCID;   // Unique ID for next Strategy Controller instance
+  static int  theirNextWOID;     // Unique ID for next workorder
 };
 
 inline DH_Solution* StrategyController::getSolution() const
@@ -104,6 +109,9 @@ inline DH_WOSolve* StrategyController::getSolveWorkOrder() const
 
 inline int StrategyController::getID() const
 { return itsID; }
+
+inline int StrategyController::getNewWorkOrderID()
+{ return theirNextWOID++; }
 
 inline ParmWriter& StrategyController::getParmWriter()
 { return itsParmWriter; }

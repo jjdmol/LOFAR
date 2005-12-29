@@ -24,7 +24,6 @@
 
 #include <BBS3/SC_WritePredData.h>
 #include <Common/LofarLogger.h>
-#include <TransportPL/DH_PL.h>
 #include <BBS3/DH_Solution.h>
 #include <BBS3/DH_WOPrediff.h>
 #include <BBS3/DH_WOSolve.h>
@@ -34,10 +33,10 @@
 namespace LOFAR
 {
 
-SC_WritePredData::SC_WritePredData(int id, Connection* inSolConn, Connection* outWOPDConn, 
+SC_WritePredData::SC_WritePredData(Connection* inSolConn, Connection* outWOPDConn, 
 		     Connection* outWOSolveConn, int nrPrediffers,
 		     const ParameterSet& args)
-  : StrategyController(id, inSolConn, outWOPDConn, outWOSolveConn, 
+  : StrategyController(inSolConn, outWOPDConn, outWOSolveConn, 
 		       nrPrediffers, args.getInt32("MSDBparams.DBMasterPort")), 
     itsFirstCall      (true),
     itsArgs           (args),
@@ -98,14 +97,15 @@ bool SC_WritePredData::execute()
   {
     corrs = itsArgs.getInt32Vector("correlations");
   }
-    // the prediffer needs to know the modelType too
-    msParams["modelType"] = itsArgs.getString("modelType");
-    msParams["calcUVW"] = itsArgs.getString("calcUVW");
-    vector<string> pNames;    // Empty vector
-    vector<string> exPNames;    // Empty vector
-    WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);
+  // the prediffer needs to know the modelType too
+  msParams["modelType"] = itsArgs.getString("modelType");
+  msParams["calcUVW"] = itsArgs.getString("calcUVW");
+  vector<string> pNames;    // Empty vector
+  vector<string> exPNames;    // Empty vector
+  WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);
  
-  WOPD->setNewWorkOrderID();
+  int woid = getNewWorkOrderID();  
+  WOPD->setWorkOrderID(woid);
   WOPD->setStrategyControllerID(getID());
   WOPD->setNewDomain(true);
 
@@ -113,7 +113,7 @@ bool SC_WritePredData::execute()
   WOSolve->setStatus(DH_WOSolve::New);
   WOSolve->setKSType("Solver");
   WOSolve->setDoNothing(true);  // No solve
-  WOSolve->setNewWorkOrderID();
+  WOSolve->setWorkOrderID(woid);
   WOSolve->setStrategyControllerID(getID());
 
   // Temporarily show on cout
@@ -145,7 +145,7 @@ bool SC_WritePredData::execute()
   int nrPred = getNumberOfPrediffers();
   for (int i = 2; i <= nrPred; i++)
   {
-    WOPD->setNewWorkOrderID();
+    WOPD->setWorkOrderID(getNewWorkOrderID());
     char str[32];
     sprintf(str, "%i", i);
     WOPD->setKSType("Prediff"+string(str));
