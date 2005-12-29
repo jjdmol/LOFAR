@@ -44,7 +44,7 @@ using namespace CAL;
 using namespace RTC;
 using namespace CAL_Protocol;
 
-CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint8 rcucontrol, int subarrayid)
+CalTest::CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint32 rcucontrol, int subarrayid)
   : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
     m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_clock(clock), m_nyquistzone(nyquistzone), m_rcucontrol(rcucontrol), m_subarrayid(subarrayid)
 {

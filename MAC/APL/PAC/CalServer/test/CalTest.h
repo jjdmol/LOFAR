@@ -43,7 +43,7 @@ namespace LOFAR
 	   * up connection establishment information using the GTMNameService and
 	   * GTMTopologyService classes.
 	   */
-	  CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint8 rcucontrol, int subarrayid);
+	  CalTest(string name, string arrayname, string parentname, int nantennas, int clock, int nyquistzone, uint32 rcucontrol, int subarrayid);
 	  virtual ~CalTest();
 
 	  // state methods
