@@ -53,7 +53,6 @@ dnl
 lofar_GENERAL
 lofar_AIPSPP(1,"-lmeasures -ltables -lscimath -lscimath_f -lcasa")
 lofar_MPI
-lofar_DTL(1)
 
 lofar_INTERNAL(LCS/databases/TransportPostgres,TransportPostgres,,1,TransportPostgres/DH_DB.h)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h)
