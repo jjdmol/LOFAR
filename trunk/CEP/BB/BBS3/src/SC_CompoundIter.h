@@ -24,7 +24,8 @@
 #define LOFAR_BBS3_SC_COMPOUNDITER_H
 
 // \file SC_CompoundIter
-// A calibration strategy which sends compound workorders (multiple iterations).
+// A calibration strategy which sends compound workorders (multiple iterations).// NB. This strategy only works correctly when Prediffer and Solver run in 
+// separate processes.
 
 //# Includes
 #include <BBS3/StrategyController.h>
