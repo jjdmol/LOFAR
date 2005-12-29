@@ -23,13 +23,16 @@
 #include <lofar_config.h>
 
 #include <BBS3/StrategyController.h>
+#include <BBS3/DH_WOPrediff.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
 
-StrategyController::StrategyController(int id,
-				       Connection* inSolConn, 
+int StrategyController::theirNextSCID=-1;
+int StrategyController::theirNextWOID=-1;
+
+StrategyController::StrategyController(Connection* inSolConn, 
 				       Connection* outWOPDConn, 
 				       Connection* outWOSolveConn,
 				       int nrPrediffers,
@@ -38,7 +41,6 @@ StrategyController::StrategyController(int id,
     itsOutWOPDConn   (outWOPDConn),
     itsOutWOSolveConn(outWOSolveConn),
     itsNrPrediffers(nrPrediffers),
-    itsID        (id),
     itsParmWriter(DBMasterPort)
     
 {
@@ -48,6 +50,15 @@ StrategyController::StrategyController(int id,
 	    "Output to Prediffer has not been connected!");
   ASSERTSTR(itsOutWOSolveConn != 0, 
 	    "Output to Solver has not been connected!");
+
+  if (theirNextSCID == -1)       // If first instance of StrategyController
+  {                              // Determine unique scid.
+    TH_DB* thDB = (TH_DB*)(itsOutWOPDConn->getTransportHolder());
+    ASSERT(thDB!=0);
+    theirNextSCID = getPrediffWorkOrder()->getMaxSCID(thDB) + 1;
+    theirNextWOID = getPrediffWorkOrder()->getMaxWOID(thDB) + 1;
+  }
+  itsID = theirNextSCID++;
 }
 
 StrategyController::~StrategyController()

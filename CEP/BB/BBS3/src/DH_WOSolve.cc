@@ -26,10 +26,9 @@
 #include <lofar_config.h>
 
 #include <BBS3/DH_WOSolve.h>
-#include <PL/TPersistentObject.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
-#include <Common/LofarLogger.h>
+#include <TransportPostgres/TH_DB.h>
 #include <sstream>
 #include <unistd.h> 
 
@@ -38,7 +37,7 @@ namespace LOFAR
 const unsigned int MaxKSTypeLength = 8;
 
 DH_WOSolve::DH_WOSolve (const string& name)
-  : DH_PL(name, "DH_WOSolve", 1),
+  : DH_DB(name, "DH_WOSolve", 1),
     itsWOID            (0),
     itsSCID            (0),
     itsStatus          (0),
@@ -46,16 +45,17 @@ DH_WOSolve::DH_WOSolve (const string& name)
     itsIteration       (0),
     itsDoNothing       (0),
     itsNewDomain       (0),
+    itsMaxIterations   (0),
+    itsFitCriterion    (0),
     itsUseSVD          (0),
-    itsCleanUp         (0),
-    itsPODHWO          (0)
+    itsCleanUp         (0)
 {
   LOG_TRACE_FLOW("DH_WOSolve constructor");
   setExtraBlob("Extra", 1);
 }
 
 DH_WOSolve::DH_WOSolve(const DH_WOSolve& that)
-  : DH_PL(that),
+  : DH_DB(that),
     itsWOID            (0),
     itsSCID            (0),
     itsStatus          (0),
@@ -63,9 +63,10 @@ DH_WOSolve::DH_WOSolve(const DH_WOSolve& that)
     itsIteration       (0),
     itsDoNothing       (0),
     itsNewDomain       (0),
+    itsMaxIterations   (0),
+    itsFitCriterion    (0),
     itsUseSVD          (0),
-    itsCleanUp         (0),
-    itsPODHWO          (0)
+    itsCleanUp         (0)
 {
   LOG_TRACE_FLOW("DH_WOSolve copy constructor");
   setExtraBlob("Extra", 1);
@@ -74,25 +75,12 @@ DH_WOSolve::DH_WOSolve(const DH_WOSolve& that)
 DH_WOSolve::~DH_WOSolve()
 {
   LOG_TRACE_FLOW("DH_WOSolve destructor");
-  delete itsPODHWO;
 }
 
 DataHolder* DH_WOSolve::clone() const
 {
   return new DH_WOSolve(*this);
 }
-
-void DH_WOSolve::initPO (const string& tableName)
-{                         
-  itsPODHWO = new PO_DH_WOSOLVE(*this);
-  itsPODHWO->tableName (tableName);
-  setPOInitialized();
-}
-
-PL::PersistentObject& DH_WOSolve::getPO() const
-{
-  return *itsPODHWO;
-} 
 
 void DH_WOSolve::init()
 {
@@ -104,6 +92,8 @@ void DH_WOSolve::init()
   addField ("Iteration", BlobField<int>(1));
   addField ("DoNothing", BlobField<unsigned int>(1));
   addField ("NewDomain", BlobField<unsigned int>(1));
+  addField ("MaxIterations", BlobField<int>(1));
+  addField ("FitCriterion", BlobField<double>(1));
   addField ("UseSVD", BlobField<unsigned int>(1));
   addField ("CleanUp", BlobField<unsigned int>(1));
 
@@ -121,6 +111,8 @@ void DH_WOSolve::init()
   *itsIteration = -1;
   *itsDoNothing = 0;
   *itsNewDomain = 0;
+  *itsMaxIterations = 1;
+  *itsFitCriterion = -1;
   *itsUseSVD = 0;
   *itsCleanUp = 0;
 }
@@ -135,6 +127,8 @@ void DH_WOSolve::fillDataPointers()
   itsIteration = getData<int> ("Iteration");
   itsDoNothing = getData<unsigned int> ("DoNothing");  
   itsNewDomain = getData<unsigned int> ("NewDomain");
+  itsMaxIterations = getData<int> ("MaxIterations");
+  itsFitCriterion = getData<double> ("FitCriterion");
   itsUseSVD = getData<unsigned int> ("UseSVD");
   itsCleanUp = getData<unsigned int> ("CleanUp");
 }
@@ -147,7 +141,7 @@ void DH_WOSolve::setKSType(const string& ksType)
   strcpy(ptr, ksType.c_str());
 }
 
-void DH_WOSolve::dump()
+void DH_WOSolve::dump() const
 {
   cout << "DH_WOSolve: " << endl;
   cout << "ID = " << getWorkOrderID() << endl;
@@ -157,6 +151,8 @@ void DH_WOSolve::dump()
   cout << "Iteration number = " << getIteration() << endl;
   cout << "Do nothing? = " << getDoNothing() << endl;
   cout << "NewDomain? = " << getNewDomain() << endl;
+  cout << "Number of iterations = " << getMaxIterations() << endl;
+  cout << "Fit criterion = " << getFitCriterion() << endl;
   cout << "UseSVD? = " << getUseSVD() << endl;
   cout << "Clean up = " << getCleanUp() << endl;
 }
@@ -171,43 +167,44 @@ void DH_WOSolve::clearData()
   setIteration(-1);
   setDoNothing(false);
   setNewDomain(true);
+  setMaxIterations(1);
+  setFitCriterion(-1);
   setUseSVD(false);
   setCleanUp(false);
 }
 
-namespace PL {
-
-void DBRep<DH_WOSolve>::bindCols (dtl::BoundIOs& cols)
+string DH_WOSolve::createInsertStatement(TH_DB* th)
 {
-  DBRep<DH_PL>::bindCols (cols);
-  cols["WOID"] == itsWOID;
-  cols["SCID"] == itsSCID;
-  cols["STATUS"] == itsStatus;
-  cols["KSTYPE"] == itsKSType;
-  cols["ITERATION"] == itsIteration;
-  cols["DONOTHING"] == itsDoNothing;
-  cols["NEWDOMAIN"] == itsNewDomain;
-  cols["USESVD"] == itsUseSVD;
-  cols["CLEANUP"] == itsCleanUp;
+   ostringstream q;
+   q << "INSERT INTO bbs3wosolver (data, woid, scid, status, kstype, iteration,"
+     << " donothing, newdomain, maxiterations, fitcriterion, usesvd, cleanup) VALUES ('";
+   th->addDBBlob(this, q);
+   q << "', "
+     << getWorkOrderID() << ", "
+     << getStrategyControllerID() << ", "
+     << getStatus() << ", '"
+     << getKSType() << "', "
+     << getIteration() << ", "
+     << getDoNothing() << ", "
+     << getNewDomain() << ", "
+     << getMaxIterations() << ", "
+     << getFitCriterion() << ", "
+     << getUseSVD() << ", "
+     << getCleanUp() << ");";
+   return q.str();
 }
 
-void DBRep<DH_WOSolve>::toDBRep (const DH_WOSolve& obj)
+string DH_WOSolve::createUpdateStatement(TH_DB* th)
 {
-  DBRep<DH_PL>::toDBRep (obj);
-  itsWOID = obj.getWorkOrderID();
-  itsSCID = obj.getStrategyControllerID();
-  itsStatus = obj.getStatus();
-  itsKSType = obj.getKSType();
-  itsIteration = obj.getIteration();
-  itsDoNothing = obj.getDoNothing();
-  itsNewDomain = obj.getNewDomain();
-  itsUseSVD = obj.getUseSVD();
-  itsCleanUp = obj.getCleanUp();
+  // NB:This implementation assumes only the status has changed. So only the blob and
+  // the status field are updated!
+  ostringstream q;
+  q << "UPDATE bbs3wosolver SET data='";
+  th->addDBBlob(this, q);
+  q << "', status=" << getStatus()
+    <<" WHERE woid=" << getWorkOrderID();
+  return q.str();
 }
 
-//# Force the instantiation of the templates.
-template class TPersistentObject<DH_WOSolve>;
-
-}  // end namespace PL
 
 } // namespace LOFAR

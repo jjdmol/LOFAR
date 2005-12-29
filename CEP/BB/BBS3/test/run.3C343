@@ -101,6 +101,7 @@ beginParmdbInputFile "dbtype='$dbtype', user='$usernm', tablename='10008336_gsm'
 makeGsm2
 applyfile
 
+
 # Solve for StokesI as function of freq.
 time ./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm "" 1 $niter $calcuvw $dbtype
 
@@ -113,4 +114,4 @@ applyfile
 time ./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm "" 1 $niter $calcuvw $dbtype
 
 # Solve for phase
-time ./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm "AP" 2 $niter $calcuvw $dbtype
+time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "AP" 2 $niter $calcuvw $dbtype

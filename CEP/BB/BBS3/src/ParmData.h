@@ -69,6 +69,10 @@ public:
   MeqMatrix& getRWValues()
     { return itsValues; }
   double getValue(unsigned int index);
+  int nx() const
+    { return itsValues.nx(); }
+  int ny() const
+    { return itsValues.ny(); } 
   // </group>
 
   // Set the first spid.

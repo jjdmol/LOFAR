@@ -35,7 +35,7 @@
 #include <tinyCEP/Profiler.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Mem.h>
-#include <TransportPL/TH_PL.h>
+#include <TransportPostgres/TH_Postgresql.h>
 #include <BBS3/BlackBoardDemo.h>
 #include <BBS3/WH_Control.h>
 #include <BBS3/WH_Prediff.h>
@@ -95,7 +95,7 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
     writeIndivParms = itsParamSet.getBool("writeIndividualParms");
   }
 
-  TH_PL::useDatabase(bbDBName); 
+  TH_Postgresql::useDatabase("dop50.astron.nl", bbDBName, "postgres");
 
   // Create the controller WorkHolder and Step
   WH_Control controlWH("control", itsNumberPD, ctrlParams);
@@ -118,9 +118,15 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
     itsPDSteps[index]->runOnNode(pdNo,0);
     topComposite.addBlock(itsPDSteps[index]);
   }
+
+  string parmTableName("bbs3ParmSolutions");
+  if (itsParamSet.isDefined("parmSolutionTable"))
+  {
+    parmTableName = itsParamSet.getString("parmSolutionTable");
+  }
   
   // Create the Solver
-  WH_Solve solveWH("Solver", itsNumberPD, writeIndivParms);
+  WH_Solve solveWH("Solver", itsNumberPD, writeIndivParms, parmTableName);
   Step solverStep(solveWH, "solverStep");
   solverStep.runOnNode(itsNumberPD+1,0);
   topComposite.addBlock(solverStep);
@@ -132,33 +138,24 @@ void BlackBoardDemo::define(const KeyValueMap& params_depr)
   // some overhead in the preprocess phase)
 
   // Create the connections to the database (themselves).
-  controlStep.connect(0, &controlStep, 0, 1, new TH_PL("BBS3Solutions"));
-  controlStep.connect(1, &controlStep, 1, 1, new TH_PL("BBS3WOPrediffer"));
-  controlStep.connect(2, &controlStep, 2, 1, new TH_PL("BBS3WOSolver"));
+  controlStep.connect(0, &controlStep, 0, 1, new TH_Postgresql());
+  controlStep.connect(1, &controlStep, 1, 1, new TH_Postgresql());
+  controlStep.connect(2, &controlStep, 2, 1, new TH_Postgresql());
 
   // Same for Solver
-  solverStep.connect(0, &solverStep, 0, 1, new TH_PL("BBS3WOSolver"));
-  solverStep.connect(1, &solverStep, 1, 1, new TH_PL("BBS3Solutions"));
-  if (writeIndivParms)
-  {                         // Write individual parameter solutions to separate table
-    string parmTableName("bbs3ParmSolutions");
-    if (itsParamSet.isDefined("parmSolutionTable"))
-    {
-      parmTableName = itsParamSet.getString("parmSolutionTable");
-    }
-    solverStep.connect(2, &solverStep, 2, 1, new TH_PL(parmTableName));
-  }
+  solverStep.connect(0, &solverStep, 0, 1, new TH_Postgresql());
+  solverStep.connect(1, &solverStep, 1, 1, new TH_Postgresql());
 
   for (int index = 0; index < itsNumberPD; index++)
   {
     // Create the connection to the database.
-    itsPDSteps[index]->connect(0, itsPDSteps[index], 0, 1, new TH_PL("BBS3WOPrediffer"));
-    itsPDSteps[index]->connect(1, itsPDSteps[index], 1, 1, new TH_PL("BBS3Solutions"));
+    itsPDSteps[index]->connect(0, itsPDSteps[index], 0, 1, new TH_Postgresql());
+    itsPDSteps[index]->connect(1, itsPDSteps[index], 1, 1, new TH_Postgresql());
     // Create the connection to the Solver
 #ifdef HAVE_MPI
-    solverStep.connect(index+3, itsPDSteps[index], 2, 1, new TH_MPI(index+1,itsNumberPD+1)); 
+    solverStep.connect(index+2, itsPDSteps[index], 2, 1, new TH_MPI(index+1,itsNumberPD+1)); 
 #else
-    solverStep.connect(index+3, itsPDSteps[index], 2, 1, new TH_Mem(), false);   
+    solverStep.connect(index+2, itsPDSteps[index], 2, 1, new TH_Mem(), false);   
 #endif
   }
 

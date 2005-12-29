@@ -31,8 +31,7 @@
 
 #include <Common/lofar_vector.h>
 
-#include <TransportPL/DH_PL.h>
-#include <TransportPL/PO_DH_PL.h>
+#include <TransportPostgres/DH_DB.h>
 #include <BBS3/Quality.h>
 
 namespace LOFAR
@@ -45,13 +44,11 @@ namespace LOFAR
    This class is a DataHolder which contains the work orders for the Solver.
 */
 
-class DH_WOSolve: public DH_PL
+class DH_WOSolve: public DH_DB
 {
 public:
 
   enum woStatus{New,Assigned,Executed};
-
-  typedef PL::TPersistentObject<DH_WOSolve> PO_DH_WOSOLVE;
 
   explicit DH_WOSolve (const string& name = "dh_wosolve");
 
@@ -61,18 +58,12 @@ public:
 
   DataHolder* clone() const;
 
-  // Get a reference to the PersistentObject.
-  virtual PL::PersistentObject& getPO() const;
-
-  // Create a TPO object and set the table name in it.
-  virtual void initPO (const string& tableName);
-
   /// Allocate the buffers.
   virtual void init();
 
   /// Data access methods.
   int getWorkOrderID() const;
-  void setNewWorkOrderID();
+  void setWorkOrderID(int id);
 
   int getStrategyControllerID() const;
   void setStrategyControllerID(int id);
@@ -92,15 +83,27 @@ public:
   bool getNewDomain() const;
   void setNewDomain(bool newDomain);
 
+  int getMaxIterations() const;
+  void setMaxIterations(int nr);
+
+  double getFitCriterion() const;
+  void setFitCriterion(double val);
+
   bool getUseSVD() const;
   void setUseSVD(bool useSVD);
 
   bool getCleanUp() const;
   void setCleanUp(bool clean);
 
-  void dump();
+  void dump() const;
 
   void clearData();
+
+protected:
+  // Methods to obtain the specific queries to insert/update this DataHolder
+  string createInsertStatement(TH_DB* th);
+  string createUpdateStatement(TH_DB* th); // NB.This implementation assumes only the
+                                           // status has changed and needs to be updated
 
 private:
   /// Forbid assignment.
@@ -109,27 +112,22 @@ private:
   // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
-  void setWorkOrderID(int id);
-
-  int*          itsWOID;                    // Unique workorder id
+  int*        itsWOID;                    // Unique workorder id
   int*          itsSCID;                    // ID of sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
   int*          itsIteration;               // Iteration number
   unsigned int* itsDoNothing;               // Do nothing?
   unsigned int* itsNewDomain;               // Solve on a new domain?
+  int*          itsMaxIterations;           // Maximum number of iterations to do
+  double*       itsFitCriterion;            // Iterate until this value is obtained for the fit
   unsigned int* itsUseSVD;                  // UseSVD in solver?
   unsigned int* itsCleanUp;                 // Clean up Solver when finished?
  
-  PO_DH_WOSOLVE*    itsPODHWO; 
-
 };
 
 inline int DH_WOSolve::getWorkOrderID() const
 { return *itsWOID; }
-
-inline void DH_WOSolve::setNewWorkOrderID()
-{ *itsWOID = *itsWOID + 1; }
 
 inline void DH_WOSolve::setWorkOrderID(int id)
 { *itsWOID = id; }
@@ -167,6 +165,18 @@ inline bool DH_WOSolve::getNewDomain() const
 inline void DH_WOSolve::setNewDomain(bool doNewDomain)
 { *itsNewDomain = doNewDomain; }
 
+inline int DH_WOSolve::getMaxIterations() const
+{ return *itsMaxIterations; }
+
+inline void DH_WOSolve::setMaxIterations(int nr)
+{ *itsMaxIterations = nr; }
+
+inline double DH_WOSolve::getFitCriterion() const
+{ return *itsFitCriterion; }
+
+inline void DH_WOSolve::setFitCriterion(double val)
+{ *itsFitCriterion = val; }
+
 inline bool DH_WOSolve::getUseSVD() const
 { return ((*itsUseSVD==0)?(false):(true)); }
 
@@ -178,30 +188,6 @@ inline bool DH_WOSolve::getCleanUp() const
 
 inline void DH_WOSolve::setCleanUp(bool clean)
 { *itsCleanUp = clean; }
-
-
-// Define the class needed to tell PL that there should be
-// extra fields stored in the database table.
-namespace PL {  
-  template<>                                                 
-  class DBRep<DH_WOSolve> : public DBRep<DH_PL>               
-  {                                                             
-    public:                                                     
-      void bindCols (dtl::BoundIOs& cols);                      
-      void toDBRep (const DH_WOSolve&);                        
-    private:                                                    
-      int          itsWOID;         // Temporarily stored in separate fields
-      int          itsSCID;         // in order to facilitate debugging
-      unsigned int itsStatus;
-      string       itsKSType;
-      int          itsIteration;
-      unsigned int itsDoNothing;
-      unsigned int itsNewDomain;
-      unsigned int itsUseSVD;
-      unsigned int itsCleanUp;
-    };   
-                                                      
-} // end namespace PL   
 
 // @}
 

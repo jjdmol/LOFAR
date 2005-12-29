@@ -87,8 +87,12 @@ class WH_Prediff : public LOFAR::WorkHolder
   // Get the sourceGroups specification.
   void getSrcGrp (const ParameterSet& args, vector<vector<int> >& srcgrp) const;
 
-  // Read a parameter solution
-  void readSolution(int id, vector<ParmData>& solVec);
+  // Read a parameter solution with specified workorder id
+  void readSolution(int woid, vector<ParmData>& solVec);
+
+  // Read a parameter solution with specified workorder id and iteration
+  // and return a boolean indicating if this solution has converged.
+  bool readSolution(int woid, int iteration, vector<ParmData>& solVec);
 
   string       itsID;         // Identification number
   ParameterSet itsArgs;       // Arguments

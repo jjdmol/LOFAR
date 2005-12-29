@@ -53,8 +53,8 @@ void ParmWriter::write(vector<ParmData>& pData, double fStart, double fEnd,
 
   MeqParmGroup pgroup;
   for (uint i=0; i<pData.size(); ++i) {
-    cout << "Writing parm " << pData[i].getName() 
- 	 << " values=" << pData[i].getValues() << endl;
+//     cout << "Writing parm " << pData[i].getName() 
+//  	 << " values=" << pData[i].getValues() << endl;
     ParmTable ptab(pData[i].getParmTableData());
     MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
     parm.readPolcs (domain);

@@ -23,7 +23,7 @@
 #  $Id$
 
 # the following options can be given:
-# -host    Host (default = dop50, this is the host PL uses)
+# -host    Host (default = dop50, this is the Postgres host uses)
 # -user    User
 
 BBHOST="dop50.astron.nl"
@@ -58,14 +58,8 @@ echo " DROP TABLE bbs3woprediffer;" >> sql_create
 echo " DROP TABLE bbs3wosolver;" >> sql_create
 echo " DROP TABLE $PTABLENAME;" >> sql_create
 echo " CREATE TABLE bbs3woprediffer (
-       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
-       Owner BIGINT NOT NULL, 
-       VersionNr INTEGER NOT NULL, 
-       ID INTEGER, 
-       TAG INTEGER, 
-       SEQNR BIGINT, 
-       DATA TEXT, 
-       WOID INTEGER,
+       DATA TEXT NOT NULL, 
+       WOID INTEGER PRIMARY KEY,
        SCID INTEGER, 
        STATUS INTEGER, 
        KSTYPE TEXT,
@@ -76,6 +70,7 @@ echo " CREATE TABLE bbs3woprediffer (
        SUBTRACTSOURCES INTEGER, 
        WRITEPREDDATA INTEGER,
        WRITEINDATACOL INTEGER,
+       MAXITERATIONS INTEGER,
        STARTFREQ DOUBLE PRECISION,
        FREQLENGTH DOUBLE PRECISION,
        STARTTIME DOUBLE PRECISION,
@@ -83,31 +78,25 @@ echo " CREATE TABLE bbs3woprediffer (
        CLEANUP INTEGER,
        UPDATEPARMS INTEGER,
        SOLUTIONID INTEGER);" >> sql_create
+echo " CREATE INDEX bbs3woprediffer_status_idx ON bbs3woprediffer(status); " >> sql_create
+#echo " CREATE INDEX bbs3woprediffer_kstype_idx ON bbs3woprediffer(kstype); " >> sql_create
 echo " CREATE TABLE bbs3wosolver (
-       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
-       Owner BIGINT NOT NULL, 
-       VersionNr INTEGER NOT NULL, 
-       ID INTEGER, 
-       TAG INTEGER, 
-       SEQNR BIGINT, 
-       DATA TEXT, 
-       WOID INTEGER,
+       DATA TEXT NOT NULL, 
+       WOID INTEGER PRIMARY KEY,
        SCID INTEGER, 
        STATUS INTEGER, 
        KSTYPE TEXT,
        ITERATION INTEGER,
        DONOTHING INTEGER,
-       NEWDOMAIN INTEGER, 
+       NEWDOMAIN INTEGER,
+       MAXITERATIONS INTEGER, 
+       FITCRITERION DOUBLE PRECISION,
        USESVD INTEGER,
        CLEANUP INTEGER);" >> sql_create
+#echo " CREATE INDEX bbs3wosolver_kstype_idx ON bbs3wosolver(kstype); " >> sql_create
+echo " CREATE INDEX bbs3wosolver_status_idx ON bbs3wosolver(status); " >> sql_create
 echo "create table bbs3solutions (
-      ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
-      Owner BIGINT NOT NULL, 
-      VersionNr INTEGER NOT NULL, 
-      ID INTEGER, 
-      TAG INTEGER, 
-      SEQNR BIGINT, 
-      DATA TEXT, 
+      DATA TEXT NOT NULL, 
       WOID INTEGER, 
       ITERATION INTEGER,
       FIT DOUBLE PRECISION, 
@@ -117,26 +106,15 @@ echo "create table bbs3solutions (
       STARTFREQ DOUBLE PRECISION,
       ENDFREQ DOUBLE PRECISION,
       STARTTIME DOUBLE PRECISION,
-      ENDTIME DOUBLE PRECISION);" >> sql_create
-echo "create table $PTABLENAME (
-      ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
-      Owner BIGINT NOT NULL, 
-      VersionNr INTEGER NOT NULL, 
-      ID INTEGER, 
-      TAG INTEGER, 
-      SEQNR BIGINT, 
-      DATA TEXT, 
-      WOID INTEGER, 
-      PARMNAME TEXT, 
-      ITERATION INTEGER,
-      FIT DOUBLE PRECISION, 
-      RANK INTEGER,
-      STARTFREQ DOUBLE PRECISION,
-      ENDFREQ DOUBLE PRECISION,
-      STARTTIME DOUBLE PRECISION,
       ENDTIME DOUBLE PRECISION,
-      COEFF0 DOUBLE PRECISION,
-      COEFF1 DOUBLE PRECISION,
-      COEFF2 DOUBLE PRECISION,
-      COEFF3 DOUBLE PRECISION);" >> sql_create
+      HASCONVERGED INTEGER,
+      PRIMARY KEY (WOID, ITERATION));" >> sql_create
+echo "create table $PTABLENAME (
+      SEQNR SERIAL PRIMARY KEY, 
+      WOID INTEGER NOT NULL,
+      ITERATION INTEGER, 
+      PARMNAME TEXT,
+      NX INTEGER,
+      NY INTEGER, 
+      COEFF DOUBLE PRECISION[]);" >> sql_create
 $SQLCLIENT < sql_create

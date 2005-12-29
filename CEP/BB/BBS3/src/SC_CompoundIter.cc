@@ -1,4 +1,4 @@
-//#  SC_Simple.cc:  A simple calibration strategy
+//#  SC_CompoundIter.cc:  A calibration strategy which sends compound workorders
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBS3/SC_Simple.h>
+#include <BBS3/SC_CompoundIter.h>
 #include <Common/LofarLogger.h>
 #include <BBS3/DH_Solution.h>
 #include <BBS3/DH_WOPrediff.h>
@@ -33,7 +33,7 @@
 namespace LOFAR
 {
 
-SC_Simple::SC_Simple(Connection* inSolConn, Connection* outWOPDConn, 
+SC_CompoundIter::SC_CompoundIter(Connection* inSolConn, Connection* outWOPDConn, 
 		     Connection* outWOSolveConn, int nrPrediffers,
 		     const ParameterSet& args)
   : StrategyController(inSolConn, outWOPDConn, outWOSolveConn, 
@@ -41,16 +41,15 @@ SC_Simple::SC_Simple(Connection* inSolConn, Connection* outWOPDConn,
     itsFirstCall      (true),
     itsPrevWOID       (0),
     itsArgs           (args),
-    itsCurIter        (-1),
+    itsCurIter        (0),
     itsCurStartTime   (0),
     itsControlParmUpd (false),
     itsStartTime      (0),
     itsTimeLength     (0),
     itsStartFreq      (0),
-    itsFreqLength     (0),
-    itsSendDoNothingWO(false)
+    itsFreqLength     (0)
 {
-  itsNrIterations = itsArgs.getInt32("maxNrIterations");
+  itsMaxIterations = itsArgs.getInt32("maxNrIterations");
   if (itsArgs.isDefined("fitCriterion"))
   {
     itsFitCriterion = itsArgs.getDouble("fitCriterion");
@@ -67,10 +66,10 @@ SC_Simple::SC_Simple(Connection* inSolConn, Connection* outWOPDConn,
   itsFreqLength = itsArgs.getDouble ("freqLength");
 }
 
-SC_Simple::~SC_Simple()
+SC_CompoundIter::~SC_CompoundIter()
 {}
 
-bool SC_Simple::execute()
+bool SC_CompoundIter::execute()
 {
   BBSTest::ScopedTimer si_exec("C:strategycontroller_execute");
   BBSTest::ScopedTimer getWOTimer("C:getWorkOrders");
@@ -78,105 +77,58 @@ bool SC_Simple::execute()
   DH_WOSolve* WOSolve = getSolveWorkOrder();
   getWOTimer.end();
 
-  itsCurIter++;
-  bool nextInter = false;
   if (itsFirstCall)
   {
     BBSTest::Logger::log("Start of testrun");
     itsFirstCall = false;
-    nextInter = true;
+
+    itsCurStartTime = itsArgs.getDouble ("startTime");
+
     WOPD->setNewBaselines(true);
     WOPD->setNewPeelSources(true);
-    WOPD->setSubtractSources(false);
-    WOPD->setUpdateParms(false);
-    WOSolve->setNewDomain(true);
-    itsCurStartTime = itsArgs.getDouble ("startTime");
   }
   else
   {
-
     WOPD->setNewBaselines(false);
     WOPD->setNewPeelSources(false);
-    WOPD->setSubtractSources(false);
-    WOPD->setUpdateParms(true);
-    WOSolve->setNewDomain(false);
-
-    if (itsSendDoNothingWO==false)  /// if previous sent WorkOrder was a "do nothing", do not read solution
+  
+    if (itsControlParmUpd || itsWriteParms)   // If Controller handles parameter writing
     {
       // Read solution of previously issued workorders
       BBSTest::ScopedTimer readSolTimer("C:read solutions");
       readSolution();
       readSolTimer.end();
+      // Controller writes new parameter values directly to the tables
+      vector<ParmData> pData;
+      getSolution()->getSolution(pData);
+      double fStart = getSolution()->getStartFreq();
+      double fEnd = getSolution()->getEndFreq();
+      double tStart = getSolution()->getStartTime();
+      double tEnd = getSolution()->getEndTime();
+      BBSTest::ScopedTimer st("C:parmwriter");
+      getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+    }
+       
+    itsCurStartTime += itsTimeLength;
 
-      if (itsControlParmUpd)   // If Controller handles parameter writing
-      {
-	// Controller writes new parameter values directly to the tables
-	vector<ParmData> pData;
-	getSolution()->getSolution(pData);
-	double fStart = getSolution()->getStartFreq();
-	double fEnd = getSolution()->getEndFreq();
-	double tStart = getSolution()->getStartTime();
-	double tEnd = getSolution()->getEndTime();
-	BBSTest::ScopedTimer st("C:parmwriter");
-	getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
-      }
-      else
-      {
-	// Send the (reference to) parameter values to Prediffers.
-	WOPD->setSolutionID(itsPrevWOID);
-      }
-    }
-     
-    // Take absolute value of fit
-    double fit = getSolution()->getQuality().itsFit;
-    if (fit<0)
-    {
-      fit = -fit;
-    }
+    BBSTest::Logger::log("NextInterval");
 
-    itsSendDoNothingWO = false;
-    // If max number of iterations reached, go to next interval.
-    // If solution for this interval is good enough, send "do nothing" workorders until 
-    // max number of iterations reached.
-    if (itsCurIter == itsNrIterations)
-    {
-      nextInter = true;
-      itsCurIter = 0;
-      WOPD->setUpdateParms(false);  // New time interval, so do not reread parameters
-      WOPD->setSolutionID(-1);  // New time interval, so do not use solution from previous interval
-      itsCurStartTime += itsArgs.getDouble ("timeInterval");
-      if (itsWriteParms && (!itsControlParmUpd))  // If controller should write params at end of
-      {                                           // each interval and has not already done so.
-	vector<ParmData> pData;
-	getSolution()->getSolution(pData);
-	double fStart = getSolution()->getStartFreq();
-	double fEnd = getSolution()->getEndFreq();
-	double tStart = getSolution()->getStartTime();
-	double tEnd = getSolution()->getEndTime();
-	BBSTest::ScopedTimer st("C:parmwriter");
-	getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
-      }
-      BBSTest::Logger::log("NextInterval");
-    }
-    else if (fit < itsFitCriterion)
-    {
-      LOG_INFO_STR("Fit criterion met after " << itsCurIter << " iterations");
-      itsSendDoNothingWO = true;
-    }
   }
 
-  WOPD->setDoNothing(itsSendDoNothingWO);
-  WOSolve->setDoNothing(itsSendDoNothingWO);
-  if (itsSendDoNothingWO==false)
+  // Set prediffer workorder data
+  WOPD->setStatus(DH_WOPrediff::New);
+  WOPD->setKSType("Prediff1");
+
+  // The following settings remain the same for each workorder:
   {
-    // Set prediffer workorder data
-    WOPD->setStatus(DH_WOPrediff::New);
-    WOPD->setKSType("Prediff1");
+    WOPD->setUpdateParms(false);
+    WOPD->setMaxIterations(itsMaxIterations);
+    WOPD->setNewDomain(true);
+    WOPD->setSubtractSources(false);
+    WOPD->setDoNothing(false);
     WOPD->setStartFreq (itsArgs.getDouble ("startFreq"));
-    WOPD->setFreqLength (itsArgs.getDouble ("freqLength"));
-    WOPD->setStartTime (itsCurStartTime);
-    double timeLength = itsArgs.getDouble ("timeInterval");
-    WOPD->setTimeLength (timeLength);
+    WOPD->setFreqLength (itsArgs.getDouble ("freqLength")); 
+    WOPD->setTimeLength (itsTimeLength); 
     WOPD->setModelType (itsArgs.getString ("modelType"));
     WOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr"));
     WOPD->setCalcUVW (itsArgs.getBool ("calcUVW"));
@@ -198,23 +150,28 @@ bool SC_Simple::execute()
     msParams["modelType"] = itsArgs.getString("modelType");
     msParams["calcUVW"] = itsArgs.getString("calcUVW");
     WOPD->setVarData (msParams, ant, pNames, exPNames, srcs, corrs);
+    WOPD->setStrategyControllerID(getID());
+  
+    WOSolve->setNewDomain(true);
+    WOSolve->setMaxIterations(itsMaxIterations);
+    WOSolve->setFitCriterion(itsFitCriterion);
+    WOSolve->setDoNothing(false);
+    WOSolve->setUseSVD (itsArgs.getBool ("useSVD"));
+    WOSolve->setIteration(itsCurIter);
+    WOSolve->setStrategyControllerID(getID());
   }
+
+  WOPD->setStartTime (itsCurStartTime);
 
   int woid = getNewWorkOrderID();
   WOPD->setWorkOrderID(woid);
-  WOPD->setStrategyControllerID(getID());
-  WOPD->setNewDomain(nextInter);
+  WOPD->setSolutionID(woid);  // WOID of solution (the same for each prediffer)
 
   // Set solver workorder data  
   WOSolve->setStatus(DH_WOSolve::New);
   WOSolve->setKSType("Solver");
-  WOSolve->setUseSVD (itsArgs.getBool ("useSVD"));
-  WOSolve->setIteration(itsCurIter);
-
-  WOSolve->setWorkOrderID(woid);
-  itsPrevWOID = WOSolve->getWorkOrderID();  // Remember the issued workorder id
-  WOSolve->setStrategyControllerID(getID());
-  WOSolve->setNewDomain(nextInter);
+  WOSolve->setWorkOrderID(woid);  
+  itsPrevWOID = woid;        // Remember the issued workorder id
 
   // Temporarily show on cout
   //  cout << "!!!!!!! Sent workorders: " << endl;
@@ -258,30 +215,27 @@ bool SC_Simple::execute()
   return true;
 }
 
-void SC_Simple::postprocess()
+void SC_CompoundIter::postprocess()
 {
-  if (itsSendDoNothingWO == false) // Only read solution if previous workorder was not a "do nothing"
+  if (itsWriteParms || itsControlParmUpd)           // write solution in parmtable
   {
-    if (itsWriteParms || itsControlParmUpd)           // write solution in parmtable
-    {
-      readSolution();
-      // Controller writes found parameter values in the tables
-      vector<ParmData> pData;
-      getSolution()->getSolution(pData);
-      double fStart = getSolution()->getStartFreq();
-      double fEnd = getSolution()->getEndFreq();
-      double tStart = getSolution()->getStartTime();
-      double tEnd = getSolution()->getEndTime();
-      BBSTest::ScopedTimer st("C:parmwriter");
-      getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
-    }
+    readSolution();
+    // Controller writes found parameter values in the tables
+    vector<ParmData> pData;
+    getSolution()->getSolution(pData);
+    double fStart = getSolution()->getStartFreq();
+    double fEnd = getSolution()->getEndFreq();
+    double tStart = getSolution()->getStartTime();
+    double tEnd = getSolution()->getEndTime();
+    BBSTest::ScopedTimer st("C:parmwriter");
+    getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
   }
   BBSTest::Logger::log("End of TestRun");
 }
 
-void SC_Simple::readSolution()
+void SC_CompoundIter::readSolution()
 {
-  LOG_TRACE_FLOW("SC_Simple reading solution");
+  LOG_TRACE_FLOW("SC_CompoundIter reading solution");
 
   DH_DB* solPtr = dynamic_cast<DH_DB*>(getSolution());
 
@@ -289,14 +243,14 @@ void SC_Simple::readSolution()
   bool firstTime = true;
   int id = itsPrevWOID;
   char str[64];
-  sprintf(str, "SELECT * FROM bbs3solutions WHERE WOID=%i", id);
+  sprintf(str, "SELECT * FROM bbs3solutions WHERE WOID=%i ORDER BY iteration DESC", id);
   string query(str);
 
   while (solPtr->queryDB(query, *itsInSolConn) <= 0)
   {
     if (firstTime)
     {
-      cout << "No solution found by SC_Simple " << getID() 
+      cout << "No solution found by SC_CompoundIter " << getID() 
 	   << ". Waiting for solution..." << endl;
       firstTime = false;
     }

@@ -151,8 +151,14 @@ void checkParameters(ACC::APS::ParameterSet& params, const string& usernm)
       intervalSize = msInterval;
       params.replace(ACC::APS::KVpair(stratName+ "timeInterval", msInterval));
     }
+
     // Determine number of CEPFrame runs
     int maxIter = params.getInt32(stratName +"maxNrIterations");
+    string stratType = params.getString(stratName + "strategy");
+    if ((stratType == "CompoundIter"))
+    {
+      maxIter = 1;
+    }
     int nrIntervals = 0;
     if (intervalSize >= endTime-startTime)
     {

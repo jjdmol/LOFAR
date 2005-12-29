@@ -44,7 +44,9 @@ class WH_Solve : public LOFAR::WorkHolder
 {
  public:
   // Construct the workholder and give it a name
-  explicit WH_Solve(const string& name, int nPrediffInputs, bool writeIndivParms);
+  explicit WH_Solve(const string& name, int nPrediffInputs, 
+		    bool writeIndivParms, 
+		    const string& parmTableName="bbs3parmsolutions");
   
   // Destructor
   virtual ~WH_Solve();
@@ -83,6 +85,7 @@ class WH_Solve : public LOFAR::WorkHolder
   bool        itsWriteIndivParms; // Write individual parameter solutions in a separate table?
   SolverMap   itsSolvers;         // Map of Solver objects, each associated
                                   // with a strategy (controller).
+  string      itsParmTableName;   // Individual parameters table name
 };
 
 // @}

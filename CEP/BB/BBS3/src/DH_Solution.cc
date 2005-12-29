@@ -26,11 +26,11 @@
 #include <lofar_config.h>
 
 #include <BBS3/DH_Solution.h>
-#include <PL/TPersistentObject.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/LofarLogger.h>
 #include <sstream>
+#include <TransportPostgres/TH_DB.h>
 
 namespace LOFAR
 {
@@ -45,62 +45,55 @@ string dtos(double dbl) // Convert double to string
   return buf;
 }
 
-DH_Solution::DH_Solution (const string& name)
-  : DH_PL           (name, "DH_Solution", 1),
-    itsWOID         (0),
-    itsIteration    (0),
-    itsFit          (0),
+DH_Solution::DH_Solution (const string& name, bool writeIndivParms,
+			  const string& parmTableName)
+  : DH_DB             (name, "DH_Solution", 1),
+    itsWOID           (0),
+    itsIteration      (0),
+    itsFit            (0),
     //    itsRank         (0),
-    itsMu           (0),
-    itsStdDev       (0),
-    itsChi          (0),
-    itsPODHSOL      (0),
-    itsStartFreq    (0),
-    itsEndFreq      (0),
-    itsStartTime    (0),
-    itsEndTime      (0)
+    itsMu             (0),
+    itsStdDev         (0),
+    itsChi            (0),
+    itsStartFreq      (0),
+    itsEndFreq        (0),
+    itsStartTime      (0),
+    itsEndTime        (0),
+    itsHasConverged   (0),
+    itsWriteIndivParms(writeIndivParms),
+    itsParmTableName  (parmTableName)
 {
   setExtraBlob("Extra", 1);
 }
 
 DH_Solution::DH_Solution(const DH_Solution& that)
-  : DH_PL   (that),
-    itsWOID         (0),
-    itsIteration    (0),
-    itsFit          (0),
+  : DH_DB             (that),
+    itsWOID           (0),
+    itsIteration      (0),
+    itsFit            (0),
     //    itsRank         (0),
-    itsMu           (0),
-    itsStdDev       (0),
-    itsChi          (0),
-    itsPODHSOL      (0),
-    itsStartFreq    (0),
-    itsEndFreq      (0),
-    itsStartTime    (0),
-    itsEndTime      (0)
+    itsMu             (0),
+    itsStdDev         (0),
+    itsChi            (0),
+    itsStartFreq      (0),
+    itsEndFreq        (0),
+    itsStartTime      (0),
+    itsEndTime        (0),
+    itsHasConverged   (0),
+    itsWriteIndivParms(that.itsWriteIndivParms),
+    itsParmTableName  (that.itsParmTableName)
 {
   setExtraBlob("Extra", 1);
 }
 
 DH_Solution::~DH_Solution()
 {
-  delete itsPODHSOL;
 }
 
 DataHolder* DH_Solution::clone() const
 {
   return new DH_Solution(*this);
 }
-
-void DH_Solution::initPO (const string& tableName)
-{                         
-  itsPODHSOL = new PO_DH_SOL(*this);
-  itsPODHSOL->tableName (tableName);
-}
-
-PL::PersistentObject& DH_Solution::getPO() const
-{
-  return *itsPODHSOL;
-} 
 
 void DH_Solution::init()
 {
@@ -116,6 +109,7 @@ void DH_Solution::init()
   addField ("EndFreq", BlobField<double>(1));
   addField ("StartTime", BlobField<double>(1));
   addField ("EndTime", BlobField<double>(1));
+  addField ("HasConverged", BlobField<unsigned int>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -131,7 +125,7 @@ void DH_Solution::init()
   *itsEndFreq = 0;
   *itsStartTime = 0;
   *itsEndTime = 0;
-
+  *itsHasConverged = 0;
 }
 
 void DH_Solution::fillDataPointers()
@@ -148,6 +142,7 @@ void DH_Solution::fillDataPointers()
   itsEndFreq = getData<double> ("EndFreq");
   itsStartTime = getData<double> ("StartTime");
   itsEndTime = getData<double> ("EndTime");
+  itsHasConverged = getData<unsigned int> ("HasConverged");
 }
 
 Quality DH_Solution::getQuality() const
@@ -249,43 +244,70 @@ void DH_Solution::dump()
 
 }
 
-namespace PL {
-
-void DBRep<DH_Solution>::bindCols (dtl::BoundIOs& cols)
+string DH_Solution::createInsertStatement(TH_DB* th)
 {
-  DBRep<DH_PL>::bindCols (cols);
-  cols["WOID"] == itsWOID;
-  cols["ITERATION"] == itsIteration;
-  cols["FIT"] == itsFit;
-  //  cols["RANK"] == itsRank;
-  cols["MU"] == itsMu;
-  cols["STDDEV"] == itsStdDev;
-  cols["CHI"] == itsChi;
-  cols["STARTFREQ"] == itsStartFreq;
-  cols["ENDFREQ"] == itsEndFreq;
-  cols["STARTTIME"] == itsStartTime;
-  cols["ENDTIME"] == itsEndTime;
+  ostringstream q;
+  if (itsWriteIndivParms) // Store parameters individually in a subtable
+  {
+    q << "INSERT INTO bbs3solutions (data, woid, iteration, fit, mu, stddev, chi, "
+      << "startfreq, endfreq, starttime, endtime, hasconverged) VALUES ('";
+    th->addDBBlob(this, q);
+    q << "', "
+      << getWorkOrderID() << ", "
+      << getIteration() << ", "
+      << getQuality().itsFit << ", "
+      << getQuality().itsMu << ", "
+      << getQuality().itsStddev << ", "
+      << getQuality().itsChi << ", "
+      << getStartFreq() << ", "
+      << getEndFreq() << ", "
+      << getStartTime() << ", "
+      << getEndTime() << ", "
+      << hasConverged() << ");";
+    // store all parameters
+    vector<ParmData> pSols;
+    getSolution(pSols);
+    for (uint i=0; i<pSols.size(); i++)
+    {
+      int nrCoeffs = pSols[i].getValues().nelements();
+      q << "INSERT INTO "
+	<< itsParmTableName 
+	<< " (woid, iteration, parmname, nx, ny, coeff) VALUES ( "
+	<< getWorkOrderID() << ", " 
+	<< getIteration() << ", '"
+	<< pSols[i].getName() << "', "
+	<< pSols[i].nx() << ", "
+	<< pSols[i].ny() << ", '{";
+	for (int coeff=0; coeff<nrCoeffs; coeff++)
+	{
+	  q << pSols[i].getValue(coeff);
+	  if (coeff < nrCoeffs-1)
+	  {
+	    q << ", ";
+	  }
+	}
+	q << "}' ); ";
+    }
+  }
+  else
+  {
+    q << "INSERT INTO bbs3solutions (data, woid, iteration, fit, mu, stddev, chi, "
+      << "startfreq, endfreq, starttime, endtime, hasconverged) VALUES ('";
+    th->addDBBlob(this, q);
+    q << "', "
+      << getWorkOrderID() << ", "
+      << getIteration() << ", "
+      << getQuality().itsFit << ", "
+      << getQuality().itsMu << ", "
+      << getQuality().itsStddev << ", "
+      << getQuality().itsChi << ", "
+      << getStartFreq() << ", "
+      << getEndFreq() << ", "
+      << getStartTime() << ", "
+      << getEndTime() << ", "
+      << hasConverged() <<");";
+  }
+  return q.str();
 }
-
-void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
-{
-  DBRep<DH_PL>::toDBRep (obj);
-  itsWOID = obj.getWorkOrderID();
-  itsIteration = obj.getIteration();
-  itsFit = obj.getQuality().itsFit;
-  //  itsRank = obj.getQuality().itsRank;
-  itsMu = obj.getQuality().itsMu;
-  itsStdDev = obj.getQuality().itsStddev;
-  itsChi = obj.getQuality().itsChi;
-  itsStartFreq = obj.getStartFreq();
-  itsEndFreq = obj.getEndFreq();
-  itsStartTime = obj.getStartTime();
-  itsEndTime = obj.getEndTime();
-}
-
-//# Force the instantiation of the templates.
-template class TPersistentObject<DH_Solution>;
-
-}  // end namespace PL
 
 } // namespace LOFAR
