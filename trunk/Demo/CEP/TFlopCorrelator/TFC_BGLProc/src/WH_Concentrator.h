@@ -44,7 +44,7 @@ class WH_Concentrator: public WorkHolder
 
   virtual void preprocess();
   virtual void process();
-  virtual void dump();
+  virtual void dump() const;
 
  private:
   /// forbid copy constructor 

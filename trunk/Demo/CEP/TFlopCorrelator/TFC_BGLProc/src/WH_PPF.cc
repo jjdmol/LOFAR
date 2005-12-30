@@ -557,20 +557,19 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
 
 
 
-WH_PPF::WH_PPF(const string& name, const short subBandID, const short max_element):
+WH_PPF::WH_PPF(const string& name, const short subBandID, const short max_element, const ACC::APS::ParameterSet& ps):
   WorkHolder(1, NR_CORRELATORS_PER_FILTER, name, "WH_Correlator"),
+  itsPS(ps),
   itsSubBandID(subBandID),
   itsMaxElement(max_element)
 {
-  ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
-
 #if 1
-  int NrTaps		     = myPS.getInt32("BGLProc.NPPFTaps");
-  int NrStations	     = myPS.getInt32("FakeData.NStations");
-  int NrStationSamples	     = myPS.getInt32("Data.NSamplesToIntegrate");
-  int NrPolarizations	     = myPS.getInt32("Data.NPolarisations");
-  int NrSubChannels	     = myPS.getInt32("Data.NChannels");
-  int NrCorrelatorsPerFilter = myPS.getInt32("BGLProc.NCorrelatorsPerComputeCell");
+  int NrTaps		     = ps.getInt32("BGLProc.NPPFTaps");
+  int NrStations	     = ps.getInt32("FakeData.NStations");
+  int NrStationSamples	     = ps.getInt32("Data.NSamplesToIntegrate");
+  int NrPolarizations	     = ps.getInt32("Data.NPolarisations");
+  int NrSubChannels	     = ps.getInt32("Data.NChannels");
+  int NrCorrelatorsPerFilter = ps.getInt32("BGLProc.NCorrelatorsPerComputeCell");
   
   assert(NrTaps			== NR_TAPS);
   assert(NrStations		== NR_STATIONS);
@@ -583,10 +582,10 @@ WH_PPF::WH_PPF(const string& name, const short subBandID, const short max_elemen
 
   assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
 
-  getDataManager().addInDataHolder(0, new DH_PPF("input", itsSubBandID, myPS));
+  getDataManager().addInDataHolder(0, new DH_PPF("input", itsSubBandID, ps));
   
   for (int corr = 0; corr < NR_CORRELATORS_PER_FILTER; corr ++) {
-    getDataManager().addOutDataHolder(corr, new DH_CorrCube("output", itsSubBandID)); 
+    getDataManager().addOutDataHolder(corr, new DH_CorrCube("output", itsSubBandID, ps)); 
   }
 
 }
@@ -597,15 +596,15 @@ WH_PPF::~WH_PPF()
 }
 
 
-WorkHolder* WH_PPF::construct(const string& name, const short subBandID, const short max_element)
+WorkHolder* WH_PPF::construct(const string& name, const short subBandID, const short max_element, const ACC::APS::ParameterSet& ps)
 {
-  return new WH_PPF(name, subBandID, max_element);
+  return new WH_PPF(name, subBandID, max_element, ps);
 }
 
 
 WH_PPF* WH_PPF::make(const string& name)
 {
-  return new WH_PPF(name, itsSubBandID, itsMaxElement);
+  return new WH_PPF(name, itsSubBandID, itsMaxElement, itsPS);
 }
 
 

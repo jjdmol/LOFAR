@@ -23,7 +23,7 @@ class Stub_RSP
 {
 public:
   // Create the stub. Get its parameters from the given file name.
-  explicit Stub_RSP (bool onServer=false);
+  explicit Stub_RSP (bool onServer, const ACC::APS::ParameterSet& ps);
 
   ~Stub_RSP();
 
@@ -32,7 +32,7 @@ public:
 
 private:
   bool                itsStubOnServer;
-  ACC::APS::ParameterSet*  itsPS;
+  const ACC::APS::ParameterSet&  itsPS;
 };
 
 } //namespace

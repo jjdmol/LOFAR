@@ -129,7 +129,7 @@ void WH_Distribute::process() {
   }
 }
 
-void WH_Distribute::dump() {
+void WH_Distribute::dump() const {
 }
 
 			     

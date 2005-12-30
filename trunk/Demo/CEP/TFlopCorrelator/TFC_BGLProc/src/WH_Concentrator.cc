@@ -86,5 +86,5 @@ void WH_Concentrator::process() {
   }
 }
 
-void WH_Concentrator::dump() {
+void WH_Concentrator::dump() const {
 }

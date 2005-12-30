@@ -14,6 +14,7 @@
 #include <TFC_Interface/TFC_Config.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -28,7 +29,7 @@ public:
   typedef fcomplex BufferType[NR_CHANNELS_PER_CORRELATOR][MAX_STATIONS_PER_PPF][NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS];
   //typedef fcomplex BufferType[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_INTEGRATION][NR_CHANNELS_PER_CORRELATOR];
 
-  explicit DH_CorrCube (const string& name, short subband); 
+  explicit DH_CorrCube (const string& name, short subband, const ACC::APS::ParameterSet& ps); 
 
 
   DH_CorrCube(const DH_CorrCube&);

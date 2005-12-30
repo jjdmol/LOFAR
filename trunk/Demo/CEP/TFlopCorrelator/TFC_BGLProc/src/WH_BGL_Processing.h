@@ -42,7 +42,7 @@ namespace LOFAR
   class WH_BGL_Processing: public WorkHolder {
     
   public:
-    explicit WH_BGL_Processing (const string& name, const short subBandID);
+    explicit WH_BGL_Processing (const string& name, const short subBandID, const ACC::APS::ParameterSet& ps);
     virtual ~WH_BGL_Processing();
 
     static WorkHolder* construct (const string& name, const short subBandID); 

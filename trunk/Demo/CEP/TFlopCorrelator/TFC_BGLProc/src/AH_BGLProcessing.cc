@@ -130,14 +130,14 @@ void AH_BGLProcessing::define(const LOFAR::KeyValueMap&) {
 
       for (int Filters = 0; Filters < itsNrFiltersPerComputeCell; Filters++) {
 	snprintf(WH_Name, 40, "PPF_%d_of_%d_of_cell_%d", Filters, itsNrFiltersPerComputeCell, computeCell);
-	PPFNodes.push_back(new WH_PPF(WH_Name, 0, 19));
+	PPFNodes.push_back(new WH_PPF(WH_Name, 0, 19, itsParamSet));
 	itsWHs.push_back(PPFNodes.back());
 	itsWHs.back()->runOnNode(lowestFreeNode++);
       }
 
       for (int Correlators = 0; Correlators < itsNrCorrelatorsPerComputeCell; Correlators++) {
 	snprintf(WH_Name, 40, "CORR_%d_of_%d", Correlators, itsNrCorrelatorsPerComputeCell);
-	CorrNodes.push_back(new WH_Correlator(WH_Name));
+	CorrNodes.push_back(new WH_Correlator(WH_Name, itsParamSet));
 	itsWHs.push_back(CorrNodes.back());
 	itsWHs.back()->runOnNode(lowestFreeNode++);
       }

@@ -1,4 +1,3 @@
-..common_top_builddir=@common_top_builddir@
 
 check_PROGRAMS = tRectMatrix tDH_FIR
 
