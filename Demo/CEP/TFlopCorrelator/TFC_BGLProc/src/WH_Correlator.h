@@ -35,7 +35,7 @@ namespace LOFAR
   class WH_Correlator: public WorkHolder {
 
   public:
-    explicit WH_Correlator (const string &name);
+    explicit WH_Correlator (const string &name, const ACC::APS::ParameterSet& ps);
     virtual ~WH_Correlator();
     
     virtual WorkHolder* construct(const string &name);
@@ -51,6 +51,8 @@ namespace LOFAR
     WH_Correlator(const WH_Correlator &);
     /// forbid assignment
     WH_Correlator& operator= (const WH_Correlator &);
+
+    const ACC::APS::ParameterSet& itsPS;
     
     int itsNfilters;
     int itsNsamples;

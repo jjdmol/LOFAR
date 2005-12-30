@@ -556,18 +556,16 @@ const float FIR::weights[NR_SUB_CHANNELS][NR_TAPS] __attribute__((aligned(32))) 
 
 
 
-WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID):
+WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID, const ACC::APS::ParameterSet ps):
   WorkHolder(1, 1, name, "WH_Correlator"),
   itsSubBandID(subBandID)
 {
-  ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
-
 #if 0
-  int NrTaps		     = myPS.getInt32("BGLProc.NPPFTaps");
-  int NrStations	     = myPS.getInt32("FakeData.NStations");
-  int NrStationSamples	     = myPS.getInt32("Data.NSamplesToIntegrate");
-  int NrPolarizations	     = myPS.getInt32("Data.NPolarisations");
-  int NrSubChannels	     = myPS.getInt32("Data.NChannels");
+  int NrTaps		     = ps.getInt32("BGLProc.NPPFTaps");
+  int NrStations	     = ps.getInt32("FakeData.NStations");
+  int NrStationSamples	     = ps.getInt32("Data.NSamplesToIntegrate");
+  int NrPolarizations	     = ps.getInt32("Data.NPolarisations");
+  int NrSubChannels	     = ps.getInt32("Data.NChannels");
   
   assert(NrTaps			== NR_TAPS);
   assert(NrStations		== NR_STATIONS);
@@ -578,8 +576,8 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, const short subBandID):
 
   assert(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
 
-  getDataManager().addInDataHolder(0, new DH_PPF("input", itsSubBandID, myPS));
-  getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, myPS));
+  getDataManager().addInDataHolder(0, new DH_PPF("input", itsSubBandID, ps));
+  getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, ps));
 }
 
 

@@ -38,17 +38,16 @@
 using namespace LOFAR;
 
 
-WH_Correlator::WH_Correlator(const string &name)
+WH_Correlator::WH_Correlator(const string &name, const ACC::APS::ParameterSet& ps)
 :
-  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator")
+  WorkHolder(NR_PPF_PER_COMPUTE_CELL, 1, name, "WH_Correlator"),
+  itsPS(ps)
 {
-  ACC::APS::ParameterSet myPS("TFlopCorrelator.cfg");
-
-  itsNfilters = myPS.getInt32("BGLProc.NFiltersPerComputeCell");
-  itsNsamples = myPS.getInt32("Data.NSamplesToIntegrate");
-  itsNelements = myPS.getInt32("FakeData.NStations");
-  itsNpolarisations = myPS.getInt32("Data.NPolarisations");
-  itsNchannels = myPS.getInt32("Data.NChannels") / myPS.getInt32("BGLProc.NCorrelatorsPerComputeCell");
+  itsNfilters = itsPS.getInt32("BGLProc.NFiltersPerComputeCell");
+  itsNsamples = itsPS.getInt32("Data.NSamplesToIntegrate");
+  itsNelements = itsPS.getInt32("FakeData.NStations");
+  itsNpolarisations = itsPS.getInt32("Data.NPolarisations");
+  itsNchannels = itsPS.getInt32("Data.NChannels") / itsPS.getInt32("BGLProc.NCorrelatorsPerComputeCell");
     
 
   ASSERTSTR(itsNelements      == NR_STATIONS, "Configuration doesn't match parameter: NrStations");
@@ -62,16 +61,16 @@ WH_Correlator::WH_Correlator(const string &name)
   for (int i = 0; i < NR_PPF_PER_COMPUTE_CELL; i++) {
     char str[50];
     snprintf(str, 50, "input_%d_of_%d", i, NR_PPF_PER_COMPUTE_CELL);
-    getDataManager().addInDataHolder(i, new DH_CorrCube(str, 0));
+    getDataManager().addInDataHolder(i, new DH_CorrCube(str, 0, itsPS));
     //totalInputSize += static_cast<DH_CorrCube*>(getDataManager().getInHolder(i))->getBufSize();
   }
 
 //   for (int ch = 0; ch < NR_CHANNELS_PER_CORRELATOR; ch ++) {
 //     char str[50];
 //     snprintf(str, 50, "output_%d_of_%d", ch, NR_CHANNELS_PER_CORRELATOR);
-//     getDataManager().addOutDataHolder(ch, new DH_Vis(str, 0, myPS));
+//     getDataManager().addOutDataHolder(ch, new DH_Vis(str, 0, itsPS));
 //   }
-  getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, myPS));
+  getDataManager().addOutDataHolder(0, new DH_Vis("output", 0, itsPS));
 
 }
 
@@ -81,12 +80,12 @@ WH_Correlator::~WH_Correlator()
 
 WorkHolder* WH_Correlator::construct(const string& name)
 {
-  return new WH_Correlator(name);
+  return new WH_Correlator(name, itsPS);
 }
 
 WH_Correlator* WH_Correlator::make(const string& name)
 {
-  return new WH_Correlator(name);
+  return new WH_Correlator(name, itsPS);
 }
 
 void WH_Correlator::preprocess()
