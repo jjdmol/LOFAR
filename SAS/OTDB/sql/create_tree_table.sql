@@ -49,7 +49,7 @@ CREATE TABLE OTDBtree (
 	treetype	INT2			NOT NULL REFERENCES treetype(ID),
 	state		INT2			NOT NULL REFERENCES treestate(ID),
 	creator		INT4			NOT NULL REFERENCES operator(ID),
-	d_creation	TIMESTAMP(0)	DEFAULT 'now',
+	d_creation	TIMESTAMP(0)	DEFAULT now(),
 
 	-- optional info
 	campaign	INT2			REFERENCES campaign(ID),
@@ -67,6 +67,6 @@ CREATE TABLE StateHistory (
 	momID		INT4			NOT NULL,
 	state		INT2			NOT NULL,
 	userID		INT4			NOT NULL REFERENCES operator(ID),
-	timestamp	TIMESTAMP(0)	DEFAULT 'now'
+	timestamp	TIMESTAMP(0)	DEFAULT now()
 ) WITHOUT OIDS;
 
