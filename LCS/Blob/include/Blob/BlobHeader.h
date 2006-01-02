@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBHEADER_H
-#define LOFAR_COMMON_BLOBHEADER_H
+#ifndef LOFAR_BLOB_BLOBHEADER_H
+#define LOFAR_BLOB_BLOBHEADER_H
 
 // \file
 // Standard header for a blob
@@ -32,8 +32,7 @@
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
   
   // Blob stands for binary large object.

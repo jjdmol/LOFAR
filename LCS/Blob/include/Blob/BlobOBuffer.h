@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBOBUFFER_H
-#define LOFAR_COMMON_BLOBOBUFFER_H
+#ifndef LOFAR_BLOB_BLOBOBUFFER_H
+#define LOFAR_BLOB_BLOBOBUFFER_H
 
 // \file
 // Abstract base class for output buffer for a blob
@@ -30,8 +30,7 @@
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
   
   // BlobOBuffer is the abstract base class for the sink of a

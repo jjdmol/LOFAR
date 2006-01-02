@@ -24,12 +24,12 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/BlobField.h>
-#include <Common/BlobArray.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobOBufChar.h>
+#include <Blob/BlobField.h>
+#include <Blob/BlobArray.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobOBufChar.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarLogger.h>
 

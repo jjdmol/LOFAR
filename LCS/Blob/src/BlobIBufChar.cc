@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobIBufChar.h>
+#include <Blob/BlobIBufChar.h>
 #include <Common/LofarLogger.h>
 #include <string.h>
 

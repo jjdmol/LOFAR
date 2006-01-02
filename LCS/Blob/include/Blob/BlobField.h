@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBFIELD_H
-#define LOFAR_COMMON_BLOBFIELD_H
+#ifndef LOFAR_BLOB_BLOBFIELD_H
+#define LOFAR_BLOB_BLOBFIELD_H
 
 // \file
 // Definition of a field in a blob
@@ -33,8 +33,7 @@
 
 namespace LOFAR {
 
-  // \ingroup Common
-  // \addtogroup Blob
+  // \ingroup %pkgname%
   // <group>
   
   //# Forward Declarations.
@@ -260,11 +259,11 @@ namespace LOFAR {
   // for this integer.
   //
   // Because class BlobField is templated and because its implementation is
-  // held in a .cc file (and not in a .tcc file), the template has to be
+  // not included in the .h file, the template has to be
   // instantiated manually. It can be done by putting the following lines
   // <srcblock>
   // //# Needed for instantiating BlobField<XX>
-  // #include <Common/BlobField.cc>
+  // #include <Blob/BlobField.tcc>
   // template class BlobField<XX>;
   // </srcblock>
   // in XX.cc or in a separate .cc file.

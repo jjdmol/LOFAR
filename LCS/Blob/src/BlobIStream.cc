@@ -23,10 +23,10 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobIStream.h>
-#include <Common/BlobHeader.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobHeader.h>
 #include <Common/DataConvert.h>
-#include <Common/BlobException.h>
+#include <Blob/BlobException.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {

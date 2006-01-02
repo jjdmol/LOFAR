@@ -20,20 +20,19 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBIBUFSTRING_H
-#define LOFAR_COMMON_BLOBIBUFSTRING_H
+#ifndef LOFAR_BLOB_BLOBIBUFSTRING_H
+#define LOFAR_BLOB_BLOBIBUFSTRING_H
 
 // \file
 // Input buffer for a blob using a string
 
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobString.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobString.h>
 #include <string>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
 
   // The buffer can be static or dynamic. A static buffer has a fixed

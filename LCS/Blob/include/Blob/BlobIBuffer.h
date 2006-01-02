@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBIBUFFER_H
-#define LOFAR_COMMON_BLOBIBUFFER_H
+#ifndef LOFAR_BLOB_BLOBIBUFFER_H
+#define LOFAR_BLOB_BLOBIBUFFER_H
 
 // \file
 // Abstract base class for input buffer for a blob
@@ -30,8 +30,7 @@
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
   
   // BlobIBuffer is the abstract base class for the source of a

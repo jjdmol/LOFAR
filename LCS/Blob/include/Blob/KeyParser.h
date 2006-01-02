@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_KEYPARSER_H
-#define LOFAR_COMMON_KEYPARSER_H
+#ifndef LOFAR_BLOB_KEYPARSER_H
+#define LOFAR_BLOB_KEYPARSER_H
 
 // \file
 // Class for parsing a key=value line.
@@ -38,8 +38,9 @@ extern "C" {
 
 namespace LOFAR {
 
-  // \addtogroup Common
-  // @{
+  // \ingroup Blob
+  // \addtogroup KeyValue
+  // <group>
 
   //# Forward Declarations
   class KeyValue;
@@ -109,7 +110,7 @@ namespace LOFAR {
 
   void KeyParseerror (char*);
   
-  // @}
+  // </group>
 
 } // end namespace
 

@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBOSTREAM_H
-#define LOFAR_COMMON_BLOBOSTREAM_H
+#ifndef LOFAR_BLOB_BLOBOSTREAM_H
+#define LOFAR_BLOB_BLOBOSTREAM_H
 
 // \file
 // Output stream for a blob
 
 #include <Common/LofarTypes.h>
-#include <Common/BlobOBuffer.h>
+#include <Blob/BlobOBuffer.h>
 #include <stack>
 #include <vector>
 #include <string>
@@ -35,8 +35,7 @@
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
 // <group>
   
   // This class makes it possible to create a blob.

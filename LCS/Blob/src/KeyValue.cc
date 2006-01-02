@@ -23,10 +23,10 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/KeyValue.h>
-#include <Common/KeyValueMap.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/KeyValue.h>
+#include <Blob/KeyValueMap.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <stdexcept>
 #include <sstream>
 #include <Common/LofarLogger.h>

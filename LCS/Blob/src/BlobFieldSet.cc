@@ -23,14 +23,14 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobFieldSet.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobOBufNull.h>
-#include <Common/BlobHeader.h>
-#include <Common/BlobException.h>
+#include <Blob/BlobFieldSet.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOBufChar.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobOBufNull.h>
+#include <Blob/BlobHeader.h>
+#include <Blob/BlobException.h>
 
 namespace LOFAR {
 

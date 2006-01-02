@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobIBufStream.h>
+#include <Blob/BlobIBufStream.h>
 #include <iostream>
 
 namespace LOFAR {

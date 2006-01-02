@@ -23,17 +23,17 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobOBufStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobIBufVector.h>
-#include <Common/BlobOBufVector.h>
-#include <Common/BlobIBufString.h>
-#include <Common/BlobOBufString.h>
-#include <Common/BlobOBufNull.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOBufStream.h>
+#include <Blob/BlobIBufStream.h>
+#include <Blob/BlobOBufChar.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobIBufVector.h>
+#include <Blob/BlobOBufVector.h>
+#include <Blob/BlobIBufString.h>
+#include <Blob/BlobOBufString.h>
+#include <Blob/BlobOBufNull.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
