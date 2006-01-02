@@ -38,6 +38,7 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common, common, LCS-Common-2_3, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Blob, blob, , 1, Blob/BlobHeader.h,,)
 lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-2_1, 1, Transport/DataHolder.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-6_1rc2, 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-6_1rc2, 1, GCF/TM/GCF_Task.h,,)
