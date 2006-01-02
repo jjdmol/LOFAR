@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 
 #include <GPI_CEPServer.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GPI_TH_Port.h>
 #include <Transport/CSConnection.h>

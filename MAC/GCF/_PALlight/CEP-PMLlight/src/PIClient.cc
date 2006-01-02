@@ -27,8 +27,8 @@
 #include <GCF/Utils.h>
 #include <GCF/ParameterSet.h>
 #include <Transport/TH_Socket.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <Transport/CSConnection.h>
 using LOFAR::BlobIStream;
 using LOFAR::BlobOStream;
