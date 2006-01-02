@@ -24,7 +24,7 @@
 
 
 %{
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include <tinyCEP/SimulatorParse.h>
 
