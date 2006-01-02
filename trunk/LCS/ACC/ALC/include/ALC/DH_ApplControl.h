@@ -33,8 +33,8 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
 #include <Transport/DataHolder.h>
 
 namespace LOFAR {

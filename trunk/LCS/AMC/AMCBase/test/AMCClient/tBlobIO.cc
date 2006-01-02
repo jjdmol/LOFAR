@@ -29,10 +29,10 @@
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobOStream.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOBufChar.h>
+#include <Blob/BlobOStream.h>
 #include <Common/LofarLogger.h>
 
 #include <Common/lofar_iomanip.h>

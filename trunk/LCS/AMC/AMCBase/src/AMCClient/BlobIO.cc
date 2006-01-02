@@ -28,8 +28,8 @@
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
 #include <AMCBase/AMCClient/ConverterCommand.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
