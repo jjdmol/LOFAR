@@ -356,20 +356,34 @@ ifeq "$(DOCDIR)"  ""
 endif
 
 ifeq "$(DOXYGEN)" ""
-   export DOXYGEN := /usr/bin/doxygen
+   DOXYGEN := /usr/local/doxygen/bin/doxygen
+   export DOXYGEN
+endif
+
+ifeq "$(DOT)" ""
+   DOT := /usr/bin/dot
+   export DOT
 endif
 
 docxx:
-	@if ! [ -d $(DOCDIR) ]; then mkdir $(DOCDIR); fi
-	@cp autoconf_share/doxygen.cfg doxygen.cfg
-	@echo "PROJECT_NAME = LOFAR" >> doxygen.cfg ; \
-	echo "INPUT = $(DOCPACKAGES)" >> doxygen.cfg ; \
-	echo "RECURSIVE = YES" >> doxygen.cfg ; \
-	echo "HTML_OUTPUT = $(DOCDIR)" >> doxygen.cfg ; \
-	echo "EXCLUDE = build test" >> doxygen.cfg; \
-	echo "TAGFILES = $(DOCDIR)/doxygen.tag=$(DOCDIR)/doxygen" >> doxygen.cfg
+	@if ! [ -d $(DOCDIR) ]; then \
+	   mkdir $(DOCDIR); \
+	fi
+	@cp $(LOFARDIR)/autoconf_share/doxygen.cfg .
+	@if [ -x $(DOT) ]; then \
+	   echo "HAVE_DOT                = YES" >> doxygen.cfg ; \
+	   echo "DOT_PATH                = `dirname $(DOT)`" >> doxygen.cfg ; \
+	fi 
+	@echo "PROJECT_NAME            = LOFAR" >> doxygen.cfg 
+	@echo "OUTPUT_DIRECTORY        = $(DOCDIR)" >> doxygen.cfg
+	@echo "STRIP_FROM_PATH         = $(LOFARDIR)" >> doxygen.cfg
+	@echo "INPUT                   = $(DOCPACKAGES)" >> doxygen.cfg
+	@echo "IMAGE_PATH              = $(LOFARDIR)" >> doxygen.cfg
+	@echo "INPUT_FILTER            = $(LOFARDIR)/autoconf_share/slash2spanning.pl" >> doxygen.cfg
+	@echo "TAGFILES                = `basename $(LOFARDIR)`.tag" >> doxygen.cfg
 	@$(MAKE) doc -C doc/doxygen
 	@$(DOXYGEN) doxygen.cfg
+	@$(RM) doxygen.cfg
 
 #
 # Install crontab to run daily and weekly builds;
