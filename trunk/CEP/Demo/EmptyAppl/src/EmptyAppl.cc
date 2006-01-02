@@ -35,7 +35,7 @@
 #include <tinyCEP/Profiler.h>
 #include <Transport/TH_ShMem.h>
 #include <EmptyAppl/EmptyAppl.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 
 #include TRANSPORTERINCLUDE

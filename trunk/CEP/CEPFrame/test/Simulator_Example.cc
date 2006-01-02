@@ -32,7 +32,7 @@
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Example.h>
 #include <tinyCEP/Profiler.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 

@@ -25,7 +25,7 @@
 
 
 #include "DH_Beamlet.h"
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {

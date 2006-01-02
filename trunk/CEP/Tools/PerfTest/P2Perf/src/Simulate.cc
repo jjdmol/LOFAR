@@ -27,7 +27,7 @@
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
-#include <Common/KeyParser.h>
+#include <Blob/KeyParser.h>
 #include "P2Perf/P2Perf.h"
 #ifdef HAVE_MPI
 #include <mpi.h>

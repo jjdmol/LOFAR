@@ -27,7 +27,7 @@
 
 #include "P2Perf/DH_VarSize.h"
 #include "Common/LofarLogger.h"
-#include "Common/BlobException.h"
+#include "Blob/BlobException.h"
 
 using namespace LOFAR;
 

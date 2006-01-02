@@ -97,6 +97,6 @@ namespace LOFAR
 
 }
 // Instantiate the template.
-#include <Common/BlobField.cc>
+#include <Blob/BlobField.tcc>
 template class LOFAR::BlobField<LOFAR::DH_CMatrix::Axis>;
 

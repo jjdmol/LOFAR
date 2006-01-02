@@ -31,7 +31,7 @@
 
 #include <CEPFrame/Composite.h>
 #include <tinyCEP/TinyApplicationHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {

@@ -12,8 +12,8 @@
 // TransportHolders
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
-#include <Common/KeyParser.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyParser.h>
+#include <Blob/KeyValueMap.h>
 #include <tinyCEP/SimulatorParseClass.h>
 
 #include <AH_BackEnd.h>

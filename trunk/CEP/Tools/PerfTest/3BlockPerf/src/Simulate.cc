@@ -25,7 +25,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <Common/KeyParser.h>
+#include <Blob/KeyParser.h>
 #include <string>
 #include <iostream>
 #include <fstream>

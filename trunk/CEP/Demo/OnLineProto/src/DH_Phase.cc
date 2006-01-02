@@ -25,7 +25,7 @@
 
 
 #include <DH_Phase.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {

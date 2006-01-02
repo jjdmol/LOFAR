@@ -29,7 +29,7 @@
 
 #include <CEPFrame/WH_Example.h>
 #include <CEPFrame/Step.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {

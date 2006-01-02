@@ -29,7 +29,7 @@
 #define LOFAR_EXAMPLESIM_EXAMPLESIM_H
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 /**
    This is an example ApplicationHolder class   

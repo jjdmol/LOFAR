@@ -27,7 +27,7 @@
 
 #include <tinyCEP/SimulatorParseClass.h>
 //#include <tinyCEP/TinyApplicationHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
 #include <sstream>

@@ -40,8 +40,8 @@
 #include <PL/QueryObject.h>
 #include <PL/Attrib.h>
 #include <PL/Collection.h>
-#include <Common/KeyValueMap.h>
-#include <Common/KeyParser.h>
+#include <Blob/KeyValueMap.h>
+#include <Blob/KeyParser.h>
 #include <casa/Quanta/MVTime.h>
 #include <string>
 #include <pwd.h>

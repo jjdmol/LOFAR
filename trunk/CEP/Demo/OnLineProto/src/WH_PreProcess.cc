@@ -28,7 +28,7 @@
 
 // CEPFrame general includes
 #include "CEPFrame/Step.h"
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 // OnLineProto specific include
 #include "OnLineProto/DH_CorrectionMatrix.h"

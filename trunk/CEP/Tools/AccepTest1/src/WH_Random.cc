@@ -10,7 +10,7 @@
 #include <stdio.h>                // for sprintf
 
 #include <Common/LofarLogger.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 #include <WH_Random.h>
 #include <DH_CorrCube.h>

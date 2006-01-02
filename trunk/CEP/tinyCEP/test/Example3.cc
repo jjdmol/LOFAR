@@ -27,7 +27,7 @@
 #include <DH_Example.h>
 #include <MySocketExample.h>
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
