@@ -30,7 +30,7 @@
 #include <Transport/Connection.h>
 #include <Transport/TH_Ethernet.h>
 #include <Transport/TH_Mem.h>
-#include <Common/BlobOStream.h>
+#include <Blob/BlobOStream.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/Timer.h>

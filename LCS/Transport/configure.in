@@ -55,6 +55,7 @@ dnl
 lofar_GENERAL
 lofar_MPI
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
 
 dnl
 dnl Output Makefiles

@@ -28,7 +28,7 @@
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
-#include <Common/BlobOStream.h>
+#include <Blob/BlobOStream.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
 

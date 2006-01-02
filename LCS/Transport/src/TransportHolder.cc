@@ -25,7 +25,7 @@
 
 #include <Transport/TransportHolder.h>
 #include <Transport/DataHolder.h>
-#include <Common/BlobStringType.h>
+#include <Blob/BlobStringType.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR

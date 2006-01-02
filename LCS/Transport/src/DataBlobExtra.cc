@@ -25,10 +25,10 @@
 
 #include <Transport/DataBlobExtra.h>
 #include <Transport/DataHolder.h>
-#include <Common/BlobField.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobString.h>
+#include <Blob/BlobField.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobString.h>
 #include <Common/LofarLogger.h>
 #include <vector>
 

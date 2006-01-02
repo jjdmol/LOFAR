@@ -26,8 +26,8 @@
 #include <DH_VarBuf.h>
 #include <Transport/Connection.h>
 #include <Transport/TH_Mem.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <iostream>
 
 using namespace LOFAR;

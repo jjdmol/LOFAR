@@ -26,8 +26,8 @@
 #include <TransportPostgres/TH_Postgresql.h>
 #include <DH_ExampleExtra3.h>
 #include <Transport/Connection.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
 

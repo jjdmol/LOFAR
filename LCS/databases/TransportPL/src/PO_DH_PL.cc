@@ -25,11 +25,11 @@
 
 #include <TransportPL/PO_DH_PL.h>
 #include <PL/TPersistentObject.h>
-#include <Common/BlobOBufString.h>
-#include <Common/BlobIBufString.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobOBufString.h>
+#include <Blob/BlobIBufString.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobArray.h>
 #include <string>
 
 namespace LOFAR {

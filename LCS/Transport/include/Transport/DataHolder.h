@@ -29,10 +29,10 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Common/BlobFieldSet.h>
-#include <Common/BlobHeader.h>
-#include <Common/BlobString.h>
-#include <Common/BlobOBufString.h>
+#include <Blob/BlobFieldSet.h>
+#include <Blob/BlobHeader.h>
+#include <Blob/BlobString.h>
+#include <Blob/BlobOBufString.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR

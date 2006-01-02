@@ -28,8 +28,8 @@
 #include <TransportPL/TH_PL.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/Connection.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobArray.h>
 #include <vector>
 #include <iostream>
 
