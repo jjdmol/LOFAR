@@ -24,7 +24,7 @@
 
 %{
 #include "SimulatorParseClass.h"
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 using namespace LOFAR;
 %}
 
