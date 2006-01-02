@@ -1,6 +1,5 @@
-check_PROGRAMS	      =	tDebug testLogger tBlobString \
-			tBlobStream tBlobArray tBlobField \
-			tDataConvert tKeyValueMap tStringUtil tHexdump \
+check_PROGRAMS	      =	tDebug testLogger \
+			tDataConvert tStringUtil tHexdump \
 			tLorrays testSocket tComplex \
 			tRunOnNode tTimer tNumeric
 
@@ -12,16 +11,11 @@ CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
-	  tBlobArray_test.sh \
-	  tBlobField_test.sh \
-          tBlobStream_test.sh \
-          tBlobString_test.sh \
 	  tComplex.sh \
 	  tDataConvert_test.sh \
 	  tDebug_test.sh \
 	  testLogger_test.sh \
 	  tHexdump_test.sh    \
-	  tKeyValueMap_test.sh \
 	  tLorrays_test.sh    \
 	  tNumeric.sh \
 	  tComplex.sh \
@@ -32,14 +26,11 @@ TESTS	= $(TESTSCRIPTS) \
 	  tTimer
 
 EXTRA_DIST = $(TESTSCRIPTS) \
-	  tBlobField.in_be tBlobField.in_le \
-          tBlobStream.in_be tBlobStream.in_le tBlobStream.stdout \
 	  tComplex.stdout \
 	  tDataConvert.stdout \
 	  tDebug.stdout \
 	  testLogger.log_prop testLogger.debug \
 	  tHexdump.log_prop \
-	  tKeyValueMap.in tKeyValueMap.stdout \
 	  tLorrays.stdout \
 	  tRunOnNode.log_prop tRunOnNode.stdout \
 	  tStringUtil.stdout 
@@ -58,29 +49,9 @@ testLogger_SOURCES		= testLogger.cc
 testLogger_LDADD		= ../src/libcommon.la	
 testLogger_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
-tBlobString_SOURCES		= tBlobString.cc
-tBlobString_LDADD		= ../src/libcommon.la
-tBlobString_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
-
-tBlobStream_SOURCES		= tBlobStream.cc
-tBlobStream_LDADD		= ../src/libcommon.la
-tBlobStream_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
-
-tBlobArray_SOURCES		= tBlobArray.cc
-tBlobArray_LDADD		= ../src/libcommon.la
-tBlobArray_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
-
-tBlobField_SOURCES		= tBlobField.cc
-tBlobField_LDADD		= ../src/libcommon.la
-tBlobField_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
-
 tDataConvert_SOURCES		= tDataConvert.cc
 tDataConvert_LDADD		= ../src/libcommon.la
 tDataConvert_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
-
-tKeyValueMap_SOURCES		= tKeyValueMap.cc
-tKeyValueMap_LDADD		= ../src/libcommon.la
-tKeyValueMap_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
 tStringUtil_SOURCES		= tStringUtil.cc
 tStringUtil_LDADD		= ../src/libcommon.la	
