@@ -21,9 +21,9 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobOBufStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobOBufStream.h>
+#include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>

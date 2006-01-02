@@ -54,6 +54,7 @@ lofar_GENERAL
 lofar_MPI
 lofar_AIPSPP(1,"-lms -lmeasures -ltables -lscimath -lscimath_f -lcasa")
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
 
