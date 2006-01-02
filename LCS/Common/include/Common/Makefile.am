@@ -5,28 +5,6 @@ endif
 INSTHDRS = \
         Allocator.h \
         BlitzToAips.h \
-        BlobArray.h \
-        BlobArrayHeader.h \
-        BlobException.h \
-        BlobField.h \
-        BlobFieldSet.h \
-        BlobHeader.h \
-        BlobIBufChar.h \
-        BlobIBuffer.h \
-        BlobIBufStream.h \
-        BlobIBufString.h \
-        BlobIBufVector.h \
-        BlobIStream.h \
-        BlobOBufChar.h \
-        BlobOBuffer.h \
-        BlobOBufNull.h \
-        BlobOBufStream.h \
-        BlobOBufString.h \
-        BlobOBufVector.h \
-        BlobOStream.h \
-        BlobString.h \
-        BlobStringTraits.h \
-        BlobStringType.h \
         CheckConfig.h \
 	ComplexBuiltinFP.h \
 	ComplexBuiltinInt.h \
@@ -38,9 +16,6 @@ INSTHDRS = \
         Debug.h \
         Exception.h \
         hexdump.h \
-        KeyParser.h \
-        KeyValue.h \
-        KeyValueMap.h \
         lofar_algorithm.h \
         lofar_complex.h \
         lofar_datetime.h \
@@ -89,8 +64,6 @@ INSTHDRS = \
 NOINSTHDRS =
 
 TCCHDRS = \
-	BlobField.cc \
-	BlobArray.tcc \
 	TypeNames.tcc
 
 nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
