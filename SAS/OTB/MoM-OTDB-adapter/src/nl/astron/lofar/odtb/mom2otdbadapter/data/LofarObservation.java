@@ -11,6 +11,7 @@ public class LofarObservation implements Serializable{
 	protected String status = null;
 	protected String measurementMom2Ids = null;
 	protected String angleTimes = null;
+	protected String timeStamp = null;
 	/*
 	 * only for input
 	 */
@@ -162,6 +163,12 @@ public class LofarObservation implements Serializable{
 	}
 	public void setStartTime(String startTime) {
 		this.startTime = startTime;
+	}
+	public String getTimeStamp() {
+		return timeStamp;
+	}
+	public void setTimeStamp(String timeStamp) {
+		this.timeStamp = timeStamp;
 	}
 
 }

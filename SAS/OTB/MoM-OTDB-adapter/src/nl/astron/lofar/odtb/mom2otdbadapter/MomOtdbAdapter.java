@@ -28,7 +28,7 @@ public class MomOtdbAdapter {
 	}
 
 	protected void startServices() throws IOException, NotBoundException {
-		//TimeZone.setDefault(TimeZone.getTimeZone("UTC")); 
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC")); 
 		Queue queue = new Queue();
 		OTDBRepository repository = new OTDBRepository(rmiHost, rmiPort
 				.intValue());
@@ -36,7 +36,7 @@ public class MomOtdbAdapter {
 				username, password, authUrl, momUrl);
 		otdbQueueProcessor.start();
 
-		OTDBListener otdbListener = new OTDBListener(queue, 5000, repository);
+		OTDBListener otdbListener = new OTDBListener(queue, 10000, repository);
 		otdbListener.start();
 
 		Server server = new Server(repository);
@@ -95,7 +95,7 @@ public class MomOtdbAdapter {
 	public void showSyntax() {
 
 		System.out.println("\n--- Syntax ---");
-		System.out.println("MomOtdbAdapter " + " -argument <value> ...");
+		System.out.println("java -jar mom-otdb-adapter.jar " + " -argument <value> ...");
 		System.out.println("\n--- Arguments ---");
 		System.out.println("-u <webapplication username>");
 		System.out.println("-p <webapplication password>");
@@ -105,6 +105,6 @@ public class MomOtdbAdapter {
 		System.out.println("-rmiport <jOTDB RMI port>");
 		System.out.println("\n---Example ---");
 		System.out
-				.println("MomOtdbAdapter -u bastiaan -p bastiaan -rmihost lofar17.astron.nl -rmiport 10099 -mom2url http://localhost:8080/mom2 -authurl http://localhost:8080/wsrtauth");
+				.println("java -jar mom-otdb-adapter.jar -u bastiaan -p bastiaan -rmihost lofar17.astron.nl -rmiport 10099 -mom2url http://localhost:8080/mom2 -authurl http://localhost:8080/wsrtauth");
 	};
 }

@@ -137,7 +137,7 @@ public class OTDBRepository {
 	public List getLatestChanges(Date startDate, Date endDate) throws RemoteException {
 		String startTime = WsrtConverter.toDateString(startDate,DATE_TIME_FORMAT);
 		String endTime = WsrtConverter.toDateString(endDate,DATE_TIME_FORMAT);
-		log.info("Query latest changes between:" + startTime + " and " + endTime);
+		log.info("Retrieve latest changes between:" + startTime + " and " + endTime);
 		remoteOTDB.connect();
 		List result = new ArrayList();
 		Vector stateList = remoteOTDB.getStateList(0,false,startTime, endTime);
@@ -150,6 +150,7 @@ public class OTDBRepository {
 				LofarObservation observation = new LofarObservation();
 				observation.setMom2Id(state.momID);
 				observation.setStatus(status);
+				observation.setTimeStamp(state.timestamp);
 				jOTDBnode observationNode = tm.getTopNode(state.treeID);
 				jOTDBnode measurementsNode = getNode(observationNode, "measurementMom2Ids");
 				observation.setMeasurementMom2Ids(measurementsNode.limits);
