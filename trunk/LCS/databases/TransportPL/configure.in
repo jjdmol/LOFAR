@@ -56,6 +56,7 @@ lofar_GENERAL
 lofar_MPI
 lofar_DTL(1)
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/TransportHolder.h,,)
 lofar_INTERNAL(LCS/databases/PL,PL,,1,PL/PersistentObject.h,,)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")

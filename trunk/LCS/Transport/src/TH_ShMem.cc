@@ -28,7 +28,7 @@
 
 #include <Transport/BaseSim.h>
 #include <Transport/DataHolder.h>
-#include <Common/BlobStringType.h>
+#include <Blob/BlobStringType.h>
 #include <Common/LofarLogger.h>
 #include <Common/shmem/shmem_alloc.h>
 #include <stdio.h>

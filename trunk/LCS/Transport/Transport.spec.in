@@ -29,6 +29,7 @@ URL: http://www.astron.nl
 Prefix: %{prefix}
 BuildArchitectures: i386 # Target platforms, i.e., i586
 Requires: Common 
+Requires: Blob
 Packager: %{packager}
 Distribution: The LOFAR project
 Vendor: ASTRON

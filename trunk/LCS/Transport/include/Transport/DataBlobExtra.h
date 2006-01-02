@@ -29,8 +29,8 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobOBufChar.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobOBufChar.h>
 #include <string>
 
 namespace LOFAR

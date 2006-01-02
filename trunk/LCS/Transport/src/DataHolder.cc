@@ -25,11 +25,11 @@
 
 #include <Transport/DataHolder.h>
 #include <Transport/DataBlobExtra.h>
-#include <Common/BlobField.h>
-#include <Common/BlobStringType.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufString.h>
+#include <Blob/BlobField.h>
+#include <Blob/BlobStringType.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufString.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
