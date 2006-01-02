@@ -27,7 +27,7 @@
 
 #include <tinyCEP/TinyApplicationHolder.h>
 #include <tinyCEP/WorkHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Transport/Connection.h>
 #include <Transport/TransportHolder.h>
 #include <Transport/DataHolder.h>

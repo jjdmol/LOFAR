@@ -24,7 +24,7 @@
 #define TFLOPCORRELATOR_WH_STORAGE_H
 
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 #ifdef USE_MAC_PI
 #include <GCF/PALlight/CEPPropertySet.h>

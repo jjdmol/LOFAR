@@ -14,7 +14,7 @@
 
 #include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <GCF/PALlight/CEPPropertySet.h>
 
 

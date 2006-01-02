@@ -13,7 +13,7 @@
 #include <sys/time.h>
 
 #include <tinyCEP/WorkHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 using namespace std;
 namespace LOFAR

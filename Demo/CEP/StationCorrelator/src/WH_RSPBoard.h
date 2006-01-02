@@ -24,7 +24,7 @@
 #define STATIONCORRELATOR_WH_RSPBOARD_H
 
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 #include <SyncStamp.h>
 
