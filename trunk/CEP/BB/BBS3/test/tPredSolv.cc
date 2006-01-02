@@ -27,11 +27,11 @@
 #include <BBS3/MNS/ParmTableData.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobOBufChar.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobArray.h>
 #include <stdexcept>
 #include <iostream>
 #include <iomanip>

@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 #include <BBS3/ParmData.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 
 namespace LOFAR {
 

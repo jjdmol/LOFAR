@@ -27,9 +27,9 @@
 #include <BBS3/MNS/MeqMatrixComplexSca.h>
 #include <BBS3/MNS/MeqMatrixRealArr.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
-#include <Common/BlobArray.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobArray.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 

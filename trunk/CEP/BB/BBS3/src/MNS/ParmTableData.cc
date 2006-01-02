@@ -25,8 +25,8 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <BBS3/MNS/ParmTableData.h>
 #include <APS/ParameterSet.h>
 

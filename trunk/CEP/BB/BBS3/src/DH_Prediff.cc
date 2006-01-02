@@ -27,8 +27,8 @@
 
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/ParmData.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
 #include <sstream>
 #include <unistd.h> 

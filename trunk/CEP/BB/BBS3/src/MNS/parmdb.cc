@@ -28,8 +28,8 @@
 #include <MNS/ParmTableBDB.h>
 #include <MNS/ParmTableBDBRepl.h>
 #include <Common/LofarLogger.h>
-#include <Common/KeyValueMap.h>
-#include <Common/KeyParser.h>
+#include <Blob/KeyValueMap.h>
+#include <Blob/KeyParser.h>
 #include <casa/Quanta/MVTime.h>
 #include <string>
 #include <pwd.h>
