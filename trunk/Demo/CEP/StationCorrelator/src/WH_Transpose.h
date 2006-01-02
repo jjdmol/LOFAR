@@ -29,7 +29,7 @@
 // one line description.
 
 //# Includes
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR

@@ -24,7 +24,7 @@
 #include <stdio.h>
 
 // General includes
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 
 #ifdef HAVE_MPI

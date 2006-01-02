@@ -23,8 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/KeyParser.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyParser.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>

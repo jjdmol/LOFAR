@@ -24,7 +24,7 @@
 #define TFLOPCORRELATOR_TFC_INPUTSECTION_WH_SBCOLLECT_H
 
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 
 

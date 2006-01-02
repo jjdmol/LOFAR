@@ -12,7 +12,7 @@
 #include <lofar_config.h>
 
 #include <DH_CorrCube.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {

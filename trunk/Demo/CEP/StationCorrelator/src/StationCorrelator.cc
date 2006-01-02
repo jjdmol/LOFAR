@@ -25,8 +25,8 @@
 
 #include <StationCorrelator.h>
 
-#include <Common/KeyParser.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyParser.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 

@@ -16,7 +16,7 @@
 
 // General includes
 #include <Common/LofarLogger.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 // Application specific includes
 #include <WH_Dump.h>

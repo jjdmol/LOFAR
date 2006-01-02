@@ -23,7 +23,7 @@
 #ifndef STATIONCORRELATOR_H
 #define STATIONCORRELATOR_H
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <CEPFrame/ApplicationHolder.h>
 
 namespace LOFAR {
