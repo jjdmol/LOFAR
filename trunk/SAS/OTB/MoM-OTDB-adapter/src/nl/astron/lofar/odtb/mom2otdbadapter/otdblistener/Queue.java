@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -25,26 +26,30 @@ public class Queue {
 	private String taskDir = "./tasks";
 
 	private static final String FILE_DATE_TIME_FORMAT = "yyyy_MM_dd'T'HH_mm_ss";
+
 	private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+	private static final String OTDB_TIME_FORMAT = "yyyy-MMM-dd HH:mm:ss";
+
 	private Date startTime = null;
 
 	private Date endTime = null;
-	
+
 	private boolean isTaskLocked = false;
-	
-	private boolean isTimeLocked = false;
 
 	public Queue() throws IOException {
 		File dir = new File(taskDir);
 		if (!dir.exists()) {
 			dir.mkdir();
 		} else {
-			String[] files = dir.list();
+			String[] files = dir.list(new TasksFilter());
 			for (int i = 0; i < files.length; i++) {
 				Task task = new Task();
-				String xml = getFile(dir.getAbsolutePath() + File.separator
-						+ files[i]);
+				String fileName = taskDir + File.separator
+				+ files[i];
+				String xml = getFile(fileName);
 				task.setXml(xml);
+				task.setFileName(fileName);
 				tasks.add(task);
 			}
 		}
@@ -52,7 +57,7 @@ public class Queue {
 
 	public synchronized Task get() {
 		while (tasks.size() == 0 || isTaskLocked) {
-			log.info("Waiting for tasks....");
+			log.info("No task available...");
 			try {
 				wait();
 			} catch (InterruptedException e) {
@@ -60,8 +65,7 @@ public class Queue {
 		}
 		isTaskLocked = true;
 		Task task = (Task) tasks.get(0);
-		log.info("Processing task...., one task removed. Number of tasks:"
-				+ tasks.size());
+		log.info("Processing task....Number of tasks:" + tasks.size());
 		notifyAll();
 		return task;
 	}
@@ -79,38 +83,37 @@ public class Queue {
 	}
 
 	public synchronized TimePeriod getTimePeriod() throws IOException {
-		while (isTimeLocked) {
-			try {
-				wait();
-			} catch (InterruptedException e) {
-			}
-		}
-		isTimeLocked = true;
+		/*
+		 * while (isTimeLocked) { try { wait(); } catch (InterruptedException e) { } }
+		 * isTimeLocked = true;
+		 */
 		String fileName = taskDir + File.separator + "last_time_period.txt";
 		String content = getFile(fileName);
 		if (content != null) {
 			String[] time = content.split(",");
-			//long newStartTime = new Long().longValue();
-			startTime = WsrtConverter.toDate(time[1],DATE_TIME_FORMAT);
-			//startTime.setTime(newStartTime);
-			
+			// long newStartTime = new Long().longValue();
+			startTime = WsrtConverter.toDate(time[1], DATE_TIME_FORMAT);
+			// startTime.setTime(newStartTime);
+
 		} else {
 			startTime = new Date();
 			startTime.setTime(0);
 
 		}
 		endTime = new Date();
-		endTime.setHours(endTime.getHours()+1);
+		// endTime.setHours(endTime.getHours()+1);
 		TimePeriod time = new TimePeriod();
 		time.setStartTime(startTime);
 		time.setEndTime(endTime);
-		notifyAll();
+		// notifyAll();
 		return time;
 	}
 
 	public synchronized void saveTimePeriod() throws IOException {
 		String fileName = taskDir + File.separator + "last_time_period.txt";
-		String content = WsrtConverter.toDateString(startTime,DATE_TIME_FORMAT) + "," + WsrtConverter.toDateString(endTime,DATE_TIME_FORMAT);
+		String content = WsrtConverter
+				.toDateString(startTime, DATE_TIME_FORMAT)
+				+ "," + WsrtConverter.toDateString(endTime, DATE_TIME_FORMAT);
 		File file = new File(fileName);
 		if (!file.exists()) {
 			file.createNewFile();
@@ -120,8 +123,8 @@ public class Queue {
 		out.write(content);
 		out.close();
 		fileOutputStream.close();
-		isTimeLocked = false;
-		notifyAll();
+		// isTimeLocked = false;
+		// notifyAll();
 	}
 
 	public synchronized void add(Task task) throws IOException {
@@ -152,10 +155,10 @@ public class Queue {
 
 	protected void storeTask(Task task) throws FileNotFoundException,
 			IOException {
-		Date date = new Date();
-		String fileName = taskDir + File.separator + "mom2id_"
-				+ task.getMom2Id() + "_time_"
-				+ WsrtConverter.toDateString(date, FILE_DATE_TIME_FORMAT) + ".xml";
+		Date date = WsrtConverter.toDate(task.getTime(), OTDB_TIME_FORMAT);
+		String fileName = taskDir + File.separator
+				+ WsrtConverter.toDateString(date, FILE_DATE_TIME_FORMAT)
+				+ "mom2id_" + task.getMom2Id() + ".xml";
 		task.setFileName(fileName);
 		File file = new File(fileName);
 		if (!file.exists()) {
@@ -168,5 +171,9 @@ public class Queue {
 		fileOutputStream.close();
 	}
 
-
+	class TasksFilter implements FilenameFilter {
+		public boolean accept(File dir, String name) {
+			return (name.endsWith(".xml"));
+		}
+	}
 }

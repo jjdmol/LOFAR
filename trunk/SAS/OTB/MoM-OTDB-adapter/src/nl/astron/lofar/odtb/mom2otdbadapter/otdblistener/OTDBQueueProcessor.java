@@ -9,7 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class OTDBQueueProcessor extends Thread {
-	private static final int SLEEP_MILLISECONDS = 5000;
+	private static final int SLEEP_MILLISECONDS = 30000;
 
 	private Log log = LogFactory.getLog(this.getClass());
 
@@ -21,9 +21,9 @@ public class OTDBQueueProcessor extends Thread {
 
 	private String password = null;
 
-	private String authUrl = null;
-
 	private String momUrl = null;
+	
+
 
 	/*
 	 * seconds to wait
@@ -32,7 +32,6 @@ public class OTDBQueueProcessor extends Thread {
 			String authUrl, String momUrl) {
 		this.username = username;
 		this.password = password;
-		this.authUrl = authUrl;
 		this.momUrl = momUrl;
 		this.queue = queue;
 		httpClient = new AstronHttpClient(authUrl);
