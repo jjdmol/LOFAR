@@ -26,17 +26,17 @@
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
 #endif
-#include <Common/KeyParser.h>
+#include <Blob/KeyParser.h>
 #include <string>
 #include <iostream>
 #include <fstream>
 
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobIBufChar.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobOBufChar.h>
+#include <Blob/BlobIBufChar.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufStream.h>
+#include <Blob/BlobArray.h>
 
 #include <casa/Arrays/Matrix.h>
 

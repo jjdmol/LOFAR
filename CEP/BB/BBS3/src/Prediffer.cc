@@ -41,9 +41,9 @@
 
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufStream.h>
+#include <Blob/BlobArray.h>
 #include <Common/VectorUtil.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarLogger.h>

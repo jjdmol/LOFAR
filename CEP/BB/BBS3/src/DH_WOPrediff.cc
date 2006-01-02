@@ -27,8 +27,8 @@
 
 #include <BBS3/DH_WOPrediff.h>
 #include <APS/ParameterSet.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <TransportPostgres/TH_DB.h>
 #include <sstream>
 #include <unistd.h> 

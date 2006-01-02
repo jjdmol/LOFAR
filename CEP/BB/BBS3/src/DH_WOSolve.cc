@@ -26,8 +26,8 @@
 #include <lofar_config.h>
 
 #include <BBS3/DH_WOSolve.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <TransportPostgres/TH_DB.h>
 #include <sstream>
 #include <unistd.h> 

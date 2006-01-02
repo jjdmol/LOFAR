@@ -26,8 +26,8 @@
 #include <lofar_config.h>
 
 #include <BBS3/DH_Solution.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <Common/LofarLogger.h>
 #include <sstream>
 #include <TransportPostgres/TH_DB.h>
