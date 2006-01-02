@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBSTRINGTYPE_H
-#define LOFAR_COMMON_BLOBSTRINGTYPE_H
+#ifndef LOFAR_BLOB_BLOBSTRINGTYPE_H
+#define LOFAR_BLOB_BLOBSTRINGTYPE_H
 
 // \file
 // Define type for a blob string
@@ -30,8 +30,7 @@
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
 
   // A BlobStringType object defines how a blob is represented in a BlobString.

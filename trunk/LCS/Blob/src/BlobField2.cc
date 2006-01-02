@@ -24,9 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/BlobField.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobException.h>
+#include <Blob/BlobField.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobException.h>
 
 namespace LOFAR {
 
@@ -165,7 +165,7 @@ namespace LOFAR {
 
 
 
-#include <Common/BlobField.cc>
+#include <Blob/BlobField.tcc>
 
 namespace LOFAR {
   //# Force the instantiation of the templates.

@@ -23,8 +23,8 @@
 */
 
 %{
-#include <Common/KeyParser.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyParser.h>
+#include <Blob/KeyValueMap.h>
 using namespace LOFAR;
 %}
 

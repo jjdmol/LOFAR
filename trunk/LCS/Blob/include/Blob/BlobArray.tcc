@@ -23,8 +23,8 @@
 #ifndef COMMON_BLOBARRAY_TCC
 #define COMMON_BLOBARRAY_TCC
 
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <Common/TypeNames.h>
 #include <Common/LofarLogger.h>
 

@@ -20,20 +20,21 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_KEYVALUEMAP_H
-#define LOFAR_COMMON_KEYVALUEMAP_H
+#ifndef LOFAR_BLOB_KEYVALUEMAP_H
+#define LOFAR_BLOB_KEYVALUEMAP_H
 
 // \file
 // Class to hold a collection of key name/value pairs.
 
-#include <Common/KeyValue.h>
+#include <Blob/KeyValue.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_iosfwd.h>
 
 namespace LOFAR {
 
-  // \addtogroup Common
-  // @{
+  // \ingroup Blob
+  // \addtogroup KeyValue
+  // <group>
 
   // <summary> Class to hold a collection of key name/value pairs </summary>
   
@@ -84,7 +85,7 @@ namespace LOFAR {
       friend BlobIStream& operator>> (BlobIStream&, KeyValueMap&);
     };
 
-  // @}  
+  // </group>
 
 } //end namespace
 

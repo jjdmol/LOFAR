@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobOBufNull.h>
+#include <Blob/BlobOBufNull.h>
 
 namespace LOFAR {
 

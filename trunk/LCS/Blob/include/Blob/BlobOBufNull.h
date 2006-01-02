@@ -20,18 +20,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBOBUFNULL_H
-#define LOFAR_COMMON_BLOBOBUFNULL_H
+#ifndef LOFAR_BLOB_BLOBOBUFNULL_H
+#define LOFAR_BLOB_BLOBOBUFNULL_H
 
 // \file
 // Output buffer for a blob using a plain pointer
 
-#include <Common/BlobOBuffer.h>
+#include <Blob/BlobOBuffer.h>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
   
   // This class is the BlobOBuffer that makes use of a null buffer.

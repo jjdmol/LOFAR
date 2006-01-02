@@ -20,19 +20,18 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBIBUFSTREAM_H
-#define LOFAR_COMMON_BLOBIBUFSTREAM_H
+#ifndef LOFAR_BLOB_BLOBIBUFSTREAM_H
+#define LOFAR_BLOB_BLOBIBUFSTREAM_H
 
 // \file
 // Input buffer for a blob using an istream
 
-#include <Common/BlobIBuffer.h>
+#include <Blob/BlobIBuffer.h>
 #include <iosfwd>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
   
   // This class is the BlobIBuffer that makes use of an istream object.

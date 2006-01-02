@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBISTREAM_H
-#define LOFAR_COMMON_BLOBISTREAM_H
+#ifndef LOFAR_BLOB_BLOBISTREAM_H
+#define LOFAR_BLOB_BLOBISTREAM_H
 
 // \file
 // Input stream for a blob
@@ -29,7 +29,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/DataFormat.h>
 #include <Common/DataConvert.h>
-#include <Common/BlobIBuffer.h>
+#include <Blob/BlobIBuffer.h>
 #include <stack>
 #include <vector>
 #include <string>
@@ -37,8 +37,7 @@
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
 // <group>
   
   // This class makes it possible to interpret a blob and create the objects

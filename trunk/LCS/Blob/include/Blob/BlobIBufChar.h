@@ -20,19 +20,18 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBIBUFCHAR_H
-#define LOFAR_COMMON_BLOBIBUFCHAR_H
+#ifndef LOFAR_BLOB_BLOBIBUFCHAR_H
+#define LOFAR_BLOB_BLOBIBUFCHAR_H
 
 // \file
 // Input buffer for a blob using a plain pointer
 
-#include <Common/BlobIBuffer.h>
+#include <Blob/BlobIBuffer.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
 
   // This class is the BlobIBuffer that makes use of a character buffer,

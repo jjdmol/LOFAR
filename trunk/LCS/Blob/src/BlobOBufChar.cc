@@ -23,8 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobException.h>
+#include <Blob/BlobOBufChar.h>
+#include <Blob/BlobException.h>
 #include <Common/LofarLogger.h>
 #include <string.h>
 

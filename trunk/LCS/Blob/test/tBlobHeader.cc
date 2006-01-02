@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobHeader.h>
+#include <Blob/BlobHeader.h>
 #include <Common/DataFormat.h>
 
 using namespace LOFAR;

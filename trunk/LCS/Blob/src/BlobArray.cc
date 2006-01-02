@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/BlobArray.h>
-#include <Common/BlobHeader.h>
+#include <Blob/BlobArray.h>
+#include <Blob/BlobHeader.h>
 #include <vector>
 
 namespace LOFAR

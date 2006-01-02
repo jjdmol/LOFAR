@@ -20,20 +20,19 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBARRAYHEADER_H
-#define LOFAR_COMMON_BLOBARRAYHEADER_H
+#ifndef LOFAR_BLOB_BLOBARRAYHEADER_H
+#define LOFAR_BLOB_BLOBARRAYHEADER_H
 
 // \file
 // Standard array header for a blob
 
-#include <Common/BlobHeader.h>
+#include <Blob/BlobHeader.h>
 #include <Common/TypeNames.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
   
   // An array is a special blob, so it has an array header following

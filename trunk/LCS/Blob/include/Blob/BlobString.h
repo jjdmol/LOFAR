@@ -20,21 +20,20 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBSTRING_H
-#define LOFAR_COMMON_BLOBSTRING_H
+#ifndef LOFAR_BLOB_BLOBSTRING_H
+#define LOFAR_BLOB_BLOBSTRING_H
 
 // \file
 // Blob buffer that can be a string<uchar> or char
 
 #include <Common/LofarTypes.h>
-#include <Common/BlobStringType.h>
-#include <Common/BlobStringTraits.h>
+#include <Blob/BlobStringType.h>
+#include <Blob/BlobStringTraits.h>
 #include <string>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
 // <group>
 
   // A BlobString object can hold a blob (binary large object).

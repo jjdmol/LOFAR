@@ -20,19 +20,18 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBOBUFSTREAM_H
-#define LOFAR_COMMON_BLOBOBUFSTREAM_H
+#ifndef LOFAR_BLOB_BLOBOBUFSTREAM_H
+#define LOFAR_BLOB_BLOBOBUFSTREAM_H
 
 // \file
 // Output buffer for a blob using an ostream
 
-#include <Common/BlobOBuffer.h>
+#include <Blob/BlobOBuffer.h>
 #include <iosfwd>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
 
   // This class is the BlobOBuffer that makes use of an ostream object.

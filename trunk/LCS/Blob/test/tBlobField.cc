@@ -23,15 +23,15 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobFieldSet.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobOBufString.h>
-#include <Common/BlobIBufString.h>
-#include <Common/BlobOBufStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobIBufVector.h>
-#include <Common/BlobHeader.h>
+#include <Blob/BlobFieldSet.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOBufString.h>
+#include <Blob/BlobIBufString.h>
+#include <Blob/BlobOBufStream.h>
+#include <Blob/BlobIBufStream.h>
+#include <Blob/BlobIBufVector.h>
+#include <Blob/BlobHeader.h>
 #include <Common/DataConvert.h>
 #include <iostream>
 #include <fstream>
@@ -61,7 +61,7 @@ namespace LOFAR {
 }
 
 //# Needed for instantiating BlobField<XX>
-#include <Common/BlobField.cc>
+#include <Blob/BlobField.tcc>
 
 // Instantiate the template.
 template class BlobField<XX>;

@@ -20,20 +20,19 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBOBUFSTRING_H
-#define LOFAR_COMMON_BLOBOBUFSTRING_H
+#ifndef LOFAR_BLOB_BLOBOBUFSTRING_H
+#define LOFAR_BLOB_BLOBOBUFSTRING_H
 
 // \file
 // Input buffer for a blob using a string
 
-#include <Common/BlobOBufChar.h>
-#include <Common/BlobString.h>
+#include <Blob/BlobOBufChar.h>
+#include <Blob/BlobString.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
 
   // This class is the BlobOBuffer that makes use of a BlobString object.

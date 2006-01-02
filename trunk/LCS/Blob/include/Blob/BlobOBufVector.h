@@ -20,20 +20,19 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBOBUFVECTOR_H
-#define LOFAR_COMMON_BLOBOBUFVECTOR_H
+#ifndef LOFAR_BLOB_BLOBOBUFVECTOR_H
+#define LOFAR_BLOB_BLOBOBUFVECTOR_H
 
 // \file
 // Input buffer for a blob using a vector
 
-#include <Common/BlobOBufChar.h>
+#include <Blob/BlobOBufChar.h>
 #include <Common/LofarLogger.h>
 #include <vector>
 
 namespace LOFAR {
 
-// \ingroup Common
-// \addtogroup Blob
+// \ingroup %pkgname%
   // @{
 
   // This class is the BlobOBuffer that makes use of a vector object.

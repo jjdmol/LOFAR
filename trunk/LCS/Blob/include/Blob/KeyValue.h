@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_KEYVALUE_H
-#define LOFAR_COMMON_KEYVALUE_H
+#ifndef LOFAR_BLOB_KEYVALUE_H
+#define LOFAR_BLOB_KEYVALUE_H
 
 // \file
 // Class to hold a general value.
@@ -36,8 +36,9 @@
 
 namespace LOFAR {
 
-  // \addtogroup Common
-  // @{
+  // \ingroup Blob
+  // \addtogroup KeyValue
+  // <group>
 
   //# Forward Declarations
   class KeyValueMap;
@@ -203,7 +204,7 @@ namespace LOFAR {
       void*    itsValuePtr;
     };
 
-  //@}
+  // </group>
 
 } // end namespace
 

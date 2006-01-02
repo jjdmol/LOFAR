@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 
-#include <Common/BlobHeader.h>
+#include <Blob/BlobHeader.h>
 #include <Common/DataFormat.h>
 #include <Common/LofarLogger.h>
 

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_BLOBEXCEPTION_H
-#define LOFAR_COMMON_BLOBEXCEPTION_H
+#ifndef LOFAR_BLOB_BLOBEXCEPTION_H
+#define LOFAR_BLOB_BLOBEXCEPTION_H
 
 // \file
 // Blob Exception class. 

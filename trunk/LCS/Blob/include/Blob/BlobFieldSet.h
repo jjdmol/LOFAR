@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_BLOBFIELDSET_H
-#define LOFAR_COMMON_BLOBFIELDSET_H
+#ifndef LOFAR_BLOB_BLOBFIELDSET_H
+#define LOFAR_BLOB_BLOBFIELDSET_H
 
 // \file
 // Definition all fields in a blob
 
-#include <Common/BlobField.h>
-#include <Common/BlobIBufChar.h>
+#include <Blob/BlobField.h>
+#include <Blob/BlobIBufChar.h>
 #include <Common/LofarLogger.h>
 #include <vector>
 #include <string>
@@ -35,8 +35,7 @@
 
 namespace LOFAR {
 
-  // \ingroup Common
-  // \addtogroup Blob
+  // \ingroup %pkgname%
   // <group>
 
   //# Forward Declarations.

@@ -23,10 +23,10 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <Common/BlobArrayHeader.h>
-#include <Common/BlobArray.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufStream.h>
+#include <Blob/BlobArrayHeader.h>
+#include <Blob/BlobArray.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufStream.h>
 #include <iostream>
 #include <vector>
 
