@@ -32,7 +32,7 @@
 #include <tinyCEP/TinyDataManager.h>
 #include <APS/ParameterSet.h>
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {

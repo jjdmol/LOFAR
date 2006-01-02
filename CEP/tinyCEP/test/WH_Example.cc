@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #include <WH_Example.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR

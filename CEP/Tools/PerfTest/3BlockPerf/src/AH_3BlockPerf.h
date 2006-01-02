@@ -29,7 +29,7 @@
 #define LOFAR_3BLOCKPERF_AH_3BLOCKPERF_H
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR {
 

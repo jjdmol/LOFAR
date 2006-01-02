@@ -32,7 +32,7 @@
 // architecture in combination with calibration software.
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 namespace LOFAR
 {

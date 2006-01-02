@@ -4,7 +4,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 #include <Transport/DataHolder.h>
 #include <tinyCEP/TinyApplicationHolder.h>

@@ -13,8 +13,8 @@
 // TransportHolders
 #include <Common/lofar_iostream.h>
 //#include <Common/LofarLogger.h>
-#include <Common/KeyParser.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyParser.h>
+#include <Blob/KeyValueMap.h>
 #include <Transport/TH_Socket.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Transport/Connection.h>

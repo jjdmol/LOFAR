@@ -29,7 +29,7 @@
 // CEPFrame general includes
 #include "CEPFrame/DH_Empty.h"
 #include "CEPFrame/Step.h"
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 
 // OnLineProto specific include
 #include "OnLineProto/WH_SimStation.h"

@@ -29,7 +29,7 @@
 #define LOFAR_ASYNCTEST_ASYNCTEST_H
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <AsyncTest/WH_Source.h>
 #include <AsyncTest/WH_Sink.h>
 

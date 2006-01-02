@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Common/lofar_string.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 //#include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <APS/ParameterSet.h>

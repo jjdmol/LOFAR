@@ -29,7 +29,7 @@
 #define LOFAR_P2PERF_P2PERF_H
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <P2Perf/DHGrowStrategy.h>
 
 namespace LOFAR

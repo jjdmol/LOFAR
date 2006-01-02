@@ -30,7 +30,7 @@
 #include <DH_Example.h>
 #include <MySecondExample.h>
 
-#include <Common/KeyValueMap.h>
+#include <Blob/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;

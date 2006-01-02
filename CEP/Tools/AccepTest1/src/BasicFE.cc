@@ -10,8 +10,8 @@
 
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
-#include <Common/KeyValueMap.h>
-#include <Common/KeyParser.h>
+#include <Blob/KeyValueMap.h>
+#include <Blob/KeyParser.h>
 #include <Common/Net/Socket.h>
 #include <unistd.h>
 
