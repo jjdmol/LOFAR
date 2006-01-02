@@ -85,6 +85,7 @@
   fi
 
   echo "PROJECT_NAME            = $projnm" >> doxygen.cfg
+  echo "OUTPUT_DIRECTORY        = $targetdir" >> doxygen.cfg
   echo "STRIP_FROM_PATH         = $lfrdir" >> doxygen.cfg
   echo "INPUT                   = $pkgdir" >> doxygen.cfg
   echo "IMAGE_PATH              = $pkgdir" >> doxygen.cfg
