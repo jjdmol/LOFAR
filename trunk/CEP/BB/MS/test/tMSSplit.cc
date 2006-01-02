@@ -21,9 +21,9 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufStream.h>
+#include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
 
 #include <tables/Tables/Table.h>

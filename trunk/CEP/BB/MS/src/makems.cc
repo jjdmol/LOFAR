@@ -26,9 +26,9 @@
 #include <MS/DH_MSMake.h>
 #include <MS/MSCreate.h>
 #include <APS/ParameterSet.h>
-#include <Common/BlobOBufStream.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobOBufStream.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
 
 #include <casa/Quanta/MVTime.h>

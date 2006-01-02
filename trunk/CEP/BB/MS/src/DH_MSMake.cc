@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 
 #include <MS/DH_MSMake.h>
-#include <Common/BlobOStream.h>
-#include <Common/BlobArray.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobArray.h>
 
 #include <casa/Arrays/Array.h>
 
