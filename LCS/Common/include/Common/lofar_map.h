@@ -34,11 +34,4 @@ namespace LOFAR
   using std::pair;
 }
 
-#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-#include <Common/lofar_global_symbol_warning.h>
-using LOFAR::map;
-using LOFAR::multimap;
-using LOFAR::pair;
-#endif
-
 #endif

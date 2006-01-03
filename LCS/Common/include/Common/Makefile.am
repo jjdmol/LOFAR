@@ -2,6 +2,8 @@ if HAVE_SHMEM
 SUBDIRS	= shmem .
 endif
 
+pkginclude_Netdir = $(pkgincludedir)/Net
+
 INSTHDRS = \
         Allocator.h \
         CheckConfig.h \
@@ -41,20 +43,15 @@ INSTHDRS = \
         StringUtil.h \
 	Timer.h \
         TypeNames.h \
-	VectorUtil.h \
-	Net/FdSet.h \
-	Net/Socket.h 
+	TypeNames.tcc \
+	VectorUtil.h
 
-NOINSTHDRS =
+pkginclude_Net_HEADERS = \
+        Net/FdSet.h \
+        Net/Socket.h
 
-TCCHDRS = \
-	TypeNames.tcc
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
-
+noinst_HEADERS =
 
 include $(top_srcdir)/Makefile.common
