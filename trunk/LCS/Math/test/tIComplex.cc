@@ -25,6 +25,7 @@
 #include <Math/IComplex.h>
 #include <Common/LofarLogger.h>
 
+using namespace LOFAR::Math;
 using namespace LOFAR;
 
 template<typename IC1, typename IC2>
@@ -52,7 +53,7 @@ void doIt()
   ASSERT (ic4*ic1 == ic3);
 }
 
-int main(int argc, const char* argv[])
+int main(int /*argc*/, const char* /*argv[]*/)
 {
   try {
     INIT_LOGGER("tIComplex");

@@ -1,16 +1,11 @@
-INSTHDRS = \
-LCSMath.h \
-IComplex.h \
-ComplexFunc.h
+pkginclude_HEADERS = \
+	deprecated_warning.h \
+	LCSMath.h \
+	IComplex.h \
+	Lonumerics.h \
+	Lorrays-Blitz.h \
+	Lorrays.h
 
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
+noinst_HEADERS =
 
 include $(top_srcdir)/Makefile.common

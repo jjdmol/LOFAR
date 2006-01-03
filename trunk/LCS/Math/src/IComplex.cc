@@ -27,22 +27,26 @@
 
 namespace LOFAR
 {
-  ostream& operator<< (ostream& os, const IComplex8& val)
+  namespace Math
   {
-    os << '(' << int(val.re()) << ',' << int(val.im()) << ')';
-    return os;
-  }
+    ostream& operator<< (ostream& os, const IComplex8& val)
+    {
+      os << '(' << int(val.re()) << ',' << int(val.im()) << ')';
+      return os;
+    }
 
-  ostream& operator<< (ostream& os, const IComplex16& val)
-  {
-    os << '(' << val.re() << ',' << val.im() << ')';
-    return os;
-  }
+    ostream& operator<< (ostream& os, const IComplex16& val)
+    {
+      os << '(' << val.re() << ',' << val.im() << ')';
+      return os;
+    }
 
-  ostream& operator<< (ostream& os, const IComplex32& val)
-  {
-    os << '(' << val.re() << ',' << val.im() << ')';
-    return os;
-  }
+    ostream& operator<< (ostream& os, const IComplex32& val)
+    {
+      os << '(' << val.re() << ',' << val.im() << ')';
+      return os;
+    }
+
+  } // namespace Math
 
 } // namespace LOFAR
