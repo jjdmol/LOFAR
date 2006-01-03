@@ -7,7 +7,6 @@ lib_LTLIBRARIES 	= libcommon.la
 libcommon_la_SOURCES 	= \
         Allocator.cc \
         DataConvert.cc \
-        Debug.cc \
         Exception.cc \
         hexdump.cc \
         LofarLogCout.cc \
@@ -19,12 +18,7 @@ libcommon_la_SOURCES 	= \
 	Timer.cc \
         TypeNames.cc \
         Net/FdSet.cc \
-        Net/Socket.cc \
-        Profiling/PerfProfile.cc \
-        Thread/SmartLock.cc \
-        Thread/Thread.cc 
-
-EXTRA_DIST = backward/Debug.cc
+        Net/Socket.cc 
 
 if HAVE_SHMEM
 libcommon_la_LIBADD	= shmem/libshmem.la
