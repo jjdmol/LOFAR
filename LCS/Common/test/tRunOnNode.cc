@@ -29,7 +29,7 @@
 using namespace std;
 using namespace LOFAR;
 
-int main (int, char *argv[]) {
+int main (int, const char**) {
 
   cout << "Program started" << endl;
   

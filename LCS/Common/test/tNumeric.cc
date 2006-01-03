@@ -378,22 +378,13 @@ void testDouble()
 }
 
 
-int main(int argc, const char* argv[])
+int main(int /*argc*/, const char* argv[])
 {
   INIT_LOGGER(argv[0]);
   LOG_INFO("Starting up ...");
   try {
-//     initNumbers(float);
-//     testNegative(float);
-//     testFinite(float);
-//     testInf(float);
-//     testNan(float);
-//     testCompare(float);
-
     testAll(float);
     testAll(double);
-//     testFloat();
-//     testDouble();
   }
   catch (Exception& e) {
     LOG_ERROR_STR(e);
