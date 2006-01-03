@@ -1,22 +1,20 @@
-check_PROGRAMS	      =	tDebug testLogger \
+check_PROGRAMS	      =	testLogger \
 			tDataConvert tStringUtil tHexdump \
-			tLorrays testSocket tComplex \
+			testSocket tComplex \
 			tRunOnNode tTimer tNumeric
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
+CHECKTOOLPROGS 	      =	testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
 			tDataConvert tKeyValueMap tStringUtil tHexdump \
-			tLorrays tTimer tNumeric
+			tTimer tNumeric
 #ENDCHECKTOOLPROGS
 
 TESTSCRIPTS = \
 	  tComplex.sh \
 	  tDataConvert_test.sh \
-	  tDebug_test.sh \
 	  testLogger_test.sh \
 	  tHexdump_test.sh    \
-	  tLorrays_test.sh    \
 	  tNumeric.sh \
 	  tComplex.sh \
 	  tRunOnNode.sh \
@@ -28,18 +26,10 @@ TESTS	= $(TESTSCRIPTS) \
 EXTRA_DIST = $(TESTSCRIPTS) \
 	  tComplex.stdout \
 	  tDataConvert.stdout \
-	  tDebug.stdout \
 	  testLogger.log_prop testLogger.debug \
 	  tHexdump.log_prop \
-	  tLorrays.stdout \
 	  tRunOnNode.log_prop tRunOnNode.stdout \
 	  tStringUtil.stdout 
-
-XFAIL_TESTS		= tLorrays_test.sh
-
-tDebug_SOURCES			= tDebug.cc
-tDebug_LDADD			= ../src/libcommon.la
-tDebug_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 testSocket_SOURCES		= testSocket.cc
 testSocket_LDADD		= ../src/libcommon.la	
@@ -60,10 +50,6 @@ tStringUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 tHexdump_SOURCES		= tHexdump.cc
 tHexdump_LDADD			= ../src/libcommon.la	
 tHexdump_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
-
-tLorrays_SOURCES		= tLorrays.cc
-tLorrays_LDADD			= ../src/libcommon.la	
-tLorrays_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 tRunOnNode_SOURCES		= tRunOnNode.cc
 tRunOnNode_LDADD		= ../src/libcommon.la	

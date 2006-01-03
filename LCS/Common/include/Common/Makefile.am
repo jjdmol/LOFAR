@@ -4,7 +4,6 @@ endif
 
 INSTHDRS = \
         Allocator.h \
-        BlitzToAips.h \
         CheckConfig.h \
 	ComplexBuiltinFP.h \
 	ComplexBuiltinInt.h \
@@ -13,7 +12,6 @@ INSTHDRS = \
 	ComplexStdInt.h \
         DataConvert.h \
         DataFormat.h \
-        Debug.h \
         Exception.h \
         hexdump.h \
         lofar_algorithm.h \
@@ -21,7 +19,6 @@ INSTHDRS = \
         lofar_datetime.h \
         lofar_deque.h \
         lofar_fstream.h \
-        lofar_global_symbol_warning.h \
 	lofar_iomanip.h \
         lofar_iosfwd.h \
         lofar_iostream.h \
@@ -34,32 +31,19 @@ INSTHDRS = \
         lofar_sstream.h \
         lofar_stack.h \
         lofar_string.h \
-        lofar_strstream.h \
         lofar_thread.h \
         LofarTypedefs.h \
         LofarTypes.h \
         lofar_vector.h \
-        Lonumerics.h \
-        Lorrays-Blitz.h \
-        Lorrays.h \
 	Numeric.h \
         RunOnNode.h \
         Stopwatch.h \
         StringUtil.h \
-        Thread.h \
 	Timer.h \
         TypeNames.h \
 	VectorUtil.h \
 	Net/FdSet.h \
-	Net/Socket.h \
-	Net/backward/Socket.h \
-	Profiling/PerfProfile.h \
-        Thread/Condition.h \
-	Thread/deprecated_warning.h \
-        Thread/Key.h \
-        Thread/Mutex.h \
-        Thread/SmartLock.h \
-        Thread/Thread.h 
+	Net/Socket.h 
 
 NOINSTHDRS =
 
