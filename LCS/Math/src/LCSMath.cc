@@ -32,13 +32,10 @@
 # include <fftw.h>
 #endif
 
-using namespace std;
-
 namespace LOFAR
 {
-  using std::sqrt;
 
-// Declare functions in lapack.
+  // Declare functions in lapack.
 #ifdef HAVE_LAPACK
 # define zheev zheev_
 # define zgesvd zgesvd_
@@ -77,7 +74,7 @@ namespace LOFAR
 #define MAXQS 15
 #define BUFFERLENGTH 100
 
-  namespace LCSMath
+  namespace Math
   {
     LoVec_double absVec (const LoVec_dcomplex& aVec)
     {
@@ -105,29 +102,29 @@ namespace LOFAR
       return out;	    
     }
     
-     LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix)
-     {
-       // Make copy of matrix to be sure it is contiguous.
-       LoMat_dcomplex tmp(aMatrix.shape());
-       tmp = aMatrix;
-       dcomplex* vals = tmp.data();
-       for (int i=0; i<tmp.size(); ++i) {
-	 vals[i] = LOFAR::conj(vals[i]);
-       }
-       return tmp;
-     }
+    LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix)
+    {
+      // Make copy of matrix to be sure it is contiguous.
+      LoMat_dcomplex tmp(aMatrix.shape());
+      tmp = aMatrix;
+      dcomplex* vals = tmp.data();
+      for (int i=0; i<tmp.size(); ++i) {
+        vals[i] = LOFAR::conj(vals[i]);
+      }
+      return tmp;
+    }
 
-     LoVec_dcomplex conj (const LoVec_dcomplex& aVector)
-     {
-       // Make copy of vector to be sure it is contiguous.
-       LoVec_dcomplex tmp(aVector.shape());
-       tmp = aVector;
-       dcomplex* vals = tmp.data();
-       for (int i=0; i<tmp.size(); ++i) {
-	 vals[i] = LOFAR::conj(vals[i]);
-       }
-       return tmp;
-     }
+    LoVec_dcomplex conj (const LoVec_dcomplex& aVector)
+    {
+      // Make copy of vector to be sure it is contiguous.
+      LoVec_dcomplex tmp(aVector.shape());
+      tmp = aVector;
+      dcomplex* vals = tmp.data();
+      for (int i=0; i<tmp.size(); ++i) {
+        vals[i] = LOFAR::conj(vals[i]);
+      }
+      return tmp;
+    }
 
 
     LoMat_dcomplex hermitianTranspose (const LoMat_dcomplex& aMatrix)
@@ -455,10 +452,7 @@ namespace LOFAR
       int n       = a.cols ();
       char jobu   = 'A';
       char jobv   = 'A';
-      int ncol_u  = m;
       int nrow_vt = n;
-      int nrow_s  = m;
-      int ncol_s  = n;
       int min_mn  = m < n ? m : n;
       int max_mn  = m > n ? m : n;
       int lwork   = 2 * min_mn + max_mn;
@@ -687,7 +681,7 @@ namespace LOFAR
     template <class T>
     T stdev (const blitz::Array <T, 1>& aVector, int length)
     {
-      return (sqrt (variance (aVector, length)));
+      return (std::sqrt (variance (aVector, length)));
     }
 
     template <class T>
@@ -705,14 +699,14 @@ namespace LOFAR
     }
     
     template <class T>
-    T max (blitz::Array <T, 1>& aVector, int length)
+    T max (blitz::Array <T, 1>& aVector, int /*length*/)
     {
       blitz::Array <T, 1> aSortedVector = sort (aVector);
       return aSortedVector (aSortedVector.ubound (blitz::firstDim));
     }
     
     template <class T>
-    T min (blitz::Array <T, 1>& aVector, int length)
+    T min (blitz::Array <T, 1>& aVector, int /*length*/)
     {
       blitz::Array <T, 1> aSortedVector = sort (aVector);
       return aSortedVector (aSortedVector.lbound (blitz::firstDim));
@@ -733,12 +727,17 @@ namespace LOFAR
     template double max (blitz::Array <double, 1>& aVector, int length);
     template double min (blitz::Array <double, 1>& aVector, int length);
 
+#if 0
+    // If it turns out that doing statistics on complex numbers is useful, we
+    // may uncomment these methods. For the time being we'll leave them out,
+    // because sqrt(dcomplex) causes trouble.
     template dcomplex sum (const blitz::Array <dcomplex, 1>& aVector, int length);
     template dcomplex sum_square (const blitz::Array <dcomplex, 1>& aVector, int length);
     template dcomplex mean (const blitz::Array <dcomplex, 1>& aVector, int length);
     template dcomplex variance (const blitz::Array <dcomplex, 1>& aVector, int length);
     template dcomplex stdev (const blitz::Array <dcomplex, 1>& aVector, int length);
+#endif
 
-  } // namespace LCSMath
+  } // namespace Math
 
 } // namespace LOFAR

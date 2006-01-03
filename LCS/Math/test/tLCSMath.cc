@@ -23,10 +23,11 @@
 #include <lofar_config.h>
 
 #include <Math/LCSMath.h>
-#include <Common/Lorrays-Blitz.h>
+#include <Math/Lorrays-Blitz.h>
 #include <Common/LofarLogger.h>
 #include <Common/Stopwatch.h>
 
+using namespace LOFAR::Math;
 using namespace LOFAR;
 
 int main()
@@ -41,7 +42,7 @@ int main()
       }
       Stopwatch timer;
       for (int j=0; j<100; j++) {
-	LCSMath::sort (vec);
+	Math::sort (vec);
       }
       cout << "100x LCSMath 10^4 " << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
@@ -56,7 +57,7 @@ int main()
       }
       Stopwatch timer;
       for (int j=0; j<100; j++) {
-	LCSMath::sort (vec);
+	Math::sort (vec);
       }
       cout << "100x LCSMath order" << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
@@ -71,7 +72,7 @@ int main()
       }
       Stopwatch timer;
       for (int j=0; j<100; j++) {
-	LCSMath::sort (vec);
+	Math::sort (vec);
       }
       cout << "100x LCSMath equal" << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
@@ -86,7 +87,7 @@ int main()
       }
       Stopwatch timer;
       for (int j=0; j<100; j++) {
-	LCSMath::sort (vec);
+	Math::sort (vec);
       }
       cout << "100x LCSMath 10^5 " << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
@@ -101,7 +102,7 @@ int main()
       }
       Stopwatch timer;
       for (int j=0; j<10; j++) {
-	LCSMath::sort (vec);
+	Math::sort (vec);
       }
       cout << " 10x LCSMath 10^6 " << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
@@ -116,7 +117,7 @@ int main()
       }
       Stopwatch timer;
       for (int j=0; j<10; j++) {
-	LCSMath::sort (vec);
+	Math::sort (vec);
       }
       cout << " 10x LCSMath order" << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
@@ -141,7 +142,7 @@ int main()
 	  mat2(j,i) = k++;
 	}
       }
-      LoMat_double mat3 = LCSMath::matMult (mat1, mat2);
+      LoMat_double mat3 = Math::matMult (mat1, mat2);
       LoMat_double mat4(n1,n3);
       mat4 = sum(mat1(blitz::tensor::i, blitz::tensor::k) *
 		 mat2(blitz::tensor::k, blitz::tensor::j),
@@ -173,7 +174,7 @@ int main()
       }
       Stopwatch timer;
       for (int i=0; i<1000; i++) {
-	LoMat_double mat3 = LCSMath::matMult (mat1, mat2);
+	LoMat_double mat3 = Math::matMult (mat1, mat2);
       }
       cout << "1000x MatMult -10 " << timer.sdelta() << endl;
     }
@@ -205,6 +206,6 @@ int main()
     cout << "Unexpected exception" << endl;
     return 1;
   }
-  std::cout << "OK" << std::endl;
+  cout << "OK" << endl;
   return 0;
 }

@@ -20,16 +20,17 @@
 //
 //  $Id$
 
-#ifndef MATH_LCSMATH_H
-#define MATH_LCSMATH_H
+#ifndef LOFAR_MATH_LCSMATH_H
+#define LOFAR_MATH_LCSMATH_H
 
 //# Includes
-#include <Common/Lorrays-Blitz.h>
 #include <Common/lofar_complex.h>
+#include <Math/Lorrays-Blitz.h>
+#include <Math/deprecated_warning.h>
 
 namespace LOFAR
 {
-  namespace LCSMath
+  namespace Math
   {
     // Set to the value zero.
     // <group>
@@ -117,7 +118,7 @@ namespace LOFAR
     template <class T> T max (blitz::Array <T, 1>& aVector, int length);
     template <class T> T min (blitz::Array <T, 1>& aVector, int length);
 
-  } // namespace LCSMath
+  } // namespace Math
 
 } // namespace LOFAR
 

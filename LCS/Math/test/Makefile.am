@@ -1,12 +1,14 @@
-check_PROGRAMS	= tLCSMath tIComplex tComplexFunc
+check_PROGRAMS	= tLCSMath tIComplex tLorrays
 
 TESTSCRIPTS	= tLCSMath_test.sh \
 	  	  tIComplex_test.sh \
-	  	  tComplexFunc_test.sh
+		  tLorrays_test.sh
 
-TESTS = $(TESTSCRIPTS)
+TESTS		= $(TESTSCRIPTS)
 
-EXTRA_DIST = $(TESTSCRIPTS)
+XFAIL_TESTS	= tLorrays_test.sh
+
+EXTRA_DIST	= $(TESTSCRIPTS)
 
 tLCSMath_SOURCES		= tLCSMath.cc
 tLCSMath_LDADD			= ../src/libmath.la
@@ -16,9 +18,9 @@ tIComplex_SOURCES		= tIComplex.cc
 tIComplex_LDADD			= ../src/libmath.la
 tIComplex_DEPENDENCIES		= ../src/libmath.la $(LOFAR_DEPEND)
 
-tComplexFunc_SOURCES		= tComplexFunc.cc
-tComplexFunc_LDADD		= ../src/libmath.la
-tComplexFunc_DEPENDENCIES	= ../src/libmath.la $(LOFAR_DEPEND)
+tLorrays_SOURCES		= tLorrays.cc
+tLorrays_LDADD			= ../src/libmath.la
+tLorrays_DEPENDENCIES		= ../src/libmath.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
 
