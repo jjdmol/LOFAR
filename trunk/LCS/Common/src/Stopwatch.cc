@@ -94,9 +94,8 @@ namespace LOFAR
   string Stopwatch::header (long long nops)
   {
     static char hdr[2][80];
-    static int dum1 = sprintf(hdr[0],"%10s%10s%10s","user","sys","real");
-    static int dum2 = sprintf(hdr[1],
-                              "%10s%10s%10s%12s%12s%12s","t/user","t/sys","t/real","p/cpusec","p/sec","count");
+    sprintf(hdr[0],"%10s%10s%10s","user","sys","real");
+    sprintf(hdr[1],"%10s%10s%10s%12s%12s%12s","t/user","t/sys","t/real","p/cpusec","p/sec","count");
   
     if( nops )
       return hdr[1];

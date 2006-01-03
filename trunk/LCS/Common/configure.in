@@ -5,7 +5,7 @@ AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(Common, 2.4, no-define)
+AM_INIT_AUTOMAKE(Common, 3.0, no-define)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -51,7 +51,6 @@ dnl
 dnl Check for LOFAR general things
 dnl
 lofar_GENERAL
-lofar_BLITZ
 lofar_MPI
 lofar_INTERNAL(LCS/Tools)
 dnl
