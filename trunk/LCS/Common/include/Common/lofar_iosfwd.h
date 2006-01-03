@@ -40,17 +40,4 @@ namespace LOFAR
   using std::fstream;
 }
 
-#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-#include <Common/lofar_global_symbol_warning.h>
-using LOFAR::istream;
-using LOFAR::ostream;
-using LOFAR::iostream;
-using LOFAR::istringstream;
-using LOFAR::ostringstream;
-using LOFAR::stringstream;
-using LOFAR::ifstream;
-using LOFAR::ofstream;
-using LOFAR::fstream;
-#endif
-
 #endif

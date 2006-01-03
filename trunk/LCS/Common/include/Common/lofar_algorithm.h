@@ -33,11 +33,5 @@ namespace LOFAR
   using std::min;
 }
 
-#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-#include <Common/lofar_global_symbol_warning.h>
-using LOFAR::max;
-using LOFAR::min;
-#endif
-
 #endif
 

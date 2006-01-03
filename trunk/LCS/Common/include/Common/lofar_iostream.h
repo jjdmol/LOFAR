@@ -42,18 +42,4 @@ namespace LOFAR
   using std::flush;
 }
 
-#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-#include <Common/lofar_global_symbol_warning.h>
-using LOFAR::istream;
-using LOFAR::ostream;
-using LOFAR::iostream;
-using LOFAR::cin;
-using LOFAR::cout;
-using LOFAR::cerr;
-using LOFAR::clog;
-using LOFAR::endl;
-using LOFAR::ends;
-using LOFAR::flush;
-#endif
-
 #endif

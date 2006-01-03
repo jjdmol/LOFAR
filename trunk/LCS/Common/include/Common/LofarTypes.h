@@ -67,29 +67,4 @@ namespace LOFAR
   using TYPES::uint64;
 }
 
-#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-#include <Common/lofar_global_symbol_warning.h>
-
-//# Make the type names defined in LofarTypedefs.h available in the
-//# global name space.
-
-using LOFAR::uchar;
-using LOFAR::ushort;
-using LOFAR::uint;
-using LOFAR::ulong;
-using LOFAR::longlong;
-using LOFAR::ulonglong;
-using LOFAR::ldouble;
-
-using LOFAR::int8;
-using LOFAR::int16;
-using LOFAR::int32;
-using LOFAR::int64;
-using LOFAR::uint8;
-using LOFAR::uint16;
-using LOFAR::uint32;
-using LOFAR::uint64;
-
-#endif // #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-
 #endif

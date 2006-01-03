@@ -33,9 +33,4 @@ namespace LOFAR
   using std::stack;
 }
 
-#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-#include <Common/lofar_global_symbol_warning.h>
-using LOFAR::stack;
-#endif
-
 #endif

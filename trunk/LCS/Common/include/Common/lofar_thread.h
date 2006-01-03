@@ -33,14 +33,4 @@ namespace LOFAR
   using namespace boost::thread;
 }
 
-    
-// You should invoke CHECK_CONFIG_THREADS(id) in every header file 
-// that defines a data structure that depends on USE_THREADs.
-#ifdef USE_THREADS
-  #define CHECK_CONFIG_THREADS(id) CHECK_CONFIG(id,UseThreads,yes);
-#else
-  #define CHECK_CONFIG_THREADS(id) CHECK_CONFIG(id,UseThreads,no);
 #endif
-    
-#endif
-    
