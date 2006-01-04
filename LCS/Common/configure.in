@@ -52,7 +52,8 @@ dnl Check for LOFAR general things
 dnl
 lofar_GENERAL
 lofar_MPI
-lofar_INTERNAL(LCS/Tools)
+lofar_INTERNAL(LCS/Tools,Tools)
+lofar_EXTERNAL(boost,0,boost/thread.hpp,boost_thread-gcc-mt)
 dnl
 dnl Output Makefiles
 dnl

@@ -25,12 +25,32 @@
 
 // \file
 
+#ifndef USE_THREADS
+#error Threading support unavailable: it should be explicitly enabled \
+with USE_THREADS
+#endif
+
 #include <boost/thread.hpp>
-#include <Common/CheckConfig.h>
 
 namespace LOFAR
 {
-  using namespace boost::thread;
+//   using boost::barrier;
+  using boost::condition;
+  using boost::lock_error;
+  using boost::thread_resource_error;
+  using boost::mutex;
+  using boost::try_mutex;
+  using boost::timed_mutex;
+  using boost::call_once;
+  using boost::recursive_mutex;
+  using boost::recursive_try_mutex;
+  using boost::recursive_timed_mutex;
+  using boost::thread;
+  using boost::thread_group;
+  using boost::xtime;
+  using boost::xtime_get;
 }
+
+#define LOFAR_ONCE_INIT BOOST_ONCE_INIT
 
 #endif
