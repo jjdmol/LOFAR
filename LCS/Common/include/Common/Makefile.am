@@ -4,7 +4,7 @@ endif
 
 pkginclude_Netdir = $(pkgincludedir)/Net
 
-INSTHDRS = \
+pkginclude_HEADERS = \
         Allocator.h \
         CheckConfig.h \
 	ComplexBuiltinFP.h \
@@ -47,10 +47,8 @@ INSTHDRS = \
 	VectorUtil.h
 
 pkginclude_Net_HEADERS = \
-        Net/FdSet.h \
-        Net/Socket.h
-
-pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+	Net/FdSet.h \
+	Net/Socket.h 
 
 noinst_HEADERS =
 
