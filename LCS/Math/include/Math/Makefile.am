@@ -1,4 +1,5 @@
 pkginclude_HEADERS = \
+	BlitzToAips.h \
 	deprecated_warning.h \
 	LCSMath.h \
 	IComplex.h \
