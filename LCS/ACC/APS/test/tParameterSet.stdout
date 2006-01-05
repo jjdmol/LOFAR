@@ -56,7 +56,7 @@ Subset a.b. contains:
 Trying to read a non-existing key
 Told you the key didn't exist.
 
-Finally write the parameterset to 'newset.out_param'
+Finally write the parameterset to 'newset.stdout'
 
 testing getInt32Vector
 5 elements in intVector1Dim
