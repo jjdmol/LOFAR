@@ -7,4 +7,3 @@ create table ExampleDB (
 	DATA	BYTEA,
 	COUNTER	INTEGER
 );
-

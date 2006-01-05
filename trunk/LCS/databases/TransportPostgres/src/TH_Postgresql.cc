@@ -25,6 +25,9 @@
 #include <Common/LofarLogger.h> 
 #include <TransportPostgres/TH_Postgresql.h>
 #include <TransportPostgres/DH_DB.h>
+#include <pqxx/binarystring>
+
+using namespace pqxx;
 
 namespace LOFAR
 {
@@ -36,7 +39,7 @@ string TH_Postgresql::theirDBName = "_XXX_";
 string TH_Postgresql::theirUserName = "postgres";
 
 int TH_Postgresql::theirInstanceCount=0;
-PGconn* TH_Postgresql::theirConnection=0;
+pqxx::connection* TH_Postgresql::theirConnection=0;
 
 TH_Postgresql::TH_Postgresql (const string& tableName)
   : itsTableName  (tableName), 
@@ -90,23 +93,22 @@ void TH_Postgresql::useDatabase (const string& dbHost, const string& dbName,
 void TH_Postgresql::connectDatabase()
 {
   ASSERTSTR(theirDBName != "_XXX_", "The TH_Postgresql::useDatabase() method has not yet been called. Do this before connecting!");
-  ostringstream ConnInfo;
+  ostringstream connInfo;
   
-  ConnInfo << "host=" << theirHost 
+  connInfo << "host=" << theirHost 
 	   << " dbname=" << theirDBName
 	   << " user="<< theirUserName;
   
- theirConnection = PQconnectdb (ConnInfo.str().c_str());
+  theirConnection = new pqxx::connection(connInfo.str());
     
-  ASSERTSTR (PQstatus (theirConnection) == CONNECTION_OK, 
-	     "ConnectDatabase(); Could not connect to database.") ;
   LOG_INFO( "Connected to database" );
 }
 
 
 void TH_Postgresql::disconnectDatabase()
 {
-  PQfinish (theirConnection);
+  delete theirConnection;
+  theirConnection = 0;
 }
 
 string TH_Postgresql::getType() const
@@ -116,59 +118,43 @@ string TH_Postgresql::getType() const
 
 void TH_Postgresql::executeSQL (const string& sqlStatement)  
 {
-  PGresult * res;
-  res = PQexec (theirConnection, sqlStatement.c_str());
-  ASSERTSTR (PQresultStatus (res) == PGRES_COMMAND_OK,
-	     "ERROR: ExecuteCommand () Failed (" 
-	     << PQresStatus (PQresultStatus (res)) 
-	     << "): " << sqlStatement);
-  PQclear (res);
+  DBGASSERT(theirConnection != 0);
+  work wrk(*theirConnection);
+  wrk.exec(sqlStatement);
+  wrk.commit();
 }  
    
 int TH_Postgresql::queryDB (const string& queryString, DataHolder* dh)  
 { 
-  PGresult * res;
-  res = PQexec (theirConnection, queryString.c_str());
-  ASSERTSTR (PQresultStatus (res) == PGRES_TUPLES_OK,
-	     "DH_Postgresql::Retrieve (); Select query " << queryString 
-	     << " failed.");
-  
+  DBGASSERT(theirConnection != 0);
+  work wrk(*theirConnection);
+  result res = wrk.exec(queryString);
+
   int nRows;
-  nRows = PQntuples (res);
+  nRows = res.size();
   if (nRows == 0)
   {
     return nRows;
   }
 
-  int dataCol =  PQfnumber(res, "data");
-  ASSERTSTR(dataCol > -1, "No column DATA found in result from query " << queryString);
+  binarystring bs(res[0]["DATA"]);
 
-  unsigned char* byteStr;
-  size_t sizeRes;
-  byteStr = PQunescapeBytea ((unsigned char*)PQgetvalue (res, 0, dataCol), &sizeRes);
   // Resize buffer if necessary
-  if (sizeRes != dh->getDataSize())
+  if (bs.size() != dh->getDataSize())
   {
-    dh->resizeBuffer(sizeRes);
+    dh->resizeBuffer(bs.size());
   }
   // Copy the data
-  memcpy (dh->getDataPtr(), byteStr, sizeRes);
-  // Can this be done more efficient?
+  memcpy (dh->getDataPtr(), bs.data(), bs.size());
 
-  // Some clean-up
-  PQclear (res);
-  free(byteStr);
   return nRows;
 }  
 
 void TH_Postgresql::addDBBlob(DataHolder* dh, ostringstream& str)
 {
-  // Now create a postgres blob and fill it with the content of the blob.
-  ostringstream byteStr;
-  size_t len;
-  byteStr << PQescapeBytea ((unsigned char *)(dh->getDataPtr()), 
-			    dh->getDataSize(), &len);
-  str << byteStr.str();
+  // Add binary string to stream.
+  const string esc = escape_binary ((char *)(dh->getDataPtr()), dh->getDataSize());
+  str << esc;
 }
 
 bool TH_Postgresql::sendBlocking(void*, int, int tag, DataHolder* dh)
@@ -232,21 +218,19 @@ void TH_Postgresql::waitForReceived(void*, int, int)
 int TH_Postgresql::queryDB (const string& queryString, 
 			    char* pResult, int maxResultSize) 
 {
-  PGresult * res;
-  res = PQexec (theirConnection, queryString.c_str());
-  ASSERTSTR (PQresultStatus (res) == PGRES_TUPLES_OK,
-	     "DH_Postgresql::Retrieve (); Select query " << queryString 
-	     << " failed.");
-  int nRows = PQntuples (res);
+  DBGASSERT(theirConnection != 0);
+  work wrk(*theirConnection);
+  result res = wrk.exec(queryString);
+
+  int nRows = res.size();
   if (nRows == 0)
   {
     return 0; 
   }
-  int length = PQgetlength (res, 0, 0);
+  int length = res[0][0].size();
   ASSERTSTR(length <= maxResultSize, "Result buffer is too small for actual result");
-  char* val = PQgetvalue (res, 0, 0);
-  memcpy(pResult, val, length);
-  PQclear (res);
+  memcpy(pResult, res[0][0].c_str(), length);
+
   return nRows;
 }
 

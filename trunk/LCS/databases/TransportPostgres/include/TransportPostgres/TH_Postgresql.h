@@ -24,7 +24,7 @@
 #define TRANSPORTPOSTGRES_TH_POSTGRES_H
 
 #include <TransportPostgres/TH_DB.h>
-#include <libpq-fe.h>
+#include <pqxx/pqxx>
 
 // This is a simple transportholder to store data in a Postgresql database.
 // It also allows you to execute your own SQL statements, so it is completely flexible 
@@ -91,7 +91,7 @@ protected:
 
   /// Statically shared connection object containing connection
   /// information to database.
-  static PGconn* theirConnection;
+  static pqxx::connection* theirConnection;
   
 private:
   // Methods to manage the connection to the dbms
