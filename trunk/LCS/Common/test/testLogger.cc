@@ -86,13 +86,42 @@ int	myFunc (int param1) {
 	return (param1 * param1);
 }
 
+//
+// Add a class that is statically initialized and logs in constructor and
+// destructor to test the order of initialization of the log4Cplus module.
+//
+class	staticInitializedClass {
+public:
+	staticInitializedClass() {
+		LOG_INFO ("constructor:this line will not be shown since there are no appenders connected yet to the LCS.common logger");
+	};
+
+	~staticInitializedClass() {
+		LOG_INFO ("destructor: logged after/during exit of program");
+	};
+
+	void show() {
+		LOG_INFO ("in staticInitializedClass");
+	};
+
+private:
+	ALLOC_TRACER_CONTEXT;
+};
+
+#ifdef ENABLE_TRACER
+INIT_TRACER_CONTEXT(staticInitializedClass, "sIclass");
+#endif
+
+// create an static instance of the class
+static staticInitializedClass	mySiClass;
 
 int main (int, char *argv[]) {
-	int		maxLoop = 1;
+	int		maxLoop = 10;
 
 	// Read in the log-environment configuration
 	// We should always start with this.
-	INIT_LOGGER_AND_WATCH("testLogger", 10000);
+	//INIT_LOGGER_AND_WATCH("testLogger", 10000);
+	INIT_LOGGER("testLogger");
 
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));
@@ -109,8 +138,8 @@ int main (int, char *argv[]) {
 	LOG_INFO ("Visible because of inheritance from 'foo'");
 
 	LOG_TRACE_FLOW("Demo of the time is takes to log a message");
-#if 1
 	struct timeval		startTime, endTime;
+
 	LOG_INFO ("Log without any arguments");
 	gettimeofday(&startTime, 0L);
 	for (int i = 0; i < maxLoop; ++i) {
@@ -137,7 +166,6 @@ int main (int, char *argv[]) {
 	gettimeofday(&endTime, 0L);
 	LOG_INFO_STR ("This took "  << timeDiff(&startTime, &endTime) * maxLoop <<
 					" milliseconds");
-#endif
 
 	LOG_DEBUG("Also show some debug output");
 	LOG_DEBUG_STR("Debug lines should contain" << "'file' and 'line' information");
@@ -170,10 +198,9 @@ int main (int, char *argv[]) {
 		LOG_TRACE_LOOP(formatString("Loop counter = %d", i));
 	}
 
-
 	LOG_TRACE_FLOW ("Finally showing the use of exceptions and assertions");
 	try {
-		THROW(LOFAR::Exception,"Just throwing an exception");
+		THROW(LOFAR::Exception,"Just THROWing an exception");
 	}
 	catch(LOFAR::Exception&	ex) {
 		LOG_WARN_STR("Caught exception: " << ex << endl);
@@ -182,13 +209,14 @@ int main (int, char *argv[]) {
 
 	int loops = 1;
 	try {
-		ASSERTSTR(loops == 0, "Trying an assertion");
+		ASSERTSTR(loops == 0, "Trying an ASSERTion");
 	}
 	catch(LOFAR::Exception&	ex) {
 		LOG_WARN_STR("Caught exception: " << ex << endl);
 		// ... handle the exception here ...
 	}
 
+	LOG_INFO ("Trying an 'FAILWHEN'");
 	try {
 		FAILWHEN(loops != 0);
 	}
@@ -197,8 +225,15 @@ int main (int, char *argv[]) {
 		// ... handle the exception here ...
 	}
 
+	// show that the static initialized object is still there
+	mySiClass.show();
+
 	LOG_INFO("Normal termination of program");
 
 	return 0;
+
+	// during termination of this program the mySiClass will be deleted and
+	// the logging of the destructor should still come in the logfile.
+	// If not the static initialisation of log4Cplus is not right.
 }
 
