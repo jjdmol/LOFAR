@@ -1,4 +1,4 @@
-SUBDIRS=src test bin
+SUBDIRS=src test bin include
 
 DISTCHECK_CONFIGURE_FLAGS=\
       --with-common=$(prefix)
