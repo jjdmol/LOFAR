@@ -1,0 +1,22 @@
+How to patch log4cplus
+----------------------
+Assume basedir is /usr/local/src
+Assume lofardir is a LOFAR dir somewhere on the system
+Assumes that the log4cplus original tar file is in /usr/local/install/
+
+cd <basedir>
+tar xzvf /usr/local/install/log4cplus-1.0.2.tar.gz
+mv log4cplus-1.0.2 log4cplus-1.0.2-patch1
+cd log4cplus-1.0.2-patch1
+cp <lofardir>/3rdparty/sourceforge/log4cplus/l4cp-patch1 .
+patch -p1 < l4cp102-patch1
+./autogen.sh
+
+Follow instructions in the file HOWTOBUILD
+
+PATCHES
++ Modifies the static initialisation of the log4cplus package so that you
+  are able to log in the destructor of an static initialized object.
+  Be sure to include the global-init.hxx file to make it work.
++ Cuts down the __FILE__ name to the basename of it. Sourcename tend to
+  be unique within a project.
