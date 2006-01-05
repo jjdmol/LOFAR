@@ -1,9 +1,28 @@
 package nl.astron.lofar.odtb.mom2otdbadapter.otdblistener;
 
+/**
+ * Task
+ * @author Bastiaan Verhoef
+ *
+ */
 public class Task {
+	/**
+	 * MoM2 xml representation of a lofarobservation
+	 */
 	protected String xml = null;
+	
+	/**
+	 * Mom2 id 
+	 */
 	protected String mom2Id = null;
+	/**
+	 * Timestamp of the status change of the lofarobservation
+	 */
 	protected String time = null;
+	
+	/**
+	 * Name of the file that belongs to this task
+	 */
 	protected String fileName = null;
 	public String getXml() {
 		return xml;

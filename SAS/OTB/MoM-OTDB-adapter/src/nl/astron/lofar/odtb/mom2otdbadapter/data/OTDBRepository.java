@@ -22,6 +22,13 @@ import nl.astron.wsrt.util.WsrtConverter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * Repository that stores and retrieves LofarObservation objects to the jOTDB RMI interface.
+ * It converts it to the tree structure of jOTDB and vice versa.
+ * 
+ * @author Bastiaan Verhoef
+ *
+ */
 public class OTDBRepository {
 	private Log log = LogFactory.getLog(this.getClass());
 
@@ -37,6 +44,13 @@ public class OTDBRepository {
 
 
 	
+	/**
+	 * Constructor that makes a connection to the specified rmi server on the specified rmi port
+	 * @param rmiServerName
+	 * @param port
+	 * @throws RemoteException
+	 * @throws NotBoundException
+	 */
 	public OTDBRepository(String rmiServerName, int port)
 			throws RemoteException, NotBoundException {
 
@@ -50,6 +64,12 @@ public class OTDBRepository {
 
 	}
 
+	/**
+	 * Stores a lofarObservation to jOTDB
+	 * 
+	 * @param lofarObservation
+	 * @throws RemoteException
+	 */
 	public void store(LofarObservation lofarObservation) throws RemoteException {
 		int treeId = tm.copyTemplateTree(TEMPLATE_ID);
 		//int treeId = 6;
@@ -98,6 +118,13 @@ public class OTDBRepository {
 		tm.setMomInfo(treeId,lofarObservation.getMom2Id(),"no campaign");
 	}
 
+	/**
+	 * Stores parameter in the tree by given parent node
+	 * @param parentNode parent node
+	 * @param paramName parameter name
+	 * @param paramValue parameter value
+	 * @throws RemoteException
+	 */
 	protected void storeParam(jOTDBnode parentNode, String paramName,
 			String paramValue) throws RemoteException {
 		jOTDBnode node = getNode(parentNode, paramName);
@@ -112,6 +139,14 @@ public class OTDBRepository {
 
 	}
 
+	/**
+	 * Retrieves node by parent node and parameter name
+	 * 
+	 * @param parentNode parent node
+	 * @param paramName name of the parameter
+	 * @return node
+	 * @throws RemoteException
+	 */
 	protected jOTDBnode getNode(jOTDBnode parentNode, String paramName)
 			throws RemoteException {
 		jOTDBnode node = null;
@@ -134,6 +169,13 @@ public class OTDBRepository {
 		return node;
 	}
 
+	/**
+	 * Retrieve lates changes between start- en endtime
+	 * @param startDate start time
+	 * @param endDate end time
+	 * @return List of lofarObservation objects
+	 * @throws RemoteException
+	 */
 	public List getLatestChanges(Date startDate, Date endDate) throws RemoteException {
 		String startTime = WsrtConverter.toDateString(startDate,DATE_TIME_FORMAT);
 		String endTime = WsrtConverter.toDateString(endDate,DATE_TIME_FORMAT);
@@ -169,104 +211,14 @@ public class OTDBRepository {
 				result.add(observation);
 			}
 		}
-/*	     System.out.println("Trying to connect to the database");
-	     remoteOTDB.connect();	
-	     remoteOTDB.isConnected();
-	     
-	     System.out.println("Connection succesful!");
-	     
-	     System.out.println("getTreeList(0,0)");
-	     Vector treeList;
-	     treeList = remoteOTDB.getTreeList((short)0, (short)0);
-	     if (treeList.size() == 0) 
-	       {
-		  System.out.println("Error:" + remoteOTDB.errorMsg());
-		  System.exit (0);
-	       }
-	     else 
-	       {
-		  System.out.println("Collected tree list");
-		  //showTreeList(treeList);
-	       }
-	     
-	     System.out.println("getTreeInfo(treeList.elementAt(1))");
-	     Integer i = new Integer((Integer)treeList.elementAt(1));
-	     jOTDBtree tInfo = remoteOTDB.getTreeInfo(i.intValue());
-		Vector stateList =  remoteOTDB.getStateList(0,false,""); 
-		for (int i = 0; i < stateList.size();i++){
-			Object object = (Object) stateList.get(i);
-			//tInfo.starttime;
-		}
 
-		// do the test
-		// log.info("Trying to connect to the database");
-		/*
-		 * remoteOTDB.connect();
-		 * 
-		 * 
-		 * log.info("Connection succesful!");
-		 * 
-		 * log.info("getTreeList(0,0)"); Vector treeList; treeList =
-		 * remoteOTDB.getTreeList((short)0,(short)0); //treeList =
-		 * remoteOTDB.getStateList(1,false,"2005-12-16 12:00:00"); if
-		 * (treeList.size() == 0) { log.info("Error:" + remoteOTDB.errorMsg()); }
-		 * else { log.info("Collected tree list"); }
-		 * 
-		 * log.info("getTreeInfo(treeList.elementAt(1))"); Integer i =
-		 * (Integer)treeList.elementAt(1); jOTDBtree tInfo =
-		 * remoteOTDB.getTreeInfo(i.intValue(), false); if (tInfo.treeID()==0) {
-		 * System.out.println("No such tree found!"); } else {
-		 * log.info(tInfo.classification +""); log.info(tInfo.creator);
-		 * log.info(tInfo.creationDate); log.info(tInfo.type +"");
-		 * log.info(tInfo.state+""); log.info(tInfo.originalTree+"");
-		 * log.info(tInfo.campaign); log.info(tInfo.starttime);
-		 * log.info(tInfo.stoptime); log.info(tInfo.treeID()+"");
-		 * log.info("MomID: " + tInfo.treeID()+""); }
-		 */
-
-/*		LofarObservation observation = new LofarObservation();
-		observation.setMom2Id(15);
-		observation.setAngleTimes("[+0,+30,+60]");
-		observation.setStatus("aborted");
-		observation.setMeasurementMom2Ids("[16,17,18]");
-		observation.setStartTime("16-12-2005 12:00:15");
-		observation.setEndTime("16-12-2005 12:01:14");
-		result.add(observation);
-		observation = new LofarObservation();
-		observation.setMom2Id(20);
-		observation.setStatus("specified");
-		observation.setMeasurementMom2Ids("[21,22,23]");
-		result.add(observation);
-		observation = new LofarObservation();
-		observation.setMom2Id(30);
-		observation.setStatus("active");
-		observation.setMeasurementMom2Ids("[31,32,33]");
-		result.add(observation);
-		observation = new LofarObservation();
-		observation.setMom2Id(40);
-		observation.setAngleTimes("[+0,+30,+60]");
-		observation.setStatus("finished");
-		observation.setMeasurementMom2Ids("[41,42,43]");
-		observation.setStartTime("16-12-2005 12:00:15");
-		observation.setEndTime("16-12-2005 12:02:14");
-		result.add(observation);*/
-/*		LofarObservation observation = new LofarObservation();
-		observation = new LofarObservation();
-		observation.setMom2Id(65);
-		observation.setAngleTimes("[+00]");
-		observation.setStatus("finished");
-		observation.setMeasurementMom2Ids("[66]");
-		observation.setStartTime("16-12-2005 12:00:15");
-		observation.setEndTime("16-12-2005 12:02:14");
-		result.add(observation);*/
-/*		LofarObservation observation = new LofarObservation();
-		observation = new LofarObservation();
-		observation.setMom2Id(65);
-		observation.setStatus("specified");
-		observation.setMeasurementMom2Ids("[66]");
-		result.add(observation);*/
 		return result;
 	}
+	/**
+	 * Checkes if observation with a status must be exported to MoM
+	 * @param code
+	 * @return true, if it must be exported
+	 */
 	protected boolean isStatusThatMustBeExported(String code) {
 		if (code.equals("specified")) {
 			return true;

@@ -3,35 +3,124 @@ package nl.astron.lofar.odtb.mom2otdbadapter.data;
 import java.io.Serializable;
 
 
+/**
+ * This data class is a mapping to the lofar observation data of OTDB
+ * It contains data that will store in OTDB
+ * 
+ * @author Bastiaan Verhoef
+ *
+ */
 public class LofarObservation implements Serializable{
 	/*
 	 * for both input and output
 	 */
+
+	/**
+	 * mom2Id of the lofar observation (mom2 <-> otdb)
+	 * e.g. 200
+	 */
 	protected int mom2Id = -1;
+
+	/**
+	 * status of a lofar observation, (mom2 <-> otdb)
+	 * e.g. being specified. 
+	 */
 	protected String status = null;
+	
+	/**
+	 * mom2Ids of the measurements that belongs to the lofarobservation (mom2 <-> otdb)
+	 * e.g. [201,202,203]
+	 */
 	protected String measurementMom2Ids = null;
+	
+	/**
+	 * angles times in seconds. (mom2 <-> otdb)
+	 * e.g. [+0,+30,+60]
+	 */
 	protected String angleTimes = null;
+	
+	/**
+	 * timestamp of status change in UTC (mom2 <-> otdb)
+	 * e.g. 2005-Dec-22 15:00:00
+	 * 
+	 */
 	protected String timeStamp = null;
 	/*
 	 * only for input
 	 */
+	
+	/**
+	 * subbands that must be used (mom2 -> otdb)
+	 * e.g. [1,3,5,7]
+	 */
 	protected String subbands = null;
+	/**
+	 * backend that must be used (mom2 -> otdb)
+	 * e.g. Transient
+	 */
 	protected String backend = null;
+	/**
+	 * Array configuration (mom2 -> otdb)
+	 * e.g. Detailed
+	 */
 	protected String arrayConfiguration = null;
+	/**
+	 * Stations that belongs to the array configuration (mom2 -> otdb)
+	 * e.g. [CS001,CS002]
+	 */
 	protected String stations = null;
+	/**
+	 * SRG configuration (mom2 -> otdb)
+	 * e.g. SA1
+	 */
 	protected String srgConfiguration = null;
+	/**
+	 * Sampling frequency in Hz (mom2 -> otdb)
+	 * e.g. 160000000
+	 */
 	protected Integer samplingFrequency = null;
+	/**
+	 * Band selection (mom2 -> otdb)
+	 * e.g. LB_10_90
+	 */
 	protected String bandSelection = null;
+	/**
+	 * Angle 1 (mom2 -> otdb)
+	 * e.g. [6.123662, 5.233748, 1459568]
+	 */
 	protected String angle1 = null;
+	/**
+	 * Angle 2 (mom2 -> otdb)
+	 * e.g. [1.026719, 0,711018, 0384089]
+	 */
 	protected String angle2 = null;
 
+	/**
+	 * Direction type (mom2 -> otdb)
+	 * e.g. J2000
+	 */
 	protected String directionType = null;
+	/**
+	 * requested duration is milliseconds (mom2 -> otdb)
+	 * e.g. 840000
+	 */
 	protected int requestedDuration = 0;
 	
 	/*
 	 * only for output
 	 */
+	
+	/**
+	 * start time of observation (mom2 <- otdb)
+	 * e.g. 2005-Dec-22 14:50:00
+	 * 
+	 */
 	protected String startTime = null;
+	/**
+	 * end time of observation (mom2 <- otdb)
+	 * e.g. 2005-Dec-22 14:53:00
+	 * 
+	 */
 	protected String endTime = null;
 	
 	

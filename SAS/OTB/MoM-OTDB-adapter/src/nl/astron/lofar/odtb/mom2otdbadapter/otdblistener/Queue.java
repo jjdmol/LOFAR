@@ -18,6 +18,11 @@ import nl.astron.wsrt.util.WsrtConverter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * Queue of tasks
+ * @author Bastiaan Verhoef
+ *
+ */
 public class Queue {
 	private Log log = LogFactory.getLog(this.getClass());
 
@@ -37,11 +42,22 @@ public class Queue {
 
 	private boolean isTaskLocked = false;
 
+	/**
+	 * Constructor that looks for tasks (*.xml) in the ./tasks directory and load them. 
+	 * @throws IOException
+	 */
 	public Queue() throws IOException {
 		File dir = new File(taskDir);
+		/*
+		 * it the tasks dir not exists, create it
+		 */
 		if (!dir.exists()) {
 			dir.mkdir();
-		} else {
+		}
+		/*
+		 * if it exists, look for tasks
+		 */
+		else {
 			String[] files = dir.list(new TasksFilter());
 			for (int i = 0; i < files.length; i++) {
 				Task task = new Task();
@@ -55,6 +71,10 @@ public class Queue {
 		}
 	}
 
+	/**
+	 * Retrieve a task, if there are tasks, if there are no tasks, wait until a task is in the queue
+	 * @return Task
+	 */
 	public synchronized Task get() {
 		while (tasks.size() == 0 || isTaskLocked) {
 			log.info("No task available...");
@@ -70,6 +90,10 @@ public class Queue {
 		return task;
 	}
 
+	/**
+	 * Remove a task
+	 * @param task task to be removed
+	 */
 	public synchronized void remove(Task task) {
 		File file = new File(task.getFileName());
 		if (!file.delete()) {
@@ -81,12 +105,27 @@ public class Queue {
 		isTaskLocked = false;
 		notifyAll();
 	}
+	
+	/**
+	 * If a task can not be executed, move it to the end of the tasks list, so other tasks can be executed.
+	 * @param task task to be moved to the end of the tasks list.
+	 */
+	public synchronized void moveToEndOfTaskList(Task task) {
+		log.info("Can not execute task(" + task.getMom2Id() + ") Number of tasks:"
+				+ tasks.size());
+		tasks.remove(0);
+		tasks.add(task);
+		isTaskLocked = false;
+		notifyAll();
+	}
 
+	/**
+	 * Retrieves the new time period, from the last time period to now
+	 * @return Time period
+	 * @throws IOException
+	 */
 	public synchronized TimePeriod getTimePeriod() throws IOException {
-		/*
-		 * while (isTimeLocked) { try { wait(); } catch (InterruptedException e) { } }
-		 * isTimeLocked = true;
-		 */
+
 		String fileName = taskDir + File.separator + "last_time_period.txt";
 		String content = getFile(fileName);
 		if (content != null) {
@@ -109,6 +148,10 @@ public class Queue {
 		return time;
 	}
 
+	/**
+	 * Save the time period 
+	 * @throws IOException
+	 */
 	public synchronized void saveTimePeriod() throws IOException {
 		String fileName = taskDir + File.separator + "last_time_period.txt";
 		String content = WsrtConverter
@@ -127,6 +170,11 @@ public class Queue {
 		// notifyAll();
 	}
 
+	/**
+	 * Add the task to the task list and store it as a xml file
+	 * @param task Task to be stored
+	 * @throws IOException
+	 */
 	public synchronized void add(Task task) throws IOException {
 		tasks.add(task);
 		log.info("Task added. Number of tasks:" + tasks.size());
@@ -134,6 +182,12 @@ public class Queue {
 		notifyAll();
 	}
 
+	/**
+	 * Retrieve file by file name
+	 * @param fileName name of the file to be read
+	 * @return file as string
+	 * @throws IOException
+	 */
 	protected String getFile(String fileName) throws IOException {
 		File file = new File(fileName);
 		if (file.exists()) {
@@ -153,6 +207,12 @@ public class Queue {
 
 	}
 
+	/**
+	 * Store a task
+	 * @param task task to be stored
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	protected void storeTask(Task task) throws FileNotFoundException,
 			IOException {
 		Date date = WsrtConverter.toDate(task.getTime(), OTDB_TIME_FORMAT);
@@ -171,7 +231,15 @@ public class Queue {
 		fileOutputStream.close();
 	}
 
+	/**
+	 * Filters task files
+	 * @author Bastiaan Verhoef
+	 *
+	 */
 	class TasksFilter implements FilenameFilter {
+		/**
+		 * filters task files, tasks files ends on .xml
+		 */
 		public boolean accept(File dir, String name) {
 			return (name.endsWith(".xml"));
 		}
