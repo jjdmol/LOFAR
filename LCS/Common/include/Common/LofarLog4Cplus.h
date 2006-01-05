@@ -34,6 +34,7 @@
 //# Includes
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
+#include <log4cplus/global-init.h>
 
 namespace LOFAR {
 
