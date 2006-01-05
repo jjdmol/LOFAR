@@ -104,8 +104,8 @@ int main() {
 	  cout << "Told you the key didn't exist." << endl;
 	}
 
-	cout << "\nFinally write the parameterset to 'newset.out_param'\n";
-	myPS.writeFile("newset.out_param");
+	cout << "\nFinally write the parameterset to 'newset.stdout'\n";
+	myPS.writeFile("newset.stdout");
 
 	try {
 		cout << "\ntesting getInt32Vector\n";
