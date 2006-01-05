@@ -2,9 +2,8 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT
-AM_INIT_AUTOMAKE(OTDB, 1.0, no-define)
 AM_CONFIG_HEADER(config.h)
-dnl AX_PREFIX_CONFIG_H([lofar-config.h], [])
+AM_INIT_AUTOMAKE(OTDB, 1.0, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -52,8 +51,8 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(LCS/ACC/APS)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
 lofar_EXTERNAL(boost,1.32,boost/date_time/date.hpp, boost_date_time-gcc)
 lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
 lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
