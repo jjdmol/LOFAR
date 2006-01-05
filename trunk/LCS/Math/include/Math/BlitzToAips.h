@@ -38,7 +38,7 @@
 namespace LOFAR
 {
 
-// \ingroup Common
+// \ingroup Math
   // \addtogroup BlitzToAips Blitz++ to AIPS++ conversion functions
   // @{
 
