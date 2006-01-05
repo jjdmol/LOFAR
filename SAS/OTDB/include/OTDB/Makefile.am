@@ -1,0 +1,35 @@
+INSTHDRS 	= 	Converter.h \
+				ClassifConv.h \
+				ParamTypeConv.h \
+				TreeStateConv.h \
+				TreeTypeConv.h \
+				UnitConv.h \
+				OTDBnode.h \
+				OTDBparam.h \
+				OTDBtree.h \
+				OTDBtypes.h \
+				OTDBvalue.h \
+				TreeState.h \
+				VICnodeDef.h \
+				OTDBconstants.h \
+				misc.h \
+				OTDBconnection.h \
+				TreeMaintenance.h \
+				TreeValue.h
+
+NOINSTHDRS 	= 	wSpaceSplit.h\
+				OTDBaction.h \
+				OTDBactionList.h \
+				OTDBcontrol.h \
+				OTDBevent.h \
+				OTDBeventList.h
+
+TCCHDRS 					=
+
+nobase_pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS 				= $(NOINSTHDRS)
+
+DOCHDRS 					= $(INSTHDRS) $(NOINSTHDRS)
+
+include $(top_srcdir)/Makefile.common
