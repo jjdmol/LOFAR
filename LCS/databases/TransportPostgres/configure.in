@@ -55,7 +55,8 @@ dnl lofar_BLITZ
 lofar_MPI
 dnl lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/TransportHolder.h,,)
-lofar_EXTERNAL(psql,0,libpq-fe.h,pq)
+lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
+lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
 
 dnl
 dnl Output Makefiles
