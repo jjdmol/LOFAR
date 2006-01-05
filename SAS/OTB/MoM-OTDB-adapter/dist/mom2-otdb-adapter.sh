@@ -12,4 +12,4 @@ export CLASSPATH=/home/verhoef/javalib/log4j.1.2.8.jar:$CLASSPATH
 export CLASSPATH=/home/verhoef/javalib/xercesImpl.jar:$CLASSPATH
 export CLASSPATH=/home/verhoef/javalib/xml-apis.jar:$CLASSPATH
 export CLASSPATH=/home/verhoef/mom-otdb-adapter.jar:$CLASSPATH
-java nl.astron.lofar.odtb.mom2otdbadapter.MomOtdbAdapter -u bastiaan -p bastiaan -rmihost lofar17.astron.nl -rmiport 10099 -mom2url http://localhost:8080/mom2 -authurl http://localhost:8080/wsrtauth
+java nl.astron.lofar.odtb.mom2otdbadapter.MomOtdbAdapter -u odtbadapter -p otdbadapter -rmihost lofar17.astron.nl -rmiport 10099 -rmiseconds 5 -mom2url http://localhost:8080/mom2 -authurl http://localhost:8080/wsrtauth
