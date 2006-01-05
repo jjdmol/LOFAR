@@ -22,9 +22,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
-public class ProcessConnection extends Thread {
+/**
+ * Process a mom2 connection
+ * @author Bastiaan Verhoef
+ *
+ */
+public class ProcessMom2Connection extends Thread {
 	private Log log = LogFactory.getLog(this.getClass());
-
 
 	private BufferedReader in = null;
 
@@ -34,25 +38,42 @@ public class ProcessConnection extends Thread {
 
 	private OTDBRepository repository;
 
-	// Constructor
-	public ProcessConnection(OTDBRepository repository, Socket client) {
+	
+	/**
+	 * Constructor
+	 * @param repository OTDBRepository with connection to jotdb
+	 * @param client Socket with the connection to mom
+	 */
+	public ProcessMom2Connection(OTDBRepository repository, Socket client) {
 		this.client = client;
 		this.repository = repository;
 	}
 
+
+	/**
+	 * Starts the thread ProcessMom2Connection.
+	 * It processes mom2 input and writes output to mom2.
+	 * 
+	 */
 	public void run() {
 		log.info("Process connection with mom2");
 		try {
 			String line = null;
 			StringBuffer stringBuffer = new StringBuffer(); 
-			//log.info("Read inputstream...");
 			in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+			/*
+			 * it reads the input stream, until the end token is given
+			 */
 			while ((line =in.readLine()) != null && !line.equals("[input end]")) {
 				stringBuffer.append(line);
 			}
-			//log.info("Process mom2 input...");
+			/*
+			 * process the input stream, it returns the result xml
+			 */
 			String outputString = processInput(stringBuffer.toString());
-			//log.debug("Write output: " + outputString);
+			/*
+			 * write the result xml to the output stream
+			 */
 			out = new PrintWriter(client.getOutputStream(), true);
 			out.println(outputString);
 			out.println("[input end]");
@@ -61,6 +82,11 @@ public class ProcessConnection extends Thread {
 		} 
 	}
 
+	/**
+	 * It process the input and stores it to repository
+	 * @param input input xml
+	 * @return result xml
+	 */
 	protected String processInput(String input) {
 		try {
 			Document document = convertStringToDocument(input);
@@ -77,6 +103,12 @@ public class ProcessConnection extends Thread {
 
 	}
 
+	/**
+	 * Convert a xml-string to a Document
+	 * @param myXML xml string
+	 * @return Document
+	 * @throws Exception
+	 */
 	protected Document convertStringToDocument(String myXML) throws Exception {
 		// read an xml string into a domtree
 		Document document;
@@ -91,6 +123,11 @@ public class ProcessConnection extends Thread {
 		return document;
 	}
 
+	/**
+	 * Creates a result xml by given erros
+	 * @param errors Errors 
+	 * @return result xml
+	 */
 	public String getResultXml(String errors) {
 		try {
 			Document document = new DocumentImpl();
@@ -120,6 +157,9 @@ public class ProcessConnection extends Thread {
 		return "";
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
 	protected void finalize() {
 		// Clean up
 		try {

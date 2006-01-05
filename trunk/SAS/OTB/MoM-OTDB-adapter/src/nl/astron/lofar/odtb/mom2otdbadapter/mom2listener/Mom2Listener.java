@@ -8,14 +8,27 @@ import nl.astron.lofar.odtb.mom2otdbadapter.data.OTDBRepository;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class Server {
+/**
+ * Listen at port 4444 for mom request
+ * @author Bastiaan Verhoef
+ *
+ */
+public class Mom2Listener {
 	private Log log = LogFactory.getLog(this.getClass());
 	private OTDBRepository repository;
 	
-	public Server(OTDBRepository repository){
+	/**
+	 * Constructor
+	 * @param repository OTDBRepository to use
+	 */
+	public Mom2Listener(OTDBRepository repository){
 		this.repository =repository;
 	}
 
+	/**
+	 * Starts a ServerSocket on port 4444
+	 * If a clients connect, it starts a new class ProcessMom2Connection
+	 */
 	public void start() {
 		ServerSocket server = null;
 		try {
@@ -25,10 +38,10 @@ public class Server {
 			log.fatal("Could not listen on port 4444", e);
 		}
 		while (true) {
-			ProcessConnection w;
+			ProcessMom2Connection w;
 			try {
 				// server.accept returns a client connection
-				w = new ProcessConnection(repository, server.accept());
+				w = new ProcessMom2Connection(repository, server.accept());
 				w.start();
 			} catch (IOException e) {
 				log.error("Accept failed: 4444", e);

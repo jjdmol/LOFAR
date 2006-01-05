@@ -3,9 +3,25 @@ package nl.astron.lofar.odtb.mom2otdbadapter.mom2listener;
 import nl.astron.wsrt.util.WsrtConverter;
 import nl.astron.wsrt.util.WsrtValidator;
 
+/**
+ * Converts mom2 values to otdb values
+ * 
+ * @author Bastiaan Verhoef
+ *
+ */
 public class Mom2OtdbConverter {
 	private static final double MAX_BANDWIDTH = 32000000;
 	private static final int TOTAL_SUBBANDS = 512;
+	/**
+	 * Calculate an array of subbands
+	 * 
+	 * @param samplingFrequency sampling frequency in Hz
+	 * @param numberOfBands number of bands
+	 * @param subbandPlacement kind of subband placement (e.g. contiguous, scattered) 
+	 * @param startFrequency start frequency in Hz
+	 * @param spacing spacing in bands
+	 * @return subbands e.g. [12,34]
+	 */
 	public static String getOTDBSubbands(Integer samplingFrequency, Integer numberOfBands,
 			String subbandPlacement, Integer startFrequency, Integer spacing) {
 		if (samplingFrequency == null 
@@ -71,6 +87,11 @@ public class Mom2OtdbConverter {
 		}
 		return null;
 	}
+	/**
+	 * Calculate bandselection from filter
+	 * @param filter
+	 * @return band selecitons
+	 */
 	public static String getOTDBBandSelection(String filter){
 
 		/*
@@ -122,6 +143,11 @@ public class Mom2OtdbConverter {
 		return null;
 	}
 
+	/**
+	 * Calculate sampling frequency
+	 * @param filter
+	 * @return sampling frequency in Hz
+	 */
 	public static Integer getOTDBSamplingFrequency(String filter) {
 		/*
 		 * check if filter is not null
@@ -162,10 +188,20 @@ public class Mom2OtdbConverter {
 		}
 		return null;
 	}
+	/**
+	 * Calculate frequency from mom frequency
+	 * @param frequency Mom2 frequency
+	 * @return OTDB frequency
+	 */
 	public static Integer getOTDBFrequency(String frequency){
 		Double freq = WsrtConverter.toDouble(frequency);
 		return new Integer((int)freq.doubleValue()*1000000);
 	}
+	/**
+	 * Convert OTDB status from mom status
+	 * @param status Mom2 status
+	 * @return OTDB status
+	 */
 	public static String getOTDBStatus(String status){
 		if (status.equals("described")){
 			return "being specified";

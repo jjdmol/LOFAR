@@ -11,6 +11,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
+/**
+ * parse the XML input from MoM and returns a LofarObservations.
+ * If needed it used the Mom2OtdbConverter to convert values to otdb values
+ * 
+ * @author Bastiaan Verhoef
+ *
+ */
 public class XMLParser {
 	private Log log = LogFactory.getLog(this.getClass());
 
@@ -21,10 +28,6 @@ public class XMLParser {
 	private static final String OBSERVATION = "observation";
 
 	private static final String CURRENT_STATUS = "currentStatus";
-
-	private static final String DESCRIBED_STATUS = "describedStatus";
-
-	private static final String SPECIFIED_STATUS = "specifiedStatus";
 
 	private static final String OBSERVATION_ATTRIBUTES = "observationAttributes";
 
@@ -66,6 +69,11 @@ public class XMLParser {
 
 	private static final String REQUESTED_DURATION = "requestedDuration";
 
+	/**
+	 * Parse a xml document and returns a lofar obseravation
+	 * @param document xml document
+	 * @return LofarObservation
+	 */
 	public LofarObservation getLofarObservation(Document document) {
 		LofarObservation lofarObservation = new LofarObservation();
 
@@ -113,6 +121,11 @@ public class XMLParser {
 		return lofarObservation;
 	}
 
+	/**
+	 * Parse the observationAttributes xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseObservationAttributes(Node node,
 			LofarObservation lofarObservation) {
 		String filter = null;
@@ -159,6 +172,11 @@ public class XMLParser {
 				subbandPlacement, startFrequency, spacing));
 	}
 
+	/**
+	 * Parse the arrayConfiguration xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseArrayConfiguration(Node node,
 			LofarObservation lofarObservation) {
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
@@ -181,7 +199,12 @@ public class XMLParser {
 			}
 		}
 	}
-
+	
+	/**
+	 * Parse the stations xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseStations(Node node, LofarObservation lofarObservation) {
 		String stations = null;
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
@@ -207,7 +230,11 @@ public class XMLParser {
 		}
 
 	}
-
+	/**
+	 * Parse the currentStatus xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseCurrentStatus(Node node,
 			LofarObservation lofarObservation) {
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
@@ -224,7 +251,11 @@ public class XMLParser {
 			}
 		}
 	}
-
+	/**
+	 * Parse the children xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseChildren(Node node, LofarObservation lofarObservation) {
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
 			Node nodeChild = node.getChildNodes().item(i);
@@ -240,7 +271,11 @@ public class XMLParser {
 			}
 		}
 	}
-
+	/**
+	 * Parse the item xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseItem(Node node, LofarObservation lofarObservation) {
 
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
@@ -258,7 +293,11 @@ public class XMLParser {
 			}
 		}
 	}
-
+	/**
+	 * Parse the measurement xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseMeasurement(Node node, LofarObservation lofarObservation) {
 		String measurementMom2Ids = lofarObservation.getMeasurementMom2Ids();
 		String mom2Id = getAttribute(node.getAttributes(),
@@ -284,7 +323,11 @@ public class XMLParser {
 			}
 		}
 	}
-
+	/**
+	 * Parse the measurementAttributes xml element.
+	 * @param node xml node that must be parsed
+	 * @param lofarObservation LofarObservation that must be filled
+	 */
 	protected void parseMeasurementAttributes(Node node,
 			LofarObservation lofarObservation) {
 		for (int i = 0; i < node.getChildNodes().getLength(); i++) {
@@ -329,11 +372,22 @@ public class XMLParser {
 		}
 	}
 
+	/**
+	 * Retrieve an attribute value from a attribute map
+	 * @param map attribute map
+	 * @param name name of the attribute
+	 * @return attribute value
+	 */
 	protected String getAttribute(NamedNodeMap map, String name) {
 		Node node = map.getNamedItem(name);
 		return node.getNodeValue();
 	}
 
+	/**
+	 * add prefix to a string
+	 * @param string input string
+	 * @return string with prefix
+	 */
 	protected String withPrefix(String string) {
 
 		return PREFIX + ":" + string;
@@ -343,7 +397,7 @@ public class XMLParser {
 	 * The getValue method returns the value of an node
 	 * 
 	 * @param node
-	 * @return
+	 * @return value of the node
 	 */
 	protected String getValue(Node node) {
 		String value = null;
@@ -356,6 +410,11 @@ public class XMLParser {
 		return value;
 	}
 
+	/**
+	 * Get seconds from a xml duration string
+	 * @param string duration string
+	 * @return seconds
+	 */
 	protected Integer getSeconds(String string) {
 		String[] splitted = string.split("T");
 		splitted = splitted[splitted.length - 1].split("H");
@@ -374,21 +433,37 @@ public class XMLParser {
 	 * 
 	 * @param node
 	 * @param nodeName
-	 * @return
+	 * @return true if equals
 	 */
 	protected boolean equal(Node node, String nodeName) {
 		return node.getNodeName().equals(nodeName);
 	}
 
+	/**
+	 * Compares if a node has the given name, ignoring the prefix of the node
+	 * @param node
+	 * @param nodeName
+	 * @return true, if equals
+	 */
 	protected boolean equalIgnorePrefix(Node node, String nodeName) {
 		String withoutPrefix = removePrefix(node);
 		return withoutPrefix.equals(nodeName);
 	}
+	/**
+	 * Returns the node name without prefix
+	 * @param node
+	 * @return node name withoud prefix
+	 */
 	protected String removePrefix(Node node){
 		String[] nodeSplit = node.getNodeName().split(":");
 		String withoutPrefix = nodeSplit[nodeSplit.length - 1];
 		return withoutPrefix;
 	}
+	/**
+	 * Retrieve status from status element
+	 * @param status status element string
+	 * @return status
+	 */
 	protected String formatStatus(String status) {
 		return status.replaceAll("Status", "");
 	}

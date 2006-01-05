@@ -15,6 +15,11 @@ import org.apache.xml.serialize.XMLSerializer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/**
+ * Generates MoM2-xml
+ * @author Bastiaan Verhoef
+ *
+ */
 public class XMLGenerator {
 	protected static final String MOM2_LOFAR_NAMESPACE = "http://www.astron.nl/MoM2-Lofar";
 
@@ -28,6 +33,12 @@ public class XMLGenerator {
 
 	private XMLBuilder xmlBuilder = null;
 
+	/**
+	 * Generates XML Document from lofarObservation
+	 * @param observation LofarObservation
+	 * @return MoM2 XML Document
+	 * @throws ParserConfigurationException
+	 */
 	protected Document getObservationDocument(LofarObservation observation)
 			throws ParserConfigurationException {
 		xmlBuilder = new XMLBuilder();
@@ -42,6 +53,13 @@ public class XMLGenerator {
 
 	}
 
+	/**
+	 * Generates XML String from LofarObservaiton
+	 * @param observation
+	 * @return MoM2 XML String
+	 * @throws IOException
+	 * @throws ParserConfigurationException
+	 */
 	public String getObservationXml(LofarObservation observation)
 			throws IOException, ParserConfigurationException {
 		Document document = getObservationDocument(observation);
