@@ -1,20 +1,22 @@
 V 10
 1
 LANG:1 23 WAN Switch Configurator
-PANEL,396 276 728 613 N "_3DFace" 0
+PANEL,386 267 708 662 N "_3DFace" 0
 "main()
 {
   g_basicSwitchEl = makeDynAnytype(
-  // 						  dpeEl			 |textFieldNameSuffix
-	  makeDynString(\"location\", \"Location\"), 
-		makeDynString(\"name\",     \"Name\"), 
-		makeDynString(\"uptime\",   \"Uptime\"), 
-		makeDynString(\"contact\",  \"Contact\")
+  // 						  dpeEl			    |textFieldNameSuffix|SNMPTransType
+	  makeDynString(\"location\",    \"Location\", 				666), 
+		makeDynString(\"name\",        \"Name\", 				    666), 
+		makeDynString(\"uptime\",      \"Uptime\", 				  662), 
+		makeDynString(\"contact\",     \"Contact\", 				666),
+		makeDynString(\"description\", \"Descr\", 				  666)
   );
 	g_portEl = makeDynAnytype(
 		// 						 dpeEl     |textFieldNameSuffix|SNMPTransType
 		makeDynAnytype(\"link\", 	  \"Link\", 					  661), // 661 == SNMPTransInt32Type
 		makeDynAnytype(\"speed\",   \"Speed\",            662), // 662 == SNMPTransUInt32Type
+		makeDynAnytype(\"hspeed\",  \"HighSpeed\",        662), 
 		makeDynAnytype(\"Tx\",      \"TX\",               662), 
 		makeDynAnytype(\"Rx\",      \"RX\",               662), 
 		makeDynAnytype(\"errors\",  \"Error\",            662)
@@ -296,7 +298,6 @@ void applyTo(string fullSwitchName, string agent, string textFieldNameSuffix = \
 	driverID = splittedAgent[2];
 	
   dpc[3] = driverID;  
-  dpc[2] = 666; // default type: SNMPTransDisplayStringType
   for (int j = 1; j <= dynlen(g_basicSwitchEl); j++)
   {
   	splittedSwitchEl = g_basicSwitchEl[j];
@@ -305,6 +306,7 @@ void applyTo(string fullSwitchName, string agent, string textFieldNameSuffix = \
 	    getValue(\"tfAddr\" + splittedSwitchEl[2], \"text\", oid);
 	    if (oid == NOT_SET_TEXT) continue;
 			dpc[1] = agentID + \"_\" + oid;
+			dpc[2] = (int) splittedSwitchEl[3];
 	    setAddressValues(fullSwitchName + \".\" + splittedSwitchEl[1], dpc);        	  
 	  }
   }  
@@ -457,7 +459,23 @@ void LOG_INFO(string logString)
 {
 	slLogging.appendItem(logString);
 	slLogging.selectedPos = slLogging.itemCount;
-}" 0
+}
+
+void enablePropSet(string dpName, string type)
+{
+  dpCreate(dpName, type);
+  dpCreate(dpName + \"__enabled\", \"GCFPaPsEnabled\");
+  dpSet(dpName + \"__enabled.\", \"autoloaded|\" + type);
+  dpSet(\"__pa_PSIndication.\", \"e|\" + dpName);
+}
+
+void disablePropSet(string dpName)
+{
+  dpDelete(dpName);
+  dpDelete(dpName + \"__enabled\");
+  dpSet(\"__pa_PSIndication.\", \"d|\" + dpName);
+}
+" 0
  2
 "CBRef""1"
 "EClose"E
@@ -469,7 +487,7 @@ LANG:1 6 Layer1
 2 3
 "Text1"
 ""
-1 30 24 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 13 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -478,8 +496,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 32 26 89 42
-0 2 0 "s" 0 0 0 192 0 0  32 26
+E E 0 1 1 0 1 E U  0 E 12 15 69 31
+0 2 0 "s" 0 0 0 192 0 0  12 15
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -489,7 +507,7 @@ LANG:1 9 Switches:
 2 4
 "Text2"
 ""
-1 304 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 45 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -498,8 +516,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 47 386 63
-0 2 0 "s" 0 0 0 192 0 0  306 47
+E E 0 1 1 0 1 E U  0 E 267 47 347 63
+0 2 0 "s" 0 0 0 192 0 0  267 47
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -509,7 +527,7 @@ LANG:1 11 SNMP Agent:
 2 7
 "Text3"
 ""
-1 304 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -518,8 +536,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 72 352 88
-0 2 0 "s" 0 0 0 64 0 0  306 72
+E E 0 1 1 0 1 E U  0 E 267 72 313 88
+0 2 0 "s" 0 0 0 64 0 0  267 72
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -529,7 +547,7 @@ LANG:1 8 # ports:
 2 9
 "Text4"
 ""
-1 304 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -538,8 +556,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 22 344 38
-0 2 0 "s" 0 0 0 192 0 0  306 22
+E E 0 1 1 0 1 E U  0 E 267 22 305 38
+0 2 0 "s" 0 0 0 192 0 0  267 22
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -549,7 +567,7 @@ LANG:1 5 Name:
 2 11
 "Text5"
 ""
-1 304 97 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 97 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 12 0 0 0 0 0
 EE E
@@ -558,8 +576,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 99 379 115
-0 2 0 "s" 0 0 0 192 0 0  306 99
+E E 0 1 1 0 1 E U  0 E 267 99 340 115
+0 2 0 "s" 0 0 0 192 0 0  267 99
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -569,7 +587,7 @@ LANG:1 11 Addr. Name:
 2 12
 "Text6"
 ""
-1 304 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -578,8 +596,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 122 384 138
-0 2 0 "s" 0 0 0 192 0 0  306 122
+E E 0 1 1 0 1 E U  0 E 267 122 345 138
+0 2 0 "s" 0 0 0 192 0 0  267 122
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -589,7 +607,7 @@ LANG:1 13 Addr. uptime:
 2 13
 "Text7"
 ""
-1 304 143 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 143 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -598,8 +616,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 145 402 161
-0 2 0 "s" 0 0 0 64 0 0  306 145
+E E 0 1 1 0 1 E U  0 E 267 145 363 161
+0 2 0 "s" 0 0 0 64 0 0  267 145
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -609,7 +627,7 @@ LANG:1 15 Addr. location:
 2 14
 "Text8"
 ""
-1 304 166 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 166 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -618,8 +636,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 168 388 184
-0 2 0 "s" 0 0 0 192 0 0  306 168
+E E 0 1 1 0 1 E U  0 E 267 168 349 184
+0 2 0 "s" 0 0 0 192 0 0  267 168
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -629,7 +647,7 @@ LANG:1 14 Addr. contact:
 2 15
 "Text9"
 ""
-1 304 306 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 352 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -638,8 +656,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 308 393 324
-0 2 0 "s" 0 0 0 192 0 0  306 308
+E E 0 1 1 0 1 E U  0 E 267 354 354 370
+0 2 0 "s" 0 0 0 192 0 0  267 354
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -649,7 +667,7 @@ LANG:1 16 Addr. porterror:
 2 16
 "Text10"
 ""
-1 304 206 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 233 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 17 0 0 0 0 0
 EE E
@@ -658,8 +676,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 208 387 224
-0 2 0 "s" 0 0 0 192 0 0  306 208
+E E 0 1 1 0 1 E U  0 E 267 235 348 251
+0 2 0 "s" 0 0 0 192 0 0  267 235
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -669,7 +687,7 @@ LANG:1 15 Addr. portlink:
 2 17
 "Text11"
 ""
-1 304 231 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 277 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 18 0 0 0 0 0
 EE E
@@ -678,8 +696,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 233 402 249
-0 2 0 "s" 0 0 0 192 0 0  306 233
+E E 0 1 1 0 1 E U  0 E 267 279 363 295
+0 2 0 "s" 0 0 0 192 0 0  267 279
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -689,7 +707,7 @@ LANG:1 16 Addr. portspeed:
 2 18
 "Text12"
 ""
-1 304 256 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 302 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -698,8 +716,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 258 385 274
-0 2 0 "s" 0 0 0 192 0 0  306 258
+E E 0 1 1 0 1 E U  0 E 267 304 346 320
+0 2 0 "s" 0 0 0 192 0 0  267 304
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -709,7 +727,7 @@ LANG:1 14 Addr. port TX:
 2 19
 "Text13"
 ""
-1 304 281 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 265 327 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -718,8 +736,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 306 283 387 299
-0 2 0 "s" 0 0 0 192 0 0  306 283
+E E 0 1 1 0 1 E U  0 E 267 329 348 345
+0 2 0 "s" 0 0 0 192 0 0  267 329
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -729,7 +747,7 @@ LANG:1 14 Addr. port RX:
 2 41
 "Text14"
 ""
-1 32 377 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 12 418 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 42 0 0 0 0 0
 EE E
@@ -738,18 +756,58 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 34 379 83 395
-0 2 0 "s" 0 0 0 192 0 0  34 379
+E E 0 1 1 0 1 E U  0 E 14 420 63 436
+0 2 0 "s" 0 0 0 192 0 0  14 420
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 8 Logging:
+2 44
+"Text15"
+""
+1 265 254 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 267 256 387 272
+0 2 0 "s" 0 0 0 192 0 0  267 256
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 20 Addr. porthighspeed:
+2 47
+"Text16"
+""
+1 265 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 267 192 369 208
+0 2 0 "s" 0 0 0 192 0 0  267 192
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 Addr. description:
 17 0
 "slSwitches"
 ""
-1 30 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -760,7 +818,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-28 48 292 322
+8 38 262 372
 0
 E
 "main()
@@ -774,7 +832,7 @@ E
 13 1
 "btnAdd"
 ""
-1 30 340 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 10 381 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -785,7 +843,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-28 338 102 365
+8 379 82 406
 T 
 1
 LANG:1 8 Add/Copy
@@ -804,7 +862,8 @@ LANG:1 8 Add/Copy
 		  session(false);
 		  return;
 		}
-	  dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+	  enablePropSet(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+
 		if (!dpExists(fullSwitchName)) 
 		{
 		  LOG_INFO(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
@@ -826,7 +885,7 @@ LANG:1 8 Add/Copy
 		} while (dpExists(fullSwitchName));
 		LOG_INFO(\"Add switch 'New_Switch_\" + i + \"' (#ports: \" + cbNrOfPorts.selectedText + \") ...\");
 		
-		dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+		enablePropSet(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
 		if (!dpExists(fullSwitchName)) 
 		{
 		  LOG_INFO(\"Aborted! '\" + fullSwitchName + \"' was not created!\");
@@ -851,7 +910,7 @@ LANG:1 8 Add/Copy
 13 2
 "btnDelete"
 ""
-1 120 340 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 100 381 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -862,7 +921,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-118 338 192 365
+98 379 172 406
 T 
 1
 LANG:1 6 Delete
@@ -870,7 +929,8 @@ LANG:1 6 Delete
 {
 	session(true);
 	LOG_INFO(\"Delete switch '\" + slSwitches.selectedText + \"'...\");
-	dpDelete(SWITCH_NAME_PREFIX + slSwitches.selectedText);
+	string dpName = SWITCH_NAME_PREFIX + slSwitches.selectedText;
+	disablePropSet(dpName);
 	int selPos = slSwitches.selectedPos;
   slSwitches.deletePos = slSwitches.selectedPos;
   slSwitches.selectedPos = (selPos > slSwitches.itemCount ? slSwitches.itemCount : selPos);
@@ -881,7 +941,7 @@ LANG:1 6 Delete
 22 6
 "cbAgent"
 ""
-1 406 46 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 46 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -892,7 +952,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 44 622 71
+384 44 602 71
 0
 E
 E
@@ -901,7 +961,7 @@ E
 22 8
 "cbNrOfPorts"
 ""
-1 406 71 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 71 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -912,7 +972,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 69 458 96
+384 69 438 96
 0
 E
 E
@@ -921,7 +981,7 @@ E
 14 10
 "tfSwitchName"
 ""
-1 406 21 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 21 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -932,7 +992,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 19 622 46
+384 19 602 46
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -940,7 +1000,7 @@ E
 14 20
 "tfAddrName"
 ""
-1 406 100 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 100 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -951,7 +1011,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 98 622 125
+384 98 602 125
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -959,7 +1019,7 @@ E
 14 21
 "tfAddrUptime"
 ""
-1 406 122 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 122 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -970,7 +1030,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 120 622 147
+384 120 602 147
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -978,7 +1038,7 @@ E
 14 22
 "tfAddrLocation"
 ""
-1 406 144 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 144 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -989,7 +1049,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 142 622 169
+384 142 602 169
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -997,7 +1057,7 @@ E
 14 23
 "tfAddrContact"
 ""
-1 406 166 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 166 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -1008,7 +1068,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 164 622 191
+384 164 602 191
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -1016,7 +1076,7 @@ E
 14 24
 "tfAddrLink"
 ""
-1 406 209 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 232 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -1027,7 +1087,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 207 622 234
+384 230 602 257
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -1035,7 +1095,7 @@ E
 14 25
 "tfAddrSpeed"
 ""
-1 406 232 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 278 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -1046,7 +1106,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 230 622 257
+384 276 602 303
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -1054,7 +1114,7 @@ E
 14 26
 "tfAddrTX"
 ""
-1 406 255 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 301 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 27 0 0 0 0 0
 EE E
@@ -1065,7 +1125,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 253 622 280
+384 299 602 326
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -1073,7 +1133,7 @@ E
 14 27
 "tfAddrRX"
 ""
-1 406 278 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 324 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 28 0 0 0 0 0
 EE E
@@ -1084,7 +1144,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 276 622 303
+384 322 602 349
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -1092,7 +1152,7 @@ E
 14 28
 "tfAddrError"
 ""
-1 406 301 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 386 347 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
  E E
 29 0 0 0 0 0
 EE E
@@ -1103,7 +1163,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-404 299 622 326
+384 345 602 372
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -1111,7 +1171,7 @@ E
 13 29
 "btnApplyToAllName"
 ""
-1 637 99 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 99 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 30 0 0 0 0 0
 EE E
@@ -1122,7 +1182,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 97 719 124
+615 97 699 124
 T 
 1
 LANG:1 12 Apply To All
@@ -1134,7 +1194,7 @@ LANG:1 12 Apply To All
 13 30
 "btnApplyToAllLocation"
 ""
-1 637 146 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 146 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 31 0 0 0 0 0
 EE E
@@ -1145,7 +1205,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 144 719 171
+615 144 699 171
 T 
 1
 LANG:1 12 Apply To All
@@ -1157,7 +1217,7 @@ LANG:1 12 Apply To All
 13 31
 "btnApplyToAllContact"
 ""
-1 637 169 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 169 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 32 0 0 0 0 0
 EE E
@@ -1168,7 +1228,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 167 719 194
+615 167 699 194
 T 
 1
 LANG:1 12 Apply To All
@@ -1180,7 +1240,7 @@ LANG:1 12 Apply To All
 13 32
 "btnApplyToAllLink"
 ""
-1 637 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 233 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 33 0 0 0 0 0
 EE E
@@ -1191,7 +1251,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 208 719 235
+615 231 699 258
 T 
 1
 LANG:1 12 Apply To All
@@ -1203,7 +1263,7 @@ LANG:1 12 Apply To All
 13 33
 "btnApplyToAllSpeed"
 ""
-1 637 233 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 279 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 34 0 0 0 0 0
 EE E
@@ -1214,7 +1274,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 231 719 258
+615 277 699 304
 T 
 1
 LANG:1 12 Apply To All
@@ -1226,7 +1286,7 @@ LANG:1 12 Apply To All
 13 34
 "btnApplyToAllTX"
 ""
-1 637 256 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 302 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 35 0 0 0 0 0
 EE E
@@ -1237,7 +1297,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 254 719 281
+615 300 699 327
 T 
 1
 LANG:1 12 Apply To All
@@ -1249,7 +1309,7 @@ LANG:1 12 Apply To All
 13 35
 "btnApplyToAllRX"
 ""
-1 637 279 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 325 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 36 0 0 0 0 0
 EE E
@@ -1260,7 +1320,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 277 719 304
+615 323 699 350
 T 
 1
 LANG:1 12 Apply To All
@@ -1272,7 +1332,7 @@ LANG:1 12 Apply To All
 13 36
 "btnApplyToAllError"
 ""
-1 637 302 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 348 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 37 0 0 0 0 0
 EE E
@@ -1283,7 +1343,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 300 719 327
+615 346 699 373
 T 
 1
 LANG:1 12 Apply To All
@@ -1295,7 +1355,7 @@ LANG:1 12 Apply To All
 13 37
 "btnApplyToAllUptime"
 ""
-1 637 122 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 122 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 38 0 0 0 0 0
 EE E
@@ -1306,7 +1366,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 120 719 147
+615 120 699 147
 T 
 1
 LANG:1 12 Apply To All
@@ -1318,7 +1378,7 @@ LANG:1 12 Apply To All
 13 38
 "btnApplyToCurrent"
 ""
-1 405 338 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 388 379 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 39 0 0 0 0 0
 EE E
@@ -1329,7 +1389,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-403 336 527 363
+386 377 510 404
 T 
 1
 LANG:1 16 Apply to Current
@@ -1343,13 +1403,20 @@ LANG:1 16 Apply to Current
 	if ((tfSwitchName.text != slSwitches.selectedText) ||
 		  (dpTypeOldName != (SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText)))
 	{
-		LOG_INFO(\"Delete '\" + oldFullSwitchName + \"' ...\");
-	  dpDelete(oldFullSwitchName);
-	  dyn_string allSwitches = slSwitches.items;
-	  allSwitches[slSwitches.selectedPos] = tfSwitchName.text;
-	  slSwitches.items = allSwitches;
-		LOG_INFO(\"Add '\" + fullSwitchName + \"' (of type '\" + cbNrOfPorts.selectedText + \"') ...\");
-	  dpCreate(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+		if (!dpExists(fullSwitchName))
+		{
+			LOG_INFO(\"Delete '\" + oldFullSwitchName + \"' ...\");
+		  disablePropSet(oldFullSwitchName);
+		  dyn_string allSwitches = slSwitches.items;
+		  allSwitches[slSwitches.selectedPos] = tfSwitchName.text;
+		  slSwitches.items = allSwitches;
+			LOG_INFO(\"Add '\" + fullSwitchName + \"' (of type '\" + cbNrOfPorts.selectedText + \"') ...\");
+		  enablePropSet(fullSwitchName, SWITCH_TYPE_PREFIX + cbNrOfPorts.selectedText);
+		}
+		else
+		{
+			LOG_INFO(\"'\" + fullSwitchName + \"' already exists!\");
+		}
 	}
 	
 	if (!dpExists(fullSwitchName)) 
@@ -1368,7 +1435,7 @@ LANG:1 16 Apply to Current
 13 39
 "btnClose"
 ""
-1 670 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 650 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 40 0 0 0 0 0
 EE E
@@ -1379,7 +1446,7 @@ LANG:1 0
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
-668 8 719 42
+648 8 699 42
 T 
 1
 LANG:1 5 Close
@@ -1404,7 +1471,7 @@ EP_panelOff()
 17 40
 "slLogging"
 ""
-1 30 400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 449 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 41 0 0 0 0 0
 EE E
@@ -1415,7 +1482,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-28 398 722 602
+8 447 702 651
 0
 E
 E
@@ -1425,7 +1492,7 @@ E
 13 42
 "btnSNMPChange"
 ""
-1 637 47 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 47 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 43 0 0 0 0 0
 EE E
@@ -1436,7 +1503,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 45 719 72
+615 45 699 72
 T 
 1
 LANG:1 10 Change ...
@@ -1445,7 +1512,6 @@ LANG:1 10 Change ...
 	dyn_float resultFloat;
 	dyn_string resultText;
 	ChildPanelOnCentralModalReturn(\"para/snmp_general.pnl\", \"SNMP\", makeDynString(\"\"), resultFloat, resultText);
-	//ModuleOnWithPanel(\"PVSS\", 100, 100, 0, 0, 1, 1, \"None\",\"para/snmp_general.pnl\", \"SNMP\", makeDynString(\"\"));
 	refreshAgentList();
 	showSwitch(slSwitches.selectedText);
 }" 0
@@ -1453,7 +1519,7 @@ LANG:1 10 Change ...
 13 43
 "btnPortNrChange"
 ""
-1 637 70 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 617 70 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 44 0 0 0 0 0
 EE E
@@ -1464,7 +1530,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-635 68 719 95
+615 68 699 95
 T 
 1
 LANG:1 10 Change ...
@@ -1475,6 +1541,90 @@ LANG:1 10 Change ...
 	ChildPanelOnCentralModalReturn(\"nav_usr/WAN/SPTconf.pnl\", \"Switch Type Configurator\", makeDynString(\"\"), resultFloat, resultText);
 	refreshPortTypeList();
 	showSwitch(slSwitches.selectedText);
+}" 0
+ E E E
+14 45
+"tfAddrHighSpeed"
+""
+1 386 255 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+384 253 602 280
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 46
+"btnApplyToAllHighSpeed"
+""
+1 617 256 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+615 254 699 281
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"HighSpeed\");
+}" 0
+ E E E
+14 48
+"tfAddrDescr"
+""
+1 386 190 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+49 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+384 188 602 215
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 49
+"btnApplyToAllDescr"
+""
+1 617 193 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+615 191 699 218
+T 
+1
+LANG:1 12 Apply To All
+"main()
+{
+  applyToAll(\"Descr\");
 }" 0
  E E E
 0

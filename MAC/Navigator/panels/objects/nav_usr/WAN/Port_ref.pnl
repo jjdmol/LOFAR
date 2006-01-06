@@ -1,10 +1,10 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 108 128 128 N "_3DFace" 2
-"$PortNr"
+PANEL,258 161 92 75 N "_3DFace" 2
 "$datapoint"
-EEE E E 1 -1 -1 0  40 50
+"$port"
+EEE E E 1 -1 -1 0  130 90
 "" 0 1
 EE 2
 "CBRef""1"
@@ -15,15 +15,28 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"Border5"
+"Border1"
 ""
-1 60 50 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
+1 16 56 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 1 0 0 0 0 0
 EE E
 0
 1
-LANG:1 11 Link active
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 16 16 66 56
+6 1
+"Border2"
+""
+1 16 56 E E E 1 E 1 E N "Weiss" E N {255,255,255} E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
 1
 "dashclr"N "_Transparent"
 "// SimpleCtrlScriptStart {invalid}
@@ -36,32 +49,118 @@ EP_setBackColor()
 {
 dyn_errClass err;
 
-  if( !dpExists( $datapoint + \".\" + $PortNr + \".Link:_online.._value\"))
+  if( !dpExists( $datapoint+\".port\"+$port+\".speed:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_setBackColorCB\", 
-            $datapoint + \".\" + $PortNr + \".Link:_online.._value\");
+            $datapoint+\".port\"+$port+\".speed:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
 
 }
 
+
 EP_setBackColorCB(string dpSource, int iNewValue)
 {
-  if (iNewValue == 1)
-    setValue(\"\", \"backCol\", \"Green\");
-  else if (iNewValue == 2)
-    setValue(\"\", \"backCol\", \"Grau\");
-  else
-    setValue(\"\", \"backCol\", \"{255,153,0}\");
+  if (iNewValue == 10000000){
+    setValue(\"\", \"backCol\", \"{255,204,51}\");
+    setValue(\"\", \"foreCol\", \"{255,204,51}\");
+    }
+  else if (iNewValue == 100000000){
+    setValue(\"\", \"backCol\", \"Gelb\");
+    setValue(\"\", \"foreCol\", \"Gelb\");
+    }
+  else if (iNewValue == 1000000000){
+    setValue(\"\", \"backCol\", \"Blue\");
+    setValue(\"\", \"foreCol\", \"Blue\");
+    }
+  else{
+    setValue(\"\", \"backCol\", \"Grey\");
+    setValue(\"\", \"foreCol\", \"Grey\");
+    }
 }
 
 // SimpleCtrlScript {EP_setBackColor}
-// DP {getSystemName()+Switch3300XM.Ports.2.Link}
+// DP {$datapoint.$port.speed}
+// DPConfig {:_online.._value}
+// DPType {int}
+// AlertHdl {FALSE}
+// DPEInvalid {}
+// DPEConfigInvalid {}
+// Operator1 {equal}
+// Operant1 {10000000}
+// Color1 {\\{255,204,51\\}}
+// Operator2 {equal}
+// Operant2 {100000000}
+// Color2 {Gelb}
+// Operator3 {equal}
+// Operant3 {1000000000}
+// Color3 {Blue}
+// Operator4 {else}
+// Operant4 {}
+// Color4 {Grey}
+// SimpleCtrlScriptEnd {EP_setBackColor}
+" 0
+ E 0 1 1 0 1 E U  1 E 16 46 26 56
+6 2
+"Border3"
+""
+1 56 56 E E E 1 E 1 E N {255,255,255} E N {255,255,255} E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_setBackColor();
+}
+
+EP_setBackColor()
+{
+dyn_errClass err;
+
+  if( !dpExists( $datapoint+\".port\"+$port+\".link:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_setBackColorCB\", 
+            $datapoint+\".port\"+$port+\".link:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_setBackColorCB(string dpSource, int iNewValue)
+{
+  if (iNewValue == 1){
+    setValue(\"\", \"backCol\", \"Green\");
+    setValue(\"\", \"foreCol\", \"Green\");
+    }
+  else if (iNewValue == 2){
+    setValue(\"\", \"backCol\", \"Red\");
+    setValue(\"\", \"foreCol\", \"Red\");
+    }
+  else{
+    setValue(\"\", \"backCol\", \"Grey\");
+    setValue(\"\", \"foreCol\", \"Grey\");
+    }
+}
+
+// SimpleCtrlScript {EP_setBackColor}
+// DP {$datapoint.$port.link}
 // DPConfig {:_online.._value}
 // DPType {int}
 // AlertHdl {FALSE}
@@ -72,64 +171,19 @@ EP_setBackColorCB(string dpSource, int iNewValue)
 // Color1 {Green}
 // Operator2 {equal}
 // Operant2 {2}
-// Color2 {Grau}
+// Color2 {Red}
 // Operator3 {else}
 // Operant3 {}
-// Color3 {\\{255,153,0\\}}
+// Color3 {Grey}
 // SimpleCtrlScriptEnd {EP_setBackColor}
 " 0
- E 0 1 1 0 1 E U  1 E 60 40 70 50
-6 1
-"Border6"
-""
-1 50 50 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-2 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 40 60 50
-6 2
-"Border7"
-""
-1 40 50 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
- E E
-3 0 0 0 0 0
-EE E
-0
-1
-LANG:1 16 GR=100Mb/OR=10Mb
-1
-"dashclr"N "_Transparent"
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-}
-
-" 0
- E 0 1 1 0 1 E U  1 E 40 40 50 50
-6 4
-"Border1"
-""
-1 40 70 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-5 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 40 50 70 70
-2 5
+ E 0 1 1 0 1 E U  1 E 56 46 66 56
+2 3
 "Text1"
 ""
-1 51 51 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+1 26 16 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
  E E
-6 0 0 0 0 0
+3 0 0 0 0 0
 EE E
 0
 1
@@ -138,16 +192,16 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  setValue(\"\", \"text\", $PortNr);
+setValue(\"\",\"text\",$port);
 }" 0
- E 0 1 1 0 1 E U  0 E 56 53 62 67
-0 2 0 "s" 0 0 0 193 0 0  56 53
+ E 0 1 1 0 1 E U  0 E 28 18 54 34
+0 2 0 "s" 0 0 0 65 0 0  28 18
  1
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 1 1
+LANG:1 1 0
 0
 LAYER, 1 
 1
