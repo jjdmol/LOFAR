@@ -1,0 +1,332 @@
+V 10
+1
+LANG:1 24 Switch Type Configurator
+PANEL,426 100 295 156 N "_3DFace" 0
+"main()
+{
+	dyn_string switchTypes = dpTypes(SWITCH_TYPE_PREFIX + \"*\");
+  dyn_string switches;
+  string dpName;
+  string portsType;
+  for (int i = 1; i <= dynlen(switchTypes); i++)
+  {
+		portsType = substr(switchTypes[i], strlen(SWITCH_TYPE_PREFIX));
+		slPortTypes.appendItem(portsType);
+	}
+	dyn_int types = slPortTypes.items;
+	dynSortAsc(types);
+	slPortTypes.items = types;
+	slPortTypes.selectedPos = 1;
+	checkPortType();
+}" 0
+EE E E 1 -1 -1 0  10 40
+"" 0 1
+E"global int MAX_NR_OF_SWITCH_PORTS = 48;
+global string SWITCH_TYPE_PREFIX = \"TWanSwitchPT\";
+
+
+void checkPortType()
+{
+	dyn_string foundSwitches = dpNames(\"*\", SWITCH_TYPE_PREFIX + slPortTypes.selectedText);
+	if (dynlen(foundSwitches) > 0)
+	{
+		btnDelete.enabled = false;
+		tfStatus.text = \"Type \\\"\" + slPortTypes.selectedText + \"\\\" is in use! Cannot deleted!\";
+	}
+	else
+	{
+		tfStatus.text = \"\";
+		btnDelete.enabled = true;
+	}
+}" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 7
+"Text1"
+""
+1 10 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 42 58 78
+0 2 0 "s" 0 0 0 64 0 0  12 42
+ 2
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Port 
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Types:
+2 8
+"Text2"
+""
+1 10 11 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 13 41 29
+0 2 0 "s" 0 0 0 192 0 0  12 13
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 New:
+2 9
+"Text3"
+""
+1 10 121 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 123 58 139
+0 2 0 "s" 0 0 0 64 0 0  12 123
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Status:
+13 0
+"btnClose"
+""
+1 230 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+228 8 285 42
+T 
+1
+LANG:1 5 Close
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_panelOff();
+}
+
+EP_panelOff()
+{
+  PanelOff();
+}
+
+// SimpleCtrlScript {EP_panelOff}
+// Function {PanelOff}
+// Panel {}
+// Module {}
+// SimpleCtrlScriptEnd {EP_panelOff}
+" 0
+ E E E
+17 2
+"slPortTypes"
+""
+1 58 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+56 38 100 112
+0
+E
+"main()
+{
+	checkPortType();
+}" 0
+
+E
+
+3 1
+14 3
+"tfNewPortType"
+""
+1 58 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+56 8 100 35
+3 "2d" 2 0 0 0 0 0 
+E
+E
+E
+13 4
+"btnAdd"
+""
+1 108 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+106 8 170 35
+T 
+1
+LANG:1 3 Add
+"main()
+{
+	int nrOfPorts = (int) tfNewPortType.text;
+	if (nrOfPorts <= MAX_NR_OF_SWITCH_PORTS)
+	{
+		dyn_dyn_string xxdepes;		
+		dyn_dyn_int xxdepei;
+		
+		// Create the data type
+		
+		xxdepes[1] = makeDynString (SWITCH_TYPE_PREFIX + tfNewPortType.text, \"\");
+		xxdepei[1] = makeDynInt (DPEL_STRUCT);
+		xxdepes[2] = makeDynString (\"\", \"location\", \"\");
+		xxdepei[2] = makeDynInt (0, DPEL_STRING);
+		xxdepes[3] = makeDynString (\"\", \"uptime\", \"\");
+		xxdepei[3] = makeDynInt (0, DPEL_STRING);
+		xxdepes[4] = makeDynString (\"\", \"name\", \"\");
+		xxdepei[4] = makeDynInt (0, DPEL_STRING);
+		xxdepes[5] = makeDynString (\"\", \"contact\", \"\");
+		xxdepei[5] = makeDynInt (0, DPEL_STRING);
+		xxdepes[6] = makeDynString (\"\", \"description\", \"\");
+		xxdepei[6] = makeDynInt (0, DPEL_STRING);
+		xxdepes[7] = makeDynString (\"\", \"status\", \"\");
+		xxdepei[7] = makeDynInt (0, DPEL_INT);
+		for (int i = 0; i < nrOfPorts; i++)
+		{
+			xxdepes[8  + i] = makeDynString (\"\", \"port\" + (i + 1), \"TWanSwitchPort\");
+			xxdepei[8  + i] = makeDynInt (0, DPEL_TYPEREF);
+		}	
+	 
+		// Create the datapoint type
+		int n = dpTypeCreate(xxdepes, xxdepei);
+		if (n == 0) 
+		{
+			tfStatus.text = \"Type \\\"\" + tfNewPortType.text + \"\\\" add!\";
+			dyn_int types = slPortTypes.items;
+			dynAppend(types, nrOfPorts);
+			dynSortAsc(types);
+			slPortTypes.items = types;
+		}
+	}
+}" 0
+ E E E
+14 5
+"tfStatus"
+""
+1 58 120 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+56 118 287 145
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 6
+"btnDelete"
+""
+1 108 40 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+106 38 170 65
+T 
+1
+LANG:1 6 Delete
+"main()
+{
+	dpTypeDelete(SWITCH_TYPE_PREFIX + slPortTypes.selectedText);	
+	int curPos = slPortTypes.selectedPos;
+	tfStatus.text = \"Type \\\"\" + slPortTypes.selectedText + \"\\\" deleted!\";
+	slPortTypes.deletePos = slPortTypes.selectedPos;
+	slPortTypes.selectedPos = (curPos > slPortTypes.itemCount	? slPortTypes.itemCount : curPos);
+	checkPortType();
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
