@@ -46,9 +46,10 @@ namespace LOFAR {
 
     ThreadArgs* args = (ThreadArgs*)arguments;
     
-    int seqid, blockid;
+    int seqid = 0;
+    int blockid = 0;
     timestamp_t actualstamp, expectedstamp;
-    vector<timestamp_t> missedStamps;
+    vector<MisStats> missedStamps;
     vector<RewriteStats> oldStamps;
     missedStamps.reserve(500);
     oldStamps.reserve(500);
@@ -91,44 +92,36 @@ namespace LOFAR {
 	pthread_exit(NULL);
     }
       // catch a frame from input connection
-      if (readnew) {
+      if (readnew){
 	try {
-	  if (args->Connection != 0){
-	    receiveTimer.start();
-	    args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
-	    receiveTimer.stop();
-	  }
+	  receiveTimer.start();
+	  args->Connection->recvBlocking( (void*)recvframe, args->FrameSize, 0);
+	  receiveTimer.stop();
 	} catch (Exception& e) {
 	  LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder, stopping thread");
 	  pthread_exit(NULL);
 	}	
-      }
-  
+	if (args->Connection->getType() != "TH_Null") {
+	  // get the actual timestamp of first EPApacket in frame
+	  seqid   = ((int*)&recvframe[8])[0];
+	  blockid = ((int*)&recvframe[12])[0];
+	  actualstamp.setStamp(seqid ,blockid);
 
-      if (args->Connection->getType() != "TH_Null") {
-	// get the actual timestamp of first EPApacket in frame
-	seqid   = ((int*)&recvframe[8])[0];
-	blockid = ((int*)&recvframe[12])[0];
-	actualstamp.setStamp(seqid ,blockid);
-      } else {
-	actualstamp += args->nrPacketsInFrame; 
-      }      
-  
-      // firstloop
-      if (firstloop) {
-	expectedstamp.setStamp(seqid, blockid); // init expectedstamp
-      
-	//get stationid
-	//*args->StationIDptr =((int*)&recvframe[4])[0];
-	if (args->IsMaster) {  // temporary hardcoded statioID's master->0, slave->1 
-	  *args->StationIDptr = 0;  
-	}
-	else {
-	  *args->StationIDptr = 1;  
-	} //end (temporary hardcoded statioID's)
-	firstloop = false;
+	  // firstloop
+	  if (firstloop) {
+	    expectedstamp.setStamp(seqid, blockid); // init expectedstamp
+	    firstloop = false;
+	  }
+	} else {
+	  if (!firstloop) {
+	    actualstamp += args->nrPacketsInFrame; 
+	  } else {
+	    actualstamp = timestamp_t(0, 0);
+	    firstloop = false;
+	  }	  
+	}      
       }
-    
+      
       // check and process the incoming data
       if (actualstamp < expectedstamp) {
 	RewriteStats rewritten;
@@ -157,7 +150,8 @@ namespace LOFAR {
 	rewriteTimer.stop();
       } else if (actualstamp > expectedstamp) {
 	writeDummyTimer.start();
-	missedStamps.push_back(expectedstamp);
+	MisStats missed = {expectedstamp, actualstamp};
+	missedStamps.push_back(missed);
 	// missed a packet so create dummy for that missing packet
 	args->BBuffer->writeElements((SubbandType*)dummyblock, expectedstamp, args->nrPacketsInFrame, 0, false);
 	// read same frame again in next loop
@@ -169,7 +163,6 @@ namespace LOFAR {
 	writeTimer.start();
 	// expected packet received so write data into corresponding buffer
 	args->BBuffer->writeElements((SubbandType*)&recvframe[args->EPAHeaderSize], actualstamp, args->nrPacketsInFrame, strideSize, true);
-	actualstamp += args->nrPacketsInFrame;
 	// read new frame in next loop
 	readnew = true;
 	// increase the expectedstamp
@@ -181,9 +174,9 @@ namespace LOFAR {
     //pthread_cleanup_pop(1);
     printTimers(itsTimers);
     cout<<"Timestamps of missed packets:"<<endl;
-    vector<timestamp_t>::iterator it = missedStamps.begin();
+    vector<MisStats>::iterator it = missedStamps.begin();
     for (; it != missedStamps.end(); it++) {
-      cout<<"MIS " << (*it)<<endl;
+      cout<<"MIS " << it->missedStamp << " received at time " << it->receiveTime <<endl;
     }
     cout<<"Rewritten packets:"<<endl;
     vector<RewriteStats>::iterator rit = oldStamps.begin();

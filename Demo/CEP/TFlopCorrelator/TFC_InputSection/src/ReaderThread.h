@@ -53,6 +53,10 @@ namespace LOFAR
     timestamp_t expectedStamp;
     int succeeded;
   } RewriteStats;
+  typedef struct {
+    timestamp_t missedStamp;
+    timestamp_t receiveTime;
+  } MisStats;
 
   void printTimers(vector<NSTimer*>& timers);
   void* ReaderThread(void* arguments);

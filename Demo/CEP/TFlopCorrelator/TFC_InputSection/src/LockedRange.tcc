@@ -69,21 +69,18 @@ namespace LOFAR {
     }
     
     bool amWaiting = false;
-    if (end > begin) {
-      while ((end - itsReadTail > itsMax) && !itsIsOverwriting && !(itsReadTail==itsNullOfType)) {
-	if (!amWaiting) {
-	  itsWriteLockTimer.stop();
-	  itsWaitingForSpaceTimer.start();		
-	  amWaiting = true;
-	}
-	itsSpaceAvailCond.wait(sl);
+    if (end < begin) end = begin;
+    while ((end - itsReadTail > itsMax) && !itsIsOverwriting) { // && !(itsReadTail==itsNullOfType)) {
+      if (!amWaiting) {
+	itsWriteLockTimer.stop();
+	itsWaitingForSpaceTimer.start();		
+	amWaiting = true;
       }
-      if (amWaiting) {
-	itsWaitingForSpaceTimer.stop();
-	itsWriteLockTimer.start();
-      }
-    } else {
-      end = begin;
+      itsSpaceAvailCond.wait(sl);
+    }
+    if (amWaiting) {
+      itsWaitingForSpaceTimer.stop();
+      itsWriteLockTimer.start();
     }
     
     if (end > itsWriteHead) itsWriteHead = end;
@@ -120,26 +117,29 @@ namespace LOFAR {
 
     itsIsOverwriting = false;
 
+    // if desiredBegin is no longer in the buffer, calculate new begin
     if (itsWriteHead - begin > itsSize) {
       begin = itsWriteHead - itsSize;
-    }
-    if (end > begin) {
-      bool amWaiting = false;
-      while (itsWriteTail - end < itsMin) {
-	if (!amWaiting) {
-	  itsReadLockTimer.stop();
-	  itsWaitingForDataTimer.start();
-	  amWaiting = true;
-	}
-	itsDataAvailCond.wait(sl);
-      }
-      if (amWaiting) {
-	itsWaitingForDataTimer.stop();
-	itsReadLockTimer.start();
-      }
-      itsReadHead = end;
       itsReadTail = begin;
+      itsSpaceAvailCond.notify_all(); 
     }
+
+    if (end < begin) end = begin;
+    bool amWaiting = false;
+    while (itsWriteTail - end < itsMin) {
+      if (!amWaiting) {
+	itsReadLockTimer.stop();
+	itsWaitingForDataTimer.start();
+	amWaiting = true;
+      }
+      itsDataAvailCond.wait(sl);
+    }
+    if (amWaiting) {
+      itsWaitingForDataTimer.stop();
+      itsReadLockTimer.start();
+    }
+    itsReadHead = end;
+    itsReadTail = begin;
     itsReadLockTimer.stop();
     return begin;
   }
@@ -156,7 +156,7 @@ namespace LOFAR {
   template<class T, class S>
   void LockedRange<T, S>::clear() {
     mutex::scoped_lock sl(itsMutex); 
-    itsReadHead = itsReadTail = itsWriteTail = itsWriteHead; 
+    itsReadHead = itsReadTail = itsWriteTail = itsWriteHead = itsNullOfType; 
     itsIsOverwriting = true; 
     itsSpaceAvailCond.notify_all();
   };
