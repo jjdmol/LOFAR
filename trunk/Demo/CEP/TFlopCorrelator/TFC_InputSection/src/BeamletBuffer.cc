@@ -106,14 +106,17 @@ namespace LOFAR {
     TimeStamp BeamletBuffer::startBufferRead() {
       TimeStamp begin(0, 0);
       TimeStamp oldest = itsLockedRange.readLock(begin, begin);
-      TimeStamp fixPoint(oldest.getSeqId() + 1, 0);
-      
+      TimeStamp fixPoint(oldest.getSeqId() + 1, 0); 
+     
       itsLockedRange.readUnlock(fixPoint);
       return fixPoint;
     }
 
     TimeStamp BeamletBuffer::startBufferRead(TimeStamp begin) {
       TimeStamp realBegin = itsLockedRange.readLock(begin, begin);
+
+      // if begin is no longer in the buffer the oldest possible beginning is returned
+      // if begin is not yet in the buffer readLock waits for it
 
       itsLockedRange.readUnlock(realBegin);
       return realBegin;
