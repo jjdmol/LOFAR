@@ -1,7 +1,8 @@
 SUBDIRS=src test bin include
 
 DISTCHECK_CONFIGURE_FLAGS=\
-      --with-common=$(prefix)
+      --with-common=$(prefix) \
+      --with-aps=$(prefix)
 
 EXTRA_DIST = \
       Makefile.common \
