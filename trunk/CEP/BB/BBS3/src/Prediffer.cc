@@ -74,6 +74,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <malloc.h>
 #include <unistd.h>
@@ -177,22 +178,30 @@ Prediffer::Prediffer(const string& msName,
   // Set up the expression tree for all baselines.
   bool asAP = true;
   bool useStatParm = false;
-  bool useEJ = false;
+  bool usePEJ = false;
+  bool useTEJ = false;
+  bool useBandpass = false;
   ///  bool useBandpass = false;
   vector<string> types = StringUtil::split(modelType, '.');
   for (uint i=0; i<types.size(); ++i) {
-    if (types[i] == "RI") {
-      asAP = false;
-      useEJ = true;
-    } else if (types[i] == "AP") {
-      useEJ = true;
-    } else if (types[i] == "USESP") {
-      useStatParm = true;
-      ///    } else if (types[i] == "USEBP") {
-      ///      useBandpass = true;
+    if (types[i] != "") {
+      if (types[i] == "TOTALEJ") {
+	useTEJ = true;
+      } else if (types[i] == "PATCHEJ") {
+	usePEJ = true;
+      } else if (types[i] == "REALIMAG") {
+	asAP = false;
+      } else if (types[i] == "DIPOLE") {
+	useStatParm = true;
+      } else if (types[i] == "BANDPASS") {
+	useBandpass = true;
+      } else {
+	ASSERTSTR (false, "Modeltype part " << types[i] << " is invalid; "
+		   "valid are TOTALEJ,PATCHEJ,REALIMAG,DIPOLE,BANDPASS");
+      }
     }
   }
-  makeLOFARExpr(useEJ, asAP, useStatParm);
+  makeLOFARExpr(useTEJ, usePEJ, asAP, useStatParm);
 
   // Show frequency domain.
   LOG_INFO_STR( "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
@@ -472,7 +481,8 @@ void Prediffer::getSources()
 // Make the expression tree per baseline for LOFAR.
 //
 //----------------------------------------------------------------------
-void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
+void Prediffer::makeLOFARExpr (bool useTEJ, bool usePEJ, bool asAP,
+			       bool useStatParm)
 {
   // Allocate the vectors holding the expressions.
   int nrstat = itsStations.size();
@@ -490,8 +500,12 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
   vector<MeqJonesExpr> statExpr(nrstat);
   // Vector containing DFTPS-s.
   vector<MeqExpr> pdfts(nrsrc*nrstat);
-  // Vector containing all EJ-s per station per source group.
-  vector<MeqJonesExpr> grpEJ(nrgrp*nrstat);
+  // Vector containing all EJ-s per station per patch.
+  vector<MeqJonesExpr> patchEJ(nrgrp*nrstat);
+  // Vector containing all EJ-s per station.
+  vector<MeqJonesExpr> totalEJ(nrstat);
+  // Correction per station.
+  itsCorrExpr.resize (nrstat);
   // Fill the vectors for each station.
   for (int i=0; i<nrstat; ++i) {
     MeqStatUVW* uvw = 0;
@@ -523,12 +537,46 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
       for (int src=0; src<nrsrc; ++src) {
 	pdfts[i*nrsrc + src] = MeqExpr(new MeqDFTPS (itsLMN[src], uvw));
       }
-      if (useEJ) {
-	// Make a complex gain expression per station per source group.
-	MeqExprRep* ej11;
-	MeqExprRep* ej12;
-	MeqExprRep* ej21;
-	MeqExprRep* ej22;
+      // Make optionally EJones expressions.
+      MeqExprRep* ej11;
+      MeqExprRep* ej12;
+      MeqExprRep* ej21;
+      MeqExprRep* ej22;
+      if (useTEJ) {
+	// Make a gain/phase expression per station.
+	string nm = itsStations[i]->getName();
+	MeqExpr ej11r (new MeqStoredParmPolc ("EJ11." + ejname1 + nm,
+					      &itsParmGroup, &itsMEP));
+	MeqExpr ej11i (new MeqStoredParmPolc ("EJ11." + ejname2 + nm,
+					      &itsParmGroup, &itsMEP));
+	MeqExpr ej12r (new MeqStoredParmPolc ("EJ12." + ejname1 + nm,
+					      &itsParmGroup, &itsMEP));
+	MeqExpr ej12i (new MeqStoredParmPolc ("EJ12." + ejname2 + nm,
+					      &itsParmGroup, &itsMEP));
+	MeqExpr ej21r (new MeqStoredParmPolc ("EJ21." + ejname1 + nm,
+					      &itsParmGroup, &itsMEP));
+	MeqExpr ej21i (new MeqStoredParmPolc ("EJ21." + ejname2 + nm,
+					      &itsParmGroup, &itsMEP));
+	MeqExpr ej22r (new MeqStoredParmPolc ("EJ22." + ejname1 + nm,
+					      &itsParmGroup, &itsMEP));
+	MeqExpr ej22i (new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
+					      &itsParmGroup, &itsMEP));
+	if (asAP) {
+	  ej11 = new MeqExprAPToComplex (ej11r, ej11i);
+	  ej12 = new MeqExprAPToComplex (ej12r, ej12i);
+	  ej21 = new MeqExprAPToComplex (ej21r, ej21i);
+	  ej22 = new MeqExprAPToComplex (ej22r, ej22i);
+	} else {
+	  ej11 = new MeqExprToComplex (ej11r, ej11i);
+	  ej12 = new MeqExprToComplex (ej12r, ej12i);
+	  ej21 = new MeqExprToComplex (ej21r, ej21i);
+	  ej22 = new MeqExprToComplex (ej22r, ej22i);
+	}
+	totalEJ[i] = new MeqJonesNode (MeqExpr(ej11), MeqExpr(ej12),
+				       MeqExpr(ej21), MeqExpr(ej22));
+      }
+      if (usePEJ) {
+	// Make a complex gain expression per station per patch.
 	for (int j=0; j<nrgrp; j++) {
 	  ostringstream ostr;
 	  ostr << j+1;
@@ -560,8 +608,14 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
 	    ej21 = new MeqExprToComplex (ej21r, ej21i);
 	    ej22 = new MeqExprToComplex (ej22r, ej22i);
 	  }
-	  grpEJ[i*nrgrp + j] = new MeqJonesNode (MeqExpr(ej11), MeqExpr(ej12),
-						 MeqExpr(ej21), MeqExpr(ej22));
+	  patchEJ[i*nrgrp + j] = new MeqJonesNode (MeqExpr(ej11),
+						   MeqExpr(ej12),
+						   MeqExpr(ej21),
+						   MeqExpr(ej22));
+	  // Only AP of first group is used for correction.
+	  if (j == 0) {
+	    itsCorrExpr[i] = patchEJ[i*nrgrp + j];
+	  }
 	}
       }
     }
@@ -578,52 +632,57 @@ void Prediffer::makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm)
     for (int ant1=0; ant1<nrant; ant1++) {
       int blindex = itsBLIndex(ant1,ant2);
       if (blindex >= 0) {
-	vector<MeqJonesExpr> vecAll;
+	vector<MeqJonesExpr> vecPatch;
 	// Loop through all source groups.
 	for (int grp=0; grp<nrgrp; ++grp) {
 	  const vector<int>& srcgrp = itsSrcGrp[grp];
-	  vector<MeqJonesExpr> vec;
-	  vec.reserve (srcgrp.size());
+	  vector<MeqJonesExpr> vecSrc;
+	  vecSrc.reserve (srcgrp.size());
 	  for (uint j=0; j<srcgrp.size(); ++j) {
 	    // Create the total DFT per source.
 	    int src = srcgrp[j] - 1;
 	    MeqExpr expr1 (new MeqBaseDFTPS (pdfts[ant1*nrsrc + src],
 					     pdfts[ant2*nrsrc + src],
 					     itsLMN[src]));
-	    vec.push_back (MeqJonesExpr
+	    vecSrc.push_back (MeqJonesExpr
 			  (new MeqBaseLinPS(expr1,
 					    &(itsSources[itsSrcNrMap[src]]))));
 	  }
 	  MeqJonesExpr sum;
 	  // Sum all sources in the group.
-	  if (vec.size() == 1) {
-	    sum = vec[0];
+	  if (vecSrc.size() == 1) {
+	    sum = vecSrc[0];
 	  } else {
-	    sum = MeqJonesExpr (new MeqJonesSum(vec));
+	    sum = MeqJonesExpr (new MeqJonesSum(vecSrc));
 	  }
-	  // Multiple by ionospheric gain/phase per station.
-	  if (useEJ) {
-	    vecAll.push_back (new MeqJonesCMul3(grpEJ[ant1*nrgrp + grp],
-						sum,
-						grpEJ[ant2*nrgrp + grp]));
+	  // Multiply by ionospheric gain/phase per station per patch.
+	  if (usePEJ) {
+	    vecPatch.push_back (new MeqJonesCMul3(patchEJ[ant1*nrgrp + grp],
+						  sum,
+						  patchEJ[ant2*nrgrp + grp]));
 	  } else {
-	    vecAll.push_back (sum);
+	    vecPatch.push_back (sum);
 	  }
 	}
-	// Sum all groups.
+	// Sum all patches.
 	MeqJonesExpr sumAll;
-	if (vecAll.size() == 1) {
-	  sumAll = vecAll[0];
+	if (vecPatch.size() == 1) {
+	  sumAll = vecPatch[0];
 	} else {
-	  sumAll = MeqJonesExpr (new MeqJonesSum(vecAll));
+	  sumAll = MeqJonesExpr (new MeqJonesSum(vecPatch));
+	}
+	// Multiply by total gain/phase per station.
+	if (useTEJ) {
+	  sumAll = new MeqJonesCMul3(totalEJ[ant1],
+				     sumAll,
+				     totalEJ[ant2]);
 	}
 	if (useStatParm) {
-	  itsExpr[blindex] = new MeqJonesCMul3(statExpr[ant1],
-					       sumAll,
-					       statExpr[ant2]);
-	} else {
-	  itsExpr[blindex] = sumAll;
+	  sumAll = new MeqJonesCMul3(statExpr[ant1],
+				     sumAll,
+				     statExpr[ant2]);
 	}
+	itsExpr[blindex] = sumAll;
       }
     }
   }
@@ -779,6 +838,8 @@ int Prediffer::setDomain (double fstart, double flength,
   int64 nrValues = nr1*nr2;
   nr2 = nrb*startIndex;
   int64 startOffset = nr1*nr2;
+  ///  cout << "mapat="<<nr1<<' '<<nr2<<' '<<nrValues<<' '<<startIndex<<' ' <<itsTimeIndex<<' '
+  ///     << itsNrTimes<<' '<<itsNrBl<<' '<<itsNrChan<<' '<<itsNCorr<<endl;
   itsDataMap->mapFile(nr1*nr2*sizeof(fcomplex), nrValues*sizeof(fcomplex)); 
   // Map the correct flags subset (this time interval)
   itsFlagsMap->mapFile(startOffset, nrValues); 
@@ -977,6 +1038,10 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 	  unsigned int blOffset = bl*itsNrChan*itsNCorr;
 	  fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
 	  // Convert the flag bits to bools.
+	    ///	  if (ant1==8&&ant2==11&&tStep<5) {
+	    ///cout << "flagmap: start="<<flagStart<<" sbit="<<flagStartBit
+	    /// << " offs="<<timeOffset + blOffset + freqOffset<<endl;
+	    ///	  }
 	  bitToBool (&flags[0], flagStart, nrchan*itsNCorr,
 		     timeOffset + blOffset + freqOffset + flagStartBit);
 	  // Get an equation for this baseline.
@@ -984,6 +1049,7 @@ void Prediffer::fillFitter (casa::LSQFit& fitter)
 	  fillEquation (*myFitter, itsNSelCorr, &diffVec[0], &indicesVec[0],
 			&resultVec[0], &flagVec[0], data, &flags[0],
 			request, blindex);
+////			request, blindex, ant1==4&&ant2==8&&tStep<5);
 	}
       }
     } // end omp parallel
@@ -1013,7 +1079,8 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
 			      double *diff, unsigned *indices,
 			      double *result, char *flagResult,
 			      const fcomplex *data, const bool *flags,
-			      const MeqRequest& request, int blindex)
+			      const MeqRequest& request, int blindex,
+			      bool showd)
 {
   //static NSTimer fillEquationTimer("fillEquation", true);
   //fillEquationTimer.start();
@@ -1039,7 +1106,8 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
 
   // Use a consecutive vector to assemble all derivatives.
   // Loop through the correlations.
-  for (int corr=0; corr<itsNCorr; corr ++, data ++, flags ++) {
+  uint nreq=0;
+  for (int corr=0; corr<itsNCorr; corr++, data++, flags++) {
     if (itsCorr[corr]) {
       // Get the difference (measured - predicted) for all channels.
       const MeqMatrix& val = predResults[corr]->getValue();
@@ -1054,21 +1122,52 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
 	// Use same flag for real and imaginary part.
 	flagResult[ch] = (char) flags[dch];
       }
+      if (showd) {
+	cout << "flag=" << corr << "x ";
+	for (int ch = 0; ch < nrchan; ch ++, dch += inc) {
+	  cout << (flagResult[ch] ? 1:0) << ' ';
+	}
+	cout << endl;
+	dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
+	cout << "flar=" << corr << "x ";
+	for (int ch = 0; ch < nrchan; ch ++, dch += inc) {
+	  cout << flags[dch]<< ' ';
+	}
+	cout << endl;
+	cout << "cor=" << corr << "x ";
+	dch = itsReverseChan ? itsNCorr * (nrchan - 1) : 0;
+	for (int ch = 0; ch < nrchan; ch ++, dch += inc) {
+	  cout << '(' << std::setprecision(12)
+	       << real(data[dch])
+	       << ',' << std::setprecision(12)
+	       << imag(data[dch])<< ')';
+	}
+	cout << endl;
+	cout << "corr=" << corr << "x ";
+	for (int ch = 0; ch < nrchan; ch ++) {
+	  cout << '(' << std::setprecision(12)
+	       << realVals[ch]
+	       << ',' << std::setprecision(12)
+	       << imagVals[ch]<< ')';
+	}
+	cout << endl;
+      }
 
       // Get the derivative for all solvable parameters.
       int nrParamsFound = 0;
       for (int scinx=0; scinx<itsNrScid; ++scinx) {
 	if (predResults[corr]->isDefined(scinx)) {
 	  // Calculate the derivative for each channel (real and imaginary part).
-	  double invPert = 1.0 / predResults[corr]->getPerturbation(scinx);
+	  ////	  double invPert = 1.0 / predResults[corr]->getPerturbation(scinx);
+	  double invPert = predResults[corr]->getPerturbation(scinx);
 	  const MeqMatrix& pertVal = predResults[corr]->getPerturbedValue(scinx);
 	  const double *pertRealVals, *pertImagVals;
 	  pertVal.dcomplexStorage(pertRealVals, pertImagVals);
 	  double *resultp = result + nrParamsFound;
 	  for (int ch=0; ch<nrchan; ++ch) {
-	    *resultp = (pertRealVals[ch] - realVals[ch]) * invPert;
+	    *resultp = (pertRealVals[ch] - realVals[ch]) / invPert;
 	    resultp += itsNrScid;
-	    *resultp = (pertImagVals[ch] - imagVals[ch]) * invPert;
+	    *resultp = (pertImagVals[ch] - imagVals[ch]) / invPert;
 	    resultp += itsNrScid;
 	  }
 	  indices[nrParamsFound ++] = scinx;
@@ -1077,17 +1176,28 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
 
       double *resultp = result;
       if (nrParamsFound != itsNrScid) {
-	casa::LSQFit miniFitter(nrParamsFound);
-	for (int ch = 0; ch < 2 * nrchan; ++ ch, resultp += itsNrScid) {
-	  if (!flagResult[ch / 2]) {
-	    miniFitter.makeNorm(resultp, 1., diff[ch]);
+	if (nrParamsFound > 0) {
+	  casa::LSQFit miniFitter(nrParamsFound);
+	  for (int ch = 0; ch < 2 * nrchan; ++ ch, resultp += itsNrScid) {
+	    if (!flagResult[ch / 2]) {
+	      miniFitter.makeNorm(resultp, 1., diff[ch]);
+	      nreq++;
+	    }
 	  }
+	  fitter.merge(miniFitter, nrParamsFound, indices);
 	}
-	fitter.merge(miniFitter, nrParamsFound, indices);
       } else {
 	for (int ch = 0; ch < 2 * nrchan; ++ ch, resultp += itsNrScid) {
 	  if (!flagResult[ch / 2]) {
 	    fitter.makeNorm(resultp, 1., diff[ch]);
+	    nreq++;
+	    if (showd) {
+	      cout << "eq"<<corr<<" ch " << ch << " diff " << diff[ch];
+	      for (int ii=0; ii<itsNrScid; ii++) {
+		cout << ' '<<resultp[ii];
+	      }
+	      cout << endl;
+	    }
 	  }
 	}
       }
@@ -1095,6 +1205,7 @@ void Prediffer::fillEquation (casa::LSQFit &fitter, int nresult,
   }
   //fillEquationTimer.stop();
   itsEqTimer.stop();
+  ///  cout << "nreq="<<nreq<<endl;
 }
 
 //----------------------------------------------------------------------
@@ -1175,7 +1286,7 @@ void Prediffer::saveData (bool subtract, fcomplex* data,
   itsEqTimer.start();
   int nrchan = request.nx();
   bool showd = false;
-  /// showd = (ant1==4 && ant2==8);
+////  showd = (ant1==4 && ant2==8);
   // Put the results in a single array for easier handling.
   const MeqResult* predResults[4];
   predResults[0] = &(jresult.getResult11());
@@ -1196,10 +1307,18 @@ void Prediffer::saveData (bool subtract, fcomplex* data,
       if (itsReverseChan) {
 	int dch = nrchan;
 	if (subtract) {
+	  if (showd) {
+	    cout << "cor=" << corr << "x ";
+	  }
 	  for (int ch=0; ch<nrchan; ++ch) {
 	    --dch;
+	    if (showd) cout << '(' << std::setprecision(12)
+			    << real(data[corr+dch*itsNCorr])
+			    << ',' << std::setprecision(12)
+			    << imag(data[corr+dch*itsNCorr])<< ')';
 	    data[corr+dch*itsNCorr] -= makefcomplex(realVals[ch], imagVals[ch]);
 	  }
+	  if (showd) cout << endl;
 	} else {
 	  for (int ch=0; ch<nrchan; ++ch) {
 	    --dch;
@@ -1219,10 +1338,6 @@ void Prediffer::saveData (bool subtract, fcomplex* data,
       }
       if (showd) {
 	cout << "corr=" << corr << ' ' << val << endl;
-	for (int ch=0; ch<nrchan; ++ch) {
-	  cout << data[corr+ch*itsNCorr] << ' ';
-	}
-	cout << endl;
       }
     }
   }
@@ -1270,6 +1385,127 @@ void Prediffer::getData (Array<Complex>& dataArr, Array<Bool>& flagArr)
     }
   }
 }
+
+void Prediffer::applyAP (bool flush)
+{
+  /*
+  if (itsVisMapped) {
+    mapResidualData (true);
+  }
+  // Correct the data.
+  cout << "applyAP to '" << itsDataMap->getFileName() << "'" << endl;
+
+  Timer totTimer;
+
+  int nrchan = itsLastChan-itsFirstChan+1;
+  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
+  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
+  unsigned int freqOffset = itsDataFirstChan*itsNCorr;
+
+  // Get the pointer to the mapped data.
+  fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
+  ASSERTSTR(dataStart!=0,
+	    "No memory region mapped. Call map(..) first."
+	    << " Perhaps you have forgotten to call nextInterval().");
+
+  // Loop through all baselines/times and create a request.
+  for (uint tStep=0; tStep<itsNrTimes; ++tStep) {
+    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
+    double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
+    double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
+    
+    MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
+    MeqRequest request(domain, nrchan, 1, itsNrScid);
+    // Calculate the AP correction for all baselines.
+    itsPredTimer.start();
+    for (uint i=0; i<itsCorrExpr.size(); ++i) {
+      itsCorrExpr[i].precalculate (request);
+    }
+    itsPredTimer.stop();
+    // Loop through all baselines and apply the AP correction to the data.
+    for (uint bl=0; bl<itsNrBl; ++bl) {
+      uint ant1 = itsAnt1[bl];
+      uint ant2 = itsAnt2[bl];
+      ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow());
+      if (itsBLSelection(ant1,ant2)  &&  itsBLIndex(ant1,ant2) >= 0) {
+	// Get pointer to correct data part.
+	unsigned int blOffset = bl*itsNrChan*itsNCorr;
+	fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
+	// Correct for this baseline.
+	int blindex = itsBLIndex(ant1,ant2);
+	doApplyAP (data, request, blindex, ant1, ant2);
+      }
+    }
+  }
+  BBSTest::Logger::log(itsPredTimer);
+  itsPredTimer.reset();
+  // Make sure data is written.
+  if (write) {
+    itsDataMap->flush();
+  }
+  totTimer.show ("T:applyAP");
+  */
+}
+
+  /*
+void Prediffer::doApplyAP (fcomplex* data,
+			   const MeqRequest& request,
+			   int blindex, int ant1, int ant2)
+{
+  itsEqTimer.start();
+  MeqJonesExpr& expr1 = itsCorrExpr[ant1];
+  MeqJonesExpr& expr2 = itsCorrExpr[ant2];
+  // Do the actual predict.
+  MeqJonesResult& res1 = expr1.getResultSynced (request);
+  MeqJonesResult& res2 = expr2.getResultSynced (request);
+  ASSERT (res1.getValue().nelements() == res2.getValue().nelements());
+  int nrchan = request.nx();
+  bool showd = false;
+  /// showd = (ant1==4 && ant2==8);
+  // Put the results in a single array for easier handling.
+  // Loop through the correlations.
+  for (int corr=0; corr<itsNCorr; ++corr) {
+    if (itsCorr[corr]) {
+      const MeqMatrix& val = predResults[corr]->getValue();
+      const double *realVals, *imagVals;
+      val.dcomplexStorage(realVals, imagVals);
+      // Subtract predicted from the data or store the predict in data.
+      if (itsReverseChan) {
+	int dch = nrchan;
+	if (subtract) {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    --dch;
+	    data[corr+dch*itsNCorr] -= makefcomplex(realVals[ch], imagVals[ch]);
+	  }
+	} else {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    --dch;
+	    data[corr+dch*itsNCorr] = makefcomplex(realVals[ch], imagVals[ch]);
+	  }
+	}
+      } else {
+	if (subtract) {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    data[corr+ch*itsNCorr] -= makefcomplex(realVals[ch], imagVals[ch]);
+	  }
+	} else {
+	  for (int ch=0; ch<nrchan; ++ch) {
+	    data[corr+ch*itsNCorr] = makefcomplex(realVals[ch], imagVals[ch]);
+	  }
+	}
+      }
+      if (showd) {
+	cout << "corr=" << corr << ' ' << val << endl;
+	for (int ch=0; ch<nrchan; ++ch) {
+	  cout << data[corr+ch*itsNCorr] << ' ';
+	}
+	cout << endl;
+      }
+    }
+  }
+  itsEqTimer.stop();
+}
+  */
 
 void Prediffer::subtractPeelSources (bool flush)
 {
@@ -1336,8 +1572,8 @@ void Prediffer::mapResidualData (Bool copyData)
       // Do this by simply copying the file.
       // First close the table.
       tab = Table();
-      RegularFile resFil(itsMSName+"vis.dat");
-      resFil.copy (filNam);
+      RegularFile resFil(itsMSName+"/vis.dat");
+      resFil.copy (itsMSName+'/'+filNam.str());
     }
   }
   // Map the vis.res file to the same place as the data file.

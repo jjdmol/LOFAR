@@ -131,6 +131,9 @@ public:
   bool setPeelGroups (const vector<int>& peelGroups,
 		      const vector<int>& extraGroups);
 
+  // Apply the amplitude/phase corrections (from the first source group).
+  void applyAP (bool flush);
+
   // Subtract the peel source(s) from the data in the .res file.
   // Optionally the mapped data are flushed to the file.
   void subtractPeelSources (bool flush=false);
@@ -208,17 +211,19 @@ private:
   void getSources();
 
   // Create the LOFAR expressions for each baseline.
-  // The EJones (per source/station) can be expressed as real/imag
+  // The EJones (per patch/station) can be expressed as real/imag
   // or ampl/phase.
   // The station parameters are optionally taken into account.
-  void makeLOFARExpr (bool useEJ, bool asAP, bool useStatParm);
+  void makeLOFARExpr (bool usePatchEJ, bool useTotalEJ, bool asAP,
+		      bool useStatParm);
 
   // Fill the fitter with the equations for the given baseline.
   void fillEquation (casa::LSQFit& fitter, int nresult,
 		     double *diff, unsigned *indices,
 		     double* result, char* flagResult,
 		     const fcomplex* data, const bool* flags,
-		     const MeqRequest& request, int blindex);
+		     const MeqRequest& request, int blindex,
+		     bool showd=false);
 
   // Subtract the peel source(s) from the data.
   // Optionally the mapped data are flushed to the file.
@@ -258,6 +263,7 @@ private:
   vector<MeqJonesExpr>  itsExpr;        //# solve expression tree per baseline
   vector<MeqJonesExpr>  itsResExpr;     //# residual expr tree per baseline
   vector<vector<MeqExprRep*> > itsPrecalcNodes;  //# nodes to be precalculated
+  vector<MeqJonesExpr>  itsCorrExpr;    //# Ampl/phase expressions (to correct)
 
   int    itsNrSelBl;                  //# nr of selected baselines
   double itsStartFreq;                //# start frequency of observation
