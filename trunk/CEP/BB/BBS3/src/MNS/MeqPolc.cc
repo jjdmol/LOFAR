@@ -45,7 +45,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
   // In that way any value can be used for the default domain [-1,1].
   // Because the values are calculated for the center of each cell,
   // it is only checked if the centers are in the polc domain.
-  //const MeqDomain& domain = request.domain();
+  const MeqDomain& reqDomain = request.domain();
   //ASSERT (domain.startX() + request.stepX()/2 >= itsDomain.startX());
   //ASSERT (domain.startY() + request.stepY()/2 >= itsDomain.startY());
   //ASSERT (domain.endX() - request.stepX()/2 <= itsDomain.endX());
@@ -78,10 +78,12 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     int ncy = itsCoeff.ny();
     // Values for x and y are scaled between 0 and 1.
     // Get the step and start values in the domain.
-    double stepx = 1. / ndx;
-    double stepy = 1. / ndy;
-    double stx = 0;
-    double sty = 0;
+    double stepx = reqDomain.scaleX() / (domain().scaleX() * ndx);
+    double stepy = reqDomain.scaleY() / (domain().scaleY() * ndy);
+    double stx = (reqDomain.startX() - domain().startX()) / domain().sizeX()
+                 + stepx/2;
+    double sty = (reqDomain.startY() - domain().startY()) / domain().sizeY()
+                 + stepy/2;
     // Evaluate the expression (as double).
     const double* coeffData = itsCoeff.doubleStorage();
     const double* pertData = 0;
@@ -153,6 +155,146 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 	      for (int ix=0; ix<ncx; ix++) {
 		if (pertValPtr[ik]) {
 		  *(pertValPtr[ik]) = total + pert[ik] * powersx[ix] * powy;
+		  pertValPtr[ik]++;
+		}
+		ik++;
+	      }
+	      powy *= valy;
+	    }
+	  }
+	}
+	*value++ = total;
+	valx += stepx;
+      }
+      valy += stepy;
+    }
+    // Set the perturbations.
+    if (makeDiff) {
+      const double* pert = itsPerturbation.doubleStorage();
+      for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+	if (itsSpidInx[i] >= 0) {
+	  result.setPerturbation (itsSpidInx[i], pert[i]);
+	}
+      }
+    }
+  }
+  return result;
+}
+
+MeqResult MeqPolc::getAnResult (const MeqRequest& request)
+{
+  PERFPROFILE(__PRETTY_FUNCTION__);
+  bool makeDiff = itsMaxNrSpid > 0  &&  request.nspid() > 0;
+  // It is not checked if the domain is valid.
+  // In that way any value can be used for the default domain [-1,1].
+  // Because the values are calculated for the center of each cell,
+  // it is only checked if the centers are in the polc domain.
+  const MeqDomain& reqDomain = request.domain();
+  //ASSERT (domain.startX() + request.stepX()/2 >= itsDomain.startX());
+  //ASSERT (domain.startY() + request.stepY()/2 >= itsDomain.startY());
+  //ASSERT (domain.endX() - request.stepX()/2 <= itsDomain.endX());
+  //ASSERT (domain.endY() - request.stepY()/2 <= itsDomain.endY());
+  // Create the result object containing as many spids as needed for
+  // this polynomial (but not more).
+  //////  MeqResult result(itsMaxNrSpid);
+  MeqResult result(request.nspid());
+  // If there is only one coefficient, the polynomial is independent
+  // of x and y.
+  // So set the value to the coefficient and possibly set the perturbed value.
+  // Make sure it is turned into a scalar value.
+  if (itsCoeff.nelements() == 1) {
+    result.setValue (MeqMatrix(itsCoeff.getDouble()));
+    if (makeDiff) {
+      result.setPerturbedValue (itsSpidInx[0],
+				MeqMatrix(1.));
+      result.setPerturbation (itsSpidInx[0], itsPerturbation.getDouble());
+// 	cout << "polc " << itsSpidInx[0] << ' ' << result.getValue()
+// 	     << result.getPerturbedValue(itsSpidInx[0]) << itsPerturbation
+// 	     << ' ' << itsCoeff << endl;
+    }
+  } else {
+    // The polynomial has multiple coefficients.
+    // Get number of steps and coefficients in x and y.
+    int ndx = request.nx();
+    int ndy = request.ny();
+    int ncx = itsCoeff.nx();
+    int ncy = itsCoeff.ny();
+    // Values for x and y are scaled between 0 and 1.
+    // Get the step and start values in the domain.
+    double stepx = reqDomain.scaleX() / (domain().scaleX() * ndx);
+    double stepy = reqDomain.scaleY() / (domain().scaleY() * ndy);
+    double stx = (reqDomain.startX() - domain().startX()) / domain().sizeX()
+                 + stepx/2;
+    double sty = (reqDomain.startY() - domain().startY()) / domain().sizeY()
+                 + stepy/2;
+    // Evaluate the expression (as double).
+    const double* coeffData = itsCoeff.doubleStorage();
+    double* pertValPtr[100];
+    if (makeDiff) {
+      // Create the matrix for each perturbed value.
+      // Keep a pointer to the internal matrix data.
+      for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+	if (itsSpidInx[i] >= 0) {
+	  result.setPerturbedValue (itsSpidInx[i],
+				    MeqMatrix(double(0), ndx, ndy));
+	  pertValPtr[i] =
+	    result.getPerturbedValueRW(itsSpidInx[i]).doubleStorage();
+	}
+      }
+    }
+    // Create matrix for the value itself and keep a pointer to its data.
+    result.setValue (MeqMatrix(double(0), ndx, ndy));
+    double* value = result.getValueRW().doubleStorage();
+    // Iterate over all cells in the domain.
+    double valy = sty;
+    for (int j=0; j<ndy; j++) {
+      double valx = stx;
+      for (int i=0; i<ndx; i++) {
+	const double* coeff = coeffData;
+	double total = 0;
+	if (ncx == 1) {
+	  // Only 1 coefficient in X, it is independent of x.
+	  // So only calculate for the Y values in the most efficient way.
+	  total = coeff[ncy-1];
+	  for (int iy=ncy-2; iy>=0; iy--) {
+	    total *= valy;
+	    total += coeff[iy];
+	  }
+	  if (makeDiff) {
+	    double powy = 1;
+	    for (int iy=0; iy<ncy; iy++) {
+	      if (pertValPtr[iy]) {
+		*(pertValPtr[iy]) = powy;
+		pertValPtr[iy]++;
+	      }
+	      powy *= valy;
+	    }
+	  }
+	} else {
+	  double powy = 1;
+	  for (int iy=0; iy<ncy; iy++) {
+	    double tmp = coeff[ncx-1];
+	    for (int ix=ncx-2; ix>=0; ix--) {
+	      tmp *= valx;
+	      tmp += coeff[ix];
+	    }
+	    total += tmp * powy;
+	    powy *= valy;
+	    coeff += ncx;
+	  }
+	  if (makeDiff) {
+	    double powersx[10];
+	    double powx = 1;
+	    for (int ix=0; ix<ncx; ix++) {
+	      powersx[ix] = powx;
+	      powx *= valx;
+	    }
+	    double powy = 1;
+	    int ik = 0;
+	    for (int iy=0; iy<ncy; iy++) {
+	      for (int ix=0; ix<ncx; ix++) {
+		if (pertValPtr[ik]) {
+		  *(pertValPtr[ik]) = powersx[ix] * powy;
 		  pertValPtr[ik]++;
 		}
 		ik++;

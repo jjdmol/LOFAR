@@ -52,6 +52,7 @@ public:
 
   // Calculate the value and possible perturbations.
   virtual MeqResult getResult (const MeqRequest&);
+  MeqResult getAnResult (const MeqRequest&);
 };
 
 // @}

@@ -57,6 +57,8 @@ public:
   // Get the precalculated result of l, m, or n.
   MeqResultVec getResultVec (const MeqRequest&);
 
+  MeqResultVec getAnResultVec (const MeqRequest& request);
+
 private:
   MeqPointSource*    itsSource;
   const MeqPhaseRef* itsPhaseRef;
