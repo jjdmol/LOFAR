@@ -35,6 +35,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasConvert.h>
 #include <casa/Quanta/MVuvw.h>
+#include <iomanip>
 
 using namespace casa;
 
@@ -91,9 +92,11 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   LOG_TRACE_FLOW_STR ("posx" << posx.getValue());
   LOG_TRACE_FLOW_STR ("posy" << posy.getValue());
   LOG_TRACE_FLOW_STR ("posz" << posz.getValue());
-  MVPosition mvpos(posx.getValue().getDouble(),
-		   posy.getValue().getDouble(),
-		   posz.getValue().getDouble());
+  // Get position relative to center to keep values small.
+  const MVPosition& mvcpos = itsPhaseRef->earthPosition().getValue();
+  MVPosition mvpos(posx.getValue().getDouble() - mvcpos(0),
+		   posy.getValue().getDouble() - mvcpos(1),
+		   posz.getValue().getDouble() - mvcpos(2));
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
   LOG_TRACE_FLOW_STR ("mbl " << mbl);
@@ -117,6 +120,9 @@ void MeqStatUVW::calculate (const MeqRequest& request)
     *wptr++ = xyz(2);
     // Save the UVW coordinates in the map.
     itsUVW[MeqTime(time)] = MeqUVW(xyz(0), xyz(1), xyz(2));
+///    if (itsStation->getName() == "SR9" || itsStation->getName() == "SR12") {
+///  cout << "UVW="<<itsStation->getName()<<' ' << std::setprecision(12)<<xyz(0) << ' '<< std::setprecision(12)<<xyz(1)<<' '<< std::setprecision(12)<<xyz(2) << ' '<<std::setprecision(12)<<time<<' '<<mvcpos(0)<<' '<<mvcpos(1)<<' '<<mvcpos(2)<<' ' <<posz.getValue()<<' '<<posy.getValue()<<' '<<posz.getValue()<<endl;
+///    }
     // Go to next time step.
     time += step;
     qepoch.setValue (time);
