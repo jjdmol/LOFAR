@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     }
     vector<vector<int> > srcgrp;
     Prediffer pre (argv[3], "meqModel", meqPdt, "skyModel", skyPdt, 
-		   antVec, "LOFAR", srcgrp, false);
+		   antVec, "", srcgrp, false);
     doIt (argv[1], pre, column, 0, 50);
     doIt (argv[1], pre, column, 10,10);
   } catch (exception& x) {

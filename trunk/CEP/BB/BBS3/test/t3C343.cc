@@ -24,6 +24,7 @@
 #include <BBS3/Prediffer.h>
 #include <BBS3/Solver.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
+#include <BBS3/BBSTestLogger.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
@@ -58,14 +59,17 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
 
 // Solve for the entire time domain.
 void doSolveAll (Prediffer& pre1, const vector<string>& solv,
-		 int niter)
+		 int maxniter, double epsilon=1e-4)
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
-  // Set a domain. Only use center frequency and all times.
-  pre1.setDomain (1.18e9-59.5*156250, 56*156250, 0., 1e12);
-    
+  // Set a domain. Only use center frequencies and all times.
+  //pre1.setDomain (1170078125+24*156250, 16*156250, 0., 1e12);
+  pre1.setDomain (1170078125+30*156250, 4*156250, 0., 1e12);
+  //pre1.setDomain (1170078125+34*156250, 4*156250, 0., 1e12);
+  ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, 0., 1e12);
+
   // Get the ParmData from the Prediffer and send it to the solver.
   Solver solver;
   solver.initSolvableParmData (1);
@@ -75,26 +79,31 @@ void doSolveAll (Prediffer& pre1, const vector<string>& solv,
   streamsize prec = cout.precision();
   cout << "Before: " << setprecision(15) << solver.getSolvableValues() << endl;
 
-  for (int it=0; it<niter; ++it) {
+  for (int it=0; it<maxniter; ++it) {
     // Get the fitter from the prediffer and give them to the solver.
     casa::LSQFit fitter;
     pre1.fillFitter (fitter);
     solver.mergeFitter (fitter, 0);
     // Do the solve.
     Quality quality;
-    solver.solve (false, quality);
+    solver.solve (true, quality);
     cout << "iter" << it << ":  " << setprecision(15)
 	 << solver.getSolvableValues() << endl;
+    cout << quality << endl;
     cout.precision (prec);
     pre1.updateSolvableParms (solver.getSolvableParmData());
+    // Stop if converged.
+    if ((abs(quality.itsFit) <= epsilon) && quality.itsFit <= 0.0) {
+      break;
+    }
   }
   pre1.writeParms();
 }
 
 // Solve for steps in time.
 void doSolveStep (Prediffer& pre1, const vector<string>& solv,
-		  vector<string>& solvexc, double timeStep,
-		  int niter)
+		  const vector<string>& solvexc, double timeStep,
+		  int maxniter, double epsilon=1e-4)
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
@@ -105,9 +114,14 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
   ///  timeLast = timeStart + 120;
   timeStart -=  30-20;
   // Loop through all time domains.
+  int counter=0;
+  double st=timeStart;
   while (timeStart < timeLast) {
-    // Set a domain. Use middle 56 channels and 2 times per step.
-    pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
+    cout << "timecounter=" << counter++ << ' ' << timeStart-st << endl;
+    // Set a domain. Use middle 56 channels and a few times per step.
+    ///pre1.setDomain (1170078125+24*156250, 16*156250, timeStart, timeStep);
+    pre1.setDomain (1170078125+30*156250, 4*156250, timeStart, timeStep);
+    ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
 
     // Get the ParmData from the Prediffer and send it to the solver.
     Solver solver;
@@ -118,20 +132,45 @@ void doSolveStep (Prediffer& pre1, const vector<string>& solv,
     streamsize prec = cout.precision();
     cout << "Before: " << setprecision(15) << solver.getSolvableValues() << endl;
 
-    for (int it=0; it<niter; ++it) {
+    for (int it=0; it<maxniter; ++it) {
       // Get the fitter from the prediffer and give them to the solver.
       casa::LSQFit fitter;
       pre1.fillFitter (fitter);
       solver.mergeFitter (fitter, 0);
       // Do the solve.
       Quality quality;
-      solver.solve (false, quality);
+      solver.solve (true, quality);
       cout << "iter" << it << ":  " << setprecision(15)
 	   << solver.getSolvableValues() << endl;
+      cout << quality << endl;
       cout.precision (prec);
       pre1.updateSolvableParms (solver.getSolvableParmData());
+      // Stop if converged.
+      if ((abs(quality.itsFit) <= epsilon) && quality.itsFit <= 0.0) {
+	break;
+      }
     }
     pre1.writeParms();
+    timeStart += timeStep;
+  }
+}
+
+// Subtract the sources.
+void doSubtract (Prediffer& pre1, double timeStep)
+{
+  // Set start time (take 10 sec into account for first time stamp of 20).
+  double timeStart = 4.47203e+09-4260-10;
+  double timeLast = timeStart + 43075+25;
+  ///  timeLast = timeStart + 120;
+  timeStart -=  30-20;
+  // Loop through all time domains.
+  while (timeStart < timeLast) {
+    // Set a domain. Use middle 56 channels and 20 times per step.
+    pre1.setDomain (1170078125+24*156250, 16*156250, timeStart, timeStep);
+    ///pre1.setDomain (1.18e9-59.5*156250, 56*156250, timeStart, timeStep);
+    pre1.showSettings();
+    // Subtract the model.
+    pre1.subtractPeelSources (true);
     timeStart += timeStep;
   }
 }
@@ -141,30 +180,36 @@ int main (int argc, const char* argv[])
 {
   cout << ">>>" << endl;
   INIT_LOGGER("t3C343");
+  BBSTest::Logger::init();
   try {
     if (argc < 6) {
-      cerr << "Run as: t3C343 user msname meqparmtable skyparmtable model [type=1] [nriter=1] [calcuvw=1] [dbtype=aips]"
+      cerr << "Run as: t3C343 user msname meqparmtable skyparmtable model [nrgrp=1] [type=1] [nriter=1] [calcuvw=1] [dbtype=aips]"
 	   << endl;
       return 1;
     }
-    int type=1;
+    int nrgrp=1;
     if (argc > 6) {
       istringstream iss(argv[6]);
-      iss >> type;
+      iss >> nrgrp;
     }
-    int nriter=1;
+    int type=1;
     if (argc > 7) {
       istringstream iss(argv[7]);
-      iss >> nriter;
+      iss >> type;
     }
-    int calcuvw=1;
+    int maxniter=1;
     if (argc > 8) {
       istringstream iss(argv[8]);
+      iss >> maxniter;
+    }
+    int calcuvw=1;
+    if (argc > 9) {
+      istringstream iss(argv[9]);
       iss >> calcuvw;
     }
     string dbtype="aips";
-    if (argc > 9) {
-      dbtype = argv[9];
+    if (argc > 10) {
+      dbtype = argv[10];
     }
 
     cout << "t3C343 user=         " << argv[1] << endl;
@@ -172,8 +217,9 @@ int main (int argc, const char* argv[])
     cout << "       meqparmtable: " << argv[3] << endl;
     cout << "       skyparmtable: " << argv[4] << endl;
     cout << "       modeltype:    " << argv[5] << endl;
+    cout << "       nrsrcgrp:     " << nrgrp << endl;
     cout << "       solve-type:   " << type << endl;
-    cout << "       nriter:       " << nriter << endl;
+    cout << "       maxniter:     " << maxniter << endl;
     cout << "       calcuvw:      " << calcuvw << endl;
     cout << "       dbtype:       " << dbtype << endl;
 
@@ -189,15 +235,21 @@ int main (int argc, const char* argv[])
 
     // Do a solve.
     {
-      vector<int> antVec(14);
-      for (int i=0; i<14; i++) {
-	antVec[i] = i;
-      }
+      ///      vector<int> antVec(5);
+      ///antVec[0]=0; antVec[1]=3; antVec[2]=6; antVec[3]=9; antVec[4]=13;
+      vector<int> antVec(2);
+      antVec[0]=4; antVec[1]=8;
+      ///vector<int> antVec(14);
+      ///for (int i=0; i<14; i++) {
+      ///antVec[i] = i;
+      ///}
       vector<vector<int> > srcgrp;
-      vector<int> grp1;
-      grp1.push_back (1);
-      grp1.push_back (2);
-      srcgrp.push_back (grp1);
+      if (nrgrp == 1) {
+	vector<int> grp1;
+	grp1.push_back (1);
+	grp1.push_back (2);
+	srcgrp.push_back (grp1);
+      }
       Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
 		     antVec, argv[5], srcgrp, calcuvw);
       // Do a further selection; only XX,YY and no autocorrelations.
@@ -206,21 +258,40 @@ int main (int argc, const char* argv[])
       vector<int> antVec2;
       pre1.select (antVec2, antVec2, false, corr);
       if (type == 1) {
-	vector<string> solv(1);
+	vector<string> solv(2);
 	solv[0] = "StokesI.*";
+	solv[1] = "StokesQ.*";
+	//solv[1] = "StokesQ.CP2";
+	//solv[0] = "StokesI.*";
 	//      solv[1] = "RA.*";
 	//      solv[2] = "DEC.*";
-	doSolveAll (pre1, solv, nriter);
-      } else {
+	///doSolveStep (pre1, solv, vector<string>(), 60, maxniter);
+	doSolveAll (pre1, solv, maxniter);
+      } else if (type == 2) {
+	// Keep phases for station 1 fixed at 0.
 	vector<string> solv2(2);
 	vector<string> solv2exc(4);
 	solv2[0] = "EJ11.phase.*";
 	solv2[1] = "EJ22.phase.*";
-	solv2exc[0] = "EJ11.phase.SR1.SG1";
+	solv2exc[0] = "EJ11.phase.SR1.*";
 	solv2exc[1] = "EJ11.phase.SR1";
-	solv2exc[2] = "EJ22.phase.SR1.SG1";
+	solv2exc[2] = "EJ22.phase.SR1.*";
 	solv2exc[3] = "EJ22.phase.SR1";
-	doSolveStep (pre1, solv2, solv2exc, 60, nriter);
+	doSolveStep (pre1, solv2, solv2exc, 30, maxniter);
+      } else if (type == 3) {
+	vector<string> solv2(2);
+	solv2[0] = "EJ11.ampl.*";
+	solv2[1] = "EJ22.ampl.*";
+	///doSolveStep (pre1, solv2, vector<string>(), 60, maxniter);
+	doSolveStep (pre1, solv2, vector<string>(), 900, maxniter);
+      } else if (type == 4) {
+	// Let SVD sort out the phase ambiguity.
+	vector<string> solv2(2);
+	solv2[0] = "EJ11.phase.*";
+	solv2[1] = "EJ22.phase.*";
+	doSolveStep (pre1, solv2, vector<string>(), 30, maxniter);
+      } else {
+        doSubtract (pre1, 900);
       }
     }
   } catch (std::exception& x) {

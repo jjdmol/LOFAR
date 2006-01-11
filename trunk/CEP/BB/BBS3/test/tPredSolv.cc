@@ -251,7 +251,7 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
-		     antVec, "LOFAR.RI", srcgrp, false);
+		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
@@ -277,7 +277,7 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
-		     antVec, "LOFAR.RI", srcgrp, false);
+		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
@@ -301,9 +301,9 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
-		     antVec, "LOFAR.RI", srcgrp, false);
+		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       Prediffer pre2(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
-		     antVec, "LOFAR.RI", srcgrp, false);
+		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
@@ -328,7 +328,7 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
-		     antVec, "LOFAR.RI", srcgrp, false);
+		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Only use first correlation.
       vector<int> corrVec(1, 0);
       vector<int> antVec2;
@@ -350,7 +350,7 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
-		     antVec, "LOFAR.RI", srcgrp, false);
+		     antVec, "TOTALEJ.REALIMAG", srcgrp, false);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
