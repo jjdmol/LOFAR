@@ -99,7 +99,7 @@ namespace LOFAR
     class ScopedUSRTimer : private casa::Timer
     {
     public:
-      ScopedUSRTimer(const string& name): itsName(name), Timer(), itsIsPrinted(false) {};
+      ScopedUSRTimer(const string& name): Timer(), itsName(name), itsIsPrinted(false) {};
       ~ScopedUSRTimer()                 { if (!itsIsPrinted) Logger::log(*this);};
       void end()                        { Logger::log(*this); itsIsPrinted = true;};
       const string& getName()           { return itsName;};
