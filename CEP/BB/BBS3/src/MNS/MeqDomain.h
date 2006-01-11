@@ -70,10 +70,14 @@ public:
     { return itsOffsetX - itsScaleX; }
   double endX() const
     { return itsOffsetX + itsScaleX; }
+  double sizeX() const
+    { return 2*itsScaleX; }
   double startY() const
     { return itsOffsetY - itsScaleY; }
   double endY() const
     { return itsOffsetY + itsScaleY; }
+  double sizeY() const
+    { return 2*itsScaleY; }
 
   bool operator== (const MeqDomain& that) const
   { return itsOffsetX == that.itsOffsetX  &&  itsScaleX == that.itsScaleX
