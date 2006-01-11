@@ -32,6 +32,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/Constants.h>
+#include <iomanip>
 
 using namespace casa;
 
@@ -48,12 +49,13 @@ MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
   itsSinDec = std::sin(itsDec);
   itsCosDec = std::cos(itsDec);
 
-  // Get hourangle for Greenwich meridian.
   // Put the position in a frame.
-  MVPosition mgwPos;
-  MPosition gwPos (mgwPos, MPosition::WGS84);
-  // Use the Dwingeloo position instead of Greenwich.
-  ASSERT (MeasTable::Observatory(gwPos, "DWL"));
+  MPosition gwPos;
+  // Use the Westerbork position in ITRF coordinates..
+  ASSERT (MeasTable::Observatory(gwPos, "WSRT"));
+  itsEarthPos = MPosition::Convert (gwPos, MPosition::ITRF) ();
+////  cout << "earthpos = " <<itsEarthPos << std::setprecision(12)<<itsEarthPos.getValue()<<endl;
+  // Put it in a frame.
   MeasFrame frame(gwPos);
   // Convert start time to an epoch and put in frame.
   Quantum<Double> qtime(0, "s");
@@ -84,8 +86,6 @@ MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
   cout << "meqphasref: " << itsStartHA << ' ' << ha << ' ' << itsScaleHA
        << ' ' << itsStartTime-4.4977e9 << ' ' << gwPos << endl;
 */
-  // Set earth position.
-  itsEarthPos = gwPos;
 
   MVEpoch ep1(startTime);
   MEpoch ep2(ep1, MEpoch::UTC);
