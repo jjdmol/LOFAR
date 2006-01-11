@@ -79,7 +79,7 @@ int main (int argc, const char* argv[])
       }
       vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], "meqModel", meqPdt, "skyModel", skyPdt, 
-		     antVec, "RI.USESP", srcgrp, false);
+		     antVec, "REALIMAG.TOTALEJ.DIPOLE", srcgrp, false);
       doPredict (pre1);
       cout << "End of predict test" << endl;
 

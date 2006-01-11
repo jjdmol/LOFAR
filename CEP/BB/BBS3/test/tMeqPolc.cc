@@ -156,7 +156,9 @@ void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
 {
   MeqRequest req(domain, nx, ny);
   MeqResult res = polc.getResult (req);
-  cout << "domain: " << domain << ' ' << nx << ' ' << ny << endl;
+  cout << "domain: " << domain << ' ' << nx << ' ' << ny
+       << "    pol: " << polc.getCoeff().nx() << ' '
+       << polc.getCoeff().ny() << endl;
   cout << "result: " << res.getValue() << endl;
   // Calculate the result for all perturbed values.
   int nspid = polc.makeSolvable (0);
@@ -205,6 +207,14 @@ void doEval (MeqPolc& polc, const MeqDomain& domain, int nx, int ny)
       ASSERT (compare (rese.getPerturbedValue(i), resm.getPerturbedValue(i)));
     }
   }
+  // Get the result using analytical derivatives.
+  // Compare if they match the computed ones.
+  MeqResult resma = polc.getAnResult (reqm);
+  ASSERT (compare (res.getValue(), resma.getValue()));
+  for (int i=0; i<nspid; ++i) {
+    ASSERT (compare (resma.getPerturbedValue(i),
+		     (resm.getPerturbedValue(i) - resm.getValue()) / resm.getPerturbation(i)));
+  }
 }
 
 void doIt (MeqPolc& polc)
@@ -218,16 +228,16 @@ void doIt (MeqPolc& polc)
   ///  doEval (polc, domain, 64, 1);
     ///  doEval (polc, domain, 64, 8);
     ///  doEval (polc, domain, 256, 1);
+  MeqDomain domain2(0,4, 0,1);
+  doEval (polc, domain2, 1, 1);
+  doEval (polc, domain2, 2, 2);
+  doEval (polc, domain2, 8, 1);
 }
 
 int main()
 {
-  for (int i=0; i<2; i++) {
+  {
     MeqPolc polc;
-    polc.setX0 (i+1);
-    polc.setY0 (-i*2);
-    polc.setXScale (2);
-    polc.setYScale (0.5);
     polc.setPerturbation (1, false);
 
     polc.setCoeff(MeqMatrix(2.));
