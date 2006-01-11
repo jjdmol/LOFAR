@@ -61,6 +61,7 @@ MMap::MMap (const string& fileName, protection prot)
   itsFd = ::open64( fileName.c_str(), pr);
   ASSERTSTR (itsFd >= 0, "Opening of file " << fileName << " failed ("
 	     << strerror(errno) << ")" );
+  ///  cout << "Map file " << fileName << endl;
 }
 
 MMap::~MMap()
@@ -103,6 +104,8 @@ void MMap::mapFile (int64 offset, size_t size)
 			 pageStartOffset);
   ASSERTSTR (itsPageStart != MAP_FAILED, "MMap::MMap - mmap failed: "
 	     << strerror(errno) ); 
+  ///  cout << "Mapped "<<size<<" bytes at " << offset<<' '<<pageStartOffset<<' '<<itsNrBytes<<endl;
+  ::madvise (itsPageStart, itsNrBytes, MADV_SEQUENTIAL);
   // Get requested pointer
   itsPtr = (char*)itsPageStart + offset-pageStartOffset;
   itsOffset = offset;
