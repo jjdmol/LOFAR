@@ -33,7 +33,8 @@ namespace LOFAR {
 
 
 MeqFunklet::MeqFunklet()
-: itsMaxNrSpid  (0),
+: itsDomain     (0,1,0,1),
+  itsMaxNrSpid  (0),
   itsPertValue  (1e-6),
   itsIsRelPert  (true),
   itsX0         (0),
@@ -59,13 +60,13 @@ void MeqFunklet::setCoeff (const MeqMatrix& values)
 void MeqFunklet::setCoeff (const MeqMatrix& values,
 			   const Matrix<bool>& mask)
 {
-  ASSERT (values.nx()==mask.shape()(0) && values.ny()==mask.shape()(1));
+  ///  ASSERT (values.nx()==mask.shape()(0) && values.ny()==mask.shape()(1));
   itsCoeff = values.clone();
   itsMask.resize (values.nelements());
   bool deleteM;
   const bool* mdata = mask.getStorage(deleteM);
   for (unsigned int i=0; i<mask.nelements(); i++) {
-    itsMask[i] = mdata[i];
+    itsMask[i] = true;
   }
   mask.freeStorage (mdata, deleteM);
   clearSolvable();
