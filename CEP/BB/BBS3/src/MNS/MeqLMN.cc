@@ -104,4 +104,104 @@ MeqResultVec MeqLMN::getResultVec (const MeqRequest& request)
   return result;
 }
 
+MeqResultVec MeqLMN::getAnResultVec (const MeqRequest& request)
+{
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
+  MeqResultVec result(3, request.nspid());
+  MeqResult& resL = result[0];
+  MeqResult& resM = result[1];
+  MeqResult& resN = result[2];
+  MeqResult raRes, deRes;
+  const MeqResult& rak  = itsSource->getRa().getResultSynced (request, raRes);
+  const MeqResult& deck = itsSource->getDec().getResultSynced (request, deRes);
+  double refRa  = itsPhaseRef->getRa();
+  double refDec = itsPhaseRef->getDec();
+  double refSinDec = itsPhaseRef->getSinDec();
+  double refCosDec = itsPhaseRef->getCosDec();
+  MeqMatrix cosdec = cos(deck.getValue());
+  MeqMatrix radiff = rak.getValue() - refRa;
+  if (request.nspid() == 0) {
+    MeqMatrix lk = cosdec * sin(radiff);
+    MeqMatrix mk = sin(deck.getValue()) * refCosDec -
+                   cosdec * refSinDec * cos(radiff);
+    MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
+    ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
+	       << " too far from phaseref " << refRa << ", " << refDec);
+    MeqMatrix nk = sqrt(nks);
+    resL.setValue (lk);
+    resM.setValue (mk);
+    resN.setValue (nk);
+  } else {
+    MeqMatrix sinradiff = sin(radiff);
+    MeqMatrix cosradiff = cos(radiff);
+    MeqMatrix sindec = sin(deck.getValue());
+    MeqMatrix lk = cosdec * sinradiff;
+    MeqMatrix mk = sindec * refCosDec -
+                   cosdec * refSinDec * cosradiff;
+    MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
+    ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSource->getSourceNr()
+	       << " too far from phaseref " << refRa << ", " << refDec);
+    MeqMatrix nk = sqrt(nks);
+    resL.setValue (lk);
+    resM.setValue (mk);
+    resN.setValue (nk);
+
+    // Evaluate (if needed) for the perturbed parameter values.
+    // l = cosdec*sinradiff
+    // m = sindec*cosdec0 - cosdec*sindec0*cosradiff
+    // l'= -sindec*dec'*sinradiff + cosdec*cosradiff*ra'
+    // m'= cosdec*dec'*cosdec0 - (-sindec*dec'*sindec0*cosradiff
+    //                            + cosdec*sindec0*-sinradiff*ra')
+    //   = (cosdec*cosdec0 + sindec*sindec0*cosradiff) * dec'
+    //     + cosdec*sindec0*sinradiff*ra'
+    // precalculate:  c1 = cosdec*sindec0*sinradiff = l*sindec0
+    //                c2 = cosdec*cosdec0 + sindec*sindec0*cosradiff
+    //                c3 = cosdec*cosradiff
+    //                c4 = -sindec*sinradiff
+    // l'= c3*ra' + c4*dec'
+    // m'= c1*ra' + c2*dec'
+    // n = sqrt(1 - l^2 - m^2)
+    // n'= 0.5 * 1/sqrt(1 - l^2 - m^2) * (-2*l*l' - 2*m*m')
+    //   = (l*l' + m*m') / -n
+    double perturbation;
+    MeqMatrix c1 = lk * refSinDec;
+    MeqMatrix c2 = cosdec * refCosDec + sindec * refSinDec * cosradiff;
+    MeqMatrix c3 = cosdec * cosradiff;
+    MeqMatrix c4 = -sindec * sinradiff;
+    MeqMatrix ln = -lk / nk;
+    MeqMatrix mn = -mk / nk;
+    for (int spinx=0; spinx<request.nspid(); spinx++) {
+      if (rak.isDefined(spinx)) {
+	const MeqMatrix& dra = raRes.getPerturbedValue (spinx);
+	if (deck.isDefined(spinx)) {
+	  // Both are defined, so we have to evaluate all.
+	  const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
+	  MeqMatrix dl = c3*dra + c4*ddec;
+	  MeqMatrix dm = c1*dra + c2*ddec;
+	  resL.setPerturbedValue (spinx, dl);
+	  resM.setPerturbedValue (spinx, dm);
+	  resN.setPerturbedValue (spinx, ln*dl + mn*dm);
+	} else {
+	  // no derivative in dec, so ddec=0.
+	  MeqMatrix dl = c3*dra;
+	  MeqMatrix dm = c1*dra;
+	  resL.setPerturbedValue (spinx, dl);
+	  resM.setPerturbedValue (spinx, dm);
+	  resN.setPerturbedValue (spinx, ln*dl + mn*dm);
+	}
+      } else if (deck.isDefined(spinx)) {
+	// no derivative in ra, so dra=0.
+	const MeqMatrix& ddec = deRes.getPerturbedValue (spinx);
+	MeqMatrix dl = c4*ddec;
+	MeqMatrix dm = c2*ddec;
+	resL.setPerturbedValue (spinx, dl);
+	resM.setPerturbedValue (spinx, dm);
+	resN.setPerturbedValue (spinx, ln*dl + mn*dm);
+      }
+    }
+  }
+  return result;
+}
+
 }
