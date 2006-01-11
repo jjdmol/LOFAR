@@ -74,7 +74,11 @@ MeqResult MeqParmPolc::getResult (const MeqRequest& request)
   MeqResult result(0);
   int ndx = request.nx();
   int ndy = request.ny();
-  double* datar = 0;
+  // Create the result matrix and initialize to zero.
+  Matrix<double> mat(ndx, ndy);
+  mat = 0;
+  result.setValue (mat);
+  double* datar = result.getValueRW().doubleStorage();
   double stepx = request.stepX();
   double stepy = request.stepY();
   double halfStepx = stepx * .5;
@@ -122,18 +126,6 @@ MeqResult MeqParmPolc::getResult (const MeqRequest& request)
 			starty, starty + nry*stepy);
       MeqRequest partReq(partDom, nrx, nry);
       MeqResult partRes = polc.getResult (partReq);
-      // Create the result matrix if it is the first time.
-      // Now it is initialized with zeroes (to see possiible errors).
-      // In the future the outcommnented statement can be used
-      // which saves the initialization time. It requires that the
-      // request domain is entirely covered by the polcs.
-      if (datar == 0) {
-	Matrix<double> mat(ndx, ndy);
-	mat = 0;
-	////	  result.setValue (MeqMatrix(double(), ndx. ndy));
-	result.setValue (mat);
-	datar = result.getValueRW().doubleStorage();
-      }
       // Move the values to the correct place in the output result.
       // Note that in principle a polynomial could be a single coefficient
       // in which case it returns a single value.
