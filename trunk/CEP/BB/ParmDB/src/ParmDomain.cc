@@ -27,6 +27,9 @@
 namespace LOFAR {
 namespace ParmDB {
 
+ParmDomain::ParmDomain()
+{}
+
 ParmDomain::ParmDomain (double startX, double endX,
 			double startY, double endY)
 {
@@ -42,11 +45,11 @@ ParmDomain::ParmDomain (double startX, double endX,
   itsEnd[1] = endY;
 }
 
-  ParmDomain::ParmDomain (const std::vector<double>& start,
-			  const std::vector<double>& end)
+ParmDomain::ParmDomain (const std::vector<double>& start,
+			const std::vector<double>& end)
 {
-  ASSERTSTR (start.size() == end.size()  &&  start.size() > 0,
-	     "ParmDomain: start and end vector must have equal length > 0");
+  ASSERTSTR (start.size() == end.size(),
+	     "ParmDomain: start and end vector must have equal length");
   for (uint i=0; i<start.size(); ++i) {
     ASSERTSTR (start[i] < end[i], "ParmDomain: start " << start[i] <<
 	     " must be < end " << end[i]);

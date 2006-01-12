@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 
 #include <casa/Quanta/MVTime.h>
+#include <casa/Containers/Block.h>
 #include <iostream>
 #include <string>
 #include <pwd.h>
@@ -71,8 +72,8 @@ char bool2char (bool val)
   return (val  ?  'y' : 'n');
 }
 
-void showArray (std::ostream& os, const vector<double>& values,
-		const vector<int>& shape)
+void showValues (std::ostream& os, const vector<double>& values,
+		 const vector<bool>& mask, const vector<int>& shape)
 {
   int n = values.size();
   if (n > 0) {
@@ -82,6 +83,12 @@ void showArray (std::ostream& os, const vector<double>& values,
     }
   }
   os << "  shape=" << shape;
+  if (n > 0) {
+    os << "  mask=" << mask[0];
+    for (int i=1; i<n; i++) {
+      os << ',' << mask[i];
+    }
+  }
 }
 
 void showTime (std::ostream& os, double val)
@@ -270,65 +277,100 @@ vector<double> getArray (const KeyValueMap& kvmap, const std::string& arrName,
   return res;
 }
 
-ParmDomain getDomain (const KeyValueMap& kvmap)
+// Return as Block instead of vector, because vector<bool> uses bits.
+Block<bool> getMask (const KeyValueMap& kvmap, const std::string& arrName,
+		     uint size)
+{
+  Block<bool> res(size, false);
+  KeyValueMap::const_iterator value = kvmap.find(arrName);
+  if (value == kvmap.end()) {
+    if (size > 0) res[0] = true;
+    return res;
+  }
+  vector<double> vec;
+  if (value->second.dataType() == KeyValue::DTValueVector) {
+    const vector<KeyValue>& vvec = value->second.getVector();
+    for (uint i=0; i<vvec.size(); i++) {
+      vec.push_back (vvec[i].getBool());
+    }
+  } else {
+    value->second.get (vec);
+  }
+  ASSERTSTR (vec.size() <= size, "More than "<<size<<" mask values are given");
+  for (uint i=0; i<vec.size(); ++i) {
+    res[i] = vec[i];
+  }
+  return res;
+}
+
+ParmDomain getDomain (const KeyValueMap& kvmap, int size=0)
 {
   KeyValueMap::const_iterator value = kvmap.find("domain");
-  if (value == kvmap.end()) {
-    return ParmDomain();
-  }
   vector<double> st;
   vector<double> end;
-  bool ok = false;
-  // See if given as domain=[start=[],end=[] or step=[]].
-  if (value->second.dataType() == KeyValue::DTValueMap) {
-    const KeyValueMap& kvm = value->second.getValueMap();
-    KeyValueMap::const_iterator key = kvm.find("st");
-    if (key != kvm.end()) {
-      st = key->second.getVecDouble();
-      key = kvm.find("end");
-      bool hasend = (key != kvm.end());
-      if (hasend) end = key->second.getVecDouble();
-      key = kvm.find("size");
-      bool hassize = (key != kvm.end());
-      if (hassize) end = key->second.getVecDouble();
-      // end and size cannot be given both.
-      if (hasend != hassize) {
-	if (st.size() == end.size()) {
-	  ok = true;
-	  if (hassize) {
-	    for (uint i=0; i<end.size(); ++i) {
-	      end[i] += st[i];
+  if (value != kvmap.end()) {
+    bool ok = false;
+    // See if given as domain=[start=[],end=[] or step=[]].
+    if (value->second.dataType() == KeyValue::DTValueMap) {
+      const KeyValueMap& kvm = value->second.getValueMap();
+      KeyValueMap::const_iterator key = kvm.find("st");
+      if (key != kvm.end()) {
+	st = key->second.getVecDouble();
+	key = kvm.find("end");
+	bool hasend = (key != kvm.end());
+	if (hasend) end = key->second.getVecDouble();
+	key = kvm.find("size");
+	bool hassize = (key != kvm.end());
+	if (hassize) end = key->second.getVecDouble();
+	// end and size cannot be given both.
+	if (hasend != hassize) {
+	  if (st.size() == end.size()) {
+	    ok = true;
+	    if (hassize) {
+	      for (uint i=0; i<end.size(); ++i) {
+		end[i] += st[i];
+	      }
 	    }
 	  }
 	}
       }
-    }
-  } else {
-    // Given as a vector of doubles (as stx,endx,sty,endy,...).
-    ok = true;
-    vector<double> vec;
-    try {
-      vec = value->second.getVecDouble();
-    } catch (...) {
-      ok = false;
-    }
-    if (ok) {
-      if (vec.size() % 2 != 0) {
+    } else {
+      // Given as a vector of doubles (as stx,endx,sty,endy,...).
+      ok = true;
+      vector<double> vec;
+      try {
+	vec = value->second.getVecDouble();
+      } catch (...) {
 	ok = false;
-      } else {
-	int nr = vec.size() / 2;
-	st.resize(nr);
-	end.resize(nr);
-	for (int i=0; i<nr; ++i) {
-	  st[i] = vec[2*i];
-	  end[i] = vec[2*i + 1];
+      }
+      if (ok) {
+	if (vec.size() % 2 != 0) {
+	  ok = false;
+	} else {
+	  int nr = vec.size() / 2;
+	  st.resize(nr);
+	  end.resize(nr);
+	  for (int i=0; i<nr; ++i) {
+	    st[i] = vec[2*i];
+	    end[i] = vec[2*i + 1];
+	  }
 	}
       }
     }
+    ASSERTSTR (ok,
+	       "domain must be given as [[stx,endx],[sty,endy],...]\n"
+	       "or as [st=[stx,...],end=[endx,...] or size=[sizex,...]]");
   }
-  ASSERTSTR (ok,
-	     "domain must be given as [[stx,endx],[sty,endy],...]\n"
-	     "or as [st=[stx,...],end=[endx,...] or size=[sizex,...]]");
+  if (size > 0) {
+    ASSERTSTR (int(st.size()) <= size, "Domain has too many axes");
+    if (st.size() < size) {
+      int nr = size - st.size();
+      for (int i=0; i<nr; ++i) {
+	st.push_back (0);
+	end.push_back (1);
+      }
+    }
+  }
   return ParmDomain(st, end);
 }
 
@@ -383,7 +425,7 @@ void showParm (const string& parmName, const ParmValueRep& parm, bool showAll)
 	 << endl;
   }
   cout << "    values:  ";
-  showArray (cout, parm.itsCoeff, parm.itsShape);
+  showValues (cout, parm.itsCoeff, parm.itsSolvMask, parm.itsShape);
   cout << endl;
   cout << "    pert=" << parm.itsPerturbation
        << " pert_rel=" << bool2char(parm.itsIsRelPert) << endl;
@@ -428,13 +470,18 @@ void newParm (const std::string& parmName, const KeyValueMap& kvmap)
   // Get the coefficients shape and the data.
   int size = getShape (kvmap, shape);
   vector<double> coeff = getArray (kvmap, "values", size);
-  pval.setCoeff (&coeff[0], shape);
+  if (kvmap.isDefined("mask")) {
+    Block<bool> mask = getMask (kvmap, "mask", size);
+    pval.setCoeff (&coeff[0], mask.storage(), shape);
+  } else {
+    pval.setCoeff (&coeff[0], shape);
+  }
   // Set perturbation for numerical derivatives.
   double pert = kvmap.getDouble ("pert", 1e-6);
   bool pertrel = kvmap.getBool ("pert_rel", true);
   pval.setPerturbation (pert, pertrel);
   // Set domain and default offset/scale.
-  pval.setDomain (getDomain (kvmap));
+  pval.setDomain (getDomain (kvmap, shape.size()));
   // Only set offset/scale if really given.
   // If given, make sure their lengths equal #dim.
   if (getArray(kvmap, "offset").size() > 0) {
@@ -460,7 +507,12 @@ void newDefParm (const std::string& parmName, KeyValueMap& kvmap)
   // Get the coefficients shape and the data.
   int size = getShape (kvmap, shape);
   vector<double> coeff = getArray (kvmap, "values", size);
-  pval.setCoeff (&coeff[0], shape);
+  if (kvmap.isDefined("mask")) {
+    Block<bool> mask = getMask (kvmap, "mask", size);
+    pval.setCoeff (&coeff[0], mask.storage(), shape);
+  } else {
+    pval.setCoeff (&coeff[0], shape);
+  }
   // Set perturbation for numerical derivatives.
   double pert = kvmap.getDouble ("pert", 1e-6);
   bool pertrel = kvmap.getBool ("pert_rel", true);
@@ -486,7 +538,12 @@ void updateParm (const string& parmName, ParmValue& pvalue,
     // Get the coefficients shape and the data.
     int size = getShape (kvmap, shape);
     vector<double> coeff = getArray (kvmap, "values", size);
-    pval.setCoeff (&coeff[0], shape);
+    if (kvmap.isDefined("mask")) {
+      Block<bool> mask = getMask (kvmap, "mask", size);
+      pval.setCoeff (&coeff[0], mask.storage(), shape);
+    } else {
+      pval.setCoeff (&coeff[0], shape);
+    }
   }
   // Set perturbation for numerical derivatives.
   if (kvmap.isDefined("pert")) {
@@ -560,7 +617,12 @@ void updateDefParm (const string& parmName, ParmValue& pvalue,
     // Get the coefficients shape and the data.
     int size = getShape (kvmap, shape);
     vector<double> coeff = getArray (kvmap, "values", size);
-    pval.setCoeff (&coeff[0], shape);
+    if (kvmap.isDefined("mask")) {
+      Block<bool> mask = getMask (kvmap, "mask", size);
+      pval.setCoeff (&coeff[0], mask.storage(), shape);
+    } else {
+      pval.setCoeff (&coeff[0], shape);
+    }
   }
   // Set perturbation for numerical derivatives.
   if (kvmap.isDefined("pert")) {

@@ -45,10 +45,36 @@ namespace ParmDB {
     itsShape = shape;
     int nr = getLength(shape);
     itsCoeff.resize (nr);
-    itsSolvMask.resize (nr);
     for (int i=0; i<nr; i++) {
       itsCoeff[i] = coeff[i];
-      itsSolvMask[i] = true;
+    }
+    // Determine maximum order.
+    int maxorder = 0;
+    int nrdim = shape.size();
+    for (int i=0; i<nrdim; ++i) {
+      if (shape[i] > maxorder) {
+	maxorder = shape[i];
+      }
+    }
+    // Set all flags of coefficients exceeding maxorder to false.
+    itsSolvMask.resize (nr);
+    std::vector<int> pos(nrdim, 0);
+    int inx = 0;
+    int order = 0;
+    for (int i=0; i<nr/shape[0]; ++i) {
+      for (int j=0; j<shape[0]; ++j) {
+	itsSolvMask[inx++] = order<maxorder;
+	order++;
+      }
+      order -= shape[0]-1;
+      for (int axis=1; axis<nrdim; ++axis) {
+	if (++(pos[axis]) < shape[axis]) {
+	  break;
+	}
+	order -= pos[axis]-1;
+	pos[axis] = 0;
+	axis++;
+      }
     }
   }
 
