@@ -42,9 +42,12 @@ namespace ParmDB {
 class ParmDomain
 {
 public:
-  // Create an 2-dim domain.
-  explicit ParmDomain (double startX=0, double endX=1,
-		       double startY=0, double endY=1);
+  // Create an empty domain.
+  ParmDomain();
+
+  // Create a 2-dim domain.
+  explicit ParmDomain (double startX, double endX,
+		       double startY, double endY);
 
   // Create an N-dim domain.
   ParmDomain (const std::vector<double>& start,

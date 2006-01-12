@@ -79,7 +79,7 @@ ParmDBAIPS::~ParmDBAIPS()
 
 void ParmDBAIPS::createTables (const string& tableName)
 {
-  TableDesc td("ME parameter table", TableDesc::New);
+  TableDesc td("ME parameter table", TableDesc::Scratch);
   td.comment() = String("Table containing parameters for ME");
   td.addColumn (ScalarColumnDesc<String>("NAME"));
   td.addColumn (ScalarColumnDesc<String>("TYPE"));
@@ -96,7 +96,7 @@ void ParmDBAIPS::createTables (const string& tableName)
   td.addColumn (ScalarColumnDesc<int>   ("ID"));
   td.addColumn (ScalarColumnDesc<int>   ("PARENTID"));
 
-  TableDesc tddef("ME default parameter values", TableDesc::New);
+  TableDesc tddef("ME default parameter values", TableDesc::Scratch);
   tddef.comment() = String("Table containing default parameters for ME");
   tddef.addColumn (ScalarColumnDesc<String>("NAME"));
   tddef.addColumn (ScalarColumnDesc<String>("TYPE"));
@@ -252,11 +252,13 @@ std::vector<ParmValueSet> ParmDBAIPS::getPatternValues
   // Only look for values without a parent; thus results of possible refit.
   Table table = itsTables[tabinx];
   Regex regex(Regex::fromPattern(parmNamePattern));
-  TableExprNode expr = 
-	    table.col("NAME") == regex  &&
+  TableExprNode expr = table.col("NAME") == regex;
+  if (domain.getStart().size() > 0) {
+    expr = expr  &&
 	    nelements(table.col("START")) == int(domain.getStart().size())  &&
 	    all(fromVector(domain.getStart()) < table.col("END"))  &&
 	    all(fromVector(domain.getEnd())   > table.col("START"));
+  }
   if (parentId >= 0) {
     expr = expr  &&  table.col("PARENTID") == parentId;
   }
@@ -495,11 +497,13 @@ void ParmDBAIPS::deleteValues (const std::string& parmNamePattern,
   TableLocker locker(table, FileLocker::Write);
   // Find all rows.
   Regex regex(Regex::fromPattern(parmNamePattern));
-  TableExprNode expr = 
-	    table.col("NAME") == regex  &&
+  TableExprNode expr = table.col("NAME") == regex;
+  if (domain.getStart().size() > 0) {
+    expr = expr  &&
 	    nelements(table.col("START")) == int(domain.getStart().size())  &&
 	    all(fromVector(domain.getStart()) < table.col("END"))  &&
 	    all(fromVector(domain.getEnd())   > table.col("START"));
+  }
   if (parentId >= 0) {
     expr = expr  &&  table.col("PARENTID") == parentId;
   }
@@ -536,10 +540,13 @@ Table ParmDBAIPS::find (const string& parmName,
     sel = itsTables[tabinx](rownrs);
   }
   // Find all rows overlapping the requested domain.
-  TableExprNode expr = sel.col("NAME") == String(parmName)  &&
-	      nelements(sel.col("START")) == int(domain.getStart().size())  &&
-	      all(fromVector(domain.getStart()) < sel.col("END"))  &&
-	      all(fromVector(domain.getEnd())   > sel.col("START"));
+  TableExprNode expr = sel.col("NAME") == String(parmName);
+  if (domain.getStart().size() > 0) {
+    expr = expr  &&
+	    nelements(sel.col("START")) == int(domain.getStart().size())  &&
+	    all(fromVector(domain.getStart()) < sel.col("END"))  &&
+	    all(fromVector(domain.getEnd())   > sel.col("START"));
+  }
   if (parentId >= 0) {
     expr = expr  &&  sel.col("PARENTID") == parentId;
   }
