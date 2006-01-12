@@ -559,28 +559,32 @@ Socket* Socket::accept(int32	waitMs)
 		addrLen = sizeof(itsTCPAddr);
 	}
 
+	// Just call 'accept'. In blocking-mode we will stay there, in non-blocking
+	// mode we catch de 'connects' that were executed before our accept.
 	itsErrno = SK_OK;
 	errno 	 = 0;
-	int32 newSocketID;
-
+	int32 	newSocketID;
 	do {
-	  newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
-	  if (newSocketID > 0) {
-	    LOG_DEBUG(formatString("Socket(%d):accept() successful",itsSocketID));
-	    setBlocking(blockingMode);
-	    Socket* newSocket = (itsType == UNIX) ?
-	      new Socket(newSocketID, itsUnixAddr) :
-	      new Socket(newSocketID, itsTCPAddr);
-	    newSocket->setBlocking(blockingMode);
-	    return (newSocket);
-	  }
+		newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
+		if (newSocketID > 0) {
+			LOG_DEBUG(formatString("Socket(%d):accept() successful",itsSocketID));
+			setBlocking(blockingMode);
+			Socket*		newSocket = (itsType == UNIX) ?
+									new Socket(newSocketID, itsUnixAddr) :
+									new Socket(newSocketID, itsTCPAddr);
+			newSocket->setBlocking(blockingMode);	// restore original
+			return (newSocket);
+		}
+		// in blocking mode we could have catch an interrupt, give it a retry.
+	} while ((errno == EINTR) && (waitMs < 0));
 
-	} while ((errno == EWOULDBLOCK) || (errno == EAGAIN) || (errno == EINTR));
-	
+	// Show why we left the accept-call
 	LOG_DEBUG(formatString("Socket(%d):accept() failed: errno=%d(%s)", 
-			       itsSocketID, errno, strerror(errno)));
+										itsSocketID, errno, strerror(errno)));
 
-	if (errno != EALREADY) {
+	// In non-blocking mode the errno's:EWOULDBLOCK, EALREADY and EINTR are
+	// legal errorcode. In blocking mode we should never come here at all!
+	if ((errno != EWOULDBLOCK) && (errno != EALREADY) && (errno != EINTR)) {
 		// real error
 		setBlocking(blockingMode);
 		setErrno(ACCEPT);
@@ -601,7 +605,10 @@ Socket* Socket::accept(int32	waitMs)
 
 	switch (pollRes) {
 	case -1:							// error on poll
-		setErrno(ACCEPT);
+		// Note: when an interrupt occured we just return that there was no
+		// connection yet. The user will sure try it again some time later.
+		// No effort is taken to do a re-poll for the remaining time.
+		setErrno((errno == EINTR) ? INPROGRESS : ACCEPT);
 		return (0);
 	case 0:								// timeout on poll let user do the rest
 		setErrno(INPROGRESS);
