@@ -562,10 +562,12 @@ Socket* Socket::accept(int32	waitMs)
 	// Just call 'accept'. In blocking-mode we will stay there, in non-blocking
 	// mode we catch de 'connects' that were executed before our accept.
 	itsErrno = SK_OK;
-	errno 	 = 0;
+	int32	acceptErrno;
 	int32 	newSocketID;
 	do {
+		errno 	 = 0;
 		newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
+		acceptErrno = errno;
 		if (newSocketID > 0) {
 			LOG_DEBUG(formatString("Socket(%d):accept() successful",itsSocketID));
 			setBlocking(blockingMode);
@@ -576,15 +578,16 @@ Socket* Socket::accept(int32	waitMs)
 			return (newSocket);
 		}
 		// in blocking mode we could have catch an interrupt, give it a retry.
-	} while ((errno == EINTR) && (waitMs < 0));
+	} while ((acceptErrno == EINTR) && (waitMs < 0));
 
 	// Show why we left the accept-call
 	LOG_DEBUG(formatString("Socket(%d):accept() failed: errno=%d(%s)", 
-										itsSocketID, errno, strerror(errno)));
+							itsSocketID, acceptErrno, strerror(acceptErrno)));
 
 	// In non-blocking mode the errno's:EWOULDBLOCK, EALREADY and EINTR are
 	// legal errorcode. In blocking mode we should never come here at all!
-	if ((errno != EWOULDBLOCK) && (errno != EALREADY) && (errno != EINTR)) {
+	if ((acceptErrno != EWOULDBLOCK) && (acceptErrno != EALREADY) 
+									 && (acceptErrno != EINTR)) {
 		// real error
 		setBlocking(blockingMode);
 		setErrno(ACCEPT);
