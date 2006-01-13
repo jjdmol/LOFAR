@@ -8,13 +8,15 @@
  * Open. You can then make changes to the template in the Source Editor.
  */
 
-package bb_gui;
+package nl.astron.lofar.cep.bb.bb_gui;
 
 /**
  *
  * @author coolen
  */
 public class Main {
+    
+    public static BB_Gui itsGui;
     
     /** Creates a new instance of Main */
     public Main() {
@@ -24,9 +26,14 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        bb_gui aGui = new bb_gui();
-        aGui.setSize(950,600);
-        aGui.setVisible(true);
+        initGui();
+    }
+    
+    private static void initGui() {
+        itsGui = new BB_Gui();
+        itsGui.setSize(910,825);
+        itsGui.setResizable(false);
+        itsGui.setVisible(true);
     }
     
 }
