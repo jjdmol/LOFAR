@@ -92,7 +92,7 @@ private:
 	ProcControlServer& 	operator=(const ProcControlServer& that);
 
 	ProcessControl*		itsPCImpl;
-	ProcControlComm*			itsCommChan;
+	ProcControlComm*	itsCommChan;
 };
 
 inline	DH_ProcControl*	ProcControlServer::getDataHolder() const {

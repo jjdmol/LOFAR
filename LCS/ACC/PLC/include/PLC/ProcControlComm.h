@@ -42,8 +42,9 @@ namespace LOFAR {
 // The result field that is passed from an application process is a bitmask
 // representing the result of the command.<br>
 // See \c resultInfo method for more information.
-typedef enum { PcCmdMaskOk 	 	  = 0x0001,
-			   PcCmdMaskCommError = 0x8000 } PcCmdResultMask;
+typedef enum { PcCmdMaskOk 	 	     = 0x0001,
+			   PcCmdMaskNotSupported = 0x0008,
+			   PcCmdMaskCommError    = 0x8000 } PcCmdResultMask;
 
 //# Description of class.
 // The ProcControlComm class implements the communication between the 
@@ -103,8 +104,8 @@ private:
 
 	//# --- Datamembers ---
 	// Pointers to the connection objects that manage the communication
-	CSConnection*			itsReadConn;
-	CSConnection*			itsWriteConn;
+	CSConnection*		itsReadConn;
+	CSConnection*		itsWriteConn;
 	DH_ProcControl*		itsDataHolder;
 
 	// Synchrone or asynchrone communication.

@@ -16,17 +16,21 @@ bool					IsSync		= false;
 time_t					delayTime	= 0;
 string					paramfile ("Observation-CygA.param");
 
+// Note: function does nothin on sync-connections
 void waitForAnswer()
 {
 	if (!IsSync) {
 		cout << "Waiting for result from command" << endl;
-		ACClient->processACmsgFromServer();
+		while (!ACClient->processACmsgFromServer()) {
+			;
+		}
 	}
 
 	if (delayTime) {
-		cout << "Command is placed on stack, waiting for real result" 
-			 << endl;
-		ACClient->processACmsgFromServer();
+		cout << "Command is placed on stack, waiting for real result" << endl;
+		while(!ACClient->processACmsgFromServer()) {
+			;
+		}
 	}
 }
 
@@ -87,10 +91,17 @@ void doBoot()
 	}
 
 	cout << "Sending boot command" << endl;
-	if (ACClient->boot(time(0L)+delayTime, paramfile)) {
+	bool	result = ACClient->boot(time(0L)+delayTime, paramfile);
+	if (result) {
 		waitForAnswer();
 	}
-	cout << "Parameter subsets must have been made by now" << endl;
+	if (result) {
+		cout << "Parameter subsets must have been made by now" << endl;
+	}
+	else {
+		cout << "ERROR during boot command" << endl;
+		sleep (2);
+	}
 
 }
 
@@ -98,59 +109,102 @@ void doBoot()
 void doDefine()
 {
 	cout << "Sending define command" << endl;
-	if (ACClient->define(time(0L)+delayTime)) {
+	bool result = ACClient->define(time(0L)+delayTime);
+	if (result) {
 		waitForAnswer();
 	}
-	cout << "Application processes must be running by now" << endl;
+	if (result) {
+		cout << "Application processes must be running by now" << endl;
+	}
+	else {
+		cout << "ERROR during define command" << endl;
+		sleep (2);
+	}
 }
 
 // Init: let AP connect to each other
 void doInit()
 {
 	cout << "Sending init command" << endl;
-	if (ACClient->init(time(0L)+delayTime)) {
+	bool result = ACClient->init(time(0L)+delayTime);
+	if (result) {
 		waitForAnswer();
 	}
-	cout << "Application processes must mutual connected by now" << endl;
+	if (result) {
+		cout << "Application processes must mutual connected by now" << endl;
+	}
+	else {
+		cout << "ERROR during init command" << endl;
+		sleep (2);
+	}
 }
 
 // Run: do work
 void doRun()
 {
 	cout << "Sending run command" << endl;
-	if (ACClient->run(time(0L)+delayTime)) {
+	bool result = ACClient->run(time(0L)+delayTime);
+	if (result) {
 		waitForAnswer();
 	}
-	cout << "Application processes must running now" << endl;
-
+	if (result) {
+		cout << "Application processes must running now" << endl;
+	}
+	else {
+		cout << "ERROR during run command" << endl;
+		sleep (2);
+	}
 }
 
 // Cancel Command queue
 void doCancel()
 {
-	cout << "Sending Cancel command" << endl;
-	if (ACClient->cancelCmdQueue()) {
+	cout << "Sending CancelQueue command" << endl;
+	bool result = ACClient->cancelCmdQueue();
+	if (result) {
 		waitForAnswer();
 	}
-	cout << "Queue must be flushed by now." << endl;
-
+	if (result) {
+		cout << "Queue must be flushed by now." << endl;
+	}
+	else {
+		cout << "ERROR during cancelqueue command" << endl;
+		sleep (2);
+	}
 }
 
 // Pause(condition,waitTime)
 void doPause()
 {
-	cout << "NOT YET IMPLEMENTED IN THIS PROG" << endl;
-	sleep (2);  
+	cout << "Sending pause command" << endl;
+	bool result = ACClient->pause(time(0)+delayTime,30,"");
+	if (result) {
+		waitForAnswer();
+	}
+	if (result) {
+		cout << "Application processes must be paused by now" << endl;
+	}
+	else {
+		cout << "ERROR during pause command" << endl;
+		sleep (2);
+	}
 }
 
 // Quit: stop processes
 void doStop()
 {
 	cout << "Sending quit command" << endl;
-	if (ACClient->quit(time(0)+delayTime)) {
+	bool result = ACClient->quit(time(0)+delayTime);
+	if (result) {
 		waitForAnswer();
 	}
-	cout << "Application processes must be killed by now" << endl;
+	if (result) {
+		cout << "Application processes must be killed by now" << endl;
+	}
+	else {
+		cout << "ERROR during quit command" << endl;
+		sleep (2);
+	}
 
 }
 

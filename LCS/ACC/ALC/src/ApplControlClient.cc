@@ -191,6 +191,7 @@ void	ApplControlClient::handleAnswerMessage(const string&	answer) const
 // override this function.
 bool	ApplControlClient::processACmsgFromServer() const
 {
+	LOG_DEBUG("ApplControlClient:processACmsgFromServer()");
 	return (false);
 }
 

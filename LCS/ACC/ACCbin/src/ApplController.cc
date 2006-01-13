@@ -29,6 +29,7 @@
 #include <ACCbin/PR_Shell.h>			// TODO: factory!
 #include <ACCbin/PR_MPI.h>				// TODO: factory!
 #include <ACCbin/ItemList.h>			// @@
+#include <PLC/ProcControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -175,12 +176,14 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 		// The rest of the command should be an Ack on the outstanding command.
 		if (ack) {
 			uint16	result  = DHProcPtr->getResult();
-			if (result & AcCmdMaskOk) {
+			// note: the process can return three values: Ok/NotSupported/Error
+			// Handle NotSupported as Ok.
+			if (result & (PcCmdMaskOk | PcCmdMaskNotSupported)) {
 				itsAPAPool->registerAck(
 								static_cast<PCCmd>(command), anAP);
 			}
 			else {			// result is a NACK!
-				sendExecutionResult(0, "Nack from process");	
+				sendExecutionResult(0, "Nack from process:" + anAP->getName());
 			}
 		}
 		else {
@@ -351,6 +354,7 @@ void ApplController::startCmdState()
 		// StateEngine needs to know the timeout values for the states
 		itsStateEngine->init(itsObsParamSet);
 		itsStateEngine->ready();				// report this state is ready.
+		break;
 	case StateCreatePSubset:
 		createParSubsets();
 		itsStateEngine->ready();				// report this state is ready.
@@ -551,7 +555,7 @@ void ApplController::checkForACCommands()
 //
 // CheckForAPMessages()
 //
-// The AP's may snet Ack or other types of messages to us. Reroute them to the
+// The AP's may sent Ack or other types of messages to us. Reroute them to the
 // right functions.
 //
 void ApplController::checkForAPMessages() 
